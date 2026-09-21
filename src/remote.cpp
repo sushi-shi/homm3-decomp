@@ -1,39 +1,53 @@
+#include "va.h"
+
 #include <string.h>
 #include <zlib.h>
-#include <va.h>
+
 #include "remote.h"
+
 #include "advmgr.h"
+#include "armygrp.h"
 #include "crt_stdio.h"
+#include "csprite.h"
+#include "cspriteframe.h"
 #include "game.h"
+#include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
+#include "message.h"
 #include "misc.h"
+#include "mousemgr.h"
 #include "netgame.h"
 #include "netplayer.h"
 #include "prefs.h"
-#include "smackmgr.h"
-#include "soundmgr.h"
-#include "armygrp.h"
-#include "csprite.h"
-#include "cspriteframe.h"
+#include "remotedlg.h"
 #include "resourcemanager.h"
 #include "sample.h"
+#include "smackmgr.h"
+#include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "remotedlg.h"
-#include "message.h"
-#include "inputmgr.h"
-#include "mousemgr.h"
-#include "../vendor/zlib-1.1.3/zlib.h"
-// gpWindowManager: CSaveScreen grabs and restores through the screen
-// bitmap, and hands the dirty rect back to the window manager.
 #include "winmgr.h"
+
+DATA(0x00697774) int g_saveGameRequested;
+DATA(0x006976dc) int g_tcpHostStatus;
+
+
+// Retail scalar state; startup initial values come from the pinned image.
+// Original DC name: giNumHumanPlayers; DoNewGame / DoLoadGame.
+DATA(0x00699274) int g_numHumanPlayers;
+// Original DC name: iMPBaseType; DoNewGame / DoLoadGame.
+DATA(0x006994e4) int g_mpBaseType;
+DATA(0x0069ca50) CHotSeatMan* g_hotSeatMan;
 
 // remote.cpp's CHourGlass wrapper expands these two singleselectionwindow
 // helpers at each use. They stay file-local declarations because this is the
 // only remote consumer and widening the shared header would perturb its TUs.
 void startMouseThread();
 void stopMouseThread();
+
+DATA(0x0069d7b0) CChatManager g_chatMan(20);
+DATA(0x0069d630) CTurnDuration g_turnDuration;
 
 DATA(0x0069d648) CLogFile g_logFile(
     DATA_COMPGEN(0x00682a3c, remoteGameLogName, "game.log"));
@@ -52,7 +66,7 @@ DATA(0x0069d814) static unsigned char g_inside;
 // helper; VC6 /Ob2 expands both retail call sites into InitConnection. The
 // three beeps, 200-byte local error buffer and recursion guard are visible in
 // both byte-identical expansions.
-inline void dpsd(int dpErr, char* file, int line)
+void dpsd(int dpErr, char* file, int line)
 {
     if (g_inside)
         return;
@@ -92,7 +106,7 @@ VA_COMPGEN(0x005522f0, 0x21, SCALAR_DELETING_DTOR, CDPlayHeroes)
 // deque from 0x28 to the VC6/Dinkumware 0x30 bytes and thereby fixes the PC
 // tail at +0x98/+0xe8/+0xec/+0xf0.  currMessageId is deliberately not
 // initialized: retail likewise leaves +0xec untouched.
-inline CDPlayHeroes::CDPlayHeroes()
+CDPlayHeroes::CDPlayHeroes()
 {
     m_localIpAddress[0] = 0;
     m_confirmId = 0;
@@ -106,7 +120,7 @@ inline CDPlayHeroes::CDPlayHeroes()
 // destructor is the decisive inline-budget input: with that complete base
 // contract, the original named helper call expands to the exact 0x205-byte
 // retail body (both deque walks included).
-inline void CDPlayHeroes::destroyMsgQueue()
+void CDPlayHeroes::destroyMsgQueue()
 {
     while (!m_msgQueue.empty()) {
         CNetMsg* netMsg = m_msgQueue.front();
@@ -128,10 +142,8 @@ unsigned char CDPlayHeroes::sysMsgHost(DPMSG_GENERIC* message,
     unsigned char wasHost = isHost();
     if (!CDPlay::sysMsgHost(message, toId))
         return 0;
-    if (!wasHost) {
-        CNetMsg msg(RS_SET_AS_HOST, sizeof(CNetMsg));
-        queueMsg(&msg);
-    }
+    if (!wasHost)
+        handleHostXFer();
     return 1;
 }
 
@@ -139,7 +151,7 @@ VA(0x00552740, 0x1DE)  // dc 0x11bb20
 unsigned char CDPlayHeroes::sysMsgSessionLost(DPMSG_GENERIC* message,
                                               unsigned long toId)
 {
-    CNetMsg msg(RS_SESSION_LOST, sizeof(CNetMsg));
+    CSessionLostMsg msg;
     queueMsg(&msg);
     return 1;
 }
@@ -202,30 +214,31 @@ bool CDPlayHeroes::pollRemote()
     return true;
 }
 
-// DC names the network singleton pDPlay; retail references at 0x69d808 and
-// the adjacent readiness byte are rooted throughout the remote/front-end
-// call graph.
+// DC names the network singleton pDPlay; retail's remote/front-end call
+// graph locates the pointer at 0x69d808.
 DATA(0x0069d808) CDPlayHeroes* g_dPlay;
-// The adjacent PC bytes are the packed counterparts of Dreamcast's bool
+// Original public ?g_lobbyLaunched@@3_NA. Retail oldmain stores the native
+// TestIfLobbyLaunched result directly here; main-menu host handling agrees.
+DATA(0x0069d80c) bool g_lobbyLaunched;
+// These adjacent PC bytes are the packed counterparts of Dreamcast's bool
 // gbMPlayer/gbMPlayerHost pair. TestIfLobbyLaunched and HandleMPlayerLaunch
 // independently distinguish their roles.
-DATA(0x0069d80c) unsigned char g_dPlayReady;
 DATA(0x00699550) bool g_mPlayer;
+DATA(0x00699551) bool g_mPlayerHost;
 // Dreamcast publishes `bDefeatedAllPlayers` as a bool in remote.obj. Retail's
 // win/loss handlers independently locate the PC cell and store full dwords,
 // so the PC representation is int even though the role and owner transfer.
-DATA(0x00699551) bool g_mPlayerHost;
 DATA(0x00699510) int g_defeatedAllPlayers;
 // Dreamcast publishes gcTCPAddress as char[21]; retail's client launch arm
 // passes this exact cell both to the log formatter and InitConnection.
-DATA(0x00699274) extern int g_unnamed699274;
+
 // The PC layout is crossed from the HD build through whole-function operand
 // correspondence; the names and types are the Dreamcast CodeView globals.
 DATA(0x00697758) char g_tcpAddress[21];
 // Retail-only byte armed when player-drop recovery resumes through
 // game::NextPlayer. No surviving symbol attests a semantic name.
 DATA(0x0069d804) unsigned char g_gameMode;
-DATA(0x0069d80d) unsigned char g_unnamed69d80d;
+DATA(0x0069d80d) unsigned char g_playerDrop;
 DATA(0x0069d80e) unsigned char g_weMoved;
 DATA(0x0069d608) CNetPlayerInfo g_thisNetPlayerInfo;
 DATA(0x006989f0) eNetGameType g_mpNetProtocol;
@@ -242,234 +255,6 @@ static const long g_playerActiveUpdateInterval = 600000;
 
 // Unimplemented carcass rows remain available to the claim/label scanners but
 // stay outside compilation as this large TU is admitted incrementally.
-#if 0  // @carcass
-
-// E:\gamedcs\remote.cpp:102
-DC_ONLY(0x11b8c4, 0x7A)
-void dpsd(int iDPErr, char* cFile, int iLine)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:129
-DC_ONLY(0x11b940, 0x2A)
-int calcCrcLong(unsigned char* buffer, int len)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:146
-DC_ONLY(0x11b96c, 0xCC)
-void CDPlayHeroes::CDPlayHeroes()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:155
-DC_ONLY(0x11ba38, 0x46)
-void CDPlayHeroes::~CDPlayHeroes()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:160
-DC_ONLY(0x11ba80, 0x58)
-void CDPlayHeroes::destroyMsgQueue()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:179
-DC_ONLY(0x11bad8, 0x48)
-unsigned char CDPlayHeroes::sysMsgHost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:192
-DC_ONLY(0x11bb20, 0x20)
-unsigned char CDPlayHeroes::sysMsgSessionLost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:204
-DC_ONLY(0x11bb40, 0x20)
-unsigned char CDPlayHeroes::sysMsgDestroyPlayerOrGroup(DPMSG_DESTROYPLAYERORGROUP* pSysMsg, unsigned long toID)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:214
-DC_ONLY(0x11bb60, 0x3A)
-unsigned char CDPlayHeroes::sysMsgCreatePlayerOrGroup(DPMSG_CREATEPLAYERORGROUP* pSysMsg, unsigned long toID)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:222
-DC_ONLY(0x11bb9c, 0xEC)
-unsigned char CDPlayHeroes::pollRemote()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:304
-DC_ONLY(0x11bc88, 0xD2)
-unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:350
-DC_ONLY(0x11bd5c, 0xF4)
-CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue, unsigned char* wasCompressed)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:407
-DC_ONLY(0x11be50, 0x44)
-unsigned char CDPlayHeroes::transmitRemoteData(CNetMsg* pMsg, int toWho, unsigned char compressMsg, unsigned char guaranteed)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:425
-DC_ONLY(0x11be94, 0xAA)
-CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:463
-DC_ONLY(0x11bf40, 0xAC)
-CNetMsg* CDPlayHeroes::UncompressMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:496
-DC_ONLY(0x11bfec, 0x60)
-unsigned char CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo, unsigned char compressMsg, unsigned char guaranteed)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:578
-DC_ONLY(0x11c04c, 0x18A)
-unsigned char CDPlayHeroes::sendIt(CNetMsg* pMsg, unsigned long dpidTo, unsigned char guaranteed)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:685
-DC_ONLY(0x11c1d8, 0x1E)
-void CDPlayHeroes::HandleHostXFer()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:690
-DC_ONLY(0x11c1f8, 0x30)
-void CDPlayHeroes::handlePlayerDrop(unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:697
-DC_ONLY(0x11c228, 0x4)
-void CDPlayHeroes::HandleNewPlayer()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:702
-DC_ONLY(0x11c22c, 0x3A)
-void CDPlayHeroes::queueMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:783
-DC_ONLY(0x11c268, 0x28)
-void CDPlayHeroes::setNetMsgHandler(CNetMsgHandler* pNetMsgHandler)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:793
-DC_ONLY(0x11c290, 0x6)
-CNetMsgHandler* CDPlayHeroes::getNetMsgHandler()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:804
-DC_ONLY(0x11c298, 0x7C)
-void CChatManager::CChatManager(int maxChatLines)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:829
-DC_ONLY(0x11c314, 0x1C)
-void CChatManager::~CChatManager()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:835
-DC_ONLY(0x11c330, 0x42)
-void CChatManager::init()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:844
-DC_ONLY(0x11c374, 0x34)
-void CChatManager::shutDown()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:857
-DC_ONLY(0x11c3a8, 0x104)
-void CChatManager::addChat(const char* cChatMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:904
-DC_ONLY(0x11c4ac, 0xAA)
-void CChatManager::turnDurationMsg(const char* cChatMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:947
-DC_ONLY(0x11c558, 0x64)
-void CChatManager::systemMsg(const char* cChatMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:968
-DC_ONLY(0x11c5bc, 0x9C)
-void CChatManager::playerDropMsg(const char* cChatMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:990
-DC_ONLY(0x11c658, 0x64)
-void CChatManager::playerEnterMsg(const char* cChatMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1033
-#endif  // @carcass
 
 VA(0x00552db0, 0x28F)  // dc 0x11bc88
 unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
@@ -521,37 +306,20 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
     return 1;
 }
 
-// E:\gamedcs\remote.cpp:350. The queue reader, and CompressMsg's exact
-// mirror: take the front message, optionally unlink it, and if it carries an
-// original size that differs from its own, expand it into a fresh block with
-// the header copied verbatim and the payload run through zlib. field_10 is
-// what CompressMsg stamps with the ORIGINAL total size, so equal sizes mean
-// "was never compressed" and the message is handed back untouched.
-
-// The null test on the freshly allocated block sits AFTER the store into it,
-// which is retail's own order, not a scheduling artifact we could move.
-
-// The three "hand the queued message back" exits are ONE exit: retail's
-// null-front arm, its already-uncompressed arm and its uncompressed-block
-// arm all reach the same `mov eax,edi` epilogue, and the last of them gets
-// there by storing the new block into pNetMsg's own memory home
-// (`mov [ebp-8],ebx` / `mov edi,[ebp-8]`). So the body is one `if (pNetMsg)`
-// block over a single trailing `return pNetMsg;`, not three early returns -
-// spelling it that way took 80.8571 -> 86.2637 with branches, ret count and
-// block skeleton all clean (14/14 branches, 5/5 rets, 0 flow-kind).
-// Residual (86.26%): pNetMsg binds EBX here against retail's EDI and is not
-// memory-homed until later, which why-reg v2 places past the first-def slice
-// (bindings agree at every #0/#1/#2), plus one target-only call inside the
-// INLINED pop_front - retail keeps a deque helper out of line there and our
-// expansion takes it, inside Dinkumware's own template body which this TU
-// may not pin into.
+// Original: CDPlayHeroes::GetRemoteData; remote.cpp:350, dc 0x11bd5c
+// Retail expands IsCompressed and ordinary UncompressMsg. Restoring these
+// boundaries and DestroyMsg calls recovers the retained deque helper and
+// register homes: 86.26 -> 98.62%, with all nine named calls in order.
+// Assigning the result before setting wasCompressed recovers the remaining
+// four instruction differences and reaches 100%; the reversed ordering is
+// the 98.62% negative control. Both helper and caller boundaries stay natural.
 VA(0x00553040, 0x1D1)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map, dc 0x11bd5c
 CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
                                      unsigned char* wasCompressed)
 {
     if (wasCompressed)
         *wasCompressed = 0;
-    if (!g_videoPaused)
+    if (!g_remoteOn)
         return 0;
     if (!m_msgQueue.size())
         return 0;
@@ -561,36 +329,17 @@ CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
         if (removeFromQueue)
             m_msgQueue.pop_front();
 
-        if (netMsg->m_uncompressedSize && netMsg->m_uncompressedSize != netMsg->m_size) {
-            unsigned long uncompressedSize =
-                netMsg->m_uncompressedSize + sizeof(CNetMsg);
-            void* storage = ::operator new(uncompressedSize);
-            CNetMsg* uncompressedMsg = static_cast<CNetMsg*>(storage);
-            memcpy(uncompressedMsg, netMsg, sizeof(CNetMsg));
-
-            uncompressedSize -= sizeof(CNetMsg);
-            if (uncompress(
-                    static_cast<unsigned char*>(storage) + sizeof(CNetMsg),
-                    &uncompressedSize,
-                    static_cast<const unsigned char*>(
-                        static_cast<const void*>(netMsg)) + sizeof(CNetMsg),
-                    netMsg->m_size - sizeof(CNetMsg))) {
-                ::operator delete(storage);
-                ::operator delete(netMsg);
-                return 0;
-            }
-
-            uncompressedMsg->m_size = uncompressedSize + sizeof(CNetMsg);
+        if (netMsg->isCompressed()) {
+            CNetMsg* uncompressedMsg = uncompressMsg(netMsg);
             if (!uncompressedMsg) {
-                ::operator delete(netMsg);
+                destroyMsg(netMsg);
                 return 0;
             }
-
             if (removeFromQueue)
-                ::operator delete(netMsg);
+                destroyMsg(netMsg);
+            netMsg = uncompressedMsg;
             if (wasCompressed)
                 *wasCompressed = 1;
-            netMsg = uncompressedMsg;
         }
     }
     return netMsg;
@@ -640,6 +389,25 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
         return 0;
     }
     return compressedMsg;
+}
+
+// Original: CDPlayHeroes::UncompressMsg; remote.cpp:463, dc 0x11bf40
+// GetRemoteData (0x553040) expands this header copy, zlib call and cleanup.
+CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
+{
+    unsigned long destSize = netMsg->m_uncompressedSize + sizeof(CNetMsg);
+    CNetMsg* result = static_cast<CNetMsg*>(::operator new(destSize));
+    *result = *netMsg;
+    destSize -= sizeof(CNetMsg);
+    if (uncompress(static_cast<unsigned char*>(static_cast<void*>(result)) + sizeof(CNetMsg),
+                   &destSize,
+                   static_cast<const unsigned char*>(static_cast<const void*>(netMsg)) + sizeof(CNetMsg),
+                   netMsg->m_size - sizeof(CNetMsg))) {
+        destroyMsg(result);
+        return 0;
+    }
+    result->m_size = destSize + sizeof(CNetMsg);
+    return result;
 }
 
 VA(0x00553370, 0x5C)
@@ -748,6 +516,18 @@ bool CDPlayHeroes::sendIt(CNetMsg* msg, unsigned long dpidTo,
     return false;
 }
 
+// Original: CDPlayHeroes::HandleHostXFer; remote.cpp:685, dc 0x11c1d8
+void CDPlayHeroes::handleHostXFer()
+{
+    CSetAsHostMsg msg;
+    queueMsg(&msg);
+}
+
+// Original: CDPlayHeroes::HandleNewPlayer; remote.cpp:697, dc 0x11c228
+void CDPlayHeroes::handleNewPlayer(unsigned long, char*, void*, unsigned long)
+{
+}
+
 VA(0x00553580, 0x1F0)
 void CDPlayHeroes::handlePlayerDrop(unsigned long dpid)
 {
@@ -786,6 +566,38 @@ VA(0x005537a0, 0x7)  // dc 0x11c290
 CNetMsgHandler* CDPlayHeroes::getNetMsgHandler()
 {
     return m_netMsgHandler;
+}
+
+// Original: CChatManager::CChatManager; remote.cpp:804, dc 0x11c298
+// Retail initializer 0x5521c0 constructs g_chatMan with 20 lines. It adds
+// the Miles handle at +0x28 between isSysMsg and the five sample stores.
+CChatManager::CChatManager(int maxChatLines)
+{
+    m_currMsg = 0;
+    m_pauseTime = 0;
+    m_changed = 1;
+    m_lastWidget = 0;
+    m_maxLines = maxChatLines;
+    m_widgetText = 0;
+    m_msgArray = 0;
+    m_position = -1;
+    m_chatKilled = 0;
+    m_isSysMsg = 0;
+    m_chatMemSample = 0;
+    m_chatSample = 0;
+    m_playerDropSample = 0;
+    m_sysMsgSample = 0;
+    m_turnDurSample = 0;
+    m_playerEnterSample = 0;
+    setMaxLines(maxChatLines);
+}
+
+// Original: CChatManager::~CChatManager; remote.cpp:829, dc 0x11c314
+// Retail's registered cleanup 0x552240 deletes these two arrays in order.
+CChatManager::~CChatManager()
+{
+    delete[] m_widgetText;
+    delete[] m_msgArray;
 }
 
 VA(0x005537b0, 0x46)  // dc 0x11c330
@@ -887,7 +699,7 @@ void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
 
     // DC line 918 calls CTurnDuration::IsClose; preserve the helper
     // instead of accessing its protected timer fields from this formatter.
-    if (!g_turnDuration69d630.isClose(59000) || canDisplay) {
+    if (!g_turnDuration.isClose(59000) || canDisplay) {
 
         sprintf(
             finalText,
@@ -1015,16 +827,13 @@ void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
     m_isSysMsg = 0;
 }
 
+// DC's UpdateWidget public encodes native bool for killOld; the retained
+// PC body tests that byte, and all authored callers supply 0 or 1.
 VA(0x00553d00, 0xA1)  // dc 0x11c6bc
-void CChatManager::updateWidget(textWidget* widget, unsigned char killOld, int numLines)
+void CChatManager::updateWidget(textWidget* widget, bool killOld, int numLines)
 {
     if (m_pauseTime == 0) {
-        int msgNbr = m_currMsg;
-        for (int i = 0; i < m_msgCount; i++) {
-            if (m_msgArray[msgNbr].m_killTime == 0)
-                m_msgArray[msgNbr].m_killTime = GameTime::get();
-            msgNbr = (msgNbr + 1) % m_maxLines;
-        }
+        updateNewChat();
         if (killOld)
             killOldChat();
     }
@@ -1037,34 +846,17 @@ void CChatManager::updateWidget(textWidget* widget, unsigned char killOld, int n
 }
 
 // E:\gamedcs\remote.cpp:1060
-#if 0  // @carcass
-DC_ONLY(0x11c71c, 0x1A)
-int CChatManager::getNextFreeMsgNbr()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1065
-DC_ONLY(0x11c738, 0x1A)
-int CChatManager::getNextMsgNbr(int msgNbr)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1070
-#endif  // @carcass
-
 // E:\gamedcs\remote.cpp:1060/1065. DC records these named source helpers.
 // AddChat uses the first canonical helper; retail /Ob2 also expands the
 // second at both surviving KillOldChat call sites.
-inline int CChatManager::getNextFreeMsgNbr()
+int CChatManager::getNextFreeMsgNbr()
 {
     return (m_currMsg + m_msgCount) % m_maxLines;
 }
 
 // E:\gamedcs\remote.cpp:1065.
 // Retail KillOldChat expands this helper at both surviving call sites.
-inline int CChatManager::getNextMsgNbr(int msgNbr)
+int CChatManager::getNextMsgNbr(int msgNbr)
 {
     return (msgNbr + 1) % m_maxLines;
 }
@@ -1110,16 +902,16 @@ void CChatManager::killOldChat()
     }
 }
 
-// E:\gamedcs\remote.cpp:1115
-#if 0  // @carcass
-DC_ONLY(0x11c87c, 0x52)
-void CChatManager::UpdateNewChat()
+// Original: CChatManager::UpdateNewChat; remote.cpp:1115, dc 0x11c87c
+void CChatManager::updateNewChat()
 {
-    // @stub
+    int msgNbr = m_currMsg;
+    for (int i = 0; i < m_msgCount; ++i) {
+        if (m_msgArray[msgNbr].m_killTime == 0)
+            m_msgArray[msgNbr].m_killTime = GameTime::get();
+        msgNbr = getNextMsgNbr(msgNbr);
+    }
 }
-
-// E:\gamedcs\remote.cpp:1128
-#endif  // @carcass
 
 VA(0x00553ee0, 0x163)  // dc 0x11c8d0
 void CChatManager::updateWidgetText(int numLines, textWidget* widget)
@@ -1187,16 +979,11 @@ void CChatManager::resumeTimeOuts()
     m_pauseTime = 0;
 }
 
-// E:\gamedcs\remote.cpp:1213
-#if 0  // @carcass
-DC_ONLY(0x11ca60, 0x10)
-unsigned char CChatManager::HasChat()
+// Original: CChatManager::HasChat; remote.cpp:1213, dc 0x11ca60
+unsigned char CChatManager::hasChat()
 {
-    // @stub
+    return m_msgCount > 0;
 }
-
-// E:\gamedcs\remote.cpp:1221
-#endif  // @carcass
 
 VA(0x005540b0, 0x20)  // dc 0x11ca70
 void CChatManager::clearChat()
@@ -1340,11 +1127,11 @@ unsigned char initRemote(eNetGameType mpType, const char* userName)
     playerInfo.m_version = *g_videoGameState;
     g_thisNetPlayerInfo = playerInfo;
 
-    strcpy(g_unnamed698758.m_networkDefaultName, userName);
+    strcpy(g_config.m_networkDefaultName, userName);
     strcpy(g_thisNetPlayerInfo.m_name,
-           g_unnamed698758.m_networkDefaultName);
+           g_config.m_networkDefaultName);
     writePrefs();
-    g_networkActive69954c = 1;
+    g_remoteOn = 1;
     return 1;
 }
 
@@ -1355,7 +1142,7 @@ void remoteCleanup()
     g_mpNetProtocol = MP_SINGLE;
     g_chatMan.clearChat();
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         if (g_dPlay) {
             if (g_thisNetPlayerInfo.m_dpid)
                 g_dPlay->destroyPlayer(g_thisNetPlayerInfo.m_dpid);
@@ -1364,7 +1151,7 @@ void remoteCleanup()
             g_dPlay = 0;
         }
 
-        g_networkActive69954c = 0;
+        g_remoteOn = 0;
         {
             CNetPlayerInfo playerInfo;
             playerInfo.m_dpid = 0;
@@ -1379,7 +1166,7 @@ VA(0x00554560, 0x82)
 int transmitRemoteDataDPID(CNetMsg* msg, unsigned long dpidTo,
                            bool compressMsg, bool guaranteed)
 {
-    if (g_networkActive69954c && g_dPlay)
+    if (g_remoteOn && g_dPlay)
         return g_dPlay->transmitRemoteDataDPID(
             msg, dpidTo, compressMsg, guaranteed);
     return 0;
@@ -1389,7 +1176,7 @@ VA(0x005545f0, 0xBA)
 int transmitRemoteData(CNetMsg* msg, int toWho,
                        bool compressMsg, bool guaranteed)
 {
-    if (g_networkActive69954c && g_dPlay)
+    if (g_remoteOn && g_dPlay)
         return g_dPlay->transmitRemoteData(
             msg, toWho, compressMsg, guaranteed);
     return 0;
@@ -1398,7 +1185,7 @@ int transmitRemoteData(CNetMsg* msg, int toWho,
 VA(0x005546b0, 0x103)
 void pollRemote()
 {
-    if (g_gameOver || !g_networkActive69954c || !g_dPlay)
+    if (g_gameOver || !g_remoteOn || !g_dPlay)
         return;
 
     if (g_currentPlayer && g_currentPlayer->isLocalHuman()) {
@@ -1407,7 +1194,7 @@ void pollRemote()
         } else if (GameTime::elapsedSince(g_lastActiveUpdate)
                    > g_playerActiveUpdateInterval) {
             g_lastActiveUpdate = GameTime::get();
-            CNetMsg msg(RS_PLAYER_ACTIVE, sizeof(CNetMsg));
+            CPlayerActiveMsg msg;
             transmitRemoteDataDPID(&msg, 0, false, false);
         }
     } else {
@@ -1644,7 +1431,7 @@ void CWaitForReadyPlayersDlg::wait()
     } while (creature == CREATURE_ARCH_DEVIL
              || creature == CREATURE_DEVIL);
 
-    setup((*g_generalText)[328], g_mediumFont,
+    setup(g_generalText->getText(328), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 0);
     doModal(0);
 
@@ -1856,8 +1643,10 @@ void destroyMsg(CNetMsg* netMsg)
     delete netMsg;
 }
 
+// DC ?TestIfLobbyLaunched@@YA_NXZ proves the native bool return; retail
+// forwards the already-boolean TestLobbied result or returns 0/1.
 VA(0x00555920, 0x171)  // dc 0x11d900
-unsigned char testIfLobbyLaunched()
+bool testIfLobbyLaunched()
 {
     HKEY key;
     char appName[256];
@@ -1918,9 +1707,8 @@ unsigned char handleMPlayerLaunch()
     g_logFile.log(DATA_COMPGEN(0x00682c50, remoteMPlayerDetected,
                             "Detected MPlayer launch."));
 
-    DATA(0x006994e4) extern int g_unnamed6994e4;
-    g_unnamed699274 = 1;
-    g_unnamed6994e4 = 1;
+    g_numHumanPlayers = 1;
+    g_mpBaseType = 1;
     g_mpNetProtocol = MP_TCP;
 
     if (g_mPlayerHost) {
@@ -1966,11 +1754,11 @@ unsigned char handleMPlayerLaunch()
         }
     }
 
-    initRemote(MP_TCP, g_unnamed698758.m_networkDefaultName);
+    initRemote(MP_TCP, g_config.m_networkDefaultName);
 
     int version = *g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
-        g_unnamed698758.m_networkDefaultName, &version, sizeof(version), 0);
+        g_config.m_networkDefaultName, &version, sizeof(version), 0);
     if (!g_thisNetPlayerInfo.m_dpid)
         return 0;
 
@@ -1978,7 +1766,7 @@ unsigned char handleMPlayerLaunch()
     g_logFile.log(DATA_COMPGEN(0x00682be0, remoteMPlayerConnected,
                             "Successful MPlayer connection."));
     strcpy(g_thisNetPlayerInfo.m_name,
-           g_unnamed698758.m_networkDefaultName);
+           g_config.m_networkDefaultName);
     return 1;
 }
 
@@ -2042,21 +1830,21 @@ unsigned char lobbyLaunchConnect()
 
     g_logFile.log(DATA_COMPGEN(0x00682c7c, lobbyConnected,
                             "Successful connect!"));
-    strncpy(g_unnamed698758.m_networkDefaultName,
+    strncpy(g_config.m_networkDefaultName,
             connection->m_playerName->m_shortNameA, 21);
     delete connection;
-    g_unnamed698758.m_networkDefaultName[21] = 0;
+    g_config.m_networkDefaultName[21] = 0;
     g_logFile.log(DATA_COMPGEN(0x00682c6c, lobbyUserName,
                             "Username=[%s]"),
-                g_unnamed698758.m_networkDefaultName);
+                g_config.m_networkDefaultName);
 
     g_mpNetProtocol = MP_TCP;
-    g_unnamed699274 = 1;
-    g_unnamed6994e4 = 1;
-    initRemote(MP_TCP, g_unnamed698758.m_networkDefaultName);
+    g_numHumanPlayers = 1;
+    g_mpBaseType = 1;
+    initRemote(MP_TCP, g_config.m_networkDefaultName);
     int version = *g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
-        g_unnamed698758.m_networkDefaultName, &version, sizeof(version), 0);
+        g_config.m_networkDefaultName, &version, sizeof(version), 0);
     if (!g_thisNetPlayerInfo.m_dpid)
         return 0;
     g_thisNetPlayerInfo.m_version = version;
@@ -2119,7 +1907,7 @@ void updateCurrentPlayers()
                g_generalText->getText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
     }
 
-    g_unnamed699274 = playerArray.getCount();
+    g_numHumanPlayers = playerArray.getCount();
     playerArray.destroy(1);
 }
 
@@ -2138,11 +1926,11 @@ void handlePlayerDrop(unsigned long dpid)
                   g_game->m_players[playerPos].m_name);
     updateCurrentPlayers();
 
-    if (g_unnamed69d810 == playerPos
+    if (g_playerTurn == playerPos
         && !g_game->m_playerDisabled[playerPos]) {
-        int priorPlayer = getPriorPlayer(g_unnamed69d810);
+        int priorPlayer = getPriorPlayer(g_playerTurn);
         g_netLocalGamePos = priorPlayer;
-        g_unnamed69d810 = priorPlayer;
+        g_playerTurn = priorPlayer;
 
         if (g_dPlay->isHost()) {
             if (g_netLocalGamePos == g_game->getLocalPlayerGamePos()) {
@@ -2158,7 +1946,7 @@ void handlePlayerDrop(unsigned long dpid)
                             dpid);
                 CPlayerDropUpdateMsg msg(dpid);
                 transmitRemoteData(
-                    &msg, g_unnamed69d810, false, true);
+                    &msg, g_playerTurn, false, true);
             }
         }
     }
@@ -2172,7 +1960,7 @@ void handleNewHost()
 {
     g_logFile.log(DATA_COMPGEN(0x00682e14, handleNewHostLog,
                             "HandleNewHost"));
-    if (!g_game->isHuman(g_unnamed69d810)) {
+    if (!g_game->isHuman(g_playerTurn)) {
         g_netLocalGamePos = getPriorPlayer(g_netLocalGamePos);
         if (g_netLocalGamePos == g_game->getLocalPlayerGamePos()) {
             onPlayerDropUpdateMsg(-1);
@@ -2212,8 +2000,8 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
     CHourGlass hourGlass(1);
-    if (!g_game->loadGame(g_unnamed698758.m_scFile, 0, 0))
-        g_game->loadGame(g_unnamed698758.m_rcFile, 0, 0);
+    if (!g_game->loadGame(g_config.m_scFile, 0, 0))
+        g_game->loadGame(g_config.m_rcFile, 0, 0);
 
     dlg.close(1);
     hourGlass.stop();
@@ -2227,16 +2015,16 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
     game* currentGame = g_game;
     int localPlayer = currentGame->getLocalPlayerGamePos();
     g_netLocalGamePos = localPlayer;
-    g_unnamed69d810 = localPlayer;
+    g_playerTurn = localPlayer;
     g_currentPlayer = &g_game->m_players[localPlayer];
-    g_unnamed69ccc4 = 1 << localPlayer;
+    g_curPlayerBit = 1 << localPlayer;
 
     int visiblePlayer = currentGame->getLocalPlayerGamePos();
-    g_unnamed69778c = visiblePlayer;
+    g_curWatchPlayer = visiblePlayer;
     g_mapVisibilityBit = 1 << visiblePlayer;
 
     if (g_weMoved) {
-        g_unnamed69d80d = 1;
+        g_playerDrop = 1;
         g_game->nextPlayer();
     } else {
         g_advManager->startLocalPlayerTurn();
@@ -2260,18 +2048,18 @@ void handlePlayerDead(int deadGuy, unsigned char showMsg)
         g_defeatedAllPlayers = 0;
         g_gameOver = 1;
     } else {
-        if (!g_unk691209 && showMsg) {
+        if (!g_goSolo && showMsg) {
             sprintf(g_text, g_generalText->getText(6),
                     g_game->getPlayerName(deadGuy));
             normalDialog(g_text, 1, -1, -1, 10, deadGuy, -1, -1,
                          -1, 5000, -1, 0);
         }
 
-        if (deadGuy == g_unnamed69d810) {
+        if (deadGuy == g_playerTurn) {
             int nextPlayer = getNextHumanPlayer(deadGuy);
             g_currentPlayer = &g_game->m_players[nextPlayer];
             g_netLocalGamePos = nextPlayer;
-            g_unnamed69d810 = nextPlayer;
+            g_playerTurn = nextPlayer;
         }
     }
 }
@@ -2322,7 +2110,7 @@ void handleNormalWinMsg(CNetMsg* netMsg)
         normalDialog(g_generalText->getText(660), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         g_defeatedAllPlayers = 1;
-        g_unnamed69951c = 1;
+        g_normalVictory = 1;
     } else {
         normalDialog(g_generalText->getText(661), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
@@ -2546,8 +2334,7 @@ unsigned char CSaveScreen::isSaved()
     return m_screenSaved;
 }
 
-void showVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
-void closeVideo();  // 0x599050
+void showVideo(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);
 
 VA(0x00557410, 0x1E)  // dc 0x11ec64
 CGameTransferSmack::CGameTransferSmack()
@@ -2591,7 +2378,7 @@ VA(0x005574b0, 0x12D)  // dc 0x11ece4
 void CGameTransferSmack::setPercentage(float pct)
 {
     m_lastFrame = static_cast<int>(pct * 20.0f);
-    setCurrentSmackFrame(m_lastFrame);
+    SmackManager::gotoSmackerFrame(m_lastFrame);
     drawCurrentFrame();
 
     char text[256];
@@ -2618,7 +2405,7 @@ void CGameTransferSmack::setPercentage(float pct)
 // E:\gamedcs\remote.cpp:2784, dc 0x11ede8
 inline void CGameTransferSmack::drawCurrentFrame()
 {
-    drawCurrentSmackFrame();
+    SmackManager::drawSmackerFrame();
 }
 
 // E:\gamedcs\remote.cpp:2789
@@ -2626,7 +2413,7 @@ VA(0x005575e0, 0x15)  // dc 0x11edec
 void CGameTransferSmack::stop()
 {
     if (m_started) {
-        closeVideo();
+        SmackManager::closeSmacker();
         m_started = 0;
     }
 }
@@ -2668,513 +2455,6 @@ void CGameTransferDlg::calcDimensions(const char* text, font* currentFont,
 }
 
 // E:\gamedcs\remote.cpp:1293
-#if 0  // @carcass
-DC_ONLY(0x11cb48, 0xAC)
-void CChatEdit::CChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1297
-DC_ONLY(0x11cbf4, 0x38)
-void CChatEdit::updateScreen()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1303
-DC_ONLY(0x11cc2c, 0xE6)
-int CChatEdit::onKeyPress(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1331
-DC_ONLY(0x11cd14, 0x50)
-int CChatEdit::onFunctionKey(message msg, int toWho)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1345
-DC_ONLY(0x11cd64, 0x4A)
-int CChatEdit::onEnter(message msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1359
-DC_ONLY(0x11cdb0, 0x2A)
-int CChatEdit::onEscape(message msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1367
-DC_ONLY(0x11cddc, 0x1A)
-unsigned char CChatEdit::isOpen()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1375
-DC_ONLY(0x11cdf8, 0x4)
-unsigned char CChatEdit::ignoreKey(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1384
-DC_ONLY(0x11cdfc, 0x18)
-CNetMsg* getRemoteData(unsigned char bRemoveFromBuffer, unsigned char* wasCompressed)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1390
-DC_ONLY(0x11ce14, 0x54)
-unsigned char initRemote(eNetGameType iMPType, const char* sUserName)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1411
-DC_ONLY(0x11ce68, 0xCC)
-void remoteCleanup()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1438
-DC_ONLY(0x11cf34, 0x30)
-int transmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo, unsigned char compressMsg, unsigned char guaranteed)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1446
-DC_ONLY(0x11cf64, 0x30)
-int transmitRemoteData(CNetMsg* pMsg, int toWho, unsigned char compressMsg, unsigned char guaranteed)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1454
-DC_ONLY(0x11cf94, 0x8A)
-void pollRemote()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1490
-DC_ONLY(0x11d020, 0x1A6)
-void sendChat(const char* cChat, int toWho)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1529
-DC_ONLY(0x11d1c8, 0x22)
-void receiveChat(char* cChat, int fromWho)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1539
-DC_ONLY(0x11d1ec, 0x64)
-void CAnimatedDlg::CAnimatedDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1547
-DC_ONLY(0x11d250, 0x40)
-void CAnimatedDlg::~CAnimatedDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1553
-DC_ONLY(0x11d290, 0x20)
-unsigned char CAnimatedDlg::setup(const char* cText, font* pFont, const char* sSprite, int seq)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1563
-DC_ONLY(0x11d2b0, 0xE2)
-void CAnimatedDlg::calcSpriteDimensions(CSprite* pSprite, int* maxWidth, int* maxHeight, int* minY)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1606
-DC_ONLY(0x11d394, 0xFC)
-void CAnimatedDlg::calcDimensions(const char* cText, font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1634
-DC_ONLY(0x11d490, 0xC8)
-void CAnimatedDlg::drawSprite()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1651
-DC_ONLY(0x11d558, 0x12)
-int CAnimatedDlg::handleMessage(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1658
-DC_ONLY(0x11d56c, 0x70)
-void CAnimatedDlg::tickAnimation()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1673
-DC_ONLY(0x11d5dc, 0xEC)
-void CAnimatedDlg::drawWindow(unsigned char update, int iLowID, int iHighIDtrue)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1829
-DC_ONLY(0x11d6c8, 0x40)
-void waitForReadyToPlayMsg()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1841
-DC_ONLY(0x11d708, 0x68)
-unsigned char createDPlayObject()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1858
-DC_ONLY(0x11d770, 0x17C)
-unsigned char initConnection(char* IpAddressOrPhoneNbr, _DPCOMPORTADDRESS* comportInfo)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1908
-DC_ONLY(0x11d8ec, 0x12)
-void destroyMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1916
-DC_ONLY(0x11d900, 0xAC)
-unsigned char testIfLobbyLaunched()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1960
-DC_ONLY(0x11d9ac, 0x210)
-unsigned char handleMPlayerLaunch()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2045
-DC_ONLY(0x11dbbc, 0x22C)
-unsigned char lobbyLaunchConnect()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2150
-DC_ONLY(0x11dde8, 0xB4)
-int getPlayerPos(unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2161
-DC_ONLY(0x11de9c, 0x2C)
-int getPriorPlayer(int gamePos)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2174
-DC_ONLY(0x11dec8, 0x48)
-unsigned char isValidHuman(CAutoArray<CDPlayPlayer>* playerArray, unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2187
-DC_ONLY(0x11df10, 0x10C)
-void updateCurrentPlayers()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2227
-DC_ONLY(0x11e01c, 0xD6)
-void handlePlayerDrop(unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2289
-DC_ONLY(0x11e0f4, 0xD8)
-void handleNewHost()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2317
-DC_ONLY(0x11e1cc, 0x1D0)
-void onPlayerDropUpdateMsg(unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2375
-DC_ONLY(0x11e39c, 0xF6)
-void handlePlayerDead(int deadGuy, unsigned char showMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2419
-DC_ONLY(0x11e494, 0x6A)
-void handlePlayerWon(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2441
-DC_ONLY(0x11e500, 0x98)
-void handlePlayerLost(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2458
-DC_ONLY(0x11e598, 0x96)
-void handleNormalWinMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2479
-DC_ONLY(0x11e630, 0x74)
-void CLevelPickWaitDlg::CLevelPickWaitDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2485
-DC_ONLY(0x11e6a4, 0x74)
-void CLevelPickWaitDlg::waitForLevels(int fromWho)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2503
-DC_ONLY(0x11e718, 0x130)
-int CLevelPickWaitDlg::handleMessage(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2546
-DC_ONLY(0x11e848, 0x4C)
-int CLevelPickWaitDlg::onPlayerDrop(CNetMsg* pNetMsg, message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2567
-DC_ONLY(0x11e894, 0x4A)
-void CLevelPickWaitDlg::onHeroLevelUpdate(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2592
-DC_ONLY(0x11e8e0, 0x68)
-void CWaitForRemoteBattleDlg::CWaitForRemoteBattleDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2600
-DC_ONLY(0x11e948, 0x56)
-void CWaitForRemoteBattleDlg::wait(int playerPos)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2613
-DC_ONLY(0x11e9a0, 0x158)
-int CWaitForRemoteBattleDlg::handleMessage(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2660
-DC_ONLY(0x11eaf8, 0x46)
-int CWaitForRemoteBattleDlg::onPlayerDrop(CNetMsg* pNetMsg, message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2673
-DC_ONLY(0x11eb40, 0x5C)
-void CSaveScreen::CSaveScreen(int w, int h)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2680
-DC_ONLY(0x11eb9c, 0x2C)
-void CSaveScreen::save(int x, int y)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2689
-DC_ONLY(0x11ebc8, 0x92)
-void CSaveScreen::restore(unsigned char updateScreen)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2701
-DC_ONLY(0x11ec5c, 0x8)
-unsigned char CSaveScreen::isSaved()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2713
-DC_ONLY(0x11ec64, 0x22)
-void CGameTransferSmack::CGameTransferSmack()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2724
-DC_ONLY(0x11ec88, 0x32)
-void CGameTransferSmack::~CGameTransferSmack()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2733
-DC_ONLY(0x11ecbc, 0x1C)
-void CGameTransferSmack::setup(int x, int y, unsigned char sending, unsigned char drawText)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2741
-DC_ONLY(0x11ecd8, 0xC)
-void CGameTransferSmack::Start()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2747
-DC_ONLY(0x11ece4, 0x102)
-void CGameTransferSmack::setPercentage(float pct)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2784
-DC_ONLY(0x11ede8, 0x4)
-void CGameTransferSmack::drawCurrentFrame()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2789
-DC_ONLY(0x11edec, 0x18)
-void CGameTransferSmack::Stop()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2799
-DC_ONLY(0x11ee04, 0x38)
-void CGameTransferSmack::saveScreen()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2807
-DC_ONLY(0x11ee3c, 0x16)
-void CGameTransferSmack::restoreScreen()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2816
-DC_ONLY(0x11ee54, 0x84)
-void CGameTransferDlg::CGameTransferDlg(unsigned char sending)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2821
-DC_ONLY(0x11eed8, 0x5C)
-void CGameTransferDlg::calcDimensions(const char* cText, font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2834
-DC_ONLY(0x11ef34, 0x2A)
-void CNetMsgHandler::CNetMsgHandler()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2840
-DC_ONLY(0x11ef60, 0x6C)
-CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup, unsigned char* msgReceived)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2875
-DC_ONLY(0x11efcc, 0x4)
-void CNetMsgHandler::setAbortPopupMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2882
-DC_ONLY(0x11efd0, 0x8E)
-CNetMsg* CNetMsgHandler::handleNetMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2912
-DC_ONLY(0x11f060, 0xE)
-void CTurnDuration::CTurnDuration()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2920
-#endif  // @carcass
-
 VA(0x005577f0, 0x11)  // dc 0x11ef34
 CNetMsgHandler::CNetMsgHandler()
 {
@@ -3250,13 +2530,27 @@ CNetMsg* CNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     return 0;
 }
 
+// Original: CTurnDuration::CTurnDuration; remote.cpp:2912, dc 0x11f060
+// Retail initializer 0x5522b0 leaves nextWarning untouched, as does DC.
+CTurnDuration::CTurnDuration()
+{
+    m_lastWarned = 0;
+    m_currDuration = 0;
+    m_turnStartTime = 0;
+    m_pauseTime = 0;
+}
+
 VA(0x00557a80, 0x15)  // dc 0x11f070
 unsigned char CTurnDuration::isOn()
 {
+    // DC remote.cpp:2921/2922 and 2925 retain two separate early-outs.
+    // This canonical body matches both the retained function and its
+    // expansion in isClose; a compound boolean return changes VC6 lowering.
     if (m_currDuration == 0)
         return 0;
-    unsigned char on = !g_unk69774c;
-    return on;
+    if (g_inCampaign)
+        return 0;
+    return 1;
 }
 
 VA(0x00557aa0, 0x4D)  // dc 0x11f090
@@ -3264,7 +2558,7 @@ unsigned char CTurnDuration::isExpired()
 {
     if ((!g_currentPlayer || g_currentPlayer->isLocalHuman())
             && m_currDuration != 0
-            && !g_unk69774c
+            && !g_inCampaign
             && m_pauseTime <= 0) {
         unsigned long startTime = m_turnStartTime;
         if (startTime > 0
@@ -3308,7 +2602,7 @@ void CTurnDuration::checkForWarning()
 {
     if (m_currDuration == 0)
         return;
-    if (g_unk69774c)
+    if (g_inCampaign)
         return;
     if (m_nextWarning == 0)
         return;
@@ -3399,7 +2693,7 @@ void CTurnDuration::setDuration(unsigned long ms)
 VA(0x00557d90, 0x3D)  // dc 0x11f3b0
 void CTurnDuration::start()
 {
-    if (m_currDuration != 0 && !g_unk69774c) {
+    if (m_currDuration != 0 && !g_inCampaign) {
         m_lastWarned = m_turnStartTime = GameTime::get();
         m_nextWarning = 0;
         if (m_currDuration > 60000)
@@ -3409,16 +2703,12 @@ void CTurnDuration::start()
     }
 }
 
-// E:\gamedcs\remote.cpp:3070
-#if 0  // @carcass
-DC_ONLY(0x11f3ec, 0xE)
-void CTurnDuration::AddTime(unsigned long howMuch)
+// Original: CTurnDuration::AddTime; remote.cpp:3070, dc 0x11f3ec
+void CTurnDuration::addTime(unsigned long howMuch)
 {
-    // @stub
+    m_turnStartTime += howMuch;
+    m_lastWarned += howMuch;
 }
-
-// E:\gamedcs\remote.cpp:3076
-#endif  // @carcass
 
 VA(0x00557dd0, 0x14)  // dc 0x11f3fc
 void CTurnDuration::pause()
@@ -3434,8 +2724,7 @@ void CTurnDuration::resume()
     if (pausedAt != 0 && m_turnStartTime != 0) {
         unsigned long pausedFor = GameTime::get() - pausedAt;
         m_pauseTime = 0;
-        m_turnStartTime += pausedFor;
-        m_lastWarned += pausedFor;
+        addTime(pausedFor);
     }
 }
 
@@ -3506,7 +2795,7 @@ CHourGlass::~CHourGlass()
 // not. Stop deliberately leaves m_thread armed, so an explicit Stop and the
 // later destructor both stop the thread, exactly as retail does.
 
-inline void CHourGlass::stop()
+void CHourGlass::stop()
 {
     if (m_thread)
         stopMouseThread();
@@ -3514,12 +2803,27 @@ inline void CHourGlass::stop()
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 }
 
-inline void CHourGlass::start()
+void CHourGlass::start()
 {
     if (m_thread)
         startMouseThread();
     else
         g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+}
+
+// Original: GetQueueSize; remote.cpp:3142, dc 0x11f550
+unsigned char getQueueSize(int toWho, unsigned long& numMsgs,
+                           unsigned long& queueSize)
+{
+    if (!g_dPlay)
+        return 0;
+    unsigned long dpidTo = 0;
+    if (toWho != NET_MESSAGE_RECIPIENT_ALL)
+        dpidTo = g_game->m_players[toWho].m_dpid;
+    if (!g_dPlay->getSendQueueSize(g_thisNetPlayerInfo.m_dpid, dpidTo,
+                                 &numMsgs, &queueSize))
+        return 0;
+    return 1;
 }
 
 // COMDAT pairing: deque<CNetMsg*>'s own destructor, 160 B against
@@ -3554,134 +2858,6 @@ unsigned char CAutoArray<CDPlayPlayer>::add(CDPlayPlayer* element)
 #endif  // @carcass
 
 // E:\gamedcs\remote.cpp:3125
-#if 0  // @carcass
-DC_ONLY(0x11f4f8, 0x2A)
-void CHourGlass::Stop()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:3134
-DC_ONLY(0x11f524, 0x2A)
-void CHourGlass::Start()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:3142
-DC_ONLY(0x11f550, 0x94)
-unsigned char GetQueueSize(int toWho, unsigned long* numMsgs, unsigned long* queueSize)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:152
-DC_ONLY(0x11f814, 0x34)
-void* CDPlayHeroes::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1294
-DC_ONLY(0x11f848, 0x34)
-void* CChatEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1544
-DC_ONLY(0x11f87c, 0x34)
-void* CAnimatedDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1708
-DC_ONLY(0x11f8b0, 0x78)
-void CWaitForReadyPlayersDlg::CWaitForReadyPlayersDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1718
-DC_ONLY(0x11f928, 0xC8)
-void CWaitForReadyPlayersDlg::wait()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1738
-DC_ONLY(0x11f9f0, 0x200)
-int CWaitForReadyPlayersDlg::handleMessage(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1798
-DC_ONLY(0x11fbf0, 0x4C)
-unsigned char CWaitForReadyPlayersDlg::allPlayersReady()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1813
-DC_ONLY(0x11fc3c, 0x70)
-int CWaitForReadyPlayersDlg::onPlayerDrop(CNetMsg* pNetMsg, message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1820
-DC_ONLY(0x11fcac, 0x34)
-void* CWaitForReadyPlayersDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:1820
-DC_ONLY(0x11fce0, 0x28)
-void CWaitForReadyPlayersDlg::~CWaitForReadyPlayersDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2482
-DC_ONLY(0x11fd08, 0x34)
-void* CLevelPickWaitDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2595
-DC_ONLY(0x11fd3c, 0x34)
-void* CWaitForRemoteBattleDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2677
-DC_ONLY(0x11fd70, 0x34)
-void* CSaveScreen::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2677
-DC_ONLY(0x11fda4, 0x18)
-void CSaveScreen::~CSaveScreen()
-{
-    // @stub
-}
-
-// E:\gamedcs\remote.cpp:2818
-DC_ONLY(0x11fdbc, 0x34)
-void* CGameTransferDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // COMDAT pairing: deque<CNetMsg*>::push_back and its map-growth helper
 // _Growmap, agreements 1.000 and 1.000 at exactly equal extents. This object
 // is the only one that instantiates the message queue.

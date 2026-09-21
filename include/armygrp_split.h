@@ -2,7 +2,8 @@
 #ifndef HOMM3_ARMYGRP_SPLIT_H
 #define HOMM3_ARMYGRP_SPLIT_H
 
-#include <va.h>
+#include "va.h"
+
 #include "advmgr.h"
 #include "advmgr_popup.h"
 #include "slider.h"

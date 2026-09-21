@@ -1,9 +1,10 @@
 #ifndef HOMM3_TEXTRESOURCE_H
 #define HOMM3_TEXTRESOURCE_H
 
+#include "va.h"
+
 #include <vector>
 
-#include <va.h>
 #include "resource.h"
 
 // Named indices into genrltxt.txt. Every value is retail-byte-proven by the
@@ -336,6 +337,8 @@ public:
     virtual ~TSpreadsheetResource();
     virtual unsigned int getSize() const;
     int getNumberOfRows() const { return m_spreadsheet.size(); }
+    // Original: TSpreadsheetResource::GetNumberOfColumns; TextResource.h:113, dc 0x162910.
+    int getNumberOfColumns(int row) const { return m_spreadsheet[row]->size(); }
     // DC TextResource.h:120/124 (text.obj:0x162934) returns const char* and
     // indexes the row and cell vectors directly. High-score defaults call
     // this accessor; their char* table entries require the explicit cast.
@@ -351,6 +354,7 @@ private:
 };
 SIZE(TSpreadsheetResource, 52);
 
-extern TTextResource* g_generalText;  // retail .data 0x6a5d5c
+// DC ?GameText@@3PBVTTextResource@@B proves a pointer-to-const resource.
+extern const TTextResource* g_generalText;  // retail .data 0x6a5d5c
 
 #endif  /* HOMM3_TEXTRESOURCE_H */

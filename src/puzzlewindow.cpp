@@ -1,22 +1,109 @@
-#include <va.h>
+#include "va.h"
+
 #include <bitset>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "puzzlewindow.h"
+
 #include "advmgr_objects.h"
 #include "bitmap816.h"
-#include "button.h"
 #include "border.h"
-#include "textwdgt.h"
+#include "button.h"
 #include "exec.h"
 #include "game.h"
 #include "kb.h"
 #include "message.h"
-#include "puzzlewindow.h"
 #include "resourcedisplay.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
+#include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
+
+// Retail coordinates occupy nine 192-byte rows: 48 X words then 48 Y
+// words; the old g_puzzlePieceY symbol was a +0x60 view of the same array.
+DATA(0x006818a4) TPuzzleCoordinates g_puzzleCoordinates[9] = {
+    { { 8, 8, 8, 8, 8, 8, 17, 23, 71, 73, 102, 107, 107, 115, 127, 129, 153, 155, 158, 167, 186, 213, 215, 218, 236, 246, 267, 289, 299, 322, 347, 355, 356, 376, 383, 409, 409, 422, 423, 427, 437, 459, 487, 488, 518, 521, 525, 526 },
+      { 8, 30, 102, 156, 202, 320, 8, 406, 301, 194, 332, 8, 31, 60, 329, 191, 347, 239, 429, 470, 127, 335, 191, 226, 147, 77, 384, 288, 8, 177, 67, 459, 397, 162, 255, 32, 111, 147, 466, 8, 238, 336, 8, 144, 145, 68, 234, 327 } },
+    { { 8, 8, 8, 8, 8, 8, 62, 98, 99, 109, 116, 130, 135, 158, 161, 163, 165, 175, 179, 188, 191, 216, 256, 266, 278, 279, 293, 295, 311, 331, 340, 340, 345, 362, 364, 399, 401, 405, 422, 430, 431, 463, 470, 487, 500, 512, 517, 526 },
+      { 8, 101, 195, 310, 378, 449, 8, 42, 201, 308, 461, 366, 8, 188, 309, 441, 126, 390, 188, 258, 24, 272, 443, 323, 45, 383, 196, 266, 8, 493, 8, 167, 108, 239, 385, 310, 130, 436, 127, 8, 106, 393, 270, 8, 481, 255, 48, 169 } },
+    { { 8, 8, 8, 8, 27, 28, 28, 29, 29, 38, 60, 77, 92, 115, 119, 133, 164, 172, 193, 213, 229, 232, 294, 298, 298, 299, 299, 313, 321, 341, 351, 351, 356, 358, 377, 389, 408, 422, 437, 446, 446, 464, 478, 498, 500, 504, 538, 557 },
+      { 8, 52, 243, 486, 391, 31, 89, 303, 336, 234, 77, 462, 245, 31, 323, 87, 370, 255, 8, 483, 95, 205, 380, 190, 260, 8, 89, 462, 261, 17, 121, 174, 371, 469, 289, 8, 45, 284, 159, 8, 211, 422, 29, 153, 108, 281, 418, 215 } },
+    { { 8, 8, 8, 8, 8, 8, 17, 42, 51, 52, 81, 82, 92, 116, 142, 154, 165, 174, 174, 188, 195, 201, 205, 240, 241, 272, 277, 297, 298, 307, 318, 328, 349, 349, 371, 402, 408, 422, 454, 456, 461, 476, 489, 505, 516, 518, 533, 557 },
+      { 8, 16, 95, 271, 308, 464, 164, 378, 471, 101, 260, 48, 143, 8, 360, 269, 55, 101, 492, 160, 388, 373, 282, 469, 8, 163, 255, 428, 281, 8, 17, 84, 142, 342, 405, 103, 40, 508, 215, 377, 170, 319, 412, 8, 67, 211, 305, 335 } },
+    { { 8, 8, 8, 8, 9, 15, 16, 35, 56, 56, 58, 95, 109, 120, 125, 132, 140, 146, 149, 176, 201, 202, 211, 248, 251, 263, 294, 304, 319, 346, 357, 358, 363, 383, 383, 422, 423, 429, 430, 444, 453, 466, 470, 477, 538, 548, 560, 559 },
+      { 8, 188, 329, 403, 8, 138, 8, 374, 82, 150, 281, 188, 344, 424, 256, 8, 92, 371, 42, 200, 291, 66, 482, 98, 227, 8, 373, 286, 173, 444, 8, 386, 38, 8, 119, 164, 249, 52, 101, 132, 239, 441, 300, 20, 249, 430, 140, 8 } },
+    { { 8, 8, 8, 8, 31, 34, 58, 63, 64, 84, 95, 100, 114, 157, 166, 173, 178, 195, 205, 237, 239, 246, 248, 248, 254, 302, 324, 324, 329, 330, 340, 358, 375, 375, 393, 401, 402, 423, 437, 439, 450, 454, 472, 478, 481, 486, 537, 542 },
+      { 8, 125, 353, 394, 101, 219, 171, 8, 90, 471, 117, 8, 258, 146, 288, 388, 36, 235, 502, 320, 8, 75, 396, 459, 152, 233, 8, 178, 342, 428, 8, 141, 8, 236, 439, 291, 103, 381, 8, 336, 131, 161, 267, 64, 456, 8, 197, 22 } },
+    { { 8, 8, 8, 8, 13, 33, 33, 37, 40, 48, 50, 71, 102, 112, 124, 139, 141, 145, 150, 159, 192, 203, 219, 220, 223, 263, 280, 280, 304, 321, 327, 334, 363, 366, 381, 393, 428, 446, 447, 460, 464, 485, 489, 490, 530, 530, 559, 564 },
+      { 8, 229, 405, 465, 8, 245, 277, 337, 15, 115, 178, 8, 35, 311, 156, 423, 224, 136, 452, 475, 68, 12, 349, 285, 96, 8, 166, 425, 314, 109, 146, 160, 26, 441, 297, 242, 275, 85, 424, 347, 53, 210, 8, 303, 8, 421, 87, 261 } },
+    { { 8, 8, 8, 8, 8, 24, 33, 43, 48, 57, 72, 88, 91, 105, 117, 135, 176, 192, 201, 217, 222, 226, 240, 246, 249, 262, 263, 298, 310, 321, 324, 327, 332, 346, 354, 359, 382, 401, 429, 449, 452, 454, 463, 466, 487, 493, 518, 550 },
+      { 8, 152, 306, 388, 434, 417, 232, 137, 440, 19, 8, 219, 26, 397, 345, 215, 168, 428, 326, 98, 398, 235, 8, 40, 208, 439, 134, 352, 99, 262, 404, 200, 20, 178, 8, 290, 399, 65, 160, 293, 94, 424, 397, 8, 163, 184, 304, 8 } },
+    { { 8, 8, 8, 8, 16, 46, 49, 87, 94, 100, 102, 105, 108, 125, 135, 182, 183, 190, 193, 193, 202, 204, 229, 236, 243, 276, 279, 291, 292, 309, 311, 313, 318, 324, 328, 331, 350, 350, 408, 422, 429, 468, 482, 490, 505, 505, 508, 543 },
+      { 8, 54, 227, 426, 48, 375, 249, 500, 55, 245, 354, 175, 14, 296, 8, 466, 200, 381, 40, 364, 124, 330, 293, 39, 335, 488, 202, 80, 115, 225, 158, 24, 8, 443, 253, 36, 330, 426, 191, 430, 246, 90, 13, 346, 113, 190, 8, 436 } }
+};
+DATA(0x006976e8) std::bitset<48> g_puzzlePiecesRemoved;
+
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x00681f64) short g_puzzlePieceOrder[432] = {
+    2, 7, 47, 39, 4, 19, 45, 11,
+    10, 38, 46, 13, 5, 14, 36, 9,
+    31, 44, 25, 8, 37, 28, 15, 40,
+    3, 16, 32, 12, 18, 33, 20, 17,
+    43, 24, 21, 34, 35, 6, 41, 30,
+    1, 26, 42, 0, 27, 29, 23, 22,
+    10, 0, 43, 44, 3, 12, 47, 22,
+    7, 30, 42, 11, 1, 28, 41, 15,
+    2, 46, 29, 4, 6, 38, 5, 8,
+    36, 25, 13, 31, 45, 16, 40, 33,
+    17, 32, 9, 37, 39, 14, 34, 20,
+    19, 35, 23, 24, 21, 18, 26, 27,
+    0, 42, 33, 11, 10, 35, 43, 46,
+    2, 30, 22, 4, 1, 25, 44, 34,
+    7, 39, 45, 3, 13, 40, 17, 41,
+    5, 32, 8, 27, 12, 18, 37, 6,
+    9, 26, 15, 47, 29, 38, 20, 19,
+    31, 14, 16, 36, 28, 21, 23, 24,
+    5, 1, 27, 30, 18, 11, 44, 47,
+    4, 2, 29, 37, 8, 9, 45, 23,
+    21, 35, 28, 34, 20, 6, 33, 43,
+    46, 3, 13, 31, 39, 14, 0, 36,
+    38, 10, 17, 24, 42, 7, 16, 40,
+    15, 41, 32, 12, 22, 26, 25, 19,
+    1, 29, 43, 25, 12, 36, 30, 6,
+    10, 45, 38, 15, 13, 31, 37, 16,
+    2, 22, 47, 0, 33, 46, 18, 3,
+    41, 35, 8, 17, 40, 23, 5, 7,
+    44, 34, 11, 26, 14, 42, 19, 9,
+    39, 21, 32, 4, 20, 27, 28, 24,
+    1, 45, 18, 32, 3, 46, 11, 40,
+    44, 26, 9, 47, 6, 38, 23, 41,
+    20, 36, 5, 43, 29, 30, 10, 39,
+    19, 31, 21, 22, 33, 13, 28, 0,
+    2, 34, 4, 12, 37, 16, 15, 42,
+    8, 14, 35, 7, 27, 17, 25, 24,
+    11, 37, 45, 2, 0, 32, 19, 4,
+    25, 47, 3, 20, 46, 33, 1, 17,
+    41, 18, 29, 27, 7, 42, 5, 40,
+    9, 28, 10, 35, 22, 24, 38, 44,
+    6, 43, 8, 15, 39, 21, 13, 34,
+    12, 23, 36, 30, 14, 31, 16, 26,
+    10, 41, 34, 4, 46, 43, 25, 22,
+    8, 37, 30, 23, 17, 32, 36, 15,
+    20, 19, 28, 27, 16, 26, 33, 18,
+    3, 40, 1, 39, 2, 47, 11, 45,
+    13, 38, 0, 42, 5, 7, 44, 6,
+    12, 35, 14, 9, 31, 21, 29, 24,
+    0, 32, 47, 7, 1, 14, 25, 3,
+    18, 31, 33, 9, 27, 37, 46, 19,
+    28, 43, 2, 4, 44, 15, 12, 45,
+    40, 10, 23, 41, 36, 6, 42, 39,
+    17, 11, 35, 5, 8, 30, 24, 13,
+    34, 21, 16, 38, 22, 26, 29, 20
+};
+DATA(0x006822c8) double g_puzzleGuessThreshold[5] = { 1.1, 0.5, 0.25, 0.0, 0.0 };
+DATA(0x00681880) const char* g_puzzleFilePrefixes[9] = { "cas", "ram", "tow", "inf", "nec", "dun", "str", "for", "Ele" };
 
 // E:\gamedcs\puzzlewindow.cpp:103
 static Bitmap816* getPuzzleBitmap(long puzzle, long piece)
@@ -97,14 +184,18 @@ TPuzzleWindow::~TPuzzleWindow()
     }
 }
 
-#if 0  // @carcass: retail inlines this helper into WindowHandler
-// E:\gamedcs\puzzlewindow.cpp:179
-DC_ONLY(0x11530c, 0x1A)
-int TPuzzleWindow::convertID2HelpID(int id)
+// Original: TPuzzleWindow::convertID2HelpID; puzzlewindow.cpp:179, dc 0x11530c.
+// The old help-index query remains separate from Complete's window handler,
+// whose hover handling now delegates to CAdvPopup.
+int TPuzzleWindow::convertID2HelpID(int id) const
 {
-    // @stub
+    if (id < 0)
+        return -1;
+    switch (id) {
+    case ACCEPT_ID: return ACCEPT_HELP_ID;
+    default: return -1;
+    }
 }
-#endif
 
 // E:\gamedcs\puzzlewindow.cpp:203
 VA(0x0052c640, 0x78)  // vtable slot 9 + CAdvPopup delegation, dc 0x115328
@@ -146,8 +237,8 @@ int TPuzzleWindow::updatePuzzle(int full)
         if (full || !g_puzzlePiecesRemoved.test(i)) {
             int piece = g_puzzlePieceOrder[m_puzWhich * 48 + i];
             Bitmap816* bitmap = m_puzzlePieces[piece];
-            const short* xCoordinate = g_puzzlePieceX + m_puzWhich * 96;
-            const short* yCoordinate = g_puzzlePieceY + m_puzWhich * 96;
+            const short* xCoordinate = g_puzzleCoordinates[m_puzWhich].m_x;
+            const short* yCoordinate = g_puzzleCoordinates[m_puzWhich].m_y;
             bitmap->draw(0, 0, bitmap->getWidth(), bitmap->getHeight(),
                          g_windowManager->m_screenBitmap,
                          xCoordinate[piece], yCoordinate[piece], 1);
@@ -231,7 +322,7 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 // the two four-bit offsets together, `test cl,0x1f` for terrain, `test
 // ecx,0x1fe0` for river and road together, and `test dl,1` for diggable.
 // has_grail and visible are deliberately NOT compared.
-DC_ONLY(0x1156bc, 0xC0)
+
 unsigned char type_AI_puzzle_tile::operator==(
     const type_AI_puzzle_tile* arg) const
 {
@@ -245,13 +336,14 @@ unsigned char type_AI_puzzle_tile::operator==(
 }
 
 // E:\gamedcs\puzzlewindow.cpp:334
-// Boundary repair: DC's 32-pixel sample walks are retained, but no cursor
-// advances after its final sample/row. Partial blocks need not have another
-// 32 bytes/rows allocated. The four-form family favors final guards (60.63%)
-// over next-sample guards (50.28%) and visited offsets (53.69%); retail's
-// unchecked 100% remains HIST, not a safe traversal alternative.
-// A fresh three-state relative-row family reproduces three objects: integral
-// byte offsets score 48.96%, multiplied row indices 33.43%; retain the guards.
+// DC puzzlewindow.cpp:390/391/393 and retail advance sample/row cursors
+// unconditionally. This exact reconstruction retains that original defect:
+// a 33x33 bitmap at dest(16,16) has valid samples but forms a final source
+// row at byte offset 2112 beyond its 1089-byte allocation. A clipped bottom
+// puzzle row can similarly form visible+324 beyond visible[17*19]. These
+// final cursors are not dereferenced, but their formation is not valid portable
+// C++. The earlier guarded repair scored 60.63%; bounded offset alternatives
+// remain non-exact. No extra allocation or padding guarantee is claimed.
 VA(0x0052c8b0, 0xFC)  // bracketed between tile ctor and AI attempt, dc 0x11577c
 void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 {
@@ -284,22 +376,19 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
         for (int x = 0; x < width; x += 32) {
             if (*sourceBlock)
                 *destinationBlock = 0;
-            if (x + 32 < width)
-                sourceBlock += 32;
+            sourceBlock += 32;
             ++destinationBlock;
         }
 
-        if (y + 32 < height) {
-            destination += 19;
-            source += m_pitch * 32;
-        }
+        destination += 19;
+        source += m_pitch * 32;
     }
 }
 
 // E:\gamedcs\puzzlewindow.cpp:403.
 // Complete reads setup alignment directly and disposes through the bitmap
 // vtable; those retail operations override the older DC callees.
-DC_ONLY(0x115838, 0x10A)
+
 static unsigned char markAIPuzzle(long player, unsigned char* visible)
 {
     long puzzle;
@@ -315,8 +404,8 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
             continue;
         int piece = g_puzzlePieceOrder[puzzle * 48 + i];
         Bitmap816* bitmap = getPuzzleBitmap(puzzle, piece);
-        const short* xCoordinate = g_puzzlePieceX + puzzle * 96;
-        const short* yCoordinate = g_puzzlePieceY + puzzle * 96;
+        const short* xCoordinate = g_puzzleCoordinates[puzzle].m_x;
+        const short* yCoordinate = g_puzzleCoordinates[puzzle].m_y;
         bitmap->markPuzzle(visible, xCoordinate[piece] - 8,
                             yCoordinate[piece] - 8);
         bitmap->dispose();
@@ -327,7 +416,7 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
 // E:\gamedcs\puzzlewindow.cpp:445.
 // DC proves the array reference and point local.
 // Complete's tile dimensions are 19x17, independently fixed by retail strides.
-DC_ONLY(0x115944, 0x12C)
+
 static void createAIPuzzleMap(long player, unsigned char* visible,
                             long puzzleX, long puzzleY,
                             type_AI_puzzle_tile (&puzzleMap)[19][17])
@@ -422,7 +511,7 @@ type_point aiAttemptPuzzleGuess(long player)
 // `first_x` restarts at zero. A single mismatched tile answers zero
 // immediately, which is why retail's failure edge jumps straight past the
 // caller's score test.
-DC_ONLY(0x115a70, 0x176)
+
 static long checkMatch(long player, long firstX, long firstY,
                         type_point origin,
                         type_AI_puzzle_tile (*puzzleMap)[17])
@@ -609,16 +698,6 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
     }
     return result;
 }
-
-#if 0  // @carcass: the compiler-generated deleting destructor thunk
-
-// E:\gamedcs\puzzlewindow.cpp:159
-DC_ONLY(0x116348, 0x34)
-void* TPuzzleWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-#endif
 
 // COMDAT pairing: bitset<48>::test, agreement 1.000 at an exactly equal
 // 52-byte extent.

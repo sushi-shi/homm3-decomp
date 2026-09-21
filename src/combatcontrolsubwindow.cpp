@@ -1,13 +1,16 @@
-#include <va.h>
+#include "text.h"
+#include "va.h"
+#include "homm3_minmax.h"
+
 #include "combatcontrolsubwindow.h"
+
 #include "border.h"
 #include "button.h"
-#include "combatwindow.h"
 #include "cmbtmgr.h"
+#include "combatwindow.h"
 #include "game.h"
 #include "iconwdgt.h"
 #include "inputmgr.h"
-#include "homm3_minmax.h"
 #include "kb.h"
 #include "textresource.h"
 #include "textwdgt.h"
@@ -23,96 +26,6 @@
 // the image reads the two dwords below it, so the table could in principle
 // begin earlier, and the eleven-row extent is a floor rather than a
 // measured end.
-DATA(0x006a6968) extern THelpText g_combatSubWindowHelp[11];
-
-#if 0  // @carcass
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:44
-DC_ONLY(0x64a84, 0x468)
-void type_combat_sub_window::type_combat_sub_window(heroWindow* parent, const char* background_sprite_name)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:122
-DC_ONLY(0x64eec, 0x74)
-void type_combat_sub_window::~type_combat_sub_window()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:148
-DC_ONLY(0x64f68, 0x64)
-void type_combat_sub_window::disableAllButtons()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:177
-DC_ONLY(0x64fcc, 0x278)
-void TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:222
-DC_ONLY(0x65244, 0x2C)
-void TCombatControlSubWindow::~TCombatControlSubWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:249
-DC_ONLY(0x65274, 0x24)
-void TCombatControlSubWindow::setRollover(const char* new_text)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:282
-DC_ONLY(0x652a8, 0x1A4)
-void TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:317
-DC_ONLY(0x6544c, 0x2C)
-void TCombatPlacementSubWindow::~TCombatPlacementSubWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:327
-DC_ONLY(0x65478, 0x28)
-void TCombatPlacementSubWindow::disableAllButtons()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:343
-DC_ONLY(0x654a0, 0x638)
-void TCombatHeroSubWindow::TCombatHeroSubWindow(int x, int y, int w, int h, heroWindow* parent)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:407
-DC_ONLY(0x65ad8, 0x68)
-void TCombatHeroSubWindow::~TCombatHeroSubWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:428
-DC_ONLY(0x65b40, 0x144)
-void TCombatHeroSubWindow::update(const hero* info, const hero* otherHero, unsigned char on_cursed_ground)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:472
-#endif  // @carcass
 
 // It is an 800x44 strip at (0, 556) with a ten-slot reserve, a
 // bitmapBorder over the caller's sprite and SEVEN buttons -
@@ -151,44 +64,44 @@ type_combat_sub_window::type_combat_sub_window(
     // The hotkeys are scancodes: S, R, O, A, C, W, then D and SPACE.
     button* b = new button(54, 5, 48, 36, 0x7d1, "icm001.def",
         0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[0].m_text,
-        g_combatSubWindowHelp[0].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[0].m_text,
+        g_combatWindowHelp[0].m_rclick, 1);
     b->setHotkey(0x1f);
     m_widgets.push_back(b);
 
     b = new button(105, 5, 48, 36, 0x7d2, "icm002.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[1].m_text,
-        g_combatSubWindowHelp[1].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[1].m_text,
+        g_combatWindowHelp[1].m_rclick, 1);
     b->setHotkey(0x13);
     m_widgets.push_back(b);
 
     b = new button(3, 5, 48, 36, 0x7d3, "icm003.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[2].m_text,
-        g_combatSubWindowHelp[2].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[2].m_text,
+        g_combatWindowHelp[2].m_rclick, 1);
     b->setHotkey(0x18);
     m_widgets.push_back(b);
 
     b = new button(156, 5, 48, 36, 0x7d4, "icm004.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[3].m_text,
-        g_combatSubWindowHelp[3].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[3].m_text,
+        g_combatWindowHelp[3].m_rclick, 1);
     b->setHotkey(0x1e);
     m_widgets.push_back(b);
 
     b = new button(645, 5, 48, 36, 0x7d8, "icm005.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[6].m_text,
-        g_combatSubWindowHelp[6].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[6].m_text,
+        g_combatWindowHelp[6].m_rclick, 1);
     b->setHotkey(0x2e);
     m_widgets.push_back(b);
 
     b = new button(696, 5, 48, 36, 0x7d9, "icm006.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[7].m_text,
-        g_combatSubWindowHelp[7].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[7].m_text,
+        g_combatWindowHelp[7].m_rclick, 1);
     b->setHotkey(0x11);
     m_widgets.push_back(b);
 
     b = new button(747, 5, 48, 36, 0x7da, "icm007.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[8].m_text,
-        g_combatSubWindowHelp[8].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[8].m_text,
+        g_combatWindowHelp[8].m_rclick, 1);
     b->setHotkey(0x20);
     b->setHotkey(0x39);
     m_widgets.push_back(b);
@@ -251,12 +164,11 @@ type_combat_sub_window::~type_combat_sub_window()
 // Retail base-table slots 1/2 fold to 0x485d80 (ret 4) and 0x5bc7e0
 // (ret 8). Keep the bodies and original long arguments (JJ), despite
 // the generated carcass prototypes having lost both parameters.
-DC_ONLY(0x64f60, 0x4)
+
 void type_combat_sub_window::setRollover(const char*)
 {
 }
 
-DC_ONLY(0x64f64, 0x4)
 void type_combat_sub_window::setRolloverButtons(long, long)
 {
 }
@@ -269,22 +181,22 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
 
     m_rolloverWidget = new bitmapBackedTextWidget(214, 7, 400, 32, "",
         "smalfont.fnt", "cRollovr.pcx", font::PRIMARY, 0x7d5, 1, 8);
-    m_rolloverWidget->setHelpText(g_combatSubWindowHelp[4].m_text,
-        g_combatSubWindowHelp[4].m_rclick, 1);
+    m_rolloverWidget->setHelpText(g_combatWindowHelp[4].m_text,
+        g_combatWindowHelp[4].m_rclick, 1);
     newWidgets.push_back(m_rolloverWidget);
 
     m_logScrollUpButton = new type_func_button(624, 5, 18, 17, 0x7d6,
         "ComSlide.def", TCombatWindow::scrollUp, 0, 1);
-    m_logScrollUpButton->setHelpText(g_combatSubWindowHelp[5].m_text,
-        g_combatSubWindowHelp[5].m_rclick, 1);
+    m_logScrollUpButton->setHelpText(g_combatWindowHelp[5].m_text,
+        g_combatWindowHelp[5].m_rclick, 1);
     m_logScrollUpButton->setDisabledFrame(1);
     m_logScrollUpButton->setHotkey(KEYCODE_KP_8);
     newWidgets.push_back(m_logScrollUpButton);
 
     m_logScrollDownButton = new type_func_button(624, 24, 18, 17, 0x7d7,
         "ComSlide.def", TCombatWindow::scrollDown, 2, 3);
-    m_logScrollDownButton->setHelpText(g_combatSubWindowHelp[5].m_text,
-        g_combatSubWindowHelp[5].m_rclick, 1);
+    m_logScrollDownButton->setHelpText(g_combatWindowHelp[5].m_text,
+        g_combatWindowHelp[5].m_rclick, 1);
     m_logScrollDownButton->setHotkey(KEYCODE_KP_2);
     m_logScrollDownButton->setDisabledFrame(3);
     newWidgets.push_back(m_logScrollDownButton);
@@ -312,7 +224,7 @@ TCombatControlSubWindow::~TCombatControlSubWindow()
 
 // DC227..246 retains an empty derived override with the same JJ ABI.
 // Retail control-table slot 2 shares the base method's ret-8 fold.
-DC_ONLY(0x65270, 0x4)
+
 void TCombatControlSubWindow::setRolloverButtons(long, long)
 {
 }
@@ -346,7 +258,7 @@ void type_combat_sub_window::disableAllButtons()
 // slot 3 shares its 0x46bf90 body after the call expands and ICF folds it.
 // Retain the override and canonical source call instead of only inheriting
 // the base slot. The base body is visible here, as in the original TU.
-DC_ONLY(0x65298, 0x10)
+
 void TCombatControlSubWindow::disableAllButtons()
 {
     type_combat_sub_window::disableAllButtons();
@@ -360,7 +272,7 @@ void TCombatControlSubWindow::disableAllButtons()
 // with (parent, "CoPlacbr.pcx") on the stack - so this constructor needs
 // nothing from the base's 1392 bytes and lands without them.
 
-VA(0x0046c050, 0x18C)  // dc 0x65310
+VA(0x0046c050, 0x18C)  // dc 0x652a8
 TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
     : type_combat_sub_window(parent, "CoPlacbr.pcx")
 {
@@ -371,14 +283,14 @@ TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
     // literal. The hotkeys are the SPACE and ENTER scancodes.
     widget* b = new button(213, 4, 198, 36, 0x8fc, "ICM011.def",
         0, 1, 0, 0x39, 2);
-    b->setHelpText(g_combatSubWindowHelp[9].m_text,
-        g_combatSubWindowHelp[9].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[9].m_text,
+        g_combatWindowHelp[9].m_rclick, 1);
     buttons.push_back(b);
 
     b = new button(419, 4, 198, 36, 0x7802, "ICM012.def",
         0, 1, 0, 0x1c, 2);
-    b->setHelpText(g_combatSubWindowHelp[10].m_text,
-        g_combatSubWindowHelp[10].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[10].m_text,
+        g_combatWindowHelp[10].m_rclick, 1);
     buttons.push_back(b);
 
     for (widget** it = buttons.begin(); it != buttons.end(); ++it) {
@@ -702,7 +614,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             spellY += 38;
         }
         m_spellText = new textWidget(
-            15, 169, 48, 36, g_emptyRolloverText, "tiny.fnt", font::PRIMARY,
+            15, 169, 48, 36, "", "tiny.fnt", font::PRIMARY,
             0x8aa, 1, 0, 8);
     } else {
         m_backgroundWidget = new bitmapBorder(
@@ -718,7 +630,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             spellY += 38;
         }
         m_spellText = new textWidget(
-            15, 7, 48, 36, g_emptyRolloverText, "tiny.fnt", font::PRIMARY,
+            15, 7, 48, 36, "", "tiny.fnt", font::PRIMARY,
             0x8aa, 1, 0, 8);
     }
 
@@ -746,7 +658,6 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:688
-
 VA(0x0046dc30, 0x2C2)  // roster order + "%d(%d)" pair + the three spell icons, dc 0x66648
 void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
 {
@@ -841,80 +752,6 @@ void TCombatCreatureSubWindow::unShow()
         m_shown = false;
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:562
-DC_ONLY(0x65dbc, 0x824)
-void TCombatCreatureSubWindow::TCombatCreatureSubWindow(int x, int y, int w, int h, heroWindow* parent, int view_level)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:666
-DC_ONLY(0x665e0, 0x68)
-void TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:688
-DC_ONLY(0x66648, 0x2A0)
-void TCombatCreatureSubWindow::update(const army* info, const hero* owner)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:773
-DC_ONLY(0x668e8, 0x88)
-void TCombatCreatureSubWindow::show()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:820
-DC_ONLY(0x66970, 0x84)
-void TCombatCreatureSubWindow::unShow()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:116
-DC_ONLY(0x66a38, 0x34)
-void* type_combat_sub_window::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:214
-DC_ONLY(0x66a6c, 0x34)
-void* TCombatControlSubWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:308
-DC_ONLY(0x66aa0, 0x34)
-void* TCombatPlacementSubWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:396
-DC_ONLY(0x66ad4, 0x34)
-void* TCombatHeroSubWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatcontrolsubwindow.cpp:655
-DC_ONLY(0x66b08, 0x34)
-void* TCombatCreatureSubWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x0046a650, 0x26, VECTOR_DTOR, widget)
 

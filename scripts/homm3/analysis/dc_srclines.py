@@ -1,101 +1,26 @@
 #!/usr/bin/env python3
-"""homm3.analysis.dc_srclines - the Dreamcast STATEMENT CENSUS.
+"""Browse Dreamcast source-line attributions and local declarations.
 
-The problem this solves: when a reconstruction plateaus, the first
-question is always "is my body line-complete, or am I missing
-statements?". Guessing at it from a dead-store titration confuses
-byte-inert MASS with statement count and invents phantom deficits
-(THallWindow's "50-90 missing statements", 2026-08-14).
-
-The executable's NB11 source-line tables answer it directly. Per module it
-lists, per contributing source FILE, a table of `line addr` pairs. Slice
-those by a proc's own extent `[offset, offset + cb)` and you have the DC
-build's source-line inventory for that body: how many DISTINCT lines of
-the owning .cpp its optimizer attributed code to.
-
-WHAT IT IS GOOD FOR - and what it is NOT.
-
-CALIBRATED 2026-08-14 over all 807 exact functions carrying a `dc 0x`
-map: the ratio of our statement-line count to the DC distinct-line count
-has median 0.933, quartiles 0.733 / 1.083, and only 29% of exact bodies
-land within +-10% of 1.0. That makes it a **+-25% instrument** - about
-+-18 statements on a 71-line body.
-
-  * USE IT AS A DISQUALIFIER. "Is the DC row even the same function?"
-    and "does this body have a whole structural limb my reconstruction
-    is missing?" are presence/absence questions, and on those it is
-    sharp and free. It retired one plateau in a single query when a
-    `dc 0x...` map turned out to name an entirely different
-    six-argument function, and it closed THallWindow by showing the
-    body was line-COMPLETE (98 spelled against 98 predicted) when a
-    dead-store titration claimed it was 50-90 statements short.
-  * DO NOT USE IT AS A MASS METER. It cannot price a 20-statement
-    effect; anything inside +-25% is noise. An earlier 249-body
-    calibration that reported median 1.000 was a small-sample
-    artefact - do not resurrect it.
-  * Inlinee line records are a POSITIVE instrument.  The recovered QFE 8511
-    compiler candidate retains source-file switches and inlinee body lines
-    for explicit and implicit inline expansions, and H3.EXE preserves such
-    rows inside 29 procedure extents.  A header range outside a procedure can
-    still be a separate out-of-line COMDAT; intersection with the S_GPROC32
-    extent is the discriminator.  NB11 has no explicit inline-site record,
-    so absence of an inlinee row is never evidence that the build called it
-    out of line.  Use `homm3 dreamcast inline-clues` for the bounded positive
-    scan.
-
-Further caveats, all of them real:
-  * DC line counts are the DC PRESSING's source. Retail is a later build
-    (RoE vs Complete) - a case block added downstream shows up as extra
-    retail lines. Scale by the structure you can see (THallWindow: one
-    more switch case = +7 lines, one more table row = +2) before
-    comparing.
-  * A PLATFORM DELTA has to be subtracted the same way the call census
-    needs it: SH4-only helpers (and WinCE-only code) contribute lines
-    that x86 never had.
-  * `cb` is the DC size. It bounds the DC body only; retail sizes come
-    from the carve and never from here.
-  * Lines are attributed by the DC's own optimizer, so a line that
-    survives to zero instructions is absent. The count is therefore a
-    LOWER bound on statements, which is exactly how to read it.
-
-`--locals` adds the companion oracle: the proc's S_REGREL32 locals as
-extracted into evidence/dreamcast/variables.csv (offset, type, name).
-That is retail's source LOCAL inventory - also a lower bound, and needing
-the same platform-delta subtraction.
-
-Selectors (any mix):
-    NAME                     match a proc by (sub)name across all modules
-    module.obj:0xOFF         one proc by DC offset
-    0x5dda10                 a RETAIL VA - resolved through the `dc 0x...`
-                             tag on that address's VA()/DC_ONLY() claim in
-                             src/<unit>.cpp
-
-  python3 -m homm3.analysis.dc_srclines townmgr.obj:0x1793b4
-  python3 -m homm3.analysis.dc_srclines 0x5dda10 --lines --locals
-  python3 -m homm3.analysis.dc_srclines SetupThievesGuild
-  python3 -m homm3.analysis.dc_srclines --unit townmgr.obj --top 20
-
-ANALYSIS OUTPUT over another pressing's debug info: a line count is
-evidence about SOURCE SHAPE, never about a retail address or size.
+Recorded lines describe an older optimized build. Gaps do not count missing
+statements and line counts must not be compared with candidate /Z7 output.
+Use declarations, line groups and file switches as positive source evidence.
+See docs/matching/dc-line-tables.md for interpretation.
 """
 from __future__ import annotations
 
 import argparse
-import csv
 import re
 import sys
 from collections import OrderedDict, defaultdict
 
 from homm3.core import common, inputs
 
-FUNCTIONS = common.EVIDENCE_DIR / "dreamcast/functions.csv"
-VARIABLES = common.EVIDENCE_DIR / "dreamcast/variables.csv"
 SRC_DIR = common.HOMM3_DIR / "src"
 
 # `VA(0x005dda10, 0x145F)  // <evidence>, dc 0x17f54c`. Evidence may also
 # mention a Dreamcast byte size earlier on the same line; greedily consume the
 # comment so the final explicit `dc 0x...` identity wins.
-CLAIM_RE = re.compile(r"\b(?:VA|VA_COMPGEN|DC_ONLY)\s*\(\s*(0x[0-9a-fA-F]+)"
+CLAIM_RE = re.compile(r"\b(?:VA|VA_COMPGEN)\s*\(\s*(0x[0-9a-fA-F]+)"
                       r"[^)]*\)[^\n]*\bdc\s+(0x[0-9a-fA-F]+)")
 
 _srclines: dict[str, list[tuple[str, int, int]]] = {}
@@ -110,17 +35,14 @@ def _load_srclines() -> dict[str, list[tuple[str, int, int]]]:
 
 
 def _load_functions() -> list[dict]:
-    with FUNCTIONS.open() as fh:
-        return list(csv.DictReader(l for l in fh if not l.startswith("#")))
+    from homm3.analysis.dc_extract import corpus_rows
+    return corpus_rows()[0]
 
 
 def _load_locals(proc: str, module: str) -> list[dict]:
-    out = []
-    with VARIABLES.open() as fh:
-        for row in csv.DictReader(l for l in fh if not l.startswith("#")):
-            if row["proc"] == proc and row["module"] == module:
-                out.append(row)
-    return out
+    from homm3.analysis.dc_extract import corpus_rows
+    return [row for row in corpus_rows()[1]
+            if row["proc"] == proc and row["module"] == module]
 
 
 def _va_index() -> dict[int, tuple[str, int]]:
@@ -202,8 +124,6 @@ def main(argv=None) -> int:
                     help="also print the proc's CodeView locals")
     args = ap.parse_args(argv)
 
-    if not FUNCTIONS.exists():
-        common.die(f"{FUNCTIONS} missing - run homm3.analysis.dc_extract")
 
     fns = _load_functions()
     by_key = {(r["module"], int(r["offset"], 16)): r for r in fns}

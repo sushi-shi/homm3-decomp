@@ -1,5 +1,7 @@
-#include <va.h>
+#include "va.h"
+
 #include "gametypewindow.h"
+
 #include "border.h"
 #include "button.h"
 #include "game.h"
@@ -9,6 +11,9 @@
 #include "soundmgr.h"
 #include "widget.h"
 #include "winmgr.h"
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x00698a2c) int g_noCdRom;
 
 // Source-private in the Dreamcast compiland. Retail's constructor stores the
 // active dialog here and its destructor clears it after deleting the widgets.
@@ -21,7 +26,7 @@ DATA(0x006a6bfc) extern THelpText g_newGameHelp[5];
 
 // Dreamcast publishes gbNoCDRom, and retail oldmain writes the same address
 // from SetupCDRom before both front-end menus consume it.
-DATA(0x00698a2c) extern int g_noCdRom;
+
 
 // Source-private, DC-attested local name; retail data contains the -1
 // initializer and this handler is its only image-wide consumer.

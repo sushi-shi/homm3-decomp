@@ -13,12 +13,13 @@
 // attested by a CodeView row: the two class names above are retail's own,
 // everything else is role-derived and provisional.
 
-#include <va.h>
+#include "va.h"
 
 #include <fstream>
 #include <string>
 
 #include "forcefeedback.h"
+
 #include "imm_mouse.h"
 #include "resourcemanager.h"
 
@@ -116,7 +117,7 @@ t_initializer::t_initializer(void* instance, void* hwnd)
     g_immWindowOrigin.x = 0;
     g_immWindowOrigin.y = 0;
     ClientToScreen(static_cast<HWND>(hwnd), &g_immWindowOrigin);
-    CIFCErrors::m_dwErrHandlingFlags = 1;
+    CIFCErrors::SetErrorHandling(1);
 
     std::auto_ptr<CImmMouse> mouse(new CImmMouse);
     if (!mouse->Initialize(instance, hwnd, 4))

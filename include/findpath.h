@@ -1,9 +1,10 @@
 #ifndef HOMM3_FINDPATH_H
 #define HOMM3_FINDPATH_H
 
-#include <va.h>
-#include <windows.h>
+#include "va.h"
+
 #include <vector>
+#include <windows.h>
 #include <windows.h>
 
 #include "struct.h"
@@ -88,6 +89,9 @@ extern int g_mapHeight;
 // uninitialized by the ctor - Init fills it.
 class searchArray {
 private:
+    void boardBoat(const hero* currentHero, pathCell& cell);
+    unsigned char validMoveAdjacent(const army* currentArmy, int hex);
+    unsigned char validMoveAdjacent(const army* currentArmy, const army& enemy);
     int m_maxQueueCount;
     unsigned char m_payTransitionCosts;
     int m_thisTurnsMovement;
@@ -309,7 +313,7 @@ inline long searchArray::getDangerValue(type_point point) const
 // tables (0x63bce8) and combatManager::wallTargets (0x63be60), so the owning
 // TU is not settled, and the tenth dword reads 0 - it may or may not be
 // part of the array. Name is an address ordinal.
-extern const long g_townSiegeStrength63bd18[];
+extern const int g_moatDamage[];
 
 // Retail .bss 0x699284; the DATA claim lands with findpath.cpp's
 // globals when that TU's data is modeled.
@@ -319,9 +323,7 @@ extern searchArray* g_searchArray;
 // (dx, dy, 0x10, 0) for N, NE, E, SE, S, SW, W, NW in that order.
 // Dreamcast publishes the source name/type as `tilePoint* normalDirTable`;
 // retail names the same base and reads its x/y fields at +0/+1. The two
-// stride-four aliases remain temporarily for already-exact legacy callers,
-// while reconstructed source uses the aggregate and lets reloc normalization
-// canonicalize owner+field-addend against retail's interior symbols.
+// legacy stride-four aliases are now expressed as fields of this aggregate.
 struct tilePoint {
 public:
     signed char m_x;
@@ -342,11 +344,8 @@ enum EMapDirection {
     MAP_DIRECTION_COUNT = 8
 };
 
-DATA(0x00678150) extern tilePoint g_normalDirTable[8];
-extern const signed char g_stepDeltaX[];   // 0x678150, stride 4
-extern const signed char g_stepDeltaY[];   // 0x678151, stride 4
+extern tilePoint g_normalDirTable[8];
 
-// --- globals ---
 // 0x56a360, search.obj's, still @stub there. Declared here because
 // TestPossibleDirections calls it as a free fastcall (hero* in ECX,
 // pathCell* in EDX, the search type on the stack); the pairing is the DC

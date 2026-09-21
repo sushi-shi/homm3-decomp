@@ -4,9 +4,11 @@
 // declarations remain visible through rmg.h, while placing the definitions in
 // this companion translation unit reproduces the natural body-visibility
 // boundary without source-false inline controls.
-#include <va.h>
+#include "va.h"
+
 #include <algorithm>
 #include <math.h>
+
 #include "exceptions.h"
 #include "rmg.h"
 #include "rmg_terrain.h"
@@ -415,7 +417,7 @@ void TRmgVoronoi::removeEdge(TRmgBoundaryVertex* edge)
 }
 
 // Provisional shared edge-side predicate, used by locate and legalization.
-// docs/rmg-voronoi-provenance.md records the adaptation evidence and its
+// docs/reference/rmg-voronoi-provenance.md records the adaptation evidence and its
 // limits; this resemblance does not establish an original name/declaration.
 // Graphics Gems IV delaunay/quadedge.C's RightOf(x, e) is ccw(x, Dest, Org)
 // over TriArea; Complete uses integer by-value TPoint and the canonical
@@ -584,13 +586,7 @@ int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
         - (second.m_y - first.m_y) * (third.m_x - first.m_x);
 }
 
-VA(0x005FDB10, 0x21) // anchor-callee addSite; Complete-only, ret 0x10
-int getRmgSquaredDistance(TPoint first, TPoint second)
-{
-    int dy = first.m_y - second.m_y;
-    int dx = first.m_x - second.m_x;
-    return dx * dx + dy * dy;
-}
+
 
 // The subdivision constructor retains seven single-edge insertions at
 // 0x5fd091/0x5fd0f6/0x5fd10e/0x5fd15a/0x5fd172/0x5fd1bb/0x5fd1d3.

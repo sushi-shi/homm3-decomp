@@ -1,13 +1,13 @@
 #ifndef HOMM3_SINGLESELECTIONPOPUPS_H
 #define HOMM3_SINGLESELECTIONPOPUPS_H
 
-#include "widget.h"
 #include "dialogbox.h"
+#include "kbwin.h"
 #include "message.h"
 #include "remote.h"
-#include "kbwin.h"
-#include "winmgr.h"
 #include "rmg.h"
+#include "widget.h"
+#include "winmgr.h"
 
 class CSprite;
 
@@ -17,21 +17,6 @@ enum TTownType;
 
 const char* getStartingResourceName(int town);
 const char* getStartingResourceDescription(int town);
-
-// A bare rectangular click target. Retail's 0x575220 ctor calls
-// ??0widget@@QAE@XZ (the default base ctor) and writes x/y/width/height/id
-// straight into the widget base (DC's trailing `focus` byte is not a retail
-// parameter: `ret 0x14` is five dwords). Vtable 0x6419a4; zBufferDraw/Draw
-// are the folded shared empties (0x404140 / 0x404df0) so they stay
-// declaration-only, and the scalar deleting dtor tail-jumps to ~widget.
-class CHotspotWidget : public widget {
-public:
-    CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId);
-    virtual ~CHotspotWidget();
-    virtual int main(message& msg);  // slot 2, retail 0x575290
-    virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
-    virtual void draw() const;             // slot 4, folded onto 0x404df0
-};
 
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
 // immediately after widget's proven 0x30-byte base. Its vtable at 0x641a00
@@ -91,27 +76,47 @@ public:
     virtual int handleMessage(message& msg)
     {
         if (msg.m_id != MESSAGE_RIGHT_BUTTON_UP) {
-            if (g_videoPaused && g_dPlay) {
+            if (g_remoteOn && g_dPlay) {
                 CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
                 if (handler) {
                     handler->checkHandleNet(1, 0);
                     if (handler->getAbortPopupMsg()) {
-                        msg.m_id = MESSAGE_WIDGET;
-                        g_windowManager->m_dialogReturn = msg.m_codeY;
-                        msg.m_codeY = widget::WIDGET_END_DIALOG;
-                        msg.m_codeX = widget::WIDGET_END_DIALOG;
-                        return 2;
+                        return exitDialog(msg);
                     }
                 }
             }
             return heroWindow::handleMessage(msg);
         }
+        return exitDialog(msg);
+    }
+    // Original: CSingleSelPopup::ExitDialog; singleselectionpopups.h:75, dc 0x12efc0.
+    // handleMessage0x575430 expands both exits with this message rewrite.
+    int exitDialog(message& msg)
+    {
         msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = msg.m_codeY;
         msg.m_codeY = widget::WIDGET_END_DIALOG;
         msg.m_codeX = widget::WIDGET_END_DIALOG;
         return 2;
     }
+
+};
+
+// A bare rectangular click target. Retail's 0x575220 ctor calls
+// ??0widget@@QAE@XZ (the default base ctor) and writes x/y/width/height/id
+// straight into the widget base (DC's trailing `focus` byte is not a retail
+// parameter: `ret 0x14` is five dwords). Vtable 0x6419a4; zBufferDraw/Draw
+// are folded shared empties (0x404140 / 0x404df0); their canonical
+// source bodies remain here. The deleting dtor tail-jumps to ~widget.
+class CHotspotWidget : public widget {
+public:
+    CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId);
+    virtual ~CHotspotWidget();
+    virtual int main(message& msg);  // slot 2, retail 0x575290
+    // Original: CHotspotWidget::zBufferDraw; singleselectionpopups.h:120, dc 0x12f010.
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const {}
+    // Original: CHotspotWidget::Draw; singleselectionpopups.h:121, dc 0x12f014.
+    virtual void draw() const {}
 };
 
 // The four dialogs. Each ctor pushes 0x12 through TDialogBox, stores its own

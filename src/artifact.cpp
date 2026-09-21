@@ -1,17 +1,168 @@
-// helper and ownership wrappers into the table initializer. The adjacent
-// bitset bodies are Dinkumware COMDATs, not source claims.
-#include <va.h>
-#include <bitset>
+// Artifact traits, slot classes and combination recipes. The static traits
+// helper and ownership wrappers expand into the table initializer. Adjacent
+// bitset bodies are Dinkumware COMDATs, not authored game routines.
+#include "va.h"
+
 #include <algorithm>
+#include <bitset>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "artifact.h"
+
 #include "const_bitset_iterator.h"
 #include "ownership.h"
 #include "resourcemanager.h"
 #include "textresource.h"
+
+// Initial contents recovered from the pinned Complete image.
+DATA(0x0063e758) const signed char g_artifactPrimarySkillBonuses[144][4] = {
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 2, 0, 0, 0 },
+    { 3, 0, 0, 0 },
+    { 4, 0, 0, 0 },
+    { 5, 0, 0, 0 },
+    { 6, 0, 0, 0 },
+    { 12, -3, 0, 0 },
+    { 0, 2, 0, 0 },
+    { 0, 3, 0, 0 },
+    { 0, 4, 0, 0 },
+    { 0, 5, 0, 0 },
+    { 0, 6, 0, 0 },
+    { -3, 12, 0, 0 },
+    { 0, 0, 0, 1 },
+    { 0, 0, 0, 2 },
+    { 0, 0, 0, 3 },
+    { 0, 0, 0, 4 },
+    { 0, 0, 0, 5 },
+    { 0, 0, -2, 10 },
+    { 0, 0, 1, 0 },
+    { 0, 0, 2, 0 },
+    { 0, 0, 3, 0 },
+    { 0, 0, 4, 0 },
+    { 0, 0, 5, 0 },
+    { 0, 0, 10, -2 },
+    { 1, 1, 1, 1 },
+    { 2, 2, 2, 2 },
+    { 3, 3, 3, 3 },
+    { 4, 4, 4, 4 },
+    { 5, 5, 5, 5 },
+    { 6, 6, 6, 6 },
+    { 1, 1, 0, 0 },
+    { 2, 2, 0, 0 },
+    { 3, 3, 0, 0 },
+    { 4, 4, 0, 0 },
+    { 0, 0, 1, 1 },
+    { 0, 0, 2, 2 },
+    { 0, 0, 3, 3 },
+    { 0, 0, 4, 4 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 3, 3, 3, 6 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 6, 6, 6, 6 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 }
+};
 
 // Retail retains bitset<19>::_Tidy and set. The explicit class instantiation
 // currently supplies set's retained body; real uses already emit _Tidy.
@@ -38,10 +189,10 @@ static const int g_spellGivingArtifacts[9] = {
     1, 128, 123, 124, 86, 87, 88, 89, 135
 };
 
-// These two tables are initialized by artifact.obj's excluded cinit family
-// at 0x44c700..0x44cd4f. Their storage and source initializers are a separate
-// admission; declaring the byte-proven addresses here makes this function's
-// data references authoritative without pretending the cinits are claims.
+// Complete traits storage. These addresses and enlarged record counts are
+// proved by the table parser and its consumers. DC's per-record bitset field
+// becomes a compact slot-class index; its old constructor is not a Windows
+// source claim. The two recipe/mask cinits below are separate table owners.
 DATA(0x006939f8)
 static TArtifactTraits g_artifactTraitsStorage[144];
 
@@ -88,6 +239,12 @@ static std::bitset<144> makeArtifactComponentMask(unsigned count, ...)
     return mask;
 }
 
+// A single ordinary function-template factory preserves both bodies but
+// does not fix the slot cinit: its variadic calls still fail the non-EH
+// caller-state gate (0x788 versus the ordinary bodies' 0x708). The empty
+// mask's nested _Tidy still receives 742 units and expands. No template
+// source spelling or convenience wrapper is established by that control.
+
 // The twelve Shadow of Death combination artifacts, ids 129..140, each with
 // the component set the assembled artifact consumes. Read straight out of
 // the cinit at 0x44c960: the 24-byte record is built in a stack temporary
@@ -117,12 +274,18 @@ const TCombinationArtifact g_combinationArtifactTable[12] = {
         makeArtifactComponentMask(4, 0x6f, 0x6d, 0x6e, 0x71)),
 };
 
-// The fifteen allowable-slot classes InitializeArtifactTraitsTable searches
-// linearly, read out of the cinit at 0x44cc00. Class 0 is the empty set and
-// is the one entry retail builds with the plain default constructor, which
-// is why `bitset<19>::_Tidy` survives out of line at 0x44d3e0; the two
-// multi-slot classes are the ring pair (6, 7) and the misc/backpack group
-// (9, 10, 11, 12, 18).
+// The fifteen allowable-slot classes searched by the traits initializer,
+// recovered from 0x44cc00. Class 0 is empty; classes 7 and 9 are the ring
+// pair (6, 7) and misc/backpack group (9, 10, 11, 12, 18).
+// Retail retains _Tidy(0) for the first entry. Neither default construction
+// nor explicit/implicit zero-value construction reproduces that boundary:
+// all expand it and produce a 326-byte cinit versus retail's 325 bytes, with
+// later copy-register changes.
+// VC6's bitset copy/destructor are implicit. Retail reuses one four-byte
+// temporary for all fifteen values, with no cleanup or additional owner;
+// the register differences do not establish a missing copy helper.
+// The neighboring combination cinit matches all 664 bytes / 24 relocations.
+// Both cinits remain outside the ordinary function-score inventory.
 DATA(0x00693898)
 const std::bitset<19> g_artifactSlotMasks[15] = {
     std::bitset<19>(),
@@ -143,10 +306,10 @@ const std::bitset<19> g_artifactSlotMasks[15] = {
 };
 
 DATA(0x00660b64)
-const TArtifactSlotTraits* g_artifactSlotTraits = g_artifactSlotTraitsStorage;
+const TArtifactSlotTraits (&g_artifactSlotTraits)[19] = g_artifactSlotTraitsStorage;
 
 DATA(0x00660b68)
-const TArtifactTraits* g_artifactTraits = g_artifactTraitsStorage;
+const TArtifactTraits (&g_artifactTraits)[144] = g_artifactTraitsStorage;
 
 DATA(0x00660b6c)
 const TCombinationArtifact* g_combinationArtifacts = g_combinationArtifactTable;
@@ -161,10 +324,30 @@ static void initializeArtifactTraits(int id,
 // parameters. Complete's pooled string copies belong to the caller; adding
 // a char*& buffer parameter to the helper is a weaker retail hypothesis.
 // The resource guards and static array owners reproduce retail cleanup.
+// Restoring strcpy at the pooled copies makes VC6 scan each source twice:
+// once for the cursor's length and again inside intrinsic strcpy. Retail
+// scans once and reuses that count for copying, supporting memcpy here.
+// DC uses Dispose and per-string TAutoStrPtr arrays. Complete's resources
+// dispose through vtable+4; its two pooled owners have an ownership byte and
+// pointer, proved by the retained 0x44d340/0x44d360 destructors. The canonical
+// TResourcePtr/TAutoArrayPtr express those Windows lifetimes. The older set/get
+// names do not imply additional Windows allocations or disposal calls.
 
-// Residual (81.376236%): the nested bitset<19> _Tidy and equality calls stay
-// out of line where retail expands them. The first size loop still hoists
-// the sheet's row-vector base, and late range-error construction differs.
+// Raw spreadsheet queries retain the older source's pointer interface;
+// the separate TResourcePtr guards own each Windows phase's real cleanup.
+// Either raw-query phase gives 83.8990%; both keep that result. The 16-state
+// pool-cursor reuse control gives 82.7881..83.4951% and changes no established
+// source fact, so retain the owner queries at the pool check and cursor setup.
+// Complete's added traits sizing pass uses the existing cell accessor.
+// This recovers the retail row-base reload, both row loads and loop schedule:
+// its 83 bytes differ only in two displacements for one length temporary.
+// The four-state cell/row-accessor control gives 86.8713% for traits only,
+// 85.5960% for both sizing passes and 83.8990% for slots only or neither.
+// The original spelling is inferred; the canonical interfaces stay intact.
+// Residual (86.8713%): nested bitset<19> _Tidy, proxy assignment and equality
+// calls stay out of line where retail expands them. Late range-error
+// construction reaches the retail _Grow call, but keeps the literal-string
+// _Tidy at the wrong site and retains the copy constructor retail expands.
 // The combination loop now has retail's owner/offset end checks, set-bit
 // search, returned-iterator copy and retained bitset<144>::test call.
 
@@ -178,27 +361,36 @@ static void initializeArtifactTraits(int id,
 // gives 81.376236%; reversing their strlen addends and removing unused stdio
 // are byte-neutral. These source boundaries replace the fabricated carrier.
 // Earlier named-row/declaration/volatile-accumulator probes did not resolve
-// the first-loop hoist; retain the direct row accesses and ordinary locals.
+// the first-loop hoist; the canonical cell accessor above does.
+// DC public ?InitializeArtifactTraitsTable@@YA_NXZ proves bool; the SH4
+// dossier renders its byte-sized procedure result as unsigned char. Complete
+// returns only AL 0/1, and the sole kb caller tests that Boolean result.
 VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
-unsigned char initializeArtifactTraitsTable()
+bool initializeArtifactTraitsTable()
 {
     {
-        TResourcePtr<TSpreadsheetResource> traitsSheet(
-            ResourceManager::getSpreadsheet(
-                DATA_COMPGEN(0x00660b80, artifactTraitsSpreadsheetName,
-                             "artraits.txt")));
-        if (!traitsSheet.get() || traitsSheet->getNumberOfRows() < 146) {
+        TSpreadsheetResource* traitsSheet = ResourceManager::getSpreadsheet(
+            DATA_COMPGEN(0x00660b80, artifactTraitsSpreadsheetName,
+                         "artraits.txt"));
+        TResourcePtr<TSpreadsheetResource> traitsSheetGuard(traitsSheet);
+        if (!traitsSheet || traitsSheet->getNumberOfRows() < 146) {
             return 0;
         }
 
         unsigned stringBytes = 0;
         int row;
         for (row = 2; row < 146; ++row) {
-            const char* name = traitsSheet->getRow(row)[0];
-            const char* description = traitsSheet->getRow(row)[22];
+            const char* name = traitsSheet->getSpreadsheet(row, 0);
+            const char* description = traitsSheet->getSpreadsheet(row, 22);
             stringBytes += strlen(description) + strlen(name) + 2;
         }
 
+        // DC artifact.cpp:33..38 used an anonymous four-byte TAutoStrPtr:
+        // null construction, a direct pointer set/get, and unconditional
+        // destruction. Complete replaces it with TAutoArrayPtr<char>.
+        // The retained destructor 0x44d360 tests ownership at 0x694c90
+        // before deleting the pointer at 0x694c94; the second buffer uses
+        // the same eight-byte layout and conditional destructor 0x44d340.
         DATA_COMPGEN_GUARD(0x006938d4, artifactStringsGuard, artifactStrings)
         VA_COMPGEN(0x0044d360, 0x16, STATIC_DTOR, artifactStrings)
         DATA(0x00694c90)
@@ -253,11 +445,11 @@ unsigned char initializeArtifactTraitsTable()
     }
 
     {
-        TResourcePtr<TSpreadsheetResource> slotsSheet(
-            ResourceManager::getSpreadsheet(
-                DATA_COMPGEN(0x00660b70, artifactSlotsSpreadsheetName,
-                             "artslots.txt")));
-        if (!slotsSheet.get() || slotsSheet->getNumberOfRows() < 19) {
+        TSpreadsheetResource* slotsSheet = ResourceManager::getSpreadsheet(
+            DATA_COMPGEN(0x00660b70, artifactSlotsSpreadsheetName,
+                         "artslots.txt"));
+        TResourcePtr<TSpreadsheetResource> slotsSheetGuard(slotsSheet);
+        if (!slotsSheet || slotsSheet->getNumberOfRows() < 19) {
             return 0;
         }
 
@@ -309,11 +501,17 @@ unsigned char initializeArtifactTraitsTable()
 // The two-form control reproduces 80.8218% with the recovered calls and
 // preserves all seven exact siblings. A lower score does not contradict
 // the positive source-call evidence; the cached form remains a failed lead.
-// Passive VC6 traces keep the outer caller at cb=1056/budget=2112. Restoring
-// the reads changes this helper from cb=330 to 351 and its child budget from
-// 65 to 64. The proxy assignment still exceeds its remaining budget (43 vs
-// 23), while _Tidy and equality remain rejected at the next nesting level.
-// The residual is not explained by the removed cache alone.
+// Restoring those reads changes this helper's C2 cost from 330 to 351.
+// With raw spreadsheet pointers and the traits sizing cell accessor, the
+// caller costs 1008 (budget 2016), and this helper receives 68. Proxy
+// assignment still exceeds its remaining budget (43 versus 27); _Tidy and
+// equality are also rejected one level down, at budgets 6 and 5.
+// Naming the consumed slot proxy in the earlier owner-query model gave
+// 80.5782% and kept all three unwanted calls, failing its expansion prediction.
+// Explicit successful-match breaks in either mask search leave all 1504
+// initializer bytes unchanged, including both retained equality calls.
+// Moving the four Complete-only defaults after this helper call is also
+// byte-neutral; their original caller/helper ownership remains unproven.
 static void initializeArtifactTraits(int id,
     const TSpreadsheetResource::TStringVector& resource)
 {
@@ -347,45 +545,6 @@ static void initializeArtifactTraits(int id,
     traits.m_targetCombo = -1;
     traits.m_givesSpells = 0;
 }
-
-#if 0  // @carcass: Dreamcast-only/out-of-line header and STL emissions
-
-// E:\gamedcs\artifact.cpp:33
-DC_ONLY(0x508bc, 0x8)
-void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
-{
-    // @stub
-}
-
-// E:\gamedcs\artifact.cpp:34
-DC_ONLY(0x508c4, 0x18)
-void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr()
-{
-    // @stub
-}
-
-// E:\gamedcs\artifact.cpp:36
-DC_ONLY(0x508dc, 0x4)
-void `anonymous namespace'::TAutoStrPtr::set(char* pStr)
-{
-    // @stub
-}
-
-// E:\gamedcs\artifact.cpp:38
-DC_ONLY(0x508e0, 0x4)
-char* `anonymous namespace'::TAutoStrPtr::get()
-{
-    // @stub
-}
-
-// E:\gamedcs\artifact.cpp:49
-DC_ONLY(0x508e4, 0x20)
-void TArtifactTraits::TArtifactTraits()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x0044D380, 0x60, BITSET_SET, Bitset19)
 

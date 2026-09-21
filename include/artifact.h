@@ -1,40 +1,43 @@
 #ifndef HOMM3_ARTIFACT_H
 #define HOMM3_ARTIFACT_H
 
-#include <bitset>
-#include <va.h>
+#include "va.h"
 
-// The artifact-id domain. Added 2026-08-08 with its first consumer,
-// recruit.obj's siege_artifact_to_creature (0x550360) - only the four
-// war machines its jump table covers are listed; grow the roster per
-// consumer, as TCreatureType and ESpellId are grown. Values are
-// byte-proven by that switch (`lea eax,[ecx-3]` over four dense
-// cases); the names are the Dreamcast TArtifact enumerators
-// (eArtifactCatapult 3, eArtifactBallista 4, eArtifactAmmoCart 5,
-// eArtifactFirstAidTent 6 in evidence/dreamcast/enums.csv) respelled
-// to this tree's convention.
-// Corroborated 2026-08-08 from a second side: hero.obj's two artifact
-// tallies (get_equipped_artifacts 0x4d9070, get_number_in_backpack
-// 0x4d90c0) both skip exactly the four consecutive ids 3,4,5,6 as the
-// war machine block, independently of recruit's jump table.
-// Grown 2026-08-08 for hero.obj's bonus getters, which are nothing but
-// IsWieldingArtifact gates. Each block below carries its own retail
-// witness; every DC spelling comes from evidence/dreamcast/enums.csv.
-// PLACEMENT NOTE: armygrp.h carries a SECOND artifact roster
-// (EArtifactId, the combat-side gates). These ids went here, into the
-// artifact domain's own owner header, rather than there - armygrp.h is
-// inside initialize.cpp's include closure through town.h, and putting
-// them in EArtifactId measurably moved initialize_game_data 96.09 ->
-// 94.07 through the include-set sensitivity class with no semantic
-// change. artifact.h is not in that closure. Unifying the two rosters
-// is a separate, measured decision.
+#include <bitset>
+
 #include "artifact_type.h"
+
+// Dreamcast's public wearable-position type. Complete adds a nineteenth
+// equipped position, but retains the same dword parameter ABI and may pass
+// that retail-only ordinal through functions which use this shared type.
+enum TArtifactSlot {
+    eArtifactSlotHead = 0,
+    eArtifactSlotShoulders,
+    eArtifactSlotNeck,
+    eArtifactSlotRightHand,
+    eArtifactSlotLeftHand,
+    eArtifactSlotTorso,
+    eArtifactSlotRightRing,
+    eArtifactSlotLeftRing,
+    eArtifactSlotFeet,
+    eArtifactSlotMisc1,
+    eArtifactSlotMisc2,
+    eArtifactSlotMisc3,
+    eArtifactSlotMisc4,
+    eArtifactSlotWarMachine1,
+    eArtifactSlotWarMachine2,
+    eArtifactSlotWarMachine3,
+    eArtifactSlotWarMachine4,
+    eArtifactSlotSpellbook,
+    kNumArtifactSlots,
+    const_first_artifact_slot = eArtifactSlotHead
+};
 
 // The per-artifact traits record. The 32-byte STRIDE is byte-proven by
 // hero::IsWieldingArtifact's `shl esi,5` index, and +0x18 by the same
 // body: it holds the id of the COMBINATION artifact this piece belongs
 // to, -1 when the artifact is not a component of one.
-// The DC's own TArtifactTraits (evidence/dreamcast/members.csv) is only
+// The DC's own TArtifactTraits (NB11 member records) is only
 // 20 bytes - m_name 0, m_cost 4, m_allowableSlotMask 8, m_class 12,
 // m_description 16 - i.e. the AB-era record without the Shadow of Death
 // combination column. Retail's artraits.txt parser at 0x44cd50 independently
@@ -104,21 +107,30 @@ extern const std::bitset<19> g_artifactSlotMasks[15];
 DATA(0x006938d8)
 extern const TCombinationArtifact g_combinationArtifactTable[12];
 
-// Retail .data 0x660b68 and 0x660b6c, two adjacent storage cells retail
-// LOADS and then indexes (`mov eax,[0x660b68]` / `[esi + eax + 0x18]`)
-// - the akHeroTraits reference-cell pattern.
-// akArtifactTraits' name is DC-attested
-// (?akArtifactTraits@@3AAY0HP@$$CBUTArtifactTraits@@A); its DC bound of
-// 127 is AB-era and is NOT carried over, which is why this is spelled
-// as a pointer rather than akHeroTraits' reference-to-array - the
-// Complete-era artifact count is 144, now proved by artifact.obj's retail
-// parser and table extent. The combination table has NO DC row (a Shadow of
-// Death addition); its name is INVENTED. artifact.obj owns both reference
-// cells and their underlying storage; the two excluded cinit tables remain a
-// separate source-initializer admission.
-extern const TArtifactTraits* g_artifactTraits;
+// DC akArtifactTraits and akArtifactSlotTraits are references to const arrays
+// of 127/18 records. Complete extends those domains to 144/19; its reference
+// cells at 0x660b68/0x660b64 point to storage at 0x6939f8/0x694bf8.
+// Preserve that reference-to-array interface with the Complete-era bounds.
+// The combination table is Complete-only; its inferred pointer interface is
+// independent of the two DC declarations. artifact.cpp owns all three tables.
+extern const TArtifactTraits (&g_artifactTraits)[144];
 extern const TCombinationArtifact* g_combinationArtifacts;
-extern const TArtifactSlotTraits* g_artifactSlotTraits;
+extern const TArtifactSlotTraits (&g_artifactSlotTraits)[19];
+
+// Original: artifactAllowedInSlot; artifact.h:229, dc 0x37d88.
+// DC233 indexes the artifact's bitset18 with operator[]. Complete replaces
+// that inline mask with a slot-class index into bitset19; the primitive
+// survives as the initial mask test in hero::heroFn004E2840 (0x4e2840).
+// The richer hero member also checks displaced/combination artifacts.
+// Retain the const mask reference: it preserves the retail exception-path
+// value lifetime. Direct nested indexing expands _Eos instead of retaining
+// its call (92.66% caller); this canonical reference form matches100%.
+inline unsigned char artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slot)
+{
+    const std::bitset<19>& allowable =
+        g_artifactSlotMasks[g_artifactTraits[artifact].m_allowableSlotMask];
+    return allowable[slot];
+}
 
 // Retail .data 0x6aa9f8, defined by townmgr.cpp and consumed by the AI
 // town-entry path. The record itself is completed by hero.h; an extern
@@ -129,7 +141,6 @@ extern type_artifact g_blacksmithArtifacts[];
 // Four signed primary-skill deltas per artifact. remove_artifact walks all
 // 144 rows when dismantling a combination; the adjacent address is a real
 // retail data symbol and is used as the pointer-loop bound.
-DATA(0x0063e758)
 extern const signed char g_artifactPrimarySkillBonuses[][4];
 DATA(0x0063e998)
 extern const signed char g_artifactPrimarySkillBonusesEnd[];

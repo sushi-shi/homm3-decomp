@@ -3,7 +3,7 @@
 #ifndef HOMM3_WIDGET_H
 #define HOMM3_WIDGET_H
 
-#include <va.h>
+#include "va.h"
 
 class heroWindow;
 class message;
@@ -19,7 +19,7 @@ class message;
 // retail home: retail is exactly DC minus those two, plus field_2C.
 
 // Virtual roster PROVEN by the retail widget vtable 0x243c90 -
-// THIRTEEN slots, not twelve (config/retail-vtables.tsv row 0x243c90;
+// THIRTEEN slots, not twelve (config/retail/vtables.tsv row 0x243c90;
 // heroWindow's own vtable begins immediately after at 0x243cc4 =
 // 0x243c90 + 13*4, which bounds the count exactly):
 //   0  scalar deleting dtor 0x5fe3b0 (~widget 0x5fe430 inlined - the
@@ -35,7 +35,7 @@ class message;
 //   9  enable 0x5fe940
 //   10 OnSetFocus / 11 OnKillFocus - both 0x4df0, the /OPT:ICF-folded
 //      empty inline (DC order fixes which name is which)
-//   12 _vslot12 0x485d80 - RETAIL-ONLY (slots 0..11 reproduce the DC
+//   12 onSleepChange 0x485d80 - RETAIL-ONLY (slots 0..11 reproduce the DC
 //      roster order exactly, with Open inserted; DC's list ends at
 //      OnKillFocus, so 12 is appended). One dword argument (`ret 4`)
 //      and an empty body that ICF folded into the program-wide `ret 4`
@@ -43,11 +43,9 @@ class message;
 //      widget::Close precedent. Overridden in exactly one place in the
 //      whole image: button's three vtables (0x23bb54/0x23bb88/
 //      0x23bbbc) point slot 12 at 0x456a10, whose entire body is an
-//      explicit `widget::_vslot12(arg)` call; the other 25
-//      widget-family vtables inherit 0x485d80. UNATTESTED NAME - DC
-//      has no such virtual, so this is the house _vslotN placeholder.
-//      Its role is byte-fixed even though its name is not: it is the
-//      per-widget sleep/wake edge hook.
+//      explicit `widget::onSleepChange(arg)` call; the other 25
+//      widget-family vtables inherit 0x485d80. The original name is unknown;
+//      onSleepChange describes the first-sleep/final-wake calls in sleep().
 class widget {
 public:
     heroWindow* m_parentWindow;
@@ -149,14 +147,15 @@ public:
     virtual int open(int newPriority, heroWindow* parent);  // slot 1
     // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
     // it DIRECTLY (0x5bc690 - a /Gy header-COMDAT the link kept from an
-    // earlier obj, ICF-folded with other empty bodies). Declared only;
-    // no local definition, so calls stay extern.
+    // earlier obj, ICF-folded with other empty bodies). The ordinary
+    // definition remains in widget.cpp.
     void close();
     // DC Main(message&) is shared by the widget overrides; retail passes
     // the same address through slot 2.
     virtual int main(message& msg) = 0;  // slot 2
-    // Complete widened the Dreamcast nil-argument draw hook. The shared
-    // vtable representative at 0x5bc7e0 is `ret 8`, and
+    // The formal DC type supplies the two draw arguments even where
+    // optimized parameter records are empty. The shared representative
+    // at 0x5bc7e0 is `ret 8`, and
     // TCampaignBrief dispatches this slot with the z-buffer and widget id.
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const = 0;  // slot 3
     // Original Draw, zBufferDraw and Dim have const receivers in CodeView.
@@ -199,10 +198,10 @@ public:
     {
         if (on) {
             if (m_sleepCount++ == 0)
-                vslot12(1);
+                onSleepChange(1);
         } else {
             if (--m_sleepCount == 0)
-                vslot12(0);
+                onSleepChange(0);
         }
     }
     // Dreamcast header inlines used by mode-switch paths.
@@ -223,6 +222,10 @@ public:
             sendMessage(WIDGET_CLEAR_STATUS, WIDGET_DRAWN);
     }
 
+    // Original: widget::force_update; Widget.h:271, dc 0x56e20.
+    // Bottom-view updates expand this same status message in Complete.
+    void forceUpdate() { sendMessage(WIDGET_SET_STATUS, WIDGET_UPDATE); }
+
 protected:
     // Dreamcast: protected static widget* last_hover_widget
     // (?last_hover_widget@widget@@1PAV1@A); retail .bss 0x6aac68,
@@ -230,12 +233,9 @@ protected:
     static widget* s_lastHoverWidget;
 
 public:
-    // Slot 12. DECLARED ONLY, exactly like Close: retail's body is the
-    // empty `ret 4` that ICF folded to the shared 0x485d80, so it has
-    // no claimable home, and leaving it undefined here is also what
-    // keeps button's override (0x456a10) emitting a real call instead
-    // of an /Ob2-inlined nothing.
-    virtual void vslot12(int on);  // slot 12
+    // Slot 12. The empty body lives in widget.cpp so button's qualified
+    // base call stays out of line. Retail ICF folds it to 0x485d80.
+    virtual void onSleepChange(int on);  // slot 12
 };
 SIZE(widget, 48);
 

@@ -223,7 +223,7 @@ predicts. Three worth naming:
 | `armygrp:?get_luck_description` | 74.7874 | **82.5689** | a whole extra lifetime: a branch-local `std::string` where retail returns the literal into the NRV |
 | `quickherowindow:??0TQuickHeroWindow` | 86.8447 | **90.7834** | an extra reset per if-arm: `push_back(new …)` in each arm, not a shared pointer pushed once |
 | `bottomviewsubwindow:??0TBottomViewTown` | 94.3114 | **95.6295** | a state store that moved: copy-initialize the `std::string`, do not default-construct and assign |
-| `bottomviewsubwindow:??0TBottomViewTown` (again, off the line table) | 95.6295 | **97.3638** | not an EH finding: `game::GetCurrTown`, see `docs/dc-line-tables.md` |
+| `bottomviewsubwindow:??0TBottomViewTown` (again, off the line table) | 95.6295 | **97.3638** | not an EH finding: `game::GetCurrTown`, see `docs/matching/dc-line-tables.md` |
 | `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` | 97.1049 | **100.0000** | the missing region is one free inline candidate site away — and that site is the post-Dreamcast version gate (below) |
 
 Two of the three landings were **invisible to every other lens**, and that is
@@ -245,9 +245,8 @@ neighbouring calls attached** (`grep -E ': call |\[ebp - 0x4\]'` over
 the callee name on the call row). The call names localize the store; the
 store localizes the statement.
 
-The Dreamcast xref graph is the natural corroborator for a lifetime claim,
-because it names the CALLS a compiland makes at source level:
-`awk -F'\t' '$1=="0x<dcoff>"' evidence/dc-xref-graph.tsv`. It confirmed
+Check the named Dreamcast calls with `homm3 dreamcast asm <selector> --blocks`
+to corroborate lifetime boundaries. The earlier call analysis confirmed
 `TBottomViewTown` reaches `basic_string`'s **constructor** (plus the
 `allocator<char>` temporary of the `const _A& = _A()` default argument) and no
 `operator=`.
@@ -299,7 +298,7 @@ with `Widgets.capacity()`-style FREE candidates (cb ≤ 0x28, no bytes emitted):
 | `armygrp:?get_luck_description` | +4 | ~~82.5689 → 90.1916~~ **82.5689 → 95.1557** (re-measured 2026-08-15; still +4, and the probe must be a USER-DEFINED inline — `armygrp_clamp(0,luck,3)` registers, `basic_string::size()`/`capacity()` do not) |
 
 **The first row is landed and EXACT** (2026-08-14); the padding is not what
-landed it. `docs/dc-line-tables.md` is the instrument that answered "which
+landed it. `docs/matching/dc-line-tables.md` is the instrument that answered "which
 candidate site does retail's source have here that ours does not": the
 Dreamcast **line/addr table** attributes every run of DC instructions to a
 source line, and the DC build of a compiland is an OLDER REVISION of the same
@@ -330,7 +329,7 @@ tuple stream, except where the divergent site is at index 0 or in the
 member-initializer prologue, where any site in the body raises the divisor.
 
 **How far the table actually gets you, seven rows in (2026-08-14).** The
-survey in `docs/dc-line-tables.md` says which of three answers a row gets,
+survey in `docs/matching/dc-line-tables.md` says which of three answers a row gets,
 and it is worth knowing before spending a round:
 
 * the divergent site is a statement the Dreamcast build spells differently

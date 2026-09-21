@@ -1,11 +1,14 @@
 // 13 functions in link order.
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "widget.h"
+
+#include "bitmap16.h"
 #include "message.h"
 #include "window.h"
 #include "winmgr.h"
-#include "bitmap16.h"
 
 VA(0x005fe340, 0x62)  // dc 0x196b4c
 widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle)
@@ -76,16 +79,12 @@ int widget::open(int newPriority, heroWindow* parent)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\widget.cpp:235
-DC_ONLY(0x196ccc, 0x4)
-void widget::Close()
+// Original: widget::Close; widget.cpp:235, dc 0x196ccc.
+// heroWindow::RemoveWidget calls the shared empty retail representative
+// at 0x5bc690. ICF removes a separate address, not this source definition.
+void widget::close()
 {
-    // @stub
 }
-
-#endif  // @carcass
 
 VA(0x005fe4f0, 0x2C8)  // dc 0x196cd0
 int widget::main(message& msg)
@@ -265,3 +264,10 @@ void widget::enable(unsigned char arg)
 
 DATA(0x006aac68)
 widget* widget::s_lastHoverWidget;
+
+// Complete-only sleep/wake hook: widget's vtable slot 12 and all inherited
+// copies point to the empty ret 4 body folded at 0x485d80. Keep the body
+// out of the header: button::onSleepChange retains its qualified base call.
+void widget::onSleepChange(int on)
+{
+}

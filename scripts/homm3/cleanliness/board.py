@@ -4,7 +4,7 @@
 The gruntz board ported at today's size: metrics counted over src/ +
 include/ with comments and string/char literals stripped first (so the
 extensive `//` annotations and literals never inflate a count), committed
-floors in config/cleanliness-baseline.tsv, and a RATCHET rule - a metric
+floors in config/cleanliness/baseline.tsv, and a RATCHET rule - a metric
 may only go DOWN. `homm3 build` dies when a ratcheted metric rises above
 its floor, and rolls floors with min(count, floor) so a regression stays
 visible instead of being blessed. `board --update` is the one deliberate
@@ -91,7 +91,7 @@ REPO = common.HOMM3_DIR
 ROOTS = ("src", "include")
 EXTS = {".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".inl"}
 _CPP = {".c", ".cpp", ".cc", ".cxx"}
-BASELINE = REPO / "config/cleanliness-baseline.tsv"
+BASELINE = REPO / "config/cleanliness/baseline.tsv"
 
 _BLOCK = re.compile(r"/\*.*?\*/", re.DOTALL)
 _LINE = re.compile(r"//[^\n]*")
@@ -219,7 +219,7 @@ def _cpp_local_enum_sites(code: str, ctx) -> list:
 
 def _dc_local_classes(sources, dc_origins=None):
     from collections import Counter, defaultdict
-    from homm3.match.source_ownership import read_dc, read_filter, family_name
+    from homm3.match.source_ownership import read_dc, read_win_filters, family_name
     origins = defaultdict(set)
     private_origins = defaultdict(set)
     for row in (read_dc(REPO) if dc_origins is None else dc_origins):
@@ -248,8 +248,7 @@ def _dc_local_classes(sources, dc_origins=None):
     # for Complete-only local classes. Do not invent a second class ledger.
     # The source-ownership gate independently rejects unused filters and
     # filters attempting to waive a known Dreamcast counterpart.
-    windows, errors = read_filter(REPO / 'config/win_only.tsv',
-                                 ('file', 'function', 'signature'))
+    windows, errors = read_win_filters(REPO)
     windows_origins = defaultdict(set)
     if not errors:
         for file, function, _signature in windows:

@@ -10,10 +10,12 @@ class border : public widget {
 public:
     border(int x, int y, int w, int h, int id, int style);
     border();
+    void initialize(int x, int y, int w, int h, int id, int style,
+                    unsigned char focusable = 0);
     virtual int main(message& msg);  // slot 2, retail 0x44ff60
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     virtual void draw() const;  // slot 4
-    // Slot 13, appended past widget's twelve-plus-_vslot12 exactly as
+    // Slot 13, appended past widget's twelve-plus-_onSleepChange exactly as
     // iconWidget appends its own twin (see iconwdgt.h). Main dispatches
     // it through `call [vptr+0x34]`, i.e. 13*4, which is what fixes the
     // index; the 4-byte `return 0` body ICF-folded onto iconWidget's.
@@ -22,18 +24,18 @@ public:
     virtual ~border();  // retail 0x44ff50
 };
 
-// Head model only, exactly like border above: the retail dtor 0x4501d0
-// is the empty derived body (it stores ??_7border@@6B@ - the derived
-// store is dead - and tail-jumps to ~widget), so no member of this
-// class is byte-proven here. The DC fieldlist gives color (int) and
-// colorize (uchar) and a base type SHARED with coloredBorder, i.e.
-// both derive straight from border - neither from the other; the two
-// members stay out until a retail body proves their offsets.
-// Retail vtable 0x63ba5c: slot 0 sdd 0x4501a0, slot 2 Main 0x450240
-// (dc 124 B -> 130), slot 3 zBufferDraw folded to 0x5bc7e0, slot 4
-// Draw 0x4501e0 (dc 110 B -> 91). coloredBorder, which overrides no
-// Main, has no retail vtable at all, which is what fixes this table on
-// coloredBorderFrame.
+// DC's simple filled border has no admitted standalone Complete identity.
+// Preserve its ordinary source interface without claiming a retail vtable.
+class coloredBorder : public border {
+public:
+    int m_color;  // DC color; immediately after the platform's widget base.
+    coloredBorder(int x, int y, int w, int h, int id, int color, int style);
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
+    virtual void draw() const;
+};
+
+// Complete vtable 0x63ba5c belongs to the frame variant; its Main handles
+// color/colorize messages, and its constructor proves the two member offsets.
 class coloredBorderFrame : public border {
 public:
     // Retail's constructor at 0x450130 stores these directly after the
@@ -48,6 +50,7 @@ public:
                        int color, int style);
     // Implicit destructor; CodeView dc 0x54dd8 compgenx.
     virtual int main(message& msg);
+    virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     virtual void draw() const;  // slot 4, retail 0x4501e0
 };
 SIZE(coloredBorderFrame, 0x38);
@@ -69,6 +72,7 @@ public:
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     virtual int main(message& msg);
     void setImage(const char* bitmapName);
+    void setPalette(const char* paletteName);
     void setPlayerPaletteColors(int whichPlayer);
 };
 
@@ -85,6 +89,8 @@ public:
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     virtual void draw() const;
     void draw2() const;
+    virtual int getRealWidth() const;
+    virtual int getRealHeight() const;
     virtual int main(message& msg);  // slot 2, retail 0x450860
     // DC dc 0x54c6c. Retail has NO row for it: Main below is its only call
     // site, /Ob2 expanded it there and /OPT:REF then dropped the orphaned

@@ -18,30 +18,29 @@
 // DC roster: 25 owning-cpp records resolve to fifteen retained bodies,
 // four folded virtuals, four expanded helpers (default button constructor,
 // SetPalette, initialize and Deselect), and two absent constructor overloads
-// explained at their inactive records. Complete adds vslot12. The two
+// explained at their inactive records. Complete adds onSleepChange. The two
 // header helpers expand; nine STLport records are the replaced library.
 // Source-audit limits remain explicit: PC drops the focus parameter and
 // the CombatIsOver pump work, and uses sprite Dispose instead of the older
 // manager entry point. Destructor and callback-type audit coverage gaps
 // are not claims of zero source differences.
-#include <va.h>
+#include "va.h"
+
 #include "button.h"
+
+#include "bitmap16.h"
+#include "inputmgr.h"
+#include "kb.h"
+#include "kbwin.h"
+#include "message.h"
+#include "mousemgr.h"
+#include "palette.h"
 #include "resourcemanager.h"
+#include "sacrifice_window.h"
+#include "sample.h"
+#include "soundmgr.h"
 #include "window.h"
 #include "winmgr.h"
-#include "bitmap16.h"
-#include "soundmgr.h"
-#include "sample.h"
-#include "message.h"
-#include "kb.h"
-#include "mousemgr.h"
-#include "inputmgr.h"
-#include "kbwin.h"
-#include "palette.h"
-
-// Thunk-form timeGetTime (an E8 rel32, not an IAT indirect - Select's
-// match proves the form); the plain declaration and the per-TU
-// import-form doctrine live in winmm_thunks.h.
 #include "winmm_thunks.h"
 
 // homm2 BUTTON.cpp's file-static modifier latch, same name and role.
@@ -76,8 +75,12 @@ VA_COMPGEN(0x00455ec0, 0x21, SCALAR_DELETING_DTOR, button)
 // E:\gamedcs\button.cpp:69
 // Retail dropped DC's trailing focus parameter outright (ret 0x2c,
 // eleven args).
+// The independent DC publics at 57130, 57268 and 57ab4 encode native bool
+// (_N) for end throughout the constructor/initialize forwarding chain.
+// This differs from lowered CodeView's byte description. Keep m_endDialog
+// and its ==1 predicate unchanged: the public ABI does not prove its type.
 VA(0x00455ef0, 0x1F7)  // linkorder bracket; GetSprite/widget-ctor callees byte-proven, dc 0x57130
-button::button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style)
+button::button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, bool end, int hotkey, int style)
     : widget(x, y, w, h, id, style)
 {
     m_disabledFrame = 2;
@@ -117,7 +120,7 @@ void button::setPalette(const char* paletteName)
 // Keep the ordinary helper boundary.
 void button::initialize(int x, int y, int w, int h, int id,
                         const char* image, int normal, int selected,
-                        unsigned char end, int hotkey, int style)
+                        bool end, int hotkey, int style)
 {
     widget::initialize(x, y, w, h, id, style);
     m_disabledFrame = 2;
@@ -401,27 +404,13 @@ void button::setPlayerPaletteColors(int whichPlayer)
 // between SetPlayerPaletteColors (0x4569e0) and textButton's scalar
 // deleting dtor (0x456a20), inside button.obj's band. The body is
 // nothing but the qualified base call - it stays a CALL rather than an
-// /Ob2-inlined nothing because widget::_vslot12 has no definition
+// /Ob2-inlined nothing because widget::onSleepChange has no definition
 // visible here (widget.h declares it only, the Close idiom).
 VA(0x00456a10, 0x10)  // anchor-vtable (slot 12 of 0x63bb54/0x63bb88/0x63bbbc), retail-only
-void button::vslot12(int on)
+void button::onSleepChange(int on)
 {
-    widget::vslot12(on);
+    widget::onSleepChange(on);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\button.cpp:487
-// Complete has no default-textButton constructor slot. Its vtable has only
-// two retail references: the fourteen-argument ctor 0x456a50 and destructor
-// 0x456bf0. No other constructor vptr store or gap body fits this overload.
-DC_ONLY(0x57a5c, 0x58)
-void textButton::textButton()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // E:\gamedcs\button.cpp:488 - textButton::`scalar deleting destructor'
 // (dc 0x57e14). Slot 0 of textButton's vtable 0x63bb88; the 33-byte
@@ -429,8 +418,13 @@ void textButton::textButton()
 VA_COMPGEN(0x00456a20, 0x21, SCALAR_DELETING_DTOR, textButton)
 
 // E:\gamedcs\button.cpp:508, dc 0x57ab4
+// Original: textButton::textButton; button.cpp:487, dc 0x57a5c.
+textButton::textButton() : button()
+{
+}
+
 VA(0x00456a50, 0x193)  // linkorder bracket; initialize/GetSprite/GetFont callees byte-proven, dc 0x57ab4
-textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor)
+textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, bool end, int hotkey, int style, font::TColor newColor)
     : button()
 {
     initialize(x, y, w, h, id, image, normal, selected, end, hotkey, style);
@@ -481,19 +475,14 @@ type_func_button::type_func_button(long x, long y, long w, long h, long id,
     m_handler = newHandler;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\button.cpp:565
-// Complete's type_func_button vtable has one retail reference, in the
-// nine-argument ctor 0x456d30. The definition-record overload has no vptr
-// store or unclaimed body slot in the fully accounted button band.
-DC_ONLY(0x57cdc, 0x6A)
-void type_func_button::type_func_button(const type_icon_definition* def, int _id, int (*)()* _handler)
+// Original: type_func_button::type_func_button; button.cpp:565, dc 0x57cdc
+type_func_button::type_func_button(const type_icon_definition& def, int id,
+                                   handler_type handler)
+    : button(def.m_x, def.m_y, def.m_width, def.m_height, id, def.m_image,
+             0, 1, 0, 0, 2)
 {
-    // @stub
+    m_handler = handler;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\button.cpp:559 - type_func_button::`scalar deleting
 // destructor' (dc 0x57e48). Slot 0 of type_func_button's vtable
@@ -523,31 +512,6 @@ int type_func_button::main(message& msg)
     }
     return result;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\button.cpp:51
-DC_ONLY(0x57de0, 0x34)
-void* button::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\button.cpp:488
-DC_ONLY(0x57e14, 0x34)
-void* textButton::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\button.cpp:559
-DC_ONLY(0x57e48, 0x34)
-void* type_func_button::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 DATA(0x00694da4)
 sample* button::s_clickSample;

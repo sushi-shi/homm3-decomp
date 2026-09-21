@@ -1,33 +1,26 @@
-#include <va.h>
+#include "va.h"
+#include "includes.h"
+
 #include "textwdgt.h"
+
 #include "bitmap16.h"
 #include "bitmap816.h"
+#include "csprite.h"
 #include "message.h"
 #include "recruit.h"
 #include "resourcemanager.h"
 #include "window.h"
 #include "winmgr.h"
-#include "includes.h"
 
-#if 0  // @carcass
-
-// E:\gamedcs\textwdgt.cpp:36
-DC_ONLY(0x164c14, 0x6C)
-void textWidget::textWidget()
+// Original: textWidget::textWidget; textwdgt.cpp:36, dc 0x164c14.
+textWidget::textWidget() : widget(0, 0, 0, 0, 0, 0)
 {
-    // @stub
+    m_font = 0;
+    m_color = font::PRIMARY;
+    m_backColor = 0;
+    m_justify = font::CENTER_JUSTIFIED;
+    m_style = 8;
 }
-
-// E:\gamedcs\textwdgt.cpp:62
-DC_ONLY(0x164c80, 0xA4)
-void textWidget::textWidget(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, const char* textString, const char* textFontName, font::TColor color, int textWidgetId, unsigned justify, int back_color, int textWidgetStyle, unsigned char focusable)
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:95
-
-#endif  // @carcass
 
 VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 
@@ -77,26 +70,24 @@ textWidget::~textWidget()
     m_font->dispose();
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\textwdgt.cpp:102
-DC_ONLY(0x164d68, 0x6C)
-void textWidget::initialize(int x, int y, int w, int h, int id, int style, const char* _text, const char* _font, font::TColor _color, unsigned _justify, unsigned char focusable)
+// Original: textWidget::initialize; textwdgt.cpp:102, dc 0x164d68.
+// Complete has no widget::focusable member; the remaining fields and calls
+// are shared with the retained parameterized constructor.
+void textWidget::initialize(int x, int y, int w, int h, int id, int style,
+                             const char* text, const char* fontName,
+                             font::TColor color, unsigned int justify,
+                             unsigned char focusable)
 {
-    // @stub
+    widget::initialize(x, y, w, h, id, style);
+    m_font = ResourceManager::getFont(fontName);
+    if (text) {
+        m_text = text;
+    }
+    m_justify = justify;
+    m_color = color;
 }
 
 // E:\gamedcs\textwdgt.cpp:120
-DC_ONLY(0x164dd4, 0x1A8)
-int textWidget::main(message& msg)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
-// E:\gamedcs\textwdgt.cpp:120
-
 VA(0x005bc440, 0x1AD)  // vtable 0x642db0 slot 2 + widget-message protocol, dc 0x164dd4
 int textWidget::main(message& msg)
 {
@@ -199,7 +190,7 @@ void textWidget::draw() const
         if (m_backColor) {
             g_windowManager->m_screenBitmap->fillRect(
                 drawX, drawY, m_width, m_height,
-                g_unnamed6aacb0->m_data[m_backColor]);
+                g_systemPalette->m_data[m_backColor]);
         }
         int colorScheme;
         if (m_status & WIDGET_DIMMED)
@@ -217,86 +208,39 @@ void textWidget::dim() const
 {
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\textwdgt.cpp:266
-DC_ONLY(0x165038, 0x58)
-void iconBackedTextWidget::iconBackedTextWidget()
+// Original: iconBackedTextWidget::iconBackedTextWidget; textwdgt.cpp:266, dc 0x165038.
+iconBackedTextWidget::iconBackedTextWidget()
+    : m_background(0), m_backgroundFrame(0)
 {
-    // @stub
 }
 
-// E:\gamedcs\textwdgt.cpp:272
-DC_ONLY(0x165090, 0x7E)
-void iconBackedTextWidget::iconBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style)
+// Original: iconBackedTextWidget::iconBackedTextWidget; textwdgt.cpp:272, dc 0x165090.
+iconBackedTextWidget::iconBackedTextWidget(
+    int x, int y, int w, int h, const char* text, const char* fontName,
+    const char* backName, font::TColor color, int id, unsigned int justify,
+    int style)
+    : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
 {
-    // @stub
+    m_background = ResourceManager::getSprite(backName);
+    m_backgroundFrame = 0;
 }
 
-// E:\gamedcs\textwdgt.cpp:295
-DC_ONLY(0x165110, 0x4)
-void iconBackedTextWidget::zBufferDraw()
+// Original: iconBackedTextWidget::zBufferDraw; textwdgt.cpp:295, dc 0x165110.
+void iconBackedTextWidget::zBufferDraw(unsigned short* zBuffer, int id) const {}
+
+// Original: iconBackedTextWidget::Draw; textwdgt.cpp:299, dc 0x165114.
+void iconBackedTextWidget::draw() const
 {
-    // @stub
+    int drawX = m_x + m_parentWindow->m_x;
+    int drawY = m_y + m_parentWindow->m_y;
+    m_background->drawInterface(m_backgroundFrame, 0, 0,
+        m_background->getWidth(), m_background->getHeight(),
+        g_windowManager->m_screenBitmap, drawX, drawY, 0);
+    textWidget::draw();
 }
 
-// E:\gamedcs\textwdgt.cpp:299
-DC_ONLY(0x165114, 0x6E)
-void iconBackedTextWidget::draw()
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:319
-DC_ONLY(0x165184, 0x54)
-void bitmapBackedTextWidget::bitmapBackedTextWidget()
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:325
-DC_ONLY(0x1651d8, 0x7A)
-void bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style)
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:348
-DC_ONLY(0x165258, 0x9C)
-void bitmapBackedTextWidget::draw()
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:42
-DC_ONLY(0x1652fc, 0x34)
-void* textWidget::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:267
-DC_ONLY(0x165330, 0x34)
-void* iconBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:267
-DC_ONLY(0x165364, 0x18)
-void iconBackedTextWidget::~iconBackedTextWidget()
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:320
-DC_ONLY(0x16537c, 0x34)
-void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
+// Original: bitmapBackedTextWidget::bitmapBackedTextWidget; textwdgt.cpp:319, dc 0x165184.
+bitmapBackedTextWidget::bitmapBackedTextWidget() : m_image(0) {}
 
 VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 

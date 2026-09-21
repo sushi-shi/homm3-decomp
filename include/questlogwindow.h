@@ -2,6 +2,7 @@
 #define HOMM3_QUESTLOGWINDOW_H
 
 #include <vector>
+
 #include "advmgr_popup.h"
 
 // The constructor writes `byte [+0x60] = <a byte loaded from a stack

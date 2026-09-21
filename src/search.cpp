@@ -1,14 +1,16 @@
-#include <va.h>
-#include "herospec.h"
-#include "findpath.h"
-
-#include "hero.h"
-#include "game.h"
-#include "advmgr.h"
-#include "kb.h"
-#include "quest.h"  // type_quest, the quest-guard arm of enter_trigger
-#include <stdlib.h>  // abs, check_town_portal's distance surcharge
+#include "va.h"
+#include "objnames.h"
 #include "includes.h"
+
+#include <stdlib.h>
+
+#include "advmgr.h"
+#include "findpath.h"
+#include "game.h"
+#include "hero.h"
+#include "herospec.h"
+#include "kb.h"
+#include "quest.h"
 
 // DC struct.h proves the const-reference comparison operators. Their canonical
 // definitions now live in struct.h; use them directly instead of TU-local
@@ -202,16 +204,20 @@ void searchArray::enterGate(const pathCell* cell, const NewmapCell* mapCell,
     }
 }
 
-#if 0  // @carcass -- Dreamcast-only row
-
-// E:\gamedcs\search.cpp:264
-DC_ONLY(0x12b900, 0x88)
-void searchArray::board_boat(const hero* current_hero, pathCell* cell)
+// Original: searchArray::board_boat; search.cpp:264, dc 0x12b900.
+// Complete expands this ordinary helper in enterTrigger's boat arm.
+void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
 {
-    // @stub
+    if (m_payTransitionCosts && !cell.m_inBoat) {
+        cell.m_cost += cell.m_moveLeft;
+        cell.m_moveLeft = m_seaMovement;
+        cell.m_flying = 0;
+        cell.m_waterWalking = 0;
+    }
+    cell.m_inBoat = 1;
+    getCell(cell.m_point, !cell.m_canStop)->m_inBoat = 1;
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\search.cpp:283
 // Castle Gate travel between the player's Inferno towns. The AI search
@@ -324,7 +330,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
     case BORDER_GATE: {
         unsigned char visited =
             (g_game->m_borderTentVisitFlags[mapCell->m_objectIndex]
-             & g_unnamed69ccc4)
+             & g_curPlayerBit)
             != 0;
         return visited;
     }
@@ -335,11 +341,13 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
             &g_game->m_worldMap.m_questGuardList[mapCell->m_extraInfo];
         if (!guard->m_quest || guard->m_quest->hasExpired())
             return 0;
-        if (!(guard->m_visitedPlayers & (1 << currentHero->m_owner)))
+        if (!guard->playerHasInfo(currentHero->m_owner))
             return 1;
         if (!guard->m_quest->isSatisfied(const_cast<hero*>(currentHero)))
             return 0;
-        cell->m_barrierValue -= guard->m_quest->getAIValue(currentHero->m_owner);
+        type_quest* quest = guard->m_quest;
+        int player = currentHero->m_owner;
+        cell->m_barrierValue -= quest->getAIValue(player);
         return 1;
     }
     case HERO:
@@ -348,26 +356,26 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
             return 0;
         if (searchType == const_AI_enemy_search)
             return 1;
-        return searchType >= const_AI_search;
-    case GARRISON:
-        if (g_game->onSameTeam(g_game->m_garrisons[mapCell->m_extraInfo].m_playerOwner,
+        if (searchType >= const_AI_search)
+            return 1;
+        return 0;
+    case GARRISON: {
+        garrison* currentGarrison =
+            g_game->getGarrison(mapCell->m_extraInfo);
+        if (g_game->onSameTeam(currentGarrison->m_playerOwner,
                                currentHero->m_owner))
             return 1;
+    }
     case MONSTER:
-        return searchType >= const_AI_search;
+        if (searchType >= const_AI_search)
+            return 1;
+        return 0;
     case BOAT:
         if (cell->m_inBoat)
             return 0;
         if (searchType < const_AI_search)
             return 0;
-        if (m_payTransitionCosts) {
-            cell->m_cost += cell->m_moveLeft;
-            cell->m_moveLeft = m_seaMovement;
-            cell->m_flying = 0;
-            cell->m_waterWalking = 0;
-        }
-        cell->m_inBoat = 1;
-        getCell(cell->m_point, !cell->m_canStop)->m_inBoat = 1;
+        boardBoat(currentHero, *cell);
         return 1;
     case UNDERGROUND_GATE:
         if (searchType < const_AI_enemy_search)
@@ -380,13 +388,13 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
     case LITH_ONEWAY_ENTRANCE:
         if (searchType < const_AI_enemy_search)
             return 0;
-        enterLith(currentHero, &g_game->m_lithExitPools[mapCell->m_objectIndex],
+        enterLith(currentHero, &g_game->getLithExits(mapCell->m_objectIndex),
                    LITH_ONEWAY_EXIT, -1, cell, limit, searchType);
         return 0;
     case LITH_TWOWAY:
         if (searchType < const_AI_enemy_search)
             return 0;
-        enterLith(currentHero, &g_game->m_lithPools[mapCell->m_objectIndex],
+        enterLith(currentHero, &g_game->getLiths(mapCell->m_objectIndex),
                    LITH_TWOWAY, mapCell->m_extraInfo, cell, limit,
                    searchType);
         return 0;
@@ -405,7 +413,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
                    searchType);
         return 1;
     }
-    return g_adventureObjectLandBlocked[type][0] == 0;
+    return g_adventureObjectTraits[type].m_blocksLanding == 0;
 }
 
 // E:\gamedcs\search.cpp:494

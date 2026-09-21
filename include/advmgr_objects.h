@@ -4,6 +4,7 @@
 #include <bitset>
 #include <string>
 #include <vector>
+
 #include "armygrp.h"
 #include "mapcell.h"
 #include "objecttype.h"
@@ -39,15 +40,13 @@ enum ECompleteDrawFps {
     COMPLETE_DRAW_FPS_FRAME_COUNT = 100
 };
 
-class CChatManager;
-void __cdecl updateCompleteDrawFps(CChatManager* manager, const char* text);
 
-DATA(0x0065f690) extern int g_completeDrawFpsFrame;
-DATA(0x00691240) extern unsigned long g_completeDrawFpsLastTime;
-DATA(0x0069136c) extern int
+extern int g_completeDrawFpsFrame;
+extern unsigned long g_completeDrawFpsLastTime;
+extern int
     g_completeDrawFpsTimes[COMPLETE_DRAW_FPS_FRAME_COUNT];
-DATA(0x006912ec) extern char g_completeDrawFpsText[];
-DATA(0x00660388) extern char g_completeDrawFpsFormat[];
+extern char g_completeDrawFpsText[];
+extern char g_completeDrawFpsFormat[];
 
 enum EGetSoundObjectIndex {
     GET_SOUND_BANK_0 = 0,
@@ -133,8 +132,8 @@ enum EGetSoundCreatureId {
     GET_SOUND_CREATURE_115 = 115
 };
 
-DATA(0x0063d570) extern TCreatureType g_creatureGenerator1Types[];
-DATA(0x00677938) extern TCreatureType g_creatureGenerator4Types[][4];
+extern TCreatureType g_creatureGenerator1Types[];
+extern TCreatureType g_creatureGenerator4Types[][4];
 
 class CObjectType;
 

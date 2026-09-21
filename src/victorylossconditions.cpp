@@ -2,7 +2,8 @@
 // town::get_army() half of the DC pair (the summoning-portal
 // precedent: never defined, /OPT:ICF folded both bodies onto the const
 // row 0x5c1460).
-#include <va.h>
+#include "va.h"
+
 #include "game.h"
 
 VA(0x005f15a0, 0x63)  // dc 0x18fdc4
@@ -539,7 +540,7 @@ static const int g_lossPortrait146 = 0x92;
 VA(0x005f2a40, 0x3C8)  // anchor-global, dc 0x1906d4
 unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
 {
-    if (g_campaignMode) {
+    if (g_inCampaign) {
         int map;
         int i;
         switch (g_game->m_campaign.m_currentCampaign) {

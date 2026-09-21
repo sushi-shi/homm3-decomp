@@ -3,14 +3,16 @@
 #ifndef HOMM3_BUTTON_H
 #define HOMM3_BUTTON_H
 
-#include <va.h>
+#include "va.h"
+
 #include <string>
 #include <string.h>
 #include <vector>
-#include "widget.h"
+
 #include "csprite.h"
-#include "resource.h"
 #include "font.h"
+#include "resource.h"
+#include "widget.h"
 
 // Player-color palette targets. Both overloads of the free
 // SetPlayerPaletteColors (0x5ffe20 / 0x5ffe40) copy a per-player run
@@ -63,12 +65,12 @@ public:
         BUTTON_REPEAT_DELAY_TICKS = 60
     };
     button();
-    void initialize(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
+    void initialize(int x, int y, int w, int h, int id, const char* image, int normal, int selected, bool end, int hotkey, int style);
     // Dreamcast ?click_sample@button@@2PAVsample@@A; retail .bss
     // 0x694da4 (defined in button.cpp).
     static sample* s_clickSample;
     void setPalette(const char* paletteName);
-    button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
+    button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, bool end, int hotkey, int style);
     int select(message& msg);
     // E:\gamedcs\button.cpp:401, dc 0x57854
     int deselect(message& msg);
@@ -100,8 +102,8 @@ public:
 
     virtual ~button();
     // widget slot 12, overridden at 0x456a10 - the only override of it
-    // in the image. Placeholder name inherited from widget.h.
-    virtual void vslot12(int on);
+    // in the image. Descriptive name inherited from widget.h.
+    virtual void onSleepChange(int on);
     void setPlayerPaletteColors(int whichPlayer);
 };
 
@@ -110,7 +112,13 @@ public:
 // [this+0x68]). Total 112.
 class textButton : public button {
 public:
-    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor newColor);
+    textButton();
+    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, bool end, int hotkey, int style, font::TColor newColor);
+
+    // Original: textButton::SetText; button.h:136, dc 0x14762c.
+    // DC assigns the inherited Text string directly, distinct from
+    // button::SetText; TurnChatOn/Off expand it at retail 0x58ca80/0x58cbf0.
+    void setText(const char* newText) { m_text = newText; }
 
     virtual void draw() const;    // slot 4, retail 0x456ca0
 
@@ -124,6 +132,8 @@ private:
 // DC gives only a forward ref. The dtor (retail 0x456db0) tears down
 // exactly button's members, so the tail is POD; Main proves handler is
 // a fastcall message handler at 0x68 (call [this+0x68] with ecx=msg).
+struct type_icon_definition;
+
 class type_func_button : public button {
 public:
     typedef int (*handler_type)(message& msg);
@@ -131,6 +141,7 @@ public:
     type_func_button(long x, long y, long w, long h, long id,
                      const char* image, handler_type newHandler,
                      int normal, int selected);
+    type_func_button(const type_icon_definition& def, int id, handler_type handler);
     virtual int main(message& msg);  // slot 2, retail 0x456e50
 
     virtual ~type_func_button();  // retail 0x456db0

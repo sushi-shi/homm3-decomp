@@ -4,8 +4,15 @@
 #include <bitset>
 #include <string>
 #include <vector>
-#include "game.h"
+
 #include "window.h"
+
+class game;
+class hero;
+class NewSMapHeader;
+class TAbstractFile;
+struct HeroPlaceholderData;
+struct CampaignScenarioPreview;
 
 // Shared saved game snapshot; original Dreamcast name: saveHeader.
 // campaignbrief.cpp owns retail 0x69fdc4.
@@ -30,12 +37,6 @@ enum EMapSize {
     MAP_SIZE_LARGE = 108,
     MAP_SIZE_EXTRA_LARGE = 144
 };
-
-struct CampaignScenarioPreview : public NewSMapHeader {
-    SGameSetupOptions m_gameSetup;
-    bool m_available;
-};
-SIZE(CampaignScenarioPreview, 0x4d4);
 
 // The scenario's "starting options" chooser, and it is a HIERARCHY: three
 // concrete 13-slot vftables (0x63d98c, 0x63dad8, 0x63db0c) sit under an
@@ -79,14 +80,11 @@ public:
         // Retail 0x488fb0, the thiscall SCampaign::PlayScenarioPrologue
         // makes on a scenario's prologue record (name provisional).
         void play();
+        void read(TAbstractFile* infile);
     };
 
-    // The empty NewMapCampaignContext base is how game::NewMap receives the
-    // selected scenario: StartScenario (0x4884c0) passes `this` in that
-    // slot and NewMap calls two customcampaign.obj bodies on it. game.h
-    // cannot name a nested type, so the base carries the relationship;
-    // being empty it leaves every proven offset in place.
-    struct ScenarioStruct : public NewMapCampaignContext {
+    // StartScenario passes this exact nested record to game::newMap.
+    struct ScenarioStruct {
         std::string m_name;
         int m_offset;
         // Retail tests this field with a signed `jle` before loading a
@@ -204,6 +202,15 @@ public:
         void startScenario(int which, int option);
         void freeData();
         int getNumMaps() const;
+        // Complete expands this shared cleanup in both load and the destructor.
+        void clearScenarios()
+        {
+            for (unsigned int scenarioIndex = 0;
+                 scenarioIndex < m_scenarios.size(); ++scenarioIndex)
+                delete m_scenarios[scenarioIndex];
+            m_scenarios.clear();
+            freeData();
+        }
     };
 
     // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The
@@ -365,7 +372,7 @@ public:
     type_func_button* m_difficultyIncrButton;
     type_text_scroller* m_scroller;
 
-    TCampaignBrief(unsigned char newCampaign, unsigned char viewFromGame);
+    TCampaignBrief(bool newCampaign, bool viewFromGame);
     virtual ~TCampaignBrief();
     void addBonusIcons();
     void updateBonusIcons();

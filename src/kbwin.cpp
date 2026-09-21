@@ -1,19 +1,23 @@
-#include "terrain.h"
-#include <va.h>
-#include <windows.h>
+#include "prefs.h"
+#include "va.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
+
 #include "kbwin.h"
-#include "kb.h"
+
 #include "exec.h"
 #include "game.h"
+#include "inputmgr.h"
+#include "kb.h"
+#include "misc.h"
 #include "mousemgr.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "wingraph.h"
-#include "inputmgr.h"
-#include "misc.h"
 #include "winmgr.h"
 
 // Every cross-TU callee and global now comes from its owner's header
@@ -24,13 +28,11 @@
 // IAT form from mmsystem.h via <windows.h> and must never see
 // winmm_thunks.h's plain declaration (see that header).
 
+static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw);
+
 VA(0x004f7a30, 0x1CF)  // dc 0xe7c90
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine, int sw)
 {
-    WNDCLASSA appClass;
-    RECT windowRect;
-    DWORD windowStyle;
-    DWORD windowExStyle;
     DWORD lastError;
 
     g_instance = instance;
@@ -53,6 +55,22 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine
     timeBeginPeriod(1);
     if (!earlySetup())
         return 0;
+    if (!appInit(instance, previousInstance, sw))
+        return 0;
+    oldmain();
+    return 0;
+}
+
+// Original: AppInit; kbwin.cpp:166, dc 0xe7d20
+// Complete uses ANSI window APIs and initializes the desktop Imm mouse;
+// DC uses wide WinCE APIs and its own DirectInput/sound initialization.
+// The ordinary helper expands into WinMain at 0x4f7a30 in Complete.
+static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
+{
+    WNDCLASSA appClass;
+    RECT windowRect;
+    DWORD windowStyle;
+    DWORD windowExStyle;
     if (!previousInstance) {
         appClass.hCursor = 0;
         appClass.hIcon = LoadIconA(instance, MAKEINTRESOURCEA(0x73));
@@ -67,7 +85,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine
         if (!RegisterClassA(&appClass))
             return 0;
     }
-    if (g_windowedMode) {
+    if (g_config.m_mainGameFullScreen) {
         windowStyle = WS_POPUP | WS_VISIBLE;
         windowExStyle = WS_EX_TOPMOST;
     } else {
@@ -77,18 +95,17 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine
     windowRect.top = windowRect.left = 0;
     windowRect.right = 800;
     windowRect.bottom = 600;
-    AdjustWindowRect(&windowRect, windowStyle, g_windowedMode == 0);
+    AdjustWindowRect(&windowRect, windowStyle, g_config.m_mainGameFullScreen == 0);
     g_hwndApp = CreateWindowExA(windowExStyle, g_appName, g_title, windowStyle,
-        g_windowX, g_windowY,
+        g_config.m_mainGameX, g_config.m_mainGameY,
         windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
-        0, g_windowedMode ? 0 : g_dfltMenu, instance, 0);
+        0, g_config.m_mainGameFullScreen ? 0 : g_dfltMenu, instance, 0);
     if (!g_hwndApp)
         return 0;
     initGraphics();
     SetCursor(LoadCursorA(0, IDC_ARROW));
     initImmMouse(g_instance, g_hwndApp);
-    oldmain();
-    return 0;
+    return 1;
 }
 
 // AppWndProc retains its AppCommand call at +0x359. The inline policy on
@@ -118,10 +135,10 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
             g_appWindowStyle = GetWindowLongA(g_hwndApp, GWL_STYLE);
             if (!(g_appWindowStyle & (WS_MINIMIZE | WS_MAXIMIZE)) && !g_closingApp) {
                 immMouseWindowMoved();
-                if (!g_windowedMode) {
+                if (!g_config.m_mainGameFullScreen) {
                     GetWindowRect(window, &g_rcAppWindow);
-                    g_windowX = g_rcAppWindow.left;
-                    g_windowY = g_rcAppWindow.top;
+                    g_config.m_mainGameX = g_rcAppWindow.left;
+                    g_config.m_mainGameY = g_rcAppWindow.top;
                     writePrefs();
                 }
             }
@@ -171,7 +188,7 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
                     g_musicWasPlaying = 0;
                     g_soundManager->resumeStream();
                     g_soundManager->resumeSamples();
-                    if (!g_videoPaused)
+                    if (!g_remoteOn)
                         videoResume();
                     g_mouseManager->showSystemCursor(0);
                     g_appDeactivated = 0;
@@ -180,7 +197,7 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
                 if (g_soundManager->musicPlaying() || g_soundManager->m_mp3Playing)
                     g_musicWasPlaying = 1;
                 g_soundManager->pauseSamples();
-                if (!g_videoPaused)
+                if (!g_remoteOn)
                     videoPause();
                 if (!g_appDeactivated)
                     g_mouseManager->showSystemCursor(1);
@@ -216,13 +233,13 @@ void process1WindowsMessage()
             DispatchMessageA(&message);
             continue;
         }
-        if (IsIconic(g_hwndApp) && !g_videoPaused) {
+        if (IsIconic(g_hwndApp) && !g_remoteOn) {
             do {
                 if (GetMessageA(&message, 0, 0, 0)) {
                     TranslateMessage(&message);
                     DispatchMessageA(&message);
                 }
-            } while (IsIconic(g_hwndApp) && !g_videoPaused);
+            } while (IsIconic(g_hwndApp) && !g_remoteOn);
         } else {
             break;
         }
@@ -254,14 +271,14 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
             g_mouseManager->showSystemCursor(0);
             break;
         case KBWIN_MENU_HELP:
-            if (g_windowedMode)
+            if (g_config.m_mainGameFullScreen)
                 SetForegroundWindow(GetDesktopWindow());
             WinHelpA(g_hwndApp,
                 DATA_COMPGEN(0x0067fa20, appCommandHelpFile, ".\\HEROES3.HLP"),
                 HELP_FINDER, 0);
             break;
         case KBWIN_MENU_FULLSCREEN:
-            if (!setFullScreenStatus(1 - g_windowedMode))
+            if (!setFullScreenStatus(1 - g_config.m_mainGameFullScreen))
                 normalDialog(
                     DATA_COMPGEN(0x0067f9b8, appCommandColorModeText,
                         "This game runs in 65536 color mode. You must switch the desktop to this mode before playing the game."),
@@ -273,6 +290,13 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
     return 0;
 }
 #pragma auto_inline(on)
+
+// Original: UpdateDfltMenu; kbwin.cpp:680, dc 0xe8018.
+// The released menu-update hook has an empty body. The adjacent 0x4f8140
+// procedure is the four-argument About callback, not this one-argument hook.
+void updateDfltMenu(HMENU menu)
+{
+}
 
 VA(0x004f8140, 0x37)  // address-taken DialogBoxParamA callback, retail-only
 BOOL CALLBACK appAbout(HWND dialog, UINT message, WPARAM messageParam, LPARAM messageData)
@@ -300,7 +324,7 @@ void kbChangeMenu(HMENU newMenu)
     else
         g_currMenu = newMenu;
     g_activeMenu = newMenu;
-    if (!g_windowedMode) {
+    if (!g_config.m_mainGameFullScreen) {
         if (newMenu) {
             SetMenu(g_hwndApp, newMenu);
             DrawMenuBar(g_hwndApp);
@@ -385,16 +409,12 @@ void GameTime::delay(int interval)
     GameTime::delayTil(GameTime::get() + interval);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\kbwin.cpp:851
-DC_ONLY(0xe80b4, 0x30)
+// Original: InitVideo; kbwin.cpp:851, dc 0xe80b4
+// Empty hook; heroWindowManager::open retains the call to retail's
+// shared ICF ret at 0x5bc690.
 void initVideo()
 {
-    // @stub
 }
-
-#endif  // @carcass
 
 DATA(0x00699600)
 HWND g_hwndApp;
@@ -414,11 +434,12 @@ HMENU g_activeMenu;
 DATA(0x00699618)
 int g_menusSuppressed;
 
-DATA(0x006987b8)
-int g_windowedMode;
 
+// Former provisional g_videoPaused: this is the network-session latch.
+// It prevents local window deactivation from pausing a live network game.
+// Original DC name: gbRemoteOn; StartLocalPlayerTurn and remote message paths.
 DATA(0x0069954c)
-int g_videoPaused;
+int g_remoteOn;
 
 DATA(0x006989d0)
 int g_inSetupDialog;
@@ -441,11 +462,7 @@ HANDLE g_gameEvent;
 DATA(0x006995c0)
 char g_commandLine[61];
 
-DATA(0x006987b0)
-int g_windowX;
 
-DATA(0x006987b4)
-int g_windowY;
 
 DATA(0x006995a8)
 LONG g_appWindowStyle;

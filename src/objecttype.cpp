@@ -3,18 +3,19 @@
 // This compiland is absent from the Dreamcast roster. Retail groups
 // TObjectType::setImageName, TObjectTypeTable::load and the global image-name
 // registry here; the registry's tree nodes hold a VC6 std::string at +0x0c.
-#include <stdlib.h>
+#include "va.h"
 
-#include <va.h>
-#include <yvals.h>
 #include <map>
+#include <stdlib.h>
 #include <string>
 #include <strstream>
 #include <vector>
+#include <yvals.h>
+
+#include "objecttype.h"
 
 #include "advmgr_objects.h"
 #include "exceptions.h"
-#include "objecttype.h"
 #include "resourcemanager.h"
 #include "textresource.h"
 
@@ -643,6 +644,11 @@ VA(0x00516750, 0x14)
 void istrstream::`vbase destructor'();
 
 #endif  // @carcass
+
+// Explicit zero mask initializers emit the exact unsigned-long constructor.
+// load still expands the passable-mask construction and retains this body
+// for the trigger mask; that caller's nested expansion remains unresolved.
+VA_COMPGEN(0x005154a0, 0x61, BITSET_CTOR, bitset48)
 
 // COMDAT pairing: bitset<48>::flip(), agreement 1.000 - the trigger-mask
 // member TObjectType::setTriggerMask flips, and 48 is the only bitset width

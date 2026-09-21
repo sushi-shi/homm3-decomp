@@ -5,12 +5,61 @@ from __future__ import annotations
 import contextlib
 import io
 import unittest
+import tempfile
+from pathlib import Path
+from homm3.match import status
 from unittest import mock
 
 from homm3.match.banked_rows import missing_rows, parse_history, selftest
 from homm3.match.status import (_canonical_definition_text, _definition_text,
                                 MatchRow, checkpoint_drops, cmd_check,
-                                seed_historical_maxima, update_rows)
+                                overall_line, projected_rows, seed_historical_maxima, update_rows)
+
+
+class ReadmeUniverseTest(unittest.TestCase):
+    def test_manifest_rejects_invalid_module_labels(self):
+        from homm3.build.configure import load_manifest
+        for invalid in ('', '   ', 123, []):
+            manifest = {'flags': {'default': []}, 'unit': [
+                {'unit': 'cursor', 'source': 'src/cursor.cpp',
+                 'flags': 'default', 'module': invalid}]}
+            with self.subTest(module=invalid), \
+                 mock.patch('homm3.manifest.load', return_value=manifest):
+                with self.assertRaisesRegex(SystemExit, 'module must be a nonempty string'):
+                    load_manifest()
+
+    def test_explicit_modules_split_game_without_changing_totals(self):
+        units = [
+            {'unit': 'cursor', 'source': 'src/cursor.cpp'},
+            {'unit': 'rmg', 'source': 'src/rmg.cpp', 'module': 'rmg'},
+            {'unit': 'rmg_support', 'source': 'src/rmg_support.cpp', 'module': 'rmg'},
+            {'unit': 'cspriteframe', 'source': 'src/cspriteframe.cpp', 'module': 'codec'},
+            {'unit': 'victor', 'source': 'src/victor.cpp', 'module': 'victor'},
+            {'unit': 'adler32', 'source': 'vendor/zlib-1.1.3/adler32.c'},
+        ]
+        report = {'units': [{'name': u['unit'], 'functions': [
+            {'name': 'f', 'size': 10, 'fuzzy_match_percent': 100}]} for u in units]}
+        rvas = {(u['unit'], 'f'): 0x1000 + i * 16 for i, u in enumerate(units)}
+        summary = ({r: 'target' for r in rvas.values()}, {}, {'target': (6, 60)})
+        with tempfile.TemporaryDirectory() as tmp:
+            readme = Path(tmp) / 'README.md'
+            readme.write_text(status.RM_START + '\n' + status.RM_END + '\n')
+            with mock.patch.object(status, 'README_PATH', readme), \
+                 mock.patch.object(status, 'load_baseline', return_value={}), \
+                 mock.patch.object(status, 'function_rvas', return_value=rvas), \
+                 mock.patch('homm3.match.universe.summary', return_value=summary), \
+                 mock.patch('homm3.build.configure.load_manifest', return_value=({}, {}, units)), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                status.write_readme(report)
+            text = readme.read_text()
+            rows = {line.split('|')[1].strip(): [c.strip() for c in line.split('|')[2:-1]]
+                    for line in text.splitlines() if line.startswith('| `')}
+            self.assertEqual(rows['`game`'][0:2], ['1', '1 / 1 (100.0%)'])
+            self.assertEqual(rows['`rmg`'][0:2], ['2', '2 / 2 (100.0%)'])
+            self.assertEqual(rows['`codec`'][0:2], ['1', '1 / 1 (100.0%)'])
+            self.assertEqual(rows['`victor`'][0:2], ['1', '1 / 1 (100.0%)'])
+            self.assertEqual(rows['`zlib-1.1.3`'][0:2], ['1', '1 / 1 (100.0%)'])
+            self.assertIn('6 / 6 functions exact', text)
 
 
 class UpdateRowsTest(unittest.TestCase):
@@ -36,6 +85,24 @@ class UpdateRowsTest(unittest.TestCase):
         self.assertEqual((rows[key].cur, rows[key].max, rows[key].hist),
                          (80.0, 98.0, 99.0))
         self.assertEqual(stats["reset"], 0)
+
+    def test_summary_uses_projected_max_without_writing_ledger(self):
+        report = {"units": [{"name": "unit", "functions": [
+            {"name": "held", "size": 10, "fuzzy_match_percent": 20},
+            {"name": "edited", "size": 30, "fuzzy_match_percent": 80},
+        ]}]}
+        old = {("unit", "held"): MatchRow(100, 100, 100, 1, "same"),
+               ("unit", "edited"): MatchRow(100, 100, 100, 2, "old")}
+        hashes = {("unit", "held"): "same", ("unit", "edited"): "new"}
+        with mock.patch("homm3.match.status.load_baseline", return_value=old), \
+                mock.patch("homm3.match.status.function_rvas", return_value={
+                    ("unit", "held"): 1, ("unit", "edited"): 2}), \
+                mock.patch("homm3.match.status.write_baseline") as write:
+            rows = projected_rows(report, fingerprint_pair=(hashes, {}))
+            self.assertEqual(overall_line(report, rows=rows),
+                             "MAX 1/2 functions exact (50.0%), 85.00% weighted MAX across 1 unit(s)")
+            write.assert_not_called()
+        self.assertEqual(old[("unit", "edited")].max, 100)
 
     def test_source_edit_resets_max_but_never_history(self):
         key = ("unit", "function")

@@ -14,7 +14,8 @@
 // down to the register: the same TResourcePtr guard, the same
 // TAutoArrayPtr<char> function-local static with its atexit wrapper eight
 // bytes past its own guard byte, the same measure-then-copy pair of passes.
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
 
 #include "campaignmusic.h"
@@ -22,6 +23,59 @@
 #include "ownership.h"
 #include "resourcemanager.h"
 #include "textresource.h"
+
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x0066c090) SCampaignMusicCue g_campaignMusicCues[49] = {
+    { "CampainMusic01", 0 },
+    { "CampainMusic02", 0 },
+    { "CampainMusic03", 0 },
+    { "CampainMusic04", 0 },
+    { "CampainMusic05", 0 },
+    { "CampainMusic06", 0 },
+    { "CampainMusic07", 0 },
+    { "CampainMusic08", 0 },
+    { "CampainMusic09", 0 },
+    { "AiTheme0", 0 },
+    { "AiTheme1", 0 },
+    { "AiTheme2", 0 },
+    { "Combat01", 0 },
+    { "Combat02", 0 },
+    { "Combat03", 0 },
+    { "Combat04", 0 },
+    { "CstleTown", 0 },
+    { "TowerTown", 0 },
+    { "Rampart", 0 },
+    { "InfernoTown", 0 },
+    { "NecroTown", 0 },
+    { "Dungeon", 0 },
+    { "Stronghold", 0 },
+    { "FortressTown", 0 },
+    { "ElemTown", 0 },
+    { "Dirt", 0 },
+    { "Sand", 0 },
+    { "Grass", 0 },
+    { "Snow", 0 },
+    { "Swamp", 0 },
+    { "Rough", 0 },
+    { "Underground", 0 },
+    { "Lava", 0 },
+    { "Water", 0 },
+    { "GoodTheme", 0 },
+    { "NeutralTheme", 0 },
+    { "EvilTheme", 0 },
+    { "SecretTheme", 0 },
+    { "LoopLepr", 0 },
+    { "MainMenu", 0 },
+    { "Win Scenario", 0 },
+    { "CampainMusic10", 0 },
+    { "BladeABCampaign", 0 },
+    { "BladeDBCampaign", 0 },
+    { "BladeDSCampaign", 0 },
+    { "BladeFLCampaign", 0 },
+    { "BladeFWCampaign", 0 },
+    { "BladePFCampaign", 0 },
+    { "CampainMusic11", 0 }
+};
 
 VA(0x0045e250, 0x160)
 unsigned char initializeCampaignMusicTable()

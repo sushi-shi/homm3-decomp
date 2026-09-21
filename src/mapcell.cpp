@@ -1,20 +1,25 @@
 
+#include "text.h"
+#include "va.h"
+#include "objnames.h"
+
+#include <stdexcept>
 #include <stdio.h>
 #include <string.h>
-#include <va.h>
 #include <windows.h>
+
+#include "mapcell.h"
+
+#include "advmgr.h"
 #include "advmgr_objects.h"
 #include "csprite.h"
-#include "advmgr.h"
 #include "game.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
-#include "mapcell.h"
 #include "newgame.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
-#include <stdexcept>
 
 VA(0x004fbf90, 0x61)  // dc 0xeb6a4
 void ExtraInfoUnion::setCellVisited(short player)
@@ -341,11 +346,11 @@ unsigned char NewmapCell::cellIsTrigger() const
 {
     if (m_type == HERO) {
         hero* obscurer = g_game->getHero(m_extraInfo);
-        return obscurer->isOnMap() && obscurer->obscuredIsTrigger();
+        return obscurer->getObscuredTrigger();
     }
     if (m_type == BOAT) {
         boat* obscurer = &g_game->m_boats[m_extraInfo];
-        return obscurer->isOnMap() && obscurer->obscuredIsTrigger();
+        return obscurer->getObscuredTrigger();
     }
     return m_isTrigger;
 }
@@ -631,17 +636,49 @@ void NewfullMap::newfullMapFn004FD950(
     }
 }
 
+// DC TSeerHut::LoadSeerList (0x12d854, seerhut.cpp:503..522) owns the
+// count/read/resize/row-load operation. Complete moves the pool into this map,
+// makes row load void, and registers quests in m_mapObjectData. A map-owned
+// member is the inferred replacement interface; its original placement is
+// unknown. Retail expands this operation in load, but VC6 still retains it.
+// Keep that caller residual separate from the exact garrison-copy body.
+int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
+{
+    short seerCount;
+    if (infile->read(&seerCount, sizeof(seerCount)) < sizeof(seerCount))
+        return -1;
+
+    m_seerHutList.resize(seerCount);
+    int spriteNum;
+    for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
+    {
+        m_seerHutList[spriteNum].load(infile, saveVersion);
+        if (m_seerHutList[spriteNum].m_quest)
+            m_mapObjectData.push_back(static_cast<CMapObjectData*>(
+                static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
+    }
+    return 0;
+}
+
 // E:\gamedcs\mapcell.cpp:679, dc 0xecb94
+// Dreamcast's int count is the reusable result of the layer/list loaders:
+// dc 0xecbbc..0xecbbe and 0xecd3e..0xecd42 store their returns before
+// the negative-result tests. It is distinct from Complete's signed-short
+// seerCount read from the save stream; preserving both does not widen I/O.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
                      int saveVersion)
 {
+    int count;
+
     init(size, twoLayers);
 
-    if (loadMapLayer(infile, size, 0, saveVersion) < 0)
+    count = loadMapLayer(infile, size, 0, saveVersion);
+    if (count < 0)
         return -1;
     if (twoLayers) {
-        if (loadMapLayer(infile, size, 1, saveVersion) < 0)
+        count = loadMapLayer(infile, size, 1, saveVersion);
+        if (count < 0)
             return -1;
     }
 
@@ -666,45 +703,35 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
     g_game->m_universities.clear();
     g_game->m_creatureBanks.clear();
 
-    if (loadMapObjects(infile) < 0)
+    count = loadMapObjects(infile);
+    if (count < 0)
         return -1;
-    if (loadBlackBoxList(infile, saveVersion) < 0)
+    count = loadBlackBoxList(infile, saveVersion);
+    if (count < 0)
         return -1;
-    if (loadTreasureList(infile) < 0)
+    count = loadTreasureList(infile);
+    if (count < 0)
         return -1;
-    if (loadMonsterList(infile) < 0)
+    count = loadMonsterList(infile);
+    if (count < 0)
         return -1;
 
-    do {
-        {
-            short count;
-            if (infile->read(&count, sizeof(count)) < sizeof(count))
-                break;
+    count = loadSeerList(infile, saveVersion);
+    if (count < 0)
+        return -1;
 
-            m_seerHutList.resize(count);
-            int spriteNum;
-            for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
-            {
-                m_seerHutList[spriteNum].load(infile, saveVersion);
-                if (m_seerHutList[spriteNum].m_quest)
-                    m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                        static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
-            }
-        }
+    if (saveVersion >= 25)
+        newfullMapFn004FD950(infile, saveVersion);
 
-        if (saveVersion >= 25)
-            newfullMapFn004FD950(infile, saveVersion);
+    count = loadTimedEventList(infile, saveVersion);
+    if (count < 0)
+        return -1;
+    count = loadTownEventList(infile, saveVersion);
+    if (count < 0)
+        return -1;
 
-        if (loadTimedEventList(infile, saveVersion) < 0)
-            return -1;
-        if (loadTownEventList(infile, saveVersion) < 0)
-            break;
-
-        incProgressBar(1);
-        return 0;
-    } while (0);
-
-    return -1;
+    incProgressBar(1);
+    return 0;
 }
 
 // E:\gamedcs\mapcell.cpp:759
@@ -2761,13 +2788,13 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     // Restoration of Erathia and Armageddon's Blade always carry the
     // experience dword; Shadow of Death gates it behind a flag byte.  In a
     // campaign game a value below forty is treated as no custom experience at
-    // all, which is what the gbUnk69774c consult is doing on both arms.
+    // all, which is what the g_inCampaign consult is doing on both arms.
     unsigned char customExperience;
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA
         || mapVersion == MAP_FORMAT_ARMAGEDDONS_BLADE) {
         infile->read(&intBuffer, sizeof(intBuffer));
         experience = intBuffer;
-        if (experience != 0 && (!g_unk69774c || experience >= 40))
+        if (experience != 0 && (!g_inCampaign || experience >= 40))
             customExperience = 1;
         else
             customExperience = 0;
@@ -2777,7 +2804,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         customExperience = experienceFlag != 0;
         if (customExperience) {
             infile->read(&experience, sizeof(experience));
-            if (g_unk69774c && experience < 40)
+            if (g_inCampaign && experience < 40)
                 customExperience = 0;
         } else {
             experience = 0;
@@ -2789,9 +2816,9 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     // owner byte for these player-table lookups. charBuffer now contains
     // the custom-name flag and is not a player index.
     if (heroID == -1) {
-        if (g_unnamed69fb24[owner] != -1) {
-            heroID = g_unnamed69fb24[owner];
-            g_unnamed69fb24[owner] = -1;
+        if (g_startingHeroOverrides[owner] != -1) {
+            heroID = g_startingHeroOverrides[owner];
+            g_startingHeroOverrides[owner] = -1;
         } else {
             TTownType alignment;
             memcpy(&alignment, &g_game->m_setup.m_alignment[owner],
@@ -2830,7 +2857,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     infile->read(&charBuffer, sizeof(charBuffer));
     if (charBuffer) {
         infile->read(&charBuffer, sizeof(charBuffer));
-        if (!isRandomHero || g_unk69774c) {
+        if (!isRandomHero || g_inCampaign) {
             heroData->m_customPortraitNumber = 1;
             heroData->m_portraitNumber = charBuffer;
         }
@@ -2967,7 +2994,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         }
     }
 
-    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
+    count = infile->read(padding, sizeof(padding));
+    if (count < sizeof(padding))
         return -1;
 
     // A prison hero is not owned and not in any tavern pool.
@@ -3168,6 +3196,9 @@ void NewfullMap::soDTransformRandomDwellings()
 // versus direct two-argument insert at 60.0594%; no sibling score moves.
 // Both guard/data insertion workers still expand where retail calls the
 // two-argument bodies, so this does not close that native-vector frontier.
+// Current residual (59.40%): readSeerData expands with its owned temporary,
+// read and pool insertion. VC6 also expands the temporary TSeerHut constructor
+// that retail retains; other map-reader call/expansion differences remain.
 VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
 int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
                            int mapVersion)
@@ -3613,22 +3644,26 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     if (count < sizeof(dummy))
         return -1;
 
-    TAdventureObjectType objectTypeRead;
-    count = infile->read(&objectTypeRead, sizeof(objectTypeRead));
-    if (count < sizeof(objectTypeRead))
+    // The object type is read through the int staging value and copied into
+    // the typed member, exactly as the trait fixup below copies into it: a
+    // separate TAdventureObjectType local takes its own frame slot and pushes
+    // every later displacement by four (99.9633 against retail's 0x8c frame).
+    count = infile->read(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
-    tempObjectType.m_objectType = objectTypeRead;
+    memcpy(&tempObjectType.m_objectType, &value,
+           sizeof(tempObjectType.m_objectType));
     if (usedDefaultMask) {
         sprintf(g_text,
                 DATA_COMPGEN(0x0067fb10, readObjectTypeMissingMask,
                              "Could not load mask file for %s! - Type: %s"),
                 tempObjectType.m_imageName.c_str(),
-                g_adventureObjectNames[tempObjectType.m_objectType]);
+                g_quickViewText[tempObjectType.m_objectType]);
         MessageBoxA(g_hwndApp, g_text, "Error!", 0);
     }
 
     memcpy(&tempObjectType.m_objectType,
-           &g_adventureObjectTraits[tempObjectType.m_objectType][8],
+           &g_adventureObjectTraits[tempObjectType.m_objectType].m_nameRow,
            sizeof(tempObjectType.m_objectType));
 
     count = infile->read(&value, sizeof(value));
@@ -3862,26 +3897,39 @@ void NewfullMap::newfullMapFn005042C0()
 }
 
 // E:\gamedcs\mapcell.cpp:3838
+// DC's long i (sp+0x18) belongs to the preceding hero-reset loop, absent in
+// Complete. These three loading loops use int x (sp+0x1c); push_back at
+// dc 0xf2d48 passes that slot directly to vector<int>::push_back(const int&).
+// A long counter instead creates a conversion temporary and changes VC6's
+// aliasing/induction decisions despite having the same x86 width.
+// Both count reads use int_buffer (sp+0x34), then copy to numObjects (sp+0x3c).
+// count (sp+0x30) owns read lengths and object-reader status; int v (sp+0x2c)
+// scans invalid placements. This ownership and the two braced read guards
+// reproduce retail, including its distinct empty/nonempty vector cleanups.
 VA(0x00504470, 0x5C9)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
 int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 {
     g_invalidPlacementList.clear();
 
+    int intBuffer;
+    int numObjects;
     int count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    int x;
+    count = infile->read(&intBuffer, sizeof(intBuffer));
+    if (count < sizeof(intBuffer)) {
         return -1;
+    }
 
-    m_objectTypes.resize(count);
-
-    long i;
-    for (i = 0; i < m_objectTypes.size(); ++i) {
-        int status = readObjectType(infile, m_objectTypes[i]);
-        if (status < 0)
+    numObjects = intBuffer;
+    m_objectTypes.resize(numObjects);
+    for (x = 0; x < m_objectTypes.size(); ++x) {
+        count = readObjectType(infile, m_objectTypes[x]);
+        if (count < 0)
             return -1;
-        if (i == m_objectTypes.size() / 2)
+        if (x == m_objectTypes.size() / 2)
             incProgressBar(1);
-        if (status == READ_OBJECT_TYPE_DEFAULT_MASK)
-            g_invalidPlacementList.push_back(i);
+        if (count == READ_OBJECT_TYPE_DEFAULT_MASK)
+            g_invalidPlacementList.push_back(x);
     }
 
     newfullMapFn005042C0();
@@ -3889,43 +3937,47 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     std::vector<CSprite*> oldSprites;
     oldSprites.resize(m_sprites.size());
-    for (i = 0; i < m_sprites.size(); ++i)
-        oldSprites[i] = m_sprites[i];
+    for (x = 0; x < m_sprites.size(); ++x)
+        oldSprites[x] = m_sprites[x];
 
-    m_sprites.resize(count);
-    for (i = 0; i < m_objectTypes.size(); ++i) {
-        m_sprites[i] =
-            ResourceManager::getSprite(m_objectTypes[i].m_imageName.c_str());
-        if (i == m_objectTypes.size() / 3)
+    m_sprites.resize(numObjects);
+    for (x = 0; x < m_objectTypes.size(); ++x) {
+        m_sprites[x] =
+            ResourceManager::getSprite(m_objectTypes[x].m_imageName.c_str());
+        if (x == m_objectTypes.size() / 3)
             incProgressBar(1);
-        if (i == m_objectTypes.size() / 3 * 2)
+        if (x == m_objectTypes.size() / 3 * 2)
             incProgressBar(1);
     }
 
-    for (i = 0; i < oldSprites.size(); ++i)
-        oldSprites[i]->dispose();
+    for (x = 0; x < oldSprites.size(); ++x)
+        oldSprites[x]->dispose();
     oldSprites.clear();
 
     incProgressBar(1);
 
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    count = infile->read(&intBuffer, sizeof(intBuffer));
+    if (count < sizeof(intBuffer)) {
         return -1;
+    }
 
-    m_objects.resize(count);
-    for (i = 0; i < m_objects.size(); ++i) {
-        if (readObject(infile, &m_objects[i], mapVersion) < 0)
+    numObjects = intBuffer;
+    m_objects.resize(numObjects);
+    for (x = 0; x < m_objects.size(); ++x) {
+        count = readObject(infile, &m_objects[x], mapVersion);
+        if (count < 0)
             return -1;
 
-        for (unsigned int missing = 0; missing < g_invalidPlacementList.size();
-             ++missing) {
-            if (m_objects[i].m_typeIndex == g_invalidPlacementList[missing]) {
+        for (int v = 0; v < g_invalidPlacementList.size();
+             ++v) {
+            if (m_objects[x].m_typeIndex == g_invalidPlacementList[v]) {
                 sprintf(g_text,
                         DATA_COMPGEN(0x0067fb48, readMapObjectsInvalidObject,
                                      "Invalid Object Referenced!\n\n"
                                      "x: %d y: %d z: %d - Type: %s"),
-                        m_objects[i].m_x, m_objects[i].m_y, m_objects[i].m_z,
-                        g_adventureObjectNames[
-                            m_objectTypes[m_objects[i].m_typeIndex].m_objectType]);
+                        m_objects[x].m_x, m_objects[x].m_y, m_objects[x].m_z,
+                        g_quickViewText[
+                            m_objectTypes[m_objects[x].m_typeIndex].m_objectType]);
                 MessageBoxA(g_hwndApp, g_text,
                             DATA_COMPGEN(0x0067fb08,
                                          readMapObjectsErrorCaption, "Error!"),
@@ -3933,7 +3985,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
             }
         }
 
-        m_objects[i].m_animationOffset = static_cast<unsigned char>(random(0, 255));
+        m_objects[x].m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
 
     incProgressBar(1);
@@ -4499,6 +4551,7 @@ VA_COMPGEN(0x005090b0, 0x30C, VECTOR_INSERT, generator)
 // where their enrollments live. The mutable form is also called for folded pointer
 // arrays; BlackBoxData's implicit assignment calls the separate const form.
 VA_COMPGEN(0x005093f0, 0x1A4, STD_COPY, TTimedEvent)
+VA_COMPGEN(0x005095a0, 0x33, STD_COPY, garrison)
 VA_COMPGEN(0x005095e0, 0x3F, STD_COPY, type_university)
 VA_COMPGEN(0x00509620, 0x207, STD_COPY, type_creature_bank)
 VA_COMPGEN(0x00509830, 0x168, STD_CONSTRUCT, TreasureData)

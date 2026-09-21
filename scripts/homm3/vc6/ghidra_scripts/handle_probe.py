@@ -49,7 +49,7 @@ import regasg_probe as _rp  # noqa: E402  (helper reuse: _functions, ...)
 OUT_DIR = import_c2.RAW_DIR / "handles"
 BASE = import_c2.IMAGE_BASE
 
-# p2symtab.c per evidence/vc6/c2-tu-map.tsv: ICE-string anchors 0x8339f /
+# p2symtab.c per build/vc6/c2-tu-map.tsv: ICE-string anchors 0x8339f /
 # 0x83a78 / 0x83cc2 / 0x84045, then p2symtab.c|reader.c brackets down to
 # 0x84cb9+84; reader.c's pure block starts at 0x84d9b and bounds the span.
 P2SYMTAB_LO = 0x8339F

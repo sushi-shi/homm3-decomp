@@ -1,31 +1,35 @@
-#include <va.h>
+#include "text.h"
+#include "va.h"
+#include "includes.h"
+
 #include <stdio.h>
+
 #include "viewarmywindow.h"
-#include "border.h"
-#include "button.h"
-#include "exec.h"
-#include "widget.h"
-#include "game.h"
-#include "kb.h"
-#include "kbwin.h"
-#include "textwdgt.h"
+
 #include "army.h"
 #include "armygrp.h"
+#include "border.h"
+#include "button.h"
 #include "cmbtmgr.h"
+#include "creaturetype.h"
+#include "exec.h"
+#include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
-#include "recruit.h"
+#include "kb.h"
+#include "kbwin.h"
 #include "message.h"
-#include "mousemgr.h"
-#include "winmgr.h"
-#include "creaturetype.h"
-#include "soundmgr.h"
 #include "misc.h"
-#include "includes.h"
+#include "mousemgr.h"
+#include "recruit.h"
+#include "soundmgr.h"
+#include "textwdgt.h"
+#include "widget.h"
+#include "winmgr.h"
 
 // The Faerie Dragon's in-combat cast button handler, retail 0x5f5030:
 // 48 bytes sitting in this TU's own band that
-// config/retail-functions.tsv has NO row for (the 0x5f4850 row's 2007
+// config/retail/functions.tsv has NO row for (the 0x5f4850 row's 2007
 // bytes end at 0x5f5027 and the next row is 0x5f5060 - a carve defect,
 // reported not fixed). The body is
 // `if (msg->codeX == 13 && !(msg->qualifier & 0x200)) { msg->id =
@@ -62,8 +66,6 @@ DATA(0x006a7458) extern THelpText g_viewArmyHelp[16];
 // luck describers (0x4f32a0 / 0x4f3540) read the SAME rows at the same
 // offsets with the same format_string/append shape, which is what fixes
 // both bases and both roles.
-DATA(0x006a57bc) extern const char* g_moraleTexts[42];
-DATA(0x006a532c) extern const char* g_luckTexts[25];
 
 // The single-stack popup: one army's whole record laid out over the
 // 298x311 CrStkPU.pcx plate. EH-bearing (`push -1 / push __ehhandler$ /
@@ -108,9 +110,18 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     // The stack's OWN traits row is the copy embedded in army at +0x74
     // (army.h's sMonInfo slice); the table row is the unmodified one.
     const TCreatureTypeTraits* stackTraits = &thisArmy->m_monInfo;
-    const TCreatureTypeTraits* typeTraits =
-        &g_creatureTypeTraits[thisArmy->m_creatureType];
+    const TCreatureTypeTraits& typeTraits =
+        g_creatureTypeTraits[thisArmy->m_creatureType];
 
+    // 97.20%: 67/67 blocks exact, every reloc and call agrees, and the
+    // sole residual is one stack slot - retail spills the shooting-attack
+    // max to [ebp-0x1c] where we use [ebp-0x18]. Everything stored before
+    // it matches; that offset alone does not prove another source local.
+    // Unsuccessful isolated probes: hoisting `side`'s declaration (no change -
+    // VC6 slots by first use, not declaration), `int shooting` (96.73,
+    // and the divergence moves earlier), and an added early int (folded
+    // away). DC types the traits local as a reference, which is adopted
+    // above and is byte-neutral.
     unsigned char shooting = thisArmy->canShoot(0);
     int attack = thisArmy->getAdjustedAttack(0, shooting);
     int defense = thisArmy->getAdjustedDefense(0, 1);
@@ -128,15 +139,15 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
 
     createPortraitWidget(stackTraits->m_spriteName,
                            stackTraits->m_townType, thisArmy->m_numTroops);
-    createAttackWidget(typeTraits->m_attackSkill, attack);
-    createDefenseWidget(typeTraits->m_defenseSkill, defense);
-    createShotsWidget(*stackTraits, typeTraits->m_numShots,
+    createAttackWidget(typeTraits.m_attackSkill, attack);
+    createDefenseWidget(typeTraits.m_defenseSkill, defense);
+    createShotsWidget(*stackTraits, typeTraits.m_numShots,
                         stackTraits->m_numShots);
     createDamageWidget(*stackTraits, thisArmy->getController());
-    createHitpointsWidget(typeTraits->m_hitPoints, stackTraits->m_hitPoints);
+    createHitpointsWidget(typeTraits.m_hitPoints, stackTraits->m_hitPoints);
     createHitpointsLeftWidget(stackTraits->m_hitPoints
                                  - thisArmy->m_topCreatureDamage);
-    createSpeedWidget(typeTraits->m_speed, thisArmy->getSpeed());
+    createSpeedWidget(typeTraits.m_speed, thisArmy->getSpeed());
 
     createMoraleWidget(thisArmy->getMorale(0));
 
@@ -334,11 +345,13 @@ VA(0x005f4210, 0x3C1)  // dc 0x19148c
 TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
                                  unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
+      // Retail initialises the creature type in the member list, before the
+      // widget run; assigning it in the body costs 94.4475 against 97.1745.
+      m_armyType(TCreatureType(armyType)),
       m_showingUpgradeButton(0),
       m_showingDismissButton(0),
       m_showingOkButton(showOk)
 {
-    m_armyType = TCreatureType(armyType);
     const TCreatureTypeTraits* traits = &g_creatureTypeTraits[armyType];
 
     m_widgets.reserve(NWIDGETS);
@@ -374,8 +387,8 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
 
     createRolloverWidget();
 
-    for (int i = 0; i < 3; i++)
-        m_influence[i] = -1;
+    int i;
+    MEMSET(m_influence, -1, sizeof(m_influence), i);
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -430,18 +443,12 @@ int TViewArmyWindow::convertID2HelpID(int id) const
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\viewarmywindow.cpp:366 - no retail row: the carve has nothing
-// between DoModal (0x5f47f0 + 92 = 0x5f484c) and WindowHandler (0x5f4850),
-// so retail either inlined this at its one call site or /OPT:REF dropped it.
-DC_ONLY(0x191764, 0x40)
+// Original: TViewArmyWindow::QuickView; viewarmywindow.cpp:366, dc 0x191764.
+// HillFortWindow's right-click path invokes the common quick-view wrapper.
 void TViewArmyWindow::quickView()
 {
-    // @stub
+    g_windowManager->doQuickView(this);
 }
-
-#endif  // @carcass
 
 VA(0x005f47f0, 0x5C)  // dc 0x1917a4
 void TViewArmyWindow::doModal()
@@ -516,33 +523,33 @@ int TViewArmyWindow::windowHandler(message& msg)
             switch (helpID) {
             case g_moraleHelpIndex:
                 if (m_morale > 0) {
-                    text.assign(formatString(g_moraleTexts[3], g_moraleTexts[0]));
+                    text.assign(formatString(g_moraleInfo[3], g_moraleInfo[0]));
                     resType = 14;
                 } else if (m_morale == 0) {
-                    text.assign(formatString(g_moraleTexts[3], g_moraleTexts[1]));
+                    text.assign(formatString(g_moraleInfo[3], g_moraleInfo[1]));
                     resType = 15;
                 } else {
-                    text.assign(formatString(g_moraleTexts[3], g_moraleTexts[2]));
+                    text.assign(formatString(g_moraleInfo[3], g_moraleInfo[2]));
                     resType = 16;
                 }
                 if (m_moraleHelp.length() == 0)
-                    text += g_moraleTexts[23];
+                    text += g_moraleInfo[23];
                 else
                     text += m_moraleHelp;
                 break;
             case g_luckHelpIndex:
                 if (m_luck > 0) {
-                    text.assign(formatString(g_luckTexts[3], g_luckTexts[0]));
+                    text.assign(formatString(g_luckInfo[3], g_luckInfo[0]));
                     resType = 11;
                 } else if (m_luck == 0) {
-                    text.assign(formatString(g_luckTexts[3], g_luckTexts[1]));
+                    text.assign(formatString(g_luckInfo[3], g_luckInfo[1]));
                     resType = 12;
                 } else {
-                    text.assign(formatString(g_luckTexts[3], g_luckTexts[2]));
+                    text.assign(formatString(g_luckInfo[3], g_luckInfo[2]));
                     resType = 13;
                 }
                 if (m_luckHelp.length() == 0)
-                    text += g_luckTexts[18];
+                    text += g_luckInfo[18];
                 else
                     text += m_luckHelp;
                 break;
@@ -596,7 +603,7 @@ int TViewArmyWindow::windowHandler(message& msg)
     } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         int hoverID = findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID != g_lastViewArmyHoverId) {
-            const char* rollover = g_emptyRolloverText;
+            const char* rollover = "";
             g_lastViewArmyHoverId = hoverID;
             if (hoverID != -1) {
                 g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
@@ -757,7 +764,7 @@ void TViewArmyWindow::createAttackWidget(int normalAttackSkill,
                                            int currentAttackSkill)
 {
     m_widgets.push_back(new textWidget(
-        154, 48, 122, 17, g_primarySkillNames[0], "smalfont.fnt",
+        154, 48, 122, 17, g_statNames[0], "smalfont.fnt",
         font::PRIMARY, ATTACK_LABEL_ID, 4, 0, 8));
 
     if (normalAttackSkill == currentAttackSkill)
@@ -775,7 +782,7 @@ void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
                                             int currentDefenseSkill)
 {
     m_widgets.push_back(new textWidget(
-        154, 66, 122, 17, g_primarySkillNames[1], "smalfont.fnt",
+        154, 66, 122, 17, g_statNames[1], "smalfont.fnt",
         font::PRIMARY, DEFENSE_LABEL_ID, 4, 0, 8));
 
     if (normalDefenseSkill == currentDefenseSkill)

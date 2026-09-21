@@ -1,6 +1,8 @@
 #ifndef HOMM3_COMMAND_H
 #define HOMM3_COMMAND_H
 
+#include "va.h"
+
 // The combat command domain: what a click on a combat hex means.
 // combatManager::GetCommand (0x476490) ANSWERS these and
 // combatManager::DoCommand (0x476bd0) CONSUMES them, and the two bodies
@@ -86,6 +88,6 @@ extern int g_thisNetGotAdventureControl;
 // The two remote combat-control player positions. Dreamcast publishes the
 // array name; retail ResetRound indexes [1-currentSide], producing relocs to
 // both the base and its second element.
-DATA(0x0069773c) extern int g_combatControlNetPos[2];
+extern int g_combatControlNetPos[2];
 
 #endif  /* HOMM3_COMMAND_H */

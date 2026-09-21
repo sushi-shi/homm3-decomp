@@ -1,34 +1,18 @@
 #ifndef HOMM3_SOUNDMGR_H
 #define HOMM3_SOUNDMGR_H
 
+#include <bink.h>
+#include <dsound.h>
+#include <Mss.h>
 #include <windows.h>
+
 #include "basemgr.h"
+#include "crt_process.h"
 #include "kbwin.h"
 
 void pollSound();
 
 class sample;
-class ds_memsample;
-
-struct AILPrimaryBufferVtable {
-    void* m_methods[15];
-    long (__stdcall* m_setVolume)(void* self, long volume);
-};
-struct AILPrimaryBuffer {
-    AILPrimaryBufferVtable* m_vtable;
-};
-// Only pointers cross this header; the SDK definition is included by its consumer.
-struct _DIG_DRIVER;
-typedef _DIG_DRIVER AILDigitalDriver;
-
-struct AILWaveFormat {
-    unsigned short m_formatTag;
-    unsigned short m_channels;
-    unsigned long m_samplesPerSec;
-    unsigned long m_avgBytesPerSec;
-    unsigned short m_blockAlign;
-    unsigned short m_bitsPerSample;
-};
 
 // DC-attested verbatim (LF_FIELDLIST 0x1c9c, Size = 8): the pair a
 // loaded-and-playing sample travels as. `playSample` is `void*` in the
@@ -129,7 +113,7 @@ public:
     };
 
     int m_mssHandle;
-    AILDigitalDriver* m_ds;
+    HDIGDRIVER m_ds;
     int m_samples;
     ds_memsample* m_sampleHandles[14];
     int m_sampleNum;
@@ -176,6 +160,8 @@ public:
     void resumeStream();          // 0x59ac00
     void resumeSamples();         // 0x599b90, name provisional
     void pauseSamples();          // 0x599c40, name provisional
+    // WinCE defines the no-op service_sounds in SoundMgr.h:140. Complete's Miles
+    // implementation is defined in soundmgr.cpp; see its platform evidence comment.
     void serviceSounds();
 
     void setMusicVolume();                              // 0x5994b0
@@ -194,19 +180,11 @@ extern short g_ailDriverState[14];
 // (AdjustMusicVolumes, ResumeSamples, StopAllSamples, PauseSamples,
 // MemorySample). Ordinal placeholder - the role is proven, the NAME is
 // unattested by any source.
-extern unsigned char g_unk691209;
+extern unsigned char g_goSolo;
 
-// Retail .bss 0x698760 / 0x698764: the two volume settings
-// ConvertVolume selects between - 0x698760 for VOLUME_TYPE_101 (music,
-// what SetMusicVolume asks for), 0x698764 otherwise (samples, what
-// MemorySample and ModifySample ask for). Each is a 1..10 step that
-// ConvertVolume scales by (setting + 1) / 10; outside that range it
-// yields 0, which is also why MemorySample and launch_sample can use
-// 0x698764 as a plain "sound is configured on" gate. Ordinal
-// placeholders - names unattested.
-extern int g_unk698760;
-extern int g_unk698764;
-extern int g_unk698a28;
+// Retail-only gate around Open's digital-driver initialization; descriptive
+// name from its only read. Original name and producer are not recovered.
+extern int g_skipDigitalDriverOpen;
 
 // Retail PC Miles initialization state used only by Open. The three .data
 // configuration dwords begin at 0x684aa8; the 16-byte PCM descriptor is at
@@ -215,12 +193,12 @@ extern int g_soundSampleRate;
 extern int g_soundBitsPerSample;
 extern int g_soundOutputChannels;
 extern int g_soundMaxSamples;
-extern AILWaveFormat g_soundWaveFormat;
+extern PCMWAVEFORMAT g_soundWaveFormat;
 
 // Retail .bss 0x69fe78: the Miles stream handle. Named from the import
 // contract - it is the sole argument to AIL_stream_status and
 // AIL_service_stream everywhere it appears.
-extern void* g_mp3Stream;
+extern HSTREAM g_mp3Stream;
 
 // Retail .bss 0x6a3258: a 14-entry side table parallel to
 // soundManager::sampleHandles. PauseSamples writes
@@ -244,17 +222,14 @@ struct SoundChannelRange {
 };
 extern SoundChannelRange g_soundChannels[4];  // 0x684ab8
 
-// Retail .bss 0x6a3290 and 0x6a3394, 0x104 bytes apart: the pending MP3
-// name and the copy ResumeStream promotes it to under
-// section_MP3_name_change. Names provisional.
-extern char g_mp3Name[260];
-extern char g_mp3NamePlaying[260];
+// Original DC currentStream / waitingStream. StartMP3 fills the pending name;
+// the worker promotes it to current, while ResumeStream requeues current.
+extern char g_currentStream[260];
+extern char g_waitingStream[260];
 
-// Retail .bss 0x69fe90 / 0x69fe9c: a dword ResumeStream copies from the
-// first to the second alongside the name promotion. Ordinal
-// placeholders - names unattested.
-extern int g_unk69fe90;
-extern int g_unk69fe9c;
+// Original DC currentLoop / waitingLoop, paired with the stream names above.
+extern int g_currentLoop;
+extern int g_waitingLoop;
 
 // Retail .bss 0x69fec0: fifty 0x108-byte playback-position records. The
 // 260-byte name and trailing dword are forced by ThreadStopMP3's stride,
@@ -286,123 +261,8 @@ extern const char* const g_terrainMusic[9];
 // bounds the id domain to 2..10. Name provisional.
 extern unsigned char g_terrainMusicIds[9];
 
-// Miles Sound System imports. The DLL exports carry their own leading
-// underscore (retail IAT: __imp___AIL_end_sample@4), which is Miles'
-// own header convention: `_AIL_*` dllimports behind `AIL_*` aliases.
-extern "C" {
-__declspec(dllimport) void __stdcall _AIL_end_sample(ds_memsample* sample);
-__declspec(dllimport) int __stdcall _AIL_sample_status(ds_memsample* sample);
-__declspec(dllimport) int __stdcall _AIL_sample_volume(ds_memsample* sample);
-__declspec(dllimport) void __stdcall _AIL_stop_sample(ds_memsample* sample);
-__declspec(dllimport) void __stdcall _AIL_resume_sample(ds_memsample* sample);
-__declspec(dllimport) void __stdcall _AIL_init_sample(ds_memsample* sample);
-__declspec(dllimport) void __stdcall _AIL_start_sample(ds_memsample* sample);
-__declspec(dllimport) int __stdcall _AIL_set_sample_file(ds_memsample* sample,
-                                                         const void* start,
-                                                         int block);
-__declspec(dllimport) void __stdcall _AIL_set_sample_loop_count(ds_memsample* sample,
-                                                                int loops);
-__declspec(dllimport) void __stdcall _AIL_set_sample_volume(ds_memsample* sample,
-                                                            int volume);
-__declspec(dllimport) int __stdcall _AIL_stream_status(void* stream);
-__declspec(dllimport) int __stdcall _AIL_stream_position(void* stream);
-__declspec(dllimport) int __stdcall _AIL_stream_volume(void* stream);
-__declspec(dllimport) void* __stdcall _AIL_open_stream(void* driver,
-                                                       const char* filename,
-                                                       int streamMem);
-__declspec(dllimport) void __stdcall _AIL_set_stream_loop_count(void* stream,
-                                                                int loops);
-__declspec(dllimport) void __stdcall _AIL_start_stream(void* stream);
-__declspec(dllimport) void __stdcall _AIL_set_stream_position(void* stream,
-                                                              int position);
-__declspec(dllimport) void __stdcall _AIL_set_stream_volume(void* stream, int volume);
-__declspec(dllimport) void __stdcall _AIL_service_stream(void* stream, int fillup);
-__declspec(dllimport) void __stdcall _AIL_pause_stream(void* stream, int pause);
-__declspec(dllimport) void __stdcall _AIL_close_stream(void* stream);
-__declspec(dllimport) void __stdcall _AIL_shutdown();
-__declspec(dllimport) void __stdcall _AIL_serve();
-__declspec(dllimport) void __stdcall _AIL_startup();
-__declspec(dllimport) int __stdcall _AIL_set_preference(int preference,
-                                                        int value);
-__declspec(dllimport) int __stdcall _AIL_get_preference(int preference);
-__declspec(dllimport) void __stdcall _AIL_HWND();
-__declspec(dllimport) int __stdcall _AIL_waveOutOpen(
-    AILDigitalDriver** driver, void* waveOut, int device,
-    AILWaveFormat* format);
-__declspec(dllimport) void __stdcall _AIL_waveOutClose(
-    AILDigitalDriver* driver);
-__declspec(dllimport) void __stdcall _AIL_digital_configuration(
-    AILDigitalDriver* driver, int* rate, int* format, char* description);
-__declspec(dllimport) ds_memsample* __stdcall _AIL_allocate_sample_handle(
-    AILDigitalDriver* driver);
-__declspec(dllimport) unsigned char __stdcall _SmackSoundUseMSS(
-    AILDigitalDriver* driver);
-typedef void* (__stdcall* BinkOpenMilesProc)(void*);
-__declspec(dllimport) void* __stdcall _BinkOpenMiles(void* soundSystem);
-__declspec(dllimport) int __stdcall _BinkSetSoundSystem(
-    BinkOpenMilesProc openSound, AILDigitalDriver* driver);
-}
-#define AIL_end_sample _AIL_end_sample
-#define AIL_sample_status _AIL_sample_status
-#define AIL_sample_volume _AIL_sample_volume
-#define AIL_stop_sample _AIL_stop_sample
-#define AIL_resume_sample _AIL_resume_sample
-#define AIL_init_sample _AIL_init_sample
-#define AIL_start_sample _AIL_start_sample
-#define AIL_set_sample_file _AIL_set_sample_file
-#define AIL_set_sample_loop_count _AIL_set_sample_loop_count
-#define AIL_set_sample_volume _AIL_set_sample_volume
-#define AIL_stream_status _AIL_stream_status
-#define AIL_stream_position _AIL_stream_position
-#define AIL_stream_volume _AIL_stream_volume
-#define AIL_open_stream _AIL_open_stream
-#define AIL_set_stream_loop_count _AIL_set_stream_loop_count
-#define AIL_start_stream _AIL_start_stream
-#define AIL_set_stream_position _AIL_set_stream_position
-#define AIL_set_stream_volume _AIL_set_stream_volume
-#define AIL_service_stream _AIL_service_stream
-#define AIL_pause_stream _AIL_pause_stream
-#define AIL_close_stream _AIL_close_stream
-#define AIL_shutdown _AIL_shutdown
-#define AIL_serve _AIL_serve
-#define AIL_startup _AIL_startup
-#define AIL_set_preference _AIL_set_preference
-#define AIL_get_preference _AIL_get_preference
-#define AIL_HWND _AIL_HWND
-#define AIL_waveOutOpen _AIL_waveOutOpen
-#define AIL_waveOutClose _AIL_waveOutClose
-#define AIL_digital_configuration _AIL_digital_configuration
-#define AIL_allocate_sample_handle _AIL_allocate_sample_handle
-#define SmackSoundUseMSS _SmackSoundUseMSS
-#define BinkOpenMiles _BinkOpenMiles
-#define BinkSetSoundSystem _BinkSetSoundSystem
-
-// The CRT thread spawner retail reaches with a plain `call __beginthread`
-// (msvcrt, __cdecl). Declared here rather than via <process.h> so the
-// TU's import-call forms stay under this header's control.
-extern "C" unsigned long __cdecl _beginthread(void(__cdecl* startAddress)(void*),
-                                              unsigned stackSize,
-                                              void* arglist);
-extern "C" void __cdecl _endthread(void);
-
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
 extern soundManager* g_soundManager;
 
-// E:\gamedcs\SoundMgr.h:140, dc 0xe6ef4
-VA(0x0059a7d0, 0x51)  // dc 0xe6ef4
-inline void soundManager::serviceSounds()
-{
-    EnterCriticalSection(&m_sectionSoundCall);
-    AIL_serve();
-    void* stream = g_mp3Stream;
-    if (stream) {
-        if (g_soundManager->m_mp3Playing) {
-            if (!g_shutDownDone)
-                AIL_service_stream(stream, 1);
-        }
-    }
-    Sleep(1);
-    LeaveCriticalSection(&m_sectionSoundCall);
-}
 
 #endif  /* HOMM3_SOUNDMGR_H */

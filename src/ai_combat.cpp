@@ -1,34 +1,23 @@
-// NEW LEVER (2026-08-07, byte-proven here by AI_quick_combat and
-// AI_auto_combat): under /GX the scope-exit destructor sequence keeps
-// the EH state variable live across every call a destructor makes,
-// emitting `mov [ebp-4], <state>` before each one. Retail emits none -
-// its `operator delete` was visible as NOTHROW. VC6's <new> declares
-// operator delete WITHOUT an exception specification, so a TU that
-// wants retail's shape has to say so itself; see the
-// __declspec(nothrow) redeclaration in include/ai_combat.h. That one
-// declaration is what takes both entry points from 96-98% to exact.
-#include <va.h>
-// check_wall_archery_penalty's three fortification tests are
-// town::HasBuilding calls in the Dreamcast body (dc 0x2a470, three
-// `jsr @r9` with r5 = 7/8/9 and r6 = 0); see town.h for why the
-// inline's visibility is scoped.
+#include "va.h"
+#include "includes.h"
+#include "homm3_minmax.h"
+
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "ai_combat.h"
+
+#include "advmgr.h"
 #include "ai_player.h"
 #include "ai_tactical.h"
-#include "advmgr.h"
 #include "armygrp.h"
 #include "game.h"
+#include "hero.h"
 #include "magicterrain.h"
 #include "misc.h"
-#include "hero.h"
 #include "town.h"
-#include "includes.h"
-
-#include "homm3_minmax.h"
 
 // The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.
 // cast_spell masks precisely these six bits twice and switches on the five
@@ -84,14 +73,14 @@ long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const her
 
 // E:\gamedcs\ai_combat.cpp:56
 // RECONSTRUCTED FROM ITS INLINED COPIES (dc 0x29a30) - retail has no
-// out-of-line row: /Ob2 inlined every call site (0x425c65 and 0x425d8d
-// inside cast_enchantment) and OPT:REF dropped the COMDAT. Spelled
-// `inline` here so our obj does not carry a base-only function retail
-// never shipped. Bytes prove the shape: the pre-image
+// out-of-line row: /Ob2 expands both uses (0x425c65 and 0x425d8d
+// inside cast_enchantment). Preserve the ordinary TU helper; an unused
+// emitted copy does not require a retail address claim. Bytes prove the shape:
+// the pre-image
 // total_hit_points*damage_modifier is taken BEFORE the update, the
 // per-creature delta is a 64-bit imul/__alldiv, and damage_modifier is
 // rewritten as the new total over that pre-image.
-inline void type_monster_data::castEnchantment(long spellValue, unsigned char increase)
+void type_monster_data::castEnchantment(long spellValue, unsigned char increase)
 {
     double previous = m_totalValue * m_combatValuePerHit;
     // 64-bit local, not a long: retail spills the __alldiv result's
@@ -130,7 +119,7 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
 // Retail expands this helper at cast_spell's selected target and emits no
 // out-of-line row. The Dreamcast supplies the helper boundary/name; the
 // statements below are reconstructed from the retail expansion.
-inline void type_monster_data::castResurrection(
+void type_monster_data::castResurrection(
     type_spell_choice& choice,
     const hero* castingHero)
 {
@@ -448,11 +437,9 @@ long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_
 
 // E:\gamedcs\ai_combat.cpp:498
 // RECONSTRUCTED FROM ITS ONE INLINED COPY (dc 0x2a764) - no retail row:
-// /Ob2 inlined the single call site (get_damage_spell_value 0x424e69)
-// and OPT:REF dropped the COMDAT. Spelled `inline` so our obj does not
-// carry a base-only function retail never shipped. It is the exact
-// value-side mirror of cast_chain_lightning.
-inline void type_AI_combat_data::getChainLightningValue(type_spell_choice& choice, const type_AI_combat_data& defender, long damage) const
+// /Ob2 expands the single call site (get_damage_spell_value 0x424e69).
+// This is an ordinary TU helper, the value-side mirror of cast_chain_lightning.
+void type_AI_combat_data::getChainLightningValue(type_spell_choice& choice, const type_AI_combat_data& defender, long damage) const
 {
     long excluded = 1 << choice.m_target;
     long target = choice.m_target;
@@ -880,7 +867,7 @@ void type_AI_combat_data::castSpell(
 // Retail inlines every use; these statements are reconstructed from the
 // repeated retail expansions. The Dreamcast contributes only the helper's
 // name/signature and retains an out-of-line body in that build.
-inline void type_AI_combat_data::castSpells(
+void type_AI_combat_data::castSpells(
     type_AI_combat_data& defender,
     type_speed_catagory round)
 {
@@ -893,21 +880,23 @@ inline void type_AI_combat_data::castSpells(
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai_combat.cpp:1100
-// No retained PC slot: castSpell ends at 0x426163, then alignment leads
-// directly to inflictMeleeDamage at 0x426170. All other span bodies and
-// both flanks are accounted for. DC 0x2b380 filters equality of category
-// before take_damage; PC inflictDamage uses the retained range-based
-// inflictMeleeDamage helper. Keep the old roster entry without a false claim.
-DC_ONLY(0x2b380, 0x88)
-long type_AI_combat_data::inflict_catagory_damage(long damage, type_speed_catagory catagory)
+// Original: type_AI_combat_data::inflict_catagory_damage; ai_combat.cpp:1100, dc 0x2b380.
+// The single-category operation is distinct from inflictMeleeDamage's
+// proportional distribution over a range. Both DC inflict_damage and Complete
+// 0x426300 use that range operation; retain this ordinary source interface
+// without claiming a separate retail body or substituting it into that path.
+long type_AI_combat_data::inflictCatagoryDamage(long damage,
+                                               type_speed_catagory catagory)
 {
-    // @stub
+    for (unsigned i = 0; i < m_creatures.size(); i++) {
+        if (m_creatures[i].m_catagory != catagory)
+            continue;
+        damage -= m_creatures[i].takeDamage(damage);
+        if (damage == 0)
+            return 0;
+    }
+    return damage;
 }
-
-#endif  // @carcass
 
 VA(0x00426170, 0x131)  // dc 0x2b408
 long type_AI_combat_data::inflictMeleeDamage(long damage, long start, long speedLimit)
@@ -989,7 +978,7 @@ long type_AI_combat_data::getFinalMeleeValue() const
 // Retail inlines every use; these statements are reconstructed from the
 // repeated retail expansions. The Dreamcast contributes only the helper's
 // name/signature and retains an out-of-line body in that build.
-inline void type_AI_combat_data::doRangedCombat(
+void type_AI_combat_data::doRangedCombat(
     type_AI_combat_data& defender)
 {
     long ourAttack = getAttack(const_ranged, 0);
@@ -1000,7 +989,7 @@ inline void type_AI_combat_data::doRangedCombat(
 
 // E:\gamedcs\ai_combat.cpp:1240
 // Retail inlines every use; the Dreamcast body survives out of line.
-inline void type_AI_combat_data::doMeleeCombat(
+void type_AI_combat_data::doMeleeCombat(
     type_speed_catagory attackerSpeed,
     type_AI_combat_data& defender)
 {
@@ -1012,7 +1001,7 @@ inline void type_AI_combat_data::doMeleeCombat(
 
 // E:\gamedcs\ai_combat.cpp:1255
 // Retail inlines every use; the Dreamcast body survives out of line.
-inline void type_AI_combat_data::doMeleeCombat(
+void type_AI_combat_data::doMeleeCombat(
     type_AI_combat_data& defender)
 {
     long ourAttack = getAttack(const_slow, 1);
@@ -1384,20 +1373,16 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
     return value;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai_combat.cpp:1656
-// DC builds a temporary armyGroup and delegates to the five-argument
-// AI_value_of_combat. No retained PC slot fits: the full evaluator ends
-// at 0x427648 and the first approximate-strength overload starts at
-// 0x427650; all surrounding bodies and native STL tails are identified.
-DC_ONLY(0x2c5e8, 0x2C)
-long aiValueOfCombat(const hero* attacking_hero, TCreatureType type, long size, NewmapCell* cell)
+// Original: AI_value_of_combat; ai_combat.cpp:1656, dc 0x2c5e8.
+// DC's ordinary convenience overload owns the one-stack group temporary.
+// Complete's retained evaluator has the same five-argument interface; this
+// overload has no independently identified retail body.
+long aiValueOfCombat(const hero* attackingHero, TCreatureType type, long size,
+                     NewmapCell* cell)
 {
-    // @stub
+    armyGroup monsters(type, size);
+    return aiValueOfCombat(attackingHero, 0, monsters, 0, cell);
 }
-
-#endif  // @carcass
 
 VA(0x00427650, 0x33)  // dc 0x2c614
 long aiApproximateStrength(const hero* currentHero)
@@ -1420,28 +1405,8 @@ VA_COMPGEN(0x004276c0, 0x87, VECTOR_COPY_CTOR, type_monster_data)
 
 VA_COMPGEN(0x00427750, 0x21, VECTOR_SIZE, type_monster_data)
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai_combat.cpp:1356. No retail slot was found; the previously
-// assigned 0x4276c0 body is the vector copy constructor above.
-DC_ONLY(0x2c6b4, 0x54)
-void type_AI_combat_data::type_AI_combat_data(const type_AI_combat_data* __that)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_combat.cpp:1356
-DC_ONLY(0x2c708, 0x18)
-void type_AI_combat_data::~type_AI_combat_data()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
-// The rows below are the DREAMCAST build's STLport instantiations and
-// stay DC_ONLY: retail links Dinkumware, so these particular symbols
-// have no retail counterpart at all (P2.3, answered 2026-08-07).
+// Dreamcast STLport instantiations have no retail counterpart: Complete
+// links Dinkumware. Their exclusions live in config/source/dc_only_generated.tsv.
 
 // push_back on the combat AI's monster table retains Dinkumware's
 // three-argument vector::insert specialization in ai_combat.obj. Byte-

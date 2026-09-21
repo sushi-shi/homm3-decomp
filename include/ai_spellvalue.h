@@ -9,11 +9,12 @@
 #ifndef HOMM3_AI_SPELLVALUE_H
 #define HOMM3_AI_SPELLVALUE_H
 
-#include <va.h>
+#include "va.h"
+
 #include <vector>
-#include "armygrp.h"
-// CodeView owns the value-list element and its inline comparisons here.
+
 #include "ai_creature_value.h"
+#include "armygrp.h"
 
 class hero;
 
@@ -107,6 +108,7 @@ protected:
                                 long timesCastable, long combatValue) const;
     long getEnchantmentValue(SpellID spell, TSkillMastery mastery,
                                long timesCastable) const;
+    long getSummoningValue(long damage, long timesCastable) const;
     long getMassDamageSpellValue(SpellID spell, TSkillMastery mastery,
                                      long timesCastable) const;
     const hero* m_ourHero;  // +0x00

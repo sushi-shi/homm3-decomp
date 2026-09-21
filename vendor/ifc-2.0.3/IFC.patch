@@ -1,15 +1,205 @@
---- a/ImmMouse.h
-+++ b/ImmMouse.h
-@@ -106,8 +106,7 @@
- 	Initialize(
- 		HANDLE hinstApp,
- 		HANDLE hwndApp,
--		DWORD dwCooperativeFlag = IMM_COOPLEVEL_FOREGROUND,
--		BOOL bEnumerate = TRUE
-+		DWORD dwCooperativeFlag = IMM_COOPLEVEL_FOREGROUND
- 		);
+--- a/IFC.h
++++ b/IFC.h
+@@ -19,61 +19,167 @@
  
- 	virtual BOOL 
+   FILE:		IFC.h
+ 
+-  PURPOSE:	Class Types for the Force Foundation Classes
++  PURPOSE:	Active IFC 2.0.3 client boundary for Heroes III Complete.
+ 
+-  STARTED:	10/29/97
+-
+-  NOTES/REVISIONS:
+-     3/2/99 jrm (Jeff Mallett): Force-->Feel renaming
+-
++	The preserved SDK in ../orig is IFC 2.2.11. These declarations use
++	the 2.0.3 import names and object layouts proved by IFC20.DLL and the
++	Heroes III client vtables. Keep additions limited to that evidence.
+ **********************************************************************/
+ 
++#ifndef HOMM3_VENDOR_IFC_2_0_3_H
++#define HOMM3_VENDOR_IFC_2_0_3_H
+ 
+-#if !defined(AFX_IFC_H__135B88C4_4175_11D1_B049_0020AF30269A__INCLUDED_)
+-#define AFX_IFC_H__135B88C4_4175_11D1_B049_0020AF30269A__INCLUDED_
++#include <windows.h>
++#include "FeelitAPI.h"
+ 
+-#if _MSC_VER >= 1000
+-#pragma once
+-#endif // _MSC_VER >= 1000
++#ifndef _IFCDLL_
++#define DLLIFC __declspec(dllimport)
++#else
++#define DLLIFC __declspec(dllexport)
++#endif
+ 
++class CIFCErrors {
++public:
++    static void SetErrorHandling(unsigned long flags)
++    {
++        m_dwErrHandlingFlags = flags;
++    }
+ 
+-#include "ImmBox.h"
+-#include "ImmCondition.h"
+-#include "ImmConstant.h"
+-#include "ImmDamper.h"
+-#include "ImmDevice.h"
+-#include "ImmDevices.h"
+-#include "ImmDXDevice.h"
+-#include "ImmEffect.h"
+-#include "ImmEllipse.h"
+-#include "ImmEnclosure.h"
+-#include "ImmMouse.h"
+-#include "ImmFriction.h"
+-#include "ImmGrid.h"
+-#include "ImmInertia.h"
+-#include "ImmPeriodic.h"
+-#include "ImmProjects.h"
+-#include "ImmRamp.h"
+-#include "ImmSpring.h"
+-#include "ImmTexture.h"
+-#include "IFCErrors.h"
++private:
++    __declspec(dllimport) static unsigned long m_dwErrHandlingFlags;
++};
+ 
++class CImmEffect;
++class CImmProject;
+ 
+-#endif // !defined(AFX_IFC_H__135B88C4_4175_11D1_B049_0020AF30269A__INCLUDED_)
++class CEffectListElement {
++public:
++    CEffectListElement() : m_pImmEffect(0), m_pNext(0) {}
+ 
++    CImmEffect* m_pImmEffect;
++    CEffectListElement* m_pNext;
++};
+ 
++class CEffectList {
++public:
++    CEffectList() : m_pFirstEffect(0) {}
++    __declspec(dllimport) ~CEffectList();
+ 
++    CEffectListElement* m_pFirstEffect;
++};
+ 
++class CImmDevice {
++public:
++    virtual ~CImmDevice();
+ 
++protected:
++    CEffectList m_Cache;
++    BOOL m_bInitialized;
++    DWORD m_dwDeviceType;
++    GUID m_guidDevice;
++    BOOL m_bGuidValid;
++};
+ 
++class DLLIFC CImmMouse : public CImmDevice {
++public:
++    CImmMouse();
++    virtual ~CImmMouse();
++    virtual IFeelit* GetAPI();
++    virtual IFeelitDevice* GetDevice();
++    virtual BOOL ChangeScreenResolution(BOOL autoSet, DWORD width,
++                                        DWORD height);
++    virtual BOOL SwitchToAbsoluteMode(BOOL absolute);
++    BOOL Initialize(HANDLE instance, HANDLE hwnd, DWORD flags);
+ 
++protected:
++    virtual BOOL prepare_device();
++    virtual void reset();
+ 
++    IFeelit* m_piApi;
++    IFeelitDevice* m_piDevice;
++};
+ 
++class DLLIFC CImmCompoundEffect {
++public:
++    BOOL Start(DWORD iterations, DWORD flags);
++};
+ 
++enum ECacheState {
++    IMMCACHE_NOT_ON_DEVICE,
++    IMMCACHE_ON_DEVICE,
++    IMMCACHE_SWAPPED_OUT
++};
+ 
++class DLLIFC CImmEffect {
++public:
++    virtual ~CImmEffect();
++    virtual BOOL GetIsCompatibleGUID(GUID& guid);
++    virtual BOOL Initialize(CImmDevice* device, const FEELIT_EFFECT& effect,
++                            DWORD flags);
++    virtual BOOL InitializeFromProject(CImmProject& project, LPCSTR name,
++                                       CImmDevice* device, DWORD flags);
++    virtual BOOL Start(DWORD iterations, DWORD flags, BOOL priority);
+ 
++protected:
++    ECacheState m_CacheState;
++    BOOL m_bInCurrentSuite;
++    short m_Priority;
++    DWORD m_dwLastStarted;
++    DWORD m_dwLastStopped;
++    DWORD m_dwLastLoaded;
++    CImmDevice* m_pImmDevice;
++    FEELIT_EFFECT m_Effect;
++    DWORD m_dwaAxes[2];
++    LONG m_laDirections[2];
++    GUID m_guidEffect;
++    BOOL m_bIsPlaying;
++    DWORD m_dwDeviceType;
++    IFeelitDevice* m_piImmDevice;
++    IFeelitEffect* m_piImmEffect;
++    DWORD m_cAxes;
++    DWORD m_dwNoDownload;
++    DWORD m_dwIterations;
++};
+ 
++class DLLIFC CImmEnclosure : public CImmEffect {
++public:
++    CImmEnclosure();
++    virtual ~CImmEnclosure();
++    virtual BOOL GetIsCompatibleGUID(GUID& guid);
++    virtual BOOL Initialize(CImmDevice* device, const FEELIT_EFFECT& effect,
++                            DWORD flags);
++    virtual BOOL Stop();
++    virtual BOOL Start(DWORD iterations);
++    BOOL Initialize(CImmDevice* device, LPCRECT rect, LONG topBottomStiffness,
++                    LONG leftRightStiffness, DWORD topBottomWidth,
++                    DWORD leftRightWidth, DWORD topBottomSaturation,
++                    DWORD leftRightSaturation, DWORD stiffnessMask,
++                    DWORD clippingMask, CImmEffect* insideEffect, LONG angle,
++                    DWORD noDownload);
++    BOOL SetRect(LPCRECT rect);
+ 
++protected:
++    FEELIT_ENCLOSURE m_enclosure;
++    BOOL m_bUseMousePosAtStart;
++};
+ 
++class CImmProject {
++public:
++    CImmProject()
++        : m_hProj(0), m_pCreatedEffects(0), m_pDevice(0), m_pNext(0) {}
++    __declspec(dllimport) ~CImmProject();
++    __declspec(dllimport) BOOL LoadProjectFromMemory(LPVOID data,
++                                                     CImmDevice* device);
++    __declspec(dllimport) void Close();
++    __declspec(dllimport) CImmCompoundEffect* CreateEffect(
++        LPCSTR name, CImmDevice* device, DWORD flags);
++    __declspec(dllimport) void DestroyEffect(CImmCompoundEffect* effect);
+ 
++private:
++    void* m_hProj;
++    CImmCompoundEffect* m_pCreatedEffects;
++    CImmDevice* m_pDevice;
++    CImmProject* m_pNext;
++};
+ 
++#endif
 --- a/ImmEnclosure.h
 +++ b/ImmEnclosure.h
 @@ -238,12 +238,14 @@
@@ -30,3 +220,15 @@
  		);
  
  	virtual BOOL
+--- a/ImmMouse.h
++++ b/ImmMouse.h
+@@ -106,8 +106,7 @@
+ 	Initialize(
+ 		HANDLE hinstApp,
+ 		HANDLE hwndApp,
+-		DWORD dwCooperativeFlag = IMM_COOPLEVEL_FOREGROUND,
+-		BOOL bEnumerate = TRUE
++		DWORD dwCooperativeFlag = IMM_COOPLEVEL_FOREGROUND
+ 		);
+ 
+ 	virtual BOOL 

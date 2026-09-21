@@ -1,30 +1,29 @@
-#include "terrain.h"
-#include <va.h>
+#include "va.h"
+
 #include "iconwdgt.h"
+
 #include "button.h"
-#include "csprite.h"
 #include "csequence.h"
+#include "csprite.h"
 #include "cspriteframe.h"
 #include "message.h"
 #include "palette.h"
 #include "resourcemanager.h"
+#include "terrain.h"
 #include "window.h"
 #include "winmgr.h"
 
 int random(int min, int max);
 
-#if 0  // @carcass
-
-// E:\gamedcs\iconwdgt.cpp:35
-DC_ONLY(0xd92fc, 0x54)
-void iconWidget::iconWidget()
+// Original: iconWidget::iconWidget; iconwdgt.cpp:35, dc 0xd92fc.
+iconWidget::iconWidget() : widget(0, 0, 0, 0, 0, 0)
 {
-    // @stub
+    m_sprite = 0;
+    m_frame = 0;
+    m_seqId = 0;
+    m_backColor = 0;
+    m_isFlipped = 0;
 }
-
-// E:\gamedcs\iconwdgt.cpp:88
-
-#endif  // @carcass
 
 VA_COMPGEN(0x004ea6f0, 0x21, SCALAR_DELETING_DTOR, iconWidget)
 
@@ -40,6 +39,22 @@ iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
       m_postPostWalkSequence(cs_wait)
 {
     m_sprite = image ? ResourceManager::getSprite(image) : 0;
+}
+
+// Original: iconWidget::initialize; iconwdgt.cpp:75, dc 0xd93f4.
+// Complete removed widget's focusable field (DC +0x20); preserve the
+// source interface without writing that obsolete controller-state slot.
+void iconWidget::initialize(int x, int y, int w, int h, int id,
+    const char* image, int frame, int sequence, unsigned char flipped,
+    unsigned int backColor, int style, unsigned char focusable)
+{
+    widget::initialize(x, y, w, h, id, style);
+    m_sprite = ResourceManager::getSprite(image);
+    m_frame = frame;
+    m_seqId = sequence;
+    m_isFlipped = flipped != 0;
+    m_backColor = static_cast<unsigned short>(backColor);
+    m_postPostWalkSequence = cs_wait;
 }
 
 VA(0x004ea7b0, 0x55)  // dc 0xd9464
@@ -160,19 +175,15 @@ int iconWidget::main(message& msg)
     return widget::main(msg);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\iconwdgt.cpp:275
-DC_ONLY(0xd96e4, 0x4)
-void iconWidget::zBufferDraw()
+// Original: iconWidget::zBufferDraw; iconwdgt.cpp:275, dc 0xd96e4.
+// CodeView's formal type proves two arguments despite the old nil-argument
+// carcass. Retail folds this empty hook onto the shared ret-8 at 0x5bc7e0.
+void iconWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
-    // @stub
 }
 
-#endif  // @carcass
-
 // E:\gamedcs\iconwdgt.cpp:257
-// Promoted from DC_ONLY 2026-08-08 on four independent corroborations:
+// Located in retail 2026-08-08 on four independent corroborations:
 // the row is inside iconwdgt.obj's own carve span, it holds the DC
 // roster's handle_click slot in order (immediately before GetRealWidth
 // and GetRealHeight, exactly as at 0x4eab20 / 0x4eab30), the iconWidget
@@ -343,7 +354,7 @@ void iconWidget::setIconFrame(int newFrame)
 // Dreamcast line 447 stores new_sequence to seqId and line 448 clears Frame;
 // Main's retail-inlined WIDGET_SET_ICON_SEQUENCE arm corroborates the order:
 // its six-instruction block is exact only with this source shape.
-DC_ONLY(0xd9ca4, 0x8)
+
 void iconWidget::setIconSequence(int newSequence)
 {
     m_seqId = newSequence;
@@ -351,7 +362,6 @@ void iconWidget::setIconSequence(int newSequence)
 }
 
 // E:\gamedcs\iconwdgt.cpp:452
-DC_ONLY(0xd9cac, 0x32)
 void iconWidget::setPalette(const char* paletteName)
 {
     TPalette16* newPalette = ResourceManager::getPalette(paletteName);
@@ -362,7 +372,6 @@ void iconWidget::setPalette(const char* paletteName)
 }
 
 // E:\gamedcs\iconwdgt.cpp:462
-DC_ONLY(0xd9ce0, 0x84)
 void iconWidget::setPlayerPaletteColors(int whichPlayer)
 {
     ::setPlayerPaletteColors(m_sprite->getPalette(), whichPlayer);
@@ -460,14 +469,3 @@ void iconWidget::nextRandomSiegeEngineFrame()
     } while (m_sprite->getNumFrames(chosen) <= 0);
     setIconSequence(chosen);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\iconwdgt.cpp:41
-DC_ONLY(0xda018, 0x34)
-void* iconWidget::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

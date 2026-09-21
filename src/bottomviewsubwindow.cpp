@@ -1,10 +1,10 @@
-#include <va.h>
+#include "va.h"
+
 #include <crt_stdio.h>
 #include <strstream>
-// TBottomViewKingdom's hall census calls town::HasBuilding three times
-// (dc 0x563b8 lines 531/533/535), so this compiland gets the Town.h
-// inline; see town.h for why the visibility is scoped.
+
 #include "bottomviewsubwindow.h"
+
 #include "border.h"
 #include "game.h"
 #include "iconwdgt.h"
@@ -56,215 +56,6 @@ __declspec(nothrow) void __cdecl operator delete(void* p);
 // 392 function spans; adding hero.h moves 118700 ex bytes) and produce
 // identical object code anyway. The C1 handle-order lever does not
 // reach this TU. See TBottomViewKingdom for what the wall actually is.
-
-#if 0  // @carcass
-
-// E:\gamedcs\bottomviewsubwindow.cpp:39
-DC_ONLY(0x550b8, 0x5C)
-void type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:47
-DC_ONLY(0x55114, 0x74)
-void type_bottom_view_window::~type_bottom_view_window()
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:64
-DC_ONLY(0x55188, 0x4)
-void type_bottom_view_window::animate()
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:77
-// RETAIL_LOCATED(0x00450dd0, 0x319)  // anchor-vtable + anchor-caller
-DC_ONLY(0x5518c, 0x2BC)
-void TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:121
-// RETAIL_LOCATED(0x004511a0, 0x79)  // anchor-vtable + anchor-caller
-DC_ONLY(0x55448, 0x64)
-void TBottomViewNewTurn::animate()
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:146
-// RETAIL_LOCATED(0x00451220, 0x393)  // anchor-vtable + anchor-caller
-DC_ONLY(0x554ac, 0x2BC)
-void TBottomViewResourceMessage::TBottomViewResourceMessage(heroWindow* parent, int res, int quantity, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:197
-// RETAIL_LOCATED(0x00451820, 0x1DC)  // anchor-vtable + anchor-caller
-DC_ONLY(0x55768, 0x140)
-void TBottomViewMessage::TBottomViewMessage(heroWindow* parent, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:222
-// RETAIL_LOCATED(0x00451ab0, 0x68A)  // anchor-vtable + anchor-caller
-DC_ONLY(0x558a8, 0x54C)
-void TBottomViewHero::TBottomViewHero(heroWindow* parent)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:352
-// RETAIL_LOCATED(0x004521f0, 0x8D4)  // anchor-vtable + anchor-caller
-DC_ONLY(0x55df4, 0x5C4)
-void TBottomViewTown::TBottomViewTown(heroWindow* parent)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:515
-// RETAIL_LOCATED(0x00452b80, 0x620)  // anchor-vtable + anchor-caller
-DC_ONLY(0x563b8, 0x4C8)
-void TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:599
-// RETAIL_LOCATED(0x00453250, 0x3EE)  // anchor-vtable + anchor-caller
-DC_ONLY(0x56880, 0x33C)
-void TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:646
-DC_ONLY(0x56bbc, 0x58)
-long TBottomViewEnemyTurn::sumMobility(long player_id)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:661
-// RETAIL_LOCATED(0x004536f0, 0x271)  // anchor-vtable + anchor-caller
-DC_ONLY(0x56c14, 0x1E4)
-void TBottomViewEnemyTurn::animate()
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:41
-DC_ONLY(0x56e3c, 0x34)
-void* type_bottom_view_window::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:118
-DC_ONLY(0x56e70, 0x34)
-void* TBottomViewNewTurn::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:118
-DC_ONLY(0x56ea4, 0x18)
-void TBottomViewNewTurn::~TBottomViewNewTurn()
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:183
-DC_ONLY(0x56ebc, 0x34)
-void* TBottomViewResourceMessage::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:183
-DC_ONLY(0x56ef0, 0x18)
-void TBottomViewResourceMessage::~TBottomViewResourceMessage()
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:209
-DC_ONLY(0x56f08, 0x34)
-void* TBottomViewMessage::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:209
-DC_ONLY(0x56f3c, 0x18)
-void TBottomViewMessage::~TBottomViewMessage()
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:339
-DC_ONLY(0x56f54, 0x34)
-void* TBottomViewHero::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:339
-DC_ONLY(0x56f88, 0x18)
-void TBottomViewHero::~TBottomViewHero()
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:503
-DC_ONLY(0x56fa0, 0x34)
-void* TBottomViewTown::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:503
-DC_ONLY(0x56fd4, 0x18)
-void TBottomViewTown::~TBottomViewTown()
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:586
-DC_ONLY(0x56fec, 0x34)
-void* TBottomViewKingdom::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:586
-DC_ONLY(0x57020, 0x18)
-void TBottomViewKingdom::~TBottomViewKingdom()
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:643
-DC_ONLY(0x57038, 0x34)
-void* TBottomViewEnemyTurn::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\bottomviewsubwindow.cpp:643
-DC_ONLY(0x5706c, 0x18)
-void TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x00450d20, 0x21, SCALAR_DELETING_DTOR, type_bottom_view_window)
 
@@ -370,6 +161,13 @@ static const char* g_newWeekIcons[5] = {
 // spending itself down across the body, not a source difference; both arms
 // are the same `text = format_string(...)` statement.
 
+// Original: type_bottom_view_window::animate; bottomviewsubwindow.cpp:64, dc 0x55188
+// The empty base hook is ICF-folded to retail's shared ret at 0x5bc690;
+// the base and five presentation-only subclass vtables retain that slot.
+void type_bottom_view_window::animate()
+{
+}
+
 VA(0x00450dd0, 0x319)  // dc 0x5518c
 TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
     : type_bottom_view_window(parent)
@@ -434,7 +232,7 @@ void TBottomViewNewTurn::animate()
     m_icon->setIconFrame(m_frame);
     m_icon->draw();
     m_backdrop->draw();
-    m_icon->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    m_icon->forceUpdate();
     m_lastStepTime = GameTime::get();
 }
 
@@ -523,8 +321,8 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
         std::ostrstream quantityText;
         quantityText << quantity << std::ends;
 
-        int textWidth = g_unnamed698a08->lineWidth(quantityText.str());
-        int fontHeight = g_unnamed698a08->m_fs.m_height;
+        int textWidth = g_smallFont->lineWidth(quantityText.str());
+        int fontHeight = g_smallFont->m_fs.m_height;
 
         m_widgets.push_back(new textWidget((m_width - textWidth) / 2,
             sprite->getHeight() + 55, textWidth, fontHeight,
@@ -1099,7 +897,7 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
     allyX = enemyX = 67;
     for (i = 0; i < 8; i++) {
         if (!g_game->m_playerDisabled[i]) {
-            if (g_game->onSameTeam(i, g_unnamed69778c)) {
+            if (g_game->onSameTeam(i, g_curWatchPlayer)) {
                 m_widgets.push_back(new iconWidget(allyX, 102, 15, 20, id++,
                     "itgflags.def", i, 0, 0, 0, 0x10));
                 allyX += 15;
@@ -1232,7 +1030,7 @@ void TBottomViewEnemyTurn::animate()
         m_lastPlayerPos = g_netLocalGamePos;
         m_crest->setIconFrame(g_netLocalGamePos);
         m_crest->draw();
-        m_crest->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+        m_crest->forceUpdate();
         if (g_currentPlayer->isHuman()) {
             m_hourGlass->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                     widget::WIDGET_DRAWN);
@@ -1276,10 +1074,10 @@ void TBottomViewEnemyTurn::animate()
     m_sand->setIconFrame(m_frame);
     m_sand->draw();
     m_hourGlass->draw();
-    m_hourGlass->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    m_hourGlass->forceUpdate();
     m_crest->setIconFrame(g_netLocalGamePos);
     m_crest->draw();
-    m_crest->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    m_crest->forceUpdate();
 }
 
 // COMDAT pairing: basic_streambuf::1?$basic_streambuf, mnemonic agreement 1.000.

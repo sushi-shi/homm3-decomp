@@ -2,6 +2,7 @@
 #define HOMM3_COMBATWINDOW_H
 
 #include <string>
+
 #include "window.h"
 
 class TSubWindow;
@@ -15,7 +16,6 @@ class message;
 // Eleven interleaved rollover/right-click rows at retail 0x6a6968. The
 // combat-window right-click handler consumes the same table as the combat
 // sub-window constructors.
-extern THelpText g_combatSubWindowHelp[11];
 
 // Retail vtable 0x63d528 and Close independently prove the heroWindow base;
 // combatManager::Open allocates the complete 0x8c-byte object. Close deletes
@@ -74,6 +74,7 @@ public:
     void combatMessage(const char* newText, bool keep,
                         bool priority);
     void drawChatText(unsigned char update);
+    void drawChatEdit(unsigned char update);
     void onChatActivate(unsigned char active);
 };
 SIZE(TCombatWindow, 0x8c);

@@ -1,7 +1,11 @@
-#include <va.h>
+#include "va.h"
+
 #include <algorithm>
 #include <string.h>
 #include <vector>
+
+#include "spellbookwindow.h"
+
 #include "armygrp.h"
 #include "border.h"
 #include "game.h"
@@ -14,7 +18,7 @@
 #include "resourcemanager.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
-#include "spellbookwindow.h"
+#include "text.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"
@@ -59,10 +63,10 @@ DATA(0x00641d94) static const char* const g_levelSprites[] = {
 
 // Complete indexes this four-pointer table directly, unlike the pointer
 // form attested for Dreamcast's gSecondarySkillLevels.
-DATA(0x006a5d48) const char* g_secondarySkillLevels[4];
+// The positive mastery branch reads the three abbreviated labels owned
+// by text.cpp at 0x6a5d4c. Retail folds the -1 subscript into 0x6a5d48.
 
 // E:\gamedcs\spellbookwindow.cpp:82
-DC_ONLY(0x14d3a4, 0x28)
 int TSpellbookWindow::getPositionFromSchool(unsigned schoolMask)
 {
     if (schoolMask == eSchoolAll)
@@ -103,15 +107,6 @@ static const char* getLevelString(SpellID spell)
     int index = g_spellTraits[spell].m_level - 1;
     return levelStrings[index];
 }
-
-#if 0  // @carcass: untouched Dreamcast-only bodies
-// E:\gamedcs\spellbookwindow.cpp:69
-DC_ONLY(0x14bc58, 0x28)
-void TSpellbookWindow::reset()
-{
-    // @stub
-}
-#endif
 
 VA(0x0059ba80, 0x1D)  // dc 0x14bc58
 void TSpellbookWindow::reset()
@@ -473,7 +468,7 @@ void TSpellbookWindow::gotoPage(int page)
                                  "{%s}\n%s/%s\n%s: %d"),
                     g_spellTraits[displaySpell].m_name,
                     getLevelString(displaySpell),
-                    g_secondarySkillLevels[entry.m_mastery],
+                    g_abbSecondarySkillLevels[entry.m_mastery - 1],
                     (*g_generalText)[388],
                     const_cast<hero*>(m_hero)->getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
@@ -525,22 +520,12 @@ void TSpellbookWindow::gotoPage(int page)
             ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
 }
 
-#if 0  // @carcass: untouched Dreamcast-only bodies
-// E:\gamedcs\spellbookwindow.cpp:680
-DC_ONLY(0x14ce10, 0x58)
-void TSpellbookWindow::displayNewSchool(int position)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 void TSpellbookWindow::displayNewSchool(int position)
 {
     if (getSchool() == getSchoolFromPosition(position))
         return;
 
-    if (g_unnamed698758.m_animateSpellBook)
+    if (g_config.m_animateSpellBook)
         videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
     setSchool(getSchoolFromPosition(position));
     gotoPage(0);
@@ -613,7 +598,7 @@ int TSpellbookWindow::windowHandler(message& msg)
         switch (msg.m_codeX) {
         case KEYCODE_KP_4: // left
             if (m_previousPageWidget->m_status & widget::WIDGET_ACTIVE) {
-                if (g_unnamed698758.m_animateSpellBook)
+                if (g_config.m_animateSpellBook)
                     videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                 previousPage();
                 drawWindow(1, -65535, 65535);
@@ -622,7 +607,7 @@ int TSpellbookWindow::windowHandler(message& msg)
 
         case KEYCODE_KP_6: // right
             if (m_nextPageWidget->m_status & widget::WIDGET_ACTIVE) {
-                if (g_unnamed698758.m_animateSpellBook)
+                if (g_config.m_animateSpellBook)
                     videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                 nextPage();
                 drawWindow(1, -65535, 65535);
@@ -649,7 +634,7 @@ int TSpellbookWindow::windowHandler(message& msg)
 
         case KEYCODE_A: // adventure spells
             if (m_contextMask != eAdventureContextMask) {
-                if (g_unnamed698758.m_animateSpellBook)
+                if (g_config.m_animateSpellBook)
                     videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                 setContext(eContextAdventure);
                 gotoPage(0);
@@ -659,7 +644,7 @@ int TSpellbookWindow::windowHandler(message& msg)
 
         case KEYCODE_C: // combat spells
             if (m_contextMask != eCombatContextMask) {
-                if (g_unnamed698758.m_animateSpellBook)
+                if (g_config.m_animateSpellBook)
                     videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                 setContext(eContextCombat);
                 gotoPage(0);
@@ -723,7 +708,7 @@ int TSpellbookWindow::windowHandler(message& msg)
 
             case COMBAT_SPELLS_ID:
                 if (getContextMask() != eCombatContextMask) {
-                    if (g_unnamed698758.m_animateSpellBook)
+                    if (g_config.m_animateSpellBook)
                         videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                     setContext(eContextCombat);
                     gotoPage(0);
@@ -733,7 +718,7 @@ int TSpellbookWindow::windowHandler(message& msg)
 
             case ADVENTURE_SPELLS_ID:
                 if (getContextMask() != eAdventureContextMask) {
-                    if (g_unnamed698758.m_animateSpellBook)
+                    if (g_config.m_animateSpellBook)
                         videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                     setContext(eContextAdventure);
                     gotoPage(0);
@@ -742,14 +727,14 @@ int TSpellbookWindow::windowHandler(message& msg)
                 break;
 
             case PREVIOUS_PAGE_ID:
-                if (g_unnamed698758.m_animateSpellBook)
+                if (g_config.m_animateSpellBook)
                     videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                 previousPage();
                 drawWindow(1, -65535, 65535);
                 break;
 
             case NEXT_PAGE_ID:
-                if (g_unnamed698758.m_animateSpellBook)
+                if (g_config.m_animateSpellBook)
                     videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                 nextPage();
                 drawWindow(1, -65535, 65535);
@@ -816,24 +801,6 @@ bool TSpellbookWindow::TSpellbookEntry::operator<(const TSpellbookEntry& y) cons
         return false;
     return _strcmpi(traits->m_name, yTraits->m_name) < 0;
 }
-
-#if 0  // @carcass: untouched Dreamcast-only bodies
-
-// E:\gamedcs\spellbookwindow.cpp:103
-DC_ONLY(0x14d3cc, 0x12)
-TSpellSchool TSpellbookWindow::getSchoolFromPosition(int j)
-{
-    // @stub
-}
-
-// E:\gamedcs\spellbookwindow.cpp:465
-DC_ONLY(0x14d3e0, 0x34)
-void* TSpellbookWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif
 
 // COMDAT pairing: std::_Sort<TSpellbookEntry>, agreement 1.000 over all 235
 // instructions. Sits beside the unit's _Insertion_sort_1 over the same element.

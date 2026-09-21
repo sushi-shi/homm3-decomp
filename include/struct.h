@@ -2,7 +2,8 @@
 #ifndef HOMM3_STRUCT_H
 #define HOMM3_STRUCT_H
 
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
 
 class heroWindow;
@@ -129,6 +130,11 @@ public:
             && m_maxX >= limits.m_minX
             && m_minY <= limits.m_maxY
             && m_maxY >= limits.m_minY;
+    }
+    // Original: SLimitData::Contains; struct.h:293, dc 0x639ec.
+    unsigned char contains(int x, int y) const
+    {
+        return x >= m_minX && x <= m_maxX && y >= m_minY && y <= m_maxY;
     }
     bool isEmpty() const
     {

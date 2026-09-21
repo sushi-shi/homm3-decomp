@@ -1,17 +1,15 @@
 #ifndef HOMM3_ARMY_H
 #define HOMM3_ARMY_H
 
-#include <va.h>
+#include "va.h"
+#include "includes.h"
+
 #include <deque>
 #include <vector>
-#include "herospec.h"
-// TCreatureTypeTraits, the type of the embedded `sMonInfo` row at +0x74.
-// Costs no consumer anything: all 24 TUs whose closure reaches army.h
-// already had armygrp.h in that closure.
+
 #include "armygrp.h"
-// SMonFrameInfo, the type of the embedded `sMonFrameInfo` row at +0x110.
+#include "herospec.h"
 #include "monframeinfo.h"
-#include "includes.h"
 
 class hero;
 class armyGroup;
@@ -746,7 +744,6 @@ public:
                     long newGroup, long newIndex, long newGridIndex);
     void initClean();
     void loadResources();
-    void freeResources();
     void resetRound();
     void endWalk();
     void walk(int direction, unsigned char endWalk,
@@ -759,7 +756,7 @@ public:
     long adjustDamage(army* enemy, long baseDamage, unsigned char isShot,
                        unsigned char simulated, long distance,
                        long* fireDamage) const;
-    inline void adjustHitpoints();
+    void adjustHitpoints();
     unsigned char attackHex(int hex, unsigned char restoreFacing);
     unsigned char doAttack(army* armyToAttack, int direction);
     void doAttack(int direction);
@@ -839,7 +836,7 @@ public:
                                  const army* excluded) const;
     long getValidCaliphSpells(const army* target) const;
     int getBestDirection(int start, int target, int direction);
-    unsigned char isAdjacent(const army* otherArmy) const;
+    unsigned char isAdjacent(const army& otherArmy) const;
     unsigned char isAdjacent(int hex) const;
     unsigned char isEnemy(const army* arg) const;
     bool isInAura() const;
@@ -953,8 +950,9 @@ private:
     void doPostAttack(army* target, int attackDamage, int killedCount,
                         int totalLife);
     void doHydraAttack(int direction);
-    bool findFlyerAttackCell(int hex, int direction) const;
-    bool findFlyerAttackCell(int hex) const;
+    // DC find_flyer_attack_cell parameters are start/target and target.
+    bool findFlyerAttackCell(int start, int target) const;
+    bool findFlyerAttackCell(int target) const;
     bool leavesNoBody() const;
     unsigned char simpleMove(int hex, unsigned char restoreFacing);
     double computeKarma() const;
@@ -1319,8 +1317,7 @@ public:
     // the horizontal flip, and both are handed to
     // GetMissileStartingPosition as the destination. Retail's bodies
     // read gpCombatManager->cells[gridIndex] at +0x1c4 and +0x1c6 with
-    // the 112-byte hexcell stride. DECLARED, NOT DEFINED - army.cpp
-    // still carries both as DC_ONLY carcasses.
+    // the 112-byte hexcell stride.
     int midX() const;                        // 0x446660
     int midY() const;                        // 0x446630
     unsigned char isEnemy(const army* arg) const; // 0x442880
@@ -1635,7 +1632,8 @@ inline bool army::needToTurn(int direction) const
         return direction < 6 && (m_facing == 0) != (direction >= 3);
     }
 
-    // E:\gamedcs\Army.h:765
+    // Original: army::Is; E:\gamedcs\Army.h:765, dc 0x27ce4.
+    // Any requested attribute suffices, including a combined trait mask.
 inline bool army::is(unsigned attribute) const
     {
         return (m_monInfo.m_attributes & attribute) != 0;
@@ -1733,7 +1731,7 @@ inline bool army::isIncapacitated() const
     // E:\gamedcs\Army.h:847
 inline bool army::canRetaliate(const army& attacker) const
     {
-        return !(attacker.is(1u << 16)) && !m_spellInfluence[70]
+        return !attacker.is(creatureFreeAttack) && !m_spellInfluence[70]
                && m_retaliationCount > 0;
     }
 
@@ -1743,7 +1741,7 @@ inline bool army::canRetaliate(const army& attacker) const
 // Psychic/Magic Elemental pair: retail compares First Aid Tent and Ammo Cart.
 inline bool army::cannotAttack() const
     {
-        return isIncapacitated() || is(1u << 21)
+        return isIncapacitated() || is(creatureImmobilized)
                || m_creatureType == ARMY_CREATURE_FIRST_AID_TENT
                || m_creatureType == ARMY_CREATURE_AMMO_CART;
     }
@@ -1763,7 +1761,7 @@ inline long army::getAttackDirection(const army* enemy) const
     // E:\gamedcs\Army.h:875
 inline bool army::leavesNoBody() const
     {
-        return is((1u << 22) | (1u << 28));
+        return is(creatureSummoned | creatureSacrificed);
     }
     // E:\gamedcs\Army.h:881
 inline bool army::isInAreaHighlight() const
@@ -1782,8 +1780,8 @@ inline bool army::isInAreaHighlight() const
 // to say where. Sliced by army::get_clockwise / get_counter_clockwise,
 // whose only located expansion is get_multi_head_directions
 // (0x448ab0). Names are bootstrap inventions - no roster attests them.
-DATA(0x00660878) extern const long g_wideDirectionRingIndex[8];
-DATA(0x00660898) extern const long g_wideDirectionRingOrder[8];
+extern const long g_wideDirectionRingIndex[8];
+extern const long g_wideDirectionRingOrder[8];
 
 // The five globals a walk publishes for the redraw, and their NAMES ARE
 // THE DREAMCAST LITERAL POOL'S - army::Walk's own SH4 body (dc 0x45254)
@@ -1794,11 +1792,11 @@ DATA(0x00660898) extern const long g_wideDirectionRingOrder[8];
 // one-hex one; all four are reset to -1 once the move has been placed.
 // They sit immediately below akWideDirectionRingIndex at 0x660878,
 // which is the four dwords 0x660868..0x660874 exactly.
-DATA(0x00660868) extern int g_walkingFrom;
-DATA(0x0066086c) extern int g_walkingFrom2;
-DATA(0x00660870) extern int g_walkingTo;
-DATA(0x00660874) extern int g_walkingTo2;
-DATA(0x00693858) extern int g_walkingYMod;
+extern int g_walkingFrom;
+extern int g_walkingFrom2;
+extern int g_walkingTo;
+extern int g_walkingTo2;
+extern int g_walkingYMod;
 
 unsigned char isValidCaliphSpell(SpellID spell, const army* target);
 // 0x447a80 (1065 B), the worker is_valid_caliph_spell tail-jumps to

@@ -1,6 +1,10 @@
-// 7 functions in link order.
-#include <va.h>
+// Seven DC procedures: five retained Complete bodies and two canonical
+// findFlyerAttackCell overloads expanded in validFlight. Retail validFlight
+// starts at 0x4b46c0; the old 0x4b4420 correlation is a bitset initializer.
+#include "va.h"
+
 #include <math.h>
+
 #include "army.h"
 #include "cmbtmgr.h"
 #include "csprite.h"
@@ -23,30 +27,15 @@
 // ValidFlight in the Dreamcast graph. Retail's 761-byte ValidFlight contains
 // their work inline and has no separate carved predecessors after the ten
 // terrain.h bitset initializers.
-#if 0  // @carcass -- inlined away in retail
-DC_ONLY(0xa1360, 0x88)
-unsigned char army::findFlyerAttackCell(int start, int target)
-{
-    // @stub
-}
-#endif
 
 // E:\gamedcs\fly.cpp:58
-#if 0  // @carcass -- inlined away in retail
-DC_ONLY(0xa13e8, 0x46)
-unsigned char army::findFlyerAttackCell(int target)
-{
-    // @stub
-}
-#endif
-
 // E:\gamedcs\fly.cpp:76
-
 // RECONSTRUCTED 2026-08-13. The 761 retail bytes are FOUR copies of the
 // same six-step adjacency scan, which is exactly the two private DC
 // find_flyer_attack_cell member overloads expanded by /Ob2. Their source
-// bodies stay member definitions even though retail retained no out-of-line
-// copy; /Ob2 decides the emission, not a file-local replacement helper.
+// bodies stay ordinary member definitions even though retail retained no
+// out-of-line copy. Removing the explicit inline keywords preserves all five
+// exact targets; expansion alone does not recover original lexical spelling.
 
 // WHAT THE FOUR COPIES VARY. The pair (start, target) walks
 // (this hex, enemy hex), (this second hex, enemy hex),
@@ -65,7 +54,7 @@ unsigned char army::findFlyerAttackCell(int target)
 // that falls through to the literal reachability test.
 
 // E:\gamedcs\fly.cpp:35
-inline bool army::findFlyerAttackCell(int start, int target) const
+bool army::findFlyerAttackCell(int start, int target) const
 {
     for (long dir = 0; dir < 6; dir++) {
         long adjacent = g_combatManager->m_adjacentCells[target][dir];
@@ -79,11 +68,11 @@ inline bool army::findFlyerAttackCell(int start, int target) const
 }
 
 // E:\gamedcs\fly.cpp:58
-inline bool army::findFlyerAttackCell(int target) const
+bool army::findFlyerAttackCell(int target) const
 {
     if (findFlyerAttackCell(m_gridIndex, target))
         return 1;
-    if (is(1u << 0)
+    if (is(creatureDoubleWide)
             && findFlyerAttackCell(getSecondGridIndex(), target))
         return 1;
     return 0;
@@ -105,7 +94,7 @@ unsigned char army::validFlight(int destIndex, unsigned char literalTest) const
         const army* enemy = &g_combatManager->m_armies[m_side][m_slot];
         long enemyHex = enemy->m_gridIndex;
         if (!findFlyerAttackCell(enemyHex)) {
-            if (!enemy->is(1u << 0)
+            if (!enemy->is(creatureDoubleWide)
                     || !findFlyerAttackCell(
                     enemy->getSecondGridIndex()))
                 return 0;
@@ -141,15 +130,13 @@ int army::flyTo(int destIndex, unsigned char restoreFacing)
 // memory and the call form) at the head of the body.
 
 // THE PACING PAIR is GameTime::DelayTil followed by the struct.h inline
-// GameTime::NextFrameTime; see its definition above for why the
-// hand-spelled `glTimers[0] += lag` form is ruled out by the bytes.
+// GameTime::NextFrameTime in kbwin.h; its elapsed-time clamp is present
+// in retail, so a direct timer increment would change the operation.
 
-// combatManager+0x53b0 is one of the three CCombatOwnedObject slots
-// cmbtmgr.h models only as "polymorphic, deleted by Close". This body
-// calls Bitmap16Bit::Draw on it, so it is really a Bitmap16Bit* - the
-// combat back-buffer. The cast is spelled at the call site rather than
-// retyped in the shared header, which is a decision for whoever owns
-// the cmbtmgr layout, not for fly.obj.
+// The typed m_saveScreenPostGrid bitmap restores the previous draw bounds.
+// Keep the by-value frame extent and the canonical renderer calls: Complete's
+// fixed-viewport header helpers eliminate ScrollTo and expand UpdateCombatArea.
+// No extra block is needed around the outer loop; its removal is byte-flat.
 
 VA(0x004b4a40, 0x44E)  // dc 0xa1590
 int army::fly(int destIndex)
@@ -172,7 +159,7 @@ int army::fly(int destIndex)
         g_combatManager->lowerDoor();
     }
 
-    if (is(1u << 0) && turn)
+    if (is(creatureDoubleWide) && turn)
         destIndex += offsetToFront(-1);
 
     setupAnimation();
@@ -208,12 +195,12 @@ int army::fly(int destIndex)
         int numFlapFrames = m_stdIcon->getNumFrames(cs_walk);
         float x = static_cast<float>(startX);
         float y = static_cast<float>(startY);
-        const int flyperiod = static_cast<long>(
+        const int flyPeriod = static_cast<long>(
             static_cast<float>(m_monFrameInfo.m_walkCycleTime)
-            * g_combatSpeedFactors[g_unnamed698758.m_combatSpeed]
+            * g_combatSpeedFactors[g_config.m_combatSpeed]
             / static_cast<float>(numFlapFrames));
 
-        { for (loop = 0; loop < ttlLoops; loop++) {
+        for (loop = 0; loop < ttlLoops; loop++) {
             for (m_currFrameIndex = 0; m_currFrameIndex < numFlapFrames;
                     m_currFrameIndex++) {
                 SLimitData ttlExtent = g_combatManager->m_drawbridgeBounds;
@@ -239,11 +226,11 @@ int army::fly(int destIndex)
                     g_combatManager->m_drawbridgeBounds, true, true, true);
                 ttlExtent.include(g_combatManager->m_drawbridgeBounds);
                 GameTime::delayTil(g_timers[0]);
-                g_timers[0] = GameTime::nextFrameTime(g_timers[0], flyperiod);
+                g_timers[0] = GameTime::nextFrameTime(g_timers[0], flyPeriod);
                 if (!scrolled)
                     g_combatManager->updateCombatArea(ttlExtent);
             }
-        } }
+        }
     }
 
     g_combatManager->placeArmyInGrid(*this, destIndex);
@@ -293,7 +280,7 @@ int army::teleport(int destIndex)
     else
         turn = 0;
 
-    if (is(1u << 0) && turn)
+    if (is(creatureDoubleWide) && turn)
         destIndex += offsetToFront(-1);
 
     setupAnimation();

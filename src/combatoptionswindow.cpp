@@ -1,5 +1,7 @@
-#include <va.h>
+#include "va.h"
+
 #include "combatoptionswindow.h"
+
 #include "border.h"
 #include "button.h"
 #include "cmbtmgr.h"
@@ -19,7 +21,8 @@
 // active dialog here and its destructor clears it before widget teardown.
 DATA(0x00694f90) static TCombatOptionsWindow* g_combatOptionsWindow;
 
-DATA(0x006a55ac) THelpText g_combatOptionsHelp[39];
+// The shared Help.txt table is owned and filled by text.cpp.
+// Retail reads column 1 (right-click), four bytes after each row base.
 
 VA(0x0046e3b0, 0x1320)  // dc 0x66c48
 TCombatOptionsWindow::TCombatOptionsWindow()
@@ -160,42 +163,42 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
         getWidget(music)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DRAWN);
-    getWidget(g_unk698760 + MUSIC_VOLUME_0_ID)->sendMessage(
+    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-    getWidget(g_unk698760 + MUSIC_VOLUME_0_ID)->sendMessage(
-        widget::WIDGET_SET_ICON_FRAME, g_unk698760);
+    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
+        widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
 
     for (int effects = EFFECTS_VOLUME_0_ID; effects <= EFFECTS_VOLUME_9_ID;
          ++effects)
         getWidget(effects)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DRAWN);
-    getWidget(g_unk698764 + EFFECTS_VOLUME_0_ID)->sendMessage(
+    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-    getWidget(g_unk698764 + EFFECTS_VOLUME_0_ID)->sendMessage(
-        widget::WIDGET_SET_ICON_FRAME, g_unk698764);
+    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
+        widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
 
     highlightCombatSpeed();
     highlightGrid();
     highlightMovementShadow();
     highlightMouseShadow();
     getWidget(AUTO_CREATURES_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
-        g_unnamed698758.m_combatAutoCreatures);
+        g_config.m_combatAutoCreatures);
     getWidget(AUTO_SPELLS_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
-        g_unnamed698758.m_combatAutoSpells);
+        g_config.m_combatAutoSpells);
     getWidget(AUTO_CATAPULT_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
-        g_unnamed698758.m_combatCatapult);
+        g_config.m_combatCatapult);
     getWidget(AUTO_BALLISTA_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
-        g_unnamed698758.m_combatBallista);
+        g_config.m_combatBallista);
     getWidget(AUTO_FIRST_AID_TENT_ID)->sendMessage(
-        widget::WIDGET_SET_ICON_FRAME, g_unnamed698758.m_combatFirstAidTent);
+        widget::WIDGET_SET_ICON_FRAME, g_config.m_combatFirstAidTent);
     getWidget(CREATURE_INFO_VERBOSE_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME,
-        g_unnamed698758.m_combatArmyInfoLevel == CREATURE_INFO_LEVEL_VERBOSE);
+        g_config.m_combatArmyInfoLevel == CREATURE_INFO_LEVEL_VERBOSE);
     getWidget(CREATURE_INFO_COMPACT_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME,
-        g_unnamed698758.m_combatArmyInfoLevel == CREATURE_INFO_LEVEL_COMPACT);
+        g_config.m_combatArmyInfoLevel == CREATURE_INFO_LEVEL_COMPACT);
     getWidget(ANIMATE_SPELLBOOK_ID)->sendMessage(
-        widget::WIDGET_SET_ICON_FRAME, g_unnamed698758.m_animateSpellBook);
+        widget::WIDGET_SET_ICON_FRAME, g_config.m_animateSpellBook);
 
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 }
@@ -248,7 +251,7 @@ void TCombatOptionsWindow::highlightCombatSpeed()
     for (int speed = COMBAT_SPEED_0_ID; speed <= COMBAT_SPEED_2_ID; ++speed)
         getWidget(speed)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
-    getWidget(g_unnamed698758.m_combatSpeed + COMBAT_SPEED_0_ID)->sendMessage(
+    getWidget(g_config.m_combatSpeed + COMBAT_SPEED_0_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 }
 
@@ -256,21 +259,21 @@ void TCombatOptionsWindow::highlightCombatSpeed()
 void TCombatOptionsWindow::highlightGrid()
 {
     getWidget(SHOW_GRID_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
-        g_unnamed698758.m_showCombatGrid);
+        g_config.m_showCombatGrid);
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:254
 void TCombatOptionsWindow::highlightMovementShadow()
 {
     getWidget(MOVEMENT_SHADOW_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
-        g_unnamed698758.m_combatShadeLevel);
+        g_config.m_combatShadeLevel);
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:265
 void TCombatOptionsWindow::highlightMouseShadow()
 {
     getWidget(MOUSE_SHADOW_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
-        g_unnamed698758.m_showCombatMouseHex);
+        g_config.m_showCombatMouseHex);
 }
 
 // Original: UpdateCombatOptions(int bFirstUpdate), DC 0x68098,
@@ -280,7 +283,6 @@ void TCombatOptionsWindow::highlightMouseShadow()
 static void updateCombatOptions(int firstUpdate);
 
 // E:\gamedcs\combatoptionswindow.cpp:278
-
 // NOT A MEMBER-OFFSET BUG (checked 2026-09-06): the `[ecx+0x6ac]` against
 // retail's `[ecx+0x704]` that a census flagged here is the SWITCH INDEX
 // TABLE - `mov dl, byte ptr [ecx + <fn>+0x704]` / `jmp [4*edx + <fn>+0x6c4]`
@@ -349,7 +351,7 @@ int combatOptionsWindowHandler(message& msg)
             if (id >= 0) {
                 int helpID = g_combatOptionsWindow->convertID2HelpID(id);
                 if (helpID >= 0)
-                    normalDialog(g_combatOptionsHelp[helpID].m_text,
+                    normalDialog(g_combatOptionsHelp[helpID].m_rclick,
                         4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             }
         }
@@ -383,37 +385,37 @@ int combatOptionsWindowHandler(message& msg)
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::AUTO_CREATURES_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatAutoCreatures);
+                        g_config.m_combatAutoCreatures);
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::AUTO_SPELLS_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatAutoSpells);
+                        g_config.m_combatAutoSpells);
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::AUTO_CATAPULT_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatCatapult);
+                        g_config.m_combatCatapult);
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::AUTO_BALLISTA_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatBallista);
+                        g_config.m_combatBallista);
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatFirstAidTent);
+                        g_config.m_combatFirstAidTent);
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::CREATURE_INFO_VERBOSE_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatArmyInfoLevel
+                        g_config.m_combatArmyInfoLevel
                             == TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE);
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatArmyInfoLevel
+                        g_config.m_combatArmyInfoLevel
                             == TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT);
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_animateSpellBook);
+                        g_config.m_animateSpellBook);
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
@@ -429,24 +431,24 @@ int combatOptionsWindowHandler(message& msg)
                 case TCombatOptionsWindow::MUSIC_VOLUME_7_ID:
                 case TCombatOptionsWindow::MUSIC_VOLUME_8_ID:
                 case TCombatOptionsWindow::MUSIC_VOLUME_9_ID: {
-                    if (!g_unk698760 && !g_soundManager->m_ds) {
+                    if (!g_config.m_musicVolume && !g_soundManager->m_ds) {
                         normalDialog(
                             g_generalText->getText(
                                 GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                         break;
                     }
-                    g_unk698760 = id - TCombatOptionsWindow::MUSIC_VOLUME_0_ID;
+                    g_config.m_musicVolume = id - TCombatOptionsWindow::MUSIC_VOLUME_0_ID;
                     for (int music = TCombatOptionsWindow::MUSIC_VOLUME_0_ID;
                          music <= TCombatOptionsWindow::MUSIC_VOLUME_9_ID; ++music)
                         g_combatOptionsWindow->getWidget(music)->sendMessage(
                             widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-                    g_combatOptionsWindow->getWidget(g_unk698760
+                    g_combatOptionsWindow->getWidget(g_config.m_musicVolume
                             + TCombatOptionsWindow::MUSIC_VOLUME_0_ID)->sendMessage(
                         widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-                    g_combatOptionsWindow->getWidget(g_unk698760
+                    g_combatOptionsWindow->getWidget(g_config.m_musicVolume
                             + TCombatOptionsWindow::MUSIC_VOLUME_0_ID)->sendMessage(
-                        widget::WIDGET_SET_ICON_FRAME, g_unk698760);
+                        widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
                     g_soundManager->adjustMusicVolumes();
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
@@ -463,26 +465,26 @@ int combatOptionsWindowHandler(message& msg)
                 case TCombatOptionsWindow::EFFECTS_VOLUME_7_ID:
                 case TCombatOptionsWindow::EFFECTS_VOLUME_8_ID:
                 case TCombatOptionsWindow::EFFECTS_VOLUME_9_ID: {
-                    if (!g_unk698764 && !g_soundManager->m_ds) {
+                    if (!g_config.m_soundVolume && !g_soundManager->m_ds) {
                         normalDialog(
                             g_generalText->getText(
                                 GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                         break;
                     }
-                    g_unk698764 = id - TCombatOptionsWindow::EFFECTS_VOLUME_0_ID;
-                    g_unnamed698758.m_lastSoundVolume = g_unk698764;
+                    g_config.m_soundVolume = id - TCombatOptionsWindow::EFFECTS_VOLUME_0_ID;
+                    g_config.m_lastSoundVolume = g_config.m_soundVolume;
                     for (int effects = TCombatOptionsWindow::EFFECTS_VOLUME_0_ID;
                          effects <= TCombatOptionsWindow::EFFECTS_VOLUME_9_ID;
                          ++effects)
                         g_combatOptionsWindow->getWidget(effects)->sendMessage(
                             widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-                    g_combatOptionsWindow->getWidget(g_unk698764
+                    g_combatOptionsWindow->getWidget(g_config.m_soundVolume
                             + TCombatOptionsWindow::EFFECTS_VOLUME_0_ID)->sendMessage(
                         widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-                    g_combatOptionsWindow->getWidget(g_unk698764
+                    g_combatOptionsWindow->getWidget(g_config.m_soundVolume
                             + TCombatOptionsWindow::EFFECTS_VOLUME_0_ID)->sendMessage(
-                        widget::WIDGET_SET_ICON_FRAME, g_unk698764);
+                        widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
                     g_soundManager->adjustSoundVolumes();
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
@@ -490,61 +492,61 @@ int combatOptionsWindowHandler(message& msg)
                 }
 
                 case TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID:
-                    g_unnamed698758.m_animateSpellBook ^= 1;
+                    g_config.m_animateSpellBook ^= 1;
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_animateSpellBook);
+                        g_config.m_animateSpellBook);
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_CREATURES_ID:
-                    g_unnamed698758.m_combatAutoCreatures ^= 1;
+                    g_config.m_combatAutoCreatures ^= 1;
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::AUTO_CREATURES_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatAutoCreatures);
+                        g_config.m_combatAutoCreatures);
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_SPELLS_ID:
-                    g_unnamed698758.m_combatAutoSpells ^= 1;
+                    g_config.m_combatAutoSpells ^= 1;
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::AUTO_SPELLS_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatAutoSpells);
+                        g_config.m_combatAutoSpells);
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_CATAPULT_ID:
-                    g_unnamed698758.m_combatCatapult ^= 1;
+                    g_config.m_combatCatapult ^= 1;
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::AUTO_CATAPULT_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatCatapult);
+                        g_config.m_combatCatapult);
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_BALLISTA_ID:
-                    g_unnamed698758.m_combatBallista ^= 1;
+                    g_config.m_combatBallista ^= 1;
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::AUTO_BALLISTA_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatBallista);
+                        g_config.m_combatBallista);
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID:
-                    g_unnamed698758.m_combatFirstAidTent ^= 1;
+                    g_config.m_combatFirstAidTent ^= 1;
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatFirstAidTent);
+                        g_config.m_combatFirstAidTent);
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
@@ -552,7 +554,7 @@ int combatOptionsWindowHandler(message& msg)
                 case TCombatOptionsWindow::COMBAT_SPEED_0_ID:
                 case TCombatOptionsWindow::COMBAT_SPEED_1_ID:
                 case TCombatOptionsWindow::COMBAT_SPEED_2_ID: {
-                    g_unnamed698758.m_combatSpeed =
+                    g_config.m_combatSpeed =
                         id - TCombatOptionsWindow::COMBAT_SPEED_0_ID;
                     g_combatOptionsWindow->highlightCombatSpeed();
                     prefsChanged = 1;
@@ -561,61 +563,61 @@ int combatOptionsWindowHandler(message& msg)
                 }
 
                 case TCombatOptionsWindow::CREATURE_INFO_VERBOSE_ID:
-                    if (g_unnamed698758.m_combatArmyInfoLevel
+                    if (g_config.m_combatArmyInfoLevel
                             != TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE) {
-                        g_unnamed698758.m_combatArmyInfoLevel =
+                        g_config.m_combatArmyInfoLevel =
                             TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE;
                         g_combatOptionsWindow->getWidget(
                             TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME, 0);
                     } else {
-                        g_unnamed698758.m_combatArmyInfoLevel = 0;
+                        g_config.m_combatArmyInfoLevel = 0;
                     }
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::CREATURE_INFO_VERBOSE_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatArmyInfoLevel
+                        g_config.m_combatArmyInfoLevel
                             == TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE);
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID:
-                    if (g_unnamed698758.m_combatArmyInfoLevel
+                    if (g_config.m_combatArmyInfoLevel
                             != TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT) {
-                        g_unnamed698758.m_combatArmyInfoLevel =
+                        g_config.m_combatArmyInfoLevel =
                             TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT;
                         g_combatOptionsWindow->getWidget(
                             TCombatOptionsWindow::CREATURE_INFO_VERBOSE_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME, 0);
                     } else {
-                        g_unnamed698758.m_combatArmyInfoLevel = 0;
+                        g_config.m_combatArmyInfoLevel = 0;
                     }
                     g_combatOptionsWindow->getWidget(
                         TCombatOptionsWindow::CREATURE_INFO_COMPACT_ID)->sendMessage(
                         widget::WIDGET_SET_ICON_FRAME,
-                        g_unnamed698758.m_combatArmyInfoLevel
+                        g_config.m_combatArmyInfoLevel
                             == TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT);
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::SHOW_GRID_ID:
-                    g_unnamed698758.m_showCombatGrid ^= 1;
+                    g_config.m_showCombatGrid ^= 1;
                     g_combatOptionsWindow->highlightGrid();
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::MOVEMENT_SHADOW_ID:
-                    g_unnamed698758.m_combatShadeLevel ^= 1;
+                    g_config.m_combatShadeLevel ^= 1;
                     g_combatOptionsWindow->highlightMovementShadow();
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
                     break;
 
                 case TCombatOptionsWindow::MOUSE_SHADOW_ID:
-                    g_unnamed698758.m_showCombatMouseHex ^= 1;
+                    g_config.m_showCombatMouseHex ^= 1;
                     g_combatOptionsWindow->highlightMouseShadow();
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
@@ -649,12 +651,4 @@ static void updateCombatOptions(int firstUpdate)
     }
 }
 
-
 // E:\gamedcs\combatoptionswindow.cpp:171
-#if 0  // @carcass -- represented by VA_COMPGEN above
-DC_ONLY(0x680d0, 0x34)
-void* TCombatOptionsWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-#endif

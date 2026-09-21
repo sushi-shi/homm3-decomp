@@ -1,10 +1,12 @@
 #ifndef HOMM3_AI_COMBAT_H
 #define HOMM3_AI_COMBAT_H
 
-#include <va.h>
+#include "va.h"
+
 #include <vector>
-#include "armygrp.h"
+
 #include "ai_tactical.h"
+#include "armygrp.h"
 
 class hero;
 class town;
@@ -87,9 +89,7 @@ public:
                                const hero* targetHero) const;
     long getResurrectionValue(type_spell_choice& choice,
                                 const hero* castingHero) const;
-    // No retail row of its own - /Ob2 inlined every call site and
-    // OPT:REF dropped the out-of-line COMDAT, so ai_combat.cpp defines
-    // it `inline` (see the note there).
+    // Ordinary TU helper, expanded at both Complete call sites.
     void castEnchantment(long spellValue, unsigned char increase);
     void castResurrection(type_spell_choice& choice,
                            const hero* castingHero);
@@ -234,6 +234,7 @@ protected:
                                          const type_AI_combat_data& defender,
                                          long start, long damage) const;
     unsigned char hasCreature(TCreatureType creature) const;
+    long inflictCatagoryDamage(long damage, type_speed_catagory catagory);
     void inflictDamage(long damage, long blockerSpeed);
     long inflictMeleeDamage(long damage, long start, long speedLimit);
     void initializeCreatures(double baseModifier, const hero* enemyHero);
@@ -251,6 +252,9 @@ long aiValueOfCombat(const hero* attackingHero,
                         const armyGroup& defendingArmy,
                         const town* defendingTown,
                         NewmapCell* cell);
+
+long aiValueOfCombat(const hero* attackingHero, TCreatureType type, long size,
+                     NewmapCell* cell);
 
 long aiApproximateStrength(const hero* currentHero);
 long aiApproximateStrength(const hero* currentHero, const armyGroup& currentArmy);

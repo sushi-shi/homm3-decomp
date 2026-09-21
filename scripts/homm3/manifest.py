@@ -9,7 +9,7 @@ the toml shape is spelled in one place.
 NOTE the manifest is NOT the label universe: retail_labels extraction sweeps
 src/*.c* directly, because carcass/reference TUs carry VA() claims without
 being manifest units, and the vendored zlib units are manifest units with no
-src/ file (their claims are the config/retail-zlib-map.tsv provider table).
+src/ file (their claims are the config/retail/zlib-map.tsv provider table).
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ def load(path: Path | None = None) -> dict:
 
 
 def units(path: Path | None = None) -> list[dict]:
-    """[{unit, source, flags}] in manifest order."""
+    """[{unit, source, flags, module?}] in manifest order."""
     return list(load(path).get("unit", []))
 
 

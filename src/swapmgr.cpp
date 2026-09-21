@@ -1,33 +1,31 @@
+#include "va.h"
 #include "includes.h"
-#include "creaturetype.h"
-#include <va.h>
+
 #include "swapmgr.h"
-#include "game.h"
-#include "hero.h"
+
 #include "advmgr.h"
 #include "bitmap816.h"
 #include "border.h"
 #include "button.h"
+#include "creaturetype.h"
+#include "game.h"
+#include "hero.h"
+#include "herospec.h"
 #include "iconwdgt.h"
 #include "kb.h"
 #include "kbwin.h"
-#include "questlogwindow.h"
-#include "winmgr.h"
-#include "netgame.h"
 #include "mousemgr.h"
+#include "netgame.h"
+#include "questlogwindow.h"
 #include "resourcemanager.h"
 #include "sskilltraits.h"
-#include "herospec.h"
 #include "text.h"
 #include "textresource.h"
 #include "textwdgt.h"
+#include "winmgr.h"
 
-// Dreamcast names the sparse widget-id lookup gStatNames. Retail folds its
-// biased view into the indexed address 0x6a51c4, so only the admitted case
-// values (115..118 and 145) are valid consumers of this base.
-DATA(0x006a3d08) static int g_unnamed6a3d08;
+DATA(0x006a3d08) static int g_splitArmyMode;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
-DATA(0x006a51c4) extern const char* g_statNames[];
 DATA(0x006a3d30) swapManager* g_swapManager;
 
 // The shared includes.h helper is named by Reset's four Dreamcast xrefs
@@ -92,7 +90,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
         font::WHITE, font::LEFT_JUSTIFIED, "TStatBar.pcx",
         0, 0x12c, 0x100, 0, 7, 5);
 
-    if (g_networkActive69954c && g_swapManager->m_humanPlayerTrade) {
+    if (g_remoteOn && g_swapManager->m_humanPlayerTrade) {
         m_leftArrow = new bitmapBorder(
             0x16e, 0xfa, 0x43, 0x10f, 0, "trarrowl.pcx", 0x800);
         m_rightArrow = new bitmapBorder(
@@ -752,7 +750,7 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
     m_destinationArmySlot = -1;
     m_givingToAlly = 1;
     m_humanPlayerTrade = 0;
-    if (g_videoPaused
+    if (g_remoteOn
         && leftHero->m_owner != rightHero->m_owner
         && g_game->isHuman(leftHero->m_owner)
         && g_game->isHuman(rightHero->m_owner))
@@ -769,7 +767,7 @@ void swapManager::reset()
     message msg;
 
     m_sourceHeroIndex = m_destinationHeroIndex = m_armySelectionPending = m_sourceArmySlot = m_destinationArmySlot = -1;
-    g_unnamed6a3d08 = 0;
+    g_splitArmyMode = 0;
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_STATUS;
@@ -987,7 +985,7 @@ void swapManager::close()
     if (g_dPlay)
         g_dPlay->setNetMsgHandler(m_previousNetMsgHandler);
     delete m_netMsgHandler;
-    g_advManager->m_status = 1;
+    g_advManager->setStatus(STATUS_ACTIVE);
     g_advManager->enableButtons();
     g_advManager->reseed(0, 0);
 }
@@ -1002,7 +1000,7 @@ void swapManager::drawSelector()
     if (m_sourceArmySlot == -1)
         return;
 
-    if (g_unnamed6a3d08)
+    if (g_splitArmyMode)
     {
         int selectedType = m_heroes[m_sourceHeroIndex]->m_army.m_armies[m_sourceArmySlot];
         x = 0x43;
@@ -1052,7 +1050,6 @@ void swapManager::drawSelector()
 }
 
 // E:\gamedcs\swapmgr.cpp:914
-DC_ONLY(0x15cccc, 0x5E)
 inline void swapManager::updateArtifactWidget(long id, TArtifact artifact)
 {
     message msg;
@@ -1240,12 +1237,12 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
         viewMon();
     else if (m_heroes[m_sourceHeroIndex]->m_owner == g_netLocalGamePos)
     {
-        if ((g_unnamed6a3d08 || shift)
+        if ((g_splitArmyMode || shift)
             && (m_heroes[m_destinationHeroIndex]->m_army.m_armies[m_destinationArmySlot] == CREATURE_NONE
                 || m_heroes[m_destinationHeroIndex]->m_army.m_armies[m_destinationArmySlot]
                        == m_heroes[m_sourceHeroIndex]->m_army.m_armies[m_sourceArmySlot]))
         {
-            g_unnamed6a3d08 = 0;
+            g_splitArmyMode = 0;
             if (canModHero(m_destinationHeroIndex))
                 m_heroes[m_sourceHeroIndex]->m_army.splitArmy(
                     m_sourceArmySlot, &m_heroes[m_destinationHeroIndex]->m_army, m_destinationArmySlot, 1, 1);
@@ -1347,7 +1344,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
             g_heroScreenDraggedArtifact.m_artifactId, slot))
         return;
 
-    if (g_campaignMode
+    if (g_inCampaign
         && oldArtifact.m_artifactId == ARTIFACT_ARMAGEDDONS_BLADE
         && g_game->m_campaign.m_currentCampaign == ARMAGEDDONS_BLADE_CAMPAIGN
         && g_game->m_campaign.m_currentMap == ARMAGEDDONS_BLADE_MAP
@@ -1420,7 +1417,7 @@ void swapManager::handleBackpackClick(long side, long id, unsigned char rightCli
 VA(0x005afbf0, 0x17A)  // dc 0x15d440
 void swapManager::sendHeroUpdate()
 {
-    if (g_networkActive69954c && m_humanPlayerTrade && m_givingToAlly) {
+    if (g_remoteOn && m_humanPlayerTrade && m_givingToAlly) {
         int otherPlayer = getOtherHero()->m_owner;
         if (!m_netMsgHandler->getAbortPopupMsg()) {
             hero* leftHero = m_heroes[0];
@@ -1433,7 +1430,7 @@ void swapManager::sendHeroUpdate()
 
 // E:\gamedcs\swapmgr.cpp:1660. Dreamcast keeps this one-statement helper;
 // Complete folds it into both exits of Main.
-DC_ONLY(0x15de34, 0xC)
+
 inline int swapManager::exitSwapManager(message& msg)
 {
     msg.m_id = MESSAGE_EXECUTIVE;
@@ -1444,7 +1441,7 @@ inline int swapManager::exitSwapManager(message& msg)
 // Dreamcast retains a substantial WinCE side-swap body. Complete's desktop
 // dispatcher has no corresponding instructions at Main's attested call site;
 // keep the source boundary while recording that proven revision removal.
-DC_ONLY(0x15de40, 0x4C8)
+
 inline void swapManager::swapSide()
 {
 }
@@ -1484,9 +1481,9 @@ int swapManager::main(message& msg)
     unsigned char shift =
         (msg.m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS) != 0;
 
-    if (g_turnDuration69d630.isExpired())
+    if (g_turnDuration.isExpired())
     {
-        if (g_networkActive69954c)
+        if (g_remoteOn)
         {
             CTradeRequestDoneMsg requestDone;
             transmitRemoteData(&requestDone, getOtherHero()->m_owner, 0, 1);
@@ -1494,7 +1491,7 @@ int swapManager::main(message& msg)
         return exitSwapManager(msg);
     }
 
-    if (g_networkActive69954c)
+    if (g_remoteOn)
     {
         m_netMsgHandler->checkHandleNet(0, 0);
         if (static_cast<CSwapMgrNetMsgHandler*>(m_netMsgHandler)->m_field0c)
@@ -1530,7 +1527,7 @@ int swapManager::main(message& msg)
                 break;
 
             case widget::WIDGET_END_DIALOG:
-                if (g_networkActive69954c && m_humanPlayerTrade)
+                if (g_remoteOn && m_humanPlayerTrade)
                 {
                     CTradeRequestDoneMsg requestDone;
                     transmitRemoteData(&requestDone, getOtherHero()->m_owner,
@@ -1943,7 +1940,7 @@ int swapManager::main(message& msg)
                 case kSwapRolloverArmyMoveLeft:
                 case kSwapRolloverArmyMoveRight:
                     if (rightMouse)
-                        normalDialog(g_heroScreenMixedArmyHelp, 4,
+                        normalDialog(g_heroScreen[32], 4,
                                      -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     break;
@@ -1984,16 +1981,15 @@ int swapManager::main(message& msg)
 // Dreamcast proves the source order below: three primary-stat bands, hero
 // heading, morale/luck, fixed status rows, two army bands, two skill bands,
 // and the four artifact/backpack bands. Complete shifts the backpack ids by
-// two and adds widget 145, while retail's 215-byte dispatch table fixes every
+// two; retail's 215-byte dispatch table fixes every
 // admitted case range independently. GetArmyName, get_artifact/get_backpack,
 // GetNthSS and get_rollover_text retain their recovered source boundaries;
 // Complete /Ob2 expands the first three where the x86 body proves it.
-// Residual (99.9787%): all 45 CFG blocks, sizes, branches and instruction
-// counts are exact. Two primary-stat loads differ only in relocation naming
-// (gPrimarySkillNames plus a negative addend versus retail's biased effective
-// base); the sole instruction-form residual commutes the base/index registers
-// in the right-skill mastery-byte load. The emitted addresses and semantics
-// agree, so neither flat label spelling is replaced with a source-false alias.
+// Dreamcast attributes the hero-heading format lookup to
+// TTextResource::operator[]; getText() is the readable byte-identical wrapper.
+// Retail primary-stat loads use biased addresses into gStatNames. The
+// 115..118 band subtracts 115 before indexing the canonical four entries.
+// Widget 145 maps to the default arm (dispatch index 19), not this band.
 VA(0x005b08b0, 0x4EF)  // retail byte table + DC statement roster, dc 0x15e308
 void swapManager::setRolloverText(int codeY)
 {
@@ -2004,20 +2000,19 @@ void swapManager::setRolloverText(int codeY)
     {
     case kSwapRolloverStat115: case kSwapRolloverStat116:
     case kSwapRolloverStat117: case kSwapRolloverStat118:
-    case kSwapRolloverStat145:
-        sprintf(g_text, g_heroScreenNameFormat, g_statNames[codeY]);
+        sprintf(g_text, g_heroScreen[1], g_statNames[codeY - kSwapRolloverStat115]);
         break;
 
     case kSwapRolloverLeftPrimary0: case kSwapRolloverLeftPrimary1:
     case kSwapRolloverLeftPrimary2: case kSwapRolloverLeftPrimary3:
-        sprintf(g_text, g_heroScreenNameFormat,
-                g_primarySkillNames[codeY - kSwapRolloverLeftPrimary0]);
+        sprintf(g_text, g_heroScreen[1],
+                g_statNames[codeY - kSwapRolloverLeftPrimary0]);
         break;
 
     case kSwapRolloverRightPrimary0: case kSwapRolloverRightPrimary1:
     case kSwapRolloverRightPrimary2: case kSwapRolloverRightPrimary3:
-        sprintf(g_text, g_heroScreenNameFormat,
-                g_primarySkillNames[codeY - kSwapRolloverRightPrimary0]);
+        sprintf(g_text, g_heroScreen[1],
+                g_statNames[codeY - kSwapRolloverRightPrimary0]);
         break;
 
     case kSwapRolloverHeroLeft: case kSwapRolloverHeroRight:
@@ -2028,41 +2023,41 @@ void swapManager::setRolloverText(int codeY)
 
     case kSwapRolloverMoraleLeft: case kSwapRolloverMoraleRight:
         if (m_heroes[codeY - kSwapRolloverMoraleLeft]->getMorale(0, 0, 1) > 0)
-            strcpy(g_text, g_heroScreenMoraleHighText);
+            strcpy(g_text, g_heroScreen[3]);
         else if (m_heroes[codeY - kSwapRolloverMoraleLeft]->getMorale(0, 0, 1) == 0)
-            strcpy(g_text, g_heroScreenMoraleNeutralText);
+            strcpy(g_text, g_heroScreen[4]);
         else
-            strcpy(g_text, g_heroScreenMoraleLowText);
+            strcpy(g_text, g_heroScreen[5]);
         break;
 
     case kSwapRolloverLuckLeft: case kSwapRolloverLuckRight:
         if (m_heroes[codeY - kSwapRolloverLuckLeft]->getLuck(0, 0, 1) > 0)
-            strcpy(g_text, g_heroScreenLuckHighText);
+            strcpy(g_text, g_heroScreen[6]);
         else if (m_heroes[codeY - kSwapRolloverLuckLeft]->getLuck(0, 0, 1) == 0)
-            strcpy(g_text, g_heroScreenLuckNeutralText);
+            strcpy(g_text, g_heroScreen[7]);
         else
-            strcpy(g_text, g_heroScreenLuckLowText);
+            strcpy(g_text, g_heroScreen[8]);
         break;
 
     case kSwapRolloverText27Left: case kSwapRolloverText27Right:
-        strcpy(g_text, g_heroScreenText27);
+        strcpy(g_text, g_heroScreen[27]);
         break;
 
     case kSwapRolloverText9Left: case kSwapRolloverText9Right:
-        strcpy(g_text, g_heroScreenText9);
+        strcpy(g_text, g_heroScreen[9]);
         break;
 
     case kSwapRolloverText22Left: case kSwapRolloverText22Right:
-        strcpy(g_text, g_heroScreenText22);
+        strcpy(g_text, g_heroScreen[22]);
         break;
 
     case kSwapRolloverArmyMoveLeft: case kSwapRolloverArmyMoveRight:
-        sprintf(g_text, g_heroScreenArmyMoveFormat,
+        sprintf(g_text, g_heroScreen[20],
                 g_generalText->getText(44));
         break;
 
     case kSwapRolloverText0Left: case kSwapRolloverText0Right:
-        strcpy(g_text, g_heroScreenText0);
+        strcpy(g_text, g_heroScreen[0]);
         break;
 
     case kSwapRolloverLeftArmy0: case kSwapRolloverLeftArmy1:
@@ -2070,9 +2065,9 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverLeftArmy4: case kSwapRolloverLeftArmy5:
     case kSwapRolloverLeftArmy6:
         if (m_heroes[0]->m_army.m_armies[codeY - kSwapRolloverLeftArmy0] == CREATURE_NONE)
-            strcpy(g_text, g_emptyRolloverText);
+            strcpy(g_text, "");
         else
-            sprintf(g_text, g_heroScreenNameFormat,
+            sprintf(g_text, g_heroScreen[1],
                     getArmyName(m_heroes[0]->m_army.m_armies[
                                     codeY - kSwapRolloverLeftArmy0], 2));
         break;
@@ -2082,9 +2077,9 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverRightArmy4: case kSwapRolloverRightArmy5:
     case kSwapRolloverRightArmy6:
         if (m_heroes[1]->m_army.m_armies[codeY - kSwapRolloverRightArmy0] == CREATURE_NONE)
-            strcpy(g_text, g_emptyRolloverText);
+            strcpy(g_text, "");
         else
-            sprintf(g_text, g_heroScreenNameFormat,
+            sprintf(g_text, g_heroScreen[1],
                     getArmyName(m_heroes[1]->m_army.m_armies[
                                     codeY - kSwapRolloverRightArmy0], 2));
         break;
@@ -2093,11 +2088,20 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverLeftSkill2: case kSwapRolloverLeftSkill3:
     case kSwapRolloverLeftSkill4: case kSwapRolloverLeftSkill5:
     case kSwapRolloverLeftSkill6: case kSwapRolloverLeftSkill7:
+        // The last residual here is one SIB byte in each skill arm:
+        // retail encodes `movsx eax, [eax + edx + 0xc9]` (hero as base,
+        // skill as index) where we emit `[edx + eax + 0xc9]`. Caching
+        // `m_heroes[n]` in a local to bias the allocator makes it much
+        // worse (99.98 -> 96.52): the pointer then lives in a callee-saved
+        // register across getNthSS and the whole arm re-schedules. DC
+        // records no stack locals here and calls already agree, so `skill`
+        // is a register temp and the base/index choice is allocator state,
+        // not a spelling we have evidence for.
         if (codeY - kSwapRolloverLeftSkill0 < m_heroes[0]->m_skillCount) {
             int skill = m_heroes[0]->getNthSS(
                 codeY - kSwapRolloverLeftSkill0);
-            sprintf(g_text, g_heroScreenSecondarySkillFormat,
-                    g_skillMasteryNamesBiased[m_heroes[0]->m_skillLevel[skill]],
+            sprintf(g_text, g_heroScreen[21],
+                    g_secondarySkillLevels[m_heroes[0]->m_skillLevel[skill] - 1],
                     g_sSkillTraits[skill].m_name);
         }
         break;
@@ -2109,8 +2113,8 @@ void swapManager::setRolloverText(int codeY)
         if (codeY - kSwapRolloverRightSkill0 < m_heroes[1]->m_skillCount) {
             int skill = m_heroes[1]->getNthSS(
                 codeY - kSwapRolloverRightSkill0);
-            sprintf(g_text, g_heroScreenSecondarySkillFormat,
-                    g_skillMasteryNamesBiased[m_heroes[1]->m_skillLevel[skill]],
+            sprintf(g_text, g_heroScreen[21],
+                    g_secondarySkillLevels[m_heroes[1]->m_skillLevel[skill] - 1],
                     g_sSkillTraits[skill].m_name);
         }
         break;
@@ -2160,7 +2164,7 @@ void swapManager::setRolloverText(int codeY)
         break;
 
     default:
-        strcpy(g_text, g_emptyRolloverText);
+        strcpy(g_text, "");
         break;
     }
 
@@ -2178,112 +2182,16 @@ void swapManager::setRolloverText(int codeY)
 }
 
 // E:\gamedcs\swapmgr.cpp:2024
-
 // Dreamcast proves this as one source statement with no locals. Complete's
 // HandleMonster expands the helper while retaining the GetNumArmies and
 // ViewArmy call order; retail fixes the first-selected hero/second slot pair.
-DC_ONLY(0x15e85c, 0x5E)
+
 void swapManager::viewMon()
 {
     g_game->viewArmy(m_heroes[m_sourceHeroIndex]->m_army, m_destinationArmySlot, m_heroes[m_sourceHeroIndex],
                      0, 0x77, 0x14,
                      m_heroes[m_sourceHeroIndex]->m_army.getNumArmies() > 1, 0);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\swapmgr.cpp:2030
-DC_ONLY(0x15e8bc, 0x142)
-void swapManager::swapMons()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2140
-DC_ONLY(0x15eb90, 0x1A)
-void swapManager::onChatUpdate()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2147
-DC_ONLY(0x15ebac, 0xAA)
-void swapManager::handleHeroUpdateMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2231
-DC_ONLY(0x15edf8, 0x2A)
-unsigned char swapManager::isLeftHero()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2259
-DC_ONLY(0x15ee74, 0x22)
-hero* swapManager::GetOurHero()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2267
-DC_ONLY(0x15ee98, 0x82)
-bool swapManager::canModHero(int hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2298
-DC_ONLY(0x15ef60, 0x70)
-void swapManager::onGiveMeStuffMsg()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:192
-DC_ONLY(0x15f0a4, 0x98)
-void CSwapManagerChatEdit::CSwapManagerChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:201
-DC_ONLY(0x15f164, 0x34)
-void* CSwapManagerChatEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:201
-DC_ONLY(0x15f198, 0x18)
-void CSwapManagerChatEdit::~CSwapManagerChatEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:454
-DC_ONLY(0x15f1b0, 0x34)
-void* TSwapWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:512
-DC_ONLY(0x15f1e4, 0x44)
-void CSwapMgrNetMsgHandler::CSwapMgrNetMsgHandler()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:518
-DC_ONLY(0x15f228, 0x100)
-CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x005b0da0, 0x141)  // dc 0x15e8bc
 void swapManager::swapMons()
@@ -2384,7 +2292,7 @@ void swapManager::update()
 
 // E:\gamedcs\swapmgr.cpp:2140. The older build retains this refresh
 // boundary; Complete expands its Update body at Main's chat-refresh site.
-DC_ONLY(0x15eb90, 0x1A)
+
 inline void swapManager::onChatUpdate()
 {
     drawSwapWin();
@@ -2466,7 +2374,7 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
 
     case kSwapRefreshLeft:
     case kSwapRefreshRight:
-        g_unnamed6a3d08 = 1;
+        g_splitArmyMode = 1;
         this->update();
         drawSwapWin();
         drawSelector();
@@ -2477,7 +2385,7 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
         break;
 
     case kSwapTradeRequestDone:
-        if (g_networkActive69954c
+        if (g_remoteOn
             && g_currentPlayer->isLocalHuman()
             && m_humanPlayerTrade)
         {
@@ -2514,6 +2422,14 @@ inline hero* swapManager::getOtherHero()
     if (isLeftHero())
         return m_heroes[1];
     return m_heroes[0];
+}
+
+// Original: swapManager::GetOurHero; swapmgr.cpp:2259, dc 0x15ee74.
+hero* swapManager::getOurHero()
+{
+    if (isLeftHero())
+        return m_heroes[0];
+    return m_heroes[1];
 }
 
 bool swapManager::canModHero(int whichHero)

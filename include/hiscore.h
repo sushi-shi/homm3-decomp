@@ -2,10 +2,9 @@
 #define HOMM3_HISCORE_H
 
 #include "basemgr.h"
-#include "window.h"
-#include "textntry.h"
-
 #include "bitmap16.h"
+#include "textntry.h"
+#include "window.h"
 
 class message;
 class textWidget;
@@ -53,7 +52,7 @@ SIZE(highScoreManager, 0x8d4);
 
 // Retail oldmain opens this manager and invokes ViewHiScore through the
 // pointer at 0x6993cc; hiscore.cpp owns the DATA definition.
-DATA(0x006993cc) extern highScoreManager* g_highScoreManager;
+extern highScoreManager* g_highScoreManager;
 DATA(0x0069955c) extern int g_showHighScore;
 
 // DC names the three CHeroWindowEx-tail pointers at +0x4c/+0x50/+0x54.
@@ -85,6 +84,9 @@ public:
                    int style, int readType, int insetX, int insetY);
     // DC195 takes message&; the shared text-entry interface still uses message*.
     virtual int onKeyPress(message* msg);  // slot 15, retail 0x4e9710
+    virtual void setFocus(bool state);  // inherited slot 14
+    virtual void onNextEdit();  // appended slot 19
+    virtual void onPrevEdit();  // appended slot 20
 };
 SIZE(CHighScoreEdit, 0x78);
 
@@ -106,7 +108,6 @@ public:
     // DC301 forwards maxChars1 to CHighScoreEdit; retail passes 40.
     CHSInputDlg(int maxChars);
     virtual ~CHSInputDlg();
-    virtual int windowHandler(message& msg);
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     virtual textWidget* getRolloverWidget();
     bool onOK();

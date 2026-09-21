@@ -1,8 +1,11 @@
 // 3 functions in link order.
-#include "terrain.h"
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "resource.h"
+
+#include "terrain.h"
 
 VA(0x00558720, 0x4E)  // dc 0x120934
 resource::resource(const char* newName, EResourceType newType)

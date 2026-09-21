@@ -1,20 +1,43 @@
-#include "terrain.h"
-#include <va.h>
-#include <windows.h>
+#include "prefs.h"
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
-#include "../vendor/miles-5.0e/include/Mss.h"
+#include <windows.h>
+
 #include "soundmgr.h"
-#include "sample.h"
-#include "smackmgr.h"
-#include "kbwin.h"
-// SetMusicVolume's three cross-TU views: the combat manager's status
-// (which selects combat music), the adventure manager's terrain field,
-// and Random.
+
 #include "advmgr.h"
 #include "cmbtmgr.h"
 #include "kb.h"
+#include "kbwin.h"
 #include "misc.h"
+#include "sample.h"
+#include "smackmgr.h"
+#include "terrain.h"
+
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x00684ae8) const char* const g_terrainMusic[9] = { "Water", "Grass", "Snow", "Swamp", "Lava", "Sand", "Dirt", "Rough", "Underground" };
+DATA(0x00678330) unsigned char g_terrainMusicIds[9] = { 8, 7, 3, 4, 5, 9, 10, 6, 2 };
+
+// Shared Miles state. All handles and playback flags begin cleared.
+DATA(0x00699290) int g_noSound;
+DATA(0x00699258) SAMPLE2 g_nullSample2;
+DATA(0x0069fea0) short g_ailDriverState[14];
+DATA(0x006a3258) int g_sampleWasPlaying[14];
+DATA(0x0069fe78) HSTREAM g_mp3Stream;
+// Original DC name: currentStream; ResumeStream copies it into waitingStream.
+DATA(0x006a3290) char g_currentStream[260];
+// Original DC name: waitingStream; StartMP3 publishes the requested filename.
+DATA(0x006a3394) char g_waitingStream[260];
+// Original DC name: currentLoop; ResumeStream and ProcessStopAndPlayMP3.
+DATA(0x0069fe90) int g_currentLoop;
+// Original DC name: waitingLoop; StartMP3 publishes the requested loop count.
+DATA(0x0069fe9c) int g_waitingLoop;
+DATA(0x00684ab8) SoundChannelRange g_soundChannels[4] = {
+    { 0, 1, 0 }, { 1, 2, 1 }, { 2, 6, 2 }, { 6, 14, 6 }
+};
+
 
 // Number of live asynchronous sample waiters. WaitEndSampleThread increments
 // and decrements this counter; Close gives them up to one second to drain.
@@ -26,8 +49,8 @@ DATA(0x00684aa8) int g_soundSampleRate = 44100;
 DATA(0x00684aac) int g_soundBitsPerSample = SOUND_BITS_PER_SAMPLE_16;
 DATA(0x00684ab0) int g_soundOutputChannels = 2;
 DATA(0x00684ae0) int g_soundMaxSamples = 14;
-DATA(0x0069fe80) AILWaveFormat g_soundWaveFormat;
-DATA(0x00698a28) int g_unk698a28;
+DATA(0x0069fe80) PCMWAVEFORMAT g_soundWaveFormat;
+DATA(0x00698a28) int g_skipDigitalDriverOpen;
 
 VA(0x005994b0, 0x210)  // dc 0x14b07c
 void soundManager::setMusicVolume()
@@ -69,14 +92,14 @@ int soundManager::convertVolume(int volumeValue, int volumeType)
 {
     int result = 0;
     if (volumeType == VOLUME_TYPE_101) {
-        const int& setting = g_unk698760;
+        const int& setting = g_config.m_musicVolume;
         if (setting >= 1 && setting <= 10) {
             result = (setting + 1) * volumeValue / 10;
             if (result < 1)
                 result = 1;
         }
     } else {
-        const int& setting = g_unk698764;
+        const int& setting = g_config.m_soundVolume;
         if (setting >= 1 && setting <= 10) {
             result = (setting + 1) * volumeValue / 10;
             if (result < 1)
@@ -133,34 +156,34 @@ int soundManager::open(int newPriority)
 
     if (!g_noSound) {
         AIL_startup();
-        if (!g_unk698a28 && !m_ds) {
+        if (!g_skipDigitalDriverOpen && !m_ds) {
             AIL_set_preference(15, 0);
             AIL_set_preference(33, 1);
             AIL_set_preference(34, 100);
 
-            AILDigitalDriver* driver;
-            AILDigitalDriver* result;
+            HDIGDRIVER driver;
+            HDIGDRIVER result;
             for (;;) {
                 if (g_soundSampleRate < 11025) {
                     result = 0;
                     break;
                 }
 
-                g_soundWaveFormat.m_formatTag = 1;
-                g_soundWaveFormat.m_channels =
+                g_soundWaveFormat.wf.wFormatTag = 1;
+                g_soundWaveFormat.wf.nChannels =
                     static_cast<unsigned short>(g_soundOutputChannels);
-                g_soundWaveFormat.m_samplesPerSec = g_soundSampleRate;
-                g_soundWaveFormat.m_avgBytesPerSec =
+                g_soundWaveFormat.wf.nSamplesPerSec = g_soundSampleRate;
+                g_soundWaveFormat.wf.nAvgBytesPerSec =
                     (g_soundBitsPerSample / 8) * g_soundOutputChannels
                     * g_soundSampleRate;
-                g_soundWaveFormat.m_blockAlign = static_cast<unsigned short>(
+                g_soundWaveFormat.wf.nBlockAlign = static_cast<unsigned short>(
                     (g_soundBitsPerSample / 8) * g_soundOutputChannels);
-                g_soundWaveFormat.m_bitsPerSample =
+                g_soundWaveFormat.wBitsPerSample =
                     static_cast<unsigned short>(g_soundBitsPerSample);
 
                 AIL_HWND();
                 int openResult = AIL_waveOutOpen(
-                    &driver, 0, -1, &g_soundWaveFormat);
+                    &driver, 0, -1, &g_soundWaveFormat.wf);
                 if (!openResult) {
                     char description[128];
                     strcpy(description, DATA_COMPGEN(
@@ -197,15 +220,15 @@ int soundManager::open(int newPriority)
         }
 
         if (!m_ds) {
-            g_unk698764 = 0;
+            g_config.m_soundVolume = 0;
         } else {
             if (g_soundManager->m_ds->lppdsb) {
-                AILPrimaryBuffer* buffer =
-                    static_cast<AILPrimaryBuffer*>(g_soundManager->m_ds->lppdsb);
-                buffer->m_vtable->m_setVolume(buffer, 0);
+                LPDIRECTSOUNDBUFFER buffer = static_cast<LPDIRECTSOUNDBUFFER>(
+                    g_soundManager->m_ds->lppdsb);
+                buffer->SetVolume(0);
             }
             SmackSoundUseMSS(g_soundManager->m_ds);
-            BinkSetSoundSystem(BinkOpenMiles, g_soundManager->m_ds);
+            BinkSoundUseMiles(g_soundManager->m_ds);
         }
         m_playSounds = 1;
 
@@ -235,7 +258,7 @@ void soundManager::close()
 {
     if (m_status == STATUS_ACTIVE) {
         g_soundManager->m_playSounds = 1;
-        g_unk691209 = 0;
+        g_goSolo = 0;
         videoShutDown();
 
         if (!g_noSound) {
@@ -277,7 +300,7 @@ void soundManager::resumeSamples()
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_goSolo)
         return;
     EnterCriticalSection(&m_sectionSoundCall);
     for (int i = 0; i < m_sampleNum; i++)
@@ -294,7 +317,7 @@ void soundManager::pauseSamples()
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_goSolo)
         return;
     EnterCriticalSection(&m_sectionSoundCall);
     for (int i = 0; i < m_sampleNum; i++) {
@@ -305,6 +328,13 @@ void soundManager::pauseSamples()
     stopMP3();
 }
 
+// Original: soundManager::Main; soundmgr.cpp:464, dc 0x14b2a4.
+// The slot at retail vftable 0x63fe54 likewise uses the shared zero return.
+int soundManager::main(message& msg)
+{
+    return 0;
+}
+
 VA(0x00599d90, 0xEA)  // dc 0x14b2a8
 void soundManager::stopAllSamples(int stopMusicToo)
 {
@@ -312,7 +342,7 @@ void soundManager::stopAllSamples(int stopMusicToo)
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_goSolo)
         return;
     memset(g_sampleWasPlaying, 0, sizeof(g_sampleWasPlaying));
     EnterCriticalSection(&m_sectionSoundCall);
@@ -358,7 +388,7 @@ void soundManager::modifySample(ds_memsample* inSample, short functionId, long v
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_goSolo)
         return;
     if (!m_samples)
         return;
@@ -416,12 +446,12 @@ void soundManager::adjustSoundVolumes()
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_goSolo)
         return;
     for (int i = 1; i < m_sampleNum; i++) {
         ds_memsample* handle = m_sampleHandles[i];
         // GetSampleInfo playing query and sinks the `push 0; push 1` arm below
-        if (g_unk698764) {
+        if (g_config.m_soundVolume) {
             if (getSampleInfo(handle, SAMPLE_INFO_PLAYING))
                 modifySample(handle, SAMPLE_MODIFY_100, g_ailDriverState[i]);
         } else {
@@ -435,7 +465,7 @@ void soundManager::adjustMusicVolumes()
 {
     if (g_noSound)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_goSolo)
         return;
     setMusicVolume();
 }
@@ -450,7 +480,7 @@ void soundManager::switchAmbientMusic(int newMusicFileId)
 VA(0x0059a210, 0x1DB)  // dc 0x14b528
 ds_memsample* soundManager::memorySample(sample* samplePointer)
 {
-    if (!g_noSound && m_ds && (m_playSounds || g_unk691209) && g_unk698764 && samplePointer
+    if (!g_noSound && m_ds && (m_playSounds || g_goSolo) && g_config.m_soundVolume && samplePointer
         && m_samples && samplePointer->m_memSample.m_memVolume) {
         SoundChannelRange* range = &g_soundChannels[samplePointer->m_memSample.m_memCindex];
         EnterCriticalSection(&m_sectionSoundCall);
@@ -477,7 +507,7 @@ ds_memsample* soundManager::memorySample(sample* samplePointer)
         AIL_init_sample(handle);
         AIL_set_sample_file(handle, samplePointer->m_memSample.m_data, 0);
         AIL_set_sample_loop_count(handle, samplePointer->m_memSample.m_memLooping);
-        if (g_unk698764)
+        if (g_config.m_soundVolume)
             AIL_set_sample_volume(handle, convertVolume(samplePointer->m_memSample.m_memVolume, 100));
         else
             AIL_set_sample_volume(handle, 0);
@@ -550,9 +580,9 @@ void launchSample(const char* sampleName, int maxTime, int channel)
         return;
     if (!g_soundManager->m_ds)
         return;
-    if (g_soundManager->m_playSounds == 0 && !g_unk691209)
+    if (g_soundManager->m_playSounds == 0 && !g_goSolo)
         return;
-    if (!g_unk698764)
+    if (!g_config.m_soundVolume)
         return;
     if (!sampleName)
         return;
@@ -596,6 +626,31 @@ void __cdecl waitEndSampleThread(void* arglist)
     _endthread();
 }
 
+// Windows Miles service operation. The WinCE counterpart service_sounds is
+// a four-byte no-op attributed to SoundMgr.h:140 (dc 0xe6ef4); its records do
+// not establish the nonempty Windows definition's inline spelling or owner.
+// Retail expands the complete operation only in memorySample and launchSample,
+// both in this TU; external consumers call the retained 0x59a7d0 body. All 13
+// retail AIL_serve references are in this TU, including ten different sound
+// operations. A source-local ordinary body recovers that visibility boundary
+// and retained emission. Its Windows ownership is a platform inference; the
+// CE header attribution remains recorded separately in dc_only.tsv.
+VA(0x0059a7d0, 0x51)
+void soundManager::serviceSounds()
+{
+    EnterCriticalSection(&m_sectionSoundCall);
+    AIL_serve();
+    HSTREAM stream = g_mp3Stream;
+    if (stream) {
+        if (g_soundManager->m_mp3Playing) {
+            if (!g_shutDownDone)
+                AIL_service_stream(stream, 1);
+        }
+    }
+    Sleep(1);
+    LeaveCriticalSection(&m_sectionSoundCall);
+}
+
 VA(0x0059a830, 0x10)  // dc 0x14b7e0
 void __cdecl processMP3Stop(void* nothing)
 {
@@ -609,7 +664,7 @@ void __cdecl processStopAndPlayMP3(void* arglist)
     EnterCriticalSection(&g_soundManager->m_sectionMp3Change);
     int volume = g_soundManager->convertVolume(127, VOLUME_TYPE_101);
     EnterCriticalSection(&g_soundManager->m_sectionMp3NameChange);
-    if (!g_mp3NamePlaying[0]) {
+    if (!g_waitingStream[0]) {
         LeaveCriticalSection(&g_soundManager->m_sectionMp3NameChange);
         LeaveCriticalSection(&g_soundManager->m_sectionMp3Change);
         _endthread();
@@ -625,19 +680,19 @@ void __cdecl processStopAndPlayMP3(void* arglist)
     LeaveCriticalSection(&g_soundManager->m_sectionSoundCall);
 
     EnterCriticalSection(&g_soundManager->m_sectionMp3NameChange);
-    if (!g_mp3NamePlaying[0]) {
+    if (!g_waitingStream[0]) {
         LeaveCriticalSection(&g_soundManager->m_sectionMp3NameChange);
         LeaveCriticalSection(&g_soundManager->m_sectionMp3Change);
         _endthread();
         return;
     }
 
-    strcpy(g_mp3Name, g_mp3NamePlaying);
-    g_unk69fe90 = g_unk69fe9c;
+    strcpy(g_currentStream, g_waitingStream);
+    g_currentLoop = g_waitingLoop;
     char filename[100];
     sprintf(filename, DATA_COMPGEN(
-        0x00684b34, mp3PathFormat, "mp3\\%s.mp3"), g_mp3NamePlaying);
-    g_mp3NamePlaying[0] = 0;
+        0x00684b34, mp3PathFormat, "mp3\\%s.mp3"), g_waitingStream);
+    g_waitingStream[0] = 0;
     LeaveCriticalSection(&g_soundManager->m_sectionMp3NameChange);
 
     if (volume && !g_shutDownDone) {
@@ -646,15 +701,15 @@ void __cdecl processStopAndPlayMP3(void* arglist)
         g_mp3Stream = AIL_open_stream(g_soundManager->m_ds, filename, 0);
         if (g_mp3Stream && !g_shutDownDone && g_foregroundApp) {
             AIL_set_stream_volume(
-                g_mp3Stream, g_unk69fe90 ? volume : 0);
-            AIL_set_stream_loop_count(g_mp3Stream, g_unk69fe90);
+                g_mp3Stream, g_currentLoop ? volume : 0);
+            AIL_set_stream_loop_count(g_mp3Stream, g_currentLoop);
             AIL_service_stream(g_mp3Stream, 1);
 
-            if (!g_unk69fe90) {
+            if (!g_currentLoop) {
                 EnterCriticalSection(&g_soundManager->m_sectionMp3Change);
                 EnterCriticalSection(&g_soundManager->m_sectionSoundCall);
                 for (int slot = 0; slot < g_mp3ResumePositionCount; ++slot) {
-                    if (strcmp(g_mp3ResumePositions[slot].m_name, g_mp3Name) == 0) {
+                    if (strcmp(g_mp3ResumePositions[slot].m_name, g_currentStream) == 0) {
                         AIL_set_stream_position(
                             g_mp3Stream, g_mp3ResumePositions[slot].m_position);
                         break;
@@ -667,7 +722,7 @@ void __cdecl processStopAndPlayMP3(void* arglist)
             if (!g_shutDownDone)
                 AIL_start_stream(g_mp3Stream);
 
-            if (!g_unk69fe90) {
+            if (!g_currentLoop) {
                 float currentVolume = 0.0f;
                 for (int step = 1; step < 10; ++step) {
                     if (g_shutDownDone)
@@ -693,12 +748,12 @@ VA(0x0059ac00, 0xA9)  // dc 0x14b8e8
 void soundManager::resumeStream()
 {
     EnterCriticalSection(&m_sectionMp3NameChange);
-    if (g_mp3Name[0] == 0 || g_shutDownDone) {
+    if (g_currentStream[0] == 0 || g_shutDownDone) {
         LeaveCriticalSection(&m_sectionMp3NameChange);
         return;
     }
-    strcpy(g_mp3NamePlaying, g_mp3Name);
-    g_unk69fe9c = g_unk69fe90;
+    strcpy(g_waitingStream, g_currentStream);
+    g_waitingLoop = g_currentLoop;
     LeaveCriticalSection(&m_sectionMp3NameChange);
     EnterCriticalSection(&m_sectionSoundCall);
     AIL_serve();
@@ -715,14 +770,14 @@ void soundManager::startMP3(const char* filename, int loopCount, unsigned char s
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_goSolo)
         return;
-    if (!g_unk698760)
+    if (!g_config.m_musicVolume)
         return;
 
     EnterCriticalSection(&m_sectionMp3NameChange);
-    if (strcmp(filename, g_mp3NamePlaying) != 0) {
-        if (strcmp(filename, g_mp3Name) == 0) {
+    if (strcmp(filename, g_waitingStream) != 0) {
+        if (strcmp(filename, g_currentStream) == 0) {
             LeaveCriticalSection(&m_sectionMp3NameChange);
             EnterCriticalSection(&m_sectionSoundCall);
             int streamStatus = AIL_stream_status(g_mp3Stream);
@@ -733,8 +788,8 @@ void soundManager::startMP3(const char* filename, int loopCount, unsigned char s
                 stopAllSamples(1);
             resumeStream();
         } else {
-            strcpy(g_mp3NamePlaying, filename);
-            g_unk69fe9c = loopCount;
+            strcpy(g_waitingStream, filename);
+            g_waitingLoop = loopCount;
             LeaveCriticalSection(&m_sectionMp3NameChange);
             if (stopSamples)
                 stopAllSamples(0);
@@ -777,14 +832,14 @@ void soundManager::threadStopMP3()
 
         int slot;
         for (slot = 0; slot < g_mp3ResumePositionCount; ++slot) {
-            if (strcmp(g_mp3ResumePositions[slot].m_name, g_mp3Name) == 0) {
+            if (strcmp(g_mp3ResumePositions[slot].m_name, g_currentStream) == 0) {
                 g_mp3ResumePositions[slot].m_position =
                     AIL_stream_position(g_mp3Stream);
                 break;
             }
         }
         if (slot == g_mp3ResumePositionCount) {
-            strcpy(g_mp3ResumePositions[slot].m_name, g_mp3Name);
+            strcpy(g_mp3ResumePositions[slot].m_name, g_currentStream);
             g_mp3ResumePositions[slot].m_position =
                 AIL_stream_position(g_mp3Stream);
             ++g_mp3ResumePositionCount;

@@ -12,7 +12,7 @@ from homm3.build import build, configure, delink, normalize_objs
 from homm3.cleanliness import board
 from homm3.core import inputs
 from homm3.core.nb11 import NB11Error
-from homm3.match import banked_rows, single_view, source_ownership, status, verify_va_claims
+from homm3.match import banked_rows, single_view, source_ownership, source_inventory, status, verify_va_claims
 
 
 class BuildModeTest(unittest.TestCase):
@@ -46,6 +46,7 @@ class BuildModeTest(unittest.TestCase):
             ("claims", verify_va_claims, "run_gate", []),
             ("single_view", single_view, "run_gate", []),
             ("ownership", source_ownership, "run_gate", []),
+            ("inventory", source_inventory, "run_gate", []),
             ("cleanliness", board, "check_and_roll", []),
             ("readme", status, "write_readme", None),
         ]:
@@ -58,7 +59,7 @@ class BuildModeTest(unittest.TestCase):
         self.assertEqual(build.main([]), 0)
         self.assertEqual(self.events, ["configure", "compile", "delink", "report",
                                       "fingerprints", "history", "check", "checkpoint", "banked", "claims",
-                                      "single_view", "origins", "ownership", "cleanliness", "readme"])
+                                      "single_view", "origins", "ownership", "inventory", "cleanliness", "readme"])
         self.mocks["compile"].assert_called_once_with("ninja")
         self.mocks["normalize"].assert_not_called()  # delink already normalizes
         self.assertEqual(self.preflight.call_count, 2)
@@ -104,9 +105,16 @@ class BuildModeTest(unittest.TestCase):
         self.mocks["checkpoint"].assert_called_once()
         self.mocks["readme"].assert_called_once()
 
+    def test_unexplained_dc_body_fails_the_full_checkpoint(self):
+        self.mocks['inventory'].side_effect = lambda **kwargs: ['SOURCE-INVENTORY missing DC body']
+        self.assertEqual(build.main([]), 1)
+        self.mocks['inventory'].assert_called_once_with(origins=[])
+        self.mocks['cleanliness'].assert_called_once_with(write=False, dc_origins=[])
+        self.assertIn('SOURCE-INVENTORY', self.stderr.getvalue())
+
     def test_fast_build_preserves_targets_and_skips_checkpoint(self):
         self.assertEqual(build.main(["--fast", "cursor"]), 0)
-        self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report"])
+        self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report", "fingerprints"])
         self.mocks["compile"].assert_called_once_with("ninja", "cursor")
         self.assertEqual(self.target.read_bytes(), b"existing retail target")
         self.mocks["delink"].assert_not_called()

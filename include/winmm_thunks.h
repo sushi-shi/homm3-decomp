@@ -13,7 +13,7 @@
 //     DOWNGRADES an earlier dllimport for the rest of the TU, and a
 //     dllimport after a plain declaration loses. Those three .cpps
 //     include this header AFTER their windows.h-bearing includes.
-// (Import-call-form doctrine: .claude/skills/match - "Import call
+// (Import-call-form doctrine: .agents/skills/match - "Import call
 // forms"; the original file-local declaration lived in button.cpp.)
 #ifndef HOMM3_WINMM_THUNKS_H
 #define HOMM3_WINMM_THUNKS_H

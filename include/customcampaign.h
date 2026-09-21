@@ -4,10 +4,11 @@
 #define HOMM3_CUSTOMCAMPAIGN_H
 
 #include <string>
-#include <vector>
 #include <string.h>
-#include "hero.h"
+#include <vector>
+
 #include "campaignmusic.h"
+#include "hero.h"
 
 class CMapHeaderData;
 
@@ -46,6 +47,22 @@ public:
     }
 };
 SIZE(CampaignScenarioInfo, 0x14);
+
+// The DC campaign backend stored map_traits[8][32] at SCampaign+1408,
+// each 36-byte TCustomCampaignTraits owning two 8-byte TArtifactRequirement
+// records. Its init/set/constructor helpers and InitCampaignMapTraits populated
+// that fixed table (dc 0x7cc8c/0x7cccc/0x7cd4c, 0xbcd20..0xbcd90).
+// Complete's 0x7c-byte SCampaign instead owns dynamic hero/artifact pools and
+// CampaignScenarioInfo progress records; ScenarioStruct::read (0x487e40) loads
+// per-scenario retention flags and crossover artifact masks from the campaign
+// file. The fixed-table helpers have no storage-compatible desktop owner.
+// DC GetExpCap (CustomCampaign.h:225, dc 0xd5944) indexed that table; retail
+// hero::giveExperience (0x4e33b0) reads NewSMapHeader::m_maxHeroLevel and converts
+// the level through getExperience. DC game::mark_campaign_map_won (0xbc384)
+// wrote three fixed progress arrays. Complete's SCampaign::completeCurrentMap
+// (0x489820) owns the dynamic scenario record, completion order and crossover
+// pools, and is called directly by oldmain. These retired interfaces are
+// recorded individually in config/source/dc_only.tsv.
 
 class SCampaign {
 public:
@@ -135,7 +152,10 @@ public:
     void doPreLoadCustomization();
     // E:\gamedcs\CustomCampaign.h:212, dc 0xe6ef8
     VA(0x004897d0, 0x43)  // dc 0xe6ef8
-    unsigned char campaignComplete()
+    // Original CampaignComplete@SCampaign@@QAA_NXZ (native bool, mutable).
+    // DC's older fixed-array body also marks campaignCompleted. Retail's
+    // 67-byte vector scan has no such store; preserve the Complete behavior.
+    bool campaignComplete()
     {
         for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
             if (!m_mapScores[i].m_completed)
@@ -467,7 +487,7 @@ enum ECampaignStartOptionType {
 // when the town is set (41 rows a town). Neither table is claimed yet, so
 // the outer bound is left open rather than invented.
 extern const char* g_campaignBuildingIconNames[][44];
-extern const int g_campaignBuildingRemap[][41];
+extern const int g_eventBuildingIds[][41];
 
 // The two mixed resource selectors a resource bonus can carry beside the
 // seven EGameResource rows, byte-read off the ten-entry jump tables the
@@ -483,7 +503,7 @@ enum ECampaignBonusResource {
 // newgame.h / tradpost.cpp already declare them; the resource
 // bonus's description indexes the same table and this is the cheaper
 // include-set edge.
-extern const char* g_resourceNames[7];
+extern const char* g_resourceNames[8];
 
 // The three sentinel hero selectors a campaign bonus can carry, byte-read
 // off the picker's own jump chain at 0x4840d0 (`cmp ecx,-3 / -2 / -1`

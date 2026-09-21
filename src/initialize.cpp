@@ -1,7 +1,9 @@
+#include "va.h"
+
+#include <string.h>
+
 #include "terrain.h"
 #include "town.h"
-#include <va.h>
-#include <string.h>
 // #include "initialize.h"
 
 VA(0x004eb730, 0x3D5)  // dc 0xdc614
@@ -196,9 +198,9 @@ VA(0x004ebb70, 0xD8)  // dc 0xdc3cc
 static void createIncludedMask(const int* includeList, __int64* includedBuildings)
 {
     const int* const commonList = g_commonIncludeList;
-    for (int index = 0; index < TOWN_BUILDING_SLOTS; ++index) {
-        includedBuildings[index] = 0;
-    }
+    MEMSET_LOCAL(includedBuildings, 0,
+                 TOWN_BUILDING_SLOTS * sizeof(includedBuildings[0]),
+                 TOWN_BUILDING_SLOTS, index);
     addToIncludedMask(commonList, includedBuildings);
     addToIncludedMask(includeList, includedBuildings);
 }
@@ -209,7 +211,7 @@ static void createIncludedMask(const int* includeList, __int64* includedBuilding
 // and - a file static with no reference left - not emitted. The 3/2
 // call order is retail's own (the row-3 copy precedes the row-2 copy
 // at 0x4eba42/0x4eba7d).
-DC_ONLY(0xdc448, 0x5C)
+
 static void createIncludedMasks()
 {
     createIncludedMask(g_town0IncludeList, town::s_includedBuildings[0]);
@@ -244,7 +246,7 @@ static void createRequirementMasks(const int* townBuildings, __int64* requiremen
 // No retail body: called once from initialize_game_data, fully inlined
 // (rows 0..2 as inline copies of create_requirement_masks, 3..8 as
 // calls to 0x4ebc50), then dropped as an unreferenced static.
-DC_ONLY(0xdc534, 0xE0)
+
 static void createBuildingMasks()
 {
     createRequirementMasks(g_town0Buildings, g_hierarchyMask[0],

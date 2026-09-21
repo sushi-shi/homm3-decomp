@@ -6,12 +6,14 @@
 // VideomodeChoice (5 DC rows, 0xea9b0..0xeb370) has no retail slot: the retail
 //   contribution is fully accounted for and its non-COMDAT globals would have to
 //   sit in this run -> DC-port-only class; recorded unlocated, not forced.
-#include <va.h>
+#include "va.h"
+
 #include "mainmenu.h"
+
 #include "button.h"
 #include "dxplay.h"
-#include "gametypewindow.h"
 #include "exec.h"
+#include "gametypewindow.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
@@ -20,6 +22,9 @@
 #include "soundmgr.h"
 #include "widget.h"
 #include "winmgr.h"
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x0069957c) int g_cdDriveNumber;
 
 // DC S_LPROC32 identifies this ordinary callback as TU-local.
 static int mainMenuHandler(message& msg);
@@ -36,7 +41,7 @@ DATA(0x0067fa64) static unsigned char g_checkDiskSpace = 1;
 
 // SetupCDDrive's result is stored by kb.obj's startup path and consumed here
 // to select the localized missing-CD wording. No public DC name survives.
-DATA(0x0069957c) extern int g_cdDriveNumber;
+
 
 // DC public gMainMenuHelp; InitializeHelpText fills the same five retail
 // THelpText rows at this address.
@@ -87,7 +92,7 @@ TMainMenu::TMainMenu()
             memError();
     }
 
-    if (g_dPlayReady) {
+    if (g_lobbyLaunched) {
         if (g_dPlay && g_dPlay->isHost()) {
             // DC mainmenu.cpp:102/103 calls widget::hide at both sites.
             getWidget(HIGH_SCORE_ID)->hide();
@@ -179,7 +184,7 @@ static int mainMenuHandler(message& msg)
             case TMainMenu::QUIT_ID: helpID = 4; break;
             default: helpID = -1; break;
             }
-            if (helpID >= 0 && !g_dPlayReady)
+            if (helpID >= 0 && !g_lobbyLaunched)
                 normalDialog(g_mainMenuHelp[helpID].m_text, 4, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -192,7 +197,7 @@ static int mainMenuHandler(message& msg)
             bool confirmed = 1;
             if (msg.m_codeY == TMainMenu::QUIT_ID) {
                 videoPause();
-                if (!g_dPlayReady) {
+                if (!g_lobbyLaunched) {
                     normalDialog((*g_generalText)[GENERAL_TEXT_QUIT],
                                  2, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
@@ -235,7 +240,7 @@ static int mainMenuHandler(message& msg)
     }
 
     if (!updatePlease) {
-        if (g_dPlayReady) {
+        if (g_lobbyLaunched) {
             unsigned long lastCheck = g_lastDiskSpaceCheck;
             if (static_cast<long>(GameTime::get() - lastCheck) > 10000)
                 g_windowManager->m_dialogReturn = TMainMenu::NEW_GAME_ID;
@@ -251,42 +256,3 @@ static int mainMenuHandler(message& msg)
     msg.m_codeX = widget::WIDGET_END_DIALOG;
     return MESSAGE_DISPATCH_FORWARD;
 }
-
-#if 0  // @carcass: Dreamcast-only video-mode class
-
-// E:\gamedcs\mainmenu.cpp:308
-DC_ONLY(0xea9b0, 0x6D0)
-void VideomodeChoice::VideomodeChoice()
-{
-    // @stub
-}
-
-// E:\gamedcs\mainmenu.cpp:360
-DC_ONLY(0xeb080, 0x62)
-void VideomodeChoice::~VideomodeChoice()
-{
-    // @stub
-}
-
-// E:\gamedcs\mainmenu.cpp:369
-DC_ONLY(0xeb0e4, 0x162)
-void VideomodeChoice::Test()
-{
-    // @stub
-}
-
-// E:\gamedcs\mainmenu.cpp:410
-DC_ONLY(0xeb248, 0xF4)
-int VideomodeChoice::windowHandler(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\mainmenu.cpp:357
-DC_ONLY(0xeb370, 0x34)
-void* VideomodeChoice::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

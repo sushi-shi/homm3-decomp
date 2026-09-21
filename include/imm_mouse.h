@@ -5,12 +5,13 @@
 #ifndef HOMM3_IMM_MOUSE_H
 #define HOMM3_IMM_MOUSE_H
 
+#include "va.h"
+
 #include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <windows.h>
-#include <va.h>
 
 #include "forcefeedback.h"
 

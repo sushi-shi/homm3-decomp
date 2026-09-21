@@ -1,230 +1,42 @@
-#include <va.h>
+#include "prefs.h"
+#include "va.h"
+
+#include <direct.h>
+
 #include "multiplayerwindow.h"
-#include "multiplayerwindow_globals.h"
-#include "winmgr.h"
-#include "csprite.h"
+
 #include "border.h"
 #include "button.h"
-#include "slider.h"
-#include "resourcemanager.h"
-#include "textresource.h"
+#include "csprite.h"
+#include "dplaycaps.h"
 #include "gametypewindow.h"
-#include "winfile.h"
-#include "netgame.h"
-#include "netplayer.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
-#include "soundmgr.h"
+#include "multiplayerwindow_globals.h"
+#include "netgame.h"
+#include "netplayer.h"
 #include "remote.h"
-#include "dplaycaps.h"
+#include "resourcemanager.h"
+#include "slider.h"
+#include "soundmgr.h"
+#include "textresource.h"
+#include "winfile.h"
+#include "winmgr.h"
 
-#include <direct.h>
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x0069ca28) TMultiPlayerWindow* g_multiPlayerWindow;
 
 unsigned char initRemote(eNetGameType netGameType, const char* userName);
 unsigned char initConnection(char* address, _DPCOMPORTADDRESS* comportInfo);
 void remoteCleanup();
 
-#if 0  // @carcass: untouched bodies before the admitted CHotSeatDlg tail
-
-// E:\gamedcs\multiplayerwindow.cpp:94
-DC_ONLY(0xffaac, 0x12)
-void AddHelp(THelpText* pHelpText, const char* rollover, const char* RightClick)
+// Original: AddHelp; multiplayerwindow.cpp:94, dc 0xffaac.
+void addHelp(THelpText* helpText, const char* rollover, const char* rightClick)
 {
-    // @stub
+    helpText->m_text = rollover;
+    helpText->m_rclick = rightClick ? rightClick : rollover;
 }
-
-// E:\gamedcs\multiplayerwindow.cpp:872
-DC_ONLY(0xffb40, 0x30)
-void DeleteTempSaveGame(const char* filename)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:1005
-DC_ONLY(0x100408, 0x28)
-void sliderGames(int state, heroWindow* parent_window)
-{
-    // @stub
-}
-
-// GoSessionList / GoMainMenu / Update promoted to VA claims (retail-located block).
-
-// E:\gamedcs\multiplayerwindow.cpp:1344
-DC_ONLY(0x100c44, 0x5A)
-void TMultiPlayerWindow::RefreshSessions()
-{
-    // @stub
-}
-
-// JoinSession / HostSession / InitRemote promoted to VA claims (retail-located block).
-
-// E:\gamedcs\multiplayerwindow.cpp:1449
-DC_ONLY(0x100e94, 0x3A)
-void TMultiPlayerWindow::CheckSessions()
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:1461
-DC_ONLY(0x100ed0, 0xC2)
-unsigned char TMultiPlayerWindow::onModemHost()
-{
-    // @stub
-}
-
-// OnDirectHost promoted to a VA claim (retail-located block).
-
-// OnHost promoted to a VA claim (retail-located block).
-
-// OnModemJoin promoted to a VA claim (retail-located block).
-
-// OnDirectJoin promoted to a VA claim (retail-located block).
-
-// OnJoin promoted to a retail claim below.
-
-// GetIPAddress promoted to a VA claim (retail-located block).
-
-// OnTCP promoted to a VA claim (retail-located block).
-
-// OnIPX is modelled inline beside its retail caller below.
-
-// E:\gamedcs\multiplayerwindow.cpp:1944
-DC_ONLY(0x10196c, 0x294)
-unsigned char TMultiPlayerWindow::onSearch()
-{
-    // @stub
-}
-
-// OnHotSeat promoted to a VA claim (retail-located block).
-
-// OnModem is modelled inline beside its retail caller below.
-
-// OnDirect is modelled inline beside its retail caller below.
-
-// E:\gamedcs\multiplayerwindow.cpp:2061
-DC_ONLY(0x101cfc, 0x5C)
-unsigned char TMultiPlayerWindow::IsNT()
-{
-    // @stub
-}
-
-// IsJoinDisabled promoted to a retail selected-COMDAT claim below.
-
-// E:\gamedcs\multiplayerwindow.cpp:141
-DC_ONLY(0x101e00, 0x98)
-void CMultiPlayerWindowEdit::CMultiPlayerWindowEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// CMultiPlayerWindowEdit::OnKeyPress promoted to a VA claim below.
-
-// E:\gamedcs\multiplayerwindow.cpp:156
-DC_ONLY(0x101ee8, 0x34)
-void* CMultiPlayerWindowEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:156
-DC_ONLY(0x101f1c, 0x18)
-void CMultiPlayerWindowEdit::~CMultiPlayerWindowEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:174
-DC_ONLY(0x101f34, 0xE0)
-unsigned char CHeroSessions::getSessionInfo(unsigned long index, char* sessName, char* userName, int* numPlayers, CHeroSessions::eSessionStatus* status)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:263
-DC_ONLY(0x102014, 0xA0)
-void CMPEdit::CMPEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:269
-DC_ONLY(0x1020b4, 0x6)
-void CMPEdit::setNextEdit(CMPEdit* pNextEdit)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:274
-DC_ONLY(0x1020bc, 0x6)
-void CMPEdit::setPrevEdit(CMPEdit* pPrevEdit)
-{
-    // @stub
-}
-
-// OnKeyPress promoted to a VA claim (retail-located block).
-
-// OnNextEdit promoted to a VA claim (retail-located block).
-
-// OnPrevEdit promoted to a VA claim (retail-located block).
-
-// SetFocus promoted to a VA claim (retail-located block).
-
-// E:\gamedcs\multiplayerwindow.cpp:339
-DC_ONLY(0x1021c4, 0x34)
-void* CMPEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:339
-DC_ONLY(0x1021f8, 0x18)
-void CMPEdit::~CMPEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:383
-DC_ONLY(0x102210, 0x98)
-void CMPInputEdit::CMPInputEdit(int x, int y, int w, int h, int textSize,
-                                const char* text, const char* fontName,
-                                font::TColor color, unsigned justification,
-                                const char* backgroundIcon,
-                                int backgroundFrame, int id, int style,
-                                int readType, int insetX, int insetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:384
-DC_ONLY(0x1022a8, 0x34)
-void* CMPInputEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:384
-DC_ONLY(0x1022dc, 0x18)
-void CMPInputEdit::~CMPInputEdit()
-{
-    // @stub
-}
-
-// CMPInputDlg::OnOK is modelled inline beside its retail caller below.
-
-// UpdateOK promoted to a VA claim (retail-located block).
-
-// E:\gamedcs\multiplayerwindow.cpp:521
-DC_ONLY(0x10286c, 0x24)
-void CMPInputDlg::disableOK()
-{
-    // @stub
-}
-
-// CMPInputDlg::`scalar deleting destructor' promoted to VA(0x005109e0) below.
-
-// E:\gamedcs\multiplayerwindow.cpp:700
-#endif
 
 // CMultiPlayerWindowEdit - the text-entry widget the session-host name field
 // uses. Derives textEntryWidget, forwarding all sixteen constructor arguments;
@@ -291,24 +103,24 @@ inline bool CHeroSessions::getSessionInfo(unsigned long index, char* sessName,
 // rollover/right-click help table indexed by (widget id - 101); the two char
 // buffers hold the local player name shown in the entry field and the name of
 // the most recently loaded game (checked for the remote-temp prefix).
-DATA(0x0069880a) char g_loadedGameName[13];
-DATA(0x00698817) char g_localPlayerName[21];
 DATA(0x006a6578) THelpText g_multiPlayerHelp[30];
 
 // Armed by all three retail host paths before they create a DirectPlay
-// session. No public symbol survives for the dword, so the name is ordinal.
-DATA(0x0069927c) int g_unnamed69927c;
+// session. DC DoNewGame/DoLoadGame identifies iMPExtendedType.
+// Original DC name: iMPExtendedType; DoNewGame / DoLoadGame.
+DATA(0x0069927c) int g_mpExtendedType;
 
 // Armed beside the two known multiplayer start flags by Complete's generic
 // join path. Its only other retail writes are in the adjacent host flows.
-DATA(0x00699288) int g_unnamed699288;
+// Original DC name: gbWaitForRemoteReceive; DoNewGame / DoLoadGame.
+DATA(0x00699288) int g_waitForRemoteReceive;
 
 const long g_dplayErrorUserCancel = 0x88770118;
 
 // The sole retail read at 0x50fade promotes the DirectPlay session from the
 // mandatory migrate-host flag to migrate-host|keep-alive. No public symbol
-// survives for the byte, so its name remains ordinal until stronger evidence.
-DATA(0x00681628) static unsigned char g_unnamed681628 = 1;
+// survives for the byte; its descriptive name follows that flag operation.
+DATA(0x00681628) static unsigned char g_sessionKeepAlive = 1;
 
 // The rollover/right-click help pointers the CMPInputDlg and CHotSeatDlg
 // constructors hand to widget::set_help_text. The OK/Back pair (0x6a7760/
@@ -321,13 +133,13 @@ DATA(0x006a7768) char* g_dialogBackHelp;
 
 // The generic network host dialog supplies separate help strings for its two
 // edit controls and a label for the session-name field. Retail proves their
-// cells and uses; no public names survive, so these remain ordinal.
-DATA(0x006a7770) char* g_unnamed6a7770;
-DATA(0x006a7778) char* g_unnamed6a7778;
+// cells and uses; descriptive names follow those controls.
+DATA(0x006a7770) char* g_sessionNameHelp;
+DATA(0x006a7778) char* g_sessionPasswordHelp;
 // The TCP search dialog's address field uses a distinct rollover string. The
-// second field reuses gUnnamed6a7778, while the generic OK/Back buttons keep
+// second field reuses g_sessionPasswordHelp, while the generic OK/Back buttons keep
 // the shared pair above.
-DATA(0x006a7780) char* g_unnamed6a7780;
+DATA(0x006a7780) char* g_sessionNameLabel;
 DATA(0x006a7788) char* g_searchAddressHelp;
 
 // CMPEdit owns the focus-ring links and navigation slots shared by the
@@ -351,7 +163,7 @@ public:
     // DC 0x1020c0 stores the argument at this+0x74.
     // E:\gamedcs\multiplayerwindow.cpp:274, dc 0x1020bc
     void setPrevEdit(CMPEdit* prevEdit) { m_prevEdit = prevEdit; }
-    virtual void setFocus(unsigned char state);
+    virtual void setFocus(bool state);
     virtual int onKeyPress(message* msg);
     virtual void onNextEdit();
     virtual void onPrevEdit();                   // slot 20, retail 0x510870
@@ -534,6 +346,24 @@ inline void CHotSeatDlg::updateOK()
     getWidget(OKAY_ID)->enable(getPlayerCount() > 1);
 }
 
+// Original: DeleteTempSaveGame; multiplayerwindow.cpp:872, dc 0xffb40.
+// DC builds the same RMT path but elides deletion; Complete calls DeleteFileA.
+void deleteTempSaveGame(const char* filename)
+{
+    char buffer[450];
+    if (!strnicmp(filename, "RMT", 3)) {
+        sprintf(buffer, "%s%s", ".\\DATA\\", filename);
+        DeleteFileA(buffer);
+    }
+}
+
+// Original: CHeroSessions::CHeroSessions; multiplayerwindow.cpp:1000,
+// dc 0x102fcc. Construction initializes its CAutoArray base; there are no
+// additional members. Complete expands that initialization at new CHeroSessions.
+CHeroSessions::CHeroSessions()
+{
+}
+
 // E:\gamedcs\multiplayerwindow.cpp:1005
 // Slider callback for the session list; scrolls the displayed window of games.
 void sliderGames(int state, heroWindow* parentWindow)
@@ -597,6 +427,9 @@ int CHotSeatEdit::onKeyPress(message* msg)
 // caller is already maximal so no shrink lever applies. Storing the slider/map
 // widgets through a local before the insert (rather than re-reading the member)
 // was worth +1.5.
+// Current residual (83.43%): DeleteTempSaveGame and CHeroSessions expand,
+// including the proven DeleteFileA path. Nested widget-vector insert/copy
+// operations still over-expand; retail retains fourteen additional call sites.
 VA(0x0050e050, 0xCFC)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims, dc 0xffb70
 TMultiPlayerWindow::TMultiPlayerWindow()
     : CHeroWindowEx(0, 0, 800, 600, 0)
@@ -638,7 +471,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
                                     g_generalText->getText(42), "smalfont.fnt",
                                     font::PRIMARY, 128, 1, 0, 8);
     m_playerName = new CMultiPlayerWindowEdit(19, 436, 334, 18, 21,
-                                            g_localPlayerName, "smalfont.fnt",
+                                            g_config.m_networkDefaultName, "smalfont.fnt",
                                             font::WHITE, 0, 0, 0, 125, 0x100, 0,
                                             7, 5);
 
@@ -696,11 +529,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_cancel->setHelpText(g_multiPlayerHelp[23].m_text,
                           g_multiPlayerHelp[23].m_rclick, 0);
 
-    if (!strnicmp(g_loadedGameName, "RMT", 3)) {
-        char tempPath[452];
-        sprintf(tempPath, "%s%s", ".\\DATA\\", g_loadedGameName);
-        DeleteFileA(tempPath);
-    }
+    deleteTempSaveGame(g_config.m_scFile);
 
     goMainMenu();
 }
@@ -828,14 +657,14 @@ void TMultiPlayerWindow::update()
                                     g_windowManager->m_screenBitmap, wx + 0x12,
                                     wy, 0, 1);
                     int fontColor = isSelected ? 5 : 1;
-                    g_unnamed698a08->drawBoundedString(
+                    g_smallFont->drawBoundedString(
                         nameBuf, g_windowManager->m_screenBitmap, wx + 0x2b, wy,
                         0x80, 0x16, font::TColor(fontColor), 5, -1);
-                    g_unnamed698a08->drawBoundedString(
+                    g_smallFont->drawBoundedString(
                         userBuf, g_windowManager->m_screenBitmap, wx + 0xad, wy,
                         0x80, 0x16, font::TColor(fontColor), 5, -1);
                     sprintf(countBuf, "%d", numPlayers);
-                    g_unnamed698a08->drawBoundedString(
+                    g_smallFont->drawBoundedString(
                         countBuf, g_windowManager->m_screenBitmap, wx + 0x130,
                         wy, 0x1e, 0x16, font::TColor(fontColor), 5, -1);
                     ++row;
@@ -880,6 +709,29 @@ void TMultiPlayerWindow::update()
     g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
 }
 
+// Original: TMultiPlayerWindow::RefreshSessions; multiplayerwindow.cpp:1344,
+// dc 0x100c44. Expanded in onTCP and the timed window handler.
+void TMultiPlayerWindow::refreshSessions()
+{
+    m_sessions->destroy();
+    g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
+    m_sessTimer = GameTime::get();
+    static_cast<slider*>(m_gameSlider)->updateResolution(
+        m_sessions->getCount() - 12);
+    update();
+}
+
+// Original: TMultiPlayerWindow::CheckSessions; multiplayerwindow.cpp:1449,
+// dc 0x100e94. The second timer read follows the complete refresh operation.
+void TMultiPlayerWindow::checkSessions()
+{
+    if (m_sessTimer
+        && GameTime::elapsedSince(m_sessTimer) > m_sessionRefreshTimeout) {
+        refreshSessions();
+        m_sessTimer = GameTime::get();
+    }
+}
+
 // E:\gamedcs\multiplayerwindow.cpp:1461
 // Complete inlines this body into OnHost. Keeping the source boundary is
 // material: VC6 leaves the nested member InitRemote call out of line, exactly
@@ -892,8 +744,8 @@ unsigned char TMultiPlayerWindow::onModemHost()
         return 0;
     }
 
-    g_unnamed69927c = 1;
-    g_unnamed6994e4 = 1;
+    g_mpExtendedType = 1;
+    g_mpBaseType = 1;
     ShowCursor(1);
     if (!hostSession(g_generalText->getText(449), 0)) {
         ShowCursor(0);
@@ -927,12 +779,7 @@ inline unsigned char TMultiPlayerWindow::onIPX()
         m_join->sendMessage(widget::WIDGET_SET_STATUS,
                            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
         m_join->enable(0);
-        m_sessions->destroy();
-        g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
-        m_sessTimer = GameTime::get();
-        static_cast<slider*>(m_gameSlider)->updateResolution(
-            m_sessions->getCount() - 12);
-        update();
+        refreshSessions();
         return 1;
     }
 
@@ -1098,16 +945,7 @@ VA(0x0050f940, 0xC5)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = 
 int TMultiPlayerWindow::windowHandler(message& msg)
 {
     pollSound();
-    unsigned long timer = m_sessTimer;
-    if (timer && GameTime::get() - timer > m_sessionRefreshTimeout) {
-        m_sessions->destroy();
-        g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
-        m_sessTimer = GameTime::get();
-        static_cast<slider*>(m_gameSlider)->updateResolution(
-            m_sessions->getCount() - 12);
-        update();
-        m_sessTimer = GameTime::get();
-    }
+    checkSessions();
 
     return CHeroWindowEx::windowHandler(msg);
 }
@@ -1121,8 +959,8 @@ unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char
 
     int version = *g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
-        g_localPlayerName, &version, sizeof(version), 0);
-    strcpy(g_thisNetPlayerInfo.m_name, g_localPlayerName);
+        g_config.m_networkDefaultName, &version, sizeof(version), 0);
+    strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
     g_thisNetPlayerInfo.m_version = version;
 
     if (g_dPlay->getLastError())
@@ -1138,10 +976,10 @@ unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* 
     char fullName[256];
     sprintf(fullName,
             DATA_COMPGEN(0x006816e4, multiplayerSessionNameFormat, "%s%c%s"),
-            sessName, 0xfa, g_localPlayerName);
+            sessName, 0xfa, g_config.m_networkDefaultName);
 
     unsigned long flags = 4;
-    if (g_unnamed681628)
+    if (g_sessionKeepAlive)
         flags |= 0x40;
     if (g_mpNetProtocol != MP_TCP)
         flags |= 0x2000;
@@ -1152,11 +990,11 @@ unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* 
 
     int version = *g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
-        g_localPlayerName, &version, sizeof(version), 0);
+        g_config.m_networkDefaultName, &version, sizeof(version), 0);
     if (!g_thisNetPlayerInfo.m_dpid)
         return 0;
 
-    strcpy(g_thisNetPlayerInfo.m_name, g_localPlayerName);
+    strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
     g_thisNetPlayerInfo.m_version = version;
 
     if (g_mpNetProtocol == MP_TCP)
@@ -1209,8 +1047,8 @@ unsigned char TMultiPlayerWindow::onDirectHost()
         return 0;
     }
 
-    g_unnamed69927c = 1;
-    g_unnamed6994e4 = 1;
+    g_mpExtendedType = 1;
+    g_mpBaseType = 1;
     ShowCursor(1);
 
     if (!hostSession(g_generalText->getText(451), 0)) {
@@ -1236,16 +1074,16 @@ unsigned char TMultiPlayerWindow::onHost()
     if (g_mpNetProtocol == MP_SERIAL)
         return onDirectHost();
 
-    g_unnamed69927c = 1;
-    g_unnamed6994e4 = 1;
-    strcpy(g_localPlayerName, m_playerName->getText());
+    g_mpExtendedType = 1;
+    g_mpBaseType = 1;
+    strcpy(g_config.m_networkDefaultName, m_playerName->getText());
 
     CMPInputDlg sessDlg(20, 20);
     sessDlg.m_field1->setText(g_generalText->getText(453));
-    sessDlg.m_header1->setText(g_unnamed6a7780);
+    sessDlg.m_header1->setText(g_sessionNameLabel);
     sessDlg.m_header2->setText(g_generalText->getText(454));
-    sessDlg.m_field1->setHelpText(g_unnamed6a7770, 0, 0);
-    sessDlg.m_field2->setHelpText(g_unnamed6a7778, 0, 0);
+    sessDlg.m_field1->setHelpText(g_sessionNameHelp, 0, 0);
+    sessDlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
     sessDlg.doModal(0);
 
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
@@ -1309,7 +1147,7 @@ void CMPEdit::onPrevEdit()
 }
 
 VA(0x00510890, 0x10)  // dc 0x1021ac
-void CMPEdit::setFocus(unsigned char state)
+void CMPEdit::setFocus(bool state)
 {
     textEntryWidget::setFocus(state);
 }
@@ -1457,10 +1295,10 @@ unsigned char TMultiPlayerWindow::onJoin()
         return onDirectJoin();
 
     g_windowManager->m_dialogReturn = DIALOG_RETURN_OK;
-    g_unnamed69927c = 2;
-    g_unnamed6994e4 = 1;
-    g_unnamed699288 = 1;
-    strcpy(g_localPlayerName, m_playerName->getText());
+    g_mpExtendedType = 2;
+    g_mpBaseType = 1;
+    g_waitForRemoteReceive = 1;
+    strcpy(g_config.m_networkDefaultName, m_playerName->getText());
 
     char userName[256];
     char sessName[256];
@@ -1478,14 +1316,14 @@ unsigned char TMultiPlayerWindow::onJoin()
     const char* password = 0;
     CMPInputDlg dlg(20, 20);
     if (session->isPasswordProtected()) {
-        dlg.m_header1->setText(g_unnamed6a7780);
+        dlg.m_header1->setText(g_sessionNameLabel);
         dlg.m_header2->setText((*g_generalText)[454]);
         dlg.m_field1->enable(0);
         dlg.m_field1->setText(sessName);
         dlg.drawWindow(1, 0xffff0001, 0xffff);
         dlg.setFocus(dlg.m_field2->m_id);
-        dlg.m_field1->setHelpText(g_unnamed6a7780, 0, 0);
-        dlg.m_field2->setHelpText(g_unnamed6a7778, 0, 0);
+        dlg.m_field1->setHelpText(g_sessionNameLabel, 0, 0);
+        dlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
         dlg.doModal(0);
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
             return 0;
@@ -1604,7 +1442,7 @@ unsigned char TMultiPlayerWindow::onSearch()
     searchDlg.m_header1->setText((*g_generalText)[179]);
     searchDlg.m_header2->setText((*g_generalText)[462]);
     searchDlg.m_field1->setHelpText(g_searchAddressHelp, 0, 0);
-    searchDlg.m_field2->setHelpText(g_unnamed6a7778, 0, 0);
+    searchDlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
     searchDlg.disableOK();
     searchDlg.doModal(0);
 
@@ -1632,12 +1470,12 @@ unsigned char TMultiPlayerWindow::onSearch()
 
     if (!joinSession(m_sessions->get(0), 0)) {
         // Original DC local name: sErr.
-        char sErr[256];
+        char errorText[256];
         long lastError = g_dPlay->getLastError();
         normalDialog((*g_generalText)[456], 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        g_dPlay->getErrorDesc(lastError, sErr);
-        normalDialog(sErr, 1, -1, -1,
+        g_dPlay->getErrorDesc(lastError, errorText);
+        normalDialog(errorText, 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         remoteCleanup();
         initRemote(MP_TCP, 0, 0);
@@ -1656,6 +1494,23 @@ unsigned char TMultiPlayerWindow::onHotSeat()
     g_mpNetProtocol = MP_HOTSEAT;
     return 1;
 }
+
+// Original: TMultiPlayerWindow::IsNT; multiplayerwindow.cpp:2061, dc 0x101cfc.
+// The ordinary platform query uses the PC ANSI OSVERSIONINFO representation.
+unsigned char TMultiPlayerWindow::isNT()
+{
+    OSVERSIONINFOA versionInfo;
+    versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
+    if (GetVersionExA(&versionInfo)) {
+        if (versionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
+            return 1;
+    }
+    return 0;
+}
+
+// DC CHotSeatDlg::WindowHandler (786, dc 0x102e24) invokes VRKeyboard
+// for player-name edits. Complete vtable 0x6401d8 slot 9 uses the inherited
+// CHeroWindowEx::windowHandler (0x5ff820); CHotSeatEdit handles native keys.
 
 VA(0x00511e20, 0x5A1)  // dc 0x1028c4
 CHotSeatDlg::CHotSeatDlg()
@@ -1733,16 +1588,6 @@ int CHotSeatDlg::onWidgetDeselect(int id, bool& exitFlag)
     return 0;
 }
 
-#if 0  // @carcass
-// E:\gamedcs\multiplayerwindow.cpp:729
-DC_ONLY(0x102cc8, 0x30)
-void CHotSeatDlg::onKillFocus(int id)
-{
-    // @stub
-}
-
-#endif
-
 VA(0x00512470, 0xB2)  // dc 0x102d88
 unsigned char CHotSeatDlg::onOK()
 {
@@ -1761,17 +1606,6 @@ textWidget* CHotSeatDlg::getRolloverWidget()
 {
     return m_rollover;
 }
-
-#if 0  // @carcass
-// E:\gamedcs\multiplayerwindow.cpp:786
-DC_ONLY(0x102e24, 0x140)
-int CHotSeatDlg::windowHandler(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:844
-#endif
 
 VA_COMPGEN(0x00512540, 0x21, SCALAR_DELETING_DTOR, CHotSeatDlg)
 
@@ -1808,20 +1642,3 @@ unsigned char CAutoArray<CDPlaySession>::insert(
 #endif  // @carcass
 
 VA_COMPGEN(0x00512670, 0x6C, SCALAR_DELETING_DTOR, CAutoArray)
-
-#if 0  // @carcass: remaining untouched bodies
-
-// TMultiPlayerWindow::`scalar deleting destructor' promoted to VA(0x0050edb0) above.
-
-// E:\gamedcs\multiplayerwindow.cpp:1000
-DC_ONLY(0x102fcc, 0x3C)
-void CHeroSessions::CHeroSessions()
-{
-    // @stub
-}
-
-// CHeroSessions' scalar deleting destructor and implicit destructor promoted
-// to retail VA_COMPGEN claims above.
-
-// CAutoArray<CDPlaySession>::`scalar deleting destructor' promoted to VA(0x00512670) above.
-#endif  // @carcass

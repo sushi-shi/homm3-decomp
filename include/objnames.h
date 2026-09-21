@@ -1,14 +1,12 @@
 // objnames.h - the adventure-object trait rows and the objnames.txt name
 // table that fills them.
 
-// Kept narrow deliberately: only objnames.cpp writes these rows. Every
-// reader in the tree reaches them through the `unsigned char (*)[16]`
-// pointer at 0x660428 that advmgr.h and mapcell.h already declare, and
-// that pointer's value in the retail image IS 0x691698, this table.
+// Only objnames.cpp writes these rows. Readers share the const record pointer
+// at retail 0x660428, whose initial value is the table address 0x691698.
 #ifndef HOMM3_OBJNAMES_H
 #define HOMM3_OBJNAMES_H
 
-#include <va.h>
+#include "va.h"
 
 enum {
     // The loader's own bound: it zeroes 232 rows, walks 232 text rows
@@ -39,6 +37,8 @@ struct TAdvObjectNameRow {
 };
 
 extern TAdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
+
+extern const TAdvObjectTraits* g_adventureObjectTraits;
 
 void initializeAdventureObjectNames();
 

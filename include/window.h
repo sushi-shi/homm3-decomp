@@ -1,8 +1,9 @@
 #ifndef HOMM3_WINDOW_H
 #define HOMM3_WINDOW_H
 
-#include <vector>
 #include "va.h"
+
+#include <vector>
 
 class widget;
 class textWidget;
@@ -24,7 +25,6 @@ SIZE(SWinSetup, 8);
 
 // One pooled empty rollover string shared by window::UpdateRollover and
 // hero::initialize's custom-name string reset.
-DATA(0x00691210) extern const char g_emptyRolloverText[];
 
 // The rollover/right-click text pair CHeroWindowEx::SetHelpText hands
 // to widget::set_help_text. Stride 8 is byte-proven by 0x5ff8e0's
@@ -72,8 +72,8 @@ enum EWindowMetrics {
 // virtual slot 8). Total 0x4c.
 
 // Virtual roster BYTE-PROVEN by the retail heroWindow vtable 0x243cc4
-// (config/retail-vtables.tsv: 9 slots; every slot's target is in
-// config/retail-reloc-evidence.tsv 0x243cc4..0x243ce4):
+// (config/retail/vtables.tsv: 9 slots; every slot's target is in
+// config/retail/reloc-evidence.tsv 0x243cc4..0x243ce4):
 //   0  sdd 0x5fea50 (~heroWindow 0x5fea80)   1  Open 0x5feae0
 //   2  Close 0x5fec60                        3  handle_message 0x4ec560
 //   4  handle_widget_hover 0x485d80 - the ICF-folded `ret 4`, so it
@@ -113,6 +113,9 @@ public:
 
     heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void centerWindow(int centerX, int centerY);
+    void moveWindow(int deltaX, int deltaY);
+    void enableAllWidgets(unsigned char enable);
+    void removeAndDeleteWidget(int id);
     int broadcastMessage(message& msg);
     int broadcastMessage(int id, int codeX, int codeY, int extra);
     int widgetSetStatus(int id, int status);
@@ -142,7 +145,10 @@ public:
     virtual int handleMessage(message& msg);         // slot 3, folded onto 0x4ec560
     virtual void handleWidgetHover(widget* w);      // slot 4, folded onto 0x485d80
     virtual void drawWindow(unsigned char update, int lowID, int highID);
-    virtual int doModal(unsigned char fadeIn);
+    // DC DoModal's UAAX_N public and all three overrides prove void(bool).
+    // Retail callers discard EAX; the dispatcher's residual value is not
+    // a returned dialog result. The virtual slot remains unchanged.
+    virtual void doModal(bool fadeIn);
 
 protected:
     void deleteWidgets();
@@ -163,7 +169,7 @@ public:
 // dword, [+0x4c] = -1. Total 0x50.
 
 // Virtual roster BYTE-PROVEN by vtable 0x243ce8 (14 slots,
-// config/retail-vtables.tsv; targets in retail-reloc-evidence.tsv
+// config/retail/vtables.tsv; targets in reloc-evidence.tsv
 // 0x243ce8..0x243d1c): slots 0-8 are heroWindow's, with slot 0 the
 // class's own sdd 0x5ff6b0 and slot 3 overridden at 0x405680; then
 //   9   WindowHandler       0x5ff820  (ret 4 - one message*)

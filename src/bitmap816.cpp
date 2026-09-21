@@ -1,34 +1,33 @@
 // 17 functions in link order.
-#include <va.h>
-#include <string.h>
 // <new> for its `void __cdecl operator delete(void*) _THROW0();` - the
 // nothrow declaration is what retail's ~Bitmap816 unwind map proves this TU
 // had (see the destructor's note below). NEW.H does NOT declare it.
+#include "va.h"
+
 #include <new>
+#include <string.h>
+
 #include "bitmap816.h"
+
 #include "bitmap16.h"
 #include "pcx.h"
 
 VA_COMPGEN(0x0044f7d0, 0x21, SCALAR_DELETING_DTOR, Bitmap816)
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\bitmap816.cpp:36
-DC_ONLY(0x53854, 0x10C)
-void Bitmap816::Bitmap816(int w, int h)
+// Original: Bitmap816::Bitmap816; bitmap816.cpp:36, dc 0x53854
+// DC allocates a padded, locked DirectDraw surface when available. Complete
+// removes that per-bitmap surface tail: retained constructor 0x44f800 owns
+// the byte buffer directly, and destructor 0x44f9d0 releases it with delete[].
+Bitmap816::Bitmap816(int w, int h)
+    : resource(0, RESOURCE_TYPE_NONE),
+      m_imageSize(w * h), m_width(w), m_height(h), m_pitch(w)
 {
-    // @stub
+    m_dataSize = m_imageSize;
+    if (w && h)
+        m_map = new unsigned char[m_dataSize];
+    else
+        m_map = 0;
 }
-
-// E:\gamedcs\bitmap816.cpp:125
-DC_ONLY(0x53a68, 0xA4)
-void Bitmap816::Bitmap816(const char* name, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap816.cpp:145
-#endif  // @carcass
 
 VA(0x0044f800, 0xCA)  // dc 0x53960
 Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data,
@@ -40,6 +39,15 @@ Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data,
     m_map = new unsigned char[m_dataSize];
     if (m_map)
         memcpy(m_map, data, m_dataSize);
+}
+
+// Original: Bitmap816::Bitmap816; bitmap816.cpp:125, dc 0x53a68
+Bitmap816::Bitmap816(const char* name, int rbits, int rshift,
+                     int gbits, int gshift, int bbits, int bshift)
+    : resource(name, RESOURCE_TYPE_BITMAP),
+      m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_pitch(0), m_map(0)
+{
+    importPCXFile(name, rbits, rshift, gbits, gshift, bbits, bshift);
 }
 
 VA(0x0044f8d0, 0xF8)  // dc 0x53b0c
@@ -75,58 +83,39 @@ Bitmap816::~Bitmap816()
 // destructor carries no exception specification. Measured: empty body -> 1
 // entry; <new> alone -> 1; <new> plus a throwing ~TPalette24 -> 2, retail.
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\bitmap816.cpp:163
-DC_ONLY(0x53c5c, 0x104)
-void Bitmap816::import(int w, int h, unsigned char* data, TPalette16* p16, int size)
+// Original: Bitmap816::import; bitmap816.cpp:163, dc 0x53c5c
+void Bitmap816::import(int w, int h, unsigned char* data,
+                       TPalette16& p16, int size)
 {
-    // @stub
+    clear();
+    m_width = w;
+    m_height = h;
+    m_pitch = w;
+    m_imageSize = w * h;
+    m_dataSize = size ? size : m_imageSize;
+    if (w && h)
+        m_map = new unsigned char[m_dataSize];
+    if (m_map)
+        memcpy(m_map, data, m_dataSize);
+    // DC copies through its reference-taking palette temporary. Complete
+    // embeds the palette and uses the pointer-taking payload assignment
+    // (0x522910), which preserves this bitmap palette's resource identity.
+    m_p16 = &p16;
 }
 
-// E:\gamedcs\bitmap816.cpp:221
-DC_ONLY(0x53d60, 0x90)
+// Original: Bitmap816::clear; bitmap816.cpp:221, dc 0x53d60
 void Bitmap816::clear()
 {
-    // @stub
+    m_width = 0;
+    m_height = 0;
+    m_pitch = 0;
+    m_dataSize = 0;
+    m_imageSize = 0;
+    if (m_map) {
+        delete[] m_map;
+        m_map = 0;
+    }
 }
-
-// E:\gamedcs\bitmap816.cpp:244
-DC_ONLY(0x53df0, 0x1F2)
-int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap816.cpp:327
-DC_ONLY(0x53fe4, 0xC4)
-void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, int id)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap816.cpp:400
-DC_ONLY(0x540a8, 0x108)
-void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char tblit)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap816.cpp:494
-DC_ONLY(0x541b0, 0x7A)
-void Bitmap816::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char tblit)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap816.cpp:501
-DC_ONLY(0x5422c, 0x4E)
-void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* zBuffer, int dx, int dy, int id)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x0044fa40, 0x155)  // dc 0x53df0
 int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift,

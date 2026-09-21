@@ -8,9 +8,18 @@
 // Retail's zlib is FASTCALL (`@gzopen@8`, `@gzread@12`), which is what the
 // vendored zlib-1.1.3 header emits under this profile's /Gr - so <zlib.h>
 // resolves here from vendor/zlib-1.1.3, the exact library retail links.
-#include <va.h>
+#include "va.h"
+
 #include <zlib.h>
+#include <errno.h>
+
 #include "gzfile.h"
+
+// The retail zlib build uses a process-global errno cell even though the
+// game links LIBCMT. Its four references at 0x6063f3, 0x6065e8, 0x60669c
+// and 0x606768 all target 0x6ab15c. Keep that independent /ML data ABI;
+// LIBCMT's _errno() supplies its own thread-local state. Vendor stays pristine.
+DATA(0x006ab15c) int errno;
 
 VA(0x004d6c50, 0x76)
 TGzFile::TGzFile(const char* path, const char* mode)

@@ -74,10 +74,10 @@ Subcommands
         and generated C++/JSON reference trees (structure).
 
   link [<homm3.build.link args>] [-- <extra link flags>]
-        OPT-IN candidate link (also `ninja candidate`): genuine VC6 link.exe
-        over the base objs with /FORCE /NODEFAULTLIB /MAP into
-        build/exe/HEROES3.candidate.EXE. Not runnable - it exists for the .map
-        layout study and the unresolved-externals punch list.
+        Link the base objects with genuine VC6, the game runtime and vendor
+        imports into build/exe/HEROES3.candidate.EXE (also `ninja candidate`).
+        Unresolved or duplicate symbols fail the link. A .map and full linker
+        diagnostics accompany the executable; runtime execution is unverified.
 
   clean
         Nuke build/ + stray root artifacts (build.ninja/*.obj/.ninja_*) so
@@ -234,15 +234,28 @@ def _dispatch(argv: list[str]) -> int:
     # gets a chance to consume or reject any of those options.
     if argv and argv[0] == "source-ownership":
         return run_module("homm3.match.source_ownership", *argv[1:])
+    if argv and argv[0] == "source-inventory":
+        return run_module("homm3.match.source_inventory", *argv[1:])
     if argv and argv[0] == "dreamcast":
         return run_module("homm3.analysis.dreamcast", *argv[1:])
     if argv and argv[0] == "warnings":
         return run_module("homm3.analysis.compiler_warnings", *argv[1:])
+    if argv and argv[0] == "victor":
+        return run_module("homm3.victor", *argv[1:])
+    if argv and argv[0] == "link":
+        return cmd_link(argparse.Namespace(link_args=argv[1:]))
+    if argv and argv[0] == "rmg":
+        return run_module("homm3.rmg", *argv[1:])
 
     ap = argparse.ArgumentParser(
         prog="homm3", description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="command")
+
+    sub.add_parser("victor", add_help=False,
+                   help="execute Victor resource comparisons (homm3 victor --help)")
+    sub.add_parser("rmg", add_help=False,
+                   help="execute retail/candidate whole-map comparisons (homm3 rmg --help)")
 
     p = sub.add_parser("init", help="one-time local setup (executables, symbols, toolchain)")
     p.add_argument("--exe", metavar="PATH",
@@ -291,6 +304,11 @@ def _dispatch(argv: list[str]) -> int:
     p.add_argument("ownership_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=lambda args: run_module("homm3.match.source_ownership", *args.ownership_args))
 
+    p = sub.add_parser("source-inventory", add_help=False,
+                       help="reconcile DC and authored functions in both directions")
+    p.add_argument("inventory_args", nargs=argparse.REMAINDER)
+    p.set_defaults(fn=lambda args: run_module("homm3.match.source_inventory", *args.inventory_args))
+
     p = sub.add_parser("status", help="objdiff scoreboard + checkpoint ledger")
     p.add_argument("status_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_status)
@@ -335,7 +353,7 @@ def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     # Analysis rc=1 means an answered difference. Build/init and the other
     # pipeline commands use rc=1 for failure.
-    failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast"} else 1
+    failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast", "rmg", "victor"} else 1
     return usage.run_logged(
         _dispatch, argv,
         lambda rc, **meta: usage.append(ROOT / "build/homm3_usage.log",

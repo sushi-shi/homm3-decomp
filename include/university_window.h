@@ -1,12 +1,12 @@
 #ifndef HOMM3_UNIVERSITY_WINDOW_H
 #define HOMM3_UNIVERSITY_WINDOW_H
 
+#include <vector>
+
 #include "advmgr_popup.h"
 #include "herospec.h"
 #include "iconwdgt.h"
 #include "textwdgt.h"
-
-#include <vector>
 class hero;
 struct type_university;
 class type_university_window;
@@ -14,7 +14,6 @@ class type_university_window;
 // Shared three-entry Basic/Advanced/Expert display-name row. Its retail
 // storage is claimed by levelupwindow.cpp; the university purchase callback
 // reads the Basic entry when composing its skill dialog.
-extern const char* g_skillMasteryNames[3];
 
 // Retail's two inlined constructor sites prove the iconWidget base followed
 // by the byte click latch and dword skill at +0x48/+0x4c. Dreamcast preserves
@@ -82,7 +81,7 @@ public:
     // gates one extra 0x48-byte widget on it.
     type_university_window(hero* newHero, const type_university* university,
                            unsigned char townUniversity);
-    virtual int doModal(unsigned char fade);  // slot 6
+    virtual void doModal(bool fade);  // slot 6
 
     // DC message-reference override; retail slot 9 folds at 0x5666f0.
     virtual int windowHandler(message& msg);

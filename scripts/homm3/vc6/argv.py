@@ -24,7 +24,7 @@ docs/vc6/driver-passes.md.  Proven pass-selector letters:
     S = unproven (only ^bS!*)     M/m = modifiers (m = repeatable, M unproven)
 
 Reusable API: decode_table(cl) and expand(flags) - importable without argparse.
-Running `python3 -m homm3.vc6.argv` (re)generates evidence/vc6/cl-option-spec.tsv.
+Running `python3 -m homm3.vc6.argv` (re)generates build/vc6/cl-option-spec.tsv.
 """
 from __future__ import annotations
 

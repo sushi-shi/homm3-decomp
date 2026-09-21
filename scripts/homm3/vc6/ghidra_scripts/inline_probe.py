@@ -39,7 +39,7 @@ import import_c2  # noqa: E402
 OUT_DIR = import_c2.RAW_DIR / "inline"
 BASE = import_c2.IMAGE_BASE
 
-# inline.c's gap-neighbourhood per evidence/vc6/c2-tu-map.tsv:
+# inline.c's gap-neighbourhood per build/vc6/c2-tu-map.tsv:
 # stack.c|inline.c rows from 0x93d28, anchor 0x94521, inline.c|dlp.c rows to
 # 0x95e48+87; the dlp.c anchor at 0x95e9f bounds it above.
 DEFAULT_LO = 0x93C23

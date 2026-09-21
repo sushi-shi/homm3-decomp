@@ -2,33 +2,35 @@
 
 Binary-matching decompilation of **Heroes of Might and Magic III Complete**
 (`HEROES3.EXE`, New World Computing, 2000). The goal is to recover the C++ structure and
-behavior and, where retail evidence permits, reproduce the original code, data, and
-relocations with the **MSVC 6.0 SP3** toolchain. Retail executable bytes and RVAs are
-authoritative. [objdiff](https://github.com/encounter/objdiff) is a useful comparison and
-navigation surface, not proof of correctness.
+behavior.
 
 This repository does **not** contain either game's executable or resources. To match
 the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H3.EXE`.
 
 <!-- match-score:start -->
 
-**Executable matched: 95.94%** — fuzzy-weighted bytes over all 1,998,985 unfiltered bytes.
+**Executable MAX: 96.92%** — weighted by function size across 1,999,142 bytes of code included in matching.
 
-**Match score** — 4,096 / 4,765 functions exact (86.0%) across the full engine (4765 in linked units).
+**Function exact MAX** — 4,249 / 4,768 current implementations (89.1%) have reached 100%.
 
-**Function exact MAX** — 4,162 / 4,765 current implementations (87.3%) have reached 100%.
+**CUR diagnostics** — 4,183 / 4,768 functions exact (87.7%) in this build (4767 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
 
-| Module       | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
-| :----------- | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`       |   138 | 4027 / 4696 (85.8%) | 4093 / 4696 (87.2%) |  95.89% |    96.49% |
-| `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
+| Module        | Units | Functions exact CUR |  Function exact MAX | Fuzzy CUR | Fuzzy MAX |
+| :------------ | ----: | ------------------: | ------------------: | --------: | --------: |
+| `game`        |   123 | 3517 / 3990 (88.1%) | 3569 / 3990 (89.4%) |    96.73% |    97.09% |
+| `rmg`         |     3 |   290 / 368 (78.8%) |   302 / 368 (82.1%) |    93.53% |    94.88% |
+| `network`     |     4 |   267 / 280 (95.4%) |   269 / 280 (96.1%) |    97.70% |    98.12% |
+| `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
+| `codec`       |     4 |     35 / 43 (81.4%) |     35 / 43 (81.4%) |    94.70% |    94.70% |
+| `victor`      |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |
+| `(unmatched)` |     — |        0 / 1 (0.0%) |        0 / 1 (0.0%) |      0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
 | Category              | Functions | Code (B) | Why excluded                                                       |
 | :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
 | `EH unwind funclets`  |     5,125 |   53,151 | compiler EH unwind funclets; match with their parent function      |
-| `CRT/C++ runtime`     |       913 |  110,536 | CRT/C++ runtime, named not matched (config/retail-runtime-map.tsv) |
+| `CRT/C++ runtime`     |       913 |  110,536 | CRT/C++ runtime, named not matched (config/retail/runtime-map.tsv) |
 | `init/cleanup thunks` |     1,119 |   94,433 | .CRT$XCU dynamic-initializer bodies (compiler-generated)           |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 
@@ -41,45 +43,7 @@ Unrelated CUR dips keep MAX and are silent. A function's own hash change resets
 MAX to its new CUR; a lower MAX is reported, but is not a build failure.
 `HIST > MAX` identifies historical peaks worth investigating.
 
-## Reconstruction debt
-
-Manually maintained cleanup checklist:
-
-- [ ] Review casts and remove avoidable conversions: **3,047 named casts**
-  (**2,830 `static_cast`**, **217 `const_cast`**).
-- [ ] Review unions and simplify avoidable alternate views: **63 union definitions**.
-- [ ] Review gotos: **31 statements** in **12 functions across 10 files**.
-- [x] Review artificial address arithmetic; see the
-  [audit and retained arithmetic](docs/vc6/address-arithmetic-audit.md).
-- [x] Review owner recovery from member pointers; see the
-  [owner-pointer audit](docs/vc6/owner-pointer-audit.md).
-- [x] Review out-of-object pointers; see the
-  [backlog repairs and allocation proofs](docs/vc6/pointer-boundary-repairs.md).
-- [ ] Review manual varargs.
-- [ ] Review unrelated variable reuse.
-- [ ] Review stack aggregates and unused members.
-- [ ] Review unresolved buffer bounds.
-- [ ] Review [compiler warnings](docs/compiler-warnings.md).
-- [ ] Investigate potentially uninitialized locals and missing-return warnings.
-- [x] Review preprocessor debt in `src/`: **36 → 1 `#define` directive**;
-  [audit and retained source macro](docs/vc6/preprocessor-audit.md).
-- [ ] Review pragma debt in `src/`: **388 `#pragma` directives**, all for inlining
-  (**190 `inline_depth(0)` and 4 `auto_inline(off)` regions**, including their resets).
-- [ ] Search for inline functions.
-- [x] Search for macros for common code; [audit](docs/vc6/preprocessor-audit.md).
-
-Unless scoped otherwise, counts cover tracked project C/C++ in `src/` and
-`include/`, excluding comments, literals, disabled `#if 0` bodies, generated build
-copies and vendor code. Casts
-count written named conversions; the cleanliness gates separately report zero
-C-style and `reinterpret_cast` conversions. Items without counts still need a
-tree-wide census; an unchecked item is a review category, not proof of a defect.
-
-All remaining gotos have individual dispositions in the [goto audit](docs/vc6/goto-audit.md).
-The [union and pragma audit](docs/vc6/union-pragma-audit.md) distinguishes real
-shared-storage representations from reconstruction adapters and inlining debt.
-Recover helpers, macros, types and lifetimes from source and retail evidence;
-validate changes with VC6, measure collateral matches and preserve MAX/HIST.
+See the [documentation](docs/README.md) and [reconstruction debt checklist](docs/todos/reconstruction_debt.md).
 
 ## Pinned target
 
@@ -89,78 +53,77 @@ The canonical image is the **English GOG Heroes III Complete 4.0 (engine 3.2)** 
 file        HEROES3.EXE
 size        2,732,032 bytes
 sha256      057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274
-base        0x00400000 (fixed; no base-relocation directory)
-entry       VA 0x0061A2B4
-.text       RVA 0x001000, 0x238612 bytes
-.rdata      RVA 0x23a000 (IAT + import descriptors live here; no .idata section)
 timestamp   8 September 2000, built by MSVC 6.0
+```
+
+The Dreamcast debug-symbol reference is pinned separately:
+
+```
+file        H3.EXE
+size        8,425,752 bytes
+sha256      cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736
 ```
 
 ## Quickstart
 
-From the repository root, supply both executable paths:
+You need Nix with flakes enabled and your own copies of the two executables
+listed above. From the repository root:
 
 ```sh
 nix develop .#build
+gh auth login        # needed for the toolchain download
 HOMM3_EXE=/absolute/path/to/HEROES3.EXE \
 HOMM3_DREAMCAST_EXE=/absolute/path/to/H3.EXE \
   homm3 init
 
-homm3 build           # compile, delink, compare, checkpoint, run gates
-homm3 link            # optional layout study; the EXE is not runnable
+homm3 build          # build all modules, compare with retail, and run checks
 ```
 
-You can also pass `--exe PATH` and `--dreamcast-exe PATH` to `homm3 init`;
-these override the environment variables.
-
-Initialization verifies both files' size and SHA-256, copies them into ignored
-`build/orig/HEROES3.EXE` and `build/orig/dreamcast/H3.EXE`, and reads the Dreamcast
-executable's embedded NB11 debug symbols. The Dreamcast input is pinned to
-**8,425,752 bytes**, SHA-256
-`cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736`.
-
-`init` also configures the build, downloads and verifies the pinned VC6 SP3 toolchain
-if missing, initializes Wine, and smoke-compiles through the normal compiler wrapper.
-Toolchain downloads use authenticated `gh`.
-
-Subsequent commands use the staged executables and recheck their bytes; the original
-paths need not remain configured. Re-running `homm3 init` verifies and reuses an existing
-setup. `homm3 clean` removes all of `build/`, including the staged copies; supply both
-paths again when initializing after a clean.
-
-Clangd works with the existing Neovim/CoC setup; hover and SDK definition lookup
-have been verified. `compile_commands.json` refreshes automatically on shell entry,
-configure, and build.
-
-Generate a browsable Dreamcast source tree from the embedded debug symbols:
+`homm3 init` verifies the executables and sets up the VC6 toolchain and Wine.
+The build compiles and compares reconstructed code. To link the resulting objects
+with the VC6 runtime, Windows libraries and retail vendor imports:
 
 ```sh
-homm3 dreamcast structure                         # all modules
-homm3 dreamcast structure --module cursor --asm --output /tmp/dc-cursor
+homm3 link --out build/exe/HEROES3.linked.EXE
 ```
 
-Inspect source-line geometry for one function or across the corpus:
+This passes without unresolved or duplicate symbols. Runtime execution is still
+unverified: the isolated launch check stops at missing Bink, Miles, Smacker and
+IFC20 DLLs. Playing also requires the original game resources. `homm3 link`
+always requires a clean link, without `/FORCE`.
+See [linking and runtime evidence](docs/vc6/runtime-link.md).
 
-```sh
-homm3 dreamcast lines 0x00524dd0
-homm3 dreamcast lines --module cursor --module town --json
-homm3 dreamcast lines --all --json > /tmp/dc-lines.json
-homm3 dreamcast show --module cursor --json > /tmp/dc-cursor-dossiers.json
-```
+### IDE setup
 
-`lines` preserves recorded positions, repeated attributions, and internal gaps
-with their line counts. It shows the approximate source shape for educated
-hypotheses; absent rows do not identify empty lines or recover source text.
-Total function length and trailing lines remain unknown. The same layout
-evidence appears in `show` and `structure`, without an MSVC shape comparison.
+Enable your editor's clangd integration and open the repository root.
+The development shell provides clangd and generates `compile_commands.json`;
+launch your editor from that shell so it can find the tools. The compilation
+database refreshes on shell entry and during builds. Run `homm3 init` first
+to set up the compiler headers needed for code navigation.
 
-The default output is `evidence/dreamcast/structure/README.md`, with annotated
-C++ stubs and JSON for each compiland, plus a type catalogue. It includes decoded
-signatures, scoped locals, recorded scope nesting, source-line spans and gaps,
-inline evidence, and inferred SH4 control flow. These are Dreamcast reference
-facts; the generated files are not build inputs. See
-[the structure exporter documentation](docs/dc-line-tables.md#generated-source-structure)
-for the format and its evidence limits.
+### Improve a function
+
+1. Run `homm3 status functions` and choose a function whose MAX is below 100%.
+2. Inspect its retail assembly and Dreamcast source evidence before editing.
+   For example, `0x00524dd0` belongs to `src/philai.cpp`:
+
+   ```sh
+   homm3 sema disasm 0x00524dd0
+   homm3 dreamcast show 0x00524dd0
+   homm3 dreamcast asm 0x00524dd0 --blocks
+   ```
+
+3. Edit the C++, rebuild its module, and inspect the remaining differences:
+
+   ```sh
+   homm3 build --fast philai
+   homm3 sema diff 0x00524dd0 --summary
+   ```
+
+4. Repeat, then run `homm3 build` for the full checks before submitting changes.
+
+Replace the example address and module with your target. The
+[matching guide](AGENTS.md) covers the full evidence pass and reconstruction rules.
 
 ## License
 
@@ -168,5 +131,10 @@ Project-authored reconstruction source and tooling are dedicated to the public
 domain under [CC0 1.0](LICENSE), to the extent the contributors can do so.
 Files carrying separate copyright or license notices — notably everything under
 `vendor/` — retain those terms. No binary game assets are stored in this
-repository. Thanks to [NH3API](https://github.com/void2012/NH3API)
-for labelling the executable.
+repository.
+
+## Thanks
+
+Thanks to [NH3API](https://github.com/void2012/NH3API) for documenting game
+structures and their layouts, and for naming references that supplement
+the Dreamcast debug symbols.

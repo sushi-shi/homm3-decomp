@@ -1,18 +1,22 @@
-#include <va.h>
+#include "va.h"
+#include "text.h"
+
 #include <stdio.h>
+
+#include "scenarioinfo.h"
+
 #include "advmgr.h"
 #include "bitmap816.h"
 #include "border.h"
 #include "button.h"
 #include "csprite.h"
-#include "game.h"
 #include "font.h"
+#include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
 #include "kb.h"
 #include "message.h"
 #include "resourcemanager.h"
-#include "scenarioinfo.h"
 #include "singleselectionpopups.h"
 #include "singleselectionwindow.h"
 #include "slider.h"
@@ -154,7 +158,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     // +0x7c3/+0x822 passes justify=4 for the victory/loss descriptions.
     widgets.push_back(new textWidget(
         411, 448, 89, 48,
-        g_unnamed6a77ec[mapHeader.m_difficulty], "smalfont.fnt",
+        g_difficulty[mapHeader.m_difficulty], "smalfont.fnt",
         font::WHITE, 100,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     sprintf(tempText, "%d%%",
@@ -267,8 +271,8 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         row->m_flag = m_flags[i];
         row->m_townType = g_game->m_setup.m_alignment[i];
         row->m_playerName = g_game->m_players[i].m_name;
-        row->m_handicapText = g_unnamed6a7800[g_game->m_setup.m_handicap[i]];
-        row->m_playerTypeText = g_unnamed6a7e18[playerType];
+        row->m_handicapText = g_handiText[g_game->m_setup.m_handicap[i]];
+        row->m_playerTypeText = g_humanCpu[playerType];
         row->m_playerPosition = rowPosition;
         row->m_startingBonus = g_game->m_setup.m_startingBonus[i];
         row->m_bonusSprite = m_bonusSprite;
@@ -352,17 +356,17 @@ void CScenarioPlayerInfoWidget::draw() const
                g_windowManager->m_screenBitmap,
                windowX + 11, windowY + m_playerPosition * 50 + 124, 1);
 
-    g_unnamed698a08->drawBoundedString(
+    g_smallFont->drawBoundedString(
         m_playerName, g_windowManager->m_screenBitmap,
         windowX + 59, windowY + m_playerPosition * 50 + 124,
         97, 17, font::PRIMARY, font::CENTER_JUSTIFIED, -1);
-    g_unnamed698a08->drawBoundedString(
+    g_smallFont->drawBoundedString(
         m_playerTypeText, g_windowManager->m_screenBitmap,
         windowX + 59, windowY + m_playerPosition * 50 + 145,
         46, 24, font::WHITE,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     if (g_game->isMultiplayer()) {
-        g_unnamed698a08->drawBoundedString(
+        g_smallFont->drawBoundedString(
             m_handicapText, g_windowManager->m_screenBitmap,
             windowX + 107, windowY + m_playerPosition * 50 + 145,
             50, 24, font::WHITE,
@@ -374,8 +378,8 @@ void CScenarioPlayerInfoWidget::draw() const
                      g_windowManager->m_screenBitmap,
                      windowX + 173, windowY + m_playerPosition * 50 + 124,
                      0, 1);
-    g_unnamed698a08->drawBoundedString(
-        g_unnamed6a74f4[m_townType], g_windowManager->m_screenBitmap,
+    g_smallFont->drawBoundedString(
+        g_townTypeNames[m_townType + 1], g_windowManager->m_screenBitmap,
         windowX + 161, windowY + m_playerPosition * 50 + 156,
         71, 16, font::WHITE,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
@@ -387,13 +391,13 @@ void CScenarioPlayerInfoWidget::draw() const
                            windowY + m_playerPosition * 50 + 124, 0);
     }
     if (m_startingHero) {
-        g_unnamed698a08->drawBoundedString(
+        g_smallFont->drawBoundedString(
             m_startingHero->m_name, g_windowManager->m_screenBitmap,
             windowX + 237, windowY + m_playerPosition * 50 + 156,
             71, 16, font::WHITE,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     } else {
-        g_unnamed698a08->drawBoundedString(
+        g_smallFont->drawBoundedString(
             g_generalText->getText(524), g_windowManager->m_screenBitmap,
             windowX + 237, windowY + m_playerPosition * 50 + 156,
             71, 16, font::WHITE,
@@ -423,14 +427,14 @@ void CScenarioPlayerInfoWidget::draw() const
                       0, 1);
 
     if (m_startingBonus == NEW_MAP_BONUS_RANDOM) {
-        g_unnamed698a08->drawBoundedString(
+        g_smallFont->drawBoundedString(
             g_generalText->getText(523), g_windowManager->m_screenBitmap,
             windowX + 313, windowY + m_playerPosition * 50 + 156,
             71, 16, font::WHITE,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     } else {
-        g_unnamed698a08->drawBoundedString(
-            g_unnamed6a5e14[m_startingBonus], g_windowManager->m_screenBitmap,
+        g_smallFont->drawBoundedString(
+            g_agrText[m_startingBonus], g_windowManager->m_screenBitmap,
             windowX + 313, windowY + m_playerPosition * 50 + 156,
             71, 16, font::WHITE,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
@@ -641,28 +645,3 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
 
     return CHeroWindowEx::processRightSelect(id);
 }
-
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\scenarioinfo.cpp:657
-DC_ONLY(0x12b038, 0x18)
-void CTeamAlignmentDlg::~CTeamAlignmentDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\scenarioinfo.cpp:657
-DC_ONLY(0x12b050, 0x18)
-void CTownDlg::~CTownDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\scenarioinfo.cpp:657
-DC_ONLY(0x12b068, 0x18)
-void CBonusDlg::~CBonusDlg()
-{
-    // @stub
-}
-
-#endif  // @carcass

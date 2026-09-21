@@ -1,9 +1,12 @@
-#include <va.h>
-#include "game.h"
+#include "va.h"
+#include "objnames.h"
+
+#include "cursor.h"
+
 #include "advmgr.h"
 #include "csprite.h"
-#include "cursor.h"
 #include "findpath.h"
+#include "game.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "prefs.h"
@@ -19,12 +22,11 @@
 DATA(0x0063d6c8) static const int g_walkSpeedPixels[5] = { 2, 8, 10, 16, 32 };
 DATA(0x0063d6dc) static const int g_scrollDelayValues[5] = { 100, 50, 50, 50, 100 };
 
-// cursor.obj-owned byte latch; the surviving source name is not present in
-// either CodeView corpus, so keep it ordinal until stronger evidence lands.
+// Retail-only byte: animateMove clears it (retail relocation 0x805af); no retail read or
+// surviving DC name establishes its role. Keep the uncertainty explicit.
 DATA(0x006968e8) unsigned char g_unnamed6968e8;
 
 // E:\gamedcs\cursor.cpp:52
-DC_ONLY(0x79a48, 0x3C)
 void advManager::startCursor(int direction)
 {
     m_cursorDirection = direction;
@@ -61,10 +63,10 @@ void advManager::stopCursor(unsigned char standEnd)
             m_cursorSequence = 2;
 
         m_cursorFrameCount = 0;
-        if (g_unnamed6968e0)
-            g_soundManager->stopSample(g_unnamed6968e0);
-        g_unnamed6968e0 = 0;
-        g_unnamed6968e4 = 0;
+        if (g_walkSample)
+            g_soundManager->stopSample(g_walkSample);
+        g_walkSample = 0;
+        g_newWalkSample = 0;
     }
     m_cursorTurning = 0;
 }
@@ -206,11 +208,11 @@ void advManager::drawCursorAlpha()
 
             if (m_heroMoving) {
                 m_cursorFrameCount = (m_cursorFrameCount + 1) % 8;
-                if (!m_cursorFrameCount && g_unnamed6968e4) {
-                    g_soundManager->stopSample(g_unnamed6968e0);
-                    g_unnamed6968e0 =
-                        g_soundManager->memorySample(g_unnamed6968e4);
-                    g_unnamed6968e4 = 0;
+                if (!m_cursorFrameCount && g_newWalkSample) {
+                    g_soundManager->stopSample(g_walkSample);
+                    g_walkSample =
+                        g_soundManager->memorySample(g_newWalkSample);
+                    g_newWalkSample = 0;
                 }
             } else {
                 m_cursorFrameCount = 0;
@@ -233,7 +235,7 @@ int advManager::getMoveShowIt(hero* currHero, int direction)
     int yInc = g_normalDirTable[direction].m_y;
 
     if ((g_currentPlayer->isLocalHuman()
-         || !g_unnamed698758.m_blackoutComputer)
+         || !g_config.m_blackoutComputer)
         && (mapExtraPosAndAdjacentsSet(currHero->m_x, currHero->m_y,
                                       currHero->m_z, g_mapVisibilityBit)
             || mapExtraPosAndAdjacentsSet(currHero->m_x + xInc,
@@ -320,7 +322,7 @@ void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
 
     if (g_completeDrawEnabled) {
         int speedIndex;
-        speedIndex = (&g_unnamed698758.m_computerWalkSpeed)
+        speedIndex = (&g_config.m_computerWalkSpeed)
             [g_currentPlayer->isLocalHuman()];
 
         m_radarOrigin.m_x = curr->m_x - 9;
@@ -404,7 +406,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     if (g_currentPlayer->isLocalHuman())
         setNoDialogMenus(0);
 
-    g_unnamed69777c = 0;
+    g_heroMoveTriggeredEvent = 0;
     *foughtBattle = 0;
     *noMove = 0;
     returnCell = 0;
@@ -462,7 +464,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
         oldBoat = g_game->getHeroBoat(curr->m_id, 1);
         getCell(curr->getLocation());
 
-        if (g_networkActive69954c && isRemoteMove) {
+        if (g_remoteOn && isRemoteMove) {
             curr->restoreCell();
             curr->m_flags &= ~0x40000;
         }
@@ -504,7 +506,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
                 g_game->recordShowHero(curr, curr->m_owner,
                                          triggerPoint, 1);
                 becameBoat = 1;
-                if (g_networkActive69954c && isRemoteMove) {
+                if (g_remoteOn && isRemoteMove) {
                     curr->restoreCell();
                     enteredBoat = 1;
                 } else {
@@ -541,14 +543,14 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
 
         case BORDER_GATE:
             if (!(g_game->m_borderTentVisitFlags[destCell->m_objectIndex]
-                  & g_unnamed69ccc4))
+                  & g_curPlayerBit))
                 return handleStopOnTrigger(
                     curr, destCell, isRemoteMove, standEnd,
                     foughtBattle, curMoveCost, nextMoveMinCost);
             break;
 
         default:
-            if (g_adventureObjectTraits[destCell->m_type][0]
+            if (g_adventureObjectTraits[destCell->m_type].m_blocksLanding
                 && (!curr->isFlying(1)))
                 return handleStopOnTrigger(
                     curr, destCell, isRemoteMove, standEnd,
@@ -574,13 +576,13 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
                           curr->m_owner, curr->getVisibility(),
                           isRemoteMove);
 
-    if (g_networkActive69954c && isRemoteMove
+    if (g_remoteOn && isRemoteMove
         && (g_game->getTeamMask(curr->m_owner)
             & (1 << g_game->getLocalPlayerGamePos())))
         updateRadar(1, 1, 0, 0, 0);
 
     m_forceCompleteDraw = 1;
-    if (g_networkActive69954c && !g_followPlayerMode
+    if (g_remoteOn && !g_followPlayerMode
         && !g_currentPlayer->isLocalHuman() && isRemoteMove) {
         curr->m_x += xInc;
         curr->m_y += yInc;
@@ -632,11 +634,11 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
         walkSample = m_heroSamples[10];
     walkSample->m_memSample.m_memLooping = 0;
     if (m_cursorFrameCount) {
-        g_unnamed6968e4 = walkSample;
+        g_newWalkSample = walkSample;
     } else {
-        g_unnamed6968e4 = 0;
-        g_soundManager->stopSample(g_unnamed6968e0);
-        g_unnamed6968e0 = g_soundManager->memorySample(walkSample);
+        g_newWalkSample = 0;
+        g_soundManager->stopSample(g_walkSample);
+        g_walkSample = g_soundManager->memorySample(walkSample);
     }
 
     point = type_point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
@@ -650,7 +652,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
             && eventCell->m_type == ANCHOR_POINT)) {
         if ((!curr->isFlying(0)
              || curr->getTarget() == triggerPoint)
-            && (!g_adventureObjectTraits[eventCell->m_type][0]
+            && (!g_adventureObjectTraits[eventCell->m_type].m_blocksLanding
                 || !curr->isFlying(1)
                 || eventCell->m_type == BOAT))
             returnCell = eventCell;
@@ -696,7 +698,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     returnCell = endMoveHero(curr, returnCell, isRemoteMove,
                                origX, origY, standEnd, foughtBattle);
     if (hasEvent) {
-        g_unnamed69777c = 1;
+        g_heroMoveTriggeredEvent = 1;
         stopCursor(1);
         handleMapEvent(curr, destCell, triggerPoint, !computerMove);
     }
@@ -746,7 +748,7 @@ void advManager::checkAdjacentMon(int* foughtBattle)
         getCell(curr->getLocation());
         doEventWanderingMonster(monsterCell, curr, monster,
                                 g_currentPlayer->isLocalHuman()
-                                    && !g_unnamed691209);
+                                    && !g_goSolo);
         *foughtBattle = 1;
     }
 }
@@ -824,12 +826,12 @@ int advManager::validMove(hero* who, int direction, int computerMove,
     int stepsSouth = dirMask & 0x38;
     if (dirMask & 0x83) {
         if (srcCell->cellIsTrigger()
-                && !g_adventureObjectTraits[srcCell->getMapObject()][1])
+                && !g_adventureObjectTraits[srcCell->getMapObject()].m_trait1)
             return 0;
     }
     if (stepsSouth) {
         if (destCell->cellIsTrigger()
-                && !g_adventureObjectTraits[destCell->getMapObject()][1])
+                && !g_adventureObjectTraits[destCell->getMapObject()].m_trait1)
             return 0;
     }
 
@@ -864,7 +866,6 @@ void advManager::onMoveHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1158
-DC_ONLY(0x7c2e0, 0x48)
 void advManager::onTeleportHero(CMapChange* mapChange)
 {
     CMCTeleportHero* change = static_cast<CMCTeleportHero*>(mapChange);
@@ -873,7 +874,6 @@ void advManager::onTeleportHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1167
-DC_ONLY(0x7c328, 0x68)
 void advManager::onClaimMine(CMapChange* mapChange)
 {
     CMCClaimMine* change = static_cast<CMCClaimMine*>(mapChange);
@@ -884,7 +884,6 @@ void advManager::onClaimMine(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1177
-DC_ONLY(0x7c390, 0x36)
 void advManager::onClaimTown(CMapChange* mapChange)
 {
     CMCClaimTown* change = static_cast<CMCClaimTown*>(mapChange);
@@ -894,7 +893,6 @@ void advManager::onClaimTown(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1186
-DC_ONLY(0x7c3c8, 0x58)
 void advManager::onBuildBoat(CMapChange* mapChange)
 {
     CMCBuildBoat* change = static_cast<CMCBuildBoat*>(mapChange);
@@ -905,7 +903,6 @@ void advManager::onBuildBoat(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1196
-DC_ONLY(0x7c420, 0x4E)
 void advManager::onEraseObject(CMapChange* mapChange)
 {
     CMCEraseObject* change = static_cast<CMCEraseObject*>(mapChange);
@@ -916,7 +913,6 @@ void advManager::onEraseObject(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1208
-DC_ONLY(0x7c470, 0xAC)
 void advManager::onDeadHero(CMapChange* mapChange)
 {
     CMCDeadHero* change = static_cast<CMCDeadHero*>(mapChange);
@@ -929,7 +925,6 @@ void advManager::onDeadHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1224
-DC_ONLY(0x7c51c, 0x66)
 void advManager::onRecruitHero(CMapChange* mapChange)
 {
     CMCRecruitHero* change = static_cast<CMCRecruitHero*>(mapChange);
@@ -945,7 +940,6 @@ void advManager::onRecruitHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1245
-DC_ONLY(0x7c584, 0x5C)
 void advManager::onDeadPlayer(CMapChange* mapChange)
 {
     CMCDeadPlayer* change = static_cast<CMCDeadPlayer*>(mapChange);
@@ -956,7 +950,6 @@ void advManager::onDeadPlayer(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1253
-DC_ONLY(0x7c5e0, 0x68)
 void advManager::onClaimGenerator(CMapChange* mapChange)
 {
     CMCClaimGenerator* change =
@@ -965,7 +958,6 @@ void advManager::onClaimGenerator(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1260
-DC_ONLY(0x7c648, 0x1A)
 void advManager::onClaimGarrison(CMapChange* mapChange)
 {
     CMCClaimGarrison* change =
@@ -974,7 +966,6 @@ void advManager::onClaimGarrison(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1267
-DC_ONLY(0x7c664, 0x24)
 void advManager::onClaimShipYard(CMapChange* mapChange)
 {
     CMCClaimShipYard* change =
@@ -1040,6 +1031,6 @@ void advManager::processMapChangeNew(CMapChange* mapChange)
 VA(0x00482390, 0x21)  // dc 0x7c9f8
 void sendMapChange(CMapChange* mapChange)
 {
-    if (g_thisNetGotAdventureControl && g_networkActive69954c)
+    if (g_thisNetGotAdventureControl && g_remoteOn)
         transmitRemoteData(mapChange, 0x7f, false, true);
 }

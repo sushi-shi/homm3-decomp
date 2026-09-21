@@ -98,7 +98,7 @@ Matcher guidance:
   accessor boundaries recovered 90.2669%, leaving every tracked sibling
   unchanged. The isolated dip was not evidence for inventing helper copies
   or abandoning the ordinary private methods. See the joint controls in
-  [the union/pragma audit](union-pragma-audit.md#shared-combat-helpers-and-drawing-callers).
+  [the union/pragma audit](../reconstruction/union-pragma-audit.md#shared-combat-helpers-and-drawing-callers).
 
 ## 1. Where the inliner lives (and why the atlas pointed one region over)
 
@@ -379,7 +379,7 @@ always counts `call` + tail `jmp`.
     hands `traits->townType` straight to the portrait builder), spelled as a
     call to a free predicate. Every other statement of retail's body has a DC
     line of its own carrying the same call, so the post-DC edit was the only
-    place left for a candidate site to hide — `docs/dc-line-tables.md` is the
+    place left for a candidate site to hide — `docs/matching/dc-line-tables.md` is the
     instrument. Worth 97.1049 → 99.9352 alone; a second finding off the same
     table (the three `Influence[i] = -1` stores are a counted `for` loop,
     which VC6 unrolls back into retail's three stores and which recovers
@@ -632,9 +632,15 @@ out-of-range exception semantics.
 
 Thus the accessor ladder also includes `at`; the earlier observation that
 subscript leaves no deeper spelling should not be generalized to other
-callers. Measure the actual overload and call site. This function still
-has separate artifact stack homes and the wrong first vector insertion
-boundary, so the remaining 0.59 points are not an established allocator wall.
+callers. Measure the actual overload and call site. Calling the same ordinary
+artifact collector used by `SCampaign::pruneCrossoverHeroes` subsequently
+restores the shared artifact stack home and the first `push_back`'s retained
+single-element insert wrapper. All 38 CFG blocks and instruction rows then
+agree. The 99.9872 report residual is the known ICF presentation: retail
+labels the signature-identical wrapper as
+`vector<type_dialog_resource>::insert`, while the candidate correctly names
+the `type_artifact` specialization. This is not evidence for changing the
+source element type.
 
 ### Constructed return values and local return objects differ after inlining
 
@@ -861,7 +867,7 @@ before and after -- and `sema diff --calls` still shows the two
 VC6 reached down the file, took the body, and emitted retail's expansion.
 The only prerequisite was the declaration already in `binkmanager.h:124`.
 
-So the helper-boundary rule in CLAUDE.md is enforceable everywhere, and
+So the helper-boundary rule in AGENTS.md is enforceable everywhere, and
 "the definition comes later" is not a reason to keep a longhand copy.
 
 ### The census, and where the caller_cb lever actually bites
@@ -1890,7 +1896,7 @@ as different behavior.
 ### Release-elided preconditions can retire small-helper overrides
 
 The `giveSS`, `getNormalCursor`, `doPurchase`, `compressMsg` and
-`getHeroSpellBonus` controls in [the union/pragma audit](union-pragma-audit.md#small-helpers-release-verification-recovery)
+`getHeroSpellBonus` controls in [the union/pragma audit](../reconstruction/union-pragma-audit.md#small-helpers-release-verification-recovery)
 replace five `auto_inline(off)` regions with meaningful
 `HOMM3_RELEASE_VERIFY` input/array preconditions. Each has a possible leading
 CodeView gap and a deletion-only negative control. Their bodies remain exact;
@@ -1944,7 +1950,7 @@ Static membership and reference arguments also survived the retail check:
 relocation destinations after explicit source-backed symbol migrations.
 Two-register `/Gr` is not proof of a free function or a pointer parameter.
 The finite families and negative controls are documented in the
-[audit](union-pragma-audit.md#serialization-locals-and-interface-recovery).
+[audit](../reconstruction/union-pragma-audit.md#serialization-locals-and-interface-recovery).
 
 ## A callee's IL cost is a lever its own bytes cannot show
 
@@ -2423,3 +2429,99 @@ parameter and canonical helper require neither pasted search code nor an
 inlining directive. Complete's body has no counterpart to Dreamcast's
 combat-over branch at line 413; that platform difference stays documented
 beside the owning function.
+
+
+### A retained sibling changes the AI selector expansion (2026-09-20)
+
+`philAI::doAI` (`0x525e80`) reaches 100% when the ordinary movement
+helpers recover their Dreamcast file-static linkage, reference parameter and
+definition order together with the selector's separate priority rejections,
+staged values and the caller's nested guards. The first movement phase keeps
+its selector call; the second expands it while retaining `getTown` and
+`getHero`. The standalone selector (`0x526a90`) and inner movement helper
+(`0x5267b0`) remain exact. No inline-control pragma or release assertion is
+needed.
+
+The byte-verified C2 trace explains the interaction. The outer movement
+helper previously had no saved body (callee flags `0x28`). With the recovered
+interface and visibility it has flags `0x48`, cost 596, and counts as an
+eligible sibling even though neither call expands. The first selector costs
+473 against a child budget of 396 and stays out of line. The second gets
+689, expands, and divides its remaining budget by two eligible siblings:
+`getPrimarySkill` receives 108 and costs 81; the remaining 27 refuses both
+`getTown` (45) and `getHero` (41). Merely relocating the earlier external
+pointer-parameter bodies did not restore that sibling.
+
+The two remaining stores independently distinguish source order: Dreamcast
+assigns the minimum skill sum before the selected hero, but both Complete's
+retained selector and its caller expansion store the selected hero first.
+Restoring that order closes the final 99.9236% selector / 99.9559% caller
+differences. The earlier pointer/reference audit suppression cited a generated
+candidate symbol as if it were a retail symbol; restoring the proven
+reference removes that unsupported exception.
+
+
+### Returned scalar values recover save-header cleanup (2026-09-20)
+
+`SavedGameHeader::load` (`0x4bc750`) reaches 100% through one ordinary
+`readValue<T>(TAbstractFile*)` template for its six unchecked native scalar
+reads. Each call reads into a local and returns that value; short/char
+conversions and discarded read counts remain unchanged. The checked ID read
+also restores Dreamcast's named count. All 62 blocks and 26 named calls match,
+including the shared failure cleanup. No reader specialization is retained in
+the candidate game object. The helper's spelling and free-function binding
+remain inferred from the scalar operations and lifetimes.
+
+Flattening those operations into primitive caller scopes scores 83.6714%;
+sharing procedure buffers with a named ID count scores 81.9600%. Returned
+values reproduce the exact result both with and without that named count.
+The historical exact implementation used four empty helper calls before the
+final return. Those calls diagnosed an inline-decision sensitivity but were
+not recovered operations; the real scalar-reader boundaries replace them.
+
+
+### Separate read, decode and application responsibilities (2026-09-20)
+
+`game::load` (`0x4bcda0`) reaches 98.1693% with ordinary snapshot
+application and packed-bit decoding helpers. The caller keeps the saved
+header alive, tests its read before applying state, and owns the bitset's
+construction, packed byte read and final member copy. The decoder owns only
+unsigned bit assignments. Its interface and the application helper's name
+and external binding are inferred, without standalone retail claims.
+The native output-reference scalar reader preserves the actual byte count;
+its returned-value overload keeps `SavedGameHeader::load` exact.
+
+The remaining retail expansion is `loadVector<type_university>`. The prefix,
+stack slots, packed proxy call and cleanup already match. Sharing a complete
+packed reader with campaign changes the call boundary; sharing unsigned
+indexing with mapcell contradicts its signed division instructions. Broader
+native range/scalar readers expand the university call but alter the final
+failure cleanup or `isLocalHuman` decision. Named fill objects likewise
+change the otherwise matching vector lifetimes. None of those diagnostic
+variants is adopted. No inline-control pragma or release assertion is added.
+
+The serializer result contracts also follow the raw Dreamcast public names:
+`generator::load/save`, `type_creature_bank::load/save` and both object-vector
+templates return `bool` (`_N`), despite the primitive display's byte alias.
+Their retained object bodies are byte-identical after this signature repair;
+score history follows the retail RVA across the regenerated labels.
+
+
+### Windows viewport helpers and cross-TU visibility
+
+`army::fly` (0x4b4a40) reaches 100% with one canonical Windows renderer
+implementation visible through cmbtmgr.h. The CE renderer scrolls, clips and
+translates a viewport; Complete presents the accumulated screen rectangle
+without those operations. Preserve the by-value extent-to-four-int
+`updateCombatArea` call and give the Windows leaf its four-int Window call.
+Keep the coordinate `scrollTo` facade ordinary in drawing.cpp: it needs no
+cross-TU visibility. Header placement is an explicit platform inference,
+recorded with exact CE/Windows catalog entries, not recovered lexical text.
+
+Both const-reference and by-value extent controls reproduce Fly, so its
+inlined copy cannot establish a changed parameter type. The by-value chain
+preserves the positive DC interface and named source call. The narrow family
+reproduces three distinct objects across all 22 affected TUs; all 1102 Fly
+bytes and 54 relocation operands agree with retail. Ordinary definitions of
+its two local search helpers and removal of the redundant outer loop block
+also preserve all five exact Fly targets (four states, two reproduced objects).

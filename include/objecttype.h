@@ -7,6 +7,7 @@
 #include <bitset>
 #include <string>
 #include <vector>
+
 #include "mapcell.h"
 
 class TObjectTypeFilter;
@@ -77,6 +78,13 @@ public:
     // loads in VC6; ordinary integer accessors retain the observed boundary.
     // Their role names are provisional: this editor type is Complete-only.
     int getWidth() const { return m_imageInfo.m_objectSize.m_x; }
+    // Complete-only query hypothesis: non-const subscript uses VC6's
+    // reference proxy, preserving the checked bitset call in mine placement
+    // at 0x545a01. A const query expands test and retains only _Xran.
+    bool isRecommendedTerrain(int terrain)
+    {
+        return m_recommendedTerrainMask[terrain];
+    }
     int getHeight() const { return m_imageInfo.m_objectSize.m_y; }
     // Retail 0x514610 and 0x514a60, both in the same Complete-only
     // compiland and both returning *this - the per-row `>>` at 0x514b80
@@ -114,6 +122,9 @@ extern const TObjectType::TPoint g_noTriggerCell;
 inline TObjectType::TObjectType()
     : m_imageNumber(0),
       m_passableMask(~std::bitset<48>(0)),
+      m_triggerMask(0),
+      m_terrainMask(0),
+      m_recommendedTerrainMask(0),
       m_objectType(NOTHING),
       m_subtype(0),
       m_slotCategory(0),

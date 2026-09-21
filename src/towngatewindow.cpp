@@ -1,6 +1,9 @@
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "towngatewindow.h"
+
 #include "armygrp.h"
 #include "border.h"
 #include "button.h"
@@ -273,14 +276,3 @@ static void townGateSliderCallback(int state, heroWindow* parentWindow)
     g_townGateWindow->updateTownLocators();
     g_townGateWindow->drawWindow(1, 0xffff0001, 0xffff);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\towngatewindow.cpp:98
-DC_ONLY(0x169c98, 0x34)
-void* TTownGateWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

@@ -2,7 +2,7 @@
 """homm3.build.build - the `homm3 build` command.
 
     configure -> ninja (base objs) -> delink (including normalization) -> objdiff report
-    -> overall line -> [normal tier] checkpoint-ledger refresh + dip report
+    -> projected MAX summary -> [normal tier] checkpoint-ledger refresh + MAX loss report
     (OBSERVATIONAL) + banked-rows check (FATAL when a previously
     banked RVA left the baseline entirely) + cleanliness board (FATAL
     when a ratcheted source metric rises above its committed floor -
@@ -59,8 +59,9 @@ def main(argv=None) -> int:
         delink.run()
 
     report = status.refresh_report()
-    print(f"[build] {status.overall_line(report)}")
-    print(f"[build] report: {status.REPORT.relative_to(ROOT)}")
+    fingerprint_pair = status.source_hash_pair()
+    print(f"[build] {status.overall_line(report, fingerprint_pair=fingerprint_pair)}")
+    print(f"[build] CUR diagnostic report: {status.REPORT.relative_to(ROOT)}")
 
     if fast:
         print("[build] fast: delink + checkpoint ledger + gates + README skipped - "
@@ -77,7 +78,6 @@ def main(argv=None) -> int:
     # Check BEFORE updating the ledger so a changed function is compared with
     # its preceding MAX/source hash. The update then resets MAX for a proven
     # source edit while preserving HIST.
-    fingerprint_pair = status.source_hash_pair()
     history_patch = status.baseline_history()
     status.cmd_check(report, fingerprint_pair=fingerprint_pair)
     status.cmd_update(report, fingerprint_pair=fingerprint_pair, history_patch=history_patch)
@@ -91,13 +91,15 @@ def main(argv=None) -> int:
     # compares the rows that ARE in the baseline, this one asks whether a
     # row that used to be there still is. Clean ratchet + lost row is
     # exactly how army::can_shoot left the ledger green (2026-08-15).
-    from homm3.match import banked_rows, single_view, verify_va_claims, source_ownership
+    from homm3.match import banked_rows, single_view, verify_va_claims, source_ownership, source_inventory
     origins = None
-    for gate in (banked_rows, verify_va_claims, single_view, source_ownership):
+    for gate in (banked_rows, verify_va_claims, single_view, source_ownership, source_inventory):
         try:
             if gate is source_ownership:
                 origins = source_ownership.read_dc(include_declarations=True)
                 fatal = source_ownership.run_gate(origins=origins)
+            elif gate is source_inventory:
+                fatal = source_inventory.run_gate(origins=origins)
             elif gate is banked_rows:
                 fatal = banked_rows.run_gate(history_patch=history_patch)
             else:

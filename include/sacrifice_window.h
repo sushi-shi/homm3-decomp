@@ -2,6 +2,7 @@
 #define HOMM3_SACRIFICE_WINDOW_H
 
 #include <vector>
+
 #include "advmgr_popup.h"
 #include "hero.h"
 #include "iconwdgt.h"
@@ -94,7 +95,7 @@ enum ESacrificeGeneralText {
 
 // HELP.TXT's second pass at 0x5b9b52 fills exactly twenty stride-8
 // text/right-click pairs from 0x6a6638 through 0x6a66d7.
-DATA(0x006a6638) extern THelpText g_sacrificeWindowHelp[SACRIFICE_HELP_COUNT];
+extern THelpText g_sacrificeWindowHelp[SACRIFICE_HELP_COUNT];
 
 // DC public ?gTransformerWindowHelp@@3PAUTHelpText@@A supplies the name;
 // Complete references the three text/right-click pairs at 0x6a77d0..e7.
@@ -198,7 +199,8 @@ public:
     void offeringClick(long slot, unsigned char rightClick);
 
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
-    virtual int doModal(unsigned char fadeIn);                 // slot 6
+    virtual void doModal(bool fadeIn);                        // slot 6
+    virtual int windowHandler(message& msg);                   // slot 9
     virtual int exitDialog(message& msg);                      // slot 14
 
 private:
@@ -337,6 +339,7 @@ public:
     void creatureClick(long side, long slot, unsigned char rightClick);
     virtual void handleWidgetHover(widget* currentWidget);  // slot 4
     virtual int windowHandler(message& msg);                   // slot 9
+    virtual int exitDialog(message& msg);                      // slot 14
 
 private:
     void createCreatureIcons(
@@ -344,6 +347,7 @@ private:
         long groupNumber, long itemNumber, long& widgetId,
         iconWidget** iconWidgets, iconWidget** selectionWidgets,
         textWidget** textWidgets);
+    void unselect();
     void update(long group, long index);
     void updateButtons();
     static int allCreatures(message& msg);

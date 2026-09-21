@@ -1,7 +1,11 @@
-#include <va.h>
-#include <windows.h>
+#include "text.h"
+#include "va.h"
+
 #include <stdio.h>
+#include <windows.h>
+
 #include "university_window.h"
+
 #include "border.h"
 #include "button.h"
 #include "game.h"
@@ -37,7 +41,7 @@ DATA(0x006a7dec) static const char* g_universitySkillHelpFormat;
 // belongs in this TU rather than the carcass: retail EXPANDS it at its one
 // call site in skill_click (the call census reads `set_skill base x1 vs
 // retail x0`), which /Ob2 can only do from a visible body.
-DC_ONLY(0x18fad8, 0xA)
+
 void type_university_skill_button::setSkill(TSecondarySkill newSkill,
                                              unsigned char newClick)
 {
@@ -49,7 +53,7 @@ void type_university_skill_button::setSkill(TSecondarySkill newSkill,
 // out-of-line body, but both allocations in the window constructor preserve
 // this source helper in full: iconWidget base construction, derived vtable,
 // then skill/click stores.
-DC_ONLY(0x18e6ac, 0x7C)
+
 type_university_skill_button::type_university_skill_button(
     long x, long y, long width, long height, long newId,
     const char* image, TSecondarySkill newSkill)
@@ -82,31 +86,6 @@ bool type_university_skill_button::handleClick(
 
     return 0;
 }
-
-#if 0  // @carcass: unpromoted Dreamcast bodies
-
-// E:\gamedcs\university_window.cpp:285
-DC_ONLY(0x18f2f8, 0x130)
-void type_university_window::updateSkillButton(type_university_skill* skill)
-{
-    // @stub
-}
-
-// E:\gamedcs\university_window.cpp:327
-DC_ONLY(0x18f428, 0xE0)
-void type_university_window::setSelectionMode()
-{
-    // @stub
-}
-
-// E:\gamedcs\university_window.cpp:354
-DC_ONLY(0x18f52c, 0x2B6)
-void type_university_window::skillClick(TSecondarySkill skill)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // DC 124/133/236 use TTextResource::operator[] for all four text lookups.
 // E:\gamedcs\university_window.cpp:102. Exact with the original helper
@@ -211,7 +190,7 @@ type_university_window::type_university_window(
         newWidget = new textWidget(
             m_skills[i].m_bottomBar->m_x, m_skills[i].m_bottomBar->m_y,
             m_skills[i].m_bottomBar->m_width, m_skills[i].m_bottomBar->m_height,
-            g_skillMasteryNames[0], "smalfont.fnt",
+            g_secondarySkillLevels[0], "smalfont.fnt",
             font::PRIMARY, -1, 1, 0, 8);
         m_widgets.push_back(newWidget);
         m_selectionWidgets.push_back(newWidget);
@@ -237,7 +216,7 @@ type_university_window::type_university_window(
 
     m_selectedSkill.m_topBar = 0;
     m_selectedSkill.m_textWidget = new textWidget(
-        179, 27, 100, 16, g_emptyRolloverText, "smalfont.fnt",
+        179, 27, 100, 16, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_selectedSkill.m_textWidget);
     m_purchaseWidgets.push_back(m_selectedSkill.m_textWidget);
@@ -249,13 +228,13 @@ type_university_window::type_university_window(
     m_selectedSkill.m_bottomBar = 0;
 
     newWidget = new textWidget(
-        179, 97, 100, 16, g_skillMasteryNames[0], "smalfont.fnt",
+        179, 97, 100, 16, g_secondarySkillLevels[0], "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(newWidget);
     m_purchaseWidgets.push_back(newWidget);
 
     m_purchaseTextWidget = new textWidget(
-        28, 133, 409, 67, g_emptyRolloverText, "smalfont.fnt",
+        28, 133, 409, 67, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_purchaseTextWidget);
     m_purchaseWidgets.push_back(m_purchaseTextWidget);
@@ -299,7 +278,7 @@ type_university_window::type_university_window(
     m_purchaseWidgets.push_back(cancelButton);
 
     m_rolloverWidget = new textWidget(
-        8, 362, 448, 18, g_emptyRolloverText, "smalfont.fnt",
+        8, 362, 448, 18, "", "smalfont.fnt",
         font::PRIMARY, widgetId, 1, 0, 8);
     m_widgets.push_back(m_rolloverWidget);
 
@@ -315,7 +294,7 @@ type_university_window::type_university_window(
 // Dreamcast preserves this helper as a separate source function. Complete
 // inlines it into DoModal and cancel_click; retaining the boundary is required
 // even though no standalone x86 body survives.
-DC_ONLY(0x18f428, 0xE0)
+
 void type_university_window::setSelectionMode()
 {
     int i;
@@ -354,7 +333,7 @@ void type_university_window::updateSkillButton(type_university_skill& skill)
         skill.m_topBar->setIconFrame(2);
         skill.m_bottomBar->setIconFrame(2);
     } else {
-        text = formatString((*g_generalText)[608], g_skillMasteryNames[0],
+        text = formatString((*g_generalText)[608], g_secondarySkillLevels[0],
                              g_sSkillTraits[skill.m_skill].m_name, TUITION);
         if (skill.m_topBar)
             skill.m_topBar->setIconFrame(1);
@@ -367,10 +346,10 @@ void type_university_window::updateSkillButton(type_university_skill& skill)
 
 VA(0x005f0a20, 0x92)  // dc 0x18f508
 
-int type_university_window::doModal(unsigned char fade)
+void type_university_window::doModal(bool fade)
 {
     setSelectionMode();
-    return heroWindow::doModal(fade);
+    heroWindow::doModal(fade);
 }
 
 VA(0x005f0ac0, 0x2F2)  // dc 0x18f52c
@@ -404,7 +383,7 @@ void type_university_window::skillClick(TSecondarySkill skill)
     std::string newText;
     const char* skillName = g_sSkillTraits[skill].m_name;
 
-    newText = formatString((*g_generalText)[609], g_skillMasteryNames[0],
+    newText = formatString((*g_generalText)[609], g_secondarySkillLevels[0],
                              skillName, TUITION);
     m_selectedSkill.m_skill = skill;
     m_selectedSkill.m_button->setSkill(skill, 1);
@@ -430,7 +409,7 @@ void type_university_window::skillClick(TSecondarySkill skill)
 // type_skeleton_window::windowHandler; inheriting CAdvPopup's 0x41b1c0
 // handler loses this derived hover step. Retain the separate source
 // override without claiming the folded retail address twice.
-DC_ONLY(0x18f7e4, 0x84)
+
 int type_university_window::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -451,7 +430,7 @@ void type_university_window::handleWidgetHover(widget* currentWidget)
     // DC 420 obtains the help pointer once before the 422..425 arms.
     const char* helpText = currentWidget->getHelpText();
     if (!helpText)
-        m_rolloverWidget->setText(g_emptyRolloverText);
+        m_rolloverWidget->setText("");
     else
         m_rolloverWidget->setText(helpText);
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -519,7 +498,7 @@ int type_university_window::purchaseClick(message& msg)
         int skill = window->m_selectedSkill.m_skill;
         const char* skillName = g_sSkillTraits[skill].m_name;
         result = formatString(
-            g_universitySkillHelpFormat, g_skillMasteryNames[0],
+            g_universitySkillHelpFormat, g_secondarySkillLevels[0],
             skillName, 2000);
         normalDialog(result.c_str(), 4, -1, -1,
                      20, skill * 3 + 3, -1, 0, -1, 0, -1, 0);
@@ -550,28 +529,3 @@ int type_university_window::exitDialog(message& msg)
     msg.m_codeX = msg.m_codeY = 10;
     return MESSAGE_DISPATCH_FORWARD;
 }
-
-#if 0  // @carcass: no distinct retail bodies promoted yet
-
-// E:\gamedcs\university_window.cpp:68
-DC_ONLY(0x18fae4, 0x34)
-void* type_university_skill_button::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\university_window.cpp:68
-DC_ONLY(0x18fb18, 0x18)
-void type_university_skill_button::~type_university_skill_button()
-{
-    // @stub
-}
-
-// E:\gamedcs\university_window.cpp:277
-DC_ONLY(0x18fb30, 0x34)
-void* type_university_window::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

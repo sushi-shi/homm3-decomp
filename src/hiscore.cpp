@@ -1,16 +1,20 @@
-#include <va.h>
-#include <windows.h>
+#include "text.h"
+#include "va.h"
+
 #include <fcntl.h>
 #include <io.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <windows.h>
+
+#include "hiscore.h"
+
 #include "bitmap816.h"
 #include "border.h"
 #include "button.h"
 #include "game.h"
-#include "hiscore.h"
 #include "iconwdgt.h"
 #include "inputmgr.h"
 #include "kb.h"
@@ -18,10 +22,132 @@
 #include "mousemgr.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
-#include "textresource.h"
 #include "textntry.h"
+#include "textresource.h"
 #include "textwdgt.h"
 #include "winmgr.h"
+
+// Initial contents recovered from the pinned Complete image.
+DATA(0x0067f1fc) short g_highScoreCreatureTable[118][2] = {
+    { 4, 42 },
+    { 8, 28 },
+    { 12, 98 },
+    { 16, 70 },
+    { 20, 43 },
+    { 24, 56 },
+    { 28, 84 },
+    { 32, 29 },
+    { 36, 85 },
+    { 40, 0 },
+    { 44, 71 },
+    { 48, 57 },
+    { 52, 99 },
+    { 56, 58 },
+    { 60, 14 },
+    { 64, 1 },
+    { 68, 2 },
+    { 72, 100 },
+    { 76, 59 },
+    { 80, 86 },
+    { 84, 15 },
+    { 88, 16 },
+    { 92, 72 },
+    { 96, 101 },
+    { 100, 44 },
+    { 104, 30 },
+    { 108, 3 },
+    { 112, 88 },
+    { 116, 31 },
+    { 120, 87 },
+    { 124, 17 },
+    { 128, 18 },
+    { 132, 73 },
+    { 136, 45 },
+    { 140, 89 },
+    { 144, 32 },
+    { 148, 60 },
+    { 152, 104 },
+    { 156, 105 },
+    { 160, 61 },
+    { 164, 115 },
+    { 168, 113 },
+    { 172, 19 },
+    { 176, 74 },
+    { 180, 114 },
+    { 184, 4 },
+    { 187, 112 },
+    { 190, 46 },
+    { 193, 75 },
+    { 196, 47 },
+    { 199, 33 },
+    { 202, 90 },
+    { 205, 6 },
+    { 208, 48 },
+    { 211, 5 },
+    { 214, 49 },
+    { 217, 8 },
+    { 220, 22 },
+    { 223, 76 },
+    { 226, 20 },
+    { 229, 21 },
+    { 232, 106 },
+    { 235, 62 },
+    { 238, 34 },
+    { 241, 77 },
+    { 244, 7 },
+    { 247, 116 },
+    { 250, 91 },
+    { 253, 35 },
+    { 256, 107 },
+    { 259, 9 },
+    { 262, 50 },
+    { 265, 117 },
+    { 268, 63 },
+    { 271, 23 },
+    { 274, 78 },
+    { 277, 64 },
+    { 280, 36 },
+    { 283, 102 },
+    { 286, 37 },
+    { 289, 92 },
+    { 292, 103 },
+    { 295, 79 },
+    { 298, 65 },
+    { 301, 93 },
+    { 304, 51 },
+    { 307, 94 },
+    { 310, 108 },
+    { 313, 95 },
+    { 316, 109 },
+    { 319, 80 },
+    { 322, 81 },
+    { 325, 52 },
+    { 328, 24 },
+    { 331, 53 },
+    { 334, 10 },
+    { 337, 38 },
+    { 340, 25 },
+    { 343, 66 },
+    { 346, 11 },
+    { 349, 67 },
+    { 352, 39 },
+    { 355, 96 },
+    { 358, 68 },
+    { 361, 40 },
+    { 364, 110 },
+    { 367, 69 },
+    { 370, 82 },
+    { 373, 26 },
+    { 376, 12 },
+    { 379, 54 },
+    { 382, 111 },
+    { 385, 97 },
+    { 388, 55 },
+    { 391, 41 },
+    { 394, 27 },
+    { 397, 83 },
+    { 32767, 13 }
+};
 
 // The file-name pointer and the threshold/creature pairs are both
 // hiscore.obj-owned retail data.  The latter is deliberately only declared:
@@ -31,9 +157,7 @@ DATA(0x0067f1f0)
 static const char* g_highScoreFileName =
     DATA_COMPGEN(0x0067f4d0, highScoreFileName, "HiScore.dat");
 DATA(0x0067f1f4) static int g_highScoreRanks[2];
-DATA(0x0067f1fc) extern short g_highScoreCreatureTable[][2];
-DATA(0x006a5ecc) extern char* g_highScoreDefaults0[11][4];
-DATA(0x006a7f08) extern char* g_highScoreDefaults1[11][4];
+
 DATA(0x006991c0) THighScoreWindow* g_highScoreWindow;
 DATA(0x006993cc) highScoreManager* g_highScoreManager;
 DATA(0x0069955c) int g_showHighScore;
@@ -42,11 +166,34 @@ int highScoreWindowHandler(message& msg);
 // The dialog methods originate in hiscore.cpp; their declarations retain
 // the default branch's hiscore.h location.
 
+// Original: CHighScoreEdit::OnNextEdit; hiscore.cpp:225, dc 0xd8e08.
+// Retail CHighScoreEdit vtable 0x63ebf4 shares slots 19/20 with CMPEdit
+// (0x510850/0x510870), whose two edit links have the same offsets.
+void CHighScoreEdit::onNextEdit()
+{
+    if (m_nextEdit && (m_nextEdit->m_status & widget::WIDGET_ACTIVE))
+        m_parentWindow->setFocus(m_nextEdit->m_id);
+}
+
+// Original: CHighScoreEdit::OnPrevEdit; hiscore.cpp:239, dc 0xd8e30.
+void CHighScoreEdit::onPrevEdit()
+{
+    if (m_prevEdit && (m_prevEdit->m_status & widget::WIDGET_ACTIVE))
+        m_parentWindow->setFocus(m_prevEdit->m_id);
+}
+
+// Original: CHighScoreEdit::SetFocus; hiscore.cpp:252, dc 0xd8e58.
+// Slot 14 shares CMPEdit's forwarding body at 0x510890.
+void CHighScoreEdit::setFocus(bool state)
+{
+    textEntryWidget::setFocus(state);
+}
+
 // DC names the three CHeroWindowEx-tail pointers at +0x4c/+0x50/+0x54.
 // Retail's proven CHeroWindowEx is four bytes wider, putting them at
 // +0x50/+0x54/+0x58; GetRolloverWidget 0x4e97f0 directly confirms the
 // last shifted offset.
-DC_ONLY(0xd8ebc, 0x290)
+
 inline CHSInputDlg::CHSInputDlg(int maxChars)
     : CHeroWindowEx(284, 194, 232, 212, 0x12)
 {
@@ -89,7 +236,7 @@ inline CHSInputDlg::CHSInputDlg(int maxChars)
 // OnWidgetDeselect names this ordinary helper at DC338; retail expands it.
 // Its retained DC public is QAA_NXZ (bool); SH4 debug types expose the
 // underlying byte as unsigned char. Preserve the public return type.
-DC_ONLY(0xd91cc, 0x38)
+
 bool CHSInputDlg::onOK()
 {
     if (m_field1->m_status & widget::WIDGET_ACTIVE) {
@@ -99,7 +246,6 @@ bool CHSInputDlg::onOK()
     return 1;
 }
 
-void unnamed4f3a60(char* filename);
 void memError();
 
 VA(0x004e8fb0, 0xBD)  // dc 0xd7a08
@@ -107,15 +253,15 @@ void highScoreManager::resetHighScores()
 {
     memset(m_highScores, 0, sizeof(m_highScores));
     for (int i = 0; i < 11; ++i) {
-        strncpy(m_highScores[1][i].m_playerName, g_highScoreDefaults1[i][0], 41);
-        strncpy(m_highScores[1][i].m_land, g_highScoreDefaults1[i][1], 41);
-        m_highScores[1][i].m_days = atoi(g_highScoreDefaults1[i][2]);
-        m_highScores[1][i].m_score = atoi(g_highScoreDefaults1[i][3]);
+        strncpy(m_highScores[1][i].m_playerName, g_highScoreStandardDefault[i][0], 41);
+        strncpy(m_highScores[1][i].m_land, g_highScoreStandardDefault[i][1], 41);
+        m_highScores[1][i].m_days = atoi(g_highScoreStandardDefault[i][2]);
+        m_highScores[1][i].m_score = atoi(g_highScoreStandardDefault[i][3]);
 
-        strncpy(m_highScores[0][i].m_playerName, g_highScoreDefaults0[i][0], 41);
-        strncpy(m_highScores[0][i].m_land, g_highScoreDefaults0[i][1], 41);
-        m_highScores[0][i].m_days = atoi(g_highScoreDefaults0[i][2]);
-        m_highScores[0][i].m_score = atoi(g_highScoreDefaults0[i][3]);
+        strncpy(m_highScores[0][i].m_playerName, g_highScoreCampaignDefault[i][0], 41);
+        strncpy(m_highScores[0][i].m_land, g_highScoreCampaignDefault[i][1], 41);
+        m_highScores[0][i].m_days = atoi(g_highScoreCampaignDefault[i][2]);
+        m_highScores[0][i].m_score = atoi(g_highScoreCampaignDefault[i][3]);
     }
 }
 
@@ -143,6 +289,19 @@ int highScoreManager::open(int newPriority)
         _read(file, m_highScores, sizeof(m_highScores));
         _close(file);
     }
+    return 0;
+}
+
+// Original: highScoreManager::Close; hiscore.cpp:711, dc 0xd7b88.
+// Retail manager vtable 0x63eb8c shares the empty close at 0x5bc690.
+void highScoreManager::close()
+{
+}
+
+// Original: highScoreManager::Main; hiscore.cpp:721, dc 0xd7bcc.
+// Its next vtable slot shares the zero-return body at 0x4ec560.
+int highScoreManager::main(message& msg)
+{
     return 0;
 }
 
@@ -255,6 +414,11 @@ int CHighScoreEdit::onKeyPress(message* msg)
     int shift = GetKeyState(VK_SHIFT);
     return textEntryWidget::onKeyPress(msg);
 }
+
+// DC CHSInputDlg::WindowHandler (hiscore.cpp:371, dc 0xd920c) creates
+// VRKeyboard, copies its result to the edit, then synthesizes dialog close.
+// Complete uses native text entry: vtable 0x63ebbc slot 9 is the inherited
+// CHeroWindowEx::windowHandler (0x5ff820). There is no console override.
 
 VA(0x004e9740, 0x4E)  // dc 0xd914c
 CHSInputDlg::~CHSInputDlg()
@@ -402,7 +566,7 @@ THighScoreWindow::THighScoreWindow()
 
 // DC941/943 owns this update/dialog pair. ViewHiScore calls the ordinary
 // helper at DC734; its retail body contains the corresponding expansion.
-DC_ONLY(0xd8400, 0x22)
+
 void THighScoreWindow::doModal()
 {
     update();
@@ -651,206 +815,6 @@ int highScoreWindowHandler(message& msg)
     }
     return MESSAGE_DISPATCH_CONSUME;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\hiscore.cpp:615
-DC_ONLY(0xd7a08, 0xC4)
-void highScoreManager::resetHighScores()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:637
-DC_ONLY(0xd7acc, 0x3A)
-void highScoreManager::highScoreManager()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:648
-DC_ONLY(0xd7b08, 0x20)
-void highScoreManager::~highScoreManager()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:658
-DC_ONLY(0xd7b28, 0x5E)
-int highScoreManager::Open(int newPriority)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:711
-DC_ONLY(0xd7b88, 0x44)
-void highScoreManager::Close()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:721
-DC_ONLY(0xd7bcc, 0x4)
-int highScoreManager::main(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:732
-DC_ONLY(0xd7bd0, 0x22)
-void highScoreManager::viewHiScore()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:738
-DC_ONLY(0xd7bf4, 0x46)
-void WriteHighScores()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:772
-DC_ONLY(0xd7c3c, 0x1D0)
-int highScoreManager::addScoreToHighScore(int iScore, int iDays, int iDiffRating, int iHighScoreType, const char* cLand)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:837
-DC_ONLY(0xd7e0c, 0x2E)
-int highScoreManager::getMonType(int iScore, int iScoreType)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:858
-DC_ONLY(0xd7e3c, 0x5C4)
-void THighScoreWindow::THighScoreWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:953
-DC_ONLY(0xd8424, 0x76)
-void THighScoreWindow::~THighScoreWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:969
-DC_ONLY(0xd849c, 0x3AC)
-void THighScoreWindow::update()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:1014
-DC_ONLY(0xd8848, 0x126)
-void UpdateCreatures()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:1034
-DC_ONLY(0xd8970, 0x3A4)
-int highScoreWindowHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:179
-DC_ONLY(0xd8d2c, 0xA0)
-void CHighScoreEdit::CHighScoreEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:195
-DC_ONLY(0xd8dcc, 0x3C)
-int CHighScoreEdit::onKeyPress(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:225
-DC_ONLY(0xd8e08, 0x28)
-void CHighScoreEdit::onNextEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:239
-DC_ONLY(0xd8e30, 0x28)
-void CHighScoreEdit::onPrevEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:252
-DC_ONLY(0xd8e58, 0x18)
-void CHighScoreEdit::setFocus(unsigned char state)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:256
-DC_ONLY(0xd8e70, 0x34)
-void* CHighScoreEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:256
-DC_ONLY(0xd8ea4, 0x18)
-void CHighScoreEdit::~CHighScoreEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:329
-DC_ONLY(0xd914c, 0x44)
-void CHSInputDlg::~CHSInputDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:334
-DC_ONLY(0xd9190, 0x3C)
-int CHSInputDlg::onWidgetDeselect(int id, bool& bExitFlag)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:369
-DC_ONLY(0xd9204, 0x6)
-textWidget* CHSInputDlg::getRolloverWidget()
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:371
-DC_ONLY(0xd920c, 0x88)
-int CHSInputDlg::windowHandler(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:382
-DC_ONLY(0xd9294, 0x34)
-void* CHSInputDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\hiscore.cpp:929
-DC_ONLY(0xd92c8, 0x34)
-void* THighScoreWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // COMDAT pairing: vector<widget*>::reserve, agreement 0.993.
 VA_COMPGEN(0x004ea630, 0x9F, VECTOR_RESERVE, widget)

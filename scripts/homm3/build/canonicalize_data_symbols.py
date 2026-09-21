@@ -56,7 +56,7 @@ ANON_NS_SCOPE_RE = re.compile(r"\?%([^@]+)@")
 
 def anon_ns_stamp_inputs() -> dict[str, Path]:
     from homm3.core import common
-    path = common.HOMM3_DIR / "config/retail-anon-ns-paths.tsv"
+    path = common.HOMM3_DIR / "config/retail/anon-ns-paths.tsv"
     return {"anon_ns_paths": path} if path.is_file() else {}
 
 
@@ -76,20 +76,20 @@ def _read_anon_ns_canonical(contents: str) -> dict[tuple[str, str], str]:
     rows = list(csv.reader(lines, delimiter="\t"))
     header = ["unit", "source_basename", "canonical_scope"]
     if not rows or rows[0] != header:
-        raise ValueError("retail-anon-ns-paths.tsv: invalid header")
+        raise ValueError("anon-ns-paths.tsv: invalid header")
     result = {}
     for row in rows[1:]:
         if len(row) != len(header) or any(not value or value != value.strip()
                                           for value in row):
-            raise ValueError("retail-anon-ns-paths.tsv: malformed row")
+            raise ValueError("anon-ns-paths.tsv: malformed row")
         unit, basename, scope = row
         if (re.fullmatch(r"[A-Za-z0-9_.-]+", unit) is None
                 or re.fullmatch(r"[A-Za-z0-9_.-]+", basename) is None
                 or re.fullmatch(r"[^@?\r\n]+\.[A-Za-z]+[0-9]+", scope) is None):
-            raise ValueError("retail-anon-ns-paths.tsv: invalid unit or scope")
+            raise ValueError("anon-ns-paths.tsv: invalid unit or scope")
         key = (unit.lower(), basename.lower())
         if key in result:
-            raise ValueError("retail-anon-ns-paths.tsv: duplicate unit/basename")
+            raise ValueError("anon-ns-paths.tsv: duplicate unit/basename")
         result[key] = scope
     return result
 
@@ -137,7 +137,7 @@ def _anon_ns_renames(
                     symbol.section, symbol.value, size, size, 0,
                     hashlib.sha256(new_name.encode("latin-1")).hexdigest(),
                     "retail-rtti-path; unit=" + str(unit),
-                    "config/retail-anon-ns-paths.tsv",
+                    "config/retail/anon-ns-paths.tsv",
                 ))
         previous = owners.get(new_name)
         if previous is not None and previous != symbol.name:

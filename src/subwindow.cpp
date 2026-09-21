@@ -1,6 +1,8 @@
 // 10 functions in link order.
-#include <va.h>
+#include "va.h"
+
 #include "subwindow.h"
+
 #include "bitmap16.h"
 #include "soundmgr.h"
 #include "widget.h"
@@ -52,14 +54,11 @@ void TSubWindow::addWidget(widget* newWidget, int newPriority)
     m_parentWindow->addWidget(newWidget, newPriority);
 }
 
-// E:\gamedcs\subwindow.cpp:111
-#if 0  // @carcass: no retail row in the AddWidget..Draw bracket
-DC_ONLY(0x158ebc, 0x12)
+// Original: TSubWindow::RemoveWidget; subwindow.cpp:111, dc 0x158ebc.
 void TSubWindow::removeWidget(widget* killWidget)
 {
-    // @stub
+    m_parentWindow->removeWidget(killWidget);
 }
-#endif
 
 VA(0x005aa4f0, 0x63)  // dc 0x158ed0
 void TSubWindow::draw(unsigned char update, int lowID, int highID)

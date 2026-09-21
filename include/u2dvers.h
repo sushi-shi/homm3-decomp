@@ -1,9 +1,10 @@
 #ifndef HOMM3_U2DVERS_H
 #define HOMM3_U2DVERS_H
 
-#include <windows.h>
-#include <string>
 #include "va.h"
+
+#include <string>
+#include <windows.h>
 
 // PROVEN retail layout: both ctor and dtor access only the allocation
 // pointer at +0; callers allocate four bytes for the object.
@@ -14,13 +15,15 @@ public:
     ~TFileVersionInfo();
     // DC's source-visible wrapper. Complete expands it at the selection
     // window call site into the ProductVersion GetVersionInfo call.
-    unsigned char getProductVersion(std::string* productVersion) const
+    // Both DC publics return native bool (QBA_N / ABA_N), despite their
+    // lowered unsigned-char debug records.
+    bool getProductVersion(std::string* productVersion) const
     {
         return getVersionInfo("ProductVersion", productVersion);
     }
 
 private:
-    unsigned char getVersionInfo(const char* name, std::string* buffer) const;
+    bool getVersionInfo(const char* name, std::string* buffer) const;
 };
 SIZE(TFileVersionInfo, 4);
 

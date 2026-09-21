@@ -1,18 +1,21 @@
-#include <va.h>
+#include "va.h"
+
 #include <stdlib.h>
 #include <string.h>
+
 #include "window.h"
-#include "kb.h"
-#include "widget.h"
-#include "message.h"
+
 #include "bitmap16.h"
-#include "winmgr.h"
+#include "kb.h"
+#include "message.h"
 #include "mousemgr.h"
-#include "textwdgt.h"
+#include "resourcemanager.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
-#include "resourcemanager.h"
 #include "textresource.h"
+#include "textwdgt.h"
+#include "widget.h"
+#include "winmgr.h"
 
 // Complete's 37-row window-text routing table.  Its initialized bytes occupy
 // 0x68c710..0x68c837; the immediately following jktext.txt literal at
@@ -114,23 +117,18 @@ void heroWindow::close(unsigned char update)
     m_status = 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:194
-DC_ONLY(0x19731c, 0x4)
-int heroWindow::handleMessage(message* msg)
+// Original: heroWindow::handle_message; window.cpp:194, dc 0x19731c.
+// Retail base vtable0x643cc4 slot3 shares the return-zero body0x4ec560.
+int heroWindow::handleMessage(message& msg)
 {
-    // @stub
+    return 0;
 }
 
-// E:\gamedcs\window.cpp:202
-DC_ONLY(0x197320, 0x4)
-void heroWindow::handleWidgetHover()
+// Original: heroWindow::handle_widget_hover; window.cpp:202, dc 0x197320.
+// Base vtable slot4 shares the empty ret4 body0x485d80.
+void heroWindow::handleWidgetHover(widget* current)
 {
-    // @stub
 }
-
-#endif  // @carcass
 
 VA(0x005fecb0, 0xA5)  // dc 0x197324
 void heroWindow::addWidget(widget* newWidget, int newPriority)
@@ -197,16 +195,19 @@ void heroWindow::removeWidget(widget* killWidget)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:346
-DC_ONLY(0x19742c, 0x54)
-void heroWindow::RemoveAndDeleteWidget(int inID)
+// Original: heroWindow::RemoveAndDeleteWidget; window.cpp:346, dc 0x19742c.
+// The recorded release body only unlinks matching widgets; the source-line
+// gap after RemoveWidget does not establish a missing delete statement.
+void heroWindow::removeAndDeleteWidget(int id)
 {
-    // @stub
+    widget* current = m_headWidget;
+    while (current) {
+        widget* next = current->m_nextWidget;
+        if (current->m_id == id)
+            removeWidget(current);
+        current = next;
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\window.cpp:381
 // DC's message& parameter and GetWidget(m_focusId) call at 391 are canonical.
@@ -327,17 +328,6 @@ void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:571
-DC_ONLY(0x197690, 0xDC)
-void heroWindow::DrawWindowX(unsigned char update, int iLowID, int iHighID)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x005ff100, 0xBD)  // dc 0x19776c
 int heroWindow::saveBackground()
 {
@@ -368,16 +358,40 @@ void heroWindow::restoreBackground(unsigned char update)
     m_background = 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:707
-DC_ONLY(0x197874, 0x106)
-void heroWindow::MoveWindow(int deltaX, int deltaY)
+// Original: heroWindow::MoveWindow; window.cpp:707, dc 0x197874.
+// This relative-motion API uses the same saved-background operations as
+// Complete's retained CenterWindow0x5ff240, with desktop800x600 clipping.
+// No retained standalone MoveWindow address is claimed.
+void heroWindow::moveWindow(int deltaX, int deltaY)
 {
-    // @stub
+    int startX = m_x;
+    int startY = m_y;
+    int newX = m_x + deltaX;
+    int newY = m_y + deltaY;
+    int startW = m_width;
+    int startH = m_height;
+    if (newX < 0)
+        newX = 0;
+    if (newY < 0)
+        newY = 0;
+    if (m_width + newX > WINDOW_SCREEN_WIDTH)
+        newX = WINDOW_SCREEN_WIDTH - m_width;
+    if (m_height + newY > WINDOW_SCREEN_HEIGHT)
+        newY = WINDOW_SCREEN_HEIGHT - m_height;
+    m_background->draw(0, 0, m_background->getWidth(), m_background->getHeight(),
+                       g_windowManager->m_screenBitmap, m_x, m_y, false);
+    m_x = newX;
+    m_y = newY;
+    m_background->grab(g_windowManager->m_screenBitmap, m_x, m_y);
+    drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    startW += abs(m_x - startX);
+    startH += abs(m_y - startY);
+    if (m_x < startX)
+        startX = m_x;
+    if (m_y < startY)
+        startY = m_y;
+    g_windowManager->updateScreen(startX, startY, startW, startH);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\window.cpp:778
 // DC 825 calls GetWidth/GetHeight and the bitmap-pointer Draw overload;
@@ -461,21 +475,20 @@ widget* heroWindow::findWidgetPtr(int mx, int my) const
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:893
-DC_ONLY(0x197bdc, 0x2A)
-void heroWindow::EnableAllWidgets(unsigned char enable)
+// Original: heroWindow::EnableAllWidgets; window.cpp:893, dc 0x197bdc.
+void heroWindow::enableAllWidgets(unsigned char enable)
 {
-    // @stub
+    widget* current = m_headWidget;
+    while (current) {
+        current->enable(enable);
+        current = current->m_nextWidget;
+    }
 }
 
-#endif  // @carcass
-
 VA(0x005ff460, 0x21)  // dc 0x197c08
-int heroWindow::doModal(unsigned char fadeIn)
+void heroWindow::doModal(bool fadeIn)
 {
-    return g_windowManager->doDialog(this, heroWindowHandler, fadeIn);
+    g_windowManager->doDialog(this, heroWindowHandler, fadeIn);
 }
 
 VA(0x005ff490, 0x6C)  // dc 0x197c24
@@ -498,7 +511,7 @@ void heroWindow::setFocus(int id)
 // E:\gamedcs\window.cpp:934
 // NO VA CLAIM - a CARVE GAP, not a missing body. Retail's handler sits
 // at 0x5ff500, inside the unowned 0x5ff4fc..0x5ff510 run between
-// SetFocus and delete_widgets, and config/retail-functions.tsv has no
+// SetFocus and delete_widgets, and config/retail/functions.tsv has no
 // row there (it is MANUALLY MANAGED; correcting a boundary is not a
 // matcher's call). The twelve bytes are decoded by hand:
 //   mov eax,ecx / push eax / mov ecx,[eax+0x1c] / mov edx,[ecx] /
@@ -576,12 +589,11 @@ unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
         id = hit->m_id;
     if (id != m_rolloverId) {
         m_rolloverId = id;
-        const char* emptyText = g_emptyRolloverText;
-        const char* text = emptyText;
+        const char* text = "";
         if (hit) {
             text = hit->getHelpText();
             if (!text)
-                text = emptyText;
+                text = "";
             g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
         } else {
             g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
@@ -646,7 +658,7 @@ int CHeroWindowEx::windowHandler(message& msg)
 // body, not a header inline. Retail vtable slot 12 and CScenarioInfoDlg's
 // qualified call resolve to 0x559140 (xor eax,eax; ret 8), ICF-folded with
 // t_stdio_file_adapter::write; that existing claim remains the sole owner.
-DC_ONLY(0x197f48, 0x4)
+
 int CHeroWindowEx::onWidgetDeselect(int id, bool& exitFlag)
 {
     return 0;
@@ -742,21 +754,3 @@ void setWinText(heroWindow* win, int winId)
         }
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\window.cpp:68
-DC_ONLY(0x1981ac, 0x34)
-void* heroWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\window.cpp:969
-DC_ONLY(0x1981e0, 0x34)
-void* CHeroWindowEx::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

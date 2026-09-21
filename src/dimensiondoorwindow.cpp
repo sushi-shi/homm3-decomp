@@ -1,5 +1,7 @@
-#include <va.h>
+#include "va.h"
+
 #include "dimensiondoorwindow.h"
+
 #include "advmgr.h"
 #include "border.h"
 #include "kb.h"
@@ -9,59 +11,6 @@
 #include "mousemgr.h"
 #include "widget.h"
 #include "winmgr.h"
-
-#if 0  // @carcass
-
-// E:\gamedcs\dimensiondoorwindow.cpp:53
-DC_ONLY(0x827f8, 0x140)
-void TDimensionDoorWindow::TDimensionDoorWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\dimensiondoorwindow.cpp:74
-DC_ONLY(0x82938, 0x68)
-void TDimensionDoorWindow::~TDimensionDoorWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\dimensiondoorwindow.cpp:100
-DC_ONLY(0x829a0, 0x1E2)
-int TDimensionDoorWindow::windowHandler(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\dimensiondoorwindow.cpp:208
-DC_ONLY(0x82b84, 0x16)
-int TDimensionDoorWindow::exitDialog(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\dimensiondoorwindow.cpp:235
-DC_ONLY(0x82b9c, 0x114)
-void TSkuttleBoatWindow::TSkuttleBoatWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\dimensiondoorwindow.cpp:254
-DC_ONLY(0x82cb0, 0x62)
-void TSkuttleBoatWindow::~TSkuttleBoatWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\dimensiondoorwindow.cpp:280
-DC_ONLY(0x82d14, 0x1BC)
-int TSkuttleBoatWindow::windowHandler(message& msg)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x004916f0, 0x164)  // dc 0x827f8
 TDimensionDoorWindow::TDimensionDoorWindow()
@@ -321,21 +270,3 @@ int TSkuttleBoatWindow::exitDialog(message& msg)
     g_windowManager->m_dialogReturn = 0;
     return MESSAGE_DISPATCH_FORWARD;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\dimensiondoorwindow.cpp:71
-DC_ONLY(0x82eec, 0x34)
-void* TDimensionDoorWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\dimensiondoorwindow.cpp:250
-DC_ONLY(0x82f20, 0x34)
-void* TSkuttleBoatWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

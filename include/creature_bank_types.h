@@ -2,10 +2,12 @@
 #ifndef HOMM3_CREATURE_BANK_TYPES_H
 #define HOMM3_CREATURE_BANK_TYPES_H
 
-#include <va.h>
+#include "va.h"
+
 #include <vector>
-#include "artifact.h"
+
 #include "armygrp.h"
+#include "artifact.h"
 
 // Dreamcast CodeView names the reward tail and retail independently fixes all
 // of its boundaries.  The army is 56 bytes; the seven-resource row occupies
@@ -23,8 +25,12 @@ public:
     TCreatureType m_rewardCreature;
     signed char m_rewardCreatures;
     std::vector<TArtifact> m_artifacts;
-    unsigned char load(void* infile);
-    ~type_creature_bank();
+    // Raw DC publics encode bool (QAA_N) for both record operations.
+    bool load(void* infile);
+    bool save(void* outfile);
+    // Implicit vector cleanup: DC0xbd58c has only the borrowed game.cpp5595
+    // line and vector<TArtifact> destruction. Retail0x4c2420 owns the emitted
+    // destructor; loadObjectVector expands the temporary cleanup.
 };
 SIZE(type_creature_bank, 0x6c);
 

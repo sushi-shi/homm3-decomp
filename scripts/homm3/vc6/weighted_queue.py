@@ -64,7 +64,7 @@ def main():
     categories, sizes = universe.classify()
     rows = ranked_rows(report, baseline, categories, sizes,
                        _compiled_functions(report))
-    output = root / "evidence/weighted-queue.tsv"
+    output = root / "build/reports/weighted-queue.tsv"
     with output.open("w") as stream:
         stream.write("# GENERATED: python -m homm3.vc6.weighted_queue\n")
         stream.write("# Admitted compiled bodies, sorted by increasing current-implementation MAX, then decreasing retail size.\n")

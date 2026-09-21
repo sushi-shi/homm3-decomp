@@ -21,8 +21,10 @@
 // FindFirstFileA/FindNextFileA/FindClose callers in the image are the
 // CRT _find* trio at 0x618113/0x6181df/0x618297.
 
-#include <va.h>
+#include "va.h"
+
 #include <io.h>
+
 #include "winfile.h"
 
 VA(0x005ffb20, 0x14)  // dc 0x198434
@@ -63,6 +65,8 @@ inline unsigned char File::exists(const char* filename)
     return _access(filename, 0) == 0;
 }
 
+// Original: File::Delete; winfile.cpp:77, dc 0x1984f0.
+// The semantic suffix avoids the C++ keyword delete after case normalization.
 VA(0x005ffb90, 0x24)  // dc 0x1984f0
 unsigned char File::deleteFile(const char* filename)
 {

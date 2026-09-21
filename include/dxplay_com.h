@@ -1,9 +1,8 @@
 #ifndef HOMM3_DXPLAY_COM_H
 #define HOMM3_DXPLAY_COM_H
-// Private to dxplay.cpp - NOT included by any other TU. Models the DirectPlay
-// COM interface so retail's __stdcall virtual dispatch reproduces byte-for-byte.
-#include "dxplay.h"
+
 #include "dplaycaps.h"
+#include "dxplay.h"
 
 // DirectPlay HRESULT macros used by the wrappers and CDPlay::GetErrorDesc.
 // Keep these as preprocessor constants, as they are in the VC6 DPLAY.H:
@@ -67,6 +66,11 @@
 #define DPERR_CANTLOADCAPI HOMM3_MAKE_DPLAY_ERROR(2060)
 #define DPERR_NOTLOGGEDIN HOMM3_MAKE_DPLAY_ERROR(2070)
 #define DPERR_LOGONDENIED HOMM3_MAKE_DPLAY_ERROR(2080)
+
+// DPLobby message flags, preserved at the SDK boundary. DC Send/Receive
+// lobby-message bodies independently fix STANDARD=2 and SYSTEM=1.
+#define DPLMSG_SYSTEM 1
+#define DPLMSG_STANDARD 2
 
 // DirectPlay system-message discriminants. ReceiveSystemMsg reads dwType off the
 // leading DPMSG_GENERIC and dispatches to the matching SysMsg* handler.

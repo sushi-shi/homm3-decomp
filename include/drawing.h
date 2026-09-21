@@ -39,11 +39,11 @@ extern TDrawbridgeBounds g_combatAreaLimits;
 // DC names the 58,86..740,557 clip rectangle GridAreaLimits. Retail's
 // initializer at 0x462640 and UpdateGrid's four clamps prove the aggregate;
 // its storage belongs to cmbtmgr.obj and this TU only references it.
-DATA(0x00694ec8) extern SLimitData g_combatGridAreaLimits;
+extern SLimitData g_combatGridAreaLimits;
 
 // The three combat animation speed multipliers at .rdata 0x63cf7c -
 // 1.0f, 0.63f and 0.4f exactly - indexed by gUnnamed698758.combatSpeed.
-// Read at eighteen sites image-wide (config/retail-reloc-evidence.tsv)
+// Read at eighteen sites image-wide (config/retail/reloc-evidence.tsv)
 // and NOT owned by drawing.obj: no admitted TU defines it yet, so this
 // is a reader-side declaration parked in the nearest combat-drawing
 // header, the way winmgr.h carries DoDialog's three unowned dialog

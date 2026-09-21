@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+
 #include "creature_bank_types.h"
 
 // Dreamcast CodeView supplies the names/order; retail's help-text selector

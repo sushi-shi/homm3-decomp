@@ -2,6 +2,7 @@
 #define HOMM3_TOWNGATEWINDOW_H
 
 #include <vector>
+
 #include "advmgr_popup.h"
 
 static void townGateSliderCallback(int state, heroWindow* parentWindow);

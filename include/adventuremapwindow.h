@@ -14,6 +14,6 @@ class message;
 void sendChat(const char* chat, int toWho);
 // Retail .bss 0x69954c, the network-session latch (remote.h owns the
 // canonical declaration; same reason as above).
-extern int g_networkActive69954c;
+extern int g_remoteOn;
 
 #endif  /* HOMM3_ADVENTUREMAPWINDOW_H */

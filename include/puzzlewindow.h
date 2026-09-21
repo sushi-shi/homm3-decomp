@@ -2,6 +2,7 @@
 #define HOMM3_PUZZLEWINDOW_H
 
 #include <bitset>
+
 #include "advmgr_popup.h"
 #include "struct.h"
 
@@ -18,6 +19,7 @@ class TPuzzleWindow : public CAdvPopup {
 public:
     enum {
         ACCEPT_ID = 0x7802,
+        ACCEPT_HELP_ID = 5,
         DIALOG_CLOSE_KEY = 1,
         DIALOG_ACCEPT_KEY = 28,
         BACKGROUND_ID = 200,
@@ -54,8 +56,11 @@ extern short g_puzzlePieceOrder[];
 // read signed words at 2 * (puzzle * 96 + piece). DC UpdatePuzzle also
 // reads word coordinates (its scaling differs); these are short tables,
 // not byte buffers requiring pointer reinterpretation.
-extern short g_puzzlePieceX[];
-extern short g_puzzlePieceY[];
+struct TPuzzleCoordinates {
+    short m_x[48];
+    short m_y[48];
+};
+extern TPuzzleCoordinates g_puzzleCoordinates[9];
 extern const char* g_puzzleFilePrefixes[];
 // 0x6822c8: five doubles - 1.1, 0.5, 0.25, 0.0, 0.0 - read from the
 // image, indexed by SGameSetupOptions::difficulty and compared against

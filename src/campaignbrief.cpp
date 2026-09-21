@@ -1,9 +1,13 @@
-#include <va.h>
+#include "prefs.h"
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
 class message;
 static int campaignBriefHandler(message& msg);
 #include "campaignbrief.h"
+#include "game.h"
+
 #include "advmgr.h"
 #include "border.h"
 #include "button.h"
@@ -17,8 +21,8 @@ static int campaignBriefHandler(message& msg);
 #include "palette.h"
 #include "soundmgr.h"
 #include "textresource.h"
-#include "textwdgt.h"
 #include "textscroller.h"
+#include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
 
@@ -52,33 +56,16 @@ void backupGameHeaders(game* dest, game* src);
 // by advancing from 0x006a6cb8 to 0x006a6ce0 in AddBonusIcons.
 DATA(0x006a6cb8) static THelpText g_campaignDifficultyHelp[5];
 
-// Both difficulty arrow buttons retain this shared message callback at
-// retail 0x00457cb0. Its source name is not yet independently recovered;
-// keep the role name provisional until that function is admitted.
-int campaignDifficultyHandler(message& msg);
-
-#if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
-// E:\gamedcs\campaignbrief.cpp:202
-DC_ONLY(0x58244, 0x530)
-void CampaignWait(int which)
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:365
-DC_ONLY(0x58774, 0x50)
-void showTerritorySmacker(unsigned char bEvil2Post)
-{
-    // @stub
-}
-
-#endif
+// Complete-only arrow callbacks. AddBonusIcons takes 0x457f70 for the
+// left arrow and 0x457fc0 for the right; each responds to left release.
+static int decreaseCampaignDifficulty(message& msg);
+static int increaseCampaignDifficulty(message& msg);
 
 // E:\gamedcs\campaignbrief.cpp:437. The Dreamcast broadcasts the map
 // description as a second widget message; Complete hands it to the
 // scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
-DC_ONLY(0x58938, 0x6A)
-inline void TCampaignBrief::resetMapAndDescription(int which)
+
+void TCampaignBrief::resetMapAndDescription(int which)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -89,13 +76,11 @@ inline void TCampaignBrief::resetMapAndDescription(int which)
     m_scroller->setText(m_scenarios[which].m_mapDescription.c_str());
 }
 
-// E:\gamedcs\campaignbrief.cpp:452. Complete keeps this and
-// ResetMapAndDescription as header-style inlines: neither has a retail
-// body, and Select carries both expanded - which is what makes
-// vector::size a NESTED candidate there, called out of line at both
-// loop tests (0x423110, the pointer-vector size COMDAT).
-DC_ONLY(0x589a4, 0x84)
-inline void TCampaignBrief::clearSelected()
+// E:\gamedcs\campaignbrief.cpp:452. Select expands this ordinary TU
+// helper and ResetMapAndDescription. Retail retains vector::size at the loop
+// tests (0x423110); expansion does not establish an inline source specifier.
+
+void TCampaignBrief::clearSelected()
 {
     for (int i = 0; i < static_cast<int>(m_campaign->m_scenarios.size()); i++) {
         if (m_scenarios[i].m_available)
@@ -158,18 +143,59 @@ void TCampaignBrief::select(int which)
     drawWindow(1, 0xffff0001, 0xffff);
 }
 
+// Retail-only: codeX at +4, qualifier at +0xc, owning window at +0x1c.
+VA(0x00457f70, 0x49)
+static int decreaseCampaignDifficulty(message& msg)
+{
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+            && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        TCampaignBrief* window = static_cast<TCampaignBrief*>(msg.m_window);
+        --g_game->m_setup.m_difficulty;
+        window->updateDifficultyButtons();
+        window->drawWindow(1, 0xffff0001, 0xffff);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
+}
+
+// Retail-only: codeX at +4, qualifier at +0xc, owning window at +0x1c.
+VA(0x00457fc0, 0x49)
+static int increaseCampaignDifficulty(message& msg)
+{
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+            && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        TCampaignBrief* window = static_cast<TCampaignBrief*>(msg.m_window);
+        ++g_game->m_setup.m_difficulty;
+        window->updateDifficultyButtons();
+        window->drawWindow(1, 0xffff0001, 0xffff);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
+}
+
 VA_COMPGEN(0x00457cb0, 0x2B8, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
 VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, Int)
 
-#if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
-// E:\gamedcs\campaignbrief.cpp:462
-DC_ONLY(0x58a28, 0x74)
+// Original: TCampaignBrief::SetupCurrentTerritory; campaignbrief.cpp:462, dc 0x58a28.
+// Complete moves currentTerritory into the window and availability/setup into
+// CampaignScenarioPreview. The constructor still expands this ordinary helper
+// between the campaign description and selected-map controls (DC line 913).
 void TCampaignBrief::setupCurrentTerritory()
 {
-    // @stub
+    if (g_campaignBriefViewFromGame) {
+        m_selectedScenario = g_game->m_campaign.m_currentMap;
+    } else {
+        for (unsigned int selectedIndex = 0;
+             selectedIndex < static_cast<int>(m_scenarios.size());
+             ++selectedIndex) {
+            if (m_scenarios[selectedIndex].m_available) {
+                m_selectedScenario = selectedIndex;
+                g_game->m_setup = m_scenarios[selectedIndex].m_gameSetup;
+                break;
+            }
+        }
+    }
 }
-
-#endif
 
 // The local player's slot in the selected scenario, DC ?playerSlot@@3HA;
 // retail .bss 0x694dcc, written by UpdateAllyEnemyFlags below.
@@ -220,17 +246,6 @@ void TCampaignBrief::updateAllyEnemyFlags()
         }
     }
 }
-
-#if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
-
-// E:\gamedcs\campaignbrief.cpp:649
-DC_ONLY(0x59300, 0x1B8)
-void ExtractCampaignMap(int* numPreReqs, unsigned char single_map_only, unsigned char write_file)
-{
-    // @stub
-}
-
-#endif
 
 // E:\gamedcs\campaignbrief.cpp:584. Dreamcast proves the initial label,
 // three-choice widget groups, visibility changes, help-text calls and the
@@ -340,12 +355,12 @@ void TCampaignBrief::addBonusIcons()
         704, 506, 16, 16, 240,
         DATA_COMPGEN(0x00660e1c, campaignDifficultyArrowSprite,
                      "SlideBuH.def"),
-        campaignDifficultyHandler, 0, 1);
+        decreaseCampaignDifficulty, 0, 1);
     m_difficultyIncrButton = new type_func_button(
         730, 506, 16, 16, 241,
         DATA_COMPGEN(0x00660e1c, campaignDifficultyArrowSprite,
                      "SlideBuH.def"),
-        campaignDifficultyHandler, 2, 3);
+        increaseCampaignDifficulty, 2, 3);
     m_widgets.push_back(m_difficultyDecrButton);
     m_widgets.push_back(m_difficultyIncrButton);
 }
@@ -356,26 +371,17 @@ void TCampaignBrief::addBonusIcons()
 // bitmap or the sprite form of the bonus with its help text, and the
 // frames past the count are hidden.
 
-// Residual (95.44%): 34 blocks against retail's 34, all 16 branches and the
-// single return agree, 32 blocks byte-exact. 2026-09-06, polish lane 35: the
-// status send_message was a TERNARY ARGUMENT over two commands one apart in
-// value, and VC6 folds such a pair branchlessly (`xor ecx,ecx / cmp edi,[..] /
-// setne cl / add ecx,K`) where retail branches and cross-jumps the shared call
-// (`jne / push SET / jmp / push CLEAR / call`). Writing it as an if/else over
-// two send_message calls recovers retail's shape - 31 blocks -> 34, three
-// flow-kind divergences -> none, 95.3700 -> 95.4400. What is left is one
-// register transposition in the `campaign->scenarios[selected_scenario]`
-// chain (retail `[ecx + 4*eax]`, ours `[eax + 4*ecx]`) plus retail loading
-// briefingChoice into EAX before the compare where we compare against memory.
-// Measured and rejected: naming the choice in an `int choice` local inside the
-// loop (byte-flat, 95.4400); naming the receiver widget (91.90, and it costs
-// the whole block agreement); both together (91.90); and swapping the
-// `scenario` / `int i` declaration order (byte-flat) - the SIB flip is not
-// reachable from this loop's index scope because the third loop consumes `i`.
+// Dreamcast's named `bmapNames` and `help_id` locals serve its fixed three-slot
+// GetWidget path. Complete directly owns the widened widget arrays instead.
+// Retail snapshots the selected scenario index before the vector lookup, uses
+// branch-local border receivers for the status update, and snapshots the live
+// campaign pointer at the following virtual call. Those lifetimes reproduce
+// all 34 CFG blocks, 16 branches, 24 calls, and every instruction row.
 VA(0x00458d40, 0x297)  // Select callee, dc-order-map after AddBonusIcons, dc 0x58c00
 void TCampaignBrief::updateBonusIcons()
 {
-    ScenarioStruct* scenario = m_campaign->m_scenarios[m_selectedScenario];
+    int selectedScenario = m_selectedScenario;
+    ScenarioStruct* scenario = m_campaign->m_scenarios[selectedScenario];
     int i;
 
     if (scenario->m_options->getCount() == TCampaignStartOption::CHOICE_COUNT_PAIR) {
@@ -392,12 +398,15 @@ void TCampaignBrief::updateBonusIcons()
 
     for (i = 0; i < scenario->m_options->getCount(); i++) {
         m_startBonusBorders[i]->show();
-        if (i == g_game->m_campaign.m_briefingChoice)
-            m_startBonusBorders[i]->sendMessage(widget::WIDGET_SET_STATUS, 4);
-        else
-            m_startBonusBorders[i]->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                                 4);
-        const char* name = scenario->m_options->getIconDefName(&g_game->m_campaign, i);
+        if (i == g_game->m_campaign.m_briefingChoice) {
+            coloredBorderFrame* border = m_startBonusBorders[i];
+            border->sendMessage(widget::WIDGET_SET_STATUS, 4);
+        } else {
+            coloredBorderFrame* border = m_startBonusBorders[i];
+            border->sendMessage(widget::WIDGET_CLEAR_STATUS, 4);
+        }
+        SCampaign* activeCampaign = &g_game->m_campaign;
+        const char* name = scenario->m_options->getIconDefName(activeCampaign, i);
         if (scenario->m_options->isBuildingBonus(i)) {
             m_bitmapBonusImages[i]->show();
             m_bitmapBonusImages[i]->setImage(name);
@@ -454,6 +463,8 @@ void TCampaignBrief::updateDifficultyButtons()
 // Complete independently fixes the PC-only campaign preview layout, widget
 // constructors, campaign-header ABI, and every branch below.  The otherwise
 // unused numPreReqs local is retained as a positive source-shape fact.
+// The DC public ??0TCampaignBrief@@QAA@_N0@Z proves two native bools;
+// its lowered unsigned-char parameter records do not override that signature.
 // DEPTH LADDER (docs/vc6/inliner.md 6b), 2026-09-06: every append here is
 // `Widgets.insert(Widgets.end(), new W(...))`, not `push_back`.  Polish 29
 // re-opened this row on the five APPENDS IT COULD SEE (85.7661 -> 86.6820,
@@ -466,9 +477,11 @@ void TCampaignBrief::updateDifficultyButtons()
 // body's nine zero-initialised `for` counters are `unsigned int`, not `int`.
 // They only pay TOGETHER - 89.0593 / 90.0586 / 90.1377 / 90.9771 / 91.1880 as
 // they accumulate - and the fifth through ninth all fall back.
+// Current residual (85.29%): setupCurrentTerritory expands, but nested STL
+// construction, string assignment and widget-insert boundaries still differ.
+// Keep the ordinary helper and its source calls while resolving those sites.
 VA(0x004590c0, 0x1319)  // anchor-caller/callee/string/vtable, dc 0x594b8
-TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
-                               unsigned char viewFromGame)
+TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     : heroWindow(0, 0, 800, 600, 0)
 {
     unsigned char bitMask[8];
@@ -640,19 +653,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
                         font::WHITE, CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
     }
 
-    if (g_campaignBriefViewFromGame) {
-        m_selectedScenario = g_game->m_campaign.m_currentMap;
-    } else {
-        for (unsigned int selectedIndex = 0;
-             selectedIndex < static_cast<int>(m_scenarios.size());
-             ++selectedIndex) {
-            if (m_scenarios[selectedIndex].m_available) {
-                m_selectedScenario = selectedIndex;
-                g_game->m_setup = m_scenarios[selectedIndex].m_gameSetup;
-                break;
-            }
-        }
-    }
+    setupCurrentTerritory();
 
     widgets.insert(widgets.end(), new textWidget(
                     481, 213, viewFromGame ? 217 : 281, 32,
@@ -725,9 +726,9 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
             memError();
     }
 
-    m_oldVolume = g_unk698760;
+    m_oldVolume = g_config.m_musicVolume;
     if (viewFromGame)
-        g_unk698760 /= 2;
+        g_config.m_musicVolume /= 2;
     m_campaign->startMusic();
 
     if (viewFromGame) {
@@ -868,10 +869,10 @@ VA(0x0045afb0, 0x18F)  // dc 0x5a11c
 TCampaignBrief::~TCampaignBrief()
 {
     if (g_saveHeader) {
-        g_unk698760 = m_oldVolume;
+        g_config.m_musicVolume = m_oldVolume;
         g_soundManager->switchAmbientMusic(
             g_terrainMusicIds[g_advManager->m_lastTerrain]);
-        *g_game = *g_saveHeader;
+        backupGameHeaders(g_game, g_saveHeader);
         delete g_saveHeader;
         g_saveHeader = 0;
         g_advManager->redrawAdvScreen(1, 0);
@@ -886,22 +887,6 @@ TCampaignBrief::~TCampaignBrief()
         delete *it;
     }
 }
-
-#if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
-// E:\gamedcs\campaignbrief.cpp:1054
-DC_ONLY(0x5a2b4, 0x54)
-int TCampaignBrief::convertID2HelpID(int id) const
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:1071
-DC_ONLY(0x5a308, 0x1A)
-void TCampaignBrief::doModal()
-{
-    // @stub
-}
-#endif
 
 // Dreamcast proves this ordinary private helper and its four source-level
 // id groups. Complete expands it into CampaignBriefHandler, so no standalone
@@ -1161,7 +1146,7 @@ static int campaignBriefHandler(message& msg)
 
         int gamePos = brief->m_campaign->m_scenarios[selected]
                           ->m_options->getPlayer(choice);
-        strcpy(g_game->m_players[gamePos].m_name, g_localPlayerName);
+        strcpy(g_game->m_players[gamePos].m_name, g_config.m_networkDefaultName);
         g_localGamePos = gamePos;
         brief->m_campaign->startScenario(selected, choice);
         incProgressBar(1);
@@ -1198,65 +1183,6 @@ std::string getCampaignName()
     header->load();
     return header->getCampaignName();
 }
-
-#if 0  // Remaining Dreamcast-only carcass.
-
-// E:\gamedcs\campaignbrief.cpp:1409
-DC_ONLY(0x5ab84, 0x60)
-void ReadRamDisc(int RamDiscNr, void* buffer, long size, unsigned long* bytesRead)
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:192
-DC_ONLY(0x5ade8, 0x28)
-void TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:192
-DC_ONLY(0x5ae10, 0x44)
-void TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct()
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:192
-DC_ONLY(0x5ae54, 0x2C)
-void NewSMapHeader::~NewSMapHeader()
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:1007
-DC_ONLY(0x5ae80, 0x34)
-void* TCampaignBrief::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:1007
-DC_ONLY(0x5aeb4, 0x64)
-NewSMapHeader* NewSMapHeader::operator=(const NewSMapHeader* __that)
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:1050
-DC_ONLY(0x5af18, 0x34)
-void* game::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\campaignbrief.cpp:1391
-DC_ONLY(0x5af4c, 0x18)
-void CHeroDlg::~CHeroDlg()
-{
-    // @stub
-}
-#endif
 
 // COMDAT pairing: the unit's own std::_Construct<type_map_hero_identity> COMDAT,
 // mnemonic agreement 1.000 over all 142 instructions.
@@ -1330,35 +1256,15 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     m_fileError = CAMPAIGN_FILE_OK;
 }
 
-// campaignbrief.cpp:192, dc 0x5ade8. Complete expands the record and its
-// cleanup; preserve that retail body in the original owning module.
-// Retail deletes every scenario record (null-checked by
-// `delete`), calls vector<ScenarioStruct*>::erase(begin, end) out of line
-// (the retail label game_1fd60_sub02_14cdb0 at 0x54cdb0 is that COMDAT,
-// i.e. a `scenarios.clear()`), calls FreeData, then destroys scenarios,
-// campaign_desc, campaign_name and file_name in reverse order.
-
-// MAX 78.5339; current canonical clear() body 75.72034. Retail calls
-// both vector::erase and FreeData; candidate expands them and leaves
-// vector::_Destroy called from erase. Keep clear() as the source boundary.
-// The 2026-09-07 passive trace corrects the old small-free-class diagnosis:
-// FreeData's C2 cost is 101, not <=40, and its site has budget 752 after
-// clear/erase. The state gate allows it (body flags 0x8000, callee 0x68).
-// Clear's nested erase costs 69 against budget 144; its _Destroy costs 49
-// against 29 and stays called. These are ordinary measured budget decisions,
-// not proof that caller-side source structure can never affect the frontier.
-// Earlier artificial free/charged-site controls were byte-inert; do not
-// repeat them or use them to infer the helper's cost. Natural loop controls:
-// signed index is byte-identical at 75.72034; naming the scenarios vector
-// by reference gives 67.27966. Neither changes the retained source choice.
+// campaignbrief.cpp:192, dc 0x5ade8. Complete expands the same scenario
+// delete/clear/freeData sequence here and in CampaignHeaderStruct::load.
+// Sharing the in-class clearScenarios body makes this destructor exact while
+// retaining vector::clear and freeData at the retail call boundaries.
 // E:\gamedcs\campaignbrief.cpp:192, dc 0x5ade8
 VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
 TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {
-    for (unsigned int i = 0; i < m_scenarios.size(); ++i)
-        delete m_scenarios[i];
-    m_scenarios.clear();
-    freeData();
+    clearScenarios();
 }
 
 // This delete loop naturally retains ScenarioStruct's compiler-generated

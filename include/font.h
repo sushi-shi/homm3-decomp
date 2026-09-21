@@ -3,8 +3,9 @@
 
 #include <string>
 #include <vector>
-#include "resource.h"
+
 #include "palette.h"
+#include "resource.h"
 
 class Bitmap16Bit;
 
@@ -119,12 +120,14 @@ public:
     // at 0x125c that the size query adds to it. DC has no such member -
     // its port left the resource size query on a different slot shape.
     int m_dataSize;
+    font();
     font(const char* name, const TFontSpec& fontspec, int dsize,
          unsigned char* d);  // retail 0x4b5070
     virtual ~font();
     virtual unsigned int getSize() const;
     void setPalette(const TPalette16& newPalette);
     void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const;
+    void drawString(const char* text, Bitmap16Bit* bitmap, int x, int y, TColor color);
     void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor colorScheme, unsigned justification, int cursorPos);
     int lineLength(const char* str, int boxWidth) const;
     int lineWidth(const char* text) const;
@@ -162,6 +165,6 @@ private:
 // (the Dreamcast dump carries only `medFont`), which is why this keeps
 // the house ordinal placeholder. Owner TU unlocated - extern only, no
 // DATA claim (the gpWindowManager / gTownSizeNames pattern).
-extern font* g_unnamed698a08;
+extern font* g_smallFont;
 
 #endif  /* HOMM3_FONT_H */

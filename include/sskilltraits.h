@@ -2,7 +2,7 @@
 #ifndef HOMM3_SSKILLTRAITS_H
 #define HOMM3_SSKILLTRAITS_H
 
-#include <va.h>
+#include "va.h"
 
 // The 28 secondary-skill rows loaded by herodefs.obj. Rollover text
 // independently proves the 16-byte stride and name at +0; retail's loader
@@ -13,7 +13,7 @@ struct TSSkillTraits {
 };
 SIZE(TSSkillTraits, 0x10);
 
-DATA(0x00698cf0) extern TSSkillTraits g_sSkillTraitsStorage[28];
-DATA(0x0067dcf0) extern const TSSkillTraits (&g_sSkillTraits)[28];
+extern TSSkillTraits g_sSkillTraitsStorage[28];
+extern const TSSkillTraits (&g_sSkillTraits)[28];
 
 #endif  /* HOMM3_SSKILLTRAITS_H */

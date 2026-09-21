@@ -1,13 +1,14 @@
 #ifndef HOMM3_MAPCELL_H
 #define HOMM3_MAPCELL_H
 
-#include <vector>
 #include <string>
+#include <vector>
+
 #include "artifact.h"
-#include "terrain_type.h"
+#include "herospec.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
-#include "herospec.h"
+#include "terrain_type.h"
 #include "town.h"
 
 class BlackBoxData;
@@ -704,12 +705,13 @@ public:
     BlackBoxData* getBlackBox() const;
     type_creature_bank& getCreatureBank() const;
     void clearVisitedBits();
+    short getCustomIndex() const;
     short getItemId() const;
     bool playerKnowsCell(short player) const;
     void setCellVisited(short player);
     unsigned char gardenIsFull() const;
     enum EGameResource getGardenResource() const;
-    void fillGarden(enum EGameResource resource);
+    void fillGarden(EGameResource resource);
     void setGarden(short id, EGameResource resource);
     void setGardenEmpty();
     int getPyramidSpell() const;
@@ -961,20 +963,18 @@ public:
     type_point getTrigger() const;
     CObjectType* getObjectTypePtr() const;
     TAdventureObjectType getType() const;
-    // MapCell.h:595. game::InsertObject byte-proves this header body: the
-    // coordinates narrow to bytes, type starts at zero, extra info remains a
-    // dword, and each dynamic object receives a random animation phase.
-
-    // The DEFAULT ARGUMENTS are byte-proven from the other end, by
-    // loadMapObjects' `objects.resize(count)`: the `_Ty()` temporary
-    // Dinkumware's resize materialises at the call site stores 0xff into
-    // each coordinate, 0xffff into typeIndex and 0xffffffff into extraInfo,
-    // then rolls the animation phase - this body verbatim, in this order,
-    // with those five values. game::InsertObject's explicit five-argument
-    // call is unaffected.
-    CObject(unsigned char newX = 0xff, unsigned char newY = 0xff,
-            unsigned char newZ = 0xff, unsigned short newType = 0xffff,
-            unsigned long newExtraInfo = 0xffffffff)
+    // Original: CObject::CObject; MapCell.h:587, dc 0xf4944.
+    // loadMapObjects' vector resize expands the distinct default ctor;
+    // the recorded overload is not a five-argument ctor with defaults.
+    CObject() : m_x(0xff), m_y(0xff), m_z(0xff), m_typeIndex(0xffff)
+    {
+        m_extraInfo = 0xffffffff;
+        m_animationOffset = static_cast<unsigned char>(random(0, 255));
+    }
+    // Original: CObject::CObject; MapCell.h:595, dc 0xbc868.
+    // game::InsertObject expands this coordinate/type/extra-info overload.
+    CObject(unsigned char newX, unsigned char newY, unsigned char newZ,
+            unsigned short newType, unsigned long newExtraInfo)
     {
         m_x = newX;
         m_y = newY;
@@ -1213,8 +1213,6 @@ void upgradeCellExtraInfo(NewmapCell* cell, int saveVersion);
 // Retail .rdata 0x660428 stores a pointer to sixteen bytes per adventure-
 // object type. can_land proves byte zero as the trigger-object landing veto;
 // the remaining bytes stay opaque.
-DATA(0x00660428)
-extern const unsigned char (*g_adventureObjectLandBlocked)[16];
 
 // --- type_obscuring_object ---
 
@@ -1348,6 +1346,7 @@ public:
     int loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                      int saveVersion);
     int loadMonsterList(TAbstractFile* infile);
+    int loadSeerList(TAbstractFile* infile, int saveVersion);
     // `ret 8`: the save version rides along to TTimedEvent::Read.
     int readTimedEventList(TAbstractFile* infile, int saveVersion);
     int loadTimedEventList(TAbstractFile* infile, int saveVersion);
@@ -1451,6 +1450,13 @@ inline const NewmapCell* NewfullMap::zCell(int x, int y, int z) const
     return m_cellData + x + y * m_size + z * m_size * m_size;
 }
 
+// MapCell.h:850, dc 0x1f974. This worker reproduces all 49 retail bytes
+// at 0x408770, including the boat callers' retained zero-coordinate lookup.
+// The former scalar-cell claim incorrectly distinguished 49 x86 bytes from
+// 82 SH4 bytes and alleged a zCell bounds test absent on both platforms.
+// Identical folded bodies cannot prove a unique original retail symbol;
+// this annotation owns the emitted canonical worker, not a renamed wrapper.
+VA(0x00408770, 0x31)  // exact body + anchor-callees, dc 0x1f974
 inline NewmapCell* NewfullMap::zCell(int x, int y, int z)
 {
     return m_cellData + x + y * m_size + z * m_size * m_size;
@@ -1468,19 +1474,12 @@ inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
 // WinCE build's out-of-line copy of a header inline - so it is a header
 // inline for EVERY compiland. DC line 907 calls zCell directly.
 
-// cell(int,int,int) is a header inline too, and MEASURED so: modelling
-// it as a declaration-only member with one out-of-line definition -
-// which its real 49-byte retail body at 0x408770 invites - costs the
-// tree 3091 -> 3058 exact functions and 95.12% -> 94.77% fuzzy, because
-// sixteen compilands expand the `(z*Size + y)*Size + x` lookup on a
-// 38-byte stride in place. The retail COMDAT is what an inline's
-// out-of-line copy looks like when one TU's call sites decline it.
-
-// The retained retail copy of this header inline is carried by advmgr.obj.
-VA(0x00408770, 0x31)  // anchor-callee, dc 0x1f9c8
+// DC MapCell.h:897 calls zCell. The unrecorded line 896 does not prove
+// a release VERIFY. Removing the inferred storage check preserves this
+// helper chain and restores the boat callers' retail expansion decisions;
+// the retained 49-byte arithmetic body is owned by zCell above.
 inline NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
-    HOMM3_RELEASE_VERIFY(m_cellData != 0);
     return zCell(x, y, z);
 }
 
@@ -1529,6 +1528,12 @@ inline short ExtraInfoUnion::getCampfireSize() const { return m_campfireInfo.m_s
 inline int ExtraInfoUnion::getCampfireResource() const { return m_campfireInfo.m_resource; }
 
 inline void ExtraInfoUnion::clearVisitedBits() { m_cellVisitedInfo.m_visited = 0; }
+
+// Original: ExtraInfoUnion::get_custom_index; MapCell.h:974, dc 0x9c7c8.
+// Complete narrows MonsterInfo::index from DC's 12 bits to eight; retail
+// MonstersGiveReward (0x4a6b30) and DoWanderingMonsterResult (0x4a7740)
+// both extract that eight-bit field before indexing the custom list.
+inline short ExtraInfoUnion::getCustomIndex() const { return m_monsterInfo.m_index; }
 
 inline short ExtraInfoUnion::getItemId() const { return m_skeletonInfo.m_id; }
 

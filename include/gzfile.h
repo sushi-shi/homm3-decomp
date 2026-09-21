@@ -5,7 +5,8 @@
 #define HOMM3_GZFILE_H
 
 #include <exception>
-#include "armygrp.h"  // TAbstractFile
+
+#include "armygrp.h"
 
 // Complete wraps the gz handle in an eight-byte polymorphic stream:
 // 0x4d6c50 installs the base vptr 0x63dac0, calls gzopen at 0x4d6c84,

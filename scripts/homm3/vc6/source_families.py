@@ -32,6 +32,7 @@ import sys
 import time
 
 from homm3.core import common
+from homm3.core.project import Project
 from homm3.match import status
 from homm3.vc6 import tu_state_sweep as scoring
 from homm3.vc6._unit import flags_for_unit, source_for_unit
@@ -106,6 +107,10 @@ def load_manifest(path, root):
     originals = {}
 
     def parse_edit(raw, default_source):
+        unknown = set(raw) - {"source", "find", "insert_before", "insert_after", "replace", "text"}
+        if unknown:
+            hint = "; use extra_edits for additional edits" if "edits" in unknown else ""
+            raise ValueError(f"unknown edit field(s): {', '.join(sorted(unknown))}{hint}")
         relative = raw.get("source", default_source)
         if not isinstance(relative, str):
             raise ValueError("every edit needs a source")
@@ -187,11 +192,35 @@ def projected_max_scores(row, previous, hashes):
 
 
 def ranking_scores(row):
-    return row.get("max_scores", row["scores"])
+    return row["max_scores"]
+
+
+def max_summary(row, previous):
+    """Describe candidate progress against banked MAX, never raw CUR dips."""
+    changes = []
+    for name, maximum in ranking_scores(row).items():
+        old = previous.get(tuple(name.split("|", 1)))
+        if old is not None and maximum != old.max:
+            changes.append(dict(function=name, before=old.max, after=maximum))
+    return dict(
+        gains=[change for change in changes if change["after"] > change["before"]],
+        losses=[change for change in changes if change["after"] < change["before"]],
+    )
+
+
+def format_max_summary(row):
+    summary = row["max_summary"]
+    return (f"projected MAX: {len(summary['gains'])} gain(s), "
+            f"{len(summary['losses'])} loss(es)")
 
 
 def expected_control_scores(report, scored):
-    """Read current scores from the live report, not stale ledger CUR."""
+    """Read current scores from the live report, independent of the MAX ledger.
+
+    Fast builds refresh the comparison report without checkpointing CUR/MAX.
+    The unchanged-source control verifies the current object, so comparing it
+    with ledger CUR would reject a valid post-adoption fast-build state.
+    """
     current = status.fn_fuzzy(report)
     return {"|".join(key): round(current.get(key, 0.0), 4)
             for key in scored}
@@ -253,6 +282,28 @@ def next_population(axes, parents, seen, width, rng):
     return picked
 
 
+def create_snapshot(root, snapshot):
+    snapshot.mkdir()
+    shutil.copytree(root / "include", snapshot / "include")
+    shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
+    # cc_wrap reads the project specification and include/profile manifest
+    # from HOMM3_DIR, which points at the isolated candidate tree.
+    (snapshot / "config").mkdir()
+    for name in ("project.toml", "units.toml"):
+        shutil.copy2(root / "config" / name, snapshot / "config" / name)
+    (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
+
+
+def candidate_environment(candidate_root):
+    env = dict(os.environ, HOMM3_DIR=str(candidate_root),
+               PYTHONPATH=str(common.HOMM3_DIR / "scripts"),
+               MSVC_DIR=str(Project(common.HOMM3_DIR).toolchain))
+    prefix = env.get("WINEPREFIX")
+    if not prefix or not Path(prefix).is_dir():
+        env["WINEPREFIX"] = str(common.HOMM3_DIR / "build/wineprefix")
+    return env
+
+
 def compile_candidate(candidate_root, unit, output):
     source = source_for_unit(unit)
     flags = flags_for_unit(unit)
@@ -260,8 +311,7 @@ def compile_candidate(candidate_root, unit, output):
         raise ValueError(f"unknown unit or missing profile: {unit}")
     output.mkdir(parents=True, exist_ok=True)
     obj = output / "candidate.obj"
-    env = dict(os.environ, HOMM3_DIR=str(candidate_root),
-               PYTHONPATH=str(common.HOMM3_DIR / "scripts"))
+    env = candidate_environment(candidate_root)
     proc = subprocess.run([
         sys.executable, "-m", "homm3.core.cc_wrap", "--out", str(obj),
         "--src", str(candidate_root / source.relative_to(common.HOMM3_DIR)),
@@ -271,20 +321,6 @@ def compile_candidate(candidate_root, unit, output):
     if proc.returncode or not obj.is_file():
         raise RuntimeError(log[-6000:])
     return obj
-
-
-def prepare_snapshot(root, snapshot):
-    """Freeze authored inputs while sharing immutable project configuration."""
-    if not snapshot.exists():
-        snapshot.mkdir()
-        shutil.copytree(root / "include", snapshot / "include")
-        shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
-        (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
-    # cc_wrap resolves include roots through Project(candidate_root), so an
-    # isolated candidate also needs the project's read-only configuration.
-    config = snapshot / "config"
-    if not config.exists():
-        config.symlink_to(root / "config", target_is_directory=True)
 
 
 def evaluate(snapshot, output, plans, originals, axes, choices, *, previous, repeat=False):
@@ -307,7 +343,8 @@ def evaluate(snapshot, output, plans, originals, axes, choices, *, previous, rep
         staged.write_text(text)
         staged.replace(path)
     started = time.monotonic()
-    row = {"id": key, "choices": choices, "labels": {
+    row = {"objective": "MAX", "diagnostic_score_field": "scores",
+        "id": key, "choices": choices, "labels": {
         axis.name: axis.options[choice].name for axis, choice in zip(axes, choices)},
         "scores": {}, "source_hashes": {name: digest(text.encode()) for name, text in sources.items()}}
     identities = []
@@ -324,6 +361,7 @@ def evaluate(snapshot, output, plans, originals, axes, choices, *, previous, rep
                                       only_units={plan.unit for plan in plans})
         row["function_source_hashes"] = {"|".join(key): value for key, value in hashes.items()}
         row["max_scores"] = projected_max_scores(row, previous, hashes)
+        row["max_summary"] = max_summary(row, previous)
     except Exception as exc:
         row.update(error=str(exc), scores={})
     row["seconds"] = time.monotonic() - started
@@ -352,7 +390,7 @@ def main(argv=None):
     if not units or len(set(units)) != len(units) or any(path is None for path in sources):
         parser.error("units must be distinct manifest unit names")
     total = math.prod(len(axis.options) for axis in axes)
-    print(f"[source-families] {total} combinations; {args.width}/generation; keep {args.keep}; {units}", flush=True)
+    print(f"[source-families] objective MAX; CUR is diagnostic only; {total} combinations; {args.width}/generation; keep {args.keep}; {units}", flush=True)
     if args.validate_only:
         return 0
     inputs = scoring._shared_inputs_digest()
@@ -363,7 +401,8 @@ def main(argv=None):
     output.mkdir(parents=True, exist_ok=True)
     scoring._write_json(output / "input.json", payload)
     snapshot = output / "snapshot"
-    prepare_snapshot(root, snapshot)
+    if not snapshot.exists():
+        create_snapshot(root, snapshot)
     rows = status.load_baseline()
     plans = []
     for unit, source in zip(units, sources):
@@ -413,7 +452,7 @@ def main(argv=None):
                 for future in as_completed(futures):
                     row = future.result()
                     records.append(row)
-                    state = "" if row["scores"] else " FAILED"
+                    state = "; " + format_max_summary(row) if row["scores"] else " FAILED"
                     valid = sum(bool(record["scores"]) for record in records)
                     print(f"[source-families] g{generation + 1} {valid}/{args.width} scored; {len(records)} attempted; {row['id']}{state}", flush=True)
                 valid = sum(bool(row["scores"]) for row in records)
@@ -437,7 +476,7 @@ def main(argv=None):
             raise RuntimeError("source/toolchain/targets/ledger changed during search; refusing stale checkpoint")
         checkpoint.update(generation=generation + 1, seen=[list(choice) for choice in sorted(seen | set(attempted))], elites=elites, records=all_records)
         scoring._write_json(checkpoint_path, checkpoint)
-        frontier = {"context": context, "generation": generation + 1, "source_modified": False,
+        frontier = {"objective": "MAX", "context": context, "generation": generation + 1, "source_modified": False,
                     "attempted": len(records), "successful": sum(bool(row["scores"]) for row in records),
                     "distinct_objects": len({row["object_hash"] for row in records if row["scores"]}), "elites": elites,
                     "changes": []}

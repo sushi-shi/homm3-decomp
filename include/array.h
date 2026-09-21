@@ -25,9 +25,9 @@
 #ifndef HOMM3_ARRAY_H
 #define HOMM3_ARRAY_H
 
-#include <string.h>  // memcpy, the grow copy Add inlines
-
 #include "va.h"
+
+#include <string.h>
 
 template<class T>
 class CAutoArray {
@@ -102,7 +102,8 @@ public:
         return 1;
     }
 
-    // E:\gamedcs\array.h:113, dc 0x103150
+    // Original: CAutoArray::Delete; array.h:113, dc 0x103150.
+    // The semantic suffix avoids the C++ keyword delete after case normalization.
     virtual unsigned char deleteElement(unsigned long elementNbr)
     {
         if (elementNbr >= m_size)

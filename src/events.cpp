@@ -1,22 +1,22 @@
+#include "text.h"
+#include "va.h"
+#include "includes.h"
+
 #include <algorithm>
-#include "creaturetype.h"
 #include <stdio.h>
 #include <string.h>
-#include <va.h>
-#include "advmgr_objects.h"
-#include "creature_bank.h"
-#include "swapmgr.h"
-#include "game.h"
+
+#include "events.h"
+
 #include "advmgr.h"
-// DoCombat needs the full combatManager type (SetupCombat and the
-// result/raised-creature fields); added 2026-08-27 with the DoCombat
-// reconstruction and measured through the ratchet like every other
-// include-closure change.
+#include "advmgr_objects.h"
 #include "cmbtmgr.h"
 #include "command.h"
+#include "creature_bank.h"
+#include "creaturetype.h"
 #include "cursor.h"
-#include "events.h"
 #include "exec.h"
+#include "game.h"
 #include "hillfortwindow.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -29,12 +29,12 @@
 #include "resourcemanager.h"
 #include "sacrifice_window.h"
 #include "soundmgr.h"
-#include "tradpost.h"
+#include "swapmgr.h"
+#include "textresource.h"
 #include "townmgr.h"
+#include "tradpost.h"
 #include "university_window.h"
 #include "winmgr.h"
-#include "textresource.h"
-#include "includes.h"
 
 // Complete sends the raw primary-skill bytes in DoCombat's level update;
 // getPrimarySkill would clamp them. This accessor is a provisional Windows
@@ -45,27 +45,6 @@ void hero::copyPrimarySkills(signed char* stats) const
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\events.cpp:61
-DC_ONLY(0x9028c, 0x24)
-unsigned char initializeAdventureEventText()
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:265
-DC_ONLY(0x902b0, 0x4A)
-unsigned char initializeArtifactEventText()
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:284
-DC_ONLY(0x902fc, 0x4A)
-unsigned char initializeRandomSignText()
-{
-    // @stub
-}
 
 // E:\gamedcs\events.cpp:300
 // RETAIL_LOCATED(0x0049e170, 0x16E)  // anchor-global, dc 0x90348
@@ -81,41 +60,6 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
     // @stub
 }
 
-// E:\gamedcs\events.cpp:380
-DC_ONLY(0x90658, 0x66)
-void advManager::doEventAnchor(hero* current_hero, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:412
-DC_ONLY(0x906c0, 0x16)
-void advManager::eventSound(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:421
-DC_ONLY(0x906d8, 0x13C)
-void advManager::doEventArena(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:478
-DC_ONLY(0x90814, 0x64)
-void advManager::giveArtifact(hero* current_hero, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:498
-DC_ONLY(0x90878, 0x62)
-void advManager::doEventFreeArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
 // E:\gamedcs\events.cpp:516
 // RETAIL_LOCATED(0x0049ea40, 0x304)  // located @stub (promoted to active VA), dc 0x908dc
 void advManager::fightForArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
@@ -126,13 +70,6 @@ void advManager::fightForArtifact(hero* current_hero, NewmapCell* cell, type_poi
 // E:\gamedcs\events.cpp:570
 // RETAIL_LOCATED(0x0049ed50, 0x2E8)  // located @stub (promoted to active VA), dc 0x90ad8
 void advManager::payForArtifact(hero* current_hero, NewmapCell* cell, type_point point, const char* dialog_text, short gold_cost, short resource_cost, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:629
-DC_ONLY(0x90c58, 0xB8)
-void advManager::doArtifactSkillRequirement(hero* current_hero, NewmapCell* cell, type_point point, TSecondarySkill skill, const char* dialog_text, unsigned char human_player)
 {
     // @stub
 }
@@ -172,76 +109,6 @@ BlackBoxData* advManager::getBlackBox(const ExtraInfoUnion* cell)
     // @stub
 }
 
-// E:\gamedcs\events.cpp:1123
-DC_ONLY(0x91c18, 0x1A0)
-void advManager::doEventBlackBox(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1170
-DC_ONLY(0x91db8, 0x18C)
-void advManager::handleMapEvent(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1219
-DC_ONLY(0x91f44, 0xA6)
-void advManager::doEventBoat(hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1266
-DC_ONLY(0x91fec, 0xF4)
-void advManager::doEventBorderGuard(type_point point, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1287
-DC_ONLY(0x920e0, 0xA6)
-void advManager::doEventBorderTent(NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1305
-DC_ONLY(0x92188, 0x96)
-void advManager::doEventBouy(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1330
-DC_ONLY(0x92220, 0xC8)
-void advManager::doEventCloverField(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1355
-DC_ONLY(0x922e8, 0xC6)
-void advManager::doEventCampfire(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1378
-DC_ONLY(0x923b0, 0x190)
-void advManager::doEventIdol(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1430
-DC_ONLY(0x92540, 0xBA)
-void advManager::doEventCoverOfDarkness(NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
 // E:\gamedcs\events.cpp:1456
 // RETAIL_LOCATED(0x004a15a0, 0x301)  // located @stub (promoted to active VA), dc 0x925fc
 void advManager::doEventCreatureBank(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
@@ -252,62 +119,6 @@ void advManager::doEventCreatureBank(hero* current_hero, NewmapCell* cell, type_
 // E:\gamedcs\events.cpp:1505
 // RETAIL_LOCATED(0x004a18b0, 0x79A)  // located @stub (promoted to active VA), dc 0x92814
 void advManager::doEventCreatureGenerator(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1649
-DC_ONLY(0x92d40, 0xAC)
-void advManager::doEventDefenseTower(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1675
-DC_ONLY(0x92dec, 0x11A)
-void advManager::doEventDragonCity(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1707
-DC_ONLY(0x92f08, 0x9E)
-void advManager::doEventFaerieRing(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1731
-DC_ONLY(0x92fa8, 0x184)
-void advManager::doEventFlotsam(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1769
-DC_ONLY(0x9312c, 0x16A)
-void advManager::doEventFountain(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1822
-DC_ONLY(0x93298, 0xCE)
-void advManager::doEventFountainOfYouth(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1854
-DC_ONLY(0x93368, 0xFC)
-void advManager::doEventGarden(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:1898
-DC_ONLY(0x93464, 0x556)
-void exchangeSpells(hero* first_hero, hero* second_hero)
 {
     // @stub
 }
@@ -325,109 +136,10 @@ void advManager::doEventHero(hero* current_hero, NewmapCell* cell, type_point po
     // @stub
 }
 
-// E:\gamedcs\events.cpp:2069
-DC_ONLY(0x93b18, 0xDE)
-void advManager::doEventLeanTo(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
 // E:\gamedcs\events.cpp:2101
-
-// E:\gamedcs\events.cpp:2140
-DC_ONLY(0x93d34, 0x7A)
-void advManager::doEventLighthouse(NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2158
-DC_ONLY(0x93db0, 0x1BC)
-void advManager::doEventMagicSchool(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2220
-DC_ONLY(0x93f6c, 0x11C)
-void advManager::doEventMagicSpring(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2259
-DC_ONLY(0x94088, 0x140)
-void advManager::doEventMagicWell(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2299
-DC_ONLY(0x941c8, 0xAC)
-void advManager::doEventMercenaryCamp(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2324
-DC_ONLY(0x94274, 0x9E)
-void advManager::doEventMermaid(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2350
-DC_ONLY(0x94314, 0x1C0)
-void advManager::doEventMine(NewmapCell* cell, hero* current_hero, type_point point, unsigned char human)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2423
-DC_ONLY(0x944d4, 0xC8)
-void advManager::doEventMysticalGarden(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2458
-DC_ONLY(0x9459c, 0x116)
-void advManager::doEventOasis(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2488
-DC_ONLY(0x946b4, 0xAC)
-void advManager::doEventPowerSchool(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
 // E:\gamedcs\events.cpp:2515
 // RETAIL_LOCATED(0x004a3eb0, 0x376)  // located @stub (promoted to active VA), dc 0x94760
 void advManager::doEventPrison(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2601
-DC_ONLY(0x949e0, 0x2AC)
-void advManager::doEventPyramid(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2677
-DC_ONLY(0x94c8c, 0xF6)
-void advManager::doEventRallyFlag(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2709
-DC_ONLY(0x94d84, 0x11E)
-void advManager::doEventRefugeeCamp(hero* current_hero, NewmapCell* cell, unsigned char human_player)
 {
     // @stub
 }
@@ -439,51 +151,9 @@ void advManager::doCustomResource(NewmapCell* cell, hero* current_hero, type_poi
     // @stub
 }
 
-// E:\gamedcs\events.cpp:2825
-DC_ONLY(0x9512c, 0xC6)
-void advManager::doEventResource(NewmapCell* cell, hero* current_hero, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2863
-DC_ONLY(0x951f4, 0x1D8)
-void advManager::doEventScholar(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2918
-DC_ONLY(0x953cc, 0x198)
-void advManager::doEventSeaChest(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2965
-DC_ONLY(0x95564, 0xEA)
-void advManager::doEventSurvivor(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:2996
-DC_ONLY(0x95650, 0x1AC)
-void advManager::doEventSkeleton(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
 // E:\gamedcs\events.cpp:3039
 // RETAIL_LOCATED(0x004a5610, 0x346)  // located @stub (promoted to active VA), dc 0x957fc
 void advManager::doEventShrine(hero* current_hero, NewmapCell* cell, const char* prompt, GlobalInfoFlags type, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:3092
-DC_ONLY(0x95a34, 0x11E)
-void advManager::doEventSiren(hero* current_hero, NewmapCell* cell, unsigned char human_player)
 {
     // @stub
 }
@@ -495,58 +165,9 @@ void advManager::doCustomSpellScroll(hero* current_hero, NewmapCell* cell, type_
     // @stub
 }
 
-// E:\gamedcs\events.cpp:3207
-DC_ONLY(0x95e14, 0x102)
-void advManager::doEventSpellScroll(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:3246
-DC_ONLY(0x95f18, 0x194)
-void advManager::doEventStables(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:3308
-DC_ONLY(0x960ac, 0x12E)
-void advManager::doEventTemple(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:3349
-DC_ONLY(0x961dc, 0x100)
-void advManager::doEventTrainingGrounds(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
 // E:\gamedcs\events.cpp:3377
 // RETAIL_LOCATED(0x004a6440, 0xD8)  // located @stub (promoted to active VA), dc 0x962dc
 void advManager::doTreasureDialog(hero* current_hero, int amount, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:3414
-DC_ONLY(0x963d8, 0xEA)
-void advManager::doEventTreasure(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:3454
-DC_ONLY(0x964c4, 0x2BE)
-void advManager::doEventTreeOfKnowledge(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:3533
-DC_ONLY(0x96784, 0x210)
-void advManager::doEventWagon(hero* current_hero, NewmapCell* cell, unsigned char human_player)
 {
     // @stub
 }
@@ -763,7 +384,7 @@ void advManager::doEventWhirlpool(hero* current_hero, NewmapCell* cell, unsigned
 // MISATTRIBUTION 2026-08-14, RESOLVED - DO NOT RECONSTRUCT DispatchEvent
 // AGAINST THIS ROW; see 0x4a84f0 above for where DispatchEvent really is.
 // 0x4aaa40 is type_university_window::~type_university_window (dc
-// 0x9ce08, the DC_ONLY row further down this file). The body is a
+// 0x9ce08). The body is a
 // destructor and nothing else: it takes no arguments, frees the two
 // Dinkumware vectors at this+0xec and this+0xdc IN REVERSE DECLARATION
 // ORDER through operator delete, zeroes all six pointers, and tail-calls
@@ -774,7 +395,7 @@ void advManager::doEventWhirlpool(hero* current_hero, NewmapCell* cell, unsigned
 // selection_widgets/purchase_widgets sit 12 apart under STLport and 16
 // apart here - which is precisely 0xec - 0xdc. (type_sacrifice_window,
 // the other CAdvPopup child in this obj, has eight.)
-// Promoting the DC_ONLY row onto this address is ordinary locate work;
+// Assigning the destructor to this address is ordinary locate work;
 // it is left for a lane that models the window layout.
 // RETAIL_LOCATED(0x004aaa40, 0x5C)  // body: 2-vector dtor + ~CAdvPopup, dc 0x9ce08
 void advManager::dispatchEvent(hero* current_hero, NewmapCell* cell, type_point point, bool human_player)
@@ -813,13 +434,6 @@ void advManager::townEvent(NewmapCell* cell, type_point point, unsigned char hum
 // E:\gamedcs\events.cpp:5390
 // RETAIL_LOCATED(0x004ab410, 0x632)  // anchor-bracket, dc 0x9a288
 void advManager::eventSound(int eventID, int extraInfo)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:5568
-DC_ONLY(0x9a528, 0x86)
-short advManager::RecruitEvent(hero* who, TCreatureType creature, short available)
 {
     // @stub
 }
@@ -915,44 +529,9 @@ void advManager::receiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromW
     // @stub
 }
 
-// E:\gamedcs\events.cpp:1883
-DC_ONLY(0x9cdc0, 0x48)
-unsigned char spell_level_order::operator()(SpellID first, SpellID second)
-{
-    // @stub
-}
-
 // E:\gamedcs\events.cpp:5140
 // RETAIL_LOCATED(0x004aaa40, 0x5C)  // located @stub (promoted to active VA), dc 0x9ce08
 void type_university_window::~type_university_window()
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:6248
-DC_ONLY(0x9ce40, 0x70)
-void CTurnDurationPause::CTurnDurationPause()
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:6261
-DC_ONLY(0x9ceb0, 0x74)
-void CTurnDurationPause::~CTurnDurationPause()
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:6709
-DC_ONLY(0x9cf24, 0x28)
-void CWaitForRemoteBattleDlg::~CWaitForRemoteBattleDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:6709
-DC_ONLY(0x9cf4c, 0x28)
-void CLevelPickWaitDlg::~CLevelPickWaitDlg()
 {
     // @stub
 }
@@ -1012,8 +591,8 @@ VA(0x0049e170, 0x16E)  // dc 0x90348
 void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
                                 int fizzleSound)
 {
-    unsigned char savedFlag = g_unnamed67f574;
-    g_unnamed67f574 = 0;
+    unsigned char savedFlag = g_colorCyclingEnabled;
+    g_colorCyclingEnabled = 0;
     unsigned char savedPause = m_animCtrPaused;
     m_animCtrPaused = 1;
 
@@ -1023,7 +602,7 @@ void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
     fizzleCenter(fizzleSound);
 
     m_animCtrPaused = savedPause;
-    g_unnamed67f574 = savedFlag;
+    g_colorCyclingEnabled = savedFlag;
 }
 
 // E:\gamedcs\events.cpp:317.
@@ -1131,6 +710,12 @@ void advManager::doEventAnchor(hero* currentHero, bool humanPlayer)
 // the first two rows in the file, because "arena" is the first adventure
 // object alphabetically. That is the strongest single check on the
 // ordering this enum rests on.
+// Original: advManager::EventSound; events.cpp:412, dc 0x906c0.
+void advManager::eventSound(NewmapCell* cell)
+{
+    eventSound(cell->m_type, cell->m_extraInfo);
+}
+
 VA(0x0049e7d0, 0x118)  // dc 0x906d8
 void advManager::doEventArena(hero* currentHero, NewmapCell* cell,
                               bool humanPlayer)
@@ -1807,7 +1392,7 @@ void advManager::doEventBlackBox(hero* currentHero, NewmapCell* cell,
         currentHero->checkLevel();
     }
 
-    if (!giveBlackBoxReward(g_emptyRolloverText, currentHero, cell, point,
+    if (!giveBlackBoxReward("", currentHero, cell, point,
                             humanPlayer, blackBox)) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
@@ -1836,7 +1421,7 @@ void advManager::handleMapEvent(hero* currentHero, NewmapCell* cell,
             } else {
                 normalDialog(text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
-                text = g_emptyRolloverText;
+                text = "";
             }
         }
         if (doCombat(point, currentHero, &currentHero->m_army, -1, 0, 0,
@@ -1970,7 +1555,7 @@ void advManager::doEventCoverOfDarkness(NewmapCell* cell, type_point point,
                          ADV_EVENT_TEXT_COVER_OF_DARKNESS),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         CResetVisibilityMsg message(point, g_netLocalGamePos, 20);
         transmitRemoteData(&message, 0x7f, 0, 1);
     }
@@ -2011,7 +1596,7 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    creatureBankEvent(currentHero, cell, g_emptyRolloverText, point,
+    creatureBankEvent(currentHero, cell, "", point,
                       humanPlayer);
 }
 
@@ -2198,7 +1783,7 @@ void advManager::doEventDragonCity(hero* currentHero, NewmapCell* cell,
 
     if (!humanPlayer && aiValueOfEvent(currentHero, point) <= 0)
         return;
-    creatureBankEvent(currentHero, cell, g_emptyRolloverText, point,
+    creatureBankEvent(currentHero, cell, "", point,
                       humanPlayer);
 }
 
@@ -2342,7 +1927,7 @@ inline void advManager::doEventBorderGuard(type_point point, NewmapCell* cell,
 {
     unsigned char visitedFlags =
         g_game->m_borderTentVisitFlags[cell->m_objectIndex];
-    if (visitedFlags & g_unnamed69ccc4) {
+    if (visitedFlags & g_curPlayerBit) {
         if (humanPlayer) {
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_BORDER_GUARD_PROMPT),
@@ -2362,7 +1947,7 @@ inline void advManager::doEventBorderTent(NewmapCell* cell,
                                           unsigned char humanPlayer)
 {
     if (g_game->m_borderTentVisitFlags[cell->m_objectIndex]
-        & g_unnamed69ccc4) {
+        & g_curPlayerBit) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_BORDER_TENT_VISITED),
@@ -2372,7 +1957,7 @@ inline void advManager::doEventBorderTent(NewmapCell* cell,
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_BORDER_TENT),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        g_game->m_borderTentVisitFlags[cell->m_objectIndex] |= g_unnamed69ccc4;
+        g_game->m_borderTentVisitFlags[cell->m_objectIndex] |= g_curPlayerBit;
     }
 }
 
@@ -3016,8 +2601,8 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
                          prisonRescueText),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 
-    unsigned char oldColorCycling = g_unnamed67f574;
-    g_unnamed67f574 = 0;
+    unsigned char oldColorCycling = g_colorCyclingEnabled;
+    g_colorCyclingEnabled = 0;
     unsigned char oldAnimCtrPaused = m_animCtrPaused;
     m_animCtrPaused = 1;
     completeDraw(0);
@@ -3044,7 +2629,7 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
 
     fizzleCenter(FIZZLE_SOUND_PICKUP);
     m_animCtrPaused = oldAnimCtrPaused;
-    g_unnamed67f574 = oldColorCycling;
+    g_colorCyclingEnabled = oldColorCycling;
 
     CMCRecruitHero change(heroID, point, g_netLocalGamePos);
     sendMapChange(&change);
@@ -3159,34 +2744,21 @@ void advManager::doEventRefugeeCamp(hero* currentHero, NewmapCell* cell,
             sprintf(g_text,
                     g_adventureEventText->getText(
                         ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY),
-                    g_adventureObjectNames[cell->m_type]);
+                    g_quickViewText[cell->m_type]);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
         sprintf(g_text,
                 g_adventureEventText->getText(ADV_EVENT_TEXT_REFUGEE_CAMP),
-                g_adventureObjectNames[cell->m_type],
+                g_quickViewText[cell->m_type],
                 getArmyName(cell->m_objectIndex, 2));
         normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             return;
     }
 
-    short available = cell->m_extraInfo;
-    TCreatureType creature;
-    {
-        creature = TCreatureType(cell->m_objectIndex);
-    }
-    if (currentHero->belongsToHuman()) {
-        recruitUnit dialog(&currentHero->m_army, 0, creature, &available,
-                           CREATURE_NONE, 0,
-                           CREATURE_NONE, 0,
-                           CREATURE_NONE, 0);
-        g_executive->doDialog(&dialog);
-    } else {
-        aiRecruitRefugees(currentHero, creature, &available);
-    }
-    cell->m_extraInfo = available;
+    cell->m_extraInfo = recruitEvent(currentHero,
+        TCreatureType(cell->m_objectIndex), cell->m_extraInfo);
 }
 
 VA(0x004a4780, 0x45D)  // dc 0x94ea4
@@ -3977,7 +3549,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
                              -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             if (humanPlayer)
-                normalDialog(g_emptyRolloverText, 1, -1, -1, 8,
+                normalDialog("", 1, -1, -1, 8,
                              reward->m_artifact, -1, 0, -1, 0, -1, 0);
             // The Complete monster reward stores a decoded map ordinal; type_artifact retains its DC TArtifact constructor.
             type_artifact artifact(static_cast<TArtifact>(reward->m_artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
@@ -3993,7 +3565,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
     do {
         if (*qty) {
             if (humanPlayer)
-                normalDialog(g_emptyRolloverText, 1, -1, -1, resource,
+                normalDialog("", 1, -1, -1, resource,
                              *qty, -1, 0, -1, 0, -1, 0);
             currentHero->giveResource(resource, *qty);
         }
@@ -4040,7 +3612,7 @@ void advManager::monstersFight(hero* currentHero, NewmapCell* cell,
 
 void aiJoinDecision(hero* currentHero, TCreatureType creature, short amount);
 unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
-                                TCreatureType type, int amount,
+                                TCreatureType type, short amount,
                                 long goldCost);
 void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 
@@ -4588,7 +4160,7 @@ void advManager::doEventLithOneWay(hero* currentHero, NewmapCell* cell,
 
     NewmapCell* exitCell = g_game->m_worldMap.cell(point);
     if (exitCell->m_type == HERO) {
-        if (g_networkActive69954c) {
+        if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 1);
             transmitRemoteData(&message, 0x7f, 0, 1);
         }
@@ -4616,7 +4188,7 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
 
     NewmapCell* exitCell = g_game->m_worldMap.cell(point);
     if (exitCell->m_type == HERO) {
-        if (g_networkActive69954c) {
+        if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 1);
             transmitRemoteData(&message, 0x7f, 0, 1);
         }
@@ -4681,8 +4253,7 @@ inline void advManager::doEventWhirlpool(hero* currentHero,
 // 94-arm jump-table switch over cell->type, biased by 2 and indexed
 // through a 214-entry byte table.  Fifty-six arms are a single call to a
 // handler this file already carries; the rest are the handlers the retail
-// branch folded into the dispatcher itself (their DC rows are the DC_ONLY
-// stubs in the carcass above).  Case order IS layout order - the 0xd4/0xd5/
+// branch folded into the dispatcher itself.  Case order IS layout order - the 0xd4/0xd5/
 // 0xd7 retail additions sit between DRAGON_CITY and EYE_OF_MAGI, and the
 // whirlpool between the two monolith arms - and the five EH states run
 // 0..4 in exactly that order: sacrifice window, hill fort window, thieves
@@ -4772,7 +4343,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
     case CARTOGRAPHER:
         if (humanPlayer) {
             if (g_game->m_cartographerFlags[cell->m_objectIndex]
-                & g_unnamed69ccc4) {
+                & g_curPlayerBit) {
                 normalDialog(g_adventureEventText->getText(
                                  ADV_EVENT_TEXT_CARTOGRAPHER_VISITED),
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -4808,7 +4379,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                 g_netLocalGamePos,
                 g_game->m_cartographerMask[cell->m_objectIndex]);
             g_game->m_cartographerFlags[cell->m_objectIndex]
-                |= g_unnamed69ccc4;
+                |= g_curPlayerBit;
             completeDraw(false);
             updateScreen(0, 0);
         }
@@ -4849,7 +4420,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case BORDER_GATE:
         if (!(g_game->m_borderTentVisitFlags[cell->m_objectIndex]
-              & g_unnamed69ccc4)) {
+              & g_curPlayerBit)) {
             if (humanPlayer)
                 normalDialog(g_adventureEventText->getText(
                                  ADV_EVENT_TEXT_BORDER_GUARD_DENIED),
@@ -4928,7 +4499,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_HUT_OF_MAGI),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        if (g_networkActive69954c && g_dPlay
+        if (g_remoteOn && g_dPlay
             && g_netLocalGamePos == g_game->getLocalPlayerGamePos()) {
             CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
             if (handler)
@@ -5023,7 +4594,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventOasis(currentHero, cell, humanPlayer);
         break;
     case OBELISK:
-        if (!(g_game->m_obeliskFlags[cell->m_extraInfo] & g_unnamed69ccc4)) {
+        if (!(g_game->m_obeliskFlags[cell->m_extraInfo] & g_curPlayerBit)) {
             g_game->m_obeliskFlags[cell->m_extraInfo]
                 |= g_game->getTeamMask(g_netLocalGamePos);
             if (humanPlayer) {
@@ -5045,7 +4616,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_OBSERVATORY),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        if (g_networkActive69954c) {
+        if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 20);
             transmitRemoteData(&message, 0x7f, 0, 1);
         }
@@ -5061,7 +4632,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_PILLAR_OF_FIRE),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        if (g_networkActive69954c) {
+        if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 20);
             transmitRemoteData(&message, 0x7f, 0, 1);
         }
@@ -5256,7 +4827,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         }
         NewmapCell* exitCell = g_game->getCell(exitPoint);
         if (exitCell->m_type == HERO) {
-            if (g_networkActive69954c) {
+            if (g_remoteOn) {
                 CSetVisibilityMsg message(exitPoint, g_netLocalGamePos, 1);
                 transmitRemoteData(&message, 0x7f, 0, 1);
             }
@@ -5271,7 +4842,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     }
     case UNIVERSITY:
-        if (!humanPlayer || g_unk691209) {
+        if (!humanPlayer || g_goSolo) {
             aiVisitUniversity(currentHero,
                                 cell->getUniversity());
         } else {
@@ -5338,7 +4909,7 @@ void advManager::doEvent(NewmapCell* eventCell, type_point point)
     hero* currentHero = g_game->getCurrHero();
 
     reseed(0, 0);
-    eventSound(eventCell->m_type, eventCell->m_extraInfo);
+    eventSound(eventCell);
     dispatchEvent(currentHero, eventCell, point, 1);
 
     updateRadar(1, 1, 0, 0, 0);
@@ -5428,7 +4999,7 @@ void advManager::heroSwap(hero* leftHero, hero* rightHero)
     if (!manager)
         memError();
 
-    if (g_networkActive69954c
+    if (g_remoteOn
         && g_currentPlayer->isLocalHuman()
         && g_game->isHuman(rightHero->m_owner)
         && rightHero->m_owner != leftHero->m_owner)
@@ -5685,6 +5256,21 @@ void advManager::eventSound(int eventID, int extraInfo)
         launchSample(sampleName.c_str(), -1, 3);
 }
 
+// Original: advManager::RecruitEvent; events.cpp:5568, dc 0x9a528.
+// The ordinary helper is expanded into Complete's refugee-camp handler.
+short advManager::recruitEvent(hero* who, TCreatureType creature, short available)
+{
+    if (who->belongsToHuman()) {
+        recruitUnit dialog(&who->m_army, 0, creature, &available,
+                           CREATURE_NONE, 0, CREATURE_NONE, 0,
+                           CREATURE_NONE, 0);
+        g_executive->doDialog(&dialog);
+    } else {
+        aiRecruitRefugees(who, creature, &available);
+    }
+    return available;
+}
+
 VA(0x004aba50, 0x361)  // dc 0x9a5b0
 void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point point)
 {
@@ -5890,7 +5476,7 @@ void advManager::doEventUndeadLair(hero* currentHero, NewmapCell* cell, const ch
         return;
     }
 
-    creatureBankEvent(currentHero, cell, g_emptyRolloverText, point,
+    creatureBankEvent(currentHero, cell, "", point,
                       humanPlayer);
 }
 
@@ -6224,10 +5810,10 @@ int advManager::doNetCombat(CNetMsg* netMsg)
                         &leftHero, &leftArmyGroup, &rightPlayer,
                         &rightTown, &rightHero, &rightArmyGroup,
                         &seed, &winner,
-                        &g_combatFlag6985a3, &g_combatFlag697744);
+                        &g_combatRetreated, &g_combatSurrendered);
 
     int leftPlayer = leftHero->m_owner;
-    if (g_networkActive69954c && !g_thisNetGotAdventureControl) {
+    if (g_remoteOn && !g_thisNetGotAdventureControl) {
         if (rightHero)
             setHeroContext(rightHero->m_id, 0, 1, 1);
         else if (rightTown)
@@ -6241,7 +5827,7 @@ int advManager::doNetCombat(CNetMsg* netMsg)
         sendHeroTownData(point, leftHero, leftArmyGroup, rightPlayer,
                          rightTown, rightHero, rightArmyGroup, seed,
                          fromWho, winner,
-                         g_combatFlag6985a3, g_combatFlag697744);
+                         g_combatRetreated, g_combatSurrendered);
 
     if (leftArmyGroup)
         delete leftArmyGroup;
@@ -6254,8 +5840,8 @@ int advManager::doNetCombat(CNetMsg* netMsg)
     if (leftHero)
         delete leftHero;
 
-    g_combatFlag6985a3 = 0;
-    g_combatFlag697744 = 0;
+    g_combatRetreated = 0;
+    g_combatSurrendered = 0;
     return 1;
 }
 
@@ -6415,10 +6001,10 @@ unsigned char CCombatInitMsg::write(TAbstractFile* outfile) const
 // E:\gamedcs\events.cpp:6248, dc 0x9ce40.
 inline CTurnDurationPause::CTurnDurationPause()
 {
-    g_turnDuration69d630.pause();
-    if (g_unnamed691209) {
-        g_game->m_players[g_unnamed69120c].m_isLocal = 1;
-        g_game->m_players[g_unnamed69120c].m_isHuman = 1;
+    g_turnDuration.pause();
+    if (g_goSolo) {
+        g_game->m_players[g_soloPos].m_isLocal = 1;
+        g_game->m_players[g_soloPos].m_isHuman = 1;
     }
 }
 
@@ -6427,10 +6013,10 @@ inline CTurnDurationPause::CTurnDurationPause()
 VA(0x004ae9b0, 0x50)
 inline CTurnDurationPause::~CTurnDurationPause()
 {
-    g_turnDuration69d630.resume();
-    if (g_unnamed691209 && g_netLocalGamePos == g_unnamed69120c) {
-        g_game->m_players[g_unnamed69120c].m_isLocal = 0;
-        g_game->m_players[g_unnamed69120c].m_isHuman = 0;
+    g_turnDuration.resume();
+    if (g_goSolo && g_netLocalGamePos == g_soloPos) {
+        g_game->m_players[g_soloPos].m_isLocal = 0;
+        g_game->m_players[g_soloPos].m_isHuman = 0;
     }
 }
 
@@ -6488,7 +6074,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     demobilizeCurrHero(0, 1);
     reseed(0, 0);
 
-    unsigned char replay = (g_unnamed691209 && g_unnamed691208) ? 1 : 0;
+    unsigned char replay = (g_goSolo && g_goSoloTest) ? 1 : 0;
     if (!rightHuman && !leftHuman && !replay) {
         int winner;
         NewmapCell* target = g_game->getCell(point);
@@ -6513,7 +6099,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     g_mouseManager->showPointer(1);
     int savePlayer = g_netLocalGamePos;
     int saveShowIt = g_completeDrawEnabled;
-    g_unnamed699540 = 1;
+    g_adventureCombatActive = 1;
 
     if (leftPlayer >= 0 && rightPlayer >= 0
         && g_game->isHuman(rightPlayer)) {
@@ -6539,8 +6125,8 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                                         point, &tleftHero, &tleftArmyGroup,
                                         &tempRightPlayer, &trightTown,
                                         &trightHero, &trightArmyGroup, &seed,
-                                        &winnerId, &g_combatFlag6985a3,
-                                        &g_combatFlag697744);
+                                        &winnerId, &g_combatRetreated,
+                                        &g_combatSurrendered);
                     if (trightTown) {
                         *rightTown = *trightTown;
                         delete trightTown;
@@ -6589,23 +6175,23 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                                  rightTown, rightHero, rightArmyGroup,
                                  point.m_x, point.m_y, seed, alternateLayout);
     if (!leftHuman)
-        splitArmies(leftHero, rightHero, *rightArmyGroup);
+        aiArrangeArmyForCombat(leftHero, rightHero, *rightArmyGroup);
     if (!rightHuman && rightHero
         && rightHero->m_skillLevel[eSecSkillBattleTactics]
                > leftHero->m_skillLevel[eSecSkillBattleTactics])
-        splitArmies(rightHero, leftHero, *leftArmyGroup);
+        aiArrangeArmyForCombat(rightHero, leftHero, *leftArmyGroup);
     if (g_highMemBuffer > 2900)
-        g_unnamed699548 = 2;
+        g_adventureGraphicsPreserveMode = 2;
     else if (g_highMemBuffer > 900)
-        g_unnamed699548 = 1;
+        g_adventureGraphicsPreserveMode = 1;
     g_executive->callManager(g_combatManager);
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
     g_mouseManager->showPointer(1);
-    g_unnamed699548 = 0;
+    g_adventureGraphicsPreserveMode = 0;
     if (leftHero)
         leftHero->checkLevel();
     if (rightHero) {
-        if (g_networkActive69954c && rightHuman && leftHuman
+        if (g_remoteOn && rightHuman && leftHuman
             && g_combatManager->m_winner == 1) {
             if (g_game->isLocalHuman(rightHero->m_owner)) {
                 rightHero->checkLevel();
@@ -6703,7 +6289,7 @@ combatFinished:
     g_completeDrawEnabled = saveShowIt;
     g_netLocalGamePos = savePlayer;
     if (!g_currentPlayer->isHuman()) {
-        if (!g_networkActive69954c)
+        if (!g_remoteOn)
             g_game->showComputerScreen();
         g_game->turnOnAIMusic();
         setNoDialogMenus(0);
@@ -6712,10 +6298,10 @@ combatFinished:
     }
     mobilizeCurrHero(0, 0, 1);
     if (finishHeroes) {
-        g_combatFlag6985a3 = 0;
-        g_combatFlag697744 = 0;
+        g_combatRetreated = 0;
+        g_combatSurrendered = 0;
     }
-    g_unnamed699540 = 0;
+    g_adventureCombatActive = 0;
     g_mouseManager->showPointer(1);
     checkEndGame(0);
     return g_combatManager->m_winner;

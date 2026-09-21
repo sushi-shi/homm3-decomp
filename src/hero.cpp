@@ -1,133 +1,88 @@
-// town::HasBuilding - hero::GetLuck's Grail gate is a real CALL to the
-// Town.h inline (retail `push 1 / push 0x1a / call 0x4305a0`), so this
-// compiland needs the declarator. It has to be defined before the FIRST
-// include that reaches town.h (game.h does, several lines below the
-// explicit `#include "town.h"`), and it stays defined for the whole
-// compiland: includes are TU-local, so no other object sees it. town.h's
-// own note measures what declaring it unconditionally would cost.
-#include <va.h>
-// VC6's own shipped Dinkumware headers - retail links Dinkumware, NOT
-// STLport (P2.3, answered 2026-08-07 and now byte-proven: see the COMDAT
-// tail near the end of this file). No vendoring: the toolchain already
-// carries the exact headers that built the retail COMDATs.
+#include "text.h"
+#include "va.h"
+#include "objnames.h"
+#include "includes.h"
+#include "homm3_limit.h"
+#include "homm3_minmax.h"
+#include "bitset_iterator.h"
+
+#include <algorithm>
 #include <bitset>
 #include <functional>
-#include <algorithm>
-#include "bitset_iterator.h"
-#include "homm3_limit.h"
-#include <vector>
-#include <stdio.h>
-#include <string.h>
-// abs() - the intrinsic form retail uses (cdq / xor / sub), the
-// stdlib.h precedent already carried by cmbtmgr, window and ai_combat.
-#include <stdlib.h>
-// sqrt() - hero::get_combat_value_modifier (0x4e5400) calls the CRT
-// entry, not an inlined fsqrt.
 #include <math.h>
-// hero.obj owns get_morale_description / get_luck_description, so the
-// owning compiland joins their gate rather than defining armygrp's
-// wider HOMM3_ARMYGRP_DESCRIPTION_API.
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <vector>
+
 #include "hero.h"
-// class army - hero::modify_spell_damage (0x4e5760) reads the target
-// stack's embedded creature-traits level at +0x78.
-#include "army.h"
-// gpGame / playerData / game::IsHuman: the owner-record accessors
-// (belongs_to_human, get_player) and every gpGame walk in this TU need
-// the real definitions, and game.h is where they live.
-#include "game.h"
-// advManager::FizzleCenter - HeroView's dismiss path calls it. The one
-// declarator, not the whole events view; advmgr.h's own note records why.
+
 #include "advmgr.h"
-#include "cursor.h"
-// TSecondarySkill / TSkillMastery / akHeroSpecificAbilities - see the
-// placement note at the top of that header.
-// The creature arm of THeroSpecificAbility's +0x04 union: hero::GetMobility
-// reads the specialty subject as a TCreatureType. hero.h above already
-// pulled armygrp.h, so TCreatureType is in scope by the time this is read.
-#include "herospec.h"
-// UpgradedCreatureType - GetMobility's creature-specialty check asks for
-// the specialty stack's upgrade; the cmbtmgr / hillfortwindow precedent.
-#include "creaturetype.h"
-// TArtifact / akArtifactTraits / gCombinationArtifacts - same placement
-// rationale as herospec.h.
+#include "army.h"
 #include "artifact.h"
-#include "exec.h"
-#include "findpath.h"
-#include "town.h"
-// GetBuildingName - the Grail arm of both description bodies names the
-// building it credits.
-#include "castle.h"
-// TMagicTerrain - the battlefield magic-terrain id the spell-school
-// quartet takes as its second argument.
-#include "magicterrain.h"
-#include "kb.h"
-#include "message.h"
-#include "misc.h"
-#include "winmgr.h"
-#include "levelupwindow.h"
-#include "sskilltraits.h"
-// The two windows THeroScreenWindow::WindowHandler constructs on the
-// stack: the spellbook on the artifact slot 17 arm and the quick-hero
-// popup on the locator right-click arm.
-#include "spellbookwindow.h"
-#include "quickherowindow.h"
-// DoQuestLog - the quest-log button arm.
-#include "questlogwindow.h"
-// gpInputManager - the two SHIFT arms force a mouse-move so the
-// rollover text re-evaluates under the new modifier.
-#include "inputmgr.h"
-// gTurnDuration69d630 - CheckLevel shortens the multiplayer dialog
-// deadline once the turn timer has expired.
-#include "remote.h"
-// launch_sample - the level-up jingle.
-#include "soundmgr.h"
-#include "resourcemanager.h"
-#include "textresource.h"
-// After Windows headers: undefine their min/max macros before using the
-// includes.h integer wrappers recovered from Dreamcast.
-#include "homm3_minmax.h"
-
-#include "mousemgr.h"
-#include "widget.h"
-
-// The hero screen's own widget zoo: THeroScreenWindow's constructor
-// builds 138 of them by hand.
 #include "border.h"
 #include "button.h"
+#include "castle.h"
+#include "creaturetype.h"
+#include "cursor.h"
+#include "exec.h"
+#include "findpath.h"
+#include "game.h"
+#include "herospec.h"
 #include "iconwdgt.h"
+#include "inputmgr.h"
+#include "kb.h"
+#include "levelupwindow.h"
+#include "magicterrain.h"
+#include "message.h"
+#include "misc.h"
+#include "mousemgr.h"
+#include "questlogwindow.h"
+#include "quickherowindow.h"
+#include "remote.h"
+#include "resourcemanager.h"
+#include "soundmgr.h"
+#include "spellbookwindow.h"
+#include "sskilltraits.h"
+#include "textresource.h"
 #include "textwdgt.h"
-#include "includes.h"
+#include "town.h"
+#include "widget.h"
+#include "winmgr.h"
 
-DATA(0x0069774c) extern unsigned char g_campaignMode;
-DATA(0x0067dcec) extern const THeroClassTraits (&g_heroClasses)[18];
+DATA(0x00698a88) type_artifact g_heroScreenDraggedArtifact;
+DATA(0x00698a94) int g_stablesMovementBonus;
+
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x00698400) int g_inSetup;
+DATA(0x00697738) int g_heroScreenArmySlot;
+DATA(0x00698b20) hero* g_currentHero;
+DATA(0x00698a84) int g_heroScreenHeroPosition;
+DATA(0x00698a90) int g_heroScreenNoDismiss;
+DATA(0x00698a50) int g_heroScreenHeroId;
+DATA(0x00698a78) THeroScreenWindow* g_heroScreenWindow;
+DATA(0x00698a44) int g_heroScreenArmyStripLive;
+
 // Runtime hero-view state used by the retail-only name getter below. The
 // storage addresses and access widths are byte-proven; no public symbol
 // roster survives for the two name-table pointer spellings, so they are
 // provisional. gpCurrentHero and the hero-screen globals live in hero.h.
 DATA(0x006a7540) extern const char* g_statDesc[4];
-DATA(0x006a66d8) extern const char* g_sharedHeroNames[156];
 // Runtime-loaded artifact rollover text. Retail fixes the three storage
 // cells and their roles; no surviving public names them, so the spellings
 // remain provisional.
-DATA(0x006a6948) extern const char* g_campaignHeroName;
-DATA(0x006a8040) extern const char* g_emptyArtifactRolloverText;
-DATA(0x006a804c) extern const char* g_spellbookRolloverText;
-DATA(0x006a8050) extern const char* g_artifactRolloverFormat;
 
 // Runtime tables loaded by initialize_ballistics_table and its inlined
 // initialize_move_constants tail. The relocation at 0x679c84 makes the
 // public const view an array reference to the four writable 8-byte rows.
+// Original move_constants; the loader and consumers share these fields.
+DATA(0x00698a98) type_movement_constants g_moveConstants;
+
 DATA(0x00698a58) static type_ballistics_traits g_ballisticsTraits[4];
 DATA(0x00679c84)
 const type_ballistics_traits (&g_constBallisticsTraits)[4] =
     g_ballisticsTraits;
-DATA(0x00698a98) extern int g_landMovement[21];
-DATA(0x00698aec) extern int g_seaMovement[kNumMasteries];
-DATA(0x00698afc) extern int g_equestriansGlovesMovementBonus;
-DATA(0x00698b00) extern int g_bootsOfSpeedMovementBonus;
-DATA(0x00698b04) extern int g_oceanGuidanceMovementBonus;
-DATA(0x00698b08) extern int g_seaCaptainsHatMovementBonus;
-DATA(0x00698b0c) extern int g_lighthouseMovementBonus;
 
 // The per-mastery specialty factor rows, one four-float .rdata run per
 // skill (retail 0x63e9f8 / 0x63ea08 / 0x63ea58 / 0x63ea88 / 0x63ea98,
@@ -252,40 +207,6 @@ static TSecondarySkill g_magicSchools[4] = {
     eSecSkillSchoolOfWaterMagic, eSecSkillSchoolOfEarthMagic
 };
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:219 - promoted to a live claim (see below).
-
-// E:\gamedcs\hero.cpp:254
-DC_ONLY(0xca7c0, 0x12)
-const char* hero::GetSpecificAbilityText()
-{
-    // @stub
-}
-
-// E:\gamedcs\hero.cpp:259
-DC_ONLY(0xca7d4, 0x12)
-const char* hero::getSpecificAbilityTextShort()
-{
-    // @stub
-}
-
-// E:\gamedcs\hero.cpp:267
-DC_ONLY(0xca7e8, 0x19C)
-unsigned char initializeMoveConstants()
-{
-    // @stub
-}
-
-// E:\gamedcs\hero.cpp:329
-DC_ONLY(0xca984, 0x11C)
-unsigned char initializeBallisticsTable()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // The specialty table itself and the const reference every reader goes
 // through, the campaignmap.obj pattern: retail's writable array is at
 // 0x678420 and the reference cell immediately after it at 0x679c80, which is
@@ -319,6 +240,12 @@ unsigned char initializeHeroSpecificAbilitiesTable()
     return 1;
 }
 
+// Original: hero::GetSpecificAbilityText; hero.cpp:254, dc 0xca7c0
+const char* hero::getSpecificAbilityText()
+{
+    return g_heroSpecificAbilities[m_id].m_longText;
+}
+
 VA(0x004d7220, 0x11)  // dc 0xca7d4
 const char* hero::getSpecificAbilityTextShort()
 {
@@ -343,9 +270,9 @@ static unsigned char initializeMoveConstants()
 
     int i;
     for (i = 0; i <= 20; ++i)
-        g_landMovement[i] = atoi(resource->getRow(i + 2)[1]);
+        g_moveConstants.m_land[i] = atoi(resource->getRow(i + 2)[1]);
 
-    int* seaMovement = g_seaMovement;
+    int* seaMovement = g_moveConstants.m_sea;
     for (int row = 2; row < 2 + kNumMasteries; ++row, ++seaMovement) {
         const TSpreadsheetResource::TStringVector& values =
             resource->getRow(row);
@@ -353,18 +280,22 @@ static unsigned char initializeMoveConstants()
     }
 
     i = 2;
-    g_equestriansGlovesMovementBonus = atoi(resource->getRow(i++)[5]);
-    g_bootsOfSpeedMovementBonus = atoi(resource->getRow(i++)[5]);
-    g_oceanGuidanceMovementBonus = atoi(resource->getRow(i++)[5]);
-    g_seaCaptainsHatMovementBonus = atoi(resource->getRow(i++)[5]);
+    g_moveConstants.m_equestriansGlovesBonus = atoi(resource->getRow(i++)[5]);
+    g_moveConstants.m_bootsOfSpeedBonus = atoi(resource->getRow(i++)[5]);
+    g_moveConstants.m_oceanGuidanceBonus = atoi(resource->getRow(i++)[5]);
+    g_moveConstants.m_seaCaptainsHatBonus = atoi(resource->getRow(i++)[5]);
     g_stablesMovementBonus = atoi(resource->getRow(i++)[5]);
-    g_lighthouseMovementBonus = atoi(resource->getRow(i)[5]);
+    g_moveConstants.m_lighthouseBonus = atoi(resource->getRow(i)[5]);
 
     resource->dispose();
     return 1;
 }
 
 VA(0x004d7240, 0x223)  // dc 0xca984
+// DC public ?initialize_ballistics_table@@YA_NXZ is bool, but its
+// initialize_move_constants callee returns unsigned char. VC6 normalizes that
+// tail call for bool; Complete forwards the byte unchanged, proving the
+// Windows interface changed to unsigned char.
 unsigned char initializeBallisticsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
@@ -403,16 +334,13 @@ type_obscuring_object::type_obscuring_object()
     initialize();
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:380
-DC_ONLY(0xcaac8, 0x3A)
-mine* type_obscuring_object::get_obscured_mine()
+// Original: type_obscuring_object::get_obscured_mine; hero.cpp:380, dc 0xcaac8
+mine* type_obscuring_object::getObscuredMine() const
 {
-    // @stub
+    if (m_valid && m_obscuredType == MINE && m_wasTrigger)
+        return &g_game->m_mines[m_extraInfo];
+    return 0;
 }
-
-#endif  // @carcass
 
 VA(0x004d7490, 0x35)  // dc 0xcab04
 town* type_obscuring_object::getObscuredTown() const
@@ -535,7 +463,7 @@ void hero::hire(int playerId, type_point point)
     player->m_resources[GOLD] =
         player->m_resources[GOLD] - g_heroGoldCost;
     placeInMap(playerId, point, 1);
-    g_game->finishTownHire(playerId, recruitSlot);
+    g_game->replaceRecruit(playerId, recruitSlot);
 }
 
 VA(0x004d7900, 0x11B)  // dc 0xcaedc
@@ -767,117 +695,62 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 VA(0x004d80c0, 0x526)  // dc 0xcb698
 int hero::save(TAbstractFile* outfile)
 {
-    unsigned int uintBuffer;
-    unsigned short ushortBuffer;
-    int intBuffer;
-    short shortBuffer;
-    unsigned char ucharBuffer;
-    char charBuffer;
-
     if (!type_obscuring_object::save(outfile))
         return -1;
 
-    charBuffer = static_cast<char>(m_sex);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_hasCustomName);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    writeValue(outfile, static_cast<char>(m_sex));
+    writeValue(outfile, static_cast<unsigned char>(m_hasCustomName));
 
-    uintBuffer = static_cast<unsigned int>(m_customName.length());
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    writeValue(outfile, static_cast<unsigned int>(m_customName.length()));
     outfile->write(m_customName.c_str(), m_customName.length());
 
-    charBuffer = static_cast<char>(m_owner);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_patrolRadius);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_moraleBonus);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_luckBonus);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_backpackCount);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_disguiseLevel);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_flightLevel);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_waterWalkLevel);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_dWalkSpellsCast);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_visionsPower);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_id);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = static_cast<char>(m_heroClass);
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_portrait);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_patrolX);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_patrolY);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_facing);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_formation);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_levelSeed);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    ucharBuffer = static_cast<unsigned char>(m_lastWisdom);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    writeValue(outfile, static_cast<char>(m_owner));
+    writeValue(outfile, static_cast<char>(m_patrolRadius));
+    writeValue(outfile, static_cast<char>(m_moraleBonus));
+    writeValue(outfile, static_cast<char>(m_luckBonus));
+    writeValue(outfile, static_cast<char>(m_backpackCount));
+    writeValue(outfile, static_cast<char>(m_disguiseLevel));
+    writeValue(outfile, static_cast<char>(m_flightLevel));
+    writeValue(outfile, static_cast<char>(m_waterWalkLevel));
+    writeValue(outfile, static_cast<char>(m_dWalkSpellsCast));
+    writeValue(outfile, static_cast<char>(m_visionsPower));
+    writeValue(outfile, static_cast<char>(m_id));
+    writeValue(outfile, static_cast<char>(m_heroClass));
+    writeValue(outfile, static_cast<unsigned char>(m_portrait));
+    writeValue(outfile, static_cast<unsigned char>(m_patrolX));
+    writeValue(outfile, static_cast<unsigned char>(m_patrolY));
+    writeValue(outfile, static_cast<unsigned char>(m_facing));
+    writeValue(outfile, static_cast<unsigned char>(m_formation));
+    writeValue(outfile, static_cast<unsigned char>(m_levelSeed));
+    writeValue(outfile, static_cast<unsigned char>(m_lastWisdom));
 
-    intBuffer = static_cast<int>(m_pathTargetX);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    intBuffer = static_cast<int>(m_pathTargetY);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    shortBuffer = static_cast<short>(m_pathTargetZ);
-    outfile->write(&shortBuffer, sizeof(shortBuffer));
-    shortBuffer = static_cast<short>(m_lastMagicSchoolLevel);
-    outfile->write(&shortBuffer, sizeof(shortBuffer));
-    intBuffer = static_cast<int>(m_maxMovePoints);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    intBuffer = static_cast<int>(m_movePoints);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    intBuffer = static_cast<int>(m_experience);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    intBuffer = static_cast<int>(m_skillCount);
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    shortBuffer = static_cast<short>(m_mana);
-    outfile->write(&shortBuffer, sizeof(shortBuffer));
-    shortBuffer = static_cast<short>(m_level);
-    outfile->write(&shortBuffer, sizeof(shortBuffer));
-    ushortBuffer = static_cast<unsigned short>(m_targetDistance);
-    outfile->write(&ushortBuffer, sizeof(ushortBuffer));
+    writeValue(outfile, static_cast<int>(m_pathTargetX));
+    writeValue(outfile, static_cast<int>(m_pathTargetY));
+    writeValue(outfile, static_cast<short>(m_pathTargetZ));
+    writeValue(outfile, static_cast<short>(m_lastMagicSchoolLevel));
+    writeValue(outfile, static_cast<int>(m_maxMovePoints));
+    writeValue(outfile, static_cast<int>(m_movePoints));
+    writeValue(outfile, static_cast<int>(m_experience));
+    writeValue(outfile, static_cast<int>(m_skillCount));
+    writeValue(outfile, static_cast<short>(m_mana));
+    writeValue(outfile, static_cast<short>(m_level));
+    writeValue(outfile, static_cast<unsigned short>(m_targetDistance));
 
-    uintBuffer = static_cast<unsigned int>(m_trainingGroundsFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_defenseTowerFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_gardenOfRevelationFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_mercCampFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_powerSchoolFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_treeOfKnowledgeFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_libraryFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_arenaFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_magicSchoolFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_warSchoolFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_universityFlags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_shrine1Flags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_shrine2Flags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_shrine3Flags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
-    uintBuffer = static_cast<unsigned int>(m_flags);
-    outfile->write(&uintBuffer, sizeof(uintBuffer));
+    writeValue(outfile, static_cast<unsigned int>(m_trainingGroundsFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_defenseTowerFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_gardenOfRevelationFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_mercCampFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_powerSchoolFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_treeOfKnowledgeFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_libraryFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_arenaFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_magicSchoolFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_warSchoolFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_universityFlags));
+    writeValue(outfile, static_cast<unsigned int>(m_shrine1Flags));
+    writeValue(outfile, static_cast<unsigned int>(m_shrine2Flags));
+    writeValue(outfile, static_cast<unsigned int>(m_shrine3Flags));
+    writeValue(outfile, static_cast<unsigned int>(m_flags));
 
     m_army.save(outfile);
 
@@ -891,8 +764,7 @@ int hero::save(TAbstractFile* outfile)
     outfile->write(m_backpack, sizeof(m_backpack));
     outfile->write(m_artifactSlotCounts, sizeof(m_artifactSlotCounts));
 
-    ucharBuffer = static_cast<unsigned char>(m_isSleeping);
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    writeValue(outfile, static_cast<unsigned char>(m_isSleeping));
 
     const std::bitset<48>& granted = m_townSpecialGrantedMask;
     unsigned char outBuf[6];
@@ -1075,8 +947,7 @@ void hero::initialize(short index)
                 static_cast<float>(random(100, 125));
 
     m_equipped[16].m_artifactId = ARTIFACT_CATAPULT;
-    for (i = 0; i < 7; i++)
-        m_army.m_armies[i] = CREATURE_NONE;
+    MEMSET(m_army.m_armies, CREATURE_NONE, sizeof(m_army.m_armies), i);
     m_pathTargetY = -1;
     m_pathTargetX = -1;
     m_level = 1;
@@ -1091,7 +962,7 @@ void hero::initialize(short index)
     m_dWalkSpellsCast = 0;
     m_visionsPower = eMasteryInvalid;
     m_hasCustomName = 0;
-    m_customName = g_emptyRolloverText;
+    m_customName = "";
     m_isSleeping = 0;
     m_formation = 2;
     m_flags = 0;
@@ -1126,8 +997,11 @@ void hero::initialize(short index)
 // hero. Its single caller is inside game.obj (0x4cae10), which walks 156
 // records with `add ebx, 0x334` - which is what closes the record's size.
 
-// Dreamcast initialize_hero(hero*, const HeroExtra*) is a free function at
-// hero.cpp:1098, dc 0xb6c84; Complete implements it as this member.
+// Original: initialize_hero; game.cpp:9912, dc 0xb6c84
+// Complete moved map-hero setup from the game.cpp free function into this
+// hero member: retail 0x4d8b30 receives this in ECX and returns with ret 4.
+// The expanded HeroExtra adds primary skills, spells, custom name and sex;
+// fixed DC campaign-trait carryover is handled by Complete's campaign owner.
 // Keep basic_string::assign out of line at the customName assignment.
 
 // Residual (94.67%): register-homing only, and why-reg v2's model CAPS it -
@@ -1157,8 +1031,8 @@ void hero::initialize(short index)
 // argument order.  The SECOND memset of the second pair already agrees, so
 // it is a block-entry schedule and not the spelling: `&arr[0]` is byte-flat
 // and hoisting `skillCount = 0` above the pair costs 0.36.
-VA(0x004d8b30, 0x434)  // retail-only, hero member, ret 4
-void hero::heroFn004D8B30(const HeroExtra* setup)
+VA(0x004d8b30, 0x434)  // Complete member interface, ret 4
+void hero::initialize(const HeroExtra* setup)
 {
     m_order = setup->m_objRef;
     m_x = setup->m_location.m_x;
@@ -1185,8 +1059,8 @@ void hero::heroFn004D8B30(const HeroExtra* setup)
         m_portrait = setup->m_portraitNumber;
 
     if (setup->m_customPrimarySkills) {
-        for (int i = 0; i < 4; i++)
-            m_stats[i] = setup->m_primarySkills[i];
+        int i;
+        MEMCPY(m_stats, setup->m_primarySkills, sizeof(m_stats), i);
     }
 
     if (setup->m_customSecondarySkills) {
@@ -1268,7 +1142,7 @@ void hero::heroFn004D8B30(const HeroExtra* setup)
         // is expanded in place at 0x4d999b, induction rewrite and all.
         // The only consistent reading is that retail's source repeats the
         // statements rather than calling it.
-        if (g_campaignMode
+        if (g_inCampaign
             && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
             && g_game->m_campaign.m_currentMap == g_startLevelScenario) {
             int level = g_game->m_heroes[g_startLevelHeroId].m_level
@@ -1300,7 +1174,7 @@ void hero::heroFn004D8B30(const HeroExtra* setup)
 VA(0x004d8f70, 0x3E)
 const char* hero::heroFn004D8F70()
 {
-    if (m_id == CLASS_NAME_OVERRIDE_HERO_ID && g_campaignMode &&
+    if (m_id == CLASS_NAME_OVERRIDE_HERO_ID && g_inCampaign &&
         g_game->m_campaign.m_currentCampaign == CLASS_NAME_OVERRIDE_SCENARIO)
         return g_generalText->getText(GENERAL_TEXT_CAMPAIGN_HERO_CLASS);
     return g_heroClasses[m_heroClass].m_className;
@@ -1320,15 +1194,15 @@ const char* hero::heroFn004D8FB0()
     if (m_hasCustomName)
         return m_customName.c_str();
 
-    if (g_campaignMode &&
+    if (g_inCampaign &&
         g_game->m_campaign.m_currentCampaign != CUSTOM_NAME_CAMPAIGN_EXCLUDED_SCENARIO &&
         g_currentHero->m_portrait == CUSTOM_NAME_CAMPAIGN_PORTRAIT)
-        return g_campaignHeroName;
+        return g_heroBio[156];
 
     const char* heroName = m_name;
     const char* defaultName = g_heroTraits[m_id].m_defaultName;
     if (strcmp(heroName, defaultName) == 0)
-        return g_sharedHeroNames[m_id];
+        return g_heroBio[m_id];
     return heroName;
 }
 
@@ -1437,6 +1311,23 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
 }
 
 // E:\gamedcs\hero.cpp:1466
+// Residual (96.5278%): 11 of 11 blocks, both branch targets, the jump table's
+// four arms in source order and the equipped-slot walk are exact. Eight bytes
+// differ, all one decision: retail loads the parameter into EAX, consumes it in
+// place (`add eax,-0x91`) for the switch index, and RELOADS `[ebp+8]` in the
+// not-matched arm; ours keeps the load in EDX (`lea eax,[edx-0x91]`) and reuses
+// it (`mov esi,edx`), i.e. VC6 CSEs the two parameter reads for us and did not
+// for retail. Measured byte-flat: default arm first/last, dropping its `break`,
+// moving the CATAPULT arm last, `long`/`TArtifact` artifact, switching on a copy
+// of the parameter, declaring `slot` outside the loop, `long slot`, and the
+// while form - and EXHAUSTIVELY so: a 64-member source family over the switch
+// head, the default arm and the loop form produced ONE object for all 64
+// combinations, so nothing in this body reaches the residual. Measured WORSE:
+// reassigning the parameter in the arms and dropping
+// the default (89.86 - VC6 then enregisters the parameter at entry and the
+// not-matched block disappears entirely), initialising `artifact` from the
+// parameter before the switch (89.86, same cause), and reversing the equipped
+// compare (96.25). DC records no locals for this body.
 VA(0x004d9260, 0x68)  // dc-bracket forced, dc 0xcc2a8
 void hero::destroySiegeWeaponArtifact(int creatureType)
 {
@@ -1616,6 +1507,42 @@ void hero::updateSpellList()
         }
         slot++;
     } while (--remaining);
+}
+
+// Original: THeroScreenWindow::HeroMessageUpdate; hero.cpp:1594, dc 0xcc49c
+void THeroScreenWindow::heroMessageUpdate(char* text)
+{
+    message msg;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    // Complete adds one equipped-artifact widget; the status ids move by one.
+    msg.m_codeY = STATUS_BAR_ID;
+    msg.m_extraText = text;
+    broadcastMessage(msg);
+    drawWindow(1, STATUS_BAR_BORDER_ID, STATUS_BAR_ID);
+}
+
+// Original: hero::HeroScreenUpdate; hero.cpp:1606, dc 0xcc4e0
+void hero::heroScreenUpdate()
+{
+    // DC1607 constructs this message before UpdateArmies at1609, although
+    // the following sends use the integer-payload overload.
+    message msg;
+    msg.m_id = MESSAGE_WIDGET;
+    updateArmies();
+    if (g_heroScreenArmySlot == THeroScreenWindow::HERO_SCREEN_NO_ARMY_SLOT) {
+        g_windowManager->broadcastMessage(
+            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+            THeroScreenWindow::MIXED_ARMY_ID,
+            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+    } else {
+        g_windowManager->broadcastMessage(
+            MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+            THeroScreenWindow::MIXED_ARMY_ID,
+            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+    }
+    g_heroScreenWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                                  WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // E:\gamedcs\hero.cpp:1632
@@ -1811,7 +1738,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
 
     type_obscuring_object::restoreCell();
 
-    if (!g_combatFlag697744) {
+    if (!g_combatSurrendered) {
         for (int slot = 0; slot < 7; slot++)
             m_army.dismiss(slot);
     }
@@ -1833,7 +1760,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
     g_advManager->m_advWindow->updateHeroLocators(0, 1, 1);
     g_game->m_heroAvailability[m_id] = -1;
 
-    if (g_combatFlag6985a3 || g_combatFlag697744) {
+    if (g_combatRetreated || g_combatSurrendered) {
         int slot = random(0, 1);
         int other = g_game->m_players[m_owner].m_recruits[slot];
         if (other != -1) {
@@ -1849,7 +1776,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
         m_flags |= 0x20000;
     }
 
-    if (g_campaignMode) {
+    if (g_inCampaign) {
         switch (g_game->m_campaign.m_currentCampaign) {
         case DEALLOCATE_CAMPAIGN_BY_PORTRAIT:
             if (m_portrait == DEALLOCATE_KEPT_PORTRAIT)
@@ -1871,7 +1798,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
         m_maxMovePoints = m_movePoints = getMobility((m_flags >> 18) & 1);
     }
 
-    if (!g_combatFlag697744)
+    if (!g_combatSurrendered)
         g_game->setRandomHeroArmies(m_id, 0, 1);
 }
 
@@ -1902,7 +1829,7 @@ int hero::getExperienceIncrement(int level)
 // the whole body expanded. `inline` reproduces the absence, the
 // strip::DrawNumber precedent. Same table and same 1.2 extrapolation as
 // GetExperience above, walked forwards instead of indexed.
-DC_ONLY(0xccc8c, 0x110)
+
 inline int hero::getLevel(int experience)
 {
     int heroLevel = 1;
@@ -1983,7 +1910,7 @@ void hero::applyBattleLossTemps()
 
 // hero::GetLevel (dc 0xccc8c, 272 B) has NO retail row: the carve is
 // gap-free from GetExperienceIncrement 0x004da420 straight into
-// ApplyBattleWinTemps 0x004da510. Left DC_ONLY above.
+// ApplyBattleWinTemps 0x004da510.
 
 // Retail .bss 0x698400. 0x4bfe70 sets it for the whole of its
 // scenario-setup pass and clears it at the end; every reader treats
@@ -1991,7 +1918,7 @@ void hero::applyBattleLossTemps()
 // notify call, CheckLevel skips the level-up window entirely. Eight
 // references image-wide, three in the body below. NAME UNATTESTED,
 // address-ordinal placeholder.
-DATA(0x00698400) extern int g_inSetup698400;
+
 
 TSecondarySkill aiChooseSecondarySkill(const hero* ourHero,
                                           TSecondarySkill first,
@@ -2016,7 +1943,6 @@ TSecondarySkill getSkillAward(const hero* currentHero,
 // reads ecx only (`void hero::CheckLevel()`), 0x004dad00 reads ecx AND
 // edx, i.e. the /Gr free function `get_skill_award(hero*, ...)`.
 // E:\gamedcs\hero.cpp:2147
-
 // The level-up loop. EH-bearing, but NOT from a source try/catch: three
 // TLevelUpWindow locals in three mutually exclusive arms plus /GX give
 // the fs:[0] frame and the 0/1/2 trylevel by themselves, and the
@@ -2111,7 +2037,7 @@ void hero::checkLevel()
                 chances = g_heroClasses[m_heroClass].m_gainPrimarySkillChance;
             else
                 chances = g_heroClasses[m_heroClass].m_gainPrimarySkillChance10P;
-            if (g_campaignMode &&
+            if (g_inCampaign &&
                 g_game->m_campaign.m_currentCampaign == LEVEL_UP_CAMPAIGN_OVERRIDE &&
                 m_id == LEVEL_UP_OVERRIDE_HERO_ID) {
                 if (m_level <= LEVEL_UP_LOW_LEVEL_LAST)
@@ -2129,7 +2055,7 @@ void hero::checkLevel()
 
             m_stats[stat]++;
             char text[200];
-            sprintf(text, "\n%s +1", g_primarySkillNames[stat]);
+            sprintf(text, "\n%s +1", g_statNames[stat]);
             strcat(g_text, text);
 
             TSecondarySkill skills[LEVEL_UP_SKILL_CHOICES];
@@ -2160,34 +2086,34 @@ void hero::checkLevel()
                     m_lastMagicSchoolLevel = m_level;
             }
 
-            if (!g_inSetup698400 && m_owner >= 0 &&
+            if (!g_inSetup && m_owner >= 0 &&
                 g_game->isLocalHuman(m_owner)) {
                 launchSample("nwherolv.82m", -1, 3);
-                if (g_videoPaused)
+                if (g_remoteOn)
                     g_currentPlayer->isLocalHuman();
 
                 if (skills[0] == eSecSkillNone) {
                     TLevelUpWindow window(this, stat, -1, -1);
                     if (g_game->isMultiplayer() &&
-                        g_turnDuration69d630.isExpired())
-                        g_dialogDeadline697784 = 15000;
+                        g_turnDuration.isExpired())
+                        g_dialogDeadline = 15000;
                     window.doModal(0);
                 } else if (skills[1] == eSecSkillNone) {
                     TLevelUpWindow window(
                         this, stat,
                         skills[0] * 3 + 3 + m_skillLevel[skills[0]], -1);
                     if (g_game->isMultiplayer() &&
-                        g_turnDuration69d630.isExpired())
-                        g_dialogDeadline697784 = 15000;
+                        g_turnDuration.isExpired())
+                        g_dialogDeadline = 15000;
                     window.doModal(0);
                     giveSS(skills[0], 1);
                 } else {
                     sprintf(text,
                             g_generalText->getText(
                                 GENERAL_TEXT_LEVEL_UP_CHOICE),
-                            g_skillMasteryNames[m_skillLevel[skills[0]]],
+                            g_secondarySkillLevels[m_skillLevel[skills[0]]],
                             g_sSkillTraits[skills[0]].m_name,
-                            g_skillMasteryNames[m_skillLevel[skills[1]]],
+                            g_secondarySkillLevels[m_skillLevel[skills[1]]],
                             g_sSkillTraits[skills[1]].m_name);
                     strcat(g_text, text);
                     {
@@ -2196,13 +2122,13 @@ void hero::checkLevel()
                             skills[0] * 3 + 3 + m_skillLevel[skills[0]],
                             skills[1] * 3 + 3 + m_skillLevel[skills[1]]);
                         if (g_game->isMultiplayer() &&
-                            g_turnDuration69d630.isExpired())
-                            g_dialogDeadline697784 = 15000;
+                            g_turnDuration.isExpired())
+                            g_dialogDeadline = 15000;
                         window.doModal(0);
                     }
                     if (g_windowManager->m_dialogReturn ==
                         DIALOG_RETURN_TIMEOUT) {
-                        if (!g_inSetup698400 && m_owner >= 0)
+                        if (!g_inSetup && m_owner >= 0)
                             giveSS(aiChooseSecondarySkill(
                                        this, skills[0], skills[1], 1), 1);
                         else
@@ -2219,7 +2145,7 @@ void hero::checkLevel()
             } else if (skills[0] != eSecSkillNone) {
                 if (skills[1] == eSecSkillNone)
                     giveSS(skills[0], 1);
-                else if (!g_inSetup698400 && m_owner >= 0)
+                else if (!g_inSetup && m_owner >= 0)
                     giveSS(aiChooseSecondarySkill(
                                this, skills[0], skills[1], 1), 1);
                 else
@@ -2292,7 +2218,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
     int heroClass = currentHero->m_heroClass;
     const THeroClassTraits& classTraits = g_heroClasses[heroClass];
     const char* skillDisabled = g_game->m_ssDisabled;
-    if (g_campaignMode &&
+    if (g_inCampaign &&
         g_game->m_campaign.m_currentCampaign == hero::LEVEL_UP_CAMPAIGN_OVERRIDE &&
         currentHero->m_id == hero::LEVEL_UP_OVERRIDE_HERO_ID)
         skillDisabled = g_campaignDisabledSkills;
@@ -2404,7 +2330,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
 // retail body is not evidence for an inline keyword. The message constructor
 // owns zero initialization; lines 2349/2358 set WIDGET_DRAWN inside each arm.
 // Keep both source stores and let VC6 decide which expansions share them.
-DC_ONLY(0xcd68c, 0x5C)
+
 void updateArtifactSlot(long id, TArtifact artifact)
 {
     message msg;
@@ -2478,7 +2404,7 @@ void THeroScreenWindow::updateAllSlots()
 // No retail row: the one call site below is /Ob2-inlined into
 // UpdateBackpack, and `inline` reproduces the absence (the
 // strip::DrawNumber precedent).
-DC_ONLY(0xcd76c, 0x22)
+
 inline void updateBackpackItem(int i)
 {
     updateArtifactSlot(i + 0x28,
@@ -2524,11 +2450,11 @@ VA(0x004db350, 0x86)  // dc 0xcd86c
 void type_artifact::getRolloverText(char* buffer) const
 {
     if (m_artifactId == ARTIFACT_NONE)
-        strcpy(buffer, g_emptyArtifactRolloverText);
+        strcpy(buffer, g_heroScreen[11]);
     else if (m_artifactId == ARTIFACT_SPELLBOOK)
-        strcpy(buffer, g_spellbookRolloverText);
+        strcpy(buffer, g_heroScreen[14]);
     else
-        sprintf(buffer, g_artifactRolloverFormat,
+        sprintf(buffer, g_heroScreen[15],
                 g_artifactTraits[m_artifactId].m_name);
 }
 
@@ -2580,44 +2506,43 @@ std::string type_artifact::getDescription() const
 // spelling keyed to the row index. Declared HERE rather than beside the
 // other three so the ~23 new symbols do not shift C1 handle numbers for
 // every already-matched body above.
-DATA(0x006a8014) extern const char* g_heroScreenText0;                 // row 0
-DATA(0x006a8018) extern const char* g_heroScreenNameFormat;            // row 1
-DATA(0x006a8020) extern const char* g_heroScreenMoraleHighText;        // row 3
-DATA(0x006a8024) extern const char* g_heroScreenMoraleNeutralText;     // row 4
-DATA(0x006a8028) extern const char* g_heroScreenMoraleLowText;         // row 5
-DATA(0x006a802c) extern const char* g_heroScreenLuckHighText;          // row 6
-DATA(0x006a8030) extern const char* g_heroScreenLuckNeutralText;       // row 7
-DATA(0x006a8034) extern const char* g_heroScreenLuckLowText;           // row 8
-DATA(0x006a8038) extern const char* g_heroScreenText9;                 // row 9
-DATA(0x006a803c) extern const char* g_heroScreenArmySlotFormat;        // row 10
-DATA(0x006a8044) extern const char* g_heroScreenArmySlotIdleFormat;    // row 12
-DATA(0x006a8048) extern const char* g_heroScreenArmySwapFormat;        // row 13
-DATA(0x006a8054) extern const char* g_heroScreenHeroNameFormat;        // row 16
-DATA(0x006a8058) extern const char* g_heroScreenText17;                // row 17
-DATA(0x006a8060) extern const char* g_heroScreenArmyMergeFormat;       // row 19
-DATA(0x006a8064) extern const char* g_heroScreenArmyMoveFormat;        // row 20
-DATA(0x006a8068) extern const char* g_heroScreenSecondarySkillFormat;  // row 21
-DATA(0x006a806c) extern const char* g_heroScreenText22;                // row 22
-DATA(0x006a8070) extern const char* g_heroScreenText23;                // row 23
-DATA(0x006a8074) extern const char* g_heroScreenText24;                // row 24
-DATA(0x006a8078) extern const char* g_heroScreenFormationGroupedText;  // row 25
-DATA(0x006a807c) extern const char* g_heroScreenFormationSpreadText;   // row 26
+                 // row 0
+            // row 1
+        // row 3
+     // row 4
+         // row 5
+          // row 6
+       // row 7
+           // row 8
+                 // row 9
+        // row 10
+    // row 12
+        // row 13
+        // row 16
+                // row 17
+       // row 19
+        // row 20
+  // row 21
+                // row 22
+                // row 23
+                // row 24
+  // row 25
+   // row 26
 // Rows 28..32 continue the same stride-4 run. WindowHandler's six
 // right-click help arms are what pin them: each hands one of these
 // straight to NormalDialog with dialog type 4, so the role is "help text
 // for widget N" and the names follow the widget they answer for.
-DATA(0x006a8080) extern const char* g_heroScreenText27;                // row 27
-DATA(0x006a8084) extern const char* g_heroScreenHeroNameHelp;          // row 28
-DATA(0x006a8088) extern const char* g_heroScreenWidget7aHelp;          // row 29
-DATA(0x006a808c) extern const char* g_heroScreenWidget7cHelp;          // row 30
-DATA(0x006a8090) extern const char* g_heroScreenFormationHelp;         // row 31
+                // row 27
+          // row 28
+          // row 29
+          // row 30
+         // row 31
 // The quest-log button's help text, and the ONE oddity in the set: it is
 // NOT in the 0x6a8014 run and has exactly one reference image-wide, this
 // call site. Provenance genuinely undetermined - 0x6a5704 is 0x6a56e0 +
 // 0x24, which would make it a cell of townmgr's stride-8 table, but
 // nothing in the bytes decides that. ORDINAL PLACEHOLDER spelling.
-DATA(0x006a8094) extern const char* g_heroScreenMixedArmyHelp;         // row 32
-DATA(0x006a5704) extern const char* g_unnamed6a5704;
+         // row 32
 
 VA(0x004db660, 0x728)  // dc 0xcd9c4
 void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
@@ -2630,8 +2555,8 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
     case PRIMARY_SKILL_1_ID:
     case PRIMARY_SKILL_2_ID:
     case PRIMARY_SKILL_3_ID:
-        sprintf(g_text, g_heroScreenNameFormat,
-                g_primarySkillNames[msg->m_codeY - PRIMARY_SKILL_0_ID]);
+        sprintf(g_text, g_heroScreen[1],
+                g_statNames[msg->m_codeY - PRIMARY_SKILL_0_ID]);
         break;
 
     case PORTRAIT_ID:
@@ -2642,20 +2567,20 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 
     case MORALE_ID:
         if (g_currentHero->getMorale(0, 0, 1) > 0)
-            strcpy(g_text, g_heroScreenMoraleHighText);
+            strcpy(g_text, g_heroScreen[3]);
         else if (g_currentHero->getMorale(0, 0, 1) == 0)
-            strcpy(g_text, g_heroScreenMoraleNeutralText);
+            strcpy(g_text, g_heroScreen[4]);
         else
-            strcpy(g_text, g_heroScreenMoraleLowText);
+            strcpy(g_text, g_heroScreen[5]);
         break;
 
     case LUCK_ID:
         if (g_currentHero->getLuck(0, 0, 1) > 0)
-            strcpy(g_text, g_heroScreenLuckHighText);
+            strcpy(g_text, g_heroScreen[6]);
         else if (g_currentHero->getLuck(0, 0, 1) == 0)
-            strcpy(g_text, g_heroScreenLuckNeutralText);
+            strcpy(g_text, g_heroScreen[7]);
         else
-            strcpy(g_text, g_heroScreenLuckLowText);
+            strcpy(g_text, g_heroScreen[8]);
         break;
 
     case ARMY_SLOT_0_ID:
@@ -2668,36 +2593,36 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
         int slot = msg->m_codeY - ARMY_SLOT_0_ID;
         if (g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
             if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE)
-                sprintf(g_text, g_heroScreenArmySlotFormat,
+                sprintf(g_text, g_heroScreen[10],
                         getArmyName(g_currentHero->m_army.m_armies[slot], 1));
             else
-                strcpy(g_text, g_emptyArtifactRolloverText);
+                strcpy(g_text, g_heroScreen[11]);
         } else if (g_heroScreenArmySlot == slot) {
-            sprintf(g_text, g_heroScreenArmySlotFormat,
+            sprintf(g_text, g_heroScreen[10],
                     getArmyName(g_currentHero->m_army.m_armies[slot], 1));
-        } else if (g_unnamed6aa9d8 != 0) {
+        } else if (g_castleOpen != 0) {
             if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE)
-                sprintf(g_text, g_heroScreenArmySlotFormat,
+                sprintf(g_text, g_heroScreen[10],
                         getArmyName(g_currentHero->m_army.m_armies[slot], 1));
             else
-                strcpy(g_text, g_emptyArtifactRolloverText);
+                strcpy(g_text, g_heroScreen[11]);
         } else if (g_currentHero->m_army.m_armies[slot] == CREATURE_NONE) {
             if (g_heroScreenArmyStripLive)
-                sprintf(g_text, g_heroScreenArmyMoveFormat,
+                sprintf(g_text, g_heroScreen[20],
                         getArmyName(g_currentHero->m_army.m_armies[
                                         g_heroScreenArmySlot],
                                     2));
             else
-                sprintf(g_text, g_heroScreenArmySlotIdleFormat,
+                sprintf(g_text, g_heroScreen[12],
                         getArmyName(g_currentHero->m_army.m_armies[
                                         g_heroScreenArmySlot],
                                     2));
         } else if (g_currentHero->m_army.m_armies[slot]
                    == g_currentHero->m_army.m_armies[g_heroScreenArmySlot]) {
-            sprintf(g_text, g_heroScreenArmyMergeFormat,
+            sprintf(g_text, g_heroScreen[19],
                     getArmyName(g_currentHero->m_army.m_armies[slot], 2));
         } else {
-            sprintf(g_text, g_heroScreenArmySwapFormat,
+            sprintf(g_text, g_heroScreen[13],
                     getArmyName(g_currentHero->m_army.m_armies[
                                     g_heroScreenArmySlot],
                                 1),
@@ -2730,52 +2655,52 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
     case WIDGET_6B_ID:
     case WIDGET_76_ID:
     case WIDGET_8B_ID:
-        strcpy(g_text, g_heroScreenText27);
+        strcpy(g_text, g_heroScreen[27]);
         break;
 
     case WIDGET_6C_ID:
     case WIDGET_70_ID:
     case WIDGET_77_ID:
-        strcpy(g_text, g_heroScreenText9);
+        strcpy(g_text, g_heroScreen[9]);
         break;
 
     case WIDGET_6D_ID:
     case WIDGET_71_ID:
     case WIDGET_78_ID:
-        strcpy(g_text, g_heroScreenText22);
+        strcpy(g_text, g_heroScreen[22]);
         break;
 
     case WIDGET_7A_ID:
-        strcpy(g_text, g_heroScreenText23);
+        strcpy(g_text, g_heroScreen[23]);
         break;
 
     case WIDGET_7C_ID:
-        strcpy(g_text, g_heroScreenText24);
+        strcpy(g_text, g_heroScreen[24]);
         break;
 
     case FORMATION_ID:
         if (g_currentHero->m_formation & HERO_FORMATION_GROUPED)
-            strcpy(g_text, g_heroScreenFormationGroupedText);
+            strcpy(g_text, g_heroScreen[25]);
         else
-            strcpy(g_text, g_heroScreenFormationSpreadText);
+            strcpy(g_text, g_heroScreen[26]);
         break;
 
     case MIXED_ARMY_ID:
-        sprintf(g_text, g_heroScreenArmyMoveFormat,
+        sprintf(g_text, g_heroScreen[20],
                 g_generalText->getText(GENERAL_TEXT_MIXED_ARMY));
         break;
 
     case WIDGET_80_ID:
-        strcpy(g_text, g_heroScreenText0);
+        strcpy(g_text, g_heroScreen[0]);
         break;
 
     case HERO_NAME_ID:
-        sprintf(g_text, g_heroScreenHeroNameFormat,
+        sprintf(g_text, g_heroScreen[16],
                 g_currentHero->m_name, g_currentHero->heroFn004D8F70());
         break;
 
     case WIDGET_7800_ID:
-        strcpy(g_text, g_heroScreenText17);
+        strcpy(g_text, g_heroScreen[17]);
         break;
 
     default: {
@@ -2795,8 +2720,8 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
         }
         if (nth < g_currentHero->m_skillCount) {
             int skill = g_currentHero->getNthSS(nth);
-            sprintf(g_text, g_heroScreenSecondarySkillFormat,
-                    g_skillMasteryNames[g_currentHero->m_skillLevel[skill] - 1],
+            sprintf(g_text, g_heroScreen[21],
+                    g_secondarySkillLevels[g_currentHero->m_skillLevel[skill] - 1],
                     g_sSkillTraits[skill].m_name);
         } else {
             g_text[0] = 0;
@@ -2805,17 +2730,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
     }
     }
 
-    message update;
-    update.m_qualifier = 0;
-    update.m_mouseX = 0;
-    update.m_mouseY = 0;
-    update.m_window = 0;
-    update.m_id = MESSAGE_WIDGET;
-    update.m_codeX = widget::WIDGET_SET_TEXT;
-    update.m_codeY = STATUS_BAR_ID;
-    update.m_extraText = g_text;
-    broadcastMessage(update);
-    drawWindow(1, STATUS_BAR_BORDER_ID, STATUS_BAR_ID);
+    heroMessageUpdate(g_text);
 }
 
 // DC hero.cpp:2726 handle_artifact_click; Complete adds combination arms.
@@ -2827,7 +2742,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 // DC 2767..2786's empty-slot-first order further gives 80.8337%. Inspection
 // else-chain and positive combined/nested drag guards are score-flat; the
 // combined guard follows both tests attributed to DC 2765.
-DC_ONLY(0xcdf30, 0x20E)
+// Dreamcast procedure: dc 0xcdf30.
 static void handleArtifactClick(long code, unsigned char rightMouse)
 {
     // DC locals: old_artifact, spell_book_window.
@@ -3167,85 +3082,85 @@ std::string hero::getMoraleDescription() const
     }
 
     if (this->isWieldingArtifact(0x6c)) {
-        result += g_moraleTexts[26];
+        result += g_moraleInfo[26];
         trackedBonus += 3;
     }
     if (this->isWieldingArtifact(0x2d)) {
-        result += g_moraleTexts[4];
+        result += g_moraleInfo[4];
         trackedBonus++;
     }
     if (this->isWieldingArtifact(0x31)) {
-        result += g_moraleTexts[5];
+        result += g_moraleInfo[5];
         trackedBonus++;
     }
     if (this->isWieldingArtifact(0x32)) {
-        result += g_moraleTexts[6];
+        result += g_moraleInfo[6];
         trackedBonus++;
     }
     if (this->isWieldingArtifact(0x33)) {
-        result += g_moraleTexts[7];
+        result += g_moraleInfo[7];
         trackedBonus++;
     }
 
     if (m_flags & 0x2000000) {
-        result += g_moraleTexts[8];
+        result += g_moraleInfo[8];
         trackedBonus++;
     }
     if (m_flags & 0x4) {
-        result += g_moraleTexts[9];
+        result += g_moraleInfo[9];
         trackedBonus++;
     }
     if (m_flags & 0x80) {
-        result += g_moraleTexts[10];
+        result += g_moraleInfo[10];
         trackedBonus++;
     }
     if (m_flags & 0x100) {
-        result += g_moraleTexts[11];
+        result += g_moraleInfo[11];
         trackedBonus++;
     }
     if (m_flags & 0x4000000) {
-        result += g_moraleTexts[12];
+        result += g_moraleInfo[12];
         trackedBonus += 2;
     }
     if (m_flags & 0x400) {
-        result += g_moraleTexts[13];
+        result += g_moraleInfo[13];
         trackedBonus--;
     }
     if (m_flags & 0x200) {
-        result += g_moraleTexts[14];
+        result += g_moraleInfo[14];
         trackedBonus--;
     }
     if (m_flags & 0x40) {
-        result += g_moraleTexts[15];
+        result += g_moraleInfo[15];
         trackedBonus++;
     }
     if (m_flags & 0x800) {
-        result += g_moraleTexts[16];
+        result += g_moraleInfo[16];
         trackedBonus--;
     }
     if (m_flags & 0x10000) {
-        result += g_moraleTexts[17];
+        result += g_moraleInfo[17];
         trackedBonus++;
     }
     if (m_flags & 0x4000) {
-        result += g_moraleTexts[18];
+        result += g_moraleInfo[18];
         trackedBonus++;
     }
     if (m_flags & 0x200000) {
-        result += g_moraleTexts[19];
+        result += g_moraleInfo[19];
         trackedBonus -= 3;
     }
 
     if (m_skillLevel[eSecSkillLeadership] == eMasteryBasic) {
-        result += g_moraleTexts[20];
+        result += g_moraleInfo[20];
         trackedBonus++;
     }
     if (m_skillLevel[eSecSkillLeadership] == eMasteryAdvanced) {
-        result += g_moraleTexts[21];
+        result += g_moraleInfo[21];
         trackedBonus += 2;
     }
     if (m_skillLevel[eSecSkillLeadership] == eMasteryExpert) {
-        result += g_moraleTexts[22];
+        result += g_moraleInfo[22];
         trackedBonus += 3;
     }
 
@@ -3268,9 +3183,9 @@ std::string hero::getMoraleDescription() const
     int otherModifier =
         this->getMorale(0, 0, 0) - trackedBonus;
     if (otherModifier < 0)
-        result += formatString(g_moraleTexts[24], abs(otherModifier));
+        result += formatString(g_moraleInfo[24], abs(otherModifier));
     else if (otherModifier > 0)
-        result += formatString(g_moraleTexts[25], abs(otherModifier));
+        result += formatString(g_moraleInfo[25], abs(otherModifier));
 
     return result;
 }
@@ -3312,66 +3227,66 @@ std::string hero::getLuckDescription() const
     }
 
     if (this->isWieldingArtifact(0x6c)) {
-        result += g_luckTexts[21];
+        result += g_luckInfo[21];
         luck += 3;
     }
     if (this->isWieldingArtifact(0x2d)) {
-        result += g_luckTexts[4];
+        result += g_luckInfo[4];
         luck++;
     }
     if (this->isWieldingArtifact(0x2e)) {
-        result += g_luckTexts[5];
+        result += g_luckInfo[5];
         luck++;
     }
     if (this->isWieldingArtifact(0x2f)) {
-        result += g_luckTexts[6];
+        result += g_luckInfo[6];
         luck++;
     }
     if (this->isWieldingArtifact(0x30)) {
-        result += g_luckTexts[7];
+        result += g_luckInfo[7];
         luck++;
     }
 
     if (m_flags & 0x8) {
-        result += g_luckTexts[8];
+        result += g_luckInfo[8];
         luck += 2;
     }
     if (m_flags & 0x10) {
-        result += g_luckTexts[9];
+        result += g_luckInfo[9];
         luck++;
     }
     if (m_flags & 0x20) {
-        result += formatString(g_luckTexts[10], "-1");
+        result += formatString(g_luckInfo[10], "-1");
         luck--;
     }
     if (m_flags & 0x8000000) {
-        result += formatString(g_luckTexts[10], "+1");
+        result += formatString(g_luckInfo[10], "+1");
         luck++;
     }
     if (m_flags & 0x10000000) {
-        result += formatString(g_luckTexts[10], "+2");
+        result += formatString(g_luckInfo[10], "+2");
         luck += 2;
     }
     if (m_flags & 0x20000000) {
-        result += formatString(g_luckTexts[10], "+3");
+        result += formatString(g_luckInfo[10], "+3");
         luck += 3;
     }
     if (m_flags & 0x1000) {
-        result += g_luckTexts[11];
+        result += g_luckInfo[11];
         luck -= 2;
     }
     if (m_flags & 0x2000) {
-        result += g_luckTexts[12];
+        result += g_luckInfo[12];
         luck++;
     }
     if (m_flags & 0x8000) {
-        result += g_luckTexts[13];
+        result += g_luckInfo[13];
         luck++;
     }
     if (m_flags & 0x10000) {
         // Retail calls append(const char*, size_type) at this rung. The
         // recovered caller state now keeps that boundary without a pin.
-        const char* mistText = g_luckTexts[14];
+        const char* mistText = g_luckInfo[14];
         size_t mistTextLen = strlen(mistText);
         result.append(mistText, mistTextLen);
         luck++;
@@ -3390,15 +3305,15 @@ std::string hero::getLuckDescription() const
         // the same pin reaches 95.45 (+1.74 over the banked max).
         // Three new pins; not shippable while the ratchet holds pins at
         // 355 falling-only.
-        result += g_luckTexts[15];
+        result += g_luckInfo[15];
         luck++;
     }
     if (m_skillLevel[eSecSkillLuck] == eMasteryAdvanced) {
-        result += g_luckTexts[16];
+        result += g_luckInfo[16];
         luck += 2;
     }
     if (m_skillLevel[eSecSkillLuck] == eMasteryExpert) {
-        result += g_luckTexts[17];
+        result += g_luckInfo[17];
         luck += 3;
     }
 
@@ -3419,9 +3334,9 @@ std::string hero::getLuckDescription() const
 
     int otherModifier = this->getLuck(0, 0, 0) - luck;
     if (otherModifier < 0)
-        result += formatString(g_luckTexts[19], abs(otherModifier));
+        result += formatString(g_luckInfo[19], abs(otherModifier));
     else if (otherModifier > 0)
-        result += formatString(g_luckTexts[20], abs(otherModifier));
+        result += formatString(g_luckInfo[20], abs(otherModifier));
 
     return result;
 }
@@ -3430,7 +3345,7 @@ std::string hero::getLuckDescription() const
 // call update_all_slots, and get_backpack_error initializes std::string msg.
 // Together these recover WindowHandler 80.8337 -> 88.6383%; order alone
 // gives 87.9454%, helpers + order without the named msg gives 88.5720%.
-DC_ONLY(0xcea3c, 0x1A4)
+// Dreamcast procedure: dc 0xcea3c.
 static void handleBackpackClick(long code, unsigned char rightMouse)
 {
     // DC locals: old_artifact and msg.
@@ -3483,7 +3398,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
 // is `ret 4` returning 2 and it fills the pointed-to message with
 // {0x200, 10, 10}, matching `int ExitDialog(message*)`.
 // Retail emits it AFTER the two description bodies, where the DC source
-// has it before ShowWidgets; ShowWidgets itself has no retail row.
+// has it before the console-only ShowWidgets page switch (reviewed below).
 VA(0x004dd2a0, 0x2C)  // anchor-vtable (slot 14 of 0x63eae8), dc 0xcebe0
 int THeroScreenWindow::exitDialog(message& msg)
 {
@@ -3497,14 +3412,14 @@ int THeroScreenWindow::exitDialog(message& msg)
 #if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:3239
-DC_ONLY(0xcec1c, 0x78E)
+// Dreamcast procedure: dc 0xcec1c.
 void THeroScreenWindow::ShowWidgets()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:3421
-DC_ONLY(0xcf3ac, 0x1A0)
+// Dreamcast procedure: dc 0xcf3ac.
 void THeroScreenWindow::show_skills()
 {
     // @stub
@@ -3552,7 +3467,7 @@ void THeroScreenWindow::show_skills()
 // THE FRONT END IS NOW RULED OUT TOO (2026-09-06). `genab run --gen rtm-fe`
 // swaps C1XX 12.00.8168 in beside the RTM back end and sweeps all 146
 // units: this function's bytes are IDENTICAL on both sides (it is absent
-// from evidence/vc6/fe-generation-verdicts.tsv, which lists every function
+// from build/vc6/fe-generation-verdicts.tsv, which lists every function
 // that differs at all), and hero.obj's five functions that DO differ
 // (HeroFn_004E2550, equip_artifact, remove_artifact,
 // THeroScreenWindow::update_slot, update_spell_list) are all back-end-only
@@ -3811,7 +3726,7 @@ int THeroScreenWindow::windowHandler(message& msg)
         case WIDGET_8B_ID:
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
-            strcpy(g_text, g_heroSpecificAbilities[g_currentHero->m_id].m_longText);
+            strcpy(g_text, g_currentHero->getSpecificAbilityText());
             normalDialog(g_text,
                          rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                      : hero::PRIMARY_STAT_DIALOG_TYPE,
@@ -3862,19 +3777,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                     && g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
                     if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE) {
                         g_heroScreenArmySlot = slot;
-                        g_currentHero->updateArmies();
-                        if (g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
-                            g_windowManager->broadcastMessage(
-                                MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                                MIXED_ARMY_ID,
-                                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                        } else {
-                            g_windowManager->broadcastMessage(
-                                MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
-                                MIXED_ARMY_ID,
-                                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                        }
-                        g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+                        g_currentHero->heroScreenUpdate();
                     }
                 } else if (rightMouse
                                ? g_currentHero->m_army.m_armies[slot]
@@ -3882,7 +3785,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                                : g_heroScreenArmySlot == slot) {
                     g_heroScreenArmyStripLive = 0;
                     int showDismiss = 0;
-                    if (!g_unnamed6aa9d8
+                    if (!g_castleOpen
                         && g_currentHero->m_army.getNumArmies() > 1)
                         showDismiss = 1;
                     g_game->viewArmy(g_currentHero->m_army, slot, g_currentHero,
@@ -3891,22 +3794,10 @@ int THeroScreenWindow::windowHandler(message& msg)
                         g_heroScreenArmySlot = HERO_SCREEN_NO_ARMY_SLOT;
                     setupHeroView();
                     drawWindow(1, 0xffff0001, 0xffff);
-                } else if (!rightMouse && g_unnamed6aa9d8) {
+                } else if (!rightMouse && g_castleOpen) {
                     if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE) {
                         g_heroScreenArmySlot = slot;
-                        g_currentHero->updateArmies();
-                        if (g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
-                            g_windowManager->broadcastMessage(
-                                MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                                MIXED_ARMY_ID,
-                                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                        } else {
-                            g_windowManager->broadcastMessage(
-                                MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
-                                MIXED_ARMY_ID,
-                                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                        }
-                        g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+                        g_currentHero->heroScreenUpdate();
                     }
                 } else if (!rightMouse) {
                     if ((g_heroScreenArmyStripLive
@@ -3932,19 +3823,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                                                  g_heroScreenArmySlot);
                     }
                     g_heroScreenArmySlot = HERO_SCREEN_NO_ARMY_SLOT;
-                    g_currentHero->updateArmies();
-                    if (g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
-                        g_windowManager->broadcastMessage(
-                            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                            MIXED_ARMY_ID,
-                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                    } else {
-                        g_windowManager->broadcastMessage(
-                            MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
-                            MIXED_ARMY_ID,
-                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                    }
-                    g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+                    g_currentHero->heroScreenUpdate();
                 }
                 if (!rightMouse) {
                     g_windowManager->m_lastHover = -1;
@@ -4003,32 +3882,32 @@ int THeroScreenWindow::windowHandler(message& msg)
 
         case WIDGET_80_ID:
             if (rightMouse)
-                normalDialog(g_unnamed6a5704, 4, -1, -1, -1, 0,
+                normalDialog(g_adventureWindowHelp[4].m_rclick, 4, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             break;
         case HERO_NAME_ID:
             if (rightMouse)
-                normalDialog(g_heroScreenHeroNameHelp, 4, -1, -1, -1, 0,
+                normalDialog(g_heroScreen[28], 4, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             break;
         case WIDGET_7A_ID:
             if (rightMouse)
-                normalDialog(g_heroScreenWidget7aHelp, 4, -1, -1, -1, 0,
+                normalDialog(g_heroScreen[29], 4, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             break;
         case WIDGET_7C_ID:
             if (rightMouse)
-                normalDialog(g_heroScreenWidget7cHelp, 4, -1, -1, -1, 0,
+                normalDialog(g_heroScreen[30], 4, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             break;
         case FORMATION_ID:
             if (rightMouse)
-                normalDialog(g_heroScreenFormationHelp, 4, -1, -1, -1, 0,
+                normalDialog(g_heroScreen[31], 4, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             break;
         case MIXED_ARMY_ID:
             if (rightMouse)
-                normalDialog(g_heroScreenMixedArmyHelp, 4, -1, -1, -1, 0,
+                normalDialog(g_heroScreen[32], 4, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             break;
 
@@ -4078,6 +3957,18 @@ int THeroScreenWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
+// Dreamcast ShowWidgets (hero.cpp:3239, dc 0xcec1c) switches the two
+// hero pages using advManager::infoScreen at +0x39: background ids 0/1
+// alternate and whole army/artifact/skill widget groups hide or show.
+// Complete builds one 672x586 page below, with id0 as its sole background
+// and id1 as the hero's name. Its adventure manager drops infoScreen;
+// +0x38 is now the network-handler pointer, followed by FPS/debug bytes.
+// Dreamcast show_skills (hero.cpp:3421, dc 0xcf3ac) uses that manager's
+// scroll_offset+0x3c, clamps it to 0..2 and enables arrow widgets 141/142.
+// It displays four skills from index 2*scroll_offset in two rows. Complete
+// instead creates eight skill icon/name/mastery triples in four rows here;
+// setupHeroView (0x4e1a50) fills all eight without moving their positions.
+// Complete has no skill-scroll arrows or adventure-manager scroll_offset.
 VA(0x004de710, 0x2C52)  // dc 0xd0184
 THeroScreenWindow::THeroScreenWindow()
     : CAdvPopup(0x40, 7, 0x2a0, 0x24a, 0x12)
@@ -4684,7 +4575,7 @@ void THeroScreenWindow::setupHeroView()
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
-    if (g_unnamed6aa9d8) {
+    if (g_castleOpen) {
         widgetClearStatus(0x8a, widget::WIDGET_DRAWN);
     } else {
         updateHeroLocators();
@@ -4697,7 +4588,7 @@ void THeroScreenWindow::setupHeroView()
         broadcastMessage(msg);
     }
 
-    if (!noDismiss && !g_unnamed6aa9d8 &&
+    if (!noDismiss && !g_castleOpen &&
         (localPlayer->m_numTowns || localPlayer->m_numHeroes != 1)) {
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x81,
                          widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
@@ -4803,7 +4694,7 @@ void THeroScreenWindow::setupHeroView()
             broadcastMessage(msg);
 
             strcpy(g_text,
-                   g_skillMasteryNamesBiased[g_currentHero->m_skillLevel[skill]]);
+                   g_secondarySkillLevels[g_currentHero->m_skillLevel[skill] - 1]);
             msg.m_codeY = i + 0x5f;
             broadcastMessage(msg);
 
@@ -5186,9 +5077,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
 VA(0x004e2840, 0x1B5)  // retail-only, hero member, ret 8; size absorbs the
 unsigned char hero::heroFn004E2840(long artifact, long slot)
 {
-    const std::bitset<19>& allowable =
-        g_artifactSlotMasks[g_artifactTraits[artifact].m_allowableSlotMask];
-    if (!allowable.test(slot))
+    if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
         return 0;
 
     if (m_equipped[slot].m_artifactId == ARTIFACT_NONE)
@@ -5401,7 +5290,6 @@ unsigned char hero::addToBackpack(const type_artifact* artifact, long slot)
 }
 
 // E:\gamedcs\hero.cpp:5044
-
 // The `else if` shape is exact - the owner-is-not-the-local-player
 // branch and the still-holding-the-combination branch BOTH fall into the
 // `!player.isHuman` arm, and a zero `bAnnounce` skips both arms while
@@ -5481,16 +5369,17 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:5064
-DC_ONLY(0xd3e40, 0x46)
-int hero::GiveRandomArtifact()
+// Original: hero::GiveRandomArtifact; hero.cpp:5064, dc 0xd3e40
+int hero::giveRandomArtifact()
 {
-    // @stub
+    type_artifact artifact;
+    artifact.m_artifactId = g_game->getRandomArtifactId(14);
+    if (artifact.m_artifactId == ARTIFACT_NONE)
+        giveResource(GOLD, 1000);
+    else
+        giveArtifact(&artifact, 1, 1);
+    return artifact.m_artifactId;
 }
-
-#endif  // @carcass
 
 VA(0x004e33b0, 0x24A)  // dc 0xd3e88
 int hero::giveExperience(int howMuch, int checkForLevelUp,
@@ -5864,7 +5753,6 @@ static const float g_logisticsFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.2f, 0.3f };
 
 // E:\gamedcs\hero.cpp:5709.
-DC_ONLY(0xd49a8, 0x48)
 float hero::getLogisticsFactor() const
 {
     float factor = g_logisticsFactors[m_skillLevel[eSecSkillLogistics]];
@@ -5877,28 +5765,29 @@ float hero::getLogisticsFactor() const
 }
 
 // E:\gamedcs\hero.cpp:5734.
-DC_ONLY(0xd49f0, 0x4E)
 long hero::getNavigationFactor() const
 {
-    long movement = g_seaMovement[m_skillLevel[eSecSkillNavigation]];
+    long movement = g_moveConstants.m_sea[m_skillLevel[eSecSkillNavigation]];
     if (m_skillLevel[eSecSkillNavigation] > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillNavigation)
-            movement += m_level * g_seaMovement[0] / 20;
+            movement += m_level * g_moveConstants.m_sea[0] / 20;
     }
     return movement;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:5758
-DC_ONLY(0xd4a40, 0x48)
-float hero::GetSorceryFactor()
+// Original: hero::GetSorceryFactor; hero.cpp:5758, dc 0xd4a40
+float hero::getSorceryFactor() const
 {
-    // @stub
+    float factor = g_sorceryFactors[m_skillLevel[eSecSkillSorcery]];
+    if (m_skillLevel[eSecSkillSorcery] > 0) {
+        const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
+        if (ability.m_type == eHeroAbilitySecondarySkill
+            && ability.m_skill == eSecSkillSorcery)
+            factor = (m_level * 0.05f + 1.0f) * factor;
+    }
+    return factor + 1.0f;
 }
-
-#endif  // @carcass
 
 VA(0x004e48b0, 0x66)  // dc 0xd4a88
 float hero::getIntelligenceFactor() const
@@ -5936,19 +5825,19 @@ int hero::getMobility(unsigned char seaMovement) const
 
         if (m_owner != -1)
             mobility += g_game->mineTypesOwned(m_owner, 100) *
-                        g_lighthouseMovementBonus;
+                        g_moveConstants.m_lighthouseBonus;
 
         if (isWieldingArtifact(0x7b))
-            mobility += g_lighthouseMovementBonus;
+            mobility += g_moveConstants.m_lighthouseBonus;
 
         for (unsigned int t = 0; t < g_game->m_towns.size(); t++) {
             if (g_game->m_towns[t].m_type == TOWN_CASTLE &&
                 g_game->m_towns[t].hasBuilding(SPECIAL_BUILDING_ID, 0))
-                mobility += g_lighthouseMovementBonus;
+                mobility += g_moveConstants.m_lighthouseBonus;
         }
 
         if (isWieldingArtifact(0x47))
-            mobility += g_oceanGuidanceMovementBonus;
+            mobility += g_moveConstants.m_oceanGuidanceBonus;
     } else {
         int slowest = 20;
         for (int slot = 0; slot < 7; slot++) {
@@ -5969,13 +5858,13 @@ int hero::getMobility(unsigned char seaMovement) const
             }
         }
 
-        mobility = g_landMovement[slowest];
+        mobility = g_moveConstants.m_land[slowest];
         mobility = static_cast<int>(mobility * getLogisticsFactor());
 
         if (isWieldingArtifact(0x62))
-            mobility += g_bootsOfSpeedMovementBonus;
+            mobility += g_moveConstants.m_bootsOfSpeedBonus;
         if (isWieldingArtifact(0x46))
-            mobility += g_equestriansGlovesMovementBonus;
+            mobility += g_moveConstants.m_equestriansGlovesBonus;
         if (m_flags & 2)
             mobility += g_stablesMovementBonus;
     }
@@ -6281,14 +6170,7 @@ long hero::modifySpellDamage(SpellID spell, int damage,
         || ((school & eSchoolFire) && isWieldingArtifact(ARTIFACT_ORB_OF_TEMPESTUOUS_FIRE))
         || ((school & eSchoolWater) && isWieldingArtifact(ARTIFACT_ORB_OF_DRIVING_RAIN)))
         value = value * 1.5f;
-    float factor = g_sorceryFactors[m_skillLevel[eSecSkillSorcery]];
-    if (m_skillLevel[eSecSkillSorcery] > 0) {
-        const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
-        if (ability.m_type == eHeroAbilitySecondarySkill
-            && ability.m_skill == eSecSkillSorcery)
-            factor = (m_level * 0.05f + 1.0f) * factor;
-    }
-    value = (factor + 1.0f) * value;
+    value = getSorceryFactor() * value;
     if (targetArmy)
         value = static_cast<float>(
                     getHeroSpellBonus(spell, targetArmy->m_monInfo.m_level,
@@ -6360,7 +6242,7 @@ unsigned char hero::canLand() const
     }
     if (!(cell->m_flags0011 & 0x40))
         return 0;
-    if (cell->m_isTrigger && g_adventureObjectLandBlocked[cell->m_type][0])
+    if (cell->m_isTrigger && g_adventureObjectTraits[cell->m_type].m_blocksLanding)
         return 0;
     return 1;
 }
@@ -6460,7 +6342,6 @@ int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
 }
 
 // E:\gamedcs\hero.cpp:6493
-
 VA(0x004e6120, 0x39E)
 void hero::heroFn004E6120(int creatureType,
                            TCreatureTypeTraits* traits) const
@@ -6519,6 +6400,27 @@ void hero::heroFn004E6120(int creatureType,
     traits->m_hitPoints += getHitPointBonus(creatureType);
 }
 
+// Original: hero::reset_artifacts; hero.cpp:6493, dc 0xd5800
+void hero::resetArtifacts()
+{
+    type_artifact artifact;
+    // Complete adds the nineteenth equipped slot; use the owning array's
+    // extent while preserving DC's spellbook/catapult exceptions.
+    int slot;
+    for (slot = 0; slot < sizeof(m_equipped) / sizeof(m_equipped[0]); ++slot) {
+        artifact = m_equipped[slot];
+        if (artifact.m_artifactId != ARTIFACT_NONE
+            && artifact.m_artifactId != ARTIFACT_SPELLBOOK
+            && artifact.m_artifactId != ARTIFACT_CATAPULT)
+            removeArtifact(slot);
+    }
+    for (slot = HERO_BACKPACK_CAPACITY - 1; slot >= 0; --slot) {
+        artifact = m_backpack[slot];
+        if (artifact.m_artifactId != ARTIFACT_NONE)
+            removeBackpackArtifact(static_cast<short>(slot));
+    }
+}
+
 #if 0  // @carcass
 
 VA_COMPGEN(0x004e64c0, 0x1B, BITSET_ANY, Bitset144)
@@ -6555,20 +6457,6 @@ std::bitset<70>& std::bitset<70>::set(size_t _P, bool _X)
 
 VA(0x004e6750, 0x21)  // anchor-caller + reference ABI/body, dc 0x20d2c
 inline const int& tLimit(const int& minimum, const int& value, const int& maximum);
-
-// E:\gamedcs\hero.cpp:6493
-DC_ONLY(0xd5800, 0xCC)
-void hero::reset_artifacts()
-{
-    // @stub
-}
-
-// E:\gamedcs\hero.cpp:1226
-DC_ONLY(0xd59b8, 0x18)
-void type_artifact::`default constructor closure'()
-{
-    // @stub
-}
 
 // E:\gamedcs\hero.cpp:4186
 // (moved to retail link order at 0x004e1520, immediately before the

@@ -7,23 +7,27 @@
 // (append at 0x41b340, runtime_error's string constructor at 0x41ba90)
 // and the two TRuntimeError copy constructors at 0x41b7b0/0x41b920 whose
 // `[src+0x1d]` byte copy exceptions.h already cites.
-#include <string.h>
+#include "va.h"
 
 #include <memory>
+#include <string.h>
 
-#include <va.h>
+#include "objnames.h"
 
 #include "exceptions.h"
-#include "objnames.h"
-#include "resourceptr.h"
 #include "resourcemanager.h"
+#include "resourceptr.h"
 #include "textresource.h"
 
-// The rows themselves: retail .data 0x691698, and the `unsigned char
-// (*)[16]` pointer at 0x660428 that every reader goes through holds
-// exactly this address.
+// The rows themselves: retail .data 0x691698. The pointer cell at
+// 0x660428 holds this address; readers and the loader share the same record.
 DATA(0x00691698)
 TAdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
+// Initial contents recovered from the pinned Complete image.
+// Retail pointer cell used by the readers; the loader owns the rows.
+DATA(0x00660428) const TAdvObjectTraits* g_adventureObjectTraits =
+    g_adventureObjectTraitRows;
+
 
 // The five .rdata override tables the loader replays over the zeroed
 // rows, in the order it walks them. Each is a list of adventure-object

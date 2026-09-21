@@ -13,7 +13,8 @@ std::bitset<N> readPackedBits(TAbstractFile* infile)
     unsigned char packed[(N + 7) / 8];
     infile->read(packed, sizeof(packed));
     for (unsigned int index = 0; index < N; ++index) {
-        result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
+        typename std::bitset<N>::reference bit = result[index];
+        bit = (packed[index >> 3] & (1 << (index & 7))) != 0;
     }
     return result;
 }

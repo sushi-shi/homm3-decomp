@@ -1,18 +1,21 @@
+#include "va.h"
+#include "includes.h"
+
 #include <math.h>
-#include <va.h>
+
 #include "event_record.h"
-#include "game.h"
+
 #include "abstractfile.h"
+#include "advmgr.h"
 #include "cursor.h"
+#include "game.h"
 #include "inputmgr.h"
-#include "misc.h"
-#include "textresource.h"
+#include "kb.h"
 #include "kbwin.h"
 #include "message.h"
+#include "misc.h"
 #include "prefs.h"
-#include "advmgr.h"
-#include "kb.h"
-#include "includes.h"
+#include "textresource.h"
 
 // Dreamcast CodeView attests this inline wrapper (Hero.h:196) and game.cpp
 // carries the same local definition. It is what makes VC6 zero-extend the
@@ -59,25 +62,20 @@ static void setPlayer(char newPlayer)
     }
     g_netLocalGamePos = newPlayer;
     g_currentPlayer = &g_game->m_players[newPlayer];
-    g_unnamed69ccc4 = 1 << newPlayer;
+    g_curPlayerBit = 1 << newPlayer;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:81
-DC_ONLY(0x8c708, 0x4)
-void type_event_record::replay()
+// Retail base vtable slot4 folds to the empty ret4 body at0x485d80.
+void type_event_record::replay(unsigned char draw)
 {
-    // @stub
 }
 
 // E:\gamedcs\event_record.cpp:88
-DC_ONLY(0x8c70c, 0x4)
+// Retail base vtable slot5 folds to the empty ret body at0x5bc690.
 void type_event_record::undo()
 {
-    // @stub
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:96
 // NO RETAIL BODY: VC6 expands this constructor at record_move and
@@ -94,17 +92,6 @@ inline type_record_move_hero::type_record_move_hero(hero* currentHero,
     m_source = currentHero->getLocation();
     m_destination = destination;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:108
-DC_ONLY(0x8c7c0, 0x26)
-type_event_record* type_record_move_hero::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // Slot 0 of TEN derived vtables at once: 0x63de8c 0x63dea4 0x63debc 0x63ded4
 // 0x63deec 0x63df04 0x63df1c 0x63df34 0x63df4c and 0x63df64 all name this
@@ -178,7 +165,6 @@ void type_record_move_hero::replay(unsigned char draw)
 }
 
 // E:\gamedcs\event_record.cpp:186
-
 // Slot 5 of type_record_move_hero's retail vtable (0x63de8c), shared with
 // type_record_teleport. The hero's `valid` byte is sampled BEFORE
 // restore_cell clears it, which is what the leading `mov bl,[hero+6]` proves.
@@ -204,17 +190,6 @@ inline type_record_teleport::type_record_teleport(hero* currentHero,
     : type_record_move_hero(currentHero, currentHero->m_facing, destination)
 {
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:211
-DC_ONLY(0x8cac4, 0x26)
-type_event_record* type_record_teleport::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x0049a980, 0x27)  // dc 0x8cac4
 type_event_record* type_record_teleport::create()
@@ -247,23 +222,12 @@ inline type_record_claim_mine::type_record_claim_mine(long id,
     m_oldOwner = g_game->m_mines[id].m_playerOwner;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:247
-DC_ONLY(0x8cb88, 0x26)
-type_event_record* type_record_claim_mine::create()
-{
-    // @stub
-}
-
 // E:\gamedcs\event_record.cpp:255
-DC_ONLY(0x8cbb0, 0x4)
-type_event_record_type type_record_claim_mine::getType()
+// Retail derived vtable slot1 folds to 0x56e3d0: mov eax,3; ret.
+type_event_record_type type_record_claim_mine::getType() const
 {
-    // @stub
+    return RECORD_CLAIM_MINE;
 }
-
-#endif  // @carcass
 
 VA(0x0049aa40, 0x27)  // dc 0x8cb88
 type_event_record* type_record_claim_mine::create()
@@ -333,26 +297,15 @@ inline type_record_claim_town::type_record_claim_town(long id,
     m_oldOwner = g_game->m_towns[id].m_owner;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:331
-DC_ONLY(0x8cd5c, 0x26)
-type_event_record* type_record_claim_town::create()
-{
-    // @stub
-}
-
 // E:\gamedcs\event_record.cpp:339
 // type_record_claim_town::get_type has no retail body of its own: slot 1 of
 // its vtable (0x63ded4) is 0x16ebc0, outside this compiland's span, where
 // /OPT:ICF folded the `mov eax,4 / ret` onto an identical body elsewhere.
-DC_ONLY(0x8cd84, 0x54)
-type_event_record_type type_record_claim_town::getType()
+// Retail derived vtable slot1 folds to 0x56ebc0: mov eax,4; ret.
+type_event_record_type type_record_claim_town::getType() const
 {
-    // @stub
+    return RECORD_CLAIM_TOWN;
 }
-
-#endif  // @carcass
 
 VA(0x0049abf0, 0x27)  // dc 0x8cd5c
 type_event_record* type_record_claim_town::create()
@@ -393,17 +346,6 @@ inline type_record_hide_boat::type_record_hide_boat(boat* currentBoat,
     m_occupyingHero = occupyingHero;
     m_previousOccupyingHero = currentBoat->m_occupyingHero;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:384
-DC_ONLY(0x8ceb0, 0x26)
-type_event_record* type_record_hide_boat::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x0049acc0, 0x27)  // dc 0x8ceb0
 type_event_record* type_record_hide_boat::create()
@@ -509,17 +451,6 @@ inline type_record_show_boat::type_record_show_boat(boat* currentBoat,
     m_location = location;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:458
-DC_ONLY(0x8d044, 0x26)
-type_event_record* type_record_show_boat::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x0049af00, 0x27)  // dc 0x8d044
 type_event_record* type_record_show_boat::create()
 {
@@ -578,23 +509,6 @@ void type_record_show_boat::undo()
     m_currentBoat->m_y = m_previousLocation.m_y;
     m_currentBoat->m_z = m_previousLocation.m_z;
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:533
-DC_ONLY(0x8d220, 0x70)
-void type_record_erase::type_record_erase(type_point _location, long _object_id, unsigned long _extra_info, long _object_index)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:544
-DC_ONLY(0x8d290, 0x26)
-type_event_record* type_record_erase::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 inline type_record_erase::type_record_erase(type_point location,
                                             long objectId,
@@ -668,30 +582,13 @@ void type_record_erase::undo()
     cell->m_extraInfo = m_extraInfo;
     cell->m_objectIndex = m_objectIndex;
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:628
-DC_ONLY(0x8d4b0, 0x50)
-void type_record_hide_hero::type_record_hide_hero(hero* _hero, char _owner)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:638
-DC_ONLY(0x8d500, 0x26)
-type_event_record* type_record_hide_hero::create()
-{
-    // @stub
-}
 
 // E:\gamedcs\event_record.cpp:646
-DC_ONLY(0x8d528, 0x4)
-type_event_record_type type_record_hide_hero::getType()
+// Retail derived vtable slot1 folds to 0x5721f0: mov eax,8; ret.
+type_event_record_type type_record_hide_hero::getType() const
 {
-    // @stub
+    return RECORD_HIDE_HERO;
 }
-
-#endif  // @carcass
 
 inline type_record_hide_hero::type_record_hide_hero(hero* who, char newOwner,
                                                     unsigned char townGarrison)
@@ -780,30 +677,6 @@ void type_record_hide_hero::undo()
     if (!m_townGarrison)
         m_currentHero->obscureCell();
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:725
-DC_ONLY(0x8d708, 0xB6)
-void type_record_show_hero::type_record_show_hero(hero* _hero, char _owner, type_point _location, unsigned char _is_boat)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:736
-DC_ONLY(0x8d7c0, 0x26)
-type_event_record* type_record_show_hero::create()
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:744
-DC_ONLY(0x8d7e8, 0x4)
-type_event_record_type type_record_show_hero::getType()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
                                                     type_point location,
@@ -821,6 +694,13 @@ VA(0x0049b6a0, 0x27)  // dc 0x8d7c0
 type_event_record* type_record_show_hero::create()
 {
     return new type_record_show_hero();
+}
+
+// E:\gamedcs\event_record.cpp:744
+// Retail derived vtable slot1 folds to 0x572810: mov eax,9; ret.
+type_event_record_type type_record_show_hero::getType() const
+{
+    return RECORD_SHOW_HERO;
 }
 
 VA(0x0049b6d0, 0x85)  // dc 0x8d7ec
@@ -891,23 +771,13 @@ void type_record_show_hero::undo()
     else
         m_currentHero->m_flags &= ~0x40000;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:842
-DC_ONLY(0x8da80, 0x40)
-void type_record_player_death::type_record_player_death(char _player_id)
+// DC843 stores the requested player at+8, distinct from the base acting-seat byte at+4.
+type_record_player_death::type_record_player_death(char playerId)
 {
-    // @stub
+    m_extra = playerId;
 }
-
-// E:\gamedcs\event_record.cpp:850
-DC_ONLY(0x8dac0, 0x26)
-type_event_record* type_record_player_death::create()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x0049ba00, 0x27)  // dc 0x8dac0
 type_event_record* type_record_player_death::create()
@@ -949,26 +819,17 @@ void type_record_player_death::replay(unsigned char draw)
                      -1, 0);
     }
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:905
-DC_ONLY(0x8dc20, 0x4)
+// The player-death undo slot shares the empty base undo body in retail.
 void type_record_player_death::undo()
 {
-    // @stub
 }
-
-// E:\gamedcs\event_record.cpp:912. NO RETAIL BODY: create expands it.
-DC_ONLY(0x8dc24, 0x8C)
-void type_record_shroud::type_record_shroud()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x0049bbd0, 0x21, SCALAR_DELETING_DTOR, type_record_shroud)
 
+// DC0x8f398 has only vector/base cleanup, supplied by the implicit C++
+// destructor; its exact emission is documented in config/source/dc_only.tsv.
 // The implicit destructor the wrapper above calls: the change vector's
 // _Tidy inlined (`operator delete(_First)` then the three-pointer clear)
 // followed by the base's vptr store.
@@ -1134,7 +995,6 @@ void game::recordMove(hero* who, int direction, type_point destination)
     m_eventRecords.push_back(new type_record_move_hero(who, direction,
                                                      destination));
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:1115
 // NO RETAIL BODY. The nine recorders between shroud::undo and SetVisibility
@@ -1143,13 +1003,11 @@ void game::recordMove(hero* who, int direction, type_point destination)
 // type_record_teleport's 0x63dea4, not type_record_player_death's 0x63df64.
 // Whatever the PC revision does on player death, it does not go through an
 // out-of-line recorder here.
-DC_ONLY(0x8e2bc, 0x3C)
-void game::record_player_death(char player_id)
+// DC1116 constructs the typed record and calls push_back. No standalone retail address is claimed.
+void game::recordPlayerDeath(char playerId)
 {
-    // @stub
+    m_eventRecords.push_back(new type_record_player_death(playerId));
 }
-
-#endif  // @carcass
 
 VA(0x0049cf50, 0x20B)  // dc 0x8e2f8
 void game::recordTeleport(hero* who, type_point destination)
@@ -1214,7 +1072,9 @@ void game::setVisibility(const int startX, const int startY, const int z,
 // DC line 1199's double distance is range+0.5, not the sqrt result; lines
 // 1206..1209 fill tagRECT rect. Both dc 0x8e624 and retail +0x18e skip the
 // write when unchanged, so line 1224's store belongs inside the inequality.
-// Canonical push_back at line 1232 retains retail's vector insert call.
+// Recovering that store reaches 97.8326%; canonical push_back (line 1232)
+// removes the inline-depth pin and reaches 99.9070%; RECT ownership closes
+// the frame and reaches 100%. Direct and named per-cell deltas reproduce it.
 VA(0x0049d3d0, 0x260)  // anchor-global (0x63df7c + GetMapExtraPtr), dc 0x8e54c
 void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
                            int range)
@@ -1249,12 +1109,13 @@ void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
 
     // The EMPTY arm is the one retail lays out inline (`jne` forward to the
     // queue), so the test is spelled == 0, not != 0.
-    if (record->m_changes.size() == 0) {
+    if (record->getChangeCount() == 0) {
         delete record;
     } else {
         m_eventRecords.push_back(record);
     }
 }
+
 VA(0x0049d630, 0x8C)  // dc 0x8e730
 void game::clearEventRecords()
 {
@@ -1268,11 +1129,11 @@ VA(0x0049d6c0, 0xD3)  // dc 0x8e77c
 void game::clearEventRecords(char playerId)
 {
     int i = 0;
-    while (i < m_eventRecords.size() && m_eventRecords[i]->m_playerId != playerId)
+    while (i < m_eventRecords.size() && m_eventRecords[i]->getPlayerId() != playerId)
         ++i;
     if (i == m_eventRecords.size())
         return;
-    while (i < m_eventRecords.size() && m_eventRecords[i]->m_playerId == playerId)
+    while (i < m_eventRecords.size() && m_eventRecords[i]->getPlayerId() == playerId)
         ++i;
     for (int j = 0; j < i; ++j)
         delete m_eventRecords[j];
@@ -1313,11 +1174,11 @@ void game::playRecordedEvents()
     size = m_eventRecords.size();
     unsigned char interrupted = 0;
     message msg;
-    int savedWalkSpeed = g_unnamed698758.m_computerWalkSpeed;
-    unsigned char savedSuppress = g_unnamed698790 != 0;
-    if (g_unnamed698758.m_computerWalkSpeed > 4)
-        g_unnamed698758.m_computerWalkSpeed = 4;
-    g_unnamed698790 = 0;
+    int savedWalkSpeed = g_config.m_computerWalkSpeed;
+    unsigned char savedSuppress = g_config.m_blackoutComputer != 0;
+    if (g_config.m_computerWalkSpeed > 4)
+        g_config.m_computerWalkSpeed = 4;
+    g_config.m_blackoutComputer = 0;
 
     for (int j = 0; j < size; ++j) {
         unsigned char draw = !interrupted
@@ -1345,62 +1206,17 @@ void game::playRecordedEvents()
     if (currTown != 0)
         g_advManager->setTownContext(currTown->m_id, 0, 1);
 
-    g_unnamed698758.m_computerWalkSpeed = savedWalkSpeed;
-    g_unnamed698790 = savedSuppress;
+    g_config.m_computerWalkSpeed = savedWalkSpeed;
+    g_config.m_blackoutComputer = savedSuppress;
     g_advManager->completeDraw(0);
     g_advManager->updateScreen(0, 0);
 }
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:1367
-DC_ONLY(0x8ea88, 0x46)
-unsigned char game::replayAvailable()
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:1380
-DC_ONLY(0x8ead0, 0xF4)
-unsigned char game::loadRecordedEvents(void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:38
-DC_ONLY(0x8f330, 0x34)
-void* type_event_record::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:913
-DC_ONLY(0x8f364, 0x34)
-void* type_record_shroud::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:913
-DC_ONLY(0x8f398, 0x28)
-void type_record_shroud::~type_record_shroud()
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:953
-DC_ONLY(0x8f3c0, 0x28)
-void type_record_shroud::type_shroud_change::type_shroud_change()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x0049da70, 0x41)
 unsigned char game::replayAvailable() const
 {
     for (unsigned i = 0; i < m_eventRecords.size(); ++i) {
-        if (m_eventRecords[i]->m_playerId != g_netLocalGamePos)
+        if (m_eventRecords[i]->getPlayerId() != g_netLocalGamePos)
             return 1;
     }
     return 0;

@@ -1,31 +1,34 @@
-#include <va.h>
-#include <yvals.h>
-#include <stdio.h>
-#include <string.h>
+#include "va.h"
+
 #include <map>
+#include <memory>
+#include <sstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <string.h>
 #include <utility>
-#include "resource.h"
+#include <windows.h>
+#include <yvals.h>
+
 #include "resourcemanager.h"
-#include "resourcemanager_archive.h"
+
 #include "abstractfile.h"
-#include "resourcemanager_sprite_headers.h"
-#include "textresource.h"
-#include "lodfile.h"
 #include "bitmap16.h"
 #include "bitmap24.h"
 #include "bitmap816.h"
 #include "csprite.h"
 #include "cspriteframe.h"
 #include "font.h"
+#include "lodfile.h"
 #include "ownership.h"
 #include "palette.h"
-#include <memory>
-#include <stdlib.h>
-#include <string>
-#include <windows.h>
-#include <sstream>
+#include "resource.h"
+#include "resourcemanager_archive.h"
+#include "resourcemanager_sprite_headers.h"
 #include "sample.h"
 #include "smackmgr.h"
+#include "textresource.h"
 
 class LODFile;
 
@@ -86,102 +89,6 @@ TSpreadsheetResource* loadSpreadsheet(const char* name);
 DATA(0x0069e528)
 ResourceManager::TCacheMap g_resourceCache;
 
-#if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\resourcemanager.cpp:158
-DC_ONLY(0x1213a0, 0x182)
-void ResourceManager::remapGraphics()
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:222
-DC_ONLY(0x121524, 0x216)
-void ResourceManager::saturateGraphics()
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:298
-DC_ONLY(0x12173c, 0x144)
-unsigned char ResourceManager::Open(unsigned char open_sprites, unsigned char open_bitmaps)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:338
-DC_ONLY(0x121880, 0x1C)
-void ResourceManager::Close()
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:357
-DC_ONLY(0x12189c, 0x26)
-void ResourceManager::setPath(const char* path)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:374
-DC_ONLY(0x1218c4, 0x168)
-void ResourceManager::setPixelFormat(unsigned long red_mask, unsigned long green_mask, unsigned long blue_mask)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:438
-DC_ONLY(0x121a2c, 0x9C)
-TGenericResource* ResourceManager::GetResource(const char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:729
-DC_ONLY(0x121ac8, 0x194)
-Bitmap816* ResourceManager::getBitmap816(const char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:906
-DC_ONLY(0x121c5c, 0x134)
-Bitmap16Bit* ResourceManager::getBitmap16(const char* name, unsigned char ignore_cache)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:1027
-DC_ONLY(0x121d90, 0x138)
-TPalette16* ResourceManager::getPalette(const char* name, unsigned char ignore_cache)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:1133
-DC_ONLY(0x121ec8, 0xE4)
-TPalette24* ResourceManager::getPalette24(const char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:1221
-DC_ONLY(0x121fac, 0xE0)
-font* ResourceManager::getFont(const char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:1356
-DC_ONLY(0x12208c, 0xD8)
-TTextResource* ResourceManager::getText(const char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:1461
-#endif
-
 // ResourceManager's retail archive pool is eight interleaved 0x190-byte
 // slots. Open proves the leading dword is the archive pathname and every
 // resource lookup independently proves the LODFile subobject at +4.
@@ -228,9 +135,9 @@ VA(0x005594f0, 0x14)  // anchor-caller + emitted COFF public, retail-only
 void basic_ostringstream::`vbase destructor'();
 #endif
 
-DATA(0x00694d60) unsigned long g_colorMaskGreen;
-DATA(0x00694d64) unsigned long g_colorMaskRed;
-DATA(0x00694d68) unsigned long g_colorMaskBlue;
+DATA(0x00694d60) unsigned int Bitmap16Bit::s_greenMask;
+DATA(0x00694d64) unsigned int Bitmap16Bit::s_blueMask;
+DATA(0x00694d68) unsigned int Bitmap16Bit::s_redMask;
 DATA(0x0069cc60) unsigned int TPalette16::s_greenMask;
 DATA(0x0069cc64) unsigned int TPalette16::s_redMask;
 DATA(0x0069cc68) unsigned int TPalette16::s_blueMask;
@@ -609,15 +516,7 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 VA(0x0055a550, 0x67)
 void ResourceManager::close()
 {
-    TCacheMap::iterator position = g_resourceCache.begin();
-    while (position != g_resourceCache.end()) {
-        resource* value = position->second;
-        if (value)
-            delete value;
-        ++position;
-    }
-
-    g_resourceCache.clear();
+    expunge();
 
     for (int i = 0; i < 8; ++i)
         g_resourceLodSlots[i].m_file.clear();
@@ -636,11 +535,8 @@ void ResourceManager::setPixelFormat(unsigned long redMask,
                                      unsigned long greenMask,
                                      unsigned long blueMask)
 {
-    CSpriteFrame::setPixelFormat(redMask, greenMask, blueMask);
-
-    g_colorMaskBlue = redMask;
-    g_colorMaskGreen = greenMask;
-    g_colorMaskRed = blueMask;
+    CSprite::setPixelFormat(redMask, greenMask, blueMask);
+    Bitmap16Bit::setPixelFormat(redMask, greenMask, blueMask);
     TPalette16::setPixelFormat(redMask, greenMask, blueMask);
     g_spriteMaskFirst = redMask;
     g_spriteMaskGreen = greenMask;
@@ -913,11 +809,11 @@ Bitmap16Bit* ResourceManager::getBitmap16(const char* name)
 // DC GetPalette independently records those arrays and the palette temporary.
 // This shared conversion operation is an inferred Complete-side helper; no
 // standalone procedure proves its original name, interface or linkage.
-// Factoring it restores the leading pathname's retained _Tidy call. Keeping
-// the archive path after the file arm's early return restores both adapter
-// stack slots without a compiler pin or a library-internal source call.
-static TPalette16* makeResourcePalette(const char* name,
-                                       const TRGBA* paletteData)
+// Factoring it restores the leading pathname's retained _Tidy call and all
+// 24 retail blocks (99.9810%). Keeping the archive path after the file arm's
+// early return restores both adapter stack slots and reaches 100%; an explicit
+// else instead swaps their slots. No compiler pin or library-internal call.
+static TPalette16* makeResourcePalette(const char* name, const TRGBA* paletteData)
 {
     TPalette24 palette24(paletteData);
     if (g_graphicsSaturated)
@@ -1409,80 +1305,18 @@ TSpreadsheetResource* ResourceManager::getSpreadsheet(const char* name)
     return loaded;
 }
 
-#if 0 // @carcass - remaining Dreamcast roster rows
-
-// E:\gamedcs\resourcemanager.cpp:1566
-DC_ONLY(0x1221fc, 0xE4)
-unsigned char ResourceManager::getSoundFile(char* localName, void** data, SoundHeaderStruct** snd, int* size)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:1606
-DC_ONLY(0x1222e0, 0x40)
-sample* ResourceManager::getSample(const char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:2080
-DC_ONLY(0x122434, 0x4E)
-void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:2110
-DC_ONLY(0x122484, 0x16)
-unsigned char ResourceManager::pointToSpriteResource(const char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:2115
-DC_ONLY(0x12249c, 0x18)
-int ResourceManager::ReadFromSpriteResource(void* data, int numBytes)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:2120
-DC_ONLY(0x1224b4, 0x16)
-unsigned char ResourceManager::pointToBitmapResource(const char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:2125
-DC_ONLY(0x1224cc, 0x18)
-int ResourceManager::readFromBitmapResource(void* data, int numBytes)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:2130
-DC_ONLY(0x1224e4, 0x4C)
-int ResourceManager::getBitmapResourceSize(const char* name)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // E:\gamedcs\resourcemanager.cpp:2141, dc 0x122530.
 // Complete routes disposal through the resource virtual method.
 void ResourceManager::dispose(resource* value) { value->dispose(); }
 
-#if 0  // @carcass
-
-// E:\gamedcs\resourcemanager.cpp:2196
-DC_ONLY(0x1225c0, 0x1C)
-void ResourceManager::dispose(sample* sam)
+// Original: ResourceManager::Dispose; resourcemanager.cpp:2196, dc 0x1225c0
+// DC releases a ds_engine sample-cache entry. Complete's sample owns its
+// sound data and inherits reference-counted resource disposal (0x55d0f0).
+void ResourceManager::dispose(sample* value)
 {
-    // @stub
+    if (value)
+        value->dispose();
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\resourcemanager.cpp:2204, dc 0x1225dc.
 // Complete routes disposal through the resource virtual method.
@@ -1494,16 +1328,19 @@ void ResourceManager::delSprFromCache()
 {
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\resourcemanager.cpp:2359
-DC_ONLY(0x1228ac, 0x7C)
-void ResourceManager::Expunge()
+// Original: ResourceManager::Expunge; resourcemanager.cpp:2359, dc 0x1228ac
+void ResourceManager::expunge()
 {
-    // @stub
-}
+    TCacheMap::iterator position = g_resourceCache.begin();
+    while (position != g_resourceCache.end()) {
+        resource* value = position->second;
+        if (value)
+            delete value;
+        ++position;
+    }
 
-#endif  // @carcass
+    g_resourceCache.clear();
+}
 
 // A cache hit adds a reference before returning the resource.
 resource* ResourceManager::getFromCache(const char* name)
@@ -1516,44 +1353,12 @@ resource* ResourceManager::getFromCache(const char* name)
     return value;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\resourcemanager.cpp:2397
-DC_ONLY(0x122984, 0x72)
-void ResourceManager::addToCache(resource* r)
+// Original: ResourceManager::Report; resourcemanager.cpp:2404, dc 0x1229f8
+// Optimized release hook: the executable body is only return true.
+unsigned char ResourceManager::report(const char* filename)
 {
-    // @stub
+    return 1;
 }
-
-// E:\gamedcs\resourcemanager.cpp:2404
-DC_ONLY(0x1229f8, 0x68)
-unsigned char ResourceManager::Report(const char* filename)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:121
-DC_ONLY(0x122bd0, 0x28)
-void ResourceManager::TCacheMapKey::TCacheMapKey(const char* n)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:126
-DC_ONLY(0x122bf8, 0x1C)
-unsigned char ResourceManager::TCacheMapKey::operator<(const ResourceManager::TCacheMapKey* y)
-{
-    // @stub
-}
-
-// E:\gamedcs\resourcemanager.cpp:136
-DC_ONLY(0x122c14, 0x18)
-void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::T()
-{
-    // @stub
-}
-
-#endif
 
 namespace ResourceManager {
 bool getSoundFile(const char* localName, std::auto_ptr<char>& data, int* size);
@@ -1614,6 +1419,12 @@ sample* loadSample(const char* name);
 // HIST. The reproduced VC6 trace has caller cb=445 (budget floor 1000);
 // the closures cost 43 and receive 96/62 inside reportMissingResource.
 // Do not paste the helper back or add an inline-depth control to suppress them.
+static void reportMissingSample(const char* name)
+{
+    reportMissingResource(
+        DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample"),
+        DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx"), name);
+}
 VA(0x0055c3c0, 0x356)  // GetSample callee + GetSoundFile/default.wav graph
 sample* ResourceManager::loadSample(const char* name)
 {
@@ -1643,15 +1454,11 @@ sample* ResourceManager::loadSample(const char* name)
     std::auto_ptr<char> data;
     int size;
     if (!getSoundFile(name, data, &size)) {
-        reportMissingResource(
-            DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample"),
-            DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx"), name);
+        reportMissingSample(name);
         const char* fallbackName = DATA_COMPGEN(
             0x006410dc, defaultSampleName, "default.wav");
         if (!getSoundFile(fallbackName, data, &size)) {
-            reportMissingResource(
-                DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample"),
-                DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx"), fallbackName);
+            reportMissingSample(fallbackName);
             return 0;
         }
     }
@@ -1670,6 +1477,26 @@ sample* ResourceManager::getSample(const char* name)
     if (loaded)
         addToCache(loaded);
     return loaded;
+}
+
+// Original: addPal16; csprite.cpp:978, dc 0x73b64.
+// Complete moved DEF parsing from CSprite::SpriteDataReload into getSprite.
+// This ordinary attachment helper moves with that operation; its expansion
+// retains deletion of the old palette and construction from the new value.
+// Complete's palette copy interface takes a pointer, where DC takes a ref.
+void addPal16(CSprite* sprite, const TPalette16* pal)
+{
+    if (sprite->m_p)
+        delete sprite->m_p;
+    sprite->m_p = new TPalette16(pal);
+}
+
+// Original: addPal24; csprite.cpp:986, dc 0x73bac.
+void addPal24(CSprite* sprite, const TPalette24* pal)
+{
+    if (sprite->m_p24)
+        delete sprite->m_p24;
+    sprite->m_p24 = new TPalette24(pal);
 }
 
 // Dreamcast GetSprite (dc 0x122320) proves GetFromCache, SpriteDefHeader
@@ -1841,13 +1668,8 @@ CSprite* ResourceManager::getSprite(const char* name)
         g_greenMaskBits, g_greenMaskShift,
         g_lastMaskBits, g_lastMaskShift);
 
-    if (sprite->m_p)
-        delete sprite->m_p;
-    sprite->m_p = new TPalette16(&palette16);
-
-    if (sprite->m_p24)
-        delete sprite->m_p24;
-    sprite->m_p24 = new TPalette24(&palette24);
+    addPal16(sprite, &palette16);
+    addPal24(sprite, &palette24);
 
     delete[] fileData;
     addToCache(sprite);

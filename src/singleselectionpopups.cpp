@@ -16,7 +16,7 @@
 // ICF folds several bodies: CBitmapWidget::Main and its scalar deleting
 // destructor onto CSpriteWidget's (0x575a10 / 0x5757b0), and the CTownDlg /
 // CTeamAlignmentDlg scalar deleting destructors onto CHeroDlg's (0x575e30);
-// the folded twins keep DC_ONLY rows below (one retail address = one claim).
+// only one source body claims each shared retail address.
 // Widget/CSingleSelPopup ctors and the trivial zBufferDraw/Draw stubs are
 // inlined or ICF-folded out of this TU (0x404140 / 0x404df0 shared empties).
 // All three widget non-deleting dtors fold to 0x575a60 (jmp ~widget), whose
@@ -30,22 +30,24 @@
 // and the per-widget temp to esi where our CL binds them the other way, a swap
 // the vc6 catalog reports as not source-addressable. CHeroDlg and CTownDlg
 // remain @stub; CTeamAlignmentDlg is reconstructed below.
+#include "va.h"
 #include "includes.h"
-#include <va.h>
+
 #include "singleselectionpopups.h"
-#include "bitmap816.h"
+
 #include "bitmap16.h"
+#include "bitmap816.h"
 #include "csprite.h"
-#include "winmgr.h"
-#include "remote.h"
-#include "kbwin.h"
+#include "font.h"
 #include "game.h"
 #include "iconwdgt.h"
+#include "kb.h"
+#include "kbwin.h"
+#include "remote.h"
+#include "resourcemanager.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "kb.h"
-#include "resourcemanager.h"
-#include "font.h"
+#include "winmgr.h"
 
 // ============================================================================
 // CHotspotWidget - a bare rectangular click target.
@@ -183,6 +185,12 @@ CSpriteWidget::CSpriteWidget(int xPos, int yPos, CSprite* sprite, int frameArg)
     m_frame %= sprite->getNumFrames(0);
 }
 
+// Original: CSpriteWidget::zBufferDraw; singleselectionpopups.cpp:67, dc 0x12f0c4.
+// Vtable0x641a00 slot3 shares the empty ret8 body at0x404140.
+void CSpriteWidget::zBufferDraw(unsigned short* zBuffer, int id) const
+{
+}
+
 CSpriteWidget::~CSpriteWidget()
 {
 }
@@ -235,6 +243,18 @@ CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* image)
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:121, dc 0x12f2ec.
+// Original: CBitmapWidget::Main; singleselectionpopups.cpp:93, dc 0x12f1e0.
+// Vtable0x641a34 slot2 folds to CSpriteWidget::main0x575a10.
+int CBitmapWidget::main(message& msg)
+{
+    return widget::main(msg);
+}
+
+// Original: CBitmapWidget::zBufferDraw; singleselectionpopups.cpp:99, dc 0x12f1f8.
+void CBitmapWidget::zBufferDraw(unsigned short* zBuffer, int id) const
+{
+}
+
 CHotspotWidget::~CHotspotWidget()
 {
 }
@@ -303,7 +323,7 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
         -1, 1, 0, 8));
     add(new CSpriteWidget((m_width - town->getWidth()) / 2, 60, town, frame));
     add(new textWidget(10, 95, m_width - 20, 18,
-        g_unnamed6a74f4[townType], "smalfont.fnt", font::PRIMARY,
+        g_townTypeNames[townType + 1], "smalfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
     add(new textWidget(10, 127, m_width - 20, 36,
         g_generalText->getText(80), "medfont.fnt", font::PRIMARY,
@@ -442,61 +462,6 @@ void CTeamAlignmentDlg::getTeams()
     }
 }
 
-#if 0  // @carcass -- located, not reconstructed
-
-// ============================================================================
-// Unclaimed DC roster rows: inlined away, ICF-folded onto a claimed twin, or
-// folded onto a shared empty outside this TU. No standalone retail body.
-// ============================================================================
-
-// --- CTeamAlignmentDlg::CountNumPlayers: inlined into GetTeams/CreateWin. ---
-// E:\gamedcs\singleselectionpopups.cpp:411
-DC_ONLY(0x12ed7c, 0x58)
-int CTeamAlignmentDlg::countNumPlayers(int teamNbr)
-{
-    // @stub
-}
-
-// --- Widget-subclass ctors: inlined into the CreateWin callers that build
-//     them (each stores the class vtable inline; see the CreateWin claims). ---
-// E:\gamedcs\singleselectionpopups.cpp:47
-DC_ONLY(0x12f018, 0x94)   // inlined into CBonusDlg/CHeroDlg/CTownDlg CreateWin
-void CSpriteWidget::CSpriteWidget(int xPos, int yPos, CSprite* pSprite, int frame)
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.cpp:82
-DC_ONLY(0x12f168, 0x78)   // inlined into CBonusDlg/CHeroDlg CreateWin
-void CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage)
-{
-    // @stub
-}
-
-// --- CBitmapWidget::Main: ICF-folded onto CSpriteWidget::Main (0x575a10). ---
-// E:\gamedcs\singleselectionpopups.cpp:93
-DC_ONLY(0x12f1e0, 0x18)   // folds -> 0x575a10 (return widget::Main)
-int CBitmapWidget::main(message& msg)
-{
-    // @stub
-}
-
-// --- Trivial zBufferDraw / Draw stubs: ICF-folded onto shared empties
-//     0x404140 / 0x404df0 outside this TU (excluded class). ---
-// E:\gamedcs\singleselectionpopups.cpp:67
-DC_ONLY(0x12f0c4, 0x4)    // folds -> 0x404140
-void CSpriteWidget::zBufferDraw()
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.cpp:99
-DC_ONLY(0x12f1f8, 0x4)    // folds -> 0x404140
-void CBitmapWidget::zBufferDraw()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // ============================================================================
 // The scenario-setup "Resource" starting bonus, in two halves.
 // ============================================================================
@@ -547,7 +512,7 @@ const char* getStartingResourceDescription(int town)
 // Complete adds this random-map generation window. The Dreamcast popup
 // procedure inventory ends with the team-alignment dialog, and its full
 // CodeView class field lists contain no RMG/progress class. The five exact
-// Windows-only method identities are reviewed in config/win_only.tsv.
+// Windows-only method identities are reviewed in config/source/win_only.tsv.
 // The whole family is vtable-proven: 0x641b14 slot 0 is the scalar deleting
 // destructor 0x577090, slot 1 the SetTotal override 0x577300 and slot 2 the
 // Advance override 0x577320, and 0x576f00 is the only body that stores that

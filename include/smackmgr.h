@@ -1,7 +1,21 @@
 #ifndef HOMM3_SMACKMGR_H
 #define HOMM3_SMACKMGR_H
 
+#include "va.h"
+
+#include <SMACK.H>
+
+// DC CodeView independently proves the complete SDK record extent; retail
+// consumes Width, Height, Frames, FrameNum and the LastRect quartet.
+SIZE(Smack, 944);
+
 namespace SmackManager {
+// DC namespace globals; Windows VA mappings are documented at definitions.
+extern bool g_updateScreen;
+extern bool g_needsUpdate;
+extern bool g_playingSmacker;
+void drawSmackerFrame();  // 0x598e80
+void gotoSmackerFrame(unsigned long frame);  // 0x5990a0
 void closeSmacker();                                     // 0x599050
 void setPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x598a40
@@ -27,59 +41,6 @@ struct VideoHeaderStruct {
     unsigned long m_offset;
 };
 
-// Partial view of the Smacker handle using the Dreamcast SmackTag prefix.
-// Retail confirms unsigned Width/Height (VideoPlay centers with shr);
-// the LastRect
-// quartet compares signed in VideoDrawRects (jge/jle).
-struct Smack {
-    unsigned long m_version;   // +0x000
-    unsigned long m_width;     // +0x004
-    unsigned long m_height;    // +0x008
-    unsigned long m_frames;    // +0x00c
-    // Dreamcast SmackTag, type 0x474e, supplies this contiguous prefix.
-    // Retail VideoPlay/VideoDrawRects confirm Frames +0x0c, FrameNum
-    // +0x374 and the signed LastRect quartet +0x380..+0x38c.
-    unsigned long m_msPerFrame;       // +0x010
-    unsigned long m_smackerType;      // +0x014
-    unsigned long m_largestInTrack[7];// +0x018
-    unsigned long m_tableSize;        // +0x034
-    unsigned long m_codeSize;         // +0x038
-    unsigned long m_abSize;           // +0x03c
-    unsigned long m_detailSize;       // +0x040
-    unsigned long m_typeSize;         // +0x044
-    unsigned long m_trackType[7];     // +0x048
-    unsigned long m_extra;            // +0x064
-    unsigned long m_newPalette;       // +0x068
-    unsigned char m_palette[772];     // +0x06c (original array extent)
-    unsigned long m_palType;          // +0x370
-    unsigned long m_frameNum;  // +0x374
-    unsigned long m_frameSize; // +0x378
-    unsigned long m_sndSize;   // +0x37c
-    long m_lastRectx;          // +0x380
-    long m_lastRecty;          // +0x384
-    long m_lastRectw;          // +0x388
-    long m_lastRecth;          // +0x38c
-};
-
-// The smackw32 import surface (retail IAT: __imp___SmackToBuffer@28 -
-// RAD's own leading underscore, the same convention soundmgr.h
-// documents for Miles). smackmgr.cpp aliases the underscored names
-// back to the radlib spellings.
-extern "C" {
-__declspec(dllimport) void __stdcall _SmackToBuffer(Smack* smk, unsigned long left, unsigned long top, unsigned long pitch, unsigned long destheight, void* buf, unsigned long flags);
-__declspec(dllimport) unsigned long __stdcall _SmackToBufferRect(Smack* smk, unsigned long flags);
-__declspec(dllimport) unsigned long __stdcall _SmackDoFrame(Smack* smk);
-__declspec(dllimport) void __stdcall _SmackGoto(Smack* smk, unsigned long frame);
-__declspec(dllimport) void __stdcall _SmackClose(Smack* smk);
-// The rest of the surface, consumed only by smackmgr.cpp itself: the
-// per-frame pump's wait/advance pair and ShowVideo's open path.
-__declspec(dllimport) unsigned long __stdcall _SmackWait(Smack* smk);
-__declspec(dllimport) void __stdcall _SmackNextFrame(Smack* smk);
-__declspec(dllimport) Smack* __stdcall _SmackOpen(void* handle, unsigned long flags, long extra);
-__declspec(dllimport) void __stdcall _SmackUseMMX(unsigned long on);
-__declspec(dllimport) void __stdcall _SmackVolumePan(Smack* smk, unsigned long trackFlags, unsigned long volume, unsigned long pan);
-}
-
 // Per-id video descriptor table in a foreign TU's .data (0x6839c0,
 // stride 20; ids below VIDEO_ID_FIRST_TABLED never consult it). The
 // record starts EIGHT bytes below the flag byte the earlier wrappers
@@ -88,9 +49,12 @@ __declspec(dllimport) void __stdcall _SmackVolumePan(Smack* smk, unsigned long t
 // that selects the bink arm is at +8, not at +0. Names provisional;
 // owning TU unknown - declared with its known consumer until the
 // owner's TU lands.
+// Pointer qualification is inferred from the DC-proven char* interface of
+// BinkManager::GetBinkFilePtr; retail passes both fields directly. This does
+// not establish the descriptor's original name or owning translation unit.
 struct SVideoDescriptor {
-    const char* m_smkStem;        // +0   video track archive stem
-    const char* m_smkAudioStem;   // +4   audio-only track ("" = none)
+    char* m_smkStem;              // +0   video track archive stem
+    char* m_smkAudioStem;         // +4   audio-only track ("" = none)
     unsigned char m_useBink;      // +8
     // Role-derived: both frame pumps decode the second track and call
     // fadeScreen(0, 4, 0) when this byte is set at the track transition.
@@ -98,7 +62,7 @@ struct SVideoDescriptor {
     unsigned char m_fadeOnAbort;  // +0x0a
     // Role-derived: the Bink opener maps this byte to BINKNOSKIP
     // (0x00400000), proven by vendor/bink-0.5a/orig/bink.h.
-    // The parallel Smacker opener maps the same policy to bit 0x200.
+    // The parallel Smacker opener maps the same policy to SMACKPRELOADALL.
     unsigned char m_noFrameSkip;      // +0x0b
     char m_padC[8];              // 20-byte stride
 };
@@ -113,8 +77,8 @@ extern Smack* g_smackVideo2;
 
 // Foreign globals without an owning header yet (all provisional):
 extern int* g_videoGameState;    // .bss 0x69923c - the forced-bink state pair
-extern int g_videoNoSkip;        // .bss 0x699524 - nonzero blocks the user abort
-extern int g_unnamed699290;       // .bss 0x699290 - nonzero suppresses the video sound tracks
+extern int g_firstTimeThrough;        // .bss 0x699524 - nonzero blocks the user abort
+       // .bss 0x699290 - nonzero suppresses the video sound tracks
 
 // Video ids as the wrappers dispatch them. Names are bootstrap ROLE
 // inventions (no DC/NH3API roster survives for the numeric ids): ids
@@ -151,15 +115,16 @@ enum EVideoPixelFormat {
 void videoSoundOnOff(int on);  // 0x5971b0; Complete carries an unused flag
 void videoRealignBuffers();    // 0x5971f0
 int videoPlay(int id, int x, int y, int w, int h);   // 0x5972d0
-void videoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8);  // 0x597570
+void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);  // 0x597570
 void videoClose();             // 0x5975f0
 void videoNextFrame();         // 0x5976e0
 void videoDrawCurrentFrame();  // 0x597740
 void videoPause();             // 0x5977a0
 void videoResume();            // 0x597850
 void videoRestart();           // 0x597900
-unsigned char videoNeedsUpdate();  // 0x597930
-unsigned char videoPlaying();      // 0x597990
+// DC VideoNeedsUpdate/VideoPlaying publics encode bool returns (`_N`).
+bool videoNeedsUpdate();  // 0x597930
+bool videoPlaying();      // 0x597990
 void videoDrawRects();         // 0x5979d0
 void videoShutDown();          // 0x597c70
 void deleteSoundHeaders();
@@ -179,7 +144,7 @@ SIZE(VideoHeaderStruct, 0x2c);
 // is the third of them plus the shared entry count EarlySetup and the
 // loader both read.
 DATA(0x0069fe2c) extern VideoHeaderStruct* g_videoHeader3;
-DATA(0x0069fe3c) extern int g_videoHeaderCount;
+extern int g_videoCount3;
 
 // ...and the other two thirds of the same trio, plus the three archive
 // handles they index. binkmanager.obj's GetBinkFilePtr (0x44d5a0) is the

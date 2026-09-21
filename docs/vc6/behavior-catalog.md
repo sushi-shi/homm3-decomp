@@ -20,7 +20,7 @@ Profile under test: **VC6 SP3 `CL.EXE`, `/O2 /Ob2 /Oy- /Op /ML /Gr /GX /GR-
 STL. Sibling corpus: **MSVC 4.2 `/Od /MT /Gr /G5 /Ob1 /QIfdiv`** with 39 `/O2`
 TUs. Compiled sources: the `Residual (`/`EXACT` blocks across `src/*.cpp`,
 `config/units.toml`, the dated block in `config/match_baseline.tsv`,
-`.claude/skills/match/SKILL.md`, homm2's `docs/patterns/*` + `docs/msvc42-*`,
+`.agents/skills/match/SKILL.md`, homm2's `docs/patterns/*` + `docs/msvc42-*`,
 and attempt-1's `docs/compiler-toolchain.md`.
 
 ## Running the oracle
@@ -902,6 +902,16 @@ spellings using the actual global result were exact, while local `bool`,
 whether a recovered state output itself owns the decision before rewriting
 returns or treating the epilogue as an allocator ceiling.
 
+
+The Bink sibling `BinkManager::nextBinkFrame` (0x44daa0) has the same state
+ownership: assign `g_needsUpdate` from the complete readiness predicate, then
+return if it is false. With the separately recovered Windows sound-service
+call boundary, this closes 92.9245% to 100%, including idle-clear placement and
+the final draw call/shared epilogue. Three source states produced two distinct
+objects and both reproduced; early-return and positive-work-arm forms of the
+real global result were exact. Separate true/false stores and completion-arm
+reordering did not close the layout. Keep the paused test after publication.
+
 ### D6. The opposite direction: retail duplicates where we merge
 `ai_tactical` 75.5 → 95.9 (three guards goto INTO the third one's body; `||`
 sinks the value/10 block); `armygrp::TSplitWindow::WindowHandler` EXACT
@@ -1065,6 +1075,41 @@ intrinsics (`sqrt` → CRT call) — see 0.4.
   loads, `add eax,2` stride and the `sbb eax,eax / sbb eax,-1` tail; no
   `call strcmp`. Compiled under the full game profile including /Op,
   corroborating that /Op leaves string intrinsics on)
+
+### D25. Zero-fill LOOP against `memset` — a distinguishable idiom
+VC6 recognises a constant-count zero fill written as a counted loop and lowers
+it to the same code a `memset` of that size lowers to, but **the two set up
+their registers in a different order**, so the bytes tell them apart:
+
+| source form | small count (unrolled) | large count (`rep stosd`) |
+|---|---|---|
+| `memset(dest, 0, n)` | `lea ecx,[esi+off]` base pointer, stores off ECX, one shared zero | `mov ecx,n` / `xor eax,eax` / `lea edi,[esi+off]` |
+| `for (i = a; i < b; i++) dest[i] = 0;` | direct `mov [esi+off],reg` stores, **its own zero register per loop** | `lea edi,[esi+off]` / `mov ecx,n` / `xor eax,eax` |
+
+The memset form computes its destination as a call argument, so the address
+lands in a register (ECX) and the displacements ride off it; two adjacent
+memsets then share one zero. The loop form has no argument to evaluate: the
+destination is folded into each store's displacement, and each loop
+materialises its own zero — an `xor eax,eax` / `xor ecx,ecx` pair for two
+adjacent loops is therefore positive evidence for two loops, not two memsets.
+A nested loop over a 2-D array collapses to the same single fill as a flat one.
+
+The idiom is NOT limited to dword arrays: a constant-count loop over a `char`
+or `unsigned char` array also becomes `rep stosd` plus the `stosw`/`stosb`
+tail, i.e. byte-identical to what `memset` of that size emits - again only the
+EDI/ECX setup order separates them. A non-zero constant fill works the same way
+(`m_heroAvailability[i] = -1` gives `rep stosd` with EAX = -1). When the fill
+VALUE is not a literal (`m_heroPoolMap[i] = allPlayers`), the order reverts to
+ECX-first, so the order test only decides zero and literal fills.
+
+Closed `advManager::advManager` (90.30 -> 100.0000, 2026-09-20): five fills
+were written as `memset`; river/road were unrolled loops and flag/boat-flag/
+looped-sample were `rep stosd` loops. `cursorIcons` stayed a real `memset` —
+its `lea edi` is hoisted ahead of the following boat loop, which the loop form
+does not reproduce. So the two forms coexist in one function and each fill has
+to be read on its own bytes.
+- status: explained, byte-proven on advmgr
+- probe: none yet (advmgr ctor is the in-tree case)
 
 ### D17. STL/library shape as codegen
 `get_total()` is VC6's own `_First == 0 ? 0 : _Last - _First` (the null arm

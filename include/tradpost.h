@@ -1,9 +1,9 @@
 #ifndef HOMM3_TRADPOST_H
 #define HOMM3_TRADPOST_H
 
-#include "town.h"
-#include "artifact.h"
 #include "advmgr_popup.h"
+#include "artifact.h"
+#include "town.h"
 
 // The gMarketWindow selector DoMarket dispatches on: the five dialog panes in
 // the order the classes are declared. Byte-proven by DoMarket's jump table and
@@ -160,6 +160,10 @@ class slider;
 // CAdvPopup base (0x60) are named where a reconstructed body attests the store
 // and left as field_NN placeholders where only the size is proven so far.
 class TTradeResourceWindow : public CAdvPopup {
+    void setWidgetOn(short id);
+    void setWidgetOff(short id);
+    void setWidgetDisabled(short id);
+    void setupNewTrade();
     slider* m_resourceSlider;   // +0x60, set by the ctor (TradeResourceSlider)
     int m_lastHoverId;          // +0x64, last widget the hover handler rolled over
     // Dreamcast tradpost.cpp:2181, original ComputeTradeRatios (private).
@@ -177,6 +181,13 @@ public:
 SIZE(TTradeResourceWindow, 0x68);
 
 class TGiveResourceWindow : public CAdvPopup {
+    void setWidgetOn(short id);
+    void setWidgetOff(short id);
+    void setWidgetDisabled(short id);
+    void setupNewTrade();
+    void computeTradeRatios(int inLeftResource, int inRightResource,
+                            int* inTradeRatio, int* inLeftDenominated,
+                            int* inMaxUnitsToTrade);
 public:
     // +0x60. The 0x46..0x4c recipient buttons index gPlayerColorNames by this
     // per-slot player-colour array; SetRolloverText's byte-proven
@@ -201,6 +212,13 @@ public:
 SIZE(TGiveResourceWindow, 0x8c);
 
 class TBuyArtifactWindow : public CAdvPopup {
+    void setWidgetOn(short id);
+    void setWidgetOff(short id);
+    void setWidgetDisabled(short id);
+    void setupNewTrade();
+    void computeTradeRatios(int inLeftResource, int inRightResource,
+                            int* inTradeRatio, int* inLeftDenominated,
+                            int* inMaxUnitsToTrade);
     int m_lastHoverId;          // +0x60, last widget the hover handler rolled over
 
 public:
@@ -236,6 +254,7 @@ public:
 SIZE(TSellArtifactWindow, 0x64);
 
 class TSellCreatureWindow : public CAdvPopup {
+    void setupNewTrade();
     slider* m_creatureSlider;   // +0x60, set by the ctor (SellCreatureSlider)
     int m_lastHoverId;          // +0x64, last widget the hover handler rolled over
 

@@ -1,13 +1,17 @@
 // 4 functions in link order.
-#include <va.h>
-#include "creaturetype.h"
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
+
 #include "quickinfowindow.h"
+
+#include "creaturetype.h"
 #include "exec.h"
 #include "iconwdgt.h"
 #include "kb.h"
 #include "textwdgt.h"
+#include "winmgr.h"
 
 VA(0x0052f8c0, 0x430)  // dc 0x11787c
 TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
@@ -73,15 +77,9 @@ TQuickCreatureWindow::~TQuickCreatureWindow()
 {
 }
 
-// E:\gamedcs\quickinfowindow.cpp:88
-// Retail folds this identical body with the quick-hero/quick-town wrappers at
-// 0x530d30 (`gpWindowManager->DoQuickView(this)`). It therefore has no distinct
-// quickinfowindow contribution to claim; the shared representative belongs to
-// the later quicktownwindow span.
-#if 0  // @carcass
-DC_ONLY(0x117b8c, 0x28)
+// Original: TQuickCreatureWindow::QuickWindowWait; quickinfowindow.cpp:88, dc 0x117b8c.
+// Identical quick-window wrappers fold onto the retail 0x530d30 body.
 void TQuickCreatureWindow::quickWindowWait()
 {
-    // @stub
+    g_windowManager->doQuickView(this);
 }
-#endif

@@ -1,15 +1,31 @@
-#include <va.h>
+#include "va.h"
+#include "objnames.h"
+#include "includes.h"
+
 #include <stdlib.h>
 #include <string.h>
+
+#include "findpath.h"
+
 #include "advmgr.h"
 #include "army.h"
 #include "cmbtmgr.h"
-#include "findpath.h"
 #include "game.h"
-#include "herospec.h"  // TSkillMastery, for the Dimension Door mastery test
+#include "herospec.h"
 #include "kb.h"
 #include "path.h"
-#include "includes.h"
+
+// Initial contents recovered from the pinned Complete image.
+DATA(0x00678150) tilePoint g_normalDirTable[8] = {
+    { 0, -1, 16 },
+    { 1, -1, 16 },
+    { 1, 0, 16 },
+    { 1, 1, 16 },
+    { 0, 1, 16 },
+    { -1, 1, 16 },
+    { -1, 0, 16 },
+    { -1, -1, 16 }
+};
 
 // ai_player.cpp:4643. Kept local because findpath's narrow include set does
 // not otherwise depend on the ai_player class declarations.
@@ -184,7 +200,9 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
         cost = g_masteryTerrainCost[waterWalking];
     if (flying >= 0) {
         if ((cell->m_flags0011 & 0x40) && terrain != eTerrainWater)
-            cost = cppMin(cost, g_masteryTerrainCost[flying]);
+            // dc 0x9f034 row 196 calls `min` [dc 0x2da4], the includes.h
+            // by-value wrapper, not the const-ref cppMin.
+            cost = min(cost, g_masteryTerrainCost[flying]);
         else
             cost = g_masteryTerrainCost[flying];
     }
@@ -211,8 +229,8 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
 VA(0x004b18c0, 0x1A2)  // dc 0x9f184
 int getTerrainCost(hero* currentHero, type_point start, int direction, int moveLeft)
 {
-    const int destX = start.m_x + g_stepDeltaX[4 * direction];
-    const int destY = start.m_y + g_stepDeltaY[4 * direction];
+    const int destX = start.m_x + g_normalDirTable[direction].m_x;
+    const int destY = start.m_y + g_normalDirTable[direction].m_y;
     NewmapCell* from = g_game->m_worldMap.cell(start.m_x, start.m_y, start.m_z);
     type_point to(destX, destY, start.m_z);
     NewmapCell* dest = g_game->m_worldMap.cell(to.m_x, to.m_y, to.m_z);
@@ -302,7 +320,7 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
     if (m_dangerZones != 0) {
         danger = *getDangerCell(m_dangerZones, point.m_point);
         if (cost > m_thisTurnsMovement) {
-            danger = cppMin(oldCell.m_dangerValue, danger);
+            danger = min(oldCell.m_dangerValue, danger);
             // The "unreachable" sentinel the danger map carries; every
             // producer that vetoes a square outright writes a value at or
             // below it. Spelled as the literal retail compares against.
@@ -502,8 +520,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
 
     for (long direction = 0; direction < 8; direction++) {
         pathCell candidate = *source;
-        candidate.m_point.m_x = source->m_point.m_x + g_stepDeltaX[4 * direction];
-        candidate.m_point.m_y = source->m_point.m_y + g_stepDeltaY[4 * direction];
+        candidate.m_point.m_x = source->m_point.m_x + g_normalDirTable[direction].m_x;
+        candidate.m_point.m_y = source->m_point.m_y + g_normalDirTable[direction].m_y;
         if (!candidate.m_point.isValid())
             continue;
         if (adjacentMonster) {
@@ -582,10 +600,10 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         }
 
         if (((1 << direction) & 0x83) && srcCell->cellIsTrigger()
-                && g_adventureObjectTraits[srcCell->getMapObject()][1] == 0)
+                && g_adventureObjectTraits[srcCell->getMapObject()].m_trait1 == 0)
             blocked = 1;
         if (((1 << direction) & 0x38) && destCell->cellIsTrigger()
-                && g_adventureObjectTraits[destCell->getMapObject()][1] == 0)
+                && g_adventureObjectTraits[destCell->getMapObject()].m_trait1 == 0)
             continue;
 
         if (destGround == eTerrainWater) {
@@ -595,8 +613,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                     candidate.m_canStop = 0;
                 }
                 if (srcGround == eTerrainWater
-                        && g_stepDeltaX[4 * direction] != 0
-                        && g_stepDeltaY[4 * direction] != 0) {
+                        && g_normalDirTable[direction].m_x != 0
+                        && g_normalDirTable[direction].m_y != 0) {
                     // READ-BACK, not a re-read of `source`. Retail extracts
                     // both coordinates from the dword it has just stored into
                     // the copy (`mov ebx,eax / shl ebx,6` on across_x, `mov
@@ -605,8 +623,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                     // shl bx,6` off the member's own word container.
                     type_point acrossX = source->m_point;
                     type_point acrossY = source->m_point;
-                    acrossX.m_x = acrossX.m_x + g_stepDeltaX[4 * direction];
-                    acrossY.m_y = acrossY.m_y + g_stepDeltaY[4 * direction];
+                    acrossX.m_x = acrossX.m_x + g_normalDirTable[direction].m_x;
+                    acrossY.m_y = acrossY.m_y + g_normalDirTable[direction].m_y;
                     if (g_game->m_worldMap.cell(acrossX.m_x, acrossX.m_y,
                                               acrossX.m_z)->m_groundSet
                                 != eTerrainWater
@@ -788,7 +806,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         }
 
         if (source->m_canStop || !destCell->m_isTrigger
-                || (g_adventureObjectTraits[destCell->m_type][0] == 0
+                || (g_adventureObjectTraits[destCell->m_type].m_blocksLanding == 0
                     && destCell->m_type != TOWN))
             pushPoint(*source, candidate, direction, cost, maxMobility,
                       candidate.m_barrierValue, candidate.m_monster,
@@ -802,28 +820,40 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\findpath.cpp:877
-// NO RETAIL SLOT. TestPossibleDirections ends at 0x4b2d94 and
-// SeedCombatPosition begins at 0x4b2da0 - the eleven bytes between are
-// alignment padding, not a body. Both overloads are the /Ob2
-// inline-away case (single-caller predicates on the combat grid).
-DC_ONLY(0xa02c8, 0xC6)
-unsigned char searchArray::valid_move_adjacent(const army* current_army, int hex)
+// Original: searchArray::valid_move_adjacent; findpath.cpp:877, dc 0xa02c8.
+// The two ordinary predicates test reachable, non-moat hexes next to either
+// half of an enemy. Preserve the source definitions without inventing a
+// standalone retail address or replacing Complete's different teleport scan.
+unsigned char searchArray::validMoveAdjacent(const army* currentArmy, int hex)
 {
-    // @stub
+    for (long i = 0; i < 6; i++) {
+        int adjacent = g_combatManager->m_adjacentCells[hex][i];
+        if (combatManager::validHex(adjacent)
+            && g_combatManager->m_cells[adjacent].m_validMove
+            && !m_isMoatSlowed[adjacent])
+            return 1;
+        if (currentArmy->is(creatureDoubleWide)) {
+            adjacent -= currentArmy->offsetToFront(-1);
+            if (combatManager::validHex(adjacent)
+                && g_combatManager->m_cells[adjacent].m_validMove
+                && !m_isMoatSlowed[adjacent])
+                return 1;
+        }
+    }
+    return 0;
 }
 
-// E:\gamedcs\findpath.cpp:905
-DC_ONLY(0xa0390, 0x6C)
-unsigned char searchArray::valid_move_adjacent(const army* current_army, const army* enemy)
+// Original: searchArray::valid_move_adjacent; findpath.cpp:905, dc 0xa0390.
+unsigned char searchArray::validMoveAdjacent(const army* currentArmy,
+                                            const army& enemy)
 {
-    // @stub
+    if (validMoveAdjacent(currentArmy, enemy.m_gridIndex))
+        return 1;
+    if (enemy.is(creatureDoubleWide)
+        && validMoveAdjacent(currentArmy, enemy.getSecondGridIndex()))
+        return 1;
+    return 0;
 }
-
-// E:\gamedcs\findpath.cpp:921
-#endif  // @carcass
 
 // Retail hands FindCombatPath 1000 for BOTH limit and base_speed in
 // the placement phase, materialising the constant once; outside it,
@@ -855,9 +885,7 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
                     || !g_combatManager->isOutsidePlacementBoundry(
                             currentGroup, i))) {
             g_combatManager->m_cells[i].m_validMove = 1;
-            if ((thisArmy->m_monInfo.m_attributes & 1)
-                    && (static_cast<unsigned char>(static_cast<unsigned>(
-                            thisArmy->m_monInfo.m_attributes) >> 6) & 1) == 0) {
+            if (thisArmy->is(creatureDoubleWide) && !thisArmy->is(creatureSiegeWeapon)) {
                 long second = i + (thisArmy->m_facing != 0 ? 1 : -1);
                 if (second < 0 || second >= COMBAT_GRID_CELLS
                         || (second % COMBAT_GRID_ROW_STRIDE != 0
@@ -879,11 +907,10 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
         long other = 1 - currentGroup;
         const army* enemy = g_combatManager->m_armies[other];
         for (long j = 0; j < g_combatManager->m_numArmies[other]; j++, enemy++) {
-            if ((static_cast<unsigned char>(static_cast<unsigned>(
-                        enemy->m_monInfo.m_attributes) >> 21) & 1) == 0
+            if (!enemy->is(creatureImmobilized)
                     && enemy->m_creatureType != CREATURE_ARROW_TOWER) {
                 g_combatManager->m_cells[enemy->m_gridIndex].m_validMove = 1;
-                if (enemy->m_monInfo.m_attributes & 1)
+                if (enemy->is(creatureDoubleWide))
                     g_combatManager->m_cells[enemy->getSecondGridIndex()]
                             .m_validMove = 1;
             }
@@ -922,14 +949,11 @@ void searchArray::markTeleport(const army* currentArmy, long currentGroup)
                 enemyIndex < g_combatManager->m_numArmies[otherGroup];
                 ++enemyIndex, ++enemy) {
             if (enemy == currentArmy
-                    || (static_cast<unsigned char>(static_cast<unsigned>(
-                            enemy->m_monInfo.m_attributes) >> 21) & 1)
+                    || enemy->is(creatureImmobilized)
                     || enemy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
 
-            long direction =
-                (static_cast<unsigned char>(static_cast<unsigned>(
-                    enemy->m_monInfo.m_attributes)) & 1) ? 8 : 6;
+            long direction = enemy->is(creatureDoubleWide) ? 8 : 6;
             while (direction-- > 0) {
                 long adjacent = enemy->getAdjacentHex(enemy->m_gridIndex,
                                                         direction);
@@ -945,8 +969,7 @@ void searchArray::markTeleport(const army* currentArmy, long currentGroup)
 
             markEnemy(enemy->m_gridIndex, 1);
 
-            if (static_cast<unsigned char>(static_cast<unsigned>(
-                    enemy->m_monInfo.m_attributes)) & 1)
+            if (enemy->is(creatureDoubleWide))
                 markEnemy(enemy->m_gridIndex, 1);
         }
     }
@@ -970,8 +993,7 @@ VA(0x004b3290, 0x16F)  // dc 0xa0804
 void searchArray::setMoat(const army* currentArmy)
 {
     memset(m_isMoatSlowed, 0, 187);
-    unsigned char flying = static_cast<unsigned char>(static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 1);
-    if (flying & 1)
+    if (currentArmy->is(creatureFlyingArmy))
         return;
     if (currentArmy->m_creatureType == CREATURE_ARCH_DEVIL)
         return;
@@ -1000,7 +1022,7 @@ void searchArray::setMoat(const army* currentArmy)
         }
     } }
     m_isMoatSlowed[currentArmy->m_gridIndex] = 0;
-    if (currentArmy->m_monInfo.m_attributes & 1)
+    if (currentArmy->is(creatureDoubleWide))
         m_isMoatSlowed[currentArmy->getSecondGridIndex()] = 0;
 }
 
@@ -1058,13 +1080,12 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
         return 0;
 
     markEnemy(enemy->m_gridIndex, cost);
-    if (enemy->is(1))
+    if (enemy->is(creatureDoubleWide))
         markEnemy(enemy->getSecondGridIndex(), cost);
     return hex == destination;
 }
 
 // E:\gamedcs\findpath.cpp:1218
-
 // THE SIEGE-PRESSURE PREAMBLE is the only part of this body that is not
 // a plain Dijkstra. It fires only while a town is defending AND the
 // acting stack is computer-driven (is_computer_action, landed in
@@ -1128,12 +1149,12 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                 || g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP)
             siegePressure = 1;
         if (currentArmy->getTotalHitPoints(0)
-                <= g_townSiegeStrength63bd18[
+                <= g_moatDamage[
                         g_combatManager->m_defendingTown->m_type] * 4)
             siegePressure = 1;
         if (siegePressure
                 && currentArmy->getTotalHitPoints(0)
-                    > g_townSiegeStrength63bd18[
+                    > g_moatDamage[
                             g_combatManager->m_defendingTown->m_type] * 40)
             siegePressure = 0;
     }
@@ -1200,7 +1221,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
 
             int flightCost = 0;
             unsigned char moat = 0;
-            if (!(currentArmy->is(1))) {
+            if (!currentArmy->is(creatureDoubleWide)) {
                 moat = isMoat(adjacent);
             } else {
                 long sideStep = currentArmy->offsetToFront(-1);
@@ -1224,7 +1245,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                 if (limit <= baseSpeed) {
                     if (isMoat(hex))
                         blocked = 1;
-                    if ((currentArmy->is(1))
+                    if (currentArmy->is(creatureDoubleWide)
                             && isMoat(static_cast<short>(
                                     pc.m_point.m_x
                                     + (currentArmy->offsetToFront(-1)))))
@@ -1234,7 +1255,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                     if (checkEnemyArmies(adjacent, enemyCost, currentGroup,
                                            destination))
                         break;
-                    if (currentArmy->is(1)) {
+                    if (currentArmy->is(creatureDoubleWide)) {
                         long tail = adjacent
                             + (currentArmy->offsetToFront(-1));
                         if (checkEnemyArmies(tail, enemyCost,
@@ -1242,7 +1263,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                             break;
                     }
                 }
-                if (!(currentArmy->is(2)
+                if (!(currentArmy->is(creatureFlyingArmy)
                         || currentArmy->m_creatureType == CREATURE_DEVIL
                         || currentArmy->m_creatureType == CREATURE_ARCH_DEVIL))
                     continue;
@@ -1332,17 +1353,6 @@ long searchArray::getTravelTime(const army* currentArmy, long hex) const
         turns = 1;
     return turns;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\findpath.cpp:79
-DC_ONLY(0xa115c, 0x50)
-void pathCell::pathCell()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x004b3f70, 0x2F3, VECTOR_INSERT, pathCell)
 

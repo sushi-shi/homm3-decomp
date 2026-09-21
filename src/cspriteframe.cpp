@@ -1,7 +1,16 @@
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "cspriteframe.h"
+
 #include "palette.h"
+#include "pcx.h"
+
+// Static mask storage, set by SetPixelFormat before sprite drawing.
+DATA(0x006968a4) TBlendMask CSpriteFrame::s_div2mask;
+DATA(0x006968aa) unsigned short CSpriteFrame::s_div4mask;
+
 
 // The retail destructor calls the common nothrow deallocator directly;
 // this declaration keeps /GX from manufacturing an unwind frame.
@@ -11,6 +20,15 @@ __declspec(nothrow) void __cdecl operator delete(void* p);
 // Draw copies it into a function-local static on first use, accounting for
 // the guard and one-byte local-static storage seen in retail.
 DATA(0x006968a6) unsigned char g_rleLiteralRunCode;
+
+// Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:67, dc 0x74600.
+CSpriteFrame::CSpriteFrame()
+    : resource(0, RESOURCE_TYPE_NONE),
+      m_dataSize(0), m_imageSize(0), m_encodingMethod(eEncodeRaw),
+      m_width(0), m_height(0), m_croppedWidth(0), m_croppedHeight(0),
+      m_croppedX(0), m_croppedY(0), m_pitch(0), m_map(0)
+{
+}
 
 VA(0x0047c2b0, 0xa7)
 CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
@@ -42,21 +60,20 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
         memcpy(m_map, data, m_dataSize);
 }
 
+// Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:188, dc 0x747cc.
+CSpriteFrame::CSpriteFrame(const char* name, unsigned char cropped)
+    : resource(name, RESOURCE_TYPE_SPRITE),
+      m_dataSize(0), m_imageSize(0), m_encodingMethod(eEncodeRaw),
+      m_width(0), m_height(0), m_croppedWidth(0), m_croppedHeight(0),
+      m_croppedX(0), m_croppedY(0), m_pitch(0), m_map(0)
+{
+    if (!cropped)
+        importPCXFile(name);
+    else
+        importCroppedPCXFile(name);
+}
+
 #if 0  // @carcass
-
-// E:\gamedcs\cspriteframe.cpp:67
-DC_ONLY(0x74600, 0x64)
-void CSpriteFrame::CSpriteFrame()
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:188
-DC_ONLY(0x747cc, 0x6E)
-void CSpriteFrame::CSpriteFrame(const char* name, unsigned char cropped)
-{
-    // @stub
-}
 
 // E:\gamedcs\cspriteframe.cpp:202
 // RETAIL_LOCATED(0x0047c430, 0x22)  // anchor-bracket, dc 0x7483c
@@ -65,183 +82,7 @@ void CSpriteFrame::~CSpriteFrame()
     // @stub
 }
 
-// E:\gamedcs\cspriteframe.cpp:217
-DC_ONLY(0x748ac, 0x6A)
-void CSpriteFrame::clear()
-{
-    // @stub
-}
-
 // E:\gamedcs\cspriteframe.cpp:245 - promoted to a live claim below.
-
-// E:\gamedcs\cspriteframe.cpp:283
-DC_ONLY(0x74a18, 0xDC)
-int CSpriteFrame::importPCXFile(const char* filename)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:368
-DC_ONLY(0x74af4, 0x26A)
-int CSpriteFrame::importCroppedPCXFile(const char* filename)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:542
-DC_ONLY(0x74d60, 0x16A)
-unsigned char CSpriteFrame::GetPixel(int x, int y)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:645
-DC_ONLY(0x74ecc, 0x1C6)
-int CSpriteFrame::Crop()
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:768
-DC_ONLY(0x75094, 0x44)
-void CSpriteFrame::Encode(TEncodingMethod method)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:791
-DC_ONLY(0x750d8, 0x1B2)
-void CSpriteFrame::EncodeGeneral()
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:894
-DC_ONLY(0x7528c, 0x1B2)
-void CSpriteFrame::EncodeTileset()
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:1012
-DC_ONLY(0x75440, 0x3D0)
-void CSpriteFrame::EncodeAdvObj()
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:2234
-DC_ONLY(0x76060, 0x324)
-void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned short flagcolor)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:2444
-DC_ONLY(0x76384, 0x302)
-void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor, unsigned char hflip)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:2645
-DC_ONLY(0x76688, 0x2FE)
-void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:2856
-DC_ONLY(0x76988, 0x762)
-void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:3365
-DC_ONLY(0x770ec, 0x576)
-void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:3776
-DC_ONLY(0x77664, 0x338)
-void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned char alpha)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:3949
-DC_ONLY(0x7799c, 0x1D0)
-void CSpriteFrame::ClipScaled50(int* sx, int* sy, int* sw, int* sh, int* dx, int* dy, int dw, int dh, unsigned char bHFlip, unsigned char bVFlip)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:4054
-DC_ONLY(0x77b6c, 0x1EA)
-void CSpriteFrame::DrawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:4187
-DC_ONLY(0x77d58, 0x240)
-void CSpriteFrame::DrawAdvObjShadowScaled50(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:4330
-DC_ONLY(0x77f98, 0x606)
-void CSpriteFrame::DrawTileScaled50(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:4802
-DC_ONLY(0x785a0, 0x1D4)
-void CSpriteFrame::ClipScaled25(int* sx, int* sy, int* sw, int* sh, int* dx, int* dy, int dw, int dh, unsigned char bHFlip, unsigned char bVFlip)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:4907
-DC_ONLY(0x78774, 0x208)
-void CSpriteFrame::DrawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:5054
-DC_ONLY(0x7897c, 0x262)
-void CSpriteFrame::DrawAdvObjShadowScaled25(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:5201
-DC_ONLY(0x78be0, 0x67E)
-void CSpriteFrame::DrawTileScaled25(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:69
-DC_ONLY(0x79260, 0x34)
-void* CSpriteFrame::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\cspriteframe.cpp:1265
-DC_ONLY(0x79294, 0x184)
-void CSpriteFrame::clip(int* sx, int* sy, int* sw, int* sh, int* dx, int* dy, int dw, int dh, unsigned char bHFlip, unsigned char bVFlip)
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 VA_COMPGEN(0x0047c280, 0x21, SCALAR_DELETING_DTOR, CSpriteFrame)
@@ -251,6 +92,27 @@ CSpriteFrame::~CSpriteFrame()
 {
     if (m_map)
         delete[] m_map;
+}
+
+// Original: CSpriteFrame::clear; cspriteframe.cpp:217, dc 0x748ac.
+// Complete removes the DC DirectDraw surface tail. As in its retained
+// destructor, the remaining map is always an owned byte allocation.
+void CSpriteFrame::clear()
+{
+    m_width = 0;
+    m_height = 0;
+    m_croppedWidth = 0;
+    m_croppedHeight = 0;
+    m_croppedX = 0;
+    m_croppedY = 0;
+    m_pitch = 0;
+    m_dataSize = 0;
+    m_imageSize = 0;
+    m_encodingMethod = eEncodeRaw;
+    if (m_map) {
+        delete[] m_map;
+        m_map = 0;
+    }
 }
 
 VA(0x0047c460, 0xF7)  // dc 0x74918
@@ -277,6 +139,626 @@ void CSpriteFrame::setPixelFormat(unsigned rmask, unsigned gmask,
     s_div4mask = ((((1 << rBits) - 1) / 4) << (gBits + bits))
         | ((((1 << gBits) - 1) / 4) << bits)
         | (((1 << bits) - 1) / 4);
+}
+
+// Original: CSpriteFrame::importPCXFile; cspriteframe.cpp:283, dc 0x74a18.
+// The ordinary file importer shares Complete's retained Victor PCX ABI with
+// Bitmap816::importPCXFile. DC's DirectDraw surface descriptor is absent from
+// the Complete frame layout; its owned byte buffer remains.
+int CSpriteFrame::importPCXFile(const char* filename)
+{
+    PcxData pdat;
+    imgdes pcxfile;
+    int error = pcxinfo(filename, &pdat);
+    if (error)
+        return 1;
+
+    m_width = pdat.m_width;
+    m_height = pdat.m_length;
+    m_pitch = pdat.m_width;
+    m_dataSize = m_imageSize = m_width * m_height;
+    m_croppedX = 0;
+    m_croppedY = 0;
+    m_croppedWidth = m_width;
+    m_croppedHeight = m_height;
+    m_map = new unsigned char[m_dataSize];
+    if (!m_map)
+        return 2;
+
+    allocimage(&pcxfile, pdat.m_width, pdat.m_length,
+               pdat.m_bpPixel * pdat.m_nplanes);
+    loadpcx(filename, &pcxfile);
+    flipimage(&pcxfile, &pcxfile);
+    for (int y = 0; y < m_height; ++y)
+        memcpy(m_map + y * m_width,
+               pcxfile.m_ibuff + y * pcxfile.m_buffwidth, m_width);
+    freeimage(&pcxfile);
+    return 0;
+}
+
+// Original: CSpriteFrame::importCroppedPCXFile; cspriteframe.cpp:368, dc 0x74af4.
+int CSpriteFrame::importCroppedPCXFile(const char* filename)
+{
+    PcxData pdat;
+    imgdes pcxfile;
+    int error = pcxinfo(filename, &pdat);
+    if (error)
+        return 1;
+
+    m_width = m_croppedWidth = pdat.m_width;
+    m_height = m_croppedHeight = pdat.m_length;
+    m_pitch = pdat.m_width;
+    m_dataSize = m_imageSize = m_width * m_height;
+    allocimage(&pcxfile, pdat.m_width, pdat.m_length,
+               pdat.m_bpPixel * pdat.m_nplanes);
+    loadpcx(filename, &pcxfile);
+    flipimage(&pcxfile, &pcxfile);
+
+    int x;
+    int y;
+    int leftoff = -1;
+    int rightoff = -1;
+    int topoff = -1;
+    int bottomoff = -1;
+    for (x = 0; x < m_width; ++x) {
+        for (y = 0; y < m_height; ++y) {
+            if (pcxfile.m_ibuff[y * pcxfile.m_buffwidth + x]) {
+                leftoff = x;
+                break;
+            }
+        }
+        if (leftoff >= 0)
+            break;
+    }
+    for (x = 0; x < m_width; ++x) {
+        for (y = 0; y < m_height; ++y) {
+            if (pcxfile.m_ibuff[y * pcxfile.m_buffwidth + m_width - x - 1]) {
+                rightoff = x;
+                break;
+            }
+        }
+        if (rightoff >= 0)
+            break;
+    }
+    for (y = 0; y < m_height; ++y) {
+        for (x = 0; x < m_width; ++x) {
+            if (pcxfile.m_ibuff[y * pcxfile.m_buffwidth + x]) {
+                topoff = y;
+                break;
+            }
+        }
+        if (topoff >= 0)
+            break;
+    }
+    for (y = 0; y < m_height; ++y) {
+        for (x = 0; x < m_width; ++x) {
+            if (pcxfile.m_ibuff[(m_height - y - 1) * pcxfile.m_buffwidth + x]) {
+                bottomoff = y;
+                break;
+            }
+        }
+        if (bottomoff >= 0)
+            break;
+    }
+    if (leftoff >= 0) {
+        m_croppedX += leftoff;
+        m_croppedWidth -= leftoff;
+    }
+    if (rightoff >= 0)
+        m_croppedWidth -= rightoff;
+    if (topoff >= 0) {
+        m_croppedY += topoff;
+        m_croppedHeight -= topoff;
+    }
+    if (bottomoff >= 0)
+        m_croppedHeight -= bottomoff;
+    m_dataSize = m_croppedWidth * m_croppedHeight;
+    m_map = new unsigned char[m_dataSize];
+    if (!m_map)
+        return 2;
+
+    unsigned char* dest = m_map;
+    unsigned char* source = pcxfile.m_ibuff + topoff * pcxfile.m_buffwidth + leftoff;
+    for (y = 0; y < m_croppedHeight; ++y) {
+        memcpy(dest, source, m_croppedWidth);
+        dest += m_croppedWidth;
+        source += pcxfile.m_buffwidth;
+    }
+    // DC retains the original PCX width as Pitch even after packing the crop.
+    m_pitch = pdat.m_width;
+    freeimage(&pcxfile);
+    return 0;
+}
+
+// Original: CSpriteFrame::GetPixel; cspriteframe.cpp:542, dc 0x74d60.
+// Row directories use the same dword/word formats as the retained renderers.
+unsigned char CSpriteFrame::getPixel(int x, int y) const
+{
+    x -= m_croppedX;
+    if (x < 0 || x >= m_croppedWidth)
+        return 0;
+    y -= m_croppedY;
+    if (y < 0 || y >= m_croppedHeight)
+        return 0;
+
+    unsigned char pixel;
+    switch (m_encodingMethod) {
+    case eEncodeRaw:
+        pixel = m_map[y * m_pitch + x];
+        break;
+    case eEncodeGeneralRLE: {
+        const unsigned int* lineOffsets =
+            static_cast<const unsigned int*>(static_cast<const void*>(m_map));
+        const unsigned char* source = m_map + lineOffsets[y];
+        unsigned int position = 0;
+        while (1) {
+            unsigned char code = *source++;
+            unsigned int run = *source++ + 1;
+            if (position + run > static_cast<unsigned int>(x)) {
+                if (code == g_rleLiteralRunCode)
+                    pixel = source[x - position];
+                else
+                    pixel = code;
+                break;
+            }
+            position += run;
+            if (code == g_rleLiteralRunCode)
+                source += run;
+        }
+        break;
+    }
+    case eEncodeTilesetRLE: {
+        const unsigned short* lineOffsets =
+            static_cast<const unsigned short*>(static_cast<const void*>(m_map));
+        const unsigned char* source = m_map + lineOffsets[y];
+        unsigned int position = 0;
+        while (1) {
+            unsigned char control = *source++;
+            unsigned char code = control >> 5;
+            unsigned int run = (control & 31) + 1;
+            if (position + run > static_cast<unsigned int>(x)) {
+                if (code == ePackedRleLiteral)
+                    pixel = source[x - position];
+                else
+                    pixel = code;
+                break;
+            }
+            position += run;
+            if (code == ePackedRleLiteral)
+                source += run;
+        }
+        break;
+    }
+    case eEncodeAdvObjRLE: {
+        unsigned int cellsPerRow = static_cast<unsigned int>(m_croppedWidth) >> 5;
+        const unsigned short* cellOffsets =
+            static_cast<const unsigned short*>(static_cast<const void*>(m_map));
+        const unsigned char* source = m_map + cellOffsets[y * cellsPerRow + (x >> 5)];
+        unsigned int position = x - (x & 31);
+        while (1) {
+            unsigned char control = *source++;
+            unsigned char code = control >> 5;
+            unsigned int run = (control & 31) + 1;
+            if (position + run > static_cast<unsigned int>(x)) {
+                pixel = code;
+                if (code == ePackedRleLiteral)
+                    pixel = source[x - position];
+                break;
+            }
+            position += run;
+            if (code == ePackedRleLiteral)
+                source += run;
+        }
+        break;
+    }
+    }
+    return pixel;
+}
+
+// Original: CSpriteFrame::Crop; cspriteframe.cpp:645, dc 0x74ecc.
+// This editing operation accepts the raw map and retains the full-image stride.
+int CSpriteFrame::crop()
+{
+    int x;
+    int y;
+    int leftoff = -1;
+    int rightoff = -1;
+    int topoff = -1;
+    int bottomoff = -1;
+    for (x = 0; x < m_width; ++x) {
+        for (y = 0; y < m_height; ++y) {
+            if (m_map[y * m_width + x]) {
+                leftoff = x;
+                break;
+            }
+        }
+        if (leftoff >= 0)
+            break;
+    }
+    for (x = 0; x < m_width; ++x) {
+        for (y = 0; y < m_height; ++y) {
+            if (m_map[y * m_width + m_width - x - 1]) {
+                rightoff = x;
+                break;
+            }
+        }
+        if (rightoff >= 0)
+            break;
+    }
+    for (y = 0; y < m_height; ++y) {
+        for (x = 0; x < m_width; ++x) {
+            if (m_map[y * m_width + x]) {
+                topoff = y;
+                break;
+            }
+        }
+        if (topoff >= 0)
+            break;
+    }
+    for (y = 0; y < m_height; ++y) {
+        for (x = 0; x < m_width; ++x) {
+            if (m_map[(m_height - y - 1) * m_width + x]) {
+                bottomoff = y;
+                break;
+            }
+        }
+        if (bottomoff >= 0)
+            break;
+    }
+    if (leftoff >= 0) {
+        m_croppedX += leftoff;
+        m_croppedWidth -= leftoff;
+    }
+    if (rightoff >= 0)
+        m_croppedWidth -= rightoff;
+    if (topoff >= 0) {
+        m_croppedY += topoff;
+        m_croppedHeight -= topoff;
+    }
+    if (bottomoff >= 0)
+        m_croppedHeight -= bottomoff;
+    m_dataSize = m_croppedWidth * m_croppedHeight;
+    unsigned char* newMap = new unsigned char[m_dataSize];
+    if (!newMap)
+        return 2;
+    unsigned char* dest = newMap;
+    unsigned char* source = m_map + topoff * m_width + leftoff;
+    for (y = 0; y < m_croppedHeight; ++y) {
+        memcpy(dest, source, m_croppedWidth);
+        dest += m_croppedWidth;
+        source += m_width;
+    }
+    m_pitch = m_width;
+    delete[] m_map;
+    m_map = newMap;
+    return 0;
+}
+
+// Original: CSpriteFrame::Encode; cspriteframe.cpp:768, dc 0x75094.
+void CSpriteFrame::encode(TEncodingMethod method)
+{
+    switch (method) {
+    case eEncodeGeneralRLE: encodeGeneral(); break;
+    case eEncodeTilesetRLE: encodeTileset(); break;
+    case eEncodeAdvObjRLE: encodeAdvObj(); break;
+    }
+}
+
+// Original: CSpriteFrame::EncodeGeneral; cspriteframe.cpp:791, dc 0x750d8.
+void CSpriteFrame::encodeGeneral()
+{
+    static const unsigned char opaqueRunCode = g_rleLiteralRunCode;
+    // DC's cspriteframe.cpp:47 initializer is max<unsigned char>() + 1.
+    static const unsigned int maxRunLength = 256;
+    unsigned int newDataSize = m_croppedHeight * sizeof(unsigned int);
+    unsigned int linesToGo = m_croppedHeight;
+    unsigned char* source = m_map;
+    do {
+        unsigned char code = source[0] < 10 ? source[0] : opaqueRunCode;
+        newDataSize += 2;
+        unsigned int run = 0;
+        int x = 1;
+        bool opaque = code == opaqueRunCode;
+        while (1) {
+            ++run;
+            if (opaque)
+                ++newDataSize;
+            if (x >= m_croppedWidth)
+                break;
+            unsigned char nextCode = source[x] < 10 ? source[x] : opaqueRunCode;
+            if (nextCode != code || run == maxRunLength) {
+                newDataSize += 2;
+                code = nextCode;
+                run = 0;
+                opaque = code == opaqueRunCode;
+            }
+            ++x;
+        }
+        source += m_croppedWidth;
+    } while (--linesToGo);
+
+    unsigned char* newMap = new unsigned char[newDataSize];
+    unsigned int* lineOffset = static_cast<unsigned int*>(static_cast<void*>(newMap));
+    linesToGo = m_croppedHeight;
+    unsigned int offset = m_croppedHeight * sizeof(unsigned int);
+    source = m_map;
+    do {
+        *lineOffset++ = offset;
+        unsigned char code = source[0] < 10 ? source[0] : opaqueRunCode;
+        newMap[offset++] = code;
+        unsigned char* runLength = newMap + offset++;
+        unsigned int run = 0;
+        int x = 1;
+        while (1) {
+            ++run;
+            if (code == opaqueRunCode)
+                newMap[offset++] = source[x - 1];
+            if (x >= m_croppedWidth)
+                break;
+            unsigned char nextCode = source[x] < 10 ? source[x] : opaqueRunCode;
+            if (nextCode != code || run == maxRunLength) {
+                *runLength = static_cast<unsigned char>(run - 1);
+                code = nextCode;
+                newMap[offset++] = code;
+                runLength = newMap + offset++;
+                run = 0;
+            }
+            ++x;
+        }
+        *runLength = static_cast<unsigned char>(run - 1);
+        source += m_croppedWidth;
+    } while (--linesToGo);
+    delete[] m_map;
+    m_map = newMap;
+    m_dataSize = newDataSize;
+    m_encodingMethod = eEncodeGeneralRLE;
+}
+
+// Original: CSpriteFrame::EncodeTileset; cspriteframe.cpp:894, dc 0x7528c.
+void CSpriteFrame::encodeTileset()
+{
+    bool hasControlPixels = false;
+    for (int i = 0; i < m_dataSize; ++i) {
+        if (m_map[i] < 5) {
+            hasControlPixels = true;
+            break;
+        }
+    }
+    if (hasControlPixels) {
+        unsigned int linesToGo = m_croppedHeight;
+        unsigned int newDataSize = m_croppedHeight * sizeof(unsigned short);
+        unsigned char* source = m_map;
+        do {
+            unsigned char code = source[0] < 5 ? source[0] : ePackedRleLiteral;
+            ++newDataSize;
+            unsigned int run = 0;
+            int x = 1;
+            bool opaque = code == ePackedRleLiteral;
+            while (1) {
+                ++run;
+                if (opaque)
+                    ++newDataSize;
+                if (x >= m_croppedWidth)
+                    break;
+                unsigned char nextCode = source[x] < 5 ? source[x] : ePackedRleLiteral;
+                if (nextCode != code || run == ePackedRleMaxRunLength) {
+                    ++newDataSize;
+                    code = nextCode;
+                    run = 0;
+                    opaque = code == ePackedRleLiteral;
+                }
+                ++x;
+            }
+            source += m_croppedWidth;
+        } while (--linesToGo);
+
+        unsigned char* newMap = new unsigned char[newDataSize];
+        unsigned short* lineOffset = static_cast<unsigned short*>(static_cast<void*>(newMap));
+        linesToGo = m_croppedHeight;
+        unsigned short offset = static_cast<unsigned short>(m_croppedHeight * sizeof(unsigned short));
+        source = m_map;
+        do {
+            *lineOffset++ = offset;
+            unsigned char code = source[0] < 5 ? source[0] : ePackedRleLiteral;
+            bool opaque = code == ePackedRleLiteral;
+            unsigned char* control = newMap + offset;
+            *control = static_cast<unsigned char>(code << 5);
+            ++offset;
+            unsigned int run = 0;
+            int x = 1;
+            while (1) {
+                ++run;
+                if (opaque)
+                    newMap[offset++] = source[x - 1];
+                if (x >= m_croppedWidth)
+                    break;
+                unsigned char nextCode = source[x] < 5 ? source[x] : ePackedRleLiteral;
+                if (nextCode != code || run == ePackedRleMaxRunLength) {
+                    *control |= static_cast<unsigned char>(run - 1);
+                    code = nextCode;
+                    control = newMap + offset;
+                    *control = static_cast<unsigned char>(code << 5);
+                    ++offset;
+                    run = 0;
+                    opaque = code == ePackedRleLiteral;
+                }
+                ++x;
+            }
+            *control |= static_cast<unsigned char>(run - 1);
+            source += m_croppedWidth;
+        } while (--linesToGo);
+        delete[] m_map;
+        m_map = newMap;
+        m_dataSize = newDataSize;
+        m_encodingMethod = eEncodeTilesetRLE;
+    }
+}
+
+// Original: CSpriteFrame::EncodeAdvObj; cspriteframe.cpp:1012, dc 0x75440.
+void CSpriteFrame::encodeAdvObj()
+{
+    int oldWidth = m_croppedWidth;
+    int right = m_croppedX + oldWidth;
+    int newCroppedX = m_croppedX - (m_croppedX & 31);
+    int newRight = right + 31 - ((right + 31) & 31);
+    unsigned int newCroppedWidth = newRight - newCroppedX;
+    unsigned int addLeft = m_croppedX - newCroppedX;
+    unsigned int addRight = newRight - right;
+    unsigned int cellsPerLine = newCroppedWidth >> 5;
+    unsigned int newDataSize = 2 * cellsPerLine * m_croppedHeight;
+    unsigned int linesToGo = m_croppedHeight;
+    unsigned char* source = m_map;
+    do {
+        unsigned char* sourceCell = source;
+        int pixelsDone = 0;
+        unsigned int cellsToGo = cellsPerLine;
+        unsigned char code;
+        if (addLeft) {
+            code = source[0] < 6 ? source[0] : ePackedRleLiteral;
+            if (code != 0)
+                ++newDataSize;
+            ++newDataSize;
+            unsigned int x = 1;
+            while (1) {
+                ++pixelsDone;
+                if (code == ePackedRleLiteral)
+                    ++newDataSize;
+                if (x >= 32 - addLeft || pixelsDone >= oldWidth)
+                    break;
+                unsigned char nextCode = source[x] < 6 ? source[x] : ePackedRleLiteral;
+                if (nextCode != code) {
+                    ++newDataSize;
+                    code = nextCode;
+                }
+                ++x;
+            }
+            sourceCell += x;
+            --cellsToGo;
+        }
+        while (cellsToGo) {
+            code = sourceCell[0] < 6 ? sourceCell[0] : ePackedRleLiteral;
+            ++newDataSize;
+            unsigned int x = 1;
+            while (1) {
+                ++pixelsDone;
+                if (code == ePackedRleLiteral)
+                    ++newDataSize;
+                if (x >= 32 || pixelsDone >= oldWidth)
+                    break;
+                unsigned char nextCode = sourceCell[x] < 6 ? sourceCell[x] : ePackedRleLiteral;
+                if (nextCode != code) {
+                    ++newDataSize;
+                    code = nextCode;
+                }
+                ++x;
+            }
+            sourceCell += x;
+            --cellsToGo;
+        }
+        if (addRight && code != 0)
+            ++newDataSize;
+        source += oldWidth;
+    } while (--linesToGo);
+
+    unsigned char* newMap = new unsigned char[newDataSize];
+    unsigned short* cellOffset = static_cast<unsigned short*>(static_cast<void*>(newMap));
+    unsigned short offset = static_cast<unsigned short>(2 * cellsPerLine * m_croppedHeight);
+    source = m_map;
+    linesToGo = m_croppedHeight;
+    do {
+        unsigned char* sourceCell = source;
+        int pixelsDone = 0;
+        unsigned int cellsToGo = cellsPerLine;
+        unsigned char code;
+        unsigned char* control;
+        unsigned int run;
+        if (addLeft) {
+            *cellOffset++ = offset;
+            code = source[0] < 6 ? source[0] : ePackedRleLiteral;
+            run = 0;
+            if (code != 0) {
+                newMap[offset] = 0;
+                newMap[offset++] |= static_cast<unsigned char>(addLeft - 1);
+            } else {
+                run += addLeft;
+            }
+            control = newMap + offset;
+            *control = static_cast<unsigned char>(code << 5);
+            ++offset;
+            unsigned int x = 1;
+            while (1) {
+                ++pixelsDone;
+                ++run;
+                if (code == ePackedRleLiteral)
+                    newMap[offset++] = source[x - 1];
+                if (x >= 32 - addLeft || pixelsDone >= oldWidth)
+                    break;
+                unsigned char nextCode = source[x] < 6 ? source[x] : ePackedRleLiteral;
+                if (nextCode != code) {
+                    *control |= static_cast<unsigned char>(run - 1);
+                    code = nextCode;
+                    control = newMap + offset;
+                    *control = static_cast<unsigned char>(code << 5);
+                    ++offset;
+                    run = 0;
+                }
+                ++x;
+            }
+            sourceCell += x;
+            if (--cellsToGo)
+                *control |= static_cast<unsigned char>(run - 1);
+        }
+        while (cellsToGo) {
+            *cellOffset++ = offset;
+            code = sourceCell[0] < 6 ? sourceCell[0] : ePackedRleLiteral;
+            control = newMap + offset;
+            *control = static_cast<unsigned char>(code << 5);
+            ++offset;
+            run = 0;
+            unsigned int x = 1;
+            while (1) {
+                ++pixelsDone;
+                ++run;
+                if (code == ePackedRleLiteral)
+                    newMap[offset++] = sourceCell[x - 1];
+                if (x >= 32 || pixelsDone >= oldWidth)
+                    break;
+                unsigned char nextCode = sourceCell[x] < 6 ? sourceCell[x] : ePackedRleLiteral;
+                if (nextCode != code) {
+                    *control |= static_cast<unsigned char>(run - 1);
+                    code = nextCode;
+                    control = newMap + offset;
+                    *control = static_cast<unsigned char>(code << 5);
+                    ++offset;
+                    run = 0;
+                }
+                ++x;
+            }
+            sourceCell += x;
+            if (!--cellsToGo)
+                break;
+            *control |= static_cast<unsigned char>(run - 1);
+        }
+        if (addRight) {
+            if (code != 0) {
+                *control |= static_cast<unsigned char>(run - 1);
+                control = newMap + offset;
+                *control = 0;
+                ++offset;
+                run = addRight;
+            } else {
+                run += addRight;
+            }
+        }
+        *control |= static_cast<unsigned char>(run - 1);
+        source += oldWidth;
+    } while (--linesToGo);
+    // Unlike the other two encoders, DC 1256 replaces the map without deleting it.
+    m_map = newMap;
+    m_dataSize = newDataSize;
+    m_encodingMethod = eEncodeAdvObjRLE;
+    m_croppedX = newCroppedX;
+    m_croppedWidth = newCroppedWidth;
 }
 
 VA(0x0047c560, 0x07)  // vtable slot 2: fixed object extent + owned bytes
@@ -356,6 +838,11 @@ inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
 // (code,count-minus-one) runs; code 255 denotes a literal byte string, while
 // other codes denote a repeated palette index.  Raw/tile and adventure-object
 // encodings dispatch to their specialized renderers before this path.
+// Dreamcast names the table pointer `aLineOffset` and records each row loop as
+// one enclosing lifetime. Advancing lineDst directly by dpitch preserves that
+// source model and makes VC6 place its initialization before the loop guard,
+// matching both retail halves exactly; rebuilding it from a base plus an
+// integer row offset deferred that store and measured 98.62%.
 
 VA(0x0047c570, 0x465)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
@@ -386,11 +873,7 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                 static_cast<unsigned short*>(static_cast<void*>(
                 static_cast<unsigned char*>(static_cast<void*>(dst))
                 + dy * dpitch + dx * 2));
-
-            unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-            int rowOffset = 0;
             for (int y = sy; y < sy + sh; ++y) {
-                lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
                 unsigned short* out = lineDst;
                 unsigned int skipped = 0;
                 const unsigned char* src = m_map + lineOffset[y];
@@ -434,18 +917,16 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
-                rowOffset += dpitch;
+                lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(lineDst))
+                    + dpitch));
             }
         } else {
             unsigned short* lineDst =
                 static_cast<unsigned short*>(static_cast<void*>(
                 static_cast<unsigned char*>(static_cast<void*>(dst))
                 + dy * dpitch + (dx + sw) * 2));
-
-            unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-            int rowOffset = 0;
             for (int y = sy; y < sy + sh; ++y) {
-                lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
                 unsigned short* out = lineDst;
                 unsigned int skipped = 0;
                 const unsigned char* src = m_map + lineOffset[y];
@@ -489,7 +970,9 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                     run = *src++ + 1;
                 } while (remaining);
 
-                rowOffset += dpitch;
+                lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(lineDst))
+                    + dpitch));
             }
         }
     }
@@ -795,6 +1278,10 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
 // (three-bit control, five-bit count-minus-one) runs.  Control seven carries
 // literal palette indexes; control five optionally draws the caller's flag
 // colour, and the remaining controls are transparent in this renderer.
+// Dreamcast records only palette, cellsPerLine and aCellOffset and gives each
+// row loop one enclosing lifetime. Advancing lineDst directly by dpitch keeps
+// that source model and matches both retail direction arms exactly; rebuilding
+// it from rowBase plus an integer rowOffset measured 96.6247%.
 
 VA(0x0047d0a0, 0x44B) // retail packed-cell decoder + DC source identity
 void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
@@ -832,10 +1319,7 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                     static_cast<unsigned char*>(static_cast<void*>(dst)) +
                     dy * dpitch + dx * 2));
 
-                unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                int rowOffset = 0;
                 for (int y = sy; y < sy + sh; ++y) {
-                    lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
                     unsigned short* out = lineDst;
                     unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     const unsigned char* src =
@@ -886,7 +1370,11 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                         ++src;
                     } while (remaining);
 
-                    rowOffset += dpitch;
+                    lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                            static_cast<unsigned char*>(
+                                static_cast<void*>(lineDst)) +
+                            dpitch));
                 }
             } else {
                 unsigned short* lineDst =
@@ -894,10 +1382,7 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                     static_cast<unsigned char*>(static_cast<void*>(dst)) +
                     dy * dpitch + (dx + sw) * 2));
 
-                unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                int rowOffset = 0;
                 for (int y = sy; y < sy + sh; ++y) {
-                    lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
                     unsigned short* out = lineDst;
                     unsigned int skipped = static_cast<unsigned int>(sx) & ~31U;
                     const unsigned char* src =
@@ -948,7 +1433,11 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                         ++src;
                     } while (remaining);
 
-                    rowOffset += dpitch;
+                    lineDst =
+                        static_cast<unsigned short*>(static_cast<void*>(
+                            static_cast<unsigned char*>(
+                                static_cast<void*>(lineDst)) +
+                            dpitch));
                 }
             }
         }
@@ -1804,7 +2293,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 }
 
 // E:\gamedcs\cspriteframe.cpp:3365
-// The tileset shadow pass: same packed-cell walk as DrawTile above, with the
+// The tileset shadow pass: same packed-cell walk as DrawTile above, where the
 // palette write becomes a blend of what is already on the destination.
 // Nothing here reads `pal` - the parameter survives because CSprite's two
 // wrappers (0x47bfa0, 0x47bff0) pass it - and nothing reads the raw encoding
@@ -1818,22 +2307,23 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 // The mask widths are read straight from the bytes - div4mask is ANDed as a
 // word and div2mask as a dword in all four arms.
 
-// Residual (99.93%): all 156 blocks EXACT, all 72 branches, all 4 returns.
-// What is left is the three-quarter blend's four sites, where retail computes
-// the div4mask term into the COPY register (`mov bx,ax / shr bx,2 / and
-// bx,word[div4mask]`) and this compile computes the div2mask term there,
-// emitting the same `add ebx,eax` and the same store. Source order is NOT the
-// lever - writing the div2mask term first is byte-flat to the digit, and so is
-// naming either term in its own local; VC6 canonicalises `+`. B-family homing.
-// WHAT DID MOVE, and it is the same line in two renderers here: the half blend
-// written `unsigned int color = out[-1]; --out; *out = (color >> 1) & mask;`
+// The single integral row cursor preserves the original codegen without
+// forming an out-of-bounds pointer after the last row. The former
+// row-base/offset spelling fell to 92.0317%; this restores 99.9308% with all
+// 156 blocks exact, all 72 branches and all 4 returns.
+//
+// The remaining difference is the three-quarter blend's four sites. Retail
+// computes the div4mask term into the COPY register (`mov bx,ax / shr bx,2 /
+// and bx,word[div4mask]`) while VC6 computes the div2mask term there,
+// emitting the same `add ebx,eax` and store. Source order is not the lever:
+// writing the div2mask term first and naming either term in a local are
+// byte-flat because VC6 canonicalises `+`. The half blend written
+// `unsigned int color = out[-1]; --out; *out = (color >> 1) & mask;`
 // emits a widening `xor eax,eax / mov ax,` pair retail does not have.
 // `--out; *out = (*out >> 1) & mask;` reads the same location AFTER the
 // decrement, which is what retail spells: 97.8963 -> 99.9300 here.
-// Row-boundary residual (92.0317%): visited pointers use integral
-// byte displacements; only the integer advances after the final row. The
-// earlier guarded/break form scored 82.7464%. DC decoder/helper scopes
-// and pixel arithmetic remain intact, including reverse/raw source walks.
+// DC decoder/helper scopes and pixel arithmetic remain intact, including
+// reverse/raw source walks.
 VA(0x0047e820, 0x740)  // anchor-callee (CSprite::DrawTileShadow/DrawShroudTile) + DC source identity
 void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
@@ -1841,6 +2331,11 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                   unsigned char hflip,
                                   unsigned char vflip) const
 {
+    union TLineAddress {
+        unsigned short* pointer;
+        unsigned long address;
+    };
+
     static const unsigned char opaqueRunCode = 7;
 
     if (m_encodingMethod == eEncodeRaw)
@@ -1859,10 +2354,10 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                         static_cast<unsigned char*>(static_cast<void*>(dst)) +
                         dy * dpitch + dx * 2));
 
-                    unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                    int rowOffset = 0;
+                    TLineAddress line;
+                    line.pointer = lineDst;
                     for (int y = sy; y < sy + sh; ++y) {
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
+                        lineDst = line.pointer;
                         unsigned short* out = lineDst;
                         const unsigned char* src = m_map + lineOffset[y];
                         unsigned int skipped = 0;
@@ -1928,7 +2423,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                             ++src;
                         } while (remaining);
 
-                        rowOffset += dpitch;
+                        line.address += dpitch;
                     }
                 } else {
                     unsigned short* lineDst =
@@ -1936,10 +2431,10 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                         static_cast<unsigned char*>(static_cast<void*>(dst)) +
                         dy * dpitch + (dx + sw) * 2));
 
-                    unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                    int rowOffset = 0;
+                    TLineAddress line;
+                    line.pointer = lineDst;
                     for (int y = sy; y < sy + sh; ++y) {
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase + rowOffset));
+                        lineDst = line.pointer;
                         unsigned short* out = lineDst;
                         const unsigned char* src = m_map + lineOffset[y];
                         unsigned int skipped = 0;
@@ -2004,7 +2499,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                             ++src;
                         } while (remaining);
 
-                        rowOffset += dpitch;
+                        line.address += dpitch;
                     }
                 }
             } else {
@@ -2014,10 +2509,10 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                         static_cast<unsigned char*>(static_cast<void*>(dst)) +
                         (dy + sh - 1) * dpitch + dx * 2));
 
-                    unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                    int rowOffset = 0;
+                    TLineAddress line;
+                    line.pointer = lineDst;
                     for (int y = sy; y < sy + sh; ++y) {
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase - rowOffset));
+                        lineDst = line.pointer;
                         unsigned short* out = lineDst;
                         const unsigned char* src = m_map + lineOffset[y];
                         unsigned int skipped = 0;
@@ -2083,7 +2578,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                             ++src;
                         } while (remaining);
 
-                        rowOffset += dpitch;
+                        line.address -= dpitch;
                     }
                 } else {
                     unsigned short* lineDst =
@@ -2091,10 +2586,10 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                         static_cast<unsigned char*>(static_cast<void*>(dst)) +
                         (dy + sh - 1) * dpitch + (dx + sw) * 2));
 
-                    unsigned char* rowBase = static_cast<unsigned char*>(static_cast<void*>(lineDst));
-                    int rowOffset = 0;
+                    TLineAddress line;
+                    line.pointer = lineDst;
                     for (int y = sy; y < sy + sh; ++y) {
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(rowBase - rowOffset));
+                        lineDst = line.pointer;
                         unsigned short* out = lineDst;
                         const unsigned char* src = m_map + lineOffset[y];
                         unsigned int skipped = 0;
@@ -2159,7 +2654,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                             ++src;
                         } while (remaining);
 
-                        rowOffset += dpitch;
+                        line.address -= dpitch;
                     }
                 }
             }
@@ -2319,6 +2814,1184 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                 } while (remaining);
 
                 rowOffset += dpitch;
+            }
+        }
+    }
+}
+
+// Original: CSpriteFrame::ClipScaled50; cspriteframe.cpp:3949, dc 0x7799c.
+void CSpriteFrame::clipScaled50(int& sx, int& sy, int& sw, int& sh,
+                                    int& dx, int& dy, int dw, int dh,
+                                    unsigned char hflip, unsigned char vflip) const
+{
+    int scaledWidth = (m_width + 1) >> 1;
+    int scaledHeight = (m_height + 1) >> 1;
+    if (hflip)
+        sx = scaledWidth - (sx + sw);
+    if (vflip)
+        sy = scaledHeight - (sy + sh);
+    if (dx < 0) {
+        if (!hflip)
+            sx -= dx;
+        sw += dx;
+        dx = 0;
+    }
+    if (dy < 0) {
+        if (!vflip)
+            sy -= dy;
+        sh += dy;
+        dy = 0;
+    }
+    if (sw + dx > dw) {
+        if (hflip)
+            sx += sw + dx - dw;
+        sw = dw - dx;
+    }
+    if (sh + dy > dh) {
+        if (vflip)
+            sy += sh + dy - dh;
+        sh = dh - dy;
+    }
+    int scaledCroppedX = (m_croppedX + 1) >> 1;
+    int scaledCroppedY = (m_croppedY + 1) >> 1;
+    int scaledCroppedWidth = ((m_croppedX + m_croppedWidth + 1) >> 1) - scaledCroppedX;
+    int scaledCroppedHeight = ((m_croppedY + m_croppedHeight + 1) >> 1) - scaledCroppedY;
+    if (sx < scaledCroppedX) {
+        int delta = scaledCroppedX - sx;
+        if (!hflip)
+            dx += delta;
+        sw -= delta;
+        sx = scaledCroppedX;
+    }
+    if (sy < scaledCroppedY) {
+        int delta = scaledCroppedY - sy;
+        if (!vflip)
+            dy += delta;
+        sh -= delta;
+        sy = scaledCroppedY;
+    }
+    int endX = scaledCroppedX + scaledCroppedWidth;
+    if (sx + sw > endX) {
+        if (hflip)
+            dx += sx + sw - endX;
+        sw = endX - sx;
+    }
+    int endY = scaledCroppedY + scaledCroppedHeight;
+    if (sy + sh > endY) {
+        if (vflip)
+            dy += sy + sh - endY;
+        sh = endY - sy;
+    }
+    sx <<= 1;
+    sy <<= 1;
+    sw <<= 1;
+    sh <<= 1;
+    sx -= m_croppedX;
+    sy -= m_croppedY;
+}
+
+// Original: CSpriteFrame::DrawAdvObjWithFlagScaled50; cspriteframe.cpp:4054, dc 0x77b6c.
+void CSpriteFrame::drawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh,
+    unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+    TPalette16& pal, unsigned short flagcolor) const
+{
+    clipScaled50(sx, sy, sw, sh, dx, dy, dw, dh, 0, 0);
+    if (sw <= 0 || sh <= 0)
+        return;
+    unsigned int cellsPerLine = m_croppedWidth >> 5;
+    const unsigned short* const cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
+    const unsigned short* const palette = pal.m_data;
+    unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst)) + dy * dpitch + dx * 2;
+    for (int y = sy; y < sy + sh; y += 2) {
+        unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+        const unsigned char* source = m_map + cellOffset[y * cellsPerLine + (sx >> 5)];
+        unsigned int x = sx & ~31;
+        unsigned char code;
+        unsigned int run;
+        while (1) {
+            unsigned char control = *source++;
+            code = control >> 5;
+            run = (control & 31) + 1;
+            if (x + run > static_cast<unsigned int>(sx)) {
+                run -= sx - x;
+                if (code == ePackedRleLiteral)
+                    source += sx - x;
+                break;
+            }
+            x += run;
+            if (code == ePackedRleLiteral)
+                source += run;
+        }
+        unsigned int skip = 0;
+        unsigned int remaining = sw;
+        do {
+            if (run > remaining)
+                run = remaining;
+            if (code == ePackedRleLiteral) {
+                unsigned int count = run;
+                if (skip) {
+                    ++source;
+                    --count;
+                }
+                while (count > 1) {
+                    *out = palette[*source];
+                    source += 2;
+                    ++out;
+                    count -= 2;
+                }
+                skip = count != 0;
+                if (skip)
+                    *out++ = palette[*source++];
+            } else if (code == eRleControlOutline5 && flagcolor) {
+                unsigned int count = run;
+                if (skip)
+                    --count;
+                while (count > 1) {
+                    *out++ = flagcolor;
+                    count -= 2;
+                }
+                skip = count != 0;
+                if (skip)
+                    *out++ = flagcolor;
+            } else {
+                unsigned int count = run;
+                if (skip)
+                    --count;
+                out += (count + 1) >> 1;
+                skip = count & 1;
+            }
+            remaining -= run;
+            if (!remaining)
+                break;
+            unsigned char control = *source++;
+            code = control >> 5;
+            run = (control & 31) + 1;
+        } while (remaining);
+        lineDst += dpitch;
+    }
+}
+
+// Original: CSpriteFrame::DrawAdvObjShadowScaled50; cspriteframe.cpp:4187, dc 0x77d58.
+void CSpriteFrame::drawAdvObjShadowScaled50(int sx, int sy, int sw, int sh,
+    unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+    TPalette16& pal) const
+{
+    clipScaled50(sx, sy, sw, sh, dx, dy, dw, dh, 0, 0);
+    if (sw <= 0 || sh <= 0)
+        return;
+    unsigned int cellsPerLine = m_croppedWidth >> 5;
+    const unsigned short* const cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
+    unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst)) + dy * dpitch + dx * 2;
+    for (int y = sy; y < sy + sh; y += 2) {
+        unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+        const unsigned char* source = m_map + cellOffset[y * cellsPerLine + (sx >> 5)];
+        unsigned int x = sx & ~31;
+        unsigned char code;
+        unsigned int run;
+        while (1) {
+            unsigned char control = *source++;
+            code = control >> 5;
+            run = (control & 31) + 1;
+            if (x + run > static_cast<unsigned int>(sx)) {
+                run -= sx - x;
+                if (code == ePackedRleLiteral)
+                    source += sx - x;
+                break;
+            }
+            x += run;
+            if (code == ePackedRleLiteral)
+                source += run;
+        }
+        unsigned int skip = 0;
+        unsigned int remaining = sw;
+        do {
+            if (run > remaining)
+                run = remaining;
+            if (code == ePackedRleLiteral) {
+                unsigned int count = run;
+                if (skip)
+                    --count;
+                out += (count + 1) >> 1;
+                skip = count & 1;
+                source += run;
+            } else {
+                switch (code) {
+                case eRleControlShadow75: {
+                    unsigned int count = run;
+                    if (skip)
+                        --count;
+                    while (count > 1) {
+                        *out = ((*out >> 1) & s_div2mask.m_word) + ((*out >> 2) & s_div4mask);
+                        ++out;
+                        count -= 2;
+                    }
+                    skip = count != 0;
+                    if (skip) {
+                        *out = ((*out >> 1) & s_div2mask.m_word) + ((*out >> 2) & s_div4mask);
+                        ++out;
+                    }
+                    break;
+                }
+                case eRleControlShadow50: {
+                    unsigned int count = run;
+                    if (skip)
+                        --count;
+                    while (count > 1) {
+                        *out = (*out >> 1) & s_div2mask.m_word;
+                        ++out;
+                        count -= 2;
+                    }
+                    skip = count != 0;
+                    if (skip) {
+                        *out = (*out >> 1) & s_div2mask.m_word;
+                        ++out;
+                    }
+                    break;
+                }
+                default: {
+                    unsigned int count = run;
+                    if (skip)
+                        --count;
+                    out += (count + 1) >> 1;
+                    skip = count & 1;
+                    break;
+                }
+                }
+            }
+            remaining -= run;
+            if (!remaining)
+                break;
+            unsigned char control = *source++;
+            code = control >> 5;
+            run = (control & 31) + 1;
+        } while (remaining);
+        lineDst += dpitch;
+    }
+}
+
+// Original: CSpriteFrame::DrawTileScaled50; cspriteframe.cpp:4330, dc 0x77f98.
+void CSpriteFrame::drawTileScaled50(int sx, int sy, int sw, int sh,
+    unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+    TPalette16& pal, unsigned char hflip, unsigned char vflip) const
+{
+    clipScaled50(sx, sy, sw, sh, dx, dy, dw, dh, hflip, vflip);
+    if (sw <= 0 || sh <= 0)
+        return;
+    const unsigned short* const lineOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
+    const unsigned short* const palette = pal.m_data;
+    if (!vflip) {
+        if (!hflip) {
+            unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst))
+                + (dy) * dpitch + (dx) * 2;
+            if (m_encodingMethod == eEncodeRaw) {
+                const unsigned char* line = m_map + sy * m_pitch + sx;
+                do {
+                    int remaining = sw;
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    const unsigned char* source = line;
+                    do {
+                        *out++ = palette[*source];
+                        source += 2;
+                        remaining -= 2;
+                    } while (remaining > 0);
+                    line += m_pitch * 2;
+                    sh -= 2;
+                    lineDst += dpitch;
+                } while (sh > 0);
+            } else {
+                for (int y = sy; y < sy + sh; y += 2) {
+                    const unsigned char* source = m_map + lineOffset[y];
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    unsigned int x = 0;
+                    unsigned char code;
+                    unsigned int run;
+                    while (1) {
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                        if (x + run > static_cast<unsigned int>(sx)) {
+                            run -= sx - x;
+                            if (code == ePackedRleLiteral)
+                                source += sx - x;
+                            break;
+                        }
+                        x += run;
+                        if (code == ePackedRleLiteral)
+                            source += run;
+                    }
+                    unsigned int skip = 0;
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == ePackedRleLiteral) {
+                            unsigned int count = run;
+                            if (skip) {
+                                ++source;
+                                --count;
+                            }
+                            while (count > 1) {
+                                *out++ = palette[*source];
+                                source += 2;
+                                count -= 2;
+                            }
+                            skip = count != 0;
+                            if (skip)
+                                *out++ = palette[*source++];
+                        } else {
+                            unsigned int count = run;
+                            if (skip)
+                                --count;
+                            out += (count + 1) >> 1;
+                            skip = count & 1;
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                    } while (remaining);
+                    lineDst += dpitch;
+                }
+            }
+        } else {
+            unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst))
+                + (dy) * dpitch + (dx + (sw >> 1)) * 2;
+            if (m_encodingMethod == eEncodeRaw) {
+                const unsigned char* line = m_map + sy * m_pitch + sx;
+                do {
+                    int remaining = sw;
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    const unsigned char* source = line;
+                    do {
+                        *--out = palette[*source];
+                        source += 2;
+                        remaining -= 2;
+                    } while (remaining > 0);
+                    line += m_pitch * 2;
+                    sh -= 2;
+                    lineDst += dpitch;
+                } while (sh > 0);
+            } else {
+                for (int y = sy; y < sy + sh; y += 2) {
+                    const unsigned char* source = m_map + lineOffset[y];
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    unsigned int x = 0;
+                    unsigned char code;
+                    unsigned int run;
+                    while (1) {
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                        if (x + run > static_cast<unsigned int>(sx)) {
+                            run -= sx - x;
+                            if (code == ePackedRleLiteral)
+                                source += sx - x;
+                            break;
+                        }
+                        x += run;
+                        if (code == ePackedRleLiteral)
+                            source += run;
+                    }
+                    unsigned int skip = 0;
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == ePackedRleLiteral) {
+                            unsigned int count = run;
+                            if (skip) {
+                                ++source;
+                                --count;
+                            }
+                            while (count > 1) {
+                                *--out = palette[*source];
+                                source += 2;
+                                count -= 2;
+                            }
+                            skip = count != 0;
+                            if (skip)
+                                *--out = palette[*source++];
+                        } else {
+                            unsigned int count = run;
+                            if (skip)
+                                --count;
+                            out -= (count + 1) >> 1;
+                            skip = count & 1;
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                    } while (remaining);
+                    lineDst += dpitch;
+                }
+            }
+        }
+    } else {
+        if (!hflip) {
+            unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst))
+                + (dy + (sh >> 1) - 1) * dpitch + (dx) * 2;
+            if (m_encodingMethod == eEncodeRaw) {
+                const unsigned char* line = m_map + sy * m_pitch + sx;
+                do {
+                    int remaining = sw;
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    const unsigned char* source = line;
+                    do {
+                        *out++ = palette[*source];
+                        source += 2;
+                        remaining -= 2;
+                    } while (remaining > 0);
+                    line += m_pitch * 2;
+                    sh -= 2;
+                    lineDst -= dpitch;
+                } while (sh > 0);
+            } else {
+                for (int y = sy; y < sy + sh; y += 2) {
+                    const unsigned char* source = m_map + lineOffset[y];
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    unsigned int x = 0;
+                    unsigned char code;
+                    unsigned int run;
+                    while (1) {
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                        if (x + run > static_cast<unsigned int>(sx)) {
+                            run -= sx - x;
+                            if (code == ePackedRleLiteral)
+                                source += sx - x;
+                            break;
+                        }
+                        x += run;
+                        if (code == ePackedRleLiteral)
+                            source += run;
+                    }
+                    unsigned int skip = 0;
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == ePackedRleLiteral) {
+                            unsigned int count = run;
+                            if (skip) {
+                                ++source;
+                                --count;
+                            }
+                            while (count > 1) {
+                                *out++ = palette[*source];
+                                source += 2;
+                                count -= 2;
+                            }
+                            skip = count != 0;
+                            if (skip)
+                                *out++ = palette[*source++];
+                        } else {
+                            unsigned int count = run;
+                            if (skip)
+                                --count;
+                            out += (count + 1) >> 1;
+                            skip = count & 1;
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                    } while (remaining);
+                    lineDst -= dpitch;
+                }
+            }
+        } else {
+            unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst))
+                + (dy + (sh >> 1) - 1) * dpitch + (dx + (sw >> 1)) * 2;
+            if (m_encodingMethod == eEncodeRaw) {
+                const unsigned char* line = m_map + sy * m_pitch + sx;
+                do {
+                    int remaining = sw;
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    const unsigned char* source = line;
+                    do {
+                        *--out = palette[*source];
+                        source += 2;
+                        remaining -= 2;
+                    } while (remaining > 0);
+                    line += m_pitch * 2;
+                    sh -= 2;
+                    lineDst -= dpitch;
+                } while (sh > 0);
+            } else {
+                for (int y = sy; y < sy + sh; y += 2) {
+                    const unsigned char* source = m_map + lineOffset[y];
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    unsigned int x = 0;
+                    unsigned char code;
+                    unsigned int run;
+                    while (1) {
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                        if (x + run > static_cast<unsigned int>(sx)) {
+                            run -= sx - x;
+                            if (code == ePackedRleLiteral)
+                                source += sx - x;
+                            break;
+                        }
+                        x += run;
+                        if (code == ePackedRleLiteral)
+                            source += run;
+                    }
+                    unsigned int skip = 0;
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == ePackedRleLiteral) {
+                            unsigned int count = run;
+                            if (skip) {
+                                ++source;
+                                --count;
+                            }
+                            while (count > 1) {
+                                *--out = palette[*source];
+                                source += 2;
+                                count -= 2;
+                            }
+                            skip = count != 0;
+                            if (skip)
+                                *--out = palette[*source++];
+                        } else {
+                            unsigned int count = run;
+                            if (skip)
+                                --count;
+                            out -= (count + 1) >> 1;
+                            skip = count & 1;
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                    } while (remaining);
+                    lineDst -= dpitch;
+                }
+            }
+        }
+    }
+}
+
+// Original: CSpriteFrame::ClipScaled25; cspriteframe.cpp:4802, dc 0x785a0.
+void CSpriteFrame::clipScaled25(int& sx, int& sy, int& sw, int& sh,
+                                    int& dx, int& dy, int dw, int dh,
+                                    unsigned char hflip, unsigned char vflip) const
+{
+    int scaledWidth = (m_width + 3) >> 2;
+    int scaledHeight = (m_height + 3) >> 2;
+    if (hflip)
+        sx = scaledWidth - (sx + sw);
+    if (vflip)
+        sy = scaledHeight - (sy + sh);
+    if (dx < 0) {
+        if (!hflip)
+            sx -= dx;
+        sw += dx;
+        dx = 0;
+    }
+    if (dy < 0) {
+        if (!vflip)
+            sy -= dy;
+        sh += dy;
+        dy = 0;
+    }
+    if (sw + dx > dw) {
+        if (hflip)
+            sx += sw + dx - dw;
+        sw = dw - dx;
+    }
+    if (sh + dy > dh) {
+        if (vflip)
+            sy += sh + dy - dh;
+        sh = dh - dy;
+    }
+    int scaledCroppedX = (m_croppedX + 3) >> 2;
+    int scaledCroppedY = (m_croppedY + 3) >> 2;
+    int scaledCroppedWidth = ((m_croppedX + m_croppedWidth + 3) >> 2) - scaledCroppedX;
+    int scaledCroppedHeight = ((m_croppedY + m_croppedHeight + 3) >> 2) - scaledCroppedY;
+    if (sx < scaledCroppedX) {
+        int delta = scaledCroppedX - sx;
+        if (!hflip)
+            dx += delta;
+        sw -= delta;
+        sx = scaledCroppedX;
+    }
+    if (sy < scaledCroppedY) {
+        int delta = scaledCroppedY - sy;
+        if (!vflip)
+            dy += delta;
+        sh -= delta;
+        sy = scaledCroppedY;
+    }
+    int endX = scaledCroppedX + scaledCroppedWidth;
+    if (sx + sw > endX) {
+        if (hflip)
+            dx += sx + sw - endX;
+        sw = endX - sx;
+    }
+    int endY = scaledCroppedY + scaledCroppedHeight;
+    if (sy + sh > endY) {
+        if (vflip)
+            dy += sy + sh - endY;
+        sh = endY - sy;
+    }
+    sx <<= 2;
+    sy <<= 2;
+    sw <<= 2;
+    sh <<= 2;
+    sx -= m_croppedX;
+    sy -= m_croppedY;
+}
+
+// Original: CSpriteFrame::DrawAdvObjWithFlagScaled25; cspriteframe.cpp:4907, dc 0x78774.
+void CSpriteFrame::drawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh,
+    unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+    TPalette16& pal, unsigned short flagcolor) const
+{
+    clipScaled25(sx, sy, sw, sh, dx, dy, dw, dh, 0, 0);
+    if (sw <= 0 || sh <= 0)
+        return;
+    unsigned int cellsPerLine = m_croppedWidth >> 5;
+    const unsigned short* const cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
+    const unsigned short* const palette = pal.m_data;
+    unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst)) + dy * dpitch + dx * 2;
+    for (int y = sy; y < sy + sh; y += 4) {
+        unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+        const unsigned char* source = m_map + cellOffset[y * cellsPerLine + (sx >> 5)];
+        unsigned int x = sx & ~31;
+        unsigned char code;
+        unsigned int run;
+        while (1) {
+            unsigned char control = *source++;
+            code = control >> 5;
+            run = (control & 31) + 1;
+            if (x + run > static_cast<unsigned int>(sx)) {
+                run -= sx - x;
+                if (code == ePackedRleLiteral)
+                    source += sx - x;
+                break;
+            }
+            x += run;
+            if (code == ePackedRleLiteral)
+                source += run;
+        }
+        unsigned int skip = 0;
+        unsigned int remaining = sw;
+        do {
+            if (run > remaining)
+                run = remaining;
+            if (code == ePackedRleLiteral) {
+                if (run > skip) {
+                    unsigned int count = run - skip;
+                    source += skip;
+                    while (count > 3) {
+                        *out = palette[*source];
+                        source += 4;
+                        ++out;
+                        count -= 4;
+                    }
+                    if (count) {
+                        *out = palette[*source];
+                        source += count;
+                        ++out;
+                        skip = 4 - count;
+                    } else {
+                        skip = 0;
+                    }
+                } else {
+                    source += run;
+                    skip -= run;
+                }
+            } else if (run > skip) {
+                if (code == eRleControlOutline5 && flagcolor) {
+                    unsigned int count = run - skip;
+                    while (count > 3) {
+                        *out++ = flagcolor;
+                        // DC 5012 subtracts two even in this quarter-size path.
+                        count -= 2;
+                    }
+                    if (count) {
+                        *out++ = flagcolor;
+                        skip = 4 - count;
+                    } else {
+                        skip = 0;
+                    }
+                } else {
+                    unsigned int count = run - skip;
+                    out += (count + 3) >> 2;
+                    skip = count & 3;
+                    skip = skip ? 4 - skip : 0;
+                }
+            } else {
+                skip -= run;
+            }
+            remaining -= run;
+            if (!remaining)
+                break;
+            unsigned char control = *source++;
+            code = control >> 5;
+            run = (control & 31) + 1;
+        } while (remaining);
+        lineDst += dpitch;
+    }
+}
+
+// Original: CSpriteFrame::DrawAdvObjShadowScaled25; cspriteframe.cpp:5054, dc 0x7897c.
+void CSpriteFrame::drawAdvObjShadowScaled25(int sx, int sy, int sw, int sh,
+    unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+    TPalette16& pal) const
+{
+    clipScaled25(sx, sy, sw, sh, dx, dy, dw, dh, 0, 0);
+    if (sw <= 0 || sh <= 0)
+        return;
+    unsigned int cellsPerLine = m_croppedWidth >> 5;
+    const unsigned short* const cellOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
+    unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst)) + dy * dpitch + dx * 2;
+    for (int y = sy; y < sy + sh; y += 4) {
+        unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+        const unsigned char* source = m_map + cellOffset[y * cellsPerLine + (sx >> 5)];
+        unsigned int x = sx & ~31;
+        unsigned char code;
+        unsigned int run;
+        while (1) {
+            unsigned char control = *source++;
+            code = control >> 5;
+            run = (control & 31) + 1;
+            if (x + run > static_cast<unsigned int>(sx)) {
+                run -= sx - x;
+                if (code == ePackedRleLiteral)
+                    source += sx - x;
+                break;
+            }
+            x += run;
+            if (code == ePackedRleLiteral)
+                source += run;
+        }
+        unsigned int skip = 0;
+        unsigned int remaining = sw;
+        do {
+            if (run > remaining)
+                run = remaining;
+            if (code == ePackedRleLiteral) {
+                if (run > skip) {
+                    unsigned int count = run - skip;
+                    out += (count + 3) >> 2;
+                    skip = count & 3;
+                    skip = skip ? 4 - skip : 0;
+                } else {
+                    skip -= run;
+                }
+                source += run;
+            } else if (run > skip) {
+                switch (code) {
+                case eRleControlShadow75: {
+                    unsigned int count = run - skip;
+                    while (count > 3) {
+                        *out = ((*out >> 1) & s_div2mask.m_word) + ((*out >> 2) & s_div4mask);
+                        ++out;
+                        count -= 4;
+                    }
+                    if (count) {
+                        *out = ((*out >> 1) & s_div2mask.m_word) + ((*out >> 2) & s_div4mask);
+                        // DC's partial quarter-size shadow run does not advance out.
+                        skip = 4 - count;
+                    } else {
+                        skip = 0;
+                    }
+                    break;
+                }
+                case eRleControlShadow50: {
+                    unsigned int count = run - skip;
+                    while (count > 3) {
+                        *out = (*out >> 1) & s_div2mask.m_word;
+                        ++out;
+                        count -= 4;
+                    }
+                    if (count) {
+                        *out = (*out >> 1) & s_div2mask.m_word;
+                        // DC's partial quarter-size shadow run does not advance out.
+                        skip = 4 - count;
+                    } else {
+                        skip = 0;
+                    }
+                    break;
+                }
+                default: {
+                    unsigned int count = run - skip;
+                    out += (count + 3) >> 2;
+                    skip = count & 3;
+                    skip = skip ? 4 - skip : 0;
+                    break;
+                }
+                }
+            } else {
+                skip -= run;
+            }
+            remaining -= run;
+            if (!remaining)
+                break;
+            unsigned char control = *source++;
+            code = control >> 5;
+            run = (control & 31) + 1;
+        } while (remaining);
+        lineDst += dpitch;
+    }
+}
+
+// Original: CSpriteFrame::DrawTileScaled25; cspriteframe.cpp:5201, dc 0x78be0.
+void CSpriteFrame::drawTileScaled25(int sx, int sy, int sw, int sh,
+    unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
+    TPalette16& pal, unsigned char hflip, unsigned char vflip) const
+{
+    clipScaled25(sx, sy, sw, sh, dx, dy, dw, dh, hflip, vflip);
+    if (sw <= 0 || sh <= 0)
+        return;
+    const unsigned short* const lineOffset = static_cast<const unsigned short*>(static_cast<const void*>(m_map));
+    const unsigned short* const palette = pal.m_data;
+    if (!vflip) {
+        if (!hflip) {
+            unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst))
+                + (dy) * dpitch + (dx) * 2;
+            if (m_encodingMethod == eEncodeRaw) {
+                const unsigned char* line = m_map + sy * m_pitch + sx;
+                do {
+                    int remaining = sw;
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    const unsigned char* source = line;
+                    do {
+                        *out++ = palette[*source];
+                        source += 4;
+                        remaining -= 4;
+                    } while (remaining > 0);
+                    line += m_pitch * 4;
+                    sh -= 4;
+                    lineDst += dpitch;
+                } while (sh > 0);
+            } else {
+                for (int y = sy; y < sy + sh; y += 4) {
+                    const unsigned char* source = m_map + lineOffset[y];
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    unsigned int x = 0;
+                    unsigned char code;
+                    unsigned int run;
+                    while (1) {
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                        if (x + run > static_cast<unsigned int>(sx)) {
+                            run -= sx - x;
+                            if (code == ePackedRleLiteral)
+                                source += sx - x;
+                            break;
+                        }
+                        x += run;
+                        if (code == ePackedRleLiteral)
+                            source += run;
+                    }
+                    unsigned int skip = 0;
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == ePackedRleLiteral) {
+                            if (run > skip) {
+                                unsigned int count = run - skip;
+                                source += skip;
+                                while (count > 3) {
+                                    *out++ = palette[*source];
+                                    source += 4;
+                                    count -= 4;
+                                }
+                                if (count) {
+                                    *out++ = palette[*source];
+                                    source += count;
+                                    skip = 4 - count;
+                                } else {
+                                    skip = 0;
+                                }
+                            } else {
+                                source += run;
+                                skip -= run;
+                            }
+                        } else if (run > skip) {
+                            unsigned int count = run - skip;
+                            out += (count + 3) >> 2;
+                            skip = count & 3;
+                            skip = skip ? 4 - skip : 0;
+                        } else {
+                            skip -= run;
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                    } while (remaining);
+                    lineDst += dpitch;
+                }
+            }
+        } else {
+            unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst))
+                + (dy) * dpitch + (dx + (sw >> 2)) * 2;
+            if (m_encodingMethod == eEncodeRaw) {
+                const unsigned char* line = m_map + sy * m_pitch + sx;
+                do {
+                    int remaining = sw;
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    const unsigned char* source = line;
+                    do {
+                        *--out = palette[*source];
+                        source += 4;
+                        remaining -= 4;
+                    } while (remaining > 0);
+                    line += m_pitch * 4;
+                    sh -= 4;
+                    lineDst += dpitch;
+                } while (sh > 0);
+            } else {
+                for (int y = sy; y < sy + sh; y += 4) {
+                    const unsigned char* source = m_map + lineOffset[y];
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    unsigned int x = 0;
+                    unsigned char code;
+                    unsigned int run;
+                    while (1) {
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                        if (x + run > static_cast<unsigned int>(sx)) {
+                            run -= sx - x;
+                            if (code == ePackedRleLiteral)
+                                source += sx - x;
+                            break;
+                        }
+                        x += run;
+                        if (code == ePackedRleLiteral)
+                            source += run;
+                    }
+                    unsigned int skip = 0;
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == ePackedRleLiteral) {
+                            if (run > skip) {
+                                unsigned int count = run - skip;
+                                source += skip;
+                                while (count > 3) {
+                                    *--out = palette[*source];
+                                    source += 4;
+                                    count -= 4;
+                                }
+                                if (count) {
+                                    *--out = palette[*source];
+                                    source += count;
+                                    skip = 4 - count;
+                                } else {
+                                    skip = 0;
+                                }
+                            } else {
+                                source += run;
+                                skip -= run;
+                            }
+                        } else if (run > skip) {
+                            unsigned int count = run - skip;
+                            out -= (count + 3) >> 2;
+                            skip = count & 3;
+                            skip = skip ? 4 - skip : 0;
+                        } else {
+                            skip -= run;
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                    } while (remaining);
+                    lineDst += dpitch;
+                }
+            }
+        }
+    } else {
+        if (!hflip) {
+            unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst))
+                + (dy + (sh >> 2) - 1) * dpitch + (dx) * 2;
+            if (m_encodingMethod == eEncodeRaw) {
+                const unsigned char* line = m_map + sy * m_pitch + sx;
+                do {
+                    int remaining = sw;
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    const unsigned char* source = line;
+                    do {
+                        *out++ = palette[*source];
+                        source += 4;
+                        remaining -= 4;
+                    } while (remaining > 0);
+                    line += m_pitch * 4;
+                    sh -= 4;
+                    lineDst -= dpitch;
+                } while (sh > 0);
+            } else {
+                for (int y = sy; y < sy + sh; y += 4) {
+                    const unsigned char* source = m_map + lineOffset[y];
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    unsigned int x = 0;
+                    unsigned char code;
+                    unsigned int run;
+                    while (1) {
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                        if (x + run > static_cast<unsigned int>(sx)) {
+                            run -= sx - x;
+                            if (code == ePackedRleLiteral)
+                                source += sx - x;
+                            break;
+                        }
+                        x += run;
+                        if (code == ePackedRleLiteral)
+                            source += run;
+                    }
+                    unsigned int skip = 0;
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == ePackedRleLiteral) {
+                            if (run > skip) {
+                                unsigned int count = run - skip;
+                                source += skip;
+                                while (count > 3) {
+                                    *out++ = palette[*source];
+                                    source += 4;
+                                    count -= 4;
+                                }
+                                if (count) {
+                                    *out++ = palette[*source];
+                                    source += count;
+                                    skip = 4 - count;
+                                } else {
+                                    skip = 0;
+                                }
+                            } else {
+                                source += run;
+                                skip -= run;
+                            }
+                        } else if (run > skip) {
+                            unsigned int count = run - skip;
+                            out += (count + 3) >> 2;
+                            skip = count & 3;
+                            skip = skip ? 4 - skip : 0;
+                        } else {
+                            skip -= run;
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                    } while (remaining);
+                    lineDst -= dpitch;
+                }
+            }
+        } else {
+            unsigned char* lineDst = static_cast<unsigned char*>(static_cast<void*>(dst))
+                + (dy + (sh >> 2) - 1) * dpitch + (dx + (sw >> 2)) * 2;
+            if (m_encodingMethod == eEncodeRaw) {
+                const unsigned char* line = m_map + sy * m_pitch + sx;
+                do {
+                    int remaining = sw;
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    const unsigned char* source = line;
+                    do {
+                        *--out = palette[*source];
+                        source += 4;
+                        remaining -= 4;
+                    } while (remaining > 0);
+                    line += m_pitch * 4;
+                    sh -= 4;
+                    lineDst -= dpitch;
+                } while (sh > 0);
+            } else {
+                for (int y = sy; y < sy + sh; y += 4) {
+                    const unsigned char* source = m_map + lineOffset[y];
+                    unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(lineDst));
+                    unsigned int x = 0;
+                    unsigned char code;
+                    unsigned int run;
+                    while (1) {
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                        if (x + run > static_cast<unsigned int>(sx)) {
+                            run -= sx - x;
+                            if (code == ePackedRleLiteral)
+                                source += sx - x;
+                            break;
+                        }
+                        x += run;
+                        if (code == ePackedRleLiteral)
+                            source += run;
+                    }
+                    unsigned int skip = 0;
+                    unsigned int remaining = sw;
+                    do {
+                        if (run > remaining)
+                            run = remaining;
+                        if (code == ePackedRleLiteral) {
+                            if (run > skip) {
+                                unsigned int count = run - skip;
+                                source += skip;
+                                while (count > 3) {
+                                    *--out = palette[*source];
+                                    source += 4;
+                                    count -= 4;
+                                }
+                                if (count) {
+                                    *--out = palette[*source];
+                                    source += count;
+                                    skip = 4 - count;
+                                } else {
+                                    skip = 0;
+                                }
+                            } else {
+                                source += run;
+                                skip -= run;
+                            }
+                        } else if (run > skip) {
+                            unsigned int count = run - skip;
+                            out -= (count + 3) >> 2;
+                            skip = count & 3;
+                            skip = skip ? 4 - skip : 0;
+                        } else {
+                            skip -= run;
+                        }
+                        remaining -= run;
+                        if (!remaining)
+                            break;
+                        unsigned char control = *source++;
+                        code = control >> 5;
+                        run = (control & 31) + 1;
+                    } while (remaining);
+                    lineDst -= dpitch;
+                }
             }
         }
     }

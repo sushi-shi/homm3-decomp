@@ -2,9 +2,10 @@
 #ifndef HOMM3_RMG_TERRAIN_H
 #define HOMM3_RMG_TERRAIN_H
 
-#include <set>
 #include <memory>
+#include <set>
 #include <vector>
+
 #include "rmg.h"
 
 // Grid points add tile directions through the signed TPoint: refresh and
@@ -182,7 +183,8 @@ public:
         unsigned char allowsSeparatedNeighbours, int defaultFrame,
         unsigned int entryCount, const TRmgTerrainPatternEntry* entries);
 
-    virtual ~TRmgPatternTerrainRule();
+    // Implicit destruction shares the base's retained cleanup at 0x5b3850;
+    // both concrete rule vtables use the deleting wrapper at 0x5b3a50.
     virtual unsigned char hasEntries();
     virtual unsigned char isSpecialFrame(int frame);
     virtual int getEntry(int index);
@@ -268,7 +270,7 @@ public:
     int selectBaseFrame(const TRmgGridPoint& point, int terrain, int oldFrame);
     void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
     void paintBaseTile(const TRmgGridPoint& point);
-    int getPaintTerrain() const;
+    const int& getPaintTerrain() const;
     unsigned char isPaintTerrain(const TRmgGridPoint& point);
 
     void paintPoint(const TRmgGridPoint& point);

@@ -1,11 +1,13 @@
+#include "va.h"
+
 #include <ctype.h>
 
-#include <va.h>
+#include "text.h"
+
 #include "exec.h"
 #include "hiscore.h"
 #include "resourcemanager.h"
 #include "textresource.h"
-#include "text.h"
 
 // --- the resource holders and destination tables the loaders below
 // write.  Every address is read off the retail loader that stores
@@ -21,7 +23,7 @@
 DATA(0x006a5328)
 TTextResource* g_resourceNamesResource;
 
-// 0x006a5390 - datum claimed at include/game.h:2723 (gPrimarySkillNames)
+DATA(0x006a5390)
 const char* g_statNames[4];
 
 DATA(0x006a53d0)
@@ -39,7 +41,7 @@ const char* g_customCampRclick[67];
 DATA(0x006a5c24)
 TSpreadsheetResource* g_campaignRegionNamesResource;
 
-// 0x006a5c28 - datum claimed at src/townmgr.cpp:9175
+DATA(0x006a5c28)
 const char* g_castleInfo[7];
 
 DATA(0x006a5cc0)
@@ -49,9 +51,9 @@ DATA(0x006a5d4c)
 const char* g_abbSecondarySkillLevels[3];
 
 DATA(0x006a5d5c)
-TTextResource* g_generalText;
+const TTextResource* g_generalText;
 
-// 0x006a5d84 - datum claimed at src/townmgr.cpp:421
+DATA(0x006a5d84)
 const char* g_townCommand[35];
 
 DATA(0x006a5e20)
@@ -63,7 +65,7 @@ const char* g_tavernInfo[8];
 DATA(0x006a5e60)
 TSpreadsheetResource* g_campaignDialogResource;
 
-// 0x006a5e64 - datum claimed at src/seerhut.cpp:290
+DATA(0x006a5e64)
 const char* g_resourceNames[8];
 
 DATA(0x006a5e84)
@@ -72,7 +74,7 @@ const char* g_terrainNames[10];
 DATA(0x006a5eac)
 TTextResource* g_hallText;
 
-// 0x006a5ecc - datum claimed at src/hiscore.cpp:34 (gHighScoreDefaults0)
+DATA(0x006a5ecc)
 char* g_highScoreCampaignDefault[11][4];
 
 DATA(0x006a5f7c)
@@ -102,7 +104,7 @@ const char* g_neutralBuildingNames[19];
 DATA(0x006a6568)
 TSpreadsheetResource* g_neutralBuildingText;
 
-// 0x006a66d8 - datum claimed at src/hero.cpp:126 (gSharedHeroNames)
+DATA(0x006a66d8)
 const char* g_heroBio[163];
 
 DATA(0x006a69c4)
@@ -117,7 +119,7 @@ TTextResource* g_advObjNames;
 DATA(0x006a6c78)
 TTextResource* g_customCampText;
 
-// 0x006a7428 - datum claimed at src/castle.cpp:28
+DATA(0x006a7428)
 const char* g_hallInfo[10];
 
 DATA(0x006a7450)
@@ -135,7 +137,7 @@ const char* g_borderColorNames[8];
 DATA(0x006a7550)
 TTextResource* g_ovText;
 
-// 0x006a7570 - datum claimed at src/levelupwindow.cpp:46 (gSkillMasteryNames)
+DATA(0x006a7570)
 const char* g_secondarySkillLevels[3];
 
 DATA(0x006a7700)
@@ -177,13 +179,13 @@ const char* g_overviewText[16];
 DATA(0x006a7f00)
 TTextResource* g_secondarySkillLevelNames;
 
-// 0x006a7f08 - datum claimed at src/hiscore.cpp:35 (gHighScoreDefaults1)
+DATA(0x006a7f08)
 char* g_highScoreStandardDefault[11][4];
 
 DATA(0x006a7fb8)
 const char* g_campaignRegionNames[23];
 
-// 0x006a8014 - datum claimed at src/hero.cpp:2961 (gHeroScreenText0)
+DATA(0x006a8014)
 const char* g_heroScreen[33];
 // --- Help.txt's 23 THelpText tables (below), Dreamcast-named ---
 
@@ -196,7 +198,7 @@ THelpText g_giveResourceWindowHelp[5];
 DATA(0x006a55a8)
 THelpText g_combatOptionsHelp[39];
 
-// 0x006a56e0 - datum claimed at src/adventuremapwindow.cpp:29
+DATA(0x006a56e0)
 THelpText g_adventureWindowHelp[27];
 
 // 0x006a5868 - datum claimed at src/tradpost.cpp:1342 (gMarketHelpText)
@@ -215,9 +217,9 @@ DATA(0x006a6570)
 THelpText g_multiSelectionHelp[25];
 
 DATA(0x006a6638)
-THelpText g_sacrificeWindowHelp2[20];
+THelpText g_sacrificeWindowHelp[20];
 
-// 0x006a6968 - datum claimed at src/combatcontrolsubwindow.cpp:28 (gCombatSubWindowHelp)
+DATA(0x006a6968)
 THelpText g_combatWindowHelp[11];
 
 DATA(0x006a6bf8)
@@ -238,7 +240,7 @@ THelpText g_viewArmyHelp[15];
 DATA(0x006a7518)
 TSpreadsheetResource* g_helpText;
 
-// 0x006a7558 - datum claimed at src/recruit.cpp:72 (gRecruitMaximumRolloverText)
+DATA(0x006a7558)
 THelpText g_recruitHelp[3];
 
 DATA(0x006a7580)
@@ -260,13 +262,13 @@ THelpText g_universityWindowHelp2[4];
 THelpText g_sellCreatureWindowHelp[5];
 // --- Arraytxt.txt's 24 destination tables (below), Dreamcast-named ---
 
-// 0x006a532c - datum claimed at src/viewarmywindow.cpp:168 (gLuckTexts)
+DATA(0x006a532c)
 const char* g_luckInfo[25];
 
 DATA(0x006a558c)
 const char* g_luckText[7];
 
-// 0x006a57bc - datum claimed at src/viewarmywindow.cpp:167 (gMoraleTexts)
+DATA(0x006a57bc)
 const char* g_moraleInfo[42];
 
 DATA(0x006a5898)
@@ -275,7 +277,7 @@ const char* g_ownedByColor[8];
 DATA(0x006a5bb8)
 const char* g_armySizeNames[9][3];
 
-// 0x006a5c48 - datum claimed at src/seerhut.cpp:296 (gQuestMonsterDirections)
+DATA(0x006a5c48)
 const char* g_directions[9];
 
 DATA(0x006a5c6c)
@@ -321,10 +323,10 @@ const char* g_statDesc[4];
 // 0x006a7710 - datum claimed at src/game.cpp:446
 const char* g_weekNames[15];
 
-// 0x006a7794 - datum claimed at src/townmgr.cpp:483 (gPersonalityNames)
+DATA(0x006a7794)
 const char* g_personality[4];
 
-// 0x006a77a8 - datum claimed at src/game.cpp:447 (gLastDayWarningFormat)
+DATA(0x006a77a8)
 const char* g_newTurn[8];
 
 DATA(0x006a77ec)
@@ -344,23 +346,18 @@ const char* g_humanCpu[3];
 
 DATA(0x006a8098)
 const char* g_newLoadSaveText[3];
-#if 0  // @carcass
-
-// E:\gamedcs\text.cpp:49
-DC_ONLY(0x160ff4, 0x4)
-void CheckTextResource()
+// These checks have empty release bodies in the DC image. The line gaps
+// do not recover the elided debug checks, so none are invented here.
+// Original: CheckTextResource; text.cpp:49, dc 0x160ff4.
+static void checkTextResource(const TTextResource&, int, const char*)
 {
-    // @stub
 }
 
-// E:\gamedcs\text.cpp:86
-DC_ONLY(0x160ff8, 0x4)
-void CheckSpreadsheetResource()
+// Original: CheckSpreadsheetResource; text.cpp:86, dc 0x160ff8.
+static void checkSpreadsheetResource(const TSpreadsheetResource&, int, int,
+                                     const char*)
 {
-    // @stub
 }
-
-#endif  // @carcass
 
 VA(0x005b90f0, 0x19)  // dc 0x160ffc
 unsigned char initializeGeneralText()
@@ -527,13 +524,13 @@ unsigned char initializeNeutralBuildingText()
     if (!g_neutralBuildingText)
         return 0;
     for (int i = 0; i < 19; i++) {
-        if (static_cast<int>(g_neutralBuildingText->getRow(i).size()) > 1)
+        if (g_neutralBuildingText->getNumberOfColumns(i) > 1)
             g_neutralBuildingNames[i] = g_neutralBuildingText->getRow(i)[0];
         else
             g_neutralBuildingNames[i] = DATA_COMPGEN(0x00691210, textEmptyText, "");
     }
     for (int j = 0; j < 28; j++) {
-        if (static_cast<int>(g_neutralBuildingText->getRow(j).size()) > 1)
+        if (g_neutralBuildingText->getNumberOfColumns(j) > 1)
             g_buildingInfoNeutral[j] = g_neutralBuildingText->getRow(j)[1];
         else
             g_buildingInfoNeutral[j] = DATA_COMPGEN(0x00691210, textEmptyText, "");
@@ -551,7 +548,7 @@ unsigned char initializeSpecialBuildingText()
     int n = 0;
     for (int faction = 0; faction < 10; faction++) {
         for (int slot = 0; slot < 11; slot++) {
-            if (static_cast<int>(g_specialBuildingText->getRow(n).size()) > 1) {
+            if (g_specialBuildingText->getNumberOfColumns(n) > 1) {
                 g_specialBuildingNames[faction][slot] =
                     g_specialBuildingText->getRow(n)[0];
                 g_buildingInfoSpecial[faction][slot] =
@@ -578,7 +575,7 @@ unsigned char initializeDwellingText()
     int n = 0;
     for (int faction = 0; faction < 10; faction++) {
         for (int slot = 0; slot < 14; slot++) {
-            if (static_cast<int>(g_dwellingText->getRow(n).size()) > 0) {
+            if (g_dwellingText->getNumberOfColumns(n) > 0) {
                 g_dwellingNames[faction][slot] = g_dwellingText->getRow(n)[0];
                 g_dwellingInfo[faction][slot] = g_dwellingText->getRow(n)[1];
             } else {
@@ -603,7 +600,7 @@ unsigned char initializeTownNameText()
     int n = 0;
     for (int faction = 0; faction < 9; faction++) {
         for (int slot = 0; slot < 16; slot++) {
-            if (static_cast<int>(g_townNameText->getRow(n).size()) > 0)
+            if (g_townNameText->getNumberOfColumns(n) > 0)
                 g_townNames[faction][slot] = g_townNameText->getRow(n)[0];
             else
                 g_townNames[faction][slot] =
@@ -873,8 +870,8 @@ unsigned char initializeHelpText()
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
-        g_sacrificeWindowHelp2[j].m_text = row[0];
-        g_sacrificeWindowHelp2[j].m_rclick = row[1];
+        g_sacrificeWindowHelp[j].m_text = row[0];
+        g_sacrificeWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 3; j++, i++) {

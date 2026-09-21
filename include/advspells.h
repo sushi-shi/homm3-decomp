@@ -1,7 +1,8 @@
 #ifndef HOMM3_ADVSPELLS_H
 #define HOMM3_ADVSPELLS_H
 
-#include <va.h>
+#include "va.h"
+
 #include "struct.h"
 
 // Retail .data 0x691250, the adventure map's on-screen viewport rectangle -
@@ -26,7 +27,7 @@
 // is declared HERE, in advspells.obj's own narrow header, rather than in
 // advmgr.h - which twenty-odd translation units include. Name is a role
 // description; nothing attests a spelling.
-DATA(0x00691250) extern SLimitData g_advMapViewLimits;
+extern SLimitData g_advMapViewLimits;
 
 // The world extents advManager::SummonBoat's eight-neighbour scan clamps
 // against before asking for a cell. DECLARATIONS ONLY - game.h owns the

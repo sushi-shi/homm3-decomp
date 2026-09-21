@@ -1,10 +1,13 @@
-#include <va.h>
+#include "va.h"
+
 #include <stdio.h>
+
+#include "resourcedisplay.h"
+
 #include "border.h"
 #include "exec.h"
 #include "game.h"
 #include "kb.h"
-#include "resourcedisplay.h"
 #include "textwdgt.h"
 #include "town.h"
 #include "window.h"
@@ -163,7 +166,7 @@ TResourceDisplay::~TResourceDisplay()
 VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
 void TResourceDisplay::update(bool drawRequested, bool update)
 {
-    int playerPos = g_unnamed69778c;
+    int playerPos = g_curWatchPlayer;
     playerData& player = g_game->m_players[playerPos];
     m_backgroundWidget->setPlayerPaletteColors(playerPos);
     for (int i = 0; i < NUM_RESOURCES; ++i) {
@@ -171,7 +174,7 @@ void TResourceDisplay::update(bool drawRequested, bool update)
         m_resourceWidgets[i]->setText(g_text);
     }
 
-    TTextResource* labels = g_generalText;
+    const TTextResource* labels = g_generalText;
     sprintf(g_text, "%s: %d, %s: %d, %s: %d",
         (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_0],
         static_cast<unsigned short>(g_game->m_month),
@@ -187,11 +190,11 @@ void TResourceDisplay::update(bool drawRequested, bool update)
 VA(0x00559020, 0xA4)  // dc 0x1210b4
 void TResourceDisplay::clear()
 {
-    m_backgroundWidget->setPlayerPaletteColors(g_unnamed69778c);
+    m_backgroundWidget->setPlayerPaletteColors(g_curWatchPlayer);
     for (int i = 0; i < NUM_RESOURCES; ++i)
         m_resourceWidgets[i]->setText("");
 
-    TTextResource* labels = g_generalText;
+    const TTextResource* labels = g_generalText;
     sprintf(g_text, "%s: %d, %s: %d, %s: %d",
         (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_0],
         static_cast<unsigned short>(g_game->m_month),

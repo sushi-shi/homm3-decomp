@@ -1,23 +1,26 @@
-#include <va.h>
-#include <windows.h>
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
-#include "army.h"
+#include <windows.h>
+
+#include "overview.h"
+
 #include "advmgr.h"
+#include "army.h"
 #include "border.h"
 #include "button.h"
 #include "creaturetype.h"
 #include "exec.h"
+#include "game.h"
 #include "herospec.h"
 #include "iconwdgt.h"
-#include "overview.h"
-#include "game.h"
 #include "kb.h"
 #include "message.h"
 #include "misc.h"
 #include "mousemgr.h"
-#include "recruit.h"
 #include "quicktownwindow.h"
+#include "recruit.h"
 #include "resourcedisplay.h"
 #include "resourcemanager.h"
 #include "slider.h"
@@ -869,6 +872,9 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
         g_overWin->drawWindow(update, 100, 999);
 }
 
+// Original: UpdateFlaggableIcon; overview.cpp:1254, dc 0x106d18.
+// Complete uses the incoming window receiver and its owned flaggable-item
+// array; the Dreamcast free function operates on the global overview window.
 VA(0x0051e670, 0x14D)  // dc 0x106d18
 void TOverviewWindow::updateFlaggableIcon(int i)
 {
@@ -904,6 +910,9 @@ void TOverviewWindow::updateFlaggableIcon(int i)
 
 // Complete refreshes seven items through this window; Dreamcast refreshes two
 // through the global overview-window pointer.
+// Original: UpdateFlaggableIcons; overview.cpp:1279, dc 0x106d98.
+// Complete uses the incoming window receiver and its owned flaggable-item
+// array; the Dreamcast free function operates on the global overview window.
 // E:\gamedcs\overview.cpp:1279, dc 0x106d98
 VA(0x0051e7c0, 0x2A)  // called by WindowHandler and DoFlaggableButtons
 void TOverviewWindow::updateFlaggableIcons()
@@ -913,6 +922,9 @@ void TOverviewWindow::updateFlaggableIcons()
     drawWindow(0, 0xffff0001, 0xffff);
 }
 
+// Original: DoFlaggableButtons; overview.cpp:1287, dc 0x106dcc.
+// Complete uses the incoming window receiver and its owned flaggable-item
+// array; the Dreamcast free function operates on the global overview window.
 VA(0x0051e7f0, 0xE0)  // dc 0x106dcc
 void TOverviewWindow::doFlaggableButtons(int which)
 {
@@ -964,8 +976,8 @@ void game::overview()
     g_advManager->demobilizeCurrHero(0, 1);
     g_windowManager->fadeScreen(1, 4, 1);
 
-    for (int titleSlot = 0; titleSlot < 3; titleSlot++)
-        g_textWidgetTitle[titleSlot] = 0;
+    int titleSlot;
+    MEMSET(g_textWidgetTitle, 0, sizeof(g_textWidgetTitle), titleSlot);
 
     g_textWidgetDynamic = new textWidget*[40 * 70];
     g_iconWidgetDynamic = new iconWidget*[40 * 70];
@@ -1095,6 +1107,35 @@ void game::overview()
     g_buttonDynamic = 0;
     delete[] g_textButtonDynamic;
     g_textButtonDynamic = 0;
+}
+
+// Original: UpdateArtifacts; overview.cpp:1562, dc 0x1077e8.
+// The older two-page equipped-artifact refresh remains an ordinary helper.
+// Complete's page buttons rebuild the overview (SetupNewOverviewType) because
+// its third page contains the backpack; those callers do not use this path.
+static void updateArtifacts(int slot)
+{
+    int slotOff = slot * 200 + 200;
+    int heroNumber = g_overviewTop[g_overviewType] + slot;
+    hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
+    message msg;
+    type_artifact artifact;
+    msg.m_id = MESSAGE_WIDGET;
+    for (int i = 0; i < 9; ++i) {
+        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_codeY = slotOff + 119 + i;
+        artifact = currHero->getArtifact(TArtifactSlot(
+            (g_overviewHeroArtifactPage[heroNumber] * 9 + i) % 18));
+        msg.m_extra = artifact.m_artifactId;
+        g_overWin->broadcastMessage(msg);
+        msg.m_codeX = artifact.m_artifactId == -1
+            ? widget::WIDGET_CLEAR_STATUS : widget::WIDGET_SET_STATUS;
+        msg.m_extra = widget::WIDGET_DRAWN;
+        g_overWin->broadcastMessage(msg);
+    }
+    g_overWin->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    g_overWin->drawWindow(0, slotOff + 119, slotOff + 127);
+    g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
 }
 
 // Dreamcast proves these as two ordinary static source helpers, each with the
@@ -1642,7 +1683,7 @@ TOverviewWindow::TOverviewWindow()
             739, i * 57 + 47, 50, 50, i + 40, "FlagPort.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
         m_flaggableCountWidgets.push_back(new textWidget(
-            739, i * 57 + 81, 50, 16, g_emptyRolloverText,
+            739, i * 57 + 81, 50, 16, "",
             "smalfont.fnt", font::PRIMARY, -1,
             font::RIGHT_JUSTIFIED, 0, 8));
         m_widgets.insert(m_widgets.end(), m_flaggableCountWidgets.back());
@@ -1954,7 +1995,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID + 4:
             case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID + 5:
             case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID + 6:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(currHero->m_army.m_armies[
                             codeY - OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID],
                                     2));
@@ -1967,7 +2008,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_ARMY_FIRST_ID + 4:
             case OVERVIEW_HERO_ARMY_FIRST_ID + 5:
             case OVERVIEW_HERO_ARMY_FIRST_ID + 6:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(currHero->m_army.m_armies[
                                         codeY - OVERVIEW_HERO_ARMY_FIRST_ID],
                                     2));
@@ -1977,37 +2018,37 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID + 1:
             case OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID + 2:
             case OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID + 3:
-                sprintf(g_text, g_heroScreenNameFormat,
-                        g_primarySkillNames[
+                sprintf(g_text, g_heroScreen[1],
+                        g_statNames[
                             codeY - OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID]);
                 break;
 
             case OVERVIEW_HERO_MORALE_ID:
                 if (currHero->getMorale(0, 0, 1) > 0)
-                    sprintf(g_text, g_heroScreenMoraleHighText);
+                    sprintf(g_text, g_heroScreen[3]);
                 else if (currHero->getMorale(0, 0, 1) == 0)
-                    sprintf(g_text, g_heroScreenMoraleNeutralText);
+                    sprintf(g_text, g_heroScreen[4]);
                 else
-                    sprintf(g_text, g_heroScreenMoraleLowText);
+                    sprintf(g_text, g_heroScreen[5]);
                 break;
 
             case OVERVIEW_HERO_LUCK_ID:
                 if (currHero->getLuck(0, 0, 1) > 0)
-                    sprintf(g_text, g_heroScreenLuckHighText);
+                    sprintf(g_text, g_heroScreen[6]);
                 else if (currHero->getLuck(0, 0, 1) == 0)
-                    sprintf(g_text, g_heroScreenLuckNeutralText);
+                    sprintf(g_text, g_heroScreen[7]);
                 else
-                    sprintf(g_text, g_heroScreenLuckLowText);
+                    sprintf(g_text, g_heroScreen[8]);
                 break;
 
             case OVERVIEW_HERO_SPECIALTY_ID:
-                sprintf(g_text, g_heroScreenText27);
+                sprintf(g_text, g_heroScreen[27]);
                 break;
             case OVERVIEW_HERO_LEVEL_ID:
-                sprintf(g_text, g_heroScreenText9);
+                sprintf(g_text, g_heroScreen[9]);
                 break;
             case OVERVIEW_HERO_MANA_ID:
-                sprintf(g_text, g_heroScreenText22);
+                sprintf(g_text, g_heroScreen[22]);
                 break;
 
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID:
@@ -2037,8 +2078,8 @@ void TOverviewWindow::doRollover(int codeY)
                 int nth = codeY - OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID;
                 if (nth < currHero->m_skillCount) {
                     int skill = currHero->getNthSS(nth);
-                    sprintf(g_text, g_heroScreenSecondarySkillFormat,
-                            g_skillMasteryNames[
+                    sprintf(g_text, g_heroScreen[21],
+                            g_secondarySkillLevels[
                                 currHero->m_skillLevel[skill] - 1],
                             g_sSkillTraits[skill].m_name);
                 }
@@ -2073,7 +2114,7 @@ void TOverviewWindow::doRollover(int codeY)
                     getLastBackpackIndex(
                         g_overviewTop[g_overviewType] + slot) + 1;
                 if (!lastBackpackIndex) {
-                    strcpy(g_text, g_emptyRolloverText);
+                    strcpy(g_text, "");
                     break;
                 }
                 currHero->getBackpack(
@@ -2085,14 +2126,14 @@ void TOverviewWindow::doRollover(int codeY)
             }
 
             default:
-                strcpy(g_text, g_emptyRolloverText);
+                strcpy(g_text, "");
                 break;
             }
         } else {
             town* currTown = g_game->getTown(
                 g_game->getLocalPlayer()->m_townIds[
                     g_overviewTop[g_overviewType] + slot]);
-            strcpy(g_text, g_emptyRolloverText);
+            strcpy(g_text, "");
 
             switch (codeY) {
             case OVERVIEW_TOWN_VISITING_HERO_LEFT_ID:
@@ -2131,7 +2172,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 4:
             case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 6:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(static_cast<const town*>(currTown)
                                         ->getArmy().m_armies[
                             codeY
@@ -2146,7 +2187,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 4:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 6:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(static_cast<const town*>(currTown)
                                         ->getArmy().m_armies[
                             codeY - OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID],
@@ -2162,7 +2203,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_VISITING_ARMY_SECOND_ROW_FIRST_ID + 6:
                 if (currTown->m_visitingHeroId < 0)
                     break;
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(
                             g_game->getHero(currTown->m_visitingHeroId)
                                 ->m_army.m_armies[
@@ -2180,7 +2221,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 6:
                 if (currTown->m_visitingHeroId < 0)
                     break;
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(
                             g_game->getHero(currTown->m_visitingHeroId)
                                 ->m_army.m_armies[
@@ -2203,7 +2244,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 11:
             case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 12:
             case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 13:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(g_townDwellingCreatures[
                             currTown->m_type * TOWN_DWELLING_SLOTS + codeY
                             - OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID], 1));
@@ -2223,7 +2264,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 11:
             case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 12:
             case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 13:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(g_townDwellingCreatures[
                             currTown->m_type * TOWN_DWELLING_SLOTS + codeY
                             - OVERVIEW_TOWN_RECRUIT_FIRST_ID], 1));
@@ -2279,12 +2320,12 @@ void TOverviewWindow::doRollover(int codeY)
 
             case OVERVIEW_TOWN_SUMMONING_PORTAL_ICON_ID:
             case OVERVIEW_TOWN_SUMMONING_PORTAL_TEXT_ID:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(currTown->m_summoningType, 1));
                 break;
 
             default:
-                strcpy(g_text, g_emptyRolloverText);
+                strcpy(g_text, "");
                 break;
             }
         }
@@ -2340,7 +2381,7 @@ void TOverviewWindow::doRollover(int codeY)
                         break;
                     case 'S':
                     case 'T':
-                        strcpy(g_text, g_quickViewGarrisonText);
+                        strcpy(g_text, g_quickViewText[33]);
                         break;
                     case 'U':
                         strcpy(g_text, g_mineDescriptions[7]);
@@ -2354,7 +2395,7 @@ void TOverviewWindow::doRollover(int codeY)
                     }
                 }
             } else {
-                strcpy(g_text, g_emptyRolloverText);
+                strcpy(g_text, "");
             }
             break;
         }
@@ -2390,45 +2431,13 @@ void TOverviewWindow::doRollover(int codeY)
             break;
 
         default:
-            strcpy(g_text, g_emptyRolloverText);
+            strcpy(g_text, "");
             break;
         }
     }
 
     updateRollover(g_text);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\overview.cpp:1254
-DC_ONLY(0x106d18, 0x7E)
-void updateFlaggableIcon(int i)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:1279
-DC_ONLY(0x106d98, 0x32)
-void updateFlaggableIcons()
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:1287
-DC_ONLY(0x106dcc, 0xC2)
-void doFlaggableButtons(int which)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:1314
-DC_ONLY(0x106e90, 0x7D6)
-void game::overview()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // Dreamcast fixes the base-handler protocol, ProcessIconSelect boundary,
 // rollover path, static-helper calls and high-level switch nesting. Complete
@@ -2743,17 +2752,6 @@ void updateBackpack(int slot)
     g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\overview.cpp:1562
-DC_ONLY(0x1077e8, 0x100)
-void UpdateArtifacts(int iSlot)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x005225d0, 0x55)  // dc 0x1078e8
 static long getLastBackpackIndex(long heroNumber)
 {
@@ -2763,77 +2761,3 @@ static long getLastBackpackIndex(long heroNumber)
         g_game->getLocalPlayer()->m_heroes[heroNumber]);
     return currHero->getLastBackpackIndex();
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\overview.cpp:1612
-DC_ONLY(0x107974, 0x42)
-void incrementBackpackStart(long slot)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:1629
-DC_ONLY(0x1079b8, 0x42)
-void decrementBackpackStart(long slot)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:1647
-DC_ONLY(0x1079fc, 0x94)
-void showArtifact(hero* currHero, const type_artifact& artifact, unsigned char right_mouse)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:1663
-DC_ONLY(0x107a90, 0xA10)
-int game::processIconSelect(int codeY, unsigned char bRightMouse)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2086
-DC_ONLY(0x108f74, 0x68)
-void TOverviewWindow::~TOverviewWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2096
-DC_ONLY(0x108fdc, 0x50)
-void TOverviewWindow::clearButtons(int slot)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2103
-DC_ONLY(0x10902c, 0x40)
-void TOverviewWindow::updateRollover(char* cText)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2115
-DC_ONLY(0x10906c, 0x90E)
-void TOverviewWindow::doRollover(int codeY)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2546
-DC_ONLY(0x10997c, 0x87C)
-int TOverviewWindow::windowHandler(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\overview.cpp:2083
-DC_ONLY(0x10a210, 0x34)
-void* TOverviewWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

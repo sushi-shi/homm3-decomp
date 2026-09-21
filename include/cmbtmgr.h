@@ -3,11 +3,13 @@
 
 #include <set>
 #include <vector>
+
 #include "army.h"
-#include "armygrp.h"   // SpellID, for the two spells.obj leaves below
+#include "armygrp.h"
 #include "basemgr.h"
 #include "hexcell.h"
 #include "struct.h"
+#include "winmgr.h"
 
 class Bitmap16Bit;
 class CNetMsgHandlerPause;
@@ -38,18 +40,6 @@ class CCombatOwnedObject {
 public:
     virtual ~CCombatOwnedObject();
 };
-
-// Per-projectile launch offsets and frame-angle boundaries. Retail indexes
-// the table at 0x67ff24 with an 84-byte stride: three signed coordinate
-// pairs followed by eighteen float boundaries.
-struct TMissileStartInfo {
-public:
-    short m_offsets[3][2];
-    float m_angles[18];
-};
-SIZE(TMissileStartInfo, 0x54);
-
-extern const TMissileStartInfo* g_missileStartInfo;
 
 // One segment of an animated lightning bolt. THE DREAMCAST DUMP HAS NO
 // MEMBER EVIDENCE FOR THIS TYPE AT ALL - members.csv carries zero rows
@@ -310,7 +300,7 @@ public:
     int m_castY;
     int m_castFrame;
 };
-DATA(0x0063bd40) extern const TCombatHeroSprite g_combatHeroSprites[18];
+extern const TCombatHeroSprite g_combatHeroSprites[18];
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
@@ -367,6 +357,12 @@ enum CombatHeroFrameType {
 
 class combatManager : public baseManager {
 public:
+    // Original DC statics: LeftHeroLimits, RightHeroLimits,
+    // MainBuildingLimits and UpperTowerLimits (GetGridIndex).
+    static const SLimitData s_leftHeroLimits;
+    static const SLimitData s_rightHeroLimits;
+    static const SLimitData s_mainBuildingLimits;
+    static const SLimitData s_upperTowerLimits;
     // drawing.cpp:666, Dreamcast dc 0x841d4. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
     unsigned char scrollTo(int x, int y, unsigned char draw,
@@ -1075,7 +1071,21 @@ public:
     unsigned char isWinner(int thisSide) const;
     unsigned char combatIsOver() const;
     void resetHitByCreature();
+    // DC LF_MFUNCTION records have no this type: these are static helpers.
+    static TWallTargetId getTargetWallIndex(int gridIndex);
+    static unsigned char inCastle(int index);
+    static unsigned char leftOfMoat(int index);
+    static void getMissileStartingPosition(int armyType, int x, int y, int facing,
+                                          int destX, int destY,
+                                          const CSprite* missile, int* startX,
+                                          int* startY, int* armyDir,
+                                          int* missileFrame);
     void damageWall(TWallTargetId targetWall, int damage);
+    void highlightHex(int hex);
+    void highlightHex(int x, int y);
+    int validAttackHex(int hex);
+    void getHexXY(int hex, int& x, int& y);
+    void setCombatViewArmy(int newCombatViewArmy);
     int getGridIndex(int x, int y) const;
     // The SGTWDEF explosion frame army::attack_wall (0x445fd0) lets
     // play before it lands the DamageWall - the wall visibly breaks
@@ -1091,7 +1101,7 @@ public:
     // routine with the creature-cast selector passed by command.cpp.
     void initiateSpell(SpellID spellToCast, int creatureSpell);
     unsigned char placeObstacle(int obstacleId);
-    void unnamed46a520(army* stack);  // 0x46a520
+    void markMovingArmy(army* stack);  // 0x46a520
     unsigned char checkObstacleAttacks(army* thisArmy,
                                          unsigned char isWalking);
     void lootDeadHero(int side,
@@ -1111,7 +1121,7 @@ public:
     // ?show_eagle_eye@combatManager@@AAAXHH@Z (two ints),
     // ?DoVictory@combatManager@@QAAXH@Z (one int) and
     // ?show_looted_artifacts@combatManager@@AAAXAAV?$vector@Utype_artifact@@...@Z,
-    void stopCombatSounds();
+    void freeArmies();
     void close();
     void initializeArchers();
     void updateArmyLuckAndMorale();
@@ -1174,14 +1184,11 @@ public:
     void updateMouseGrid(int gridIndex, std::vector<long>& hexes,
                          unsigned char forceUpdate);
     void updateMouseGrid(int gridIndex, int allowDuringAction);
-    // drawing.cpp:513, DC 0x83ec0. DC's body takes the extent by value;
-    // Complete has no out-of-line copy, and the exact retail expansion in
-    // UpdateMouseGrid proves its const-reference form here.
-    void updateCombatArea(const SLimitData& area);
-    // Fly's two Complete-era header folds. The retail viewport never scrolls,
-    // so ScrollTo is supplied as a TU inline there; UpdateCombatArea expands
-    // to UpdateScreen, matching drawing.cpp's retained inline copy.
-    // DC drawing.cpp:679/680 preserves the coordinate facade.
+    // Preserve DC UpdateCombatArea's by-value extent and coordinate facade.
+    // The Windows fixed-viewport definitions and their platform evidence are
+    // below. The coordinate ScrollTo facade remains ordinary in drawing.cpp.
+    void updateCombatArea(SLimitData area);
+    void updateCombatArea(int x, int y, int width, int height);
     bool scrollTo(int x, int y, int width, int height, bool draw,
                   bool doscrollX, bool doscrollY);
     bool scrollTo(SLimitData extent, bool draw,
@@ -1278,7 +1285,6 @@ public:
     // this declaration alone already costs GetCommand 92.5714 ->
     // 92.5357 unconditionally (include-set class, bisected), so it is
     // scoped to army.cpp and the field waits for the same lane.
-    void markMovingArmy(const army* movingArmy);  // 0x46a520
     // 0x465ad0 (0x443), already carved and carcassed in cmbtmgr.cpp.
     // army::range_attack (0x440160) short-circuits into it for an ARROW
     // TOWER, passing that stack's indexToAttack as the tower position -
@@ -1497,6 +1503,7 @@ public:
     void viewCastleBallista(int isQuickInfo);
     void markTowerArmy(const army* tower);
     void demonicResurrection(const army* caster, army* target);
+    void removeCorpse(army* corpse);
     void removeCorpse(hexcell* hex, long side, long slot);  // 0x5a7320
     unsigned char hasValidSpellTarget(SpellID spellId, long mastery,
                                       long castingSide,
@@ -1705,7 +1712,7 @@ public:
     // failure path at +0x2159.
     inline void showSpellCastFailure(army* targetArmy, int spellId);
     // The ONE TSpellEffectID this header needs so far. Value from the
-    // Dreamcast enum table (evidence/dreamcast/enums.csv:
+    // Dreamcast enum table (NB11 enum records:
     // TSpellEffectID.eSpellEffectFireShield = 11), and retail proves the
     // number at the only site that uses it: army::do_fire_shield
     // (0x4409c0) pushes the literal 11 into PowEffect. Named rather than
@@ -1758,6 +1765,11 @@ public:
     // lists it among DoCompAI's callees and retail carries no
     // out-of-line copy, so it is the /Ob2 inline-away case.
     army* getCurrentArmy() { return &m_armies[m_actingSide][m_actingSlot]; }
+    // Original: combatManager::get_current_army; CmbtMgr.h:1483, dc 0x1581b8.
+    const army* getCurrentArmy() const
+    {
+        return &m_armies[m_actingSide][m_actingSlot];
+    }
     // E:\gamedcs\CmbtMgr.h:1488. Dreamcast proves the single-expression
     // helper and its four ordered bounds. Complete widens the window to the
     // retail 800x556 combat area; ProcessCombatMsg retains the source call
@@ -1767,6 +1779,8 @@ public:
     {
         return x >= 0 && x < 800 && y >= 0 && y < 556;
     }
+    // Original: combatManager::is_in_second_phase; CmbtMgr.h:1494, dc 0x27f28.
+    unsigned char isInSecondPhase() const { return m_inSecondPhase; }
     // Dreamcast S_PUB32 fixes this entire inline band: GetHexIndex and GridX
     // are static int helpers, RowIsOdd is a const bool member, and
     // InInvisibleColumn is static bool. Their CodeView lines also fix this
@@ -1821,7 +1835,7 @@ public:
     army* findDemonicResurrectionTarget(int armyGroup, int targetIndex);
     void markAreaEffect(SpellID spell, long hex, long mastery,
                           std::vector<army*>& targets);
-    void markHexAreaEffect(long hex, long radius,
+    void markAreaEffect(long hex, long radius,
                               unsigned char includeCenter,
                               std::vector<army*>& targets);
     void markBerserkAreaEffect(long hex, long mastery,
@@ -1842,8 +1856,11 @@ private:
     // (`A` access), which costs nothing here and is recorded rather than
     // acted on: this header keeps one public block.
     void loadArmies(unsigned char isSurrounded);
+    void checkNativeTerrain();
+    void combineGroups(armyGroup* src, armyGroup* dest);
 
 public:
+    static float computeDamageModifier(int attack, int defense);
     unsigned char unnamed464d40(army* selected);
     unsigned char unnamed464f50(const army* incumbent, const army* candidate);
     virtual int main(message& msg);
@@ -1901,13 +1918,11 @@ extern combatManager* g_combatManager;
 // CheckGetAIMove caches the displayed surrender price here. No surviving
 // retail or Dreamcast symbol supplies a public spelling, so the name keeps
 // its address ordinal.
-DATA(0x00695030) extern long g_surrenderCost695030;
-DATA(0x00698998) extern unsigned long g_combatStamp698998;
-DATA(0x006989b8) extern unsigned long g_combatStamp6989b8;
-DATA(0x006985a3) extern unsigned char g_combatFlag6985a3;
+extern long g_surrenderCost;
+extern unsigned char g_combatRetreated;
 // Set while the combat action pump is active; process_move_then_attack clears
 // it on a win before the ResetMouse path. Definition belongs to drawing.cpp.
-DATA(0x00697744) extern unsigned char g_combatFlag697744;
+extern unsigned char g_combatSurrendered;
 DATA(0x006989ec) extern int g_processingCombatAction;
 
 // The combat random seed, .data 0x66d840. SetupCombat parks its iSeed
@@ -1926,7 +1941,7 @@ DATA(0x006989ec) extern int g_processingCombatAction;
 // 92.5714 -> 92.5357 by itself, and gating it restores the ceiling. A
 // bulk probe of externs added together evidently does not reproduce what
 // a single extern added to a header this widely included does.
-extern int g_combatSeed66d840;
+extern int g_combatSeed;
 
 // THE FOUR COMBAT DEPLOYMENT TABLES, .rdata, and their BOUNDS ARE PROVEN
 // BY ADJACENCY rather than assumed: 0x63d0a8 + 2*7*4 = 0x63d0e0,
@@ -1941,16 +1956,16 @@ extern int g_combatSeed66d840;
 // chosen turns on the defending hero's formation byte, so the pair is the
 // game's tight/loose deployment split - but no roster row or string
 // reaches any of the four, so the names carry their addresses.
-extern const int g_combatDeployHexes63d0a8[2][7];
-extern const int g_combatDeploySurroundedHexes63d0e0[2][7];
-extern const int g_combatDeploySlots63d118[7][7];
-extern const int g_combatDeploySlots63d1dc[7][7];
+extern const int g_combatDeployHexes[2][7];
+extern const int g_combatDeploySurroundedHexes[2][7];
+extern const int g_combatDeploySpreadSlots[7][7];
+extern const int g_combatDeployGroupedSlots[7][7];
 
 // Source aggregate copied into combatManager+0x13d38 by the constructor,
 // LowerDoor and RaiseDoor. The current DATA contract cannot express its
 // size, so the stripped target still represents interior relocations as
 // separate symbols; source keeps the retail-proven aggregate shape.
-DATA(0x00694f30) extern TDrawbridgeBounds g_drawbridgeBounds694f30;
+extern TDrawbridgeBounds g_drawbridgeBounds;
 
 // The clip rectangle every combat-drawing pass intersects its dirty
 // region with before handing it to heroWindowManager::UpdateScreen.
@@ -1965,7 +1980,7 @@ DATA(0x00694f30) extern TDrawbridgeBounds g_drawbridgeBounds694f30;
 // choice produces is masked (ResetLimitCreature is exact through the
 // identical aggregate copy). NAME IS A SOURCE-FACING INVENTION and
 // carries its address - no roster row, string or DC global reaches it.
-DATA(0x00694f18) extern TDrawbridgeBounds g_combatDrawLimits694f18;
+extern TDrawbridgeBounds g_combatDrawLimits;
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot
@@ -2018,16 +2033,16 @@ public:
     unsigned int m_flags;  // +0x8
 };
 SIZE(TSpellEffectTraits, 0xc);
-DATA(0x00641e08) extern const TSpellEffectTraits g_spellEffectTraits[];
+extern const TSpellEffectTraits g_spellEffectTraits[];
 
 // The moat's per-town base damage, at .rdata 0x63bd18 and indexed by
 // town type: SetupAndLoadObstacles folds [0x63bd20] for the Tower,
 // which is 0x63bd18 + 4*TOWN_TOWER. searchArray::set_moat (0x4b3290)
 // and mark_firewalls (0x4215e0) read the same table with a live index.
 // Name is a BOOTSTRAP INVENTION - no roster attests it.
-DATA(0x0063bd18) extern const int g_moatDamage[];
+extern const int g_moatDamage[];
 
-DATA(0x006a5d60) extern const char* g_moatDamageMessages[9];
+extern const char* g_moatDamageMessages[9];
 
 // The thirty-two hexes two facing boats occupy, at .rdata 0x63d368.
 // SetupAndLoadObstacles walks it as a POINTER and ends the walk on the
@@ -2035,34 +2050,16 @@ DATA(0x006a5d60) extern const char* g_moatDamageMessages[9];
 // the delinked reference names the combatManager vtable there - so the
 // extent is exactly (0x63d3e8 - 0x63d368) / 4 == 32. Name is a
 // BOOTSTRAP INVENTION.
-DATA(0x0063d368) extern const int g_boatBlockedHexes[];
+extern const int g_boatBlockedHexes[];
 DATA(0x0063c7ca) extern const unsigned short g_obstacleMagicTerrainMasks[];
-DATA(0x0063bec0) extern const unsigned short g_largeObstacleTerrainMasks[];
-DATA(0x0063bec2) extern const unsigned short g_largeObstacleMagicTerrainMasks[];
-DATA(0x0063becc) extern const short g_largeObstacleHexes[];
 
 // LowerDoor's quick-combat bypass and the four redraw-bound sources.
 // Names are address ordinals because no surviving public symbol names
 // them; widths and uses are byte-proven by the retail body.
-DATA(0x0069877c) extern int g_combatQuickMode69877c;
-extern int g_combatActive698a18;
+extern int g_combatActive;
 
-DATA(0x00694ea8) extern int g_combatHexLeft694ea8;
-DATA(0x00694eac) extern int g_combatHexTop694eac;
-DATA(0x00694eb0) extern int g_combatHexRight694eb0;
-DATA(0x00694eb4) extern int g_combatHexBottom694eb4;
-DATA(0x00694ed8) extern int g_combatHexLeft694ed8;
-DATA(0x00694edc) extern int g_combatHexTop694edc;
-DATA(0x00694ee0) extern int g_combatHexRight694ee0;
-DATA(0x00694ee4) extern int g_combatHexBottom694ee4;
-DATA(0x00694ef0) extern int g_combatHexLeft694ef0;
-DATA(0x00694ef4) extern int g_combatHexTop694ef4;
-DATA(0x00694ef8) extern int g_combatHexRight694ef8;
-DATA(0x00694efc) extern int g_combatHexBottom694efc;
-DATA(0x00694f08) extern int g_combatHexLeft694f08;
-DATA(0x00694f0c) extern int g_combatHexTop694f0c;
-DATA(0x00694f10) extern int g_combatHexRight694f10;
-DATA(0x00694f14) extern int g_combatHexBottom694f14;
+// Rectangles built by the retail static initializers at 0x4626a0..0x462759.
+
 
 // The row-column table one hex LEFT of gCastleWallColumns, at 0x63bce8
 // (retail bytes 0b 1c 2c 3d 4d 5f 6f 81 92 a4 b5 - each entry exactly
@@ -2071,16 +2068,14 @@ DATA(0x00694f14) extern int g_combatHexBottom694f14;
 // IsInMoat walks all eleven entries looking for an exact hit. Name is
 // a BOOTSTRAP INVENTION in the style of gCastleWallColumns - no roster
 // attests it.
-extern const unsigned char g_moatColumns[];
+extern const unsigned char g_moatHexes[];
 
 // The row-column table one hex left again, at 0x63bcf4 (bytes 0a 1b 2b
 // 3c 4c 5e 6e 80 91 a3 b4). Only IsInMoat reads it, and only when the
 // defending town is a Fortress - the second moat ring. Name is a
 // BOOTSTRAP INVENTION.
-extern const unsigned char g_outerMoatColumns[];
+extern const unsigned char g_innerMoatHexes[];
 
-unsigned char inCastle(int index);
-unsigned char leftOfMoat(int index);
 
 // The five wall segments the castle AI checks, at 0x63abe0: the
 // TWallSection values {6, 8, 9, 10, 12}, i.e. wallTargets rows 1..5 by
@@ -2093,14 +2088,33 @@ unsigned char leftOfMoat(int index);
 // rectangles sixteen separate ints. Neither is defined here - findpath
 // and ai only read them, and an unclaimed extern still pairs.
 extern const long g_castleWallGateTargets[5];   // 0x63abe0
-extern const long g_castleWallGateTargetsEnd[]; // 0x63abf4, one past
 
-int getTargetWallIndex(int gridIndex);
 
-void getMissileStartingPosition(int armyType, int x, int y, int facing,
-                                int destX, int destY,
-                                const CSprite* missile, int* startX,
-                                int* startY, int* armyDir,
-                                int* missileFrame);
+// Windows fixed-viewport implementations. CE drawing.cpp:513/514 forwards
+// a by-value extent to the four-int UpdateCombatArea (dc 0x83ec0/0x83ee8).
+// Preserve that call and inclusive dimensions. The CE leaf clips/translates
+// viewport offsets, calls six-int Window::UpdateScreen and redraws a combat
+// window; retail Fly instead calls four-int updateScreen at 0x4b4df3.
+// Likewise CE ScrollTo (drawing.cpp:598, dc 0x8405c) moves/redraws a viewport;
+// retail Fly has neither its scrolling work nor a scrolled-result branch.
+// One shared Windows definition accounts for those cross-TU expansions.
+// Header placement is a platform visibility inference, not recovered lexical
+// source. dc_only.tsv retains the CE origins separately. The by-value helper
+// chain reproduces all 1102 Fly bytes; an inlined copy does not prove a
+// const-reference parameter. The coordinate ScrollTo facade stays in drawing.cpp.
+inline void combatManager::updateCombatArea(int x, int y, int width, int height)
+{
+    g_windowManager->updateScreen(x, y, width, height);
+}
+
+inline void combatManager::updateCombatArea(SLimitData area)
+{
+    updateCombatArea(area.m_minX, area.m_minY, area.width(), area.height());
+}
+
+inline bool combatManager::scrollTo(SLimitData, bool, bool, bool)
+{
+    return false;
+}
 
 #endif  /* HOMM3_CMBTMGR_H */

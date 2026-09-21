@@ -2,7 +2,7 @@
 #define HOMM3_PHILAI_H
 
 #include "armygrp.h"
-#include "herospec.h"  // TSecondarySkill, the appraisals' skill parameter
+#include "herospec.h"
 
 class hero;
 class town;
@@ -41,6 +41,7 @@ public:
 // No original name is known; retain the ordinal until source evidence exists.
 void unnamed526d20(int playerId, int* costs, int flag);
 
+void showStatus();
 long aiGetSpellValue(const hero* ourHero, SpellID spell);
 
 // Dreamcast line 3834 publishes the reference-qualified

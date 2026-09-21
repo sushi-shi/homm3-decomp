@@ -2,10 +2,11 @@
 #define HOMM3_AI_PLAYER_H
 
 #include <vector>
+
+#include "ai_creature_value.h"
+#include "armygrp.h"
 #include "netmsg.h"
 #include "turn_update_msg.h"
-#include "armygrp.h"
-#include "ai_creature_value.h"
 
 class hero;
 class playerData;
@@ -19,8 +20,8 @@ void aiMarkDangerZones(hero* currentHero, long* dangerZones);
 
 // Five-entry AI hero caps indexed by game difficulty. Dreamcast names both
 // compiland statics; retail hire_heroes proves these corresponding addresses.
-DATA(0x00660518) extern int g_heroLimits[5];
-DATA(0x0066052c) extern int g_globalLimits[5];
+extern int g_heroLimits[5];
+extern int g_globalLimits[5];
 
 long aiGetValueOfArtifact(type_artifact artifact, const hero* owner,
                               unsigned char equipped, unsigned char exact);
@@ -73,6 +74,7 @@ public:
     // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
     // inlined into type_income_artifact::get_value, whose by-value double
     // return temp at [ebp-8] is what the retail bytes home under /Op.
+    long getResourceValue(int* resources) const;
     double getResourceValue(enum EGameResource resource) const
     {
         return m_resourceValue[resource];
@@ -249,7 +251,7 @@ unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown);
 long findMagusHutValue(long playerId, unsigned char exploreMode);
 void fillProhibitedArray(playerData* player, unsigned char* prohibited);
 
-extern const char* g_resourceNames[7];
+extern const char* g_resourceNames[8];
 extern char g_aiResourceWarningFormat[];
 
 // Retail .bss 0x693718, one byte per TAdventureObjectType.
@@ -259,7 +261,7 @@ extern char g_aiResourceWarningFormat[];
 // it; named in the gUnnamed69ccc4 style. ai_player.obj is the nearest
 // admitted consumer.
 DATA(0x00693718)
-extern unsigned char g_unnamed693718[];
+extern unsigned char g_oneUseEvents[];
 
 // Dreamcast publishes this object-value table by name. Retail's
 // AI_value_of_observatory indexes the same dword array with the trigger
@@ -278,7 +280,7 @@ public:
     type_artifact_effect();
     virtual ~type_artifact_effect();
     virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+                           unsigned char exact) const = 0;
 };
 
 // Dreamcast names this table `const_artifact_effects`; retail indexes the
@@ -287,7 +289,10 @@ extern std::vector<type_artifact_effect*> g_constArtifactEffects[144];
 
 // Complete's 0x63ac7c sentinel stream selects the concrete effect class
 // created for each artifact. The numeric order is retail's jump table at
-// 0x434530; the Dreamcast initializer corroborates the shared class family.
+// 0x434530: slots 12..15 are tome, antimagic, antimorale, antiluck.
+// The source arm order differs from that numeric order; interchanging them
+// makes artifact 83 consume the wrong number of operands. Dreamcast
+// corroborates the shared class family, not Complete's effect-id ordering.
 enum EArtifactEffectKind {
     ARTIFACT_EFFECT_MIGHT,
     ARTIFACT_EFFECT_POWER,
@@ -301,10 +306,10 @@ enum EArtifactEffectKind {
     ARTIFACT_EFFECT_SPELLCASTER,
     ARTIFACT_EFFECT_DURATION,
     ARTIFACT_EFFECT_SCHOOL,
+    ARTIFACT_EFFECT_TOME,
     ARTIFACT_EFFECT_ANTIMAGIC,
     ARTIFACT_EFFECT_ANTIMORALE,
     ARTIFACT_EFFECT_ANTILUCK,
-    ARTIFACT_EFFECT_TOME,
     ARTIFACT_EFFECT_INCOME,
     ARTIFACT_EFFECT_CREATURE_GROWTH,
     ARTIFACT_EFFECT_SPELL,
@@ -354,7 +359,16 @@ public:
                            unsigned char exact) const;
 };
 
-class type_necromancy_artifact : public type_combat_artifact {
+// The recovered Complete type inventory names this no-data base. Retail's
+// initializer keeps the type_combat_artifact constructor call for both
+// necromancy branches; the extra inline layer reproduces those boundaries
+// without adding storage or a distinct vtable.
+class type_base_necromancy_artifact : public type_combat_artifact {
+public:
+    type_base_necromancy_artifact(long newBonus);
+};
+
+class type_necromancy_artifact : public type_base_necromancy_artifact {
 public:
     type_necromancy_artifact(long newBonus);
     virtual long getValue(const hero* owner, unsigned char equipped,
@@ -414,7 +428,8 @@ public:
     long m_growthBonus;
 };
 
-class type_undead_king_cloak_artifact : public type_necromancy_artifact {
+class type_undead_king_cloak_artifact
+    : public type_base_necromancy_artifact {
 public:
     type_undead_king_cloak_artifact();
     virtual long getValue(const hero* owner, unsigned char equipped,

@@ -1,7 +1,11 @@
 // 26 Dreamcast functions in link order; 20 compiler-generated $-thunks
 // omitted. Complete adds the two retail-only level-button callbacks below.
-#include <va.h>
+#include "va.h"
+#include "objnames.h"
+#include "includes.h"
+
 #include "viewwrld.h"
+
 #include "advmgr.h"
 #include "bitmap16.h"
 #include "border.h"
@@ -21,7 +25,6 @@
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
-#include "includes.h"
 
 // Dreamcast publishes this source-private renderer state by name. Retail
 // independently fixes each address through the repeated view-world draw
@@ -80,7 +83,7 @@ static unsigned char g_viewHeroes;
 // a `double` literal folds to. And the operand ORDER is magic + d - the
 // float is what reaches the x87 stack first, with `fadd qword ptr` taking
 // the double argument as the memory operand.
-DC_ONLY(0x192ee8, 0x62)
+
 static long ftol(double d)
 {
     union {
@@ -116,7 +119,7 @@ static long ftol(double d)
 VA(0x005f73b0, 0x14D)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x192f4c
 void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z)
 {
-    int offset = (32.0f - g_unnamed68c6b8) / 2.0f;
+    int offset = (32.0f - g_viewWorldScaleFloat) / 2.0f;
     x -= offset;
     y -= offset;
 
@@ -374,7 +377,7 @@ void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int 
             tilex + (2 - boatCellY) * 32,
             tiley - boatCellX * 32 + 32, tilew, tileh,
             g_memoryBuffer, 0, 0,
-            currBoat->m_facing > hero::kFacingS);
+            currBoat->getHflip());
     }
 
     m_boatIcons[currBoat->m_type]->drawHero(
@@ -383,7 +386,7 @@ void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int 
         tilex + (2 - boatCellY) * 32,
         tiley - boatCellX * 32 + 32, tilew, tileh,
         g_memoryBuffer, 0, 0,
-        currBoat->m_facing > hero::kFacingS);
+        currBoat->getHflip());
 }
 
 VA(0x005f7ef0, 0x1E1)  // dc 0x1938cc
@@ -403,7 +406,7 @@ void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
             tilex + (2 - boatCellY) * 32,
             tiley - boatCellX * 32 + 32, tilew, tileh,
             g_memoryBuffer, 0, 0,
-            currBoat->m_facing > hero::kFacingS);
+            currBoat->getHflip());
     }
 
     m_boatIcons[currBoat->m_type]->drawHeroShadow(
@@ -412,7 +415,7 @@ void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
         tilex + (2 - boatCellY) * 32,
         tiley - boatCellX * 32 + 32, tilew, tileh,
         g_memoryBuffer, 0, 0,
-        currBoat->m_facing > hero::kFacingS);
+        currBoat->getHflip());
 }
 
 // The dispatch is a jump table, so the emitted arm order IS the source case
@@ -518,8 +521,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
                 if (!playerBit
                     && (!g_vwTerrains
-                        || !g_adventureObjectLandBlocked
-                                [objType->m_objectType][12]))
+                        || !g_adventureObjectTraits[objType->m_objectType].m_trait3))
                     continue;
 
                 if (!objType->m_drawCells[
@@ -545,7 +547,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                         (objType->m_width - objCell->m_cellX - 1) * 32,
                         (objType->m_height - objCell->m_cellY - 1) * 32,
                         32, 32, g_memoryBuffer, 0, 0,
-                        g_unnamed6aacb0->m_data[64 + owner], false);
+                        g_systemPalette->m_data[64 + owner], false);
                 } else {
                     sprPtr->drawAdvObj(
                         (m_animCtr
@@ -607,7 +609,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
             if (row == OBJECT_DRAW_LAYER_HERO_BACK
                 && destY == CURSOR_DEST_Y0
-                && this->m_drawCursor && !::g_unnamed6989f4) {
+                && this->m_drawCursor && !::g_drawingPuzzle) {
                 if (destX == CURSOR_DEST_X0) {
                     this->drawCursor(0, 0);
                 } else if (destX == CURSOR_DEST_X1) {
@@ -617,7 +619,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 }
             } else if (row == OBJECT_DRAW_LAYER_HERO_FRONT
                        && destY == CURSOR_DEST_Y1
-                       && this->m_drawCursor && !::g_unnamed6989f4) {
+                       && this->m_drawCursor && !::g_drawingPuzzle) {
                 if (destX == CURSOR_DEST_X0) {
                     this->drawCursor(0, 1);
                 } else if (destX == CURSOR_DEST_X1) {
@@ -700,6 +702,19 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // where we still hold them in registers across the guard, plus the one
 // under-inlined `memoryBuffer->GetMap(0,0)` inside VWScaleToScreenBuffer's
 // row loop, which retail folds to `mov ebx,[memoryBuffer] / mov ebx,[ebx+0x30]`.
+// THAT UNDER-INLINE IS NOW PRICED EXACTLY (`predict-inline --trace`): this body
+// has cb 977, so budget 1954; by the VWScaleToScreenBuffer site it is down to
+// 1383, giving the nested pool (1383-241)/1 = 1142 and then
+// (1142-356)/6 = 131 at VWClipScaleToScreenBuffer's depth. Its three GetMap
+// expansions cost 45 each and the third is refused with 41 left - short by 4.
+// Any of these closes it: this body's cb >= 989 (+12), the depth-1 spend before
+// the scale call 24 lower, one fewer call site in VWScaleToScreenBuffer
+// (divisor 6 -> 5 gives 157), or VWClipScaleToScreenBuffer's cb <= 332.
+// Measured and byte-flat: merging the two clip guards, plain-`if` clamps,
+// splitting the entry guard into two or four ifs, and naming the type_point
+// local. Measured worse: caching GetMap(0,0) in a local across the row loop
+// (unit 96.76 -> 95.77 - retail reloads it), and dropping the clamp upper
+// bounds (this body +1.36, unit -2.03).
 VA(0x005f8be0, 0x636)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer), dc 0x1943ec
 void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -735,7 +750,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 
         if (!playerBit
             && (!g_vwTerrains
-                || !g_adventureObjectLandBlocked[objType->m_objectType][12]))
+                || !g_adventureObjectTraits[objType->m_objectType].m_trait3))
             continue;
 
         if (!objType->m_drawCells[
@@ -925,7 +940,7 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 
     if (!g_completeDrawAllCells
         && ((getMapExtra(srcX, srcY, z) & g_mapVisibilityBit)
-            || g_unnamed6989f4)) {
+            || g_drawingPuzzle)) {
         drawShroud = false;
     } else {
         drawShroud = true;
@@ -952,7 +967,7 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
             lookup = CLOUD_DRAW_FRAME_4;
     }
 
-    if (g_unnamed6989f4)
+    if (g_drawingPuzzle)
         return;
     if (!drawShroud)
         return;
@@ -1348,7 +1363,7 @@ int viewWorldUndergroundHandler(message& msg)
 VA(0x005fbf90, 0x2A3)  // dc 0x195b48
 void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 {
-    g_unnamed6aac3c = 1;
+    g_inViewWorld = 1;
     g_viewArtifacts = 0;
     g_viewTowns = 0;
     g_viewHeroes = 0;
@@ -1391,13 +1406,13 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
         break;
     }
 
-    g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
+    g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_MID;
     g_viewWorldScale = 11;
     g_csVwIcons = ResourceManager::getSprite("VWsymbol.def");
     g_memoryBuffer = new Bitmap16Bit(64, 64);
     g_advManager->demobilizeCurrHero(0, 1);
     g_windowManager->m_colorCyclingOn = 0;
-    g_combatActive698a18 = 2;
+    g_combatActive = 2;
     {
         TViewWorldWindow viewWorldWindow;
         type_point mapCenter(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
@@ -1412,11 +1427,11 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
         g_windowManager->m_colorCyclingOn = 1;
         viewWorldWindow.doModal(0);
     }
-    g_unnamed6aac3c = 0;
+    g_inViewWorld = 0;
     updateRadar(0, 1, g_viewMines, g_viewHeroes, g_viewTowns);
     g_windowManager->m_colorCyclingOn = 0;
     redrawAdvScreen(1, 0);
-    g_combatActive698a18 = 0;
+    g_combatActive = 0;
     g_windowManager->m_colorCyclingOn = 1;
 }
 
@@ -1453,7 +1468,7 @@ void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
 
     m_viewableWidth = 608 / g_viewWorldScale;
     m_viewableHeight = 544 / g_viewWorldScale;
-    float skipLevel = 32.0f / g_unnamed68c6b8;
+    float skipLevel = 32.0f / g_viewWorldScaleFloat;
     for (i = 0; i < g_viewWorldScale; i++)
         g_scaleLine[i] = ftol(static_cast<float>(i) * skipLevel);
 
@@ -1689,17 +1704,17 @@ int TViewWorldWindow::windowHandler(message& msg)
         case widget::WIDGET_DESELECT:
             switch (msg.m_codeY) {
             case MAGNIFY_FAR_ID:
-                g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FAR;
+                g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_FAR;
                 g_viewWorldScale = 7;
                 updateViewWorld(&msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_MID_ID:
-                g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
+                g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_MID;
                 g_viewWorldScale = 11;
                 updateViewWorld(&msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_FULL_ID:
-                g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FULL;
+                g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_FULL;
                 g_viewWorldScale = 16;
                 updateViewWorld(&msg);
                 return MESSAGE_DISPATCH_CONSUME;
@@ -1727,14 +1742,3 @@ int TViewWorldWindow::windowHandler(message& msg)
     }
     return MESSAGE_DISPATCH_CONSUME;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\viewwrld.cpp:1392
-DC_ONLY(0x196b18, 0x34)
-void* TViewWorldWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

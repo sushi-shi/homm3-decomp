@@ -2,9 +2,10 @@
 #define HOMM3_TOWNMGR_H
 
 #include "advmgr_popup.h"
-#include "remote.h"
 #include "basemgr.h"
 #include "text.h"
+#include "remote.h"
+#include "terrain_type.h"
 
 struct type_point;
 
@@ -79,7 +80,6 @@ extern TPalette16* g_systemPalette;  // retail .bss 0x6aacb0
 // for one dword would widen this compiland by the whole 29-member
 // preference block. Definition and DATA claim stay with misc.obj, whose
 // carved span does not reach 0x698784.
-extern int g_townOutlines;  // retail .bss 0x698784
 
 // One drawable object of the town panorama - a building, its outline
 // and its hotspot - forty-four slots of them on the manager at +0x5c.
@@ -127,6 +127,8 @@ public:
     // Retail 0x5c2ff0 (dc 0x16a2b0), reconstructed in townmgr.cpp.
     // CycleOutline's two expansions of the town-redraw block are the
     // arity evidence: thiscall plus two pushed 1s.
+    void drawOutline();
+    void drawHotspot();
     void draw(int incFrame, unsigned char drawHotspots);
 };
 SIZE(townObject, 0x30);
@@ -495,6 +497,8 @@ protected:
     // Retail 0x5d05f0 (dc 0x172af0). The dialog's status line, and the
     // town page's pending command with it.
     void setCommandAndText(message* msg);
+    void showText();
+    void viewArmy();
 };
 
 // The two derived garrison windows have EMPTY destructors: retail inlines
@@ -565,6 +569,8 @@ public:
 
     TShipWindow(int type);
     virtual ~TShipWindow();
+    void setRightClickText(int codeY);
+    void setRolloverText(int codeY);
     virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5d25a0
 };
 
@@ -587,6 +593,8 @@ public:
 
     TBuyBuildWindow(int x2, int y2, int id);
     virtual ~TBuyBuildWindow();
+    void setRolloverText(int codeY);
+    void setRightClickText(int codeY);
     void setPrerequisiteText(const town* currentTown, int building);
     virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5d6810
 };
@@ -711,6 +719,7 @@ private:
     // Retail 0x5dcbf0. NOT virtual: 0x5dcbf0 appears in no vtable and in
     // no .rdata cell image-wide, and its one caller (the page's own
     // WindowHandler at 0x5dd2f9) reaches it with a direct call.
+    void showText();
     void setRolloverText(message* msg);
     // Retail 0x5dce50, the fort page's buy button for row `i`.
     void recruit(int i);
@@ -739,8 +748,31 @@ class CTownNetMsgHandler;
 // modelled only as far as retail proves it, so no size is asserted; the
 // unattested run at +0x144 stays an opaque pad. The three virtuals are
 // the three slots of vtable 0x643720.
+// Shared table owned by text.cpp; also exposed to town value accessors.
+extern const char* g_townTypeNames[10];
+
 class townManager : public baseManager {
 public:
+    // Original: townManager::SetTown; TownMgr.h:686, dc 0x168e24.
+    // town::view0x5be210 expands the assignment to Complete's +0x38 field.
+    void setTown(town* townToView) { m_townToView = townToView; }
+
+    // Original: townManager::TownNativeTerrains; ten entries including
+    // the neutral town type -1. Complete retains the table at 0x643694.
+    static const TTerrainType s_townNativeTerrains[10];
+
+    // Original: townManager::GetTownTypeName; TownMgr.h:738, dc 0x20280
+    static const char* getTownTypeName(int type)
+    {
+        return g_townTypeNames[type + 1];
+    }
+
+    // Original: townManager::GetNativeTerrain; TownMgr.h:745, dc 0x4cc8c.
+    static TTerrainType getNativeTerrain(int type)
+    {
+        return s_townNativeTerrains[type + 1];
+    }
+
     town* m_townToView;  // +0x38
     // +0x3c: the panorama background, a bitmapBorder16 -
     // UpdateTownInfo builds it with `new bitmapBorder16(0, 0, 800,
@@ -854,6 +886,7 @@ public:
     char m_recruitSelected[0x4];  // +0x1c8  untouched by the retail bodies
     // Retail 0x5d8480 (dc 0x17b318). Inferno's Castle Gate.
     void doTownGate();
+    void moveHero(town* fromTown, town* toTown);
     void updateTownInfo();
     void moveHeroFromGarrison();
     void drawTown(int update, int incFrame, unsigned char drawHotspots);
@@ -871,6 +904,7 @@ public:
     unsigned char m_currentDwellingIdOff[7];
     void resetStrips();
     void setCommandAndText(message* msg);
+    void showText();
     void setArmyCommand(int splitEnabled, unsigned char joinDialog);
     void doCommand(int inCommand, unsigned char isGarrison,
                    type_garrison_base_window* garrisonWindow);
@@ -896,12 +930,6 @@ public:
     // one of those through the window rather than through the manager.
     void setupWell(TCastleWindow* wellWin);
     void setupMage(heroWindow* mageWin);
-    // E:\gamedcs\townmgr.h:738, GetTownTypeName (dc 0x20280).
-    // Retail expands this same indexed load in DrawHeroAdvancedOption.
-    static const char* getTownTypeName(int type)
-    {
-        return g_townTypeNames[type + 1];
-    }
 
     townManager();
     void unloadTown();
@@ -911,6 +939,8 @@ public:
     // Same gate, same measured reason, as SetupExtraStuff above.
     void setupTown(unsigned char fade);
     void setupExtraStuff();
+    void changeTown(unsigned char fade);
+    void createPopupBank(heroWindow* parent);
     void doPortalOfSummoning();
 
 private:
@@ -945,6 +975,5 @@ void doShipyard(int type);
 // The shared frame-pacing stamp at .bss 0x698998. cmbtmgr.h owns the
 // DATA claim (advmgr's Open/Main and drawing.cpp share the cell);
 // townManager::Main paces the panorama animation with it.
-extern unsigned long g_combatStamp698998;
 
 #endif  /* HOMM3_TOWNMGR_H */

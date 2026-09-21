@@ -4,7 +4,6 @@
 #define HOMM3_OWNERSHIP_H
 
 #include "autoarrayptr.h"
-
 #include "resourceptr.h"
 
 #endif

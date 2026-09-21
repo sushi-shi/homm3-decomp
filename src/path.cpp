@@ -1,9 +1,10 @@
-#include "terrain.h"
-#include <va.h>
+#include "va.h"
+
 #include "army.h"
-#include "hexcell.h"
 #include "cmbtmgr.h"
 #include "findpath.h"
+#include "hexcell.h"
+#include "terrain.h"
 
 VA(0x005239d0, 0x96)  // dc 0x10c918
 int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimited, unsigned char literalTarget)
@@ -41,7 +42,7 @@ VA(0x00523b20, 0x89)  // dc 0x10c9ec
 unsigned army::getAttackMask(int currIndex, int criteria, int literalTargetIndex) const
 {
     int testCellIndex;
-    unsigned char twoHex = static_cast<unsigned char>(m_monInfo.m_attributes & 1);
+    unsigned char twoHex = static_cast<unsigned char>(is(creatureDoubleWide));
     unsigned bit = 1;
     unsigned mask = twoHex ? 0 : 0xc0;
     int dirs = twoHex ? 8 : 6;
@@ -59,7 +60,7 @@ int army::validAttack(int currIndex, int direction, int criteria, int literalInd
     if (!combatManager::validHex(currIndex))
         return 0;
     int other = currIndex;
-    if (m_monInfo.m_attributes & 1) {
+    if (is(creatureDoubleWide)) {
         if (direction == COMBAT_DIRECTION_WIDE_UPPER) {
             *testCellIndex = getAdjacentCellIndex(currIndex, m_facing ? 0 : 5);
         } else if (direction == COMBAT_DIRECTION_WIDE_LOWER) {
@@ -119,7 +120,7 @@ int army::getAdjacentCellIndex(int currIndex, int direction) const
 VA(0x00523df0, 0x86)  // dc 0x10cc80
 long army::getAdjacentHex(long hex, long direction) const
 {
-    if (m_monInfo.m_attributes & 1) {
+    if (is(creatureDoubleWide)) {
         if (m_facing == 0) {
             if (direction >= 3)
                 hex--;
@@ -151,13 +152,216 @@ int oppositeDirection(int direction)
                ? COMBAT_DIRECTION_WIDE_LOWER : COMBAT_DIRECTION_WIDE_UPPER;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\path.cpp:480
-DC_ONLY(0x10cd50, 0x4A8)
+// Original: army::GetBestDirection; path.cpp:480, dc 0x10cd50.
+// The blocked-direction mask is searched in a source-proven priority order:
+// vertical targets distinguish odd/even staggered rows, then diagonal and
+// horizontal targets prefer the nearest heading. No retained Complete RVA or
+// fabricated caller is assigned to this ordinary legacy member.
 int army::getBestDirection(int currIndex, int destIndex, int currMask)
 {
-    // @stub
-}
+    if (!combatManager::validHex(currIndex)
+        || !combatManager::validHex(destIndex))
+        return -1;
 
-#endif  // @carcass
+    int currX = combatManager::gridX(currIndex);
+    int currY = combatManager::gridY(currIndex);
+    int destX = combatManager::gridX(destIndex);
+    int destY = combatManager::gridY(destIndex);
+    int up = 0;
+    int down = 0;
+    int left = 0;
+    int right = 0;
+    if (destX > currX)
+        right = 1;
+    else if (destX != currX)
+        left = 1;
+    if (destY > currY)
+        down = 1;
+    else if (destY != currY)
+        up = 1;
+
+    if (right == left) {
+        if (up == 1) {
+            if (currY & 1) {
+                if (!(currMask & (1 << COMBAT_DIRECTION_5)))
+                    return COMBAT_DIRECTION_5;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_0)))
+                    return COMBAT_DIRECTION_0;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_4)))
+                    return COMBAT_DIRECTION_4;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_1)))
+                    return COMBAT_DIRECTION_1;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_3)))
+                    return COMBAT_DIRECTION_3;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_2)))
+                    return COMBAT_DIRECTION_2;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_UPPER)))
+                    return COMBAT_DIRECTION_WIDE_UPPER;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_LOWER)))
+                    return COMBAT_DIRECTION_WIDE_LOWER;
+            } else {
+                if (!(currMask & (1 << COMBAT_DIRECTION_0)))
+                    return COMBAT_DIRECTION_0;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_5)))
+                    return COMBAT_DIRECTION_5;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_1)))
+                    return COMBAT_DIRECTION_1;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_4)))
+                    return COMBAT_DIRECTION_4;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_2)))
+                    return COMBAT_DIRECTION_2;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_3)))
+                    return COMBAT_DIRECTION_3;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_UPPER)))
+                    return COMBAT_DIRECTION_WIDE_UPPER;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_LOWER)))
+                    return COMBAT_DIRECTION_WIDE_LOWER;
+            }
+        } else {
+            if (currY & 1) {
+                if (!(currMask & (1 << COMBAT_DIRECTION_3)))
+                    return COMBAT_DIRECTION_3;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_2)))
+                    return COMBAT_DIRECTION_2;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_4)))
+                    return COMBAT_DIRECTION_4;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_1)))
+                    return COMBAT_DIRECTION_1;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_5)))
+                    return COMBAT_DIRECTION_5;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_0)))
+                    return COMBAT_DIRECTION_0;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_LOWER)))
+                    return COMBAT_DIRECTION_WIDE_LOWER;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_UPPER)))
+                    return COMBAT_DIRECTION_WIDE_UPPER;
+            } else {
+                if (!(currMask & (1 << COMBAT_DIRECTION_2)))
+                    return COMBAT_DIRECTION_2;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_3)))
+                    return COMBAT_DIRECTION_3;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_1)))
+                    return COMBAT_DIRECTION_1;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_4)))
+                    return COMBAT_DIRECTION_4;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_0)))
+                    return COMBAT_DIRECTION_0;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_5)))
+                    return COMBAT_DIRECTION_5;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_LOWER)))
+                    return COMBAT_DIRECTION_WIDE_LOWER;
+                else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_UPPER)))
+                    return COMBAT_DIRECTION_WIDE_UPPER;
+            }
+        }
+    }
+
+    if (left == 1) {
+        if (up == 1) {
+            if (!(currMask & (1 << COMBAT_DIRECTION_5)))
+                return COMBAT_DIRECTION_5;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_4)))
+                return COMBAT_DIRECTION_4;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_0)))
+                return COMBAT_DIRECTION_0;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_3)))
+                return COMBAT_DIRECTION_3;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_1)))
+                return COMBAT_DIRECTION_1;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_2)))
+                return COMBAT_DIRECTION_2;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_UPPER)))
+                return COMBAT_DIRECTION_WIDE_UPPER;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_LOWER)))
+                return COMBAT_DIRECTION_WIDE_LOWER;
+        } else if (down == 1) {
+            if (!(currMask & (1 << COMBAT_DIRECTION_3)))
+                return COMBAT_DIRECTION_3;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_4)))
+                return COMBAT_DIRECTION_4;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_2)))
+                return COMBAT_DIRECTION_2;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_5)))
+                return COMBAT_DIRECTION_5;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_1)))
+                return COMBAT_DIRECTION_1;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_0)))
+                return COMBAT_DIRECTION_0;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_LOWER)))
+                return COMBAT_DIRECTION_WIDE_LOWER;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_UPPER)))
+                return COMBAT_DIRECTION_WIDE_UPPER;
+        } else {
+            if (!(currMask & (1 << COMBAT_DIRECTION_4)))
+                return COMBAT_DIRECTION_4;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_5)))
+                return COMBAT_DIRECTION_5;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_3)))
+                return COMBAT_DIRECTION_3;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_0)))
+                return COMBAT_DIRECTION_0;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_2)))
+                return COMBAT_DIRECTION_2;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_1)))
+                return COMBAT_DIRECTION_1;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_LOWER)))
+                return COMBAT_DIRECTION_WIDE_LOWER;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_UPPER)))
+                return COMBAT_DIRECTION_WIDE_UPPER;
+        }
+    } else if (right == 1) {
+        if (up == 1) {
+            if (!(currMask & (1 << COMBAT_DIRECTION_0)))
+                return COMBAT_DIRECTION_0;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_1)))
+                return COMBAT_DIRECTION_1;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_5)))
+                return COMBAT_DIRECTION_5;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_2)))
+                return COMBAT_DIRECTION_2;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_4)))
+                return COMBAT_DIRECTION_4;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_3)))
+                return COMBAT_DIRECTION_3;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_UPPER)))
+                return COMBAT_DIRECTION_WIDE_UPPER;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_LOWER)))
+                return COMBAT_DIRECTION_WIDE_LOWER;
+        } else if (down == 1) {
+            if (!(currMask & (1 << COMBAT_DIRECTION_2)))
+                return COMBAT_DIRECTION_2;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_1)))
+                return COMBAT_DIRECTION_1;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_3)))
+                return COMBAT_DIRECTION_3;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_0)))
+                return COMBAT_DIRECTION_0;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_5)))
+                return COMBAT_DIRECTION_5;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_4)))
+                return COMBAT_DIRECTION_4;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_LOWER)))
+                return COMBAT_DIRECTION_WIDE_LOWER;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_UPPER)))
+                return COMBAT_DIRECTION_WIDE_UPPER;
+        } else {
+            if (!(currMask & (1 << COMBAT_DIRECTION_1)))
+                return COMBAT_DIRECTION_1;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_0)))
+                return COMBAT_DIRECTION_0;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_2)))
+                return COMBAT_DIRECTION_2;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_5)))
+                return COMBAT_DIRECTION_5;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_3)))
+                return COMBAT_DIRECTION_3;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_4)))
+                return COMBAT_DIRECTION_4;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_LOWER)))
+                return COMBAT_DIRECTION_WIDE_LOWER;
+            else if (!(currMask & (1 << COMBAT_DIRECTION_WIDE_UPPER)))
+                return COMBAT_DIRECTION_WIDE_UPPER;
+        }
+    }
+    return -1;
+}

@@ -1,12 +1,14 @@
 #ifndef HOMM3_RECRUIT_H
 #define HOMM3_RECRUIT_H
 
+#include "va.h"
+
 #include <string.h>
-#include <va.h>
+
 #include "basemgr.h"
+#include "palette.h"
 #include "slider.h"
 #include "window.h"
-#include "palette.h"
 
 class armyGroup;
 class button;
@@ -97,7 +99,7 @@ extern struct HMENU__* g_recruitSavedMenu;
 
 // The game palette uses indices 31 and 36 for normal and selected recruit
 // borders, index 45 for level-up selection, and indices starting at 64 for players.
-extern TPalette16* g_unnamed6aacb0;
+extern TPalette16* g_systemPalette;
 
 class TRecruitQuickWindow : public heroWindow {
 public:

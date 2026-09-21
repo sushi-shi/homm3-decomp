@@ -1,8 +1,11 @@
 // The quest log is the one reader of the map's two quest pools
 // (NewfullMap's SeerHutList / QuestGuardList vectors).
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "questlogwindow.h"
+
 #include "border.h"
 #include "button.h"
 #include "game.h"
@@ -85,24 +88,6 @@ static void questSliderCallback(int state, heroWindow* parentWindow)
     g_questLogWindow->drawWindow(
         1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\questlogwindow.cpp:81
-DC_ONLY(0x116b6c, 0x6A)
-void TQuestLogWindow::~TQuestLogWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\questlogwindow.cpp:89
-DC_ONLY(0x116bd8, 0xA0)
-void TQuestLogWindow::updateQuestLocator(int i)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x0052e1b0, 0x21, SCALAR_DELETING_DTOR, TQuestLogWindow)
 
@@ -201,20 +186,3 @@ void doQuestLog(int player)
     g_questLogWindow->doModal(0);
     delete g_questLogWindow;
 }
-
-VA(0x0052e6b0, 0x2E)
-const std::string* type_quest::questTextRow()
-{
-    return m_seerHut ? g_questTextA[m_textVariant] : g_questTextB[m_textVariant];
-}
-
-#if 0  // @carcass
-
-// E:\gamedcs\questlogwindow.cpp:78
-DC_ONLY(0x116e28, 0x34)
-void* TQuestLogWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

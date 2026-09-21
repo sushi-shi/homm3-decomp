@@ -26,6 +26,8 @@ public:
         return *this;
     }
     T* get() const { return m_ptr; }
+    // Original: TAutoArrayPtr<char>::release; AutoArrayPtr.h:77, dc 0x5b2d4.
+    T* release() const { m_owns = 0; return m_ptr; }
 
 private:
     mutable unsigned char m_owns;

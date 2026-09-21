@@ -47,7 +47,7 @@ All use the pinned binaries under Wine.
 
 ## 1. Method
 
-1. **Navigation by the atlas.** `evidence/vc6/c2-tu-map.tsv` places
+1. **Navigation by the atlas.** `build/vc6/c2-tu-map.tsv` places
    regasg.c at `0x8941f..0x8cf95` (ICE anchor `0x8b906`) and color.c at
    `0x8e1f7..0x8f5e3` (anchors `0x8e474/0x8e877/0x8e9de`).
    `ghidra_scripts/regasg_probe.py` (read-only over the persisted
@@ -1715,7 +1715,7 @@ constructor still auto-inlines in TCombatWindow; its former explicit inline
 keyword is unnecessary. The emitted vtable has the correct 108-byte extent
 and the two inherited method relocations. Its deleting destructor uses a COFF
 weak alias to the scalar wrapper, whose 33 bytes agree with retail outside the
-two call operands. The existing external widget::vslot12 remains separately
+two call operands. The existing external widget::onSleepChange remains separately
 documented in widget.h; function exactness does not close that missing body.
 
 ### Shared exit state and explicit dialog branches in the hall handler
@@ -1853,3 +1853,142 @@ lifetimes are neutral. The extra index is an evidence-supported source
 hypothesis; it is not a recovered named Dreamcast local. All other cursor
 scores hold. The two `startVals+4` operands resolve to retail's separately
 labelled `const_23d6f4`; they do not represent different table elements.
+
+### Output temporaries bound through VC6's reference extension
+
+A short output lifetime can come from a temporary argument to a mutable
+reference parameter. VC6 accepts `map->getSize(TRmgGridPoint())`; the returned
+reference can then be copied before the full expression ends. This is a
+Microsoft extension, not standard C++ reference binding. Keep the actual
+output-reference ABI instead of replacing it with a hidden value result.
+
+The terrain painter constructor at `0x5b45f0` proves the distinction together
+with both map adapters. An ordinary value-query helper preserves the ABI but
+scores 93.0418%: it consumes 45 inline-budget units, leaving only 1 for the
+shrinking path's `vector::size()` (cost 42). Passing the temporary directly
+restores all 621 bytes, 16 direct calls and the virtual call. A default output
+argument reproduces the same constructor; all seven header consumers retain
+their scores. The four differently named folded STL callees also match their
+retail bodies. This explains the temporary lifetime without a caller block
+or a separate convenience helper. It does not prove whether the original
+source supplied the temporary explicitly or through a default argument.
+
+### Stack-slot sharing has a separate interference graph
+
+<!-- c2-role: function 0x31ef3 ColorStackLocals -->
+<!-- c2-role: function 0x322b9 IndexStackLocals -->
+<!-- c2-role: function 0x49846 AssignStackBins -->
+<!-- c2-role: function 0x49d15 FindOrCreateStackBin -->
+
+These are inferred roles in the pinned SP3 binary, not recovered compiler
+symbol names. `ColorStackLocals` collects stack-resident values, builds their
+interference sets, and calls `AssignStackBins`. The general bin search checks
+size and interference before combining values into shared storage. This is a
+separate operation from choosing EAX/ECX/EDX/ESI/EDI for register live ranges;
+register-assignment traces alone cannot explain a frame-size difference.
+
+A passive trace of `refreshRmgLinePoint` (0x4f9f00) observes 13 stack values
+placed in 12 bins. Caller `oldType` and the inlined selector's `pattern` are
+both four-byte values; the compiler puts them in one bin and assigns each
+owner offset -0xc. Every other bin has one member. Retail keeps the terrain
+at -0xc and the selector output at -0x10, accounting for the 0x58 versus
+0x5c frame. The scalar-return reconstruction therefore has an actual sharing
+difference, rather than an unexplained padding requirement. Caller const/ref
+bindings and an ordinary output-reference terrain getter do not resolve it.
+
+Three passive sites expose the stages: 0x31f24 after indexing, 0x49a44 before
+assigning homes, and 0x32014 before freeing the temporary sets. Their pinned
+bytes are `8bd8a16cc07a10`, `8b44241c85c0`, and `a10cf27910`. Variable records
+are indexed through 0x9f218, with count at 0x9f20c; bin records are five dwords
+under 0x9f228, with count at 0x9f224. The final assignment walk consumes bin
+membership, so empty sets observed afterward do not mean no sharing occurred.
+The private capture/replay preserved all 77,868 object bytes outside the COFF
+timestamp, replayed overwritten instructions and flags, and restored its clean
+shim. This validates this observation, not a complete stack-allocator model.
+
+### Stack-bin priorities have unstable ties
+
+For frames exceeding 128 bytes, the pinned backend sorts the movable stack
+bins at `0x5ac90`. Each key is `floor(1000 * countedReferences / size)`;
+`0x5acdd..0x5ad09` computes and compares those keys. Its middle-pivot
+partition moves only strictly higher keys before the pivot, so equal-priority
+bins are not stable. Declaration order alone does not control final homes.
+
+A passive `connectZones` (`0x543240`) capture preserves all 304,652 object
+bytes outside the COFF timestamp and reproduces the matching function body.
+Its 31 stack values form 19 bins. The map-item pointer has twelve counted
+references and size four; three default-allocator temporaries share a one-byte
+bin with three references. Both keys are 3000. The allocator bin sorts first,
+placing its byte at `-0x19` and the pointer at `-0x20`; retail reverses those
+homes (`-0x1d` and `-0x1c`). All other stack homes and the 96-block instruction
+and branch structure agree; the measured match is 99.9779%. Strict relocation
+comparison still flags the pointer-vector insert versus retail's int-vector
+label, alongside data-label differences ignored by the score.
+
+This explained the residual, not the missing original source. Earlier pointer
+declarations, existing origin accessors, equivalent clearing loops, index
+signedness and returned-coordinate ownership do not remove it. Do not add
+padding, artificial scopes or otherwise unnecessary references to change a
+bin's priority. Recover actual lifetimes and data flow; the sort is a diagnostic
+model, not a substitute for source evidence.
+
+Sharing `connectionIndex` across both zone passes resolves the tie and reaches
+100%. The second pass resets that same index, scans past connected records and
+resumes from the first unconnected record. The 24-state cursor/record-lifetime
+family reproduces the exact candidate independently; borrowed cell-record
+references do not help. A separate 30-state pass-cursor family confirms that
+splitting the map cursor or the object position does not fix this residual.
+No extra operation, artificial scope or compiler pin is needed.
+
+### Attribute register priorities to actual live ranges
+
+A passive trace of `rmgTerrainPainter::repairTerrainPoint` (0x5b5440)
+identifies the painter receiver as the priority-265 group assigned ESI.
+The priority-248 group assigned EDI is the final gap-painting direction
+(candidate +0x593..+0x5e3), not an early coordinate temporary. Earlier
+coordinate captures are separate priority-56 groups. Several distinct values
+therefore occupy the register opposite the painter; this is not one
+whole-function point variable whose declaration merely needs moving.
+
+At global assignment the painter is processed first, with zero costs for
+eligible callee-save registers, and takes ESI. The final direction then has
+ESI excluded and takes EDI. Accumulation tracing accounts for the painter's
+priority as 464 positive contributions minus 199 live-through penalties;
+the direction has 248 positive contributions and no such penalties. Loop
+weighting contributes to these costs. This supports investigating actual
+use/interference and helper boundaries, not renaming or padding locals.
+It does not establish the original retail compiler's intermediate state.
+
+The decision/rewrite sites are C2 RVAs 0x24754 and 0x32526; priority sites
+are 0x22d4c, 0x22d6b and 0x22d99. Capture/replay preserves all 77,868 object
+bytes outside the COFF timestamp and restores the private clean shim.
+The trace records 57 decisions, 302 rewrites and 1,237 priority events.
+It accounts for these two priorities and 48 of 57 groups overall; nine
+have intervening changes outside these sites, so this is not a complete
+allocator replay.
+
+A separate final painting iterator is neutral at MAX 99.1821%. Minimum-gap
+and paint-neighbour helpers, and borrowing the coordinate offset, all produce
+the same alternative function bytes at 98.2293%; they rotate final-block
+scratch registers without correcting the global ESI/EDI roles. Treat these
+as one backend outcome, not independent evidence for each source model.
+
+## Recover shared state before treating register swaps as allocator noise
+
+`BinkManager::playBink` (`0x44dd20`) reaches 100% after restoring the
+48-byte `BinkManagerStruct`, its namespace-global `playingBINK` object, and its
+`unsigned short* screen` member. Dreamcast's member/global records prove
+this layout; retail's field accesses and campaign-preview copies corroborate
+it. The reconstruction had represented the twelve members as separate
+extern globals and the screen as a byte pointer.
+
+With sound enabled before dimension snapshots and global coordinates stored
+before redraw locals, the fragmented model reaches 98.3721%. Both setup
+branches keep X/Y in the opposite EAX/ECX roles from retail, and the final
+bitmap-address additions differ. Scalar/POINT positions, named byte offsets,
+canonical bitmap accessor variants and message lifetimes do not close that
+gap. The combined canonical aggregate and typed `getMap` assignment do:
+all 30 playback blocks and 15 calls agree after fresh delinking. This is a
+measured combined source model, not an isolated claim about which type or
+alias-analysis rule decides register allocation. Preserve the same aggregate
+in consumers and saved state instead of introducing aliases to its fields.

@@ -57,7 +57,7 @@ public:
     slider();
     slider(int x, int y, int w, int h, int id, int num,
            TSliderFunction func, EGraphics graphics, int page,
-           unsigned char hotKey);
+           bool hotKey);
     virtual ~slider();
 
     virtual int main(message& msg);                 // slot 2

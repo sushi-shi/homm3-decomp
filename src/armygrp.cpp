@@ -1,62 +1,43 @@
+#include "text.h"
+#include "va.h"
 #include "includes.h"
-#include <va.h>
+
 #include <algorithm>
+#include <bitset>
 #include <stdlib.h>
 #include <string.h>
-// VC6's own shipped Dinkumware <bitset> - retail links Dinkumware, NOT
-// STLport (P2.3, byte-proven by hero.obj's COMDAT tail and again here:
-// GetMorale's four helper calls are Dinkumware bitset members to the
-// instruction).
-#include <bitset>
-// get_luck_description's Rampart/Fountain-of-Fortune gate calls
-// town::HasBuilding (dc 0x4fab4 line 1499, `mov #21,r5 / mov #1,r6`);
-// see town.h for why the inline's visibility is scoped.
+
 #include "armygrp.h"
-#include "spelldefs.h"
-#include "creaturetype.h"
-#include "game.h"
-#include "hero.h"
-#include "town.h"
+
 #include "advmgr.h"
-#include "castle.h"
+#include "armygrp_split.h"
 #include "border.h"
 #include "button.h"
+#include "castle.h"
+#include "creaturetype.h"
+#include "exec.h"
+#include "game.h"
+#include "hero.h"
 #include "iconwdgt.h"
-#include "widget.h"
+#include "kb.h"
+#include "message.h"
+#include "misc.h"
+#include "spelldefs.h"
 #include "textntry.h"
 #include "textwdgt.h"
-#include "message.h"
-#include "kb.h"
+#include "town.h"
+#include "townmgr.h"
+#include "widget.h"
 #include "winmgr.h"
-#include "exec.h"
-#include "misc.h"
-#include "armygrp_split.h"
 
-// DC includes.h:134 names limit at the split-window and army-rating
-// sites below. homm3_limit.h owns its shared reference-selector chain.
+// Retail table initializers, in the layouts used by their named consumers.
+DATA(0x00682910) const char* g_creatureBackgrounds[9] = { "CrBkgCas.pcx", "CrBkgRam.pcx", "CrBkgTow.pcx", "CrBkgInf.pcx", "CrBkgNec.pcx", "CrBkgDun.pcx", "CrBkgStr.pcx", "CrBkgFor.pcx", "CrBkgEle.pcx" };
 
 DATA(0x00693878)
 static TSplitWindow* g_splitWindow;
 
 // Runtime-loaded combat-stat description lines. Their storage addresses and
 // uses are retail-proven here; the text-resource loader owns the definitions.
-DATA(0x006a5384) extern const char* g_cursedGroundLuckText;
-DATA(0x006a5388) extern const char* g_hourglassLuckFormat;
-DATA(0x006a538c) extern const char* g_cloverFieldLuckText;
-DATA(0x006a5828) extern const char* g_cursedGroundMoraleText;
-DATA(0x006a582c) extern const char* g_noMoraleCreatureText;
-DATA(0x006a5830) extern const char* g_alignmentMoraleFormat;
-DATA(0x006a5834) extern const char* g_sameAlignmentMoraleText;
-DATA(0x006a5838) extern const char* g_undeadMoraleText;
-DATA(0x006a583c) extern const char* g_angelMoraleFormat;
-DATA(0x006a5840) extern const char* g_enemyCreatureStatFormat;
-DATA(0x006a5844) extern const char* g_spiritOppressionMoraleFormat;
-DATA(0x006a5848) extern const char* g_alwaysPositiveMoraleFormat;
-DATA(0x006a584c) extern const char* g_otherStatModifiersFormat;
-DATA(0x006a5854) extern const char* g_holyGroundEvilMoraleText;
-DATA(0x006a5858) extern const char* g_holyGroundGoodMoraleText;
-DATA(0x006a585c) extern const char* g_evilFogGoodMoraleText;
-DATA(0x006a5860) extern const char* g_evilFogEvilMoraleText;
 
 inline void TSplitWindow::updateSplitArmy(unsigned char update)
 {
@@ -341,28 +322,6 @@ int TSplitWindow::windowHandler(message& msg)
         updateSplitArmy(1);
     return MESSAGE_DISPATCH_CONSUME;
 }
-
-#if 0  // @carcass
-
-// LINKER-ELIMINATED in retail (inlined at their single call sites,
-// then dropped by /OPT:REF - the HasSomeUndead pattern):
-//   E:\gamedcs\armygrp.cpp:62   TSplitWindow::UpdateSplitArmy(uchar)
-//     -> inlined into SplitSliderCallback (0x4496c0)
-DC_ONLY(0x4db08, 0x80)
-void TSplitWindow::updateSplitArmy(unsigned char bUpdate)
-{
-    // @stub
-}
-
-//   E:\gamedcs\armygrp.cpp:208  TSplitWindow::SetRolloverText(int)
-//     -> reconstructed above and inlined into WindowHandler (0x44a180)
-DC_ONLY(0x4e388, 0xA0)
-void TSplitWindow::setRolloverText(int codeY)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x0044a460, 0x55)
 const std::bitset<9>& armyGrpFn0044A460()
@@ -692,16 +651,13 @@ int armyGroup::getAlignments(unsigned char* alignments) const
     return count;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\armygrp.cpp:748
-DC_ONLY(0x4ec98, 0x16)
-int armyGroup::GetHomogeneityMoraleAdjust() const
+// Original: armyGroup::GetHomogeneityMoraleAdjust; armygrp.cpp:748, dc 0x4ec98
+// Complete getMorale additionally groups allied alignments before applying
+// this adjustment, so that path keeps its explicit alignment census.
+int armyGroup::getHomogeneityMoraleAdjust() const
 {
-    // @stub
+    return 2 - getAlignments(0);
 }
-
-#endif  // @carcass
 
 VA(0x0044ac50, 0x2E)  // dc 0x4ecb0
 int armyGroup::canJoin(int monType) const
@@ -774,16 +730,32 @@ void armyGroup::swap(int srcIndex, armyGroup* destGroup, int destIndex)
     destGroup->m_numTroops[destIndex] = troops;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\armygrp.cpp:885
-DC_ONLY(0x4ee08, 0x180)
-void armyGroup::DamageGroup(float casualtyRate)
+// Original: armyGroup::DamageGroup; armygrp.cpp:885, dc 0x4ee08
+void armyGroup::damageGroup(float casualtyRate)
 {
-    // @stub
+    int limit = static_cast<int>(casualtyRate * 100.0);
+    unsigned char first = 1;
+    for (int slot = 0; slot < ARMY_GROUP_SLOT_COUNT; ++slot) {
+        if (m_armies[slot] != CREATURE_NONE) {
+            int casualties = 0;
+            for (int troop = 0; troop < m_numTroops[slot]; ++troop) {
+                if (sRandom(0, 100) < limit)
+                    ++casualties;
+            }
+            if (first && casualties == m_numTroops[slot]
+                && casualtyRate < 0.999)
+                --casualties;
+            m_numTroops[slot] -= casualties;
+            if (m_numTroops[slot] <= 0 || casualtyRate >= 1.0) {
+                m_numTroops[slot] = 0;
+                m_armies[slot] = CREATURE_NONE;
+            }
+            first = 0;
+        } else {
+            m_numTroops[slot] = 0;
+        }
+    }
 }
-
-#endif  // @carcass
 
 VA(0x0044ada0, 0x16)  // dc 0x4ef88
 int armyGroup::getCreatureTotal() const
@@ -811,22 +783,22 @@ VA(0x0044ade0, 0x79)  // dc 0x4efec
 const char* armyGroup::getArmySizeName(int howMany, int nameSet)
 {
     if (howMany < 5)
-        return g_apszArmySizeNames[0][nameSet];
+        return g_armySizeNames[0][nameSet];
     if (howMany < 10)
-        return g_apszArmySizeNames[1][nameSet];
+        return g_armySizeNames[1][nameSet];
     if (howMany < 20)
-        return g_apszArmySizeNames[2][nameSet];
+        return g_armySizeNames[2][nameSet];
     if (howMany < 50)
-        return g_apszArmySizeNames[3][nameSet];
+        return g_armySizeNames[3][nameSet];
     if (howMany < 100)
-        return g_apszArmySizeNames[4][nameSet];
+        return g_armySizeNames[4][nameSet];
     if (howMany < 250)
-        return g_apszArmySizeNames[5][nameSet];
+        return g_armySizeNames[5][nameSet];
     if (howMany < 500)
-        return g_apszArmySizeNames[6][nameSet];
+        return g_armySizeNames[6][nameSet];
     if (howMany < 1000)
-        return g_apszArmySizeNames[7][nameSet];
-    return g_apszArmySizeNames[8][nameSet];
+        return g_armySizeNames[7][nameSet];
+    return g_armySizeNames[8][nameSet];
 }
 
 VA(0x0044ae60, 0x29A)  // dc 0x4f078
@@ -1178,7 +1150,7 @@ std::string armyGroup::getMoraleDescription(
     unsigned char groupAlignments) const
 {
     if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
-        return g_cursedGroundMoraleText;
+        return g_moraleInfo[27];
 
     // NOT a named `const TCreatureTypeTraits&`: retail's CSE keeps the
     // 116-byte OFFSET (it stores the `shl eax,2` result, not an address)
@@ -1188,7 +1160,7 @@ std::string armyGroup::getMoraleDescription(
     // `add` per use, a stack slot of its own, and the table base loaded
     // BEFORE the index chain rather than after it.
     if (g_creatureTypeTraits[creature].m_attributes & g_ctaNoMorale)
-        return g_noMoraleCreatureText;
+        return g_moraleInfo[28];
 
     int currentMorale = getMorale(
         ownerHero, ownerTown, otherHero, otherGroup, 0,
@@ -1221,12 +1193,12 @@ std::string armyGroup::getMoraleDescription(
 
         holyGroundGood:
             --morale;
-            result += g_holyGroundGoodMoraleText;
+            result += g_moraleInfo[39];
             goto moraleTerrainDone;
 
         holyGroundEvil:
             ++morale;
-            result += g_holyGroundEvilMoraleText;
+            result += g_moraleInfo[38];
             goto moraleTerrainDone;
         }
         if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
@@ -1249,12 +1221,12 @@ std::string armyGroup::getMoraleDescription(
 
         evilFogGood:
             ++morale;
-            result += g_evilFogGoodMoraleText;
+            result += g_moraleInfo[40];
             goto moraleTerrainDone;
 
         evilFogEvil:
             --morale;
-            result += g_evilFogEvilMoraleText;
+            result += g_moraleInfo[41];
             goto moraleTerrainDone;
         }
 
@@ -1278,21 +1250,21 @@ std::string armyGroup::getMoraleDescription(
 
     if (numAlignments >= 3) {
         int penalty = numAlignments >= 5 ? -3 : 2 - numAlignments;
-        result += formatString(g_alignmentMoraleFormat,
+        result += formatString(g_moraleInfo[29],
                                 numAlignments, penalty);
     } else if (numAlignments == 1) {
-        result += g_sameAlignmentMoraleText;
+        result += g_moraleInfo[30];
     }
 
     if (hasSomeUndead())
-        result += g_undeadMoraleText;
+        result += g_moraleInfo[31];
 
     TCreatureType angelType;
     if (isMember(CREATURE_ANGEL) || isMember(CREATURE_ARCHANGEL)) {
         angelType = CREATURE_ANGEL;
         if (isMember(CREATURE_ARCHANGEL))
             angelType = CREATURE_ARCHANGEL;
-        result += formatString(g_angelMoraleFormat,
+        result += formatString(g_moraleInfo[32],
                                 getArmyName(angelType, 2));
     }
 
@@ -1304,7 +1276,7 @@ std::string armyGroup::getMoraleDescription(
             dragonType = CREATURE_GHOST_DRAGON;
         if (dragonType != CREATURE_NONE)
             result += formatString(
-                g_enemyCreatureStatFormat,
+                g_moraleInfo[33],
                 getArmyName(dragonType, 2));
     }
 
@@ -1321,7 +1293,7 @@ std::string armyGroup::getMoraleDescription(
     if (creature == CREATURE_MINOTAUR
         || creature == CREATURE_MINOTAUR_KING) {
         if (currentMorale < 1) {
-            result += formatString(g_alwaysPositiveMoraleFormat,
+            result += formatString(g_moraleInfo[35],
                                     getArmyName(creature, 2));
             currentMorale = 1;
         }
@@ -1333,7 +1305,7 @@ std::string armyGroup::getMoraleDescription(
                             ARTIFACT_SPIRIT_OF_OPPRESSION))) {
         if (currentMorale > 0) {
             result = formatString(
-                g_spiritOppressionMoraleFormat,
+                g_moraleInfo[34],
                 g_artifactTraits[ARTIFACT_SPIRIT_OF_OPPRESSION].m_name);
             currentMorale = 0;
         }
@@ -1341,7 +1313,7 @@ std::string armyGroup::getMoraleDescription(
 
     morale -= currentMorale;
     if (morale)
-        result += formatString(g_otherStatModifiersFormat, morale);
+        result += formatString(g_moraleInfo[36], morale);
 
     return result;
 }
@@ -1439,6 +1411,8 @@ std::string armyGroup::getMoraleDescription(
 // conditional branches and symbolic branch targets. A generated one-line
 // town-type accessor reaches the same bytes, but no such accessor is attested
 // in the Dreamcast class record; the ordinary local is retained instead.
+// Dreamcast 0x4fab4:1499 calls town::HasBuilding for the Rampart
+// Fountain of Fortune check (building 21, built-only flag 1).
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::getLuckDescription(
     TCreatureType creature, int luck, const hero* ourHero,
@@ -1446,13 +1420,13 @@ std::string armyGroup::getLuckDescription(
     const armyGroup* enemyGroup, int magicTerrain) const
 {
     if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
-        return g_cursedGroundLuckText;
+        return g_luckInfo[22];
 
     if ((ourHero && ourHero->isWieldingArtifact(
                         ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))
         || (enemyHero && enemyHero->isWieldingArtifact(
                            ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))) {
-        return formatString(g_hourglassLuckFormat,
+        return formatString(g_luckInfo[23],
                              g_artifactTraits[
                                  ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR].m_name);
     }
@@ -1492,7 +1466,7 @@ std::string armyGroup::getLuckDescription(
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
             luck -= 2;
-            result.append(g_cloverFieldLuckText);
+            result.append(g_luckInfo[24]);
             break;
         default:
             break;
@@ -1508,7 +1482,7 @@ std::string armyGroup::getLuckDescription(
         if (enemyGroup->isMember(CREATURE_ARCH_DEVIL))
             devilType = CREATURE_ARCH_DEVIL;
         if (devilType != CREATURE_NONE)
-            result += formatString(g_enemyCreatureStatFormat,
+            result += formatString(g_moraleInfo[33],
                                     getArmyName(devilType, 2));
     }
 
@@ -1529,7 +1503,7 @@ std::string armyGroup::getLuckDescription(
 
     luck -= currentLuck;
     if (luck)
-        result += formatString(g_otherStatModifiersFormat, luck);
+        result += formatString(g_moraleInfo[36], luck);
 
     return result;
 }
@@ -1546,7 +1520,7 @@ TTerrainType armyGroup::getNativeTerrain() const
             alignment = -1;
         else
             alignment = g_creatureTypeTraits[m_armies[i]].m_townType;
-        TTerrainType terrain = g_nativeTerrains[alignment];
+        TTerrainType terrain = townManager::getNativeTerrain(alignment);
         if (native != TERRAIN_NONE) {
             if (terrain != native)
                 return TERRAIN_NONE;
@@ -1555,17 +1529,6 @@ TTerrainType armyGroup::getNativeTerrain() const
     }
     return native;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\armygrp.cpp:131
-DC_ONLY(0x4fd54, 0x34)
-void* TSplitWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // COMDAT pairing: bitset<9>::reference::operator=, agreement 0.922; the
 // neighbouring 0x4c680 row scores 0.600 against the same COMDAT.

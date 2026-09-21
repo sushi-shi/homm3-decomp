@@ -3,14 +3,17 @@
 // The Dreamcast build contains no random-map generator compiland. Function
 // ownership, field layout, helper boundaries, and call/expansion decisions in
 // this unit therefore come directly from the retail x86 cluster.
-#include <va.h>
-#include <stdlib.h>
-#include "rmg_terrain.h"
-#include "exceptions.h"
-#include "tiles.h"
+#include "va.h"
 #include "includes.h"
 
-DATA(0x00642BD8) extern TRmgTerrainRule* const g_rmgTerrainRules[];
+#include <stdlib.h>
+
+#include "rmg_terrain.h"
+
+#include "exceptions.h"
+#include "tiles.h"
+// Vtable 0x642cb0 slot 2 shares the false/ret-4 body at 0x5543f0.
+unsigned char TRmgTableTerrainRule::isSpecialFrame(int) { return 0; }
 
 // Initializer-list copy of the point: the body assignment costs the
 // walker's first neighbour pass its retained compound add (78.03 against
@@ -59,43 +62,27 @@ TRmgGridRectangle::TRmgGridRectangle(const TRmgGridPoint& origin, const TRmgGrid
 {
 }
 
-// Retail 0x4f9f00: preserve the original tile proxy across neighbour queries,
-// select an id/flip pair, and draw a random frame only if its pattern or flips
-// differ. The eight-direction table starts at north, unlike g_rmgDirections.
-// The current tile's terrain field survives; the adapter owns layer updates.
-// Initial source retains extra grid-copy calls while expanding the neighbour's
-// compound add and proxy call. Its value-return tile getter also makes a
-// three-dword copy after the virtual output-reference call; retail has none.
-// Explicit tile output, assigned proxy coordinates and assignment-built grid
-// translation raise 51.0615% to 63.9923%, preserving every existing exact RMG
-// row and improving terrain paintPoint too. All 384 construction/return/query
-// combinations were tested; the remaining proxy and arithmetic calls still
-// need recovery. Keep their canonical boundaries rather than flattening them.
-// Shared grid/proxy controls can restore the += call (70.2846%) but introduce
-// unwanted arithmetic calls in terrain painting. Five ordinary operator+
-// placements add no gain; parameter-by-value proxy construction also loses.
-// The retained calls at 0x4f9f60/0x4f9f77/0x4f9f86 (TPoint add, grid
-// conversion, proxy factory) sit where this body's own budget is above
-// 700, so retail expands the neighbour query from a nested context: an
-// ordinary neighbour-land helper on the painter interface holds the sum,
-// the conversion and the factory, and its budget divides by the sites
-// after it, which the current tile's frame and flip accessors in the
-// pattern test supply (71.92 -> 91.48%; a tile-returning neighbour
-// factory 83.55%, no accessors 79.75%, getters and setters together
-// 86.74%). Retail then keeps the selected pattern in EDI across the
-// rand() call, which the output variable itself cannot do once its
-// address has been passed: a plain copy taken after the tile read holds
-// it (97.35%; the copy before the read 96.75%, a range reference 94.74%,
-// the flip locals declared first 91.5%, register 91.5%). Residual: the
-// point and painter parameters take ESI/EDI in the opposite roles from
-// retail; a direct proxy construction, reading the land through the
-// painter first, building the mask first, and accessor coordinates do
-// not swap them (84-97%).
-// Follow-up selection ownership/lifetime/decision forms (60 states) and
-// table-interface/receiver/snapshot forms (60 states) preserve 97.3461%.
-// All six direct calls remain correct; the selected-output copy is still
-// required. A two-state painter pointer/reference contract produces identical
-// function bytes across all seven consumers. No speculative API is retained.
+// Retail 0x4f9f00 keeps one tile proxy across neighbour queries and selects
+// a pattern/flip pair before reading the current tile. A new random frame is
+// drawn only when the pattern or flips differ. Its ordinary neighbour helper
+// supplies nested TPoint-add, grid-conversion and proxy-factory call sites.
+// Returning the selected integer through this ordinary overload preserves the
+// canonical output-reference selector and the two independent byte outputs.
+// It recovers retail's register roles and selected-pattern comparison; a
+// returned aggregate packs the flips together and changes their lifetimes.
+// No DC counterpart: these helper boundaries are retail-derived hypotheses.
+// Residual 99.7462%: all instructions/calls align, but the selector output
+// shares the old-terrain slot; retail keeps both and has a 0x5c vs 0x58 frame.
+// Value/const-value/const-reference caller bindings do not separate the slots.
+int selectRmgLinePattern(
+    const unsigned char* neighbours, const TRmgLinePatternTable* table,
+    unsigned char& flipX, unsigned char& flipY)
+{
+    int pattern;
+    selectRmgLinePattern(neighbours, table, pattern, flipX, flipY);
+    return pattern;
+}
+
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -113,15 +100,13 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
     }
     TRmgLinePatternTable* table = painter->getPattern(oldType);
     unsigned char flipX, flipY;
-    int selected;
-    selectRmgLinePattern(matches, table, selected, flipX, flipY);
+    int selected = selectRmgLinePattern(matches, table, flipX, flipY);
     rmgTerrainTile current;
     tile.getTile(current);
-    int pattern = selected;
-    if (table->m_patterns[current.getFrame()] != pattern
+    if (table->m_patterns[current.getFrame()] != selected
         || current.getFlipX() != flipX || current.getFlipY() != flipY) {
-        unsigned int frame = table->m_ranges[pattern].m_firstIndex
-            + rand() % table->m_ranges[pattern].m_valueCount;
+        unsigned int frame = table->m_ranges[selected].m_firstIndex
+            + rand() % table->m_ranges[selected].m_valueCount;
         current.m_frame = frame;
         current.m_flipX = flipX;
         current.m_flipY = flipY;
@@ -706,19 +691,21 @@ int __fastcall selectTerrainTransition(
     return 0;
 }
 
-// The short output lifetime can arise from the expanded value-size helper;
-// exact stack reuse did not prove the artificial block in the earlier model.
-// Residual (35.3347%): the value helper expands, but vector::insert(count,value)
-// remains a call where retail expands it. Both _Tree::_Init calls and virtual
-// slot 3 remain in order. Coordinate getters/fields, named value snapshots,
-// member initialization and an ordinary size/storage helper did not recover
-// that nested boundary. Scoped output is retained only as an experiment control.
+// The explicit output temporary uses VC6's non-const-reference binding
+// extension. The returned reference is copied before that temporary dies at
+// the full-expression boundary, matching retail's short output lifetime.
+// This preserves virtual slot 3's proven ABI and both exact adapter bodies.
+// All 621 bytes, 16 direct calls and virtual slot 3 reproduce; a default
+// output argument gives the same result. A separate value-query helper uses
+// inline budget and leaves the shrinking size() call retained (93.0418%).
+// No separate
+// convenience helper or artificial caller scope is needed.
 VA(0x005B45F0, 0x26D)
 rmgTerrainPainter::rmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
     : m_adapter(newAdapter), m_paintTerrain(terrain), m_transitionStrength(strength)
 {
-    m_size = m_adapter->getSize();
+    m_size = m_adapter->getSize(TRmgGridPoint());
     m_packedCells.resize(getWidth() * getHeight(), TRmgPackedTerrainCell());
 }
 
@@ -803,7 +790,7 @@ void rmgTerrainPainter::paintBaseTile(const TRmgGridPoint& point)
 // form refuses it while the final insert's pair constructor still expands,
 // closing paintPoint (2026-09-12). Reading the configured terrain as the
 // field, or swapping the operands, drops the caller below 90%.
-int rmgTerrainPainter::getPaintTerrain() const
+const int& rmgTerrainPainter::getPaintTerrain() const
 {
     return m_paintTerrain;
 }
@@ -1032,6 +1019,14 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // Value accessors for the unchanged coordinate restore retail's fresh scalar
 // copy and terrain reload, but retain the reversed ESI/EDI roles and change
 // scheduling (85.9764..93.6307%). The lifetime mechanism is insufficient alone.
+// Query-result widths, owned scalar results, shared gap counters, workspace
+// lifetimes and gap-record construction/compaction leave 93.6307% unchanged.
+// Passive C2 tracing reproduces the whole object and observes 227 temporary
+// bindings; it does not identify the cause of the painter/point allocation.
+// Returning configured terrain by const reference, together with value
+// coordinate accessors in both gap predicates, reaches 99.1821%. All 1576
+// bytes align except an ESI/EDI permutation; frame, scalar copies and all
+// 46 calls agree. The accessor refers to the painter member, not a temporary.
 VA(0x005B5440, 0x628) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
@@ -1250,8 +1245,8 @@ unsigned char rmgTerrainPainter::isHorizontalGap(
     const TRmgGridPoint& point, int terrain)
 {
     return point.m_x > 0 && point.m_x < getWidth() - 1
-        && getTerrain(TRmgGridPoint(point.m_x - 1, point.m_y)) != terrain
-        && getTerrain(TRmgGridPoint(point.m_x + 1, point.m_y)) != terrain;
+        && getTerrain(TRmgGridPoint(point.getX() - 1, point.getY())) != terrain
+        && getTerrain(TRmgGridPoint(point.getX() + 1, point.getY())) != terrain;
 }
 
 VA(0x005B6430, 0x106)
@@ -1259,8 +1254,8 @@ unsigned char rmgTerrainPainter::isVerticalGap(
     const TRmgGridPoint& point, int terrain)
 {
     return point.m_y > 0 && point.m_y < getHeight() - 1
-        && getTerrain(TRmgGridPoint(point.m_x, point.m_y - 1)) != terrain
-        && getTerrain(TRmgGridPoint(point.m_x, point.m_y + 1)) != terrain;
+        && getTerrain(TRmgGridPoint(point.getX(), point.getY() - 1)) != terrain
+        && getTerrain(TRmgGridPoint(point.getX(), point.getY() + 1)) != terrain;
 }
 
 // Cardinal neighbours use coordinates clamped to the map edge. A diagonal
@@ -1416,12 +1411,12 @@ void rmgTerrainPainter::buildNeighbourKinds(
     }
 }
 
-// Both diagonal residuals are the upper clamp comparison: retail uses
-// CMP value,maximum / JG, while canonical tLimit uses the reverse / JL.
-// Changing shared tLimit to value > maximum restores both callers, but loses
-// six exact rows: retained tLimit, heroQuickView, monsterQuickView, armyGroup
-// split, splitwindow and quicktowncenter. Keep its proven maximum < value
-// body; the identity of this Complete-only RMG clamp remains unresolved.
+// These Complete-only diagonal callers retain the opposite upper-clamp
+// operand orientation under canonical tLimit. Spelling the comparison as
+// value > maximum makes these two callers exact but regresses the retained
+// helper and several Dreamcast-proven limit callers, so keep the shared helper
+// canonical and recover the caller-specific compiler state separately.
+// Min/max compositions do not recover these bodies.
 VA(0x005B6BA0, 0x24C)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
@@ -1665,3 +1660,103 @@ bool operator<(const TRmgCoordinatePoint<Coordinate>& left,
 {
     return left.getY() < right.getY() || (left.getY() == right.getY() && left.getX() < right.getX());
 }
+
+// Complete terrain data, read from the pinned retail image. The initializer
+// calls at 0x5b3b60..0x5b3da0 prove entry counts, arguments and object order;
+// the table at 0x642bd8 proves terrain-index order. Names are role-derived.
+DATA(0x006424A8)
+const TRmgTerrainTransitionEntry g_rmgTerrainPatterns[48] = {
+    {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0},
+    {0, 0, 0}, {0, 0, 0}, {8, 0, 0}, {8, 0, 0}, {8, 1, 0}, {8, 1, 0},
+    {8, 0, 1}, {8, 0, 1}, {8, 1, 1}, {8, 1, 1}, {9, 0, 0}, {9, 0, 0},
+    {9, 1, 0}, {9, 1, 0}, {10, 0, 0}, {10, 0, 0}, {10, 0, 1}, {10, 0, 1},
+    {11, 0, 0}, {11, 0, 0}, {11, 1, 0}, {11, 1, 0}, {11, 0, 1}, {11, 0, 1},
+    {11, 1, 1}, {11, 1, 1}, {12, 0, 0}, {12, 0, 0}, {12, 1, 0}, {12, 1, 0},
+    {12, 0, 1}, {12, 0, 1}, {12, 1, 1}, {12, 1, 1}, {13, 0, 0}, {13, 0, 0},
+    {13, 1, 0}, {13, 1, 0}, {13, 0, 1}, {13, 0, 1}, {13, 1, 1}, {13, 1, 1},
+};
+
+DATA(0x00642628)
+static const TRmgTerrainPatternEntry g_rmgLandPatternEntries[79] = {
+    {2, 0}, {2, 0}, {2, 0}, {2, 0}, {3, 0}, {3, 0},
+    {3, 0}, {3, 0}, {4, 0}, {4, 0}, {4, 0}, {4, 0},
+    {5, 0}, {5, 0}, {5, 0}, {5, 0}, {6, 0}, {6, 0},
+    {7, 0}, {7, 0}, {8, 0}, {8, 0}, {8, 0}, {8, 0},
+    {9, 0}, {9, 0}, {9, 0}, {9, 0}, {10, 0}, {10, 0},
+    {10, 0}, {10, 0}, {11, 0}, {11, 0}, {11, 0}, {11, 0},
+    {12, 0}, {12, 0}, {13, 0}, {13, 0}, {14, 0}, {15, 0},
+    {16, 0}, {17, 0}, {18, 0}, {19, 0}, {20, 0}, {21, 0},
+    {22, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
+    {0, 0}, {0, 0}, {0, 0}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {23, 0}, {24, 0}, {25, 0}, {26, 0}, {28, 0},
+    {27, 0},
+};
+
+DATA(0x006428A0)
+static const TRmgTerrainPatternEntry g_rmgDirtPatternEntries[46] = {
+    {8, 0}, {8, 0}, {8, 0}, {8, 0}, {9, 0}, {9, 0},
+    {9, 0}, {9, 0}, {10, 0}, {10, 0}, {10, 0}, {10, 0},
+    {11, 0}, {11, 0}, {11, 0}, {11, 0}, {12, 0}, {12, 0},
+    {13, 0}, {13, 0}, {16, 0}, {0, 0}, {0, 0}, {0, 0},
+    {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {24, 0},
+};
+
+DATA(0x00642A10)
+static const TRmgTerrainPatternEntry g_rmgSandPatternEntries[24] = {
+    {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
+    {0, 0}, {0, 0}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+    {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1}, {0, 1},
+};
+
+DATA(0x00642AD0)
+static const TRmgTerrainPatternEntry g_rmgWaterPatternEntries[33] = {
+    {8, 0}, {8, 0}, {8, 0}, {8, 0}, {9, 0}, {9, 0},
+    {9, 0}, {9, 0}, {10, 0}, {10, 0}, {10, 0}, {10, 0},
+    {11, 0}, {11, 0}, {11, 0}, {11, 0}, {12, 0}, {12, 0},
+    {13, 0}, {13, 0}, {16, 0}, {0, 0}, {0, 0}, {0, 0},
+    {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
+    {0, 0}, {0, 0}, {0, 0},
+};
+
+DATA(0x006A48D0)
+static TRmgPatternTerrainRule g_rmgDirtRule(1, 1, 50, 46, g_rmgDirtPatternEntries);
+VA_COMPGEN(0x005B3B60, 0x23, STATIC_CTOR, g_rmgDirtRule)
+DATA(0x006A44F8)
+static TRmgPatternTerrainRule g_rmgSandRule(0, 1, 70, 24, g_rmgSandPatternEntries);
+VA_COMPGEN(0x005B3BA0, 0x23, STATIC_CTOR, g_rmgSandRule)
+DATA(0x006A3D88)
+static TRmgPatternTerrainRule g_rmgGrassRule(1, 1, 50, 79, g_rmgLandPatternEntries);
+VA_COMPGEN(0x005B3BE0, 0x23, STATIC_CTOR, g_rmgGrassRule)
+DATA(0x006A3F70)
+static TRmgPatternTerrainRule g_rmgSnowRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+VA_COMPGEN(0x005B3C20, 0x23, STATIC_CTOR, g_rmgSnowRule)
+DATA(0x006A46E0)
+static TRmgPatternTerrainRule g_rmgSwampRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+VA_COMPGEN(0x005B3C60, 0x23, STATIC_CTOR, g_rmgSwampRule)
+DATA(0x006A4AB8)
+static TRmgPatternTerrainRule g_rmgRoughRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+VA_COMPGEN(0x005B3CA0, 0x23, STATIC_CTOR, g_rmgRoughRule)
+DATA(0x006A5070)
+static TRmgPatternTerrainRule g_rmgSubterraneanRule(1, 1, 60, 79, g_rmgLandPatternEntries);
+VA_COMPGEN(0x005B3CE0, 0x23, STATIC_CTOR, g_rmgSubterraneanRule)
+DATA(0x006A4E88)
+static TRmgPatternTerrainRule g_rmgLavaRule(1, 1, 80, 79, g_rmgLandPatternEntries);
+VA_COMPGEN(0x005B3D20, 0x23, STATIC_CTOR, g_rmgLavaRule)
+DATA(0x006A4CA0)
+static TRmgPatternTerrainRule g_rmgWaterRule(0, 0, 0, 33, g_rmgWaterPatternEntries);
+VA_COMPGEN(0x005B3D60, 0x23, STATIC_CTOR, g_rmgWaterRule)
+DATA(0x006A48C8)
+static TRmgTableTerrainRule g_rmgRockRule;
+
+DATA(0x00642BD8)
+TRmgTerrainRule* const g_rmgTerrainRules[10] = {
+    &g_rmgDirtRule, &g_rmgSandRule, &g_rmgGrassRule, &g_rmgSnowRule,
+    &g_rmgSwampRule, &g_rmgRoughRule, &g_rmgSubterraneanRule,
+    &g_rmgLavaRule, &g_rmgWaterRule, &g_rmgRockRule
+};

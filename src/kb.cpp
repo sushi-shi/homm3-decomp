@@ -1,37 +1,40 @@
-#include <va.h>
-#include <windows.h>
+#include "va.h"
+#include "homm3_minmax.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
+
 #include "kb.h"
-#include "seerhut.h"
-#include "game.h"
-#include "textresource.h"
+
 #include "advmgr.h"
 #include "artifact.h"
 #include "binkmanager.h"
 #include "bitmap16.h"
 #include "border.h"
 #include "button.h"
-#include "campaignbrief.h"
 #include "campaign.h"
+#include "campaignbrief.h"
 #include "campaignwindow.h"
 #include "castle.h"
-#include "command.h"
 #include "cmbtmgr.h"
+#include "command.h"
 #include "creaturetype.h"
 #include "csprite.h"
 #include "cursor.h"
 #include "customcampaign.h"
 #include "customcampaignwindow.h"
 #include "dialogbox.h"
-#include "kbwin.h"
 #include "exec.h"
+#include "findpath.h"
 #include "font.h"
+#include "game.h"
 #include "gametypewindow.h"
 #include "hiscore.h"
 #include "iconwdgt.h"
 #include "inputmgr.h"
+#include "kbwin.h"
 #include "mainmenu.h"
 #include "message.h"
 #include "misc.h"
@@ -39,31 +42,72 @@
 #include "multiplayerwindow.h"
 #include "newgame.h"
 #include "palette.h"
+#include "philai.h"
 #include "prefs.h"
 #include "remote.h"
 #include "resourcemanager.h"
+#include "sample.h"
 #include "savegame.h"
+#include "seerhut.h"
 #include "singleselectionwindow.h"
 #include "smackmgr.h"
-#include "sample.h"    // TResourceHandle<sample>::~TResourceHandle calls resource::Dispose
 #include "soundmgr.h"
 #include "sskilltraits.h"
-#include "timer.h"
 #include "text.h"
-#include "textwdgt.h"
+#include "textresource.h"
 #include "textscroller.h"
-#include "winmgr.h"
-#include "wingraph.h"
-#include "findpath.h"
-// GameUnsaved polls the town manager's baseManager status, so kb.obj is
-// one of the consumers that needs townmgr.h's guarded class prefix.
+#include "textwdgt.h"
+#include "timer.h"
 #include "townmgr.h"
+#include "wingraph.h"
+#include "winmgr.h"
 
-// E:\gamedcs\includes.h:97,114. Dreamcast retains calls to these two
-// by-value wrappers from type_dialog_icon::set. Retail expands them and
-// selects an operand address before loading the result, proving the nested
-// reference-returning VC6 helper rather than a plain ternary or Win32 macro.
-#include "homm3_minmax.h"
+// Initial contents recovered from the pinned Complete image.
+DATA(0x0067f558) const float g_mapScoreDifficultyFactor[5] = { 0.800000011920929f, 1.0f, 1.2999999523162842f, 1.600000023841858f, 2.0f };
+
+// Original gText is 768 bytes in DC; retail's next datum starts at +0x300.
+DATA(0x006973d8) char g_text[768];
+// gTimers: ten shared deadlines; button::Select writes slot 2 at 0x6989a0.
+DATA(0x00698998) unsigned long g_timers[10];
+DATA(0x006985a8) CTimer g_globalTimer(0);
+DATA(0x006972b8) int g_gameOver;
+DATA(0x006783d0) unsigned char g_foregroundApp = 1;
+// Original DC name: giLimitPlayer; InterpretCommandLine initializes the AI player filter.
+DATA(0x006994f0) int g_limitPlayer;
+// Original DC name: gbCheatMenus; the /NWCGRAIL command-line switch.
+DATA(0x00698a34) int g_cheatMenus;
+// Players.pal and game.pal results stored by oldmain, before any dialogs.
+DATA(0x006aaca8) TPalette16* g_playerPalette;
+DATA(0x006aacac) TPalette24* g_playerPalette24;
+DATA(0x006aacb0) TPalette16* g_systemPalette;
+
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x006989f8) unsigned short* g_mapExtra;
+// Original DC name: giTotalHighMem; CheckMem sets it beside giHighMemBuffer.
+DATA(0x006994ec) int g_totalHighMem;
+
+// InitVars loads these five font resources at 0x698a04..0x698a14;
+// smallFont was also declared under the provisional g_unnamed698a08 name.
+DATA(0x00698a04) font* g_tinyFont;
+DATA(0x00698a08) font* g_smallFont;
+DATA(0x00698a0c) font* g_mediumFont;
+DATA(0x00698a10) font* g_bigFont;
+DATA(0x00698a14) font* g_calligraphicFont;
+
+// Manager pointer slots written by InitMainClasses, in its retail call
+// order. Every slot is in the PE zero-fill tail; shutdown owns deletion.
+DATA(0x00699500) executive* g_executive;
+DATA(0x006994e0) inputManager* g_inputManager;
+DATA(0x00699260) mouseManager* g_mouseManager;
+DATA(0x00699280) heroWindowManager* g_windowManager;
+DATA(0x006993c4) soundManager* g_soundManager;
+DATA(0x006994e8) game* g_game;
+DATA(0x00699268) advManager* g_advManager;
+DATA(0x006993d0) combatManager* g_combatManager;
+DATA(0x006994fc) townManager* g_townManager;
+DATA(0x00699284) searchArray* g_searchArray;
+DATA(0x0069928c) philAI* g_philAI;
 
 // type_dialog_icon::set's two Dreamcast min calls and retail's equality exit
 // use the same text-column clamp.
@@ -97,56 +141,59 @@ bool g_inShutDown;
 
 // The loading-screen progress bar, kb.obj's own .bss triple right below
 // PollSound's latch: the backdrop loadbar.pcx, the loadprog.def segment
-// sprite and the number of segments lit (capped at twenty). Names
-// PROVISIONAL - the Dreamcast keeps them file-static.
+// sprite and the number of segments lit (capped at twenty). DC's S_PUB32
+// names are loadBar, progDots and progressCount (data 0x137cc/0x137d0/0x137d4),
+// proving external identities, not the formerly inferred file-static ones.
+// Complete changes the backdrop from Bitmap816 to Bitmap16Bit. Restoring
+// names/linkage is byte-flat across the four helpers and oldmain.
 DATA(0x0069956c)
-static Bitmap16Bit* g_progressBarBack;
+Bitmap16Bit* g_loadBar;
 DATA(0x00699570)
-static CSprite* g_progressBarSprite;
+CSprite* g_progDots;
 DATA(0x00699574)
-static int g_progressBarCount;
+int g_progressCount;
 
 VA(0x004ed230, 0x6A)  // dc 0xdf160
 void drawProgressCount()
 {
-    if (g_progressBarSprite) {
-        for (int i = 0; i < g_progressBarCount; i++) {
-            g_progressBarSprite->draw(0, i, 0, 0,
-                                      g_progressBarSprite->getWidth(),
-                                      g_progressBarSprite->getHeight(),
-                                      g_windowManager->m_screenBitmap,
-                                      395 + i * 18, 548, 0, 0);
-        }
+    if (!g_progDots)
+        return;
+    for (int i = 0; i < g_progressCount; i++) {
+        g_progDots->draw(0, i, 0, 0,
+                         g_progDots->getWidth(),
+                         g_progDots->getHeight(),
+                         g_windowManager->m_screenBitmap,
+                         395 + i * 18, 548, 0, 0);
     }
 }
 
 VA(0x004ed2a0, 0xA7)  // dc 0xdf1dc
-void incProgressBar(unsigned char update)
+void incProgressBar(bool update)
 {
-    if (g_progressBarSprite) {
-        g_progressBarCount++;
-        if (g_progressBarCount > 20)
-            g_progressBarCount = 20;
-        drawProgressCount();
-        if (update)
-            g_windowManager->updateScreen(395, 548, 358, 16);
-    }
+    if (!g_progDots)
+        return;
+    g_progressCount++;
+    if (g_progressCount > 20)
+        g_progressCount = 20;
+    drawProgressCount();
+    if (update)
+        g_windowManager->updateScreen(395, 548, 358, 16);
 }
 
 VA(0x004ed350, 0xF3)  // dc 0xdf228
 void showProgressBar()
 {
-    if (!g_progressBarBack) {
-        g_progressBarBack = ResourceManager::getBitmap16(
+    if (!g_loadBar) {
+        g_loadBar = ResourceManager::getBitmap16(
             DATA_COMPGEN(0x0067f5bc, progressBarBackName, "loadbar.pcx"));
-        g_progressBarSprite = ResourceManager::getSprite(
+        g_progDots = ResourceManager::getSprite(
             DATA_COMPGEN(0x0067f5ac, progressBarSpriteName, "loadprog.def"));
-        g_progressBarCount = 0;
+        g_progressCount = 0;
     }
-    if (g_progressBarBack) {
-        g_progressBarBack->draw(0, 0, g_progressBarBack->getWidth(),
-                                g_progressBarBack->getHeight(),
-                                g_windowManager->m_screenBitmap, 0, 0, 0);
+    if (g_loadBar) {
+        g_loadBar->draw(0, 0, g_loadBar->getWidth(),
+                        g_loadBar->getHeight(),
+                        g_windowManager->m_screenBitmap, 0, 0, 0);
         drawProgressCount();
         g_windowManager->updateScreen(0, 0, 800, 600);
     }
@@ -155,13 +202,13 @@ void showProgressBar()
 VA(0x004ed450, 0x3D)  // dc 0xdf2a4
 void unloadProgressBar()
 {
-    if (g_progressBarBack)
-        g_progressBarBack->dispose();
-    if (g_progressBarSprite)
-        g_progressBarSprite->dispose();
-    g_progressBarCount = 0;
-    g_progressBarSprite = 0;
-    g_progressBarBack = 0;
+    if (g_loadBar)
+        g_loadBar->dispose();
+    if (g_progDots)
+        g_progDots->dispose();
+    g_progressCount = 0;
+    g_progDots = 0;
+    g_loadBar = 0;
 }
 
 VA(0x004ed490, 0x1B5)  // dc 0xdf330
@@ -172,12 +219,12 @@ void pollSound()
         g_mouseManager->checkUpdate();
         if (GameTime::isPast(g_timers[7])) {
             const int fastCycleType = 3;
-            if (g_combatActive698a18 == 1
-                || g_combatActive698a18 == fastCycleType)
+            if (g_combatActive == 1
+                || g_combatActive == fastCycleType)
                 g_timers[7] = GameTime::get() + 110;
             else
                 g_timers[7] = GameTime::get() + 200;
-            if (g_unnamed67f574) {
+            if (g_colorCyclingEnabled) {
                 if (g_advManager->m_groundTileset[8]) {
                     g_advManager->m_groundTileset[8]->colorCycle(0xe5, 0xf0, -1);
                     g_advManager->m_groundTileset[8]->colorCycle(0xf2, 0xfd, -1);
@@ -200,7 +247,7 @@ void pollSound()
         if (GameTime::isPast(g_timers[5])) {
             g_timers[5] = GameTime::get() + 60;
             pollRemote();
-            g_turnDuration69d630.checkForWarning();
+            g_turnDuration.checkForWarning();
         }
         g_inPollSound = 0;
     }
@@ -213,8 +260,9 @@ void pollSound()
 // reference anywhere.
 DATA(0x00699580)
 static int g_earlySetupDone;
+// Original DC name: gPalette; InitVars clears it between gGameCommand and the view frame.
 DATA(0x006985bc)
-static int g_unnamed6985bc;
+static palette* g_palette;
 
 // The startup callees whose own rows are still unclaimed. Every name is the
 // Dreamcast CodeView spelling for the compiland the retail address falls in,
@@ -253,13 +301,13 @@ int interpretCommandLine();
 bool initializeAdventureEventText();
 unsigned char initializeSpellTraitsTable();
 unsigned char initializeHeroTraitsTable();
-unsigned char initializeHeroClassTraitsTable();
+bool initializeHeroClassTraitsTable();
 unsigned char initializeBallisticsTable();
-unsigned char initializeSSkillTraitsTable();
-unsigned char initializeArtifactTraitsTable();
-unsigned char initializeVCDescriptions();
-unsigned char initializeLCDescriptions();
-unsigned char initializeTurnDurationText();
+bool initializeSSkillTraitsTable();
+bool initializeArtifactTraitsTable();
+bool initializeVCDescriptions();
+bool initializeLCDescriptions();
+bool initializeTurnDurationText();
 unsigned char initializeCreatureAnimationTraitsTable();
 bool initializeArtifactEventText();
 bool initializeRandomSignText();
@@ -317,8 +365,8 @@ int earlySetup()
     initMainClasses();
     unsigned char desktopOk = getDesktopInfo();
     readPrefs();
-    if (!g_windowedMode && !desktopOk) {
-        g_windowedMode = 1;
+    if (!g_config.m_mainGameFullScreen && !desktopOk) {
+        g_config.m_mainGameFullScreen = 1;
         writePrefs();
     }
     ResourceManager::setPath(
@@ -351,7 +399,7 @@ int earlySetup()
         bool found = 0;
         i = 0;
         while (1) {
-            if (i >= g_videoHeaderCount)
+            if (i >= g_videoCount3)
                 break;
             if (!_strcmpi(g_videoHeader3[i].m_name,
                           DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
@@ -364,7 +412,7 @@ int earlySetup()
         if (!found) {
             i = 0;
             while (1) {
-                if (i >= g_videoHeaderCount)
+                if (i >= g_videoCount3)
                     break;
                 if (!_strcmpi(g_videoHeader3[i].m_name,
                               DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
@@ -402,7 +450,7 @@ void initMainClasses()
     g_combatManager = new combatManager;
     g_townManager = new townManager;
     g_searchArray = new searchArray;
-    g_unnamed69928c = new CAITurnDriver69928c;
+    g_philAI = new philAI;
 }
 
 VA(0x004edda0, 0x407)  // dc 0xdfa3c
@@ -503,29 +551,7 @@ void creditsWait()
 
 #if 0  // @carcass
 
-// E:\gamedcs\kb.cpp:553
-DC_ONLY(0xdf840, 0x12)
-void earlyShutdown(const char* cTitle, const char* cBody)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:580
-DC_ONLY(0xdf854, 0xC6)
-void setupCDRom()
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:645 - promoted to a live claim (see below).
-
-// E:\gamedcs\kb.cpp:814
-DC_ONLY(0xdff5c, 0x86)
-void showCredits()
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:962
 // Located by the same PollSound..oldmain order-mapping (4532->7172 B);
 // WinMain's final call - the game main loop.
@@ -535,125 +561,25 @@ int oldmain()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:1841
-DC_ONLY(0xe130c, 0x2A4)
-int doNewGame()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:1962
-DC_ONLY(0xe15b0, 0x7E)
-int doCampaignWindow(unsigned char newGame)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:1988
-DC_ONLY(0xe1630, 0x110)
-int doSinglePlayerWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2036
-DC_ONLY(0xe1740, 0x36)
-int doMultiPlayerWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2059
-DC_ONLY(0xe1778, 0x1D8)
-int doLoadGame()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2145
-DC_ONLY(0xe1950, 0x3E)
-int pickLoadGame()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2174 - promoted to a live claim (see below).
-
-// E:\gamedcs\kb.cpp:2270
-DC_ONLY(0xe1b90, 0x4)
-int NullHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2279
-DC_ONLY(0xe1b94, 0x62)
-int waitHandler(message* msg)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:2367
 // RETAIL_LOCATED(0x004f08d0, 0x20C): anchor-callee + dialog-global shape.
 // Its order-checked retail claim lives below; this row preserves DC source order.
-DC_ONLY(0xe1ccc, 0x118)
-int normalDialogHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2442
-DC_ONLY(0xe1de4, 0x74)
-void type_normal_dialog_frame::type_normal_dialog_frame(long _x, long _y, long _w, long _h, long _id, EGameResource _resource, long _qualifier)
-{
-    // @stub
-}
 
 // E:\gamedcs\kb.cpp:2452 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:2549 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:2630 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:2636 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:2720 - ordinary static helper reconstructed below.
-
-// E:\gamedcs\kb.cpp:2811
-DC_ONLY(0xe2808, 0x128)
-unsigned char getTeamNames(int player, char* sNames)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2867
-DC_ONLY(0xe2930, 0x3A)
-void sendPlayerWon()
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:2878 - reconstructed above as the inline helper
 // retail expands at every DisplayLCWinLoss arm.
 
-// E:\gamedcs\kb.cpp:2888
-DC_ONLY(0xe29a8, 0xB1A)
-unsigned char displayVCWinLoss(VictoryConditionStruct* VictoryCondition, int* bGameWon, int* bGameLost, unsigned char remoteCheck)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:3419 - ordinary helper reconstructed below.
-
 // E:\gamedcs\kb.cpp:3440 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:3566 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:3763 - reconstructed above as the source-static
 // retail expands into EarlySetup.
 
 // E:\gamedcs\kb.cpp:3798 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:3830
 #endif  // @carcass
 
@@ -665,12 +591,12 @@ unsigned char displayVCWinLoss(VictoryConditionStruct* VictoryCondition, int* bG
 // ShutDown), soundManager's is the header inline, and the window, input,
 // town and executive managers plus the AI turn driver are trivially
 // destructible.
-DC_ONLY(0xdf6d0, 0x170)
+
 static void deleteMainClasses()
 {
-    if (g_unnamed69928c)
-        delete g_unnamed69928c;
-    g_unnamed69928c = 0;
+    if (g_philAI)
+        delete g_philAI;
+    g_philAI = 0;
     if (g_searchArray)
         delete g_searchArray;
     g_searchArray = 0;
@@ -859,21 +785,25 @@ static Bitmap16Bit* g_gameSelectBack;
 // setup state. Their declarations live with their owning/domain headers; the
 // two cells below are private oldmain state (their only retail references are
 // in this function).
+// Original DC name: gbDirectConnect; DoNewGame / DoLoadGame.
 DATA(0x0069953c)
-static int g_unnamed69953c;
+static int g_directConnect;
+// Original DC name: gbGameInitialized; oldmain sets it before entering the adventure loop.
 DATA(0x00699558)
-static int g_unnamed699558;
+static int g_gameInitialized;
 // oldmain's own scenario-summary scratch: the only retail reference to
 // this .bss cell is the sprintf that formats general text row 116 with
 // the finished game's turn number. The extent is NOT proven - nothing
 // else in the image touches the 0x12c bytes up to gpSoundManager's
 // neighbour - so the declared width is a placeholder, not a claim.
+// Original DC name: gcWinText; oldmain formats the completed game turn count.
 DATA(0x00699294)
-static char g_unnamed699294[300];
+static char g_winText[300];
 DATA(0x00699584)
-static int g_unnamed699584;
+static int g_runStartEventsOnEntry;
+// Original DC name: giSetupGameType; zero for DoNewGame, one for DoLoadGame.
 DATA(0x006972e8)
-static unsigned char g_unnamed6972e8;
+static unsigned char g_setupGameType;
 
 // Dreamcast CodeView marks these menu helpers source-static.  Complete's
 // VC6 build expands DoNewGame and DoLoadGame into oldmain but retains the
@@ -905,6 +835,7 @@ void showCongrats(int hsType);
 
 static int doNewGame();
 static unsigned char doCampaignWindow();
+static int doCampaignWindow(bool newGame, int campaignSet);
 static int doSinglePlayerWindow();
 static int doMultiPlayerWindow();
 static int doLoadGame();
@@ -915,7 +846,7 @@ static int pickLoadGame();
 // first Draw lowers inline while the later identical Draw reaches the
 // compiler-emitted forwarding wrapper, exactly the kind of site-specific
 // /Ob2 decision that must remain expressed as one source-level operation.
-inline void showCredits()
+void showCredits()
 {
     videoDrawCurrentFrame();
     g_mainBack->draw(0, 0, g_mainBack->getWidth(), g_mainBack->getHeight(),
@@ -936,23 +867,43 @@ inline void showCredits()
 // created or loaded game a second time and also cleared the latch for
 // unrelated commands. Restoring these paths is retained through the dip.
 
-// 2026-09-07: 78.9421% MAX preserved. Correct switch paths 77.1614%; TTownType
-// alignment is byte-flat. Retail's signed-word menu dispatch adds 77.3147%;
-// Dreamcast-proven bitmap width/height calls alone give 78.7233%; both yield
-// 78.7743%. DoNewGame/DoLoadGame exit flags now initialize just before their
-// loops (DC 1859/2076); that relocation and removing DoNewGame's remaining
-// SINGLE_ID inline pin are byte-flat. The verified padded body is 7888 B.
+// DC1287/1297/1310 preserve the three lobby helper calls below. The former
+// pasted new-game bodies incorrectly refreshed on CANCEL and read the
+// maximum player count. Retail +0x679/+0x743 accepts only OK and reads the
+// minimum count, exactly as canonical DoSinglePlayerWindow does.
+// Remaining inline-boundary leads: DoNewGame's multiplayer helper,
+// restart progress drawing and CampaignComplete. The explicit PickLoadGame
+// return guards recover its campaign-arm boundary. Restoring the original
+// parameterized campaign operation at DC1732/1744 raises this body to 81.1882%.
+// A byte-formal trial reaches 83.3705% only with the briefing constructor's
+// obsolete byte signature; restoring its proven bool,bool removes that gain.
+// Earlier retry-loop alternatives did not resolve those expansions. All three
+// inherited DoLoadGame inline-depth pins are now removable without byte changes.
+// Their expansions still differ from retail; equal aggregate call counts
+// do not establish matching boundaries. The original DC video-mode dialog,
+// 8-bit startup graphics and fixed-array campaign setup are port differences:
+// Complete's startup, 16-bit graphics and dynamic campaign header are proved
+// by its retail calls, not substitutions to satisfy the DC helper audit.
+// DC1462..1538 orders restart before high scores/credits. Moving those whole
+// arms in Complete scores 75.4381% and retains the campaign/progress inline
+// differences; retail's machine order supports the current arm order.
+// A signed CampaignComplete index, suggested by DC's older scalar bound,
+// is byte-flat across all 64 header consumers and does not restore its
+// missing retained body. Complete's vector-bound counter type stays unresolved.
+// Moving the pure Complete query to an ordinary cpp definition restores its
+// exact 67-byte retained body and four calls here (81.4021%). That diagnostic
+// does not establish a source-location change from DC's substantive header
+// implementation; keep its positive ownership until stronger evidence emerges.
+// A condition-owned do/while retry makes DoCampaignWindow eligible and
+// recovers the 0x5d18 frame, but duplicates dialog blocks absent from retail
+// (81.1222%, or 80.6745% with a direct cancel return). Bool/byte formals
+// converge in those models; neither control form resolves the remaining CFG.
+// Separate nested multiplayer/single-player guards at DC1896/1898 and
+// DC2110/2112 are byte-identical to the current short-circuit conditions,
+// including all kb bodies and EH/relocation graphs. They do not repair the
+// misplaced DoMultiPlayerWindow expansion in the new-game arm.
 
-// Passive C2 trace updates the old inline diagnosis: caller cb 3538, initial
-// budget 7076. DoNewGame's two ordinary DoSinglePlayerWindow calls (cb 157)
-// get 143/83 and both stay calls; tutorial ShowProgressBar (116) gets 83 and
-// stays a call too. The first tutorial IncProgressBar still expands where
-// retail calls it. Restart ShowProgressBar expands DrawProgressCount (100)
-// with budget 103; restart IncProgressBar expansions give it 235..254 where
-// retail calls it. DoLoadGame's campaign PickLoadGame (62, budget 129) also
-// expands where retail calls it. Keep these source helpers canonical.
-
-VA(0x004ee3e0, 0x1C04)
+VA(0x004ee3e0, 0x1C04)  // dc 0xe0158
 int oldmain()
 {
     int command = -1;
@@ -968,7 +919,7 @@ int oldmain()
     g_playerPalette24 = ResourceManager::getPalette24("Players.pal");
 
     g_tinyFont = ResourceManager::getFont("tiny.fnt");
-    g_unnamed698a08 = ResourceManager::getFont("smalfont.fnt");
+    g_smallFont = ResourceManager::getFont("smalfont.fnt");
     g_mediumFont = ResourceManager::getFont("medfont.fnt");
     g_bigFont = ResourceManager::getFont("bigfont.fnt");
     g_calligraphicFont = ResourceManager::getFont("Calli10R.fnt");
@@ -979,16 +930,16 @@ int oldmain()
     if (g_soundManager->open(-1))
         shutDown((*g_generalText)[132]);
 
-    if (g_unnamed6989c8 < 9)
+    if (g_debugLevel < 9)
         checkMem();
-    if (g_unnamed6989c8 > 0)
+    if (g_debugLevel > 0)
         g_globalTimer.enable();
 
     for (int i = 0; i < 8; ++i)
         g_game->m_players[i].init();
 
-    g_dPlayReady = testIfLobbyLaunched();
-    if (g_dPlayReady) {
+    g_lobbyLaunched = testIfLobbyLaunched();
+    if (g_lobbyLaunched) {
         g_logFile.log(DATA_COMPGEN(
             0x0067f738, oldMainLobbyLaunchLog,
             "We were launched by a DirectPlay lobby!!!"));
@@ -1000,36 +951,36 @@ int oldmain()
     g_chatMan.init();
 
     if (g_firstTimeThrough && !g_noCdRom) {
-        g_unnamed698758.m_binkVideo = 0;
+        g_config.m_binkVideo = 0;
         videoPlay(27, 0, 0, 800, 600);
 
         g_testDecomp = static_cast<int>(
-            static_cast<float>(g_binkSummary.m_totalDecompTime * 100)
-            / static_cast<float>(g_binkSummary.m_totalTime));
+            static_cast<float>(g_binkSummary.TotalDecompTime * 100)
+            / static_cast<float>(g_binkSummary.TotalTime));
         g_testBlit = static_cast<int>(
-            static_cast<float>(g_binkSummary.m_totalBlitTime * 100)
-            / static_cast<float>(g_binkSummary.m_totalTime));
+            static_cast<float>(g_binkSummary.TotalBlitTime * 100)
+            / static_cast<float>(g_binkSummary.TotalTime));
         g_testRead = static_cast<int>(
-            static_cast<float>(g_binkSummary.m_totalReadTime * 100)
-            / static_cast<float>(g_binkSummary.m_totalTime));
+            static_cast<float>(g_binkSummary.TotalReadTime * 100)
+            / static_cast<float>(g_binkSummary.TotalTime));
 
-        if (static_cast<float>(g_binkSummary.m_totalTime)
+        if (static_cast<float>(g_binkSummary.TotalTime)
                 <= static_cast<float>(
-                    1000 * (g_binkSummary.m_totalFrames / g_binkSummary.m_frameRate)
+                    1000 * (g_binkSummary.TotalFrames / g_binkSummary.FrameRate)
                     + 500)
             && g_testDecomp < 40
             && g_testBlit < 25
             && g_testRead < 10)
-            g_unnamed698758.m_binkVideo = 1;
+            g_config.m_binkVideo = 1;
 
-        if (g_dPlayReady)
+        if (g_lobbyLaunched)
             writePrefs();
     }
 
     g_windowManager->m_screenBitmap->fillRect(0, 0, 800, 600, 0);
     g_windowManager->updateScreen(0, 0, 800, 600);
 
-    if (!g_dPlayReady) {
+    if (!g_lobbyLaunched) {
         g_mouseManager->hidePointer();
         if (g_showIntro || g_firstTimeThrough) {
             if (videoPlay(28, 0, 0, 800, 600)
@@ -1072,8 +1023,8 @@ int oldmain()
         if (g_gameCommand != TMainMenu::QUIT_ID)
             g_windowManager->m_colorCyclingOn = 1;
 
-        if (g_dPlayReady) {
-            g_unnamed699584 = 1;
+        if (g_lobbyLaunched) {
+            g_runStartEventsOnEntry = 1;
             g_windowManager->updateScreen(0, 0, 800, 600);
             videoPause();
             if (!lobbyLaunchConnect()) {
@@ -1092,36 +1043,14 @@ int oldmain()
                 if (g_windowManager->m_dialogReturn
                     == TMainMenu::LOAD_GAME_ID) {
                     g_windowManager->m_dialogReturn = -1;
-                    {
-                        TSingleSelectionWindow selectionWindow(1);
-                        selectionWindow.doModal(0);
-                    }
-                    if (g_windowManager->m_dialogReturn
-                        == DIALOG_RETURN_CANCEL)
+                    if (!pickLoadGame())
                         unused = 1;
                     else
                         videoResume();
                 } else if (g_windowManager->m_dialogReturn
                            == TMainMenu::NEW_GAME_ID) {
                     g_windowManager->m_dialogReturn = -1;
-                    g_game->m_isTutorial = 0;
-                    {
-                        TSingleSelectionWindow selectionWindow(0);
-                        selectionWindow.doModal(0);
-                    }
-                    if (g_windowManager->m_dialogReturn
-                            == DIALOG_RETURN_CANCEL
-                        || g_windowManager->m_dialogReturn
-                            == DIALOG_RETURN_OK) {
-                        if (!g_game->m_mapHeader.get(
-                                g_game->m_setup.m_path,
-                                g_game->m_setup.m_filename, 0)
-                            && g_game->m_mapHeader.m_maxNumHumanPlayers
-                                <= g_unnamed699274)
-                            strcpy(g_mapName, g_game->m_setup.m_filename);
-                    }
-                    if (g_windowManager->m_dialogReturn
-                        == DIALOG_RETURN_CANCEL)
+                    if (!doSinglePlayerWindow())
                         unused = 1;
                     else
                         videoResume();
@@ -1129,20 +1058,7 @@ int oldmain()
                     unused = 1;
                 }
             } else {
-                g_game->m_isTutorial = 0;
-                {
-                    TSingleSelectionWindow selectionWindow(0);
-                    selectionWindow.doModal(0);
-                }
-                if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL
-                    || g_windowManager->m_dialogReturn == DIALOG_RETURN_OK) {
-                    if (!g_game->m_mapHeader.get(
-                            g_game->m_setup.m_path, g_game->m_setup.m_filename, 0)
-                        && g_game->m_mapHeader.m_maxNumHumanPlayers
-                            <= g_unnamed699274)
-                        strcpy(g_mapName, g_game->m_setup.m_filename);
-                }
-                if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
+                if (!doSinglePlayerWindow())
                     unused = 1;
                 else
                     videoResume();
@@ -1171,7 +1087,7 @@ int oldmain()
         case TMainMenu::LOAD_GAME_ID: {
             if (!doLoadGame())
                 continue;
-            g_unnamed699584 = 0;
+            g_runStartEventsOnEntry = 0;
             break;
         }
 
@@ -1200,16 +1116,24 @@ int oldmain()
             TTownType alignment[8];
             memcpy(alignment, g_game->m_setup.m_alignment, sizeof(alignment));
 
-            if (g_unk69774c)
+            if (g_inCampaign)
                 g_game->resetGame(g_game->m_setup.m_difficulty,
                                   g_game->m_campaign.m_currentMap,
                                   &g_game->m_mapHeader);
             else
                 g_game->resetGame(g_game->m_setup.m_difficulty, 0, 0);
 
-            if (g_unk69774c) {
+            if (g_inCampaign) {
+                // Original lifetime defect: retail +0x10dd destroys the
+                // returned string before +0x10e9 constructs the header.
+                // VC6 normally shares the campaign member's COW buffer,
+                // but frozen/saturated copies can leave this pointer dangling.
+                // Preserve that source lifetime; the later scoring path
+                // intentionally keeps its temporary through construction.
+                const char* campaignFilename =
+                    g_game->m_campaign.getCampaignFileName().c_str();
                 TCampaignBrief::CampaignHeaderStruct campaignBrief(
-                    g_game->m_campaign.getCampaignFileName().c_str());
+                    campaignFilename);
                 int briefingChoice = g_game->m_campaign.m_briefingChoice;
                 int currentMap = g_game->m_campaign.m_currentMap;
                 campaignBrief.load();
@@ -1229,7 +1153,7 @@ int oldmain()
                         & g_game->m_mapHeader.m_playerSlotAttributes[j]
                               .m_legalAlignments) {
                         g_game->m_setup.m_alignment[j] = alignment[j];
-                        g_unnamed69fb24[j] = g_game->m_setup.m_startingHero[j];
+                        g_startingHeroOverrides[j] = g_game->m_setup.m_startingHero[j];
                     }
                     strcpy(g_game->m_players[j].m_name, playerSave[j].m_name);
                     g_game->m_players[j].m_isLocal = playerSave[j].m_isLocal;
@@ -1240,7 +1164,7 @@ int oldmain()
                 incProgressBar(1);
                 g_game->setupFirstPlayer();
                 g_game->newMap(g_game->m_setup.m_path, g_game->m_setup.m_filename,
-                               g_unnamed69fb24, g_game->m_f1f698);
+                               g_startingHeroOverrides, g_game->m_f1f698);
             }
             incProgressBar(1);
             incProgressBar(1);
@@ -1268,13 +1192,13 @@ int oldmain()
             campaignScored = 0;
             g_windowManager->m_colorCyclingOn = 1;
             computeAdvNetControl();
-            g_unnamed699558 = 1;
+            g_gameInitialized = 1;
             g_soundManager->stopAllSamples(1);
 
-            if (g_unk69774c
+            if (g_inCampaign
                 && g_game->m_campaign.m_mapScores[g_game->m_campaign.m_currentMap]
                        .m_completed) {
-                g_progressBarCount = 20;
+                g_progressCount = 20;
                 showProgressBar();
                 g_defeatedAllPlayers = g_gameResultCampaignMapScored;
                 unloadProgressBar();
@@ -1285,17 +1209,17 @@ int oldmain()
                     shutDown((*g_generalText)[1]);
                 unloadProgressBar();
 
-                if (g_videoPaused) {
+                if (g_remoteOn) {
                     waitForReadyToPlayMsg();
-                    g_game->getLocalPlayer()->m_quickCombat = g_combatQuickMode69877c;
-                    CCombatTypeMsg combatTypeMsg(g_combatQuickMode69877c);
+                    g_game->getLocalPlayer()->m_quickCombat = g_config.m_quickCombat;
+                    CCombatTypeMsg combatTypeMsg(g_config.m_quickCombat);
                     transmitRemoteData(&combatTypeMsg, 0x7f, false, true);
                 }
 
                 if (command == TMainMenu::NEW_GAME_ID
                     || command == TMainMenu::RESTART_ID
-                    || g_unnamed699584) {
-                    g_unnamed699584 = 0;
+                    || g_runStartEventsOnEntry) {
+                    g_runStartEventsOnEntry = 0;
                     launchSample(
                         DATA_COMPGEN(0x00660c80, oldMainNewDaySample,
                                      "newday.wav"),
@@ -1304,17 +1228,17 @@ int oldmain()
                     g_game->checkForTownEvent();
                 }
 
-                g_turnDuration69d630.start();
+                g_turnDuration.start();
                 g_executive->mainLoop();
                 g_soundManager->m_playSounds = 1;
-                g_unnamed691209 = 0;
+                g_goSolo = 0;
                 g_soundManager->stopAllSamples(1);
                 g_executive->removeManager(g_advManager);
                 g_windowManager->fadeScreen(1, 4, false);
 
                 if (g_gameCommand != TMainMenu::RESTART_ID)
                     remoteCleanup();
-                if (g_dPlayReady)
+                if (g_lobbyLaunched)
                     unused = 1;
             }
         }
@@ -1323,19 +1247,21 @@ int oldmain()
             remoteCleanup();
             g_completeDrawEnabled = 1;
             g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
-            sprintf(g_unnamed699294, (*g_generalText)[116],
+            sprintf(g_winText, (*g_generalText)[116],
                     g_game->getCurrentTurn());
 
             if (!g_defeatedAllPlayers) {
                 lostGame();
-            } else if (g_unk69774c) {
+            } else if (g_inCampaign) {
                 SCampaign& campaign = g_game->m_campaign;
 
                 if (g_defeatedAllPlayers != g_gameResultCampaignMapScored) {
                     TCampaignBrief::CampaignHeaderStruct campaignBrief(
                         campaign.getCampaignFileName().c_str());
                     campaignBrief.load();
-                    campaign.completeCurrentMap(&campaignBrief);
+                    // Complete reloads gpGame here (+0x1572), after the
+                    // header load; the following epilogue keeps cached ESI.
+                    g_game->m_campaign.completeCurrentMap(&campaignBrief);
                     saveGame(1);
                     campaign.playScenarioEpilogue(&campaignBrief);
                     if ((campaign.m_currentCampaign == g_campaignOrdinal03
@@ -1354,7 +1280,7 @@ int oldmain()
                             g_highScoreManager->viewHiScore();
                         }
                         g_gameOver = 0;
-                        g_unk69774c = 0;
+                        g_inCampaign = 0;
                         continue;
                     }
                 }
@@ -1374,30 +1300,9 @@ int oldmain()
                         g_highScoreManager->viewHiScore();
                     }
                     if (campaign.m_currentCampaign != g_campaignOrdinalLast) {
-                        g_unk69774c = 1;
-                        while (1) {
-                            {
-                                TCampaignWindow campaignWindow(
-                                    0, nextCampaign);
-                                campaignWindow.doModal();
-                            }
-                            videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
-                            videoPause();
-                            if (g_windowManager->m_dialogReturn
-                                == DIALOG_RETURN_CANCEL)
-                                break;
-                            {
-                                TCampaignBrief campaignBriefWindow(0, 0);
-                                campaignBriefWindow.doModal();
-                            }
-                            if (g_windowManager->m_dialogReturn
-                                != DIALOG_RETURN_CANCEL)
-                                break;
-                        }
-                        if (g_windowManager->m_dialogReturn
-                            != DIALOG_RETURN_CANCEL) {
+                        if (doCampaignWindow(false, nextCampaign)) {
                             g_gameOver = 0;
-                            g_unnamed699584 = 1;
+                            g_runStartEventsOnEntry = 1;
                             goto runGame;
                         }
                     }
@@ -1405,26 +1310,7 @@ int oldmain()
                                == g_gameResultCampaignMapScored
                            && campaign.campaignComplete()) {
                     if (campaign.m_currentCampaign != g_campaignOrdinalLast) {
-                        g_unk69774c = 1;
-                        while (1) {
-                            {
-                                TCampaignWindow campaignWindow(
-                                    0, nextCampaign);
-                                campaignWindow.doModal();
-                            }
-                            videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
-                            videoPause();
-                            if (g_windowManager->m_dialogReturn
-                                == DIALOG_RETURN_CANCEL)
-                                break;
-                            {
-                                TCampaignBrief campaignBriefWindow(0, 0);
-                                campaignBriefWindow.doModal();
-                            }
-                            if (g_windowManager->m_dialogReturn
-                                != DIALOG_RETURN_CANCEL)
-                                break;
-                        }
+                        doCampaignWindow(false, nextCampaign);
                     }
                 } else {
                     TCampaignBrief campaignBriefWindow(0, 0);
@@ -1433,7 +1319,7 @@ int oldmain()
 
                 if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL) {
                     g_gameOver = 0;
-                    g_unnamed699584 = 1;
+                    g_runStartEventsOnEntry = 1;
                     goto runGame;
                 }
             } else {
@@ -1454,7 +1340,7 @@ int oldmain()
             }
         }
 
-        if (g_videoPaused)
+        if (g_remoteOn)
             unused = 1;
     }
 
@@ -1469,14 +1355,14 @@ int oldmain()
 static int doNewGame()
 {
     g_inSetupDialog = 1;
-    g_unk69774c = 0;
-    g_unnamed69927c = 10;
-    g_unnamed6994e4 = 10;
-    g_unnamed699274 = 1;
-    g_unnamed699288 = 0;
-    g_unnamed69953c = 0;
+    g_inCampaign = 0;
+    g_mpExtendedType = 10;
+    g_mpBaseType = 10;
+    g_numHumanPlayers = 1;
+    g_waitForRemoteReceive = 0;
+    g_directConnect = 0;
     g_game->m_isTutorial = 0;
-    g_unnamed6972e8 = 0;
+    g_setupGameType = 0;
 
     g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
                          g_gameSelectBack->getHeight(),
@@ -1507,7 +1393,7 @@ static int doNewGame()
             if (doCampaignWindow())
                 exitNewGame = 1;
             else
-                g_unk69774c = 0;
+                g_inCampaign = 0;
             break;
 
         case TGameTypeWindow::MULTIPLAYER_ID:
@@ -1534,15 +1420,15 @@ static int doNewGame()
             strcpy(g_game->m_setup.m_filename,
                    DATA_COMPGEN(0x0067f6e8, oldMainTutorialMap,
                                 "tutorial.tut"));
-            g_unnamed698758.m_showCombatMouseHex = 1;
-            g_unnamed698758.m_combatShadeLevel = 1;
+            g_config.m_showCombatMouseHex = 1;
+            g_config.m_combatShadeLevel = 1;
 
             g_game->resetGame(0, 0, 0);
             incProgressBar(1);
 
             g_game->m_players[0].m_isLocal = 1;
             g_game->m_players[0].m_isHuman = 1;
-            strcpy(g_game->m_players[0].m_name, g_localPlayerName);
+            strcpy(g_game->m_players[0].m_name, g_config.m_networkDefaultName);
 
             for (int i = 0; i < 8; ++i) {
                 g_newMapStartingBonus[i] = 3;
@@ -1586,12 +1472,40 @@ static int doNewGame()
     return g_windowManager->m_dialogReturn != TGameTypeWindow::QUIT_ID;
 }
 
-// E:\gamedcs\kb.cpp:1962. Dreamcast proves the helper boundary and nested
-// TCampaignWindow/TCampaignBrief lifetimes. Complete adds the campaign-set
-// and custom-campaign chooser branches; retail oldmain+0x91c performs a bare
-// call and 0x4f00a0 materializes newGame=1 internally, proving that Complete
-// removed Dreamcast's unsigned-char parameter. The helper remains
-// source-static and out of line in Complete.
+// Original DoCampaignWindow, DC kb.cpp:1962, dc 0xe15b0. DC proves the int
+// return and records a lowered byte newGame; semantic bool here is inferred.
+// Oldmain1732/1744 call this operation: the first tests its int result,
+// the second discards it. Complete expands both calls and adds a campaign
+// set to the window constructor; the overload's second parameter is inferred
+// from those retail arguments. Keep the two modal-object lifetimes here.
+static int doCampaignWindow(bool newGame, int campaignSet)
+{
+    g_inCampaign = 1;
+    while (1) {
+        {
+            TCampaignWindow campaignWindow(newGame, campaignSet);
+            campaignWindow.doModal();
+        }
+        videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+        videoPause();
+        if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
+            break;
+        {
+            TCampaignBrief campaignBrief(newGame, false);
+            campaignBrief.doModal();
+        }
+        if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL)
+            break;
+    }
+    return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
+}
+
+// Complete's separate campaign-set/custom-campaign front end. Retail
+// oldmain+0x91c proves this zero-argument entry, not removal of the older
+// parameterized operation above. Its three new-game retry loops include an
+// additional cancel reopen. Sharing the older operation at these inferred
+// sites changes the retained call/expansion pattern; their ownership remains
+// unresolved, unlike oldmain's two positively identified calls.
 // Residual (99.8872%): all 30 blocks, 15 branches, 44 calls and opcodes are
 // exact. Retail leaves one four-byte allocator hole between exitCampaigns
 // (the exact byte at [ebp-0xd]) and the first 0x4c-byte TCampaignSetWindow,
@@ -1617,7 +1531,7 @@ static unsigned char doCampaignWindow()
         switch (g_windowManager->m_dialogReturn) {
         case TCampaignSetWindow::CAMPAIGN_SET_SOD_ID: {
             videoPause();
-            g_unk69774c = 1;
+            g_inCampaign = 1;
 
             while (1) {
                 {
@@ -1646,7 +1560,7 @@ static unsigned char doCampaignWindow()
 
         case TCampaignSetWindow::CAMPAIGN_SET_AB_ID: {
             videoPause();
-            g_unk69774c = 1;
+            g_inCampaign = 1;
 
             while (1) {
                 {
@@ -1675,7 +1589,7 @@ static unsigned char doCampaignWindow()
 
         case TCampaignSetWindow::CAMPAIGN_SET_ROE_ID: {
             videoPause();
-            g_unk69774c = 1;
+            g_inCampaign = 1;
 
             while (1) {
                 {
@@ -1707,14 +1621,14 @@ static unsigned char doCampaignWindow()
             TCustomCampaignWindow customCampaignWindow;
             customCampaignWindow.doModal(0);
             if (g_windowManager->m_dialogReturn) {
-                g_unk69774c = 1;
+                g_inCampaign = 1;
                 {
                     TCampaignBrief campaignBrief(1, 0);
                     campaignBrief.doModal();
                     if (g_windowManager->m_dialogReturn
                         != DIALOG_RETURN_CANCEL)
                         return 1;
-                    g_unk69774c = 0;
+                    g_inCampaign = 0;
                 }
             }
             break;
@@ -1762,7 +1676,7 @@ static int doSinglePlayerWindow()
     if (dialogResult && dialogResult == 1) {
         if (!g_game->m_mapHeader.get(g_game->m_setup.m_path,
                                    g_game->m_setup.m_filename, 0)
-            && g_game->m_mapHeader.m_minNumHumanPlayers <= g_unnamed699274)
+            && g_game->m_mapHeader.m_minNumHumanPlayers <= g_numHumanPlayers)
             strcpy(g_mapName, g_game->m_setup.m_filename);
     }
 
@@ -1786,14 +1700,14 @@ static int doMultiPlayerWindow()
 static int doLoadGame()
 {
     g_inSetupDialog = 1;
-    g_unk69774c = 0;
-    g_unnamed69927c = 10;
-    g_unnamed6994e4 = 10;
-    g_unnamed699274 = 1;
-    g_unnamed699288 = 0;
-    g_unnamed69953c = 0;
+    g_inCampaign = 0;
+    g_mpExtendedType = 10;
+    g_mpBaseType = 10;
+    g_numHumanPlayers = 1;
+    g_waitForRemoteReceive = 0;
+    g_directConnect = 0;
     g_game->m_isTutorial = 0;
-    g_unnamed6972e8 = 1;
+    g_setupGameType = 1;
 
     g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
                          g_gameSelectBack->getHeight(),
@@ -1811,40 +1725,29 @@ static int doLoadGame()
 
         switch (static_cast<short>(g_windowManager->m_dialogReturn)) {
         case TGameTypeWindow::SINGLE_ID:
-            // DC2096 and retail oldmain+0xc68 retain PickLoadGame. The
-            // recovered helper/control flow needs no compiler pin.
+            // DC2096 and retail oldmain+0xc68 retain PickLoadGame.
+            // The recovered helper/control flow needs no compiler pin.
             if (pickLoadGame())
                 exitLoadGame = 1;
             break;
 
         case TGameTypeWindow::CAMPAIGN_ID:
             // Same proven PickLoadGame boundary, retail oldmain+0xc54.
-            // Unpinned: removing this one alone is oldmain 77.56300 ->
-            // 77.93137 and it combines with DoNewGame's for 78.01930. The
-            // SINGLE_ID, MULTIPLAYER_ID and TUTORIAL_ID siblings below stay
-            // pinned - every subset that also drops one of those is worse
-            // (2026-09-06, polish lane 50).
             if (pickLoadGame()) {
-                g_unk69774c = 1;
+                g_inCampaign = 1;
                 exitLoadGame = 1;
             }
             break;
 
         case TGameTypeWindow::MULTIPLAYER_ID:
-            // INLINE BOUNDARY: DoLoadGame -> DoMultiPlayerWindow and
-            // PickLoadGame. Dreamcast kb.cpp:2110/2112 and retail
-            // oldmain+0xc5f/+0xc68 retain both calls. With the current
-            // recovered helper state, ordinary depth retains the same bytes.
+            // DC2110/2112 and retail oldmain+0xc5f/+0xc68 retain both calls.
             if (doMultiPlayerWindow() && pickLoadGame())
                 exitLoadGame = 1;
             break;
 
         case TGameTypeWindow::TUTORIAL_ID:
             g_game->m_isTutorial = 1;
-            // INLINE BOUNDARY: DoLoadGame -> PickLoadGame. Dreamcast
-            // kb.cpp:2122 names the call and retail oldmain's tutorial-load
-            // arm retains it. The recovered helper state keeps the boundary
-            // naturally; the old pragma is byte-flat.
+            // DC2122 and retail's tutorial-load arm retain PickLoadGame.
             if (pickLoadGame())
                 exitLoadGame = 1;
             break;
@@ -1871,14 +1774,17 @@ static int doLoadGame()
         && g_windowManager->m_dialogReturn != TGameTypeWindow::QUIT_ID;
 }
 
-VA(0x004f0610, 0x77)
+// DC2153/2159/2162 records the success guard and separate final return.
+VA(0x004f0610, 0x77)  // dc 0xe1950
 static int pickLoadGame()
 {
     {
         TSingleSelectionWindow singleSelectionWindow(1);
         singleSelectionWindow.doModal(0);
     }
-    return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
+    if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL)
+        return 1;
+    return 0;
 }
 
 // Two write-only process cells whose ONLY retail reference in the whole
@@ -1886,9 +1792,9 @@ static int pickLoadGame()
 // owns them under the same rule as oldmain's private cells above. The
 // .data one ships initialized to 1 and is re-armed here.
 DATA(0x006783d8)
-static int g_unnamed6783d8 = 1;
+static int g_screenScroll = 1;
 DATA(0x00698a38)
-static int g_unnamed698a38;
+static int g_useWaveout;
 
 // E:\gamedcs\kb.cpp:2174
 // EarlySetup's last gate: reset the process-wide session flags, take the
@@ -1916,13 +1822,13 @@ int interpretCommandLine()
     int i;
     int length;
 
-    g_unnamed6783d8 = 1;
-    g_unnamed6993dc = 1;
+    g_screenScroll = 1;
+    g_blackoutPlayer = 1;
     g_mPlayer = false;
-    g_unnamed698a38 = 0;
-    g_unnamed6989c8 = 0;
+    g_useWaveout = 0;
+    g_debugLevel = 0;
     g_noSound = 0;
-    g_unnamed6994f0 = 0;
+    g_limitPlayer = 0;
     strcpy(g_mapName, g_generalText->getText(101));
     length = strlen(g_commandLine);
     _strupr(g_commandLine);
@@ -1946,7 +1852,7 @@ int interpretCommandLine()
                     && toupper(g_commandLine[i + 6]) == 'A'
                     && toupper(g_commandLine[i + 7]) == 'I'
                     && toupper(g_commandLine[i + 8]) == 'L')
-                    g_unnamed698a34 = 1;
+                    g_cheatMenus = 1;
                 break;
             case 'S':
                 if (i + 2 < length)
@@ -1971,6 +1877,13 @@ DATA(0x00699588)
 int g_normalDialogStart;
 DATA(0x00699590)
 static TDialogBox* g_normalDialogWindow;
+
+// Original: NullHandler; kb.cpp:2270, dc 0xe1b90.
+// The complete SH4 body returns one. No distinct retail address is claimed.
+int nullHandler(message& msg)
+{
+    return 1;
+}
 
 // E:\gamedcs\kb.cpp:2332
 // The dialog's forced answer: the default button for the message-box
@@ -2011,13 +1924,13 @@ int normalDialogHandler(message& msg)
 {
     if (g_advManager && g_advManager->m_advWindow)
         g_advManager->m_advWindow->animateBottomView(1);
-    if (!g_dialogDeadline697784 && g_turnDuration69d630.isExpired()) {
+    if (!g_dialogDeadline && g_turnDuration.isExpired()) {
         if (GameTime::elapsedSince(g_normalDialogStart) < 15000)
-            g_dialogDeadline697784 = 15000 - GameTime::elapsedSince(g_normalDialogStart);
+            g_dialogDeadline = 15000 - GameTime::elapsedSince(g_normalDialogStart);
         else
             return exitNormalDialog(msg);
     }
-    if (g_networkActive69954c && !g_dialogDeadline697784) {
+    if (g_remoteOn && !g_dialogDeadline) {
         unsigned char msgReceived = 0;
         if (g_dPlay) {
             CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
@@ -2025,7 +1938,7 @@ int normalDialogHandler(message& msg)
                 handler->checkHandleNet(1, &msgReceived);
                 if (msgReceived && handler->getAbortPopupMsg()) {
                     if (GameTime::elapsedSince(g_normalDialogStart) < 15000)
-                        g_dialogDeadline697784 =
+                        g_dialogDeadline =
                             15000 - GameTime::elapsedSince(g_normalDialogStart);
                     else
                         return exitNormalDialog(msg);
@@ -2055,7 +1968,7 @@ VA_COMPGEN(0x004f0b10, 0x5, IMPLICIT_DTOR, type_normal_dialog_frame)
 // An armed deadline that has run out answers DIALOG_RETURN_TIMEOUT for the
 // window; otherwise a deselect on one of the dialog's reply buttons is
 // turned into the window's answer.  The two picture choices of the
-// E:\gamedcs\kb.cpp:2452. Promoted from DC_ONLY on body evidence: a
+// E:\gamedcs\kb.cpp:2452. Located in retail on body evidence: a
 // two-byte-argument `ret 8` virtual whose `this` carries an
 // EGameResource at +0x38 and a long qualifier at +0x3c, dispatched
 // through a 37-entry byte index over exactly the EGameResource domain
@@ -2072,27 +1985,27 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
     if (downClick && rightClick) {
         switch (m_resource) {
         case RES_GOOD_LUCK:
-            normalDialog(g_luckTexts[0], NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog(g_luckInfo[0], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_NEUTRAL_LUCK:
-            normalDialog(g_luckTexts[1], NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog(g_luckInfo[1], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_BAD_LUCK:
-            normalDialog(g_luckTexts[2], NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog(g_luckInfo[2], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_GOOD_MORALE:
-            normalDialog(g_moraleTexts[0], NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog(g_moraleInfo[0], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_NEUTRAL_MORALE:
-            normalDialog(g_moraleTexts[1], NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog(g_moraleInfo[1], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_BAD_MORALE:
-            normalDialog(g_moraleTexts[2], NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog(g_moraleInfo[2], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_EXPERIENCE:
@@ -2160,12 +2073,12 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
 VA(0x004f0fc0, 0x1C3)  // dc 0xe206c
 int eventWindowHandler(message& msg)
 {
-    if (g_dialogDeadline697784 && GameTime::isPast(g_dialogDeadline697784)) {
+    if (g_dialogDeadline && GameTime::isPast(g_dialogDeadline)) {
         msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = DIALOG_RETURN_TIMEOUT;
         msg.m_codeY = 10;
         msg.m_codeX = 10;
-        g_dialogDeadline697784 = 0;
+        g_dialogDeadline = 0;
         return MESSAGE_DISPATCH_FORWARD;
     }
     if (msg.m_id == MESSAGE_WIDGET
@@ -2210,7 +2123,7 @@ int eventWindowHandler(message& msg)
             }
             msg.m_codeY = 10;
             msg.m_codeX = 10;
-            g_dialogDeadline697784 = 0;
+            g_dialogDeadline = 0;
             return MESSAGE_DISPATCH_FORWARD;
         }
         case g_dialogReturnClose:
@@ -2220,7 +2133,7 @@ int eventWindowHandler(message& msg)
             g_windowManager->m_dialogReturn = msg.m_codeY;
             msg.m_codeY = 10;
             msg.m_codeX = 10;
-            g_dialogDeadline697784 = 0;
+            g_dialogDeadline = 0;
             return MESSAGE_DISPATCH_FORWARD;
         }
     }
@@ -2241,8 +2154,8 @@ void playerDead(int whichPlayer)
     int x;
     int i;
 
-    g_combatFlag6985a3 = 0;
-    g_combatFlag697744 = 0;
+    g_combatRetreated = 0;
+    g_combatSurrendered = 0;
 
     playerData* player = &g_game->m_players[whichPlayer];
     g_game->m_playerDisabled[whichPlayer] = 1;
@@ -2288,7 +2201,7 @@ void playerDead(int whichPlayer)
             g_game->m_heroAvailability[recruitId] = -1;
     }
 
-    if (g_videoPaused) {
+    if (g_remoteOn) {
         if (g_game->isHuman(whichPlayer)) {
             handleRemoteDeadPlayerExit(whichPlayer, 0);
         } else {
@@ -2311,22 +2224,22 @@ void playerDead(int whichPlayer)
 // 93.4214% while preserving all 44 exact kb siblings. Direct repeated
 // g_game indexing was 88.5571%; pointer/reference forms agree. The joined
 // predicate follows the DC scopes even where its score is byte-flat.
-DC_ONLY(0xe24a0, 0x366)
+
 static void checkPlayerLoss()
 {
     if (!g_thisNetGotAdventureControl)
         return;
-    if (g_inSetup698400)
+    if (g_inSetup)
         return;
     if (g_gameOver)
         return;
     unsigned char tookLocalControl;
     tookLocalControl = 0;
-    if (g_unnamed691209 && g_netLocalGamePos == g_unnamed69120c
-        && !g_game->m_players[g_unnamed69120c].m_isLocal) {
-        g_game->m_players[g_unnamed69120c].m_isHuman = 1;
+    if (g_goSolo && g_netLocalGamePos == g_soloPos
+        && !g_game->m_players[g_soloPos].m_isLocal) {
+        g_game->m_players[g_soloPos].m_isHuman = 1;
         tookLocalControl = 1;
-        g_game->m_players[g_unnamed69120c].m_isLocal = 1;
+        g_game->m_players[g_soloPos].m_isLocal = 1;
     }
 
     for (int i = 0; i < g_gamePlayerCount; i++) {
@@ -2337,7 +2250,7 @@ static void checkPlayerLoss()
             && player.m_numTowns == 0) {
             playerDead(i);
             if (i == g_game->getLocalPlayerGamePos()) {
-                g_unnamed691209 = 0;
+                g_goSolo = 0;
                 normalDialog((*g_generalText)[96], NORMAL_DIALOG_DEFAULT,
                              -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             } else {
@@ -2360,7 +2273,7 @@ static void checkPlayerLoss()
                 if (g_game->isLocalHuman(i) && i == g_netLocalGamePos) {
                     const char* localFormat = (*g_generalText)[8];
                     sprintf(g_text, localFormat, g_game->getPlayerName(i));
-                    g_unnamed691209 = 0;
+                    g_goSolo = 0;
                 } else {
                     const char* otherFormat = (*g_generalText)[9];
                     sprintf(g_text, otherFormat, g_game->getPlayerName(i));
@@ -2373,10 +2286,10 @@ static void checkPlayerLoss()
         }
     }
 
-    if (g_unnamed691209 && g_netLocalGamePos == g_unnamed69120c
+    if (g_goSolo && g_netLocalGamePos == g_soloPos
         && tookLocalControl) {
-        g_game->m_players[g_unnamed69120c].m_isHuman = 0;
-        g_game->m_players[g_unnamed69120c].m_isLocal = 0;
+        g_game->m_players[g_soloPos].m_isHuman = 0;
+        g_game->m_players[g_soloPos].m_isLocal = 0;
     }
 }
 
@@ -2428,7 +2341,7 @@ unsigned char getTeamNames(int player, char* names)
 // part of the source shape rather than duplicated network scaffolding.
 inline void sendPlayerWon()
 {
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         CPlayerWonMsg msg(
             g_game->m_mapHeader.m_victoryCondition.m_playerWinner,
             g_game->m_mapHeader.m_victoryCondition);
@@ -2444,7 +2357,7 @@ inline void sendPlayerWon()
 // layout and its constructor's statement order.
 inline void sendPlayerLost()
 {
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         CPlayerLostMsg msg(g_game->m_mapHeader.m_lossCondition.m_playerLoser,
                            g_game->m_mapHeader.m_lossCondition);
         transmitRemoteData(&msg, 127, false, true);
@@ -2484,15 +2397,15 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                 gameLost = 1;
             }
 
-            if (g_unk69774c
+            if (g_inCampaign
                 && g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_7
                 && g_game->m_campaign.m_currentMap == GAME_SCENARIO_1) {
                 strcpy(g_text, (*g_generalText)[714]);
-            } else if (g_unk69774c
+            } else if (g_inCampaign
                 && g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_18
                 && g_game->m_campaign.m_currentMap == GAME_SCENARIO_8) {
                 strcpy(g_text, (*g_generalText)[764]);
-            } else if (g_unk69774c
+            } else if (g_inCampaign
                 && g_game->m_campaign.m_currentCampaign == GAME_CAMPAIGN_18
                 && g_game->m_campaign.m_currentMap == GAME_SCENARIO_9) {
                 strcpy(g_text, (*g_generalText)[738]);
@@ -2894,7 +2807,7 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
 // full-width mask. Keep the canonical GetTeamMask byte return and consume
 // it as int here; caching the receiver or keeping a byte local loses those
 // homes. No local type was recorded for this older DC helper.
-DC_ONLY(0xe34c4, 0x92)
+
 int getEnemyCount()
 {
     int enemyCount = 0;
@@ -3016,7 +2929,7 @@ void checkEndGame(int forceWin)
 
     if (!g_thisNetGotAdventureControl)
         return;
-    if (g_inSetup698400)
+    if (g_inSetup)
         return;
     if (g_gameOver)
         return;
@@ -3028,7 +2941,7 @@ void checkEndGame(int forceWin)
     liveOpponents = getEnemyCount();
 
     tookLocalControl = 0;
-    if (g_unnamed691209 && g_netLocalGamePos == g_unnamed69120c
+    if (g_goSolo && g_netLocalGamePos == g_soloPos
         && !g_currentPlayer->m_isLocal) {
         g_currentPlayer->m_isLocal = 1;
         tookLocalControl = 1;
@@ -3058,11 +2971,11 @@ void checkEndGame(int forceWin)
         g_defeatedAllPlayers = 1;
     }
     if (standardVictoryAllowed && liveOpponents == 0) {
-        g_unnamed69951c = 1;
+        g_normalVictory = 1;
         g_gameOver = 1;
         gameWon = 1;
         g_defeatedAllPlayers = 1;
-        if (g_networkActive69954c) {
+        if (g_remoteOn) {
             CNormalWinMsg winMsg(g_game->getLocalPlayerGamePos());
             transmitRemoteData(&winMsg, 127, false, true);
         }
@@ -3095,7 +3008,7 @@ void checkEndGame(int forceWin)
         gameLost = 1;
     }
     if (!g_gameOver) {
-        if (g_unnamed691209 && g_netLocalGamePos == g_unnamed69120c
+        if (g_goSolo && g_netLocalGamePos == g_soloPos
             && tookLocalControl) {
             g_currentPlayer->m_isLocal = 0;
             g_currentPlayer->m_isHuman = 0;
@@ -3112,19 +3025,19 @@ void game::showMoraleInfo(hero* thisHero, int mbType)
     std::string text;
 
     if (morale > 0) {
-        text = formatString(g_moraleTexts[3], g_moraleTexts[0]);
+        text = formatString(g_moraleInfo[3], g_moraleInfo[0]);
         icon = 14;
     } else if (morale == 0) {
-        text = formatString(g_moraleTexts[3], g_moraleTexts[1]);
+        text = formatString(g_moraleInfo[3], g_moraleInfo[1]);
         icon = 15;
     } else {
-        text = formatString(g_moraleTexts[3], g_moraleTexts[2]);
+        text = formatString(g_moraleInfo[3], g_moraleInfo[2]);
         icon = 16;
     }
 
     std::string modifiers = thisHero->getMoraleDescription();
     if (modifiers.length() == 0)
-        text += g_moraleTexts[23];
+        text += g_moraleInfo[23];
     else
         text += modifiers;
 
@@ -3139,19 +3052,19 @@ void game::showLuckInfo(hero* thisHero, int mbType)
     int luck = thisHero->getLuck(0, 0, 1);
 
     if (luck > 0) {
-        sprintf(g_text, g_luckTexts[3], g_luckTexts[0]);
+        sprintf(g_text, g_luckInfo[3], g_luckInfo[0]);
         icon = 11;
     } else if (luck == 0) {
-        sprintf(g_text, g_luckTexts[3], g_luckTexts[1]);
+        sprintf(g_text, g_luckInfo[3], g_luckInfo[1]);
         icon = 12;
     } else {
-        sprintf(g_text, g_luckTexts[3], g_luckTexts[2]);
+        sprintf(g_text, g_luckInfo[3], g_luckInfo[2]);
         icon = 13;
     }
 
     std::string modifiers = thisHero->getLuckDescription();
     strcat(g_text,
-           modifiers.length() == 0 ? g_luckTexts[18] : modifiers.c_str());
+           modifiers.length() == 0 ? g_luckInfo[18] : modifiers.c_str());
 
     normalDialog(g_text, mbType, -1, 28, icon, 0,
                  -1, 0, -1, 0, -1, 0);
@@ -3164,14 +3077,14 @@ static void initVars()
     g_nullSample2.m_resSample = 0;
     g_nullSample2.m_playSample = 0;
     g_gameCommand = -1;
-    g_unnamed6985bc = 0;
+    g_palette = 0;
     g_game->m_viewFrame = 0;
     strcpy(g_game->m_setup.m_filename,
            DATA_COMPGEN(0x0067f5c8, defaultScenarioName, "test.h3m"));
     g_game->m_setup.m_fileInitialized = 0;
     memset(g_timers, 0, sizeof(g_timers));
-    g_inSetup698400 = 0;
-    if (g_unnamed698a34) {
+    g_inSetup = 0;
+    if (g_cheatMenus) {
         g_dfltMenu = LoadMenu(g_instance, MAKEINTRESOURCE(0x6f));
         g_gameMenu = LoadMenu(g_instance, MAKEINTRESOURCE(0x71));
     } else {
@@ -3244,7 +3157,6 @@ VA_COMPGEN(0x004f3940, 0xA9, IMPLICIT_DTOR, combatManager)
 VA_COMPGEN(0x004f39f0, 0x6D, IMPLICIT_DTOR, advManager)
 
 // E:\gamedcs\kb.cpp:4187; Complete's body is empty (see kb.h).
-DC_ONLY(0xe4530, 0x78)
 void earlyShutDownSystem()
 {
 }
@@ -3374,7 +3286,7 @@ static unsigned char loadGameData()
 // it; retail therefore contains these two stores solely in the caller.
 static int checkMem()
 {
-    g_unnamed6994ec = 16000;
+    g_totalHighMem = 16000;
     g_highMemBuffer = 8000;
     return 1;
 }
@@ -3382,16 +3294,7 @@ static int checkMem()
 #if 0  // @carcass
 
 // E:\gamedcs\kb.cpp:3970 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:4102 - promoted to a live claim (see below).
-
-// E:\gamedcs\kb.cpp:4168
-DC_ONLY(0xe44f0, 0x40)
-void memError()
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:4197
 // Located as AppWndProc's WM_CLOSE gate (homm2 kbwin.cpp calls
 // GameUnsaved there); 52 B on DC vs 53 here, directly before
@@ -3425,38 +3328,13 @@ void cleanUpMenus()
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:4781
-DC_ONLY(0xe519c, 0x76)
-int getNextHumanPlayer(int start)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:4806 - promoted to a live claim (see below).
-
-// E:\gamedcs\kb.cpp:4855
-DC_ONLY(0xe52a8, 0x10)
-int checkMem()
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:4897
 // Promoted to the live retail claim below.
 
 // E:\gamedcs\kb.cpp:5206 - promoted to a live claim (see below).
-
 // E:\gamedcs\kb.cpp:5478 - canonical definition follows getQuickviewSize below.
-
 // E:\gamedcs\kb.cpp:5488 - promoted to a live claim (see below).
-
-// E:\gamedcs\kb.cpp:5531
-DC_ONLY(0xe60dc, 0xC14)
-void doNormalDialog(TNormalDialogInfo dialog_info)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:5909
 // RETAIL_LOCATED(0x004f7690, 0x312)  // anchor-global, dc 0xe6cf0
 void extendedDialog(const char* text, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* resources, long x, long y, long timeout)
@@ -3478,113 +3356,7 @@ unsigned short* getMapExtraPtr(int x, int y, int z)
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe70ac, 0x34)
-void* searchArray::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe70e0, 0x34)
-void* combatManager::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe7114, 0x34)
-void* advManager::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe7148, 0x34)
-void* highScoreManager::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe717c, 0x34)
-void* soundManager::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe71b0, 0x54)
-void combatManager::~combatManager()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe7204, 0x30)
-void advManager::~advManager()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:542
-DC_ONLY(0xe7234, 0x18)
-void std::set<enum SpellID,std::less<enum SpellID>,std::allocator<enum SpellID> >::~set<enum SpellID,std::less<enum SpellID>,std::allocator<enum SpellID> >()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:1837
-DC_ONLY(0xe724c, 0x194)
-playerData* playerData::operator=(const playerData* __that)
-{
-    // @stub
-}
-
 // E:\gamedcs\kb.cpp:2445 - both promoted to live claims (see below).
-
-// E:\gamedcs\kb.cpp:5466
-DC_ONLY(0xe742c, 0x34)
-void TNormalDialogInfo::TNormalDialogInfo()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:5466
-DC_ONLY(0xe7460, 0x30)
-void TNormalDialogInfo::~TNormalDialogInfo()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:5466
-DC_ONLY(0xe7490, 0x24)
-void type_dialog_icon::type_dialog_icon()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:5466
-DC_ONLY(0xe74b4, 0x24)
-void type_dialog_icon::~type_dialog_icon()
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:5528
-DC_ONLY(0xe74d8, 0x84)
-void TNormalDialogInfo::TNormalDialogInfo(const TNormalDialogInfo* __that)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:5528
-DC_ONLY(0xe755c, 0x60)
-void type_dialog_icon::type_dialog_icon(const type_dialog_icon* __that)
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 VA(0x004f3a60, 0x4D)  // dc 0xe3dfc
@@ -3629,7 +3401,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
                 "%d"), base);
             break;
         case CONGRATS_COLUMN_DIFFICULTY:
-            strcpy(temp, g_unnamed6a77ec[g_game->m_setup.m_difficulty]);
+            strcpy(temp, g_difficulty[g_game->m_setup.m_difficulty]);
             break;
         case CONGRATS_COLUMN_SCORE:
             sprintf(temp, DATA_COMPGEN(0x00660a1c, dialogDecimalFormat,
@@ -3675,7 +3447,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
                         break;
                     case CONGRATS_COLUMN_DIFFICULTY:
                         strcpy(temp,
-                               g_unnamed6a77ec[g_game->m_setup.m_difficulty]);
+                               g_difficulty[g_game->m_setup.m_difficulty]);
                         break;
                     case CONGRATS_COLUMN_SCORE:
                         sprintf(temp, DATA_COMPGEN(0x00660a1c,
@@ -3707,9 +3479,9 @@ short game::getBaseMapScore() const
     playerData* player = g_game->getLocalPlayer();
     int gamePos = g_game->getLocalPlayerGamePos();
 
-    return static_cast<short>((g_unnamed69950c == gamePos ? 25 : 0)
+    return static_cast<short>((g_grailOwner == gamePos ? 25 : 0)
                               - (turn + 10) / (player->m_numTowns + 5)
-                              + (g_unnamed69951c ? 25 : 0)
+                              + (g_normalVictory ? 25 : 0)
                               + 200);
 }
 
@@ -3822,7 +3594,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_FORCE_VICTORY:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         checkEndGame(END_GAME_FORCE_VICTORY);
         break;
@@ -3833,7 +3605,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_TOGGLE_VIEW_ALL:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         g_advManager->m_debugViewAll = !g_advManager->m_debugViewAll;
         if (g_advManager->m_debugViewAll)
@@ -3844,7 +3616,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_CHEAT_REVEAL: {
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         for (int level = 0; level < g_game->getNumMapLevels(); level++) {
             g_game->setVisibility(APP_MENU_REVEAL_COORDINATE,
@@ -3861,7 +3633,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_CHEAT_MOVEMENT:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         if (currentHero)
             currentHero->m_movePoints = APP_MENU_MOVEMENT_BONUS;
@@ -3869,7 +3641,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_CHEAT_RESOURCES: {
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         for (int resource = 0; resource < APP_MENU_RESOURCE_COUNT; resource++) {
             g_currentPlayer->m_resources[resource] +=
@@ -3883,7 +3655,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_COMBAT_ORDINAL_B798:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         g_combatManager->m_debugNoSpellLimit = !g_combatManager->m_debugNoSpellLimit;
         if (g_combatManager->m_debugNoSpellLimit)
@@ -3904,7 +3676,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_COMBAT_ORDINAL_B79B:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         g_combatManager->m_debugShowHiddenObjects = !g_combatManager->m_debugShowHiddenObjects;
         if (g_combatManager->m_debugShowHiddenObjects)
@@ -3916,7 +3688,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_COMBAT_ORDINAL_B79C:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         g_combatManager->m_debugShowBlockedHexes = !g_combatManager->m_debugShowBlockedHexes;
         if (g_combatManager->m_debugShowBlockedHexes)
@@ -3929,7 +3701,7 @@ int handleAppSpecificMenuCommands(int idItem)
 
     case APP_MENU_COMBAT_REBUILD_OBSTACLES:
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
         g_combatManager->placeAllObstacles();
         g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
@@ -3941,7 +3713,7 @@ int handleAppSpecificMenuCommands(int idItem)
     default:
         if (idItem >= APP_MENU_ARMY_FIRST && idItem < APP_MENU_ARMY_LAST) {
             g_game->m_isCheater = 1;
-            if (g_unk69774c)
+            if (g_inCampaign)
                 g_game->m_campaign.m_isCheater = 1;
             if (g_game->getCurrHeroId() != -1) {
                 g_game->giveArmy(
@@ -3956,7 +3728,7 @@ int handleAppSpecificMenuCommands(int idItem)
         if (idItem >= APP_MENU_SECONDARY_FIRST
                 && idItem < APP_MENU_SECONDARY_LAST) {
             g_game->m_isCheater = 1;
-            if (g_unk69774c)
+            if (g_inCampaign)
                 g_game->m_campaign.m_isCheater = 1;
             if (g_combatManager->m_status == baseManager::STATUS_ACTIVE)
                 currentHero = g_combatManager->m_heroes[g_combatManager->m_currentSide];
@@ -3972,7 +3744,7 @@ int handleAppSpecificMenuCommands(int idItem)
         else if (idItem >= APP_MENU_ARTIFACT_FIRST
                 && idItem < APP_MENU_ARTIFACT_LAST) {
             g_game->m_isCheater = 1;
-            if (g_unk69774c)
+            if (g_inCampaign)
                 g_game->m_campaign.m_isCheater = 1;
             TArtifact artifactId;
             {
@@ -3990,7 +3762,7 @@ int handleAppSpecificMenuCommands(int idItem)
             if (currentHero) {
                 type_artifact artifact(ARTIFACT_NONE);
                 g_game->m_isCheater = 1;
-                if (g_unk69774c)
+                if (g_inCampaign)
                     g_game->m_campaign.m_isCheater = 1;
                 if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
                     {
@@ -4089,7 +3861,7 @@ int getNextHumanPlayer(int start)
 VA(0x004f4c00, 0x2AA)  // dc 0xe5214
 void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
 {
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         if (dpGamePos == g_game->getLocalPlayerGamePos()) {
             int nextPlayer = getNextHumanPlayer(dpGamePos);
             if (nextPlayer != -1) {
@@ -4100,7 +3872,7 @@ void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
 
                     g_netLocalGamePos = nextPlayer;
                     g_currentPlayer = &g_game->m_players[nextPlayer];
-                    g_unnamed69ccc4 = 1 << nextPlayer;
+                    g_curPlayerBit = 1 << nextPlayer;
                     for (i = 0;
                          i < g_game->m_players[g_netLocalGamePos].m_numHeroes;
                          i++) {
@@ -4265,7 +4037,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
         break;
 
     case RES_COLOR:
-        m_text = g_playerColorNames[m_qualifier];
+        m_text = g_colors[m_qualifier];
         m_spriteName = DATA_COMPGEN(
             0x006601fc, dialogPlayerCrestSprite, "crest58.def");
         m_spriteFrameIndex = m_qualifier;
@@ -4284,11 +4056,11 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
             m_text = formatString(
                 DATA_COMPGEN(0x006778a4, dialogQuantityFormat, "%d %s"),
                 static_cast<unsigned short>(m_qualifier),
-                g_primarySkillNames[m_spriteFrameIndex]);
+                g_statNames[m_spriteFrameIndex]);
         } else {
             m_text = formatString(
                 DATA_COMPGEN(0x00677278, dialogBonusFormat, "+%d %s"),
-                m_qualifier, g_primarySkillNames[m_spriteFrameIndex]);
+                m_qualifier, g_statNames[m_spriteFrameIndex]);
         }
         break;
 
@@ -4309,7 +4081,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     }
 
     case RES_SECONDARY_SKILL:
-        m_text = g_skillMasteryNames[m_qualifier % 3];
+        m_text = g_secondarySkillLevels[m_qualifier % 3];
         m_text += DATA_COMPGEN(0x00660330, dialogSkillSeparator, " ");
         m_text += g_sSkillTraits[m_qualifier / 3 - 1].m_name;
         m_spriteName = DATA_COMPGEN(
@@ -4396,7 +4168,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 
         int wordWidth = 2;
         while (*current && *current != ' ') {
-            wordWidth += g_unnamed698a08->getCharacterWidth(*current);
+            wordWidth += g_smallFont->getCharacterWidth(*current);
             ++current;
         }
         if (wordWidth > m_textWidth)
@@ -4404,16 +4176,16 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     }
 
     m_textWidth = min(m_textWidth, g_dialogIconMaxTextWidth);
-    int lines = g_unnamed698a08->lineLength(m_text.c_str(), m_textWidth);
-    m_textHeight = g_unnamed698a08->m_fs.m_height * lines;
+    int lines = g_smallFont->lineLength(m_text.c_str(), m_textWidth);
+    m_textHeight = g_smallFont->m_fs.m_height * lines;
 
     while (lines > 1 && m_textHeight > m_textWidth * 2 / 3) {
         // Both retail and the Dreamcast delay slot store the grown width
         // before entering min; the clamp is a second assignment.
         m_textWidth = m_textWidth * 3 / 2;
         m_textWidth = min(m_textWidth, g_dialogIconMaxTextWidth);
-        lines = g_unnamed698a08->lineLength(m_text.c_str(), m_textWidth);
-        m_textHeight = g_unnamed698a08->m_fs.m_height * lines;
+        lines = g_smallFont->lineLength(m_text.c_str(), m_textWidth);
+        m_textHeight = g_smallFont->m_fs.m_height * lines;
         if (m_textWidth == g_dialogIconMaxTextWidth)
             break;
     }
@@ -4657,7 +4429,7 @@ void getQuickviewSize(const char* text, int* width, int* height)
 // DC kb.cpp:5478..5479 returns gpNormalDialogWindow. EventWindowHandler's
 // retail loads at 0x4f0fc0 corroborate the same getter expansion. Keep the
 // ordinary helper in its owning TU and the DC source order after sizing.
-DC_ONLY(0xe5f60, 0x6)
+
 TDialogBox* getCurrentNormalDialog()
 {
     return g_normalDialogWindow;
@@ -4713,7 +4485,7 @@ void normalDialog(const char* text, int mbType, int x, int y,
 }
 
 DATA(0x00699254)
-static int g_unnamed699254;
+static int g_waitDialogActive;
 
 void pollSound();
 int normalDialogHandler(message& msg);
@@ -4731,29 +4503,29 @@ VA_COMPGEN(0x004f6810, 0x179, IMPLICIT_COPY_CTOR, type_dialog_icon)
 VA(0x004f6990, 0xC8C)  // dc 0xe60dc
 void doNormalDialog(TNormalDialogInfo dialogInfo)
 {
-    if (!g_videoPaused
-            && !g_turnDuration69d630.isOn()
-            && !g_unnamed691209)
+    if (!g_remoteOn
+            && !g_turnDuration.isOn()
+            && !g_goSolo)
         dialogInfo.m_timeout = 0;
 
     if (dialogInfo.m_timeout > 1 && dialogInfo.m_timeout < 20000)
-        g_dialogDeadline697784 = GameTime::get() + dialogInfo.m_timeout;
+        g_dialogDeadline = GameTime::get() + dialogInfo.m_timeout;
     else
-        g_dialogDeadline697784 = dialogInfo.m_timeout;
+        g_dialogDeadline = dialogInfo.m_timeout;
 
-    if (!g_dialogDeadline697784) {
-        if (g_turnDuration69d630.isClose(15000))
-            g_dialogDeadline697784 = GameTime::get() + 15000;
+    if (!g_dialogDeadline) {
+        if (g_turnDuration.isClose(15000))
+            g_dialogDeadline = GameTime::get() + 15000;
 
-        if (!g_dialogDeadline697784 && g_dPlay) {
+        if (!g_dialogDeadline && g_dPlay) {
             CNetMsgHandler* netMsgHandler = g_dPlay->getNetMsgHandler();
             if (netMsgHandler && netMsgHandler->getAbortPopupMsg())
-                g_dialogDeadline697784 = GameTime::get() + 15000;
+                g_dialogDeadline = GameTime::get() + 15000;
         }
     }
 
     if (g_gameOver)
-        g_dialogDeadline697784 = 0;
+        g_dialogDeadline = 0;
 
     int saveNormalDialogType;
     int saveNormalDialogSelection;
@@ -4992,8 +4764,8 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 
     videoPause();
-    if (g_unnamed691209)
-        g_dialogDeadline697784 = GameTime::get() + 2000;
+    if (g_goSolo)
+        g_dialogDeadline = GameTime::get() + 2000;
 
     if (dialogInfo.m_mbType == NORMAL_DIALOG_ORDINAL_6
             || dialogInfo.m_mbType == NORMAL_DIALOG_ORDINAL_5) {
@@ -5020,13 +4792,13 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
 VA(0x004f7620, 0x66)  // dc 0xe1b94
 static int waitHandler(message& msg)
 {
-    g_unnamed699254 = 1;
+    g_waitDialogActive = 1;
     pollSound();
     if (msg.m_id == MESSAGE_WIDGET
             && msg.m_codeX == widget::WIDGET_DESELECT
             && msg.m_codeY >= 0x7800
             && msg.m_codeY <= DIALOG_RETURN_OK) {
-        g_unnamed699254 = 0;
+        g_waitDialogActive = 0;
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         msg.m_id = MESSAGE_WIDGET;
         msg.m_codeY = widget::WIDGET_END_DIALOG;
@@ -5090,4 +4862,11 @@ VA(0x004f79e0, 0x24)  // decorated identity + map-extents arithmetic
 unsigned short* getMapExtraPtr(int x, int y, int z)
 {
     return &g_mapExtra[(z * g_mapHeight + y) * g_mapWidth + x];
+}
+
+// EarlySetup at 0x4ed66a passes ".\\" in ECX to the shared release ret
+// at 0x5bc690. DC kb.cpp:648 calls the older CLogFile::InitLogFile() instead;
+// Complete's directory-taking hook has no work in this release build.
+void initLogFile(const char* path)
+{
 }

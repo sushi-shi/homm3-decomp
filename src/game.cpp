@@ -1,101 +1,119 @@
-// calculate_production and playerData::HasCapitol read the town masks
-// through town::HasBuilding in the Dreamcast bodies (dc 0xa3474 lines
-// with r5 = 15/22/17, dc 0xa4e80 with r5 = 13); see town.h for why the
-// inline's visibility is scoped.
-// playerData::add_garrison_hero (0x4b9fc0) needs three declarators no
-// other game.obj body reaches: game::record_hide_hero, and CMCHideHero
-// with the two default constructors it chains through. Held on its own
-// gate so neither townmgr.obj (the other HOMM3_GAME_OBJ_DECLS consumer)
-// nor any town.h/hero.h reader widens its include closure.
-// game::ProcessRandomObjects (0x4c9dd0) needs its own declarator, the
-// GetRandomMonster it rolls each monster case with, and ConvertObject -
-// which town.obj already declares behind its own gate. Held together
-// here so townmgr.obj gains no member of class game.
-// game::CreateTownHeroes (0x4ca040) needs its own declarator plus
-// town::GiveSpells, which it closes each starting town with. Held on its
-// own gate: a bare member declarator on class game is the include-set
-// wall's trigger shape (a first attempt that hung both off
-// HOMM3_GAME_OBJ_DECLS cost recruitUnit::Update 90.84 -> 88.24), and
-// townmgr.obj shares that macro.
-// game::ClaimTown (0x4c61e0) needs four declarators no other game.obj
-// body reaches: record_claim_town, game::get_alignment, is_human_ally
-// and generator::remove_bonus. Held on its own gate for the same reason
-// the town-heroes group is - townmgr.obj shares HOMM3_GAME_OBJ_DECLS.
-// game::Load's tail needs load_recorded_events and setup_shipyards, and
-// neither is reached by any other body here. Same gate discipline as the
-// two groups above.
-// Retail's retained hero-setup tree helpers call std::_Lockit and carry the
-// nested cleanup states those calls require. Keep the pinned /ML runtime, but
-// expose the header's external-lock declarations while this TU is parsed;
-// the byte verdict below is the authority for that otherwise hidden PCH view.
-#include "advmgr_objects.h"
-#include "advmgr.h"
-#include "adventuremapwindow.h"
+#include "prefs.h"
+#include "text.h"
+#include "va.h"
 #include "bitset_iterator.h"
 #include "packed_bits.h"
-#include "initialize.h"
-#include "terrain.h"
-#include "inputmgr.h"
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <va.h>
-#include <direct.h>
-#include <math.h>
-#include <memory>
 #include <algorithm>
-#include "game.h"
-#include "gamecontext.h"
-// StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
-// with Random and hand the name to soundManager::StartMP3;
-// game::SetMapSize (0x4ccef0) writes findpath's two map-extent globals
-// and closes the global search array.
-#include "findpath.h"
-#include "misc.h"
-#include "soundmgr.h"
-#include "smackmgr.h"
-#include "remote.h"
-#include "remotedlg.h"
-#include "diff.h"
-#include "winfile.h"
-#include "turn_update_msg.h"
-#include "spellbookwindow.h"
-#include "townmgr_globals.h"
-// playerData::ClearNetInfo and GetName read the default player name from
-// the canonical genrltxt.txt TTextResource;
-// playerData::AssignNetInfo reads a CNetPlayerInfo.
-#include "exec.h"
-#include "netplayer.h"
-// game::GetLocalPlayer / GetLocalPlayerGamePos / IsMultiplayer branch
-// on the protocol selector; IsMultiplayer also reads 0x69954c, which
-// kbwin.h declares as `bVideoPaused` and kbwin.obj DATA-claims. The
-// name is contradicted there and the storage is right - the same
-// finding recruit.obj recorded - so the call site keeps the declared
-// name and this TU includes the owner's header rather than
-// re-declaring it.
-#include "netgame.h"
-#include "kb.h"
-#include "kbwin.h"
-#include "cursor.h"
-#include "mousemgr.h"
-#include "puzzlewindow.h"
-#include "resourcedisplay.h"
-#include "resourcemanager.h"
-#include "multiplayerwindow_globals.h"
-#include "bitmap816.h"
-#include "herospec.h"
-#include "savegame.h"
-#include "winmgr.h"
-#include "creature_bank.h"
-#include "creaturetype.h"
-#include "viewarmywindow.h"
-#include "recruit.h"
-#include "quicktownwindow.h"
-#include "imm_mouse.h"
-#include "timer.h"
+#include <ctype.h>
+#include <direct.h>
 #include <fcntl.h>
 #include <io.h>
+#include <math.h>
+#include <memory>
+#include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
+
+#include "game.h"
+
+#include "adventuremapwindow.h"
+#include "advmgr.h"
+#include "advmgr_objects.h"
+#include "bitmap816.h"
+#include "creature_bank.h"
+#include "creaturetype.h"
+#include "cursor.h"
+#include "diff.h"
+#include "exec.h"
+#include "findpath.h"
+#include "gamecontext.h"
+#include "herospec.h"
+#include "imm_mouse.h"
+#include "initialize.h"
+#include "inputmgr.h"
+#include "kb.h"
+#include "kbwin.h"
+#include "misc.h"
+#include "mousemgr.h"
+#include "multiplayerwindow_globals.h"
+#include "netgame.h"
+#include "netplayer.h"
+#include "puzzlewindow.h"
+#include "quicktownwindow.h"
+#include "recruit.h"
+#include "remote.h"
+#include "remotedlg.h"
+#include "resourcedisplay.h"
+#include "resourcemanager.h"
+#include "savegame.h"
+#include "smackmgr.h"
+#include "soundmgr.h"
+#include "spellbookwindow.h"
+#include "terrain.h"
+#include "timer.h"
+#include "townmgr_globals.h"
+#include "turn_update_msg.h"
+#include "viewarmywindow.h"
+#include "winfile.h"
+#include "winmgr.h"
+
+// Initial contents recovered from the pinned Complete image.
+DATA(0x0063d570) TCreatureType g_creatureGenerator1Types[80] = { TCreatureType(106), TCreatureType(96), TCreatureType(74), TCreatureType(66), TCreatureType(68), TCreatureType(10), TCreatureType(14), TCreatureType(112), TCreatureType(12), TCreatureType(94), TCreatureType(54), TCreatureType(104), TCreatureType(16), TCreatureType(113), TCreatureType(52), TCreatureType(18), TCreatureType(114), TCreatureType(30), TCreatureType(36), TCreatureType(86), TCreatureType(98), TCreatureType(84), TCreatureType(44), TCreatureType(102), TCreatureType(26), TCreatureType(4), TCreatureType(72), TCreatureType(46), TCreatureType(110), TCreatureType(42), TCreatureType(100), TCreatureType(34), TCreatureType(80), TCreatureType(76), TCreatureType(78), TCreatureType(8), TCreatureType(38), TCreatureType(48), TCreatureType(90), TCreatureType(88), TCreatureType(50), TCreatureType(82), TCreatureType(92), TCreatureType(28), TCreatureType(40), TCreatureType(22), TCreatureType(70), TCreatureType(115), TCreatureType(60), TCreatureType(108), TCreatureType(20), TCreatureType(24), TCreatureType(64), TCreatureType(62), TCreatureType(56), TCreatureType(58), TCreatureType(0), TCreatureType(2), TCreatureType(6), TCreatureType(118), TCreatureType(120), TCreatureType(130), TCreatureType(132), TCreatureType(133), TCreatureType(134), TCreatureType(135), TCreatureType(136), TCreatureType(137), TCreatureType(24), TCreatureType(112), TCreatureType(113), TCreatureType(114), TCreatureType(115), TCreatureType(138), TCreatureType(139), TCreatureType(140), TCreatureType(141), TCreatureType(142), TCreatureType(143), TCreatureType(144) };
+DATA(0x00677938) TCreatureType g_creatureGenerator4Types[2][4] = {
+    { TCreatureType(112), TCreatureType(114), TCreatureType(113), TCreatureType(115) },
+    { TCreatureType(32), TCreatureType(33), TCreatureType(116), TCreatureType(117) }
+};
+DATA(0x00677974) const char* g_artifactObjectDefFormat = "ava%04d.def";
+
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x00677998) double g_productionHandicap[3] = { 0.0, 0.15, 0.3 };
+DATA(0x00678170) const int g_initResourcesHuman[5][7] = {
+    { 30, 15, 30, 15, 15, 15, 30000 },
+    { 20, 10, 20, 10, 10, 10, 20000 },
+    { 15, 7, 15, 7, 7, 7, 15000 },
+    { 10, 4, 10, 4, 4, 4, 10000 },
+    { 0, 0, 0, 0, 0, 0, 0 }
+};
+DATA(0x006781fc) const int g_initResourcesComputer[5][7] = {
+    { 5, 2, 5, 2, 2, 2, 5000 },
+    { 10, 4, 10, 4, 4, 4, 7500 },
+    { 15, 7, 15, 7, 7, 7, 10000 },
+    { 15, 7, 15, 7, 7, 7, 10000 },
+    { 15, 7, 15, 7, 7, 7, 10000 }
+};
+
+DATA(0x0069ccb0) playerData* g_currentPlayer;
+DATA(0x0069cca8) int g_netLocalGamePos;
+DATA(0x00699554) int g_localGamePos;
+// Original DC name: iSandAnim; GetTurnAIVars resets it beside iCurHourGlassPhase.
+DATA(0x00691680) int g_sandAnim;
+
+
+// Retail table initializers, in the layouts used by their named consumers.
+DATA(0x00677958) const char* g_resourceObjectDefs[NUM_RESOURCES] = { "avtwood0.def", "avtmerc0.def", "avtore0.def", "avtsulf0.def", "avtcrys0.def", "avtgems0.def", "avtgold0.def" };
+DATA(0x00677a0c) const char* g_townVillageObjectDefs[9] = { "AVCcast0.def", "AVCramp0.def", "AVCtowr0.def", "AVCinft0.def", "AVCnecr0.def", "AVCdung0.def", "AVCstro0.def", "AVCftrt0.def", "AVChfor0.def" };
+DATA(0x00677a30) const char* g_townFortObjectDefs[9] = { "AVCcasx0.def", "AVCramx0.def", "AVCtowx0.def", "AVCinfx0.def", "AVCnecx0.def", "AVCdunx0.def", "AVCstrx0.def", "AVCftrx0.def", "AVChforx.def" };
+DATA(0x00677a54) const char* g_townCapitolObjectDefs[9] = { "AVCcasz0.def", "AVCramz0.def", "AVCtowz0.def", "AVCinfz0.def", "AVCnecz0.def", "AVCdunz0.def", "AVCstrz0.def", "AVCforz0.def", "AVChforz.def" };
+DATA(0x00677978) int g_mineProduction[7] = { 2, 1, 2, 1, 1, 1, 1000 };
+DATA(0x006779b0) const int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
+DATA(0x0069fbf8) int g_newMapStartingBonus[8];
+DATA(0x0069fb24) int g_startingHeroOverrides[8];
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x00697294) TTextResource* g_randomTavernText;
+DATA(0x0069774c) bool g_inCampaign;
+DATA(0x00697750) int g_weekType;
+DATA(0x006983fc) int g_weekTypeExtra;
+DATA(0x00697748) int g_monthType;
+DATA(0x00698834) int g_monthTypeExtra;
+DATA(0x006783c8) int g_mapWidth = 72;
+DATA(0x006783cc) int g_mapHeight = 72;
+// Original DC name: g_playerTurn; StartLocalPlayerTurn and remote turn handoff.
+DATA(0x0069d810) int g_playerTurn;
+DATA(0x0067814c) int g_heroGoldCost = 2500;
+DATA(0x0069950c) int g_grailOwner;
+DATA(0x0069951c) unsigned char g_normalVictory;
+DATA(0x0069ccc4) unsigned char g_curPlayerBit;
 
 type_point aiAttemptPuzzleGuess(long player);
 
@@ -103,7 +121,6 @@ type_point aiAttemptPuzzleGuess(long player);
 // game.obj writer. The second dword is the byte-proven autosave preference
 // gate, but no surviving symbol attests a semantic spelling for it.
 DATA(0x00691684) int g_curHourGlassPhase;
-DATA(0x00698770) int g_unnamed698770;
 
 // Hero-setup maps use the native Dinkumware <utility>/<xtree> definitions.
 // Retail retains the pair cleanup at 0x4c4df0 and the tree minimum, insert
@@ -112,14 +129,10 @@ DATA(0x00698770) int g_unnamed698770;
 // do not own them. The per-TU /MT profile supplies the external _Lockit
 // calls used by the native tree scopes (0x60b598/0x60b634).
 
-unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<generator>& srcVector);
-unsigned char saveObjectVector(TAbstractFile* outfile,
-                                 std::vector<type_creature_bank>* srcVector);
-// The Load mirror of save_object_vector (retail 0x4d2870), reached only
-// by game::Load's tail. Same /Gr shape: file in ecx, vector in edx.
-unsigned char loadObjectVector(TAbstractFile* infile, std::vector<generator>& destVector);
-unsigned char loadObjectVector(TAbstractFile* infile,
-                                 std::vector<type_creature_bank>* destVector);
+template <class T>
+bool saveObjectVector(TAbstractFile* outfile, std::vector<T>& srcVector);
+template <class T>
+bool loadObjectVector(TAbstractFile* infile, std::vector<T>& destVector);
 
 const int g_savedCreatureNone = 0xff;
 const int g_savedMapCoordinateNone = 0xff;
@@ -206,24 +219,16 @@ const int g_neutralTownFortifiedReinforcementChance = 80;
 // remaining spellings describe only the retail use proven in DoNewTurn.
 DATA(0x006a79c4) extern const char* g_monthNames[10];
 DATA(0x006a7710) extern const char* g_weekNames[15];
-DATA(0x006a77a8) extern const char* g_lastDayWarningFormat;
-DATA(0x006a77ac) extern const char* g_oneDayWarningFormat;
-DATA(0x006a77b0) extern const char* g_normalMonthFormat;
-DATA(0x006a77b4) extern const char* g_creatureMonthFormat;
-DATA(0x006a77b8) extern const char* g_plagueMonthText;
-DATA(0x006a77bc) extern const char* g_normalWeekFormat;
-DATA(0x006a77c0) extern const char* g_creatureWeekFormat;
-DATA(0x006a77c4) extern const char* g_infernoWeekFormat;
 
 // The 256 canned-rumour text pointers are filled by the game-data loader.
 // Its first store is 0x696d9c and SetCannedRumour is the table's only
 // runtime reader.
-DATA(0x00696d9c) extern const char* g_cannedRumours[256];
+DATA(0x00696d9c) const char* g_cannedRumours[256];
 
 // randtvrn.txt itself, kept alive because the table above points into it.
 // InitializeRandomTavernText is its only writer and nothing else in the
 // image reads the slot.
-DATA(0x00697294) extern TTextResource* g_randomTavernText;
+
 
 const int g_allRandomArtifactClasses = 0x1e;
 const int g_campaignArmyOverrideHero = 45;
@@ -267,8 +272,6 @@ const int g_specialRumourGrailAboveText = 264;
 const int g_specialRumourGrailBelowText = 265;
 
 const int g_firstArmageddonsBladeCampaign = 7;
-const int g_newMapRumourMapThreshold = 33;
-const int g_newMapRumourSpecialThreshold = 66;
 // The map's full obelisk roster and the puzzle it uncovers are the same
 // 48: game::obeliskFlags is 0x30 entries, puzzlePiecesRemoved is a
 // std::bitset<48>, and GetNumObelisks scans exactly 48. The placement
@@ -322,38 +325,6 @@ const int g_gameDifficultyEasy = 0;
 const int g_gameDifficultyExpert = 3;
 const int g_gameDifficultyImpossible = 4;
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:348
-DC_ONLY(0xa2b5c, 0x3A)
-void Buffer::Buffer()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:356
-DC_ONLY(0xa2b98, 0x1C)
-void Buffer::~Buffer()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:365
-DC_ONLY(0xa2bb4, 0x1A6)
-int bufwrite(const void* buf, int size)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:396
-DC_ONLY(0xa2d5c, 0x42)
-int bufread(void* buf, int size)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x004b8410, 0x33)  // dc 0xa2af8
 unsigned char initializeRandomTavernText()
 {
@@ -404,7 +375,7 @@ generator::generator()
 }
 
 VA(0x004b85a0, 0x13B)  // dc 0xa2e48
-unsigned char generator::load(TAbstractFile* infile)
+bool generator::load(TAbstractFile* infile)
 {
     if (infile->read(&m_playerOwner, sizeof(m_playerOwner)) !=
         sizeof(m_playerOwner))
@@ -436,13 +407,13 @@ unsigned char generator::load(TAbstractFile* infile)
     if (m_guards.load(infile) == -1)
         return 0;
 
-    unsigned char success =
+    bool success =
         infile->read(&m_townId, sizeof(m_townId)) == sizeof(m_townId);
     return success;
 }
 
 VA(0x004b86e0, 0xB1)  // dc 0xa2fdc
-unsigned char generator::save(TAbstractFile* outfile)
+bool generator::save(TAbstractFile* outfile)
 {
     outfile->write(&m_playerOwner, sizeof(m_playerOwner));
     outfile->write(&m_genClass, sizeof(m_genClass));
@@ -458,7 +429,7 @@ unsigned char generator::save(TAbstractFile* outfile)
     outfile->write(&m_mapY, sizeof(m_mapY));
     outfile->write(&m_mapZ, sizeof(m_mapZ));
     m_guards.save(outfile);
-    unsigned char saved =
+    bool saved =
         outfile->write(&m_townId, sizeof(m_townId)) == sizeof(m_townId);
     return saved;
 }
@@ -473,7 +444,7 @@ unsigned char generator::save(TAbstractFile* outfile)
 // Dreamcast records the alignment local as TTownType and get_alignment's
 // header declaration returns that same enum. Complete retains the helper call
 // here while update_bonus expands its elemental gate and traits lookup.
-DC_ONLY(0xa30c4, 0xB2)
+// Dreamcast procedure: dc 0xa30c4.
 inline void generator::removeBonus()
 {
     if (m_playerOwner < 0)
@@ -515,7 +486,6 @@ inline void generator::updateBonus()
 }
 
 // E:\gamedcs\game.cpp:557
-DC_ONLY(0xa3250, 0x38)
 inline void generator::setOwner(long owner)
 {
     if (owner == m_playerOwner)
@@ -599,8 +569,7 @@ void game::calculateProduction()
         if (!m_playerDisabled[playerId]) {
             long (&production)[NUM_RESOURCES] =
                 m_players[playerId].m_ai.m_turnProductionResource;
-            for (i = 0; i < NUM_RESOURCES; ++i)
-                production[i] = 0;
+            MEMSET(production, 0, sizeof(production), i);
         }
     }
 
@@ -888,7 +857,7 @@ int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
         m_garrisons[i].m_mapZ = static_cast<unsigned char>(count);
 
         if (saveVersion < 28) {
-            m_garrisons[i].m_removableTroops = !g_unk69774c;
+            m_garrisons[i].m_removableTroops = !g_inCampaign;
         } else {
             unsigned char value;
             infile->read(&value, sizeof(value));
@@ -1036,15 +1005,15 @@ int game::saveBoatPool(TAbstractFile* outfile)
 // Retail expands this ordinary helper in game::load. Complete routes the
 // two reads through TAbstractFile instead of Dreamcast's gzread handle.
 // Original locals: count, char_buffer.
-DC_ONLY(0xa4c08, 0x5E)
+
 int game::loadObeliskPool(TAbstractFile* infile)
 {
     char charBuffer;
-    int count = infile->read(&charBuffer, sizeof(charBuffer));
+    int count = readValue(infile, charBuffer);
     if (count < sizeof(charBuffer))
         return -1;
     m_numObelisks = charBuffer;
-    count = infile->read(m_obeliskFlags, sizeof(m_obeliskFlags));
+    count = readValue(infile, m_obeliskFlags);
     if (count < sizeof(m_obeliskFlags))
         return -1;
     return 0;
@@ -1053,7 +1022,7 @@ int game::loadObeliskPool(TAbstractFile* infile)
 // E:\gamedcs\game.cpp:1256; original SaveObeliskPool.
 // The ordinary writer mirrors the reader; retail expands it in game::save.
 // Original locals: count, char_buffer.
-DC_ONLY(0xa4c68, 0x5E)
+
 int game::saveObeliskPool(TAbstractFile* outfile)
 {
     char charBuffer = m_numObelisks;
@@ -1095,8 +1064,8 @@ void playerData::init()
     m_recruits[1] = -1;
     m_personality = 0;
     memset(&m_ai, 0, sizeof(m_ai));
-    for (int heroIndex = 0; heroIndex < 8; heroIndex++)
-        m_heroes[heroIndex] = -1;
+    int heroIndex;
+    MEMSET(m_heroes, -1, sizeof(m_heroes), heroIndex);
     memset(m_townIds, 0xff, sizeof(m_townIds));
     m_isLocal = 0;
     m_isHuman = 0;
@@ -1143,7 +1112,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
 
     g_game->recordHideHero(ourHero, ourHero->m_owner, 0);
 
-    if (g_videoPaused) {
+    if (g_remoteOn) {
         CMCHideHero hideHero(ourHero->m_id);
         sendMapChange(&hideHero);
     }
@@ -1169,31 +1138,27 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
     return 1;
 }
 
+// Original: playerData::SetName; game.cpp:1383, dc 0xa50ac.
+// AssignNetInfo expands this ordinary bounded-copy helper in Complete.
+void playerData::setName(char* newName)
+{
+    strncpy(m_name, newName, 20);
+}
+
 VA(0x004ba130, 0x34)  // dc 0xa5108
 void playerData::assignNetInfo(CNetPlayerInfo* netPlayerInfo)
 {
-    strncpy(m_name, netPlayerInfo->m_name, 20);
+    setName(netPlayerInfo->m_name);
     m_dpid = netPlayerInfo->m_dpid;
     m_isHuman = 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:1383
-DC_ONLY(0xa50ac, 0x5C)
-void playerData::SetName(char* cNewName)
+// Original: playerData::GetNetInfo; game.cpp:1395, dc 0xa5138.
+void playerData::getNetInfo(CNetPlayerInfo* netPlayerInfo)
 {
-    // @stub
+    strcpy(netPlayerInfo->m_name, m_name);
+    netPlayerInfo->m_dpid = m_dpid;
 }
-
-// E:\gamedcs\game.cpp:1395
-DC_ONLY(0xa5138, 0x2E)
-void playerData::GetNetInfo(CNetPlayerInfo* pNetPlayerInfo)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x004ba170, 0x4E)  // dc 0xa5168
 void playerData::clearNetInfo()
@@ -1470,33 +1435,41 @@ int playerData::save(TAbstractFile* outfile)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:1668
-DC_ONLY(0xa5998, 0x54)
-int game::LoadPlayerData(void* infile)
+// Original: game::LoadPlayerData; game.cpp:1668, dc 0xa5998.
+// Complete passes the saved version to each playerData::load in the
+// expansion at game::load +0x51f. DC's ordinary helper has x and err locals
+// and returns the element error; the caller maps a negative result to -1.
+int game::loadPlayerData(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    for (int x = 0; x < 8; ++x) {
+        int err = m_players[x].load(infile, saveVersion);
+        if (err < 0)
+            return err;
+    }
+    return 0;
 }
 
-// E:\gamedcs\game.cpp:1683
-DC_ONLY(0xa59ec, 0x54)
-int game::SavePlayerData(void* outfile)
+// Original: game::SavePlayerData; game.cpp:1683, dc 0xa59ec.
+// Ordinary helper expanded at game::save +0x38f; eight player records.
+int game::savePlayerData(TAbstractFile* outfile)
 {
-    // @stub
+    for (int x = 0; x < 8; ++x) {
+        int err = m_players[x].save(outfile);
+        if (err < 0)
+            return err;
+    }
+    return 0;
 }
 
 // E:\gamedcs\game.cpp:1698
-#endif  // @carcass
-
 // Original LoadTownPool; uchar_buffer -> townCount. Complete passes the save
 // version to town::load. DC returns the element error unchanged, while the
 // game::load caller maps any negative result to -1.
-DC_ONLY(0xa5a40, 0xB6)
+
 int game::loadTownPool(TAbstractFile* infile, int saveVersion)
 {
     unsigned char townCount;
-    int count = infile->read(&townCount, sizeof(townCount));
+    int count = readValue(infile, townCount);
     if (count < sizeof(townCount))
         return -1;
     m_towns.resize(townCount);
@@ -1509,11 +1482,10 @@ int game::loadTownPool(TAbstractFile* infile, int saveVersion)
 }
 
 // E:\gamedcs\game.cpp:1722
-
 // Original SaveTownPool; uchar_buffer -> townCount. Keep the DC vector-size
 // loop and element error return; ordinary inlining replaces the copied loop
 // and its pinned condition in game::save.
-DC_ONLY(0xa5af8, 0xA4)
+
 int game::saveTownPool(TAbstractFile* outfile)
 {
     unsigned char townCount = m_towns.size();
@@ -1528,23 +1500,34 @@ int game::saveTownPool(TAbstractFile* outfile)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:1745
-DC_ONLY(0xa5b9c, 0x56)
-int game::SaveHeroPool(void* outfile)
+// Original: game::SaveHeroPool; game.cpp:1745, dc 0xa5b9c.
+// Ordinary helper expanded at game::save +0x45a. Complete writes all156
+// hero records; the older pressing's pool was128.
+int game::saveHeroPool(TAbstractFile* outfile)
 {
-    // @stub
+    for (int x = 0; x < HERO_COUNT; ++x) {
+        int err = m_heroes[x].save(outfile);
+        if (err < 0)
+            return err;
+    }
+    return 0;
 }
 
-// E:\gamedcs\game.cpp:1760
-DC_ONLY(0xa5bf4, 0x56)
-int game::LoadHeroPool(void* infile)
+// Original: game::LoadHeroPool; game.cpp:1760, dc 0xa5bf4.
+// Complete's game::load +0x622 tests saveVersion against25, chooses128 or
+//156 records, and passes that version to hero::load at +0x658.
+int game::loadHeroPool(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    int heroCount = HERO_COUNT;
+    if (saveVersion < g_saveVersionCompleteHeroRoster)
+        heroCount = g_mapHeaderLegacyHeroCount;
+    for (int x = 0; x < heroCount; ++x) {
+        int err = m_heroes[x].load(infile, saveVersion);
+        if (err < 0)
+            return err;
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 VA(0x004ba9e0, 0x2D)  // dc 0xa5c4c
 int playerData::findHero(int id) const
@@ -1620,16 +1603,24 @@ int getNumObelisks(int whichPlayer)
     return numFound;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:1873
-DC_ONLY(0xa5f30, 0xBE)
-int playerData::BuildingsOwned(int townType, int buildingId, int mageLevel)
+// Original: playerData::BuildingsOwned; game.cpp:1873, dc 0xa5f30
+int playerData::buildingsOwned(int townType, int buildingId, int mageLevel)
 {
-    // @stub
+    int count = 0;
+    for (int i = 0; i < m_numTowns; ++i) {
+        town* currentTown = &g_game->m_towns[m_townIds[i]];
+        if (buildingId < DWELLING_0_ID || currentTown->m_type == townType) {
+            if (buildingId == MAGE_GUILD_ID) {
+                if (currentTown->hasBuilding(MAGE_GUILD_ID, 0)
+                    && currentTown->m_mageLevel == mageLevel)
+                    ++count;
+            } else if (currentTown->hasBuilding(buildingId, 0)) {
+                ++count;
+            }
+        }
+    }
+    return count;
 }
-
-#endif  // @carcass
 
 VA(0x004babd0, 0xDC)  // dc 0xa5ff0
 int playerData::numOfGivenArtifact(int whichArtifact) const
@@ -1699,7 +1690,7 @@ char* playerData::getName()
     if ((!m_isHuman && _strcmpi(m_name, g_generalText->getText(
             GENERAL_TEXT_DEFAULT_PLAYER_NAME)) == 0) ||
         (m_isHuman && _strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")) == 0)) {
-        strcpy(m_name, g_playerColorNames[m_color]);
+        strcpy(m_name, g_colors[m_color]);
     }
     m_name[0] = toupper(m_name[0]);
     return m_name;
@@ -1870,23 +1861,27 @@ int game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove,
     return id;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:2158
-DC_ONLY(0xa67bc, 0x94)
-int game::Scan(signed char* whichList, int start, int length)
+// Original: game::Scan; game.cpp:2158, dc 0xa67bc
+int game::scan(signed char* whichList, int start, int length)
 {
-    // @stub
+    for (int i = start; i < start + length; ++i) {
+        if (whichList[i] == -1)
+            return i;
+    }
+    return -1;
 }
 
-// E:\gamedcs\game.cpp:2173
-DC_ONLY(0xa6850, 0x86)
-int game::RandomScan(signed char* whichList, int start, int length, signed char scanValue)
+// Original: game::RandomScan; game.cpp:2173, dc 0xa6850
+int game::randomScan(signed char* whichList, int start, int length,
+                     signed char scanValue)
 {
-    // @stub
+    TPickANumber picker(start, start + length - 1);
+    int id;
+    do {
+        id = picker.pick();
+    } while (whichList[id] != scanValue && id >= start);
+    return id >= start ? id : -1;
 }
-
-#endif  // @carcass
 
 VA(0x004bb400, 0x1DC)  // dc 0xa68d8
 int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
@@ -2074,16 +2069,15 @@ int game::getTownId(int x, int y, int z)
     return -1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:2390
-DC_ONLY(0xa707c, 0x90)
-int game::GetHeroId(type_point hero_location)
+// Original: game::GetHeroId; game.cpp:2390, dc 0xa707c
+int game::getHeroId(type_point heroLocation)
 {
-    // @stub
+    for (int i = 0; i < HERO_COUNT; ++i) {
+        if (m_heroes[i].getLocation() == heroLocation)
+            return i;
+    }
+    return -1;
 }
-
-#endif  // @carcass
 
 // Original GetMineId, game.cpp:2405, dc 0xa710c. The ordinary helper
 // scans x/y/z in that order and returns -1 after exhausting the mine pool.
@@ -2135,37 +2129,46 @@ int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
     return length;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:2433
-DC_ONLY(0xa7278, 0xA6)
-int game::GetGarrisonId(int x, int y, int z)
+// Original: game::GetGarrisonId; game.cpp:2433, dc 0xa7278
+int game::getGarrisonId(int x, int y, int z)
 {
-    // @stub
+    for (int i = 0; i < m_garrisons.size(); ++i) {
+        if (m_garrisons[i].m_mapX == x && m_garrisons[i].m_mapY == y
+            && m_garrisons[i].m_mapZ == z)
+            return i;
+    }
+    return -1;
 }
 
-// E:\gamedcs\game.cpp:2448
-DC_ONLY(0xa7320, 0xF2)
-void GenerateStandardFileName(char* cLongName, char* cRetName)
+// Original: GenerateStandardFileName; game.cpp:2448, dc 0xa7320
+// DC retains this ordinary utility without a recorded named caller. Keep its
+// source operation without assigning it a retail address or inventing a use.
+void generateStandardFileName(char* longName, char* retName)
 {
-    // @stub
+    char* period = strrchr(longName, '.');
+    if (!period) {
+        strcpy(retName, longName);
+        return;
+    }
+    *period = 0;
+    int charCount = 0;
+    int length = strlen(longName);
+    for (int i = 0; i < length; ++i) {
+        char current = longName[i];
+        current = toupper(current);
+        if ((current >= 'A' && current <= 'Z')
+            || (current >= '0' && current <= '9') || current == '_') {
+            retName[charCount] = current;
+            ++charCount;
+        }
+        // DC line2482 assigns 999 to i (literal pool0xa74b2), then the
+        // ordinary for increment and length test finish the short-name scan.
+        if (charCount >= 8)
+            i = 999;
+    }
+    *period = '.';
+    strcpy(retName + charCount, period);
 }
-
-// ---------------------------------------------------------------------
-// THE game::Load / game::Save REGION (0x4bb990 .. 0x4c61e0).
-
-// This stretch is NOT a clean order-map: 54 carve rows against 55
-// game.cpp DC rows is exactly the count coincidence the FORCED-bracket
-// trap is made of, and it is a coincidence - the region is INTERLEAVED
-// with header-origin and Dinkumware COMDATs that game.obj also emits
-// (two rows carry the literal 'invalid bitset<N> position', one is
-// reachable only from /GX unwind funclets, and the DC dump attributes
-// ~390 stlport rows plus 70 header rows to game.obj). Header-origin
-// functions do not anchor, so only rows with independent evidence are
-// claimed here; the rest stay unclaimed on purpose.
-
-// E:\gamedcs\game.cpp:2564
-#endif  // @carcass
 
 VA(0x004bbb60, 0xBB)  // dc 0xa750c
 int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
@@ -2303,7 +2306,6 @@ void game::setupShipyards()
 }
 
 // E:\gamedcs\game.cpp:2654.
-DC_ONLY(0xa795c, 0xC6)
 int game::saveBlackMarkets(TAbstractFile* outfile)
 {
     char blackMarketListSize = m_blackMarkets.size();
@@ -2317,20 +2319,19 @@ int game::saveBlackMarkets(TAbstractFile* outfile)
 }
 
 // E:\gamedcs\game.cpp:2672
-
 // Original LoadBlackMarkets; black_market_list_size -> blackMarketListSize.
 // DC calls clear, resize and operator[]. The ordinary helper restores one
 // caller cleanup boundary; its natural expansion needs no inline-depth pin.
-DC_ONLY(0xa7a24, 0x98)
+
 int game::loadBlackMarkets(TAbstractFile* infile)
 {
     m_blackMarkets.clear();
     char blackMarketListSize;
-    int count = infile->read(&blackMarketListSize, sizeof(blackMarketListSize));
+    int count = readValue(infile, blackMarketListSize);
     if (count < sizeof(blackMarketListSize))
         return -1;
     m_blackMarkets.resize(blackMarketListSize);
-    count = infile->read(&m_blackMarkets[0], blackMarketListSize * sizeof(TBlackMarket));
+    count = readValues(infile, &m_blackMarkets[0], blackMarketListSize);
     if (count < blackMarketListSize * sizeof(TBlackMarket))
         return -1;
     return 0;
@@ -2343,21 +2344,20 @@ int game::loadBlackMarkets(TAbstractFile* infile)
 // prove a bool result and vector reference; Complete uses TAbstractFile.
 // Retail Load's gate-pair arm zeroes its fill before resize:
 // that is the native long default, not the old point-vector pointer union.
-// All six source calls expand naturally, removing six resize fences and
-// raising Load 78.2645 -> 80.1570. The 33-state helper family and 97-state
-// return/fence follow-up also test explicit T() locals and direct boolean
-// returns (up to 82.2663); retain the DC default-argument and guard scopes.
-// Restoring the generic university aggregate removes an extra constructor
-// call from its default fill and raises Load to 81.2284. The elemental-school
+// Complete's native count reader preserves the short output and byte count.
+// The point and long calls expand in game::load; the university call remains
+// the caller's 98.1693% residual. Direct payload-result returns alter the
+// retained creature-bank reader's comparison, so keep the two DC guards.
+// The generic university fill stays an aggregate; its elemental-school
 // initializer belongs only to the Conflux consumers (see type_university).
 template <class T>
 bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 {
     short count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return false;
     destVector.resize(count);
-    if (infile->read(&destVector[0], count * sizeof(T)) < count * sizeof(T))
+    if (readValues(infile, &destVector[0], count) < count * sizeof(T))
         return false;
     return true;
 }
@@ -2381,15 +2381,16 @@ bool saveVector(TAbstractFile* outfile, std::vector<T>& srcVector)
     return true;
 }
 
-// E:\gamedcs\game.cpp:2733
-// Original load_object_vector; dest_vector -> destVector. CodeView proves an
-// ordinary overload taking the generator vector by reference, short count and
-// long i. Complete substitutes TAbstractFile for the Dreamcast gz handle.
-DC_ONLY(0xc1950, 0x98)
-unsigned char loadObjectVector(TAbstractFile* infile, std::vector<generator>& destVector)
+// Original: load_object_vector; game.cpp:2733, dc 0xc1950 / 0xc1b6c.
+// Both DC instantiations have the same source rows and reference interface.
+// Raw public YA_N proves bool; the primitive type display uses a byte alias.
+// Complete uses TAbstractFile in place of the DC gz handle; generator calls
+// expand, while the creature-bank instantiation is retained at 0x4d2870.
+template <class T>
+bool loadObjectVector(TAbstractFile* infile, std::vector<T>& destVector)
 {
     short count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return 0;
     destVector.resize(count);
     for (long i = 0; i < count; ++i) {
@@ -2399,11 +2400,11 @@ unsigned char loadObjectVector(TAbstractFile* infile, std::vector<generator>& de
     return 1;
 }
 
-// E:\gamedcs\game.cpp:2754
-// Original save_object_vector; src_vector -> srcVector. The ordinary overload
-// is expanded by game::save; keep the count short and the vector by reference.
-DC_ONLY(0xc1d38, 0x9C)
-unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<generator>& srcVector)
+// Original: save_object_vector; game.cpp:2754, dc 0xc1d38 / 0xc1f64.
+// The matching reference writer preserves each record's own save boundary.
+// Both raw public symbols return bool (YA_N), like the record members (QAA_N).
+template <class T>
+bool saveObjectVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 {
     short count = srcVector.size();
     if (outfile->write(&count, sizeof(count)) < sizeof(count))
@@ -2418,11 +2419,12 @@ unsigned char saveObjectVector(TAbstractFile* outfile, std::vector<generator>& s
 // E:\gamedcs\game.cpp:2774
 // Retail inlines this record reader into load_object_vector. The fixed
 // bands are the 0x38-byte army, seven 4-byte resources, the creature id and
-// reward count; the trailing short sizes the four-byte artifact vector.
-inline unsigned char type_creature_bank::load(void* input)
+// reward count; DC2783 then delegates the short-count artifact tail to
+// load_vector. Keeping that nested boundary also bounds the ordinary member
+// before VC6 chooses its expansion into loadObjectVector.
+bool type_creature_bank::load(void* input)
 {
     TAbstractFile* infile = static_cast<TAbstractFile*>(input);
-    short artifactCount;
 
     if (infile->read(&m_guards, sizeof(m_guards)) != sizeof(m_guards))
         return 0;
@@ -2434,215 +2436,30 @@ inline unsigned char type_creature_bank::load(void* input)
     if (infile->read(&m_rewardCreatures, sizeof(m_rewardCreatures)) !=
         sizeof(m_rewardCreatures))
         return 0;
-    std::vector<TArtifact>& artifactVector = m_artifacts;
-    if (infile->read(&artifactCount, sizeof(artifactCount)) <
-        sizeof(artifactCount))
-        return 0;
-
-    artifactVector.resize(artifactCount);
-    if (infile->read(artifactVector.begin(),
-                     artifactCount * sizeof(TArtifact)) <
-        artifactCount * sizeof(TArtifact))
-        return 0;
-    return 1;
+    return loadVector(infile, m_artifacts);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:2790
-DC_ONLY(0xa7b60, 0x64)
-unsigned char type_creature_bank::save(void* outfile)
+// Original: type_creature_bank::save; game.cpp:2790, dc 0xa7b60.
+// DC2791..2794 write the four fixed bands without checking each result;
+// DC2795 returns save_vector for the artifact tail. Complete expands this
+// ordinary member in its retained saveObjectVector<type_creature_bank>.
+bool type_creature_bank::save(void* output)
 {
-    // @stub
+    TAbstractFile* outfile = static_cast<TAbstractFile*>(output);
+    outfile->write(&m_guards, sizeof(m_guards));
+    outfile->write(m_resources, sizeof(m_resources));
+    outfile->write(&m_rewardCreature, sizeof(m_rewardCreature));
+    outfile->write(&m_rewardCreatures, sizeof(m_rewardCreatures));
+    return saveVector(outfile, m_artifacts);
 }
 
-// E:\gamedcs\game.cpp:2806
-DC_ONLY(0xa7bec, 0x558)
-int game::GetSaveGameHeaders(void* infile)
+// Complete reading belongs to SavedGameHeader::load. The caller tests
+// its result before restoring any game state and retains the snapshot for
+// later version tests. This ordinary application phase owns the demonstrated
+// g_game/global field transfers. Its name and free-function binding are
+// inferred; no Dreamcast identity or retained address is asserted.
+void applySavedGameHeader(const SavedGameHeader& saved)
 {
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:3026
-// CALLEE-SET PROOF, the strongest evidence in this TU. 0x4bcda0's rel32
-// callees include generator::generator, generator::load, playerData::load,
-// hero::load, town::town, NewfullMap::Load, searchArray::Close,
-// SCampaign::SCampaign AND all four claimed pool LOADERS
-// (0x4b9070 / 0x4b9340 / 0x4b96f0 / 0x4b9a00) - and none of the savers.
-// It references the literal 'H3SVG' at 0x677d38. `ret 4` = p=2.
-
-// PARTIAL (47.6526%): retail's SavedGameHeader frame and restoration prefix,
-// scalar scenario-state tail, nineteen teleport-destination vectors,
-// map/object pools, and all eight player records are reconstructed below.
-// The canonical SCampaign, SGameSetupOptions, and NewSMapHeader members make
-// the header copy land on the same object bands in every translation unit.
-// The town/hero roster and final map-extra bands remain. Short teleport-vector
-// counts deliberately skip only that vector rather than failing the load.
-#endif  // @carcass
-
-// WALL IDENTIFIED AND LARGELY CLEARED 2026-08-20 - and it was NOT the
-// old `_Tidy` story. `homm3 vc6 diagnose 0x004bcda0` classed this
-// INLINER (predict-inline): 14 callees expanded on retail's side only, 2
-// on ours, 203 basic blocks against 139, 97 conditional branches against
-// 72. The frame already matched (`sub esp,0x7a8` both sides); we simply
-// emitted ~200 more instructions.
-
-// The whole cluster was ONE decision seen from both ends. Retail keeps
-// every std::vector<T>::resize instantiation OUT OF LINE and inlines
-// insert/erase/size INTO it - vector<type_point>::resize is the 497-byte
-// body at 0x4d4aa0, called five times from here. We did the inverse:
-// resize expanded into Load at every site, and the insert/erase/size it
-// contains were then left as calls. Our direct-call multiset carried
-// 5 insert, 4 erase and 9 size() rows retail has none of.
-
-// The fix is to pin the eight resize CALL SITES, not the function.
-// `#pragma inline_depth(0)` is NOT function-granular in VC6 - this tree
-// already relies on that around generator::Grow above - so wrapping each
-// `X.resize(n)` statement alone suppresses exactly the one expansion and
-// leaves the fourteen expansions retail wants. 50.4577 -> 69.6199.
-
-// Second point, from the pin's own documented side effect: it also
-// de-inlines everything else in the statement it covers, and
-// `resize(n)`'s DEFAULT ARGUMENT lives inside that statement, so the
-// empty `type_point()` was being emitted as five out-of-line constructor
-// calls retail does not make. Building the fill value as a named local
-// OUTSIDE the pin and passing it explicitly took 69.6199 -> 71.7143.
-// `emptyPoint` is a CODEGEN DEVICE, not retail's source spelling -
-// retail certainly wrote `resize(n)` - and it is semantically identical
-// because type_point's default constructor is empty, so both leave the
-// fill value uninitialised.
-// OUTSIDE THE PIN MEANS OUTSIDE, AND THE DECLARATION HAD DRIFTED BACK IN
-// (restored 2026-08-20, 90.9797 -> 91.8624). All five sites read
-// `#pragma inline_depth(0) / type_point emptyPoint; / X.resize(...)`,
-// which puts the declaration INSIDE the pinned region and de-inlines the
-// empty constructor again - `??0type_point@@QAE@XZ` came out as five
-// out-of-line calls at fn+0xc6d, +0xcc8, +0xd13, +0xd57 and +0xd9b that
-// retail does not make. Moving the declaration above the pragma is the
-// whole fix, and it lands exactly on the 91.8624 this note already
-// quotes: the note survived a merge that the code did not. If this row
-// ever reads 90.98 again, look here FIRST.
-
-// Two knobs measured and REJECTED, so they are not re-tried:
-//   * `#pragma inline_depth(0)` scoped to the whole function: 50.46 ->
-//     48.97. It suppresses the resize expansion but also kills the
-//     fourteen expansions retail makes, and those dominate.
-//   * `#pragma auto_inline(off)` around a leading `#include <vector>`:
-//     no effect whatsoever (50.4577 either way). auto_inline only
-//     excludes functions from AUTOMATIC inlining, and the vector members
-//     are defined inside the class, so they are implicitly `inline` and
-//     the pragma never reaches them.
-
-// 71.7143 -> 86.7504, 2026-08-20. The standing note said the blocker was
-// "which two of 37 string teardowns"; that framing was wrong twice over.
-// Each `_Tidy` call in this function IS one guarded `return -1` - retail
-// gives every cleanup site its own unwind-state pair and calls
-// basic_string::_Tidy on `saved.fileName` there - so counting them counts
-// RETURNS, and the delta was four MISSING statements, not two inlining
-// decisions. All four were read straight off retail's tail, and each is
-// the exact mirror of something game::Save already writes:
-//   * the availability read is an IF/ELSE ON THE VERSION with the literals
-//     0x9c and 0x80 and the 0x40 fill inside the SHORT arm - two guarded
-//     reads, not one read of `heroCount`;
-//   * a SEPARATE guarded byte feeds f_1f698. Retail reads into the same
-//     slot a second time and only then tests `saveVersion < 40`; the store
-//     is `movsx`, which is what makes the temp a signed char;
-//   * the four-byte slot game::Save writes as a literal zero is read into
-//     a stack dword and never looked at;
-//   * the gMapExtra plane, `(gpGame->worldMap.HasTwoLevels + 1) *
-//     MAP_WIDTH * MAP_HEIGHT * 2`, read through the GLOBAL gpGame.
-// The twelve scalar reads also needed game::Save's FOUR temps rather than
-// one char and one short, and the event-record payload size has to be
-// recomputed rather than cached in a local.
-
-// THREE PINS, and the third is a lever this tree had not used before:
-//   * `std::bitset<8> poolMap(0)` and the bit assignment in the heroPool
-//     loop - retail CALLS both the bitset constructor (0x4cff30) and
-//     bitset<8>::reference::operator=(bool) (0x4d4490), where we inlined
-//     them and dragged _Xran in. The subscript must be hoisted into a
-//     named `bitset<8>::reference` first, because retail keeps operator[]
-//     INLINE and the pin is statement-granular. Worth 80.1270 -> 83.2954.
-//     The bit itself is byte-array indexed - `poolBits[player >> 3] &
-//     (1 << (player & 7))`, not `1 << player` - which is what the `shr
-//     eax,3` / `and ecx,7` pair says.
-//   * `#pragma inline_depth(0)` ON THE `return 0` STATEMENT. The pin
-//     reaches a LOCAL'S SCOPE-EXIT DESTRUCTOR: retail calls
-//     ~SavedGameHeader out of line at the normal exit (0x4bdf80) while
-//     expanding it at the early-return one, and pinning the return alone
-//     reproduces exactly that split. 83.2954 -> 85.1473.
-//   * the event-record `clear()`. Retail expands clear() and CALLS
-//     erase(begin(), end()); we expanded erase too and called its `copy`
-//     and `_Destroy`. Spelled as an explicit erase with begin()/end()
-//     hoisted out of the pin. With the recompute of `count * 28`,
-//     85.1473 -> 86.7504.
-
-// THE TWO SCRATCH BUFFERS MUST BE BLOCK-SCOPED (+1.22, and it is
-// game::Save's own frame lever applied here). At function scope VC6 gives
-// `char_buffer` and `short_buffer` permanent slots (-0xf and -0xe); with
-// each use group wrapped in its own brace pair they COLOUR INTO THE
-// INCOMING PARAMETER'S HOME, which is where retail keeps them - [ebp+0xb]
-// for the byte (10 refs) and [ebp+0xa] for the short (22), with the byte
-// temp at -0xd matching ref for ref.
-
-// 90.0926 -> 91.8624, 2026-08-20 (cold-combatpath lane): the frame is
-// RETAIL'S NOW (sub esp,0x7a8 both sides), and the lever was the
-// saveVersion CACHE - retail re-reads saved.version from [ebp-0x5cc] at
-// every one of the 18 uses (the note below already said the poolCount
-// compare reads it there); deleting `int saveVersion` and spelling
-// `saved.version` at each use is +1.77 and the whole 8-byte frame
-// delta. Do not cache what retail reloads, once more. Measured against
-// it in the same pass: the emptyPoint fills respelled as unnamed
-// `resize(n, type_point())` temporaries are -1.2 in this context (the
-// named block-scoped local is retail's shape), and the poolCount
-// ternary flipped to `>= 32 ? 8 : 3` is -0.75, so the setl lowering is
-// not the operand order.
-// Residual (92.3721%): base now has 37 `_Tidy` calls against retail's 39
-// and 73 conditional branches against 72. The two remaining depth-one
-// destructor sites are the default `town` temporary after towns.resize
-// and the failed load_recorded_events exit. A named town temporary with a
-// depth-1 scope exit does produce retail's local `_Tidy` call, but changes
-// VC6's whole-function optimizer state to 90.2707 and 76 branches; normal
-// scope exit lands on the same score. `#pragma inline_depth(1)` at the
-// event-record return is byte-flat, while depth 0 calls the whole
-// ~SavedGameHeader and is the already-rejected shape. This is an inliner-
-// threshold residual; do not grind the same spellings again.
-// A release-elided diagnostic carrier is also MEASURED AND REJECTED
-// (2026-08-21). Call-shaped sites at function entry score 90.89 for doses
-// one and two, 91.99 for four, and 90.44 for eight, all below 92.37; one
-// site at either residual cleanup, or one at both, scores the same 90.89
-// with 76 branches. The carrier does move VC6's inliner, but never toward
-// retail's 72-branch phase, so it is not the missing source-history mass.
-
-// VERIFY AUDIT (2026-08-21): conventional release VERIFY is not the
-// 73-versus-72 explanation. Positional branch alignment accounts for the
-// total as TWO retail-only conditions (the 128/156 hero-count selection and
-// the empty-range guard in the legacy-availability fill) versus THREE
-// base-only conditional tests inside the inlined string cleanup at the
-// failed load_recorded_events exit. Every call-result failure guard has a
-// retail mate; changing one to VERIFY would remove a branch retail has.
-// VERIFY around one of the already-unguarded Read calls is release-byte
-// indistinguishable and therefore cannot be proved from this image.
-// A one-call hero-count helper is byte-flat; explicit initialize/overwrite
-// reaches the missing branch but drops to 90.9683 with 77 branches.
-// `std::fill(first,last,0x40)` and an explicit guarded runtime-size memset
-// both reach the retail-style empty-range guard but select the same 91.7116,
-// 77-branch inliner phase. All three lower spellings were reverted.
-// Complete's hero-pool operation uses unsigned byte indexing. This inferred
-// decoder owns assignments into an existing destination; game::load owns its
-// default construction, stream read and member copy.
-template <size_t N>
-void decodePackedBits(const unsigned char* packed, std::bitset<N>& result)
-{
-    for (unsigned int index = 0; index < N; ++index)
-        result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
-}
-
-VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
-int game::load(TAbstractFile* infile)
-{
-    SavedGameHeader saved;
-    if (saved.load(infile))
-        return -1;
-
     // Every store in this block goes through gpGame, RELOADED from the
     // global for each one, not through the implicit `this` retail
     // already has in a register: `mov ecx,[gpGame] / mov [ecx+0x1f698],
@@ -2652,32 +2469,67 @@ int game::load(TAbstractFile* infile)
     g_game->m_f1f698 = saved.m_gameVersion;
     g_game->m_mapHeader = saved.m_mapHeader;
     g_game->m_setup = saved.m_mapSetup;
-    g_unk69774c = saved.m_campaignGame;
+    g_inCampaign = saved.m_campaignGame;
     g_game->m_campaign = saved.m_campaign;
     strcpy(g_game->m_saveFileName, saved.m_fileName.c_str());
     g_game->m_difficultyRating = saved.m_difficultyRating;
     g_game->m_numDeadPlayers = saved.m_numDeadPlayers;
     memcpy(g_game->m_playerDisabled, saved.m_deadPlayer,
            sizeof(g_game->m_playerDisabled));
+    g_netLocalGamePos = saved.m_currentPlayer;
+    memcpy(g_wasHuman, saved.m_humanPlayer, sizeof(saved.m_humanPlayer));
+}
+
+// Complete's hero-pool operation uses unsigned byte indexing. This inferred
+// decoder owns assignments into an existing destination; game::load owns its
+// default construction, stream read and member copy. Campaign's returned-value
+// reader and mapcell's signed division loops retain their distinct operations.
+template <size_t N>
+void decodePackedBits(const unsigned char* packed, std::bitset<N>& result)
+{
+    for (unsigned int index = 0; index < N; ++index) {
+        result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
+    }
+}
+
+// Original: game::Load; game.cpp:3026, dc 0xa83d0. Complete loads a
+// SavedGameHeader value and restores the acting-player and human-player state
+// before the map pools. DC's gzread interface became TAbstractFile::read.
+// Its scalar reads and final map-extra read stage their results through count.
+// Keep the pool loaders canonical and the packed-byte scratch buffer inside
+// its hero loop. Default bitset construction reproduces more of the retained
+// calls than the unsigned-long constructor; neither requires inline controls.
+// The native range reader deduces the serialized count type. Its char instance
+// preserves loadBlackMarkets, while its short instances reproduce the register
+// allocation of every expanded loadVector call. Together with the counted
+// disabled-skill clear and native packed-byte read, game::load matches all
+// 139 retail blocks exactly. No inline-control pragma or release assertion is
+// needed by this model.
+VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
+int game::load(TAbstractFile* infile)
+{
+    SavedGameHeader saved;
+    if (saved.load(infile))
+        return -1;
+    applySavedGameHeader(saved);
 
     char byteValue;
-    char extraByteValue;
+    unsigned char extraByteValue;
     short shortValue;
     unsigned short extraShortValue;
     int zero;
-    unsigned char poolBits[1];
+    int count;
+    int i;
 
     clearEventRecords();
-    g_mapWidth = m_mapHeader.m_size;
-    g_mapHeight = m_mapHeader.m_size;
-    g_searchArray->close();
+    // Complete expands SetMapSize at +0x1cc..+0x1e7, before the pool reads.
+    // DC calls it later at game.cpp:3193, just before the map-extra plane.
+    setMapSize(m_mapHeader.m_size, m_mapHeader.m_size);
 
     if (saved.m_version >= 41) {
-        char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        g_unnamed69950c = charBuffer;
+        g_grailOwner = readValue<char>(infile);
     } else {
-        g_unnamed69950c = -1;
+        g_grailOwner = -1;
     }
 
     if (saved.m_version >= 34) {
@@ -2691,7 +2543,7 @@ int game::load(TAbstractFile* infile)
     if (saved.m_version >= 29)
         infile->read(m_ssDisabled, sizeof(m_ssDisabled));
     else
-        memset(m_ssDisabled, 0, sizeof(m_ssDisabled));
+        MEMSET(m_ssDisabled, 0, sizeof(m_ssDisabled), i);
 
     if (loadRumours(infile) < 0)
         return -1;
@@ -2710,7 +2562,6 @@ int game::load(TAbstractFile* infile)
     if (!loadObjectVector(infile, m_generators))
         return -1;
 
-    int i;
     if (loadGarrisonPool(infile, saved.m_version) < 0)
         return -1;
     if (loadBoatPool(infile) < 0)
@@ -2721,25 +2572,20 @@ int game::load(TAbstractFile* infile)
     if (loadObeliskPool(infile) < 0)
         return -1;
 
-    for (i = 0; i < 8; ++i) {
-        if (m_players[i].load(infile, saved.m_version) < 0)
-            return -1;
-    }
+    if (loadPlayerData(infile, saved.m_version) < 0)
+        return -1;
 
     if (loadTownPool(infile, saved.m_version) < 0)
         return -1;
 
-    int heroCount = saved.m_version < 25 ? 128 : HERO_COUNT;
-    for (i = 0; i < heroCount; ++i) {
-        if (m_heroes[i].load(infile, saved.m_version) < 0)
-            return -1;
-    }
-
-    unsigned char legacyHeroPoolMap[8];
-    if (saved.m_version < 31
-        && infile->read(legacyHeroPoolMap, sizeof(legacyHeroPoolMap))
-            < sizeof(legacyHeroPoolMap)) {
+    if (loadHeroPool(infile, saved.m_version) < 0)
         return -1;
+
+    if (saved.m_version < 31) {
+        unsigned char legacyHeroPoolMap[8];
+        if (infile->read(legacyHeroPoolMap, sizeof(legacyHeroPoolMap))
+            < sizeof(legacyHeroPoolMap))
+            return -1;
     }
 
     // THE AVAILABILITY READ IS AN IF/ELSE ON THE VERSION, NOT ONE READ OF
@@ -2748,18 +2594,24 @@ int game::load(TAbstractFile* infile)
     // teardowns, not one - and the 0x40 fill lives inside the SHORT arm
     // rather than behind an `if (heroCount < HERO_COUNT)`.
     if (saved.m_version >= 25) {
-        if (infile->read(m_heroAvailability, HERO_COUNT) < HERO_COUNT)
+        if (infile->read(m_heroAvailability, sizeof(m_heroAvailability))
+            < sizeof(m_heroAvailability))
             return -1;
     } else {
-        if (infile->read(m_heroAvailability, 128) < 128)
+        if (infile->read(m_heroAvailability,
+                         g_mapHeaderLegacyHeroCount * sizeof(m_heroAvailability[0]))
+            < g_mapHeaderLegacyHeroCount * sizeof(m_heroAvailability[0]))
             return -1;
-        memset(m_heroAvailability + 128, 0x40, HERO_COUNT - 128);
+        std::fill(m_heroAvailability + g_mapHeaderLegacyHeroCount,
+                  m_heroAvailability + HERO_COUNT,
+                  static_cast<char>(hero::HERO_AVAILABILITY_TAVERN_POOL));
     }
 
     if (saved.m_version >= 31) {
         for (i = 0; i < HERO_COUNT; ++i) {
             std::bitset<8> poolMap;
-            infile->read(poolBits, sizeof(poolBits));
+            unsigned char poolBits[1];
+            readValue(infile, poolBits);
             decodePackedBits(poolBits, poolMap);
             m_heroPoolMap[i] = poolMap;
         }
@@ -2769,30 +2621,35 @@ int game::load(TAbstractFile* infile)
     // writes temp for temp: retail carries FOUR of them, a char reused
     // across reads 1-2 and 7-9, a second char for 5-6, a short for 3-4 and
     // a second short for 10-12.
-    if (infile->read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+    count = infile->read(&byteValue, sizeof(byteValue));
+    if (count < sizeof(byteValue))
         return -1;
     m_newCampaignStarted = byteValue;
-    if (infile->read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+    count = infile->read(&byteValue, sizeof(byteValue));
+    if (count < sizeof(byteValue))
         return -1;
     m_numPlayers = byteValue;
 
-    if (infile->read(&shortValue, sizeof(shortValue)) < sizeof(shortValue))
+    count = infile->read(&shortValue, sizeof(shortValue));
+    if (count < sizeof(shortValue))
         return -1;
     m_ultimateArtifactX = shortValue;
-    if (infile->read(&shortValue, sizeof(shortValue)) < sizeof(shortValue))
+    count = infile->read(&shortValue, sizeof(shortValue));
+    if (count < sizeof(shortValue))
         return -1;
     m_ultimateArtifactY = shortValue;
 
-    if (infile->read(&extraByteValue, sizeof(extraByteValue)) <
-        sizeof(extraByteValue))
+    count = infile->read(&extraByteValue, sizeof(extraByteValue));
+    if (count < sizeof(extraByteValue))
         return -1;
     m_ultimateArtifactZ = extraByteValue;
-    if (infile->read(&extraByteValue, sizeof(extraByteValue)) <
-        sizeof(extraByteValue))
+    count = infile->read(&extraByteValue, sizeof(extraByteValue));
+    if (count < sizeof(extraByteValue))
         return -1;
     m_ultimateRadius = extraByteValue;
 
-    if (infile->read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+    count = infile->read(&byteValue, sizeof(byteValue));
+    if (count < sizeof(byteValue))
         return -1;
     m_ultimateArtifactPresent = byteValue != 0;
     // A SEPARATE GUARDED BYTE, not a second use of the one above. Retail
@@ -2800,62 +2657,66 @@ int game::load(TAbstractFile* infile)
     // the store is `movsx ecx, byte ptr` into the int at +0x1f698 - which
     // is what makes the temp a signed char. game::Save's mirror writes
     // `static_cast<char>(f_1f698)` as its own eighth scalar.
-    if (infile->read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+    count = infile->read(&byteValue, sizeof(byteValue));
+    if (count < sizeof(byteValue))
         return -1;
     if (saved.m_version < 40)
         m_f1f698 = byteValue;
 
-    if (infile->read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+    count = infile->read(&byteValue, sizeof(byteValue));
+    if (count < sizeof(byteValue))
         return -1;
     m_isCheater = byteValue;
 
-    if (infile->read(&extraShortValue, sizeof(extraShortValue)) <
-        sizeof(extraShortValue))
+    count = infile->read(&extraShortValue, sizeof(extraShortValue));
+    if (count < sizeof(extraShortValue))
         return -1;
     m_day = extraShortValue;
-    if (infile->read(&extraShortValue, sizeof(extraShortValue)) <
-        sizeof(extraShortValue))
+    count = infile->read(&extraShortValue, sizeof(extraShortValue));
+    if (count < sizeof(extraShortValue))
         return -1;
     m_week = extraShortValue;
-    if (infile->read(&extraShortValue, sizeof(extraShortValue)) <
-        sizeof(extraShortValue))
+    count = infile->read(&extraShortValue, sizeof(extraShortValue));
+    if (count < sizeof(extraShortValue))
         return -1;
     m_month = extraShortValue;
 
     // Retail asks for all 32 bytes but accepts an eight-byte return here.
-    if (infile->read(m_uniqueSystemId, sizeof(m_uniqueSystemId)) < 8)
+    count = infile->read(m_uniqueSystemId, sizeof(m_uniqueSystemId));
+    if (count < 8U)
         return -1;
-    if (infile->read(m_marketArtifacts, sizeof(m_marketArtifacts)) < sizeof(m_marketArtifacts))
+    count = infile->read(m_marketArtifacts, sizeof(m_marketArtifacts));
+    if (count < sizeof(m_marketArtifacts))
         return -1;
-    if (infile->read(m_globalInfoFlags, sizeof(m_globalInfoFlags)) <
-        sizeof(m_globalInfoFlags))
+    count = infile->read(m_globalInfoFlags, sizeof(m_globalInfoFlags));
+    if (count < sizeof(m_globalInfoFlags))
         return -1;
-    if (infile->read(m_borderTentVisitFlags, sizeof(m_borderTentVisitFlags)) <
-        sizeof(m_borderTentVisitFlags))
+    count = infile->read(m_borderTentVisitFlags, sizeof(m_borderTentVisitFlags));
+    if (count < sizeof(m_borderTentVisitFlags))
         return -1;
-    if (infile->read(m_cartographerMask, sizeof(m_cartographerMask)) <
-        sizeof(m_cartographerMask))
+    count = infile->read(m_cartographerMask, sizeof(m_cartographerMask));
+    if (count < sizeof(m_cartographerMask))
         return -1;
-    if (infile->read(m_cartographerFlags, sizeof(m_cartographerFlags)) <
-        sizeof(m_cartographerFlags))
+    count = infile->read(m_cartographerFlags, sizeof(m_cartographerFlags));
+    if (count < sizeof(m_cartographerFlags))
         return -1;
 
     // The four-byte slot game::Save writes as a literal zero. Retail reads
     // it into a stack dword and never looks at it again - the guard is the
     // only thing it is for.
-    if (infile->read(&zero, sizeof(zero)) < sizeof(zero))
+    count = infile->read(&zero, sizeof(zero));
+    if (count < sizeof(zero))
         return -1;
 
     // The map-extra plane, the mirror of game::Save's write: HasTwoLevels
     // read through the GLOBAL gpGame rather than this->worldMap, and the
     // *2 applied LAST (retail's `lea edi,[eax+eax]` follows both imuls).
-    unsigned int mapExtraBytes =
-        (g_game->m_worldMap.getNumLevels()) * g_mapWidth * g_mapHeight *
-        sizeof(unsigned short);
-    if (infile->read(g_mapExtra, mapExtraBytes) < mapExtraBytes)
+    int mapExtraSize = (g_mapWidth * g_mapHeight) * g_game->getNumMapLevels();
+    count = infile->read(g_mapExtra, mapExtraSize * sizeof(unsigned short));
+    if (count < mapExtraSize * sizeof(unsigned short))
         return -1;
 
-    int poolCount = (((saved.m_version < 32) - 1) & 5) + 3;
+    int poolCount = saved.m_version >= 32 ? 8 : 3;
     for (i = 0; i < poolCount; ++i)
         loadVector(infile, m_lithPools[i]);
     for (i = 0; i < poolCount; ++i)
@@ -2864,20 +2725,18 @@ int game::load(TAbstractFile* infile)
     loadVector(infile, m_undergroundGateExits);
     loadVector(infile, m_undergroundGatePairs);
     loadVector(infile, m_universities);
-    // The post-integration 226-site audit and joint four-state control
-    // preserve the entire game object, including every cleanup/call site.
-    loadObjectVector(infile, &m_creatureBanks);
+    loadObjectVector(infile, m_creatureBanks);
 
     if (!loadRecordedEvents(infile, saved.m_version))
         return -1;
 
     g_advManager->m_curHeroMobile = 0;
     g_currentPlayer = &g_game->m_players[g_netLocalGamePos];
-    g_unnamed69ccc4 = 1 << g_netLocalGamePos;
-    if (!g_networkActive69954c)
-        g_unnamed69778c = g_netLocalGamePos;
+    g_curPlayerBit = 1 << g_netLocalGamePos;
+    if (!g_remoteOn)
+        g_curWatchPlayer = g_netLocalGamePos;
     setupShipyards();
-    g_mapVisibilityBit = 1 << g_unnamed69778c;
+    g_mapVisibilityBit = 1 << g_curWatchPlayer;
     g_completeDrawEnabled = g_game->isLocalHuman(g_netLocalGamePos);
     setupAdjacentMons();
     aiExamineMap();
@@ -2886,19 +2745,6 @@ int game::load(TAbstractFile* infile)
 }
 
 // Retained compiler-generated SCampaign memberwise assignment.
-
-// MEASURED 2026-09-05, and the claim is PROVEN CORRECT: the only reason
-// game.obj does not emit this COMDAT is that our compile expands
-// `gpGame->campaign = saved.campaign` at game::Load's line above, where
-// retail calls it. Forcing that ONE statement out of line emits the symbol
-// and the row scores 100.0000 over all 777 bytes on the first try, taking
-// game.obj 93.5690 -> 94.2050 against 0.47 off game::Load (60.5547 ->
-// 60.0776, MAX held at 92.41). It is not shipped, because the only lever
-// that reaches it is a committed `#pragma inline_depth(0)` and the pin
-// floor is falling-only. The route that IS open is the one game.h's own
-// note names: game::Load carrying retail's caller mass, after which the
-// expansion should stop being affordable on its own. Re-take it then, and
-// expect the row at 100 immediately.
 VA_COMPGEN(0x004bdc70, 0x309, IMPLICIT_COPY_ASSIGN, SCampaign)
 
 VA(0x004be140, 0x11E)
@@ -3145,7 +2991,7 @@ int game::save(TAbstractFile* outfile)
         return -1;
 
     {
-        charBuffer = g_unnamed69950c;
+        charBuffer = g_grailOwner;
         outfile->write(&charBuffer, sizeof(charBuffer));
     }
     outfile->write(m_artifactDisabled, sizeof(m_artifactDisabled));
@@ -3182,18 +3028,14 @@ int game::save(TAbstractFile* outfile)
     if (saveObeliskPool(outfile) < 0)
         return -1;
 
-    for (i = 0; i < 8; ++i) {
-        if (m_players[i].save(outfile) < 0)
-            return -1;
-    }
+    if (savePlayerData(outfile) < 0)
+        return -1;
 
     if (saveTownPool(outfile) < 0)
         return -1;
 
-    for (i = 0; i < HERO_COUNT; ++i) {
-        if (m_heroes[i].save(outfile) < 0)
-            return -1;
-    }
+    if (saveHeroPool(outfile) < 0)
+        return -1;
 
     if (outfile->write(m_heroAvailability, sizeof(m_heroAvailability)) <
         sizeof(m_heroAvailability)) {
@@ -3328,7 +3170,7 @@ int game::save(TAbstractFile* outfile)
     saveVector(outfile, m_undergroundGateExits);
     saveVector(outfile, m_undergroundGatePairs);
     saveVector(outfile, m_universities);
-    saveObjectVector(outfile, &m_creatureBanks);
+    saveObjectVector(outfile, m_creatureBanks);
 
     // Retail calls ~SavedGameHeader out of line at both final exits. The
     // recovered caller mass now selects that cleanup naturally.
@@ -3337,24 +3179,6 @@ int game::save(TAbstractFile* outfile)
 
     return 0;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:3275
-DC_ONLY(0xa8ba0, 0xCC)
-int hero_power(hero* this_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:3288
-DC_ONLY(0xa8c6c, 0x62)
-int compare_heroes(const void* arg1, const void* arg2)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x004beea0, 0x2F6)  // dc 0xa99d0
 unsigned char game::saveGame(const char* filename, unsigned char determineSuffix, unsigned char campaignWinMode, unsigned char compressIt, unsigned char xferFile)
@@ -3372,7 +3196,7 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
         strcpy(nameNoExtension, filename);
         strtok(nameNoExtension,
                DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
-        if (g_unk69774c)
+        if (g_inCampaign)
             sprintf(saveName,
                     DATA_COMPGEN(0x00677d98, nameWithExtensionFormat, "%s.%s"),
                     nameNoExtension,
@@ -3385,7 +3209,7 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
         else
             sprintf(saveName,
                     DATA_COMPGEN(0x00677d90, saveSlotNameFormat, "%s.GM%d"),
-                    nameNoExtension, g_unnamed699274);
+                    nameNoExtension, g_numHumanPlayers);
     } else {
         strcpy(saveName, filename);
     }
@@ -3434,8 +3258,8 @@ void game::setupOrigData()
 {
     int i;
 
-    g_unnamed69951c = 0;
-    g_unnamed69950c = -1;
+    g_normalVictory = 0;
+    g_grailOwner = -1;
     m_difficultyRating = 1;
     g_weekTypeExtra = 0;
     g_weekType = 0;
@@ -3445,9 +3269,8 @@ void game::setupOrigData()
 
     strncpy(m_saveFileName, (*g_generalText)[12], sizeof(m_saveFileName));
     m_saveFileName[sizeof(m_saveFileName) - 1] = 0;
-    for (i = 0; i < 8; ++i)
-        m_playerDisabled[i] = 0;
-    memset(g_unnamed69fb24, -1, sizeof(g_unnamed69fb24));
+    MEMSET(m_playerDisabled, 0, sizeof(m_playerDisabled), i);
+    memset(g_startingHeroOverrides, -1, sizeof(g_startingHeroOverrides));
 
     m_ultimateArtifactX = -1;
     m_ultimateArtifactY = -1;
@@ -3464,8 +3287,7 @@ void game::setupOrigData()
     m_numObelisks = 0;
     advManager* manager = g_advManager;
     manager->m_curHeroMobile = 0;
-    for (i = 0; i < sizeof(m_heroAvailability); ++i)
-        m_heroAvailability[i] = -1;
+    MEMSET(m_heroAvailability, -1, sizeof(m_heroAvailability), i);
 
     std::bitset<8> allPlayers;
     allPlayers.set();
@@ -3477,14 +3299,10 @@ void game::setupOrigData()
         m_heroes[i].initialize(i);
     }
 
-    for (i = 0; i < sizeof(m_obeliskFlags); ++i)
-        m_obeliskFlags[i] = 0;
-    for (i = 0; i < sizeof(m_spellAllocInfo); ++i)
-        m_spellAllocInfo[i] = 0;
-    for (i = 0; i < sizeof(m_spellDisabledInfo); ++i)
-        m_spellDisabledInfo[i] = 0;
-    for (i = 0; i < sizeof(m_cartographerFlags); ++i)
-        m_cartographerFlags[i] = 0;
+    MEMSET(m_obeliskFlags, 0, sizeof(m_obeliskFlags), i);
+    MEMSET(m_spellAllocInfo, 0, sizeof(m_spellAllocInfo), i);
+    MEMSET(m_spellDisabledInfo, 0, sizeof(m_spellDisabledInfo), i);
+    MEMSET(m_cartographerFlags, 0, sizeof(m_cartographerFlags), i);
 }
 
 VA(0x004bf330, 0x23B)
@@ -3552,7 +3370,7 @@ void game::giveTroopsToNeutralTown(int townId)
     armyGroup* townArmy = &currentTown->getArmy();
     TCreatureType creature;
     TCreatureType upgradedCreature;
-    TCreatureType upgradedValue = g_townUpgradedDwellingCreatures[
+    TCreatureType upgradedValue = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
         townType * TOWN_DWELLING_SLOTS + monsterLevel];
     creature = g_townDwellingCreatures[
         townType * TOWN_DWELLING_SLOTS + monsterLevel];
@@ -3597,7 +3415,7 @@ void game::giveTroopsToNeutralTown(int townId)
     }
 }
 
-// E:\gamedcs\game.cpp:4029
+// Original: game::GiveTroopsToNeutralTowns; game.cpp:4029, dc 0xaa6f8
 void game::giveTroopsToNeutralTowns()
 {
     for (int i = 0; i < m_towns.size(); ++i) {
@@ -3616,7 +3434,6 @@ void game::giveTroopsToNeutralTowns()
 }
 
 // E:\gamedcs\game.cpp:4050
-
 // Retail's campaign chain cross-jumps every `AllowNormalVictory = 0` tail
 // into ONE store at 0x4bf835 and shares a single `je` at 0x4bf840, so each
 // arm ends `cmp eax,<last>` + `jmp <shared je>` and the `= 1` store is the
@@ -3660,7 +3477,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         int campaignNumber = m_campaign.m_currentCampaign;
         if (numLivingPlayers == 1) {
             m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
-        } else if (g_unk69774c) {
+        } else if (g_inCampaign) {
             if (campaignNumber == GAME_CAMPAIGN_5
                 || campaignNumber == GAME_CAMPAIGN_3) {
                 if (map != GAME_SCENARIO_0)
@@ -3835,29 +3652,19 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 // E:\gamedcs\game.cpp:4236
 VA(0x004bfe70, 0x6A8)  // dc 0xaada4
 void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
-                  NewMapCampaignContext* campaignContext, int gameVersion)
+                  TCampaignBrief::ScenarioStruct* campaignContext, int gameVersion)
 {
-    g_inSetup698400 = 1;
+    g_inSetup = 1;
 
-    for (int heroIndex = 0; heroIndex < HERO_COUNT; ++heroIndex) {
-        m_heroes[heroIndex].m_experience = random(0, 50) + 40;
-        setRandomHeroArmies(heroIndex, 0, 0);
-        int mobility = m_heroes[heroIndex].getMobility();
-        m_heroes[heroIndex].m_movePoints = mobility;
-        m_heroes[heroIndex].m_maxMovePoints = mobility;
-        m_heroes[heroIndex].m_levelSeed =
-            static_cast<unsigned char>(random(1, 255));
-        m_heroes[heroIndex].m_lastWisdom = 0;
-        m_heroes[heroIndex].m_lastMagicSchoolLevel = 0;
-    }
+    randomizeHeroPool();
 
     m_numPlayers = 8;
     m_numDeadPlayers = 0;
-    if (gameVersion != -1 && !g_unk69774c) {
+    if (gameVersion != -1 && !g_inCampaign) {
         m_f1f698 = gameVersion;
     } else {
         m_f1f698 = 2;
-        if (g_unk69774c) {
+        if (g_inCampaign) {
             if (m_campaign.m_currentCampaign < g_firstArmageddonsBladeCampaign)
                 m_f1f698 = 0;
             else if (m_campaign.m_currentCampaign < 13)
@@ -3901,7 +3708,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
         g_game->m_campaign.doPreLoadCustomization();
     processOnMapHeroes();
     if (campaignContext != NULL)
-        campaignContext->newMapFn00487290();
+        campaignContext->placeCrossoverHeroes();
     createTownHeroes(playerHeroFaces);
 
     for (unsigned int mapDataIndex = 0;
@@ -3920,7 +3727,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 
     validateVictoryLossConditions(1);
 
-    if (g_unk69774c && m_campaign.m_currentCampaign == GAME_CAMPAIGN_14) {
+    if (g_inCampaign && m_campaign.m_currentCampaign == GAME_CAMPAIGN_14) {
         hero* campaignHero = &m_heroes[45];
         if (campaignHero->getArtifact(TArtifactSlot(hero::EQUIPPED_SLOT_SPELLBOOK)).m_artifactId
             != -1)
@@ -3942,7 +3749,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                    sizeof(m_players[setupPlayer].m_resources));
             if (m_isTutorial)
                 memcpy(m_players[setupPlayer].m_resources,
-                       &g_neutralTownLevelWeightsEnd,
+                       g_neutralTownLevelWeights + 6,
                        sizeof(m_players[setupPlayer].m_resources));
         } else {
             m_players[setupPlayer].m_personality = random(0, 2);
@@ -3951,7 +3758,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                    sizeof(m_players[setupPlayer].m_resources));
         }
 
-        if (!g_unk69774c) {
+        if (!g_inCampaign) {
             int bonus = g_newMapStartingBonus[setupPlayer];
             bool hasHero = true;
             if (getHero(m_players[setupPlayer].m_heroes[0]) == NULL)
@@ -4026,26 +3833,14 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
     }
 
     if (campaignContext != NULL)
-        campaignContext->newMapFn00487900();
+        campaignContext->giveCrossoverArtifacts();
 
     setupAdjacentMons();
-    int rumourType = random(1, 100);
-    if (rumourType < g_newMapRumourMapThreshold)
-        setCannedRumour();
-    else if (rumourType < g_newMapRumourSpecialThreshold)
-        setMapRumour();
-    else
-        setSpecialRumour();
+    setupNewRumour();
 
-    m_marketArtifacts[0] = getRandomArtifactId(2);
-    m_marketArtifacts[1] = getRandomArtifactId(2);
-    m_marketArtifacts[2] = getRandomArtifactId(2);
-    m_marketArtifacts[3] = getRandomArtifactId(4);
-    m_marketArtifacts[4] = getRandomArtifactId(4);
-    m_marketArtifacts[5] = getRandomArtifactId(4);
-    m_marketArtifacts[6] = getRandomArtifactId(8);
+    setMarketArtifacts();
 
-    g_inSetup698400 = 0;
+    g_inSetup = 0;
 }
 
 // Retail-only PC wrapper between the DC NewMap and SetupFirstPlayer rows.
@@ -4079,6 +3874,9 @@ unsigned char game::newMap(const char* mapPath, const char* mapName,
     }
 }
 
+// Original: SetupFirstPlayer; game.cpp:4474, dc 0xab8d0.
+// Complete makes this a game member: 0x4c0632 saves incoming ECX and
+// indexes the player array through that receiver throughout the body.
 VA(0x004c0630, 0xB1)  // dc 0xab8d0
 void game::setupFirstPlayer()
 {
@@ -4097,12 +3895,12 @@ void game::setupFirstPlayer()
 
     g_netLocalGamePos = startingPos;
     g_currentPlayer = &m_players[startingPos];
-    g_unnamed69ccc4 = static_cast<unsigned char>(1 << startingPos);
+    g_curPlayerBit = static_cast<unsigned char>(1 << startingPos);
 
     int currentPlayer = getLocalPlayerGamePos();
-    g_unnamed69778c = currentPlayer;
+    g_curWatchPlayer = currentPlayer;
     g_mapVisibilityBit = static_cast<unsigned char>(1 << currentPlayer);
-    g_unnamed69d810 = startingPos;
+    g_playerTurn = startingPos;
 }
 // E:\gamedcs\game.cpp:4509. On x86 the unchanged award, secondary skill
 // and spell stores fold away, leaving only the randomized primary lane.
@@ -4167,7 +3965,7 @@ static void randomizeShrine(NewmapCell* cell, const int level)
         spell = g_game->getRandomSpell(spellLevels);
         info->m_shrineInfo.m_spell = spell;
     }
-    info->m_cellVisitedInfo.m_visited = 0;
+    info->clearVisitedBits();
 }
 
 // E:\gamedcs\game.cpp:4654, dc 0xabda8
@@ -5852,6 +5650,37 @@ int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
     return 0;
 }
 
+// Original: NewSMapHeader::saveLossCondition; game.cpp:6390, dc 0xaf2b4
+// Complete save 0x4c4f10 expands this helper after the loss-type byte.
+// It writes this header through TAbstractFile, uses the saved hero ID rather
+// than the old three hero coordinates, and does not test these payload writes.
+int NewSMapHeader::saveLossCondition(char type, TAbstractFile* outfile)
+{
+    char charBuffer;
+    short shortBuffer;
+    switch (type) {
+    case LOSS_CONDITION_LOSE_TOWN:
+        charBuffer = m_lossCondition.m_townX;
+        outfile->write(&charBuffer, sizeof(charBuffer));
+        charBuffer = m_lossCondition.m_townY;
+        outfile->write(&charBuffer, sizeof(charBuffer));
+        charBuffer = m_lossCondition.m_townZ;
+        outfile->write(&charBuffer, sizeof(charBuffer));
+        break;
+
+    case LOSS_CONDITION_LOSE_HERO:
+        shortBuffer = m_lossCondition.m_heroId;
+        outfile->write(&shortBuffer, sizeof(shortBuffer));
+        break;
+
+    case LOSS_CONDITION_TIME_LIMIT:
+        shortBuffer = m_lossCondition.m_numDays;
+        outfile->write(&shortBuffer, sizeof(shortBuffer));
+        break;
+    }
+    return 0;
+}
+
 // Complete adds saveVersion; every retained return pops three arguments.
 VA(0x004c3d90, 0x15E)  // DC loadLossCondition + sole Load caller + ret 0xc, dc 0xaf488
 int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
@@ -6140,7 +5969,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         readVictoryCondition(x, infile);
 
-    if (g_unk69774c) {
+    if (g_inCampaign) {
         switch (g_game->m_campaign.m_currentCampaign) {
         case g_campaignVictoryOverrideFirst:
             if (campaignMap == GAME_SCENARIO_2) {
@@ -6196,7 +6025,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                 availableHeroesMask, g_mapHeaderLegacyHeroCount),
             bitset_iterator<g_mapHeaderHeroCount>(m_availableHeroes, 0));
 
-        if (!g_unk69774c) {
+        if (!g_inCampaign) {
             for (int i = g_mapHeaderCompleteLegacyHeroFirst;
                  i <= g_mapHeaderCompleteLegacyHeroLast; ++i)
                 m_availableHeroes[i] = true;
@@ -6418,30 +6247,8 @@ int NewSMapHeader::save(TAbstractFile* outfile)
         < sizeof(enumBuffer))
         return -1;
 
-    if (m_lossCondition.m_type != -1) {
-        switch (enumBuffer) {
-        case LOSS_CONDITION_LOSE_TOWN:
-            charBuffer = m_lossCondition.m_townX;
-            outfile->write(&charBuffer, sizeof(charBuffer));
-            charBuffer = m_lossCondition.m_townY;
-            outfile->write(&charBuffer, sizeof(charBuffer));
-            charBuffer = m_lossCondition.m_townZ;
-            outfile->write(&charBuffer, sizeof(charBuffer));
-            break;
-
-        case LOSS_CONDITION_LOSE_HERO: {
-            short shortBuffer = m_lossCondition.m_heroId;
-            outfile->write(&shortBuffer, sizeof(shortBuffer));
-            break;
-        }
-
-        case LOSS_CONDITION_TIME_LIMIT: {
-            short shortBuffer = m_lossCondition.m_numDays;
-            outfile->write(&shortBuffer, sizeof(shortBuffer));
-            break;
-        }
-        }
-    }
+    if (m_lossCondition.m_type != -1)
+        saveLossCondition(enumBuffer, outfile);
 
     enumBuffer = m_numTeams;
     if (outfile->write(&enumBuffer, sizeof(enumBuffer))
@@ -6722,178 +6529,6 @@ int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
     return length;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:4029
-DC_ONLY(0xaa6f8, 0xE8)
-void game::GiveTroopsToNeutralTowns()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4050
-DC_ONLY(0xaa7e0, 0x5C4)
-void game::validateVictoryLossConditions(unsigned char check_map_locations)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4236
-DC_ONLY(0xaada4, 0xB2A)
-void game::newMap(char* MapName, THeroID* playerHeroFaces)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4509
-DC_ONLY(0xab96c, 0x66)
-void randomizeScholar(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4524
-DC_ONLY(0xab9d4, 0x2C8)
-void RandomizeArtifact(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4613
-DC_ONLY(0xabc9c, 0xB0)
-void randomizeSeaChest(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4639
-DC_ONLY(0xabd4c, 0x5C)
-void randomizeShrine(NewmapCell* cell, const int level)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4654
-DC_ONLY(0xabda8, 0x86)
-void randomizeWagon(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4681
-DC_ONLY(0xabe30, 0x5E)
-void RandomizeWiseTree(short id, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4691
-DC_ONLY(0xabe90, 0xE6)
-void randomizeTreasure(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4724
-DC_ONLY(0xabf78, 0x6E)
-void randomize_tomb(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4753
-DC_ONLY(0xabfe8, 0x60)
-void randomizePyramid(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4804
-DC_ONLY(0xac168, 0x3A)
-void randomizeWitchHut(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:5600
-DC_ONLY(0xadb88, 0x3B0)
-int game::loadMap(char* mapName)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:5687
-DC_ONLY(0xadf38, 0x67A)
-int NewSMapHeader::readVictoryCondition(char type, void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:5921
-DC_ONLY(0xae5b4, 0x5AE)
-int NewSMapHeader::saveVictoryCondition(char type, void* outfile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6110
-DC_ONLY(0xaeb64, 0x5B4)
-int NewSMapHeader::loadVictoryCondition(char type, void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6324
-DC_ONLY(0xaf118, 0x19C)
-int NewSMapHeader::readLossCondition(char type, void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6390
-DC_ONLY(0xaf2b4, 0x1D4)
-int NewSMapHeader::saveLossCondition(char type, void* outfile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6448
-DC_ONLY(0xaf488, 0x1C4)
-int NewSMapHeader::loadLossCondition(char type, void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6513
-DC_ONLY(0xaf64c, 0xB3A)
-int NewSMapHeader::read(void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6792
-DC_ONLY(0xb0188, 0x5CC)
-int NewSMapHeader::save(void* outfile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6974
-DC_ONLY(0xb0754, 0x752)
-int NewSMapHeader::load(void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:7185
-DC_ONLY(0xb0ea8, 0x266)
-int NewSMapHeader::get(const char* filename)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x004c61e0, 0x4A8)  // dc 0xb1230
 void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove, unsigned char checkEndGame)
 {
@@ -6903,7 +6538,7 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
     if (oldOwner == newPlayerOwner)
         return;
 
-    if (!g_inSetup698400 && !isRemoteMove)
+    if (!g_inSetup && !isRemoteMove)
         recordClaimTown(townId, newPlayerOwner);
 
     thisTown->m_isGrouped = 0;
@@ -7186,18 +6821,6 @@ void game::turnOffAIMusic()
     g_soundManager->m_playSounds = 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:7603
-// Live retail reconstruction follows this carcass bracket.
-DC_ONLY(0xb1fd0, 0xB04)
-void game::nextPlayer()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // E:\gamedcs\game.cpp:7603
 // The retail body preserves the HoMM2 turn-transition skeleton while adding
 // Complete's victory-condition sweep, local-human turn timer, network-state
@@ -7262,10 +6885,10 @@ void game::nextPlayer()
     }
 
     if (g_currentPlayer->isLocalHuman())
-        g_turnDuration69d630.clear();
+        g_turnDuration.clear();
     g_curHourGlassPhase = 0;
 
-    if (g_currentPlayer->isLocalHuman() && g_unnamed698770) {
+    if (g_currentPlayer->isLocalHuman() && g_config.m_autosave) {
         for (i = 0; i < 8; ++i) {
             if (!m_playerDisabled[i]) {
                 humans = i;
@@ -7301,7 +6924,7 @@ void game::nextPlayer()
             if (weekSave) {
                 makeOrig = 1;
                 perDay();
-                if (g_networkActive69954c) {
+                if (g_remoteOn) {
                     m_mapHeader.m_lossCondition.checkForTimeLimitExpired();
                     ::checkEndGame(0);
                     if (g_gameOver)
@@ -7313,34 +6936,34 @@ void game::nextPlayer()
         }
     }
 
-    if (g_unnamed691209 && makeOrig
-        && (!g_networkActive69954c || g_unnamed699274 == 1)) {
+    if (g_goSolo && makeOrig
+        && (!g_remoteOn || g_numHumanPlayers == 1)) {
         g_advManager->drawRolloverText(
             const_cast<char*>(g_generalText->getText(108)));
         saveGame(g_generalText->getText(77), 1, 0, 1, 0);
         g_advManager->drawRolloverText(
             DATA_COMPGEN(0x00691210, nextPlayerSoloEmptyRollover, ""));
 
-        save = g_networkActive69954c;
-        g_networkActive69954c = 1;
-        g_unnamed691209 = 0;
+        save = g_remoteOn;
+        g_remoteOn = 1;
+        g_goSolo = 0;
         normalDialogTimeOut(g_generalText->getText(663), 2, 2000,
                             -1, -1, -1, 0, -1, 0, -1, -1, 0);
-        g_networkActive69954c = save;
+        g_remoteOn = save;
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE) {
-            g_game->m_players[g_unnamed69120c].m_isHuman = 1;
-            g_game->m_players[g_unnamed69120c].m_isLocal = 1;
-            g_unnamed691209 = 0;
-            g_mapVisibilityBit = 1 << g_unnamed69120c;
+            g_game->m_players[g_soloPos].m_isHuman = 1;
+            g_game->m_players[g_soloPos].m_isLocal = 1;
+            g_goSolo = 0;
+            g_mapVisibilityBit = 1 << g_soloPos;
         } else {
-            g_unnamed691209 = 1;
+            g_goSolo = 1;
         }
     }
 
     g_currentPlayer = &g_game->m_players[g_netLocalGamePos];
-    g_unnamed69ccc4 = 1 << g_netLocalGamePos;
+    g_curPlayerBit = 1 << g_netLocalGamePos;
 
-    if (g_networkActive69954c && !g_currentPlayer->isHuman()) {
+    if (g_remoteOn && !g_currentPlayer->isHuman()) {
         CTurnUpdateMsg msg(g_netLocalGamePos);
         transmitRemoteData(&msg, 0x7f, false, true);
     }
@@ -7382,39 +7005,39 @@ void game::nextPlayer()
         showComputerScreen();
         g_completeDrawEnabled = 0;
 
-        if (g_networkActive69954c && isHuman(g_netLocalGamePos)) {
+        if (g_remoteOn && isHuman(g_netLocalGamePos)) {
             toWho = g_netLocalGamePos;
             makeOrig = 0;
             g_thisNetGotAdventureControl = 0;
-            if (g_unnamed69d80d) {
+            if (g_playerDrop) {
                 toWho = 0x7f;
-                g_unnamed69d80d = 0;
+                g_playerDrop = 0;
             }
             if (isLastHuman(getLocalPlayerGamePos())) {
                 toWho = 0x7f;
-                g_unnamed69d80d = 0;
+                g_playerDrop = 0;
                 makeOrig = 1;
             }
             save = transmitSaveGame(toWho, 0, 1, makeOrig);
-            if (!save && g_unnamed69d80d) {
+            if (!save && g_playerDrop) {
                 g_netLocalGamePos = giCurPlayerSave;
-                g_unnamed69d80d = 0;
+                g_playerDrop = 0;
                 g_currentPlayer = &g_game->m_players[g_netLocalGamePos];
-                g_unnamed69ccc4 = 1 << g_netLocalGamePos;
+                g_curPlayerBit = 1 << g_netLocalGamePos;
                 nextPlayer();
                 return;
             }
             g_advManager->updateRadar(1, 1, 0, 0, 0);
-            g_unnamed69d810 = g_netLocalGamePos;
+            g_playerTurn = g_netLocalGamePos;
         }
         g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, -1);
     } else {
         setNoDialogMenus(1);
         g_inputManager->flush();
-        g_unnamed69778c = g_netLocalGamePos;
-        g_mapVisibilityBit = g_unnamed69ccc4;
+        g_curWatchPlayer = g_netLocalGamePos;
+        g_mapVisibilityBit = g_curPlayerBit;
 
-        if (g_unnamed6993dc && g_unnamed699274 > 1) {
+        if (g_blackoutPlayer && g_numHumanPlayers > 1) {
             char textBuffer[256];
             sprintf(textBuffer, g_generalText->getText(
                         GENERAL_TEXT_PLAYER_TURN_FORMAT),
@@ -7423,98 +7046,17 @@ void game::nextPlayer()
         }
 
         if (g_currentPlayer->isLocalHuman()
-            || (g_networkActive69954c && g_currentPlayer->isHuman())) {
+            || (g_remoteOn && g_currentPlayer->isHuman())) {
             cancelComputerScreen();
         }
     }
 
     if (g_currentPlayer->isLocalHuman())
-        g_turnDuration69d630.start();
+        g_turnDuration.start();
     doNewTurn();
     if (g_currentPlayer->isLocalHuman())
         g_advManager->forceNewHover();
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:7898
-DC_ONLY(0xb2ad4, 0x55C)
-int game::computeDailyGold(int iWhichPlayer, unsigned char include_silo)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:7958
-DC_ONLY(0xb3030, 0x14C)
-unsigned char game::growCoverOfDarkness()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:7978
-DC_ONLY(0xb317c, 0x6DA)
-void game::resetAllPlayerVisibility()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:8094
-DC_ONLY(0xb3858, 0x532)
-void game::perDay()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:8266
-DC_ONLY(0xb3d8c, 0x74)
-void game::clear_recruits(THeroID* m_recruits)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:8290
-DC_ONLY(0xb3e00, 0x5E)
-THeroID get_new_hero(THeroClass hero_class)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:8308
-DC_ONLY(0xb3e60, 0x1EE)
-void game::set_weekly_recruits(THeroID* m_recruits, TTownType alignment)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:8358
-DC_ONLY(0xb4050, 0xA4)
-void game::replaceRecruit(THeroID* m_recruits, long recruit_slot, TTownType alignment)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:8373
-DC_ONLY(0xb40f4, 0xEA)
-void game::setRecruits()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:8398
-DC_ONLY(0xb41e0, 0x5D8)
-void game::perWeek()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:8593
-DC_ONLY(0xb47b8, 0x39E)
-void game::perMonth()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // Original: game::clear_recruits; game.cpp:8266, dc 0xb3d8c
 void game::clearRecruits(int* recruits)
@@ -7791,6 +7333,10 @@ void game::perDay()
     m_grailAsked = 0;
 }
 
+// Original: game::set_weekly_recruits; game.cpp:8308, dc 0xb3e60
+// Complete passes a player index instead of the older recruits/align pair.
+// The two-slot loop, tutorial choices and equipment/mana/army closeout identify
+// this body; DC's nullary set_recruits is the surrounding all-player operation.
 VA(0x004c8450, 0x248)
 void game::setWeeklyRecruits(int playerPos)
 {
@@ -7865,6 +7411,8 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
 
 // Original: game::set_recruits; game.cpp:8373, dc 0xb40f4
 // Complete's NewMap and PerWeek both expand these two eight-player passes.
+// The DC neutral recruit pair (receiver+0xe188) and its extra clear/fill calls
+// disappeared from the desktop game layout and both retail expansions.
 void game::setRecruits()
 {
     long i;
@@ -7884,12 +7432,26 @@ void game::setRecruits()
 // relationship from PerDay and predecessor relationship to PerMonth close the
 // otherwise ambiguous Dreamcast bracket.
 
-// Residual (99.8370%): all 128 retail blocks, branch targets, operations and
-// relocations agree. Restoring the Dreamcast-proven IsCastle source boundary
-// made the entire neutral-town arm exact; Complete's retail bytes separately
-// select HasBuilding's built-mask lane for the Summoning Portal test. The sole
-// residual is the opening creature-week scan's C1 handle-state ESI/EDI role
-// permutation (`this` versus `i`), which why-reg proves source-unaddressable.
+// Residual (98.8948%, HIST 99.8370%): restoring the Dreamcast-proven IsCastle
+// source boundary made the entire neutral-town arm exact; Complete's retail
+// bytes separately select HasBuilding's built-mask lane for the Summoning
+// Portal test. The residual is the opening creature-week scan's C1 handle-state
+// ESI/EDI role permutation (`this` versus `i`), which why-reg proves
+// source-unaddressable: the reference binds `i` to ESI and `this` to EDI, so
+// `i` would have to be the earlier-created call-crossing pseudo. PROVED
+// IMPOSSIBLE by the front end: `il-locals` shows this body's handles as
+// this 0xc5c6 then obscuringHero/align/alternateBonus/bonusAmount/x/y/i 0xc5ce,
+// i.e. `this` precedes every local, and handle-order.md measures params < `this`
+// < locals as parse-FIXED with assignment strictly top-to-bottom. No declaration
+// order can put `i` ahead of `this`, so the binding is TU state, not source. THE 99.8370 HIST WAS REACHED BY
+// THIS EXACT src_hash (1078057cac97 at f8570b07/a5348767, CUR 98.8948 in the
+// same row), so the permutation is a TU-state effect that some include closure
+// already produced - not a lost source shape. Byte-flat here: `int i = 0` at the
+// declaration, moving `i` first in the declaration block, assigning `i` before
+// the two CREATURE_NONE stores, and binding the MONSTER arm's packed dword to a
+// local. The MONSTER arm's own four-byte split (retail consumes the loaded
+// m_extraInfo in place and reloads it for the preserved lanes, ours copies it)
+// rides on the same allocator phase.
 VA(0x004c8780, 0x7B7)  // PerDay/PerMonth bracket + dc lines/callees, dc 0xb41e0
 void game::perWeek()
 {
@@ -8002,12 +7564,9 @@ void game::perWeek()
                 }
 
                 switch (mapCell->m_type) {
-                case MAGIC_SPRING: {
-                    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-                        static_cast<void*>(&mapCell->m_extraInfo));
-                    info->fillMagicSpring(1);
+                case MAGIC_SPRING:
+                    mapCell->fillMagicSpring(1);
                     break;
-                }
 
                 case MONSTER: {
                     if (!(mapCell->m_extraInfo & 0x40000)) {
@@ -8161,9 +7720,7 @@ void game::perMonth()
                         && random(1, g_monthMonsterSpawnRollMax) == 1) {
                         insertObject(x, y, z, RANDOM_MONSTER,
                                      g_monthType, 0);
-                        tempCell->m_monsterInfo.m_qty = 2 * random(
-                            g_creatureTypeTraits[g_monthType].m_wanderingLow,
-                            g_creatureTypeTraits[g_monthType].m_wanderingHigh);
+                        tempCell->m_monsterInfo.m_qty = 2 * getRandomNumTroops(g_monthType);
                         tempCell->m_monsterInfo.m_disposition =
                             random(1, g_monthMonsterDispositionMax);
                     }
@@ -8173,13 +7730,7 @@ void game::perMonth()
         setupAdjacentMons();
     }
 
-    m_marketArtifacts[0] = getRandomArtifactId(2);
-    m_marketArtifacts[1] = getRandomArtifactId(2);
-    m_marketArtifacts[2] = getRandomArtifactId(2);
-    m_marketArtifacts[3] = getRandomArtifactId(4);
-    m_marketArtifacts[4] = getRandomArtifactId(4);
-    m_marketArtifacts[5] = getRandomArtifactId(4);
-    m_marketArtifacts[6] = getRandomArtifactId(8);
+    setMarketArtifacts();
     g_advManager->completeDraw(0);
 }
 
@@ -8241,7 +7792,7 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
         monsterOk[CREATURE_RUST_DRAGON] = false;
         monsterOk[CREATURE_ENCHANTER] = false;
         monsterOk[CREATURE_SHARPSHOOTER] = false;
-        if (g_unk69774c
+        if (g_inCampaign
             && m_campaign.m_currentCampaign >= g_firstShadowOfDeathCampaign) {
             monsterOk[CREATURE_PIXIE] = false;
             monsterOk[CREATURE_SPRITE] = false;
@@ -8369,24 +7920,23 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
     return -1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:8896
-// No retail row. Only ONE carve row (0x4c9730) sits between
-// GetRandomSpell (ends 0x4c972d) and InsertObject (0x4c9890), and that
-// row is `ret 0xc` - three stack arguments, i.e. the p=4 prototype
-// below, not this p=1 one. RandomizeHeroPool was inlined away.
-DC_ONLY(0xb4fa0, 0xF4)
-void game::RandomizeHeroPool()
+// Original: game::RandomizeHeroPool; game.cpp:8896, dc 0xb4fa0
+// NewMap expands this loop in retail, including Complete's enlarged roster
+// and separate last-Wisdom/last-magic-school tracking bytes.
+void game::randomizeHeroPool()
 {
-    // @stub
+    for (int heroIndex = 0; heroIndex < HERO_COUNT; ++heroIndex) {
+        m_heroes[heroIndex].m_experience = random(0, 50) + 40;
+        setRandomHeroArmies(heroIndex, 0, 0);
+        int mobility = m_heroes[heroIndex].getMobility();
+        m_heroes[heroIndex].m_movePoints = mobility;
+        m_heroes[heroIndex].m_maxMovePoints = mobility;
+        m_heroes[heroIndex].m_levelSeed =
+            static_cast<unsigned char>(random(1, 255));
+        m_heroes[heroIndex].m_lastWisdom = 0;
+        m_heroes[heroIndex].m_lastMagicSchoolLevel = 0;
+    }
 }
-
-// Complete ignores bCheat. Initialize all seven army slots, roll the three
-// starting stacks at 100%/88%/25%, and equip Ballista and First Aid Tent
-// entries as artifacts.
-// E:\gamedcs\game.cpp:8924
-#endif  // @carcass
 
 VA(0x004c9730, 0x159)  // dc 0xb5094
 void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
@@ -8394,7 +7944,7 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     armyGroup* currentArmy = &m_heroes[hero].m_army;
     const THeroTraits* traits = &g_heroTraits[hero];
 
-    if (g_unk69774c
+    if (g_inCampaign
         && hero == g_campaignArmyOverrideHero
         && m_campaign.m_currentCampaign == g_campaignArmyOverrideCampaign
         && m_campaign.m_currentMap) {
@@ -8475,97 +8025,101 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m
 // RANDOM_TOWN shares TOWN's; every other value falls to the default.
 // Arm order below is retail's physical order, i.e. the source order.
 
-// The !is_trigger path reaches the tail with defName UNINITIALIZED. That
+// The !is_trigger path reaches the tail with tempText UNINITIALIZED. That
 // is retail: ProcessRandomObjects only ever calls this for trigger cells,
 // so the arm is unreachable in practice. Transcribed, not repaired.
 
-// All three tail loops RE-READ their bounds - newType->height and
-// newType->width are reloaded with movsx at each increment, and
-// cell->objects.end() at the bottom of every iteration - and
+// All three tail loops RE-READ their bounds - objectType's height and
+// width are reloaded with movsx at each increment, and
+// newCell->m_objects.end() at the bottom of every iteration - and
 // objectTypes.size() is recomputed at every match rather than hoisted.
 // The sprite push_back goes through this->worldMap while
 // CalculateCellExtra RELOADS gpGame; do not unify them.
 
-// Residual (97.5098%): 395 generated ordinary-source variants lift the town
-// arm by copying built to __int64 and materializing its decision in a byte.
-// DC names only thisTown, so the two extra locals remain PC codegen hypotheses;
-// all tested types and scopes plateau at the same register/stack schedule.
+// DC's twelve locals include short objectToConvert (sp+0x12), not int;
+// the entry load and later comparison preserve that signed interpretation.
+// Keep its recorded local identities, named tempSprite, and the canonical
+// isCapitol/isCastle calls. The frame and all 44 block sizes match retail.
+// Residual 99.9756%: the string assignment's inlined _Eos terminator encodes
+// [eax+ecx] instead of [ecx+eax], NOT a NewfullMap::cell difference. Eight
+// type/declaration/call models and five recorded-name models reproduce the
+// same score; do not replace a proven helper or invent a local for that byte.
+// DC lines 9245/9246 store the monster cell type before the local type.
+// Restoring that order, explicit iterator sequencing and the town predicates'
+// public-symbol-proven bool returns are all byte-flat; the latter also preserve
+// every measured consumer. SH4 cannot settle an x86 SIB operand-order choice.
 VA(0x004c9990, 0x43A)  // anchor-global, dc 0xb54f8
 void game::convertObject(NewmapCell* tempCell)
 {
-    char defName[100];
+    char tempText[100];
 
-    int objectId = tempCell->m_objectTypeIndex;
-    CObject* object = &m_worldMap.m_objects[objectId];
+    short objectToConvert = tempCell->m_objectTypeIndex;
+    CObject* object = &m_worldMap.m_objects[objectToConvert];
 
     m_worldMap.m_objectTypes.push_back(m_worldMap.m_objectTypes[object->m_typeIndex]);
-    CObjectType* newType = &m_worldMap.m_objectTypes.back();
+    CObjectType* objectType = &m_worldMap.m_objectTypes.back();
 
-    TAdventureObjectType newObject = NOTHING;
+    TAdventureObjectType type = NOTHING;
     if (tempCell->m_isTrigger) {
-        newObject = tempCell->getMapObject();
-        switch (newObject) {
+        type = tempCell->getMapObject();
+        switch (type) {
         case RESOURCE:
-            strcpy(defName, g_resourceObjectDefs[tempCell->m_objectIndex]);
+            strcpy(tempText, g_resourceObjectDefs[tempCell->m_objectIndex]);
             break;
         case ARTIFACT:
-            sprintf(defName, g_artifactObjectDefFormat, tempCell->m_objectIndex);
+            sprintf(tempText, g_artifactObjectDefFormat, tempCell->m_objectIndex);
             break;
         case MONSTER:
         case RANDOM_MONSTER:
-            strcpy(defName,
+            strcpy(tempText,
                    m_worldMap.newfullMapFn00505EA0(MONSTER,
                                                   tempCell->m_objectIndex)
                        ->m_imageName.c_str());
-            newObject = MONSTER;
             tempCell->m_type = MONSTER;
+            type = MONSTER;
             break;
         case RANDOM_TOWN:
         case TOWN: {
             town* thisTown = g_game->getTown(tempCell->getMapExtraInfo());
-            __int64 buildings = thisTown->m_built;
-            if (buildings & g_bitNumber[HALL_CAPITOL_ID]) {
-                strcpy(defName, g_townCapitolObjectDefs[tempCell->m_objectIndex]);
+            if (thisTown->isCapitol()) {
+                strcpy(tempText, g_townCapitolObjectDefs[tempCell->m_objectIndex]);
             } else {
-                unsigned char hasFort =
-                    (buildings & g_bitNumber[CASTLE_FORT_ID])
-                    || (buildings & g_bitNumber[CASTLE_CITADEL_ID])
-                    || thisTown->hasBuilding(CASTLE_CASTLE_ID, 0);
-                if (hasFort)
-                    strcpy(defName, g_townFortObjectDefs[tempCell->m_objectIndex]);
+                if (thisTown->isCastle())
+                    strcpy(tempText, g_townFortObjectDefs[tempCell->m_objectIndex]);
                 else
-                    strcpy(defName, g_townVillageObjectDefs[tempCell->m_objectIndex]);
+                    strcpy(tempText, g_townVillageObjectDefs[tempCell->m_objectIndex]);
             }
             break;
         }
         }
     }
 
-    int oldType = newType->m_objectType;
-    newType->m_imageName = defName;
-    newType->m_objectType = newObject;
-    newType->m_extra = tempCell->m_objectIndex;
-    m_worldMap.m_sprites.push_back(
-        ResourceManager::getSprite(newType->m_imageName.c_str()));
+    int oldType = objectType->m_objectType;
+    objectType->m_imageName = tempText;
+    objectType->m_objectType = type;
+    objectType->m_extra = tempCell->m_objectIndex;
+    CSprite* tempSprite =
+        ResourceManager::getSprite(objectType->m_imageName.c_str());
+    m_worldMap.m_sprites.push_back(tempSprite);
 
-    for (int iy = 0; iy < newType->m_height; iy++) {
-        if (object->m_y - iy < 0 || object->m_y - iy >= g_mapHeight)
+    for (int vert = 0; vert < objectType->m_height; vert++) {
+        if (object->m_y - vert < 0 || object->m_y - vert >= g_mapHeight)
             continue;
-        for (int ix = 0; ix < newType->m_width; ix++) {
-            if (object->m_x - ix < 0 || object->m_x - ix >= g_mapWidth)
+        for (int horiz = 0; horiz < objectType->m_width; horiz++) {
+            if (object->m_x - horiz < 0 || object->m_x - horiz >= g_mapWidth)
                 continue;
-            NewmapCell* cell = m_worldMap.cell(object->m_x - ix,
-                                             object->m_y - iy, object->m_z);
-            for (NewmapCell::TObjectCell* entry = cell->m_objects.begin();
-                 entry != cell->m_objects.end(); entry++) {
-                if (entry->m_objectIndex == objectId) {
+            NewmapCell* newCell = m_worldMap.cell(object->m_x - horiz,
+                                                object->m_y - vert, object->m_z);
+            for (NewmapCell::TObjectCell* thisObj = newCell->m_objects.begin();
+                 thisObj != newCell->m_objects.end(); thisObj++) {
+                if (thisObj->m_objectIndex == objectToConvert) {
                     object->m_typeIndex = static_cast<unsigned short>(
                         m_worldMap.m_objectTypes.size() - 1);
-                    if (cell->m_type == oldType && !cell->m_isTrigger)
-                        cell->m_type = newObject;
+                    if (newCell->m_type == oldType && !newCell->m_isTrigger)
+                        newCell->m_type = type;
                 }
             }
-            g_game->m_worldMap.calculateCellExtra(cell, 0);
+            g_game->m_worldMap.calculateCellExtra(newCell, 0);
         }
     }
 }
@@ -8713,7 +8267,7 @@ void game::createTownHeroes(int* startingHeroIds)
         if (startingHeroIds != NULL && m_players[i].m_isHuman
             && startingHeroIds[i] != -1)
             heroId = startingHeroIds[i];
-        else if (g_unk69774c)
+        else if (g_inCampaign)
             heroId = getStartingHeroId(m_setup.m_alignment[i], i, 0);
         else
             heroId = getStartingHeroId(m_setup.m_alignment[i], i, 0);
@@ -8724,7 +8278,7 @@ void game::createTownHeroes(int* startingHeroIds)
         thisTown->placeInMap(heroId, i, 1);
         thisTown->giveSpells(NULL);
 
-        if (g_unk69774c
+        if (g_inCampaign
             && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
             && g_game->m_campaign.m_currentMap == g_startLevelScenario)
             m_heroes[heroId].giveExperience(
@@ -8796,39 +8350,6 @@ int game::experienceValueOfStack(const armyGroup* whichGroup, const hero* whichH
     return value;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:9596
-DC_ONLY(0xb61d0, 0x128)
-void game::setupAdjacentMons()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9636
-DC_ONLY(0xb62f8, 0x64)
-void game::cancelComputerScreen()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9660
-DC_ONLY(0xb635c, 0x1DC)
-void game::showComputerScreen()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9720
-DC_ONLY(0xb6538, 0x108)
-void game::showHeroesLogo()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9748
-#endif  // @carcass
-
 VA(0x004ca410, 0x116)  // dc 0xb61d0
 void game::setupAdjacentMons()
 {
@@ -8874,7 +8395,7 @@ void game::showComputerScreen()
     g_advManager->m_advWindow->getWidget(6)->enable(0);
     g_advManager->m_advWindow->getWidget(12)->enable(0);
 
-    if (g_unnamed698790 && !g_currentPlayer->isHuman()) {
+    if (g_config.m_blackoutComputer && !g_currentPlayer->isHuman()) {
         g_currentPlayer->m_isLocal = 1;
         g_completeDrawAllCells = 1;
         g_advManager->completeDraw(1);
@@ -8912,7 +8433,7 @@ void game::showHeroesLogo()
     int x;
     int y;
 
-    if (g_networkActive69954c && g_dPlay) {
+    if (g_remoteOn && g_dPlay) {
         netMsgHandler = g_dPlay->getNetMsgHandler();
         if (netMsgHandler && netMsgHandler->isInPopup())
             return;
@@ -8936,7 +8457,7 @@ void game::showHeroesLogo()
 VA(0x004ca840, 0x19C)  // dc 0xb6640
 void game::waitForPlayer(char* text, int playerId)
 {
-    if (!g_unnamed6993dc || g_unnamed699274 <= 1 || g_networkActive69954c)
+    if (!g_blackoutPlayer || g_numHumanPlayers <= 1 || g_remoteOn)
         return;
 
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
@@ -8969,139 +8490,11 @@ void game::waitForPlayer(char* text, int playerId)
     g_advManager->m_advWindow->updateTownLocators(0, 1, 0);
     g_advManager->m_advWindow->updateQuestLogButton(1);
 }
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:9798
-DC_ONLY(0xb6878, 0x6)
-void game::SetupTowns()
+// Original: game::SetupTowns; game.cpp:9798, dc 0xb6878
+// The DC release body is empty; its 6 bytes only home this and return.
+void game::setupTowns()
 {
-    // @stub
 }
-
-// E:\gamedcs\game.cpp:9803
-DC_ONLY(0xb6944, 0x72)
-const char* getRandomTownName(int townType)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9821
-DC_ONLY(0xb69b8, 0x3A)
-void resetRandomTownNames()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9833
-DC_ONLY(0xb69f4, 0x290)
-void game::processOnMapTowns()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9912
-DC_ONLY(0xb6c84, 0x57E)
-void initialize_hero(hero* current_hero, const HeroExtra* setup)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:10060
-DC_ONLY(0xb7204, 0x350)
-void game::processOnMapHeroes()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:10132
-DC_ONLY(0xb7554, 0xC)
-void game::checkHeroConsistency()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:10142
-// Retail admission 2026-09-01: ProcessOnMapHeroes and DoNewTurn bracket these
-// two transfer bodies in the same order as dc game.obj.  This first body is a
-// thiscall with four stack arguments and `ret 0x10`; its SaveGame -> optional
-// CDiffMaker/gzip -> CGameTransmitInitMsg/CGameTransmitMainMsg -> transfer
-// dialog -> resend/confirm/drop sequence independently identifies
-// TransmitSaveGame.  The full 0xd14-byte span is intentional: 0x4cb1ec is the
-// typed catch named by retail's HandlerType at 0x64db70, and the normal path at
-// 0x4cb1ea jumps to the parent's 0x4cb206 continuation, which reuses the saved
-// EBP frame and reaches the shared epilogues and trailing switch tables.
-// Negative controls: treating 0x4cb1ec or 0x4cb206 as entries breaks that EH/
-// frame/control-flow evidence; the cross-build address 0x4cac90 is before this
-// carved entry and therefore cannot name this retail function.
-
-// Dreamcast dossier (dc 0xb7560): preserve the function-scoped locals
-// retryCount, dataTimeOutStart, pSmack, isDiff, pConfirmMsg, playerDone[8],
-// data, cFileName[351], attempts, current, bytesLeft, iFullGameCRC, diffSize,
-// totalBlocks, smack, done, iReturn, pGameTransmitMainMsg, queueSize,
-// iFileSize, handle, numMsgs, msg, useGuaranteed, curBlock, bSChangeSounds,
-// netMsgHandlerPause and dlg.  Its nested diff scope owns File, oldSize,
-// pDiff, pOld, newSize, diffFilename, CDiffMaker, pNew and pFile; message
-// scopes own pNetMsg/CMessageKill, killDPID, CGameTransmitEndMsg,
-// CGameTransmitReqMsg and CChatMsg.  The 203-row / 45-branch / 129-call
-// dossier proves those RAII scopes and the phase order above.  A source body
-// remains fenced until those positive facts can be expressed coherently; a
-// return-only or decompiler-shaped placeholder is the explicit negative
-// control and is not an admissible reconstruction.
-DC_ONLY(0xb7560, 0x1064)
-int game::transmitSaveGame(int iToWho, int thisPlayerDead, unsigned char inGame, unsigned char makeOrig)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:10587
-// Retail admission 2026-09-01: this second bracketed body is a thiscall with
-// five stack arguments and `ret 0x14`.  Its GameTime stamp, incoming buffer
-// and block-received allocation, request/ack/retransmit loop, optional
-// CDiffFile/gzip application, save write, UI restoration and NextPlayer path
-// identify ReceiveSaveGame independently of the DC order transfer.
-// Negative controls: the inherited HD/NH3API-style address 0x4cba00 lies in
-// TransmitSaveGame's retail body, not at an entry; 0x4cbfef is merely the
-// fall-through DestroyMsg block in this body's live receive loop and still
-// uses the parent's EBP frame, so promoting it likewise destroys the CFG.
-
-// Dreamcast dossier (dc 0xb85c4): preserve pSmack, pNetMsg, fromDPID,
-// cFileName[351], data, diffSize, blockReceived, totalBlocks, smack, done,
-// handle, waitingForRetransmit, bSChangeSounds, iLastDataReceiveTime,
-// netMsgHandlerPause and dlg as the function-local inventory.  Nested message
-// scopes own CGameTransmitReqMsg, CGameTransmitMainMsg, killDPID,
-// CGameTransmitEndMsg, CGameTransmitConfirmEndMsg and CChatMsg; the diff scope
-// owns size, origFilename, bytesRead, diffFilename, CDiffFile, gzfile, pOrig,
-// newSave and File.  The 197-row / 45-branch / 128-call dossier proves those
-// lifetimes and receive -> validate -> apply/write -> restore ordering.  As
-// above, a flat return-only or pseudocode transcription is the explicit
-// negative control, not source recovery.
-DC_ONLY(0xb85c4, 0xE44)
-int game::receiveSaveGame(int iFileSize, int iFullGameCRC, int iFromWho, unsigned char inGame, unsigned char isDiff)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11028
-DC_ONLY(0xb9408, 0x5C6)
-void game::doNewTurn()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11170
-DC_ONLY(0xb99d0, 0x62)
-int game::getBoatsBuilt()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11188
-// Promoted 2026-08-19: retail 0x4cce30 (184 B) sits directly before the
-// SetMapSize anchor exactly as dc 0xb9a34 precedes dc 0xb9b24; thiscall
-// with one stack arg matches the signature, and the body walks the
-// player's towns testing building masks - the thieves-guild count the
-// advmgr quick views threshold at 1/2.
-#endif  // @carcass
 
 // The nine-faction no-repeat town-name samplers are file-static in game.cpp.
 // Retail's vector-constructor iterator at 0x4ca9e0 proves nine 24-byte
@@ -9131,6 +8524,13 @@ inline void resetRandomTownNames()
 {
     for (int i = 0; i < 9; ++i)
         g_randomTownNames[i].reset();
+}
+
+// Original: game::CheckHeroConsistency; game.cpp:10132, dc 0xb7554
+// The DC release body only homes this and returns; no gameplay operation
+// is present to duplicate at its callers.
+void game::checkHeroConsistency()
+{
 }
 
 // E:\gamedcs\game.cpp:9833
@@ -9213,7 +8613,7 @@ void game::processOnMapHeroes()
             }
 
             currHero = getHero(heroExtra->m_id);
-            currHero->heroFn004D8B30(heroExtra);
+            currHero->initialize(heroExtra);
 
             if (m_heroAvailability[heroExtra->m_id]
                 != hero::HERO_AVAILABILITY_PRISON) {
@@ -9226,7 +8626,7 @@ void game::processOnMapHeroes()
             }
         } else {
             currHero = getHero(heroExtra->m_id);
-            currHero->heroFn004D8B30(heroExtra);
+            currHero->initialize(heroExtra);
         }
     }
 }
@@ -9287,13 +8687,13 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
         g_advManager->bvMessage((*g_generalText)[99]);
 
-    saveGame(g_loadedGameName, 0, 0, !inGame, 1);
+    saveGame(g_config.m_scFile, 0, 0, !inGame, 1);
 
     char fileName[351];
     sprintf(fileName,
             DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
             DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"),
-            g_loadedGameName);
+            g_config.m_scFile);
 
     if (inGame) {
         File file;
@@ -9365,7 +8765,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     unsigned char done = 0;
     unsigned long numMsgs = 0;
     int curBlock = 0;
-    g_unnamed69d80d = 0;
+    g_playerDrop = 0;
     if (totalBlocks % fileSize)
         ++totalBlocks;
 
@@ -9385,7 +8785,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     }
 
     bool useGuaranteed = false;
-    if (g_dPlayReady || g_mpNetProtocol == MP_TCP)
+    if (g_lobbyLaunched || g_mpNetProtocol == MP_TCP)
     {
         g_logFile.log(DATA_COMPGEN(0x00677f88, xferGuaranteedLog,
                                 "Using guaranteed!!"));
@@ -9453,7 +8853,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                         CDestroyPlayerMsg destroyMsg(
                             m_players[toWho].m_dpid);
                         m_players[toWho].clearNetInfo();
-                        g_unnamed69d80d = 1;
+                        g_playerDrop = 1;
                         transmitRemoteDataDPID(&destroyMsg, 0,
                                                false, true);
                         return 0;
@@ -9471,7 +8871,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                                                        false, true);
                             }
                         }
-                        g_unnamed69d80d = 1;
+                        g_playerDrop = 1;
                         delete[] data;
                         return 0;
                     }
@@ -9520,7 +8920,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             case RS_PLAYER_DROPPED:
                 if (getGamePosFromDPID(confirmMsg->m_dpidFrom) == toWho) {
                     handlePlayerDrop(confirmMsg->m_dpidFrom);
-                    g_unnamed69d80d = 1;
+                    g_playerDrop = 1;
                     delete[] data;
                     return 0;
                 }
@@ -9874,7 +9274,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     sprintf(fileName,
             DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
             DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"),
-            g_loadedGameName);
+            g_config.m_scFile);
     int handle = _open(fileName,
                        _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
                        _S_IWRITE);
@@ -9938,10 +9338,10 @@ void game::doNewTurn()
 
     if (g_currentPlayer->m_deathCountDown >= 0) {
         if (g_currentPlayer->m_deathCountDown == 1) {
-            sprintf(g_text, g_oneDayWarningFormat,
+            sprintf(g_text, g_newTurn[1],
                     g_currentPlayer->getName());
         } else {
-            sprintf(g_text, g_lastDayWarningFormat,
+            sprintf(g_text, g_newTurn[0],
                     g_currentPlayer->getName(),
                     g_currentPlayer->m_deathCountDown);
         }
@@ -9978,28 +9378,28 @@ void game::doNewTurn()
 
     if (m_week == 1 && g_weekType == g_weekTypeNormal) {
         if (g_monthTypeExtra == g_monthEffectNormal) {
-            sprintf(g_text, g_normalMonthFormat, g_monthNames[g_monthType]);
+            sprintf(g_text, g_newTurn[2], g_monthNames[g_monthType]);
         } else if (g_monthTypeExtra == g_monthEffectCreature) {
             strcpy(temp, getArmyName(g_monthType, 1));
             temp[0] = toupper(temp[0]);
-            sprintf(g_text, g_creatureMonthFormat,
+            sprintf(g_text, g_newTurn[3],
                     getArmyName(g_monthType, 1), temp);
         } else {
-            strcpy(g_text, g_plagueMonthText);
+            strcpy(g_text, g_newTurn[4]);
         }
     } else {
         switch (g_weekType) {
         case g_weekTypeNormal:
-            sprintf(g_text, g_normalWeekFormat, g_weekNames[g_weekTypeExtra]);
+            sprintf(g_text, g_newTurn[5], g_weekNames[g_weekTypeExtra]);
             break;
 
         case g_weekTypeCreature:
             strcpy(temp, getArmyName(g_weekTypeExtra, 1));
-            sprintf(g_text, g_creatureWeekFormat, temp, temp);
+            sprintf(g_text, g_newTurn[6], temp, temp);
             break;
 
         case g_weekTypeInfernoGrail:
-            sprintf(g_text, g_infernoWeekFormat,
+            sprintf(g_text, g_newTurn[7],
                     g_creatureTypeTraits[g_creatureImpId].m_name,
                     g_creatureTypeTraits[g_creatureImpId].m_name,
                     g_creatureTypeTraits[g_creatureImpId].m_growthRate,
@@ -10052,102 +9452,64 @@ void game::setMapSize(int width, int height)
     g_searchArray->close();
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:11221
-DC_ONLY(0xb9b54, 0x44)
-int game::HeroIDToHeroPos(playerData* pPlayer, int id)
+// Original: game::HeroIDToHeroPos; game.cpp:11221, dc 0xb9b54
+int game::heroIdToHeroPos(playerData* player, int id)
 {
-    // @stub
+    for (int i = 0; i < player->m_numHeroes; ++i) {
+        if (player->m_heroes[i] == id)
+            return i;
+    }
+    return -1;
 }
 
-// E:\gamedcs\game.cpp:11231
-DC_ONLY(0xb9b98, 0x6C)
-int game::TownIDToTownPos(playerData* pPlayer, int id)
+// Original: game::TownIDToTownPos; game.cpp:11231, dc 0xb9b98
+int game::townIdToTownPos(playerData* player, int id)
 {
-    // @stub
+    for (int i = 0; i < player->m_numTowns; ++i) {
+        if (player->m_townIds[i] == id)
+            return i;
+    }
+    return -1;
 }
 
-// E:\gamedcs\game.cpp:11241
-DC_ONLY(0xb9c04, 0xA6)
-void game::SetMarketArtifacts()
+// Original: game::SetMarketArtifacts; game.cpp:11241, dc 0xb9c04
+void game::setMarketArtifacts()
 {
-    // @stub
+    m_marketArtifacts[0] = getRandomArtifactId(2);
+    m_marketArtifacts[1] = getRandomArtifactId(2);
+    m_marketArtifacts[2] = getRandomArtifactId(2);
+    m_marketArtifacts[3] = getRandomArtifactId(4);
+    m_marketArtifacts[4] = getRandomArtifactId(4);
+    m_marketArtifacts[5] = getRandomArtifactId(4);
+    m_marketArtifacts[6] = getRandomArtifactId(8);
 }
 
-// E:\gamedcs\game.cpp:11252
-DC_ONLY(0xb9cac, 0xAA)
-void game::SetSummoningGenerators()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11273
-DC_ONLY(0xb9d58, 0x122)
-void game::setCannedRumour()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11311
-DC_ONLY(0xb9e7c, 0x1C2)
-void game::setMapRumour()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11358
-DC_ONLY(0xba040, 0xBC4)
-void game::setSpecialRumour()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11445
-DC_ONLY(0xbac04, 0xA0)
-void game::SetupNewRumour()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11459
-DC_ONLY(0xbaca4, 0x20C)
-void game::giveTimeEventReward(const TTimedEvent* thisEvent)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11499
-DC_ONLY(0xbaeb0, 0x44)
-void game::GiveTownEventReward(const TTownEvent* thisEvent)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11512
-DC_ONLY(0xbaef4, 0xF8)
-void game::checkForTimeEvent()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11540
-#endif  // @carcass
-
-// E:\gamedcs\game.cpp:11252
+// Original: game::SetSummoningGenerators; game.cpp:11252, dc 0xb9cac
 void game::setSummoningGenerators()
 {
-    for (int playerId = 0; playerId < 8; ++playerId) {
-        playerData* player = &m_players[playerId];
-        if (!m_playerDisabled[playerId]) {
-            for (int i = 0; i < player->m_numTowns; ++i) {
-                town* currentTown = getTown(player->m_townIds[i]);
+    for (int i = 0; i < 8; ++i) {
+        if (!m_playerDisabled[i]) {
+            playerData* player = &m_players[i];
+            for (int j = 0; j < player->m_numTowns; ++j) {
+                town* currentTown = getTown(player->m_townIds[j]);
                 if (currentTown->m_type == TOWN_DUNGEON
                     && currentTown->hasBuilding(EXTRA_1_ID, 0))
                     currentTown->setSummoningGenerator();
             }
         }
     }
+}
+
+// Original: game::SetupNewRumour; game.cpp:11445, dc 0xbac04
+void game::setupNewRumour()
+{
+    int rumourType = random(1, 100);
+    if (rumourType < g_rumourMapThreshold)
+        setCannedRumour();
+    else if (rumourType < g_rumourSpecialThreshold)
+        setMapRumour();
+    else
+        setSpecialRumour();
 }
 
 VA(0x004ccf20, 0x8E)  // dc 0xb9d58
@@ -10161,7 +9523,8 @@ void game::setCannedRumour()
     }
 
     if (!available) {
-        memset(m_rumourState, 0, sizeof(m_rumourState));
+        int rumourSlot;
+        MEMSET(m_rumourState, 0, sizeof(m_rumourState), rumourSlot);
         available = 256;
     }
 
@@ -10306,12 +9669,12 @@ void game::setSpecialRumour()
             sprintf(m_currentRumour,
                     g_generalText->getText(
                         g_specialRumourGrailAboveText),
-                    g_questMonsterDirections[direction]);
+                    g_directions[direction]);
         } else {
             sprintf(m_currentRumour,
                     g_generalText->getText(
                         g_specialRumourGrailBelowText),
-                    g_questMonsterDirections[direction]);
+                    g_directions[direction]);
         }
     } else {
         type_point artifactLocation(m_ultimateArtifactX, m_ultimateArtifactY,
@@ -10319,20 +9682,8 @@ void game::setSpecialRumour()
         const NewmapCell* cell = g_advManager->getCell(artifactLocation);
         sprintf(m_currentRumour,
                 g_generalText->getText(g_specialRumourGrailObjectText),
-                g_grailTerrainNames[cell->m_groundSet]);
+                g_rumourTerrainDescriptions[cell->m_groundSet]);
     }
-}
-
-// E:\gamedcs\game.cpp:11445
-void game::setupNewRumour()
-{
-    int rumourType = random(1, 100);
-    if (rumourType < g_rumourMapThreshold)
-        setCannedRumour();
-    else if (rumourType < g_rumourSpecialThreshold)
-        setMapRumour();
-    else
-        setSpecialRumour();
 }
 
 VA(0x004cd710, 0x200)
@@ -10370,7 +9721,7 @@ void game::giveTimeEventReward(const TTimedEvent* thisEvent)
         g_advManager->m_advWindow->updateResourceDisplay(1, 1);
         extendedDialog(thisEvent->m_message.c_str(), rewards, -1, -1, 0);
 
-        if (g_unk69774c) {
+        if (g_inCampaign) {
             short currentTurn = getCurrentTurn();
             if (currentTurn == g_campaignPopulationEventDay
                 && m_campaign.m_currentCampaign
@@ -10391,6 +9742,18 @@ void game::giveTimeEventReward(const TTimedEvent* thisEvent)
     }
 }
 
+// Original: game::GiveTownEventReward; game.cpp:11499, dc 0xbaeb0
+// Both date arms of Complete checkForTownEvent 0x4cda10 expand this operation:
+// select the town, require its owner to be local, then grant the two rewards.
+void game::giveTownEventReward(const TTownEvent& thisEvent)
+{
+    town* thisTown = getTown(thisEvent.m_townNum);
+    if (g_netLocalGamePos == thisTown->m_owner) {
+        giveTimeEventReward(&thisEvent);
+        thisTown->giveEventReward(&thisEvent);
+    }
+}
+
 VA(0x004cd910, 0xF5)  // unique body/order + 0x34-byte TTimedEvent stride
 void game::checkForTimeEvent()
 {
@@ -10407,7 +9770,7 @@ void game::checkForTimeEvent()
                   : thisEvent->m_applyToComputer)) {
             continue;
         }
-        if (!(g_unnamed69ccc4 & thisEvent->m_playerFlags))
+        if (!(g_curPlayerBit & thisEvent->m_playerFlags))
             continue;
 
         if (thisEvent->m_firstTime == day) {
@@ -10436,22 +9799,14 @@ void game::checkForTownEvent()
                   : thisEvent.m_applyToComputer)) {
             continue;
         }
-        if (!(g_unnamed69ccc4 & thisEvent.m_playerFlags))
+        if (!(g_curPlayerBit & thisEvent.m_playerFlags))
             continue;
 
         if (thisEvent.m_firstTime == day) {
-            town* thisTown = getTown(thisEvent.m_townNum);
-            if (g_netLocalGamePos == thisTown->m_owner) {
-                giveTimeEventReward(&thisEvent);
-                thisTown->giveEventReward(&thisEvent);
-            }
+            giveTownEventReward(thisEvent);
         } else if (thisEvent.m_interval && day > thisEvent.m_firstTime
                    && (day - thisEvent.m_firstTime) % thisEvent.m_interval == 0) {
-            town* thisTown = getTown(thisEvent.m_townNum);
-            if (g_netLocalGamePos == thisTown->m_owner) {
-                giveTimeEventReward(&thisEvent);
-                thisTown->giveEventReward(&thisEvent);
-            }
+            giveTownEventReward(thisEvent);
         }
     }
 }
@@ -10574,26 +9929,46 @@ type_point game::getUndergroundGateExit(const NewmapCell* cell) const
 // heroPoolMap element is also byte-flat here and regresses game::Load from
 // 92.3721 to 92.2795. The implicit-member boundary is therefore bounded
 // without sacrificing an exact function.
+// The scalar array initialisations use MEMSET markers, which expand to counted
+// loops rather than CRT memset calls. Retail
+// sets EDI up before ECX at m_saveFileName, m_heroAvailability,
+// m_artifactUsed, m_artifactDisabled, m_obeliskFlags, m_currentRumour,
+// m_globalInfoFlags and m_rumourState, and ECX before EDI at m_setup: the
+// loop form and the memset form emit the same rep stosd (plus the stosw /
+// stosb tail for the odd bytes, and EAX = -1 for the -1 fill), and only that
+// setup order separates them (behavior-catalog D25). m_heroPoolMap keeps
+// ECX-first because its fill value is a variable, not a literal.
+// Adopting the eight loops moved this body 78.16 -> 80.60 and reset MAX from
+// the 88.86 banked before the canonical SCampaign header bodies were
+// restored; HIST holds that peak. The rest of the residual is that header
+// decision, not these fills: retail CALLS SCampaign::SCampaign (which itself
+// expands its string and four vector members) where our TU inlines its body
+// and keeps the member ctor calls, and retail opens one more EH state (11).
 VA(0x004cdf20, 0x585)  // anchor-global, dc 0xbb62c
 game::game()
 {
     m_difficultyRating = 0;
     m_newCampaignStarted = 0;
-    memset(m_saveFileName, 0, sizeof(m_saveFileName));
+    int nameByte;
+    MEMSET(m_saveFileName, 0, sizeof(m_saveFileName), nameByte);
     memset(&m_setup, 0, sizeof(m_setup));
     memset(m_playerDisabled, 0, sizeof(m_playerDisabled));
     m_day = 0;
     m_week = 0;
     m_month = 0;
-    memset(m_heroAvailability, -1, sizeof(m_heroAvailability));
+    int heroSlot;
+    MEMSET(m_heroAvailability, -1, sizeof(m_heroAvailability), heroSlot);
 
     std::bitset<8> allPlayers;
     allPlayers.set();
     for (int i = 0; i < HERO_COUNT; i++)
         m_heroPoolMap[i] = allPlayers;
-    memset(m_artifactUsed, 0, sizeof(m_artifactUsed));
-    memset(m_artifactDisabled, 0, sizeof(m_artifactDisabled));
-    memset(m_obeliskFlags, 0, sizeof(m_obeliskFlags));
+    int usedArt;
+    MEMSET(m_artifactUsed, 0, sizeof(m_artifactUsed), usedArt);
+    int disabledArt;
+    MEMSET(m_artifactDisabled, 0, sizeof(m_artifactDisabled), disabledArt);
+    int obelisk;
+    MEMSET(m_obeliskFlags, 0, sizeof(m_obeliskFlags), obelisk);
     m_ultimateArtifactX = -1;
     m_ultimateArtifactY = -1;
     m_ultimateArtifactZ = -1;
@@ -10601,9 +9976,11 @@ game::game()
     m_ultimateArtifactPresent = 0;
     m_f1f698 = 0;
     m_isCheater = 0;
-    memset(m_currentRumour, 0, sizeof(m_currentRumour));
+    int rumourByte;
+    MEMSET(m_currentRumour, 0, sizeof(m_currentRumour), rumourByte);
     m_numObelisks = 0;
-    memset(m_globalInfoFlags, 0, sizeof(m_globalInfoFlags));
+    int infoFlag;
+    MEMSET(m_globalInfoFlags, 0, sizeof(m_globalInfoFlags), infoFlag);
     memset(m_borderTentVisitFlags, 0, sizeof(m_borderTentVisitFlags));
     m_cartographerMask[0] = 0x100;
     m_cartographerMask[1] = 0xbf;
@@ -10628,7 +10005,6 @@ VA_COMPGEN(0x004ce520, 0x4A, IMPLICIT_DTOR, HeroExtra)
 VA_COMPGEN(0x004ce570, 0x32, IMPLICIT_DTOR, playerData)
 
 // E:\gamedcs\game.cpp:11749
-
 VA(0x004ce5b0, 0x346)  // dc 0xbbd28
 game::~game()
 {
@@ -10672,18 +10048,9 @@ int game::getLocalPlayerGamePos() const
 {
     if (g_mpNetProtocol == MP_HOTSEAT) {
         int pos = g_netLocalGamePos;
-        bool selected = false;
-        if (pos >= 0 && pos < 8 && m_players[pos].m_isHuman)
+        if (pos >= 0 && pos < 8 && m_players[pos].isHuman())
             return pos;
-        for (pos = 7; pos >= 0; pos--) {
-            if (m_players[pos].m_isHuman) {
-                selected = true;
-                break;
-            }
-        }
-        if (!selected)
-            pos = 0;
-        return pos;
+        return getLastHuman();
     }
     return g_localGamePos;
 }
@@ -10738,7 +10105,7 @@ bool game::isLastHuman(int gamePos) const
 VA(0x004cec90, 0x18)  // dc 0xbc300
 bool game::isMultiplayer() const
 {
-    if (g_videoPaused || g_mpNetProtocol == MP_HOTSEAT)
+    if (g_remoteOn || g_mpNetProtocol == MP_HOTSEAT)
         return true;
     return false;
 }
@@ -10755,7 +10122,7 @@ void game::resetGame(int difficulty, int version,
     g_buildAllBuildings = 0;
     setupOrigData();
     initNewGame(difficulty, version, defaultMapHeader, 0);
-    g_turnDuration69d630.clear();
+    g_turnDuration.clear();
     g_thisNetGotAdventureControl = 0;
     TSpellbookWindow::reset();
     memset(m_borderTentVisitFlags, 0, sizeof(m_borderTentVisitFlags));
@@ -10901,23 +10268,15 @@ VA_COMPGEN(0x004d4f80, 0x3B, VECTOR_UCOPY, generator)
 VA_COMPGEN(0x004d4fc0, 0x31, VECTOR_UFILL, generator)
 VA_COMPGEN(0x004d5000, 0xCB, BITSET_XRAN, Bitset128)
 
-// E:\gamedcs\game.cpp:2733
-VA(0x004d2870, 0x24D)
-unsigned char loadObjectVector(
-    TAbstractFile* infile,
-    std::vector<type_creature_bank>* destVector)
+// Retained instantiation of the canonical template at game.cpp2733.
+#if 0  // @carcass -- claim-only template instance
+VA(0x004d2870, 0x24D)  // dc 0xc1b6c
+bool loadObjectVector(TAbstractFile* infile,
+                      std::vector<type_creature_bank>& destVector)
 {
-    short count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
-        return 0;
-
-    destVector->resize(count);
-    for (int i = 0; i < count; ++i) {
-        if (!(*destVector)[i].load(infile))
-            return 0;
-    }
-    return 1;
+    // @stub
 }
+#endif
 
 // The retained template instances are claimed in retail address order.
 // Their one active implementation appears at the DC source-order boundary.
@@ -10935,192 +10294,24 @@ bool saveVector(TAbstractFile* outfile, std::vector<type_university>& srcVector)
 }
 #endif
 
+#if 0  // @carcass -- claim-only template instance
 VA(0x004d2b80, 0x102)  // dc 0xc1f64
-unsigned char saveObjectVector(TAbstractFile* outfile,
-                                 std::vector<type_creature_bank>* srcVector)
+bool saveObjectVector(TAbstractFile* outfile,
+                      std::vector<type_creature_bank>& srcVector)
 {
-    int count = srcVector->size();
-    if (outfile->write(&count, sizeof(short)) < sizeof(short))
-        return 0;
+    // @stub
+}
+#endif
 
-    for (long i = 0; i < static_cast<short>(count); ++i) {
-        type_creature_bank& bank = (*srcVector)[i];
-        outfile->write(&bank.m_guards, sizeof(bank.m_guards));
-        outfile->write(bank.m_resources, sizeof(bank.m_resources));
-        outfile->write(&bank.m_rewardCreature, sizeof(bank.m_rewardCreature));
-        outfile->write(&bank.m_rewardCreatures, sizeof(bank.m_rewardCreatures));
-
-        int artifactCount = bank.m_artifacts.size();
-        if (outfile->write(&artifactCount, sizeof(short)) < sizeof(short))
-            return 0;
-        if (outfile->write(bank.m_artifacts.begin(),
-                           static_cast<short>(artifactCount) *
-                               sizeof(TArtifact)) <
-            static_cast<short>(artifactCount) * sizeof(TArtifact))
-            return 0;
+// Original: game::GetLastHuman; game.cpp:11869, dc 0xbc320
+int game::getLastHuman() const
+{
+    for (int i = 7; i >= 0; --i) {
+        if (m_players[i].isHuman())
+            return i;
     }
-    return 1;
+    return 0;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:11869
-DC_ONLY(0xbc320, 0x64)
-int game::GetLastHuman()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11884
-DC_ONLY(0xbc384, 0x94)
-void game::mark_campaign_map_won()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11895
-DC_ONLY(0xbc418, 0xE8)
-void game::resetGame()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11918
-DC_ONLY(0xbc500, 0x9C)
-unsigned char DCFileConv(char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2969
-DC_ONLY(0xbd4fc, 0x38)
-void* Buffer::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:5595
-DC_ONLY(0xbd534, 0x58)
-void type_creature_bank::type_creature_bank()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:5595
-DC_ONLY(0xbd58c, 0x20)
-void type_creature_bank::~type_creature_bank()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9801
-// Retail 0x4caa40 is claimed above through its exact implicit destructor
-// public; this row records the independent Dreamcast name and order.
-DC_ONLY(0xbd5ac, 0x1C)
-void TPickRandomTownName::~TPickRandomTownName()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:10583
-DC_ONLY(0xbd5c8, 0x2C)
-void CGameTransferDlg::~CGameTransferDlg()
-{
-    // @stub
-}
-
-// HeroExtra::HeroExtra (dc 0xbd5f4) and playerData::~playerData
-// (dc 0xbd630) are CLAIMED above, in their retail order between
-// game::game and game::~game - see the bracket note there.
-
-// E:\gamedcs\game.cpp:11746
-DC_ONLY(0xbd654, 0x44)
-void std::vector<type_point,std::allocator<type_point> >::`default constructor closure'()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2698
-DC_ONLY(0xc184c, 0x80)
-unsigned char load_vector(void* infile, std::vector<enum* dest_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2716
-DC_ONLY(0xc18cc, 0x84)
-unsigned char saveVector(void* outfile, std::vector<enum* src_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2733
-#endif  // @carcass
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:2698
-DC_ONLY(0xc19e8, 0x80)
-unsigned char load_vector(void* infile, std::vector<type_point,std::allocator<type_point>* dest_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2698
-DC_ONLY(0xc1a68, 0x80)
-unsigned char load_vector(void* infile, std::vector<long,std::allocator<long>* dest_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2698
-DC_ONLY(0xc1ae8, 0x84)
-unsigned char load_vector(void* infile, std::vector<type_university,std::allocator<type_university>* dest_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2733
-DC_ONLY(0xc1b6c, 0x98)
-unsigned char loadObjectVector(void* infile, std::vector<type_creature_bank,std::allocator<type_creature_bank>* dest_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2754
-#endif  // @carcass
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:2716
-DC_ONLY(0xc1dd4, 0x84)
-unsigned char saveVector(void* outfile, std::vector<type_point,std::allocator<type_point>* src_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2716
-DC_ONLY(0xc1e58, 0x84)
-unsigned char saveVector(void* outfile, std::vector<long,std::allocator<long>* src_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2716
-DC_ONLY(0xc1edc, 0x88)
-unsigned char saveVector(void* outfile, std::vector<type_university,std::allocator<type_university>* src_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2754
-DC_ONLY(0xc1f64, 0x9C)
-unsigned char saveObjectVector(void* outfile, std::vector<type_creature_bank,std::allocator<type_creature_bank>* src_vector)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x004cff30, 0x17, BITSET_TIDY, Bitset8)
 VA_COMPGEN(0x004d1790, 0x15, BITSET_TIDY, Bitset5)

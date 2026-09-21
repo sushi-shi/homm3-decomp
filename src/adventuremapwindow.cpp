@@ -1,32 +1,34 @@
-#include <va.h>
+#include "va.h"
+
 #include <stdio.h>
+
 #include "adventuremapwindow.h"
+
 #include "advmgr.h"
 #include "border.h"
 #include "bottomviewsubwindow.h"
 #include "button.h"
-#include "remote.h"
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
 #include "imm_mouse.h"
 #include "inputmgr.h"
 #include "kb.h"
-#include "town.h"
-#include "townmgr_globals.h"
 #include "message.h"
 #include "mousemgr.h"
 #include "prefs.h"
 #include "quest.h"
+#include "remote.h"
 #include "resourcedisplay.h"
 #include "resourcemanager.h"
-#include "textwdgt.h"
 #include "textntry.h"
 #include "textresource.h"
+#include "textwdgt.h"
+#include "town.h"
+#include "townmgr_globals.h"
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x006a56e0) extern THelpText g_adventureWindowHelp[];
 // 0x6a56e4 is g_adventureWindowHelp[0].m_rclick, not another array.
 // Dreamcast's gQuickViewText belongs to the distinct object-name table.
 
@@ -51,11 +53,6 @@ const char* TCheatCode::s_b = "nopqrstuvwxyzabcdefghijklm";
 // implementation 0x5ff5f0 owns the walk. The adventure override 0x4040b0
 // additionally controls its mouse effect. This is a changed class boundary,
 // not evidence that an otherwise identical TADW wrapper was inlined away.
-DC_ONLY(0x370, 0x3E)
-void TAdventureMapWindow::sleepAllWidgets(unsigned char put_to_sleep)
-{
-    // @stub
-}
 
 // Three RETAIL-ONLY heroWindow virtual overrides the Dreamcast TADW class
 // never carried (its field list marks every method VANILLA bar the dtor).
@@ -192,7 +189,7 @@ public:
         char* textFontName, font::TColor colorIndex,
         font::EJustify justification,
         char* backgroundIconName, int backgroundFrame, int textWidgetId,
-        int textWidgetStyle, int iReadType, int textInsetX, int textInsetY);
+        int textWidgetStyle, int readType, int textInsetX, int textInsetY);
     virtual void sendChat(const char* text, int toWho);
 };
 
@@ -201,12 +198,12 @@ CAdventurMapChatEdit::CAdventurMapChatEdit(
     int textWidgetHeight, int textStringSize, char* textString,
     char* textFontName, font::TColor colorIndex, font::EJustify justification,
     char* backgroundIconName, int backgroundFrame, int textWidgetId,
-    int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+    int textWidgetStyle, int readType, int textInsetX, int textInsetY)
     : CGameChatEdit(textWidgetX, textWidgetY, textWidgetWidth,
                     textWidgetHeight, textStringSize, textString,
                     textFontName, colorIndex, justification,
                     backgroundIconName, backgroundFrame, textWidgetId,
-                    textWidgetStyle, iReadType, textInsetX, textInsetY)
+                    textWidgetStyle, readType, textInsetX, textInsetY)
 {
 }
 
@@ -484,18 +481,18 @@ void CAdventurMapChatEdit::sendChat(const char* chat, int toWho)
         checkAdvCheatCode(chatString);
 
     if (chatString == DATA_COMPGEN(0x0065f3cc, advChatGoSolo, "gosolo")) {
-        if (!g_networkActive69954c)
+        if (!g_remoteOn)
             g_mapVisibilityBit = 0xff;
-        g_unnamed691209 = 1;
-        g_unnamed69120c = g_game->getLocalPlayerGamePos();
-        g_unnamed698758.m_combatBallista = 1;
-        g_unnamed698758.m_combatCatapult = 1;
-        g_unnamed698758.m_combatAutoCreatures = 1;
-        g_unnamed698758.m_combatFirstAidTent = 1;
-        g_unnamed698758.m_combatAutoSpells = 1;
-        g_unnamed698758.m_combatSpeed = 2;
-        g_unnamed698758.m_computerWalkSpeed = 4;
-        g_unnamed698758.m_walkSpeed = 4;
+        g_goSolo = 1;
+        g_soloPos = g_game->getLocalPlayerGamePos();
+        g_config.m_combatBallista = 1;
+        g_config.m_combatCatapult = 1;
+        g_config.m_combatAutoCreatures = 1;
+        g_config.m_combatFirstAidTent = 1;
+        g_config.m_combatAutoSpells = 1;
+        g_config.m_combatSpeed = 2;
+        g_config.m_computerWalkSpeed = 4;
+        g_config.m_walkSpeed = 4;
     }
 
     ::sendChat(chatString.c_str(), toWho);
@@ -643,7 +640,7 @@ void checkAdvCheatCode(std::string& chatString)
     if (cheatUsed) {
         chatString = (*g_generalText)[261];
         g_game->m_isCheater = 1;
-        if (g_unk69774c)
+        if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
     }
 }
@@ -1213,12 +1210,7 @@ void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
         unsigned i;
         for (i = 0; i < g_game->m_worldMap.m_seerHutList.size(); i++) {
             TSeerHut& hut = g_game->m_worldMap.m_seerHutList[i];
-            type_quest* quest = hut.m_quest;
-            if (quest
-                && quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
-                && (hut.m_visitedPlayers
-                    & (1 << static_cast<unsigned char>(player)))
-                && hut.m_quest) {
+            if (hut.questActiveforPlayer(player)) {
                 enabled = 1;
                 break;
             }
@@ -1226,12 +1218,7 @@ void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
 
         for (i = 0; i < g_game->m_worldMap.m_questGuardList.size(); i++) {
             TQuestGuard& guard = g_game->m_worldMap.m_questGuardList[i];
-            type_quest* quest = guard.m_quest;
-            if (quest
-                && quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
-                && (guard.m_visitedPlayers
-                    & (1 << static_cast<unsigned char>(player)))
-                && guard.m_quest) {
+            if (guard.questActiveforPlayer(player)) {
                 enabled = 1;
                 break;
             }
@@ -1325,7 +1312,7 @@ unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
 // 240-trial, 12-family target-local state campaign remained at 86.6667%; the
 // residual is a nested vector<int> inliner decision, not evidence to erase the
 // helper boundary again.
-VA(0x00403cc0, 0x215)  // anchor-global, dc 0x118c; real older body dc 0x2a74
+VA(0x00403cc0, 0x215)  // anchor-global, dc 0x118c
 void TAdventureMapWindow::setSleepImage(int image)
 {
     if (image != g_sleepImage) {
@@ -1381,7 +1368,9 @@ void TAdventureMapWindow::drawChatText(unsigned char update)
             m_chatTextWidget->m_width, m_chatTextWidget->m_height);
 }
 
-// E:\gamedcs\adventuremapwindow.cpp:1273, dc 0x1238
+// Original: TAdvMenu::SetAdvWinButtonPalette; adventuremapwindow.cpp:1273, dc 0x1238.
+// Complete owns these menu buttons directly in TAdventureMapWindow; its
+// updateButtons body at 0x403f60 expands GetWidget and the button palette call.
 void TAdventureMapWindow::setAdvWinButtonPalette(int id, int player)
 {
     widget* w = getWidget(id);
@@ -1411,176 +1400,17 @@ void TAdventureMapWindow::updateButtons(unsigned char draw, unsigned char update
 
 #if 0  // @carcass
 
-// E:\gamedcs\adventuremapwindow.cpp:1307
-DC_ONLY(0x1284, 0x708)
-void TAdvMenu::TAdvMenu()
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1448
-DC_ONLY(0x198c, 0xB4)
-void TAdvMenu::InitAdvMenu()
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1475
-DC_ONLY(0x1a40, 0x78)
-void TAdvMenu::~TAdvMenu()
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1486
-DC_ONLY(0x1ab8, 0x64E)
-int TAdvMenu::windowHandler(message& msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1706
-DC_ONLY(0x2108, 0x2B4)
-void TAdvMenu::updateHeroLocator(int iWhich, unsigned char drawWinSect, unsigned char updateFlag)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1782
-DC_ONLY(0x23bc, 0x150)
-void TAdvMenu::updateHeroLocators(int top, unsigned char drawWin, unsigned char updateFlag)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1842
-DC_ONLY(0x250c, 0x15A)
-void TAdvMenu::updateTownLocator(int i, unsigned char drawWinSect, unsigned char updateFlag)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1885
-DC_ONLY(0x2668, 0x176)
-void TAdvMenu::updateTownLocators(int top, unsigned char drawWin, unsigned char updateFlag)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1942
-DC_ONLY(0x27e0, 0xDE)
-void TAdvMenu::highlightLocators(unsigned char update)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1978
-DC_ONLY(0x28c0, 0x96)
-void TAdvMenu::doHeroKnob(unsigned char up)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1996
-DC_ONLY(0x2958, 0x64)
-void TAdvMenu::doTownKnob(unsigned char up)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:2014
-DC_ONLY(0x29bc, 0x6A)
-unsigned char TAdvMenu::setElevationToggleImage(int level)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:2038
-DC_ONLY(0x2a28, 0x4C)
-void TAdvMenu::updateSpellButton(const hero* this_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:2056
-DC_ONLY(0x2a74, 0xC8)
-void TAdvMenu::setSleepImage(int image)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:2082
-DC_ONLY(0x2b3c, 0x40)
-void TAdvMenu::updateSleepButton(const hero* this_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:2099
-DC_ONLY(0x2b7c, 0xB4)
-void TAdvMenu::updateQuestLogButton(unsigned char update)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:2132
-DC_ONLY(0x2c30, 0x88)
-void TAdvMenu::checkDimNextHeroBut()
-{
-    // @stub
-}
+// Platform difference: DC puts a second copy of the adventure controls in
+// TAdvMenu, a modal CAdvPopup (ctor0x1284, handler0x1ab8, dtor0x1a40).
+// Complete constructs the buttons directly in TAdventureMapWindow0x401510
+// and updates them through0x403220..0x403f60; advManager owns dispatch.
+// These additional modal methods are accounted individually in dc_only.tsv.
+// Their operations survive in the persistent window; they are not missing
+// standalone retail claims. SetAdvWinButtonPalette above has its own proven
+// source-identity bridge and is deliberately retained as a canonical helper.
 
 // E:\gamedcs\button.h:104
 void button::setHotkey(int code)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:257
-DC_ONLY(0x3274, 0x98)
-void CAdventurMapChatEdit::CAdventurMapChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:311
-DC_ONLY(0x3414, 0x34)
-void* CAdventurMapChatEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:311
-DC_ONLY(0x3448, 0x18)
-void CAdventurMapChatEdit::~CAdventurMapChatEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:486
-DC_ONLY(0x3460, 0x34)
-void* TAdventureMapWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1445
-DC_ONLY(0x3494, 0x34)
-void* TAdvMenu::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1445
-DC_ONLY(0x34c8, 0x18)
-void CAdvPopup::~CAdvPopup()
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1445
-DC_ONLY(0x34e0, 0x18)
-void CHeroWindowEx::~CHeroWindowEx()
 {
     // @stub
 }

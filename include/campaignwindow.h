@@ -1,6 +1,7 @@
 #ifndef HOMM3_CAMPAIGNWINDOW_H
 #define HOMM3_CAMPAIGNWINDOW_H
 
+#include "binkmanager.h"
 #include "window.h"
 
 class message;
@@ -102,8 +103,10 @@ public:
     // campaign the current page shows; the constructor seeds 0, 7 or 13.
     int m_firstCampaign;
 
-    // Complete added the leading new-game selector to Dreamcast's
-    // one-argument constructor; oldmain and the retail body prove both slots.
+    // DC's sole int newCampaign is the reset flag (test at dc 0x5b5c0).
+    // Complete narrows that flag to a byte and adds the campaign-set slot.
+    // Native bool versus unsigned char remains unresolved; the second
+    // parameter's current spelling is not a recovered DC name.
     TCampaignWindow(unsigned char newGame, int newCampaign);
     virtual ~TCampaignWindow();
     void doModal();
@@ -126,7 +129,7 @@ int campaignWindowHandler(message& msg);
 // fixes the image name and the widget id; the constructor reads
 // +0x04/+0x08 again for the check-mark plate and +0x0c/+0x10/+0x14 for
 // the caption box. The 12-dword tail is the row's private snapshot of
-// the consecutive Bink state beginning at gBinkVideo, written by
+// BinkManager::playingBINK aggregate, written by
 // OpenPreview and restored by the destructor and the hover handler.
 struct SCampaignPreview {
     int m_video;
@@ -137,7 +140,7 @@ struct SCampaignPreview {
     int m_textWidth;
     const char* m_image;
     int m_widgetId;
-    int m_binkState[12];
+    BinkManager::BinkManagerStruct m_binkState;
 };
 SIZE(SCampaignPreview, 0x50);
 extern SCampaignPreview g_campaignPreviews[20];

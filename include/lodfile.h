@@ -1,19 +1,11 @@
 #ifndef HOMM3_LODFILE_H
 #define HOMM3_LODFILE_H
 
-#include <stdio.h>
-#include <vector>
 #include "va.h"
 
-// zlib's uncompress, which LODFile::read calls on every packed entry
-// (retail 0x606be0, decorated @uncompress@16 - the vendored zlib TUs
-// compile /Gr, so it is fastcall like everything else here). The vendor
-// include directory is deliberately kept off the compiler's INCLUDE
-// path, so the single prototype lodfile.obj needs is spelled here
-// rather than by pulling zlib.h into the game headers.
-extern "C" int uncompress(unsigned char* dest, unsigned long* destLen,
-                          const unsigned char* source,
-                          unsigned long sourceLen);
+#include <stdio.h>
+#include <vector>
+#include <zlib.h>
 
 // The 32-byte archive-directory row. Retail Find's indexing uses a five-bit
 // shift, while open reads these same five fields from the on-disk table.
@@ -65,8 +57,19 @@ private:
     void* getDataPtr(const char* itemName);
 
 public:
+    enum EError {
+        LOD_NO_ERROR = 0,
+        LOD_NOT_OPEN = 1,
+        LOD_ALREADY_EXISTS = 2,
+        LOD_CHAPTER_NOT_FOUND = 3,
+        LOD_ITEM_NOT_FOUND = 4,
+        LOD_NO_IO_BUFFER = 5
+    };
     int m_numEntries;
     std::vector<LODEntry> m_subindex;
+    unsigned char exist(const char* itemName);
+    char* getErrorString(int lodError);
+    void sort();
     void clear();
     unsigned char pointAt(const char* itemName);
     int read(void* dest, int numBytes);

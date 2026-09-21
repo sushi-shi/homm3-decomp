@@ -1,9 +1,12 @@
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
+#include "campaignwindow.h"
+
 #include "binkmanager.h"
 #include "border.h"
 #include "button.h"
-#include "campaignwindow.h"
 #include "font.h"
 #include "game.h"
 #include "kb.h"
@@ -14,18 +17,46 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x0066cadc) const char* g_campaignFileNames[20] = {
+    "Good1.h3c", "Good2.h3c", "Neutral1.h3c", "Good3.h3c", "Evil1.h3c", "Evil2.h3c", "Secret1.h3c", "AB.h3c",
+    "blood.h3c", "slayer.h3c", "festival.h3c", "fool.h3c", "fire.h3c", "crag.h3c", "yog.h3c", "gem.h3c",
+    "gelu.h3c", "sandro.h3c", "final.h3c", "secret.h3c"
+};
+DATA(0x0066c498) SCampaignPreview g_campaignPreviews[20] = {
+    { 7, 90, 72, 58, 192, 270, "campgd1s.pcx", 108, { 0 } },
+    { 8, 42, 244, 8, 364, 270, "campgd2s.pcx", 109, { 0 } },
+    { 10, 313, 244, 276, 364, 270, "campneus.pcx", 110, { 0 } },
+    { 9, 33, 414, 0, 532, 270, "campgd3s.pcx", 111, { 0 } },
+    { 11, 539, 72, 504, 192, 270, "campev1s.pcx", 112, { 0 } },
+    { 12, 585, 244, 565, 364, 235, "campev2s.pcx", 113, { 0 } },
+    { 13, 404, 414, 368, 532, 270, "campscts.pcx", 114, { 0 } },
+    { 14, 90, 72, 58, 192, 270, "camp1ab7.pcx", 115, { 0 } },
+    { 15, 539, 72, 504, 192, 270, "Camp1DB2.pcx", 116, { 0 } },
+    { 16, 42, 244, 8, 364, 270, "camp1ds1.pcx", 117, { 0 } },
+    { 17, 313, 244, 276, 364, 270, "camp1fl3.pcx", 118, { 0 } },
+    { 18, 33, 414, 0, 532, 270, "camp1fw1.pcx", 119, { 0 } },
+    { 19, 585, 244, 565, 364, 235, "camp1pf2.pcx", 120, { 0 } },
+    { 20, 42, 244, 8, 364, 270, "camphs1.pcx", 121, { 0 } },
+    { 21, 585, 244, 565, 364, 235, "campbb1.pcx", 122, { 0 } },
+    { 22, 90, 72, 58, 192, 270, "campnb1.pcx", 123, { 0 } },
+    { 23, 539, 72, 504, 192, 270, "campel1.pcx", 124, { 0 } },
+    { 24, 313, 244, 276, 364, 270, "camprn1.pcx", 125, { 0 } },
+    { 25, 33, 414, 0, 532, 270, "campua1.pcx", 126, { 0 } },
+    { 26, 404, 414, 368, 532, 270, "campsp1.pcx", 127, { 0 } }
+};
+
 // Source-private in the Dreamcast compiland. Retail's constructor stores the
 // active dialog here and its destructor clears it before destroying the base.
 DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;
 
 // Complete-only campaign-preview table at retail 0x66c498. Each 0x50-byte
 // row has eight descriptor dwords followed by a 12-dword snapshot of the
-// consecutive Bink state beginning at gBinkVideo. The constructor/helper own
+// BinkManager::playingBINK aggregate. The constructor/helper own
 // the initialized rows; this TU view intentionally makes no DATA claim yet.
 // The row type and the caption block live in campaignwindow.h.
 
 // E:\gamedcs\campaignwindow.cpp:78
-
 // Dreamcast emits it out of line (dc 0x5b53c, 0x34 B); retail has no slot for
 // it, because /Ob2 expands it at all three call sites. The expansion is
 // register-visible and is what the handler's EBX is: the inlined `this` is
@@ -44,8 +75,8 @@ void TCampaignWindow::hideText()
 }
 
 // One preview row's video: open it at the row's own position, pause the
-// track, snapshot the twelve consecutive Bink globals into the row and clear
-// gBinkVideo so the next row opens a fresh one, then hang the row's still on
+// track, snapshot the Bink playback state into the row and clear
+// its first track so the next row opens a fresh one, then hang the row's still on
 // the window. The destructor and the hover handler restore that snapshot.
 VA(0x0045e7c0, 0x27A)
 void TCampaignWindow::openPreview(int campaignIndex)
@@ -54,10 +85,11 @@ void TCampaignWindow::openPreview(int campaignIndex)
 
     videoOpen(preview->m_video, preview->m_x, preview->m_y, PREVIEW_WIDTH,
               PREVIEW_HEIGHT, 1, 0, 1);
-    g_binkPaused = 0;
-    _BinkPause(g_binkVideo, 0);
-    memcpy(preview->m_binkState, &g_binkVideo, 12 * sizeof(int));
-    g_binkVideo = 0;
+    BinkManager::g_playingBink.m_paused = 0;
+    BinkPause(BinkManager::g_playingBink.m_bink, 0);
+    memcpy(&preview->m_binkState, &BinkManager::g_playingBink,
+        sizeof(BinkManager::g_playingBink));
+    BinkManager::g_playingBink.m_bink = 0;
 
     m_widgets.push_back(new bitmapBorder16(preview->m_x, preview->m_y,
         PREVIEW_WIDTH, PREVIEW_HEIGHT, preview->m_widgetId, preview->m_image,
@@ -65,10 +97,10 @@ void TCampaignWindow::openPreview(int campaignIndex)
 }
 
 // E:\gamedcs\campaignwindow.cpp:86
-
-// `ret 8` against two parameters: +8 `unsigned char newGame`, +0xc `int
-// newCampaign`, both slots reused as temps once dead. EH frame with twelve
-// unwind states and `sub esp, 0x8c`.
+// `ret 8` against two parameters: +8 byte-domain reset flag, +0xc int
+// campaign-set selector, both slots reused as temps once dead. DC's single
+// int newCampaign is the reset flag, not the added campaign-set selector.
+// EH frame with twelve unwind states and `sub esp, 0x8c`.
 
 // FIXED 82.5365% -> 98.4726% (2026-08-21): the newGame arm, in two steps.
 // Retail's SCampaign copy assignment and destructor are compiler-generated;
@@ -102,7 +134,7 @@ void TCampaignWindow::openPreview(int campaignIndex)
 // reach, and the pin lever is out of bounds for this lane; max/hist keep the
 // 98.4726 peak the shadow bought.
 
-VA(0x0045ea40, 0x692)  // campbkx2.pcx + vtable/global stores; Complete adds newGame, dc 0x5b570
+VA(0x0045ea40, 0x692)  // campbkx2.pcx + vtable/global stores; Complete narrows the reset flag and adds the campaign-set slot; dc 0x5b570
 TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     : heroWindow(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0)
 {
@@ -252,14 +284,17 @@ VA(0x0045f210, 0xAE)  // dc 0x5bd00
 TCampaignWindow::~TCampaignWindow()
 {
     // Six Complete campaign previews retain independent copies of the Bink
-    // globals. Restore each live copy, close it, then preserve the cleared
+    // playback state. Restore each live copy, close it, then preserve the cleared
     // state back into its row.
     for (int preview = 0; preview < 6; ++preview) {
-        int* savedBinkState = g_campaignPreviews[preview].m_binkState;
-        if (*savedBinkState) {
-            memcpy(&g_binkVideo, savedBinkState, 12 * sizeof(int));
+        BinkManager::BinkManagerStruct* savedBinkState =
+            &g_campaignPreviews[preview].m_binkState;
+        if (savedBinkState->m_bink) {
+            memcpy(&BinkManager::g_playingBink, savedBinkState,
+                sizeof(BinkManager::g_playingBink));
             BinkManager::closeBink();
-            memcpy(savedBinkState, &g_binkVideo, 12 * sizeof(int));
+            memcpy(savedBinkState, &BinkManager::g_playingBink,
+                sizeof(BinkManager::g_playingBink));
         }
     }
 
@@ -283,16 +318,15 @@ void TCampaignWindow::doModal()
 DATA(0x0066cad8) static int g_lastCampaignHoverId;
 
 // E:\gamedcs\campaignwindow.cpp:291
-
 VA(0x0045f2f0, 0x26C)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
 int campaignWindowHandler(message& msg)
 {
     int exitFlag = 0;
 
-    if (g_binkDirty) {
+    if (BinkManager::g_needsUpdate) {
         g_campaignWindow->drawWindow(0, 0x80, 0x86);
-        g_windowManager->updateScreen(g_binkX, g_binkY,
-            g_binkUpdateWidth, g_binkUpdateHeight);
+        g_windowManager->updateScreen(BinkManager::g_playingBink.m_x, BinkManager::g_playingBink.m_y,
+            BinkManager::g_playingBink.m_w, BinkManager::g_playingBink.m_h);
     }
     if (msg.m_id == MESSAGE_WIDGET) {
         if (msg.m_codeX == widget::WIDGET_DESELECT) {
@@ -322,8 +356,8 @@ int campaignWindowHandler(message& msg)
                     id - TCampaignWindow::CAMPAIGN_FIRST_ID,
                     g_campaignFileNames[
                         id - TCampaignWindow::CAMPAIGN_FIRST_ID]);
-                g_binkPaused = 1;
-                _BinkPause(g_binkVideo, 1);
+                BinkManager::g_playingBink.m_paused = 1;
+                BinkPause(BinkManager::g_playingBink.m_bink, 1);
                 // Fall through: selection and cancel both close the dialog.
             case DIALOG_RETURN_CANCEL:
                 exitFlag = 1;
@@ -356,13 +390,14 @@ int campaignWindowHandler(message& msg)
                 g_campaignWindow->hideText();
                 g_campaignWindow->getWidget(hoverID
                         - g_campaignWindow->m_firstCampaign - 7)->show();
-                memcpy(&g_binkVideo, preview->m_binkState, 12 * sizeof(int));
-                g_binkPaused = 0;
-                _BinkPause(g_binkVideo, 0);
+                memcpy(&BinkManager::g_playingBink, &preview->m_binkState,
+                    sizeof(BinkManager::g_playingBink));
+                BinkManager::g_playingBink.m_paused = 0;
+                BinkPause(BinkManager::g_playingBink.m_bink, 0);
                 BinkManager::restartBink();
             } else {
-                g_binkPaused = 1;
-                _BinkPause(g_binkVideo, 1);
+                BinkManager::g_playingBink.m_paused = 1;
+                BinkPause(BinkManager::g_playingBink.m_bink, 1);
                 g_campaignWindow->hideText();
             }
 
@@ -387,12 +422,4 @@ int campaignWindowHandler(message& msg)
 }
 
 // E:\gamedcs\campaignwindow.cpp:258
-#if 0  // @carcass -- represented by VA_COMPGEN above
-DC_ONLY(0x5bf44, 0x34)
-void* TCampaignWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-#endif
-
 VA_COMPGEN(0x004601f0, 0x1A4, VECTOR_COPY_ASSIGN, type_artifact)

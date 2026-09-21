@@ -1,8 +1,9 @@
 #ifndef HOMM3_EVENTS_H
 #define HOMM3_EVENTS_H
 
-#include <va.h>
-#include "armygrp.h"  // SpellID, used by spell_level_order
+#include "va.h"
+
+#include "armygrp.h"
 
 class garrison;
 class hero;
@@ -31,7 +32,7 @@ void doEventGarrison(hero* inHero, garrison* thisGarrison);
 // advmgr.h rides in ~40 closures and events.h in two; DoCombat is the
 // first consumer, so events.h holds the claim until the producer is
 // decoded (the iCombatControlNetPos / command.h precedent).
-DATA(0x00691208) extern unsigned char g_unnamed691208;
+extern unsigned char g_goSoloTest;
 
 // DoCombat's two AI callees, declared HERE on the DoEventGarrison
 // precedent above: their owning headers cannot enter events.cpp's
@@ -69,8 +70,9 @@ public:
 unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
                               armyGroup& defendingArmy, town* defendingTown,
                               NewmapCell* cell);
-// Dreamcast ai_player.cpp:2817 proves the enemy reference parameter.
-void splitArmies(hero* currentHero, const hero* enemyHero,
+// Original: AI_arrange_army_for_combat; ai_player.cpp:2952, dc 0x3285c.
+// The public wrapper consolidates, splits and arranges before DoCombat.
+void aiArrangeArmyForCombat(hero* currentHero, const hero* enemyHero,
                   const armyGroup& enemy);
 
 // Named indices into advevent.txt, the adventure-object text resource
@@ -495,7 +497,7 @@ enum EFountainLuck {
 // award, which is why the count enumerator has no arm of its own.
 
 // The sea chest's reward selector, enumerator NAMES the Dreamcast's own
-// (evidence/dreamcast/enums.csv, enum SeaChestRewardTypes). The domain is
+// (NB11 enum records, enum SeaChestRewardTypes). The domain is
 // closed by construction: DoEventSeaChest (0x4a5030) switches over it with
 // the decrement chain and sends anything else straight to the pick-up.
 enum SeaChestRewardTypes {
@@ -546,7 +548,7 @@ enum EStablesResult {
 // adds under the SAME guard, i.e. the Stables building; and philai's
 // ValueOfStables (0x52aac0) appraises a visit as
 // `(8 - dayOfWeek) * this / 2`, the movement still to be had this week.
-DATA(0x00698a94) extern int g_stablesMovementBonus;
+extern int g_stablesMovementBonus;
 
 // Retail .bss 0x699540. DoCombat raises it across the whole interactive
 // battle (set to 1 right after the mouse pointer swap, cleared just
@@ -554,7 +556,7 @@ DATA(0x00698a94) extern int g_stablesMovementBonus;
 // role. Name ordinal; DoCombat is the first consumer, so events.h holds
 // the claim until the band's producer is decoded (the gUnnamed691208
 // rationale above).
-DATA(0x00699540) extern int g_unnamed699540;
+extern int g_adventureCombatActive;
 
 // advManager::FizzleCenter's (0x4acbb0) sound selector, also the second
 // argument of advManager::HeroLoses. Retail lowers the two arms as a

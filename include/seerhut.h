@@ -2,15 +2,16 @@
 #ifndef HOMM3_SEERHUT_H
 #define HOMM3_SEERHUT_H
 
+#include "va.h"
+
 #include <string>
 #include <vector>
-#include <va.h>
+
 #include "quest.h"
 
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 unsigned char initializeSeerHutText();
 
-class TAdventureMapWindow;
 class hero;
 class NewmapCell;
 struct type_point;
@@ -18,7 +19,7 @@ struct type_point;
 // Complete's seer-hut name table replaced Dreamcast's const-char pointer
 // array with Dinkumware strings; TSeerHut::GetName keeps the shared header
 // accessor boundary over the revised storage.
-DATA(0x0069fab8) extern std::vector<std::string>* g_seerHutNamesPointer;
+extern std::vector<std::string>* g_seerHutNamesPointer;
 
 #pragma pack(push, 1)
 
@@ -41,16 +42,23 @@ public:
     std::string questGuardFn00573040(int player);
     std::string questGuardFn00572D60();
     int save(TAbstractFile* outfile);
-    // Complete retains the Dreamcast TSeerHut predicate on the new shared
-    // quest-guard base.  DoQuestLog proves that its final two tests are the
+    // Complete retains the Dreamcast TSeerHut predicate on its quest-guard
+    // record. DoQuestLog proves that its final two tests are the
     // visited-player bit followed by a fresh quest-pointer read.
     unsigned char questActiveforPlayer(
         const unsigned char playerNum) const
     {
         return m_quest
-            && m_quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
-            && (m_visitedPlayers & (1 << playerNum))
+            && m_quest->questTexts().m_text4.length()
+            && playerHasInfo(playerNum)
             && m_quest;
+    }
+    // Complete's guard uses the same packed visit mask and byte argument as
+    // TSeerHut::PlayerHasInfo (DC seerhut.h:117). The quick-info/rollover
+    // pair and enterTrigger expand this predicate over the guard's +4 byte.
+    unsigned char playerHasInfo(const unsigned char playerNum) const
+    {
+        return (m_visitedPlayers & (1 << playerNum)) != 0;
     }
     int load(TAbstractFile* infile, int saveVersion);
 };
@@ -134,10 +142,8 @@ SIZE(TSeerData, 0x11);
 class TSeerHut : private TSeerData {
 public:
     // readObject's SEER arm tests the private base's quest pointer before
-    // registering the deserialized record in the +0xb0 pool. These consumers
-    // retain friendship while ordinary access stays on TSeerHut's surface.
+    // registering the deserialized record in the +0xb0 pool.
     friend class NewfullMap;
-    friend class TAdventureMapWindow;
 
 private:
     // Dreamcast preserves this private source boundary. Complete replaces
@@ -147,11 +153,11 @@ private:
     // Dreamcast's next private helper owns the completion dialog and reward
     // application. Complete revises both models, while retaining the source
     // boundary inside DoSeerEvent's human arm.
-    inline void doCompletionDialog(hero* currentHero, bool humanPlayer);
+    void doCompletionDialog(hero* currentHero, bool humanPlayer);
     // Dreamcast proves this nested no-local switch helper as the first call
     // made by DoCompletionDialog. Complete retains the boundary while
     // shifting the primary-skill icon domain by one.
-    inline int getRewardType();
+    int getRewardType();
     signed char m_nameIndex;
 
 public:
@@ -173,6 +179,7 @@ public:
     }
     // Dreamcast supplies the surviving public name/signature; retail's
     // Complete-era body replaces the monolith with the virtual quest family.
+    static void setRandomName(TSeerHut& thisHut);
     void doSeerEvent(hero* currentHero, bool humanPlayer);
     int getValue(hero* currentHero);
     void read(TAbstractFile* infile);
@@ -184,26 +191,22 @@ public:
     std::string seerHutFn005741B0(int player) const;
     std::string seerHutFn005743E0(int player) const;
     std::string getSeerLogText();
-    // Dreamcast names QuestActiveforPlayer as a const byte-returning TSeerHut
-    // helper.  Its old body tested playerGivenQuest and then !QuestCompleted.
-    // Complete's virtual quest model replaces the latter byte with a live quest
-    // and a non-empty quest-log line, but retail keeps the same final visited-bit
-    // and fresh quest-pointer tests.  Keep both pool-specific spellings: retail
-    // forms a named quest_text_row pointer for SeerHutList, while the exact
-    // UpdateQuestLogButton sibling proves quest_texts()[LOG] for guards.
-    // E:\gamedcs\SeerHut.h:112, dc 0x3250
+    // Dreamcast names QuestActiveforPlayer as a const byte-returning header
+    // predicate (SeerHut.h:112, dc 0x3250). Complete adds the live quest and
+    // quest-log text tests; both retail consumers reload the quest after
+    // the visit test because the virtual text access can change the hut.
     unsigned char questActiveforPlayer(
         const unsigned char playerNum) const
     {
-        type_quest* thisQuest = m_quest;
-        if (!thisQuest)
-            return 0;
-
-        const std::string* questTexts = thisQuest->questTextRow()
-            + type_quest::QUEST_TEXT_COLUMNS * thisQuest->questType();
-        return questTexts[type_quest::QUEST_TEXT_LOG].length()
-            && (m_visitedPlayers & (1 << playerNum))
+        return m_quest
+            && m_quest->questTexts().m_text4.length()
+            && playerHasInfo(playerNum)
             && m_quest;
+    }
+    // Original: TSeerHut::PlayerHasInfo; SeerHut.h:117, dc 0x2021c
+    unsigned char playerHasInfo(const unsigned char playerNum) const
+    {
+        return (m_visitedPlayers & (1 << playerNum)) != 0;
     }
     // E:\gamedcs\seerhut.h:121, dc 0x20244. Retail corroborates the signed
     // NameIndex load, 16-byte vector stride and inlined c_str() fallback.
@@ -211,6 +214,12 @@ public:
     {
         return (*g_seerHutNamesPointer)[m_nameIndex].c_str();
     }
+
+    // DC GetQuestArtifactName (SeerHut.h:123, 0x20260) looked up the one
+    // artifact ID at this+0. Complete stores type_quest* there instead:
+    // artifact quests own a vector and getRequirementText (0x56f5f0)
+    // joins all required artifact names. This old single-artifact API was
+    // replaced by the virtual quest description used by 0x5741b0/0x5743e0.
 
 private:
     // 0x573fd0, the SeerHutList twin of TQuestGuard::save and reached the

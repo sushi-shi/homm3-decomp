@@ -3,7 +3,7 @@
 #ifndef HOMM3_BASEMGR_H
 #define HOMM3_BASEMGR_H
 
-#include <va.h>
+#include "va.h"
 
 class message;
 
@@ -27,6 +27,9 @@ public:
     int m_priority;
     char m_mgrName[32];
     int m_status;
+
+    // Original: baseManager::SetStatus; basemgr.h:41, dc 0x15efd0.
+    void setStatus(short newStatus) { m_status = newStatus; }
 
     baseManager();
     virtual int open(int) = 0;         // slot 0

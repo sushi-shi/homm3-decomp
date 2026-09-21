@@ -5,15 +5,51 @@ from pathlib import Path
 import random
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from homm3.vc6.source_families import (
-    Axis, Option, identity_symbol, load_manifest, next_population, render,
-    expected_control_scores, prepare_snapshot, projected_max_scores,
-    select_elites,
+    Axis, Option, create_snapshot, identity_symbol, load_manifest, next_population, render,
+    format_max_summary, max_summary, projected_max_scores, rank, select_elites,
+    candidate_environment, expected_control_scores,
 )
 
 
 class SourceFamiliesTests(unittest.TestCase):
+    def test_snapshot_carries_frozen_project_configuration(self):
+        from homm3.core.project import Project
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "project"
+            for name in ("include", "src", "config", "vendor"):
+                (root / name).mkdir(parents=True)
+            project = '[inputs.retail]\nimage_base = 4194304\n'
+            units = '[build]\nincludes = ["include", "vendor/headers"]\n'
+            (root / "config/project.toml").write_text(project)
+            (root / "config/units.toml").write_text(units)
+            snapshot = Path(tmp) / "snapshot"
+            create_snapshot(root, snapshot)
+            (root / "config/project.toml").write_text('changed')
+            (root / "config/units.toml").write_text('changed')
+            self.assertEqual(Project(snapshot).specification['inputs']['retail']['image_base'],
+                             4194304)
+            self.assertEqual(Project(snapshot).includes,
+                             [snapshot / "include", snapshot / "vendor/headers"])
+
+    def test_candidate_uses_active_toolchain_and_prefix_with_isolated_sources(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            candidate = root / "candidate"
+            toolchain = root / "msvc"
+            with patch('homm3.vc6.source_families.common.HOMM3_DIR', root), \
+                 patch('homm3.core.project.Project.toolchain', toolchain), \
+                 patch.dict('os.environ', {}, clear=True):
+                env = candidate_environment(candidate)
+                self.assertEqual(env['HOMM3_DIR'], str(candidate))
+                self.assertEqual(env['MSVC_DIR'], str(toolchain))
+                self.assertEqual(env['WINEPREFIX'], str(root / "build/wineprefix"))
+                with patch.dict('os.environ', {'WINEPREFIX': tmp}):
+                    self.assertEqual(candidate_environment(candidate)['WINEPREFIX'], tmp)
+
     def test_anonymous_scope_identity_preserves_semantics_not_path_nonce(self):
         first = r'?g_directions@?%Z:\tmp\first\rmg.cpp123@@3PAUTPoint@@A'
         repeat = r'?g_directions@?%Z:\tmp\repeat\rmg.cpp456@@3PAUTPoint@@A'
@@ -69,17 +105,26 @@ class SourceFamiliesTests(unittest.TestCase):
                     self.manifest(root, {"schema": 1, "source": source, "axes": [
                         {"name": "a", "find": "x", "options": [{"name": "base"}]}]})
 
-    def test_snapshot_exposes_project_configuration_to_candidate_compiles(self):
+    def test_unknown_edit_fields_cannot_silently_drop_requested_changes(self):
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp) / "root"
-            for directory in ("include", "src", "vendor", "config"):
-                (root / directory).mkdir(parents=True)
-            (root / "config/project.toml").write_text("[project]\n")
-            snapshot = Path(tmp) / "snapshot"
-            prepare_snapshot(root, snapshot)
-            self.assertTrue((snapshot / "config").is_symlink())
-            self.assertEqual((snapshot / "config/project.toml").read_text(), "[project]\n")
-            prepare_snapshot(root, snapshot)
+            root = Path(tmp)
+            (root / "src").mkdir()
+            (root / "src/a.cpp").write_text("int x; int y;")
+            for location in ("axis", "option", "extra_edit"):
+                with self.subTest(location=location):
+                    option = {"name": "changed", "replace": "long x;"}
+                    axis = {"name": "x", "find": "int x;", "options": [option]}
+                    extra = {"find": "int y;", "replace": "long y;"}
+                    if location == "axis":
+                        axis["edits"] = [extra]
+                    elif location == "option":
+                        option["edits"] = [extra]
+                    else:
+                        extra["replcae"] = extra.pop("replace")
+                        option["extra_edits"] = [extra]
+                    with self.assertRaisesRegex(ValueError, "unknown edit field"):
+                        self.manifest(root, {"schema": 1, "source": "src/a.cpp", "axes": [axis]})
+                    self.assertEqual((root / "src/a.cpp").read_text(), "int x; int y;")
 
     def test_60_member_family_exhausts_without_repeating(self):
         axes = tuple(Axis(str(n), tuple(Option(str(i), ()) for i in range(n))) for n in (2, 2, 3, 5))
@@ -95,6 +140,8 @@ class SourceFamiliesTests(unittest.TestCase):
             {"id": "c", "object_hash": "c", "scores": {"x": 60, "y": 100}},
             {"id": "d", "object_hash": "d", "scores": {"x": 99, "y": 90}},
         ]
+        for row in records:
+            row["max_scores"] = dict(row["scores"])
         elites = select_elites(records, 2)
         self.assertEqual({row["object_hash"] for row in elites}, {"a", "c"})
 
@@ -145,6 +192,27 @@ class SourceFamiliesTests(unittest.TestCase):
              "max_scores": {"held": 100, "x": 90, "y": 95}},
         ]
         self.assertEqual([row["id"] for row in select_elites(records, 2)], ["a", "c"])
+
+    def test_report_omits_held_max_dips_but_exposes_source_edit_losses(self):
+        from homm3.match.status import MatchRow
+
+        previous = {("u", name): MatchRow(value, value, value, index, "old")
+                    for index, (name, value) in enumerate(
+                        [("target", 90), ("held", 100), ("edited", 100)], 1)}
+        row = {"scores": {"u|target": 100, "u|held": 60, "u|edited": 95}}
+        hashes = {("u", "target"): "new", ("u", "held"): "old",
+                  ("u", "edited"): "new"}
+        row["max_scores"] = projected_max_scores(row, previous, hashes)
+        row["max_summary"] = max_summary(row, previous)
+        self.assertEqual(row["max_summary"], {
+            "gains": [{"function": "u|target", "before": 90, "after": 100}],
+            "losses": [{"function": "u|edited", "before": 100, "after": 95}],
+        })
+        self.assertEqual(format_max_summary(row), "projected MAX: 1 gain(s), 1 loss(es)")
+
+    def test_ranking_never_falls_back_to_current_scores(self):
+        with self.assertRaises(KeyError):
+            rank({"id": "unprojected", "scores": {"u|f": 100}})
 
 
 if __name__ == "__main__":

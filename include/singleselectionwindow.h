@@ -1,17 +1,16 @@
 #ifndef HOMM3_SINGLESELECTIONWINDOW_H
 #define HOMM3_SINGLESELECTIONWINDOW_H
 
-#include "netplayer.h"
-#include "advmgr_popup.h"
-#include "town.h"
 #include "va.h"
-// The three header lists are std::vectors of GameSelectionHeadersStruct
-// (see the member block), whose element type must be complete here.
+
 #include <vector>
+
+#include "advmgr_popup.h"
+#include "game.h"
+#include "netplayer.h"
 #include "remote.h"
-// Keep the shared request declaration at its original include position for
-// this window's compilation context.
 #include "rmg_request.h"
+#include "town.h"
 
 // Devil / Arch Devil, ids fixed by army.h's Inferno-run arithmetic
 // (Demon 0x30 opens it, 0x35..0x37 close it); the wait dialog rerolls
@@ -146,15 +145,6 @@ enum ESingleSelectionWidgetId {
     SSW_TEAM_ALIGNMENT = 387
 };
 
-// A cross-module dword at 0x6989f0 the game-selection window branches on
-// during teardown; DoModal and ExitDialog each take a distinct path when it
-// equals 3, the only value recoverable here. House ordinal placeholder,
-// exactly the textntry.h EField68 rule - names the domain member so the
-// branch is not a magic compare, without claiming an attested identity.
-enum EWindowMode6989f0 {
-    WINDOW_MODE_6989F0_3 = 3
-};
-
 // Constructor-only domains. DC gives gameMode as int; retail proves the two
 // non-default commands by their load/save setup arms. The context values are
 // intentionally ordinal until the gpVideoGameState owner supplies names.
@@ -192,6 +182,7 @@ class textEntryWidget;
 class CNewPlayerUpdateMan;
 class CChatWidget;
 class textWidget;
+class type_text_scroller;
 class textButton;
 class button;
 struct GameSelectionHeadersStruct;
@@ -199,20 +190,14 @@ struct GameSelectionHeadersStruct;
 // Difficulty mirror (DC lastDiff), teardown mode and constructor headings.
 // Retail addresses: 0x683454, 0x6989f0 and 0x6a8098 respectively.
 extern int g_lastDiff;
-extern int g_unnamed6989f0;
-extern const char* g_unnamed6a8098[];
 
 // Shared selection/scenario presentation tables. Retail scenarioinfo.obj
 // references the same addresses initialized and owned by
 // singleselectionwindow.obj, which proves external rather than file linkage.
 extern const char* g_turnDurationText[11];
 extern int g_difficultyRatingPercent[5];
-extern const char* g_unnamed6a77ec[];
-extern const char* g_unnamed6a7800[3];
-extern const char* g_unnamed6a7e18[];
 // Starting-bonus labels shared by the selection window and the Complete-only
 // scenario-info row renderer. No source symbol survives for the retail table.
-extern const char* g_unnamed6a5e14[];
 
 enum ESingleSelectionGameContext {
     SINGLE_SELECTION_CONTEXT_1 = 1,
@@ -388,8 +373,11 @@ public:
     CNetPlayerHandlerPlayer* getPlayer(unsigned long dpid);
     unsigned char isFaceTaken(int face, int exclude);
     unsigned char addNewPlayer(CNetPlayerInfo* netPlayer);
+    unsigned char playerExists(unsigned long dpid);
     unsigned char setNextPlayer(int pos);
+    unsigned char setComputer(int pos);
     int getUnassignedPlayerPos();
+    int getPlayerCount(unsigned char assignedOnly);
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 
@@ -398,7 +386,10 @@ SIZE(CNetPlayerHandler, 0x7d0);
 // CNetMsgHandler's ctor is followed by the derived vtable store and a clear
 // of m_wasCompressed at +0x0c. The class is embedded by value below;
 // its constructor body belongs to singleselectionwindow.cpp:8758.
-class CSingleSelectionNetMsgHandler : public CAdvMgrNetMsgHandler {
+// The retail vtable at 0x641ce8 has only CNetMsgHandler's four slots;
+// CAdvMgrNetMsgHandler adds a fifth (HandleGiftMsg), so it cannot be the
+// base. DC0x14515a likewise calls CNetMsgHandler's constructor directly.
+class CSingleSelectionNetMsgHandler : public CNetMsgHandler {
 public:
     CSingleSelectionNetMsgHandler();
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
@@ -555,7 +546,7 @@ private:
     slider* m_fileSlider;  // 0x183c
     slider* m_durationSlider;  // 0x1840
     slider* m_nameSlider;  // 0x1844
-    CChatWidget* m_chatWidget;  // 0x1848 (DC chatWidget)
+    textWidget* m_chatWidget;  // 0x1848 (DC chatWidget: textWidget*)
     // The DC chatWidget..flagBack member run (dc 2848..2888) maps onto
     // retail 0x1848..0x1870 LINEARLY (constant delta 3368, every
     // already-proven anchor agrees: chatShowing 2877->0x1865, chatToggle
@@ -576,9 +567,9 @@ public:
     char m_paddingBeforeChatEdit[0x1858 - 0x1856];
 
 private:
-    // DC chatEdit (a CCombatChatEdit there): TurnChatOn (0x58ca80)
-    // focuses its id on chat-open. Base-typed until its widget lands.
-    textEntryWidget* m_chatEdit;  // 0x1858
+    // DC chatEdit is CChatEdit*: TurnChatOn (0x58ca80) focuses its id.
+    // Complete constructs CSingleSelectionChatEdit through the same base.
+    CChatEdit* m_chatEdit;  // 0x1858
     int m_sortWhich;  // 0x185c
 
 public:
@@ -654,17 +645,23 @@ public:
     // directly, never through GetWidget.
     // Role-derived: construction creates a CScrollTextWidget here;
     // updateGameVars (0x583580) fills it from the selected map description.
-    widget* m_descriptionWidget;  // 0x196c
+    // Retain the concrete type: ctor retail +0xb3c/+0xb3f binds the widget
+    // vector insert to a converted pointer temporary at EBP+8, not this
+    // member's address. All text accesses use this same scroller class.
+    // Complete-only type inference; the older DC class has no such member.
+    type_text_scroller* m_descriptionWidget;  // 0x196c
 
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
-    virtual int doModal(unsigned char fadeIn);
+    virtual void doModal(bool fadeIn);
     void updatePlayerPositions(unsigned char updateCurPlayer);
     virtual int windowHandler(message& msg);  // slot 9
+    void onNameSlider(int newIndex);
     void onChatWindowSlider(int newIndex);
     void onDurationSlider(int newIndex);
     void onFileMenuSlider(int newIndex);
-    void updateAllyEnemyFlags(unsigned char update);
+    // DC publics retain native bool (_N), although lowered CV says UCHAR.
+    void updateAllyEnemyFlags(bool update);
 
 private:
     virtual unsigned char processRightSelect(int id);  // slot 11
@@ -700,13 +697,14 @@ public:
     TTownType getDisplayTown(int gamePos);
     const char* getHeroName(int gamePos);
     void onNameChange(int gamePos, const char* newName);
+    void updateNames();
     unsigned char highlightFile(char* filename);
     void onNameClick(int pos);
     unsigned char isVersionCompatible(const char* otherVersion);
     // Complete-only random-map helpers at 0x5879a0 and 0x5860e0. Their
     // provisional role names describe the byte-decoded caller contract.
     unsigned char generateRandomMap(const char* name);
-    void setCurrentMap(int map, unsigned char update);
+    void setCurrentMap(int map, bool update);
     void drawHeroAdvancedOption(int playerPos, unsigned char update,
                                 int position);
     void onDeleteFile();
@@ -751,7 +749,7 @@ public:
     void turnOffScenarioOptions();
     void turnOffAdvancedOptions();
     bool onClickMsg(CNetMsg* netMsg);
-    void turnChatOn(unsigned char update);
+    void turnChatOn(bool update);
     void turnChatOff(unsigned char update);
     void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
     void updateNameLists();
@@ -792,7 +790,7 @@ public:
     unsigned char sendSetupInfo(unsigned long dpid);
     bool isHost();
     void sendPlayerFaces();
-    unsigned char isMultiPlayer();
+    bool isMultiPlayer();
     void showWidget(int id);
     void turnOffFilterOptions();
     int calcPosition(int playerPos);
@@ -802,16 +800,16 @@ private:
 };
 SIZE(TSingleSelectionWindow, 0x1970);
 
-// Four cross-TU cells advmgr's SaveGame drives; the selection window's
-// own TU is their natural owner, so they are declared here (the
-// gUnnamed69d808 precedent) until it lands.
+// Cross-TU cells used by advmgr's SaveGame and the selection window.
+// game.h owns the inCampaign DATA claim; the other cells retain their
+// provisional address-based names.
 //   0x69fc2c  the chosen save filename (empty = the dialog was cancelled)
 //   0x691268  the extension scratch SaveGame sprintf's (.GM%d / .CGM)
 //   0x69774c  campaign-game byte: picks the .CGM extension
 //   0x697774  set to 1 the moment a save filename is committed
-extern char g_unnamed69fc2c[];
-extern char g_unnamed691268[];
-extern unsigned char g_unnamed69774c;
-extern int g_unnamed697774;
+extern char g_saveGameName[];
+extern char g_saveGameSuffix[];
+extern bool g_inCampaign;
+extern int g_saveGameRequested;
 
 #endif  /* HOMM3_SINGLESELECTIONWINDOW_H */

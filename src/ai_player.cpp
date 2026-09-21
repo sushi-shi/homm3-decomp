@@ -3,30 +3,186 @@
 // town.h for why the inline's visibility is scoped.
 // find_all_destinations' grail-spot tail expands the canonical game::getCell
 // wrapper and naturally retains its nested NewfullMap::cell call.
-#include <va.h>
-#include "creaturetype.h"
+#include "va.h"
+#include "objnames.h"
+#include "text.h"
+#include "includes.h"
+
 #include <algorithm>
 #include <functional>
 #include <math.h>
+
 #include "ai_player.h"
+
 #include "advmgr.h"
 #include "ai_combat.h"
 #include "ai_spellvalue.h"
 #include "armygrp.h"
-#include "mousemgr.h"
-#include "findpath.h"
+#include "creaturetype.h"
 #include "exec.h"
+#include "findpath.h"
 #include "game.h"
 #include "hero.h"
 #include "kb.h"
 #include "misc.h"
+#include "mousemgr.h"
 #include "netgame.h"
+#include "recruit.h"
 #include "remote.h"
 #include "soundmgr.h"
 #include "town.h"
 #include "tradpost.h"
-#include "recruit.h"
-#include "includes.h"
+
+// Initial contents recovered from the pinned Complete image.
+DATA(0x00660838) char g_aiResourceWarningFormat[] = "Warning!  AI player has %i %s.\n";
+DATA(0x0063ac7c) const int g_aiArtifactEffectDefinitions[637] = {
+    2, 16, 5000, 6, 17, 0, 5, 17, 1, 4, 17, 2, 3, 17, 3, 2, 17, 4, 1, 17, 5, 1, 17, 6, 1, -1,
+    7, 0, 1, -1,
+    8, 0, 2, -1,
+    9, 0, 3, -1,
+    10, 0, 4, -1,
+    11, 0, 5, -1,
+    12, 0, 9, -1,
+    13, 0, 1, -1,
+    14, 0, 2, -1,
+    15, 0, 3, -1,
+    16, 0, 4, -1,
+    17, 0, 5, -1,
+    18, 0, 9, -1,
+    19, 2, 1, -1,
+    20, 2, 2, -1,
+    21, 2, 3, -1,
+    22, 2, 4, -1,
+    23, 2, 5, -1,
+    24, 2, 12, 1, -3, -1,
+    25, 1, 1, -1,
+    26, 1, 2, -1,
+    27, 1, 3, -1,
+    28, 1, 4, -1,
+    29, 1, 5, -1,
+    30, 1, 12, 2, -3, -1,
+    31, 0, 2, 1, 1, 2, 1, -1,
+    32, 0, 4, 1, 2, 2, 2, -1,
+    33, 0, 6, 1, 3, 2, 3, -1,
+    34, 0, 8, 1, 4, 2, 4, -1,
+    35, 0, 10, 1, 5, 2, 5, -1,
+    36, 0, 12, 1, 6, 2, 6, -1,
+    37, 0, 2, -1,
+    38, 0, 4, -1,
+    39, 0, 6, -1,
+    40, 0, 8, -1,
+    41, 1, 1, 2, 1, -1,
+    42, 1, 2, 2, 2, -1,
+    43, 1, 3, 2, 3, -1,
+    44, 1, 4, 2, 4, -1,
+    45, 4, 1, 3, 1, -1,
+    46, 4, 1, -1,
+    47, 4, 1, -1,
+    48, 4, 1, -1,
+    49, 3, 1, -1,
+    50, 3, 1, -1,
+    51, 3, 1, -1,
+    52, 5, 1, -1,
+    53, 5, 1, -1,
+    54, 6, 5, -1,
+    55, 6, 10, -1,
+    56, 6, 15, -1,
+    57, 7, 1, -1,
+    58, 7, 3, -1,
+    59, 7, 5, -1,
+    60, 19, 2, -1,
+    61, 19, 5, -1,
+    62, 19, 7, -1,
+    63, 7, 1, -1,
+    64, 7, 2, -1,
+    65, 7, 3, -1,
+    66, 7, 1, -1,
+    67, 7, 2, -1,
+    68, 7, 3, -1,
+    98, 8, 25, -1,
+    70, 8, 12, -1,
+    71, 8, 25, -1,
+    72, 8, 50, -1,
+    73, 9, 2, -1,
+    74, 9, 4, -1,
+    75, 9, 6, -1,
+    76, 10, 1, -1,
+    77, 10, 2, -1,
+    78, 10, 3, -1,
+    79, 11, 1, 100, -1,
+    80, 11, 8, 100, -1,
+    81, 11, 2, 100, -1,
+    82, 11, 4, 100, -1,
+    83, 13, 3, -1,
+    84, 14, -1,
+    85, 15, -1,
+    86, 12, 2, -1,
+    87, 12, 1, -1,
+    88, 12, 4, -1,
+    89, 12, 8, -1,
+    90, 7, 5, -1,
+    91, 19, 5, -1,
+    92, 7, 2, -1,
+    93, 7, 10, -1,
+    94, 7, 1, -1,
+    95, 7, 1, -1,
+    96, 7, 2, -1,
+    97, 7, 5, -1,
+    69, 7, 5, -1,
+    99, 7, 10, -1,
+    100, 7, 1, -1,
+    101, 7, 10, -1,
+    102, 7, 1, -1,
+    103, 7, 5, -1,
+    104, 7, 5, -1,
+    105, 7, 1, -1,
+    106, 7, 10, -1,
+    107, 7, 1, -1,
+    108, 7, 10, -1,
+    109, 16, 1, 4, -1,
+    110, 16, 1, 5, -1,
+    111, 16, 1, 1, -1,
+    112, 16, 1, 2, -1,
+    113, 16, 1, 3, -1,
+    114, 16, 1, 0, -1,
+    115, 16, 1000, 6, -1,
+    116, 16, 750, 6, -1,
+    117, 16, 500, 6, -1,
+    118, 17, 1, 5, -1,
+    119, 17, 2, 4, -1,
+    120, 17, 3, 3, -1,
+    121, 17, 4, 2, -1,
+    122, 17, 5, 1, -1,
+    123, 8, 5, -1,
+    124, 9, 20, -1,
+    125, 7, 5, -1,
+    126, 13, 0, -1,
+    128, 0, 6, 1, 3, 2, 6, -1,
+    127, 0, 10, -1,
+    129, 20, -1,
+    130, 21, -1,
+    131, 22, -1,
+    132, 7, 15, 0, 6, 19, 10, -1,
+    133, 23, -1,
+    134, 0, 12, 1, 6, 2, 6, 7, 10, -1,
+    135, 18, 57, -1,
+    136, 8, 12, -1,
+    137, 19, 7, -1,
+    138, 9, 10, -1,
+    139, 10, 50, -1,
+    140, 16, 4, 4, 16, 4, 5, 16, 4, 1, 16, 4, 3, -1,
+    -100
+};
+
+// AIInitialize's eight 0x98-byte records and GetAttackBonus's two floats.
+DATA(0x00692950) type_AI_player g_aiPlayers[8];
+DATA(0x006604f8) float type_AI_player::s_attackComputerBonus = 0.5f;
+DATA(0x006604fc) float type_AI_player::s_attackHumanBonus = 0.5f;
+
+
+// Retail table initializers, in the layouts used by their named consumers.
+DATA(0x00660518) int g_heroLimits[5] = { 2, 3, 4, 5, 6 };
+DATA(0x0066052c) int g_globalLimits[5] = { 8, 11, 14, 17, 20 };
 
 #ifdef min
 #undef min
@@ -54,6 +210,21 @@ const unsigned int g_ctaShooter = 0x4;
 // address, count and 16-byte stride to the vector-constructor iterator.
 DATA(0x00692e18)
 std::vector<type_artifact_effect*> g_constArtifactEffects[144];
+// DC source63 has the global initializer's generated call to its ordinary
+// constructor (0x37bbc). Retail startup entry0x428070 expands that body.
+class type_AI_initializer {
+public:
+    type_AI_initializer();
+};
+static type_AI_initializer g_aiInitializer;
+
+// Retail startup0x428070 clears 232 one-byte flags and232 long values.
+// Original visibility-array spelling: AI_event_visibility_values.
+DATA(0x00693718)
+unsigned char g_oneUseEvents[232];
+DATA(0x006925ac)
+long g_aiEventVisibilityValues[232];
+
 // Retail and Dreamcast both make this an 8-byte strategy object: a
 // three-slot vptr followed by the current player id. start_turn inlines
 // both constructors and calls check_towns on one base and one derived
@@ -141,110 +312,13 @@ unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown)
     return attacker.m_totalCombatValue > 0;
 }
 
-#if 0  // @carcass
-
-// THE THREAT-CHECKER BRACKET was only partially decidable when surveyed
-// 2026-08-08. Retail puts only FOUR rows between can_take_town
-// (0x428410, claimed) and get_attack_bonus (0x428710, claimed) -
-// 0x428570 (13 B), 0x428580 (289 B), 0x4286b0 (33 B) and 0x4286e0
-// (38 B) - while the Dreamcast roster lists ELEVEN bodies there, six of
-// them 4- to 18-byte accessors that /Ob2 folds away without trace. With
-// seven of eleven candidates unplaceable the ranks originally carried no
-// information. The three game bodies are now independently resolved:
-//   * 0x428570 is now proven as type_town_threat_checker::mark_town:
-//     it is slot 2 of the checker's three-entry vtable; DC puts this method
-//     in slot 2 too and names town byte +3 `threatening_heroes`; the body
-//     increments precisely that byte. The active exact claim is below.
-//   * 0x428580 is type_garrison_purchaser::mark_town: derived vtable slot 2
-//     agrees with DC, and its town-army/artifact calls feed the now-proven
-//     six-argument Complete purchaser path. The active claim is below.
-//   * 0x4286b0 is now proven as type_creature_source's three-argument
-//     constructor. The old bracket note mistakenly counted the implicit
-//     `this` as a fourth stack parameter; `ret 0xc` is exactly the DC
-//     signature, and the four stores reproduce its 0/4/8/10 layout.
-//   * 0x4286e0 (`ret`, frees [this+0x30], caller in another TU's band)
-//     is the same compiler-generated vector teardown shape as ai.obj's
-//     0x420cf0, not an ai_player.cpp body at all.
-// Only 0x4286e0 is not a source body; it remains compiler-generated teardown.
-
-// E:\gamedcs\ai_player.cpp:89
-DC_ONLY(0x2dd40, 0x22)
-void type_town_threat_checker::type_town_threat_checker(long new_player)
+// Original: type_town_threat_checker::is_marked; ai_player.cpp:179, dc 0x2dfa0.
+// Retail vtable0x63b670 slot1 points to the folded xor-al/ret4 body
+// 0x5543f0; DC independently returns false at source180.
+unsigned char type_town_threat_checker::isMarked(const town* ourTown) const
 {
-    // @stub
+    return 0;
 }
-
-// E:\gamedcs\ai_player.cpp:97
-DC_ONLY(0x2dd64, 0x104)
-void type_town_threat_checker::checkTowns()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:134
-DC_ONLY(0x2de68, 0x42)
-void type_town_threat_checker::clearMarks()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:146
-DC_ONLY(0x2deac, 0xF2)
-void type_town_threat_checker::markTowns(hero* enemy_hero, searchArray* search_array)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:179
-DC_ONLY(0x2dfa0, 0x4)
-unsigned char type_town_threat_checker::isMarked(const town* our_town)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:186
-DC_ONLY(0x2dfa4, 0x12)
-void type_town_threat_checker::markTown(town* our_town)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:195
-DC_ONLY(0x2dfb8, 0x32)
-void type_garrison_purchaser::type_garrison_purchaser(long new_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:202
-DC_ONLY(0x2dfec, 0x4)
-void type_garrison_purchaser::clearMarks()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:209
-DC_ONLY(0x2dff0, 0x4)
-unsigned char type_garrison_purchaser::isMarked(const town* our_town)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:217
-DC_ONLY(0x2dff4, 0xA0)
-void type_garrison_purchaser::markTown(town* our_town)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:230
-DC_ONLY(0x2e094, 0xC8)
-long type_AI_player::getResourceValue(int* resources)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x00428570, 0x0D)  // dc 0x2dfa4
 void type_town_threat_checker::markTown(town* ourTown) const
@@ -261,6 +335,19 @@ public:
     virtual void markTown(town* ourTown) const;
 };
 
+// Original: type_garrison_purchaser::clear_marks; ai_player.cpp:202, dc 0x2dfec.
+// Retail vtable0x63b67c slot0 is the shared empty return0x5bc690.
+void type_garrison_purchaser::clearMarks() const
+{
+}
+
+// Original: type_garrison_purchaser::is_marked; ai_player.cpp:209, dc 0x2dff0.
+// Retail vtable0x63b67c slot1 shares the false/ret4 body0x5543f0.
+unsigned char type_garrison_purchaser::isMarked(const town* ourTown) const
+{
+    return 0;
+}
+
 VA(0x00428580, 0x121)  // dc 0x2dff4
 void type_garrison_purchaser::markTown(town* ourTown) const
 {
@@ -273,6 +360,18 @@ void type_garrison_purchaser::markTown(town* ourTown) const
 }
 
 VA_COMPGEN(0x004286e0, 0x26, IMPLICIT_DTOR, type_AI_creature_purchaser)
+
+// Original: type_AI_player::get_resource_value; ai_player.cpp:230, dc 0x2e094.
+// DC235/236 sums seven resources with conversion back to long each turn;
+// GetTotalValue calls it at DC1359. Retail0x42a150 expands this loop.
+long type_AI_player::getResourceValue(int* resources) const
+{
+    long value = 0;
+    for (int resource = 0; resource < 7; ++resource)
+        value = static_cast<long>(
+            value + resources[resource] * m_resourceValue[resource]);
+    return value;
+}
 
 VA(0x00428710, 0x2D)  // dc 0x2e15c
 float type_AI_player::getAttackBonus(short player)
@@ -330,7 +429,7 @@ void type_AI_player::calculateDemand()
                     type_building_id(building));
                 int buildResource;
                 for (buildResource = 0; buildResource < 7; buildResource++)
-                    m_resourceDemand[buildResource] = cppMax(
+                    m_resourceDemand[buildResource] = max(
                         m_resourceDemand[buildResource],
                         static_cast<long>(buildCost[buildResource]));
             }
@@ -594,7 +693,7 @@ void type_AI_player::makeGift(long playerId)
             displayedResource.m_qualifier = surplus[resource];
             if (g_game->m_players[playerId].isLocalHuman()) {
                 list.push_back(displayedResource);
-            } else if (g_networkActive69954c) {
+            } else if (g_remoteOn) {
                 CGiftMsg msg(g_netLocalGamePos, displayedResource.m_resource,
                              displayedResource.m_qualifier);
                 transmitRemoteData(&msg, playerId, 0, 1);
@@ -606,7 +705,7 @@ void type_AI_player::makeGift(long playerId)
     if (g_game->m_players[playerId].isLocalHuman()) {
         message = formatString(
             g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
-            g_playerColorNames[m_team]);
+            g_colors[m_team]);
         extendedDialog(message.c_str(), list, -1, -1, 0);
     }
 
@@ -618,7 +717,7 @@ void type_AI_player::makeGift(long playerId)
             requestedResource.m_qualifier = 0;
             if (g_game->m_players[playerId].isLocalHuman()) {
                 list.push_back(requestedResource);
-            } else if (g_networkActive69954c) {
+            } else if (g_remoteOn) {
                 CGiftRequestMsg msg(g_netLocalGamePos, requestedResource.m_resource);
                 transmitRemoteData(&msg, playerId, 0, 1);
             }
@@ -630,16 +729,16 @@ void type_AI_player::makeGift(long playerId)
             message = formatString(
                 g_generalText->getText(
                     GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
-                g_playerColorNames[m_team],
+                g_colors[m_team],
                 g_resourceNames[list[0].m_resource]);
         } else {
             message = formatString(
                 g_generalText->getText(
                     GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST),
-                g_playerColorNames[m_team]);
+                g_colors[m_team]);
         }
         int timeout = 0;
-        if (g_turnDuration69d630.isOn())
+        if (g_turnDuration.isOn())
             timeout = 15000;
         extendedDialog(message.c_str(), list, -1, -1, timeout);
     }
@@ -852,37 +951,6 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
     }
 }
 
-#if 0  // @carcass
-
-// value_of_dwelling (dc 0x2f4b0) promoted to VA(0x0042b520) in RVA order above.
-// value_of_dwelling_upgrade (dc 0x2f548) promoted to VA(0x0042b5b0) above.
-
-// E:\gamedcs\ai_player.cpp:895
-DC_ONLY(0x2f5fc, 0x98)
-long sumPlayerDwellings(long player_id)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:926
-DC_ONLY(0x2f694, 0x20C)
-void fillProhibitedArray(playerData* player, unsigned char* prohibited)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:1006
-DC_ONLY(0x2f8a0, 0xF8)
-int valueOfCastleUpgrade(town* current_town, int* extra_cost)
-{
-    // @stub
-}
-
-// value_of_horde (dc 0x2f9bc) promoted to VA(0x0042b790) in RVA order above.
-// value_of_horde_upgrade (dc 0x2fa88) promoted to VA(0x0042b800) above.
-
-#endif  // @carcass
-
 VA(0x0042a150, 0x157)  // dc 0x301c4
 long type_AI_player::getTotalValue(long basicValue, int* cost)
 {
@@ -903,10 +971,7 @@ long type_AI_player::getTotalValue(long basicValue, int* cost)
             return -1;
     }
 
-    long totalCost = 0;
-    for (int resource = 0; resource < 7; resource++)
-        totalCost = static_cast<long>(
-            totalCost + cost[resource] * m_resourceValue[resource]);
+    long totalCost = getResourceValue(cost);
     return basicValue * 1000 / totalCost;
 }
 
@@ -1116,7 +1181,7 @@ void type_AI_player::doResourceTrade(int* supply)
             ++marketCount;
     }
 
-    marketCount = cppMin(marketCount, 10);
+    marketCount = min(marketCount, 10);
     if (marketCount == 0)
         return;
 
@@ -1177,7 +1242,7 @@ int canBuy(const town* currTown, int buildingId);
 // E:\gamedcs\ai_player.cpp:1045
 // Single-call-site static: /Ob2 folds it into value_of_building below,
 // which is itself folded into purchase_building - no retail body.
-DC_ONLY(0x2f998, 0x24)
+
 static long valueOfSilo(town* currentTown, playerData* player)
 {
     return 7 * aiResourceCost(player, currentTown->getSiloIncome());
@@ -1189,7 +1254,7 @@ static long valueOfSilo(town* currentTown, playerData* player)
 // illegal, built, and Grail slots and every threatened growth building.
 // The faction switch keeps retail's source order (Stronghold's arm sits
 // between Tower's and Necropolis'). Single call site - no retail body.
-DC_ONLY(0x2fdac, 0x29c)
+
 static long valueOfBuilding(town* currentTown, type_building_id building,
                               unsigned char* prohibitedCreatures,
                               int* extraCost)
@@ -1305,7 +1370,7 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
 // slot at [ebp-0x34]. The two spellings are equivalent - `requirements`
 // starts as bitNumber[building] alone, so a scan from 0 can only hit at
 // `building` - and this one is what the bytes say. 96.20 -> 97.32.
-DC_ONLY(0x30048, 0x106)
+
 static __int64 getRequirements(const town* currentTown,
                                 type_building_id building)
 {
@@ -1335,7 +1400,7 @@ static __int64 getRequirements(const town* currentTown,
 
 // E:\gamedcs\ai_player.cpp:1313
 // Single call site - no retail body.
-DC_ONLY(0x30150, 0x74)
+
 static void getFullCost(const town* currentTown, int* result,
                           __int64 requirements)
 {
@@ -1358,7 +1423,7 @@ static void getFullCost(const town* currentTown, int* result,
 // Single call site - no retail body. `k` is a SIGNED int: retail's
 // strength-reduced back edge is `cmp <ptr>, <end> / jl`, and an unsigned
 // counter can only ever emit `jb` (97.32 -> 97.42, branches clean).
-DC_ONLY(0x302e0, 0x54)
+
 static void markValues(long* fullValue, long totalValue,
                         __int64 requirements)
 {
@@ -1643,7 +1708,7 @@ static int __cdecl maxBuyableCreatures(
 
 // E:\gamedcs\ai_player.cpp:1838, dc 0x31094.
 // Complete extends the prohibited-creature table to 145 entries.
-DC_ONLY(0x31094, 0x60)
+
 void type_AI_player::purchaseBuildings()
 {
     unsigned char prohibitedCreatures[145];
@@ -1798,493 +1863,31 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
         currentTown->buyBuilding(type_building_id(building));
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai_player.cpp:2022
-DC_ONLY(0x31514, 0xA8)
-void move_creatures(armyGroup* army, TCreatureType type, short amount)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2061
-DC_ONLY(0x315bc, 0x1A)
-void type_AI_creature_swapper::type_AI_creature_swapper()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2074
-DC_ONLY(0x315d8, 0x92)
-void type_AI_creature_swapper::addCreatures(TCreatureType type, short amount, short slot)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2096
-DC_ONLY(0x3166c, 0x168)
-long type_AI_creature_swapper::doBestSwap(unsigned char can_take_all)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2171
-DC_ONLY(0x317d4, 0x34)
-short calculateImprovement(const hero* current_hero, const hero* second_hero)
-{
-    // @stub
-}
-
-// do_swap (dc 0x31808) promoted to VA(0x0042c3b0) in RVA order below;
-// Complete adds the Angelic-Alliance parameter the philai callers pass.
-
-// E:\gamedcs\ai_player.cpp:2209
-DC_ONLY(0x31864, 0xC0)
-long type_AI_creature_swapper::getSwapValue(const hero* current_hero, const armyGroup* source_army, const hero* second_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2233
-DC_ONLY(0x31924, 0xDA)
-void type_AI_creature_swapper::dumpExtraCreature()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2282
-DC_ONLY(0x31a00, 0xF2)
-long type_AI_creature_swapper::chooseWeakestArmy(unsigned char is_shooter, unsigned char check_alignments)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2350
-DC_ONLY(0x31af4, 0x346)
-long type_AI_creature_swapper::valueOfAddingArmy(TCreatureType type, short count, short* slot, unsigned char must_replace_creature)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2461
-DC_ONLY(0x31e3c, 0x98)
-void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, generator* current_generator)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2483
-DC_ONLY(0x31ed4, 0x4E)
-void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, town* current_town)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2495
-DC_ONLY(0x31f24, 0x6E)
-void type_AI_creature_purchaser::type_AI_creature_purchaser(long player, TCreatureType type, short* amount, bool is_free)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2506
-DC_ONLY(0x31f94, 0x68)
-void type_AI_creature_purchaser::set(town* current_town)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2524
-DC_ONLY(0x31ffc, 0x3A)
-void type_AI_creature_purchaser::set(TCreatureType type, short* amount)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2535
-DC_ONLY(0x32038, 0x250)
-long type_AI_creature_purchaser::doBestPurchase(unsigned char trade_allowed)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2626
-DC_ONLY(0x32288, 0x70)
-void type_AI_creature_purchaser::doPurchase(armyGroup* new_army, short new_morale, armyGroup* new_adjacent_army, long* new_funds, unsigned char allow_trade)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2657
-DC_ONLY(0x322f8, 0xC2)
-long type_AI_creature_purchaser::getPurchaseValue(const armyGroup* new_army, short new_morale, const armyGroup* new_adjacent_army, const long* new_funds)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2692
-DC_ONLY(0x323bc, 0x72)
-void aiConsolidateArmy(armyGroup& current_army)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:2718
-DC_ONLY(0x32430, 0x18A)
-void aiArrangeArmy(armyGroup& current_army)
-{
-    // @stub
-}
-
-// split_armies (dc 0x32670) is claimed in retail-RVA order below.
-
-// E:\gamedcs\ai_player.cpp:2952
-DC_ONLY(0x3285c, 0x36)
-void AI_arrange_army_for_combat(hero* current_hero, const hero* enemy_hero, const armyGroup* enemy)
-{
-    // @stub
-}
-
-// mark_danger_zones (dc 0x32894) is claimed in retail-RVA order below.
-
-// AI_mark_danger_zones (dc 0x329f8) is reconstructed below.
-
-// E:\gamedcs\ai_player.cpp:3044
-DC_ONLY(0x32a84, 0x3AC)
-long markDestinations(hero* current_hero, long max_distance, searchArray* search_array, unsigned short* friendly_distances, type_search_type search_type)
-{
-    // @stub
-}
-
-// check_holy_grail (dc 0x32e30) is reconstructed below as the source-real
-// helper that Complete VC6 expands into find_all_destinations.
-
-// E:\gamedcs\ai_player.cpp:3225
-DC_ONLY(0x33038, 0x3CA)
-long findAllDestinations(hero* current_hero, searchArray* search_array, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations, long max_distance, unsigned char hiring_hero, unsigned char allow_spells, unsigned char explore_mode)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:3390
-DC_ONLY(0x33404, 0x450)
-void markStrategicMap(hero* current_hero, long* strategic_map, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:3498
-DC_ONLY(0x33854, 0x1F6)
-int netValueOfLocation(hero* current_hero, HeroDestination* destination, long* strategic_map, pathCell* path_cell, searchArray* search_array)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:3573
-DC_ONLY(0x33a4c, 0x2AC)
-void unblockLith(hero* current_hero, HeroDestination* destination, long* best_distance)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:3645
-DC_ONLY(0x33cf8, 0x46A)
-int aiChooseDestination(hero* current_hero, long max_distance, HeroDestination* best_point, long* best_raw_value, unsigned char allow_spells, unsigned char explore_mode)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:3813
-DC_ONLY(0x34164, 0x90)
-void considerHidingMouse(hero* current_hero, int direction)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:3832
-DC_ONLY(0x341f4, 0x1CE)
-unsigned char attemptStep(hero* current_hero, pathCell* path_cell, unsigned char bStandEnd, unsigned char first_step)
-{
-    // @stub
-}
-
-// build_path (dc 0x343c4) is promoted to its retained Complete body at
-// VA(0x00430610) below.
-
-// check_move_spell (dc 0x34508) is promoted to its retained Complete body
-// at VA(0x004309a0) below.
-
-// attempt_teleport (dc 0x34630) is promoted to its retained Complete body
-// at VA(0x00430ab0) below.
-
-// E:\gamedcs\ai_player.cpp:4155
-DC_ONLY(0x34a7c, 0x8C)
-void checkGatePurchase(type_point point)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:4179
-DC_ONLY(0x34b08, 0x4B0)
-void aiAttemptMove(hero* current_hero, HeroDestination* best_point, long* best_raw_value, unsigned char explore_mode)
-{
-    // @stub
-}
-
-// value_of_hiring (dc 0x34fb8) promoted to the VA(0x00431bd0) carcass claim
-// in RVA order below - see consider_hiring's anchor pair.
-
-// total_artifact_value (dc 0x35400) promoted to VA(0x004339e0) in RVA order below.
-
-// E:\gamedcs\ai_player.cpp:4476
-DC_ONLY(0x354bc, 0x32E)
-unsigned char considerHiring(long player_id, hero* candidate)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:4565
-DC_ONLY(0x357ec, 0x9C)
-town* getShipyardTown(const playerData* player, long x, long y, long z)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:4583
-DC_ONLY(0x35888, 0x86)
-unsigned char getMapShipyard(const playerData* player, long x, long y, long z)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:4607
-DC_ONLY(0x35910, 0xFE)
-void aiBuildShip(const hero* our_hero, long x, long y, long z)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:4643
-DC_ONLY(0x35a10, 0xB6)
-long aiGetShipCost(const hero* our_hero, type_point point)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:4670
-DC_ONLY(0x35ac8, 0x178)
-bool type_AI_player::hireHeroes()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:4728
-DC_ONLY(0x35c40, 0x210)
-long aiValueOfObservatory(type_point origin, long player_id, long range)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:4930
-DC_ONLY(0x35f08, 0x2BE)
-void initializeArtifactEffects()
-{
-    // @stub
-}
-
-// ~type_artifact_effect (dc 0x361f4) promoted to VA(0x00432500) below: the
-// 7-byte retail body stores the class vtable WITHOUT the mov eax,ecx a VC6
-// ctor's this-return always emits, and its one caller is the ICF-folded
-// scalar deleting dtor 0x433080 - so the slot is the plain dtor, and the
-// default CTOR (dc 0x361c8) is retail-inlined at its construction sites.
-
-// E:\gamedcs\ai_player.cpp:5057
-DC_ONLY(0x36214, 0x44)
-void type_scouting_artifact::type_scouting_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5090
-DC_ONLY(0x362e0, 0x40)
-void type_might_artifact::type_might_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5109
-DC_ONLY(0x36350, 0x40)
-void type_power_artifact::type_power_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5127
-DC_ONLY(0x363b4, 0x3C)
-void type_knowledge_artifact::type_knowledge_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5145
-DC_ONLY(0x36414, 0x3C)
-void type_necromancy_artifact::type_necromancy_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5182
-DC_ONLY(0x364dc, 0x50)
-void type_movement_artifact::type_movement_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5198
-DC_ONLY(0x36558, 0x44)
-void type_spellcaster_artifact::type_spellcaster_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5219
-DC_ONLY(0x365e4, 0x48)
-void type_morale_artifact::type_morale_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5243
-DC_ONLY(0x366d8, 0x48)
-void type_luck_artifact::type_luck_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5267
-DC_ONLY(0x367cc, 0x48)
-void type_duration_artifact::type_duration_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5285
-DC_ONLY(0x36838, 0x44)
-void type_school_artifact::type_school_artifact(TSpellSchool new_school, long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5347
-DC_ONLY(0x369dc, 0x40)
-void type_antimagic_artifact::type_antimagic_artifact(long _max_level)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5380
-DC_ONLY(0x36ab4, 0x48)
-void type_antimorale_artifact::type_antimorale_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5406
-DC_ONLY(0x36c40, 0x50)
-void type_antiluck_artifact::type_antiluck_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5433
-DC_ONLY(0x36dd4, 0x54)
-void type_tome_artifact::type_tome_artifact(TSpellSchool new_school)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5477
-DC_ONLY(0x36ee8, 0x6C)
-void type_income_artifact::type_income_artifact(long new_amount, EGameResource new_resource)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5495
-DC_ONLY(0x36fec, 0x60)
-void type_creature_growth_artifact::type_creature_growth_artifact(long new_level, long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5505
-DC_ONLY(0x3704c, 0x148)
-long type_creature_growth_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char exact)
-{
-    // @stub
-}
-
-// AI_get_value_of_artifact (dc 0x37194) promoted to VA(0x004336c0) in RVA order below.
-
-// E:\gamedcs\ai_player.cpp:5643
-DC_ONLY(0x37464, 0xAE)
-long aiGetEquipValue(type_artifact artifact, const hero* our_hero, unsigned char exact)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5708
-DC_ONLY(0x37588, 0x266)
-long getFullValue(const hero* our_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5792
-DC_ONLY(0x377f0, 0xA8)
-long removeNegativeArtifacts(hero* our_hero)
-{
-    // @stub
-}
-
-// add_artifact (dc 0x37898) promoted to VA(0x00433e20) in RVA order below.
-
-// E:\gamedcs\ai_player.cpp:5940
-DC_ONLY(0x37a58, 0x74)
-void aiEquipArtifacts(hero* our_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5967
-DC_ONLY(0x37acc, 0xEE)
-void aiSwapArtifacts(hero* source, hero* dest)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:6012
-DC_ONLY(0x37bbc, 0x7A)
-void type_AI_initializer::type_AI_initializer()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:6096
-DC_ONLY(0x37c38, 0x36)
-void aiInitialize()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:6105
-DC_ONLY(0x37c70, 0xBC)
-void aiShutDown()
-{
-    // @stub
+// Original: move_creatures; ai_player.cpp:2022, dc 0x31514.
+// AddCreatures calls this static ordinary helper at DC2086. Retail
+// 0x42c130 expands its add-or-replace search before dismissing the old slot.
+static void moveCreatures(armyGroup* army, TCreatureType type, short amount)
+{
+    if (!army)
+        return;
+    if (army->add(type, amount, -1))
+        return;
+    long weakestValue = -g_creatureTypeTraits[type].m_aiValue * amount;
+    short weakestSlot = -1;
+    for (short candidate = 0;
+         candidate < armyGroup::ARMY_GROUP_SLOT_COUNT; ++candidate) {
+        long value = -g_creatureTypeTraits[army->m_armyTypes[candidate]].m_aiValue
+            * army->m_numTroops[candidate];
+        if (value > weakestValue) {
+            weakestValue = value;
+            weakestSlot = candidate;
+        }
+    }
+    if (weakestSlot < 0)
+        return;
+    army->dismiss(weakestSlot);
+    army->add(type, amount, weakestSlot);
 }
-
-#endif  // @carcass
 
 VA(0x0042c040, 0x15)  // dc 0x315bc
 type_AI_creature_swapper::type_AI_creature_swapper()
@@ -2335,27 +1938,7 @@ void type_AI_creature_swapper::addCreatures(
             * static_cast<short>(m_army->m_numTroops[slot]);
         short oldAmount = m_army->m_numTroops[slot];
 
-        armyGroup* destination = m_adjacentArmy;
-        if (destination && !destination->add(oldType, oldAmount, -1)) {
-            long weakestValue = -g_creatureTypeTraits[oldType].m_aiValue
-                * oldAmount;
-            short weakestSlot = -1;
-            for (short candidate = 0;
-                 candidate < armyGroup::ARMY_GROUP_SLOT_COUNT;
-                 ++candidate) {
-                long value = -g_creatureTypeTraits[
-                    destination->m_armyTypes[candidate]].m_aiValue
-                    * destination->m_numTroops[candidate];
-                if (value > weakestValue) {
-                    weakestValue = value;
-                    weakestSlot = candidate;
-                }
-            }
-            if (weakestSlot >= 0) {
-                destination->dismiss(weakestSlot);
-                destination->add(oldType, oldAmount, weakestSlot);
-            }
-        }
+        moveCreatures(m_adjacentArmy, oldType, oldAmount);
         m_army->dismiss(slot);
     }
     m_army->add(type, amount, slot);
@@ -2535,6 +2118,20 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // `why-reg` measures distance 119. Making the grouped alignment volatile
 // improves that internal distance but worsens the real objdiff score to
 // 86.33%, and declaration/reference/condition spellings are flat or worse.
+// Re-measured 2026-09-20: the permutation is rooted at `this`. Retail copies it
+// into EDI at entry and reads m_army through it; ours leaves it in ECX, spills
+// it, and reloads, which frees EDI for shooterCount and cascades into every
+// later binding - the traits address spilling instead of staying live, the
+// checkAlignments byte loaded to BL on retail's side and compared in memory on
+// ours, and the reverse for g_game->m_f1f698. why-reg's model says the value
+// that must move first is `this`, and the front end proves that unreachable:
+// `il-locals` gives isShooter 0xca55, checkAlignments 0xca56, this 0xca58, then
+// shooterCount 0xca5a and the rest, and handle-order.md measures
+// params < `this` < locals as parse-FIXED. Retail binds shooterCount to ESI and
+// `this` to EDI, which needs shooterCount created first - no declaration order
+// reaches it. Same verdict and same root as get_simple_attack_effect.
+// Byte-flat: `traits.m_townType` for the repeated subscript, and
+// `!g_game->m_f1f698` for the `== 0` test.
 VA(0x0042c690, 0x192)  // DC method + retail body/caller; dc 0x31a00
 long type_AI_creature_swapper::chooseWeakestArmy(
     unsigned char isShooter, unsigned char checkAlignments)
@@ -2691,8 +2288,8 @@ long type_AI_creature_swapper::valueOfAddingArmy(
         }
     }
     if (slowestSpeed > traits->m_speed) {
-        long oldMove = g_landMovement[slowestSpeed];
-        long newMove = g_landMovement[traits->m_speed];
+        long oldMove = g_moveConstants.m_land[slowestSpeed];
+        long newMove = g_moveConstants.m_land[traits->m_speed];
         long armyValue = m_army->getAIValue() + 500;
         value += static_cast<long>(
             static_cast<double>(newMove) * armyValue
@@ -3008,127 +2605,113 @@ void aiArrangeArmy(armyGroup& currentArmy)
 long splitArmy(armyGroup* currentArmy, short index, short limit,
                 short openSlots);
 
-// E:\gamedcs\ai_player.cpp:2817
-// Dreamcast proves the const armyGroup& enemy parameter, armyGroup&
-// current_army local, and long walker_count local. Retail's consolidation
-// prefix is the ordinary aiConsolidateArmy body expanded at this call site;
-// the canonical helper naturally inlines here, so no copied merge loop is
-// needed. Its retained body and other callers keep their own decisions.
-// The enemy counters precede the combat-value calls in DC lines 2832-2846
-// and retail. The first split loop exits immediately when no slots remain.
-// Recovering that order and exit reaches 86.50% from the old 83.62%.
-
-// Retail adds army arrangement to DC's early exits, sharing one exit block
-// for the guards and retaining a separate ordinary completion call. A scoped
-// do/while(0) calculation removes all six gotos and improves 97.7143% to
-// 98.8238%. Each split loop breaks on exhausted slots, then propagates that
-// real result to the enclosing calculation. Keeping the ordinary completion
-// call separate preserves retail's two arrangement paths.
-// Negative controls: one unconditional arrangement after the calculation
-// scores 94.3714%; nested positive guards remove four gotos but stay at
-// 97.7143%. Per-guard arrange/return copies previously scored 76.55%.
-// Residual: consolidation reload scheduling and final split-loop homing;
-// keep the canonical aiConsolidateArmy boundary and reference local.
-VA(0x0042db20, 0x249)  // retail callee set + arity, dc 0x32670
-void splitArmies(hero* currentHero, const hero* enemyHero,
-                  const armyGroup& enemy)
+// Original: split_armies; ai_player.cpp:2817, dc 0x32670.
+// This static ordinary helper owns only splitting and its early returns.
+// DC2820 binds current_army;2823 counts free slots;2880/2939 return when
+// the split loops exhaust those slots. Consolidation and final arrangement
+// belong to AI_arrange_army_for_combat below, whose retail body expands us.
+// DC2832..2834 initializes max value, shooter count, then shooter value.
+static void splitArmies(hero* currentHero, const hero* enemyHero,
+                        const armyGroup& enemy)
 {
     armyGroup& currentArmy = currentHero->m_army;
-    aiConsolidateArmy(currentArmy);
-
-    do {
-        int openSlots = 7 - currentArmy.getNumArmies();
-        if (openSlots <= 0) {
-            break;
-        }
-        int enemyShooterCount = 0;
-        int enemyShooterValue = 0;
-        int enemyMaxValue = 0;
-        float ratio;
-        if (enemyHero == 0)
-            ratio = 1.0f;
-        else
-            ratio = const_cast<hero*>(enemyHero)
-                        ->getCombatValueModifier();
-        ratio /= currentHero->getCombatValueModifier();
-
-        int k;
-        for (k = 0; k < 7; ++k) {
-            TCreatureType type = enemy.m_armyTypes[k];
-            if (type == CREATURE_NONE)
-                continue;
-            long value = static_cast<long>(
-                enemy.m_numTroops[k] * g_creatureTypeTraits[type].m_aiValue
-                * ratio);
-            if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter) {
-                ++enemyShooterCount;
-                enemyShooterValue += value;
-            }
-            if (value > enemyMaxValue)
-                enemyMaxValue = value;
-        }
-
-        int slot;
-        for (slot = 0; slot < 7; ++slot) {
-            TCreatureType type = currentArmy.m_armyTypes[slot];
-            if (type != CREATURE_NONE
-                && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
-                openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue * 5,
-                                         openSlots);
-                if (openSlots == 0) {
-                    break;
-                }
-            }
-        }
-
-        if (openSlots == 0)
-            break;
-        if (enemyShooterCount == 0) {
-            break;
-        }
-        long heroShooterValue = 0;
-        long walkerCount = 0;
-        int m;
-        for (m = 0; m < 7; ++m) {
-            TCreatureType type = currentArmy.m_armyTypes[m];
-            if (type == CREATURE_NONE)
-                continue;
-            if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
-                heroShooterValue += currentArmy.m_numTroops[m]
-                    * g_creatureTypeTraits[type].m_aiValue;
-            else
-                ++walkerCount;
-        }
-
-        if (heroShooterValue >= enemyShooterValue) {
-            break;
-        }
-        int splitsNeeded = (enemyShooterCount
-            - heroShooterValue * enemyShooterCount
-                / enemyShooterValue
-            + 1) / 2 - walkerCount;
-        if (splitsNeeded <= 0) {
-            break;
-        }
-        if (splitsNeeded < openSlots)
-            openSlots = splitsNeeded;
-        for (slot = 0; slot < 7; ++slot) {
-            TCreatureType type = currentArmy.m_armyTypes[slot];
-            if (type == CREATURE_NONE)
-                continue;
-            if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
-                continue;
-            openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue,
-                                   openSlots);
-            if (openSlots == 0)
-                break;
-        }
-        if (openSlots == 0)
-            break;
-        aiArrangeArmy(currentArmy);
+    int openSlots = 7 - currentArmy.getNumArmies();
+    if (openSlots <= 0) {
         return;
-    } while (0);
-    aiArrangeArmy(currentArmy);
+    }
+    int enemyMaxValue = 0;
+    int enemyShooterCount = 0;
+    int enemyShooterValue = 0;
+    float ratio;
+    if (enemyHero == 0)
+        ratio = 1.0f;
+    else
+        ratio = const_cast<hero*>(enemyHero)
+                    ->getCombatValueModifier();
+    ratio /= currentHero->getCombatValueModifier();
+
+    int k;
+    for (k = 0; k < 7; ++k) {
+        TCreatureType type = enemy.m_armyTypes[k];
+        if (type == CREATURE_NONE)
+            continue;
+        long value = static_cast<long>(
+            enemy.m_numTroops[k] * g_creatureTypeTraits[type].m_aiValue
+            * ratio);
+        if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter) {
+            ++enemyShooterCount;
+            enemyShooterValue += value;
+        }
+        if (value > enemyMaxValue)
+            enemyMaxValue = value;
+    }
+
+    int slot;
+    for (slot = 0; slot < 7; ++slot) {
+        TCreatureType type = currentArmy.m_armyTypes[slot];
+        if (type != CREATURE_NONE
+            && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
+            openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue * 5,
+                                     openSlots);
+            if (openSlots == 0) {
+                return;
+            }
+        }
+    }
+
+    if (enemyShooterCount == 0) {
+        return;
+    }
+    long heroShooterValue = 0;
+    long walkerCount = 0;
+    int m;
+    for (m = 0; m < 7; ++m) {
+        TCreatureType type = currentArmy.m_armyTypes[m];
+        if (type == CREATURE_NONE)
+            continue;
+        if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
+            heroShooterValue += currentArmy.m_numTroops[m]
+                * g_creatureTypeTraits[type].m_aiValue;
+        else
+            ++walkerCount;
+    }
+
+    if (heroShooterValue >= enemyShooterValue) {
+        return;
+    }
+    int splitsNeeded = (enemyShooterCount
+        - heroShooterValue * enemyShooterCount
+            / enemyShooterValue
+        + 1) / 2 - walkerCount;
+    if (splitsNeeded <= 0) {
+        return;
+    }
+    if (splitsNeeded < openSlots)
+        openSlots = splitsNeeded;
+    for (slot = 0; slot < 7; ++slot) {
+        TCreatureType type = currentArmy.m_armyTypes[slot];
+        if (type == CREATURE_NONE)
+            continue;
+        if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
+            continue;
+        openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue,
+                               openSlots);
+        if (openSlots == 0)
+            return;
+    }
+}
+
+// Original: AI_arrange_army_for_combat; ai_player.cpp:2952, dc 0x3285c.
+// DC2953..2955 calls consolidate, split_armies and arrange in this order.
+// Retail0x42db20 contains the first two expansions and final arrange calls;
+// events::DoCombat calls this wrapper, not its static splitting helper.
+VA(0x0042db20, 0x249)  // anchor-events DoCombat + canonical wrapper call sequence
+void aiArrangeArmyForCombat(hero* currentHero, const hero* enemyHero,
+                           const armyGroup& enemy)
+{
+    aiConsolidateArmy(currentHero->m_army);
+    splitArmies(currentHero, enemyHero, enemy);
+    aiArrangeArmy(currentHero->m_army);
 }
 
 VA(0x0042dd70, 0xdc)  // dc 0x325bc
@@ -3290,7 +2873,7 @@ static void markStrategicMap(
         NewmapCell* cell = g_advManager->getCell(point.m_point);
         int type = cell->m_type;
         if (!(getMapExtra(point.m_point.m_x, point.m_point.m_y, point.m_point.m_z)
-              & g_unnamed69ccc4)) {
+              & g_curPlayerBit)) {
             strategicMap[point.m_point.m_z * levelSize
                           + point.m_point.m_y * g_mapWidth + point.m_point.m_x]
                 += point.m_value;
@@ -3298,7 +2881,7 @@ static void markStrategicMap(
         }
 
         wasTrigger = cell->m_isTrigger;
-        if (g_adventureObjectTraits[type][0])
+        if (g_adventureObjectTraits[type].m_blocksLanding)
             cell->m_isTrigger = 0;
 
         rect.left = max(0L, static_cast<long>(point.m_point.m_x) - 5);
@@ -3313,7 +2896,7 @@ static void markStrategicMap(
             59999, 0);
 
         short nearbyCost;
-        if (!g_adventureObjectTraits[type][0]) {
+        if (!g_adventureObjectTraits[type].m_blocksLanding) {
             nearbyCost = 0;
         } else {
             cell->m_isTrigger = wasTrigger;
@@ -3568,10 +3151,10 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 // call site before handing it the team.
 
 // The nine functions below are located by the callee-fingerprint join against
-// evidence/dc-xref-graph.tsv: for each retail carve row the cross-unit resolved
+// Dreamcast call targets: for each retail carve row the cross-unit resolved
 // calls (homm3 sema disasm) form a set that matches a unique ai_player DC
 // callee-set through the RVA scramble. Reciprocal-best pairs; sizes carve-exact
-// from config/retail-functions.tsv; claimed @stub in RVA order (ORDER gate).
+// from config/retail/functions.tsv; claimed @stub in RVA order (ORDER gate).
 //   0x2edd0 find_all_destinations - 7 shared (game::GetTownId, CheckDoMain,
 //           AI_value_of_event, hero::is_in_patrol_radius, ...), marginR=12.
 //   0x2f570 mark_destinations - searchArray ctor/dtor + is_in_patrol_radius +
@@ -3668,7 +3251,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
             continue;
         NewmapCell* mapCell = g_advManager->getCell(cell->m_point);
         if (!mapCell->m_isTrigger) {
-            if ((getMapExtra(cell->m_point) & g_unnamed69ccc4)
+            if ((getMapExtra(cell->m_point) & g_curPlayerBit)
                 || g_currentPlayer->m_numTowns == 0)
                 continue;
         }
@@ -3696,7 +3279,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
         if (point.m_point == currentHero->getLocation())
             continue;
 
-        if (g_unnamed693718[mapCell->m_type]
+        if (g_oneUseEvents[mapCell->m_type]
             && point.m_moveCost > friendlyDistances[
                 point.m_point.m_z * levelSize + point.m_point.m_y * g_mapWidth
                 + point.m_point.m_x])
@@ -3704,7 +3287,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
         point.m_moveCost = cell->m_adjustedCost;
         if (hiringHero)
             point.m_moveCost = 10000;
-        if (!(getMapExtra(point.m_point) & g_unnamed69ccc4)
+        if (!(getMapExtra(point.m_point) & g_curPlayerBit)
             && g_currentPlayer->m_numTowns > 0) {
             if (exploreMode) {
                 point.m_value = 100000;
@@ -3850,8 +3433,8 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
     type_point point = destination->m_point;
     NewmapCell* cell = g_advManager->getCell(point);
     int type = cell->m_type;
-    if (cell->m_isTrigger && g_adventureObjectTraits[type][0]) {
-        if (getMapExtra(point.m_x, point.m_y, point.m_z) & g_unnamed69ccc4) {
+    if (cell->m_isTrigger && g_adventureObjectTraits[type].m_blocksLanding) {
+        if (getMapExtra(point.m_x, point.m_y, point.m_z) & g_curPlayerBit) {
             destination->m_moveCost -= currentPathCell->m_cost;
             point = currentPathCell->m_lastPoint;
             pathCell* lastCell = currentSearchArray->getCell(point, 0);
@@ -3866,7 +3449,7 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
     if (value >= -500000000)
         value += currentPathCell->m_dangerValue;
 
-    if (!g_adventureObjectTraits[type][0]) {
+    if (!g_adventureObjectTraits[type].m_blocksLanding) {
         type_point monsterPos;
         if (g_advManager->findAdjacentMonster(destination->m_point,
                                               &monsterPos,
@@ -3917,6 +3500,21 @@ static unsigned char attemptTeleport(hero* currentHero,
                                       std::vector<pathCell>& path,
                                       long step);
 
+// Original: ConsiderHidingMouse; ai_player.cpp:3813, dc 0x34164.
+// DC3815 calls IsVis/GetMoveShowIt;3819..3822 saves, enables, hides and
+// restores the drawing flag. AttemptStep calls this ordinary static helper
+// at DC3838; retail0x42fc50 expands it before reading the path-cell point.
+static void considerHidingMouse(hero* currentHero, int direction)
+{
+    if (g_mouseManager->isVis()
+        && g_advManager->getMoveShowIt(currentHero, direction)) {
+        int saveDraw = g_completeDrawEnabled;
+        g_completeDrawEnabled = 1;
+        g_mouseManager->hidePointer();
+        g_completeDrawEnabled = saveDraw;
+    }
+}
+
 // E:\gamedcs\ai_player.cpp:3832
 VA(0x0042fc50, 0x285)  // dc 0x341f4
 unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
@@ -3924,13 +3522,7 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
 {
     type_point triggerPoint;
     int direction = currentPathCell->m_direction;
-    if (g_mouseManager->m_hideCount == 0
-        && g_advManager->considerHidingMouse(currentHero, direction)) {
-        int saveDraw = g_completeDrawEnabled;
-        g_completeDrawEnabled = 1;
-        g_mouseManager->hidePointer();
-        g_completeDrawEnabled = saveDraw;
-    }
+    considerHidingMouse(currentHero, direction);
 
     triggerPoint = currentPathCell->m_point;
     NewmapCell* cell = g_game->getCell(triggerPoint);
@@ -4394,7 +3986,6 @@ static long totalArtifactValue(hero* candidate, long playerId)
 }
 
 // E:\gamedcs\ai_player.cpp:4565, dc 0x357ec.
-
 // The Dreamcast roster marks both coordinate lookups static, and its
 // AI_build_ship xrefs mark both calls inlined. Retail retains those two
 // source-level passes: owned town docks first, then claimed map shipyards.
@@ -4430,7 +4021,7 @@ static unsigned char getMapShipyard(const playerData* player, long x,
 VA(0x00430f80, 0x1d2)  // dc 0x35910
 void aiBuildShip(const hero* ourHero, long x, long y, long z)
 {
-    if (ourHero->belongsToHuman() && !g_unk691209)
+    if (ourHero->belongsToHuman() && !g_goSolo)
         return;
 
     playerData* player = &g_game->m_players[ourHero->m_owner];
@@ -5040,7 +4631,7 @@ long type_creature_growth_artifact::getValue(const hero* owner,
 // Each table has the shared deleting destructor 0x433080 at slot 0 and
 // the matching three-argument, ret 0xc getValue at slot 1. The exact
 // Complete-only constructor and virtual definitions are reviewed in
-// config/win_only.tsv; class names remain provisional semantic names.
+// config/source/win_only.tsv; class names remain provisional semantic names.
 VA(0x00432f90, 0xe4)  // vtable-slot 0x63b750 + get_raw_spell_value, retail-only
 long type_spell_artifact::getValue(const hero* owner, unsigned char equipped,
                                     unsigned char exact) const
@@ -5601,17 +5192,20 @@ void aiSwapArtifacts(hero* source, hero* dest)
 }
 
 // Complete keeps the DC artifact-effect class boundaries but expands these
-// tiny construction helpers into initialize_artifact_effects. DC also proves
+// tiny construction helpers into initializeArtifactEffects. DC also proves
 // the explicit type_artifact_effect default constructor (line 5043); spelling
 // it here is byte-flat but preserves that real source/inliner boundary.
-// Retail retains type_combat_artifact at four later nested-base sites.
+// Retail writes the concrete vtable before the member stores for scouting,
+// school, antimagic, tome, income, and creature growth. Assigning those
+// members in the constructor bodies reproduces that order. The recovered
+// no-data necromancy base accounts for the two retained combat-base calls.
 inline type_artifact_effect::type_artifact_effect()
 {
 }
 
 inline type_scouting_artifact::type_scouting_artifact(long newBonus)
-    : m_bonus(newBonus)
 {
+    m_bonus = newBonus;
 }
 
 inline type_might_artifact::type_might_artifact(long newBonus)
@@ -5629,8 +5223,14 @@ inline type_knowledge_artifact::type_knowledge_artifact(long newBonus)
 {
 }
 
-inline type_necromancy_artifact::type_necromancy_artifact(long newBonus)
+inline type_base_necromancy_artifact::type_base_necromancy_artifact(
+    long newBonus)
     : type_combat_artifact(newBonus)
+{
+}
+
+inline type_necromancy_artifact::type_necromancy_artifact(long newBonus)
+    : type_base_necromancy_artifact(newBonus)
 {
 }
 
@@ -5661,13 +5261,14 @@ inline type_duration_artifact::type_duration_artifact(long newBonus)
 
 inline type_school_artifact::type_school_artifact(TSpellSchool newSchool,
                                                    long newBonus)
-    : type_power_artifact(newBonus), m_school(newSchool)
+    : type_power_artifact(newBonus)
 {
+    m_school = newSchool;
 }
 
 inline type_antimagic_artifact::type_antimagic_artifact(long maxLevel)
-    : m_bonus(maxLevel)
 {
+    m_bonus = maxLevel;
 }
 
 inline type_antimorale_artifact::type_antimorale_artifact()
@@ -5679,24 +5280,27 @@ inline type_antiluck_artifact::type_antiluck_artifact()
 }
 
 inline type_tome_artifact::type_tome_artifact(TSpellSchool newSchool)
-    : type_combat_artifact(0), m_school(newSchool)
+    : type_combat_artifact(0)
 {
+    m_school = newSchool;
 }
 
 inline type_income_artifact::type_income_artifact(
     long newAmount, EGameResource newResource)
-    : m_amount(newAmount), m_resource(newResource)
 {
+    m_amount = newAmount;
+    m_resource = newResource;
 }
 
 inline type_creature_growth_artifact::type_creature_growth_artifact(
     long newLevel, long newBonus)
-    : m_bonus(newLevel), m_growthBonus(newBonus)
 {
+    m_bonus = newLevel;
+    m_growthBonus = newBonus;
 }
 
 inline type_undead_king_cloak_artifact::type_undead_king_cloak_artifact()
-    : type_necromancy_artifact(30)
+    : type_base_necromancy_artifact(30)
 {
 }
 
@@ -5725,6 +5329,48 @@ inline type_statue_of_legion_artifact::type_statue_of_legion_artifact()
 
 static void initializeArtifactEffects();
 
+// Original: type_AI_initializer::type_AI_initializer; ai_player.cpp:6012, dc 0x37bbc.
+// DC6014/6034/6039/6087..6090 and retail startup0x428070 prove the two
+// zero-fills and sentinel-table loops. Table contents come from the pinned
+// retail .data allocations0x660540/0x6605d8; bounds232 are the retail clear
+// extents. The one-use loop marks successive indices, as both images do.
+// The startup dispatcher is already admitted as cinit79; this constructor
+// has no separately claimed retained retail body.
+type_AI_initializer::type_AI_initializer()
+{
+    // Original: const_one_use_events.
+    static const int g_constOneUseEvents[] = {
+        5, 6, 9, 10, 12, 13, 16, 22, 24, 29, 37, 39,
+        42, 48, 53, 54, 55, 57, 58, 59, 60, 62, 63, 79,
+        80, 81, 82, 84, 85, 86, 93, 99, 101, 105, 108, 109,
+        112, 0
+    };
+    // Original: const_visibility_values; alternating event/value pairs.
+    static const int g_constVisibilityValues[] = {
+        2, 1, 4, 100, 5, 200, 6, 400, 8, 100, 10, 500,
+        11, 1, 12, 10, 13, 1000, 14, 1, 15, 1, 16, 10,
+        17, 10, 20, 10, 22, 1, 23, 100, 24, 10, 25, 10,
+        28, 1, 29, 5, 30, 1, 31, 1, 32, 100, 35, 1,
+        36, 1000, 37, 200, 38, 1, 39, 1, 41, 400, 42, 10,
+        43, 50, 45, 100, 47, 50, 48, 10, 49, 10, 51, 100,
+        52, 1, 53, 20, 55, 10, 56, 1, 57, 10, 58, 100,
+        60, 100, 61, 100, 62, 200, 63, 10, 64, 1, 78, 10,
+        79, 10, 81, 20, 82, 10, 83, 10, 84, 10, 85, 10,
+        86, 10, 88, 10, 89, 10, 90, 10, 93, 10, 94, 10,
+        96, 1, 98, 200, 100, 50, 101, 20, 102, 100, 104, 50,
+        105, 1, 106, 1, 107, 50, 108, 10, 109, 10, 110, 1,
+        111, 50, 112, 10, 113, 50, 0
+    };
+    memset(g_oneUseEvents, 0, sizeof(g_oneUseEvents));
+    for (int event = 0; g_constOneUseEvents[event]; ++event)
+        g_oneUseEvents[event] = 1;
+    memset(g_aiEventVisibilityValues, 0, sizeof(g_aiEventVisibilityValues));
+    for (int i = 0; g_constVisibilityValues[i]; ++i) {
+        int event = g_constVisibilityValues[i++];
+        g_aiEventVisibilityValues[event] = g_constVisibilityValues[i];
+    }
+}
+
 VA(0x004340e0, 0x20)  // dc 0x37c38
 void aiInitialize()
 {
@@ -5740,11 +5386,7 @@ void aiInitialize()
 // vector::clear before the inner loop; restoring that statement raises this
 // body from 86.90% to 91.95%. Flattening the helper into AI_initialize
 // measured 84.09% only because the old retail inventory incorrectly
-// coalesced both functions, and is the boundary negative control. The one
-// remaining extra CFG block is a retained type_combat_artifact call in our
-// necromancy arm; inline_depth(255) and force-inlining the outer constructor
-// were byte-flat, while inline-qualifying the shared base over-expanded later
-// retail call sites and fell to 76.42%, so no synthetic control is retained.
+// coalesced both functions, and is the boundary negative control.
 
 // 91.95 -> 95.16 (polish 49, lever A/C census): retail NEVER folds the two
 // stream reads of a two-argument arm into one pointer bump. The SCHOOL,
@@ -5757,12 +5399,15 @@ void aiInitialize()
 // `add esi,8` at +0x222/+0x2dd/+0x305. Naming the first read restores all
 // three sites and both esi bumps per arm.
 
-// Residual (95.16%): ONE swapped inline decision - retail CALLS
-// type_combat_artifact's ctor in the NECROMANCY arm (t+0x165) and expands
-// it in SHOOTER_BONUS (t+0x37d); we do the exact opposite (+0x38c call,
-// necromancy expanded). DURATION, SCHOOL and UNDEAD_KING_CLOAK keep their
-// calls on both sides, so this is a per-site /Ob2 budget boundary, not a
-// missing source element.
+// 95.16 -> 97.45: constructor-body assignments make six field/vtable blocks
+// exact. Restoring type_base_necromancy_artifact, a no-data base named by the
+// recovered Complete type inventory, makes both necromancy construction paths
+// retain the same type_combat_artifact call as retail. The remaining two CFG
+// blocks are the opposite decision in the Complete-only Angelic Alliance arm:
+// retail expands that nested base while VC6 gives the current natural source
+// 56 budget units for a 63-unit callee. In-class and ordinary constructor
+// definitions are byte-flat; inline_depth(255) is also flat. No synthetic
+// force-inline or pragma is retained.
 VA(0x00434100, 0x490)  // tail target/fresh frame + DC helper, dc 0x35f08
 static void initializeArtifactEffects()
 {
@@ -5874,297 +5519,6 @@ void aiShutDown()
         g_constArtifactEffects[i].clear();
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\ai_player.cpp:224
-DC_ONLY(0x380d8, 0x18)
-void type_AI_creature_purchaser::~type_AI_creature_purchaser()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:3213
-DC_ONLY(0x380f0, 0x28)
-void HeroDestination::HeroDestination()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:4924
-DC_ONLY(0x38118, 0x34)
-void std::vector<type_artifact_effect *,std::allocator<type_artifact_effect *> >::`default constructor closure'()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:4924
-DC_ONLY(0x3814c, 0x38)
-void `vector destructor iterator'(void* __t, unsigned __s, int __n, void (*)()* __f)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5044
-DC_ONLY(0x38184, 0x34)
-void* type_artifact_effect::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5059
-DC_ONLY(0x381b8, 0x34)
-void* type_scouting_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5059
-DC_ONLY(0x381ec, 0x18)
-void type_scouting_artifact::~type_scouting_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5075
-DC_ONLY(0x38204, 0x34)
-void* type_combat_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5075
-DC_ONLY(0x38238, 0x18)
-void type_combat_artifact::~type_combat_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5091
-DC_ONLY(0x38250, 0x34)
-void* type_might_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5091
-DC_ONLY(0x38284, 0x18)
-void type_might_artifact::~type_might_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5110
-DC_ONLY(0x3829c, 0x34)
-void* type_power_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5110
-DC_ONLY(0x382d0, 0x18)
-void type_power_artifact::~type_power_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5128
-DC_ONLY(0x382e8, 0x34)
-void* type_knowledge_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5128
-DC_ONLY(0x3831c, 0x18)
-void type_knowledge_artifact::~type_knowledge_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5146
-DC_ONLY(0x38334, 0x34)
-void* type_necromancy_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5146
-DC_ONLY(0x38368, 0x18)
-void type_necromancy_artifact::~type_necromancy_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5183
-DC_ONLY(0x38380, 0x34)
-void* type_movement_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5183
-DC_ONLY(0x383b4, 0x18)
-void type_movement_artifact::~type_movement_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5199
-DC_ONLY(0x383cc, 0x34)
-void* type_spellcaster_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5199
-DC_ONLY(0x38400, 0x18)
-void type_spellcaster_artifact::~type_spellcaster_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5220
-DC_ONLY(0x38418, 0x34)
-void* type_morale_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5220
-DC_ONLY(0x3844c, 0x18)
-void type_morale_artifact::~type_morale_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5244
-DC_ONLY(0x38464, 0x34)
-void* type_luck_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5244
-DC_ONLY(0x38498, 0x18)
-void type_luck_artifact::~type_luck_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5268
-DC_ONLY(0x384b0, 0x34)
-void* type_duration_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5268
-DC_ONLY(0x384e4, 0x18)
-void type_duration_artifact::~type_duration_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5287
-DC_ONLY(0x384fc, 0x34)
-void* type_school_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5287
-DC_ONLY(0x38530, 0x18)
-void type_school_artifact::~type_school_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5349
-DC_ONLY(0x38548, 0x34)
-void* type_antimagic_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5349
-DC_ONLY(0x3857c, 0x18)
-void type_antimagic_artifact::~type_antimagic_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5381
-DC_ONLY(0x38594, 0x34)
-void* type_antimorale_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5381
-DC_ONLY(0x385c8, 0x18)
-void type_antimorale_artifact::~type_antimorale_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5407
-DC_ONLY(0x385e0, 0x34)
-void* type_antiluck_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5407
-DC_ONLY(0x38614, 0x18)
-void type_antiluck_artifact::~type_antiluck_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5435
-DC_ONLY(0x3862c, 0x34)
-void* type_tome_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5435
-DC_ONLY(0x38660, 0x18)
-void type_tome_artifact::~type_tome_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5480
-DC_ONLY(0x38678, 0x34)
-void* type_income_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5480
-DC_ONLY(0x386ac, 0x18)
-void type_income_artifact::~type_income_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5498
-DC_ONLY(0x386c4, 0x34)
-void* type_creature_growth_artifact::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5498
-DC_ONLY(0x386f8, 0x18)
-void type_creature_growth_artifact::~type_creature_growth_artifact()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // COMDAT pairing: vector<type_creature_source>::size, agreement 1.000.
 VA_COMPGEN(0x00434600, 0x20, VECTOR_SIZE, type_creature_source)

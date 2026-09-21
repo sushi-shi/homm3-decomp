@@ -3,7 +3,7 @@
 The caller-side complement of `disasm`. Callers come from one linear
 E8/E9 (call/jmp rel32) scan of retail .text, each site attributed
 SIZE-BOUNDED to its containing function - the boundary map
-(config/retail-functions.tsv via symbol_names.csv) is complete, so
+(config/retail/functions.tsv via symbol_names.csv) is complete, so
 attribution always lands or the site is genuinely unowned padding/data.
 
 Modes:
@@ -21,9 +21,9 @@ Modes:
               which has no callers to tree.
 
 The function views end with the data-side references, resolved EXACTLY
-from the admitted dir32 reloc sites (config/retail-relocs.tsv) - fn-ptr
+from the admitted dir32 reloc sites (config/retail/relocs.tsv) - fn-ptr
 tables, command tables, vtable slots (named slot-precisely via
-config/retail-vtables.tsv), and address-takings inside .text. No blind
+config/retail/vtables.tsv), and address-takings inside .text. No blind
 byte scan, no false positives.
 
 rc: 0 = answered (even "no callers"), 2 = error.

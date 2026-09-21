@@ -12,7 +12,7 @@ resolve. Recover the ONE real type and delete the view.
 The tree currently declares ZERO externs (the cleanliness board's
 `cpp extern decls` row keeps .cpp files that way; owner headers are
 where externs will appear), so this gate is pure arrival-prevention:
-the backlog (config/single-view-baseline.tsv, gruntz shape - frozen
+the backlog (config/cleanliness/single-view-baseline.tsv, gruntz shape - frozen
 splits reported as standing debt, drained by explicit review) starts
 empty and any new split is fatal in the `homm3 build` tail. Never runs
 in `--fast`.
@@ -36,7 +36,7 @@ from homm3.core import common
 # it (incl. the backtick-apostrophe lesson); do not fork the semantics.
 from homm3.cleanliness.board import _strip
 
-BASELINE = common.HOMM3_DIR / "config/single-view-baseline.tsv"
+BASELINE = common.HOMM3_DIR / "config/cleanliness/single-view-baseline.tsv"
 ROOTS = ("src", "include")
 EXTS = {".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".inl"}
 

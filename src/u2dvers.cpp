@@ -1,5 +1,6 @@
 // 3 functions in link order.
-#include <va.h>
+#include "va.h"
+
 #include "u2dvers.h"
 
 VA(0x005eeda0, 0x4C)  // dc 0x18e3b0
@@ -25,9 +26,11 @@ TFileVersionInfo::~TFileVersionInfo()
 }
 
 VA(0x005eee00, 0x265)  // dc 0x18e3b8
-unsigned char TFileVersionInfo::getVersionInfo(const char* name, std::string* buffer) const
+bool TFileVersionInfo::getVersionInfo(const char* name, std::string* buffer) const
 {
-    unsigned char found = 0;
+    // The PC implementation is absent from DC's stub. Retail normalizes
+    // both WinAPI results before preserving this byte through cleanup.
+    bool found = false;
     if (m_data) {
         std::string subBlock;
         subBlock = DATA_COMPGEN(0x00643b24, versionInfo040904B0,
@@ -39,16 +42,14 @@ unsigned char TFileVersionInfo::getVersionInfo(const char* name, std::string* bu
         // buffer the caller copies out.
         void* value;
         unsigned int length;
-        found = static_cast<unsigned char>(
-            VerQueryValueA(m_data, const_cast<char*>(subBlock.c_str()),
-                &value, &length) != 0);
+        found = VerQueryValueA(m_data, const_cast<char*>(subBlock.c_str()),
+                &value, &length) != 0;
         if (!found) {
             subBlock = DATA_COMPGEN(0x00643b40, versionInfo040904e4,
                 "\\StringFileInfo\\040904e4\\");
             subBlock += name;
-            found = static_cast<unsigned char>(
-                VerQueryValueA(m_data, const_cast<char*>(subBlock.c_str()),
-                    &value, &length) != 0);
+            found = VerQueryValueA(m_data, const_cast<char*>(subBlock.c_str()),
+                    &value, &length) != 0;
         }
 
         if (found)

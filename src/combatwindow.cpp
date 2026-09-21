@@ -1,9 +1,12 @@
-#include <va.h>
+#include "text.h"
+#include "va.h"
+
 #include "combatwindow.h"
-#include "combatwindowchatedit.h"
-#include "cmbtmgr.h"
+
 #include "border.h"
+#include "cmbtmgr.h"
 #include "combatcontrolsubwindow.h"
+#include "combatwindowchatedit.h"
 #include "font.h"
 #include "game.h"
 #include "inputmgr.h"
@@ -15,8 +18,8 @@
 #include "textntry.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "winmgr.h"
 #include "widget.h"
+#include "winmgr.h"
 
 // Retail .bss 0x695000. The constructor publishes itself here for the chat
 // edit callbacks and the destructor clears the slot. The Dreamcast image has
@@ -59,7 +62,7 @@ void checkCombatCheatCode(std::string& chatString)
     if (recognized) {
         *chat = (*g_generalText)[261];
         g_game->m_isCheater = 1;
-        if (g_unk69774c) {
+        if (g_inCampaign) {
             g_game->m_campaign.m_isCheater = 1;
         }
     }
@@ -71,7 +74,7 @@ void checkCombatCheatCode(std::string& chatString)
 
 // Retail expands this ordinary forwarding constructor into TCombatWindow.
 // The canonical CGameChatEdit base owns the +0x70 clear.
-DC_ONLY(0x6a3ec, 0x98)
+
 CCombatChatEdit::CCombatChatEdit(
     int x, int y, int w, int h, int textSize, char* text, char* fontName,
     font::TColor color, font::EJustify justification, char* backgroundIcon,
@@ -267,7 +270,7 @@ unsigned char TCombatWindow::processRightSelect(const message* msg)
     if (helpID < 0)
         return 0;
 
-    const char* text = g_combatSubWindowHelp[helpID].m_rclick;
+    const char* text = g_combatWindowHelp[helpID].m_rclick;
     int width;
     int height;
     getQuickviewSize(text, &width, &height);
@@ -400,7 +403,7 @@ void TCombatWindow::combatMessage(const char* newText,
         m_combatMessages.push_back(new std::string(temp));
     } else {
         temp[split] = ' ';
-        if (g_unnamed698a08->lineLength(
+        if (g_smallFont->lineLength(
                 temp.c_str(), m_controlSubWindow->m_rolloverWidget->m_width) < 2) {
             m_combatMessages.push_back(new std::string(temp));
         } else {
@@ -445,10 +448,9 @@ void TCombatWindow::drawChatText(unsigned char update)
     }
 }
 
-VA(0x004732f0, 0x59)
-void TCombatWindow::drawWindow(unsigned char update, int low, int high)
+// Original: TCombatWindow::DrawChatEdit; combatwindow.cpp:615, dc 0x6a2c0
+void TCombatWindow::drawChatEdit(unsigned char update)
 {
-    heroWindow::drawWindow(update, low, high);
     if (m_chatEdit && m_chatEdit->m_hasFocus) {
         m_chatEdit->draw();
         if (update) {
@@ -459,79 +461,12 @@ void TCombatWindow::drawWindow(unsigned char update, int low, int high)
     }
 }
 
-#if 0  // @carcass: remaining combat-window bodies are not reconstructed yet
-
-// E:\gamedcs\combatwindow.cpp:382
-DC_ONLY(0x69d5c, 0x4C)
-void TCombatWindow::setRollover(const char* new_text)
+VA(0x004732f0, 0x59)
+void TCombatWindow::drawWindow(unsigned char update, int low, int high)
 {
-    // @stub
+    heroWindow::drawWindow(update, low, high);
+    drawChatEdit(update);
 }
-
-// E:\gamedcs\combatwindow.cpp:393
-DC_ONLY(0x69da8, 0x56)
-void TCombatWindow::handleWidgetHover(widget* current_widget)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:417
-DC_ONLY(0x69e00, 0x3A)
-void TCombatWindow::clearCombatMessages()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:431
-DC_ONLY(0x69e3c, 0xE8)
-void TCombatWindow::showMessages(long start)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:456
-DC_ONLY(0x69f24, 0x46)
-void TCombatWindow::scrollRollover(long delta)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:475
-DC_ONLY(0x69f6c, 0x26)
-int TCombatWindow::scrollUp(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:491
-DC_ONLY(0x69f94, 0x26)
-int TCombatWindow::scrollDown(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:583
-DC_ONLY(0x6a200, 0x62)
-void TCombatWindow::endPlacementPhase()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:603
-DC_ONLY(0x6a264, 0x5C)
-void TCombatWindow::drawChatText(unsigned char update)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:615
-DC_ONLY(0x6a2c0, 0x50)
-void TCombatWindow::DrawChatEdit(unsigned char update)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // E:\gamedcs\combatwindow.cpp:633..649. Original name: OnChatActivate.
 // DC calls this ordinary member from SendChat:189 and OnEscape:201.
@@ -552,24 +487,6 @@ void TCombatWindow::onChatActivate(unsigned char active)
         }
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\combatwindow.cpp:652
-DC_ONLY(0x6a3c0, 0x28)
-void TCombatWindow::drawWindow(unsigned char update, int low, int high)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:313
-DC_ONLY(0x6a65c, 0x34)
-void* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // COMDAT pairing: substr on the char instantiation, mnemonic agreement 1.000.
 VA_COMPGEN(0x00473350, 0x1A0, BASIC_STRING_SUBSTR, char)

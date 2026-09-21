@@ -1,11 +1,15 @@
-#include "includes.h"
-#include <va.h>
 // DC's retained HasBuilding callee (r11) serves all seven hall, silo and
 // fort tests. Keep every source call and the ordinary canonical town body.
+#include "text.h"
+#include "va.h"
+#include "includes.h"
+
 #include <stdio.h>
 #include <string>
 #include <strstream>
+
 #include "quicktownwindow.h"
+
 #include "armygrp.h"
 #include "border.h"
 #include "game.h"
@@ -175,7 +179,7 @@ TQuickTownWindow::TQuickTownWindow(const garrison* thisGarrison,
     m_widgets.push_back(new bitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "townqvbk.pcx", 0x800));
     m_widgets.push_back(new textWidget(
-        77, 13, 110, 24, g_quickViewGarrisonText, "smalfont.fnt",
+        77, 13, 110, 24, g_quickViewText[33], "smalfont.fnt",
         font::WHITE, NAME_ID, 0, 0, 8));
 
     initializeArmyDisplay(thisGarrison->m_garrisonArmy, viewLevel);
@@ -261,10 +265,3 @@ void TQuickTownWindow::quickWindowWait()
 }
 
 // E:\gamedcs\quicktownwindow.cpp:139
-#if 0  // @carcass -- represented by VA_COMPGEN above
-DC_ONLY(0x118848, 0x34)
-void* TQuickTownWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-#endif

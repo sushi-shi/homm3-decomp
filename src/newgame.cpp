@@ -1,7 +1,11 @@
-#include <va.h>
+#include "text.h"
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
+
 #include "newgame.h"
+
 #include "campaignbrief.h"
 #include "game.h"
 #include "misc.h"
@@ -63,7 +67,7 @@ void game::initNewGame(int difficulty, int version,
     m_setup.m_fileInitialized = 0;
     m_setup.m_curSelectedPlayer = -1;
     m_setup.m_initializationNumHumans =
-        static_cast<signed char>(g_unnamed699274);
+        static_cast<signed char>(g_numHumanPlayers);
 
     if (mapHeader) {
         this->m_mapHeader = *mapHeader;
@@ -119,7 +123,7 @@ void game::initNewGame(int difficulty, int version,
         if (m_setup.m_playerPos[slot] != -1)
             continue;
 
-        if (humanCount < g_unnamed699274 && this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman) {
+        if (humanCount < g_numHumanPlayers && this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman) {
             m_setup.m_playerPos[slot] = static_cast<signed char>(humanCount);
             humanCount++;
         } else if (this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeComputer) {
@@ -159,7 +163,7 @@ TTownType pickNextAlignment(int legalAlignments, TTownType type)
 VA(0x00513740, 0xBC)  // dc 0x103824
 void game::showScenInfo()
 {
-    if (g_unk69774c) {
+    if (g_inCampaign) {
         TCampaignBrief campaignBrief(0, 1);
         campaignBrief.doModal();
         if (g_windowManager->m_dialogReturn == NEWGAME_CAMPAIGN_BRIEF_EXIT)
@@ -292,14 +296,14 @@ void game::getVictoryConditionText(char* text)
                 sprintf(text, (*g_generalText)[322],
                         victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
                             ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
-                            : g_emptyRolloverText,
-                        g_questMonsterDirections[direction]);
+                            : "",
+                        g_directions[direction]);
             } else {
                 sprintf(text, (*g_generalText)[669],
                         victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
                             ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
-                            : g_emptyRolloverText,
-                        g_questMonsterDirections[direction]);
+                            : "",
+                        g_directions[direction]);
             }
             break;
         }
@@ -328,28 +332,3 @@ void game::getVictoryConditionText(char* text)
         strcpy(text, (*g_generalText)[235]);
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\newgame.cpp:337
-DC_ONLY(0x1037f4, 0x4)
-void game::SetupNetPlayerNames()
-{
-    // @stub
-}
-
-// E:\gamedcs\newgame.cpp:668
-DC_ONLY(0x103a08, 0x5AC)
-void game::getVictoryConditionText(char* rText)
-{
-    // @stub
-}
-
-// E:\gamedcs\newgame.cpp:826
-DC_ONLY(0x103fb4, 0x244)
-int game::GetSideDesc(char* rText, int iStartPos, int iEndPos)
-{
-    // @stub
-}
-
-#endif  // @carcass

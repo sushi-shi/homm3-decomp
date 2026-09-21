@@ -1,22 +1,25 @@
+#include "text.h"
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
 
-#include <va.h>
+#include "hillfortwindow.h"
+
 #include "advmgr.h"
 #include "border.h"
 #include "button.h"
-#include "hillfortwindow.h"
 #include "creaturetype.h"
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
 #include "kb.h"
 #include "message.h"
-#include "recruit.h"
 #include "mousemgr.h"
+#include "recruit.h"
 #include "soundmgr.h"
-#include "textwdgt.h"
 #include "textresource.h"
+#include "textwdgt.h"
 #include "viewarmywindow.h"
 #include "widget.h"
 #include "winmgr.h"
@@ -71,7 +74,7 @@ THillFortWindow::THillFortWindow()
         DATA_COMPGEN(0x0067f1e0, hillFortBackground, "APhlftBk.pcx"),
         0x800));
     m_widgets.push_back(new textWidget(
-        0, 0x14, 0x28c, 0x15c, g_adventureObjectNames[HILL_FORT],
+        0, 0x14, 0x28c, 0x15c, g_quickViewText[HILL_FORT],
         DATA_COMPGEN(0x00660b24, hillFortBigFont, "bigfont.fnt"),
         font::HEADING, TITLE_ID, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new bitmapBorder(
@@ -190,14 +193,15 @@ THillFortWindow::~THillFortWindow()
     }
 }
 
-// E:\gamedcs\hillfortwindow.cpp:178
-#if 0  // @carcass: retail inlines this switch into the dialog handler
-DC_ONLY(0xd6b94, 0x1A)
-int THillFortWindow::convertID2HelpID(int id)
+// Original: THillFortWindow::convertID2HelpID; hillfortwindow.cpp:178, dc 0xd6b94.
+// Complete's handler uses named widget cases directly; this source query
+// retains the DC help-table range, including every background and cost row.
+int THillFortWindow::convertID2HelpID(int id) const
 {
-    // @stub
+    if (id < BACKGROUND_ID || id > UPGRADE_BUTTON_7_ID)
+        return -1;
+    return id - BACKGROUND_ID;
 }
-#endif
 
 VA(0x004e7e90, 0x1F)  // dc 0xd6bb0
 void THillFortWindow::doModal()
@@ -207,7 +211,6 @@ void THillFortWindow::doModal()
 }
 
 // E:\gamedcs\hillfortwindow.cpp:192
-DC_ONLY(0xd6bd4, 0x22)
 inline bool canAfford(const long* cost, const long* playerRes)
 {
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
@@ -330,7 +333,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
             allUpgraded = 0;
             if (s.m_level == 0) {
                 strcpy(s.m_goldCost, (*g_generalText)[345]);
-                strcpy(s.m_resourceCost, g_emptyRolloverText);
+                strcpy(s.m_resourceCost, "");
             } else {
                 TCreatureType upgraded;
                 {
@@ -352,7 +355,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
                 }
                 sprintf(s.m_goldCost, "%d", s.m_cost[6]);
                 if (s.m_resourceIndex == -1)
-                    sprintf(s.m_resourceCost, g_emptyRolloverText);
+                    sprintf(s.m_resourceCost, "");
                 else
                     sprintf(s.m_resourceCost, "%d",
                             s.m_cost[s.m_resourceIndex]);
@@ -471,7 +474,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
             msg.m_extraText = totalCostText;
             broadcastMessage(msg);
         } else {
-            strcpy(totalCostText, g_emptyRolloverText);
+            strcpy(totalCostText, "");
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_SET_TEXT;
             msg.m_codeY = totalID;
@@ -704,7 +707,7 @@ int hillFortWindowHandler(message& msg)
 
         default:
             g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
-            msg.m_extraText = g_emptyRolloverText;
+            msg.m_extraText = "";
             break;
         }
 

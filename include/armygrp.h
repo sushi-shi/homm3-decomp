@@ -1,13 +1,14 @@
 #ifndef HOMM3_ARMYGRP_H
 #define HOMM3_ARMYGRP_H
 
-#include <va.h>
-#include "abstractfile.h"
+#include "va.h"
 
+#include "abstractfile.h"
 #include "artifact_type.h"
-#include "terrain_type.h"  // TTerrainType, for akNativeTerrains below
-#include "struct.h"    // type_point, used through this header's consumers
-#include "spellschool.h"  // TSpellSchool, the type of SSpellTraits::school
+#include "creature_flags.h"
+#include "spellschool.h"
+#include "struct.h"
+#include "terrain_type.h"
 
 namespace std {
 template<class T> class allocator;
@@ -21,6 +22,9 @@ template<class E, class Tr, class A> class basic_string;
 // TCreatureType; retail compares slots against -1.)
 enum TCreatureType {
     CREATURE_NONE = -1,
+    // Original TCreatureType::Pikeman, ordinal zero; GetBaseCreature
+    // returns this value on its out-of-range dwelling arm.
+    CREATURE_PIKEMAN = 0,
     // The two griffins, byte-proven by ai_tactical's
     // get_counterstroke_value (0x439e80): it doubles the counterstrike
     // multiplier for 4 and refuses the spell outright for 5, which is
@@ -594,7 +598,7 @@ SIZE(SSpellTraits, 136);
 // The 81-entry count is now retail-proven: spelldefs constructs 81 strings
 // and writes the contiguous 136-byte backing rows at 0x685450, whose exact
 // end is this pointer cell (0x685450 + 81*136 == 0x687f58).
-DATA(0x00687f58) extern const SSpellTraits (&g_spellTraits)[81];
+extern const SSpellTraits (&g_spellTraits)[81];
 
 unsigned char spellTargetsASingleArmy(int spell, int sslevel);
 
@@ -689,7 +693,7 @@ const unsigned int g_ctaAlive = 0x10;
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
 // akCreatureTypeTraits (a const reference to the 150-entry array).
-DATA(0x006747b0) extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
+extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
 
 // Creature-card background image by town alignment (CrBkgCas.pcx first,
 // CrBkgEle.pcx last). Retail indexes this biased base with -1 for the
@@ -702,22 +706,12 @@ DATA(0x006747b0) extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
 // initialize_game_data from 100.00% to 96.09% - the include-set class,
 // measured, with no semantic change anywhere. armygrp.cpp and
 // viewarmywindow.cpp are the two TUs that define the macro.
-DATA(0x00682910) extern const char* g_creatureBackgrounds[9];
+extern const char* g_creatureBackgrounds[9];
 
 // Army-size name tables (BSS at 0x6a5bb8, runtime-filled from game
 // text): nine threshold bands x three name sets, 12-byte row stride
 // proven by GetArmySizeName's nine reloc targets. The NAME is a
 // bootstrap invention (no Dreamcast/NH3API name survives for these).
-DATA(0x006a5bb8) extern const char* g_apszArmySizeNames[9][3];
-
-// Native terrain by ALIGNMENT (townType order; -1 = none), .rdata:
-// the full table starts one entry earlier at 0x643694 with the -1 row,
-// and retail indexes through this biased base exactly as GetAlignments
-// biases its census by +1 - so alignment -1 (gated elementals) is a
-// legal index. grass, grass, snow, lava, dirt, subterranean, rough,
-// swamp, grass. The NAME is a bootstrap invention (no Dreamcast/NH3API
-// name survives for this table) - replace on evidence.
-DATA(0x00643698) extern const TTerrainType g_nativeTerrains[9];
 
 // GetMorale's two town-building tests were bootstrapped here as
 // separate `unsigned int[2]` mask objects (gTavernMask /
@@ -760,6 +754,8 @@ public:
     int m_numTroops[ARMY_GROUP_SLOT_COUNT];
     void initialize();
     int getAlignments(unsigned char* alignments) const;
+    int getHomogeneityMoraleAdjust() const;
+    void damageGroup(float casualtyRate);
     long getAIValue() const;
     int getCreatureTotal() const;
     int getCreatureTotal(TCreatureType monType) const;

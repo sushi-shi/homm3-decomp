@@ -2,6 +2,7 @@
 #define HOMM3_MOUSEMGR_H
 
 #include <windows.h>
+
 #include "basemgr.h"
 #include "csprite.h"
 

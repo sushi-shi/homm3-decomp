@@ -1,7 +1,7 @@
 # `why-branch` — the control-flow solver (v1)
 
 For the project-wide inventory and controlled reductions, see the
-[goto reconstruction audit](goto-audit.md). Its helper and nested-loop controls
+[goto reconstruction audit](../reconstruction/goto-audit.md). Its helper and nested-loop controls
 show why a matching assembly join alone does not establish an original goto.
 The follow-up also recovers dialog exit flags and switch-arm copies: shared
 source tails can inhibit the compiler merge that ordinary per-arm statements
@@ -31,6 +31,25 @@ allows a positive gate guard and `else` to remove two jumps at 100%.
 `isWinner` restores its `army::is` calls and first-scan result, eliminating
 three jumps while retaining all 188 bytes. A failed direct-return probe alone
 had missed both forms.
+
+The adventure network dispatcher gives a nested-inlining control. Its
+`RS_TRADE_REQUEST` arm comes from ordinary `HandleTradeRequestMsg`
+(DC `advmgr.cpp:713`, `0x6428`), containing two hero assignments and `HeroSwap`.
+Restoring only that helper while leaving the visibility arms flattened made
+VC6 expand nested hero copies and lowered the dispatcher to 53.34%. Restoring
+the visibility arms' canonical `UpdateRadar`, `CompleteDraw`, and `UpdateScreen`
+calls as well reproduced all 61 retail CFG blocks and 100% of the dispatcher.
+The final source has ordinary helper calls and no former inline-depth pins.
+The neighboring gift handlers also needed their identities corrected:
+`0x406a20` is `HandleGiftRequestMsg`; virtual `0x406bf0` is `HandleGiftMsg`.
+Byte equality under an incorrect name had concealed the source mismatch.
+
+The selection-window condition-text helper gives a value-lifetime control.
+Restoring `GetVCText` alone lowered `DrawBasicMapInfo` to 94.872%; retail
+preserves the condition type and selected description across `strcpy`.
+Keeping those values in the canonical helper restored 100%. Retain that
+retail-supported cache when comparing helper boundaries; the flattened caller
+had hidden the original value lifetime.
 
 A common failure action can also have an ordinary breakable scope.
 `NewfullMap::load` keeps 56.7217% with two `break`s from one `do/while(0)`
@@ -1015,3 +1034,16 @@ caller/`StopCursor` experiment produces two reproduced objects. Restoring
 `GetCurrHero` inside `StopCursor` is byte-flat but preserves its independent
 source attribution. The exact generic accessor and other callers did not
 establish which accessor this function originally used.
+
+### Integer text payloads and helper expansion
+
+`TBuyBuildWindow::SetRolloverText` (DC `0x179900`, line 7504) sends
+`g_text` through the integer fourth argument of `BroadcastMessage`; retail
+`windowHandler` (`0x5d6810`) expands that operation and pushes the same text
+address. Constructing a `message` merely to read back its integer union member
+adds a source-false lifetime and its initialization changes VC6's inline
+decision. With that temporary, the caller scored 29.185184%; the recovered
+direct `reinterpret_cast<int>(g_text)` makes the caller 100%. The owning ABI
+is 32-bit, so this is an explicit admission of one necessary integer-carrier
+cast in the cleanliness baseline. Do not introduce a wrapper or a temporary
+object to conceal that conversion from the source-quality metric.

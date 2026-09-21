@@ -1,17 +1,13 @@
 // 7 functions in link order.
-#include <va.h>
+#include "va.h"
+
 #include "csequence.h"
 
-#if 0  // @carcass: no distinct retail body located
-
-// E:\gamedcs\csequence.cpp:32
-DC_ONLY(0x71f14, 0xC)
-void CSequence::CSequence()
+// Original: CSequence::CSequence; csequence.cpp:32, dc 0x71f14.
+CSequence::CSequence()
+    : m_numFrames(0), m_allocatedFrames(0), m_f(0)
 {
-    // @stub
 }
-
-#endif  // @carcass
 
 VA(0x0047b840, 0x44)  // dc 0x71f20
 CSequence::CSequence(int num)
@@ -19,8 +15,7 @@ CSequence::CSequence(int num)
     m_numFrames = 0;
     m_allocatedFrames = num;
     m_f = new CSpriteFrame*[num];
-    for (int i = 0; i < num; ++i)
-        m_f[i] = 0;
+    MEMSET_LOCAL(m_f, 0, num * sizeof(m_f[0]), num, i);
 }
 
 VA(0x0047b890, 0x0F)  // dc 0x71f60
@@ -30,30 +25,40 @@ CSequence::~CSequence()
         delete[] m_f;
 }
 
-#if 0  // @carcass: overloads inlined or absent from retail
-
-// E:\gamedcs\csequence.cpp:68
-DC_ONLY(0x71f78, 0x4E)
+// Original: CSequence::AddFrame; csequence.cpp:68, dc 0x71f78.
 int CSequence::addFrame(const char* name)
 {
-    // @stub
+    if (m_numFrames < m_allocatedFrames) {
+        m_f[m_numFrames++] = new CSpriteFrame(name, 0);
+        return m_numFrames;
+    }
+    return 0;
 }
 
-// E:\gamedcs\csequence.cpp:79
-DC_ONLY(0x71fc8, 0x72)
-int CSequence::addFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding)
+// Original: CSequence::AddFrame; csequence.cpp:79, dc 0x71fc8.
+int CSequence::addFrame(const char* name, int w, int h, unsigned char* data,
+                        int csize, TEncodingMethod encoding)
 {
-    // @stub
+    if (m_numFrames < m_allocatedFrames) {
+        m_f[m_numFrames++] = new CSpriteFrame(name, w, h, data, csize, encoding);
+        return m_numFrames;
+    }
+    return 0;
 }
 
-// E:\gamedcs\csequence.cpp:91
-DC_ONLY(0x7203c, 0x8A)
-int CSequence::addFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding, int m_croppedWidth, int m_croppedHeight, int m_croppedX, int m_croppedY)
+// Original: CSequence::AddFrame; csequence.cpp:91, dc 0x7203c.
+int CSequence::addFrame(const char* name, int w, int h, unsigned char* data,
+                        int csize, TEncodingMethod encoding,
+                        int croppedWidth, int croppedHeight, int croppedX, int croppedY)
 {
-    // @stub
+    if (m_numFrames < m_allocatedFrames) {
+        m_f[m_numFrames++] = new CSpriteFrame(name, w, h, data, csize, encoding,
+                                             croppedWidth, croppedHeight,
+                                             croppedX, croppedY);
+        return m_numFrames;
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 VA(0x0047b8a0, 0x26)  // dc 0x720c8
 int CSequence::addFrame(CSpriteFrame* frame)

@@ -1,16 +1,34 @@
-#include "terrain.h"
-#include <va.h>
+#include "va.h"
+#include "text.h"
+
 #include <stdio.h>
 #include <string.h>
-#include "advmgr.h"
+
 #include "castle.h"
+
+#include "advmgr.h"
 #include "game.h"
 #include "kb.h"
-#include "townmgr.h"
-#include "textresource.h"
 #include "message.h"
+#include "terrain.h"
+#include "textresource.h"
+#include "townmgr.h"
 #include "widget.h"
 #include "winmgr.h"
+
+// Retail table initializers, in the layouts used by their named consumers.
+DATA(0x0066cf98) const unsigned char g_townSpecStructScreen[9][18] = {
+    { 30, 31, 32, 33, 34, 35, 36, 0, 5, 6, 14, 7, 10, 16, 18, 21, 0, 0 },
+    { 30, 31, 32, 33, 34, 35, 36, 0, 5, 14, 7, 10, 16, 18, 24, 22, 17, 0 },
+    { 30, 31, 32, 33, 34, 35, 36, 0, 5, 22, 14, 7, 10, 16, 18, 21, 23, 17 },
+    { 30, 31, 32, 33, 34, 35, 36, 0, 5, 14, 7, 10, 16, 18, 21, 22, 23, 24 },
+    { 30, 31, 32, 33, 34, 35, 36, 0, 5, 6, 14, 7, 10, 16, 18, 21, 22, 17 },
+    { 30, 31, 32, 33, 34, 35, 36, 0, 5, 14, 7, 10, 16, 18, 17, 21, 22, 23 },
+    { 30, 31, 32, 33, 34, 35, 36, 0, 5, 14, 7, 10, 16, 18, 21, 22, 23, 17 },
+    { 30, 31, 32, 33, 34, 35, 36, 0, 5, 6, 14, 7, 10, 16, 18, 21, 17, 0 },
+    { 30, 31, 32, 33, 34, 35, 36, 0, 5, 6, 14, 7, 10, 16, 18, 17, 21, 0 }
+};
+DATA(0x0066d03c) const unsigned char g_numOfTownSpecStrScreen[9] = { 16, 17, 18, 18, 18, 18, 18, 17, 17 };
 
 // File-local working state used by the hall page. All later references in
 // this function are relocations to these two bases plus source-array
@@ -22,8 +40,7 @@ static unsigned char g_castleBuildOrder[18];
 
 // Dreamcast public `cHallInfo`; Complete extends the same hall-page text
 // roster through the Conflux-era cases while retaining ten pointer slots.
-DATA(0x006a7428)
-const char* g_hallInfo[10];
+// Storage is owned by text.cpp, whose InitializeHallText fills the table.
 
 // Both the rollover and right-click arms map the resource-display widget
 // bands through this shared retail table before indexing the two columns of
@@ -36,12 +53,12 @@ const char* getBuildingName(int townType, int buildingId)
 {
     if (buildingId < BUILDING_ID_TOWN_FIRST) {
         if (buildingId == BUILDING_ID_DWELLING)
-            return g_buildingNamesDwelling[townType * 11];
-        return g_buildingNamesCommon[buildingId];
+            return g_specialBuildingNames[townType][10];
+        return g_neutralBuildingNames[buildingId];
     }
     if (buildingId < BUILDING_ID_UPGRADE_FIRST)
-        return g_buildingNamesTown[townType * 11 + buildingId];
-    return g_buildingNamesUpgrade[buildingId + townType * 14];
+        return g_specialBuildingNames[townType][buildingId - 17];
+    return g_dwellingNames[townType][buildingId - 30];
 }
 
 VA(0x00461130, 0x5C)  // dc 0x5c228

@@ -1,11 +1,12 @@
 #ifndef HOMM3_REMOTE_H
 #define HOMM3_REMOTE_H
 
-#include "dxplay.h"
 #include <deque>
+
+#include "dxplay.h"
+#include "inputmgr.h"
 #include "textntry.h"
 #include "window.h"
-#include "inputmgr.h"
 
 class CNetMsg;
 class CNetMsgHandler;
@@ -44,7 +45,7 @@ public:
 };
 SIZE(CHotSeatMan, 0xac);
 
-DATA(0x0069ca50) extern CHotSeatMan* g_hotSeatMan;
+extern CHotSeatMan* g_hotSeatMan;
 
 // DC publishes this exact 351-byte record and the cdecl varargs Log
 // signature.  Retail's global at 0x69d648 and its pushed-this call sites
@@ -56,8 +57,12 @@ public:
     {
         strcpy(m_logFileName, logFileName);
     }
-    void initLogFile();
-    void log(char* format, ...);
+    // Original: CLogFile::InitLogFile; remote.h:235, dc 0xe709c.
+    // Both release builds keep the logging hooks empty. Complete's calls
+    // share the no-argument ret representative at 0x5bc690.
+    void initLogFile() {}
+    // Original: CLogFile::Log; remote.h:249, dc 0x70ac4.
+    void log(char* format, ...) {}
 
 protected:
     char m_logFileName[351];
@@ -103,10 +108,13 @@ public:
     void setNetMsgHandler(CNetMsgHandler* netMsgHandler);
     CNetMsgHandler* getNetMsgHandler();
     void handlePlayerDrop(unsigned long dpid);
+    void handleHostXFer();
+    void handleNewPlayer(unsigned long dpid, char* name, void* data, unsigned long size);
 
 protected:
     void queueMsg(CNetMsg* netMsg);
     CNetMsg* compressMsg(CNetMsg* netMsg);
+    CNetMsg* uncompressMsg(CNetMsg* netMsg);
     unsigned char handleLowLevelMsg(CNetMsg* netMsg);
 
 public:
@@ -126,20 +134,22 @@ protected:
 SIZE(CDPlayHeroes, 0xf4);
 
 extern CDPlayHeroes* g_dPlay;
-extern unsigned char g_dPlayReady;
+extern bool g_lobbyLaunched;
 extern bool g_mPlayer;
 extern bool g_mPlayerHost;
 extern char g_tcpAddress[21];
 
 extern "C" const GUID guidHeroes3;
 
-extern unsigned char g_unk69774c;
+extern bool g_inCampaign;
 
 // Retail's chat methods independently prove every offset used here; the
 // Dreamcast CodeView field list supplies the source names and the 0x88-byte
 // nested record extent.
 class CChatManager {
 public:
+    CChatManager(int maxChatLines);
+    ~CChatManager();
     class CChatStr {
     public:
         char m_text[128];
@@ -203,7 +213,7 @@ public:
     // The sample pointer at +0x30 requires these three alignment bytes.
     char m_paddingBeforeChatSample[3];
 
-    void updateWidget(textWidget* widget, unsigned char killOld, int numLines);
+    void updateWidget(textWidget* widget, bool killOld, int numLines);
     void pauseTimeOuts();
     void resumeTimeOuts();
     void clearChat();
@@ -215,6 +225,7 @@ public:
     void setMaxLines(int maxChatLines);
     bool chatChanged() { return m_changed || m_chatKilled; }
     unsigned char hasOldChat();
+    unsigned char hasChat();
 
 protected:
     sample* m_chatSample;  // +0x30
@@ -228,12 +239,13 @@ protected:
     int getNextFreeMsgNbr();
     int getNextMsgNbr(int msgNbr);
     void killOldChat();
+    void updateNewChat();
     void updateWidgetText(int numLines, textWidget* widget);
 };
 SIZE(CChatManager::CChatStr, 0x88);
 SIZE(CChatManager, 0x44);
 
-DATA(0x0069d7b0) extern CChatManager g_chatMan;
+extern CChatManager g_chatMan;
 
 enum ENetMessageRecipient {
     NET_MESSAGE_RECIPIENT_ALL = 0x7f
@@ -252,7 +264,6 @@ public:
               font::EJustify justification,
               char* backgroundIcon, int backgroundFrame, int id, int style,
               int readType, int insetX, int insetY);
-    virtual ~CChatEdit();
     virtual int onKeyPress(message* msg);  // slot 15
     virtual unsigned char ignoreKey(message* msg);  // slot 16
     virtual void updateScreen();  // slot 19
@@ -343,6 +354,8 @@ inline void CGameChatEdit::activate()
 // +0/+4/+8/+c/+10; Dreamcast CodeView supplies their source names.
 class CTurnDuration {
 public:
+    CTurnDuration();
+    void addTime(unsigned long howMuch);
     unsigned char isOn();
     unsigned char isExpired();
     unsigned char isClose(unsigned long howClose);
@@ -363,14 +376,14 @@ protected:
 };
 SIZE(CTurnDuration, 0x14);
 
-extern CTurnDuration g_turnDuration69d630;
+extern CTurnDuration g_turnDuration;
 
 // Retail .bss pair right behind gUnnamed69d808's pointer cell, written
 // together by advManager::StartLocalPlayerTurn (the acting player's game
 // position and an armed byte) and read back by CAdvMgrNetMsgHandler::
 // HandleNetMsg. The band 0x552e00..0x556900 that owns their siblings is
 // unclaimed, so the names stay ordinal and the DATA claims wait for it.
-extern int g_unnamed69d810;
+extern int g_playerTurn;
 extern unsigned char g_weMoved;
 
 // Retail's constructor/destructor pair stores and tests only this byte;
@@ -491,7 +504,7 @@ public:
 };
 SIZE(CNetMsgHandlerPause, 0x10);
 
-// Adventure-map network dispatch. Retail's trade handler reads the inherited
+// Adventure-map network dispatch. Retail's gift handler reads the inherited
 // m_inPopup byte through IsInPopup; the DC roster supplies the class and
 // method names but no additional data members.
 class CAdvMgrNetMsgHandler : public CNetMsgHandler {
@@ -510,6 +523,7 @@ void handlePlayerWon(CNetMsg* netMsg);
 void handlePlayerLost(CNetMsg* netMsg);
 void handleNormalWinMsg(CNetMsg* netMsg);
 
+unsigned char getQueueSize(int toWho, unsigned long& numMsgs, unsigned long& queueSize);
 void receiveChat(char* chat, int fromWho);
 void handlePlayerDrop(unsigned long dpid);
 
@@ -534,15 +548,15 @@ unsigned char lobbyLaunchConnect();
 // Dreamcast names this network-launch state directly; retail oldmain tests
 // it only while handling the missing-CD startup result.
 extern int g_tcpHostStatus;
-unsigned char testIfLobbyLaunched();
+bool testIfLobbyLaunched();
 // Dreamcast publishes the owning remote.obj buffer and Complete's tutorial
 // setup copies its selected filename here before loading the map header.
 extern char g_mapName[260];
 
-// Retail .data 0x69954c. make_gift only uses it as the gate for sending
-// a gift/request message to a non-local human; wider role unattested.
-extern int g_networkActive69954c;
-extern int g_unnamed6994e4;
+// Retail 0x69954c: enabled by network initialization, cleared on shutdown;
+// gates message transmission and prevents pausing for window deactivation.
+extern int g_remoteOn;
+extern int g_mpBaseType;
 
 void destroyMsg(CNetMsg* netMsg);
 void handlePlayerDrop(unsigned long dpid);

@@ -26,9 +26,17 @@ inline int min(int left, int right)
     return cppMin(left, right);
 }
 
+// Original: min; includes.h:117, dc 0x4c9c0.
+inline double min(double left, double right)
+{
+    return cppMin(left, right);
+}
+
 // E:\gamedcs\includes.h:124, dc 0x20d2c. CodeView types all three
-// parameters and the return as const references. Retail expands this helper
-// through the by-value limit wrapper in the adventure and small-window TUs.
+// parameters and the return as const references. The retained retail body and
+// ordinary limit expansions use maximum < value for the upper clamp. Retail
+// expands this helper through the by-value limit wrapper in the adventure and
+// small-window TUs.
 template <class T>
 inline const T& tLimit(const T& minimum, const T& value,
                        const T& maximum)
@@ -62,7 +70,13 @@ public:
     int m_numbersLeft;
     std::vector<unsigned char> m_available;
     TPickANumber(int lowBound, int high);
+    // Original: TPickANumber::IsAvailable; includes.h:166, dc 0xfe374.
+    unsigned char isAvailable(int number) const
+    {
+        return m_available[number - m_low];
+    }
     int pick();
+    void markOut(int number);
 };
 
 // E:\gamedcs\includes.h:175/178. The written inline constructor

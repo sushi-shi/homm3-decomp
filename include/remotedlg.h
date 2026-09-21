@@ -11,12 +11,12 @@
 #ifndef HOMM3_REMOTEDLG_H
 #define HOMM3_REMOTEDLG_H
 
+#include "armygrp.h"
 #include "bitmap16.h"
 #include "dialogbox.h"
-#include "remote.h"
-#include "armygrp.h"
 #include "hero.h"
 #include "netmsg.h"
+#include "remote.h"
 #include "town.h"
 
 class CSprite;
@@ -25,8 +25,6 @@ class CSprite;
 // forwards its fastcall frame argument to SmackGoto on the current handle;
 // the second decodes that handle's current frame when playback is active.
 // Their wider ownership and original names remain unattested.
-void __fastcall setCurrentSmackFrame(int frame);
-void drawCurrentSmackFrame();
 
 // CNetMsgHandlerPause is defined in remote.h beside its base class.
 
