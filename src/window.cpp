@@ -533,7 +533,7 @@ void heroWindow::deleteWidgets()
         if (*it)
             delete *it;
     }
-    m_widgets.erase(m_widgets.begin(), m_widgets.end());
+    m_widgets.clear();
 }
 
 VA(0x005ff570, 0x32)  // dc 0x197cd4

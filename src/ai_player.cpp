@@ -555,7 +555,7 @@ void type_AI_player::endTurn()
     if (townIndex < player->m_numTowns) {
         while (true) {
             town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
-            if (currentTown->hasBuilding(MARKETPLACE_ID, 1)) {
+            if (currentTown->hasBuilding(MARKETPLACE_ID, true)) {
                 for (short playerId = 0; playerId < 8; playerId++) {
                     if (!g_game->m_playerDisabled[playerId]
                         && playerId != m_team
@@ -1782,8 +1782,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     if (g_game->townAlreadyBuiltOn(currentTown->m_id))
         return;
     if (!g_game->m_setup.m_difficulty
-        && !g_game->isHumanAlly(
-               g_game->getTeam(g_netLocalGamePos)))
+        && !g_game->isHumanAlly(g_netLocalGamePos))
         return;
     short amount;
     const TCreatureTypeTraits* traits;
@@ -2136,7 +2135,7 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // it, and reloads, which frees EDI for shooterCount and cascades into every
 // later binding - the traits address spilling instead of staying live, the
 // checkAlignments byte loaded to BL on retail's side and compared in memory on
-// ours, and the reverse for g_game->m_f1f698. why-reg's model says the value
+// ours, and the reverse for g_game->m_gameVersion. why-reg's model says the value
 // that must move first is `this`, and the front end proves that unreachable:
 // `il-locals` gives isShooter 0xca55, checkAlignments 0xca56, this 0xca58, then
 // shooterCount 0xca5a and the rest, and handle-order.md measures
@@ -2144,7 +2143,7 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // `this` to EDI, which needs shooterCount created first - no declaration order
 // reaches it. Same verdict and same root as get_simple_attack_effect.
 // Byte-flat: `traits.m_townType` for the repeated subscript, and
-// `!g_game->m_f1f698` for the `== 0` test.
+// `!g_game->m_gameVersion` for the `== 0` test.
 VA(0x0042c690, 0x192)  // DC method + retail body/caller; dc 0x31a00
 long type_AI_creature_swapper::chooseWeakestArmy(
     unsigned char isShooter, unsigned char checkAlignments)
@@ -2176,7 +2175,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
         if (checkAlignments) {
             int alignment;
-            if (g_game->m_f1f698 == 0
+            if (g_game->m_gameVersion == 0
                 && isBaseElemental(type)) {
                 alignment = -1;
             } else {
@@ -2239,7 +2238,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     long moraleArmyValue = 0;
 
     int alignment;
-    if (g_game->m_f1f698 == 0
+    if (g_game->m_gameVersion == 0
         && isBaseElemental(type)) {
         alignment = -1;
     } else {
@@ -2256,7 +2255,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
         int minimumMorale;
-        if (g_game->m_f1f698 == 0
+        if (g_game->m_gameVersion == 0
             && isBaseElemental(type)) {
             minimumMorale = 1;
         } else {
@@ -2779,9 +2778,9 @@ static void markDangerZones(const hero* ourHero, hero* enemyHero,
              visitedIndex--;) {
             const type_point& point = g_searchArray->getVisitedCell(visitedIndex)->m_point;
             if (value >= -500000000) {
-                *getDangerCell(dangerZones, point) += value;
+                getDangerCell(dangerZones, point) += value;
             } else {
-                *getDangerCell(dangerZones, point) =
+                getDangerCell(dangerZones, point) =
                     -1000000000;
             }
         }
@@ -3451,7 +3450,7 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
         }
     }
 
-    long value = *getDangerCell(strategicMap, point)
+    long value = getDangerCell(strategicMap, point)
         + currentPathCell->m_barrierValue;
     if (currentPathCell->m_dangerValue <= -500000000 && value >= 1968)
         currentPathCell->m_dangerValue = -2500000;
@@ -3795,7 +3794,7 @@ static unsigned char attemptTeleport(hero* currentHero,
     return 1;
 }
 // E:\gamedcs\ai_player.cpp:4155, dc 0x34a7c.
-static __forceinline void checkGatePurchase(type_point point)
+static inline void checkGatePurchase(type_point point)
 {
     int townId = g_game->getTownId(point.m_x, point.m_y, point.m_z);
     if (townId >= 0) {
@@ -4038,7 +4037,7 @@ void aiBuildShip(const hero* ourHero, long x, long y, long z)
     if (!shipyardTown) {
         if (!getMapShipyard(player, x, y, z))
             return;
-    } else if (!shipyardTown->hasBuilding(DOCK_ID, 1)
+    } else if (!shipyardTown->hasBuilding(DOCK_ID, true)
                && !shipyardTown->buyBuilding(DOCK_ID)) {
         return;
     }
@@ -4063,7 +4062,7 @@ long aiGetShipCost(const hero* ourHero, type_point point)
     if (!shipyardTown) {
         if (!getMapShipyard(player, point.m_x, point.m_y, point.m_z))
             return -200000;
-    } else if (!shipyardTown->hasBuilding(DOCK_ID, 1)) {
+    } else if (!shipyardTown->hasBuilding(DOCK_ID, true)) {
         shipyardTown->getBuildCost(DOCK_ID, cost);
     }
 
@@ -4164,7 +4163,7 @@ bool considerHiring(long playerId, hero* candidate)
         if (currentTown->m_visitingHeroId >= 0)
             continue;
         long value = total;
-        if (!currentTown->hasBuilding(TAVERN_ID, 1)) {
+        if (!currentTown->hasBuilding(TAVERN_ID, true)) {
             if (!currentTown->canBuild(TAVERN_ID))
                 continue;
             if (!canBuy(currentTown, TAVERN_ID))
@@ -4181,7 +4180,7 @@ bool considerHiring(long playerId, hero* candidate)
     if (bestTown == 0)
         return 0;
 
-    if (!bestTown->hasBuilding(TAVERN_ID, 1)) {
+    if (!bestTown->hasBuilding(TAVERN_ID, true)) {
         if (!bestTown->buyBuilding(TAVERN_ID))
             return 0;
         if (player.m_resources[GOLD] < g_heroGoldCost)
@@ -4603,13 +4602,13 @@ long type_creature_growth_artifact::getValue(const hero* owner,
             return 0;
 
         town* currentTown = g_game->getTown(townId);
-        if (!currentTown->hasBuilding(DWELLING_0_ID + m_bonus, 1))
+        if (!currentTown->hasBuilding(DWELLING_0_ID + m_bonus, true))
             return 0;
         if (currentTown->m_garrisonHeroId != owner->m_id)
             return 1;
 
         int dwelling = m_bonus;
-        if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, 1))
+        if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, true))
             dwelling += TOWN_DWELLING_COUNT;
         TCreatureType creature = g_townDwellingCreatures[
             currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling];
@@ -4618,10 +4617,10 @@ long type_creature_growth_artifact::getValue(const hero* owner,
 
     for (int i = 0; i < player.m_numTowns; ++i) {
         town* currentTown = g_game->getTown(player.m_townIds[i]);
-        if (!currentTown->hasBuilding(DWELLING_0_ID + m_bonus, 1))
+        if (!currentTown->hasBuilding(DWELLING_0_ID + m_bonus, true))
             continue;
         int dwelling = m_bonus;
-        if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, 1))
+        if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, true))
             dwelling += TOWN_DWELLING_COUNT;
         TCreatureType creature = g_townDwellingCreatures[
             currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling];
@@ -4667,7 +4666,7 @@ long type_shooter_bonus_artifact::getValue(const hero* owner, unsigned char, uns
     long total = 0;
     for (int i = 0; i < 7; i++) {
         int type = owner->m_army.m_armies[i];
-        if (type != -1 && (g_creatureTypeTraits[type].m_attributes & 0x4))
+        if (type != -1 && (g_creatureTypeTraits[type].m_attributes & creatureShootingArmy))
             total += g_creatureTypeTraits[type].m_aiValue * owner->m_army.m_numTroops[i];
     }
     return m_bonus * total / 100;
@@ -4690,7 +4689,7 @@ long type_angelic_alliance_artifact::getValue(
             int creature = currentHero->m_army.m_armies[heroSlot];
             if (creature == CREATURE_NONE)
                 continue;
-            if (g_game->m_f1f698 == 0
+            if (g_game->m_gameVersion == 0
                 && isBaseElemental(creature)) {
                 continue;
             }
@@ -4712,7 +4711,7 @@ long type_angelic_alliance_artifact::getValue(
             int creature = townArmy.m_armies[townSlot];
             if (creature == CREATURE_NONE)
                 continue;
-            if (g_game->m_f1f698 == 0
+            if (g_game->m_gameVersion == 0
                 && isBaseElemental(creature)) {
                 continue;
             }
@@ -4804,7 +4803,7 @@ long type_elixir_of_life_artifact::getValue(const hero* owner, unsigned char, un
     long total = 0;
     for (int i = 0; i < 7; i++) {
         int type = owner->m_army.m_armies[i];
-        if (type != -1 && (g_creatureTypeTraits[type].m_attributes & 0x10))
+        if (type != -1 && (g_creatureTypeTraits[type].m_attributes & creatureAlive))
             total += g_creatureTypeTraits[type].m_aiValue * owner->m_army.m_numTroops[i];
     }
     return total / 8;

@@ -210,7 +210,7 @@ unsigned char combatManager::aiCheckRetreat()
         if (numTowns > 0) {
             { for (; i < numTowns; i++) {
                     town* currentTown = g_game->getTown(player->m_townIds[i]);
-                    if (currentTown->hasBuilding(TAVERN_ID, 1)) {
+                    if (currentTown->hasBuilding(TAVERN_ID, true)) {
                         count++;
                         if (m_defendingTown == currentTown)
                             besiegedTownOnly = 1;
@@ -221,7 +221,7 @@ unsigned char combatManager::aiCheckRetreat()
                 && (count != 1 || sideFV != 1 || !besiegedTownOnly)
                 && (!m_defendingTown || sideFV != 1
                     || (m_defendingTown->m_type == TOWN_STRONGHOLD
-                        && m_defendingTown->hasBuilding(SPECIAL_BUILDING_ID, 1)))) {
+                        && m_defendingTown->hasBuilding(SPECIAL_BUILDING_ID, true)))) {
                 if (failedSiege())
                     return 1;
 
@@ -1584,20 +1584,15 @@ unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estim
     return 1;
 }
 
-// SPELL ID 0x0d IS SPELLED AS A LITERAL ON PURPOSE: the roster lives in
-// armygrp.h, which another lane owns this session. It wants
-// `SPELL_FIRE_WALL = 0xd` and this call should read it - flagged for
-// the next armygrp change rather than reached across for.
-
 VA(0x004214f0, 0x94)  // dc 0x26600
 void combatManager::markFirewalls(const army* currentArmy, long* enemyAttacks, type_AI_combat_parameters* estimate)
 {
     for (long i = 0; i < 187; i++) {
-        if ((m_cells[i].m_attributes & 0x10) == 0)
+        if ((m_cells[i].m_attributes & hexcell::fireWall) == 0)
             continue;
         TObstacle* obstacle = &getObstacle(m_cells[i].m_obstacleIndex);
         long base = obstacle->m_spellDamage;
-        long damage = modifySpellDamage(base, 0xd,
+        long damage = modifySpellDamage(base, SPELL_FIRE_WALL,
                                         m_heroes[obstacle->m_owner],
                                         m_heroes[estimate->m_ourGroup],
                                         currentArmy, 0);
@@ -1658,15 +1653,6 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 // cmbtmgr.h's InCastle / combatManager::IsInMoat.
 
 // Things worth knowing about the transcription:
-//   * `budget` is spelled as an assignment from itself rather than an
-//     `if (...) budget = 0;` because retail SELECTS into EAX (`xor eax,
-//     eax` / `mov eax,[ebp-0x30]`) ahead of the teleport branch instead
-//     of storing zero into the slot.
-//   * the disabled-stack predicate is spelled out three fields at a
-//     time everywhere it appears. army::IsIncapacitated is pinned
-//     `auto_inline(off)` in this TU to protect find_move_order's single
-//     retail call, so reaching for it here would emit a CALL where
-//     retail has the fields.
 //   * the two `field_3c = 6` exits store in DIFFERENT orders - the
 //     teleport one writes 3c/40/44, the commit one 40/3c/44. Both are
 //     transcribed as retail has them.
@@ -1705,7 +1691,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     memset(enemyAttacks, 0, sizeof(enemyAttacks));
 
     markFirewalls(currentArmy, enemyAttacks, estimate);
-    if (g_game->m_f1f698 >= 2)
+    if (g_game->m_gameVersion >= 2)
         markMoat(currentArmy, enemyAttacks, estimate);
     if (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[ourGroup])
         markEnemyAttacks(currentArmy, enemyAttacks, &markedEnemies,

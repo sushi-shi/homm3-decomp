@@ -21,7 +21,7 @@ __declspec(nothrow) void __cdecl operator delete(void* value);
 // dossier proves its double parameter and sole named local, const unsigned long
 // magic; reusing d's representation is what gives retail its shared qword home.
 // DC bitmap24.cpp:40 initializes magic, line 42 updates d, and line 43 reads
-// its low word. Removing the unsupported __forceinline attribute produces
+// its low word. Removing the unsupported forced-inline attribute produces
 // the same code object: AdjustHSV stays 95.7470% and all seven exact siblings
 // hold. The ordinary static helper expands naturally through HSVToRGB.
 // Original: ftol; bitmap24.cpp:39, dc 0x525b4

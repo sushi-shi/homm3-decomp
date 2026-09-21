@@ -93,7 +93,7 @@ std::string joinTextList(const std::vector<std::string>& items)
     for (int i = 0; i < items.size(); ++i) {
         if (i > 0) {
             if (i == items.size() - 1)
-                result += g_generalText->getText(142);
+                result += g_generalText->getText(GENERAL_TEXT_LIST_AND);
             else
                 result += DATA_COMPGEN(0x0066032c, seerHutListSeparator, ", ");
         }

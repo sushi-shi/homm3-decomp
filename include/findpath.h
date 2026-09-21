@@ -143,9 +143,10 @@ public:
                       unsigned char seedContinuation);
     int buildPath(const hero* currentHero, long limit);
 
+    // E:\gamedcs\FindPath.h:211-213, dc 0x200e8: vector::clear.
     void clearPath()
     {
-        m_result.erase(m_result.begin(), m_result.end());
+        m_result.clear();
     }
     // Dreamcast FindPath.h:216/226. Both const header helpers retain public
     // SH4 copies, while Complete expands build_path's calls into the result
@@ -289,10 +290,11 @@ private:
     long* m_dangerZones;
 };
 
-// E:\gamedcs\FindPath.h:265, dc 0x37e98
-inline long* getDangerCell(long* dangerZones, type_point point)
+// Original: get_danger_cell; E:\gamedcs\FindPath.h:265, dc 0x37e98.
+// CodeView proves a long& result referring to the existing map element.
+inline long& getDangerCell(long* dangerZones, type_point point)
 {
-    return &dangerZones[(point.m_z * g_mapHeight + point.m_y) * g_mapWidth + point.m_x];
+    return dangerZones[(point.m_z * g_mapHeight + point.m_y) * g_mapWidth + point.m_x];
 }
 
 // E:\gamedcs\FindPath.h:270, dc 0x37eec
@@ -301,7 +303,7 @@ inline long searchArray::getDangerValue(type_point point) const
 {
     if (!m_dangerZones)
         return 0;
-    return *getDangerCell(m_dangerZones, point);
+    return getDangerCell(m_dangerZones, point);
 }
 
 // Retail .rdata 0x63bd18, nine dwords indexed by town::type:

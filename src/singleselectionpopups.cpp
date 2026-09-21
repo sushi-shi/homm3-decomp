@@ -474,16 +474,16 @@ const char* getStartingResourceName(int town)
 {
     switch (town) {
     case TOWN_RAMPART:
-        return g_generalText->getText(693);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_RAMPART_CAPTION);
     case TOWN_TOWER:
-        return g_generalText->getText(694);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_TOWER_CAPTION);
     case TOWN_INFERNO:
     case TOWN_CONFLUX:
-        return g_generalText->getText(695);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_INFERNO_CAPTION);
     case TOWN_DUNGEON:
-        return g_generalText->getText(696);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_CAPTION);
     default:
-        return g_generalText->getText(90);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_CAPTION);
     }
 }
 
@@ -492,16 +492,16 @@ const char* getStartingResourceDescription(int town)
 {
     switch (town) {
     case TOWN_RAMPART:
-        return g_generalText->getText(689);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_RAMPART_DESCRIPTION);
     case TOWN_TOWER:
-        return g_generalText->getText(690);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_TOWER_DESCRIPTION);
     case TOWN_INFERNO:
     case TOWN_CONFLUX:
-        return g_generalText->getText(691);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_INFERNO_DESCRIPTION);
     case TOWN_DUNGEON:
-        return g_generalText->getText(692);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_DESCRIPTION);
     default:
-        return g_generalText->getText(94);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_DESCRIPTION);
     }
 }
 
@@ -540,7 +540,7 @@ TRandomMapProgress::TRandomMapProgress(int totalSteps)
     for (unsigned int i = 0; i < m_widgets.size(); i++)
         m_window->addWidget(m_widgets[i], -1);
     g_windowManager->addWindow(m_window, -1, 1);
-    loadProgFn00577180();
+    updateProgressBar();
     g_windowManager->updateScreen(0, 0, 800, 600);
 }
 
@@ -559,7 +559,7 @@ TRandomMapProgress::~TRandomMapProgress()
 }
 
 VA(0x00577180, 0x17F)
-void TRandomMapProgress::loadProgFn00577180()
+void TRandomMapProgress::updateProgressBar()
 {
     if (!m_barSprite)
         return;
@@ -600,14 +600,7 @@ VA(0x00577300, 0x12)
 void TRandomMapProgress::setTotal(int totalSteps)
 {
     m_steps = totalSteps;
-    loadProgFn00577180();
-}
-
-VA(0x00577320, 0x31)
-void TRandomMapProgress::advance(int amount)
-{
-    m_done = min(m_done + amount, m_steps);
-    loadProgFn00577180();
+    updateProgressBar();
 }
 
 // COMDAT pairing: vector<widget*>::_Ucopy, agreement 0.978. Same caller-set

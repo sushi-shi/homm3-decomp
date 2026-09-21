@@ -150,7 +150,7 @@ int combatManager::viewSpells() const
         return -1;
 
     if (m_onAntiMagicGarrison) {
-        normalDialog(g_generalText->getText(685), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_GARRISON_ADVENTURE_SPELL), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return -1;
     }
@@ -196,7 +196,7 @@ int combatManager::viewSpells() const
 
     int level = g_spellTraits[g_windowManager->m_dialogReturn].m_level;
     if (level > 1 && m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS) {
-        normalDialog(g_generalText->getText(748), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_CURSED_GROUND_HIGH_LEVEL_SPELL), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return -1;
     }
@@ -547,7 +547,7 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
 {
     if (!currentArmy->m_numTroops)
         return 0;
-    if ((m_cells[hex].m_attributes & 8) == 0)
+    if ((m_cells[hex].m_attributes & hexcell::landMine) == 0)
         return 0;
 
     TObstacle* obstacle = &getObstacle(m_cells[hex].m_obstacleIndex);
@@ -596,7 +596,7 @@ unsigned char combatManager::checkFireWall(long hex, army* currentArmy,
 {
     if (!currentArmy->m_numTroops)
         return 0;
-    if ((m_cells[hex].m_attributes & 0x10) == 0)
+    if ((m_cells[hex].m_attributes & hexcell::fireWall) == 0)
         return 0;
 
     TObstacle* obstacle = &getObstacle(m_cells[hex].m_obstacleIndex);
@@ -851,7 +851,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 hex = picker.pick();
             } while (hex >= 0
                      && (inInvisibleColumn(hex)
-                         || (m_cells[hex].m_attributes & 0x3f)
+                         || (m_cells[hex].m_attributes & hexcell::obstacleMask)
                          || m_cells[hex].hasArmy()
                          || m_cells[hex].m_bodiesInHex > 0));
             if (hex < 0)
@@ -878,7 +878,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newQuicksand.m_dispelEffect = 0x3a;
             m_obstacles.push_back(newQuicksand);
             int obstacleSlot = m_obstacles.size() - 1;
-            placeObstacle(&newQuicksand, obstacleSlot, hex, 4);
+            placeObstacle(newQuicksand, obstacleSlot, hex, hexcell::quicksand);
             drawFrame(1, 0, 0, 0, 1, 0);
 
             if (!static_cast<const combatManager*>(this)->isQuickCombat())
@@ -907,7 +907,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 hex = picker.pick();
             } while (hex >= 0
                      && (inInvisibleColumn(hex)
-                         || (m_cells[hex].m_attributes & 0x3f)
+                         || (m_cells[hex].m_attributes & hexcell::obstacleMask)
                          || m_cells[hex].hasArmy()
                          || m_cells[hex].m_bodiesInHex > 0));
             if (hex < 0)
@@ -931,7 +931,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newLandmine.m_dispelEffect = 0x3b;
             m_obstacles.push_back(newLandmine);
             int obstacleSlot = m_obstacles.size() - 1;
-            placeObstacle(&newLandmine, obstacleSlot, hex, 8);
+            placeObstacle(newLandmine, obstacleSlot, hex, hexcell::landMine);
             drawFrame(1, 0, 0, 0, 1, 0);
 
             if (!static_cast<const combatManager*>(this)->isQuickCombat())
@@ -961,7 +961,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         newWall.m_dispelEffect = (mastery >= eMasteryAdvanced) + 0x3c;
         m_obstacles.push_back(newWall);
         int obstacleSlot = m_obstacles.size() - 1;
-        placeObstacle(&newWall, obstacleSlot, targetIndex, 0x22);
+        placeObstacle(newWall, obstacleSlot, targetIndex, hexcell::stoneWall | hexcell::blocked);
         showSpellMessage(isMonsterSpell, spellId, 0);
         break;
     }
@@ -986,7 +986,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newWall.m_dispelEffect = 0x42;
             m_obstacles.push_back(newWall);
             int obstacleSlot = m_obstacles.size() - 1;
-            placeObstacle(&newWall, obstacleSlot, hex, 0x10);
+            placeObstacle(newWall, obstacleSlot, hex, hexcell::fireWall);
             drawFrame(1, 0, 0, 0, 1, 0);
         }
         showSpellMessage(isMonsterSpell, spellId, 0);
@@ -1379,7 +1379,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             for (TObstacle* obstacle = m_obstacles.begin();
                  obstacle != m_obstacles.end(); ++obstacle) {
                 if (obstacle->m_sprite
-                    && (m_cells[obstacle->m_hex].m_attributes & 0x3c)) {
+                    && (m_cells[obstacle->m_hex].m_attributes & hexcell::magicObstacleMask)) {
                     removeObstacle(obstacle - m_obstacles.begin());
                     if (obstacle->m_dispelEffect != -1)
                         spellEffect(obstacle->m_dispelEffect, obstacle->m_hex,
@@ -2236,6 +2236,11 @@ static int handleGetTeleportDestination(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
+// DC 2614..2618 has Sacrifice's explicit two arms, then Resurrection
+// (2621), Animate Dead (2625), and the default GetArmy (2629). Preserve
+// both GetArmy source calls rather than merging them into a shared tail.
+// This and a named-result/final-return interpretation both retain 100%
+// for the standalone body; neither alone prevents its caller expansion.
 VA(0x005a3950, 0x68)  // dc 0x152dec
 army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
                                        unsigned char firstTarget,
@@ -2244,19 +2249,38 @@ army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
     if (!validHex(hex))
         return 0;
     switch (spell) {
+    case SPELL_SACRIFICE:
+        if (firstTarget)
+            return findResurrectionTarget(side, hex, creatureSpell);
+        else
+            return m_cells[hex].getArmy();
     case SPELL_RESURRECTION:
         return findResurrectionTarget(side, hex, creatureSpell);
     case SPELL_ANIMATE_DEAD:
         return findAnimateDeadTarget(side, hex);
-    case SPELL_SACRIFICE:
-        if (firstTarget)
-            return findResurrectionTarget(side, hex, creatureSpell);
-        break;
+    default:
+        return m_cells[hex].getArmy();
     }
-    return m_cells[hex].getArmy();
 }
 
 // E:\gamedcs\spells.cpp:2645
+// Current reconstruction supersedes the historical register-only diagnosis
+// below. DC proves ValidSpellTargetArmy, GetSpellWallHex,
+// InInvisibleColumn, HasArmy, GridY and RowIsOdd calls, plus the advanced
+// arm's const unsigned attributes and const unsigned char base_row_is_odd.
+// Restoring these boundaries and removing the finder pin gives 72.67%
+// (old pinned source 88.4937%). The finder remains 100% standalone but
+// expands here; this is unfinished inline selection, not a solved match.
+// Compound wall guards follow the single DC rows 2712/2745. The mastery
+// switch's successful early returns and advanced-local scope follow
+// 2675..2690; retaining the old inverted exits gives 71.04%.
+// Passive C2 trace reproduces the object: caller cb=575, initial budget
+// 1150; findSpellTarget costs 160 and reaches its first-level test with
+// all 1150 units available. This is not a marginal budget refusal.
+// Eight natural guard/wall-length/shape-selection forms produce four
+// reproduced objects; the conditional shape initializer reaches 72.7004%,
+// but none restores the retained finder call. Keep the helper boundaries
+// while investigating the remaining TU/compiler-state difference.
 // "Could this spell be aimed at this cell", and the body is three
 // independent rules stacked on one shared pair of exits.
 
@@ -2337,87 +2361,51 @@ unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
     if (!validHex(targetIndex))
         return 0;
     if (g_spellTraits[spellId].m_flags & 0x20070) {
-        // Retail CALLS the finder four rows above where our /Ob2 expands
-        // it - the same budget asymmetry cmbtmgr.cpp's mana-drain pair
-        // records, and the same fix.
-#pragma inline_depth(0)
         army* target = findSpellTarget(spellId, castingSide, targetIndex,
                                          firstTarget, creatureSpell);
-#pragma inline_depth()
-        if (target)
-            return spellCastWorkChance(spellId, castingSide, target, 0,
-                                       firstTarget, creatureSpell) > 0.0;
-        return 0;
+        return target && validSpellTargetArmy(spellId, castingSide, target,
+                                              firstTarget, creatureSpell);
     }
     if (g_spellTraits[spellId].m_flags & 0x100) {
         if (m_cells[targetIndex].m_obstacleIndex >= 0) {
             switch (mastery) {
             case eMasteryNone:
             case eMasteryBasic:
-                if (m_cells[targetIndex].m_attributes & 0x3c)
-                    return 0;
+                if (!(m_cells[targetIndex].m_attributes & hexcell::magicObstacleMask))
+                    return 1;
                 break;
-            case eMasteryAdvanced:
-                if (!(m_cells[targetIndex].m_attributes & 0x3c))
-                    break;
-                if (m_cells[targetIndex].m_attributes & 0x10)
-                    break;
-                return 0;
-            case eMasteryExpert:
+            case eMasteryAdvanced: {
+                const unsigned int attributes = m_cells[targetIndex].m_attributes;
+                if (!(attributes & hexcell::magicObstacleMask) || (attributes & hexcell::fireWall))
+                    return 1;
                 break;
-            default:
-                return 0;
             }
-        } else {
-            return 0;
+            case eMasteryExpert:
+                return 1;
+            }
         }
+        return 0;
     } else if (spellId == SPELL_FIRE_WALL) {
         long wallCells = (mastery >= eMasteryAdvanced) + 2;
         for (long i = 0; i < wallCells; i++) {
-            long hex = targetIndex;
-            if (i == WALL_CELL_NEAR) {
-                hex = targetIndex - COMBAT_GRID_ROW_STRIDE;
-                if ((targetIndex / COMBAT_GRID_ROW_STRIDE) & 1) {
-                    if (m_currentSide == 1)
-                        hex--;
-                } else if (m_currentSide == 0) {
-                    hex++;
-                }
-            } else if (i == WALL_CELL_FAR) {
-                hex = targetIndex - 2 * COMBAT_GRID_ROW_STRIDE;
-            }
+            long hex = getSpellWallHex(targetIndex, i, m_currentSide);
             const hexcell* cell = &m_cells[hex];
-            if (!validHex(hex))
-                return 0;
-            if (hex % COMBAT_GRID_ROW_STRIDE == 0)
-                return 0;
-            if (hex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_ROW_STRIDE - 1)
-                return 0;
-            if (cell->m_attributes & 0x3f)
-                return 0;
-            if (cell->m_armySide >= 0)
+            if (!validHex(hex) || inInvisibleColumn(hex)
+                || (cell->m_attributes & hexcell::obstacleMask) || cell->hasArmy())
                 return 0;
         }
     } else if (spellId == SPELL_FORCE_FIELD) {
-        const TObstacleInfo* shape = &s_wallObstacleInfo[0];
-        if (mastery >= eMasteryAdvanced)
-            shape = &s_wallObstacleInfo[1];
-        long oddRow = (targetIndex / COMBAT_GRID_ROW_STRIDE) & 1;
+        const TObstacleInfo* shape = mastery >= eMasteryAdvanced
+            ? &s_wallObstacleInfo[1] : &s_wallObstacleInfo[0];
+        const unsigned char baseRowIsOdd = rowIsOdd(gridY(targetIndex));
         long wallCells = shape->m_extraHexCount;
         for (long i = 0; i < wallCells; i++) {
             long hex = targetIndex + shape->m_extraHexOffsets[i];
-            if (oddRow && !((hex / COMBAT_GRID_ROW_STRIDE) & 1))
+            if (baseRowIsOdd && !rowIsOdd(gridY(hex)))
                 hex--;
             const hexcell* cell = &m_cells[hex];
-            if (!validHex(hex))
-                return 0;
-            if (hex % COMBAT_GRID_ROW_STRIDE == 0)
-                return 0;
-            if (hex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_ROW_STRIDE - 1)
-                return 0;
-            if (cell->m_attributes & 0x3f)
-                return 0;
-            if (cell->m_armySide >= 0)
+            if (!validHex(hex) || inInvisibleColumn(hex)
+                || (cell->m_attributes & hexcell::obstacleMask) || cell->hasArmy())
                 return 0;
         }
     }
@@ -2455,7 +2443,7 @@ army* combatManager::findResurrectionTarget(int side, int hex,
             return target;
         return 0;
     }
-    if (cell->m_attributes & 2)
+    if (cell->m_attributes & hexcell::blocked)
         return 0;
     int i = cell->m_bodiesInHex - 1;
     if (i < 0)
@@ -2470,13 +2458,13 @@ army* combatManager::findResurrectionTarget(int side, int hex,
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
                 continue;
-            if (m_cells[hex + 1].m_attributes & 2)
+            if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
             if (m_cells[hex - 1].m_armySide >= 0)
                 continue;
-            if (m_cells[hex - 1].m_attributes & 2)
+            if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (spellCastWorkChance(SPELL_RESURRECTION, side, corpse, 0, 1,
@@ -2496,7 +2484,7 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
     if (!validHex(hex))
         return 0;
     hexcell* cell = &m_cells[hex];
-    if (cell->m_attributes & 2)
+    if (cell->m_attributes & hexcell::blocked)
         return 0;
     if (cell->m_armySide >= 0)
         return 0;
@@ -2510,13 +2498,13 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
                 continue;
-            if (m_cells[hex + 1].m_attributes & 2)
+            if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
             if (m_cells[hex - 1].m_armySide >= 0)
                 continue;
-            if (m_cells[hex - 1].m_attributes & 2)
+            if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
         }
         return &m_armies[deadSide][deadSlot];
@@ -2543,7 +2531,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
             return target;
         return 0;
     }
-    if (cell->m_attributes & 2)
+    if (cell->m_attributes & hexcell::blocked)
         return 0;
     int i = cell->m_bodiesInHex - 1;
     if (i < 0)
@@ -2558,13 +2546,13 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
                 continue;
-            if (m_cells[hex + 1].m_attributes & 2)
+            if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
             if (m_cells[hex - 1].m_armySide >= 0)
                 continue;
-            if (m_cells[hex - 1].m_attributes & 2)
+            if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (spellCastWorkChance(SPELL_ANIMATE_DEAD, side, corpse, 0, 1, 0)
@@ -2913,9 +2901,10 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
 // 556-pixel clip is retail's own inconsistency; transcribed.
 
 // DC also preserves the original helper boundaries: ClearEffects,
-// SpellCastWorks, CSprite::DrawSpellEffect and TTextResource::operator[].
-// VC6 expands each one here. SpellCastWorks has no recorded local and one
-// body row, so its direct return expression is retained; the earlier named
+// SpellCastWorks and CSprite::DrawSpellEffect. Its text subscripts forward
+// to the getText accessor used here. VC6 expands these helpers. SpellCastWorks
+// has no recorded local and one body row, so its direct return expression is
+// retained; the earlier named
 // `chance` changed this caller's allocation even though the helper itself was
 // byte-flat. The tile coordinates are the DC const locals `dy` and `sh`,
 // derived from the loop indices rather than maintained as running counters.
@@ -3061,7 +3050,7 @@ void combatManager::armageddon(int level, int power)
         && !static_cast<const combatManager*>(this)->isQuickCombat()) {
         long totalDamage = computeSpellDamage(
             SPELL_ARMAGEDDON, power, level, 0, 0, 0, 0);
-        sprintf(g_text, (*g_generalText)[89], totalDamage);
+        sprintf(g_text, g_generalText->getText(89), totalDamage);
         m_combatWindow->combatMessage(g_text, 1, 0);
     }
     checkRebirth();
@@ -4899,11 +4888,10 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
 // still what the source says, and the load has to be at the default
 // label rather than ahead of the switch for the bytes to come out.
 
-// THE /Ob2 CALL-VS-INLINE ASYMMETRY IS SPELLED PER SITE, AGAIN. The
-// TARGET's name is a CALL to army::GetName; the CASTING stack's name, in
-// the creature arm's default, is EXPANDED. Same two source lines, one
-// written as army::GetName and one as this file's CreatureName - the
-// third instance of the lever in this TU.
+// DC spells.cpp:5824/5825 calls get_current_army and army::GetName for
+// the caster, just as 5754 calls GetName for the target. Keep both canonical
+// boundaries and the text-resource getters. Restoring these source calls
+// is byte-flat at 98.7602%; their retail expansion decisions belong to VC6.
 
 // BANKED EXACT (100%, 0x999 bytes, 2026-08-21): the last seven instructions
 // were all in the artifact arm. Retail RELOADS `[ebp+0xc]` at that arm's
@@ -5001,9 +4989,8 @@ void combatManager::showSpellMessage(int isMonsterSpell, SpellID spellId,
             // Every OTHER creature ability names its own caster - the
             // stack whose turn it is - and then appends the target
             // clause only if there is a target to name.
-            const army* caster = &m_armies[m_actingSide][m_actingSlot];
-            const char* casterName = getArmyName(caster->m_creatureType,
-                                                  caster->m_numTroops);
+            const army* caster = getCurrentArmy();
+            const char* casterName = caster->getName();
             if (caster->m_numTroops == 1)
                 message = formatString(g_generalText->getText(566),
                                         casterName, spellName);

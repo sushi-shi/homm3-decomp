@@ -483,132 +483,36 @@ always counts `call` + tail `jmp`.
 * The `hidden-args` term of the arg-count check (`0x18d54` jump table) is
   assumed satisfied — the front end emits matching IL for legal calls.
 
-## 6b. The library-accessor DEPTH lever (measured 2026-09-06, polish 29)
+## 6b. Library helper boundaries and diagnostic spellings
 
-### The depth-one budget floor
+VC6's nested inline budget distinguishes a source helper from its expanded
+body. For example, the pinned library implements `push_back` through
+`insert`, string assignment through `assign`, and `clear` through range
+`erase`. A retained `insert` or `assign` call in retail can therefore be
+inside an expanded public helper. It does not establish the authored call.
 
-`clamp(2 * caller_cb, 1000, 35000)` has a floor. A depth-one callee whose
-cost is below 1000 cannot be refused by shrinking its caller. The trace for
-`game::readMapHeroSetups` records caller cb 607, initial budget 1214, and:
+Compare those spellings as diagnostics, then restore the call supported by
+source evidence. Keep the canonical helper and investigate declaration/body
+visibility, statement order, object lifetimes and the rest of the caller.
+A score gain alone does not justify bypassing a helper, adding caller-side
+argument copies, or replacing an operator with its implementation worker.
 
-    depth 1  budget 1214  cb 307  ->  basic_string::assign(str, pos, n)  ALLOWED
+The historical army-window experiment illustrates the distinction. Seven
+`text.assign(...)` spellings improved matching, but Dreamcast lines 427-470
+prove seven assignments and the temporary string cleanup after each formatted
+result. Restoring `operator=` changes a later nested append decision even
+though the assignment call sequences still agree with retail. Inspect the
+ordered named calls before attributing a change to the edited expression.
 
-Retail calls that assign at 0x4c2eac. A named file-scope assignment helper
-moves the same callee to depth two, where the reduced budget refuses it, and
-the caller reaches 100% without an inline pragma. Staging the scalar reads
-through `readValue<T>(file)` first reduces the caller from 52.0030% to
-71.3149%; together the two source boundaries produce the exact 40-block
-function. This is a structural limit: no further caller-side cb reduction can
-move a sub-1000 depth-one callee across the 1000-unit floor.
+The converse is useful too: in `tryPlaceMine` (`0x545990`), restoring
+`push_back(properties)` leaves insertion expanded but recovers the subsequent
+`type_object` constructor call (69.3906% to 71.5746%). The affected boundary
+need not be inside the source helper being restored.
 
-The `/Ob2` budget is spent per call site, so the SPELLING of a library
-accessor - which is to say how many inline levels stand between the caller's
-statement and the leaf the budget runs out on - is a source lever with no
-pragma involved. `std::bitset<N>` is the cleanest instance in this tree
-because Dinkumware layers it exactly:
-
-    operator[](size_t) const  ->  test(size_t)  ->  _Xran()  ->
-        out_of_range(const string&)  ->  basic_string(const char*, alloc)
-
-so writing `b[i]` instead of `b.test(i)` costs the leaf one level of budget
-and pushes whatever was marginal back OUT of line, which is where retail
-frequently has it. Swept over every `.test(` / `.set(` site whose owning row
-sits below 100 at its banked MAX (36 rows):
-
-| row | before -> after |
-| --- | --- |
-| `town::initialize_spells` | 97.7386 -> **100.0000** |
-| `NewfullMap::GenerateHeightMap` | 96.7484 -> **100.0000** |
-| `TSingleSelectionWindow::SetNewPlayerSlot` | 63.0729 -> 68.8219 |
-| `TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts` | 72.5726 -> 73.0000 |
-| `mark_spells` (`.set(i,v)` -> `[i] = v`) | 93.9578 -> 94.5148 |
-| `TSingleSelectionWindow::MakeHeroFilter` | 87.3429 -> 87.5476 |
-
-It is NOT a general improvement, and the losers are as informative as the
-winners: `armyGroup::get_morale_description` 93.06 -> 89.04,
-`NewSMapHeader::Save` 87.00 -> 80.36, `AI_attempt_puzzle_guess` 97.16 ->
-95.60, `town::GiveSpells` 99.92 -> 99.70, `hero::HeroFn_004DC100`
-87.27 -> 79.24 on the `.set` form, and eleven rows byte-flat. Read it as a
-per-site fact about which level retail's budget ran out on, and MEASURE both
-spellings; the flat rows are the ones where the leaf was never marginal.
-
-An API change can instead restore a later, unrelated helper boundary.
-In `tryPlaceMine` (`0x545990`), changing the first candidate append from
-`insert(end(), properties)` to `push_back(properties)` leaves that insertion
-expanded but restores retail's subsequent `type_object` constructor call.
-The caller rises from 69.3906% to 71.5746%; every other banked function is
-unchanged. Changing its terrain read from `test` to subscript moves only
-`_Xran` out of line and still emits no standalone `bitset<10>::test`.
-Inspect the named calls before attributing an API-control gain to the helper
-being probed.
-
-The same ladder runs through the sequence containers and `basic_string`, and
-two more rows moved on it:
-
-| row | change | before -> after |
-| --- | --- | --- |
-| `InitializeSeerHutText` | `push_back(x)` -> `insert(end(), x)` | 79.8841 -> **100.0000** |
-| `exchange_spells` | `s += x` -> `s.append(x)` (13 sites) | 88.6905 -> 92.1640 |
-
-And the widest one, `basic_string::operator=` -> `assign`, swept over all 37
-sub-100 rows that assign to a `std::string` local:
-
-| row | change | before -> after |
-| --- | --- | --- |
-| `TViewArmyWindow::WindowHandler` | `text = X` -> `text.assign(X)` (7 sites) | 92.5744 -> 99.1520 |
-
-One winner out of 37, three losers (`QuickInfo` 94.87 -> 94.55,
-`CreatureBankEvent` 91.59 -> 91.41, `TSpellbookWindow::WindowHandler`
-99.90 -> 98.81), three non-compiling and thirty byte-flat. The hit rate is
-low; the payoff when it lands is 6.6 points on a row 97 of whose 98 blocks
-were already exact, so sweep it, do not reason about it.
-
-`clear()` is the fourth mass-carrying forwarder (`clear()` is literally
-`erase(begin(), end())`, and the erase is the mass). Swept over 29 sub-100
-rows: `TCampaignStartHeroOption::Read` 88.9802 -> 92.6089 and
-`NewSMapHeader::Load` 92.5118 -> 92.6763; two byte-flat, one non-compiling,
-and TWENTY-FOUR losers, several catastrophic - `army::HeroFn_00445490`
-92.52 -> 14.41, `readMapObjects` 92.20 -> 27.51, `readBlackBox` 93.01 -> 66.11,
-`TTextScroller::SetText` 99.44 -> 73.40. This is the lowest hit rate of the
-four and the most dangerous; it is worth sweeping only because the sweep is
-mechanical and each row is measured on its own.
-
-**THE INTERMEDIATE LEVEL MUST CARRY MASS.** This is the bound, and it is what
-separates the levers above from the ones that do nothing. `bitset::test` holds
-a range check, `push_back` holds an `insert` call, `operator+=` holds an
-`append` call - each is a real basic block the budget can run out on. A
-one-line forwarder that only renames its argument is FREE, and adding or
-removing it is byte-flat at every site measured:
-
-* `.length()` -> `.size()` (`length()` is literally `return size();`) - twelve
-  rows swept, **all twelve byte-flat to the digit**.
-* `.resize(n)` -> `.resize(n, T())` (`resize(n)` is literally
-  `resize(n, T())`) - four rows swept, **all four byte-flat**.
-
-So do not sweep a forwarder; sweep an accessor that does work. And measure -
-the sign is per-site, never per-lever (`push_back` -> `insert` LOSES on five
-of the eleven rows it was tried on, up to -9.7).
-
-**AND THE LADDER RE-OPENS CLOSED ROWS.** Twenty rows whose residual notes had
-been closed against every lever that existed before this one were re-measured
-with it, one measurement each. Three moved, two materially:
-`game::LoadMap` **70.6990 -> 75.4768** on the six `clear()` calls in its pool
-reset, and `TCampaignBrief::TCampaignBrief` **85.7661 -> 86.6820** on five
-`push_back`s (`TCampaignBrief::CompleteCurrentMap` gained 0.16 and was left
-alone as noise). Neither row's standing note was wrong - both predate the
-lever. This is the "a local-maximum verdict expires when a new lever lands"
-rule paying out, and it is cheap: the sweep is mechanical.
-
-Two riders:
-
-* `TSingleSelectionWindow::OnBeginGame` shows the ladder has a floor. It is
-  already spelled `[...]` through a `const bitset<4>&` and retail is STILL one
-  level less inlined - it CALLS `bitset<4>::_Xran()` - and there is no deeper
-  legal spelling, so that one needs caller mass, not a respelling.
-* The lever can RETIRE a pin. `mark_spells` carried a statement
-  `#pragma inline_depth(0)` around one `.set`; with the subscript form the pin
-  is worth -0.19 (94.32 pinned against 94.51 unpinned), so it came out and the
-  tree's pin count fell 354 -> 353.
+The source census ratchets end-position insertions and authored `std::_`
+references separately. These are review candidates: a range insertion or a
+retained library definition can be legitimate. The census excludes comments
+and symbol strings; it does not prove an original source spelling.
 
 ### A mutable bitset proxy also explains boolean argument homes
 
@@ -1867,6 +1771,15 @@ Windows `max` macro replace the source call: `useSpell` falls to 77.0690%,
 and its expansion in `fly` falls from 32.6234% to 29.7013%. Correct ordering
 restores both previous scores. Every other hero function is byte-flat,
 including the two parked hero register-allocation cases.
+
+`matchPuzzle` (`0x52cf10`) supplies a concrete argument-copy example.
+Dreamcast names two `RECT` locals and global by-value `min`/`max` calls.
+Direct internal selectors, explicit `long` conversions and extra caller
+locals had recreated only part of that expansion. Restoring the two objects,
+recorded assignment order and canonical point/map helpers raises 92.4089%
+to 95.3093%. Merely writing `min`/`max` without including their owning header
+instead invokes the Windows macros and drops to 73.7542%. Source helper
+visibility and object ownership must be checked together.
 
 ### Check overload resolution before changing inline budgets
 

@@ -220,17 +220,17 @@ public:
     const TSeerHutTextColumn* questTextRow()
     {
         if (m_seerHut)
-            return g_questTextA + m_textVariant;
-        return g_questTextB + m_textVariant;
+            return &g_questTextA[m_textVariant];
+        return &g_questTextB[m_textVariant];
     }
     // The five-column text group for this quest type. Keep the selector
     // call and virtual discriminator in the same expression: retail's
     // retained and expanded instances evaluate their operands differently.
     const TSeerHutQuestText& questTexts()
     {
-        const TSeerHutQuestText* texts =
-            questTextRow()->m_quest + questType();
-        return *texts;
+        const TSeerHutQuestText& texts =
+            questTextRow()->m_quest[questType()];
+        return texts;
     }
     const std::string& questText(int column)
     {

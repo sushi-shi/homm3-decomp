@@ -294,7 +294,7 @@ void type_sacrifice_window::createArtifactWidgets(
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 600, 593, widgetId++,
-        g_game->m_f1f698 >= 2 ? "AltrArt2.pcx" : "AltarArt.pcx", 0x800);
+        g_game->m_gameVersion >= 2 ? "AltrArt2.pcx" : "AltarArt.pcx", 0x800);
     background->setPlayerPaletteColors(curPlayer);
     m_widgets.push_back(background);
     m_artifactWidgets.push_back(background);
@@ -304,7 +304,7 @@ void type_sacrifice_window::createArtifactWidgets(
     def.m_width = 44;
     def.m_height = 44;
     def.m_image = "artifact.def";
-    long count = g_game->m_f1f698 >= 2 ? 19 : 18;
+    long count = g_game->m_gameVersion >= 2 ? 19 : 18;
     long i;
     for (i = 0; i < count; ++i) {
         def.m_x = g_slotDefinitions[i][0];
@@ -723,7 +723,7 @@ void type_sacrifice_window::updateSlot(long slot)
 VA(0x005629e0, 0x33)  // dc 0x125c34
 void type_sacrifice_window::updateAllSlots()
 {
-    long slotCount = g_game->m_f1f698 >= 2 ? 19 : 18;
+    long slotCount = g_game->m_gameVersion >= 2 ? 19 : 18;
     for (long slot = 0; slot < slotCount; ++slot)
         updateSlot(slot);
 }
@@ -1702,6 +1702,10 @@ type_transformer_slot::type_transformer_slot(
 // 0x5654f0 - so neither row is an /OPT:ICF fold.
 VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
+// DC proves push_back; its text subscripts forward to getText. At 98.3508%,
+// the final rollover append's growth path retains an extra vector::size.
+// Removing the vector alias or binding its pointer argument locally does
+// not recover that nested expansion; keep the canonical container call.
 VA(0x005654f0, 0xA3C)  // dc 0x1275c0
 type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     : CAdvPopup(100, 67, 600, 485, 18)
@@ -1719,8 +1723,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         g_game->getLocalPlayerGamePos());
     m_widgets.push_back(background);
 
-    std::vector<widget*>& widgets = m_widgets;
-    widgets.insert(widgets.end(), new textWidget(
+    m_widgets.push_back(new textWidget(
         25, 21, 257, 18,
         g_generalText->getText(
             SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE),

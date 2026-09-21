@@ -91,11 +91,11 @@ inline TSpellSchool TSpellbookWindow::getSchoolFromPosition(int position)
 static const char* getLevelString(SpellID spell)
 {
     static const char* levelStrings[] = {
-        (*g_generalText)[173],
-        (*g_generalText)[174],
-        (*g_generalText)[175],
-        (*g_generalText)[176],
-        (*g_generalText)[177]
+        g_generalText->getText(173),
+        g_generalText->getText(174),
+        g_generalText->getText(175),
+        g_generalText->getText(176),
+        g_generalText->getText(177)
     };
     // DC117 initializes the five labels; DC119 reads the level, subtracts
     // one and indexes this table. Capture that actual index before lookup.
@@ -153,7 +153,7 @@ std::string TSpellbookWindow::getSpellDescription(
             spell,
             traits->m_powerFactor * power + traits->m_masteryBonus[mastery],
             0);
-        sprintf(g_text, (*g_generalText)[344], damage);
+        sprintf(g_text, g_generalText->getText(344), damage);
         result += g_text;
     }
     return result;
@@ -388,6 +388,11 @@ void TSpellbookWindow::close(unsigned char update)
     heroWindow::close(update);
 }
 
+// DC uses push_back for the available-spell entry. Restoring that wrapper
+// leaves sort's _Unguarded_insert retained where retail expands it (88.8745%,
+// formerly exact with direct insert). Conditional or single-value school
+// selection does not recover it. Retail retains getSpellLevel here; DC's
+// older caller uses GetSpellSchoolLevel, so keep Complete's spell-id contract.
 VA(0x0059c9a0, 0x691)  // dc 0x14c904
 void TSpellbookWindow::gotoPage(int page)
 {
@@ -410,8 +415,7 @@ void TSpellbookWindow::gotoPage(int page)
                 school = highestSchool;
             TSkillMastery mastery = m_hero->getSpellLevel(
                 spell, m_onMagicPlains);
-            availableSpells.insert(availableSpells.end(),
-                          TSpellbookEntry(spell, school, mastery));
+            availableSpells.push_back(TSpellbookEntry(spell, school, mastery));
         }
     }
 
@@ -469,7 +473,7 @@ void TSpellbookWindow::gotoPage(int page)
                     g_spellTraits[displaySpell].m_name,
                     getLevelString(displaySpell),
                     g_abbSecondarySkillLevels[entry.m_mastery - 1],
-                    (*g_generalText)[388],
+                    g_generalText->getText(388),
                     const_cast<hero*>(m_hero)->getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
         } else {
@@ -477,7 +481,7 @@ void TSpellbookWindow::gotoPage(int page)
                     DATA_COMPGEN(0x00684bdc, spellInfoWithoutMastery,
                                  "{%s}\n%s\n%s: %d"),
                     g_spellTraits[displaySpell].m_name,
-                    getLevelString(displaySpell), (*g_generalText)[388],
+                    getLevelString(displaySpell), g_generalText->getText(388),
                     const_cast<hero*>(m_hero)->getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
         }
@@ -684,7 +688,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                         exitFlag = 1;
                         msg.m_codeY = m_spellMap[msg.m_codeY - SPELL_0_ID];
                     } else {
-                        sprintf(g_text, (*g_generalText)[207],
+                        sprintf(g_text, g_generalText->getText(207),
                                 manaCost, m_hero->m_mana);
                         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                                      -1, 0, -1, 0);

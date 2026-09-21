@@ -111,6 +111,10 @@ void extendedDialog(const char* text,
 // three-column tables from it, then walk every row
 
 // Complete loads quest text from a spreadsheet; Dreamcast initializes a fixed table.
+// The name-row append is inferred from retail. Canonical push_back gives
+// 79.8841%; direct insert formerly hid the remaining inline-context mismatch.
+// Explicit/named string construction, positive validation and the cell
+// accessor do not recover retail's retained string::assign during conversion.
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 VA(0x0056c3e0, 0x183)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
 unsigned char initializeSeerHutText()
@@ -132,7 +136,7 @@ unsigned char initializeSeerHutText()
         const char* name = sheet->getRow(row)[0];
         if (!name[0] || name[0] == ' ')
             continue;
-        g_seerHutNames.insert(g_seerHutNames.end(), name);
+        g_seerHutNames.push_back(name);
     }
 
     sheet->dispose();
@@ -291,14 +295,14 @@ void type_quest::save(TAbstractFile* file)
 // questTextRow and getCurrentTurn preserve that lookup and the signed-short
 // date result. This Complete-only caller has no Dreamcast source record;
 // the shared helper bodies and retail expansion support these source calls.
-// Constructing text directly from the separator keeps its EH lifetime closed
-// until construction succeeds and reproduces both retail cleanup tails.
-
+// They are byte-flat at 93.4944%. Moving remainingDays earlier or directly
+// initializing text lost agreement (combined controls: 75.2472%).
 VA(0x0056d040, 0x1F7)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
 std::string type_quest::getTimeLimitText()
 {
     int days = g_game->getCurrentTurn();
-    std::string text = DATA_COMPGEN(0x00660330, questTimeLimitSeparator, " ");
+    std::string text;
+    text = DATA_COMPGEN(0x00660330, questTimeLimitSeparator, " ");
     int remainingDays = m_limit - days;
     const TSeerHutTextColumn* row = questTextRow();
     text += formatString(row->m_completion.c_str(), remainingDays);
@@ -441,6 +445,19 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 // formats the missing-skill list into the table's progress column and appends
 // the common deadline suffix before showing the same pictures.
 
+// Ordinary shared-dialog helper probe: passing either const char* or
+// const std::string& preserves insert/vector-dtor calls but expands both vector
+// constructors and the final string cleanups (60.80%, vs pinned 91.6396%).
+// The repeated loops and temporary lifetime alone do not establish that helper.
+// Sixteen compiled forms cross required-by-value, push_back, and constructor/
+// cleanup unpinning (eight reproduced elites). Unpinned push_back is 90.6577%,
+// but its second insertion expands to the count overload; retail retains the
+// single-element overload. No form restores the retail call/lifetime pattern.
+// The pinned baseline remains best. The Complete class has no DC counterpart.
+// A narrower shared picture-appender with caller-owned vectors also misses:
+// indexed/cursor forms give 73.9279/68.3423%, and progress falls to 94.2360%.
+// Removing all six pins with direct push_back gives 53.0360%; the earlier
+// 90.6577% control removed constructor/cleanup pins, not both insertion pins.
 VA(0x0056dad0, 0x28C)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProposalDialog(hero* currentHero)
 {
@@ -602,10 +619,12 @@ std::string type_skill_quest::skillRequirementText(
     }
     return joinTextList(requirements);
 }
-// The shared questTexts source form keeps the completion string's assign
-// out of line while expanding its returned temporary's cleanup, exactly as
-// retail. Naming that temporary introduced a second assignment and fell to
-// 50.4925%; no inline-depth steering is retained.
+// Direct completionText = formatString(...) expands assign here (49.37%,
+// versus 96.5299% with the diagnostic pin); unlike the proposal assignment,
+// retail retains this second assign. No DC counterpart settles the boundary.
+// Lifetime-extended requirement/result references do not recover it: six
+// unpinned ordinary-assignment forms reproduce 49.3657/50.4925%. The retained
+// assign boundary, not a missing temporary lifetime, remains the first issue.
 VA(0x0056e0d0, 0x169)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::setDefaultText()
 {
@@ -617,7 +636,7 @@ void type_skill_quest::setDefaultText()
                                      requirement.c_str());
     if (m_completionText.length() == 0)
         m_completionText = formatString(texts.m_text2.c_str(),
-                                        requirement.c_str());
+                                       requirement.c_str());
 }
 
 VA(0x0056e240, 0xF2)
@@ -888,12 +907,14 @@ void type_monster_quest::save(TAbstractFile* file)
 // and describes the point by map third (plus an underground suffix). Those
 // two strings are the varargs for each of the three localized text columns.
 
-// The canonical questTexts call leaves its nested questTextRow selector out of
-// line, reproducing all 77 retail CFG blocks without the former inline-depth
-// diagnostics. The remaining difference is one final retained string::_Eos in
-// retail; operator= and one-argument assign are byte-identical, while naming or
-// lifetime-extending the completion temporary regresses the matching tail.
-// E:\gamedcs\seerhut.cpp
+// The packed-point lookup and guarded plural-name lookup correspond to the
+// existing game::getCell and getArmyName helpers. Their declarations have
+// DC evidence; these Complete-only caller expansions are inferred from
+// retail. Keep the canonical calls and ordinary direction assignments.
+// Residual 96.7191%: the middle-north assignment retains string::assign
+// where retail expands it. Moving the name declaration to its use is flat;
+// explicit inner returns in getArmyName worsen this caller to 73.8785% and
+// lower four other consumers, including two exact drawing functions.
 VA(0x0056ef20, 0x57C)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::setDefaultText()
 {
@@ -901,12 +922,9 @@ void type_monster_quest::setDefaultText()
     if (m_position.m_x < 0)
         return;
 
-    const char* monsterName;
     const TSeerHutQuestText& texts = questTexts();
-    m_monsterId = g_game->m_worldMap.cell(m_position)->m_objectIndex;
-    monsterName = m_monsterId >= 0 && m_monsterId <= 0x96
-                      ? g_creatureTypeTraits[m_monsterId].m_pluralName
-                      : "";
+    m_monsterId = g_game->getCell(m_position)->m_objectIndex;
+    const char* monsterName = getArmyName(m_monsterId, 0);
 
     std::string direction;
     if (m_position.m_x < g_mapWidth / 3) {
@@ -924,9 +942,9 @@ void type_monster_quest::setDefaultText()
         else
             direction = g_directions[2];
     } else {
-        if (m_position.m_y < g_mapHeight / 3)
+        if (m_position.m_y < g_mapHeight / 3) {
             direction = g_directions[0];
-        else if (m_position.m_y > (2 * g_mapHeight) / 3)
+        } else if (m_position.m_y > (2 * g_mapHeight) / 3)
             direction = g_directions[4];
         else
             direction = g_directions[8];
@@ -936,13 +954,13 @@ void type_monster_quest::setDefaultText()
         direction += DATA_COMPGEN(0x00683228, questUndergroundSuffix,
                                   " underground");
 
-    if (m_proposalText.length() == 0)
+    if (m_proposalText.empty())
         m_proposalText = formatString(texts.m_text0.c_str(),
                                      monsterName, direction.c_str());
-    if (m_progressText.length() == 0)
+    if (m_progressText.empty())
         m_progressText = formatString(texts.m_text1.c_str(),
                                      monsterName, direction.c_str());
-    if (m_completionText.length() == 0)
+    if (m_completionText.empty())
         m_completionText = formatString(texts.m_text2.c_str(),
                                        monsterName, direction.c_str());
 }
@@ -1004,13 +1022,31 @@ void type_artifact_quest::takePayment(hero* currentHero)
 // arm formats the missing-name list into the progress template, while a
 // custom progress string is passed through directly.
 
-// Computing the five-column group once fixes the retail
+// Historical pinned residual (88.7407%): all 31 CFG blocks and every branch target agree, as do
+// retail's 0x68 frame and every persistent vector/string/record slot. Keeping
+// each dialog record outside its loop is what recovers that layout. Retail
+// outlines only the generated arm's repeated vector::size test; restricting
+// inline_depth(0) to that statement restores the complete CFG without also
+// outlining operator[] and push_back.
+
+// Residual (89.1000%): computing the five-column group once fixes the retail
 // quest-text copy schedule. The remaining Dinkumware inline-budget class
 // inlines both dialog-vector destructors and the final trivial artifact-vector
 // destroy where retail calls them, and selects the count-taking insert in the
-// custom arm where retail selects the position/value overload. The former
-// inline-depth diagnostic on the generated loop is removed; retain the natural
-// loop and source-shaped lifetimes instead of manufacturing cleanup flow.
+// custom arm where retail selects the position/value overload. Extending the
+// depth limit through either dialog scope regresses; retain the source-shaped
+// lifetime instead of manufacturing storage or cleanup flow.
+// Current unpinned source: counted loops and canonical push_back, with the
+// invariant resource type initialized once per dialog record (82.6111%).
+// Assigning that field inside each loop gives 80.4889%; empty() is flat.
+// One function-scope unsigned counter shared by the loops gives 84.5037%;
+// the shared signed-counter control stays at 82.6111%.
+// Using questText(QUEST_TEXT_PROGRESS) instead of the row helper preserves
+// row-before-questType evaluation but falls to 81.4815%; keep questTexts().
+// Per-iteration resource declaration, either assigned or aggregate-initialized,
+// gives the same 83.7074% code; neither restores the retained size/cleanup calls.
+// Old pinned loop + insert(end(), resource) gave 92.0556%, but neither
+// compiler-control scaffolding nor that artificial append is retained.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056f8a0, 0x313)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
 void type_artifact_quest::doProposalDialog(hero* currentHero)
@@ -1018,7 +1054,8 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
     std::vector<TArtifact> missingArtifacts;
     std::vector<std::string> requirements;
     const char* textPointer;
-    for (unsigned i = 0; i < m_artifacts.size(); ++i) {
+    unsigned i;
+    for (i = 0; i < m_artifacts.size(); ++i) {
         if (!currentHero->hasArtifact(m_artifacts[i])) {
             missingArtifacts.push_back(m_artifacts[i]);
             requirements.push_back(g_artifactTraits[m_artifacts[i]].m_name);
@@ -1034,8 +1071,8 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
         textPointer = text.c_str();
         std::vector<type_dialog_resource> dialogResources;
         type_dialog_resource resource;
-        for (unsigned i = 0; i < missingArtifacts.size(); ++i) {
-            resource.m_resource = 8;
+        resource.m_resource = 8;
+        for (i = 0; i < missingArtifacts.size(); ++i) {
             resource.m_qualifier = missingArtifacts[i];
             dialogResources.push_back(resource);
         }
@@ -1044,15 +1081,10 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
         textPointer = m_progressText.c_str();
         std::vector<type_dialog_resource> dialogResources;
         type_dialog_resource resource;
-        for (unsigned i = 0; i < missingArtifacts.size(); ++i) {
-            resource.m_resource = 8;
+        resource.m_resource = 8;
+        for (i = 0; i < missingArtifacts.size(); ++i) {
             resource.m_qualifier = missingArtifacts[i];
-            // DEPTH LADDER (docs/vc6/inliner.md 6b): this append alone is
-            // spelled `insert(end(), x)`; the two in the sibling arm above
-            // stay `push_back`.  89.1000 -> 92.0556.  Per-site: the two
-            // sibling sites give 91.6667 each, all three together 85.7667,
-            // and a greedy second round over the survivors finds nothing.
-            dialogResources.insert(dialogResources.end(), resource);
+            dialogResources.push_back(resource);
         }
         extendedDialog(textPointer, dialogResources, -1, -1, 0);
     }
@@ -1293,11 +1325,10 @@ void type_creature_quest::doProposalDialog(hero* currentHero)
 // in the joined stack list; otherwise it uses the base's dated proposal-text
 // getter. Picture qualifiers use the same unsigned 16|16 packing as slot 4.
 
-// Computing the five-column quest group through questTexts() restores retail's
-// questType/questTextRow call order. Its branch-return selector and named
-// result also restore the retail cleanup decisions here. Keeping text and both
-// vectors in their natural declaration scope then reproduces all retail bytes;
-// no inline pragma is needed.
+// Preserve the canonical questText proposal lookup and natural declaration
+// order. Both vectors are destroyed before text without an extra scope.
+// This Complete-only interface is inferred from retail; the combined
+// helper/lifetime model must be measured in the merged compiler context.
 // E:\gamedcs\seerhut.cpp
 VA(0x00570b80, 0x2D5)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
 void type_creature_quest::doProgressDialog()
@@ -1322,8 +1353,8 @@ void type_creature_quest::doProgressDialog()
     }
 
     if (m_proposalText.length() == 0) {
-        const TSeerHutQuestText& texts = questTexts();
-        std::string textFormat = texts.m_text0;
+        std::string textFormat =
+            questText(QUEST_TEXT_PROPOSAL);
         if (m_limit >= 0)
             textFormat += getTimeLimitText();
         text = formatString(
@@ -1597,13 +1628,15 @@ void type_resource_quest::save(TAbstractFile* file)
         file->write(m_completionText.c_str(), m_completionText.length());
     }
 }
+// The canonical questTexts -> questTextRow chain is exact. Branch returns
+// in the shared row selector preserve the retained child call here; its old
+// conditional-expression body over-expanded that child (91.2333%).
 VA(0x00571cc0, 0x23E)
 void type_resource_quest::setDefaultText()
 {
     std::vector<std::string> requirements;
     std::string requirement;
-    const TSeerHutQuestText& texts =
-        questTextRow()->m_quest[questType()];
+    const TSeerHutQuestText& texts = questTexts();
     for (int i = 0; i <= 6; i++) {
         if (m_resources[i] > 0) {
             requirement = formatString(
@@ -1778,14 +1811,16 @@ void type_belong_to_player_quest::save(TAbstractFile* file)
         file->write(m_completionText.c_str(), m_completionText.length());
     }
 }
+// The canonical questTexts -> questTextRow chain is exact. Branch returns
+// in the shared row selector preserve the retained child call here; its old
+// conditional-expression body over-expanded that child (87.4421%).
 VA(0x00572940, 0x204)
 void type_belong_to_player_quest::setDefaultText()
 {
     std::string requirement = g_colors[m_requiredOwner];
     std::transform(requirement.begin(), requirement.end(),
                    requirement.begin(), ::tolower);
-    const TSeerHutQuestText& texts =
-        questTextRow()->m_quest[questType()];
+    const TSeerHutQuestText& texts = questTexts();
     if (m_proposalText.length() == 0)
         m_proposalText = formatString(texts.m_text0.c_str(),
                               requirement.c_str());
@@ -1804,6 +1839,10 @@ TQuestGuard::TQuestGuard()
     m_visitedPlayers = 0;
 }
 
+// Complete-only caller: retail expands the same expiry test retained in
+// hasExpired and the row selector retained at 0x52e6b0. Keep those canonical
+// calls. Direct predicate use preserves all retail bytes; the intermediate
+// bool result added an absent conversion and measured 96.25%.
 VA(0x00572b60, 0x1FE)
 void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
                           NewmapCell* eventCell, type_point point)
@@ -1811,19 +1850,10 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
     if (!m_quest)
         return;
 
-    bool expired = false;
-    if (m_quest->m_limit >= 0) {
-        expired = m_quest->m_limit < static_cast<short>(
-            (g_game->m_month * 4 + g_game->m_week - 5) * 7
-            + g_game->m_day);
-    }
-
-    if (expired) {
+    if (m_quest->hasExpired()) {
         if (humanPlayer) {
-            const TSeerHutTextColumn& row = m_quest->m_seerHut
-                ? g_questTextA[m_quest->m_textVariant]
-                : g_questTextB[m_quest->m_textVariant];
-            normalDialog(row.m_name.c_str(),
+            const TSeerHutTextColumn* row = m_quest->questTextRow();
+            normalDialog(row->m_name.c_str(),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
@@ -1895,20 +1925,20 @@ std::string TQuestGuard::questGuardFn00573040(int player)
     return text;
 }
 
-__forceinline type_experience_quest::type_experience_quest(
+inline type_experience_quest::type_experience_quest(
     unsigned char flags)
     : type_quest(flags)
 {
     m_requiredLevel = 0;
 }
 
-__forceinline type_skill_quest::type_skill_quest(unsigned char flags)
+inline type_skill_quest::type_skill_quest(unsigned char flags)
     : type_quest(flags)
 {
     memset(m_requiredSkills, 0, sizeof(m_requiredSkills));
 }
 
-__forceinline type_defeat_hero_quest::type_defeat_hero_quest(
+inline type_defeat_hero_quest::type_defeat_hero_quest(
     unsigned char flags)
     : type_quest(flags)
 {
@@ -1917,7 +1947,7 @@ __forceinline type_defeat_hero_quest::type_defeat_hero_quest(
     m_satisfiedMask = 0;
 }
 
-__forceinline type_monster_quest::type_monster_quest(unsigned char flags)
+inline type_monster_quest::type_monster_quest(unsigned char flags)
     : type_quest(flags)
 {
     m_position.m_x = (m_monsterId = m_defeatedBy = -1);
@@ -1942,23 +1972,23 @@ type_artifact_quest::type_artifact_quest(
     setDefaultText();
 }
 
-__forceinline type_creature_quest::type_creature_quest(unsigned char flags)
+inline type_creature_quest::type_creature_quest(unsigned char flags)
     : type_quest(flags)
 {
 }
 
-__forceinline type_resource_quest::type_resource_quest(unsigned char flags)
+inline type_resource_quest::type_resource_quest(unsigned char flags)
     : type_quest(flags)
 {
     memset(m_resources, 0, sizeof(m_resources));
 }
 
-__forceinline type_be_hero_quest::type_be_hero_quest(unsigned char flags)
+inline type_be_hero_quest::type_be_hero_quest(unsigned char flags)
     : type_quest(flags), m_requiredHero(-1)
 {
 }
 
-__forceinline type_belong_to_player_quest::type_belong_to_player_quest(
+inline type_belong_to_player_quest::type_belong_to_player_quest(
     unsigned char flags)
     : type_quest(flags), m_requiredOwner(0)
 {

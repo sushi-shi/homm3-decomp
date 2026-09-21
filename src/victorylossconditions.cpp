@@ -244,7 +244,7 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
                 bool hasGrail = false;
                 if (thisTownLoc == grailTownLoc
                     || grailTownLoc == anyTownLoc)
-                    hasGrail = thisTown->hasBuilding(HOLY_GRAIL_ID, 1);
+                    hasGrail = thisTown->hasBuilding(HOLY_GRAIL_ID, true);
                 if (hasGrail) {
                     m_playerWinner = thisTown->m_owner;
                     m_gameWon = 1;

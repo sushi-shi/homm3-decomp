@@ -163,7 +163,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         font::PRIMARY, 0x209,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(0xf7, 0xdf, 0x41, 0x15,
-        g_generalText->getText(17),
+        g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x20d,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -311,7 +311,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
     m_widgets.push_back(new bitmapBorder(startX, startY, 100, 130,
         slot + 0x21e,
         g_creatureBackgrounds[
-            g_game->m_f1f698 == 0
+            g_game->m_gameVersion == 0
                 && isBaseElemental(creature)
             ? -1 : g_creatureTypeTraits[creature].m_townType],
         0x800));
@@ -526,7 +526,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     updateCost();
 
     sprintf(g_text, "%s %s",
-        (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
+        g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE),
         getArmyName(m_monsterType, 2));
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -1198,7 +1198,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
 
     recruitWindow->addWidget(new bitmapBorder(30, 44, 100, 130, 0x21e,
         g_creatureBackgrounds[
-            g_game->m_f1f698 == 0
+            g_game->m_gameVersion == 0
                 && isBaseElemental(monType)
             ? -1 : g_creatureTypeTraits[monType].m_townType],
         0x800), -1);

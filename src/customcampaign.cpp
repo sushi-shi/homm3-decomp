@@ -17,18 +17,18 @@
 #include "customcampaign.h"
 
 #include "abstractfile.h"
-#include "abstractfile.h"
 #include "artifact.h"
-#include "bitmap16.h"
+#include "packed_bits.h"
 #include "campaignbrief.h"
-#include "campaignmap.h"
 #include "castle.h"
-#include "creaturetype.h"
 #include "customcampaign_legacy.h"
-#include "font.h"
-#include "game.h"
 #include "gzinflatebuf.h"
 #include "hero.h"
+#include "bitmap16.h"
+#include "campaignmap.h"
+#include "creaturetype.h"
+#include "font.h"
+#include "game.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -381,7 +381,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
          g_game->m_campaign.m_currentMap == g_creatureBonusTownScenarioB)) {
         int creature = m_creature;
         int faction;
-        if (g_game->m_f1f698 == 0 &&
+        if (g_game->m_gameVersion == 0 &&
             isBaseElemental(creature))
             faction = -1;
         else
@@ -600,7 +600,7 @@ std::string TCampaignPrimarySkillBonus::getText() const
                 m_skills[stat], g_statNames[stat]);
             --remaining;
             if (remaining == 1)
-                list += g_generalText->getText(142);
+                list += g_generalText->getText(GENERAL_TEXT_LIST_AND);
             else if (remaining > 0)
                 list += ", ";
         }
@@ -1212,32 +1212,6 @@ std::string readLengthPrefixedString(TAbstractFile* infile)
         remaining -= count;
     }
     return text;
-}
-
-// The three packed-bit reads use the same temporary-then-member-copy shape
-// in retail ScenarioStruct::Read. Keep that value-returning serialization
-// operation together; the helper name is provisional for this Complete code.
-// The three expansions restore retail's 45-block caller from 62 blocks and
-// raise 55.04 -> 70.55%; no separate retail helper body is claimed.
-// After the caller's pointer/lifetime corrections, default zero construction
-// reaches 83.29%; the unsigned-long(0) constructor is the 80.95% control.
-// Direct proxy assignment plus an explicit prerequisite-loop body scope
-// originally raised the caller to 84.92324%. After restoring its text-reader
-// and scalar lifetimes, naming the proxy changes VC6's nested scheduling and
-// raises 87.4222 -> 89.4456 without changing any other customcampaign score.
-// The three loops still call bitset::set rather than retail's proxy assignment;
-// naming only the Boolean value is byte-flat.
-template <size_t N>
-std::bitset<N> readPackedCampaignBits(TAbstractFile* infile)
-{
-    std::bitset<N> result;
-    unsigned char packed[(N + 7) / 8];
-    infile->read(packed, sizeof(packed));
-    for (unsigned int index = 0; index < N; ++index) {
-        typename std::bitset<N>::reference bit = result[index];
-        bit = (packed[index >> 3] & (1 << (index & 7))) != 0;
-    }
-    return result;
 }
 
 VA(0x00485f50, 0x8B)
@@ -1874,7 +1848,7 @@ void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(unsigned char* wanted)
 // virtual reads, contradicting retail, and is not retained.
 // Keeping inflated-size's temporary in the function scope gives it retail's
 // local home instead of reusing the infile parameter slot (86.4073 -> 87.4222).
-// A named proxy in readPackedCampaignBits changes the nested code generation
+// A named proxy in the shared readPackedBits changes the nested code generation
 // in all three expansions (87.4222 -> 89.4456); the proxy-call boundary itself
 // remains unfinished.
 void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
@@ -1948,12 +1922,12 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
         m_retainArtifacts = (flags >> 4) & 1;
     }
 
-    m_crossoverCreatures = readPackedCampaignBits<g_crossoverCreatureBits>(infile);
+    m_crossoverCreatures = readPackedBits<g_crossoverCreatureBits>(infile);
 
     if (campaignVersion >= g_campaignVersionWideArtifacts) {
-        m_crossoverArtifacts = readPackedCampaignBits<g_crossoverArtifactBits>(infile);
+        m_crossoverArtifacts = readPackedBits<g_crossoverArtifactBits>(infile);
     } else {
-        std::bitset<129> legacyArtifacts = readPackedCampaignBits<129>(infile);
+        std::bitset<129> legacyArtifacts = readPackedBits<129>(infile);
         std::copy(
             bitset_iterator<129>(legacyArtifacts, 0),
             bitset_iterator<129>(legacyArtifacts, g_crossoverLegacyArtifactBits),
@@ -3177,7 +3151,7 @@ VA(0x0048b2e0, 0x8C)
 void SCampaign::applyBriefingChoice(int option)
 {
     m_briefingChoice = option;
-    m_assignedCarryover.erase(m_assignedCarryover.begin(), m_assignedCarryover.end());
+    m_assignedCarryover.clear();
     if (m_currentCampaign == ALIGNMENT_CHOICE_CAMPAIGN_A
         && m_currentMap == ALIGNMENT_CHOICE_MAP)
         g_game->m_setup.m_alignment[2] = TOWN_INFERNO;
@@ -3238,7 +3212,8 @@ VA_COMPGEN(0x0048e850, 0x2A, STD_FILL, hero)
 // COMDAT pairing: hero::_Ufill, mnemonic agreement 0.913.
 VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)
 
-VA_COMPGEN(0x00404700, 0x157, CLASS_CTOR, out_of_range)
+// CatchableType's copyFunction selects this overload, not the string ctor.
+VA_COMPGEN(0x00404700, 0x157, IMPLICIT_COPY_CTOR, out_of_range)
 
 // COMDAT pairing: vector<vector<hero>>::_Destroy - reached from game and from
 // two sites in this unit's own segment.

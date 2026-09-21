@@ -500,7 +500,7 @@ VA(0x005bd8e0, 0x551)  // dc 0x165ea0
 void town::applySpecialBuildingEffect(hero* townHero)
 {
     if (m_type == TOWN_DUNGEON && m_manaVortexFull
-        && hasBuilding(EXTRA_0_ID, 0)) {
+        && hasBuilding(EXTRA_0_ID, false)) {
         int maxMana = townHero->getMaxMana() * 2;
         if (townHero->m_mana < maxMana) {
             if (g_game->isLocalHuman(m_owner))
@@ -511,7 +511,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         }
     }
 
-    if (m_type == TOWN_CASTLE && hasBuilding(EXTRA_0_ID, 0)
+    if (m_type == TOWN_CASTLE && hasBuilding(EXTRA_0_ID, false)
         && !(townHero->m_flags & 2)) {
         townHero->m_flags |= 2;
         townHero->m_maxMovePoints += g_stablesMovementBonus;
@@ -521,7 +521,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 
-    if (m_type == TOWN_TOWER && hasBuilding(EXTRA_2_ID, 0)
+    if (m_type == TOWN_TOWER && hasBuilding(EXTRA_2_ID, false)
         && !townHero->m_townSpecialGrantedMask.test(m_id)) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(3, 1);
@@ -531,7 +531,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
                 1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
     }
 
-    if (m_type == TOWN_INFERNO && hasBuilding(EXTRA_2_ID, 0)
+    if (m_type == TOWN_INFERNO && hasBuilding(EXTRA_2_ID, false)
         && !townHero->m_townSpecialGrantedMask[m_id]) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(2, 1);
@@ -540,7 +540,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
                          1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
     }
 
-    if (m_type == TOWN_DUNGEON && hasBuilding(EXTRA_2_ID, 0)
+    if (m_type == TOWN_DUNGEON && hasBuilding(EXTRA_2_ID, false)
         && !townHero->m_townSpecialGrantedMask[m_id]) {
         int experience = static_cast<int>(
             townHero->getExperienceBonusFactor() * 1000.0f);
@@ -552,7 +552,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         townHero->giveExperience(experience, 1, 1);
     }
 
-    if (m_type == TOWN_STRONGHOLD && hasBuilding(EXTRA_2_ID, 0)
+    if (m_type == TOWN_STRONGHOLD && hasBuilding(EXTRA_2_ID, false)
         && !townHero->m_townSpecialGrantedMask[m_id]) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
@@ -562,7 +562,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         townHero->adjustPrimarySkill(0, 1);
     }
 
-    if (m_type == TOWN_FORTRESS && hasBuilding(SPECIAL_BUILDING_ID, 0)
+    if (m_type == TOWN_FORTRESS && hasBuilding(SPECIAL_BUILDING_ID, false)
         && !townHero->m_townSpecialGrantedMask[m_id]) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
@@ -660,7 +660,7 @@ void town::giveSpells(hero* forceHero) const
 
         if (currentHero) {
             if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-                if (hasBuilding(MAGE_GUILD_ID, 1)) {
+                if (hasBuilding(MAGE_GUILD_ID, true)) {
                     if (m_type == TOWN_CONFLUX
                         && (m_active & g_bitNumber[HOLY_GRAIL_ID])) {
                         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
@@ -869,7 +869,7 @@ void town::setSpellsAvailable()
     memset(m_mageGuildSpellCounts, 0, sizeof(m_mageGuildSpellCounts));
     for (int level = 1; level <= m_mageLevel; level++) {
         int count = g_mageGuildBaseSpellCounts[level - 1];
-        if (m_type == TOWN_TOWER && hasBuilding(EXTRA_1_ID, 1))
+        if (m_type == TOWN_TOWER && hasBuilding(EXTRA_1_ID, true))
             count++;
         while (count > 0
                && m_mageGuildSpells[level - 1][count - 1] == -1)
@@ -991,7 +991,7 @@ type_building_id town::buildBuilding(int buildingId,
             int team = m_owner;
             if (team >= 0)
                 team = g_game->m_mapHeader.m_teamInfo[team];
-            if (!g_game->isHumanAlly(team))
+            if (!g_game->isHumanTeam(team))
                 m_builtThisTurn = 2;
             else
                 m_builtThisTurn = 1;
@@ -1109,9 +1109,9 @@ void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
 VA(0x005bf570, 0x86)  // dc 0x1673dc
 long town::getCastleGrowthBonus(TCreatureType creature) const
 {
-    if (m_built & g_bitNumber[CASTLE_CASTLE_ID])
+    if (hasBuilding(CASTLE_CASTLE_ID, false))
         return g_creatureTypeTraits[creature].m_growthRate;
-    if (m_built & g_bitNumber[CASTLE_CITADEL_ID])
+    if (hasBuilding(CASTLE_CITADEL_ID, false))
         return g_creatureTypeTraits[creature].m_growthRate / 2;
     return 0;
 }
@@ -1262,16 +1262,7 @@ short town::getGrowthRate(short dwelling) const
                 m_type * TOWN_DWELLING_SLOTS + dwellingIndex];
             long legionGrowth =
                 g_creatureTypeTraits[legionCreature].m_growthRate;
-            long castleBonus;
-#pragma inline_depth(0)
-            if (m_built & g_bitNumber[CASTLE_CASTLE_ID])
-                castleBonus = legionGrowth;
-            else if (hasBuilding(CASTLE_CITADEL_ID, 0))
-                castleBonus =
-                    g_creatureTypeTraits[legionCreature].m_growthRate / 2;
-            else
-                castleBonus = 0;
-#pragma inline_depth()
+            long castleBonus = getCastleGrowthBonus(legionCreature);
             legionBonus = (legionGrowth + castleBonus) / 2;
         }
         growth += legionBonus;
@@ -1663,7 +1654,7 @@ void town::updateFullBuildingMask()
 {
     m_active = m_built;
     for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (hasBuilding(i, 0))
+        if (hasBuilding(i, false))
             m_active |= s_includedBuildings[m_type][i];
     }
 }
