@@ -358,7 +358,7 @@ int recruitUnit::open(int newPriority)
     g_recruitWindow->broadcastMessage(msg);
 
     const char* creatureName;
-    if (m_monsterType != CREATURE_NONE
+    if (m_monsterType >= CREATURE_PIKEMAN
         && m_monsterType <= CREATURE_RETAIL_RANGE_MAX)
         creatureName = H3_AT(g_creatureTypeTraits, m_monsterType).m_pluralName;
     else
@@ -1212,7 +1212,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
     recruitWindow->broadcastMessage(msg);
 
     recruitWindow->addWidget(new textWidget(0, 20, 161, 20,
-        monType != CREATURE_NONE && monType <= CREATURE_RETAIL_RANGE_MAX
+        monType >= CREATURE_PIKEMAN && monType <= CREATURE_RETAIL_RANGE_MAX
             ? H3_AT(g_creatureTypeTraits, monType).m_pluralName
             : DATA_COMPGEN(0x00691210, quickRecruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),

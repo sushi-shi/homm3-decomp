@@ -1800,9 +1800,8 @@ int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
     if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
         return -1;
     for (i = 0; i < numArmies; ++i) {
-        // Army slots retain four-byte creature storage.
-        TCreatureType creature = H3_ENUM_DECODE(
-            TCreatureType, thisBox->m_creatures.m_armies[i]);
+        H3_ENUM_STORAGE(TCreatureType, short) creature =
+            thisBox->m_creatures.m_armies[i];
         outfile->write(&creature, 2);
         short count = thisBox->m_creatures.m_numTroops[i];
         if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)

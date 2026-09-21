@@ -98,6 +98,30 @@ constexpr bool operator!=(Enum left, H3EnumStorage<Enum, Storage> right)
     return !(left == right);
 }
 
+template<class Enum, class Storage>
+constexpr bool operator<(H3EnumStorage<Enum, Storage> left, Enum right)
+{
+    return static_cast<Enum>(left) < right;
+}
+
+template<class Enum, class Storage>
+constexpr bool operator<=(H3EnumStorage<Enum, Storage> left, Enum right)
+{
+    return static_cast<Enum>(left) <= right;
+}
+
+template<class Enum, class Storage>
+constexpr bool operator>(H3EnumStorage<Enum, Storage> left, Enum right)
+{
+    return static_cast<Enum>(left) > right;
+}
+
+template<class Enum, class Storage>
+constexpr bool operator>=(H3EnumStorage<Enum, Storage> left, Enum right)
+{
+    return static_cast<Enum>(left) >= right;
+}
+
 template<class Enum, class LeftStorage, class RightStorage>
 constexpr bool operator==(H3EnumStorage<Enum, LeftStorage> left,
     H3EnumStorage<Enum, RightStorage> right)
@@ -196,6 +220,30 @@ template<class Enum, class Storage>
 constexpr bool operator!=(Enum left, H3SteppedEnumStorage<Enum, Storage> right)
 {
     return !(left == right);
+}
+
+template<class Enum, class Storage>
+constexpr bool operator<(H3SteppedEnumStorage<Enum, Storage> left, Enum right)
+{
+    return static_cast<Enum>(left) < right;
+}
+
+template<class Enum, class Storage>
+constexpr bool operator<=(H3SteppedEnumStorage<Enum, Storage> left, Enum right)
+{
+    return static_cast<Enum>(left) <= right;
+}
+
+template<class Enum, class Storage>
+constexpr bool operator>(H3SteppedEnumStorage<Enum, Storage> left, Enum right)
+{
+    return static_cast<Enum>(left) > right;
+}
+
+template<class Enum, class Storage>
+constexpr bool operator>=(H3SteppedEnumStorage<Enum, Storage> left, Enum right)
+{
+    return static_cast<Enum>(left) >= right;
 }
 
 template<class Enum, class Storage>

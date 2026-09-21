@@ -619,7 +619,7 @@ extern int g_siloIncome[9][NUM_RESOURCES];
 // BEFORE scaling (`[4*(esi+slot) + table]`, one reloc, no second base
 // register) - a two-dimensional subscript compiles to the three-term
 // form instead. Name INVENTED (no DC symbol); owner TU unlocated.
-extern H3_ENUM_STORAGE(TCreatureType, int)
+extern TCreatureType
     g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 // Biased view of the upgraded half of the same first town row. Retail
 // GiveTroopsToNeutralTown carries a distinct relocation to this address.

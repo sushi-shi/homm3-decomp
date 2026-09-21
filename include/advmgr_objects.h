@@ -71,8 +71,8 @@ enum EGetSoundObjectIndex {
 
 // GetSoundId switches on the canonical TCreatureType domain.
 
-extern H3_ENUM_STORAGE(TCreatureType, int) g_creatureGenerator1Types[];
-extern H3_ENUM_STORAGE(TCreatureType, int) g_creatureGenerator4Types[][4];
+extern TCreatureType g_creatureGenerator1Types[];
+extern TCreatureType g_creatureGenerator4Types[][4];
 
 class CObjectType;
 

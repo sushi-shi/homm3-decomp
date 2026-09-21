@@ -58,8 +58,8 @@
 #include "winmgr.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x0063d570) H3_ENUM_STORAGE(TCreatureType, int) g_creatureGenerator1Types[80] = { CREATURE_BASILISK, CREATURE_BEHEMOTH, CREATURE_BEHOLDER, CREATURE_BLACK_KNIGHT, CREATURE_BONE_DRAGON, CREATURE_CAVALIER, CREATURE_CENTAUR, CREATURE_AIR_ELEMENTAL, CREATURE_ANGEL, CREATURE_CYCLOPS, CREATURE_DEVIL, CREATURE_SERPENT_FLY, CREATURE_DWARF, CREATURE_EARTH_ELEMENTAL, CREATURE_EFREETI, CREATURE_WOOD_ELF, CREATURE_FIRE_ELEMENTAL, CREATURE_STONE_GARGOYLE, CREATURE_GENIE, CREATURE_WOLF_RIDER, CREATURE_GNOLL, CREATURE_GOBLIN, CREATURE_GOG, CREATURE_GORGON, CREATURE_GREEN_DRAGON, CREATURE_GRIFFIN, CREATURE_HARPY, CREATURE_HELL_HOUND, CREATURE_HYDRA, CREATURE_IMP, CREATURE_LIZARDMAN, CREATURE_MAGE, CREATURE_MANTICORE, CREATURE_MEDUSA, CREATURE_MINOTAUR, CREATURE_MONK, CREATURE_NAGA, CREATURE_DEMON, CREATURE_OGRE, CREATURE_ORC, CREATURE_PIT_FIEND, CREATURE_RED_DRAGON, CREATURE_ROC, CREATURE_GREMLIN, CREATURE_GIANT, CREATURE_DENDROID_GUARD, CREATURE_TROGLODYTE, CREATURE_WATER_ELEMENTAL, CREATURE_WIGHT, CREATURE_WYVERN, CREATURE_PEGASUS, CREATURE_UNICORN, CREATURE_LICH, CREATURE_VAMPIRE, CREATURE_SKELETON, CREATURE_WALKING_DEAD, CREATURE_PIKEMAN, CREATURE_ARCHER, CREATURE_SWORDSMAN, CREATURE_PIXIE, CREATURE_PSYCHIC_ELEMENTAL, CREATURE_FIREBIRD, CREATURE_AZURE_DRAGON, CREATURE_CRYSTAL_DRAGON, CREATURE_FAERIE_DRAGON, CREATURE_RUST_DRAGON, CREATURE_ENCHANTER, CREATURE_SHARPSHOOTER, CREATURE_UNICORN, CREATURE_AIR_ELEMENTAL, CREATURE_EARTH_ELEMENTAL, CREATURE_FIRE_ELEMENTAL, CREATURE_WATER_ELEMENTAL, CREATURE_HALFLING, CREATURE_PEASANT, CREATURE_BOAR, CREATURE_MUMMY, CREATURE_NOMAD, CREATURE_ROGUE, CREATURE_TROLL };
-DATA(0x00677938) H3_ENUM_STORAGE(TCreatureType, int) g_creatureGenerator4Types[2][4] = {
+DATA(0x0063d570) TCreatureType g_creatureGenerator1Types[80] = { CREATURE_BASILISK, CREATURE_BEHEMOTH, CREATURE_BEHOLDER, CREATURE_BLACK_KNIGHT, CREATURE_BONE_DRAGON, CREATURE_CAVALIER, CREATURE_CENTAUR, CREATURE_AIR_ELEMENTAL, CREATURE_ANGEL, CREATURE_CYCLOPS, CREATURE_DEVIL, CREATURE_SERPENT_FLY, CREATURE_DWARF, CREATURE_EARTH_ELEMENTAL, CREATURE_EFREETI, CREATURE_WOOD_ELF, CREATURE_FIRE_ELEMENTAL, CREATURE_STONE_GARGOYLE, CREATURE_GENIE, CREATURE_WOLF_RIDER, CREATURE_GNOLL, CREATURE_GOBLIN, CREATURE_GOG, CREATURE_GORGON, CREATURE_GREEN_DRAGON, CREATURE_GRIFFIN, CREATURE_HARPY, CREATURE_HELL_HOUND, CREATURE_HYDRA, CREATURE_IMP, CREATURE_LIZARDMAN, CREATURE_MAGE, CREATURE_MANTICORE, CREATURE_MEDUSA, CREATURE_MINOTAUR, CREATURE_MONK, CREATURE_NAGA, CREATURE_DEMON, CREATURE_OGRE, CREATURE_ORC, CREATURE_PIT_FIEND, CREATURE_RED_DRAGON, CREATURE_ROC, CREATURE_GREMLIN, CREATURE_GIANT, CREATURE_DENDROID_GUARD, CREATURE_TROGLODYTE, CREATURE_WATER_ELEMENTAL, CREATURE_WIGHT, CREATURE_WYVERN, CREATURE_PEGASUS, CREATURE_UNICORN, CREATURE_LICH, CREATURE_VAMPIRE, CREATURE_SKELETON, CREATURE_WALKING_DEAD, CREATURE_PIKEMAN, CREATURE_ARCHER, CREATURE_SWORDSMAN, CREATURE_PIXIE, CREATURE_PSYCHIC_ELEMENTAL, CREATURE_FIREBIRD, CREATURE_AZURE_DRAGON, CREATURE_CRYSTAL_DRAGON, CREATURE_FAERIE_DRAGON, CREATURE_RUST_DRAGON, CREATURE_ENCHANTER, CREATURE_SHARPSHOOTER, CREATURE_UNICORN, CREATURE_AIR_ELEMENTAL, CREATURE_EARTH_ELEMENTAL, CREATURE_FIRE_ELEMENTAL, CREATURE_WATER_ELEMENTAL, CREATURE_HALFLING, CREATURE_PEASANT, CREATURE_BOAR, CREATURE_MUMMY, CREATURE_NOMAD, CREATURE_ROGUE, CREATURE_TROLL };
+DATA(0x00677938) TCreatureType g_creatureGenerator4Types[2][4] = {
     { CREATURE_AIR_ELEMENTAL, CREATURE_FIRE_ELEMENTAL, CREATURE_EARTH_ELEMENTAL, CREATURE_WATER_ELEMENTAL },
     { CREATURE_STONE_GOLEM, CREATURE_IRON_GOLEM, CREATURE_GOLD_GOLEM, CREATURE_DIAMOND_GOLEM }
 };
@@ -450,16 +450,14 @@ inline void generator::removeBonus()
         return;
 
     playerData& player = g_game->m_players[m_playerOwner];
-    // Generator records retain creature ids in fixed-width storage.
-    TCreatureType creature = H3_ENUM_DECODE(TCreatureType, m_type[0]);
-    int alignment = g_game->getAlignment(creature);
+    int alignment = g_game->getAlignment(m_type[0]);
     if (alignment == -1)
         return;
 
     for (long i = 0; i < player.m_numTowns; i++) {
         town* currentTown = g_game->getTown(player.m_townIds[i]);
         if (currentTown->m_type == alignment)
-            currentTown->changeGeneratorBonus(creature, -1);
+            currentTown->changeGeneratorBonus(m_type[0], -1);
     }
 }
 
@@ -470,8 +468,7 @@ inline void generator::updateBonus()
         return;
 
     playerData& player = g_game->m_players[m_playerOwner];
-    // Generator records retain creature ids in fixed-width storage.
-    TCreatureType creature = H3_ENUM_DECODE(TCreatureType, m_type[0]);
+    H3_ENUM_STORAGE(TCreatureType, int) creature = m_type[0];
     if (!g_game->m_gameVersion &&
         isBaseElemental(creature))
         return;
@@ -483,7 +480,7 @@ inline void generator::updateBonus()
     for (int index = 0; index < player.m_numTowns; index++) {
         town* currentTown = g_game->getTown(player.m_townIds[index]);
         if (currentTown->m_type == townType)
-            currentTown->changeGeneratorBonus(creature, 1);
+            currentTown->changeGeneratorBonus(m_type[0], 1);
     }
 }
 
@@ -507,7 +504,7 @@ void generator::initialize(long newOwner)
     }
     m_guards.initialize();
 
-    H3_ENUM_STORAGE(TCreatureType, int)* types;
+    TCreatureType* types;
     int typeCount;
     if (m_genClass == CREATURE_GENERATOR_1) {
         int generatorType = m_genType;
@@ -775,8 +772,10 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
             infile->read(&legacyType, sizeof(legacyType));
             infile->read(&legacyAmount, sizeof(legacyAmount));
             int amountValue = legacyAmount;
-            if (legacyType != CREATURE_NONE && amountValue > 0)
-                guards->add(legacyType, amountValue, -1);
+            int typeValue = H3_IDX(legacyType);
+            if (typeValue != -1 && amountValue > 0)
+                guards->add(H3_ENUM_DECODE(TCreatureType, typeValue),
+                    amountValue, -1);
         }
 
         if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
@@ -8288,7 +8287,7 @@ void game::giveArmy(armyGroup* thisMonInfo,
         }
     }
     for (int j = 0; j < 7; j++) {
-        if (thisMonInfo->m_armies[j] == CREATURE_NONE) {
+        if (thisMonInfo->m_armies[j] < CREATURE_PIKEMAN) {
             thisMonInfo->m_armies[j] = monType;
             thisMonInfo->m_numTroops[j] = monNum;
             return;

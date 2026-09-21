@@ -941,7 +941,7 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
     }
 
     for (H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature = CREATURE_PIKEMAN;
-         creature != CREATURE_ROSTER_END; ++creature) {
+         creature < CREATURE_ROSTER_END; ++creature) {
         H3_AT(prohibited, creature) = 0;
         getMonsterCost(creature, resources);
         for (short resource = 0; resource < 6; ++resource) {

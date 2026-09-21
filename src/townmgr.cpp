@@ -2731,14 +2731,15 @@ void townManager::selectArmy(strip* fromStrip, long slot,
     m_currStrip = fromStrip;
     m_currIndex = slot;
 
-    if (!fromStrip->m_group || fromStrip->m_group->m_armies[slot] == CREATURE_NONE) {
+    if (!fromStrip->m_group
+        || fromStrip->m_group->m_armies[slot] < CREATURE_PIKEMAN) {
         strcpy(m_statusText, g_townCommand[11]);
         m_command = -2;
         return;
     }
 
     const char* name;
-    if (isRetailAcceptedCreatureType(fromStrip->m_group->m_armies[slot])) {
+    if (fromStrip->m_group->m_armies[slot] <= CREATURE_RETAIL_RANGE_MAX) {
         if (fromStrip->m_group->m_numTroops[slot] == 1)
             name = H3_AT(g_creatureTypeTraits, fromStrip->m_group->m_armies[slot]).m_name;
         else

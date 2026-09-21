@@ -1912,7 +1912,7 @@ long combatManager::getSurrenderCost()
 
     for (int slot = 0; slot < 20; ++slot) {
         army* currentArmy = &m_armies[side][slot];
-        if (currentArmy->m_creatureType != CREATURE_NONE
+        if (currentArmy->m_creatureType >= CREATURE_PIKEMAN
             && currentArmy->m_numTroops > 0
             && !currentArmy->is(creatureSummoned)
             && currentArmy->m_numTroops
