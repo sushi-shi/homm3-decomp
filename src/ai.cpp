@@ -1565,7 +1565,7 @@ unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estim
     if (estimate->m_ourGroup != 1)
         return 0;
     { for (const long* target = g_castleWallGateTargets;
-           target < g_castleWallGateTargetsEnd; target++) {
+           target < (g_castleWallGateTargets + 5); target++) {
         if (m_wallStrength[*target])
             continue;
         if (!hexIsBlocked(s_wallTargets[*target].getBlockedHex()))
@@ -1615,7 +1615,7 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 
     long row;
     for (row = 0; row < 11; row++) {
-        long hex = g_moatColumns[row];
+        long hex = g_moatHexes[row];
         if (m_drawbridgeState == DRAWBRIDGE_UP
                 || hex != COMBAT_HEX_GATE_MOAT) {
             long damage = g_moatDamage[m_defendingTown->m_type];
@@ -1628,7 +1628,7 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
     if (!m_moatIsWide)
         return;
     for (row = 0; row < 11; row++) {
-        long hex = g_outerMoatColumns[row];
+        long hex = g_innerMoatHexes[row];
         if (m_drawbridgeState == DRAWBRIDGE_UP
                 || hex != COMBAT_HEX_OUTER_MOAT) {
             long damage = g_moatDamage[m_defendingTown->m_type];
@@ -2353,8 +2353,8 @@ unsigned char combatManager::doSpellAI()
         return 0;
     if (m_playerIds[m_currentSide] >= 0
         && g_game->isHuman(m_playerIds[m_currentSide])
-        && !((m_autoCombatOn || g_unk691209)
-             && g_unnamed698758.m_combatAutoSpells)
+        && !((m_autoCombatOn || g_goSolo)
+             && g_config.m_combatAutoSpells)
         && !static_cast<const combatManager*>(this)->isQuickCombat())
         return 0;
     long side = m_currentSide;

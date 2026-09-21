@@ -180,19 +180,11 @@ extern short g_ailDriverState[14];
 // (AdjustMusicVolumes, ResumeSamples, StopAllSamples, PauseSamples,
 // MemorySample). Ordinal placeholder - the role is proven, the NAME is
 // unattested by any source.
-extern unsigned char g_unk691209;
+extern unsigned char g_goSolo;
 
-// Retail .bss 0x698760 / 0x698764: the two volume settings
-// ConvertVolume selects between - 0x698760 for VOLUME_TYPE_101 (music,
-// what SetMusicVolume asks for), 0x698764 otherwise (samples, what
-// MemorySample and ModifySample ask for). Each is a 1..10 step that
-// ConvertVolume scales by (setting + 1) / 10; outside that range it
-// yields 0, which is also why MemorySample and launch_sample can use
-// 0x698764 as a plain "sound is configured on" gate. Ordinal
-// placeholders - names unattested.
-extern int g_unk698760;
-extern int g_unk698764;
-extern int g_unk698a28;
+// Retail-only gate around Open's digital-driver initialization; descriptive
+// name from its only read. Original name and producer are not recovered.
+extern int g_skipDigitalDriverOpen;
 
 // Retail PC Miles initialization state used only by Open. The three .data
 // configuration dwords begin at 0x684aa8; the 16-byte PCM descriptor is at
@@ -230,17 +222,14 @@ struct SoundChannelRange {
 };
 extern SoundChannelRange g_soundChannels[4];  // 0x684ab8
 
-// Retail .bss 0x6a3290 and 0x6a3394, 0x104 bytes apart: the pending MP3
-// name and the copy ResumeStream promotes it to under
-// section_MP3_name_change. Names provisional.
-extern char g_mp3Name[260];
-extern char g_mp3NamePlaying[260];
+// Original DC currentStream / waitingStream. StartMP3 fills the pending name;
+// the worker promotes it to current, while ResumeStream requeues current.
+extern char g_currentStream[260];
+extern char g_waitingStream[260];
 
-// Retail .bss 0x69fe90 / 0x69fe9c: a dword ResumeStream copies from the
-// first to the second alongside the name promotion. Ordinal
-// placeholders - names unattested.
-extern int g_unk69fe90;
-extern int g_unk69fe9c;
+// Original DC currentLoop / waitingLoop, paired with the stream names above.
+extern int g_currentLoop;
+extern int g_waitingLoop;
 
 // Retail .bss 0x69fec0: fifty 0x108-byte playback-position records. The
 // 260-byte name and trailing dword are forced by ThreadStopMP3's stride,

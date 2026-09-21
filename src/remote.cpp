@@ -29,6 +29,17 @@
 #include "textwdgt.h"
 #include "winmgr.h"
 
+DATA(0x00697774) int g_saveGameRequested;
+DATA(0x006976dc) int g_tcpHostStatus;
+
+
+// Retail scalar state; startup initial values come from the pinned image.
+// Original DC name: giNumHumanPlayers; DoNewGame / DoLoadGame.
+DATA(0x00699274) int g_numHumanPlayers;
+// Original DC name: iMPBaseType; DoNewGame / DoLoadGame.
+DATA(0x006994e4) int g_mpBaseType;
+DATA(0x0069ca50) CHotSeatMan* g_hotSeatMan;
+
 // remote.cpp's CHourGlass wrapper expands these two singleselectionwindow
 // helpers at each use. They stay file-local declarations because this is the
 // only remote consumer and widening the shared header would perturb its TUs.
@@ -36,7 +47,7 @@ void startMouseThread();
 void stopMouseThread();
 
 DATA(0x0069d7b0) CChatManager g_chatMan(20);
-DATA(0x0069d630) CTurnDuration g_turnDuration69d630;
+DATA(0x0069d630) CTurnDuration g_turnDuration;
 
 DATA(0x0069d648) CLogFile g_logFile(
     DATA_COMPGEN(0x00682a3c, remoteGameLogName, "game.log"));
@@ -220,14 +231,14 @@ DATA(0x00699551) bool g_mPlayerHost;
 DATA(0x00699510) int g_defeatedAllPlayers;
 // Dreamcast publishes gcTCPAddress as char[21]; retail's client launch arm
 // passes this exact cell both to the log formatter and InitConnection.
-DATA(0x00699274) extern int g_unnamed699274;
+
 // The PC layout is crossed from the HD build through whole-function operand
 // correspondence; the names and types are the Dreamcast CodeView globals.
 DATA(0x00697758) char g_tcpAddress[21];
 // Retail-only byte armed when player-drop recovery resumes through
 // game::NextPlayer. No surviving symbol attests a semantic name.
 DATA(0x0069d804) unsigned char g_gameMode;
-DATA(0x0069d80d) unsigned char g_unnamed69d80d;
+DATA(0x0069d80d) unsigned char g_playerDrop;
 DATA(0x0069d80e) unsigned char g_weMoved;
 DATA(0x0069d608) CNetPlayerInfo g_thisNetPlayerInfo;
 DATA(0x006989f0) eNetGameType g_mpNetProtocol;
@@ -308,7 +319,7 @@ CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
 {
     if (wasCompressed)
         *wasCompressed = 0;
-    if (!g_videoPaused)
+    if (!g_remoteOn)
         return 0;
     if (!m_msgQueue.size())
         return 0;
@@ -687,7 +698,7 @@ void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
 
     // DC line 918 calls CTurnDuration::IsClose; preserve the helper
     // instead of accessing its protected timer fields from this formatter.
-    if (!g_turnDuration69d630.isClose(59000) || canDisplay) {
+    if (!g_turnDuration.isClose(59000) || canDisplay) {
 
         sprintf(
             finalText,
@@ -1115,11 +1126,11 @@ unsigned char initRemote(eNetGameType mpType, const char* userName)
     playerInfo.m_version = *g_videoGameState;
     g_thisNetPlayerInfo = playerInfo;
 
-    strcpy(g_unnamed698758.m_networkDefaultName, userName);
+    strcpy(g_config.m_networkDefaultName, userName);
     strcpy(g_thisNetPlayerInfo.m_name,
-           g_unnamed698758.m_networkDefaultName);
+           g_config.m_networkDefaultName);
     writePrefs();
-    g_networkActive69954c = 1;
+    g_remoteOn = 1;
     return 1;
 }
 
@@ -1130,7 +1141,7 @@ void remoteCleanup()
     g_mpNetProtocol = MP_SINGLE;
     g_chatMan.clearChat();
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         if (g_dPlay) {
             if (g_thisNetPlayerInfo.m_dpid)
                 g_dPlay->destroyPlayer(g_thisNetPlayerInfo.m_dpid);
@@ -1139,7 +1150,7 @@ void remoteCleanup()
             g_dPlay = 0;
         }
 
-        g_networkActive69954c = 0;
+        g_remoteOn = 0;
         {
             CNetPlayerInfo playerInfo;
             playerInfo.m_dpid = 0;
@@ -1154,7 +1165,7 @@ VA(0x00554560, 0x82)
 int transmitRemoteDataDPID(CNetMsg* msg, unsigned long dpidTo,
                            bool compressMsg, bool guaranteed)
 {
-    if (g_networkActive69954c && g_dPlay)
+    if (g_remoteOn && g_dPlay)
         return g_dPlay->transmitRemoteDataDPID(
             msg, dpidTo, compressMsg, guaranteed);
     return 0;
@@ -1164,7 +1175,7 @@ VA(0x005545f0, 0xBA)
 int transmitRemoteData(CNetMsg* msg, int toWho,
                        bool compressMsg, bool guaranteed)
 {
-    if (g_networkActive69954c && g_dPlay)
+    if (g_remoteOn && g_dPlay)
         return g_dPlay->transmitRemoteData(
             msg, toWho, compressMsg, guaranteed);
     return 0;
@@ -1173,7 +1184,7 @@ int transmitRemoteData(CNetMsg* msg, int toWho,
 VA(0x005546b0, 0x103)
 void pollRemote()
 {
-    if (g_gameOver || !g_networkActive69954c || !g_dPlay)
+    if (g_gameOver || !g_remoteOn || !g_dPlay)
         return;
 
     if (g_currentPlayer && g_currentPlayer->isLocalHuman()) {
@@ -1424,7 +1435,7 @@ void CWaitForReadyPlayersDlg::wait()
 
     if (g_dPlay->isHost()) {
         CAllReadyToPlayMsg msg;
-        if (g_networkActive69954c && g_dPlay)
+        if (g_remoteOn && g_dPlay)
             g_dPlay->transmitRemoteData(&msg, 127, 0, 1);
     }
 }
@@ -1698,9 +1709,8 @@ unsigned char handleMPlayerLaunch()
     g_logFile.log(DATA_COMPGEN(0x00682c50, remoteMPlayerDetected,
                             "Detected MPlayer launch."));
 
-    DATA(0x006994e4) extern int g_unnamed6994e4;
-    g_unnamed699274 = 1;
-    g_unnamed6994e4 = 1;
+    g_numHumanPlayers = 1;
+    g_mpBaseType = 1;
     g_mpNetProtocol = MP_TCP;
 
     if (g_mPlayerHost) {
@@ -1746,11 +1756,11 @@ unsigned char handleMPlayerLaunch()
         }
     }
 
-    initRemote(MP_TCP, g_unnamed698758.m_networkDefaultName);
+    initRemote(MP_TCP, g_config.m_networkDefaultName);
 
     int version = *g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
-        g_unnamed698758.m_networkDefaultName, &version, sizeof(version), 0);
+        g_config.m_networkDefaultName, &version, sizeof(version), 0);
     if (!g_thisNetPlayerInfo.m_dpid)
         return 0;
 
@@ -1758,7 +1768,7 @@ unsigned char handleMPlayerLaunch()
     g_logFile.log(DATA_COMPGEN(0x00682be0, remoteMPlayerConnected,
                             "Successful MPlayer connection."));
     strcpy(g_thisNetPlayerInfo.m_name,
-           g_unnamed698758.m_networkDefaultName);
+           g_config.m_networkDefaultName);
     return 1;
 }
 
@@ -1822,21 +1832,21 @@ unsigned char lobbyLaunchConnect()
 
     g_logFile.log(DATA_COMPGEN(0x00682c7c, lobbyConnected,
                             "Successful connect!"));
-    strncpy(g_unnamed698758.m_networkDefaultName,
+    strncpy(g_config.m_networkDefaultName,
             connection->m_playerName->m_shortNameA, 21);
     delete connection;
-    g_unnamed698758.m_networkDefaultName[21] = 0;
+    g_config.m_networkDefaultName[21] = 0;
     g_logFile.log(DATA_COMPGEN(0x00682c6c, lobbyUserName,
                             "Username=[%s]"),
-                g_unnamed698758.m_networkDefaultName);
+                g_config.m_networkDefaultName);
 
     g_mpNetProtocol = MP_TCP;
-    g_unnamed699274 = 1;
-    g_unnamed6994e4 = 1;
-    initRemote(MP_TCP, g_unnamed698758.m_networkDefaultName);
+    g_numHumanPlayers = 1;
+    g_mpBaseType = 1;
+    initRemote(MP_TCP, g_config.m_networkDefaultName);
     int version = *g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
-        g_unnamed698758.m_networkDefaultName, &version, sizeof(version), 0);
+        g_config.m_networkDefaultName, &version, sizeof(version), 0);
     if (!g_thisNetPlayerInfo.m_dpid)
         return 0;
     g_thisNetPlayerInfo.m_version = version;
@@ -1899,7 +1909,7 @@ void updateCurrentPlayers()
                g_generalText->getText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
     }
 
-    g_unnamed699274 = playerArray.getCount();
+    g_numHumanPlayers = playerArray.getCount();
     playerArray.destroy(1);
 }
 
@@ -1918,11 +1928,11 @@ void handlePlayerDrop(unsigned long dpid)
                   g_game->m_players[playerPos].m_name);
     updateCurrentPlayers();
 
-    if (g_unnamed69d810 == playerPos
+    if (g_playerTurn == playerPos
         && !g_game->m_playerDisabled[playerPos]) {
-        int priorPlayer = getPriorPlayer(g_unnamed69d810);
+        int priorPlayer = getPriorPlayer(g_playerTurn);
         g_netLocalGamePos = priorPlayer;
-        g_unnamed69d810 = priorPlayer;
+        g_playerTurn = priorPlayer;
 
         if (g_dPlay->isHost()) {
             if (g_netLocalGamePos == g_game->getLocalPlayerGamePos()) {
@@ -1938,7 +1948,7 @@ void handlePlayerDrop(unsigned long dpid)
                             dpid);
                 CPlayerDropUpdateMsg msg(dpid);
                 transmitRemoteData(
-                    &msg, g_unnamed69d810, false, true);
+                    &msg, g_playerTurn, false, true);
             }
         }
     }
@@ -1952,13 +1962,13 @@ void handleNewHost()
 {
     g_logFile.log(DATA_COMPGEN(0x00682e14, handleNewHostLog,
                             "HandleNewHost"));
-    if (!g_game->isHuman(g_unnamed69d810)) {
+    if (!g_game->isHuman(g_playerTurn)) {
         g_netLocalGamePos = getPriorPlayer(g_netLocalGamePos);
         if (g_netLocalGamePos == g_game->getLocalPlayerGamePos()) {
             onPlayerDropUpdateMsg(-1);
         } else {
             CPlayerDropUpdateMsg msg(-1);
-            if (g_networkActive69954c && g_dPlay) {
+            if (g_remoteOn && g_dPlay) {
 #pragma inline_depth(0)
                 g_dPlay->transmitRemoteData(
                     &msg, g_netLocalGamePos, false, true);
@@ -1996,8 +2006,8 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
     CHourGlass hourGlass(1);
-    if (!g_game->loadGame(g_unnamed698758.m_scFile, 0, 0))
-        g_game->loadGame(g_unnamed698758.m_rcFile, 0, 0);
+    if (!g_game->loadGame(g_config.m_scFile, 0, 0))
+        g_game->loadGame(g_config.m_rcFile, 0, 0);
 
     dlg.close(1);
     hourGlass.stop();
@@ -2011,16 +2021,16 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
     game* currentGame = g_game;
     int localPlayer = currentGame->getLocalPlayerGamePos();
     g_netLocalGamePos = localPlayer;
-    g_unnamed69d810 = localPlayer;
+    g_playerTurn = localPlayer;
     g_currentPlayer = &g_game->m_players[localPlayer];
-    g_unnamed69ccc4 = 1 << localPlayer;
+    g_curPlayerBit = 1 << localPlayer;
 
     int visiblePlayer = currentGame->getLocalPlayerGamePos();
-    g_unnamed69778c = visiblePlayer;
+    g_curWatchPlayer = visiblePlayer;
     g_mapVisibilityBit = 1 << visiblePlayer;
 
     if (g_weMoved) {
-        g_unnamed69d80d = 1;
+        g_playerDrop = 1;
         g_game->nextPlayer();
     } else {
         g_advManager->startLocalPlayerTurn();
@@ -2044,18 +2054,18 @@ void handlePlayerDead(int deadGuy, unsigned char showMsg)
         g_defeatedAllPlayers = 0;
         g_gameOver = 1;
     } else {
-        if (!g_unk691209 && showMsg) {
+        if (!g_goSolo && showMsg) {
             sprintf(g_text, g_generalText->getText(6),
                     g_game->getPlayerName(deadGuy));
             normalDialog(g_text, 1, -1, -1, 10, deadGuy, -1, -1,
                          -1, 5000, -1, 0);
         }
 
-        if (deadGuy == g_unnamed69d810) {
+        if (deadGuy == g_playerTurn) {
             int nextPlayer = getNextHumanPlayer(deadGuy);
             g_currentPlayer = &g_game->m_players[nextPlayer];
             g_netLocalGamePos = nextPlayer;
-            g_unnamed69d810 = nextPlayer;
+            g_playerTurn = nextPlayer;
         }
     }
 }
@@ -2106,7 +2116,7 @@ void handleNormalWinMsg(CNetMsg* netMsg)
         normalDialog(g_generalText->getText(660), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         g_defeatedAllPlayers = 1;
-        g_unnamed69951c = 1;
+        g_normalVictory = 1;
     } else {
         normalDialog(g_generalText->getText(661), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
@@ -2331,7 +2341,6 @@ unsigned char CSaveScreen::isSaved()
 }
 
 void showVideo(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);
-void closeVideo();  // 0x599050
 
 VA(0x00557410, 0x1E)  // dc 0x11ec64
 CGameTransferSmack::CGameTransferSmack()
@@ -2375,7 +2384,7 @@ VA(0x005574b0, 0x12D)  // dc 0x11ece4
 void CGameTransferSmack::setPercentage(float pct)
 {
     m_lastFrame = static_cast<int>(pct * 20.0f);
-    setCurrentSmackFrame(m_lastFrame);
+    SmackManager::gotoSmackerFrame(m_lastFrame);
     drawCurrentFrame();
 
     char text[256];
@@ -2402,7 +2411,7 @@ void CGameTransferSmack::setPercentage(float pct)
 // E:\gamedcs\remote.cpp:2784, dc 0x11ede8
 inline void CGameTransferSmack::drawCurrentFrame()
 {
-    drawCurrentSmackFrame();
+    SmackManager::drawSmackerFrame();
 }
 
 // E:\gamedcs\remote.cpp:2789
@@ -2410,7 +2419,7 @@ VA(0x005575e0, 0x15)  // dc 0x11edec
 void CGameTransferSmack::stop()
 {
     if (m_started) {
-        closeVideo();
+        SmackManager::closeSmacker();
         m_started = 0;
     }
 }

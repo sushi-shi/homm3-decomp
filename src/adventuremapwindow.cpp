@@ -29,7 +29,6 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x006a56e0) extern THelpText g_adventureWindowHelp[];
 // 0x6a56e4 is g_adventureWindowHelp[0].m_rclick, not another array.
 // Dreamcast's gQuickViewText belongs to the distinct object-name table.
 
@@ -483,18 +482,18 @@ void CAdventurMapChatEdit::sendChat(const char* chat, int toWho)
         checkAdvCheatCode(chatString);
 
     if (chatString == DATA_COMPGEN(0x0065f3cc, advChatGoSolo, "gosolo")) {
-        if (!g_networkActive69954c)
+        if (!g_remoteOn)
             g_mapVisibilityBit = 0xff;
-        g_unnamed691209 = 1;
-        g_unnamed69120c = g_game->getLocalPlayerGamePos();
-        g_unnamed698758.m_combatBallista = 1;
-        g_unnamed698758.m_combatCatapult = 1;
-        g_unnamed698758.m_combatAutoCreatures = 1;
-        g_unnamed698758.m_combatFirstAidTent = 1;
-        g_unnamed698758.m_combatAutoSpells = 1;
-        g_unnamed698758.m_combatSpeed = 2;
-        g_unnamed698758.m_computerWalkSpeed = 4;
-        g_unnamed698758.m_walkSpeed = 4;
+        g_goSolo = 1;
+        g_soloPos = g_game->getLocalPlayerGamePos();
+        g_config.m_combatBallista = 1;
+        g_config.m_combatCatapult = 1;
+        g_config.m_combatAutoCreatures = 1;
+        g_config.m_combatFirstAidTent = 1;
+        g_config.m_combatAutoSpells = 1;
+        g_config.m_combatSpeed = 2;
+        g_config.m_computerWalkSpeed = 4;
+        g_config.m_walkSpeed = 4;
     }
 
     ::sendChat(chatString.c_str(), toWho);

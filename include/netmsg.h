@@ -221,8 +221,8 @@ public:
     // five includers on merge.
     t_complex_net_message();
     t_complex_net_message(eRS_Messages subType);
-    virtual unsigned char read(TAbstractFile* infile);
-    virtual unsigned char write(TAbstractFile* outfile) const;
+    virtual unsigned char read(TAbstractFile* infile) = 0;
+    virtual unsigned char write(TAbstractFile* outfile) const = 0;
     unsigned char remoteFn00512E00(CNetMsg* netMsg);
     unsigned char remoteFn00512D40(int toWho, bool compressMsg,
                                     bool guaranteed);

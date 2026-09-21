@@ -540,7 +540,7 @@ TRandomMapProgress::TRandomMapProgress(int totalSteps)
     for (unsigned int i = 0; i < m_widgets.size(); i++)
         m_window->addWidget(m_widgets[i], -1);
     g_windowManager->addWindow(m_window, -1, 1);
-    loadProgFn00577180();
+    updateProgressBar();
     g_windowManager->updateScreen(0, 0, 800, 600);
 }
 
@@ -559,7 +559,7 @@ TRandomMapProgress::~TRandomMapProgress()
 }
 
 VA(0x00577180, 0x17F)
-void TRandomMapProgress::loadProgFn00577180()
+void TRandomMapProgress::updateProgressBar()
 {
     if (!m_barSprite)
         return;
@@ -600,7 +600,7 @@ VA(0x00577300, 0x12)
 void TRandomMapProgress::setTotal(int totalSteps)
 {
     m_steps = totalSteps;
-    loadProgFn00577180();
+    updateProgressBar();
 }
 
 // COMDAT pairing: vector<widget*>::_Ucopy, agreement 0.978. Same caller-set

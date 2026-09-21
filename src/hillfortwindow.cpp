@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 
 #include <stdio.h>
@@ -73,7 +74,7 @@ THillFortWindow::THillFortWindow()
         DATA_COMPGEN(0x0067f1e0, hillFortBackground, "APhlftBk.pcx"),
         0x800));
     m_widgets.push_back(new textWidget(
-        0, 0x14, 0x28c, 0x15c, g_adventureObjectNames[HILL_FORT],
+        0, 0x14, 0x28c, 0x15c, g_quickViewText[HILL_FORT],
         DATA_COMPGEN(0x00660b24, hillFortBigFont, "bigfont.fnt"),
         font::HEADING, TITLE_ID, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new bitmapBorder(
@@ -332,7 +333,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
             allUpgraded = 0;
             if (s.m_level == 0) {
                 strcpy(s.m_goldCost, (*g_generalText)[345]);
-                strcpy(s.m_resourceCost, g_emptyRolloverText);
+                strcpy(s.m_resourceCost, "");
             } else {
                 TCreatureType upgraded;
                 {
@@ -354,7 +355,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
                 }
                 sprintf(s.m_goldCost, "%d", s.m_cost[6]);
                 if (s.m_resourceIndex == -1)
-                    sprintf(s.m_resourceCost, g_emptyRolloverText);
+                    sprintf(s.m_resourceCost, "");
                 else
                     sprintf(s.m_resourceCost, "%d",
                             s.m_cost[s.m_resourceIndex]);
@@ -473,7 +474,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
             msg.m_extraText = totalCostText;
             broadcastMessage(msg);
         } else {
-            strcpy(totalCostText, g_emptyRolloverText);
+            strcpy(totalCostText, "");
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_SET_TEXT;
             msg.m_codeY = totalID;
@@ -706,7 +707,7 @@ int hillFortWindowHandler(message& msg)
 
         default:
             g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
-            msg.m_extraText = g_emptyRolloverText;
+            msg.m_extraText = "";
             break;
         }
 

@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 #include "includes.h"
 
@@ -65,8 +66,6 @@ DATA(0x006a7458) extern THelpText g_viewArmyHelp[16];
 // luck describers (0x4f32a0 / 0x4f3540) read the SAME rows at the same
 // offsets with the same format_string/append shape, which is what fixes
 // both bases and both roles.
-DATA(0x006a57bc) extern const char* g_moraleTexts[42];
-DATA(0x006a532c) extern const char* g_luckTexts[25];
 
 // The single-stack popup: one army's whole record laid out over the
 // 298x311 CrStkPU.pcx plate. EH-bearing (`push -1 / push __ehhandler$ /
@@ -484,9 +483,9 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 //
 // DC lines 412/511-583 prove the shared exit flag, and 420-475 prove one
 // help-text string with seven operator= stores followed by the dialog.
-// Lines 510/517/555-561 use TTextResource::operator[]. The selected spell
-// value survives those lookups in DC; keep that value for every tooltip arm.
-// Restoring these calls and the value snapshot gives 92.5504%. The former
+// DC text subscripts at 510/517/555-561 forward to the getText accessor
+// used here. The selected spell value survives those lookups in DC.
+// Keeping that value snapshot gives 92.5744%. The former
 // assign/const-reference spellings reached 100% through different nested
 // append decisions. The luck += still retains append where retail expands
 // it. Exit-flag declaration and upgrade-input lifetime controls are flat;
@@ -512,33 +511,33 @@ int TViewArmyWindow::windowHandler(message& msg)
             switch (helpID) {
             case g_moraleHelpIndex:
                 if (m_morale > 0) {
-                    text = formatString(g_moraleTexts[3], g_moraleTexts[0]);
+                    text = formatString(g_moraleInfo[3], g_moraleInfo[0]);
                     resType = 14;
                 } else if (m_morale == 0) {
-                    text = formatString(g_moraleTexts[3], g_moraleTexts[1]);
+                    text = formatString(g_moraleInfo[3], g_moraleInfo[1]);
                     resType = 15;
                 } else {
-                    text = formatString(g_moraleTexts[3], g_moraleTexts[2]);
+                    text = formatString(g_moraleInfo[3], g_moraleInfo[2]);
                     resType = 16;
                 }
                 if (m_moraleHelp.length() == 0)
-                    text += g_moraleTexts[23];
+                    text += g_moraleInfo[23];
                 else
                     text += m_moraleHelp;
                 break;
             case g_luckHelpIndex:
                 if (m_luck > 0) {
-                    text = formatString(g_luckTexts[3], g_luckTexts[0]);
+                    text = formatString(g_luckInfo[3], g_luckInfo[0]);
                     resType = 11;
                 } else if (m_luck == 0) {
-                    text = formatString(g_luckTexts[3], g_luckTexts[1]);
+                    text = formatString(g_luckInfo[3], g_luckInfo[1]);
                     resType = 12;
                 } else {
-                    text = formatString(g_luckTexts[3], g_luckTexts[2]);
+                    text = formatString(g_luckInfo[3], g_luckInfo[2]);
                     resType = 13;
                 }
                 if (m_luckHelp.length() == 0)
-                    text += g_luckTexts[18];
+                    text += g_luckInfo[18];
                 else
                     text += m_luckHelp;
                 break;
@@ -569,7 +568,7 @@ int TViewArmyWindow::windowHandler(message& msg)
                 }
                 if (resource >= 0)
                     amount = cost[resource];
-                normalDialog((*g_generalText)[GENERAL_TEXT_UPGRADE_ARMY_PROMPT],
+                normalDialog(g_generalText->getText(GENERAL_TEXT_UPGRADE_ARMY_PROMPT),
                              2, -1, -1, 6, cost[6], resource, amount,
                              -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
@@ -577,7 +576,7 @@ int TViewArmyWindow::windowHandler(message& msg)
                 break;
             }
             case DISMISS_ID:
-                normalDialog((*g_generalText)[GENERAL_TEXT_DISMISS_ARMY_PROMPT],
+                normalDialog(g_generalText->getText(GENERAL_TEXT_DISMISS_ARMY_PROMPT),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
                     exitFlag = 1;
@@ -590,7 +589,7 @@ int TViewArmyWindow::windowHandler(message& msg)
     } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         int hoverID = findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID != g_lastViewArmyHoverId) {
-            const char* rollover = g_emptyRolloverText;
+            const char* rollover = "";
             g_lastViewArmyHoverId = hoverID;
             if (hoverID != -1) {
                 g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
@@ -603,22 +602,22 @@ int TViewArmyWindow::windowHandler(message& msg)
                             m_influence[hoverID - AFFECTING_SPELLS_0_ID];
                         if (spell == SPELL_BIND)
                             sprintf(g_text,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT],
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
                                     g_spellTraits[spell].m_name,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_BIND]);
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_BIND));
                         else if (spell == SPELL_BERSERK)
                             sprintf(g_text,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT],
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
                                     g_spellTraits[spell].m_name,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_BERSERK]);
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_BERSERK));
                         else if (spell == SPELL_DISRUPTING_RAY)
                             sprintf(g_text,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT],
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
                                     g_spellTraits[spell].m_name,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY]);
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY));
                         else
                             sprintf(g_text,
-                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT],
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT),
                                     g_spellTraits[spell].m_name,
                                     m_duration[hoverID - AFFECTING_SPELLS_0_ID]);
                         rollover = g_text;
@@ -744,7 +743,7 @@ void TViewArmyWindow::createAttackWidget(int normalAttackSkill,
                                            int currentAttackSkill)
 {
     m_widgets.push_back(new textWidget(
-        154, 48, 122, 17, g_primarySkillNames[0], "smalfont.fnt",
+        154, 48, 122, 17, g_statNames[0], "smalfont.fnt",
         font::PRIMARY, ATTACK_LABEL_ID, 4, 0, 8));
 
     if (normalAttackSkill == currentAttackSkill)
@@ -762,7 +761,7 @@ void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
                                             int currentDefenseSkill)
 {
     m_widgets.push_back(new textWidget(
-        154, 66, 122, 17, g_primarySkillNames[1], "smalfont.fnt",
+        154, 66, 122, 17, g_statNames[1], "smalfont.fnt",
         font::PRIMARY, DEFENSE_LABEL_ID, 4, 0, 8));
 
     if (normalDefenseSkill == currentDefenseSkill)

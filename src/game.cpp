@@ -1,3 +1,5 @@
+#include "prefs.h"
+#include "text.h"
 #include "va.h"
 #include "bitset_iterator.h"
 
@@ -54,13 +56,70 @@
 #include "winfile.h"
 #include "winmgr.h"
 
+// Initial contents recovered from the pinned Complete image.
+DATA(0x0063d570) TCreatureType g_creatureGenerator1Types[80] = { TCreatureType(106), TCreatureType(96), TCreatureType(74), TCreatureType(66), TCreatureType(68), TCreatureType(10), TCreatureType(14), TCreatureType(112), TCreatureType(12), TCreatureType(94), TCreatureType(54), TCreatureType(104), TCreatureType(16), TCreatureType(113), TCreatureType(52), TCreatureType(18), TCreatureType(114), TCreatureType(30), TCreatureType(36), TCreatureType(86), TCreatureType(98), TCreatureType(84), TCreatureType(44), TCreatureType(102), TCreatureType(26), TCreatureType(4), TCreatureType(72), TCreatureType(46), TCreatureType(110), TCreatureType(42), TCreatureType(100), TCreatureType(34), TCreatureType(80), TCreatureType(76), TCreatureType(78), TCreatureType(8), TCreatureType(38), TCreatureType(48), TCreatureType(90), TCreatureType(88), TCreatureType(50), TCreatureType(82), TCreatureType(92), TCreatureType(28), TCreatureType(40), TCreatureType(22), TCreatureType(70), TCreatureType(115), TCreatureType(60), TCreatureType(108), TCreatureType(20), TCreatureType(24), TCreatureType(64), TCreatureType(62), TCreatureType(56), TCreatureType(58), TCreatureType(0), TCreatureType(2), TCreatureType(6), TCreatureType(118), TCreatureType(120), TCreatureType(130), TCreatureType(132), TCreatureType(133), TCreatureType(134), TCreatureType(135), TCreatureType(136), TCreatureType(137), TCreatureType(24), TCreatureType(112), TCreatureType(113), TCreatureType(114), TCreatureType(115), TCreatureType(138), TCreatureType(139), TCreatureType(140), TCreatureType(141), TCreatureType(142), TCreatureType(143), TCreatureType(144) };
+DATA(0x00677938) TCreatureType g_creatureGenerator4Types[2][4] = {
+    { TCreatureType(112), TCreatureType(114), TCreatureType(113), TCreatureType(115) },
+    { TCreatureType(32), TCreatureType(33), TCreatureType(116), TCreatureType(117) }
+};
+DATA(0x00677974) const char* g_artifactObjectDefFormat = "ava%04d.def";
+
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x00677998) double g_productionHandicap[3] = { 0.0, 0.15, 0.3 };
+DATA(0x00678170) const int g_initResourcesHuman[5][7] = {
+    { 30, 15, 30, 15, 15, 15, 30000 },
+    { 20, 10, 20, 10, 10, 10, 20000 },
+    { 15, 7, 15, 7, 7, 7, 15000 },
+    { 10, 4, 10, 4, 4, 4, 10000 },
+    { 0, 0, 0, 0, 0, 0, 0 }
+};
+DATA(0x006781fc) const int g_initResourcesComputer[5][7] = {
+    { 5, 2, 5, 2, 2, 2, 5000 },
+    { 10, 4, 10, 4, 4, 4, 7500 },
+    { 15, 7, 15, 7, 7, 7, 10000 },
+    { 15, 7, 15, 7, 7, 7, 10000 },
+    { 15, 7, 15, 7, 7, 7, 10000 }
+};
+
+DATA(0x0069ccb0) playerData* g_currentPlayer;
+DATA(0x0069cca8) int g_netLocalGamePos;
+DATA(0x00699554) int g_localGamePos;
+// Original DC name: iSandAnim; GetTurnAIVars resets it beside iCurHourGlassPhase.
+DATA(0x00691680) int g_sandAnim;
+
+
+// Retail table initializers, in the layouts used by their named consumers.
+DATA(0x00677958) const char* g_resourceObjectDefs[NUM_RESOURCES] = { "avtwood0.def", "avtmerc0.def", "avtore0.def", "avtsulf0.def", "avtcrys0.def", "avtgems0.def", "avtgold0.def" };
+DATA(0x00677a0c) const char* g_townVillageObjectDefs[9] = { "AVCcast0.def", "AVCramp0.def", "AVCtowr0.def", "AVCinft0.def", "AVCnecr0.def", "AVCdung0.def", "AVCstro0.def", "AVCftrt0.def", "AVChfor0.def" };
+DATA(0x00677a30) const char* g_townFortObjectDefs[9] = { "AVCcasx0.def", "AVCramx0.def", "AVCtowx0.def", "AVCinfx0.def", "AVCnecx0.def", "AVCdunx0.def", "AVCstrx0.def", "AVCftrx0.def", "AVChforx.def" };
+DATA(0x00677a54) const char* g_townCapitolObjectDefs[9] = { "AVCcasz0.def", "AVCramz0.def", "AVCtowz0.def", "AVCinfz0.def", "AVCnecz0.def", "AVCdunz0.def", "AVCstrz0.def", "AVCforz0.def", "AVChforz.def" };
+DATA(0x00677978) int g_mineProduction[7] = { 2, 1, 2, 1, 1, 1, 1000 };
+DATA(0x006779b0) const int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
+DATA(0x0069fbf8) int g_newMapStartingBonus[8];
+DATA(0x0069fb24) int g_startingHeroOverrides[8];
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x00697294) TTextResource* g_randomTavernText;
+DATA(0x0069774c) bool g_inCampaign;
+DATA(0x00697750) int g_weekType;
+DATA(0x006983fc) int g_weekTypeExtra;
+DATA(0x00697748) int g_monthType;
+DATA(0x00698834) int g_monthTypeExtra;
+DATA(0x006783c8) int g_mapWidth = 72;
+DATA(0x006783cc) int g_mapHeight = 72;
+// Original DC name: g_playerTurn; StartLocalPlayerTurn and remote turn handoff.
+DATA(0x0069d810) int g_playerTurn;
+DATA(0x0067814c) int g_heroGoldCost = 2500;
+DATA(0x0069950c) int g_grailOwner;
+DATA(0x0069951c) unsigned char g_normalVictory;
+DATA(0x0069ccc4) unsigned char g_curPlayerBit;
+
 type_point aiAttemptPuzzleGuess(long player);
 
 // Retail/HD evidence names the hourglass animation phase; NextPlayer is its
 // game.obj writer. The second dword is the byte-proven autosave preference
 // gate, but no surviving symbol attests a semantic spelling for it.
 DATA(0x00691684) int g_curHourGlassPhase;
-DATA(0x00698770) int g_unnamed698770;
 
 // Hero-setup maps use the native Dinkumware <utility>/<xtree> definitions.
 // Retail retains the pair cleanup at 0x4c4df0 and the tree minimum, insert
@@ -159,24 +218,16 @@ const int g_neutralTownFortifiedReinforcementChance = 80;
 // remaining spellings describe only the retail use proven in DoNewTurn.
 DATA(0x006a79c4) extern const char* g_monthNames[10];
 DATA(0x006a7710) extern const char* g_weekNames[15];
-DATA(0x006a77a8) extern const char* g_lastDayWarningFormat;
-DATA(0x006a77ac) extern const char* g_oneDayWarningFormat;
-DATA(0x006a77b0) extern const char* g_normalMonthFormat;
-DATA(0x006a77b4) extern const char* g_creatureMonthFormat;
-DATA(0x006a77b8) extern const char* g_plagueMonthText;
-DATA(0x006a77bc) extern const char* g_normalWeekFormat;
-DATA(0x006a77c0) extern const char* g_creatureWeekFormat;
-DATA(0x006a77c4) extern const char* g_infernoWeekFormat;
 
 // The 256 canned-rumour text pointers are filled by the game-data loader.
 // Its first store is 0x696d9c and SetCannedRumour is the table's only
 // runtime reader.
-DATA(0x00696d9c) extern const char* g_cannedRumours[256];
+DATA(0x00696d9c) const char* g_cannedRumours[256];
 
 // randtvrn.txt itself, kept alive because the table above points into it.
 // InitializeRandomTavernText is its only writer and nothing else in the
 // image reads the slot.
-DATA(0x00697294) extern TTextResource* g_randomTavernText;
+
 
 const int g_allRandomArtifactClasses = 0x1e;
 const int g_campaignArmyOverrideHero = 45;
@@ -1106,7 +1157,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
 
     g_game->recordHideHero(ourHero, ourHero->m_owner, 0);
 
-    if (g_videoPaused) {
+    if (g_remoteOn) {
         CMCHideHero hideHero(ourHero->m_id);
         sendMapChange(&hideHero);
     }
@@ -1684,7 +1735,7 @@ char* playerData::getName()
     if ((!m_isHuman && _strcmpi(m_name, g_generalText->getText(
             GENERAL_TEXT_DEFAULT_PLAYER_NAME)) == 0) ||
         (m_isHuman && _strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")) == 0)) {
-        strcpy(m_name, g_playerColorNames[m_color]);
+        strcpy(m_name, g_colors[m_color]);
     }
     m_name[0] = toupper(m_name[0]);
     return m_name;
@@ -2527,9 +2578,9 @@ int game::load(TAbstractFile* infile)
     setMapSize(m_mapHeader.m_size, m_mapHeader.m_size);
 
     if (saved.m_version >= 41) {
-        g_unnamed69950c = readValue<char>(infile);
+        g_grailOwner = readValue<char>(infile);
     } else {
-        g_unnamed69950c = -1;
+        g_grailOwner = -1;
     }
 
     if (saved.m_version >= 34) {
@@ -2732,11 +2783,11 @@ int game::load(TAbstractFile* infile)
 
     g_advManager->m_curHeroMobile = 0;
     g_currentPlayer = &g_game->m_players[g_netLocalGamePos];
-    g_unnamed69ccc4 = 1 << g_netLocalGamePos;
-    if (!g_networkActive69954c)
-        g_unnamed69778c = g_netLocalGamePos;
+    g_curPlayerBit = 1 << g_netLocalGamePos;
+    if (!g_remoteOn)
+        g_curWatchPlayer = g_netLocalGamePos;
     setupShipyards();
-    g_mapVisibilityBit = 1 << g_unnamed69778c;
+    g_mapVisibilityBit = 1 << g_curWatchPlayer;
     g_completeDrawEnabled = g_game->isLocalHuman(g_netLocalGamePos);
     setupAdjacentMons();
     aiExamineMap();
@@ -2991,7 +3042,7 @@ int game::save(TAbstractFile* outfile)
         return -1;
 
     {
-        charBuffer = g_unnamed69950c;
+        charBuffer = g_grailOwner;
         outfile->write(&charBuffer, sizeof(charBuffer));
     }
     outfile->write(m_artifactDisabled, sizeof(m_artifactDisabled));
@@ -3238,7 +3289,7 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
         else
             sprintf(saveName,
                     DATA_COMPGEN(0x00677d90, saveSlotNameFormat, "%s.GM%d"),
-                    nameNoExtension, g_unnamed699274);
+                    nameNoExtension, g_numHumanPlayers);
     } else {
         strcpy(saveName, filename);
     }
@@ -3287,8 +3338,8 @@ void game::setupOrigData()
 {
     int i;
 
-    g_unnamed69951c = 0;
-    g_unnamed69950c = -1;
+    g_normalVictory = 0;
+    g_grailOwner = -1;
     m_difficultyRating = 1;
     g_weekTypeExtra = 0;
     g_weekType = 0;
@@ -3299,7 +3350,7 @@ void game::setupOrigData()
     strncpy(m_saveFileName, (*g_generalText)[12], sizeof(m_saveFileName));
     m_saveFileName[sizeof(m_saveFileName) - 1] = 0;
     MEMSET(m_playerDisabled, 0, sizeof(m_playerDisabled), i);
-    memset(g_unnamed69fb24, -1, sizeof(g_unnamed69fb24));
+    memset(g_startingHeroOverrides, -1, sizeof(g_startingHeroOverrides));
 
     m_ultimateArtifactX = -1;
     m_ultimateArtifactY = -1;
@@ -3399,7 +3450,7 @@ void game::giveTroopsToNeutralTown(int townId)
     armyGroup* townArmy = &currentTown->getArmy();
     TCreatureType creature;
     TCreatureType upgradedCreature;
-    TCreatureType upgradedValue = g_townUpgradedDwellingCreatures[
+    TCreatureType upgradedValue = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
         townType * TOWN_DWELLING_SLOTS + monsterLevel];
     creature = g_townDwellingCreatures[
         townType * TOWN_DWELLING_SLOTS + monsterLevel];
@@ -3681,9 +3732,9 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 // E:\gamedcs\game.cpp:4236
 VA(0x004bfe70, 0x6A8)  // dc 0xaada4
 void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
-                  NewMapCampaignContext* campaignContext, int gameVersion)
+                  TCampaignBrief::ScenarioStruct* campaignContext, int gameVersion)
 {
-    g_inSetup698400 = 1;
+    g_inSetup = 1;
 
     randomizeHeroPool();
 
@@ -3737,7 +3788,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
         g_game->m_campaign.doPreLoadCustomization();
     processOnMapHeroes();
     if (campaignContext != NULL)
-        campaignContext->newMapFn00487290();
+        campaignContext->placeCrossoverHeroes();
     createTownHeroes(playerHeroFaces);
 
     for (unsigned int mapDataIndex = 0;
@@ -3778,7 +3829,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                    sizeof(m_players[setupPlayer].m_resources));
             if (m_isTutorial)
                 memcpy(m_players[setupPlayer].m_resources,
-                       &g_neutralTownLevelWeightsEnd,
+                       g_neutralTownLevelWeights + 6,
                        sizeof(m_players[setupPlayer].m_resources));
         } else {
             m_players[setupPlayer].m_personality = random(0, 2);
@@ -3862,14 +3913,14 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
     }
 
     if (campaignContext != NULL)
-        campaignContext->newMapFn00487900();
+        campaignContext->giveCrossoverArtifacts();
 
     setupAdjacentMons();
     setupNewRumour();
 
     setMarketArtifacts();
 
-    g_inSetup698400 = 0;
+    g_inSetup = 0;
 }
 
 // Retail-only PC wrapper between the DC NewMap and SetupFirstPlayer rows.
@@ -3924,12 +3975,12 @@ void game::setupFirstPlayer()
 
     g_netLocalGamePos = startingPos;
     g_currentPlayer = &m_players[startingPos];
-    g_unnamed69ccc4 = static_cast<unsigned char>(1 << startingPos);
+    g_curPlayerBit = static_cast<unsigned char>(1 << startingPos);
 
     int currentPlayer = getLocalPlayerGamePos();
-    g_unnamed69778c = currentPlayer;
+    g_curWatchPlayer = currentPlayer;
     g_mapVisibilityBit = static_cast<unsigned char>(1 << currentPlayer);
-    g_unnamed69d810 = startingPos;
+    g_playerTurn = startingPos;
 }
 // E:\gamedcs\game.cpp:4509. On x86 the unchanged award, secondary skill
 // and spell stores fold away, leaving only the randomized primary lane.
@@ -5137,21 +5188,13 @@ bool game::loadMap(TAbstractFile* mapFile)
 // second argument is part of the proved retail arity (`ret 8`) but this body
 // never reads it.
 
-// Residual (86.08842%, 2026-08-26): all 39 reachable blocks, every branch,
-// the 0x5c frame and the normal return are instruction-for-instruction exact.
-// The candidate has 42 blocks against retail's 40 solely because VC6 expands
-// two more layers of bitset<70>::set's unreachable range-error construction:
-// it expands basic_string::_Tidy and logic_error's constructor where retail
-// calls them. predict-inline reports the same six-call census on both sides
-// and identifies exactly those two over-inline decisions. inline_depth 1..4,
-// set/operator[] spellings and byte-inert candidate-site sweeps do not move
-// that decision in this compiland; depth zero incorrectly calls set itself.
-
 // The artifact records are assigned as complete two-dword values. Besides
 // expressing the map format directly, that is the source shape which gives
-// retail's `movsx / store / or -1 / store` loop. assign_map_hero_name keeps
-// the returned string temporary as the direct assign argument while pinning
-// only assign itself, reproducing the complete normal-path cleanup transcript.
+// retail's `movsx / store / or -1 / store` loop. The custom name likewise
+// assigns the complete returned string. No Dreamcast counterpart is known
+// for this Complete-only reader. Whole-string operator= currently gives
+// 44.0213% versus 52.0030% with explicit assign; a named return-value temporary
+// only reaches 44.7652%. String and bitset helper expansion remains unresolved.
 VA(0x004c2ce0, 0x3A8)  // sole caller LoadMap + HeroExtra field-offset walk
 void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 {
@@ -5226,8 +5269,7 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
         mapFile->read(&customName, sizeof(customName));
         if (customName) {
             heroRecord->m_customName = 1;
-            heroRecord->m_name.assign(
-                readLengthPrefixedString(mapFile), 0, std::string::npos);
+            heroRecord->m_name = readLengthPrefixedString(mapFile);
         }
 
         signed char sexByte;
@@ -5921,8 +5963,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
             if (heroId == g_savedHeroNone)
                 heroId = -1;
             m_heroes[heroIndex].m_heroId = heroId;
-            m_heroes[heroIndex].m_name.assign(
-                readLengthPrefixedString(infile), 0, std::string::npos);
+            m_heroes[heroIndex].m_name = readLengthPrefixedString(infile);
             ++heroIndex;
             --heroCount;
         } while (heroCount != 0);
@@ -6621,7 +6662,7 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
     if (oldOwner == newPlayerOwner)
         return;
 
-    if (!g_inSetup698400 && !isRemoteMove)
+    if (!g_inSetup && !isRemoteMove)
         recordClaimTown(townId, newPlayerOwner);
 
     thisTown->m_isGrouped = 0;
@@ -6984,10 +7025,10 @@ void game::nextPlayer()
     }
 
     if (g_currentPlayer->isLocalHuman())
-        g_turnDuration69d630.clear();
+        g_turnDuration.clear();
     g_curHourGlassPhase = 0;
 
-    if (g_currentPlayer->isLocalHuman() && g_unnamed698770) {
+    if (g_currentPlayer->isLocalHuman() && g_config.m_autosave) {
         for (i = 0; i < 8; ++i) {
             if (!m_playerDisabled[i]) {
                 humans = i;
@@ -7023,7 +7064,7 @@ void game::nextPlayer()
             if (weekSave) {
                 makeOrig = 1;
                 perDay();
-                if (g_networkActive69954c) {
+                if (g_remoteOn) {
                     m_mapHeader.m_lossCondition.checkForTimeLimitExpired();
                     ::checkEndGame(0);
                     if (g_gameOver)
@@ -7035,34 +7076,34 @@ void game::nextPlayer()
         }
     }
 
-    if (g_unnamed691209 && makeOrig
-        && (!g_networkActive69954c || g_unnamed699274 == 1)) {
+    if (g_goSolo && makeOrig
+        && (!g_remoteOn || g_numHumanPlayers == 1)) {
         g_advManager->drawRolloverText(
             const_cast<char*>(g_generalText->getText(108)));
         saveGame(g_generalText->getText(77), 1, 0, 1, 0);
         g_advManager->drawRolloverText(
             DATA_COMPGEN(0x00691210, nextPlayerSoloEmptyRollover, ""));
 
-        save = g_networkActive69954c;
-        g_networkActive69954c = 1;
-        g_unnamed691209 = 0;
+        save = g_remoteOn;
+        g_remoteOn = 1;
+        g_goSolo = 0;
         normalDialogTimeOut(g_generalText->getText(663), 2, 2000,
                             -1, -1, -1, 0, -1, 0, -1, -1, 0);
-        g_networkActive69954c = save;
+        g_remoteOn = save;
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE) {
-            g_game->m_players[g_unnamed69120c].m_isHuman = 1;
-            g_game->m_players[g_unnamed69120c].m_isLocal = 1;
-            g_unnamed691209 = 0;
-            g_mapVisibilityBit = 1 << g_unnamed69120c;
+            g_game->m_players[g_soloPos].m_isHuman = 1;
+            g_game->m_players[g_soloPos].m_isLocal = 1;
+            g_goSolo = 0;
+            g_mapVisibilityBit = 1 << g_soloPos;
         } else {
-            g_unnamed691209 = 1;
+            g_goSolo = 1;
         }
     }
 
     g_currentPlayer = &g_game->m_players[g_netLocalGamePos];
-    g_unnamed69ccc4 = 1 << g_netLocalGamePos;
+    g_curPlayerBit = 1 << g_netLocalGamePos;
 
-    if (g_networkActive69954c && !g_currentPlayer->isHuman()) {
+    if (g_remoteOn && !g_currentPlayer->isHuman()) {
         CTurnUpdateMsg msg(g_netLocalGamePos);
         transmitRemoteData(&msg, 0x7f, false, true);
     }
@@ -7104,39 +7145,39 @@ void game::nextPlayer()
         showComputerScreen();
         g_completeDrawEnabled = 0;
 
-        if (g_networkActive69954c && isHuman(g_netLocalGamePos)) {
+        if (g_remoteOn && isHuman(g_netLocalGamePos)) {
             toWho = g_netLocalGamePos;
             makeOrig = 0;
             g_thisNetGotAdventureControl = 0;
-            if (g_unnamed69d80d) {
+            if (g_playerDrop) {
                 toWho = 0x7f;
-                g_unnamed69d80d = 0;
+                g_playerDrop = 0;
             }
             if (isLastHuman(getLocalPlayerGamePos())) {
                 toWho = 0x7f;
-                g_unnamed69d80d = 0;
+                g_playerDrop = 0;
                 makeOrig = 1;
             }
             save = transmitSaveGame(toWho, 0, 1, makeOrig);
-            if (!save && g_unnamed69d80d) {
+            if (!save && g_playerDrop) {
                 g_netLocalGamePos = giCurPlayerSave;
-                g_unnamed69d80d = 0;
+                g_playerDrop = 0;
                 g_currentPlayer = &g_game->m_players[g_netLocalGamePos];
-                g_unnamed69ccc4 = 1 << g_netLocalGamePos;
+                g_curPlayerBit = 1 << g_netLocalGamePos;
                 nextPlayer();
                 return;
             }
             g_advManager->updateRadar(1, 1, 0, 0, 0);
-            g_unnamed69d810 = g_netLocalGamePos;
+            g_playerTurn = g_netLocalGamePos;
         }
         g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, -1);
     } else {
         setNoDialogMenus(1);
         g_inputManager->flush();
-        g_unnamed69778c = g_netLocalGamePos;
-        g_mapVisibilityBit = g_unnamed69ccc4;
+        g_curWatchPlayer = g_netLocalGamePos;
+        g_mapVisibilityBit = g_curPlayerBit;
 
-        if (g_unnamed6993dc && g_unnamed699274 > 1) {
+        if (g_blackoutPlayer && g_numHumanPlayers > 1) {
             char textBuffer[256];
             sprintf(textBuffer, g_generalText->getText(
                         GENERAL_TEXT_PLAYER_TURN_FORMAT),
@@ -7145,13 +7186,13 @@ void game::nextPlayer()
         }
 
         if (g_currentPlayer->isLocalHuman()
-            || (g_networkActive69954c && g_currentPlayer->isHuman())) {
+            || (g_remoteOn && g_currentPlayer->isHuman())) {
             cancelComputerScreen();
         }
     }
 
     if (g_currentPlayer->isLocalHuman())
-        g_turnDuration69d630.start();
+        g_turnDuration.start();
     doNewTurn();
     if (g_currentPlayer->isLocalHuman())
         g_advManager->forceNewHover();
@@ -8499,7 +8540,7 @@ void game::showComputerScreen()
     g_advManager->m_advWindow->getWidget(6)->enable(0);
     g_advManager->m_advWindow->getWidget(12)->enable(0);
 
-    if (g_unnamed698790 && !g_currentPlayer->isHuman()) {
+    if (g_config.m_blackoutComputer && !g_currentPlayer->isHuman()) {
         g_currentPlayer->m_isLocal = 1;
         g_completeDrawAllCells = 1;
         g_advManager->completeDraw(1);
@@ -8537,7 +8578,7 @@ void game::showHeroesLogo()
     int x;
     int y;
 
-    if (g_networkActive69954c && g_dPlay) {
+    if (g_remoteOn && g_dPlay) {
         netMsgHandler = g_dPlay->getNetMsgHandler();
         if (netMsgHandler && netMsgHandler->isInPopup())
             return;
@@ -8561,7 +8602,7 @@ void game::showHeroesLogo()
 VA(0x004ca840, 0x19C)  // dc 0xb6640
 void game::waitForPlayer(char* text, int playerId)
 {
-    if (!g_unnamed6993dc || g_unnamed699274 <= 1 || g_networkActive69954c)
+    if (!g_blackoutPlayer || g_numHumanPlayers <= 1 || g_remoteOn)
         return;
 
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
@@ -8684,8 +8725,8 @@ void game::processOnMapTowns()
                     if (townExtra->m_customName)
                         currTown->m_name = townExtra->m_name;
                     else
-                        currTown->m_name.assign(
-                            getRandomTownName(townExtra->m_townType));
+                        currTown->m_name =
+                            getRandomTownName(townExtra->m_townType);
 
                     currTown->initialize(townExtra);
                     convertObject(tempCell);
@@ -8791,13 +8832,13 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
         g_advManager->bvMessage((*g_generalText)[99]);
 
-    saveGame(g_loadedGameName, 0, 0, !inGame, 1);
+    saveGame(g_config.m_scFile, 0, 0, !inGame, 1);
 
     char fileName[351];
     sprintf(fileName,
             DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
             DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"),
-            g_loadedGameName);
+            g_config.m_scFile);
 
     if (inGame) {
         File file;
@@ -8869,7 +8910,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     unsigned char done = 0;
     unsigned long numMsgs = 0;
     int curBlock = 0;
-    g_unnamed69d80d = 0;
+    g_playerDrop = 0;
     if (totalBlocks % fileSize)
         ++totalBlocks;
 
@@ -8957,7 +8998,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                         CDestroyPlayerMsg destroyMsg(
                             m_players[toWho].m_dpid);
                         m_players[toWho].clearNetInfo();
-                        g_unnamed69d80d = 1;
+                        g_playerDrop = 1;
                         transmitRemoteDataDPID(&destroyMsg, 0,
                                                false, true);
                         return 0;
@@ -8975,7 +9016,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                                                        false, true);
                             }
                         }
-                        g_unnamed69d80d = 1;
+                        g_playerDrop = 1;
                         delete[] data;
                         return 0;
                     }
@@ -9024,7 +9065,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             case RS_PLAYER_DROPPED:
                 if (getGamePosFromDPID(confirmMsg->m_dpidFrom) == toWho) {
                     handlePlayerDrop(confirmMsg->m_dpidFrom);
-                    g_unnamed69d80d = 1;
+                    g_playerDrop = 1;
                     delete[] data;
                     return 0;
                 }
@@ -9378,7 +9419,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     sprintf(fileName,
             DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
             DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"),
-            g_loadedGameName);
+            g_config.m_scFile);
     int handle = _open(fileName,
                        _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
                        _S_IWRITE);
@@ -9442,10 +9483,10 @@ void game::doNewTurn()
 
     if (g_currentPlayer->m_deathCountDown >= 0) {
         if (g_currentPlayer->m_deathCountDown == 1) {
-            sprintf(g_text, g_oneDayWarningFormat,
+            sprintf(g_text, g_newTurn[1],
                     g_currentPlayer->getName());
         } else {
-            sprintf(g_text, g_lastDayWarningFormat,
+            sprintf(g_text, g_newTurn[0],
                     g_currentPlayer->getName(),
                     g_currentPlayer->m_deathCountDown);
         }
@@ -9482,28 +9523,28 @@ void game::doNewTurn()
 
     if (m_week == 1 && g_weekType == g_weekTypeNormal) {
         if (g_monthTypeExtra == g_monthEffectNormal) {
-            sprintf(g_text, g_normalMonthFormat, g_monthNames[g_monthType]);
+            sprintf(g_text, g_newTurn[2], g_monthNames[g_monthType]);
         } else if (g_monthTypeExtra == g_monthEffectCreature) {
             strcpy(temp, getArmyName(g_monthType, 1));
             temp[0] = toupper(temp[0]);
-            sprintf(g_text, g_creatureMonthFormat,
+            sprintf(g_text, g_newTurn[3],
                     getArmyName(g_monthType, 1), temp);
         } else {
-            strcpy(g_text, g_plagueMonthText);
+            strcpy(g_text, g_newTurn[4]);
         }
     } else {
         switch (g_weekType) {
         case g_weekTypeNormal:
-            sprintf(g_text, g_normalWeekFormat, g_weekNames[g_weekTypeExtra]);
+            sprintf(g_text, g_newTurn[5], g_weekNames[g_weekTypeExtra]);
             break;
 
         case g_weekTypeCreature:
             strcpy(temp, getArmyName(g_weekTypeExtra, 1));
-            sprintf(g_text, g_creatureWeekFormat, temp, temp);
+            sprintf(g_text, g_newTurn[6], temp, temp);
             break;
 
         case g_weekTypeInfernoGrail:
-            sprintf(g_text, g_infernoWeekFormat,
+            sprintf(g_text, g_newTurn[7],
                     g_creatureTypeTraits[g_creatureImpId].m_name,
                     g_creatureTypeTraits[g_creatureImpId].m_name,
                     g_creatureTypeTraits[g_creatureImpId].m_growthRate,
@@ -9773,12 +9814,12 @@ void game::setSpecialRumour()
             sprintf(m_currentRumour,
                     g_generalText->getText(
                         g_specialRumourGrailAboveText),
-                    g_questMonsterDirections[direction]);
+                    g_directions[direction]);
         } else {
             sprintf(m_currentRumour,
                     g_generalText->getText(
                         g_specialRumourGrailBelowText),
-                    g_questMonsterDirections[direction]);
+                    g_directions[direction]);
         }
     } else {
         type_point artifactLocation(m_ultimateArtifactX, m_ultimateArtifactY,
@@ -9786,7 +9827,7 @@ void game::setSpecialRumour()
         const NewmapCell* cell = g_advManager->getCell(artifactLocation);
         sprintf(m_currentRumour,
                 g_generalText->getText(g_specialRumourGrailObjectText),
-                g_grailTerrainNames[cell->m_groundSet]);
+                g_rumourTerrainDescriptions[cell->m_groundSet]);
     }
 }
 
@@ -9874,7 +9915,7 @@ void game::checkForTimeEvent()
                   : thisEvent->m_applyToComputer)) {
             continue;
         }
-        if (!(g_unnamed69ccc4 & thisEvent->m_playerFlags))
+        if (!(g_curPlayerBit & thisEvent->m_playerFlags))
             continue;
 
         if (thisEvent->m_firstTime == day) {
@@ -9903,7 +9944,7 @@ void game::checkForTownEvent()
                   : thisEvent.m_applyToComputer)) {
             continue;
         }
-        if (!(g_unnamed69ccc4 & thisEvent.m_playerFlags))
+        if (!(g_curPlayerBit & thisEvent.m_playerFlags))
             continue;
 
         if (thisEvent.m_firstTime == day) {
@@ -10209,7 +10250,7 @@ bool game::isLastHuman(int gamePos) const
 VA(0x004cec90, 0x18)  // dc 0xbc300
 bool game::isMultiplayer() const
 {
-    if (g_videoPaused || g_mpNetProtocol == MP_HOTSEAT)
+    if (g_remoteOn || g_mpNetProtocol == MP_HOTSEAT)
         return true;
     return false;
 }
@@ -10226,7 +10267,7 @@ void game::resetGame(int difficulty, int version,
     g_buildAllBuildings = 0;
     setupOrigData();
     initNewGame(difficulty, version, defaultMapHeader, 0);
-    g_turnDuration69d630.clear();
+    g_turnDuration.clear();
     g_thisNetGotAdventureControl = 0;
     TSpellbookWindow::reset();
     memset(m_borderTentVisitFlags, 0, sizeof(m_borderTentVisitFlags));

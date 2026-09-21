@@ -1715,7 +1715,7 @@ constructor still auto-inlines in TCombatWindow; its former explicit inline
 keyword is unnecessary. The emitted vtable has the correct 108-byte extent
 and the two inherited method relocations. Its deleting destructor uses a COFF
 weak alias to the scalar wrapper, whose 33 bytes agree with retail outside the
-two call operands. The existing external widget::vslot12 remains separately
+two call operands. The existing external widget::onSleepChange remains separately
 documented in widget.h; function exactness does not close that missing body.
 
 ### Shared exit state and explicit dialog branches in the hall handler

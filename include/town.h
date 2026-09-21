@@ -159,7 +159,7 @@ extern const char* g_townBuildingSpriteNames[9];
 
 // town.cpp owns the DATA claim; TResourceDisplay consumes the current
 // player-position selector directly, as its retail bodies do.
-extern int g_unnamed69778c;
+extern int g_curWatchPlayer;
 
 // Retail .data 0x67814c; Dreamcast publishes the same global name. Both
 // hero::hire and town::hire subtract it from the player's gold resource.
@@ -622,13 +622,10 @@ extern int g_siloIncome[9][NUM_RESOURCES];
 extern TCreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 // Biased view of the upgraded half of the same first town row. Retail
 // GiveTroopsToNeutralTown carries a distinct relocation to this address.
-DATA(0x006747d0)
-extern TCreatureType g_townUpgradedDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 
 // Retail .data 0x6782a4: ordinary spell counts for guild levels one
 // through five. initialize_spells generates one extra candidate per row so
 // Tower's Library can expose it.
-DATA(0x006782a4)
 extern const signed char g_mageGuildBaseSpellCounts[5];
 
 // Retail .rdata 0x642e20, the four horde building ids in slot order

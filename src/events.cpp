@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 #include "includes.h"
 
@@ -590,8 +591,8 @@ VA(0x0049e170, 0x16E)  // dc 0x90348
 void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
                                 int fizzleSound)
 {
-    unsigned char savedFlag = g_unnamed67f574;
-    g_unnamed67f574 = 0;
+    unsigned char savedFlag = g_colorCyclingEnabled;
+    g_colorCyclingEnabled = 0;
     unsigned char savedPause = m_animCtrPaused;
     m_animCtrPaused = 1;
 
@@ -601,7 +602,7 @@ void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
     fizzleCenter(fizzleSound);
 
     m_animCtrPaused = savedPause;
-    g_unnamed67f574 = savedFlag;
+    g_colorCyclingEnabled = savedFlag;
 }
 
 // E:\gamedcs\events.cpp:317.
@@ -1391,7 +1392,7 @@ void advManager::doEventBlackBox(hero* currentHero, NewmapCell* cell,
         currentHero->checkLevel();
     }
 
-    if (!giveBlackBoxReward(g_emptyRolloverText, currentHero, cell, point,
+    if (!giveBlackBoxReward("", currentHero, cell, point,
                             humanPlayer, blackBox)) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
@@ -1420,7 +1421,7 @@ void advManager::handleMapEvent(hero* currentHero, NewmapCell* cell,
             } else {
                 normalDialog(text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
-                text = g_emptyRolloverText;
+                text = "";
             }
         }
         if (doCombat(point, currentHero, &currentHero->m_army, -1, 0, 0,
@@ -1554,7 +1555,7 @@ void advManager::doEventCoverOfDarkness(NewmapCell* cell, type_point point,
                          ADV_EVENT_TEXT_COVER_OF_DARKNESS),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         CResetVisibilityMsg message(point, g_netLocalGamePos, 20);
         transmitRemoteData(&message, 0x7f, 0, 1);
     }
@@ -1595,7 +1596,7 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    creatureBankEvent(currentHero, cell, g_emptyRolloverText, point,
+    creatureBankEvent(currentHero, cell, "", point,
                       humanPlayer);
 }
 
@@ -1775,7 +1776,7 @@ void advManager::doEventDragonCity(hero* currentHero, NewmapCell* cell,
 
     if (!humanPlayer && aiValueOfEvent(currentHero, point) <= 0)
         return;
-    creatureBankEvent(currentHero, cell, g_emptyRolloverText, point,
+    creatureBankEvent(currentHero, cell, "", point,
                       humanPlayer);
 }
 
@@ -1920,7 +1921,7 @@ inline void advManager::doEventBorderGuard(type_point point, NewmapCell* cell,
 {
     unsigned char visitedFlags =
         g_game->m_borderTentVisitFlags[cell->m_objectIndex];
-    if (visitedFlags & g_unnamed69ccc4) {
+    if (visitedFlags & g_curPlayerBit) {
         if (humanPlayer) {
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_BORDER_GUARD_PROMPT),
@@ -1940,7 +1941,7 @@ inline void advManager::doEventBorderTent(NewmapCell* cell,
                                           unsigned char humanPlayer)
 {
     if (g_game->m_borderTentVisitFlags[cell->m_objectIndex]
-        & g_unnamed69ccc4) {
+        & g_curPlayerBit) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_BORDER_TENT_VISITED),
@@ -1950,7 +1951,7 @@ inline void advManager::doEventBorderTent(NewmapCell* cell,
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_BORDER_TENT),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        g_game->m_borderTentVisitFlags[cell->m_objectIndex] |= g_unnamed69ccc4;
+        g_game->m_borderTentVisitFlags[cell->m_objectIndex] |= g_curPlayerBit;
     }
 }
 
@@ -2077,18 +2078,21 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
 
 // E:\gamedcs\events.cpp:1898. Allied heroes exchange every spell the other
 // can learn through Scholar. Dreamcast supplies the original helper, local
-// inventory, scope order and all seven statement groups; retail proves the
-// Complete limits, both independent transfer guards, dialog rows and the
-// asymmetric seven-icon packing policy.
+// inventory and scope order; retail proves the Complete limits, dialog rows
+// and asymmetric seven-icon packing policy. Both builds put the two transfer
+// directions under an exclusive spell-ownership if/else and reload the first
+// hero's Scholar level for the dialog icon after swapping heroes.
 // DC calls min at lines 1913/1915 and appends spells with push_back.
-// Its Scholar maximum is std::max<signed char>; VC6 exposes that standard
-// selector only under an internal name, so use our canonical reference
-// selector with the same deduced signed-char operands.
-// The final taught-text append still differs in its inline decision.
+// DC's maximum uses signed-char std::max; retail 0x4a2969..0x4a298b instead
+// selects between promoted four-byte copies, consistent with the existing
+// by-value int max overload. DC 1979-2019 builds the message with operator+=.
+// Residual 91.3003%: the final taught-message += retains string::append
+// where retail expands it. Both builds destroy formatString's temporary at
+// the end of that expression; extending its lifetime lacks source evidence.
 VA(0x004a2940, 0x85C)  // anchor-callee from do_event_hero + full retail semantics, dc 0x93464
 static void exchangeSpells(hero* firstHero, hero* secondHero)
 {
-    const int magicScholarLevel = cppMax(
+    const int magicScholarLevel = max(
         firstHero->m_skillLevel[eSecSkillMagicScholar],
         secondHero->m_skillLevel[eSecSkillMagicScholar]);
     std::vector<SpellID> spellsLearned;
@@ -2110,20 +2114,20 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
 
         SpellID spell;
         for (spell = 0; spell < hero::NUM_SPELLS; spell++) {
-            if (firstHero->isInSpellbook(spell)
-                && !secondHero->isInSpellbook(spell)
-                && g_spellTraits[spell].m_level <= secondSpellLevel) {
-                secondHero->addSpell(spell);
-                if (g_currentPlayer->isLocalHuman())
-                    spellsTaught.push_back(spell);
-            }
-
-            if (secondHero->isInSpellbook(spell)
-                && !firstHero->isInSpellbook(spell)
-                && g_spellTraits[spell].m_level <= firstSpellLevel) {
-                firstHero->addSpell(spell);
-                if (g_currentPlayer->isLocalHuman())
-                    spellsLearned.push_back(spell);
+            if (firstHero->isInSpellbook(spell)) {
+                if (!secondHero->isInSpellbook(spell)
+                    && g_spellTraits[spell].m_level <= secondSpellLevel) {
+                    secondHero->addSpell(spell);
+                    if (g_currentPlayer->isLocalHuman())
+                        spellsTaught.push_back(spell);
+                }
+            } else if (secondHero->isInSpellbook(spell)) {
+                if (!firstHero->isInSpellbook(spell)
+                    && g_spellTraits[spell].m_level <= firstSpellLevel) {
+                    firstHero->addSpell(spell);
+                    if (g_currentPlayer->isLocalHuman())
+                        spellsLearned.push_back(spell);
+                }
             }
         }
     }
@@ -2135,10 +2139,10 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
     std::vector<type_dialog_resource> spellsExchanged;
     type_dialog_resource spellInfo;
 
-    msg = formatString((*g_generalText)[140], firstHero->m_name);
+    msg = formatString(g_generalText->getText(140), firstHero->m_name);
     spellInfo.m_resource = RES_SECONDARY_SKILL;
     spellInfo.m_qualifier = eSecSkillMagicScholar * 3
-                           + magicScholarLevel + 2;
+                           + firstHero->m_skillLevel[eSecSkillMagicScholar] + 2;
     spellsExchanged.push_back(spellInfo);
 
     std::sort(spellsLearned.begin(), spellsLearned.end(),
@@ -2152,7 +2156,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
         3, 7 - static_cast<int>(spellsLearned.size()));
 
     if (spellsLearned.size()) {
-        msg.append((*g_generalText)[141]);
+        msg += g_generalText->getText(141);
         for (int i = 0; i < spellsLearned.size(); i++) {
             if (i < learnedIconCount) {
                 spellInfo.m_resource = RES_SPELL;
@@ -2161,21 +2165,21 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             }
             if (i > 0) {
                 if (i == spellsLearned.size() - 1)
-                    msg.append((*g_generalText)[142]);
+                    msg += g_generalText->getText(142);
                 else
-                    msg.append(DATA_COMPGEN(0x0066032c, listSeparator, ", "));
+                    msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
             }
-            msg.append(g_spellTraits[spellsLearned[i]].m_name);
+            msg += g_spellTraits[spellsLearned[i]].m_name;
         }
-        msg.append(formatString((*g_generalText)[143], secondHero->m_name));
+        msg += formatString(g_generalText->getText(143), secondHero->m_name);
     }
 
     if (spellsTaught.size()) {
         if (spellsLearned.size()) {
-            msg.append(DATA_COMPGEN(0x00660db4, commaText, ","));
-            msg.append((*g_generalText)[142]);
+            msg += DATA_COMPGEN(0x00660db4, commaText, ",");
+            msg += g_generalText->getText(142);
         }
-        msg.append((*g_generalText)[148]);
+        msg += g_generalText->getText(148);
         for (int i = 0; i < spellsTaught.size(); i++) {
             if (i < taughtIconCount) {
                 spellInfo.m_resource = RES_SPELL;
@@ -2184,16 +2188,16 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             }
             if (i > 0) {
                 if (i == spellsTaught.size() - 1)
-                    msg.append((*g_generalText)[142]);
+                    msg += g_generalText->getText(142);
                 else
-                    msg.append(DATA_COMPGEN(0x0066032c, listSeparator, ", "));
+                    msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
             }
-            msg.append(g_spellTraits[spellsTaught[i]].m_name);
+            msg += g_spellTraits[spellsTaught[i]].m_name;
         }
-        msg.append(formatString((*g_generalText)[149], secondHero->m_name));
+        msg += formatString(g_generalText->getText(149), secondHero->m_name);
     }
 
-    msg.append(DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
+    msg += DATA_COMPGEN(0x006603ec, saveExtensionDot, ".");
     extendedDialog(msg.c_str(), spellsExchanged, -1, -1, 0);
 }
 
@@ -2567,8 +2571,8 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
                          prisonRescueText),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 
-    unsigned char oldColorCycling = g_unnamed67f574;
-    g_unnamed67f574 = 0;
+    unsigned char oldColorCycling = g_colorCyclingEnabled;
+    g_colorCyclingEnabled = 0;
     unsigned char oldAnimCtrPaused = m_animCtrPaused;
     m_animCtrPaused = 1;
     completeDraw(0);
@@ -2595,7 +2599,7 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
 
     fizzleCenter(FIZZLE_SOUND_PICKUP);
     m_animCtrPaused = oldAnimCtrPaused;
-    g_unnamed67f574 = oldColorCycling;
+    g_colorCyclingEnabled = oldColorCycling;
 
     CMCRecruitHero change(heroID, point, g_netLocalGamePos);
     sendMapChange(&change);
@@ -2710,13 +2714,13 @@ void advManager::doEventRefugeeCamp(hero* currentHero, NewmapCell* cell,
             sprintf(g_text,
                     g_adventureEventText->getText(
                         ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY),
-                    g_adventureObjectNames[cell->m_type]);
+                    g_quickViewText[cell->m_type]);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
         sprintf(g_text,
                 g_adventureEventText->getText(ADV_EVENT_TEXT_REFUGEE_CAMP),
-                g_adventureObjectNames[cell->m_type],
+                g_quickViewText[cell->m_type],
                 getArmyName(cell->m_objectIndex, 2));
         normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
@@ -3515,7 +3519,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
                              -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             if (humanPlayer)
-                normalDialog(g_emptyRolloverText, 1, -1, -1, 8,
+                normalDialog("", 1, -1, -1, 8,
                              reward->m_artifact, -1, 0, -1, 0, -1, 0);
             // The Complete monster reward stores a decoded map ordinal; type_artifact retains its DC TArtifact constructor.
             type_artifact artifact(static_cast<TArtifact>(reward->m_artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
@@ -3531,7 +3535,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
     do {
         if (*qty) {
             if (humanPlayer)
-                normalDialog(g_emptyRolloverText, 1, -1, -1, resource,
+                normalDialog("", 1, -1, -1, resource,
                              *qty, -1, 0, -1, 0, -1, 0);
             currentHero->giveResource(resource, *qty);
         }
@@ -3578,7 +3582,7 @@ void advManager::monstersFight(hero* currentHero, NewmapCell* cell,
 
 void aiJoinDecision(hero* currentHero, TCreatureType creature, short amount);
 unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
-                                TCreatureType type, int amount,
+                                TCreatureType type, short amount,
                                 long goldCost);
 void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 
@@ -4126,7 +4130,7 @@ void advManager::doEventLithOneWay(hero* currentHero, NewmapCell* cell,
 
     NewmapCell* exitCell = g_game->m_worldMap.cell(point);
     if (exitCell->m_type == HERO) {
-        if (g_networkActive69954c) {
+        if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 1);
             transmitRemoteData(&message, 0x7f, 0, 1);
         }
@@ -4154,7 +4158,7 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
 
     NewmapCell* exitCell = g_game->m_worldMap.cell(point);
     if (exitCell->m_type == HERO) {
-        if (g_networkActive69954c) {
+        if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 1);
             transmitRemoteData(&message, 0x7f, 0, 1);
         }
@@ -4301,7 +4305,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
     case CARTOGRAPHER:
         if (humanPlayer) {
             if (g_game->m_cartographerFlags[cell->m_objectIndex]
-                & g_unnamed69ccc4) {
+                & g_curPlayerBit) {
                 normalDialog(g_adventureEventText->getText(
                                  ADV_EVENT_TEXT_CARTOGRAPHER_VISITED),
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -4337,7 +4341,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
                 g_netLocalGamePos,
                 g_game->m_cartographerMask[cell->m_objectIndex]);
             g_game->m_cartographerFlags[cell->m_objectIndex]
-                |= g_unnamed69ccc4;
+                |= g_curPlayerBit;
             completeDraw(false);
             updateScreen(0, 0);
         }
@@ -4378,7 +4382,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case BORDER_GATE:
         if (!(g_game->m_borderTentVisitFlags[cell->m_objectIndex]
-              & g_unnamed69ccc4)) {
+              & g_curPlayerBit)) {
             if (humanPlayer)
                 normalDialog(g_adventureEventText->getText(
                                  ADV_EVENT_TEXT_BORDER_GUARD_DENIED),
@@ -4457,7 +4461,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_HUT_OF_MAGI),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        if (g_networkActive69954c && g_dPlay
+        if (g_remoteOn && g_dPlay
             && g_netLocalGamePos == g_game->getLocalPlayerGamePos()) {
             CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
             if (handler)
@@ -4552,7 +4556,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventOasis(currentHero, cell, humanPlayer);
         break;
     case OBELISK:
-        if (!(g_game->m_obeliskFlags[cell->m_extraInfo] & g_unnamed69ccc4)) {
+        if (!(g_game->m_obeliskFlags[cell->m_extraInfo] & g_curPlayerBit)) {
             g_game->m_obeliskFlags[cell->m_extraInfo]
                 |= g_game->getTeamMask(g_netLocalGamePos);
             if (humanPlayer) {
@@ -4574,7 +4578,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_OBSERVATORY),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        if (g_networkActive69954c) {
+        if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 20);
             transmitRemoteData(&message, 0x7f, 0, 1);
         }
@@ -4590,7 +4594,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_PILLAR_OF_FIRE),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        if (g_networkActive69954c) {
+        if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 20);
             transmitRemoteData(&message, 0x7f, 0, 1);
         }
@@ -4785,7 +4789,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         }
         NewmapCell* exitCell = g_game->getCell(exitPoint);
         if (exitCell->m_type == HERO) {
-            if (g_networkActive69954c) {
+            if (g_remoteOn) {
                 CSetVisibilityMsg message(exitPoint, g_netLocalGamePos, 1);
                 transmitRemoteData(&message, 0x7f, 0, 1);
             }
@@ -4800,7 +4804,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     }
     case UNIVERSITY:
-        if (!humanPlayer || g_unk691209) {
+        if (!humanPlayer || g_goSolo) {
             aiVisitUniversity(currentHero,
                                 cell->getUniversity());
         } else {
@@ -4957,7 +4961,7 @@ void advManager::heroSwap(hero* leftHero, hero* rightHero)
     if (!manager)
         memError();
 
-    if (g_networkActive69954c
+    if (g_remoteOn
         && g_currentPlayer->isLocalHuman()
         && g_game->isHuman(rightHero->m_owner)
         && rightHero->m_owner != leftHero->m_owner)
@@ -5434,7 +5438,7 @@ void advManager::doEventUndeadLair(hero* currentHero, NewmapCell* cell, const ch
         return;
     }
 
-    creatureBankEvent(currentHero, cell, g_emptyRolloverText, point,
+    creatureBankEvent(currentHero, cell, "", point,
                       humanPlayer);
 }
 
@@ -5768,10 +5772,10 @@ int advManager::doNetCombat(CNetMsg* netMsg)
                         &leftHero, &leftArmyGroup, &rightPlayer,
                         &rightTown, &rightHero, &rightArmyGroup,
                         &seed, &winner,
-                        &g_combatFlag6985a3, &g_combatFlag697744);
+                        &g_combatRetreated, &g_combatSurrendered);
 
     int leftPlayer = leftHero->m_owner;
-    if (g_networkActive69954c && !g_thisNetGotAdventureControl) {
+    if (g_remoteOn && !g_thisNetGotAdventureControl) {
         if (rightHero)
             setHeroContext(rightHero->m_id, 0, 1, 1);
         else if (rightTown)
@@ -5785,7 +5789,7 @@ int advManager::doNetCombat(CNetMsg* netMsg)
         sendHeroTownData(point, leftHero, leftArmyGroup, rightPlayer,
                          rightTown, rightHero, rightArmyGroup, seed,
                          fromWho, winner,
-                         g_combatFlag6985a3, g_combatFlag697744);
+                         g_combatRetreated, g_combatSurrendered);
 
     if (leftArmyGroup)
         delete leftArmyGroup;
@@ -5798,8 +5802,8 @@ int advManager::doNetCombat(CNetMsg* netMsg)
     if (leftHero)
         delete leftHero;
 
-    g_combatFlag6985a3 = 0;
-    g_combatFlag697744 = 0;
+    g_combatRetreated = 0;
+    g_combatSurrendered = 0;
     return 1;
 }
 
@@ -5959,10 +5963,10 @@ unsigned char CCombatInitMsg::write(TAbstractFile* outfile) const
 // E:\gamedcs\events.cpp:6248, dc 0x9ce40.
 inline CTurnDurationPause::CTurnDurationPause()
 {
-    g_turnDuration69d630.pause();
-    if (g_unnamed691209) {
-        g_game->m_players[g_unnamed69120c].m_isLocal = 1;
-        g_game->m_players[g_unnamed69120c].m_isHuman = 1;
+    g_turnDuration.pause();
+    if (g_goSolo) {
+        g_game->m_players[g_soloPos].m_isLocal = 1;
+        g_game->m_players[g_soloPos].m_isHuman = 1;
     }
 }
 
@@ -5971,10 +5975,10 @@ inline CTurnDurationPause::CTurnDurationPause()
 VA(0x004ae9b0, 0x50)
 inline CTurnDurationPause::~CTurnDurationPause()
 {
-    g_turnDuration69d630.resume();
-    if (g_unnamed691209 && g_netLocalGamePos == g_unnamed69120c) {
-        g_game->m_players[g_unnamed69120c].m_isLocal = 0;
-        g_game->m_players[g_unnamed69120c].m_isHuman = 0;
+    g_turnDuration.resume();
+    if (g_goSolo && g_netLocalGamePos == g_soloPos) {
+        g_game->m_players[g_soloPos].m_isLocal = 0;
+        g_game->m_players[g_soloPos].m_isHuman = 0;
     }
 }
 
@@ -6015,7 +6019,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     demobilizeCurrHero(0, 1);
     reseed(0, 0);
 
-    unsigned char replay = (g_unnamed691209 && g_unnamed691208) ? 1 : 0;
+    unsigned char replay = (g_goSolo && g_goSoloTest) ? 1 : 0;
     if (!rightHuman && !leftHuman && !replay) {
         int winner;
         NewmapCell* target = g_game->m_worldMap.cell(point);
@@ -6040,7 +6044,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     g_mouseManager->showPointer(1);
     int savePlayer = g_netLocalGamePos;
     int saveShowIt = g_completeDrawEnabled;
-    g_unnamed699540 = 1;
+    g_adventureCombatActive = 1;
 
     do {
         if (leftPlayer >= 0 && rightPlayer >= 0
@@ -6067,8 +6071,8 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                                             point, &tleftHero, &tleftArmyGroup,
                                             &tempRightPlayer, &trightTown,
                                             &trightHero, &trightArmyGroup, &seed,
-                                            &winnerId, &g_combatFlag6985a3,
-                                            &g_combatFlag697744);
+                                            &winnerId, &g_combatRetreated,
+                                            &g_combatSurrendered);
                         if (trightTown) {
                             *rightTown = *trightTown;
                             delete trightTown;
@@ -6123,17 +6127,17 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                    > leftHero->m_skillLevel[eSecSkillBattleTactics])
             aiArrangeArmyForCombat(rightHero, leftHero, *leftArmyGroup);
         if (g_highMemBuffer > 2900)
-            g_unnamed699548 = 2;
+            g_adventureGraphicsPreserveMode = 2;
         else if (g_highMemBuffer > 900)
-            g_unnamed699548 = 1;
+            g_adventureGraphicsPreserveMode = 1;
         g_executive->callManager(g_combatManager);
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         g_mouseManager->showPointer(1);
-        g_unnamed699548 = 0;
+        g_adventureGraphicsPreserveMode = 0;
         if (leftHero)
             leftHero->checkLevel();
         if (rightHero) {
-            if (g_networkActive69954c && rightHuman && leftHuman
+            if (g_remoteOn && rightHuman && leftHuman
                 && g_combatManager->m_winner == 1) {
                 if (g_game->isLocalHuman(rightHero->m_owner)) {
                     rightHero->checkLevel();
@@ -6294,7 +6298,7 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
         g_completeDrawEnabled = saveShowIt;
         g_netLocalGamePos = savePlayer;
         if (!g_currentPlayer->isHuman()) {
-            if (!g_networkActive69954c)
+            if (!g_remoteOn)
                 g_game->showComputerScreen();
             g_game->turnOnAIMusic();
             setNoDialogMenus(0);
@@ -6303,10 +6307,10 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
         }
         mobilizeCurrHero(0, 0, 1);
         if (finishHeroes) {
-            g_combatFlag6985a3 = 0;
-            g_combatFlag697744 = 0;
+            g_combatRetreated = 0;
+            g_combatSurrendered = 0;
         }
-        g_unnamed699540 = 0;
+        g_adventureCombatActive = 0;
         g_mouseManager->showPointer(1);
         checkEndGame(0);
         return g_combatManager->m_winner;

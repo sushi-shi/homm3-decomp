@@ -6,23 +6,19 @@
 #include "misc.h"
 
 #include "crt_stdio.h"
+#include "kb.h"
 #include "kbwin.h"
 #include "prefs.h"
 #include "wingraph.h"
 #include "winmm_thunks.h"
 
-// The dialog FileSize raises when the open fails. Free /Gr row at
-// retail 0x4f3a60, inside kb.obj's carve bracket and UNCLAIMED, so the
-// name is a house ordinal placeholder (the town.h Unnamed526d20
-// precedent). Body: sprintf's a text-table format against the incoming
-// filename into a 500-byte frame buffer, then NormalDialog.
-void unnamed4f3a60(char* filename);
+// Initial contents recovered from the pinned Complete image.
 
 // Use the timer during video playback so the game RNG sequence stays unchanged.
 VA(0x0050b1d0, 0x54)  // dc 0xfd81c
 int safeRandom(int min, int max)
 {
-    if (!g_videoPaused) {
+    if (!g_remoteOn) {
         if (max == min)
             return max;
         if (max < min)
@@ -55,13 +51,13 @@ void generateUniqueSystemID()
         DATA_COMPGEN(0x0067fe68, uniqueSystemIDCharacters,
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
 
-    memset(g_unnamed698758.m_name, 0, sizeof(g_unnamed698758.m_name));
+    memset(g_config.m_name, 0, sizeof(g_config.m_name));
     value = random(1, 999999) + GameTime::get();
-    g_unnamed698758.m_name[2] = characters[value % 36];
+    g_config.m_name[2] = characters[value % 36];
     value += random(1, 999999) + GameTime::get();
-    g_unnamed698758.m_name[1] = characters[value % 36];
+    g_config.m_name[1] = characters[value % 36];
     value += random(1, 999999) + GameTime::get();
-    g_unnamed698758.m_name[0] = static_cast<char>(value % 26 + 'A');
+    g_config.m_name[0] = static_cast<char>(value % 26 + 'A');
 }
 
 // E:\gamedcs\misc.cpp:170
@@ -84,57 +80,57 @@ void generateUniqueSystemID()
 VA(0x0050b260, 0x26C)  // body + sole retail caller, dc 0xfd958
 void checkConfigFile()
 {
-    g_unnamed698758.m_showRoute &= 1;
-    g_unnamed698758.m_animateSpellBook &= 1;
-    g_unnamed698758.m_videoSubtitles &= 1;
-    g_unnamed698758.m_quickCombat &= 1;
-    g_unnamed698758.m_moveReminder &= 1;
-    g_unnamed698758.m_showCombatGrid &= 1;
+    g_config.m_showRoute &= 1;
+    g_config.m_animateSpellBook &= 1;
+    g_config.m_videoSubtitles &= 1;
+    g_config.m_quickCombat &= 1;
+    g_config.m_moveReminder &= 1;
+    g_config.m_showCombatGrid &= 1;
     // Retail masks animateSpellBook TWICE: it loads 0x298788 once, ANDs the
     // register at +0x8f and again at +0xa5, and stores once. VC6 folds the
     // repeat only when the two statements are adjacent - written here, seven
     // statements apart, both masks survive (98.5030 -> 99.1000).
-    g_unnamed698758.m_animateSpellBook &= 1;
-    g_unnamed698758.m_showCombatMouseHex &= 1;
-    g_unnamed698758.m_townOutlines &= 1;
-    g_unnamed698758.m_combatAutoSpells &= 1;
-    g_unnamed698758.m_combatCatapult &= 1;
-    g_unnamed698758.m_combatAutoCreatures &= 1;
-    g_unnamed698758.m_combatBallista &= 1;
-    g_unnamed698758.m_combatFirstAidTent &= 1;
-    g_unnamed698758.m_autosave &= 1;
-    g_unnamed698758.m_blackoutComputer &= 1;
+    g_config.m_animateSpellBook &= 1;
+    g_config.m_showCombatMouseHex &= 1;
+    g_config.m_townOutlines &= 1;
+    g_config.m_combatAutoSpells &= 1;
+    g_config.m_combatCatapult &= 1;
+    g_config.m_combatAutoCreatures &= 1;
+    g_config.m_combatBallista &= 1;
+    g_config.m_combatFirstAidTent &= 1;
+    g_config.m_autosave &= 1;
+    g_config.m_blackoutComputer &= 1;
     g_firstTimeThrough &= 1;
-    g_unnamed698758.m_firstInstall &= 1;
-    g_unnamed698758.m_mainGameShowMenu &= 1;
-    g_unnamed698758.m_mainGameFullScreen &= 1;
-    g_unnamed698758.m_combatShadeLevel &= 1;
+    g_config.m_firstInstall &= 1;
+    g_config.m_mainGameShowMenu &= 1;
+    g_config.m_mainGameFullScreen &= 1;
+    g_config.m_combatShadeLevel &= 1;
 
-    if (g_unnamed698758.m_combatArmyInfoLevel < 0 ||
-            g_unnamed698758.m_combatArmyInfoLevel > 2)
-        g_unnamed698758.m_combatArmyInfoLevel = 0;
-    if (g_unnamed698758.m_combatSpeed < 0 ||
-            g_unnamed698758.m_combatSpeed > 2)
-        g_unnamed698758.m_combatSpeed = 0;
-    if (g_unnamed698758.m_windowScrollSpeed < 0 ||
-            g_unnamed698758.m_windowScrollSpeed > 2)
-        g_unnamed698758.m_windowScrollSpeed = 1;
-    if (g_unnamed698758.m_computerWalkSpeed < 2 ||
-            g_unnamed698758.m_computerWalkSpeed > 5)
-        g_unnamed698758.m_computerWalkSpeed = 3;
-    if (g_unnamed698758.m_walkSpeed <= 0 ||
-            g_unnamed698758.m_walkSpeed > 4)
-        g_unnamed698758.m_walkSpeed = 2;
-    if (g_unnamed698758.m_musicVolume < 0 ||
-            g_unnamed698758.m_musicVolume > 9)
-        g_unnamed698758.m_musicVolume = 5;
-    if (g_unnamed698758.m_soundVolume < 0 ||
-            g_unnamed698758.m_soundVolume > 9)
-        g_unnamed698758.m_soundVolume = 5;
+    if (g_config.m_combatArmyInfoLevel < 0 ||
+            g_config.m_combatArmyInfoLevel > 2)
+        g_config.m_combatArmyInfoLevel = 0;
+    if (g_config.m_combatSpeed < 0 ||
+            g_config.m_combatSpeed > 2)
+        g_config.m_combatSpeed = 0;
+    if (g_config.m_windowScrollSpeed < 0 ||
+            g_config.m_windowScrollSpeed > 2)
+        g_config.m_windowScrollSpeed = 1;
+    if (g_config.m_computerWalkSpeed < 2 ||
+            g_config.m_computerWalkSpeed > 5)
+        g_config.m_computerWalkSpeed = 3;
+    if (g_config.m_walkSpeed <= 0 ||
+            g_config.m_walkSpeed > 4)
+        g_config.m_walkSpeed = 2;
+    if (g_config.m_musicVolume < 0 ||
+            g_config.m_musicVolume > 9)
+        g_config.m_musicVolume = 5;
+    if (g_config.m_soundVolume < 0 ||
+            g_config.m_soundVolume > 9)
+        g_config.m_soundVolume = 5;
 
-    g_unnamed698758.m_lastMusicVolume = g_unnamed698758.m_musicVolume;
-    g_unnamed698758.m_lastSoundVolume = g_unnamed698758.m_soundVolume;
-    if (strlen(g_unnamed698758.m_name) < 3)
+    g_config.m_lastMusicVolume = g_config.m_musicVolume;
+    g_config.m_lastSoundVolume = g_config.m_soundVolume;
+    if (strlen(g_config.m_name) < 3)
         generateUniqueSystemID();
 }
 
@@ -154,14 +150,14 @@ void checkConfigFile()
 
 void setDefaultSystemOptions()
 {
-    g_unnamed698758.m_showRoute = 1;
-    g_unnamed698758.m_moveReminder = 1;
-    g_unnamed698758.m_quickCombat = 0;
-    g_unnamed698758.m_videoSubtitles = 1;
-    g_unnamed698758.m_townOutlines = 1;
-    g_unnamed698758.m_windowScrollSpeed = 1;
-    g_unnamed698758.m_computerWalkSpeed = 3;
-    g_unnamed698758.m_walkSpeed = 2;
+    g_config.m_showRoute = 1;
+    g_config.m_moveReminder = 1;
+    g_config.m_quickCombat = 0;
+    g_config.m_videoSubtitles = 1;
+    g_config.m_townOutlines = 1;
+    g_config.m_windowScrollSpeed = 1;
+    g_config.m_computerWalkSpeed = 3;
+    g_config.m_walkSpeed = 2;
 }
 
 // E:\gamedcs\misc.cpp:403
@@ -182,8 +178,9 @@ void setDefaultSystemOptions()
 // The prefs block type and the four sibling dwords are defined in
 // include/prefs.h; their DEFINITIONS and DATA claims stay here, in
 // the owning TU.
+// Original DC name: gConfig / configStruct; ReadPrefs zeroes this complete object.
 DATA(0x00698758)
-SUnnamed698758 g_unnamed698758;
+configStruct g_config;
 
 DATA(0x006985c4)
 char g_regAppPath[351];
@@ -333,22 +330,22 @@ static const char* const g_prefShowIntro =
 VA(0x0050b4d0, 0x222)  // dc 0xfda8c
 void setGameDefaults()
 {
-    g_unnamed698758.m_musicVolume = 5;
-    g_unnamed698758.m_lastMusicVolume = 5;
-    g_unnamed698758.m_soundVolume = 5;
-    g_unnamed698758.m_lastSoundVolume = 5;
-    g_unnamed698758.m_mainGameX = 10;
-    g_unnamed698758.m_mainGameY = 10;
+    g_config.m_musicVolume = 5;
+    g_config.m_lastMusicVolume = 5;
+    g_config.m_soundVolume = 5;
+    g_config.m_lastSoundVolume = 5;
+    g_config.m_mainGameX = 10;
+    g_config.m_mainGameY = 10;
     setDefaultSystemOptions();
     setDefaultCombatOptions();
-    g_unnamed698758.m_autosave = 1;
-    g_unnamed698758.m_blackoutComputer = 0;
-    g_unnamed698758.m_mainGameShowMenu = 1;
-    g_unnamed698758.m_mainGameFullScreen = 1;
+    g_config.m_autosave = 1;
+    g_config.m_blackoutComputer = 0;
+    g_config.m_mainGameShowMenu = 1;
+    g_config.m_mainGameFullScreen = 1;
     g_firstTimeThrough = 1;
-    strcpy(g_unnamed698758.m_networkDefaultName, "Player");
+    strcpy(g_config.m_networkDefaultName, "Player");
     generateUniqueSystemID();
-    g_unnamed698758.m_firstInstall = 0;
+    g_config.m_firstInstall = 0;
 
     _getcwd(g_regAppPath, sizeof(g_regAppPath));
     strcat(g_regAppPath,
@@ -367,33 +364,33 @@ void setGameDefaults()
 VA(0x0050b700, 0x44)  // dc 0xfdb98
 void setDefaultCombatOptions()
 {
-    g_unnamed698758.m_animateSpellBook = 1;
-    g_unnamed698758.m_showCombatGrid = 0;
-    g_unnamed698758.m_showCombatMouseHex = 0;
-    g_unnamed698758.m_combatShadeLevel = 0;
-    g_unnamed698758.m_combatArmyInfoLevel = 0;
-    g_unnamed698758.m_combatSpeed = 0;
-    g_unnamed698758.m_combatAutoCreatures = 1;
-    g_unnamed698758.m_combatAutoSpells = 1;
-    g_unnamed698758.m_combatCatapult = 1;
-    g_unnamed698758.m_combatBallista = 1;
-    g_unnamed698758.m_combatFirstAidTent = 1;
+    g_config.m_animateSpellBook = 1;
+    g_config.m_showCombatGrid = 0;
+    g_config.m_showCombatMouseHex = 0;
+    g_config.m_combatShadeLevel = 0;
+    g_config.m_combatArmyInfoLevel = 0;
+    g_config.m_combatSpeed = 0;
+    g_config.m_combatAutoCreatures = 1;
+    g_config.m_combatAutoSpells = 1;
+    g_config.m_combatCatapult = 1;
+    g_config.m_combatBallista = 1;
+    g_config.m_combatFirstAidTent = 1;
 }
 
 VA(0x0050b750, 0x59)  // dc 0xfdbd0
 void readPrefs()
 {
-    memset(&g_unnamed698758, 0, sizeof(g_unnamed698758));
+    memset(&g_config, 0, sizeof(g_config));
     readPrefsFromRegistry();
-    sprintf(g_unnamed698758.m_rcFile,
+    sprintf(g_config.m_rcFile,
         DATA_COMPGEN(0x0067fea8, readPrefsRcFileFormat, "RMT%sRC.BIN"),
-        g_unnamed698758.m_name);
-    sprintf(g_unnamed698758.m_rdFile,
+        g_config.m_name);
+    sprintf(g_config.m_rdFile,
         DATA_COMPGEN(0x0067fe9c, readPrefsRdFileFormat, "RMT%sRD.BIN"),
-        g_unnamed698758.m_name);
-    sprintf(g_unnamed698758.m_scFile,
+        g_config.m_name);
+    sprintf(g_config.m_scFile,
         DATA_COMPGEN(0x0067fe90, readPrefsScFileFormat, "RMT%sSC.BIN"),
-        g_unnamed698758.m_name);
+        g_config.m_name);
     writePrefsToRegistry();
 }
 
@@ -440,9 +437,9 @@ void readPrefsFromRegistry()
         cbData = 4;
         if (RegQueryValueExA(key, g_prefMusicVolume, 0, &type,
                 static_cast<BYTE*>(static_cast<void*>(
-                    &g_unnamed698758.m_musicVolume)), &cbData)
+                    &g_config.m_musicVolume)), &cbData)
                 != ERROR_SUCCESS) {
-            memset(&g_unnamed698758, 0, sizeof(g_unnamed698758));
+            memset(&g_config, 0, sizeof(g_config));
             setGameDefaults();
             RegCloseKey(key);
             writePrefsToRegistry();
@@ -451,46 +448,46 @@ void readPrefsFromRegistry()
 
         RegQueryValueExA(key, g_prefMusicVolume, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_musicVolume)), &cbData);
+                &g_config.m_musicVolume)), &cbData);
         RegQueryValueExA(key, g_prefSoundVolume, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_soundVolume)), &cbData);
+                &g_config.m_soundVolume)), &cbData);
         RegQueryValueExA(key, g_prefLastMusicVolume, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_lastMusicVolume)), &cbData);
+                &g_config.m_lastMusicVolume)), &cbData);
         RegQueryValueExA(key, g_prefLastSoundVolume, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_lastSoundVolume)), &cbData);
+                &g_config.m_lastSoundVolume)), &cbData);
         RegQueryValueExA(key, g_prefWalkSpeed, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_walkSpeed)), &cbData);
+                &g_config.m_walkSpeed)), &cbData);
         RegQueryValueExA(key, g_prefComputerWalkSpeed, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_computerWalkSpeed)), &cbData);
+                &g_config.m_computerWalkSpeed)), &cbData);
         RegQueryValueExA(key, g_prefShowRoute, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_showRoute)), &cbData);
+                &g_config.m_showRoute)), &cbData);
         RegQueryValueExA(key, g_prefMoveReminder, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_moveReminder)), &cbData);
+                &g_config.m_moveReminder)), &cbData);
         RegQueryValueExA(key, g_prefQuickCombat, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_quickCombat)), &cbData);
+                &g_config.m_quickCombat)), &cbData);
         RegQueryValueExA(key, g_prefVideoSubtitles, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_videoSubtitles)), &cbData);
+                &g_config.m_videoSubtitles)), &cbData);
         RegQueryValueExA(key, g_prefTownOutlines, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_townOutlines)), &cbData);
+                &g_config.m_townOutlines)), &cbData);
         RegQueryValueExA(key, g_prefAnimateSpellBook, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_animateSpellBook)), &cbData);
+                &g_config.m_animateSpellBook)), &cbData);
         RegQueryValueExA(key, g_prefWindowScrollSpeed, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_windowScrollSpeed)), &cbData);
+                &g_config.m_windowScrollSpeed)), &cbData);
         RegQueryValueExA(key, g_prefBlackoutComputer, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_blackoutComputer)), &cbData);
+                &g_config.m_blackoutComputer)), &cbData);
         RegQueryValueExA(key, g_prefFirstTime, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_firstTimeThrough)), &cbData);
@@ -505,63 +502,63 @@ void readPrefsFromRegistry()
                 &g_testBlit)), &cbData);
         RegQueryValueExA(key, g_prefBinkVideo, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_binkVideo)), &cbData);
+                &g_config.m_binkVideo)), &cbData);
 
         cbData = 4;
         RegQueryValueExA(key, g_prefUniqueSystemId, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                g_unnamed698758.m_name)), &cbData);
-        g_unnamed698758.m_name[3] = 0;
+                g_config.m_name)), &cbData);
+        g_config.m_name[3] = 0;
         cbData = 31;
         RegQueryValueExA(key, g_prefNetworkDefaultName, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                g_unnamed698758.m_networkDefaultName)), &cbData);
+                g_config.m_networkDefaultName)), &cbData);
         cbData = 4;
         RegQueryValueExA(key, g_prefAutosave, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_autosave)), &cbData);
+                &g_config.m_autosave)), &cbData);
         RegQueryValueExA(key, g_prefShowCombatGrid, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_showCombatGrid)), &cbData);
+                &g_config.m_showCombatGrid)), &cbData);
         RegQueryValueExA(key, g_prefShowCombatMouseHex, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_showCombatMouseHex)), &cbData);
+                &g_config.m_showCombatMouseHex)), &cbData);
         RegQueryValueExA(key, g_prefCombatShadeLevel, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_combatShadeLevel)), &cbData);
+                &g_config.m_combatShadeLevel)), &cbData);
         RegQueryValueExA(key, g_prefCombatArmyInfoLevel, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_combatArmyInfoLevel)), &cbData);
+                &g_config.m_combatArmyInfoLevel)), &cbData);
         RegQueryValueExA(key, g_prefCombatAutoCreatures, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_combatAutoCreatures)), &cbData);
+                &g_config.m_combatAutoCreatures)), &cbData);
         RegQueryValueExA(key, g_prefCombatAutoSpells, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_combatAutoSpells)), &cbData);
+                &g_config.m_combatAutoSpells)), &cbData);
         RegQueryValueExA(key, g_prefCombatCatapult, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_combatCatapult)), &cbData);
+                &g_config.m_combatCatapult)), &cbData);
         RegQueryValueExA(key, g_prefCombatBallista, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_combatBallista)), &cbData);
+                &g_config.m_combatBallista)), &cbData);
         RegQueryValueExA(key, g_prefCombatFirstAidTent, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_combatFirstAidTent)), &cbData);
+                &g_config.m_combatFirstAidTent)), &cbData);
         RegQueryValueExA(key, g_prefCombatSpeed, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_combatSpeed)), &cbData);
+                &g_config.m_combatSpeed)), &cbData);
         RegQueryValueExA(key, g_prefMainGameShowMenu, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_mainGameShowMenu)), &cbData);
+                &g_config.m_mainGameShowMenu)), &cbData);
         RegQueryValueExA(key, g_prefMainGameX, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_mainGameX)), &cbData);
+                &g_config.m_mainGameX)), &cbData);
         RegQueryValueExA(key, g_prefMainGameY, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_mainGameY)), &cbData);
+                &g_config.m_mainGameY)), &cbData);
         RegQueryValueExA(key, g_prefMainGameFullScreen, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_unnamed698758.m_mainGameFullScreen)), &cbData);
+                &g_config.m_mainGameFullScreen)), &cbData);
 
         cbData = 350;
         _getcwd(appPath, sizeof(appPath));
@@ -585,14 +582,14 @@ void readPrefsFromRegistry()
         strcpy(g_regCdRomPath, g_regAppPath);
         RegCloseKey(key);
 
-        if (g_unnamed698758.m_mainGameX > getDesktopWidth() - 800)
-            g_unnamed698758.m_mainGameX = getDesktopWidth() - 800;
-        if (g_unnamed698758.m_mainGameY > getDesktopHeight() - 600)
-            g_unnamed698758.m_mainGameY = getDesktopHeight() - 600;
-        if (g_unnamed698758.m_mainGameX < 0)
-            g_unnamed698758.m_mainGameX = 0;
-        if (g_unnamed698758.m_mainGameY < 0)
-            g_unnamed698758.m_mainGameY = 0;
+        if (g_config.m_mainGameX > getDesktopWidth() - 800)
+            g_config.m_mainGameX = getDesktopWidth() - 800;
+        if (g_config.m_mainGameY > getDesktopHeight() - 600)
+            g_config.m_mainGameY = getDesktopHeight() - 600;
+        if (g_config.m_mainGameX < 0)
+            g_config.m_mainGameX = 0;
+        if (g_config.m_mainGameY < 0)
+            g_config.m_mainGameY = 0;
 
     }
     checkConfigFile();
@@ -606,49 +603,49 @@ void writePrefsToRegistry()
             &key) == ERROR_SUCCESS) {
         RegSetValueExA(key, g_prefMusicVolume, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_musicVolume)), 4);
+                &g_config.m_musicVolume)), 4);
         RegSetValueExA(key, g_prefSoundVolume, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_soundVolume)), 4);
+                &g_config.m_soundVolume)), 4);
         RegSetValueExA(key, g_prefLastMusicVolume, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_lastMusicVolume)), 4);
+                &g_config.m_lastMusicVolume)), 4);
         RegSetValueExA(key, g_prefLastSoundVolume, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_lastSoundVolume)), 4);
+                &g_config.m_lastSoundVolume)), 4);
         RegSetValueExA(key, g_prefWalkSpeed, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_walkSpeed)), 4);
+                &g_config.m_walkSpeed)), 4);
         RegSetValueExA(key, g_prefComputerWalkSpeed, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_computerWalkSpeed)), 4);
+                &g_config.m_computerWalkSpeed)), 4);
         RegSetValueExA(key, g_prefShowRoute, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_showRoute)), 4);
+                &g_config.m_showRoute)), 4);
         RegSetValueExA(key, g_prefMoveReminder, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_moveReminder)), 4);
+                &g_config.m_moveReminder)), 4);
         RegSetValueExA(key, g_prefQuickCombat, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_quickCombat)), 4);
+                &g_config.m_quickCombat)), 4);
         RegSetValueExA(key, g_prefVideoSubtitles, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_videoSubtitles)), 4);
+                &g_config.m_videoSubtitles)), 4);
         RegSetValueExA(key, g_prefTownOutlines, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_townOutlines)), 4);
+                &g_config.m_townOutlines)), 4);
         RegSetValueExA(key, g_prefAnimateSpellBook, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_animateSpellBook)), 4);
+                &g_config.m_animateSpellBook)), 4);
         RegSetValueExA(key, g_prefWindowScrollSpeed, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_windowScrollSpeed)), 4);
+                &g_config.m_windowScrollSpeed)), 4);
         RegSetValueExA(key, g_prefBinkVideo, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_binkVideo)), 4);
+                &g_config.m_binkVideo)), 4);
         RegSetValueExA(key, g_prefBlackoutComputer, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_blackoutComputer)), 4);
+                &g_config.m_blackoutComputer)), 4);
         RegSetValueExA(key, g_prefFirstTime, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
                 &g_firstTimeThrough)), 4);
@@ -663,55 +660,55 @@ void writePrefsToRegistry()
                 &g_testBlit)), 4);
         RegSetValueExA(key, g_prefUniqueSystemId, 0, REG_SZ,
             static_cast<const BYTE*>(static_cast<const void*>(
-                g_unnamed698758.m_name)), 4);
+                g_config.m_name)), 4);
         RegSetValueExA(key, g_prefNetworkDefaultName, 0, REG_SZ,
             static_cast<const BYTE*>(static_cast<const void*>(
-                g_unnamed698758.m_networkDefaultName)), 21);
+                g_config.m_networkDefaultName)), 21);
         RegSetValueExA(key, g_prefAutosave, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_autosave)), 4);
+                &g_config.m_autosave)), 4);
         RegSetValueExA(key, g_prefShowCombatGrid, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_showCombatGrid)), 4);
+                &g_config.m_showCombatGrid)), 4);
         RegSetValueExA(key, g_prefShowCombatMouseHex, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_showCombatMouseHex)), 4);
+                &g_config.m_showCombatMouseHex)), 4);
         RegSetValueExA(key, g_prefCombatShadeLevel, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_combatShadeLevel)), 4);
+                &g_config.m_combatShadeLevel)), 4);
         RegSetValueExA(key, g_prefCombatArmyInfoLevel, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_combatArmyInfoLevel)), 4);
+                &g_config.m_combatArmyInfoLevel)), 4);
         RegSetValueExA(key, g_prefCombatAutoCreatures, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_combatAutoCreatures)), 4);
+                &g_config.m_combatAutoCreatures)), 4);
         RegSetValueExA(key, g_prefCombatAutoSpells, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_combatAutoSpells)), 4);
+                &g_config.m_combatAutoSpells)), 4);
         RegSetValueExA(key, g_prefCombatCatapult, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_combatCatapult)), 4);
+                &g_config.m_combatCatapult)), 4);
         RegSetValueExA(key, g_prefCombatBallista, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_combatBallista)), 4);
+                &g_config.m_combatBallista)), 4);
         RegSetValueExA(key, g_prefCombatFirstAidTent, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_combatFirstAidTent)), 4);
+                &g_config.m_combatFirstAidTent)), 4);
         RegSetValueExA(key, g_prefCombatSpeed, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_combatSpeed)), 4);
+                &g_config.m_combatSpeed)), 4);
         RegSetValueExA(key, g_prefMainGameShowMenu, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_mainGameShowMenu)), 4);
+                &g_config.m_mainGameShowMenu)), 4);
         RegSetValueExA(key, g_prefMainGameX, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_mainGameX)), 4);
+                &g_config.m_mainGameX)), 4);
         RegSetValueExA(key, g_prefMainGameY, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_mainGameY)), 4);
+                &g_config.m_mainGameY)), 4);
         RegSetValueExA(key, g_prefMainGameFullScreen, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_unnamed698758.m_mainGameFullScreen)), 4);
+                &g_config.m_mainGameFullScreen)), 4);
         RegCloseKey(key);
     }
 }
@@ -737,7 +734,7 @@ long fileSize(char* filename)
 {
     FILE* stream = fopen(filename, DATA_COMPGEN(0x0067ff20, fileSizeOpenMode, "r+b"));
     if (!stream)
-        unnamed4f3a60(filename);
+        fileError(filename);
     fseek(stream, 0, SEEK_END);
     long size = ftell(stream);
     fseek(stream, 0, SEEK_SET);
@@ -754,15 +751,15 @@ static char g_formatStringBuffer[512];
 // The seed SRand records before handing it to the CRT. Retail .data
 // 0x67fb94, and the store below is its ONLY reference in the whole
 // image (one row in config/retail/reloc-evidence.tsv), so nothing
-// attests a name or a linkage - house ordinal placeholder, filed
-// static in the one TU that touches it.
+// attests an original name or linkage. The descriptive name follows the
+// stored seed; storage stays private to the only TU that touches it.
 DATA(0x0067fb94)
-static int g_unnamed67fb94;
+static int g_randomSeed;
 
 VA(0x0050c5f0, 0xE)  // dc 0xfe0b8
 void sRand(int seed)
 {
-    g_unnamed67fb94 = seed;
+    g_randomSeed = seed;
     srand(seed);
 }
 

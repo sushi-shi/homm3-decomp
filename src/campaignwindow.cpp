@@ -17,6 +17,35 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x0066cadc) const char* g_campaignFileNames[20] = {
+    "Good1.h3c", "Good2.h3c", "Neutral1.h3c", "Good3.h3c", "Evil1.h3c", "Evil2.h3c", "Secret1.h3c", "AB.h3c",
+    "blood.h3c", "slayer.h3c", "festival.h3c", "fool.h3c", "fire.h3c", "crag.h3c", "yog.h3c", "gem.h3c",
+    "gelu.h3c", "sandro.h3c", "final.h3c", "secret.h3c"
+};
+DATA(0x0066c498) SCampaignPreview g_campaignPreviews[20] = {
+    { 7, 90, 72, 58, 192, 270, "campgd1s.pcx", 108, { 0 } },
+    { 8, 42, 244, 8, 364, 270, "campgd2s.pcx", 109, { 0 } },
+    { 10, 313, 244, 276, 364, 270, "campneus.pcx", 110, { 0 } },
+    { 9, 33, 414, 0, 532, 270, "campgd3s.pcx", 111, { 0 } },
+    { 11, 539, 72, 504, 192, 270, "campev1s.pcx", 112, { 0 } },
+    { 12, 585, 244, 565, 364, 235, "campev2s.pcx", 113, { 0 } },
+    { 13, 404, 414, 368, 532, 270, "campscts.pcx", 114, { 0 } },
+    { 14, 90, 72, 58, 192, 270, "camp1ab7.pcx", 115, { 0 } },
+    { 15, 539, 72, 504, 192, 270, "Camp1DB2.pcx", 116, { 0 } },
+    { 16, 42, 244, 8, 364, 270, "camp1ds1.pcx", 117, { 0 } },
+    { 17, 313, 244, 276, 364, 270, "camp1fl3.pcx", 118, { 0 } },
+    { 18, 33, 414, 0, 532, 270, "camp1fw1.pcx", 119, { 0 } },
+    { 19, 585, 244, 565, 364, 235, "camp1pf2.pcx", 120, { 0 } },
+    { 20, 42, 244, 8, 364, 270, "camphs1.pcx", 121, { 0 } },
+    { 21, 585, 244, 565, 364, 235, "campbb1.pcx", 122, { 0 } },
+    { 22, 90, 72, 58, 192, 270, "campnb1.pcx", 123, { 0 } },
+    { 23, 539, 72, 504, 192, 270, "campel1.pcx", 124, { 0 } },
+    { 24, 313, 244, 276, 364, 270, "camprn1.pcx", 125, { 0 } },
+    { 25, 33, 414, 0, 532, 270, "campua1.pcx", 126, { 0 } },
+    { 26, 404, 414, 368, 532, 270, "campsp1.pcx", 127, { 0 } }
+};
+
 // Source-private in the Dreamcast compiland. Retail's constructor stores the
 // active dialog here and its destructor clears it before destroying the base.
 DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;

@@ -190,7 +190,7 @@ void textWidget::draw() const
         if (m_backColor) {
             g_windowManager->m_screenBitmap->fillRect(
                 drawX, drawY, m_width, m_height,
-                g_unnamed6aacb0->m_data[m_backColor]);
+                g_systemPalette->m_data[m_backColor]);
         }
         int colorScheme;
         if (m_status & WIDGET_DIMMED)

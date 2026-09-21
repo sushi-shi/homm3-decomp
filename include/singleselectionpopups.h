@@ -77,7 +77,7 @@ public:
     virtual int handleMessage(message& msg)
     {
         if (msg.m_id != MESSAGE_RIGHT_BUTTON_UP) {
-            if (g_videoPaused && g_dPlay) {
+            if (g_remoteOn && g_dPlay) {
                 CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
                 if (handler) {
                     handler->checkHandleNet(1, 0);
@@ -193,11 +193,10 @@ public:
     virtual void advance(int amount)
     {
         m_done = min(m_done + amount, m_steps);
-        loadProgFn00577180();
+        updateProgressBar();
     }
-    // Ordinal name, retained from the earlier singleselectionwindow.h model
-    // because that TU already calls it by this spelling.
-    void loadProgFn00577180();  // retail 0x577180
+    // Descriptive name inferred from the retained progress-bar repaint body.
+    void updateProgressBar();  // retail 0x577180
 };
 // Check this provisional view; exact retail extent remains unresolved.
 SIZE(TRandomMapProgress, 0x2c);

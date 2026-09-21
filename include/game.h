@@ -13,6 +13,7 @@
 #include "creaturetype.h"
 #include "creaturetype_fwd.h"
 #include "customcampaign.h"
+#include "campaignbrief.h"
 #include "hero.h"
 #include "mapcell.h"
 #include "netmsg.h"
@@ -212,7 +213,7 @@ enum EMapFormatVersion {
 // Retail 0x69774c selects H3SVC versus H3SVG. SavedGameHeader::reset and
 // game::load copy it directly to/from the canonical saved-header bool.
 // This is not DC's separate campaignMode selection-window flag (0x327d8).
-DATA(0x0069774c) extern bool g_inCampaign;
+extern bool g_inCampaign;
 
 // The upgrade-town victory's two level domains (map-format ordinals).
 // CheckForUpgradedTown (0x5f1d40) maps each to the matching
@@ -684,19 +685,11 @@ public:
 };
 SIZE(SGameSetupOptions, 0x1cc);
 
-// The PC campaign-new-map caller passes this object as NewMap's third
-// argument.  Retail invokes two nullary members at 0x487290/0x487900;
-// neither has a surviving name, so the address-bearing spellings remain
-// provisional while preserving the proved receiver and arity.
-// Complete's NewMap takes the selected TCampaignBrief::ScenarioStruct
-// (StartScenario 0x4884c0 passes `this`); game.h cannot name a nested
-// type, so ScenarioStruct derives from this empty stand-in and the two
-// bodies below (0x487290 / 0x487900, customcampaign.obj) are its methods.
-class NewMapCampaignContext {
-public:
-    void newMapFn00487290();
-    void newMapFn00487900();
+struct CampaignScenarioPreview : public NewSMapHeader {
+    SGameSetupOptions m_gameSetup;
+    bool m_available;
 };
+SIZE(CampaignScenarioPreview, 0x4d4);
 
 // Product generation recorded in SavedGameHeader::gameVersion.  The save
 // loader derives the same three rungs from the on-disk format version when an
@@ -980,7 +973,7 @@ class game;
 // Retail .bss 0x6994e8 (the game record) and 0x69ccb0 (the acting
 // player's record). Names provisional. 2,264 dir32 references
 // image-wide make gpGame the central object.
-DATA(0x006994e8) extern game* g_game;
+extern game* g_game;
 extern playerData* g_currentPlayer;
 
 // Head model: GetWorldMapData hands out the embedded map record at
@@ -992,7 +985,6 @@ class game {
 public:
     game();
     ~game();
-    game& __fastcall operator=(const game& that);
     struct TRumour {
         std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_text;
         unsigned char m_unavailable;
@@ -1382,7 +1374,7 @@ public:
     void giveTroopsToNeutralTown(int townId);  // 0x4bf570
     void setupOrigData();
     void newMap(TAbstractFile* mapFile, int* playerHeroFaces,
-                NewMapCampaignContext* campaignContext, int gameVersion);
+                TCampaignBrief::ScenarioStruct* campaignContext, int gameVersion);
     unsigned char newMap(const char* mapPath, const char* mapName,
                          int* playerHeroFaces, int gameVersion);
     void setupFirstPlayer();
@@ -1456,10 +1448,6 @@ public:
     void showMoraleInfo(hero* who, int dialogType);
     void recordHideHero(hero* who, char newOwner,
                           unsigned char townGarrison);
-    // 0x4c86a0. town::hire passes the player id and consumed two-slot
-    // recruit index; hero::hire uses the same closeout call. The body
-    // remains outside the admitted surface.
-    void finishTownHire(long playerId, int recruitSlot);
     // Dreamcast's public symbol is `?OnSameTeam@game@@QBA_NHH@Z`: bool,
     VA(0x005296d0, 0x37)  // hd-crossbuild + anchor-callee x3, dc 0x1febc
     bool onSameTeam(int player1, int player2) const
@@ -1717,57 +1705,55 @@ public:
 // AVCcasx0..AVChforx (fort) and AVCcasz0..AVChforz (capitol), nine
 // entries each in TTownType order. Names are house placeholders - no DC
 // roster row covers any of the five.
-DATA(0x00677958) extern const char* g_resourceObjectDefs[NUM_RESOURCES];
-DATA(0x00677974) extern const char* g_artifactObjectDefFormat;
-DATA(0x00677a0c) extern const char* g_townVillageObjectDefs[9];
-DATA(0x00677a30) extern const char* g_townFortObjectDefs[9];
+extern const char* g_resourceObjectDefs[NUM_RESOURCES];
+extern const char* g_artifactObjectDefFormat;
+extern const char* g_townVillageObjectDefs[9];
+extern const char* g_townFortObjectDefs[9];
 // Calendar-state globals saved across advManager::LoadRemote. Dreamcast
 // supplies the names; retail fixes these four dword cells and their paired
 // reset/restore use around game::LoadGame.
-DATA(0x00677a54) extern const char* g_townCapitolObjectDefs[9];
-DATA(0x00697750) extern int g_weekType;
-DATA(0x006983fc) extern int g_weekTypeExtra;
-DATA(0x00697748) extern int g_monthType;
+extern const char* g_townCapitolObjectDefs[9];
+extern int g_weekType;
+extern int g_weekTypeExtra;
+extern int g_monthType;
 // Shared UI text table: attack, defense, spell power, and knowledge.
-DATA(0x00698834) extern int g_monthTypeExtra;
+extern int g_monthTypeExtra;
 // The map's live width and height, Dreamcast-named (`?MAP_WIDTH@@3HA` /
 // `?MAP_HEIGHT@@3HA` in kb.obj's PlayerDead scan) and initialised to 72 -
 // a Medium map - in retail's .data.  96 retail bodies reference the pair,
 // so it belongs in this header rather than any one consumer's; kb.obj's
 // PlayerDead is the byte-proven reader here, walking y over MAP_HEIGHT and
 // x over MAP_WIDTH while indexing worldMap by its own Size.
-DATA(0x006a5390) extern const char* g_primarySkillNames[4];
-DATA(0x006783c8) extern int g_mapWidth;
-DATA(0x006783cc) extern int g_mapHeight;
-DATA(0x00677978) extern int g_mineProduction[6];
+extern int g_mapWidth;
+extern int g_mapHeight;
+extern int g_mineProduction[7];
 // Six weighted neutral-town dwelling levels, byte-proven as
 // {2,3,4,5,4,3} by game::GiveTroopsToNeutralTown.
-DATA(0x00677998) extern double g_productionHandicap[];
-DATA(0x006779b0) extern const int g_neutralTownLevelWeights[6];
+extern double g_productionHandicap[];
+extern const int g_neutralTownLevelWeights[6];
 // NewMap's seven-resource rows, indexed by setup.difficulty.  The first
 // address is also the seven-int tutorial row immediately following the
 // neutral-town weights above.
-DATA(0x006779c8) extern const int g_neutralTownLevelWeightsEnd;
-DATA(0x00678170) extern const int g_initResourcesHuman[][NUM_RESOURCES];
+extern const int g_initResourcesHuman[][NUM_RESOURCES];
 // NewMap reads one dword per player here before narrowing the selected value
 // into setup.startingBonus.  The other known readers do not yet prove a
 // broader semantic name, so keep the address-bearing role provisional.
-DATA(0x006781fc) extern const int g_initResourcesComputer[][NUM_RESOURCES];
+extern const int g_initResourcesComputer[][NUM_RESOURCES];
 // SetupFirstPlayer writes its first-human scan result here alongside
 // gNetLocalGamePos.  StartLocalPlayerTurn later consumes the same cell;
 // no surviving symbol attests a semantic spelling.
-DATA(0x0069fbf8) extern int g_newMapStartingBonus[8];
+extern int g_newMapStartingBonus[8];
 // remote.obj owns the DATA claim. NextPlayer consumes the adjacent recovery
 // latch while retrying a failed turn-state transfer.
-DATA(0x0069d810) extern int g_unnamed69d810;
-extern unsigned char g_unnamed69d80d;
+extern int g_playerTurn;
+extern unsigned char g_playerDrop;
 // advmgr.cpp owns the retail datum; ResetGame only clears the turn-control
 // latch after rebuilding the session.
 extern int g_thisNetGotAdventureControl;
-DATA(0x0067814c) extern int g_heroGoldCost;
+extern int g_heroGoldCost;
 // One-byte session latch reset by game::SetupOrigData. No surviving symbol
 // names its wider role, so retain the address-ordinal spelling.
-DATA(0x0069950c) extern int g_unnamed69950c;
+extern int g_grailOwner;
 // Eight ints indexed by PLAYER, and readHeroData (0x5021c0) CONSUMES an
 // entry: `movsx eax,[owner] / mov ecx,[4*eax + 0x69fb24]`, and when that is
 // not -1 it becomes the hero id and the slot is stored -1 again. A reserved
@@ -1778,14 +1764,14 @@ DATA(0x0069950c) extern int g_unnamed69950c;
 
 // No Dreamcast or NH3API symbol covers it, so the spelling stays ordinal on
 // gUnnamed69950c's precedent rather than inventing a role name.
-DATA(0x0069951c) extern unsigned char g_unnamed69951c;
-DATA(0x0069fb24) extern int g_unnamed69fb24[8];
+extern unsigned char g_normalVictory;
+extern int g_startingHeroOverrides[8];
 // Dreamcast public `iCurHourGlassPhase`; game.cpp owns the retail word and
 // philAI::DoAI advances it as computer heroes are processed.
 extern int g_curHourGlassPhase;
 // Retail-only companion word cleared beside the hourglass phase by
 // philAI::GetTurnAIVars. It has no surviving source symbol or other reader.
-extern int g_unnamed691680;
+extern int g_sandAnim;
 // Retail .bss 0x69ccc4, and the SIBLING of advmgr.h's gMapVisibilityBit
 // (0x69ccbc) rather than an alias of it - it has 38 relocation sites of
 // its own, and advManager::ProcessHover gates fog on it with the same
@@ -1794,13 +1780,9 @@ extern int g_unnamed691680;
 // `1 << gUnnamed69778c` (the acting player) while this one takes
 // `1 << gNetLocalGamePos` (this machine's own seat). NAME UNATTESTED -
 // address-ordinal placeholder, as gUnnamed69778c is.
-// 0x69954c, extern-only here: kbwin.cpp owns the DATA claim under the
-// name bVideoPaused, which recruit.cpp already records as CONTRADICTED
-// with the storage correct. remote.h spells the same word
-// gNetworkActive69954c and game::Load's use agrees with remote.h - not
-// networked means the acting player IS the local seat.
-DATA(0x0069ccc4) extern unsigned char g_unnamed69ccc4;
-extern int g_networkActive69954c;
+extern unsigned char g_curPlayerBit;
+// Network-session latch; canonical storage is owned by kbwin.cpp.
+extern int g_remoteOn;
 // E:\gamedcs\philai.cpp:4126, `?AI_examine_map@@YAXXZ`); declared here
 void __cdecl aiExamineMap();
 // hero.cpp owns the DATA claim on 0x698400 (name unattested,
@@ -1809,7 +1791,7 @@ void __cdecl aiExamineMap();
 // hero.cpp's note already records THIS call site: every reader treats
 // nonzero as "suppress the interactive path", and game::ClaimTown skips
 // its notify call.
-extern int g_inSetup698400;
+extern int g_inSetup;
 
 // --- the local-player pair, read by GetLocalPlayer and
 // GetLocalPlayerGamePos (both in this TU). The mode selector they
@@ -1818,7 +1800,7 @@ extern int g_inSetup698400;
 // dword eight bytes ahead of gpCurrentPlayer, and range-checked
 // against [0,8) before use. Ordinal placeholder.
 extern int g_netLocalGamePos;                // .bss 0x69cca8
-extern unsigned char g_unnamed69ccc4;
+extern unsigned char g_curPlayerBit;
 
 void startAITheme();
 // 0x699554: the same answer for every other protocol, handed back
@@ -1827,12 +1809,10 @@ extern int g_localGamePos;                   // .bss 0x699554
 // 0x6a7df8: eight char* colour names; playerData::GetName copies
 // gPlayerColorNames[color] over an empty/default name. Defined by a TU
 // not yet located - extern only (the bitNumber pattern).
-extern char* g_playerColorNames[];           // .bss 0x6a7df8
+           // .bss 0x6a7df8
 // SetSpecialRumour shares the nine-way direction table with seer-hut quest
 // descriptions, and indexes the terrain-name table by a Grail cell's ground
 // set when producing the alternative location hint.
-extern const char* g_questMonsterDirections[9];
-DATA(0x006a5d24) extern const char* const g_grailTerrainNames[];
 
 // Located game.cpp bodies kbwin calls (the Imm/tablet mouse hooks;
 // bodies not yet reconstructed - declarators match the kbwin call

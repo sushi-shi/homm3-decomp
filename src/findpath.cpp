@@ -1,4 +1,5 @@
 #include "va.h"
+#include "objnames.h"
 #include "includes.h"
 
 #include <stdlib.h>
@@ -13,6 +14,18 @@
 #include "herospec.h"
 #include "kb.h"
 #include "path.h"
+
+// Initial contents recovered from the pinned Complete image.
+DATA(0x00678150) tilePoint g_normalDirTable[8] = {
+    { 0, -1, 16 },
+    { 1, -1, 16 },
+    { 1, 0, 16 },
+    { 1, 1, 16 },
+    { 0, 1, 16 },
+    { -1, 1, 16 },
+    { -1, 0, 16 },
+    { -1, -1, 16 }
+};
 
 // ai_player.cpp:4643. Kept local because findpath's narrow include set does
 // not otherwise depend on the ai_player class declarations.
@@ -216,8 +229,8 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
 VA(0x004b18c0, 0x1A2)  // dc 0x9f184
 int getTerrainCost(hero* currentHero, type_point start, int direction, int moveLeft)
 {
-    const int destX = start.m_x + g_stepDeltaX[4 * direction];
-    const int destY = start.m_y + g_stepDeltaY[4 * direction];
+    const int destX = start.m_x + g_normalDirTable[direction].m_x;
+    const int destY = start.m_y + g_normalDirTable[direction].m_y;
     NewmapCell* from = g_game->m_worldMap.cell(start.m_x, start.m_y, start.m_z);
     type_point to(destX, destY, start.m_z);
     NewmapCell* dest = g_game->m_worldMap.cell(to.m_x, to.m_y, to.m_z);
@@ -244,28 +257,18 @@ int getTerrainCost(hero* currentHero, type_point start, int direction, int moveL
 // adjusted_cost, pCell, move_cost, barrier_value, delta_x and delta_y.
 // The queue orders barrier plus danger after this turn's movement, with
 // adjusted cost breaking ties. Only after queue/visited insertion is the
-// point copied to its grid cell. Retail's dead erase copy loop requires
-// erase(end()-1) for the 500-entry cap; DC line 396 instead calls pop_back.
+// point copied to its grid cell. DC line 396 calls pop_back for the
+// 500-entry cap; keep that source operation instead of a library expansion.
 
 // Removed the old terrainForbidsMagic, findQueueSlot and fillPathCell
 // compiler-budget probes and the tail-insert inline_depth(0) pin. Their
 // prior 87.5488% peak is superseded; none had source-boundary evidence.
 // The real game::get_cell accessor remains a canonical game.h inline.
 
-// 2026-09-08: 72 public vector-overload/arm-order/midpoint-lifetime
-// hypotheses recover 97.8175% with DC's push_back/insert/push_back sequence.
-// Retail also supports the explicit three-way key comparison, rather than
-// the probe's combined Boolean test. Computing the first midpoint before
-// the loop and updating it after each bound recovers retail's loop layout;
-// the equivalent top-tested loop is 94.3098%. All 72 candidates pass an
-// independent linear-order oracle across 12,800 cap/tie/cost/alias cases.
-// A further 24 declaration/scope/erase-iterator controls reach 98.2622%
-// by initializing cheaper before the key comparison, as retail does.
-// Hoisting upper/lower or adding visited-branch braces is byte-flat;
-// a named erase iterator falls to 98.1234%. No other TU score falls.
-// Residual: stack homes, the folded erase iterator and pointer-vector
-// _Destroy retention in visitedPoints' grow arm. All interior queue-insert
-// calls, including the retained _Construct<pathCell>, now agree naturally.
+// Retail reuses one comparison-key stack home in the visited-cell check and
+// queue search. One local for that shared role, together with pop_back,
+// reproduces the retained body. Separate cell/entry locals leave six stack
+// homes permuted (99.9640%); the original local name is not recorded.
 VA(0x004b1a70, 0x88D)  // anchor-bracket, dc 0x9f2a4
 void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
                             int direction, int moveCost, int limit,
@@ -305,7 +308,7 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 
     long danger = 0;
     if (m_dangerZones != 0) {
-        danger = *getDangerCell(m_dangerZones, point.m_point);
+        danger = getDangerCell(m_dangerZones, point.m_point);
         if (cost > m_thisTurnsMovement) {
             danger = min(oldCell.m_dangerValue, danger);
             // The "unreachable" sentinel the danger map carries; every
@@ -320,16 +323,17 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 
     unsigned char cheaper = 0;
     long key = barrierValue;
+    long comparisonKey;
     if (cost > m_thisTurnsMovement)
         key = danger + barrierValue;
 
     if (cell->m_visited) {
-        long cellKey = cell->m_barrierValue;
+        comparisonKey = cell->m_barrierValue;
         if (cell->m_cost > m_thisTurnsMovement)
-            cellKey += cell->m_dangerValue;
-        if (cellKey > key)
+            comparisonKey += cell->m_dangerValue;
+        if (comparisonKey > key)
             return;
-        if (cellKey < key)
+        if (comparisonKey < key)
             cheaper = 1;
         else if (adjustedCost >= cell->m_adjustedCost)
             return;
@@ -354,18 +358,18 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
     }
 
     if (m_queue.size() >= 500)
-        m_queue.erase(m_queue.end() - 1);
+        m_queue.pop_back();
 
     int upper = m_queue.size();
     int lower = 0;
     int middle = (upper + lower) >> 1;
     while (upper > lower) {
-        long entryKey = m_queue[middle].m_barrierValue;
+        comparisonKey = m_queue[middle].m_barrierValue;
         if (m_queue[middle].m_cost > m_thisTurnsMovement)
-            entryKey += m_queue[middle].m_dangerValue;
-        if (entryKey < key)
+            comparisonKey += m_queue[middle].m_dangerValue;
+        if (comparisonKey < key)
             lower = middle + 1;
-        else if (entryKey > key)
+        else if (comparisonKey > key)
             upper = middle;
         else if (adjustedCost < m_queue[middle].m_adjustedCost)
             lower = middle + 1;
@@ -507,8 +511,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
 
     for (long direction = 0; direction < 8; direction++) {
         pathCell candidate = *source;
-        candidate.m_point.m_x = source->m_point.m_x + g_stepDeltaX[4 * direction];
-        candidate.m_point.m_y = source->m_point.m_y + g_stepDeltaY[4 * direction];
+        candidate.m_point.m_x = source->m_point.m_x + g_normalDirTable[direction].m_x;
+        candidate.m_point.m_y = source->m_point.m_y + g_normalDirTable[direction].m_y;
         if (!candidate.m_point.isValid())
             continue;
         if (adjacentMonster) {
@@ -587,10 +591,10 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         }
 
         if (((1 << direction) & 0x83) && srcCell->cellIsTrigger()
-                && g_adventureObjectTraits[srcCell->getMapObject()][1] == 0)
+                && g_adventureObjectTraits[srcCell->getMapObject()].m_trait1 == 0)
             blocked = 1;
         if (((1 << direction) & 0x38) && destCell->cellIsTrigger()
-                && g_adventureObjectTraits[destCell->getMapObject()][1] == 0)
+                && g_adventureObjectTraits[destCell->getMapObject()].m_trait1 == 0)
             continue;
 
         if (destGround == eTerrainWater) {
@@ -600,8 +604,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                     candidate.m_canStop = 0;
                 }
                 if (srcGround == eTerrainWater
-                        && g_stepDeltaX[4 * direction] != 0
-                        && g_stepDeltaY[4 * direction] != 0) {
+                        && g_normalDirTable[direction].m_x != 0
+                        && g_normalDirTable[direction].m_y != 0) {
                     // READ-BACK, not a re-read of `source`. Retail extracts
                     // both coordinates from the dword it has just stored into
                     // the copy (`mov ebx,eax / shl ebx,6` on across_x, `mov
@@ -610,8 +614,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                     // shl bx,6` off the member's own word container.
                     type_point acrossX = source->m_point;
                     type_point acrossY = source->m_point;
-                    acrossX.m_x = acrossX.m_x + g_stepDeltaX[4 * direction];
-                    acrossY.m_y = acrossY.m_y + g_stepDeltaY[4 * direction];
+                    acrossX.m_x = acrossX.m_x + g_normalDirTable[direction].m_x;
+                    acrossY.m_y = acrossY.m_y + g_normalDirTable[direction].m_y;
                     if (g_game->m_worldMap.cell(acrossX.m_x, acrossX.m_y,
                                               acrossX.m_z)->m_groundSet
                                 != eTerrainWater
@@ -793,7 +797,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         }
 
         if (source->m_canStop || !destCell->m_isTrigger
-                || (g_adventureObjectTraits[destCell->m_type][0] == 0
+                || (g_adventureObjectTraits[destCell->m_type].m_blocksLanding == 0
                     && destCell->m_type != TOWN))
             pushPoint(*source, candidate, direction, cost, maxMobility,
                       candidate.m_barrierValue, candidate.m_monster,
@@ -1136,12 +1140,12 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                 || g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP)
             siegePressure = 1;
         if (currentArmy->getTotalHitPoints(0)
-                <= g_townSiegeStrength63bd18[
+                <= g_moatDamage[
                         g_combatManager->m_defendingTown->m_type] * 4)
             siegePressure = 1;
         if (siegePressure
                 && currentArmy->getTotalHitPoints(0)
-                    > g_townSiegeStrength63bd18[
+                    > g_moatDamage[
                             g_combatManager->m_defendingTown->m_type] * 40)
             siegePressure = 0;
     }

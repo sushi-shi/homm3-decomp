@@ -166,7 +166,7 @@ TResourceDisplay::~TResourceDisplay()
 VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
 void TResourceDisplay::update(bool drawRequested, bool update)
 {
-    int playerPos = g_unnamed69778c;
+    int playerPos = g_curWatchPlayer;
     playerData& player = g_game->m_players[playerPos];
     m_backgroundWidget->setPlayerPaletteColors(playerPos);
     for (int i = 0; i < NUM_RESOURCES; ++i) {
@@ -190,7 +190,7 @@ void TResourceDisplay::update(bool drawRequested, bool update)
 VA(0x00559020, 0xA4)  // dc 0x1210b4
 void TResourceDisplay::clear()
 {
-    m_backgroundWidget->setPlayerPaletteColors(g_unnamed69778c);
+    m_backgroundWidget->setPlayerPaletteColors(g_curWatchPlayer);
     for (int i = 0; i < NUM_RESOURCES; ++i)
         m_resourceWidgets[i]->setText("");
 

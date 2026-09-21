@@ -321,8 +321,8 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
         std::ostrstream quantityText;
         quantityText << quantity << std::ends;
 
-        int textWidth = g_unnamed698a08->lineWidth(quantityText.str());
-        int fontHeight = g_unnamed698a08->m_fs.m_height;
+        int textWidth = g_smallFont->lineWidth(quantityText.str());
+        int fontHeight = g_smallFont->m_fs.m_height;
 
         m_widgets.push_back(new textWidget((m_width - textWidth) / 2,
             sprite->getHeight() + 55, textWidth, fontHeight,
@@ -897,7 +897,7 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
     allyX = enemyX = 67;
     for (i = 0; i < 8; i++) {
         if (!g_game->m_playerDisabled[i]) {
-            if (g_game->onSameTeam(i, g_unnamed69778c)) {
+            if (g_game->onSameTeam(i, g_curWatchPlayer)) {
                 m_widgets.push_back(new iconWidget(allyX, 102, 15, 20, id++,
                     "itgflags.def", i, 0, 0, 0, 0x10));
                 allyX += 15;

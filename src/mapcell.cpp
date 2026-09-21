@@ -1,5 +1,7 @@
 
+#include "text.h"
 #include "va.h"
+#include "objnames.h"
 
 #include <stdexcept>
 #include <stdio.h>
@@ -2812,9 +2814,9 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     }
 
     if (heroID == -1) {
-        if (g_unnamed69fb24[charBuffer] != -1) {
-            heroID = g_unnamed69fb24[charBuffer];
-            g_unnamed69fb24[charBuffer] = -1;
+        if (g_startingHeroOverrides[charBuffer] != -1) {
+            heroID = g_startingHeroOverrides[charBuffer];
+            g_startingHeroOverrides[charBuffer] = -1;
         } else {
             TTownType alignment;
             memcpy(&alignment, &g_game->m_setup.m_alignment[charBuffer],
@@ -3662,12 +3664,12 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
                 DATA_COMPGEN(0x0067fb10, readObjectTypeMissingMask,
                              "Could not load mask file for %s! - Type: %s"),
                 tempObjectType.m_imageName.c_str(),
-                g_adventureObjectNames[tempObjectType.m_objectType]);
+                g_quickViewText[tempObjectType.m_objectType]);
         MessageBoxA(g_hwndApp, g_text, "Error!", 0);
     }
 
     memcpy(&tempObjectType.m_objectType,
-           &g_adventureObjectTraits[tempObjectType.m_objectType][8],
+           &g_adventureObjectTraits[tempObjectType.m_objectType].m_nameRow,
            sizeof(tempObjectType.m_objectType));
 
     count = infile->read(&value, sizeof(value));
@@ -3980,7 +3982,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
                                      "Invalid Object Referenced!\n\n"
                                      "x: %d y: %d z: %d - Type: %s"),
                         m_objects[x].m_x, m_objects[x].m_y, m_objects[x].m_z,
-                        g_adventureObjectNames[
+                        g_quickViewText[
                             m_objectTypes[m_objects[x].m_typeIndex].m_objectType]);
                 MessageBoxA(g_hwndApp, g_text,
                             DATA_COMPGEN(0x0067fb08,

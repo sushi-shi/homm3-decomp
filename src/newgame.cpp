@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 
 #include <stdio.h>
@@ -66,7 +67,7 @@ void game::initNewGame(int difficulty, int version,
     m_setup.m_fileInitialized = 0;
     m_setup.m_curSelectedPlayer = -1;
     m_setup.m_initializationNumHumans =
-        static_cast<signed char>(g_unnamed699274);
+        static_cast<signed char>(g_numHumanPlayers);
 
     if (mapHeader) {
         this->m_mapHeader = *mapHeader;
@@ -122,7 +123,7 @@ void game::initNewGame(int difficulty, int version,
         if (m_setup.m_playerPos[slot] != -1)
             continue;
 
-        if (humanCount < g_unnamed699274 && this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman) {
+        if (humanCount < g_numHumanPlayers && this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman) {
             m_setup.m_playerPos[slot] = static_cast<signed char>(humanCount);
             humanCount++;
         } else if (this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeComputer) {
@@ -295,14 +296,14 @@ void game::getVictoryConditionText(char* text)
                 sprintf(text, (*g_generalText)[322],
                         victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
                             ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
-                            : g_emptyRolloverText,
-                        g_questMonsterDirections[direction]);
+                            : "",
+                        g_directions[direction]);
             } else {
                 sprintf(text, (*g_generalText)[669],
                         victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
                             ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
-                            : g_emptyRolloverText,
-                        g_questMonsterDirections[direction]);
+                            : "",
+                        g_directions[direction]);
             }
             break;
         }
