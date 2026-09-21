@@ -228,6 +228,14 @@ int Bitmap16Bit::importPCXFile(const char* filename)
 }
 
 // E:\gamedcs\bitmap16.cpp:541
+#define BITMAP16_BYTE_OFFSET(pointer, offset)                              \
+    static_cast<unsigned short*>(static_cast<void*>(                      \
+        static_cast<unsigned char*>(static_cast<void*>(pointer)) + offset))
+#define BITMAP16_CONST_BYTE_OFFSET(pointer, offset)                        \
+    static_cast<const unsigned short*>(static_cast<const void*>(           \
+        static_cast<const unsigned char*>(static_cast<const void*>(pointer)) \
+        + offset))
+
 VA(0x0044e2b0, 0x139)  // order-map(DC bitmap16.obj, immediately before Grab), dc 0x51378
 void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
                        unsigned short* dst, int dstX, int dstY, int dstWidth,
@@ -250,9 +258,8 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
 
     if (srcWidth > 0 && srcHeight > 0) {
         const unsigned short* src = getMap(srcX, srcY);
-        dst = static_cast<unsigned short*>(static_cast<void*>(
-            static_cast<unsigned char*>(static_cast<void*>(dst))
-            + dstY * dstPitch + dstX * sizeof(unsigned short)));
+        dst = BITMAP16_BYTE_OFFSET(
+            dst, dstY * dstPitch + dstX * sizeof(unsigned short));
 
         if (flipped) {
             for (int row = 0; row < srcHeight; ++row) {
@@ -264,26 +271,21 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
                     ++in;
                     ++out;
                 }
-                src = static_cast<const unsigned short*>(static_cast<const void*>(
-                    static_cast<const unsigned char*>(static_cast<const void*>(src))
-                    + m_pitch));
-                dst = static_cast<unsigned short*>(static_cast<void*>(
-                    static_cast<unsigned char*>(static_cast<void*>(dst))
-                    + dstPitch));
+                src = BITMAP16_CONST_BYTE_OFFSET(src, m_pitch);
+                dst = BITMAP16_BYTE_OFFSET(dst, dstPitch);
             }
         } else {
             for (int row = 0; row < srcHeight; ++row) {
                 memcpy(dst, src, srcWidth * sizeof(unsigned short));
-                src = static_cast<const unsigned short*>(static_cast<const void*>(
-                    static_cast<const unsigned char*>(static_cast<const void*>(src))
-                    + m_pitch));
-                dst = static_cast<unsigned short*>(static_cast<void*>(
-                    static_cast<unsigned char*>(static_cast<void*>(dst))
-                    + dstPitch));
+                src = BITMAP16_CONST_BYTE_OFFSET(src, m_pitch);
+                dst = BITMAP16_BYTE_OFFSET(dst, dstPitch);
             }
         }
     }
 }
+
+#undef BITMAP16_CONST_BYTE_OFFSET
+#undef BITMAP16_BYTE_OFFSET
 
 // E:\gamedcs\bitmap16.cpp:625
 VA(0x0044e3f0, 0xC9)  // order-map(DC bitmap16.obj, between Draw and FillRect), dc 0x51468
