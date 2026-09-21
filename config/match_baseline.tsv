@@ -88,7 +88,7 @@ advmgr	?deactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a
 advmgr	?deactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570	tokens1:c8b06714cfc6
 advmgr	?demobilizeCurrHero@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17680	tokens1:8cbcfe305358
 advmgr	?disableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0	tokens1:1796d2423457
-advmgr	?doAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	71.9114	71.9114	94.3953	0x7b80	tokens1:82ac23e62558
+advmgr	?doAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	90.4485	90.4485	94.3953	0x7b80	tokens1:fd22e9e0fc73
 advmgr	?doAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	tokens1:b5da8b6a746f
 advmgr	?doSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	tokens1:dd20ce0ffd66
 advmgr	?drawAdvObj@advManager@@QAEXHHHHH@Z	87.7028	87.7028	87.9441	0x10c00	tokens1:a8f7c132bc48
@@ -145,10 +145,10 @@ advmgr	?overrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.
 advmgr	?popupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80	tokens1:d33a2b7d5f5a
 advmgr	?processDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	85.2558	100.0000	100.0000	0x9a70	tokens1:fa4eec27480c
 advmgr	?processHover@advManager@@QAEHHH@Z	88.1654	88.1654	91.6263	0xe360	tokens1:2433ed1a28cb
-advmgr	?processKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	87.4146	87.4146	97.6091	0x8c40	tokens1:28b0e6e3c076
+advmgr	?processKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	87.3076	87.4146	97.6091	0x8c40	tokens1:28b0e6e3c076
 advmgr	?processMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	87.4858	87.4858	91.1006	0xa5d0	tokens1:5b8388f5def7
 advmgr	?processRadarSelect@advManager@@QAEXPBVmessage@@@Z	91.5595	100.0000	100.0000	0xa0c0	tokens1:d127dff7b4ce
-advmgr	?processSearch@advManager@@QAEHHHH@Z	93.7323	93.7323	96.1549	0xec90	tokens1:663ae981d4a4
+advmgr	?processSearch@advManager@@QAEHHHH@Z	92.1018	93.7323	96.1549	0xec90	tokens1:663ae981d4a4
 advmgr	?processSelect@advManager@@QAEHPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	99.7304	100.0000	100.0000	0x97e0	tokens1:0cbeaaa9e35b
 advmgr	?processWaitingHover@advManager@@QAEHHH@Z	95.1433	95.1433	96.1467	0xdeb0	tokens1:cf31de690cfd
 advmgr	?quickInfo@advManager@@QAEXHHH@Z	96.2393	96.2393	96.2393	0x137c0	tokens1:d67cf4db09d6
