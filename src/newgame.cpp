@@ -1,7 +1,10 @@
-#include <va.h>
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
+
 #include "newgame.h"
+
 #include "campaignbrief.h"
 #include "game.h"
 #include "misc.h"

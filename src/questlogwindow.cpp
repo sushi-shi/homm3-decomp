@@ -1,8 +1,11 @@
 // The quest log is the one reader of the map's two quest pools
 // (NewfullMap's SeerHutList / QuestGuardList vectors).
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "questlogwindow.h"
+
 #include "border.h"
 #include "button.h"
 #include "game.h"

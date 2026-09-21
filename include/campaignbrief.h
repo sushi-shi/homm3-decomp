@@ -4,6 +4,7 @@
 #include <bitset>
 #include <string>
 #include <vector>
+
 #include "game.h"
 #include "window.h"
 

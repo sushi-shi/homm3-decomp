@@ -1,6 +1,9 @@
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "cspriteframe.h"
+
 #include "palette.h"
 #include "pcx.h"
 

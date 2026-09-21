@@ -7,7 +7,8 @@
 #ifndef HOMM3_EXCEPTIONS_H
 #define HOMM3_EXCEPTIONS_H
 
-#include <va.h>
+#include "va.h"
+
 #include <stdexcept>
 
 // The catchable-type entries describe multiple inheritance, not a linear

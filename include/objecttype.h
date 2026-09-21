@@ -7,6 +7,7 @@
 #include <bitset>
 #include <string>
 #include <vector>
+
 #include "mapcell.h"
 
 class TObjectTypeFilter;

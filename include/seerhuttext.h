@@ -4,10 +4,10 @@
 #ifndef HOMM3_SEERHUTTEXT_H
 #define HOMM3_SEERHUTTEXT_H
 
+#include "va.h"
+
 #include <string>
 #include <vector>
-
-#include <va.h>
 
 class TSpreadsheetResource;
 

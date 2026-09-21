@@ -1,9 +1,11 @@
-#include <va.h>
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
 class message;
 static int campaignBriefHandler(message& msg);
 #include "campaignbrief.h"
+
 #include "advmgr.h"
 #include "border.h"
 #include "button.h"
@@ -17,8 +19,8 @@ static int campaignBriefHandler(message& msg);
 #include "palette.h"
 #include "soundmgr.h"
 #include "textresource.h"
-#include "textwdgt.h"
 #include "textscroller.h"
+#include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
 

@@ -1,10 +1,13 @@
-#include <va.h>
+#include "va.h"
+
 #include <stdio.h>
+
+#include "resourcedisplay.h"
+
 #include "border.h"
 #include "exec.h"
 #include "game.h"
 #include "kb.h"
-#include "resourcedisplay.h"
 #include "textwdgt.h"
 #include "town.h"
 #include "window.h"

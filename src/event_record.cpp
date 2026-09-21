@@ -1,18 +1,21 @@
+#include "va.h"
+#include "includes.h"
+
 #include <math.h>
-#include <va.h>
+
 #include "event_record.h"
-#include "game.h"
+
 #include "abstractfile.h"
+#include "advmgr.h"
 #include "cursor.h"
+#include "game.h"
 #include "inputmgr.h"
-#include "misc.h"
-#include "textresource.h"
+#include "kb.h"
 #include "kbwin.h"
 #include "message.h"
+#include "misc.h"
 #include "prefs.h"
-#include "advmgr.h"
-#include "kb.h"
-#include "includes.h"
+#include "textresource.h"
 
 // Dreamcast CodeView attests this inline wrapper (Hero.h:196) and game.cpp
 // carries the same local definition. It is what makes VC6 zero-extend the

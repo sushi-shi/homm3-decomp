@@ -1,7 +1,10 @@
-#include <va.h>
+#include "va.h"
+
 #include <stdlib.h>
 #include <string.h>
+
 #include "creaturetype.h"
+
 #include "resourcemanager.h"
 #include "textresource.h"
 #include "town.h"

@@ -2,10 +2,12 @@
 #ifndef HOMM3_CREATURE_BANK_TYPES_H
 #define HOMM3_CREATURE_BANK_TYPES_H
 
-#include <va.h>
+#include "va.h"
+
 #include <vector>
-#include "artifact.h"
+
 #include "armygrp.h"
+#include "artifact.h"
 
 // Dreamcast CodeView names the reward tail and retail independently fixes all
 // of its boundaries.  The army is 56 bytes; the seven-resource row occupies

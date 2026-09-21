@@ -1,8 +1,11 @@
 // 2 functions in link order.
-#include "terrain.h"
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "sample.h"
+
+#include "terrain.h"
 
 // The ai_combat lever, applied to a base-subobject unwind instead of a
 // scope-exit one: under /GX the dtor's `delete data` is a throwing call

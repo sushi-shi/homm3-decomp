@@ -1,26 +1,28 @@
-#include <va.h>
-#include "creaturetype.h"
+#include "va.h"
+#include "includes.h"
+
 #include <algorithm>
 #include <functional>
 #include <math.h>
 #include <string.h>
+
 #include "philai.h"
+
+#include "advmgr.h"
+#include "ai_player.h"
 #include "ai_spellvalue.h"
-#include "ai_player.h"  // purchaser and AI player interfaces used in this TU
-#include "hero.h"
-#include "town.h"
-#include "tradpost.h"
-#include "game.h"
-#include "recruit.h"
-#include "advmgr.h"  // gpAdvManager + advManager::get_treasure_data, for the
-                     // adventure-object appraisals (custom item / scroll / ...)
+#include "creaturetype.h"
 #include "findpath.h"
+#include "game.h"
+#include "hero.h"
+#include "hillfortwindow.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "mousemgr.h"
+#include "recruit.h"
 #include "soundmgr.h"
-#include "hillfortwindow.h"
-#include "includes.h"
+#include "town.h"
+#include "tradpost.h"
 
 double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);

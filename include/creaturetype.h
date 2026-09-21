@@ -2,9 +2,8 @@
 #define HOMM3_CREATURETYPE_H
 
 #include "armygrp.h"
-#include "town.h"
-
 #include "creaturetype_fwd.h"
+#include "town.h"
 
 // Complete extends the Dreamcast creature-name domain through id 0x96.
 // GetArmyName's retail range guard proves the inclusive upper bound.

@@ -2,6 +2,7 @@
 #define HOMM3_SPELLDEFS_H
 
 #include <vector>
+
 #include "armygrp.h"
 
 // Dreamcast SpellDefs.h:345..346, dc 0x4fd34: original IsMindSpell.

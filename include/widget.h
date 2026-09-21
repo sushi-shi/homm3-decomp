@@ -3,7 +3,7 @@
 #ifndef HOMM3_WIDGET_H
 #define HOMM3_WIDGET_H
 
-#include <va.h>
+#include "va.h"
 
 class heroWindow;
 class message;

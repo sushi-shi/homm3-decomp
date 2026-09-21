@@ -1,7 +1,8 @@
 #ifndef HOMM3_BITSET_ITERATOR_H
 #define HOMM3_BITSET_ITERATOR_H
 
-#include <va.h>
+#include "va.h"
+
 #include <bitset>
 
 // The PC standard library's bitset has no iterator surface.  The game uses

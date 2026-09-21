@@ -1,7 +1,11 @@
-#include <va.h>
+#include "va.h"
+
 #include <algorithm>
 #include <string.h>
 #include <vector>
+
+#include "spellbookwindow.h"
+
 #include "armygrp.h"
 #include "border.h"
 #include "game.h"
@@ -14,7 +18,6 @@
 #include "resourcemanager.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
-#include "spellbookwindow.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"

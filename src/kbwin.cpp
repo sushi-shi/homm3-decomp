@@ -1,19 +1,22 @@
-#include "terrain.h"
-#include <va.h>
-#include <windows.h>
+#include "va.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
+
 #include "kbwin.h"
-#include "kb.h"
+
 #include "exec.h"
 #include "game.h"
+#include "inputmgr.h"
+#include "kb.h"
+#include "misc.h"
 #include "mousemgr.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
+#include "terrain.h"
 #include "wingraph.h"
-#include "inputmgr.h"
-#include "misc.h"
 #include "winmgr.h"
 
 // Every cross-TU callee and global now comes from its owner's header

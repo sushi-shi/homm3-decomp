@@ -1,15 +1,17 @@
 #ifndef HOMM3_MULTIPLAYERWINDOW_H
 #define HOMM3_MULTIPLAYERWINDOW_H
 
-#include <windows.h>
-#include <string.h>
-#include "window.h"
-#include "textwdgt.h"
-#include "textntry.h"
-#include "netgame.h"
 #include "va.h"
+
+#include <string.h>
+#include <windows.h>
+
 #include "dxplay.h"
 #include "hotseat.h"
+#include "netgame.h"
+#include "textntry.h"
+#include "textwdgt.h"
+#include "window.h"
 
 struct _DPCOMPORTADDRESS;
 

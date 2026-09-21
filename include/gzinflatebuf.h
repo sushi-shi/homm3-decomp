@@ -5,6 +5,8 @@
 #ifndef HOMM3_GZINFLATEBUF_H
 #define HOMM3_GZINFLATEBUF_H
 
+#include "va.h"
+
 #include <streambuf>
 #include <zlib.h>
 

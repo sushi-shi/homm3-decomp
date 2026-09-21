@@ -11,12 +11,12 @@
 #ifndef HOMM3_REMOTEDLG_H
 #define HOMM3_REMOTEDLG_H
 
+#include "armygrp.h"
 #include "bitmap16.h"
 #include "dialogbox.h"
-#include "remote.h"
-#include "armygrp.h"
 #include "hero.h"
 #include "netmsg.h"
+#include "remote.h"
 #include "town.h"
 
 class CSprite;

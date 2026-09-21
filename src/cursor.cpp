@@ -1,9 +1,11 @@
-#include <va.h>
-#include "game.h"
+#include "va.h"
+
+#include "cursor.h"
+
 #include "advmgr.h"
 #include "csprite.h"
-#include "cursor.h"
 #include "findpath.h"
+#include "game.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "prefs.h"

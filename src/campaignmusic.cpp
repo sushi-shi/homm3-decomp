@@ -14,7 +14,8 @@
 // down to the register: the same TResourcePtr guard, the same
 // TAutoArrayPtr<char> function-local static with its atexit wrapper eight
 // bytes past its own guard byte, the same measure-then-copy pair of passes.
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
 
 #include "campaignmusic.h"

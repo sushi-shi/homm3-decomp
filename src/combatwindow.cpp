@@ -1,9 +1,11 @@
-#include <va.h>
+#include "va.h"
+
 #include "combatwindow.h"
-#include "combatwindowchatedit.h"
-#include "cmbtmgr.h"
+
 #include "border.h"
+#include "cmbtmgr.h"
 #include "combatcontrolsubwindow.h"
+#include "combatwindowchatedit.h"
 #include "font.h"
 #include "game.h"
 #include "inputmgr.h"
@@ -15,8 +17,8 @@
 #include "textntry.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "winmgr.h"
 #include "widget.h"
+#include "winmgr.h"
 
 // Retail .bss 0x695000. The constructor publishes itself here for the chat
 // edit callbacks and the destructor clears the slot. The Dreamcast image has
