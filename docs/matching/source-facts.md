@@ -34,8 +34,8 @@ check, and Dreamcast coverage cannot fill the gap for Complete-only RMG.
 ## Member access and method properties
 
 ```sh
-PYTHONPATH=scripts python scripts/experiments/verify-access-adherence.py --all --json
-PYTHONPATH=scripts python scripts/experiments/verify-access-adherence.py --module adventuremapwindow
+PYTHONPATH=scripts python -m homm3.analysis.access_facts --all --json
+PYTHONPATH=scripts python -m homm3.analysis.access_facts --module adventuremapwindow
 ```
 
 This read-only audit uses libclang and each TU's manifest profile to compare
@@ -53,7 +53,7 @@ describes only correlated facts. Missing DC members and authored members that
 cannot be correlated remain explicit; they are not proof of platform changes.
 The audit does not compare SH4 and candidate statement or scope counts.
 
-`apply-access-adherence.py` prints a declaration-only proposal by default;
+`python -m homm3.analysis.access_edit` prints a declaration-only proposal by default;
 `--apply` tightens unambiguously correlated public or protected declarations
 without moving members. It shares the auditor's owning-name aliases and preserves
 nested records and conditional access sections while removing redundant labels.
@@ -131,9 +131,9 @@ private entries. These are observations about the type records, not recovered
 literal access labels or header line numbers.
 
 ```sh
-python scripts/experiments/recover-member-order.py --output build/member-order.json
-python scripts/experiments/recover-member-order.py --apply-plan build/member-order.json
-python scripts/experiments/recover-member-order.py --output build/member-order-after.json \
+python -m homm3.analysis.member_order --output build/member-order.json
+python -m homm3.analysis.member_order --apply-plan build/member-order.json
+python -m homm3.analysis.member_order --output build/member-order-after.json \
   --compare-layouts build/member-order.json
 ```
 
