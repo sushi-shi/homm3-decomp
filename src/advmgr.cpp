@@ -7935,6 +7935,9 @@ void advManager::mobilizeCurrHero(int inMove, unsigned char waitingPlayer, unsig
     }
 }
 
+// Dreamcast lines 9455/9461/9470 name curr and cell and preserve the
+// getCurrHero, getLocation and updateScreen helper boundaries. Restoring those
+// calls removes the duplicated timer body and reproduces all 431 retail bytes.
 VA(0x00417680, 0x1AF)  // dc 0x1a520
 void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
                                     unsigned char drawChanges)
@@ -7942,38 +7945,19 @@ void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
     if (!waitingPlayer && g_currentPlayer
         && g_currentPlayer->m_currHeroId != -1 && m_curHeroMobile) {
         m_curHeroMobile = 0;
-        hero* currHero;
-        if (g_currentPlayer->m_currHeroId != -1)
-            currHero = &g_game->m_heroes[g_currentPlayer->m_currHeroId];
-        else
-            currHero = 0;
+        hero* curr = g_game->getCurrHero();
         stopCursor(1);
-        currHero->obscureCell();
+        curr->obscureCell();
 
-        type_point point;
-        point = type_point(currHero->m_x, currHero->m_y, currHero->m_z);
-        getCell(point);
+        type_point point = curr->getLocation();
+        NewmapCell* cell = getCell(point);
 
-        currHero->m_facing = m_cursorDirection;
+        curr->m_facing = m_cursorDirection;
         m_drawCursor = 0;
 
         if (!g_unnamed6aac3c && drawChanges && g_completeDrawEnabled) {
             completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
-            g_windowManager->updateScreen(0, 8, 608, 544);
-
-            unsigned long now = GameTime::get();
-            if (static_cast<long>(
-                    now - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
-                    >= 0
-                && !m_animCtrPaused) {
-                m_animCtr++;
-                g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] += cppMax(
-                    static_cast<long>(
-                        now
-                        - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]),
-                    180L);
-            }
-            process1WindowsMessage();
+            updateScreen(0, 0);
         }
     }
 }

@@ -2936,10 +2936,10 @@ VA_COMPGEN(0x0048AE30, 0x5D, CLASS_CTOR, LegacyCampaignHero)
 // 2026-09-07: score reference alone 88.0368%, pool references alone 85.4136%,
 // both 99.6062% (from 78.8074% MAX). Per-write scalar scopes with short word
 // buffers reach 99.9518%; sharing the artifact word reaches 99.9632%; one
-// outer counter across all three runs reaches 99.9858%. All 38 CFG blocks,
-// 16 branches, and 24 calls agree. The 880-byte candidate differs at five
-// non-relocation bytes: frame 0x14 instead of 0x10 and four artifact-buffer
-// offsets -0x14 instead of -0x10. The hero induction slot is otherwise exact.
+// outer counter across all three runs reaches 99.9858%. The canonical
+// by-value writeValue<short> boundary for the two artifact fields restores
+// retail's shared [ebp-0x10] parameter home and 0x10-byte frame. All 880 bytes,
+// 38 CFG blocks, 16 branches, and 24 calls now agree.
 // Controls: narrowing into int gives 97.1048% (movsx); also sharing the inner
 // counters, scoping the hero loop or entire hero phase, hoisting the word
 // to pool/function scope, and unsigned-short buffers are byte-flat at
@@ -3041,10 +3041,9 @@ void SCampaign::save(TAbstractFile* outfile)
             }
             for (unsigned int whichArtifact = 0;
                  whichArtifact < artifactPool.size(); ++whichArtifact) {
-                short word = static_cast<short>(artifactPool[whichArtifact].m_artifactId);
-                outfile->write(&word, sizeof(word));
-                word = static_cast<short>(artifactPool[whichArtifact].m_extra);
-                outfile->write(&word, sizeof(word));
+                writeValue<short>(
+                    outfile, artifactPool[whichArtifact].m_artifactId);
+                writeValue<short>(outfile, artifactPool[whichArtifact].m_extra);
             }
         }
     }

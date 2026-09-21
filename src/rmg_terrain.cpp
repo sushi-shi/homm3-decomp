@@ -1408,10 +1408,12 @@ void rmgTerrainPainter::buildNeighbourKinds(
     }
 }
 
-// Retail's upper clamp uses CMP value,maximum / JG. Canonical tLimit's
-// value > maximum spelling restores both diagonals without changing its
-// const-reference selection contract. Reversing that comparison leaves
-// 98.6070% / 99.1026%; min/max compositions do not recover these bodies.
+// These Complete-only diagonal callers retain the opposite upper-clamp
+// operand orientation under canonical tLimit. Spelling the comparison as
+// value > maximum makes these two callers exact but regresses the retained
+// helper and several Dreamcast-proven limit callers, so keep the shared helper
+// canonical and recover the caller-specific compiler state separately.
+// Min/max compositions do not recover these bodies.
 VA(0x005B6BA0, 0x24C)
 unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)

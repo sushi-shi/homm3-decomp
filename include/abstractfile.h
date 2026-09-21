@@ -28,9 +28,8 @@ public:
 // calls and eleven direct buffer writes. The helper lifetimes reproduce
 // retail's 0x8 frame; the earlier function-scope staging buffers used 0x1c.
 // This is an inferred interface, not a recovered template declaration.
-// town::save, SCampaign::save,
-// SavedGameHeader::save, type_creature_quest::save and the NewSMapHeader and
-// mapcell readers all still stage by hand, and several of them sit below 100%
+// town::save, SavedGameHeader::save, and the NewSMapHeader and mapcell
+// readers still stage by hand, and several of them sit below 100%
 // on frame-size residuals. Check each against its own retail bytes before
 // converting - a staging local that is genuinely two distinct variables
 // (town::load and town::save each need a SECOND char local for the position

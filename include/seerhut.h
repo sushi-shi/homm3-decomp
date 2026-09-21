@@ -52,6 +52,14 @@ public:
             && (m_visitedPlayers & (1 << playerNum))
             && m_quest;
     }
+    // Complete split quest guards from TSeerHut while retaining its visited
+    // mask. Dreamcast names this exact predicate PlayerHasInfo on TSeerHut;
+    // ownership on the new guard record is inferred and the retail expansion
+    // in searchArray::enterTrigger is byte-identical to the direct test.
+    unsigned char playerHasInfo(const unsigned char playerNum) const
+    {
+        return (m_visitedPlayers & (1 << playerNum)) != 0;
+    }
     int load(TAbstractFile* infile, int saveVersion);
 };
 SIZE(TQuestGuard, 0x5);
