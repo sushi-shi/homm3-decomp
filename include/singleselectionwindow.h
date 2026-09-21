@@ -293,8 +293,8 @@ SIZE(GameSelectionHeadersStruct, 0xCA4);
 // dwords are the complete 0x7d0-byte Windows layout.  Defined ahead of
 // TSingleSelectionWindow because that window embeds one at +0x1064.
 // The ctor below seeds version from the game-context cell
-// (resourcemanager.cpp owns the claim).
-extern int* g_videoGameState;
+// (gamecontext.cpp owns the reference and its startup initializer).
+extern int& g_gameContext;
 
 class CNetPlayerHandlerPlayer : public CNetPlayerInfo {
 public:

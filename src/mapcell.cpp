@@ -2676,8 +2676,8 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             // 24-byte archive-set rows at 0x69e538 - so the pointee is a
             // small game/resource-context ordinal, not a video flag.
             int legalAlignments = 0xff;
-            if ((*g_videoGameState == 1
-                 || *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
+            if ((g_gameContext == 1
+                 || g_gameContext == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
                 && g_game->m_f1f698 >= 1)
                 legalAlignments = 0x1ff;
             tempTown.m_townType = pickAlignment(legalAlignments, 0);

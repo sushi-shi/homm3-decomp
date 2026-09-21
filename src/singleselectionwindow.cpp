@@ -1843,10 +1843,10 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_flag66 = 0;
     g_scenarioListVisibleRows = 18;
 
-    m_commonGameVersion = *g_videoGameState;
+    m_commonGameVersion = g_gameContext;
     m_townHeadingId = 341;
-    if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1
-        || *g_videoGameState == SINGLE_SELECTION_CONTEXT_3)
+    if (g_gameContext == SINGLE_SELECTION_CONTEXT_1
+        || g_gameContext == SINGLE_SELECTION_CONTEXT_3)
         m_townHeadingId = 342;
 
     if (gameMode == SINGLE_SELECTION_LOAD_GAME) {
@@ -2241,8 +2241,8 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
             414, 509, 200, 20, 129, "gspbutt.def",
             g_generalText->getText(502), "smalfont.fnt",
             0, 1, 0, 30, 2, font::WHITE));
-        if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1
-            || *g_videoGameState == SINGLE_SELECTION_CONTEXT_3) {
+        if (g_gameContext == SINGLE_SELECTION_CONTEXT_1
+            || g_gameContext == SINGLE_SELECTION_CONTEXT_3) {
             m_widgets.push_back(new textButton(
                 414, 105, 200, 20, 130, "gspbutt.def",
                 g_generalText->getText(760), "smalfont.fnt",
@@ -2910,13 +2910,13 @@ void TSingleSelectionWindow::setupLoadGameMode()
         }
         g_thisNetPlayerInfo.m_dpid = 1;
         strcpy(g_thisNetPlayerInfo.m_name, g_game->m_players[0].m_name);
-        g_thisNetPlayerInfo.m_version = *g_videoGameState;
+        g_thisNetPlayerInfo.m_version = g_gameContext;
         delete g_hotSeatMan;
         g_hotSeatMan = 0;
     } else {
         g_thisNetPlayerInfo.m_dpid = 1;
         strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
-        g_thisNetPlayerInfo.m_version = *g_videoGameState;
+        g_thisNetPlayerInfo.m_version = g_gameContext;
         setNewPlayerSlot(&g_thisNetPlayerInfo);
     }
 
@@ -2972,13 +2972,13 @@ void TSingleSelectionWindow::setupNewGameMode()
         }
         g_thisNetPlayerInfo.m_dpid = 1;
         strcpy(g_thisNetPlayerInfo.m_name, g_game->m_players[0].m_name);
-        g_thisNetPlayerInfo.m_version = *g_videoGameState;
+        g_thisNetPlayerInfo.m_version = g_gameContext;
         delete g_hotSeatMan;
         g_hotSeatMan = 0;
     } else {
         g_thisNetPlayerInfo.m_dpid = 1;
         strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
-        g_thisNetPlayerInfo.m_version = *g_videoGameState;
+        g_thisNetPlayerInfo.m_version = g_gameContext;
         setNewPlayerSlot(&g_thisNetPlayerInfo);
     }
 
@@ -3006,7 +3006,7 @@ void TSingleSelectionWindow::updateMainWindow()
 {
     showWidget(128);
     showWidget(129);
-    if (g_gameContextFeatures[*g_videoGameState].test(1))
+    if (g_gameContextFeatures[g_gameContext].test(1))
         showWidget(130);
     showWidget(107);
     showWidget(108);
@@ -3310,7 +3310,7 @@ void TSingleSelectionWindow::setupAdvancedOptions()
                     return;
                 const TTextResource* text;
                 const char* gameType;
-                if (*g_videoGameState == 1) {
+                if (g_gameContext == 1) {
                     text = g_generalText;
                     gameType = text->getText(746);
                 } else {
@@ -3337,7 +3337,7 @@ void TSingleSelectionWindow::setupAdvancedOptions()
                     return;
                 const TTextResource* text;
                 const char* gameType;
-                if (*g_videoGameState == 1) {
+                if (g_gameContext == 1) {
                     text = g_generalText;
                     gameType = text->getText(746);
                 } else {
@@ -7138,7 +7138,7 @@ unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
         w->enable(!g_remoteOn || g_dPlay->isHost() || m_flag65);
     }
-    if (g_gameContextFeatures[*g_videoGameState].test(1)) {
+    if (g_gameContextFeatures[g_gameContext].test(1)) {
         w = getWidget(130);
         if (w) {
             w->sendMessage(widget::WIDGET_SET_STATUS,
@@ -7431,7 +7431,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
                 g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
             const TTextResource* text;
             const char* gameType;
-            if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
+            if (g_gameContext == SINGLE_SELECTION_CONTEXT_1) {
                 text = g_generalText;
                 gameType = text->getText(746);
             } else {
@@ -7453,7 +7453,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         if (m_commonGameVersion < mapVersionClass) {
             const TTextResource* text;
             const char* gameType;
-            if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
+            if (g_gameContext == SINGLE_SELECTION_CONTEXT_1) {
                 text = g_generalText;
                 gameType = text->getText(746);
             } else {

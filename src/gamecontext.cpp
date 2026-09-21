@@ -8,6 +8,17 @@
 
 #include "gamecontext.h"
 
+// Retail 0x4eccf0 binds the context cell at 0x69923c to the initialized
+// dword 3 at 0x67f554 before remote's player-record initializer (0x552290).
+// Of 78 retail references, one binds the cell and the others read it;
+// there is no surviving Dreamcast counterpart or original identifier.
+// The backing dword is in retail .data. Binding its storage preserves the
+// two-level access; binding a literal or const scalar makes VC6 copy the
+// value into another temporary with an extra runtime store absent in retail.
+DATA(0x0067f554) static int g_installedGameContext = 3;
+DATA(0x0069923c) int& g_gameContext = g_installedGameContext;
+VA_COMPGEN(0x004eccf0, 0x0b, STATIC_CTOR, g_gameContext)
+
 // The 212-byte retail initializer constructs four unsigned-long bitsets in
 // one reused stack temporary, then copies them into 0x699240..0x69924f.
 // Its successive masks are 1, 3, 5 and 15. Game and single-selection readers
@@ -22,9 +33,7 @@
 // 32-byte locale-id guard. No extra stream include or emission caller is needed.
 // Unsuffixed integer literals are byte-flat. An implicit scalar initializer
 // list constructs directly into the array and loses retail's stack temporary,
-// so explicit bitset temporaries are retained. The adjacent selector still
-// needs its own source recovery: binding a const int reference directly to 3
-// adds a ten-byte runtime backing-value store absent from its retail thunk.
+// so explicit bitset temporaries are retained.
 DATA(0x00699240)
 std::bitset<4> g_gameContextFeatures[4] = {
     std::bitset<4>(1ul), std::bitset<4>(3ul),

@@ -68,7 +68,7 @@ HBINK BinkManager::getBinkFilePtr(char* filename, int binkOptions)
     strcpy(name, filename);
     strcat(name, DATA_COMPGEN(0x00660b98, binkFileExtension, ".bik"));
 
-    if (*g_videoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES) {
+    if (g_gameContext == VIDEO_GAME_STATE_EXPANSION_ARCHIVES) {
         for (i = 0; i < g_videoCount1; i++) {
             if (_strcmpi(g_videoHeader1[i].m_name, name) == 0) {
                 SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
@@ -101,7 +101,7 @@ HBINK BinkManager::getBinkFilePtr(char* filename, int binkOptions)
         }
     }
 
-    if (*g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+    if (g_gameContext == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
         for (i = 0; i < g_videoCount1; i++) {
             if (_strcmpi(g_videoHeader1[i].m_name, name) == 0) {
                 SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,

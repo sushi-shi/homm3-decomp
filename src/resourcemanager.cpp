@@ -558,7 +558,7 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 
         try {
             TResourceArchiveContext* context =
-                &g_resourceArchiveContexts[*g_videoGameState];
+                &g_resourceArchiveContexts[g_gameContext];
 
             if (openSprites) {
                 int remaining = context->m_sprites.m_count;
@@ -715,7 +715,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
 
     {
         TResourceArchiveList& archives =
-            g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+            g_resourceArchiveContexts[g_gameContext].m_bitmaps;
         int remaining = archives.m_count;
         int* archive = archives.m_indices;
         LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
@@ -738,7 +738,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
             const char* fallbackName = DATA_COMPGEN(
                 0x0064108c, defaultBitmap816Name, "default.pcx");
             TResourceArchiveList& fallbackArchives =
-                g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+                g_resourceArchiveContexts[g_gameContext].m_bitmaps;
             int fallbackRemaining = fallbackArchives.m_count;
             int* fallbackArchive = fallbackArchives.m_indices;
             lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
@@ -830,7 +830,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
         return result;
     } else {
         TResourceArchiveList& archives =
-            g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+            g_resourceArchiveContexts[g_gameContext].m_bitmaps;
         int remaining = archives.m_count;
         int* archive = archives.m_indices;
         LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
@@ -853,7 +853,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
             const char* fallbackName = DATA_COMPGEN(
                 0x006410a8, defaultBitmap24Name, "dfault24.pcx");
             TResourceArchiveList& fallbackArchives =
-                g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+                g_resourceArchiveContexts[g_gameContext].m_bitmaps;
             int fallbackRemaining = fallbackArchives.m_count;
             int* fallbackArchive = fallbackArchives.m_indices;
             lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
@@ -960,7 +960,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
     }
 
     TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+        g_resourceArchiveContexts[g_gameContext].m_bitmaps;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
     LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
@@ -983,7 +983,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
         const char* fallbackName = DATA_COMPGEN(
             0x006410b8, defaultPalette16Name, "default.pal");
         TResourceArchiveList& fallbackArchives =
-            g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+            g_resourceArchiveContexts[g_gameContext].m_bitmaps;
         int fallbackRemaining = fallbackArchives.m_count;
         int* fallbackArchive = fallbackArchives.m_indices;
         lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
@@ -1088,7 +1088,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
     }
 
     TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+        g_resourceArchiveContexts[g_gameContext].m_bitmaps;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
     LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
@@ -1110,7 +1110,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
         const char* fallbackName =
             DATA_COMPGEN(0x006410c4, defaultPaletteName, "default.pal");
         TResourceArchiveList& fallbackArchives =
-            g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+            g_resourceArchiveContexts[g_gameContext].m_bitmaps;
         int fallbackRemaining = fallbackArchives.m_count;
         int* fallbackArchive = fallbackArchives.m_indices;
         lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
@@ -1204,7 +1204,7 @@ font* ResourceManager::loadFont(const char* name)
 
     LODFile* lodFile = 0;
     TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+        g_resourceArchiveContexts[g_gameContext].m_bitmaps;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
     lodFile = &g_resourceLodSlots[*archive].m_file;
@@ -1226,7 +1226,7 @@ font* ResourceManager::loadFont(const char* name)
         const char* fallbackName =
             DATA_COMPGEN(0x006410d0, defaultFontName, "default.fnt");
         TResourceArchiveList& fallbackArchives =
-            g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+            g_resourceArchiveContexts[g_gameContext].m_bitmaps;
         int fallbackRemaining = fallbackArchives.m_count;
         int* fallbackArchive = fallbackArchives.m_indices;
         lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
@@ -1299,7 +1299,7 @@ TTextResource* ResourceManager::loadText(const char* name)
     }
 
     TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+        g_resourceArchiveContexts[g_gameContext].m_bitmaps;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
     LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
@@ -1372,7 +1372,7 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
     }
 
     TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+        g_resourceArchiveContexts[g_gameContext].m_bitmaps;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
     LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
@@ -1491,7 +1491,7 @@ bool ResourceManager::getSoundFile(const char* localName,
         soundName.erase(extension);
 
     TResourceArchiveContext* context =
-        &g_resourceArchiveContexts[*g_videoGameState];
+        &g_resourceArchiveContexts[g_gameContext];
     int remaining = context->m_sounds.m_count;
     int* archive = context->m_sounds.m_indices;
     int x;
@@ -1808,11 +1808,6 @@ CSprite* ResourceManager::getSprite(const char* name)
     return sprite;
 }
 
-// The pointee's exact domain name is not yet proven; retail consumers agree
-// that this global points at the small active game/resource-context ordinal.
-DATA(0x0069923c)
-int* g_videoGameState;
-
 DATA(0x0069d870)
 TResourceLODSlot g_resourceLodSlots[8] = {
     DATA_COMPGEN(0x00682ef8, resourceBitmapArchiveName, "h3bitmap.lod"),
@@ -1847,7 +1842,7 @@ VA(0x0055cf50, 0x83)
 LODFile* ResourceManager::pointToSpriteResource(const char* name)
 {
     TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_sprites;
+        g_resourceArchiveContexts[g_gameContext].m_sprites;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
     LODFile* file = &g_resourceLodSlots[*archive].m_file;
@@ -1866,7 +1861,7 @@ VA(0x0055cfe0, 0x83)  // bitmap-field twin of PointToSpriteResource
 LODFile* ResourceManager::pointToBitmapResource(const char* name)
 {
     TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+        g_resourceArchiveContexts[g_gameContext].m_bitmaps;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
     LODFile* file = &g_resourceLodSlots[*archive].m_file;
@@ -1897,7 +1892,7 @@ VA(0x0055d070, 0x5C)  // retail archive-list walk + dc/hd name corroboration
 int ResourceManager::getBitmapResourceSize(const char* name)
 {
     TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+        g_resourceArchiveContexts[g_gameContext].m_bitmaps;
     int* archive = archives.m_indices;
     LODEntry* entry = g_resourceLodSlots[*archive].m_file.getItemIndex(name);
     while (!entry)

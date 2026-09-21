@@ -119,8 +119,35 @@ Exact CUR is 4,176, and executable MAX is 96.87%.
 The linker completed with zero unresolved symbols and zero duplicate
 warnings. The PE entry point was verified to be `WinMainCRTStartup`.
 
-A launch in the isolated Wine prefix exits with loader status `c0000135`: the
-runtime DLLs BINKW32.DLL, MSS32.DLL, SMACKW32.DLL and IFC20.dll are unavailable.
-The repository does not distribute those DLLs or the game resources. No menu,
-map, battle or gameplay execution has been verified. A successful link is not
-proof that remaining reconstruction differences are safe at runtime.
+The first isolated Wine launch lacked BINKW32.DLL, MSS32.DLL, SMACKW32.DLL
+and IFC20.dll. Both local Steam installations provide identical 32-bit copies
+with all 81 required exports. A disposable copy of the standard installation's
+libraries and game data lets the reconstructed executable load them successfully.
+The repository does not distribute those files.
+
+That launch exposed a missing CRT initializer, not a missing DLL: the global
+network-player record read through the zero-initialized `g_videoGameState`.
+Retail also starts its cell at 0x69923c as zero, but initializer 0x4eccf0 binds
+it to the initialized dword 3 at 0x67f554. The CRT table lists this initializer
+at 0x65e7d4, before the player-record initializer 0x552290 at 0x65ebf0.
+
+`gamecontext.cpp` now owns that storage and binding as `g_installedGameContext`
+and `g_gameContext`. A mutable reference to the initialized dword reproduces
+the 11-byte initializer; a literal or const scalar makes VC6 introduce an
+extra temporary/value store. The reference preserves the former mutable
+pointee contract. Existing consumers retain their instruction bytes. Both
+startup initializers are enrolled explicitly and match retail, including
+independently resolved relocation targets/addends; the backing dword also
+matches. The real link places the binding before the player-record initializer.
+
+This illustrates why initial data bytes and function scores alone are
+insufficient: the missing binding cell was correctly zero-filled, and the
+consumer's instructions were correct, while the required initializer was
+unenrolled and absent. Data validation must cover backing values, reference
+identity, generated startup code and its execution order together.
+
+The retry passes this first fault and reaches `ResourceManager::open`, then
+faults while reading an archive index through
+`g_resourceArchiveContexts[3].m_sprites.m_indices`. That separate table remains
+zero-initialized and needs its own recovery. No menu, map, battle or gameplay
+execution has been verified.

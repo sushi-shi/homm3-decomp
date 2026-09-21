@@ -76,7 +76,7 @@ extern Smack* g_smackVideo;
 extern Smack* g_smackVideo2;
 
 // Foreign globals without an owning header yet (all provisional):
-extern int* g_videoGameState;    // .bss 0x69923c - the forced-bink state pair
+extern int& g_gameContext;    // retail context reference, initialized by gamecontext.cpp
 extern int g_firstTimeThrough;        // .bss 0x699524 - nonzero blocks the user abort
        // .bss 0x699290 - nonzero suppresses the video sound tracks
 

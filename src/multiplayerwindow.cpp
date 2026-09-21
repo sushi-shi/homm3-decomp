@@ -953,7 +953,7 @@ unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char
                              const_cast<char*>(password)))
         return 0;
 
-    int version = *g_videoGameState;
+    int version = g_gameContext;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
         g_config.m_networkDefaultName, &version, sizeof(version), 0);
     strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
@@ -984,7 +984,7 @@ unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* 
                              const_cast<char*>(password)))
         return 0;
 
-    int version = *g_videoGameState;
+    int version = g_gameContext;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
         g_config.m_networkDefaultName, &version, sizeof(version), 0);
     if (!g_thisNetPlayerInfo.m_dpid)
