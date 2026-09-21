@@ -1542,26 +1542,31 @@ void town::updateFullBuildingMask()
 }
 
 // E:\gamedcs\town.cpp:2097
+// DC names the short parameter building_id and the 64-bit local
+// building_mask. Its source rows retain TownAlreadyBuiltOn,
+// is_legal_building, CanBuildDock and get_building_mask; Complete expands
+// those same source calls and matches this body exactly.
 VA(0x005c0d20, 0x13D)  // anchor-global, dc 0x168504
 unsigned char town::canBuild(short buildingId) const
 {
-    if (!g_game->m_towns[m_id].m_builtThisTurn) {
-        int legalId = buildingId;
-        if (g_bitNumber[buildingId] & m_available) {
-            if (buildingId == DOCK_ID)
-                return m_dockSite != TOWN_DOCK_SITE_NONE;
-            if (buildingId == HALL_CAPITOL_ID)
-                return !g_game->m_players[m_owner].hasCapitol();
-            char townType = m_type;
-            __int64 requirements = g_hierarchyMask[townType][buildingId];
-            if (g_game->m_isTutorial && buildingId == DWELLING_2_ID
-                && townType == TOWN_CASTLE)
-                requirements &= ~g_bitNumber[BLACKSMITH_ID];
-            if (!(m_active & g_bitNumber[buildingId])
-                && (m_active & requirements) == requirements)
-                return 1;
-        }
-    }
+    if (g_game->townAlreadyBuiltOn(m_id))
+        return 0;
+    if (!isLegalBuilding(type_building_id(buildingId)))
+        return 0;
+    if (buildingId == DOCK_ID)
+        return canBuildDock();
+    if (buildingId == HALL_CAPITOL_ID)
+        return !g_game->m_players[m_owner].hasCapitol();
+
+    char townType = m_type;
+    __int64 requirements = g_hierarchyMask[townType][buildingId];
+    __int64 buildingMask = getBuildingMask();
+    if (g_game->m_isTutorial && buildingId == DWELLING_2_ID
+        && townType == TOWN_CASTLE)
+        requirements &= ~g_bitNumber[BLACKSMITH_ID];
+    if (!(buildingMask & g_bitNumber[buildingId])
+        && (buildingMask & requirements) == requirements)
+        return 1;
     return 0;
 }
 

@@ -4366,7 +4366,7 @@ town	?applySpecialBuildingEffect@town@@QAEXPAVhero@@@Z	100.0000	100.0000	100.000
 town	?buildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	97.5320	97.5320	99.3036	0x1bede0	tokens1:2498d6af2bee
 town	?buyBuilding@town@@QAEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1bf3c0	tokens1:ccec8fc3d1e5
 town	?calcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0	tokens1:b2259400c4e1
-town	?canBuild@town@@QBEEF@Z	81.1852	81.1852	89.6018	0x1c0d20	tokens1:3f1ab1705516
+town	?canBuild@town@@QBEEF@Z	100.0000	100.0000	100.0000	0x1c0d20	tokens1:269e4e13df7c
 town	?canBuildDock@town@@QBEEXZ	100.0000	100.0000	100.0000	0x1bf4e0	tokens1:3f5ecbff0f3e
 town	?canEverBuild@town@@QBEEH@Z	100.0000	100.0000	100.0000	0x1c0e60	tokens1:ca99471c1b68
 town	?changeGeneratorBonus@town@@QAEXW4TCreatureType@@J@Z	100.0000	100.0000	100.0000	0x1bfe50	tokens1:e1614c770094
