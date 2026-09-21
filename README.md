@@ -83,13 +83,13 @@ The build compiles and compares reconstructed code. To link the resulting object
 with the VC6 runtime, Windows libraries and retail vendor imports:
 
 ```sh
-homm3 link --strict --game-libraries --out build/exe/HEROES3.linked.EXE
+homm3 link --out build/exe/HEROES3.linked.EXE
 ```
 
 This passes without unresolved or duplicate symbols. Runtime execution is still
 unverified: the isolated launch check stops at missing Bink, Miles, Smacker and
-IFC20 DLLs. Playing also requires the original game resources. Plain `homm3 link`
-retains its `/FORCE` layout-diagnostic behavior; use `--strict` for a real link.
+IFC20 DLLs. Playing also requires the original game resources. `homm3 link`
+always requires a clean link, without `/FORCE`.
 See [linking and runtime evidence](docs/vc6/runtime-link.md).
 
 ### IDE setup

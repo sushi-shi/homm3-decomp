@@ -3,14 +3,14 @@
 After `homm3 build`, run:
 
 ```sh
-homm3 link --strict --game-libraries --out build/exe/HEROES3.linked.EXE
+homm3 link --out build/exe/HEROES3.linked.EXE
 ```
 
-The strict link includes all 152 objects and retains their COMDATs. It uses
+The default link includes all 152 objects and retains their COMDATs. It uses
 `WinMainCRTStartup`, LIBCMT/LIBCPMT from the pinned VC6 SP3 toolchain, Windows
 import libraries and generated vendor import libraries. It rejects unresolved
 symbols, duplicate-symbol diagnostics, `/FORCE` overrides and linker timeouts.
-Plain `homm3 link` remains a partial-image layout diagnostic.
+No opt-in flag is needed for these checks or the game libraries.
 
 The vendor libraries contain loader import records, not substitute implementations.
 `llvm-dlltool` generates them from the pinned executable's named imports. Its short
@@ -48,15 +48,46 @@ VC6 object data checks compared 112 restored tables (82,559 bytes), resolving an
 checking 3,267 string referents against the pinned image. These disposable checks
 and extraction manifests live in ignored `build/`. The ordinary build refreshes
 retail targets and runs the source inventory, ownership and address-claim gates.
-Source-supported changes can lower individual matching scores; retained HIST
-values preserve previous peaks. Relative to the starting checkout, 20 functions
-have lower MAX values after the canonical declarations and data references were
-restored; the largest is TCampaignBrief's destructor (100% to 62.74%, with its
-previous peak retained in HIST). The implementation remains partially matched.
+The ledger separates CUR (the latest compile) from MAX (the best score for the
+current function source hash) and HIST (the peak across source revisions).
+Changing a function's source hash resets MAX to CUR, even if its current score
+is unchanged. That explains all seven formerly MAX-exact entries in this PR:
+
+| Function | Parent CUR | PR CUR | Parent MAX → PR MAX |
+| --- | ---: | ---: | ---: |
+| `advManager::main` | 99.7919% | 99.7919% | 100% → 99.7919% |
+| `TCampaignBrief::~TCampaignBrief` | 62.7417% | 62.7417% | 100% → 62.7417% |
+| `combatManager::drawFrame` | 98.0274% | 98.0274% | 100% → 98.0274% |
+| `TRmgTreasureGroup::canFitObject` | 87.4868% | 87.4868% | 100% → 87.4868% |
+| `type_belong_to_player_quest::setDefaultText` | 87.4421% | 87.4421% | 100% → 87.4421% |
+| `type_resource_quest::setDefaultText` | 91.2333% | 91.2333% | 100% → 91.2333% |
+| `TSingleSelectionWindow::~TSingleSelectionWindow` | 86.6265% | 86.6265% | 100% → 86.6265% |
+
+The comparison is commit `66275fba` against its parent `e4b68c84`. These seven
+current scores did not worsen; their source hashes changed when declarations,
+names and data access were corrected. HIST retains the previous exact peaks.
+Across all 20 MAX decreases, 18 have unchanged CUR, one has lower CUR
+(`armyGroup::getMoraleDescription`) and one has slightly higher CUR
+(`type_monster_quest::setDefaultText`).
+
+Two existing functions gained MAX 100% (`army::doAttack` and
+`swapManager::setRolloverText`). The two new inventory entries are retail's
+campaign difficulty arrow callbacks at 0x457f70 and 0x457fc0, both 73 bytes and
+both exact. They replace the unresolved shared callback declaration, which
+incorrectly identified the copy-assignment body at 0x457cb0 as a button handler.
+Thus exact MAX is 4,244 − 7 + 2 + 2 = 4,241, and the function count grows from
+4,766 to 4,768. No gameplay functions were invented to increase the count.
+
+CUR is a separate result: ten existing functions lost current exact status,
+three existing functions gained it, and the two new callbacks are exact, giving
+4,182 − 10 + 3 + 2 = 4,177. The ten losses occur in quest description/log builders
+after the typed quest-text accessor changes. Their previous MAX peaks remain
+where their own source hashes are unchanged. The implementation remains
+partially matched; the successful link does not establish byte identity.
 
 ## Execution status
 
-The strict linker completed with zero unresolved symbols and zero duplicate
+The linker completed with zero unresolved symbols and zero duplicate
 warnings. The PE entry point was verified to be `WinMainCRTStartup`.
 
 A launch in the isolated Wine prefix exits with loader status `c0000135`: the

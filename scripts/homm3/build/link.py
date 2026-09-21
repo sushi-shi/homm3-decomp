@@ -3,9 +3,9 @@
 
 Runs the genuine VC6 SP3 `link.exe` (LINK 6.00.8447 - the generation that built
 retail HEROES3.EXE) under wine over our base `.obj`s. The reconstruction is
-partial, so the default `/FORCE` mode is a layout diagnostic, not a runnable
-build. `--strict --game-libraries` requires a clean link with the real CRT and
-vendor imports. A clean link alone does not establish runtime correctness. The `.map`
+partial, but the game links with the real CRT and vendor imports. Every link
+requires a successful exit and no unresolved or duplicate symbols. A clean
+link alone does not establish runtime correctness. The `.map`
 gives every function's link-assigned address and its source object, which is
 what lets us reverse-engineer the retail object order later (intra-TU order =
 source-definition order; cross-TU order = object link order).
@@ -14,7 +14,7 @@ What it does:
   1. assemble the obj list (a dir of <unit>.obj, explicit --obj, or an --order
      file giving the exact link order to test), winepath-translate every path,
      and write a `@response` file (link's argv limit under wine is short);
-  2. run `wine link.exe @rsp`; strict mode requires a successful exit, an
+  2. run `wine link.exe @rsp`; require a successful exit, an
      executable, and no unresolved or duplicate symbol diagnostics;
   3. save the unresolved-externals punch list next to the EXE (the
      drive-to-linkable worklist).
@@ -24,8 +24,9 @@ VC6 LINK.EXE's static imports are only mspdb60/msvcrt/kernel32 (verified by
 walking its import table); MSDIS110.DLL is loaded dynamically and only by the
 `/dump /disasm` path. MSPDB60.DLL ships next to link.exe in the toolchain.
 
-Defaults are tuned for layout study, not a shippable binary:
-  /FORCE /NODEFAULTLIB /SUBSYSTEM:WINDOWS /BASE:0x400000 /INCREMENTAL:NO /MAP
+Defaults use the real game startup and explicitly selected libraries:
+  /NODEFAULTLIB /SUBSYSTEM:WINDOWS /BASE:0x400000 /INCREMENTAL:NO /MAP
+  /ENTRY:WinMainCRTStartup
   /OPT:NOREF /OPT:NOICF   (keep EVERY function so the map is complete)
 
 Run inside `nix develop .#build`:
@@ -53,7 +54,7 @@ def die(msg: str) -> None:
     sys.exit(1)
 
 
-def run_wine(cmd: list, cwd, produced: Path):
+def run_wine(cmd: list, cwd):
     """Run a wine command hang-proof; return (output, rc). Mirrors cc_wrap:
     wine can leave a finished-but-unreaped grandchild holding stdio open, so log
     to a temp FILE (no pipe to block on), own process group, bounded wait."""
@@ -118,21 +119,13 @@ def unresolved_symbols(output: str) -> list[str]:
     return sorted(names)
 
 
-def link_succeeded(output: str, rc: int, exists: bool, strict: bool) -> bool:
-    if not exists or rc == 124:
-        return False
-    if strict:
-        return (rc == 0 and not unresolved_symbols(output)
-                and not re.search(r"\bLNK(?:2005|4006|4088)\b", output))
-    return True
+def link_succeeded(output: str, rc: int, exists: bool) -> bool:
+    return (exists and rc == 0 and not unresolved_symbols(output)
+            and not re.search(r"\bLNK(?:2005|4006|4088)\b", output))
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="VC6 link.exe wrapper (candidate link).")
-    ap.add_argument("--game-libraries", action="store_true",
-                    help="link the VC6 CRT, Windows APIs, and pinned vendor imports")
-    ap.add_argument("--strict", action="store_true",
-                    help="reject unresolved/duplicate symbols; omit /FORCE")
     ap.add_argument("--out", default="build/exe/HEROES3.candidate.EXE")
     ap.add_argument("--map", dest="mapfile", default=None,
                     help="map path (default: <out> with .map suffix).")
@@ -142,7 +135,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--lib", action="append", default=[],
                     help="extra import/static lib to pass to link (repeatable).")
     ap.add_argument("--base", default=None, help="image base (/BASE).")
-    ap.add_argument("--entry", help="/ENTRY symbol (game libraries: WinMainCRTStartup; diagnostic: _x).")
+    ap.add_argument("--entry", default="WinMainCRTStartup",
+                    help="/ENTRY symbol (default: WinMainCRTStartup).")
     ap.add_argument("--keep-all", dest="keep_all", action="store_true", default=True,
                     help="/OPT:NOREF /OPT:NOICF - keep every COMDAT (default).")
     ap.add_argument("--opt-ref", dest="keep_all", action="store_false",
@@ -151,11 +145,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="extra link flags after `--`.")
     args = ap.parse_args(argv)
     extra = args.flags[1:] if args.flags and args.flags[0] == "--" else args.flags
-    if args.strict and any(re.match(r"^[-/]force(?:[:=]|$)", flag, re.I)
-                           for flag in extra):
-        ap.error("--strict cannot be combined with /FORCE")
-    if args.entry is None:
-        args.entry = "WinMainCRTStartup" if args.game_libraries else "_x"
+    if any(re.match(r"^[-/]force(?:[:=]|$)", flag, re.I) for flag in extra):
+        ap.error("/FORCE is unsupported: the game must link without unresolved or duplicate symbols")
     if args.base is None:
         from homm3.core import common
         args.base = hex(common.load_image()[0].image_base)
@@ -184,19 +175,18 @@ def main(argv: list[str] | None = None) -> int:
     ensure_wineserver()
 
     libraries = list(args.lib)
-    if args.game_libraries:
-        from homm3.build.import_libraries import build_vendor_libraries
-        from homm3.core.common import load_image
-        libraries += [str(path) for path in build_vendor_libraries(
-            load_image()[0].data, out.parent / "imports")]
-        for name in ("LIBCMT.LIB", "LIBCPMT.LIB", "KERNEL32.LIB", "USER32.LIB",
-                     "GDI32.LIB", "ADVAPI32.LIB", "WINMM.LIB", "VERSION.LIB",
-                     "WSOCK32.LIB", "DDRAW.LIB", "DINPUT.LIB", "DXGUID.LIB",
-                     "UUID.LIB", "OLE32.LIB", "SHELL32.LIB", "OLDNAMES.LIB"):
-            library = find_ci(msvc / "lib", name)
-            if library is None:
-                die(f"missing toolchain library {name}")
-            libraries.append(str(library))
+    from homm3.build.import_libraries import build_vendor_libraries
+    from homm3.core.common import load_image
+    libraries += [str(path) for path in build_vendor_libraries(
+        load_image()[0].data, out.parent / "imports")]
+    for name in ("LIBCMT.LIB", "LIBCPMT.LIB", "KERNEL32.LIB", "USER32.LIB",
+                 "GDI32.LIB", "ADVAPI32.LIB", "WINMM.LIB", "VERSION.LIB",
+                 "WSOCK32.LIB", "DDRAW.LIB", "DINPUT.LIB", "DXGUID.LIB",
+                 "UUID.LIB", "OLE32.LIB", "SHELL32.LIB", "OLDNAMES.LIB"):
+        library = find_ci(msvc / "lib", name)
+        if library is None:
+            die(f"missing toolchain library {name}")
+        libraries.append(str(library))
 
     rsp_lines = [
         f'/OUT:"{winepath_w(out)}"',
@@ -204,8 +194,6 @@ def main(argv: list[str] | None = None) -> int:
         "/NOLOGO", "/NODEFAULTLIB", "/SUBSYSTEM:WINDOWS",
         f"/BASE:{args.base}", "/INCREMENTAL:NO", f"/ENTRY:{args.entry}",
     ]
-    if not args.strict:
-        rsp_lines.append("/FORCE")
     if args.keep_all:
         rsp_lines += ["/OPT:NOREF", "/OPT:NOICF"]
     else:
@@ -219,26 +207,23 @@ def main(argv: list[str] | None = None) -> int:
     rsp.write_text("\n".join(rsp_lines) + "\n")
 
     output, rc = run_wine(["wine", str(link), f"@{winepath_w(rsp)}"],
-                          out.parent, out)
+                          out.parent)
 
     log = out.with_suffix(".link.log")
     log.write_text(output)
     unresolved = unresolved_symbols(output)
     punch = out.parent / (out.stem + ".unresolved.txt")
     punch.write_text("\n".join(unresolved) + ("\n" if unresolved else ""))
-    if not link_succeeded(output, rc, out.exists(), args.strict):
+    if not link_succeeded(output, rc, out.exists()):
         sys.stderr.write(f"[link] FAILED: {out} (link exit {rc}; see {log.name})\n")
         sys.stderr.write("\n".join(output.strip().splitlines()[-20:]) + "\n")
         return rc or 1
 
-    # /FORCE means unresolved externals are EXPECTED (partial reconstruction);
-    # surface the counts but treat the produced EXE as success.
     warns = sum(1 for ln in output.splitlines() if "LNK4006" in ln)
     shown = out.relative_to(HOMM3_DIR) if out.is_relative_to(HOMM3_DIR) else out
     print(f"[link] {len(objs)} objs -> {shown} ({out.stat().st_size} B) + {mapf.name}")
-    mode = "strict link" if args.strict else "diagnostic /FORCE; runtime unverified"
     print(f"[link] {len(unresolved)} unresolved externals -> {punch.name}, "
-          f"{warns} dup-symbol warnings ({mode})")
+          f"{warns} dup-symbol warnings")
     return 0
 
 

@@ -6,8 +6,8 @@ from homm3.build.import_libraries import named_imports, exact_import_names
 
 
 class LinkDiagnosticsTest(unittest.TestCase):
-    def test_strict_requires_completed_clean_link(self):
-        self.assertTrue(link_succeeded('', 0, True, True))
+    def test_requires_completed_clean_link(self):
+        self.assertTrue(link_succeeded('', 0, True))
         for output, rc, exists in [
             ('', 1, True), ('', 124, True), ('', 0, False),
             ('a.obj : error LNK2001: unresolved external symbol missing', 0, True),
@@ -16,11 +16,45 @@ class LinkDiagnosticsTest(unittest.TestCase):
             ('warning LNK4088: image being generated due to /FORCE', 0, True),
         ]:
             with self.subTest(output=output, rc=rc, exists=exists):
-                self.assertFalse(link_succeeded(output, rc, exists, True))
+                self.assertFalse(link_succeeded(output, rc, exists))
 
-    def test_diagnostic_mode_allows_partial_image_but_not_timeout(self):
-        self.assertTrue(link_succeeded('LNK2001: unresolved external symbol missing', 1, True, False))
-        self.assertFalse(link_succeeded('', 124, True, False))
+    def test_default_link_uses_game_libraries_and_real_startup(self):
+        from contextlib import ExitStack, redirect_stdout
+        from io import StringIO
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        with TemporaryDirectory() as directory, ExitStack() as stack:
+            root = Path(directory)
+            output = root / 'game.exe'
+            def run(command, cwd):
+                output.write_bytes(b'linked executable')
+                return '', 0
+            patches = {
+                'homm3.build.link.shutil.which': lambda _: 'wine',
+                'homm3.build.link.msvc_dir': lambda: root,
+                'homm3.build.link.find_ci': lambda parent, name: parent / name,
+                'homm3.build.link.ensure_wineserver': lambda: None,
+                'homm3.build.link.winepath_w': str,
+                'homm3.build.link.collect_objs': lambda _: [root / 'game.obj'],
+                'homm3.build.link.run_wine': run,
+                'homm3.core.common.load_image': lambda: (
+                    SimpleNamespace(image_base=0x400000, data=b'retail'), None),
+                'homm3.build.import_libraries.build_vendor_libraries':
+                    lambda data, where: [where / 'BINKW32.lib'],
+            }
+            for name, value in patches.items():
+                stack.enter_context(patch(name, value))
+            stack.enter_context(patch.dict('os.environ', {'WINEPREFIX': directory}))
+            with redirect_stdout(StringIO()):
+                self.assertEqual(main(['--out', str(output)]), 0)
+            response = output.with_suffix('.objs.rsp').read_text()
+            self.assertIn('/ENTRY:WinMainCRTStartup', response)
+            self.assertNotIn('/FORCE', response)
+            for name in ('LIBCMT.LIB', 'LIBCPMT.LIB', 'BINKW32.lib'):
+                self.assertIn(name, response)
+            self.assertEqual(output.with_suffix('.unresolved.txt').read_text(), '')
 
     def test_timeout_does_not_accept_an_existing_executable(self):
         import subprocess
@@ -35,17 +69,17 @@ class LinkDiagnosticsTest(unittest.TestCase):
             with patch('homm3.build.link.subprocess.Popen', return_value=process), \
                  patch('homm3.build.link.os.getpgid', return_value=12345), \
                  patch('homm3.build.link.os.killpg') as kill:
-                output, rc = run_wine(['wine'], directory, produced)
+                output, rc = run_wine(['wine'], directory)
             self.assertEqual(rc, 124)
             self.assertEqual(output, '')
             kill.assert_called_once()
 
-    def test_strict_rejects_force_override_before_starting_wine(self):
+    def test_rejects_force_override_before_starting_wine(self):
         from contextlib import redirect_stderr
         from io import StringIO
         for flag in ['/FORCE', '/force:unresolved', '-FORCE:MULTIPLE']:
             with redirect_stderr(StringIO()), self.assertRaises(SystemExit) as error:
-                main(['--strict', '--', flag])
+                main(['--', flag])
             self.assertEqual(error.exception.code, 2)
 
     def test_decorated_and_c_symbols(self):
