@@ -2988,7 +2988,7 @@ questlogwindow	?questSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100
 questlogwindow	?questTextRow@type_quest@@QAEPBUTSeerHutTextColumn@@XZ	100.0000	100.0000	100.0000	0x12e6b0	tokens1:2b11ec27953d
 questlogwindow	?updateQuestLocator@TQuestLogWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x12e270	tokens1:7e40b6070e75
 questlogwindow	?windowHandler@TQuestLogWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x12e410	tokens1:ae8c747ccc08
-quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	97.5654	97.5654	97.5654	0x12ead0	tokens1:ec0f4c8c049d
+quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	97.5654	97.5654	97.5654	0x12ead0	tokens1:8f4e2d0f1376
 quickherowindow	??1TQuickHeroWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12f3d0	tokens1:dbf31bd3831a
 quickherowindow	??_GTQuickHeroWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12f3a0	-
 quickherowindow	?init@?$basic_ios@DU?$char_traits@D@std@@@std@@IAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@2@_N@Z	100.0000	100.0000	100.0000	0x12f440	-
