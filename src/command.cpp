@@ -2049,8 +2049,10 @@ void combatManager::turnOffHighlighter(unsigned char drawIt)
 // the two twenty-stack value loops; retail homes one extra four-byte scratch
 // and binds the row walk to EDI/ECX where this build uses EDX/EDI. A named
 // side is codegen-inert; explicit current-hero locals score 87.19%/80.53%;
-// and spelling the DC-attested IsActive call directly scores 84.86% because
-// it consumes an inline-budget slot and leaves a second string _Tidy call.
+// and an earlier IsActive-call probe scored 84.86%. The current source keeps
+// IsActive (DC line 3085) and TTextResource::operator[] (3058/3105); both are
+// now byte-flat at 94.4335%. FullUpdate after each dialog is DC-only here:
+// retail continues directly to the response checks without that redraw.
 // Keeping a named army-row base is the best measured natural spelling.
 // Countdown sweep 2026-09-06: retail computes ONE `&armies[currentSide][0]
 // .numTroops` (edi at fn+0x4b2, disp 0x5518 folded into the lea) and shares
@@ -2075,7 +2077,7 @@ void combatManager::checkGetAIMove()
         if (isHuman) {
             if (m_autoRetreatOn) {
                 std::string result = formatString(
-                    g_generalText->getText(414), m_heroes[m_currentSide]->m_name);
+                    (*g_generalText)[414], m_heroes[m_currentSide]->m_name);
                 normalDialog(result.c_str(), 2, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn
@@ -2094,8 +2096,7 @@ void combatManager::checkGetAIMove()
                 army* currentArmies = m_armies[m_currentSide];
                 for (int slot = 0; slot < 20; ++slot) {
                     army* currentArmy = &currentArmies[slot];
-                    if (currentArmy->m_creatureType >= 0
-                            && currentArmy->m_numTroops > 0) {
+                    if (currentArmy->isActive()) {
                         combatValue +=
                             g_creatureTypeTraits[currentArmy->m_creatureType].m_cost[6]
                             * currentArmy->m_numTroops;
@@ -2109,7 +2110,7 @@ void combatManager::checkGetAIMove()
                         && combatValue > g_surrenderCost695030 + 2500) {
                     std::string msg;
                     if (isHuman) {
-                        msg = formatString(g_generalText->getText(130),
+                        msg = formatString((*g_generalText)[130],
                                             m_heroes[m_currentSide]->m_name,
                                             g_surrenderCost695030);
                         normalDialog(msg.c_str(), 2, -1, -1, 6,

@@ -4905,11 +4905,10 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
 // still what the source says, and the load has to be at the default
 // label rather than ahead of the switch for the bytes to come out.
 
-// THE /Ob2 CALL-VS-INLINE ASYMMETRY IS SPELLED PER SITE, AGAIN. The
-// TARGET's name is a CALL to army::GetName; the CASTING stack's name, in
-// the creature arm's default, is EXPANDED. Same two source lines, one
-// written as army::GetName and one as this file's CreatureName - the
-// third instance of the lever in this TU.
+// DC spells.cpp:5824/5825 calls get_current_army and army::GetName for
+// the caster, just as 5754 calls GetName for the target. Keep both canonical
+// boundaries and the text-resource subscripts. Restoring these source calls
+// is byte-flat at 98.7602%; their retail expansion decisions belong to VC6.
 
 // BANKED EXACT (100%, 0x999 bytes, 2026-08-21): the last seven instructions
 // were all in the artifact arm. Retail RELOADS `[ebp+0xc]` at that arm's
@@ -4960,64 +4959,63 @@ void combatManager::showSpellMessage(int isMonsterSpell, SpellID spellId,
                             * targetArmy->m_poisonPenalty + 0.95f)
                 - targetArmy->m_monInfo.m_hitPoints;
             if (targetArmy->m_numTroops == 1)
-                message = formatString(g_generalText->getText(552),
+                message = formatString((*g_generalText)[552],
                                         targetName, lost);
             else
-                message = formatString(g_generalText->getText(553),
+                message = formatString((*g_generalText)[553],
                                         targetName, lost);
             break;
         }
         case SPELL_DISEASE:
             if (targetArmy->m_numTroops == 1)
-                message = formatString(g_generalText->getText(554), targetName);
+                message = formatString((*g_generalText)[554], targetName);
             else
-                message = formatString(g_generalText->getText(555), targetName);
+                message = formatString((*g_generalText)[555], targetName);
             break;
         case SPELL_DISPEL_HELPFUL:
-            message = formatString(g_generalText->getText(556), targetName);
+            message = formatString((*g_generalText)[556], targetName);
             break;
         case SPELL_BLIND:
-            message = formatString(g_generalText->getText(557), targetName);
+            message = formatString((*g_generalText)[557], targetName);
             break;
         case SPELL_CURSE:
-            message = formatString(g_generalText->getText(558), targetName);
+            message = formatString((*g_generalText)[558], targetName);
             break;
         case SPELL_STONE:
             if (targetArmy->m_numTroops == 1)
-                message = formatString(g_generalText->getText(559), targetName);
+                message = formatString((*g_generalText)[559], targetName);
             else
-                message = formatString(g_generalText->getText(560), targetName);
+                message = formatString((*g_generalText)[560], targetName);
             break;
         case SPELL_BIND:
-            message = formatString(g_generalText->getText(561), targetName);
+            message = formatString((*g_generalText)[561], targetName);
             break;
         case SPELL_POISON:
             if (targetArmy->m_numTroops == 1)
-                message = formatString(g_generalText->getText(562), targetName);
+                message = formatString((*g_generalText)[562], targetName);
             else
-                message = formatString(g_generalText->getText(563), targetName);
+                message = formatString((*g_generalText)[563], targetName);
             break;
         case SPELL_PARALYZE:
             if (targetArmy->m_numTroops == 1)
-                message = formatString(g_generalText->getText(564), targetName);
+                message = formatString((*g_generalText)[564], targetName);
             else
-                message = formatString(g_generalText->getText(565), targetName);
+                message = formatString((*g_generalText)[565], targetName);
             break;
         default: {
             // Every OTHER creature ability names its own caster - the
             // stack whose turn it is - and then appends the target
             // clause only if there is a target to name.
-            const army* caster = &m_armies[m_actingSide][m_actingSlot];
-            const char* casterName = getArmyName(caster->m_creatureType,
-                                                  caster->m_numTroops);
+            const army* caster = getCurrentArmy();
+            const char* casterName = caster->getName();
             if (caster->m_numTroops == 1)
-                message = formatString(g_generalText->getText(566),
+                message = formatString((*g_generalText)[566],
                                         casterName, spellName);
             else
-                message = formatString(g_generalText->getText(567),
+                message = formatString((*g_generalText)[567],
                                         casterName, spellName);
             if (targetName)
-                message += formatString(g_generalText->getText(568),
+                message += formatString((*g_generalText)[568],
                                          targetName);
             break;
         }
@@ -5039,17 +5037,17 @@ void combatManager::showSpellMessage(int isMonsterSpell, SpellID spellId,
             artifact = spellId;
             break;
         }
-        message = formatString(g_generalText->getText(197),
+        message = formatString((*g_generalText)[197],
                                 g_artifactTraits[artifact].m_name, spellName);
         break;
     }
     default:
         if (targetName)
-            message = formatString(g_generalText->getText(196),
+            message = formatString((*g_generalText)[196],
                                     m_heroes[m_currentSide]->m_name, spellName,
                                     targetName);
         else
-            message = formatString(g_generalText->getText(197),
+            message = formatString((*g_generalText)[197],
                                     m_heroes[m_currentSide]->m_name, spellName);
         break;
     }

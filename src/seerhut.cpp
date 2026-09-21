@@ -285,29 +285,22 @@ void type_quest::save(TAbstractFile* file)
     }
 }
 
-// The deadline suffix both base dialog getters below append when the quest
-// is dated. It is the only reader of the text row's LAST column: retail
-// takes it at `[row + 0x334]`, which is 51 * sizeof(std::string) plus the
-// _Ptr member, and - unlike every other row read in this file - WITHOUT a
-// quest_type() call, so the ternary on field_04/field_38 is spelled inline
-// with the 832-byte product duplicated into both arms, exactly as
-// quest_text()'s own note describes. Naming the remaining-day subtraction at
-// this lifetime raises retail similarity from 85.1124% to 93.4944%. Moving it
-// earlier, naming the text variant too, or constructing text directly from the
-// separator loses agreement; the combined direct/copy-initialization controls
-// score 75.2472%.
-
+// The base dialog getters append this deadline suffix. Retail reads the
+// row-wide time-limit column (51), without questType's per-kind offset.
+// questTextRow and getCurrentTurn preserve that lookup and the signed-short
+// date result. This Complete-only caller has no Dreamcast source record;
+// the shared helper bodies and retail expansion support these source calls.
+// They are byte-flat at 93.4944%. Moving remainingDays earlier or directly
+// initializing text lost agreement (combined controls: 75.2472%).
 VA(0x0056d040, 0x1F7)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
 std::string type_quest::getTimeLimitText()
 {
-    int days = static_cast<short>(
-        (g_game->m_month * 4 + g_game->m_week - 5) * 7
-        + g_game->m_day);
+    int days = g_game->getCurrentTurn();
     std::string text;
     text = DATA_COMPGEN(0x00660330, questTimeLimitSeparator, " ");
     int remainingDays = m_limit - days;
     const std::string* row =
-        m_seerHut ? g_questTextA[m_textVariant] : g_questTextB[m_textVariant];
+        questTextRow();
     text += formatString(row[QUEST_TEXT_TIME_LIMIT].c_str(), remainingDays);
     return text;
 }
@@ -912,7 +905,7 @@ void type_monster_quest::setDefaultText()
 
     const char* monsterName;
     const std::string* texts =
-        questTextRow() + QUEST_TEXT_COLUMNS * questType();
+        questTexts();
     m_monsterId = g_game->m_worldMap.cell(m_position)->m_objectIndex;
     monsterName = m_monsterId >= 0 && m_monsterId <= 0x96
                       ? g_creatureTypeTraits[m_monsterId].m_pluralName
@@ -1298,11 +1291,10 @@ void type_creature_quest::doProposalDialog(hero* currentHero)
 // in the joined stack list; otherwise it uses the base's dated proposal-text
 // getter. Picture qualifiers use the same unsigned 16|16 packing as slot 4.
 
-// The vectors need their own inner scope so their cleanup precedes the final
-// text cleanup. Retail retains the element destructor and expands the final
-// string destructor; the unpinned compiler currently makes the opposite pair
-// of inline decisions. The former end-of-scope inline-depth diagnostic is not
-// source evidence and has been removed.
+// The vectors' inner scope ends their cleanup before text's final cleanup.
+// Keep the nested questText call for the proposal template: restoring this
+// boundary also restores retail's destructor decisions and all 0x2d5 bytes.
+// This Complete-only interface is inferred from the retail callers.
 // E:\gamedcs\seerhut.cpp
 VA(0x00570b80, 0x2D5)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
 void type_creature_quest::doProgressDialog()
@@ -1329,8 +1321,7 @@ void type_creature_quest::doProgressDialog()
 
         if (m_proposalText.length() == 0) {
             std::string textFormat =
-                questTextRow()[QUEST_TEXT_COLUMNS * questType()
-                                 + QUEST_TEXT_PROPOSAL];
+                questText(QUEST_TEXT_PROPOSAL);
             if (m_limit >= 0)
                 textFormat += getTimeLimitText();
             text = formatString(
@@ -1607,13 +1598,16 @@ void type_resource_quest::save(TAbstractFile* file)
         file->write(m_completionText.c_str(), m_completionText.length());
     }
 }
+// Keep the shared questTexts group selector. Retail calls questTextRow
+// inside its expansion; VC6 currently expands that child too (91.2333%).
+// The earlier flattened group reached 100%, retained in history.
 VA(0x00571cc0, 0x23E)
 void type_resource_quest::setDefaultText()
 {
     std::vector<std::string> requirements;
     std::string requirement;
     const std::string* texts =
-        questTextRow() + QUEST_TEXT_COLUMNS * questType();
+        questTexts();
     for (int i = 0; i <= 6; i++) {
         if (m_resources[i] > 0) {
             requirement = formatString(
@@ -1788,6 +1782,9 @@ void type_belong_to_player_quest::save(TAbstractFile* file)
         file->write(m_completionText.c_str(), m_completionText.length());
     }
 }
+// Keep the shared questTexts group selector. Retail calls questTextRow
+// inside its expansion; VC6 currently expands that child too (87.4421%).
+// The earlier flattened group reached 100%, retained in history.
 VA(0x00572940, 0x204)
 void type_belong_to_player_quest::setDefaultText()
 {
@@ -1795,7 +1792,7 @@ void type_belong_to_player_quest::setDefaultText()
     std::transform(requirement.begin(), requirement.end(),
                    requirement.begin(), ::tolower);
     const std::string* texts =
-        questTextRow() + QUEST_TEXT_COLUMNS * questType();
+        questTexts();
     if (m_proposalText.length() == 0)
         m_proposalText = formatString(texts[QUEST_TEXT_PROPOSAL].c_str(),
                               requirement.c_str());
@@ -1814,6 +1811,10 @@ TQuestGuard::TQuestGuard()
     m_visitedPlayers = 0;
 }
 
+// Complete-only caller: retail expands the same expiry test retained in
+// hasExpired and the row selector retained at 0x52e6b0. Keep those canonical
+// calls. They currently score 96.25% versus the pasted body's 100%; the
+// remaining inline/lifetime difference is not evidence for duplicate source.
 VA(0x00572b60, 0x1FE)
 void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
                           NewmapCell* eventCell, type_point point)
@@ -1821,18 +1822,11 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
     if (!m_quest)
         return;
 
-    bool expired = false;
-    if (m_quest->m_limit >= 0) {
-        expired = m_quest->m_limit < static_cast<short>(
-            (g_game->m_month * 4 + g_game->m_week - 5) * 7
-            + g_game->m_day);
-    }
+    bool expired = m_quest->hasExpired();
 
     if (expired) {
         if (humanPlayer) {
-            const std::string* row = m_quest->m_seerHut
-                ? g_questTextA[m_quest->m_textVariant]
-                : g_questTextB[m_quest->m_textVariant];
+            const std::string* row = m_quest->questTextRow();
             normalDialog(row[type_quest::QUEST_TEXT_EXPIRED].c_str(),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
