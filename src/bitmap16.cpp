@@ -228,16 +228,22 @@ int Bitmap16Bit::importPCXFile(const char* filename)
 }
 
 // E:\gamedcs\bitmap16.cpp:541
+#define BITMAP16_BYTE_OFFSET(pointer, offset)                              \
+    static_cast<unsigned short*>(static_cast<void*>(                      \
+        static_cast<unsigned char*>(static_cast<void*>(pointer)) + offset))
+#define BITMAP16_CONST_BYTE_OFFSET(pointer, offset)                        \
+    static_cast<const unsigned short*>(static_cast<const void*>(           \
+        static_cast<const unsigned char*>(static_cast<const void*>(pointer)) \
+        + offset))
+
 VA(0x0044e2b0, 0x139)  // order-map(DC bitmap16.obj, immediately before Grab), dc 0x51378
 void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
                        unsigned short* dst, int dstX, int dstY, int dstWidth,
                        int dstHeight, int dstPitch, bool flipped) const
 {
-    int w = srcWidth;
-
     if (dstX < 0) {
         srcX -= dstX;
-        w += dstX;
+        srcWidth += dstX;
         dstX = 0;
     }
     if (dstY < 0) {
@@ -245,42 +251,41 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
         srcHeight += dstY;
         dstY = 0;
     }
-    if (w + dstX > dstWidth)
-        w = dstWidth - dstX;
+    if (srcWidth + dstX > dstWidth)
+        srcWidth = dstWidth - dstX;
     if (srcHeight + dstY > dstHeight)
         srcHeight = dstHeight - dstY;
 
-    if (w > 0 && srcHeight > 0) {
-        Bitmap16ConstMapPointer source;
-        source.m_pixels = getMap(0, srcY);
-        Bitmap16MapPointer target;
-        target.m_pixels = dst;
-        target.m_bytes += dstY * dstPitch;
+    if (srcWidth > 0 && srcHeight > 0) {
+        const unsigned short* src = getMap(srcX, srcY);
+        dst = BITMAP16_BYTE_OFFSET(
+            dst, dstY * dstPitch + dstX * sizeof(unsigned short));
 
         if (flipped) {
             for (int row = 0; row < srcHeight; ++row) {
-                for (int col = 0; col < w; ++col) {
-                    // BOUND BY `const unsigned short&`: retail loads the
-                    // source pixel twice - once for the key compare and once
-                    // for the store - rather than keeping it in a register.
-                    // 81.3095 -> 83.5794.
-                    const unsigned short& pixel = source.m_pixels[srcX + col];
-                    if (pixel != static_cast<unsigned short>(flipped))
-                        target.m_pixels[dstX + col] = pixel;
+                const unsigned short* in = src;
+                unsigned short* out = dst;
+                for (int col = 0; col < srcWidth; ++col) {
+                    if (*in != static_cast<unsigned short>(flipped))
+                        *out = *in;
+                    ++in;
+                    ++out;
                 }
-                source.m_bytes += m_pitch;
-                target.m_bytes += dstPitch;
+                src = BITMAP16_CONST_BYTE_OFFSET(src, m_pitch);
+                dst = BITMAP16_BYTE_OFFSET(dst, dstPitch);
             }
         } else {
             for (int row = 0; row < srcHeight; ++row) {
-                memcpy(target.m_pixels + dstX, source.m_pixels + srcX,
-                       w * sizeof(unsigned short));
-                source.m_bytes += m_pitch;
-                target.m_bytes += dstPitch;
+                memcpy(dst, src, srcWidth * sizeof(unsigned short));
+                src = BITMAP16_CONST_BYTE_OFFSET(src, m_pitch);
+                dst = BITMAP16_BYTE_OFFSET(dst, dstPitch);
             }
         }
     }
 }
+
+#undef BITMAP16_CONST_BYTE_OFFSET
+#undef BITMAP16_BYTE_OFFSET
 
 // E:\gamedcs\bitmap16.cpp:625
 VA(0x0044e3f0, 0xC9)  // order-map(DC bitmap16.obj, between Draw and FillRect), dc 0x51468
@@ -425,11 +430,9 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
 // bitmap has a non-zero byte. The mask row stride is its WIDTH, not its
 // Pitch - retail adds [mask+0x24] at the foot of every row - while the
 // starting row is still taken through Pitch.
-// Row-boundary residual (86.8791%): both map and mask step only when another
-// row exists; next-row guards score 67.6374%. Keep DC GetMap/GetPitch and
-// their different pitch meanings (dc 0x52570/0x5256c), not a width->pitch fix.
-// Native actual-body tests cover output, independent pitches and the old
-// final-row defect; changing GetPitch to the storage pitch fails the oracle.
+// Dreamcast line 808 and retail both advance the mask and bitmap row pointers
+// after the inner pixel loop. Keep DC GetMap/GetPitch and their different
+// pitch meanings (dc 0x52570/0x5256c), not a width-to-pitch substitution.
 VA(0x0044e6a0, 0xE0)  // anchor-caller(UpdateGrid, seven pushes) + order-map(DC bitmap16.obj), dc 0x516a8
 void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
                          int sx, int sy)
@@ -459,10 +462,8 @@ void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
                 ++maskPixel;
                 ++pixel.m_pixels;
             }
-            if (iy + 1 < h) {
-                maskRow += mask->getPitch();
-                row.m_bytes += m_pitch;
-            }
+            maskRow += mask->getPitch();
+            row.m_bytes += m_pitch;
         }
     }
 }

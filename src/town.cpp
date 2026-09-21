@@ -857,23 +857,10 @@ void town::initializeSpells(const TownExtra* townSetup)
 
     int guildLevel = 5;
     while (guildLevel > 0
-           && !(m_built & g_bitNumber[guildLevel - 1]))
+           && !hasBuilding(guildLevel - 1, false))
         --guildLevel;
-    m_mageLevel = static_cast<unsigned char>(guildLevel);
-    memset(m_mageGuildSpellCounts, 0, sizeof(m_mageGuildSpellCounts));
-
-    for (int availableLevel = 1;
-         availableLevel <= static_cast<signed char>(m_mageLevel);
-         ++availableLevel) {
-        int count = g_mageGuildBaseSpellCounts[availableLevel - 1];
-        if (m_type == TOWN_TOWER && (m_active & g_bitNumber[EXTRA_1_ID]))
-            ++count;
-        while (count > 0
-               && m_mageGuildSpells[availableLevel - 1][count - 1] == -1)
-            --count;
-        m_mageGuildSpellCounts[availableLevel - 1] =
-            static_cast<signed char>(count);
-    }
+    m_mageLevel = static_cast<signed char>(guildLevel);
+    setSpellsAvailable();
 }
 
 // E:\gamedcs\town.cpp:1206
@@ -1673,26 +1660,31 @@ void town::updateFullBuildingMask()
 }
 
 // E:\gamedcs\town.cpp:2097
+// DC names the short parameter building_id and the 64-bit local
+// building_mask. Its source rows retain TownAlreadyBuiltOn,
+// is_legal_building, CanBuildDock and get_building_mask; Complete expands
+// those same source calls and matches this body exactly.
 VA(0x005c0d20, 0x13D)  // anchor-global, dc 0x168504
 unsigned char town::canBuild(short buildingId) const
 {
-    if (!g_game->m_towns[m_id].m_builtThisTurn) {
-        int legalId = buildingId;
-        if (g_bitNumber[buildingId] & m_available) {
-            if (buildingId == DOCK_ID)
-                return m_dockSite != TOWN_DOCK_SITE_NONE;
-            if (buildingId == HALL_CAPITOL_ID)
-                return !g_game->m_players[m_owner].hasCapitol();
-            char townType = m_type;
-            __int64 requirements = g_hierarchyMask[townType][buildingId];
-            if (g_game->m_isTutorial && buildingId == DWELLING_2_ID
-                && townType == TOWN_CASTLE)
-                requirements &= ~g_bitNumber[BLACKSMITH_ID];
-            if (!(m_active & g_bitNumber[buildingId])
-                && (m_active & requirements) == requirements)
-                return 1;
-        }
-    }
+    if (g_game->townAlreadyBuiltOn(m_id))
+        return 0;
+    if (!isLegalBuilding(type_building_id(buildingId)))
+        return 0;
+    if (buildingId == DOCK_ID)
+        return canBuildDock();
+    if (buildingId == HALL_CAPITOL_ID)
+        return !g_game->m_players[m_owner].hasCapitol();
+
+    char townType = m_type;
+    __int64 requirements = g_hierarchyMask[townType][buildingId];
+    __int64 buildingMask = getBuildingMask();
+    if (g_game->m_isTutorial && buildingId == DWELLING_2_ID
+        && townType == TOWN_CASTLE)
+        requirements &= ~g_bitNumber[BLACKSMITH_ID];
+    if (!(buildingMask & g_bitNumber[buildingId])
+        && (buildingMask & requirements) == requirements)
+        return 1;
     return 0;
 }
 

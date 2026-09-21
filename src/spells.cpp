@@ -3730,15 +3730,7 @@ void combatManager::chainLightning(int index, int level, int power)
                             (destY - curY) * (destY - curY)
                             + (destX - curX) * (destX - curX))))
                         / 10;
-                    // MEASURED (polish 49), this operand order is the best
-                    // of the four: retail materialises the 30 temp before the
-                    // `cmp edx,8` and inverts the guard, but respelling it
-                    // costs - _cpp_min(_cpp_max(8L, distance), 30L) 95.97,
-                    // _cpp_min(30L, _cpp_max(distance, 8L)) 95.73,
-                    // _cpp_min(30L, _cpp_max(8L, distance)) 95.95, against
-                    // 96.19 as written.
-                    const int segmentLength =
-                        cppMin(cppMax(distance, 8L), 30L);
+                    const int segmentLength = limit(8, distance, 30);
                     doBolt(0, curX, curY, destX, destY, 0, 80, 9, 2,
                            BOLT_COLOR_CHAIN_LIGHTNING, 10, 80,
                            segmentLength, (segmentLength > 20) + 2, 0, 0,

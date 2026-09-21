@@ -224,7 +224,8 @@ void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
 // counts how many gates the treasury can still afford (capped at two:
 // one here, one at the far end) and charges each unbuilt gate's cost
 // into the barrier; the normal search only routes through built gates.
-// A town with a visiting hero cannot receive.
+// A town with a visiting hero cannot receive. Retail's min temporaries put
+// gates first, and its destination loop loads each town ID once.
 VA(0x0056a850, 0x27E)  // exhaustive search.obj order-map, dc 0x12b988
 void searchArray::enterTown(const hero* currentHero, long startTown,
                              const pathCell* currentPathCell, long limit,
@@ -243,7 +244,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
         gates = 2;
         for (int i = 0; i < 7; i++) {
             if (cost[i] > 0) {
-                gates = min(player->m_resources[i] / cost[i], gates);
+                gates = min(gates, player->m_resources[i] / cost[i]);
                 if (!gates)
                     break;
             }
@@ -259,9 +260,10 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
     }
     pathCell newCell;
     for (int i = 0; i < player->m_numTowns; i++) {
-        if (player->m_townIds[i] == startTown)
+        int townId = player->m_townIds[i];
+        if (townId == startTown)
             continue;
-        town* otherTown = g_game->getTown(player->m_townIds[i]);
+        town* otherTown = g_game->getTown(townId);
         if (otherTown->m_type != TOWN_INFERNO)
             continue;
         if (otherTown->m_visitingHeroId >= 0)

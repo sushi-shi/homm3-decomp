@@ -71,6 +71,7 @@ public:
     unsigned char m_gameWon;
     signed char m_playerWinner;
     char m_paddingAfterWinner[2];
+    // E:\gamedcs\VictoryLossConditions.h, dc 0xbccdc
     VA(0x004bc340, 0xE)  // anchor-caller (SavedGameHeader ctor), dc 0xbccdc
     VictoryConditionStruct()
       : m_type(-1), m_gameWon(0), m_playerWinner(-1) {}

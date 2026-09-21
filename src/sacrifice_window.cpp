@@ -286,9 +286,6 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:360
-// Residual (99.9983%): all 102 CFG blocks and instruction rows agree. The
-// remaining bytes are the member-store order in artifactOffering's generated
-// constructor; the declaration order below follows the Dreamcast line table.
 VA(0x00560380, 0xD67)  // ctor caller + dc name/order/locals, dc 0x1246b8
 void type_sacrifice_window::createArtifactWidgets(
     long& widgetId, int curPlayer)
@@ -2011,8 +2008,7 @@ void type_skeleton_window::createCreatureIcons(
                 widgetId++, "TwCrPort.def");
             m_widgets.push_back(selectionWidgets[count]);
             selectionWidgets[count]->setIconFrame(1);
-            selectionWidgets[count]->sendMessage(
-                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+            selectionWidgets[count]->setVisible(0);
 
             ++count;
             textX += 83;

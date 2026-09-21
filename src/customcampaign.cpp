@@ -2159,12 +2159,12 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
     int mapOffset = m_stream->pubseekoff(0, std::ios::cur, std::ios::in);
     NewSMapHeader mapHeader;
     for (int scenario2 = 0; scenario2 < numScenarios; ++scenario2) {
-        ScenarioStruct* scenario = m_scenarios[scenario2];
-        scenario->m_offset = mapOffset;
-        if (scenario->m_inflatedSize > 0) {
-            mapOffset += scenario->m_inflatedSize;
-            scenario->loadMapHeader(m_stream, &mapHeader, scenario2);
-            applyCampaignMapHeader(*scenario, mapHeader);
+        m_scenarios[scenario2]->m_offset = mapOffset;
+        if (m_scenarios[scenario2]->m_inflatedSize > 0) {
+            mapOffset += m_scenarios[scenario2]->m_inflatedSize;
+            m_scenarios[scenario2]->loadMapHeader(m_stream, &mapHeader,
+                                                 scenario2);
+            applyCampaignMapHeader(*m_scenarios[scenario2], mapHeader);
         }
     }
     return true;

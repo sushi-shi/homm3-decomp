@@ -775,11 +775,12 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
         } else {
             armyGroup* guards = &m_mines[x].m_guards;
             guards->initialize();
-            legacyMineGuard legacy;
-            infile->read(&legacy.m_type, sizeof(legacy.m_type));
-            infile->read(&legacy.m_amount, sizeof(legacy.m_amount));
-            int typeValue = legacy.m_type;
-            int amountValue = legacy.m_amount;
+            signed char legacyAmount;
+            signed char legacyType;
+            infile->read(&legacyType, sizeof(legacyType));
+            infile->read(&legacyAmount, sizeof(legacyAmount));
+            int amountValue = legacyAmount;
+            int typeValue = legacyType;
             if (typeValue != -1 && amountValue > 0)
                 guards->add(typeValue, amountValue, -1);
         }
@@ -1505,7 +1506,9 @@ int game::saveTownPool(TAbstractFile* outfile)
 // hero records; the older pressing's pool was128.
 int game::saveHeroPool(TAbstractFile* outfile)
 {
-    for (int x = 0; x < HERO_COUNT; ++x) {
+    // Complete's 156-entry loop uses an unsigned bound (`jb`) in its
+    // expansion inside game::save; the older Dreamcast roster had 128 heroes.
+    for (unsigned int x = 0; x < HERO_COUNT; ++x) {
         int err = m_heroes[x].save(outfile);
         if (err < 0)
             return err;
@@ -2480,9 +2483,9 @@ void applySavedGameHeader(const SavedGameHeader& saved)
     memcpy(g_wasHuman, saved.m_humanPlayer, sizeof(saved.m_humanPlayer));
 }
 
-// Complete's hero-pool operation uses unsigned byte indexing. This inferred
-// decoder owns assignments into an existing destination; game::load owns its
-// default construction, stream read and member copy. Campaign's returned-value
+// Complete's packed bit readers use unsigned byte indexing. This inferred
+// decoder owns assignment into an existing bitset; callers retain their stream
+// reads and any later copy into the live game arrays. Campaign's returned-value
 // reader and mapcell's signed division loops retain their distinct operations.
 template <size_t N>
 void decodePackedBits(const unsigned char* packed, std::bitset<N>& result)
@@ -2983,7 +2986,7 @@ int game::save(TAbstractFile* outfile)
     unsigned char extraByteValue;
     char charBuffer;
     short shortValue;
-    short extraShortValue;
+    unsigned short extraShortValue;
     int zero;
     SavedGameHeader saved;
     saved.reset();
@@ -3972,18 +3975,16 @@ static void randomizeShrine(NewmapCell* cell, const int level)
 // RandomizeEvents expands this ordinary static helper.
 static void randomizeWagon(NewmapCell* cell)
 {
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->m_extraInfo));
     int i = random(0, 99);
     // DC game.cpp:4662 has both Random calls in SetWagon's expression.
     // Keep them there; the conversion itself has no recovered helper.
-    info->setWagon(EGameResource(random(0, 5)),
+    cell->setWagon(EGameResource(random(0, 5)),
         static_cast<short>(random(2, 5)));
     if (i < 10)
-        info->emptyWagon();
+        cell->emptyWagon();
     else if (i < 50) {
         TArtifact artifact = g_game->getRandomArtifactId(6);
-        info->setWagon(artifact);
+        cell->setWagon(artifact);
     }
 }
 
@@ -4045,7 +4046,7 @@ static void randomizeTomb(NewmapCell* cell)
 // did not recover the retained call; the fatal header-emission gate remains.
 static void randomizePyramid(NewmapCell* cell)
 {
-    std::vector<long> possibleSpells;
+    std::vector<int> possibleSpells;
     int i;
     for (i = 0; i < 70; ++i) {
         if (g_spellTraits[i].m_school != const_invalid_school
@@ -4054,11 +4055,10 @@ static void randomizePyramid(NewmapCell* cell)
             possibleSpells.push_back(i);
     }
 
-    int spell = possibleSpells[random(0, possibleSpells.size() - 1)];
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->m_extraInfo));
-    info->setPyramid(true, spell);
-    info->clearVisitedBits();
+    SpellID spell = SpellID(
+        possibleSpells[random(0, possibleSpells.size() - 1)]);
+    cell->setPyramid(true, spell);
+    cell->clearVisitedBits();
 }
 
 // E:\gamedcs\game.cpp:4770
@@ -4912,10 +4912,7 @@ bool game::loadMap(TAbstractFile* mapFile)
         return false;
 
     applyMapHeaderAvailability();
-    int mapSize = m_mapHeader.m_size;
-    g_mapWidth = mapSize;
-    g_mapHeight = mapSize;
-    g_searchArray->close();
+    setMapSize(m_mapHeader.m_size, m_mapHeader.m_size);
 
     if (m_gameVersion < 1)
         memset(m_heroAvailability + 128, hero::HERO_AVAILABILITY_TAVERN_POOL,
@@ -4986,33 +4983,29 @@ bool game::loadMap(TAbstractFile* mapFile)
     std::copy(m_spellDisabledInfo,
               m_spellDisabledInfo + sizeof(m_spellDisabledInfo), m_spellAllocInfo);
 
-    int rumourCount;
-    if (mapFile->read(&rumourCount, sizeof(rumourCount))
-        < sizeof(rumourCount)) {
+    int rumourListSize;
+    if (mapFile->read(&rumourListSize, sizeof(rumourListSize))
+        < sizeof(rumourListSize)) {
         return false;
     }
-    // The rumour list NAMED AS A REFERENCE: retail reads its _First/_Last
-    // through the vector's own address rather than folding the member offset
-    // off gpGame.  75.9944 -> 76.5443.
-    std::vector<TRumour>& rRumours = m_rumours;
-    rRumours.resize(rumourCount);
-    for (TRumour* rumour = rRumours.begin(); rumour != rRumours.end();
-         ++rumour) {
+    m_rumours.resize(rumourListSize);
+    TRumour* rit;
+    for (rit = m_rumours.begin(); rit != m_rumours.end(); ++rit) {
         std::string throwAway;
-        int result = NewSMapHeader::readString(mapFile, throwAway);
-        if (result < 0)
+        int hr = NewSMapHeader::readString(mapFile, throwAway);
+        if (hr < 0)
             return false;
-        result = NewSMapHeader::readString(mapFile, rumour->m_text);
-        if (result < 0)
+        hr = NewSMapHeader::readString(mapFile, rit->m_text);
+        if (hr < 0)
             return false;
-        rumour->m_unavailable = 0;
+        rit->m_unavailable = 0;
     }
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        std::map<int, type_map_hero_info>::iterator it =
-            m_mapHeader.m_heroPlayerSetups.begin();
-        for (; it != m_mapHeader.m_heroPlayerSetups.end();) {
+        for (std::map<int, type_map_hero_info>::iterator it =
+                 m_mapHeader.m_heroPlayerSetups.begin();
+             it != m_mapHeader.m_heroPlayerSetups.end(); ++it) {
             HeroExtra* setupRecord = &m_heroSetup[it->first];
             type_map_hero_info* headerRecord = &it->second;
             if (headerRecord->m_portrait != -1) {
@@ -5025,14 +5018,13 @@ bool game::loadMap(TAbstractFile* mapFile)
                         sizeof(setupRecord->m_nameBuffer));
                 setupRecord->m_nameBuffer[sizeof(setupRecord->m_nameBuffer) - 1] = 0;
             }
-            ++it;
         }
         readMapHeroSetups(mapFile, m_mapHeader.m_version);
     }
 
-    for (int pool = 0; pool < 8; ++pool) {
-        m_lithPools[pool].clear();
-        m_lithExitPools[pool].clear();
+    for (long i = 0; i < 8; ++i) {
+        m_lithPools[i].clear();
+        m_lithExitPools[i].clear();
     }
     m_whirlpools.clear();
     m_undergroundGateExits.clear();
@@ -5062,86 +5054,56 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
     for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
         HeroExtra* heroRecord = &m_heroSetup[heroId];
 
-        char hasSetup;
-        mapFile->read(&hasSetup, sizeof(hasSetup));
-        if (!hasSetup)
+        if (!readValue<char>(mapFile))
             continue;
 
-        char customExperience;
-        mapFile->read(&customExperience, sizeof(customExperience));
-        if (customExperience) {
+        if (readValue<char>(mapFile)) {
             heroRecord->m_customExperience = 1;
-            int experience;
-            mapFile->read(&experience, sizeof(experience));
-            heroRecord->m_experience = experience;
+            heroRecord->m_experience = readValue<int>(mapFile);
         }
 
-        char customSecondarySkills;
-        mapFile->read(&customSecondarySkills,
-                      sizeof(customSecondarySkills));
-        if (customSecondarySkills) {
+        if (readValue<char>(mapFile)) {
             heroRecord->m_customSecondarySkills = 1;
-            int numSecondarySkills;
-            mapFile->read(&numSecondarySkills, sizeof(numSecondarySkills));
-            heroRecord->m_numSecondarySkills = numSecondarySkills;
+            heroRecord->m_numSecondarySkills = readValue<int>(mapFile);
             for (int skill = 0;
                  skill < heroRecord->m_numSecondarySkills; ++skill) {
-                char secondarySkill;
-                mapFile->read(&secondarySkill, sizeof(secondarySkill));
-                heroRecord->m_secondarySkill[skill] = secondarySkill;
-                char secondarySkillLevel;
-                mapFile->read(&secondarySkillLevel,
-                              sizeof(secondarySkillLevel));
+                heroRecord->m_secondarySkill[skill] = readValue<char>(mapFile);
                 heroRecord->m_secondarySkillLevel[skill] =
-                    secondarySkillLevel;
+                    readValue<char>(mapFile);
             }
         }
 
-        char customArtifacts;
-        mapFile->read(&customArtifacts, sizeof(customArtifacts));
-        if (customArtifacts) {
+        if (readValue<char>(mapFile)) {
             heroRecord->m_customArtifacts = 1;
             for (int equipped = 0; equipped < 19; ++equipped) {
-                short artifact;
-                mapFile->read(&artifact, sizeof(artifact));
                 heroRecord->m_artifacts[equipped] =
                     // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
-                    type_artifact(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                    type_artifact(static_cast<TArtifact>(readValue<short>(mapFile)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             }
 
-            short backpackCount;
-            mapFile->read(&backpackCount, sizeof(backpackCount));
             heroRecord->m_numInBackpack =
-                static_cast<unsigned char>(backpackCount);
+                static_cast<unsigned char>(readValue<short>(mapFile));
             for (int carried = 0;
                  carried < heroRecord->m_numInBackpack; ++carried) {
-                short artifact;
-                mapFile->read(&artifact, sizeof(artifact));
                 heroRecord->m_backpack[carried] =
                     // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
-                    type_artifact(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                    type_artifact(static_cast<TArtifact>(readValue<short>(mapFile)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             }
 
             heroRecord->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4] =
                 type_artifact(ARTIFACT_CATAPULT);
         }
 
-        char customName;
-        mapFile->read(&customName, sizeof(customName));
-        if (customName) {
+        if (readValue<char>(mapFile)) {
             heroRecord->m_customName = 1;
             heroRecord->m_name = readLengthPrefixedString(mapFile);
         }
 
-        signed char sexByte;
-        mapFile->read(&sexByte, sizeof(sexByte));
-        int sex = sexByte;
+        int sex = readValue<signed char>(mapFile);
         if (sex != -1)
             heroRecord->m_sex = sex;
 
-        char customSpells;
-        mapFile->read(&customSpells, sizeof(customSpells));
-        if (customSpells) {
+        if (readValue<char>(mapFile)) {
             heroRecord->m_customSpells = 1;
             unsigned char spellMask[9];
             mapFile->read(spellMask, sizeof(spellMask));
@@ -5152,15 +5114,10 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
             }
         }
 
-        char customPrimarySkills;
-        mapFile->read(&customPrimarySkills,
-                      sizeof(customPrimarySkills));
-        if (customPrimarySkills) {
+        if (readValue<char>(mapFile)) {
             heroRecord->m_customPrimarySkills = 1;
             for (int skill = 0; skill < 4; ++skill) {
-                char primarySkill;
-                mapFile->read(&primarySkill, sizeof(primarySkill));
-                heroRecord->m_primarySkills[skill] = primarySkill;
+                heroRecord->m_primarySkills[skill] = readValue<char>(mapFile);
             }
         }
     }

@@ -792,11 +792,9 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 // the source vocabulary; the Complete body proves the changed player fields,
 // slider update, two-message protocol, per-mode title counts, and geometry.
 // E:\gamedcs\overview.cpp:1170
-VA(0x0051e330, 0x33A)
+VA(0x0051e330, 0x33A)  // dc 0x1069fc
 void game::setupNewOverviewType(int whichType, unsigned char update)
 {
-    message msg;
-
     g_overviewType = whichType;
     g_overviewItemCount = g_overviewType == 0
         ? g_game->getLocalPlayer()->m_numHeroes
@@ -814,6 +812,10 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
         g_overviewSlider->setResolution(1);
     }
 
+    // Dreamcast constructs this message after the slider branch. Complete
+    // overwrites all eight fields before the first use, so that lifetime also
+    // lets VC6 remove the constructor's zero stores.
+    message msg;
     msg.m_codeY = 195 + (g_overviewType != 1);
     msg.m_qualifier = 0;
     msg.m_mouseX = 0;
@@ -2401,21 +2403,19 @@ void TOverviewWindow::doRollover(int codeY)
 // independently fixes the four 200-id hero rows, three artifact-page buttons
 // and two backpack arrows per row, plus the keyboard paging extension.
 
-// Residual (80.10% MAX): VC6 expands all four doFlaggableButtons sites,
-// including updateFlaggableIcons in HOME/PREVIOUS; retail retains the latter
-// and calls doFlaggableButtons for NEXT/END. The current C2 caller is 1321
-// before expansion (budget 2642); updateFlaggableIcons costs 68 against
-// HOME/PREVIOUS nested budgets 81/69. Later backpack getHero calls also
-// over-expand. Retain the canonical helper bodies and source calls.
-// Retail jump-table order is HOME/PREVIOUS/NEXT/END/control, and keyboard
-// PRIOR/NEXT/HOME/END. Its twelve artifact-page arms read overviewTop[0].
-// The mouse cache-hit return precedes the store/rollover/second return.
-// Controls: sharing the keyboard refresh through a common switch exit gives
-// 79.8825%; reusing heroNumber for the selected hero id gives 69.7888% and
-// does not preserve get_last_backpack_index's DC early-return scope.
-// Restoring that helper's static linkage or placing its definition before
-// the backpack steppers is byte-flat. No extra caller statements or inline
-// controls are retained to alter the budget.
+// DC lines 2597..2738 group the equipped-page actions across all four rows,
+// followed by every increment arrow (2773..2798), every decrement arrow
+// (2801..2826), and the flaggable actions (2829..2841). Complete's third page
+// stays with the other page actions. This source order raises the retail match
+// from 80.10% to 83.20%; interleaving arrows by row gives 81.04%, and placing
+// the third page after the arrows gives 74.86%.
+//
+// Residual: VC6 still expands more of doFlaggableButtons and its nested
+// updateFlaggableIcon calls than retail, while later backpack expansions retain
+// a different getHero frontier. Keep the canonical helpers and source calls.
+// Retail's flaggable jump-table order is HOME/PREVIOUS/NEXT/END/control, its
+// keyboard order is PRIOR/NEXT/HOME/END, and all page arms read overviewTop[0].
+// The mouse cache-hit return precedes the store, rollover, and second return.
 // E:\gamedcs\overview.cpp:2546
 VA(0x00521960, 0xB03)  // vtable slot 9 + exhaustive call/CFG identity, dc 0x10997c
 int TOverviewWindow::windowHandler(message& msg)
@@ -2440,23 +2440,6 @@ int TOverviewWindow::windowHandler(message& msg)
 
         case widget::WIDGET_DESELECT:
             switch (msg.m_codeY) {
-            case OVERVIEW_FLAGGABLE_HOME_ID:
-                doFlaggableButtons(OVERVIEW_FLAGGABLE_HOME);
-                break;
-            case OVERVIEW_FLAGGABLE_PREVIOUS_ID:
-                doFlaggableButtons(OVERVIEW_FLAGGABLE_PREVIOUS);
-                break;
-            case OVERVIEW_FLAGGABLE_NEXT_ID:
-                doFlaggableButtons(OVERVIEW_FLAGGABLE_NEXT);
-                break;
-            case OVERVIEW_FLAGGABLE_END_ID:
-                doFlaggableButtons(OVERVIEW_FLAGGABLE_END);
-                break;
-            case OVERVIEW_CONTROL_14_ID:
-                res = 1;
-                g_windowManager->m_dialogReturn = msg.m_codeY;
-                break;
-
             case OVERVIEW_SELECT_HEROES_ID:
                 if (g_overviewType != 0)
                     g_game->setupNewOverviewType(0, 1);
@@ -2482,6 +2465,7 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
+
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
                         && g_overviewHeroArtifactPage[
@@ -2492,17 +2476,6 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
-            case OVERVIEW_ROW_FIRST_ID
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
-                if (g_overviewType == 0)
-                    decrementBackpackStart(0);
-                break;
-            case OVERVIEW_ROW_FIRST_ID
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
-                if (g_overviewType == 0)
-                    incrementBackpackStart(0);
-                break;
-
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
                 if (g_overviewType == 0) {
@@ -2521,6 +2494,7 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
+
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
@@ -2533,17 +2507,6 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
-            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
-                if (g_overviewType == 0)
-                    decrementBackpackStart(1);
-                break;
-            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
-                if (g_overviewType == 0)
-                    incrementBackpackStart(1);
-                break;
-
             case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
                 if (g_overviewType == 0) {
@@ -2562,6 +2525,7 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
+
             case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
@@ -2574,17 +2538,6 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
-            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
-                if (g_overviewType == 0)
-                    decrementBackpackStart(2);
-                break;
-            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
-                if (g_overviewType == 0)
-                    incrementBackpackStart(2);
-                break;
-
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
                 if (g_overviewType == 0) {
@@ -2603,6 +2556,7 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
+
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
@@ -2615,15 +2569,64 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
-            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+
+            case OVERVIEW_ROW_FIRST_ID
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
                 if (g_overviewType == 0)
-                    decrementBackpackStart(3);
+                    incrementBackpackStart(0);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
+                if (g_overviewType == 0)
+                    incrementBackpackStart(1);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
+                if (g_overviewType == 0)
+                    incrementBackpackStart(2);
                 break;
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
                 if (g_overviewType == 0)
                     incrementBackpackStart(3);
+                break;
+
+            case OVERVIEW_ROW_FIRST_ID
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+                if (g_overviewType == 0)
+                    decrementBackpackStart(0);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+                if (g_overviewType == 0)
+                    decrementBackpackStart(1);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+                if (g_overviewType == 0)
+                    decrementBackpackStart(2);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+                if (g_overviewType == 0)
+                    decrementBackpackStart(3);
+                break;
+
+            case OVERVIEW_FLAGGABLE_HOME_ID:
+                doFlaggableButtons(OVERVIEW_FLAGGABLE_HOME);
+                break;
+            case OVERVIEW_FLAGGABLE_PREVIOUS_ID:
+                doFlaggableButtons(OVERVIEW_FLAGGABLE_PREVIOUS);
+                break;
+            case OVERVIEW_FLAGGABLE_NEXT_ID:
+                doFlaggableButtons(OVERVIEW_FLAGGABLE_NEXT);
+                break;
+            case OVERVIEW_FLAGGABLE_END_ID:
+                doFlaggableButtons(OVERVIEW_FLAGGABLE_END);
+                break;
+            case OVERVIEW_CONTROL_14_ID:
+                res = 1;
+                g_windowManager->m_dialogReturn = msg.m_codeY;
                 break;
             }
             break;

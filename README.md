@@ -9,17 +9,17 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable MAX: 96.93%** — weighted by function size across 1,999,142 bytes of code included in matching.
+**Executable MAX: 97.11%** — weighted by function size across 1,999,142 bytes of code included in matching.
 
-**Function exact MAX** — 4,245 / 4,768 current implementations (89.0%) have reached 100%.
+**Function exact MAX** — 4,270 / 4,768 current implementations (89.6%) have reached 100%.
 
-**CUR diagnostics** — 4,184 / 4,768 functions exact (87.8%) in this build (4767 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
+**CUR diagnostics** — 4,200 / 4,768 functions exact (88.1%) in this build (4767 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
 
 | Module        | Units | Functions exact CUR |  Function exact MAX | Fuzzy CUR | Fuzzy MAX |
 | :------------ | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`        |   123 | 3517 / 3990 (88.1%) | 3566 / 3990 (89.4%) |    96.79% |    97.14% |
+| `game`        |   123 | 3534 / 3990 (88.6%) | 3591 / 3990 (90.0%) |    97.01% |    97.36% |
 | `rmg`         |     3 |   291 / 368 (79.1%) |   301 / 368 (81.8%) |    93.19% |    94.37% |
-| `network`     |     4 |   267 / 280 (95.4%) |   269 / 280 (96.1%) |    97.72% |    98.14% |
+| `network`     |     4 |   266 / 280 (95.0%) |   269 / 280 (96.1%) |    97.68% |    98.14% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
 | `codec`       |     4 |     35 / 43 (81.4%) |     35 / 43 (81.4%) |    94.70% |    94.70% |
 | `victor`      |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |
@@ -80,18 +80,8 @@ homm3 build          # build all modules, compare with retail, and run checks
 ```
 
 `homm3 init` verifies the executables and sets up the VC6 toolchain and Wine.
-The build compiles and compares reconstructed code. To link the resulting objects
-with the VC6 runtime, Windows libraries and retail vendor imports:
-
-```sh
-homm3 link --out build/exe/HEROES3.linked.EXE
-```
-
-This passes without unresolved or duplicate symbols. Runtime execution is still
-unverified: the isolated launch check stops at missing Bink, Miles, Smacker and
-IFC20 DLLs. Playing also requires the original game resources. `homm3 link`
-always requires a clean link, without `/FORCE`.
-See [linking and runtime evidence](docs/vc6/runtime-link.md).
+The build compiles and compares reconstructed code; it does not yet produce
+a playable game.
 
 ### IDE setup
 

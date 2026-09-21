@@ -747,13 +747,6 @@ public:
 };
 SIZE(Sign, 0x14);
 
-struct legacyMineGuard {
-public:
-    signed char m_type;
-    signed char m_amount;
-};
-SIZE(legacyMineGuard, 2);
-
 enum type_action_type {
     const_initialization_action = 0,
     const_normal_action = 1,

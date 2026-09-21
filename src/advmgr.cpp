@@ -961,101 +961,37 @@ type_point advManager::get_mouse_map_point() const
 // domain enum, and the four .bss cells 0x6968e0 / 0x69777c / 0x698774 /
 // 0x699560. HeroView's existing gate was widened rather than duplicated.
 
-// 77.1683 -> 77.3765 (2026-08-21): Dreamcast CodeView records a
-// function-scope `town* newTown`, and retail likewise materialises the
-// get_obscured_town result before the View call. Restoring that named
-// temporary is the measured gain below. Moving the also-attested
-// `bSaveShowRoute` and `msg` declarations to function scope is byte-flat
-// with and without newTown, so their narrower existing scopes are kept.
-// Release-elided TRACE carriers at 1/3/5/10 sites are byte-flat too: unlike
-// the town constructors, this body's already-exact call ledger does not
-// cross an optimizer threshold from those dormant call candidates.
-
-// Residual (77.38%): why-branch reports 123 vs 122 blocks and 80 vs 80
-// branches - structurally converged - with exactly TWO polarity flips left
-// and no size or count divergence anywhere.
-//   #15 (+0x211) is the BuildPath budget select: retail lays the 0xea5f
-//     arm out as the fall-through, ours lays out movePoints. Three
-//     spellings were measured and ALL THREE emit byte-identical code
-//     (now 77.38 each), so VC6 normalises this block pair itself and the
-//     order is not source-addressable here: the positive
-//     `if (F1 || F2) movePoints else 0xea5f` kept below, its De Morgan
-//     twin `if (!F1 && !F2) 0xea5f else movePoints`, and the same
-//     condition as a ternary feeding one initialiser. A fourth spelling,
-//     initialising to 0xea5f and conditionally assigning movePoints,
-//     adds a branch and regresses 77.3765 -> 76.9612.
-//     RE-MEASURED 2026-09-06 on the post-unpeel 94.2359 shape, because
-//     every verdict above predates it: the ternary and the De Morgan twin
-//     are still byte-flat at 94.2359, initialising to 0xea5f and
-//     conditionally assigning movePoints is 93.9100 (and still flips), and
-//     the untried INVERSE - initialise to movePoints, overwrite with
-//     0xea5f under the negated guard - is the one spelling that takes the
-//     branch census CLEAN at 80/80 and still LOSES, 93.7900. So the flip
-//     is now known to be reachable and known to cost 0.45; the kept
-//     positive form remains the scoring winner.
-//     2026-09-06, polish lane 22 - and the 0.45 is NOT a second polarity
-//     flip or a spelling: the inverse form buys the clean 80/80 census by
-//     MERGING a block (120 against retail's 121, one missing) and the
-//     skeleton collapses with it, 113 exact blocks down to 16 and 0
-//     flow-kind mismatches up to 53. The two are in tension, not additive.
-//     Retail's own layout at 0x407d97 confirms the POSITIVE source: every
-//     `||` arm that succeeds jumps FORWARD to the movePoints block at
-//     0x407d9e, the last test falls through into the 0xea5f block at
-//     0x407d97, and that block jumps OVER movePoints - retail simply emits
-//     the else-arm first. It is a block-placement choice VC6 makes for us;
-//     do not spend another lane on this spelling.
-//   The remaining lead is the FRAME, and it is now localised. Ours is 0x84
-//   against retail's 0x80 and the shift is uniform: -0x4 / -0x8 / -0xc
-//   agree, and from there down every slot of ours is retail's minus four
-//   (0x14->0x10, 0x1a->0x16, 0x1c->0x18, 0x22->0x1e, 0x24->0x20,
-//   0x44->0x40, 0x64->0x60, 0x84->0x80). So we allocate ONE dead dword at
-//   [ebp-0x10] that no instruction in the body ever reads or writes. The
-//   first real divergence after the prologue is the radarOrigin type_point
-//   pack at advmgr.cpp:1528: we update the packed word IN PLACE with VC6's
-//   xor idiom (`xor word ptr [ebp-0x1c], ax`) where retail builds the value
-//   whole with and/shl/or. Whoever takes this next should look for the
-//   type_point local whose lifetime forces that dead slot, not for another
-//   branch spelling.
-//   #46 (+0x46d) is the step loop's back edge: retail exits with `js`
-//     and returns with an UNCONDITIONAL `jmp` because it keeps
-//     gpSearchArray live in eax across the edge and reloads it at the
-//     bottom; ours closes with a conditional `jns`. That is the
-//     rematerialisation half of the register-homing family, not a loop
-//     form - why-branch's own guided search moved all six D1/D2 loop
-//     mutations and none changed the distance (two made it far worse).
-//     Rechecking a hand-written top-tested `while (i >= 0)` after the
-//     newTown gain adds two branches and regresses 77.3765 -> 77.2027.
-// Dreamcast's local records put bBreak, bNoMove, bFoughtBattle and i in
-// the same enclosing route block, in that order. Transplanting that scope
-// to x86 is MEASURED AND REJECTED (2026-08-21): 77.3765 -> 77.2780, 82
-// branches against retail's 80, with both polarity flips unchanged. The
-// narrower per-iteration output-flag scope below is the retail-byte winner;
-// DC local scopes are name/type evidence, not x86 allocation evidence.
-// Earlier loop controls measured 88.5537 -> 90.2547 with an explicit
-// decrement and unconditional back edge instead of a conventional for-test.
-// The earlier goto-only model still peeled 29 instructions into the back
-// edge; an enclosing while(1) removed that duplication (90.2547 -> 94.2359
-// in that older implementation). These observations support the explicit
-// decrement and loop scope, not a requirement for goto. The current audit
-// below removes all remaining exits and forward-continue labels, retaining
-// the initial empty-path guard and the same body decrement.
-// Restoring both HideRoute sites plus the IsFlying/CanWalkOnWater mode
-// helpers improves the current caller from 83.3621% to 84.9679%, without TU
-// collateral in that checkpoint. Hero.h:645/654 owns the CanLand checks;
-// the caller now passes checkTerrain=1 instead of flattening that branch.
-// Goto audit: a positive initial guard and nested breaks remove seven route
-// jumps without changing any TU score. DC 1349..1357 sets bBreak, exits the
-// event loop, then tests it to exit the route loop; interrupted carries it.
-// Rotating the decrement into a guarded do/while loses 3.3322 points, so the
-// decrement stays in the body. Positive landing scopes remove the other two
-// jumps, preserving the same bytes with either nested or compound guards.
+// The DC line table and lexical records recover the function-scope event,
+// message, current-hero and saved-route lifetimes, the shared route-loop
+// scope for bBreak/bNoMove/bFoughtBattle/i, and the single-statement helper
+// groups for BuildPath, the selector arms and DoEventShipyard. Restoring
+// those facts and the named GetCurrHero/GetCell/GetTarget/Reseed boundaries
+// raises Complete from 71.9114% to 90.45%; the source-fact audit is clean
+// apart from the two intentionally shadowed localPlayer records.
+//
+// The residual is an inliner frontier. Candidate and retail agree through
+// the route loop (the first 83 CFG blocks); Complete then expands
+// CheckDimHero but retains its nested CheckDimNextHeroBut call, while this
+// compile expands both. The shipyard tail has the same reciprocal shape:
+// retail expands GetCell and retains zCell, then retains updateScreen;
+// this compile expands one level deeper. predict-inline reports 84 retained
+// calls against retail's 80 and the frame remains 0x84 against 0x80. The
+// explicit outer current-hero guard regresses 90.45 -> 87.11, and spelling
+// both Complete-only CheckDimHero tail calls through this regresses to
+// 77.17. No inline pragma is retained; recover the remaining natural
+// lifetime or compiler state before revisiting the nested calls.
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
 NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
 {
     town* newTown;
+    // Before normalization: curr.
+    hero* currHero;
+    // Before normalization: bSaveShowRoute.
+    int savedShowRoute;
     NewmapCell* eventCell = 0;
+    message msg;
     triggerPoint->m_x = -1;
-    hero* currHero = g_game->getHero(g_currentPlayer->m_currHeroId);
+    currHero = g_game->getCurrHero();
 
     switch (m_advCommand) {
     case ADV_COMMAND_MOVE_HERO:
@@ -1082,19 +1018,13 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         sampleToPlay->m_memSample.m_memLooping = 0;
         g_walkSample = g_soundManager->memorySample(sampleToPlay);
 
-        {
-            type_point target(currHero->m_pathTargetX, currHero->m_pathTargetY,
-                              currHero->m_pathTargetZ);
-            seedTo(target);
-        }
+        seedTo(currHero->getTarget());
 
-        int moveBudget;
-        if ((currHero->isFlying(0))
-            || (currHero->canWalkOnWater(0)))
-            moveBudget = currHero->m_movePoints;
-        else
-            moveBudget = 0xea5f;
-        g_searchArray->buildPath(currHero, moveBudget);
+        g_searchArray->buildPath(
+            currHero,
+            (currHero->isFlying(0) || currHero->canWalkOnWater(0))
+                ? currHero->m_movePoints
+                : 0xea5f);
 
         currHero->m_isSleeping = 0;
         m_advWindow->setSleepImage(0);
@@ -1102,7 +1032,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         if (static_cast<int>(g_searchArray->getPathSteps()) <= 0)
             break;
 
-        int savedShowRoute = m_showRoute;
+        savedShowRoute = m_showRoute;
         mobilizeCurrHero(1, 0, 0);
         if (g_config.m_showRoute || savedShowRoute) {
             showRoute(1, 0, 1);
@@ -1113,29 +1043,28 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         g_mouseManager->hidePointer();
         g_inputManager->flush();
 
+        // Before normalization: bBreak.
         unsigned char interrupted = 0;
+        // Before normalization: bNoMove.
+        int noMove;
+        // Before normalization: bFoughtBattle.
+        int foughtBattle;
         int i = g_searchArray->getPathSteps() - 1;
         if (i >= 0) {
             while (1) {
                 {
-                    int noMove;
-                    int foughtBattle;
                     eventCell = moveHero(g_searchArray->getStep(i),
                                          i == 0, *triggerPoint, &noMove, 0,
                                          &foughtBattle, 0);
                     m_advWindow->updateHeroLocator(-1, 1, 1);
                     if (eventCell)
                         break;
-                    if (noMove)
-                        break;
-                    if (foughtBattle)
-                        break;
-                    if (g_heroMoveTriggeredEvent)
+                    if (noMove || foughtBattle || g_heroMoveTriggeredEvent)
                         break;
 
                     if (!currHero->isFlying(1) && !currHero->canWalkOnWater(1)) {
                         process1WindowsMessage();
-                        message msg = g_inputManager->getEvent();
+                        msg = g_inputManager->getEvent();
                         while (msg.m_id) {
                             if (msg.m_id == MESSAGE_KEY_DOWN
                                 || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
@@ -1156,7 +1085,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
                     break;
             }
         }
-        m_seedingValid = 0;
+        reseed(0, 0);
         if ((i <= 0 && currHero->m_x == currHero->m_pathTargetX
              && currHero->m_y == currHero->m_pathTargetY)
             || (interrupted && !g_config.m_showRoute) || eventCell) {
@@ -1171,7 +1100,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
             doEvent(eventCell, *triggerPoint);
             triggerPoint->m_x = -1;
             eventCell = 0;
-            m_seedingValid = 0;
+            reseed(0, 0);
         }
 
         forceNewHover();
@@ -1194,11 +1123,13 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         if (g_currentPlayer->isLocalHuman())
             demobilizeCurrHero(0, 1);
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+        // Before normalization: localPlayer.
         playerData* viewingPlayer = g_game->getLocalPlayer();
         if (!viewingPlayer)
             break;
         if (viewingPlayer->m_currTownId == -1)
             break;
+        // Before normalization: currTown.
         town* viewedTown = g_game->getTown(viewingPlayer->m_currTownId);
         // The lookup is retained even though its result is discarded.
         getCell(viewedTown->getLocation());
@@ -1208,11 +1139,14 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     }
 
     case ADV_COMMAND_VIEW_HERO: {
+        // Before normalization: localPlayer.
         playerData* viewingPlayer = g_game->getLocalPlayer();
         if (!viewingPlayer)
             break;
         if (viewingPlayer->m_currHeroId == -1)
             break;
+        // Before normalization: currHero.
+        hero* currentHero = g_game->getHero(viewingPlayer->m_currHeroId);
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         if (g_lowMemory) {
             type_point offMap(-1, -1, 0);
@@ -1225,6 +1159,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
             setEnvironmentOrigin(centre, 1);
         }
         if (g_remoteOn && g_dPlay) {
+            // Before normalization: pNetMsgHandler.
             CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
             if (handler)
                 handler->setInPopup(0);
@@ -2550,14 +2485,6 @@ type_cell_adjuster::type_cell_adjuster()
 // slot. Its caller set is the creature-bank help group and QuickInfo; no
 // Dreamcast standalone copy survives, so the name is role-derived.
 
-// Both creature-name sites go through the TU's own GetArmyName helper and
-// pass the REAL count - numTroops[i] in the detailed list, the consolidated
-// total in the approximate form - so a stack of one takes the singular name.
-// Writing the bounds guard longhand against m_plural_name instead cost 28
-// points (64.73 against 93.21): it duplicated a guard retail shares and
-// dropped the count test retail folds, which is what put our body at 57
-// blocks / 32 branches against retail's 42 / 23.
-
 // THE PREFIX ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-09-06, reloc
 // census). Retail's call at fn+0x8a is basic_string::assign(const char*,
 // size_type) where ours was append(const char*, size_type); the inlined
@@ -2591,14 +2518,13 @@ std::string getArmyHelpText(const armyGroup* source,
             result += armyGroup::getArmySizeName(
                 consolidatedArmy.m_numTroops[i], 2);
             result += " ";
-            result += getArmyName(consolidatedArmy.m_armies[i],
-                                  consolidatedArmy.m_numTroops[i]);
+            result += getArmyName(consolidatedArmy.m_armies[i], 2);
         }
     } else {
         int amount = consolidatedArmy.getCreatureTotal();
         const char* armyName;
         if (consolidatedArmy.m_armies[1] == CREATURE_NONE) {
-            armyName = getArmyName(consolidatedArmy.m_armies[0], amount);
+            armyName = getArmyName(consolidatedArmy.m_armies[0], 2);
         } else {
             armyName = g_generalText->getText(GENERAL_TEXT_MIXED_ARMY);
         }
@@ -4967,7 +4893,7 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 signed char bitY = bitOffsets >> 4;
                 bitOffsets <<= 4;
                 signed char bitX = bitOffsets >> 4;
-                int bit = 47 - bitY * 8 - bitX;
+                int bit = CObjectType::getBitPos(bitX, bitY);
                 if (!objType->m_drawCells[bit] || objType->m_suppressDraw)
                     continue;
 
@@ -5254,7 +5180,7 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
         signed char yOffset = offsets >> 4;
         offsets <<= 4;
         signed char xOffset = offsets >> 4;
-        int bit = -yOffset * 8 - xOffset + 47;
+        int bit = CObjectType::getBitPos(xOffset, yOffset);
         if (!objType->m_shadowCells[bit] || objType->m_suppressDraw)
             continue;
 
@@ -7389,8 +7315,7 @@ void advManager::bvMessage(const char* msg)
     // MEASURED NEGATIVE, do not retry: same pin as BVResMsg above, same
     // reason - it costs 92.68 -> 21.28 here.
     m_bottomViewMessage = msg;
-    m_bottomViewOverride = BOTTOM_VIEW_7;
-    m_bottomViewDeadline = GameTime::get() - 1;
+    overrideBottomView(BOTTOM_VIEW_7, -1);
     g_advManager->updBottomView(1, 1, 1);
 }
 
@@ -8613,7 +8538,7 @@ void advManager::checkDimHero()
     if (!g_game->getCurrHero()->isMobile()) {
         showRoute(1, 0, 0);
         g_advManager->m_advWindow->updateHeroLocators(-1, 1, 1);
-        g_advManager->checkDimNextHeroBut();
+        checkDimNextHeroBut();
     }
 }
 

@@ -24,6 +24,23 @@ class HeaderCarrierTest(unittest.TestCase):
     def test_ambiguous_boundary_is_not_guessed(self):
         self.assertIsNone(choose_carrier(20, {'a', 'b'}, {}, [(10, 'a'), (30, 'b')]))
 
+    def test_identical_emitters_replace_a_missing_banked_carrier(self):
+        from unittest.mock import patch
+        from homm3.retail_labels.headers import equivalent_emitter
+
+        with patch('homm3.retail_labels.source._base_authority_digests',
+                   side_effect=lambda unit: {'body': 'same'}):
+            self.assertEqual(equivalent_emitter('body', {'second', 'first'}),
+                             'first')
+
+    def test_distinct_emitters_remain_ambiguous(self):
+        from unittest.mock import patch
+        from homm3.retail_labels.headers import equivalent_emitter
+
+        with patch('homm3.retail_labels.source._base_authority_digests',
+                   side_effect=lambda unit: {'body': unit}):
+            self.assertIsNone(equivalent_emitter('body', {'first', 'second'}))
+
 
 class InlineSourceAnnotationTest(unittest.TestCase):
     def test_banked_projection_requires_active_source_identity(self):
@@ -125,7 +142,7 @@ class LocalInlineIdentityTest(unittest.TestCase):
         from unittest.mock import patch
         from homm3.core import common
         from homm3.match.source_ownership import Definition
-        from homm3.retail_labels.source import banked_inline_names, ir_bind
+        from homm3.retail_labels.source import banked_unemitted_names, ir_bind
         d = Definition('src/example.cpp', 8, 0, 100, 'Example::run',
                        'void ()', 0, True, True, 0x401000,
                        '?run@Example@@QAEXXZ')
@@ -141,7 +158,7 @@ class LocalInlineIdentityTest(unittest.TestCase):
             with self.subTest(definitions=definitions, banked=banked), \
                  patch('homm3.retail_labels.source._base_authority_names',
                        return_value={'other': [('?other@@YIXXZ', 8)]}):
-                fallback = banked_inline_names(path, definitions, banked)
+                fallback = banked_unemitted_names(path, definitions, banked)
                 rows, problems = [dict(channel='src-VA', rva=0x1000, size=8)], []
                 taken = ir_bind('example', rows, {0x1000: d.mangled}, problems, fallback)
                 if accepted:
@@ -152,6 +169,27 @@ class LocalInlineIdentityTest(unittest.TestCase):
                     self.assertNotIn('joined', rows[0])
                     self.assertTrue(rows[0]['ir_unconfirmed'])
                     self.assertEqual(taken, set())
+
+    def test_active_banked_file_static_body_gets_fallback(self):
+        from dataclasses import replace
+        from unittest.mock import patch
+        from homm3.core import common
+        from homm3.match.source_ownership import Definition
+        from homm3.retail_labels.source import banked_unemitted_names, ir_bind
+        d = Definition('src/example.cpp', 8, 0, 100, 'run',
+                       'void ()', 0, False, False, 0x401000,
+                       '?run@@YIXXZ', internal=True)
+        path = common.HOMM3_DIR / d.file
+        with patch('homm3.retail_labels.source._base_authority_names',
+                   return_value={'other': [('?other@@YIXXZ', 8)]}):
+            fallback = banked_unemitted_names(path, [d], {('example', 0x1000)})
+            rows, problems = [dict(channel='src-VA', rva=0x1000, size=8)], []
+            taken = ir_bind('example', rows, {0x1000: d.mangled}, problems, fallback)
+        self.assertEqual(rows[0]['joined'], d.mangled)
+        self.assertEqual(taken, {d.mangled})
+        self.assertTrue(any('missing body' in p for p in problems))
+        self.assertEqual(banked_unemitted_names(
+            path, [replace(d, internal=False)], {('example', 0x1000)}), {})
 
 
 class AnonymousNamespaceIdentityTest(unittest.TestCase):

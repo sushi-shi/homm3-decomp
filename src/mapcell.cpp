@@ -640,8 +640,9 @@ void NewfullMap::loadQuestGuardList(
 // count/read/resize/row-load operation. Complete moves the pool into this map,
 // makes row load void, and registers quests in m_mapObjectData. A map-owned
 // member is the inferred replacement interface; its original placement is
-// unknown. Retail expands this operation in load, but VC6 still retains it.
-// Keep that caller residual separate from the exact garrison-copy body.
+// unknown. DC uses one vector subscript per row. Keeping that named row
+// reference makes VC6 expand this helper in load while retaining the nested
+// TSeerHut constructor, as retail does.
 int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
 {
     short seerCount;
@@ -650,12 +651,12 @@ int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
 
     m_seerHutList.resize(seerCount);
     int spriteNum;
-    for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
-    {
-        m_seerHutList[spriteNum].load(infile, saveVersion);
-        if (m_seerHutList[spriteNum].m_quest)
+    for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum) {
+        TSeerHut& seerHut = m_seerHutList[spriteNum];
+        seerHut.load(infile, saveVersion);
+        if (seerHut.m_quest)
             m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
+                static_cast<void*>(seerHut.m_quest)));
     }
     return 0;
 }

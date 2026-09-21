@@ -1094,16 +1094,16 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
 // that also puts the mover's SECOND cell next to the client, and a tie
 // on that goes by screen x, toward the side the client faces.
 
-// best_time / best_contact are deliberately uninitialised: retail writes
-// neither before the loop and both are only read once *best_hex is no
-// longer -1.
+// DC's best_travel_time / best_hexes_covered are deliberately uninitialised:
+// retail writes neither before the loop and both are only read once *best_hex
+// is no longer -1.
 
 // E:\gamedcs\ai.cpp:1357
 VA(0x004205d0, 0x185)  // linkorder, dc 0x25998
 unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const army* client, long* bestHex, long* openHexes, searchArray* currentSearchArray)
 {
-    long bestTime;
-    long bestContact;
+    long bestTravelTime;
+    long bestHexesCovered;
 
     *openHexes = 0;
     *bestHex = -1;
@@ -1111,7 +1111,7 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
         if (direction >= 6 && !client->is(creatureDoubleWide))
             continue;
         long hex = client->getAdjacentHex(client->m_gridIndex, direction);
-        if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+        if (!combatManager::validHex(hex))
             continue;
         hexcell* cell = &m_cells[hex];
         army* occupant = cell->getArmy();
@@ -1121,22 +1121,23 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
         const pathCell* path = currentSearchArray->getHex(hex);
         if (!path->m_visited)
             continue;
-        long time = m_creaturePlacement
+        long travelTime = m_creaturePlacement
                 ? 1
                 : currentSearchArray->getTravelTime(currentArmy, hex);
-        long contact;
+        long hexesCovered;
         if (currentArmy->is(creatureDoubleWide)
-                && client->isAdjacent(hex + (currentArmy->m_facing ? 1 : -1)))
-            contact = 2;
+                && client->isAdjacent(
+                    hex + currentArmy->offsetToFront(-1)))
+            hexesCovered = 2;
         else
-            contact = 1;
+            hexesCovered = 1;
         if (*bestHex >= 0) {
-            if (time > bestTime)
+            if (travelTime > bestTravelTime)
                 continue;
-            if (time == bestTime) {
-                if (contact < bestContact)
+            if (travelTime == bestTravelTime) {
+                if (hexesCovered < bestHexesCovered)
                     continue;
-                if (contact == bestContact) {
+                if (hexesCovered == bestHexesCovered) {
                     if (client->m_facing == 1) {
                         if (cell->m_refX < m_cells[*bestHex].m_refX)
                             continue;
@@ -1146,9 +1147,9 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
                 }
             }
         }
-        bestTime = time;
-        bestContact = contact;
         *bestHex = hex;
+        bestTravelTime = travelTime;
+        bestHexesCovered = hexesCovered;
     }
     return static_cast<unsigned char>(*bestHex >= 0);
 }

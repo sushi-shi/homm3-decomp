@@ -129,7 +129,7 @@ public:
     // E:\\gamedcs\\Hero.h:145.  The DC tiny helper is the validity byte;
     // retail folds it into unblock_lith before temporarily restoring the
     // hero's underlying map cell.
-    bool isOnMap() const { return m_valid != 0; }
+    unsigned char isOnMap() const { return m_valid; }
     // E:\gamedcs\Hero.h:150. Dreamcast retains an out-of-line copy, while
     // retail expands the validity test at every admitted Windows caller.
     TAdventureObjectType getObscuredObject() const
@@ -223,10 +223,15 @@ public:
     // the -1 sentinel at +4. Retail value_of_town preserves that order in
     // its register allocation even though the eventual by-value pushes are
     // ordered by record layout.
-    // The generated offering constructor at dc 0x128714 calls this
-    // constructor with -1. That proves the default argument: no separate
-    // zero-argument type_artifact constructor exists in the DC class API.
-    explicit type_artifact(TArtifact id = ARTIFACT_NONE)
+    // Complete's generated offering constructor emits the member-initializer
+    // store order of a distinct default constructor. Dreamcast instead calls
+    // the TArtifact overload with -1 here, so this boundary is versioned.
+    type_artifact()
+    {
+        m_extra = -1;
+        m_artifactId = ARTIFACT_NONE;
+    }
+    explicit type_artifact(TArtifact id)
     {
         m_artifactId = id;
         m_extra = -1;
@@ -243,7 +248,8 @@ public:
     // The reconstruction-only (int, int) overload was removed. Ordinary
     // artifacts use the TArtifact constructor; scrolls use SpellID. A
     // separately decoded payload is assigned explicitly by its owning caller.
-    // Both proven constructors retain their DC id-before-payload store order.
+    // The two argument-taking constructors retain their DC
+    // id-before-payload store order.
 
 // townmgr.cpp's blacksmith right-click text (0x5d1aa0) calls this on a
 // copy of the war machine's artifact record; hero.obj owns the

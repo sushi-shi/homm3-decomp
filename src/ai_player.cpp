@@ -1465,7 +1465,7 @@ unsigned char type_AI_player::purchaseBuilding(
          ++townIndex) {
         town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
         __int64 buildMask = currentTown->getBuildableMask();
-        if (g_game->m_towns[currentTown->m_id].m_builtThisTurn)
+        if (g_game->townAlreadyBuiltOn(currentTown->m_id))
             continue;
 
         memset(extraCosts, 0, sizeof(extraCosts));
@@ -1476,7 +1476,7 @@ unsigned char type_AI_player::purchaseBuilding(
                 int ordinal = building;
                 memcpy(&buildingId, &ordinal, sizeof buildingId);
                 if (!currentTown->isLegalBuilding(buildingId)
-                    || (currentTown->m_active & g_bitNumber[building])
+                    || currentTown->hasBuilding(building, 1)
                     || building == HOLY_GRAIL_ID) {
                     basicValue[building] = -1;
                     continue;
@@ -1534,7 +1534,7 @@ unsigned char type_AI_player::purchaseBuilding(
         bestTown->getBuildCost(buildingId, cost);
     }
     tradeResources(cost, 1);
-    if (g_game->m_towns[bestTown->m_id].m_builtThisTurn)
+    if (g_game->townAlreadyBuiltOn(bestTown->m_id))
         return 0;
     if (bestBuilding >= HALL_VILLAGE_ID
         && bestBuilding <= MARKETPLACE_SILO_ID) {
@@ -2040,19 +2040,14 @@ void type_AI_creature_swapper::doSwap(hero* currentHero,
 // Complete adds the Angelic-Alliance byte used by the three philai callers;
 // retail proves its store at +8 and folds calculate_improvement plus the
 // consolidation helper into this selected body.
-// Residual (92.5052%): all calls and computations agree. The candidate
-// promotes `value` into EDI after the consolidation loop, splitting one exit
-// edge (16 blocks versus retail's 15); retail keeps it at [ebp-4]. A volatile
-// control forced 15 blocks but changed the surrounding allocation and fell to
-// 80.38%, so the source-false qualifier is rejected.
 VA(0x0042c4a0, 0x108)  // DC method/locals + Complete parameter, dc 0x31864
 long type_AI_creature_swapper::getSwapValue(
     const hero* currentHero, const armyGroup* sourceArmy,
     const hero* secondHero, unsigned char newHasAngelicAlliance)
 {
+    long value = 0;
     armyGroup localArmy(currentHero->m_army);
     armyGroup localSource(*sourceArmy);
-    long value = 0;
 
     m_hasAngelicAlliance = newHasAngelicAlliance;
     m_army = &localArmy;
@@ -3145,10 +3140,6 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
     delete[] strategicMap;
     return rawValue;
 }
-
-// is_human_ally (dc 0x37fd8, game.h:1370) is claimed at its retail COMDAT
-// slot below (0x42b9e0); the callers additionally expand GetTeam at the
-// call site before handing it the team.
 
 // The nine functions below are located by the callee-fingerprint join against
 // Dreamcast call targets: for each retail carve row the cross-unit resolved
@@ -4901,10 +4892,10 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
                 const TCreatureTypeTraits& traits =
                     g_creatureTypeTraits[creature];
                 if (firstAid >= traits.m_hitPoints)
-                    value = cppMax(value,
-                                     static_cast<long>(traits.m_aiValue));
+                    value = max(value,
+                                static_cast<long>(traits.m_aiValue));
                 else
-                    value = cppMax(
+                    value = max(
                         value, static_cast<long>(
                                    traits.m_aiValue * firstAid
                                    / traits.m_hitPoints));
