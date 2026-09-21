@@ -614,6 +614,7 @@ army	?walkTo@army@@QAEEHE@Z	93.3162	93.3162	93.3162	0x41fa0	tokens1:f7d81316b08c
 armygrp	??0TSplitWindow@@QAE@HHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x49790	tokens1:0b28d201d8e9
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x4aaa0	tokens1:36a3f47ad959
 armygrp	??0armyGroup@@QAE@XZ	100.0000	100.0000	100.0000	0x4aa80	tokens1:dbaf80e7fe0c
+armygrp	??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x87bd0	-
 armygrp	??1TSplitWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x49e20	tokens1:625415ef5f02
 armygrp	??4reference@?$bitset@$08@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0x4c610	-
 armygrp	??_GTSplitWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x49df0	-
@@ -1845,7 +1846,6 @@ game	??0VictoryConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0xbc340	tokens
 game	??0game@@QAE@XZ	80.5959	80.5959	88.8584	0xcdf20	tokens1:8c7615f6fca8
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550	tokens1:e7daf55622b0
 game	??0logic_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0xc3090	-
-game	??0out_of_range@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x87bd0	-
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0	tokens1:0d78c045bd8d
 game	??0type_map_hero_info@@QAE@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$bitset@$07@2@@Z	100.0000	100.0000	100.0000	0xc4cc0	tokens1:42a86bf417c4
 game	??1?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb61f0	-
@@ -1906,6 +1906,7 @@ game	?_Erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype
 game	?_Insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@$$CBHUtype_map_hero_info@@@2@@Z	100.0000	100.0000	100.0000	0xd1d50	-
 game	?_Min@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@KIPAU_Node@12@PAU312@@Z	100.0000	100.0000	100.0000	0xd2050	-
 game	?_Tidy@?$bitset@$07@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcff30	-
+game	?_Tidy@?$bitset@$0BM@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd1830	-
 game	?_Tidy@?$bitset@$0JA@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x8c0b0	-
 game	?_Tidy@?$bitset@$0JB@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x8d480	-
 game	?_Ucopy@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@IAEPAUTBlackMarket@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x14d920	-
@@ -2031,7 +2032,7 @@ game	?loadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	tokens1:8314
 game	?loadGarrisonPool@game@@AAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	tokens1:1c6e01a99913
 game	?loadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	tokens1:2576a496deb9
 game	?loadLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc3d90	tokens1:f1de65a51af1
-game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	61.4712	61.4712	78.2855	0xc2450	tokens1:5be9b20c1ca5
+game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	83.1646	83.1646	83.1646	0xc2450	tokens1:b23caa130d8c
 game	?loadMinePool@game@@AAEHPAVTAbstractFile@@H@Z	98.8718	98.8718	100.0000	0xb9340	tokens1:005160e9587e
 game	?loadObjectVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2870	tokens1:0c896143b823
 game	?loadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	tokens1:16710ddf8b29
@@ -2131,7 +2132,6 @@ game	?waitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	tokens1:
 game	__h3cg$game$bitset_flip$Bitset28	0.0000	100.0000	100.0000	0xd17b0	-
 game	__h3cg$game$bitset_test$Bitset28	0.0000	100.0000	100.0000	0xd17d0	-
 game	__h3cg$game$bitset_tidy$Bitset128	0.0000	100.0000	100.0000	0xd4e90	-
-game	__h3cg$game$bitset_tidy$Bitset28	0.0000	100.0000	100.0000	0xd1830	-
 game	__h3cg$game$bitset_tidy$Bitset5	0.0000	100.0000	100.0000	0xd1790	-
 game	__h3cg$game$std_copy$type_map_hero_identity	0.0000	0.0000	100.0000	0xd2e50	-
 game	__h3cg$game$vector_capacity$type_university	0.0000	100.0000	100.0000	0xcfa40	-

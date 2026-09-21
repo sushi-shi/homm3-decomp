@@ -2682,9 +2682,9 @@ void applySavedGameHeader(const SavedGameHeader& saved)
     memcpy(g_wasHuman, saved.m_humanPlayer, sizeof(saved.m_humanPlayer));
 }
 
-// Complete's hero-pool operation uses unsigned byte indexing. This inferred
-// decoder owns assignments into an existing destination; game::load owns its
-// default construction, stream read and member copy. Campaign's returned-value
+// Complete's packed bit readers use unsigned byte indexing. This inferred
+// decoder owns assignment into an existing bitset; callers retain their stream
+// reads and any later copy into the live game arrays. Campaign's returned-value
 // reader and mapcell's signed division loops retain their distinct operations.
 template <size_t N>
 void decodePackedBits(const unsigned char* packed, std::bitset<N>& result)
@@ -5109,24 +5109,18 @@ VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
 // rumour and hero customization records before handing the remainder to the
 // map-cell owner.
 
-// MAX 78.2855. On 2026-09-07 the inherited body measured 74.47679.
-// Restoring all clear calls alone gives 63.79606, separate reads with the
-// failure-return pin removed give 68.89874, and both give 64.73558. Keep
-// the recovered boundaries through the dip. Removing the normal loop-end
-// destructor pin too gives 63.86639 (73.26442 in the inherited body), but
-// replaces its destructor call at +0x61b with retail's required _Tidy call
-// at +0x61d. Both failure exits also retain _Tidy. Remove both destructor
-// pins on that call-sequence evidence; do not keep them for the higher score.
-// The passive source-boundary trace has caller cb 1752 / budget 3504.
-// Bitset<144>::_Tidy costs 72 against 71/70 and stays called, while the
-// 129/70-bit instances get 73/87 and expand. The 28-bit read's _Xran now
-// stays called (cost 65, budget 50), correcting the older frontier diagnosis.
-// Remaining frontier: bitset/container inner-helper expansion decisions
-// still differ. The version-21 artifact arm and merge
-// loop also have different placement/register allocation.
-// Earlier bounded pin-removal controls recovered the bitset<70> constructor
-// expansion and removed the byte-neutral rumours.resize pin. Removing the
-// remaining copy-loop/skills pins together did not improve banked MAX.
+// MAX 83.1646. Retail's AB compatibility arm copies the 129 serialized bits
+// through a named bitset and std::copy's input/output bitset iterators; the
+// temporary at retail +0x24b and the iterator call sequence at +0x290..+0x2b5
+// distinguish that source from the former handwritten loop. The four packed
+// mask reads share decodePackedBits, and the artifact merge walks the live byte
+// array while indexing the temporary mask. Those recovered boundaries remove
+// every inline-depth directive from this function and leave 46 calls on both
+// sides. The residual is two nested bitset expansion choices plus one vector
+// clear: retail calls bitset<144>::operator[]/test where this compiland reaches
+// _Xran, expands bitset_iterator<129>::operator* where ours calls it, and
+// expands whirlpools' _Destroy where ours retains it. The CFG is 107 versus
+// 105 blocks and 64 versus 63 conditional branches.
 // DC LoadMap0xadb88 owns a mutable filename and calls DCFileConv0xbc500
 // to replace spaces with underscores. Complete receives an already-open
 // TAbstractFile here. The other DC consumer is ds_engine::PlayStream;
@@ -5140,10 +5134,7 @@ bool game::loadMap(TAbstractFile* mapFile)
         return false;
 
     applyMapHeaderAvailability();
-    int mapSize = m_mapHeader.m_size;
-    g_mapWidth = mapSize;
-    g_mapHeight = mapSize;
-    g_searchArray->close();
+    setMapSize(m_mapHeader.m_size, m_mapHeader.m_size);
 
     if (m_f1f698 < 1)
         memset(m_heroAvailability + 128, hero::HERO_AVAILABILITY_TAVERN_POOL,
@@ -5165,48 +5156,31 @@ bool game::loadMap(TAbstractFile* mapFile)
             std::bitset<144> serializedArtifacts(0);
             unsigned char artifactBits[18];
             mapFile->read(artifactBits, sizeof(artifactBits));
-            for (unsigned int artifactBit = 0;
-                 artifactBit < sizeof(m_artifactDisabled); ++artifactBit) {
-                std::bitset<144>::reference serializedBit =
-                    serializedArtifacts[artifactBit];
-#pragma inline_depth(0)
-                serializedBit =
-                    (artifactBits[artifactBit >> 3]
-                     & (1 << (artifactBit & 7))) != 0;
-#pragma inline_depth()
-            }
+            decodePackedBits(artifactBits, serializedArtifacts);
             disabledArtifacts = serializedArtifacts;
         } else {
             for (artifact = 0; artifact < 144; ++artifact) {
-#pragma inline_depth(0)
-                disabledArtifacts.set(
-                    artifact, g_artifactTraits[artifact].m_comboType != -1);
-#pragma inline_depth()
+                disabledArtifacts[artifact] =
+                    g_artifactTraits[artifact].m_comboType != -1;
             }
 
             std::bitset<129> serializedArtifacts(0);
             unsigned char artifactBits[17];
             mapFile->read(artifactBits, sizeof(artifactBits));
-            for (unsigned int legacyBit = 0; legacyBit < 129; ++legacyBit) {
-                std::bitset<129>::reference serializedBit =
-                    serializedArtifacts[legacyBit];
-#pragma inline_depth(0)
-                serializedBit =
-                    (artifactBits[legacyBit >> 3]
-                     & (1 << (legacyBit & 7))) != 0;
-#pragma inline_depth()
-            }
-            for (unsigned int copyBit = 0; copyBit < 129; ++copyBit) {
-                disabledArtifacts[copyBit] = serializedArtifacts[copyBit];
-            }
+            decodePackedBits(artifactBits, serializedArtifacts);
+            std::bitset<129> serializedCopy = serializedArtifacts;
+            std::copy(
+                bitset_iterator<129>(serializedCopy, 0),
+                bitset_iterator<129>(serializedCopy, 129),
+                bitset_iterator<144>(disabledArtifacts, 0));
         }
 
-        for (artifact = 0; artifact < 144; ++artifact) {
-#pragma inline_depth(0)
+        unsigned char* artifactState = m_artifactDisabled;
+        for (artifact = 0;
+             artifactState != m_artifactDisabled + sizeof(m_artifactDisabled);
+             ++artifact, ++artifactState) {
             bool serializedDisabled = disabledArtifacts[artifact];
-#pragma inline_depth()
-            m_artifactDisabled[artifact] =
-                m_artifactDisabled[artifact] || serializedDisabled;
+            *artifactState = *artifactState || serializedDisabled;
         }
     }
 
@@ -5215,23 +5189,10 @@ bool game::loadMap(TAbstractFile* mapFile)
         std::bitset<70> serializedSpells(0);
         unsigned char spellBits[9];
         mapFile->read(spellBits, sizeof(spellBits));
-        for (unsigned int spellBit = 0; spellBit < hero::NUM_SPELLS;
-             ++spellBit) {
-            std::bitset<70>::reference serializedBit =
-                serializedSpells[spellBit];
-            // Removal controls are non-additive (2026-09-09): deleting this
-            // pin alone improves LoadMap, but deleting it together with the
-            // artifact-copy and serializedSkills pins lowers 63.8664% to
-            // 62.3643%. The two-pin removal kept here is 63.9902%; this last
-            // pin remains matching debt, not a recovered source directive.
-#pragma inline_depth(0)
-            serializedBit =
-                (spellBits[spellBit >> 3] & (1 << (spellBit & 7))) != 0;
-#pragma inline_depth()
-        }
+        decodePackedBits(spellBits, serializedSpells);
 
         const std::bitset<70> serializedSpellCopy = serializedSpells;
-        for (unsigned int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (serializedSpellCopy[spell]) {
                 for (artifact = 0; artifact < 144; ++artifact) {
                     if (g_artifactTraits[artifact].m_givesSpells) {
@@ -5249,15 +5210,7 @@ bool game::loadMap(TAbstractFile* mapFile)
         std::bitset<28> serializedSkills(0);
         unsigned char skillBits[4];
         mapFile->read(skillBits, sizeof(skillBits));
-        for (unsigned int skillBit = 0; skillBit < sizeof(m_ssDisabled);
-             ++skillBit) {
-            std::bitset<28>::reference serializedBit =
-                serializedSkills[skillBit];
-#pragma inline_depth(0)
-            serializedBit =
-                (skillBits[skillBit >> 3] & (1 << (skillBit & 7))) != 0;
-#pragma inline_depth()
-        }
+        decodePackedBits(skillBits, serializedSkills);
         const std::bitset<28> serializedSkillCopy = serializedSkills;
         for (int skill = 0; skill < sizeof(m_ssDisabled); ++skill)
             m_ssDisabled[skill] = serializedSkillCopy[skill];
@@ -5272,33 +5225,29 @@ bool game::loadMap(TAbstractFile* mapFile)
     std::copy(m_spellDisabledInfo,
               m_spellDisabledInfo + sizeof(m_spellDisabledInfo), m_spellAllocInfo);
 
-    int rumourCount;
-    if (mapFile->read(&rumourCount, sizeof(rumourCount))
-        < sizeof(rumourCount)) {
+    int rumourListSize;
+    if (mapFile->read(&rumourListSize, sizeof(rumourListSize))
+        < sizeof(rumourListSize)) {
         return false;
     }
-    // The rumour list NAMED AS A REFERENCE: retail reads its _First/_Last
-    // through the vector's own address rather than folding the member offset
-    // off gpGame.  75.9944 -> 76.5443.
-    std::vector<TRumour>& rRumours = m_rumours;
-    rRumours.resize(rumourCount);
-    for (TRumour* rumour = rRumours.begin(); rumour != rRumours.end();
-         ++rumour) {
+    m_rumours.resize(rumourListSize);
+    TRumour* rit;
+    for (rit = m_rumours.begin(); rit != m_rumours.end(); ++rit) {
         std::string throwAway;
-        int result = NewSMapHeader::readString(mapFile, throwAway);
-        if (result < 0)
+        int hr = NewSMapHeader::readString(mapFile, throwAway);
+        if (hr < 0)
             return false;
-        result = NewSMapHeader::readString(mapFile, rumour->m_text);
-        if (result < 0)
+        hr = NewSMapHeader::readString(mapFile, rit->m_text);
+        if (hr < 0)
             return false;
-        rumour->m_unavailable = 0;
+        rit->m_unavailable = 0;
     }
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        std::map<int, type_map_hero_info>::iterator it =
-            m_mapHeader.m_heroPlayerSetups.begin();
-        for (; it != m_mapHeader.m_heroPlayerSetups.end();) {
+        for (std::map<int, type_map_hero_info>::iterator it =
+                 m_mapHeader.m_heroPlayerSetups.begin();
+             it != m_mapHeader.m_heroPlayerSetups.end(); ++it) {
             HeroExtra* setupRecord = &m_heroSetup[it->first];
             type_map_hero_info* headerRecord = &it->second;
             if (headerRecord->m_portrait != -1) {
@@ -5311,14 +5260,13 @@ bool game::loadMap(TAbstractFile* mapFile)
                         sizeof(setupRecord->m_nameBuffer));
                 setupRecord->m_nameBuffer[sizeof(setupRecord->m_nameBuffer) - 1] = 0;
             }
-            ++it;
         }
         readMapHeroSetups(mapFile, m_mapHeader.m_version);
     }
 
-    for (int pool = 0; pool < 8; ++pool) {
-        m_lithPools[pool].clear();
-        m_lithExitPools[pool].clear();
+    for (long i = 0; i < 8; ++i) {
+        m_lithPools[i].clear();
+        m_lithExitPools[i].clear();
     }
     m_whirlpools.clear();
     m_undergroundGateExits.clear();
@@ -10661,8 +10609,6 @@ VA_COMPGEN(0x0045f810, 0x1CD, VECTOR_COPY_ASSIGN, type_artifact_vector)
 // _Ucopy resemble this address; type_university wins on agreement (0.907
 // against 0.810 for the next) and `ret 0xc` matches its three pointers.
 VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, type_university)
-
-VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
 
 // Slot 5 of that zip: vector<hero>::~vector, the row ~SCampaign,
 // vector<vector<hero>>::operator= and vector<vector<hero>>::insert all reach.

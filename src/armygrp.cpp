@@ -1550,3 +1550,10 @@ VA_COMPGEN(0x0044c610, 0x67, BITSET_REFERENCE_ASSIGN, bitset9)
 // COMDAT pairing: the same bitset<9> instantiation's _Tidy, 23 B against
 // this compiland's single 23-byte COMDAT.
 VA_COMPGEN(0x0044c6e0, 0x17, BITSET_TIDY, bitset9)
+
+// COMDAT pairing: out_of_range's const-string constructor. Recovering
+// game::loadMap's natural bitset boundaries stopped game.obj from retaining
+// this overload. armygrp.obj retains both constructors, and one claim against
+// the two-name group resolves uniquely by exact extent: 352 bytes for this
+// string form versus 343 for the copy constructor.
+VA_COMPGEN(0x00487bd0, 0x160, CLASS_CTOR, out_of_range)
