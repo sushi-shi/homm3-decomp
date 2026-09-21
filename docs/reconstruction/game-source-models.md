@@ -141,7 +141,7 @@ inline keyword was unnecessary, not evidence of an original annotation.
 
 ### Full-width object-type input ownership
 
-`generate-object-type-read-owner-family.py` starts at `ba9d07f2` and exhausts
+The object-type input experiment started at `ba9d07f2` and exhausts
 eight owner/query alternatives in context `f19ddfdcac44d6eb1e45`: eight scored
 states, three emitted identities, all three elites reproduced. It preserves
 the existing integer buffer's filename-length and extra-field uses, crossing
@@ -285,7 +285,7 @@ that remaining nested decision, and all other philai scores stay fixed.
 The follow-up discovers an actual missing source boundary: DC `0x10f2f8`,
 philai.cpp:1331, calls the player-pointer resource-cost overload from the
 player-ID overload. DC bank `0x110808` in turn calls the ID overload with the
-hero owner. `generate-bank-resource-boundary-family.py` restores that ordinary
+hero owner. The resource-cost experiment restored that ordinary
 forwarding call and the bank's canonical call together, crossing both with
 fence removal. Context `a44951e66f11cc57a5c4` exhausts eight states, eight object
 identities and eight reproduced elites. The canonical pair with the fence
@@ -335,9 +335,9 @@ setupScenarioOptions from 100% to 90.1470%. None is adopted. The caller's
 proven request/progress/path scope and the shared ordinary helper stay intact.
 
 The score-flat task-destructor deletion needs a separate untracked-body review.
-`generate-update-task-fence-family.py`, context `0b5874006d53a33b2e6b`, reproduces
+The completed experiment at context `0b5874006d53a33b2e6b` reproduced
 both source states and both emitted-object identities. All 223 tracked scores
-agree. `verify-update-task-bodies.py` proves that all 396 emitted functions
+agree. Its one-off whole-object check proved that all 396 emitted functions
 remain present, with 395 bodies and their relocation destinations unchanged.
 After excluding only `.debug` metadata, all 737 remaining sections preserve
 order and attributes; all bytes/relocations outside the generated Proc body
@@ -1300,7 +1300,7 @@ current results after the calls are corrected.
 
 ### Recovering video callers with canonical header helpers
 
-`generate-video-recovery-family.py` compares the sound guard, resume guard
+The video-caller experiment compared the sound guard, resume guard
 and pause-draining loop while retaining the ordinary `videoSoundOnOff`,
 `videoResume` and `videoClose` calls. The shared `serviceSounds` body stays
 inline in its proven `soundmgr.h` owner. The PC retail bodies prove the
@@ -1432,7 +1432,7 @@ All initial and refined candidates passed before adoption. The permanent
 disabled frame, defaults, missing append and widget ID. This validates UI
 construction behavior; it is not an x86 ABI model.
 
-`generate-sound-service-recovery-family.py` takes all 51 header-dependent TUs
+The sound-service experiment took all 51 header-dependent TUs
 from compiler dependency records. Context `bf4bbe51a427f361ce69`, reproduced
 candidate `7173bdb9b7e2604dc1808b27`, captures the stream after `AIL_serve` and
 nests the three real state guards. `serviceSounds` stays inline in SoundMgr.h
