@@ -12,7 +12,6 @@
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 unsigned char initializeSeerHutText();
 
-class TAdventureMapWindow;
 class hero;
 class NewmapCell;
 struct type_point;
@@ -43,21 +42,20 @@ public:
     std::string questGuardFn00573040(int player);
     std::string questGuardFn00572D60();
     int save(TAbstractFile* outfile);
-    // Complete retains the Dreamcast TSeerHut predicate on the new shared
-    // quest-guard base.  DoQuestLog proves that its final two tests are the
+    // Complete retains the Dreamcast TSeerHut predicate on its quest-guard
+    // record. DoQuestLog proves that its final two tests are the
     // visited-player bit followed by a fresh quest-pointer read.
     unsigned char questActiveforPlayer(
         const unsigned char playerNum) const
     {
         return m_quest
             && m_quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
-            && (m_visitedPlayers & (1 << playerNum))
+            && playerHasInfo(playerNum)
             && m_quest;
     }
-    // Complete split quest guards from TSeerHut while retaining its visited
-    // mask. Dreamcast names this exact predicate PlayerHasInfo on TSeerHut;
-    // ownership on the new guard record is inferred and the retail expansion
-    // in searchArray::enterTrigger is byte-identical to the direct test.
+    // Complete's guard uses the same packed visit mask and byte argument as
+    // TSeerHut::PlayerHasInfo (DC seerhut.h:117). The quick-info/rollover
+    // pair and enterTrigger expand this predicate over the guard's +4 byte.
     unsigned char playerHasInfo(const unsigned char playerNum) const
     {
         return (m_visitedPlayers & (1 << playerNum)) != 0;
@@ -144,10 +142,8 @@ SIZE(TSeerData, 0x11);
 class TSeerHut : private TSeerData {
 public:
     // readObject's SEER arm tests the private base's quest pointer before
-    // registering the deserialized record in the +0xb0 pool. These consumers
-    // retain friendship while ordinary access stays on TSeerHut's surface.
+    // registering the deserialized record in the +0xb0 pool.
     friend class NewfullMap;
-    friend class TAdventureMapWindow;
 
 private:
     // Dreamcast preserves this private source boundary. Complete replaces
@@ -195,25 +191,16 @@ public:
     std::string seerHutFn005741B0(int player) const;
     std::string seerHutFn005743E0(int player) const;
     std::string getSeerLogText();
-    // Dreamcast names QuestActiveforPlayer as a const byte-returning TSeerHut
-    // helper.  Its old body tested playerGivenQuest and then !QuestCompleted.
-    // Complete's virtual quest model replaces the latter byte with a live quest
-    // and a non-empty quest-log line, but retail keeps the same final visited-bit
-    // and fresh quest-pointer tests.  Keep both pool-specific spellings: retail
-    // forms a named quest_text_row pointer for SeerHutList, while the exact
-    // UpdateQuestLogButton sibling proves quest_texts()[LOG] for guards.
-    // E:\gamedcs\SeerHut.h:112, dc 0x3250
+    // Dreamcast names QuestActiveforPlayer as a const byte-returning header
+    // predicate (SeerHut.h:112, dc 0x3250). Complete adds the live quest and
+    // quest-log text tests; both retail consumers reload the quest after
+    // the visit test because the virtual text access can change the hut.
     unsigned char questActiveforPlayer(
         const unsigned char playerNum) const
     {
-        type_quest* thisQuest = m_quest;
-        if (!thisQuest)
-            return 0;
-
-        const std::string* questTexts = thisQuest->questTextRow()
-            + type_quest::QUEST_TEXT_COLUMNS * thisQuest->questType();
-        return questTexts[type_quest::QUEST_TEXT_LOG].length()
-            && (m_visitedPlayers & (1 << playerNum))
+        return m_quest
+            && m_quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
+            && playerHasInfo(playerNum)
             && m_quest;
     }
     // Original: TSeerHut::PlayerHasInfo; SeerHut.h:117, dc 0x2021c

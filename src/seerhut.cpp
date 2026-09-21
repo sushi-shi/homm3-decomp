@@ -1841,7 +1841,7 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
     }
 
     if (humanPlayer) {
-        if (!(m_visitedPlayers & (1 << currentHero->m_owner)))
+        if (!playerHasInfo(currentHero->m_owner))
             m_quest->doProgressDialog();
         else if (!m_quest->isSatisfied(currentHero))
             m_quest->doProposalDialog(currentHero);
@@ -1884,7 +1884,7 @@ std::string TQuestGuard::questGuardFn00572E40(int player)
     std::string text;
     text = g_questGuardName;
 
-    if ((m_visitedPlayers & (1 << static_cast<unsigned char>(player))) && m_quest) {
+    if (playerHasInfo(player) && m_quest) {
         text += DATA_COMPGEN(0x006603b0, questGuardQuickInfoSeparator, "\n\n");
         text += m_quest->getQuestDescription();
     }
@@ -1898,7 +1898,7 @@ std::string TQuestGuard::questGuardFn00573040(int player)
     std::string text;
     text = g_questGuardName;
 
-    if ((m_visitedPlayers & (1 << static_cast<unsigned char>(player))) && m_quest) {
+    if (playerHasInfo(player) && m_quest) {
         text += DATA_COMPGEN(0x00660330, questGuardRolloverSeparator, " ");
         text += m_quest->getQuestDescription();
     }
@@ -2086,8 +2086,10 @@ int TSeerHut::getValue(hero* currentHero)
 {
     int value = m_reward.getValue(currentHero);
 
-    if (!(m_visitedPlayers & (1 << currentHero->m_owner)))
-        return cppMax(value, 20);
+    // The by-value max wrapper owns its argument temporaries only in this
+    // arm; retail reuses that stack slot for the active quest below.
+    if (!playerHasInfo(currentHero->m_owner))
+        return ::max(value, 20);
 
     if (m_quest && !m_quest->hasExpired()
         && m_quest->isSatisfied(currentHero))
@@ -2127,8 +2129,7 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
             doEmptyDialog();
     } else {
         if (humanPlayer) {
-            if (!(m_visitedPlayers
-                  & (1 << static_cast<unsigned char>(g_netLocalGamePos))))
+            if (!playerHasInfo(g_netLocalGamePos))
                 m_quest->doProgressDialog();
             else if (!m_quest->isSatisfied(currentHero))
                 m_quest->doProposalDialog(currentHero);

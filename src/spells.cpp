@@ -340,15 +340,14 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                                              m_nextActionGridIndex, 1, 0);
             if (target && spellToCast != SPELL_DISPEL
                     && target->m_combatSide != m_currentSide
-                    && !(target->m_monInfo.m_attributes & (1 << 21))
+                    && !target->is(creatureImmobilized)
                     && target->getMirrorEffect() >= random(1, 100)) {
                 TPickANumber picker(0, m_numArmies[m_currentSide] - 1);
                 int picked;
                 do {
                     picked = picker.pick();
                 } while (picked >= 0
-                         && ((m_armies[m_currentSide][picked].m_monInfo.m_attributes
-                              & (1 << 21))
+                         && (m_armies[m_currentSide][picked].is(creatureImmobilized)
                              || m_armies[m_currentSide][picked].m_gridIndex
                                     == g_mirrorImageExcludedHex));
                 m_nextActionGridIndex2 = m_armies[m_currentSide][picked].m_gridIndex;
@@ -1236,7 +1235,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                   castingHero);
         showSpellMessage(isMonsterSpell, spellId, target);
         if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
-            target->m_monInfo.m_attributes |= 0x40000000;
+            target->m_monInfo.m_attributes |= creatureGreyColoring;
             resetLimitCreature();
             markCreatureEffect(target->m_combatSide, target->m_bitIndex);
             computeMaxExtent();
@@ -1244,7 +1243,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 target->m_paletteEffect = frame * 0.1;
                 drawFrame(1, 1, 0, 100, 1, 1);
             }
-            target->m_monInfo.m_attributes &= ~0x40000000;
+            target->m_monInfo.m_attributes &= ~creatureGreyColoring;
             drawFrame(1, 1, 0, 0, 1, 0);
         }
         break;
@@ -1255,7 +1254,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                       castingHero);
             showSpellMessage(isMonsterSpell, spellId, target);
             if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
-                target->m_monInfo.m_attributes |= 0x20000000;
+                target->m_monInfo.m_attributes |= creatureRedColoring;
                 resetLimitCreature();
                 markCreatureEffect(target->m_combatSide, target->m_bitIndex);
                 computeMaxExtent();
@@ -1271,7 +1270,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                         drawFrame(1, 1, 0, 100, 1, 1);
                     }
                 }
-                target->m_monInfo.m_attributes &= ~0x20000000;
+                target->m_monInfo.m_attributes &= ~creatureRedColoring;
                 drawFrame(1, 1, 0, 0, 1, 0);
             }
         } else {
@@ -1286,7 +1285,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                         for (int index = 0; index < m_numArmies[side]; ++index) {
                             if (m_effected[side][index]) {
                                 army* effectedArmy = &m_armies[side][index];
-                                effectedArmy->m_monInfo.m_attributes |= 0x20000000;
+                                effectedArmy->m_monInfo.m_attributes |= creatureRedColoring;
                                 markCreatureEffect(side, index);
                             }
                         }
@@ -1320,7 +1319,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                     for (unsigned int side = 0; side < 2; ++side) {
                         for (int index = 0; index < m_numArmies[side]; ++index) {
                             if (m_effected[side][index])
-                                m_armies[side][index].m_monInfo.m_attributes &= ~0x20000000;
+                                m_armies[side][index].m_monInfo.m_attributes &= ~creatureRedColoring;
                         }
                     }
                 }
@@ -1457,7 +1456,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             sacrificeArmy->damage(sacrificeArmy->m_monInfo.m_hitPoints
                                    * sacrificeArmy->m_numTroops);
             sacrificeArmy->m_showPowEffect = 1;
-            sacrificeArmy->m_monInfo.m_attributes |= 0x10000000;
+            sacrificeArmy->m_monInfo.m_attributes |= creatureSacrificed;
             showSpellMessage(isMonsterSpell, spellId, sacrificeArmy);
             powEffect(eSpellEffectSacrifice_Slay, 1);
             resurrect(target, hitPointsResurrected, 0);
@@ -1507,7 +1506,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         target->removeBinding();
         target->cancelIndividualSpell(SPELL_BIND);
         removeArmyFromGrid(*target);
-        if (target->is(1u << 0))
+        if (target->is(creatureDoubleWide))
             target->canFit(targetIndex, 1, &targetIndex);
         placeArmyInGrid(*target, targetIndex);
         target->m_gridIndex = targetIndex;
@@ -1925,7 +1924,7 @@ void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
         army* thisArmy = g_combatManager->m_armies[side];
         for (int i = 0; i < g_combatManager->m_numArmies[side];
              i++, thisArmy++) {
-            if (thisArmy->is(1u << 21))
+            if (thisArmy->is(creatureImmobilized))
                 continue;
             if (!(g_combatManager->spellCastWorkChance(
                     spell, g_combatManager->m_currentSide, thisArmy, 0, 1, 0)
@@ -1973,7 +1972,7 @@ static void clearAreaHighlights()
         army* thisArmy = g_combatManager->m_armies[side];
         for (int i = 0; i < g_combatManager->m_numArmies[side];
              i++, thisArmy++) {
-            if (!thisArmy->is(1u << 21))
+            if (!thisArmy->is(creatureImmobilized))
                 thisArmy->setInsideAreaEffect(0);
         }
     }
@@ -2447,7 +2446,7 @@ army* combatManager::findResurrectionTarget(int side, int hex,
         army* target = cell->getArmy();
         if (target->m_combatSide != side)
             return 0;
-        if (!(target->is(1u << 4)))
+        if (!target->is(creatureAlive))
             return 0;
         if (target->m_numTroops >= target->m_origNumTroops)
             return 0;
@@ -2466,7 +2465,7 @@ army* combatManager::findResurrectionTarget(int side, int hex,
                               [cell->m_deadArmySlot[i]];
         if (cell->m_deadArmySide[i] != side)
             continue;
-        if (!(corpse->is(1u << 4)))
+        if (!corpse->is(creatureAlive))
             continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
@@ -2506,7 +2505,7 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
         int deadSlot = cell->m_deadArmySlot[i];
         if (deadSide != side)
             continue;
-        if (!(m_armies[deadSide][deadSlot].is(1u << 4)))
+        if (!(m_armies[deadSide][deadSlot].is(creatureAlive)))
             continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
@@ -2535,7 +2534,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
         army* target = cell->getArmy();
         if (target->m_combatSide != side)
             return 0;
-        if (!(target->is(1u << 18)))
+        if (!target->is(creatureUndead))
             return 0;
         if (target->m_numTroops >= target->m_origNumTroops)
             return 0;
@@ -2554,7 +2553,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
                               [cell->m_deadArmySlot[i]];
         if (cell->m_deadArmySide[i] != side)
             continue;
-        if (!(corpse->is(1u << 18)))
+        if (!corpse->is(creatureUndead))
             continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
@@ -2725,7 +2724,7 @@ void combatManager::markAreaEffect(long hex, long radius,
         army* target = m_cells[hexes[i]].getArmy();
         if (target == 0)
             continue;
-        if (target->is(1u << 21))
+        if (target->is(creatureImmobilized))
             continue;
         if (m_effected[target->m_combatSide][target->m_bitIndex])
             continue;
@@ -2748,7 +2747,7 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
         army* target = m_cells[hexes[i]].getArmy();
         if (target == 0)
             continue;
-        if (target->is(1u << 21))
+        if (target->is(creatureImmobilized))
             continue;
         if (m_effected[target->m_combatSide][target->m_bitIndex])
             continue;
@@ -3047,7 +3046,7 @@ void combatManager::armageddon(int level, int power)
                 // is what stops VC6 folding the test back into a
                 // `test dword ptr [mem], imm` on the member - the same
                 // lever that closed SpellCastWorkChance's register wall.
-                if (currentArmy->is(1u << 6))
+                if (currentArmy->is(creatureSiegeWeapon))
                     m_heroes[side]->destroySiegeWeaponArtifact(
                         currentArmy->m_creatureType);
                 deaths = 1;
@@ -3972,7 +3971,7 @@ void combatManager::showMassSpell(const unsigned char (*effected)[20],
             army& stack = m_armies[side][i];
             if (effected[side][i] && stack.m_numTroops == 0) {
                 stack.processDeath(0);
-                if (stack.is(1u << 6))
+                if (stack.is(creatureSiegeWeapon))
                     m_heroes[side]->destroySiegeWeaponArtifact(
                         stack.m_creatureType);
                 anyDied = 1;
@@ -4001,7 +4000,7 @@ void combatManager::mirrorImage(int targetIndex, int level)
                     if (sourceHexCount == 0) {
                         sourceHexIndex = source->m_gridIndex;
                     } else {
-                        if (!(source->is(1u << 0)))
+                        if (!source->is(creatureDoubleWide))
                             continue;
                         sourceHexIndex =
                             source->m_gridIndex + source->offsetToFront(-1);
@@ -4042,7 +4041,7 @@ void combatManager::mirrorImage(int targetIndex, int level)
                                         addArmy(m_currentSide, source->m_creatureType,
                                                 source->m_numTroops, hex, 0x800000, 0);
                                         army* mirror = m_cells[hex].getArmy();
-                                        mirror->m_monInfo.m_attributes |= 0x400000;
+                                        mirror->m_monInfo.m_attributes |= creatureSummoned;
                                         mirror->m_roundsLeftBeforeVanish =
                                             m_heroes[m_currentSide]->getSpellDurationBonus()
                                             + m_spellPower[m_currentSide];
@@ -4193,7 +4192,7 @@ void combatManager::removeCorpse(army* corpse)
 {
     removeCorpse(&m_cells[corpse->m_gridIndex], corpse->m_combatSide,
                 corpse->m_bitIndex);
-    if (corpse->is(1))
+    if (corpse->is(creatureDoubleWide))
         removeCorpse(&m_cells[corpse->getSecondGridIndex()],
                     corpse->m_combatSide, corpse->m_bitIndex);
 }
@@ -4333,7 +4332,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
         } }
     }
 
-    targetArmy->m_monInfo.m_attributes &= ~0x00200000;
+    targetArmy->m_monInfo.m_attributes &= ~creatureImmobilized;
     targetArmy->m_showPowEffect = 0;
     drawFrame(1, 0, 0, 0, 1, 0);
 }
@@ -4717,7 +4716,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         && traits->m_level < target->m_antiMagicSpellLevel
         && !(traits->m_flags & 0x8))
         return 0.0f;
-    if ((target->is(1u << 21)) && spell != SPELL_RESURRECTION
+    if (target->is(creatureImmobilized) && spell != SPELL_RESURRECTION
         && spell != SPELL_ANIMATE_DEAD && spell != SPELL_SACRIFICE)
         return 0.0f;
     if (target->m_allUnitsKilled)
@@ -4754,11 +4753,11 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
             return 0.0f;
         break;
     case SPELL_ANTI_MAGIC:
-        if (target->is(1u << 23))
+        if (target->is(creatureClone))
             return 0.0f;
         break;
     case SPELL_CLONE:
-        if ((target->is(1u << 23)) || target->m_mirrorDestIndex != -1)
+        if (target->is(creatureClone) || target->m_mirrorDestIndex != -1)
             return 0.0f;
         if (target->m_monInfo.m_level + 1
             > g_spellTraits[SPELL_CLONE].m_masteryBonus[
@@ -4788,14 +4787,14 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         break;
     }
     case SPELL_SACRIFICE:
-        if (!(target->is(1u << 4)))
+        if (!target->is(creatureAlive))
             return 0.0f;
-        if (target->is(1u << 22))
+        if (target->is(creatureSummoned))
             return 0.0f;
         if (firstTarget) {
             if (target->m_numTroops >= target->m_origNumTroops)
                 return 0.0f;
-        } else if ((target->is(1u << 18)) || target->m_numTroops <= 0) {
+        } else if (target->is(creatureUndead) || target->m_numTroops <= 0) {
             return 0.0f;
         }
         break;
