@@ -11,7 +11,7 @@
 // byte-proven by that switch (`lea eax,[ecx-3]` over four dense
 // cases); the names are the Dreamcast TArtifact enumerators
 // (eArtifactCatapult 3, eArtifactBallista 4, eArtifactAmmoCart 5,
-// eArtifactFirstAidTent 6 in evidence/dreamcast/enums.csv) respelled
+// eArtifactFirstAidTent 6 in NB11 enum records) respelled
 // to this tree's convention.
 // Corroborated 2026-08-08 from a second side: hero.obj's two artifact
 // tallies (get_equipped_artifacts 0x4d9070, get_number_in_backpack
@@ -19,7 +19,7 @@
 // war machine block, independently of recruit's jump table.
 // Grown 2026-08-08 for hero.obj's bonus getters, which are nothing but
 // IsWieldingArtifact gates. Each block below carries its own retail
-// witness; every DC spelling comes from evidence/dreamcast/enums.csv.
+// witness; every DC spelling comes from NB11 enum records.
 // PLACEMENT NOTE: armygrp.h carries a SECOND artifact roster
 // (EArtifactId, the combat-side gates). These ids went here, into the
 // artifact domain's own owner header, rather than there - armygrp.h is
@@ -60,7 +60,7 @@ enum TArtifactSlot {
 // hero::IsWieldingArtifact's `shl esi,5` index, and +0x18 by the same
 // body: it holds the id of the COMBINATION artifact this piece belongs
 // to, -1 when the artifact is not a component of one.
-// The DC's own TArtifactTraits (evidence/dreamcast/members.csv) is only
+// The DC's own TArtifactTraits (NB11 member records) is only
 // 20 bytes - m_name 0, m_cost 4, m_allowableSlotMask 8, m_class 12,
 // m_description 16 - i.e. the AB-era record without the Shadow of Death
 // combination column. Retail's artraits.txt parser at 0x44cd50 independently

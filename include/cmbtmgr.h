@@ -1718,7 +1718,7 @@ public:
     // failure path at +0x2159.
     inline void showSpellCastFailure(army* targetArmy, int spellId);
     // The ONE TSpellEffectID this header needs so far. Value from the
-    // Dreamcast enum table (evidence/dreamcast/enums.csv:
+    // Dreamcast enum table (NB11 enum records:
     // TSpellEffectID.eSpellEffectFireShield = 11), and retail proves the
     // number at the only site that uses it: army::do_fire_shield
     // (0x4409c0) pushes the literal 11 into PowEffect. Named rather than

@@ -41,7 +41,7 @@ Unrelated CUR dips keep MAX and are silent. A function's own hash change resets
 MAX to its new CUR; a lower MAX is reported, but is not a build failure.
 `HIST > MAX` identifies historical peaks worth investigating.
 
-See the [reconstruction debt checklist](docs/todos/recounstruction_debt.md) for remaining source cleanup.
+See the [documentation](docs/README.md) and [reconstruction debt checklist](docs/todos/reconstruction_debt.md).
 
 ## Pinned target
 

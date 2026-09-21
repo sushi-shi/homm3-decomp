@@ -33,7 +33,7 @@ Two generation overlays exist, selected by --gen:
                 FileVersion+export table) before every install - a wrong
                 pressing is a hard abort.
   run        A/B the wall corpus (or --fn targets), emit
-             evidence/vc6/{c2,fe}-generation-verdicts.tsv.  Verdict per
+             build/vc6/{c2,fe}-generation-verdicts.tsv.  Verdict per
              function:
                SP3-matches      SP3 output already matches retail at the
                                 register-visible + branch-shape grade

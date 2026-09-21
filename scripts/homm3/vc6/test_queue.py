@@ -54,7 +54,7 @@ class BankedMaxRouting(unittest.TestCase):
                 with contextlib.redirect_stdout(io.StringIO()) as out:
                     queue.run(SimpleNamespace(unit=None, quiet=True, limit=limit, diagnose=True))
                 self.assertEqual(out.getvalue().count("%  unit:fn"), shown)
-                census = (Path(tmp) / "evidence/wall-census.tsv").read_text()
+                census = (Path(tmp) / "build/reports/wall-census.tsv").read_text()
                 self.assertIn("fn0", census)
                 self.assertIn("fn2", census)
                 self.assertNotIn("reconstruct", census)
@@ -67,7 +67,7 @@ class BankedMaxRouting(unittest.TestCase):
                 contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(queue.run(SimpleNamespace(unit=None, limit=20)), 0)
             diagnose.assert_not_called()
-            census = (Path(tmp) / "evidence/wall-census.tsv").read_text()
+            census = (Path(tmp) / "build/reports/wall-census.tsv").read_text()
             self.assertIn(
                 "25.0000\t25.0000\t0.0000\t10.0000\t100\tunit\tbody",
                 census)
@@ -145,20 +145,14 @@ class AdmissionRouting(unittest.TestCase):
             "unit\t?undiffable@@YAXXZ\t0\t0\t0\t0x200\t-",
             "unit\t?residual@@YAXXZ\t12\t12\t12\t0x300\t-",
         ))
-        links = "\n".join((
-            "rva\tsize\trelation\towner_or_bracket\tcandidates\tlabel",
-            "0x100\t100\tin-span\tunit\tunit\tflat_carve",
-            "0x400\t1000\tbracketed\ta..b\ta,b\tnew_largest",
-            "0x500\t2000\tin-span\truntime\truntime\tnot_a_target",
-        ))
         category = {0x100: "target", 0x200: "target", 0x300: "target",
                     0x400: "target", 0x500: "runtime"}
         sizes = {0x100: 100, 0x200: 90, 0x300: 80,
                  0x400: 1000, 0x500: 2000}
         rows = queue._admission_rows_from_text(
-            data, baseline, links, category, sizes)
+            data, baseline, category, sizes)
         self.assertEqual([r["rva"] for r in rows], [0x400, 0x100])
-        self.assertEqual(rows[0]["state"], "bracketed")
+        self.assertEqual(rows[0]["state"], "unmapped")
         self.assertEqual(rows[1]["state"], "carcass")
 
 
@@ -241,9 +235,6 @@ class SmallestFirstRouting(unittest.TestCase):
     def test_admission_queue_is_largest_first(self):
         rows = queue._admission_rows_from_text(
             _report(), "",
-            "rva\tsize\trelation\towner_or_bracket\tcandidates\tlabel\n"
-            "0x10\t10\tunmapped\t\t\tshort\n"
-            "0x20\t20\tunmapped\t\t\tlong",
             {0x10: "target", 0x20: "target"}, {0x10: 10, 0x20: 20})
         self.assertEqual([r["rva"] for r in rows], [0x20, 0x10])
 

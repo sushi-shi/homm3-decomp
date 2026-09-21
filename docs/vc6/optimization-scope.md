@@ -4,7 +4,7 @@ Answers three recurring questions: (1) is the inline→everything cascade writte
 down; (2) can we predict whether something inlined; (3) how *non-local* are the
 optimizations across a function. Grounded in what the `vc6` area reverse-
 engineered (inliner, register allocator) plus the Ghidra atlas's module map
-(`evidence/vc6/c2-tu-map.tsv`); passes we located but did not model are marked
+(`build/vc6/c2-tu-map.tsv`); passes we located but did not model are marked
 **located-only**.
 
 ## 1. The C2 pass pipeline (image base 0x10700000; anchor RVAs from the atlas)
@@ -234,9 +234,7 @@ alone (`docs/vc6/handle-order.md`).
 Now yes — here, plus the pieces it ties together: the inliner rule
 (`inliner.md`), the allocator (`regalloc.md`), catalog **B7** ("register renaming
 cascade after a call-vs-inline change") and the smackmgr worked example, and the
-`diagnose` routing that encodes inline→flow→register. The taxonomy has also been
-applied outside HOMM3 (`gruntz-wall-identifier-field-note.md`, MSVC 5.0), so the
-scope model is not HOMM3-specific.
+`diagnose` routing that encodes inline→flow→register.
 
 The resource-display constructor (0x558ba0) supplies a second condition-merging
 counterexample. Dreamcast lines 41 and 46 separately test size for subwindow

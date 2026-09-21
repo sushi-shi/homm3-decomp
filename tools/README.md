@@ -126,7 +126,7 @@ interpretation of any other member.
 
 Retail `HEROES3.EXE` remains authoritative. Binary-proven container and
 renderer facts, Dreamcast source-shape facts, and current unknowns are recorded
-in [the format note](../docs/lod-def-formats.md). A passing Rust census is a
+in [the format note](../docs/formats/lod-def-formats.md). A passing Rust census is a
 strong consistency check, not permission to override conflicting retail bytes.
 The exhaustive inventory and per-family closure status live in
-[the resource-format matrix](../docs/resource-format-matrix.md).
+[the resource-format matrix](../docs/formats/resource-format-matrix.md).

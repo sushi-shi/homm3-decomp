@@ -821,7 +821,7 @@ SIZE(AI, 0x78);
 // 0x21610, sixteen bytes short of the hero array at 0x21620.
 
 // The 0x00..0x40 head and the 0x88..0xe8 tail were sliced 2026-08-08 by
-// REPACKING THE DREAMCAST ROSTER (evidence/dreamcast/members.csv, class
+// REPACKING THE DREAMCAST ROSTER (NB11 member records, class
 // `playerData`, 344 B / 26 members) onto retail's alignment - the same
 // lever the hero roster answered to. One member changes width and
 // everything else follows: DC's `currHero` is a char at 2, retail's is a

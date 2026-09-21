@@ -6,7 +6,7 @@ These two sections hold the optimizer's mutable state - the hunting ground
 for the /Ob2 inline budget counter and the register-allocator state the later
 vc6 phases model. For each referenced address we record every referencing
 site, whether it reads or writes, and the access width, so atlas.py can fold
-this into evidence/vc6/c2-globals.tsv (joined with the TU map for writer_tus).
+this into build/vc6/c2-globals.tsv (joined with the TU map for writer_tus).
 
 Access classification per referencing instruction, best channel first:
   pcode-exact   a ram-space varnode of the instruction's raw pcode covers the

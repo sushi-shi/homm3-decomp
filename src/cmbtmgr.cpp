@@ -2616,7 +2616,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 
 // E:\gamedcs\cmbtmgr.cpp:3902
 // RECONSTRUCTED 2026-08-20. Local names are DC's own
-// (evidence/dreamcast/variables.csv): deltaX/deltaY, addX/addY,
+// (NB11 local records): deltaX/deltaY, addX/addY,
 // nframes, flipped, saved, frame, next_frame_time, ARROW_DELAY, and
 // update_area for the four running limits - which is why update_area is
 // spelled as ONE four-int aggregate rather than four scalars: the

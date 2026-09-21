@@ -128,7 +128,7 @@ PYTHONPATH=scripts python3 -m homm3.vc6.genab clean
   generation-question column.
 - **Verdicts**: `SP3-matches` | `RTM-closes` | `neither` |
   `RTM-unavailable`, one row per function in
-  `evidence/vc6/c2-generation-verdicts.tsv` (regenerate, never hand-edit).
+  `build/vc6/c2-generation-verdicts.tsv` (regenerate, never hand-edit).
   rc 0 = ran with RTM available, 1 = `RTM-unavailable` rows present,
   2 = error.
 
@@ -223,7 +223,7 @@ Consequences:
 > 2026-09-06, recorded below). Result already
 > banked from the first corpus run (2026-08-09): the C2 generation swap is
 > codegen-invariant on all 18 wall/control functions
-> (`evidence/vc6/c2-generation-verdicts.tsv`, `sp3_vs_rtm == 0`), so the
+> (`build/vc6/c2-generation-verdicts.tsv`, `sp3_vs_rtm == 0`), so the
 > merged-return / tail-duplication and register-swap walls are NOT
 > RTM-generation artifacts; the only generation-sensitive functions found
 > (town::GiveSpells, town::initialize_spells, kbwin SetMenus - a jb/jl
@@ -313,7 +313,7 @@ IL header.  Every other byte is identical.  **C1XX 12.00.8472 and C1XX
 `config/units.toml` under both toolchains, masks the COFF TimeDateStamp and
 the `@comp.id` value, and byte-compares; only units that actually differ get
 a per-function three-way pass.  Regenerate, never hand-edit:
-`evidence/vc6/fe-generation-verdicts.tsv`.
+`build/vc6/fe-generation-verdicts.tsv`.
 
 - 146 units compiled clean on both sides.  **32** differ at object level.
 - Of those 32, **14** differ ONLY in the symbol table / section headers -
@@ -427,8 +427,8 @@ pull.
 | path | role |
 |---|---|
 | `scripts/homm3/vc6/genab.py` | the A/B harness (overlays + corpus + sweep + verify) |
-| `evidence/vc6/c2-generation-verdicts.tsv` | §4 back-end verdicts (regenerate, never hand-edit) |
-| `evidence/vc6/fe-generation-verdicts.tsv` | §6 front-end verdicts, whole-corpus sweep (same rule) |
+| `build/vc6/c2-generation-verdicts.tsv` | §4 back-end verdicts (regenerate, never hand-edit) |
+| `build/vc6/fe-generation-verdicts.tsv` | §6 front-end verdicts, whole-corpus sweep (same rule) |
 | `../orig/vc6-rtm/{C2,C1,C1XX}.DLL, CL.EXE` | staged RTM binaries (outside every repo) |
 | `../orig/vc6-rtm/PROVENANCE.txt` | staging-side provenance record |
 | `build/vc6/toolchain-rtm/` | the back-end-only overlay (gitignored) |

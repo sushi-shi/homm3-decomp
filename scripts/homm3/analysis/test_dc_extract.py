@@ -3,6 +3,7 @@ import csv
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from homm3.analysis import dc_extract
 from homm3.core import nb11
@@ -10,6 +11,19 @@ from homm3.core.test_nb11 import fixture
 
 
 class ProcedureRosterTest(unittest.TestCase):
+    def test_browsing_reads_embedded_symbols_without_csv_exports(self):
+        from homm3.analysis import dreamcast, dc_srclines
+        symbols = nb11.parse(fixture())
+        with patch.object(dc_extract.inputs, 'dreamcast_symbols', return_value=symbols):
+            corpus = dreamcast.Corpus(claims=[])
+            function = corpus.resolve('Function')
+            self.assertEqual(function['module'], 'unit.obj')
+            self.assertEqual(function['line'], '10')
+            self.assertEqual(dc_srclines._load_functions(), corpus.functions)
+            self.assertEqual(dc_srclines._load_locals('Function', 'unit.obj'),
+                             corpus.variables)
+            self.assertEqual(corpus.variables[0]['name'], 'value')
+
     def test_crt_module_and_source_boundaries_come_from_own_compiland(self):
         symbols = nb11.Symbols(
             procedures={0x100: nb11.Procedure("_cinit", 12, module="crt0dat.obj"),

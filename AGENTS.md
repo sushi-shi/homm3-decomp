@@ -79,7 +79,7 @@ statements or empty `inline-clues` do not prove absence in retail; an emitted
 standalone helper does not disprove an inline copy. Do not compare SH4 shape with
 candidate `/Z7` shape, build regex rosters/automated source-structure comparators,
 or demand equal instruction, block, call, statement, local, or scope counts.
-See [docs/dc-line-tables.md](docs/dc-line-tables.md) for interpretation.
+See [docs/matching/dc-line-tables.md](docs/matching/dc-line-tables.md) for interpretation.
 
 `dreamcast audit` checks positive typed declarations and named source-call
 anchors against the authored Clang AST. It reports cv/ref layers, array/base
@@ -88,7 +88,7 @@ this is not an SH4-versus-C++ structure comparison. Review each finding with
 retail evidence, restore supported facts, then rerun the audit and VC6 build.
 Keep justified platform differences in owning source comments. Coverage gaps
 are not zero differences: missing names, unsupported types and Clang errors
-remain explicit. See [docs/source-facts.md](docs/source-facts.md).
+remain explicit. See [docs/matching/source-facts.md](docs/matching/source-facts.md).
 
 Reject Dreamcast shape only when retail semantics, ABI, layout, or CFG contradict
 it. A lower similarity score is insufficient. Preserve proven classes, interfaces,
@@ -188,7 +188,6 @@ original spelling in the owning source's evidence comment so reference lookup
 remains possible. Preserve required external ABI spellings at their boundaries.
 
 Source annotations own names; build regenerates labels. Do not maintain a second
-symbol ledger. `config/` contains hand-admitted retail inventories and manifests;
-`evidence/` contains generated analysis, which must be regenerated, not hand-edited.
+symbol ledger. `config/` contains hand-admitted retail inventories and manifests.
 Keep `vendor/` pristine; zlib's address-to-symbol mapping belongs in
 `config/retail-zlib-map.tsv`.

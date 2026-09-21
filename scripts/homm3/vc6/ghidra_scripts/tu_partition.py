@@ -25,7 +25,7 @@ itself), so the interval owner is the honest anchor; Ghidra's opinion is kept
 per row as a diagnostic (n_frag = sites where it disagreed).
 
 Raw outputs (build/re/vc6/raw/, gitignored; atlas.py post-processes into
-evidence/vc6/c2-tu-map.tsv with the bracket propagation):
+build/vc6/c2-tu-map.tsv with the bracket propagation):
   c2_funcs_raw.tsv     entry_rva  size  name        (every .text function)
   c2_anchors_raw.tsv   func_rva  tu  string_rva  n_ref  n_imm  n_frag  channel
 

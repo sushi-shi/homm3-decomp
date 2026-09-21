@@ -47,7 +47,7 @@ All use the pinned binaries under Wine.
 
 ## 1. Method
 
-1. **Navigation by the atlas.** `evidence/vc6/c2-tu-map.tsv` places
+1. **Navigation by the atlas.** `build/vc6/c2-tu-map.tsv` places
    regasg.c at `0x8941f..0x8cf95` (ICE anchor `0x8b906`) and color.c at
    `0x8e1f7..0x8f5e3` (anchors `0x8e474/0x8e877/0x8e9de`).
    `ghidra_scripts/regasg_probe.py` (read-only over the persisted

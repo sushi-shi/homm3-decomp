@@ -4,7 +4,7 @@ Status: 20 unresolved declarations from the original 332-field inventory;
 312 handled after evidence pass 86. This is a recovery backlog, not a claim
 that all retained integer types or opaque extents are original source types.
 The detailed evidence and completed recoveries are in
-[remaining-field-recovery.md](../remaining-field-recovery.md).
+[remaining-field-recovery.md](../reconstruction/field-layouts.md).
 
 No supported semantic name was established for these 20 from the inspected
 Dreamcast and NH3API records. Some owners or neighboring members have names;
@@ -48,7 +48,4 @@ and vendor boundaries. Remove opaque storage as alignment only when layout
 and access evidence support it. Record the evidence beside the owning source
 and remove the corresponding backlog entry once verified.
 
-Batch actual source changes for retail validation. Documentation alone needs
-no build. The latest full checkpoint (pass 86) passed with 3,755 exact linked
-functions, 4,406 matching rows and 91.26% executable fuzzy coverage. Historical
-MAX values remain distinct from current reproducible scores.
+Batch source changes for retail validation. Documentation alone needs no build.

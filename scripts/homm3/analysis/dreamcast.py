@@ -66,7 +66,7 @@ Subcommands
   structure [--module MODULE ...] [--output PATH] [--asm]
         Generate C++ browsing stubs and JSON with signatures, typed locals,
         lexical scope trees, source rows, inline evidence and SH4 control flow.
-        Defaults to all modules under evidence/dreamcast/structure/.
+        Defaults to all modules under build/dreamcast/structure/.
 
 All results are ANALYSIS OUTPUT about another pressing.  A Dreamcast address,
 line or call is never retail address/byte evidence; retail promotion still
@@ -96,9 +96,6 @@ from homm3.analysis import dc_asm, dc_lines, dc_srclines, dc_source_layout, debu
 from homm3.core import common, inputs, undname
 
 
-FUNCTIONS = common.EVIDENCE_DIR / "dreamcast/functions.csv"
-VARIABLES = common.EVIDENCE_DIR / "dreamcast/variables.csv"
-BRIDGES = common.EVIDENCE_DIR / "retail-dc-name-map.csv"
 SRC_DIR = common.HOMM3_DIR / "src"
 RETAIL_NAMES = common.HOMM3_DIR / "build/gen/symbol_names.csv"
 LOG = common.HOMM3_DIR / "build/homm3_dreamcast.log"
@@ -174,14 +171,6 @@ class DreamcastDossier:
         }
 
 
-def _csv_rows(path: Path) -> list[dict[str, str]]:
-    if not path.is_file():
-        raise DreamcastError(f"missing corpus file: {path}")
-    with path.open(newline="") as fh:
-        return list(csv.DictReader(line for line in fh
-                                   if not line.startswith("#")))
-
-
 def _integer(value: str | int) -> int:
     return value if isinstance(value, int) else int(value, 0)
 
@@ -205,16 +194,19 @@ def _source_claims(src_dir: Path = SRC_DIR) -> list[Claim]:
 
 
 class Corpus:
-    """Materialized CSV indexes.  Optional rows make resolution hermetic in tests."""
+    """Embedded-symbol indexes. Optional rows keep selector tests hermetic."""
 
     def __init__(self, *, functions: list[dict[str, str]] | None = None,
                  variables: list[dict[str, str]] | None = None,
                  bridges: list[dict[str, str]] | None = None,
                  claims: list[Claim] | None = None,
                  retail_names: dict[int, str] | None = None):
-        self.functions = _csv_rows(FUNCTIONS) if functions is None else functions
-        self.variables = _csv_rows(VARIABLES) if variables is None else variables
-        self.bridges = _csv_rows(BRIDGES) if bridges is None else bridges
+        if functions is None or variables is None:
+            from homm3.analysis.dc_extract import corpus_rows
+            embedded_functions, embedded_variables = corpus_rows()
+        self.functions = embedded_functions if functions is None else functions
+        self.variables = embedded_variables if variables is None else variables
+        self.bridges = [] if bridges is None else bridges
         self.claims = _source_claims() if claims is None else claims
         self._retail_names = retail_names  # rva -> mangled name; lazy
 
@@ -1351,8 +1343,8 @@ def _build_parser() -> argparse.ArgumentParser:
     structure.add_argument("--module", action="append", dest="modules", metavar="MODULE",
                            help="module[.obj] to export; repeatable (default all)")
     structure.add_argument("--output", type=Path,
-                           default=common.EVIDENCE_DIR / "dreamcast/structure",
-                           help="generated tree directory (default evidence/dreamcast/structure)")
+                           default=common.HOMM3_DIR / "build/dreamcast/structure",
+                           help="generated tree directory (default build/dreamcast/structure)")
     structure.add_argument("--asm", action="store_true", help="include decoded SH4 instructions")
     return ap
 
