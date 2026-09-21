@@ -1,7 +1,10 @@
-#include <va.h>
-#include <windows.h>
+#include "va.h"
+
 #include <stdio.h>
+#include <windows.h>
+
 #include "university_window.h"
+
 #include "border.h"
 #include "button.h"
 #include "game.h"

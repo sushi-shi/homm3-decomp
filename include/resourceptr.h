@@ -2,7 +2,7 @@
 #ifndef HOMM3_RESOURCEPTR_H
 #define HOMM3_RESOURCEPTR_H
 
-#include <va.h>
+#include "va.h"
 
 class TTextResource;
 

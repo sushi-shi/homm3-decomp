@@ -1,7 +1,7 @@
 #ifndef HOMM3_MONFRAMEINFO_H
 #define HOMM3_MONFRAMEINFO_H
 
-#include <va.h>
+#include "va.h"
 
 // PROVEN layout (retail parser 0x50ca00): 0x54 stride byte-derived from
 // the &table[id] scaling (id*7*3*4), every field offset from the parse

@@ -2,6 +2,7 @@
 #define HOMM3_CSEQUENCE_H
 
 #include "va.h"
+
 #include "cspriteframe.h"
 
 class CSprite;

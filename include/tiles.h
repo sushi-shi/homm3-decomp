@@ -13,7 +13,7 @@
 #ifndef HOMM3_TILES_H
 #define HOMM3_TILES_H
 
-#include <va.h>
+#include "va.h"
 
 // The eight neighbour directions, clockwise from north. The order is fixed by
 // the retail .bss table at 0x6a80a8, whose sixteen dwords read

@@ -1,10 +1,11 @@
 #ifndef HOMM3_SOUNDMGR_H
 #define HOMM3_SOUNDMGR_H
 
-#include <Mss.h>
 #include <bink.h>
 #include <dsound.h>
+#include <Mss.h>
 #include <windows.h>
+
 #include "basemgr.h"
 #include "crt_process.h"
 #include "kbwin.h"

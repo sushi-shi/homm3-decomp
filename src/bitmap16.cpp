@@ -1,8 +1,11 @@
-#include <va.h>
+#include "va.h"
+
 #include <limits>
 #include <math.h>
 #include <string.h>
+
 #include "bitmap16.h"
+
 #include "bitmap816.h"
 #include "hsv.h"
 #include "pcx.h"

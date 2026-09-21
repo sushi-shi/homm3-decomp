@@ -1,8 +1,9 @@
 #ifndef HOMM3_WINDOW_H
 #define HOMM3_WINDOW_H
 
-#include <vector>
 #include "va.h"
+
+#include <vector>
 
 class widget;
 class textWidget;

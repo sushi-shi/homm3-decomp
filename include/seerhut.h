@@ -2,9 +2,11 @@
 #ifndef HOMM3_SEERHUT_H
 #define HOMM3_SEERHUT_H
 
+#include "va.h"
+
 #include <string>
 #include <vector>
-#include <va.h>
+
 #include "quest.h"
 
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28

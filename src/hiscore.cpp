@@ -1,16 +1,19 @@
-#include <va.h>
-#include <windows.h>
+#include "va.h"
+
 #include <fcntl.h>
 #include <io.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <windows.h>
+
+#include "hiscore.h"
+
 #include "bitmap816.h"
 #include "border.h"
 #include "button.h"
 #include "game.h"
-#include "hiscore.h"
 #include "iconwdgt.h"
 #include "inputmgr.h"
 #include "kb.h"
@@ -18,8 +21,8 @@
 #include "mousemgr.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
-#include "textresource.h"
 #include "textntry.h"
+#include "textresource.h"
 #include "textwdgt.h"
 #include "winmgr.h"
 

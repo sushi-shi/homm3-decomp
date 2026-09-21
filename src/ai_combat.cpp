@@ -1,34 +1,23 @@
-// NEW LEVER (2026-08-07, byte-proven here by AI_quick_combat and
-// AI_auto_combat): under /GX the scope-exit destructor sequence keeps
-// the EH state variable live across every call a destructor makes,
-// emitting `mov [ebp-4], <state>` before each one. Retail emits none -
-// its `operator delete` was visible as NOTHROW. VC6's <new> declares
-// operator delete WITHOUT an exception specification, so a TU that
-// wants retail's shape has to say so itself; see the
-// __declspec(nothrow) redeclaration in include/ai_combat.h. That one
-// declaration is what takes both entry points from 96-98% to exact.
-#include <va.h>
-// check_wall_archery_penalty's three fortification tests are
-// town::HasBuilding calls in the Dreamcast body (dc 0x2a470, three
-// `jsr @r9` with r5 = 7/8/9 and r6 = 0); see town.h for why the
-// inline's visibility is scoped.
+#include "va.h"
+#include "includes.h"
+#include "homm3_minmax.h"
+
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "ai_combat.h"
+
+#include "advmgr.h"
 #include "ai_player.h"
 #include "ai_tactical.h"
-#include "advmgr.h"
 #include "armygrp.h"
 #include "game.h"
+#include "hero.h"
 #include "magicterrain.h"
 #include "misc.h"
-#include "hero.h"
 #include "town.h"
-#include "includes.h"
-
-#include "homm3_minmax.h"
 
 // The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.
 // cast_spell masks precisely these six bits twice and switches on the five

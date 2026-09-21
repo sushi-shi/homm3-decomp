@@ -8,7 +8,8 @@
 #ifndef HOMM3_WINFILE_H
 #define HOMM3_WINFILE_H
 
-#include <va.h>
+#include "va.h"
+
 #include <windows.h>
 
 // DC enum 0x10be. The values are the FILE_ATTRIBUTE_* constants;

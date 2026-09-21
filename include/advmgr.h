@@ -2,18 +2,15 @@
 #define HOMM3_ADVMGR_H
 
 #include "basemgr.h"
-#include "sskilltraits.h"
+#include "herospec.h"
+#include "kb.h"
+#include "mapcell.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
-#include "herospec.h"
+#include "sskilltraits.h"
 #include "struct.h"
-#include "mapcell.h"
-// EGameResource: ExtraInfoUnion's windmill/wagon/garden arms carry
-// `EGameResource resource : N` BITFIELDS, and a bitfield's enum type
-// must be complete - a forward declaration is not enough (C2150).
 #include "town.h"
 #include "window.h"
-#include "kb.h"  // ordinary three-coordinate GetMapExtra declaration
 
 class BlackBoxData;
 class CNetMsgHandler;

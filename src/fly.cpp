@@ -1,8 +1,10 @@
 // Seven DC procedures: five retained Complete bodies and two canonical
 // findFlyerAttackCell overloads expanded in validFlight. Retail validFlight
 // starts at 0x4b46c0; the old 0x4b4420 correlation is a bitset initializer.
-#include <va.h>
+#include "va.h"
+
 #include <math.h>
+
 #include "army.h"
 #include "cmbtmgr.h"
 #include "csprite.h"

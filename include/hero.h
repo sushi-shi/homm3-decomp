@@ -1,22 +1,16 @@
 #ifndef HOMM3_HERO_H
 #define HOMM3_HERO_H
 
+#include "va.h"
+
 #include <string>
-#include <va.h>
+
+#include "advmgr_popup.h"
 #include "armygrp.h"
-#include "mapcell.h"
-// TArtifact - the id domain hero::remove_artifact takes. It is the
-// artifact domain's own type and artifact.h is deliberately outside
-// initialize.cpp's include closure (see the placement note there), so
-// this edge cannot reach the initialize_game_data tripwire: nothing in
-// that closure includes hero.h.
 #include "artifact.h"
 #include "herospec.h"
-// TSpellSchool - the mask hero::GetSpellSchoolLevel and
-// hero::GetHighestSchool take. Its own domain header rather than a second
-// copy here.
+#include "mapcell.h"
 #include "spellschool.h"
-#include "advmgr_popup.h"
 
 // hero.obj's four primary-stat descriptions.  Dreamcast supplies the name
 // and type; Complete fixes the 0x6a7540 address and all four indexed readers.

@@ -1,18 +1,21 @@
-#include <va.h>
+#include "va.h"
+
 #include <stdlib.h>
 #include <string.h>
+
 #include "window.h"
-#include "kb.h"
-#include "widget.h"
-#include "message.h"
+
 #include "bitmap16.h"
-#include "winmgr.h"
+#include "kb.h"
+#include "message.h"
 #include "mousemgr.h"
-#include "textwdgt.h"
+#include "resourcemanager.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
-#include "resourcemanager.h"
 #include "textresource.h"
+#include "textwdgt.h"
+#include "widget.h"
+#include "winmgr.h"
 
 // Complete's 37-row window-text routing table.  Its initialized bytes occupy
 // 0x68c710..0x68c837; the immediately following jktext.txt literal at

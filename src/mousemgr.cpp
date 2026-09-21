@@ -1,12 +1,15 @@
-#include "terrain.h"
-#include <va.h>
-#include <windows.h>
+#include "va.h"
+
 #include <ddraw.h>
 #include <string.h>
+#include <windows.h>
+
 #include "mousemgr.h"
+
+#include "bitmap16.h"
 #include "kbwin.h"
 #include "resourcemanager.h"
-#include "bitmap16.h"
+#include "terrain.h"
 #include "wingraph.h"
 
 // SetPointer's re-entrancy latch - the byte immediately after the

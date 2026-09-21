@@ -95,7 +95,7 @@
 #ifndef HOMM3_TERRAIN_H
 #define HOMM3_TERRAIN_H
 
-#include <va.h>
+#include "va.h"
 
 #include <bitset>
 

@@ -8,8 +8,10 @@
 // Retail's zlib is FASTCALL (`@gzopen@8`, `@gzread@12`), which is what the
 // vendored zlib-1.1.3 header emits under this profile's /Gr - so <zlib.h>
 // resolves here from vendor/zlib-1.1.3, the exact library retail links.
-#include <va.h>
+#include "va.h"
+
 #include <zlib.h>
+
 #include "gzfile.h"
 
 VA(0x004d6c50, 0x76)

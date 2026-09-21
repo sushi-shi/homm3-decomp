@@ -25,9 +25,9 @@
 #ifndef HOMM3_ARRAY_H
 #define HOMM3_ARRAY_H
 
-#include <string.h>  // memcpy, the grow copy Add inlines
-
 #include "va.h"
+
+#include <string.h>
 
 template<class T>
 class CAutoArray {

@@ -2,6 +2,7 @@
 #define HOMM3_COMBATWINDOW_H
 
 #include <string>
+
 #include "window.h"
 
 class TSubWindow;

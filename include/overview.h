@@ -2,6 +2,7 @@
 #define HOMM3_OVERVIEW_H
 
 #include <vector>
+
 #include "advmgr_popup.h"
 
 class textWidget;

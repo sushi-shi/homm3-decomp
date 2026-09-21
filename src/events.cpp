@@ -1,22 +1,21 @@
+#include "va.h"
+#include "includes.h"
+
 #include <algorithm>
-#include "creaturetype.h"
 #include <stdio.h>
 #include <string.h>
-#include <va.h>
-#include "advmgr_objects.h"
-#include "creature_bank.h"
-#include "swapmgr.h"
-#include "game.h"
+
+#include "events.h"
+
 #include "advmgr.h"
-// DoCombat needs the full combatManager type (SetupCombat and the
-// result/raised-creature fields); added 2026-08-27 with the DoCombat
-// reconstruction and measured through the ratchet like every other
-// include-closure change.
+#include "advmgr_objects.h"
 #include "cmbtmgr.h"
 #include "command.h"
+#include "creature_bank.h"
+#include "creaturetype.h"
 #include "cursor.h"
-#include "events.h"
 #include "exec.h"
+#include "game.h"
 #include "hillfortwindow.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -29,12 +28,12 @@
 #include "resourcemanager.h"
 #include "sacrifice_window.h"
 #include "soundmgr.h"
-#include "tradpost.h"
+#include "swapmgr.h"
+#include "textresource.h"
 #include "townmgr.h"
+#include "tradpost.h"
 #include "university_window.h"
 #include "winmgr.h"
-#include "textresource.h"
-#include "includes.h"
 
 // Complete sends the raw primary-skill bytes in DoCombat's level update;
 // getPrimarySkill would clamp them. This accessor is a provisional Windows

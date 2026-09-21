@@ -1,7 +1,10 @@
 // 21 functions in link order.
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "textntry.h"
+
 #include "bitmap16.h"
 #include "bitmap816.h"
 #include "inputmgr.h"

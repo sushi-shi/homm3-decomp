@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+
 #include "border.h"
 #include "town.h"
 

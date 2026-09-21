@@ -3,34 +3,37 @@
 // The Dreamcast build has no RMG compiland. Retail's direct caller graph
 // reaches this library from TSingleSelectionWindow::GenerateRandomMap, and
 // the tree node layout proves an eight-byte TPoint value ordered by y, then x.
-#include "mapcell.h"
-#include <va.h>
+#include "va.h"
+#include "homm3_minmax.h"
+#include "bitset_iterator.h"
+
 #include <algorithm>
 #include <bitset>
 #include <ctype.h>
 #include <functional>
-#include <math.h>
 #include <list>
+#include <math.h>
 #include <queue>
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 #include <string.h>
 #include <time.h>
-#include <string>
+
+#include "rmg.h"
+
 #include "abstractfile.h"
 #include "advmgr_objects.h"
-#include "artifact.h"
 #include "armygrp.h"
-#include "bitset_iterator.h"
-#include "homm3_minmax.h"
+#include "artifact.h"
 #include "hero.h"
+#include "mapcell.h"
 #include "objnames.h"
 #include "resourcemanager.h"
 #include "rmg_request.h"
-#include "rmg.h"
-#include "savegame.h"
 #include "rmg_terrain.h"
+#include "savegame.h"
 #include "textresource.h"
 #include "town.h"
 

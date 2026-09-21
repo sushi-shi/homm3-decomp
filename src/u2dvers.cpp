@@ -1,5 +1,6 @@
 // 3 functions in link order.
-#include <va.h>
+#include "va.h"
+
 #include "u2dvers.h"
 
 VA(0x005eeda0, 0x4C)  // dc 0x18e3b0

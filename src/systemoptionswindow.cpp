@@ -1,8 +1,10 @@
-#include <va.h>
+#include "va.h"
+
 #include "systemoptionswindow.h"
-#include "cmbtmgr.h"
+
 #include "border.h"
 #include "button.h"
+#include "cmbtmgr.h"
 #include "exec.h"
 #include "game.h"
 #include "iconwdgt.h"
