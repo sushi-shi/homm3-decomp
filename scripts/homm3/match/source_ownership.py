@@ -55,6 +55,7 @@ class Definition:
     declaration_only_type: int = 0
     original_name: str = ""
     template: bool = False
+    internal: bool = False
 
 
 @dataclass(frozen=True)
@@ -705,7 +706,9 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
                 inline_origin=inline_origin, declaration_only_type=declaration_type,
                 original_name=original_name_hint(
                     line_indexes[relative], char_offset(cursor.location.offset)),
-                template=template))
+                template=template,
+                internal=(cursor.kind == k.FUNCTION_DECL
+                          and cursor.storage_class == cindex.StorageClass.STATIC)))
             if instances:
                 instance_requests.append((first, cursor.location.offset))
                 extras = []

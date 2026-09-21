@@ -169,7 +169,14 @@ public:
     // though completion behavior now belongs to the quest object.
     unsigned char m_completedByPlayer;
     // E:\gamedcs\SeerHut.h:108, dc 0xf4b38
-    TSeerHut();
+    VA(0x00573580, 0x13)
+    TSeerHut()
+    {
+        m_quest = 0;
+        m_visitedPlayers = 0;
+        m_nameIndex = 0;
+        m_completedByPlayer = 0;
+    }
     // Dreamcast supplies the surviving public name/signature; retail's
     // Complete-era body replaces the monolith with the virtual quest family.
     static void setRandomName(TSeerHut& thisHut);

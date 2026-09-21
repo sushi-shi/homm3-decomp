@@ -116,7 +116,18 @@ public:
     // is a std::vector over a 4-byte element whose identity is unproven.
     std::vector<int> m_assignedCarryover;
     // E:\gamedcs\CustomCampaign.h:199, dc 0xbcd90
-    SCampaign();
+    VA(0x00489500, 0x88)  // dc 0xbcd90
+    SCampaign()
+    {
+        m_isCheater = 0;
+        m_secretActive = 0;
+        m_currentMap = -1;
+        m_numMapRegions = -1;
+        m_briefingChoice = -1;
+        m_crossoverArrayIndex = -1;
+        m_currentCampaign = CAMPAIGN_NONE;
+        memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
+    }
     void selectCampaign(int campaignIndex, const char* filename);
     // nameable before the campaign-brief declarations; the receiver,
     void playScenarioPrologue(void* campaignHeader);
@@ -136,7 +147,15 @@ public:
     // Original CampaignComplete@SCampaign@@QAA_NXZ (native bool, mutable).
     // DC's older fixed-array body also marks campaignCompleted. Retail's
     // 67-byte vector scan has no such store; preserve the Complete behavior.
-    bool campaignComplete();
+    VA(0x004897d0, 0x43)  // dc 0xe6ef8
+    bool campaignComplete()
+    {
+        for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+            if (!m_mapScores[i].m_completed)
+                return 0;
+        }
+        return 1;
+    }
     int getScore() const;
     int getTotalTime() const;
     // Provisional name; PlaceCrossoverHeroes retains this lookup's nested

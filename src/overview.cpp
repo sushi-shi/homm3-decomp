@@ -88,10 +88,7 @@ static const int g_overviewHelpIds[8] = {
     19, 20, 21, 22, 23, 24, 18, 25
 };
 
-// DC overview.obj marks this helper static. Under Complete's VC6 profile that
-// linkage expands the last windowHandler call and removes the retained body;
-// ordinary linkage preserves retail's call to the exact body at 0x5225d0.
-long getLastBackpackIndex(long heroNumber);
+static long getLastBackpackIndex(long heroNumber);
 void updateBackpack(int slot);
 
 // 90.9107 -> 91.7418 (2026-09-05): the town row's TWO `iLookup` chains
@@ -2716,7 +2713,7 @@ void updateBackpack(int slot)
 }
 
 VA(0x005225d0, 0x55)  // dc 0x1078e8
-long getLastBackpackIndex(long heroNumber)
+static long getLastBackpackIndex(long heroNumber)
 {
     if (heroNumber >= g_game->getLocalPlayer()->m_numHeroes)
         return 0;

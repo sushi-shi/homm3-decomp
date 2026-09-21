@@ -11,6 +11,25 @@ from pathlib import Path
 from homm3.core import common
 
 
+def equivalent_emitter(mangled: str, emitters: set[str]) -> str | None:
+    """Choose a stable carrier when every emitted COMDAT is identical.
+
+    Header bodies can be emitted by several callers after their former carrier
+    stops emitting them.  Equal code-and-relocation digests make those copies
+    interchangeable comparison carriers; differing or unreadable copies remain
+    ambiguous.
+    """
+    from homm3.retail_labels import source
+
+    if len(emitters) < 2:
+        return None
+    digests = [source._base_authority_digests(unit).get(mangled)
+               for unit in sorted(emitters)]
+    if any(digest is None for digest in digests) or len(set(digests)) != 1:
+        return None
+    return min(emitters)
+
+
 def claim_files(root: Path = common.HOMM3_DIR) -> list[Path]:
     from homm3.retail_labels import source
     head, _arity, _prototype = source.MACRO_HEADS['VA']
@@ -53,6 +72,8 @@ def project(paths: list[Path], functions: set[int], ir_maps: dict,
             emitters = {unit: mangled for unit in ir_maps
                         if mangled is not None and mangled in authorities[unit]}
             carrier = policy.choose(rva, set(emitters), banked, anchors)
+            if carrier not in emitters:
+                carrier = equivalent_emitter(mangled, set(emitters)) or carrier
             if carrier is None:
                 problems.append(
                     f"header VA(0x{rva + common.IMAGE_BASE:08x}) in {path.name}: "

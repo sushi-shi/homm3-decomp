@@ -1813,7 +1813,7 @@ def vc6_function_name(mangled: str, candidates, unit: str) -> str | None:
 
 
 def ir_bind(unit: str, rows: list[dict], ir_names: dict,
-            problems: list[str], banked_inlines: dict | None = None) -> set:
+            problems: list[str], banked_unemitted: dict | None = None) -> set:
     """Bind VA() claims to the mangled names clang paired them with, in
     place; returns the mangled names taken (which the lexical join must
     then leave alone).
@@ -1837,14 +1837,14 @@ def ir_bind(unit: str, rows: list[dict], ir_names: dict,
             continue          # not compiled here (a `#if 0` carcass stub)
         confirmed = vc6_function_name(mangled, content, unit)
         if content and confirmed is None:
-            if (banked_inlines or {}).get(row['rva']) == mangled:
+            if (banked_unemitted or {}).get(row['rva']) == mangled:
                 row['joined'] = mangled
                 row['channel'] = 'src-VA+ir'
                 taken.add(mangled)
                 problems.append(
                     f"{unit}: VA(0x{row['rva'] + common.IMAGE_BASE:08x}) - "
                     f"no retained {mangled!r}; keeping its active canonical "
-                    "inline identity and banked carrier to report the missing body")
+                    "source identity and banked carrier to report the missing body")
                 continue
             # The obj contradicts the compiler's own pairing, so it is the
             # LAST thing that may name this claim: handing the row to the
@@ -2725,14 +2725,14 @@ def src_files() -> list:
 
 
 def _extract_one(path, functions: set, ir_names: dict | None,
-                 problems: list[str], banked_inlines: dict | None = None) -> list[dict]:
+                 problems: list[str], banked_unemitted: dict | None = None) -> list[dict]:
     """One unit's rows, IR-bound where clang reached the TU and lexically
     joined for the rest."""
     unit = path.stem
     rows = scan_file(path, functions, problems)
     taken = set()
     if ir_names is not None:
-        taken = ir_bind(unit, rows, ir_names, problems, banked_inlines)
+        taken = ir_bind(unit, rows, ir_names, problems, banked_unemitted)
     join_unit(unit, rows, taken)
     return rows
 
@@ -2755,13 +2755,19 @@ def ast_names(path: Path, definitions, ir_names: dict | None,
     return names
 
 
-def banked_inline_names(path: Path, definitions, banked: set) -> dict:
-    """Only an active inline body can keep an existing missing comparison."""
+def banked_unemitted_names(path: Path, definitions, banked: set) -> dict:
+    """Keep the identity of an active body VC6 may legitimately not emit.
+
+    Explicit inline bodies and ordinary file-static helpers can both disappear
+    after all calls expand. External ordinary functions must still emit and
+    therefore do not receive this fallback.
+    """
     from homm3.match.source_ownership import claim_definitions
     relative = path.relative_to(common.HOMM3_DIR).as_posix()
     return {d.va - common.IMAGE_BASE: d.mangled
             for d in claim_definitions(definitions)
-            if d.file == relative and d.inline and d.va is not None and d.mangled
+            if d.file == relative and (d.inline or d.internal)
+            and d.va is not None and d.mangled
             and (path.stem, d.va - common.IMAGE_BASE) in banked}
 
 
@@ -2817,7 +2823,7 @@ def run(only_units: list[str] | None = None,
         ir_names = ast_names(path, definitions, ir_names, problems)
         rows_by_unit[path.stem] = _extract_one(
             path, functions, ir_names, problems,
-            banked_inline_names(path, definitions, banked))
+            banked_unemitted_names(path, definitions, banked))
     headers.project(header_paths, functions,
                     {p.stem: names for p, names in zip(todo, ir_maps)},
                     rows_by_unit, problems, policy=policy, ownership=(definitions, errors, _reached))

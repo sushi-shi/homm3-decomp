@@ -71,12 +71,10 @@ public:
     unsigned char m_gameWon;
     signed char m_playerWinner;
     char m_paddingAfterWinner[2];
-    // Retail's body lies at 0x4bc340, between SavedGameHeader's constructor
-    // 0x4bc0e0 and its reset 0x4bc350 in game.cpp, and its three callers -
-    // that constructor, displayVCWinLoss 0x4f15e0 and
-    // rebuildFilteredPlayerSetup 0x580430 - all CALL it.  An in-class body is
-    // expanded at every one of those sites and leaves nothing to compare.
-    VictoryConditionStruct();
+    // E:\gamedcs\VictoryLossConditions.h, dc 0xbccdc
+    VA(0x004bc340, 0xE)  // anchor-caller (SavedGameHeader ctor), dc 0xbccdc
+    VictoryConditionStruct()
+      : m_type(-1), m_gameWon(0), m_playerWinner(-1) {}
     int appliesToPlayer(long playerId) const;
     // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
     // (0x4aaaa0) calls the pair back to back on the same
