@@ -132,7 +132,7 @@ unsigned char initializeSeerHutText()
         const char* name = sheet->getRow(row)[0];
         if (!name[0] || name[0] == ' ')
             continue;
-        g_seerHutNames.insert(g_seerHutNames.end(), name);
+        g_seerHutNames.push_back(name);
     }
 
     sheet->dispose();

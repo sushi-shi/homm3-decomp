@@ -63,8 +63,8 @@ public:
     virtual void newMapVFn18();
     virtual void newMapVFn1c();
     virtual void newMapVFn20();
-    virtual void newMapVFn24(int heroId, int player);
-    virtual void newMapVFn28(type_point point, int player);
+    virtual void notifyHeroDefeated(int heroId, int player);
+    virtual void notifyMonsterDefeated(type_point point, int player);
     virtual void newMapVFn2c();
     virtual void newMapVFn30();
     virtual void newMapVFn34();
@@ -1278,7 +1278,7 @@ private:
     int saveSignPool(TAbstractFile* outfile);  // 0x4b9270
 
 public:
-    unsigned char isHumanAlly(int playerNum) const;
+    bool isHumanAlly(int playerNum) const;
     // event_record.obj owns 0x49d6c0's body.
     void clearEventRecords(char playerId);
     type_point getUndergroundGateExit(const NewmapCell* cell) const;
@@ -1401,7 +1401,7 @@ public:
     void clearRecruits(int* recruits);
     void randomizeHeroPool();
     void replaceRecruit(int playerPos, long recruitSlot);
-    unsigned char growCoverOfDarkness();
+    bool growCoverOfDarkness();
     void initNewGame(int difficulty, int version,
                      NewSMapHeader* mapHeader, TAbstractFile* infile);
     void resetGame(int difficulty, int version, NewSMapHeader* mapHeader);
@@ -1471,13 +1471,14 @@ public:
             return CREATURE_NONE;
         return ::upgradedCreatureType(creature);
     }
-    // Dreamcast IsHumanTeam (game.h:839, dc 0x37f64) proves the unsigned-byte
-    // result, negative-team guard and IsHuman call. Complete's expanded copy
+    // Dreamcast IsHumanTeam (game.h:839, dc 0x37f64) has a bool result
+    // (_N in its public), a negative-team guard and an IsHuman call.
+    // Complete's expanded copy
     // in ClaimTown proves the latch-tested eight-player scan: the usual `for`
     // rotates its final branch, while this source produces all 76 retail
     // blocks exactly.
     VA(0x0042b9e0, 0x45)  // dc 0x37f64
-    inline unsigned char isHumanTeam(int teamNum) const
+    inline bool isHumanTeam(int teamNum) const
     {
         if (teamNum >= 0) {
             int player = 0;
@@ -1496,7 +1497,8 @@ public:
     // IsComputerTeam boundary. Complete keeps the same boundary but its
     // retail lowering calls the exact IsHumanTeam COMDAT above; retaining
     // the wrapper is what preserves the materialized logical negation.
-    inline unsigned char isComputerTeam(int teamNum) const
+    // The DC public ?IsComputerTeam@game@@QBA_NH@Z likewise proves bool.
+    inline bool isComputerTeam(int teamNum) const
     {
         if (teamNum < 0)
             return 0;
@@ -2020,7 +2022,7 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
 }
 
 // DC game.h:1370, is_human_ally maps a player through the canonical team helpers.
-inline unsigned char game::isHumanAlly(int playerNum) const
+inline bool game::isHumanAlly(int playerNum) const
 {
     return isHumanTeam(getTeam(playerNum));
 }

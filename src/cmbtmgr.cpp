@@ -2147,7 +2147,7 @@ void combatManager::setupAndLoadObstacles()
                 newLandmine.m_spellDamage = damage;
                 newLandmine.m_duration = 0;
                 newLandmine.m_dispelEffect = 0x3b;
-                m_obstacles.insert(m_obstacles.end(), 1, newLandmine);
+                m_obstacles.push_back(newLandmine);
                 int landmineSlot = m_obstacles.size();
                 landmineSlot--;
                 placeObstacle(newLandmine, landmineSlot, hex, hexcell::landMine);

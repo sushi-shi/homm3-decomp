@@ -474,16 +474,16 @@ const char* getStartingResourceName(int town)
 {
     switch (town) {
     case TOWN_RAMPART:
-        return g_generalText->getText(693);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_RAMPART_CAPTION);
     case TOWN_TOWER:
-        return g_generalText->getText(694);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_TOWER_CAPTION);
     case TOWN_INFERNO:
     case TOWN_CONFLUX:
-        return g_generalText->getText(695);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_INFERNO_CAPTION);
     case TOWN_DUNGEON:
-        return g_generalText->getText(696);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_CAPTION);
     default:
-        return g_generalText->getText(90);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_CAPTION);
     }
 }
 
@@ -492,16 +492,16 @@ const char* getStartingResourceDescription(int town)
 {
     switch (town) {
     case TOWN_RAMPART:
-        return g_generalText->getText(689);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_RAMPART_DESCRIPTION);
     case TOWN_TOWER:
-        return g_generalText->getText(690);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_TOWER_DESCRIPTION);
     case TOWN_INFERNO:
     case TOWN_CONFLUX:
-        return g_generalText->getText(691);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_INFERNO_DESCRIPTION);
     case TOWN_DUNGEON:
-        return g_generalText->getText(692);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_DESCRIPTION);
     default:
-        return g_generalText->getText(94);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_DESCRIPTION);
     }
 }
 

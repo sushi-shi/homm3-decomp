@@ -382,7 +382,7 @@ int earlySetup()
     if (!loadGameData())
         shutDown(DATA_COMPGEN(0x0067f5fc, remoteInitializationFailed,
             "Initialization failed!"));
-    g_game->m_worldMap.newfullMapFn00505DA0();
+    g_game->m_worldMap.loadObjectTypeTemplates();
     aiInitialize();
     if (!interpretCommandLine())
         return 1;
@@ -2251,10 +2251,10 @@ static void checkPlayerLoss()
             playerDead(i);
             if (i == g_game->getLocalPlayerGamePos()) {
                 g_goSolo = 0;
-                normalDialog(g_generalText->getText(96), NORMAL_DIALOG_DEFAULT,
+                normalDialog(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_DEFEATED), NORMAL_DIALOG_DEFAULT,
                              -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             } else {
-                const char* deadFormat = g_generalText->getText(6);
+                const char* deadFormat = g_generalText->getText(GENERAL_TEXT_PLAYER_DEFEATED_FORMAT);
                 sprintf(g_text, deadFormat, g_game->getPlayerName(i));
                 normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
                              -1, -1, -1, 5000, -1, 0);
@@ -2979,7 +2979,7 @@ void checkEndGame(int forceWin)
             CNormalWinMsg winMsg(g_game->getLocalPlayerGamePos());
             transmitRemoteData(&winMsg, 127, false, true);
         }
-        normalDialog(g_generalText->getText(660), NORMAL_DIALOG_DEFAULT, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_TEAM_VICTORY), NORMAL_DIALOG_DEFAULT, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
     } else {
         for (i = 0; i < g_gamePlayerCount; i++)

@@ -7118,17 +7118,20 @@ int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
 
 // DC game.cpp:7964/7970 uses town-vector accesses directly, not a cached
 // pointer. Restoring those accesses preserves the retained retail body at 100%.
+// The public's _N return and retail's direct AL load also require a bool
+// result local: unsigned char adds a normalization at the return. DC lowers
+// both source bool and unsigned char to T_UCHAR, so that record cannot decide.
 VA(0x004c7ba0, 0xAC)  // dc 0xb3030
-unsigned char game::growCoverOfDarkness()
+bool game::growCoverOfDarkness()
 {
-    unsigned char changed = 0;
+    bool changed = false;
     for (int i = 0; i < m_towns.size(); ++i) {
         if (m_towns[i].m_type == TOWN_NECROPOLIS
             && m_towns[i].hasBuilding(SPECIAL_BUILDING_ID, false)) {
             g_game->resetVisibility(m_towns[i].m_mapX, m_towns[i].m_mapY,
                                     m_towns[i].m_mapZ, m_towns[i].m_owner,
                                     20);
-            changed = 1;
+            changed = true;
         }
     }
     return changed;
@@ -7983,10 +7986,10 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m
                    static_cast<unsigned char>(z), 0, m_extraInfo);
 
     if (objType == TERRAIN_HOLE) {
-        m_worldMap.newfullMapFn00505F20(
+        m_worldMap.setObjectType(
             &object, TERRAIN_HOLE, 0, m_worldMap.cell(x, y, z)->m_groundSet);
     } else {
-        m_worldMap.newfullMapFn00505F20(
+        m_worldMap.setObjectType(
             &object, objType, objectIndex, -1);
     }
 
@@ -8054,7 +8057,7 @@ void game::convertObject(NewmapCell* tempCell)
         case MONSTER:
         case RANDOM_MONSTER:
             strcpy(tempText,
-                   m_worldMap.newfullMapFn00505EA0(MONSTER,
+                   m_worldMap.findObjectType(MONSTER,
                                                   tempCell->m_objectIndex)
                        ->m_imageName.c_str());
             tempCell->m_type = MONSTER;
@@ -8667,7 +8670,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     g_soundManager->m_playSounds = changeSounds;
 
     if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
-        g_advManager->bvMessage(g_generalText->getText(99));
+        g_advManager->bvMessage(g_generalText->getText(GENERAL_TEXT_SENDING_GAME));
 
     saveGame(g_config.m_scFile, 0, 0, !inGame, 1);
 
@@ -8959,7 +8962,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     g_advManager->trimLoopingSounds(4);
 
     if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
-        g_advManager->bvMessage(g_generalText->getText(100));
+        g_advManager->bvMessage(g_generalText->getText(GENERAL_TEXT_RECEIVING_GAME));
 
     int lastDataReceiveTime = GameTime::get();
     int changeSounds = g_soundManager->m_currentTerrainMusic;
@@ -9166,7 +9169,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                 break;
 
             case RS_SET_AS_HOST:
-                g_chatMan.systemMsg(g_generalText->getText(471));
+                g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
                 break;
 
             case RS_CHAT_MSG: {

@@ -616,7 +616,7 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
 // So the residual is the handle NUMBERING with the same local set, not a
 // missing or extra local: docs/vc6/handle-order.md's C1-capped class.
 VA(0x004fd950, 0x268)  // caller Load 0xfdbc0; TQuestGuard ctor/load + vector resize/push_back
-void NewfullMap::newfullMapFn004FD950(
+void NewfullMap::loadQuestGuardList(
     TAbstractFile* infile, int saveVersion)
 {
     int count;
@@ -721,7 +721,7 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
         return -1;
 
     if (saveVersion >= 25)
-        newfullMapFn004FD950(infile, saveVersion);
+        loadQuestGuardList(infile, saveVersion);
 
     count = loadTimedEventList(infile, saveVersion);
     if (count < 0)
@@ -3096,7 +3096,7 @@ void NewfullMap::soDTransformRandomDwellings()
 
         int generatorType;
         if (creature == CREATURE_STONE_GOLEM) {
-            newfullMapFn00505F20(dwelling.m_object, CREATURE_GENERATOR_4,
+            setObjectType(dwelling.m_object, CREATURE_GENERATOR_4,
                                   1, -1);
             newGenerator.m_genClass = CREATURE_GENERATOR_4;
             generatorType = 1;
@@ -3108,7 +3108,7 @@ void NewfullMap::soDTransformRandomDwellings()
                      && generatorType--);
             if (generatorType < 0)
                 continue;
-            newfullMapFn00505F20(dwelling.m_object, CREATURE_GENERATOR_1,
+            setObjectType(dwelling.m_object, CREATURE_GENERATOR_1,
                                   generatorType, -1);
         }
 
@@ -3871,7 +3871,7 @@ std::vector<int> g_invalidPlacementList;
 // resolve to 0x63a608; no DATA_COMPGEN binding exists in mapcell.obj because
 // the literal's physical owner is another compiland.
 VA(0x005042c0, 0x1A5)  // retail body + two callers: readMapObjects/loadMapObjects; no DC roster row
-void NewfullMap::newfullMapFn005042C0()
+void NewfullMap::rebuildObjectTypeIndex()
 {
     for (int objectClass = 0; objectClass < 232; ++objectClass) {
         for (int typeIndex = 0;
@@ -3932,7 +3932,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
             g_invalidPlacementList.push_back(x);
     }
 
-    newfullMapFn005042C0();
+    rebuildObjectTypeIndex();
     incProgressBar(1);
 
     std::vector<CSprite*> oldSprites;
@@ -4035,7 +4035,7 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
     }
 
     incProgressBar(1);
-    newfullMapFn005042C0();
+    rebuildObjectTypeIndex();
 
     std::vector<CSprite*> oldSprites;
     oldSprites.resize(m_sprites.size());
@@ -4390,21 +4390,21 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
 }
 
 VA(0x00505d20, 0x3F)
-void NewfullMap::newfullMapFn00505D20(int heroId, int player)
+void NewfullMap::notifyHeroDefeated(int heroId, int player)
 {
     for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
-        m_mapObjectData[i]->newMapVFn24(heroId, player);
+        m_mapObjectData[i]->notifyHeroDefeated(heroId, player);
 }
 
 VA(0x00505d60, 0x3F)
-void NewfullMap::newfullMapFn00505D60(type_point point, int player)
+void NewfullMap::notifyMonsterDefeated(type_point point, int player)
 {
     for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
-        m_mapObjectData[i]->newMapVFn28(point, player);
+        m_mapObjectData[i]->notifyMonsterDefeated(point, player);
 }
 
 VA(0x00505da0, 0xF8)
-void NewfullMap::newfullMapFn00505DA0()
+void NewfullMap::loadObjectTypeTemplates()
 {
     TObjectTypeTable objectTypeTable;
     objectTypeTable.load(
@@ -4419,7 +4419,7 @@ void NewfullMap::newfullMapFn00505DA0()
 }
 
 VA(0x00505ea0, 0x80)  // linkorder + this@+0xdc=objectTypeIndex; reverse-find CObjectType by extra, caller game::ConvertObject, retail-only
-CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
+CObjectType* NewfullMap::findObjectType(int objectType, int extra)
 {
     int i = m_objectTypeIndex[objectType].size();
     while (i--) {
@@ -4443,7 +4443,7 @@ CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
 // .test(terrain) instead compacts the frame from 0xc to 0x8. There is no
 // missing-record failure branch in retail; the caller must supply a match.
 VA(0x00505f20, 0x157)  // linkorder + this@+0xdc=objectTypeIndex; caller game::InsertObject, retail-only
-void NewfullMap::newfullMapFn00505F20(CObject* object, int objectType,
+void NewfullMap::setObjectType(CObject* object, int objectType,
                                        int objectIndex, int terrain)
 {
     int i = m_objectTypeIndex[objectType].size();

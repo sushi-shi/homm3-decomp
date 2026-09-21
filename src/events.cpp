@@ -2144,14 +2144,10 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
                 && g_spellTraits[spell].m_level <= secondSpellLevel) {
                 secondHero->addSpell(spell);
                 if (g_currentPlayer->isLocalHuman())
-            // DEPTH LADDER (docs/vc6/inliner.md 6b): this ONE append is
-            // `insert(end(), x)`; the other four in this body stay
-            // push_back.  92.1640 -> 94.7989, and a greedy second round over
-            // the remaining four finds nothing.  Site #1 measures the same
-            // 94.7989, #2 93.05 and #3 93.33; the `.append` -> `+=` rung on
-            // the thirteen text stores is a flat 93.2791 at every site, so
-            // this append is the one the budget turns on.
-            spellsTaught.insert(spellsTaught.end(), spell);
+                    // Historical insert(end(), value) probe reached 94.80%.
+                    // Ordinary appends preserve the source operation; 92.16%
+                    // remains inline-boundary debt, not a reason to paste STL.
+                    spellsTaught.push_back(spell);
             }
 
             if (secondHero->isInSpellbook(spell)
@@ -3646,7 +3642,7 @@ void advManager::monstersFlee(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    g_game->m_worldMap.newfullMapFn00505D60(point, currentHero->m_owner);
+    g_game->m_worldMap.notifyMonsterDefeated(point, currentHero->m_owner);
     eraseAndFizzle(cell, point, FIZZLE_SOUND_KILL_FADE);
     if (g_game->m_mapHeader.m_victoryCondition.checkForDefeatedMonsterWin(
             currentHero, point))
@@ -3683,7 +3679,7 @@ bool advManager::monstersJoin(hero* currentHero, NewmapCell* cell,
         }
     }
 
-    g_game->m_worldMap.newfullMapFn00505D60(point, currentHero->m_owner);
+    g_game->m_worldMap.notifyMonsterDefeated(point, currentHero->m_owner);
     if (!currentHero->m_army.add(monType, numMons, -1)) {
         if (humanPlayer)
             doMonsterJoinDialog(currentHero, monType, numMons);
@@ -3749,7 +3745,7 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
         }
     }
 
-    g_game->m_worldMap.newfullMapFn00505D60(point, currentHero->m_owner);
+    g_game->m_worldMap.notifyMonsterDefeated(point, currentHero->m_owner);
     g_game->m_players[currentHero->m_owner].m_resources[GOLD] -= cost;
     if (!currentHero->m_army.add(monType, numMons, -1)) {
         if (humanPlayer)
@@ -6215,12 +6211,12 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
 combatFinished:
     int winner = g_combatManager->m_winner;
     if (winner != 0)
-        g_game->m_worldMap.newfullMapFn00505D20(leftHero->m_id, rightPlayer);
+        g_game->m_worldMap.notifyHeroDefeated(leftHero->m_id, rightPlayer);
     if (winner != 1) {
         if (rightHero)
-            g_game->m_worldMap.newfullMapFn00505D20(rightHero->m_id, leftPlayer);
+            g_game->m_worldMap.notifyHeroDefeated(rightHero->m_id, leftPlayer);
         else
-            g_game->m_worldMap.newfullMapFn00505D60(point, leftPlayer);
+            g_game->m_worldMap.notifyMonsterDefeated(point, leftPlayer);
     }
     if (winner == -1) {
         if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(

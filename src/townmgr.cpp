@@ -8252,11 +8252,9 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
             }
             if (bestHero) {
                 g_heroWidgetMap[column] = bestHero->m_id;
-                // DEPTH LADDER: this ONE append is `insert(end(), x)`;
-                // the other eight in this body stay push_back.  93.3762 ->
-                // 94.0399 (site #0 is 93.6631, #2..#4 are 93.90 each) and a
-                // greedy second round finds nothing.
-                m_widgets.insert(m_widgets.end(), new bitmapBorder(
+                // Historical insert(end(), value) probe: 93.38 -> 94.04%.
+                // Keep the ordinary append proven by DC's widget sequence.
+                m_widgets.push_back(new bitmapBorder(
                     66 * column + 0x104, 0x168, 0x30, 0x20,
                     column + HERO_P0,
                     g_heroTraits[bestHero->m_portrait].m_smallPortraitName,

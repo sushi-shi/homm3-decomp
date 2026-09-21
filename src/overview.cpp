@@ -1686,7 +1686,7 @@ TOverviewWindow::TOverviewWindow()
             739, i * 57 + 81, 50, 16, "",
             "smalfont.fnt", font::PRIMARY, -1,
             font::RIGHT_JUSTIFIED, 0, 8));
-        m_widgets.insert(m_widgets.end(), m_flaggableCountWidgets.back());
+        m_widgets.push_back(m_flaggableCountWidgets.back());
     }
 
     // SEVEN resource icons, not six (found 2026-09-05 by the tree-wide
@@ -1882,16 +1882,11 @@ TOverviewWindow::TOverviewWindow()
         if (item < 0) {
             item = m_flaggableItems.size();
             overview_item_record record = { 'W', 0 };
-            // See the constructor's ladder note: this append and the flag-label
-        // one are the only two of the 42 whose `insert(end(), x)` spelling
-        // pays (+6.89 here).  NAMING THE VECTOR on top of it is another
-        // +0.24 (90.2053 -> 90.4407): retail reads `_Last` through the
-        // vector's own address instead of folding the member offset off
-        // `this`, and it is one of the two frame dwords this body is short.
-        // The same reference on the flag-label append LOSES 0.60, and both
-        // together 0.61 - per-site, like everything else about this lever.
-        std::vector<overview_item_record>& items = m_flaggableItems;
-        items.insert(items.end(), record);
+            // Historical insert(end(), value) plus a vector-reference local
+            // reached 90.44%, but the reference existed only to steer stack
+            // allocation. Keep the natural member append and recover the
+            // constructor's real helper/lifetime boundaries separately.
+            m_flaggableItems.push_back(record);
         }
         ++m_flaggableItems[item].m_count;
     }

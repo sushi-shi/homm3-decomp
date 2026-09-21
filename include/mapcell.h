@@ -1303,15 +1303,13 @@ public:
     // 0x4fd950, `ret 8`. One of the four retail-only rows this compiland's
     // span audit already flags as having no Dreamcast counterpart; Load
     // reaches it, and only when the save version is at least 25.
-    void newfullMapFn004FD950(TAbstractFile* infile, int saveVersion);
+    void loadQuestGuardList(TAbstractFile* infile, int saveVersion);
     // 0x5042c0, nullary. Reached by BOTH readMapObjects and loadMapObjects,
     // right after the object-type list is deserialized. It rebuilds the
-    // per-class object-type index: the 232-entry array of vectors at
-    // NewfullMap+0xdc that this tree does not model yet. Named for its
-    // address on NewfullMapFn_00505F20's precedent - the Dreamcast mapcell
-    // roster runs loadObjectType -> $E482..$E485 -> readMapObjects with
-    // nothing between, so no surviving symbol names it.
-    void newfullMapFn005042C0();
+    // per-class object-type index: the 232-entry array of vectors at +0xdc.
+    // This role-based name is provisional: the Dreamcast roster has no
+    // corresponding procedure between loadObjectType and readMapObjects.
+    void rebuildObjectTypeIndex();
     void soDTransformRandomDwellings();
     void loadShipyards();
     int readObjectType(TAbstractFile* infile, CObjectType& objectType);
@@ -1407,22 +1405,24 @@ private:
     void calcCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
 
 public:
-    // (0x4ad470) calls it at 0x4ae45a/0x4ae483 with (hero->id, opposing player)
-    void newfullMapFn00505D20(int heroId, int player);
-    void newfullMapFn00505D60(type_point point, int player);
-    void newfullMapFn00505DA0();
+    // Role-based names. DoCombat (0x4ad470) broadcasts the defeated hero
+    // and winning player at 0x4ae45a/0x4ae483; monster removal broadcasts
+    // the defeated/joined/fled stack's location. Quest slots +0x24/+0x28
+    // implement the same notifications (hero_defeated/monster_defeated).
+    void notifyHeroDefeated(int heroId, int player);
+    void notifyMonsterDefeated(type_point point, int player);
+    void loadObjectTypeTemplates();
     // Retail-only helper at 0x505f20. Its behavior selects or appends the
     // matching object-type/sprite pair and writes the resulting type index.
-    // No surviving symbol names it, so the address-bearing spelling remains
-    // provisional until a source identity is proven.
-    void newfullMapFn00505F20(CObject* object, int objectType,
+    // No surviving symbol names it; setObjectType describes its retail role.
+    void setObjectType(CObject* object, int objectType,
                                int objectIndex, int terrain);
     // Retail-only helper at 0x505ea0, used by ConvertObject and hiscore.
     // It scans m_objectTypeIndex[objectType] backwards for a matching extra
     // and returns its address. The array is a Complete addition absent in
     // CodeView NewfullMap type 0x3450. No surviving symbol names the helper;
-    // its address-bearing spelling remains provisional.
-    CObjectType* newfullMapFn00505EA0(int objectType, int extra);
+    // findObjectType is a provisional role-based name.
+    CObjectType* findObjectType(int objectType, int extra);
     NewfullMap();
     ~NewfullMap();
     void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);

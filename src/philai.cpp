@@ -165,7 +165,8 @@ void aiVisitBlackMarket(hero* currentHero, TBlackMarket* blackMarket)
 // E:\gamedcs\philai.cpp:123
 // Complete expands both known calls; the helper boundary is retained from
 // the Dreamcast source rather than flattening the phase adjustment twice.
-inline void incrementHourGlass()
+// DC marks IncrementHourGlass static; retail auto-inlines the ordinary helper.
+static void incrementHourGlass()
 {
     int numHeroes = g_currentPlayer->m_numHeroes;
     ++g_curHourGlassPhase;
@@ -209,19 +210,6 @@ static void checkForTown(hero* currentHero)
     aiEnterTown(currentHero, g_game->getTown(townId));
 }
 
-#if 0  // @carcass
-
-// get_artifact_purchase_value promoted to a retail claim below. Its active
-// definition remains here in Dreamcast source order.
-
-// E:\gamedcs\philai.cpp:326
-// Retail claim promoted to the reconstructed body below; DC identity retained.
-void buyArtifacts(hero* current_hero, TArtifact* artifact_list, long market_count)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // E:\gamedcs\philai.cpp:207. Retail /Ob2 folds this source helper into
 // AI_enter_town. Dreamcast proves the helper boundary and its five named
@@ -1781,27 +1769,6 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     }
 }
 
-#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
-
-// E:\gamedcs\philai.cpp:3645.  Retail 0x524dd0/243 B: same three-argument
-// shape returning a byte, sweeping the 28 skill slots against the hero class's
-// gainSecondarySkillChance row and calling get_skill_value above.  312 -> 243 B,
-// and AI_choose_secondary_skill's tail is its one caller. Complete's call site
-// passes the skill and choice as full-width integers.
-// Retail claim promoted to the reconstructed body below.
-unsigned char wantsSkill(const hero* our_hero, TSecondarySkill first, unsigned char complex_choice)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3744
-// Retail claim promoted to the reconstructed Complete-signature body below.
-void aiVisitUniversity(hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x00524d20, 0xa3)  // dc 0x11350c
 long getSchoolValue(const hero* ourHero, TSecondarySkill skill)
@@ -2591,16 +2558,6 @@ void aiPurchaseCreatures(hero* currentHero, generator* currentGenerator)
                           hasAngelicAlliance);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\philai.cpp:2513
-// Retail claim promoted to the reconstructed body below; DC identity retained.
-void aiVisitHillFort(hero* current_hero)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x00527bb0, 0x11D)  // dc 0x111630
 void aiVisitHillFort(hero* currentHero)
@@ -3117,16 +3074,6 @@ int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell)
         static_cast<short>(cell->m_extraInfo));
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\philai.cpp:2208
-// Retail claim promoted to the reconstructed body below.
-long valueOfRecruiting(const hero* current_hero, TCreatureType creature, short amount)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x0052a710, 0xad)  // dc 0x110c90
 long valueOfRecruiting(const hero* currentHero, TCreatureType creature,

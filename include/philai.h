@@ -84,8 +84,6 @@ inline int valueOfLighthouse(NewmapCell* cell);
 int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell);
 inline int valueOfMercenaryCamp(const hero* currentHero,
                                        NewmapCell* cell);
-int moraleIncreaseValue(const hero* currentHero, int value);
-int luckIncreaseValue(const hero* currentHero, int value);
 inline long valueOfMagusHut(long playerId);
 int valueOfMine(const hero* currentHero, NewmapCell* cell);
 long valueOfMonsters(const hero* currentHero, NewmapCell* cell,

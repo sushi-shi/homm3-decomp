@@ -52,8 +52,8 @@ public:
     // its first rows.size() expands, but this insertion path calls size,
     // the pair constructor and row insert. Flattening this lookup into
     // the caller expands the pair constructor and scores 47.77 vs 54.77.
-    // Keep the returned entry distinct from the iterator passed by reference
-    // to vector::insert. In setImageName this preserves retail's existing-
+    // Keep the returned entry distinct from the iterator appended to m_rows.
+    // In setImageName this preserves retail's existing-
     // entry EAX path and reloads only after insertion (fn+0xe8). With the
     // ordinary registry accessor, returning the mapped value by value also
     // restores the caller's scratch allocation; see setImageName's controls.
@@ -67,7 +67,7 @@ public:
             std::pair<TNameIndex::iterator, bool> inserted = m_nameIndex.insert(
                 TNameIndex::value_type(name, m_rows.size()));
             found = inserted.first;
-            m_rows.insert(m_rows.end(), found);
+            m_rows.push_back(found);
             result = found;
         }
         return result->second;

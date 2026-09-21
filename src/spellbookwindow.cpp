@@ -410,8 +410,7 @@ void TSpellbookWindow::gotoPage(int page)
                 school = highestSchool;
             TSkillMastery mastery = m_hero->getSpellLevel(
                 spell, m_onMagicPlains);
-            availableSpells.insert(availableSpells.end(),
-                          TSpellbookEntry(spell, school, mastery));
+            availableSpells.push_back(TSpellbookEntry(spell, school, mastery));
         }
     }
 

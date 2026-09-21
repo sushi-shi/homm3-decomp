@@ -524,7 +524,7 @@ THighScoreWindow::THighScoreWindow()
     for (i = 0; i < 11; ++i) {
         m_creatures[1][i] = new iconWidget(
             649, 26 + 50 * i, 64, 64, 1004 + i,
-            g_game->m_worldMap.newfullMapFn00505EA0(
+            g_game->m_worldMap.findObjectType(
                 MONSTER, highScoreManager::getMonType(
                     g_highScoreManager->m_highScores[1][i].m_score,
                     1))->m_imageName.c_str(),
@@ -536,7 +536,7 @@ THighScoreWindow::THighScoreWindow()
     for (i = 0; i < 11; ++i) {
         m_creatures[0][i] = new iconWidget(
             649, 26 + 50 * i, 64, 64, 1015 + i,
-            g_game->m_worldMap.newfullMapFn00505EA0(
+            g_game->m_worldMap.findObjectType(
                 MONSTER, highScoreManager::getMonType(
                     g_highScoreManager->m_highScores[0][i].m_score,
                     0))->m_imageName.c_str(),
@@ -762,14 +762,14 @@ int highScoreWindowHandler(message& msg)
                     g_highScoreManager->m_highScores[1][reset].m_score,
                     1);
                 g_highScoreWindow->m_creatures[1][reset]->setSprite(
-                    g_game->m_worldMap.newfullMapFn00505EA0(
+                    g_game->m_worldMap.findObjectType(
                         MONSTER, monsterType)->m_imageName.c_str());
                 g_highScoreWindow->m_creatures[1][reset]->setIconFrame(0);
                 monsterType = highScoreManager::getMonType(
                     g_highScoreManager->m_highScores[0][reset].m_score,
                     0);
                 g_highScoreWindow->m_creatures[0][reset]->setSprite(
-                    g_game->m_worldMap.newfullMapFn00505EA0(
+                    g_game->m_worldMap.findObjectType(
                         MONSTER, monsterType)->m_imageName.c_str());
                 g_highScoreWindow->m_creatures[0][reset]->setIconFrame(0);
             }

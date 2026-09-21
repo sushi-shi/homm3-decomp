@@ -813,7 +813,7 @@ void type_record_player_death::replay(unsigned char draw)
 {
     if (draw) {
         std::string text;
-        text = formatString(g_generalText->getText(6),
+        text = formatString(g_generalText->getText(GENERAL_TEXT_PLAYER_DEFEATED_FORMAT),
                              g_game->getPlayerName(m_extra));
         normalDialog(text.c_str(), 1, -1, -1, 10, m_extra, -1, -1, -1, 5000,
                      -1, 0);

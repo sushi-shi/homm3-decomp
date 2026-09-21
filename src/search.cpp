@@ -64,7 +64,7 @@ int searchArray::buildPath(const hero* currentHero, long limit)
         }
 
         if (currentPathCell->m_cost <= limit)
-            m_result.insert(m_result.end(), 1, currentPathCell);
+            m_result.push_back(currentPathCell);
 
         if (currentPathCell->m_lastPoint == dest) {
             clearPath();

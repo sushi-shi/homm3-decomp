@@ -1511,7 +1511,7 @@ int CWaitForReadyPlayersDlg::handleMessage(message& msg)
                     return onPlayerDrop(netMsg, msg);
 
                 case RS_SET_AS_HOST:
-                    g_chatMan.systemMsg(g_generalText->getText(471));
+                    g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
                     break;
 
                 case RS_SESSION_LOST:
@@ -1747,7 +1747,7 @@ unsigned char handleMPlayerLaunch()
         sessions.destroy(1);
 
         if (!connected) {
-            normalDialog(g_generalText->getText(468), 1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_RECONNECT_FAILED), 1,
                          -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             remoteCleanup();
             return 0;
@@ -1970,7 +1970,7 @@ void handleNewHost()
                 &msg, g_netLocalGamePos, false, true);
         }
     }
-    g_chatMan.systemMsg(g_generalText->getText(471));
+    g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
 }
 
 // E:\gamedcs\remote.cpp:2317. Dreamcast supplies the public boundary and
@@ -2040,7 +2040,7 @@ void handlePlayerDead(int deadGuy, unsigned char showMsg)
         remoteCleanup();
 
         if (showMsg) {
-            strcpy(g_text, g_generalText->getText(96));
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_DEFEATED));
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
         }
@@ -2049,7 +2049,7 @@ void handlePlayerDead(int deadGuy, unsigned char showMsg)
         g_gameOver = 1;
     } else {
         if (!g_goSolo && showMsg) {
-            sprintf(g_text, g_generalText->getText(6),
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_PLAYER_DEFEATED_FORMAT),
                     g_game->getPlayerName(deadGuy));
             normalDialog(g_text, 1, -1, -1, 10, deadGuy, -1, -1,
                          -1, 5000, -1, 0);
@@ -2107,12 +2107,12 @@ void handleNormalWinMsg(CNetMsg* netMsg)
     int localPlayer = g_game->getLocalPlayerGamePos();
 
     if (g_game->onSameTeam(message->m_gamePos, localPlayer)) {
-        normalDialog(g_generalText->getText(660), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_TEAM_VICTORY), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         g_defeatedAllPlayers = 1;
         g_normalVictory = 1;
     } else {
-        normalDialog(g_generalText->getText(661), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_TEAM_DEFEAT), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         g_defeatedAllPlayers = 0;
     }
@@ -2137,7 +2137,7 @@ void CLevelPickWaitDlg::waitForLevels(int fromWho)
     } while (creature == CREATURE_ARCH_DEVIL
              || creature == CREATURE_DEVIL);
 
-    setup(g_generalText->getText(472), g_mediumFont,
+    setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_LEVEL_SELECTION), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 0);
     doModal(0);
 }
@@ -2238,7 +2238,7 @@ void CWaitForRemoteBattleDlg::wait(int playerPos)
 {
     m_playerPos = playerPos;
     int creature = random(0, 111);
-    setup(g_generalText->getText(473), g_mediumFont,
+    setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_REMOTE_BATTLE), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 12);
     doModal(0);
 }
@@ -2260,7 +2260,7 @@ int CWaitForRemoteBattleDlg::handleMessage(message& msg)
                 return onPlayerDrop(netMsg, msg);
 
             case RS_SET_AS_HOST:
-                g_chatMan.systemMsg(g_generalText->getText(471));
+                g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
                 break;
 
             case RS_SESSION_LOST:
@@ -2384,9 +2384,9 @@ void CGameTransferSmack::setPercentage(float pct)
     char text[256];
     char percentageText[256];
     if (m_sending)
-        strcpy(text, g_generalText->getText(99));
+        strcpy(text, g_generalText->getText(GENERAL_TEXT_SENDING_GAME));
     else
-        strcpy(text, g_generalText->getText(100));
+        strcpy(text, g_generalText->getText(GENERAL_TEXT_RECEIVING_GAME));
     sprintf(percentageText,
             DATA_COMPGEN(0x00682e40, transferPercentageFormat, "\n%0.0f%%"),
             pct * 100.0f);
@@ -2631,9 +2631,9 @@ void CTurnDuration::checkForWarning()
     if (timeLeft > 60000) {
         float minutes = timeLeft / 60000.0f;
         if (minutes >= 0.8 && minutes <= 1.2)
-            g_chatMan.turnDurationMsg(g_generalText->getText(629));
+            g_chatMan.turnDurationMsg(g_generalText->getText(GENERAL_TEXT_TURN_ONE_MINUTE_REMAINING));
         else
-            g_chatMan.turnDurationMsg(g_generalText->getText(630), minutes);
+            g_chatMan.turnDurationMsg(g_generalText->getText(GENERAL_TEXT_TURN_MINUTES_REMAINING_FORMAT), minutes);
     } else {
         // A 29-second remainder is announced as the 30-second mark. The
         // bound is spelled as a named local rather than an enumerator on
@@ -2645,9 +2645,9 @@ void CTurnDuration::checkForWarning()
         if (seconds == roundUpSeconds)
             seconds = 30;
         if (seconds == 1)
-            g_chatMan.turnDurationMsg(g_generalText->getText(627));
+            g_chatMan.turnDurationMsg(g_generalText->getText(GENERAL_TEXT_TURN_ONE_SECOND_REMAINING));
         else
-            g_chatMan.turnDurationMsg(g_generalText->getText(628), seconds);
+            g_chatMan.turnDurationMsg(g_generalText->getText(GENERAL_TEXT_TURN_SECONDS_REMAINING_FORMAT), seconds);
     }
 
     m_lastWarned = currTime;

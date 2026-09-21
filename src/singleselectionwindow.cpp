@@ -361,16 +361,16 @@ inline const char* getResourceBonusCaption(int townType)
 {
     switch (townType) {
     case TOWN_RAMPART:
-        return g_generalText->getText(693);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_RAMPART_CAPTION);
     case TOWN_TOWER:
-        return g_generalText->getText(694);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_TOWER_CAPTION);
     case TOWN_INFERNO:
     case TOWN_CONFLUX:
-        return g_generalText->getText(695);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_INFERNO_CAPTION);
     case TOWN_DUNGEON:
-        return g_generalText->getText(696);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_CAPTION);
     default:
-        return g_generalText->getText(90);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_CAPTION);
     }
 }
 
@@ -379,16 +379,16 @@ inline const char* getResourceBonusDescription(int townType)
 {
     switch (townType) {
     case TOWN_RAMPART:
-        return g_generalText->getText(689);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_RAMPART_DESCRIPTION);
     case TOWN_TOWER:
-        return g_generalText->getText(690);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_TOWER_DESCRIPTION);
     case TOWN_INFERNO:
     case TOWN_CONFLUX:
-        return g_generalText->getText(691);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_INFERNO_DESCRIPTION);
     case TOWN_DUNGEON:
-        return g_generalText->getText(692);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_DESCRIPTION);
     default:
-        return g_generalText->getText(94);
+        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_DESCRIPTION);
     }
 }
 
@@ -435,7 +435,7 @@ unsigned char saveValid(const char* filename)
     unsigned char valid = 0;
 
     if (getAvailableDiskSpace() < 0x100000) {
-        normalDialog(g_generalText->getText(709), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_INSUFFICIENT_SAVE_DISK_SPACE), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -446,7 +446,7 @@ unsigned char saveValid(const char* filename)
     if (strlen(name) != 0) {
         g_windowManager->m_dialogReturn = DIALOG_RETURN_ACCEPT;
         if (savedGameExists(name)) {
-            sprintf(g_text, g_generalText->getText(494), name);
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_OVERWRITE_SAVE_PROMPT_FORMAT), name);
             normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
@@ -2636,7 +2636,7 @@ void TSingleSelectionWindow::createFilterWidgets()
         current->m_highlightedFrame = 2;
         current->setDisabledFrame(1);
         widget* added = current;
-        widgets.insert(widgets.end(), added);
+        widgets.push_back(added);
     }
 
     {
@@ -2668,7 +2668,7 @@ void TSingleSelectionWindow::createFilterWidgets()
         current->m_highlightedFrame = 2;
         current->setDisabledFrame(1);
         widget* added = current;
-        widgets.insert(widgets.end(), added);
+        widgets.push_back(added);
     }
 
     {
@@ -2700,7 +2700,7 @@ void TSingleSelectionWindow::createFilterWidgets()
         current->m_highlightedFrame = 2;
         current->setDisabledFrame(1);
         widget* added = current;
-        widgets.insert(widgets.end(), added);
+        widgets.push_back(added);
     }
 
     {
@@ -2730,7 +2730,7 @@ void TSingleSelectionWindow::createFilterWidgets()
         current->m_highlightedFrame = 2;
         current->setDisabledFrame(1);
         widget* added = current;
-        widgets.insert(widgets.end(), added);
+        widgets.push_back(added);
     }
 
     {
@@ -2752,7 +2752,7 @@ void TSingleSelectionWindow::createFilterWidgets()
         current->m_highlightedFrame = 2;
         current->setDisabledFrame(1);
         widget* added = current;
-        widgets.insert(widgets.end(), added);
+        widgets.push_back(added);
     }
 
     {
@@ -2774,7 +2774,7 @@ void TSingleSelectionWindow::createFilterWidgets()
         current->m_highlightedFrame = 2;
         current->setDisabledFrame(1);
         widget* added = current;
-        widgets.insert(widgets.end(), added);
+        widgets.push_back(added);
     }
 
     {
@@ -7116,7 +7116,7 @@ void TSingleSelectionWindow::onSetAGRMsg(
 VA(0x0058B120, 0x3E8)  // dc 0x141b98
 unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
 {
-    g_chatMan.systemMsg(g_generalText->getText(471));
+    g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
     displayChat();
     CNewHostMsg msg(g_thisNetPlayerInfo.m_dpid);
     transmitRemoteDataDPID(&msg, 0, false, true);
