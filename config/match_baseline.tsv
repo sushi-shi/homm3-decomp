@@ -687,7 +687,7 @@ bitmap24	??0Bitmap24Bit@@QAE@PBDHHPBEH@Z	100.0000	100.0000	100.0000	0x4ed50	toke
 bitmap24	??1Bitmap24Bit@@UAE@XZ	100.0000	100.0000	100.0000	0x4eec0	tokens1:a43a8189d625
 bitmap24	??_GBitmap24Bit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4ed20	-
 bitmap24	?adjustHSV@Bitmap24Bit@@QAEXHHHHMMMM@Z	100.0000	100.0000	100.0000	0x4f190	tokens1:2235ee1bc17d
-bitmap24	?draw@Bitmap24Bit@@QBEXHHHHPAGHHHHH@Z	85.0312	85.0312	100.0000	0x4f010	tokens1:488f036267ac
+bitmap24	?draw@Bitmap24Bit@@QBEXHHHHPAGHHHHH@Z	100.0000	100.0000	100.0000	0x4f010	tokens1:34a97b9bc7f0
 bitmap24	?draw@Bitmap24Bit@@QBEXHHHHPAVBitmap16Bit@@HH@Z	100.0000	100.0000	100.0000	0x4efd0	tokens1:9e673f0cb9b0
 bitmap24	?getSize@Bitmap24Bit@@UBEIXZ	100.0000	100.0000	100.0000	0x4f180	tokens1:a622d1ffea8b
 bitmap24	?importPCXFile@Bitmap24Bit@@AAEHPBD@Z	100.0000	100.0000	100.0000	0x4eef0	tokens1:1c1013d93c27
@@ -946,7 +946,7 @@ cmbtmgr	?enemyIsAdjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	100.
 cmbtmgr	?erase@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AViterator@12@V312@0@Z	100.0000	100.0000	100.0000	0x6a740	-
 cmbtmgr	?erase@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AViterator@12@V312@@Z	100.0000	100.0000	100.0000	0x6a870	-
 cmbtmgr	?freeArmies@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x639e0	tokens1:3121e32b6f63
-cmbtmgr	?freeIcons@combatManager@@AAEXXZ	94.3333	94.3333	100.0000	0x63500	tokens1:8e971fefe47e
+cmbtmgr	?freeIcons@combatManager@@AAEXXZ	94.3333	94.3333	100.0000	0x63500	tokens1:92507d666f72
 cmbtmgr	?generateMap@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x642d0	tokens1:9db59ff65300
 cmbtmgr	?getBackgroundName@combatManager@@QAEPBDXZ	100.0000	100.0000	100.0000	0x646d0	tokens1:66c77ec0bf9f
 cmbtmgr	?getDistance@combatManager@@SIJJJ@Z	100.0000	100.0000	100.0000	0x69670	tokens1:c41896568c5b
@@ -4401,7 +4401,7 @@ town	?initialize@town@@QAEXPBVTownExtra@@@Z	89.7688	89.7688	100.0000	0x1c0670	to
 town	?initializeBuildingCostsTables@town@@SIEXZ	100.0000	100.0000	100.0000	0x1c14c0	tokens1:6977d74db776
 town	?initializeBuildings@@YIXPAVtown@@PBVTownExtra@@@Z	86.9676	86.9676	100.0000	0x1c08c0	tokens1:9cb07bffd44b
 town	?initializeHordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60	tokens1:12a6d91f4df1
-town	?initializeSpells@town@@QAEXPBVTownExtra@@@Z	82.4621	82.4621	100.0000	0x1be600	tokens1:3349b095b152
+town	?initializeSpells@town@@QAEXPBVTownExtra@@@Z	82.4621	82.4621	100.0000	0x1be600	tokens1:c1392f076a78
 town	?isLegalBuilding@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0	tokens1:d9bc20285f48
 town	?load@town@@QAEHPAVTAbstractFile@@H@Z	98.1694	98.1694	98.1694	0x1bcd60	tokens1:9c647c175329
 town	?placeInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0	tokens1:e8cebeabfe11

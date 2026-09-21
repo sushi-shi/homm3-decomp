@@ -717,23 +717,10 @@ void town::initializeSpells(const TownExtra* townSetup)
 
     int guildLevel = 5;
     while (guildLevel > 0
-           && !(m_built & g_bitNumber[guildLevel - 1]))
+           && !hasBuilding(guildLevel - 1, false))
         --guildLevel;
-    m_mageLevel = static_cast<unsigned char>(guildLevel);
-    memset(m_mageGuildSpellCounts, 0, sizeof(m_mageGuildSpellCounts));
-
-    for (int availableLevel = 1;
-         availableLevel <= static_cast<signed char>(m_mageLevel);
-         ++availableLevel) {
-        int count = g_mageGuildBaseSpellCounts[availableLevel - 1];
-        if (m_type == TOWN_TOWER && (m_active & g_bitNumber[EXTRA_1_ID]))
-            ++count;
-        while (count > 0
-               && m_mageGuildSpells[availableLevel - 1][count - 1] == -1)
-            --count;
-        m_mageGuildSpellCounts[availableLevel - 1] =
-            static_cast<signed char>(count);
-    }
+    m_mageLevel = static_cast<signed char>(guildLevel);
+    setSpellsAvailable();
 }
 
 // E:\gamedcs\town.cpp:1206
