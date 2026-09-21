@@ -1952,25 +1952,20 @@ long type_AI_spellcaster::getBerserkValue(const army* enemy, type_enchant_data c
     return total / targets.size();
 }
 
+// DC ai_tactical.cpp:2417/2427/2445 names cannot_attack and the by-value
+// min/max wrappers. The wrappers' parameter copies are visible in retail as
+// the two stack temporaries around each reference-returning selector. Clang
+// cannot choose between this project's int and double overloads for Win32
+// long, but VC6 selects the int wrapper and reproduces retail exactly.
 VA(0x0043a500, 0x16E)  // dc 0x40ac0
 long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data caster) const
 {
-    if (m_winLikely)
+    if (m_winLikely || enemy->cannotAttack())
         return 0;
-    if (enemy->m_spellInfluence[62])
-        return 0;
-    if (enemy->m_spellInfluence[70])
-        return 0;
-    if (enemy->m_spellInfluence[74])
-        return 0;
-    if (enemy->is(creatureImmobilized))
-        return 0;
-    if (enemy->m_creatureType == CREATURE_FIRST_AID_TENT
-            || enemy->m_creatureType == CREATURE_AMMO_CART)
-        return 0;
-    long best = 0;
+    long total = 0;
     const army* enemyRow = g_combatManager->m_armies[m_enemySide];
-    long turns = cppMin(g_hypnotizeTurns[caster.m_mastery], m_estimate.m_roundsLeft);
+    long turns = ::min(g_hypnotizeTurns[caster.m_mastery],
+                       m_estimate.m_roundsLeft);
     if (enemy->is(creatureDone))
         turns--;
     if (turns == 0)
@@ -1984,9 +1979,9 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
             continue;
         if (!g_combatManager->m_cells[enemyRow->m_gridIndex].m_validMove)
             continue;
-        best = cppMax(getTraitorValue(enemy, enemyRow), best);
+        total = ::max(getTraitorValue(enemy, enemyRow), total);
     }
-    return best;
+    return total;
 }
 
 VA(0x0043a670, 0x291)  // dc 0x40bb8

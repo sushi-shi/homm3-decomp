@@ -480,7 +480,7 @@ ai_tactical	?getFortuneValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_dat
 ai_tactical	?getFrenzyValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	98.9849	98.9849	98.9849	0x375d0	tokens1:d786601e9e5d
 ai_tactical	?getHasteValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x396b0	tokens1:2baf22d4b5fe
 ai_tactical	?getHexAttackValue@type_AI_attack_hex_chooser@@IAEJJAAJ@Z	92.6167	92.6167	92.6167	0x36180	tokens1:580502aa4e79
-ai_tactical	?getHypnotizeValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	72.9153	72.9153	100.0000	0x3a500	tokens1:8fe41fda0651
+ai_tactical	?getHypnotizeValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a500	tokens1:1985df79daf6
 ai_tactical	?getMassDamageEffect@type_AI_spellcaster@@IBEJJJ@Z	100.0000	100.0000	100.0000	0x36fb0	tokens1:57a4842be3fd
 ai_tactical	?getMasteryValue@type_enchant_data@@QBEJXZ	100.0000	100.0000	100.0000	0x36930	tokens1:1f75e1712aef
 ai_tactical	?getMirthValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38170	tokens1:e05b707bc876
