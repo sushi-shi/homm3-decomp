@@ -247,22 +247,43 @@ DATA(0x0069d854) int g_greenMaskBits;
 DATA(0x0069d85c) int g_lastMaskShift;
 DATA(0x0069e5a0) int g_lastMaskBits;
 DATA(0x0069e4f0) std::string g_resourcePath;
+// Complete-only common diagnostic, reconstructed from the identical seven-part
+// messages in 0x559510, 0x5599e0 and both 0x55c3c0 error paths. Retail evaluates
+// typeName.c_str() before constructing the stream; an ordinary shared helper
+// recovers that argument boundary and the stream's short lifetime. VC6 expands
+// this body naturally: no source inline keyword or inline-depth controls.
+// Both typed reporters are byte-exact with ordinary string assignments. Pasting
+// this body into those callers gives 78.49/72.05 and the wrong stream expansion.
+// The original helper name and exact source location are not available.
+static void reportMissingResource(const char* caller, const char* typeName,
+                                  const char* resourceName)
+{
+    std::ostringstream message;
+    message
+        << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
+                        "ResourceManager::")
+        << caller
+        << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
+                        " could not find the \"")
+        << typeName
+        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
+        << resourceName
+        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
+    MessageBoxA(
+        GetForegroundWindow(), message.str().c_str(),
+        DATA_COMPGEN(0x00682f08, resourceManagerCaption,
+                     "ResourceManager"),
+        0);
+}
 
 // Complete's common missing-resource reporter has no Dreamcast identity, but
 // its thirteen retail callers prove the fastcall surface. The dense 0..96
 // dispatch maps the admitted resource values to names and renders every gap
 // as `0x` plus a hexadecimal value before building the diagnostic shown by
 // the callers.
-// WALL (89.3910%): all twelve named cases, the hexadecimal default, seven-part
-// message and MessageBox call are closed, and all 29 retail blocks now agree
-// in flow (23 exact, six size-only). Retail calls assign at the first eight
-// cases and expands four late sites. Hoisting strlen before a pinned two-arg
-// assign in the first four cases preserves those calls while reproducing the
-// late expansion budget. The threshold ratchet was N=0 77.3910, N=1 82.2494,
-// N=2 flat, N=3 83.5393 (negative control), and N=4 89.3910. The residual six
-// size-only blocks are the default/message stream's frame coloring: an added
-// message scope regresses to 87.0742, and predict-inline leaves only one
-// ios_base destructor and one string::_Tidy over-inlined.
+// 100%: ordinary string assignments plus reportMissingResource recover all
+// retail calls and lifetimes without inline-depth pins. The former bootstrap
+// C linkage suppressed EH cleanup; keep the ordinary C++ declaration.
 VA(0x00559510, 0x4C1)  // caller ABI + retail type-name jump table/message graph
 void __fastcall game_null_159510(const char* caller,
                                  int resourceType,
@@ -270,80 +291,42 @@ void __fastcall game_null_159510(const char* caller,
 {
     std::string typeName;
     switch (resourceType) {
-    case RESOURCE_TYPE_NONE: {
-        const char* value =
-            DATA_COMPGEN(0x00682fc8, nullResourceType, "null");
-        std::string::size_type length = strlen(value);
-// INLINE BOUNDARY: game_null_159510 -> basic_string::assign(ptr,len).
-// Retail keeps the first eight assign calls and expands four late cases;
-// hoisting strlen makes this pin govern assign alone. Flattening all four
-// restores the 77.3910 baseline; the N=3 control is 83.5393 vs N=4 89.3910.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_NONE:
+        typeName = DATA_COMPGEN(0x00682fc8, nullResourceType, "null");
         break;
-    }
-    case RESOURCE_TYPE_DATA: {
-        const char* value =
-            DATA_COMPGEN(0x00682fc0, dataResourceType, "data");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=3/N=4 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_DATA:
+        typeName = DATA_COMPGEN(0x00682fc0, dataResourceType, "data");
         break;
-    }
-    case RESOURCE_TYPE_TEXT: {
-        const char* value =
-            DATA_COMPGEN(0x00682fb8, textResourceType, "text");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=3/N=4 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_TEXT:
+        typeName = DATA_COMPGEN(0x00682fb8, textResourceType, "text");
         break;
-    }
-    case RESOURCE_TYPE_BITMAP: {
-        const char* value =
-            DATA_COMPGEN(0x00682fb0, bitmap8ResourceType, "bitmap8");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=3/N=4 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_BITMAP:
+        typeName = DATA_COMPGEN(0x00682fb0, bitmap8ResourceType, "bitmap8");
         break;
-    }
     case RESOURCE_TYPE_BITMAP24:
-        typeName.assign(
-            DATA_COMPGEN(0x00682fa4, bitmap24ResourceType, "bitmap24"));
+        typeName = DATA_COMPGEN(0x00682fa4, bitmap24ResourceType, "bitmap24");
         break;
     case RESOURCE_TYPE_BITMAP16:
-        typeName.assign(
-            DATA_COMPGEN(0x00682f98, bitmap16ResourceType, "bitmap16"));
+        typeName = DATA_COMPGEN(0x00682f98, bitmap16ResourceType, "bitmap16");
         break;
     case RESOURCE_TYPE_BITMAP565:
-        typeName.assign(
-            DATA_COMPGEN(0x00682f8c, bitmap565ResourceType, "bitmap565"));
+        typeName = DATA_COMPGEN(0x00682f8c, bitmap565ResourceType, "bitmap565");
         break;
     case RESOURCE_TYPE_BITMAP555:
-        typeName.assign(
-            DATA_COMPGEN(0x00682f80, bitmap555ResourceType, "bitmap555"));
+        typeName = DATA_COMPGEN(0x00682f80, bitmap555ResourceType, "bitmap555");
         break;
     case RESOURCE_TYPE_BITMAP1555:
-        typeName.assign(DATA_COMPGEN(0x00682f74, bitmap1555ResourceType,
-                                     "bitmap1555"));
+        typeName = DATA_COMPGEN(0x00682f74, bitmap1555ResourceType,
+                                     "bitmap1555");
         break;
     case RESOURCE_TYPE_MIDI:
-        typeName.assign(
-            DATA_COMPGEN(0x00682f6c, midiResourceType, "midi"));
+        typeName = DATA_COMPGEN(0x00682f6c, midiResourceType, "midi");
         break;
     case RESOURCE_TYPE_FONT:
-        typeName.assign(
-            DATA_COMPGEN(0x00682f64, fontResourceType, "font"));
+        typeName = DATA_COMPGEN(0x00682f64, fontResourceType, "font");
         break;
     case RESOURCE_TYPE_PALETTE:
-        typeName.assign(
-            DATA_COMPGEN(0x00682f5c, paletteResourceType, "palette"));
+        typeName = DATA_COMPGEN(0x00682f5c, paletteResourceType, "palette");
         break;
     default: {
         std::ostringstream numericType;
@@ -355,130 +338,58 @@ void __fastcall game_null_159510(const char* caller,
     }
     }
 
-#pragma inline_depth(0)
-    std::ostringstream message;
-#pragma inline_depth()
-    message
-        << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
-                        "ResourceManager::")
-        << caller
-        << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
-                        " could not find the \"")
-        << typeName.c_str()
-        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
-        << resourceName
-        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
-    MessageBoxA(
-        GetForegroundWindow(), message.str().c_str(),
-        DATA_COMPGEN(0x00682f08, resourceManagerCaption,
-                     "ResourceManager"),
-        0);
-#pragma inline_depth(0)
+    reportMissingResource(caller, typeName.c_str(), resourceName);
 }
-#pragma inline_depth()
 
 // Complete splits sprite-family diagnostics from the common resource
 // reporter above. GetSprite's two calls prove the fastcall ABI and the retail
-// jump table proves the complete 64..79 type-name mapping. WALL (86.1324%):
-// all eleven named cases, the hexadecimal default, seven-part message and
-// MessageBox call agree, and all 28 retail blocks now agree in flow (22 exact,
-// six size-only). Retail calls assign for the early cases and expands four
-// late sites. The explicit strlen plus assign-only pin ratchets N=0 70.5441,
-// N=1 flat, N=2 76.7853, N=3 flat, N=4 78.4735 (negative control), and N=5
-// 86.1324 -> 86.9559: the message stream is BLOCK-SCOPED. Retail's frame is
-// 0xac against our 0x130, and the 0x84 surplus is exactly one ostringstream -
-// retail overlays the default arm's `numericType` onto `message`, which VC6
-// will only do once `message` has a scope of its own. The frame is now
-// retail's to the byte. MEASURED AND REJECTED: the identical scope in
-// game_null_159510 above COSTS 2.62 (89.3910 -> 86.7726) even though it makes
-// that frame exact too - it adds five early-return destructor blocks there,
-// so this is a per-function verdict, not a rule. Predict-inline leaves only
-// one ios_base destructor and one string::_Tidy over-inlined; the remaining
-// six blocks are size-only stream frame coloring rather than a missing
-// semantic branch.
-VA(0x005599e0, 0x448)  // anchor-caller + retail type-name jump table; wall
+// jump table proves the complete 64..79 type-name mapping. Like the common
+// reporter, this is 100% with ordinary assignments and reportMissingResource;
+// no artificial message scope or inline-depth control is needed.
+VA(0x005599e0, 0x448)  // anchor-caller + retail type-name jump table
 void __fastcall game_sprite_1599e0(const char* caller,
                                    int resourceType,
                                    const char* resourceName)
 {
     std::string typeName;
     switch (resourceType) {
-    case RESOURCE_TYPE_SPRITE: {
-        const char* value =
-            DATA_COMPGEN(0x0067555c, spriteResourceType, "sprite");
-        std::string::size_type length = strlen(value);
-// INLINE BOUNDARY: game_sprite_1599e0 -> basic_string::assign(ptr,len).
-// Retail keeps the early assign calls and expands four late cases; hoisting
-// strlen makes this pin govern assign alone. Flattening all five restores the
-// 70.5441 baseline; the N=4 control is 78.4735 vs N=5 86.1324.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_SPRITE:
+        typeName = DATA_COMPGEN(0x0067555c, spriteResourceType, "sprite");
         break;
-    }
-    case RESOURCE_TYPE_SPRITE_DEFINITION: {
-        const char* value = DATA_COMPGEN(
+    case RESOURCE_TYPE_SPRITE_DEFINITION:
+        typeName = DATA_COMPGEN(
             0x00682ff4, spriteDefinitionResourceType, "spritedef");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=4/N=5 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
         break;
-    }
-    case RESOURCE_TYPE_CREATURE: {
-        const char* value =
-            DATA_COMPGEN(0x00675550, creatureResourceType, "creature");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=4/N=5 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_CREATURE:
+        typeName = DATA_COMPGEN(0x00675550, creatureResourceType, "creature");
         break;
-    }
-    case RESOURCE_TYPE_ADVENTURE_OBJECT: {
-        const char* value = DATA_COMPGEN(
+    case RESOURCE_TYPE_ADVENTURE_OBJECT:
+        typeName = DATA_COMPGEN(
             0x00675548, adventureObjectResourceType, "advobj");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=4/N=5 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
         break;
-    }
-    case RESOURCE_TYPE_HERO: {
-        const char* value =
-            DATA_COMPGEN(0x00675540, heroResourceType, "hero");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=4/N=5 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_HERO:
+        typeName = DATA_COMPGEN(0x00675540, heroResourceType, "hero");
         break;
-    }
     case RESOURCE_TYPE_TILESET:
-        typeName.assign(
-            DATA_COMPGEN(0x00675538, tilesetResourceType, "tileset"));
+        typeName = DATA_COMPGEN(0x00675538, tilesetResourceType, "tileset");
         break;
     case RESOURCE_TYPE_POINTER:
-        typeName.assign(
-            DATA_COMPGEN(0x00675530, pointerResourceType, "pointer"));
+        typeName = DATA_COMPGEN(0x00675530, pointerResourceType, "pointer");
         break;
     case RESOURCE_TYPE_INTERFACE:
-        typeName.assign(
-            DATA_COMPGEN(0x00675524, interfaceResourceType, "interface"));
+        typeName = DATA_COMPGEN(0x00675524, interfaceResourceType, "interface");
         break;
     case RESOURCE_TYPE_SPRITE_FRAME:
-        typeName.assign(DATA_COMPGEN(0x00682fe4, spriteFrameResourceType,
-                                     "sprite frame"));
+        typeName = DATA_COMPGEN(0x00682fe4, spriteFrameResourceType,
+                                     "sprite frame");
         break;
     case RESOURCE_TYPE_COMBAT_HERO:
-        typeName.assign(DATA_COMPGEN(0x00682fd8, combatHeroResourceType,
-                                     "combat hero"));
+        typeName = DATA_COMPGEN(0x00682fd8, combatHeroResourceType,
+                                     "combat hero");
         break;
     case RESOURCE_TYPE_ADVENTURE_MASK:
-        typeName.assign(DATA_COMPGEN(0x00682fd0, adventureMaskResourceType,
-                                     "advmask"));
+        typeName = DATA_COMPGEN(0x00682fd0, adventureMaskResourceType,
+                                     "advmask");
         break;
     default: {
         std::ostringstream numericType;
@@ -490,29 +401,8 @@ void __fastcall game_sprite_1599e0(const char* caller,
     }
     }
 
-    {
-#pragma inline_depth(0)
-    std::ostringstream message;
-#pragma inline_depth()
-    message
-        << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
-                        "ResourceManager::")
-        << caller
-        << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
-                        " could not find the \"")
-        << typeName.c_str()
-        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
-        << resourceName
-        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
-    MessageBoxA(
-        GetForegroundWindow(), message.str().c_str(),
-        DATA_COMPGEN(0x00682f08, resourceManagerCaption,
-                     "ResourceManager"),
-        0);
-    }
-#pragma inline_depth(0)
+    reportMissingResource(caller, typeName.c_str(), resourceName);
 }
-#pragma inline_depth()
 
 VA(0x00559e30, 0x1E5)
 void ResourceManager::remapGraphics()
@@ -1018,54 +908,32 @@ Bitmap16Bit* ResourceManager::getBitmap16(const char* name)
     return loaded;
 }
 
-// WALL (95.6920%): both resource paths read the exact 24-byte header (DC type
-// 0x289e proves plain char[24]) and
-// 256-TRGBA payload, construct the shared-slot TPalette24, apply the optional
-// saturation transform, and feed the six retail pixel-mask globals to the
-// named TPalette16 constructor.  The ordinary path destroys the temporary
-// palette before fclose; making the file/archive arms an explicit if/else
-// lets C1 color both branch-local palettes at [ebp-0x364] and recovers
-// retail's exact 0x758-byte frame (the non-exclusive source used two slots and
-// a 0xa7c frame).
+// Both retail paths read char[24] and TRGBA[256], construct TPalette24,
+// optionally adjust saturation, and convert using the six pixel-mask globals.
+// DC GetPalette independently records those arrays and the palette temporary.
+// This shared conversion operation is an inferred Complete-side helper; no
+// standalone procedure proves its original name, interface or linkage.
+// Factoring it restores the leading pathname's retained _Tidy call. Keeping
+// the archive path after the file arm's early return restores both adapter
+// stack slots without a compiler pin or a library-internal source call.
+static TPalette16* makeResourcePalette(const char* name,
+                                       const TRGBA* paletteData)
+{
+    TPalette24 palette24(paletteData);
+    if (g_graphicsSaturated)
+        palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+    return new TPalette16(name, palette24,
+        g_firstMaskBits, g_firstMaskShift,
+        g_greenMaskBits, g_greenMaskShift,
+        g_lastMaskBits, g_lastMaskShift);
+}
 
-// The unwind map settles the LIFETIME question exactly (EH census
-// 2026-09-06). Retail's FuncInfo at 0x6528d0 has maxState 8, one try
-// block [0..3] with catchHigh 4, and its eight entries mirror the two
-// arms three for three: state 1 / 5 destroy the stream adapter
-// ([ebp-0x28] file arm, [ebp-0x1c] archive arm), 2 / 6 the TPalette24 at
-// [ebp-0x364], 3 / 7 `operator delete([ebp-0x20])` for the half-built
-// TPalette16, and states 0 and 4 carry NO action (the try entry and the
-// catch itself). Our transcript is [reg,-1,1,2,3,4,2,6,7,8,6] against
-// retail's [reg,1,2,3,1,5,6,7,5] - two surplus regions, and both are the
-// SAME one: the leading pathname temporary. Retail brackets it with NO
-// state store at all (`call operator+`, c_str INLINED to
-// `mov eax,[eax+4]` plus its empty-string branch, `call fopen`, then the
-// destructor inlined down to a CALLED `_Tidy(1)`), and writes its first
-// state only at fn+0x6b, after the `if (file)` test. We write state=esi
-// at +0x41 and state=-1 at +0x5a because the retained inline_depth(0)
-// leaves a real `call c_str` inside the temporary's lifetime. So the
-// missing shape is "expand c_str AND the temporary's destructor, but
-// call _Tidy" - which no placement of the existing pin reaches, and
-// which is why the whole tail of both arms is numbered one state high.
-
-// The leading string temporary is the bounded residual shared with LoadFont
-// and GetPalette24. Retail inlines c_str and the parent destructor but calls
-// _Tidy(true); inline_depth(0), retained below, calls both parents, while no
-// pin and function-wide auto_inline(off) expand the full teardown. A named
-// scoped string and a const-reference lifetime are worse as well. why-reg v2
-// finds the same three first definitions/pseudos but a C1-state ESI/EDI
-// processing-order permutation; its only legal declaration-order probe
-// worsens the register-visible distance 67 -> 75. The surviving 22-vs-24
-// block split and 22-vs-21 call count are therefore inliner/front-end walls,
-// not missing resource behavior.
 VA(0x0055b060, 0x377)  // public GetPalette callee + retail conversion tuple
 TPalette16* ResourceManager::loadPalette(const char* name)
 {
     char header[24];
     TRGBA paletteData[256];
-#pragma inline_depth(0)
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
-#pragma inline_depth()
 
     if (file) {
         try {
@@ -1074,18 +942,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
             streamInterface->read(header, sizeof(header));
             streamInterface->read(paletteData, sizeof(paletteData));
 
-            TPalette16* result;
-            {
-                TPalette24 palette24(paletteData);
-                if (g_graphicsSaturated)
-                    palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
-
-                result = new TPalette16(
-                    name, palette24,
-                    g_firstMaskBits, g_firstMaskShift,
-                    g_greenMaskBits, g_greenMaskShift,
-                    g_lastMaskBits, g_lastMaskShift);
-            }
+            TPalette16* result = makeResourcePalette(name, paletteData);
 
             fclose(file);
             return result;
@@ -1094,69 +951,61 @@ TPalette16* ResourceManager::loadPalette(const char* name)
             fclose(file);
             throw;
         }
-    } else {
-        TResourceArchiveList& archives =
-            g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
-        int remaining = archives.m_count;
-        int* archive = archives.m_indices;
-        LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
+    }
 
-        while (!lodFile->pointAt(name)) {
-            ++archive;
-            if (!--remaining) {
+    TResourceArchiveList& archives =
+        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+    int remaining = archives.m_count;
+    int* archive = archives.m_indices;
+    LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
+
+    while (!lodFile->pointAt(name)) {
+        ++archive;
+        if (!--remaining) {
+            lodFile = 0;
+            break;
+        }
+        lodFile = &g_resourceLodSlots[*archive].m_file;
+    }
+
+    if (!lodFile) {
+        game_null_159510(
+            DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
+                         "GetPalette"),
+            RESOURCE_TYPE_PALETTE, name);
+
+        const char* fallbackName = DATA_COMPGEN(
+            0x006410b8, defaultPalette16Name, "default.pal");
+        TResourceArchiveList& fallbackArchives =
+            g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+        int fallbackRemaining = fallbackArchives.m_count;
+        int* fallbackArchive = fallbackArchives.m_indices;
+        lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
+
+        while (!lodFile->pointAt(fallbackName)) {
+            ++fallbackArchive;
+            if (!--fallbackRemaining) {
                 lodFile = 0;
                 break;
             }
-            lodFile = &g_resourceLodSlots[*archive].m_file;
+            lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
         }
 
         if (!lodFile) {
             game_null_159510(
                 DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                              "GetPalette"),
-                RESOURCE_TYPE_PALETTE, name);
-
-            const char* fallbackName = DATA_COMPGEN(
-                0x006410b8, defaultPalette16Name, "default.pal");
-            TResourceArchiveList& fallbackArchives =
-                g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
-            int fallbackRemaining = fallbackArchives.m_count;
-            int* fallbackArchive = fallbackArchives.m_indices;
-            lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
-
-            while (!lodFile->pointAt(fallbackName)) {
-                ++fallbackArchive;
-                if (!--fallbackRemaining) {
-                    lodFile = 0;
-                    break;
-                }
-                lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
-            }
-
-            if (!lodFile) {
-                game_null_159510(
-                    DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
-                                 "GetPalette"),
-                    RESOURCE_TYPE_PALETTE, fallbackName);
-                return 0;
-            }
+                RESOURCE_TYPE_PALETTE, fallbackName);
+            return 0;
         }
-
-        t_lod_file_adapter stream(lodFile);
-        TAbstractFile* streamInterface = &stream;
-        streamInterface->read(header, sizeof(header));
-        streamInterface->read(paletteData, sizeof(paletteData));
-
-        TPalette24 palette24(paletteData);
-        if (g_graphicsSaturated)
-            palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
-
-        return new TPalette16(
-            name, palette24,
-            g_firstMaskBits, g_firstMaskShift,
-            g_greenMaskBits, g_greenMaskShift,
-            g_lastMaskBits, g_lastMaskShift);
     }
+
+    t_lod_file_adapter stream(lodFile);
+    TAbstractFile* streamInterface = &stream;
+    streamInterface->read(header, sizeof(header));
+    streamInterface->read(paletteData, sizeof(paletteData));
+
+    return makeResourcePalette(name, paletteData);
 }
 
 // Like GetBitmap16, Complete always consults the cache and removes the
@@ -1759,6 +1608,12 @@ namespace ResourceManager {
 sample* loadSample(const char* name);
 }
 
+// The shared diagnostic restores all 25 retail blocks (23 exact) and leaves
+// only the two message-stream vbase-destructor closures over-expanded:
+// 98.2289 MAX, with the former pasted-body implementation's 100 retained in
+// HIST. The reproduced VC6 trace has caller cb=445 (budget floor 1000);
+// the closures cost 43 and receive 96/62 inside reportMissingResource.
+// Do not paste the helper back or add an inline-depth control to suppress them.
 VA(0x0055c3c0, 0x356)  // GetSample callee + GetSoundFile/default.wav graph
 sample* ResourceManager::loadSample(const char* name)
 {
@@ -1788,45 +1643,15 @@ sample* ResourceManager::loadSample(const char* name)
     std::auto_ptr<char> data;
     int size;
     if (!getSoundFile(name, data, &size)) {
-        {
-            std::ostringstream message;
-            message
-                << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
-                                "ResourceManager::")
-                << DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample")
-                << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
-                                " could not find the \"")
-                << DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx")
-                << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
-                << name
-                << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
-            MessageBoxA(
-                GetForegroundWindow(), message.str().c_str(),
-                DATA_COMPGEN(0x00682f08, resourceManagerCaption,
-                             "ResourceManager"),
-                0);
-        }
+        reportMissingResource(
+            DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample"),
+            DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx"), name);
         const char* fallbackName = DATA_COMPGEN(
             0x006410dc, defaultSampleName, "default.wav");
         if (!getSoundFile(fallbackName, data, &size)) {
-            {
-                std::ostringstream message;
-                message
-                    << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
-                                    "ResourceManager::")
-                    << DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample")
-                    << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
-                                    " could not find the \"")
-                    << DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx")
-                    << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
-                    << fallbackName
-                    << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
-                MessageBoxA(
-                    GetForegroundWindow(), message.str().c_str(),
-                    DATA_COMPGEN(0x00682f08, resourceManagerCaption,
-                                 "ResourceManager"),
-                    0);
-            }
+            reportMissingResource(
+                DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample"),
+                DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx"), fallbackName);
             return 0;
         }
     }

@@ -7,6 +7,10 @@
 // faction-specific building-name column when no visiting hero is present.
 extern const char* g_specialBuildingNames[10][11];
 
+// DC gTownTypeNames; retail InitializeArrayText fills ten entries at
+// 0x6a74f0. The faction-name subtable starts at element one (0x6a74f4).
+extern const char* g_townTypeNames[10];
+
 unsigned char initializeGeneralText();               // 0x5b90f0
 unsigned char initializeCustomCampaignText();        // 0x5b9110
 unsigned char initializeMineEventText();             // 0x5b9150

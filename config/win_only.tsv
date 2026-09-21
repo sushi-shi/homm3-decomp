@@ -1,5 +1,6 @@
 # Reviewed exact Complete-only definitions; each entry cites platform/pressing evidence.
 file	function	signature	reason
+src/resourcemanager.cpp	reportMissingResource	void (const char *, const char *, const char *) __attribute__((fastcall))	Complete-only resource diagnostics, no Dreamcast counterpart. The shared seven-part stream/message-box sequence in retail 0x559510, 0x5599e0 and both 0x55c3c0 error paths supports the ordinary helper; argument evaluation before stream construction and its short lifetime recover both typed reporters byte-exact without inline controls. Name and exact source location are provisional.
 include/rmg.h	TPoint::TPoint	void () __attribute__((thiscall))	Complete-only RMG; no Dreamcast procedure counterpart. Retail ownership and caller/layout evidence are documented in src/rmg.cpp and src/rmg_terrain.cpp.
 include/rmg.h	TPoint::TPoint	void (int, int) __attribute__((thiscall))	Complete-only RMG; no Dreamcast procedure counterpart. Retail ownership and caller/layout evidence are documented in src/rmg.cpp and src/rmg_terrain.cpp.
 include/rmg.h	TPoint::operator!=	bool (const TPoint &) __attribute__((thiscall)) const	Complete-only RMG; no Dreamcast procedure counterpart. Retail ownership and caller/layout evidence are documented in src/rmg.cpp and src/rmg_terrain.cpp.

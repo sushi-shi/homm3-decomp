@@ -284,7 +284,10 @@ public:
     // row between save (0x49bdf0) and replay (0x49be60) - so Complete
     // expanded both into game::SetVisibility / game::ResetVisibility.
     void addChange(int x, int y, int z, short oldValue, short newValue);
-    long getChangeCount();
+    long getChangeCount() const
+    {
+        return m_changes.size();
+    }
 
     std::vector<type_shroud_change> m_changes;  // +0x08 (allocator at +0x08)
 };

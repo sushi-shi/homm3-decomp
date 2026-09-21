@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <bitset>
 #include <ctype.h>
+#include <functional>
 #include <math.h>
 #include <list>
 #include <set>
@@ -274,22 +275,18 @@ static void __fastcall assignRmgTeams(
     const unsigned char* players,
     char* teams);
 
+// The Dreamcast build has no RMG compiland. Complete's two expanded instances
+// retain bitset<156>::set and bitset<128>::set while consuming the disabled-byte
+// range through the project's canonical bitset iterator.
 template <unsigned int N>
 static void setAvailableRmgHeroes(
     std::bitset<N>* availableHeroes,
     unsigned char* heroFlag,
     unsigned char* end)
 {
-    int heroIndex = 0;
-    while (heroFlag != end) {
-        bool available = !*heroFlag;
-        // WriteMapHeader -> bitset<N>::set: retail retains both call sites.
-#pragma inline_depth(0)
-        availableHeroes->set(heroIndex, available);
-#pragma inline_depth()
-        ++heroFlag;
-        ++heroIndex;
-    }
+    std::transform(heroFlag, end,
+        bitset_iterator<N>(*availableHeroes, 0),
+        std::logical_not<unsigned char>());
 }
 
 // Vtable 0x6409cc slot 0 and the 0x14-byte concrete map layout identify this

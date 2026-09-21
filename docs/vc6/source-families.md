@@ -40,11 +40,14 @@ PYTHONPATH=scripts python -m homm3.vc6.source_families build/choices.json --vali
 PYTHONPATH=scripts python -m homm3.vc6.source_families build/choices.json --width 60 --keep 10 --jobs 6
 ```
 
-Run in the active worktree with `HOMM3_DIR` set there and a fresh full-build
-checkpoint. The driver verifies the unchanged baseline and opposite-corner
-reproduction before searching. Adopt supported source deliberately and finish
-with full `homm3 build`. Per-function mock behavior suites are not prerequisites;
-use a temporary diagnostic only for a concrete unresolved semantic question.
+Run in the active worktree with `HOMM3_DIR` set there and fresh fast- or
+full-build comparison objects. The unchanged-source control compares with the
+live report, so a fast-build adoption does not require an intermediate MAX
+checkpoint. The ledger still supplies projected MAX/HIST behavior. The driver
+also verifies opposite-corner reproduction before searching. Adopt supported
+source deliberately and finish with full `homm3 build`. Per-function mock
+behavior suites are not prerequisites; use a temporary diagnostic only for a
+concrete unresolved semantic question.
 
 ## Historical findings
 

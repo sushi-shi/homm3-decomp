@@ -1231,18 +1231,7 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
 //     command-bar rearm), which is also where bCreaturePlacement and
 //     the compare chain's default edge go.
 
-// 75.89 -> 87.51% 2026-08-20, and the lever was the INLINER again, the
-// same reading place_obstacle's note records. predict-inline named it
-// in one line - retail CALLS basic_string::assign in BOTH message arms
-// and our /Ob2 expanded it in the plural arm only - and the scoped
-// inline_depth(0) on that one statement is the whole fix. Worth
-// stressing that the two arms are spelled IDENTICALLY, so no source
-// difference explains why the budget ran out between them and nothing
-// but the pragma reaches it. inline_depth(1) and (2) were both
-// measured and both leave the expansion in place (75.8883, flat), so
-// only 0 works.
-
-// DREAMCAST SHAPE RESTORED 2026-08-30, byte-flat at 99.64975%. Raw NB11
+// DREAMCAST SHAPE RESTORED. Raw NB11
 // records `result` as the sole non-optimized local inside the mana-drain
 // sample scope. Its xrefs prove two Army.h get_controlling_side calls,
 // two Army.h GetName calls and the named GetControl tail. The old source
@@ -1253,17 +1242,12 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
 // Three frozen missing-call rows retire; fatal rules now reject putting any
 // of those flattened spellings back.
 
-// Residual (99.6498%, rechecked 2026-09-01): 73 of 74 CFG blocks are exact
-// and the remaining block differs by one instruction. The two string
-// temporaries' frame slots are
-// TRANSPOSED (retail singular -0x34 / plural -0x44; ours -0x44/-0x34)
-// because the named local allocates in the named-local region while
-// retail's two unnamed temps take creation order - ~10 masked lines of
-// pure slot renumber; one `lea edx,[ebp-0x34] / push edx` where retail
-// propagates the RVO address still in eax (`push eax`); and the
-// unwind-table push addend (0x0 vs 0x8), the unscored prologue class.
-// All three are the price of the named-local device and no spelling
-// that keeps the dtor out of the pin can avoid it.
+// DC lines 2399 and 2403 each put format_string, basic_string::operator=
+// and the returned temporary's destructor on one statement row. Restoring
+// the same direct assignment in both arms makes the complete message region
+// byte-exact and removes the diagnostic inline-depth fence. Recovering the
+// two player references in isQuickCombat then restores retail's expansion
+// here as well: all 0x4f6 bytes, 74 blocks, 44 branches and 27 calls match.
 VA(0x00465330, 0x4F6)  // anchor-global, dc 0x5f934
 void combatManager::setNextArmy(int group, int index)
 {
@@ -1318,28 +1302,12 @@ void combatManager::setNextArmy(int group, int index)
                                 GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE),
                             stack->getName(),
                             drained->m_name);
-                    else {
-                        // OVER-INLINE, pinned. Retail CALLS
-                        // basic_string::assign in BOTH arms; our /Ob2
-                        // expands it in this one only - erase x2 plus
-                        // _Grow, _Eos and the _Nullstr compare, which is
-                        // the whole 53-vs-44 conditional-branch gap. The
-                        // asymmetry is the inline budget running out at
-                        // a different point, not a spelling difference:
-                        // the two arms are written identically.
-                        // SPLIT: the temporary named in its own statement
-                        // so the pin misses its destructor -
-                        // the dtor runs at the brace, outside the pinned
-                        // statement, and stays inline as retail has it.
-                        std::string many = formatString(
+                    else
+                        result = formatString(
                             g_generalText->getText(
                                 GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY),
                             stack->getName(),
                             drained->m_name);
-#pragma inline_depth(0)
-                        result.assign(many, 0, std::string::npos);
-#pragma inline_depth()
-                    }
                     if (m_combatWindow)
                         m_combatWindow->combatMessage(result.c_str(), 1, 0);
                     spellEffect(77, stack, 100, 0);
@@ -1670,7 +1638,7 @@ void combatManager::resetHitByCreature()
 VA(0x00466010, 0x243)  // dc 0x60354
 unsigned char combatManager::placeObstacle(int obstacleId)
 {
-    const TObstacleInfo* shape = &s_obstacleInfo[obstacleId];
+    const TObstacleInfo* const shape = &s_obstacleInfo[obstacleId];
     TPickANumber picker(0x12, 0xa8);
     int hex;
     while (1) {
@@ -1723,11 +1691,8 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             obstacle.m_duration = 0;
             obstacle.m_dispelEffect = -1;
             m_obstacles.push_back(obstacle);
-            // Keep placeObstacle out of line at this call site.
             int obstacleSlot = m_obstacles.size() - 1;
-#pragma inline_depth(0)
-            placeObstacle(&obstacle, obstacleSlot, hex, 2);
-#pragma inline_depth()
+            placeObstacle(obstacle, obstacleSlot, hex, 2);
             return 1;
         }
     }
@@ -1835,9 +1800,7 @@ void combatManager::setupAndLoadObstacles()
                 m_obstacles.insert(m_obstacles.end(), 1, newLandmine);
                 int landmineSlot = m_obstacles.size();
                 landmineSlot--;
-#pragma inline_depth(0)
-                placeObstacle(&newLandmine, landmineSlot, hex, 8);
-#pragma inline_depth()
+                placeObstacle(newLandmine, landmineSlot, hex, 8);
             }
         }
 
@@ -1921,13 +1884,13 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
 }
 
 VA(0x004669b0, 0xBF)  // dc 0x609d0
-void combatManager::placeObstacle(const combatManager::TObstacle* obstacle, int id, int hex, unsigned attributes)
+void combatManager::placeObstacle(const combatManager::TObstacle& obstacle, int id, int hex, unsigned attributes)
 {
-    const TObstacleInfo* shape = obstacle->m_shape;
-    unsigned char rowIsOdd = static_cast<unsigned char>((hex / 0x11) & 1);
-    for (int i = 0; i < shape->m_extraHexCount; i++) {
-        int cellIndex = shape->m_extraHexOffsets[i] + hex;
-        if (rowIsOdd && ((cellIndex / 0x11) & 1) == 0)
+    const TObstacleInfo* const info = obstacle.m_shape;
+    bool oddRow = rowIsOdd(gridY(hex));
+    for (int i = 0; i < info->m_extraHexCount; i++) {
+        int cellIndex = info->m_extraHexOffsets[i] + hex;
+        if (oddRow && !rowIsOdd(gridY(cellIndex)))
             cellIndex--;
         hexcell& cell = m_cells[cellIndex];
         cell.m_attributes |= attributes;
@@ -3548,8 +3511,13 @@ bool combatManager::isQuickCombat() const
     if (g_game->m_isTutorial)
         return false;
     if (g_videoPaused && m_sideIsAi[0] && m_sideIsAi[1]) {
-        if (g_game->m_players[m_playerIds[0]].m_quickCombat
-                && g_game->m_players[m_playerIds[1]].m_quickCombat)
+        // DC's single line gap before the test and both retail expansions
+        // compute the two player addresses before reading either flag. This
+        // also closes Open, DamageMessage and ShootAnimatedMissile while
+        // improving both remaining missile callers.
+        const playerData& firstPlayer = g_game->m_players[m_playerIds[0]],
+            &secondPlayer = g_game->m_players[m_playerIds[1]];
+        if (firstPlayer.m_quickCombat && secondPlayer.m_quickCombat)
             return true;
         return false;
     }

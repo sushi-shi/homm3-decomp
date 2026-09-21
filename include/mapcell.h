@@ -709,6 +709,8 @@ public:
     void setCellVisited(short player);
     unsigned char gardenIsFull() const;
     enum EGameResource getGardenResource() const;
+    void fillGarden(enum EGameResource resource);
+    void setGarden(short id, EGameResource resource);
     void setGardenEmpty();
     int getPyramidSpell() const;
     bool pyramidIsGuarded() const;
@@ -717,6 +719,7 @@ public:
     void setLeanTo(short id, short amount, int resource);
     unsigned char magicSpringIsFull() const;
     void fillMagicSpring(unsigned char full);
+    void setMagicSpring(short id, unsigned char full);
     void setPyramid(bool guards, int newSpell);
     ScholarAwards getScholarAward() const;
     TPrimarySkill getScholarPrimarySkill() const;
@@ -1321,6 +1324,7 @@ public:
 
 private:
     void init(int size, unsigned char twoLayers);
+    void close();  // Original: Close, mapcell.cpp:537, dc 0xec724.
     // `ret 0xc`: the layer index is the third argument, and the return is
     // the cell count (size * size), not a status.
     int readMapLayer(TAbstractFile* infile, int size, int layer);
@@ -1377,6 +1381,7 @@ public:
     int readEventData(TAbstractFile* infile, CObject* eventObject,
                       int mapVersion);
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
+    int readSeerData(TAbstractFile* infile, CObject* seerObject);
     int readScholarData(TAbstractFile* infile, CObject* scholarObject);
     // The map-object dispatcher. `ret 0xc`: three arguments, and the third
     // is the map version every version-sensitive reader below takes - it is
@@ -1424,6 +1429,7 @@ public:
     void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
     void generateHeightMap(const CObject* object, signed char heightMap[8][6]);
     int placeObject(int objectIndex, unsigned char setExtraInfo);
+    int placeObjects();
 };
 
 // Canonical inline definitions in Dreamcast MapCell.h source-line order.
@@ -1554,6 +1560,14 @@ inline unsigned char ExtraInfoUnion::magicSpringIsFull() const { return m_magicS
 
 inline void ExtraInfoUnion::fillMagicSpring(unsigned char full) { m_magicSpringInfo.m_full = full; }
 
+// DC MapCell.h:1012..1015 records the resource store followed by the full
+// flag store, and game::PerWeek calls this canonical helper.
+inline void ExtraInfoUnion::fillGarden(enum EGameResource resource)
+{
+    m_gardenInfo.m_resource = resource;
+    m_gardenInfo.m_full = 1;
+}
+
 // The mystical-garden trio (MapCell.h:1018/1023/1035). GardenIsFull
 // is `unsigned char () const` and its `(value >> 10) & 1` shape is
 // what retail inlines; a direct bitfield test would fold to a byte
@@ -1562,7 +1576,22 @@ inline unsigned char ExtraInfoUnion::gardenIsFull() const { return m_gardenInfo.
 
 inline enum EGameResource ExtraInfoUnion::getGardenResource() const { return m_gardenInfo.m_resource; }
 
+// Original SetGarden, MapCell.h:1028..1032, dc 0xbc9b0.
+inline void ExtraInfoUnion::setGarden(short id, EGameResource resource)
+{
+    m_gardenInfo.m_id = id;
+    m_gardenInfo.m_resource = resource;
+    m_gardenInfo.m_full = 1;
+}
+
 inline void ExtraInfoUnion::setGardenEmpty() { m_gardenInfo.m_full = 0; }
+
+// Original SetMagicSpring, MapCell.h:1040..1043, dc 0xbca04.
+inline void ExtraInfoUnion::setMagicSpring(short id, unsigned char full)
+{
+    m_magicSpringInfo.m_id = id;
+    m_magicSpringInfo.m_full = full;
+}
 
 // MapCell.h:1046/1051, dc 0x9c864 / 0x9c870. do_event_pyramid
 // (0x4a4230) proves the signed spell lane and bit-zero guarded flag.
@@ -1685,9 +1714,9 @@ inline bool ExtraInfoUnion::wagonHasArtifact() const { return m_wagonInfo.m_hasA
 inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
 
 // DC 1177..1181 writes resource, amount, full, has_artifact, visited_bits.
-// The Complete masks prove the corresponding five fields. The prior
-// combined mask and these recovered stores both fully expand in
-// RandomizeEvents; neither currently emits the retained 0x4c2360 body.
+// The Complete masks prove the corresponding five fields. With the shrine
+// bitset default-constructed and unpinned, RandomizeEvents retains this call
+// and the 0x4c2360 body matches exactly.
 // E:\gamedcs\MapCell.h:1176, dc 0xbcac8
 VA(0x004c2360, 0x27)
 inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)

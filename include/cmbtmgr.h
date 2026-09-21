@@ -1145,7 +1145,7 @@ public:
     const char* getBackgroundName();
     void generateMap();
     void combatSystemOptions();
-    void placeObstacle(const TObstacle* obstacle, int id, int hex,
+    void placeObstacle(const TObstacle& obstacle, int id, int hex,
                        unsigned attributes);
     void removeObstacle(int index);
     void placeAllObstacles();

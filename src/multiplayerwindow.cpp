@@ -432,18 +432,22 @@ public:
     textWidget* m_header2;   // +0x5c
     textWidget* m_rollover;  // +0x60
 
-    __forceinline CMPInputDlg(int maxChars1, int maxChars2);
+    // DC OnHost/OnJoin retain calls to this source constructor, while
+    // Complete expands it only in OnSearch. Standard inline gives VC6 those
+    // three natural decisions; the prior forced-inline reconstruction required
+    // artificial caller pins.
+    inline CMPInputDlg(int maxChars1, int maxChars2);
     virtual ~CMPInputDlg();
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     virtual textWidget* getRolloverWidget();
     unsigned char onOK();
     virtual void updateOK();  // slot 14, retail 0x510980
-    __forceinline void disableOK();
+    inline void disableOK();
 };
 SIZE(CMPInputDlg, 0x64);
 
 VA(0x00510060, 0x6F7)  // dc 0x1022f4
-__forceinline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
+inline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     : CHeroWindowEx(284, 194, 232, 212, 18)
 {
     m_widgets.reserve(6);
@@ -498,7 +502,7 @@ inline unsigned char CMPInputDlg::onOK()
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:521, dc 0x10286c
-__forceinline void CMPInputDlg::disableOK()
+inline void CMPInputDlg::disableOK()
 {
     getWidget(OKAY_ID)->enable(0);
 }
@@ -1236,9 +1240,7 @@ unsigned char TMultiPlayerWindow::onHost()
     g_unnamed6994e4 = 1;
     strcpy(g_localPlayerName, m_playerName->getText());
 
-#pragma inline_depth(0)
     CMPInputDlg sessDlg(20, 20);
-#pragma inline_depth()
     sessDlg.m_field1->setText(g_generalText->getText(453));
     sessDlg.m_header1->setText(g_unnamed6a7780);
     sessDlg.m_header2->setText(g_generalText->getText(454));
@@ -1474,9 +1476,7 @@ unsigned char TMultiPlayerWindow::onJoin()
         return 0;
 
     const char* password = 0;
-#pragma inline_depth(0)
     CMPInputDlg dlg(20, 20);
-#pragma inline_depth()
     if (session->isPasswordProtected()) {
         dlg.m_header1->setText(g_unnamed6a7780);
         dlg.m_header2->setText((*g_generalText)[454]);
@@ -1612,48 +1612,36 @@ unsigned char TMultiPlayerWindow::onSearch()
         return 0;
 
     remoteCleanup();
-    const char* address = searchDlg.m_field1->getText();
-#pragma inline_depth(0)
-    if (!initRemote(MP_TCP, address, 0)) {
-#pragma inline_depth()
+    if (!initRemote(MP_TCP, searchDlg.m_field1->getText(), 0)) {
         normalDialog((*g_generalText)[459], 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
 
     CHourGlass hourGlass(1);
-#pragma inline_depth(0)
     m_sessions->destroy();
-#pragma inline_depth()
     g_dPlay->enumSessions(m_sessions, 5000, 0x42);
 
     if (!m_sessions->getCount()) {
         normalDialog((*g_generalText)[463], 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         remoteCleanup();
-#pragma inline_depth(0)
         initRemote(MP_TCP, 0, 0);
-#pragma inline_depth()
         return 0;
     }
 
-#pragma inline_depth(0)
     if (!joinSession(m_sessions->get(0), 0)) {
-#pragma inline_depth()
-        char errorText[256];
+        // Original DC local name: sErr.
+        char sErr[256];
         long lastError = g_dPlay->getLastError();
         normalDialog((*g_generalText)[456], 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        g_dPlay->getErrorDesc(lastError, errorText);
-        normalDialog(errorText, 1, -1, -1,
+        g_dPlay->getErrorDesc(lastError, sErr);
+        normalDialog(sErr, 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         remoteCleanup();
-#pragma inline_depth(0)
         initRemote(MP_TCP, 0, 0);
-#pragma inline_depth()
-#pragma inline_depth(0)
         return 0;
-#pragma inline_depth()
     }
     return 1;
 }

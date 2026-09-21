@@ -5,6 +5,7 @@
 #include "kbwin.h"
 #include "mousemgr.h"
 #include "advmgr.h"
+#include "remote.h"
 #include "textntry.h"
 #include "winmgr.h"
 #include "soundmgr.h"

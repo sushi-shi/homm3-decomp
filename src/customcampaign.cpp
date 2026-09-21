@@ -3181,7 +3181,8 @@ VA_COMPGEN(0x0048e850, 0x2A, STD_FILL, hero)
 // COMDAT pairing: hero::_Ufill, mnemonic agreement 0.913.
 VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)
 
-VA_COMPGEN(0x00404700, 0x157, CLASS_CTOR, out_of_range)
+// CatchableType's copyFunction selects this overload, not the string ctor.
+VA_COMPGEN(0x00404700, 0x157, IMPLICIT_COPY_CTOR, out_of_range)
 
 // COMDAT pairing: vector<vector<hero>>::_Destroy - reached from game and from
 // two sites in this unit's own segment.

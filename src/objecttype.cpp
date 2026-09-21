@@ -671,7 +671,7 @@ VA_COMPGEN(0x00516e20, 0x1C, BASIC_STRING_SUBSCRIPT, char)
 // constructor. The three 29-byte _Doraise bodies in this object (runtime_error,
 // logic_error, invalid_argument) are otherwise indistinguishable.
 VA_COMPGEN(0x00516f10, 0x1D, EXCEPTION_DORAISE, invalid_argument)
-VA_COMPGEN(0x00516f30, 0x157, CLASS_CTOR, invalid_argument)
+VA_COMPGEN(0x00516f30, 0x157, IMPLICIT_COPY_CTOR, invalid_argument)
 
 // COMDAT pairing: _Tree<string,...>::erase(iterator) - at 1342 B the largest
 // unclaimed body in the span - agreement 0.971, and ::_Erase(node), the
@@ -832,9 +832,9 @@ VA_COMPGEN(0x00517680, 0xCB, BITSET_XINV, Bitset9)
 //   0x648648  .?AVruntime_error@std@@   copyFunction 0x41bc30
 //   0x650440  .?AVinvalid_argument@std@@ copyFunction 0x516f30 (claimed above)
 
-VA_COMPGEN(0x004044e0, 0x159, CLASS_CTOR, logic_error)
+VA_COMPGEN(0x004044e0, 0x159, IMPLICIT_COPY_CTOR, logic_error)
 VA_COMPGEN(0x0041bc10, 0x1D, EXCEPTION_DORAISE, runtime_error)
-VA_COMPGEN(0x0041bc30, 0x159, CLASS_CTOR, runtime_error)
+VA_COMPGEN(0x0041bc30, 0x159, IMPLICIT_COPY_CTOR, runtime_error)
 
 // The rest of logic_error's own COMDAT group, plus out_of_range's _Doraise,
 // all four selected out of this object and all four sitting in the same

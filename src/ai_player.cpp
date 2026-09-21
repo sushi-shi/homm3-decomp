@@ -1700,8 +1700,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     if (g_game->townAlreadyBuiltOn(currentTown->m_id))
         return;
     if (!g_game->m_setup.m_difficulty
-        && !g_game->isHumanAlly(
-               g_game->getTeam(g_netLocalGamePos)))
+        && !g_game->isHumanAlly(g_netLocalGamePos))
         return;
     short amount;
     const TCreatureTypeTraits* traits;
@@ -4195,7 +4194,7 @@ static unsigned char attemptTeleport(hero* currentHero,
     return 1;
 }
 // E:\gamedcs\ai_player.cpp:4155, dc 0x34a7c.
-static __forceinline void checkGatePurchase(type_point point)
+static inline void checkGatePurchase(type_point point)
 {
     int townId = g_game->getTownId(point.m_x, point.m_y, point.m_z);
     if (townId >= 0) {

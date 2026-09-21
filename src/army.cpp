@@ -183,9 +183,6 @@ void army::stopSample(army::TSampleID id)
 // register - that slot is then reused for the two dead erase
 // iterators at the bottom.
 
-// Retail calls vector<SpellID>::erase at both clear sites. Keep begin() and
-// end() outside the pinned erase statement.
-
 // Residual (92.6261%): the register-homing family. Retail fills the
 // two by-value iterator temps through EDI as scratch with EAX/EDX
 // holding the slot pointers; ours picks the mirror assignment, and the
@@ -204,19 +201,7 @@ void army::initClean()
     m_roundsLeftBeforeVanish = -1;
     m_numSpellInfluences = 0;
     memset(m_spellInfluence, 0, sizeof(m_spellInfluence));
-    {
-        // clear() spelled through its own body with the erase pinned:
-        // retail expands clear and CALLS deque::erase (0x448db0), and
-        // our CL - the InitClean residual note below - inlines erase
-        // and starves. The statement-scoped depth(0) reproduces the
-        // rejection; begin()/end() build their 16-byte temps inline in
-        // the two unpinned statements exactly as retail does.
-        TSpellQueue::iterator queueEnd = m_spellInfluenceQueue.end();
-        TSpellQueue::iterator queueBegin = m_spellInfluenceQueue.begin();
-#pragma inline_depth(0)
-        m_spellInfluenceQueue.erase(queueBegin, queueEnd);
-#pragma inline_depth()
-    }
+    m_spellInfluenceQueue.clear();
     m_lastFidgetTime = GameTime::get();
     if (m_stdIcon)
         m_stdIcon->dispose();
@@ -1126,27 +1111,20 @@ unsigned char army::setInsideAreaEffect(unsigned char arg)
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:1062
-// NO RETAIL BODY, AND THE BRACKET PROVES IT. The carve has exactly ONE
-// row between remove_bindings (0x43ee10, 0x1C2) and Walk (0x43f0b0) -
-// 0x43efe0 / 207 B - and the Dreamcast roster has TWO here, so one of
-// the pair has no retail slot. 0x43efe0 is set_inside_area_effect: it
-// takes ONE byte argument, compares it against +0x4f1
-// (is_area_effect_target), stores it, and ends `ret 4`, which
-// EndWalk() - no arguments - cannot. Retail therefore emits no
-// out-of-line EndWalk anywhere, and its four statements are written at
-// Walk's `if (end_walk)` instead. The shape below is byte-exact for
-// this call site; whether retail's source kept the name as a header
-// inline or spelled the statements out is NOT decided here.
-DC_ONLY(0x45204, 0x50)
+// DC EndWalk (0x45204), called at Walk:1163 and WalkTo:2439.
+// Retail expands this ordinary helper; no standalone body is claimed.
 void army::endWalk()
 {
-    // @stub
+    if (!g_combatManager->isQuickCombat()) {
+        playSample(POST_WALK_SAMPLE);
+        if (m_armySample[WALK_SAMPLE])
+            g_soundManager->stopSample(
+                m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
+        playAnimation(cs_postwalk, -1, 0);
+        playAnimation(cs_wait, 1, 0);
+    }
 }
-
-#endif  // @carcass
 
 // One hex of a walk: turn to face the step if it needs turning, publish
 // the from/to pair the redraw reads, play the walk animation, and move
@@ -1192,15 +1170,8 @@ void army::walk(int direction, unsigned char endWalk,
     g_walkingTo = -1;
     g_walkingTo2 = -1;
     m_drawPriority = 4;
-    if (endWalk) {
-        if (!g_combatManager->isQuickCombat()) {
-            playSample(POST_WALK_SAMPLE);
-            if (m_armySample[WALK_SAMPLE])
-                g_soundManager->stopSample(m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
-            playAnimation(21, -1, 0);
-            playAnimation(2, 1, 0);
-        }
-    }
+    if (endWalk)
+        this->endWalk();
 }
 
 // E:\gamedcs\army.cpp:1171
@@ -2224,92 +2195,26 @@ unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 // Champion's joustBonus with the step count - and re-wire auras and
 // facing at the end.
 
-// WHAT IS INLINE AND WHAT IS NOT, read off the bytes: GetSpeed expands
-// at both of its sites (the slowRounds float re-time with its floor at
-// 1), remove_aura expands whole (both teardown loops with erase_item
-// CALLS kept), remove_binding stays a call, play_sample(POST_WALK)
-// expands with its own IsQuickCombat re-test under the outer one, and
-// the WALK_SAMPLE stop is written straight through gpSoundManager -
-// stop_sample's inline would re-test IsQuickCombat a third time and
-// retail has exactly two. Walk's direction argument re-reads the path
-// cell's bitfield rather than the `direction` local the two adjacency
-// calls share - do not cache what retail reloads.
-
-// `stop` doubles as the loop bound: a moat or trap RAISES it to the
-// current index so the walk ends on this step. The explicit-else
-// spelling and the `(stop = ...) < 0` condition-assignment measure
-// IDENTICALLY (89.7721) - both give retail's shared zero-store block -
-// and the `long stop = 0;` pre-initialized form is 1.0 WORSE
-// (88.7607); the init store must not exist ahead of the branch.
-
-// Residual (89.7721%): the register-mirror family. Retail homes
-// gpSearchArray in EBX and the counts in EDI for the whole body; our
-// C2 picks the mirror image at the first definition and every
-// downstream pairing follows, plus the `stop` slot takes its zero from
-// an immediate store where ours routes a zeroed register. Same B1
-// handle-state class as attack_hex's direction-search note. Calls,
-// call order, and every block pair off (24/24 calls after the
-// remove_aura longhand below).
-// 89.8063 -> 93.3162 (2026-08-21): the two blocked-hex else-arms must
-// write `succeeded = 0; stop = i;` in THAT order while the moat arms
-// write `stop = i; succeeded = 0;` - the asymmetry is what stops our
-// CL cross-jumping the four arm tails into one shared block, which
-// retail keeps duplicated per arm (why-branch's D8 jne->je pair, and
-// the whole 343-vs-351 instruction gap). Residual (93.32): the walk
-// region's ebx/edi roles and the stop/conversion-temp slots are
-// permuted - retail homes `stop` at [ebp-0x4] and reloads it per
-// iteration where we keep it in EBX; why-reg's model reads the first
-// ESI/EBX/EDI definitions as agreeing on both sides, so the flip is
-// mid-function creation order past the model's reach. Global-load
-// census agrees 23=23, so it is not a cache-vs-reload spelling.
+// DC names/types: save_facing (int), initial_walk (unsigned char),
+// direction and both next_cell locals (const int). Its named calls recover
+// remove_aura, EndWalk, GetObstacle, Is, OffsetToFront and
+// check_obstacle_attacks instead of pasted helper bodies.
+// Removing the five aura pins through removeAura() is byte-flat at 93.3162;
+// restoring the remaining helpers/types reaches 99.32%. Stopping before
+// revealing the obstacle (DC 2459 before GetObstacle:2461, likewise
+// 2481/2483) closes the two store-order differences: 100% without pins.
+// Merely swapping stop/succeeded after the visibility store cross-jumps
+// the trap arms and gives 95.78%; the full statement order matters.
+// Complete has no emitted CancelSpellType(AFTER_MOVE) operation here;
+// its cancelSpellType handles only AFTER_ATTACK and AFTER_DAMAGE.
 VA(0x00441fa0, 0x461)  // anchor-global, dc 0x472f4
 unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
 {
     m_side = m_slot = -1;
     if (!findPath(destIndex, getSpeed(), 0, 0))
         return 0;
-    long originalFacing = m_facing;
-    // remove_aura()'s body, spelled through so the two erase_item
-    // sites can carry the pins retail's own expansion decisions need:
-    // both stay CALLS here (our CL otherwise inlines one), the first
-    // size() and clear() expand, the second size() and clear() stay
-    // out of line.
-    long sourceCount = m_auraSources.size();
-    while (sourceCount-- > 0) {
-        army* source = m_auraSources[sourceCount];
-#pragma inline_depth(0)
-        eraseItem(source->m_auraClients, this);
-#pragma inline_depth()
-    }
-    {
-        // Retail reads _First and _Last through the VECTOR'S OWN ADDRESS -
-        // `mov eax,[ebx+8] / mov ecx,[ebx+4]`, the same EBX it then hands the
-        // erase as `this` - where `aura_sources.begin()` makes VC6 fold the
-        // member offset into each load off `this` (`[esi+0x52c]` and
-        // `[esi+0x528]`) and form EBX only for the call. Naming the vector as
-        // a reference is what puts the base in a register first:
-        // 89.7721 -> 89.8063. NARROW, and measured: naming BOTH vectors at
-        // the top of the remove_aura block instead puts the row back at
-        // exactly 89.7721, so this is per-site, not a style to spread.
-        std::vector<army*>& sources = m_auraSources;
-        army** first = sources.begin();
-        army** end = sources.end();
-#pragma inline_depth(0)
-        sources.erase(first, end);
-#pragma inline_depth()
-    }
-#pragma inline_depth(0)
-    long clientCount = m_auraClients.size();
-#pragma inline_depth()
-    while (clientCount-- > 0) {
-        army* client = m_auraClients[clientCount];
-#pragma inline_depth(0)
-        eraseItem(client->m_auraSources, this);
-#pragma inline_depth()
-    }
-#pragma inline_depth(0)
-    m_auraClients.clear();
-#pragma inline_depth()
+    int saveFacing = m_facing;
+    removeAura();
     removeBinding();
     unsigned char succeeded = 1;
     long stop;
@@ -2321,67 +2226,58 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
         stop = 0;
     }
     long last = g_searchArray->getPathSteps() - 1;
-    unsigned char atRest = 1;
+    unsigned char initialWalk = 1;
     m_isMoving = 1;
     m_joustBonus = last - stop + 1;
     for (long i = last; i >= stop; i--) {
         const int direction = g_searchArray->getStep(i);
-        long nextHex = getAdjacentCellIndex(m_gridIndex, direction);
-        if (g_combatManager->shouldLowerDoor(this, nextHex)) {
-            if (!atRest) {
-                if (!static_cast<const combatManager*>(g_combatManager)
-                         ->isQuickCombat()) {
-                    playSample(POST_WALK_SAMPLE);
-                    if (m_armySample[WALK_SAMPLE])
-                        g_soundManager->stopSample(
-                            m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
-                    playAnimation(cs_postwalk, -1, 0);
-                    playAnimation(cs_wait, 1, 0);
-                }
+        const int nextCell = getAdjacentCellIndex(m_gridIndex, direction);
+        if (g_combatManager->shouldLowerDoor(this, nextCell)) {
+            if (!initialWalk) {
+                endWalk();
                 m_currFrameType = cs_wait;
                 m_currFrameIndex = 0;
                 g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
             }
             g_combatManager->lowerDoor();
             g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
-            atRest = 1;
+            initialWalk = 1;
         }
-        if (g_searchArray->isMoat(static_cast<short>(nextHex))) {
+        if (g_searchArray->isMoat(static_cast<short>(nextCell))) {
             stop = i;
             succeeded = 0;
-        } else if (g_combatManager->m_cells[nextHex].m_attributes & 4) {
-            g_combatManager->m_obstacles
-                [g_combatManager->m_cells[nextHex].m_obstacleIndex]
+        } else if (g_combatManager->m_cells[nextCell].m_attributes & 4) {
+            stop = i;
+            succeeded = 0;
+            g_combatManager->getObstacle(
+                g_combatManager->m_cells[nextCell].m_obstacleIndex)
                 .m_isVisible = 1;
-            succeeded = 0;
-            stop = i;
         }
-        if (m_monInfo.m_attributes & 1) {
-            long secondHex = getAdjacentCellIndex(m_gridIndex, direction)
-                              + (m_facing ? 1 : -1);
+        if (is(1u << 0)) {
+            const int nextCell = getAdjacentCellIndex(m_gridIndex, direction)
+                                 + offsetToFront(-1);
             if (g_searchArray
-                    ->isMoat(static_cast<short>(secondHex))) {
+                    ->isMoat(static_cast<short>(nextCell))) {
                 stop = i;
                 succeeded = 0;
-            } else if (g_combatManager->m_cells[secondHex].m_attributes & 4) {
-                g_combatManager->m_obstacles
-                    [g_combatManager->m_cells[secondHex].m_obstacleIndex]
+            } else if (g_combatManager->m_cells[nextCell].m_attributes & 4) {
+                stop = i;
+                succeeded = 0;
+                g_combatManager->getObstacle(
+                    g_combatManager->m_cells[nextCell].m_obstacleIndex)
                     .m_isVisible = 1;
-                succeeded = 0;
-                stop = i;
             }
         }
-        walk(g_searchArray->getStep(i), i == stop, atRest);
-        atRest = 0;
-        if (m_creatureType != ARMY_CREATURE_ARROW_TOWER)
-            g_combatManager->checkObstacleAttacks(this, i != stop);
+        walk(g_searchArray->getStep(i), i == stop, initialWalk);
+        initialWalk = 0;
+        checkObstacleAttacks(i != stop);
         if (m_numTroops <= 0) {
             succeeded = 0;
             break;
         }
     }
     if (m_numTroops > 0) {
-        if (m_facing != originalFacing && restoreFacing)
+        if (m_facing != saveFacing && restoreFacing)
             turn(1);
         addAura();
         m_currFrameType = cs_wait;
@@ -2389,7 +2285,8 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
     }
     m_isMoving = 0;
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
-    g_combatManager->testRaiseDoor();
+    // Complete folded DC TestRaiseDoor's occupancy checks into RaiseDoor.
+    g_combatManager->raiseDoor();
     return succeeded;
 }
 
@@ -3448,6 +3345,9 @@ inline void army::adjustHitpoints()
 // `erase(it)` = `erase(it, it + 1)` with the two 16-byte iterators
 // built on the stack - the second and last call site of the
 // deque::erase COMDAT at 0x448db0.
+// DC 3790..3792 names iterator si and the single-iterator erase overload.
+// Restoring that source call removes the iterator-advance pin and reaches
+// 100%; the hand-expanded range erase left BIND's clear under-inlined.
 
 VA(0x00444510, 0x3DB)  // anchor-global, dc 0x49748
 void army::cancelIndividualSpell(int spell)
@@ -3500,15 +3400,10 @@ void army::cancelIndividualSpell(int spell)
         m_monInfo.m_defenseSkill += m_diseaseDefensePenalty;
         break;
     }
-    TSpellQueue::iterator it = std::find(m_spellInfluenceQueue.begin(),
-                                         m_spellInfluenceQueue.end(), spell);
-    if (it != m_spellInfluenceQueue.end()) {
-        TSpellQueue::iterator next = it;
-#pragma inline_depth(0)
-        next += 1;
-        m_spellInfluenceQueue.erase(it, next);
-#pragma inline_depth()
-    }
+    TSpellQueue::iterator si = std::find(m_spellInfluenceQueue.begin(),
+                                        m_spellInfluenceQueue.end(), spell);
+    if (si != m_spellInfluenceQueue.end())
+        m_spellInfluenceQueue.erase(si);
 }
 
 // Cancel spells with positive durations. Complete has 81 spell entries;
@@ -4966,50 +4861,50 @@ unsigned char army::canCastSpell(long hex) const
     return 0;
 }
 
-// RETAIL-ONLY: the shared spell-validity worker army.h describes -
-// is_valid_caliph_spell (0x447eb0) TAIL-JUMPS to it, can_cast_spell above
-// calls it, and Unnamed447fe0 calls it twice. Two fastcall register
-// arguments and a bare `ret`, so it is a free function, which rules out
-// the three one-argument group_has_* statics the DC roster has left in
-// this bracket. Name is army.h's, a bootstrap invention.
+// Original: group_has_melee; army.cpp:5433, dc 0x4c0f0.
+// DC5437/5455/5473 all count down with i-- > 0. Complete expands these
+// static helpers in its broader spell-validity worker, preserving the
+// CannotAttack and CanShoot boundaries inside the two capability scans.
+static unsigned char groupHasMelee(long group)
+{
+    long i = g_combatManager->m_numArmies[group];
+    while (i-- > 0) {
+        army* enemy = &g_combatManager->m_armies[group][i];
+        if (!enemy->cannotAttack() && !enemy->canShoot(0))
+            return 1;
+    }
+    return 0;
+}
 
-// Would the Genie's roll actually CHANGE anything for the target it
-// landed on? A spell already standing on the stack is never re-cast,
-// ValidSpellTargetArmy answers the immunity/first-target half, and the
-// switch is the per-spell "would it matter" test: protections and the
-// mirror only matter while the enemy hero can cast (wields the
-// spellbook slot), Cure needs damage to heal, the two melee-side
-// screens need a live shooter (Air Shield) or a live melee attacker
-// (Shield / Fire Shield) among the enemy stacks, Precision needs the
-// target itself shooting and Bloodlust the opposite.
+// Original: group_has_shooters; army.cpp:5451, dc 0x4c154.
+static unsigned char groupHasShooters(long group)
+{
+    long i = g_combatManager->m_numArmies[group];
+    while (i-- > 0) {
+        army* enemy = &g_combatManager->m_armies[group][i];
+        if (!enemy->cannotAttack() && enemy->canShoot(0))
+            return 1;
+    }
+    return 0;
+}
 
-// THIS BODY IS WHY can_shoot HAS AN OUT-OF-LINE COPY AT ALL (the note
-// on 0x4428f0): the two loop sites below are the sites VC6 declines,
-// while the Precision/Bloodlust tail sites expand - Bloodlust's only
-// partially, leaving the OffsetToFront COMDAT call and the
-// army::enemy_is_adjacent wrapper call retail shows.
+// Original: group_has_dragons; army.cpp:5469, dc 0x4c1b8.
+static unsigned char groupHasDragons(long group)
+{
+    long i = g_combatManager->m_numArmies[group];
+    while (i-- > 0) {
+        army* enemy = &g_combatManager->m_armies[group][i];
+        if (enemy->is(1u << 7))
+            return 1;
+    }
+    return 0;
+}
 
-// WHAT EACH SPELLING MEASURED (0.00 -> 41.65 -> 85.84 -> 87.41 ->
-// 91.07): the switch arms are laid out in SOURCE order exactly as
-// written; the two loop arms carry statement-scoped
-// `#pragma inline_depth(0)` pins on their can_shoot calls because our
-// CL otherwise expands both (retail declines them - the pins are what
-// force can_shoot's out-of-line COMDAT exactly as retail's own
-// rejected sites do); the loop idiom is `i = n; while (i-- > 0)`
-// (the `for (i=n-1; i>=0; i--)` spelling emits dec/js and loses the
-// count-copy retail has); `1 - side` must be a NAMED LOCAL `group` in
-// all three loop arms or the front end folds numArmies/armies into
-// two different displacement constants where retail indexes both off
-// one register; Prayer needs the uchar cast `(uchar)~Is(1u << 26)` for
-// retail's `not al` (bare `~Is(1u << 26)` emits `not eax`); the
-// protections arm must RETURN the `&&` expression (the int
-// materialization `mov eax,1`/`xor eax,eax` retail has - the
-// early-return spelling emits byte `xor al,al` and a private
-// epilogue); Precision is `return can_shoot(0);` EXPANDED (writing
-// the same tests longhand duplicates five zero-exits retail shares,
-// 91.07 -> 87.41-class); Bloodlust longhand-with-flag beats
-// `return !can_shoot(0);` (87.02) because our expansion of the
-// negated call diverges harder than the flag form's exits.
+// Complete's shared spell-validity worker is a desktop addition: the
+// older DC is_valid_caliph_spell contains these per-spell tests itself.
+// Both reuse the three ordinary group helpers above. The two loop sites
+// retain CanShoot calls in retail; their real helper nesting replaces the
+// former statement-scoped inline-depth pins on pasted loop bodies.
 
 VA(0x00447a80, 0x429)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
@@ -5035,74 +4930,17 @@ unsigned char spellIsValidOnTarget(int spell, const army* target)
         return target->m_topCreatureDamage > 0;
     case SPELL_PRAYER:
         return static_cast<unsigned char>(~target->is(1u << 26)) & 1;
-    case SPELL_SLAYER: {
-        long group = 1 - side;
-        long i = g_combatManager->m_numArmies[group];
-        while (i-- > 0) {
-            if (g_combatManager->m_armies[group][i].is(1u << 7))
-                return 1;
-        }
-        return 0;
-    }
+    case SPELL_SLAYER:
+        return groupHasDragons(1 - side);
     case SPELL_SHIELD:
-    case SPELL_FIRE_SHIELD: {
-        long group = 1 - side;
-        long i = g_combatManager->m_numArmies[group];
-        while (i-- > 0) {
-            army* enemy = &g_combatManager->m_armies[group][i];
-            if (!enemy->m_spellInfluence[62] && !enemy->m_spellInfluence[70]
-                && !enemy->m_spellInfluence[74] && !(enemy->is(1u << 21))
-                && enemy->m_creatureType != CREATURE_FIRST_AID_TENT
-                && enemy->m_creatureType != CREATURE_AMMO_CART) {
-#pragma inline_depth(0)
-                if (!enemy->canShoot(0))
-                    return 1;
-#pragma inline_depth()
-            }
-        }
-        return 0;
-    }
-    case SPELL_AIR_SHIELD: {
-        long group = 1 - side;
-        long i = g_combatManager->m_numArmies[group];
-        while (i-- > 0) {
-            army* enemy = &g_combatManager->m_armies[group][i];
-            if (!enemy->m_spellInfluence[62] && !enemy->m_spellInfluence[70]
-                && !enemy->m_spellInfluence[74] && !(enemy->is(1u << 21))
-                && enemy->m_creatureType != CREATURE_FIRST_AID_TENT
-                && enemy->m_creatureType != CREATURE_AMMO_CART) {
-#pragma inline_depth(0)
-                if (enemy->canShoot(0))
-                    return 1;
-#pragma inline_depth()
-            }
-        }
-        return 0;
-    }
+    case SPELL_FIRE_SHIELD:
+        return groupHasMelee(1 - side);
+    case SPELL_AIR_SHIELD:
+        return groupHasShooters(1 - side);
     case SPELL_PRECISION:
         return target->canShoot(0);
-    case SPELL_BLOODLUST: {
-        unsigned char shoots;
-        if (target->m_creatureType == army::ARMY_CREATURE_BALLISTA
-            || target->m_creatureType == army::ARMY_CREATURE_ARROW_TOWER) {
-            shoots = 1;
-        } else if (!(target->is(1u << 2)) || target->m_monInfo.m_numShots <= 0) {
-            shoots = 0;
-        } else {
-            hero* controller = target->getController();
-            shoots = 1;
-            if (!controller
-                || !controller->isWieldingArtifact(
-                       ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
-                if (target->enemyIsAdjacent(0))
-                    shoots = 0;
-            }
-            if (shoots && target->m_spellInfluence[61]
-                && target->m_forgetfulnessLevel >= 2)
-                shoots = 0;
-        }
-        return !shoots;
-    }
+    case SPELL_BLOODLUST:
+        return !target->canShoot(0);
     }
     return 1;
 }

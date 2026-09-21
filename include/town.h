@@ -392,11 +392,9 @@ public:
     VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
     bool hasBuilding(int buildingId, bool checkIncluded) const
     {
-        if (checkIncluded) {
+        if (checkIncluded)
             return (m_active & g_bitNumber[buildingId]) != 0;
-        } else {
-            return (m_built & g_bitNumber[buildingId]) != 0;
-        }
+        return (m_built & g_bitNumber[buildingId]) != 0;
     }
     // E:\gamedcs\Town.h:337. One canonical header body for all consumers.
     unsigned char isCastle() const
@@ -622,8 +620,9 @@ enum ETownDwellingTier {
 // town::GetTypeName (0x5c1450) hands out: `movsx eax,[this+4]` then
 // `mov eax,[4*eax + 0x6a74f4]`. The nine-row bound is the same
 // TOWN_TYPE_COUNT every other per-type table in this header carries -
-// the index IS town::type. Name INVENTED (no DC symbol covers it);
-// house ordinal placeholder. Owner TU unlocated - extern only.
+// the index IS town::type. This legacy interior alias is element one of
+// text.cpp's g_townTypeNames[10] at 0x6a74f0 (DC gTownTypeNames).
+// townManager::getTownTypeName uses the owning array directly.
 extern const char* g_unnamed6a74f4[TOWN_TYPE_COUNT];
 
 // Retail .data 0x688eb4: nine 7-int rows (one per town type) that

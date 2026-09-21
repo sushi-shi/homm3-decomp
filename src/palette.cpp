@@ -17,7 +17,7 @@ union TDoubleLongBits {
 
 // Dreamcast exposes this original helper boundary and its sole named local.
 // Retail has no out-of-line copy because VC6 /Ob2 expands it into HSVToRGB.
-static __forceinline long ftol(double d)
+static inline long ftol(double d)
 {
     const unsigned long magic = 0x59c00000;
     TFloatLongBits magicValue;

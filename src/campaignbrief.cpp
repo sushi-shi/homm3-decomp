@@ -700,16 +700,8 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
         w->sendMessage(widget::WIDGET_CLEAR_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        // TCampaignBrief::TCampaignBrief -> vector<widget*>::insert: DC proves
-        // the source operation is push_back, while retail retains its nested
-        // three-argument insert at 0x54d120.  This narrow depth-0 control stops
-        // the otherwise expanded size/_Ucopy/_Ufill/_Destroy family, although
-        // it currently stops one layer early at push_back.  Negative controls:
-        // ordinary depth and depth 1 both produce 73.58% / 216 blocks; pinning
-        // only this site leaves 202 blocks / 80.97%, versus 185 in retail.
-#pragma inline_depth(0)
-        widgets.insert(widgets.end(), w);
-#pragma inline_depth()
+        // Dreamcast proves the canonical widget-vector append here.
+        widgets.push_back(w);
 
         w = new iconWidget(
             673 + flagIndex * 15, 406, 15, 20,
@@ -719,13 +711,8 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
         w->sendMessage(widget::WIDGET_CLEAR_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        // The second DC push_back independently reaches the same retained
-        // retail insert.  Its one-pin negative control leaves 200 blocks and
-        // 81.38%; both controls together give the current 187-block / 85.72%
-        // checkpoint while the natural source-state threshold is recovered.
-#pragma inline_depth(0)
-        widgets.insert(widgets.end(), w);
-#pragma inline_depth()
+        // The second DC append has the same source operation.
+        widgets.push_back(w);
     }
 
     addBonusIcons();

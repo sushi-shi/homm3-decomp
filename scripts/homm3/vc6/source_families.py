@@ -36,7 +36,7 @@ from homm3.match import status
 from homm3.vc6 import tu_state_sweep as scoring
 from homm3.vc6._unit import flags_for_unit, source_for_unit
 
-VERSION = 7
+VERSION = 9
 
 
 @dataclass(frozen=True)
@@ -190,6 +190,13 @@ def ranking_scores(row):
     return row.get("max_scores", row["scores"])
 
 
+def expected_control_scores(report, scored):
+    """Read current scores from the live report, not stale ledger CUR."""
+    current = status.fn_fuzzy(report)
+    return {"|".join(key): round(current.get(key, 0.0), 4)
+            for key in scored}
+
+
 def rank(row):
     scores = ranking_scores(row).values()
     return (sum(value == 100 for value in scores), sum(scores), row["id"])
@@ -264,6 +271,20 @@ def compile_candidate(candidate_root, unit, output):
     if proc.returncode or not obj.is_file():
         raise RuntimeError(log[-6000:])
     return obj
+
+
+def prepare_snapshot(root, snapshot):
+    """Freeze authored inputs while sharing immutable project configuration."""
+    if not snapshot.exists():
+        snapshot.mkdir()
+        shutil.copytree(root / "include", snapshot / "include")
+        shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
+        (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
+    # cc_wrap resolves include roots through Project(candidate_root), so an
+    # isolated candidate also needs the project's read-only configuration.
+    config = snapshot / "config"
+    if not config.exists():
+        config.symlink_to(root / "config", target_is_directory=True)
 
 
 def evaluate(snapshot, output, plans, originals, axes, choices, *, previous, repeat=False):
@@ -342,11 +363,7 @@ def main(argv=None):
     output.mkdir(parents=True, exist_ok=True)
     scoring._write_json(output / "input.json", payload)
     snapshot = output / "snapshot"
-    if not snapshot.exists():
-        snapshot.mkdir()
-        shutil.copytree(root / "include", snapshot / "include")
-        shutil.copytree(root / "src", snapshot / "src", ignore=shutil.ignore_patterns("build"))
-        (snapshot / "vendor").symlink_to(root / "vendor", target_is_directory=True)
+    prepare_snapshot(root, snapshot)
     rows = status.load_baseline()
     plans = []
     for unit, source in zip(units, sources):
@@ -363,7 +380,8 @@ def main(argv=None):
     if render(originals, axes, zero) != originals:
         raise ValueError("the first option on every axis must preserve the original source")
     control = evaluate(snapshot, output, plans, originals, axes, zero, previous=rows)
-    expected = {"|".join(key): row.cur or 0 for key, row in rows.items() if key[0] in units}
+    scored = tuple(key for key in rows if key[0] in units)
+    expected = expected_control_scores(status.load_report(), scored)
     if control["scores"] != expected:
         raise RuntimeError(f"unchanged-source control failed: {control.get('error', 'scores differ from current build')}")
     corner = tuple(len(axis.options) - 1 for axis in axes)

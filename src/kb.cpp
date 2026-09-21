@@ -1811,13 +1811,10 @@ static int doLoadGame()
 
         switch (static_cast<short>(g_windowManager->m_dialogReturn)) {
         case TGameTypeWindow::SINGLE_ID:
-            // INLINE BOUNDARY: DoLoadGame -> PickLoadGame. Dreamcast
-            // kb.cpp:2096 and retail oldmain+0xc68 retain the call;
-            // ordinary depth expands the modal object into oldmain.
-#pragma inline_depth(0)
+            // DC2096 and retail oldmain+0xc68 retain PickLoadGame. The
+            // recovered helper/control flow needs no compiler pin.
             if (pickLoadGame())
                 exitLoadGame = 1;
-#pragma inline_depth()
             break;
 
         case TGameTypeWindow::CAMPAIGN_ID:
@@ -1836,24 +1833,20 @@ static int doLoadGame()
         case TGameTypeWindow::MULTIPLAYER_ID:
             // INLINE BOUNDARY: DoLoadGame -> DoMultiPlayerWindow and
             // PickLoadGame. Dreamcast kb.cpp:2110/2112 and retail
-            // oldmain+0xc5f/+0xc68 retain both calls. Ordinary depth expands
-            // both modal objects and destroys the retail call sequence.
-#pragma inline_depth(0)
+            // oldmain+0xc5f/+0xc68 retain both calls. With the current
+            // recovered helper state, ordinary depth retains the same bytes.
             if (doMultiPlayerWindow() && pickLoadGame())
                 exitLoadGame = 1;
-#pragma inline_depth()
             break;
 
         case TGameTypeWindow::TUTORIAL_ID:
             g_game->m_isTutorial = 1;
             // INLINE BOUNDARY: DoLoadGame -> PickLoadGame. Dreamcast
             // kb.cpp:2122 names the call and retail oldmain's tutorial-load
-            // arm retains it. Negative control: ordinary depth expands the
-            // selection-window ctor/modal/dtor into oldmain.
-#pragma inline_depth(0)
+            // arm retains it. The recovered helper state keeps the boundary
+            // naturally; the old pragma is byte-flat.
             if (pickLoadGame())
                 exitLoadGame = 1;
-#pragma inline_depth()
             break;
 
         case TGameTypeWindow::QUIT_ID:

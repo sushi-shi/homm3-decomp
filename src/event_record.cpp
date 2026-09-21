@@ -1158,68 +1158,48 @@ void game::recordTeleport(hero* who, type_point destination)
 }
 
 // E:\gamedcs\event_record.cpp:1136
-// Residual (88.1751% / 87.9349%): the register-homing family.  Retail gives
-// `this` EDI and the inlined GetTeamMask scan ESI; our CL swaps them, and
-// every later row follows.  Frames differ by one dword (0x30 against
-// retail's 0x38).  MEASURED AND REJECTED 2026-09-06: the Dreamcast's own
-// `rect` local (tagRECT at sp+0x44, the four clamp results as one object)
-// does NOT survive into Complete - retail's four results sit at [ebp-0x38],
-// [ebp-0x30], [ebp-0x2c] and a parameter home, which no 16-byte contiguous
-// struct can produce - and spelling it costs 0.04 on both twins (85.6037 /
-// 84.7442).  Spelling the queue guard as the DC's `get_change_count()`
-// accessor instead of `changes.size()` is byte-flat.
-// The positive visibility sweep. The radius test is a REAL sqrt against
-// `range + 0.5` (the double at .rdata 0x63ac70), the clamps are the
-// reference-returning min/max templates above - which is what puts their
-// by-value temporaries in the dead parameter homes - and every cell whose
-// mask actually changes is journalled into a shroud record. The record is
-// queued only for a local, non-empty, non-replay sweep; otherwise it is
-// deleted through the vtable.
+// The DC RECT, distance and teamMask locals reproduce Complete exactly.
+// Both dc 0x8e48c and retail +0x17f branch around addChange and the map-cell
+// store, so unchanged cells are not rewritten. The header getChangeCount
+// helper and vector push_back remain canonical source calls and expand to
+// the retail sequences without inline steering.
 VA(0x0049d160, 0x268)  // anchor-global (0x63df7c + GetMapExtraPtr), dc 0x8e33c
-void game::setVisibility(int startX, int startY, int z, int whichPlayer,
+void game::setVisibility(const int startX, const int startY, const int z,
+                         const int whichPlayer,
                          int range, unsigned char remoteMove)
 {
     if (whichPlayer < 0 || whichPlayer >= 8)
         return;
 
-    unsigned short visMask = getTeamMask(whichPlayer);
-    double limit = range + 0.5;
+    unsigned short teamMask = getTeamMask(whichPlayer);
+    double distance = range + 0.5;
     type_record_shroud* record = new type_record_shroud();
 
-    int x0 = max(startX - range, 0);
-    int x1 = cppMin(startX + range + 1, g_mapWidth);
-    int y0 = max(startY - range, 0);
-    int y1 = cppMin(startY + range + 1, g_mapHeight);
+    RECT rect;
+    rect.left = max(startX - range, 0);
+    rect.right = min(startX + range + 1, g_mapWidth);
+    rect.top = max(startY - range, 0);
+    rect.bottom = min(startY + range + 1, g_mapHeight);
 
-    for (int y = y0; y < y1; ++y) {
-        int dy = startY - y;
-        for (int x = x0; x < x1; ++x) {
-            int dx = startX - x;
-            if (sqrt(static_cast<double>(dx * dx + dy * dy)) <= limit) {
-                unsigned short* extra = getMapExtraPtr(x, y, z);
-                unsigned short oldValue = *extra;
-                unsigned short newValue = oldValue | visMask;
-                if (oldValue != newValue)
-                    record->addChange(x, y, z, oldValue, newValue);
-                *extra = newValue;
+    for (int y = rect.top; y < rect.bottom; ++y) {
+        for (int x = rect.left; x < rect.right; ++x) {
+            if (sqrt(static_cast<double>(
+                    (startX - x) * (startX - x)
+                    + (startY - y) * (startY - y))) <= distance) {
+                unsigned short* oldValue = getMapExtraPtr(x, y, z);
+                unsigned short newValue = *oldValue | teamMask;
+                if (*oldValue != newValue) {
+                    record->addChange(x, y, z, *oldValue, newValue);
+                    *oldValue = newValue;
+                }
             }
         }
     }
 
-    if (!remoteMove && record->m_changes.size() != 0 && !g_completeDrawMessageBypass)
+    if (!remoteMove && record->getChangeCount() != 0 && !g_completeDrawMessageBypass)
     {
-        // Retail CALLS insert(iterator, n, const T&) here where the smaller
-        // game::record_* bodies expand it, so the site is pinned - with
-        // end() hoisted OUT of the pinned statement, because retail keeps
-        // that one inline (`mov eax,[ecx+8]`).
-        // The record list NAMED AS A REFERENCE: 85.6452 -> 86.7235.  The same
-        // change on `changes` in this body is flat, and on the sibling
-        // ResetVisibility 0x49d3d0 it does not beat MAX.
-        std::vector<type_event_record*>& rEventRecords = m_eventRecords;
-        type_event_record** at = rEventRecords.end();
-#pragma inline_depth(0)
-        rEventRecords.insert(at, 1, record);
-#pragma inline_depth()
+        // Dreamcast line 1178 identifies the canonical source call.
+        m_eventRecords.push_back(record);
     } else {
         delete record;
     }
@@ -1231,32 +1211,38 @@ void game::setVisibility(int startX, int startY, int z, int whichPlayer,
 // named player keeps its own team's bit and everyone else loses theirs -
 // Cover of Darkness's semantics exactly - while -1 clears all eight. It
 // also has no replay guard on the queue, only the empty-record one.
+// DC line 1199's double distance is range+0.5, not the sqrt result; lines
+// 1206..1209 fill tagRECT rect. Both dc 0x8e624 and retail +0x18e skip the
+// write when unchanged, so line 1224's store belongs inside the inequality.
+// Canonical push_back at line 1232 retains retail's vector insert call.
 VA(0x0049d3d0, 0x260)  // anchor-global (0x63df7c + GetMapExtraPtr), dc 0x8e54c
 void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
                            int range)
 {
-    unsigned short keepMask = 0x100;
+    unsigned short enemyMask = 0x100;
     if (whichPlayer != -1)
-        keepMask = getTeamMask(whichPlayer) | 0x100;
+        enemyMask = getTeamMask(whichPlayer) | 0x100;
 
-    double limit = range + 0.5;
+    double distance = range + 0.5;
     type_record_shroud* record = new type_record_shroud();
 
-    int x0 = max(startX - range, 0);
-    int x1 = cppMin(startX + range + 1, g_mapWidth);
-    int y0 = max(startY - range, 0);
-    int y1 = cppMin(startY + range + 1, g_mapHeight);
+    RECT rect;
+    rect.left = max(startX - range, 0);
+    rect.right = min(startX + range + 1, g_mapWidth);
+    rect.top = max(startY - range, 0);
+    rect.bottom = min(startY + range + 1, g_mapHeight);
 
-    for (int y = y0; y < y1; ++y) {
-        int dy = startY - y;
-        for (int x = x0; x < x1; ++x) {
-            int dx = startX - x;
-            if (sqrt(static_cast<double>(dx * dx + dy * dy)) <= limit) {
+    for (int y = rect.top; y < rect.bottom; ++y) {
+        for (int x = rect.left; x < rect.right; ++x) {
+            if (sqrt(static_cast<double>(
+                    (startX - x) * (startX - x)
+                    + (startY - y) * (startY - y))) <= distance) {
                 unsigned short* oldValue = getMapExtraPtr(x, y, z);
-                unsigned short newValue = *oldValue & keepMask;
-                if (*oldValue != newValue)
+                unsigned short newValue = *oldValue & enemyMask;
+                if (*oldValue != newValue) {
                     record->addChange(x, y, z, *oldValue, newValue);
-                *oldValue = newValue;
+                    *oldValue = newValue;
+                }
             }
         }
     }
@@ -1266,14 +1252,7 @@ void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
     if (record->m_changes.size() == 0) {
         delete record;
     } else {
-        // Retail CALLS insert(iterator, n, const T&) here where the smaller
-        // game::record_* bodies expand it, so the site is pinned - with
-        // end() hoisted OUT of the pinned statement, because retail keeps
-        // that one inline (`mov eax,[ecx+8]`).
-        type_event_record** at = m_eventRecords.end();
-#pragma inline_depth(0)
-        m_eventRecords.insert(at, 1, record);
-#pragma inline_depth()
+        m_eventRecords.push_back(record);
     }
 }
 VA(0x0049d630, 0x8C)  // dc 0x8e730

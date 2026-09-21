@@ -498,8 +498,8 @@ class CAdvMgrNetMsgHandler : public CNetMsgHandler {
 protected:
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg);
     void handleGiftRequestMsg(CNetMsg* netMsg);
-    void handleGiftMsg(CNetMsg* netMsg);
-    virtual void handleTradeRequestMsg(CNetMsg* netMsg);
+    virtual void handleGiftMsg(CNetMsg* netMsg);
+    void handleTradeRequestMsg(CNetMsg* netMsg);
 };
 SIZE(CAdvMgrNetMsgHandler, 0x0c);
 

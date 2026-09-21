@@ -209,7 +209,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             g_advManager->updBottomView(1, 1, 1);
         }
         if (g_currentPlayer->isHuman()) {
-            g_chatMan.systemMsg(g_generalText->getText(352),
+            g_chatMan.systemMsg((*g_generalText)[352],
                       g_currentPlayer->m_name);
             g_unnamed69d810 = g_netLocalGamePos;
         }
@@ -259,59 +259,19 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         g_game->setVisibility(msg->m_point.m_x, msg->m_point.m_y,
                               msg->m_point.m_z, msg->m_playerPos,
                               msg->m_range, 0);
-        g_advManager->updateRadar(g_advManager->m_radarOrigin, 1, 1, 0, 0, 0);
-        g_advManager->completeDraw(g_advManager->m_radarOrigin.m_x,
-                                   g_advManager->m_radarOrigin.m_y,
-                                   g_advManager->m_radarOrigin.m_z, 0, 1);
-        advManager* manager = g_advManager;
-        g_windowManager->updateScreen(advManager::ADVENTURE_SCREEN_X,
-                                      advManager::ADVENTURE_SCREEN_Y,
-                                      advManager::ADVENTURE_SCREEN_WIDTH,
-                                      advManager::ADVENTURE_SCREEN_HEIGHT);
-        unsigned long curTime = GameTime::get();
-        if (static_cast<long>(
-                curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
-                >= 0
-            && !manager->m_animCtrPaused) {
-            ++manager->m_animCtr;
-            long elapsedTime =
-                curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-            g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                cppMax(elapsedTime,
-                         static_cast<long>(
-                             advManager::ADVENTURE_ANIMATION_MAX_ELAPSED));
-        }
-        process1WindowsMessage();
+        g_advManager->updateRadar(1, 1, 0, 0, 0);
+        g_advManager->completeDraw(0);
+        g_advManager->updateScreen(0, 0);
         break;
     }
     case RS_RESET_VISIBILITY: {
-        CSetVisibilityMsg* msg = static_cast<CSetVisibilityMsg*>(netMsg);
+        CResetVisibilityMsg* msg = static_cast<CResetVisibilityMsg*>(netMsg);
         g_game->setVisibility(msg->m_point.m_x, msg->m_point.m_y,
                               msg->m_point.m_z, msg->m_playerPos,
                               msg->m_range, 0);
-        g_advManager->updateRadar(g_advManager->m_radarOrigin, 1, 1, 0, 0, 0);
-        g_advManager->completeDraw(g_advManager->m_radarOrigin.m_x,
-                                   g_advManager->m_radarOrigin.m_y,
-                                   g_advManager->m_radarOrigin.m_z, 0, 1);
-        advManager* manager = g_advManager;
-        g_windowManager->updateScreen(advManager::ADVENTURE_SCREEN_X,
-                                      advManager::ADVENTURE_SCREEN_Y,
-                                      advManager::ADVENTURE_SCREEN_WIDTH,
-                                      advManager::ADVENTURE_SCREEN_HEIGHT);
-        unsigned long curTime = GameTime::get();
-        if (static_cast<long>(
-                curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
-                >= 0
-            && !manager->m_animCtrPaused) {
-            ++manager->m_animCtr;
-            long elapsedTime =
-                curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-            g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                cppMax(elapsedTime,
-                         static_cast<long>(
-                             advManager::ADVENTURE_ANIMATION_MAX_ELAPSED));
-        }
-        process1WindowsMessage();
+        g_advManager->updateRadar(1, 1, 0, 0, 0);
+        g_advManager->completeDraw(0);
+        g_advManager->updateScreen(0, 0);
         break;
     }
     case RS_COMBAT_TYPE: {
@@ -324,24 +284,18 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             m_abortPopupMsg = netMsg;
             return 0;
         }
-        CTradeRequestMsg* msg = static_cast<CTradeRequestMsg*>(netMsg);
-#pragma inline_depth(0)
-        g_game->m_heroes[msg->m_left.m_id] = msg->m_left;
-        g_game->m_heroes[msg->m_right.m_id] = msg->m_right;
-#pragma inline_depth()
-        g_advManager->heroSwap(&g_game->m_heroes[msg->m_left.m_id],
-                               &g_game->m_heroes[msg->m_right.m_id]);
+        handleTradeRequestMsg(netMsg);
         break;
     }
     case RS_PLAYER_ACTIVE:
-        g_chatMan.systemMsg(g_generalText->getText(40),
+        g_chatMan.systemMsg((*g_generalText)[40],
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()));
         break;
     case RS_GIFT:
-        handleTradeRequestMsg(netMsg);
+        handleGiftMsg(netMsg);
         break;
     case RS_GIFT_REQUEST:
-        handleGiftMsg(netMsg);
+        handleGiftRequestMsg(netMsg);
         break;
     case RS_SESSION_LOST:
         if (m_inPopup) {
@@ -367,23 +321,13 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     return 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\advmgr.cpp:651
-DC_ONLY(0x5fc8, 0x204)
-void CAdvMgrNetMsgHandler::handleGiftRequestMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// The retained source name handles a resource request (RS_GIFT_REQUEST).
-// E:\gamedcs\advmgr.cpp:677
-#endif  // @carcass
-
 VA_COMPGEN(0x00406480, 0x59F, IMPLICIT_COPY_ASSIGN, hero)
 
-VA(0x00406a20, 0x1C7)  // dc 0x61cc
-void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
+// Original: CAdvMgrNetMsgHandler::HandleGiftRequestMsg; advmgr.cpp:651,
+// dc 0x5fc8. CGiftRequestMsg and the RS_GIFT_REQUEST dispatch prove the
+// identity; the old link-order mapping had shifted all three handler names.
+VA(0x00406a20, 0x1C7)  // anchor-callee + message payload, dc 0x5fc8
+void CAdvMgrNetMsgHandler::handleGiftRequestMsg(CNetMsg* netMsg)
 {
     CGiftRequestMsg* msg = static_cast<CGiftRequestMsg*>(netMsg);
     std::string text;
@@ -408,10 +352,10 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
     resources.clear();
 }
 
-// The retained source name handles a gift (RS_GIFT), using its giver, resource,
-// and quantity payload.
-VA(0x00406bf0, 0x1FA)  // dc 0x6428
-void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
+// Original: CAdvMgrNetMsgHandler::HandleGiftMsg; advmgr.cpp:677, dc 0x61cc.
+// The gift payload, local-player credit and vtable slot all corroborate it.
+VA(0x00406bf0, 0x1FA)  // anchor-vtable + town forward, dc 0x61cc
+void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
 {
     CGiftMsg* msg = static_cast<CGiftMsg*>(netMsg);
     std::string text;
@@ -438,6 +382,18 @@ void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
         localPlayer->m_resources[msg->m_resource] += msg->m_qty;
         g_advManager->m_advWindow->updateResourceDisplay(!isInPopup(), 1);
     }
+}
+
+// Original: CAdvMgrNetMsgHandler::HandleTradeRequestMsg; advmgr.cpp:713,
+// dc 0x6428. Complete expands this ordinary helper in handleNetMsg's
+// RS_TRADE_REQUEST arm; it has no retained standalone retail body.
+void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
+{
+    CTradeRequestMsg* msg = static_cast<CTradeRequestMsg*>(netMsg);
+    g_game->m_heroes[msg->m_left.m_id] = msg->m_left;
+    g_game->m_heroes[msg->m_right.m_id] = msg->m_right;
+    g_advManager->heroSwap(&g_game->m_heroes[msg->m_left.m_id],
+                           &g_game->m_heroes[msg->m_right.m_id]);
 }
 
 // E:\gamedcs\advmgr.cpp:734
@@ -532,10 +488,18 @@ DATA(0x0065f67c) extern const char* const g_boatFrothIconNames[3];
 
 // E:\gamedcs\advmgr.cpp:837
 
-// Retail calls vector<resource*>::insert at both push_back sites. Keep the
-// site-level inline pins on those calls.
-
-// Residual (97.80%): the tail of the same cascade, register/slot only.
+// Restoring GetNumMapLevels, GetCursorSampleSet, OverrideBottomView and
+// TTextResource::operator[] recovers the natural push_back expansions without
+// inline-depth pins: 97.9312 pinned -> 99.5978 unpinned. The sample helper alone
+// reaches 75.2428 unpinned; the coupled bottom-view calls are load-bearing.
+// Restoring the DC 962..965 sound-pointer clearing loop instead of memset
+// recovers the store scheduling and raises the unpinned body to 99.9601.
+// Residual: temporary slots -0x10/-0x14, plus distinct cache-arm pointer homes.
+// Direct appends, shared DC counters and a reused filename buffer were flat
+// before that loop recovery. With it, sharing a resource pointer scores
+// 99.9475 per iteration / 99.9366 per cache batch, so direct appends remain.
+// The register model cannot classify this slot residual. The two insert-call
+// name differences are resource*/widget* pointer-vector ICF aliases.
 // The adventure screen setup. Retail's grouping is preserved: the route
 // array and the map window are allocated lazily with MemError guards,
 // the cached-graphics list reverses each name and picks GetSprite for
@@ -548,15 +512,18 @@ DATA(0x0065f67c) extern const char* const g_boatFrothIconNames[3];
 VA(0x00406fd0, 0x7D6)  // anchor-vtable, dc 0x6b24
 int advManager::open(int newPriority)
 {
+    int i;
+    int j;
+
     m_bottomViewType = BOTTOM_VIEW_DEFAULT;
     m_heroLogoShowing = 0;
     g_completeDrawEnabled = 0;
 
     if (m_routeArray == 0) {
-        m_routeArray = new unsigned short[(g_game->m_worldMap.getNumLevels())
+        m_routeArray = new unsigned short[(g_game->getNumMapLevels())
                                         * g_mapHeight * g_mapWidth];
         memset(m_routeArray, 0,
-               (g_game->m_worldMap.getNumLevels()) * g_mapHeight * g_mapWidth
+               (g_game->getNumMapLevels()) * g_mapHeight * g_mapWidth
                    * sizeof(unsigned short));
         if (m_routeArray == 0)
             memError();
@@ -573,34 +540,25 @@ int advManager::open(int newPriority)
             memError();
     }
     g_windowManager->addWindow(m_advWindow, 0, 1);
-    if (g_game->m_worldMap.getNumLevels() < 2)
+    if (g_game->getNumMapLevels() < 2)
         m_advWindow->widgetSetStatus(4, 8);
 
-    // The cache loop's counter is UNSIGNED: retail closes it with
-    // `cmp esi,0x26 / jb` at 0x406fd0+0x28e where a signed `int` can only
-    // emit `jl`. 97.7989 -> 97.9314 and the branch view goes clean 36/36.
-    // MEASURED AND REJECTED at that plateau: hoisting one shared
-    // `resource* graphic` above the if/else so both arms share retail's
-    // [ebp-0x10] slot - 97.9057, the per-arm declarations are right.
+    // DC names the shared counters i/j. The cache itself is retail-only:
+    // comparing i with the array's unsigned element count preserves retail's
+    // jb loop edge without inventing a separate unsigned source local.
     m_cachedGraphics.reserve(38);
-    for (unsigned int cached = 0; cached < 38; cached++) {
+    for (i = 0; i < sizeof(g_advCachedGraphicNames) / sizeof(g_advCachedGraphicNames[0]); i++) {
         char reversed[16];
-        strcpy(reversed, g_advCachedGraphicNames[cached]);
+        strcpy(reversed, g_advCachedGraphicNames[i]);
         _strrev(reversed);
         if (_strnicmp(reversed,
                       DATA_COMPGEN(0x00660328, defExtensionReversed, "fed"),
                       3) == 0) {
-            resource* graphic = ResourceManager::getSprite(g_advCachedGraphicNames[cached]);
-#pragma inline_depth(0)
-            m_cachedGraphics.push_back(graphic);
-#pragma inline_depth()
+            m_cachedGraphics.push_back(ResourceManager::getSprite(g_advCachedGraphicNames[i]));
         } else {
-            resource* graphic = ResourceManager::getBitmap816(g_advCachedGraphicNames[cached]);
-#pragma inline_depth(0)
-            m_cachedGraphics.push_back(graphic);
-#pragma inline_depth()
+            m_cachedGraphics.push_back(ResourceManager::getBitmap816(g_advCachedGraphicNames[i]));
         }
-        if (cached == CACHED_GRAPHIC_TICK)
+        if (i == CACHED_GRAPHIC_TICK)
             incProgressBar(1);
     }
     incProgressBar(1);
@@ -608,14 +566,14 @@ int advManager::open(int newPriority)
     m_movingObjectSprite =
         ResourceManager::getSprite(DATA_COMPGEN(0x00660318, movingObjectSpriteName,
                                "avwattak.def"));
-    for (int ground = 0; ground < 10; ground++)
-        m_groundTileset[ground] = ResourceManager::getSprite(g_groundTilesetNames[ground]);
+    for (i = 0; i < 10; i++)
+        m_groundTileset[i] = ResourceManager::getSprite(g_groundTilesetNames[i]);
     incProgressBar(1);
-    for (int river = 0; river < 4; river++)
-        m_riverTileset[river + 1] = ResourceManager::getSprite(g_riverTilesetNames[river]);
+    for (i = 0; i < 4; i++)
+        m_riverTileset[i + 1] = ResourceManager::getSprite(g_riverTilesetNames[i]);
     incProgressBar(1);
-    for (int road = 0; road < 3; road++)
-        m_roadTileset[road + 1] = ResourceManager::getSprite(g_roadTilesetNames[road]);
+    for (i = 0; i < 3; i++)
+        m_roadTileset[i + 1] = ResourceManager::getSprite(g_roadTilesetNames[i]);
     incProgressBar(1);
     m_borderTileset =
         ResourceManager::getSprite(DATA_COMPGEN(0x00660310, borderTilesetName, "edg.def"));
@@ -634,37 +592,33 @@ int advManager::open(int newPriority)
     m_cloudIcons =
         ResourceManager::getSprite(DATA_COMPGEN(0x006602bc, cloudIconsName, "tshre.def"));
     incProgressBar(1);
-    for (int cursor = 0; cursor < 18; cursor++) {
-        m_cursorIcons[cursor] = ResourceManager::getSprite(g_cursorIconNames[cursor]);
-        if (cursor == CURSOR_ICON_TICK)
+    for (i = 0; i < 18; i++) {
+        m_cursorIcons[i] = ResourceManager::getSprite(g_cursorIconNames[i]);
+        if (i == CURSOR_ICON_TICK)
             incProgressBar(1);
     }
     incProgressBar(1);
-    for (int boat = 0; boat < 3; boat++) {
-        m_boatIcons[boat] = ResourceManager::getSprite(g_boatIconNames[boat]);
-        m_boatFrothIcons[boat] = ResourceManager::getSprite(g_boatFrothIconNames[boat]);
-        for (int boatOwner = 0; boatOwner < 8; boatOwner++)
-            m_boatFlagIcons[boat][boatOwner] =
-                ResourceManager::getSprite(g_boatFlagIconNames[boat][boatOwner]);
+    for (i = 0; i < 3; i++) {
+        m_boatIcons[i] = ResourceManager::getSprite(g_boatIconNames[i]);
+        m_boatFrothIcons[i] = ResourceManager::getSprite(g_boatFrothIconNames[i]);
+        for (j = 0; j < 8; j++)
+            m_boatFlagIcons[i][j] =
+                ResourceManager::getSprite(g_boatFlagIconNames[i][j]);
     }
     incProgressBar(1);
-    for (int owner = 0; owner < 8; owner++)
-        m_flagIcons[owner] = ResourceManager::getSprite(g_flagIconNames[owner]);
+    for (i = 0; i < 8; i++)
+        m_flagIcons[i] = ResourceManager::getSprite(g_flagIconNames[i]);
     m_radarIcons =
         ResourceManager::getSprite(DATA_COMPGEN(0x006602b0, radarIconsName, "radar.def"));
 
-    memset(m_loopedSample, 0, sizeof(m_loopedSample));
-    for (int slot = 0; slot < ADVENTURE_ACTIVE_SOUND_COUNT; slot++) {
-        m_soundArray[slot].m_soundId = LOOPING_SOUND_INVALID;
-        m_soundArray[slot].m_priority = 0x7f;
+    for (i = 0; i < LOOPING_SOUND_COUNT; i++)
+        m_loopedSample[i] = 0;
+    for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
+        m_soundArray[i].m_soundId = LOOPING_SOUND_INVALID;
+        m_soundArray[i].m_priority = 0x7f;
         m_touchedSounds = 0;
     }
-    for (int horse = 0; horse <= 10; horse++) {
-        sprintf(g_text,
-                DATA_COMPGEN(0x006602a0, heroSampleFormat, "horse%02d.wav"),
-                horse);
-        m_heroSamples[horse] = ResourceManager::getSample(g_text);
-    }
+    getCursorSampleSet(g_unnamed698758.m_walkSpeed);
 
     if (!g_currentPlayer->isLocalHuman()) {
         g_game->turnOnAIMusic();
@@ -688,7 +642,7 @@ int advManager::open(int newPriority)
         g_completeDrawEnabled = 1;
     }
     m_bottomViewType = BOTTOM_VIEW_DEFAULT;
-    m_bottomViewOverride = BOTTOM_VIEW_DEFAULT;
+    overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
     g_soundManager->adjustSoundVolumes();
     g_game->resetAllPlayerVisibility();
     setInitialMapOrigin();
@@ -707,12 +661,11 @@ int advManager::open(int newPriority)
         g_unnamed6993dc = 1;
         g_completeDrawEnabled = g_currentPlayer->isLocalHuman();
         char text[256];
-        sprintf(text, g_generalText->getText(14), g_currentPlayer->getName());
+        sprintf(text, (*g_generalText)[14], g_currentPlayer->getName());
         g_windowManager->m_isWaitingForFadeIn = 0;
         g_game->waitForPlayer(text, g_netLocalGamePos);
         redrawAdvScreen(1, 0);
-        m_bottomViewOverride = BOTTOM_VIEW_1;
-        m_bottomViewDeadline = GameTime::get() + 3000;
+        overrideBottomView(BOTTOM_VIEW_1, -1);
     }
     if (g_mpNetProtocol != MP_HOTSEAT)
         g_windowManager->fadeScreen(0, 4, 0);
@@ -873,18 +826,18 @@ int advManager::inMapArea(int x, int y)
         && y >= mapWidget->m_y && y < mapWidget->m_y + mapWidget->m_height;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\advmgr.cpp:1229
-DC_ONLY(0x79b0, 0x52)
-void advManager::GetCursorSampleSet(int walkSpeed)
+// DC advmgr.cpp:1229..1237, dc 0x79b0: GetCursorSampleSet.
+// Both retail callers expand this ordinary helper. The walkSpeed parameter
+// is already unused in the DC body; its sample loop covers indices 0..10.
+void advManager::getCursorSampleSet(int walkSpeed)
 {
-    // @stub
+    for (int i = 0; i <= 10; i++) {
+        sprintf(g_text,
+                DATA_COMPGEN(0x006602a0, heroSampleFormat, "horse%02d.wav"),
+                i);
+        m_heroSamples[i] = ResourceManager::getSample(g_text);
+    }
 }
-
-// The ordinary get_mouse_map_point body follows this reference block.
-
-#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:1245. This is the mouse-relative point, not
 // get_map_center: DC 0x7a04 adds the mouse offsets, while header dc 0x1f000
@@ -7697,7 +7650,15 @@ void advManager::heroQuickView(int heroId, int x, int y,
 const char* getBuildingName(int townType, int buildingId);
 
 // E:\gamedcs\advmgr.cpp:9115
-
+// Exact without the two building-append pins. DC 9120/9121 name GetTown
+// and get_location; 9171 names HasBuilding(building, false), followed by
+// is_legal_building. The appends at 9174/9176 are ordinary operator+=.
+// DC locals include enemy_player (reference), this_hero, shared long i,
+// msg, iPlayer, infowin and view_level (normalized below). Keep retail's
+// const town access for its four const getArmy calls, unlike the older DC.
+// Restoring these together gives 99.5015%; DC 9192/9193 and retail place
+// first = 1 before calculateProduction, closing the remaining instruction
+// schedule difference at 100%. No alternate string spelling is required.
 VA(0x004167a0, 0x7DB)  // anchor-callee, dc 0x19674
 void advManager::townQuickView(int townId, int x, int y,
                                unsigned char displayDropShadow)
@@ -7705,7 +7666,7 @@ void advManager::townQuickView(int townId, int x, int y,
     if (townId == -1)
         return;
 
-    int localPos = g_game->getLocalPlayerGamePos();
+    int player = g_game->getLocalPlayerGamePos();
     // CONST, and the bytes require it: retail's four get_army() calls below
     // are ?get_army@town@@QBEABVarmyGroup@@XZ, the const overload, which is
     // a DIFFERENT function at a different address from the non-const one a
@@ -7718,29 +7679,29 @@ void advManager::townQuickView(int townId, int x, int y,
     // name, so this is a fidelity fix - it makes the object reference the
     // function retail references - and it retires a false OVER-inline row
     // that would otherwise send the next lane after an inliner knob.
-    const town* thisTown = &g_game->m_towns[townId];
-    type_point point(thisTown->m_mapX, thisTown->m_mapY, thisTown->m_mapZ);
-
-    TSkillMastery identifyLevel = TSkillMastery(getIdentifyLevel(point));
+    const town* const thisTown = g_game->getTown(townId);
+    TSkillMastery identifyLevel = getIdentifyLevel(thisTown->getLocation());
 
     if (m_debugViewAll && thisTown->m_owner != g_netLocalGamePos) {
-        std::string text;
-        playerData* ownerPlayer = &g_game->m_players[thisTown->m_owner];
+        std::string msg;
+        playerData& enemyPlayer = g_game->m_players[thisTown->m_owner];
         unsigned char first = 1;
 
-        text = thisTown->m_name;
-        text += "\n\n";
+        msg = thisTown->m_name;
+        msg += "\n\n";
         if (thisTown->m_garrisonHeroId >= 0) {
-            text += g_game->getHero(thisTown->m_garrisonHeroId)->m_name;
+            const hero* thisHero = g_game->getHero(thisTown->m_garrisonHeroId);
+            msg += thisHero->m_name;
             first = 0;
         }
 
-        for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        long i;
+        for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             if (thisTown->getArmy().m_armies[i] != -1) {
                 if (!first)
-                    text += ", ";
+                    msg += ", ";
                 first = 0;
-                text += formatString(
+                msg += formatString(
                     "%i %s", thisTown->getArmy().m_numTroops[i],
                     getArmyName(thisTown->getArmy().m_armies[i],
                                 thisTown->getArmy().m_numTroops[i]));
@@ -7748,90 +7709,66 @@ void advManager::townQuickView(int townId, int x, int y,
         }
 
         if (!first)
-            text += "\n\n";
+            msg += "\n\n";
         first = 1;
-        for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
-            if (thisTown->m_built & g_bitNumber[building]) {
-                int storage;
-                storage = building;
-                if (thisTown->isLegalBuilding(type_building_id(storage))) {
-                    // Retail CALLS basic_string::append(const char*,
-                    // size_type) at BOTH of this arm's appends - fn+0x349 for
-                    // the separator and fn+0x371 for the name - with the
-                    // strlen expanded in front of each as `repne scasb`, and
-                    // our CL expanded the append too. `operator+=` reaches
-                    // append(const char*) which reaches this two-argument one,
-                    // so the site has to be spelled at the depth retail stops
-                    // at before a statement pin can impose the call.
-                    // MEASURED NEGATIVE, do not extend: the same treatment on
-                    // the other seven `text += <literal>` sites in this block
-                    // costs 90.9834 -> 73.8082. Retail calls append at THESE
-                    // two and expands it at the rest.
-                    if (!first) {
-                        const char* sep = ", ";
-                        size_t sepLen = strlen(sep);
-#pragma inline_depth(0)
-                        text.append(sep, sepLen);
-#pragma inline_depth()
-                    }
-                    first = 0;
-                    const char* buildingName =
-                        getBuildingName(thisTown->m_type, building);
-                    size_t buildingNameLen = strlen(buildingName);
-#pragma inline_depth(0)
-                    text.append(buildingName, buildingNameLen);
-#pragma inline_depth()
-                }
-            }
-        }
-
-        text += "\n\n";
-        for (int res = 0; res < 7; res++) {
-            if (res > 0)
-                text += ", ";
-            text += formatString(
-                "%i %s", ownerPlayer->m_resources[res], g_resourceNames[res]);
-        }
-
-        text += "\n\nIncome:\n";
-        g_game->calculateProduction();
-        first = 1;
-        for (int inc = 0; inc < 7; inc++) {
-            if (ownerPlayer->m_ai.m_turnProductionResource[inc] > 0) {
+        for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+            type_building_id building = type_building_id(i);
+            if (thisTown->hasBuilding(building, false)
+                    && thisTown->isLegalBuilding(building)) {
                 if (!first)
-                    text += ", ";
+                    msg += ", ";
                 first = 0;
-                text += formatString(
-                    "%i %s", ownerPlayer->m_ai.m_turnProductionResource[inc],
-                    g_resourceNames[inc]);
+                msg += getBuildingName(thisTown->m_type, building);
             }
         }
 
-        normalDialog(text.c_str(), 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        msg += "\n\n";
+        for (i = 0; i < 7; i++) {
+            if (i > 0)
+                msg += ", ";
+            msg += formatString(
+                "%i %s", enemyPlayer.m_resources[i], g_resourceNames[i]);
+        }
+
+        msg += "\n\nIncome:\n";
+        first = 1;
+        g_game->calculateProduction();
+        for (i = 0; i < 7; i++) {
+            if (enemyPlayer.m_ai.m_turnProductionResource[i] > 0) {
+                if (!first)
+                    msg += ", ";
+                first = 0;
+                msg += formatString(
+                    "%i %s", enemyPlayer.m_ai.m_turnProductionResource[i],
+                    g_resourceNames[i]);
+            }
+        }
+
+        normalDialog(msg.c_str(), 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
 
-    TQuickTownWindow::TViewLevel level;
-    if (g_game->onSameTeam(thisTown->m_owner, localPos)
+    TQuickTownWindow::TViewLevel viewLevel;
+    if (g_game->onSameTeam(thisTown->m_owner, player)
         || identifyLevel == eMasteryExpert)
-        level = TQuickTownWindow::ViewAll;
-    else if (g_game->getNumThievesGuilds(localPos) >= 2)
-        level = TQuickTownWindow::ViewArmySizes;
+        viewLevel = TQuickTownWindow::ViewAll;
+    else if (g_game->getNumThievesGuilds(player) >= 2)
+        viewLevel = TQuickTownWindow::ViewArmySizes;
     else
-        level = g_game->getNumThievesGuilds(localPos) >= 1
+        viewLevel = g_game->getNumThievesGuilds(player) >= 1
                     ? TQuickTownWindow::ViewArmyTypes
                     : TQuickTownWindow::ViewNone;
 
-    TQuickTownWindow window(thisTown, level);
-    window.m_x = limit(window.m_width / 2, x,
-                     WINDOW_SCREEN_WIDTH - 1 - window.m_width / 2)
-               - window.m_width / 2;
-    window.m_y = limit(window.m_height / 2, y,
-                     WINDOW_SCREEN_HEIGHT - 1 - window.m_height / 2)
-               - window.m_height / 2;
+    TQuickTownWindow infoWin(thisTown, viewLevel);
+    infoWin.m_x = limit(infoWin.m_width / 2, x,
+                     WINDOW_SCREEN_WIDTH - 1 - infoWin.m_width / 2)
+               - infoWin.m_width / 2;
+    infoWin.m_y = limit(infoWin.m_height / 2, y,
+                     WINDOW_SCREEN_HEIGHT - 1 - infoWin.m_height / 2)
+               - infoWin.m_height / 2;
     if (!displayDropShadow)
-        window.m_type &= ~WINDOW_FLAG_SHADOWED;
-    window.quickWindowWait();
+        infoWin.m_type &= ~WINDOW_FLAG_SHADOWED;
+    infoWin.quickWindowWait();
 }
 
 // E:\gamedcs\advmgr.cpp:9243
@@ -9638,10 +9575,7 @@ unsigned char advManager::doSystemOptions()
         int i;
         for (i = 0; i < 10; i++)
             m_heroSamples[i]->dispose();
-        for (i = 0; i <= 10; i++) {
-            sprintf(g_text, "horse%02d.wav", i);
-            m_heroSamples[i] = ResourceManager::getSample(g_text);
-        }
+        getCursorSampleSet(g_unnamed698758.m_walkSpeed);
     }
 
     if (saveMobile)

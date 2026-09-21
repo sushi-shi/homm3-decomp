@@ -938,55 +938,33 @@ inline void TViewArmyWindow::createLuckWidget(int newLuck)
         limit(-3, m_luck, 3) + 3, 0, 0, 0, 0x10));
 }
 
-// The fixed three-slot row shows the newest standing spell influences. The
-// queue's VC6 deque layout, its 16-byte iterator and the two 81-dword spell
-// rows are independently byte-proven in army.h; this body is their first UI
-// consumer. Retail always visits all three display slots, writing -1 into an
-// unused Influence entry so WindowHandler can suppress its help text.
-
-// Residual (86.65703%): this is a cyclic VC6 inliner wall. The named iterator
-// plus the statement-scoped pin below reproduces retail's 16-byte begin()
-// temporary and its one out-of-line operator+= call, but our remaining budget
-// expands the first vector::_Ucopy loop (18 branches against retail's 16).
-// The natural deque subscript, including bounded inline-depth 1 and 2 probes,
-// makes that vector insertion take retail's call-form but expands the deque's
-// map/block arithmetic here instead (79.8430%). An explicit begin()+i is
-// 79.3512%, direct vector::insert 84.6860%, and the non-const iterator path
-// 79.5413%. The outer loop, member offsets, widget arguments and return agree;
-// the remaining choice is one front-end inline budget spent at either of two
-// nested STL sites.
+// DC lines 849--862 prove an xp-controlled three-slot loop, natural deque
+// subscripting and separate advances of the widget id, queue index and x.
+// Retail confirms the same two adjacent three-int member rows.
 // E:\gamedcs\viewarmywindow.cpp:837
 VA(0x005f65b0, 0x2B5)  // queue iterator arithmetic + SpellInt.def + widget ids
 void TViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
 {
     int x = 127;
-    unsigned int first = cppMax<int>(
+    int widgetId = AFFECTING_SPELLS_0_ID;
+    unsigned int spell = cppMax<int>(
         0, static_cast<int>(thisArmy->m_spellInfluenceQueue.size()) - NSPELLS);
-    unsigned int i = first;
-    int* influence = m_influence;
-    int widgetId = AFFECTING_SPELLS_0_ID - first;
-    int count = NSPELLS;
 
-    do {
-        if (i < thisArmy->m_spellInfluenceQueue.size()) {
-            army::TSpellQueue::const_iterator position =
-                thisArmy->m_spellInfluenceQueue.begin();
-#pragma inline_depth(0)
-            position += i;
-#pragma inline_depth()
-            *influence = *position;
-            influence[NSPELLS] = thisArmy->m_spellInfluence[*influence];
+    for (int xp = 0; xp < NSPELLS; ++xp) {
+        if (spell < thisArmy->m_spellInfluenceQueue.size()) {
+            m_influence[xp] = thisArmy->m_spellInfluenceQueue[spell];
+            m_duration[xp] = thisArmy->getSpellTime(m_influence[xp]);
             m_widgets.push_back(new iconWidget(
-                x, 186, 48, 36, widgetId + i,
+                x, 186, 48, 36, widgetId,
                 DATA_COMPGEN(0x006700a4, viewArmySpellIcons, "spellint.def"),
-                *influence + 1, 0, 0, 0, 0x10));
+                m_influence[xp] + 1, 0, 0, 0, 0x10));
         } else {
-            *influence = -1;
+            m_influence[xp] = -1;
         }
-        ++influence;
+        ++widgetId;
+        ++spell;
         x += 52;
-        ++i;
-    } while (--count);
+    }
 }
 
 VA(0x005f6870, 0x264)  // dc 0x192a28

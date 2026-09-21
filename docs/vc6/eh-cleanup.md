@@ -65,6 +65,29 @@ Two independent inputs, each a fact about retail's TU:
    region that its own call would otherwise need, collapsing the map to one
    entry.
 
+## Provisional C linkage can erase the whole cleanup frame
+
+The retail-only resource reporters at `0x559510` and `0x5599e0` originally
+had bootstrap `extern "C"` declarations despite using C++ strings and streams.
+Their callers prove `__fastcall`, not C linkage. With the pinned `/GX` profile
+and unchanged bodies, replacing those declarations by ordinary C++ linkage
+restores the `fs:[0]` registration and exception-state stores in both bodies.
+The scores rise from 89.3910% to 94.1438% and 86.9559% to 92.7882%.
+Argument passing remains fastcall; the emitted COFF names change, so refresh
+claims and delinking with a full build before comparing.
+
+This is a measured declaration effect, not grounds to remove genuine C ABI
+boundaries. Restoring EH alone does not solve every inline boundary: ordinary
+string assignments with the message body pasted into each reporter give
+78.49% / 72.05% without pins. Recovering the shared ordinary
+`reportMissingResource(caller, typeName.c_str(), resourceName)` boundary then
+makes both reporters 100% with all thirteen inline-depth pins removed. Retail
+evaluates the type-name pointer before constructing the message stream; the
+helper's short-lived stream also recovers the natural stack reuse without an
+artificial caller block. The eight-state assignment/helper family reproduces
+all eight objects; both `operator=` and the one-argument `assign` work at these
+call sites. The retained source uses ordinary assignment.
+
 ## Retail publishes the answer — the funclets are data
 
 Do not infer the map; read it. Our side: `.xdata$x` holds `maxState` at +4 and

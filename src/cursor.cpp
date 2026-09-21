@@ -934,13 +934,7 @@ void advManager::onRecruitHero(CMapChange* mapChange)
 {
     CMCRecruitHero* change = static_cast<CMCRecruitHero*>(mapChange);
     g_game->getCell(change->m_point);
-    // OnRecruitHero -> game::GetHero: Dreamcast game.h:972-979 residue
-    // proves the source-inline accessor. Complete retains this nested call
-    // after expanding OnRecruitHero. Negative control without this site pin:
-    // ProcessMapChangeNew 100.0000% -> 92.6034%, calls 30 -> 29.
-#pragma inline_depth(0)
     hero* currentHero = g_game->getHero(change->m_heroId);
-#pragma inline_depth()
     currentHero->m_x = change->m_point.m_x;
     currentHero->m_y = change->m_point.m_y;
     currentHero->m_z = change->m_point.m_z;

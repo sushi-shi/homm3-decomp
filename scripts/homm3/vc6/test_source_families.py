@@ -8,7 +8,8 @@ import unittest
 
 from homm3.vc6.source_families import (
     Axis, Option, identity_symbol, load_manifest, next_population, render,
-    projected_max_scores, select_elites,
+    expected_control_scores, prepare_snapshot, projected_max_scores,
+    select_elites,
 )
 
 
@@ -68,6 +69,18 @@ class SourceFamiliesTests(unittest.TestCase):
                     self.manifest(root, {"schema": 1, "source": source, "axes": [
                         {"name": "a", "find": "x", "options": [{"name": "base"}]}]})
 
+    def test_snapshot_exposes_project_configuration_to_candidate_compiles(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "root"
+            for directory in ("include", "src", "vendor", "config"):
+                (root / directory).mkdir(parents=True)
+            (root / "config/project.toml").write_text("[project]\n")
+            snapshot = Path(tmp) / "snapshot"
+            prepare_snapshot(root, snapshot)
+            self.assertTrue((snapshot / "config").is_symlink())
+            self.assertEqual((snapshot / "config/project.toml").read_text(), "[project]\n")
+            prepare_snapshot(root, snapshot)
+
     def test_60_member_family_exhausts_without_repeating(self):
         axes = tuple(Axis(str(n), tuple(Option(str(i), ()) for i in range(n))) for n in (2, 2, 3, 5))
         population = next_population(axes, [], set(), 60, random.Random(1))
@@ -112,6 +125,15 @@ class SourceFamiliesTests(unittest.TestCase):
                          {"u|f": 100})
         self.assertEqual(projected_max_scores(row, previous, {("u", "f"): "new"}),
                          {"u|f": 80})
+
+    def test_unchanged_control_uses_live_report_instead_of_stale_ledger_cur(self):
+        report = {"units": [{"name": "u", "functions": [
+            {"name": "f", "fuzzy_match_percent": 82.45175},
+            {"name": "sibling", "fuzzy_match_percent": 100.0},
+        ]}]}
+        self.assertEqual(
+            expected_control_scores(report, (("u", "f"), ("u", "sibling"))),
+            {"u|f": 82.4518, "u|sibling": 100.0})
 
     def test_specialist_ranking_uses_projected_max(self):
         records = [

@@ -43,6 +43,7 @@
 #include "inputmgr.h"
 #include "slider.h"
 #include "textresource.h"
+#include "townmgr.h"
 #include "remotedlg.h"
 #include "textntry.h"
 #include "netmsg.h"
@@ -4705,6 +4706,16 @@ inline void TSingleSelectionWindow::onSortMaps(int how)
 // refill is the vector erase/insert pair whose element operator= and
 // _Destroy retail keeps out of line.
 // E:\gamedcs\singleselectionwindow.cpp:4646
+// DC 4678 names IsHost; restoring that call together with push_back
+// removes the append pin and raises 91.6682% to 92.68%. push_back alone
+// gives 90.68%: it over-expands clear's _Destroy. The remaining sort/clear
+// schedule keeps zero in EDX instead of retail's ESI. Moving DC's int x
+// declaration to entry, using direct predicate arguments, and swapping the
+// two reset stores do not fix that binding; chaining the resets is 92.67%.
+// why-reg's creation-order probe is flat. DC uses qsort and an index array;
+// Complete's vector/functor details therefore require retail evidence.
+// DC's message junk belongs to the older Update(message&) interface;
+// Complete calls the no-argument Update, so no unused message is invented.
 VA(0x00585050, 0x2A8)  // anchor-callee HandleNetMsg's RS_SORT_MAPS arm calls it (how, 1, 1) - the DC 3-arg signature; size 1.07x dc 0x27a, dc 0x13b780
 void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
                                       unsigned char update)
@@ -4718,9 +4729,8 @@ void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
     m_currentMap = 0;
     switch (how) {
     case SORT_MAPS_BY_NAME: {
-        int isNet = (m_flag65 != 0 || m_flag64 != 0) ? 1 : 0;
         std::sort(src->begin(), src->end(),
-                  TSortMapsByName(m_sortDirection, isNet));
+                  TSortMapsByName(m_sortDirection, m_flag65 || m_flag64));
         break;
     }
     case SORT_MAPS_BY_PLAYERS:
@@ -4728,9 +4738,8 @@ void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
                   TSortMapsByPlayers(m_sortDirection));
         break;
     case SORT_MAPS_BY_VERSION: {
-        int isNet = (m_flag65 != 0 || m_flag64 != 0) ? 1 : 0;
         std::sort(src->begin(), src->end(),
-                  TSortMapsByVersion(m_sortDirection, isNet));
+                  TSortMapsByVersion(m_sortDirection, m_flag65 || m_flag64));
         break;
     }
     case SORT_MAPS_BY_SIZE:
@@ -4747,21 +4756,12 @@ void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
         break;
     }
     m_selectionHeaders.clear();
-    for (unsigned int i = 0; i < src->size(); ++i) {
-        if (m_mapSizeFilter == 0 || m_mapSizeFilter == (*src)[i].m_header.m_size) {
-            // Retail calls the insert COMDAT (0x58ebe0) while keeping
-            // end() and the element address inline - the pin imposes
-            // the refusal and the named locals hoist what stays inline
-            // out of the pinned statement.
-            std::vector<GameSelectionHeadersStruct>::iterator w =
-                m_selectionHeaders.end();
-            const GameSelectionHeadersStruct& v = (*src)[i];
-#pragma inline_depth(0)
-            m_selectionHeaders.insert(w, 1, v);
-#pragma inline_depth()
+    for (int x = 0; x < src->size(); ++x) {
+        if (m_mapSizeFilter == 0 || m_mapSizeFilter == (*src)[x].m_header.m_size) {
+            m_selectionHeaders.push_back((*src)[x]);
         }
     }
-    if (g_videoPaused != 0 && g_dPlay->isHost() && sendSortMsg != 0) {
+    if (g_videoPaused != 0 && isHost() && sendSortMsg != 0) {
         CSortMapsMsg msg(how, m_sortDirection);
         transmitRemoteDataDPID(&msg, 0, false, true);
     }
@@ -5044,12 +5044,7 @@ void TSingleSelectionWindow::setFilter(int size)
     dst.clear();
     for (unsigned int i = 0; i < src->size(); ++i) {
         if (m_mapSizeFilter == 0 || m_mapSizeFilter == (*src)[i].m_header.m_size) {
-            std::vector<GameSelectionHeadersStruct>::iterator w =
-                dst.end();
-            const GameSelectionHeadersStruct& v = (*src)[i];
-#pragma inline_depth(0)
-            dst.insert(w, 1, v);
-#pragma inline_depth()
+            dst.push_back((*src)[i]);
         }
     }
     if (m_selectionHeaders.size() != 0) {
@@ -6518,6 +6513,17 @@ unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:6723
+// DC's body is a ten-byte return-1 stub (6723, 6769, 6770), so the
+// Windows transfer path is reconstructed from retail, not missing DC text.
+// Retail reuses the request-message slot at ebp-0x2c across both failure
+// arms. Making the missing-file arm an else removes the extra 0x1c slot
+// and raises 90.2193% to 90.31%. The assignment pin remains debt: direct
+// unpinned assignment with sibling scopes gives 71.50%; a shared final
+// return gives 67.06%, and a positive receiving guard gives 71.53%.
+// Moving the typed message binding to entry is byte-flat. The residual
+// includes the third operator= expansion, CNetMsg construction and
+// SavedGameHeader cleanup; the constructor's DC 605..608 has no missing
+// initialization to justify synthetic budget mass.
 VA(0x00589710, 0x40F)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg, dc 0x140664
 unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
 {
@@ -6556,11 +6562,12 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
             transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
         }
         return 1;
+    } else {
+        _chdir("..");
+        CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
+        transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
+        return 1;
     }
-    _chdir("..");
-    CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
-    transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
-    return 1;
 }
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
@@ -7387,63 +7394,10 @@ unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
                        != g_thisNetPlayerInfo.m_dpid)
             m_newPlayerUpdateMan->newPlayer(m_players.m_humanPlayers[i].m_dpid);
     }
-    widget* w = getWidget(128);
-    if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
-    }
-    w = getWidget(129);
-    if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
-    }
-    if (g_gameContextFeatures[*g_videoGameState].test(1)) {
-        w = getWidget(130);
-        if (w) {
-            w->sendMessage(widget::WIDGET_SET_STATUS,
-                            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-            w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
-        }
-    }
-    w = getWidget(107);
-    if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
-    }
-    w = getWidget(108);
-    if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
-    }
-    w = getWidget(109);
-    if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
-    }
-    w = getWidget(110);
-    if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
-    }
-    w = getWidget(111);
-    if (w) {
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
-    }
-#pragma inline_depth(0)
-    showWidget(186);
-#pragma inline_depth()
-#pragma inline_depth(0)
-    if (m_selectionHeaders.size() == 0 && m_flag64)
-#pragma inline_depth()
-        getWidget(186)->enable(0);
+    // DC line 7408 names this helper. Complete expands it here while retaining
+    // the exact body at 0x57fb90; the nested showWidget/size calls then select
+    // their retail boundaries without either former inline-depth pin.
+    updateMainWindow();
     drawWindow(1, 0xffff0001, 0xffff);
     update();
     return 1;
@@ -8212,190 +8166,174 @@ unsigned char TSingleSelectionWindow::highlightFile(char* filename)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8297
+// DC 8299/8434 recover CalcPosition/GetDisplayTown rather than pasted
+// caller bodies; 8504/8511 name HasRandomHero/HasNonRandomHero, and
+// 8603/8631 name IsHost/IsHuman/IsMultiPlayer. Keep these canonical calls
+// and the proven text operator[] calls. The combined unpinned source gives
+// 91.4419% versus the old pinned 91.4350%; restoring only town/position/text
+// gives 89.9471%, so the helper model must be tested together. Retail's
+// Complete GetDisplayTown keeps -1 for an uncommitted multi-town seat.
+// Keep DC's separate townType/sprite and position-based coordinates; the
+// resource-bonus arm selects by townType, never the row position. The first
+// 98.2244% coordinate probe had a bad row-index substitution and is invalid
+// source evidence. Correcting it gives 99.3418%; removing the unsupported
+// pre-switch sprite initializer gives 99.6582% (explicit if/else is flat).
+// Reusing DC's left/rite pair across all three control groups gives 99.7699%.
+// GetTownTypeName and widget::show/hide are canonical proven header helpers.
+// Exact without the pin: DC 8560/8561 update both the player's bonus and
+// local agr (bonus here). Retail +0x8a9 jumps straight to random-bonus text.
+// The resource arm must finish its frame assignment and break, rather than
+// fall through into the random case. Updating only the local gives 99.7181%;
+// an explicit exit without that update gives 99.6789%; together they give
+// 100%. Nested if/else and early-break forms both reproduce the exact body.
 VA(0x0058d510, 0xA40)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x dc 0x158a, dc 0x143a7c
 void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                                                     unsigned char update,
                                                     int position)
 {
-    if (position == -1) {
-        position = 0;
-        for (int i = 0; i != playerPos; ++i)
-            if (g_game->m_setup.m_playerPos[i] >= 0
-                    && (m_flag64 == 0 || g_game->m_playerDisabled[i] == 0))
-                ++position;
-    }
+    if (position == -1)
+        position = calcPosition(playerPos);
     getWidget(playerPos + 263)->draw();
-    int rowY = position * 50;
     m_panels[playerPos]->draw(0, 0, m_panels[0]->getWidth(),
                                  m_panels[0]->getHeight(),
                                  g_windowManager->m_screenBitmap, 57,
-                                 rowY + 128, 1);
+                                 position * 50 + 128, 1);
     getWidget(playerPos + 199)->draw();
     getWidget(playerPos + 207)->draw();
     CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(playerPos);
     if (p == 0)
         p = m_players.getCompPlayerInPos(playerPos);
     if (m_flag64 != 0) {
-        // The committed alignment takes over the spent `position`
-        // parameter (retail homes it in [ebp+0x10], the dead third-arg
-        // slot, and the resource-bonus arm's self-store below only
-        // exists against that memory home).
-        position = g_game->m_setup.m_alignment[playerPos];
-        int iconY = rowY + 130;
-        m_townPix->draw(0, position * 2 + 2, 0, 0, m_townPix->getWidth(),
+        int townType = g_game->m_setup.m_alignment[playerPos];
+        m_townPix->draw(0, townType * 2 + 2, 0, 0, m_townPix->getWidth(),
                         m_townPix->getHeight(), g_windowManager->m_screenBitmap,
-                        176, iconY, 0, 1);
-        int textY = rowY + 162;
-        // (textY/iconY keep retail's dead-slot homes)
-        g_tinyFont->drawBoundedString(g_unnamed6a74f4[position],
-            g_windowManager->m_screenBitmap, 164, textY, 71, 16, font::WHITE, 5, -1);
+                        176, position * 50 + 130, 0, 1);
+        g_tinyFont->drawBoundedString(townManager::getTownTypeName(townType),
+            g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16, font::WHITE, 5, -1);
         int face = getDisplayFace(playerPos);
         if (face != -1) {
             m_heroPix[face]->draw(0, 0, m_heroPix[0]->getWidth(),
                 m_heroPix[0]->getHeight(), g_windowManager->m_screenBitmap,
-                252, iconY, 0);
+                252, position * 50 + 130, 0);
             const char* name = getHeroName(playerPos);
             g_tinyFont->drawBoundedString(name,
-                g_windowManager->m_screenBitmap, 240, textY, 71, 16, font::WHITE, 5,
+                g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71, 16, font::WHITE, 5,
                 -1);
         } else {
             m_noHeroBmp->draw(0, 0, m_noHeroBmp->getWidth(), m_noHeroBmp->getHeight(),
-                g_windowManager->m_screenBitmap, 252, iconY, 0);
-            g_tinyFont->drawBoundedString(g_generalText->getText(524),
-                g_windowManager->m_screenBitmap, 240, textY, 71, 16, font::WHITE, 5,
+                g_windowManager->m_screenBitmap, 252, position * 50 + 130, 0);
+            g_tinyFont->drawBoundedString((*g_generalText)[524],
+                g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71, 16, font::WHITE, 5,
                 -1);
         }
         int bonus = g_game->m_setup.m_startingBonus[playerPos];
+        int sprite;
         switch (bonus) {
         case NEW_MAP_BONUS_ARTIFACT:
-            position = 9;
+            sprite = 9;
             break;
         case NEW_MAP_BONUS_GOLD:
-            position = 8;
+            sprite = 8;
             break;
         case NEW_MAP_BONUS_RESOURCE:
-            position = position == TOWN_CONFLUX ? 3 : position;
+            sprite = townType == TOWN_CONFLUX ? 3 : townType;
             break;
         case NEW_MAP_BONUS_RANDOM:
-            position = 10;
+            sprite = 10;
             break;
         }
-        m_resource->draw(0, position, 0, 0, m_resource->getWidth(),
+        m_resource->draw(0, sprite, 0, 0, m_resource->getWidth(),
                          m_resource->getHeight(),
-                         g_windowManager->m_screenBitmap, 328, iconY, 0, 1);
+                         g_windowManager->m_screenBitmap, 328, position * 50 + 130, 0, 1);
         if (bonus == NEW_MAP_BONUS_RANDOM)
-            g_tinyFont->drawBoundedString(g_generalText->getText(523),
-                g_windowManager->m_screenBitmap, 316, textY, 71, 16, font::WHITE, 5,
+            g_tinyFont->drawBoundedString((*g_generalText)[523],
+                g_windowManager->m_screenBitmap, 316, position * 50 + 162, 71, 16, font::WHITE, 5,
                 -1);
         else
             g_tinyFont->drawBoundedString(g_unnamed6a5e14[bonus],
-                g_windowManager->m_screenBitmap, 316, textY, 71, 16, font::WHITE, 5,
+                g_windowManager->m_screenBitmap, 316, position * 50 + 162, 71, 16, font::WHITE, 5,
                 -1);
     } else {
-        CNetPlayerHandlerPlayer* q = m_players.getPlayerInPos(playerPos);
-        if (q == 0)
-            q = m_players.getCompPlayerInPos(playerPos);
-        int town;
-        {
-            CMapHeaderData::TPlayerSlotAttributes* slot =
-                &g_game->m_mapHeader.m_playerSlotAttributes[playerPos];
-#pragma inline_depth(0)
-            if (slot->m_hasRandomAlignment != 0
-                    || hasMultipleTowns(playerPos))
-                town = q->m_townIndex;
-            else
-                town = pickAlignment(
-                    static_cast<unsigned short>(slot->m_legalAlignments),
-                    1);
-#pragma inline_depth()
-        }
-        widget* townLeft = getWidget(playerPos + 215);
-        widget* townRight = getWidget(playerPos + 223);
+        TTownType town = getDisplayTown(playerPos);
+        widget* left = getWidget(playerPos + 215);
+        widget* rite = getWidget(playerPos + 223);
         if (canChooseTown(playerPos)) {
-            townLeft->enable(1);
-            townRight->enable(1);
-            townLeft->sendMessage(widget::WIDGET_SET_STATUS, 6);
-            townRight->sendMessage(widget::WIDGET_SET_STATUS, 6);
-            townLeft->draw();
-            townRight->draw();
+            left->enable(1);
+            rite->enable(1);
+            left->show();
+            rite->show();
+            left->draw();
+            rite->draw();
         } else {
-            townLeft->enable(0);
-            townRight->enable(0);
-            townLeft->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-            townRight->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            left->enable(0);
+            rite->enable(0);
+            left->hide();
+            rite->hide();
         }
         if (town == -1) {
             m_randomTownBmp->draw(0, 0, m_randomHeroBmp->getWidth(),
                 m_randomHeroBmp->getHeight(), g_windowManager->m_screenBitmap,
-                176, rowY + 130, 0);
-            g_tinyFont->drawBoundedString(g_generalText->getText(523),
-                g_windowManager->m_screenBitmap, 164, rowY + 162, 71, 16,
+                176, position * 50 + 130, 0);
+            g_tinyFont->drawBoundedString((*g_generalText)[523],
+                g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         } else {
             m_townPix->draw(0, town * 2 + 2, 0, 0, m_townPix->getWidth(),
                 m_townPix->getHeight(), g_windowManager->m_screenBitmap, 176,
-                rowY + 130, 0, 1);
-            g_tinyFont->drawBoundedString(g_unnamed6a74f4[town],
-                g_windowManager->m_screenBitmap, 164, rowY + 162, 71, 16,
+                position * 50 + 130, 0, 1);
+            g_tinyFont->drawBoundedString(townManager::getTownTypeName(town),
+                g_windowManager->m_screenBitmap, 164, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         }
         int face = getDisplayFace(playerPos);
-        widget* heroLeft = getWidget(playerPos + 231);
-        widget* heroRight = getWidget(playerPos + 239);
+        left = getWidget(playerPos + 231);
+        rite = getWidget(playerPos + 239);
         unsigned char canChooseHero = this->canChooseHero(playerPos);
         if (canChooseHero) {
-            heroLeft->enable(1);
-            heroRight->enable(1);
-            heroLeft->sendMessage(widget::WIDGET_SET_STATUS, 6);
-            heroRight->sendMessage(widget::WIDGET_SET_STATUS, 6);
-            heroLeft->draw();
-            heroRight->draw();
+            left->enable(1);
+            rite->enable(1);
+            left->show();
+            rite->show();
+            left->draw();
+            rite->draw();
         } else {
-            heroLeft->enable(0);
-            heroRight->enable(0);
-            heroLeft->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-            heroRight->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            left->enable(0);
+            rite->enable(0);
+            left->hide();
+            rite->hide();
         }
         unsigned char noHero = 0;
         if (face == -1) {
-            if (g_game->m_mapHeader.m_playerSlotAttributes[playerPos]
-                        .m_hasRandomHero == 0
-                    && g_game->m_mapHeader.m_playerSlotAttributes[playerPos]
-                           .m_generateHero == 0
-                    && g_game->m_mapHeader.m_playerSlotAttributes[playerPos]
-                           .m_nonRandomHeroId == -1)
+            if (!hasRandomHero(playerPos) && !hasNonRandomHero(playerPos))
                 noHero = 1;
             if (canChooseHero == 0 && (town != -1 || noHero != 0)
-                    && g_game->m_mapHeader.m_playerSlotAttributes[playerPos]
-                           .m_hasRandomHero == 0
-                    && g_game->m_mapHeader.m_playerSlotAttributes[playerPos]
-                           .m_generateHero == 0) {
+                    && !hasRandomHero(playerPos)) {
                 m_noHeroBmp->draw(0, 0, m_noHeroBmp->getWidth(), m_noHeroBmp->getHeight(),
-                    g_windowManager->m_screenBitmap, 252, rowY + 130, 0);
+                    g_windowManager->m_screenBitmap, 252, position * 50 + 130, 0);
                 g_tinyFont->drawBoundedString(
-                    g_generalText->getText(524),
-                    g_windowManager->m_screenBitmap, 240, rowY + 162, 71,
+                    (*g_generalText)[524],
+                    g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71,
                     16, font::WHITE, 5, -1);
             } else {
                 m_randomHeroBmp->draw(0, 0, m_randomHeroBmp->getWidth(),
                     m_randomHeroBmp->getHeight(),
-                    g_windowManager->m_screenBitmap, 252, rowY + 130, 0);
+                    g_windowManager->m_screenBitmap, 252, position * 50 + 130, 0);
                 g_tinyFont->drawBoundedString(
-                    g_generalText->getText(523),
-                    g_windowManager->m_screenBitmap, 240, rowY + 162, 71,
+                    (*g_generalText)[523],
+                    g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71,
                     16, font::WHITE, 5, -1);
             }
         } else {
             const char* name = getHeroName(playerPos);
             m_heroPix[face]->draw(0, 0, m_heroPix[0]->getWidth(),
                 m_heroPix[0]->getHeight(), g_windowManager->m_screenBitmap,
-                252, rowY + 130, 0);
+                252, position * 50 + 130, 0);
             g_tinyFont->drawBoundedString(name,
-                g_windowManager->m_screenBitmap, 240, rowY + 162, 71, 16,
+                g_windowManager->m_screenBitmap, 240, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         }
-        widget* bonusLeft = getWidget(playerPos + 247);
-        widget* bonusRight = getWidget(playerPos + 255);
+        left = getWidget(playerPos + 247);
+        rite = getWidget(playerPos + 255);
         int bonus = p->m_startBonusIndex;
         int frame;
         switch (bonus) {
@@ -8406,30 +8344,31 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
             frame = 8;
             break;
         case NEW_MAP_BONUS_RESOURCE:
-            if (town == TOWN_CONFLUX) {
+            if (town == TOWN_CONFLUX)
                 frame = 3;
-                break;
-            }
-            if (town != -1) {
+            else if (town != -1)
                 frame = town;
-                break;
+            else {
+                p->m_startBonusIndex = NEW_MAP_BONUS_RANDOM;
+                bonus = NEW_MAP_BONUS_RANDOM;
+                frame = 10;
             }
-            p->m_startBonusIndex = NEW_MAP_BONUS_RANDOM;
+            break;
         case NEW_MAP_BONUS_RANDOM:
             frame = 10;
             break;
         }
         if (bonus == NEW_MAP_BONUS_RANDOM)
-            g_tinyFont->drawBoundedString(g_generalText->getText(523),
-                g_windowManager->m_screenBitmap, 316, rowY + 162, 71, 16,
+            g_tinyFont->drawBoundedString((*g_generalText)[523],
+                g_windowManager->m_screenBitmap, 316, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         else
             g_tinyFont->drawBoundedString(g_unnamed6a5e14[bonus],
-                g_windowManager->m_screenBitmap, 316, rowY + 162, 71, 16,
+                g_windowManager->m_screenBitmap, 316, position * 50 + 162, 71, 16,
                 font::WHITE, 5, -1);
         m_resource->draw(0, frame, 0, 0, m_resource->getWidth(),
             m_resource->getHeight(), g_windowManager->m_screenBitmap, 328,
-            rowY + 130, 0, 1);
+            position * 50 + 130, 0, 1);
         unsigned char townChosen = 1;
         if (town == -1)
             townChosen = 0;
@@ -8439,31 +8378,30 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         // `dpid != 0` arms both jump to the gUnnamed6989f0 compare, not
         // past it (branch topology clean at 49/49 once written this way).
         if (getThisPlayerGamePos() == playerPos
-                || ((g_videoPaused == 0 || g_dPlay->isHost())
-                    && p->m_dpid == 0
+                || (isHost()
+                    && !p->isHuman()
                     && (canChooseTown(playerPos) || townChosen != 0))
                 || g_unnamed6989f0 == WINDOW_MODE_6989F0_3) {
-            bonusLeft->enable(1);
-            bonusRight->enable(1);
-            bonusLeft->sendMessage(widget::WIDGET_SET_STATUS, 6);
-            bonusRight->sendMessage(widget::WIDGET_SET_STATUS, 6);
-            bonusLeft->draw();
-            bonusRight->draw();
+            left->enable(1);
+            rite->enable(1);
+            left->show();
+            rite->show();
+            left->draw();
+            rite->draw();
         } else {
-            bonusLeft->enable(0);
-            bonusRight->enable(0);
-            bonusLeft->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-            bonusRight->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            left->enable(0);
+            rite->enable(0);
+            left->hide();
+            rite->hide();
         }
     }
     widget* nameText = getWidget(playerPos + 345);
-    nameText->sendMessage(widget::WIDGET_SET_STATUS, 6);
+    nameText->show();
     nameText->draw();
-    if (g_videoPaused == 0
-            && g_unnamed6989f0 != WINDOW_MODE_6989F0_3)
+    if (!isMultiPlayer())
         getWidget(playerPos + 353)->draw();
     if (update)
-        g_windowManager->updateScreen(13, rowY + 127, 382, 54);
+        g_windowManager->updateScreen(13, position * 50 + 127, 382, 54);
 }
 
 // DC keeps this source helper separate (i/nextColor locals and the two

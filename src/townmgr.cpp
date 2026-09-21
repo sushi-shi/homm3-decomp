@@ -1267,7 +1267,7 @@ int townManager::open(int newPriority)
 VA(0x005c66b0, 0x20)  // dc 0x18146c
 void CTownNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
 {
-    CAdvMgrNetMsgHandler::handleTradeRequestMsg(netMsg);
+    CAdvMgrNetMsgHandler::handleGiftMsg(netMsg);
     m_resourceDisplay->update(1, 1);
 }
 

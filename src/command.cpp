@@ -294,9 +294,7 @@ int combatManager::main(message& msg)
                 } else if (static_cast<const combatManager*>(this)->isQuickCombat()
                         || isComputerAction(getCurrentArmy())) {
                     unnamed465f20();
-#pragma inline_depth(0)
                     resetMouse();
-#pragma inline_depth()
                     towerTurn = 1;
                 } else {
                     towerTurn = 0;

@@ -4,6 +4,7 @@
 #include "advmgr_popup.h"
 #include "remote.h"
 #include "basemgr.h"
+#include "text.h"
 
 struct type_point;
 
@@ -895,6 +896,13 @@ public:
     // one of those through the window rather than through the manager.
     void setupWell(TCastleWindow* wellWin);
     void setupMage(heroWindow* mageWin);
+    // E:\gamedcs\townmgr.h:738, GetTownTypeName (dc 0x20280).
+    // Retail expands this same indexed load in DrawHeroAdvancedOption.
+    static const char* getTownTypeName(int type)
+    {
+        return g_townTypeNames[type + 1];
+    }
+
     townManager();
     void unloadTown();
     // Retail 0x5c6870 (dc 0x16bba4) and 0x5c77a0 (dc 0x16c940). Neither

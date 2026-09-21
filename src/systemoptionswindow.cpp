@@ -381,7 +381,7 @@ void TSystemOptionsWindow::doModal()
 // retail's EBX-held dispatch value and reaches 95.3661.
 
 // Negative controls: all-immediate and fully-assigned range-first helper
-// families are byte-identical at 85.5532; plain, inline and __forceinline
+// families are byte-identical at 85.5532; plain, inline and forced-inline
 // declarations are byte-identical; moving the dispatch-value declaration or
 // reusing the base-handler result is byte-identical in that family and
 // score-flat at 95.3661. Moving the consume label physically ahead of the

@@ -866,7 +866,7 @@ type_building_id town::buildBuilding(int buildingId,
             int team = m_owner;
             if (team >= 0)
                 team = g_game->m_mapHeader.m_teamInfo[team];
-            if (!g_game->isHumanAlly(team))
+            if (!g_game->isHumanTeam(team))
                 m_builtThisTurn = 2;
             else
                 m_builtThisTurn = 1;
@@ -984,9 +984,9 @@ void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
 VA(0x005bf570, 0x86)  // dc 0x1673dc
 long town::getCastleGrowthBonus(TCreatureType creature) const
 {
-    if (m_built & g_bitNumber[CASTLE_CASTLE_ID])
+    if (hasBuilding(CASTLE_CASTLE_ID, 0))
         return g_creatureTypeTraits[creature].m_growthRate;
-    if (m_built & g_bitNumber[CASTLE_CITADEL_ID])
+    if (hasBuilding(CASTLE_CITADEL_ID, 0))
         return g_creatureTypeTraits[creature].m_growthRate / 2;
     return 0;
 }
@@ -1137,16 +1137,7 @@ short town::getGrowthRate(short dwelling) const
                 m_type * TOWN_DWELLING_SLOTS + dwellingIndex];
             long legionGrowth =
                 g_creatureTypeTraits[legionCreature].m_growthRate;
-            long castleBonus;
-#pragma inline_depth(0)
-            if (m_built & g_bitNumber[CASTLE_CASTLE_ID])
-                castleBonus = legionGrowth;
-            else if (hasBuilding(CASTLE_CITADEL_ID, 0))
-                castleBonus =
-                    g_creatureTypeTraits[legionCreature].m_growthRate / 2;
-            else
-                castleBonus = 0;
-#pragma inline_depth()
+            long castleBonus = getCastleGrowthBonus(legionCreature);
             legionBonus = (legionGrowth + castleBonus) / 2;
         }
         growth += legionBonus;
@@ -1372,6 +1363,50 @@ void showCreatureRewards(const town* thisTown,
 void initializeBuildings(town* currentTown, const TownExtra* townSetup);
 unsigned char checkShipyardSquare(town* currentTown, long x, long y);
 
+// Original: initialize_army; town.cpp:2017, dc 0x168330.
+// Complete expands the ordinary initializer into town::initialize. Its custom
+// army path additionally resolves the map format's negative random-tier IDs;
+// DC's older body copied those creature IDs directly. Both use getArmy's
+// canonical garrison/hero selection at every read and write.
+static void initializeArmy(town* currentTown, const TownExtra* townSetup)
+{
+    if (townSetup->m_customArmies) {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+            currentTown->getArmy().m_numTroops[slot] =
+                townSetup->m_townArmy.m_numTroops[slot];
+            if (currentTown->getArmy().m_numTroops[slot] > 0) {
+                int troop = townSetup->m_townArmy.m_armies[slot];
+                if (troop <= -2) {
+                    int tier = (-2 - troop) / 2;
+                    if (troop & 1)
+                        tier += TOWN_DWELLING_COUNT;
+                    troop = g_townDwellingCreatures[
+                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                }
+                currentTown->getArmy().m_armies[slot] = troop;
+            } else {
+                currentTown->getArmy().m_armies[slot] = -1;
+            }
+        }
+    } else {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+            currentTown->getArmy().m_armies[slot] = -1;
+            currentTown->getArmy().m_numTroops[slot] = 0;
+        }
+        if (currentTown->m_owner < 0) {
+            for (int tier = 0; tier < 4; tier++) {
+                if (random(1, 100) <= g_townInitArmyChance[tier]) {
+                    int creature = g_townDwellingCreatures[
+                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                    currentTown->getArmy().add(creature,
+                        random(g_townInitArmyLow[tier], g_townInitArmyHigh[tier]),
+                        -1);
+                }
+            }
+        }
+    }
+}
+
 VA(0x005c0670, 0x24E)  // dc 0x16842c
 void town::initialize(const TownExtra* townSetup)
 {
@@ -1379,53 +1414,7 @@ void town::initialize(const TownExtra* townSetup)
     m_owner = -1;
     memset(m_generatorBonus, 0, sizeof(m_generatorBonus));
     g_game->claimTown(m_id, townSetup->m_playerOwner, 0, 0);
-    if (townSetup->m_customArmies) {
-#pragma inline_depth(0)
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
-             slot++) {
-            (m_garrisonHeroId < 0 ? m_garrison
-                                : g_game->getHero(m_garrisonHeroId)->m_army)
-                .m_numTroops[slot] = townSetup->m_townArmy.m_numTroops[slot];
-            if ((m_garrisonHeroId < 0
-                     ? m_garrison
-                     : g_game->getHero(m_garrisonHeroId)->m_army)
-                    .m_numTroops[slot] > 0) {
-                int troop = townSetup->m_townArmy.m_armies[slot];
-                if (troop <= -2) {
-                    int tier = (-2 - troop) / 2;
-                    if (troop & 1)
-                        tier += TOWN_DWELLING_COUNT;
-                    troop = g_townDwellingCreatures[
-                        m_type * (2 * TOWN_DWELLING_COUNT) + tier];
-                }
-                (m_garrisonHeroId < 0
-                     ? m_garrison
-                     : g_game->getHero(m_garrisonHeroId)->m_army)
-                    .m_armies[slot] = troop;
-            } else {
-                getArmy().m_armies[slot] = -1;
-            }
-        }
-#pragma inline_depth()
-    } else {
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
-             slot++) {
-            getArmy().m_armies[slot] = -1;
-            getArmy().m_numTroops[slot] = 0;
-        }
-        if (m_owner < 0) {
-            for (int tier = 0; tier < 4; tier++) {
-                if (random(1, 100) <= g_townInitArmyChance[tier]) {
-                    int creature = g_townDwellingCreatures[
-                        m_type * (2 * TOWN_DWELLING_COUNT) + tier];
-                    getArmy().add(creature,
-                                    random(g_townInitArmyLow[tier],
-                                           g_townInitArmyHigh[tier]),
-                                    -1);
-                }
-            }
-        }
-    }
+    initializeArmy(this, townSetup);
     initializeBuildings(this, townSetup);
     m_active = m_built;
     for (int i = 0; i < MAX_BUILDING_TYPE; i++) {

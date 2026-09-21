@@ -1229,28 +1229,18 @@ TViewWorldWindow::TViewWorldWindow()
     m_surfaceButton = new type_func_button(
         686, 538, 32, 32, -1, "iam003.def",
         viewWorldSurfaceHandler, 0, 1);
-    // INLINE BOUNDARY: TViewWorldWindow::TViewWorldWindow ->
-    // vector<widget*>::insert. These level controls are Complete-only, while
-    // Dreamcast 0x1952b8 proves their surrounding append order. Retail keeps
-    // the underground append as a call at ctor+0x1071 and expands the surface
-    // append immediately after it. Negative control: ordinary depth expands
-    // both sites and contributes the second surplus STL reallocation body.
-#pragma inline_depth(0)
+    // The level controls are Complete-only; Dreamcast 0x1952b8 proves the
+    // surrounding append family uses push_back. The two widget::hide calls
+    // below are the real header-helper sites that select retail's frontier:
+    // the first append retains vector::insert and the second expands it.
     m_widgets.push_back(m_undergroundButton);
-#pragma inline_depth()
     m_widgets.push_back(m_surfaceButton);
 
-    // DEPTH LADDER (docs/vc6/inliner.md 6b): this ONE append is spelled
-    // `insert(end(), x)`; the other forty-four in this constructor stay
-    // `push_back`.  Retail CALLS `vector<widget*>::insert` here and expands
-    // it everywhere else, and the shallower spelling at this site alone is
-    // worth 96.4425 -> 97.0623.  Titrated per site, all 45 measured singly:
-    // every other site is a LOSS (the plateau is 96.2923, the worst 90.9541
-    // at the surface-button append), the next best is the `ok` append at
-    // 96.5179, and #43 PLUS `ok` together fall back to 96.4869 - so the rung
-    // is worth exactly one site here.
-    std::vector<widget*>& widgets = m_widgets;
-    widgets.insert(widgets.end(), new bitmapBorder(
+    // DC lines 1370 and 1373 prove these are push_back calls too. Together
+    // with both DC Widget.h::hide helpers below, the natural source reproduces
+    // the complete 215-block retail constructor exactly; no depth pin or
+    // direct vector::insert spelling is needed.
+    m_widgets.push_back(new bitmapBorder(
         725, 537, 68, 34, -1, "box66x32.pcx", 0x800));
     button* ok = new button(
         726, 538, 66, 32, 0x7802, "iOkay32.def", 0, 1, 0, 1, 2);
@@ -1279,9 +1269,9 @@ TViewWorldWindow::TViewWorldWindow()
         g_game->getLocalPlayerGamePos());
 
     if (m_origin.m_z == 1 || g_game->getNumMapLevels() == 1)
-        m_undergroundButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+        m_undergroundButton->hide();
     if (m_origin.m_z == 0)
-        m_surfaceButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+        m_surfaceButton->hide();
 }
 
 VA_COMPGEN(0x005fbd30, 0x21, SCALAR_DELETING_DTOR, TViewWorldWindow)

@@ -487,6 +487,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STD_DISTANCE", "STD_DISTANCE_TAGGED",
                  "LOCAL_STATIC_DTOR",
                  "CLASS_CTOR",
+                 "CLASS_NONCOPY_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
 COMPGEN_KINDS |= {member.upper() for member in CHAR_STREAM_MEMBER_KINDS}
@@ -2114,6 +2115,15 @@ def _icf_group_pairing(candidates: list[dict], mangled_group: list,
     return {row["rva"]: names[0]}
 
 
+def _ctor_kind_compatible(row: dict, name: str) -> bool:
+    """Constructor kind is evidence, not a hint overridden by size/order."""
+    if "$implicit_copy_ctor$" in row["name"]:
+        return name.startswith("??0") and bool(COPY_CTOR_TAIL_RE.search(name))
+    if "$class_noncopy_ctor$" in row["name"]:
+        return name.startswith("??0") and not COPY_CTOR_TAIL_RE.search(name)
+    return True
+
+
 def _ctor_kind_pairing(candidates: list[dict], mangled_group: list,
                        used: set | None = None) -> dict:
     """{claim rva -> mangled} for the constructor halves a group's CLAIM
@@ -2142,14 +2152,15 @@ def _ctor_kind_pairing(candidates: list[dict], mangled_group: list,
     used = used or set()
     free = [name for name, _content in mangled_group
             if name not in used and name.startswith("??0")]
-    halves = (("$implicit_copy_ctor$",
+    halves = ((("$implicit_copy_ctor$",),
                [n for n in free if COPY_CTOR_TAIL_RE.search(n)]),
-              ("$class_ctor$",
+              (("$class_ctor$", "$class_noncopy_ctor$"),
                [n for n in free if not COPY_CTOR_TAIL_RE.search(n)]))
     out = {}
-    for marker, names in halves:
+    for markers, names in halves:
         rows = [r for r in candidates
-                if marker in r["name"] and r["channel"] != "src-VA+base"]
+                if any(marker in r["name"] for marker in markers)
+                and r["channel"] != "src-VA+base"]
         if len(rows) == 1 and len(names) == 1:
             out[rows[0]["rva"]] = names[0]
     return out
@@ -2564,7 +2575,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             claim_keys.setdefault(
                 f"{owner}@local_static_dtor", []).append(row)
             continue
-        if "$class_ctor$" in row["name"]:
+        if ("$class_ctor$" in row["name"]
+                or "$class_noncopy_ctor$" in row["name"]):
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}_{owner}", []).append(row)
             continue
@@ -2639,6 +2651,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             if pairing is None:
                 pairing = [name for name, _content in mangled_group]
             for row, mangled in zip(by_rva, pairing):
+                if not _ctor_kind_compatible(row, mangled):
+                    continue
                 row["joined"] = mangled
                 row["channel"] = "src-VA+base"
             continue
@@ -2648,12 +2662,13 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         # when the assignment is unambiguous both ways.
         for row in candidates:
             fits = [name for name, content in mangled_group
-                    if content == row["size"]]
+                    if content == row["size"] and _ctor_kind_compatible(row, name)]
             if len(fits) != 1:
                 continue
             mangled = fits[0]
             claim_fits = [r for r in candidates
-                          if any(c == r["size"]
+                          if _ctor_kind_compatible(r, mangled)
+                          and any(c == r["size"]
                                  for n, c in mangled_group
                                  if n == mangled)]
             if len(claim_fits) != 1:
@@ -2682,7 +2697,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         pairing = _icf_group_pairing(unbound, free, digests)
         for row in unbound:
             mangled = pairing.get(row["rva"])
-            if mangled is not None:
+            if mangled is not None and _ctor_kind_compatible(row, mangled):
                 row["joined"] = mangled
                 row["channel"] = "src-VA+base"
 
