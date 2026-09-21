@@ -1633,11 +1633,9 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         return -1;
     count = value;
     if (count == 0) {
-        // DEPTH LADDER (docs/vc6/inliner.md 6b): this third list's empty arm
-        // is the LONGHAND range erase; the two above it stay `clear()`.
-        // 93.0057 -> 95.3605, and a greedy second round over the other two
-        // finds nothing - the rung is per-site here as everywhere.
-        thisBox->m_spells.erase(thisBox->m_spells.begin(), thisBox->m_spells.end());
+        // Dreamcast mapcell.cpp:1655 calls vector<SpellID>::clear here,
+        // just as the two preceding empty-list arms do.
+        thisBox->m_spells.clear();
     } else {
         thisBox->m_spells.resize(count);
         for (i = 0; i < count; ++i) {

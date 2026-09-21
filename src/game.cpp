@@ -1040,7 +1040,7 @@ void playerData::init()
     m_numHeroes = 0;
     m_currHeroId = -1;
     m_currTownId = 0;
-    m_shipyards.erase(m_shipyards.begin(), m_shipyards.end());
+    m_shipyards.clear();
 
     m_puzzleGuess.m_x = -1;
     m_puzzleGuess.m_y = -1;
@@ -3384,7 +3384,7 @@ void game::giveTroopsToNeutralTown(int townId)
     town* currentTown = &m_towns[townId];
     long weekNumber = static_cast<short>(
         (m_month * 4 + m_week - 5) * 7 + m_day) / 7;
-    int maxRoll = std::_cpp_min(weekNumber, static_cast<long>(8)) + 1;
+    int maxRoll = min(weekNumber, 8) + 1;
     int roll = random(0, maxRoll) + random(0, maxRoll)
               + random(0, maxRoll);
 
@@ -6523,7 +6523,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             m_teamInfo[i] = i;
     }
 
-    m_heroPlayerSetups.erase(m_heroPlayerSetups.begin(), m_heroPlayerSetups.end());
+    m_heroPlayerSetups.clear();
     if (saveVersion < g_saveVersionCustomHeroSetups)
         return 0;
 

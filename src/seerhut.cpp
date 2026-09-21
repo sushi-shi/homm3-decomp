@@ -108,6 +108,8 @@ void extendedDialog(const char* text,
 // three-column tables from it, then walk every row
 
 // Complete loads quest text from a spreadsheet; Dreamcast initializes a fixed table.
+// The name-row append is inferred from retail. Canonical push_back gives
+// 79.8841%; direct insert formerly hid the remaining inline-context mismatch.
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 VA(0x0056c3e0, 0x183)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
 unsigned char initializeSeerHutText()
@@ -129,7 +131,7 @@ unsigned char initializeSeerHutText()
         const char* name = sheet->getRow(row)[0];
         if (!name[0] || name[0] == ' ')
             continue;
-        g_seerHutNames.insert(g_seerHutNames.end(), name);
+        g_seerHutNames.push_back(name);
     }
 
     sheet->dispose();
@@ -1055,12 +1057,7 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
         for (unsigned i = 0; i < missingArtifacts.size(); ++i) {
             resource.m_resource = 8;
             resource.m_qualifier = missingArtifacts[i];
-            // DEPTH LADDER (docs/vc6/inliner.md 6b): this append alone is
-            // spelled `insert(end(), x)`; the two in the sibling arm above
-            // stay `push_back`.  89.1000 -> 92.0556.  Per-site: the two
-            // sibling sites give 91.6667 each, all three together 85.7667,
-            // and a greedy second round over the survivors finds nothing.
-            dialogResources.insert(dialogResources.end(), resource);
+            dialogResources.push_back(resource);
         }
         extendedDialog(textPointer, dialogResources, -1, -1, 0);
     }

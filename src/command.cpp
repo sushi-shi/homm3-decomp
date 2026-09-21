@@ -1823,7 +1823,7 @@ void combatManager::doVictory(int winningGroup)
         if (m_defendingTown) {
             int currentMana = m_heroes[1]->m_mana;
             int manaCap = m_originalMana;
-            int newMana = std::_cpp_min(manaCap, currentMana);
+            int newMana = min(manaCap, currentMana);
             m_heroes[1]->m_mana = newMana;
         }
     }
@@ -2342,7 +2342,7 @@ void combatManager::processFirstAid(army* currentArmy)
                    currentArmy->getController()->getFirstAidFactor()
                    * 100.0f));
         int result = targetArmy->m_topCreatureDamage;
-        result = std::_cpp_min(maximum, result);
+        result = min(maximum, result);
         targetArmy->m_topCreatureDamage -= result;
         currentArmy->m_monInfo.m_attributes |= creatureDone;
 
@@ -2521,7 +2521,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
             if (!m_creaturePlacement && !currentArmy->is(creatureSiegeWeapon)) {
                 std::string message;
                 currentArmy->m_monInfo.m_attributes |= creatureDefending;
-                currentArmy->m_defendBonus = std::_cpp_max(
+                currentArmy->m_defendBonus = max(
                     currentArmy->m_monInfo.m_defenseSkill * 20 / 100, 1);
 
                 if (currentArmy->m_numTroops == 1)

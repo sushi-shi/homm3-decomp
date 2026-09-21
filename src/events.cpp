@@ -2080,37 +2080,15 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
 // inventory, scope order and all seven statement groups; retail proves the
 // Complete limits, both independent transfer guards, dialog rows and the
 // asymmetric seven-icon packing policy.
-// Residual (88.6858%), LOCALISED 2026-09-06.  Two facts, one fixed and one
-// not:
-//   (a) both `_cpp_min` calls take `magic_scholar_level + 1` as the LEFT
-//       argument - retail computes the wisdom term first (VC6 evaluates
-//       arguments right to left) and compares `cmp wisdom+2, msl+1` with
-//       `&(wisdom+2)` as the fall-through, the mirror of what the other
-//       operand order emits.  Swapping both: 88.4113 -> 88.6858.
-//   (b) the remaining structural deficit is ONE inline decision and the
-//       call streams name it exactly: at the LAST `msg += format_string(...)`
-//       (the taught block's trailer, base +6fa) retail EXPANDS
-//       basic_string::append(const basic_string&, size_t, size_t) - its
-//       _Xlen / _Grow / _Eos are retail-only calls #39..#41 - while we emit
-//       the out-of-line `append`.  Retail CALLS the same append at the
-//       learned block's trailer (#24), so this is the /Ob2 quotient at the
-//       final site, and it accounts for the whole 65-vs-60 branch deficit
-//       (an inlined append is four guards plus the throw).  UNDER-inline =
-//       grow the caller, i.e. real missing mass; nothing local to the
-//       statement reaches it and no pin may be added (falling-only floor).
-// The prologue register split is downstream of the same thing: retail loads
-// `second_hero->skillLevel` straight off the incoming EDX and lands the
-// _cpp_max result in ESI, leaving EDX as the zero for the two vector
-// headers; we copy EDX into EBX first, so the max spills to [ebp-0x1c] and
-// ESI carries the zero instead.  Every instruction pairs; only the register
-// and the one extra frame slot differ.
-// MEASURED NEGATIVE (polish 49): swapping the _cpp_max operand order so the
-// second hero's skill is read first - retail's `mov al,[edx+0xdb]` lands
-// before the register saves - costs 92.1640 -> 92.1508.
+// DC calls min at lines 1913/1915 and appends spells with push_back.
+// Its Scholar maximum is std::max<signed char>; VC6 exposes that standard
+// selector only under an internal name, so use our canonical reference
+// selector with the same deduced signed-char operands.
+// The final taught-text append still differs in its inline decision.
 VA(0x004a2940, 0x85C)  // anchor-callee from do_event_hero + full retail semantics, dc 0x93464
 static void exchangeSpells(hero* firstHero, hero* secondHero)
 {
-    const int magicScholarLevel = std::_cpp_max<int>(
+    const int magicScholarLevel = cppMax(
         firstHero->m_skillLevel[eSecSkillMagicScholar],
         secondHero->m_skillLevel[eSecSkillMagicScholar]);
     std::vector<SpellID> spellsLearned;
@@ -2123,10 +2101,10 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
     if (magicScholarLevel > 0
         && firstHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)
         && secondHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-        const int firstSpellLevel = std::_cpp_min<int>(
+        const int firstSpellLevel = min(
             magicScholarLevel + 1,
             firstHero->m_skillLevel[eSecSkillWisdom] + 2);
-        const int secondSpellLevel = std::_cpp_min<int>(
+        const int secondSpellLevel = min(
             magicScholarLevel + 1,
             secondHero->m_skillLevel[eSecSkillWisdom] + 2);
 
@@ -2137,14 +2115,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
                 && g_spellTraits[spell].m_level <= secondSpellLevel) {
                 secondHero->addSpell(spell);
                 if (g_currentPlayer->isLocalHuman())
-            // DEPTH LADDER (docs/vc6/inliner.md 6b): this ONE append is
-            // `insert(end(), x)`; the other four in this body stay
-            // push_back.  92.1640 -> 94.7989, and a greedy second round over
-            // the remaining four finds nothing.  Site #1 measures the same
-            // 94.7989, #2 93.05 and #3 93.33; the `.append` -> `+=` rung on
-            // the thirteen text stores is a flat 93.2791 at every site, so
-            // this append is the one the budget turns on.
-            spellsTaught.insert(spellsTaught.end(), spell);
+                    spellsTaught.push_back(spell);
             }
 
             if (secondHero->isInSpellbook(spell)

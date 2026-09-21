@@ -557,8 +557,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     }
     if (m_maxAvail > *m_numAvail)
         m_maxAvail = *m_numAvail;
-    long maxBuy = m_maxAvail;
-    m_numberToBuy = std::_MIN<long>(m_numberToBuy, maxBuy);
+    m_numberToBuy = min(m_numberToBuy, m_maxAvail);
 
     // NAME CONTRADICTED, storage correct: 0x69954c is declared
     // `bVideoPaused` in kbwin.h, which flags all of its .bss names as

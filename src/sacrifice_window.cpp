@@ -1719,7 +1719,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     m_widgets.push_back(background);
 
     std::vector<widget*>& widgets = m_widgets;
-    widgets.insert(widgets.end(), new textWidget(
+    widgets.push_back(new textWidget(
         25, 21, 257, 18,
         g_generalText->getText(
             SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE),

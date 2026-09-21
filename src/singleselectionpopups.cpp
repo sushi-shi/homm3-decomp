@@ -603,13 +603,6 @@ void TRandomMapProgress::setTotal(int totalSteps)
     loadProgFn00577180();
 }
 
-VA(0x00577320, 0x31)
-void TRandomMapProgress::advance(int amount)
-{
-    m_done = min(m_done + amount, m_steps);
-    loadProgFn00577180();
-}
-
 // COMDAT pairing: vector<widget*>::_Ucopy, agreement 0.978. Same caller-set
 // argument as the insert above: 0x174ce0 is reached from TAdventureMapWindow's
 // constructor and SetSleepImage, and from TTownGateWindow::AddTown's expanded
