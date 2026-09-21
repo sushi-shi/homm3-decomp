@@ -1212,12 +1212,7 @@ void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
         unsigned i;
         for (i = 0; i < g_game->m_worldMap.m_seerHutList.size(); i++) {
             TSeerHut& hut = g_game->m_worldMap.m_seerHutList[i];
-            type_quest* quest = hut.m_quest;
-            if (quest
-                && quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
-                && (hut.m_visitedPlayers
-                    & (1 << static_cast<unsigned char>(player)))
-                && hut.m_quest) {
+            if (hut.questActiveforPlayer(player)) {
                 enabled = 1;
                 break;
             }
@@ -1225,12 +1220,7 @@ void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
 
         for (i = 0; i < g_game->m_worldMap.m_questGuardList.size(); i++) {
             TQuestGuard& guard = g_game->m_worldMap.m_questGuardList[i];
-            type_quest* quest = guard.m_quest;
-            if (quest
-                && quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
-                && (guard.m_visitedPlayers
-                    & (1 << static_cast<unsigned char>(player)))
-                && guard.m_quest) {
+            if (guard.questActiveforPlayer(player)) {
                 enabled = 1;
                 break;
             }
