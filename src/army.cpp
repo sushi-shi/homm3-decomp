@@ -1954,8 +1954,9 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // fresh full blind).
 
 // GetName expands at the two damage_message sites and stays a call at
-// the sprintf; get_controlling_side is a CALL here (the one this TU
-// keeps out of line); MarkCreatureEffect expands three times.
+// the sprintf. Dreamcast records the three MarkCreatureEffect source calls
+// without intervening get_owning_side calls; passing each army's combatSide
+// and bitIndex members directly restores all three retail expansions.
 
 // SPELLING LEDGER (0 -> 88.11 -> 93.99 -> 95.52 -> 98.59 -> 99.9616 -> 99.9962):
 // the two over-inlines take statement-scoped depth(0) pins with the call
@@ -1966,8 +1967,8 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // do_multi_head_attack's fourth output is fire_shield_damage, not total_life.
 // A nested shield-charge scope gives retail's dead [ebp+8] parameter home;
 // spelling the null arm explicitly gives its fall-through and zero register.
-// Named side/index arguments select retail's address association in both
-// MarkCreatureEffect expansions.
+// The remaining instruction delta is the EDI/EBX reload order after
+// do_multi_head_attack; all 106 blocks, 58 branches and 31 calls agree.
 
 VA(0x00441610, 0x6A0)  // corroborates, dc 0x46bec
 unsigned char army::doAttack(army* armyToAttack, int direction)
@@ -2004,7 +2005,7 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
         }
     }
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
+    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
     checkLuck();
     int damage = 0;
     int killed = 0;
@@ -2016,10 +2017,10 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
         doMultiHeadAttack(attackMask, &damage, &killed,
                              &fireDamage);
     } else {
-        g_combatManager->markCreatureEffect(armyToAttack->getOwningSide(),
+        g_combatManager->markCreatureEffect(armyToAttack->m_combatSide,
                                             armyToAttack->m_bitIndex);
         if (behind)
-            g_combatManager->markCreatureEffect(behind->getOwningSide(),
+            g_combatManager->markCreatureEffect(behind->m_combatSide,
                                                 behind->m_bitIndex);
         totalLife = armyToAttack->getTotalHitPoints(0);
         fireDamage = damageEnemy(armyToAttack, &damage, &killed, 0);
@@ -2332,7 +2333,9 @@ inline void army::checkLuck()
 {
     m_luckStatus = 0;
     if (getController() && m_luck > 0) {
-        if (sRandom(1, 24) <= min(m_luck, 3)) {
+        // Dreamcast named SRandom here; Complete retail calls random in both
+        // rangeAttack and doAttack.
+        if (random(1, 24) <= min(m_luck, 3)) {
             m_luckStatus = 1;
             if (!static_cast<const combatManager*>(g_combatManager)
                      ->isQuickCombat()) {

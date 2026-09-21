@@ -181,6 +181,9 @@ void type_text_scroller::refresh(int firstLine)
 // Re-wraps the whole scroller around a new string. The wrap width is
 // re-tried at the narrow measure only when the wide one already fits, and
 // the slider is re-ranged or hidden from the resulting line count.
+// Residual (99.4444%): 29/30 blocks are exact; the empty-line push retains
+// one extra count argument. Calling insert(end(), value) directly perturbs
+// the /Ob2 frontier and falls to 97.03%, so keep the canonical push_back.
 VA(0x005BA6E0, 0x1EF)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
 void type_text_scroller::setText(const char* text)
 {

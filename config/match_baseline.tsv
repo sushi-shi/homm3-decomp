@@ -540,7 +540,7 @@ army	?computeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x
 army	?considerAttack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	tokens1:a8462e6eb3e6
 army	?cure@army@@QAEXHHPBVhero@@@Z	89.9485	100.0000	100.0000	0x46500	tokens1:6174ba90ca07
 army	?damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090	tokens1:b47dff9d1b34
-army	?doAttack@army@@QAEEPAV1@H@Z	99.9040	99.9424	99.9962	0x41610	tokens1:e26696b60b6f
+army	?doAttack@army@@QAEEPAV1@H@Z	99.9616	99.9616	99.9962	0x41610	tokens1:0f74c7e8a589
 army	?doAttack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	tokens1:687b92b5ea7f
 army	?doFireShield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	tokens1:e29378ace4f0
 army	?doMultiHeadAttack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	tokens1:4743d5c367fc
@@ -3018,7 +3018,7 @@ recruit	?quickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750	t
 recruit	?quickViewRecruit@@YIXW4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x151780	tokens1:4e8b6965c245
 recruit	?recruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x14e800	tokens1:0a78aaf337d9
 recruit	?siegeArtifactToCreature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360	tokens1:ca8b074685ad
-recruit	?update@recruitUnit@@QAEXEJ@Z	99.9898	99.9898	99.9898	0x1503a0	tokens1:ebd9408697b1
+recruit	?update@recruitUnit@@QAEXEJ@Z	99.9898	99.9898	99.9898	0x1503a0	tokens1:7a2a925a6fde
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50	tokens1:9cb7f65c769c
 remote	??0CChatEdit@@QAE@HHHHHPAD0W4TColor@font@@W4EJustify@2@0HHHHHH@Z	100.0000	100.0000	100.0000	0x1541a0	tokens1:014d0118749d
 remote	??0CGameTransferDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x157720	tokens1:b63d1ed9b628
