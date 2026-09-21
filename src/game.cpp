@@ -1499,7 +1499,9 @@ int game::saveTownPool(TAbstractFile* outfile)
 // hero records; the older pressing's pool was128.
 int game::saveHeroPool(TAbstractFile* outfile)
 {
-    for (int x = 0; x < HERO_COUNT; ++x) {
+    // Complete's 156-entry loop uses an unsigned bound (`jb`) in its
+    // expansion inside game::save; the older Dreamcast roster had 128 heroes.
+    for (unsigned int x = 0; x < HERO_COUNT; ++x) {
         int err = m_heroes[x].save(outfile);
         if (err < 0)
             return err;
@@ -2240,6 +2242,206 @@ int game::loadRumours(TAbstractFile* infile)
         it->m_unavailable = value != 0;
     }
     return 1;
+}
+
+// The five bodies below were canonical Game.h / VictoryLossConditions.h
+// inlines.  Retail places them here, in game.cpp source order between
+// loadRumours 0x4bbe40 and setupShipyards 0x4bcb30, and CALLS every one of
+// them - game::save 0x4be3f0 calls reset and save, CGameHeaderInfoMsg::write
+// 0x577950 calls save, and the constructors are called from kb,
+// singleselectionwindow and customcampaign.  An `inline` keyword makes VC6
+// expand a body of this size at every site, so a header definition leaves no
+// standalone copy for 0x4bc340/0x4bc350/0x4bc5d0 to compare at all.  The DC
+// header placements are recorded in dc_only.tsv.
+
+// Complete save files use the H3SVG signature and version 42.
+// E:\gamedcs\Game.h:1301, dc 0xbceb4
+VA(0x004bc0e0, 0x251)
+SavedGameHeader::SavedGameHeader()
+{
+    memset(m_id, 0, sizeof(m_id));
+    strcpy(m_id, "H3SVG");
+    m_version = 42;
+}
+
+// E:\gamedcs\VictoryLossConditions.h, dc 0xbccdc.  DC declares this
+// constructor in the header; Complete's body sits here, between
+// SavedGameHeader's constructor and its reset, and all three retail callers
+// call it out of line.
+VA(0x004bc340, 0xE)  // anchor-caller (SavedGameHeader ctor), dc 0xbccdc
+VictoryConditionStruct::VictoryConditionStruct()
+  : m_type(-1), m_gameWon(0), m_playerWinner(-1) {}
+
+// E:\gamedcs\Game.h:1312, dc 0xbcf00
+VA(0x004bc350, 0x271)  // anchor-caller (game::Save) + layout, dc 0xbcf00
+void SavedGameHeader::reset()
+{
+    if (g_inCampaign)
+        strcpy(m_id, "H3SVC");
+    else
+        strcpy(m_id, "H3SVG");
+
+    m_version = 42;
+    m_gameVersion = g_game->m_f1f698;
+
+    m_campaign = g_game->m_campaign;
+
+    m_mapHeader = g_game->m_mapHeader;
+
+    m_currentPlayer = g_netLocalGamePos;
+    m_mapSetup = g_game->m_setup;
+    m_campaignGame = g_inCampaign;
+    m_fileName = g_game->m_saveFileName;
+    m_difficultyRating = g_game->m_difficultyRating;
+    m_numDeadPlayers = g_game->m_numDeadPlayers;
+    memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
+
+    // Residual at 98.29%: retail rounds the predicate through the shared
+    // [ebp-4] slot (`mov byte [ebp-4],dl` / `mov edx,[ebp-4]` / `and
+    // edx,0xff`) and stores through `[ecx-4]` after advancing.  A named
+    // bool, unsigned char or function-scope carrier for that value is
+    // byte-flat - VC6 enregisters all three - so the home is not spelled by
+    // the local's declaration.
+    int* human = m_humanPlayer;
+    for (int i = 0; i < 8; ++i)
+        *human++ = g_game->m_players[i].isHuman();
+}
+
+// Complete serializes the expanded snapshot through its abstract stream.
+// Preserve the disjoint scalar staging scopes used by retail stack slots.
+// E:\gamedcs\Game.h:1325, dc 0xbcf6c
+VA(0x004bc5d0, 0x17A)  // anchor-layout + game::Save caller
+int SavedGameHeader::save(TAbstractFile* outfile)
+{
+    char fileNameBuffer[0x15f];
+    char compatibilityBuffer[32];
+
+    outfile->write(m_id, sizeof(m_id));
+
+    {
+        int buffer = m_version;
+        outfile->write(&buffer, sizeof(buffer));
+    }
+    {
+        int buffer = m_gameVersion;
+        outfile->write(&buffer, sizeof(buffer));
+    }
+
+    if (outfile->write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
+        sizeof(compatibilityBuffer))
+        return -1;
+
+    if (m_mapHeader.save(outfile) < 0)
+        return -1;
+    if (m_mapSetup.save(outfile) < 0)
+        return -1;
+
+    {
+        short buffer = m_campaignGame;
+        outfile->write(&buffer, sizeof(buffer));
+    }
+    if (m_campaignGame)
+        m_campaign.save(outfile);
+
+    strcpy(fileNameBuffer, m_fileName.c_str());
+    outfile->write(fileNameBuffer, sizeof(fileNameBuffer));
+
+    {
+        short buffer = m_difficultyRating;
+        outfile->write(&buffer, sizeof(buffer));
+    }
+    {
+        char buffer = m_numDeadPlayers;
+        outfile->write(&buffer, sizeof(buffer));
+    }
+    outfile->write(m_deadPlayer, sizeof(m_deadPlayer));
+    outfile->write(m_humanPlayer, sizeof(m_humanPlayer));
+    {
+        int buffer = m_currentPlayer;
+        outfile->write(&buffer, sizeof(buffer));
+    }
+
+    return 0;
+}
+
+// Complete reads versioned nested records through the abstract stream;
+// Dreamcast uses gzread directly and records the checked ID-read count.
+// The six unchecked scalar reads use returned values rather than artificial
+// caller scopes. VC6 then matches all 62 retail blocks and 26 named calls,
+// including the shared failure cleanup; flattening those reads loses it.
+// E:\gamedcs\Game.h:1344, dc 0xbcfe4
+VA(0x004bc750, 0x3D5)  // dc 0xbcfe4
+int SavedGameHeader::load(TAbstractFile* infile)
+{
+    std::string openedName;
+    unsigned char inputWasProvided = infile != 0;
+    std::auto_ptr<TAbstractFile> ownedInput;
+    int count;
+
+    if (!inputWasProvided) {
+        openedName = g_game->m_setup.m_filename;
+        _chdir("games");
+        try {
+            infile = new TGzFile(openedName.c_str(), "rb");
+            ownedInput = std::auto_ptr<TAbstractFile>(infile);
+        }
+        catch (TGzFile::TOpenFailure) {
+            return -1;
+        }
+        _chdir("..");
+        if (!infile)
+            return -1;
+    }
+
+    count = infile->read(m_id, sizeof(m_id));
+    if (count < sizeof(m_id))
+        return -1;
+
+    m_version = readValue<int>(infile);
+    if (m_version > 42)
+        return -1;
+
+    if (m_version >= 40) {
+        m_gameVersion = readValue<int>(infile);
+    } else {
+        if (m_version < 25 && (m_version < 16 || m_version > 18))
+            return -1;
+        if (m_version <= 18)
+            m_gameVersion = 0;
+        else if (m_version <= 30)
+            m_gameVersion = 1;
+        else
+            m_gameVersion = 2;
+    }
+
+    if (m_gameVersion == 1 &&
+        *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW)
+        return -1;
+
+    char compatibilityBuffer[32];
+    infile->read(compatibilityBuffer, sizeof(compatibilityBuffer));
+    if (m_mapHeader.load(infile, m_version) < 0)
+        return -1;
+    if (m_mapSetup.load(infile, m_version) < 0)
+        return -1;
+
+    m_campaignGame = readValue<short>(infile) != 0;
+    if (m_campaignGame)
+        m_campaign.load(infile, m_version);
+
+    char fileNameBuffer[0x15f];
+    infile->read(fileNameBuffer, sizeof(fileNameBuffer));
+    m_fileName = fileNameBuffer;
+
+    m_difficultyRating = readValue<short>(infile);
+    m_numDeadPlayers = readValue<char>(infile);
+    infile->read(m_deadPlayer, sizeof(m_deadPlayer));
+    infile->read(m_humanPlayer, sizeof(m_humanPlayer));
+    m_currentPlayer = readValue<int>(infile);
+
+    if (!inputWasProvided)
+        strcpy(m_mapSetup.m_filename, openedName.c_str());
+    return 0;
 }
 
 // E:\gamedcs\game.cpp:2975
@@ -2983,7 +3185,7 @@ int game::save(TAbstractFile* outfile)
     unsigned char extraByteValue;
     char charBuffer;
     short shortValue;
-    short extraShortValue;
+    unsigned short extraShortValue;
     int zero;
     SavedGameHeader saved;
     saved.reset();
