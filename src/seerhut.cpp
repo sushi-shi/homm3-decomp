@@ -288,15 +288,14 @@ void type_quest::save(TAbstractFile* file)
 // questTextRow and getCurrentTurn preserve that lookup and the signed-short
 // date result. This Complete-only caller has no Dreamcast source record;
 // the shared helper bodies and retail expansion support these source calls.
-// They are byte-flat at 93.4944%. Moving remainingDays earlier or directly
-// initializing text lost agreement (combined controls: 75.2472%).
+// Constructing text directly from the separator keeps its EH lifetime closed
+// until construction succeeds and reproduces both retail cleanup tails.
 
 VA(0x0056d040, 0x1F7)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
 std::string type_quest::getTimeLimitText()
 {
     int days = g_game->getCurrentTurn();
-    std::string text;
-    text = DATA_COMPGEN(0x00660330, questTimeLimitSeparator, " ");
+    std::string text = DATA_COMPGEN(0x00660330, questTimeLimitSeparator, " ");
     int remainingDays = m_limit - days;
     const std::string* row =
         questTextRow();

@@ -3756,7 +3756,7 @@ seerhut	?getRequirementText@type_resource_quest@@UAE?AV?$basic_string@DU?$char_t
 seerhut	?getRequirementText@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d960	tokens1:6dc21f9ae2b3
 seerhut	?getRewardExtra@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	0x173f10	tokens1:27b398e60214
 seerhut	?getSeerLogText@TSeerHut@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x174070	tokens1:3028811a1546
-seerhut	?getTimeLimitText@type_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	93.4944	93.4944	93.4944	0x16d040	tokens1:dc58cb77b9f1
+seerhut	?getTimeLimitText@type_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d040	tokens1:2f4e9e5e7ec9
 seerhut	?getValue@TSeerHut@@QAEHPAVhero@@@Z	100.0000	100.0000	100.0000	0x1735a0	tokens1:3581031cec3d
 seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	0x173a70	tokens1:35368d302207
 seerhut	?giveReward@TSeerReward@@QAEXPAVhero@@_N@Z	100.0000	100.0000	100.0000	0x173c80	tokens1:00fc41cebb9b
