@@ -80,7 +80,7 @@ static unsigned char g_viewHeroes;
 // a `double` literal folds to. And the operand ORDER is magic + d - the
 // float is what reaches the x87 stack first, with `fadd qword ptr` taking
 // the double argument as the memory operand.
-DC_ONLY(0x192ee8, 0x62)
+
 static long ftol(double d)
 {
     union {
@@ -1750,14 +1750,3 @@ int TViewWorldWindow::windowHandler(message& msg)
     }
     return MESSAGE_DISPATCH_CONSUME;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\viewwrld.cpp:1392
-DC_ONLY(0x196b18, 0x34)
-void* TViewWorldWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

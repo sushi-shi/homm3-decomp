@@ -235,7 +235,7 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 // the two four-bit offsets together, `test cl,0x1f` for terrain, `test
 // ecx,0x1fe0` for river and road together, and `test dl,1` for diggable.
 // has_grail and visible are deliberately NOT compared.
-DC_ONLY(0x1156bc, 0xC0)
+
 unsigned char type_AI_puzzle_tile::operator==(
     const type_AI_puzzle_tile* arg) const
 {
@@ -301,7 +301,7 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 // E:\gamedcs\puzzlewindow.cpp:403.
 // Complete reads setup alignment directly and disposes through the bitmap
 // vtable; those retail operations override the older DC callees.
-DC_ONLY(0x115838, 0x10A)
+
 static unsigned char markAIPuzzle(long player, unsigned char* visible)
 {
     long puzzle;
@@ -329,7 +329,7 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
 // E:\gamedcs\puzzlewindow.cpp:445.
 // DC proves the array reference and point local.
 // Complete's tile dimensions are 19x17, independently fixed by retail strides.
-DC_ONLY(0x115944, 0x12C)
+
 static void createAIPuzzleMap(long player, unsigned char* visible,
                             long puzzleX, long puzzleY,
                             type_AI_puzzle_tile (&puzzleMap)[19][17])
@@ -424,7 +424,7 @@ type_point aiAttemptPuzzleGuess(long player)
 // `first_x` restarts at zero. A single mismatched tile answers zero
 // immediately, which is why retail's failure edge jumps straight past the
 // caller's score test.
-DC_ONLY(0x115a70, 0x176)
+
 static long checkMatch(long player, long firstX, long firstY,
                         type_point origin,
                         type_AI_puzzle_tile (*puzzleMap)[17])
@@ -611,16 +611,6 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
     }
     return result;
 }
-
-#if 0  // @carcass: the compiler-generated deleting destructor thunk
-
-// E:\gamedcs\puzzlewindow.cpp:159
-DC_ONLY(0x116348, 0x34)
-void* TPuzzleWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-#endif
 
 // COMDAT pairing: bitset<48>::test, agreement 1.000 at an exactly equal
 // 52-byte extent.

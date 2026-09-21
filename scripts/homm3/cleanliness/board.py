@@ -219,7 +219,7 @@ def _cpp_local_enum_sites(code: str, ctx) -> list:
 
 def _dc_local_classes(sources, dc_origins=None):
     from collections import Counter, defaultdict
-    from homm3.match.source_ownership import read_dc, read_filter, family_name
+    from homm3.match.source_ownership import read_dc, read_win_filters, family_name
     origins = defaultdict(set)
     private_origins = defaultdict(set)
     for row in (read_dc(REPO) if dc_origins is None else dc_origins):
@@ -248,8 +248,7 @@ def _dc_local_classes(sources, dc_origins=None):
     # for Complete-only local classes. Do not invent a second class ledger.
     # The source-ownership gate independently rejects unused filters and
     # filters attempting to waive a known Dreamcast counterpart.
-    windows, errors = read_filter(REPO / 'config/win_only.tsv',
-                                 ('file', 'function', 'signature'))
+    windows, errors = read_win_filters(REPO)
     windows_origins = defaultdict(set)
     if not errors:
         for file, function, _signature in windows:

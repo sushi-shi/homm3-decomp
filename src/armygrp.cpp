@@ -343,28 +343,6 @@ int TSplitWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-#if 0  // @carcass
-
-// LINKER-ELIMINATED in retail (inlined at their single call sites,
-// then dropped by /OPT:REF - the HasSomeUndead pattern):
-//   E:\gamedcs\armygrp.cpp:62   TSplitWindow::UpdateSplitArmy(uchar)
-//     -> inlined into SplitSliderCallback (0x4496c0)
-DC_ONLY(0x4db08, 0x80)
-void TSplitWindow::updateSplitArmy(unsigned char bUpdate)
-{
-    // @stub
-}
-
-//   E:\gamedcs\armygrp.cpp:208  TSplitWindow::SetRolloverText(int)
-//     -> reconstructed above and inlined into WindowHandler (0x44a180)
-DC_ONLY(0x4e388, 0xA0)
-void TSplitWindow::setRolloverText(int codeY)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x0044a460, 0x55)
 const std::bitset<9>& armyGrpFn0044A460()
 {
@@ -1569,17 +1547,6 @@ TTerrainType armyGroup::getNativeTerrain() const
     }
     return native;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\armygrp.cpp:131
-DC_ONLY(0x4fd54, 0x34)
-void* TSplitWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // COMDAT pairing: bitset<9>::reference::operator=, agreement 0.922; the
 // neighbouring 0x4c680 row scores 0.600 against the same COMDAT.

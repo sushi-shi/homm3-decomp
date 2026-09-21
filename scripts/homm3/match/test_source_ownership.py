@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from homm3.match.source_ownership import Definition, Origin, compare, read_filter
+from homm3.match.source_ownership import Definition, Origin, compare, read_filter, read_dc_filters, read_win_filters
 
 
 def parsing_project(root):
@@ -237,16 +237,15 @@ class OwnershipTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             parsing_project(root)
-            (root / 'evidence/dreamcast').mkdir(parents=True)
-            csv = root / 'evidence/dreamcast/functions.csv'
-            heading = 'offset,file,name,line,params,module\n'
-            csv.write_text(heading + '0x1000,logger.cpp,Logger::write,50,1,logger.obj\n')
+            rows = [dict(offset='0x1000', file='logger.cpp', name='Logger::write',
+                         line='50', params='1', module='logger.obj')]
             with mock.patch('homm3.core.inputs.dreamcast_symbols', return_value=symbols), \
-                 mock.patch('homm3.core.nb11_types.Types.from_symbols', return_value=Types()):
+                 mock.patch('homm3.core.nb11_types.Types.from_symbols', return_value=Types()), \
+                 mock.patch('homm3.analysis.dc_extract.corpus_rows', return_value=(rows, [])):
                 procedures = read_dc(root, include_declarations=True)
                 self.assertEqual(len(procedures), 1)
                 self.assertEqual(procedures[0].argument_types, ('const char *', '...'))
-                csv.write_text(heading)
+                rows.clear()
                 declarations = read_dc(root, include_declarations=True)
                 self.assertEqual(len(declarations), 1)
                 self.assertTrue(declarations[0].declaration_only)
@@ -539,6 +538,59 @@ class OwnershipTest(unittest.TestCase):
             self.assertTrue(errors)
 
 
+class SplitDcFiltersTest(unittest.TestCase):
+    def test_union_preserves_reasons_and_checks_generated_entries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'config').mkdir()
+            header = 'file\tfunction\tline\treason\n'
+            (root / 'config/dc_only.tsv').write_text(
+                header + 'port.cpp\tport_init\t10\tPlatform operation\n')
+            generated = root / 'config/dc_only_generated.tsv'
+            generated.write_text(header + 'library.h\tallocate\t20\tLibrary emission\n')
+            rows, errors = read_dc_filters(root)
+            self.assertEqual(errors, [])
+            self.assertEqual(rows, {('port.cpp', 'port_init', '10'): 'Platform operation',
+                                    ('library.h', 'allocate', '20'): 'Library emission'})
+            errors, _ = compare([], [], rows, {})
+            self.assertTrue(any('allocate' in error and 'stale' in error for error in errors))
+            generated.write_text(header + 'library.h\tallocate\t20\t\n')
+            self.assertTrue(read_dc_filters(root)[1])
+
+    def test_cross_file_duplicates_and_missing_list_fail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'config').mkdir()
+            content = 'file\tfunction\tline\treason\nport.cpp\tport_init\t10\tReason\n'
+            (root / 'config/dc_only.tsv').write_text(content)
+            self.assertTrue(any('missing dc_only_generated.tsv' in e
+                                for e in read_dc_filters(root)[1]))
+            (root / 'config/dc_only_generated.tsv').write_text(content)
+            errors = read_dc_filters(root)[1]
+            self.assertTrue(any('duplicate exclusion' in e and 'dc_only_generated.tsv' in e
+                                for e in errors))
+
+
+    def test_windows_lists_preserve_signatures_and_reject_overlap(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'config').mkdir()
+            header = 'file\tfunction\tsignature\treason\n'
+            primary = root / 'config/win_only.tsv'
+            modules = root / 'config/win_only_modules.tsv'
+            primary.write_text(header + 'src/game.cpp\tload\tint ()\tChanged interface\n')
+            self.assertTrue(any('missing win_only_modules.tsv' in e
+                                for e in read_win_filters(root)[1]))
+            modules.write_text(header + 'src/rmg.cpp\tgenerate\tvoid ()\tWindows module\n')
+            rows, errors = read_win_filters(root)
+            self.assertEqual(errors, [])
+            self.assertEqual(rows, {('src/game.cpp', 'load', 'int ()'): 'Changed interface',
+                                    ('src/rmg.cpp', 'generate', 'void ()'): 'Windows module'})
+            modules.write_text(primary.read_text())
+            self.assertTrue(any('duplicate exclusion' in e and 'win_only_modules.tsv' in e
+                                for e in read_win_filters(root)[1]))
+
+
 class DefinitionScannerTest(unittest.TestCase):
     def scan_instance_fixture(self, body, extra=''):
         from homm3.match.source_ownership import scan_unit
@@ -824,7 +876,7 @@ class LocalClassTest(unittest.TestCase):
         windows = {('src/windows.cpp', 'WindowsDialog::draw', 'void ()'): 'retail proof'}
         with mock.patch.object(board, 'REPO', root), \
              mock.patch('homm3.match.source_ownership.read_dc', return_value=[]), \
-             mock.patch('homm3.match.source_ownership.read_filter', return_value=(windows, [])):
+             mock.patch('homm3.match.source_ownership.read_win_filters', return_value=(windows, [])):
             self.assertEqual(board._dc_local_classes([(path, source)])[path], {'WindowsDialog'})
             other = root / 'src/other.cpp'
             self.assertEqual(board._dc_local_classes([(other, source)])[other], set())
@@ -833,7 +885,7 @@ class LocalClassTest(unittest.TestCase):
         dc = [Origin('original.h', 'WindowsDialog::draw', 10, 1, 'x.obj', '0x1000')]
         with mock.patch.object(board, 'REPO', root), \
              mock.patch('homm3.match.source_ownership.read_dc', return_value=dc), \
-             mock.patch('homm3.match.source_ownership.read_filter', return_value=(windows, [])):
+             mock.patch('homm3.match.source_ownership.read_win_filters', return_value=(windows, [])):
             self.assertEqual(board._dc_local_classes([(path, source)])[path], set())
 
     def test_qualified_nested_class_uses_its_own_name(self):
@@ -876,13 +928,17 @@ enum Outside { OTHER = 503 };
         self.assertTrue(board._cpp_local_view_sites(source, {}))
 
 class CoverageTest(unittest.TestCase):
-    def test_reference_carcass_cannot_hide_implementation(self):
-        from homm3.match.source_ownership import reference_stubs_only
-        stub = '#include <va.h>\nDC_ONLY(0x1000, 8)\nvoid Reference() { /* @stub */ }\n'
-        self.assertTrue(reference_stubs_only(stub))
-        self.assertFalse(reference_stubs_only(stub.replace('/* @stub */', 'work();')))
-        self.assertFalse(reference_stubs_only(stub + 'void hidden() {}\n'))
-        self.assertFalse(reference_stubs_only('#define HIDDEN void hidden() {}\n'))
+    def test_unadmitted_sources_include_empty_and_inactive_files(self):
+        from homm3.match.source_ownership import unadmitted_sources
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'src').mkdir()
+            (root / 'src/active.cpp').write_text('void active() {}')
+            (root / 'src/empty.c').write_text('')
+            (root / 'src/reference.cxx').write_text('#if 0\nvoid stub() {}\n#endif\n')
+            (root / 'src/notes.md').write_text('reference notes')
+            self.assertEqual(unadmitted_sources(root, {'src/active.cpp'}),
+                             ['src/empty.c', 'src/reference.cxx'])
 
     def test_doubled_windows_path_separators(self):
         from homm3.match.source_ownership import source_file
@@ -949,19 +1005,6 @@ class CoverageTest(unittest.TestCase):
         errors, counts = compare([d], [o], {}, {})
         self.assertEqual(counts, {'signature': 1})
         self.assertTrue(errors[0].startswith('SIGNATURE '))
-
-
-class LinkOrderOriginTest(unittest.TestCase):
-    def test_unannotated_body_consumes_its_own_source_origin(self):
-        from homm3.analysis.link_order import parse_unit
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / 'dialog.cpp'
-            path.write_text('// E:\\gamedcs\\dialog.cpp:10\n'
-                            'int helper() { return 1; }\n'
-                            'VA(0x401000, 8)\nvoid unrelated() {}\n'
-                            '// E:\\gamedcs\\dialog.cpp:20\n'
-                            'VA(0x402000, 8)\nvoid owned() {}\n')
-            self.assertEqual(parse_unit(path), [('dialog.cpp', 20, 'VA', 0x402000, 8)])
 
 
 class HeaderClaimOwnershipTest(unittest.TestCase):

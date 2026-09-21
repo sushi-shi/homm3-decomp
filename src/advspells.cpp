@@ -519,7 +519,7 @@ void advManager::townGate(TSkillMastery level)
 // E:\gamedcs\advspells.cpp:605
 // Visions. Raises the caster's own visions level, posts the confirmation
 // line and charges the mana; the sample runs across all of it.
-DC_ONLY(0x228e8, 0xDC)
+
 void advManager::identify(TSkillMastery level)
 {
     hero* who = g_game->getCurrHero();
@@ -537,7 +537,7 @@ void advManager::identify(TSkillMastery level)
 // Water Walk. hero::CanWalkOnWater is the whole gate - already walking, or
 // wearing the boots (artifact 0x5a), and nothing happens; aboard a boat the
 // helper answers no and the spell runs.
-DC_ONLY(0x229c4, 0x7A)
+
 void advManager::waterWalk(TSkillMastery level)
 {
     const SSpellTraits* traits = &g_spellTraits[SPELL_WATER_WALK];
@@ -554,7 +554,7 @@ void advManager::waterWalk(TSkillMastery level)
 
 // E:\gamedcs\advspells.cpp:654
 // Disguise. The shortest of the four: set the level, charge, wait.
-DC_ONLY(0x22a40, 0x5A)
+
 void advManager::disguise(TSkillMastery level)
 {
     hero* who = g_game->getCurrHero();
@@ -569,7 +569,7 @@ void advManager::disguise(TSkillMastery level)
 // but the boat case is not silent here - it gets its own refusal line, and
 // retail re-reads the boat bit for that second test rather than reusing the
 // one IsFlying already made. hero::Fly charges the mana itself.
-DC_ONLY(0x22a9c, 0xEC)
+
 void advManager::flight(TSkillMastery level)
 {
     const SSpellTraits* traits = &g_spellTraits[SPELL_FLY];

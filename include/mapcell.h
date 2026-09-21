@@ -1347,6 +1347,7 @@ public:
     int loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                      int saveVersion);
     int loadMonsterList(TAbstractFile* infile);
+    int loadSeerList(TAbstractFile* infile, int saveVersion);
     // `ret 8`: the save version rides along to TTimedEvent::Read.
     int readTimedEventList(TAbstractFile* infile, int saveVersion);
     int loadTimedEventList(TAbstractFile* infile, int saveVersion);

@@ -251,33 +251,6 @@ static TSecondarySkill g_magicSchools[4] = {
     eSecSkillSchoolOfWaterMagic, eSecSkillSchoolOfEarthMagic
 };
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:219 - promoted to a live claim (see below).
-
-// E:\gamedcs\hero.cpp:259
-DC_ONLY(0xca7d4, 0x12)
-const char* hero::getSpecificAbilityTextShort()
-{
-    // @stub
-}
-
-// E:\gamedcs\hero.cpp:267
-DC_ONLY(0xca7e8, 0x19C)
-unsigned char initializeMoveConstants()
-{
-    // @stub
-}
-
-// E:\gamedcs\hero.cpp:329
-DC_ONLY(0xca984, 0x11C)
-unsigned char initializeBallisticsTable()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // The specialty table itself and the const reference every reader goes
 // through, the campaignmap.obj pattern: retail's writable array is at
 // 0x678420 and the reference cell immediately after it at 0x679c80, which is
@@ -1897,7 +1870,7 @@ int hero::getExperienceIncrement(int level)
 // the whole body expanded. `inline` reproduces the absence, the
 // strip::DrawNumber precedent. Same table and same 1.2 extrapolation as
 // GetExperience above, walked forwards instead of indexed.
-DC_ONLY(0xccc8c, 0x110)
+
 inline int hero::getLevel(int experience)
 {
     int heroLevel = 1;
@@ -1978,7 +1951,7 @@ void hero::applyBattleLossTemps()
 
 // hero::GetLevel (dc 0xccc8c, 272 B) has NO retail row: the carve is
 // gap-free from GetExperienceIncrement 0x004da420 straight into
-// ApplyBattleWinTemps 0x004da510. Left DC_ONLY above.
+// ApplyBattleWinTemps 0x004da510.
 
 // Retail .bss 0x698400. 0x4bfe70 sets it for the whole of its
 // scenario-setup pass and clears it at the end; every reader treats
@@ -2011,7 +1984,6 @@ TSecondarySkill getSkillAward(const hero* currentHero,
 // reads ecx only (`void hero::CheckLevel()`), 0x004dad00 reads ecx AND
 // edx, i.e. the /Gr free function `get_skill_award(hero*, ...)`.
 // E:\gamedcs\hero.cpp:2147
-
 // The level-up loop. EH-bearing, but NOT from a source try/catch: three
 // TLevelUpWindow locals in three mutually exclusive arms plus /GX give
 // the fs:[0] frame and the 0/1/2 trylevel by themselves, and the
@@ -2399,7 +2371,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
 // retail body is not evidence for an inline keyword. The message constructor
 // owns zero initialization; lines 2349/2358 set WIDGET_DRAWN inside each arm.
 // Keep both source stores and let VC6 decide which expansions share them.
-DC_ONLY(0xcd68c, 0x5C)
+
 void updateArtifactSlot(long id, TArtifact artifact)
 {
     message msg;
@@ -2473,7 +2445,7 @@ void THeroScreenWindow::updateAllSlots()
 // No retail row: the one call site below is /Ob2-inlined into
 // UpdateBackpack, and `inline` reproduces the absence (the
 // strip::DrawNumber precedent).
-DC_ONLY(0xcd76c, 0x22)
+
 inline void updateBackpackItem(int i)
 {
     updateArtifactSlot(i + 0x28,
@@ -2802,22 +2774,6 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 
     heroMessageUpdate(g_text);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:2726
-DC_ONLY(0xcdf30, 0x20E)
-void handleArtifactClick(long code, unsigned char right_mouse)
-{
-    // @stub
-}
-
-// E:\gamedcs\hero.cpp:2796
-// Whole body proven: `mov eax,0x3f / add ecx,0x3cc` starts at
-// backpack[63] (0x1d4 + 63*8 == 0x3cc) and walks back by 8 until a slot
-// id is not -1, then `or eax,-1` for the not-found return. Both the
-// stride and the base are the modelled backpack array.
-#endif  // @carcass
 
 VA(0x004dbd90, 0x1E)  // dc 0xce140
 long hero::getLastBackpackIndex() const
@@ -3324,17 +3280,6 @@ std::string hero::getLuckDescription() const
     return result;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:3181
-DC_ONLY(0xcea3c, 0x1A4)
-void handleBackpackClick(long code, unsigned char right_mouse)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // E:\gamedcs\hero.cpp:3229
 // ANCHOR-VTABLE: 0x004dd2a0 has no rel32 caller at all - it is reached
 // only through slot 14 of vtable 0x63eae8, and 0x63eae8 is the vtable
@@ -3352,24 +3297,6 @@ int THeroScreenWindow::exitDialog(message& msg)
     msg.m_codeX = 10;
     return MESSAGE_DISPATCH_FORWARD;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:3239
-DC_ONLY(0xcec1c, 0x78E)
-void THeroScreenWindow::ShowWidgets()
-{
-    // @stub
-}
-
-// E:\gamedcs\hero.cpp:3421
-DC_ONLY(0xcf3ac, 0x1A0)
-void THeroScreenWindow::show_skills()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 static void handleArtifactClick(long code, unsigned char rightMouse)
 {
@@ -3613,7 +3540,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
 // THE FRONT END IS NOW RULED OUT TOO (2026-09-06). `genab run --gen rtm-fe`
 // swaps C1XX 12.00.8168 in beside the RTM back end and sweeps all 146
 // units: this function's bytes are IDENTICAL on both sides (it is absent
-// from evidence/vc6/fe-generation-verdicts.tsv, which lists every function
+// from build/vc6/fe-generation-verdicts.tsv, which lists every function
 // that differs at all), and hero.obj's five functions that DO differ
 // (HeroFn_004E2550, equip_artifact, remove_artifact,
 // THeroScreenWindow::update_slot, update_spell_list) are all back-end-only
@@ -5435,7 +5362,6 @@ unsigned char hero::addToBackpack(const type_artifact* artifact, long slot)
 }
 
 // E:\gamedcs\hero.cpp:5044
-
 // The `else if` shape is exact - the owner-is-not-the-local-player
 // branch and the still-holding-the-combination branch BOTH fall into the
 // `!player.isHuman` arm, and a zero `bAnnounce` skips both arms while
@@ -5904,7 +5830,6 @@ static const float g_logisticsFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.2f, 0.3f };
 
 // E:\gamedcs\hero.cpp:5709.
-DC_ONLY(0xd49a8, 0x48)
 float hero::getLogisticsFactor() const
 {
     float factor = g_logisticsFactors[m_skillLevel[eSecSkillLogistics]];
@@ -5917,7 +5842,6 @@ float hero::getLogisticsFactor() const
 }
 
 // E:\gamedcs\hero.cpp:5734.
-DC_ONLY(0xd49f0, 0x4E)
 long hero::getNavigationFactor() const
 {
     long movement = g_seaMovement[m_skillLevel[eSecSkillNavigation]];
@@ -6495,7 +6419,6 @@ int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
 }
 
 // E:\gamedcs\hero.cpp:6493
-
 VA(0x004e6120, 0x39E)
 void hero::heroFn004E6120(int creatureType,
                            TCreatureTypeTraits* traits) const
@@ -6611,18 +6534,6 @@ std::bitset<70>& std::bitset<70>::set(size_t _P, bool _X)
 
 VA(0x004e6750, 0x21)  // anchor-caller + reference ABI/body, dc 0x20d2c
 inline const int& tLimit(const int& minimum, const int& value, const int& maximum);
-
-
-
-
-
-
-// E:\gamedcs\hero.cpp:1226
-DC_ONLY(0xd59b8, 0x18)
-void type_artifact::`default constructor closure'()
-{
-    // @stub
-}
 
 // E:\gamedcs\hero.cpp:4186
 // (moved to retail link order at 0x004e1520, immediately before the

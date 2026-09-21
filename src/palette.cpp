@@ -33,11 +33,6 @@ static long ftol(double d)
     return result.m_words[0];
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\palette.cpp:204
-#endif  // @carcass
-
 VA(0x00522650, 0x16)  // dc 0x10a2a8
 TPalette16::TPalette16()
     : resource(0, RESOURCE_TYPE_NONE)
@@ -857,20 +852,6 @@ void rgbToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
 // E:\gamedcs\palette.cpp:862
 // Retail body reconstructed above at 0x005232f0; dc 0x10c564.
 void hsvToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
-{
-    // @stub
-}
-
-// E:\gamedcs\palette.cpp:57
-DC_ONLY(0x10c8b0, 0x34)
-void* TPalette16::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\palette.cpp:599
-DC_ONLY(0x10c8e4, 0x34)
-void* TPalette24::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }

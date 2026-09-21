@@ -1,6 +1,6 @@
 // netgame.h - the multiplayer-protocol selector.
 
-// `eNetGameType` is a Dreamcast LF_ENUM (evidence/dreamcast/enums.csv),
+// `eNetGameType` is a Dreamcast LF_ENUM (NB11 enum records),
 // and the DC roster also names the global that carries it:
 // ?iMPNetProtocol@@3W4eNetGameType@@A, dc 0xcc2c. On retail that global
 // is .bss 0x6989f0, byte-identified in game.obj - game::GetLocalPlayer,

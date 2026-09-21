@@ -942,17 +942,6 @@ void gotoSmackerFrame(unsigned long frame)
 
 }  // namespace SmackManager
 
-#if 0  // @carcass
-
-// E:\gamedcs\smackmgr.cpp:569
-DC_ONLY(0x14ac6c, 0x32)
-void deleteAnimHeaders()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // COMDAT pairing: basic_string<char>::append(size_t, char) - the fill form,
 // which the mangled suffix `@ID@Z` separates from the already-modelled
 // pointer form `@PBDI@Z`. Agreement 0.994 here against 0.834 for the

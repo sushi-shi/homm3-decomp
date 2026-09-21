@@ -23,9 +23,8 @@ verbatim from the pre-port build.labels monolith:
     RAW declarator spellings, then joined base-obj spellings take over;
     a second global pass suffixes remaining label-grade collisions and
     dies on a colliding PROVEN symbol;
-  * naming fallbacks: evidence/ enrichment for working labels and vtable
-    classes (an ADMITTED census class outranks enrichment - retail bytes
-    win), seg_/fn_/vtbl_/const_/data_/bss_ dense spellings;
+  * naming fallbacks: seg_/fn_/vtbl_/const_/data_/bss_ dense spellings;
+    vtable class identities come only from the reviewed config census;
   * fatal gates: a claim naming a volatile `$E<n>` ordinal, duplicate
     rvas, duplicate proven names, alias owners contradicting an existing
     row, any universe function left uncovered.
@@ -211,8 +210,6 @@ def _upgrade_dense_data_alias(row: dict, claim) -> dict:
 
 def generate() -> Path:
     functions = {r["rva"]: r["size"] for r in censuses.functions()}
-    # evidence/ is enrichment only (scaffolding, slated for removal)
-    labels = providers.evidence_symbols()
 
     rows = {}       # rva -> row dict (first writer wins per authority order)
     problems = []
@@ -267,7 +264,7 @@ def generate() -> Path:
     for rva, size in sorted(functions.items()):
         if rva in rows:
             continue
-        put(rva, labels.get(rva, f"fn_{rva:x}"),
+        put(rva, f"fn_{rva:x}",
             f"seg_{rva >> BUCKET_SHIFT:04x}", size, "func",
             "working-label")
 
@@ -288,25 +285,15 @@ def generate() -> Path:
             continue
         put(c.rva, c.name, "", "", "data", c.channel)
 
-    # An ADMITTED census name outranks the candidate enrichment: when the
-    # hand census places a class, a conflicting enrichment attribution of
-    # the SAME class to another rva is dropped (first case: NH3API-derived
-    # rows put mouseManager on 0x240038 while the retail ctor at 0x10cb50
-    # stores 0x240028 - retail bytes win).
+    # Reviewed vtable identities live in the retail census.
     vt_rows = censuses.vtables()
-    admitted_names = {r["class"] for r in vt_rows if r["class"]}
-    vt_class = {rva: cls
-                for rva, cls in providers.evidence_vtable_classes().items()
-                if cls not in admitted_names}
     for r in vt_rows:
         if r["rva"] in rows:
             continue  # a src claim owns the address
-        admitted = r["class"] or None
-        cls = admitted or vt_class.get(r["rva"])
+        cls = r["class"] or None
         name = f"??_7{cls}@@6B@" if cls else f"vtbl_{r['rva']:x}"
         put(r["rva"], name, "", r["count"] * 4, "data",
-            "vtable-name" if admitted else
-            ("vtable-class" if cls else "vtable"))
+            "vtable-name" if cls else "vtable")
 
     from homm3.core.project import Project
     project = Project(common.HOMM3_DIR)

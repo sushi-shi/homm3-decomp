@@ -1,5 +1,5 @@
 // Retail emits this TU in the drawing->event_record gap (0x96c50..0x9a1e0,
-// bracket from evidence/link-order/gaps.tsv); ds_engine, the other alphabetical
+// retail address bracket); ds_engine, the other alphabetical
 // candidate for that gap, is NOT resident here - GetErrorDesc's DPERR switch,
 // the CDPlay/CDPlayLobby/CAutoArray vtables and the cinit tail all place the
 // whole gap in dxplay. Header-inline virtuals retain their canonical bodies
@@ -1436,55 +1436,3 @@ TRuntimeError::TRuntimeError(const char* text)
     : std::runtime_error(std::string(text))
 {
 }
-
-#if 0  // @carcass -- DC_ONLY, unclaimed (folded / inlined / unlocated)
-// E:\gamedcs\dxplay.cpp:66
-DC_ONLY(0x8a074, 0x70)
-void CDPlay::CDPlay()
-{
-    // @stub
-}
-
-
-
-
-
-
-// C:\WCEDreamcast\inc\objbase.h:519
-DC_ONLY(0x8bc84, 0x1C)
-int operator==(const _GUID* guidOne, const _GUID* guidOther)
-{
-    // @stub
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#endif  // @carcass

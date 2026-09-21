@@ -34,59 +34,6 @@ static void rgbToHSV(unsigned int r, unsigned int g, unsigned int b,
 static void hsvToRGB(float h, float s, float v,
                      unsigned int* r, unsigned int* g, unsigned int* b);
 
-#if 0  // @carcass: remaining Bitmap24Bit bodies are not reconstructed yet
-
-// E:\gamedcs\bitmap24.cpp:64
-DC_ONLY(0x5266c, 0x7A)
-void Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h, const unsigned char* data, int size)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap24.cpp:80
-DC_ONLY(0x526e8, 0x6C)
-void Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap24.cpp:94
-DC_ONLY(0x52754, 0x3E)
-void Bitmap24Bit::~Bitmap24Bit()
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap24.cpp:274
-DC_ONLY(0x528f8, 0x70)
-void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap24.cpp:349
-DC_ONLY(0x52aa8, 0x424)
-void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue, float hue_adjust, float saturation_adjust, float value_adjust)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap24.cpp:446
-DC_ONLY(0x52ecc, 0x1B6)
-void rgbToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap24.cpp:481
-DC_ONLY(0x53084, 0x32C)
-void hsvToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA_COMPGEN(0x0044ed20, 0x21, SCALAR_DELETING_DTOR, Bitmap24Bit)
 
 // Original: Bitmap24Bit::Bitmap24Bit; bitmap24.cpp:55, dc 0x52618
@@ -421,14 +368,3 @@ static void hsvToRGB(float h, float s, float v,
             v * static_cast<float>(std::numeric_limits<int>::max()));
     }
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\bitmap24.cpp:58
-DC_ONLY(0x533bc, 0x34)
-void* Bitmap24Bit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

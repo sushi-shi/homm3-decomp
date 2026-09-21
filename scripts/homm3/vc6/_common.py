@@ -17,7 +17,7 @@ from homm3.core import common
 
 REPO = common.HOMM3_DIR
 LOG = REPO / "build/homm3_vc6.log"
-EVIDENCE = REPO / "evidence/vc6"
+EVIDENCE = REPO / "build/vc6"
 DOCS = REPO / "docs/vc6"
 
 
@@ -27,7 +27,7 @@ def die(msg: str):
 
 
 def provenance(generator: str, extra: list[str] | None = None) -> list[str]:
-    """Header for a generated evidence/vc6 TSV.
+    """Header for a generated build/vc6 TSV.
 
     The subject here is the TOOLCHAIN, not the game image, so the pinned
     identity we cite is the compiler binary's - see _toolchain.PINNED.

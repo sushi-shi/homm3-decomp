@@ -12,7 +12,7 @@
 // so does the hero-side pair hero::GetSpellSchoolLevel (0x4e5100) /
 // hero::GetHighestSchool (0x4e51c0).
 // Enumerator names and values are the Dreamcast roster verbatim
-// (evidence/dreamcast/enums.csv); the values are a BITMASK, which is
+// (NB11 enum records); the values are a BITMASK, which is
 // why those three take a "school_mask" and why eSchoolAll is 15.
 // kNumSpellSchools sharing eSchoolWater's 4 is the dump's own doing,
 // not a transcription slip.

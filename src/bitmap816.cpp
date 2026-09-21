@@ -80,45 +80,6 @@ Bitmap816::~Bitmap816()
 // destructor carries no exception specification. Measured: empty body -> 1
 // entry; <new> alone -> 1; <new> plus a throwing ~TPalette24 -> 2, retail.
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\bitmap816.cpp:244
-DC_ONLY(0x53df0, 0x1F2)
-int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap816.cpp:327
-DC_ONLY(0x53fe4, 0xC4)
-void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, int id)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap816.cpp:400
-DC_ONLY(0x540a8, 0x108)
-void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char tblit)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap816.cpp:494
-DC_ONLY(0x541b0, 0x7A)
-void Bitmap816::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char tblit)
-{
-    // @stub
-}
-
-// E:\gamedcs\bitmap816.cpp:501
-DC_ONLY(0x5422c, 0x4E)
-void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* zBuffer, int dx, int dy, int id)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // Original: Bitmap816::import; bitmap816.cpp:163, dc 0x53c5c
 void Bitmap816::import(int w, int h, unsigned char* data,
                        TPalette16& p16, int size)

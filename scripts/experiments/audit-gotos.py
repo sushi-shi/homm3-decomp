@@ -36,7 +36,7 @@ def inventory(revision=None):
         if not gotos:
             continue
         owners = []
-        for claim in re.finditer(r"\b(VA|DC_ONLY)\s*\(\s*(0x[\da-fA-F]+)\s*,[^)]*\)", code):
+        for claim in re.finditer(r"\b(VA)\s*\(\s*(0x[\da-fA-F]+)\s*,[^)]*\)", code):
             definition = _definition_text(raw, code, claim.end())
             if not definition:
                 continue

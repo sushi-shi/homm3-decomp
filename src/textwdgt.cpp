@@ -10,19 +10,6 @@
 #include "winmgr.h"
 #include "includes.h"
 
-#if 0  // @carcass
-
-// E:\gamedcs\textwdgt.cpp:62
-DC_ONLY(0x164c80, 0xA4)
-void textWidget::textWidget(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, const char* textString, const char* textFontName, font::TColor color, int textWidgetId, unsigned justify, int back_color, int textWidgetStyle, unsigned char focusable)
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:95
-
-#endif  // @carcass
-
 // Original: textWidget::textWidget; textwdgt.cpp:36, dc 0x164c14.
 textWidget::textWidget() : widget(0, 0, 0, 0, 0, 0)
 {
@@ -81,17 +68,6 @@ textWidget::~textWidget()
     m_font->dispose();
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\textwdgt.cpp:120
-DC_ONLY(0x164dd4, 0x1A8)
-int textWidget::main(message& msg)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // Original: textWidget::initialize; textwdgt.cpp:102, dc 0x164d68.
 // Complete has no widget::focusable member; the remaining fields and calls
 // are shared with the retained parameterized constructor.
@@ -110,7 +86,6 @@ void textWidget::initialize(int x, int y, int w, int h, int id, int style,
 }
 
 // E:\gamedcs\textwdgt.cpp:120
-
 VA(0x005bc440, 0x1AD)  // vtable 0x642db0 slot 2 + widget-message protocol, dc 0x164dd4
 int textWidget::main(message& msg)
 {
@@ -230,52 +205,6 @@ VA(0x005bc690, 0x1)  // dc 0x165034
 void textWidget::dim() const
 {
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\textwdgt.cpp:325
-DC_ONLY(0x1651d8, 0x7A)
-void bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style)
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:348
-DC_ONLY(0x165258, 0x9C)
-void bitmapBackedTextWidget::draw()
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:42
-DC_ONLY(0x1652fc, 0x34)
-void* textWidget::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:267
-DC_ONLY(0x165330, 0x34)
-void* iconBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:267
-DC_ONLY(0x165364, 0x18)
-void iconBackedTextWidget::~iconBackedTextWidget()
-{
-    // @stub
-}
-
-// E:\gamedcs\textwdgt.cpp:320
-DC_ONLY(0x16537c, 0x34)
-void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // Original: iconBackedTextWidget::iconBackedTextWidget; textwdgt.cpp:266, dc 0x165038.
 iconBackedTextWidget::iconBackedTextWidget()

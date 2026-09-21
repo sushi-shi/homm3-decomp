@@ -280,7 +280,6 @@ void TCombatOptionsWindow::highlightMouseShadow()
 static void updateCombatOptions(int firstUpdate);
 
 // E:\gamedcs\combatoptionswindow.cpp:278
-
 // NOT A MEMBER-OFFSET BUG (checked 2026-09-06): the `[ecx+0x6ac]` against
 // retail's `[ecx+0x704]` that a census flagged here is the SWITCH INDEX
 // TABLE - `mov dl, byte ptr [ecx + <fn>+0x704]` / `jmp [4*edx + <fn>+0x6c4]`
@@ -649,12 +648,4 @@ static void updateCombatOptions(int firstUpdate)
     }
 }
 
-
 // E:\gamedcs\combatoptionswindow.cpp:171
-#if 0  // @carcass -- represented by VA_COMPGEN above
-DC_ONLY(0x680d0, 0x34)
-void* TCombatOptionsWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-#endif

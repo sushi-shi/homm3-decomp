@@ -1052,7 +1052,6 @@ void swapManager::drawSelector()
 }
 
 // E:\gamedcs\swapmgr.cpp:914
-DC_ONLY(0x15cccc, 0x5E)
 inline void swapManager::updateArtifactWidget(long id, TArtifact artifact)
 {
     message msg;
@@ -1433,7 +1432,7 @@ void swapManager::sendHeroUpdate()
 
 // E:\gamedcs\swapmgr.cpp:1660. Dreamcast keeps this one-statement helper;
 // Complete folds it into both exits of Main.
-DC_ONLY(0x15de34, 0xC)
+
 inline int swapManager::exitSwapManager(message& msg)
 {
     msg.m_id = MESSAGE_EXECUTIVE;
@@ -1444,7 +1443,7 @@ inline int swapManager::exitSwapManager(message& msg)
 // Dreamcast retains a substantial WinCE side-swap body. Complete's desktop
 // dispatcher has no corresponding instructions at Main's attested call site;
 // keep the source boundary while recording that proven revision removal.
-DC_ONLY(0x15de40, 0x4C8)
+
 inline void swapManager::swapSide()
 {
 }
@@ -2189,106 +2188,16 @@ void swapManager::setRolloverText(int codeY)
 }
 
 // E:\gamedcs\swapmgr.cpp:2024
-
 // Dreamcast proves this as one source statement with no locals. Complete's
 // HandleMonster expands the helper while retaining the GetNumArmies and
 // ViewArmy call order; retail fixes the first-selected hero/second slot pair.
-DC_ONLY(0x15e85c, 0x5E)
+
 void swapManager::viewMon()
 {
     g_game->viewArmy(m_heroes[m_sourceHeroIndex]->m_army, m_destinationArmySlot, m_heroes[m_sourceHeroIndex],
                      0, 0x77, 0x14,
                      m_heroes[m_sourceHeroIndex]->m_army.getNumArmies() > 1, 0);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\swapmgr.cpp:2030
-DC_ONLY(0x15e8bc, 0x142)
-void swapManager::swapMons()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2140
-DC_ONLY(0x15eb90, 0x1A)
-void swapManager::onChatUpdate()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2147
-DC_ONLY(0x15ebac, 0xAA)
-void swapManager::handleHeroUpdateMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2231
-DC_ONLY(0x15edf8, 0x2A)
-unsigned char swapManager::isLeftHero()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2267
-DC_ONLY(0x15ee98, 0x82)
-bool swapManager::canModHero(int hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:2298
-DC_ONLY(0x15ef60, 0x70)
-void swapManager::onGiveMeStuffMsg()
-{
-    // @stub
-}
-
-
-// E:\gamedcs\swapmgr.cpp:192
-DC_ONLY(0x15f0a4, 0x98)
-void CSwapManagerChatEdit::CSwapManagerChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:201
-DC_ONLY(0x15f164, 0x34)
-void* CSwapManagerChatEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:201
-DC_ONLY(0x15f198, 0x18)
-void CSwapManagerChatEdit::~CSwapManagerChatEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:454
-DC_ONLY(0x15f1b0, 0x34)
-void* TSwapWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:512
-DC_ONLY(0x15f1e4, 0x44)
-void CSwapMgrNetMsgHandler::CSwapMgrNetMsgHandler()
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:518
-DC_ONLY(0x15f228, 0x100)
-CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x005b0da0, 0x141)  // dc 0x15e8bc
 void swapManager::swapMons()
@@ -2389,7 +2298,7 @@ void swapManager::update()
 
 // E:\gamedcs\swapmgr.cpp:2140. The older build retains this refresh
 // boundary; Complete expands its Update body at Main's chat-refresh site.
-DC_ONLY(0x15eb90, 0x1A)
+
 inline void swapManager::onChatUpdate()
 {
     drawSwapWin();

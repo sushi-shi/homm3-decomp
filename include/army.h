@@ -1319,8 +1319,7 @@ public:
     // the horizontal flip, and both are handed to
     // GetMissileStartingPosition as the destination. Retail's bodies
     // read gpCombatManager->cells[gridIndex] at +0x1c4 and +0x1c6 with
-    // the 112-byte hexcell stride. DECLARED, NOT DEFINED - army.cpp
-    // still carries both as DC_ONLY carcasses.
+    // the 112-byte hexcell stride.
     int midX() const;                        // 0x446660
     int midY() const;                        // 0x446630
     unsigned char isEnemy(const army* arg) const; // 0x442880

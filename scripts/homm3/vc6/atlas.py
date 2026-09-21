@@ -14,8 +14,8 @@ in this setup):
                                    functions -> raw funcs/anchors tables
   3. ghidra_scripts/globals_map.py .bssbe/.databe reference census -> raw
   4. post-process (here, no Ghidra): bracket propagation between anchors
-     (VC6 links objects contiguously) -> evidence/vc6/c2-tu-map.tsv;
-     reader/writer fold + TU join -> evidence/vc6/c2-globals.tsv
+     (VC6 links objects contiguously) -> build/vc6/c2-tu-map.tsv;
+     reader/writer fold + TU join -> build/vc6/c2-globals.tsv
   5. corroboration: every anchor re-proven from RAW BYTES (the string VA
      as an imm32 inside the function's byte range, via _toolchain.Binary -
      no Ghidra), plus a negative control proving the checker can fail.

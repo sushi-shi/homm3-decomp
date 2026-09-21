@@ -98,7 +98,7 @@ Matcher guidance:
   accessor boundaries recovered 90.2669%, leaving every tracked sibling
   unchanged. The isolated dip was not evidence for inventing helper copies
   or abandoning the ordinary private methods. See the joint controls in
-  [the union/pragma audit](union-pragma-audit.md#shared-combat-helpers-and-drawing-callers).
+  [the union/pragma audit](../reconstruction/union-pragma-audit.md#shared-combat-helpers-and-drawing-callers).
 
 ## 1. Where the inliner lives (and why the atlas pointed one region over)
 
@@ -379,7 +379,7 @@ always counts `call` + tail `jmp`.
     hands `traits->townType` straight to the portrait builder), spelled as a
     call to a free predicate. Every other statement of retail's body has a DC
     line of its own carrying the same call, so the post-DC edit was the only
-    place left for a candidate site to hide — `docs/dc-line-tables.md` is the
+    place left for a candidate site to hide — `docs/matching/dc-line-tables.md` is the
     instrument. Worth 97.1049 → 99.9352 alone; a second finding off the same
     table (the three `Influence[i] = -1` stores are a counted `for` loop,
     which VC6 unrolls back into retail's three stores and which recovers
@@ -1896,7 +1896,7 @@ as different behavior.
 ### Release-elided preconditions can retire small-helper overrides
 
 The `giveSS`, `getNormalCursor`, `doPurchase`, `compressMsg` and
-`getHeroSpellBonus` controls in [the union/pragma audit](union-pragma-audit.md#small-helpers-release-verification-recovery)
+`getHeroSpellBonus` controls in [the union/pragma audit](../reconstruction/union-pragma-audit.md#small-helpers-release-verification-recovery)
 replace five `auto_inline(off)` regions with meaningful
 `HOMM3_RELEASE_VERIFY` input/array preconditions. Each has a possible leading
 CodeView gap and a deletion-only negative control. Their bodies remain exact;
@@ -1950,7 +1950,7 @@ Static membership and reference arguments also survived the retail check:
 relocation destinations after explicit source-backed symbol migrations.
 Two-register `/Gr` is not proof of a free function or a pointer parameter.
 The finite families and negative controls are documented in the
-[audit](union-pragma-audit.md#serialization-locals-and-interface-recovery).
+[audit](../reconstruction/union-pragma-audit.md#serialization-locals-and-interface-recovery).
 
 ## A callee's IL cost is a lever its own bytes cannot show
 

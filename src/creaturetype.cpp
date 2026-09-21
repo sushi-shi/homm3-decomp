@@ -33,7 +33,6 @@ TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr)
         townType * 2 * TOWN_DWELLING_COUNT + baseCreatureNbr];
 }
 
-
 VA(0x0047b120, 0x5D)  // dc 0x718fc
 int isBaseCreature(TCreatureType monType)
 {
@@ -242,35 +241,3 @@ void initializeCreatureTypeTraits(int id,
     strcpy(creatureTypeAbilities[id].get(), values[23]);
     traits.m_specialAbility = creatureTypeAbilities[id].get();
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\creaturetype.cpp:399
-DC_ONLY(0x71eec, 0x8)
-void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
-{
-    // @stub
-}
-
-// E:\gamedcs\creaturetype.cpp:402
-DC_ONLY(0x71ef4, 0x18)
-void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr()
-{
-    // @stub
-}
-
-// E:\gamedcs\creaturetype.cpp:404
-DC_ONLY(0x71f0c, 0x4)
-void `anonymous namespace'::TAutoStrPtr::set(char* pStr)
-{
-    // @stub
-}
-
-// E:\gamedcs\creaturetype.cpp:406
-DC_ONLY(0x71f10, 0x4)
-char* `anonymous namespace'::TAutoStrPtr::get()
-{
-    // @stub
-}
-
-#endif

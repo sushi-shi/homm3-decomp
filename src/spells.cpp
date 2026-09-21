@@ -129,32 +129,6 @@ DATA(0x00642248) extern const float g_iceBoltAngles[5];
 DATA(0x0064225c) extern const char* const g_disruptingRaySprites[1];
 DATA(0x00642260) extern const float g_disruptingRayAngles[1];
 
-#if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:97
-DC_ONLY(0x14ea14, 0x2A8)
-SpellID combatManager::viewSpells()
-{
-    // @stub
-}
-
-// E:\gamedcs\spells.cpp:517
-DC_ONLY(0x14f51c, 0x18E)
-unsigned char combatManager::checkLandmine(long hex, army* current_army, unsigned char is_walking)
-{
-    // @stub
-}
-
-// E:\gamedcs\spells.cpp:570
-DC_ONLY(0x14f6ac, 0x12E)
-unsigned char combatManager::checkFireWall(long hex, army* current_army, unsigned char is_walking)
-{
-    // @stub
-}
-
-// E:\gamedcs\spells.cpp:616
-#endif  // @carcass
-
 // Dreamcast spells.cpp:176 supplies the source switch, the TPickANumber
 // lifetime, and the retained helper boundaries. Complete adds the initial
 // already-cast guard and the creatureSpell selector; its retail jump table and
@@ -2009,7 +1983,7 @@ void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
 // Inlined at both of its Complete call sites (the two exit arms of
 // HandleCastSpell), so it has no retail body of its own - the double
 // loop with the `Is(1u << 21)` skip is recognisable in each.
-DC_ONLY(0x152484, 0xD4)
+
 static void clearAreaHighlights()
 {
     for (int side = 0; side < 2; side++) {
@@ -2736,7 +2710,7 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
 // row above that. Expanded into HandleCastWallSpell by /Ob2 - its only
 // retail caller - so it has no retail body of its own; GetSpellWallHex
 // expands inside it in turn.
-DC_ONLY(0x153884, 0x80)
+
 void combatManager::markWallAreaEffect(long targetHex,
                                           TSkillMastery mastery,
                                           std::vector<long>& result)
@@ -4212,19 +4186,6 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
     addArmy(m_currentSide, monType, count, hex, 0x400000, 1);
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// DC-only DoBolt luck arc. Complete army::checkLuck uses goodluck.82m
-// and the Fortune spell effect, including doRangedAttack0x43f900; see dc_only.tsv.
-// E:\gamedcs\spells.cpp:4765
-DC_ONLY(0x1564c4, 0x11E)
-void combatManager::DoLuck(int iTargetGroup, int iTargetIndex)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x005a7320, 0x68)  // dc 0x1565e4
 void combatManager::removeCorpse(hexcell* hex, long side, long slot)
 {
@@ -4253,7 +4214,6 @@ void combatManager::removeCorpse(army* corpse)
         removeCorpse(&m_cells[corpse->getSecondGridIndex()],
                     corpse->m_combatSide, corpse->m_bitIndex);
 }
-
 
 // The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
 // stack takes its cell.
@@ -4400,7 +4360,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
 // Complete VC6 expands this whole helper into CastSpell; the retail arm
 // independently corroborates the selector, formula, hero bonus and
 // temporary-resurrection predicate.
-DC_ONLY(0x156a68, 0x84)
+
 inline void combatManager::resurrect(SpellID spell, int targetHex,
                                      int power, int mastery,
                                      const hero* castingHero)
@@ -5187,7 +5147,6 @@ int combatManager::getSpellWallHex(int baseIndex, int rowOffset, int side)
     }
     return hex;
 }
-
 
 // COMDAT pairing: _Tree<int, int, set>::insert, agreement 0.936. Its key and
 // value are the same primitive, so the map regexes cannot name it.

@@ -641,28 +641,3 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
 
     return CHeroWindowEx::processRightSelect(id);
 }
-
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// E:\gamedcs\scenarioinfo.cpp:657
-DC_ONLY(0x12b038, 0x18)
-void CTeamAlignmentDlg::~CTeamAlignmentDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\scenarioinfo.cpp:657
-DC_ONLY(0x12b050, 0x18)
-void CTownDlg::~CTownDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\scenarioinfo.cpp:657
-DC_ONLY(0x12b068, 0x18)
-void CBonusDlg::~CBonusDlg()
-{
-    // @stub
-}
-
-#endif  // @carcass

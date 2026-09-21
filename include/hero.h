@@ -524,7 +524,7 @@ public:
     unsigned long m_shrine1Flags;  // +0x83
     unsigned long m_shrine2Flags;  // +0x87
     unsigned long m_shrine3Flags;  // +0x8b
-    // +0x8f / +0x90, DC-attested (evidence/dreamcast/members.csv rows
+    // +0x8f / +0x90, DC-attested (NB11 member records rows
     // `hero,148,iLevelSeed` and `hero,149,lastWisdom` - the same uniform
     // -5 repack the flag band above already answers to, and the two rows
     // sit between Shrine3Flags (DC 144, retail +0x8b) and heroArmy
@@ -663,7 +663,7 @@ public:
     //     the two tables (+0x3ea, +0x3f4, +0x404, +0x420, +0x430,
     //     +0x436..+0x439, +0x43e, +0x453, +0x455, +0x461), then a jump
     //     to 20-28 references at +0x476..+0x479.
-    // NAMES ARE DC-ATTESTED, not invented: evidence/dreamcast/members.csv
+    // NAMES ARE DC-ATTESTED, not invented: NB11 member records
     // carries `hero,969,in_spellbook`, `hero,1039,available_spells` and
     // `hero,1109,stats` - the same 70/70 spacing as retail's
     // 0x3ea/0x430/0x476, and the DC SpellID enum ends `kNumSpells,70`.

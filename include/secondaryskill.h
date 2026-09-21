@@ -3,7 +3,7 @@
 #define HOMM3_SECONDARYSKILL_H
 
 // DC LF_ENUM `TSecondarySkill`, transcribed from
-// evidence/dreamcast/enums.csv (31 enumerators; the DC spellings, minus
+// NB11 enum records (31 enumerators; the DC spellings, minus
 // aliases that name no distinct skill). Retail corroborates the domain in
 // hero specialty lookups and type_university's four elemental-school slots.
 enum TSecondarySkill {

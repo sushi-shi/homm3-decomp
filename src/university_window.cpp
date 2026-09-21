@@ -37,7 +37,7 @@ DATA(0x006a7dec) static const char* g_universitySkillHelpFormat;
 // belongs in this TU rather than the carcass: retail EXPANDS it at its one
 // call site in skill_click (the call census reads `set_skill base x1 vs
 // retail x0`), which /Ob2 can only do from a visible body.
-DC_ONLY(0x18fad8, 0xA)
+
 void type_university_skill_button::setSkill(TSecondarySkill newSkill,
                                              unsigned char newClick)
 {
@@ -49,7 +49,7 @@ void type_university_skill_button::setSkill(TSecondarySkill newSkill,
 // out-of-line body, but both allocations in the window constructor preserve
 // this source helper in full: iconWidget base construction, derived vtable,
 // then skill/click stores.
-DC_ONLY(0x18e6ac, 0x7C)
+
 type_university_skill_button::type_university_skill_button(
     long x, long y, long width, long height, long newId,
     const char* image, TSecondarySkill newSkill)
@@ -82,31 +82,6 @@ bool type_university_skill_button::handleClick(
 
     return 0;
 }
-
-#if 0  // @carcass: unpromoted Dreamcast bodies
-
-// E:\gamedcs\university_window.cpp:285
-DC_ONLY(0x18f2f8, 0x130)
-void type_university_window::updateSkillButton(type_university_skill* skill)
-{
-    // @stub
-}
-
-// E:\gamedcs\university_window.cpp:327
-DC_ONLY(0x18f428, 0xE0)
-void type_university_window::setSelectionMode()
-{
-    // @stub
-}
-
-// E:\gamedcs\university_window.cpp:354
-DC_ONLY(0x18f52c, 0x2B6)
-void type_university_window::skillClick(TSecondarySkill skill)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // DC 124/133/236 use TTextResource::operator[] for all four text lookups.
 // E:\gamedcs\university_window.cpp:102. Exact with the original helper
@@ -315,7 +290,7 @@ type_university_window::type_university_window(
 // Dreamcast preserves this helper as a separate source function. Complete
 // inlines it into DoModal and cancel_click; retaining the boundary is required
 // even though no standalone x86 body survives.
-DC_ONLY(0x18f428, 0xE0)
+
 void type_university_window::setSelectionMode()
 {
     int i;
@@ -430,7 +405,7 @@ void type_university_window::skillClick(TSecondarySkill skill)
 // type_skeleton_window::windowHandler; inheriting CAdvPopup's 0x41b1c0
 // handler loses this derived hover step. Retain the separate source
 // override without claiming the folded retail address twice.
-DC_ONLY(0x18f7e4, 0x84)
+
 int type_university_window::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -550,28 +525,3 @@ int type_university_window::exitDialog(message& msg)
     msg.m_codeX = msg.m_codeY = 10;
     return MESSAGE_DISPATCH_FORWARD;
 }
-
-#if 0  // @carcass: no distinct retail bodies promoted yet
-
-// E:\gamedcs\university_window.cpp:68
-DC_ONLY(0x18fae4, 0x34)
-void* type_university_skill_button::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\university_window.cpp:68
-DC_ONLY(0x18fb18, 0x18)
-void type_university_skill_button::~type_university_skill_button()
-{
-    // @stub
-}
-
-// E:\gamedcs\university_window.cpp:277
-DC_ONLY(0x18fb30, 0x34)
-void* type_university_window::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

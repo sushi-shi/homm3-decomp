@@ -137,8 +137,7 @@ public:
 private:
     void blitToScreenWithPointer(int x, int y, int w, int h);
 
-    // The window list, byte-proven by RemoveWindow (located
-    // 2026-08-06 by homm3.analysis.dc_callgraph): headWindow@0x50,
+    // The window list, byte-proven by RemoveWindow: headWindow@0x50,
     // tailWindow@0x54, lastActive@0x58, activeWindow@0x5c.
     heroWindow* m_headWindow;
     heroWindow* m_tailWindow;

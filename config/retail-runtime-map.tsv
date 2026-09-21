@@ -9,7 +9,7 @@
 # but do not match from source. Raw linker symbol where the
 # masked-archive channel proved it against retail bytes; working
 # label otherwise. Rows get properly mapped as matching
-# proceeds. MFC is absent from the image (docs/exe-dna.md).
+# proceeds. MFC is absent from the image (docs/reference/executable-libraries.md).
 rva	name
 0x40f0	?_Tidy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEX_N@Z
 # 0x4bd0 RETIRED: adventuremapwindow's emitted basic_string<char>::_Copy

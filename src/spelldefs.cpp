@@ -153,23 +153,3 @@ static void initializeSpellTraits(
 VA_COMPGEN(0x0059e4b0, 0x17, STATIC_DTOR, spellDescriptions)
 VA_COMPGEN(0x0059e4d0, 0x14, STATIC_DTOR, abbreviatedSpellNames)
 VA_COMPGEN(0x0059e4f0, 0x14, STATIC_DTOR, spellNames)
-
-#if 0  // @carcass -- inline/ICF representatives, no TU-local retail rows
-
-// E:\gamedcs\spelldefs.cpp:320
-DC_ONLY(0x14e78c, 0x8)
-void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr() { /* @stub */ }
-
-// E:\gamedcs\spelldefs.cpp:321
-DC_ONLY(0x14e794, 0x18)
-void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr() { /* @stub */ }
-
-// E:\gamedcs\spelldefs.cpp:323
-DC_ONLY(0x14e7ac, 0x4)
-void `anonymous namespace'::TAutoStrPtr::set(char* pStr) { /* @stub */ }
-
-// E:\gamedcs\spelldefs.cpp:325
-DC_ONLY(0x14e7b0, 0x4)
-char* `anonymous namespace'::TAutoStrPtr::get() { /* @stub */ }
-
-#endif

@@ -25,7 +25,7 @@ mark_loop = mark_loop.replace('g_puzzlePiecesRemoved.test(i)', 'g_puzzlePiecesRe
 mark_helper = '''// E:\\gamedcs\\puzzlewindow.cpp:403. Before normalization: mark_AI_puzzle.
 // Complete reads setup alignment directly and disposes through the bitmap
 // vtable; those retail operations override the older DC callees.
-DC_ONLY(0x115838, 0x10A)
+// Dreamcast dc 0x115838, 0x10A bytes.
 static unsigned char markAIPuzzle(long player, unsigned char* visible)
 {
     long puzzle;
@@ -48,7 +48,7 @@ create_body = create_body.replace(lookup, 'NewmapCell* mapCell = g_game->getCell
 create_helper = '''// E:\\gamedcs\\puzzlewindow.cpp:445. Before normalization: create_AI_puzzle_map,
 // puzzle_x, puzzle_y, puzzle_map. DC proves the array reference and point local.
 // Complete's tile dimensions are 19x17, independently fixed by retail strides.
-DC_ONLY(0x115944, 0x12C)
+// Dreamcast dc 0x115944, 0x12C bytes.
 static void createAIPuzzleMap(long player, unsigned char* visible,
                             long puzzleX, long puzzleY,
                             type_AI_puzzle_tile (&puzzleMap)[19][17])

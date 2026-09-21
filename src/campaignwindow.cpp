@@ -25,7 +25,6 @@ DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;
 // The row type and the caption block live in campaignwindow.h.
 
 // E:\gamedcs\campaignwindow.cpp:78
-
 // Dreamcast emits it out of line (dc 0x5b53c, 0x34 B); retail has no slot for
 // it, because /Ob2 expands it at all three call sites. The expansion is
 // register-visible and is what the handler's EBX is: the inlined `this` is
@@ -66,7 +65,6 @@ void TCampaignWindow::openPreview(int campaignIndex)
 }
 
 // E:\gamedcs\campaignwindow.cpp:86
-
 // `ret 8` against two parameters: +8 byte-domain reset flag, +0xc int
 // campaign-set selector, both slots reused as temps once dead. DC's single
 // int newCampaign is the reset flag, not the added campaign-set selector.
@@ -288,7 +286,6 @@ void TCampaignWindow::doModal()
 DATA(0x0066cad8) static int g_lastCampaignHoverId;
 
 // E:\gamedcs\campaignwindow.cpp:291
-
 VA(0x0045f2f0, 0x26C)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
 int campaignWindowHandler(message& msg)
 {
@@ -393,12 +390,4 @@ int campaignWindowHandler(message& msg)
 }
 
 // E:\gamedcs\campaignwindow.cpp:258
-#if 0  // @carcass -- represented by VA_COMPGEN above
-DC_ONLY(0x5bf44, 0x34)
-void* TCampaignWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-#endif
-
 VA_COMPGEN(0x004601f0, 0x1A4, VECTOR_COPY_ASSIGN, type_artifact)

@@ -314,46 +314,6 @@ const int g_gameDifficultyEasy = 0;
 const int g_gameDifficultyExpert = 3;
 const int g_gameDifficultyImpossible = 4;
 
-#if 0  // @carcass
-
-// DC's Buffer/bufwrite/bufread backend (game.cpp:348..401) owns a global
-// saveBuffer, its cursor at+4, payload at+8 and 50000-byte growth capacity
-// at+16. Modified DC gzwrite0x80130/gzread0xc9fd4 call these callbacks for
-// VM file staging. Complete's TGzFile0x4d6c50/0x4d6d80/0x4d6da0 instead
-// owns a gz handle; retained gzread0x6066f0 and gzwrite0x606930 call the CRT
-// fread/fwrite backend. The game load/save paths construct this desktop
-// stream directly, so the console buffer owner and callbacks are retired.
-
-// E:\gamedcs\game.cpp:348
-DC_ONLY(0xa2b5c, 0x3A)
-void Buffer::Buffer()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:356
-DC_ONLY(0xa2b98, 0x1C)
-void Buffer::~Buffer()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:365
-DC_ONLY(0xa2bb4, 0x1A6)
-int bufwrite(const void* buf, int size)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:396
-DC_ONLY(0xa2d5c, 0x42)
-int bufread(void* buf, int size)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x004b8410, 0x33)  // dc 0xa2af8
 unsigned char initializeRandomTavernText()
 {
@@ -476,7 +436,7 @@ bool generator::save(TAbstractFile* outfile)
 // out longhand. Two retail bodies differing means two sources
 // differing, so the call stays a call - and stays pinned, because our
 // CL inlines a 67-byte callee here that retail does not.
-DC_ONLY(0xa30c4, 0xB2)
+
 inline void generator::removeBonus()
 {
     if (m_playerOwner < 0)
@@ -520,7 +480,6 @@ void generator::updateBonus()
 }
 
 // E:\gamedcs\game.cpp:557
-DC_ONLY(0xa3250, 0x38)
 inline void generator::setOwner(long owner)
 {
     if (owner == m_playerOwner)
@@ -1081,7 +1040,7 @@ int game::saveBoatPool(TAbstractFile* outfile)
 // Retail expands this ordinary helper in game::load. Complete routes the
 // two reads through TAbstractFile instead of Dreamcast's gzread handle.
 // Original locals: count, char_buffer.
-DC_ONLY(0xa4c08, 0x5E)
+
 int game::loadObeliskPool(TAbstractFile* infile)
 {
     char charBuffer;
@@ -1098,7 +1057,7 @@ int game::loadObeliskPool(TAbstractFile* infile)
 // E:\gamedcs\game.cpp:1256; original SaveObeliskPool.
 // The ordinary writer mirrors the reader; retail expands it in game::save.
 // Original locals: count, char_buffer.
-DC_ONLY(0xa4c68, 0x5E)
+
 int game::saveObeliskPool(TAbstractFile* outfile)
 {
     char charBuffer = m_numObelisks;
@@ -1541,7 +1500,7 @@ int game::savePlayerData(TAbstractFile* outfile)
 // Original LoadTownPool; uchar_buffer -> townCount. Complete passes the save
 // version to town::load. DC returns the element error unchanged, while the
 // game::load caller maps any negative result to -1.
-DC_ONLY(0xa5a40, 0xB6)
+
 int game::loadTownPool(TAbstractFile* infile, int saveVersion)
 {
     unsigned char townCount;
@@ -1558,11 +1517,10 @@ int game::loadTownPool(TAbstractFile* infile, int saveVersion)
 }
 
 // E:\gamedcs\game.cpp:1722
-
 // Original SaveTownPool; uchar_buffer -> townCount. Keep the DC vector-size
 // loop and element error return; ordinary inlining replaces the copied loop
 // and its pinned condition in game::save.
-DC_ONLY(0xa5af8, 0xA4)
+
 int game::saveTownPool(TAbstractFile* outfile)
 {
     unsigned char townCount = m_towns.size();
@@ -2244,24 +2202,6 @@ void generateStandardFileName(char* longName, char* retName)
     strcpy(retName + charCount, period);
 }
 
-#if 0  // @carcass
-
-// ---------------------------------------------------------------------
-// THE game::Load / game::Save REGION (0x4bb990 .. 0x4c61e0).
-
-// This stretch is NOT a clean order-map: 54 carve rows against 55
-// game.cpp DC rows is exactly the count coincidence the FORCED-bracket
-// trap is made of, and it is a coincidence - the region is INTERLEAVED
-// with header-origin and Dinkumware COMDATs that game.obj also emits
-// (two rows carry the literal 'invalid bitset<N> position', one is
-// reachable only from /GX unwind funclets, and the DC dump attributes
-// ~390 stlport rows plus 70 header rows to game.obj). Header-origin
-// functions do not anchor, so only rows with independent evidence are
-// claimed here; the rest stay unclaimed on purpose.
-
-// E:\gamedcs\game.cpp:2564
-#endif  // @carcass
-
 VA(0x004bbb60, 0xBB)  // dc 0xa750c
 int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 {
@@ -2407,7 +2347,6 @@ void game::setupShipyards()
 }
 
 // E:\gamedcs\game.cpp:2654.
-DC_ONLY(0xa795c, 0xC6)
 int game::saveBlackMarkets(TAbstractFile* outfile)
 {
     char blackMarketListSize = m_blackMarkets.size();
@@ -2421,11 +2360,10 @@ int game::saveBlackMarkets(TAbstractFile* outfile)
 }
 
 // E:\gamedcs\game.cpp:2672
-
 // Original LoadBlackMarkets; black_market_list_size -> blackMarketListSize.
 // DC calls clear, resize and operator[]. The ordinary helper restores one
 // caller cleanup boundary; its natural expansion needs no inline-depth pin.
-DC_ONLY(0xa7a24, 0x98)
+
 int game::loadBlackMarkets(TAbstractFile* infile)
 {
     m_blackMarkets.clear();
@@ -2555,26 +2493,6 @@ bool type_creature_bank::save(void* output)
     outfile->write(&m_rewardCreatures, sizeof(m_rewardCreatures));
     return saveVector(outfile, m_artifacts);
 }
-
-#if 0  // @carcass
-
-// DC GetSaveGameHeaders0xa7bec reads the map/setup/campaign/player header
-// into game after SavedGameHeader::Load0xbcfe4 reads only ID, version and
-// 32 compatibility bytes. Its null-input path also owns VM Buffer staging
-// and uncompress. Complete moved those reads into the full SavedGameHeader
-// value object: load0x4bc750 reads its nested records via TAbstractFile;
-// game::load0x4bcda0 retains that value for later version tests and copies
-// its fields to game. Selection also loads this value directly. There is
-// no equivalent old game-owned header-reading interface to reproduce.
-
-// E:\gamedcs\game.cpp:2806
-DC_ONLY(0xa7bec, 0x558)
-int game::GetSaveGameHeaders(void* infile)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // Complete reading belongs to SavedGameHeader::load. The caller tests
 // its result before restoring any game state and retains the snapshot for
@@ -3332,24 +3250,6 @@ int game::save(TAbstractFile* outfile)
 #pragma inline_depth()
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:3275
-DC_ONLY(0xa8ba0, 0xCC)
-int hero_power(hero* this_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:3288
-DC_ONLY(0xa8c6c, 0x62)
-int compare_heroes(const void* arg1, const void* arg2)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x004beea0, 0x2F6)  // dc 0xa99d0
 unsigned char game::saveGame(const char* filename, unsigned char determineSuffix, unsigned char campaignWinMode, unsigned char compressIt, unsigned char xferFile)
 {
@@ -3604,7 +3504,6 @@ void game::giveTroopsToNeutralTowns()
 }
 
 // E:\gamedcs\game.cpp:4050
-
 // Retail's campaign chain cross-jumps every `AllowNormalVictory = 0` tail
 // into ONE store at 0x4bf835 and shares a single `je` at 0x4bf840, so each
 // arm ends `cmp eax,<last>` + `jmp <shared je>` and the `= 1` store is the
@@ -6754,164 +6653,6 @@ int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
     return length;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:4050
-DC_ONLY(0xaa7e0, 0x5C4)
-void game::validateVictoryLossConditions(unsigned char check_map_locations)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4236
-DC_ONLY(0xaada4, 0xB2A)
-void game::newMap(char* MapName, THeroID* playerHeroFaces)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4509
-DC_ONLY(0xab96c, 0x66)
-void randomizeScholar(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4524
-DC_ONLY(0xab9d4, 0x2C8)
-void RandomizeArtifact(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4613
-DC_ONLY(0xabc9c, 0xB0)
-void randomizeSeaChest(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4639
-DC_ONLY(0xabd4c, 0x5C)
-void randomizeShrine(NewmapCell* cell, const int level)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4654
-DC_ONLY(0xabda8, 0x86)
-void randomizeWagon(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4681
-DC_ONLY(0xabe30, 0x5E)
-void RandomizeWiseTree(short id, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4691
-DC_ONLY(0xabe90, 0xE6)
-void randomizeTreasure(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4724
-DC_ONLY(0xabf78, 0x6E)
-void randomize_tomb(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4753
-DC_ONLY(0xabfe8, 0x60)
-void randomizePyramid(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4804
-DC_ONLY(0xac168, 0x3A)
-void randomizeWitchHut(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:5600
-DC_ONLY(0xadb88, 0x3B0)
-int game::loadMap(char* mapName)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:5687
-DC_ONLY(0xadf38, 0x67A)
-int NewSMapHeader::readVictoryCondition(char type, void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:5921
-DC_ONLY(0xae5b4, 0x5AE)
-int NewSMapHeader::saveVictoryCondition(char type, void* outfile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6110
-DC_ONLY(0xaeb64, 0x5B4)
-int NewSMapHeader::loadVictoryCondition(char type, void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6324
-DC_ONLY(0xaf118, 0x19C)
-int NewSMapHeader::readLossCondition(char type, void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6448
-DC_ONLY(0xaf488, 0x1C4)
-int NewSMapHeader::loadLossCondition(char type, void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6513
-DC_ONLY(0xaf64c, 0xB3A)
-int NewSMapHeader::read(void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6792
-DC_ONLY(0xb0188, 0x5CC)
-int NewSMapHeader::save(void* outfile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:6974
-DC_ONLY(0xb0754, 0x752)
-int NewSMapHeader::load(void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:7185
-DC_ONLY(0xb0ea8, 0x266)
-int NewSMapHeader::get(const char* filename)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 VA(0x004c61e0, 0x4A8)  // dc 0xb1230
 void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove, unsigned char checkEndGame)
 {
@@ -7197,25 +6938,6 @@ int game::getRandomNumTroops(int whichMon)
                   g_creatureTypeTraits[whichMon].m_wanderingHigh);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:7577
-// The three music bodies below are byte-identified as a group and they
-// corroborate each other. All three build on the same block:
-//   sprintf(buf, <0x677eac>, Random(1, 3) - 1);
-//   gpSoundManager->StartMP3(buf, 0, 1);      // 0x59acb0, claimed
-// 0x004c6f40 is that block alone - StartAITheme. 0x004c6f80 is the SAME
-// block INLINED plus `gpSoundManager->field_84 = 0`, and 0x004c6fd0 is
-// `gpSoundManager->field_84 = 1` on its own. That pairing is the /Ob2
-// single-call-site rule in the clean case: StartAITheme has exactly one
-// caller, so it is inlined there AND still emitted out of line (extern
-// linkage), which is why the same block appears twice. The flag polarity
-// fixes the two names against DC rank - clearing +0x84 goes with
-// starting the theme (TurnOnAIMusic), setting it goes with TurnOffAIMusic,
-// and that is also the DC order.
-// game::GetRandomNumTroops (dc 0xb1f1c, 66 B) has no retail row.
-#endif  // @carcass
-
 VA(0x004c6f40, 0x3F)  // dc 0xb1f60
 void startAITheme()
 {
@@ -7238,18 +6960,6 @@ void game::turnOffAIMusic()
 {
     g_soundManager->m_playSounds = 1;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:7603
-// Live retail reconstruction follows this carcass bracket.
-DC_ONLY(0xb1fd0, 0xB04)
-void game::nextPlayer()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // E:\gamedcs\game.cpp:7603
 // The retail body preserves the HoMM2 turn-transition skeleton while adding
@@ -7488,38 +7198,6 @@ void game::nextPlayer()
         g_advManager->forceNewHover();
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:7898
-DC_ONLY(0xb2ad4, 0x55C)
-int game::computeDailyGold(int iWhichPlayer, unsigned char include_silo)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:7958
-DC_ONLY(0xb3030, 0x14C)
-unsigned char game::growCoverOfDarkness()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:7978
-DC_ONLY(0xb317c, 0x6DA)
-void game::resetAllPlayerVisibility()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:8094
-DC_ONLY(0xb3858, 0x532)
-void game::perDay()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // Original: game::clear_recruits; game.cpp:8266, dc 0xb3d8c
 void game::clearRecruits(int* recruits)
 {
@@ -7546,31 +7224,6 @@ int getNewHero(THeroClass heroClass)
     }
     return heroId;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:8358
-DC_ONLY(0xb4050, 0xA4)
-void game::replaceRecruit(THeroID* m_recruits, long recruit_slot, TTownType alignment)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:8398
-DC_ONLY(0xb41e0, 0x5D8)
-void game::perWeek()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:8593
-DC_ONLY(0xb47b8, 0x39E)
-void game::perMonth()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x004c7930, 0x266)  // dc 0xb2ad4
 int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
@@ -8430,14 +8083,6 @@ void game::randomizeHeroPool()
     }
 }
 
-#if 0  // @carcass
-
-// Complete ignores bCheat. Initialize all seven army slots, roll the three
-// starting stacks at 100%/88%/25%, and equip Ballista and First Aid Tent
-// entries as artifacts.
-// E:\gamedcs\game.cpp:8924
-#endif  // @carcass
-
 VA(0x004c9730, 0x159)  // dc 0xb5094
 void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
 {
@@ -8850,39 +8495,6 @@ int game::experienceValueOfStack(const armyGroup* whichGroup, const hero* whichH
     return value;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:9596
-DC_ONLY(0xb61d0, 0x128)
-void game::setupAdjacentMons()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9636
-DC_ONLY(0xb62f8, 0x64)
-void game::cancelComputerScreen()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9660
-DC_ONLY(0xb635c, 0x1DC)
-void game::showComputerScreen()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9720
-DC_ONLY(0xb6538, 0x108)
-void game::showHeroesLogo()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9748
-#endif  // @carcass
-
 VA(0x004ca410, 0x116)  // dc 0xb61d0
 void game::setupAdjacentMons()
 {
@@ -9029,45 +8641,6 @@ void game::setupTowns()
 {
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:9803
-DC_ONLY(0xb6944, 0x72)
-const char* getRandomTownName(int townType)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9821
-DC_ONLY(0xb69b8, 0x3A)
-void resetRandomTownNames()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9833
-DC_ONLY(0xb69f4, 0x290)
-void game::processOnMapTowns()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9912
-DC_ONLY(0xb6c84, 0x57E)
-void initialize_hero(hero* current_hero, const HeroExtra* setup)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:10060
-DC_ONLY(0xb7204, 0x350)
-void game::processOnMapHeroes()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // The nine-faction no-repeat town-name samplers are file-static in game.cpp.
 // Retail's vector-constructor iterator at 0x4ca9e0 proves nine 24-byte
 // TPickRandomTownName objects and its element wrapper proves [0, 15].
@@ -9104,91 +8677,6 @@ inline void resetRandomTownNames()
 void game::checkHeroConsistency()
 {
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:10142
-// Retail admission 2026-09-01: ProcessOnMapHeroes and DoNewTurn bracket these
-// two transfer bodies in the same order as dc game.obj.  This first body is a
-// thiscall with four stack arguments and `ret 0x10`; its SaveGame -> optional
-// CDiffMaker/gzip -> CGameTransmitInitMsg/CGameTransmitMainMsg -> transfer
-// dialog -> resend/confirm/drop sequence independently identifies
-// TransmitSaveGame.  The full 0xd14-byte span is intentional: 0x4cb1ec is the
-// typed catch named by retail's HandlerType at 0x64db70, and the normal path at
-// 0x4cb1ea jumps to the parent's 0x4cb206 continuation, which reuses the saved
-// EBP frame and reaches the shared epilogues and trailing switch tables.
-// Negative controls: treating 0x4cb1ec or 0x4cb206 as entries breaks that EH/
-// frame/control-flow evidence; the cross-build address 0x4cac90 is before this
-// carved entry and therefore cannot name this retail function.
-
-// Dreamcast dossier (dc 0xb7560): preserve the function-scoped locals
-// retryCount, dataTimeOutStart, pSmack, isDiff, pConfirmMsg, playerDone[8],
-// data, cFileName[351], attempts, current, bytesLeft, iFullGameCRC, diffSize,
-// totalBlocks, smack, done, iReturn, pGameTransmitMainMsg, queueSize,
-// iFileSize, handle, numMsgs, msg, useGuaranteed, curBlock, bSChangeSounds,
-// netMsgHandlerPause and dlg.  Its nested diff scope owns File, oldSize,
-// pDiff, pOld, newSize, diffFilename, CDiffMaker, pNew and pFile; message
-// scopes own pNetMsg/CMessageKill, killDPID, CGameTransmitEndMsg,
-// CGameTransmitReqMsg and CChatMsg.  The 203-row / 45-branch / 129-call
-// dossier proves those RAII scopes and the phase order above.  A source body
-// remains fenced until those positive facts can be expressed coherently; a
-// return-only or decompiler-shaped placeholder is the explicit negative
-// control and is not an admissible reconstruction.
-DC_ONLY(0xb7560, 0x1064)
-int game::transmitSaveGame(int iToWho, int thisPlayerDead, unsigned char inGame, unsigned char makeOrig)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:10587
-// Retail admission 2026-09-01: this second bracketed body is a thiscall with
-// five stack arguments and `ret 0x14`.  Its GameTime stamp, incoming buffer
-// and block-received allocation, request/ack/retransmit loop, optional
-// CDiffFile/gzip application, save write, UI restoration and NextPlayer path
-// identify ReceiveSaveGame independently of the DC order transfer.
-// Negative controls: the inherited HD/NH3API-style address 0x4cba00 lies in
-// TransmitSaveGame's retail body, not at an entry; 0x4cbfef is merely the
-// fall-through DestroyMsg block in this body's live receive loop and still
-// uses the parent's EBP frame, so promoting it likewise destroys the CFG.
-
-// Dreamcast dossier (dc 0xb85c4): preserve pSmack, pNetMsg, fromDPID,
-// cFileName[351], data, diffSize, blockReceived, totalBlocks, smack, done,
-// handle, waitingForRetransmit, bSChangeSounds, iLastDataReceiveTime,
-// netMsgHandlerPause and dlg as the function-local inventory.  Nested message
-// scopes own CGameTransmitReqMsg, CGameTransmitMainMsg, killDPID,
-// CGameTransmitEndMsg, CGameTransmitConfirmEndMsg and CChatMsg; the diff scope
-// owns size, origFilename, bytesRead, diffFilename, CDiffFile, gzfile, pOrig,
-// newSave and File.  The 197-row / 45-branch / 128-call dossier proves those
-// lifetimes and receive -> validate -> apply/write -> restore ordering.  As
-// above, a flat return-only or pseudocode transcription is the explicit
-// negative control, not source recovery.
-DC_ONLY(0xb85c4, 0xE44)
-int game::receiveSaveGame(int iFileSize, int iFullGameCRC, int iFromWho, unsigned char inGame, unsigned char isDiff)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11028
-DC_ONLY(0xb9408, 0x5C6)
-void game::doNewTurn()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11170
-DC_ONLY(0xb99d0, 0x62)
-int game::getBoatsBuilt()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11188
-// Promoted 2026-08-19: retail 0x4cce30 (184 B) sits directly before the
-// SetMapSize anchor exactly as dc 0xb9a34 precedes dc 0xb9b24; thiscall
-// with one stack arg matches the signature, and the body walks the
-// player's towns testing building masks - the thieves-guild count the
-// advmgr quick views threshold at 1/2.
-#endif  // @carcass
 
 // E:\gamedcs\game.cpp:9833
 VA(0x004caa70, 0x39C)  // DC name/order + retail map/vector/string shape, dc 0xb69f4
@@ -10157,31 +9645,6 @@ void game::setSummoningGenerators()
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:11273
-DC_ONLY(0xb9d58, 0x122)
-void game::setCannedRumour()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11311
-DC_ONLY(0xb9e7c, 0x1C2)
-void game::setMapRumour()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11358
-DC_ONLY(0xba040, 0xBC4)
-void game::setSpecialRumour()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // Original: game::SetupNewRumour; game.cpp:11445, dc 0xbac04
 void game::setupNewRumour()
 {
@@ -10193,25 +9656,6 @@ void game::setupNewRumour()
     else
         setSpecialRumour();
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:11459
-DC_ONLY(0xbaca4, 0x20C)
-void game::giveTimeEventReward(const TTimedEvent* thisEvent)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11512
-DC_ONLY(0xbaef4, 0xF8)
-void game::checkForTimeEvent()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11540
-#endif  // @carcass
 
 VA(0x004ccf20, 0x8E)  // dc 0xb9d58
 void game::setCannedRumour()
@@ -10706,7 +10150,6 @@ VA_COMPGEN(0x004ce520, 0x4A, IMPLICIT_DTOR, HeroExtra)
 VA_COMPGEN(0x004ce570, 0x32, IMPLICIT_DTOR, playerData)
 
 // E:\gamedcs\game.cpp:11749
-
 VA(0x004ce5b0, 0x346)  // dc 0xbbd28
 game::~game()
 {
@@ -11014,159 +10457,6 @@ int game::getLastHuman() const
     }
     return 0;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:11884
-DC_ONLY(0xbc384, 0x94)
-void game::mark_campaign_map_won()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11895
-DC_ONLY(0xbc418, 0xE8)
-void game::resetGame()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11918
-DC_ONLY(0xbc500, 0x9C)
-unsigned char DCFileConv(char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2969
-DC_ONLY(0xbd4fc, 0x38)
-void* Buffer::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:5595
-DC_ONLY(0xbd534, 0x58)
-void type_creature_bank::type_creature_bank()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:5595
-DC_ONLY(0xbd58c, 0x20)
-void type_creature_bank::~type_creature_bank()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:9801
-// Retail 0x4caa40 is claimed above through its exact implicit destructor
-// public; this row records the independent Dreamcast name and order.
-DC_ONLY(0xbd5ac, 0x1C)
-void TPickRandomTownName::~TPickRandomTownName()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:10583
-DC_ONLY(0xbd5c8, 0x2C)
-void CGameTransferDlg::~CGameTransferDlg()
-{
-    // @stub
-}
-
-// HeroExtra::HeroExtra (dc 0xbd5f4) and playerData::~playerData
-// (dc 0xbd630) are CLAIMED above, in their retail order between
-// game::game and game::~game - see the bracket note there.
-
-// E:\gamedcs\game.cpp:11746
-DC_ONLY(0xbd654, 0x44)
-void std::vector<type_point,std::allocator<type_point> >::`default constructor closure'()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2698
-DC_ONLY(0xc184c, 0x80)
-unsigned char load_vector(void* infile, std::vector<enum* dest_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2716
-DC_ONLY(0xc18cc, 0x84)
-unsigned char saveVector(void* outfile, std::vector<enum* src_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2733
-#endif  // @carcass
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:2698
-DC_ONLY(0xc19e8, 0x80)
-unsigned char load_vector(void* infile, std::vector<type_point,std::allocator<type_point>* dest_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2698
-DC_ONLY(0xc1a68, 0x80)
-unsigned char load_vector(void* infile, std::vector<long,std::allocator<long>* dest_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2698
-DC_ONLY(0xc1ae8, 0x84)
-unsigned char load_vector(void* infile, std::vector<type_university,std::allocator<type_university>* dest_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2733
-DC_ONLY(0xc1b6c, 0x98)
-bool loadObjectVector(void* infile, std::vector<type_creature_bank,std::allocator<type_creature_bank>* dest_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2754
-#endif  // @carcass
-
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:2716
-DC_ONLY(0xc1dd4, 0x84)
-unsigned char saveVector(void* outfile, std::vector<type_point,std::allocator<type_point>* src_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2716
-DC_ONLY(0xc1e58, 0x84)
-unsigned char saveVector(void* outfile, std::vector<long,std::allocator<long>* src_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2716
-DC_ONLY(0xc1edc, 0x88)
-unsigned char saveVector(void* outfile, std::vector<type_university,std::allocator<type_university>* src_vector)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2754
-DC_ONLY(0xc1f64, 0x9C)
-bool saveObjectVector(void* outfile, std::vector<type_creature_bank,std::allocator<type_creature_bank>* src_vector)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x004cff30, 0x17, BITSET_TIDY, Bitset8)
 VA_COMPGEN(0x004d1790, 0x15, BITSET_TIDY, Bitset5)

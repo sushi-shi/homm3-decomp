@@ -657,16 +657,6 @@ unsigned char CNewMapHeaderInfoMsg::write(TAbstractFile* outfile) const
     return !const_cast<NewSMapHeader&>(m_header).save(outfile);
 }
 
-#if 0  // @carcass
-// E:\gamedcs\singleselectionwindow.cpp:368
-DC_ONLY(0x12fdf0, 0x92)
-void getGameVersion(char* version)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // E:\gamedcs\singleselectionwindow.cpp:429
 class CHostWaitDlg : public CAnimatedDlg {
 public:
@@ -1110,82 +1100,8 @@ bool initializeTurnDurationText()
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:890
-DC_ONLY(0x13006c, 0x22)
-int numberComp(int num1, int num2)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:901
-DC_ONLY(0x130090, 0x4C)
-int victoryCompare(const void* arg1, const void* arg2)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:912
-DC_ONLY(0x1300dc, 0x50)
-int lossCompare(const void* arg1, const void* arg2)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:923
-DC_ONLY(0x13012c, 0x50)
-int sizeCompare(const void* arg1, const void* arg2)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:934
-DC_ONLY(0x13017c, 0xA6)
-int numberCompare(const void* arg1, const void* arg2)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:948
-DC_ONLY(0x130224, 0x136)
-int alphaCompare(const void* arg1, const void* arg2)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:985
-DC_ONLY(0x13035c, 0x1E)
-void sliderChatWindow(int state, heroWindow* parent_window)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:989
-DC_ONLY(0x13037c, 0x60)
-void sliderDuration(int state, heroWindow* parent_window)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:994
-DC_ONLY(0x1303dc, 0x1E)
-void sliderFileMenu(int state, heroWindow* parent_window)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:1005
-DC_ONLY(0x1303fc, 0xAC)
-void CNetPlayerHandler::CNetPlayerHandler()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:1005
-// Dreamcast dc 0x1303fc (the DC_ONLY row above): the two seat-array
+// Dreamcast dc 0x1303fc: the two seat-array
 // constructions, the four seat counters and the human-seat colour /
 // computer-seat name loop. DC1014 stores at this+i*120+112; DC1015
 // copies into the second array. Retail likewise stores the colour at
@@ -1886,7 +1802,6 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1953
-
 // DC's allies/enemies and generic flag widget are widget*, not pointers to
 // their allocated subclasses. Together with the corrected handler base and
 // seat-array stores, those source facts recover 95.5273%. A 48-state family
@@ -4392,21 +4307,6 @@ void TSingleSelectionWindow::drawBasicMapInfo()
             g_windowManager->m_screenBitmap, 420, 365, 0, 1);
 }
 
-#if 0  // @carcass
-
-// DC's advanced-options viewport uses MaxPlayers as the my_index scroll
-// bound (WindowHandler DC6118/6121). Complete Update 0x584550 draws all
-// eight slots; its WindowHandler 0x587d00 has no such scroll arm.
-// Exact platform-UI disposition: config/dc_only.tsv.
-// E:\gamedcs\singleselectionwindow.cpp:4219
-DC_ONLY(0x13a2f8, 0x86)
-int TSingleSelectionWindow::MaxPlayers()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // E:\gamedcs\singleselectionwindow.cpp:4239, dc 0xd84
 VA(0x00584550, 0x698)  // anchor-callee OnGameTransmitInitMsg (0x589b20) calls it no-arg after DrawWindow; owns the '%d/%d' literal; also tailed by SliderDuration 0x57c7f0 + WindowHandler, size 0.49x dc 0xd84, dc 0x13a380
 int TSingleSelectionWindow::update()
@@ -4585,24 +4485,6 @@ void TSingleSelectionWindow::doModal(bool fade)
     g_windowManager->doDialogDraw(this,
         heroWindow::heroWindowHandler, ::update, 0);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:4446
-DC_ONLY(0x13b178, 0xB4)
-unsigned char TSingleSelectionWindow::setNewPlayerSlot(unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:4621
-DC_ONLY(0x13b704, 0x7C)
-void TSingleSelectionWindow::onSortMaps(int how)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // DC SetHumanSlot: refresh the game vars, clear every seat and the
 // disabled slots' CanBeHuman, then re-seat. Multiplayer fills seats
@@ -5300,7 +5182,6 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:5085
-DC_ONLY(0x13c724, 0x78)
 bool TSingleSelectionWindow::onClickMsg(CNetMsg* netMsg)
 {
     CClickMsg* clickMsg = static_cast<CClickMsg*>(netMsg);
@@ -6200,20 +6081,8 @@ int TSingleSelectionWindow::windowHandler(message& msg)
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:6296
-DC_ONLY(0x13f748, 0x28)
-int TSingleSelectionWindow::getThisPlayerGamePos()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:6301
-#endif  // @carcass
-
-// Like GetThisPlayer above: retail keeps no out-of-line copy (the
-// DC_ONLY row below stays), every caller expands the GetGamePos chain.
+// Like GetThisPlayer above: retail keeps no out-of-line copy;
+// every caller expands the GetGamePos chain.
 inline int TSingleSelectionWindow::getThisPlayerGamePos()
 {
     return m_players.getGamePos(g_thisNetPlayerInfo.m_dpid);
@@ -6586,6 +6455,7 @@ unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost
 VA(0x00589710, 0x40F)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg, dc 0x140664
 unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
 {
+#ifdef _WINDOWS
     if (m_headersA.size() == 0)
         return 1;
     if (!m_receivingMaps)
@@ -6613,17 +6483,18 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
                 m_headersA[mapFileNameMsg->m_number] = temp;
             GameSelectionHeadersStruct& sel =
                 m_selectionHeaders[mapFileNameMsg->m_number];
-            // This pin is LOAD-BEARING, unlike loadPalette's. Retail calls
-            // GameSelectionHeadersStruct's generated assignment out of line
-            // here; letting VC6 expand it costs 90.22 -> 71.42 and replaces
-            // the single ~SavedGameHeader call with an inline _Tidy plus
-            // ~SCampaign and ~NewSMapHeader, which is also where our frame
-            // grows 0x1c over retail's 0xcc4. Removing it needs the real
-            // reason retail's operator= stayed out of line, not just the
-            // pin's removal.
-#pragma inline_depth(0)
+            // Both init handlers size the active source list and its display
+            // mirror together; a received row must address that shared range.
+            HOMM3_RELEASE_VERIFY(mapFileNameMsg->m_number >= 0
+                && static_cast<unsigned int>(mapFileNameMsg->m_number)
+                    < (mapFileNameMsg->m_flag
+                           ? m_transferHeaders.size()
+                           : m_headersA.size()));
+            HOMM3_RELEASE_VERIFY(
+                (mapFileNameMsg->m_flag
+                     ? m_transferHeaders.size()
+                     : m_headersA.size()) == m_selectionHeaders.size());
             sel = temp;
-#pragma inline_depth()
         } else {
             CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
             transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
@@ -6633,12 +6504,12 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
     _chdir("..");
     CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
     transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
+#endif
     return 1;
 }
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:6664
-DC_ONLY(0x140508, 0x46)
 bool TSingleSelectionWindow::onMapHeaderRequestMsg(CNetMsg* netMsg)
 {
     CMapHeaderRequestMsg* msg = static_cast<CMapHeaderRequestMsg*>(netMsg);
@@ -6652,7 +6523,6 @@ bool TSingleSelectionWindow::onMapHeaderRequestMsg(CNetMsg* netMsg)
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:6677
-DC_ONLY(0x140550, 0x38)
 bool TSingleSelectionWindow::onHeaderConfirmMsg(CNetMsg* netMsg)
 {
     m_newPlayerUpdateMan->headerConfirmed(netMsg->m_dpidFrom);
@@ -6663,7 +6533,6 @@ bool TSingleSelectionWindow::onHeaderConfirmMsg(CNetMsg* netMsg)
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:6709
-DC_ONLY(0x14060c, 0x56)
 bool TSingleSelectionWindow::onReqHeaderConfirmMsg(CNetMsg* netMsg)
 {
     if (!checkMissingHeaders(netMsg->m_dpidFrom)) {
@@ -6690,7 +6559,6 @@ static inline void updateTurnDuration()
 // HandleNetMsg +0x21e recomputes the version after DeletePlayer and calls
 // no-argument Update: the older DC message junk local does not survive.
 // E:\gamedcs\singleselectionwindow.cpp:6937
-DC_ONLY(0x140c88, 0xC6)
 bool TSingleSelectionWindow::onPlayerDroppedMsg(CNetMsg* netMsg)
 {
     CNetPlayerInfo* player = m_players.getPlayer(netMsg->m_dpidFrom);
@@ -6711,7 +6579,6 @@ bool TSingleSelectionWindow::onPlayerDroppedMsg(CNetMsg* netMsg)
 // base ctor 0x512c20, header at +0x18, vtable 0x641d30, read 0x512e00,
 // SetupOrigData, and header teardown. The receive result is not tested.
 // E:\gamedcs\singleselectionwindow.cpp:6968
-DC_ONLY(0x140d50, 0x22)
 bool TSingleSelectionWindow::onNewMapHeaderInfo(CNetMsg* netMsg)
 {
     CNewMapHeaderInfoMsg msg;
@@ -6719,35 +6586,6 @@ bool TSingleSelectionWindow::onNewMapHeaderInfo(CNetMsg* netMsg)
     g_game->setupOrigData();
     return true;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:6980
-DC_ONLY(0x140d74, 0x48)
-unsigned char TSingleSelectionWindow::sendPlayerPositions(unsigned long dpidTo)
-{
-    // @stub
-}
-
-// DC's synchronous init/row-loop/end API uses the obsolete two-argument
-// CGameHeaderInfoMsg constructor. Complete OnNewPlayerMsg 0x589fa0 starts
-// NewPlayer 0x58a280 and the Go/Tick/Finish transfer state machine, with
-// list flags, throttling and confirmation. Exact disposition: dc_only.tsv.
-// E:\gamedcs\singleselectionwindow.cpp:6990
-DC_ONLY(0x140dbc, 0x126)
-unsigned char TSingleSelectionWindow::SendGameHeaders(unsigned long dpidTo)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7009
-DC_ONLY(0x140ee4, 0x40)
-unsigned char TSingleSelectionWindow::sendSetupInfo(unsigned long dpid)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // DC keeps these helpers out of line; retail VC6 expands them at the advanced-
 // options call sites. Keep the original cpp boundaries visible while allowing
@@ -6785,7 +6623,6 @@ inline unsigned char TSingleSelectionWindow::sendSetupInfo(
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:7094
-DC_ONLY(0x1412fc, 0xC8)
 bool TSingleSelectionWindow::onGameHeaderInfoEndMsg(CNetMsg* netMsg)
 {
     m_receivedMaps = true;
@@ -6803,7 +6640,6 @@ bool TSingleSelectionWindow::onGameHeaderInfoEndMsg(CNetMsg* netMsg)
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:7118
-DC_ONLY(0x1413c4, 0x4A)
 bool TSingleSelectionWindow::onScrollMsg(CNetMsg* netMsg)
 {
     CScrollMsg* msg = static_cast<CScrollMsg*>(netMsg);
@@ -6813,172 +6649,12 @@ bool TSingleSelectionWindow::onScrollMsg(CNetMsg* netMsg)
     return true;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:7131
-DC_ONLY(0x141410, 0x38)
-unsigned char TSingleSelectionWindow::isHost()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // Original: TSingleSelectionWindow::OnNameSlider; singleselectionwindow.cpp:7139, dc 0x141448.
 // DC's entire body is parameter homes followed by return at7140; the
 // original callback performs no operation. No retail address is claimed.
 void TSingleSelectionWindow::onNameSlider(int newIndex)
 {
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:7143
-DC_ONLY(0x141450, 0x68)
-void TSingleSelectionWindow::onChatWindowSlider(int newIndex)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7149
-DC_ONLY(0x1414b8, 0x2A)
-void TSingleSelectionWindow::onFileMenuSlider(int newIndex)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7156
-DC_ONLY(0x1414e4, 0xC4)
-void TSingleSelectionWindow::onDurationSlider(int newIndex)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7178
-DC_ONLY(0x1415a8, 0xF4)
-void TSingleSelectionWindow::sendChat(unsigned long dpid, const char* cChat)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7212
-DC_ONLY(0x14169c, 0x56)
-void TSingleSelectionWindow::receiveChat(
-    unsigned long dpid, char* chat, bool inPopup)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7298
-DC_ONLY(0x14196c, 0xA8)
-void TSingleSelectionWindow::onRequestHeroFaceMsg(CNetMsg* pNetMsg, unsigned char inPopup)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7323
-DC_ONLY(0x141a14, 0x60)
-CNetPlayerHandlerPlayer* TSingleSelectionWindow::getThisPlayer()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7356
-DC_ONLY(0x141af0, 0xA8)
-void TSingleSelectionWindow::onSetAGRMsg(CNetMsg* pNetMsg, unsigned char inPopup)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7455
-DC_ONLY(0x141e9c, 0x18C)
-void TSingleSelectionWindow::onNameClick(int pos)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7512
-DC_ONLY(0x142028, 0x180)
-void TSingleSelectionWindow::onPlayerPosClick(int pos)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7682
-DC_ONLY(0x1425f0, 0x84)
-void TSingleSelectionWindow::sendPlayerFaces()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7698
-DC_ONLY(0x142674, 0x1FC)
-unsigned char TSingleSelectionWindow::onBeginGame()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7756
-DC_ONLY(0x142870, 0x176)
-unsigned char TSingleSelectionWindow::beginSavedGame()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7822
-DC_ONLY(0x1429e8, 0x2B4)
-unsigned char TSingleSelectionWindow::beginNewGame()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7889
-DC_ONLY(0x142c9c, 0x22)
-unsigned char TSingleSelectionWindow::isMultiPlayer()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7990
-DC_ONLY(0x1430cc, 0x6C)
-void TSingleSelectionWindow::onTownUpdateMsg(CNetMsg* pNetMsg, unsigned char inPopup)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:8143
-DC_ONLY(0x143548, 0xB0)
-THeroID TSingleSelectionWindow::getHeroInPos(int gamePos)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:8166
-DC_ONLY(0x1435f8, 0xBC)
-TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:8643
-DC_ONLY(0x145008, 0xA0)
-int TSingleSelectionWindow::calcPosition(int playerPos)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:8758
-DC_ONLY(0x14514c, 0x52)
-void CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA(0x00589b20, 0x13C)  // dc 0x1406ec
 unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
@@ -8241,7 +7917,7 @@ const char* TSingleSelectionWindow::getHeroName(int gamePos)
 // instead preserves the supplied row and passes -1 to DrawHeroAdvancedOption,
 // so those two Complete semantics remain explicit below. The original w
 // local and all eight named/virtual source calls retain their order.
-DC_ONLY(0x143810, 0xA8)
+
 void TSingleSelectionWindow::onNameChange(int gamePos, const char* newName)
 {
     CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
@@ -8707,556 +8383,6 @@ CNetMsg* CSingleSelectionNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     }
 }
 
-#if 0  // @carcass
-
-// Dreamcast-only VM backend, source8847..9754: MapleEnumerateDevices /
-// MapleCreateDevice provide IFlashDevice/IFlashFile interfaces, device/file
-// descriptors, capacity dialogues and multipart save assembly. Complete uses
-// disk directories and CRT/Win32 file I/O: SaveValid 0x577360, OnDeleteFile
-// 0x58dfb0, highScoreManager::open 0x4e90a0 and writeHighScores expanded at 0x4e91d0.
-// GetDateTime below reads the VM enumeration's cached date string; Complete
-// drawBasicMapInfo 0x5840f0 instead converts each header's FILETIME.
-// These thirteen exact source identities are reviewed in config/dc_only.tsv.
-// E:\gamedcs\singleselectionwindow.cpp:8847
-DC_ONLY(0x1453ec, 0xB0)
-int EnumMapleDevicesCallback(const MAPLEDEVICEINSTANCE* pmdi, void* pvContext)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:8878
-DC_ONLY(0x14549c, 0x860)
-unsigned char VMSaveFile(char* m_fileName, unsigned char* buffer, unsigned long lenBuffer, unsigned long start)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:9086
-DC_ONLY(0x145cfc, 0xEE)
-int myEnumFiles(IFlashDevice* pIFlashDevice, unsigned long fsfileid, const _FSFILEDESC* lpcfsfiledesc, void* pvContext)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:9103
-DC_ONLY(0x145dec, 0x2A2)
-void TSingleSelectionWindow::SetVMIconStatus()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:9142
-DC_ONLY(0x146090, 0x292)
-unsigned char TSingleSelectionWindow::FindCurrentVM()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:9268
-DC_ONLY(0x146324, 0x240)
-unsigned char TSingleSelectionWindow::GetDeviceDesc(unsigned char save)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:9328
-DC_ONLY(0x146564, 0x2AE)
-unsigned char VMLoadFile(char* m_fileName, Buffer* buf)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:9420
-DC_ONLY(0x146814, 0x180)
-unsigned char VMDeleteFile(char* m_fileName)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:9465
-DC_ONLY(0x146994, 0x268)
-unsigned char VMSaveHiscore(char* m_fileName, void* buffer, unsigned long lenBuffer, unsigned long start)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:9542
-DC_ONLY(0x146bfc, 0x8A)
-unsigned char FindFileOnVMS(char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:9571
-DC_ONLY(0x146c88, 0x5F4)
-unsigned char LoadCompleteVMFile(char* filename)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:9712
-DC_ONLY(0x14727c, 0xD4)
-void GetDateTime()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:9726
-DC_ONLY(0x147350, 0x7C)
-void EnumVMs()
-{
-    // @stub
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// E:\gamedcs\singleselectionwindow.cpp:429
-DC_ONLY(0x14767c, 0x60)
-void CHostWaitDlg::CHostWaitDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:437
-DC_ONLY(0x1476dc, 0xD4)
-void CHostWaitDlg::wait(unsigned long forWho)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:473
-DC_ONLY(0x14787c, 0x28)
-void CLaunchingGameMsg::CLaunchingGameMsg()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:487
-DC_ONLY(0x1478a4, 0x40)
-void CGameHeaderInfoInitMsg::CGameHeaderInfoInitMsg(unsigned long numMaps, unsigned char loadGameMode, unsigned long msgSize)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:505
-DC_ONLY(0x1478e4, 0x5C)
-void CGameHeaderInfoInitMsgEx::CGameHeaderInfoInitMsgEx(char* version, unsigned long numMaps, unsigned char loadGameMode)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:520
-DC_ONLY(0x147940, 0x18C)
-void CGameHeaderInfoMsg::CGameHeaderInfoMsg(int headerNbr, GameSelectionHeadersStruct* pHeader)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:532
-DC_ONLY(0x147acc, 0x28)
-void CGameHeaderInfoEndMsg::CGameHeaderInfoEndMsg()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:544
-DC_ONLY(0x147af4, 0xFC)
-void CNewSetupInfoMsg::CNewSetupInfoMsg(SGameSetupOptions* pGameSetupOptions)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:557
-DC_ONLY(0x147bf0, 0x38)
-void CScrollMsg::CScrollMsg(int map, int index)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:571
-DC_ONLY(0x147c28, 0x50)
-void CNewMapHeaderInfoMsg::CNewMapHeaderInfoMsg(NewSMapHeader* pMapHeader)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:587
-DC_ONLY(0x147c78, 0x74)
-void CMapFileNameMsg::CMapFileNameMsg(int nbr, char* fileName, TTownType* townType, _FILETIME fileTime)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:605
-DC_ONLY(0x147cec, 0x30)
-void CMapHeaderRequestMsg::CMapHeaderRequestMsg(int nbr)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:616
-DC_ONLY(0x147d1c, 0x28)
-void CReqHeaderConfirmMsg::CReqHeaderConfirmMsg()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:626
-DC_ONLY(0x147d44, 0x28)
-void CHeaderConfirmMsg::CHeaderConfirmMsg()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:638
-DC_ONLY(0x147d6c, 0x38)
-void CSortMapsMsg::CSortMapsMsg(int how, int direction)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:651
-DC_ONLY(0x147da4, 0x30)
-void CSetFilterMsg::CSetFilterMsg(int size)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:663
-DC_ONLY(0x147dd4, 0x30)
-void CRequestHeroFaceMsg::CRequestHeroFaceMsg(int which)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:676
-DC_ONLY(0x147e04, 0x38)
-void CRequestHeroFaceReplyMsg::CRequestHeroFaceReplyMsg(int pos, int face)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:690
-DC_ONLY(0x147e3c, 0x38)
-void CSetAGRMsg::CSetAGRMsg(int gamePos, int agr)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:703
-DC_ONLY(0x147e74, 0x30)
-void CNewHostMsg::CNewHostMsg(unsigned long dpidNewHost)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:717
-DC_ONLY(0x147ea4, 0x84)
-void CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(CNetPlayerHandlerPlayer* pNetPlayers, CNetPlayerHandlerPlayer* pCompPlayers)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:730
-DC_ONLY(0x147f28, 0x30)
-void CClickMsg::CClickMsg(int widgetId)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:744
-DC_ONLY(0x147f58, 0x38)
-void CTownUpdateMsg::CTownUpdateMsg(int gamePos, TTownType town)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:758
-DC_ONLY(0x147f90, 0xA8)
-void CNewPlayerMsg::CNewPlayerMsg(CNetPlayerInfo* pPlayerInfo, char* version)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1262
-DC_ONLY(0x14808c, 0x40)
-void CNewPlayerUpdateProc::CNewPlayerUpdateProc(unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1272
-DC_ONLY(0x1480cc, 0x64)
-void CNewPlayerUpdateProc::go()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1282
-DC_ONLY(0x148130, 0x208)
-void CNewPlayerUpdateProc::tick()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1341
-DC_ONLY(0x148338, 0x10)
-unsigned char CNewPlayerUpdateProc::isFinished()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1369
-DC_ONLY(0x1483a8, 0x50)
-void CNewPlayerUpdateProc::requestConfirmation()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1375
-DC_ONLY(0x1483f8, 0xD0)
-void CNewPlayerUpdateProc::handleRequests()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1393
-DC_ONLY(0x1484c8, 0x1B0)
-void CNewPlayerUpdateProc::finish()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1435
-DC_ONLY(0x148678, 0x30)
-void CNewPlayerUpdateMan::CNewPlayerUpdateMan()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1443
-DC_ONLY(0x1486a8, 0x64)
-void CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1452
-DC_ONLY(0x14870c, 0x84)
-void CNewPlayerUpdateMan::newPlayer(unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1466
-DC_ONLY(0x148790, 0xA8)
-void CNewPlayerUpdateMan::tick()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1500
-DC_ONLY(0x1488a4, 0x84)
-void CNewPlayerUpdateMan::playerDropped(unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1517
-DC_ONLY(0x148928, 0x38)
-unsigned char CNewPlayerUpdateMan::isSendingHeaders()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1533
-DC_ONLY(0x148960, 0x38)
-int CNewPlayerUpdateMan::getFirstAvailable()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1553
-DC_ONLY(0x1489f0, 0x38)
-void* CNewPlayerUpdateProc::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1553
-DC_ONLY(0x148a28, 0x20)
-void CNewPlayerUpdateProc::~CNewPlayerUpdateProc()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1569
-DC_ONLY(0x148a48, 0x90)
-void CChatSlider::CChatSlider(int x, int y, int w, int h, int id, int num, void (*)()* func, slider::EGraphics graf, int page)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1600
-DC_ONLY(0x148b98, 0x38)
-void* CChatSlider::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1600
-DC_ONLY(0x148bd0, 0x1C)
-void CChatSlider::~CChatSlider()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1618
-DC_ONLY(0x148bec, 0x64)
-void CChatWidget::CChatSave::CChatSave(int w, int h)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1631
-DC_ONLY(0x148c8c, 0x12)
-unsigned char CChatWidget::CChatSave::isSaved()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1664
-DC_ONLY(0x148ca0, 0xD8)
-void CChatWidget::CChatWidget(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, const char* textString, const char* textFontName, font::TColor color, int textWidgetId, unsigned justify, int back_color, int textWidgetStyle)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1670
-DC_ONLY(0x148d78, 0x7C)
-void CChatWidget::~CChatWidget()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1696
-DC_ONLY(0x148f0c, 0x38)
-void* CChatWidget::CChatSave::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1696
-DC_ONLY(0x148f44, 0x38)
-void* CChatWidget::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1696
-DC_ONLY(0x148f7c, 0x1C)
-void CChatWidget::CChatSave::~CChatSave()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1741
-DC_ONLY(0x148f98, 0xBC)
-void CSingleSelectionChatEdit::CSingleSelectionChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1746
-DC_ONLY(0x149054, 0x2C)
-void CSingleSelectionChatEdit::sendChat(const char* sChat, int toWho)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1752
-DC_ONLY(0x149080, 0x50)
-unsigned char CSingleSelectionChatEdit::ignoreKey(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1764
-DC_ONLY(0x1490d0, 0x38)
-void* CSingleSelectionChatEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1764
-DC_ONLY(0x149108, 0x1C)
-void CSingleSelectionChatEdit::~CSingleSelectionChatEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1805
-DC_ONLY(0x149124, 0xBC)
-void CEnterNameEdit::CEnterNameEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1820
-DC_ONLY(0x149238, 0x58)
-int CEnterNameEdit::onEnter()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1834
-DC_ONLY(0x1492b8, 0x38)
-void* CEnterNameEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1834
-DC_ONLY(0x1492f0, 0x1C)
-void CEnterNameEdit::~CEnterNameEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1887
-DC_ONLY(0x14930c, 0xBC)
-void CSaveGameEdit::CSaveGameEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1941
-DC_ONLY(0x149590, 0x38)
-void* CSaveGameEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1941
-DC_ONLY(0x1495c8, 0x1C)
-void CSaveGameEdit::~CSaveGameEdit()
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // Dreamcast lines 4013..4071 recover the ownership phases and named helper
 // boundaries. Complete retail independently fixes the wider 164-entry hero
 // bank, its three retained random plates, the added VersionIcon, and the
@@ -9412,24 +8538,6 @@ int TSingleSelectionWindow::getCommonGameVersion()
         level--;
     return level;
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\singleselectionwindow.cpp:4071
-DC_ONLY(0x14961c, 0x38)
-void* CNewPlayerUpdateMan::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7886
-DC_ONLY(0x149654, 0x20)
-void CNewMapHeaderInfoMsg::~CNewMapHeaderInfoMsg()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // ---------------------------------------------------------------------------
 // SortMaps' six column comparators. The functors are declared in the priv

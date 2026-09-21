@@ -96,25 +96,25 @@ def read_dc(root: Path = ROOT, *, include_declarations: bool = False, project=No
     types = Types.from_symbols(symbols)
     generated = generated_members(types)
     origins = []
-    with (root / 'evidence/dreamcast/functions.csv').open(newline='') as stream:
-        rows = csv.DictReader(line for line in stream if not line.startswith('#'))
-        for r in rows:
-            proc = symbols.procedures.get(int(r['offset'], 16))
-            function = types.get(proc.type_index) if proc else {}
-            arguments = None
-            const = False
-            if function.get('kind') == 'function':
-                arguments = tuple('...' if t == 0 else types.declaration(t) for t in
-                                  types.get(function['arguments']).get('types', []))
-                this = types.get(function.get('this', 0))
-                if this['kind'] == 'pointer':
-                    const = 'const' in types.get(this['target']).get('qualifiers', [])
-            origins.append(Origin(source_file(r['file']), r['name'], int(r['line'] or 0),
-                                  int(r['params'] or 0), r['module'], r['offset'],
-                                  arguments, const, bool(proc and
-                                      (family_name(proc.name), proc.type_index) in generated),
-                                  return_type=(types.declaration(function['returns'])
-                                               if 'returns' in function else '')))
+    from homm3.analysis.dc_extract import corpus_rows
+    rows, _variables = corpus_rows(symbols)
+    for r in rows:
+        proc = symbols.procedures.get(int(r['offset'], 16))
+        function = types.get(proc.type_index) if proc else {}
+        arguments = None
+        const = False
+        if function.get('kind') == 'function':
+            arguments = tuple('...' if t == 0 else types.declaration(t) for t in
+                              types.get(function['arguments']).get('types', []))
+            this = types.get(function.get('this', 0))
+            if this['kind'] == 'pointer':
+                const = 'const' in types.get(this['target']).get('qualifiers', [])
+        origins.append(Origin(source_file(r['file']), r['name'], int(r['line'] or 0),
+                              int(r['params'] or 0), r['module'], r['offset'],
+                              arguments, const, bool(proc and
+                                  (family_name(proc.name), proc.type_index) in generated),
+                              return_type=(types.declaration(function['returns'])
+                                           if 'returns' in function else '')))
     if include_declarations:
         origins.extend(declaration_origins(types, origins))
     return origins
@@ -207,32 +207,6 @@ def type_identity(name: str) -> str:
     return re.sub(r'\s+', '', re.sub(r'\b(?:class|struct|enum|union)\s+', '', name))
 
 
-def reference_stubs_only(raw: str) -> bool:
-    """Unadmitted carcasses are evidence, but must contain no implementation."""
-    from homm3.retail_labels import source
-    from homm3.match.status import _definition_text
-    masked = source.mask_lexical_noise(raw)
-    residue = list(masked)
-    for start, end, _args, _raw_args in source.macro_invocations(
-            masked, source.MACRO_HEADS['DC_ONLY'][0], raw):
-        if end is None:
-            return False
-        body = _definition_text(raw, masked, end + 1)
-        if body is None:
-            return False
-        begin = raw.index(body, end + 1)
-        finish = begin + len(body)
-        declaration = masked[begin:finish]
-        if declaration[declaration.index('{') + 1:declaration.rindex('}')].strip():
-            return False
-        residue[start:finish] = ' ' * (finish - start)
-    # Only includes and the conventional inactive-carcass wrapper are allowed;
-    # a macro definition could itself hide a new implementation.
-    remaining = re.sub(r'^\s*#\s*(?:include\b[^\n]*|if\s+0\s*|endif\s*)$',
-                       '', ''.join(residue), flags=re.M)
-    return not remaining.strip()
-
-
 class LineIndex:
     """One index per scanned file, shared by all annotation lookups."""
     def __init__(self, raw: str):
@@ -262,7 +236,7 @@ def attached_prefix(raw: str | LineIndex, start: int) -> list[str]:
     for line in index.preceding(start):
         line = line.rstrip('\r\n')
         text = line.strip()
-        if text and not text.startswith(('//', '#', 'VA(', 'DC_ONLY(')):
+        if text and not text.startswith(('//', '#', 'VA(')):
             break
         prefix.append(line)
     prefix.reverse()
@@ -759,6 +733,13 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
     return definitions, errors, sorted(reached)
 
 
+def unadmitted_sources(root: Path, admitted: set[str]) -> list[str]:
+    return [path.relative_to(root).as_posix()
+            for path in sorted((root / 'src').rglob('*'))
+            if path.suffix.lower() in {'.c', '.cpp', '.cxx'}
+            and path.relative_to(root).as_posix() not in admitted]
+
+
 def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
     units = [u for u in manifest.units(root / 'config/units.toml')
              if u['source'].startswith('src/')]
@@ -846,13 +827,8 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
                           and p.relative_to(root).as_posix() not in reached]
         results.extend(pool.map(cached_scan, orphan_headers))
     unique = {}
-    errors = []
-    for path in sorted((root / 'src').rglob('*')):
-        if path.suffix.lower() not in {'.c', '.cpp', '.cxx'}:
-            continue
-        relative = path.relative_to(root).as_posix()
-        if relative not in admitted and not reference_stubs_only(path.read_text()):
-            errors.append(f'COVERAGE {relative}: implementation outside config/units.toml')
+    errors = [f'COVERAGE {relative}: source outside config/units.toml'
+              for relative in unadmitted_sources(root, admitted)]
     reached = set()
     for definitions, failures, paths in results:
         errors.extend(failures)
@@ -880,6 +856,34 @@ def read_filter(path: Path, fields: tuple[str, ...]):
     return entries, errors
 
 
+
+def read_split_filters(root: Path, names: tuple[str, ...], fields: tuple[str, ...]):
+    """Read exclusion lists without allowing identities to overlap."""
+    entries = {}
+    errors = []
+    owners = {}
+    for name in names:
+        rows, failures = read_filter(root / 'config' / name, fields)
+        errors.extend(failures)
+        for key, reason in rows.items():
+            if key in entries:
+                errors.append(f'FILTER duplicate exclusion {key} in {owners[key]} and {name}')
+            else:
+                entries[key] = reason
+                owners[key] = name
+    return entries, errors
+
+
+def read_dc_filters(root: Path):
+    return read_split_filters(root, ('dc_only.tsv', 'dc_only_generated.tsv'),
+                              ('file', 'function', 'line'))
+
+
+def read_win_filters(root: Path):
+    return read_split_filters(root, ('win_only.tsv', 'win_only_modules.tsv'),
+                              ('file', 'function', 'signature'))
+
+
 def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             win_only: dict, *, symbols=None, matched_out=None,
             strict_names: bool = False) -> tuple[list[str], dict]:
@@ -897,7 +901,7 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             dc_keys.add(key)
         if key not in dc_only:
             by_name[procedure_name(o.name)].append(o)
-    errors = inline_errors + [f'FILTER stale dc_only.tsv entry {key}'
+    errors = inline_errors + [f'FILTER stale dc_only.tsv/dc_only_generated.tsv entry {key}'
                               for key in dc_only if key not in dc_keys]
     used_win = set()
     matches = []
@@ -1113,7 +1117,7 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         if matched_out is not None and len(errors) == errors_before:
             matched_out.append((d, tuple(candidates)))
     for key in win_only.keys() - used_win:
-        errors.append(f'FILTER stale win_only.tsv entry {key}')
+        errors.append(f'FILTER stale win_only.tsv/win_only_modules.tsv entry {key}')
     previous = {}
     for d, file, dc_line in matches:
         # Ordinary retained .cpp bodies follow retail RVA order, checked by
@@ -1171,9 +1175,9 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None
     image_base = project.specification["inputs"]["retail"]["image_base"]
     definitions, errors, reached = collect(root, jobs, fresh)
     errors.extend(active_stub_definitions(definitions, root))
-    dc_only, failures = read_filter(root / 'config/dc_only.tsv', ('file', 'function', 'line'))
+    dc_only, failures = read_dc_filters(root)
     errors.extend(failures)
-    win_only, failures = read_filter(root / 'config/win_only.tsv', ('file', 'function', 'signature'))
+    win_only, failures = read_win_filters(root)
     errors.extend(failures)
     violations, counts = compare(definitions,
                                  read_dc(root, include_declarations=True, project=project) if origins is None else origins,

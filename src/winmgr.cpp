@@ -17,17 +17,6 @@
 #include "kb.h"
 #include "remote.h"
 
-#if 0  // @carcass
-
-// E:\gamedcs\winmgr.cpp:101
-DC_ONLY(0x19a840, 0x11A)
-int heroWindowManager::Open(int newPriority)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // The four screen-geometry slots Open hands to Bitmap16Bit::reference.
 // They are read at exactly one site in the whole image - these four
 // instructions - and written at none, so nothing names them; the widths are
@@ -474,29 +463,6 @@ void heroWindowManager::doQuickView(heroWindow* window)
     g_mouseManager->showPointer(false);
 }
 
-#if 0  // @carcass
-
-// DC's translated combat viewport uses destination offsets (8,32) and the
-// lastdx/lastdy/mdr1 state in DDAppBlitX. Complete instead derives screen
-// position through ClientToScreen in RobAppBlit (0x5ffe70) and retains the
-// four-argument UpdateScreen (0x602bd0). The six-argument viewport path is
-// documented in dc_only.tsv with its blitter, not paired to the PC body.
-// E:\gamedcs\winmgr.cpp:916
-DC_ONLY(0x19b328, 0x9C)
-void heroWindowManager::updateScreen(int x, int y, int width, int height, int dx, int dy)
-{
-    // @stub
-}
-
-// E:\gamedcs\winmgr.cpp:986
-DC_ONLY(0x19b3f0, 0x38)
-void heroWindowManager::BlitToScreenWithPointerX(int x, int y, int w, int h, int dx, int dy)
-{
-    // @stub
-}
-
-#endif  // @carcass
-
 // Original: heroWindowManager::UpdateScreen; winmgr.cpp:844, dc 0x19b1f0.
 // Complete draws combat and adventure into the same 800x600 client surface.
 // DC's combat-only (8,32) destination branch belongs to its translated viewport.
@@ -504,7 +470,6 @@ void heroWindowManager::updateScreen()
 {
     updateScreen(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
 }
-
 
 VA(0x00602bd0, 0x7C)  // dc 0x19b230
 void heroWindowManager::updateScreen(int x, int y, int width, int height)
@@ -539,7 +504,6 @@ void heroWindowManager::blitToScreenWithPointer(int x, int y, int w, int h)
         robAppBlit(&tempRect);
     }
 }
-
 
 VA(0x00602c50, 0x63)  // dc 0x19b428
 void heroWindowManager::fadeScreen(int inOut, int speed, unsigned char expectFadein)
@@ -596,7 +560,6 @@ void heroWindowManager::saveFizzleSource(int startX, int startY, int width, int 
     m_bmpFizzleSource = new Bitmap16Bit(width, height);
     m_bmpFizzleSource->grab(g_windowManager->m_screenBitmap, startX, startY);
 }
-
 
 VA(0x00602cc0, 0xF2)  // dc 0x19b5c0
 void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
@@ -698,7 +661,6 @@ void heroWindowManager::fizzleForward(int startX, int startY, int width,
     m_colorCyclingOn = savedColorCycling;
     releaseFizzleSource();
 }
-
 
 // E:\gamedcs\winmgr.cpp:1314. Cross-fade the saved fizzle source forward
 // into the live screen over eight frames, then blit the destination in whole.

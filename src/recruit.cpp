@@ -524,11 +524,6 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 }
 
 // E:\gamedcs\recruit.cpp:511
-// Residual (99.9898%): the CFG, calls, and instruction sequence agree. Two
-// multiply instructions encode their commutative register operands in the
-// opposite order; natural declaration and expression variants retain VC6's
-// current allocation.
-
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
 void recruitUnit::update(unsigned char newMonster, long slot)
 {
@@ -670,24 +665,6 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     msg.m_extra = g_unnamed6aacb0->m_data[36];
     g_recruitWindow->broadcastMessage(msg);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\recruit.cpp:666
-DC_ONLY(0x11a280, 0x74)
-void recruitUnit::setRolloverText(int codeY)
-{
-    // @stub
-}
-
-// E:\gamedcs\recruit.cpp:693
-DC_ONLY(0x11a2f4, 0x18)
-int exitRecruitUnit(message& msg)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // E:\gamedcs\recruit.cpp:666 / :693. Both Dreamcast helpers are header-sized
 // single-purpose bodies. Retail /Ob2 expands them into Main and /OPT:REF leaves
@@ -1312,24 +1289,6 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
 
     g_windowManager->doQuickView(recruitWindow);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\recruit.cpp:288
-DC_ONLY(0x11b53c, 0x34)
-void* TRecruitWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\recruit.cpp:1221
-DC_ONLY(0x11b570, 0x34)
-void* TRecruitQuickWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // COMDAT pairing: vector<widget*>::insert, agreement 0.985. Three addresses
 // resembled this COMDAT and the CALLER SET settles it: 0x14d120 is reached
