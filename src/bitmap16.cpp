@@ -425,11 +425,9 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
 // bitmap has a non-zero byte. The mask row stride is its WIDTH, not its
 // Pitch - retail adds [mask+0x24] at the foot of every row - while the
 // starting row is still taken through Pitch.
-// Row-boundary residual (86.8791%): both map and mask step only when another
-// row exists; next-row guards score 67.6374%. Keep DC GetMap/GetPitch and
-// their different pitch meanings (dc 0x52570/0x5256c), not a width->pitch fix.
-// Native actual-body tests cover output, independent pitches and the old
-// final-row defect; changing GetPitch to the storage pitch fails the oracle.
+// Dreamcast line 808 and retail both advance the mask and bitmap row pointers
+// after the inner pixel loop. Keep DC GetMap/GetPitch and their different
+// pitch meanings (dc 0x52570/0x5256c), not a width-to-pitch substitution.
 VA(0x0044e6a0, 0xE0)  // anchor-caller(UpdateGrid, seven pushes) + order-map(DC bitmap16.obj), dc 0x516a8
 void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
                          int sx, int sy)
@@ -459,10 +457,8 @@ void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
                 ++maskPixel;
                 ++pixel.m_pixels;
             }
-            if (iy + 1 < h) {
-                maskRow += mask->getPitch();
-                row.m_bytes += m_pitch;
-            }
+            maskRow += mask->getPitch();
+            row.m_bytes += m_pitch;
         }
     }
 }
