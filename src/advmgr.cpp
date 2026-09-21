@@ -3208,7 +3208,9 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         if (cell->m_isTrigger) {
             // DC 3918 calls GetArmyName(type, 2); retail expands the same
             // bounds check and plural-name selection. Preserve that helper.
-            const char* creatureName = getArmyName(cell->m_objectIndex, 2);
+            // Monster map cells store the creature as a raw object ordinal.
+            const char* creatureName = getArmyName(
+                H3_ENUM_DECODE(TCreatureType, cell->m_objectIndex), 2);
             sprintf(g_text, DATA_COMPGEN(
                 0x00660344, rolloverMonsterFormat, "%s %s"),
                 armyGroup::getArmySizeName(cell->m_extraInfo & 0xfff, 1),
@@ -7466,7 +7468,7 @@ void advManager::townQuickView(int townId, int x, int y,
 
         long i;
         for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-            if (thisTown->getArmy().m_armies[i] != -1) {
+            if (thisTown->getArmy().m_armies[i] != CREATURE_NONE) {
                 if (!first)
                     msg += ", ";
                 first = 0;
@@ -7579,7 +7581,8 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
     const int count = cell->m_extraInfo & 0xfff;
     TCreatureType type;
     {
-        type = TCreatureType(cell->m_objectIndex);
+        // Monster map cells store the creature as a raw object ordinal.
+        type = H3_ENUM_DECODE(TCreatureType, cell->m_objectIndex);
     }
 
     playerData* localPlayer = g_game->getLocalPlayer();
@@ -7602,7 +7605,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
             const int diplomacy = currHero->m_skillLevel[eSecSkillDiplomacy];
             const float strengthRatio =
                 static_cast<float>(aiApproximateStrength(currHero))
-                / static_cast<float>(g_creatureTypeTraits[type].m_aiValue
+                / static_cast<float>(H3_AT(g_creatureTypeTraits, type).m_aiValue
                                      * count);
             int force = getForceModifier(strengthRatio);
             TQuickCreatureWindow::TDisposition disposition =
@@ -7622,7 +7625,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
             else
                 mood = TQuickCreatureWindow::Flee;
 
-            int cost = g_creatureTypeTraits[type].m_cost[6] * count;
+            int cost = H3_AT(g_creatureTypeTraits, type).m_cost[6] * count;
             window = new TQuickCreatureWindow(
                 TQuickCreatureWindow::ViewAll, type, count, mood, cost);
             showDetails = true;
@@ -8252,64 +8255,64 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             return LOOPING_SOUND_39;
         case CREATURE_GENERATOR_1:
             switch (g_creatureGenerator1Types[thisCell->m_objectIndex]) {
-            case GET_SOUND_CREATURE_106:
-            case GET_SOUND_CREATURE_108: return LOOPING_SOUND_33;
-            case GET_SOUND_CREATURE_096: return LOOPING_SOUND_3;
-            case GET_SOUND_CREATURE_010:
-            case GET_SOUND_CREATURE_014: return LOOPING_SOUND_21;
-            case GET_SOUND_CREATURE_112: return LOOPING_SOUND_46;
-            case GET_SOUND_CREATURE_012: return LOOPING_SOUND_37;
-            case GET_SOUND_CREATURE_054: return LOOPING_SOUND_9;
-            case GET_SOUND_CREATURE_104: return LOOPING_SOUND_23;
-            case GET_SOUND_CREATURE_016: return LOOPING_SOUND_50;
-            case GET_SOUND_CREATURE_113: return LOOPING_SOUND_51;
-            case GET_SOUND_CREATURE_018: return LOOPING_SOUND_52;
-            case GET_SOUND_CREATURE_086: return LOOPING_SOUND_68;
-            case GET_SOUND_CREATURE_084: return LOOPING_SOUND_56;
-            case GET_SOUND_CREATURE_044:
-            case GET_SOUND_CREATURE_052: return LOOPING_SOUND_65;
-            case GET_SOUND_CREATURE_072: return LOOPING_SOUND_20;
-            case GET_SOUND_CREATURE_046: return LOOPING_SOUND_10;
-            case GET_SOUND_CREATURE_110: return LOOPING_SOUND_22;
-            case GET_SOUND_CREATURE_080: return LOOPING_SOUND_58;
-            case GET_SOUND_CREATURE_076: return LOOPING_SOUND_59;
-            case GET_SOUND_CREATURE_078:
-            case GET_SOUND_CREATURE_102: return LOOPING_SOUND_0;
-            case GET_SOUND_CREATURE_008: return LOOPING_SOUND_32;
-            case GET_SOUND_CREATURE_038: return LOOPING_SOUND_60;
-            case GET_SOUND_CREATURE_090: return LOOPING_SOUND_61;
-            case GET_SOUND_CREATURE_088:
-            case GET_SOUND_CREATURE_098: return LOOPING_SOUND_34;
-            case GET_SOUND_CREATURE_042:
-            case GET_SOUND_CREATURE_050:
-            case GET_SOUND_CREATURE_114: return LOOPING_SOUND_14;
-            case GET_SOUND_CREATURE_026:
-            case GET_SOUND_CREATURE_068:
-            case GET_SOUND_CREATURE_082: return LOOPING_SOUND_11;
-            case GET_SOUND_CREATURE_092: return LOOPING_SOUND_4;
-            case GET_SOUND_CREATURE_028: return LOOPING_SOUND_18;
-            case GET_SOUND_CREATURE_022: return LOOPING_SOUND_54;
-            case GET_SOUND_CREATURE_115: return LOOPING_SOUND_16;
-            case GET_SOUND_CREATURE_020: return LOOPING_SOUND_35;
-            case GET_SOUND_CREATURE_024: return LOOPING_SOUND_44;
-            case GET_SOUND_CREATURE_056: return LOOPING_SOUND_63;
-            case GET_SOUND_CREATURE_058:
-            case GET_SOUND_CREATURE_060:
-            case GET_SOUND_CREATURE_062:
-            case GET_SOUND_CREATURE_064:
-            case GET_SOUND_CREATURE_066: return LOOPING_SOUND_8;
-            case GET_SOUND_CREATURE_000: return LOOPING_SOUND_36;
-            case GET_SOUND_CREATURE_002:
-            case GET_SOUND_CREATURE_100: return LOOPING_SOUND_1;
-            case GET_SOUND_CREATURE_004:
-            case GET_SOUND_CREATURE_030: return LOOPING_SOUND_19;
-            case GET_SOUND_CREATURE_034:
-            case GET_SOUND_CREATURE_036: return LOOPING_SOUND_25;
-            case GET_SOUND_CREATURE_048:
-            case GET_SOUND_CREATURE_070:
-            case GET_SOUND_CREATURE_074:
-            case GET_SOUND_CREATURE_094: return LOOPING_SOUND_7;
-            case GET_SOUND_CREATURE_040: return LOOPING_SOUND_43;
+            case CREATURE_BASILISK:
+            case CREATURE_WYVERN: return LOOPING_SOUND_33;
+            case CREATURE_BEHEMOTH: return LOOPING_SOUND_3;
+            case CREATURE_CAVALIER:
+            case CREATURE_CENTAUR: return LOOPING_SOUND_21;
+            case CREATURE_AIR_ELEMENTAL: return LOOPING_SOUND_46;
+            case CREATURE_ANGEL: return LOOPING_SOUND_37;
+            case CREATURE_DEVIL: return LOOPING_SOUND_9;
+            case CREATURE_SERPENT_FLY: return LOOPING_SOUND_23;
+            case CREATURE_DWARF: return LOOPING_SOUND_50;
+            case CREATURE_EARTH_ELEMENTAL: return LOOPING_SOUND_51;
+            case CREATURE_WOOD_ELF: return LOOPING_SOUND_52;
+            case CREATURE_WOLF_RIDER: return LOOPING_SOUND_68;
+            case CREATURE_GOBLIN: return LOOPING_SOUND_56;
+            case CREATURE_GOG:
+            case CREATURE_EFREETI: return LOOPING_SOUND_65;
+            case CREATURE_HARPY: return LOOPING_SOUND_20;
+            case CREATURE_HELL_HOUND: return LOOPING_SOUND_10;
+            case CREATURE_HYDRA: return LOOPING_SOUND_22;
+            case CREATURE_MANTICORE: return LOOPING_SOUND_58;
+            case CREATURE_MEDUSA: return LOOPING_SOUND_59;
+            case CREATURE_MINOTAUR:
+            case CREATURE_GORGON: return LOOPING_SOUND_0;
+            case CREATURE_MONK: return LOOPING_SOUND_32;
+            case CREATURE_NAGA: return LOOPING_SOUND_60;
+            case CREATURE_OGRE: return LOOPING_SOUND_61;
+            case CREATURE_ORC:
+            case CREATURE_GNOLL: return LOOPING_SOUND_34;
+            case CREATURE_IMP:
+            case CREATURE_PIT_FIEND:
+            case CREATURE_FIRE_ELEMENTAL: return LOOPING_SOUND_14;
+            case CREATURE_GREEN_DRAGON:
+            case CREATURE_BONE_DRAGON:
+            case CREATURE_RED_DRAGON: return LOOPING_SOUND_11;
+            case CREATURE_ROC: return LOOPING_SOUND_4;
+            case CREATURE_GREMLIN: return LOOPING_SOUND_18;
+            case CREATURE_DENDROID_GUARD: return LOOPING_SOUND_54;
+            case CREATURE_WATER_ELEMENTAL: return LOOPING_SOUND_16;
+            case CREATURE_PEGASUS: return LOOPING_SOUND_35;
+            case CREATURE_UNICORN: return LOOPING_SOUND_44;
+            case CREATURE_SKELETON: return LOOPING_SOUND_63;
+            case CREATURE_WALKING_DEAD:
+            case CREATURE_WIGHT:
+            case CREATURE_VAMPIRE:
+            case CREATURE_LICH:
+            case CREATURE_BLACK_KNIGHT: return LOOPING_SOUND_8;
+            case CREATURE_PIKEMAN: return LOOPING_SOUND_36;
+            case CREATURE_ARCHER:
+            case CREATURE_LIZARDMAN: return LOOPING_SOUND_1;
+            case CREATURE_GRIFFIN:
+            case CREATURE_STONE_GARGOYLE: return LOOPING_SOUND_19;
+            case CREATURE_MAGE:
+            case CREATURE_GENIE: return LOOPING_SOUND_25;
+            case CREATURE_DEMON:
+            case CREATURE_TROGLODYTE:
+            case CREATURE_BEHOLDER:
+            case CREATURE_CYCLOPS: return LOOPING_SOUND_7;
+            case CREATURE_GIANT: return LOOPING_SOUND_43;
             default: return LOOPING_SOUND_42;
             }
         case CREATURE_GENERATOR_4:

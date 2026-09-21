@@ -265,7 +265,7 @@ public:
 
 struct TSiegeArcherInfo {
 public:
-    int m_creatureType;
+    H3_ENUM_STORAGE(TCreatureType, int) m_creatureType;
     TSiegeArcherPosition m_positions[3];
     const char* m_shadowSpriteName;
 };
@@ -539,7 +539,7 @@ public:
     // both through four-byte resource handles, as in army: 0x462920 clears
     // +4/+8 and 0x462930 releases them in reverse order with EH cleanup.
     struct TArcher {
-        int m_creatureType;             // +0x0
+        H3_ENUM_STORAGE(TCreatureType, int) m_creatureType; // +0x0
         TResourceHandle<CSprite> m_sprite;          // +0x4
         TResourceHandle<CSprite> m_shadowSprite;    // +0x8
         int m_x;                        // +0xc
@@ -800,7 +800,7 @@ public:
     // Original Dreamcast SummonedElemental (+0x12974): retail
     // SummonElemental (0x5a7080) writes the creature type, and the
     // spell eligibility check rejects a different elemental type.
-    int m_summonedElemental[2];  // +0x132a8 .. +0x132af
+    H3_ENUM_STORAGE(TCreatureType, int) m_summonedElemental[2];  // +0x132a8
     // Two per-side "this side has already lost / fled" latches, byte
     // proven by CombatIsOver (0x465830) and IsWinner (0x4658b0): both
     // index them by SIDE as bytes (`byte [this + side + 0x132b2]`,
@@ -947,7 +947,7 @@ public:
     // this pair unchanged, then promotes the creature and converts the
     // count at a two-for-three ratio if the destination group is full.
     int m_raisedCreatureCount;  // +0x13d4c
-    TCreatureType m_raisedCreatureType;  // +0x13d50
+    H3_ENUM_STORAGE(TCreatureType, int) m_raisedCreatureType;  // +0x13d50
     Bitmap816* m_combatGridBitmap;  // +0x13d54
     // The placed-obstacle array, as the raw first/last pair retail
     // tests: RemoveObstacle (0x466b30) null-checks the FIRST pointer,
@@ -1075,7 +1075,8 @@ public:
     static TWallTargetId getTargetWallIndex(int gridIndex);
     static unsigned char inCastle(int index);
     static unsigned char leftOfMoat(int index);
-    static void getMissileStartingPosition(int armyType, int x, int y, int facing,
+    static void getMissileStartingPosition(
+        H3_ENUM_PARAM(TCreatureType, int) armyType, int x, int y, int facing,
                                           int destX, int destY,
                                           const CSprite* missile, int* startX,
                                           int* startY, int* armyDir,
@@ -1498,7 +1499,8 @@ public:
     int viewSpells() const;
     // 0x47a100. Claims the first free (or expendable) slot on a side,
     // initialises the stack there and optionally fizzles it in.
-    army* addArmy(int side, int monType, int monQty, int gridIndex,
+    army* addArmy(int side, H3_ENUM_PARAM(TCreatureType, int) monType,
+                  int monQty, int gridIndex,
                   int setAttributes, int fizzleItIn);
     void viewCastleBallista(int isQuickInfo);
     void markTowerArmy(const army* tower);
@@ -1827,7 +1829,7 @@ public:
     TObstacle& getObstacle(int index) { return m_obstacles[index]; }
     void markCreatureEffect(int group, int index)
     {
-        if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
+        if (m_armies[group][index].m_creatureType == CREATURE_ARROW_TOWER)
             markTowerArmy(&m_armies[group][index]);
         else
             m_creatureEffect[group][index] = 1;

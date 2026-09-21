@@ -1691,10 +1691,10 @@ void rmgBlackBoxObject::write(TAbstractFile* outfile, int version)
             outfile->write(&creatureCount, sizeof(creatureCount));
         }
         if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-            short creatureType = H3_IDX(m_creatureType);
+            H3_ENUM_STORAGE(TCreatureType, short) creatureType = m_creatureType;
             outfile->write(&creatureType, sizeof(creatureType));
         } else {
-            char creatureType = H3_IDX(m_creatureType);
+            H3_ENUM_STORAGE(TCreatureType, char) creatureType = m_creatureType;
             outfile->write(&creatureType, sizeof(creatureType));
         }
         {
@@ -1821,10 +1821,10 @@ void rmgSeerHutObject::write(TAbstractFile* outfile, int version)
             outfile->write(&rewardKind, sizeof(rewardKind));
         }
         if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-            short creature = H3_IDX(m_creatureType);
+            H3_ENUM_STORAGE(TCreatureType, short) creature = m_creatureType;
             outfile->write(&creature, sizeof(creature));
         } else {
-            char creature = H3_IDX(m_creatureType);
+            H3_ENUM_STORAGE(TCreatureType, char) creature = m_creatureType;
             outfile->write(&creature, sizeof(creature));
         }
         {
@@ -2156,8 +2156,8 @@ type_object* type_dwelling_def::generate(TRmgObjectPropertiesRef* properties,
 VA(0x005347F0, 0x79)
 int type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* generator)
 {
-    const TCreatureTypeTraits& creature =
-        g_creatureTypeTraits[g_creatureGenerator1Types[m_subtype]];
+    const TCreatureTypeTraits& creature = H3_AT(
+        g_creatureTypeTraits, g_creatureGenerator1Types[m_subtype]);
     if (creature.m_townType != zone->m_townType2)
         return -1;
 
@@ -3566,9 +3566,9 @@ void type_random_map_generator::initializeObjectGenerators()
         // The exclusive bounds are the first expansion creature (Pixie) and
         // the first war machine (Catapult).
         H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creatureCount =
-            m_mapVersion >= 1 ? CREATURE_CATAPULT : CREATURE_PIXIE;
+            m_mapVersion >= 1 ? CREATURE_ROSTER_END : CREATURE_ROE_ROSTER_END;
         for (H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature = creatureCount;
-             H3_IDX(creature--);) {
+             creature--;) {
             if (H3_AT(g_creatureTypeTraits, creature).m_level >= 0)
                 m_objectGenerators.push_back(
                     new type_black_box_creature_def(creature));
@@ -3688,9 +3688,9 @@ void type_random_map_generator::initializeObjectGenerators()
     for (int quest = 0; quest < m_objectPrototypes[83].size(); ++quest) {
         // Same creature-domain bounds as the black-box generator scan above.
         H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creatureCount =
-            m_mapVersion >= 1 ? CREATURE_CATAPULT : CREATURE_PIXIE;
+            m_mapVersion >= 1 ? CREATURE_ROSTER_END : CREATURE_ROE_ROSTER_END;
         for (H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature = creatureCount;
-             H3_IDX(creature--);) {
+             creature--;) {
             if (H3_AT(g_creatureTypeTraits, creature).m_level >= 0)
                 m_objectGenerators.push_back(
                     new type_quest_creature_def(creature, quest));
@@ -5793,37 +5793,43 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     } else {
         memcpy(allowed, zone->m_slot->m_allowedMonsters, sizeof(allowed));
     }
-    int prototypeIndices[RMG_GUARD_CREATURE_COUNT];
+    int prototypeIndices[CREATURE_ROSTER_COUNT];
     memset(prototypeIndices, -1, sizeof(prototypeIndices));
     for (unsigned int index = 0; index < m_objectPrototypes[MONSTER].size(); ++index) {
         TRmgObjectPropertiesRef* properties = m_objectPrototypes[MONSTER][index];
-        prototypeIndices[properties->m_prototype->m_subtype] = index;
+        // Monster object subtypes store raw creature ordinals.
+        TCreatureType prototypeCreature = H3_ENUM_DECODE(
+            TCreatureType, properties->m_prototype->m_subtype);
+        H3_AT(prototypeIndices, prototypeCreature) = index;
     }
     int eligibleCount = 0;
-    int creature = RMG_GUARD_CREATURE_COUNT;
+    H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature =
+        CREATURE_ROSTER_END;
     if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE) {
-        while (--creature >= RMG_GUARD_ROE_EXCLUDED_FIRST)
-            prototypeIndices[creature] = -1;
+        while (--creature >= CREATURE_ROE_ROSTER_END)
+            H3_AT(prototypeIndices, creature) = -1;
     }
-    for (--creature; creature >= 0; --creature) {
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+    for (--creature; creature >= CREATURE_PIKEMAN; --creature) {
+        const TCreatureTypeTraits& traits = H3_AT(g_creatureTypeTraits, creature);
         if ((traits.m_wanderingHigh + traits.m_wanderingLow) / 2 * traits.m_aiValue <= value
             && value <= traits.m_aiValue * RMG_GUARD_MAXIMUM_COUNT
             && traits.m_level >= 0 && allowed[traits.m_townType + 1]) {
             ++eligibleCount;
         } else {
-            prototypeIndices[creature] = -1;
+            H3_AT(prototypeIndices, creature) = -1;
         }
     }
     if (!eligibleCount)
         return 0;
     int chosen = rand() % eligibleCount;
-    for (creature = RMG_GUARD_CREATURE_COUNT - 1; creature >= 0; --creature) {
-        if (prototypeIndices[creature] >= 0 && --chosen < 0)
+    for (creature = CREATURE_ROSTER_END - 1;
+         creature >= CREATURE_PIKEMAN; --creature) {
+        if (H3_AT(prototypeIndices, creature) >= 0 && --chosen < 0)
             break;
     }
-    TRmgObjectPropertiesRef* properties = m_objectPrototypes[MONSTER][prototypeIndices[creature]];
-    int aiValue = g_creatureTypeTraits[creature].m_aiValue;
+    TRmgObjectPropertiesRef* properties =
+        m_objectPrototypes[MONSTER][H3_AT(prototypeIndices, creature)];
+    int aiValue = H3_AT(g_creatureTypeTraits, creature).m_aiValue;
     int count = (value + aiValue / 2) / aiValue;
     int variation = count / 4 + 1;
     if (variation > 1) {

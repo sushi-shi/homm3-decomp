@@ -67,7 +67,9 @@ long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const her
     if (turns > 5)
         turns = 5;
     long value = g_spellTraits[choice.m_spell].m_masteryValues[choice.m_mastery];
-    float chance = getSpellWorkChance(choice.m_spell, m_type, castingHero, targetHero);
+    // AI monster rows retain long storage for the creature domain.
+    float chance = getSpellWorkChance(choice.m_spell,
+        H3_ENUM_DECODE(TCreatureType, m_type), castingHero, targetHero);
     return static_cast<long>(value * turns * m_totalValue * chance / 500.0);
 }
 
@@ -103,13 +105,15 @@ long type_monster_data::getResurrectionValue(type_spell_choice& choice, const he
 {
     if (m_originalNumber <= m_number)
         return 0;
-    if (getSpellWorkChance(choice.m_spell, m_type, castingHero, castingHero) == 0.0)
+    if (getSpellWorkChance(choice.m_spell,
+            H3_ENUM_DECODE(TCreatureType, m_type),
+            castingHero, castingHero) == 0.0)
         return 0;
     long value = choice.getMasteryValue()
                  + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     if (castingHero)
         value += const_cast<hero*>(castingHero)->getHeroSpellBonus(
-            choice.m_spell, g_creatureTypeTraits[m_type].m_level, value);
+            choice.m_spell, H3_AT(g_creatureTypeTraits, m_type).m_level, value);
     long resurrected = min(static_cast<long>(value * m_combatValuePerHit) / m_value,
                            m_originalNumber - m_number);
     return resurrected * m_value;
@@ -134,10 +138,13 @@ long type_monster_data::getSpellDamage(SpellID spell, const hero* castingHero, c
 {
     if (m_totalValue == 0)
         return 0;
-    damage = static_cast<long>(getSpellWorkChance(spell, m_type, castingHero, targetHero) * damage);
+    // AI monster rows retain long storage for the creature domain.
+    damage = static_cast<long>(getSpellWorkChance(spell,
+        H3_ENUM_DECODE(TCreatureType, m_type), castingHero, targetHero) * damage);
     if (damage == 0)
         return 0;
-    damage = modifySpellDamage(damage, spell, m_type);
+    damage = modifySpellDamage(
+        damage, spell, H3_ENUM_DECODE(TCreatureType, m_type));
     if (damage == 0)
         return 0;
     damage = const_cast<hero*>(castingHero)->modifySpellDamage(spell, damage, 0);
@@ -269,15 +276,16 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
     // lead is this platform/ABI difference, not an omitted shared call.
     m_totalCombatValue = 0;
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-        TCreatureType creature = m_currentArmy->m_armyTypes[i];
+        // Army slots retain four-byte creature storage.
+        TCreatureType creature = H3_ENUM_DECODE(
+            TCreatureType, m_currentArmy->m_armies[i]);
         if (creature == CREATURE_NONE)
             continue;
 
-        int creatureId = creature;
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[creatureId];
+        const TCreatureTypeTraits& traits = H3_AT(g_creatureTypeTraits, creature);
         hitPoints = traits.m_hitPoints;
         if (m_currentHero) {
-            hitBonus = m_currentHero->getHitPointBonus(creatureId);
+            hitBonus = m_currentHero->getHitPointBonus(creature);
             hitPoints += hitBonus;
         }
 
@@ -362,7 +370,7 @@ type_speed_catagory type_AI_combat_data::getCatagory(
     TCreatureType creature,
     long speed) const
 {
-    unsigned int attributes = g_creatureTypeTraits[creature].m_attributes;
+    unsigned int attributes = H3_AT(g_creatureTypeTraits, creature).m_attributes;
     if (attributes & g_ctaShooter)
         return const_ranged;
 
@@ -1176,12 +1184,14 @@ void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGro
     factor += 0.02f;
     TCreatureType skeleton = const_cast<hero*>(currentHero)->getNecromancyCreature();
     long total = 0;
-    long skeletonHitPoints = g_creatureTypeTraits[skeleton].m_hitPoints;
+    long skeletonHitPoints = H3_AT(g_creatureTypeTraits, skeleton).m_hitPoints;
     float skeletonHitPointsF = static_cast<float>(skeletonHitPoints);
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-        long creature = deadArmy->m_armies[i];
+        // Army slots retain four-byte creature storage.
+        TCreatureType creature =
+            H3_ENUM_DECODE(TCreatureType, deadArmy->m_armies[i]);
         long count = deadArmy->m_numTroops[i];
-        long hitPoints = g_creatureTypeTraits[creature].m_hitPoints;
+        long hitPoints = H3_AT(g_creatureTypeTraits, creature).m_hitPoints;
         if (hitPoints > skeletonHitPoints)
             hitPoints = skeletonHitPoints;
         long raised = static_cast<long>(static_cast<float>(hitPoints * count)

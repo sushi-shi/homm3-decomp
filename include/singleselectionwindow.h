@@ -12,14 +12,7 @@
 #include "rmg_request.h"
 #include "town.h"
 
-// Devil / Arch Devil, ids fixed by army.h's Inferno-run arithmetic
-// (Demon 0x30 opens it, 0x35..0x37 close it); the wait dialog rerolls
-// its random flavor creature past both. TU-private for the same
-// include-set reason army.h scopes its own creature ids.
-enum EWaitDialogCreatures {
-    WAIT_CREATURE_DEVIL = 0x36,
-    WAIT_CREATURE_ARCH_DEVIL = 0x37
-};
+// The wait dialog uses the canonical Devil creature identities.
 
 // Update (0x584550) remaps a campaign scenario's version icon from the
 // row's campaign ordinal: rows 0..6 are Restoration of Erathia's seven

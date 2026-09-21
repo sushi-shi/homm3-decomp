@@ -14,7 +14,7 @@ namespace {
 // Original akCreatureTypeTraits references these 150 writable rows. Retail
 // initializers retain sprite/sample names and flags before crtraits.txt loads.
 DATA(0x006703b8)
-TCreatureTypeTraits g_creatureTypeTraitsStorage[150] = {
+TCreatureTypeTraits g_creatureTypeTraitsStorage[CREATURE_TRAIT_COUNT] = {
     { 0, 0, "pike", "cpkman.def", 0x10, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 0, "halb", "chalbd.def", 0x10, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 1, "lcrs", "clcbow.def", 0x14, 0, 0, 0, { 0, 0, 0, 0, 0, 0, 0 }, 0, 0, 0, 0, { 0, 0 }, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -170,7 +170,8 @@ TCreatureTypeTraits g_creatureTypeTraitsStorage[150] = {
 }
 
 DATA(0x006747b0)
-const TCreatureTypeTraits (&g_creatureTypeTraits)[150] = g_creatureTypeTraitsStorage;
+const TCreatureTypeTraits (&g_creatureTypeTraits)[CREATURE_TRAIT_COUNT] =
+    g_creatureTypeTraitsStorage;
 
 void initializeCreatureTypeTraits(int id,
     const std::vector<char*, std::allocator<char*> >& values);
@@ -183,14 +184,15 @@ TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr)
         return CREATURE_PIKEMAN;
     // Complete stores normal and upgraded rows together; isBaseCreature
     // at 0x47b120 proves the fourteen-entry town stride.
-    return g_townDwellingCreatures[
-        townType * 2 * TOWN_DWELLING_COUNT + baseCreatureNbr];
+    // The dwelling table retains four-byte storage for the creature domain.
+    return H3_ENUM_DECODE(TCreatureType, g_townDwellingCreatures[
+        townType * 2 * TOWN_DWELLING_COUNT + baseCreatureNbr]);
 }
 
 VA(0x0047b120, 0x5D)  // dc 0x718fc
 int isBaseCreature(TCreatureType monType)
 {
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[monType];
+    const TCreatureTypeTraits& traits = H3_AT(g_creatureTypeTraits, monType);
     int townType = traits.m_townType;
     if (townType == -1)
         return 0;
@@ -217,7 +219,7 @@ unsigned char isSiegeWeapon(TCreatureType creature)
 VA(0x0047b1a0, 0x71)  // dc 0x71948
 TCreatureType upgradedCreatureType(TCreatureType type)
 {
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
+    const TCreatureTypeTraits& traits = H3_AT(g_creatureTypeTraits, type);
     int townType = traits.m_townType;
     if (townType == -1)
         return CREATURE_NONE;
@@ -230,15 +232,16 @@ TCreatureType upgradedCreatureType(TCreatureType type)
     }
     if (creatureIndex < 0 || creatureIndex >= 7)
         return CREATURE_NONE;
-    return g_townDwellingCreatures[
-        g_creatureTypeTraits[type].m_townType * 14 + creatureIndex + 7];
+    // The dwelling table retains four-byte storage for the creature domain.
+    return H3_ENUM_DECODE(TCreatureType, g_townDwellingCreatures[
+        H3_AT(g_creatureTypeTraits, type).m_townType * 14 + creatureIndex + 7]);
 }
 
 VA(0x0047B220, 0x6D)
 TCreatureType downgradedCreatureType(TCreatureType type)
 {
     do {
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
+        const TCreatureTypeTraits& traits = H3_AT(g_creatureTypeTraits, type);
         int townType = traits.m_townType;
         int creatureIndex;
         if (townType == -1)
@@ -252,8 +255,9 @@ TCreatureType downgradedCreatureType(TCreatureType type)
         }
         if (creatureIndex < 7)
             break;
-        return g_townDwellingCreatures[
-            g_creatureTypeTraits[type].m_townType * 14 + creatureIndex - 7];
+        // The dwelling table retains four-byte storage for the creature domain.
+        return H3_ENUM_DECODE(TCreatureType, g_townDwellingCreatures[
+            H3_AT(g_creatureTypeTraits, type).m_townType * 14 + creatureIndex - 7]);
     } while (0);
     return CREATURE_NONE;
 }
@@ -353,14 +357,14 @@ void initializeCreatureTypeTraits(int id,
     DATA_COMPGEN_GUARD(0x00696640, creatureTypeStringsGuard,
                        creatureTypeNames)
     DATA(0x006963e8)
-    static TAutoStrPtr creatureTypeNames[150];
+    static TAutoStrPtr creatureTypeNames[CREATURE_TRAIT_COUNT];
 
     creatureTypeNames[id].set(new char[strlen(values[0]) + 1]);
     strcpy(creatureTypeNames[id].get(), values[0]);
     traits.m_name = creatureTypeNames[id].get();
 
     DATA(0x00696644)
-    static TAutoStrPtr creatureTypePluralNames[150];
+    static TAutoStrPtr creatureTypePluralNames[CREATURE_TRAIT_COUNT];
 
     creatureTypePluralNames[id].set(new char[strlen(values[1]) + 1]);
     strcpy(creatureTypePluralNames[id].get(), values[1]);
@@ -389,7 +393,7 @@ void initializeCreatureTypeTraits(int id,
     traits.m_wanderingHigh = atoi(values[22]);
 
     DATA(0x00696190)
-    static TAutoStrPtr creatureTypeAbilities[150];
+    static TAutoStrPtr creatureTypeAbilities[CREATURE_TRAIT_COUNT];
 
     creatureTypeAbilities[id].set(new char[strlen(values[23]) + 1]);
     strcpy(creatureTypeAbilities[id].get(), values[23]);

@@ -1002,7 +1002,9 @@ void swapManager::drawSelector()
 
     if (g_splitArmyMode)
     {
-        int selectedType = m_heroes[m_sourceHeroIndex]->m_army.m_armies[m_sourceArmySlot];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType selectedType = H3_ENUM_DECODE(TCreatureType,
+            m_heroes[m_sourceHeroIndex]->m_army.m_armies[m_sourceArmySlot]);
         x = 0x43;
         for (int hero = 0; hero < 2; hero++)
         {
@@ -1010,8 +1012,9 @@ void swapManager::drawSelector()
             {
                 if (!(hero == m_sourceHeroIndex && slot == m_sourceArmySlot))
                 {
-                    int creature = m_heroes[hero]->m_army.m_armies[slot];
-                    if (creature == -1 || creature == selectedType)
+                    TCreatureType creature = H3_ENUM_DECODE(
+                        TCreatureType, m_heroes[hero]->m_army.m_armies[slot]);
+                    if (creature == CREATURE_NONE || creature == selectedType)
                     {
                         m_border->draw(0, 0, 0x24, 0x24,
                                      g_windowManager->m_screenBitmap,
@@ -2259,7 +2262,8 @@ void swapManager::update()
                 msg.m_extra = 4;
                 m_parent->broadcastMessage(msg);
                 msg.m_codeX = 4;
-                msg.m_extra = m_heroes[side]->m_army.m_armies[i] + 2;
+                // The portrait resource uses creature ordinal + 2.
+                msg.m_extra = H3_IDX(m_heroes[side]->m_army.m_armies[i]) + 2;
             }
             m_parent->broadcastMessage(msg);
         }

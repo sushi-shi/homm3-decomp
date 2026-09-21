@@ -771,7 +771,8 @@ public:
     // primitive and adds occupancy/combination checks and displaced-slot
     // restoration. ORDINAL PLACEHOLDER name.
     unsigned char heroFn004E2840(long artifact, long slot);
-    void upgradeCreatures(int sourceCreatureType, int destCreatureType);
+    void upgradeCreatures(H3_ENUM_PARAM(TCreatureType, int) sourceCreatureType,
+        H3_ENUM_PARAM(TCreatureType, int) destCreatureType);
     // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads
     // the boat bit out of `flags` and forwards to the other.
     // Dreamcast hero.cpp:5709/5734; ordinary movement helpers expanded here.
@@ -799,7 +800,7 @@ private:
 
 public:
     int heroFn004E5DE0() const;
-    void heroFn004E6120(int creatureType,
+    void heroFn004E6120(H3_ENUM_PARAM(TCreatureType, int) creatureType,
                          TCreatureTypeTraits* traits) const;
     // 0x4d9050 / 0x4e56b0, the two owner-record accessors; both open
     // with the same `owner < 0` guard.
@@ -815,7 +816,8 @@ public:
     // 0x4e4390 - Estates gold per day, the int twin of the five
     // specialty-factor getters.
     int getEstatesBonus() const;
-    long getHitPointBonus(int creatureType) const;
+    long getHitPointBonus(
+        H3_ENUM_PARAM(TCreatureType, int) creatureType) const;
     // The three backpack primitives at 0x004dbd90 / 0x004dbdb0 /
     // 0x004dbe10; all three walk `backpack` above.
     long getLastBackpackIndex() const;
@@ -847,7 +849,8 @@ public:
     void heroFn004DC070(long slot);
     // 0x004d9260 - drops the artifact backing a war machine when the
     // machine dies.
-    void destroySiegeWeaponArtifact(int creatureType);
+    void destroySiegeWeaponArtifact(
+        H3_ENUM_PARAM(TCreatureType, int) creatureType);
     // 0x004d92d0 - spends mana and refreshes the local adventure hero
     // locators while that manager is active.
     void useSpell(int cost);
@@ -998,7 +1001,7 @@ public:
     // dispatches to the other two, so all three need the declaration.
     void setSS(int whichSS, int levelToSet);
     int takeSS(int whichSS, int numLevelsToTake);
-    int creatureTypeCount(int creatureType);
+    int creatureTypeCount(H3_ENUM_PARAM(TCreatureType, int) creatureType);
     int getNthSS(int which);
     float getSurrenderCostFactor() const;
     float getOffenseFactor() const;
@@ -1208,9 +1211,9 @@ public:
     // three bytes align the spell ID, despite NH3API widening the flag to bool32.
     char m_paddingBeforeStartingSpell[3];
     int m_startingSpell;  // +0x20 (SpellID)
-    TCreatureType m_firstStack;  // +0x24
-    TCreatureType m_secondStack;  // +0x28
-    TCreatureType m_thirdStack;  // +0x2c
+    H3_ENUM_STORAGE(TCreatureType, int) m_firstStack;  // +0x24
+    H3_ENUM_STORAGE(TCreatureType, int) m_secondStack;  // +0x28
+    H3_ENUM_STORAGE(TCreatureType, int) m_thirdStack;  // +0x2c
     // UpdateHeroLocator sends this pointer to the portrait widget. Dreamcast
     // independently names the same +0x30 member m_small_portrait_name.
     const char* m_smallPortraitName;  // +0x30 image name for locator portraits

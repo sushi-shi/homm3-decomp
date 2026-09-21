@@ -17,15 +17,34 @@ template<class E> struct char_traits;
 template<class E, class Tr, class A> class basic_string;
 }
 
-// Bootstrap domain: only the sentinel is modeled; the full creature
-// roster gets its own header when a consumer needs the values.
-// (Dreamcast CodeView types armies[] and IsMember's parameter as
-// TCreatureType; retail compares slots against -1.)
+// Complete creature domain. Dreamcast CodeView proves the TCreatureType
+// identity; Complete retail fixes the ordinals below and uses four-byte enum
+// values in ordinary fields and signatures. Narrow or serialized storage is
+// always spelled through the domain macros.
 H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     CREATURE_NONE = -1,
+    // Negative map-format selectors request a random town creature. Each
+    // tier occupies a base/upgraded pair from -2 through -15.
+    CREATURE_RANDOM_TIER_1 = -2,
+    CREATURE_RANDOM_TIER_1_UPGRADED = -3,
+    CREATURE_RANDOM_TIER_2 = -4,
+    CREATURE_RANDOM_TIER_2_UPGRADED = -5,
+    CREATURE_RANDOM_TIER_3 = -6,
+    CREATURE_RANDOM_TIER_3_UPGRADED = -7,
+    CREATURE_RANDOM_TIER_4 = -8,
+    CREATURE_RANDOM_TIER_4_UPGRADED = -9,
+    CREATURE_RANDOM_TIER_5 = -10,
+    CREATURE_RANDOM_TIER_5_UPGRADED = -11,
+    CREATURE_RANDOM_TIER_6 = -12,
+    CREATURE_RANDOM_TIER_6_UPGRADED = -13,
+    CREATURE_RANDOM_TIER_7 = -14,
+    CREATURE_RANDOM_TIER_7_UPGRADED = -15,
     // Original TCreatureType::Pikeman, ordinal zero; GetBaseCreature
     // returns this value on its out-of-range dwelling arm.
     CREATURE_PIKEMAN = 0,
+    CREATURE_HALBERDIER = 0x1,
+    CREATURE_ARCHER = 0x2,
+    CREATURE_MARKSMAN = 0x3,
     // The two griffins, byte-proven by ai_tactical's
     // get_counterstroke_value (0x439e80): it doubles the counterstrike
     // multiplier for 4 and refuses the spell outright for 5, which is
@@ -34,6 +53,8 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     // retaliations is worth nothing).
     CREATURE_GRIFFIN = 0x4,
     CREATURE_ROYAL_GRIFFIN = 0x5,
+    CREATURE_MONK = 0x8,
+    CREATURE_ZEALOT = 0x9,
     // The four base elementals (NH3API enum spellings; IDs proven by
     // GetAlignments' compare chain at 0x44ac08).
     CREATURE_AIR_ELEMENTAL = 0x70,
@@ -74,6 +95,9 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     CREATURE_CHAMPION = 0xb,
     CREATURE_ANGEL = 0xc,
     CREATURE_ARCHANGEL = 0xd,
+    CREATURE_CENTAUR = 0xe,
+    CREATURE_WOOD_ELF = 0x12,
+    CREATURE_GRAND_ELF = 0x13,
     CREATURE_BONE_DRAGON = 0x44,
     CREATURE_GHOST_DRAGON = 0x45,
     // Proven by modify_spell_damage's dispatch table at 0x44b58c:
@@ -82,6 +106,9 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     // spell lists.
     CREATURE_STONE_GOLEM = 0x20,
     CREATURE_IRON_GOLEM = 0x21,
+    CREATURE_MASTER_GREMLIN = 0x1d,
+    CREATURE_GENIE = 0x24,
+    CREATURE_TITAN = 0x29,
     CREATURE_GOLD_GOLEM = 0x74,
     CREATURE_DIAMOND_GOLEM = 0x75,
     CREATURE_ICE_ELEMENTAL = 0x7b,
@@ -108,6 +135,9 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     // spell. NH3API spellings, Complete numbering (0x24 the plain
     // Genie, 0x5a the plain Ogre).
     CREATURE_MASTER_GENIE = 0x25,
+    CREATURE_GREMLIN = 0x1c,
+    CREATURE_NAGA = 0x26,
+    CREATURE_GIANT = 0x28,
     CREATURE_OGRE_MAGE = 0x5b,
     // The on-attack debuff roster, byte-proven in one function:
     // army::check_special_attack (0x440500) switches over the
@@ -128,6 +158,21 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     // hydras, at the Fortress top exactly where the Complete run ends.
     // NH3API spellings.
     CREATURE_CERBERUS = 0x2f,
+    CREATURE_HELL_HOUND = 0x2e,
+    CREATURE_GOG = 0x2c,
+    CREATURE_MAGOG = 0x2d,
+    CREATURE_DEMON = 0x30,
+    CREATURE_HORNED_DEMON = 0x31,
+    CREATURE_PIT_FIEND = 0x32,
+    CREATURE_PIT_LORD = 0x33,
+    CREATURE_EFREETI = 0x34,
+    CREATURE_WRAITH = 0x3d,
+    CREATURE_VAMPIRE_LORD = 0x3f,
+    CREATURE_POWER_LICH = 0x41,
+    CREATURE_HARPY = 0x48,
+    CREATURE_HARPY_HAG = 0x49,
+    CREATURE_BEHOLDER = 0x4a,
+    CREATURE_EVIL_EYE = 0x4b,
     CREATURE_HYDRA = 0x6e,
     CREATURE_CHAOS_HYDRA = 0x6f,
     CREATURE_DENDROID_GUARD = 0x16,
@@ -138,6 +183,7 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     CREATURE_MEDUSA = 0x4c,
     CREATURE_MEDUSA_QUEEN = 0x4d,
     CREATURE_SCORPICORE = 0x51,
+    CREATURE_MANTICORE = 0x50,
     CREATURE_BASILISK = 0x6a,
     CREATURE_GREATER_BASILISK = 0x6b,
     CREATURE_WYVERN_MONARCH = 0x6d,
@@ -146,8 +192,23 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     // Original DC names: eCreatureCyclops, eCreatureImp, eCreatureNagaSentinel,
     // eCreatureDragonFly, eCreatureVampire, eCreatureWyvern.
     CREATURE_CYCLOPS = 94,
+    CREATURE_CYCLOPS_KING = 0x5f,
+    CREATURE_ORC = 0x58,
+    CREATURE_ORC_CHIEFTAIN = 0x59,
+    CREATURE_GOBLIN = 0x54,
+    CREATURE_WOLF_RIDER = 0x56,
+    CREATURE_OGRE = 0x5a,
+    CREATURE_ROC = 0x5c,
+    CREATURE_THUNDERBIRD = 0x5d,
+    CREATURE_UNICORN = 0x18,
+    CREATURE_WAR_UNICORN = 0x19,
+    CREATURE_BEHEMOTH = 0x60,
+    CREATURE_ANCIENT_BEHEMOTH = 0x61,
+    CREATURE_LIZARDMAN = 0x64,
+    CREATURE_LIZARD_WARRIOR = 0x65,
+    CREATURE_MIGHTY_GORGON = 0x67,
+    CREATURE_SERPENT_FLY = 0x68,
     CREATURE_IMP = 42,
-    CREATURE_NAGA_SENTINEL = 38,
     CREATURE_DRAGON_FLY = 105,
     CREATURE_VAMPIRE = 62,
     CREATURE_WYVERN = 108,
@@ -176,11 +237,19 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     // only consumer of this compare is the identify-range gate. NH3API
     // spelling.
     CREATURE_ROGUE = 0x8f,
+    CREATURE_TROLL = 0x90,
     CREATURE_CATAPULT = 0x91,
+    // One-past-the-end of the ordinary creature roster. War machines begin
+    // at Catapult and do not participate in ordinary creature scans.
+    CREATURE_ROSTER_END = CREATURE_CATAPULT,
     CREATURE_BALLISTA = 0x92,
     CREATURE_FIRST_AID_TENT = 0x93,
     CREATURE_AMMO_CART = 0x94,
     CREATURE_ARROW_TOWER = 0x95,
+    // Several retail validation guards accept 0x96 even though the 150-row
+    // trait table ends at Arrow Tower (0x95). This names the observed compare
+    // without pretending that 0x96 is a creature or the last roster member.
+    CREATURE_RETAIL_RANGE_MAX = 0x96,
     // The four shooters combatManager::ShotIsThroughWall lets past its
     // wall gate alongside the Arrow Tower: the compare chain at
     // 0x46753d tests 0x22, 0x23, 0x88, 0x89, 0x95 in that order and
@@ -224,6 +293,8 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     // creature id: this is the documented type/symbol-table population
     // class, not a modelling error. game.obj opens them for itself.
     CREATURE_PIXIE = 0x76,
+    // One-past-the-end of Restoration of Erathia's creature roster.
+    CREATURE_ROE_ROSTER_END = CREATURE_PIXIE,
     CREATURE_SPRITE = 0x77,
     CREATURE_PSYCHIC_ELEMENTAL = 0x78,
     CREATURE_FIREBIRD = 0x82,
@@ -249,6 +320,8 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     CREATURE_WALKING_DEAD = 0x3a,
     CREATURE_WIGHT = 0x3c,
     CREATURE_LICH = 0x40,
+    CREATURE_GNOLL = 0x62,
+    CREATURE_GORGON = 0x66,
     // get_spell_work_chance's per-creature immunity switch (0x44a9xx):
     // the magic-resistant dwarves/Crystal Dragon, the level-gated
     // dragons, and the spell-immune Magic Elemental (NH3API spellings;
@@ -270,9 +343,31 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     // is `terrain == 1 -> terrain = 0` - it erases terrain 1's movement
     // penalty, terrain 1 is Sand (terrain.h's ten-mask permutation),
     // and Nomads are the creature that cancels the sand penalty.
-    CREATURE_NOMAD = 0x8e
+    CREATURE_NOMAD = 0x8e,
+    // Canonical roster names used by the static creature tables. These fill
+    // the remaining values without introducing local numeric creature views.
+    CREATURE_SWORDSMAN = 0x06,
+    CREATURE_CRUSADER = 0x07,
+    CREATURE_CENTAUR_CAPTAIN = 0x0f,
+    CREATURE_NAGA_QUEEN = 0x27,
+    CREATURE_SKELETON_WARRIOR = 0x39,
+    CREATURE_HOBGOBLIN = 0x55,
+    CREATURE_WOLF_RAIDER = 0x57,
+    CREATURE_GNOLL_MARAUDER = 0x63,
+    CREATURE_CONFLUX_UNUSED_122 = 0x7a,
+    CREATURE_CONFLUX_UNUSED_124 = 0x7c,
+    CREATURE_CONFLUX_UNUSED_126 = 0x7e,
+    CREATURE_CONFLUX_UNUSED_128 = 0x80,
+    CREATURE_PEASANT = 0x8b,
+    CREATURE_BOAR = 0x8c
 H3_ENUM_END_SPLIT(TCreatureType, int)
 H3_ENUM_STEPPED(TCreatureType)
+
+enum ECreatureRosterConstants {
+    CREATURE_ROE_ROSTER_COUNT = 118,
+    CREATURE_ROSTER_COUNT = 145,
+    CREATURE_TRAIT_COUNT = 150
+};
 
 // The spell-id domain (the full roster gets its own header when spell
 // work begins in earnest); DC CodeView types the parameters SpellID.
@@ -695,7 +790,7 @@ const unsigned int g_ctaAlive = 0x10;
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
 // akCreatureTypeTraits (a const reference to the 150-entry array).
-extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
+extern const TCreatureTypeTraits (&g_creatureTypeTraits)[CREATURE_TRAIT_COUNT];
 
 // Creature-card background image by town alignment (CrBkgCas.pcx first,
 // CrBkgEle.pcx last). Retail indexes this biased base with -1 for the
@@ -732,24 +827,15 @@ extern const char* g_creatureBackgrounds[9];
 
 class armyGroup {
 public:
-    enum { ARMY_GROUP_SLOT_COUNT = 7 };
-
-    // Spelled int (not TCreatureType) so slot writes from int-typed
-    // parameters (Add) stay cast-free; the enum appears where the
-    // Dreamcast prototypes demand it - and game::ViewArmy (0x4c6c50) is
-    // the first body that needs the READING side typed as well, because
-    // it hands a slot straight to UpgradedCreatureType and
-    // get_upgrade_cost and both take the enum. A union of the two views
-    // over ONE storage keeps readers and writers alike cast-free, which
-    // this tree's zero enum-cast floor requires; `armyTypes` is the
-    // Dreamcast's own typing of the array and `armies` the writers'
-    // convenience. Retyping the array outright was measured and does
-    // NOT work: it breaks five int-typed slot writes in armygrp.cpp and
-    // one in townmgr.cpp.
-    union {
-        int m_armies[ARMY_GROUP_SLOT_COUNT];
-        TCreatureType m_armyTypes[ARMY_GROUP_SLOT_COUNT];
+    enum {
+        ARMY_GROUP_INVALID_SLOT = -1,
+        ARMY_GROUP_SLOT_COUNT = 7
     };
+
+    // Dreamcast types this array as TCreatureType. Retail stores each slot in
+    // four bytes, so the domain wrapper preserves both facts and makes every
+    // raw integer crossing visible to the strict C++20 analysis build.
+    H3_ENUM_STORAGE(TCreatureType, int) m_armies[ARMY_GROUP_SLOT_COUNT];
 
     armyGroup();
     armyGroup(TCreatureType type, int amount);
@@ -762,7 +848,7 @@ public:
     int getCreatureTotal() const;
     int getCreatureTotal(TCreatureType monType) const;
     unsigned char isMember(TCreatureType monType) const;
-    int canJoin(int monType) const;
+    int canJoin(H3_ENUM_PARAM(TCreatureType, int) monType) const;
     unsigned char hasAllUndead() const;
     // Dreamcast armygrp.cpp:668. Complete retains the same source helper at
     // its morale consumers; VC6 /Ob2 expands the loop and /OPT:REF removes
@@ -811,7 +897,8 @@ public:
                              int magicTerrain) const;
     int save(TAbstractFile* outfile);
     int load(TAbstractFile* infile);
-    int add(int armyType, int newNumTroops, int newIndex);
+    int add(H3_ENUM_PARAM(TCreatureType, int) armyType,
+        int newNumTroops, int newIndex);
     void dismiss(int whichIndex);
     void swap(int srcIndex, armyGroup* destGroup, int destIndex);
     int getNumArmies() const;

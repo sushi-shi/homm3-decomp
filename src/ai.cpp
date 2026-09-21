@@ -1299,16 +1299,16 @@ unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters* data)
         int archerLevel;
         m_defendingTown->calcNumLevelArchers(&numArchers, &archerLevel);
         if (m_wallStrength[14] > 0)
-            shooterValue[1] += g_creatureTypeTraits[CREATURE_ARCHER].m_aiValue
+            shooterValue[1] += H3_AT(g_creatureTypeTraits, CREATURE_ARCHER).m_aiValue
                                 * numArchers;
         if (m_fortificationLevel == COMBAT_FORTIFICATION_CASTLE) {
             if (m_wallStrength[13] > 0)
                 shooterValue[1] +=
-                    g_creatureTypeTraits[CREATURE_ARCHER].m_aiValue
+                    H3_AT(g_creatureTypeTraits, CREATURE_ARCHER).m_aiValue
                     * (numArchers + 1) / 2;
             if (m_wallStrength[5] > 0)
                 shooterValue[1] +=
-                    g_creatureTypeTraits[CREATURE_ARCHER].m_aiValue
+                    H3_AT(g_creatureTypeTraits, CREATURE_ARCHER).m_aiValue
                     * (numArchers + 1) / 2;
         }
     }
@@ -1460,7 +1460,7 @@ unsigned char combatManager::chooseResurrectAction(const army* currentArmy, long
         return 0;
     army demonArmy;  // Original: demon_army.
     if (currentArmy->m_creatureType == CREATURE_PIT_LORD)
-        demonArmy.initialize(TCreatureType(CREATURE_DEMON), 1,
+        demonArmy.initialize(CREATURE_DEMON, 1,
                              m_heroes[estimate->getGroup()],
                              estimate->getGroup(), 0, 0);
     for (long i = m_numArmies[estimate->getGroup()]; i--; ) {

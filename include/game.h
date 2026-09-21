@@ -573,7 +573,7 @@ public:
     char m_genClass;  // +0x00
     char m_genType;  // +0x01
     char m_paddingBeforeCreatureTypes[2];
-    TCreatureType m_type[4];  // +0x04  (DC 0x1CF0, 16 B)
+    H3_ENUM_STORAGE(TCreatureType, int) m_type[4];  // +0x04  (DC 0x1CF0, 16 B)
     // +0x14. Four SHORTS, not two ints: the constructor's fused loop
     // walks `type` by 4 and this row by 2 over the same four
     // iterations.
@@ -1204,7 +1204,8 @@ public:
     TArtifact getRandomArtifactId(int artifactClass);  // 0x4c94d0
     void setupTowns();
     void checkHeroConsistency();
-    int getRandomNumTroops(int whichMon);
+    int getRandomNumTroops(
+        H3_ENUM_PARAM(TCreatureType, int) creature);
     void setupDynamicStuff(int update, int forceUpdate);  // 0x51bd50
     void setupNewOverviewType(int whichType,
                               unsigned char update);  // 0x51e330
@@ -1226,7 +1227,8 @@ public:
     // 0x4baf00, its link-order neighbour. countOnly stops at the piece
     // count; otherwise the shared puzzlePiecesRemoved bitset is re-rolled.
     int setupPuzzlePieces(int whichPlayer, int countOnly);
-    void giveArmy(armyGroup* thisMonInfo, int monType,
+    void giveArmy(armyGroup* thisMonInfo,
+                  H3_ENUM_PARAM(TCreatureType, int) monType,
                   int monNum, int slot);  // 0x4ca340
     int experienceValueOfStack(const armyGroup* whichGroup,
                                const hero* whichHero);  // 0x4ca3b0

@@ -42,7 +42,7 @@ private:
     char m_paddingBeforeCreature[2];
 
 public:
-    TCreatureType m_creature;      // +0x7c
+    H3_ENUM_STORAGE(TCreatureType, int) m_creature;      // +0x7c
 
     TSplitWindow(int x2, int y2, TCreatureType thisArmy);
     virtual ~TSplitWindow();

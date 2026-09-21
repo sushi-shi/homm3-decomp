@@ -3529,9 +3529,11 @@ void showCongrats(int hsType)
         land = getCampaignName();
     }
 
-    int monType = highScoreManager::getMonType(score, hsType);
-    sprintf(temp, monType >= 0 && monType <= 150
-                       ? g_creatureTypeTraits[monType].m_name
+    // The retail helper returns the creature in an int ABI slot.
+    TCreatureType monType = H3_ENUM_DECODE(
+        TCreatureType, highScoreManager::getMonType(score, hsType));
+    sprintf(temp, isRetailAcceptedCreatureType(monType)
+                       ? H3_AT(g_creatureTypeTraits, monType).m_name
                        : "");
     if (g_game->m_isCheater)
         strcpy(temp, g_generalText->getText(GENERAL_TEXT_CHEATER));
@@ -3716,9 +3718,11 @@ int handleAppSpecificMenuCommands(int idItem)
             if (g_inCampaign)
                 g_game->m_campaign.m_isCheater = 1;
             if (g_game->getCurrHeroId() != -1) {
+                // The cheat-menu command range encodes a creature ordinal.
                 g_game->giveArmy(
                                  &g_game->m_heroes[g_game->getCurrHeroId()].m_army,
-                                 idItem - APP_MENU_ARMY_FIRST,
+                                 H3_ENUM_DECODE(TCreatureType,
+                                     idItem - APP_MENU_ARMY_FIRST),
                                  APP_MENU_ARMY_QUANTITY, -1);
                 g_advManager->updBottomView(1, 1, 1);
             }
@@ -4067,8 +4071,11 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 
     case RES_MONSTER: {
         unsigned long count = HIWORD(m_qualifier);
-        int creature = LOWORD(m_qualifier);
-        m_spriteFrameIndex = creature + 2;
+        // Monster dialog qualifiers pack a creature ordinal in the low word.
+        TCreatureType creature =
+            H3_ENUM_DECODE(TCreatureType, LOWORD(m_qualifier));
+        // The dialog portrait resource uses creature ordinal + 2.
+        m_spriteFrameIndex = H3_IDX(creature) + 2;
         if (count != 0) {
             m_text = formatString(
                 DATA_COMPGEN(0x006778a4, dialogQuantityFormat, "%d %s"),

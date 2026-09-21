@@ -1300,13 +1300,17 @@ int NewfullMap::readTreasureData(TAbstractFile* infile, TreasureData* treasure)
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
             if (g_game->m_mapHeader.m_version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                signed char creature;
-                infile->read(&creature, sizeof(creature));
-                treasure->m_guardians.m_armies[i] = creature;
+                signed char creatureOrdinal;
+                infile->read(&creatureOrdinal, sizeof(creatureOrdinal));
+                // The map format stores creature ordinals in one byte in RoE.
+                treasure->m_guardians.m_armies[i] =
+                    H3_ENUM_DECODE(TCreatureType, creatureOrdinal);
             } else {
-                short creature;
-                infile->read(&creature, sizeof(creature));
-                treasure->m_guardians.m_armies[i] = creature;
+                short creatureOrdinal;
+                infile->read(&creatureOrdinal, sizeof(creatureOrdinal));
+                // Later map formats widen the stored creature ordinal to a word.
+                treasure->m_guardians.m_armies[i] =
+                    H3_ENUM_DECODE(TCreatureType, creatureOrdinal);
             }
 
             short amount;
@@ -1644,17 +1648,19 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     count = value;
     thisBox->m_creatures.initialize();
     for (i = 0; i < count; ++i) {
-        int creature;
+        int creatureOrdinal;
         if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
             signed char narrow;
             infile->read(&narrow, sizeof(narrow));
-            creature = narrow;
+            creatureOrdinal = narrow;
         } else {
             short wide;
             infile->read(&wide, sizeof(wide));
-            creature = wide;
+            creatureOrdinal = wide;
         }
-        thisBox->m_creatures.m_armies[i] = creature;
+        // Map object data stores the creature as a raw ordinal.
+        thisBox->m_creatures.m_armies[i] =
+            H3_ENUM_DECODE(TCreatureType, creatureOrdinal);
 
         short troops;
         if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
@@ -1794,7 +1800,9 @@ int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
     if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
         return -1;
     for (i = 0; i < numArmies; ++i) {
-        short creature = thisBox->m_creatures.m_armies[i];
+        // Army slots retain four-byte creature storage.
+        TCreatureType creature = H3_ENUM_DECODE(
+            TCreatureType, thisBox->m_creatures.m_armies[i]);
         outfile->write(&creature, 2);
         short count = thisBox->m_creatures.m_numTroops[i];
         if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
@@ -1929,11 +1937,15 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         if (saveVersion < 25) {
             signed char narrow;
             infile->read(&narrow, sizeof(narrow));
-            thisBox->m_creatures.m_armies[i] = narrow;
+            // Old saves store creature ordinals in one byte.
+            thisBox->m_creatures.m_armies[i] =
+                H3_ENUM_DECODE(TCreatureType, narrow);
         } else {
             short wide;
             infile->read(&wide, sizeof(wide));
-            thisBox->m_creatures.m_armies[i] = wide;
+            // Newer saves store creature ordinals in one word.
+            thisBox->m_creatures.m_armies[i] =
+                H3_ENUM_DECODE(TCreatureType, wide);
         }
         short troops;
         if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
@@ -2572,17 +2584,19 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     tempTown.m_customArmies = charBuffer;
     if (tempTown.m_customArmies) {
         for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
-            int creature;
+            int creatureOrdinal;
             if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char narrow;
                 infile->read(&narrow, sizeof(narrow));
-                creature = narrow;
+                creatureOrdinal = narrow;
             } else {
                 short wide;
                 infile->read(&wide, sizeof(wide));
-                creature = wide;
+                creatureOrdinal = wide;
             }
-            tempTown.m_townArmy.m_armies[x] = creature;
+            // Town setup data stores the creature as a raw map ordinal.
+            tempTown.m_townArmy.m_armies[x] =
+                H3_ENUM_DECODE(TCreatureType, creatureOrdinal);
 
             if (infile->read(&shortBuffer, sizeof(shortBuffer))
                 < sizeof(shortBuffer))
@@ -3026,17 +3040,19 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
         return -1;
 
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        int creature;
+        int creatureOrdinal;
         if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
             signed char narrow;
             infile->read(&narrow, sizeof(narrow));
-            creature = narrow;
+            creatureOrdinal = narrow;
         } else {
             short wide;
             infile->read(&wide, sizeof(wide));
-            creature = wide;
+            creatureOrdinal = wide;
         }
-        newGarrison.m_garrisonArmy.m_armies[slot] = creature;
+        // Garrison setup data stores the creature as a raw map ordinal.
+        newGarrison.m_garrisonArmy.m_armies[slot] =
+            H3_ENUM_DECODE(TCreatureType, creatureOrdinal);
 
         short count;
         if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -3089,9 +3105,11 @@ void NewfullMap::soDTransformRandomDwellings()
             alignment = pickAlignment(dwelling.m_factionMask, 0);
         }
 
-        TCreatureType creature = g_townDwellingCreatures[
-            alignment * 2 * TOWN_DWELLING_COUNT
-            + random(dwelling.m_minLevel, dwelling.m_maxLevel)];
+        // The dwelling table retains four-byte creature storage.
+        TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+            g_townDwellingCreatures[
+                alignment * 2 * TOWN_DWELLING_COUNT
+                + random(dwelling.m_minLevel, dwelling.m_maxLevel)]);
 
         int generatorType;
         if (creature == CREATURE_STONE_GOLEM) {

@@ -436,16 +436,18 @@ void type_AI_player::calculateDemand()
         }
     }
 
-    std::vector<type_creature_value> creatures(H3_IDX(CREATURE_CATAPULT));
-    int creatureIndex;
-    for (creatureIndex = 0;
-         creatureIndex < H3_IDX(CREATURE_CATAPULT); creatureIndex++) {
+    std::vector<type_creature_value> creatures(CREATURE_ROSTER_COUNT);
+    H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creatureIndex;
+    for (creatureIndex = CREATURE_PIKEMAN;
+         creatureIndex != CREATURE_ROSTER_END; creatureIndex++) {
         {
-            int value = creatureIndex;
-            memcpy(&creatures[creatureIndex].m_type, &value,
-                   sizeof creatures[creatureIndex].m_type);
+            // The stepped loop variable carries a creature-domain ordinal.
+            TCreatureType value = H3_ENUM_DECODE(
+                TCreatureType, creatureIndex);
+            memcpy(&H3_AT(creatures, creatureIndex).m_type, &value,
+                   sizeof H3_AT(creatures, creatureIndex).m_type);
         }
-        creatures[creatureIndex].m_amount = 0;
+        H3_AT(creatures, creatureIndex).m_amount = 0;
     }
 
     int dwellingTownIndex;
@@ -461,18 +463,21 @@ void type_AI_player::calculateDemand()
                 amount += growth;
             }
             if (amount > 0) {
-                int creatureType = g_townDwellingCreatures[
-                    currentTown->m_type * 14 + dwelling];
-                creatures[creatureType].m_amount += amount;
+                // The dwelling roster is fixed-width creature storage.
+                TCreatureType creatureType = H3_ENUM_DECODE(TCreatureType,
+                    g_townDwellingCreatures[
+                        currentTown->m_type * 14 + dwelling]);
+                H3_AT(creatures, creatureType).m_amount += amount;
             }
         }
     }
 
-    int valueCreature;
-    for (valueCreature = 0;
-         valueCreature < H3_IDX(CREATURE_CATAPULT); valueCreature++)
-        creatures[valueCreature].m_value = creatures[valueCreature].m_amount
-            * g_creatureTypeTraits[valueCreature].m_aiValue;
+    H3_ENUM_STORAGE_STEPPED(TCreatureType, int) valueCreature;
+    for (valueCreature = CREATURE_PIKEMAN;
+         valueCreature != CREATURE_ROSTER_END; valueCreature++)
+        H3_AT(creatures, valueCreature).m_value =
+            H3_AT(creatures, valueCreature).m_amount
+            * H3_AT(g_creatureTypeTraits, valueCreature).m_aiValue;
 
     std::sort(creatures.begin(), creatures.end(),
               std::greater<type_creature_value>());
@@ -484,7 +489,8 @@ void type_AI_player::calculateDemand()
         int costResource;
         for (costResource = 0; costResource < 7; costResource++)
             m_resourceDemand[costResource] +=
-                g_creatureTypeTraits[creatureInfo.m_type].m_cost[costResource]
+                H3_AT(g_creatureTypeTraits, creatureInfo.m_type)
+                    .m_cost[costResource]
                 * creatureInfo.m_amount;
     }
 
@@ -825,14 +831,17 @@ void type_AI_player::calculateReserve()
             if (*population > 0) {
                 type_creature_value creatureInfo;
                 {
-                    int value = g_townDwellingCreatures[
-                        currentTown->m_type * 14 + dwelling];
+                    // The dwelling roster is fixed-width creature storage.
+                    TCreatureType value = H3_ENUM_DECODE(TCreatureType,
+                        g_townDwellingCreatures[
+                            currentTown->m_type * 14 + dwelling]);
                     memcpy(&creatureInfo.m_type, &value,
                            sizeof creatureInfo.m_type);
                 }
                 creatureInfo.m_amount = *population;
                 creatureInfo.m_value = static_cast<short>(creatureInfo.m_amount
-                    * g_creatureTypeTraits[creatureInfo.m_type].m_aiValue);
+                    * H3_AT(g_creatureTypeTraits, creatureInfo.m_type)
+                          .m_aiValue);
                 creatures.push_back(creatureInfo);
             }
         }
@@ -843,13 +852,13 @@ void type_AI_player::calculateReserve()
         long totalCost[7];
         memset(totalCost, 0, sizeof(totalCost));
         int cost[7];
-        for (short creature = static_cast<short>(creatures.size() - 1);
-             creature >= 0 && creature >= creatures.size() - 2;
-             creature--) {
-            getMonsterCost(creatures[creature].m_type, cost);
+        for (short creatureIndex = static_cast<short>(creatures.size() - 1);
+             creatureIndex >= 0 && creatureIndex >= creatures.size() - 2;
+             creatureIndex--) {
+            getMonsterCost(creatures[creatureIndex].m_type, cost);
             for (short resource = 0; resource < 7; resource++)
                 totalCost[resource] += cost[resource]
-                    * creatures[creature].m_amount;
+                    * creatures[creatureIndex].m_amount;
         }
 
         for (int reserveResource = 0; reserveResource < 7; reserveResource++) {
@@ -872,9 +881,12 @@ static long sumPlayerDwellings(long playerId)
         for (int dwelling = 0; dwelling < 14; ++dwelling) {
             long growth = currentTown->getGrowthRate(dwelling);
             if (growth > 0) {
-                TCreatureType creature = g_townDwellingCreatures[
-                    currentTown->m_type * 14 + dwelling];
-                value += g_creatureTypeTraits[creature].m_aiValue * growth;
+                // The dwelling roster is fixed-width creature storage.
+                TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+                    g_townDwellingCreatures[
+                        currentTown->m_type * 14 + dwelling]);
+                value += H3_AT(g_creatureTypeTraits, creature).m_aiValue
+                    * growth;
             }
         }
     }
@@ -898,8 +910,10 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
         for (dwelling = 0; dwelling < 14; ++dwelling) {
             short growth = currentTown->getGrowthRate(dwelling);
             if (growth > 0) {
-                TCreatureType creature = g_townDwellingCreatures[
-                    currentTown->m_type * 14 + dwelling];
+                // The dwelling roster is fixed-width creature storage.
+                TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+                    g_townDwellingCreatures[
+                        currentTown->m_type * 14 + dwelling]);
                 getMonsterCost(creature, resources);
                 for (short resource = 0; resource < 7; ++resource) {
                     income[resource] -= resources[resource] * growth;
@@ -926,12 +940,13 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
         }
     }
 
-    for (int creature = 0; creature < H3_IDX(CREATURE_CATAPULT); ++creature) {
-        prohibited[creature] = 0;
+    for (H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature = CREATURE_PIKEMAN;
+         creature != CREATURE_ROSTER_END; ++creature) {
+        H3_AT(prohibited, creature) = 0;
         getMonsterCost(creature, resources);
         for (short resource = 0; resource < 6; ++resource) {
             if (resources[resource] > 0 && income[resource] <= 0)
-                prohibited[creature] = 1;
+                H3_AT(prohibited, creature) = 1;
         }
 
         if (g_game->m_setup.m_difficulty == 0) {
@@ -939,14 +954,14 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
                 ? g_netLocalGamePos
                 : g_game->m_mapHeader.m_teamInfo[g_netLocalGamePos];
             if (localTeam < 0 || !g_game->isHumanTeam(localTeam)) {
-                    if (g_creatureTypeTraits[creature].m_level
+                    if (H3_AT(g_creatureTypeTraits, creature).m_level
                         == TOWN_DWELLING_COUNT - 1)
-                    prohibited[creature] = 1;
-                if (g_creatureTypeTraits[creature].m_growthRate
-                            * g_creatureTypeTraits[creature].m_aiValue
+                    H3_AT(prohibited, creature) = 1;
+                if (H3_AT(g_creatureTypeTraits, creature).m_growthRate
+                            * H3_AT(g_creatureTypeTraits, creature).m_aiValue
                         + localGrowth
                         > humanStrength) {
-                    prohibited[creature] = 1;
+                    H3_AT(prohibited, creature) = 1;
                 }
             }
         }
@@ -1564,11 +1579,12 @@ unsigned char type_AI_player::purchaseBuilding(
 VA(0x0042b520, 0x8b)  // dc 0x2f4b0
 long valueOfDwelling(town* currentTown, short dwelling, unsigned char* prohibited, int* extraCost)
 {
-    TCreatureType creature = g_townDwellingCreatures[
-        currentTown->m_type * 14 + dwelling];
-    if (prohibited[creature])
+    // The dwelling roster is fixed-width creature storage.
+    TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+        g_townDwellingCreatures[currentTown->m_type * 14 + dwelling]);
+    if (H3_AT(prohibited, creature))
         return -1;
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+    const TCreatureTypeTraits& traits = H3_AT(g_creatureTypeTraits, creature);
     long growth = traits.m_growthRate;
     if (g_game->m_day >= 5)
         growth = currentTown->getCastleGrowthBonus(creature) + 2 * growth;
@@ -1581,15 +1597,18 @@ VA(0x0042b5b0, 0xbe)  // dc 0x2f548
 long valueOfDwellingUpgrade(town* currentTown, short dwelling, int* extraCost)
 {
     short baseDwelling = dwelling - 7;
-    TCreatureType creature = g_townDwellingCreatures[
-        currentTown->m_type * 14 + baseDwelling];
-    TCreatureType upgraded = g_townDwellingCreatures[
-        currentTown->m_type * 14 + dwelling];
+    // The dwelling roster is fixed-width creature storage.
+    TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+        g_townDwellingCreatures[currentTown->m_type * 14 + baseDwelling]);
+    TCreatureType upgraded = H3_ENUM_DECODE(TCreatureType,
+        g_townDwellingCreatures[currentTown->m_type * 14 + dwelling]);
     long amount = currentTown->m_population[baseDwelling];
     if (g_game->m_day >= 5)
         amount += currentTown->getGrowthRate(baseDwelling);
-    const TCreatureTypeTraits& baseTraits = g_creatureTypeTraits[creature];
-    const TCreatureTypeTraits& upgradedTraits = g_creatureTypeTraits[upgraded];
+    const TCreatureTypeTraits& baseTraits =
+        H3_AT(g_creatureTypeTraits, creature);
+    const TCreatureTypeTraits& upgradedTraits =
+        H3_AT(g_creatureTypeTraits, upgraded);
     for (int i = 0; i < 7; i++)
         extraCost[i] += (upgradedTraits.m_cost[i]
                           - baseTraits.m_cost[i]) * amount;
@@ -1612,13 +1631,15 @@ int valueOfCastleUpgrade(town* currentTown, int* extraCost)
     if (g_game->m_day >= 5) {
         for (short dwelling = 0; dwelling < 14; ++dwelling) {
             if (currentTown->getGrowthRate(dwelling) > 0) {
-                int creature = g_townDwellingCreatures[
-                    currentTown->m_type * 14 + dwelling];
+                // The dwelling roster is fixed-width creature storage.
+                TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+                    g_townDwellingCreatures[
+                        currentTown->m_type * 14 + dwelling]);
                 const TCreatureTypeTraits* traits =
-                    g_creatureTypeTraits + creature;
+                    &H3_AT(g_creatureTypeTraits, creature);
                 for (int i = 0; i < 7; ++i)
                     extraCost[i] += traits->m_cost[i];
-                value += g_creatureTypeTraits[creature].m_aiValue;
+                value += H3_AT(g_creatureTypeTraits, creature).m_aiValue;
             }
         }
     }
@@ -1629,10 +1650,12 @@ VA(0x0042b790, 0x62)  // dc 0x2f9bc
 long valueOfHorde(town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
 {
     type_horde_effect* horde = currentTown->getHordeEffect(building);
-    TCreatureType creature = horde->m_creature;
-    if (prohibited[creature])
+    // Horde effects retain creature ids in fixed-width storage.
+    TCreatureType creature = H3_ENUM_DECODE(
+        TCreatureType, horde->m_creature);
+    if (H3_AT(prohibited, creature))
         return -1;
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+    const TCreatureTypeTraits& traits = H3_AT(g_creatureTypeTraits, creature);
     for (int i = 0; i < 7; i++)
         extraCost[i] += horde->m_bonus * traits.m_cost[i];
     return traits.m_aiValue * horde->m_bonus;
@@ -1646,10 +1669,12 @@ long valueOfHordeUpgrade(town* currentTown, type_building_id building, unsigned 
         return -1;
     if (g_bitNumber[building - 1] & currentTown->m_built)
         return -1;
-    TCreatureType creature = horde->m_creature;
-    if (prohibited[creature])
+    // Horde effects retain creature ids in fixed-width storage.
+    TCreatureType creature = H3_ENUM_DECODE(
+        TCreatureType, horde->m_creature);
+    if (H3_AT(prohibited, creature))
         return -1;
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+    const TCreatureTypeTraits& traits = H3_AT(g_creatureTypeTraits, creature);
     for (int i = 0; i < 7; i++)
         extraCost[i] += horde->m_bonus * traits.m_cost[i];
     return traits.m_aiValue * horde->m_bonus;
@@ -1713,7 +1738,7 @@ static int __cdecl maxBuyableCreatures(
 
 void type_AI_player::purchaseBuildings()
 {
-    unsigned char prohibitedCreatures[H3_IDX(CREATURE_CATAPULT)];
+    unsigned char prohibitedCreatures[CREATURE_ROSTER_COUNT];
     fillProhibitedArray(&g_game->m_players[m_team], prohibitedCreatures);
     while (purchaseBuilding(prohibitedCreatures)) {
     }
@@ -1783,10 +1808,11 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     for (building.m_index = DWELLING_0_ID;
          building.m_index <= DWELLING_6_ID; building.m_index++) {
         if (buildMask & g_bitNumber[building.m_index]) {
-            creature = g_townDwellingCreatures[
+            // The dwelling roster is fixed-width creature storage.
+            creature = H3_ENUM_DECODE(TCreatureType, g_townDwellingCreatures[
                 currentTown->m_type * TOWN_DWELLING_SLOTS
-                + building.m_index - DWELLING_0_ID];
-            traits = &g_creatureTypeTraits[creature];
+                + building.m_index - DWELLING_0_ID]);
+            traits = &H3_AT(g_creatureTypeTraits, creature);
             int* cost = currentTown->getBuildCostArray(building.m_id);
             unsigned char affordable = 1;
             for (int resource = 0; resource < 7; ++resource) {
@@ -1874,11 +1900,11 @@ static void moveCreatures(armyGroup* army, TCreatureType type, short amount)
         return;
     if (army->add(type, amount, -1))
         return;
-    long weakestValue = -g_creatureTypeTraits[type].m_aiValue * amount;
+    long weakestValue = -H3_AT(g_creatureTypeTraits, type).m_aiValue * amount;
     short weakestSlot = -1;
     for (short candidate = 0;
          candidate < armyGroup::ARMY_GROUP_SLOT_COUNT; ++candidate) {
-        long value = -g_creatureTypeTraits[army->m_armyTypes[candidate]].m_aiValue
+        long value = -H3_AT(g_creatureTypeTraits, army->m_armies[candidate]).m_aiValue
             * army->m_numTroops[candidate];
         if (value > weakestValue) {
             weakestValue = value;
@@ -1933,10 +1959,12 @@ VA(0x0042c130, 0x146)  // dc 0x315d8
 void type_AI_creature_swapper::addCreatures(
     TCreatureType type, short amount, short slot)
 {
-    TCreatureType oldType = m_army->m_armyTypes[slot];
-    m_armyValueIncrease += g_creatureTypeTraits[type].m_aiValue * amount;
+    // Army slots retain creature ids in fixed-width storage.
+    TCreatureType oldType = H3_ENUM_DECODE(
+        TCreatureType, m_army->m_armies[slot]);
+    m_armyValueIncrease += H3_AT(g_creatureTypeTraits, type).m_aiValue * amount;
     if (oldType != type && oldType != CREATURE_NONE) {
-        m_armyValueIncrease -= g_creatureTypeTraits[oldType].m_aiValue
+        m_armyValueIncrease -= H3_AT(g_creatureTypeTraits, oldType).m_aiValue
             * static_cast<short>(m_army->m_numTroops[slot]);
         short oldAmount = m_army->m_numTroops[slot];
 
@@ -1956,7 +1984,9 @@ long type_AI_creature_swapper::doBestSwap(bool canTakeAll)
     getAlignments();
 
     for (short source = 0; source < armyGroup::ARMY_GROUP_SLOT_COUNT; ++source) {
-        TCreatureType type = m_adjacentArmy->m_armyTypes[source];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, m_adjacentArmy->m_armies[source]);
         if (type == CREATURE_NONE)
             continue;
         short count = m_adjacentArmy->m_numTroops[source];
@@ -1989,7 +2019,9 @@ long type_AI_creature_swapper::doBestSwap(bool canTakeAll)
     if (bestValue <= 0)
         return bestValue;
 
-    TCreatureType swapType = m_adjacentArmy->m_armyTypes[bestSourceSlot];
+    // Army slots retain creature ids in fixed-width storage.
+    TCreatureType swapType = H3_ENUM_DECODE(
+        TCreatureType, m_adjacentArmy->m_armies[bestSourceSlot]);
     if (static_cast<short>(m_adjacentArmy->m_numTroops[bestSourceSlot])
         == bestAmount)
         m_adjacentArmy->dismiss(bestSourceSlot);
@@ -2077,7 +2109,9 @@ void type_AI_creature_swapper::dumpExtraCreature()
         return;
 
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        TCreatureType type = m_army->m_armyTypes[slot];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, m_army->m_armies[slot]);
         if (type != CREATURE_NONE) {
             if (m_adjacentArmy->getNumArmies()
                     == armyGroup::ARMY_GROUP_SLOT_COUNT
@@ -2096,7 +2130,7 @@ void type_AI_creature_swapper::dumpExtraCreature()
                     || m_army->getNumArmies() == 1)
                     return;
             } else {
-                m_army->m_armyTypes[slot] = type;
+                m_army->m_armies[slot] = type;
                 m_army->m_numTroops[slot] = count;
             }
         }
@@ -2138,9 +2172,11 @@ long type_AI_creature_swapper::chooseWeakestArmy(
     for (shooterSlot = 0;
          shooterSlot < armyGroup::ARMY_GROUP_SLOT_COUNT;
          ++shooterSlot) {
-        TCreatureType type = m_army->m_armyTypes[shooterSlot];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, m_army->m_armies[shooterSlot]);
         if (type != CREATURE_NONE
-            && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
+            && (H3_AT(g_creatureTypeTraits, type).m_attributes & g_ctaShooter)) {
             ++shooterCount;
         }
     }
@@ -2152,19 +2188,21 @@ long type_AI_creature_swapper::chooseWeakestArmy(
 
     int slot;
     for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        TCreatureType type = m_army->m_armyTypes[slot];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, m_army->m_armies[slot]);
         if (type == CREATURE_NONE)
             continue;
 
         int groupedAlignment;
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
+        const TCreatureTypeTraits& traits = H3_AT(g_creatureTypeTraits, type);
         if (checkAlignments) {
             int alignment;
             if (g_game->m_gameVersion == 0
                 && isBaseElemental(type)) {
                 alignment = -1;
             } else {
-                alignment = g_creatureTypeTraits[type].m_townType;
+                alignment = H3_AT(g_creatureTypeTraits, type).m_townType;
             }
 
             groupedAlignment = alignment;
@@ -2217,7 +2255,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     TCreatureType type, short count, short& slot,
     unsigned char mustReplaceCreature)
 {
-    const TCreatureTypeTraits* traits = &g_creatureTypeTraits[type];
+    const TCreatureTypeTraits* traits = &H3_AT(g_creatureTypeTraits, type);
     long value = traits->m_aiValue * count;
     bool badMorale = false;
     long moraleArmyValue = 0;
@@ -2255,14 +2293,16 @@ long type_AI_creature_swapper::valueOfAddingArmy(
             int index;
             for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT;
                  ++index) {
-                TCreatureType current = m_army->m_armyTypes[index];
+                // Army slots retain creature ids in fixed-width storage.
+                TCreatureType current = H3_ENUM_DECODE(
+                    TCreatureType, m_army->m_armies[index]);
                 if (current != CREATURE_NONE
-                    && !(g_creatureTypeTraits[current].m_attributes
+                    && !(H3_AT(g_creatureTypeTraits, current).m_attributes
                          & g_ctaNoMorale)
                     && current != CREATURE_MINOTAUR
                     && current != CREATURE_MINOTAUR_KING) {
                     moraleArmyValue +=
-                        g_creatureTypeTraits[current].m_aiValue
+                        H3_AT(g_creatureTypeTraits, current).m_aiValue
                         * m_army->m_numTroops[index];
                 }
             }
@@ -2278,10 +2318,12 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     int slowestSpeed = 20;
     int index;
     for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
-        TCreatureType current = m_army->m_armyTypes[index];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType current = H3_ENUM_DECODE(
+            TCreatureType, m_army->m_armies[index]);
         if (current != CREATURE_NONE) {
             slowestSpeed = min(
-                slowestSpeed, g_creatureTypeTraits[current].m_speed);
+                slowestSpeed, H3_AT(g_creatureTypeTraits, current).m_speed);
         }
     }
     if (slowestSpeed > traits->m_speed) {
@@ -2296,7 +2338,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
 
     slot = -1;
     for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
-        if (m_army->m_armyTypes[index] == type) {
+        if (m_army->m_armies[index] == type) {
             slot = index;
             if (mustReplaceCreature)
                 return -1;
@@ -2307,7 +2349,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     if (!badMorale && !mustReplaceCreature
         && (m_army->getNumArmies() < 6 || !m_adjacentArmy)) {
         for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
-            if (m_army->m_armyTypes[index] == CREATURE_NONE) {
+            if (m_army->m_armies[index] == CREATURE_NONE) {
                 slot = index;
                 return value;
             }
@@ -2318,7 +2360,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
         (traits->m_attributes & g_ctaShooter) != 0, badMorale);
     if (slot < 0)
         return 0;
-    return value - g_creatureTypeTraits[m_army->m_armyTypes[slot]].m_aiValue
+    return value - H3_AT(g_creatureTypeTraits, m_army->m_armies[slot]).m_aiValue
         * m_army->m_numTroops[slot];
 }
 
@@ -2330,11 +2372,13 @@ type_AI_creature_purchaser::type_AI_creature_purchaser(
     m_funds = 0;
     m_subtractCostMode = 1;
     for (short i = 0; i < 4; ++i) {
-        TCreatureType type = currentGenerator->m_type[i];
+        // Generator records retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, currentGenerator->m_type[i]);
         if (type != CREATURE_NONE) {
             m_creatures.push_back(type_creature_source(
                 type, &currentGenerator->m_population[i],
-                g_creatureTypeTraits[type].m_level == 0));
+                H3_AT(g_creatureTypeTraits, type).m_level == 0));
         }
     }
 }
@@ -2370,8 +2414,9 @@ void type_AI_creature_purchaser::set(town* currentTown)
     int remaining = 14;
     short* population = currentTown->m_population;
     for (; remaining; ++dwelling, ++population, --remaining) {
-        TCreatureType type = g_townDwellingCreatures[
-            currentTown->m_type * 14 + dwelling];
+        // The dwelling roster is fixed-width creature storage.
+        TCreatureType type = H3_ENUM_DECODE(TCreatureType,
+            g_townDwellingCreatures[currentTown->m_type * 14 + dwelling]);
         short amount = *population;
         if (amount > 0) {
             m_creatures.push_back(type_creature_source(type, population, 0));
@@ -2416,7 +2461,9 @@ long type_AI_creature_purchaser::doBestPurchase(
 
     getAlignments();
     for (sourceIndex = 0; sourceIndex < m_creatures.size(); ++sourceIndex) {
-        TCreatureType type = m_creatures[sourceIndex].m_type;
+        // Purchaser entries retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, m_creatures[sourceIndex].m_type);
         short available = m_creatures[sourceIndex].m_number;
         if (available > 0) {
             long number;
@@ -2457,7 +2504,9 @@ long type_AI_creature_purchaser::doBestPurchase(
     }
 
     if (bestValue > 0) {
-        TCreatureType type = m_creatures[bestSource].m_type;
+        // Purchaser entries retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, m_creatures[bestSource].m_type);
         addCreatures(type, bestNumber, bestSlot);
         if (!m_creatures[bestSource].m_isFree) {
             getMonsterCost(type, resourceCost);
@@ -2544,12 +2593,14 @@ void aiConsolidateArmy(armyGroup& currentArmy)
 {
     for (int first = 0; first < armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
          ++first) {
-        TCreatureType type = currentArmy.m_armyTypes[first];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, currentArmy.m_armies[first]);
         if (type != CREATURE_NONE) {
             for (int duplicate = first + 1;
                 duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT;
                 ++duplicate) {
-                if (currentArmy.m_armyTypes[duplicate] == type) {
+                if (currentArmy.m_armies[duplicate] == type) {
                     currentArmy.m_numTroops[first] +=
                         currentArmy.m_numTroops[duplicate];
                     currentArmy.dismiss(duplicate);
@@ -2565,11 +2616,13 @@ void aiArrangeArmy(armyGroup& currentArmy)
     std::vector<type_creature_value> values;
     type_creature_value entry;
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-        TCreatureType type = currentArmy.m_armyTypes[i];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, currentArmy.m_armies[i]);
         if (type != CREATURE_NONE) {
             entry.m_type = type;
             entry.m_amount = static_cast<short>(currentArmy.m_numTroops[i]);
-            entry.m_value = g_creatureTypeTraits[type].m_speed;
+            entry.m_value = H3_AT(g_creatureTypeTraits, type).m_speed;
             values.push_back(entry);
             currentArmy.dismiss(i);
         }
@@ -2580,7 +2633,7 @@ void aiArrangeArmy(armyGroup& currentArmy)
     for (int shooter = static_cast<int>(values.size()) - 1; shooter >= 0;
          --shooter) {
         entry = values[shooter];
-        if (g_creatureTypeTraits[entry.m_type].m_attributes & g_ctaShooter) {
+        if (H3_AT(g_creatureTypeTraits, entry.m_type).m_attributes & g_ctaShooter) {
             currentArmy.add(entry.m_type, entry.m_amount, slot);
             slot += 2;
             if (slot >= armyGroup::ARMY_GROUP_SLOT_COUNT)
@@ -2591,8 +2644,8 @@ void aiArrangeArmy(armyGroup& currentArmy)
     int freeSlot = 0;
     for (unsigned int walker = 0; walker < values.size(); ++walker) {
         entry = values[walker];
-        if (!(g_creatureTypeTraits[entry.m_type].m_attributes & g_ctaShooter)) {
-            while (currentArmy.m_armyTypes[freeSlot] != CREATURE_NONE)
+        if (!(H3_AT(g_creatureTypeTraits, entry.m_type).m_attributes & g_ctaShooter)) {
+            while (currentArmy.m_armies[freeSlot] != CREATURE_NONE)
                 ++freeSlot;
             currentArmy.add(entry.m_type, entry.m_amount, freeSlot);
         }
@@ -2629,13 +2682,15 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
 
     int k;
     for (k = 0; k < 7; ++k) {
-        TCreatureType type = enemy.m_armyTypes[k];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, enemy.m_armies[k]);
         if (type == CREATURE_NONE)
             continue;
         long value = static_cast<long>(
-            enemy.m_numTroops[k] * g_creatureTypeTraits[type].m_aiValue
+            enemy.m_numTroops[k] * H3_AT(g_creatureTypeTraits, type).m_aiValue
             * ratio);
-        if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter) {
+        if (H3_AT(g_creatureTypeTraits, type).m_attributes & g_ctaShooter) {
             ++enemyShooterCount;
             enemyShooterValue += value;
         }
@@ -2645,9 +2700,11 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
 
     int slot;
     for (slot = 0; slot < 7; ++slot) {
-        TCreatureType type = currentArmy.m_armyTypes[slot];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, currentArmy.m_armies[slot]);
         if (type != CREATURE_NONE
-            && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
+            && (H3_AT(g_creatureTypeTraits, type).m_attributes & g_ctaShooter)) {
             openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue * 5,
                                      openSlots);
             if (openSlots == 0) {
@@ -2663,12 +2720,14 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
     long walkerCount = 0;
     int m;
     for (m = 0; m < 7; ++m) {
-        TCreatureType type = currentArmy.m_armyTypes[m];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, currentArmy.m_armies[m]);
         if (type == CREATURE_NONE)
             continue;
-        if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
+        if (H3_AT(g_creatureTypeTraits, type).m_attributes & g_ctaShooter)
             heroShooterValue += currentArmy.m_numTroops[m]
-                * g_creatureTypeTraits[type].m_aiValue;
+                * H3_AT(g_creatureTypeTraits, type).m_aiValue;
         else
             ++walkerCount;
     }
@@ -2686,10 +2745,12 @@ static void splitArmies(hero* currentHero, const hero* enemyHero,
     if (splitsNeeded < openSlots)
         openSlots = splitsNeeded;
     for (slot = 0; slot < 7; ++slot) {
-        TCreatureType type = currentArmy.m_armyTypes[slot];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, currentArmy.m_armies[slot]);
         if (type == CREATURE_NONE)
             continue;
-        if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
+        if (H3_AT(g_creatureTypeTraits, type).m_attributes & g_ctaShooter)
             continue;
         openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue,
                                openSlots);
@@ -2715,8 +2776,10 @@ VA(0x0042dd70, 0xdc)  // dc 0x325bc
 long splitArmy(armyGroup* currentArmy, short index, short limit,
                 short openSlots)
 {
-    TCreatureType type = currentArmy->m_armyTypes[index];
-    int pieces = g_creatureTypeTraits[type].m_aiValue
+    // Army slots retain creature ids in fixed-width storage.
+    TCreatureType type = H3_ENUM_DECODE(
+        TCreatureType, currentArmy->m_armies[index]);
+    int pieces = H3_AT(g_creatureTypeTraits, type).m_aiValue
         * currentArmy->m_numTroops[index] / limit;
     if (pieces > openSlots + 1)
         pieces = openSlots + 1;
@@ -2726,7 +2789,7 @@ long splitArmy(armyGroup* currentArmy, short index, short limit,
         return 0;
     int remaining = pieces;
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        if (currentArmy->m_armyTypes[slot] == CREATURE_NONE) {
+        if (currentArmy->m_armies[slot] == CREATURE_NONE) {
             long per = currentArmy->m_numTroops[index] / remaining;
             currentArmy->add(type, per, slot);
             currentArmy->m_numTroops[index] -= per;
@@ -4123,9 +4186,11 @@ bool considerHiring(long playerId, hero* candidate)
     long total = totalArtifactValue(candidate, playerId);
     int slot;
     for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        TCreatureType type = candidate->m_army.m_armyTypes[slot];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, candidate->m_army.m_armies[slot]);
         if (type != CREATURE_NONE) {
-            const int* creatureCost = g_creatureTypeTraits[type].m_cost;
+            const int* creatureCost = H3_AT(g_creatureTypeTraits, type).m_cost;
             double troops = candidate->m_army.m_numTroops[slot];
             for (int resource = 0; resource < 7; ++resource)
                 total = static_cast<long>(
@@ -4595,9 +4660,11 @@ long type_creature_growth_artifact::getValue(const hero* owner,
         int dwelling = m_bonus;
         if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, true))
             dwelling += TOWN_DWELLING_COUNT;
-        TCreatureType creature = g_townDwellingCreatures[
-            currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling];
-        return g_creatureTypeTraits[creature].m_aiValue * m_growthBonus;
+        // The dwelling roster is fixed-width creature storage.
+        TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+            g_townDwellingCreatures[
+                currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling]);
+        return H3_AT(g_creatureTypeTraits, creature).m_aiValue * m_growthBonus;
     }
 
     for (int i = 0; i < player.m_numTowns; ++i) {
@@ -4607,10 +4674,12 @@ long type_creature_growth_artifact::getValue(const hero* owner,
         int dwelling = m_bonus;
         if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, true))
             dwelling += TOWN_DWELLING_COUNT;
-        TCreatureType creature = g_townDwellingCreatures[
-            currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling];
+        // The dwelling roster is fixed-width creature storage.
+        TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+            g_townDwellingCreatures[
+                currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling]);
         value = max(
-            value, g_creatureTypeTraits[creature].m_aiValue * m_growthBonus);
+            value, H3_AT(g_creatureTypeTraits, creature).m_aiValue * m_growthBonus);
     }
     return value;
 }
@@ -4650,9 +4719,13 @@ long type_shooter_bonus_artifact::getValue(const hero* owner, unsigned char, uns
 {
     long total = 0;
     for (int i = 0; i < 7; i++) {
-        int type = owner->m_army.m_armies[i];
-        if (type != -1 && (g_creatureTypeTraits[type].m_attributes & creatureShootingArmy))
-            total += g_creatureTypeTraits[type].m_aiValue * owner->m_army.m_numTroops[i];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, owner->m_army.m_armies[i]);
+        if (type != CREATURE_NONE
+            && (H3_AT(g_creatureTypeTraits, type).m_attributes
+                & creatureShootingArmy))
+            total += H3_AT(g_creatureTypeTraits, type).m_aiValue * owner->m_army.m_numTroops[i];
     }
     return m_bonus * total / 100;
 }
@@ -4671,16 +4744,18 @@ long type_angelic_alliance_artifact::getValue(
         for (int heroSlot = 0;
              heroSlot < armyGroup::ARMY_GROUP_SLOT_COUNT;
              ++heroSlot) {
-            int creature = currentHero->m_army.m_armies[heroSlot];
+            // Army slots retain creature ids in fixed-width storage.
+            TCreatureType creature = H3_ENUM_DECODE(
+                TCreatureType, currentHero->m_army.m_armies[heroSlot]);
             if (creature == CREATURE_NONE)
                 continue;
             if (g_game->m_gameVersion == 0
                 && isBaseElemental(creature)) {
                 continue;
             }
-            int alignment = g_creatureTypeTraits[creature].m_townType;
+            int alignment = H3_AT(g_creatureTypeTraits, creature).m_townType;
             if (alignment != -1 && alliedAlignments.test(alignment)) {
-                total += g_creatureTypeTraits[creature].m_aiValue
+                total += H3_AT(g_creatureTypeTraits, creature).m_aiValue
                          * currentHero->m_army.m_numTroops[heroSlot];
             }
         }
@@ -4693,16 +4768,18 @@ long type_angelic_alliance_artifact::getValue(
         for (int townSlot = 0;
              townSlot < armyGroup::ARMY_GROUP_SLOT_COUNT;
              ++townSlot) {
-            int creature = townArmy.m_armies[townSlot];
+            // Army slots retain creature ids in fixed-width storage.
+            TCreatureType creature = H3_ENUM_DECODE(
+                TCreatureType, townArmy.m_armies[townSlot]);
             if (creature == CREATURE_NONE)
                 continue;
             if (g_game->m_gameVersion == 0
                 && isBaseElemental(creature)) {
                 continue;
             }
-            int alignment = g_creatureTypeTraits[creature].m_townType;
+            int alignment = H3_AT(g_creatureTypeTraits, creature).m_townType;
             if (alignment != -1 && alliedAlignments.test(alignment)) {
-                total += g_creatureTypeTraits[creature].m_aiValue
+                total += H3_AT(g_creatureTypeTraits, creature).m_aiValue
                          * townArmy.m_numTroops[townSlot];
             }
         }
@@ -4761,9 +4838,9 @@ long type_undead_king_cloak_artifact::getValue(const hero* owner,
     }
 
     float multiplier =
-        (static_cast<float>(g_creatureTypeTraits[creature].m_aiValue) -
-         static_cast<float>(g_creatureTypeTraits[CREATURE_SKELETON].m_aiValue)) /
-        static_cast<float>(g_creatureTypeTraits[CREATURE_SKELETON].m_aiValue);
+        (static_cast<float>(H3_AT(g_creatureTypeTraits, creature).m_aiValue) -
+         static_cast<float>(H3_AT(g_creatureTypeTraits, CREATURE_SKELETON).m_aiValue)) /
+        static_cast<float>(H3_AT(g_creatureTypeTraits, CREATURE_SKELETON).m_aiValue);
     necromancy = static_cast<int>(
         (1.0f - owner->getNecromancyFactor(0)) * 100.0f);
     if (equipped) {
@@ -4787,9 +4864,13 @@ long type_elixir_of_life_artifact::getValue(const hero* owner, unsigned char, un
 {
     long total = 0;
     for (int i = 0; i < 7; i++) {
-        int type = owner->m_army.m_armies[i];
-        if (type != -1 && (g_creatureTypeTraits[type].m_attributes & creatureAlive))
-            total += g_creatureTypeTraits[type].m_aiValue * owner->m_army.m_numTroops[i];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, owner->m_army.m_armies[i]);
+        if (type != CREATURE_NONE
+            && (H3_AT(g_creatureTypeTraits, type).m_attributes
+                & creatureAlive))
+            total += H3_AT(g_creatureTypeTraits, type).m_aiValue * owner->m_army.m_numTroops[i];
     }
     return total / 8;
 }
@@ -4814,11 +4895,13 @@ long type_statue_of_legion_artifact::getValue(
                 & g_bitNumber[DWELLING_0_UPG_ID + dwelling]) {
                 dwellingSlot += TOWN_DWELLING_COUNT;
             }
-            TCreatureType creature = g_townDwellingCreatures[
-                currentTown->m_type * TOWN_DWELLING_SLOTS + dwellingSlot];
-            long growth = g_creatureTypeTraits[creature].m_growthRate;
+            // The dwelling roster is fixed-width creature storage.
+            TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+                g_townDwellingCreatures[
+                    currentTown->m_type * TOWN_DWELLING_SLOTS + dwellingSlot]);
+            long growth = H3_AT(g_creatureTypeTraits, creature).m_growthRate;
             growth += currentTown->getCastleGrowthBonus(creature);
-            total += g_creatureTypeTraits[creature].m_aiValue * growth / 2;
+            total += H3_AT(g_creatureTypeTraits, creature).m_aiValue * growth / 2;
         }
     }
     return total;
@@ -4875,10 +4958,12 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
 
     case ARTIFACT_AMMO_CART: {
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-            TCreatureType creature = owner->m_army.m_armyTypes[i];
+            // Army slots retain creature ids in fixed-width storage.
+            TCreatureType creature = H3_ENUM_DECODE(
+                TCreatureType, owner->m_army.m_armies[i]);
             if (creature != CREATURE_NONE
-                && (g_creatureTypeTraits[creature].m_attributes & g_ctaShooter)) {
-                value += g_creatureTypeTraits[creature].m_aiValue
+                && (H3_AT(g_creatureTypeTraits, creature).m_attributes & g_ctaShooter)) {
+                value += H3_AT(g_creatureTypeTraits, creature).m_aiValue
                          * owner->m_army.m_numTroops[i] / 40;
             }
         }
@@ -4889,10 +4974,12 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
         int firstAid = static_cast<int>(
             owner->getFirstAidFactor() * 25.0f);
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-            TCreatureType creature = owner->m_army.m_armyTypes[i];
+            // Army slots retain creature ids in fixed-width storage.
+            TCreatureType creature = H3_ENUM_DECODE(
+                TCreatureType, owner->m_army.m_armies[i]);
             if (creature != CREATURE_NONE) {
                 const TCreatureTypeTraits& traits =
-                    g_creatureTypeTraits[creature];
+                    H3_AT(g_creatureTypeTraits, creature);
                 if (firstAid >= traits.m_hitPoints)
                     value = max(value,
                                 static_cast<long>(traits.m_aiValue));
@@ -5038,7 +5125,9 @@ long getFullValue(const hero* ourHero)
     long value = 0;
 
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-        TCreatureType creature = ourHero->m_army.m_armyTypes[i];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType creature = H3_ENUM_DECODE(
+            TCreatureType, ourHero->m_army.m_armies[i]);
         if (creature != CREATURE_NONE) {
             unsigned char hasAlliance;
             if (ourHero->m_owner >= 0)
@@ -5055,7 +5144,7 @@ long getFullValue(const hero* ourHero)
             value = static_cast<long>(
                 (aiValueOfMorale(0, morale) + 1.0) *
                     (aiValueOfLuck(0, luck) + 1.0) *
-                    (g_creatureTypeTraits[creature].m_aiValue *
+                    (H3_AT(g_creatureTypeTraits, creature).m_aiValue *
                      ourHero->m_army.m_numTroops[i]) +
                 value);
         }

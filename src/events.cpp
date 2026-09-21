@@ -795,7 +795,9 @@ VA(0x0049ea40, 0x304)  // dc 0x908dc
 void advManager::fightForArtifact(hero* currentHero, NewmapCell* cell,
                                   type_point point, bool humanPlayer)
 {
-    int monsterType = static_cast<long>(cell->m_extraInfo << 19) >> 23;
+    // Artifact guard data stores the creature ordinal in a signed bit lane.
+    TCreatureType monsterType = H3_ENUM_DECODE(
+        TCreatureType, static_cast<long>(cell->m_extraInfo << 19) >> 23);
     int amount = (cell->m_extraInfo >> 17) & 0x3fff;
     short artifact = cell->m_objectIndex;
 
@@ -1294,7 +1296,9 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
     unsigned char joinFailed = 0;
     armyGroup creatures = blackBox->m_creatures;
     for (unsigned int p = 0; p < 7; p++) {
-        int type = creatures.m_armies[p];
+        // Army slots retain four-byte creature storage.
+        TCreatureType type =
+            H3_ENUM_DECODE(TCreatureType, creatures.m_armies[p]);
         int count = creatures.m_numTroops[p];
         if (type == CREATURE_NONE)
             continue;
@@ -1307,17 +1311,16 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
                 alternate = formatString(
                     g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_CREATURES_JOIN_FORMAT),
                     getArmyName(type, 2), currentHero->m_name);
+            // Reward records pack the creature ordinal in the low word.
             addReward(message, alternate, rewards, RES_MONSTER,
-                       ((count & 0xffff) << 16) | (type & 0xffff));
+                       ((count & 0xffff) << 16) | (H3_IDX(type) & 0xffff));
         }
         if (currentHero->m_army.add(type, count, -1)) {
             creatures.dismiss(p);
         } else if (humanPlayer) {
             joinFailed = 1;
         } else {
-            int storage;
-            storage = type;
-            aiJoinDecision(currentHero, TCreatureType(storage), count);
+            aiJoinDecision(currentHero, type, count);
         }
         gave = 1;
     }
@@ -1644,8 +1647,9 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                     if (currentGenerator.m_guards.m_armies[i] != CREATURE_NONE)
                         break;
                 }
-                TCreatureType guardType =
-                    TCreatureType(currentGenerator.m_guards.m_armies[i]);
+                // Army slots retain four-byte creature storage.
+                TCreatureType guardType = H3_ENUM_DECODE(
+                    TCreatureType, currentGenerator.m_guards.m_armies[i]);
                 long guardQty = currentGenerator.m_guards.getCreatureTotal();
                 overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
                 updBottomView(0, 1, 1);
@@ -1692,18 +1696,20 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
             bool canRecruit = false;
             std::string result;
             for (int i = 0; i < 4; i++) {
-                TCreatureType creature = currentGenerator.m_type[i];
+                // Generator records retain four-byte creature storage.
+                TCreatureType creature = H3_ENUM_DECODE(
+                    TCreatureType, currentGenerator.m_type[i]);
                 if (creature == CREATURE_NONE)
                     continue;
 
-                if (g_creatureTypeTraits[creature].m_level != 0) {
+                if (H3_AT(g_creatureTypeTraits, creature).m_level != 0) {
                     canRecruit = true;
                     continue;
                 }
 
                 if (currentGenerator.m_population[i] == 0) {
                     result += formatString(g_generalText->getText(GENERAL_TEXT_NO_CREATURES_TO_RECRUIT_FORMAT),
-                        g_creatureTypeTraits[creature].m_pluralName);
+                        H3_AT(g_creatureTypeTraits, creature).m_pluralName);
                 } else if (!currentHero->m_army.add(
                                creature, currentGenerator.m_population[i],
                                -1)) {
@@ -2643,7 +2649,8 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
     }
 
     int goldGolems = 40;
-    if (combatMonsterEvent(currentHero, 116, &goldGolems, cell, point,
+    if (combatMonsterEvent(currentHero, CREATURE_GOLD_GOLEM,
+                           &goldGolems, cell, point,
                            CREATURE_DIAMOND_GOLEM, 20, 2,
                            CREATURE_NONE, 0, 0))
         return;
@@ -2722,17 +2729,22 @@ void advManager::doEventRefugeeCamp(hero* currentHero, NewmapCell* cell,
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
+        // Refugee-camp objectIndex stores a creature ordinal.
         sprintf(g_text,
                 g_adventureEventText->getText(ADV_EVENT_TEXT_REFUGEE_CAMP_RECRUIT_FORMAT),
                 g_quickViewText[cell->m_type],
-                getArmyName(cell->m_objectIndex, 2));
+                getArmyName(H3_ENUM_DECODE(
+                                TCreatureType, cell->m_objectIndex),
+                    2));
         normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             return;
     }
 
+    // Refugee-camp objectIndex stores a creature ordinal.
     cell->m_extraInfo = recruitEvent(currentHero,
-        TCreatureType(cell->m_objectIndex), cell->m_extraInfo);
+        H3_ENUM_DECODE(TCreatureType, cell->m_objectIndex),
+        cell->m_extraInfo);
 }
 
 VA(0x004a4780, 0x45D)  // dc 0x94ea4
@@ -3208,8 +3220,8 @@ void advManager::doEventStables(hero* currentHero, NewmapCell* cell,
     }
     // 10 and 11 are the Cavalier and its Champion upgrade; the reward
     // dialogs below show 11 as their picture for the same reason.
-    if (currentHero->creatureTypeCount(10)) {
-        currentHero->upgradeCreatures(10, 11);
+    if (currentHero->creatureTypeCount(CREATURE_CAVALIER)) {
+        currentHero->upgradeCreatures(CREATURE_CAVALIER, CREATURE_CHAMPION);
         granted |= STABLES_UPGRADE;
     }
 
@@ -3564,7 +3576,8 @@ void advManager::monstersFight(hero* currentHero, NewmapCell* cell,
 {
     TCreatureType monType;
     {
-        monType = TCreatureType(cell->m_objectIndex);
+        // Adventure-map monster objects store a raw creature ordinal.
+        monType = H3_ENUM_DECODE(TCreatureType, cell->m_objectIndex);
     }
     int numMons = cell->m_monsterInfo.m_qty;
     int survived = combatMonsterEvent(currentHero, monType, &numMons,
@@ -3603,7 +3616,8 @@ void advManager::monstersFlee(hero* currentHero, NewmapCell* cell,
 {
     TCreatureType monType;
     {
-        monType = TCreatureType(cell->m_objectIndex);
+        // Monster objectIndex stores a creature ordinal.
+        monType = H3_ENUM_DECODE(TCreatureType, cell->m_objectIndex);
     }
 
     if (humanPlayer) {
@@ -3639,7 +3653,8 @@ bool advManager::monstersJoin(hero* currentHero, NewmapCell* cell,
 {
     TCreatureType monType;
     {
-        monType = TCreatureType(cell->m_objectIndex);
+        // Monster objectIndex stores a creature ordinal.
+        monType = H3_ENUM_DECODE(TCreatureType, cell->m_objectIndex);
     }
     int numMons = cell->m_monsterInfo.m_qty;
 
@@ -3686,10 +3701,11 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
 {
     TCreatureType monType;
     {
-        monType = TCreatureType(cell->m_objectIndex);
+        // Monster objectIndex stores a creature ordinal.
+        monType = H3_ENUM_DECODE(TCreatureType, cell->m_objectIndex);
     }
     int numMons = cell->m_monsterInfo.m_qty;
-    int cost = g_creatureTypeTraits[monType].m_cost[GOLD] * numMons;
+    int cost = H3_AT(g_creatureTypeTraits, monType).m_cost[GOLD] * numMons;
 
     if (cost > g_game->m_players[currentHero->m_owner].m_resources[GOLD])
         return false;
@@ -3756,7 +3772,7 @@ int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
 
     if ((!g_game->m_gameVersion
          && isBaseElemental(creature))
-        || g_creatureTypeTraits[creature].m_townType == -1) {
+        || H3_AT(g_creatureTypeTraits, creature).m_townType == -1) {
         like = CREATURE_NONE;
     } else {
         if (!g_game->m_gameVersion
@@ -3779,7 +3795,9 @@ int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
     for (int i = 0; i < 7; i++) {
         if (currentHero->m_army.m_numTroops[i] > 0) {
             armyCount += currentHero->m_army.m_numTroops[i];
-            int type = currentHero->m_army.m_armies[i];
+            // Army slots retain four-byte creature storage.
+            TCreatureType type = H3_ENUM_DECODE(
+                TCreatureType, currentHero->m_army.m_armies[i]);
             if (type == creature || type == like)
                 kinCount += currentHero->m_army.m_numTroops[i] * 2;
         }
@@ -3817,7 +3835,8 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
 {
     TCreatureType monType;
     {
-        monType = TCreatureType(cell->m_objectIndex);
+        // Monster objectIndex stores a creature ordinal.
+        monType = H3_ENUM_DECODE(TCreatureType, cell->m_objectIndex);
     }
     int numTroops = cell->m_monsterInfo.m_qty;
     int disposition = cell->m_monsterInfo.m_disposition;
@@ -3832,7 +3851,7 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
 
     float strengthRatio =
         static_cast<float>(aiApproximateStrength(currentHero))
-        / static_cast<float>(g_creatureTypeTraits[monType].m_aiValue
+        / static_cast<float>(H3_AT(g_creatureTypeTraits, monType).m_aiValue
                              * numTroops);
     short likeModifier = getLikeModifier(currentHero, monType);
     short diplomacy = currentHero->m_skillLevel[eSecSkillDiplomacy];
@@ -5256,18 +5275,20 @@ void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point poi
         std::string result;
 
         for (int i = 0; i < 4; i++) {
-            TCreatureType creature = currentGenerator.m_type[i];
+            // Generator records retain four-byte creature storage.
+            TCreatureType creature = H3_ENUM_DECODE(
+                TCreatureType, currentGenerator.m_type[i]);
             if (creature == CREATURE_NONE)
                 continue;
 
-            if (g_creatureTypeTraits[creature].m_level != 0) {
+            if (H3_AT(g_creatureTypeTraits, creature).m_level != 0) {
                 canRecruit = true;
                 continue;
             }
 
             if (currentGenerator.m_population[i] == 0) {
                 result += formatString(g_generalText->getText(GENERAL_TEXT_NO_CREATURES_TO_RECRUIT_FORMAT),
-                    g_creatureTypeTraits[creature].m_pluralName);
+                    H3_AT(g_creatureTypeTraits, creature).m_pluralName);
             } else if (!who->m_army.add(creature,
                                       currentGenerator.m_population[i], -1)) {
                 result += formatString(g_generalText->getText(GENERAL_TEXT_RECRUIT_INSUFFICIENT_PROVISIONS_FORMAT),
@@ -5286,11 +5307,16 @@ void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point poi
             return;
     }
 
+    // Recruit APIs consume the semantic domain, not generator storage.
     recruitUnit* manager = new recruitUnit(&who->m_army, 0,
-        currentGenerator.m_type[0], &currentGenerator.m_population[0],
-        currentGenerator.m_type[1], &currentGenerator.m_population[1],
-        currentGenerator.m_type[2], &currentGenerator.m_population[2],
-        currentGenerator.m_type[3], &currentGenerator.m_population[3]);
+        H3_ENUM_DECODE(TCreatureType, currentGenerator.m_type[0]),
+        &currentGenerator.m_population[0],
+        H3_ENUM_DECODE(TCreatureType, currentGenerator.m_type[1]),
+        &currentGenerator.m_population[1],
+        H3_ENUM_DECODE(TCreatureType, currentGenerator.m_type[2]),
+        &currentGenerator.m_population[2],
+        H3_ENUM_DECODE(TCreatureType, currentGenerator.m_type[3]),
+        &currentGenerator.m_population[3]);
     if (!manager)
         memError();
 
@@ -5315,11 +5341,13 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
     if (humanPlayer) {
         int best = 0;
         for (int i = 0; i < 7; i++) {
-            int type = bank.m_guards.m_armies[i];
+            // Army slots retain four-byte storage for the creature domain.
+            TCreatureType type = H3_ENUM_DECODE(
+                TCreatureType, bank.m_guards.m_armies[i]);
             if (type != CREATURE_NONE
-                && g_creatureTypeTraits[type].m_aiValue > best) {
-                best = g_creatureTypeTraits[type].m_aiValue;
-                leaderMonster = TCreatureType(type);
+                && H3_AT(g_creatureTypeTraits, type).m_aiValue > best) {
+                best = H3_AT(g_creatureTypeTraits, type).m_aiValue;
+                leaderMonster = type;
             }
         }
     }
@@ -5342,7 +5370,8 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
 
         if (bank.m_rewardCreatures > 0) {
             resource.m_resource = 0x15;
-            resource.m_qualifier = bank.m_rewardCreature;
+            // Reward dialogs consume the creature's numeric ordinal.
+            resource.m_qualifier = H3_IDX(bank.m_rewardCreature);
             resources.push_back(resource);
             result = formatString(
                 DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
@@ -5396,15 +5425,17 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
     }
 
     if (bank.m_rewardCreatures > 0) {
+        TCreatureType rewardCreature = H3_ENUM_DECODE(
+            TCreatureType, bank.m_rewardCreature);
         if (!who->m_army.add(bank.m_rewardCreature, bank.m_rewardCreatures,
                            -1)) {
             if (humanPlayer)
                 doMonsterJoinDialog(
-                    who, bank.m_rewardCreature,
+                    who, rewardCreature,
                     bank.m_rewardCreatures);
             else
                 aiJoinDecision(who,
-                                 bank.m_rewardCreature,
+                                 rewardCreature,
                                  bank.m_rewardCreatures);
         }
     }
@@ -5456,7 +5487,9 @@ void advManager::doEventUndeadLair(hero* currentHero, NewmapCell* cell, const ch
 
 // E:\gamedcs\events.cpp:5851.
 VA(0x004ac580, 0x3A7)  // dc-bracket forced, ret 0x2c=p12 (unique), dc 0x9af34
-int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
+int advManager::combatMonsterEvent(hero* who,
+                                   H3_ENUM_PARAM(TCreatureType, int) monType,
+                                   int* numMons,
                                    NewmapCell* eventCell, type_point point,
                                    TCreatureType monType2, int numMons2,
                                    int numGroups2, TCreatureType monType3,
@@ -5535,11 +5568,11 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
                      + point.m_y * 0x4386d + 0x25ea7;
     sRand(eventSeed);
 
-    int combatValue = g_creatureTypeTraits[monType].m_aiValue * *numMons;
+    int combatValue = H3_AT(g_creatureTypeTraits, monType).m_aiValue * *numMons;
     if (monType2 != CREATURE_NONE)
-        combatValue += g_creatureTypeTraits[monType2].m_aiValue * numMons2;
+        combatValue += H3_AT(g_creatureTypeTraits, monType2).m_aiValue * numMons2;
     if (monType3 != CREATURE_NONE)
-        combatValue += g_creatureTypeTraits[monType3].m_aiValue * numMons3;
+        combatValue += H3_AT(g_creatureTypeTraits, monType3).m_aiValue * numMons3;
 
     who->m_army.getAIValue();
     who->getPrimarySkillTotal();
@@ -5587,12 +5620,10 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
     }
 
     {
-        int storage;
-        storage = monType;
         if ((g_game->m_gameVersion
              || !isBaseElemental(monType))
-            && static_cast<unsigned char>(
-                   isBaseCreature(TCreatureType(storage)))
+            && static_cast<unsigned char>(isBaseCreature(
+                H3_ENUM_DECODE(TCreatureType, monType)))
             && numGroups > 1
             && monType2 == CREATURE_NONE
             && monType3 == CREATURE_NONE
@@ -5601,19 +5632,17 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
             if (!g_game->m_gameVersion
                 && isBaseElemental(monType))
                 upgraded = CREATURE_NONE;
-            else {
-                int upgradeType;
-                upgradeType = monType;
-                upgraded = upgradedCreatureType(TCreatureType(upgradeType));
-            }
-            currentArmyGroup.m_armyTypes[numGroups / 2] = upgraded;
+            else
+                upgraded = upgradedCreatureType(
+                    H3_ENUM_DECODE(TCreatureType, monType));
+            currentArmyGroup.m_armies[numGroups / 2] = upgraded;
         }
     }
 
     int totalGroups = numGroups;
     if (monType2 != CREATURE_NONE) {
         for (int i = 0; i < numGroups2; ++i) {
-            currentArmyGroup.m_armyTypes[numGroups + i] = monType2;
+            currentArmyGroup.m_armies[numGroups + i] = monType2;
             currentArmyGroup.m_numTroops[numGroups + i] =
                 numMons2 / numGroups2 + (numMons2 % numGroups2 > i);
         }
@@ -5622,7 +5651,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
 
     if (monType3 != CREATURE_NONE) {
         for (int i = 0; i < numGroups3; ++i) {
-            currentArmyGroup.m_armyTypes[totalGroups + i] = monType3;
+            currentArmyGroup.m_armies[totalGroups + i] = monType3;
             currentArmyGroup.m_numTroops[totalGroups + i] =
                 numMons3 / numGroups3 + (numMons3 % numGroups3 > i);
         }
@@ -5632,9 +5661,9 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
         int tempNumTroops[7];
         TCreatureType tempArmies[7];
         memcpy(tempNumTroops, currentArmyGroup.m_numTroops, sizeof(tempNumTroops));
-        memcpy(tempArmies, currentArmyGroup.m_armyTypes, sizeof(tempArmies));
+        memcpy(tempArmies, currentArmyGroup.m_armies, sizeof(tempArmies));
         for (int i = 0; i < 7; ++i) {
-            currentArmyGroup.m_armyTypes[i] =
+            currentArmyGroup.m_armies[i] =
                 tempArmies[reorderMap[numGroups][numGroups3][i]];
             currentArmyGroup.m_numTroops[i] =
                 tempNumTroops[reorderMap[numGroups][numGroups3][i]];
@@ -5643,11 +5672,8 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
 
     int result = doCombat(point, who, &who->m_army, -1, 0, 0,
                           &currentArmyGroup, eventSeed, 1, 0);
-    {
-        int storage;
-        storage = monType;
-        *numMons = currentArmyGroup.getCreatureTotal(TCreatureType(storage));
-    }
+    *numMons = currentArmyGroup.getCreatureTotal(
+        H3_ENUM_DECODE(TCreatureType, monType));
     mobilizeCurrHero(0, 0, 1);
     return result;
 }
@@ -5695,7 +5721,7 @@ void advManager::doWhirlpool(hero* who)
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (who->m_army.m_numTroops[i] > 0) {
             int value = who->m_army.m_numTroops[i]
-                * g_creatureTypeTraits[who->m_army.m_armies[i]].m_baseFightValue;
+                * H3_AT(g_creatureTypeTraits, who->m_army.m_armies[i]).m_baseFightValue;
             if (value < weakestValue) {
                 weakestArmy = i;
                 weakestValue = value;
@@ -6228,10 +6254,11 @@ combatFinished:
         }
         normalDialog(
             g_text, 1, -1, -1, 0x15,
+            // Dialog qualifier 0x15 packs count and creature ordinal.
             (static_cast<unsigned short>(g_combatManager->m_raisedCreatureCount)
              << 16)
                 | static_cast<unsigned short>(
-                      g_combatManager->m_raisedCreatureType),
+                      H3_IDX(g_combatManager->m_raisedCreatureType)),
             -1, 0, -1, 15000, -1, 0);
         g_game->m_mapHeader.m_victoryCondition.checkForTotalCreatures();
         clearMemSample(sample);

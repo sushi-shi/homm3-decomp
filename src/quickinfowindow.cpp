@@ -20,8 +20,10 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
 {
     m_widgets.reserve(m_widgets.size() + 3);
 
+    // The portrait resource uses creature ordinal + 2 as its frame id.
     m_widgets.push_back(new iconWidget(
-        99, 26, 58, 64, 1000, "TwCrPort.def", id + 2, 0, 0, 0, 0x10));
+        99, 26, 58, 64, 1000, "TwCrPort.def", H3_IDX(id) + 2,
+        0, 0, 0, 0x10));
     addWidget(m_widgets.back(), -1);
 
     if (viewLevel == ViewAll) {

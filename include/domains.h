@@ -27,6 +27,9 @@
     ;                                                                                              \
     using enum name;
 
+#define H3_ENUM_FORWARD(name) enum class name : int
+#define H3_ENUM_FORWARD_SPLIT(name, storage) enum class name : storage
+
 #define H3_ENUM_STORAGE(name, storage) H3EnumStorage<name, storage>
 #define H3_ENUM_STORAGE_STEPPED(name, storage) H3SteppedEnumStorage<name, storage>
 #define H3_ENUM_PARAM(name, storage) name
@@ -125,6 +128,7 @@ public:
         : m_value(static_cast<Storage>(static_cast<Enum>(value))) {}
 
     constexpr operator Enum() const { return static_cast<Enum>(m_value); }
+    explicit constexpr operator bool() const { return m_value != 0; }
 
     H3SteppedEnumStorage& operator=(Enum value) {
         m_value = static_cast<Storage>(value);
@@ -206,14 +210,21 @@ constexpr int H3EnumIndex(H3SteppedEnumStorage<Enum, Storage> value)
     return static_cast<int>(static_cast<Enum>(value));
 }
 
-template<class Value> constexpr int H3EnumIndex(Value value)
+template<class Enum> constexpr int H3EnumIndex(Enum value)
 {
+    static_assert(__is_enum(Enum),
+        "H3_IDX/H3_AT require an enum-domain value");
     return static_cast<int>(value);
 }
 
 template<class Enum> constexpr Enum H3OffsetEnum(Enum value, int amount)
 {
     return static_cast<Enum>(static_cast<int>(value) + amount);
+}
+
+template<class Enum, class Storage> constexpr Enum H3DecodeEnum(Storage value)
+{
+    return static_cast<Enum>(value);
 }
 
 #define H3_ENUM_STEPPED(name)                                                                      \
@@ -249,6 +260,8 @@ template<class Enum> constexpr Enum H3OffsetEnum(Enum value, int amount)
 #define H3_ENUM_END(name) };
 #define H3_ENUM_BEGIN_SPLIT(name, storage) enum name {
 #define H3_ENUM_END_SPLIT(name, storage) };
+#define H3_ENUM_FORWARD(name) enum name
+#define H3_ENUM_FORWARD_SPLIT(name, storage) enum name
 
 #define H3_ENUM_STORAGE(name, storage) storage
 #define H3_ENUM_STORAGE_STEPPED(name, storage) storage
@@ -263,9 +276,11 @@ template<class Enum> constexpr Enum H3OffsetEnum(Enum value, int amount)
 #if H3_STRICT_ENUMS
 #define H3_AT(array, index) (array)[H3EnumIndex(index)]
 #define H3_IDX(value) H3EnumIndex(value)
+#define H3_ENUM_DECODE(name, value) H3DecodeEnum<name>(value)
 #else
 #define H3_AT(array, index) array[index]
 #define H3_IDX(value) value
+#define H3_ENUM_DECODE(name, value) (name)(value)
 #endif
 
 #endif

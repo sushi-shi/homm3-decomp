@@ -769,8 +769,8 @@ void type_defeat_hero_quest::setDefaultText()
 VA(0x0056ea30, 0xF9)
 std::string type_monster_quest::getRequirementText()
 {
-    const char* name = m_monsterId >= 0 && m_monsterId <= 0x96
-                           ? g_creatureTypeTraits[m_monsterId].m_pluralName
+    const char* name = isRetailAcceptedCreatureType(m_monsterId)
+                           ? H3_AT(g_creatureTypeTraits, m_monsterId).m_pluralName
                            : "";
     return name;
 }
@@ -780,8 +780,8 @@ std::string type_monster_quest::getQuestDescription()
 {
     return formatString(
         questText(QUEST_TEXT_DESCRIPTION).c_str(),
-        m_monsterId >= 0 && m_monsterId <= 0x96
-            ? g_creatureTypeTraits[m_monsterId].m_pluralName
+        isRetailAcceptedCreatureType(m_monsterId)
+            ? H3_AT(g_creatureTypeTraits, m_monsterId).m_pluralName
             : "");
 }
 
@@ -803,15 +803,17 @@ unsigned char type_monster_quest::isSatisfied(hero* currentHero)
 VA(0x0056ec00, 0x9F)
 void type_monster_quest::doProposalDialog(hero* currentHero)
 {
+    // Dialog qualifier 0x15 consumes the creature's numeric ordinal.
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, 0x15,
-                 m_monsterId, -1, 0, -1, 0, -1, 0);
+                 H3_IDX(m_monsterId), -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x0056eca0, 0x9B)
 void type_monster_quest::doProgressDialog()
 {
+    // Dialog qualifier 0x15 consumes the creature's numeric ordinal.
     normalDialog(getProgressDialogText().c_str(), 1, -1, -1, 0x15,
-                 m_monsterId, -1, 0, -1, 0, -1, 0);
+                 H3_IDX(m_monsterId), -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x0056ed40, 0x45)
@@ -837,7 +839,8 @@ void type_monster_quest::load(TAbstractFile* file, int version)
         short id;
 
         file->read(&id, sizeof(id));
-        m_monsterId = id;
+        // Quest saves store the creature as a 16-bit ordinal.
+        m_monsterId = H3_ENUM_DECODE(TCreatureType, id);
     }
     {
         signed char killer;
@@ -863,7 +866,8 @@ void type_monster_quest::save(TAbstractFile* file)
 {
     file->write(&m_position, sizeof(m_position));
     {
-        short id = m_monsterId;
+        // Quest saves store the creature as a 16-bit ordinal.
+        short id = static_cast<short>(H3_IDX(m_monsterId));
         file->write(&id, sizeof(id));
     }
     {
@@ -923,7 +927,9 @@ void type_monster_quest::setDefaultText()
         return;
 
     const TSeerHutQuestText& texts = questTexts();
-    m_monsterId = g_game->getCell(m_position)->m_objectIndex;
+    // Monster map cells store the creature as a raw object ordinal.
+    m_monsterId = H3_ENUM_DECODE(
+        TCreatureType, g_game->getCell(m_position)->m_objectIndex);
     const char* monsterName = getArmyName(m_monsterId, 0);
 
     std::string direction;
@@ -1229,7 +1235,7 @@ int type_creature_quest::getAIValue(int player)
     int total = 0;
 
     for (unsigned i = 0; i < m_types.size(); ++i)
-        total += g_creatureTypeTraits[m_types[i]].m_aiValue * m_counts[i];
+        total += H3_AT(g_creatureTypeTraits, m_types[i]).m_aiValue * m_counts[i];
     return total;
 }
 VA(0x005704e0, 0x1A7)
@@ -1382,7 +1388,8 @@ void type_creature_quest::load(TAbstractFile* file, int version)
         file->read(&type, sizeof(short));
         TCreatureType creature;
         {
-            creature = TCreatureType(type & 0xffff);
+            // Quest files serialize creature ordinals as 16-bit values.
+            creature = H3_ENUM_DECODE(TCreatureType, type & 0xffff);
         }
         file->read(&number, sizeof(number));
         int amount = number;
@@ -1408,7 +1415,8 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
         file->read(&type, sizeof(short));
         TCreatureType creature;
         {
-            creature = TCreatureType(type & 0xffff);
+            // Quest files serialize creature ordinals as 16-bit values.
+            creature = H3_ENUM_DECODE(TCreatureType, type & 0xffff);
         }
         file->read(&number, sizeof(short));
         int amount = number & 0xffff;
@@ -1428,7 +1436,8 @@ void type_creature_quest::save(TAbstractFile* file)
     unsigned char count = static_cast<unsigned char>(m_types.size());
     file->write(&count, sizeof(count));
     for (unsigned int i = 0; i < m_types.size(); i++) {
-        writeValue<short>(file, m_types[i]);
+        // Quest files store creature ordinals as 16-bit values.
+        writeValue<short>(file, static_cast<short>(H3_IDX(m_types[i])));
         writeValue<int>(file, m_counts[i]);
     }
 
@@ -1950,7 +1959,9 @@ inline type_defeat_hero_quest::type_defeat_hero_quest(
 inline type_monster_quest::type_monster_quest(unsigned char flags)
     : type_quest(flags)
 {
-    m_position.m_x = (m_monsterId = m_defeatedBy = -1);
+    m_defeatedBy = -1;
+    m_monsterId = CREATURE_NONE;
+    m_position.m_x = -1;
 }
 
 type_artifact_quest::type_artifact_quest(unsigned char flags)
@@ -2323,7 +2334,7 @@ int TSeerReward::getValue(const hero* currentHero)
         return currentHero->valueOfSpell(m_value.m_dwords[0]);
 
     case eRewardCreature:
-        return g_creatureTypeTraits[m_value.m_creature.m_creatureType].m_aiValue
+        return H3_AT(g_creatureTypeTraits, m_value.m_creature.m_creatureType).m_aiValue
             * m_value.m_creature.m_count;
 
     default:
@@ -2413,20 +2424,19 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
         break;
 
     case eRewardCreature:
-        if (!currentHero->m_army.add(m_value.m_creature.m_creatureType,
+        // Quest rewards retain creature ids in fixed-width storage.
+        if (!currentHero->m_army.add(H3_ENUM_DECODE(
+                                        TCreatureType,
+                                        m_value.m_creature.m_creatureType),
                                    m_value.m_creature.m_count, -1)) {
             if (humanPlayer) {
-                TCreatureType creature;
-                {
-                    creature = TCreatureType(m_value.m_creature.m_creatureType);
-                }
+                TCreatureType creature = H3_ENUM_DECODE(
+                    TCreatureType, m_value.m_creature.m_creatureType);
                 doMonsterJoinDialog(currentHero, creature,
                     m_value.m_creature.m_count);
             } else {
-                TCreatureType creature;
-                {
-                    creature = TCreatureType(m_value.m_creature.m_creatureType);
-                }
+                TCreatureType creature = H3_ENUM_DECODE(
+                    TCreatureType, m_value.m_creature.m_creatureType);
                 aiJoinDecision(currentHero, creature,
                     m_value.m_creature.m_count);
             }
@@ -2720,14 +2730,19 @@ void TSeerHut::read(TAbstractFile* infile)
     }
 
     case eRewardCreature: {
+        // Seer rewards serialize the domain as a byte in RoE and a word later.
         if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
             int intBuffer;
             infile->read(&intBuffer, 1);
-            m_reward.m_value.m_creature.m_creatureType = intBuffer & 0xff;
+            // RoE rewards store a one-byte creature ordinal.
+            m_reward.m_value.m_creature.m_creatureType =
+                H3_ENUM_DECODE(TCreatureType, intBuffer & 0xff);
         } else {
             short shortBuffer;
             infile->read(&shortBuffer, sizeof(shortBuffer));
-            m_reward.m_value.m_creature.m_creatureType = shortBuffer;
+            // Later rewards store a two-byte creature ordinal.
+            m_reward.m_value.m_creature.m_creatureType =
+                H3_ENUM_DECODE(TCreatureType, shortBuffer);
         }
         int countBuffer;
         infile->read(&countBuffer, 2);

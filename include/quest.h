@@ -324,7 +324,7 @@ class type_monster_quest : public type_quest {
 public:
     int m_mapMonster;             // +0x40, the h3m identity slot 12 fills
     TQuestPosition m_position;     // +0x44
-    int m_monsterId;       // +0x48
+    H3_ENUM_STORAGE(TCreatureType, int) m_monsterId;  // +0x48
     int m_defeatedBy;      // +0x4c, -1 until some player kills it
 
     type_monster_quest(unsigned char flags);

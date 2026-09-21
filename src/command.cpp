@@ -1794,7 +1794,7 @@ void combatManager::doVictory(int winningGroup)
             m_raisedCreatureType =
                 m_heroes[winningGroup]->getNecromancyCreature();
             int raisedHitPoints =
-                g_creatureTypeTraits[m_raisedCreatureType].m_hitPoints;
+                H3_AT(g_creatureTypeTraits, m_raisedCreatureType).m_hitPoints;
             unsigned char anythingDied = 0;
             for (int slot = 0; slot < 20; slot++) {
                 army* stack = &m_armies[lastAliveSideIndex][slot];
@@ -1805,7 +1805,7 @@ void combatManager::doVictory(int winningGroup)
                     continue;
                 anythingDied = 1;
                 int hitPoints =
-                    g_creatureTypeTraits[stack->m_creatureType].m_hitPoints;
+                    H3_AT(g_creatureTypeTraits, stack->m_creatureType).m_hitPoints;
                 if (hitPoints > raisedHitPoints)
                     hitPoints = raisedHitPoints;
                 int raised = static_cast<int>(hitPoints * killed
@@ -1912,14 +1912,14 @@ long combatManager::getSurrenderCost()
 
     for (int slot = 0; slot < 20; ++slot) {
         army* currentArmy = &m_armies[side][slot];
-        if (currentArmy->m_creatureType >= 0
+        if (currentArmy->m_creatureType != CREATURE_NONE
             && currentArmy->m_numTroops > 0
             && !currentArmy->is(creatureSummoned)
             && currentArmy->m_numTroops
                 > currentArmy->m_numTroopsBattleResurrected) {
             cost += (currentArmy->m_numTroops
                      - currentArmy->m_numTroopsBattleResurrected)
-                  * g_creatureTypeTraits[currentArmy->m_creatureType].m_cost[6];
+                  * H3_AT(g_creatureTypeTraits, currentArmy->m_creatureType).m_cost[6];
         }
     }
 
@@ -2101,7 +2101,7 @@ void combatManager::checkGetAIMove()
                     army* currentArmy = &currentArmies[slot];
                     if (currentArmy->isActive()) {
                         combatValue +=
-                            g_creatureTypeTraits[currentArmy->m_creatureType].m_cost[6]
+                            H3_AT(g_creatureTypeTraits, currentArmy->m_creatureType).m_cost[6]
                             * currentArmy->m_numTroops;
                     }
                 }
@@ -2309,9 +2309,9 @@ unsigned char combatManager::processMoveThenAttack(message* msg)
     currentArmy->m_monInfo.m_attributes |= creatureDone;
     currentArmy->m_joustBonus = 0;
     if (m_nextActionExtra != -1 && oldGridIndex != m_nextActionExtra
-            && (currentArmy->m_creatureType == army::ARMY_CREATURE_HARPY
+            && (currentArmy->m_creatureType == CREATURE_HARPY
                 || currentArmy->m_creatureType
-                       == army::ARMY_CREATURE_HARPY_HAG)
+                       == CREATURE_HARPY_HAG)
             && !currentArmy->is(creatureImmobilized)
             && currentArmy->m_spellInfluence[62] == 0
             && currentArmy->m_spellInfluence[70] == 0
@@ -2699,7 +2699,9 @@ void combatManager::setCombatGrid(int combatShowEntireGrid,
 // left/top/right/bottom rectangle. The save/redraw/fizzle triple around
 // DrawFrame(0,0,0,0,1,0) is what makes a mid-combat summon appear.
 VA(0x0047a100, 0x1CD)  // dc 0x70474
-army* combatManager::addArmy(int side, int monType, int monQty,
+army* combatManager::addArmy(int side,
+                             H3_ENUM_PARAM(TCreatureType, int) monType,
+                             int monQty,
                              int gridIndex, int setAttributes,
                              int fizzleItIn)
 {
@@ -2707,7 +2709,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
     int slot = -1;
     { for (long candidate = 0; candidate < 20; candidate++) {
         const army* stack = &m_armies[side][candidate];
-        if (stack->m_creatureType == -1) {
+        if (stack->m_creatureType == CREATURE_NONE) {
             slot = candidate;
             break;
         }

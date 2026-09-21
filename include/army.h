@@ -17,7 +17,8 @@ class town;
 class sample;
 class CSprite;
 
-inline const char* getArmyName(int type, int count);
+inline const char* getArmyName(
+    H3_ENUM_PARAM(TCreatureType, int) type, int count);
 
 // Combat-grid directions as path.cpp's walkers consume them: 0..5 are
 // the six hex neighbours (combatManager::adjacentCells columns); 6/7
@@ -277,7 +278,7 @@ public:
     // retail's S_PUB32 mangling for that slot is `W4TCreatureType`. The
     // ELABORATED spelling parses in every include order without armygrp.h
     // being visible, which is why this needs no view macro.
-    enum TCreatureType m_creatureType;   // +0x34, DC army::armyType
+    H3_ENUM_STORAGE(TCreatureType, int) m_creatureType; // +0x34, DC army::armyType
     // Occupied combat cell. ai_tactical's find_attack_hex (0x436840)
     // feeds it straight into check_adjacent_hexes as the enemy hex,
     // and the type_AI_spellcaster ctor walks armies by it.
@@ -738,7 +739,8 @@ public:
     // candidate temporarily scores lower: C1XX assigns member handles from
     // this stream before C2 optimizes any individual function.
     army();
-    void init(int armyId, int newNumTroops, const hero* owner, int side,
+    void init(H3_ENUM_PARAM(TCreatureType, int) armyId,
+              int newNumTroops, const hero* owner, int side,
               int inIndex, int gridIndex, int origPos);
     void initialize(TCreatureType type, long number, const hero* owner,
                     long newGroup, long newIndex, long newGridIndex);
@@ -1134,154 +1136,6 @@ private:
     // into TCreatureType when an owner moves initialize.cpp's includes.
 #endif  // superseded unordered/view-fragmented declarations
 public:
-    enum EArmyCreatureId {
-        // The three-headed attacker. get_multi_head_directions
-        // (0x448ab0) hands every OTHER creature the full adjacency
-        // mask (0xff wide, 0x3f narrow) and only this id gets the
-        // three-direction fan, which is exactly the Cerberus rule.
-        // The id is fixed by arithmetic, not by a roster: Demon is
-        // 0x30 two lines below on independent evidence, and 0x2f is
-        // the slot immediately before it - the Inferno tier that ends
-        // Imp / Familiar / Gog / Magog / Hell Hound / CERBERUS /
-        // Demon. NH3API spelling.
-        ARMY_CREATURE_CERBERUS = 0x2f,
-        ARMY_CREATURE_DEMON = 0x30,
-        // The top tier of the Dungeon block and the two Conflux
-        // elementals whose attacks ComputeAttackerDamageReduction
-        // (0x443b90) halves. All three ids are fixed by ids
-        // armygrp.h's TCreatureType already proves and by the rule the
-        // body implements, not by a roster:
-        //   - Troglodyte 0x46 / Infernal Troglodyte 0x47 open the
-        //     fourteen-id Dungeon block and Minotaur 0x4e / Minotaur
-        //     King 0x4f sit in it, which puts its top tier - the black
-        //     dragon - on 0x53;
-        //   - Air / Earth / Fire / Water Elemental 0x70..0x73 and Gold
-        //     / Diamond Golem 0x74/0x75 leave 0x76/0x77 for the pixie
-        //     pair and 0x78/0x79 for the psychic and magic elementals,
-        //     which is also exactly what puts Ice 0x7b, Magma 0x7d,
-        //     Storm 0x7f and Energy 0x81 where TCreatureType already
-        //     has them - the four unused slots between them.
-        // The body corroborates both readings on the retail rules:
-        // 0x78 halves against a defender carrying the mind-immunity
-        // bit (the psychic elemental's rule) and 0x79 halves against
-        // 0x79 or 0x53 (the magic elemental against black dragons and
-        // its own kind). NH3API spellings.
-
-        // These domain names are ordinary source facts. Their declaration
-        // changes VC6's class-source state, which is why hiding them once
-        // produced a higher local score; that measurement is not permission
-        // to replace the declarations with literals in selected TUs.
-        // The Pit Lord id is fixed by
-        // arithmetic against ids the block above already proves - Demon
-        // 0x30 opens the Inferno upgrade run and Efreet Sultan 0x35 /
-        // Devil 0x36 / Arch Devil 0x37 close it, so 0x33 is the Pit
-        // Lord - and the body corroborates it: this is exactly the id
-        // that takes the DEMONIC resurrection arm, priced (in
-        // get_resurrection_size 0x447330, already exact) in
-        // akCreatureTypeTraits[0x30].hitPoints. NH3API spelling.
-        ARMY_CREATURE_ARCHANGEL = 0x0d,
-        ARMY_CREATURE_BLACK_DRAGON = 0x53,
-        ARMY_CREATURE_PSYCHIC_ELEMENTAL = 0x78,
-        ARMY_CREATURE_MAGIC_ELEMENTAL = 0x79,
-        ARMY_CREATURE_PIT_LORD = 0x33,
-        // Complete's cannot_attack adds the two non-attacking war machines.
-        // Keep these aliases in army's local creature-id view: army.h is
-        // parsed before armygrp.h's complete TCreatureType declaration in
-        // several retail TUs.
-        ARMY_CREATURE_FIRST_AID_TENT = 0x93,
-        ARMY_CREATURE_AMMO_CART = 0x94,
-        // The two creatures with a retaliation rule of their own, and
-        // ResetRound (0x447120) is what proves both: id 4 gets a
-        // retaliation allowance of 2 and id 5 gets 5000, which is
-        // "unlimited" in a word that is only ever counted down. Two
-        // retaliations is the Griffin's rule and unlimited retaliation
-        // is the Royal Griffin's, and nothing else in the roster has
-        // either. Their ids follow from the Castle block that opens the
-        // table - Pikeman / Halberdier / Archer / Marksman fill 0..3,
-        // which puts the tier-three pair on 4 and 5, exactly as
-        // CREATURE_ANGEL 0xc / CREATURE_ARCHANGEL 0xd close the same
-        // town's run eight slots later. NH3API spellings.
-        ARMY_CREATURE_GRIFFIN = 0x4,
-        ARMY_CREATURE_ROYAL_GRIFFIN = 0x5,
-        // The two Dungeon flyers that strike and return to their starting
-        // hex. process_move_then_attack compares exactly 0x48/0x49 before
-        // applying the Blind/Stone/Paralyze return guards. NH3API spellings;
-        // the ids also follow from Dungeon's 0x46..0x53 fourteen-slot run.
-        ARMY_CREATURE_HARPY = 0x48,
-        ARMY_CREATURE_HARPY_HAG = 0x49,
-        // The two creatures that bring down a wall segment without a
-        // catapult, and AttackWall (0x445d30) is what proves both: its
-        // switch answers 0x5e with ballistics row 1 and 0x5f with row
-        // 2, and the Dreamcast build's own AttackWall (dc 0x4a97c)
-        // compares the SAME two ids - 94 and 95 - which is what says
-        // they are below the Complete renumbering's break (the DC row
-        // compares 118 for the catapult where retail compares 145).
-        // The ids follow from the pair already byte-proven directly
-        // below: Stronghold's fourteen slots end Behemoth 0x60 /
-        // Ancient Behemoth 0x61, so the tier-five pair is 0x5e/0x5f,
-        // and Cyclopes are HoMM3's one wall-breaking creature. Dreamcast
-        // AttackWall compares the same 94/95 pair, and retail 0x445d30
-        // corroborates both ids.
-        ARMY_CREATURE_CYCLOPS = 0x5e,
-        ARMY_CREATURE_CYCLOPS_KING = 0x5f,
-        // The aura pair. add_aura (0x43ea70) is the only reader and it
-        // tests BOTH stacks against the same two ids, once in each
-        // direction, which is what says these are the creature that
-        // GIVES the aura rather than one that receives it. 0x18/0x19
-        // land on Unicorn / War Unicorn in Rampart's fourteen-slot run,
-        // and the Dendroid pair two slots earlier (0x16/0x17) is
-        // corroborated from the other side by remove_binding's own
-        // subject - Rampart owns both of HoMM3's stack-to-stack
-        // relationships, the unicorn's resistance aura and the
-        // dendroid's bind. Dreamcast add_aura compares the same 24/25
-        // pair, and retail 0x43ea70 corroborates both values.
-        ARMY_CREATURE_UNICORN = 0x18,
-        ARMY_CREATURE_WAR_UNICORN = 0x19,
-        ARMY_CREATURE_BEHEMOTH = 0x60,
-        ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
-        // The three creatures with a START-OF-TURN ability, and
-        // combatManager::SetNextArmy (0x465330) is the one body that
-        // proves all three: its compare chain answers 0x3d, 0x86 and
-        // 0x88 and nothing else. Each id follows from the arithmetic the
-        // elemental block above already fixes - Psychic / Magic
-        // Elemental on 0x78/0x79 and Ice 0x7b / Magma 0x7d / Storm 0x7f
-        // / Energy 0x81 with the four unused slots between them, which
-        // continues Firebird 0x82 / Phoenix 0x83, Azure 0x84 / Crystal
-        // 0x85 / FAERIE 0x86 / Rust 0x87, then ENCHANTER 0x88 - and
-        // 0x3d closes the Necropolis run that opens at Skeleton 0x38.
-        // The bodies corroborate each id independently:
-        //   - 0x3d drains two mana off the OTHER side's hero and plays
-        //     ManaDrai.wav, which is the wraith's rule and no other
-        //     creature's;
-        //   - 0x86 calls 0x447510, whose body picks a spell at random
-        //     out of a weighted table - the faerie dragon's rule - and
-        //     which the HD crossbuild map independently names
-        //     FaerieDragonSpell;
-        //   - 0x88 is gated on a per-side counter that must exceed 2 and
-        //     is reset to 0 on success, i.e. an ability with a cooldown
-        //     of three rounds, which is the enchanter's mass cast.
-        ARMY_CREATURE_WRAITH = 0x3d,
-        ARMY_CREATURE_FAERIE_DRAGON = 0x86,
-        ARMY_CREATURE_ENCHANTER = 0x88,
-        // The two combat participants can_shoot (0x4428f0) admits as
-        // shooters unconditionally, ahead of every other test - the
-        // ballista and the arrow tower, which are the only war machines
-        // that shoot. NH3API spellings; ai_tactical's own 0x93/0x94
-        // comparisons put the first-aid tent and ammo cart between them.
-        ARMY_CREATURE_BALLISTA = 0x92,
-        // The one creature obstacles never fire at:
-        // check_obstacle_attacks (0x441f70) compares creatureType
-        // against 0x95 and returns 0 before it reaches the combat
-        // manager's worker. NH3API spells the same guard
-        // `armyType != CREATURE_ARROW_TOWER` with the same 149, and a
-        // siege tower is the one combat participant that never moves.
-        ARMY_CREATURE_ARROW_TOWER = 0x95,
-        // The highest id GetName (0x440100) accepts: its range guard is
-        // `type < 0 || type > 0x96`, so the name rows it indexes run
-        // 0..150 inclusive - one past the 150-entry bound armygrp.h
-        // currently declares for akCreatureTypeTraits.
-        ARMY_CREATURE_LAST = 0x96
-    };
 
 #if 0  // superseded unordered/view-fragmented declaration reconstruction
 
@@ -1589,8 +1443,8 @@ SIZE(army, 0x548);
     // E:\gamedcs\Army.h:718
 inline bool army::canCastResurrect() const
     {
-        return (m_creatureType == ARMY_CREATURE_ARCHANGEL
-                || m_creatureType == ARMY_CREATURE_PIT_LORD)
+        return (m_creatureType == CREATURE_ARCHANGEL
+                || m_creatureType == CREATURE_PIT_LORD)
                && m_monInfo.m_hasSpell > 0;
     }
 
@@ -1712,7 +1566,7 @@ inline TSkillMastery army::getSpellLevel(int spell) const
     // E:\gamedcs\Army.h:830
 inline bool army::isActive() const
     {
-        return m_creatureType >= 0 && m_numTroops > 0;
+        return m_creatureType != CREATURE_NONE && m_numTroops > 0;
     }
 
     // E:\gamedcs\Army.h:835
@@ -1742,8 +1596,8 @@ inline bool army::canRetaliate(const army& attacker) const
 inline bool army::cannotAttack() const
     {
         return isIncapacitated() || is(creatureImmobilized)
-               || m_creatureType == ARMY_CREATURE_FIRST_AID_TENT
-               || m_creatureType == ARMY_CREATURE_AMMO_CART;
+               || m_creatureType == CREATURE_FIRST_AID_TENT
+               || m_creatureType == CREATURE_AMMO_CART;
     }
 
     // E:\gamedcs\Army.h:864

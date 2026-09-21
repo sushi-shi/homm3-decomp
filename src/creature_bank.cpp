@@ -49,7 +49,7 @@ static void initializeCreatureBankLevel(type_creature_bank_level& traits,
         traits.m_guards.m_numTroops[guard] = atoi(resource[column]);
         column += 2;
         if (traits.m_guards.m_numTroops[guard] == 0)
-            traits.m_guards.m_armyTypes[guard] = CREATURE_NONE;
+            traits.m_guards.m_armies[guard] = CREATURE_NONE;
     }
 
     ++column;
@@ -80,13 +80,14 @@ unsigned char initializeCreatureBankTraits()
     }
 
     DATA(0x006702a0)
-    static TCreatureType guardTypes[CREATURE_BANK_COUNT][5] = {
+    static H3_ENUM_STORAGE(TCreatureType, int)
+        guardTypes[CREATURE_BANK_COUNT][5] = {
         { CREATURE_CYCLOPS, CREATURE_NONE },
         { CREATURE_DWARF, CREATURE_NONE },
         { CREATURE_GRIFFIN, CREATURE_NONE },
         { CREATURE_IMP, CREATURE_NONE },
         { CREATURE_MEDUSA, CREATURE_NONE },
-        { CREATURE_NAGA_SENTINEL, CREATURE_NONE },
+        { CREATURE_NAGA, CREATURE_NONE },
         { CREATURE_DRAGON_FLY, CREATURE_NONE },
         { CREATURE_WIGHT, CREATURE_NONE },
         { CREATURE_WATER_ELEMENTAL, CREATURE_NONE },
@@ -96,7 +97,8 @@ unsigned char initializeCreatureBankTraits()
           CREATURE_GOLD_DRAGON, CREATURE_BLACK_DRAGON, CREATURE_NONE }
     };
     DATA(0x0067037c)
-    static TCreatureType rewardTypes[CREATURE_BANK_COUNT] = {
+    static H3_ENUM_STORAGE(TCreatureType, int)
+        rewardTypes[CREATURE_BANK_COUNT] = {
         CREATURE_NONE, CREATURE_NONE, CREATURE_ANGEL, CREATURE_NONE,
         CREATURE_NONE, CREATURE_NONE, CREATURE_WYVERN, CREATURE_NONE,
         CREATURE_NONE, CREATURE_NONE, CREATURE_NONE
@@ -115,7 +117,7 @@ unsigned char initializeCreatureBankTraits()
             for (int slot = 0; slot < 5; ++slot) {
                 if (guardTypes[bank][slot] == CREATURE_NONE)
                     break;
-                level->m_guards.m_armyTypes[slot] = guardTypes[bank][slot];
+                level->m_guards.m_armies[slot] = guardTypes[bank][slot];
             }
             level->m_rewardCreature = rewardTypes[bank];
 
@@ -143,7 +145,7 @@ static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
     long groupsLeft = groups;
     for (; groupsLeft > 1; --groupsLeft) {
         while (freeSlot < armyGroup::ARMY_GROUP_SLOT_COUNT
-               && currentArmyGroup->m_armies[freeSlot] != -1)
+               && currentArmyGroup->m_armies[freeSlot] != CREATURE_NONE)
             ++freeSlot;
         if (freeSlot == armyGroup::ARMY_GROUP_SLOT_COUNT)
             break;
@@ -212,11 +214,14 @@ void initializeCreatureBank(type_creature_bank* bank,
     }
 
     if (random(1, 100) <= level->m_upgradeChance) {
-        TCreatureType current = bank->m_guards.m_armyTypes[slot];
+        // Army slots retain four-byte storage for the creature domain.
+        TCreatureType current = H3_ENUM_DECODE(
+            TCreatureType, bank->m_guards.m_armies[slot]);
         if (!(g_game->m_gameVersion == 0 && isBaseElemental(current))
             && static_cast<unsigned char>(isBaseCreature(current))) {
-            TCreatureType promoted = bank->m_guards.m_armyTypes[slot];
-            int upgraded = g_game->upgradedCreatureType(promoted);
+            TCreatureType promoted = H3_ENUM_DECODE(
+                TCreatureType, bank->m_guards.m_armies[slot]);
+            TCreatureType upgraded = g_game->upgradedCreatureType(promoted);
             bank->m_guards.m_armies[slot] = upgraded;
         }
     }

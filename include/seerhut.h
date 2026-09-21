@@ -118,7 +118,7 @@ public:
             signed int m_bonus : 8;
         } m_primarySkill;
         struct {
-            int m_creatureType;
+            H3_ENUM_STORAGE(TCreatureType, int) m_creatureType;
             signed int m_count : 16;
             signed int : 16;
         } m_creature;

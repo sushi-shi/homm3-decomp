@@ -612,13 +612,9 @@ enum ERmgConnectionConstants {
     RMG_WATER_RANDOM = 3
 };
 
-// Complete's guard selector 0x540b20 uses these bounds, not the full combat
-// creature array. Its RoE exclusion starts at 118 even though evaluation
-// stops before 117; keep that observed boundary distinct.
+// Complete's guard selector 0x540b20 uses the typed roster endpoints from
+// TCreatureType. Its non-creature tuning values remain local to RMG.
 enum ERmgGuardConstants {
-    RMG_GUARD_CREATURE_COUNT = 145,
-    RMG_GUARD_ROE_CREATURE_LIMIT = 117,
-    RMG_GUARD_ROE_EXCLUDED_FIRST = 118,
     RMG_GUARD_MAXIMUM_COUNT = 100,
     RMG_GUARD_DISPOSITION = 3
 };

@@ -103,13 +103,14 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         H3_ENUM_STORAGE(TCreatureType, int) disguiseCreature = CREATURE_NONE;
         if (thisHero->m_disguiseLevel != TQuickHeroWindow::DisguiseInvalid &&
             thisHero->m_disguiseLevel <= TQuickHeroWindow::DisguiseAdvanced) {
-            const TCreatureType* currentArmy = thisHero->m_army.m_armyTypes;
+            const H3_ENUM_STORAGE(TCreatureType, int)* currentArmy =
+                thisHero->m_army.m_armies;
             for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
                  ++slot, ++currentArmy) {
                 H3_ENUM_STORAGE(TCreatureType, int) creature = *currentArmy;
                 // Retail compares the slot ordinal, not the creature loaded just
                 // above.  Preserve that byte-proven source-level wart.
-                if (slot != H3_IDX(CREATURE_NONE) &&
+                if (slot != armyGroup::ARMY_GROUP_INVALID_SLOT &&
                     (disguiseCreature == CREATURE_NONE ||
                      H3_AT(g_creatureTypeTraits, creature).m_aiValue >
                          H3_AT(g_creatureTypeTraits, disguiseCreature).m_aiValue))
@@ -117,9 +118,10 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
             }
         } else if (thisHero->m_disguiseLevel == TQuickHeroWindow::DisguiseExpert) {
             H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature =
-                g_game->m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
+                g_game->m_gameVersion
+                    ? CREATURE_ROSTER_END : CREATURE_ROE_ROSTER_END;
             int owner = thisHero->m_owner;
-            while (H3_IDX(creature--)) {
+            while (creature--) {
                 int townType = g_game->getAlignment(creature);
 
                 int alignment = owner >= 0
@@ -140,12 +142,13 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
         int displaySlot = 0;
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
             H3_ENUM_STORAGE(TCreatureType, int) creature =
-                thisHero->m_army.m_armyTypes[slot];
+                thisHero->m_army.m_armies[slot];
             if (creature == CREATURE_NONE)
                 continue;
             if (disguiseCreature != CREATURE_NONE)
                 creature = disguiseCreature;
 
+            // The portrait resource uses creature ordinal + 2.
             widgets.push_back(new iconWidget(
                 g_armyPos[displaySlot][0],
                 g_armyPos[displaySlot][1], 32, 32, widgetId++,

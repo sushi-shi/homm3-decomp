@@ -378,13 +378,14 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
          g_game->m_campaign.m_currentMap == g_creatureBonusTownScenarioA) ||
         (g_game->m_campaign.m_currentCampaign == g_creatureBonusTownCampaignB &&
          g_game->m_campaign.m_currentMap == g_creatureBonusTownScenarioB)) {
-        int creature = m_creature;
+        // Campaign records retain four-byte storage for the creature domain.
+        TCreatureType creature = H3_ENUM_DECODE(TCreatureType, m_creature);
         int faction;
         if (g_game->m_gameVersion == 0 &&
             isBaseElemental(creature))
             faction = -1;
         else
-            faction = g_creatureTypeTraits[creature].m_townType;
+            faction = H3_AT(g_creatureTypeTraits, creature).m_townType;
         for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
             town* garrison = g_game->getTown(player->m_townIds[townIndex]);
             if (garrison->m_type == faction) {
@@ -423,7 +424,8 @@ void TCampaignCreatureBonus::read(TAbstractFile* file)
         file->read(&value, sizeof(short));
         m_hero = value;
         file->read(&value, sizeof(short));
-        m_creature = value;
+        // Campaign bonus files store the creature as a 16-bit ordinal.
+        m_creature = H3_ENUM_DECODE(TCreatureType, value);
     }
     {
         unsigned short count;
@@ -441,7 +443,8 @@ const char* TCampaignCreatureBonus::getIconDefName() const
 VA(0x00484560, 0x7)
 int TCampaignCreatureBonus::getIconIndex() const
 {
-    return m_creature + 2;
+    // The campaign portrait resource uses creature ordinal + 2.
+    return H3_IDX(m_creature) + 2;
 }
 
 // Singular against plural on a count of exactly one, and an empty name
@@ -450,12 +453,12 @@ VA(0x00484570, 0x7A)
 std::string TCampaignCreatureBonus::getText() const
 {
     const char* name;
-    if (m_creature < 0 || m_creature > 150)
+    if (!isRetailAcceptedCreatureType(m_creature))
         name = "";
     else if (m_count == 1)
-        name = g_creatureTypeTraits[m_creature].m_name;
+        name = H3_AT(g_creatureTypeTraits, m_creature).m_name;
     else
-        name = g_creatureTypeTraits[m_creature].m_pluralName;
+        name = H3_AT(g_creatureTypeTraits, m_creature).m_pluralName;
     return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_count, name);
 }
 
@@ -1418,8 +1421,10 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 
     currentHero->m_army.initialize();
     for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        if (sourceHero->m_army.m_armies[slot] != -1
-            && m_crossoverCreatures.test(sourceHero->m_army.m_armies[slot])) {
+        // The bitset is indexed by the creature's numeric ordinal.
+        if (sourceHero->m_army.m_armies[slot] != CREATURE_NONE
+            && m_crossoverCreatures.test(
+                H3_IDX(sourceHero->m_army.m_armies[slot]))) {
             currentHero->m_army.add(sourceHero->m_army.m_armies[slot],
                                   sourceHero->m_army.m_numTroops[slot], -1);
         }

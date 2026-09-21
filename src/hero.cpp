@@ -1076,7 +1076,9 @@ void hero::initialize(const HeroExtra* setup)
             int count = setup->m_numTroops[i];
             m_army.m_numTroops[i] = count;
             if (count > 0)
-                m_army.m_armies[i] = setup->m_armies[i];
+                // Hero setup data stores the creature as a raw map ordinal.
+                m_army.m_armies[i] =
+                    H3_ENUM_DECODE(TCreatureType, setup->m_armies[i]);
             else
                 m_army.m_armies[i] = CREATURE_NONE;
         }
@@ -1329,7 +1331,8 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
 // parameter before the switch (89.86, same cause), and reversing the equipped
 // compare (96.25). DC records no locals for this body.
 VA(0x004d9260, 0x68)  // dc-bracket forced, dc 0xcc2a8
-void hero::destroySiegeWeaponArtifact(int creatureType)
+void hero::destroySiegeWeaponArtifact(
+    H3_ENUM_PARAM(TCreatureType, int) creatureType)
 {
     int artifact;
     switch (creatureType) {
@@ -1345,7 +1348,8 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
         artifact = ARTIFACT_AMMO_CART;
         break;
     default:
-        artifact = creatureType;
+        // Retail's fallback reuses the creature ordinal as an artifact id.
+        artifact = H3_IDX(creatureType);
         break;
     }
     // Nineteen equipped slots, one more than the DC build's eighteen.
@@ -1584,7 +1588,8 @@ void hero::updateArmies()
         }
 
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.m_extra = m_army.m_armies[slot] + 2;
+        // The creature portrait resource uses ordinal + 2 as its frame id.
+        msg.m_extra = H3_IDX(m_army.m_armies[slot]) + 2;
         msg.m_codeY = slot + 0x36;
         g_heroScreenWindow->broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_SET_STATUS;
@@ -4785,7 +4790,7 @@ unsigned char hero::hasSecondarySkill(int whichSkill)
 }
 
 VA(0x004e2340, 0x2A)  // dc 0xd3830
-int hero::creatureTypeCount(int creatureType)
+int hero::creatureTypeCount(H3_ENUM_PARAM(TCreatureType, int) creatureType)
 {
     int count = 0;
     for (int slot = 0; slot < 7; slot++) {
@@ -4796,7 +4801,9 @@ int hero::creatureTypeCount(int creatureType)
 }
 
 VA(0x004e2370, 0x26)  // dc 0xd3874
-void hero::upgradeCreatures(int sourceCreatureType, int destCreatureType)
+void hero::upgradeCreatures(
+    H3_ENUM_PARAM(TCreatureType, int) sourceCreatureType,
+    H3_ENUM_PARAM(TCreatureType, int) destCreatureType)
 {
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
         if (m_army.m_armies[slot] == sourceCreatureType)
@@ -5816,16 +5823,21 @@ int hero::getMobility(unsigned char seaMovement) const
     } else {
         int slowest = 20;
         for (int slot = 0; slot < 7; slot++) {
-            int creature = m_army.m_armies[slot];
+            // Army slots retain creature ids in fixed-width storage.
+            TCreatureType creature = H3_ENUM_DECODE(
+                TCreatureType, m_army.m_armies[slot]);
             if (creature != CREATURE_NONE) {
-                int speed = g_creatureTypeTraits[creature].m_speed;
+                int speed = H3_AT(g_creatureTypeTraits, creature).m_speed;
                 if (g_heroSpecificAbilities[m_id].m_type == eHeroAbilityCreature) {
                     if (creature == g_heroSpecificAbilities[m_id].m_creature)
                         speed++;
                     else if (g_heroSpecificAbilities[m_id].m_creature !=
                                  CREATURE_BALLISTA &&
+                             // Hero-specialty records retain creature ids in
+                             // fixed-width storage.
                              creature == g_game->upgradedCreatureType(
-                                 g_heroSpecificAbilities[m_id].m_creature))
+                                 H3_ENUM_DECODE(TCreatureType,
+                                     g_heroSpecificAbilities[m_id].m_creature)))
                         speed++;
                 }
                 if (speed < slowest)
@@ -6187,7 +6199,8 @@ long hero::getCombatSpeedBonus() const
 }
 
 VA(0x004e5b80, 0x15C)  // dc 0xd5508
-long hero::getHitPointBonus(int creatureType) const
+long hero::getHitPointBonus(
+    H3_ENUM_PARAM(TCreatureType, int) creatureType) const
 {
     long bonus = 0;
     if (isWieldingArtifact(ARTIFACT_RING_OF_VITALITY))
@@ -6196,9 +6209,9 @@ long hero::getHitPointBonus(int creatureType) const
         bonus++;
     if (isWieldingArtifact(ARTIFACT_VIAL_OF_LIFEBLOOD))
         bonus += 2;
-    if ((g_creatureTypeTraits[creatureType].m_attributes & creatureAlive)
+    if ((H3_AT(g_creatureTypeTraits, creatureType).m_attributes & creatureAlive)
         && isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))
-        bonus += g_creatureTypeTraits[creatureType].m_hitPoints / 4;
+        bonus += H3_AT(g_creatureTypeTraits, creatureType).m_hitPoints / 4;
     return bonus;
 }
 
@@ -6318,7 +6331,7 @@ int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
 
 // E:\gamedcs\hero.cpp:6493
 VA(0x004e6120, 0x39E)
-void hero::heroFn004E6120(int creatureType,
+void hero::heroFn004E6120(H3_ENUM_PARAM(TCreatureType, int) creatureType,
                            TCreatureTypeTraits* traits) const
 {
     traits->m_attackSkill += getPrimarySkill(0);
@@ -6338,14 +6351,17 @@ void hero::heroFn004E6120(int creatureType,
     case eHeroAbilityCreatureUniversal:
         if (creatureType == ability.m_creature
             || (ability.m_creature != CREATURE_BALLISTA
-                && creatureType == g_game->upgradedCreatureType(ability.m_creature))) {
+                // Hero-specialty records retain creature ids in fixed-width
+                // storage.
+                && creatureType == g_game->upgradedCreatureType(
+                    H3_ENUM_DECODE(TCreatureType, ability.m_creature)))) {
             if (ability.m_type == eHeroAbilityCreature) {
                 double scale = m_level / (traits->m_level + 1) * 0.05;
                 traits->m_attackSkill = static_cast<int>(
-                    ceil(g_creatureTypeTraits[creatureType].m_attackSkill * scale)
+                    ceil(H3_AT(g_creatureTypeTraits, creatureType).m_attackSkill * scale)
                     + traits->m_attackSkill);
                 traits->m_defenseSkill = static_cast<int>(
-                    ceil(g_creatureTypeTraits[creatureType].m_defenseSkill * scale)
+                    ceil(H3_AT(g_creatureTypeTraits, creatureType).m_defenseSkill * scale)
                     + traits->m_defenseSkill);
                 if (!(traits->m_attributes & g_ctaSiegeWeapon))
                     traits->m_speed++;
@@ -6360,7 +6376,7 @@ void hero::heroFn004E6120(int creatureType,
         }
         break;
     case eHeroAbilityDragons:
-        if (g_creatureTypeTraits[creatureType].m_attributes
+        if (H3_AT(g_creatureTypeTraits, creatureType).m_attributes
             & g_creatureAttrDragon) {
             traits->m_attackSkill += ability.m_creatureAttackBonus;
             traits->m_defenseSkill += ability.m_creatureDefenseBonus;

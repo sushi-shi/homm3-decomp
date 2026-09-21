@@ -294,14 +294,16 @@ void game::getVictoryConditionText(char* text)
 
             if (!monsterZ) {
                 sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_DEFEAT_MONSTER_FORMAT),
-                        victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
-                            ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
+                        victory.m_creatureType >= CREATURE_PIKEMAN
+                            && victory.m_creatureType <= CREATURE_RETAIL_RANGE_MAX
+                            ? H3_AT(g_creatureTypeTraits, victory.m_creatureType).m_pluralName
                             : "",
                         g_directions[direction]);
             } else {
                 sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_DEFEAT_MONSTER_UNDERGROUND_FORMAT),
-                        victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
-                            ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
+                        victory.m_creatureType >= CREATURE_PIKEMAN
+                            && victory.m_creatureType <= CREATURE_RETAIL_RANGE_MAX
+                            ? H3_AT(g_creatureTypeTraits, victory.m_creatureType).m_pluralName
                             : "",
                         g_directions[direction]);
             }
@@ -309,7 +311,7 @@ void game::getVictoryConditionText(char* text)
         }
         case VICTORY_CONDITION_TOTAL_CREATURES:
             sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_ACCUMULATE_CREATURES_FORMAT), victory.m_numCreatures,
-                    g_creatureTypeTraits[victory.m_creatureType].m_pluralName);
+                    H3_AT(g_creatureTypeTraits, victory.m_creatureType).m_pluralName);
             break;
         case VICTORY_CONDITION_FLAG_ALL_GENERATORS:
             strcpy(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_FLAG_DWELLINGS));

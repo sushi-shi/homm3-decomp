@@ -1450,7 +1450,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         if (validHex(secondaryIndex)) {
             army* sacrificeArmy = m_cells[secondaryIndex].getArmy();
             long hitPointsResurrected =
-                (g_creatureTypeTraits[sacrificeArmy->m_creatureType].m_hitPoints
+                (H3_AT(g_creatureTypeTraits, sacrificeArmy->m_creatureType).m_hitPoints
                  + traits->m_masteryBonus[mastery] + monsterPower)
                 * sacrificeArmy->m_numTroops;
             sacrificeArmy->damage(sacrificeArmy->m_monInfo.m_hitPoints
@@ -1741,7 +1741,10 @@ std::string combatManager::getFailureReason(SpellID spell, const char* msg,
             && target->getOwningSide() != m_currentSide)
             return formatString(g_generalText->getText(GENERAL_TEXT_SPELL_FRIENDLY_TARGET_ONLY_FORMAT),
                                  spellTraits->m_name);
-        if (getSpellWorkChance(spell, target->m_creatureType,
+        // Combat armies retain four-byte storage for the creature domain.
+        if (getSpellWorkChance(spell,
+                                  H3_ENUM_DECODE(TCreatureType,
+                                      target->m_creatureType),
                                   m_heroes[m_currentSide], 0) <= 0.0) {
             if (spell == SPELL_RESURRECTION || spell == SPELL_ANIMATE_DEAD
                 || spell == SPELL_SACRIFICE)
@@ -4101,7 +4104,7 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
 {
     army summoned;
     summoned.initClean();
-    summoned.m_monInfo = g_creatureTypeTraits[monType];
+    summoned.m_monInfo = H3_AT(g_creatureTypeTraits, monType);
     int leftColumn = 1;
     int rightColumn = 15;
     summoned.m_combatSide = m_currentSide;
@@ -4193,7 +4196,7 @@ void combatManager::demonicResurrection(const army* caster, army* target)
     long raised = caster->getResurrectionSize(target);
     long origPosition = target->m_originalIndex;
     army* demons = addArmy(caster->getControllingSide(),
-                           army::ARMY_CREATURE_DEMON, raised,
+                           CREATURE_DEMON, raised,
                            target->m_gridIndex, 0, 1);
     demons->m_originalIndex = origPosition;
     resetLimitCreature();
@@ -4415,8 +4418,9 @@ long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
         damage = const_cast<hero*>(castingHero)->modifySpellDamage(
             spellType, baseDamage, targetArmy);
     if (targetArmy) {
+        // Combat armies retain four-byte storage for the creature domain.
         damage = ::modifySpellDamage(damage, spellType,
-                                     targetArmy->m_creatureType);
+            H3_ENUM_DECODE(TCreatureType, targetArmy->m_creatureType));
         damage = modifySpellDamageForSpells(damage, spellType, targetArmy);
         if (printResult && damage != baseDamage
             && !static_cast<const combatManager*>(this)->isQuickCombat()) {
@@ -4655,7 +4659,9 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
 {
     const hero* const castingHero = m_heroes[side];
     hero* targetHero = target->getController();
-    TCreatureType creature = target->m_creatureType;
+    // Combat armies retain four-byte storage for the creature domain.
+    TCreatureType creature =
+        H3_ENUM_DECODE(TCreatureType, target->m_creatureType);
     const SSpellTraits* traits = &g_spellTraits[spell];
 
     if (m_magicTerrain == MAGIC_TERRAIN_CURSED_GROUND && traits->m_level > 1)
@@ -5080,7 +5086,7 @@ unsigned char combatManager::ableToSummonElemental(SpellID spell, long side)
 {
     if (m_numArmies[side] >= 20)
         return 0;
-    if (m_summonedElemental[side] == -1)
+    if (m_summonedElemental[side] == CREATURE_NONE)
         return 1;
     return getElementalType(spell) == m_summonedElemental[side];
 }

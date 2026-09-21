@@ -522,18 +522,21 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
 
     int numStacks = 0;
     for (int n = 0; n < 7; n++) {
-        if (who->m_army.m_armies[n] != -1)
+        if (who->m_army.m_armies[n] != CREATURE_NONE)
             numStacks++;
     }
 
     if (numStacks > 0) {
         int id = 0x7db;
         for (int j = 0; j < 7; j++) {
-            int type = who->m_army.m_armies[j];
-            if (type != -1) {
+            // Army slots retain four-byte storage for the creature domain.
+            TCreatureType type = H3_ENUM_DECODE(
+                TCreatureType, who->m_army.m_armies[j]);
+            if (type != CREATURE_NONE) {
                 m_widgets.push_back(new iconWidget(g_heroArmyCoords[j][0],
                     g_heroArmyCoords[j][1], 32, 32, id++, "cprsmall.def",
-                    type + 2, 0, 0, 0, 0x10));
+                    // The portrait resource uses creature ordinal + 2.
+                    H3_IDX(type) + 2, 0, 0, 0, 0x10));
 
                 std::string text;
                 if (who->m_army.m_numTroops[j] < 10000)
@@ -762,13 +765,17 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         // positions. Keep the two-dimensional army_pos table's row boundary.
         int displaySlot = 0;
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-            int creature = which->getArmy().m_armies[i];
-            if (creature == -1)
+            // Army slots retain four-byte storage for the creature domain.
+            TCreatureType creature = H3_ENUM_DECODE(
+                TCreatureType, which->getArmy().m_armies[i]);
+            if (creature == CREATURE_NONE)
                 continue;
 
             m_widgets.push_back(new iconWidget(g_townArmyCoords[displaySlot][0],
                 g_townArmyCoords[displaySlot][1],
-                32, 32, id++, "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
+                32, 32, id++, "cprsmall.def",
+                // The portrait resource uses creature ordinal + 2.
+                H3_IDX(creature) + 2, 0, 0, 0, 0x10));
 
             std::ostrstream quantityText;
             if (which->getArmy().m_numTroops[i] < 10000)

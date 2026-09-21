@@ -67,7 +67,7 @@ enum type_speed_catagory {
 struct type_monster_data {
 public:
     long m_index;  // +0x00
-    TCreatureType m_type;  // +0x04
+    H3_ENUM_STORAGE(TCreatureType, long) m_type;  // +0x04
     long m_number;  // +0x08
     long m_originalNumber;  // +0x0c
     long m_speed;  // +0x10

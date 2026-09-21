@@ -3,6 +3,7 @@
 
 #include "advmgr_popup.h"
 #include "basemgr.h"
+#include "creaturetype_fwd.h"
 #include "text.h"
 #include "remote.h"
 #include "terrain_type.h"
@@ -339,7 +340,7 @@ public:
     // at +0x94. The DC element type is TCreatureType; spelled int because
     // armygrp.h is outside this header's include closure and the enum's
     // loads/stores are int-identical under VC6.
-    int m_bonusCreatures[8];
+    H3_ENUM_STORAGE(TCreatureType, int) m_bonusCreatures[8];
     TTownScreenWindow();
     virtual ~TTownScreenWindow();
     void updateTownLocators();

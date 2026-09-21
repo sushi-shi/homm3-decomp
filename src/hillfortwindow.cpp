@@ -317,13 +317,14 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
         s.m_goldCost[0] = 0;
         s.m_resourceCost[0] = 0;
         s.m_resourceIndex = -1;
-        s.m_type = currHero->m_army.m_armyTypes[i];
+        s.m_type = currHero->m_army.m_armies[i];
         s.m_count = currHero->m_army.m_numTroops[i];
-        s.m_level = g_creatureTypeTraits[s.m_type].m_level;
+        s.m_level = H3_AT(g_creatureTypeTraits, s.m_type).m_level;
         sprintf(s.m_countText, "%d", s.m_count);
         memset(s.m_cost, 0, sizeof s.m_cost);
 
-        TCreatureType type = s.m_type;
+        // Hill-fort slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(TCreatureType, s.m_type);
         if ((g_game->m_gameVersion != 0
              || (type != CREATURE_AIR_ELEMENTAL && type != CREATURE_EARTH_ELEMENTAL
                  && type != CREATURE_FIRE_ELEMENTAL
@@ -337,11 +338,13 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
             } else {
                 TCreatureType upgraded;
                 {
-                    TCreatureType baseType = s.m_type;
+                    TCreatureType baseType = H3_ENUM_DECODE(
+                        TCreatureType, s.m_type);
                     upgraded = g_game->upgradedCreatureType(baseType);
                 }
                 {
-                    TCreatureType baseType = s.m_type;
+                    TCreatureType baseType = H3_ENUM_DECODE(
+                        TCreatureType, s.m_type);
                     getUpgradeCost(baseType, upgraded, s.m_count, s.m_cost);
                 }
                 s.m_cost[6] = static_cast<int>(
@@ -376,7 +379,8 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             msg.m_codeY = portraitId;
-            msg.m_extra = s.m_type + 2;
+            // The creature portrait resource uses ordinal + 2 as its frame id.
+            msg.m_extra = H3_IDX(s.m_type) + 2;
             broadcastMessage(msg);
 
             msg.m_id = MESSAGE_WIDGET;
@@ -410,7 +414,9 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
                 broadcastMessage(msg);
             }
 
-            TCreatureType stateType = s.m_type;
+            // Hill-fort slots retain creature ids in fixed-width storage.
+            TCreatureType stateType = H3_ENUM_DECODE(
+                TCreatureType, s.m_type);
             if ((g_game->m_gameVersion == 0
                  && (stateType == CREATURE_AIR_ELEMENTAL
                      || stateType == CREATURE_EARTH_ELEMENTAL
@@ -515,7 +521,9 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 
     case UPGRADE_STATE_AFFORDABLE:
         if (m_slot[which].m_type != CREATURE_NONE && m_slot[which].m_count > 0) {
-            TCreatureType type = m_slot[which].m_type;
+            // Hill-fort slots retain creature ids in fixed-width storage.
+            TCreatureType type = H3_ENUM_DECODE(
+                TCreatureType, m_slot[which].m_type);
             if ((g_game->m_gameVersion != 0
                  || (type != CREATURE_AIR_ELEMENTAL
                      && type != CREATURE_EARTH_ELEMENTAL
@@ -524,7 +532,8 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
                 && static_cast<unsigned char>(isBaseCreature(type))) {
                 TCreatureType upgraded;
                 {
-                    TCreatureType baseType = m_slot[which].m_type;
+                    TCreatureType baseType = H3_ENUM_DECODE(
+                        TCreatureType, m_slot[which].m_type);
                     upgraded = g_game->upgradedCreatureType(baseType);
                 }
 
@@ -599,7 +608,7 @@ void THillFortWindow::handleClick(message& msg)
     case CREATURE_PORTRAIT_6_ID:
     case CREATURE_PORTRAIT_7_ID:
         {
-            int creature =
+            TCreatureType creature =
                 g_hillFortWindow->getCreatureType(msg.m_codeY - CREATURE_PORTRAIT_1_ID);
             if (creature == CREATURE_NONE)
                 break;
@@ -686,9 +695,9 @@ int hillFortWindowHandler(message& msg)
         case THillFortWindow::CREATURE_PORTRAIT_5_ID:
         case THillFortWindow::CREATURE_PORTRAIT_6_ID:
         case THillFortWindow::CREATURE_PORTRAIT_7_ID:
-            msg.m_extraText = g_creatureTypeTraits[
+            msg.m_extraText = H3_AT(g_creatureTypeTraits,
                 g_hillFortWindow->getCreatureType(
-                    hoverID - THillFortWindow::CREATURE_PORTRAIT_1_ID)].m_pluralName;
+                    hoverID - THillFortWindow::CREATURE_PORTRAIT_1_ID)).m_pluralName;
             break;
 
         case THillFortWindow::UPGRADE_BUTTON_1_ID:
@@ -699,9 +708,9 @@ int hillFortWindowHandler(message& msg)
         case THillFortWindow::UPGRADE_BUTTON_6_ID:
         case THillFortWindow::UPGRADE_BUTTON_7_ID:
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UPGRADE_FORMAT),
-                    g_creatureTypeTraits[
+                    H3_AT(g_creatureTypeTraits,
                         g_hillFortWindow->getCreatureType(
-                            hoverID - THillFortWindow::UPGRADE_BUTTON_1_ID)].m_pluralName);
+                            hoverID - THillFortWindow::UPGRADE_BUTTON_1_ID)).m_pluralName);
             msg.m_extraText = g_text;
             break;
 

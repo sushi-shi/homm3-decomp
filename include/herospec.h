@@ -5,7 +5,10 @@
 
 #include "va.h"
 
+#include "domains.h"
 #include "secondaryskill.h"
+
+H3_ENUM_FORWARD_SPLIT(TCreatureType, int);
 
 // Five TSecondarySkill values are independently retail-proven here:
 // hero.obj's specialty factor getters each read hero::skillLevel at a fixed
@@ -103,7 +106,7 @@ struct THeroSpecificAbility {
     // (advmgr.cpp, findpath.cpp) reach this header before it.
     union {
         TSecondarySkill m_skill;       // +0x04 - valid for kind 0
-        enum TCreatureType m_creature; // +0x04 - valid for kind 1
+        H3_ENUM_STORAGE(TCreatureType, int) m_creature; // +0x04, kind 1
     };
     // +0x08/+0x0c/+0x10, the FLAT creature bonuses kinds 4 and 7 add.
     // Byte-proven by hero::HeroFn_004E6120, which reads them at exactly
@@ -119,8 +122,8 @@ struct THeroSpecificAbility {
     // names TWO creatures it will upgrade, the one at +0x04 and this
     // second one, and +0x18 is what both become. Elaborated enum for the
     // reason the union above is: herospec.h does not include armygrp.h.
-    enum TCreatureType m_upgradeAlternateSubject;  // +0x14
-    enum TCreatureType m_upgradeResult;            // +0x18
+    H3_ENUM_STORAGE(TCreatureType, int) m_upgradeAlternateSubject; // +0x14
+    H3_ENUM_STORAGE(TCreatureType, int) m_upgradeResult; // +0x18
     // +0x1c, the one-line specialty label. Retail's own 17-byte getter at
     // 0x4d7220 is nothing but `return akHeroSpecificAbilities[id].<+0x1c>;`,
     // and THeroScreenWindow::SetupHeroView sprintf's it into widget 0x8b,

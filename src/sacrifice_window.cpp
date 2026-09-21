@@ -19,7 +19,8 @@
 #include "viewarmywindow.h"
 #include "winmgr.h"
 
-static const TCreatureType g_deathCreature[H3_IDX(CREATURE_CATAPULT)] = {
+static const H3_ENUM_STORAGE(TCreatureType, int)
+    g_deathCreature[CREATURE_ROSTER_COUNT] = {
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
@@ -481,7 +482,8 @@ void type_sacrifice_window::createCreatureWidgets(
     textWidget* newTextWidgets[7];
     long itemNumber = 0;
 
-    for (long defIndex = 0; defIndex < 2; ++defIndex) {
+    long defIndex;
+    for (defIndex = 0; defIndex < 2; ++defIndex) {
         count = createCreatureIcons(
             g_constCreatureSources[defIndex][0],
             g_constCreatureSources[defIndex][1],
@@ -804,7 +806,7 @@ void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
 // divide-by-forty reciprocal fix this integer value exactly.
 long sacrificeValue(TCreatureType creature)
 {
-    return g_creatureTypeTraits[creature].m_aiValue / 40 * 5;
+    return H3_AT(g_creatureTypeTraits, creature).m_aiValue / 40 * 5;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:924
@@ -843,7 +845,9 @@ void type_sacrifice_window::updateCreatureOffering(
         creatureType = CREATURE_NONE;
         creature->m_amount = 0;
     } else {
-        creatureType = m_currentHero->m_army.m_armyTypes[creature->m_group];
+        // Army slots retain creature ids in fixed-width storage.
+        creatureType = H3_ENUM_DECODE(TCreatureType,
+            m_currentHero->m_army.m_armies[creature->m_group]);
         available = m_currentHero->m_army.m_numTroops[creature->m_group];
     }
 
@@ -858,7 +862,8 @@ void type_sacrifice_window::updateCreatureOffering(
             * m_currentHero->getExperienceBonusFactor());
         std::string result;
 
-        creature->m_iconWidget->setIconFrame(creatureType + 2);
+        // The creature portrait resource uses ordinal + 2.
+        creature->m_iconWidget->setIconFrame(H3_IDX(creatureType) + 2);
         creature->m_iconWidget->setVisible(1);
         if (!creature->m_sourceSelectionFrame) {
             result = convertWithCommas(creature->m_amount);
@@ -868,7 +873,8 @@ void type_sacrifice_window::updateCreatureOffering(
         creature->m_creatureCountText->setText(result.c_str());
         creature->m_creatureCountText->setVisible(1);
 
-        creature->m_selectionWidget->setIconFrame(creatureType + 2);
+        // The creature portrait resource uses ordinal + 2.
+        creature->m_selectionWidget->setIconFrame(H3_IDX(creatureType) + 2);
         creature->m_selectionWidget->setVisible(creature->m_amount > 0);
         result = convertWithCommas(totalHits);
         result = formatString(
@@ -1420,7 +1426,9 @@ void type_sacrifice_window::setCreatureSacrifice(long slot, long newAmount)
     if (m_creatureOfferings[slot].m_amount == newAmount)
         return;
 
-    TCreatureType creatureType = m_currentHero->m_army.m_armyTypes[slot];
+    // Army slots retain creature ids in fixed-width storage.
+    TCreatureType creatureType = H3_ENUM_DECODE(
+        TCreatureType, m_currentHero->m_army.m_armies[slot]);
     long value = sacrificeValue(creatureType);
     long oldExperience = static_cast<long>(
         (value * m_creatureOfferings[slot].m_amount)
@@ -1550,7 +1558,9 @@ void type_sacrifice_window::creatureClick(
             return;
         }
 
-        TCreatureType creatureType = m_currentHero->m_army.m_armyTypes[slot];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType creatureType = H3_ENUM_DECODE(
+            TCreatureType, m_currentHero->m_army.m_armies[slot]);
         long amount = m_creatureOfferings[slot].m_amount;
         if (leftPane)
             amount = m_currentHero->m_army.m_numTroops[slot] - amount;
@@ -1575,14 +1585,14 @@ void type_sacrifice_window::creatureClick(
         updateCreatureOffering(&m_currentCreature);
         updateCreatureOffering(&m_creatureOfferings[slot]);
 
-        if (m_currentHero->m_army.m_armyTypes[slot] == CREATURE_NONE) {
+        if (m_currentHero->m_army.m_armies[slot] == CREATURE_NONE) {
             m_creatureNameWidget->setVisible(0);
         } else {
             std::string buffer;
             buffer = formatString(
                 g_generalText->getText(
                     SACRIFICE_GENERAL_TEXT_CREATURE_NAME),
-                getArmyName(m_currentHero->m_army.m_armyTypes[slot], 0));
+                getArmyName(m_currentHero->m_army.m_armies[slot], 0));
             m_creatureNameWidget->setText(buffer.c_str());
             m_creatureNameWidget->setVisible(1);
             m_creatureOfferings[slot].m_offeringSelectionFrame->setVisible(1);
@@ -1821,10 +1831,12 @@ inline void type_skeleton_window::updateButtons()
 {
     long i;
     for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-        long type = m_armies[1]->m_armyTypes[i];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType type = H3_ENUM_DECODE(
+            TCreatureType, m_armies[1]->m_armies[i]);
         if (type == CREATURE_NONE)
             continue;
-        if (type != g_deathCreature[type])
+        if (type != H3_AT(g_deathCreature, type))
             break;
     }
     m_sacrificeButton->enable(i < armyGroup::ARMY_GROUP_SLOT_COUNT);
@@ -1834,7 +1846,9 @@ inline void type_skeleton_window::updateButtons()
 VA(0x00566030, 0x45D)  // dc 0x127b68
 void type_skeleton_window::update(long group, long index)
 {
-    TCreatureType type = m_armies[group]->m_armyTypes[index];
+    // Army slots retain creature ids in fixed-width storage.
+    TCreatureType type = H3_ENUM_DECODE(
+        TCreatureType, m_armies[group]->m_armies[index]);
     if (type == CREATURE_NONE) {
         m_armyWidget[group][index]->setVisible(0);
         m_armyLabel[group][index]->setVisible(0);
@@ -1848,7 +1862,8 @@ void type_skeleton_window::update(long group, long index)
     const char* name = getArmyName(
         type, m_armies[group]->m_numTroops[index]);
 
-    m_armyWidget[group][index]->setIconFrame(type + 2);
+    // The creature portrait resource uses ordinal + 2.
+    m_armyWidget[group][index]->setIconFrame(H3_IDX(type) + 2);
     result = formatString(
         DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
         m_armies[group]->m_numTroops[index]);
@@ -1860,7 +1875,9 @@ void type_skeleton_window::update(long group, long index)
         result = formatString(
             g_generalText->getText(SACRIFICE_GENERAL_TEXT_CREATURE), name);
     } else {
-        int transformed = g_deathCreature[type];
+        // The transformation table retains creature ids in fixed-width storage.
+        TCreatureType transformed = H3_ENUM_DECODE(
+            TCreatureType, H3_AT(g_deathCreature, type));
         if (transformed != type) {
             result = formatString(
                 g_generalText->getText(
@@ -1892,7 +1909,9 @@ VA(0x00566490, 0x258)
 void type_skeleton_window::creatureClick(
     long side, long slot, unsigned char rightClick)
 {
-    TCreatureType creatureType = m_armies[side]->m_armyTypes[slot];
+    // Army slots retain creature ids in fixed-width storage.
+    TCreatureType creatureType = H3_ENUM_DECODE(
+        TCreatureType, m_armies[side]->m_armies[slot]);
 
     if (rightClick
         || (slot == m_selectedIndex && side == m_selectedGroup)) {
@@ -1915,18 +1934,18 @@ void type_skeleton_window::creatureClick(
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     } else {
         if (creatureType
-            == m_armies[m_selectedGroup]->m_armyTypes[m_selectedIndex]) {
+            == m_armies[m_selectedGroup]->m_armies[m_selectedIndex]) {
             m_armies[side]->add(
                 creatureType,
                 m_armies[m_selectedGroup]->m_numTroops[m_selectedIndex], slot);
             m_armies[m_selectedGroup]->dismiss(m_selectedIndex);
         } else {
-            long troops = m_armies[side]->m_numTroops[slot];
-            m_armies[side]->m_armyTypes[slot] =
-                m_armies[m_selectedGroup]->m_armyTypes[m_selectedIndex];
+            int troops = m_armies[side]->m_numTroops[slot];
+            m_armies[side]->m_armies[slot] =
+                m_armies[m_selectedGroup]->m_armies[m_selectedIndex];
             m_armies[side]->m_numTroops[slot] =
                 m_armies[m_selectedGroup]->m_numTroops[m_selectedIndex];
-            m_armies[m_selectedGroup]->m_armyTypes[m_selectedIndex] = creatureType;
+            m_armies[m_selectedGroup]->m_armies[m_selectedIndex] = creatureType;
             m_armies[m_selectedGroup]->m_numTroops[m_selectedIndex] = troops;
         }
         m_selectBorder[m_selectedGroup][m_selectedIndex]->sendMessage(
@@ -2028,12 +2047,12 @@ void type_skeleton_window::createCreatureIcons(
 inline void moveAllArmies(armyGroup* source, armyGroup* dest)
 {
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-        if (source->m_armyTypes[i] == CREATURE_NONE)
+        if (source->m_armies[i] == CREATURE_NONE)
             continue;
         long destIndex = i;
-        if (dest->m_armyTypes[i] != CREATURE_NONE)
+        if (dest->m_armies[i] != CREATURE_NONE)
             destIndex = -1;
-        dest->add(source->m_armyTypes[i], source->m_numTroops[i], destIndex);
+        dest->add(source->m_armies[i], source->m_numTroops[i], destIndex);
         source->dismiss(i);
     }
 }
@@ -2107,18 +2126,20 @@ int type_skeleton_window::sacrifice(message& msg)
         type_skeleton_window* window =
             static_cast<type_skeleton_window*>(msg.m_window);
         for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-            TCreatureType type = window->m_armies[1]->m_armyTypes[i];
-            if (type == CREATURE_NONE || type == g_deathCreature[type])
+            // Army slots retain creature ids in fixed-width storage.
+            TCreatureType type = H3_ENUM_DECODE(
+                TCreatureType, window->m_armies[1]->m_armies[i]);
+            if (type == CREATURE_NONE || type == H3_AT(g_deathCreature, type))
                 continue;
 
             sprintf(g_text,
                     DATA_COMPGEN(0x006609e0, transformerKillSampleFormat,
                                  "%skill.82M"),
-                    g_creatureTypeTraits[type].m_samplePrefix);
+                    H3_AT(g_creatureTypeTraits, type).m_samplePrefix);
             sample* newSample = ResourceManager::getSample(g_text);
             window->m_deathSamples.push_back(newSample);
             g_soundManager->memorySample(newSample);
-            window->m_armies[1]->m_armyTypes[i] = g_deathCreature[type];
+            window->m_armies[1]->m_armies[i] = H3_AT(g_deathCreature, type);
             window->update(1, i);
         }
         window->updateButtons();

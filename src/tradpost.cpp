@@ -2504,11 +2504,11 @@ void TSellCreatureWindow::update(bool update)
                              : g_generalText->getText(GENERAL_TEXT_UNIT),
                 g_resourceNames[g_leftResource], rightQty,
                 rightQty > 1
-                    ? g_creatureTypeTraits[
-                          g_marketHero->m_army.m_armies[g_selectedArtifact]]
+                    ? H3_AT(g_creatureTypeTraits,
+                          g_marketHero->m_army.m_armies[g_selectedArtifact])
                           .m_pluralName
-                    : g_creatureTypeTraits[
-                          g_marketHero->m_army.m_armies[g_selectedArtifact]]
+                    : H3_AT(g_creatureTypeTraits,
+                          g_marketHero->m_army.m_armies[g_selectedArtifact])
                           .m_name);
     } else {
         if (g_leftDenominated)
@@ -2569,7 +2569,9 @@ void TSellCreatureWindow::update(bool update)
             msg.m_codeX = 4;
             if (side == 0) {
                 msg.m_codeY = 10;
-                msg.m_extra = g_marketHero->m_army.m_armies[g_selectedArtifact] + 2;
+                // The portrait resource uses creature ordinal + 2.
+                msg.m_extra =
+                    H3_IDX(g_marketHero->m_army.m_armies[g_selectedArtifact]) + 2;
                 broadcastMessage(msg);
                 msg.m_codeX = 3;
                 msg.m_codeY = 4;
@@ -2630,7 +2632,9 @@ void TSellCreatureWindow::update(bool update)
 
                     msg.m_codeX = 4;
                     msg.m_codeY = resource + 132;
-                    msg.m_extra = g_marketHero->m_army.m_armies[resource] + 2;
+                    // The portrait resource uses creature ordinal + 2.
+                    msg.m_extra =
+                        H3_IDX(g_marketHero->m_army.m_armies[resource]) + 2;
                     broadcastMessage(msg);
 
                     sprintf(g_text,
@@ -2807,8 +2811,8 @@ void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightReso
 VA(0x005ece80, 0x157)  // anchor-callee (TSellCreatureWindow::Update+WindowHandler) + GetNumArmies, dc 0x18b114
 void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
-    float denominator = static_cast<float>(g_creatureTypeTraits[
-                            g_marketHero->m_army.m_armies[inLeftResource]].m_cost[6])
+    float denominator = static_cast<float>(H3_AT(g_creatureTypeTraits,
+                            g_marketHero->m_army.m_armies[inLeftResource]).m_cost[6])
                       * g_creatureSaleEfficency[g_marketCount];
     float ratio = static_cast<float>(g_marketValues[inRightResource]) / denominator;
     if (ratio >= 1.0f) {
@@ -3760,8 +3764,10 @@ void TSellCreatureWindow::setRolloverText(int codeY)
     case MARKET_CREATURE_SLOT_2_ID: case MARKET_CREATURE_SLOT_3_ID:
     case MARKET_CREATURE_SLOT_4_ID: case MARKET_CREATURE_SLOT_5_ID:
     case MARKET_CREATURE_SLOT_6_ID: {
-        int creatureType =
-            g_marketHero->m_army.m_armies[codeY - MARKET_CREATURE_SLOT_0_ID];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType creatureType = H3_ENUM_DECODE(TCreatureType,
+            g_marketHero->m_army.m_armies[
+                codeY - MARKET_CREATURE_SLOT_0_ID]);
         sprintf(g_text, getArmyName(creatureType, 2));
         break;
     }
