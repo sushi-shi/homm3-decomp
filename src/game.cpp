@@ -3997,18 +3997,16 @@ static void randomizeShrine(NewmapCell* cell, const int level)
 // RandomizeEvents expands this ordinary static helper.
 static void randomizeWagon(NewmapCell* cell)
 {
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->m_extraInfo));
     int i = random(0, 99);
     // DC game.cpp:4662 has both Random calls in SetWagon's expression.
     // Keep them there; the conversion itself has no recovered helper.
-    info->setWagon(EGameResource(random(0, 5)),
+    cell->setWagon(EGameResource(random(0, 5)),
         static_cast<short>(random(2, 5)));
     if (i < 10)
-        info->emptyWagon();
+        cell->emptyWagon();
     else if (i < 50) {
         TArtifact artifact = g_game->getRandomArtifactId(6);
-        info->setWagon(artifact);
+        cell->setWagon(artifact);
     }
 }
 
@@ -4063,14 +4061,13 @@ static void randomizeTomb(NewmapCell* cell)
     info->setTomb(g_game->getRandomArtifactId(level));
 }
 
-// E:\gamedcs\game.cpp:4753. The vector local and its teardown belong to the
-// inlined source helper; retail calls only the packed pyramid setter.
-// Ownership probe: the MapCell.h body at 0x4c2330 is currently fully
-// expanded here. Replacing this helper's __forceinline with ordinary static
-// did not recover the retained call; the fatal header-emission gate remains.
+// E:\gamedcs\game.cpp:4753. The selected value is the recorded SpellID local.
+// Complete replaces the old retry loop with a candidate vector; its retained
+// vector<int>::insert relocation proves the element type. Retail expands this
+// helper into RandomizeEvents but retains the packed pyramid setter.
 static void randomizePyramid(NewmapCell* cell)
 {
-    std::vector<long> possibleSpells;
+    std::vector<int> possibleSpells;
     int i;
     for (i = 0; i < 70; ++i) {
         if (g_spellTraits[i].m_school != const_invalid_school
@@ -4079,11 +4076,10 @@ static void randomizePyramid(NewmapCell* cell)
             possibleSpells.push_back(i);
     }
 
-    int spell = possibleSpells[random(0, possibleSpells.size() - 1)];
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->m_extraInfo));
-    info->setPyramid(true, spell);
-    info->clearVisitedBits();
+    SpellID spell = SpellID(
+        possibleSpells[random(0, possibleSpells.size() - 1)]);
+    cell->setPyramid(true, spell);
+    cell->clearVisitedBits();
 }
 
 // E:\gamedcs\game.cpp:4770
