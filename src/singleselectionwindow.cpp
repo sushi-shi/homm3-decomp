@@ -2,6 +2,7 @@
 #include "va.h"
 
 #include <algorithm>
+#include "homm3_minmax.h"
 #include <bitset>
 #include <direct.h>
 #include <io.h>
@@ -2784,6 +2785,9 @@ void TSingleSelectionWindow::createFilterWidgets()
     }
 }
 
+// Complete-only model: the AI bound selects an operand reference; the
+// player/human bounds use value wrappers. Binding the selected player id
+// before widgetSetStatus preserves the retail argument homes (100%).
 VA(0x0057ef70, 0x3B9)
 void TSingleSelectionWindow::updateFilterWidgets()
 {
@@ -2831,9 +2835,10 @@ void TSingleSelectionWindow::updateFilterWidgets()
     int lastFilter = m_randomMapOptions[3];
     if (lastFilter == -1)
         widgetSetStatus(0x131, 0x10);
-    else
-        widgetSetStatus(std::_cpp_min<long>(hi, lastFilter) + 0x129,
-                        0x10);
+    else {
+        int selectedFilter = min(hi, lastFilter);
+        widgetSetStatus(selectedFilter + 0x129, 0x10);
+    }
     for (i = 0x133; i <= 0x13b; ++i)
         widgetClearStatus(i, 0x10);
     for (i = 0x134; i <= 0x13b - lo; ++i)
@@ -2841,7 +2846,7 @@ void TSingleSelectionWindow::updateFilterWidgets()
     for (; i <= 0x13a; ++i)
         widgetSetStatus(i, 0x1000);
     int aiFilter = m_randomMapOptions[4];
-    int n = std::_cpp_min(8 - lo, aiFilter);
+    int n = std::min(8 - lo, aiFilter);
     if (aiFilter == -1) {
         n = 8 - lo;
         widgetSetStatus(0x13b, 0x10);
@@ -2858,7 +2863,7 @@ void TSingleSelectionWindow::updateFilterWidgets()
     if (humanFilter == -1)
         widgetSetStatus(0x144, 0x10);
     else
-        widgetSetStatus(std::_cpp_min<long>(n, humanFilter) + 0x13d, 0x10);
+        widgetSetStatus(min(n, humanFilter) + 0x13d, 0x10);
     for (i = 0x146; i <= 0x149; ++i)
         widgetClearStatus(i, 0x10);
     if (m_randomMapOptions[6] == SCENARIO_FILTER_CATEGORY_ANY)
@@ -5144,9 +5149,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
         path += name;
 
         result = request.generate(path.c_str(), &progress);
-        progress.m_done = std::_cpp_min<long>(progress.m_done + 1,
-                                            progress.m_steps);
-        progress.loadProgFn00577180();
+        progress.advance(1);
     }
 
     stopMouseThread();

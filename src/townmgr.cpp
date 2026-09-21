@@ -6877,98 +6877,15 @@ void townManager::doTownTavern()
 // `adventure_spell` false because this is the town-screen entry rather
 // than the adventure-map spell.
 
-// Two townmgr.obj members are EXPANDED here rather than called, which is
-// what makes retail's 609 bytes out of the Dreamcast's 270:
-//   * townManager::MoveHero(fromTown, toTown) (dc 0x17b428) - the
-//     townToView store, the TeleportTo and the GiveSpells;
-//   * townManager::ChangeTown(fade) (dc 0x16b9e4) - the mouse-thread
-//     bracket, SetupExtraStuff, SetupTown and the SetCommandAndText
-//     message. Its del_Spr_from_Cache call is Dreamcast-only: retail's
-//     multiset here does not carry it, the same finding THallWindow's
-//     note records for that TU-wide census.
-// Both are spelled out in place because neither is defined in this
-// compiland ahead of this body, so writing the call would emit the call
-// retail does not have - and for MoveHero there is a stronger reason:
-// retail has NO out-of-line body for it anywhere. The carve runs
-// DoTownTavern 0x5d82b0 / DoTownGate 0x5d8480 / TCastleWindow 0x5d86f0
-// with fifteen bytes of alignment between the last two and no row
-// between, and an extern-linkage member is emitted unconditionally, so
-// the Dreamcast roster's townManager::MoveHero cannot be a member in
-// retail's source - it is a single-call-site file static that /Ob2
-// expanded and dropped, the initialize.obj pattern. Spelling it as such
-// (a 3-arg static taking the town id) WAS measured and vanishes exactly
-// as the model predicts, but scores the same 98.6070 to the digit and
-// would invent a declarator the Dreamcast contradicts, so the
-// transcription is kept - the DrawTown/ShowText treatment two rows up.
-
-// `town::get_location` is the by-value type_point accessor town.h gates:
-// retail builds the point straight into TeleportTo's argument slot with
-// the three bitfield inserts (x and y masked to 0x3ff into their own
-// 16-bit units, z shifted ten bits into the second), which is the
-// accessor inlined against its hidden return buffer.
-
-// The hero handed to TeleportTo is the FROM town's, read before the
-// townToView store; the one handed to ApplySpecialBuildingEffect is the
-// TO town's, read after it - retail reloads `[edi+0x38]` for the second,
-// so the two are separate expressions and not one CSE.
-
-// Residual (98.61%): FIVE BYTES, and they are the price of expanding
-// [2026-08-21] The five bytes are decoded, and the obvious fix loses.
-// Retail tests `gpWindowManager->dialogReturn` ONCE and lets the inlined
-// GetTown's own `== -1` guard reuse those flags (`cmp eax,-1 / je <else>`
-// ... `mov ecx,[edi+0x38] / jne`, the `mov` not touching flags). The
-// `int selectedTown` copy below moves the value into a second register
-// (`mov eax,ecx`) and forces a re-materialised `cmp eax,-1`. Dropping the
-// local and handing `gpWindowManager->dialogReturn` straight to GetTown DOES
-// retire the second compare and costs 0.47 (98.6070 -> 98.1343), because the
-// re-read of the global then outweighs it. The named local stays - measured
-// local maximum.
-// [2026-08-21] The five bytes are decoded, and the obvious fix loses.
-// Retail tests `gpWindowManager->dialogReturn` ONCE and lets the inlined
-// GetTown's own `== -1` guard reuse those flags: `cmp eax,-1 / je <else>`
-// ... `mov ecx,[edi+0x38] / jne` - the `mov` does not touch flags. Our
-// `int selectedTown = ...` copy moves the value to a second register
-// (`mov eax,ecx`) and forces a re-materialised `cmp eax,-1`. Dropping the
-// local and passing `gpWindowManager->dialogReturn` straight to GetTown
-// does retire the second compare and COSTS 0.47 (98.6070 -> 98.1343),
-// because the re-read of the global then outweighs it. The named local
-// stays; this pair is a local maximum.
-// MoveHero by hand instead of letting /Ob2 do it. Retail reaches the
-// teleport with `mov ecx,[gpWindowManager] / mov eax,[ecx+0x38] /
-// cmp eax,-1 / je tail`, then loads fromTown and takes the GetTown null
-// arm on the SAME flags (`jne`) - one load, one compare, two branches,
-// the identical-compare fold this tree documents. Our CL keeps the load
-// (`mov ecx,[eax+0x38]`) but copies it into the argument register and
-// re-compares (`mov eax,ecx / cmp eax,-1`). The two ways out of that are
-// both worse and both measured: naming the id once and using that ONE
-// name in both the guard and GetTown lets VC6 propagate the range and
-// delete the null arm entirely (97.51), and reading the member twice
-// with no local at all folds the first read into a memory compare so
-// there is no register to CSE (98.13). Sweeping the three declaration
-// orders inside the arm gives 98.13 / 98.13 / 97.21, and putting the
-// redraw in the if-body rather than the else costs the tail-duplicated
-// epilogue outright (83.78). The spelling kept is the best of the eight:
-// the guard on the member, the id named INSIDE the arm. Retail's own
-// fold needs the two tests to arrive from different inlining phases,
-// which a hand expansion cannot reproduce; locating MoveHero's retail
-// body and letting the compiler expand it is the honest fix.
-
-// Six more spellings measured 2026-08-15 against the same five bytes,
-// none of them better, and between them they CLOSE the mechanism: the
-// guard is a load-and-compare only when the value is ALSO named, and
-// naming it is exactly what lets VC6 propagate the range through the
-// copy and delete GetTown's null arm. Hoisting `fromTown` out of the
-// arm (98.61, byte-identical), declaring the id uninitialised at
-// function scope and assigning it inside (98.61, byte-identical),
-// assigning townToView straight from GetTown and naming the result
-// after (98.61, byte-identical), naming the id ahead of the guard and
-// still guarding on the member (97.51 - the arm goes), naming it ahead
-// and guarding on the name (97.51, the same), and reordering the id and
-// fromTown declarations (98.13). The two outcomes are the only two the
-// compiler has: EITHER the copy survives and the second compare with
-// it, OR the range propagates and the null arm goes. Retail has
-// neither, which is what "different inlining phases" means here.
-// Withdraw the standing hope that a declaration order closes it.
+// Dreamcast calls MoveHero (dc 0x17b428) and ChangeTown (dc 0x16b9e4).
+// Keep those ordinary members and their source calls; their retail expansions
+// do not establish different declarations or authorize pasted caller bodies.
+// ChangeTown's del_Spr_from_Cache operation is Dreamcast-only: retail's
+// corresponding redraw sequence omits it.
+// Earlier flattened-caller probes reached 98.61%. Naming the selected town
+// before the guard erased GetTown's null arm (97.51%); reading dialogReturn
+// twice retained a redundant load (98.13%). Those results describe the old
+// expansion, not a reason to bypass the recovered members.
 
 // E:\gamedcs\townmgr.cpp:8203
 VA(0x005d8480, 0x261)  // anchor-callee TTownGateWindow ctor/AddTown/DoModal + arity(bare ret), dc 0x17b318
@@ -8252,8 +8169,6 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
             }
             if (bestHero) {
                 g_heroWidgetMap[column] = bestHero->m_id;
-                // Historical insert(end(), value) probe: 93.38 -> 94.04%.
-                // Keep the ordinary append proven by DC's widget sequence.
                 m_widgets.push_back(new bitmapBorder(
                     66 * column + 0x104, 0x168, 0x30, 0x20,
                     column + HERO_P0,

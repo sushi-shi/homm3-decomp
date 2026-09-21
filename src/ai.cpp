@@ -1652,15 +1652,6 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 // cmbtmgr.h's InCastle / combatManager::IsInMoat.
 
 // Things worth knowing about the transcription:
-//   * `budget` is spelled as an assignment from itself rather than an
-//     `if (...) budget = 0;` because retail SELECTS into EAX (`xor eax,
-//     eax` / `mov eax,[ebp-0x30]`) ahead of the teleport branch instead
-//     of storing zero into the slot.
-//   * the disabled-stack predicate is spelled out three fields at a
-//     time everywhere it appears. army::IsIncapacitated is pinned
-//     `auto_inline(off)` in this TU to protect find_move_order's single
-//     retail call, so reaching for it here would emit a CALL where
-//     retail has the fields.
 //   * the two `field_3c = 6` exits store in DIFFERENT orders - the
 //     teleport one writes 3c/40/44, the commit one 40/3c/44. Both are
 //     transcribed as retail has them.

@@ -1340,59 +1340,13 @@ std::string armyGroup::getMoraleDescription(
 // differs, which objdiff does not score. Recorded because it is what retail
 // wrote and because the call multiset is what `predict-inline` reads.
 
-// WHAT THE LINE TABLE CAN AND CANNOT SAY HERE. The DC compiland is an
-// older revision with no `creature` parameter, and it has NO line at all
-// for two blocks retail has: the clover-field arm (between DC 1482 and
-// 1485) and the halfling arm (between DC 1502 and 1505) - retail's four
-// `format_string`/append groups against DC's three corroborate the second
-// exactly. So the +4 candidate sites this row is measured to be short of
-// (docs/vc6/inliner.md §5.12) must live in those two blocks; the table
-// bounds them negatively and cannot name them. The clover arm's own
-// bytes - including its longhand four-way elemental compare, which is the
-// `is_base_elemental` shape landed in viewarmywindow - already match
-// retail exactly, so it is a site count and not a spelling.
-
-// A DC-census lead that does NOT transfer (2026-08-14): the xref graph
-// records `GetArmyName` (dc 0x1ef94, E:\gamedcs\CreatureType.h:296) from
-// both this body (x1) and get_morale_description (x3), and that helper is
-// what closed ??0TQuickCreatureWindow. Respelling
-// `armygrp_creature_plural_name(x)` as `GetArmyName(x, 0)` - the same
-// lookup, with the count test folding away - costs this row 1.9 points and
-// is byte-flat on get_morale_description (67.5649) and
-// get_spell_work_chance (88.5071). The plain plural lookup with no count
-// parameter is retail's x86 spelling in this compiland; the census counts
-// (x1/x3 against our x2/x2) already said the port's bodies differ.
-// Two further census leads are real but not reachable from this file:
-// `town::HasBuilding` x1 (E:\gamedcs\Town.h:324) where we read
-// `ourTown->active & bitNumber[EXTRA_0_ID]` as a field - town.h carries
-// the declaration - and `std::string::operator+=`
-// x3 against our mixed `+=`/`append`.
-// THE SITE COUNT IS RE-MEASURED AND THE SEARCH IS NARROWED TO ONE BLOCK
-// (2026-08-15). The deficit is still exactly FOUR free candidate sites,
-// but the probe has to be a USER-DEFINED inline to register at all -
-// `armygrp_clamp(0, luck, 3);` steps 82.5689 flat through +3 and jumps to
-// 95.1557 at +4, while `result.size()` / `result.capacity()` (Dinkumware
-// members) are inert until they start doing harm. And POSITION decides it:
-//   clover arm  x4  -> 95.1557      halfling arm x4  -> 80.5000
-//   devil block x4  -> 95.1557      after the tail   x4  -> 80.5000
-//   any 1/3, 2/2 or 3/1 split across clover+halfling -> 80.5000
-// So the four sites are at or BEFORE the Rampart gate, which EXCLUDES the
-// halfling arm - half of what the line table's negative bound allowed -
-// and leaves the clover arm as the only post-Dreamcast block they can live
-// in. Two real sites are now landed inside that window (`is_base_elemental`
-// in the clover gate, `town::HasBuilding` in the Rampart gate); both are
-// byte-flat, which is expected on a threshold this sharp. Open: which four
-// statements the clover arm carries. Nothing is padded - the probe is an
-// instrument, and the baseline row is deliberately left at 82.5689.
-
-// THE RAMPART GATE IS A town::HasBuilding CALL (byte-flat, 2026-08-15):
-// dc 0x4fab4 line 1499 is `mov #21,r5 / mov #1,r6 / jsr` on
-// `?HasBuilding@town@@QBA_NH_N@Z` where this body tested `active &
-// bitNumber[EXTRA_0_ID]`. It buys ONE candidate site, and this row is
-// short FOUR, so the score does not move - recorded because it is the
-// statement retail wrote and because it narrows the outstanding deficit
-// to +3 sites in the two post-Dreamcast blocks above. GetLuck's twin
-// gate (dc 0x4f20c line 1101) is byte-flat too and stays exact.
+// Complete adds the clover-field and halfling arms to the older DC body.
+// Their missing DC lines do not recover absent statements. Keep the shared
+// isBaseElemental, GetArmyName and HasBuilding helpers already used below.
+// DC line 1499 positively calls HasBuilding(EXTRA_0_ID, true).
+// Earlier flattened lookup controls and artificial inline-budget probes
+// changed string expansion decisions, but do not establish alternate helper
+// declarations or justify adding candidate sites to this source.
 
 // [2026-08-21] +5.69 (84.5060 -> 90.1916) from the nine-town switch routing
 // below, and the two sides' instruction counts now agree exactly (332 = 332,
@@ -1466,7 +1420,7 @@ std::string armyGroup::getLuckDescription(
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
             luck -= 2;
-            result.append(g_luckInfo[24]);
+            result += g_luckInfo[24];
             break;
         default:
             break;

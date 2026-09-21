@@ -3128,7 +3128,7 @@ VA(0x0048b2e0, 0x8C)
 void SCampaign::applyBriefingChoice(int option)
 {
     m_briefingChoice = option;
-    m_assignedCarryover.erase(m_assignedCarryover.begin(), m_assignedCarryover.end());
+    m_assignedCarryover.clear();
     if (m_currentCampaign == ALIGNMENT_CHOICE_CAMPAIGN_A
         && m_currentMap == ALIGNMENT_CHOICE_MAP)
         g_game->m_setup.m_alignment[2] = TOWN_INFERNO;

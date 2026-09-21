@@ -1046,7 +1046,7 @@ void playerData::init()
     m_numHeroes = 0;
     m_currHeroId = -1;
     m_currTownId = 0;
-    m_shipyards.erase(m_shipyards.begin(), m_shipyards.end());
+    m_shipyards.clear();
 
     m_puzzleGuess.m_x = -1;
     m_puzzleGuess.m_y = -1;
@@ -3355,7 +3355,7 @@ void game::giveTroopsToNeutralTown(int townId)
     town* currentTown = &m_towns[townId];
     long weekNumber = static_cast<short>(
         (m_month * 4 + m_week - 5) * 7 + m_day) / 7;
-    int maxRoll = std::_cpp_min(weekNumber, static_cast<long>(8)) + 1;
+    int maxRoll = min(weekNumber, 8) + 1;
     int roll = random(0, maxRoll) + random(0, maxRoll)
               + random(0, maxRoll);
 
@@ -5049,21 +5049,13 @@ bool game::loadMap(TAbstractFile* mapFile)
 // second argument is part of the proved retail arity (`ret 8`) but this body
 // never reads it.
 
-// Residual (86.08842%, 2026-08-26): all 39 reachable blocks, every branch,
-// the 0x5c frame and the normal return are instruction-for-instruction exact.
-// The candidate has 42 blocks against retail's 40 solely because VC6 expands
-// two more layers of bitset<70>::set's unreachable range-error construction:
-// it expands basic_string::_Tidy and logic_error's constructor where retail
-// calls them. predict-inline reports the same six-call census on both sides
-// and identifies exactly those two over-inline decisions. inline_depth 1..4,
-// set/operator[] spellings and byte-inert candidate-site sweeps do not move
-// that decision in this compiland; depth zero incorrectly calls set itself.
-
 // The artifact records are assigned as complete two-dword values. Besides
 // expressing the map format directly, that is the source shape which gives
-// retail's `movsx / store / or -1 / store` loop. assign_map_hero_name keeps
-// the returned string temporary as the direct assign argument while pinning
-// only assign itself, reproducing the complete normal-path cleanup transcript.
+// retail's `movsx / store / or -1 / store` loop. The custom name likewise
+// assigns the complete returned string. No Dreamcast counterpart is known
+// for this Complete-only reader. Whole-string operator= currently gives
+// 44.0213% versus 52.0030% with explicit assign; a named return-value temporary
+// only reaches 44.7652%. String and bitset helper expansion remains unresolved.
 VA(0x004c2ce0, 0x3A8)  // sole caller LoadMap + HeroExtra field-offset walk
 void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 {
@@ -5138,8 +5130,7 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
         mapFile->read(&customName, sizeof(customName));
         if (customName) {
             heroRecord->m_customName = 1;
-            heroRecord->m_name.assign(
-                readLengthPrefixedString(mapFile), 0, std::string::npos);
+            heroRecord->m_name = readLengthPrefixedString(mapFile);
         }
 
         signed char sexByte;
@@ -5833,8 +5824,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
             if (heroId == g_savedHeroNone)
                 heroId = -1;
             m_heroes[heroIndex].m_heroId = heroId;
-            m_heroes[heroIndex].m_name.assign(
-                readLengthPrefixedString(infile), 0, std::string::npos);
+            m_heroes[heroIndex].m_name = readLengthPrefixedString(infile);
             ++heroIndex;
             --heroCount;
         } while (heroCount != 0);
@@ -6440,7 +6430,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             m_teamInfo[i] = i;
     }
 
-    m_heroPlayerSetups.erase(m_heroPlayerSetups.begin(), m_heroPlayerSetups.end());
+    m_heroPlayerSetups.clear();
     if (saveVersion < g_saveVersionCustomHeroSetups)
         return 0;
 
@@ -8565,8 +8555,8 @@ void game::processOnMapTowns()
                     if (townExtra->m_customName)
                         currTown->m_name = townExtra->m_name;
                     else
-                        currTown->m_name.assign(
-                            getRandomTownName(townExtra->m_townType));
+                        currTown->m_name =
+                            getRandomTownName(townExtra->m_townType);
 
                     currTown->initialize(townExtra);
                     convertObject(tempCell);

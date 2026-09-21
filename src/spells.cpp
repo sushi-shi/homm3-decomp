@@ -2901,9 +2901,10 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
 // 556-pixel clip is retail's own inconsistency; transcribed.
 
 // DC also preserves the original helper boundaries: ClearEffects,
-// SpellCastWorks, CSprite::DrawSpellEffect and TTextResource::operator[].
-// VC6 expands each one here. SpellCastWorks has no recorded local and one
-// body row, so its direct return expression is retained; the earlier named
+// SpellCastWorks and CSprite::DrawSpellEffect. Its text subscripts forward
+// to the getText accessor used here. VC6 expands these helpers. SpellCastWorks
+// has no recorded local and one body row, so its direct return expression is
+// retained; the earlier named
 // `chance` changed this caller's allocation even though the helper itself was
 // byte-flat. The tile coordinates are the DC const locals `dy` and `sh`,
 // derived from the loop indices rather than maintained as running counters.
@@ -4895,11 +4896,10 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
 // still what the source says, and the load has to be at the default
 // label rather than ahead of the switch for the bytes to come out.
 
-// THE /Ob2 CALL-VS-INLINE ASYMMETRY IS SPELLED PER SITE, AGAIN. The
-// TARGET's name is a CALL to army::GetName; the CASTING stack's name, in
-// the creature arm's default, is EXPANDED. Same two source lines, one
-// written as army::GetName and one as this file's CreatureName - the
-// third instance of the lever in this TU.
+// DC spells.cpp:5824/5825 calls get_current_army and army::GetName for
+// the caster, just as 5754 calls GetName for the target. Keep both canonical
+// boundaries and the text-resource getters. Restoring these source calls
+// is byte-flat at 98.7602%; their retail expansion decisions belong to VC6.
 
 // BANKED EXACT (100%, 0x999 bytes, 2026-08-21): the last seven instructions
 // were all in the artifact arm. Retail RELOADS `[ebp+0xc]` at that arm's
@@ -4997,9 +4997,8 @@ void combatManager::showSpellMessage(int isMonsterSpell, SpellID spellId,
             // Every OTHER creature ability names its own caster - the
             // stack whose turn it is - and then appends the target
             // clause only if there is a target to name.
-            const army* caster = &m_armies[m_actingSide][m_actingSlot];
-            const char* casterName = getArmyName(caster->m_creatureType,
-                                                  caster->m_numTroops);
+            const army* caster = getCurrentArmy();
+            const char* casterName = caster->getName();
             if (caster->m_numTroops == 1)
                 message = formatString(g_generalText->getText(566),
                                         casterName, spellName);

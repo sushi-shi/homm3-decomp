@@ -687,7 +687,7 @@ void combatManager::freeIcons()
         if (obstacle->m_sprite)
             obstacle->m_sprite->dispose();
     }
-    m_obstacles.erase(m_obstacles.begin(), m_obstacles.end());
+    m_obstacles.clear();
 
     for (int side = 0; side < 2; ++side) {
         if (m_creatureSprites[side])

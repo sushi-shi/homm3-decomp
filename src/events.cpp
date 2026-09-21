@@ -2084,40 +2084,21 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
 
 // E:\gamedcs\events.cpp:1898. Allied heroes exchange every spell the other
 // can learn through Scholar. Dreamcast supplies the original helper, local
-// inventory, scope order and all seven statement groups; retail proves the
-// Complete limits, both independent transfer guards, dialog rows and the
-// asymmetric seven-icon packing policy.
-// Residual (88.6858%), LOCALISED 2026-09-06.  Two facts, one fixed and one
-// not:
-//   (a) both `_cpp_min` calls take `magic_scholar_level + 1` as the LEFT
-//       argument - retail computes the wisdom term first (VC6 evaluates
-//       arguments right to left) and compares `cmp wisdom+2, msl+1` with
-//       `&(wisdom+2)` as the fall-through, the mirror of what the other
-//       operand order emits.  Swapping both: 88.4113 -> 88.6858.
-//   (b) the remaining structural deficit is ONE inline decision and the
-//       call streams name it exactly: at the LAST `msg += format_string(...)`
-//       (the taught block's trailer, base +6fa) retail EXPANDS
-//       basic_string::append(const basic_string&, size_t, size_t) - its
-//       _Xlen / _Grow / _Eos are retail-only calls #39..#41 - while we emit
-//       the out-of-line `append`.  Retail CALLS the same append at the
-//       learned block's trailer (#24), so this is the /Ob2 quotient at the
-//       final site, and it accounts for the whole 65-vs-60 branch deficit
-//       (an inlined append is four guards plus the throw).  UNDER-inline =
-//       grow the caller, i.e. real missing mass; nothing local to the
-//       statement reaches it and no pin may be added (falling-only floor).
-// The prologue register split is downstream of the same thing: retail loads
-// `second_hero->skillLevel` straight off the incoming EDX and lands the
-// _cpp_max result in ESI, leaving EDX as the zero for the two vector
-// headers; we copy EDX into EBX first, so the max spills to [ebp-0x1c] and
-// ESI carries the zero instead.  Every instruction pairs; only the register
-// and the one extra frame slot differ.
-// MEASURED NEGATIVE (polish 49): swapping the _cpp_max operand order so the
-// second hero's skill is read first - retail's `mov al,[edx+0xdb]` lands
-// before the register saves - costs 92.1640 -> 92.1508.
+// inventory and scope order; retail proves the Complete limits, dialog rows
+// and asymmetric seven-icon packing policy. Both builds put the two transfer
+// directions under an exclusive spell-ownership if/else and reload the first
+// hero's Scholar level for the dialog icon after swapping heroes.
+// DC calls min at lines 1913/1915 and appends spells with push_back.
+// DC's maximum uses signed-char std::max; retail 0x4a2969..0x4a298b instead
+// selects between promoted four-byte copies, consistent with the existing
+// by-value int max overload. DC 1979-2019 builds the message with operator+=.
+// Residual 91.3003%: the final taught-message += retains string::append
+// where retail expands it. Both builds destroy formatString's temporary at
+// the end of that expression; extending its lifetime lacks source evidence.
 VA(0x004a2940, 0x85C)  // anchor-callee from do_event_hero + full retail semantics, dc 0x93464
 static void exchangeSpells(hero* firstHero, hero* secondHero)
 {
-    const int magicScholarLevel = std::_cpp_max<int>(
+    const int magicScholarLevel = max(
         firstHero->m_skillLevel[eSecSkillMagicScholar],
         secondHero->m_skillLevel[eSecSkillMagicScholar]);
     std::vector<SpellID> spellsLearned;
@@ -2130,32 +2111,29 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
     if (magicScholarLevel > 0
         && firstHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)
         && secondHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-        const int firstSpellLevel = std::_cpp_min<int>(
+        const int firstSpellLevel = min(
             magicScholarLevel + 1,
             firstHero->m_skillLevel[eSecSkillWisdom] + 2);
-        const int secondSpellLevel = std::_cpp_min<int>(
+        const int secondSpellLevel = min(
             magicScholarLevel + 1,
             secondHero->m_skillLevel[eSecSkillWisdom] + 2);
 
         SpellID spell;
         for (spell = 0; spell < hero::NUM_SPELLS; spell++) {
-            if (firstHero->isInSpellbook(spell)
-                && !secondHero->isInSpellbook(spell)
-                && g_spellTraits[spell].m_level <= secondSpellLevel) {
-                secondHero->addSpell(spell);
-                if (g_currentPlayer->isLocalHuman())
-                    // Historical insert(end(), value) probe reached 94.80%.
-                    // Ordinary appends preserve the source operation; 92.16%
-                    // remains inline-boundary debt, not a reason to paste STL.
-                    spellsTaught.push_back(spell);
-            }
-
-            if (secondHero->isInSpellbook(spell)
-                && !firstHero->isInSpellbook(spell)
-                && g_spellTraits[spell].m_level <= firstSpellLevel) {
-                firstHero->addSpell(spell);
-                if (g_currentPlayer->isLocalHuman())
-                    spellsLearned.push_back(spell);
+            if (firstHero->isInSpellbook(spell)) {
+                if (!secondHero->isInSpellbook(spell)
+                    && g_spellTraits[spell].m_level <= secondSpellLevel) {
+                    secondHero->addSpell(spell);
+                    if (g_currentPlayer->isLocalHuman())
+                        spellsTaught.push_back(spell);
+                }
+            } else if (secondHero->isInSpellbook(spell)) {
+                if (!firstHero->isInSpellbook(spell)
+                    && g_spellTraits[spell].m_level <= firstSpellLevel) {
+                    firstHero->addSpell(spell);
+                    if (g_currentPlayer->isLocalHuman())
+                        spellsLearned.push_back(spell);
+                }
             }
         }
     }
@@ -2170,7 +2148,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
     msg = formatString(g_generalText->getText(140), firstHero->m_name);
     spellInfo.m_resource = RES_SECONDARY_SKILL;
     spellInfo.m_qualifier = eSecSkillMagicScholar * 3
-                           + magicScholarLevel + 2;
+                           + firstHero->m_skillLevel[eSecSkillMagicScholar] + 2;
     spellsExchanged.push_back(spellInfo);
 
     std::sort(spellsLearned.begin(), spellsLearned.end(),
@@ -2184,7 +2162,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
         3, 7 - static_cast<int>(spellsLearned.size()));
 
     if (spellsLearned.size()) {
-        msg.append(g_generalText->getText(141));
+        msg += g_generalText->getText(141);
         for (int i = 0; i < spellsLearned.size(); i++) {
             if (i < learnedIconCount) {
                 spellInfo.m_resource = RES_SPELL;
@@ -2193,21 +2171,21 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             }
             if (i > 0) {
                 if (i == spellsLearned.size() - 1)
-                    msg.append(g_generalText->getText(GENERAL_TEXT_LIST_AND));
+                    msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
                 else
-                    msg.append(DATA_COMPGEN(0x0066032c, listSeparator, ", "));
+                    msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
             }
-            msg.append(g_spellTraits[spellsLearned[i]].m_name);
+            msg += g_spellTraits[spellsLearned[i]].m_name;
         }
-        msg.append(formatString(g_generalText->getText(143), secondHero->m_name));
+        msg += formatString(g_generalText->getText(143), secondHero->m_name);
     }
 
     if (spellsTaught.size()) {
         if (spellsLearned.size()) {
-            msg.append(DATA_COMPGEN(0x00660db4, commaText, ","));
-            msg.append(g_generalText->getText(GENERAL_TEXT_LIST_AND));
+            msg += DATA_COMPGEN(0x00660db4, commaText, ",");
+            msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
         }
-        msg.append(g_generalText->getText(148));
+        msg += g_generalText->getText(148);
         for (int i = 0; i < spellsTaught.size(); i++) {
             if (i < taughtIconCount) {
                 spellInfo.m_resource = RES_SPELL;
@@ -2216,16 +2194,16 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             }
             if (i > 0) {
                 if (i == spellsTaught.size() - 1)
-                    msg.append(g_generalText->getText(GENERAL_TEXT_LIST_AND));
+                    msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
                 else
-                    msg.append(DATA_COMPGEN(0x0066032c, listSeparator, ", "));
+                    msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
             }
-            msg.append(g_spellTraits[spellsTaught[i]].m_name);
+            msg += g_spellTraits[spellsTaught[i]].m_name;
         }
-        msg.append(formatString(g_generalText->getText(149), secondHero->m_name));
+        msg += formatString(g_generalText->getText(149), secondHero->m_name);
     }
 
-    msg.append(DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
+    msg += DATA_COMPGEN(0x006603ec, saveExtensionDot, ".");
     extendedDialog(msg.c_str(), spellsExchanged, -1, -1, 0);
 }
 
