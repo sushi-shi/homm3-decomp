@@ -6,12 +6,14 @@
 // msg slots -0x48/-0x68/-0x68). The `inline` definitions below
 // reproduce the absence under the non-/Gy profile (winfile Exists
 // precedent).
-#include <va.h>
 #include <stdio.h>
+
 #include "strip.h"
+
 #include "hero.h"
 #include "kb.h"
 #include "message.h"
+#include "va.h"
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"

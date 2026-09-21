@@ -3,12 +3,14 @@
 // The Dreamcast build contains no random-map generator compiland. Function
 // ownership, field layout, helper boundaries, and call/expansion decisions in
 // this unit therefore come directly from the retail x86 cluster.
-#include <va.h>
 #include <stdlib.h>
+
 #include "rmg_terrain.h"
+
 #include "exceptions.h"
-#include "tiles.h"
 #include "includes.h"
+#include "tiles.h"
+#include "va.h"
 // Vtable 0x642cb0 slot 2 shares the false/ret-4 body at 0x5543f0.
 unsigned char TRmgTableTerrainRule::isSpecialFrame(int) { return 0; }
 

@@ -1,13 +1,15 @@
-#include <va.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "creature_bank.h"
+
 #include "creaturetype.h"
 #include "game.h"
 #include "misc.h"
 // The traits loader reads crbanks.txt through the spreadsheet resource.
 #include "resourcemanager.h"
 #include "textresource.h"
+#include "va.h"
 
 // The bank traits table itself, and the pointer every consumer reads it
 // through. Retail proves the split from both ends: the loader below

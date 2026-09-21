@@ -1,9 +1,11 @@
 // 39 functions in link order.
-#include <va.h>
 #include <limits>
 #include <math.h>
 #include <string.h>
+
 #include "palette.h"
+
+#include "va.h"
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif

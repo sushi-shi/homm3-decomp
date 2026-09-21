@@ -22,7 +22,6 @@
 // The header-check failures throw a plain `bool` (throw record 0x64e1b8
 // names the type `._N`) and are caught in the constructor itself, which is
 // what leaves the stream in raw pass-through mode with ok == 0.
-#include <va.h>
 // Retail's basic_streambuf constructor calls std::_Lockit around
 // _Locimp::_Init; that is the external-lock view of <yvals.h>, so expose it
 // while this TU is parsed exactly as game.obj does. The pinned /ML runtime
@@ -31,8 +30,10 @@
 #include <stdexcept>
 #include <string>
 
-#include "exceptions.h"
 #include "gzinflatebuf.h"
+
+#include "exceptions.h"
+#include "va.h"
 
 class TGzInflateBuf::TDataError : public std::runtime_error {
 public:

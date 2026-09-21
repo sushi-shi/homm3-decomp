@@ -4,8 +4,9 @@
 
 #include <string>
 #include <vector>
-#include <va.h>
+
 #include "quest.h"
+#include "va.h"
 
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 unsigned char initializeSeerHutText();

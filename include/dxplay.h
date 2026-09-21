@@ -3,8 +3,9 @@
 
 #include <string.h>  // strcpy, for CDPlayPlayer's in-class constructor
 #include <windows.h>
-#include <va.h>
+
 #include "array.h"  // CAutoArray, every Enum* out-parameter
+#include "va.h"
 
 class CDPlayConnection;
 class CDPlayAddressElement;

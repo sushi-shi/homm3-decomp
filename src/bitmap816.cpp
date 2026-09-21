@@ -1,13 +1,15 @@
 // 17 functions in link order.
-#include <va.h>
-#include <string.h>
 // <new> for its `void __cdecl operator delete(void*) _THROW0();` - the
 // nothrow declaration is what retail's ~Bitmap816 unwind map proves this TU
 // had (see the destructor's note below). NEW.H does NOT declare it.
 #include <new>
+#include <string.h>
+
 #include "bitmap816.h"
+
 #include "bitmap16.h"
 #include "pcx.h"
+#include "va.h"
 
 VA_COMPGEN(0x0044f7d0, 0x21, SCALAR_DELETING_DTOR, Bitmap816)
 

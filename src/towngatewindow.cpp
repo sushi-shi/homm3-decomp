@@ -1,6 +1,7 @@
-#include <va.h>
 #include <string.h>
+
 #include "towngatewindow.h"
+
 #include "armygrp.h"
 #include "border.h"
 #include "button.h"
@@ -11,6 +12,7 @@
 #include "slider.h"
 #include "textresource.h"
 #include "textwdgt.h"
+#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

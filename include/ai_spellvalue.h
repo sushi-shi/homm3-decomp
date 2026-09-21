@@ -9,11 +9,12 @@
 #ifndef HOMM3_AI_SPELLVALUE_H
 #define HOMM3_AI_SPELLVALUE_H
 
-#include <va.h>
 #include <vector>
-#include "armygrp.h"
+
 // CodeView owns the value-list element and its inline comparisons here.
 #include "ai_creature_value.h"
+#include "armygrp.h"
+#include "va.h"
 
 class hero;
 

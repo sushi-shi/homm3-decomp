@@ -1,19 +1,19 @@
-#include <va.h>
+#include <math.h>    // sqrt for chain-lightning; sin/cos for DoBolt.
+#include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
 #include <windows.h>  // tagPOINT, the CodeView axial-coordinate type
-// AreaEffect hands akSpellTraits[spell].m_effect (+0x08) to drawing's
-// hex-taking SpellEffect; armygrp.h keeps that slice behind this view.
-#include "armygrp.h"
+
 #include "spells.h"
-#include "spelldefs.h"  // ESpellTargetFlags
-// DrawBolt writes 16-bit pixels straight into the screen bitmap, so it needs
-// the Bitmap16Bit layout and WinGraph.h's recovered RGBto16 boundary.
-#include "bitmap16.h"
-#include "wingraph.h"  // DC-proven RGBto16 header helper and channel domain
+
 // ModifySpellDamage forwards army::creatureType into armygrp's free
 // modify_spell_damage, whose slot is TCreatureType; army.h keeps the
 // DC-typed arm of that field behind this view.
 #include "army.h"
-#include "creaturetype.h"  // GetArmyName, the header body army::GetName expands
+// AreaEffect hands akSpellTraits[spell].m_effect (+0x08) to drawing's
+// hex-taking SpellEffect; armygrp.h keeps that slice behind this view.
+#include "armygrp.h"
+// DrawBolt writes 16-bit pixels straight into the screen bitmap, so it needs
+// the Bitmap16Bit layout and WinGraph.h's recovered RGBto16 boundary.
+#include "bitmap16.h"
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
 // this view; spells.obj is its second consumer after cmbtmgr.obj.
 // mark_area_effect's berserk arm calls mark_berserk_area_effect, whose
@@ -21,35 +21,37 @@
 // it is unconditional (measured 2026-08-20).
 #include "cmbtmgr.h"
 #include "combatwindow.h"      // TCombatWindow::combat_message
+#include "creaturetype.h"  // GetArmyName, the header body army::GetName expands
 #include "csprite.h"           // CSprite::Dispose, LoadSpellEffect's release
 // DoBolt scales its inter-frame delay by gCombatSpeedFactors, exactly as
 // army::Fly does; drawing.h is where this tree parks that unowned table.
 #include "drawing.h"           // gCombatSpeedFactors
-#include "resourcemanager.h"   // ResourceManager::GetSprite
 #include "game.h"     // playImmEffect, Resurrect's force-feedback cue
 #include "hero.h"
 #include "herospec.h"  // TSkillMastery, for ValidSpellTarget's mastery ladder
+#include "includes.h"
+#include "inputmgr.h"   // gpInputManager, the cast handlers PeekEvent coalescing
 #include "kb.h"      // gText, and NormalDialog for MirrorImage's failure line
-// MirrorImage walks outward from the caster through path.obj's
-// GetAdjacentCellIndexNoArmy looking for a hex to clone into.
-#include "path.h"
 // DoBolt paces its draw loop with GameTime::DelayTil + the NextFrameTime
 // header inline, the same pair army::Fly's flight loop uses.
 #include "kbwin.h"   // GameTime
 #include "misc.h"    // Random, for SpellCastWorks' dice roll
-#include "inputmgr.h"   // gpInputManager, the cast handlers PeekEvent coalescing
 #include "mousemgr.h"  // gpMouseManager, DoBolt's pointer hide/show
+// MirrorImage walks outward from the caster through path.obj's
+// GetAdjacentCellIndexNoArmy looking for a hex to clone into.
+#include "path.h"
 #include "prefs.h"     // gUnnamed698758.combatSpeed, DoBolt's speed index
-#include "soundmgr.h"      // SAMPLE2 / LoadPlaySample / WaitEndSample
+#include "resourcemanager.h"   // ResourceManager::GetSprite
 #include "sample.h"        // Quicksand/Land Mine retained sample resources
+#include "soundmgr.h"      // SAMPLE2 / LoadPlaySample / WaitEndSample
+#include "spellbookwindow.h"  // TSpellbookWindow, the row ViewSpells opens
+#include "spelldefs.h"  // ESpellTargetFlags
 // ModifySpellDamage's four "the spell did more/less than the table row"
 // messages; textresource.h keeps those enumerators behind this view.
 #include "textresource.h"  // gpGeneralText
-#include "spellbookwindow.h"  // TSpellbookWindow, the row ViewSpells opens
+#include "va.h"
+#include "wingraph.h"  // DC-proven RGBto16 header helper and channel domain
 #include "winmgr.h"  // gpWindowManager, DoBolt's per-pass UpdateScreen
-#include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
-#include <math.h>    // sqrt for chain-lightning; sin/cos for DoBolt.
-#include "includes.h"
 
 // SpellCastWorkChance's board-wide ban: it refuses every spell of level
 // 3 and up the moment EITHER combat hero wields artifact 0x53, walking

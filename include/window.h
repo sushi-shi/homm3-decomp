@@ -2,6 +2,7 @@
 #define HOMM3_WINDOW_H
 
 #include <vector>
+
 #include "va.h"
 
 class widget;

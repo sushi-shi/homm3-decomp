@@ -1,9 +1,9 @@
-#include "terrain.h"
-#include <va.h>
 #include "army.h"
-#include "hexcell.h"
 #include "cmbtmgr.h"
 #include "findpath.h"
+#include "hexcell.h"
+#include "terrain.h"
+#include "va.h"
 
 VA(0x005239d0, 0x96)  // dc 0x10c918
 int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimited, unsigned char literalTarget)

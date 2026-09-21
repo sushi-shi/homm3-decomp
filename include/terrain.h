@@ -95,9 +95,9 @@
 #ifndef HOMM3_TERRAIN_H
 #define HOMM3_TERRAIN_H
 
-#include <va.h>
-
 #include <bitset>
+
+#include "va.h"
 
 // E:\gamedcs\terrain.h:70-79
 static std::bitset<10> g_dirtMask = std::bitset<10>(1) << 0;          // eTerrainDirt

@@ -1,14 +1,7 @@
-#include <va.h>
-#include <stdlib.h>
 #include <stdarg.h>
-#include "misc.h"
-#include "kbwin.h"
+#include <stdlib.h>
 
-// Thunk-form timeGetTime (rel32, same as mousemgr's CheckUpdate); the
-// plain declaration and the per-TU import-form doctrine live in
-// winmm_thunks.h. Kept AFTER the windows.h-bearing includes so the
-// plain declaration downgrades mmsystem.h's dllimport for this TU.
-#include "winmm_thunks.h"
+#include "misc.h"
 
 // The CRT stream/memory surface, and the prefs block this TU owns.
 // Both are reviewed headers rather than .cpp-local text: crt_stdio.h
@@ -16,8 +9,15 @@
 // instead of including <stdio.h>, and prefs.h explains why the block's
 // definition does not live in misc.h.
 #include "crt_stdio.h"
+#include "kbwin.h"
 #include "prefs.h"
+#include "va.h"
 #include "wingraph.h"
+// Thunk-form timeGetTime (rel32, same as mousemgr's CheckUpdate); the
+// plain declaration and the per-TU import-form doctrine live in
+// winmm_thunks.h. Kept AFTER the windows.h-bearing includes so the
+// plain declaration downgrades mmsystem.h's dllimport for this TU.
+#include "winmm_thunks.h"
 
 // The dialog FileSize raises when the open fails. Free /Gr row at
 // retail 0x4f3a60, inside kb.obj's carve bracket and UNCLAIMED, so the

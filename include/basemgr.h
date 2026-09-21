@@ -3,7 +3,7 @@
 #ifndef HOMM3_BASEMGR_H
 #define HOMM3_BASEMGR_H
 
-#include <va.h>
+#include "va.h"
 
 class message;
 

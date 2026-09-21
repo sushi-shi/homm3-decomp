@@ -3,7 +3,8 @@
 #define HOMM3_RESOURCEMANAGER_ARCHIVE_H
 
 #include <windows.h>
-#include <va.h>
+
+#include "va.h"
 
 struct SoundHeaderStruct;
 

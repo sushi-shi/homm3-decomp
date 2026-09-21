@@ -4,8 +4,9 @@
 // This unit initializes the context selector at 0x4eccf0 and the feature
 // table at 0x4ecd00, then emits bitset<4>::set at 0x4ecde0 and its own
 // locale-id guard at 0x4ece40. kb's terrain initializers start at 0x4ece60.
-#include <va.h>
 #include "gamecontext.h"
+
+#include "va.h"
 
 // The 212-byte retail initializer constructs four unsigned-long bitsets in
 // one reused stack temporary, then copies them into 0x699240..0x69924f.

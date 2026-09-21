@@ -1,22 +1,15 @@
-#include "terrain.h"
 #include <stdio.h>
 #include <xutility>
-#include <va.h>
-#include "includes.h"
+
+#include "recruit.h"
+
+#include "advmgr.h"
 #include "armygrp.h"
 #include "artifact.h"
-#include "recruit.h"
-#include "exec.h"
-#include "game.h"
-#include "hero.h"
-#include "kb.h"
-#include "kbwin.h"
-#include "message.h"
-#include "widget.h"
+#include "border.h"
 // Appended AFTER the original set on purpose: recruit.obj is knife-edge
 // on C1XX symbol-handle position, and appending leaves every handle the
 // old include stream numbered alone.
-
 // button.h and border.h joined textwdgt.h 2026-08-14, on the same
 // standard and with the same kind of evidence, to buy back the handle
 // position ONE forward declaration in townmgr.h costs (see the +0x1b0
@@ -28,18 +21,26 @@
 // `coloredBorderFrame` four - alongside the eleven `textWidget`s that
 // justified textwdgt.h.
 #include "button.h"
-#include "border.h"
+#include "creaturetype.h"
+#include "exec.h"
+#include "game.h"
+#include "hero.h"
 #include "iconwdgt.h"
+#include "includes.h"
+#include "kb.h"
+#include "kbwin.h"
+#include "message.h"
+#include "misc.h"
+#include "mousemgr.h"
 #include "resourcedisplay.h"
+#include "terrain.h"
 #include "textntry.h"
 #include "textwdgt.h"
 #include "townmgr.h"
-#include "winmgr.h"
-#include "mousemgr.h"
-#include "advmgr.h"
-#include "creaturetype.h"
-#include "misc.h"
+#include "va.h"
 #include "viewarmywindow.h"
+#include "widget.h"
+#include "winmgr.h"
 
 // recruit.cpp-owned rollover text pointers. Each has exactly one retail
 // reader, the SetRolloverText expansion in recruitUnit::Main; the adjacent

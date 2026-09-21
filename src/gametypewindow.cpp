@@ -1,5 +1,5 @@
-#include <va.h>
 #include "gametypewindow.h"
+
 #include "border.h"
 #include "button.h"
 #include "game.h"
@@ -7,6 +7,7 @@
 #include "message.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
+#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

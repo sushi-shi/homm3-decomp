@@ -1,5 +1,5 @@
-#include <va.h>
 #include "dimensiondoorwindow.h"
+
 #include "advmgr.h"
 #include "border.h"
 #include "kb.h"
@@ -7,6 +7,7 @@
 #include "mapcell.h"
 #include "message.h"
 #include "mousemgr.h"
+#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

@@ -1,31 +1,32 @@
 #ifndef HOMM3_GAME_H
 #define HOMM3_GAME_H
 
+#include <ctype.h>
+#include <direct.h>
 #include <map>
 #include <memory>
-#include <direct.h>
-#include "savegame.h"
-#include "smackmgr.h"
-#include <ctype.h>
 #include <string.h>
 #include <vector>
-#include "mapcell.h"
-#include "netmsg.h"
-#include "secondaryskill.h"
+
+#include "advmgr_objects.h"
+#include "creature_bank_types.h"
 #include "creaturetype.h"
-#include "struct.h"
+#include "creaturetype_fwd.h"
+#include "customcampaign.h"
 // `class game` embeds the hero array by value, so the COMPLETE hero
 // type has to be visible here. hero.h pulls armygrp.h; armygrp.h no
 // longer pulls this header back (see the note at its top) - that is the
 // edge that was cut to make this include legal.
 #include "hero.h"
-#include "creature_bank_types.h"
+#include "mapcell.h"
+#include "netmsg.h"
+#include "savegame.h"
+#include "secondaryskill.h"
+#include "seerhut.h"
+#include "smackmgr.h"
+#include "struct.h"
 #include "town.h"
 #include "victorylossconditions.h"
-#include "creaturetype_fwd.h"
-#include "advmgr_objects.h"
-#include "seerhut.h"
-#include "customcampaign.h"
 
 // The one decoded value of game::field_1f63e shared by events.obj and
 // philai.obj: Sunday is the seventh day.  DoEventTemple doubles its morale

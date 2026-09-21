@@ -15,11 +15,12 @@
 // 0x5b5440. 0x4f9f00 is the proof of the pairing - it calls 0x5bc910 with the
 // mask on its own frame, then loops `edx` from 0x6a80a8 to 0x6a80e8 in steps
 // of eight while indexing that same mask by the loop counter.
-#include <va.h>
 #include <algorithm>
 
 #include "tiles.h"
+
 #include "rmg.h"
+#include "va.h"
 
 // Retail .bss 0x6a80a8, sixteen dwords: (0,-1) (1,-1) (1,0) (1,1) (0,1)
 // (-1,1) (-1,0) (-1,-1). TPoint is non-POD, so the values arrive through the

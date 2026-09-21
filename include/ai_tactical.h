@@ -1,13 +1,13 @@
 #ifndef HOMM3_AI_TACTICAL_H
 #define HOMM3_AI_TACTICAL_H
 
-#include <va.h>
 #include "army.h"
 #include "armygrp.h"
 #include "cmbtmgr.h"
-#include "hexcell.h"
 #include "herospec.h"
+#include "hexcell.h"
 #include "spellschool.h"
+#include "va.h"
 
 class hero;
 class searchArray;

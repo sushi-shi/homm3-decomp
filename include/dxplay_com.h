@@ -2,8 +2,8 @@
 #define HOMM3_DXPLAY_COM_H
 // Private to dxplay.cpp - NOT included by any other TU. Models the DirectPlay
 // COM interface so retail's __stdcall virtual dispatch reproduces byte-for-byte.
-#include "dxplay.h"
 #include "dplaycaps.h"
+#include "dxplay.h"
 
 // DirectPlay HRESULT macros used by the wrappers and CDPlay::GetErrorDesc.
 // Keep these as preprocessor constants, as they are in the VC6 DPLAY.H:

@@ -3,26 +3,29 @@
 // two exact methods below. The flanking cursor/customcampaign and
 // customcampaign/dialogbox gaps remain ambiguous, so the older-revision
 // carcass is not force-claimed merely from roster order.
-#include <va.h>
-#include "creaturetype.h"
 #include <algorithm>
 #include <direct.h>
 #include <fstream>
+#include <string.h>
 #include <strstream>
-#include "game.h"
-#include "campaignmap.h"
+
+#include "customcampaign.h"
+
+#include "abstractfile.h"
 #include "abstractfile.h"
 #include "artifact.h"
+#include "bitmap16.h"
 #include "bitset_iterator.h"
 #include "campaignbrief.h"
+#include "campaignmap.h"
 #include "castle.h"
-#include "customcampaign.h"
+#include "creaturetype.h"
 #include "customcampaign_legacy.h"
-#include "gzinflatebuf.h"
-#include "abstractfile.h"
-#include "hero.h"
-#include "bitmap16.h"
 #include "font.h"
+#include "game.h"
+#include "gzinflatebuf.h"
+#include "hero.h"
+#include "homm3_minmax.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -36,9 +39,8 @@
 #include "sskilltraits.h"
 #include "textresource.h"
 #include "town.h"
+#include "va.h"
 #include "winmgr.h"
-#include <string.h>
-#include "homm3_minmax.h"
 
 // Scenario ordinals used when the fixed legacy matrices are promoted to the
 // current variable-length CampaignScenarioInfo vector.

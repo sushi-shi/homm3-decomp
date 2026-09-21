@@ -1,8 +1,9 @@
 #ifndef HOMM3_U2DVERS_H
 #define HOMM3_U2DVERS_H
 
-#include <windows.h>
 #include <string>
+#include <windows.h>
+
 #include "va.h"
 
 // PROVEN retail layout: both ctor and dtor access only the allocation

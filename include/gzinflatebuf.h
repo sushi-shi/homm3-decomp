@@ -8,6 +8,8 @@
 #include <streambuf>
 #include <zlib.h>
 
+#include "va.h"
+
 // A std::streambuf that inflates a gzip member out of another streambuf.
 // LAYOUT BYTE-PROVEN by the constructor 0x4d6050 and destructor 0x4d6820:
 // the Dinkumware basic_streambuf<char> base is 0x38 (its locale at +0x34),

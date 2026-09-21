@@ -13,14 +13,14 @@
 // attested by a CodeView row: the two class names above are retail's own,
 // everything else is role-derived and provisional.
 
-#include <va.h>
-
 #include <fstream>
 #include <string>
 
 #include "forcefeedback.h"
+
 #include "imm_mouse.h"
 #include "resourcemanager.h"
+#include "va.h"
 
 namespace force_feedback {
 

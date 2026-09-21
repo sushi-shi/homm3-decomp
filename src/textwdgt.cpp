@@ -1,14 +1,15 @@
-#include <va.h>
 #include "textwdgt.h"
+
 #include "bitmap16.h"
 #include "bitmap816.h"
 #include "csprite.h"
+#include "includes.h"
 #include "message.h"
 #include "recruit.h"
 #include "resourcemanager.h"
+#include "va.h"
 #include "window.h"
 #include "winmgr.h"
-#include "includes.h"
 
 // Original: textWidget::textWidget; textwdgt.cpp:36, dc 0x164c14.
 textWidget::textWidget() : widget(0, 0, 0, 0, 0, 0)

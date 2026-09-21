@@ -1,7 +1,8 @@
-#include <va.h>
-#include <windows.h>
 #include <stdio.h>
+#include <windows.h>
+
 #include "university_window.h"
+
 #include "border.h"
 #include "button.h"
 #include "game.h"
@@ -12,6 +13,7 @@
 #include "misc.h"
 #include "sskilltraits.h"
 #include "textresource.h"
+#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

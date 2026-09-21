@@ -1,12 +1,14 @@
 // 15 functions in link order.
-#include <va.h>
 #include <limits>
 #include <math.h>
 #include <string.h>
+
 #include "bitmap24.h"
+
 #include "bitmap16.h"
 #include "hsv.h"
 #include "pcx.h"
+#include "va.h"
 
 // The retail destructor is frameless under /GX, so this compiland saw the
 // same nothrow deallocator contract as bitmap16.obj and sample.obj.

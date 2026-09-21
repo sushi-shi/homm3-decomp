@@ -2,10 +2,9 @@
 #define HOMM3_HISCORE_H
 
 #include "basemgr.h"
-#include "window.h"
-#include "textntry.h"
-
 #include "bitmap16.h"
+#include "textntry.h"
+#include "window.h"
 
 class message;
 class textWidget;

@@ -7,20 +7,22 @@
 // (0x5b9f80, the excluded cinit class) plus the eight rows below.
 // textwdgt.obj is NOT the owner: its banked band runs 0x5bc230..0x5bc890,
 // past textntry.obj entirely.
-#include <va.h>
 #include <string>
 #include <vector>
+
 #include "textscroller.h"
+
 #include "bitmap16.h"
 #include "font.h"
+#include "includes.h"
 #include "message.h"
 #include "resourcemanager.h"
 #include "slider.h"
 #include "textwdgt.h"
+#include "va.h"
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"
-#include "includes.h"
 
 // The scroller's private slider. Retail proves the whole shape from the
 // constructor 0x5b9fb0 and the vtable 0x642cc8: a 0x6c-byte object whose

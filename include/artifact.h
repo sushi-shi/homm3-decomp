@@ -2,7 +2,6 @@
 #define HOMM3_ARTIFACT_H
 
 #include <bitset>
-#include <va.h>
 
 // The artifact-id domain. Added 2026-08-08 with its first consumer,
 // recruit.obj's siege_artifact_to_creature (0x550360) - only the four
@@ -29,6 +28,7 @@
 // change. artifact.h is not in that closure. Unifying the two rosters
 // is a separate, measured decision.
 #include "artifact_type.h"
+#include "va.h"
 
 // Dreamcast's public wearable-position type. Complete adds a nineteenth
 // equipped position, but retains the same dword parameter ABI and may pass

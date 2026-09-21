@@ -1,7 +1,6 @@
-#include <va.h>
-#include "creaturetype.h"
 #include <stdio.h>
 #include <string.h>
+
 // hero.h's type_artifact::get_description declarator, for the
 // blacksmith's right-click text. Set ahead of every include because
 // hero.h is reached through more than one of them and its guard makes
@@ -14,6 +13,7 @@
 // Opens town.h's SetSummoningGenerator declarator for TCastleWindow's
 // constructor, and only for it: town.cpp never defines this.
 #include "townmgr.h"
+
 // advspells.obj's TeleportTo declarator, for the MoveHero that
 // DoTownGate expands inline. Gated so no other includer of advmgr.h
 // widens; measured free on this compiland (1121/1504 unmoved).
@@ -23,15 +23,13 @@
 #include "buildinginfo.h"
 #include "button.h"
 #include "castle.h"
+#include "creaturetype.h"
 // gpExecutive: TCastleWindow::Recruit needs the global.
 #include "exec.h"
-// town.h's mage-guild slice: SetupMage reads the spell grid at +0x44 and
-// the per-level counts at +0xbc.
-// town::get_location, for the type_point DoTownGate hands TeleportTo.
-#include "town.h"
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
+#include "includes.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -49,6 +47,10 @@
 #include "strip.h"
 #include "textresource.h"
 #include "textwdgt.h"
+// town.h's mage-guild slice: SetupMage reads the spell grid at +0x44 and
+// the per-level counts at +0xbc.
+// town::get_location, for the type_point DoTownGate hands TeleportTo.
+#include "town.h"
 #include "towngatewindow.h"
 // DoMarketplace / DoArtifactMerchants / DoFreelancersGuild, for Main's
 // marketplace and special-building arms.
@@ -58,9 +60,9 @@
 // its real size and its implicit destructor. Gated so the two TUs that
 // already include that header keep the narrow view they are measured on.
 #include "university_window.h"
+#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
-#include "includes.h"
 
 void startMouseThread();
 void stopMouseThread();

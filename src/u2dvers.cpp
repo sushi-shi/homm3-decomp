@@ -1,6 +1,7 @@
 // 3 functions in link order.
-#include <va.h>
 #include "u2dvers.h"
+
+#include "va.h"
 
 VA(0x005eeda0, 0x4C)  // dc 0x18e3b0
 TFileVersionInfo::TFileVersionInfo(const char* filename)

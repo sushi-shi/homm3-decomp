@@ -1,25 +1,26 @@
-#include <va.h>
+#include <direct.h>
+
 #include "multiplayerwindow.h"
-#include "multiplayerwindow_globals.h"
-#include "winmgr.h"
-#include "csprite.h"
+
 #include "border.h"
 #include "button.h"
-#include "slider.h"
-#include "resourcemanager.h"
-#include "textresource.h"
+#include "csprite.h"
+#include "dplaycaps.h"
 #include "gametypewindow.h"
-#include "winfile.h"
-#include "netgame.h"
-#include "netplayer.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
-#include "soundmgr.h"
+#include "multiplayerwindow_globals.h"
+#include "netgame.h"
+#include "netplayer.h"
 #include "remote.h"
-#include "dplaycaps.h"
-
-#include <direct.h>
+#include "resourcemanager.h"
+#include "slider.h"
+#include "soundmgr.h"
+#include "textresource.h"
+#include "va.h"
+#include "winfile.h"
+#include "winmgr.h"
 
 unsigned char initRemote(eNetGameType netGameType, const char* userName);
 unsigned char initConnection(char* address, _DPCOMPORTADDRESS* comportInfo);

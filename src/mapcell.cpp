@@ -1,20 +1,22 @@
 
+#include <stdexcept>
 #include <stdio.h>
 #include <string.h>
-#include <va.h>
 #include <windows.h>
+
+#include "mapcell.h"
+
+#include "advmgr.h"
 #include "advmgr_objects.h"
 #include "csprite.h"
-#include "advmgr.h"
 #include "game.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
-#include "mapcell.h"
 #include "newgame.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
-#include <stdexcept>
+#include "va.h"
 
 VA(0x004fbf90, 0x61)  // dc 0xeb6a4
 void ExtraInfoUnion::setCellVisited(short player)

@@ -1,11 +1,12 @@
 #ifndef HOMM3_REMOTE_H
 #define HOMM3_REMOTE_H
 
-#include "dxplay.h"
 #include <deque>
+
+#include "dxplay.h"
+#include "inputmgr.h"
 #include "textntry.h"
 #include "window.h"
-#include "inputmgr.h"
 
 class CNetMsg;
 class CNetMsgHandler;

@@ -1,8 +1,10 @@
 #include <string.h>
-#include <va.h>
-#include "terrain.h"
+
 #include "diff.h"
+
 #include "includes.h"
+#include "terrain.h"
+#include "va.h"
 
 // E:\gamedcs\diff.cpp:43, dc 0x825b8. CodeView type 0x54d4
 // owns this record's single in-class constructor; only this TU uses it.

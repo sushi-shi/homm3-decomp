@@ -1,8 +1,9 @@
 // 3 functions in link order.
-#include "terrain.h"
-#include <va.h>
 #include "hexcell.h"
+
 #include "cmbtmgr.h"
+#include "terrain.h"
+#include "va.h"
 
 VA(0x004e7150, 0x20)  // dc 0xd60fc
 hexcell::hexcell()

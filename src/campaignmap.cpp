@@ -1,11 +1,13 @@
 // retains the table initializer and its static-dtor wrapper, both exact. Nine
 // Dreamcast AutoArrayPtr / ResourcePtr roster entries are header emissions and
 // have no distinct retail bodies in this compiland.
-#include <va.h>
 #include <string.h>
+
 #include "campaignmap.h"
-#include "textresource.h"
+
 #include "resourcemanager.h"
+#include "textresource.h"
+#include "va.h"
 
 // Retail's underlying writable array is immediately followed by the public
 // const-reference cell. The large static initializer remains unclaimed in

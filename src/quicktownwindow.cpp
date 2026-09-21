@@ -1,17 +1,19 @@
-#include "includes.h"
-#include <va.h>
 // DC's retained HasBuilding callee (r11) serves all seven hall, silo and
 // fort tests. Keep every source call and the ordinary canonical town body.
 #include <stdio.h>
 #include <string>
 #include <strstream>
+
 #include "quicktownwindow.h"
+
 #include "armygrp.h"
 #include "border.h"
 #include "game.h"
 #include "iconwdgt.h"
+#include "includes.h"
 #include "kb.h"
 #include "textwdgt.h"
+#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

@@ -1,11 +1,12 @@
 #ifndef HOMM3_TOWN_H
 #define HOMM3_TOWN_H
 
-#include <va.h>
 #include <bitset>
 #include <string>
 #include <vector>
+
 #include "armygrp.h"
+#include "va.h"
 
 class TownExtra;  // canonical definition in Game.h
 

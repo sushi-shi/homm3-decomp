@@ -30,22 +30,23 @@
 // and the per-widget temp to esi where our CL binds them the other way, a swap
 // the vc6 catalog reports as not source-addressable. CHeroDlg and CTownDlg
 // remain @stub; CTeamAlignmentDlg is reconstructed below.
-#include "includes.h"
-#include <va.h>
 #include "singleselectionpopups.h"
-#include "bitmap816.h"
+
 #include "bitmap16.h"
+#include "bitmap816.h"
 #include "csprite.h"
-#include "winmgr.h"
-#include "remote.h"
-#include "kbwin.h"
+#include "font.h"
 #include "game.h"
 #include "iconwdgt.h"
+#include "includes.h"
+#include "kb.h"
+#include "kbwin.h"
+#include "remote.h"
+#include "resourcemanager.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "kb.h"
-#include "resourcemanager.h"
-#include "font.h"
+#include "va.h"
+#include "winmgr.h"
 
 // ============================================================================
 // CHotspotWidget - a bare rectangular click target.

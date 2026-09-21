@@ -1,18 +1,19 @@
 // Artifact traits, slot classes and combination recipes. The static traits
 // helper and ownership wrappers expand into the table initializer. Adjacent
 // bitset bodies are Dinkumware COMDATs, not authored game routines.
-#include <va.h>
-#include <bitset>
 #include <algorithm>
+#include <bitset>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "artifact.h"
+
 #include "const_bitset_iterator.h"
 #include "ownership.h"
 #include "resourcemanager.h"
 #include "textresource.h"
+#include "va.h"
 
 // Retail retains bitset<19>::_Tidy and set. The explicit class instantiation
 // currently supplies set's retained body; real uses already emit _Tidy.

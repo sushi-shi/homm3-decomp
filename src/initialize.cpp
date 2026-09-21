@@ -1,7 +1,8 @@
+#include <string.h>
+
 #include "terrain.h"
 #include "town.h"
-#include <va.h>
-#include <string.h>
+#include "va.h"
 // #include "initialize.h"
 
 VA(0x004eb730, 0x3D5)  // dc 0xdc614

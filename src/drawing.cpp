@@ -1,6 +1,8 @@
-#include <va.h>
 #include <string.h>
+
 #include "drawing.h"
+
+#include "ai_tactical.h"
 #include "bitmap16.h"
 #include "bitmap816.h"
 #include "combatcontrolsubwindow.h"
@@ -10,7 +12,6 @@
 #include "csprite.h"
 #include "findpath.h"
 #include "game.h"
-#include "ai_tactical.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
@@ -19,9 +20,10 @@
 #include "remote.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
-#include "textwdgt.h"
 #include "textresource.h"
+#include "textwdgt.h"
 #include "town.h"
+#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

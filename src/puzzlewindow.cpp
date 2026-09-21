@@ -1,20 +1,22 @@
-#include <va.h>
 #include <bitset>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "puzzlewindow.h"
+
 #include "advmgr_objects.h"
 #include "bitmap816.h"
-#include "button.h"
 #include "border.h"
-#include "textwdgt.h"
+#include "button.h"
 #include "exec.h"
 #include "game.h"
 #include "kb.h"
 #include "message.h"
-#include "puzzlewindow.h"
 #include "resourcedisplay.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
+#include "textwdgt.h"
+#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

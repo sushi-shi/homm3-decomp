@@ -20,15 +20,14 @@
 #ifndef HOMM3_FORCEFEEDBACK_H
 #define HOMM3_FORCEFEEDBACK_H
 
+#include <IFC.h>
 #include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
-
-#include <IFC.h>
 #include <windows.h>
 
-#include <va.h>
+#include "va.h"
 
 // IFC20.dll 2.0.3 and the client vtables prove these active vendor layouts.
 SIZE(CImmDevice, 0x24);

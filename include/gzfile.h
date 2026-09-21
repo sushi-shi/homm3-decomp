@@ -5,6 +5,7 @@
 #define HOMM3_GZFILE_H
 
 #include <exception>
+
 #include "armygrp.h"  // TAbstractFile
 
 // Complete wraps the gz handle in an eight-byte polymorphic stream:

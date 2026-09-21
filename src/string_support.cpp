@@ -1,8 +1,9 @@
 // Dinkumware string COMDAT support. The original compiland name is unknown:
 // retail places this body in the broad newgame..overview link-order gap, and
 // its only code reference is collate<char>::do_transform at 0x614260.
-#include <va.h>
 #include <string>
+
+#include "va.h"
 
 // Complete class instantiation is the natural VC6 boundary which retains the
 // one-argument resize COMDAT. A member-only explicit instantiation is a

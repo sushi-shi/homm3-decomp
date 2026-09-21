@@ -1,14 +1,16 @@
-#include "terrain.h"
-#include <va.h>
 #include <stdio.h>
 #include <string.h>
-#include "advmgr.h"
+
 #include "castle.h"
+
+#include "advmgr.h"
 #include "game.h"
 #include "kb.h"
-#include "townmgr.h"
-#include "textresource.h"
 #include "message.h"
+#include "terrain.h"
+#include "textresource.h"
+#include "townmgr.h"
+#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

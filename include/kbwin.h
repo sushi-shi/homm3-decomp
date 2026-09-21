@@ -2,6 +2,7 @@
 #define HOMM3_KBWIN_H
 
 #include <windows.h>
+
 #include "struct.h"
 
 void appExit();                         // 0x4f7fa0

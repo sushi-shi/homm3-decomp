@@ -5,9 +5,10 @@
 #include <bitset>
 #include <string>
 #include <vector>
-#include <va.h>
-#include "terrain_type.h"
+
 #include "advmgr_objects.h"
+#include "terrain_type.h"
+#include "va.h"
 
 class TAbstractFile;
 class TSpreadsheetResource;

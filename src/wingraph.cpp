@@ -1,18 +1,20 @@
-#include <va.h>
 #include <ddraw.h>
 #include <string.h>
+
 #include "wingraph.h"
+
+#include "bitmap16.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
-#include "palette.h"
-#include "bitmap16.h"
 #include "mousemgr.h"
+#include "palette.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
 // DDSetFullScreenStatus brackets the mode change with a pause of the
 // music stream.
 #include "soundmgr.h"
+#include "va.h"
 #include "winmgr.h"
 
 // Private desktop metrics, written as one consecutive triple by

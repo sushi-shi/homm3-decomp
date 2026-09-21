@@ -3,6 +3,7 @@
 
 #include <set>
 #include <vector>
+
 #include "army.h"
 #include "armygrp.h"   // SpellID, for the two spells.obj leaves below
 #include "basemgr.h"

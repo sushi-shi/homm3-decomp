@@ -1,13 +1,14 @@
 #ifndef HOMM3_MAPCELL_H
 #define HOMM3_MAPCELL_H
 
-#include <vector>
 #include <string>
+#include <vector>
+
 #include "artifact.h"
-#include "terrain_type.h"
+#include "herospec.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
-#include "herospec.h"
+#include "terrain_type.h"
 #include "town.h"
 
 class BlackBoxData;

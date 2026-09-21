@@ -1,17 +1,18 @@
 #ifndef HOMM3_ARMY_H
 #define HOMM3_ARMY_H
 
-#include <va.h>
 #include <deque>
 #include <vector>
-#include "herospec.h"
+
 // TCreatureTypeTraits, the type of the embedded `sMonInfo` row at +0x74.
 // Costs no consumer anything: all 24 TUs whose closure reaches army.h
 // already had armygrp.h in that closure.
 #include "armygrp.h"
+#include "herospec.h"
+#include "includes.h"
 // SMonFrameInfo, the type of the embedded `sMonFrameInfo` row at +0x110.
 #include "monframeinfo.h"
-#include "includes.h"
+#include "va.h"
 
 class hero;
 class armyGroup;

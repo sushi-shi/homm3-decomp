@@ -1,23 +1,25 @@
-#include <va.h>
-#include "creaturetype.h"
 #include <algorithm>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
+
 #include "seerhut.h"
+
+#include "advmgr.h"
 #include "ai_player.h"
-#include "seerhuttext.h"
-#include "resourcemanager.h"
-#include "hero.h"
-#include "quest.h"
+#include "creaturetype.h"
 // game.h for game::GetHero, which two of the slot-7 descriptions below
 // name their hero through.
 #include "game.h"
-#include "advmgr.h"
-#include "winmgr.h"
-#include "textresource.h"
+#include "hero.h"
+#include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
 #include "includes.h"
+#include "quest.h"
+#include "resourcemanager.h"
+#include "seerhuttext.h"
+#include "textresource.h"
+#include "va.h"
+#include "winmgr.h"
 
 void aiEquipArtifacts(hero* currentHero);
 void aiJoinDecision(hero* currentHero, TCreatureType creature, int amount);

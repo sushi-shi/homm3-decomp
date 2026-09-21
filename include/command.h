@@ -1,6 +1,8 @@
 #ifndef HOMM3_COMMAND_H
 #define HOMM3_COMMAND_H
 
+#include "va.h"
+
 // The combat command domain: what a click on a combat hex means.
 // combatManager::GetCommand (0x476490) ANSWERS these and
 // combatManager::DoCommand (0x476bd0) CONSUMES them, and the two bodies

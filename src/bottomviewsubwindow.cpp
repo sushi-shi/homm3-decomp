@@ -1,10 +1,11 @@
-#include <va.h>
 #include <crt_stdio.h>
 #include <strstream>
+
 // TBottomViewKingdom's hall census calls town::HasBuilding three times
 // (dc 0x563b8 lines 531/533/535), so this compiland gets the Town.h
 // inline; see town.h for why the visibility is scoped.
 #include "bottomviewsubwindow.h"
+
 #include "border.h"
 #include "game.h"
 #include "iconwdgt.h"
@@ -15,6 +16,7 @@
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
+#include "va.h"
 #include "widget.h"
 #include "window.h"
 

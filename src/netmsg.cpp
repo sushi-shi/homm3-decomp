@@ -18,12 +18,12 @@
 // and are not claimed.
 #include <string.h>
 
-#include <va.h>
+#include "netmsg.h"
 
 #include "abstractfile.h"
-#include "netmsg.h"
 #include "remote.h"
 #include "remotedlg.h"
+#include "va.h"
 
 // Complete adds this module-local memory stream to the wire-message bridge.
 // The class name is provisional. Retail vtable 0x640264 proves the three

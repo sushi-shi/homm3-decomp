@@ -2,7 +2,20 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include <va.h>
+#include "army.h"
+
+// ai.h: the narrow EAreaAttackCreature roster - LoadResources' missile
+// switch needs its ARCHER/MAGOG/POWER_LICH, which deliberately live
+// there rather than in armygrp.h's wide enum (see ai.h's own note).
+// Include-set canaries measured after this edge was added: initialize/
+// events/recruit all unmoved.
+#include "ai.h"
+// SSpellTraits' m_sample slice: army.cpp is its only consumer and this
+// header sits inside initialize.cpp's include closure (see the field).
+#include "armygrp.h"
+#include "bitmap16.h"
+#include "cmbtmgr.h"
+#include "combatwindow.h"
 // army::get_clockwise / get_counter_clockwise and the two direction
 // tables they index: army.cpp is their only consumer, and declaring
 // them to every consumer of army.h costs command.obj's GetCommand
@@ -13,20 +26,6 @@
 // function (measured 2026-08-14, bisected against the field slicing in
 // the same change, which is innocent).
 #include "creaturetype.h"
-#include "army.h"
-// ai.h: the narrow EAreaAttackCreature roster - LoadResources' missile
-// switch needs its ARCHER/MAGOG/POWER_LICH, which deliberately live
-// there rather than in armygrp.h's wide enum (see ai.h's own note).
-// Include-set canaries measured after this edge was added: initialize/
-// events/recruit all unmoved.
-#include "ai.h"
-// SSpellTraits' m_sample slice: army.cpp is its only consumer and this
-// header sits inside initialize.cpp's include closure (see the field).
-#include "armygrp.h"
-#include "townmgr.h"
-#include "bitmap16.h"
-#include "cmbtmgr.h"
-#include "combatwindow.h"
 #include "csprite.h"
 #include "cspriteframe.h"   // CroppedY for LoadResources' image_height
 #include "drawing.h"
@@ -38,6 +37,7 @@
 #include "game.h"   // gpGame->f_1f698, initialize's elemental-town gate
 #include "hero.h"
 #include "herospec.h"
+#include "includes.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
@@ -50,8 +50,9 @@
 #include "soundmgr.h"
 #include "textresource.h"
 #include "town.h"
+#include "townmgr.h"
+#include "va.h"
 #include "winmgr.h"
-#include "includes.h"
 
 #ifdef min
 #undef min

@@ -1,8 +1,8 @@
 #ifndef HOMM3_CAMPAIGNWINDOW_H
 #define HOMM3_CAMPAIGNWINDOW_H
 
-#include "window.h"
 #include "binkmanager.h"
+#include "window.h"
 
 class message;
 class Bitmap816;

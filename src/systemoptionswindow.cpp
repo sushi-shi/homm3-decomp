@@ -1,8 +1,8 @@
-#include <va.h>
 #include "systemoptionswindow.h"
-#include "cmbtmgr.h"
+
 #include "border.h"
 #include "button.h"
+#include "cmbtmgr.h"
 #include "exec.h"
 #include "game.h"
 #include "iconwdgt.h"
@@ -16,6 +16,7 @@
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
+#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

@@ -1,25 +1,27 @@
 #include <stdio.h>
-#include "creaturetype.h"
 #include <string.h>
-#include <va.h>
+
 #include "tradpost.h"
+
 #include "border.h"
 #include "button.h"
+#include "creaturetype.h"
+#include "customcampaign.h"
 #include "game.h"
 #include "iconwdgt.h"
 #include "kb.h"
+#include "message.h"
+#include "mousemgr.h"
+#include "netmsg.h"
+#include "remote.h"
+#include "slider.h"
 #include "text.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "townmgr.h"
+#include "va.h"
 #include "widget.h"
-#include "message.h"
 #include "winmgr.h"
-#include "mousemgr.h"
-#include "slider.h"
-#include "netmsg.h"
-#include "remote.h"
-#include "customcampaign.h"
 
 void tradeResourceSlider(int state, heroWindow* parentWindow);
 void giveResourceSlider(int state, heroWindow* parentWindow);

@@ -1,12 +1,12 @@
 #ifndef HOMM3_UNIVERSITY_WINDOW_H
 #define HOMM3_UNIVERSITY_WINDOW_H
 
+#include <vector>
+
 #include "advmgr_popup.h"
 #include "herospec.h"
 #include "iconwdgt.h"
 #include "textwdgt.h"
-
-#include <vector>
 class hero;
 struct type_university;
 class type_university_window;

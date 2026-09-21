@@ -1,15 +1,16 @@
-#include "terrain.h"
-#include <va.h>
 #include "exec.h"
+
 #include "advmgr.h"
 #include "basemgr.h"
 #include "inputmgr.h"
+#include "kb.h"
+#include "kbwin.h"
 #include "mousemgr.h"
 #include "soundmgr.h"
+#include "terrain.h"
+#include "va.h"
 #include "window.h"
 #include "winmgr.h"
-#include "kbwin.h"
-#include "kb.h"
 
 VA(0x004b0900, 0x10)  // dc 0x9e510
 executive::executive()

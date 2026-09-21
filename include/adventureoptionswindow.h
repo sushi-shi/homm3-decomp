@@ -1,8 +1,8 @@
 #ifndef HOMM3_ADVENTUREOPTIONSWINDOW_H
 #define HOMM3_ADVENTUREOPTIONSWINDOW_H
 
-#include <va.h>
 #include "advmgr_popup.h"
+#include "va.h"
 
 class textWidget;
 

@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include <va.h>
 #include "resource.h"
+#include "va.h"
 
 // Named indices into genrltxt.txt. Every value is retail-byte-proven by the
 // corresponding TTextResource::Text[index] consumer; names describe those

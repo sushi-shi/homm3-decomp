@@ -1,102 +1,88 @@
-// town::HasBuilding - hero::GetLuck's Grail gate is a real CALL to the
-// Town.h inline (retail `push 1 / push 0x1a / call 0x4305a0`), so this
-// compiland needs the declarator. It has to be defined before the FIRST
-// include that reaches town.h (game.h does, several lines below the
-// explicit `#include "town.h"`), and it stays defined for the whole
-// compiland: includes are TU-local, so no other object sees it. town.h's
-// own note measures what declaring it unconditionally would cost.
-#include <va.h>
-// VC6's own shipped Dinkumware headers - retail links Dinkumware, NOT
-// STLport (P2.3, answered 2026-08-07 and now byte-proven: see the COMDAT
-// tail near the end of this file). No vendoring: the toolchain already
-// carries the exact headers that built the retail COMDATs.
+#include <algorithm>
 #include <bitset>
 #include <functional>
-#include <algorithm>
-#include "bitset_iterator.h"
-#include "homm3_limit.h"
-#include <vector>
-#include <stdio.h>
-#include <string.h>
-// abs() - the intrinsic form retail uses (cdq / xor / sub), the
-// stdlib.h precedent already carried by cmbtmgr, window and ai_combat.
-#include <stdlib.h>
 // sqrt() - hero::get_combat_value_modifier (0x4e5400) calls the CRT
 // entry, not an inlined fsqrt.
 #include <math.h>
-// hero.obj owns get_morale_description / get_luck_description, so the
-// owning compiland joins their gate rather than defining armygrp's
-// wider HOMM3_ARMYGRP_DESCRIPTION_API.
+#include <stdio.h>
+// abs() - the intrinsic form retail uses (cdq / xor / sub), the
+// stdlib.h precedent already carried by cmbtmgr, window and ai_combat.
+#include <stdlib.h>
+#include <string.h>
+#include <vector>
+
 #include "hero.h"
+
+// advManager::FizzleCenter - HeroView's dismiss path calls it. The one
+// declarator, not the whole events view; advmgr.h's own note records why.
+#include "advmgr.h"
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
 #include "army.h"
+// TArtifact / akArtifactTraits / gCombinationArtifacts - same placement
+// rationale as herospec.h.
+#include "artifact.h"
+#include "bitset_iterator.h"
+// The hero screen's own widget zoo: THeroScreenWindow's constructor
+// builds 138 of them by hand.
+#include "border.h"
+#include "button.h"
+// GetBuildingName - the Grail arm of both description bodies names the
+// building it credits.
+#include "castle.h"
+// UpgradedCreatureType - GetMobility's creature-specialty check asks for
+// the specialty stack's upgrade; the cmbtmgr / hillfortwindow precedent.
+#include "creaturetype.h"
+#include "cursor.h"
+#include "exec.h"
+#include "findpath.h"
 // gpGame / playerData / game::IsHuman: the owner-record accessors
 // (belongs_to_human, get_player) and every gpGame walk in this TU need
 // the real definitions, and game.h is where they live.
 #include "game.h"
-// advManager::FizzleCenter - HeroView's dismiss path calls it. The one
-// declarator, not the whole events view; advmgr.h's own note records why.
-#include "advmgr.h"
-#include "cursor.h"
 // TSecondarySkill / TSkillMastery / akHeroSpecificAbilities - see the
 // placement note at the top of that header.
 // The creature arm of THeroSpecificAbility's +0x04 union: hero::GetMobility
 // reads the specialty subject as a TCreatureType. hero.h above already
 // pulled armygrp.h, so TCreatureType is in scope by the time this is read.
 #include "herospec.h"
-// UpgradedCreatureType - GetMobility's creature-specialty check asks for
-// the specialty stack's upgrade; the cmbtmgr / hillfortwindow precedent.
-#include "creaturetype.h"
-// TArtifact / akArtifactTraits / gCombinationArtifacts - same placement
-// rationale as herospec.h.
-#include "artifact.h"
-#include "exec.h"
-#include "findpath.h"
-#include "town.h"
-// GetBuildingName - the Grail arm of both description bodies names the
-// building it credits.
-#include "castle.h"
+#include "homm3_limit.h"
+// After Windows headers: undefine their min/max macros before using the
+// includes.h integer wrappers recovered from Dreamcast.
+#include "homm3_minmax.h"
+#include "iconwdgt.h"
+#include "includes.h"
+// gpInputManager - the two SHIFT arms force a mouse-move so the
+// rollover text re-evaluates under the new modifier.
+#include "inputmgr.h"
+#include "kb.h"
+#include "levelupwindow.h"
 // TMagicTerrain - the battlefield magic-terrain id the spell-school
 // quartet takes as its second argument.
 #include "magicterrain.h"
-#include "kb.h"
 #include "message.h"
 #include "misc.h"
-#include "winmgr.h"
-#include "levelupwindow.h"
-#include "sskilltraits.h"
+#include "mousemgr.h"
+// DoQuestLog - the quest-log button arm.
+#include "questlogwindow.h"
+#include "quickherowindow.h"
+// gTurnDuration69d630 - CheckLevel shortens the multiplayer dialog
+// deadline once the turn timer has expired.
+#include "remote.h"
+#include "resourcemanager.h"
+// launch_sample - the level-up jingle.
+#include "soundmgr.h"
 // The two windows THeroScreenWindow::WindowHandler constructs on the
 // stack: the spellbook on the artifact slot 17 arm and the quick-hero
 // popup on the locator right-click arm.
 #include "spellbookwindow.h"
-#include "quickherowindow.h"
-// DoQuestLog - the quest-log button arm.
-#include "questlogwindow.h"
-// gpInputManager - the two SHIFT arms force a mouse-move so the
-// rollover text re-evaluates under the new modifier.
-#include "inputmgr.h"
-// gTurnDuration69d630 - CheckLevel shortens the multiplayer dialog
-// deadline once the turn timer has expired.
-#include "remote.h"
-// launch_sample - the level-up jingle.
-#include "soundmgr.h"
-#include "resourcemanager.h"
+#include "sskilltraits.h"
 #include "textresource.h"
-// After Windows headers: undefine their min/max macros before using the
-// includes.h integer wrappers recovered from Dreamcast.
-#include "homm3_minmax.h"
-
-#include "mousemgr.h"
-#include "widget.h"
-
-// The hero screen's own widget zoo: THeroScreenWindow's constructor
-// builds 138 of them by hand.
-#include "border.h"
-#include "button.h"
-#include "iconwdgt.h"
 #include "textwdgt.h"
-#include "includes.h"
+#include "town.h"
+#include "va.h"
+#include "widget.h"
+#include "winmgr.h"
 
 DATA(0x0067dcec) extern const THeroClassTraits (&g_heroClasses)[18];
 // Runtime hero-view state used by the retail-only name getter below. The

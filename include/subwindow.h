@@ -2,6 +2,7 @@
 #define HOMM3_SUBWINDOW_H
 
 #include <vector>
+
 #include "va.h"
 
 class Bitmap16Bit;

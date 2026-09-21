@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <vector>
 #include <zlib.h>
+
 #include "va.h"
 
 // The 32-byte archive-directory row. Retail Find's indexing uses a five-bit

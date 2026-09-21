@@ -4,24 +4,26 @@
 // Smacker handles (video and audio-only tracks); Bink's parallel state
 // belongs to the binkmanager.cpp namespace.
 // The vendored RAD headers own the Smacker and Bink import interfaces.
-#include "terrain.h"
-#include <va.h>
-#include <windows.h>
 #include <ddraw.h>
-#include <string.h>
 #include <string>
+#include <string.h>
+#include <windows.h>
+
 #include "smackmgr.h"
+
 #include "binkmanager.h"
-#include "wingraph.h"
-#include "soundmgr.h"
-#include "winmgr.h"
-#include "mousemgr.h"
+#include "bitmap16.h"
 #include "inputmgr.h"
 #include "kbwin.h"
-#include "bitmap16.h"
 #include "message.h"
+#include "mousemgr.h"
 #include "prefs.h"
+#include "soundmgr.h"
+#include "terrain.h"
 #include "textresource.h"
+#include "va.h"
+#include "wingraph.h"
+#include "winmgr.h"
 
 // The drive letter the misc.obj install scan settled on. It is WRITTEN at
 // 0x50c278 inside that scan (still unclaimed) and READ only there and by

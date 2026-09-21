@@ -1,14 +1,16 @@
-#include "terrain.h"
-#include <va.h>
 #include <string.h>
+
 #include "border.h"
-#include "bitmap816.h"
+
 #include "bitmap16.h"
+#include "bitmap816.h"
 #include "resourcemanager.h"
-#include "winmgr.h"
+#include "terrain.h"
+#include "va.h"
 // bitmapBorder's two blitters offset the widget rect by its parent
 // window's origin, so this TU needs the COMPLETE heroWindow.
 #include "window.h"
+#include "winmgr.h"
 
 // Ordinary source-local body. Retail expands it in the three derived
 // constructors (0x450130, 0x4502d0, 0x450690), leaving a widget default-

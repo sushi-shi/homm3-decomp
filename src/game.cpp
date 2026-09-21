@@ -1,69 +1,43 @@
-// calculate_production and playerData::HasCapitol read the town masks
-// through town::HasBuilding in the Dreamcast bodies (dc 0xa3474 lines
-// with r5 = 15/22/17, dc 0xa4e80 with r5 = 13); see town.h for why the
-// inline's visibility is scoped.
-// playerData::add_garrison_hero (0x4b9fc0) needs three declarators no
-// other game.obj body reaches: game::record_hide_hero, and CMCHideHero
-// with the two default constructors it chains through. Held on its own
-// gate so neither townmgr.obj (the other HOMM3_GAME_OBJ_DECLS consumer)
-// nor any town.h/hero.h reader widens its include closure.
-// game::ProcessRandomObjects (0x4c9dd0) needs its own declarator, the
-// GetRandomMonster it rolls each monster case with, and ConvertObject -
-// which town.obj already declares behind its own gate. Held together
-// here so townmgr.obj gains no member of class game.
-// game::CreateTownHeroes (0x4ca040) needs its own declarator plus
-// town::GiveSpells, which it closes each starting town with. Held on its
-// own gate: a bare member declarator on class game is the include-set
-// wall's trigger shape (a first attempt that hung both off
-// HOMM3_GAME_OBJ_DECLS cost recruitUnit::Update 90.84 -> 88.24), and
-// townmgr.obj shares that macro.
-// game::ClaimTown (0x4c61e0) needs four declarators no other game.obj
-// body reaches: record_claim_town, game::get_alignment, is_human_ally
-// and generator::remove_bonus. Held on its own gate for the same reason
-// the town-heroes group is - townmgr.obj shares HOMM3_GAME_OBJ_DECLS.
-// game::Load's tail needs load_recorded_events and setup_shipyards, and
-// neither is reached by any other body here. Same gate discipline as the
-// two groups above.
-// Retail's retained hero-setup tree helpers call std::_Lockit and carry the
-// nested cleanup states those calls require. Keep the pinned /ML runtime, but
-// expose the header's external-lock declarations while this TU is parsed;
-// the byte verdict below is the authority for that otherwise hidden PCH view.
-#include "advmgr_objects.h"
-#include "advmgr.h"
-#include "adventuremapwindow.h"
-#include "bitset_iterator.h"
-#include "initialize.h"
-#include "terrain.h"
-#include "inputmgr.h"
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
-#include <va.h>
 #include <direct.h>
+#include <fcntl.h>
+#include <io.h>
 #include <math.h>
 #include <memory>
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>
+
 #include "game.h"
-#include "gamecontext.h"
+
+#include "adventuremapwindow.h"
+#include "advmgr.h"
+#include "advmgr_objects.h"
+#include "bitmap816.h"
+#include "bitset_iterator.h"
+#include "creature_bank.h"
+#include "creaturetype.h"
+#include "cursor.h"
+#include "diff.h"
+// playerData::ClearNetInfo and GetName read the default player name from
+// the canonical genrltxt.txt TTextResource;
+// playerData::AssignNetInfo reads a CNetPlayerInfo.
+#include "exec.h"
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
 // with Random and hand the name to soundManager::StartMP3;
 // game::SetMapSize (0x4ccef0) writes findpath's two map-extent globals
 // and closes the global search array.
 #include "findpath.h"
+#include "gamecontext.h"
+#include "herospec.h"
+#include "imm_mouse.h"
+#include "initialize.h"
+#include "inputmgr.h"
+#include "kb.h"
+#include "kbwin.h"
 #include "misc.h"
-#include "soundmgr.h"
-#include "smackmgr.h"
-#include "remote.h"
-#include "remotedlg.h"
-#include "diff.h"
-#include "winfile.h"
-#include "turn_update_msg.h"
-#include "spellbookwindow.h"
-#include "townmgr_globals.h"
-// playerData::ClearNetInfo and GetName read the default player name from
-// the canonical genrltxt.txt TTextResource;
-// playerData::AssignNetInfo reads a CNetPlayerInfo.
-#include "exec.h"
-#include "netplayer.h"
+#include "mousemgr.h"
+#include "multiplayerwindow_globals.h"
 // game::GetLocalPlayer / GetLocalPlayerGamePos / IsMultiplayer branch
 // on the protocol selector; IsMultiplayer also reads 0x69954c, which
 // kbwin.h declares as `bVideoPaused` and kbwin.obj DATA-claims. The
@@ -72,28 +46,26 @@
 // name and this TU includes the owner's header rather than
 // re-declaring it.
 #include "netgame.h"
-#include "kb.h"
-#include "kbwin.h"
-#include "cursor.h"
-#include "mousemgr.h"
+#include "netplayer.h"
 #include "puzzlewindow.h"
+#include "quicktownwindow.h"
+#include "recruit.h"
+#include "remote.h"
+#include "remotedlg.h"
 #include "resourcedisplay.h"
 #include "resourcemanager.h"
-#include "multiplayerwindow_globals.h"
-#include "bitmap816.h"
-#include "herospec.h"
 #include "savegame.h"
-#include "winmgr.h"
-#include "creature_bank.h"
-#include "creaturetype.h"
-#include "viewarmywindow.h"
-#include "recruit.h"
-#include "quicktownwindow.h"
-#include "imm_mouse.h"
+#include "smackmgr.h"
+#include "soundmgr.h"
+#include "spellbookwindow.h"
+#include "terrain.h"
 #include "timer.h"
-#include <fcntl.h>
-#include <io.h>
-#include <sys/stat.h>
+#include "townmgr_globals.h"
+#include "turn_update_msg.h"
+#include "va.h"
+#include "viewarmywindow.h"
+#include "winfile.h"
+#include "winmgr.h"
 
 type_point aiAttemptPuzzleGuess(long player);
 

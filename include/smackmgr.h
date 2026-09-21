@@ -3,6 +3,8 @@
 
 #include <SMACK.H>
 
+#include "va.h"
+
 // DC CodeView independently proves the complete SDK record extent; retail
 // consumes Width, Height, Frames, FrameNum and the LastRect quartet.
 SIZE(Smack, 944);

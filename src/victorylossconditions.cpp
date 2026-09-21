@@ -2,8 +2,8 @@
 // town::get_army() half of the DC pair (the summoning-portal
 // precedent: never defined, /OPT:ICF folded both bodies onto the const
 // row 0x5c1460).
-#include <va.h>
 #include "game.h"
+#include "va.h"
 
 VA(0x005f15a0, 0x63)  // dc 0x18fdc4
 int VictoryConditionStruct::appliesToPlayer(long playerId) const

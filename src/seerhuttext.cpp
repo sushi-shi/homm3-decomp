@@ -5,10 +5,11 @@
 #include <string>
 #include <vector>
 
-#include <va.h>
-#include "resourcemanager.h"
 #include "seerhuttext.h"
+
+#include "resourcemanager.h"
 #include "textresource.h"
+#include "va.h"
 
 VA_COMPGEN(0x0056bde0, 0x5A, CLASS_CTOR, TSeerHutTextColumn)
 VA_COMPGEN(0x0056be40, 0x8A, IMPLICIT_DTOR, TSeerHutTextColumn)

@@ -8,8 +8,9 @@
 #ifndef HOMM3_WINFILE_H
 #define HOMM3_WINFILE_H
 
-#include <va.h>
 #include <windows.h>
+
+#include "va.h"
 
 // DC enum 0x10be. The values are the FILE_ATTRIBUTE_* constants;
 // faError = -1 backs the GetAttribute failure return.

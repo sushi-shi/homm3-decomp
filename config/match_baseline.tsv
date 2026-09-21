@@ -2242,7 +2242,7 @@ hero	?getStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?getStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110	tokens1:4b11cd54c3cc
 hero	?getSurrenderCostFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe4580	tokens1:a7b572659fd1
 hero	?getVisibility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4070	tokens1:498f41cfaf60
-hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	79.8138	79.8138	79.8138	0xe3070	tokens1:085b54a23ec5
+hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	79.7247	79.8138	79.8138	0xe3070	tokens1:085b54a23ec5
 hero	?giveExperience@hero@@QAEHHHE@Z	97.6632	100.0000	100.0000	0xe33b0	tokens1:bc5f334e06d8
 hero	?giveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	tokens1:7cfba9aeace3
 hero	?giveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	tokens1:b7eb1dec2edc
@@ -3501,7 +3501,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:9ffb396c8413
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	tokens1:f84e27622dc7
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:d414eb83c2cc
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6721	95.6792	95.7066	0x149cb0	tokens1:65047c18cd7d
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6792	95.6792	95.7066	0x149cb0	tokens1:65047c18cd7d
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:c9c09a93db3c
 rmg	__h3cg$rmg$list_dtor$TPoint	0.0000	100.0000	100.0000	0x14c6a0	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-

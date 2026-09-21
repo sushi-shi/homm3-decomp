@@ -13,12 +13,13 @@
 // compiled bodies).  Non-virtual Create*Connection are dispatched from one
 // remote-side caller (0x1556e0) in source order; the two CDPlayLobby ctor/dtor
 // rows are proven by their dual base+derived vtable stores.
-#include <va.h>
 // dxplay.cpp is the DirectPlay TU: it sees the complete DP6 value structures and
 // the lobby non-virtual member set, exactly as retail did.
 #include "dxplay.h"
+
 #include "dxplay_com.h"
 #include "exceptions.h"
+#include "va.h"
 
 // VC6's <new> declares `operator delete` WITHOUT an exception specification,
 // so under /GX every explicit `::operator delete` becomes a throw point and

@@ -2,6 +2,7 @@
 #define HOMM3_PUZZLEWINDOW_H
 
 #include <bitset>
+
 #include "advmgr_popup.h"
 #include "struct.h"
 

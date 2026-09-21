@@ -1,8 +1,9 @@
 // 10 functions in link order.
-#include <va.h>
 #include "subwindow.h"
+
 #include "bitmap16.h"
 #include "soundmgr.h"
+#include "va.h"
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"

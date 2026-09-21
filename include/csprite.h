@@ -4,8 +4,8 @@
 #include "bitmap16.h"
 #include "csequence.h"
 #include "cspriteframe.h"
-#include "resource.h"
 #include "palette.h"
+#include "resource.h"
 
 class palette;
 class paletteHiColor;

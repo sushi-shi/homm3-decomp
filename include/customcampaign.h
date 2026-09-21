@@ -4,10 +4,11 @@
 #define HOMM3_CUSTOMCAMPAIGN_H
 
 #include <string>
-#include <vector>
 #include <string.h>
-#include "hero.h"
+#include <vector>
+
 #include "campaignmusic.h"
+#include "hero.h"
 
 class CMapHeaderData;
 

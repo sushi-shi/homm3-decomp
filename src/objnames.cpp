@@ -7,17 +7,16 @@
 // (append at 0x41b340, runtime_error's string constructor at 0x41ba90)
 // and the two TRuntimeError copy constructors at 0x41b7b0/0x41b920 whose
 // `[src+0x1d]` byte copy exceptions.h already cites.
+#include <memory>
 #include <string.h>
 
-#include <memory>
-
-#include <va.h>
+#include "objnames.h"
 
 #include "exceptions.h"
-#include "objnames.h"
-#include "resourceptr.h"
 #include "resourcemanager.h"
+#include "resourceptr.h"
 #include "textresource.h"
+#include "va.h"
 
 // The rows themselves: retail .data 0x691698, and the `unsigned char
 // (*)[16]` pointer at 0x660428 that every reader goes through holds

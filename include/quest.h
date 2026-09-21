@@ -21,13 +21,14 @@
 
 #include <string>
 #include <vector>
-#include <va.h>
+
 // TAbstractFile, the two-slot save/load stream every quest deserializer
 // virtual-calls (slot 1 = Read). This adds NOTHING to seerhut.cpp's include
 // closure: hero.h, which seerhut.cpp already includes ahead of this header,
 // includes armygrp.h itself.
 #include "armygrp.h"
 #include "artifact.h"  // TArtifact, used by the artifact-quest vector below
+#include "va.h"
 
 class hero;
 

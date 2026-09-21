@@ -1,7 +1,8 @@
-#include <va.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "combatresultswindow.h"
+
 #include "border.h"
 #include "button.h"
 #include "cmbtmgr.h"
@@ -9,6 +10,7 @@
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
+#include "includes.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "message.h"
@@ -16,9 +18,9 @@
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
+#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
-#include "includes.h"
 
 // Source-private in the Dreamcast compiland. Retail's destructor is the only
 // body in this admitted subset that touches the active-window slot.

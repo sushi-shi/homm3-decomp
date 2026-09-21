@@ -1,12 +1,12 @@
 #ifndef HOMM3_FINDPATH_H
 #define HOMM3_FINDPATH_H
 
-#include <va.h>
-#include <windows.h>
 #include <vector>
+#include <windows.h>
 #include <windows.h>
 
 #include "struct.h"
+#include "va.h"
 
 class army;
 class hero;

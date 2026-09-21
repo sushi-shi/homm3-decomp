@@ -1,21 +1,23 @@
-#include <va.h>
 #include <stdio.h>
+
 #include "winmgr.h"
-#include "message.h"
-#include "mousemgr.h"
-#include "window.h"
-#include "widget.h"
-#include "inputmgr.h"
-#include "kbwin.h"
-#include "soundmgr.h"
+
 // Close deletes both owned bitmaps through the virtual slot-0 tail, so
 // this TU needs the COMPLETE Bitmap16Bit.
 #include "bitmap16.h"
 #include "bitmap816.h"
-#include "wingraph.h"
+#include "inputmgr.h"
 // Open answers a failed screen-bitmap allocation with MemError.
 #include "kb.h"
+#include "kbwin.h"
+#include "message.h"
+#include "mousemgr.h"
 #include "remote.h"
+#include "soundmgr.h"
+#include "va.h"
+#include "widget.h"
+#include "window.h"
+#include "wingraph.h"
 
 // The four screen-geometry slots Open hands to Bitmap16Bit::reference.
 // They are read at exactly one site in the whole image - these four

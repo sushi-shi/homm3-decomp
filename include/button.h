@@ -3,14 +3,15 @@
 #ifndef HOMM3_BUTTON_H
 #define HOMM3_BUTTON_H
 
-#include <va.h>
 #include <string>
 #include <string.h>
 #include <vector>
-#include "widget.h"
+
 #include "csprite.h"
-#include "resource.h"
 #include "font.h"
+#include "resource.h"
+#include "va.h"
+#include "widget.h"
 
 // Player-color palette targets. Both overloads of the free
 // SetPlayerPaletteColors (0x5ffe20 / 0x5ffe40) copy a per-player run

@@ -1,29 +1,31 @@
 #include <string.h>
 #include <zlib.h>
-#include <va.h>
+
 #include "remote.h"
+
 #include "advmgr.h"
+#include "armygrp.h"
 #include "crt_stdio.h"
+#include "csprite.h"
+#include "cspriteframe.h"
 #include "game.h"
+#include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
+#include "message.h"
 #include "misc.h"
+#include "mousemgr.h"
 #include "netgame.h"
 #include "netplayer.h"
 #include "prefs.h"
-#include "smackmgr.h"
-#include "soundmgr.h"
-#include "armygrp.h"
-#include "csprite.h"
-#include "cspriteframe.h"
+#include "remotedlg.h"
 #include "resourcemanager.h"
 #include "sample.h"
+#include "smackmgr.h"
+#include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "remotedlg.h"
-#include "message.h"
-#include "inputmgr.h"
-#include "mousemgr.h"
+#include "va.h"
 // gpWindowManager: CSaveScreen grabs and restores through the screen
 // bitmap, and hands the dirty rect back to the window manager.
 #include "winmgr.h"

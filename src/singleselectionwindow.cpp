@@ -1,8 +1,14 @@
 #include <algorithm>
-#include <io.h>
+// Module-local dialogs, network messages and header-transfer jobs.
+#include <bitset>
 #include <direct.h>
+#include <io.h>
+#include <memory>
 #include <string.h>
-#include <va.h>
+#include <vector>
+
+#include "singleselectionwindow.h"
+
 // The TurnChatOn/TurnChatOff widget runs are widget::show()/hide()
 // expansions (DC calls the Widget.h pair out of line; retail expands
 // them - the seven candidate sites are ALSO what starves the /Ob2
@@ -11,54 +17,50 @@
 // UpdatePlayerPositions reaches SetupFirstPlayer and the new-map bonus
 // array, both scoped behind game.h's new-map view gate.
 #include "advmgr.h"
-#include "game.h"
 #include "armygrp.h"
-#include "gametypewindow.h"
-#include "kb.h"
-#include "kbwin.h"
-#include "newgame.h"
-#include "hotseat.h"
-#include "netgame.h"
-#include "ownership.h"
-#include <memory>
-#include "savegame.h"
-#include "text.h"
 // Update draws the scenario rows: the three icon strips are CSprite
 // draws and the columns render through the shared font cells;
 // DrawHeroAdvancedOption blits the flag/portrait plates.
 #include "bitmap816.h"
 #include "border.h"
-#include "crt_process.h"
-#include "csprite.h"
-#include "font.h"
-#include "iconwdgt.h"
-#include "mousemgr.h"
-#include "scenarioinfo.h"
-#include "singleselectionpopups.h"
-#include "singleselectionwindow.h"
-// Module-local dialogs, network messages and header-transfer jobs.
-#include <bitset>
-#include <vector>
-#include "gamecontext.h"
-#include "inputmgr.h"
-#include "slider.h"
-#include "textresource.h"
-#include "remotedlg.h"
-#include "textntry.h"
-#include "netmsg.h"
-#include "winmgr.h"
 // TurnChatOn/TurnChatOff relabel chatToggle through textButton's
 // inherited header-inline SetText (retail expands the std::string
 // assign in place, calling only _Grow/_Eos - the button.h shape).
 #include "button.h"
+#include "campaignbrief.h"
+#include "crt_process.h"
+#include "csprite.h"
+#include "font.h"
+#include "game.h"
+#include "gamecontext.h"
+#include "gametypewindow.h"
+#include "hotseat.h"
+#include "iconwdgt.h"
+#include "inputmgr.h"
+#include "kb.h"
+#include "kbwin.h"
+#include "misc.h"
+#include "mousemgr.h"
+#include "multiplayerwindow.h"
+#include "netgame.h"
+#include "netmsg.h"
+#include "newgame.h"
+#include "ownership.h"
+#include "remotedlg.h"
+#include "resourcemanager.h"
+#include "savegame.h"
+#include "scenarioinfo.h"
+#include "singleselectionpopups.h"
+#include "slider.h"
+#include "soundmgr.h"
+#include "text.h"
+#include "textntry.h"
+#include "textresource.h"
 #include "textscroller.h"
 #include "textwdgt.h"
-#include "resourcemanager.h"
-#include "multiplayerwindow.h"
-#include "campaignbrief.h"
-#include "misc.h"
-#include "soundmgr.h"
 #include "u2dvers.h"
+#include "va.h"
+#include "winmgr.h"
 
 // The host-wait animated dialog. CAnimatedDlg base is 0x78; handle_message
 // proves the two tail fields (the polled message pointer at +0x78, the awaited

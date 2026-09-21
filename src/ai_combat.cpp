@@ -7,7 +7,6 @@
 // wants retail's shape has to say so itself; see the
 // __declspec(nothrow) redeclaration in include/ai_combat.h. That one
 // declaration is what takes both entry points from 96-98% to exact.
-#include <va.h>
 // check_wall_archery_penalty's three fortification tests are
 // town::HasBuilding calls in the Dreamcast body (dc 0x2a470, three
 // `jsr @r9` with r5 = 7/8/9 and r6 = 0); see town.h for why the
@@ -16,19 +15,21 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "ai_combat.h"
+
+#include "advmgr.h"
 #include "ai_player.h"
 #include "ai_tactical.h"
-#include "advmgr.h"
 #include "armygrp.h"
 #include "game.h"
+#include "hero.h"
+#include "homm3_minmax.h"
+#include "includes.h"
 #include "magicterrain.h"
 #include "misc.h"
-#include "hero.h"
 #include "town.h"
-#include "includes.h"
-
-#include "homm3_minmax.h"
+#include "va.h"
 
 // The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.
 // cast_spell masks precisely these six bits twice and switches on the five

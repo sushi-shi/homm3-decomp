@@ -19,41 +19,41 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include <va.h>
-#include "DC_precompiledheaders.h"  // canonical reference selectors
+#include "cmbtmgr.h"
+
 // PowEffect's own surface: its declarator and TSpellEffectID from
 // cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
 // and bPowSequenceComplete from army.h, the death sequence from
 // csprite.h and the Immersion hook from game.h.
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
-#include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
 #include "bitmap816.h"
-                                     // it in InitNonVisualVars' siege arms
-#include "cmbtmgr.h"
-#include "combatwindow.h"
 #include "combatoptionswindow.h"
+#include "combatwindow.h"
 #include "creaturetype.h" // UpgradedCreatureType, for RaiseSkeletons
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
+#include "DC_precompiledheaders.h"  // canonical reference selectors
 #include "drawing.h"  // gCombatAreaLimits / gCombatSpeedFactors, for the
                       // missile animators
+#include "findpath.h" // searchArray::lower_door, for LowerDoor
 #include "game.h"     // gpGame ruleset gate, for RaiseSkeletons
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
-#include "findpath.h" // searchArray::lower_door, for LowerDoor
+#include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
+#include "inputmgr.h" // gpInputManager, for Open
 #include "kb.h"   // gText, the shared combat-message scratch buffer
 #include "kbwin.h"  // bVideoPaused storage, the network-game gate here
-#include "inputmgr.h" // gpInputManager, for Open
+#include "mapcell.h"
 #include "misc.h"   // TPickANumber, for PlaceAllObstacles
 #include "monframeinfo.h" // gMonFrameInfo, the shot table KeepAttack times from
+#include "mousemgr.h" // gpMouseManager / SetPointer / ShowPointer, for Open
 #include "prefs.h"  // the local quick-combat preference
-#include "mapcell.h"
+#include "remote.h"
+#include "remotedlg.h" // CNetMsgHandlerPause, the pause handler Open installs
 #include "resourcemanager.h"
 #include "sample.h"   // TResourceHandle<sample>::~TResourceHandle calls resource::Dispose
 #include "soundmgr.h" // SAMPLE2 / LoadPlaySample / WaitEndSample
-#include "mousemgr.h" // gpMouseManager / SetPointer / ShowPointer, for Open
-#include "remote.h"
-#include "remotedlg.h" // CNetMsgHandlerPause, the pause handler Open installs
 #include "textresource.h"
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
+#include "va.h"
 #include "viewarmywindow.h"
 #include "widget.h"  // WIDGET_DIMMED / WIDGET_UPDATE, for Open
 #include "winmgr.h"
