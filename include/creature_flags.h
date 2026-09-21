@@ -1,12 +1,6 @@
 #ifndef HOMM3_CREATURE_FLAGS_H
 #define HOMM3_CREATURE_FLAGS_H
 
-// Attribute names from NH3API's creature_flags (core/creatures.hpp), also
-// recorded in evidence/ida/enums.txt. Dreamcast retains the unsigned mask
-// field and army::Is(unsigned), but no corresponding enum roster. Keep the
-// original CF_* spellings below for reference lookup. Retail call sites
-// corroborate the masks they use. Low bits describe traits; high bits also
-// carry combat state.
 enum creatureFlags {
     creatureDoubleWide            = 0x00000001U,  // CF_DOUBLE_WIDE
     creatureFlyingArmy            = 0x00000002U,  // CF_FLYING_ARMY
