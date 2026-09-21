@@ -229,29 +229,25 @@ public:
         // plus the _Ptr member, with no quest_type() in the address.
         QUEST_TEXT_TIME_LIMIT = 51
     };
-    // The five-column group this quest type owns, computed ONCE: slot 14
-    // fills three of the columns off one row and retail keeps the group
-    // base in a register across all three.
+    // Complete's shared row selector survives at 0x52e6b0. The quest-log
+    // caller retains it while the adventure-window predicates expand it.
+    // Header ownership is inferred from that cross-TU use; Complete added
+    // this interface after the Dreamcast quest representation.
+    VA(0x0052e6b0, 0x2E)
+    const std::string* questTextRow()
+    {
+        return m_seerHut ? g_questTextA[m_textVariant] : g_questTextB[m_textVariant];
+    }
+    // The five-column text group for this quest type. Keep the selector
+    // call and virtual discriminator in the same expression: retail's
+    // retained and expanded instances evaluate their operands differently.
     const std::string* questTexts()
     {
-        const std::string* row =
-            m_seerHut ? g_questTextA[m_textVariant] : g_questTextB[m_textVariant];
-        return row + QUEST_TEXT_COLUMNS * questType();
+        return questTextRow() + QUEST_TEXT_COLUMNS * questType();
     }
-    // The row-selecting half of quest_texts(), emitted out of line at
-    // 0x52e6b0.  Large callers use this body while the smaller slot-14
-    // functions inline the same field_04/field_38 calculation.
-    const std::string* questTextRow();
     const std::string& questText(int column)
     {
-        // The ternary is on the whole INDEXED ROW, not on the table
-        // pointer: retail duplicates the `field_38 * 13 << 6` product
-        // into both arms and adds the base inside each one, which is
-        // what this spelling produces and what hoisting the pointer out
-        // does not.
-        const std::string* row =
-            m_seerHut ? g_questTextA[m_textVariant] : g_questTextB[m_textVariant];
-        return row[QUEST_TEXT_COLUMNS * questType() + column];
+        return questTexts()[column];
     }
 
     std::string getProposalDialogText();

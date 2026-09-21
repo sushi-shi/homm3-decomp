@@ -778,15 +778,15 @@ void combatManager::updateArmyGroup(int whichSide)
         if (current.m_numTroops <= 0)
             continue;
 
-        if (current.is(1u << 21))
+        if (current.is(creatureImmobilized))
             continue;
         if (m_playerIds[whichSide] != -1) {
-            if (current.is(1u << 22))
+            if (current.is(creatureSummoned))
                 continue;
         }
-        if (current.is(1u << 23))
+        if (current.is(creatureClone))
             continue;
-        if (current.is(1u << 6))
+        if (current.is(creatureSiegeWeapon))
             continue;
         if (current.m_originalIndex < 0
             || current.m_originalIndex >= armyGroup::ARMY_GROUP_SLOT_COUNT)
@@ -1017,15 +1017,15 @@ void combatManager::checkApplyGoodMorale(int group, int index)
     army* stack = &m_armies[group][index];
     if (m_creaturePlacement)
         return;
-    if (stack->is(1u << 27))
+    if (stack->is(creatureDefending))
         return;
-    if (stack->is(1u << 24))
+    if (stack->is(creatureMorale))
         return;
     if (!stack->m_numTroops)
         return;
     if (random(1, 24) > stack->getMorale(1))
         return;
-    stack->m_monInfo.m_attributes = (stack->m_monInfo.m_attributes & ~0x04000000) | 0x01000000;
+    stack->m_monInfo.m_attributes = (stack->m_monInfo.m_attributes & ~creatureDone) | creatureMorale;
     if (!isQuickCombat()) {
         SAMPLE2 sample = loadPlaySample(
             DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
@@ -1046,7 +1046,7 @@ int combatManager::checkApplyBadMorale(int group, int index)
         army* stack = &m_armies[group][index];
         if (random(1, 12) <= -stack->getMorale(1)) {
             if (m_sideIsAi[group] || random(1, 4) != 1) {
-                stack->m_monInfo.m_attributes |= 0x04000000;
+                stack->m_monInfo.m_attributes |= creatureDone;
                 if (!isQuickCombat()) {
                     SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
                         0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
@@ -1067,7 +1067,7 @@ int combatManager::checkApplyBadMorale(int group, int index)
 VA(0x00464d40, 0x20D)
 unsigned char combatManager::unnamed464d40(army* selected)
 {
-    if (selected->is(1u << 17))
+    if (selected->is(creatureNoMorale))
         return 0;
     if (selected->m_creatureType == CREATURE_AZURE_DRAGON)
         return 0;
@@ -1090,7 +1090,7 @@ unsigned char combatManager::unnamed464d40(army* selected)
     if (rand() % 10 > 0)
         return 0;
 
-    selected->m_monInfo.m_attributes |= 1 << 26;
+    selected->m_monInfo.m_attributes |= creatureDone;
     if (!isQuickCombat()) {
         SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
             0x0066ff88, fearSampleName, "Fear.wav"));
@@ -1109,8 +1109,8 @@ VA(0x00464f50, 0x123)
 unsigned char combatManager::unnamed464f50(
     const army* incumbent, const army* candidate)
 {
-    if ((incumbent->is(1u << 24)) != (candidate->is(1u << 24)))
-        return incumbent->is(1u << 24);
+    if (incumbent->is(creatureMorale) != (candidate->is(creatureMorale)))
+        return incumbent->is(creatureMorale);
 
     int incumbentSpecial = incumbent->m_creatureType == CREATURE_ARROW_TOWER;
     int candidateSpecial = candidate->m_creatureType == CREATURE_ARROW_TOWER;
@@ -1146,11 +1146,11 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
             for (int side = 0; side < 2; side++) {
                 for (int i = 0; i < m_numArmies[side]; i++) {
                     army* stack = &m_armies[side][i];
-                    if (stack->is(1u << 26))
+                    if (stack->is(creatureDone))
                         continue;
-                    if (stack->is(1u << 21))
+                    if (stack->is(creatureImmobilized))
                         continue;
-                    if (stack->is(1u << 25))
+                    if (stack->is(creatureWaiting))
                         continue;
                     if (stack->m_resetThisRound && stack->isIncapacitated())
                         continue;
@@ -1166,7 +1166,7 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
                     }
                     if (stack->m_creatureType == CREATURE_AMMO_CART)
                         continue;
-                    if (m_creaturePlacement && (stack->is(1u << 6)))
+                    if (m_creaturePlacement && stack->is(creatureSiegeWeapon))
                         continue;
                     if (best && unnamed464f50(best, stack))
                         continue;
@@ -1199,7 +1199,7 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
             checkingForBadMorale = 0;
             for (int s = 0; s < 2; s++) {
                 for (int j = 0; j < m_numArmies[s]; j++)
-                    m_armies[s][j].m_monInfo.m_attributes &= ~(1 << 25);
+                    m_armies[s][j].m_monInfo.m_attributes &= ~creatureWaiting;
             }
         }
     }
@@ -1377,9 +1377,9 @@ unsigned char combatManager::combatIsOver() const
             const army& currentArmy = m_armies[side][slot];
             if (currentArmy.m_creatureType == -1)
                 continue;
-            if (currentArmy.is(1u << 21))
+            if (currentArmy.is(creatureImmobilized))
                 continue;
-            if (currentArmy.is(1u << 6))
+            if (currentArmy.is(creatureSiegeWeapon))
                 continue;
             hasArmy = 1;
             break;
@@ -1400,11 +1400,11 @@ unsigned char combatManager::isWinner(int thisSide) const
         const army& a = m_armies[thisSide][slot];
         if (a.m_creatureType == -1)
             continue;
-        if (a.is(1u << 22))
+        if (a.is(creatureSummoned))
             continue;
-        if (a.is(1u << 6))
+        if (a.is(creatureSiegeWeapon))
             continue;
-        if (!a.is(1u << 21)) {
+        if (!a.is(creatureImmobilized)) {
             noStacks = 0;
             break;
         }
@@ -1416,9 +1416,9 @@ unsigned char combatManager::isWinner(int thisSide) const
             const army& a = m_armies[otherSide][other];
             if (a.m_creatureType == -1)
                 continue;
-            if (a.is(1u << 21))
+            if (a.is(creatureImmobilized))
                 continue;
-            if (!a.is(1u << 6))
+            if (!a.is(creatureSiegeWeapon))
                 return 0;
         }
     }
@@ -1463,21 +1463,21 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
             int slot = m_archers[2].m_armySlot;
             m_wallStrength[17] = 0;
             m_wallStanding[17] = 0;
-            m_armies[1][slot].m_monInfo.m_attributes |= 1 << 21;
+            m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
             break;
         }
         case WALL_TARGET_6: {
             int slot = m_archers[1].m_armySlot;
             m_wallStrength[16] = 0;
             m_wallStanding[16] = 0;
-            m_armies[1][slot].m_monInfo.m_attributes |= 1 << 21;
+            m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
             break;
         }
         case WALL_TARGET_7: {
             int slot = m_archers[0].m_armySlot;
             m_wallStrength[15] = 0;
             m_wallStanding[15] = 0;
-            m_armies[1][slot].m_monInfo.m_attributes |= 1 << 21;
+            m_armies[1][slot].m_monInfo.m_attributes |= creatureImmobilized;
             break;
         }
         }
@@ -1650,7 +1650,7 @@ int combatManager::experienceValueOfStack(int whichGroup)
     int total = 0;
     for (int slot = 0; slot < 20; ++slot) {
         const army& a = m_armies[whichGroup][slot];
-        if (a.m_creatureType != -1 && !a.is(1u << 22) && !a.is(1u << 6))
+        if (a.m_creatureType != -1 && !a.is(creatureSummoned) && !a.is(creatureSiegeWeapon))
             total += (a.m_origNumTroops - a.m_numTroops)
                 * g_creatureTypeTraits[a.m_creatureType].m_hitPoints;
     }
@@ -2114,7 +2114,7 @@ void combatManager::makeCreaturesVanish()
             const army& stack = m_armies[side][index];
             m_cells[stack.m_gridIndex].m_armySide = -1;
             m_cells[stack.m_gridIndex].m_armySlot = -1;
-            if (stack.is(1u << 0)) {
+            if (stack.is(creatureDoubleWide)) {
                 m_cells[stack.m_gridIndex + (stack.m_facing ? 1 : -1)].m_armySide = -1;
                 m_cells[stack.m_gridIndex + (stack.m_facing ? 1 : -1)].m_armySlot = -1;
             }
@@ -2141,7 +2141,7 @@ unsigned char combatManager::shouldLowerDoor(army* thisArmy, long hex) const
     if (hex == COMBAT_HEX_GATE || hex == COMBAT_HEX_GATE_MOAT
             || hex == COMBAT_HEX_OUTER_MOAT)
         return 1;
-    if (!(thisArmy->m_monInfo.m_attributes & 1))
+    if (!thisArmy->is(creatureDoubleWide))
         return 0;
     long second = hex + (thisArmy->m_facing != 0 ? 1 : -1);
     if (second == COMBAT_HEX_GATE || second == COMBAT_HEX_GATE_MOAT
@@ -2268,11 +2268,11 @@ unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* 
 
     int source = attacker->m_gridIndex;
     int dest = defender->m_gridIndex;
-    if (attacker->m_monInfo.m_attributes & 1)
+    if (attacker->is(creatureDoubleWide))
         source = attacker->getSecondGridIndex();
     if (getDistance(source, dest) <= 10)
         return 0;
-    if (!(defender->m_monInfo.m_attributes & 1))
+    if (!defender->is(creatureDoubleWide))
         return 1;
     dest = defender->getSecondGridIndex();
     return getDistance(source, dest) > 10;
@@ -2776,7 +2776,7 @@ void combatManager::removeArmyFromGrid(const army& a)
     m_cells[a.m_gridIndex].m_armySlot = -1;
     m_cells[a.m_gridIndex].m_armySide = -1;
     m_cells[a.m_gridIndex].m_partOfDouble = -1;
-    if (a.m_monInfo.m_attributes & 1) {
+    if (a.is(creatureDoubleWide)) {
         int hex = a.m_gridIndex + (a.m_facing != 0 ? 1 : -1);
         m_cells[hex].m_armySlot = -1;
         m_cells[hex].m_armySide = -1;
@@ -2790,7 +2790,7 @@ void combatManager::placeArmyInGrid(const army& a, int hex)
     m_cells[hex].m_armySide = static_cast<signed char>(a.m_combatSide);
     m_cells[hex].m_armySlot = static_cast<signed char>(a.m_bitIndex);
     m_cells[hex].m_partOfDouble = -1;
-    if (a.m_monInfo.m_attributes & 1) {
+    if (a.is(creatureDoubleWide)) {
         m_cells[hex].m_partOfDouble = a.m_facing == 0;
         int second = hex + (a.m_facing != 0 ? 1 : -1);
         m_cells[second].m_armySide = static_cast<signed char>(a.m_combatSide);
@@ -2906,7 +2906,7 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
                         stack.m_nextFrameType = cs_death;
                     else
                         stack.m_nextFrameType = static_cast<signed char>(
-                            cs_wince + ((stack.is(1u << 27)) != 0));
+                            cs_wince + (stack.is(creatureDefending)));
                     stack.m_remainingFramesToPlay = static_cast<signed char>(
                         stack.m_stdIcon->getNumFrames(stack.m_nextFrameType));
                     if (stack.m_nextFrameType == stack.m_currFrameType)
@@ -2963,7 +2963,7 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
         for (side = 0; side < 2; side++) {
             for (slot = 0; slot < m_numArmies[side]; slot++) {
                 army& stack = m_armies[side][slot];
-                if (stack.is(1u << 21))
+                if (stack.is(creatureImmobilized))
                     continue;
                 if (!stack.m_someUnitsDamaged && !stack.m_showAttackFrames
                         && !stack.m_showRangeFrames)
@@ -3101,7 +3101,7 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
             army& stack = m_armies[side][slot];
             if (stack.m_allUnitsKilled) {
                 stack.processDeath(0);
-                if (stack.is(1u << 6))
+                if (stack.is(creatureSiegeWeapon))
                     m_heroes[side]->destroySiegeWeaponArtifact(
                         stack.m_creatureType);
             }
@@ -3148,9 +3148,9 @@ void combatManager::checkRebirth()
         army* stack = &m_armies[side][0];
         for (int slot = 0; slot < m_numArmies[side]; slot++, stack++) {
             if (stack->m_creatureType != CREATURE_PHOENIX
-                    || !(stack->is(1u << 21))
+                    || !stack->is(creatureImmobilized)
                     || stack->m_monInfo.m_hasSpell <= 0
-                    || (stack->is(1u << 23)))
+                    || stack->is(creatureClone))
                 continue;
 
             stack->m_monInfo.m_hasSpell--;
@@ -3165,7 +3165,7 @@ void combatManager::checkRebirth()
             if (!resurrected)
                 continue;
 
-            stack->m_monInfo.m_attributes |= 1 << 26;
+            stack->m_monInfo.m_attributes |= creatureDone;
             if (!isQuickCombat())
                 launchSample(g_spellTraits[SPELL_RESURRECTION].m_sample,
                               -1, 3);
@@ -3335,7 +3335,7 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
         bool stackWipedOut = false;
         if (defender) {
             name = defender->getName(deaths);
-            if (defender->is(1u << 6)) {
+            if (defender->is(creatureSiegeWeapon)) {
                 deathText = formatString(
                     g_generalText->getText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT),
                     name);
@@ -3564,7 +3564,7 @@ void combatManager::unnamed46a520(army* stack)
 {
     memset(m_obstacleAttackVisited, 0, COMBAT_GRID_CELLS);
     m_obstacleAttackVisited[stack->m_gridIndex] = 1;
-    if (stack->m_monInfo.m_attributes & 1)
+    if (stack->is(creatureDoubleWide))
         m_obstacleAttackVisited[stack->getSecondGridIndex()] = 1;
 }
 
@@ -3588,7 +3588,7 @@ unsigned char combatManager::checkObstacleAttacks(army* thisArmy,
         }
     }
 
-    if (thisArmy->m_monInfo.m_attributes & 1) {
+    if (thisArmy->is(creatureDoubleWide)) {
         hex = thisArmy->getSecondGridIndex();
         if (!m_obstacleAttackVisited[hex]) {
             m_obstacleAttackVisited[hex] = 1;

@@ -179,7 +179,7 @@ unsigned char combatManager::automateFirstAidTent()
     int bestDamage = 0;
     for (int i = 0; i < m_numArmies[side]; ++i) {
         army* target = &m_armies[side][i];
-        if (target->is((1u << 21) | (1u << 6)))
+        if (target->is(creatureSiegeWeapon | creatureImmobilized))
             continue;
         if (target->m_topCreatureDamage == 0)
             continue;
@@ -288,7 +288,7 @@ int combatManager::main(message& msg)
                 }
 
                 if (m_wallStrength[wall] == 0) {
-                    currentArmy->m_monInfo.m_attributes |= 0x200000;
+                    currentArmy->m_monInfo.m_attributes |= creatureImmobilized;
                     m_nextAction = 12;
                     towerTurn = 1;
                 } else if (static_cast<const combatManager*>(this)->isQuickCombat()
@@ -445,7 +445,7 @@ void combatManager::setCombatDirections(int hex)
             m_cells[firstHex].m_validMove
             && currentArmy->canFit(firstHex, 0, 0)
             && !g_searchArray->isMoat(firstHex);
-        if (firstIsValid && (currentArmy->is(1u << 0))
+        if (firstIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
                     firstHex + (currentArmy->m_facing ? 1 : -1)))
             firstIsValid = 0;
@@ -456,7 +456,7 @@ void combatManager::setCombatDirections(int hex)
             m_combatDirections[0][attackAngle] = targetGroup + 7;
         }
 
-        if (!(currentArmy->is(1u << 0)))
+        if (!currentArmy->is(creatureDoubleWide))
             continue;
 
         secondHex = firstHex - (currentArmy->m_facing ? 1 : -1);
@@ -464,7 +464,7 @@ void combatManager::setCombatDirections(int hex)
             m_cells[secondHex].m_validMove
             && currentArmy->canFit(secondHex, 0, 0)
             && !g_searchArray->isMoat(secondHex);
-        if (secondIsValid && (currentArmy->is(1u << 0))
+        if (secondIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
                     secondHex + (currentArmy->m_facing ? 1 : -1)))
             secondIsValid = 0;
@@ -1226,12 +1226,12 @@ void combatManager::autoResolveCombat()
         for (int slot = 0; slot < m_numArmies[side]; slot++) {
             army* stack = &m_armies[side][slot];
             if (stack->m_numTroops > 0
-                    && !(stack->is(1u << 6))
+                    && !stack->is(creatureSiegeWeapon)
                     && stack->m_originalIndex >= 0) {
                 stack->m_numTroops =
                     localArmies[side].m_numTroops[stack->m_originalIndex];
                 if (stack->m_numTroops == 0)
-                    stack->m_monInfo.m_attributes |= 0x200000;
+                    stack->m_monInfo.m_attributes |= creatureImmobilized;
             }
         }
     }
@@ -1358,7 +1358,7 @@ int combatManager::getCommand(int newIndex)
 
     if (m_fortificationLevel >= COMBAT_FORTIFICATION_CASTLE
             && newIndex == COMBAT_HEX_UPPER_TOWER) {
-        if ((currentArmy->is(1u << 5)) && m_currentSide == 0
+        if (currentArmy->is(creatureCatapult) && m_currentSide == 0
                 && !m_creaturePlacement
                 && validWallTarget(WALL_TARGET_0)) {
             currentArmy->m_slot = COMBAT_HEX_UPPER_TOWER;
@@ -1370,7 +1370,7 @@ int combatManager::getCommand(int newIndex)
 
     if (m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL
             && newIndex == COMBAT_HEX_KEEP) {
-        if ((currentArmy->is(1u << 5)) && m_currentSide == 0
+        if (currentArmy->is(creatureCatapult) && m_currentSide == 0
                 && !m_creaturePlacement
                 && validWallTarget(WALL_TARGET_7)) {
             currentArmy->m_slot = COMBAT_HEX_KEEP;
@@ -1409,7 +1409,7 @@ int combatManager::getCommand(int newIndex)
         if (targetSide == m_currentSide
                 && currentArmy->m_creatureType == CREATURE_FIRST_AID_TENT
                 && target->m_topCreatureDamage > 0
-                && (target->is(1u << 6)) == 0)
+                && !target->is(creatureSiegeWeapon))
             return COMBAT_COMMAND_FIRST_AID;
         if (targetSide == m_currentSide)
             return COMBAT_COMMAND_VIEW_ARMY;
@@ -1435,7 +1435,7 @@ int combatManager::getCommand(int newIndex)
         return COMBAT_COMMAND_NONE;
     }
 
-    if ((currentArmy->is(1u << 5))
+    if (currentArmy->is(creatureCatapult)
             && m_fortificationLevel > COMBAT_FORTIFICATION_NONE
             && m_currentSide == 0
             && !m_creaturePlacement) {
@@ -1467,7 +1467,7 @@ int combatManager::getCommand(int newIndex)
                                           currentArmy->m_monInfo.m_speed,
                                           m_creaturePlacement, -1);
         if (m_cells[newIndex].m_validMove || m_cells[newIndex].m_frontMove)
-            return (currentArmy->is(1u << 1)) ? COMBAT_COMMAND_FLY
+            return (currentArmy->is(creatureFlyingArmy)) ? COMBAT_COMMAND_FLY
                                             : COMBAT_COMMAND_WALK;
     }
 
@@ -1555,7 +1555,7 @@ void combatManager::doCommand(int command)
     case COMBAT_COMMAND_FLY:
         m_nextAction = 2;
         m_nextActionGridIndex = m_lastCellIndex;
-        if ((currentArmy->is(1u << 0)) && m_cells[m_lastCellIndex].m_frontMove)
+        if (currentArmy->is(creatureDoubleWide) && m_cells[m_lastCellIndex].m_frontMove)
             m_nextActionGridIndex = m_lastCellIndex - (currentArmy->m_facing ? 1 : -1);
         m_nextActionExtra = -1;
         break;
@@ -1909,7 +1909,7 @@ long combatManager::getSurrenderCost()
         army* currentArmy = &m_armies[side][slot];
         if (currentArmy->m_creatureType >= 0
             && currentArmy->m_numTroops > 0
-            && !(currentArmy->is(1u << 22))
+            && !currentArmy->is(creatureSummoned)
             && currentArmy->m_numTroops
                 > currentArmy->m_numTroopsBattleResurrected) {
             cost += (currentArmy->m_numTroops
@@ -1948,7 +1948,7 @@ void combatManager::checkChangeSelector()
 
     updateGrid(0, 1);
     m_lastMovedArmy = currentArmy;
-    if (!(currentArmy->is(1u << 21))
+    if (!currentArmy->is(creatureImmobilized)
             && currentArmy->m_currFrameType != cs_wait) {
         currentArmy->m_currFrameType = cs_wait;
         currentArmy->m_currFrameIndex = 0;
@@ -1964,7 +1964,7 @@ void combatManager::turnOffSelector(unsigned char drawIt)
 
     if (drawIt) {
         resetLimitCreature();
-        if (!(m_lastMovedArmy->is(1u << 21)))
+        if (!m_lastMovedArmy->is(creatureImmobilized))
             markCreatureEffect(m_lastMovedArmy->m_combatSide,
                                m_lastMovedArmy->m_bitIndex);
     }
@@ -2290,23 +2290,23 @@ unsigned char combatManager::processMoveThenAttack(message* msg)
     currentArmy->m_joustBonus = 0;
     if (m_nextActionExtra != -1 && oldGridIndex != m_nextActionExtra) {
         if (currentArmy->moveTo(m_nextActionExtra, 0)) {
-            if (!(currentArmy->is(1u << 21)))
+            if (!currentArmy->is(creatureImmobilized))
                 currentArmy->attackHex(m_nextActionGridIndex, 0);
         }
     } else {
-        if (!(currentArmy->is(1u << 21)))
+        if (!currentArmy->is(creatureImmobilized))
             currentArmy->attackHex(m_nextActionGridIndex, 0);
         memset(m_obstacleAttackVisited, 0, COMBAT_GRID_CELLS);
         currentArmy->checkObstacleAttacks(0);
     }
 
-    currentArmy->m_monInfo.m_attributes |= 0x04000000;
+    currentArmy->m_monInfo.m_attributes |= creatureDone;
     currentArmy->m_joustBonus = 0;
     if (m_nextActionExtra != -1 && oldGridIndex != m_nextActionExtra
             && (currentArmy->m_creatureType == army::ARMY_CREATURE_HARPY
                 || currentArmy->m_creatureType
                        == army::ARMY_CREATURE_HARPY_HAG)
-            && !(currentArmy->is(1u << 21))
+            && !currentArmy->is(creatureImmobilized)
             && currentArmy->m_spellInfluence[62] == 0
             && currentArmy->m_spellInfluence[70] == 0
             && currentArmy->m_spellInfluence[74] == 0) {
@@ -2314,7 +2314,7 @@ unsigned char combatManager::processMoveThenAttack(message* msg)
     }
 
     if (oldFacing != currentArmy->m_facing
-            && !(currentArmy->is(1u << 21))) {
+            && !currentArmy->is(creatureImmobilized)) {
         currentArmy->setupAnimation();
         currentArmy->turn(1);
     }
@@ -2342,7 +2342,7 @@ void combatManager::processFirstAid(army* currentArmy)
         int result = targetArmy->m_topCreatureDamage;
         result = std::_cpp_min(maximum, result);
         targetArmy->m_topCreatureDamage -= result;
-        currentArmy->m_monInfo.m_attributes |= 0x04000000;
+        currentArmy->m_monInfo.m_attributes |= creatureDone;
 
         if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
             SAMPLE2 sample = loadPlaySample(
@@ -2436,7 +2436,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
         resetCyclingCreatures();
         currentArmy->moveTo(m_nextActionGridIndex, 1);
         currentArmy->m_joustBonus = 0;
-        currentArmy->m_monInfo.m_attributes |= 0x04000000;
+        currentArmy->m_monInfo.m_attributes |= creatureDone;
         if (checkWin(&msg)) {
             g_processingCombatAction = 0;
             resetMouse();
@@ -2451,7 +2451,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
         m_anyActionTaken = 1;
         resetCyclingCreatures();
         currentArmy->attackHex(m_nextActionGridIndex, 1);
-        currentArmy->m_monInfo.m_attributes |= 0x04000000;
+        currentArmy->m_monInfo.m_attributes |= creatureDone;
         if (checkWin(&msg)) {
             g_processingCombatAction = 0;
             resetMouse();
@@ -2470,7 +2470,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
         m_anyActionTaken = 1;
         resetCyclingCreatures();
         currentArmy->castSpell(m_nextActionGridIndex);
-        currentArmy->m_monInfo.m_attributes |= 0x04000000;
+        currentArmy->m_monInfo.m_attributes |= creatureDone;
         checkApplyGoodMorale(m_actingSide, m_actingSlot);
         returnValue = 1;
         resetCycleTimers();
@@ -2514,11 +2514,11 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
         break;
 
     case g_combatActionDefend:
-        if (!(currentArmy->m_monInfo.m_attributes & 0x0c000000)) {
-            currentArmy->m_monInfo.m_attributes |= 0x04000000;
-            if (!m_creaturePlacement && !(currentArmy->is(1u << 6))) {
+        if (!currentArmy->is(creatureDone | creatureDefending)) {
+            currentArmy->m_monInfo.m_attributes |= creatureDone;
+            if (!m_creaturePlacement && !currentArmy->is(creatureSiegeWeapon)) {
                 std::string message;
-                currentArmy->m_monInfo.m_attributes |= 0x08000000;
+                currentArmy->m_monInfo.m_attributes |= creatureDefending;
                 currentArmy->m_defendBonus = std::_cpp_max(
                     currentArmy->m_monInfo.m_defenseSkill * 20 / 100, 1);
 
@@ -2542,7 +2542,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
         break;
 
     case g_combatActionWait: {
-        currentArmy->m_monInfo.m_attributes |= 0x02000000;
+        currentArmy->m_monInfo.m_attributes |= creatureWaiting;
         if (!m_creaturePlacement) {
             std::string message;
             if (currentArmy->m_numTroops == 1)
@@ -2563,7 +2563,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
         resetCyclingCreatures();
         m_anyActionTaken = 1;
         currentArmy->attackWall(m_nextActionGridIndex);
-        currentArmy->m_monInfo.m_attributes |= 0x04000000;
+        currentArmy->m_monInfo.m_attributes |= creatureDone;
         checkApplyGoodMorale(m_actingSide, m_actingSlot);
         returnValue = 1;
         resetCycleTimers();
@@ -2575,7 +2575,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
         break;
 
     case AI_ORDER_NONE:
-        currentArmy->m_monInfo.m_attributes |= 0x04000000;
+        currentArmy->m_monInfo.m_attributes |= creatureDone;
         returnValue = 1;
         break;
     }
@@ -2606,7 +2606,7 @@ void combatManager::resetCyclingCreatures()
     for (int side = 0; side < 2; side++) {
         for (int slot = 0; slot < m_numArmies[side]; slot++) {
             army* stack = &m_armies[side][slot];
-            if (!(stack->is(1u << 21))
+            if (!stack->is(creatureImmobilized)
                     && stack->m_currFrameType == cs_fidget) {
                 cyclingCreatures++;
                 markCreatureEffect(side, slot);
@@ -2619,7 +2619,7 @@ void combatManager::resetCyclingCreatures()
         for (int side = 0; side < 2; side++) {
             for (int slot = 0; slot < m_numArmies[side]; slot++) {
                 army* stack = &m_armies[side][slot];
-                if (!(stack->is(1u << 21))) {
+                if (!stack->is(creatureImmobilized)) {
                     stack->m_currFrameType = cs_wait;
                     stack->m_currFrameIndex = 0;
                     stack->m_lastFidgetTime = GameTime::get();
@@ -2706,10 +2706,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
             break;
         }
         if (stack->m_numTroops == 0
-                && (static_cast<unsigned char>(static_cast<unsigned>(
-                        stack->m_monInfo.m_attributes) >> 21) & 1)
-                && (static_cast<unsigned char>(static_cast<unsigned>(
-                        stack->m_monInfo.m_attributes) >> 22) & 1)) {
+                && stack->is(creatureImmobilized) && stack->is(creatureSummoned)) {
             slot = candidate;
             replaced = 1;
             break;

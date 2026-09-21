@@ -5,6 +5,7 @@
 #include "abstractfile.h"
 
 #include "artifact_type.h"
+#include "creature_flags.h"
 #include "terrain_type.h"  // TTerrainType, for akNativeTerrains below
 #include "struct.h"    // type_point, used through this header's consumers
 #include "spellschool.h"  // TSpellSchool, the type of SSpellTraits::school

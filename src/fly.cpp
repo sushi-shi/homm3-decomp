@@ -70,7 +70,7 @@ bool army::findFlyerAttackCell(int target) const
 {
     if (findFlyerAttackCell(m_gridIndex, target))
         return 1;
-    if (is(1u << 0)
+    if (is(creatureDoubleWide)
             && findFlyerAttackCell(getSecondGridIndex(), target))
         return 1;
     return 0;
@@ -92,7 +92,7 @@ unsigned char army::validFlight(int destIndex, unsigned char literalTest) const
         const army* enemy = &g_combatManager->m_armies[m_side][m_slot];
         long enemyHex = enemy->m_gridIndex;
         if (!findFlyerAttackCell(enemyHex)) {
-            if (!enemy->is(1u << 0)
+            if (!enemy->is(creatureDoubleWide)
                     || !findFlyerAttackCell(
                     enemy->getSecondGridIndex()))
                 return 0;
@@ -157,7 +157,7 @@ int army::fly(int destIndex)
         g_combatManager->lowerDoor();
     }
 
-    if (is(1u << 0) && turn)
+    if (is(creatureDoubleWide) && turn)
         destIndex += offsetToFront(-1);
 
     setupAnimation();
@@ -278,7 +278,7 @@ int army::teleport(int destIndex)
     else
         turn = 0;
 
-    if (is(1u << 0) && turn)
+    if (is(creatureDoubleWide) && turn)
         destIndex += offsetToFront(-1);
 
     setupAnimation();

@@ -4031,7 +4031,7 @@ static void randomizeShrine(NewmapCell* cell, const int level)
         spell = g_game->getRandomSpell(spellLevels);
         info->m_shrineInfo.m_spell = spell;
     }
-    info->m_cellVisitedInfo.m_visited = 0;
+    info->clearVisitedBits();
 }
 
 // E:\gamedcs\game.cpp:4654, dc 0xabda8

@@ -1634,7 +1634,8 @@ inline bool army::needToTurn(int direction) const
         return direction < 6 && (m_facing == 0) != (direction >= 3);
     }
 
-    // E:\gamedcs\Army.h:765
+    // Original: army::Is; E:\gamedcs\Army.h:765, dc 0x27ce4.
+    // Any requested attribute suffices, including a combined trait mask.
 inline bool army::is(unsigned attribute) const
     {
         return (m_monInfo.m_attributes & attribute) != 0;
@@ -1732,7 +1733,7 @@ inline bool army::isIncapacitated() const
     // E:\gamedcs\Army.h:847
 inline bool army::canRetaliate(const army& attacker) const
     {
-        return !(attacker.is(1u << 16)) && !m_spellInfluence[70]
+        return !attacker.is(creatureFreeAttack) && !m_spellInfluence[70]
                && m_retaliationCount > 0;
     }
 
@@ -1742,7 +1743,7 @@ inline bool army::canRetaliate(const army& attacker) const
 // Psychic/Magic Elemental pair: retail compares First Aid Tent and Ammo Cart.
 inline bool army::cannotAttack() const
     {
-        return isIncapacitated() || is(1u << 21)
+        return isIncapacitated() || is(creatureImmobilized)
                || m_creatureType == ARMY_CREATURE_FIRST_AID_TENT
                || m_creatureType == ARMY_CREATURE_AMMO_CART;
     }
@@ -1762,7 +1763,7 @@ inline long army::getAttackDirection(const army* enemy) const
     // E:\gamedcs\Army.h:875
 inline bool army::leavesNoBody() const
     {
-        return is((1u << 22) | (1u << 28));
+        return is(creatureSummoned | creatureSacrificed);
     }
     // E:\gamedcs\Army.h:881
 inline bool army::isInAreaHighlight() const
