@@ -393,6 +393,7 @@ ai_player	?getValue@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	93.5778	9
 ai_player	?hasBuilding@town@@QBE_NH_N@Z	100.0000	100.0000	100.0000	0x305a0	tokens1:37a298d450ce
 ai_player	?hireHeroes@type_AI_player@@QAE_NXZ	100.0000	100.0000	100.0000	0x31360	tokens1:affdde797775
 ai_player	?initializeArtifactEffects@@YIXXZ	97.4454	97.4454	97.4454	0x34100	tokens1:7a8c9bae5473
+ai_player	?isHumanAlly@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0x2b9e0	tokens1:c2ecd8a063bb
 ai_player	?makeGift@type_AI_player@@IAEXJ@Z	86.5174	86.5174	86.5174	0x29110	tokens1:6176af6c01dc
 ai_player	?markDestinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type@@@Z	91.1693	91.1693	91.6997	0x2f570	tokens1:1bbc0e48b791
 ai_player	?markTown@type_garrison_purchaser@@UBEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28580	tokens1:46e13fe43707
@@ -2014,7 +2015,6 @@ game	?insert@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEXPAVtown@@IABV3@
 game	?insertObject@game@@QAEXHHHHHH@Z	100.0000	100.0000	100.0000	0xc9890	tokens1:817ae6845d71
 game	?isHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce940	tokens1:4892ccc372db
 game	?isHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbada0	tokens1:fe970bd0ef08
-game	?isHumanAlly@game@@QBE_NH@Z	53.6364	53.6364	100.0000	0x2b9e0	tokens1:9110a496e1ca
 game	?isLastHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xcec50	tokens1:b3ae76c5a53e
 game	?isLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970	tokens1:67b8f473808f
 game	?isLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80	tokens1:411f7c950539
@@ -2046,7 +2046,7 @@ game	?nextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40	tokens1:146
 game	?nextPlayer@game@@QAEXXZ	82.5633	82.5633	83.3584	0xc6fe0	tokens1:e054512154ee
 game	?nextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40	tokens1:a12560d43ae3
 game	?numOfGivenArtifact@playerData@@QBEHH@Z	100.0000	100.0000	100.0000	0xbabd0	tokens1:6f2acc104950
-game	?perDay@game@@QAEXXZ	75.3994	75.3994	100.0000	0xc7fe0	tokens1:be2db12f4f65
+game	?perDay@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7fe0	tokens1:be2db12f4f65
 game	?perMonth@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc8f40	tokens1:6ad144f689ed
 game	?perWeek@game@@QAEXXZ	95.8993	95.8993	99.8370	0xc8780	tokens1:4d4c526656ba
 game	?processOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10	tokens1:c3c4fcf7b56a
@@ -2925,7 +2925,7 @@ philai	?getValueOfWell@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510	toke
 philai	?luckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80	tokens1:ef10e07752b8
 philai	?moraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0	tokens1:c2e4b27b2528
 philai	?moveHero@@YIXPAVhero@@EAAE@Z	100.0000	100.0000	100.0000	0x1267b0	tokens1:83347cbe9269
-philai	?moveHero@@YIXPAVhero@@PAJEAAE@Z	76.3549	80.1607	86.6362	0x1261f0	tokens1:3183d3bad18c
+philai	?moveHero@@YIXPAVhero@@PAJEAAE@Z	97.0312	97.0312	97.0312	0x1261f0	tokens1:3183d3bad18c
 philai	?netValueOfArtifact@@YIHPBVhero@@HHHW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x129810	tokens1:f91a2fa2febd
 philai	?onSameTeam@game@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x1296d0	tokens1:664c00af8f44
 philai	?playerKnowsCell@ExtraInfoUnion@@QBE_NF@Z	100.0000	100.0000	100.0000	0x129690	tokens1:64d02b955fd1
@@ -4025,7 +4025,7 @@ singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMs
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	tokens1:2d739ed70aef
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:5b3700830a2b
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	93.0332	93.0332	93.0332	0x189710	tokens1:3a9c2a4f2228
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	tokens1:6cb45bcd5302
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	tokens1:f68b58bfb66a
@@ -4363,7 +4363,7 @@ textwdgt	?zBufferDraw@textWidget@@UBEXPAGH@Z	100.0000	100.0000	100.0000	0x1bc7e0
 tiles	?buildTileNeighbourMask@@YIXHHHHPAE@Z	100.0000	100.0000	100.0000	0x1bc910	tokens1:ad8ac122ec1a
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80	tokens1:25f98d68a395
 town	?applySpecialBuildingEffect@town@@QAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1bd8e0	tokens1:9d69c86b55c8
-town	?buildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	96.1003	97.5320	99.3036	0x1bede0	tokens1:2498d6af2bee
+town	?buildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	97.5320	97.5320	99.3036	0x1bede0	tokens1:2498d6af2bee
 town	?buyBuilding@town@@QAEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1bf3c0	tokens1:ccec8fc3d1e5
 town	?calcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0	tokens1:b2259400c4e1
 town	?canBuild@town@@QBEEF@Z	81.1852	81.1852	89.6018	0x1c0d20	tokens1:3f1ab1705516

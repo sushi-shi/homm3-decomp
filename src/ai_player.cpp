@@ -1564,6 +1564,23 @@ void type_AI_player::purchaseBuildings()
     }
 }
 
+// DC game.h:1370 records the older inline source expression as
+// IsHumanTeam(GetTeam(player_number)). Complete retains its selected body in
+// ai_player.obj, between valueOfHall and buyCreatures, with GetTeam and
+// IsHumanTeam expanded and the nested isHuman call retained.
+VA(0x0042b9e0, 0x45)  // dc 0x37fd8
+bool game::isHumanAlly(int teamNum) const
+{
+    if (teamNum >= 0) {
+        for (int player = 0; player < 8; ++player) {
+            if (m_mapHeader.m_teamInfo[player] == teamNum
+                && g_game->isHuman(player))
+                return true;
+        }
+    }
+    return false;
+}
+
 // E:\gamedcs\ai_player.cpp:1850
 // Retail expands the purchaser ctor, do_swap, both set overloads,
 // TownAlreadyBuiltOn (towns[id].field_02) and is_human_ally in place while
@@ -2993,10 +3010,6 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
     delete[] strategicMap;
     return rawValue;
 }
-
-// is_human_ally (dc 0x37fd8, game.h:1370) is claimed at its retail COMDAT
-// slot below (0x42b9e0); the callers additionally expand GetTeam at the
-// call site before handing it the team.
 
 // The nine functions below are located by the callee-fingerprint join against
 // Dreamcast call targets: for each retail carve row the cross-unit resolved

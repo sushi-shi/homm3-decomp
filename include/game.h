@@ -2023,20 +2023,6 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
     return 0;
 }
 
-// E:\gamedcs\Game.h:1370, dc 0x37fd8
-VA(0x0042b9e0, 0x45)  // dc 0x37fd8
-inline bool game::isHumanAlly(int teamNum) const
-{
-    if (teamNum >= 0) {
-        for (int player = 0; player < 8; ++player) {
-            if (m_mapHeader.m_teamInfo[player] == teamNum
-                && g_game->isHuman(player))
-                return true;
-        }
-    }
-    return false;
-}
-
 // E:\gamedcs\Game.h:1375, dc 0x2000c
 VA(0x004c6690, 0x43)  // dc 0x2000c
 inline int game::getAlignment(int creature) const
