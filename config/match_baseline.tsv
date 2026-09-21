@@ -145,10 +145,10 @@ advmgr	?overrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.
 advmgr	?popupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80	tokens1:50da26cf1f75
 advmgr	?processDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	85.2558	85.2558	100.0000	0x9a70	tokens1:d6c1655c972d
 advmgr	?processHover@advManager@@QAEHHH@Z	88.1654	88.1654	91.6263	0xe360	tokens1:2433ed1a28cb
-advmgr	?processKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	87.3076	87.3076	97.6091	0x8c40	tokens1:548bcf36e149
+advmgr	?processKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	87.3076	87.4146	97.6091	0x8c40	tokens1:548bcf36e149
 advmgr	?processMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	87.4858	87.4858	91.1006	0xa5d0	tokens1:4fe54777d89b
 advmgr	?processRadarSelect@advManager@@QAEXPBVmessage@@@Z	91.5595	100.0000	100.0000	0xa0c0	tokens1:d127dff7b4ce
-advmgr	?processSearch@advManager@@QAEHHHH@Z	92.1018	92.1018	96.1549	0xec90	tokens1:dbdfb4893b23
+advmgr	?processSearch@advManager@@QAEHHHH@Z	92.1018	93.7323	96.1549	0xec90	tokens1:dbdfb4893b23
 advmgr	?processSelect@advManager@@QAEHPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	99.7304	99.7304	100.0000	0x97e0	tokens1:65d1a77bab6a
 advmgr	?processWaitingHover@advManager@@QAEHHH@Z	95.1433	95.1433	96.1467	0xdeb0	tokens1:cf31de690cfd
 advmgr	?quickInfo@advManager@@QAEXHHH@Z	96.2393	96.2393	96.2393	0x137c0	tokens1:379cae7db667
@@ -541,7 +541,7 @@ army	?computeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x
 army	?considerAttack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	tokens1:a8462e6eb3e6
 army	?cure@army@@QAEXHHPBVhero@@@Z	89.9485	100.0000	100.0000	0x46500	tokens1:6174ba90ca07
 army	?damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090	tokens1:e5ba34427920
-army	?doAttack@army@@QAEEPAV1@H@Z	99.9616	99.9616	99.9962	0x41610	tokens1:84e9f93d4512
+army	?doAttack@army@@QAEEPAV1@H@Z	99.9616	100.0000	100.0000	0x41610	tokens1:84e9f93d4512
 army	?doAttack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	tokens1:2176074c6457
 army	?doFireShield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	tokens1:e29378ace4f0
 army	?doMultiHeadAttack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	tokens1:4743d5c367fc
@@ -887,7 +887,7 @@ campaignbrief	?_Refcnt@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@s
 campaignbrief	?_Ucopy@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@IAEPAUtype_map_hero_identity@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x5d230	-
 campaignbrief	?addBonusIcons@TCampaignBrief@@QAEXXZ	98.8391	98.8391	98.8391	0x58120	tokens1:18a74805757d
 campaignbrief	?assign@?$char_traits@D@std@@SAXAADABD@Z	100.0000	100.0000	100.0000	0x5dc90	tokens1:14a4588a3c7d
-campaignbrief	?campaignBriefHandler@@YIHAAVmessage@@@Z	86.1027	86.1027	87.3081	0x5b1e0	tokens1:b273317d2624
+campaignbrief	?campaignBriefHandler@@YIHAAVmessage@@@Z	86.1027	87.3081	87.3081	0x5b1e0	tokens1:b273317d2624
 campaignbrief	?capacity@?$vector@HV?$allocator@H@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14deb0	-
 campaignbrief	?deallocate@?$allocator@D@std@@QAEXPAXI@Z	100.0000	100.0000	100.0000	0x5c1e0	-
 campaignbrief	?decreaseCampaignDifficulty@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x57f70	tokens1:8355420ff0e6
@@ -2265,7 +2265,7 @@ hero	?heroFn004E5DE0@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5de0	tokens1:4e6
 hero	?heroFn004E6120@hero@@QBEXHPAUTCreatureTypeTraits@@@Z	100.0000	100.0000	100.0000	0xe6120	tokens1:f3b05afc1287
 hero	?heroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800	tokens1:ce34809feffc
 hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890	tokens1:06b0579ceb00
-hero	?initialize@hero@@QAEXF@Z	90.6074	90.6074	91.0235	0xd8720	tokens1:00ed33cdf8cf
+hero	?initialize@hero@@QAEXF@Z	90.6074	91.0235	91.0235	0xd8720	tokens1:00ed33cdf8cf
 hero	?initialize@hero@@QAEXPBVHeroExtra@@@Z	97.5529	97.5831	97.5831	0xd8b30	tokens1:06ceb9563d23
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0	tokens1:90bec856c736
 hero	?initializeBallisticsTable@@YIEXZ	100.0000	100.0000	100.0000	0xd7240	tokens1:aa1b6db957c1
@@ -3617,7 +3617,7 @@ rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgSnowRule	100.0000	100.0000	100.0
 rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgSubterraneanRule	100.0000	100.0000	100.0000	0x1b3ce0	-
 rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgSwampRule	100.0000	100.0000	100.0000	0x1b3c60	-
 rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgWaterRule	100.0000	100.0000	100.0000	0x1b3d60	-
-sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	99.9955	99.9955	100.0000	0x15fdd0	tokens1:f77bbbc5476d
+sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	99.9955	100.0000	100.0000	0x15fdd0	tokens1:f77bbbc5476d
 sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1654f0	tokens1:1ec4c698c842
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0	tokens1:2485fecfa941
 sacrifice_window	??1type_skeleton_window@@UAE@XZ	100.0000	100.0000	100.0000	0x165f60	tokens1:dede5a341820
@@ -3741,11 +3741,11 @@ seerhut	?getProgressDialogText@type_quest@@QAE?AV?$basic_string@DU?$char_traits@
 seerhut	?getProposalDialogText@type_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d240	tokens1:3169dd19f4d1
 seerhut	?getQuestDescription@type_artifact_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.2279	100.0000	100.0000	0x16f730	tokens1:3053b77a54b0
 seerhut	?getQuestDescription@type_be_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	97.4510	100.0000	100.0000	0x172160	tokens1:ee52b261cc83
-seerhut	?getQuestDescription@type_belong_to_player_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.5769	99.5769	100.0000	0x172670	tokens1:1bfc00e6d340
+seerhut	?getQuestDescription@type_belong_to_player_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.5769	100.0000	100.0000	0x172670	tokens1:1bfc00e6d340
 seerhut	?getQuestDescription@type_creature_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.2279	100.0000	100.0000	0x170690	tokens1:6d1a9165e734
 seerhut	?getQuestDescription@type_defeat_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	97.4510	100.0000	100.0000	0x16e340	tokens1:8121052ba3d0
 seerhut	?getQuestDescription@type_experience_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	96.8182	100.0000	100.0000	0x16d410	tokens1:4dd96284cf65
-seerhut	?getQuestDescription@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	97.4510	97.4510	100.0000	0x16eb30	tokens1:676c5bb410fa
+seerhut	?getQuestDescription@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	97.4510	100.0000	100.0000	0x16eb30	tokens1:676c5bb410fa
 seerhut	?getQuestDescription@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.2279	100.0000	100.0000	0x1716e0	tokens1:fa35e0803524
 seerhut	?getQuestDescription@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.2375	100.0000	100.0000	0x16d990	tokens1:b61605ecc7ff
 seerhut	?getRequirementText@type_artifact_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16f5f0	tokens1:0f25e76ac42c
