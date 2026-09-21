@@ -321,7 +321,7 @@ ai_player	?aiEquipArtifacts@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x33b40	t
 ai_player	?aiGetEquipValue@@YIJUtype_artifact@@PBVhero@@E@Z	100.0000	100.0000	100.0000	0x339e0	tokens1:1cfb3363c6e6
 ai_player	?aiGetShipCost@@YIJPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x31160	tokens1:33157a3194ef
 ai_player	?aiGetValueOfArtifact@@YIJABUtype_artifact@@J@Z	100.0000	100.0000	100.0000	0x33aa0	tokens1:a4b46a0b9f13
-ai_player	?aiGetValueOfArtifact@@YIJUtype_artifact@@PBVhero@@EE@Z	92.7585	92.7585	92.7585	0x336c0	tokens1:80864332a716
+ai_player	?aiGetValueOfArtifact@@YIJUtype_artifact@@PBVhero@@EE@Z	92.7585	92.7585	92.7585	0x336c0	tokens1:99eb5a3effdb
 ai_player	?aiInitialize@@YIXXZ	100.0000	100.0000	100.0000	0x340e0	tokens1:12cfc5e3c753
 ai_player	?aiMarkDangerZones@@YIXPAVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x2de50	tokens1:06e78d8a98c7
 ai_player	?aiShutDown@@YIXXZ	100.0000	100.0000	100.0000	0x34590	tokens1:ff61f29657ad
@@ -675,7 +675,7 @@ bitmap16	?colorize@Bitmap16Bit@@QAEXHHHHG@Z	100.0000	100.0000	100.0000	0x4e780	t
 bitmap16	?colorize@Bitmap16Bit@@QAEXHHHHMM@Z	100.0000	100.0000	100.0000	0x4e940	tokens1:b757cb99f596
 bitmap16	?darken@Bitmap16Bit@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x4e5f0	tokens1:2bf970a04dd7
 bitmap16	?darken@Bitmap16Bit@@QAEXHHHHPAVBitmap816@@HH@Z	100.0000	100.0000	100.0000	0x4e6a0	tokens1:a5860c74799e
-bitmap16	?draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	100.0000	100.0000	100.0000	0x4e2b0	tokens1:5876ae7b1afa
+bitmap16	?draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	100.0000	100.0000	100.0000	0x4e2b0	tokens1:172e459daefb
 bitmap16	?fillRect@Bitmap16Bit@@QAEXHHHHG@Z	100.0000	100.0000	100.0000	0x4e4c0	tokens1:6cc61c059f0c
 bitmap16	?frameRect@Bitmap16Bit@@QAEXHHHHG@Z	100.0000	100.0000	100.0000	0x4e540	tokens1:fc850b56de41
 bitmap16	?getSize@Bitmap16Bit@@UBEIXZ	100.0000	100.0000	100.0000	0x4e240	tokens1:025ff51aaf8a

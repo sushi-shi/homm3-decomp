@@ -88,6 +88,9 @@ static const int g_overviewHelpIds[8] = {
     19, 20, 21, 22, 23, 24, 18, 25
 };
 
+// DC overview.obj marks this helper static. Under Complete's VC6 profile that
+// linkage expands the last windowHandler call and removes the retained body;
+// ordinary linkage preserves retail's call to the exact body at 0x5225d0.
 long getLastBackpackIndex(long heroNumber);
 void updateBackpack(int slot);
 

@@ -4910,10 +4910,10 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
                 const TCreatureTypeTraits& traits =
                     g_creatureTypeTraits[creature];
                 if (firstAid >= traits.m_hitPoints)
-                    value = ::max(value,
-                                  static_cast<long>(traits.m_aiValue));
+                    value = max(value,
+                                static_cast<long>(traits.m_aiValue));
                 else
-                    value = ::max(
+                    value = max(
                         value, static_cast<long>(
                                    traits.m_aiValue * firstAid
                                    / traits.m_hitPoints));
