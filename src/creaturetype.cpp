@@ -179,9 +179,10 @@ void initializeCreatureTypeTraits(int id,
 // Original: GetBaseCreature; creaturetype.cpp:202, dc 0x718dc
 TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr)
 {
-    // DC returns ordinal zero for an invalid dwelling, not CREATURE_NONE.
+    // DC returns the first roster ordinal for an invalid dwelling, not
+    // CREATURE_NONE; the assembly does not identify Pikeman semantically.
     if (baseCreatureNbr < 0 || baseCreatureNbr >= TOWN_DWELLING_COUNT)
-        return CREATURE_PIKEMAN;
+        return CREATURE_ROSTER_BEGIN;
     // Complete stores normal and upgraded rows together; isBaseCreature
     // at 0x47b120 proves the fourteen-entry town stride.
     // The dwelling table retains four-byte storage for the creature domain.
