@@ -205,7 +205,7 @@ ai	?canCastSpells@combatManager@@QBEEJE@Z	100.0000	100.0000	100.0000	0x1f890	tok
 ai	?chooseBallistaTarget@combatManager@@QAEHHHH@Z	99.8919	99.8919	99.8919	0x1e190	tokens1:0eb1d794c887
 ai	?chooseCreatureSpell@combatManager@@AAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	95.8926	95.8926	95.8926	0x20d20	tokens1:ab8ea1988303
 ai	?chooseCyclopsAction@combatManager@@QAEEJJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1eea0	tokens1:0deb4b4aad11
-ai	?chooseDefenseHex@combatManager@@AAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	99.0992	99.0992	99.0992	0x205d0	tokens1:b47052918eb9
+ai	?chooseDefenseHex@combatManager@@AAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	100.0000	100.0000	100.0000	0x205d0	tokens1:608eb227aeb6
 ai	?chooseMeleeAction@combatManager@@QAEJPBVarmy@@EEJ@Z	100.0000	100.0000	100.0000	0x21f80	tokens1:2ca2d0f34f96
 ai	?chooseMeleeTarget@combatManager@@AAEEPBVarmy@@EPAJPAUtype_AI_combat_parameters@@@Z	97.0793	97.0793	97.0793	0x21680	tokens1:7532efe0a673
 ai	?chooseResurrectAction@combatManager@@AAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x21000	tokens1:821af09e31c3
