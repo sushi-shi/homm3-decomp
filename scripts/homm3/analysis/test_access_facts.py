@@ -35,11 +35,7 @@ class AccessFactsTest(unittest.TestCase):
         self.assertEqual(facts.correlate(field, dc), (None, "name"))
 
     def test_member_order_preserves_layout_slots_and_overloads(self):
-        import importlib.util
-        script = Path(__file__).resolve().parents[2] / "experiments/recover-member-order.py"
-        spec = importlib.util.spec_from_file_location("member_order", script)
-        order = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(order)
+        from homm3.analysis import member_order as order
         members = [
             {"kind": "member", "rank": 9},
             {"kind": "method", "rank": 5, "virtual": True},
@@ -97,11 +93,7 @@ class AccessFactsTest(unittest.TestCase):
             ["mnewfield", "oldfield"])
 
     def test_access_formatter_preserves_nested_and_conditional_access(self):
-        import importlib.util
-        script = Path(__file__).resolve().parents[2] / "experiments/apply-access-adherence.py"
-        spec = importlib.util.spec_from_file_location("access_transform", script)
-        transform = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(transform)
+        from homm3.analysis import access_edit as transform
         source = ("class Outer {\npublic:\n    int first;\n"
                   "public: // retain evidence\n    int second;\n"
                   "    class Inner {\n    private:\n        int secret;\n    };\n"

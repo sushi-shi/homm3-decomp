@@ -110,8 +110,8 @@ Five finite source forms were compiled and independently reproduced through
 
 All 14 scored sibling functions stayed unchanged. This finite result is not
 a proof that no matching bounded source exists. It explains retaining the
-proven 100% form under this pass's no-loss constraint. The source comment and
-`scripts/experiments/generate-fill-row-family.py` retain the failed controls.
+proven 100% form under this pass's no-loss constraint. The source comment
+records the failed controls; Git history retains the experiment.
 
 ### Retained lookup and API boundaries
 

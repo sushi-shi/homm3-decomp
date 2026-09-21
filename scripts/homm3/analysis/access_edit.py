@@ -5,9 +5,9 @@ Access changes can alter VC6 mangled names, so finish with a full build to
 refresh the source-owned claims. Declarations stay in their original order.
 
     # dry run -- print the plan, touch nothing
-    PYTHONPATH=scripts python scripts/experiments/apply-access-adherence.py
+    PYTHONPATH=scripts python -m homm3.analysis.access_edit
     # apply the edits to the headers
-    PYTHONPATH=scripts python scripts/experiments/apply-access-adherence.py --apply
+    PYTHONPATH=scripts python -m homm3.analysis.access_edit --apply
 
 Only unambiguously correlated public/protected -> tighter access changes are
 proposed. A C2248 error is evidence of a missing source relationship: inspect
