@@ -592,7 +592,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     msg.m_extraText = g_text;
     g_recruitWindow->broadcastMessage(msg);
 
-    m_totalGold = m_goldPerTroop * m_numberToBuy;
+    m_totalGold = m_numberToBuy * m_goldPerTroop;
     sprintf(g_text, "%d", m_totalGold);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -609,7 +609,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
 
     if (m_altResource == -1)
         m_resourcesPerTroop = 0;
-    m_totalResources = m_resourcesPerTroop * m_numberToBuy;
+    m_totalResources = m_numberToBuy * m_resourcesPerTroop;
     sprintf(g_text, "%d", m_totalResources);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;

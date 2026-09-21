@@ -46,6 +46,10 @@
 // forced to 0. Both passes keep the running best - the retry does not
 // reset best_value or result - and both re-read numArmies[target_group]
 // through the back edge.
+// Residual (99.8919%): all 40 blocks, 27 branches, 16 calls and masked
+// opcodes agree; only the five local stack homes cycle. Dreamcast does not
+// list `damage`, but folding it into the value expression falls to 96.29%;
+// moving its declaration after result is byte-flat.
 
 VA(0x0041e190, 0x2A8)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets, dc 0x23450
 int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int averageDamage)

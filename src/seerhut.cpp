@@ -1381,20 +1381,18 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
     type_quest::loadFromMap(file);
 }
 
+// Complete-only: the Dreamcast procedure roster has no creature-quest save
+// body. Retail's one-slot frame and reuse of the file parameter home for the
+// integer count identify the canonical by-value writeValue boundary; direct
+// staging used two frame slots and stopped at 99.4853%.
 VA(0x00571280, 0x137)
 void type_creature_quest::save(TAbstractFile* file)
 {
     unsigned char count = static_cast<unsigned char>(m_types.size());
     file->write(&count, sizeof(count));
     for (unsigned int i = 0; i < m_types.size(); i++) {
-        {
-            short value = m_types[i];
-            file->write(&value, sizeof(value));
-        }
-        {
-            int value = m_counts[i];
-            file->write(&value, sizeof(value));
-        }
+        writeValue<short>(file, m_types[i]);
+        writeValue<int>(file, m_counts[i]);
     }
 
     {

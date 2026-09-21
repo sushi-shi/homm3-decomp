@@ -7326,7 +7326,7 @@ int TCastleWindow::windowHandler(message& msg)
                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (elapsed >= 0) {
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            cppMax(100L, elapsed);
+            max(100, elapsed);
         for (int i = 0; i < TOWN_DWELLING_COUNT; i++)
             m_spriteWidget[i]->nextRandomFrame();
         if (m_use8)

@@ -2028,6 +2028,8 @@ static long g_castWallIndexToCastOn = -1;
 // that. display_failure_reason is expanded into the refusal arm - the
 // out-of-line get_failure_reason call, the c_str() null-arm and the
 // string teardown are its body.
+// Dreamcast attributes the failure-text lookup to TTextResource::operator[];
+// getText() is the readable wrapper and emits the same retail bytes.
 // Residual (99.97026%): all 37 CFG blocks, all 21 branches, and every
 // instruction byte agree. The sole real relocation difference is the
 // vector<long>::insert growth call at +0x182: retail's linker selected the

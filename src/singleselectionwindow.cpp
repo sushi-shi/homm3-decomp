@@ -5817,6 +5817,10 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     return 0;
 }
 
+// Complete-only: no Dreamcast procedure is present for this helper. Retail
+// initializes both the slot counter and the advancing filename cursor before
+// clearing the timestamps; spelling out that cursor reproduces its instruction
+// schedule while retaining ordinary array indexing for the returned slot.
 // Hidden std::string result in ECX, no explicit stack args. Retail enumerates
 // random_maps/*.h3m and returns the generated filename: it builds the fifteen
 // canonical slot names, stamps each existing file's write time into the
@@ -5840,9 +5844,11 @@ std::string getRandomMapName()
                             "random_map_1.h3m");
     }
 
+    char* name = names[0];
+    i = 0;
     memset(times, 0, sizeof(times));
-    for (i = 0; i < 15; ++i)
-        sprintf(names[i],
+    for (; i < 15; ++i, name += 30)
+        sprintf(name,
                 DATA_COMPGEN(0x006837e4, randomMapNameFormat,
                              "random_map_%i.h3m"),
                 i + 1);
