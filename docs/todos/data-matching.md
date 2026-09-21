@@ -5,6 +5,13 @@ executable has been reconstructed. Extend data matching with independent retail
 extents and explicit pointer ownership, keeping enrollment separate from match
 quality. Candidate object sizes alone cannot prove retail boundaries.
 
+The independent whole-file/image accounting layer is implemented in
+`homm3 sema coverage --output build/retail-accounting`; start with its
+`backlog.tsv`. See [complete retail byte accounting](../tooling/data-coverage.md)
+for the measured totals, evidence policy and remaining identification work.
+Source/candidate binding, enrollment and pointer/access-width verification
+remain separate unfinished tasks.
+
 ## Implementation checklist
 
 1. **Make data enrollment explicit.** Display disabled data comparison as such.

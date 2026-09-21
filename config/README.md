@@ -2,6 +2,7 @@
 
 - [`project.toml`](project.toml): target executable, toolchain and build settings.
 - [`units.toml`](units.toml): source units, modules and compiler profiles.
+- [`retail/data-extents.tsv`](retail/data-extents.tsv): reviewed retail extents, boundary evidence and optional shared-storage groups; source annotations own names.
 - [`match_baseline.tsv`](match_baseline.tsv): generated per-function CUR/MAX/HIST ledger.
 
 | Directory | Contents |

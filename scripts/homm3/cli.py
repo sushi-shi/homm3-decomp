@@ -58,7 +58,7 @@ Subcommands
         reports source edits whose new MAX falls below the prior MAX without
         gating. Unrelated CUR dips are silent; HIST preserves older peaks.
 
-  sema <xref|diff|disasm|rva|strings|data|candidates|compare> ...
+  sema <xref|diff|disasm|rva|strings|data|coverage|candidates|compare> ...
         Read-only navigation over the retail image (homm3.sema): caller
         trees + exact data refs (xref --to = every referencing site),
         base-vs-target diffs (skeleton by default; --summary = every
