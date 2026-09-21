@@ -1760,18 +1760,18 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                 const char* targetName =
                     target->getName(target->m_numTroops + killedCount);
                 if (m_numTroops - deadVampires == 1)
-                    text = formatString(g_generalText->getText(362),
+                    text = formatString(g_generalText->getText(GENERAL_TEXT_LIFE_DRAIN_ONE_FORMAT),
                                          getName(m_numTroops - deadVampires),
                                          damageRecovered, targetName);
                 else
-                    text = formatString(g_generalText->getText(363),
+                    text = formatString(g_generalText->getText(GENERAL_TEXT_LIFE_DRAIN_MANY_FORMAT),
                                          getName(m_numTroops - deadVampires),
                                          damageRecovered, targetName);
                 if (deadVampires > 0) {
                     if (deadVampires == 1)
-                        text += g_generalText->getText(364);
+                        text += g_generalText->getText(GENERAL_TEXT_LIFE_DRAIN_RAISE_ONE_SUFFIX);
                     else
-                        text += formatString(g_generalText->getText(365),
+                        text += formatString(g_generalText->getText(GENERAL_TEXT_LIFE_DRAIN_RAISE_MANY_SUFFIX_FORMAT),
                                               deadVampires);
                 }
                 if (!static_cast<const combatManager*>(g_combatManager)
@@ -1802,11 +1802,11 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                     target->m_monInfo.m_hitPoints * dead - target->m_topCreatureDamage;
                 std::string text;
                 if (dead == 1)
-                    text = formatString(g_generalText->getText(119),
+                    text = formatString(g_generalText->getText(GENERAL_TEXT_DEATH_STARE_ONE_FORMAT),
                                          target->getName(dead),
                                          getName());
                 else
-                    text = formatString(g_generalText->getText(120),
+                    text = formatString(g_generalText->getText(GENERAL_TEXT_DEATH_STARE_MANY_FORMAT),
                                          dead,
                                          target->getName(dead),
                                          getName());
@@ -1844,7 +1844,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                              g_combatManager)
                              ->isQuickCombat()) {
                         text = formatString(
-                            g_generalText->getText(368),
+                            g_generalText->getText(GENERAL_TEXT_LIGHTNING_STRIKE_FORMAT),
                             target->getName());
                         g_combatManager->m_combatWindow->combatMessage(
                             text.c_str(), 1, 0);
@@ -2250,7 +2250,7 @@ inline void army::checkLuck()
                 launchSample(DATA_COMPGEN(0x00660a20, goodLuckSampleName,
                                            "goodluck.82m"),
                               -1, 3);
-                sprintf(g_text, g_generalText->getText(46), getName());
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_LUCK_FORMAT), getName());
                 g_combatManager->m_combatWindow->combatMessage(g_text, 1, 0);
                 g_combatManager->spellEffect(
                     combatManager::eSpellEffectFortune, this, 100, 0);
@@ -2757,13 +2757,13 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
                     std::string text;
                     if (m_numTroops == 1)
                         text = formatString(
-                            g_generalText->getText(369),
+                            g_generalText->getText(GENERAL_TEXT_HATRED_DAMAGE_ONE_FORMAT),
                             ::getArmyName(m_creatureType, m_numTroops),
                             ::getArmyName(defender->m_creatureType,
                                     defender->m_numTroops));
                     else
                         text = formatString(
-                            g_generalText->getText(370),
+                            g_generalText->getText(GENERAL_TEXT_HATRED_DAMAGE_MANY_FORMAT),
                             ::getArmyName(m_creatureType, m_numTroops),
                             ::getArmyName(defender->m_creatureType,
                                     defender->m_numTroops));
@@ -2826,7 +2826,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
                 std::string text;
                 const char* creatureName;
                 creatureName = getName();
-                text = formatString(g_generalText->getText(366),
+                text = formatString(g_generalText->getText(GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT),
                                      creatureName);
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);
@@ -2842,10 +2842,10 @@ int army::computeAttackerDamageBonuses(int baseDamage,
                      ->isQuickCombat()) {
                 std::string text;
                 if (m_numTroops == 1)
-                    text = formatString(g_generalText->getText(366),
+                    text = formatString(g_generalText->getText(GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT),
                                          getName());
                 else
-                    text = formatString(g_generalText->getText(367),
+                    text = formatString(g_generalText->getText(GENERAL_TEXT_DOUBLE_DAMAGE_MANY_FORMAT),
                                          getName());
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);
@@ -4584,11 +4584,11 @@ void army::newTurn()
                 std::string text;
                 if (m_numTroops == 1)
                     text = formatString(
-                        g_generalText->getText(371),
+                        g_generalText->getText(GENERAL_TEXT_REGENERATION_ONE_FORMAT),
                         getName());
                 else
                     text = formatString(
-                        g_generalText->getText(372),
+                        g_generalText->getText(GENERAL_TEXT_REGENERATION_MANY_FORMAT),
                         getName());
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);

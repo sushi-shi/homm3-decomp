@@ -185,11 +185,11 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
         && !(g_game->m_week == 1 && g_game->m_month == 1)) {
         iconName = g_newWeekIcons[
             static_cast<unsigned short>(g_game->m_week)];
-        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_RESOURCE_DISPLAY_1),
+        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_CALENDAR_WEEK),
             static_cast<unsigned short>(g_game->m_week));
     } else {
         iconName = "NewDay.def";
-        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_RESOURCE_DISPLAY_2),
+        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_CALENDAR_DAY),
             static_cast<unsigned short>(g_game->m_day));
         launchSample("newday.wav", 30000, 3);
     }
@@ -886,10 +886,10 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
                 font::WHITE, -1, 1, 0, 8));
     }
 
-    text = formatString("%s:", g_generalText->getText(391));
+    text = formatString("%s:", g_generalText->getText(GENERAL_TEXT_ALLIES));
     m_widgets.push_back(new textWidget(10, 103, 57, 20, text.c_str(),
         "smalfont.fnt", font::WHITE, -1, 0, 0, 8));
-    text = formatString("%s:", g_generalText->getText(392));
+    text = formatString("%s:", g_generalText->getText(GENERAL_TEXT_ENEMIES));
     m_widgets.push_back(new textWidget(10, 134, 57, 20, text.c_str(),
         "smalfont.fnt", font::WHITE, -1, 0, 0, 8));
 
@@ -971,7 +971,7 @@ TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
 
     if (g_currentPlayer->isHuman()) {
         m_widgets.push_back(new textWidget(0, 20, 176, 31,
-            g_generalText->getText(631), "medfont.fnt", font::PRIMARY,
+            g_generalText->getText(GENERAL_TEXT_CURRENT_PLAYER_IS), "medfont.fnt", font::PRIMARY,
             -1, 1, 0, 8));
         m_widgets.push_back(new textWidget(0, 123, 176, 31,
             g_currentPlayer->m_name, "medfont.fnt", font::PRIMARY,

@@ -1379,7 +1379,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
         SAMPLE2 sample = loadPlaySample(
             DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
         spellEffect(20, stack, 100, 0);
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_MORALE),
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_MORALE_FORMAT),
             getArmyName(stack->m_creatureType, stack->m_numTroops));
         m_combatWindow->combatMessage(g_text, 1, 0);
         waitEndSample(sample, -1);
@@ -1400,7 +1400,7 @@ int combatManager::checkApplyBadMorale(int group, int index)
                     SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
                         0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
                     sprintf(g_text,
-                        g_generalText->getText(GENERAL_TEXT_BAD_MORALE),
+                        g_generalText->getText(GENERAL_TEXT_BAD_MORALE_FORMAT),
                         getArmyName(stack->m_creatureType, stack->m_numTroops));
                     m_combatWindow->combatMessage(g_text, 1, 0);
                     spellEffect(30, stack, 100, 1);
@@ -1444,7 +1444,7 @@ unsigned char combatManager::unnamed464d40(army* selected)
         SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
             0x0066ff88, fearSampleName, "Fear.wav"));
         sprintf(g_text,
-                g_generalText->getText(GENERAL_TEXT_COMBAT_FEAR),
+                g_generalText->getText(GENERAL_TEXT_COMBAT_FEAR_FORMAT),
                 getArmyName(CREATURE_AZURE_DRAGON, azureDragons),
                 getArmyName(selected->m_creatureType, selected->m_numTroops));
         m_combatWindow->combatMessage(g_text, 1, 0);
@@ -1652,13 +1652,13 @@ void combatManager::setNextArmy(int group, int index)
                     if (stack->m_numTroops == 1)
                         result = formatString(
                             g_generalText->getText(
-                                GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE),
+                                GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE_FORMAT),
                             stack->getName(),
                             drained->m_name);
                     else
                         result = formatString(
                             g_generalText->getText(
-                                GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY),
+                                GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY_FORMAT),
                             stack->getName(),
                             drained->m_name);
                     if (m_combatWindow)
@@ -3636,11 +3636,11 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
     std::string message;
     if (attackerQty == 1)
         message = formatString(
-            g_generalText->getText(GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER),
+            g_generalText->getText(GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER_FORMAT),
             attacker, damage);
     else
         message = formatString(
-            g_generalText->getText(GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS),
+            g_generalText->getText(GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS_FORMAT),
             attacker, damage);
 
     if (deaths > 0) {
@@ -3651,23 +3651,23 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
             name = defender->getName(deaths);
             if (defender->is(creatureSiegeWeapon)) {
                 deathText = formatString(
-                    g_generalText->getText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT),
+                    g_generalText->getText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT_FORMAT),
                     name);
                 stackWipedOut = true;
             }
         } else {
             if (deaths == 1)
-                name = g_generalText->getText(GENERAL_TEXT_MIXED_ARMY_ONE);
+                name = g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_SINGULAR);
             else
-                name = g_generalText->getText(GENERAL_TEXT_MIXED_ARMY);
+                name = g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL);
         }
         if (!stackWipedOut) {
             if (deaths == 1)
                 deathText = formatString(
-                    g_generalText->getText(GENERAL_TEXT_COMBAT_ONE_DEATH), name);
+                    g_generalText->getText(GENERAL_TEXT_COMBAT_ONE_DEATH_FORMAT), name);
             else
                 deathText = formatString(
-                    g_generalText->getText(GENERAL_TEXT_COMBAT_MANY_DEATHS),
+                    g_generalText->getText(GENERAL_TEXT_COMBAT_MANY_DEATHS_FORMAT),
                     deaths, name);
         }
         message += deathText;

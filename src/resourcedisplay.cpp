@@ -176,11 +176,11 @@ void TResourceDisplay::update(bool drawRequested, bool update)
 
     const TTextResource* labels = g_generalText;
     sprintf(g_text, "%s: %d, %s: %d, %s: %d",
-        (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_0],
+        (*labels)[GENERAL_TEXT_CALENDAR_MONTH],
         static_cast<unsigned short>(g_game->m_month),
-        (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_1],
+        (*labels)[GENERAL_TEXT_CALENDAR_WEEK],
         static_cast<unsigned short>(g_game->m_week),
-        (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_2],
+        (*labels)[GENERAL_TEXT_CALENDAR_DAY],
         static_cast<unsigned short>(g_game->m_day));
     m_dayWidget->setText(g_text);
     if (drawRequested)
@@ -196,11 +196,11 @@ void TResourceDisplay::clear()
 
     const TTextResource* labels = g_generalText;
     sprintf(g_text, "%s: %d, %s: %d, %s: %d",
-        (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_0],
+        (*labels)[GENERAL_TEXT_CALENDAR_MONTH],
         static_cast<unsigned short>(g_game->m_month),
-        (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_1],
+        (*labels)[GENERAL_TEXT_CALENDAR_WEEK],
         static_cast<unsigned short>(g_game->m_week),
-        (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_2],
+        (*labels)[GENERAL_TEXT_CALENDAR_DAY],
         static_cast<unsigned short>(g_game->m_day));
     m_dayWidget->setText(g_text);
     draw(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);

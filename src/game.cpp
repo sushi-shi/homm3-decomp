@@ -3229,8 +3229,8 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
                 saveName);
         // General text 77 and 109 are the two reserved auto-save names;
         // a save under either of them does not become the remembered one.
-        if (_strnicmp(saveName, g_generalText->getText(77), 8)
-            && _strnicmp(saveName, g_generalText->getText(109), 8))
+        if (_strnicmp(saveName, g_generalText->getText(GENERAL_TEXT_AUTOSAVE_NAME), 8)
+            && _strnicmp(saveName, g_generalText->getText(GENERAL_TEXT_PLAYER_EXIT_SAVE_NAME), 8))
             strcpy(g_game->m_saveFileName, filename);
     }
 
@@ -3270,7 +3270,7 @@ void game::setupOrigData()
     g_monthTypeExtra = 0;
     m_isCheater = 0;
 
-    strncpy(m_saveFileName, g_generalText->getText(12), sizeof(m_saveFileName));
+    strncpy(m_saveFileName, g_generalText->getText(GENERAL_TEXT_NEW_GAME_SAVE_NAME), sizeof(m_saveFileName));
     m_saveFileName[sizeof(m_saveFileName) - 1] = 0;
     MEMSET(m_playerDisabled, 0, sizeof(m_playerDisabled), i);
     memset(g_startingHeroOverrides, -1, sizeof(g_startingHeroOverrides));
@@ -6826,8 +6826,8 @@ void game::nextPlayer()
             }
         }
         g_advManager->drawRolloverText(
-            const_cast<char*>(g_generalText->getText(108)));
-        saveGame(g_generalText->getText(77), 1, 0, 1, 0);
+            const_cast<char*>(g_generalText->getText(GENERAL_TEXT_AUTOSAVING)));
+        saveGame(g_generalText->getText(GENERAL_TEXT_AUTOSAVE_NAME), 1, 0, 1, 0);
         g_advManager->drawRolloverText(
             DATA_COMPGEN(0x00691210, nextPlayerEmptyRollover, ""));
     }
@@ -6868,15 +6868,15 @@ void game::nextPlayer()
     if (g_goSolo && makeOrig
         && (!g_remoteOn || g_numHumanPlayers == 1)) {
         g_advManager->drawRolloverText(
-            const_cast<char*>(g_generalText->getText(108)));
-        saveGame(g_generalText->getText(77), 1, 0, 1, 0);
+            const_cast<char*>(g_generalText->getText(GENERAL_TEXT_AUTOSAVING)));
+        saveGame(g_generalText->getText(GENERAL_TEXT_AUTOSAVE_NAME), 1, 0, 1, 0);
         g_advManager->drawRolloverText(
             DATA_COMPGEN(0x00691210, nextPlayerSoloEmptyRollover, ""));
 
         save = g_remoteOn;
         g_remoteOn = 1;
         g_goSolo = 0;
-        normalDialogTimeOut(g_generalText->getText(663), 2, 2000,
+        normalDialogTimeOut(g_generalText->getText(GENERAL_TEXT_PRESS_ESC_TO_CANCEL_SOLO_MODE), 2, 2000,
                             -1, -1, -1, 0, -1, 0, -1, -1, 0);
         g_remoteOn = save;
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE) {
@@ -8775,7 +8775,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                             "Timeout sending save game [%d]"),
                         retryCount);
             if (retryCount > 1) {
-                normalDialog(g_generalText->getText(GENERAL_TEXT_DPLAY_SEND_RETRY), 2, -1, -1,
+                normalDialog(g_generalText->getText(GENERAL_TEXT_DIRECTPLAY_SEND_RETRY_PROMPT), 2, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn
                         != DIALOG_RETURN_ACCEPT) {
@@ -8963,7 +8963,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
 
         if (GameTime::elapsedSince(lastDataReceiveTime)
                 > GAME_TRANSMIT_TIMEOUT) {
-            normalDialog(g_generalText->getText(15), 2, -1, -1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_NETWORK_RECEIVE_RETRY_PROMPT), 2, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 lastDataReceiveTime = GameTime::get();
@@ -9108,7 +9108,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             case RS_PLAYER_DROPPED:
                 if (getGamePosFromDPID(netMsg->m_dpidFrom) == fromWho) {
                     remoteCleanup();
-                    normalDialog(g_generalText->getText(432), 1, -1, -1,
+                    normalDialog(g_generalText->getText(GENERAL_TEXT_PLAYER_LEFT_DURING_TRANSMISSION), 1, -1, -1,
                                  -1, 0, -1, 0, -1, 0, -1, 0);
                     return 0;
                 }

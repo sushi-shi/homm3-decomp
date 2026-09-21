@@ -846,7 +846,7 @@ int combatManager::processCombatMsg(message& msg)
 
             case TCombatWindow::COMBAT_RIGHT_COMMAND_0_ID:
                 if (!m_heroes[m_currentSide]) {
-                    normalDialog(g_generalText->getText(128),
+                    normalDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_NO_HERO_FOR_SPELL),
                                  1, -1, -1, -1, 0,
                                  -1, 0, -1, 0, -1, 0);
                 } else {
@@ -856,7 +856,7 @@ int combatManager::processCombatMsg(message& msg)
                 break;
 
             case TCombatWindow::COMBAT_LEFT_COMMAND_1_ID:
-                normalDialog(g_generalText->getText(29),
+                normalDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_RETREAT_PROMPT),
                              2, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
@@ -868,7 +868,7 @@ int combatManager::processCombatMsg(message& msg)
                 if (doSurrender()) {
                     if (g_game->m_players[m_playerIds[m_currentSide]].m_resources[6]
                             < g_surrenderCost) {
-                        normalDialog(g_generalText->getText(30),
+                        normalDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_NOT_ENOUGH_GOLD),
                                      1, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     } else {
@@ -1685,8 +1685,8 @@ void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
         reward.m_qualifier = spell;
         if (rewards.size() == 0) {
             // General text 222 is the "<hero> learns <spell>" opener;
-            // the row has no enumerator in this tree yet.
-            msg = formatString(g_generalText->getText(222), winner->m_name,
+            // its enum name describes those two arguments.
+            msg = formatString(g_generalText->getText(GENERAL_TEXT_EAGLE_EYE_LEARNS_SPELL_FORMAT), winner->m_name,
                                 g_spellTraits[spell].m_name);
         } else {
             if (x == m_eagleEyeData[winningGroup].end()
@@ -1736,7 +1736,7 @@ void combatManager::showLootedArtifacts(
                               random(1, 7))
                     .c_str(),
                 -1, 3);
-            extendedDialog(g_generalText->getText(31), rewards, -1, -1,
+            extendedDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_CAPTURED_ARTIFACT), rewards, -1, -1,
                             dialogTimeout);
             rewards.clear();
         }
@@ -1935,7 +1935,7 @@ long combatManager::getSurrenderCost()
 inline int combatManager::doSurrender()
 {
     g_surrenderCost = getSurrenderCost();
-    sprintf(g_text, g_generalText->getText(33),
+    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_SURRENDER_OFFER_FORMAT),
             m_heroes[1 - m_currentSide]->m_name, g_surrenderCost);
     normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     return g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT;
@@ -2080,7 +2080,7 @@ void combatManager::checkGetAIMove()
         if (isHuman) {
             if (m_autoRetreatOn) {
                 std::string result = formatString(
-                    g_generalText->getText(414), m_heroes[m_currentSide]->m_name);
+                    g_generalText->getText(GENERAL_TEXT_COMBAT_RETREAT_OVERWHELMED_FORMAT), m_heroes[m_currentSide]->m_name);
                 normalDialog(result.c_str(), 2, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn
@@ -2113,7 +2113,7 @@ void combatManager::checkGetAIMove()
                         && combatValue > g_surrenderCost + 2500) {
                     std::string msg;
                     if (isHuman) {
-                        msg = formatString(g_generalText->getText(130),
+                        msg = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_SAVE_ARMY_PROMPT_FORMAT),
                                             m_heroes[m_currentSide]->m_name,
                                             g_surrenderCost);
                         normalDialog(msg.c_str(), 2, -1, -1, 6,
@@ -2355,7 +2355,7 @@ void combatManager::processFirstAid(army* currentArmy)
                 DATA_COMPGEN(0x00660a94, regenerSampleName,
                              "Regener.wav"));
             std::string text = formatString(
-                g_generalText->getText(415), currentArmy->getName(),
+                g_generalText->getText(GENERAL_TEXT_FIRST_AID_HEAL_FORMAT), currentArmy->getName(),
                 targetArmy->getName(), result);
             m_combatWindow->combatMessage(text.c_str(), 1, 0);
             spellEffect(eSpellEffectRegeneration, targetArmy, 100, 0);
@@ -2492,7 +2492,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     case g_combatActionRetreat:
         if ((m_heroes[0] && m_heroes[0]->isWieldingArtifact(125))
                 || (m_heroes[1] && m_heroes[1]->isWieldingArtifact(125))) {
-            sprintf(g_text, g_generalText->getText(341),
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SHACKLES_PREVENT_RETREAT_FORMAT),
                     m_heroes[m_currentSide]->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
@@ -2506,7 +2506,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     case g_combatActionSurrender:
         if ((m_heroes[0] && m_heroes[0]->isWieldingArtifact(125))
                 || (m_heroes[1] && m_heroes[1]->isWieldingArtifact(125))) {
-            sprintf(g_text, g_generalText->getText(342),
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SHACKLES_PREVENT_SURRENDER_FORMAT),
                     m_heroes[m_currentSide]->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
@@ -2529,11 +2529,11 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
                     currentArmy->m_monInfo.m_defenseSkill * 20 / 100, 1);
 
                 if (currentArmy->m_numTroops == 1)
-                    message = formatString(g_generalText->getText(121),
+                    message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_DEFEND_ONE_FORMAT),
                                             currentArmy->getName(),
                                             currentArmy->m_defendBonus);
                 else
-                    message = formatString(g_generalText->getText(122),
+                    message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_DEFEND_MANY_FORMAT),
                                             currentArmy->getName(),
                                             currentArmy->m_defendBonus);
                 m_combatWindow->combatMessage(message.c_str(), 1, 0);
@@ -2552,10 +2552,10 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
         if (!m_creaturePlacement) {
             std::string message;
             if (currentArmy->m_numTroops == 1)
-                message = formatString(g_generalText->getText(137),
+                message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_WAIT_ONE_FORMAT),
                                         currentArmy->getName());
             else
-                message = formatString(g_generalText->getText(138),
+                message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_WAIT_MANY_FORMAT),
                                         currentArmy->getName());
             m_combatWindow->combatMessage(message.c_str(), 1, 0);
         }

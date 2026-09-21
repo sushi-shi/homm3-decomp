@@ -500,7 +500,7 @@ bool CDPlayHeroes::sendIt(CNetMsg* msg, unsigned long dpidTo,
 
             if (retries >= 5) {
                 normalDialogTimeOut(
-                    g_generalText->getText(GENERAL_TEXT_DPLAY_SEND_RETRY),
+                    g_generalText->getText(GENERAL_TEXT_DIRECTPLAY_SEND_RETRY_PROMPT),
                     2, 15000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
                 if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT) {
                     shutDown(0);
@@ -1235,13 +1235,13 @@ void sendChat(const char* chatString, int toWho)
             DATA_COMPGEN(0x00682b44, chatNonHumanLineFormat,
                          "%s: (%s:%s) %s"),
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()),
-            g_generalText->getText(GENERAL_TEXT_CHAT_NONHUMAN_LINE_TAG),
+            g_generalText->getText(GENERAL_TEXT_CHAT_WHISPER_TO_LINE_TAG),
             recipientName,
             chatString);
         sprintf(
             transformedChat,
             DATA_COMPGEN(0x00682b3c, chatNonHumanWireFormat, "(%s) %s"),
-            g_generalText->getText(GENERAL_TEXT_CHAT_NONHUMAN_WIRE_TAG),
+            g_generalText->getText(GENERAL_TEXT_CHAT_WHISPER_WIRE_TAG),
             chatString);
         outgoingChat = transformedChat;
     } else {
@@ -1922,7 +1922,7 @@ void handlePlayerDrop(unsigned long dpid)
                             "Handling player drop [%d]"),
                 dpid);
     g_chatMan.playerDropMsg(
-                  g_generalText->getText(GENERAL_TEXT_PLAYER_DROPPED),
+                  g_generalText->getText(GENERAL_TEXT_PLAYER_DROPPED_FORMAT),
                   g_game->m_players[playerPos].m_name);
     updateCurrentPlayers();
 

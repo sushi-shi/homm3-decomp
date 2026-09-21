@@ -3,6 +3,13 @@
 
 // Shared text storage filled by the resource loaders in text.cpp.
 struct THelpText;
+
+// Named rows from Credits.txt consumed by initializeCreditsText.
+enum ECreditsTextIndex {
+    CREDITS_TEXT_STAFF = 1,
+    CREDITS_TEXT_LEGAL = 2
+};
+
 extern const char* g_abbSecondarySkillLevels[3];
 extern const char* g_statNames[4];
 extern const char* g_castleInfo[7];

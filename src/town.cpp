@@ -504,7 +504,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         int maxMana = townHero->getMaxMana() * 2;
         if (townHero->m_mana < maxMana) {
             if (g_game->isLocalHuman(m_owner))
-                normalDialog(g_generalText->getText(580), // Mana Vortex
+                normalDialog(g_generalText->getText(GENERAL_TEXT_MANA_VORTEX_VISIT), // Mana Vortex
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             townHero->m_mana = static_cast<short>(maxMana);
             m_manaVortexFull = 0;
@@ -517,7 +517,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         townHero->m_maxMovePoints += g_stablesMovementBonus;
         townHero->m_movePoints += g_stablesMovementBonus;
         if (g_game->isLocalHuman(townHero->m_owner))
-            normalDialog(g_generalText->getText(581), // Stables
+            normalDialog(g_generalText->getText(GENERAL_TEXT_STABLES_VISIT), // Stables
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 
@@ -527,7 +527,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         townHero->adjustPrimarySkill(3, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
-                g_generalText->getText(582), // Wall of Knowledge
+                g_generalText->getText(GENERAL_TEXT_WALL_OF_KNOWLEDGE_VISIT), // Wall of Knowledge
                 1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
     }
 
@@ -536,7 +536,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(2, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
-            normalDialog(g_generalText->getText(583), // Order of Fire
+            normalDialog(g_generalText->getText(GENERAL_TEXT_ORDER_OF_FIRE_VISIT), // Order of Fire
                          1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
     }
 
@@ -546,7 +546,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
             townHero->getExperienceBonusFactor() * 1000.0f);
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
-                g_generalText->getText(584), // Battle Scholar Academy
+                g_generalText->getText(GENERAL_TEXT_BATTLE_SCHOLAR_ACADEMY_VISIT), // Battle Scholar Academy
                 1, -1, -1, 0x11, experience, -1, 0, -1, 0, -1, 0);
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->giveExperience(experience, 1, 1);
@@ -556,7 +556,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         && !townHero->m_townSpecialGrantedMask[m_id]) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
-                g_generalText->getText(585), // Hall of Valhalla
+                g_generalText->getText(GENERAL_TEXT_HALL_OF_VALHALLA_VISIT), // Hall of Valhalla
                 1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(0, 1);
@@ -566,7 +566,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         && !townHero->m_townSpecialGrantedMask[m_id]) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
-                g_generalText->getText(586), // Cage of Warlords
+                g_generalText->getText(GENERAL_TEXT_CAGE_OF_WARLORDS_VISIT), // Cage of Warlords
                 1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(1, 1);
@@ -1436,7 +1436,7 @@ void showBuildingRewards(const town* thisTown,
         }
         text += getBuildingName(thisTown->m_type, (*rewards)[i].m_qualifier);
     }
-    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_BUILDINGS),
+    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_BUILDINGS_FORMAT),
                          thisTown->m_name.c_str(), text.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)
@@ -1473,7 +1473,7 @@ void showCreatureRewards(const town* thisTown,
         text += getArmyName(creature, count);
     }
     long firstCount = (*rewards)[0].m_qualifier >> 16;
-    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES),
+    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES_FORMAT),
                          firstCount, text.c_str(), thisTown->m_name.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)

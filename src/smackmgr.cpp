@@ -715,8 +715,8 @@ unsigned char loadAnimHeaders()
             FILE_SHARE_READ, 0, OPEN_EXISTING,
             FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
         if (g_videoFile1 == INVALID_HANDLE_VALUE) {
-            MessageBoxA(g_hwndApp, g_generalText->getText(535),
-                g_generalText->getText(536), 0);
+            MessageBoxA(g_hwndApp, g_generalText->getText(GENERAL_TEXT_VIDEO_FILE_OPEN_ERROR),
+                g_generalText->getText(GENERAL_TEXT_VIDEO_FILE_ERROR), 0);
             return 0;
         }
         ReadFile(g_videoFile1, &g_videoCount1, 4, &nread, 0);
@@ -727,8 +727,8 @@ unsigned char loadAnimHeaders()
     g_videoFile2 = CreateFileA("data\\Video.vid", GENERIC_READ, FILE_SHARE_READ,
         0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
     if (g_videoFile2 == INVALID_HANDLE_VALUE) {
-        MessageBoxA(g_hwndApp, g_generalText->getText(535),
-            g_generalText->getText(536), 0);
+        MessageBoxA(g_hwndApp, g_generalText->getText(GENERAL_TEXT_VIDEO_FILE_OPEN_ERROR),
+            g_generalText->getText(GENERAL_TEXT_VIDEO_FILE_ERROR), 0);
         return 0;
     }
     ReadFile(g_videoFile2, &g_videoCount2, 4, &nread, 0);
@@ -763,8 +763,8 @@ unsigned char loadSoundHeaders()
     g_soundFile = CreateFileA("data\\heroes3.snd", GENERIC_READ, FILE_SHARE_READ,
         0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
     if (g_soundFile == INVALID_HANDLE_VALUE) {
-        MessageBoxA(g_hwndApp, g_generalText->getText(664),
-            g_generalText->getText(665), 0);
+        MessageBoxA(g_hwndApp, g_generalText->getText(GENERAL_TEXT_SOUND_ARCHIVE_OPEN_ERROR),
+            g_generalText->getText(GENERAL_TEXT_SOUND_FILE_ERROR), 0);
         return 0;
     }
     ReadFile(g_soundFile, &g_soundCount, 4, &nread, 0);
@@ -777,8 +777,8 @@ unsigned char loadSoundHeaders()
             FILE_SHARE_READ, 0, OPEN_EXISTING,
             FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
         if (g_soundFileCd == INVALID_HANDLE_VALUE) {
-            MessageBoxA(g_hwndApp, g_generalText->getText(664),
-                g_generalText->getText(665), 0);
+            MessageBoxA(g_hwndApp, g_generalText->getText(GENERAL_TEXT_SOUND_ARCHIVE_OPEN_ERROR),
+                g_generalText->getText(GENERAL_TEXT_SOUND_FILE_ERROR), 0);
             return 0;
         }
         ReadFile(g_soundFileCd, &g_soundCountCd, 4, &nread, 0);

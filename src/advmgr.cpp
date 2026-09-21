@@ -281,7 +281,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             g_advManager->updBottomView(1, 1, 1);
         }
         if (g_currentPlayer->isHuman()) {
-            g_chatMan.systemMsg(g_generalText->getText(352),
+            g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_TURN_ITS_FORMAT),
                       g_currentPlayer->m_name);
             g_playerTurn = g_netLocalGamePos;
         }
@@ -360,7 +360,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         break;
     }
     case RS_PLAYER_ACTIVE:
-        g_chatMan.systemMsg(g_generalText->getText(40),
+        g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_ACTIVE_PLAYER_FORMAT),
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()));
         break;
     case RS_GIFT:
@@ -409,12 +409,12 @@ void CAdvMgrNetMsgHandler::handleGiftRequestMsg(CNetMsg* netMsg)
     std::string text;
     if (g_game->m_players[gift->m_greedyGuy].isHuman()) {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
+            g_generalText->getText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT),
             g_game->m_players[gift->m_greedyGuy].m_name,
             g_resourceNames[gift->m_resource]);
     } else {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
+            g_generalText->getText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT),
             g_colors[gift->m_greedyGuy],
             g_resourceNames[gift->m_resource]);
     }
@@ -443,11 +443,11 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
     std::string text;
     if (g_game->m_players[gift->m_niceGuy].isHuman()) {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
+            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT),
             g_game->m_players[gift->m_niceGuy].m_name);
     } else {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
+            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT),
             g_colors[gift->m_niceGuy]);
     }
 
@@ -1213,7 +1213,7 @@ int advManager::main(message& msg)
     if (g_turnDuration.isExpired()) {
         // Row 202 of the general text, the turn-timer expiry notice. No
         // surviving symbol names the row.
-        normalDialogTimeOut(g_generalText->getText(202), 1, 15000, -1, -1,
+        normalDialogTimeOut(g_generalText->getText(GENERAL_TEXT_TURN_TIME_EXPIRED), 1, 15000, -1, -1,
                             -1, 0, -1, 0, -1, -1, 0);
         g_turnDuration.clear();
         g_game->nextPlayer();
@@ -1556,9 +1556,9 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
     case KEYCODE_N:
         if (g_game->isMultiplayer())
             break;
-        // Rows 68/69/70 of the general text, the new-game, load-game and
-        // exit confirms. No surviving symbol names any of the three.
-        normalDialog(g_generalText->getText(68), 2, -1, -1, -1, 0, -1, 0,
+        // Rows 68/69/70 are the new-game, load-game and exit confirms;
+        // their enum names describe those roles because no source symbol survives.
+        normalDialog(g_generalText->getText(GENERAL_TEXT_RESTART_GAME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
@@ -1569,7 +1569,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
     case KEYCODE_L:
         if (g_game->isMultiplayer())
             break;
-        normalDialog(g_generalText->getText(69), 2, -1, -1, -1, 0, -1, 0,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_LOAD_GAME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
@@ -1597,7 +1597,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         g_game->showScenInfo();
         if (g_windowManager->m_dialogReturn != SYSOPT_COMMAND_111)
             break;
-        normalDialog(g_generalText->getText(68), 2, -1, -1, -1, 0, -1, 0,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_RESTART_GAME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
@@ -1846,10 +1846,9 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
 
     if ((msg->m_qualifier & MESSAGE_MODIFIER_RIGHT)
         && msg->m_codeY >= ADV_HELP_ID_FIRST && msg->m_codeY <= ADV_HELP_ID_LAST) {
-        // Row 110 of the general text, the only help string the whole
-        // adventure-button band answers with. No surviving symbol names
-        // the row, so the index stays a literal.
-        normalDialog(g_generalText->getText(110), 4, -1, -1, -1, 0, -1, 0,
+        // Row 110 is the only help string the whole adventure-button band
+        // answers with; its enum name describes that role.
+        normalDialog(g_generalText->getText(GENERAL_TEXT_STATUS_WINDOW_HELP), 4, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
     }
     return 1;
@@ -1927,7 +1926,7 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
     case TAdventureMapWindow::ADVENTURE_OPTIONS_ID:
         doAdventureOptions();
         if (g_windowManager->m_dialogReturn == SYSOPT_COMMAND_111) {
-            normalDialog(g_generalText->getText(68), 2, -1, -1, -1, 0, -1, 0,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_RESTART_GAME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 g_gameCommand = SYSOPT_QUIT;
@@ -1943,9 +1942,9 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
     case TAdventureMapWindow::END_TURN_ID:
         if (!g_game->m_isTutorial && g_currentPlayer->hasMobileHero()
             && g_config.m_moveReminder) {
-            // Row 56 of the general text, the "you still have heroes who
-            // can move" confirm. No surviving symbol names the row.
-            normalDialog(g_generalText->getText(56), 2, -1, -1, -1, 0, -1, 0,
+            // Row 56 is the "you still have heroes who can move" confirm;
+            // its enum name describes that role.
+            normalDialog(g_generalText->getText(GENERAL_TEXT_END_TURN_HEROES_CAN_MOVE_PROMPT), 2, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
                 break;
@@ -2038,7 +2037,7 @@ VA(0x0040a0c0, 0x50D)  // dc 0xa168
 void advManager::processRadarSelect(const message* msg)
 {
     if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
-        normalDialog(g_generalText->getText(55), 4, -1, -1, -1, 0, -1, 0,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_WORLD_MAP_HELP), 4, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         return;
     }
@@ -2526,7 +2525,7 @@ std::string getArmyHelpText(const armyGroup* source,
         if (consolidatedArmy.m_armies[1] == CREATURE_NONE) {
             armyName = getArmyName(consolidatedArmy.m_armies[0], 2);
         } else {
-            armyName = g_generalText->getText(GENERAL_TEXT_MIXED_ARMY);
+            armyName = g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL);
         }
         result += armyGroup::getArmySizeName(amount, 2);
         result += " ";
@@ -4237,7 +4236,7 @@ int advManager::processSearch(int x, int y, int z)
                 sprintf(g_text,
                         DATA_COMPGEN(0x00660358,
                                      processSearchFoundFormat, "%s%s"),
-                        g_generalText->getText(GENERAL_TEXT_SEARCH_FOUND_FORMAT),
+                        g_generalText->getText(GENERAL_TEXT_SEARCH_FOUND_PREFIX),
                         g_artifactTraits[ARTIFACT_HOLY_GRAIL].m_name);
                 normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
@@ -6271,7 +6270,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
 
     if (!mapPoint.isValid()) {
         strcpy(g_text, g_generalText->getText(
-            GENERAL_TEXT_QUICK_INFO_INVALID_POINT));
+            GENERAL_TEXT_MAP_BORDER));
     } else {
         // DC names GetCell here; its ordinary retained body owns the
         // validity branch and canonical map indexing.
@@ -8044,7 +8043,7 @@ unsigned char saveGame(unsigned char campaignWinMode)
             strtok(g_saveGameName,
                    DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
             char text[100];
-            sprintf(text, g_generalText->getText(351), g_saveGameName);
+            sprintf(text, g_generalText->getText(GENERAL_TEXT_GAME_SAVED_FORMAT), g_saveGameName);
             normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
     }
@@ -8850,7 +8849,7 @@ void advManager::startLocalPlayerTurn()
     if (g_currentPlayer->isLocalHuman()) {
         if (g_goSolo) {
             g_goSolo = 0;
-            normalDialogTimeOut(g_generalText->getText(663), 2, 2000, -1, -1,
+            normalDialogTimeOut(g_generalText->getText(GENERAL_TEXT_PRESS_ESC_TO_CANCEL_SOLO_MODE), 2, 2000, -1, -1,
                                 -1, 0, -1, 0, -1, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE) {
                 g_game->m_players[g_soloPos].m_isHuman = 1;
@@ -8901,12 +8900,12 @@ void advManager::startLocalPlayerTurn()
     if (g_game->m_isCheater && !g_lastCheaterState) {
         g_lastCheaterState = 1;
         sprintf(g_text, DATA_COMPGEN(0x0066040c, turnPopupLineFormat, "%s\n"),
-                g_generalText->getText(332));
+                g_generalText->getText(GENERAL_TEXT_CHEAT_DETECTED));
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
     if (g_debugLevel > 0 && !g_lastDebugState) {
         g_lastDebugState = 1;
-        sprintf(g_text, "%s\n", g_generalText->getText(333));
+        sprintf(g_text, "%s\n", g_generalText->getText(GENERAL_TEXT_DEBUG_LEVEL_DETECTED));
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 }
@@ -9276,7 +9275,7 @@ unsigned char advManager::doSystemOptions()
     switch (g_windowManager->m_dialogReturn) {
     case SYSOPT_QUIT:
         result = g_windowManager->m_dialogReturn;
-        normalDialog(g_generalText->getText(68), 2, -1, -1, -1, 0, -1, 0,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_RESTART_GAME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             result = -1;
