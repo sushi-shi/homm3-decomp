@@ -283,29 +283,23 @@ void type_quest::save(TAbstractFile* file)
     }
 }
 
-// The deadline suffix both base dialog getters below append when the quest
-// is dated. It is the only reader of the text row's LAST column: retail
-// takes it at `[row + 0x334]`, which is 51 * sizeof(std::string) plus the
-// _Ptr member, and - unlike every other row read in this file - WITHOUT a
-// quest_type() call, so the ternary on field_04/field_38 is spelled inline
-// with the 832-byte product duplicated into both arms, exactly as
-// quest_text()'s own note describes. Naming the remaining-day subtraction at
-// this lifetime raises retail similarity from 85.1124% to 93.4944%. Moving it
-// earlier, naming the text variant too, or constructing text directly from the
-// separator loses agreement; the combined direct/copy-initialization controls
-// score 75.2472%.
+// The base dialog getters append this deadline suffix. Retail reads the
+// row-wide time-limit column (51), without questType's per-kind offset.
+// questTextRow and getCurrentTurn preserve that lookup and the signed-short
+// date result. This Complete-only caller has no Dreamcast source record;
+// the shared helper bodies and retail expansion support these source calls.
+// They are byte-flat at 93.4944%. Moving remainingDays earlier or directly
+// initializing text lost agreement (combined controls: 75.2472%).
 
 VA(0x0056d040, 0x1F7)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
 std::string type_quest::getTimeLimitText()
 {
-    int days = static_cast<short>(
-        (g_game->m_month * 4 + g_game->m_week - 5) * 7
-        + g_game->m_day);
+    int days = g_game->getCurrentTurn();
     std::string text;
     text = DATA_COMPGEN(0x00660330, questTimeLimitSeparator, " ");
     int remainingDays = m_limit - days;
     const std::string* row =
-        m_seerHut ? g_questTextA[m_textVariant] : g_questTextB[m_textVariant];
+        questTextRow();
     text += formatString(row[QUEST_TEXT_TIME_LIMIT].c_str(), remainingDays);
     return text;
 }
@@ -607,6 +601,10 @@ std::string type_skill_quest::skillRequirementText(
     }
     return joinTextList(requirements);
 }
+// The shared questTexts source form keeps the completion string's assign
+// out of line while expanding its returned temporary's cleanup, exactly as
+// retail. Naming that temporary introduced a second assignment and fell to
+// 50.4925%; no inline-depth steering is retained.
 VA(0x0056e0d0, 0x169)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::setDefaultText()
 {
@@ -616,12 +614,9 @@ void type_skill_quest::setDefaultText()
     if (m_proposalText.length() == 0)
         m_proposalText = formatString(texts[QUEST_TEXT_PROPOSAL].c_str(),
                                      requirement.c_str());
-    if (m_completionText.length() == 0) {
-        std::string formatted =
-            formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
-                          requirement.c_str());
-        m_completionText = formatted;
-    }
+    if (m_completionText.length() == 0)
+        m_completionText = formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
+                                        requirement.c_str());
 }
 
 VA(0x0056e240, 0xF2)
@@ -1302,13 +1297,10 @@ void type_creature_quest::doProposalDialog(hero* currentHero)
 // getter. Picture qualifiers use the same unsigned 16|16 packing as slot 4.
 
 // Computing the five-column quest group through questTexts() restores retail's
-// questType/questTextRow call order. Keeping text and both vectors in their
-// natural declaration scope also reproduces every block through extendedDialog.
-// The residual is confined to implicit cleanup: retail calls the vector
-// element destructor and then expands text's destructor to _Tidy, while this
-// compiler invocation expands both one level deeper. Lifetime, condition and
-// alias spelling families did not change that boundary; no inline pragma is
-// retained.
+// questType/questTextRow call order. Its branch-return selector and named
+// result also restore the retail cleanup decisions here. Keeping text and both
+// vectors in their natural declaration scope then reproduces all retail bytes;
+// no inline pragma is needed.
 // E:\gamedcs\seerhut.cpp
 VA(0x00570b80, 0x2D5)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
 void type_creature_quest::doProgressDialog()
