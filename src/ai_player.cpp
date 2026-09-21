@@ -438,7 +438,7 @@ void type_AI_player::calculateDemand()
 
     std::vector<type_creature_value> creatures(CREATURE_ROSTER_COUNT);
     H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creatureIndex;
-    for (creatureIndex = CREATURE_PIKEMAN;
+    for (creatureIndex = CREATURE_ROSTER_BEGIN;
          creatureIndex != CREATURE_ROSTER_END; creatureIndex++) {
         {
             // The stepped loop variable carries a creature-domain ordinal.
@@ -473,7 +473,7 @@ void type_AI_player::calculateDemand()
     }
 
     H3_ENUM_STORAGE_STEPPED(TCreatureType, int) valueCreature;
-    for (valueCreature = CREATURE_PIKEMAN;
+    for (valueCreature = CREATURE_ROSTER_BEGIN;
          valueCreature != CREATURE_ROSTER_END; valueCreature++)
         H3_AT(creatures, valueCreature).m_value =
             H3_AT(creatures, valueCreature).m_amount
@@ -940,7 +940,7 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
         }
     }
 
-    for (H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature = CREATURE_PIKEMAN;
+    for (H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature = CREATURE_ROSTER_BEGIN;
          creature < CREATURE_ROSTER_END; ++creature) {
         H3_AT(prohibited, creature) = 0;
         getMonsterCost(creature, resources);

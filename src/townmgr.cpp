@@ -1553,7 +1553,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             long growth = H3_AT(g_creatureTypeTraits, creature).m_growthRate;
             int offsetToMon = currTown->getGrowthRate(slot) - growth;
             const char* name;
-            if (creature >= CREATURE_PIKEMAN
+            if (creature >= CREATURE_ROSTER_BEGIN
                 && creature <= CREATURE_RETAIL_RANGE_MAX)
                 name = H3_AT(g_creatureTypeTraits, creature).m_name;
             else
@@ -1670,7 +1670,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             currTown->setSummoningGenerator();
         if (currTown->m_summoningType != CREATURE_NONE) {
             const char* name;
-            if (currTown->m_summoningType >= CREATURE_PIKEMAN
+            if (currTown->m_summoningType >= CREATURE_ROSTER_BEGIN
                 && currTown->m_summoningType <= CREATURE_RETAIL_RANGE_MAX)
                 name = H3_AT(g_creatureTypeTraits, currTown->m_summoningType).m_name;
             else
@@ -2453,7 +2453,7 @@ void townManager::setCommandAndText(message* msg)
             m_townToView->m_type * TOWN_DWELLING_SLOTS
             + g_hordeDwellingSlot[m_townToView->m_type][code - HORDE_ID]]);
         const char* name;
-        if (creature >= CREATURE_PIKEMAN && creature <= CREATURE_RETAIL_RANGE_MAX)
+        if (creature >= CREATURE_ROSTER_BEGIN && creature <= CREATURE_RETAIL_RANGE_MAX)
             name = H3_AT(g_creatureTypeTraits, creature).m_pluralName;
         else
             name = "";
@@ -2468,7 +2468,7 @@ void townManager::setCommandAndText(message* msg)
             m_townToView->m_type * TOWN_DWELLING_SLOTS
             + g_horde2DwellingSlot[m_townToView->m_type][code - HORDE_2_ID]]);
         const char* name;
-        if (creature >= CREATURE_PIKEMAN && creature <= CREATURE_RETAIL_RANGE_MAX)
+        if (creature >= CREATURE_ROSTER_BEGIN && creature <= CREATURE_RETAIL_RANGE_MAX)
             name = H3_AT(g_creatureTypeTraits, creature).m_pluralName;
         else
             name = "";
@@ -2607,7 +2607,7 @@ void townManager::setCommandAndText(message* msg)
                 m_townToView->m_type * TOWN_DWELLING_SLOTS
                 + code - DWELLING_0_ID]);
         const char* name;
-        if (creature >= CREATURE_PIKEMAN && creature <= CREATURE_RETAIL_RANGE_MAX)
+        if (creature >= CREATURE_ROSTER_BEGIN && creature <= CREATURE_RETAIL_RANGE_MAX)
             name = H3_AT(g_creatureTypeTraits, creature).m_pluralName;
         else
             name = "";
@@ -2732,7 +2732,7 @@ void townManager::selectArmy(strip* fromStrip, long slot,
     m_currIndex = slot;
 
     if (!fromStrip->m_group
-        || fromStrip->m_group->m_armies[slot] < CREATURE_PIKEMAN) {
+        || fromStrip->m_group->m_armies[slot] < CREATURE_ROSTER_BEGIN) {
         strcpy(m_statusText, g_townCommand[11]);
         m_command = -2;
         return;
@@ -3889,7 +3889,7 @@ void type_garrison_base_window::setCommandAndText(message* msg)
             // is a member of `army`, which this compiland's include
             // closure does not define and must not grow to.
             sprintf(mgr->m_statusText, g_townCommand[0],
-                    creature >= CREATURE_PIKEMAN
+                    creature >= CREATURE_ROSTER_BEGIN
                         && creature <= CREATURE_RETAIL_RANGE_MAX
                         ? H3_AT(g_creatureTypeTraits, creature).m_name
                         : "");
@@ -8004,7 +8004,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
 
         msg.m_codeY = 0x20;
         const char* summonName;
-        if (g_townManager->m_townToView->m_summoningType >= CREATURE_PIKEMAN
+        if (g_townManager->m_townToView->m_summoningType >= CREATURE_ROSTER_BEGIN
             && g_townManager->m_townToView->m_summoningType
                    <= CREATURE_RETAIL_RANGE_MAX)
             summonName =

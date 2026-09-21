@@ -5809,7 +5809,7 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
         while (--creature >= CREATURE_ROE_ROSTER_END)
             H3_AT(prototypeIndices, creature) = -1;
     }
-    for (--creature; creature >= CREATURE_PIKEMAN; --creature) {
+    for (--creature; creature >= CREATURE_ROSTER_BEGIN; --creature) {
         const TCreatureTypeTraits& traits = H3_AT(g_creatureTypeTraits, creature);
         if ((traits.m_wanderingHigh + traits.m_wanderingLow) / 2 * traits.m_aiValue <= value
             && value <= traits.m_aiValue * RMG_GUARD_MAXIMUM_COUNT
@@ -5823,7 +5823,7 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
         return 0;
     int chosen = rand() % eligibleCount;
     for (creature = CREATURE_ROSTER_END - 1;
-         creature >= CREATURE_PIKEMAN; --creature) {
+         creature >= CREATURE_ROSTER_BEGIN; --creature) {
         if (H3_AT(prototypeIndices, creature) >= 0 && --chosen < 0)
             break;
     }

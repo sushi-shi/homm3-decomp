@@ -39,9 +39,10 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     CREATURE_RANDOM_TIER_6_UPGRADED = -13,
     CREATURE_RANDOM_TIER_7 = -14,
     CREATURE_RANDOM_TIER_7_UPGRADED = -15,
-    // Original TCreatureType::Pikeman, ordinal zero; GetBaseCreature
-    // returns this value on its out-of-range dwelling arm.
-    CREATURE_PIKEMAN = 0,
+    // First ordinary creature ordinal. Original TCreatureType::Pikeman is
+    // ordinal zero; GetBaseCreature returns it on its out-of-range dwelling arm.
+    CREATURE_ROSTER_BEGIN = 0,
+    CREATURE_PIKEMAN = CREATURE_ROSTER_BEGIN,
     CREATURE_HALBERDIER = 0x1,
     CREATURE_ARCHER = 0x2,
     CREATURE_MARKSMAN = 0x3,

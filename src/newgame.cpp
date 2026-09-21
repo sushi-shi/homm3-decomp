@@ -294,14 +294,14 @@ void game::getVictoryConditionText(char* text)
 
             if (!monsterZ) {
                 sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_DEFEAT_MONSTER_FORMAT),
-                        victory.m_creatureType >= CREATURE_PIKEMAN
+                        victory.m_creatureType >= CREATURE_ROSTER_BEGIN
                             && victory.m_creatureType <= CREATURE_RETAIL_RANGE_MAX
                             ? H3_AT(g_creatureTypeTraits, victory.m_creatureType).m_pluralName
                             : "",
                         g_directions[direction]);
             } else {
                 sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_DEFEAT_MONSTER_UNDERGROUND_FORMAT),
-                        victory.m_creatureType >= CREATURE_PIKEMAN
+                        victory.m_creatureType >= CREATURE_ROSTER_BEGIN
                             && victory.m_creatureType <= CREATURE_RETAIL_RANGE_MAX
                             ? H3_AT(g_creatureTypeTraits, victory.m_creatureType).m_pluralName
                             : "",

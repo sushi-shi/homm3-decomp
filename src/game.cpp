@@ -7763,7 +7763,7 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
         }
     }
 
-    for (creature = CREATURE_PIKEMAN;
+    for (creature = CREATURE_ROSTER_BEGIN;
          creature != CREATURE_ROSTER_END; ++creature) {
         if (H3_AT(g_creatureTypeTraits, creature).m_level < minLevel
             || H3_AT(g_creatureTypeTraits, creature).m_level > maxLevel)
@@ -7772,7 +7772,7 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
 
     totalInClass = monsterOk.count();
     curCount = random(0, totalInClass - 1);
-    selectedCreature = CREATURE_PIKEMAN;
+    selectedCreature = CREATURE_ROSTER_BEGIN;
     for (;;) {
         if (H3_AT(monsterOk, selectedCreature)) {
             if (curCount == 0)
@@ -8287,7 +8287,7 @@ void game::giveArmy(armyGroup* thisMonInfo,
         }
     }
     for (int j = 0; j < 7; j++) {
-        if (thisMonInfo->m_armies[j] < CREATURE_PIKEMAN) {
+        if (thisMonInfo->m_armies[j] < CREATURE_ROSTER_BEGIN) {
             thisMonInfo->m_armies[j] = monType;
             thisMonInfo->m_numTroops[j] = monNum;
             return;
