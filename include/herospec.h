@@ -3,8 +3,9 @@
 #ifndef HOMM3_HEROSPEC_H
 #define HOMM3_HEROSPEC_H
 
-#include "secondaryskill.h"
 #include "va.h"
+
+#include "secondaryskill.h"
 
 // Five TSecondarySkill values are independently retail-proven here:
 // hero.obj's specialty factor getters each read hero::skillLevel at a fixed

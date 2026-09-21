@@ -1,9 +1,9 @@
 // 1 functions in link order.
+#include "va.h"
+
 #include <string.h>
 
 #include "basemgr.h"
-
-#include "va.h"
 // #include "basemgr.h"
 
 VA(0x0044d530, 0x45)  // dc 0x50a28

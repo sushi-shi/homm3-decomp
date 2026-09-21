@@ -1,10 +1,11 @@
+#include "va.h"
+
 #include <string.h>
 
 #include "cspriteframe.h"
 
 #include "palette.h"
 #include "pcx.h"
-#include "va.h"
 
 // The retail destructor calls the common nothrow deallocator directly;
 // this declaration keeps /GX from manufacturing an unwind frame.

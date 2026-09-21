@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <ctype.h>
 
 #include "text.h"
@@ -6,7 +8,6 @@
 #include "hiscore.h"
 #include "resourcemanager.h"
 #include "textresource.h"
-#include "va.h"
 
 // --- the resource holders and destination tables the loaders below
 // write.  Every address is read off the retail loader that stores

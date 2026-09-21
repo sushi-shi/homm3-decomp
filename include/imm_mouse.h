@@ -5,6 +5,8 @@
 #ifndef HOMM3_IMM_MOUSE_H
 #define HOMM3_IMM_MOUSE_H
 
+#include "va.h"
+
 #include <map>
 #include <memory>
 #include <stdexcept>
@@ -12,7 +14,6 @@
 #include <windows.h>
 
 #include "forcefeedback.h"
-#include "va.h"
 
 // The effect holder is the public eight-byte handle; its implementation and
 // RTTI-proven local initializer are defined in forcefeedback.cpp.

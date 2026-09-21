@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include "iconwdgt.h"
 
 #include "button.h"
@@ -8,7 +10,6 @@
 #include "palette.h"
 #include "resourcemanager.h"
 #include "terrain.h"
-#include "va.h"
 #include "window.h"
 #include "winmgr.h"
 

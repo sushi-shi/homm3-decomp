@@ -6,6 +6,8 @@
 // VideomodeChoice (5 DC rows, 0xea9b0..0xeb370) has no retail slot: the retail
 //   contribution is fully accounted for and its non-COMDAT globals would have to
 //   sit in this run -> DC-port-only class; recorded unlocated, not forced.
+#include "va.h"
+
 #include "mainmenu.h"
 
 #include "button.h"
@@ -18,7 +20,6 @@
 #include "remote.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

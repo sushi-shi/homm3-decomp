@@ -3,15 +3,12 @@
 
 #include "basemgr.h"
 #include "herospec.h"
-#include "kb.h"  // ordinary three-coordinate GetMapExtra declaration
+#include "kb.h"
 #include "mapcell.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
 #include "sskilltraits.h"
 #include "struct.h"
-// EGameResource: ExtraInfoUnion's windmill/wagon/garden arms carry
-// `EGameResource resource : N` BITFIELDS, and a bitfield's enum type
-// must be complete - a forward declaration is not enough (C2150).
 #include "town.h"
 #include "window.h"
 

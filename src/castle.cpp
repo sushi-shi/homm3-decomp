@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -10,7 +12,6 @@
 #include "terrain.h"
 #include "textresource.h"
 #include "townmgr.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

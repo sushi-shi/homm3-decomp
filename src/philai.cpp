@@ -1,3 +1,6 @@
+#include "va.h"
+#include "includes.h"
+
 #include <algorithm>
 #include <functional>
 #include <math.h>
@@ -5,16 +8,14 @@
 
 #include "philai.h"
 
-#include "advmgr.h"  // gpAdvManager + advManager::get_treasure_data, for the
-                     // adventure-object appraisals (custom item / scroll / ...)
-#include "ai_player.h"  // purchaser and AI player interfaces used in this TU
+#include "advmgr.h"
+#include "ai_player.h"
 #include "ai_spellvalue.h"
 #include "creaturetype.h"
 #include "findpath.h"
 #include "game.h"
 #include "hero.h"
 #include "hillfortwindow.h"
-#include "includes.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "mousemgr.h"
@@ -22,7 +23,6 @@
 #include "soundmgr.h"
 #include "town.h"
 #include "tradpost.h"
-#include "va.h"
 
 double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);

@@ -1,7 +1,7 @@
 // 7 functions in link order.
-#include "csequence.h"
-
 #include "va.h"
+
+#include "csequence.h"
 
 // Original: CSequence::CSequence; csequence.cpp:32, dc 0x71f14.
 CSequence::CSequence()

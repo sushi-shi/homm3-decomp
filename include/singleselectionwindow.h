@@ -1,8 +1,8 @@
 #ifndef HOMM3_SINGLESELECTIONWINDOW_H
 #define HOMM3_SINGLESELECTIONWINDOW_H
 
-// The three header lists are std::vectors of GameSelectionHeadersStruct
-// (see the member block), whose element type must be complete here.
+#include "va.h"
+
 #include <vector>
 
 #include "advmgr_popup.h"
@@ -11,7 +11,6 @@
 #include "remote.h"
 #include "rmg_request.h"
 #include "town.h"
-#include "va.h"
 
 // Devil / Arch Devil, ids fixed by army.h's Inferno-run arithmetic
 // (Demon 0x30 opens it, 0x35..0x37 close it); the wait dialog rerolls

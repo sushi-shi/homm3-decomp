@@ -1,22 +1,11 @@
+#include "va.h"
+#include "includes.h"
+
 #include <stdio.h>
 #include <string.h>
 
-// hero.h's type_artifact::get_description declarator, for the
-// blacksmith's right-click text. Set ahead of every include because
-// hero.h is reached through more than one of them and its guard makes
-// only the first inclusion count; it widens this compiland's view of
-// type_artifact by exactly one member declarator and nothing else.
-// hero.h's HeroView declarator, for DoCommand's view-hero arm. Set here
-// with the artifact gate and for the same reason: hero.h is reached
-// through more than one include below and its guard makes only the
-// first inclusion count.
-// Opens town.h's SetSummoningGenerator declarator for TCastleWindow's
-// constructor, and only for it: town.cpp never defines this.
 #include "townmgr.h"
 
-// advspells.obj's TeleportTo declarator, for the MoveHero that
-// DoTownGate expands inline. Gated so no other includer of advmgr.h
-// widens; measured free on this compiland (1121/1504 unmoved).
 #include "advmgr.h"
 #include "bitmap816.h"
 #include "border.h"
@@ -24,12 +13,10 @@
 #include "button.h"
 #include "castle.h"
 #include "creaturetype.h"
-// gpExecutive: TCastleWindow::Recruit needs the global.
 #include "exec.h"
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
-#include "includes.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -47,20 +34,10 @@
 #include "strip.h"
 #include "textresource.h"
 #include "textwdgt.h"
-// town.h's mage-guild slice: SetupMage reads the spell grid at +0x44 and
-// the per-level counts at +0xbc.
-// town::get_location, for the type_point DoTownGate hands TeleportTo.
 #include "town.h"
 #include "towngatewindow.h"
-// DoMarketplace / DoArtifactMerchants / DoFreelancersGuild, for Main's
-// marketplace and special-building arms.
 #include "tradpost.h"
-// Opens university_window.h's layout tail and constructor declarator for
-// DoUniversity, which puts one of these windows on the STACK and so needs
-// its real size and its implicit destructor. Gated so the two TUs that
-// already include that header keep the narrow view they are measured on.
 #include "university_window.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

@@ -1,9 +1,9 @@
+#include "va.h"
+
 #include <stdlib.h>
 #include <string.h>
 
 #include "lodfile.h"
-
-#include "va.h"
 
 VA(0x004fa590, 0x77)  // dc 0xe908c
 void LODFile::clear()

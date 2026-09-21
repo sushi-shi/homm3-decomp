@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <stdio.h>
 
 #include "scenarioinfo.h"
@@ -20,7 +22,6 @@
 #include "textresource.h"
 #include "textscroller.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"

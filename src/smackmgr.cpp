@@ -4,6 +4,8 @@
 // Smacker handles (video and audio-only tracks); Bink's parallel state
 // belongs to the binkmanager.cpp namespace.
 // The vendored RAD headers own the Smacker and Bink import interfaces.
+#include "va.h"
+
 #include <ddraw.h>
 #include <string>
 #include <string.h>
@@ -21,7 +23,6 @@
 #include "soundmgr.h"
 #include "terrain.h"
 #include "textresource.h"
-#include "va.h"
 #include "wingraph.h"
 #include "winmgr.h"
 

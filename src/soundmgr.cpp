@@ -1,12 +1,11 @@
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
 
 #include "soundmgr.h"
 
-// SetMusicVolume's three cross-TU views: the combat manager's status
-// (which selects combat music), the adventure manager's terrain field,
-// and Random.
 #include "advmgr.h"
 #include "cmbtmgr.h"
 #include "kb.h"
@@ -15,7 +14,6 @@
 #include "sample.h"
 #include "smackmgr.h"
 #include "terrain.h"
-#include "va.h"
 
 // Number of live asynchronous sample waiters. WaitEndSampleThread increments
 // and decrements this counter; Close gives them up to one second to drain.

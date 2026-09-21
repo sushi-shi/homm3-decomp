@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <algorithm>
 #include <string.h>
 #include <vector>
@@ -18,7 +20,6 @@
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

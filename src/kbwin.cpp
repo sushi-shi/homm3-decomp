@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +16,6 @@
 #include "smackmgr.h"
 #include "soundmgr.h"
 #include "terrain.h"
-#include "va.h"
 #include "wingraph.h"
 #include "winmgr.h"
 

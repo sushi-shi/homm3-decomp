@@ -14,6 +14,8 @@
 // down to the register: the same TResourcePtr guard, the same
 // TAutoArrayPtr<char> function-local static with its atexit wrapper eight
 // bytes past its own guard byte, the same measure-then-copy pair of passes.
+#include "va.h"
+
 #include <string.h>
 
 #include "campaignmusic.h"
@@ -21,7 +23,6 @@
 #include "ownership.h"
 #include "resourcemanager.h"
 #include "textresource.h"
-#include "va.h"
 
 VA(0x0045e250, 0x160)
 unsigned char initializeCampaignMusicTable()

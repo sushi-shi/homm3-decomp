@@ -1,8 +1,9 @@
 #ifndef HOMM3_ADVSPELLS_H
 #define HOMM3_ADVSPELLS_H
 
-#include "struct.h"
 #include "va.h"
+
+#include "struct.h"
 
 // Retail .data 0x691250, the adventure map's on-screen viewport rectangle -
 // ONE SLimitData, not four loose ints. Its dynamic initialiser at 0x405db0

@@ -1,12 +1,13 @@
 #ifndef HOMM3_ARMYGRP_H
 #define HOMM3_ARMYGRP_H
 
+#include "va.h"
+
 #include "abstractfile.h"
 #include "artifact_type.h"
-#include "spellschool.h"  // TSpellSchool, the type of SSpellTraits::school
-#include "struct.h"    // type_point, used through this header's consumers
-#include "terrain_type.h"  // TTerrainType, for akNativeTerrains below
-#include "va.h"
+#include "spellschool.h"
+#include "struct.h"
+#include "terrain_type.h"
 
 namespace std {
 template<class T> class allocator;

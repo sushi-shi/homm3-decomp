@@ -1,3 +1,6 @@
+#include "va.h"
+#include "includes.h"
+
 #include <algorithm>
 #include <bitset>
 #include <stdlib.h>
@@ -15,7 +18,6 @@
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
-#include "includes.h"
 #include "kb.h"
 #include "message.h"
 #include "misc.h"
@@ -24,7 +26,6 @@
 #include "textwdgt.h"
 #include "town.h"
 #include "townmgr.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

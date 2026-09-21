@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <algorithm>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +12,7 @@
 #include "events.h"
 #include "exec.h"
 #include "game.h"
-#include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
+#include "herospec.h"
 #include "kb.h"
 #include "mapcell.h"
 #include "misc.h"
@@ -19,7 +21,6 @@
 #include "terrain.h"
 #include "textresource.h"
 #include "townmgr.h"
-#include "va.h"
 
 // Narrow town.obj-only globals reached by town::View. Their owning
 // compilands remain outside the admitted surface.

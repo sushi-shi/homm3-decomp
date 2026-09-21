@@ -19,6 +19,8 @@
 // adapters at 0x483f10/0x483f30 and crossover-hero functions. The generated
 // DC-anchor map brackets this whole Complete addition between cursor and
 // customcampaign; the body/vtable/callback evidence above resolves it.
+#include "va.h"
+
 #include <algorithm>
 #include <direct.h>
 #include <io.h>
@@ -36,7 +38,6 @@
 #include "slider.h"
 #include "textscroller.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "winmgr.h"
 
 static int customCampaignBeginHandler(message& msg);

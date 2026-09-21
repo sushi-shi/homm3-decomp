@@ -1,3 +1,6 @@
+#include "va.h"
+#include "bitset_iterator.h"
+
 #include <ctype.h>
 #include <direct.h>
 #include <fcntl.h>
@@ -14,19 +17,11 @@
 #include "advmgr.h"
 #include "advmgr_objects.h"
 #include "bitmap816.h"
-#include "bitset_iterator.h"
 #include "creature_bank.h"
 #include "creaturetype.h"
 #include "cursor.h"
 #include "diff.h"
-// playerData::ClearNetInfo and GetName read the default player name from
-// the canonical genrltxt.txt TTextResource;
-// playerData::AssignNetInfo reads a CNetPlayerInfo.
 #include "exec.h"
-// StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
-// with Random and hand the name to soundManager::StartMP3;
-// game::SetMapSize (0x4ccef0) writes findpath's two map-extent globals
-// and closes the global search array.
 #include "findpath.h"
 #include "gamecontext.h"
 #include "herospec.h"
@@ -38,13 +33,6 @@
 #include "misc.h"
 #include "mousemgr.h"
 #include "multiplayerwindow_globals.h"
-// game::GetLocalPlayer / GetLocalPlayerGamePos / IsMultiplayer branch
-// on the protocol selector; IsMultiplayer also reads 0x69954c, which
-// kbwin.h declares as `bVideoPaused` and kbwin.obj DATA-claims. The
-// name is contradicted there and the storage is right - the same
-// finding recruit.obj recorded - so the call site keeps the declared
-// name and this TU includes the owner's header rather than
-// re-declaring it.
 #include "netgame.h"
 #include "netplayer.h"
 #include "puzzlewindow.h"
@@ -62,7 +50,6 @@
 #include "timer.h"
 #include "townmgr_globals.h"
 #include "turn_update_msg.h"
-#include "va.h"
 #include "viewarmywindow.h"
 #include "winfile.h"
 #include "winmgr.h"

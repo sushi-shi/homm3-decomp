@@ -1,17 +1,18 @@
-#include <string.h>   // GetBinkFilePtr's inline strcpy/strcat/_strcmpi
+#include "va.h"
+
+#include <string.h>
 
 #include "binkmanager.h"
 
-#include "bitmap16.h"   // screenBitmap map/Pitch/Height
-#include "inputmgr.h"   // gpInputManager, KEYCODE_F4
-#include "kbwin.h"      // PollSound / Process1WindowsMessage
+#include "bitmap16.h"
+#include "inputmgr.h"
+#include "kbwin.h"
 #include "message.h"
-#include "mousemgr.h"   // gpMouseManager
-#include "prefs.h"      // gUnnamed698758.soundVolume
-#include "smackmgr.h"   // gVideoDescriptors, VideoDrawRects, VideoClose
-#include "soundmgr.h"   // gpSoundManager->serviceSounds
-#include "va.h"
-#include "wingraph.h"   // gpDDSBack
+#include "mousemgr.h"
+#include "prefs.h"
+#include "smackmgr.h"
+#include "soundmgr.h"
+#include "wingraph.h"
 #include "winmgr.h"
 
 // Dreamcast publishes this exact name and the old 112-byte SDK type. Retail

@@ -2,9 +2,9 @@
 #ifndef HOMM3_STRUCT_H
 #define HOMM3_STRUCT_H
 
-#include <string.h>
-
 #include "va.h"
+
+#include <string.h>
 
 class heroWindow;
 

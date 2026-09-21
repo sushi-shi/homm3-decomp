@@ -1,3 +1,6 @@
+#include "va.h"
+#include "includes.h"
+
 #include <algorithm>
 #include <stdio.h>
 #include <string.h>
@@ -6,10 +9,6 @@
 
 #include "advmgr.h"
 #include "advmgr_objects.h"
-// DoCombat needs the full combatManager type (SetupCombat and the
-// result/raised-creature fields); added 2026-08-27 with the DoCombat
-// reconstruction and measured through the ratchet like every other
-// include-closure change.
 #include "cmbtmgr.h"
 #include "command.h"
 #include "creature_bank.h"
@@ -18,7 +17,6 @@
 #include "exec.h"
 #include "game.h"
 #include "hillfortwindow.h"
-#include "includes.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
@@ -35,7 +33,6 @@
 #include "townmgr.h"
 #include "tradpost.h"
 #include "university_window.h"
-#include "va.h"
 #include "winmgr.h"
 
 // Complete sends the raw primary-skill bytes in DoCombat's level update;

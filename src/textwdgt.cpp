@@ -1,13 +1,14 @@
+#include "va.h"
+#include "includes.h"
+
 #include "textwdgt.h"
 
 #include "bitmap16.h"
 #include "bitmap816.h"
 #include "csprite.h"
-#include "includes.h"
 #include "message.h"
 #include "recruit.h"
 #include "resourcemanager.h"
-#include "va.h"
 #include "window.h"
 #include "winmgr.h"
 

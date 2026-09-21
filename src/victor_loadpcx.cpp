@@ -1,10 +1,11 @@
 // Reconstructed Victor PCX loader. The original library object name is
 // unknown. Retail retains all helper calls, so this provisional caller
 // unit uses canonical declarations without exposing their implementations.
+#include "va.h"
+
 #include <stdlib.h>
 #include <string.h>
 
-#include "va.h"
 #include "victor.h"
 
 // Retail RGB triples and per-decoding-mode scratch-row multipliers.

@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <limits>
 #include <math.h>
 #include <string.h>
@@ -7,7 +9,6 @@
 #include "bitmap816.h"
 #include "hsv.h"
 #include "pcx.h"
-#include "va.h"
 
 // Retail's destructor is frameless under /GX, proving that this TU saw the
 // deallocator as nothrow (the same header contract established by sample.obj).

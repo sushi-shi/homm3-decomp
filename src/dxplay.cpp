@@ -15,11 +15,12 @@
 // rows are proven by their dual base+derived vtable stores.
 // dxplay.cpp is the DirectPlay TU: it sees the complete DP6 value structures and
 // the lobby non-virtual member set, exactly as retail did.
+#include "va.h"
+
 #include "dxplay.h"
 
 #include "dxplay_com.h"
 #include "exceptions.h"
-#include "va.h"
 
 // VC6's <new> declares `operator delete` WITHOUT an exception specification,
 // so under /GX every explicit `::operator delete` becomes a throw point and

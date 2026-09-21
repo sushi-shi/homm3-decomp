@@ -1,9 +1,9 @@
 #ifndef HOMM3_SMACKMGR_H
 #define HOMM3_SMACKMGR_H
 
-#include <SMACK.H>
-
 #include "va.h"
+
+#include <SMACK.H>
 
 // DC CodeView independently proves the complete SDK record extent; retail
 // consumes Width, Height, Frames, FrameNum and the LastRect quartet.

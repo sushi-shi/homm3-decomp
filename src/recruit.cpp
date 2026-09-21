@@ -1,3 +1,6 @@
+#include "va.h"
+#include "includes.h"
+
 #include <stdio.h>
 #include <xutility>
 
@@ -7,26 +10,12 @@
 #include "armygrp.h"
 #include "artifact.h"
 #include "border.h"
-// Appended AFTER the original set on purpose: recruit.obj is knife-edge
-// on C1XX symbol-handle position, and appending leaves every handle the
-// old include stream numbered alone.
-// button.h and border.h joined textwdgt.h 2026-08-14, on the same
-// standard and with the same kind of evidence, to buy back the handle
-// position ONE forward declaration in townmgr.h costs (see the +0x1b0
-// note there - the shift is name-independent, and two definitions here
-// absorb it: 0 -> 88.24, 1 -> 88.24, 2 -> 90.84, 3 -> 90.84). The
-// supply is honest by the image's own call edges: TRecruitWindow's
-// constructor 0x54e850, the unreconstructed row in this compiland,
-// calls the `button` constructor three times, `bitmapBorder` five and
-// `coloredBorderFrame` four - alongside the eleven `textWidget`s that
-// justified textwdgt.h.
 #include "button.h"
 #include "creaturetype.h"
 #include "exec.h"
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
-#include "includes.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "message.h"
@@ -37,7 +26,6 @@
 #include "textntry.h"
 #include "textwdgt.h"
 #include "townmgr.h"
-#include "va.h"
 #include "viewarmywindow.h"
 #include "widget.h"
 #include "winmgr.h"

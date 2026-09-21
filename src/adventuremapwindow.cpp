@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <stdio.h>
 
 #include "adventuremapwindow.h"
@@ -24,7 +26,6 @@
 #include "textwdgt.h"
 #include "town.h"
 #include "townmgr_globals.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

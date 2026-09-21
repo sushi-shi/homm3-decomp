@@ -1,6 +1,8 @@
 // Both DC command routines below retain army::GetName as the source boundary,
 // while the original CreatureType.h body supplies its nested GetArmyName
 // expansion.  Omitting that header-inline body loses 16 retail CFG blocks.
+#include "va.h"
+
 #include "command.h"
 
 #include "cmbtmgr.h"
@@ -13,7 +15,7 @@
 #include "findpath.h"
 #include "game.h"
 #include "hero.h"
-#include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
+#include "herospec.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -23,7 +25,6 @@
 #include "remote.h"
 #include "soundmgr.h"
 #include "textresource.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

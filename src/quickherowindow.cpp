@@ -1,3 +1,6 @@
+#include "va.h"
+#include "includes.h"
+
 #include <stdio.h>
 #include <string>
 #include <strstream>
@@ -10,11 +13,9 @@
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
-#include "includes.h"
 #include "kb.h"
 #include "misc.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

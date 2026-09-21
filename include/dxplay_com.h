@@ -1,7 +1,6 @@
 #ifndef HOMM3_DXPLAY_COM_H
 #define HOMM3_DXPLAY_COM_H
-// Private to dxplay.cpp - NOT included by any other TU. Models the DirectPlay
-// COM interface so retail's __stdcall virtual dispatch reproduces byte-for-byte.
+
 #include "dplaycaps.h"
 #include "dxplay.h"
 

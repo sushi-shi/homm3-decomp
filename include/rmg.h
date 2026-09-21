@@ -2,13 +2,14 @@
 #ifndef HOMM3_RMG_H
 #define HOMM3_RMG_H
 
+#include "va.h"
+
 #include <bitset>
 #include <string>
 #include <vector>
 
 #include "advmgr_objects.h"
 #include "terrain_type.h"
-#include "va.h"
 
 class TAbstractFile;
 class TSpreadsheetResource;

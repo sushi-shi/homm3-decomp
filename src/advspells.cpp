@@ -1,3 +1,6 @@
+#include "va.h"
+#include "includes.h"
+
 #include <limits>
 
 #include "advspells.h"
@@ -9,14 +12,12 @@
 #include "exec.h"
 #include "findpath.h"
 #include "game.h"
-#include "includes.h"
 #include "kb.h"
 #include "misc.h"
 #include "mousemgr.h"
 #include "soundmgr.h"
 #include "spellbookwindow.h"
 #include "towngatewindow.h"
-#include "va.h"
 #include "winmgr.h"
 
 VA(0x0041c2f0, 0x192)  // dc 0x2194c

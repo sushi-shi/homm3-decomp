@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <string.h>
 
 #include "campaignwindow.h"
@@ -12,7 +14,6 @@
 #include "smackmgr.h"
 #include "soundmgr.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

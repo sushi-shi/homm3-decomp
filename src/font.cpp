@@ -1,10 +1,11 @@
 // 18 functions in link order.
+#include "va.h"
+
 #include <string.h>
 
 #include "font.h"
 
 #include "bitmap16.h"
-#include "va.h"
 
 // The sample.obj lever (src/sample.cpp), needed here for the opposite
 // reason: with the palette a real member, a THROWING `delete data` forces

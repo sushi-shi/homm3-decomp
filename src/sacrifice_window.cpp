@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include "sacrifice_window.h"
 
 #include "border.h"
@@ -14,7 +16,6 @@
 #include "soundmgr.h"
 #include "spellbookwindow.h"
 #include "textresource.h"
-#include "va.h"
 #include "viewarmywindow.h"
 #include "winmgr.h"
 

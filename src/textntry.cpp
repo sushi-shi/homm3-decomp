@@ -1,4 +1,6 @@
 // 21 functions in link order.
+#include "va.h"
+
 #include <string.h>
 
 #include "textntry.h"
@@ -10,7 +12,6 @@
 #include "kbwin.h"
 #include "message.h"
 #include "resourcemanager.h"
-#include "va.h"
 #include "window.h"
 #include "winmgr.h"
 

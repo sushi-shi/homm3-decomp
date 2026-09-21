@@ -13,12 +13,12 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 **Function exact MAX** — 4,238 / 4,766 current implementations (88.9%) have reached 100%.
 
-**CUR diagnostics** — 4,172 / 4,766 functions exact (87.5%) in this build (4766 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
+**CUR diagnostics** — 4,171 / 4,766 functions exact (87.5%) in this build (4766 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
 
 | Module       | Units | Functions exact CUR |  Function exact MAX | Fuzzy CUR | Fuzzy MAX |
 | :----------- | ----: | ------------------: | ------------------: | --------: | --------: |
 | `game`       |   127 | 3770 / 4269 (88.3%) | 3826 / 4269 (89.6%) |    96.76% |    97.10% |
-| `rmg`        |     3 |   293 / 368 (79.6%) |   303 / 368 (82.3%) |    93.54% |    95.03% |
+| `rmg`        |     3 |   292 / 368 (79.3%) |   303 / 368 (82.3%) |    93.54% |    95.03% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
 | `codec`      |     4 |     35 / 43 (81.4%) |     35 / 43 (81.4%) |    94.70% |    94.70% |
 | `victor`     |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |

@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <map>
 #include <memory>
 #include <sstream>
@@ -27,7 +29,6 @@
 #include "sample.h"
 #include "smackmgr.h"
 #include "textresource.h"
-#include "va.h"
 
 class LODFile;
 

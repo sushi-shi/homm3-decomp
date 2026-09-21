@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "army.h"
-#include "armygrp.h"   // SpellID, for the two spells.obj leaves below
+#include "armygrp.h"
 #include "basemgr.h"
 #include "hexcell.h"
 #include "struct.h"

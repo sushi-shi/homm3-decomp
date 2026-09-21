@@ -1,8 +1,9 @@
 #ifndef HOMM3_CAMPAIGNMAP_H
 #define HOMM3_CAMPAIGNMAP_H
 
-#include "ownership.h"
 #include "va.h"
+
+#include "ownership.h"
 
 // Retail Complete layout, proved by InitializeCampaignMapTraitsTable's
 // 0x10 campaign stride and 0x6c region stride. Dreamcast attests the six

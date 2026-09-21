@@ -1,3 +1,6 @@
+#include "va.h"
+#include "homm3_minmax.h"
+
 #include "combatcontrolsubwindow.h"
 
 #include "border.h"
@@ -5,13 +8,11 @@
 #include "cmbtmgr.h"
 #include "combatwindow.h"
 #include "game.h"
-#include "homm3_minmax.h"
 #include "iconwdgt.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"

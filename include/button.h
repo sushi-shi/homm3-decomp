@@ -3,6 +3,8 @@
 #ifndef HOMM3_BUTTON_H
 #define HOMM3_BUTTON_H
 
+#include "va.h"
+
 #include <string>
 #include <string.h>
 #include <vector>
@@ -10,7 +12,6 @@
 #include "csprite.h"
 #include "font.h"
 #include "resource.h"
-#include "va.h"
 #include "widget.h"
 
 // Player-color palette targets. Both overloads of the free

@@ -540,7 +540,7 @@ army	?computeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x
 army	?considerAttack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	tokens1:a8462e6eb3e6
 army	?cure@army@@QAEXHHPBVhero@@@Z	89.9485	100.0000	100.0000	0x46500	tokens1:6174ba90ca07
 army	?damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090	tokens1:b47dff9d1b34
-army	?doAttack@army@@QAEEPAV1@H@Z	99.9424	99.9424	99.9962	0x41610	tokens1:e26696b60b6f
+army	?doAttack@army@@QAEEPAV1@H@Z	99.9040	99.9424	99.9962	0x41610	tokens1:e26696b60b6f
 army	?doAttack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	tokens1:687b92b5ea7f
 army	?doFireShield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	tokens1:e29378ace4f0
 army	?doMultiHeadAttack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	tokens1:4743d5c367fc
@@ -2242,7 +2242,7 @@ hero	?getStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?getStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110	tokens1:4b11cd54c3cc
 hero	?getSurrenderCostFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe4580	tokens1:a7b572659fd1
 hero	?getVisibility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4070	tokens1:498f41cfaf60
-hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	79.7247	79.8138	79.8138	0xe3070	tokens1:085b54a23ec5
+hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	79.8138	79.8138	79.8138	0xe3070	tokens1:085b54a23ec5
 hero	?giveExperience@hero@@QAEHHHE@Z	97.6632	100.0000	100.0000	0xe33b0	tokens1:bc5f334e06d8
 hero	?giveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	tokens1:7cfba9aeace3
 hero	?giveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	tokens1:b7eb1dec2edc
@@ -3330,7 +3330,7 @@ rmg	?connectZones@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0
 rmg	?copy@std@@YIPAHPAH00@Z	100.0000	100.0000	100.0000	0x1093c0	-
 rmg	?copy@std@@YIPAHPBH0PAH@Z	100.0000	100.0000	100.0000	0x14df40	-
 rmg	?copy@std@@YIPAUTRmgMapPosition@@PAU2@00@Z	100.0000	100.0000	100.0000	0x14d9e0	-
-rmg	?copy_backward@std@@YIPAUTRmgObjectPlacementRule@@PAU2@00@Z	100.0000	100.0000	100.0000	0x14dbc0	-
+rmg	?copy_backward@std@@YIPAUTRmgObjectPlacementRule@@PAU2@00@Z	99.8750	100.0000	100.0000	0x14dbc0	-
 rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	80.6476	81.8175	81.8175	0x141140	tokens1:fbcb8cb2f93f
 rmg	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x140b20	tokens1:688fb984af00
 rmg	?createMonolithConnection@type_random_map_generator@@QAEXPAUTRmgZone@@PAUTRmgZoneConnection@@H@Z	89.1945	91.9027	91.9027	0x142ce0	tokens1:fcc50a4a6715
@@ -3501,7 +3501,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:9ffb396c8413
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	tokens1:f84e27622dc7
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:d414eb83c2cc
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6792	95.6792	95.7066	0x149cb0	tokens1:65047c18cd7d
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6721	95.6792	95.7066	0x149cb0	tokens1:65047c18cd7d
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:c9c09a93db3c
 rmg	__h3cg$rmg$list_dtor$TPoint	0.0000	100.0000	100.0000	0x14c6a0	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-

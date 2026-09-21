@@ -1,34 +1,11 @@
 #ifndef HOMM3_ARTIFACT_H
 #define HOMM3_ARTIFACT_H
 
+#include "va.h"
+
 #include <bitset>
 
-// The artifact-id domain. Added 2026-08-08 with its first consumer,
-// recruit.obj's siege_artifact_to_creature (0x550360) - only the four
-// war machines its jump table covers are listed; grow the roster per
-// consumer, as TCreatureType and ESpellId are grown. Values are
-// byte-proven by that switch (`lea eax,[ecx-3]` over four dense
-// cases); the names are the Dreamcast TArtifact enumerators
-// (eArtifactCatapult 3, eArtifactBallista 4, eArtifactAmmoCart 5,
-// eArtifactFirstAidTent 6 in NB11 enum records) respelled
-// to this tree's convention.
-// Corroborated 2026-08-08 from a second side: hero.obj's two artifact
-// tallies (get_equipped_artifacts 0x4d9070, get_number_in_backpack
-// 0x4d90c0) both skip exactly the four consecutive ids 3,4,5,6 as the
-// war machine block, independently of recruit's jump table.
-// Grown 2026-08-08 for hero.obj's bonus getters, which are nothing but
-// IsWieldingArtifact gates. Each block below carries its own retail
-// witness; every DC spelling comes from NB11 enum records.
-// PLACEMENT NOTE: armygrp.h carries a SECOND artifact roster
-// (EArtifactId, the combat-side gates). These ids went here, into the
-// artifact domain's own owner header, rather than there - armygrp.h is
-// inside initialize.cpp's include closure through town.h, and putting
-// them in EArtifactId measurably moved initialize_game_data 96.09 ->
-// 94.07 through the include-set sensitivity class with no semantic
-// change. artifact.h is not in that closure. Unifying the two rosters
-// is a separate, measured decision.
 #include "artifact_type.h"
-#include "va.h"
 
 // Dreamcast's public wearable-position type. Complete adds a nineteenth
 // equipped position, but retains the same dword parameter ABI and may pass

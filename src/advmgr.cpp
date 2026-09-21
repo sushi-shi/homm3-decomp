@@ -3,6 +3,10 @@
 // no standalone retail body because VC6 expands their calls. Their canonical
 // definitions remain in this TU and are included in the source inventory.
 // Platform/interface retirements are recorded by exact identity in dc_only.tsv.
+#include "va.h"
+#include "includes.h"
+#include "homm3_limit.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -22,8 +26,6 @@
 #include "findpath.h"
 #include "game.h"
 #include "herospec.h"
-#include "homm3_limit.h"
-#include "includes.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -46,7 +48,6 @@
 #include "textntry.h"
 #include "townmgr.h"
 #include "university_window.h"
-#include "va.h"
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"

@@ -5,10 +5,11 @@
 // expands all seven boundaries and scores 0%. The palette initializer needs
 // /Ob2 with its upload helper visible, so that proven pair stays together.
 // This unit keeps canonical shared declarations and ordinary helper calls.
+#include "va.h"
+
 #include <stdlib.h>
 #include <string.h>
 
-#include "va.h"
 #include "victor.h"
 
 // Public Victor vertical region flip. Retail reads paired rows through a

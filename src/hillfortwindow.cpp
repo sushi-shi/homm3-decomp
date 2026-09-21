@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -17,7 +19,6 @@
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "viewarmywindow.h"
 #include "widget.h"
 #include "winmgr.h"

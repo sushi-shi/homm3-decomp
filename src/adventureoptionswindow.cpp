@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include "adventureoptionswindow.h"
 
 #include "border.h"
@@ -8,7 +10,6 @@
 #include "mousemgr.h"
 #include "soundmgr.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

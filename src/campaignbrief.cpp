@@ -1,7 +1,7 @@
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
-
-#include "va.h"
 class message;
 static int campaignBriefHandler(message& msg);
 #include "campaignbrief.h"

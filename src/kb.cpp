@@ -1,3 +1,6 @@
+#include "va.h"
+#include "homm3_minmax.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,11 +32,6 @@
 #include "game.h"
 #include "gametypewindow.h"
 #include "hiscore.h"
-// E:\gamedcs\includes.h:97,114. Dreamcast retains calls to these two
-// by-value wrappers from type_dialog_icon::set. Retail expands them and
-// selects an operand address before loading the result, proving the nested
-// reference-returning VC6 helper rather than a plain ternary or Win32 macro.
-#include "homm3_minmax.h"
 #include "iconwdgt.h"
 #include "inputmgr.h"
 #include "kbwin.h"
@@ -47,7 +45,7 @@
 #include "prefs.h"
 #include "remote.h"
 #include "resourcemanager.h"
-#include "sample.h"    // TResourceHandle<sample>::~TResourceHandle calls resource::Dispose
+#include "sample.h"
 #include "savegame.h"
 #include "seerhut.h"
 #include "singleselectionwindow.h"
@@ -59,10 +57,7 @@
 #include "textscroller.h"
 #include "textwdgt.h"
 #include "timer.h"
-// GameUnsaved polls the town manager's baseManager status, so kb.obj is
-// one of the consumers that needs townmgr.h's guarded class prefix.
 #include "townmgr.h"
-#include "va.h"
 #include "wingraph.h"
 #include "winmgr.h"
 

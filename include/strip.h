@@ -1,8 +1,9 @@
 #ifndef HOMM3_STRIP_H
 #define HOMM3_STRIP_H
 
-#include "armygrp.h"
 #include "va.h"
+
+#include "armygrp.h"
 
 class hero;
 class heroWindow;

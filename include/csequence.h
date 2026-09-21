@@ -1,8 +1,9 @@
 #ifndef HOMM3_CSEQUENCE_H
 #define HOMM3_CSEQUENCE_H
 
-#include "cspriteframe.h"
 #include "va.h"
+
+#include "cspriteframe.h"
 
 class CSprite;
 class CSpriteFrame;

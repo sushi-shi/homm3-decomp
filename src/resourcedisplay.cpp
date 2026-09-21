@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <stdio.h>
 
 #include "resourcedisplay.h"
@@ -8,7 +10,6 @@
 #include "kb.h"
 #include "textwdgt.h"
 #include "town.h"
-#include "va.h"
 #include "window.h"
 
 // Retail .rdata 0x641008, immediately before this class's vtable.

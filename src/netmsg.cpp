@@ -16,6 +16,8 @@
 // eight ~95-byte initializers at 0x5126e0..0x512a70, and the same run
 // again at 0x512ec0..0x513250). Those are the excluded initializer class
 // and are not claimed.
+#include "va.h"
+
 #include <string.h>
 
 #include "netmsg.h"
@@ -23,7 +25,6 @@
 #include "abstractfile.h"
 #include "remote.h"
 #include "remotedlg.h"
-#include "va.h"
 
 // Complete adds this module-local memory stream to the wire-message bridge.
 // The class name is provisional. Retail vtable 0x640264 proves the three

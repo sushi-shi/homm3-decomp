@@ -1,9 +1,9 @@
 #ifndef HOMM3_WINGRAPH_H
 #define HOMM3_WINGRAPH_H
 
-#include <ddraw.h>
-
 #include "va.h"
+
+#include <ddraw.h>
 
 // E:\gamedcs\WinGraph.h:55.  Dreamcast keeps this header helper out of
 // line, and its xref graph proves calls from mousemgr, spells, and wingraph.

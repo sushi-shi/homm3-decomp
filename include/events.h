@@ -1,8 +1,9 @@
 #ifndef HOMM3_EVENTS_H
 #define HOMM3_EVENTS_H
 
-#include "armygrp.h"  // SpellID, used by spell_level_order
 #include "va.h"
+
+#include "armygrp.h"
 
 class garrison;
 class hero;

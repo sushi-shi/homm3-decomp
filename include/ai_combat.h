@@ -1,11 +1,12 @@
 #ifndef HOMM3_AI_COMBAT_H
 #define HOMM3_AI_COMBAT_H
 
+#include "va.h"
+
 #include <vector>
 
 #include "ai_tactical.h"
 #include "armygrp.h"
-#include "va.h"
 
 class hero;
 class town;

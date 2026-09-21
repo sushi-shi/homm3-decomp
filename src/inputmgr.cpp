@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <string.h>
 
 #include "inputmgr.h"
@@ -8,7 +10,6 @@
 #include "mousemgr.h"
 #include "soundmgr.h"
 #include "textntry.h"
-#include "va.h"
 #include "winmgr.h"
 
 VA(0x004ec0e0, 0x1AB)  // dc 0xdc894

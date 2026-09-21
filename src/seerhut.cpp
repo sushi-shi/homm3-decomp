@@ -1,3 +1,6 @@
+#include "va.h"
+#include "includes.h"
+
 #include <algorithm>
 #include <ctype.h>
 #include <stdlib.h>
@@ -8,17 +11,13 @@
 #include "advmgr.h"
 #include "ai_player.h"
 #include "creaturetype.h"
-// game.h for game::GetHero, which two of the slot-7 descriptions below
-// name their hero through.
 #include "game.h"
 #include "hero.h"
-#include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
-#include "includes.h"
+#include "herospec.h"
 #include "quest.h"
 #include "resourcemanager.h"
 #include "seerhuttext.h"
 #include "textresource.h"
-#include "va.h"
 #include "winmgr.h"
 
 void aiEquipArtifacts(hero* currentHero);

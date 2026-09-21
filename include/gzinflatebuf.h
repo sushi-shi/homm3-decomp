@@ -5,10 +5,10 @@
 #ifndef HOMM3_GZINFLATEBUF_H
 #define HOMM3_GZINFLATEBUF_H
 
+#include "va.h"
+
 #include <streambuf>
 #include <zlib.h>
-
-#include "va.h"
 
 // A std::streambuf that inflates a gzip member out of another streambuf.
 // LAYOUT BYTE-PROVEN by the constructor 0x4d6050 and destructor 0x4d6820:

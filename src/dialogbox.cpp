@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include "dialogbox.h"
 
 #include "border.h"
@@ -6,7 +8,6 @@
 #include "kb.h"
 #include "message.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

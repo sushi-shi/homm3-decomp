@@ -1,5 +1,6 @@
+#include "va.h"
+
 #include <algorithm>
-// Module-local dialogs, network messages and header-transfer jobs.
 #include <bitset>
 #include <direct.h>
 #include <io.h>
@@ -9,23 +10,10 @@
 
 #include "singleselectionwindow.h"
 
-// The TurnChatOn/TurnChatOff widget runs are widget::show()/hide()
-// expansions (DC calls the Widget.h pair out of line; retail expands
-// them - the seven candidate sites are ALSO what starves the /Ob2
-// collector so basic_string::_Grow/_Eos stay retail's out-of-line
-// calls in both functions).
-// UpdatePlayerPositions reaches SetupFirstPlayer and the new-map bonus
-// array, both scoped behind game.h's new-map view gate.
 #include "advmgr.h"
 #include "armygrp.h"
-// Update draws the scenario rows: the three icon strips are CSprite
-// draws and the columns render through the shared font cells;
-// DrawHeroAdvancedOption blits the flag/portrait plates.
 #include "bitmap816.h"
 #include "border.h"
-// TurnChatOn/TurnChatOff relabel chatToggle through textButton's
-// inherited header-inline SetText (retail expands the std::string
-// assign in place, calling only _Grow/_Eos - the button.h shape).
 #include "button.h"
 #include "campaignbrief.h"
 #include "crt_process.h"
@@ -59,7 +47,6 @@
 #include "textscroller.h"
 #include "textwdgt.h"
 #include "u2dvers.h"
-#include "va.h"
 #include "winmgr.h"
 
 // The host-wait animated dialog. CAnimatedDlg base is 0x78; handle_message

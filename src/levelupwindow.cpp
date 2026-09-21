@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <stdio.h>
 
 #include "levelupwindow.h"
@@ -17,7 +19,6 @@
 #include "soundmgr.h"
 #include "sskilltraits.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

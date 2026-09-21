@@ -1,9 +1,9 @@
 #ifndef HOMM3_SUBWINDOW_H
 #define HOMM3_SUBWINDOW_H
 
-#include <vector>
-
 #include "va.h"
+
+#include <vector>
 
 class Bitmap16Bit;
 class heroWindow;

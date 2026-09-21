@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <fcntl.h>
 #include <io.h>
 #include <stdio.h>
@@ -22,7 +24,6 @@
 #include "textntry.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "winmgr.h"
 
 // The file-name pointer and the threshold/creature pairs are both

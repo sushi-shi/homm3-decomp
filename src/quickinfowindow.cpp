@@ -1,4 +1,6 @@
 // 4 functions in link order.
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -9,7 +11,6 @@
 #include "iconwdgt.h"
 #include "kb.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "winmgr.h"
 
 VA(0x0052f8c0, 0x430)  // dc 0x11787c

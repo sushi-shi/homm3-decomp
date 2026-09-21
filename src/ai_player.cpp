@@ -3,6 +3,9 @@
 // town.h for why the inline's visibility is scoped.
 // find_all_destinations' grail-spot tail expands the canonical game::getCell
 // wrapper and naturally retains its nested NewfullMap::cell call.
+#include "va.h"
+#include "includes.h"
+
 #include <algorithm>
 #include <functional>
 #include <math.h>
@@ -18,7 +21,6 @@
 #include "findpath.h"
 #include "game.h"
 #include "hero.h"
-#include "includes.h"
 #include "kb.h"
 #include "misc.h"
 #include "mousemgr.h"
@@ -28,7 +30,6 @@
 #include "soundmgr.h"
 #include "town.h"
 #include "tradpost.h"
-#include "va.h"
 
 #ifdef min
 #undef min

@@ -24,6 +24,8 @@
 // the CombatIsOver pump work, and uses sprite Dispose instead of the older
 // manager entry point. Destructor and callback-type audit coverage gaps
 // are not claims of zero source differences.
+#include "va.h"
+
 #include "button.h"
 
 #include "bitmap16.h"
@@ -37,12 +39,8 @@
 #include "sacrifice_window.h"
 #include "sample.h"
 #include "soundmgr.h"
-#include "va.h"
 #include "window.h"
 #include "winmgr.h"
-// Thunk-form timeGetTime (an E8 rel32, not an IAT indirect - Select's
-// match proves the form); the plain declaration and the per-TU
-// import-form doctrine live in winmm_thunks.h.
 #include "winmm_thunks.h"
 
 // homm2 BUTTON.cpp's file-static modifier latch, same name and role.

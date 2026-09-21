@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include "systemoptionswindow.h"
 
 #include "border.h"
@@ -16,7 +18,6 @@
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

@@ -1,3 +1,6 @@
+#include "va.h"
+#include "includes.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -7,11 +10,9 @@
 #include "army.h"
 #include "cmbtmgr.h"
 #include "game.h"
-#include "herospec.h"  // TSkillMastery, for the Dimension Door mastery test
-#include "includes.h"
+#include "herospec.h"
 #include "kb.h"
 #include "path.h"
-#include "va.h"
 
 // ai_player.cpp:4643. Kept local because findpath's narrow include set does
 // not otherwise depend on the ai_player class declarations.

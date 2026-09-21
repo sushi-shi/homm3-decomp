@@ -1,8 +1,8 @@
+#include "va.h"
+
 #include <string.h>
 
 #include "textresource.h"
-
-#include "va.h"
 
 // Original: TTextResource::TTextResource; textresource.cpp:33, dc 0x163808.
 TTextResource::TTextResource() : resource(0, RESOURCE_TYPE_NONE), m_data(0)

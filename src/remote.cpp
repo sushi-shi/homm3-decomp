@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <string.h>
 #include <zlib.h>
 
@@ -25,9 +27,6 @@
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "va.h"
-// gpWindowManager: CSaveScreen grabs and restores through the screen
-// bitmap, and hands the dirty rect back to the window manager.
 #include "winmgr.h"
 
 // remote.cpp's CHourGlass wrapper expands these two singleselectionwindow

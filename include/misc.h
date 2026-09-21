@@ -1,10 +1,10 @@
 #ifndef HOMM3_MISC_H
 #define HOMM3_MISC_H
 
+#include "includes.h"
+
 #include <string>
 #include <vector>
-
-#include "includes.h"
 
 // Live prototypes (claimed misc.cpp bodies).
 int safeRandom(int min, int max);   // 0x50b1d0

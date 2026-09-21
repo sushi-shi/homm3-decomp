@@ -1,5 +1,8 @@
 // 26 Dreamcast functions in link order; 20 compiler-generated $-thunks
 // omitted. Complete adds the two retail-only level-button callbacks below.
+#include "va.h"
+#include "includes.h"
+
 #include "viewwrld.h"
 
 #include "advmgr.h"
@@ -9,7 +12,6 @@
 #include "csprite.h"
 #include "game.h"
 #include "iconwdgt.h"
-#include "includes.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -20,7 +22,6 @@
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

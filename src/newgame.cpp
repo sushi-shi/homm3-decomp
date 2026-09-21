@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -10,7 +12,6 @@
 #include "scenarioinfo.h"
 #include "textresource.h"
 #include "town.h"
-#include "va.h"
 #include "window.h"
 #include "winmgr.h"
 

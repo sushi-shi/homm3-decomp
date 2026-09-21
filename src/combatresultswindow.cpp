@@ -1,3 +1,6 @@
+#include "va.h"
+#include "includes.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -10,7 +13,6 @@
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
-#include "includes.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "message.h"
@@ -18,7 +20,6 @@
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

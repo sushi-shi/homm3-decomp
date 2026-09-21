@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <direct.h>
 
 #include "multiplayerwindow.h"
@@ -18,7 +20,6 @@
 #include "slider.h"
 #include "soundmgr.h"
 #include "textresource.h"
-#include "va.h"
 #include "winfile.h"
 #include "winmgr.h"
 

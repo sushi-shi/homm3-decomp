@@ -2,6 +2,8 @@
 // Retail bodies prove these layouts and helpers; the original source filename
 // is unresolved. InitializeSeerHutText belongs to seerhut.cpp (DC line 50),
 // so the neighboring RVA range does not establish a separate compiland.
+#include "va.h"
+
 #include <string>
 #include <vector>
 
@@ -9,7 +11,6 @@
 
 #include "resourcemanager.h"
 #include "textresource.h"
-#include "va.h"
 
 VA_COMPGEN(0x0056bde0, 0x5A, CLASS_CTOR, TSeerHutTextColumn)
 VA_COMPGEN(0x0056be40, 0x8A, IMPLICIT_DTOR, TSeerHutTextColumn)

@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <stdio.h>
 #include <windows.h>
 
@@ -13,7 +15,6 @@
 #include "misc.h"
 #include "sskilltraits.h"
 #include "textresource.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

@@ -1,11 +1,12 @@
 // 13 functions in link order.
+#include "va.h"
+
 #include <string.h>
 
 #include "widget.h"
 
 #include "bitmap16.h"
 #include "message.h"
-#include "va.h"
 #include "window.h"
 #include "winmgr.h"
 

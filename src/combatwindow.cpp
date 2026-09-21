@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include "combatwindow.h"
 
 #include "border.h"
@@ -15,7 +17,6 @@
 #include "textntry.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

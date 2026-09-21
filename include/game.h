@@ -13,10 +13,6 @@
 #include "creaturetype.h"
 #include "creaturetype_fwd.h"
 #include "customcampaign.h"
-// `class game` embeds the hero array by value, so the COMPLETE hero
-// type has to be visible here. hero.h pulls armygrp.h; armygrp.h no
-// longer pulls this header back (see the note at its top) - that is the
-// edge that was cut to make this include legal.
 #include "hero.h"
 #include "mapcell.h"
 #include "netmsg.h"

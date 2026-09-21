@@ -2,12 +2,12 @@
 // This grouping filename is provisional: the original library source/object
 // names are unavailable. Retail library ownership follows imgdes, the public
 // PCX APIs and the image-allocation/Win32 import band described in pcx.h.
+#include "va.h"
+
 #include <stdlib.h>
 #include <string.h>
 
 #include "victor.h"
-
-#include "va.h"
 
 // The allocation mode occupies zero-initialized storage in retail .data's
 // virtual tail; the worker receives its current value as argument five.

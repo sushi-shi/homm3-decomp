@@ -1,6 +1,8 @@
 #ifndef HOMM3_MULTIPLAYERWINDOW_H
 #define HOMM3_MULTIPLAYERWINDOW_H
 
+#include "va.h"
+
 #include <string.h>
 #include <windows.h>
 
@@ -9,7 +11,6 @@
 #include "netgame.h"
 #include "textntry.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "window.h"
 
 struct _DPCOMPORTADDRESS;

@@ -1,5 +1,8 @@
 // DC's retained HasBuilding callee (r11) serves all seven hall, silo and
 // fort tests. Keep every source call and the ordinary canonical town body.
+#include "va.h"
+#include "includes.h"
+
 #include <stdio.h>
 #include <string>
 #include <strstream>
@@ -10,10 +13,8 @@
 #include "border.h"
 #include "game.h"
 #include "iconwdgt.h"
-#include "includes.h"
 #include "kb.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

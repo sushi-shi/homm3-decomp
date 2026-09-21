@@ -4,6 +4,8 @@
 // declarations remain visible through rmg.h, while placing the definitions in
 // this companion translation unit reproduces the natural body-visibility
 // boundary without source-false inline controls.
+#include "va.h"
+
 #include <algorithm>
 #include <math.h>
 
@@ -11,7 +13,6 @@
 #include "rmg.h"
 #include "rmg_terrain.h"
 #include "tiles.h"
-#include "va.h"
 
 // The common painter prefix owns only the two dimensions and virtual API.
 // Both retained final constructors obtain the adapter size before building

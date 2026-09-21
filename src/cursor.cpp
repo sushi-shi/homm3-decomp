@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include "cursor.h"
 
 #include "advmgr.h"
@@ -11,7 +13,6 @@
 #include "sample.h"
 #include "soundmgr.h"
 #include "textresource.h"
-#include "va.h"
 #include "winmgr.h"
 
 // Retail cursor.obj constants, read from the hash-verified image. Dreamcast

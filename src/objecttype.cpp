@@ -3,6 +3,8 @@
 // This compiland is absent from the Dreamcast roster. Retail groups
 // TObjectType::setImageName, TObjectTypeTable::load and the global image-name
 // registry here; the registry's tree nodes hold a VC6 std::string at +0x0c.
+#include "va.h"
+
 #include <map>
 #include <stdlib.h>
 #include <string>
@@ -16,7 +18,6 @@
 #include "exceptions.h"
 #include "resourcemanager.h"
 #include "textresource.h"
-#include "va.h"
 
 // Provisional role name; retail stores the two grid dimensions here.
 // The only references are TObjectTypeTable::load's default object and

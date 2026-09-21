@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include "exec.h"
 
 #include "advmgr.h"
@@ -8,7 +10,6 @@
 #include "mousemgr.h"
 #include "soundmgr.h"
 #include "terrain.h"
-#include "va.h"
 #include "window.h"
 #include "winmgr.h"
 

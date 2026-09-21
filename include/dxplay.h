@@ -1,11 +1,12 @@
 #ifndef HOMM3_DXPLAY_H
 #define HOMM3_DXPLAY_H
 
-#include <string.h>  // strcpy, for CDPlayPlayer's in-class constructor
+#include "va.h"
+
+#include <string.h>
 #include <windows.h>
 
-#include "array.h"  // CAutoArray, every Enum* out-parameter
-#include "va.h"
+#include "array.h"
 
 class CDPlayConnection;
 class CDPlayAddressElement;

@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <bitset>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +18,6 @@
 #include "resourcemanager.h"
 #include "soundmgr.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

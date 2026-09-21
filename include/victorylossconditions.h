@@ -1,10 +1,11 @@
 #ifndef HOMM3_VICTORYLOSSCONDITIONS_H
 #define HOMM3_VICTORYLOSSCONDITIONS_H
 
+#include "va.h"
+
 #include "artifact.h"
 #include "struct.h"
 #include "town.h"
-#include "va.h"
 
 class hero;
 class town;

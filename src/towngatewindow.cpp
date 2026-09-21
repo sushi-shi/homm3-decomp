@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <string.h>
 
 #include "towngatewindow.h"
@@ -12,7 +14,6 @@
 #include "slider.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "widget.h"
 #include "winmgr.h"
 

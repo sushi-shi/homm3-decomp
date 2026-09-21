@@ -1,3 +1,6 @@
+#include "va.h"
+#include "includes.h"
+
 #include "swapmgr.h"
 
 #include "advmgr.h"
@@ -9,7 +12,6 @@
 #include "hero.h"
 #include "herospec.h"
 #include "iconwdgt.h"
-#include "includes.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "mousemgr.h"
@@ -20,7 +22,6 @@
 #include "text.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "va.h"
 #include "winmgr.h"
 
 // Dreamcast names the sparse widget-id lookup gStatNames. Retail folds its

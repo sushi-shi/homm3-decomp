@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <string.h>
 
 #include "border.h"
@@ -6,9 +8,6 @@
 #include "bitmap816.h"
 #include "resourcemanager.h"
 #include "terrain.h"
-#include "va.h"
-// bitmapBorder's two blitters offset the widget rect by its parent
-// window's origin, so this TU needs the COMPLETE heroWindow.
 #include "window.h"
 #include "winmgr.h"
 

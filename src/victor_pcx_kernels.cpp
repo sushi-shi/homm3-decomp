@@ -3,6 +3,7 @@
 // /O2 /Og- preserves the RLE kernel's EBX save/restore; the C++ wrappers in
 // victor.cpp use ordinary /O2. See docs/vc6/victor-library.md.
 #include "va.h"
+
 #include "victor.h"
 
 VA(0x00604510, 0x53)  // anchor-caller loadpcx + RLE marker semantics; external Victor library

@@ -1,4 +1,6 @@
 // Dreamcast roster supplies names and source-level signatures.
+#include "va.h"
+
 #include "slider.h"
 
 #include "bitmap816.h"
@@ -10,7 +12,6 @@
 #include "mousemgr.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
-#include "va.h"
 #include "window.h"
 #include "winmgr.h"
 

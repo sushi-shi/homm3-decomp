@@ -1,14 +1,15 @@
-#include <stdlib.h>  // abs, check_town_portal's distance surcharge
+#include "va.h"
+#include "includes.h"
+
+#include <stdlib.h>
 
 #include "advmgr.h"
 #include "findpath.h"
 #include "game.h"
 #include "hero.h"
 #include "herospec.h"
-#include "includes.h"
 #include "kb.h"
-#include "quest.h"  // type_quest, the quest-guard arm of enter_trigger
-#include "va.h"
+#include "quest.h"
 
 // DC struct.h proves the const-reference comparison operators. Their canonical
 // definitions now live in struct.h; use them directly instead of TU-local

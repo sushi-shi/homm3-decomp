@@ -1,24 +1,21 @@
+#include "va.h"
+#include "includes.h"
+
 #include <algorithm>
 
-// army's +0xdc spell-charge word and army::is_adjacent(int) are canonical
-// class facts: the Dreamcast member/function records name both, while
-// choose_spell_action, choose_creature_spell and choose_defense_hex prove
-// their retail uses.
 #include "ai.h"
 
 #include "ai_player.h"
 #include "ai_spellvalue.h"
 #include "ai_tactical.h"
-#include "csprite.h"   // TResourceHandle<CSprite>::~TResourceHandle calls resource::Dispose
+#include "csprite.h"
 #include "findpath.h"
 #include "game.h"
 #include "hero.h"
-#include "includes.h"
 #include "misc.h"
 #include "prefs.h"
-#include "sample.h"    // TResourceHandle<sample>::~TResourceHandle calls resource::Dispose
+#include "sample.h"
 #include "soundmgr.h"
-#include "va.h"
 
 // THE HEAD OF ai.obj, 0x41e190..0x41eac0 (2026-09-05). The three rows
 // between the compiland's ten terrain.h bitset initializers

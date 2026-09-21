@@ -1,3 +1,5 @@
+#include "va.h"
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -6,7 +8,6 @@
 #include "resource.h"
 #include "resourcemanager.h"
 #include "textresource.h"
-#include "va.h"
 
 static void initializeSpellTraits(
     int id, const std::vector<char*, std::allocator<char*> >& resource);

@@ -1,4 +1,6 @@
 
+#include "va.h"
+
 #include <stdexcept>
 #include <stdio.h>
 #include <string.h>
@@ -16,7 +18,6 @@
 #include "newgame.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
-#include "va.h"
 
 VA(0x004fbf90, 0x61)  // dc 0xeb6a4
 void ExtraInfoUnion::setCellVisited(short player)

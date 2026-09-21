@@ -1,9 +1,9 @@
 #ifndef HOMM3_BINKMANAGER_H
 #define HOMM3_BINKMANAGER_H
 
-#include <bink.h>
-
 #include "va.h"
+
+#include <bink.h>
 
 // The active vendor header is patched from its preserved 1.0a source to the
 // complete 0.5a layouts proved by Dreamcast CodeView. Retail independently
