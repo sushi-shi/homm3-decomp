@@ -32,6 +32,7 @@
 #include "advmgr.h"
 #include "adventuremapwindow.h"
 #include "bitset_iterator.h"
+#include "packed_bits.h"
 #include "initialize.h"
 #include "terrain.h"
 #include "inputmgr.h"
@@ -752,16 +753,25 @@ int game::loadSignPool(TAbstractFile* infile)
 VA(0x004b9270, 0xCF)  // dc 0xa3d50
 int game::saveSignPool(TAbstractFile* outfile)
 {
-    unsigned char count = static_cast<unsigned char>(m_signs.size());
-    if (outfile->write(&count, sizeof(count)) < sizeof(count))
+    // DC game.cpp:874..888 records int count, int x, char char_buffer,
+    // with each write/save result assigned before its separate guard.
+    // Complete uses the abstract-file write in place of DC's gzwrite.
+    int count;
+    int x;
+    char charBuffer;
+    charBuffer = static_cast<char>(m_signs.size());
+    count = outfile->write(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
 
-    for (unsigned int i = 0; i < m_signs.size(); ++i) {
-        if (saveString(outfile, m_signs[i].m_signText) < 0)
+    for (x = 0; x < m_signs.size(); ++x) {
+        count = saveString(outfile, m_signs[x].m_signText);
+        if (count < 0)
             return -1;
 
-        count = m_signs[i].m_hasText;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        charBuffer = m_signs[x].m_hasText;
+        count = outfile->write(&charBuffer, sizeof(charBuffer));
+        if (count < sizeof(charBuffer))
             return -1;
     }
     return 0;
@@ -3150,26 +3160,12 @@ int game::save(TAbstractFile* outfile)
 
     if (m_worldMap.save(outfile, m_mapHeader.m_size, m_mapHeader.m_hasTwoLayers) < 0)
         return -1;
-    // predict-inline: SaveSignPool base x0 vs retail x1 - our CL expands
-    // a 0x1b3-byte callee retail CALLS. Pinned at the SITE, not the
-    // function: inline_depth(0) is statement-granular in VC6, and
-    // SaveMinePool immediately below is expanded on BOTH sides.
-    // THE PIN IS CONDITION-ONLY, and that is worth 89.1864 -> 93.5676
-    // (2026-08-20). The note that stood here read "NARROWING THE PIN TO
-    // THE CALL ALONE WAS MEASURED AND IS WORSE (82.6492 -> 82.4641)" -
-    // true of the narrowing it measured, which landed the result in a
-    // local first and paid for a frame slot. Closing the pin between the
-    // `if (...)` and its `return -1;` needs no local: pragma state is
-    // per-site at collection, so SaveSignPool stays out of line while
-    // this exit's ~SavedGameHeader goes back to being EXPANDED.
-    // THE CENSUS WAS ALREADY RIGHT AND THE PLACEMENT WAS NOT: both sides
-    // emit three out-of-line ~SavedGameHeader calls, but retail's are all
-    // in the tail (fn+0x9fb, +0xa70, +0xa8b) and ours put one at fn+0x247
-    // - this exit - and only two in the tail. Read the sites IN ORDER,
-    // not as a count.
-#pragma inline_depth(0)
+    // DC game.cpp:3515 names SaveSignPool; retail retains the call.
+    // Restoring that helper's int result/index and separate char buffer
+    // makes the old condition pin byte-inert: 59.5944% with or without it.
+    // Control with the previous helper and no pin gives 50.1717%; both
+    // retained helper bodies are exact. Keep the source facts, not the pin.
     if (saveSignPool(outfile) < 0)
-#pragma inline_depth()
         return -1;
     if (saveMinePool(outfile) < 0)
         return -1;
@@ -3204,22 +3200,19 @@ int game::save(TAbstractFile* outfile)
         return -1;
     }
 
-    // PINNED: retail CALLS std::bitset<8>::test here (`push edi / call`),
-    // it does not inline it. Once the tail below landed, this body grew
-    // past the /Ob2 budget that had been keeping the expansion out, and
-    // VC6 inlined test together with its _Xran throw path - which drags
-    // a whole std::out_of_range and its "invalid bitset<N> position"
-    // string onto the frame, 28 bytes that retail's frame does not have.
+    // Complete's packed hero-player masks have no DC loop counterpart.
+    // Retail retains bitset<8>::test. Reading through const operator[]
+    // preserves that boundary without a pin (59.5944% for the whole save);
+    // direct test(), including on a const reference, expands it (57.4921%).
     for (i = 0; i < HERO_COUNT; ++i) {
+        const std::bitset<8>& players = m_heroPoolMap[i];
         unsigned char poolBits[1];
         poolBits[0] = 0;
         unsigned int player;
-#pragma inline_depth(0)
         for (player = 0; player < 8; ++player) {
-            if (m_heroPoolMap[i].test(player))
+            if (players[player])
                 poolBits[player >> 3] |= 1 << (player & 7);
         }
-#pragma inline_depth()
         outfile->write(poolBits, sizeof(poolBits));
     }
 
@@ -5105,15 +5098,15 @@ VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
 // Remaining frontier: bitset/container inner-helper expansion decisions
 // still differ. The version-21 artifact arm and merge
 // loop also have different placement/register allocation.
-// Four packed decoding loops now share decodePackedBits, as does game::load.
-// This Complete-only helper hypothesis removes four pins and raises the
-// current 61.8805% to 67.6976%. Bare five-pin removal gives 57.7665%; removing
-// the remaining artifact-initialization pin with the decoders gives 61.6892%.
 // DC's filename-based loader predates these packed artifact/spell/skill planes.
-// The final pin is gone with the binary transform merge and a named combination
-// flag: 71.1435%. The algorithm-header-only control is byte-flat; transform
-// with the pin still present gives 63.7679%. Unpinned set/direct-index forms
-// with transform give 71.1181/70.8903%, so the surrounding merge is load-bearing.
+// Retail decodes the legacy mask into a temporary, copies five dwords, then
+// traverses the copy through mutable bitset iterators. The value-returning
+// readPackedBits shared with ScenarioStruct::read explains that copy and the
+// spell/skill temporaries without redundant caller snapshots: 79.8650% versus
+// the unpinned decoder/transform model's 71.1435% (bare pin removal: 57.7665%).
+// Explicit result(0) gives 80.4993% but lowers the campaign reader; direct wide
+// assignment gives 67.4290%. The legacy source dereference still stays called
+// where retail expands it. No inline controls are needed for these readers.
 VA(0x004c2450, 0x88E)  // sole NewMap caller + full stream/callee sequence
 bool game::loadMap(TAbstractFile* mapFile)
 {
@@ -5143,10 +5136,7 @@ bool game::loadMap(TAbstractFile* mapFile)
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         std::bitset<144> disabledArtifacts(0);
         if (m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-            std::bitset<144> serializedArtifacts(0);
-            unsigned char artifactBits[18];
-            mapFile->read(artifactBits, sizeof(artifactBits));
-            decodePackedBits(artifactBits, serializedArtifacts);
+            std::bitset<144> serializedArtifacts = readPackedBits<144>(mapFile);
             disabledArtifacts = serializedArtifacts;
         } else {
             for (artifact = 0; artifact < 144; ++artifact) {
@@ -5154,13 +5144,10 @@ bool game::loadMap(TAbstractFile* mapFile)
                 disabledArtifacts[artifact] = isComboArtifact;
             }
 
-            std::bitset<129> serializedArtifacts(0);
-            unsigned char artifactBits[17];
-            mapFile->read(artifactBits, sizeof(artifactBits));
-            decodePackedBits(artifactBits, serializedArtifacts);
-            for (unsigned int copyBit = 0; copyBit < 129; ++copyBit) {
-                disabledArtifacts[copyBit] = serializedArtifacts[copyBit];
-            }
+            std::bitset<129> serializedArtifacts = readPackedBits<129>(mapFile);
+            std::copy(bitset_iterator<129>(serializedArtifacts, 0),
+                      bitset_iterator<129>(serializedArtifacts, 129),
+                      bitset_iterator<144>(disabledArtifacts, 0));
         }
 
         std::transform(m_artifactDisabled, m_artifactDisabled + 144,
@@ -5170,14 +5157,10 @@ bool game::loadMap(TAbstractFile* mapFile)
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        std::bitset<70> serializedSpells(0);
-        unsigned char spellBits[9];
-        mapFile->read(spellBits, sizeof(spellBits));
-        decodePackedBits(spellBits, serializedSpells);
+        const std::bitset<70> serializedSpells = readPackedBits<70>(mapFile);
 
-        const std::bitset<70> serializedSpellCopy = serializedSpells;
         for (unsigned int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-            if (serializedSpellCopy[spell]) {
+            if (serializedSpells[spell]) {
                 for (artifact = 0; artifact < 144; ++artifact) {
                     if (g_artifactTraits[artifact].m_givesSpells) {
                         m_artifactDisabled[artifact] =
@@ -5187,17 +5170,13 @@ bool game::loadMap(TAbstractFile* mapFile)
                 }
             }
             m_spellDisabledInfo[spell] =
-                serializedSpellCopy[spell]
+                serializedSpells[spell]
                 || (g_spellTraits[spell].m_flags & 0x2000) != 0;
         }
 
-        std::bitset<28> serializedSkills(0);
-        unsigned char skillBits[4];
-        mapFile->read(skillBits, sizeof(skillBits));
-        decodePackedBits(skillBits, serializedSkills);
-        const std::bitset<28> serializedSkillCopy = serializedSkills;
+        const std::bitset<28> serializedSkills = readPackedBits<28>(mapFile);
         for (int skill = 0; skill < sizeof(m_ssDisabled); ++skill)
-            m_ssDisabled[skill] = serializedSkillCopy[skill];
+            m_ssDisabled[skill] = serializedSkills[skill];
     } else {
         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             m_spellDisabledInfo[spell] =
@@ -6052,10 +6031,35 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
 // has it; what this body cannot absorb is the change in the two placeholder
 // blocks' own block-scoped `count`, which the shared local subsumes.
 // Complete adds the campaign-map ordinal to the stream reader (ret 8).
+// Complete's returned packed-bitset reader accounts for the legacy temporary
+// copied before iterator traversal and the modern/player mask reads. Sharing
+// readPackedBits at all three sites removes four pins: 91.5614 -> 92.9547%.
+// Eight reproduced combinations establish the coupled choice; using only
+// legacy+player reads gives 90.8737%, modern+player 89.5495%.
+// Natural placeholder-vector clear() instead of erase(begin(), end()) raises
+// this to 95.0513% and retains _Destroy. The preceding retail std::copy still
+// expands here; the call sequence is not yet exact.
+// Returned-mask lifetime controls: modern const-reference and player
+// const-reference forms are flat at 95.0513%. Direct modern assignment alone
+// gives 93.1657%; pairing it with a player const-reference returns 95.0513%.
+// Keep the named values until stronger evidence distinguishes their lifetime.
+// Complete setup records compare the saved hero ID as a byte before mapping
+// 0xff to -1. A byte buffer with a widened int preserves that source operation
+// and gives 95.2598%; a fused conditional gives 93.2122%. Separating the setup
+// count from the reused x buffer gives 93.2408% (93.4827% with the byte ID).
+// Current diagnostic routes to the over-expanded std::copy inside clear(),
+// ahead of register/CFG differences. A separate DC int count for all ten
+// guarded reads, preserving both nested record-count scopes, gives 79.0894%
+// against 95.2598%. That does not refute the proven DC result local; its
+// Complete source mapping remains a coupled recovery problem, not a pin lever.
+// Restoring count at the two readString calls is byte-score flat (95.2598%);
+// combining it with all ten stream reads remains 79.0894%. The string-result
+// source facts are retained independently of that unresolved stream mapping.
 VA(0x004c4390, 0x92E)  // DC Read + LoadMap/Get callers + stream order, dc 0xaf64c
 int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 {
     char padding[g_mapHeaderPaddingSize];
+    int count;
 
     m_mapName.erase();
     m_mapDescription.erase();
@@ -6082,9 +6086,13 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
-    if (readString(infile, m_mapName) < 0)
+    // DC game.cpp:6563/6569 stores each string-read result in count;
+    // the next recorded source lines test that result separately.
+    count = readString(infile, m_mapName);
+    if (count < 0)
         return -1;
-    if (readString(infile, m_mapDescription) < 0)
+    count = readString(infile, m_mapDescription);
+    if (count < 0)
         return -1;
 
     unsigned char ucharBuffer;
@@ -6178,15 +6186,8 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 
     if (m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         m_availableHeroes.reset();
-        std::bitset<g_mapHeaderLegacyHeroCount> availableHeroesMask;
-        unsigned char heroBits[g_mapHeaderLegacyHeroCount / 8];
-        infile->read(heroBits, sizeof(heroBits));
-        for (unsigned int i = 0; i < g_mapHeaderLegacyHeroCount; ++i) {
-#pragma inline_depth(0)
-            availableHeroesMask.set(
-                i, (heroBits[i >> 3] & (1 << (i & 7))) != 0);
-#pragma inline_depth()
-        }
+        std::bitset<g_mapHeaderLegacyHeroCount> availableHeroesMask =
+            readPackedBits<g_mapHeaderLegacyHeroCount>(infile);
 
         std::copy(
             bitset_iterator<g_mapHeaderLegacyHeroCount>(
@@ -6201,23 +6202,15 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                 m_availableHeroes[i] = true;
         }
     } else {
-#pragma inline_depth(0)
-        std::bitset<g_mapHeaderHeroCount> availableHeroesMask(0);
-#pragma inline_depth()
-        unsigned char heroBits[(g_mapHeaderHeroCount + 7) / 8];
-        infile->read(heroBits, sizeof(heroBits));
-        for (unsigned int i = 0; i < g_mapHeaderHeroCount; ++i) {
-#pragma inline_depth(0)
-            availableHeroesMask.set(
-                i, (heroBits[i >> 3] & (1 << (i & 7))) != 0);
-#pragma inline_depth()
-        }
+        std::bitset<g_mapHeaderHeroCount> availableHeroesMask =
+            readPackedBits<g_mapHeaderHeroCount>(infile);
         m_availableHeroes = availableHeroesMask;
     }
 
-    m_placeholders.erase(m_placeholders.begin(), m_placeholders.end());
+    m_placeholders.clear();
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        int count;
+        // Complete retail tests this dword for zero, not signed positivity.
+        unsigned int count;
         infile->read(&count, sizeof(count));
         if (count > 0) {
             do {
@@ -6239,23 +6232,14 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
                 infile->read(&x, sizeof(unsigned char));
                 int heroKey = x & 0xff;
 
-                int heroId;
-                infile->read(&heroId, sizeof(unsigned char));
-                heroId &= 0xff;
-                if (heroId == g_savedHeroNone)
+                unsigned char savedHeroId;
+                infile->read(&savedHeroId, sizeof(savedHeroId));
+                int heroId = savedHeroId;
+                if (savedHeroId == g_savedHeroNone)
                     heroId = -1;
 
                 std::string heroName = readLengthPrefixedString(infile);
-                std::bitset<8> availability;
-                unsigned char availabilityBits[1];
-                infile->read(availabilityBits, sizeof(availabilityBits));
-                for (unsigned int i = 0; i < g_mapHeaderPlayerCount; ++i) {
-#pragma inline_depth(0)
-                    availability.set(
-                        i, (availabilityBits[i >> 3]
-                            & (1 << (i & 7))) != 0);
-#pragma inline_depth()
-                }
+                std::bitset<8> availability = readPackedBits<8>(infile);
 
                 m_heroPlayerSetups.insert(
                     std::pair<const int, type_map_hero_info>(

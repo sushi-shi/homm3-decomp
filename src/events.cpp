@@ -2152,6 +2152,10 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
 // wrapper is recorded for Garden (1858/1866), MercenaryCamp (2303/2311), and
 // PowerSchool (2492/2500). Restoring all eight calls preserves their exact
 // retail bodies; it does not by itself recover dispatchEvent's retained calls.
+// Keep humanPlayer as bool: the DC publics for all four handlers at
+// 0x92d40/0x93368/0x941c8/0x946b4 end in PAVNewmapCell@@_N@Z. Their
+// unsigned-char CodeView formal records are lowered bool representations,
+// not evidence for changing the source interface or steering the inliner.
 VA(0x004a2050, 0xE4)  // dc 0x92d40
 void advManager::doEventDefenseTower(hero* currentHero, NewmapCell* cell,
                                      bool humanPlayer)
@@ -4705,6 +4709,10 @@ inline void advManager::doEventWhirlpool(hero* currentHero,
 // removing their four call pins still expands the handlers (90.77%, versus
 // pinned 99.4678%). Text-wrapper flattening was real source debt, but not the
 // cause of these four retained-call decisions.
+// Garden-specific control: replacing its visited early return with an else
+// leaves the retained helper at 100% and this dispatcher at 99.4678%. Removing
+// only the Garden pin gives 97.8007% under either structure; four distinct
+// reproduced objects rule out that branch spelling as the call-boundary fix.
 VA(0x004a84f0, 0x2542)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above), dc 0x9824c
 void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point point, bool humanPlayer)
 {

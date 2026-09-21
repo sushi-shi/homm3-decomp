@@ -2998,6 +2998,8 @@ void hero::rotateBackpackRight()
 }
 
 VA(0x004dbe80, 0xA4)
+// Complete's shared combination predicate: proxy assignment keeps this retained
+// body exact while recovering set/any boundaries in its expanded callers.
 unsigned char hero::heroFn004DBE80(int combination)
 {
     std::bitset<144> missingComponents =
@@ -3005,7 +3007,7 @@ unsigned char hero::heroFn004DBE80(int combination)
     for (int slot = 0; slot < 19; slot++) {
         int artifactId = m_equipped[slot].m_artifactId;
         if (artifactId != ARTIFACT_NONE)
-            missingComponents.reset(artifactId);
+            missingComponents[artifactId] = false;
     }
     return !missingComponents.any();
 }
@@ -3087,58 +3089,39 @@ void hero::heroFn004DC070(long slot)
 // 2 - past what /Ob2 expands here. All three sites are written that way
 // and all three throws collapse into retail's calls.
 
-// Residual (87.3%): the esi/edi/ebx role permutation plus the prologue's
-// unwind-table addend, which is a reloc addend and not a state count. The
-// DC roster has NO row for this function at all, so its call census
-// cannot be consulted.
-// Unpinned reset(index)/!none() restores the last bitset<12> _Xran boundary,
-// but expands both retained bitset<144> operations (70.03%). Proxy assignment
-// to false with !none() also changes the earlier bitset<12> set (67.23%).
-// Neither standard-wrapper form reproduces the retail call sequence.
+// Complete-only combination prompt. Calling the canonical predicate with its
+// proxy-assignment body removes both pins and restores all nine retail calls,
+// including the third bitset<12>::_Xran: 87.2712 -> 96.1808%. The predicate's
+// retained body stays exact. Its reset/none spelling gives 83.5593% here;
+// direct set(false) gives 76.1977%. Remaining differences are in the caller.
+// Naming the equipped artifact ID and indexing traits directly gives 97.4237%,
+// preserving all 25 retail blocks and nine calls. An artifact reference or
+// getArtifact() leaves the prior 96.1808%; copying the traits gives 92.7175%,
+// and reading the artifact before the player gives 87.7345%.
+// Player-pointer ownership (with either equipped-field or getArtifact lookup)
+// is flat at 97.4237%. Binding the combination bitset instead gives 83.2994%;
+// repeating the global player lookup gives 72.5198%. Neither recovers the
+// entry register choices or first bitset-write scheduling.
 VA(0x004dc100, 0x217)  // retail-only, hero member, ret 4
 void hero::heroFn004DC100(long slot)
 {
     playerData& player = g_game->m_players[m_owner];
-    const TArtifactTraits& traits =
-        g_artifactTraits[m_equipped[slot].m_artifactId];
+    int artifactId = m_equipped[slot].m_artifactId;
 
-    if (traits.m_comboType != -1) {
-        player.m_assembledCombinations[traits.m_comboType] = true;
+    if (g_artifactTraits[artifactId].m_comboType != -1) {
+        player.m_assembledCombinations[g_artifactTraits[artifactId].m_comboType] = true;
         return;
     }
 
-    int targetCombo = traits.m_targetCombo;
+    int targetCombo = g_artifactTraits[artifactId].m_targetCombo;
     if (targetCombo == -1)
         return;
     if (player.m_assembledCombinations[targetCombo])
         return;
 
-    std::bitset<144> missing =
-        g_combinationArtifacts[targetCombo].m_components;
-    for (int i = 0; i < 19; i++) {
-        int artifactId = m_equipped[i].m_artifactId;
-        if (artifactId != ARTIFACT_NONE)
-#pragma inline_depth(0)
-            missing.set(artifactId, false);
-#pragma inline_depth()
-    }
-#pragma inline_depth(0)
-    if (missing.any())
-#pragma inline_depth()
+    if (!heroFn004DBE80(targetCombo))
         return;
 
-    // THE ONE SITE OF THE THREE THAT STILL EXPANDS (residual 87.27%), and
-    // it is the budget being handed downstream, not a wrong spelling.
-    // Retail emits `cmp edi,0xc / jb / call bitset<12>::_Xran` at fn+0x12e;
-    // we still build the `invalid bitset<N> position` string at [ebp-0x40]
-    // and the out_of_range at [ebp-0x70] here, which is the whole 44-byte
-    // frame surplus (`sub esp,0x64` against retail's 0x38). Fixing the two
-    // EARLIER sites is what freed the budget this one then spends - the
-    // A9 sequential-charge behaviour, observed from the receiving end.
-    // <bitset> offers no rung deeper than `operator[] -> operator= ->
-    // set -> _Xran` to push it back out: `reset(_P)` and `flip(_P)` sit at
-    // the same depth, and `at(_P)` emits TWO bounds checks where retail
-    // has one.
     player.m_assembledCombinations[targetCombo] = true;
 
     int assembled = g_combinationArtifacts[targetCombo].m_artifactId;
@@ -5447,6 +5430,10 @@ unsigned char hero::addToBackpack(const type_artifact* artifact, long slot)
 // DC's older GiveArtifact has no combination-assembly path; it proves only
 // the equipment/backpack and end-check helper boundaries here. The remaining
 // per-site inlining decision needs positive Complete/VC6 evidence.
+// Current shared-predicate recovery supersedes the flattened-loop controls
+// above: heroFn004DBE80 with proxy assignment removes the remaining set pin
+// and raises 79.8138 -> 85.8421%. Its reset/none and direct-set controls give
+// 83.2510/76.7044%; the retained predicate is exact in all three forms.
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
 unsigned char hero::giveArtifact(const type_artifact* artifact,
                                  unsigned char announce,
@@ -5457,16 +5444,7 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
             int targetCombo =
                 g_artifactTraits[artifact->m_artifactId].m_targetCombo;
             if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {
-                std::bitset<144> missing =
-                    g_combinationArtifacts[targetCombo].m_components;
-                for (int i = 0; i < 19; i++) {
-                    int artifactId = m_equipped[i].m_artifactId;
-                    if (artifactId != ARTIFACT_NONE)
-#pragma inline_depth(0)
-                        missing.set(artifactId, false);
-#pragma inline_depth()
-                }
-                if (!missing.any()) {
+                if (heroFn004DBE80(targetCombo)) {
                     playerData& player = g_game->m_players[m_owner];
                     if (announce) {
                         if (m_owner == g_game->getLocalPlayerGamePos() &&

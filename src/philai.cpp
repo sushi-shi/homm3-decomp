@@ -3894,6 +3894,12 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
 // The four-state order/removal family reproduces all four objects: moving
 // this definition preserves 97.4610; removing all 24 pins gives 95.9975 in
 // either position. Source order alone does not recover the inline decisions.
+// A current-TU site census compiles all 24 individual removals plus baseline
+// and joint removal: 26 distinct objects, eight reproduced elites. No pin is
+// byte-inert here. Singles range 94.6723% (bank) to 97.3351% (refugee camp),
+// below 97.4610%; joint removal repeats 95.9975%. Preserve the named helpers
+// while recovering their retained-call decisions; moving the dispatcher is
+// not the missing source model.
 // DC's free MoraleIncreaseValue/LuckIncreaseValue calls became hero members
 // in Complete: retail passes their receiver in ECX at the retained sites.
 long aiValueOfEvent(const hero* currentHero, type_point point,

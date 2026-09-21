@@ -548,6 +548,10 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 // but its second insertion expands to the count overload; retail retains the
 // single-element overload. No form restores the retail call/lifetime pattern.
 // The pinned baseline remains best. The Complete class has no DC counterpart.
+// A narrower shared picture-appender with caller-owned vectors also misses:
+// indexed/cursor forms give 73.9279/68.3423%, and progress falls to 94.2360%.
+// Removing all six pins with direct push_back gives 53.0360%; the earlier
+// 90.6577% control removed constructor/cleanup pins, not both insertion pins.
 VA(0x0056dad0, 0x28C)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProposalDialog(hero* currentHero)
 {
@@ -729,6 +733,9 @@ std::string type_skill_quest::skillRequirementText(
 // Direct completionText = formatString(...) expands assign here (49.37%,
 // versus 96.5299% with the diagnostic pin); unlike the proposal assignment,
 // retail retains this second assign. No DC counterpart settles the boundary.
+// Lifetime-extended requirement/result references do not recover it: six
+// unpinned ordinary-assignment forms reproduce 49.3657/50.4925%. The retained
+// assign boundary, not a missing temporary lifetime, remains the first issue.
 VA(0x0056e0d0, 0x169)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::setDefaultText()
 {

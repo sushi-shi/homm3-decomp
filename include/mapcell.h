@@ -756,7 +756,7 @@ public:
     enum EGameResource getWindmillResource() const;
     void setWindmill(enum EGameResource resource, short amount);
     int getWitchSkill() const;
-    void setWitchSkill(int skill);
+    void setWitchSkill(TSecondarySkill skill);
 };
 SIZE(ExtraInfoUnion, 4);
 
@@ -1780,10 +1780,13 @@ inline void ExtraInfoUnion::setWindmill(enum EGameResource resource, short amoun
 inline int ExtraInfoUnion::getWitchSkill() const { return m_witchHutInfo.m_skill; }
 
 // E:\gamedcs\MapCell.h:1251, dc 0xbcbdc
+// DC lines 1252/1253 assign the typed skill, then clear visits. Retail folds
+// those field stores into the combined 0xfff0001f mask; retain the source fields.
 VA(0x004c23c0, 0x1c)
-inline void ExtraInfoUnion::setWitchSkill(int skill)
+inline void ExtraInfoUnion::setWitchSkill(TSecondarySkill skill)
 {
-    m_value = (m_value & 0xfff0001f) | ((skill & 0x7f) << 13);
+    m_witchHutInfo.m_skill = skill;
+    m_cellVisitedInfo.m_visited = 0;
 }
 
 // MapCell.h:1260. Dreamcast returns TArtifact; this foundational header

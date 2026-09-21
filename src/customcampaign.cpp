@@ -14,6 +14,7 @@
 #include "abstractfile.h"
 #include "artifact.h"
 #include "bitset_iterator.h"
+#include "packed_bits.h"
 #include "campaignbrief.h"
 #include "castle.h"
 #include "customcampaign.h"
@@ -1124,29 +1125,6 @@ std::string readLengthPrefixedString(TAbstractFile* infile)
     return text;
 }
 
-// The three packed-bit reads use the same temporary-then-member-copy shape
-// in retail ScenarioStruct::Read. Keep that value-returning serialization
-// operation together; the helper name is provisional for this Complete code.
-// The three expansions restore retail's 45-block caller from 62 blocks and
-// raise 55.04 -> 70.55%; no separate retail helper body is claimed.
-// After the caller's pointer/lifetime corrections, default zero construction
-// reaches 83.29%; the unsigned-long(0) constructor is the 80.95% control.
-// Direct proxy assignment plus an explicit prerequisite-loop body scope
-// raises the caller to 84.92324%. Either change alone is byte-flat at 83.29%.
-// A named reference keeps the same public bitset operation but changes VC6's
-// nested decisions; neither form retains all four retail proxy assignments.
-template <size_t N>
-std::bitset<N> readPackedCampaignBits(TAbstractFile* infile)
-{
-    std::bitset<N> result;
-    unsigned char packed[(N + 7) / 8];
-    infile->read(packed, sizeof(packed));
-    for (unsigned int index = 0; index < N; ++index) {
-        result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
-    }
-    return result;
-}
-
 VA(0x00485f50, 0x8B)
 TCampaignBrief::ScenarioStruct::ScenarioStruct()
 {
@@ -1766,6 +1744,10 @@ void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(unsigned char* wanted)
 // local text pointers then reach 80.95%. Member reloads after each virtual Read
 // are the negative control. Explicitly widening the one-byte read buffers to
 // masked ints was byte-flat and is not retained.
+// The three temporary-then-copy packed reads share readPackedBits with loadMap.
+// Moving that ordinary template to the shared header is byte-score flat at
+// 84.9232%; explicit result(0) lowers this caller to 81.9787%. The proxy
+// assignment and option-constructor inline boundaries remain unfinished.
 VA(0x00487e40, 0x586)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
                                           int numScenarios,
@@ -1839,12 +1821,12 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
         m_retainArtifacts = (flags >> 4) & 1;
     }
 
-    m_crossoverCreatures = readPackedCampaignBits<g_crossoverCreatureBits>(infile);
+    m_crossoverCreatures = readPackedBits<g_crossoverCreatureBits>(infile);
 
     if (campaignVersion >= g_campaignVersionWideArtifacts) {
-        m_crossoverArtifacts = readPackedCampaignBits<g_crossoverArtifactBits>(infile);
+        m_crossoverArtifacts = readPackedBits<g_crossoverArtifactBits>(infile);
     } else {
-        std::bitset<129> legacyArtifacts = readPackedCampaignBits<129>(infile);
+        std::bitset<129> legacyArtifacts = readPackedBits<129>(infile);
         std::copy(
             bitset_iterator<129>(legacyArtifacts, 0),
             bitset_iterator<129>(legacyArtifacts, g_crossoverLegacyArtifactBits),
