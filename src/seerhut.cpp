@@ -2111,13 +2111,15 @@ int TSeerHut::getValue(hero* currentHero)
 // the completion temporary is state 2. FuncInfo 0x654048 has maxState 3,
 // unwind map 0x654068 and NO try blocks: no catch scope is missing.
 
-// The Complete AI arm duplicates the admitted getValue method's reward,
-// visit-mask, expiry and satisfaction logic. Keep one ordinary helper.
-// A call to its old flattened-expiry body stayed out of line (27.17%).
-// Restoring the existing has_expired boundary inside it makes VC6 expand
-// getValue naturally (42.5710%) while its standalone body stays 100%.
-// The old inline-keyword probe removed that standalone body; it is not
-// needed. Both has_expired and getValue remain ordinary TU definitions.
+// Complete revised the human completion arm: declining returns, while an
+// accepted dialog and a sufficiently valuable AI visit converge on the same
+// payment/reward tail. This also puts the completion-text temporary in the
+// caller's EH state, after which VC6 naturally expands the retained
+// DoEmptyDialog source call and keeps all three retail `_Tidy` boundaries.
+// The resulting 59-block CFG and all 27 branches agree with retail. The only
+// byte residual is a two-instruction scheduling difference inside the expanded
+// ordinary getValue helper; why-reg finds the same pseudos in a different C1
+// processing order, and its source-local creation-order probe regresses.
 
 VA(0x00573670, 0x400)  // code plus two retail switch tables in the admitted row
 void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
@@ -2140,11 +2142,16 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
             return;
 
         if (humanPlayer) {
-            doCompletionDialog(currentHero, humanPlayer);
-            return;
-        }
+            normalDialog(m_quest->getCompletionText().c_str(),
+                         2, -1, -1, getRewardType(),
+                         m_reward.getRewardExtra(currentHero),
+                         -1, 0, -1, 0, -1, 0);
 
-        if (getValue(currentHero) <= 0)
+            if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT
+                && g_windowManager->m_dialogReturn
+                       != DIALOG_RETURN_CHOICE_1)
+                return;
+        } else if (getValue(currentHero) <= 0)
             return;
 
         m_quest->takePayment(currentHero);
@@ -2157,9 +2164,9 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
 // Dreamcast preserves this private helper at dc 0x12d158 and places it after
 // DoSeerEvent in the TU. Complete replaces its fixed-buffer sprintf with a
 // string-returning formatter, but retail's no-quest arm corroborates the
-// helper's name lookup followed by NormalDialog. Complete retail expands this
-// source boundary into its sole caller while retaining selected nested
-// Dinkumware calls.
+// helper's name lookup followed by NormalDialog. Once the caller owns the
+// revised completion-text lifetime, VC6 naturally expands this source boundary
+// while retaining selected nested Dinkumware calls.
 void TSeerHut::doEmptyDialog()
 {
     std::string text;
@@ -2173,9 +2180,9 @@ void TSeerHut::doEmptyDialog()
 
 // Dreamcast places this private boundary immediately after DoEmptyDialog and
 // gives it the same (hero*, bool) inputs. Complete's virtual quest owns the
-// completion text and its reward object owns application, but retail folds
-// this revised helper into DoSeerEvent and cross-jumps its accepted arm with
-// the AI reward tail.
+// completion text and its reward object owns application. Complete's shared
+// human/AI reward tail supersedes this older helper boundary in DoSeerEvent;
+// retain the boundary here as Dreamcast source evidence.
 // Original: TSeerHut::DoCompletionDialog; seerhut.cpp:185, dc 0x12d1a8
 void TSeerHut::doCompletionDialog(
     hero* currentHero, bool humanPlayer)

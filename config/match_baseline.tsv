@@ -3729,7 +3729,7 @@ seerhut	?doProposalDialog@type_experience_quest@@UAEXPAVhero@@@Z	100.0000	100.00
 seerhut	?doProposalDialog@type_monster_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16ec00	tokens1:539bfada21ae
 seerhut	?doProposalDialog@type_resource_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171840	tokens1:b04b7b82354e
 seerhut	?doProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	54.1577	54.1577	91.6396	0x16dad0	tokens1:55fe4e9dd723
-seerhut	?doSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	41.7469	42.5710	46.3642	0x173670	tokens1:b8df5995fe7f
+seerhut	?doSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	99.1975	99.1975	99.1975	0x173670	tokens1:dc6c2116512d
 seerhut	?fill@std@@YIXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@0ABV21@@Z	100.0000	100.0000	100.0000	0xaf870	-
 seerhut	?getAIValue@type_artifact_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x16f5a0	tokens1:881844d910ff
 seerhut	?getAIValue@type_creature_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x170480	tokens1:2578de3ef663
