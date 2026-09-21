@@ -3,6 +3,7 @@
 // two exact methods below. The flanking cursor/customcampaign and
 // customcampaign/dialogbox gaps remain ambiguous, so the older-revision
 // carcass is not force-claimed merely from roster order.
+#include "text.h"
 #include "va.h"
 #include "homm3_minmax.h"
 #include "bitset_iterator.h"
@@ -43,6 +44,87 @@
 #include "town.h"
 #include "winmgr.h"
 
+// Initial contents recovered from the pinned Complete image.
+DATA(0x0063d734) const int g_campaignVideoIds[101] = { 38, 39, 40, 45, 46, 47, 41, 42, 43, 48, 49, 50, 51, 55, 62, 56, 57, 58, 52, 53, 54, 59, 60, 61, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 102, 103, 104, 105, 106, 107, 113, 114, 115, 116, 117, 97, 98, 99, 100, 101, 108, 109, 110, 111, 112, 118, 119, 120, 121, 122, 136, 137, 138, 139, 140, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135 };
+DATA(0x00675be8) const char* g_campaignVideoSounds[101] = { "g1a", "g1b", "g1c", "e1a", "e1b", "e1c", "n1a", "n1b", "n1c_d", "g2a", "g2b", "g2c", "g2d", "e2a", "e2Ae", "e2b", "e2c", "e2d", "g3a", "g3b", "g3c", "s1a", "s1b", "s1c", "ABvoAB1", "ABvoAB2", "ABvoAB3", "ABvoAB4", "ABvoAB5", "ABvoAB6", "ABvoAB7", "ABvoAB8", "ABvoAB9", "ABvoDB1", "ABvoDB2", "ABvoDB3", "ABvoDB4", "ABvoDB5", "ABvoDS1", "ABvoDS2", "ABvoDS3", "ABvoDS4", "ABvoDS5", "ABvoFL1", "ABvoFL2", "ABvoFL3", "ABvoFL4", "ABvoFL5", "ABvoFW1", "ABvoFW2", "ABvoFW3", "ABvoFW4", "ABvoFW5", "ABvoPF1", "ABvoPF2", "ABvoPF3", "ABvoPF4", "H3x2BBa", "H3x2BBb", "H3x2BBc", "H3x2BBd", "H3x2BBe", "H3x2BBf", "H3x2ELa", "H3x2ELb", "H3x2ELc", "H3x2ELd", "H3x2ELe", "H3x2HSa", "H3x2HSb", "H3x2HSc", "H3x2HSd", "H3x2HSe", "H3x2NBa", "H3x2NBb", "H3x2NBc", "H3x2NBd", "H3x2NBe", "H3x2RNa", "H3x2RNb", "H3x2RNc", "H3x2RNd", "H3x2RNe", "H3x2SPa", "H3x2SPb", "H3x2SPc", "H3x2SPd", "H3x2SPe", "H3x2UAa", "H3x2UAb", "H3x2UAc", "H3x2UAd", "H3x2UAe", "H3x2UAf", "H3x2UAg", "H3x2UAh", "H3x2UAi", "H3x2UAj", "H3x2UAk", "H3x2UAl", "H3x2UAm" };
+
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x006755b8) const char* g_campaignBuildingIconNames[9][44] = {
+    {
+    "BoCsMag1.pcx", "BoCsMag2.pcx", "BoCsMag3.pcx", "BoCsMag4.pcx", "BoCsMag5.pcx", "BoCsTav1.pcx", "BoCsDock.pcx", "BoCsCas1.pcx",
+    "BoCsCas2.pcx", "BoCsCas3.pcx", "BoCsHal1.pcx", "BoCsHal2.pcx", "BoCsHal3.pcx", "BoCsHal4.pcx", "BoCsMrk1.pcx", "BoCsMrk2.pcx",
+    "BoCsBlak.pcx", "BoCsLite.pcx", "BoCsGr1H.pcx", "BoCsGr2H.pcx", "", "BoCsCv2S.pcx", "BoCsTav2.pcx", "",
+    "", "", "BoCsHoly.pcx", "", "", "", "BoCsPik1.pcx", "BoCsMrk1.pcx",
+    "BoCsGr1.pcx", "BoCsSwd1.pcx", "BoCsMon1.pcx", "BoCsCv1.pcx", "BoCsAng1.pcx", "BoCsPik2.pcx", "BoCsMrk2.pcx", "BoCsGr2.pcx",
+    "BoCsSwd1.pcx", "BoCsMon2.pcx", "BoCsCv2.pcx", "BoCsAng2.pcx"
+},
+    {
+    "BoRMag1.pcx", "BoRMag2.pcx", "BoRMag3.pcx", "BoRMag4.pcx", "BoRMag5.pcx", "BoRTav.pcx", "", "BoRCas1.pcx",
+    "BoRCas2.pcx", "BoRCas3.pcx", "BoRHal1.pcx", "BoRHal2.pcx", "BoRHal3.pcx", "BoRHal4.pcx", "BoRMrk1.pcx", "BoRMrk2.pcx",
+    "BoRAid.pcx", "BoRGar1.pcx", "BoRDwf1h.pcx", "BoRDwf2h.pcx", "", "BoRGar2.pcx", "", "",
+    "BoRTre1h.pcx", "BoRTre2h.pcx", "BoRHoly.pcx", "", "", "", "BoRCen1.pcx", "BoRDwf1.pcx",
+    "BoRElf1.pcx", "BoRPeg1.pcx", "BoRTre1.pcx", "BoRUni1.pcx", "BoRDra1.pcx", "BoRCen2.pcx", "BoRDwf2.pcx", "BoRElf2.pcx",
+    "BoRPeg2.pcx", "BoRTre2.pcx", "BoRUni2.pcx", "BoRDra2.pcx"
+},
+    {
+    "BoTGld1.pcx", "BoTGld2.pcx", "BoTGld3.pcx", "BoTGld4.pcx", "BoTGld5.pcx", "BoTTav.pcx", "", "BoTCas1.pcx",
+    "BoTCas2.pcx", "BoTCas3.pcx", "BoTHal1.pcx", "BoTHal2.pcx", "BoTHal3.pcx", "BoTHal4.pcx", "BoTMark.pcx", "BoTMarkS.pcx",
+    "BoTBlack.pcx", "BoTMarkA.pcx", "BoTGa1H.pcx", "BoTGa2h.pcx", "", "BoTCasW.pcx", "BoTGldL.pcx", "BoTGldW.pcx",
+    "", "", "BoTHoly.pcx", "", "", "", "BoTGrem1.pcx", "BoTGar1.pcx",
+    "BoTGolm1.pcx", "BoTMag1.pcx", "BoTGen1.pcx", "BoTNaga1.pcx", "BoTTit1.pcx", "BoTGrem2.pcx", "BoTGar2.pcx", "BoTGolm2.pcx",
+    "BoTMag2.pcx", "BoTGen2.pcx", "BoTNaga2.pcx", "BoTTit2.pcx"
+},
+    {
+    "BoIMag1.pcx", "BoIMag2.pcx", "BoIMag3.pcx", "BoIMag4.pcx", "BoIMag5.pcx", "BoITav.pcx", "", "BoICas1.pcx",
+    "BoICas2.pcx", "BoICas3.pcx", "BoIHal1.pcx", "BoIHal2.pcx", "BoIHal3.pcx", "BoIHal4.pcx", "BoIMrk1.pcx", "BoIMrk2.pcx",
+    "BoIBlak.pcx", "", "BoIImpH.pcx", "BoIImp2H.pcx", "", "BoICasB.pcx", "BoICasG.pcx", "BoIMagO.pcx",
+    "BoIHndH.pcx", "BoIHnd2H.pcx", "BoIHoly.pcx", "", "", "", "BoIImp1.pcx", "BoIGog1.pcx",
+    "BoIHnd1.pcx", "BoIDmn1.pcx", "BoIPit1.pcx", "BoIEfr1.pcx", "BoIDvl1.pcx", "BoIImp2.pcx", "BoIGog2.pcx", "BoIHnd2.pcx",
+    "BoIDmn2.pcx", "BoIPit2.pcx", "BoIEfr2.pcx", "BoIDvl2.pcx"
+},
+    {
+    "BoNmage1.pcx", "BoNmage2.pcx", "BoNmage3.pcx", "BoNmage4.pcx", "BoNmage5.pcx", "BoNtav.pcx", "BoNship.pcx", "BoNcast1.pcx",
+    "BoNcast2.pcx", "BoNcast3.pcx", "BoNhall1.pcx", "BoNhall2.pcx", "BoNhall3.pcx", "BoNhall4.pcx", "BoNmark1.pcx", "BoNmark2.pcx",
+    "BoNsmith.pcx", "BoNshrod.pcx", "BoNskelH.pcx", "BoNskelH.pcx", "", "BoNnecro.pcx", "BoNskelT.pcx", "",
+    "", "", "BoNholyG.pcx", "", "", "", "BoNskel1.pcx", "BoNzomb1.pcx",
+    "BoNwigh1.pcx", "BoNvamp1.pcx", "BoNlich1.pcx", "BoNbkni1.pcx", "BoNbone1.pcx", "BoNskel2.pcx", "BoNzomb2.pcx", "BoNwigh2.pcx",
+    "BoNvamp2.pcx", "BoNlich2.pcx", "BoNbkni2.pcx", "BoNbone2.pcx"
+},
+    {
+    "BoDmage1.pcx", "BoDmage2.pcx", "BoDmage3.pcx", "BoDmage4.pcx", "BoDmage5.pcx", "BoDtav.pcx", "", "BoDcas1.pcx",
+    "BoDcas2.pcx", "BoDcas3.pcx", "BoDhall1.pcx", "BoDhall2.pcx", "BoDhall3.pcx", "BoDhall4.pcx", "BoDmark1.pcx", "BoDmark2.pcx",
+    "BoDsmith.pcx", "BoDmarkA.pcx", "BoDtrogH.pcx", "BoDtrogH.pcx", "", "BoDvort.pcx", "BoDport.pcx", "BoDacad.pcx",
+    "", "", "BoDholy.pcx", "", "", "", "BoDtrog1.pcx", "BoDharp1.pcx",
+    "BoDbeh1.pcx", "BoDmedu1.pcx", "BoDmino1.pcx", "BoDmant1.pcx", "BoDdrag1.pcx", "BoDtrog2.pcx", "BoDharp2.pcx", "BoDbeh2.pcx",
+    "BoDmedu2.pcx", "BoDmino2.pcx", "BoDmant2.pcx", "BoDdrag2.pcx"
+},
+    {
+    "BoSmage1.pcx", "BoSmage2.pcx", "BoSmage3.pcx", "BoSmage4.pcx", "BoSmage5.pcx", "BoStav1.pcx", "", "BoScas1.pcx",
+    "BoScas2.pcx", "BoScas3.pcx", "BoShall1.pcx", "BoShall2.pcx", "BoShall3.pcx", "BoShall4.pcx", "BoSmrk1.pcx", "BoSmrk2.pcx",
+    "BoSblak1.pcx", "BoSescap.pcx", "BoSgob1h.pcx", "BoSgob2h.pcx", "", "BoSmrk1c.pcx", "BoSblak2.pcx", "BoSvahal.pcx",
+    "", "", "BoSholy.pcx", "", "", "", "BoSgob1.pcx", "BoSwolf1.pcx",
+    "BoSorc1.pcx", "BoSogre1.pcx", "BoSroc1.pcx", "BoScyc1.pcx", "BoSbeh1.pcx", "BoSgob2.pcx", "BoSwolf2.pcx", "BoSorc2.pcx",
+    "BoSogre2.pcx", "BoSroc2.pcx", "BoScyc2.pcx", "BoSbeh2.pcx"
+},
+    {
+    "BoFmage1.pcx", "BoFmage2.pcx", "BoFmage3.pcx", "BoFmage4.pcx", "BoFmage5.pcx", "BoFtav.pcx", "BoFship.pcx", "BoFcast1.pcx",
+    "BoFcast2.pcx", "BoFcast3.pcx", "BoFhall1.pcx", "BoFhall2.pcx", "BoFhall3.pcx", "BoFhall4.pcx", "BoFmark1.pcx", "BoFmark2.pcx",
+    "BoFapoth.pcx", "BoFcage.pcx", "BoFgno1h.pcx", "BoFgno2h.pcx", "", "BoFcastD.pcx", "BoFcastA.pcx", "",
+    "", "", "BoFgrail.pcx", "", "", "", "BoFgnol1.pcx", "BoFlizr1.pcx",
+    "BoFfly1.pcx", "BoFbas1.pcx", "BoFgorg1.pcx", "BoFwyvr1.pcx", "BoFhydr1.pcx", "BoFgnol2.pcx", "BoFlizr2.pcx", "BoFfly2.pcx",
+    "BoFbas2.pcx", "BoFgorg2.pcx", "BoFwyvr2.pcx", "BoFhydr2.pcx"
+},
+    {
+    "BoEgld1.pcx", "BoEgld2.pcx", "BoEgld3.pcx", "BoEgld4.pcx", "BoEgld5.pcx", "BoEtav.pcx", "BoEship.pcx", "BoEcast1.pcx",
+    "BoEcast2.pcx", "BoEcast3.pcx", "BoEhall1.pcx", "BoEhall2.pcx", "BoEhall3.pcx", "BoEhall4.pcx", "BoEmark1.pcx", "BoEmarkS.pcx",
+    "BoEblack.pcx", "BoEmarkA.pcx", "BoDhrd1.pcx", "BoDhrd2.pcx", "", "BoEuniv.pcx", "", "",
+    "", "", "BoEgrail.pcx", "", "", "", "BoEdn_0.pcx", "BoEdn_1.pcx",
+    "BoEdn_2.pcx", "BoEdn_3.pcx", "BoEdn_4.pcx", "BoEdn_5.pcx", "BoEdn_6.pcx", "BoEup_0.pcx", "BoEup_1.pcx", "BoEup_2.pcx",
+    "BoEup_3.pcx", "BoEup_4.pcx", "BoEup_5.pcx", "BoEup_6.pcx"
+}
+};
+DATA(0x0066c218) const SCampaignMusicCue* g_campaignMusicTraits = g_campaignMusicCues;
+
 // Scenario ordinals used when the fixed legacy matrices are promoted to the
 // current variable-length CampaignScenarioInfo vector.
 DATA(0x0063d8c8) static int g_legacyCampaignScenarioIndices[7][4];
@@ -50,7 +132,7 @@ DATA(0x0063d8c8) static int g_legacyCampaignScenarioIndices[7][4];
 // Retail .data 0x66c218 is a reference cell (the akHeroTraits pattern)
 // holding the campaign music table at 0x66c090; only StartMusic and
 // MapTextStruct::Play read the cell, so customcampaign.obj owns it.
-DATA(0x0066c218) extern const SCampaignMusicCue* g_campaignMusicTraits;
+
 
 // The campaign file version at which a scenario's crossover-artifact plane
 // widened from 129 bits to 144; ScenarioStruct::Read still reads and widens
@@ -125,8 +207,8 @@ static const int g_campaignSkipKey = 0x3e;
 // The two per-video tables MapTextStruct::Play indexes with `video`. Each is
 // referenced from exactly one site in the whole image - this body - so
 // customcampaign.obj owns both.
-DATA(0x0063d734) extern const int g_campaignVideoIds[];
-DATA(0x00675be8) extern const char* g_campaignVideoSounds[];
+
+
 
 // The TAbstractFile view of a streambuf: Read is sgetn, Write is sputn.
 // Size 8 is byte-proven by every stack instance (vftable, streambuf*).
@@ -442,7 +524,7 @@ VA(0x004847e0, 0x22)
 void TCampaignBuildingBonus::setTown(int town)
 {
     m_town = town;
-    m_building = g_campaignBuildingRemap[town][m_building];
+    m_building = g_eventBuildingIds[town][m_building];
 }
 
 VA(0x00484810, 0x6)
@@ -515,7 +597,7 @@ std::string TCampaignPrimarySkillBonus::getText() const
         if (m_skills[stat] > 0) {
             list += formatString(
                 DATA_COMPGEN(0x00677278, primarySkillBonusFormat, "+%d %s"),
-                m_skills[stat], g_primarySkillNames[stat]);
+                m_skills[stat], g_statNames[stat]);
             --remaining;
             if (remaining == 1)
                 list += g_generalText->getText(142);
@@ -568,7 +650,7 @@ VA(0x00484c50, 0x4B)
 std::string TCampaignSecondarySkillBonus::getText() const
 {
     return formatString(g_generalText->getText(719),
-                         g_skillMasteryNamesBiased[m_level],
+                         g_secondarySkillLevels[m_level - 1],
                          g_sSkillTraits[m_skill].m_name);
 }
 
@@ -2168,7 +2250,7 @@ void TCampaignBrief::MapTextStruct::play()
     unsigned char finished = 0;
     unsigned char speechStarted = 0;
     int mp3Started = 0;
-    int savedVolume = g_unk698760;
+    int savedVolume = g_config.m_musicVolume;
     long nextScroll = GameTime::get() + g_campaignScrollInterval;
     int textHeight = g_bigFont->lineLength(m_subtitles.c_str(),
                                             g_campaignSubtitleWidth)
@@ -2193,7 +2275,7 @@ void TCampaignBrief::MapTextStruct::play()
 
     g_windowManager->m_screenBitmap->fillRect(0, 0, 800, 600, 0);
 
-    if (m_subtitles.length() > 0 && (g_showSubtitles || !speechName)) {
+    if (m_subtitles.length() > 0 && (g_config.m_videoSubtitles || !speechName)) {
         if (textHeight < g_campaignSubtitleHeight)
             textHeight = g_campaignSubtitleHeight;
         strip = new Bitmap16Bit(g_campaignSubtitleWidth,
@@ -2305,12 +2387,12 @@ void TCampaignBrief::MapTextStruct::play()
                 }
             } else if (music && AIL_stream_status(g_mp3Stream)
                                     != AIL_STREAM_PLAYING) {
-                g_unk698760 /= 2;
+                g_config.m_musicVolume /= 2;
                 g_soundManager->startMP3(music, 0, 1);
                 mp3Started = 1;
             }
 
-            if (g_showSubtitles)
+            if (g_config.m_videoSubtitles)
                 redraw = 1;
             if (!videoDone && !g_smackVideo) {
                 videoDone = 1;
@@ -2350,7 +2432,7 @@ void TCampaignBrief::MapTextStruct::play()
         speech->dispose();
     }
     delete strip;
-    g_unk698760 = savedVolume;
+    g_config.m_musicVolume = savedVolume;
     videoClose();
 }
 

@@ -54,6 +54,355 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Initial contents recovered from the pinned Complete image.
+DATA(0x0063cf7c) const float g_combatSpeedFactors[3] = { 1.0f, 0.6299999952316284f, 0.4000000059604645f };
+DATA(0x0063bd00) const unsigned char g_castleWallColumns[11] = { 12, 29, 45, 62, 78, 96, 112, 130, 147, 165, 182 };
+DATA(0x0063d368) const int g_boatBlockedHexes[32] = { 6, 7, 8, 9, 24, 25, 26, 58, 59, 60, 75, 76, 77, 92, 93, 94, 109, 110, 111, 126, 127, 128, 159, 160, 161, 162, 163, 176, 177, 178, 179, 180 };
+DATA(0x0063d0a8) const int g_combatDeployHexes[2][7] = {
+    { 1, 35, 69, 86, 103, 137, 171 },
+    { 15, 49, 83, 100, 117, 151, 185 }
+};
+DATA(0x0063d0e0) const int g_combatDeploySurroundedHexes[2][7] = {
+    { 57, 61, 90, 93, 96, 125, 129 },
+    { 15, 185, 172, 2, 100, 87, 8 }
+};
+DATA(0x0063d118) const int g_combatDeploySpreadSlots[7][7] = {
+    { 3, 0, 0, 0, 0, 0, 0 },
+    { 1, 5, 0, 0, 0, 0, 0 },
+    { 1, 3, 5, 0, 0, 0, 0 },
+    { 0, 2, 4, 6, 0, 0, 0 },
+    { 0, 1, 3, 5, 6, 0, 0 },
+    { 0, 1, 2, 4, 5, 6, 0 },
+    { 0, 1, 2, 3, 4, 5, 6 }
+};
+DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[7][7] = {
+    { 3, 0, 0, 0, 0, 0, 0 },
+    { 2, 4, 0, 0, 0, 0, 0 },
+    { 2, 3, 4, 0, 0, 0, 0 },
+    { 1, 2, 4, 5, 0, 0, 0 },
+    { 1, 2, 3, 4, 5, 0, 0 },
+    { 0, 1, 2, 4, 5, 6, 0 },
+    { 0, 1, 2, 3, 4, 5, 6 }
+};
+DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[18] = {
+    { "CH00.DEF", 92, 67, 5 },
+    { "CH01.DEF", 94, 54, 5 },
+    { "CH02.DEF", 102, 62, 5 },
+    { "CH03.DEF", 102, 62, 5 },
+    { "CH05.DEF", 100, 59, 5 },
+    { "CH04.DEF", 98, 52, 5 },
+    { "CH06.DEF", 97, 63, 5 },
+    { "CH07.DEF", 99, 62, 5 },
+    { "CH08.DEF", 91, 68, 5 },
+    { "CH09.DEF", 96, 56, 5 },
+    { "CH010.DEF", 92, 56, 5 },
+    { "CH11.DEF", 96, 56, 5 },
+    { "CH013.DEF", 101, 60, 5 },
+    { "CH012.DEF", 96, 59, 5 },
+    { "CH014.DEF", 99, 58, 5 },
+    { "CH015.DEF", 95, 52, 5 },
+    { "CH16.DEF", 99, 58, 5 },
+    { "CH17.DEF", 95, 52, 5 }
+};
+DATA(0x0063cf88) const TSiegeArcherInfo g_siegeArcherInfo[9] = {
+    { 2, { { 780, 238 }, { 648, 566 }, { 596, 80 } }, "plcbowx.def" },
+    { 18, { { 786, 240 }, { 625, 563 }, { 595, 81 } }, "pelfx.def" },
+    { 34, { { 753, 251 }, { 609, 578 }, { 600, 92 } }, "pmagex.def" },
+    { 44, { { 765, 230 }, { 623, 565 }, { 595, 80 } }, "cprgogx.def" },
+    { 64, { { 755, 365 }, { 625, 570 }, { 593, 90 } }, "PLICH.def" },
+    { 76, { { 785, 217 }, { 625, 560 }, { 596, 80 } }, "pmedusx.def" },
+    { 88, { { 785, 222 }, { 615, 557 }, { 596, 80 } }, "porchx.def" },
+    { 100, { { 795, 230 }, { 626, 575 }, { 580, 85 } }, "pplizax.def" },
+    { 127, { { 783, 225 }, { 636, 575 }, { 595, 105 } }, "cprgtix.def" }
+};
+DATA(0x00641e08) const TSpellEffectTraits g_spellEffectTraits[83] = {
+    { "C10spW.def", "Prayer", 256 },
+    { "C11spA0.def", "Lightning_Bolt", 2 },
+    { "C01spA0.def", "AirShield", 1 },
+    { "C02spA0.def", "Backlash", 1 },
+    { "C01spE0.def", "AnimateDead", 1 },
+    { "C02spE0.def", "AntiMagic", 1 },
+    { "C02spF0.def", "Blind", 1 },
+    { "C04spA0.def", "Counterstroke", 1 },
+    { "C04spE0.def", "DeathRipple", 1 },
+    { "C04spF0.def", "Fireblast", 1 },
+    { "C05spE0.def", "Decay", 0 },
+    { "C05spF0.def", "FireShield", 1 },
+    { "C06spF0.def", "Firestorm", 15 },
+    { "C07spA0.def", "DisruptiveRay_Ray", 15 },
+    { "C07spA1.def", "DisruptiveRay_Burst", 257 },
+    { "C0fear.def", "Fear", 257 },
+    { "C08spE0.def", "MeteorShower", 1 },
+    { "C08spF0.def", "Frenzy", 1 },
+    { "C09spA0.def", "Fortune", 1 },
+    { "C09spE0.def", "MuckAndMire", 0 },
+    { "C09spW0.def", "Mirth", 1 },
+    { "C10spA0.def", "Hypnotize", 1 },
+    { "C11spE0.def", "ProtectionFromAir", 0 },
+    { "C11spF0.def", "ProtectionFromWater", 0 },
+    { "C11spW0.def", "ProtectionFromFire", 0 },
+    { "C12spA0.def", "Precision", 1 },
+    { "C13spA0.def", "ProtectionFromEarth", 0 },
+    { "C13spE0.def", "Shield", 1 },
+    { "C13spW0.def", "Slayer", 1 },
+    { "C14spA0.def", "SacredBreath", 257 },
+    { "C14spE0.def", "Sorrow", 1 },
+    { "C15spA0.def", "TailWind", 0 },
+    { "C15spE0.def", "Forcefield_2", 0 },
+    { "C15spE9.def", "Forcefield_3", 0 },
+    { "C18spW0.def", "RemoveObstacle", 0 },
+    { "C01spF0.def", "Berserk", 1 },
+    { "C01spW0.def", "Bless", 1 },
+    { "C03spA0.def", "ChainLightning_Bolt", 2 },
+    { "C03spA1.def", "ChainLightning_Dust", 1 },
+    { "C03spW0.def", "Cure", 1 },
+    { "C04spW0.def", "Curse", 1 },
+    { "C05spW0.def", "Dispel", 1 },
+    { "C06spW0.def", "Forgetfulness", 1 },
+    { "C07spF0.def", "Firewall_2", 4 },
+    { "C07spF9.def", "Firewall_3", 4 },
+    { "C07spW0.def", "FrostRing", 1 },
+    { "C08spW5.def", "IceRay_Burst", 257 },
+    { "C09spF0.def", "LandMine", 4 },
+    { "C10spF0.def", "Misfortune", 1 },
+    { "C11spA1.def", "Lightning_Dust", 0 },
+    { "C12spE0.def", "Resurrection", 257 },
+    { "C12spF0.def", "Sacrifice_Slay", 1 },
+    { "C12spF1.def", "Sacrifice_Resurrect", 257 },
+    { "C13spF.def", "SpontaneousCombustion", 1 },
+    { "C16spE0.def", "ToughSkin", 1 },
+    { "C17spE0.def", "Quicksand", 4 },
+    { "C17spW0.def", "Weakness", 1 },
+    { "C09spF3.def", "LandMineExplosion", 0 },
+    { "C17spE2.def", "DispelQuicksand", 4 },
+    { "C09spF2.def", "DispelLandMine", 4 },
+    { "C15spE2.def", "DispelForcefield_2", 4 },
+    { "C15spE11.def", "DispelForcefield_3", 4 },
+    { "C07spF2.def", "DispelFirewall_2", 4 },
+    { "C07spF11.def", "DispelFirewall_3", 4 },
+    { "C20SPX.DEF", "MagicBolt_Burst", 1 },
+    { "C07spF60.def", "Firewall_1", 4 },
+    { "C07spF62.def", "DispelFirewall_1", 4 },
+    { "sp11_.def", "Poison", 1 },
+    { "sp02_.def", "Bind", 0 },
+    { "sp05_.def", "Disease", 1 },
+    { "sp10_.def", "Paralyze", 0 },
+    { "sp01_.def", "Age", 1 },
+    { "sp04_.def", "DeathCloud", 271 },
+    { "sp03_.def", "DeathBlow", 1 },
+    { "sp06_.def", "DrainLife", 257 },
+    { "sp07_A.def", "MagicChannel_Suck", 1 },
+    { "sp07_B.def", "MagicChannel_Spew", 1 },
+    { "sp08_.def", "MagicDrain", 0 },
+    { "sp09_.def", "MagicResistance", 3 },
+    { "sp12_.def", "Regenerate", 257 },
+    { "c07spe0.def", "DeathStare", 1 },
+    { "c0acid.def", "AcidBreath", 1 },
+    { "poof.def", "Poof", 0 }
+};
+DATA(0x0063c7c8) const combatManager::TObstacleInfo combatManager::s_obstacleInfo[91] = {
+    { 1, 0, 1, 2, 2, 1, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObDino1.def" },
+    { 99, 1, 2, 3, 3, 0, { 0, 1, 2, 0, 0, 0, 0, 0 }, "ObDino2.def" },
+    { 1, 0, 2, 4, 5, 1, { 0, 1, -14, -15, -16, 0, 0, 0 }, "ObDino3.def" },
+    { 33, 4, 1, 2, 2, 1, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObSkel1.def" },
+    { 97, 5, 1, 2, 2, 1, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObSkel2.def" },
+    { 1, 0, 2, 4, 3, 1, { 1, 2, 3, -14, -15, -16, 0, 0 }, "ObBDT01.def" },
+    { 1, 0, 2, 3, 2, 1, { -15, -16, 0, 0, 0, 0, 0, 0 }, "ObDRk01.def" },
+    { 1, 0, 2, 2, 2, 0, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObDRk02.def" },
+    { 1, 0, 2, 2, 1, 1, { -16, 0, 0, 0, 0, 0, 0, 0 }, "ObDRk03.def" },
+    { 1, 0, 2, 2, 2, 0, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObDRk04.def" },
+    { 1, 0, 2, 2, 2, 0, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObDSh01.def" },
+    { 1, 0, 1, 2, 2, 0, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObDTF03.def" },
+    { 33, 4, 3, 3, 4, 0, { 0, 1, 2, 3, 0, 0, 0, 0 }, "ObDtS03.def" },
+    { 33, 4, 2, 3, 3, 1, { 1, 2, -15, 0, 0, 0, 0, 0 }, "ObDtS04.def" },
+    { 33, 4, 2, 3, 3, 1, { 2, -15, -16, 0, 0, 0, 0, 0 }, "ObDtS14.def" },
+    { 33, 4, 3, 3, 3, 1, { 1, -16, -33, 0, 0, 0, 0, 0 }, "ObDtS15.def" },
+    { 2, 0, 4, 4, 6, 1, { -15, -16, -32, -33, -48, -49, 0, 0 }, "ObDsM01.def" },
+    { 2, 0, 2, 3, 3, 1, { 1, -15, -16, 0, 0, 0, 0, 0 }, "ObDsS02.def" },
+    { 2, 0, 2, 4, 5, 1, { 1, 2, 3, -15, -16, 0, 0, 0 }, "ObDsS17.def" },
+    { 20, 0, 1, 2, 2, 1, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObGLg01.def" },
+    { 20, 2, 2, 2, 2, 0, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObGRk01.def" },
+    { 20, 0, 1, 1, 1, 1, { 0, 0, 0, 0, 0, 0, 0, 0 }, "ObGSt01.def" },
+    { 4, 2, 2, 6, 8, 1, { 1, 2, 3, 4, -13, -14, -15, -16 }, "ObGrS01.def" },
+    { 4, 0, 1, 7, 2, 1, { 1, 2, 0, 0, 0, 0, 0, 0 }, "OBGrS02.def" },
+    { 8, 0, 1, 3, 3, 1, { 0, 1, 2, 0, 0, 0, 0, 0 }, "ObSnS01.def" },
+    { 8, 0, 1, 5, 4, 1, { 1, 2, 3, 4, 0, 0, 0, 0 }, "ObSnS02.def" },
+    { 8, 0, 3, 3, 3, 1, { 0, -16, -33, 0, 0, 0, 0, 0 }, "ObSnS03.def" },
+    { 8, 0, 1, 3, 3, 1, { 0, 1, 2, 0, 0, 0, 0, 0 }, "ObSnS04.def" },
+    { 8, 0, 1, 3, 1, 1, { 1, 0, 0, 0, 0, 0, 0, 0 }, "ObSnS05.def" },
+    { 8, 0, 2, 3, 2, 0, { 1, 2, 0, 0, 0, 0, 0, 0 }, "ObSnS06.def" },
+    { 8, 0, 1, 2, 2, 1, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObSnS07.def" },
+    { 8, 0, 2, 3, 3, 0, { 0, 1, 2, 0, 0, 0, 0, 0 }, "ObSnS08.def" },
+    { 8, 0, 2, 7, 8, 1, { 2, 3, 4, 5, -13, -14, -15, -16 }, "ObSnS09.def" },
+    { 8, 0, 5, 5, 7, 1, { 3, -13, -14, -15, -33, -49, -66, -67 }, "ObSnS10.def" },
+    { 16, 0, 2, 2, 1, 0, { 0, 0, 0, 0, 0, 0, 0, 0 }, "ObSwS01.def" },
+    { 16, 0, 3, 8, 7, 1, { -10, -11, -12, -13, -14, -15, -16, 0 }, "ObSwS02.def" },
+    { 16, 0, 1, 2, 2, 0, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObSwS03.def" },
+    { 16, 0, 1, 3, 3, 0, { 0, 1, 2, 0, 0, 0, 0, 0 }, "ObSwS04.def" },
+    { 16, 0, 4, 5, 8, 1, { -13, -14, -15, -16, -30, -31, -32, -33 }, "ObSwS11b.def" },
+    { 16, 0, 3, 4, 6, 1, { -16, -17, -31, -32, -33, -34, 0, 0 }, "ObSwS13a.def" },
+    { 32, 4, 2, 2, 3, 1, { 0, 1, -16, 0, 0, 0, 0, 0 }, "ObRgS01.def" },
+    { 32, 4, 3, 4, 5, 1, { -14, -15, -16, -32, -33, 0, 0, 0 }, "ObRgS02.def" },
+    { 32, 4, 2, 3, 4, 1, { 1, 2, -15, -16, 0, 0, 0, 0 }, "ObRgS03.def" },
+    { 32, 4, 3, 3, 3, 1, { -16, -32, -33, 0, 0, 0, 0, 0 }, "ObRgS04.def" },
+    { 32, 4, 3, 3, 3, 1, { -15, -16, -32, 0, 0, 0, 0, 0 }, "ObRgS05.def" },
+    { 64, 0, 3, 3, 5, 0, { 0, 1, 2, -15, -16, 0, 0, 0 }, "ObSuS01.def" },
+    { 64, 0, 2, 3, 3, 0, { 0, 1, 2, 0, 0, 0, 0, 0 }, "ObSuS02.def" },
+    { 64, 0, 3, 4, 7, 0, { 0, 1, 2, 3, -14, -15, -16, 0 }, "ObSuS11b.def" },
+    { 128, 0, 3, 4, 3, 1, { -14, -32, -33, 0, 0, 0, 0, 0 }, "ObLvS01.def" },
+    { 128, 0, 2, 4, 6, 1, { 0, 1, 2, -14, -15, -16, 0, 0 }, "ObLvS02.def" },
+    { 128, 0, 3, 5, 7, 1, { -13, -14, -15, -30, -31, -32, -33, 0 }, "ObLvS03.def" },
+    { 128, 0, 2, 3, 3, 0, { 0, 1, 2, 0, 0, 0, 0, 0 }, "ObLvS04.def" },
+    { 128, 0, 4, 4, 6, 1, { -14, -15, -32, -33, -49, -50, 0, 0 }, "ObLvS09.def" },
+    { 128, 0, 3, 5, 6, 1, { -13, -14, -15, -16, -30, -31, 0, 0 }, "ObLvS17.def" },
+    { 128, 0, 3, 5, 7, 1, { -13, -14, -15, -16, -31, -32, -33, 0 }, "ObLvS22.def" },
+    { 256, 0, 3, 3, 3, 1, { -15, -16, -33, 0, 0, 0, 0, 0 }, "ObBtS04.def" },
+    { 0, 1, 2, 3, 3, 1, { 1, -15, -16, 0, 0, 0, 0, 0 }, "ObBhS02.def" },
+    { 0, 1, 2, 3, 3, 0, { 0, 1, 2, 0, 0, 0, 0, 0 }, "ObBhS03.def" },
+    { 0, 1, 2, 5, 6, 1, { 1, 2, 3, -14, -15, -16, 0, 0 }, "ObBhS11a.def" },
+    { 0, 1, 2, 4, 4, 1, { 1, 2, -14, -15, 0, 0, 0, 0 }, "ObBhS12b.def" },
+    { 0, 1, 2, 2, 3, 1, { 0, 1, -16, 0, 0, 0, 0, 0 }, "ObBhS14b.def" },
+    { 0, 8, 1, 1, 1, 0, { 0, 0, 0, 0, 0, 0, 0, 0 }, "ObHGs00.def" },
+    { 0, 8, 1, 2, 2, 0, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObHGs01.def" },
+    { 0, 8, 3, 3, 1, 0, { 1, 0, 0, 0, 0, 0, 0, 0 }, "ObHGs02.def" },
+    { 0, 8, 2, 3, 3, 0, { 0, 1, 2, 0, 0, 0, 0, 0 }, "ObHGs03.def" },
+    { 0, 8, 3, 4, 4, 0, { 0, 1, 2, 3, 0, 0, 0, 0 }, "ObHGs04.def" },
+    { 0, 16, 1, 1, 1, 0, { 0, 0, 0, 0, 0, 0, 0, 0 }, "ObEFs00.def" },
+    { 0, 16, 1, 2, 2, 0, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObEFs01.def" },
+    { 0, 16, 2, 3, 3, 0, { 0, 1, 2, 0, 0, 0, 0, 0 }, "ObEFs02.def" },
+    { 0, 16, 2, 4, 2, 0, { 1, 2, 0, 0, 0, 0, 0, 0 }, "ObEFs03.def" },
+    { 0, 16, 2, 6, 5, 0, { 1, 2, 3, -12, -13, 0, 0, 0 }, "ObEFs04.def" },
+    { 0, 32, 1, 1, 1, 1, { 0, 0, 0, 0, 0, 0, 0, 0 }, "ObCFs00.def" },
+    { 0, 32, 1, 3, 3, 1, { 0, 1, 2, 0, 0, 0, 0, 0 }, "ObCFs01.def" },
+    { 0, 32, 2, 3, 4, 1, { 1, 2, -15, -16, 0, 0, 0, 0 }, "ObCFs02.def" },
+    { 0, 32, 2, 4, 6, 1, { 0, 1, 2, -14, -15, -16, 0, 0 }, "ObCFs03.def" },
+    { 0, 64, 1, 1, 1, 1, { 0, 0, 0, 0, 0, 0, 0, 0 }, "ObLPs00.def" },
+    { 0, 64, 1, 2, 2, 1, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObLPs01.def" },
+    { 0, 64, 2, 3, 3, 1, { 0, -15, -16, 0, 0, 0, 0, 0 }, "ObLPs02.def" },
+    { 0, 64, 2, 5, 7, 1, { 1, 2, 3, -13, -14, -15, -16, 0 }, "ObLPs03.def" },
+    { 0, 128, 1, 1, 1, 0, { 0, 0, 0, 0, 0, 0, 0, 0 }, "ObFFs00.def" },
+    { 0, 128, 1, 2, 2, 0, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObFFs01.def" },
+    { 0, 128, 2, 3, 4, 0, { 0, 1, 2, -15, 0, 0, 0, 0 }, "ObFFs02.def" },
+    { 0, 128, 2, 4, 5, 0, { 1, 2, 3, -15, -16, 0, 0, 0 }, "ObFFs03.def" },
+    { 0, 128, 3, 3, 7, 0, { 0, 1, 2, 3, -14, -15, -16, 0 }, "ObFFs04.def" },
+    { 0, 256, 1, 1, 1, 0, { 0, 0, 0, 0, 0, 0, 0, 0 }, "ObRLs00.def" },
+    { 0, 256, 1, 2, 2, 0, { 0, 1, 0, 0, 0, 0, 0, 0 }, "ObRLs01.def" },
+    { 0, 256, 1, 3, 3, 0, { 0, 1, 2, 0, 0, 0, 0, 0 }, "ObRLs02.def" },
+    { 0, 256, 2, 4, 5, 0, { 1, 2, 3, -15, -16, 0, 0, 0 }, "ObRLs03.def" },
+    { 0, 512, 1, 1, 1, 1, { 0, 0, 0, 0, 0, 0, 0, 0 }, "ObMCs00.def" },
+    { 0, 512, 2, 2, 2, 1, { 1, -16, 0, 0, 0, 0, 0, 0 }, "ObMCs01.def" },
+    { 0, 512, 2, 4, 4, 1, { 0, 1, -14, -15, 0, 0, 0, 0 }, "ObMCs02.def" }
+};
+DATA(0x0063cee8) const combatManager::TObstacleInfo combatManager::s_quicksandInfo[1] = {
+    { 0, 0, 1, 1, 1, 1, { 0, 0, 0, 0, 0, 0, 0, 0 }, "C17SPE1.DEF" }
+};
+DATA(0x0063cf00) const combatManager::TObstacleInfo combatManager::s_landMineInfo[1] = {
+    { 0, 0, 1, 1, 1, 1, { 0, 0, 0, 0, 0, 0, 0, 0 }, "C09spF1.def" }
+};
+DATA(0x0063cf18) const combatManager::TObstacleInfo combatManager::s_wallObstacleInfo[5] = {
+    { 0, 0, 3, 1, 2, 0, { 0, -16, 0, 0, 0, 0, 0, 0 }, "C15spE1.def" },
+    { 0, 0, 4, 1, 3, 0, { 0, -16, -34, 0, 0, 0, 0, 0 }, "C15spE10.def" },
+    { 0, 0, 3, 1, 2, 0, { 0, -16, 0, 0, 0, 0, 0, 0 }, "C07spF1.def" },
+    { 0, 0, 4, 1, 3, 0, { 0, -16, -34, 0, 0, 0, 0, 0 }, "C07spF10.def" },
+    { 0, 0, 3, 1, 1, 0, { 0, 0, 0, 0, 0, 0, 0, 0 }, "C07spF61.def" }
+};
+DATA(0x0063bec0) const combatManager::SElevationOverlay combatManager::s_elevationOverlay[34] = {
+    { 1, 0, 124, 254, { 80, 94, 95, 96, 97, 105, 106, 107, 108, 109, 110, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObDtL04.pcx" },
+    { 1, 0, 256, 254, { 73, 91, 108, 109, 110, 111, 112, 113, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObDtL06.pcx" },
+    { 1, 0, 168, 212, { 60, 61, 62, 63, 64, 72, 73, 74, 75, 76, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, -1, 0, 0, 0, 0 }, "ObDtL10.pcx" },
+    { 1, 0, 124, 254, { 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObDtL02.pcx" },
+    { 1, 0, 146, 254, { 76, 77, 78, 79, 80, 89, 90, 91, 92, 93, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObDtL03.pcx" },
+    { 4, 0, 173, 221, { 55, 56, 57, 58, 75, 76, 77, 95, 112, 113, 131, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObGrL01.pcx" },
+    { 4, 0, 180, 264, { 81, 91, 92, 93, 94, 95, 96, 97, 98, 106, 107, 123, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObGrL02.pcx" },
+    { 8, 0, 166, 255, { 76, 77, 78, 79, 91, 92, 93, 97, 98, 106, 107, 108, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObSnL01.pcx" },
+    { 8, 0, 302, 172, { 41, 42, 43, 58, 75, 92, 108, 126, 143, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObSnL14.pcx" },
+    { 16, 0, 300, 170, { 40, 41, 58, 59, 74, 75, 92, 93, 109, 110, 111, 127, 128, 129, 130, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObSwL15.pcx" },
+    { 16, 0, 278, 171, { 43, 60, 61, 77, 93, 94, 95, 109, 110, 126, 127, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObSwL14.pcx" },
+    { 16, 0, 256, 254, { 74, 75, 76, 77, 91, 92, 93, 94, 95, 109, 110, 111, 112, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObSwL22.pcx" },
+    { 128, 0, 124, 254, { 77, 78, 79, 80, 81, 91, 92, 93, 94, 105, 106, 107, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObLvL01.pcx" },
+    { 128, 0, 256, 128, { 43, 60, 61, 76, 77, 93, 109, 126, 127, 142, 143, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "OBLvL02.pcx" },
+    { 32, 4, 186, 212, { 55, 72, 90, 107, 125, 126, 127, 128, 129, 130, 131, 132, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObRgL01.pcx" },
+    { 32, 4, 347, 174, { 41, 59, 76, 94, 111, 129, 143, 144, 145, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObRgL02.pcx" },
+    { 32, 4, 294, 169, { 40, 41, 42, 43, 58, 75, 93, 110, 128, 145, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObRgL03.pcx" },
+    { 32, 4, 165, 257, { 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 89, 105, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObRgL04.pcx" },
+    { 32, 4, 208, 268, { 72, 73, 74, 75, 76, 77, 78, 79, 80, 90, 91, 92, 93, 94, 95, 96, 97, -1, 0, 0, 0, 0, 0, 0, 0 }, "ObRgL05.pcx" },
+    { 32, 4, 252, 254, { 73, 74, 75, 76, 77, 78, 91, 92, 93, 94, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObRgL06.pcx" },
+    { 32, 4, 278, 128, { 23, 40, 58, 75, 93, 110, 128, 145, 163, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObRgL15.pcx" },
+    { 32, 4, 208, 268, { 72, 73, 74, 75, 76, 77, 78, 79, 80, 90, 91, 92, 93, 94, 95, 96, 97, -1, 0, 0, 0, 0, 0, 0, 0 }, "ObRgL05.pcx" },
+    { 32, 4, 168, 212, { 73, 74, 75, 76, 77, 78, 79, 90, 91, 92, 93, 94, 95, 96, 97, 106, 107, 108, 109, 110, 111, 112, -1, 0, 0 }, "ObRgL22.pcx" },
+    { 0, 1, 147, 264, { 72, 73, 74, 75, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObBhL02.pcx" },
+    { 0, 1, 178, 262, { 71, 72, 73, 74, 75, 76, 77, 78, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, -1, 0, 0, 0, 0, 0, 0 }, "ObBhL03.pcx" },
+    { 0, 1, 173, 257, { 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 89, 90, 105, 106, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObBhL05.pcx" },
+    { 0, 1, 241, 272, { 73, 91, 108, 109, 110, 111, 112, 113, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObBhL06.pcx" },
+    { 0, 1, 261, 129, { 27, 28, 43, 44, 60, 61, 76, 77, 93, 94, 109, 110, 126, 127, 142, 143, 159, -1, 0, 0, 0, 0, 0, 0, 0 }, "ObBhL14.pcx" },
+    { 0, 1, 180, 154, { 22, 38, 39, 40, 44, 45, 46, 55, 56, 57, 62, 63, 123, 124, 125, 130, 131, 140, 141, 146, 147, 148, -1, 0, 0 }, "ObBhL16.pcx" },
+    { 0, 32, 304, 264, { 76, 77, 92, 93, 94, 95, 109, 110, 111, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObCFL00.pcx" },
+    { 0, 64, 256, 257, { 76, 77, 78, 92, 93, 94, 107, 108, 109, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObLPL00.pcx" },
+    { 0, 128, 257, 255, { 76, 77, 91, 92, 93, 94, 95, 108, 109, 110, 111, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObFFL00.pcx" },
+    { 0, 256, 277, 218, { 60, 61, 75, 76, 77, 91, 92, 93, 94, 95, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObRLL00.pcx" },
+    { 0, 512, 300, 214, { 59, 60, 74, 75, 76, 93, 94, 95, 111, 112, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObMCL00.pcx" }
+};
+DATA(0x0066d84c) combatManager::TWallTraits combatManager::s_wallTraits[9][18] = {
+    { { -1, 0, -552, 102, { "SgCsDrw2.pcx", "SgCsDrw1.pcx", 0, 0, 0 }, 0, 400, 276 }, { -1, 0, 0, 0, { "SgCsDrwC.pcx", 0, 0, 0, 0 }, 0, 410, 90 }, { -1, 0, -616, 102, { 0, 0, 0, 0, 0 }, 0, 403, 80 }, { -1, 0, -632, 102, { 0, 0, 0, 0, 0 }, 0, 600, 49 }, { -1, 0, -648, 102, { 0, 0, 0, 0, 0 }, 0, 569, 35 }, { 255, 0, -664, 102, { "SgCsTw21.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx", 0 }, 0, 524, 32 }, { 45, 0, 0, 0, { "SgCsWa62.pcx", "SgCsWa61.pcx", "SgCsWa61.pcx", "SgCsWa61.pcx", 0 }, 0, 489, 79 }, { 62, 0, -724, 102, { 0, 0, 0, 0, 0 }, 0, 470, 127 }, { 78, 0, 0, 0, { "SgCsWa42.pcx", "SgCsWa41.pcx", "SgCsWa41.pcx", "SgCsWa41.pcx", 0 }, 0, 477, 238 }, { 112, 0, -772, 102, { "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx", 0 }, 0, 469, 291 }, { 130, 0, 0, 0, { "SgCsWa32.pcx", "SgCsWa31.pcx", "SgCsWa31.pcx", "SgCsWa31.pcx", 0 }, 0, 512, 347 }, { 165, 0, -816, 102, { 0, 0, 0, 0, 0 }, 0, 528, 350 }, { 182, 0, 0, 0, { "SgCsWa12.pcx", "SgCsWa11.pcx", "SgCsWa11.pcx", "SgCsWa11.pcx", 0 }, 0, 602, 500 }, { 251, 0, -864, 102, { "SgCsTw11.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx", 0 }, 0, 720, 158 }, { 135, 0, -896, 102, { "SgCsMan1.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx", 0 }, 0, 720, 158 }, { 135, 0, 0, 0, { "SgCsManC.pcx", 0, 0, 0, 0 }, 0, 602, 500 }, { 251, 0, 0, 0, { "SgCsTw1C.pcx", 0, 0, 0, 0 }, 0, 557, 24 }, { 255, 0, 0, 0, { "SgCsTw2C.pcx", 0, 0, 0, 0 }, 0, 404, 271 } },
+    { { -1, 0, -976, 102, { "SgRmDrw2.pcx", "SgRmDrw1.pcx", 0, 0, 0 }, 0, 404, 271 }, { -1, 0, 0, 0, { "SgRmDrwC.pcx", 0, 0, 0, 0 }, 0, 410, 77 }, { -1, 0, -1040, 102, { 0, 0, 0, 0, 0 }, 0, 410, 97 }, { -1, 0, -1056, 102, { 0, 0, 0, 0, 0 }, 0, 608, 46 }, { -1, 0, -1072, 102, { 0, 0, 0, 0, 0 }, 0, 565, 31 }, { 255, 0, -1088, 102, { "SgRmTw21.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx", 0 }, 0, 530, 57 }, { 45, 0, 0, 0, { "SgRmWa62.pcx", "SgRmWa61.pcx", "SgRmWa61.pcx", "SgRmWa61.pcx", 0 }, 0, 492, 103 }, { 62, 0, -1148, 102, { 0, 0, 0, 0, 0 }, 0, 469, 186 }, { 78, 0, 0, 0, { "SgRmWa42.pcx", "SgRmWa41.pcx", "SgRmWa41.pcx", "SgRmWa41.pcx", 0 }, 0, 460, 220 }, { 112, 0, -1196, 102, { "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx", 0 }, 0, 469, 309 }, { 130, 0, 0, 0, { "SgRmWa32.pcx", "SgRmWa31.pcx", "SgRmWa31.pcx", "SgRmWa31.pcx", 0 }, 0, 510, 364 }, { 165, 0, -1240, 102, { 0, 0, 0, 0, 0 }, 0, 549, 451 }, { 182, 0, 0, 0, { "SgRmWa12.pcx", "SgRmWa11.pcx", "SgRmWa11.pcx", "SgRmWa11.pcx", 0 }, 0, 594, 511 }, { 251, 0, -1288, 102, { "SgRmTw11.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx", 0 }, 0, 724, 189 }, { 135, 0, -1320, 102, { "SgRmMan1.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx", 0 }, 0, 724, 189 }, { 135, 0, 0, 0, { "SgRmManC.pcx", 0, 0, 0, 0 }, 0, 594, 511 }, { 251, 0, 0, 0, { "SgRmTw1C.pcx", 0, 0, 0, 0 }, 0, 566, 31 }, { 255, 0, 0, 0, { "SgRmTw2C.pcx", 0, 0, 0, 0 }, 0, 401, 253 } },
+    { { -1, 0, -1400, 102, { "SgTwDrw2.pcx", "SgTwDrw1.pcx", 0, 0, 0 }, 0, 401, 253 }, { -1, 0, 0, 0, { "SgTwDrwC.pcx", 0, 0, 0, 0 }, 0, 410, 90 }, { -1, 0, 0, 0, { 0, 0, 0, 0, 0 }, 0, 403, 80 }, { -1, 0, 0, 0, { 0, 0, 0, 0, 0 }, 0, 615, 57 }, { -1, 0, -1464, 102, { 0, 0, 0, 0, 0 }, 0, 580, 36 }, { 255, 0, -1480, 102, { "SgTwTw21.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx", 0 }, 0, 547, 66 }, { 45, 0, 0, 0, { "SgTwWa62.pcx", "SgTwWa61.pcx", "SgTwWa61.pcx", "SgTwWa61.pcx", 0 }, 0, 514, 79 }, { 62, 0, -1540, 102, { 0, 0, 0, 0, 0 }, 0, 488, 190 }, { 78, 0, 0, 0, { "SgTwWa42.pcx", "SgTwWa41.pcx", "SgTwWa41.pcx", "SgTwWa41.pcx", 0 }, 0, 471, 187 }, { 112, 0, -1588, 102, { "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx", 0 }, 0, 475, 298 }, { 130, 0, 0, 0, { "SgTwWa32.pcx", "SgTwWa31.pcx", "SgTwWa31.pcx", "SgTwWa31.pcx", 0 }, 0, 517, 365 }, { 165, 0, -1632, 102, { 0, 0, 0, 0, 0 }, 0, 547, 452 }, { 182, 0, 0, 0, { "SgTwWa12.pcx", "SgTwWa11.pcx", "SgTwWa11.pcx", "SgTwWa11.pcx", 0 }, 0, 592, 516 }, { 251, 0, -1680, 102, { "SgTwTw11.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx", 0 }, 0, 726, 148 }, { 135, 0, -1712, 102, { "SgTwMan1.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx", 0 }, 0, 726, 148 }, { 135, 0, 0, 0, { "SgTwManC.pcx", 0, 0, 0, 0 }, 0, 592, 516 }, { 251, 0, 0, 0, { "SgTwTw1C.pcx", 0, 0, 0, 0 }, 0, 580, 36 }, { 255, 0, 0, 0, { "SgTwTw2C.pcx", 0, 0, 0, 0 }, 0, 409, 254 } },
+    { { -1, 0, -1792, 102, { "SgInDrw2.pcx", "SgInDrw1.pcx", 0, 0, 0 }, 0, 409, 254 }, { -1, 0, 0, 0, { "SgInDrwC.pcx", 0, 0, 0, 0 }, 0, 403, 68 }, { -1, 0, -1856, 102, { 0, 0, 0, 0, 0 }, 0, 403, 68 }, { -1, 0, -1872, 102, { 0, 0, 0, 0, 0 }, 0, 606, 52 }, { -1, 0, -1888, 102, { 0, 0, 0, 0, 0 }, 0, 569, 27 }, { 255, 0, -1904, 102, { "SgInTw21.pcx", "SgInTw21.pcx", "SgInTw21.pcx", "SgInTw21.pcx", 0 }, 0, 532, 71 }, { 45, 0, 0, 0, { "SgInWa62.pcx", "SgInWa61.pcx", "SgInWa61.pcx", "SgInWa61.pcx", 0 }, 0, 502, 92 }, { 62, 0, -1964, 102, { 0, 0, 0, 0, 0 }, 0, 480, 151 }, { 78, 0, 0, 0, { "SgInWa42.pcx", "SgInWa41.pcx", "SgInWa41.pcx", "SgInWa41.pcx", 0 }, 0, 477, 221 }, { 112, 0, -2012, 102, { "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx", 0 }, 0, 485, 316 }, { 130, 0, 0, 0, { "SgInWa32.pcx", "SgInWa31.pcx", "SgInWa31.pcx", "SgInWa31.pcx", 0 }, 0, 522, 376 }, { 165, 0, -2056, 102, { 0, 0, 0, 0, 0 }, 0, 561, 451 }, { 182, 0, 0, 0, { "SgInWa12.pcx", "SgInWa11.pcx", "SgInWa11.pcx", "SgInWa11.pcx", 0 }, 0, 595, 514 }, { 251, 0, -2104, 102, { "SgInTw11.pcx", "SgInTw11.pcx", "SgInTw11.pcx", "SgInTw11.pcx", 0 }, 0, 730, 179 }, { 135, 0, -2136, 102, { "SgInMan1.pcx", "SgInMan1.pcx", "SgInMan1.pcx", "SgInMan1.pcx", 0 }, 0, 730, 179 }, { 135, 0, 0, 0, { "SgInManC.pcx", 0, 0, 0, 0 }, 0, 595, 514 }, { 251, 0, 0, 0, { "SgInTw1C.pcx", 0, 0, 0, 0 }, 0, 569, 27 }, { 255, 0, 0, 0, { "SgInTw2C.pcx", 0, 0, 0, 0 }, 0, 402, 262 } },
+    { { -1, 0, -2216, 102, { "SgNcDrw2.pcx", "SgNcDrw1.pcx", 0, 0, 0 }, 0, 402, 262 }, { -1, 0, 0, 0, { "SgNcDrwC.pcx", 0, 0, 0, 0 }, 0, 406, 77 }, { -1, 0, -2280, 102, { 0, 0, 0, 0, 0 }, 0, 474, 109 }, { -1, 0, -2296, 102, { 0, 0, 0, 0, 0 }, 0, 604, 58 }, { -1, 0, -2312, 102, { 0, 0, 0, 0, 0 }, 0, 561, 26 }, { 255, 0, -2328, 102, { "SgNcTw21.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx", 0 }, 0, 543, 66 }, { 45, 0, 0, 0, { "SgNcWa62.pcx", "SgNcWa61.pcx", "SgNcWa61.pcx", "SgNcWa61.pcx", 0 }, 0, 504, 97 }, { 62, 0, -2388, 102, { 0, 0, 0, 0, 0 }, 0, 487, 164 }, { 78, 0, 0, 0, { "SgNcWa42.pcx", "SgNcWa41.pcx", "SgNcWa41.pcx", "SgNcWa41.pcx", 0 }, 0, 474, 240 }, { 112, 0, -2436, 102, { "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx", 0 }, 0, 478, 323 }, { 130, 0, 0, 0, { "SgNcWa32.pcx", "SgNcWa31.pcx", "SgNcWa31.pcx", "SgNcWa31.pcx", 0 }, 0, 509, 372 }, { 165, 0, -2480, 102, { 0, 0, 0, 0, 0 }, 0, 536, 445 }, { 182, 0, 0, 0, { "SgNcWa12.pcx", "SgNcWa11.pcx", "SgNcWa11.pcx", "SgNcWa11.pcx", 0 }, 0, 592, 512 }, { 251, 0, -2528, 102, { "SgNcTw11.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx", 0 }, 0, 730, 164 }, { 135, 0, -2560, 102, { "SgNcMan1.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx", 0 }, 0, 730, 164 }, { 135, 0, 0, 0, { "SgNcManC.pcx", 0, 0, 0, 0 }, 0, 592, 512 }, { 251, 0, 0, 0, { "SgNcTw1C.pcx", 0, 0, 0, 0 }, 0, 561, 26 }, { 255, 0, 0, 0, { "SgNcTw2C.pcx", 0, 0, 0, 0 }, 0, 396, 260 } },
+    { { -1, 0, -2640, 102, { "SgDnDrw2.pcx", "SgDnDrw1.pcx", 0, 0, 0 }, 0, 396, 260 }, { -1, 0, 0, 0, { "SgDnDrwC.pcx", 0, 0, 0, 0 }, 0, 283, 94 }, { -1, 0, -2704, 102, { 0, 0, 0, 0, 0 }, 0, 283, 94 }, { -1, 0, -2720, 102, { 0, 0, 0, 0, 0 }, 0, 608, 50 }, { -1, 0, -2736, 102, { 0, 0, 0, 0, 0 }, 0, 565, 15 }, { 255, 0, -2752, 102, { "SgDnTw21.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx", 0 }, 0, 523, 56 }, { 45, 0, 0, 0, { "SgDnWa62.pcx", "SgDnWa61.pcx", "SgDnWa61.pcx", "SgDnWa61.pcx", 0 }, 0, 494, 53 }, { 62, 0, -2812, 102, { 0, 0, 0, 0, 0 }, 0, 477, 180 }, { 78, 0, 0, 0, { "SgDnWa42.pcx", "SgDnWa41.pcx", "SgDnWa41.pcx", "SgDnWa41.pcx", 0 }, 0, 471, 164 }, { 112, 0, -2860, 102, { "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx", 0 }, 0, 471, 296 }, { 130, 0, 0, 0, { "SgDnWa32.pcx", "SgDnWa31.pcx", "SgDnWa31.pcx", "SgDnWa31.pcx", 0 }, 0, 522, 305 }, { 165, 0, -2904, 102, { 0, 0, 0, 0, 0 }, 0, 559, 448 }, { 182, 0, 0, 0, { "SgDnWa12.pcx", "SgDnWa11.pcx", "SgDnWa11.pcx", "SgDnWa11.pcx", 0 }, 0, 600, 495 }, { 251, 0, -2952, 102, { "SgDnTw11.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx", 0 }, 0, 732, 162 }, { 135, 0, -2984, 102, { "SgDnMan1.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx", 0 }, 0, 732, 162 }, { 135, 0, 0, 0, { "SgDnManC.pcx", 0, 0, 0, 0 }, 0, 600, 495 }, { 251, 0, 0, 0, { "SgDnTw1C.pcx", 0, 0, 0, 0 }, 0, 565, 15 }, { 255, 0, 0, 0, { "SgDnTw2C.pcx", 0, 0, 0, 0 }, 0, 408, 267 } },
+    { { -1, 0, -3064, 102, { "SgStDrw2.pcx", "SgStDrw1.pcx", 0, 0, 0 }, 0, 408, 267 }, { -1, 0, 0, 0, { "SgStDrwC.pcx", 0, 0, 0, 0 }, 0, 410, 90 }, { -1, 0, -3128, 102, { 0, 0, 0, 0, 0 }, 0, 410, 91 }, { -1, 0, -3144, 102, { 0, 0, 0, 0, 0 }, 0, 617, 62 }, { -1, 0, -3160, 102, { 0, 0, 0, 0, 0 }, 0, 568, 30 }, { 255, 0, -3176, 102, { "SgStTw21.pcx", "SgStTw21.pcx", "SgStTw21.pcx", "SgStTw21.pcx", 0 }, 0, 534, 69 }, { 45, 0, 0, 0, { "SgStWa62.pcx", "SgStWa61.pcx", "SgStWa61.pcx", "SgStWa61.pcx", 0 }, 0, 499, 107 }, { 62, 0, -3236, 102, { 0, 0, 0, 0, 0 }, 0, 476, 189 }, { 78, 0, 0, 0, { "SgStWa42.pcx", "SgStWa41.pcx", "SgStWa41.pcx", "SgStWa41.pcx", 0 }, 0, 478, 235 }, { 112, 0, -3284, 102, { "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx", 0 }, 0, 483, 304 }, { 130, 0, 0, 0, { "SgStWa32.pcx", "SgStWa31.pcx", "SgStWa31.pcx", "SgStWa31.pcx", 0 }, 0, 511, 380 }, { 165, 0, -3328, 102, { 0, 0, 0, 0, 0 }, 0, 553, 440 }, { 182, 0, 0, 0, { "SgStWa12.pcx", "SgStWa11.pcx", "SgStWa11.pcx", "SgStWa11.pcx", 0 }, 0, 586, 508 }, { 251, 0, -3376, 102, { "SgStTw11.pcx", "SgStTw11.pcx", "SgStTw11.pcx", "SgStTw11.pcx", 0 }, 0, 731, 168 }, { 135, 0, -3408, 102, { "SgStMan1.pcx", "SgStMan1.pcx", "SgStMan1.pcx", "SgStMan1.pcx", 0 }, 0, 731, 168 }, { 135, 0, 0, 0, { "SgStManC.pcx", 0, 0, 0, 0 }, 0, 586, 508 }, { 251, 0, 0, 0, { "SgStTw1C.pcx", 0, 0, 0, 0 }, 0, 568, 30 }, { 255, 0, 0, 0, { "SgStTw2C.pcx", 0, 0, 0, 0 }, 0, 393, 253 } },
+    { { -1, 0, -3488, 102, { "SgFrDrw2.pcx", "SgFrDrw1.pcx", 0, 0, 0 }, 0, 393, 253 }, { -1, 0, 0, 0, { "SgFrDrwC.pcx", 0, 0, 0, 0 }, 0, 383, 95 }, { -1, 0, -3552, 102, { 0, 0, 0, 0, 0 }, 0, 376, 70 }, { -1, 0, -3568, 102, { 0, 0, 0, 0, 0 }, 0, 599, 62 }, { -1, 0, -3584, 102, { 0, 0, 0, 0, 0 }, 0, 548, 27 }, { 255, 0, -3600, 102, { "SgFrTw21.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx", 0 }, 0, 526, 80 }, { 45, 0, 0, 0, { "SgFrWa62.pcx", "SgFrWa61.pcx", "SgFrWa61.pcx", "SgFrWa61.pcx", 0 }, 0, 508, 130 }, { 62, 0, -3660, 102, { 0, 0, 0, 0, 0 }, 0, 498, 184 }, { 78, 0, 0, 0, { "SgFrWa42.pcx", "SgFrWa41.pcx", "SgFrWa41.pcx", "SgFrWa41.pcx", 0 }, 0, 483, 236 }, { 112, 0, -3708, 102, { "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx", 0 }, 0, 487, 306 }, { 130, 0, 0, 0, { "SgFrWa32.pcx", "SgFrWa31.pcx", "SgFrWa31.pcx", "SgFrWa31.pcx", 0 }, 0, 522, 382 }, { 165, 0, -3752, 102, { 0, 0, 0, 0, 0 }, 0, 546, 441 }, { 182, 0, 0, 0, { "SgFrWa12.pcx", "SgFrWa11.pcx", "SgFrWa11.pcx", "SgFrWa11.pcx", 0 }, 0, 599, 505 }, { 251, 0, -3800, 102, { "SgFrTw11.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx", 0 }, 0, 721, 178 }, { 135, 0, -3832, 102, { "SgFrMan1.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx", 0 }, 0, 721, 178 }, { 135, 0, 0, 0, { "SgFrManC.pcx", 0, 0, 0, 0 }, 0, 599, 505 }, { 251, 0, 0, 0, { "SgFrTw1C.pcx", 0, 0, 0, 0 }, 0, 548, 27 }, { 255, 0, 0, 0, { "SgFrTw2C.pcx", 0, 0, 0, 0 }, 0, 409, 254 } },
+    { { -1, 0, -3912, 102, { "SgElDrw2.pcx", "SgElDrw1.pcx", 0, 0, 0 }, 0, 409, 254 }, { -1, 0, 0, 0, { "SgElDrwC.pcx", 0, 0, 0, 0 }, 0, 407, 80 }, { -1, 0, -3976, 102, { 0, 0, 0, 0, 0 }, 0, 407, 80 }, { -1, 0, -3992, 102, { 0, 0, 0, 0, 0 }, 0, 600, 50 }, { -1, 0, -4008, 102, { 0, 0, 0, 0, 0 }, 0, 576, 28 }, { 255, 0, -4024, 102, { "SgElTw21.pcx", "SgElTw21.pcx", "SgElTw22.pcx", 0, 0 }, 0, 521, 41 }, { 45, 0, 0, 0, { "SgElWa62.pcx", "SgElWa61.pcx", "SgElWa61.pcx", 0, 0 }, 0, 490, 97 }, { 62, 0, -4084, 102, { 0, 0, 0, 0, 0 }, 0, 471, 147 }, { 78, 0, 0, 0, { "SgElWa42.pcx", "SgElWa41.pcx", "SgElWa41.pcx", 0, 0 }, 0, 486, 232 }, { 112, 0, -4132, 102, { "SgElArch.pcx", "SgElArch.pcx", "SgElArch.pcx", 0, 0 }, 0, 468, 299 }, { 130, 0, 0, 0, { "SgElWa32.pcx", "SgElWa31.pcx", "SgElWa31.pcx", 0, 0 }, 0, 509, 346 }, { 165, 0, -4176, 102, { 0, 0, 0, 0, 0 }, 0, 509, 346 }, { 182, 0, 0, 0, { "SgElWa12.pcx", "SgElWa11.pcx", "SgElWa11.pcx", 0, 0 }, 0, 608, 505 }, { 251, 0, -4224, 102, { "SgElTw11.pcx", "SgElTw11.pcx", "SGElTw11.pcx", 0, 0 }, 0, 736, 159 }, { 135, 0, -4272, 102, { "SgElMan1.pcx", "SgElMan1.pcx", "SgElMan1.pcx", 0, 0 }, 0, 736, 159 }, { 135, 0, 0, 0, { "SgElManC.pcx", 0, 0, 0, 0 }, 0, 608, 505 }, { 251, 0, 0, 0, { "SgElTw1C.pcx", 0, 0, 0, 0 }, 0, 576, 28 }, { 255, 0, 0, 0, { "SgElTw2C.pcx", 0, 0, 0, 0 }, 0, 26451, 27717 } }
+};
+DATA(0x0063be60) const combatManager::TWallTarget combatManager::s_wallTargets[8] = {
+    { 255, -1, 586, 48, TWallSection(5) },
+    { 29, 1, 564, 128, TWallSection(6) },
+    { 62, 4, 520, 212, TWallSection(8) },
+    { 96, 5, 498, 296, TWallSection(9) },
+    { 130, 7, 520, 380, TWallSection(10) },
+    { 182, 10, 586, 506, TWallSection(12) },
+    { 183, -1, 630, 506, TWallSection(13) },
+    { 254, -1, 762, 212, TWallSection(14) }
+};
+
+// Retail static constructors 0x462610/0x462640/0x462670 establish these
+// clipping rectangles before combat. Zero-filled placeholders would hide them.
+DATA(0x00694f18) SLimitData g_combatDrawLimits(0, 0, 799, 555);
+DATA(0x00694ec8) SLimitData g_combatGridAreaLimits(58, 86, 740, 557);
+DATA(0x00694f30) SLimitData g_drawbridgeBounds(365, 211, 542, 380);
+DATA(0x00694ea8) const SLimitData combatManager::s_mainBuildingLimits(742, 160, 799, 337);
+DATA(0x00694ed8) const SLimitData combatManager::s_upperTowerLimits(564, 0, 651, 85);
+DATA(0x00694ef0) const SLimitData combatManager::s_rightHeroLimits(741, 16, 799, 127);
+DATA(0x00694f08) const SLimitData combatManager::s_leftHeroLimits(0, 16, 57, 127);
+
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x0063d2a0) const char* const g_townCombatBackgrounds[9] = { "SgCsBack.pcx", "SgRmBack.pcx", "SgTwBack.pcx", "SgInBack.pcx", "SgNcBack.pcx", "SgDnBack.pcx", "SgStBack.pcx", "SgFrBack.pcx", "SgElBack.pcx" };
+DATA(0x0063d2c8) const char* const g_magicTerrainCombatBackgrounds[10] = {
+    0, "CmBkMag.pcx", "CmBkCur.pcx", "CmBkHG.pcx", "CmBkEF.pcx", "CmBkCF.pcx", "CmBkLP.pcx", "CmBkFF.pcx",
+    "CmBkRK.pcx", "CmBkMC.pcx"
+};
+DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[9][3] = {
+    { "CmBkDrDd.pcx", "CmBkDrMt.pcx", "CmBkDrTr.pcx" },
+    { "CmBkDes.pcx", "CmBkDes.pcx", "CmBkDes.pcx" },
+    { "CmBkGrTr.pcx", "CmBkGrMt.pcx", "CmBkGrTr.pcx" },
+    { "CmBkSnTr.pcx", "CmBkSnMt.pcx", "CmBkSnTr.pcx" },
+    { "CmBkSwmp.pcx", "CmBkSwmp.pcx", "CmBkSwmp.pcx" },
+    { "CmBkRgh.pcx", "CmBkRgh.pcx", "CmBkRgh.pcx" },
+    { "CmBkSub.pcx", "CmBkSub.pcx", "CmBkSub.pcx" },
+    { "CmBkLava.pcx", "CmBkLava.pcx", "CmBkLava.pcx" },
+    { 0, 0, 0 }
+};
+DATA(0x0063bd18) const int g_moatDamage[9] = { 70, 70, 150, 90, 70, 90, 70, 90, 70 };
+DATA(0x0063abe0) const long g_castleWallGateTargets[5] = { 6, 8, 9, 10, 12 };
+
+DATA(0x0066d840) int g_combatSeed = 1;
+DATA(0x00698a18) int g_combatActive;
+
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x00695030) long g_surrenderCost;
+DATA(0x006985a3) unsigned char g_combatRetreated;
+DATA(0x00697744) unsigned char g_combatSurrendered;
+
 VA(0x00462760, 0x127)  // dc 0x5d3e0
 combatManager::combatManager()
     : m_combatWindow(0)
@@ -127,8 +476,8 @@ int combatManager::open(int newPriority)
     SAMPLE2 sample;
 
     g_mouseManager->m_noChangePointer = 1;
-    int savedShowMouseHex = g_unnamed698758.m_showCombatMouseHex;
-    g_unnamed698758.m_showCombatMouseHex = 0;
+    int savedShowMouseHex = g_config.m_showCombatMouseHex;
+    g_config.m_showCombatMouseHex = 0;
     m_combatShowIt = 0;
     g_soundManager->stopAllSamples(1);
 
@@ -155,7 +504,7 @@ int combatManager::open(int newPriority)
     memset(m_curDrawGridShade, 0, COMBAT_GRID_CELLS);
 
     m_backgroundDrawn = 0;
-    g_combatActive698a18 = m_combatCycleType;
+    g_combatActive = m_combatCycleType;
     m_powSprite = 0;
     m_powSpellEffect = -1;
 
@@ -199,13 +548,13 @@ int combatManager::open(int newPriority)
     if (!isQuickCombat()) {
         drawFrame(1, 0, 0, 0, 1, 0);
         m_combatWindow->drawWindow(1, -65535, 65535);
-        g_combatStamp698998 = GameTime::get();
+        g_timers[0] = GameTime::get();
         kbChangeMenu(g_gameMenu);
         CheckMenuItem(g_activeMenu, 0xb798, 0);
         CheckMenuItem(g_activeMenu, 0xb79c, 0);
         CheckMenuItem(g_activeMenu, 0xb79b, 0);
         g_windowManager->updateScreen(0, 0, 800, 600);
-        g_unnamed698758.m_showCombatMouseHex = savedShowMouseHex;
+        g_config.m_showCombatMouseHex = savedShowMouseHex;
         g_mouseManager->m_noChangePointer = 0;
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
         g_mouseManager->showPointer(0);
@@ -219,7 +568,7 @@ int combatManager::open(int newPriority)
         g_soundManager->startMP3(music, 0, 1);
     }
 
-    g_combatStamp6989b8 = GameTime::get();
+    g_timers[8] = GameTime::get();
     resetCycleTimers();
     g_inputManager->flush();
     resetMouse();
@@ -254,7 +603,7 @@ void combatManager::close()
     if (!isQuickCombat())
         g_windowManager->fadeScreen(1, 4, 1);
 
-    g_combatActive698a18 = 0;
+    g_combatActive = 0;
     delete m_saveScreenPreGrid;
     delete m_saveScreenPostGrid;
     delete m_combatMouseBackground;
@@ -417,14 +766,14 @@ void combatManager::loadArmies(unsigned char isSurrounded)
             int hex;
             army& thisArmy = m_armies[side][placed];
             if (isSurrounded) {
-                hex = g_combatDeploySurroundedHexes63d0e0[side][placed];
+                hex = g_combatDeploySurroundedHexes[side][placed];
             } else {
                 int ordinal;
                 if (grouped)
-                    ordinal = g_combatDeploySlots63d1dc[layout][placed];
+                    ordinal = g_combatDeployGroupedSlots[layout][placed];
                 else
-                    ordinal = g_combatDeploySlots63d118[layout][placed];
-                hex = g_combatDeployHexes63d0a8[side][ordinal];
+                    ordinal = g_combatDeploySpreadSlots[layout][placed];
+                hex = g_combatDeployHexes[side][ordinal];
             }
             thisArmy.init(group->m_armies[i], group->m_numTroops[i], combatHero,
                           side, placed, hex, i);
@@ -520,7 +869,7 @@ void combatManager::checkNativeTerrain()
 VA(0x004639f0, 0x270)  // dc 0x5e464
 void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int seed, unsigned char isSurrounded)
 {
-    g_combatSeed66d840 = seed;
+    g_combatSeed = seed;
     sRand(x * 0x1aed3 + y * 0x28f79 + 0x13ea1);
     m_mapPoint = point;
     m_combatCell = g_advManager->getCell(point);
@@ -692,8 +1041,8 @@ void combatManager::initNonVisualVars()
     m_currentSide = 1;
     m_actingSide = 1;
     m_actingSlot = 0;
-    g_combatFlag6985a3 = 0;
-    g_combatFlag697744 = 0;
+    g_combatRetreated = 0;
+    g_combatSurrendered = 0;
     m_sideSurrendered[0] = 0;
     m_sideSurrendered[1] = 0;
     m_sideRetreated[0] = 0;
@@ -935,21 +1284,21 @@ const char* combatManager::getBackgroundName()
 VA(0x004647a0, 0x17A)  // dc 0x5f058
 int combatManager::getGridIndex(int x, int y) const
 {
-    if (g_combatHexLeft694f08 <= x && x <= g_combatHexRight694f10
-            && g_combatHexTop694f0c <= y
-            && y <= g_combatHexBottom694f14)
+    if (combatManager::s_leftHeroLimits.m_minX <= x && x <= combatManager::s_leftHeroLimits.m_maxX
+            && combatManager::s_leftHeroLimits.m_minY <= y
+            && y <= combatManager::s_leftHeroLimits.m_maxY)
         return 252;
-    if (g_combatHexLeft694ef0 <= x && x <= g_combatHexRight694ef8
-            && g_combatHexTop694ef4 <= y
-            && y <= g_combatHexBottom694efc)
+    if (combatManager::s_rightHeroLimits.m_minX <= x && x <= combatManager::s_rightHeroLimits.m_maxX
+            && combatManager::s_rightHeroLimits.m_minY <= y
+            && y <= combatManager::s_rightHeroLimits.m_maxY)
         return 253;
-    if (g_combatHexLeft694ea8 <= x && x <= g_combatHexRight694eb0
-            && g_combatHexTop694eac <= y
-            && y <= g_combatHexBottom694eb4)
+    if (combatManager::s_mainBuildingLimits.m_minX <= x && x <= combatManager::s_mainBuildingLimits.m_maxX
+            && combatManager::s_mainBuildingLimits.m_minY <= y
+            && y <= combatManager::s_mainBuildingLimits.m_maxY)
         return 254;
-    if (g_combatHexLeft694ed8 <= x && x <= g_combatHexRight694ee0
-            && g_combatHexTop694edc <= y
-            && y <= g_combatHexBottom694ee4)
+    if (combatManager::s_upperTowerLimits.m_minX <= x && x <= combatManager::s_upperTowerLimits.m_maxX
+            && combatManager::s_upperTowerLimits.m_minY <= y
+            && y <= combatManager::s_upperTowerLimits.m_maxY)
         return 255;
 
     int px = x - 14;
@@ -1798,7 +2147,7 @@ void combatManager::setupAndLoadObstacles()
             for (int row = 0; row < 11; row++) {
                 if (row == COMBAT_GATE_ROW)
                     continue;
-                int hex = g_moatColumns[row];
+                int hex = g_moatHexes[row];
 
                 long damage;
                 if (g_game->m_f1f698 >= 2) {
@@ -1903,12 +2252,12 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
     TPickANumber picker(0, 0x21);
     int obstacleId = picker.pick();
     while (obstacleId >= 0) {
-        if ((terrainMask & g_largeObstacleTerrainMasks[obstacleId * 34])
+        if ((terrainMask & s_elevationOverlay[obstacleId].m_terrainMask)
                 || (magicTerrainMask
-                    & g_largeObstacleMagicTerrainMasks[obstacleId * 34])) {
+                    & s_elevationOverlay[obstacleId].m_specialTerrainMask)) {
             int count = 0;
             int i = 0;
-            const short* hex = &g_largeObstacleHexes[obstacleId * 34];
+            const short* hex = s_elevationOverlay[obstacleId].m_blockedSquares;
             for (; i < 25 && *hex != -1; ++i, ++hex) {
                 m_cells[*hex].m_attributes |= 2;
                 ++count;
@@ -2127,7 +2476,7 @@ void combatManager::makeCreaturesVanish()
         g_windowManager->fizzleForwardX(
             x, y, width, height,
             static_cast<int>(
-                g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 150.0f));
+                g_combatSpeedFactors[g_config.m_combatSpeed] * 150.0f));
     }
 }
 
@@ -2160,7 +2509,7 @@ void combatManager::lowerDoor()
 
     SAMPLE2 sample = loadPlaySample(
         DATA_COMPGEN(0x0066ffb0, drawbridgeSampleName, "drawbrg.82m"));
-    m_drawbridgeBounds = g_drawbridgeBounds694f30;
+    m_drawbridgeBounds = g_drawbridgeBounds;
     for (int state = DRAWBRIDGE_UP; state >= DRAWBRIDGE_DOWN; state--) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -2191,7 +2540,7 @@ void combatManager::raiseDoor()
     }
 
     SAMPLE2 sample = loadPlaySample("drawbrg.82m");
-    m_drawbridgeBounds = g_drawbridgeBounds694f30;
+    m_drawbridgeBounds = g_drawbridgeBounds;
     for (int state = DRAWBRIDGE_DOWN; state <= DRAWBRIDGE_UP; state++) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -2216,7 +2565,7 @@ unsigned char combatManager::inCastle(int index)
 VA(0x00467490, 0x22)  // dc 0x61180
 unsigned char combatManager::leftOfMoat(int index)
 {
-    return index < g_moatColumns[index / 0x11];
+    return index < g_moatHexes[index / 0x11];
 }
 
 VA(0x004674c0, 0x4C)  // dc 0x611a0
@@ -2428,7 +2777,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     Bitmap16Bit saved(width, height);
     TDrawbridgeBounds updateArea = g_combatAreaLimits;
     const int missileperiod = static_cast<int>(
-        g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 100.0f);
+        g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
 
     int frame = 0;
     int step = 0;
@@ -2467,14 +2816,14 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 updateArea.m_maxX = right;
             if (updateArea.m_maxY < bottom)
                 updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits694f18.m_minX)
-                updateArea.m_minX = g_combatDrawLimits694f18.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits694f18.m_minY)
-                updateArea.m_minY = g_combatDrawLimits694f18.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits694f18.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits694f18.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits694f18.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits694f18.m_maxY;
+            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
+                updateArea.m_minX = g_combatDrawLimits.m_minX;
+            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
+                updateArea.m_minY = g_combatDrawLimits.m_minY;
+            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
+                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
+            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
+                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.m_maxX - updateArea.m_minX + 1,
@@ -2557,7 +2906,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     TDrawbridgeBounds updateArea = g_combatAreaLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowDelay = static_cast<int>(
-        g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 33.0f);
+        g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
     int frame = 0;
     int step = 0;
@@ -2589,14 +2938,14 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                 updateArea.m_maxX = right;
             if (updateArea.m_maxY < bottom)
                 updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits694f18.m_minX)
-                updateArea.m_minX = g_combatDrawLimits694f18.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits694f18.m_minY)
-                updateArea.m_minY = g_combatDrawLimits694f18.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits694f18.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits694f18.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits694f18.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits694f18.m_maxY;
+            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
+                updateArea.m_minX = g_combatDrawLimits.m_minX;
+            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
+                updateArea.m_minY = g_combatDrawLimits.m_minY;
+            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
+                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
+            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
+                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.m_maxX - updateArea.m_minX + 1,
@@ -2697,7 +3046,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     TDrawbridgeBounds updateArea = g_combatAreaLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowdelay = static_cast<int>(
-        g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 33.0f);
+        g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
     int bottom = y + height - 1;
     int right = x + width - 1;
@@ -2739,14 +3088,14 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             updateArea.m_maxX = right;
         if (updateArea.m_maxY < bottom)
             updateArea.m_maxY = bottom;
-        if (updateArea.m_minX < g_combatDrawLimits694f18.m_minX)
-            updateArea.m_minX = g_combatDrawLimits694f18.m_minX;
-        if (updateArea.m_minY < g_combatDrawLimits694f18.m_minY)
-            updateArea.m_minY = g_combatDrawLimits694f18.m_minY;
-        if (updateArea.m_maxX > g_combatDrawLimits694f18.m_maxX)
-            updateArea.m_maxX = g_combatDrawLimits694f18.m_maxX;
-        if (updateArea.m_maxY > g_combatDrawLimits694f18.m_maxY)
-            updateArea.m_maxY = g_combatDrawLimits694f18.m_maxY;
+        if (updateArea.m_minX < g_combatDrawLimits.m_minX)
+            updateArea.m_minX = g_combatDrawLimits.m_minX;
+        if (updateArea.m_minY < g_combatDrawLimits.m_minY)
+            updateArea.m_minY = g_combatDrawLimits.m_minY;
+        if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
+            updateArea.m_maxX = g_combatDrawLimits.m_maxX;
+        if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
+            updateArea.m_maxY = g_combatDrawLimits.m_maxY;
         g_windowManager->updateScreen(updateArea.m_minX, updateArea.m_minY,
                                       updateArea.m_maxX - updateArea.m_minX + 1,
                                       updateArea.m_maxY - updateArea.m_minY + 1);
@@ -3227,6 +3576,8 @@ void combatManager::updateArmyLuckAndMorale()
     }
 }
 
+// DC cmbtmgr.cpp:4584 names const SMonFrameInfo& sMonFrameInfo; retail
+// loads the same 0x67ff24 reference cell owned by monframeinfo.cpp.
 VA(0x00469880, 0x190)  // dc 0x62fe4
 void combatManager::getMissileStartingPosition(int armyType, int x, int y, int facing,
                                 int destX, int destY,
@@ -3234,12 +3585,12 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
                                 int* startY, int* armyDir,
                                 int* missileFrame)
 {
-    const TMissileStartInfo& info = g_missileStartInfo[armyType];
+    const SMonFrameInfo& monFrameInfo = g_monFrameInfo[armyType];
     if (!facing)
-        *startX = x - info.m_offsets[1][0];
+        *startX = x - monFrameInfo.m_missileOffset[2];
     else
-        *startX = x + info.m_offsets[1][0];
-    *startY = y + info.m_offsets[1][1];
+        *startX = x + monFrameInfo.m_missileOffset[2];
+    *startY = y + monFrameInfo.m_missileOffset[3];
 
     int deltaX = destX - *startX;
     int deltaY = destY - *startY;
@@ -3256,7 +3607,7 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
         int frames = missile->getNumFrames(0);
         int frame = 1;
         while (frame < frames
-                && (info.m_angles[frame - 1] + info.m_angles[frame]) / 2.0f
+                && (monFrameInfo.m_arrowAngle[frame - 1] + monFrameInfo.m_arrowAngle[frame]) / 2.0f
                    >= angle)
             ++frame;
         *missileFrame = frame - 1;
@@ -3277,10 +3628,10 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
     }
 
     if (!facing)
-        *startX = x - info.m_offsets[offset][0];
+        *startX = x - monFrameInfo.m_missileOffset[2 * offset];
     else
-        *startX = x + info.m_offsets[offset][0];
-    *startY = y + info.m_offsets[offset][1];
+        *startX = x + monFrameInfo.m_missileOffset[2 * offset];
+    *startY = y + monFrameInfo.m_missileOffset[2 * offset + 1];
 }
 
 // E:\gamedcs\cmbtmgr.cpp:4669
@@ -3367,7 +3718,7 @@ unsigned char combatManager::isInMoat(int hex, int* index)
 {
     if (m_moatOn) {
         for (int row = 0; row < 11; row++) {
-            if (g_moatColumns[row] == hex
+            if (g_moatHexes[row] == hex
                     && (m_drawbridgeState == DRAWBRIDGE_UP
                         || hex != COMBAT_HEX_GATE_MOAT)) {
                 if (index)
@@ -3377,7 +3728,7 @@ unsigned char combatManager::isInMoat(int hex, int* index)
         }
         if (m_defendingTown->m_type == TOWN_FORTRESS) {
             for (int row = 0; row < 11; row++) {
-                if (g_outerMoatColumns[row] == hex
+                if (g_innerMoatHexes[row] == hex
                         && (m_drawbridgeState == DRAWBRIDGE_UP
                             || hex != COMBAT_HEX_OUTER_MOAT)) {
                     if (index)
@@ -3470,9 +3821,9 @@ VA(0x0046a070, 0x2D3)  // dc 0x63704
 void combatManager::lootDeadHero(int side,
                                  std::vector<type_artifact>& lootedArtifacts)
 {
-    if (g_combatFlag6985a3)
+    if (g_combatRetreated)
         return;
-    if (g_combatFlag697744)
+    if (g_combatSurrendered)
         return;
     hero* dead = m_heroes[1 - side];
     if (!dead)
@@ -3515,7 +3866,7 @@ VA(0x0046a350, 0x10C)  // dc 0x6388c
 void combatManager::calculateGainedExperience(int side, int* experienceGained)
 {
     int total = experienceValueOfStack(1 - side);
-    if (g_combatFlag6985a3 || g_combatFlag697744)
+    if (g_combatRetreated || g_combatSurrendered)
         total -= 500;
     if (m_defendingTown && side == 0)
         total += 500;
@@ -3547,7 +3898,7 @@ bool combatManager::isQuickCombat() const
 {
     if (g_game->m_isTutorial)
         return false;
-    if (g_videoPaused && m_sideIsAi[0] && m_sideIsAi[1]) {
+    if (g_remoteOn && m_sideIsAi[0] && m_sideIsAi[1]) {
         // Retail's three inlined missile callers retain both player aliases;
         // this standalone body folds the same references into direct loads.
         playerData& firstPlayer = g_game->m_players[m_playerIds[0]];
@@ -3556,11 +3907,11 @@ bool combatManager::isQuickCombat() const
             return true;
         return false;
     }
-    return g_unnamed698758.m_quickCombat != 0;
+    return g_config.m_quickCombat != 0;
 }
 
 VA(0x0046a520, 0x44)
-void combatManager::unnamed46a520(army* stack)
+void combatManager::markMovingArmy(army* stack)
 {
     memset(m_obstacleAttackVisited, 0, COMBAT_GRID_CELLS);
     m_obstacleAttackVisited[stack->m_gridIndex] = 1;

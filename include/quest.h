@@ -20,6 +20,7 @@
 #define HOMM3_QUEST_H
 
 #include "va.h"
+#include "seerhuttext.h"
 
 #include <string>
 #include <vector>
@@ -39,25 +40,9 @@ class hero;
 // most of the tree) or by including advmgr.h; the two existing declarators
 // of exactly this shape - gTreeOfKnowledgeName at index 102 and
 // gWitchHutName at index 113 - are the precedent.
-DATA(0x006a7d48) extern const char* g_questGuardName;
-DATA(0x006a7b38) extern const char* g_seerName;
 
-// The family's TWO text tables, .data pointer cells at 0x68320c and
-// 0x683210. Every quest body that reads either one picks between them on
-// type_quest::field_04 and on nothing else, and reaches a string through
-// the SAME two strides: 832 bytes per row (field_04's partner +0x38,
-// scaled by 13 and then by 64) and 16 bytes per column, taking the text
-// from the column's +4 behind the same `_Ptr ? _Ptr : _Nullstr` guard
-// every other string read in this compiland carries. That is Dinkumware
-// basic_string's own c_str(), so the columns ARE std::strings; there are
-// five per quest type (`5 * quest_type()` scaled by 16 is exactly
-// retail's `lea eax,[eax+eax*4] / shl eax,4`), and a row is 832/16 == 52
-// of them - ten quest types' worth plus two no body here reaches.
-// Nothing in the admitted surface writes either cell, so both are
-// declared rather than claimed.
-DATA(0x0068320c) extern std::string (*g_questTextA)[52];
-DATA(0x00683210) extern std::string (*g_questTextB)[52];
-
+// The quest reader cells and the loader's typed storage are declared together.
+// Retail uses 0x340-byte columns containing ten five-string quest records.
 typedef type_point TQuestPosition;
 
 // Retail's factory at 0x573240 switches on exactly these nine values. The
@@ -130,16 +115,16 @@ public:
     virtual ~type_quest();
     // Slot 1: the AI's valuation of the quest for one player. The base body
     // at 0x4ec560 is a bare `xor eax,eax / ret 4`, so the default is 0.
-    virtual int getAIValue(int player);
+    virtual int getAIValue(int player) { return 0; }
     // Slot 2 of every quest vtable: does this hero satisfy the quest? It
     // returns a BYTE - the defeat-hero body ends `xor al,al` on its guard
     // path and the monster body `mov al,dl`. The hero is NOT const: the
     // artifact and resource leaves call hero::HasArtifact, which is not.
-    virtual unsigned char isSatisfied(hero* currentHero);
+    virtual unsigned char isSatisfied(hero* currentHero) = 0;
     // Slot 3: take the quest's price off the hero. The base body at
     // 0x485d80 is a bare `ret 4`; the artifact leaf removes the artifacts
     // and the resource leaf debits the player's treasury. Provisional name.
-    virtual void takePayment(hero* currentHero);
+    virtual void takePayment(hero* currentHero) {}
     unsigned char hasExpired() const;
     // Slots 4 and 5, IDENTIFIED 2026-08-21: the family's two dialog
     // entry points. Every leaf body is the same shape - take a string
@@ -162,10 +147,10 @@ public:
     // renaming either would touch forty reconstructed leaf bodies for no
     // byte, so the observation is banked here for the lane that closes the
     // two getters.
-    virtual void doProposalDialog(hero* currentHero);
-    virtual void doProgressDialog();
+    virtual void doProposalDialog(hero* currentHero) = 0;
+    virtual void doProgressDialog() = 0;
     // Slot 6. Pure in the base and overridden everywhere.
-    virtual std::string getRequirementText();
+    virtual std::string getRequirementText() = 0;
     // Slot 7: the second string-returning virtual, and the one the four
     // TQuestGuard / TSeerHut quick-info and rollover builders call on
     // `TQuestGuard::quest` (0x572e40, 0x573040, 0x5741b0 and 0x5743e0 all
@@ -175,18 +160,18 @@ public:
     // indexes the player-name table at 0x6a7df8 with the quest's own
     // `required_owner`, so slot 7 is the long, player-facing description
     // where slot 6 is the short requirement line. The NAME is provisional.
-    virtual std::string getQuestDescription();
+    virtual std::string getQuestDescription() = 0;
     // Slot 8: the quest-type discriminator. Retail's leaf bodies return a
     // bare constant; see the enumeration proof in the file header.
-    virtual int questType();
+    virtual int questType() = 0;
     // Slot 9 / slot 10: the "this target was defeated" notifications. Both
     // default to the shared `ret 8` stub at 0x5bc7e0, so both take two dword
     // arguments and return nothing. The NAMES are provisional inventions -
     // only the argument shape and the two overriding bodies are attested.
-    virtual void notifyHeroDefeated(int heroId, int player);
+    virtual void notifyHeroDefeated(int heroId, int player) {}
     // Slot 10's monster override is reconstructed at 0x56ed40; see its
     // compiler-generation residual note in seerhut.cpp.
-    virtual void notifyMonsterDefeated(TQuestPosition where, int player);
+    virtual void notifyMonsterDefeated(TQuestPosition where, int player) {}
     // Slot 11 / slot 12: the two deserializers. Both are loads - every body
     // in the family calls TAbstractFile slot 1 and then stores what came back
     // into the object - and they differ in format, not direction: slot 11
@@ -201,7 +186,7 @@ public:
     // Slot 14, IDENTIFIED 2026-08-21: every leaf back-fills the three
     // strings above from columns 0/1/2 of its own text group, and only
     // where the string is still empty. NAME provisional.
-    virtual void setDefaultText();
+    virtual void setDefaultText() = 0;
 
     // The one way into the two text tables above, and the shape of every
     // read: the column is the only thing that varies between the two
@@ -232,31 +217,38 @@ public:
     // Header ownership is inferred from that cross-TU use; Complete added
     // this interface after the Dreamcast quest representation.
     VA(0x0052e6b0, 0x2E)
-    const std::string* questTextRow()
+    const TSeerHutTextColumn* questTextRow()
     {
         if (m_seerHut)
-            return g_questTextA[m_textVariant];
-        return g_questTextB[m_textVariant];
+            return g_questTextA + m_textVariant;
+        return g_questTextB + m_textVariant;
     }
     // The five-column text group for this quest type. Keep the selector
     // call and virtual discriminator in the same expression: retail's
     // retained and expanded instances evaluate their operands differently.
-    const std::string* questTexts()
+    const TSeerHutQuestText& questTexts()
     {
-        const std::string* texts =
-            questTextRow() + QUEST_TEXT_COLUMNS * questType();
-        return texts;
+        const TSeerHutQuestText* texts =
+            questTextRow()->m_quest + questType();
+        return *texts;
     }
     const std::string& questText(int column)
     {
-        return questTexts()[column];
+        const TSeerHutQuestText& texts = questTexts();
+        switch (column) {
+        case QUEST_TEXT_PROPOSAL: return texts.m_text0;
+        case QUEST_TEXT_PROGRESS: return texts.m_text1;
+        case QUEST_TEXT_COMPLETION: return texts.m_text2;
+        case QUEST_TEXT_DESCRIPTION: return texts.m_text3;
+        default: return texts.m_text4;
+        }
     }
 
     std::string getProposalDialogText();
     std::string getProgressDialogText();
     // The exact HD structural twin maps this accessor to retail 0x45bad0;
     // its body copies the base's +0x28 completionText member.
-    std::string getCompletionText();
+    std::string getCompletionText() { return m_completionText; }
     // The exact HD structural twin maps this deadline suffix builder to
     // retail 0x56d040. The two dated dialog getters and the complex skill /
     // creature dialogs are its four callers.
@@ -265,6 +257,8 @@ public:
 
 class type_experience_quest : public type_quest {
 public:
+    // Retail vtable 0x641788, slot 8: mov eax,1; ret.
+    virtual int questType() { return 1; }
     int m_requiredLevel;  // +0x40
 
     type_experience_quest(unsigned char flags);
@@ -286,6 +280,8 @@ public:
 // read everywhere else.
 class type_skill_quest : public type_quest {
 public:
+    // Retail vtable 0x6417c4, slot 8: mov eax,2; ret.
+    virtual int questType() { return 2; }
     signed char m_requiredSkills[4];  // +0x40
 
     type_skill_quest(unsigned char flags);
@@ -352,6 +348,8 @@ public:
 // exactly at the +0x40 payload slot every other leaf uses.
 class type_artifact_quest : public type_quest {
 public:
+    // Retail vtable 0x641878, slot 8: mov eax,5; ret.
+    virtual int questType() { return 5; }
     std::vector<TArtifact> m_artifacts;  // +0x40
 
     type_artifact_quest(unsigned char flags);
@@ -379,6 +377,8 @@ public:
 // Quest type 6: parallel creature-type and creature-count vectors.
 class type_creature_quest : public type_quest {
 public:
+    // Retail vtable 0x6418b4, slot 8: mov eax,6; ret.
+    virtual int questType() { return 6; }
     std::vector<int> m_counts;             // +0x40
     std::vector<TCreatureType> m_types;    // +0x50
 
@@ -406,6 +406,8 @@ public:
 // Quest type 7: seven resource amounts, read as one 0x1c-byte block.
 class type_resource_quest : public type_quest {
 public:
+    // Retail vtable 0x6418f0, slot 8: mov eax,7; ret.
+    virtual int questType() { return 7; }
     int m_resources[7];  // +0x40
 
     type_resource_quest(unsigned char flags);

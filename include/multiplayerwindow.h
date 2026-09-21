@@ -17,9 +17,8 @@ struct _DPCOMPORTADDRESS;
 
 // multiplayerwindow.cpp owns this 21-byte preference-backed player name.
 // DoNewGame and the campaign launch copy it into a player cName slot.
-extern char g_localPlayerName[21];
-extern int g_unnamed69927c;
-extern int g_unnamed699288;
+extern int g_mpExtendedType;
+extern int g_waitForRemoteReceive;
 
 // Cast-free storage for the Winsock bind call in GetIPAddress. Both views are
 // the same 16-byte IPv4 socket-address record; keeping the union in the domain
@@ -185,6 +184,6 @@ SIZE(TMultiPlayerWindow, 0x100);
 
 // The singleton the ctor latches to `this` (0x50e050+0x66) and the dtor
 // nulls (0x50ee40+0x51). No DC public names it - provisional house name.
-DATA(0x0069ca28) extern TMultiPlayerWindow* g_multiPlayerWindow;
+extern TMultiPlayerWindow* g_multiPlayerWindow;
 
 #endif  /* HOMM3_MULTIPLAYERWINDOW_H */

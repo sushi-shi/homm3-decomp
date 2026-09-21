@@ -9,7 +9,6 @@ class armyGroup;
 
 // Retail .bss 0x6a7a70. This is the quick-view label consumed by the
 // garrison constructor; storage ownership remains with the text-loading TU.
-DATA(0x006a7a70) extern const char* g_quickViewGarrisonText;
 
 // Both retail constructors initialize heroWindow directly, install vtable
 // 0x6406f4, and touch no storage beyond heroWindow's proven 0x4c-byte extent.

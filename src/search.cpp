@@ -1,4 +1,5 @@
 #include "va.h"
+#include "objnames.h"
 #include "includes.h"
 
 #include <stdlib.h>
@@ -331,7 +332,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
     case BORDER_GATE: {
         unsigned char visited =
             (g_game->m_borderTentVisitFlags[mapCell->m_objectIndex]
-             & g_unnamed69ccc4)
+             & g_curPlayerBit)
             != 0;
         return visited;
     }
@@ -414,7 +415,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
                    searchType);
         return 1;
     }
-    return g_adventureObjectLandBlocked[type][0] == 0;
+    return g_adventureObjectTraits[type].m_blocksLanding == 0;
 }
 
 // E:\gamedcs\search.cpp:494

@@ -571,7 +571,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
         int direction = 8;
         if (current->isRoadEntrance()) {
             int objectType = current->m_objects[0]->m_properties->m_prototype->m_objectType;
-            if (!g_adventureObjectLandBlocked[objectType][1])
+            if (!g_adventureObjectTraits[objectType].m_trait1)
                 direction = 5;
         }
         while (direction--) {
@@ -587,10 +587,10 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
                 continue;
             if (next->isRoadEntrance()) {
                 int objectType = next->m_objects[0]->m_properties->m_prototype->m_objectType;
-                const unsigned char* traits = g_adventureObjectLandBlocked[objectType];
-                if (traits[0] && !traits[2])
+                const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
+                if (traits.m_blocksLanding && !traits.m_trait2)
                     continue;
-                if (!traits[1] && direction > 0 && direction < 4)
+                if (!traits.m_trait1 && direction > 0 && direction < 4)
                     continue;
             }
             if (next->m_zoneState.m_zone != zone) {
@@ -758,7 +758,7 @@ unsigned char type_random_map::canPlaceObject(
     int objectType = prototype.m_objectType;
     properties->buildOutline();
     if (!hasConnectedOutline(properties->m_outline, position,
-            g_adventureObjectLandBlocked[objectType][2] && g_adventureObjectLandBlocked[objectType][1],
+            g_adventureObjectTraits[objectType].m_trait2 && g_adventureObjectTraits[objectType].m_trait1,
             zone, 0))
         return 0;
     if (!prototype.m_hasTrigger)
@@ -779,7 +779,7 @@ unsigned char type_random_map::canPlaceObject(
         return 0;
     if (item->isRoadEntrance()) {
         int entranceType = item->m_objects[0]->m_properties->m_prototype->m_objectType;
-        if (!g_adventureObjectLandBlocked[entranceType][2])
+        if (!g_adventureObjectTraits[entranceType].m_trait2)
             return 0;
     }
     unsigned char result = (item->m_tile.m_landType == eTerrainWater) == (zone->m_terrain == eTerrainWater);
@@ -2408,7 +2408,7 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         TRmgMapPosition entrance = object->getPosition();
         entrance.m_y -= prototype->m_triggerCell.m_y;
         entrance.m_x -= prototype->m_triggerCell.m_x;
-        unsigned int direction = g_adventureObjectLandBlocked[prototype->m_objectType][1]
+        unsigned int direction = g_adventureObjectTraits[prototype->m_objectType].m_trait1
             ? RMG_DIRECTION_COUNT : 5;
         while (direction--) {
             TRmgMapPosition position = entrance + g_rmgDirections[direction];
@@ -2558,7 +2558,7 @@ unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* propertie
     TRmgVector origin(position.m_x, position.m_y);
     origin.m_x -= trigger.m_x;
     origin.m_y -= trigger.m_y;
-    if (!g_adventureObjectLandBlocked[objectType][1]) {
+    if (!g_adventureObjectTraits[objectType].m_trait1) {
         for (int direction = 5; direction < RMG_DIRECTION_COUNT; ++direction) {
             TPoint nearby = g_rmgDirections[direction] + origin;
             if (m_map.getMapItem(nearby.m_x, nearby.m_y, 0)->isRoadEntrance())
@@ -2571,8 +2571,8 @@ unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* propertie
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
             if (item->isRoadEntrance()) {
                 int neighborType = item->m_objects[0]->m_properties->m_prototype->m_objectType;
-                if (!g_adventureObjectLandBlocked[neighborType][2]
-                    || !g_adventureObjectLandBlocked[neighborType][1])
+                if (!g_adventureObjectTraits[neighborType].m_trait2
+                    || !g_adventureObjectTraits[neighborType].m_trait1)
                     goto placementFailure;
             }
         }
@@ -2630,7 +2630,7 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
         entrance.m_y -= existingPrototype->m_triggerCell.m_y;
         int end;
         int first;
-        if (g_adventureObjectLandBlocked[existingPrototype->m_objectType][1]) {
+        if (g_adventureObjectTraits[existingPrototype->m_objectType].m_trait1) {
             end = 8;
             first = 0;
         } else {
@@ -2792,7 +2792,7 @@ void TRmgGeneratorBase::loadObjectPrototypes()
             continue;
         TRmgObjectPropertiesRef* properties =
             new TRmgObjectPropertiesRef(&m_objectsTxt.m_objectTypes[index]);
-        memcpy(&type, &g_adventureObjectLandBlocked[type][8], sizeof(type));
+        memcpy(&type, &g_adventureObjectTraits[type].m_nameRow, sizeof(type));
         m_objectPrototypes[type].push_back(properties);
     }
     for (index = 0; index < m_objectPrototypes[54].size() - 1; ++index) {
@@ -2893,7 +2893,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
                 int mappedType;
                 // Same canonical byte table used by readObjectType: the
                 // dword at +8 remaps aliases to their objnames.txt row.
-                memcpy(&mappedType, &g_adventureObjectLandBlocked[objectType][8],
+                memcpy(&mappedType, &g_adventureObjectTraits[objectType].m_nameRow,
                        sizeof(mappedType));
                 int match = rulesByType[mappedType][terrain].size();
                 while (match-- && *std::vector<int>::reverse_iterator(
@@ -8048,8 +8048,8 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
     for (unsigned int index = 0; index < m_objectGenerators.size(); ++index) {
         type_treasure_def* definition = m_objectGenerators[index];
         int objectType = definition->m_objectType;
-        if (!primary && g_adventureObjectLandBlocked[objectType][0]
-            && !g_adventureObjectLandBlocked[objectType][2])
+        if (!primary && g_adventureObjectTraits[objectType].m_blocksLanding
+            && !g_adventureObjectTraits[objectType].m_trait2)
             continue;
         if (!allowTerrainDependent && definition->isTerrainDependent())
             continue;
@@ -8494,7 +8494,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     TRmgMapPosition entrance = lastObject->getPosition();
     entrance.m_x -= prototype->m_triggerCell.m_x;
     entrance.m_y -= prototype->m_triggerCell.m_y;
-    if (!g_adventureObjectLandBlocked[prototype->m_objectType][1]) {
+    if (!g_adventureObjectTraits[prototype->m_objectType].m_trait1) {
         firstDirection = 1;
         lastDirection = 4;
     }
@@ -8523,7 +8523,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     int allowEntrances;
     for (unsigned int objectIndex = 0; objectIndex < group->m_objects.size(); ++objectIndex) {
         int objectType = group->m_objects[objectIndex]->m_properties->m_prototype->m_objectType;
-        if (!g_adventureObjectLandBlocked[objectType][2])
+        if (!g_adventureObjectTraits[objectType].m_trait2)
             goto disallowEntrances;
     }
     if (!group->m_hasGuard) {
@@ -8730,8 +8730,8 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
             type_object* object = mapItem->m_objects[0];
             TObjectType* properties = object->m_properties->m_prototype;
             int objectType = properties->m_objectType;
-            if (!g_adventureObjectLandBlocked[objectType][1]
-                && !g_adventureObjectLandBlocked[objectType][2])
+            if (!g_adventureObjectTraits[objectType].m_trait1
+                && !g_adventureObjectTraits[objectType].m_trait2)
                 direction = 5;
 
             switch (objectType) {
@@ -8816,11 +8816,10 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
             if (nextRoadEntrance) {
                 int objectType =
                     nextMapItem->m_objects[0]->m_properties->m_prototype->m_objectType;
-                const unsigned char* traits =
-                    g_adventureObjectLandBlocked[objectType];
-                if (traits[0] && !traits[2])
+                const TAdvObjectTraits& traits = g_adventureObjectTraits[objectType];
+                if (traits.m_blocksLanding && !traits.m_trait2)
                     continue;
-                if (!traits[1] && !traits[2]
+                if (!traits.m_trait1 && !traits.m_trait2
                     && direction > 0 && direction < 4)
                     continue;
             }
@@ -9878,12 +9877,12 @@ unsigned char type_random_map_generator::writeMap(TAbstractFile* outfile)
     }
     for (unsigned int first = 0; first < m_positions.size(); ++first) {
         type_object* object = m_positions[first];
-        if (g_adventureObjectLandBlocked[object->m_properties->m_prototype->m_objectType][12])
+        if (g_adventureObjectTraits[object->m_properties->m_prototype->m_objectType].m_trait3)
             object->write(outfile, m_mapVersion);
     }
     for (unsigned int second = 0; second < m_positions.size(); ++second) {
         type_object* object = m_positions[second];
-        if (!g_adventureObjectLandBlocked[object->m_properties->m_prototype->m_objectType][12])
+        if (!g_adventureObjectTraits[object->m_properties->m_prototype->m_objectType].m_trait3)
             object->write(outfile, m_mapVersion);
     }
     if (m_progress)

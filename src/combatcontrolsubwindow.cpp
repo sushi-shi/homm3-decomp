@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 #include "homm3_minmax.h"
 
@@ -25,7 +26,6 @@
 // the image reads the two dwords below it, so the table could in principle
 // begin earlier, and the eleven-row extent is a floor rather than a
 // measured end.
-DATA(0x006a6968) extern THelpText g_combatSubWindowHelp[11];
 
 // It is an 800x44 strip at (0, 556) with a ten-slot reserve, a
 // bitmapBorder over the caller's sprite and SEVEN buttons -
@@ -64,44 +64,44 @@ type_combat_sub_window::type_combat_sub_window(
     // The hotkeys are scancodes: S, R, O, A, C, W, then D and SPACE.
     button* b = new button(54, 5, 48, 36, 0x7d1, "icm001.def",
         0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[0].m_text,
-        g_combatSubWindowHelp[0].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[0].m_text,
+        g_combatWindowHelp[0].m_rclick, 1);
     b->setHotkey(0x1f);
     m_widgets.push_back(b);
 
     b = new button(105, 5, 48, 36, 0x7d2, "icm002.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[1].m_text,
-        g_combatSubWindowHelp[1].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[1].m_text,
+        g_combatWindowHelp[1].m_rclick, 1);
     b->setHotkey(0x13);
     m_widgets.push_back(b);
 
     b = new button(3, 5, 48, 36, 0x7d3, "icm003.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[2].m_text,
-        g_combatSubWindowHelp[2].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[2].m_text,
+        g_combatWindowHelp[2].m_rclick, 1);
     b->setHotkey(0x18);
     m_widgets.push_back(b);
 
     b = new button(156, 5, 48, 36, 0x7d4, "icm004.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[3].m_text,
-        g_combatSubWindowHelp[3].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[3].m_text,
+        g_combatWindowHelp[3].m_rclick, 1);
     b->setHotkey(0x1e);
     m_widgets.push_back(b);
 
     b = new button(645, 5, 48, 36, 0x7d8, "icm005.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[6].m_text,
-        g_combatSubWindowHelp[6].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[6].m_text,
+        g_combatWindowHelp[6].m_rclick, 1);
     b->setHotkey(0x2e);
     m_widgets.push_back(b);
 
     b = new button(696, 5, 48, 36, 0x7d9, "icm006.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[7].m_text,
-        g_combatSubWindowHelp[7].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[7].m_text,
+        g_combatWindowHelp[7].m_rclick, 1);
     b->setHotkey(0x11);
     m_widgets.push_back(b);
 
     b = new button(747, 5, 48, 36, 0x7da, "icm007.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[8].m_text,
-        g_combatSubWindowHelp[8].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[8].m_text,
+        g_combatWindowHelp[8].m_rclick, 1);
     b->setHotkey(0x20);
     b->setHotkey(0x39);
     m_widgets.push_back(b);
@@ -181,22 +181,22 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
 
     m_rolloverWidget = new bitmapBackedTextWidget(214, 7, 400, 32, "",
         "smalfont.fnt", "cRollovr.pcx", font::PRIMARY, 0x7d5, 1, 8);
-    m_rolloverWidget->setHelpText(g_combatSubWindowHelp[4].m_text,
-        g_combatSubWindowHelp[4].m_rclick, 1);
+    m_rolloverWidget->setHelpText(g_combatWindowHelp[4].m_text,
+        g_combatWindowHelp[4].m_rclick, 1);
     newWidgets.push_back(m_rolloverWidget);
 
     m_logScrollUpButton = new type_func_button(624, 5, 18, 17, 0x7d6,
         "ComSlide.def", TCombatWindow::scrollUp, 0, 1);
-    m_logScrollUpButton->setHelpText(g_combatSubWindowHelp[5].m_text,
-        g_combatSubWindowHelp[5].m_rclick, 1);
+    m_logScrollUpButton->setHelpText(g_combatWindowHelp[5].m_text,
+        g_combatWindowHelp[5].m_rclick, 1);
     m_logScrollUpButton->setDisabledFrame(1);
     m_logScrollUpButton->setHotkey(KEYCODE_KP_8);
     newWidgets.push_back(m_logScrollUpButton);
 
     m_logScrollDownButton = new type_func_button(624, 24, 18, 17, 0x7d7,
         "ComSlide.def", TCombatWindow::scrollDown, 2, 3);
-    m_logScrollDownButton->setHelpText(g_combatSubWindowHelp[5].m_text,
-        g_combatSubWindowHelp[5].m_rclick, 1);
+    m_logScrollDownButton->setHelpText(g_combatWindowHelp[5].m_text,
+        g_combatWindowHelp[5].m_rclick, 1);
     m_logScrollDownButton->setHotkey(KEYCODE_KP_2);
     m_logScrollDownButton->setDisabledFrame(3);
     newWidgets.push_back(m_logScrollDownButton);
@@ -283,14 +283,14 @@ TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
     // literal. The hotkeys are the SPACE and ENTER scancodes.
     widget* b = new button(213, 4, 198, 36, 0x8fc, "ICM011.def",
         0, 1, 0, 0x39, 2);
-    b->setHelpText(g_combatSubWindowHelp[9].m_text,
-        g_combatSubWindowHelp[9].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[9].m_text,
+        g_combatWindowHelp[9].m_rclick, 1);
     buttons.push_back(b);
 
     b = new button(419, 4, 198, 36, 0x7802, "ICM012.def",
         0, 1, 0, 0x1c, 2);
-    b->setHelpText(g_combatSubWindowHelp[10].m_text,
-        g_combatSubWindowHelp[10].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[10].m_text,
+        g_combatWindowHelp[10].m_rclick, 1);
     buttons.push_back(b);
 
     for (widget** it = buttons.begin(); it != buttons.end(); ++it) {
@@ -614,7 +614,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             spellY += 38;
         }
         m_spellText = new textWidget(
-            15, 169, 48, 36, g_emptyRolloverText, "tiny.fnt", font::PRIMARY,
+            15, 169, 48, 36, "", "tiny.fnt", font::PRIMARY,
             0x8aa, 1, 0, 8);
     } else {
         m_backgroundWidget = new bitmapBorder(
@@ -630,7 +630,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             spellY += 38;
         }
         m_spellText = new textWidget(
-            15, 7, 48, 36, g_emptyRolloverText, "tiny.fnt", font::PRIMARY,
+            15, 7, 48, 36, "", "tiny.fnt", font::PRIMARY,
             0x8aa, 1, 0, 8);
     }
 

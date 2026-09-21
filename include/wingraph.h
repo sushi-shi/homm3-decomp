@@ -17,6 +17,10 @@
 // object at 0x68c850 to GetPixelFormat, then reads masks at +0x10/+0x14/+0x18.
 DATA(0x0068c850) extern DDPIXELFORMAT g_pixelFormat;
 
+// Original InitWin; shared view of the locked DirectDraw back surface.
+class Bitmap16Bit;
+extern Bitmap16Bit g_initWin;
+
 inline unsigned rgBto16(int r, int g, int b)
 {
     unsigned color;
@@ -79,9 +83,9 @@ extern int g_completeDrawEnabled;                         // .bss 0x6989c0
 // Fullscreen-toggle inhibitor read by SetFullScreenStatus's leading test.
 // That test is the ONLY reference to .bss 0x6989d4 anywhere in the image (a
 // whole-image scan for the absolute operand returns exactly one hit), so no
-// writer attests an owning TU; the extern stays with its one consumer and
-// the name is a house ordinal.
-extern int g_unnamed6989d4;                               // .bss 0x6989d4
+// writer attests its producer. The descriptive name follows the mode-change
+// guard; wingraph.cpp owns the storage.
+extern int g_fullScreenChangesDisabled;             // .bss 0x6989d4
 
 struct IDirectDrawSurface;
 struct tagRECT;

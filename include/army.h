@@ -1780,8 +1780,8 @@ inline bool army::isInAreaHighlight() const
 // to say where. Sliced by army::get_clockwise / get_counter_clockwise,
 // whose only located expansion is get_multi_head_directions
 // (0x448ab0). Names are bootstrap inventions - no roster attests them.
-DATA(0x00660878) extern const long g_wideDirectionRingIndex[8];
-DATA(0x00660898) extern const long g_wideDirectionRingOrder[8];
+extern const long g_wideDirectionRingIndex[8];
+extern const long g_wideDirectionRingOrder[8];
 
 // The five globals a walk publishes for the redraw, and their NAMES ARE
 // THE DREAMCAST LITERAL POOL'S - army::Walk's own SH4 body (dc 0x45254)
@@ -1792,11 +1792,11 @@ DATA(0x00660898) extern const long g_wideDirectionRingOrder[8];
 // one-hex one; all four are reset to -1 once the move has been placed.
 // They sit immediately below akWideDirectionRingIndex at 0x660878,
 // which is the four dwords 0x660868..0x660874 exactly.
-DATA(0x00660868) extern int g_walkingFrom;
-DATA(0x0066086c) extern int g_walkingFrom2;
-DATA(0x00660870) extern int g_walkingTo;
-DATA(0x00660874) extern int g_walkingTo2;
-DATA(0x00693858) extern int g_walkingYMod;
+extern int g_walkingFrom;
+extern int g_walkingFrom2;
+extern int g_walkingTo;
+extern int g_walkingTo2;
+extern int g_walkingYMod;
 
 unsigned char isValidCaliphSpell(SpellID spell, const army* target);
 // 0x447a80 (1065 B), the worker is_valid_caliph_spell tail-jumps to

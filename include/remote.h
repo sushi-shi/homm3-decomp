@@ -45,7 +45,7 @@ public:
 };
 SIZE(CHotSeatMan, 0xac);
 
-DATA(0x0069ca50) extern CHotSeatMan* g_hotSeatMan;
+extern CHotSeatMan* g_hotSeatMan;
 
 // DC publishes this exact 351-byte record and the cdecl varargs Log
 // signature.  Retail's global at 0x69d648 and its pushed-this call sites
@@ -264,7 +264,6 @@ public:
               font::EJustify justification,
               char* backgroundIcon, int backgroundFrame, int id, int style,
               int readType, int insetX, int insetY);
-    virtual ~CChatEdit();
     virtual int onKeyPress(message* msg);  // slot 15
     virtual unsigned char ignoreKey(message* msg);  // slot 16
     virtual void updateScreen();  // slot 19
@@ -377,14 +376,14 @@ protected:
 };
 SIZE(CTurnDuration, 0x14);
 
-extern CTurnDuration g_turnDuration69d630;
+extern CTurnDuration g_turnDuration;
 
 // Retail .bss pair right behind gUnnamed69d808's pointer cell, written
 // together by advManager::StartLocalPlayerTurn (the acting player's game
 // position and an armed byte) and read back by CAdvMgrNetMsgHandler::
 // HandleNetMsg. The band 0x552e00..0x556900 that owns their siblings is
 // unclaimed, so the names stay ordinal and the DATA claims wait for it.
-extern int g_unnamed69d810;
+extern int g_playerTurn;
 extern unsigned char g_weMoved;
 
 // Retail's constructor/destructor pair stores and tests only this byte;
@@ -554,10 +553,10 @@ bool testIfLobbyLaunched();
 // setup copies its selected filename here before loading the map header.
 extern char g_mapName[260];
 
-// Retail .data 0x69954c. make_gift only uses it as the gate for sending
-// a gift/request message to a non-local human; wider role unattested.
-extern int g_networkActive69954c;
-extern int g_unnamed6994e4;
+// Retail 0x69954c: enabled by network initialization, cleared on shutdown;
+// gates message transmission and prevents pausing for window deactivation.
+extern int g_remoteOn;
+extern int g_mpBaseType;
 
 void destroyMsg(CNetMsg* netMsg);
 void handlePlayerDrop(unsigned long dpid);

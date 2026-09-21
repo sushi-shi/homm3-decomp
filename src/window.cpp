@@ -589,12 +589,11 @@ unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
         id = hit->m_id;
     if (id != m_rolloverId) {
         m_rolloverId = id;
-        const char* emptyText = g_emptyRolloverText;
-        const char* text = emptyText;
+        const char* text = "";
         if (hit) {
             text = hit->getHelpText();
             if (!text)
-                text = emptyText;
+                text = "";
             g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
         } else {
             g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);

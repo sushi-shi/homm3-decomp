@@ -1,3 +1,4 @@
+#include "prefs.h"
 #include "va.h"
 #include "includes.h"
 
@@ -78,7 +79,7 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
 
 // CheckDoMain's two TU-local frame-pacing cells. Dreamcast CodeView names the
 // second one iLastFrameRateTimer; no readable symbol names the first flag.
-DATA(0x0069cca4) static unsigned char g_unnamed69cca4;
+DATA(0x0069cca4) static unsigned char g_mainLoopInitFlags;
 DATA(0x0069ccac) static unsigned long g_lastFrameRateTimer;
 
 // Dreamcast names this shared cursor-suppression flag bSpecialHideCursor.
@@ -104,8 +105,8 @@ static int onMySide(int whichPlayer)
 VA(0x005242d0, 0x82)  // dc 0x10d47c
 void checkDoMain(int forceMouseCheck, int mouseOnly)
 {
-    if (!(g_unnamed69cca4 & 1)) {
-        g_unnamed69cca4 |= 1;
+    if (!(g_mainLoopInitFlags & 1)) {
+        g_mainLoopInitFlags |= 1;
         g_lastFrameRateTimer = GameTime::get();
     }
 
@@ -239,7 +240,7 @@ static void upgradeCreatures(hero* currentHero, const town* currentTown)
                 DWELLING_0_UPG_ID + dwelling, 1))
             continue;
 
-        TCreatureType upgrade = g_townUpgradedDwellingCreatures[
+        TCreatureType upgrade = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
             currentTown->m_type * 2 * TOWN_DWELLING_COUNT + dwelling];
 
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
@@ -633,7 +634,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     unsigned char destinationWasUnvisited =
         !(getMapExtra(originalDestination.m_x, originalDestination.m_y,
                       originalDestination.m_z)
-          & g_unnamed69ccc4);
+          & g_curPlayerBit);
     int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
                                     currentHero->m_z);
     if (townId != -1) {
@@ -645,13 +646,13 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
         }
     }
 
-    g_unnamed69ccd4 = 1;
+    g_aiHeroMoveActive = 1;
     aiAttemptMove(currentHero, destination, rawValue, exploreMode);
 
     if (destinationWasUnvisited && exploreMode
         && (getMapExtra(originalDestination.m_x, originalDestination.m_y,
                         originalDestination.m_z)
-            & g_unnamed69ccc4)) {
+            & g_curPlayerBit)) {
         g_aiPlayers[g_netLocalGamePos].resetMagusHutValue();
         exploreMode = 0;
         for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i)
@@ -678,10 +679,10 @@ static void moveHero(hero* currentHero, long* dangerZones,
     if (g_gameOver)
         return;
 
-    g_unnamed69ccd4 = 0;
+    g_aiHeroMoveActive = 0;
     g_advManager->m_advWindow->animateBottomView(0);
     if (currentHero->m_movePoints > 0) {
-        if (!g_unnamed698790 && !g_videoPaused
+        if (!g_config.m_blackoutComputer && !g_remoteOn
             && mapExtraPosAndAdjacentsSet(
                 currentHero->m_x, currentHero->m_y, currentHero->m_z,
                 g_mapVisibilityBit))
@@ -2238,7 +2239,7 @@ void philAI::doAI(int whichPlayer)
     pollSound();
     g_advManager->updBottomView(0, 1, 1);
     if (!g_gameOver) {
-        if (!g_unnamed6994f0 || whichPlayer == g_unnamed6994f0) {
+        if (!g_limitPlayer || whichPlayer == g_limitPlayer) {
             int mapSize = (g_mapWidth * g_mapHeight) * g_game->getNumMapLevels();
             long* dangerZones = new long[mapSize];
             g_aiPlayers[whichPlayer].startTurn();
@@ -2538,7 +2539,7 @@ VA(0x00527960, 0x140)  // anchor-callee, dc 0x110018
 void philAI::getTurnAIVars(int whichPlayer)
 {
     g_curHourGlassPhase = 0;
-    g_unnamed691680 = 0;
+    g_sandAnim = 0;
 
     for (int heroIndex = 0;
          heroIndex < g_currentPlayer->m_numHeroes; ++heroIndex) {
@@ -2778,7 +2779,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
 
     case BORDER_TENT:
         if (g_game->m_borderTentVisitFlags[cell->m_objectIndex]
-            & g_unnamed69ccc4)
+            & g_curPlayerBit)
             return 0;
         return 5000;
     case BUOY:

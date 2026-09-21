@@ -54,6 +54,9 @@ DATA(0x0069faa8) extern std::vector<std::string> g_seerHutNames;
 // Retail 0x56c120. Free fastcall under /Gr: the sheet arrives in ECX, the
 // destination column record in EDX and the spreadsheet column index on the
 // stack (`ret 4`).
+extern const TSeerHutTextColumn* g_questTextA;
+extern const TSeerHutTextColumn* g_questTextB;
+
 void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
                            TSeerHutTextColumn* column, int col);
 

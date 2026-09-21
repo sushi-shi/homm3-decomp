@@ -83,11 +83,11 @@ int viewWorldUndergroundHandler(message& msg);
 // viewwrld.obj's own .bss run (0x6aab68 .. 0x6aac3c), so this compiland
 // owns the definition. The claim is left where it stands rather than moved
 // across lanes; this is the declaration its writer compiles against.
-extern int g_unnamed6aac3c;
+extern int g_inViewWorld;
 // cmbtmgr.h's modal-screen latch (retail .bss 0x698a18). ViewWorld parks
 // it at 2 for the life of the view-world dialog, which is what kb.cpp's
 // fast-cycle guard tests. Declared here rather than by pulling cmbtmgr.h
 // into a TU that has no other use for it.
-extern int g_combatActive698a18;
+extern int g_combatActive;
 
 #endif  /* HOMM3_VIEWWRLD_H */

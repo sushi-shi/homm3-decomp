@@ -239,7 +239,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceWidget = new textWidget(
-        44, 468, 66, 16, g_emptyRolloverText, "smalfont.fnt",
+        44, 468, 66, 16, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_experienceWidget);
 
@@ -249,7 +249,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceTotalWidget = new textWidget(
-        41, 536, 66, 16, g_emptyRolloverText, "smalfont.fnt",
+        41, 536, 66, 16, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_experienceTotalWidget);
 
@@ -267,7 +267,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
     m_widgets.push_back(newWidget);
 
     m_rolloverText = new textWidget(
-        8, 567, 584, 18, g_emptyRolloverText, "smalfont.fnt",
+        8, 567, 584, 18, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_rolloverText);
 
@@ -358,7 +358,7 @@ void type_sacrifice_window::createArtifactWidgets(
         long textY = itemY + 47;
         for (count = g_rowSize[j]; count > 0; --count) {
             currentTextWidget = new textWidget(
-                textX, textY, 48, 16, g_emptyRolloverText,
+                textX, textY, 48, 16, "",
                 "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
             m_widgets.push_back(currentTextWidget);
             m_artifactWidgets.push_back(currentTextWidget);
@@ -457,7 +457,7 @@ void type_sacrifice_window::createCreatureWidgets(
     m_creatureWidgets.push_back(currentTextWidget);
 
     m_creatureNameWidget = new textWidget(
-        29, 56, 256, 42, g_emptyRolloverText, "medfont.fnt",
+        29, 56, 256, 42, "", "medfont.fnt",
         font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_creatureNameWidget);
     m_creatureWidgets.push_back(m_creatureNameWidget);
@@ -518,7 +518,7 @@ void type_sacrifice_window::createCreatureWidgets(
     }
 
     m_currentCreature.m_creatureCountText = new textWidget(
-        145, 493, 66, 16, g_emptyRolloverText, "smalfont.fnt",
+        145, 493, 66, 16, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_currentCreature.m_creatureCountText->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_CREATURE_AMOUNT].m_text,
@@ -536,7 +536,7 @@ void type_sacrifice_window::createCreatureWidgets(
     m_currentCreature.m_sourceSelectionFrame = 0;
 
     m_currentCreature.m_experienceText = new textWidget(
-        391, 493, 66, 16, g_emptyRolloverText, "smalfont.fnt",
+        391, 493, 66, 16, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_currentCreature.m_experienceText->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_AMOUNT].m_text,
@@ -602,7 +602,7 @@ long type_sacrifice_window::createCreatureIcons(
     for (long row = 0; row < rows; ++row) {
         for (long column = 0; column < columns; ++column) {
             textWidgets[count] = new textWidget(
-                textX, textY, 66, 16, g_emptyRolloverText,
+                textX, textY, 66, 16, "",
                 "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
             textWidgets[count]->setHelpText(
                 g_sacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLOT].m_text,
@@ -1624,7 +1624,7 @@ VA(0x005653f0, 0x3b)  // dc 0x12743c
 void type_sacrifice_window::handleWidgetHover(widget* currentWidget)
 {
     if (!currentWidget->getHelpText())
-        m_rolloverText->setText(g_emptyRolloverText);
+        m_rolloverText->setText("");
     else
         m_rolloverText->setText(currentWidget->getHelpText());
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -1779,7 +1779,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     m_widgets.push_back(exitButton);
 
     m_rolloverText = new textWidget(
-        8, 459, 585, 19, g_emptyRolloverText, "smalfont.fnt",
+        8, 459, 585, 19, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_rolloverText);
 
@@ -1969,7 +1969,7 @@ VA(0x00566720, 0x38)  // dc 0x128098
 void type_skeleton_window::handleWidgetHover(widget* currentWidget)
 {
     if (!currentWidget->getHelpText())
-        m_rolloverText->setText(g_emptyRolloverText);
+        m_rolloverText->setText("");
     else
         m_rolloverText->setText(currentWidget->getHelpText());
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -1991,7 +1991,7 @@ void type_skeleton_window::createCreatureIcons(
     for (row = 0; row < rows; ++row) {
         for (column = 0; column < columns; ++column) {
             textWidgets[count] = new textWidget(
-                textX, textY, 66, 16, g_emptyRolloverText,
+                textX, textY, 66, 16, "",
                 "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
             m_widgets.push_back(textWidgets[count]);
 

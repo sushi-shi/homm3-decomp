@@ -23,6 +23,12 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Initial contents recovered from the pinned Complete image.
+DATA(0x006701a8) const char* const g_combatResultMusic[6] = { "win battle", "losecombat", "defend castle", "retreat battle", "surrender battle", "losecastle" };
+
+DATA(0x00695014) int g_combatResult;
+
+
 // Source-private in the Dreamcast compiland. Retail's destructor is the only
 // body in this admitted subset that touches the active-window slot.
 DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
@@ -252,9 +258,9 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
 
     int videoId;
     if (mySide == winningSide) {
-        if (g_combatFlag697744)
+        if (g_combatSurrendered)
             strcpy(g_text, (*g_generalText)[303]);
-        else if (g_combatFlag6985a3)
+        else if (g_combatRetreated)
             strcpy(g_text, (*g_generalText)[304]);
         else
             strcpy(g_text, (*g_generalText)[305]);
@@ -266,50 +272,50 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         }
         if (isSiege && myHero == defender) {
             videoId = 4;
-            g_combatResultFlag695014 = 2;
+            g_combatResult = 2;
         } else {
             videoId = 0;
-            g_combatResultFlag695014 = 0;
+            g_combatResult = 0;
         }
     } else if (myHero) {
-        if (g_combatFlag697744)
+        if (g_combatSurrendered)
             sprintf(g_text, (*g_generalText)[307], myHero->m_name);
-        else if (g_combatFlag6985a3)
+        else if (g_combatRetreated)
             sprintf(g_text, (*g_generalText)[308], myHero->m_name);
         else
             sprintf(g_text, (*g_generalText)[309], myHero->m_name);
         if (isSiege && myHero == defender) {
             videoId = 1;
-            g_combatResultFlag695014 = 5;
-        } else if (g_combatFlag697744) {
+            g_combatResult = 5;
+        } else if (g_combatSurrendered) {
             videoId = 3;
-            g_combatResultFlag695014 = 4;
-        } else if (g_combatFlag6985a3) {
+            g_combatResult = 4;
+        } else if (g_combatRetreated) {
             videoId = 2;
-            g_combatResultFlag695014 = 3;
+            g_combatResult = 3;
         } else {
             videoId = 5;
-            g_combatResultFlag695014 = 1;
+            g_combatResult = 1;
         }
     } else {
-        if (g_combatFlag697744)
+        if (g_combatSurrendered)
             strcpy(g_text, (*g_generalText)[310]);
-        else if (g_combatFlag6985a3)
+        else if (g_combatRetreated)
             strcpy(g_text, (*g_generalText)[311]);
         else
             strcpy(g_text, (*g_generalText)[312]);
         if (isSiege) {
             videoId = 1;
-            g_combatResultFlag695014 = 5;
-        } else if (g_combatFlag697744) {
+            g_combatResult = 5;
+        } else if (g_combatSurrendered) {
             videoId = 3;
-            g_combatResultFlag695014 = 4;
-        } else if (g_combatFlag6985a3) {
+            g_combatResult = 4;
+        } else if (g_combatRetreated) {
             videoId = 2;
-            g_combatResultFlag695014 = 3;
+            g_combatResult = 3;
         } else {
             videoId = 5;
-            g_combatResultFlag695014 = 1;
+            g_combatResult = 1;
         }
     }
 
@@ -445,7 +451,7 @@ int combatResultsWindowHandler(message& msg)
 
     // DC445 calls IsPast; retail 0x471bc5 expands Get/sub/js. Preserve
     // the canonical helper, including its ElapsedSince delegation.
-    unsigned long deadline = g_dialogDeadline697784;
+    unsigned long deadline = g_dialogDeadline;
     if (deadline > 0
         && GameTime::isPast(deadline)) {
         msg.m_codeY = DIALOG_RETURN_SPLIT_ACCEPT;
@@ -457,7 +463,7 @@ int combatResultsWindowHandler(message& msg)
         g_windowManager->m_dialogReturn = msg.m_codeY;
         msg.m_codeY = widget::WIDGET_END_DIALOG;
         msg.m_codeX = widget::WIDGET_END_DIALOG;
-        g_dialogDeadline697784 = 0;
+        g_dialogDeadline = 0;
         return MESSAGE_DISPATCH_FORWARD;
     }
 

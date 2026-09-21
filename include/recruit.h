@@ -99,7 +99,7 @@ extern struct HMENU__* g_recruitSavedMenu;
 
 // The game palette uses indices 31 and 36 for normal and selected recruit
 // borders, index 45 for level-up selection, and indices starting at 64 for players.
-extern TPalette16* g_unnamed6aacb0;
+extern TPalette16* g_systemPalette;
 
 class TRecruitQuickWindow : public heroWindow {
 public:

@@ -72,6 +72,12 @@ void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
 
 DATA(0x0069e728) TSeerHutTextColumn g_seerHutTextA[3];
 DATA(0x0069f0e8) TSeerHutTextColumn g_seerHutTextB[3];
+// Initial contents recovered from the pinned Complete image.
+// The quest readers use 52 contiguous strings per column; the loader's
+// aggregate owns their construction. Retail cells point to B and A, in that order.
+DATA(0x0068320c) const TSeerHutTextColumn* g_questTextA = g_seerHutTextB;
+DATA(0x00683210) const TSeerHutTextColumn* g_questTextB = g_seerHutTextA;
+
 DATA(0x0069faa8) std::vector<std::string> g_seerHutNames;
 
 // Both separator arms expand basic_string::append in full and the
