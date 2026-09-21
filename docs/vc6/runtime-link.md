@@ -146,8 +146,28 @@ consumer's instructions were correct, while the required initializer was
 unenrolled and absent. Data validation must cover backing values, reference
 identity, generated startup code and its execution order together.
 
-The retry passes this first fault and reaches `ResourceManager::open`, then
-faults while reading an archive index through
-`g_resourceArchiveContexts[3].m_sprites.m_indices`. That separate table remains
-zero-initialized and needs its own recovery. No menu, map, battle or gameplay
-execution has been verified.
+The retry exposed two more missing initializers in the resource manager:
+
+- `ResourceManager::open` dereferenced the zero archive-index pointer in
+  `g_resourceArchiveContexts[3].m_sprites`. Retail 0x559320 builds four 24-byte
+  contexts from twelve read-only archive-index arrays. Reconstructing the
+  descriptor constructor and explicit array temporaries reproduces all 209
+  initializer bytes, including 16 resolved relocations. The twelve lists
+  occupy 100 bytes at 0x641028..0x64108b and independently match retail.
+- With archive selection working, `ResourceManager::getSoundFile` dereferenced
+  a zero count pointer in `g_soundHeaderDescriptors`. Retail 0x5592b0 binds three
+  descriptors to the live sound-header, count and file-handle globals. The
+  reconstructed descriptor constructor and array initialization reproduce all
+  97 bytes, including 18 resolved relocations. They refer to the existing
+  globals rather than copies, so LoadSoundHeaders updates reach the readers.
+
+All three fixes pass the full build and link gates without MAX regressions.
+The four newly enrolled entries are existing retail CRT initializers: the
+context binding, its network-player consumer and the two resource tables.
+They all score 100%; their address operands were also checked independently
+of objdiff's relaxed relocation scoring. No gameplay function was added.
+
+A fresh launch with the three fixes reaches and plays the Complete intro;
+two window captures show advancing frames. An additional `/i0` launch used the
+game's existing intro-skip option, but no main-menu result was captured. Menu,
+map, battle and gameplay execution remain unverified.

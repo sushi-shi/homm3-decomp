@@ -14,7 +14,7 @@ struct SoundHeaderStruct;
 struct TResourceArchiveList {
 public:
     int m_count;
-    int* m_indices;
+    const int* m_indices;
 };
 
 struct TResourceArchiveContext {
@@ -22,6 +22,20 @@ public:
     TResourceArchiveList m_sprites;
     TResourceArchiveList m_bitmaps;
     TResourceArchiveList m_sounds;
+
+    // Retail 0x559320 constructs each 24-byte descriptor in one temporary,
+    // then copies it into the four-context array. This expansion is PC-only.
+    TResourceArchiveContext(int spriteCount, const int* spriteIndices,
+                            int bitmapCount, const int* bitmapIndices,
+                            int soundCount, const int* soundIndices)
+    {
+        m_sprites.m_count = spriteCount;
+        m_sprites.m_indices = spriteIndices;
+        m_bitmaps.m_count = bitmapCount;
+        m_bitmaps.m_indices = bitmapIndices;
+        m_sounds.m_count = soundCount;
+        m_sounds.m_indices = soundIndices;
+    }
 };
 SIZE(TResourceArchiveContext, 0x18);
 
@@ -46,6 +60,13 @@ public:
     SoundHeaderStruct** m_sounds;
     int* m_count;
     HANDLE* m_file;
+
+    // Retail's PC-only 0x5592b0 initializer binds live header/count/handle
+    // cells, so later LoadSoundHeaders updates are visible to the readers.
+    TSoundHeaderDescriptor(SoundHeaderStruct** sounds, int* count, HANDLE* file)
+        : m_sounds(sounds), m_count(count), m_file(file)
+    {
+    }
 };
 SIZE(TSoundHeaderDescriptor, 0x0c);
 
