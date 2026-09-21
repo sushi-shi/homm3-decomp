@@ -152,7 +152,7 @@ static int mainMenuHandler(message& msg)
         if (g_cdDriveNumber != CD_DRIVE_NUMBER_5 &&
             g_cdDriveNumber != CD_DRIVE_NUMBER_6) {
             normalDialog(formatString(
-                g_generalText->getText(GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT),
+                g_generalText->getText(GENERAL_TEXT_CD_REQUIRED_GENERIC_FORMAT),
                 fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
@@ -160,7 +160,7 @@ static int mainMenuHandler(message& msg)
                 ? g_generalText->getText(GENERAL_TEXT_RESTORATION_OF_ERATHIA)
                 : g_generalText->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
             normalDialog(formatString(
-                g_generalText->getText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT),
+                g_generalText->getText(GENERAL_TEXT_WRONG_CD_EDITION_FORMAT),
                 drive, fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }

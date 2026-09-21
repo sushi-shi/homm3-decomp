@@ -1176,7 +1176,7 @@ const char* hero::heroFn004D8F70()
 {
     if (m_id == CLASS_NAME_OVERRIDE_HERO_ID && g_inCampaign &&
         g_game->m_campaign.m_currentCampaign == CLASS_NAME_OVERRIDE_SCENARIO)
-        return g_generalText->getText(GENERAL_TEXT_CAMPAIGN_HERO_CLASS);
+        return g_generalText->getText(GENERAL_TEXT_SORCERESS_CLASS_NAME);
     return g_heroClasses[m_heroClass].m_className;
 }
 
@@ -2110,7 +2110,7 @@ void hero::checkLevel()
                 } else {
                     sprintf(text,
                             g_generalText->getText(
-                                GENERAL_TEXT_LEVEL_UP_CHOICE),
+                                GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT),
                             g_secondarySkillLevels[m_skillLevel[skills[0]]],
                             g_sSkillTraits[skills[0]].m_name,
                             g_secondarySkillLevels[m_skillLevel[skills[1]]],
@@ -2687,7 +2687,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 
     case MIXED_ARMY_ID:
         sprintf(g_text, g_heroScreen[20],
-                g_generalText->getText(GENERAL_TEXT_MIXED_ARMY));
+                g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL));
         break;
 
     case WIDGET_80_ID:
@@ -5373,7 +5373,7 @@ int hero::giveExperience(int howMuch, int checkForLevelUp,
                 m_experience = cap;
             if (showCapWindow && g_game->isLocalHuman(m_owner)) {
                 std::string text =
-                    formatString(g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_LIMIT), m_name);
+                    formatString(g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_LIMIT_FORMAT), m_name);
                 normalDialog(text.c_str(), 1, -1, -1, 0x11, 0, -1, 0, -1,
                              0, -1, 0);
             }

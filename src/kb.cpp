@@ -1206,7 +1206,7 @@ int oldmain()
             } else {
 
                 if (g_executive->addManager(g_advManager, -1))
-                    shutDown(g_generalText->getText(GENERAL_TEXT_SHUTDOWN));
+                    shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
                 unloadProgressBar();
 
                 if (g_remoteOn) {

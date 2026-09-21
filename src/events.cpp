@@ -825,7 +825,7 @@ void advManager::fightForArtifact(hero* currentHero, NewmapCell* cell,
 
     currentHero->checkLevel();
     if (humanPlayer) {
-        sprintf(g_text, g_adventureEventText->getText(ADV_EVENT_TEXT_CUSTOM_GUARDED),
+        sprintf(g_text, g_adventureEventText->getText(ADV_EVENT_TEXT_CUSTOM_GUARDED_REWARD_FORMAT),
                 g_artifactTraits[artifact].m_name);
         normalDialog(g_text, 1, -1, -1,
                      8, artifact, -1, 0, -1, 0, -1, 0);
@@ -871,7 +871,7 @@ void advManager::payForArtifact(hero* currentHero, NewmapCell* cell,
         resources[resourceType] < resourceCost) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_ARTIFACT_CANT_AFFORD),
+                             ADV_EVENT_TEXT_ARTIFACT_CANNOT_AFFORD),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -940,7 +940,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
                 guards = getArmyName(guardList.m_armies[0], 2);
                 firstGuard = guards;
                 if (numArmies > 1) {
-                    firstGuard = g_generalText->getText(GENERAL_TEXT_MIXED_ARMY);
+                    firstGuard = g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL);
                     for (int i = 1; i < numArmies; i++) {
                         if (i == numArmies - 1)
                             guards += g_generalText->getText(GENERAL_TEXT_LIST_AND);
@@ -971,7 +971,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
         if (humanPlayer) {
             sprintf(g_text,
                     g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_CUSTOM_GUARDED),
+                        ADV_EVENT_TEXT_CUSTOM_GUARDED_REWARD_FORMAT),
                     g_artifactTraits[artifactId].m_name);
             normalDialog(g_text, 1, -1, -1, 8, artifactId,
                          -1, 0, -1, 0, -1, 0);
@@ -1051,32 +1051,32 @@ void advManager::doEventArtifact(hero* currentHero, NewmapCell* cell,
     case const_artifact_requires_wisdom:
         doArtifactSkillRequirement(
             currentHero, cell, point, eSecSkillWisdom,
-            g_adventureEventText->getText(ADV_EVENT_TEXT_ARTIFACT_WISDOM),
+            g_adventureEventText->getText(ADV_EVENT_TEXT_ARTIFACT_WISDOM_FORMAT),
             humanPlayer);
         break;
     case const_artifact_requires_leadership:
         doArtifactSkillRequirement(
             currentHero, cell, point, eSecSkillLeadership,
             g_adventureEventText->getText(
-                ADV_EVENT_TEXT_ARTIFACT_LEADERSHIP),
+                ADV_EVENT_TEXT_ARTIFACT_LEADERSHIP_FORMAT),
             humanPlayer);
         break;
     case const_artifact_costs_2000:
         payForArtifact(currentHero, cell, point,
                        g_adventureEventText->getText(
-                           ADV_EVENT_TEXT_ARTIFACT_COST_2000),
+                           ADV_EVENT_TEXT_ARTIFACT_COST_2000_FORMAT),
                        2000, 0, humanPlayer);
         break;
     case const_artifact_costs_2500:
         payForArtifact(currentHero, cell, point,
                        g_adventureEventText->getText(
-                           ADV_EVENT_TEXT_ARTIFACT_COST_2500),
+                           ADV_EVENT_TEXT_ARTIFACT_COST_2500_FORMAT),
                        2500, 3, humanPlayer);
         break;
     case const_artifact_costs_3000:
         payForArtifact(currentHero, cell, point,
                        g_adventureEventText->getText(
-                           ADV_EVENT_TEXT_ARTIFACT_COST_3000),
+                           ADV_EVENT_TEXT_ARTIFACT_COST_3000_FORMAT),
                        3000, 5, humanPlayer);
         break;
     }
@@ -1575,7 +1575,7 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
     cell->setCellVisited(currentHero->m_owner);
     if (cell->m_extraInfo & 0x2000000) {
         if (humanPlayer) {
-            dialogText = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_CREATURE_BANK_EMPTY),
+            dialogText = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_CREATURE_BANK_EMPTY_FORMAT),
                                         name.c_str());
             normalDialog(dialogText.c_str(),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -1584,7 +1584,7 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
     }
 
     if (humanPlayer) {
-        dialogText = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_CREATURE_BANK_PROMPT),
+        dialogText = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_CREATURE_BANK_PROMPT_FORMAT),
                                     name.c_str());
         overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
         updBottomView(0, 1, 1);
@@ -2433,11 +2433,11 @@ void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
             updBottomView(0, 1, 1);
             if (currentMine->m_playerOwner < 0)
                 normalDialog(g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_MINE_GUARDED),
+                ADV_EVENT_TEXT_MINE_GUARDED_PROMPT),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             else
                 normalDialog(g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_MINE_DEFENDED),
+                ADV_EVENT_TEXT_MINE_DEFENDED_PROMPT),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
                 return;
@@ -2652,20 +2652,20 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
     int spell = cell->getPyramidSpell();
     char text[500];
     sprintf(text, DATA_COMPGEN(0x00677750, quotedNameFormat, "%s'%s'."),
-            g_adventureEventText->getText(ADV_EVENT_TEXT_PYRAMID_SPELL),
+            g_adventureEventText->getText(ADV_EVENT_TEXT_PYRAMID_SPELL_PREFIX),
             g_spellTraits[spell].m_name);
     cell->setPyramid(0, spell);
 
     if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         if (humanPlayer) {
             strcat(text, g_adventureEventText->getText(
-                              ADV_EVENT_TEXT_PYRAMID_NO_SPELLBOOK));
+                              ADV_EVENT_TEXT_PYRAMID_NO_SPELLBOOK_SUFFIX));
             normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
     } else if (g_spellTraits[spell].m_level > currentHero->m_skillLevel[eSecSkillWisdom] + 2) {
         if (humanPlayer) {
             strcat(text, g_adventureEventText->getText(
-                              ADV_EVENT_TEXT_PYRAMID_NO_WISDOM));
+                              ADV_EVENT_TEXT_PYRAMID_NO_WISDOM_SUFFIX));
             normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
     } else {
@@ -2717,13 +2717,13 @@ void advManager::doEventRefugeeCamp(hero* currentHero, NewmapCell* cell,
         if (cell->m_extraInfo == 0) {
             sprintf(g_text,
                     g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY),
+                        ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY_FORMAT),
                     g_quickViewText[cell->m_type]);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
         sprintf(g_text,
-                g_adventureEventText->getText(ADV_EVENT_TEXT_REFUGEE_CAMP),
+                g_adventureEventText->getText(ADV_EVENT_TEXT_REFUGEE_CAMP_RECRUIT_FORMAT),
                 g_quickViewText[cell->m_type],
                 getArmyName(cell->m_objectIndex, 2));
         normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -2770,7 +2770,7 @@ void advManager::doCustomResource(NewmapCell* cell, hero* currentHero,
             prompt[0] = tolower(prompt[0]);
             sprintf(g_text,
                     g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_RESOURCE_PICKUP),
+                        ADV_EVENT_TEXT_RESOURCE_PICKUP_FORMAT),
                     prompt);
             bvResMsg(g_text, type, amount);
         }
@@ -2787,7 +2787,7 @@ void advManager::doCustomResource(NewmapCell* cell, hero* currentHero,
         prompt[0] = tolower(prompt[0]);
         sprintf(g_text,
                 g_adventureEventText->getText(
-                    ADV_EVENT_TEXT_RESOURCE_PICKUP),
+                    ADV_EVENT_TEXT_RESOURCE_PICKUP_FORMAT),
                 prompt);
         bvResMsg(g_text, type, amount);
     }
@@ -2819,7 +2819,7 @@ void advManager::doEventResource(NewmapCell* cell, hero* currentHero,
         strcpy(prompt, g_resourceNames[type]);
         prompt[0] = tolower(prompt[0]);
         sprintf(g_text,
-                g_adventureEventText->getText(ADV_EVENT_TEXT_RESOURCE_PICKUP),
+                g_adventureEventText->getText(ADV_EVENT_TEXT_RESOURCE_PICKUP_FORMAT),
                 prompt);
         bvResMsg(g_text, type, amount);
     }
@@ -2913,7 +2913,7 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
         if (humanPlayer) {
             sprintf(g_text,
                     g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT),
+                        ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT_FORMAT),
                     g_artifactTraits[artifact.m_artifactId].m_name);
             normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
                          0x24, 1000, -1, 0, -1, 0);
@@ -2936,7 +2936,7 @@ void advManager::doEventSurvivor(hero* currentHero, NewmapCell* cell,
         if (humanPlayer) {
             sprintf(g_text,
                     g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_SURVIVOR_ARTIFACT),
+                        ADV_EVENT_TEXT_SHIPWRECK_SURVIVOR_ARTIFACT_FORMAT),
                     g_artifactTraits[cell->m_extraInfo].m_name);
             normalDialog(g_text, 1, -1, -1, 8, cell->m_extraInfo,
                          -1, 0, -1, 0, -1, 0);
@@ -2951,7 +2951,7 @@ void advManager::doEventSurvivor(hero* currentHero, NewmapCell* cell,
     } else {
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_SURVIVOR_BACKPACK_FULL),
+                             ADV_EVENT_TEXT_SHIPWRECK_SURVIVOR_BACKPACK_FULL),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 
@@ -2977,7 +2977,7 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
                 sprintf(g_text,
                         DATA_COMPGEN(0x00660344, twoWordFormat, "%s %s"),
                         g_adventureEventText->getText(
-                            ADV_EVENT_TEXT_SKELETON_ARTIFACT),
+                            ADV_EVENT_TEXT_SKELETON_ARTIFACT_PREFIX),
                         g_artifactTraits[artifact.m_artifactId].m_name);
                 normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
                              -1, 0, -1, 0, -1, 0);
@@ -2989,7 +2989,7 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
             if (humanPlayer) {
                 sprintf(g_text,
                         DATA_COMPGEN(0x00677758, sentenceFormat, "%s."),
-                        g_generalText->getText(GENERAL_TEXT_SKELETON_GOLD));
+                        g_generalText->getText(GENERAL_TEXT_TREASURE_CAPTION));
                 normalDialog(g_text, 1, -1, -1, GOLD, 1000,
                              -1, 0, -1, 0, -1, 0);
             }
@@ -3036,7 +3036,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
     if (currentHero->isInSpellbook(spell)) {
         if (!humanPlayer)
             return;
-        result += g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE_SPELL_KNOWN);
+        result += g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE_SPELL_KNOWN_SUFFIX);
         normalDialog(result.c_str(), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
@@ -3044,7 +3044,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
 
     if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         if (humanPlayer) {
-            result += g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE_NO_SPELLBOOK);
+            result += g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE_NO_SPELLBOOK_SUFFIX);
             normalDialog(result.c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -3053,7 +3053,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
 
     if (g_spellTraits[spell].m_level > currentHero->m_skillLevel[eSecSkillWisdom] + 2) {
         if (humanPlayer) {
-            result += g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE_NO_WISDOM);
+            result += g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE_NO_WISDOM_SUFFIX);
             normalDialog(result.c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -3084,7 +3084,7 @@ void advManager::doEventSiren(hero* currentHero, NewmapCell* cell,
     if (experience) {
         if (humanPlayer) {
             sprintf(g_text,
-                    g_adventureEventText->getText(ADV_EVENT_TEXT_SIRENS),
+                    g_adventureEventText->getText(ADV_EVENT_TEXT_SIRENS_EXPERIENCE_FORMAT),
                     experience);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -3128,7 +3128,7 @@ void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
         if (humanPlayer) {
             sprintf(g_text,
                     g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_CUSTOM_GUARDED),
+                        ADV_EVENT_TEXT_CUSTOM_GUARDED_REWARD_FORMAT),
                     g_spellTraits[spell].m_name);
             normalDialog(g_text, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
         }
@@ -3146,7 +3146,7 @@ void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
         } else {
             std::string text;
             text = formatString(g_adventureEventText->getText(
-                                     ADV_EVENT_TEXT_SPELL_SCROLL),
+                                     ADV_EVENT_TEXT_SPELL_SCROLL_FORMAT),
                                  g_spellTraits[spell].m_name);
             normalDialog(text.c_str(),
                          1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
@@ -3181,7 +3181,7 @@ void advManager::doEventSpellScroll(hero* currentHero, NewmapCell* cell,
     scroll.m_extra = spell;
     if (humanPlayer) {
         sprintf(g_text,
-                g_adventureEventText->getText(ADV_EVENT_TEXT_SPELL_SCROLL),
+                g_adventureEventText->getText(ADV_EVENT_TEXT_SPELL_SCROLL_FORMAT),
                 g_spellTraits[spell].m_name);
         normalDialog(g_text, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
     }
@@ -3363,7 +3363,7 @@ void advManager::doEventTreasure(hero* currentHero, NewmapCell* cell,
             if (humanPlayer) {
                 sprintf(g_text,
                         g_adventureEventText->getText(
-                            ADV_EVENT_TEXT_TREASURE_ARTIFACT),
+                            ADV_EVENT_TEXT_TREASURE_ARTIFACT_FORMAT),
                         g_artifactTraits[artifact.m_artifactId].m_name);
                 normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
                              -1, 0, -1, 0, -1, 0);
@@ -3395,7 +3395,7 @@ void advManager::doEventTreeOfKnowledge(hero* currentHero,
     if (currentHero->m_treeOfKnowledgeFlags & visited) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_TREE_VISITED),
+                             ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_VISITED),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -3409,20 +3409,20 @@ void advManager::doEventTreeOfKnowledge(hero* currentHero,
     case const_tree_wants_nothing:
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_TREE_FREE),
+                             ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_FREE),
                          1, -1, -1, 0x11, -1, -1, 0, -1, 0, -1, 0);
         break;
     case const_tree_wants_gold:
         if (g_currentPlayer->m_resources[GOLD] < 2000) {
             if (humanPlayer)
                 normalDialog(g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_TREE_NO_GOLD),
+                                 ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_NO_GOLD),
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
         if (humanPlayer) {
             normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_TREE_GOLD_PROMPT),
+                             ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_GOLD_PROMPT),
                          2, -1, -1, 0x11, -1, -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE)
                 return;
@@ -3436,13 +3436,13 @@ void advManager::doEventTreeOfKnowledge(hero* currentHero,
         if (g_currentPlayer->m_resources[GEMS] < 10) {
             if (humanPlayer)
                 normalDialog(g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_TREE_NO_GEMS),
+                                 ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_NO_GEMS),
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
         if (humanPlayer) {
             normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_TREE_GEMS_PROMPT),
+                             ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_GEMS_PROMPT),
                          2, -1, -1, 0x11, -1, -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE)
                 return;
@@ -3482,7 +3482,7 @@ void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
         if (humanPlayer) {
             sprintf(g_text,
                     g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_WAGON_ARTIFACT),
+                        ADV_EVENT_TEXT_WAGON_ARTIFACT_FORMAT),
                     g_artifactTraits[artifact.m_artifactId].m_name);
             // iResType1 8 is the artifact picture class, exactly as the
             // warrior's tomb passes it.
@@ -3608,7 +3608,7 @@ void advManager::monstersFlee(hero* currentHero, NewmapCell* cell,
 
     if (humanPlayer) {
         sprintf(g_text,
-                g_adventureEventText->getText(ADV_EVENT_TEXT_MONSTERS_FLEE),
+                g_adventureEventText->getText(ADV_EVENT_TEXT_MONSTERS_FLEE_FORMAT),
                 getArmyName(monType, 2));
         normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
@@ -3645,7 +3645,7 @@ bool advManager::monstersJoin(hero* currentHero, NewmapCell* cell,
 
     if (humanPlayer) {
         sprintf(g_text,
-                g_adventureEventText->getText(ADV_EVENT_TEXT_MONSTERS_JOIN),
+                g_adventureEventText->getText(ADV_EVENT_TEXT_MONSTERS_JOIN_FORMAT),
                 getArmyName(monType, 2));
         normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE) {
@@ -3701,15 +3701,15 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
         if (numMons == 1) {
             sprintf(g_text,
                     g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_MONSTERS_SELL_OUT_ONE),
+                        ADV_EVENT_TEXT_MONSTERS_SELL_OUT_ONE_FORMAT),
                     getArmyName(monType, 1), cost);
         } else {
             char text[300];
             strcpy(g_text, g_adventureEventText->getText(
-                              ADV_EVENT_TEXT_MONSTERS_SELL_OUT_LEAD));
+                              ADV_EVENT_TEXT_MONSTERS_SELL_OUT_PREFIX));
             sprintf(text,
                     g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_MONSTERS_SELL_OUT_MANY),
+                        ADV_EVENT_TEXT_MONSTERS_SELL_OUT_MANY_FORMAT),
                     numMons, getArmyName(monType, 2), cost);
             strcat(g_text, text);
         }
@@ -3978,7 +3978,7 @@ void advManager::doEventWarriorTomb(hero* currentHero, ExtraInfoUnion* cell,
         if (humanPlayer) {
             sprintf(g_text,
                     g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_WARRIOR_TOMB_ARTIFACT),
+                        ADV_EVENT_TEXT_WARRIOR_TOMB_ARTIFACT_FORMAT),
                     g_artifactTraits[artifact.m_artifactId].m_name);
             // iResType1 8 is the artifact picture class; the water wheel's
             // twin passes a resource id in the same slot.
@@ -4094,21 +4094,21 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
             if (humanPlayer) {
                 sprintf(g_text,
                         g_adventureEventText->getText(
-                            ADV_EVENT_TEXT_WITCH_HUT_KNOWN),
+                            ADV_EVENT_TEXT_WITCH_HUT_KNOWN_FORMAT),
                         g_sSkillTraits[skill].m_name);
             }
         } else if (currentHero->m_skillCount >= 8) {
             if (humanPlayer) {
                 sprintf(g_text,
                         g_adventureEventText->getText(
-                            ADV_EVENT_TEXT_WITCH_HUT_FULL),
+                            ADV_EVENT_TEXT_WITCH_HUT_FULL_FORMAT),
                         g_sSkillTraits[skill].m_name);
             }
         } else {
             if (humanPlayer) {
                 sprintf(g_text,
                         g_adventureEventText->getText(
-                            ADV_EVENT_TEXT_WITCH_HUT_LEARN),
+                            ADV_EVENT_TEXT_WITCH_HUT_LEARN_FORMAT),
                         g_sSkillTraits[skill].m_name);
                 // iResType1 20 is the secondary-skill picture class and the
                 // extra is the icon slot: three mastery frames per skill, the
@@ -4382,11 +4382,11 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
     case DERELICT_SHIP:
         doEventUndeadLair(currentHero, cell,
                              g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_DERELICT_PROMPT),
+                                 ADV_EVENT_TEXT_DERELICT_SHIP_PROMPT),
                              g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_DERELICT_EMPTY),
+                                 ADV_EVENT_TEXT_DERELICT_SHIP_EMPTY),
                              g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_DERELICT_TREASURE),
+                                 ADV_EVENT_TEXT_DERELICT_SHIP_TREASURE),
                              0x800, point);
         break;
     case DRAGON_CITY:
@@ -4528,7 +4528,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
     case LITH_ONEWAY_EXIT:
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_LITH_EXIT),
+                             ADV_EVENT_TEXT_LITH_ONEWAY_EXIT_BLOCKED),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     case LITH_TWOWAY:
@@ -4699,17 +4699,17 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case SHRINE1:
         doEventShrine(currentHero, cell,
-                      g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE1),
+                      g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE1_PREFIX),
                       Shrine1Info, humanPlayer);
         break;
     case SHRINE2:
         doEventShrine(currentHero, cell,
-                      g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE2),
+                      g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE2_PREFIX),
                       Shrine2Info, humanPlayer);
         break;
     case SHRINE3:
         doEventShrine(currentHero, cell,
-                      g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE3),
+                      g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE3_PREFIX),
                       Shrine3Info, humanPlayer);
         break;
     case SIGN: {
@@ -4839,7 +4839,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             aiVisitWarFactory(currentHero);
         } else {
             normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_WAR_FACTORY_PROMPT),
+                             ADV_EVENT_TEXT_WAR_MACHINE_FACTORY_PROMPT),
                          2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
                 break;

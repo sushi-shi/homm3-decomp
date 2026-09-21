@@ -521,7 +521,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             break;
         case CampaignHeaderStruct::CAMPAIGN_FILE_VERSION_UNSUPPORTED:
             normalDialog(
-                formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_FILE_FORMAT_ERROR), campaignFilename).c_str(),
+                formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_FILE_PARSE_ERROR_FORMAT), campaignFilename).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         }

@@ -4426,26 +4426,26 @@ long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
                 if (targetArmy->m_numTroops == 1)
                     message = formatString(
                         g_generalText->getText(
-                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE),
+                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE_FORMAT),
                         targetArmy->getName(),
                         -delta);
                 else
                     message = formatString(
                         g_generalText->getText(
-                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY),
+                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY_FORMAT),
                         targetArmy->getName(),
                         -delta);
             } else {
                 if (targetArmy->m_numTroops == 1)
                     message = formatString(
                         g_generalText->getText(
-                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE),
+                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE_FORMAT),
                         targetArmy->getName(),
                         delta);
                 else
                     message = formatString(
                         g_generalText->getText(
-                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY),
+                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY_FORMAT),
                         targetArmy->getName(),
                         delta);
             }

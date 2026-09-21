@@ -2053,7 +2053,7 @@ void swapManager::setRolloverText(int codeY)
 
     case kSwapRolloverArmyMoveLeft: case kSwapRolloverArmyMoveRight:
         sprintf(g_text, g_heroScreen[20],
-                g_generalText->getText(GENERAL_TEXT_MIXED_ARMY));
+                g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL));
         break;
 
     case kSwapRolloverText0Left: case kSwapRolloverText0Right:

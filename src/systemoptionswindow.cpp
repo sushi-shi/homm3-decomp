@@ -474,7 +474,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                     id == TMainMenu::QUIT_ID)
                 {
                     normalDialog(
-                        g_generalText->getText(GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM),
+                        g_generalText->getText(GENERAL_TEXT_UNSAVED_GAME_COMMAND_CONFIRM),
                         2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
                         exitFlag = 1;

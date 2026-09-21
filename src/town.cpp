@@ -1436,7 +1436,7 @@ void showBuildingRewards(const town* thisTown,
         }
         text += getBuildingName(thisTown->m_type, (*rewards)[i].m_qualifier);
     }
-    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_BUILDINGS),
+    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_BUILDINGS_FORMAT),
                          thisTown->m_name.c_str(), text.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)
@@ -1473,7 +1473,7 @@ void showCreatureRewards(const town* thisTown,
         text += getArmyName(creature, count);
     }
     long firstCount = (*rewards)[0].m_qualifier >> 16;
-    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES),
+    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES_FORMAT),
                          firstCount, text.c_str(), thisTown->m_name.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)

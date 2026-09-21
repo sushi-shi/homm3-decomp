@@ -90,7 +90,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
         0, 0, m_width, m_height, 0, "GPuCrDiv.pcx", 0x800));
 
     sprintf(g_text,
-            g_generalText->getText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER),
+            g_generalText->getText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT),
             g_creatureTypeTraits[m_creature].m_pluralName);
     m_widgets.push_back(new textWidget(
         0, 20, m_width, 30, g_text, "bigfont.fnt", font::HEADING,
@@ -236,7 +236,7 @@ inline void TSplitWindow::setRolloverText(int codeY)
         break;
     case DIALOG_RETURN_SPLIT_ACCEPT:
         sprintf(g_text,
-                g_generalText->getText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER),
+                g_generalText->getText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT),
                 g_creatureTypeTraits[m_creature].m_pluralName);
         break;
     default:

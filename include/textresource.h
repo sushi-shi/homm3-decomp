@@ -10,331 +10,27 @@
 // Named indices into genrltxt.txt. Every value is retail-byte-proven by the
 // corresponding TTextResource::Text[index] consumer; names describe those
 // consumers until the original source roster supplies stronger wording.
+// FORMAT means the row itself contains printf conversions; PREFIX, SUFFIX,
+// and FRAGMENT identify rows that callers compose with other text.
 enum EGeneralTextIndex {
-    // Role-based names from HandlePlayerDead, network wait/transfer dialogs,
-    // TurnDurationWarning, SaveValid, and the resource-bonus text helpers.
-    GENERAL_TEXT_PLAYER_DEFEATED_FORMAT = 6,
-    GENERAL_TEXT_LOCAL_PLAYER_DEFEATED = 96,
-    GENERAL_TEXT_SENDING_GAME = 99,
-    GENERAL_TEXT_RECEIVING_GAME = 100,
-    GENERAL_TEXT_RECONNECT_FAILED = 468,
-    GENERAL_TEXT_LOCAL_PLAYER_IS_HOST = 471,
-    GENERAL_TEXT_WAIT_FOR_LEVEL_SELECTION = 472,
-    GENERAL_TEXT_WAIT_FOR_REMOTE_BATTLE = 473,
-    GENERAL_TEXT_OVERWRITE_SAVE_PROMPT_FORMAT = 494,
-    GENERAL_TEXT_TURN_ONE_SECOND_REMAINING = 627,
-    GENERAL_TEXT_TURN_SECONDS_REMAINING_FORMAT = 628,
-    GENERAL_TEXT_TURN_ONE_MINUTE_REMAINING = 629,
-    GENERAL_TEXT_TURN_MINUTES_REMAINING_FORMAT = 630,
-    GENERAL_TEXT_TEAM_VICTORY = 660,
-    GENERAL_TEXT_TEAM_DEFEAT = 661,
-    GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_CAPTION = 90,
-    GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_DESCRIPTION = 94,
-    GENERAL_TEXT_RESOURCE_BONUS_RAMPART_DESCRIPTION = 689,
-    GENERAL_TEXT_RESOURCE_BONUS_TOWER_DESCRIPTION = 690,
-    GENERAL_TEXT_RESOURCE_BONUS_INFERNO_DESCRIPTION = 691,
-    GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_DESCRIPTION = 692,
-    GENERAL_TEXT_RESOURCE_BONUS_RAMPART_CAPTION = 693,
-    GENERAL_TEXT_RESOURCE_BONUS_TOWER_CAPTION = 694,
-    GENERAL_TEXT_RESOURCE_BONUS_INFERNO_CAPTION = 695,
-    GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_CAPTION = 696,
-    GENERAL_TEXT_INSUFFICIENT_SAVE_DISK_SPACE = 709,
-    // Role-based names: CWaitForReadyPlayersDlg::wait and the scenario
-    // player-row hero selector. These describe consumers, not text quotes.
-    GENERAL_TEXT_WAIT_FOR_READY_PLAYERS = 328,
-    GENERAL_TEXT_RANDOM_HERO = 523,
-    GENERAL_TEXT_NO_HERO = 524,
-    GENERAL_TEXT_SHUTDOWN = 1,
-    GENERAL_TEXT_LEVEL_UP_OR = 5,
-    // The dismiss-this-stack confirmation TViewArmyWindow::WindowHandler
-    // raises from the DISMISS button (a folded [Text._First + 0x34]).
-    GENERAL_TEXT_DISMISS_ARMY_PROMPT = 13,
-    GENERAL_TEXT_PLAYER_TURN_FORMAT = 14,
-    GENERAL_TEXT_HERO_ROLLOVER_FORMAT = 16,
-    GENERAL_TEXT_RECRUIT_TITLE = 17,
-    // The two combat morale lines, both "%s" formats over the affected
-    // stack's name: combatManager::CheckApplyGoodMorale (0x464920) folds
-    // [Text._First + 0x88] and CheckApplyBadMorale (0x464b40)
-    // [Text._First + 0x8c]. Gated for the reason GENERAL_TEXT_SKELETON_
-    // GOLD below is - an ungated enumerator counts toward the include-set
-    // threshold in every consumer.
-    GENERAL_TEXT_GOOD_MORALE = 34,
-    GENERAL_TEXT_BAD_MORALE = 35,
-    // The singular partner of GENERAL_TEXT_MIXED_ARMY below, and the one
-    // consumer that proves the pair is a pair: combatManager::
-    // damage_message (0x469a90) picks between the folded
-    // [Text._First + 0xac] and [Text._First + 0xb0] on `deaths == 1`
-    // when the dying stack has no army record to name itself from.
-    // Gated for the reason GENERAL_TEXT_GOOD_MORALE above is - an
-    // ungated enumerator counts toward the include-set threshold in
-    // every consumer.
-    GENERAL_TEXT_MIXED_ARMY_ONE = 43,
-    GENERAL_TEXT_MIXED_ARMY = 44,
-    // DoEventSkeleton (0x4a5480) shows this row - and nothing else in the
-    // image does. The index is the folded `[Text._First + 0xbc]` load at
-    // 0x4a5540, and a scan of every such load reachable from a
-    // gpGeneralText reference finds exactly ONE, so the row has a single
-    // consumer and the name can only describe it: the 1000 gold a Corpse
-    // pays a hero whose sixty-four backpack slots are all full, wrapped in
-    // the pooled "%s." format. Gated to the events view for the reason
-    // GENERAL_TEXT_DRAGON_CITY_EMPTIED below is - an ungated enumerator
-    // counts toward the include-set threshold in every consumer.
-    GENERAL_TEXT_SKELETON_GOLD = 47,
-    // TurnDurationMsg prefixes its caller-supplied warning with this row.
-    GENERAL_TEXT_TURN_DURATION_PREFIX = 54,
-    // town.obj's three event-reward rows: the " and " list separator
-    // (folded [Text._First + 0x238] in both show_* helpers), and the
-    // two town-event dialog formats give_event_reward's helpers wrap
-    // around the reward list ([+0x92c] buildings, [+0x930] creatures).
-    // Gated: an ungated enumerator counts toward the include-set
-    // threshold in every consumer.
-    GENERAL_TEXT_LIST_AND = 142,
-    GENERAL_TEXT_EVENT_BUILDINGS = 587,
-    GENERAL_TEXT_EVENT_CREATURES = 588,
-    GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE = 57,
-    GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND = 58,
-    GENERAL_TEXT_SEARCH_FOUND_FORMAT = 59,
-    GENERAL_TEXT_SEARCH_NOTHING_FOUND = 60,
-    GENERAL_TEXT_SEARCH_WATER = 61,
-    GENERAL_TEXT_QUICK_INFO_SHROUDED = 62,
-    GENERAL_TEXT_RESOURCE_DISPLAY_0 = 63,
-    GENERAL_TEXT_RESOURCE_DISPLAY_1 = 64,
-    GENERAL_TEXT_RESOURCE_DISPLAY_2 = 65,
-    GENERAL_TEXT_QUIT = 70,
-    // CDPlayHeroes::HandleLowLevelMsg's RS_PING_REPLY arm (0x552f9b) is the
-    // only consumer of the folded [Text._First + 0x10c]: it sprintf()s the
-    // round trip GameTime::ElapsedSince measured against the echoed ping
-    // stamp into a 256-byte buffer and hands the line to ReceiveChat.
-    GENERAL_TEXT_CHAT_PING_RESULT_FORMAT = 67,
-    // advspells.obj's DimensionDoor (0x41d090) posts this when the
-    // targeted square disagrees with the caster's boat bit - a folded
-    // [Text._First + 0x11c]. The INDEX is byte-proven; the NAME is
-    // role-based and PROVISIONAL, like its three neighbours below.
-    GENERAL_TEXT_DIMENSION_DOOR_BLOCKED = 71,
-    // SendChat's command/status rows. The indices are the folded retail
-    // TTextResource loads; their roles are fixed by the surrounding ping
-    // and recipient-control flow.
-    GENERAL_TEXT_CHAT_PING_COMMAND = 73,
-    GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT = 74,
-    GENERAL_TEXT_CHAT_PING_ALL = 75,
-    // CDPlayHeroes::SendIt shows this two-button row after six failed send
-    // attempts and retries only when the window returns ACCEPT.
-    GENERAL_TEXT_DPLAY_SEND_RETRY = 82,
-    GENERAL_TEXT_SEARCH_NOT_DIGGABLE = 98,
-    GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT = 107,
-    GENERAL_TEXT_QUICK_INFO_INVALID_POINT = 111,
-    // combatManager::DoCommand (0x476bd0) shows this entry instead of
-    // opening the spell book while the acting side's field_54b4 latch
-    // is set - i.e. the hero has already cast this round. The NAME
-    // describes that consumer, which is this enum's stated convention;
-    // the index is retail-byte-proven (a folded [Text._First + 0x204]).
-    GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST = 129,
-    // The Visions arm of advManager::CastSpell posts this line after
-    // raising the caster's own visions level ([Text._First + 0x108]).
-    GENERAL_TEXT_VISIONS_CAST = 66,
-    // The Fly arm refuses here when the caster is aboard a boat
-    // ([Text._First + 0x304]). Both indexes retail-byte-proven; names
-    // describe the consumers.
-    GENERAL_TEXT_SPELL_NOT_WHILE_ON_BOAT = 193,
-    // advManager::SummonBoat's four outcome lines, all folded
-    // [Text._First + N] loads in one body: 0x538 when the caster is already
-    // at sea (sprintf'd with the hero's name), 0x53c when no adjacent water
-    // tile is free, 0x540 when neither a summonable boat nor a new one can
-    // be produced, and 0x544 when the mastery roll fails (also name-fed).
-    // Indexes are retail-byte-proven; the names describe the consumers.
-    GENERAL_TEXT_SUMMON_BOAT_ALREADY_AT_SEA_FORMAT = 334,
-    GENERAL_TEXT_SUMMON_BOAT_NO_WATER = 335,
-    GENERAL_TEXT_SUMMON_BOAT_NONE_AVAILABLE = 336,
-    GENERAL_TEXT_SUMMON_BOAT_FAILED_FORMAT = 337,
-    // advManager::TownGate's three refusals, all folded [Text._First + N]
-    // loads in one body: 0x1f0 when the chosen town already has a visiting
-    // hero, 0x1f4 when the caster's team owns no town at all, and 0x220
-    // when the caster is aboard a boat (hero flags & 0x40000). Indexes are
-    // retail-byte-proven; the names describe those three consumers.
-    GENERAL_TEXT_TOWN_PORTAL_TOWN_OCCUPIED = 124,
-    GENERAL_TEXT_TOWN_PORTAL_NO_TOWN = 125,
-    GENERAL_TEXT_SPELL_NOT_FROM_BOAT = 136,
-    // DimensionDoor's movement gate refuses here when the caster has no
-    // movement points left ([Text._First + 0x1f8]). Name provisional.
-    GENERAL_TEXT_SPELL_NEEDS_MOVEMENT = 126,
-    // ResetRound posts this line after every non-placement, non-quick round;
-    // retail folds Text._First + 0x674, i.e. row 413.
-    GENERAL_TEXT_COMBAT_ROUND = 413,
-    GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE = 151,
-    GENERAL_TEXT_BACKPACK_FULL = 153,
-    // HandleCombatPlayerDrop's two 15-second notification rows.
-    GENERAL_TEXT_COMBAT_LOCAL_PLAYER_DROPPED = 416,
-    GENERAL_TEXT_COMBAT_REMOTE_PLAYER_DROPPED = 417,
-    GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT = 154,
-    // get_tower_string's two folded vector loads at Text._First + 0x26c and
-    // +0x270. The first takes the wall name; the second takes that name,
-    // skill and the double/triple archer counts.
-    GENERAL_TEXT_COMBAT_WALL_DESTROYED_FORMAT = 155,
-    GENERAL_TEXT_COMBAT_WALL_STATUS_FORMAT = 156,
-    GENERAL_TEXT_VIEW_ARMY_SPEED = 194,
-    // The two rows above HEALTH_REMAINING in the popup, both folded
-    // [Text._First + N] loads: 0x31c in
-    // TViewArmyWindow::create_shots_widget (0x5f5b30) and 0x320 in
-    // create_damage_widget (0x5f5860).
-    GENERAL_TEXT_VIEW_ARMY_SHOTS = 199,
-    GENERAL_TEXT_VIEW_ARMY_DAMAGE = 200,
-    GENERAL_TEXT_VIEW_ARMY_HEALTH_REMAINING = 201,
-    GENERAL_TEXT_ARMY_HELP_PREFIX = 203,
-    GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE = 204,
-    GENERAL_TEXT_LEVEL_UP_CHOICE = 205,
-    // The upgrade-this-stack confirmation, shown with the gold slot and
-    // the highest non-gold resource the upgrade costs (a folded
-    // [Text._First + 0x340] in TViewArmyWindow::WindowHandler).
-    GENERAL_TEXT_UPGRADE_ARMY_PROMPT = 208,
-    // kb's MemError (0x4f42c0) formats this entry into gText and hands
-    // the result to ShutDown: the allocation-failure line.
-    GENERAL_TEXT_OUT_OF_MEMORY = 223,
-    GENERAL_TEXT_ARMY_ENTRY_SEPARATOR = 238,
-    GENERAL_TEXT_QUICK_CREATURE_JOIN = 244,
-    GENERAL_TEXT_QUICK_CREATURE_JOIN_COST = 245,
-    GENERAL_TEXT_QUICK_CREATURE_FLEE = 246,
-    GENERAL_TEXT_QUICK_CREATURE_ATTACK = 247,
-    GENERAL_TEXT_SEARCH_BACKPACK_FULL = 248,
-    GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER = 257,
-    GENERAL_TEXT_SPLIT_OTHER_ROLLOVER = 258,
-    // The single-button dialog CDPlayHeroes::HandleLowLevelMsg (0x552e92)
-    // raises when the RS_DESTROY_PLAYER order names this machine's own DPID:
-    // the folded [Text._First + 0x524], shown after RemoteCleanup and
-    // immediately before ShutDown(0).
-    GENERAL_TEXT_REMOTE_SESSION_DESTROYED = 329,
-    GENERAL_TEXT_QUICK_INFO_DIGGABLE = 331,
-    // The one-vararg format advManager::SkuttleBoat (0x41cdf0) sprintf's
-    // the caster's name into when the mastery roll fails
-    // ([Text._First + 0x548]) - the row immediately below DimensionDoor's
-    // own limit format. Name provisional.
-    GENERAL_TEXT_SCUTTLE_BOAT_FAILED_FORMAT = 338,
-    // A one-vararg format DimensionDoor sprintf's the caster's name into
-    // when dWalkSpellsCast has reached this mastery's cap
-    // ([Text._First + 0x54c]). Name provisional.
-    GENERAL_TEXT_DIMENSION_DOOR_LIMIT_FORMAT = 339,
-    // The hero screen's "Level %d %s" line (widget 0x8c): a folded
-    // [Text._First + 0x55c] in THeroScreenWindow::SetupHeroView, fed the
-    // hero's level and the class name HeroFn_004D8F70 picks. The INDEX is
-    // byte-proven; the NAME describes the two arguments retail feeds it.
-    GENERAL_TEXT_HERO_LEVEL_CLASS_FORMAT = 343,
-    // The seer hut's display line: a folded [Text._First + 0x570] fed the
-    // hut's own name out of seerhut.obj's name list. Three consumers, all
-    // in seerhut.obj - the two TSeerHut text builders (0x5741b0 and
-    // 0x5743e0) and the nullary 0x574070. The INDEX is byte-proven; the
-    // NAME describes the one argument retail feeds it.
-    GENERAL_TEXT_SEER_HUT_NAME_FORMAT = 348,
-    GENERAL_TEXT_VISITED_OBJECT = 353,
-    GENERAL_TEXT_UNVISITED_OBJECT = 354,
-    GENERAL_TEXT_KNOWN_SHRINE_SPELL = 355,
-    GENERAL_TEXT_SHRINE_SPELL_FORMAT = 356,
-    GENERAL_TEXT_WITCH_SKILL_FORMAT = 357,
-    GENERAL_TEXT_HERO_KNOWS_WITCH_SKILL = 358,
-    GENERAL_TEXT_AI_GIFT_RECEIVED = 359,
-    GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST = 360,
-    GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST = 361,
-    // The tactics-phase help dialog combatManager::Open (0x462a20)
-    // raises once per player, behind that player's own
-    // placement_help_enabled flag which it then clears - a folded
-    // [Text._First + 0x5d4] and the only load of that row in the image.
-    // The index is byte-proven; the name describes the one consumer,
-    // since the TXT resources are not in this tree.
-    GENERAL_TEXT_COMBAT_PLACEMENT_HELP = 373,
-    // The wraith's mana-drain line, in its two counts. Both are folded
-    // [Text._First + N] loads in combatManager::SetNextArmy (0x465330)
-    // - 0x5d8 on `numTroops == 1` and 0x5dc otherwise - and both are
-    // fed (the draining stack's name, the drained hero's name).
-    GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE = 374,
-    GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY = 375,
-    // The attacker NAME combatManager::KeepAttack (0x465ad0) hands to
-    // damage_message for an arrow tower's shot - a folded
-    // [Text._First + 0x5e0], and the only load of that row in the image.
-    // It is passed with a count of 1, so it is a singular noun rather
-    // than a format. The index is byte-proven; the name describes the
-    // one consumer, since the TXT resources are not in the image.
-    GENERAL_TEXT_COMBAT_ARROW_TOWER_ATTACKER = 376,
-    // The four rows combatManager::damage_message (0x469a90) builds its
-    // line out of, every index a folded [Text._First + N] load in that
-    // one body: 0x5e4/0x5e8 are the damage clause, selected on
-    // `attacker_qty == 1` and both fed (attacker name, damage); 0x5ec is
-    // the one-death clause, fed the dying stack's name alone, and 0x5f0
-    // the many-death clause, fed (deaths, name). Gated for the reason
-    // GENERAL_TEXT_GOOD_MORALE above is.
-    GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER = 377,
-    GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS = 378,
-    GENERAL_TEXT_COMBAT_ONE_DEATH = 379,
-    GENERAL_TEXT_COMBAT_MANY_DEATHS = 380,
-    GENERAL_TEXT_VIEW_ARMY_HEALTH = 389,
-    // do_event_dragon_city (0x4a2140) shows this row - and nothing else in
-    // the image does. The index is the folded `[Text._First + 0x6a4]` load
-    // at 0x4a2183, and a scan of every `mov r32,[r32+0x6a4]` in .text finds
-    // exactly ONE, so the row has a single consumer and the name can only
-    // describe it: the line a hero gets on a Dragon Utopia whose cell
-    // already carries the emptied bit 0x2000000. The generic creature bank
-    // (0x4a15a0) tests the same bit on the same dword but formats
-    // advevent.txt row 33 with the bank's own name instead, so the two are
-    // NOT shared. Gated to the events view: no other modeled consumer
-    // proves the value, and an ungated enumerator counts toward the
-    // include-set threshold - winmgr.h's DIALOG_RETURN_DECLINE sets that
-    // precedent.
-    GENERAL_TEXT_DRAGON_CITY_EMPTIED = 425,
-    GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT = 445,
-    GENERAL_TEXT_LEVEL_UP_HERO_FORMAT = 446,
-    GENERAL_TEXT_PUZZLE_WINDOW = 464,
-    GENERAL_TEXT_DEFAULT_PLAYER_NAME = 469,
-    GENERAL_TEXT_PLAYER_DROPPED = 470,
-    GENERAL_TEXT_CHAT_NONHUMAN_WIRE_TAG = 474,
-    GENERAL_TEXT_CHAT_NONHUMAN_LINE_TAG = 475,
-    // OnPlayerDropUpdateMsg displays this row while reloading the shared
-    // recovery save. Retail fixes it at [Text._First + 0xa4c].
-    GENERAL_TEXT_PLAYER_DROP_RELOAD = 659,
-    GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM = 579,
-    // The four spell-influence rollover rows TViewArmyWindow's spell
-    // icons print, all folded [Text._First + N] loads in its
-    // WindowHandler: 0x98c carries the spell name and a turn count,
-    // 0xaa0 the same name with a fixed descriptor instead, and
-    // 0xaa4/0xaa8/0xaac are that descriptor for the three spells whose
-    // effect has no turn count.
-    GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT = 611,
-    // damage_message's third death clause, and the only [Text._First +
-    // 0xa70] load in the image. It replaces the one/many pair above
-    // when the defending stack carries creatureId bit 6 - the same bit
-    // SideIsWipedOut (0x465830) and IsWinner (0x4658b0) read as "this
-    // stack is out of the fight" - and it takes the stack's name alone,
-    // with no count. Gated for the reason GENERAL_TEXT_GOOD_MORALE is.
-    GENERAL_TEXT_COMBAT_STACK_WIPED_OUT = 668,
-    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE = 545,
-    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY = 546,
-    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE = 547,
-    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY = 548,
-    GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT = 680,
-    GENERAL_TEXT_ARMY_SPELL_BIND = 681,
-    GENERAL_TEXT_ARMY_SPELL_BERSERK = 682,
-    GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY = 683,
-    GENERAL_TEXT_GARRISON_ADVENTURE_SPELL = 685,
-    GENERAL_TEXT_MAIN_MENU_LOW_DISK = 708,
-    GENERAL_TEXT_COMBAT_FEAR = 729,
-    GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT = 730,
-    // The refusal both adventure-targeting spells share when their popup
-    // comes back without a usable square: DimensionDoor (0x41d090) and
-    // SkuttleBoat (0x41cdf0) both fold [Text._First + 0xb70]. Name
-    // provisional.
-    GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET = 732,
-    GENERAL_TEXT_CAMPAIGN_HERO_CLASS = 736,
-    GENERAL_TEXT_ARMAGEDDONS_BLADE = 746,
-    GENERAL_TEXT_SHADOW_OF_DEATH = 747,
-    GENERAL_TEXT_CURSED_GROUND_HIGH_LEVEL_SPELL = 748,
-    GENERAL_TEXT_RESTORATION_OF_ERATHIA = 763,
-    // Remaining literal genrltxt.txt consumers. Names follow the English
-    // Complete 4.0 rows and the role of each retail-proven call site.
-    GENERAL_TEXT_HERO_EXPERIENCE_LIMIT = 2,
+    GENERAL_TEXT_ADD_MANAGER_ERROR = 1,
+    GENERAL_TEXT_HERO_EXPERIENCE_LIMIT_FORMAT = 2,
     GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT = 3,
     GENERAL_TEXT_PER_DAY_FORMAT = 4,
+    GENERAL_TEXT_LEVEL_UP_OR = 5,
+    GENERAL_TEXT_PLAYER_DEFEATED_FORMAT = 6,
     GENERAL_TEXT_PLAYER_LAST_TOWN_WARNING_FORMAT = 7,
     GENERAL_TEXT_PLAYER_BANISHED_FORMAT = 8,
     GENERAL_TEXT_PLAYER_BANISHED_THIRD_PERSON_FORMAT = 9,
     GENERAL_TEXT_FILE_OPEN_ERROR_FORMAT = 11,
     GENERAL_TEXT_NEW_GAME_SAVE_NAME = 12,
+    // The dismiss-this-stack confirmation TViewArmyWindow::WindowHandler
+    // raises from the DISMISS button (a folded [Text._First + 0x34]).
+    GENERAL_TEXT_DISMISS_ARMY_PROMPT = 13,
+    GENERAL_TEXT_PLAYER_TURN_FORMAT = 14,
     GENERAL_TEXT_NETWORK_RECEIVE_RETRY_PROMPT = 15,
+    GENERAL_TEXT_HERO_ROLLOVER_FORMAT = 16,
+    GENERAL_TEXT_RECRUIT_TITLE = 17,
     GENERAL_TEXT_RECRUIT_GARRISON_FULL = 18,
     GENERAL_TEXT_TOWN_HERO_LIMIT_FORMAT = 19,
     GENERAL_TEXT_TOWN_HERO_NEEDS_ARMY = 20,
@@ -351,6 +47,14 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_COMBAT_CAPTURED_ARTIFACT = 31,
     GENERAL_TEXT_NONE = 32,
     GENERAL_TEXT_COMBAT_SURRENDER_OFFER_FORMAT = 33,
+    // The two combat morale lines, both "%s" formats over the affected
+    // stack's name: combatManager::CheckApplyGoodMorale (0x464920) folds
+    // [Text._First + 0x88] and CheckApplyBadMorale (0x464b40)
+    // [Text._First + 0x8c]. Gated for the reason GENERAL_TEXT_TREASURE_CAPTION
+    // below is - an ungated enumerator counts toward the include-set
+    // threshold in every consumer.
+    GENERAL_TEXT_GOOD_MORALE_FORMAT = 34,
+    GENERAL_TEXT_BAD_MORALE_FORMAT = 35,
     GENERAL_TEXT_TOWN_GARRISON_MAKE_ROOM_FORMAT = 36,
     GENERAL_TEXT_COMBAT_ATTACK_DAMAGE_FORMAT = 37,
     GENERAL_TEXT_COMBAT_SHOOT_LAST_SHOT_FORMAT = 38,
@@ -358,24 +62,78 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_ACTIVE_PLAYER_FORMAT = 40,
     GENERAL_TEXT_SESSION_NAME = 41,
     GENERAL_TEXT_USER_NAME = 42,
+    // The singular partner of GENERAL_TEXT_GENERIC_CREATURE_PLURAL below,
+    // and the consumer that proves the pair is a pair: combatManager::
+    // damage_message (0x469a90) picks between the folded
+    // [Text._First + 0xac] and [Text._First + 0xb0] on `deaths == 1`
+    // when the dying stack has no army record to name itself from.
+    // Gated for the reason GENERAL_TEXT_GOOD_MORALE_FORMAT above is - an
+    // ungated enumerator counts toward the include-set threshold in
+    // every consumer.
+    GENERAL_TEXT_GENERIC_CREATURE_SINGULAR = 43,
+    GENERAL_TEXT_GENERIC_CREATURE_PLURAL = 44,
     GENERAL_TEXT_GOOD_LUCK_FORMAT = 46,
+    // DoEventSkeleton (0x4a5480) shows this row - and nothing else in the
+    // image does. The index is the folded `[Text._First + 0xbc]` load at
+    // 0x4a5540, and a scan of every such load reachable from a
+    // gpGeneralText reference finds exactly ONE, so the row has a single
+    // consumer: it is the "Treasure" caption on the 1000 gold a Corpse
+    // pays a hero whose sixty-four backpack slots are all full. Gated to
+    // the events view for the reason
+    // GENERAL_TEXT_DRAGON_CITY_EMPTIED below is - an ungated enumerator
+    // counts toward the include-set threshold in every consumer.
+    GENERAL_TEXT_TREASURE_CAPTION = 47,
     GENERAL_TEXT_TOWN_UNDER_ATTACK_FORMAT = 48,
     GENERAL_TEXT_ATTACK_TARGET_TOWN = 49,
     GENERAL_TEXT_ATTACK_TARGET_HERO = 50,
     GENERAL_TEXT_TOWN_SCREEN = 51,
     GENERAL_TEXT_BOAT_BUILD_BLOCKED = 52,
     GENERAL_TEXT_REQUIRES = 53,
+    // TurnDurationMsg prefixes its caller-supplied warning with this row.
+    GENERAL_TEXT_TURN_DURATION_PREFIX = 54,
     GENERAL_TEXT_WORLD_MAP_HELP = 55,
     GENERAL_TEXT_END_TURN_HEROES_CAN_MOVE_PROMPT = 56,
+    GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE = 57,
+    GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND = 58,
+    GENERAL_TEXT_SEARCH_FOUND_PREFIX = 59,
+    GENERAL_TEXT_SEARCH_NOTHING_FOUND = 60,
+    GENERAL_TEXT_SEARCH_WATER = 61,
+    GENERAL_TEXT_QUICK_INFO_SHROUDED = 62,
+    GENERAL_TEXT_CALENDAR_MONTH = 63,
+    GENERAL_TEXT_CALENDAR_WEEK = 64,
+    GENERAL_TEXT_CALENDAR_DAY = 65,
+    // The Visions arm of advManager::CastSpell posts this line after
+    // raising the caster's own visions level ([Text._First + 0x108]).
+    GENERAL_TEXT_VISIONS_CAST = 66,
+    // CDPlayHeroes::HandleLowLevelMsg's RS_PING_REPLY arm (0x552f9b) is the
+    // only consumer of the folded [Text._First + 0x10c]: it sprintf()s the
+    // round trip GameTime::ElapsedSince measured against the echoed ping
+    // stamp into a 256-byte buffer and hands the line to ReceiveChat.
+    GENERAL_TEXT_CHAT_PING_RESULT_FORMAT = 67,
     GENERAL_TEXT_RESTART_GAME_PROMPT = 68,
     GENERAL_TEXT_LOAD_GAME_PROMPT = 69,
+    GENERAL_TEXT_QUIT = 70,
+    // advspells.obj's DimensionDoor (0x41d090) posts this when the
+    // targeted square disagrees with the caster's boat bit - a folded
+    // [Text._First + 0x11c]. The INDEX is byte-proven; the NAME is
+    // role-based and PROVISIONAL, like its three neighbours below.
+    GENERAL_TEXT_DIMENSION_DOOR_BLOCKED = 71,
     GENERAL_TEXT_CAMPAIGN_CHOOSE_BONUS = 72,
+    // SendChat's command/status rows. The indices are the folded retail
+    // TTextResource loads; their roles are fixed by the surrounding ping
+    // and recipient-control flow.
+    GENERAL_TEXT_CHAT_PING_COMMAND = 73,
+    GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT = 74,
+    GENERAL_TEXT_CHAT_PING_ALL = 75,
     GENERAL_TEXT_HIGH_SCORE_SCORE = 76,
     GENERAL_TEXT_AUTOSAVE_NAME = 77,
     GENERAL_TEXT_SCENARIO_STARTING_HERO_CAPTION = 78,
     GENERAL_TEXT_SCENARIO_HERO_SPECIALTY_CAPTION = 79,
     GENERAL_TEXT_SCENARIO_ASSOCIATED_CREATURES_CAPTION = 80,
     GENERAL_TEXT_SCENARIO_TOWN_ALIGNMENT_CAPTION = 81,
+    // CDPlayHeroes::SendIt shows this two-button row after six failed send
+    // attempts and retries only when the window returns ACCEPT.
+    GENERAL_TEXT_DIRECTPLAY_SEND_RETRY_PROMPT = 82,
     GENERAL_TEXT_MULTIPLAYER_REQUIRES_TWO_PLAYERS = 83,
     GENERAL_TEXT_ARTIFACT_BONUS = 84,
     GENERAL_TEXT_GOLD_BONUS = 85,
@@ -383,19 +141,27 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_RANDOM_BONUS = 87,
     GENERAL_TEXT_STARTING_GOLD_RANGE = 88,
     GENERAL_TEXT_COMBAT_ARMAGEDDON_DAMAGE_FORMAT = 89,
+    GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_CAPTION = 90,
     GENERAL_TEXT_STARTING_ARTIFACT_DESCRIPTION = 91,
     GENERAL_TEXT_COMBAT_DISRUPTING_RAY_FORMAT = 92,
     GENERAL_TEXT_STARTING_GOLD_DESCRIPTION = 93,
+    GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_DESCRIPTION = 94,
     GENERAL_TEXT_STARTING_RANDOM_BONUS_DESCRIPTION = 95,
+    GENERAL_TEXT_LOCAL_PLAYER_DEFEATED = 96,
     GENERAL_TEXT_HIGH_SCORE_NAME_PROMPT = 97,
+    GENERAL_TEXT_SEARCH_NOT_DIGGABLE = 98,
+    GENERAL_TEXT_SENDING_GAME = 99,
+    GENERAL_TEXT_RECEIVING_GAME = 100,
     GENERAL_TEXT_DEFAULT_MAP_FILENAME = 101,
     GENERAL_TEXT_SCENARIO_RANDOM_HERO_CAPTION = 102,
     GENERAL_TEXT_SCENARIO_RANDOM_HERO_DESCRIPTION = 103,
     GENERAL_TEXT_SCENARIO_RANDOM_TOWN_CAPTION = 104,
     GENERAL_TEXT_SCENARIO_RANDOM_TOWN_DESCRIPTION = 105,
+    GENERAL_TEXT_CD_REQUIRED_GENERIC_FORMAT = 107,
     GENERAL_TEXT_AUTOSAVING = 108,
     GENERAL_TEXT_PLAYER_EXIT_SAVE_NAME = 109,
     GENERAL_TEXT_STATUS_WINDOW_HELP = 110,
+    GENERAL_TEXT_MAP_BORDER = 111,
     GENERAL_TEXT_MANA_ABSORBED_ONE_FORMAT = 112,
     GENERAL_TEXT_MANA_ABSORBED_MANY_FORMAT = 113,
     GENERAL_TEXT_GAME_DIRECTORY_CHANGE_ERROR = 114,
@@ -407,26 +173,54 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_DEATH_STARE_MANY_FORMAT = 120,
     GENERAL_TEXT_COMBAT_DEFEND_ONE_FORMAT = 121,
     GENERAL_TEXT_COMBAT_DEFEND_MANY_FORMAT = 122,
+    // advManager::TownGate's three refusals, all folded [Text._First + N]
+    // loads in one body: 0x1f0 when the chosen town already has a visiting
+    // hero, 0x1f4 when the caster's team owns no town at all, and 0x220
+    // when the caster is aboard a boat (hero flags & 0x40000). Indexes are
+    // retail-byte-proven; the names describe those three consumers.
+    GENERAL_TEXT_TOWN_PORTAL_TOWN_OCCUPIED = 124,
+    GENERAL_TEXT_TOWN_PORTAL_NO_TOWN = 125,
+    // DimensionDoor's movement gate refuses here when the caster has no
+    // movement points left ([Text._First + 0x1f8]). Name provisional.
+    GENERAL_TEXT_SPELL_NEEDS_MOVEMENT = 126,
     GENERAL_TEXT_TOWN_GATE_VISITING_HERO_ONLY = 127,
     GENERAL_TEXT_COMBAT_NO_HERO_FOR_SPELL = 128,
+    // combatManager::DoCommand (0x476bd0) shows this entry instead of
+    // opening the spell book while the acting side's field_54b4 latch
+    // is set - i.e. the hero has already cast this round. The NAME
+    // describes that consumer, which is this enum's stated convention;
+    // the index is retail-byte-proven (a folded [Text._First + 0x204]).
+    GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST = 129,
     GENERAL_TEXT_COMBAT_SAVE_ARMY_PROMPT_FORMAT = 130,
     GENERAL_TEXT_INPUT_DEVICE_INITIALIZATION_ERROR = 131,
     GENERAL_TEXT_SOUND_INITIALIZATION_ERROR = 132,
     GENERAL_TEXT_MOUSE_INITIALIZATION_ERROR = 133,
     GENERAL_TEXT_WINDOWS_INITIALIZATION_ERROR = 134,
     GENERAL_TEXT_SHIPYARD_BLOCKED_FORMAT = 135,
+    GENERAL_TEXT_SPELL_NOT_FROM_BOAT = 136,
     GENERAL_TEXT_COMBAT_WAIT_ONE_FORMAT = 137,
     GENERAL_TEXT_COMBAT_WAIT_MANY_FORMAT = 138,
     GENERAL_TEXT_HERO_NAME_LEVEL_CLASS_FORMAT = 139,
     GENERAL_TEXT_SCHOLAR_MAGIC_INTRO_FORMAT = 140,
     GENERAL_TEXT_LEARNS_FRAGMENT = 141,
+    // town.obj's " and " event-reward list separator, folded at
+    // [Text._First + 0x238] in both show_* helpers.
+    GENERAL_TEXT_LIST_AND = 142,
     GENERAL_TEXT_FROM_HERO_FORMAT = 143,
     GENERAL_TEXT_NECROMANCY_RAISE_MANY_FORMAT = 146,
     GENERAL_TEXT_NECROMANCY_RAISE_ONE_FORMAT = 147,
     GENERAL_TEXT_TEACHES_FRAGMENT = 148,
     GENERAL_TEXT_TO_HERO_FORMAT = 149,
     GENERAL_TEXT_SPELL_POINTS_HELP = 150,
+    GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE = 151,
     GENERAL_TEXT_COMBAT_BALLISTA_OPTION = 152,
+    GENERAL_TEXT_BACKPACK_FULL = 153,
+    GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT = 154,
+    // get_tower_string's two folded vector loads at Text._First + 0x26c and
+    // +0x270. The first takes the wall name; the second takes that name,
+    // skill and the double/triple archer counts.
+    GENERAL_TEXT_COMBAT_WALL_DESTROYED_FORMAT = 155,
+    GENERAL_TEXT_COMBAT_WALL_STATUS_FORMAT = 156,
     GENERAL_TEXT_VIEW_ARROW_TOWER_INFO = 157,
     GENERAL_TEXT_TRADE_RESOURCE_OFFER_FORMAT = 158,
     GENERAL_TEXT_MARKETPLACE = 159,
@@ -463,13 +257,32 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_MAGIC_RESISTANCE_FORMAT = 190,
     GENERAL_TEXT_TOWN_ATTACK_LABEL = 191,
     GENERAL_TEXT_TOWN_DEFENSE_LABEL = 192,
+    // The Fly arm refuses here when the caster is aboard a boat
+    // ([Text._First + 0x304]). Both indexes retail-byte-proven; names
+    // describe the consumers.
+    GENERAL_TEXT_SPELL_NOT_WHILE_ON_BOAT = 193,
+    GENERAL_TEXT_VIEW_ARMY_SPEED = 194,
     GENERAL_TEXT_TOWN_GROWTH_LABEL = 195,
     GENERAL_TEXT_HERO_CASTS_SPELL_ON_TARGET_FORMAT = 196,
     GENERAL_TEXT_HERO_CASTS_SPELL_FORMAT = 197,
     GENERAL_TEXT_PLAYER_FORMAT = 198,
+    // The two rows above HEALTH_REMAINING in the popup, both folded
+    // [Text._First + N] loads: 0x31c in
+    // TViewArmyWindow::create_shots_widget (0x5f5b30) and 0x320 in
+    // create_damage_widget (0x5f5860).
+    GENERAL_TEXT_VIEW_ARMY_SHOTS = 199,
+    GENERAL_TEXT_VIEW_ARMY_DAMAGE = 200,
+    GENERAL_TEXT_VIEW_ARMY_HEALTH_REMAINING = 201,
     GENERAL_TEXT_TURN_TIME_EXPIRED = 202,
+    GENERAL_TEXT_ARMY_HELP_PREFIX = 203,
+    GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE_FORMAT = 204,
+    GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT = 205,
     GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT = 206,
     GENERAL_TEXT_SPELL_POINTS_INSUFFICIENT_FORMAT = 207,
+    // The upgrade-this-stack confirmation, shown with the gold slot and
+    // the highest non-gold resource the upgrade costs (a folded
+    // [Text._First + 0x340] in TViewArmyWindow::WindowHandler).
+    GENERAL_TEXT_UPGRADE_ARMY_PROMPT = 208,
     GENERAL_TEXT_SPELLBOOK_CANNOT_AFFORD = 214,
     GENERAL_TEXT_SPELLBOOK_PURCHASE_PROMPT = 215,
     GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT = 216,
@@ -479,6 +292,9 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_BUILDING_PREREQUISITES_MET = 220,
     GENERAL_TEXT_COMBAT_ATTACK_FORMAT = 221,
     GENERAL_TEXT_EAGLE_EYE_LEARNS_SPELL_FORMAT = 222,
+    // kb's MemError (0x4f42c0) formats this entry into gText and hands
+    // the result to ShutDown: the allocation-failure line.
+    GENERAL_TEXT_OUT_OF_MEMORY = 223,
     GENERAL_TEXT_TOWN_ALREADY_BUILT_THIS_TURN = 224,
     GENERAL_TEXT_LOSS_CONDITION_LOSE_TOWN_FORMAT = 225,
     GENERAL_TEXT_LOSS_CONDITION_LOSE_HERO_FORMAT = 226,
@@ -491,8 +307,14 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_VICTORY_CONDITION_ACCUMULATE_RESOURCE_FORMAT = 233,
     GENERAL_TEXT_VICTORY_CONDITION_STANDARD_ALLOWED = 234,
     GENERAL_TEXT_VICTORY_CONDITION_STANDARD = 235,
+    GENERAL_TEXT_ARMY_ENTRY_SEPARATOR = 238,
     GENERAL_TEXT_EXPERIENCE_HELP = 242,
     GENERAL_TEXT_RESOURCES_HELP = 243,
+    GENERAL_TEXT_QUICK_CREATURE_JOIN = 244,
+    GENERAL_TEXT_QUICK_CREATURE_JOIN_COST_FORMAT = 245,
+    GENERAL_TEXT_QUICK_CREATURE_FLEE = 246,
+    GENERAL_TEXT_QUICK_CREATURE_ATTACK = 247,
+    GENERAL_TEXT_SEARCH_BACKPACK_FULL = 248,
     GENERAL_TEXT_CDROM_UNAVAILABLE = 249,
     GENERAL_TEXT_LOCAL_CAPTURE_TOWN_VICTORY_FORMAT = 250,
     GENERAL_TEXT_ENEMY_CAPTURE_TOWN_VICTORY_FORMAT = 251,
@@ -501,6 +323,8 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_LOSE_HERO_DEFEAT_FORMAT = 254,
     GENERAL_TEXT_TIME_LIMIT_DEFEAT = 255,
     GENERAL_TEXT_DAILY_INCOME = 256,
+    GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT = 257,
+    GENERAL_TEXT_SPLIT_OTHER_ROLLOVER = 258,
     GENERAL_TEXT_ARTIFACTS = 259,
     GENERAL_TEXT_EQUIPPED = 260,
     GENERAL_TEXT_CHEATER = 261,
@@ -568,18 +392,66 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_VICTORY_CONDITION_FLAG_MINES = 325,
     GENERAL_TEXT_VICTORY_CONDITION_TRANSPORT_ARTIFACT_FORMAT = 326,
     GENERAL_TEXT_RECRUIT_BACKPACK_FULL = 327,
+    // Role-based names: CWaitForReadyPlayersDlg::wait and the scenario
+    // player-row hero selector. These describe consumers, not text quotes.
+    GENERAL_TEXT_WAIT_FOR_READY_PLAYERS = 328,
+    // The single-button dialog CDPlayHeroes::HandleLowLevelMsg (0x552e92)
+    // raises when the RS_DESTROY_PLAYER order names this machine's own DPID:
+    // the folded [Text._First + 0x524], shown after RemoteCleanup and
+    // immediately before ShutDown(0).
+    GENERAL_TEXT_REMOTE_SESSION_DESTROYED = 329,
     GENERAL_TEXT_BOAT_PURCHASE_CANNOT_AFFORD = 330,
+    GENERAL_TEXT_QUICK_INFO_DIGGABLE = 331,
     GENERAL_TEXT_CHEAT_DETECTED = 332,
     GENERAL_TEXT_DEBUG_LEVEL_DETECTED = 333,
+    // advManager::SummonBoat's four outcome lines, all folded
+    // [Text._First + N] loads in one body: 0x538 when the caster is already
+    // at sea (sprintf'd with the hero's name), 0x53c when no adjacent water
+    // tile is free, 0x540 when neither a summonable boat nor a new one can
+    // be produced, and 0x544 when the mastery roll fails (also name-fed).
+    // Indexes are retail-byte-proven; the names describe the consumers.
+    GENERAL_TEXT_SUMMON_BOAT_ALREADY_AT_SEA_FORMAT = 334,
+    GENERAL_TEXT_SUMMON_BOAT_NO_WATER = 335,
+    GENERAL_TEXT_SUMMON_BOAT_NONE_AVAILABLE = 336,
+    GENERAL_TEXT_SUMMON_BOAT_FAILED_FORMAT = 337,
+    // The one-vararg format advManager::SkuttleBoat (0x41cdf0) sprintf's
+    // the caster's name into when the mastery roll fails
+    // ([Text._First + 0x548]) - the row immediately below DimensionDoor's
+    // own limit format. Name provisional.
+    GENERAL_TEXT_SCUTTLE_BOAT_FAILED_FORMAT = 338,
+    // A one-vararg format DimensionDoor sprintf's the caster's name into
+    // when dWalkSpellsCast has reached this mastery's cap
+    // ([Text._First + 0x54c]). Name provisional.
+    GENERAL_TEXT_DIMENSION_DOOR_LIMIT_FORMAT = 339,
     GENERAL_TEXT_SHACKLES_PREVENT_RETREAT_FORMAT = 341,
     GENERAL_TEXT_SHACKLES_PREVENT_SURRENDER_FORMAT = 342,
+    // The hero screen's "Level %d %s" line (widget 0x8c): a folded
+    // [Text._First + 0x55c] in THeroScreenWindow::SetupHeroView, fed the
+    // hero's level and the class name HeroFn_004D8F70 picks. The INDEX is
+    // byte-proven; the NAME describes the two arguments retail feeds it.
+    GENERAL_TEXT_HERO_LEVEL_CLASS_FORMAT = 343,
     GENERAL_TEXT_SPELL_DAMAGE_DESCRIPTION_FORMAT = 344,
     GENERAL_TEXT_FREE = 345,
     GENERAL_TEXT_UPGRADE_NOT_AVAILABLE = 346,
     GENERAL_TEXT_COST_PER_TROOP = 347,
+    // The seer hut's display line: a folded [Text._First + 0x570] fed the
+    // hut's own name out of seerhut.obj's name list. Three consumers, all
+    // in seerhut.obj - the two TSeerHut text builders (0x5741b0 and
+    // 0x5743e0) and the nullary 0x574070. The INDEX is byte-proven; the
+    // NAME describes the one argument retail feeds it.
+    GENERAL_TEXT_SEER_HUT_NAME_FORMAT = 348,
     GENERAL_TEXT_BLACK_MARKET = 350,
     GENERAL_TEXT_GAME_SAVED_FORMAT = 351,
     GENERAL_TEXT_PLAYER_TURN_ITS_FORMAT = 352,
+    GENERAL_TEXT_VISITED_OBJECT = 353,
+    GENERAL_TEXT_UNVISITED_OBJECT = 354,
+    GENERAL_TEXT_KNOWN_SHRINE_SPELL = 355,
+    GENERAL_TEXT_SHRINE_SPELL_FORMAT = 356,
+    GENERAL_TEXT_WITCH_SKILL_FORMAT = 357,
+    GENERAL_TEXT_HERO_KNOWS_WITCH_SKILL = 358,
+    GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT = 359,
+    GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT = 360,
+    GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST_FORMAT = 361,
     GENERAL_TEXT_LIFE_DRAIN_ONE_FORMAT = 362,
     GENERAL_TEXT_LIFE_DRAIN_MANY_FORMAT = 363,
     GENERAL_TEXT_LIFE_DRAIN_RAISE_ONE_SUFFIX = 364,
@@ -591,6 +463,37 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_HATRED_DAMAGE_MANY_FORMAT = 370,
     GENERAL_TEXT_REGENERATION_ONE_FORMAT = 371,
     GENERAL_TEXT_REGENERATION_MANY_FORMAT = 372,
+    // The tactics-phase help dialog combatManager::Open (0x462a20)
+    // raises once per player, behind that player's own
+    // placement_help_enabled flag which it then clears - a folded
+    // [Text._First + 0x5d4] and the only load of that row in the image.
+    // The index is byte-proven; the name describes the one consumer,
+    // since the TXT resources are not in this tree.
+    GENERAL_TEXT_COMBAT_PLACEMENT_HELP = 373,
+    // The wraith's mana-drain line, in its two counts. Both are folded
+    // [Text._First + N] loads in combatManager::SetNextArmy (0x465330)
+    // - 0x5d8 on `numTroops == 1` and 0x5dc otherwise - and both are
+    // fed (the draining stack's name, the drained hero's name).
+    GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE_FORMAT = 374,
+    GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY_FORMAT = 375,
+    // The attacker NAME combatManager::KeepAttack (0x465ad0) hands to
+    // damage_message for an arrow tower's shot - a folded
+    // [Text._First + 0x5e0], and the only load of that row in the image.
+    // It is passed with a count of 1, so it is a singular noun rather
+    // than a format. The index is byte-proven; the name describes the
+    // one consumer, since the TXT resources are not in the image.
+    GENERAL_TEXT_COMBAT_ARROW_TOWER_ATTACKER = 376,
+    // The four rows combatManager::damage_message (0x469a90) builds its
+    // line out of, every index a folded [Text._First + N] load in that
+    // one body: 0x5e4/0x5e8 are the damage clause, selected on
+    // `attacker_qty == 1` and both fed (attacker name, damage); 0x5ec is
+    // the one-death clause, fed the dying stack's name alone, and 0x5f0
+    // the many-death clause, fed (deaths, name). Gated for the reason
+    // GENERAL_TEXT_GOOD_MORALE_FORMAT above is.
+    GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER_FORMAT = 377,
+    GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS_FORMAT = 378,
+    GENERAL_TEXT_COMBAT_ONE_DEATH_FORMAT = 379,
+    GENERAL_TEXT_COMBAT_MANY_DEATHS_FORMAT = 380,
     GENERAL_TEXT_ATTACK_ABBREVIATION = 381,
     GENERAL_TEXT_DEFENSE_ABBREVIATION = 382,
     GENERAL_TEXT_POWER_ABBREVIATION = 383,
@@ -599,6 +502,7 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_LUCK = 386,
     GENERAL_TEXT_DAMAGE_ABBREVIATION = 387,
     GENERAL_TEXT_SPELL_POINTS_LABEL = 388,
+    GENERAL_TEXT_VIEW_ARMY_HEALTH = 389,
     GENERAL_TEXT_HEALTH_LABEL = 390,
     GENERAL_TEXT_ALLIES = 391,
     GENERAL_TEXT_ENEMIES = 392,
@@ -622,8 +526,14 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_DEFENDER = 410,
     GENERAL_TEXT_VICTORIOUS = 411,
     GENERAL_TEXT_DEFEATED = 412,
+    // ResetRound posts this line after every non-placement, non-quick round;
+    // retail folds Text._First + 0x674, i.e. row 413.
+    GENERAL_TEXT_COMBAT_ROUND = 413,
     GENERAL_TEXT_COMBAT_RETREAT_OVERWHELMED_FORMAT = 414,
     GENERAL_TEXT_FIRST_AID_HEAL_FORMAT = 415,
+    // HandleCombatPlayerDrop's two 15-second notification rows.
+    GENERAL_TEXT_COMBAT_LOCAL_PLAYER_DROPPED = 416,
+    GENERAL_TEXT_COMBAT_REMOTE_PLAYER_DROPPED = 417,
     GENERAL_TEXT_VIEW_HERO_STATS = 418,
     GENERAL_TEXT_VIEW_ENEMY_HERO_STATS = 419,
     GENERAL_TEXT_APPLY_FIRST_AID_TO_FORMAT = 420,
@@ -631,6 +541,19 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_GUARDED_OBJECT_PROMPT_FORMAT = 422,
     GENERAL_TEXT_NO_CREATURES_TO_RECRUIT_FORMAT = 423,
     GENERAL_TEXT_CREATURES_JOIN_FORMAT = 424,
+    // do_event_dragon_city (0x4a2140) shows this row - and nothing else in
+    // the image does. The index is the folded `[Text._First + 0x6a4]` load
+    // at 0x4a2183, and a scan of every `mov r32,[r32+0x6a4]` in .text finds
+    // exactly ONE, so the row has a single consumer and the name can only
+    // describe it: the line a hero gets on a Dragon Utopia whose cell
+    // already carries the emptied bit 0x2000000. The generic creature bank
+    // (0x4a15a0) tests the same bit on the same dword but formats
+    // advevent.txt row 33 with the bank's own name instead, so the two are
+    // NOT shared. Gated to the events view: no other modeled consumer
+    // proves the value, and an ungated enumerator counts toward the
+    // include-set threshold - winmgr.h's DIALOG_RETURN_DECLINE sets that
+    // precedent.
+    GENERAL_TEXT_DRAGON_CITY_EMPTIED = 425,
     GENERAL_TEXT_RECRUIT_INSUFFICIENT_PROVISIONS_FORMAT = 426,
     GENERAL_TEXT_ATTACK_TARGET_GARRISON = 430,
     GENERAL_TEXT_OLD_MAP_FORMAT_LABEL = 431,
@@ -647,6 +570,8 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_FINAL_SCORE = 442,
     GENERAL_TEXT_ONE_LEVEL_BONUS = 443,
     GENERAL_TEXT_COMMAND_LINE_HELP = 444,
+    GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT = 445,
+    GENERAL_TEXT_LEVEL_UP_HERO_FORMAT = 446,
     GENERAL_TEXT_HOTSEAT_NAME_PROMPT = 447,
     GENERAL_TEXT_MODEM_CONNECTION_INITIALIZATION_ERROR = 448,
     GENERAL_TEXT_MODEM_SESSION = 449,
@@ -664,9 +589,19 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_IPX_CONNECTION_INITIALIZATION_ERROR = 461,
     GENERAL_TEXT_PASSWORD_OPTIONAL = 462,
     GENERAL_TEXT_IP_ADDRESS_WAS_NOT_FOUND = 463,
+    GENERAL_TEXT_PUZZLE_WINDOW = 464,
     GENERAL_TEXT_RECRUIT_AVAILABLE_LABEL = 466,
     GENERAL_TEXT_TOTAL_COST = 467,
+    GENERAL_TEXT_RECONNECT_FAILED = 468,
+    GENERAL_TEXT_DEFAULT_PLAYER_NAME = 469,
+    GENERAL_TEXT_PLAYER_DROPPED_FORMAT = 470,
+    GENERAL_TEXT_LOCAL_PLAYER_IS_HOST = 471,
+    GENERAL_TEXT_WAIT_FOR_LEVEL_SELECTION = 472,
+    GENERAL_TEXT_WAIT_FOR_REMOTE_BATTLE = 473,
+    GENERAL_TEXT_CHAT_WHISPER_WIRE_TAG = 474,
+    GENERAL_TEXT_CHAT_WHISPER_TO_LINE_TAG = 475,
     GENERAL_TEXT_SCENARIO_PLAYER_DIFFICULTY = 493,
+    GENERAL_TEXT_OVERWRITE_SAVE_PROMPT_FORMAT = 494,
     GENERAL_TEXT_SCENARIO_MAP_DIFFICULTY_LABEL = 495,
     GENERAL_TEXT_SCENARIO_NAME_LABEL = 496,
     GENERAL_TEXT_SCENARIO_DESCRIPTION_LABEL = 497,
@@ -694,6 +629,8 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_STARTING_HERO_HEADER = 520,
     GENERAL_TEXT_STARTING_BONUS_HEADER = 521,
     GENERAL_TEXT_PLAYER_TURN_DURATION_HEADER = 522,
+    GENERAL_TEXT_RANDOM_HERO = 523,
+    GENERAL_TEXT_NO_HERO = 524,
     GENERAL_TEXT_HOST_LAUNCHED_WITHOUT_PLAYER = 525,
     GENERAL_TEXT_PLAYER_ENTERS_GAME_FORMAT = 526,
     GENERAL_TEXT_PLAYER_LEFT_GAME_FORMAT = 527,
@@ -712,6 +649,10 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_SPELL_INCANTATION_NO_EFFECT_FORMAT = 542,
     GENERAL_TEXT_CHOOSE_RESURRECTION_TARGET = 543,
     GENERAL_TEXT_CHOOSE_SACRIFICE_TARGET = 544,
+    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE_FORMAT = 545,
+    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY_FORMAT = 546,
+    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE_FORMAT = 547,
+    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY_FORMAT = 548,
     GENERAL_TEXT_COMBAT_RESURRECT_TARGET_FORMAT = 549,
     GENERAL_TEXT_COMBAT_SACRIFICE_TARGET_FORMAT = 550,
     GENERAL_TEXT_COMBAT_REMOVE_OBSTACLE_TARGET = 551,
@@ -742,6 +683,7 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_VIDEO_SUBTITLES = 576,
     GENERAL_TEXT_TOWN_BUILDING_OUTLINES = 577,
     GENERAL_TEXT_SPELL_BOOK_ANIMATION = 578,
+    GENERAL_TEXT_UNSAVED_GAME_COMMAND_CONFIRM = 579,
     GENERAL_TEXT_MANA_VORTEX_VISIT = 580,
     GENERAL_TEXT_STABLES_VISIT = 581,
     GENERAL_TEXT_WALL_OF_KNOWLEDGE_VISIT = 582,
@@ -749,6 +691,11 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_BATTLE_SCHOLAR_ACADEMY_VISIT = 584,
     GENERAL_TEXT_HALL_OF_VALHALLA_VISIT = 585,
     GENERAL_TEXT_CAGE_OF_WARLORDS_VISIT = 586,
+    // The two town-event formats give_event_reward's helpers wrap around
+    // the reward list ([Text._First + 0x92c] for buildings and +0x930 for
+    // creatures).
+    GENERAL_TEXT_EVENT_BUILDINGS_FORMAT = 587,
+    GENERAL_TEXT_EVENT_CREATURES_FORMAT = 588,
     GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT = 589,
     GENERAL_TEXT_WEEKLY_GROWTH_IS_FORMAT = 590,
     GENERAL_TEXT_BASIC_GROWTH_FORMAT = 591,
@@ -770,6 +717,13 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_UNIVERSITY_COST_FORMAT = 608,
     GENERAL_TEXT_UNIVERSITY_TUITION_FORMAT = 609,
     GENERAL_TEXT_PURCHASE_FORMAT = 610,
+    // The four spell-influence rollover rows TViewArmyWindow's spell
+    // icons print, all folded [Text._First + N] loads in its
+    // WindowHandler: 0x98c carries the spell name and a turn count,
+    // 0xaa0 the same name with a fixed descriptor instead, and
+    // 0xaa4/0xaa8/0xaac are that descriptor for the three spells whose
+    // effect has no turn count.
+    GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT = 611,
     GENERAL_TEXT_VIEW_WORLD = 612,
     GENERAL_TEXT_VIEW_WORLD_TOWN = 613,
     GENERAL_TEXT_VIEW_WORLD_HERO = 614,
@@ -785,6 +739,10 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_VIEW_WORLD_CRYSTAL = 624,
     GENERAL_TEXT_VIEW_WORLD_GEMS = 625,
     GENERAL_TEXT_VIEW_WORLD_GOLD = 626,
+    GENERAL_TEXT_TURN_ONE_SECOND_REMAINING = 627,
+    GENERAL_TEXT_TURN_SECONDS_REMAINING_FORMAT = 628,
+    GENERAL_TEXT_TURN_ONE_MINUTE_REMAINING = 629,
+    GENERAL_TEXT_TURN_MINUTES_REMAINING_FORMAT = 630,
     GENERAL_TEXT_CURRENT_PLAYER_IS = 631,
     GENERAL_TEXT_REMOTE_PLAYER_ARTIFACT_VICTORY_FORMAT = 632,
     GENERAL_TEXT_REMOTE_TEAM_ARTIFACT_VICTORY_FORMAT = 633,
@@ -813,12 +771,24 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_SHOW_SAVED_GAMES = 656,
     GENERAL_TEXT_TEAM_NUMBER_FORMAT = 657,
     GENERAL_TEXT_TEAM_ALIGNMENTS_CAPTION = 658,
+    // OnPlayerDropUpdateMsg displays this row while reloading the shared
+    // recovery save. Retail fixes it at [Text._First + 0xa4c].
+    GENERAL_TEXT_PLAYER_DROP_RELOAD = 659,
+    GENERAL_TEXT_TEAM_VICTORY = 660,
+    GENERAL_TEXT_TEAM_DEFEAT = 661,
     GENERAL_TEXT_SCENARIO_INFORMATION = 662,
     GENERAL_TEXT_PRESS_ESC_TO_CANCEL_SOLO_MODE = 663,
     GENERAL_TEXT_SOUND_ARCHIVE_OPEN_ERROR = 664,
     GENERAL_TEXT_SOUND_FILE_ERROR = 665,
     GENERAL_TEXT_NETWORK_VERSION_MISMATCH_FORMAT = 666,
     GENERAL_TEXT_RESET_HIGH_SCORES_PROMPT = 667,
+    // damage_message's third death clause, and the only [Text._First +
+    // 0xa70] load in the image. It replaces the one/many pair above
+    // when the defending stack carries creatureId bit 6 - the same bit
+    // SideIsWipedOut (0x465830) and IsWinner (0x4658b0) read as "this
+    // stack is out of the fight" - and it takes the stack's name alone,
+    // with no count. Gated for the reason GENERAL_TEXT_GOOD_MORALE_FORMAT is.
+    GENERAL_TEXT_COMBAT_STACK_WIPED_OUT_FORMAT = 668,
     GENERAL_TEXT_VICTORY_CONDITION_DEFEAT_MONSTER_UNDERGROUND_FORMAT = 669,
     GENERAL_TEXT_LOSS_HERO_DEFEATED_FORMAT = 671,
     GENERAL_TEXT_CAMPAIGN = 673,
@@ -828,10 +798,23 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_CAMPAIGN_RANK = 677,
     GENERAL_TEXT_MYSTIC_POND_EMPTY = 678,
     GENERAL_TEXT_MYSTIC_POND_REWARD_FORMAT = 679,
+    GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT = 680,
+    GENERAL_TEXT_ARMY_SPELL_BIND = 681,
+    GENERAL_TEXT_ARMY_SPELL_BERSERK = 682,
+    GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY = 683,
     GENERAL_TEXT_ANTI_MAGIC_ARTIFACT_FORMAT = 684,
+    GENERAL_TEXT_GARRISON_ADVENTURE_SPELL = 685,
     GENERAL_TEXT_NO_SAVED_GAMES = 686,
     GENERAL_TEXT_SELECT_DESTINATION = 687,
     GENERAL_TEXT_DELETE_SAVE_PROMPT_FORMAT = 688,
+    GENERAL_TEXT_RESOURCE_BONUS_RAMPART_DESCRIPTION = 689,
+    GENERAL_TEXT_RESOURCE_BONUS_TOWER_DESCRIPTION = 690,
+    GENERAL_TEXT_RESOURCE_BONUS_INFERNO_DESCRIPTION = 691,
+    GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_DESCRIPTION = 692,
+    GENERAL_TEXT_RESOURCE_BONUS_RAMPART_CAPTION = 693,
+    GENERAL_TEXT_RESOURCE_BONUS_TOWER_CAPTION = 694,
+    GENERAL_TEXT_RESOURCE_BONUS_INFERNO_CAPTION = 695,
+    GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_CAPTION = 696,
     GENERAL_TEXT_CASTER_OUT_OF_SPELL_POINTS_ONE_FORMAT = 697,
     GENERAL_TEXT_CASTER_OUT_OF_SPELL_POINTS_MANY_FORMAT = 698,
     GENERAL_TEXT_CURSED_GROUND_SPELL_LIMIT = 699,
@@ -843,6 +826,8 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_RESURRECTION_LIVING_ONLY = 705,
     GENERAL_TEXT_RESURRECTION_INSUFFICIENT_POWER_ONE_FORMAT = 706,
     GENERAL_TEXT_RESURRECTION_INSUFFICIENT_POWER_MANY_FORMAT = 707,
+    GENERAL_TEXT_MAIN_MENU_LOW_DISK = 708,
+    GENERAL_TEXT_INSUFFICIENT_SAVE_DISK_SPACE = 709,
     GENERAL_TEXT_LEAVE_GUARDS = 710,
     GENERAL_TEXT_SPELL_WILL_NOT_AFFECT_ANYTHING = 713,
     GENERAL_TEXT_ARMAGEDDONS_BLADE_COMPLETE = 714,
@@ -855,10 +840,18 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_CAMPAIGN_START_WITH_RANDOM_HERO = 721,
     GENERAL_TEXT_CAMPAIGN_WOOD_AND_ORE = 722,
     GENERAL_TEXT_CAMPAIGN_RARE_RESOURCES = 723,
-    GENERAL_TEXT_CAMPAIGN_FILE_FORMAT_ERROR = 724,
+    GENERAL_TEXT_CAMPAIGN_FILE_PARSE_ERROR_FORMAT = 724,
+    GENERAL_TEXT_COMBAT_FEAR_FORMAT = 729,
+    GENERAL_TEXT_WRONG_CD_EDITION_FORMAT = 730,
     GENERAL_TEXT_RANDOM_MAP_GENERATING = 731,
+    // The refusal both adventure-targeting spells share when their popup
+    // comes back without a usable square: DimensionDoor (0x41d090) and
+    // SkuttleBoat (0x41cdf0) both fold [Text._First + 0xb70]. Name
+    // provisional.
+    GENERAL_TEXT_ADVENTURE_SPELL_NO_TARGET = 732,
     GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT = 733,
     GENERAL_TEXT_COMBINATION_ARTIFACT_DISASSEMBLY_PROMPT = 734,
+    GENERAL_TEXT_SORCERESS_CLASS_NAME = 736,
     GENERAL_TEXT_YOG_REJECTS_MAGIC = 737,
     GENERAL_TEXT_ANGELIC_ALLIANCE_COMPONENTS_RECOVERED = 738,
     GENERAL_TEXT_RANDOM_MAP_SETUP = 739,
@@ -868,6 +861,9 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_TUTORIAL_MAP_MISSING = 743,
     GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT = 744,
     GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT = 745,
+    GENERAL_TEXT_ARMAGEDDONS_BLADE = 746,
+    GENERAL_TEXT_SHADOW_OF_DEATH = 747,
+    GENERAL_TEXT_CURSED_GROUND_HIGH_LEVEL_SPELL = 748,
     GENERAL_TEXT_RANDOM_MAP_CREATED = 749,
     GENERAL_TEXT_RANDOM_MAP_FILE_CREATE_ERROR = 750,
     GENERAL_TEXT_RANDOM_MAP_FILE_WRITE_ERROR = 751,
@@ -882,6 +878,7 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_RANDOM_MAP_BUTTON = 760,
     GENERAL_TEXT_CREATING_MAP = 761,
     GENERAL_TEXT_ARMAGEDDONS_BLADE_GELU_ONLY = 762,
+    GENERAL_TEXT_RESTORATION_OF_ERATHIA = 763,
     GENERAL_TEXT_ANGELIC_ALLIANCE_RECOVERED = 764
 };
 

@@ -185,11 +185,11 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
         && !(g_game->m_week == 1 && g_game->m_month == 1)) {
         iconName = g_newWeekIcons[
             static_cast<unsigned short>(g_game->m_week)];
-        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_RESOURCE_DISPLAY_1),
+        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_CALENDAR_WEEK),
             static_cast<unsigned short>(g_game->m_week));
     } else {
         iconName = "NewDay.def";
-        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_RESOURCE_DISPLAY_2),
+        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_CALENDAR_DAY),
             static_cast<unsigned short>(g_game->m_day));
         launchSample("newday.wav", 30000, 3);
     }

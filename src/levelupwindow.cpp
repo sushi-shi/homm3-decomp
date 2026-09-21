@@ -83,7 +83,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
         0, 0, 0, 0x10));
 
     if (secondChoice != -1) {
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LEVEL_UP_CHOICE),
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT),
                 g_secondarySkillLevels[firstChoice % 3],
                 g_sSkillTraits[firstChoice / 3 - 1].m_name,
                 g_secondarySkillLevels[secondChoice % 3],
@@ -126,7 +126,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             200, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT7_ID, 5, 0, 8));
     } else if (firstChoice != -1) {
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE),
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE_FORMAT),
                 g_secondarySkillLevels[firstChoice % 3],
                 g_sSkillTraits[firstChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(

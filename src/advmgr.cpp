@@ -409,12 +409,12 @@ void CAdvMgrNetMsgHandler::handleGiftRequestMsg(CNetMsg* netMsg)
     std::string text;
     if (g_game->m_players[gift->m_greedyGuy].isHuman()) {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
+            g_generalText->getText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT),
             g_game->m_players[gift->m_greedyGuy].m_name,
             g_resourceNames[gift->m_resource]);
     } else {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
+            g_generalText->getText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT),
             g_colors[gift->m_greedyGuy],
             g_resourceNames[gift->m_resource]);
     }
@@ -443,11 +443,11 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
     std::string text;
     if (g_game->m_players[gift->m_niceGuy].isHuman()) {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
+            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT),
             g_game->m_players[gift->m_niceGuy].m_name);
     } else {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
+            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT),
             g_colors[gift->m_niceGuy]);
     }
 
@@ -2525,7 +2525,7 @@ std::string getArmyHelpText(const armyGroup* source,
         if (consolidatedArmy.m_armies[1] == CREATURE_NONE) {
             armyName = getArmyName(consolidatedArmy.m_armies[0], 2);
         } else {
-            armyName = g_generalText->getText(GENERAL_TEXT_MIXED_ARMY);
+            armyName = g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL);
         }
         result += armyGroup::getArmySizeName(amount, 2);
         result += " ";
@@ -4236,7 +4236,7 @@ int advManager::processSearch(int x, int y, int z)
                 sprintf(g_text,
                         DATA_COMPGEN(0x00660358,
                                      processSearchFoundFormat, "%s%s"),
-                        g_generalText->getText(GENERAL_TEXT_SEARCH_FOUND_FORMAT),
+                        g_generalText->getText(GENERAL_TEXT_SEARCH_FOUND_PREFIX),
                         g_artifactTraits[ARTIFACT_HOLY_GRAIL].m_name);
                 normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
@@ -6270,7 +6270,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
 
     if (!mapPoint.isValid()) {
         strcpy(g_text, g_generalText->getText(
-            GENERAL_TEXT_QUICK_INFO_INVALID_POINT));
+            GENERAL_TEXT_MAP_BORDER));
     } else {
         // DC names GetCell here; its ordinary retained body owns the
         // validity branch and canonical map indexing.

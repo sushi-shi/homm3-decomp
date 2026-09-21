@@ -80,6 +80,8 @@ void aiArrangeArmyForCombat(hero* currentHero, const hero* enemyHero,
 // Every value is retail-byte-proven by the [Text._First + 4*N] load in
 // the handler named beside it; the names describe those consumers,
 // which is the convention textresource.h's EGeneralTextIndex sets.
+// FORMAT means the row itself contains printf conversions; PREFIX and
+// SUFFIX identify rows that callers compose with other text.
 // The rows run ALPHABETICALLY by adventure object, which is what makes
 // each object's lines contiguous and what places every triple below
 // exactly where it falls: war school 158..160, warrior's tomb 161..163,
@@ -98,24 +100,21 @@ enum EAdventureEventText {
     // pair rather than anywhere near an object whose name begins with a
     // letter, so it is a generic refusal rather than one object's line.
     ADV_EVENT_TEXT_BACKPACK_FULL = 2,
-    ADV_EVENT_TEXT_ARTIFACT_WISDOM = 3,
-    ADV_EVENT_TEXT_ARTIFACT_LEADERSHIP = 4,
-    ADV_EVENT_TEXT_ARTIFACT_COST_2000 = 5,
-    ADV_EVENT_TEXT_ARTIFACT_COST_2500 = 6,
-    ADV_EVENT_TEXT_ARTIFACT_COST_3000 = 7,
+    ADV_EVENT_TEXT_ARTIFACT_WISDOM_FORMAT = 3,
+    ADV_EVENT_TEXT_ARTIFACT_LEADERSHIP_FORMAT = 4,
+    ADV_EVENT_TEXT_ARTIFACT_COST_2000_FORMAT = 5,
+    ADV_EVENT_TEXT_ARTIFACT_COST_2500_FORMAT = 6,
+    ADV_EVENT_TEXT_ARTIFACT_COST_3000_FORMAT = 7,
     // The sprintf format BOTH customised guarded arms pay out with -
     // DoCustomSpellScroll (0x4a5a80) formats the spell name into it and
     // DoCustomArtifact (0x49f070) the artifact name - one row after the
     // artifact-cost block.
-    ADV_EVENT_TEXT_CUSTOM_GUARDED = 8,
+    ADV_EVENT_TEXT_CUSTOM_GUARDED_REWARD_FORMAT = 8,
+    ADV_EVENT_TEXT_ARTIFACT_FIGHT_DECLINED = 11,
     // PayForArtifact (0x49ed50): the affordability refusal followed by
     // the line shown when the player declines the offered artifact.
-    ADV_EVENT_TEXT_ARTIFACT_CANT_AFFORD = 12,
+    ADV_EVENT_TEXT_ARTIFACT_CANNOT_AFFORD = 12,
     ADV_EVENT_TEXT_ARTIFACT_DECLINED = 13,
-    // The four "one permanent primary skill, once per hero" objects, and
-    // each one is a PAIR: the reward line, then the already-visited line
-    // straight after it. The rows land where the alphabet puts each
-    // object, exactly as the war school / witch hut run below does.
     // DoEventBlackBox (0x4a0c50) - Pandora's Box. 14 is the yes/no prompt
     // asked with iMBType 2, 15 the line a box that paid nothing shows and
     // 16 the one its guardians get. All three are byte-proven by the
@@ -142,6 +141,11 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_BORDER_TENT_VISITED = 20,
     ADV_EVENT_TEXT_BUOY = 21,
     ADV_EVENT_TEXT_BUOY_VISITED = 22,
+    // DoEventCampfire (0x4a1120), the object's only row: one line carrying
+    // BOTH payouts, the gold and the resource, as its two picture/quantity
+    // pairs. 23 sits below the cover of darkness at 31, which is where the
+    // alphabet puts "campfire".
+    ADV_EVENT_TEXT_CAMPFIRE = 23,
     ADV_EVENT_TEXT_CARTOGRAPHER_VISITED = 24,
     ADV_EVENT_TEXT_CARTOGRAPHER_WATER = 25,
     ADV_EVENT_TEXT_CARTOGRAPHER_LAND = 26,
@@ -149,45 +153,17 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_CARTOGRAPHER_NO_GOLD = 28,
     ADV_EVENT_TEXT_CLOVER_FIELD = 29,
     ADV_EVENT_TEXT_CLOVER_FIELD_VISITED = 30,
-    ADV_EVENT_TEXT_DERELICT_PROMPT = 41,
-    ADV_EVENT_TEXT_DERELICT_EMPTY = 42,
-    ADV_EVENT_TEXT_DERELICT_TREASURE = 43,
-    ADV_EVENT_TEXT_EYE_OF_MAGI = 48,
-    ADV_EVENT_TEXT_FAERIE_RING = 49,
-    ADV_EVENT_TEXT_FAERIE_RING_VISITED = 50,
-    ADV_EVENT_TEXT_HUT_OF_MAGI = 61,
-    ADV_EVENT_TEXT_LIGHTHOUSE = 69,
-    ADV_EVENT_TEXT_LITH_EXIT = 70,
-    ADV_EVENT_TEXT_MERMAID_VISITED = 82,
-    ADV_EVENT_TEXT_MERMAID = 83,
-    ADV_EVENT_TEXT_OBELISK = 96,
-    ADV_EVENT_TEXT_OBELISK_VISITED = 97,
-    ADV_EVENT_TEXT_OBSERVATORY = 98,
-    ADV_EVENT_TEXT_PILLAR_OF_FIRE = 99,
-    ADV_EVENT_TEXT_SANCTUARY = 114,
-    ADV_EVENT_TEXT_SEPULCHER_PROMPT = 119,
-    ADV_EVENT_TEXT_SEPULCHER_EMPTY = 120,
-    ADV_EVENT_TEXT_SEPULCHER_TREASURE = 121,
-    ADV_EVENT_TEXT_SHIPWRECK_PROMPT = 122,
-    ADV_EVENT_TEXT_SHIPWRECK_EMPTY = 123,
-    ADV_EVENT_TEXT_SHIPWRECK_TREASURE = 124,
-    ADV_EVENT_TEXT_SHRINE1 = 127,
-    ADV_EVENT_TEXT_SHRINE2 = 128,
-    ADV_EVENT_TEXT_SHRINE3 = 129,
-    ADV_EVENT_TEXT_THIEVES_DEN = 142,
-    ADV_EVENT_TEXT_SUBTERRANEAN_BLOCKED = 153,
-    ADV_EVENT_TEXT_WAR_FACTORY_PROMPT = 157,
-    // DoEventCampfire (0x4a1120), the object's only row: one line carrying
-    // BOTH payouts, the gold and the resource, as its two picture/quantity
-    // pairs. 23 sits below the cover of darkness at 31, which is where the
-    // alphabet puts "campfire".
-    ADV_EVENT_TEXT_CAMPFIRE = 23,
     // DoEventCoverOfDarkness (0x4a14b0), the object's only row - it has
     // nothing to report but the fact of the visit. 31 sits below the
     // defense tower's 39, which is where the alphabet puts "cover of
     // darkness", and the DC roster agrees: DoEventCoverOfDarkness
     // (dc 0x92540) runs before DoEventDefenseTower (dc 0x92d40).
     ADV_EVENT_TEXT_COVER_OF_DARKNESS = 31,
+    ADV_EVENT_TEXT_CREATURE_BANK_PROMPT_FORMAT = 32,
+    ADV_EVENT_TEXT_CREATURE_BANK_EMPTY_FORMAT = 33,
+    ADV_EVENT_TEXT_CREATURE_BANK_REWARD_FORMAT = 34,
+    ADV_EVENT_TEXT_DWELLING_RECRUIT_ONE_FORMAT = 35,
+    ADV_EVENT_TEXT_DWELLING_RECRUIT_MULTIPLE_FORMAT = 36,
     // DoEventSkeleton (0x4a5480) - the Corpse, whose per-player band
     // game.h names DeadGuyFlags. 37 is a sprintf FRAGMENT joined to the
     // artifact name by the pooled "%s %s", 38 the nothing-here line. The
@@ -198,12 +174,28 @@ enum EAdventureEventText {
     // low band is not in handler-address order either. Both indices are
     // byte-proven by the [Text._First + 0x94] / [+0x98] loads at
     // 0x4a54d4 / 0x4a55b6.
-    ADV_EVENT_TEXT_SKELETON_ARTIFACT = 37,
+    ADV_EVENT_TEXT_SKELETON_ARTIFACT_PREFIX = 37,
     ADV_EVENT_TEXT_SKELETON_EMPTY = 38,
     // DoEventDefenseTower (0x4a2050); the reward line carries picture
     // 0x20, the +1 Defense icon.
     ADV_EVENT_TEXT_DEFENSE_TOWER = 39,
     ADV_EVENT_TEXT_DEFENSE_TOWER_VISITED = 40,
+    ADV_EVENT_TEXT_DERELICT_SHIP_PROMPT = 41,
+    ADV_EVENT_TEXT_DERELICT_SHIP_EMPTY = 42,
+    ADV_EVENT_TEXT_DERELICT_SHIP_TREASURE = 43,
+    // DoEventRefugeeCamp (0x4a4600), and this object is where the
+    // alphabetical run BREAKS. Its offer line lands at 112, directly after
+    // the rally flag's pair, exactly where "refugee camp" belongs - but its
+    // empty line is 44, out in the "d" band between the defense tower's
+    // pair at 39/40 and the dragon city's 47. Both indices are byte-proven
+    // (the [Text._First + 0xb0] and [+0x1c0] loads at 0x4a462c/0x4a46aa)
+    // and a full scan of every advevent.txt index reachable from
+    // gpAdventureEventText shows 44 has exactly ONE consumer image-wide, so
+    // it is not a shared generic row that happens to be borrowed. The ROLE
+    // is what names it, as with WITCH_HUT_NO_SKILL at 190 below; only the
+    // index is evidence.
+    ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY_FORMAT = 44,
+    ADV_EVENT_TEXT_ARTIFACT_NAME_WITH_ARTICLE_FORMAT = 45,
     // do_event_dragon_city (0x4a2140), asked with iMBType 2 - the yes/no
     // form whose answer comes back out of heroWindowManager::dialogReturn.
     // The utopia has only this ONE advevent.txt row: its already-emptied
@@ -214,10 +206,9 @@ enum EAdventureEventText {
     // do_event_dragon_city - between DoEventDefenseTower (dc 0x92d40) and
     // DoEventFaerieRing (dc 0x92f08). The two orderings agree again.
     ADV_EVENT_TEXT_DRAGON_CITY_PROMPT = 47,
-    // DoEventIdol (0x4a12f0). ONE reward row serves all three arms - the
-    // pictures are what differ - and 63 is the already-visited line.
-    ADV_EVENT_TEXT_IDOL = 62,
-    ADV_EVENT_TEXT_IDOL_VISITED = 63,
+    ADV_EVENT_TEXT_EYE_OF_MAGI = 48,
+    ADV_EVENT_TEXT_FAERIE_RING = 49,
+    ADV_EVENT_TEXT_FAERIE_RING_VISITED = 50,
     // DoEventFlotsam (0x4a2230), and the flotsam is the only object in
     // this enum with FOUR contiguous rows besides the stables: its four
     // sizes each have their own line, 51 the empty one and 52..54 the
@@ -243,6 +234,11 @@ enum EAdventureEventText {
     // DoEventGarden (0x4a2710), picture 0x22 = +1 Knowledge.
     ADV_EVENT_TEXT_GARDEN = 59,
     ADV_EVENT_TEXT_GARDEN_VISITED = 60,
+    ADV_EVENT_TEXT_HUT_OF_MAGI = 61,
+    // DoEventIdol (0x4a12f0). ONE reward row serves all three arms - the
+    // pictures are what differ - and 63 is the already-visited line.
+    ADV_EVENT_TEXT_IDOL = 62,
+    ADV_EVENT_TEXT_IDOL_VISITED = 63,
     // DoEventLeanTo (0x4a31a0). 64 is the payout - a resource picture and
     // its amount - and 65 the picked-clean line.
     ADV_EVENT_TEXT_LEAN_TO = 64,
@@ -253,6 +249,8 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_LIBRARY = 66,
     ADV_EVENT_TEXT_LIBRARY_VISITED = 67,
     ADV_EVENT_TEXT_LIBRARY_UNWORTHY = 68,
+    ADV_EVENT_TEXT_LIGHTHOUSE = 69,
+    ADV_EVENT_TEXT_LITH_ONEWAY_EXIT_BLOCKED = 70,
     // DoEventMagicSchool (0x4a33e0) - the School of Magic - and its rows
     // sit under M, immediately before the magic spring's, which is where
     // the INTERNAL name puts it and not where the displayed one would.
@@ -276,6 +274,8 @@ enum EAdventureEventText {
     // DoEventMercenaryCamp (0x4a38b0), picture 0x1f = +1 Attack.
     ADV_EVENT_TEXT_MERC_CAMP = 80,
     ADV_EVENT_TEXT_MERC_CAMP_VISITED = 81,
+    ADV_EVENT_TEXT_MERMAID_VISITED = 82,
+    ADV_EVENT_TEXT_MERMAID = 83,
     // DoEventMine (0x4a39a0), and the mine is the one object in this enum
     // whose rows are SPLIT across the file. 84 is the prompt an unowned,
     // monster-guarded mine asks with iMBType 2 and 85 the line its cleared
@@ -284,9 +284,8 @@ enum EAdventureEventText {
     // 187 is the same prompt for a mine that belongs to an ENEMY - a
     // single-consumer row out past the witch hut's block, so the ROLE is
     // what names it, as with WITCH_HUT_NO_SKILL at 190.
-    ADV_EVENT_TEXT_MINE_GUARDED = 84,
+    ADV_EVENT_TEXT_MINE_GUARDED_PROMPT = 84,
     ADV_EVENT_TEXT_MINE_CLEARED = 85,
-    ADV_EVENT_TEXT_MINE_DEFENDED = 187,
     // The wandering-stack outcome handlers, and the run is contiguous
     // because "monster" is a single alphabetical entry: 86 is the join
     // offer monsters_join (0x4a7000) asks with iMBType 2, 91 the
@@ -298,12 +297,12 @@ enum EAdventureEventText {
     // single-creature form taking (name, gold), while for a real stack
     // 89 is strcpy'd whole and 90 - taking (count, name, gold) - is
     // formatted into a 300-byte local and strcat'd onto it.
-    ADV_EVENT_TEXT_MONSTERS_JOIN = 86,
+    ADV_EVENT_TEXT_MONSTERS_JOIN_FORMAT = 86,
     ADV_EVENT_TEXT_MONSTERS_INSULTED = 87,
-    ADV_EVENT_TEXT_MONSTERS_SELL_OUT_ONE = 88,
-    ADV_EVENT_TEXT_MONSTERS_SELL_OUT_LEAD = 89,
-    ADV_EVENT_TEXT_MONSTERS_SELL_OUT_MANY = 90,
-    ADV_EVENT_TEXT_MONSTERS_FLEE = 91,
+    ADV_EVENT_TEXT_MONSTERS_SELL_OUT_ONE_FORMAT = 88,
+    ADV_EVENT_TEXT_MONSTERS_SELL_OUT_PREFIX = 89,
+    ADV_EVENT_TEXT_MONSTERS_SELL_OUT_MANY_FORMAT = 90,
+    ADV_EVENT_TEXT_MONSTERS_FLEE_FORMAT = 91,
     // DoEventMysticalGarden (0x4a3bc0). 92 is the payout, 93 the
     // already-harvested line.
     ADV_EVENT_TEXT_MYSTICAL_GARDEN = 92,
@@ -313,6 +312,14 @@ enum EAdventureEventText {
     // reward. Both indices are byte-proven by the arm that loads them.
     ADV_EVENT_TEXT_OASIS_VISITED = 94,
     ADV_EVENT_TEXT_OASIS = 95,
+    ADV_EVENT_TEXT_OBELISK = 96,
+    ADV_EVENT_TEXT_OBELISK_VISITED = 97,
+    ADV_EVENT_TEXT_OBSERVATORY = 98,
+    ADV_EVENT_TEXT_PILLAR_OF_FIRE = 99,
+    // DoEventPowerSchool (0x4a3dc0), picture 0x21 = +1 Spell Power - the
+    // fourth member of the primary-skill quartet above.
+    ADV_EVENT_TEXT_POWER_SCHOOL = 100,
+    ADV_EVENT_TEXT_POWER_SCHOOL_VISITED = 101,
     // do_event_pyramid (0x4a4230), and the pyramid has the longest run in
     // this enum after the stables: 105 is the yes/no prompt asked with
     // iMBType 2, 106 the sprintf FRAGMENT the spell name is quoted onto
@@ -322,43 +329,16 @@ enum EAdventureEventText {
     // spellbook. The run sits between the power school's 100/101 and the
     // rally flag's 110/111, which is where the alphabet puts "pyramid".
     ADV_EVENT_TEXT_PYRAMID_PROMPT = 105,
-    ADV_EVENT_TEXT_PYRAMID_SPELL = 106,
+    ADV_EVENT_TEXT_PYRAMID_SPELL_PREFIX = 106,
     ADV_EVENT_TEXT_PYRAMID_ROBBED = 107,
-    ADV_EVENT_TEXT_PYRAMID_NO_WISDOM = 108,
-    ADV_EVENT_TEXT_PYRAMID_NO_SPELLBOOK = 109,
+    ADV_EVENT_TEXT_PYRAMID_NO_WISDOM_SUFFIX = 108,
+    ADV_EVENT_TEXT_PYRAMID_NO_SPELLBOOK_SUFFIX = 109,
     // DoEventRallyFlag (0x4a44c0), and this pair is REVERSED like the
     // oasis: 110 is the already-visited line and 111 the reward, which
     // shows the morale and luck pictures side by side.
     ADV_EVENT_TEXT_RALLY_FLAG_VISITED = 110,
     ADV_EVENT_TEXT_RALLY_FLAG = 111,
-    // DoEventRefugeeCamp (0x4a4600), and this object is where the
-    // alphabetical run BREAKS. Its offer line lands at 112, directly after
-    // the rally flag's pair, exactly where "refugee camp" belongs - but its
-    // empty line is 44, out in the "d" band between the defense tower's
-    // pair at 39/40 and the dragon city's 47. Both indices are byte-proven
-    // (the [Text._First + 0xb0] and [+0x1c0] loads at 0x4a462c/0x4a46aa)
-    // and a full scan of every advevent.txt index reachable from
-    // gpAdventureEventText shows 44 has exactly ONE consumer image-wide, so
-    // it is not a shared generic row that happens to be borrowed. The ROLE
-    // is what names it, as with WITCH_HUT_NO_SKILL at 190 below; only the
-    // index is evidence.
-    ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY = 44,
-    ADV_EVENT_TEXT_REFUGEE_CAMP = 112,
-    // DoEventSeaChest (0x4a5030): 116 is the empty chest, 117 the sprintf
-    // format taking the artifact name - the only row in this enum whose
-    // dialog shows THREE pictures, the artifact plus a 0x24/1000 pair -
-    // and 118 the plain 1500-gold line. The run sits directly after the
-    // scholar's 115, which is where the alphabet puts "sea chest".
-    ADV_EVENT_TEXT_SEA_CHEST_EMPTY = 116,
-    ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT = 117,
-    ADV_EVENT_TEXT_SEA_CHEST_GOLD = 118,
-    // DoEventScholar (0x4a4dc0), and ONE row serves all three awards - the
-    // pictures and their quantities are what differ, spell class 9 for a
-    // spell, class 0x14 with a computed icon index for a secondary skill,
-    // and the primary-skill picture 0x1f + skill for a stat point. 115 sits
-    // directly after the resource pile's 113, which is where the alphabet
-    // puts "scholar".
-    ADV_EVENT_TEXT_SCHOLAR = 115,
+    ADV_EVENT_TEXT_REFUGEE_CAMP_RECRUIT_FORMAT = 112,
     // The resource-pile pickup line, SHARED by DoEventResource (0x4a4be0)
     // and the customised-cell handler it delegates to (0x4a4780, which
     // formats it twice). It is a sprintf format taking the resource's own
@@ -366,11 +346,29 @@ enum EAdventureEventText {
     // copies the name out of gResourceNames instead of passing it through.
     // 113 sits directly after the refugee camp's 112, which is where the
     // alphabet puts "resource".
-    ADV_EVENT_TEXT_RESOURCE_PICKUP = 113,
-    // DoEventPowerSchool (0x4a3dc0), picture 0x21 = +1 Spell Power - the
-    // fourth member of the primary-skill quartet above.
-    ADV_EVENT_TEXT_POWER_SCHOOL = 100,
-    ADV_EVENT_TEXT_POWER_SCHOOL_VISITED = 101,
+    ADV_EVENT_TEXT_RESOURCE_PICKUP_FORMAT = 113,
+    ADV_EVENT_TEXT_SANCTUARY = 114,
+    // DoEventScholar (0x4a4dc0), and ONE row serves all three awards - the
+    // pictures and their quantities are what differ, spell class 9 for a
+    // spell, class 0x14 with a computed icon index for a secondary skill,
+    // and the primary-skill picture 0x1f + skill for a stat point. 115 sits
+    // directly after the resource pile's 113, which is where the alphabet
+    // puts "scholar".
+    ADV_EVENT_TEXT_SCHOLAR = 115,
+    // DoEventSeaChest (0x4a5030): 116 is the empty chest, 117 the sprintf
+    // format taking the artifact name - the only row in this enum whose
+    // dialog shows THREE pictures, the artifact plus a 0x24/1000 pair -
+    // and 118 the plain 1500-gold line. The run sits directly after the
+    // scholar's 115, which is where the alphabet puts "sea chest".
+    ADV_EVENT_TEXT_SEA_CHEST_EMPTY = 116,
+    ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT_FORMAT = 117,
+    ADV_EVENT_TEXT_SEA_CHEST_GOLD = 118,
+    ADV_EVENT_TEXT_SEPULCHER_PROMPT = 119,
+    ADV_EVENT_TEXT_SEPULCHER_EMPTY = 120,
+    ADV_EVENT_TEXT_SEPULCHER_TREASURE = 121,
+    ADV_EVENT_TEXT_SHIPWRECK_PROMPT = 122,
+    ADV_EVENT_TEXT_SHIPWRECK_EMPTY = 123,
+    ADV_EVENT_TEXT_SHIPWRECK_TREASURE = 124,
     // DoEventSurvivor (0x4a52a0), the shipwreck survivor: 125 is a sprintf
     // format taking the artifact name, 126 the line a hero with all
     // sixty-four backpack slots full gets - and unlike every other
@@ -378,15 +376,20 @@ enum EAdventureEventText {
     // artifact id in its RAW extra-info dword, not in a bitfield lane. The
     // pair sits below the sirens' block, which is where the alphabet puts
     // "shipwreck survivor".
-    ADV_EVENT_TEXT_SURVIVOR_ARTIFACT = 125,
-    ADV_EVENT_TEXT_SURVIVOR_BACKPACK_FULL = 126,
+    ADV_EVENT_TEXT_SHIPWRECK_SURVIVOR_ARTIFACT_FORMAT = 125,
+    ADV_EVENT_TEXT_SHIPWRECK_SURVIVOR_BACKPACK_FULL = 126,
+    ADV_EVENT_TEXT_SHRINE1_PREFIX = 127,
+    ADV_EVENT_TEXT_SHRINE2_PREFIX = 128,
+    ADV_EVENT_TEXT_SHRINE3_PREFIX = 129,
+    ADV_EVENT_TEXT_SHRINE_NO_WISDOM_SUFFIX = 130,
+    ADV_EVENT_TEXT_SHRINE_NO_SPELLBOOK_SUFFIX = 131,
     // DoEventSiren (0x4a5980). 132 is a sprintf format taking the
     // experience the drowned troops were worth, 133 the already-visited
     // line and 134 the row a hero with nothing to lose gets. The trio
     // sits just below the stables' block, which is where the alphabet
     // puts "sirens" - and the DC roster agrees, running DoEventSiren
     // (dc 0x95a34) before DoEventSpellScroll and DoEventStables.
-    ADV_EVENT_TEXT_SIRENS = 132,
+    ADV_EVENT_TEXT_SIRENS_EXPERIENCE_FORMAT = 132,
     ADV_EVENT_TEXT_SIRENS_VISITED = 133,
     ADV_EVENT_TEXT_SIRENS_NO_LOSS = 134,
     // The scroll pickup line, SHARED by DoEventSpellScroll (0x4a5ea0) and
@@ -394,7 +397,7 @@ enum EAdventureEventText {
     // sprintf format taking the SPELL's name out of akSpellTraits, not an
     // artifact name, and the dialog shows it with picture class 9 - the
     // spell class - where every other artifact row in this enum uses 8.
-    ADV_EVENT_TEXT_SPELL_SCROLL = 135,
+    ADV_EVENT_TEXT_SPELL_SCROLL_FORMAT = 135,
     // DoEventStables (0x4a60a0), and this is the only object in the enum
     // with FOUR contiguous rows: the handler accumulates what it actually
     // did into a two-bit value and switches over it, so every combination
@@ -411,10 +414,32 @@ enum EAdventureEventText {
     // and 141 is the already-worshipped line.
     ADV_EVENT_TEXT_TEMPLE = 140,
     ADV_EVENT_TEXT_TEMPLE_VISITED = 141,
+    ADV_EVENT_TEXT_THIEVES_DEN = 142,
     // DoEventTrainingGrounds (0x4a6330). The reward line carries picture
     // 0x11 and the experience amount as its quantity.
     ADV_EVENT_TEXT_TRAINING_GROUNDS = 143,
     ADV_EVENT_TEXT_TRAINING_GROUNDS_VISITED = 144,
+    // DoEventTreasure (0x4a6520), the treasure chest: 145 is the sprintf
+    // format taking the artifact name. Its twin 146 belongs to
+    // DoTreasureDialog (0x4a6440), which is not reconstructed here, so
+    // only the row this body proves is named. 145 sits directly after the
+    // training grounds' pair at 143/144, which is where the alphabet puts
+    // "treasure chest".
+    ADV_EVENT_TEXT_TREASURE_ARTIFACT_FORMAT = 145,
+    ADV_EVENT_TEXT_TREASURE_GOLD_OR_EXPERIENCE = 146,
+    // DoEventTreeOfKnowledge (0x4a6710), the longest run in this enum after
+    // the pyramid's: 147 is the already-taught line and then the three
+    // prices take two rows apiece - 148 the free tree, 149/150 the
+    // 2000-gold prompt and its refusal, 151/152 the ten-gems pair. The run
+    // sits directly after the treasure chest's 145/146, which is where the
+    // alphabet puts "tree of knowledge".
+    ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_VISITED = 147,
+    ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_FREE = 148,
+    ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_GOLD_PROMPT = 149,
+    ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_NO_GOLD = 150,
+    ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_GEMS_PROMPT = 151,
+    ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_NO_GEMS = 152,
+    ADV_EVENT_TEXT_SUBTERRANEAN_BLOCKED = 153,
     // DoEventWagon (0x4a69b0), the run directly below the war school's -
     // which is where the alphabet puts "wagon" - and the only object in
     // this enum whose reward comes in TWO flavours: 154 is the resource
@@ -423,66 +448,36 @@ enum EAdventureEventText {
     // roster agrees: DoEventWagon (dc 0x96784) runs before DoEventWarSchool
     // (dc 0x97628).
     ADV_EVENT_TEXT_WAGON_RESOURCE = 154,
-    ADV_EVENT_TEXT_WAGON_ARTIFACT = 155,
+    ADV_EVENT_TEXT_WAGON_ARTIFACT_FORMAT = 155,
     ADV_EVENT_TEXT_WAGON_EMPTY = 156,
+    ADV_EVENT_TEXT_WAR_MACHINE_FACTORY_PROMPT = 157,
     // DoEventWarSchool (0x4a7a40). 158 is the two-picture choice offered
     // with iMBType 10 (+1 Attack against +1 Defense), 159 the
     // already-trained line and 160 the "under 1000 gold" refusal.
     ADV_EVENT_TEXT_WAR_SCHOOL_CHOOSE = 158,
     ADV_EVENT_TEXT_WAR_SCHOOL_VISITED = 159,
     ADV_EVENT_TEXT_WAR_SCHOOL_NO_GOLD = 160,
-    // DoEventTreasure (0x4a6520), the treasure chest: 145 is the sprintf
-    // format taking the artifact name. Its twin 146 belongs to
-    // DoTreasureDialog (0x4a6440), which is not reconstructed here, so
-    // only the row this body proves is named. 145 sits directly after the
-    // training grounds' pair at 143/144, which is where the alphabet puts
-    // "treasure chest".
-    ADV_EVENT_TEXT_TREASURE_ARTIFACT = 145,
-    // DoEventTreeOfKnowledge (0x4a6710), the longest run in this enum after
-    // the pyramid's: 147 is the already-taught line and then the three
-    // prices take two rows apiece - 148 the free tree, 149/150 the
-    // 2000-gold prompt and its refusal, 151/152 the ten-gems pair. The run
-    // sits directly after the treasure chest's 145/146, which is where the
-    // alphabet puts "tree of knowledge".
-    ADV_EVENT_TEXT_TREE_VISITED = 147,
-    ADV_EVENT_TEXT_TREE_FREE = 148,
-    ADV_EVENT_TEXT_TREE_GOLD_PROMPT = 149,
-    ADV_EVENT_TEXT_TREE_NO_GOLD = 150,
-    ADV_EVENT_TEXT_TREE_GEMS_PROMPT = 151,
-    ADV_EVENT_TEXT_TREE_NO_GEMS = 152,
     // do_event_warrior_tomb (0x4a7c30). 161 is asked with iMBType 2 - the
     // yes/no form whose answer the handler reads back out of
     // heroWindowManager::dialogReturn - 162 is a sprintf format taking the
     // artifact name, and 163 is the empty-tomb line that costs -3 morale.
     ADV_EVENT_TEXT_WARRIOR_TOMB_PROMPT = 161,
-    ADV_EVENT_TEXT_WARRIOR_TOMB_ARTIFACT = 162,
+    ADV_EVENT_TEXT_WARRIOR_TOMB_ARTIFACT_FORMAT = 162,
     ADV_EVENT_TEXT_WARRIOR_TOMB_EMPTY = 163,
     ADV_EVENT_TEXT_WATER_WHEEL_GOLD = 164,
     ADV_EVENT_TEXT_WATER_WHEEL_EMPTY = 165,
     ADV_EVENT_TEXT_WATERING_HOLE = 166,
     ADV_EVENT_TEXT_WATERING_HOLE_VISITED = 167,
+    ADV_EVENT_TEXT_WHIRLPOOL = 168,
     ADV_EVENT_TEXT_WINDMILL_EMPTY = 169,
     ADV_EVENT_TEXT_WINDMILL_RESOURCE = 170,
     // do_event_witch_hut (0x4a8080). All three take the secondary-skill
     // name through sprintf; only the first one actually teaches, and the
     // roles follow from which arm of the cascade reaches each row.
-    ADV_EVENT_TEXT_WITCH_HUT_LEARN = 171,
-    ADV_EVENT_TEXT_WITCH_HUT_KNOWN = 172,
-    ADV_EVENT_TEXT_WITCH_HUT_FULL = 173,
-    // Remaining events.cpp consumers, named from the English Complete 4.0
-    // advevent.txt rows and the role of each retail-proven call site.
-    ADV_EVENT_TEXT_ARTIFACT_FIGHT_DECLINED = 11,
-    ADV_EVENT_TEXT_CREATURE_BANK_PROMPT = 32,
-    ADV_EVENT_TEXT_CREATURE_BANK_EMPTY = 33,
-    ADV_EVENT_TEXT_CREATURE_BANK_REWARD_FORMAT = 34,
-    ADV_EVENT_TEXT_DWELLING_RECRUIT_ONE_FORMAT = 35,
-    ADV_EVENT_TEXT_DWELLING_RECRUIT_MULTIPLE_FORMAT = 36,
-    ADV_EVENT_TEXT_ARTIFACT_NAME_WITH_ARTICLE_FORMAT = 45,
-    ADV_EVENT_TEXT_SHRINE_NO_WISDOM = 130,
-    ADV_EVENT_TEXT_SHRINE_NO_SPELLBOOK = 131,
-    ADV_EVENT_TEXT_TREASURE_GOLD_OR_EXPERIENCE = 146,
-    ADV_EVENT_TEXT_WHIRLPOOL = 168,
-    ADV_EVENT_TEXT_SHRINE_SPELL_KNOWN = 174,
+    ADV_EVENT_TEXT_WITCH_HUT_LEARN_FORMAT = 171,
+    ADV_EVENT_TEXT_WITCH_HUT_KNOWN_FORMAT = 172,
+    ADV_EVENT_TEXT_WITCH_HUT_FULL_FORMAT = 173,
+    ADV_EVENT_TEXT_SHRINE_SPELL_KNOWN_SUFFIX = 174,
     ADV_EVENT_TEXT_BLACK_BOX_REWARD_FORMAT = 175,
     ADV_EVENT_TEXT_BLACK_BOX_LOSE_MANA_FORMAT = 176,
     ADV_EVENT_TEXT_BLACK_BOX_GAIN_MANA_FORMAT = 177,
@@ -495,6 +490,7 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELL_FORMAT = 184,
     ADV_EVENT_TEXT_BLACK_BOX_CREATURE_JOINS_FORMAT = 185,
     ADV_EVENT_TEXT_BLACK_BOX_CREATURES_JOIN_FORMAT = 186,
+    ADV_EVENT_TEXT_MINE_DEFENDED_PROMPT = 187,
     ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELLS_FORMAT = 188,
     ADV_EVENT_TEXT_ABANDONED_SHIPYARD = 189,
     // The row the same handler shows when the cell carries no skill at

@@ -8775,7 +8775,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                             "Timeout sending save game [%d]"),
                         retryCount);
             if (retryCount > 1) {
-                normalDialog(g_generalText->getText(GENERAL_TEXT_DPLAY_SEND_RETRY), 2, -1, -1,
+                normalDialog(g_generalText->getText(GENERAL_TEXT_DIRECTPLAY_SEND_RETRY_PROMPT), 2, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn
                         != DIALOG_RETURN_ACCEPT) {
