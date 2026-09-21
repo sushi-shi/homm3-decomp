@@ -1134,7 +1134,7 @@ TViewWorldWindow::TViewWorldWindow()
         607, 195, 190, 381, 14, "VWorld.pcx", 0x800));
     m_widgets.push_back(new border(630, 26, 144, 144, 20, 1));
     m_widgets.push_back(new textWidget(
-        608, 194, 188, 49, (*g_generalText)[612], "bigfont.fnt",
+        608, 194, 188, 49, g_generalText->getText(612), "bigfont.fnt",
         font::HEADING, 15, 1, 0, 8));
 
     int firstFrame = g_game->getLocalPlayerGamePos() * 19;
@@ -1178,46 +1178,46 @@ TViewWorldWindow::TViewWorldWindow()
         761, 498, 32, 32, 21, "VWsymbol.def", firstFrame + 18, 0, 0, 0, 16));
 
     m_widgets.push_back(new textWidget(
-        650, 260, 130, 20, (*g_generalText)[613], "Calli10R.fnt",
+        650, 260, 130, 20, g_generalText->getText(613), "Calli10R.fnt",
         font::PRIMARY, 0, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        650, 280, 130, 20, (*g_generalText)[614], "Calli10R.fnt",
+        650, 280, 130, 20, g_generalText->getText(614), "Calli10R.fnt",
         font::PRIMARY, 1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        650, 300, 130, 20, (*g_generalText)[615], "Calli10R.fnt",
+        650, 300, 130, 20, g_generalText->getText(615), "Calli10R.fnt",
         font::PRIMARY, 2, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        650, 320, 130, 20, (*g_generalText)[616], "Calli10R.fnt",
+        650, 320, 130, 20, g_generalText->getText(616), "Calli10R.fnt",
         font::PRIMARY, 3, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        650, 340, 130, 20, (*g_generalText)[617], "Calli10R.fnt",
+        650, 340, 130, 20, g_generalText->getText(617), "Calli10R.fnt",
         font::PRIMARY, 4, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        614, 368, 60, 18, (*g_generalText)[618], "Calli10R.fnt",
+        614, 368, 60, 18, g_generalText->getText(618), "Calli10R.fnt",
         font::PRIMARY, 12, 0, 0, 8));
     m_widgets.push_back(new textWidget(
-        722, 368, 70, 18, (*g_generalText)[619], "Calli10R.fnt",
+        722, 368, 70, 18, g_generalText->getText(619), "Calli10R.fnt",
         font::PRIMARY, 13, 2, 0, 8));
     m_widgets.push_back(new textWidget(
-        648, 384, 120, 20, (*g_generalText)[620], "Calli10R.fnt",
+        648, 384, 120, 20, g_generalText->getText(620), "Calli10R.fnt",
         font::PRIMARY, 6, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        648, 404, 120, 20, (*g_generalText)[621], "Calli10R.fnt",
+        648, 404, 120, 20, g_generalText->getText(621), "Calli10R.fnt",
         font::PRIMARY, 7, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        648, 424, 120, 20, (*g_generalText)[622], "Calli10R.fnt",
+        648, 424, 120, 20, g_generalText->getText(622), "Calli10R.fnt",
         font::PRIMARY, 8, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        648, 444, 120, 20, (*g_generalText)[623], "Calli10R.fnt",
+        648, 444, 120, 20, g_generalText->getText(623), "Calli10R.fnt",
         font::PRIMARY, 9, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        648, 464, 120, 20, (*g_generalText)[624], "Calli10R.fnt",
+        648, 464, 120, 20, g_generalText->getText(624), "Calli10R.fnt",
         font::PRIMARY, 10, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        648, 484, 120, 20, (*g_generalText)[625], "Calli10R.fnt",
+        648, 484, 120, 20, g_generalText->getText(625), "Calli10R.fnt",
         font::PRIMARY, 11, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        648, 504, 120, 20, (*g_generalText)[626], "Calli10R.fnt",
+        648, 504, 120, 20, g_generalText->getText(626), "Calli10R.fnt",
         font::PRIMARY, 5, 5, 0, 8));
 
     m_widgets.push_back(new button(

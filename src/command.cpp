@@ -1003,7 +1003,7 @@ int combatManager::processCombatMsg(message& msg)
                         }
                     }
                 } else if (m_debugShowBlockedHexes
-                           && (m_cells[gridIndex].m_attributes & 2)
+                           && (m_cells[gridIndex].m_attributes & hexcell::blocked)
                            && m_cells[gridIndex].m_obstacleIndex != -1) {
                     TObstacle& obstacle =
                         m_obstacles[m_cells[gridIndex].m_obstacleIndex];
@@ -2195,7 +2195,7 @@ void combatManager::getControl()
                     || (m_currentSide == 1 && m_defendingTown
                         && (m_defendingTown->m_type != TOWN_STRONGHOLD
                             || !m_defendingTown->hasBuilding(
-                                SPECIAL_BUILDING_ID, 1))))
+                                SPECIAL_BUILDING_ID, true))))
                 m_combatWindow->widgetSetStatus(
                     0x7d2, 0x1000);
             else

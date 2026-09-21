@@ -150,7 +150,7 @@ int combatManager::viewSpells() const
         return -1;
 
     if (m_onAntiMagicGarrison) {
-        normalDialog(g_generalText->getText(685), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_GARRISON_ADVENTURE_SPELL), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return -1;
     }
@@ -196,7 +196,7 @@ int combatManager::viewSpells() const
 
     int level = g_spellTraits[g_windowManager->m_dialogReturn].m_level;
     if (level > 1 && m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS) {
-        normalDialog(g_generalText->getText(748), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_CURSED_GROUND_HIGH_LEVEL_SPELL), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return -1;
     }
@@ -547,7 +547,7 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
 {
     if (!currentArmy->m_numTroops)
         return 0;
-    if ((m_cells[hex].m_attributes & 8) == 0)
+    if ((m_cells[hex].m_attributes & hexcell::landMine) == 0)
         return 0;
 
     TObstacle* obstacle = &getObstacle(m_cells[hex].m_obstacleIndex);
@@ -596,7 +596,7 @@ unsigned char combatManager::checkFireWall(long hex, army* currentArmy,
 {
     if (!currentArmy->m_numTroops)
         return 0;
-    if ((m_cells[hex].m_attributes & 0x10) == 0)
+    if ((m_cells[hex].m_attributes & hexcell::fireWall) == 0)
         return 0;
 
     TObstacle* obstacle = &getObstacle(m_cells[hex].m_obstacleIndex);
@@ -851,7 +851,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 hex = picker.pick();
             } while (hex >= 0
                      && (inInvisibleColumn(hex)
-                         || (m_cells[hex].m_attributes & 0x3f)
+                         || (m_cells[hex].m_attributes & hexcell::obstacleMask)
                          || m_cells[hex].hasArmy()
                          || m_cells[hex].m_bodiesInHex > 0));
             if (hex < 0)
@@ -878,7 +878,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newQuicksand.m_dispelEffect = 0x3a;
             m_obstacles.push_back(newQuicksand);
             int obstacleSlot = m_obstacles.size() - 1;
-            placeObstacle(newQuicksand, obstacleSlot, hex, 4);
+            placeObstacle(newQuicksand, obstacleSlot, hex, hexcell::quicksand);
             drawFrame(1, 0, 0, 0, 1, 0);
 
             if (!static_cast<const combatManager*>(this)->isQuickCombat())
@@ -907,7 +907,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 hex = picker.pick();
             } while (hex >= 0
                      && (inInvisibleColumn(hex)
-                         || (m_cells[hex].m_attributes & 0x3f)
+                         || (m_cells[hex].m_attributes & hexcell::obstacleMask)
                          || m_cells[hex].hasArmy()
                          || m_cells[hex].m_bodiesInHex > 0));
             if (hex < 0)
@@ -931,7 +931,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newLandmine.m_dispelEffect = 0x3b;
             m_obstacles.push_back(newLandmine);
             int obstacleSlot = m_obstacles.size() - 1;
-            placeObstacle(newLandmine, obstacleSlot, hex, 8);
+            placeObstacle(newLandmine, obstacleSlot, hex, hexcell::landMine);
             drawFrame(1, 0, 0, 0, 1, 0);
 
             if (!static_cast<const combatManager*>(this)->isQuickCombat())
@@ -961,7 +961,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         newWall.m_dispelEffect = (mastery >= eMasteryAdvanced) + 0x3c;
         m_obstacles.push_back(newWall);
         int obstacleSlot = m_obstacles.size() - 1;
-        placeObstacle(newWall, obstacleSlot, targetIndex, 0x22);
+        placeObstacle(newWall, obstacleSlot, targetIndex, hexcell::stoneWall | hexcell::blocked);
         showSpellMessage(isMonsterSpell, spellId, 0);
         break;
     }
@@ -986,7 +986,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             newWall.m_dispelEffect = 0x42;
             m_obstacles.push_back(newWall);
             int obstacleSlot = m_obstacles.size() - 1;
-            placeObstacle(newWall, obstacleSlot, hex, 0x10);
+            placeObstacle(newWall, obstacleSlot, hex, hexcell::fireWall);
             drawFrame(1, 0, 0, 0, 1, 0);
         }
         showSpellMessage(isMonsterSpell, spellId, 0);
@@ -1379,7 +1379,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             for (TObstacle* obstacle = m_obstacles.begin();
                  obstacle != m_obstacles.end(); ++obstacle) {
                 if (obstacle->m_sprite
-                    && (m_cells[obstacle->m_hex].m_attributes & 0x3c)) {
+                    && (m_cells[obstacle->m_hex].m_attributes & hexcell::magicObstacleMask)) {
                     removeObstacle(obstacle - m_obstacles.begin());
                     if (obstacle->m_dispelEffect != -1)
                         spellEffect(obstacle->m_dispelEffect, obstacle->m_hex,
@@ -2371,12 +2371,12 @@ unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
             switch (mastery) {
             case eMasteryNone:
             case eMasteryBasic:
-                if (!(m_cells[targetIndex].m_attributes & 0x3c))
+                if (!(m_cells[targetIndex].m_attributes & hexcell::magicObstacleMask))
                     return 1;
                 break;
             case eMasteryAdvanced: {
                 const unsigned int attributes = m_cells[targetIndex].m_attributes;
-                if (!(attributes & 0x3c) || (attributes & 0x10))
+                if (!(attributes & hexcell::magicObstacleMask) || (attributes & hexcell::fireWall))
                     return 1;
                 break;
             }
@@ -2391,7 +2391,7 @@ unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
             long hex = getSpellWallHex(targetIndex, i, m_currentSide);
             const hexcell* cell = &m_cells[hex];
             if (!validHex(hex) || inInvisibleColumn(hex)
-                || (cell->m_attributes & 0x3f) || cell->hasArmy())
+                || (cell->m_attributes & hexcell::obstacleMask) || cell->hasArmy())
                 return 0;
         }
     } else if (spellId == SPELL_FORCE_FIELD) {
@@ -2405,7 +2405,7 @@ unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
                 hex--;
             const hexcell* cell = &m_cells[hex];
             if (!validHex(hex) || inInvisibleColumn(hex)
-                || (cell->m_attributes & 0x3f) || cell->hasArmy())
+                || (cell->m_attributes & hexcell::obstacleMask) || cell->hasArmy())
                 return 0;
         }
     }
@@ -2443,7 +2443,7 @@ army* combatManager::findResurrectionTarget(int side, int hex,
             return target;
         return 0;
     }
-    if (cell->m_attributes & 2)
+    if (cell->m_attributes & hexcell::blocked)
         return 0;
     int i = cell->m_bodiesInHex - 1;
     if (i < 0)
@@ -2458,13 +2458,13 @@ army* combatManager::findResurrectionTarget(int side, int hex,
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
                 continue;
-            if (m_cells[hex + 1].m_attributes & 2)
+            if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
             if (m_cells[hex - 1].m_armySide >= 0)
                 continue;
-            if (m_cells[hex - 1].m_attributes & 2)
+            if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (spellCastWorkChance(SPELL_RESURRECTION, side, corpse, 0, 1,
@@ -2484,7 +2484,7 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
     if (!validHex(hex))
         return 0;
     hexcell* cell = &m_cells[hex];
-    if (cell->m_attributes & 2)
+    if (cell->m_attributes & hexcell::blocked)
         return 0;
     if (cell->m_armySide >= 0)
         return 0;
@@ -2498,13 +2498,13 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
                 continue;
-            if (m_cells[hex + 1].m_attributes & 2)
+            if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
             if (m_cells[hex - 1].m_armySide >= 0)
                 continue;
-            if (m_cells[hex - 1].m_attributes & 2)
+            if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
         }
         return &m_armies[deadSide][deadSlot];
@@ -2531,7 +2531,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
             return target;
         return 0;
     }
-    if (cell->m_attributes & 2)
+    if (cell->m_attributes & hexcell::blocked)
         return 0;
     int i = cell->m_bodiesInHex - 1;
     if (i < 0)
@@ -2546,13 +2546,13 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
         if (cell->m_deadPartOfDouble[i] == 0) {
             if (m_cells[hex + 1].m_armySide >= 0)
                 continue;
-            if (m_cells[hex + 1].m_attributes & 2)
+            if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
             if (m_cells[hex - 1].m_armySide >= 0)
                 continue;
-            if (m_cells[hex - 1].m_attributes & 2)
+            if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (spellCastWorkChance(SPELL_ANIMATE_DEAD, side, corpse, 0, 1, 0)
@@ -3049,7 +3049,7 @@ void combatManager::armageddon(int level, int power)
         && !static_cast<const combatManager*>(this)->isQuickCombat()) {
         long totalDamage = computeSpellDamage(
             SPELL_ARMAGEDDON, power, level, 0, 0, 0, 0);
-        sprintf(g_text, (*g_generalText)[89], totalDamage);
+        sprintf(g_text, g_generalText->getText(89), totalDamage);
         m_combatWindow->combatMessage(g_text, 1, 0);
     }
     checkRebirth();

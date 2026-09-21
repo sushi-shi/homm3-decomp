@@ -192,9 +192,9 @@ static void reportMissingResource(const char* caller, const char* typeName,
 // retail calls and lifetimes without inline-depth pins. The former bootstrap
 // C linkage suppressed EH cleanup; keep the ordinary C++ declaration.
 VA(0x00559510, 0x4C1)  // caller ABI + retail type-name jump table/message graph
-void __fastcall game_null_159510(const char* caller,
-                                 int resourceType,
-                                 const char* resourceName)
+void __fastcall reportMissingTypedResource(const char* caller,
+                                          int resourceType,
+                                          const char* resourceName)
 {
     std::string typeName;
     switch (resourceType) {
@@ -254,9 +254,9 @@ void __fastcall game_null_159510(const char* caller,
 // reporter, this is 100% with ordinary assignments and reportMissingResource;
 // no artificial message scope or inline-depth control is needed.
 VA(0x005599e0, 0x448)  // anchor-caller + retail type-name jump table
-void __fastcall game_sprite_1599e0(const char* caller,
-                                   int resourceType,
-                                   const char* resourceName)
+void __fastcall reportMissingSpriteResource(const char* caller,
+                                           int resourceType,
+                                           const char* resourceName)
 {
     std::string typeName;
     switch (resourceType) {
@@ -620,7 +620,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
         }
 
         if (!lodFile) {
-            game_null_159510(
+            reportMissingTypedResource(
                 DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
                              "GetBitmap816"),
                 RESOURCE_TYPE_BITMAP, name);
@@ -643,7 +643,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
             }
 
             if (!lodFile) {
-                game_null_159510(
+                reportMissingTypedResource(
                     DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
                                  "GetBitmap816"),
                     RESOURCE_TYPE_BITMAP, fallbackName);
@@ -735,7 +735,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
         }
 
         if (!lodFile) {
-            game_null_159510(
+            reportMissingTypedResource(
                 DATA_COMPGEN(0x00683040, loadBitmap16ErrorContext,
                              "GetBitmap16"),
                 RESOURCE_TYPE_BITMAP16, name);
@@ -758,7 +758,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
             }
 
             if (!lodFile) {
-                game_null_159510(
+                reportMissingTypedResource(
                     DATA_COMPGEN(0x00683040, loadBitmap16ErrorContext,
                                  "GetBitmap16"),
                     RESOURCE_TYPE_BITMAP16, fallbackName);
@@ -865,7 +865,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
     }
 
     if (!lodFile) {
-        game_null_159510(
+        reportMissingTypedResource(
             DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                          "GetPalette"),
             RESOURCE_TYPE_PALETTE, name);
@@ -888,7 +888,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
         }
 
         if (!lodFile) {
-            game_null_159510(
+            reportMissingTypedResource(
                 DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                              "GetPalette"),
                 RESOURCE_TYPE_PALETTE, fallbackName);
@@ -993,7 +993,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
     }
 
     if (!lodFile) {
-        game_null_159510(
+        reportMissingTypedResource(
             DATA_COMPGEN(0x0068304c, loadPaletteErrorContext, "GetPalette"),
             RESOURCE_TYPE_PALETTE, name);
 
@@ -1015,7 +1015,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
         }
 
         if (!lodFile) {
-            game_null_159510(
+            reportMissingTypedResource(
                 DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                              "GetPalette"),
                 RESOURCE_TYPE_PALETTE, fallbackName);
@@ -1109,7 +1109,7 @@ font* ResourceManager::loadFont(const char* name)
     }
 
     if (!lodFile) {
-        game_null_159510(
+        reportMissingTypedResource(
             DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
             RESOURCE_TYPE_FONT, name);
 
@@ -1131,7 +1131,7 @@ font* ResourceManager::loadFont(const char* name)
         }
 
         if (!lodFile) {
-            game_null_159510(
+            reportMissingTypedResource(
                 DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
                 RESOURCE_TYPE_FONT, fallbackName);
             return 0;
@@ -1204,7 +1204,7 @@ TTextResource* ResourceManager::loadText(const char* name)
     }
 
     if (!lodFile) {
-        game_null_159510(
+        reportMissingTypedResource(
             DATA_COMPGEN(0x00683060, loadTextErrorContext, "GetText"),
             RESOURCE_TYPE_TEXT, name);
         return 0;
@@ -1277,7 +1277,7 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
     }
 
     if (!lodFile) {
-        game_null_159510(
+        reportMissingTypedResource(
             DATA_COMPGEN(0x00683068, loadSpreadsheetErrorContext,
                          "GetSpreadsheet"),
             RESOURCE_TYPE_TEXT, name);
@@ -1521,14 +1521,14 @@ CSprite* ResourceManager::getSprite(const char* name)
     LODFile* lodFile = pointToSpriteResource(name);
 
     if (!lodFile) {
-        game_sprite_1599e0(
+        reportMissingSpriteResource(
             DATA_COMPGEN(0x00683088, getSpriteErrorContext, "GetSprite"),
             RESOURCE_TYPE_SPRITE, name);
 
         lodFile = pointToSpriteResource(name);
 
         if (!lodFile) {
-            game_sprite_1599e0(
+            reportMissingSpriteResource(
                 DATA_COMPGEN(0x00683088, getSpriteErrorContext, "GetSprite"),
                 RESOURCE_TYPE_SPRITE, name);
             return 0;
@@ -1705,7 +1705,7 @@ void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
                      destBmap, 0, 0, false);
         source->dispose();
     } else {
-        game_null_159510(
+        reportMissingTypedResource(
             DATA_COMPGEN(0x00683094, getBackdropErrorContext, "GetBackdrop"),
             RESOURCE_TYPE_BITMAP, resName);
     }

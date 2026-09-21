@@ -2669,7 +2669,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             int legalAlignments = 0xff;
             if ((*g_videoGameState == 1
                  || *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
-                && g_game->m_f1f698 >= 1)
+                && g_game->m_gameVersion >= 1)
                 legalAlignments = 0x1ff;
             tempTown.m_townType = pickAlignment(legalAlignments, 0);
         }
@@ -4583,42 +4583,6 @@ int NewfullMap::placeObjects()
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
-// NewmapCell::NewmapCell (dc 0xf49a4) moved up: claimed at VA 0x004fd650.
-
-// CObject::get_type (dc 0xf4a78) moved to its original inline definition in
-// include/advmgr_objects.h; retail emits no out-of-line copy.
-
-// type_obscuring_object::get_obscured_object (dc 0xf4a9c) moved to its
-// original inline definition in include/hero.h; retail emits no out-of-line
-// copy.
-
-// E:\gamedcs\mapcell.cpp:544
-DC_ONLY(0xf4b64, 0x78)
-void* NewmapCell::`vector deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// NewmapCell::~NewmapCell (dc 0xf4bdc) moved up: claimed at VA 0x004fd4c0.
-// BlackBoxData::~BlackBoxData (dc 0xf4bfc) moved up: claimed at VA 0x004ffdf0.
-
-// E:\gamedcs\mapcell.cpp:2692
-DC_ONLY(0xf4c50, 0x1C)
-void MonsterData::~MonsterData()
-{
-    // @stub
-}
-
-// E:\gamedcs\mapcell.cpp:2947
-DC_ONLY(0xf4c6c, 0x1C)
-void TTownEvent::~TTownEvent()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 VA_COMPGEN(0x00508cf0, 0x3B9, VECTOR_INSERT, TownExtra)
 

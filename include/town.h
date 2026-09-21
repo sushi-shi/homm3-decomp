@@ -372,6 +372,8 @@ public:
     void calcNumLevelArchers(int* numArchers, int* archerLevel);
 
     VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
+    // checkIncluded includes buildings supplied by an upgrade (m_active);
+    // false tests only the explicitly constructed buildings (m_built).
     bool hasBuilding(int buildingId, bool checkIncluded) const
     {
         if (checkIncluded)
@@ -388,15 +390,15 @@ public:
     // the DC T_UCHAR return record is lowered, as for hasBuilding.
     bool isCastle() const
     {
-        return hasBuilding(CASTLE_FORT_ID, 0)
-            || hasBuilding(CASTLE_CITADEL_ID, 0)
-            || hasBuilding(CASTLE_CASTLE_ID, 0);
+        return hasBuilding(CASTLE_FORT_ID, false)
+            || hasBuilding(CASTLE_CITADEL_ID, false)
+            || hasBuilding(CASTLE_CASTLE_ID, false);
     }
     // E:\gamedcs\Town.h:342. Public ?IsCapitol@town@@QBA_NXZ likewise
     // proves native bool. Both declarations are byte-flat in all consumers.
     bool isCapitol() const
     {
-        return hasBuilding(HALL_CAPITOL_ID, 0);
+        return hasBuilding(HALL_CAPITOL_ID, false);
     }
     void setSummoningGenerator();
     int getPortraitFrame(bool isSmall) const;

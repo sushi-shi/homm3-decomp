@@ -940,10 +940,10 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
                 guards = getArmyName(guardList.m_armies[0], 2);
                 firstGuard = guards;
                 if (numArmies > 1) {
-                    firstGuard = g_generalText->getText(44);
+                    firstGuard = g_generalText->getText(GENERAL_TEXT_MIXED_ARMY);
                     for (int i = 1; i < numArmies; i++) {
                         if (i == numArmies - 1)
-                            guards += g_generalText->getText(142);
+                            guards += g_generalText->getText(GENERAL_TEXT_LIST_AND);
                         else
                             guards += ", ";
                         guards += armyGroup::getArmySizeName(
@@ -2171,7 +2171,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
     std::vector<type_dialog_resource> spellsExchanged;
     type_dialog_resource spellInfo;
 
-    msg = formatString((*g_generalText)[140], firstHero->m_name);
+    msg = formatString(g_generalText->getText(140), firstHero->m_name);
     spellInfo.m_resource = RES_SECONDARY_SKILL;
     spellInfo.m_qualifier = eSecSkillMagicScholar * 3
                            + magicScholarLevel + 2;
@@ -2188,7 +2188,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
         3, 7 - static_cast<int>(spellsLearned.size()));
 
     if (spellsLearned.size()) {
-        msg.append((*g_generalText)[141]);
+        msg.append(g_generalText->getText(141));
         for (int i = 0; i < spellsLearned.size(); i++) {
             if (i < learnedIconCount) {
                 spellInfo.m_resource = RES_SPELL;
@@ -2197,21 +2197,21 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             }
             if (i > 0) {
                 if (i == spellsLearned.size() - 1)
-                    msg.append((*g_generalText)[142]);
+                    msg.append(g_generalText->getText(GENERAL_TEXT_LIST_AND));
                 else
                     msg.append(DATA_COMPGEN(0x0066032c, listSeparator, ", "));
             }
             msg.append(g_spellTraits[spellsLearned[i]].m_name);
         }
-        msg.append(formatString((*g_generalText)[143], secondHero->m_name));
+        msg.append(formatString(g_generalText->getText(143), secondHero->m_name));
     }
 
     if (spellsTaught.size()) {
         if (spellsLearned.size()) {
             msg.append(DATA_COMPGEN(0x00660db4, commaText, ","));
-            msg.append((*g_generalText)[142]);
+            msg.append(g_generalText->getText(GENERAL_TEXT_LIST_AND));
         }
-        msg.append((*g_generalText)[148]);
+        msg.append(g_generalText->getText(148));
         for (int i = 0; i < spellsTaught.size(); i++) {
             if (i < taughtIconCount) {
                 spellInfo.m_resource = RES_SPELL;
@@ -2220,13 +2220,13 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             }
             if (i > 0) {
                 if (i == spellsTaught.size() - 1)
-                    msg.append((*g_generalText)[142]);
+                    msg.append(g_generalText->getText(GENERAL_TEXT_LIST_AND));
                 else
                     msg.append(DATA_COMPGEN(0x0066032c, listSeparator, ", "));
             }
             msg.append(g_spellTraits[spellsTaught[i]].m_name);
         }
-        msg.append(formatString((*g_generalText)[149], secondHero->m_name));
+        msg.append(formatString(g_generalText->getText(149), secondHero->m_name));
     }
 
     msg.append(DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
@@ -3780,18 +3780,18 @@ int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
     int armyCount = 0;
     TCreatureType like;
 
-    if ((!g_game->m_f1f698
+    if ((!g_game->m_gameVersion
          && isBaseElemental(creature))
         || g_creatureTypeTraits[creature].m_townType == -1) {
         like = CREATURE_NONE;
     } else {
-        if (!g_game->m_f1f698
+        if (!g_game->m_gameVersion
             && isBaseElemental(creature))
             like = CREATURE_NONE;
         else
             like = upgradedCreatureType(creature);
         if (like == CREATURE_NONE) {
-            if (!g_game->m_f1f698
+            if (!g_game->m_gameVersion
                 && (creature == CREATURE_ICE_ELEMENTAL
                     || creature == CREATURE_STORM_ELEMENTAL
                     || creature == CREATURE_MAGMA_ELEMENTAL
@@ -5406,7 +5406,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
         result = rewardStrings[0];
         for (i = 1; i < rewardStrings.size(); i++) {
             if (i == rewardStrings.size() - 1)
-                result += g_generalText->getText(142);
+                result += g_generalText->getText(GENERAL_TEXT_LIST_AND);
             else
                 result += ", ";
             result += rewardStrings[i];
@@ -5615,7 +5615,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
     {
         int storage;
         storage = monType;
-        if ((g_game->m_f1f698
+        if ((g_game->m_gameVersion
              || !isBaseElemental(monType))
             && static_cast<unsigned char>(
                    isBaseCreature(TCreatureType(storage)))
@@ -5624,7 +5624,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
             && monType3 == CREATURE_NONE
             && random(1, 100) <= 50) {
             TCreatureType upgraded;
-            if (!g_game->m_f1f698
+            if (!g_game->m_gameVersion
                 && isBaseElemental(monType))
                 upgraded = CREATURE_NONE;
             else {
@@ -6159,12 +6159,12 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             char text[256];  // DC sText[256]
             const char* target;
             if (rightTown)
-                target = (*g_generalText)[49];
+                target = g_generalText->getText(49);
             else if (rightHero)
-                target = (*g_generalText)[50];
+                target = g_generalText->getText(50);
             else
-                target = (*g_generalText)[430];
-            sprintf(text, (*g_generalText)[48],
+                target = g_generalText->getText(430);
+            sprintf(text, g_generalText->getText(48),
                     g_game->getPlayerName(rightPlayer), target);
             g_game->waitForPlayer(text, rightPlayer);
         }
@@ -6245,10 +6245,10 @@ combatFinished:
         sprintf(g_text, "pickup%02d.82M", sRandom(1, 7));
         SAMPLE2 sample = loadPlaySample(g_text);
         if (g_combatManager->m_raisedCreatureCount == 1) {
-            sprintf(g_text, (*g_generalText)[147],
+            sprintf(g_text, g_generalText->getText(147),
                     getArmyName(g_combatManager->m_raisedCreatureType, 1));
         } else {
-            sprintf(g_text, (*g_generalText)[146],
+            sprintf(g_text, g_generalText->getText(146),
                     g_combatManager->m_raisedCreatureCount,
                     getArmyName(g_combatManager->m_raisedCreatureType, 2));
         }

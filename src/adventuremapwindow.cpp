@@ -638,7 +638,7 @@ void checkAdvCheatCode(std::string& chatString)
     }
 
     if (cheatUsed) {
-        chatString = (*g_generalText)[261];
+        chatString = g_generalText->getText(261);
         g_game->m_isCheater = 1;
         if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;

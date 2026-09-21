@@ -1317,7 +1317,7 @@ unsigned char TMultiPlayerWindow::onJoin()
     CMPInputDlg dlg(20, 20);
     if (session->isPasswordProtected()) {
         dlg.m_header1->setText(g_sessionNameLabel);
-        dlg.m_header2->setText((*g_generalText)[454]);
+        dlg.m_header2->setText(g_generalText->getText(454));
         dlg.m_field1->enable(0);
         dlg.m_field1->setText(sessName);
         dlg.drawWindow(1, 0xffff0001, 0xffff);
@@ -1333,9 +1333,9 @@ unsigned char TMultiPlayerWindow::onJoin()
     if (joinSession(session, password))
         return 1;
 
-    const char* errorText = (*g_generalText)[456];
+    const char* errorText = g_generalText->getText(456);
     if (g_dPlay->getLastError() == static_cast<long>(0x88770154))
-        errorText = (*g_generalText)[458];
+        errorText = g_generalText->getText(458);
     normalDialog(errorText, 1, -1, -1,
                  -1, 0, -1, 0, -1, 0, -1, 0);
     return 0;
@@ -1439,8 +1439,8 @@ unsigned char TMultiPlayerWindow::onSearch()
     // sentinel is copy-propagated byte-flat, as the register model predicts;
     // the remaining role swap is not a statement-level lever.
     CMPInputDlg searchDlg(20, 20);
-    searchDlg.m_header1->setText((*g_generalText)[179]);
-    searchDlg.m_header2->setText((*g_generalText)[462]);
+    searchDlg.m_header1->setText(g_generalText->getText(179));
+    searchDlg.m_header2->setText(g_generalText->getText(462));
     searchDlg.m_field1->setHelpText(g_searchAddressHelp, 0, 0);
     searchDlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
     searchDlg.disableOK();
@@ -1451,7 +1451,7 @@ unsigned char TMultiPlayerWindow::onSearch()
 
     remoteCleanup();
     if (!initRemote(MP_TCP, searchDlg.m_field1->getText(), 0)) {
-        normalDialog((*g_generalText)[459], 1, -1, -1,
+        normalDialog(g_generalText->getText(459), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -1461,7 +1461,7 @@ unsigned char TMultiPlayerWindow::onSearch()
     g_dPlay->enumSessions(m_sessions, 5000, 0x42);
 
     if (!m_sessions->getCount()) {
-        normalDialog((*g_generalText)[463], 1, -1, -1,
+        normalDialog(g_generalText->getText(463), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         remoteCleanup();
         initRemote(MP_TCP, 0, 0);
@@ -1472,7 +1472,7 @@ unsigned char TMultiPlayerWindow::onSearch()
         // Original DC local name: sErr.
         char errorText[256];
         long lastError = g_dPlay->getLastError();
-        normalDialog((*g_generalText)[456], 1, -1, -1,
+        normalDialog(g_generalText->getText(456), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         g_dPlay->getErrorDesc(lastError, errorText);
         normalDialog(errorText, 1, -1, -1,

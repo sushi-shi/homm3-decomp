@@ -185,11 +185,11 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
         && !(g_game->m_week == 1 && g_game->m_month == 1)) {
         iconName = g_newWeekIcons[
             static_cast<unsigned short>(g_game->m_week)];
-        text = formatString("%s %d", g_generalText->getText(64),
+        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_RESOURCE_DISPLAY_1),
             static_cast<unsigned short>(g_game->m_week));
     } else {
         iconName = "NewDay.def";
-        text = formatString("%s %d", g_generalText->getText(65),
+        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_RESOURCE_DISPLAY_2),
             static_cast<unsigned short>(g_game->m_day));
         launchSample("newday.wav", 30000, 3);
     }
@@ -704,11 +704,11 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 
     int hallLevel = 0;
-    if (which->hasBuilding(HALL_TOWN_ID, 0))
+    if (which->hasBuilding(HALL_TOWN_ID, false))
         hallLevel = 1;
-    else if (which->hasBuilding(HALL_CITY_ID, 0))
+    else if (which->hasBuilding(HALL_CITY_ID, false))
         hallLevel = 2;
-    else if (which->hasBuilding(HALL_CAPITOL_ID, 0))
+    else if (which->hasBuilding(HALL_CAPITOL_ID, false))
         hallLevel = 3;
 
     std::string townSizeName = g_townSizeNames[hallLevel];
@@ -717,11 +717,11 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         hallLevel, 0, 0, 0, 0x10));
 
     int fortLevel;
-    if (which->hasBuilding(CASTLE_FORT_ID, 0))
+    if (which->hasBuilding(CASTLE_FORT_ID, false))
         fortLevel = 0;
-    else if (which->hasBuilding(CASTLE_CITADEL_ID, 0))
+    else if (which->hasBuilding(CASTLE_CITADEL_ID, false))
         fortLevel = 1;
-    else if (which->hasBuilding(CASTLE_CASTLE_ID, 0))
+    else if (which->hasBuilding(CASTLE_CASTLE_ID, false))
         fortLevel = 2;
     else
         fortLevel = 3;
@@ -733,7 +733,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         m_widgets.push_back(new bitmapBorder(149, 76, 22, 30, 0x7d8,
             "townqkgh.pcx", 0x800));
 
-    if (which->hasBuilding(MARKETPLACE_SILO_ID, 1)) {
+    if (which->hasBuilding(MARKETPLACE_SILO_ID, true)) {
         int* resource = which->getSiloIncome();
         int slots[2];
         int found = 0;
@@ -865,11 +865,11 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 
     for (i = 0; i < g_currentPlayer->m_numTowns; i++) {
         town* which = g_game->getTown(g_currentPlayer->m_townIds[i]);
-        if (which->hasBuilding(HALL_CAPITOL_ID, 1))
+        if (which->hasBuilding(HALL_CAPITOL_ID, true))
             townCount[3]++;
-        else if (which->hasBuilding(HALL_CITY_ID, 1))
+        else if (which->hasBuilding(HALL_CITY_ID, true))
             townCount[2]++;
-        else if (which->hasBuilding(HALL_TOWN_ID, 1))
+        else if (which->hasBuilding(HALL_TOWN_ID, true))
             townCount[1]++;
         else
             townCount[0]++;

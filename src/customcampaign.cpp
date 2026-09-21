@@ -381,7 +381,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
          g_game->m_campaign.m_currentMap == g_creatureBonusTownScenarioB)) {
         int creature = m_creature;
         int faction;
-        if (g_game->m_f1f698 == 0 &&
+        if (g_game->m_gameVersion == 0 &&
             isBaseElemental(creature))
             faction = -1;
         else
@@ -600,7 +600,7 @@ std::string TCampaignPrimarySkillBonus::getText() const
                 m_skills[stat], g_statNames[stat]);
             --remaining;
             if (remaining == 1)
-                list += g_generalText->getText(142);
+                list += g_generalText->getText(GENERAL_TEXT_LIST_AND);
             else if (remaining > 0)
                 list += ", ";
         }

@@ -11,6 +11,11 @@
 // corresponding TTextResource::Text[index] consumer; names describe those
 // consumers until the original source roster supplies stronger wording.
 enum EGeneralTextIndex {
+    // Role-based names: CWaitForReadyPlayersDlg::wait and the scenario
+    // player-row hero selector. These describe consumers, not text quotes.
+    GENERAL_TEXT_WAIT_FOR_READY_PLAYERS = 328,
+    GENERAL_TEXT_RANDOM_HERO = 523,
+    GENERAL_TEXT_NO_HERO = 524,
     GENERAL_TEXT_SHUTDOWN = 1,
     GENERAL_TEXT_LEVEL_UP_OR = 5,
     // The dismiss-this-stack confirmation TViewArmyWindow::WindowHandler

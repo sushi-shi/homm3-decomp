@@ -100,31 +100,31 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     widgets.push_back(new bitmapBorder(
         0, 0, 557, 585, 102, "AdvOptBk.pcx", 0x800));
 
-    sprintf(g_text, "%s:", (*g_generalText)[493]);
+    sprintf(g_text, "%s:", g_generalText->getText(493));
     widgets.push_back(new textWidget(
         411, 429, 334, 19, g_text, "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 132,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    sprintf(g_text, "%s:", (*g_generalText)[219]);
+    sprintf(g_text, "%s:", g_generalText->getText(219));
     widgets.push_back(new textWidget(
         662, 429, 84, 19, g_text, "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 133,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        411, 429, 90, 19, (*g_generalText)[495], "smalfont.fnt",
+        411, 429, 90, 19, g_generalText->getText(495), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 134,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        419, 21, 278, 18, (*g_generalText)[496], "smalfont.fnt",
+        419, 21, 278, 18, g_generalText->getText(496), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        419, 131, 278, 18, (*g_generalText)[497], "smalfont.fnt",
+        419, 131, 278, 18, g_generalText->getText(497), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 105, font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        419, 282, 278, 18, (*g_generalText)[498], "smalfont.fnt",
+        419, 282, 278, 18, g_generalText->getText(498), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        419, 338, 278, 18, (*g_generalText)[499], "smalfont.fnt",
+        419, 338, 278, 18, g_generalText->getText(499), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     iconWidget* mapSizeIcon = new iconWidget(
@@ -132,11 +132,11 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         iconWidget::ICON_STYLE_PLAIN);
     widgets.push_back(mapSizeIcon);
 
-    sprintf(g_text, "%s:", (*g_generalText)[391]);
+    sprintf(g_text, "%s:", g_generalText->getText(391));
     widgets.push_back(new textWidget(
         411, 397, 44, 23, g_text, "smalfont.fnt", font::WHITE, 100,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
-    sprintf(g_text, "%s:", (*g_generalText)[392]);
+    sprintf(g_text, "%s:", g_generalText->getText(392));
     widgets.push_back(new textWidget(
         576, 397, 58, 23, g_text, "smalfont.fnt", font::WHITE, 386,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8));
@@ -188,7 +188,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
 
     widgets.push_back(new CHotspotWidget(453, 396, 310, 25, 387));
     widgets.push_back(new textWidget(
-        55, 84, 104, 36, (*g_generalText)[518], "smalfont.fnt",
+        55, 84, 104, 36, g_generalText->getText(518), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 339,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
@@ -197,19 +197,19 @@ CScenarioInfoDlg::CScenarioInfoDlg()
             || *g_videoGameState == SINGLE_SELECTION_CONTEXT_3)
         gameTypeId = 342;
     widgets.push_back(new textWidget(
-        160, 84, 75, 36, (*g_generalText)[519], "smalfont.fnt",
+        160, 84, 75, 36, g_generalText->getText(519), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, gameTypeId,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        236, 84, 75, 36, (*g_generalText)[520], "smalfont.fnt",
+        236, 84, 75, 36, g_generalText->getText(520), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 343,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        312, 84, 75, 36, (*g_generalText)[521], "smalfont.fnt",
+        312, 84, 75, 36, g_generalText->getText(521), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 344,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
-        55, 528, 334, 20, (*g_generalText)[522], "smalfont.fnt",
+        55, 528, 334, 20, g_generalText->getText(522), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 340,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new button(
@@ -235,7 +235,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     widgets.push_back(durationSlider);
 
     widgets.push_back(new textWidget(
-        55, 18, 334, 59, (*g_generalText)[662], "bigfont.fnt",
+        55, 18, 334, 59, g_generalText->getText(662), "bigfont.fnt",
         font::HEADING_HIGHLIGHT, -1,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     widgets.push_back(new textWidget(
@@ -398,7 +398,7 @@ void CScenarioPlayerInfoWidget::draw() const
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     } else {
         g_smallFont->drawBoundedString(
-            g_generalText->getText(524), g_windowManager->m_screenBitmap,
+            g_generalText->getText(GENERAL_TEXT_NO_HERO), g_windowManager->m_screenBitmap,
             windowX + 237, windowY + m_playerPosition * 50 + 156,
             71, 16, font::WHITE,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
@@ -428,7 +428,7 @@ void CScenarioPlayerInfoWidget::draw() const
 
     if (m_startingBonus == NEW_MAP_BONUS_RANDOM) {
         g_smallFont->drawBoundedString(
-            g_generalText->getText(523), g_windowManager->m_screenBitmap,
+            g_generalText->getText(GENERAL_TEXT_RANDOM_HERO), g_windowManager->m_screenBitmap,
             windowX + 313, windowY + m_playerPosition * 50 + 156,
             71, 16, font::WHITE,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);

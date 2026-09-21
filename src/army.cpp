@@ -243,7 +243,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     TCreatureTypeTraits* traits = &m_monInfo;
     *traits = g_creatureTypeTraits[type];
     traits->m_townType =
-        (g_game->m_f1f698 == 0
+        (g_game->m_gameVersion == 0
          && isBaseElemental(type))
             ? -1
             : g_creatureTypeTraits[type].m_townType;
@@ -808,7 +808,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
              && !g_combatManager->m_cells[m_gridIndex + step]
                      .getArmy()
                      ->m_isMoving)
-            || (g_combatManager->m_cells[m_gridIndex + step].m_attributes & 2)) {
+            || (g_combatManager->m_cells[m_gridIndex + step].m_attributes & hexcell::blocked)) {
             xoff -= 0x25;
             yoff = -0xf;
         } else {
@@ -1760,18 +1760,18 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                 const char* targetName =
                     target->getName(target->m_numTroops + killedCount);
                 if (m_numTroops - deadVampires == 1)
-                    text = formatString((*g_generalText)[362],
+                    text = formatString(g_generalText->getText(362),
                                          getName(m_numTroops - deadVampires),
                                          damageRecovered, targetName);
                 else
-                    text = formatString((*g_generalText)[363],
+                    text = formatString(g_generalText->getText(363),
                                          getName(m_numTroops - deadVampires),
                                          damageRecovered, targetName);
                 if (deadVampires > 0) {
                     if (deadVampires == 1)
-                        text += (*g_generalText)[364];
+                        text += g_generalText->getText(364);
                     else
-                        text += formatString((*g_generalText)[365],
+                        text += formatString(g_generalText->getText(365),
                                               deadVampires);
                 }
                 if (!static_cast<const combatManager*>(g_combatManager)
@@ -1802,11 +1802,11 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                     target->m_monInfo.m_hitPoints * dead - target->m_topCreatureDamage;
                 std::string text;
                 if (dead == 1)
-                    text = formatString((*g_generalText)[119],
+                    text = formatString(g_generalText->getText(119),
                                          target->getName(dead),
                                          getName());
                 else
-                    text = formatString((*g_generalText)[120],
+                    text = formatString(g_generalText->getText(120),
                                          dead,
                                          target->getName(dead),
                                          getName());
@@ -1844,7 +1844,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                              g_combatManager)
                              ->isQuickCombat()) {
                         text = formatString(
-                            (*g_generalText)[368],
+                            g_generalText->getText(368),
                             target->getName());
                         g_combatManager->m_combatWindow->combatMessage(
                             text.c_str(), 1, 0);
@@ -2192,21 +2192,21 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
         if (g_searchArray->isMoat(static_cast<short>(nextCell))) {
             stop = i;
             succeeded = 0;
-        } else if (g_combatManager->m_cells[nextCell].m_attributes & 4) {
+        } else if (g_combatManager->m_cells[nextCell].m_attributes & hexcell::quicksand) {
             stop = i;
             succeeded = 0;
             g_combatManager->getObstacle(
                 g_combatManager->m_cells[nextCell].m_obstacleIndex)
                 .m_isVisible = 1;
         }
-        if (is(1u << 0)) {
+        if (is(creatureDoubleWide)) {
             const int nextCell = getAdjacentCellIndex(m_gridIndex, direction)
                                  + offsetToFront(-1);
             if (g_searchArray
                     ->isMoat(static_cast<short>(nextCell))) {
                 stop = i;
                 succeeded = 0;
-            } else if (g_combatManager->m_cells[nextCell].m_attributes & 4) {
+            } else if (g_combatManager->m_cells[nextCell].m_attributes & hexcell::quicksand) {
                 stop = i;
                 succeeded = 0;
                 g_combatManager->getObstacle(
@@ -2250,7 +2250,7 @@ inline void army::checkLuck()
                 launchSample(DATA_COMPGEN(0x00660a20, goodLuckSampleName,
                                            "goodluck.82m"),
                               -1, 3);
-                sprintf(g_text, (*g_generalText)[46], getName());
+                sprintf(g_text, g_generalText->getText(46), getName());
                 g_combatManager->m_combatWindow->combatMessage(g_text, 1, 0);
                 g_combatManager->spellEffect(
                     combatManager::eSpellEffectFortune, this, 100, 0);
@@ -4885,7 +4885,7 @@ unsigned char spellIsValidOnTarget(int spell, const army* target)
     case SPELL_CURE:
         return target->m_topCreatureDamage > 0;
     case SPELL_PRAYER:
-        return static_cast<unsigned char>(~target->is(1u << 26)) & 1;
+        return static_cast<unsigned char>(~target->is(creatureDone)) & 1;
     case SPELL_SLAYER:
         return groupHasDragons(1 - side);
     case SPELL_SHIELD:

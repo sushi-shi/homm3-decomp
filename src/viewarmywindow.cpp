@@ -270,7 +270,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     createNameWidget(getArmyName(m_armyType, 2));
 
     int townType;
-    if (!g_game->m_f1f698 && isBaseElemental(m_armyType))
+    if (!g_game->m_gameVersion && isBaseElemental(m_armyType))
         townType = -1;
     else
         townType = g_creatureTypeTraits[m_armyType].m_townType;
@@ -363,7 +363,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     createNameWidget(traits->m_pluralName);
 
     int townType;
-    if (!g_game->m_f1f698 && isBaseElemental(armyType))
+    if (!g_game->m_gameVersion && isBaseElemental(armyType))
         townType = -1;
     else
         townType = g_creatureTypeTraits[armyType].m_townType;
@@ -818,7 +818,7 @@ void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
 {
     m_widgets.push_back(new textWidget(
         154, 104, 122, 17,
-        (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE],
+        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE),
         "smalfont.fnt", font::PRIMARY, DAMAGE_LABEL_ID, 4, 0, 8));
 
     int low = traits.m_damageLowBound;
@@ -852,7 +852,7 @@ void TViewArmyWindow::createShotsWidget(const TCreatureTypeTraits& traits,
     if (traits.m_attributes & g_ctaShooter) {
         m_widgets.push_back(new textWidget(
             154, 85, 122, 17,
-            (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SHOTS],
+            g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SHOTS),
             "smalfont.fnt", font::PRIMARY, SHOTS_LABEL_ID, 4, 0, 8));
 
         if (normalShots == currentShots)
@@ -906,7 +906,7 @@ void TViewArmyWindow::createSpeedWidget(int normalSpeed,
 {
     m_widgets.push_back(new textWidget(
         154, 161, 122, 17,
-        (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED],
+        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED),
         "smalfont.fnt", font::PRIMARY, SPEED_LABEL_ID, 4, 0, 8));
 
     normalSpeed = max(0, normalSpeed);

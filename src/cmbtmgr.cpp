@@ -638,7 +638,7 @@ void combatManager::loadIcons()
         TWallTraits* traits = s_wallTraits[m_defendingTown->m_type];
         for (int wall = 0; wall < 18; wall++) {
             for (int icon = 0; icon < 5; icon++) {
-                if ((g_game->m_f1f698 >= 2
+                if ((g_game->m_gameVersion >= 2
                         || m_defendingTown->m_type != TOWN_STRONGHOLD
                         || wall != WALL_TRAITS_ROW_MOAT)
                         && traits[wall].m_filenames[icon] != 0)
@@ -907,13 +907,13 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
             m_fortificationLevel = COMBAT_FORTIFICATION_CITADEL;
             m_moatOn = rightTown->m_type != TOWN_TOWER
                          && (rightTown->m_type != TOWN_STRONGHOLD
-                             || g_game->m_f1f698 >= 2);
+                             || g_game->m_gameVersion >= 2);
             m_moatIsWide = rightTown->m_type == TOWN_FORTRESS;
         } else if (rightTown->hasBuilding(CASTLE_CASTLE_ID, false)) {
             m_fortificationLevel = COMBAT_FORTIFICATION_CASTLE;
             m_moatOn = rightTown->m_type != TOWN_TOWER
                          && (rightTown->m_type != TOWN_STRONGHOLD
-                             || g_game->m_f1f698 >= 2);
+                             || g_game->m_gameVersion >= 2);
             m_moatIsWide = rightTown->m_type == TOWN_FORTRESS;
         } else {
             m_fortificationLevel = COMBAT_FORTIFICATION_NONE;
@@ -985,28 +985,28 @@ void combatManager::initNonVisualVars()
         if (m_defendingTown) {
             switch (m_defendingTown->m_type) {
             case TOWN_TOWER:
-                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, 0))
+                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, false))
                     m_heroes[1]->m_mana = static_cast<short>(
                         m_heroes[1]->m_mana + 150);
                 break;
             case TOWN_INFERNO:
-                if (m_defendingTown->hasBuilding(EXTRA_0_ID, 1))
+                if (m_defendingTown->hasBuilding(EXTRA_0_ID, true))
                     m_heroes[1]->adjustPrimarySkill(2, 2);
                 break;
             case TOWN_DUNGEON:
-                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, 0))
+                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, false))
                     m_heroes[1]->adjustPrimarySkill(2, 12);
                 break;
             case TOWN_STRONGHOLD:
-                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, 0))
+                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, false))
                     m_heroes[1]->adjustPrimarySkill(0, 20);
                 break;
             case TOWN_FORTRESS:
-                if (m_defendingTown->hasBuilding(EXTRA_0_ID, 1))
+                if (m_defendingTown->hasBuilding(EXTRA_0_ID, true))
                     m_heroes[1]->adjustPrimarySkill(0, 2);
-                if (m_defendingTown->hasBuilding(EXTRA_1_ID, 1))
+                if (m_defendingTown->hasBuilding(EXTRA_1_ID, true))
                     m_heroes[1]->adjustPrimarySkill(1, 2);
-                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, 1)) {
+                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, true)) {
                     m_heroes[1]->adjustPrimarySkill(0, 10);
                     m_heroes[1]->adjustPrimarySkill(1, 10);
                 }
@@ -1770,7 +1770,7 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
         case WALL_TARGET_4:
         case WALL_TARGET_5: {
             int blockedHex = s_wallTargets[targetWall].getBlockedHex();
-            m_cells[blockedHex].m_attributes &= ~2;
+            m_cells[blockedHex].m_attributes &= ~hexcell::blocked;
             break;
         }
         case WALL_TARGET_3:
@@ -2004,7 +2004,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                 continue;
             if (shape->m_width + column > 15)
                 continue;
-            if (m_cells[hex].m_attributes & 0x3f)
+            if (m_cells[hex].m_attributes & hexcell::obstacleMask)
                 continue;
             const unsigned char baseRowIsOdd = rowIsOdd(row);
             unsigned char overlap = 0;
@@ -2014,7 +2014,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                     cellIndex--;
                 int cellColumn = gridX(cellIndex);
                 if (cellColumn <= 2 || cellColumn >= 14
-                        || (m_cells[cellIndex].m_attributes & 0x3f)) {
+                        || (m_cells[cellIndex].m_attributes & hexcell::obstacleMask)) {
                     overlap = 1;
                     break;
                 }
@@ -2022,7 +2022,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             if (overlap)
                 continue;
 
-            if (g_game->m_f1f698 < 2 && m_fortificationLevel >= 2
+            if (g_game->m_gameVersion < 2 && m_fortificationLevel >= 2
                     && m_defendingTown->m_type == TOWN_STRONGHOLD) {
                 int wallColumn = g_castleWallColumns[row];
                 if (wallColumn == COMBAT_HEX_GATE)
@@ -2042,7 +2042,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             obstacle.m_dispelEffect = -1;
             m_obstacles.push_back(obstacle);
             int obstacleSlot = m_obstacles.size() - 1;
-            placeObstacle(obstacle, obstacleSlot, hex, 2);
+            placeObstacle(obstacle, obstacleSlot, hex, hexcell::blocked);
             return 1;
         }
     }
@@ -2101,7 +2101,7 @@ void combatManager::setupAndLoadObstacles()
         }
 
         for (int row = 0; row < 11; row++)
-            m_cells[g_castleWallColumns[row]].m_attributes |= 2;
+            m_cells[g_castleWallColumns[row]].m_attributes |= hexcell::blocked;
 
         // A Tower's moat is a minefield. Row 5 is the gate hex and is
         // skipped; every other row gets one obstacle whose damage is the
@@ -2115,7 +2115,7 @@ void combatManager::setupAndLoadObstacles()
                 int hex = g_moatHexes[row];
 
                 long damage;
-                if (g_game->m_f1f698 >= 2) {
+                if (g_game->m_gameVersion >= 2) {
                     damage = g_moatDamage[TOWN_TOWER];
                     if (m_heroes[1]) {
                         long cast = computeSpellDamage(
@@ -2150,11 +2150,11 @@ void combatManager::setupAndLoadObstacles()
                 m_obstacles.insert(m_obstacles.end(), 1, newLandmine);
                 int landmineSlot = m_obstacles.size();
                 landmineSlot--;
-                placeObstacle(newLandmine, landmineSlot, hex, 8);
+                placeObstacle(newLandmine, landmineSlot, hex, hexcell::landMine);
             }
         }
 
-        if (g_game->m_f1f698 >= 2)
+        if (g_game->m_gameVersion >= 2)
             return;
         if (m_defendingTown->m_type != TOWN_STRONGHOLD)
             return;
@@ -2169,7 +2169,7 @@ void combatManager::setupAndLoadObstacles()
             && m_heroes[1] && (m_heroes[1]->m_flags & 0x40000)) {
         for (const int* hex = g_boatBlockedHexes;
                 hex < g_boatBlockedHexes + 32; hex++)
-            m_cells[*hex].m_attributes |= 2;
+            m_cells[*hex].m_attributes |= hexcell::blocked;
         return;
     }
 
@@ -2222,7 +2222,7 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
             int i = 0;
             const short* hex = s_elevationOverlay[obstacleId].m_blockedSquares;
             for (; i < 25 && *hex != -1; ++i, ++hex) {
-                m_cells[*hex].m_attributes |= 2;
+                m_cells[*hex].m_attributes |= hexcell::blocked;
                 ++count;
             }
             m_largeObstacleId = obstacleId;
@@ -2247,7 +2247,7 @@ void combatManager::placeObstacle(const combatManager::TObstacle& obstacle, int 
         cell.m_obstacleIndex = id;
     }
     hexcell& anchor = m_cells[hex];
-    anchor.m_attributes |= 1;
+    anchor.m_attributes |= hexcell::obstacleOrigin;
     anchor.m_obstacleIndex = id;
 }
 
@@ -2293,11 +2293,11 @@ void combatManager::removeObstacle(int index)
         if (rowIsOdd && ((cellIndex / 0x11) & 1) == 0)
             cellIndex--;
         hexcell& cell = m_cells[cellIndex];
-        cell.m_attributes &= ~0x3f;
+        cell.m_attributes &= ~hexcell::obstacleMask;
         cell.m_obstacleIndex = -1;
     }
     hexcell& anchor = m_cells[obstacle->m_hex];
-    anchor.m_attributes &= ~1;
+    anchor.m_attributes &= ~hexcell::obstacleOrigin;
     anchor.m_obstacleIndex = -1;
     obstacle->m_sprite->dispose();
     obstacle->m_sprite = 0;
@@ -2634,7 +2634,7 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
         } else {
             for (int wall = 0; wall < 11; wall++) {
                 if (hex == g_castleWallColumns[wall]) {
-                    if (m_cells[g_castleWallColumns[wall]].m_attributes & 2)
+                    if (m_cells[g_castleWallColumns[wall]].m_attributes & hexcell::blocked)
                         return 0;
                 }
             }
@@ -3622,7 +3622,7 @@ unsigned char combatManager::hexIsBlocked(int index) const
             && (index == COMBAT_HEX_GATE || index == COMBAT_HEX_GATE_MOAT)) {
         if (m_drawbridgeState == DRAWBRIDGE_UP && !doorCanBeLowered())
             return 1;
-    } else if (m_cells[index].m_attributes & 2)
+    } else if (m_cells[index].m_attributes & hexcell::blocked)
         return 1;
     return 0;
 }
@@ -3710,7 +3710,7 @@ VA(0x00469e50, 0xC1)
 unsigned char combatManager::unnamed469e50(
     int hex, army* stack, unsigned char playSound)
 {
-    if (g_game->m_f1f698 >= 2 && stack->m_numTroops && isInMoat(hex, 0)) {
+    if (g_game->m_gameVersion >= 2 && stack->m_numTroops && isInMoat(hex, 0)) {
         if (playSound)
             stack->stopSample(army::WALK_SAMPLE);
 
@@ -3738,7 +3738,7 @@ void combatManager::raiseSkeletons(int side)
             m_raisedCreatureType, m_raisedCreatureCount, -1);
         if (!added) {
             TCreatureType upgradedType = m_raisedCreatureType;
-            if (!g_game->m_f1f698
+            if (!g_game->m_gameVersion
                 && isBaseElemental(upgradedType)) {
                 upgradedType = CREATURE_NONE;
             } else {

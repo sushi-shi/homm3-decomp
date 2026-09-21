@@ -704,7 +704,7 @@ void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
         sprintf(
             finalText,
             DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-            (*g_generalText)[GENERAL_TEXT_TURN_DURATION_PREFIX],
+            g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
             chatText);
         m_isSysMsg = 1;
         addChat(finalText);
@@ -1431,7 +1431,7 @@ void CWaitForReadyPlayersDlg::wait()
     } while (creature == CREATURE_ARCH_DEVIL
              || creature == CREATURE_DEVIL);
 
-    setup(g_generalText->getText(328), g_mediumFont,
+    setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_READY_PLAYERS), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 0);
     doModal(0);
 
@@ -1515,7 +1515,7 @@ int CWaitForReadyPlayersDlg::handleMessage(message& msg)
                     break;
 
                 case RS_SESSION_LOST:
-                    normalDialog(g_generalText->getText(329),
+                    normalDialog(g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                                  1, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
                     shutDown(0);
@@ -2166,7 +2166,7 @@ int CLevelPickWaitDlg::handleMessage(message& msg)
                 break;
 
             case RS_SESSION_LOST:
-                normalDialog(g_generalText->getText(329),
+                normalDialog(g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                              1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
                 shutDown(0);
@@ -2264,7 +2264,7 @@ int CWaitForRemoteBattleDlg::handleMessage(message& msg)
                 break;
 
             case RS_SESSION_LOST:
-                normalDialog(g_generalText->getText(329),
+                normalDialog(g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                              1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
                 shutDown(0);
@@ -2519,7 +2519,7 @@ CNetMsg* CNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         break;
 
     case RS_SESSION_LOST:
-        normalDialog(g_generalText->getText(329), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         shutDown(0);
         break;

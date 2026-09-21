@@ -1336,7 +1336,7 @@ VA(0x005e9d20, 0x139)  // dc 0x188454
 void doArtifactMerchants()
 {
     if (g_townManager->m_townToView->m_visitingHeroId == -1) {
-        sprintf(g_text, (*g_generalText)[274],
+        sprintf(g_text, g_generalText->getText(274),
                 g_specialBuildingNames[g_townManager->m_townToView->m_type][0]);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
@@ -1367,7 +1367,7 @@ VA(0x005e9ea0, 0x13b)
 void doFreelancersGuild(town* currentTown)
 {
     if (currentTown->m_visitingHeroId == -1) {
-        sprintf(g_text, (*g_generalText)[274],
+        sprintf(g_text, g_generalText->getText(274),
                 g_specialBuildingNames[currentTown->m_type][4]);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
@@ -1731,22 +1731,22 @@ void TTradeResourceWindow::update(unsigned char update)
         if (g_ratioInverted) {
             qtyLeft = g_giveQuantity;
             qtyRight = 1;
-            wordRight = (*g_generalText)[162];
-            wordLeft = (qtyLeft > 1) ? (*g_generalText)[161]
-                                     : (*g_generalText)[162];
+            wordRight = g_generalText->getText(162);
+            wordLeft = (qtyLeft > 1) ? g_generalText->getText(161)
+                                     : g_generalText->getText(162);
         } else {
             qtyRight = g_giveQuantity;
-            wordRight = (qtyRight > 1) ? (*g_generalText)[161]
-                                       : (*g_generalText)[162];
+            wordRight = (qtyRight > 1) ? g_generalText->getText(161)
+                                       : g_generalText->getText(162);
             qtyLeft = 1;
-            wordLeft = (*g_generalText)[162];
+            wordLeft = g_generalText->getText(162);
         }
-        sprintf(g_text, (*g_generalText)[158],
+        sprintf(g_text, g_generalText->getText(158),
                 qtyLeft, wordLeft, g_resourceNames[g_leftResource],
                 qtyRight, wordRight, g_resourceNames[g_selectedArtifact]);
     } else {
-        sprintf(g_text, g_leftDenominated ? (*g_generalText)[163]
-                                        : (*g_generalText)[164]);
+        sprintf(g_text, g_leftDenominated ? g_generalText->getText(163)
+                                        : g_generalText->getText(164));
     }
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -1756,10 +1756,10 @@ void TTradeResourceWindow::update(unsigned char update)
 
     switch (g_marketSource) {
     case MARKET_SOURCE_MARKETPLACE:
-        strcpy(g_text, (*g_generalText)[159]);
+        strcpy(g_text, g_generalText->getText(159));
         break;
     case MARKET_SOURCE_TRADING_POST:
-        strcpy(g_text, (*g_generalText)[160]);
+        strcpy(g_text, g_generalText->getText(160));
         break;
     case MARKET_SOURCE_FREELANCER:
         strcpy(g_text, g_marketSource3Name);
@@ -1769,10 +1769,10 @@ void TTradeResourceWindow::update(unsigned char update)
     broadcastMessage(msg);
 
     msg.m_codeY = 0xe;
-    sprintf(g_text, (*g_generalText)[271]);
+    sprintf(g_text, g_generalText->getText(271));
     broadcastMessage(msg);
 
-    strcpy(g_text, (*g_generalText)[169]);
+    strcpy(g_text, g_generalText->getText(169));
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0xf;
     msg.m_extraText = g_text;
@@ -1885,7 +1885,7 @@ void TTradeResourceWindow::update(unsigned char update)
                 msg.m_extraText = g_text;
                 if (g_selectedArtifact != -1) {
                     if (g_selectedArtifact == i) {
-                        sprintf(g_text, (*g_generalText)[165]);
+                        sprintf(g_text, g_generalText->getText(165));
                     } else {
                         computeTradeRatios(g_selectedArtifact, i,
                             &tempTradeRatio, &tempLeftDenominated,
@@ -1919,15 +1919,15 @@ void TGiveResourceWindow::update(bool update)
     msg.m_id = MESSAGE_WIDGET;
 
     if (g_selectedArtifact != -1 && g_leftResource != -1) {
-        sprintf(g_text, (*g_generalText)[166],
+        sprintf(g_text, g_generalText->getText(166),
                 g_resourceNames[g_selectedArtifact],
                 g_colors[
                     m_slotPlayerColor[g_leftResource]]);
     } else {
         if (g_leftDenominated)
-            sprintf(g_text, (*g_generalText)[167]);
+            sprintf(g_text, g_generalText->getText(167));
         else
-            sprintf(g_text, (*g_generalText)[168]);
+            sprintf(g_text, g_generalText->getText(168));
     }
 
     msg.m_id = MESSAGE_WIDGET;
@@ -1938,10 +1938,10 @@ void TGiveResourceWindow::update(bool update)
 
     switch (g_marketSource) {
     case MARKET_SOURCE_MARKETPLACE:
-        strcpy(g_text, (*g_generalText)[159]);
+        strcpy(g_text, g_generalText->getText(159));
         break;
     case MARKET_SOURCE_TRADING_POST:
-        strcpy(g_text, (*g_generalText)[160]);
+        strcpy(g_text, g_generalText->getText(160));
         break;
     case MARKET_SOURCE_FREELANCER:
         strcpy(g_text, g_marketSource3Name);
@@ -1951,10 +1951,10 @@ void TGiveResourceWindow::update(bool update)
     broadcastMessage(msg);
 
     msg.m_codeY = 14;
-    sprintf(g_text, (*g_generalText)[271]);
+    sprintf(g_text, g_generalText->getText(271));
     broadcastMessage(msg);
 
-    strcpy(g_text, (*g_generalText)[170]);
+    strcpy(g_text, g_generalText->getText(170));
     msg.m_codeX = 3;
     msg.m_codeY = 15;
     msg.m_extraText = g_text;
@@ -2130,21 +2130,21 @@ void TBuyArtifactWindow::update(unsigned char update)
         const char* word;
         if (g_ratioInverted) {
             qty = 1;
-            word = (*g_generalText)[162];
+            word = g_generalText->getText(162);
         } else {
             qty = g_giveQuantity;
             if (qty > 1) {
-                word = (*g_generalText)[161];
+                word = g_generalText->getText(161);
             } else {
-                word = (*g_generalText)[162];
+                word = g_generalText->getText(162);
             }
         }
-        sprintf(g_text, (*g_generalText)[268],
+        sprintf(g_text, g_generalText->getText(268),
                 g_artifactTraits[g_marketArtifacts[g_leftResource]].m_name,
                 qty, word, g_resourceNames[g_selectedArtifact]);
     } else {
-        sprintf(g_text, g_leftDenominated ? (*g_generalText)[163]
-                                        : (*g_generalText)[164]);
+        sprintf(g_text, g_leftDenominated ? g_generalText->getText(163)
+                                        : g_generalText->getText(164));
     }
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -2157,7 +2157,7 @@ void TBuyArtifactWindow::update(unsigned char update)
         strcpy(g_text, g_marketSubtitle);
         break;
     case MARKET_SOURCE_BLACK_MARKET:
-        sprintf(g_text, (*g_generalText)[350]);
+        sprintf(g_text, g_generalText->getText(350));
         break;
     }
 
@@ -2165,10 +2165,10 @@ void TBuyArtifactWindow::update(unsigned char update)
     broadcastMessage(msg);
 
     msg.m_codeY = 0xe;
-    sprintf(g_text, (*g_generalText)[271]);
+    sprintf(g_text, g_generalText->getText(271));
     broadcastMessage(msg);
 
-    strcpy(g_text, (*g_generalText)[169]);
+    strcpy(g_text, g_generalText->getText(169));
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0xf;
     msg.m_extraText = g_text;
@@ -2331,15 +2331,15 @@ void TSellArtifactWindow::update(unsigned char update)
                 (g_backpackStart + g_selectedArtifact - 18)
                 % g_marketHero->getNumberInBackpack(1)).m_artifactId;
         }
-        sprintf(g_text, (*g_generalText)[269],
+        sprintf(g_text, g_generalText->getText(269),
                 rightQty,
-                (rightQty > 1) ? (*g_generalText)[161]
-                                : (*g_generalText)[162],
+                (rightQty > 1) ? g_generalText->getText(161)
+                                : g_generalText->getText(162),
                 g_resourceNames[g_leftResource], g_artifactTraits[art].m_name);
     } else if (g_leftDenominated) {
-        sprintf(g_text, (*g_generalText)[163]);
+        sprintf(g_text, g_generalText->getText(163));
     } else {
-        sprintf(g_text, (*g_generalText)[164]);
+        sprintf(g_text, g_generalText->getText(164));
     }
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -2352,10 +2352,10 @@ void TSellArtifactWindow::update(unsigned char update)
     broadcastMessage(msg);
 
     msg.m_codeY = 0xe;
-    sprintf(g_text, (*g_generalText)[272], g_marketHero->m_name);
+    sprintf(g_text, g_generalText->getText(272), g_marketHero->m_name);
     broadcastMessage(msg);
 
-    strcpy(g_text, (*g_generalText)[169]);
+    strcpy(g_text, g_generalText->getText(169));
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0xf;
     msg.m_extraText = g_text;
@@ -2499,9 +2499,9 @@ void TSellCreatureWindow::update(bool update)
             leftQty = 1;
             rightQty = g_giveQuantity;
         }
-        sprintf(g_text, (*g_generalText)[270], leftQty,
-                leftQty > 1 ? (*g_generalText)[161]
-                             : (*g_generalText)[162],
+        sprintf(g_text, g_generalText->getText(270), leftQty,
+                leftQty > 1 ? g_generalText->getText(161)
+                             : g_generalText->getText(162),
                 g_resourceNames[g_leftResource], rightQty,
                 rightQty > 1
                     ? g_creatureTypeTraits[
@@ -2512,9 +2512,9 @@ void TSellCreatureWindow::update(bool update)
                           .m_name);
     } else {
         if (g_leftDenominated)
-            sprintf(g_text, (*g_generalText)[163]);
+            sprintf(g_text, g_generalText->getText(163));
         else
-            sprintf(g_text, (*g_generalText)[164]);
+            sprintf(g_text, g_generalText->getText(164));
     }
 
     msg.m_id = MESSAGE_WIDGET;
@@ -2528,10 +2528,10 @@ void TSellCreatureWindow::update(bool update)
     broadcastMessage(msg);
 
     msg.m_codeY = 14;
-    sprintf(g_text, (*g_generalText)[273], g_marketHero->m_name);
+    sprintf(g_text, g_generalText->getText(273), g_marketHero->m_name);
     broadcastMessage(msg);
 
-    strcpy(g_text, (*g_generalText)[169]);
+    strcpy(g_text, g_generalText->getText(169));
     msg.m_codeX = 3;
     msg.m_codeY = 15;
     msg.m_extraText = g_text;
@@ -3203,7 +3203,7 @@ void TGiveResourceWindow::setRolloverText(int codeY)
     case GIVE_RECIPIENT_SLOT_2_ID: case GIVE_RECIPIENT_SLOT_3_ID:
     case GIVE_RECIPIENT_SLOT_4_ID: case GIVE_RECIPIENT_SLOT_5_ID:
     case GIVE_RECIPIENT_SLOT_6_ID:
-        sprintf(g_text, (*g_generalText)[198],
+        sprintf(g_text, g_generalText->getText(198),
                 g_colors[m_slotPlayerColor[codeY - GIVE_RECIPIENT_SLOT_0_ID]]);
         break;
     case MARKET_COMMAND_ID: strcpy(g_text, g_giveHelpText[4].m_text); break;
@@ -3435,7 +3435,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
             case MARKET_ARTIFACT_SLOT_13_ID: case MARKET_ARTIFACT_SLOT_14_ID:
             case MARKET_ARTIFACT_SLOT_15_ID: case MARKET_ARTIFACT_SLOT_16_ID:
             case MARKET_ARTIFACT_SLOT_17_ID:
-                normalDialog((*g_generalText)[22], 1, -1, -1, -1, 0, -1, 0,
+                normalDialog(g_generalText->getText(22), 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
                 return MESSAGE_DISPATCH_CONSUME;
 

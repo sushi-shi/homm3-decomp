@@ -2752,7 +2752,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
         if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
             if (rightMouse) {
-                if (g_game->m_f1f698 >= 2) {
+                if (g_game->m_gameVersion >= 2) {
                     // Retail +0x95d..+0x963 loads both indices before the test.
                     const TArtifactTraits& traits =
                         g_artifactTraits[oldArtifact.m_artifactId];
@@ -2826,7 +2826,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                     g_currentHero->getSpecialTerrain());
                 spellBookWindow.doModal(0);
             } else if (slot == hero::EQUIPPED_SLOT_WAR_MACHINE_4) {
-                normalDialog((*g_generalText)[313], 1, -1, -1, 8, 3,
+                normalDialog(g_generalText->getText(313), 1, -1, -1, 8, 3,
                              -1, 0, -1, 0, -1, 0);
             } else if (g_currentPlayer->isLocalHuman()) {
                 g_heroScreenDraggedArtifact = oldArtifact;
@@ -2844,7 +2844,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
         if (oldArtifact.m_artifactId == ARTIFACT_NONE) {
             g_currentHero->equipArtifact(
                 &g_heroScreenDraggedArtifact, slot);
-            if (g_game->m_f1f698 >= 2)
+            if (g_game->m_gameVersion >= 2)
                 g_currentHero->heroFn004DC100(slot);
             g_currentHero->updateStats();
             g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
@@ -2856,7 +2856,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
             g_currentHero->removeArtifact(slot);
             g_currentHero->equipArtifact(
                 &g_heroScreenDraggedArtifact, slot);
-            if (g_game->m_f1f698 >= 2)
+            if (g_game->m_gameVersion >= 2)
                 g_currentHero->heroFn004DC100(slot);
             g_currentHero->updateStats();
             g_heroScreenDraggedArtifact = oldArtifact;
@@ -2869,14 +2869,6 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:2796
-// Whole body proven: `mov eax,0x3f / add ecx,0x3cc` starts at
-// backpack[63] (0x1d4 + 63*8 == 0x3cc) and walks back by 8 until a slot
-// id is not -1, then `or eax,-1` for the not-found return. Both the
-// stride and the base are the modelled backpack array.
-#endif  // @carcass
 
 VA(0x004dbd90, 0x1E)  // dc 0xce140
 long hero::getLastBackpackIndex() const
@@ -3077,7 +3069,7 @@ std::string hero::getMoraleDescription() const
     std::string result;
 
     if (m_flags & 0x800000) {
-        result = (*g_generalText)[438];
+        result = g_generalText->getText(438);
         trackedBonus = 500;
     }
 
@@ -3409,23 +3401,6 @@ int THeroScreenWindow::exitDialog(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:3239
-// Dreamcast procedure: dc 0xcec1c.
-void THeroScreenWindow::ShowWidgets()
-{
-    // @stub
-}
-
-// E:\gamedcs\hero.cpp:3421
-// Dreamcast procedure: dc 0xcf3ac.
-void THeroScreenWindow::show_skills()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 
 
@@ -3641,7 +3616,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             break;
         switch (msg.m_codeY) {
         case HERO_NAME_ID:
-            normalDialog((*g_generalText)[23], 2, -1, -1, -1, 0,
+            normalDialog(g_generalText->getText(23), 2, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 exitFlag = 1;
@@ -3739,7 +3714,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             {
                 if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                     break;
-                sprintf(g_text, (*g_generalText)[206],
+                sprintf(g_text, g_generalText->getText(206),
                         g_currentHero->m_name, g_currentHero->m_mana,
                         g_currentHero->getMaxMana());
                 normalDialog(g_text,
@@ -3754,7 +3729,7 @@ int THeroScreenWindow::windowHandler(message& msg)
         case WIDGET_77_ID:
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
-            sprintf(g_text, (*g_generalText)[3],
+            sprintf(g_text, g_generalText->getText(3),
                     g_currentHero->m_level,
                     hero::getExperience(g_currentHero->m_level + 1),
                     g_currentHero->m_experience);
@@ -3978,7 +3953,7 @@ THeroScreenWindow::THeroScreenWindow()
     m_field64 = m_widgets.back();
 
     const char* background =
-        g_game->m_f1f698 >= 2 ? "heroscr4.pcx" : "heroscr3.pcx";
+        g_game->m_gameVersion >= 2 ? "heroscr4.pcx" : "heroscr3.pcx";
     m_widgets.push_back(new bitmapBorder(
         0, 0, m_width, m_height, 0, background, 0x800));
     m_widgets.push_back(new textWidget(
@@ -4229,7 +4204,7 @@ THeroScreenWindow::THeroScreenWindow()
     m_widgets.push_back(new iconWidget(
         0x221, 0x12f, 0x2c, 0x2c, 0x26, "artifact.def",
         0, 0, 0, 0, 0x10));
-    if (g_game->m_f1f698 >= 2)
+    if (g_game->m_gameVersion >= 2)
         m_widgets.push_back(new iconWidget(
             0x13c, 0x11f, 0x2c, 0x2c, 0x27, "artifact.def",
             0, 0, 0, 0, 0x10));
@@ -4287,7 +4262,7 @@ THeroScreenWindow::THeroScreenWindow()
     m_widgets.push_back(new iconWidget(
         0x221, 0x12f, 0x2c, 0x2c, 0x13, "artifact.def",
         0, 0, 0, 0, 0x10));
-    if (g_game->m_f1f698 >= 2)
+    if (g_game->m_gameVersion >= 2)
         m_widgets.push_back(new iconWidget(
             0x13c, 0x11f, 0x2c, 0x2c, 0x14, "artifact.def",
             0, 0, 0, 0, 0x10));
@@ -4922,7 +4897,7 @@ void hero::transferArtifacts(hero* src)
 VA(0x004e2550, 0x2EC)  // retail-only, hero member, ret 8
 unsigned char hero::heroFn004E2550(long artifact, long slot)
 {
-    if (g_game->m_f1f698 < 2 && slot == EQUIPPED_SLOT_SOD_MISC)
+    if (g_game->m_gameVersion < 2 && slot == EQUIPPED_SLOT_SOD_MISC)
         return 0;
 
     long remaining = 1;
@@ -5328,7 +5303,7 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
                                  unsigned char checkEnd)
 {
     if (equipArtifact(artifact, -1)) {
-        if (g_game->m_f1f698 >= 2) {
+        if (g_game->m_gameVersion >= 2) {
             int targetCombo =
                 g_artifactTraits[artifact->m_artifactId].m_targetCombo;
             if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {
@@ -5466,7 +5441,7 @@ int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
         playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
-            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1) &&
+            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
                 ownedTown->m_type == TOWN_RAMPART) {
                 luck += 2;
                 break;
@@ -5512,7 +5487,7 @@ int hero::getMorale(const hero* otherHero, unsigned char onCursedGround,
         playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
-            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1) &&
+            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
                 ownedTown->m_type == TOWN_CASTLE) {
                 morale += 2;
                 break;
@@ -5832,7 +5807,7 @@ int hero::getMobility(unsigned char seaMovement) const
 
         for (unsigned int t = 0; t < g_game->m_towns.size(); t++) {
             if (g_game->m_towns[t].m_type == TOWN_CASTLE &&
-                g_game->m_towns[t].hasBuilding(SPECIAL_BUILDING_ID, 0))
+                g_game->m_towns[t].hasBuilding(SPECIAL_BUILDING_ID, false))
                 mobility += g_moveConstants.m_lighthouseBonus;
         }
 
@@ -6221,7 +6196,7 @@ long hero::getHitPointBonus(int creatureType) const
         bonus++;
     if (isWieldingArtifact(ARTIFACT_VIAL_OF_LIFEBLOOD))
         bonus += 2;
-    if ((g_creatureTypeTraits[creatureType].m_attributes & 0x10)
+    if ((g_creatureTypeTraits[creatureType].m_attributes & creatureAlive)
         && isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))
         bonus += g_creatureTypeTraits[creatureType].m_hitPoints / 4;
     return bonus;

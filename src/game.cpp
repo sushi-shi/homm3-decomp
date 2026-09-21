@@ -470,7 +470,7 @@ inline void generator::updateBonus()
 
     playerData& player = g_game->m_players[m_playerOwner];
     int creature = m_type[0];
-    if (!g_game->m_f1f698 &&
+    if (!g_game->m_gameVersion &&
         isBaseElemental(creature))
         return;
 
@@ -597,7 +597,7 @@ void game::calculateProduction()
 
         playerData& currentPlayer = m_players[currentTown.m_owner];
         long* production = currentPlayer.m_ai.m_turnProductionResource;
-        if (currentTown.hasBuilding(MARKETPLACE_SILO_ID, 0)) {
+        if (currentTown.hasBuilding(MARKETPLACE_SILO_ID, false)) {
             int* siloIncome = currentTown.getSiloIncome();
             for (i = 0; i < NUM_RESOURCES; ++i)
                 production[i] += siloIncome[i];
@@ -1087,7 +1087,7 @@ bool playerData::hasCapitol()
     if (towns <= 0)
         return false;
     do {
-        if (g_game->getTown(m_townIds[i])->hasBuilding(HALL_CAPITOL_ID, 0))
+        if (g_game->getTown(m_townIds[i])->hasBuilding(HALL_CAPITOL_ID, false))
             return true;
     } while (++i < towns);
     return false;
@@ -1611,10 +1611,10 @@ int playerData::buildingsOwned(int townType, int buildingId, int mageLevel)
         town* currentTown = &g_game->m_towns[m_townIds[i]];
         if (buildingId < DWELLING_0_ID || currentTown->m_type == townType) {
             if (buildingId == MAGE_GUILD_ID) {
-                if (currentTown->hasBuilding(MAGE_GUILD_ID, 0)
+                if (currentTown->hasBuilding(MAGE_GUILD_ID, false)
                     && currentTown->m_mageLevel == mageLevel)
                     ++count;
-            } else if (currentTown->hasBuilding(buildingId, 0)) {
+            } else if (currentTown->hasBuilding(buildingId, false)) {
                 ++count;
             }
         }
@@ -1998,7 +1998,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
             weights[heroClass] = 0;
     }
 
-    if (g_game->m_f1f698 >= 2
+    if (g_game->m_gameVersion >= 2
         && *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
         && alignment != TOWN_CONFLUX
         && counts[classPlanesWalker] + counts[classElementalist]
@@ -2466,7 +2466,7 @@ void applySavedGameHeader(const SavedGameHeader& saved)
     // edx`, then `mov ecx,[gpGame]` again for mapHeader, again for
     // setup, again for campaign, again for the filename. Do not cache
     // what retail reloads.
-    g_game->m_f1f698 = saved.m_gameVersion;
+    g_game->m_gameVersion = saved.m_gameVersion;
     g_game->m_mapHeader = saved.m_mapHeader;
     g_game->m_setup = saved.m_mapSetup;
     g_inCampaign = saved.m_campaignGame;
@@ -2661,7 +2661,7 @@ int game::load(TAbstractFile* infile)
     if (count < sizeof(byteValue))
         return -1;
     if (saved.m_version < 40)
-        m_f1f698 = byteValue;
+        m_gameVersion = byteValue;
 
     count = infile->read(&byteValue, sizeof(byteValue));
     if (count < sizeof(byteValue))
@@ -3095,7 +3095,7 @@ int game::save(TAbstractFile* outfile)
         if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
             return -1;
         // f_1f698 is an int member and retail writes only its low byte.
-        byteValue = static_cast<char>(m_f1f698);
+        byteValue = static_cast<char>(m_gameVersion);
         if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
             return -1;
         byteValue = m_isCheater;
@@ -3267,7 +3267,7 @@ void game::setupOrigData()
     g_monthTypeExtra = 0;
     m_isCheater = 0;
 
-    strncpy(m_saveFileName, (*g_generalText)[12], sizeof(m_saveFileName));
+    strncpy(m_saveFileName, g_generalText->getText(12), sizeof(m_saveFileName));
     m_saveFileName[sizeof(m_saveFileName) - 1] = 0;
     MEMSET(m_playerDisabled, 0, sizeof(m_playerDisabled), i);
     memset(g_startingHeroOverrides, -1, sizeof(g_startingHeroOverrides));
@@ -3661,14 +3661,14 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
     m_numPlayers = 8;
     m_numDeadPlayers = 0;
     if (gameVersion != -1 && !g_inCampaign) {
-        m_f1f698 = gameVersion;
+        m_gameVersion = gameVersion;
     } else {
-        m_f1f698 = 2;
+        m_gameVersion = 2;
         if (g_inCampaign) {
             if (m_campaign.m_currentCampaign < g_firstArmageddonsBladeCampaign)
-                m_f1f698 = 0;
+                m_gameVersion = 0;
             else if (m_campaign.m_currentCampaign < 13)
-                m_f1f698 = 1;
+                m_gameVersion = 1;
         }
     }
 
@@ -4917,7 +4917,7 @@ bool game::loadMap(TAbstractFile* mapFile)
     g_mapHeight = mapSize;
     g_searchArray->close();
 
-    if (m_f1f698 < 1)
+    if (m_gameVersion < 1)
         memset(m_heroAvailability + 128, hero::HERO_AVAILABILITY_TAVERN_POOL,
                HERO_COUNT - 128);
 
@@ -4925,8 +4925,8 @@ bool game::loadMap(TAbstractFile* mapFile)
     for (artifact = 0; artifact < 144; ++artifact)
         m_artifactDisabled[artifact] = g_artifactTraits[artifact].m_disabled;
 
-    if (m_f1f698 < 2) {
-        artifact = (((m_f1f698 >= 1) - 1) & -2) + 129;
+    if (m_gameVersion < 2) {
+        artifact = (((m_gameVersion >= 1) - 1) & -2) + 129;
         memset(m_artifactDisabled + artifact, 1,
                sizeof(m_artifactDisabled) - artifact);
     }
@@ -6578,11 +6578,11 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
                       m_towns[townId].m_mapZ, newPlayerOwner, 5, 0);
 
         if (thisTown->m_type == TOWN_TOWER) {
-            if (thisTown->hasBuilding(EXTRA_0_ID, 0))
+            if (thisTown->hasBuilding(EXTRA_0_ID, false))
                 g_game->setVisibility(thisTown->m_mapX, thisTown->m_mapY,
                                       thisTown->m_mapZ, newPlayerOwner,
-                                      20, 0);
-            if (thisTown->hasBuilding(HOLY_GRAIL_ID, 0)) {
+                                      20, false);
+            if (thisTown->hasBuilding(HOLY_GRAIL_ID, false)) {
                 g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 0,
                                       newPlayerOwner, g_mapWidth, 0);
                 if (g_game->getNumMapLevels() > 1)
@@ -6779,24 +6779,6 @@ int game::getRandomNumTroops(int whichMon)
                   g_creatureTypeTraits[whichMon].m_wanderingHigh);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:7577
-// The three music bodies below are byte-identified as a group and they
-// corroborate each other. All three build on the same block:
-//   sprintf(buf, <0x677eac>, Random(1, 3) - 1);
-//   gpSoundManager->StartMP3(buf, 0, 1);      // 0x59acb0, claimed
-// 0x004c6f40 is that block alone - StartAITheme. 0x004c6f80 is the SAME
-// block INLINED plus `gpSoundManager->field_84 = 0`, and 0x004c6fd0 is
-// `gpSoundManager->field_84 = 1` on its own. That pairing is the /Ob2
-// single-call-site rule in the clean case: StartAITheme has exactly one
-// caller, so it is inlined there AND still emitted out of line (extern
-// linkage), which is why the same block appears twice. The flag polarity
-// fixes the two names against DC rank - clearing +0x84 goes with
-// starting the theme (TurnOnAIMusic), setting it goes with TurnOffAIMusic,
-// and that is also the DC order.
-// game::GetRandomNumTroops (dc 0xb1f1c, 66 B) has no retail row.
-#endif  // @carcass
 
 VA(0x004c6f40, 0x3F)  // dc 0xb1f60
 void startAITheme()
@@ -7142,7 +7124,7 @@ unsigned char game::growCoverOfDarkness()
     unsigned char changed = 0;
     for (int i = 0; i < m_towns.size(); ++i) {
         if (m_towns[i].m_type == TOWN_NECROPOLIS
-            && m_towns[i].hasBuilding(SPECIAL_BUILDING_ID, 0)) {
+            && m_towns[i].hasBuilding(SPECIAL_BUILDING_ID, false)) {
             g_game->resetVisibility(m_towns[i].m_mapX, m_towns[i].m_mapY,
                                     m_towns[i].m_mapZ, m_towns[i].m_owner,
                                     20);
@@ -7166,7 +7148,7 @@ void game::resetAllPlayerVisibility()
     for (i = 0; i < m_towns.size(); ++i) {
         int range = 5;
         if (m_towns[i].m_type == TOWN_TOWER
-            && m_towns[i].hasBuilding(EXTRA_0_ID, 0)) {
+            && m_towns[i].hasBuilding(EXTRA_0_ID, false)) {
             range = 20;
         }
 
@@ -7175,7 +7157,7 @@ void game::resetAllPlayerVisibility()
                           m_towns[i].m_owner, range, 0);
             if (m_day == 1 && m_week == 1 && m_month == 1
                 && m_towns[i].m_type == TOWN_TOWER
-                && m_towns[i].hasBuilding(HOLY_GRAIL_ID, 0)) {
+                && m_towns[i].hasBuilding(HOLY_GRAIL_ID, false)) {
                 setVisibility(g_mapWidth / 2, g_mapHeight / 2, 0,
                               m_towns[i].m_owner, g_mapWidth, 0);
                 if (m_worldMap.getNumLevels() > 1) {
@@ -7273,7 +7255,7 @@ void game::perDay()
         for (long townId = 0; townId < m_towns.size(); ++townId) {
             town& currentTown = m_towns[townId];
             if (currentTown.m_type == TOWN_RAMPART
-                && currentTown.hasBuilding(SPECIAL_BUILDING_ID, 1)) {
+                && currentTown.hasBuilding(SPECIAL_BUILDING_ID, true)) {
                 currentTown.m_pondResource = g_resources[random(0, 3)];
                 currentTown.m_pondAmount = random(1, 4);
             } else {
@@ -7314,7 +7296,7 @@ void game::perDay()
 
     for (i = 0; i < m_towns.size(); ++i) {
         town* currTown = getTown(i);
-        if (currTown->hasBuilding(MAGE_GUILD_ID, 1)) {
+        if (currTown->hasBuilding(MAGE_GUILD_ID, true)) {
             if (currTown->m_visitingHeroId != -1) {
                 hero* currHero = getHero(currTown->m_visitingHeroId);
                 int maxMana = currHero->getMaxMana();
@@ -7482,9 +7464,9 @@ void game::perWeek()
         && random(1, g_specialWeekRollMax) == 1) {
         g_weekType = g_weekTypeCreature;
 
-        for (align = m_f1f698 ? CREATURE_CATAPULT : CREATURE_PIXIE;
+        for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
-            if ((m_f1f698
+            if ((m_gameVersion
                  || !isBaseElemental(align))
                 && g_creatureTypeTraits[align].m_townType != -1
                 && g_creatureTypeTraits[align].m_level >= 0)
@@ -7492,13 +7474,13 @@ void game::perWeek()
         }
 
         i = rand() % i;
-        for (align = m_f1f698 ? CREATURE_CATAPULT : CREATURE_PIXIE;
+        for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
-            if ((m_f1f698
+            if ((m_gameVersion
                  || !isBaseElemental(align))
                 && g_creatureTypeTraits[align].m_townType != -1
                 && g_creatureTypeTraits[align].m_level >= 0) {
-                if ((m_f1f698
+                if ((m_gameVersion
                      || align == CREATURE_AIR_ELEMENTAL
                      || align == CREATURE_EARTH_ELEMENTAL
                      || align == CREATURE_FIRE_ELEMENTAL
@@ -7516,7 +7498,7 @@ void game::perWeek()
 
     for (i = 0; i < m_towns.size(); ++i) {
         if (m_towns[i].m_type == TOWN_INFERNO
-            && m_towns[i].hasBuilding(HOLY_GRAIL_ID, 0)) {
+            && m_towns[i].hasBuilding(HOLY_GRAIL_ID, false)) {
             g_weekType = g_weekTypeInfernoGrail;
             {
                 bonusCreature = TCreatureType(g_creatureImpId);
@@ -7778,7 +7760,7 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
     std::bitset<CREATURE_CATAPULT> monsterOk;
     monsterOk.set();
 
-    if (!m_f1f698) {
+    if (!m_gameVersion) {
         bitset_iterator<CREATURE_CATAPULT> it;
         it = bitset_iterator<CREATURE_CATAPULT>(monsterOk, CREATURE_PIXIE);
         bitset_iterator<CREATURE_CATAPULT> end(monsterOk, CREATURE_CATAPULT);
@@ -8685,7 +8667,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     g_soundManager->m_playSounds = changeSounds;
 
     if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
-        g_advManager->bvMessage((*g_generalText)[99]);
+        g_advManager->bvMessage(g_generalText->getText(99));
 
     saveGame(g_config.m_scFile, 0, 0, !inGame, 1);
 
@@ -8843,7 +8825,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                             "Timeout sending save game [%d]"),
                         retryCount);
             if (retryCount > 1) {
-                normalDialog((*g_generalText)[82], 2, -1, -1,
+                normalDialog(g_generalText->getText(GENERAL_TEXT_DPLAY_SEND_RETRY), 2, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn
                         != DIALOG_RETURN_ACCEPT) {
@@ -8977,7 +8959,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     g_advManager->trimLoopingSounds(4);
 
     if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
-        g_advManager->bvMessage((*g_generalText)[100]);
+        g_advManager->bvMessage(g_generalText->getText(100));
 
     int lastDataReceiveTime = GameTime::get();
     int changeSounds = g_soundManager->m_currentTerrainMusic;
@@ -9031,7 +9013,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
 
         if (GameTime::elapsedSince(lastDataReceiveTime)
                 > GAME_TRANSMIT_TIMEOUT) {
-            normalDialog((*g_generalText)[15], 2, -1, -1,
+            normalDialog(g_generalText->getText(15), 2, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 lastDataReceiveTime = GameTime::get();
@@ -9050,7 +9032,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             } else {
                 if (inGame) {
                     remoteCleanup();
-                    normalDialog((*g_generalText)[329], 1, -1, -1,
+                    normalDialog(g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED), 1, -1, -1,
                                  -1, 0, -1, 0, -1, 0, -1, 0);
                     shutDown(0);
                 } else {
@@ -9176,7 +9158,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             case RS_PLAYER_DROPPED:
                 if (getGamePosFromDPID(netMsg->m_dpidFrom) == fromWho) {
                     remoteCleanup();
-                    normalDialog((*g_generalText)[432], 1, -1, -1,
+                    normalDialog(g_generalText->getText(432), 1, -1, -1,
                                  -1, 0, -1, 0, -1, 0, -1, 0);
                     return 0;
                 }
@@ -9184,7 +9166,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                 break;
 
             case RS_SET_AS_HOST:
-                g_chatMan.systemMsg((*g_generalText)[471]);
+                g_chatMan.systemMsg(g_generalText->getText(471));
                 break;
 
             case RS_CHAT_MSG: {
@@ -9493,7 +9475,7 @@ void game::setSummoningGenerators()
             for (int j = 0; j < player->m_numTowns; ++j) {
                 town* currentTown = getTown(player->m_townIds[j]);
                 if (currentTown->m_type == TOWN_DUNGEON
-                    && currentTown->hasBuilding(EXTRA_1_ID, 0))
+                    && currentTown->hasBuilding(EXTRA_1_ID, false))
                     currentTown->setSummoningGenerator();
             }
         }
@@ -9974,7 +9956,7 @@ game::game()
     m_ultimateArtifactZ = -1;
     m_ultimateRadius = 0x7f;
     m_ultimateArtifactPresent = 0;
-    m_f1f698 = 0;
+    m_gameVersion = 0;
     m_isCheater = 0;
     int rumourByte;
     MEMSET(m_currentRumour, 0, sizeof(m_currentRumour), rumourByte);

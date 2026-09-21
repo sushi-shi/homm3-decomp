@@ -1063,7 +1063,9 @@ public:
     // The ultimate-artifact coordinate/radius/validity run ends with
     // a byte at +0x1f696; this byte aligns the PC dword at +0x1f698.
     char m_paddingAfterUltimateArtifactPresent;
-    int m_f1f698;
+    // Complete product generation at +0x1f698: init assigns gameVersion;
+    // applySavedGameHeader restores SavedGameHeader::gameVersion here.
+    int m_gameVersion;
     unsigned char m_isCheater;
     // Byte gate town::can_build and get_buildable_mask test before the
     // Castle-Griffin-Tower special case that drops the Blacksmith
@@ -1461,7 +1463,7 @@ public:
     VA(0x00529710, 0x34)
     TCreatureType upgradedCreatureType(TCreatureType creature) const
     {
-        if (m_f1f698 == 0
+        if (m_gameVersion == 0
             && (creature == CREATURE_AIR_ELEMENTAL
                 || creature == CREATURE_EARTH_ELEMENTAL
                 || creature == CREATURE_FIRE_ELEMENTAL
@@ -1861,7 +1863,7 @@ inline void SavedGameHeader::reset()
         strcpy(m_id, "H3SVG");
 
     m_version = 42;
-    m_gameVersion = g_game->m_f1f698;
+    m_gameVersion = g_game->m_gameVersion;
 
     m_campaign = g_game->m_campaign;
 
@@ -2030,7 +2032,7 @@ inline unsigned char game::isHumanAlly(int playerNum) const
 VA(0x004c6690, 0x43)
 inline int game::getAlignment(int creature) const
 {
-    if (m_f1f698 == 0) {
+    if (m_gameVersion == 0) {
         if (isBaseElemental(creature))
             return -1;
     }

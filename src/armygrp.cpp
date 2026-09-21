@@ -90,7 +90,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
         0, 0, m_width, m_height, 0, "GPuCrDiv.pcx", 0x800));
 
     sprintf(g_text,
-            (*g_generalText)[GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER],
+            g_generalText->getText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER),
             g_creatureTypeTraits[m_creature].m_pluralName);
     m_widgets.push_back(new textWidget(
         0, 20, m_width, 30, g_text, "bigfont.fnt", font::HEADING,
@@ -232,11 +232,11 @@ inline void TSplitWindow::setRolloverText(int codeY)
     switch (codeY) {
     case DIALOG_RETURN_SPLIT_CANCEL:
         sprintf(g_text,
-                (*g_generalText)[GENERAL_TEXT_SPLIT_OTHER_ROLLOVER]);
+                g_generalText->getText(GENERAL_TEXT_SPLIT_OTHER_ROLLOVER));
         break;
     case DIALOG_RETURN_SPLIT_ACCEPT:
         sprintf(g_text,
-                (*g_generalText)[GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER],
+                g_generalText->getText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER),
                 g_creatureTypeTraits[m_creature].m_pluralName);
         break;
     default:
@@ -637,7 +637,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
         if (traits.m_attributes & g_ctaSiegeWeapon)
             continue;
         int alignment;
-        if (g_game->m_f1f698 == 0 && isBaseElemental(m_armies[i]))
+        if (g_game->m_gameVersion == 0 && isBaseElemental(m_armies[i]))
             alignment = -1;
         else
             alignment = traits.m_townType;
@@ -836,10 +836,10 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
             || otherGroup->isMember(CREATURE_GHOST_DRAGON)))
         morale--;
     if (ownerTown) {
-        if (ownerTown->hasBuilding(TAVERN_ID, 0))
+        if (ownerTown->hasBuilding(TAVERN_ID, false))
             morale++;
         if (ownerTown->m_type == TOWN_CASTLE
-            && ownerTown->hasBuilding(EXTRA_1_ID, 1))
+            && ownerTown->hasBuilding(EXTRA_1_ID, true))
             morale += 2;
     }
     return applyLimits ? limit(-3, morale, 3) : morale;
@@ -859,7 +859,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
         int type = m_armies[index];
-        if (g_game->m_f1f698 != 0 || !isBaseElemental(type)) {
+        if (g_game->m_gameVersion != 0 || !isBaseElemental(type)) {
             do {
                 switch (g_creatureTypeTraits[type].m_townType) {
                 case TOWN_CASTLE:
@@ -883,7 +883,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     do {
         if (mode == MAGIC_TERRAIN_EVIL_FOG) {
             int type = m_armies[index];
-            if (g_game->m_f1f698 != 0 || !isBaseElemental(type)) {
+            if (g_game->m_gameVersion != 0 || !isBaseElemental(type)) {
                 switch (g_creatureTypeTraits[type].m_townType) {
                 case TOWN_CASTLE:
                 case TOWN_RAMPART:
@@ -933,7 +933,7 @@ int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero*
             || otherGroup->isMember(CREATURE_ARCH_DEVIL)))
         luck--;
     if (ownerTown && ownerTown->m_type == TOWN_RAMPART
-        && ownerTown->hasBuilding(EXTRA_0_ID, 1))
+        && ownerTown->hasBuilding(EXTRA_0_ID, true))
         luck += 2;
     if (applyLimits)
         return limit(-3, luck, 3);
@@ -948,7 +948,7 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
         int creature = m_armies[index];
-        if (g_game->m_f1f698 != 0 || !isBaseElemental(creature)) {
+        if (g_game->m_gameVersion != 0 || !isBaseElemental(creature)) {
             do {
                 switch (g_creatureTypeTraits[creature].m_townType) {
                 case TOWN_CASTLE:
@@ -1174,7 +1174,7 @@ std::string armyGroup::getMoraleDescription(
     // currentMorale at the tail, as proved by retail 0x44b960.
     {
         if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
-            && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
+            && (g_game->m_gameVersion != 0 || !isBaseElemental(creature))) {
             switch (g_creatureTypeTraits[creature].m_townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
@@ -1202,7 +1202,7 @@ std::string armyGroup::getMoraleDescription(
             goto moraleTerrainDone;
         }
         if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
-            && (g_game->m_f1f698 != 0 || !isBaseElemental(creature))) {
+            && (g_game->m_gameVersion != 0 || !isBaseElemental(creature))) {
             switch (g_creatureTypeTraits[creature].m_townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
@@ -1281,11 +1281,11 @@ std::string armyGroup::getMoraleDescription(
     }
 
     if (ownerTown) {
-        if (ownerTown->hasBuilding(TAVERN_ID, 0))
+        if (ownerTown->hasBuilding(TAVERN_ID, false))
             result += formatString(
                 "\n%s +1", getBuildingName(ownerTown->m_type, TAVERN_ID));
         if (ownerTown->m_type == TOWN_CASTLE
-            && ownerTown->hasBuilding(EXTRA_1_ID, 1))
+            && ownerTown->hasBuilding(EXTRA_1_ID, true))
             result += formatString(
                 "\n%s +2", getBuildingName(TOWN_CASTLE, EXTRA_1_ID));
     }
@@ -1440,7 +1440,7 @@ std::string armyGroup::getLuckDescription(
     // Complete adds the clover-field luck bonus before applying enemy-group
     // modifiers. Dreamcast has only the cursed-ground terrain parameter.
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
-        && (g_game->m_f1f698 != 0 || !(creature == CREATURE_AIR_ELEMENTAL
+        && (g_game->m_gameVersion != 0 || !(creature == CREATURE_AIR_ELEMENTAL
             || creature == CREATURE_EARTH_ELEMENTAL
             || creature == CREATURE_FIRE_ELEMENTAL
             || creature == CREATURE_WATER_ELEMENTAL))) {
@@ -1489,7 +1489,7 @@ std::string armyGroup::getLuckDescription(
     if (ourTown) {
         char ourTownType = ourTown->m_type;
         if (ourTownType == TOWN_RAMPART
-            && ourTown->hasBuilding(EXTRA_0_ID, 1)) {
+            && ourTown->hasBuilding(EXTRA_0_ID, true)) {
             result += formatString(
                 "\n%s +2", getBuildingName(TOWN_RAMPART, EXTRA_0_ID));
         }
@@ -1516,7 +1516,7 @@ TTerrainType armyGroup::getNativeTerrain() const
         if (m_armies[i] == CREATURE_NONE)
             continue;
         int alignment;
-        if (g_game->m_f1f698 == 0 && isBaseElemental(m_armies[i]))
+        if (g_game->m_gameVersion == 0 && isBaseElemental(m_armies[i]))
             alignment = -1;
         else
             alignment = g_creatureTypeTraits[m_armies[i]].m_townType;

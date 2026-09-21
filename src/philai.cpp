@@ -237,7 +237,7 @@ static void upgradeCreatures(hero* currentHero, const town* currentTown)
 
     for (dwelling = 0; dwelling < TOWN_DWELLING_COUNT; ++dwelling) {
         if (!currentTown->hasBuilding(
-                DWELLING_0_UPG_ID + dwelling, 1))
+                DWELLING_0_UPG_ID + dwelling, true))
             continue;
 
         TCreatureType upgrade = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
@@ -1657,7 +1657,7 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
                 long value = g_creatureTypeTraits[creature].m_aiValue
                     * ourHero->m_army.m_numTroops[group];
                 armyValue += value;
-                if (g_creatureTypeTraits[creature].m_attributes & 4)
+                if (g_creatureTypeTraits[creature].m_attributes & creatureShootingArmy)
                     rangedValue += value;
             }
         }
@@ -2001,7 +2001,7 @@ VA(0x005253d0, 0x60c)  // dc 0x10e3f8
 void aiEnterTown(hero* currentHero, town* currentTown)
 {
     if (currentHero->hasArtifact(ARTIFACT_HOLY_GRAIL)
-        && !currentTown->hasBuilding(HOLY_GRAIL_ID, 0)
+        && !currentTown->hasBuilding(HOLY_GRAIL_ID, false)
         && currentTown->isLegalBuilding(HOLY_GRAIL_ID)) {
         currentHero->removeArtifact(ARTIFACT_HOLY_GRAIL);
         currentTown->buildBuilding(HOLY_GRAIL_ID, 1, 1);
@@ -2026,7 +2026,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
     {
         playerData* player = &g_game->m_players[currentHero->m_owner];
         if (player->m_resources[GOLD] >= 500
-            && currentTown->hasBuilding(MAGE_GUILD_ID, 1)
+            && currentTown->hasBuilding(MAGE_GUILD_ID, true)
             && !currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
             TArtifact artifactId;
             {
@@ -2068,7 +2068,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
     }
 
     if (currentTown->m_type == TOWN_CONFLUX
-        && currentTown->hasBuilding(EXTRA_0_ID, 1)) {
+        && currentTown->hasBuilding(EXTRA_0_ID, true)) {
         type_university university;
         university.initializeMagicSkills();
         aiVisitUniversity(currentHero, &university);
@@ -2094,13 +2094,13 @@ void buyArtifacts(hero* currentHero, town* currentTown)
          ++townIndex) {
         town* ownedTown = g_game->getTown(
             g_currentPlayer->m_townIds[townIndex]);
-        if (ownedTown->hasBuilding(MARKETPLACE_ID, 1))
+        if (ownedTown->hasBuilding(MARKETPLACE_ID, true))
             ++marketCount;
     }
     if (marketCount > 10)
         marketCount = 10;
 
-    if (!currentTown->hasBuilding(SPECIAL_BUILDING_ID, 1)) {
+    if (!currentTown->hasBuilding(SPECIAL_BUILDING_ID, true)) {
         if (!currentTown->canBuild(SPECIAL_BUILDING_ID))
             return;
 
@@ -2172,7 +2172,7 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
             return;
     }
 
-    if (!currentTown->hasBuilding(building, 1)) {
+    if (!currentTown->hasBuilding(building, true)) {
         if (!currentTown->buyBuilding(building))
             return;
         for (int checkResource = 0; checkResource < 7; ++checkResource) {
@@ -2611,7 +2611,7 @@ void aiVisitHillFort(hero* currentHero)
         TCreatureType creature = currentHero->m_army.m_armyTypes[i];
         if (creature == CREATURE_NONE)
             continue;
-        if (g_game->m_f1f698 == 0
+        if (g_game->m_gameVersion == 0
             && isBaseElemental(creature))
             continue;
 
@@ -2793,18 +2793,6 @@ long valueOfLearning(const hero* currentHero, SpellID spell)
     return aiGetSpellValue(currentHero, spell);
 }
 
-#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
-
-// E:\gamedcs\philai.cpp:2054
-// Retail claim promoted to the source-order definition above.
-long valueOfBank(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2128
-#endif  // @carcass
-
 VA(0x00529920, 0x10d)  // dc 0x110808
 long valueOfBank(const hero* currentHero, NewmapCell* cell);
 
@@ -2853,7 +2841,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
                == VICTORY_CONDITION_FLAG_ALL_GENERATORS
         && !g_game->onSameTeam(currentGenerator.getOwner(),
                                g_netLocalGamePos)
-        && (g_game->m_f1f698 != 0
+        && (g_game->m_gameVersion != 0
             || (currentGenerator.m_type[0] != CREATURE_AIR_ELEMENTAL
                 && currentGenerator.m_type[0] != CREATURE_EARTH_ELEMENTAL
                 && currentGenerator.m_type[0] != CREATURE_FIRE_ELEMENTAL
@@ -2888,7 +2876,7 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short move
 
     townValue = static_cast<long>(
         enemyTown->getGoldIncome(0) * player->m_ai.m_resourceValue[GOLD] * 3.0);
-    if (enemyTown->hasBuilding(MARKETPLACE_SILO_ID, 0)) {
+    if (enemyTown->hasBuilding(MARKETPLACE_SILO_ID, false)) {
         int* siloIncome = enemyTown->getSiloIncome();
         townValue += 3 * aiResourceCost(player, siloIncome);
     }
@@ -3290,7 +3278,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
     VictoryConditionStruct& victory = g_game->m_mapHeader.m_victoryCondition;
     if (currentHero->hasArtifact(ARTIFACT_HOLY_GRAIL)
         && currentTown->isLegalBuilding(HOLY_GRAIL_ID)
-        && !currentTown->hasBuilding(HOLY_GRAIL_ID, 0)) {
+        && !currentTown->hasBuilding(HOLY_GRAIL_ID, false)) {
         if (victory.m_type == VICTORY_CONDITION_BUILD_GRAIL) {
             if (victory.m_townX == currentTown->m_mapX
                 && victory.m_townY == currentTown->m_mapY
@@ -3407,13 +3395,13 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
 {
     long value = 0;
     if (currentTown->m_type == TOWN_CONFLUX
-        && currentTown->hasBuilding(EXTRA_0_ID, 1)) {
+        && currentTown->hasBuilding(EXTRA_0_ID, true)) {
         type_university university;
         university.initializeMagicSkills();
         value = valueOfUniversity(currentHero, &university, 1);
     }
 
-    if (currentTown->hasBuilding(MAGE_GUILD_ID, 1)) {
+    if (currentTown->hasBuilding(MAGE_GUILD_ID, true)) {
         if (!currentHero->isWieldingArtifact(
                 ARTIFACT_SPELLBOOK)) {
             if (g_currentPlayer->m_resources[GOLD] >= 500)
@@ -3440,21 +3428,21 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
 
     switch (currentTown->m_type) {
     case TOWN_TOWER:
-        if (currentTown->hasBuilding(EXTRA_2_ID, 1))
+        if (currentTown->hasBuilding(EXTRA_2_ID, true))
             value += currentHero->getValueOfKnowledge();
         break;
     case TOWN_INFERNO:
-        if (currentTown->hasBuilding(EXTRA_2_ID, 1))
+        if (currentTown->hasBuilding(EXTRA_2_ID, true))
             value += currentHero->getValueOfPower();
         break;
     case TOWN_DUNGEON:
-        if (currentTown->hasBuilding(EXTRA_2_ID, 1))
+        if (currentTown->hasBuilding(EXTRA_2_ID, true))
             value = static_cast<long>(
                 currentHero->m_turnExperienceToRvRatio * 1000.0f
                 + static_cast<float>(value));
         break;
     case TOWN_STRONGHOLD:
-        if (currentTown->hasBuilding(EXTRA_2_ID, 1))
+        if (currentTown->hasBuilding(EXTRA_2_ID, true))
             value = static_cast<long>(
                 static_cast<float>(hero::getExperienceIncrement(
                     currentHero->m_level))
@@ -3462,7 +3450,7 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
                 + static_cast<float>(value));
         break;
     case TOWN_FORTRESS:
-        if (currentTown->hasBuilding(SPECIAL_BUILDING_ID, 1))
+        if (currentTown->hasBuilding(SPECIAL_BUILDING_ID, true))
             value = static_cast<long>(
                 static_cast<float>(hero::getExperienceIncrement(
                     currentHero->m_level))
