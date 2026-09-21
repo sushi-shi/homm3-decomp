@@ -8,14 +8,13 @@ friends and preprocessor directives are barriers, not guessed source positions.
 Comments travel with their declarations. Access is preserved, never inferred
 from a neighbour. Run the access audit and full VC6 build after applying.
 
-    python scripts/experiments/recover-member-order.py --output build/member-order.json
-    python scripts/experiments/recover-member-order.py --apply-plan build/member-order.json
+    python -m homm3.analysis.member_order --output build/member-order.json
+    python -m homm3.analysis.member_order --apply-plan build/member-order.json
 """
 import argparse
 from collections import defaultdict
 import hashlib
 import heapq
-import importlib.util
 import json
 from pathlib import Path
 import re
@@ -322,10 +321,7 @@ def apply_plan(plan):
     root = common.HOMM3_DIR
     if plan["root"] != str(root):
         raise RuntimeError("plan belongs to another worktree")
-    spec = importlib.util.spec_from_file_location("access_transform",
-            Path(__file__).with_name("apply-access-adherence.py"))
-    transform = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(transform)
+    from homm3.analysis import access_edit as transform
     outputs = {}
     for relative, file in plan["files"].items():
         path = root / relative

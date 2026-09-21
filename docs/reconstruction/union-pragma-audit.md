@@ -317,11 +317,6 @@ in context `41f7062873689b4033e9`. Its CObject-reference argument was restored
 separately with the same whole-object proof and one explicit symbol rename.
 Its boundary row is also borrowed: no assertion was added.
 
-```sh
-python scripts/experiments/generate-string-boundary-family.py build/string-family.json
-python scripts/experiments/generate-string-boundary-family.py build/object-save-family.json --object-save
-PYTHONPATH=scripts python -m homm3.vc6.source_families build/object-save-family.json --keep 5 --generations 1
-```
 
 These generators accept both the inspected pre-edit source and the adopted
 source. Current controls do not reintroduce old pragmas.
@@ -435,15 +430,10 @@ the two-deletion state removes more debt and still improves over the baseline.
 Deleting both fences without restoring the name calls gives only 87.4391%
 with the typed field. The ordinary source boundaries matter jointly.
 
-These families are reproduced by their generators under `scripts/experiments/`:
-`generate-header-request-boundary-family.py` (`--adjacent`, context
-`775af75f16447393e9f2`), `generate-saved-header-reset-family.py`
-(`8eb0ac9d4548f228b82f`), and `generate-viewarmy-ownership-family.py`
-(`36638968a9b0a5d650da`). They are historical pre-adoption controls: run in a
-prepared worktree at `ab315284` for the header/reset sources. The popup family
-was run after their adoption, so its whole-six-TU score vector also includes
-the lower reset score. Generators reject changed anchors rather than silently
-testing different source. Frozen input snapshots retain the exact experiments.
+The header/reset controls used the pre-adoption source at `ab315284`; the
+popup experiment followed their adoption, so its six-TU score vector also
+includes the lower reset score. The completed generators have been retired;
+Git history preserves those experiments.
 All 16/54/32 states scored, with 16/48/32 distinct objects and ten reproduced
 elites in each family. The selected all-corrections corners were independently
 recompiled as well. Final production objects match the selected family objects

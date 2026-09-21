@@ -507,10 +507,10 @@ The caller establishes the distinction between the virtual contracts. It does
 not establish the caller source: a value-returning helper can own the output
 reference call and expand into that caller.
 
-`probe-rmg-size-output-reference.py` calibrates the original tiny model to
+The output-reference probe calibrated the original tiny model to
 the actual translation unit, then reproduces the explicit-reference model:
 the base remains exactly 21 bytes and both adapters become exactly 39 bytes.
-`generate-rmg-size-output-family.py` and its audited comparison runner test
+The dimension-interface experiment and its audited comparison runner tested
 all seven actual header consumers. The two-state family reproduces both
 objects and makes the adapter exact, but moves the terrain painter constructor
 from 100% to 99.9874%. Its named query output remains live through the later
@@ -553,7 +553,7 @@ return that value; the painter assigns `m_adapter->getSize()` before storage
 resize. This gives the query output a helper lifetime without caller braces.
 In-class placement is an inferred source model, not a Dreamcast declaration.
 
-`generate-rmg-size-helper-family.py` exhausts three states in context
+The dimension-helper experiment exhausted three states in context
 `f26499b578daef1b5794`, with three distinct objects and reproduced candidates.
 The adopted assignment model `8b04a05337c95da7271e9430` reproduces the size
 forwarders, but changes the painter from 621 to 281 bytes (35.3347%). Repository
@@ -565,11 +565,11 @@ Initializing the member in the constructor initializer list also moves the query
 before tree construction and scores 26.8912%; this is the wrong phase order.
 
 Two bounded combined families complete that investigation for this checkpoint.
-`generate-rmg-size-storage-family.py`, context `5eb43a0b4c061c34031e`, exhausts
+The dimension-storage experiment, context `5eb43a0b4c061c34031e`, exhausts
 five states/four distinct objects/four reproduced candidates. Reading dimensions
 through coordinate accessors or fields leaves the insertion boundary unresolved;
 an ordinary painter size/storage method scores 23.1297% without recovering it.
-`generate-rmg-size-snapshot-family.py`, context `d5ee197e39debad90512`, exhausts
+The dimension-snapshot experiment, context `d5ee197e39debad90512`, exhausts
 five states/four distinct objects/four reproduced candidates. Named copy-initialized,
 const and default-constructed/assigned value snapshots each score 34.3431% and
 still retain insertion. None of those alternatives is adopted.
@@ -586,7 +586,7 @@ remains open when matching pauses; an exact diagnostic block is not reinstated.
 
 Earlier negative controls explain why local return spellings were insufficient.
 
-`probe-rmg-size-qualification.py` checks four meaningful interface models:
+The qualification probe checked four meaningful interface models:
 unchanged, const receiver, const returned value, and both. It uses the actual
 generic coordinate class, all three seven-slot abstract interfaces, the map's
 actual member layout and the three authored size definitions. All six
@@ -602,7 +602,7 @@ unchanged, and the virtual slot-3 call, hidden result and `ret 4` ABI persist.
 Only mangled cv qualifications change. The experiment is rejected before an
 actual seven-consumer family; no source or interface edit is adopted.
 
-`probe-rmg-size-domains.py` separately tests a signed `TPoint` result for the
+The coordinate-domain probe separately tested a signed `TPoint` result for the
 map interface and concrete map while both painter adapter interfaces retain
 unsigned grid results. The existing grid-from-`TPoint` conversion is canonical;
 its ordinary template body currently belongs to the terrain source file. A
@@ -1268,9 +1268,6 @@ retained candidates reproduce; no tracked peak improves and none is adopted.
 All 29 constructor CFG blocks already agree, but retail's width reload and
 height-load schedule are still unresolved:
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-painter-area-family.py build/rmg-painter-area.json
-```
 
 The native fixture uses the actual accessor bodies and checks dimension,
 query-count, area and initialized-cell semantics for 49 dimension pairs per
@@ -2442,54 +2439,6 @@ diagonal checks/coordinate class, shipyard footprint/side selection, and connect
 They read the current authored baseline;
 their output lives under `build/`, while the generator itself is reviewable.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-neighbour-clear-family.py \
-  build/rmg-neighbour-clear-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-diagonal-family.py \
-  build/rmg-diagonal-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-shipyard-family.py \
-  build/rmg-shipyard-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-path-family.py \
-  build/rmg-path-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-position-family.py \
-  build/rmg-position-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-guard-placement-family.py \
-  build/rmg-guard-placement-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-outline-family.py \
-  build/rmg-outline-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-outline-refine-family.py \
-  build/rmg-outline-refine-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-copy-cursor-family.py \
-  build/rmg-copy-cursor-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-tile-value-family.py \
-  build/rmg-tile-value-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-zone-math-family.py \
-  build/rmg-zone-math-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-clear-lifetime-family.py \
-  build/rmg-clear-lifetime-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-clear-declaration-family.py \
-  build/rmg-clear-declaration-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-line-walk-family.py \
-  build/rmg-line-walk-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-line-selector-family.py \
-  build/rmg-line-selector-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-line-selector-end-family.py \
-  build/rmg-line-selector-end-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-line-refresh-family.py \
-  build/rmg-line-refresh-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-line-proxy-copy-family.py \
-  build/rmg-line-proxy-copy-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-line-proxy-binding-family.py \
-  build/rmg-line-proxy-binding-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-line-entry-family.py \
-  build/rmg-line-entry-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-line-neighbour-family.py \
-  build/rmg-line-neighbour-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-line-query-family.py \
-  build/rmg-line-query-family.json
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-grid-add-boundary-family.py \
-  build/rmg-grid-add-boundary-family.json
-```
 
 Use an output as the family-runner argument. The neighbour family keeps
 the eight real classifier calls and their order; it varies point/query and
@@ -2544,9 +2493,6 @@ with signed offset arithmetic in range; it does not claim unsigned clipping or
 zero-dimension equivalence. An unsigned selector would wrongly clip a negative
 offset to the upper edge.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-diagonal-limit-family.py build/rmg-diagonal-limit-family.json
-```
 
 For `repairTerrainPoint`, sixteen coordinate-accessor forms produce sixteen
 objects without improving 93.6307%. The value-returning accessors recover the
@@ -2558,10 +2504,6 @@ caller accessors (60 states, 45 objects). Neither improves the retained score.
 All preserve the ordinary gap-predicate APIs and the later neighbour-ring
 phase. The native predicate/workflow oracles include negative controls.
 
-```sh
-PYTHONPATH=scripts python scripts/experiments/generate-rmg-clamp-structure-family.py build/rmg-clamp-structure.json
-PYTHONPATH=scripts python scripts/experiments/terrain-gap-accessors.py build/terrain-gap-accessors.json
-```
 
 The border family tests scalar bounds against one rectangle or two corner
 values, including independent bound-evaluation order. A rectangle's allocation
