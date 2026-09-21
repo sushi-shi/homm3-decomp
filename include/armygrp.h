@@ -250,7 +250,7 @@ H3_ENUM_BEGIN_SPLIT(TCreatureType, int)
     // Several retail validation guards accept 0x96 even though the 150-row
     // trait table ends at Arrow Tower (0x95). This names the observed compare
     // without pretending that 0x96 is a creature or the last roster member.
-    CREATURE_RETAIL_RANGE_MAX = 0x96,
+    CREATURE_ACCEPTED_RANGE_MAX = 0x96,
     // The four shooters combatManager::ShotIsThroughWall lets past its
     // wall gate alongside the Arrow Tower: the compare chain at
     // 0x46753d tests 0x22, 0x23, 0x88, 0x89, 0x95 in that order and

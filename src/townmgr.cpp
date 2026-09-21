@@ -1554,7 +1554,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             int offsetToMon = currTown->getGrowthRate(slot) - growth;
             const char* name;
             if (creature >= CREATURE_ROSTER_BEGIN
-                && creature <= CREATURE_RETAIL_RANGE_MAX)
+                && creature <= CREATURE_ACCEPTED_RANGE_MAX)
                 name = H3_AT(g_creatureTypeTraits, creature).m_name;
             else
                 name = "";
@@ -1671,7 +1671,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
         if (currTown->m_summoningType != CREATURE_NONE) {
             const char* name;
             if (currTown->m_summoningType >= CREATURE_ROSTER_BEGIN
-                && currTown->m_summoningType <= CREATURE_RETAIL_RANGE_MAX)
+                && currTown->m_summoningType <= CREATURE_ACCEPTED_RANGE_MAX)
                 name = H3_AT(g_creatureTypeTraits, currTown->m_summoningType).m_name;
             else
                 name = "";
@@ -2278,7 +2278,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
         TCreatureType id = H3_ENUM_DECODE(
             TCreatureType, m_srcStrip->m_group->m_armies[m_srcIndex]);
         const char* name;
-        if (isRetailAcceptedCreatureType(id))
+        if (isCreatureTypeInAcceptedRange(id))
             name = H3_AT(g_creatureTypeTraits, id).m_pluralName;
         else
             name = "";
@@ -2301,7 +2301,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
     if (anchorId == selId && selOwner == m_destStrip->m_owner) {
         if (splitEnabled) {
             const char* name;
-            if (isRetailAcceptedCreatureType(selId))
+            if (isCreatureTypeInAcceptedRange(selId))
                 name = H3_AT(g_creatureTypeTraits, selId).m_name;
             else
                 name = "";
@@ -2314,7 +2314,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
             return;
         }
         const char* name;
-        if (isRetailAcceptedCreatureType(selId))
+        if (isCreatureTypeInAcceptedRange(selId))
             name = H3_AT(g_creatureTypeTraits, selId).m_name;
         else
             name = "";
@@ -2326,7 +2326,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
     if (splitEnabled) {
         if (anchorId == CREATURE_NONE) {
             const char* name;
-            if (isRetailAcceptedCreatureType(selId))
+            if (isCreatureTypeInAcceptedRange(selId))
                 name = H3_AT(g_creatureTypeTraits, selId).m_name;
             else
                 name = "";
@@ -2341,7 +2341,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
                 return;
             }
             const char* name;
-            if (isRetailAcceptedCreatureType(selId))
+            if (isCreatureTypeInAcceptedRange(selId))
                 name = H3_AT(g_creatureTypeTraits, selId).m_pluralName;
             else
                 name = "";
@@ -2356,12 +2356,12 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
         return;
     }
     const char* nameAnchor;
-    if (isRetailAcceptedCreatureType(anchorId))
+    if (isCreatureTypeInAcceptedRange(anchorId))
         nameAnchor = H3_AT(g_creatureTypeTraits, anchorId).m_pluralName;
     else
         nameAnchor = "";
     const char* nameSel;
-    if (isRetailAcceptedCreatureType(selId))
+    if (isCreatureTypeInAcceptedRange(selId))
         nameSel = H3_AT(g_creatureTypeTraits, selId).m_pluralName;
     else
         nameSel = "";
@@ -2453,7 +2453,7 @@ void townManager::setCommandAndText(message* msg)
             m_townToView->m_type * TOWN_DWELLING_SLOTS
             + g_hordeDwellingSlot[m_townToView->m_type][code - HORDE_ID]]);
         const char* name;
-        if (creature >= CREATURE_ROSTER_BEGIN && creature <= CREATURE_RETAIL_RANGE_MAX)
+        if (creature >= CREATURE_ROSTER_BEGIN && creature <= CREATURE_ACCEPTED_RANGE_MAX)
             name = H3_AT(g_creatureTypeTraits, creature).m_pluralName;
         else
             name = "";
@@ -2468,7 +2468,7 @@ void townManager::setCommandAndText(message* msg)
             m_townToView->m_type * TOWN_DWELLING_SLOTS
             + g_horde2DwellingSlot[m_townToView->m_type][code - HORDE_2_ID]]);
         const char* name;
-        if (creature >= CREATURE_ROSTER_BEGIN && creature <= CREATURE_RETAIL_RANGE_MAX)
+        if (creature >= CREATURE_ROSTER_BEGIN && creature <= CREATURE_ACCEPTED_RANGE_MAX)
             name = H3_AT(g_creatureTypeTraits, creature).m_pluralName;
         else
             name = "";
@@ -2580,7 +2580,7 @@ void townManager::setCommandAndText(message* msg)
             TCreatureType id = H3_ENUM_DECODE(
                 TCreatureType, m_srcStrip->m_group->m_armies[m_srcIndex]);
             const char* name;
-            if (isRetailAcceptedCreatureType(id))
+            if (isCreatureTypeInAcceptedRange(id))
                 name = H3_AT(g_creatureTypeTraits, id).m_pluralName;
             else
                 name = "";
@@ -2607,7 +2607,7 @@ void townManager::setCommandAndText(message* msg)
                 m_townToView->m_type * TOWN_DWELLING_SLOTS
                 + code - DWELLING_0_ID]);
         const char* name;
-        if (creature >= CREATURE_ROSTER_BEGIN && creature <= CREATURE_RETAIL_RANGE_MAX)
+        if (creature >= CREATURE_ROSTER_BEGIN && creature <= CREATURE_ACCEPTED_RANGE_MAX)
             name = H3_AT(g_creatureTypeTraits, creature).m_pluralName;
         else
             name = "";
@@ -2739,7 +2739,7 @@ void townManager::selectArmy(strip* fromStrip, long slot,
     }
 
     const char* name;
-    if (fromStrip->m_group->m_armies[slot] <= CREATURE_RETAIL_RANGE_MAX) {
+    if (fromStrip->m_group->m_armies[slot] <= CREATURE_ACCEPTED_RANGE_MAX) {
         if (fromStrip->m_group->m_numTroops[slot] == 1)
             name = H3_AT(g_creatureTypeTraits, fromStrip->m_group->m_armies[slot]).m_name;
         else
@@ -2977,7 +2977,7 @@ void TThievesGuildWindow::setRolloverText(int codeY)
             TCreatureType slot = H3_ENUM_DECODE(TCreatureType,
                 g_creatureArmies[codeY - 0x352].m_armies[
                     g_creatureWidgetMap1[codeY - CREATURE_P0]]);
-            if (isRetailAcceptedCreatureType(slot))
+            if (isCreatureTypeInAcceptedRange(slot))
                 strcpy(g_text, H3_AT(g_creatureTypeTraits, slot).m_pluralName);
             else
                 strcpy(g_text, "");
@@ -3885,12 +3885,12 @@ void type_garrison_base_window::setCommandAndText(message* msg)
             TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
                 mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex]);
             // The traits row's own bound, spelled as the literal
-            // retail compares against: armygrp.h's CREATURE_RETAIL_RANGE_MAX
+            // retail compares against: armygrp.h's CREATURE_ACCEPTED_RANGE_MAX
             // is a member of `army`, which this compiland's include
             // closure does not define and must not grow to.
             sprintf(mgr->m_statusText, g_townCommand[0],
                     creature >= CREATURE_ROSTER_BEGIN
-                        && creature <= CREATURE_RETAIL_RANGE_MAX
+                        && creature <= CREATURE_ACCEPTED_RANGE_MAX
                         ? H3_AT(g_creatureTypeTraits, creature).m_name
                         : "");
         }
@@ -4085,7 +4085,7 @@ type_monster_join_window::type_monster_join_window(hero* inHero,
         // Army slots retain four-byte storage for the creature domain.
         TCreatureType type =
             H3_ENUM_DECODE(TCreatureType, monsters->m_armies[i]);
-        if (!isRetailAcceptedCreatureType(type))
+        if (!isCreatureTypeInAcceptedRange(type))
             name = "";
         else if (monsters->m_numTroops[i] == 1)
             name = H3_AT(g_creatureTypeTraits, type).m_name;
@@ -7650,7 +7650,7 @@ void TCastleWindow::setRolloverText(message* msg)
                     g_townManager->m_townToView->m_type
                     * TOWN_DWELLING_SLOTS + dwelling]);
             const char* creatureName;
-            if (isRetailAcceptedCreatureType(rowCreature))
+            if (isCreatureTypeInAcceptedRange(rowCreature))
                 creatureName = H3_AT(g_creatureTypeTraits, rowCreature).m_pluralName;
             else
                 creatureName = "";
@@ -7986,7 +7986,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
                 m_townToView->m_type * TOWN_DWELLING_SLOTS
                 + m_currentDwellingIdOff[i]]);
         const char* creatureName;
-        if (isRetailAcceptedCreatureType(rowCreature))
+        if (isCreatureTypeInAcceptedRange(rowCreature))
             creatureName = H3_AT(g_creatureTypeTraits, rowCreature).m_pluralName;
         else
             creatureName = "";
@@ -8006,7 +8006,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         const char* summonName;
         if (g_townManager->m_townToView->m_summoningType >= CREATURE_ROSTER_BEGIN
             && g_townManager->m_townToView->m_summoningType
-                   <= CREATURE_RETAIL_RANGE_MAX)
+                   <= CREATURE_ACCEPTED_RANGE_MAX)
             summonName =
                 H3_AT(g_creatureTypeTraits, g_townManager->m_townToView->m_summoningType).m_pluralName;
         else

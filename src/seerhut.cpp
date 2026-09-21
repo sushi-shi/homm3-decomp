@@ -769,7 +769,7 @@ void type_defeat_hero_quest::setDefaultText()
 VA(0x0056ea30, 0xF9)
 std::string type_monster_quest::getRequirementText()
 {
-    const char* name = isRetailAcceptedCreatureType(m_monsterId)
+    const char* name = isCreatureTypeInAcceptedRange(m_monsterId)
                            ? H3_AT(g_creatureTypeTraits, m_monsterId).m_pluralName
                            : "";
     return name;
@@ -780,7 +780,7 @@ std::string type_monster_quest::getQuestDescription()
 {
     return formatString(
         questText(QUEST_TEXT_DESCRIPTION).c_str(),
-        isRetailAcceptedCreatureType(m_monsterId)
+        isCreatureTypeInAcceptedRange(m_monsterId)
             ? H3_AT(g_creatureTypeTraits, m_monsterId).m_pluralName
             : "");
 }

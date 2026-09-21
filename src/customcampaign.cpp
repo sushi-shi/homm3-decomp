@@ -453,7 +453,7 @@ VA(0x00484570, 0x7A)
 std::string TCampaignCreatureBonus::getText() const
 {
     const char* name;
-    if (!isRetailAcceptedCreatureType(m_creature))
+    if (!isCreatureTypeInAcceptedRange(m_creature))
         name = "";
     else if (m_count == 1)
         name = H3_AT(g_creatureTypeTraits, m_creature).m_name;

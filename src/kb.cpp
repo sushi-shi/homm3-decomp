@@ -3532,7 +3532,7 @@ void showCongrats(int hsType)
     // The retail helper returns the creature in an int ABI slot.
     TCreatureType monType = H3_ENUM_DECODE(
         TCreatureType, highScoreManager::getMonType(score, hsType));
-    sprintf(temp, isRetailAcceptedCreatureType(monType)
+    sprintf(temp, isCreatureTypeInAcceptedRange(monType)
                        ? H3_AT(g_creatureTypeTraits, monType).m_name
                        : "");
     if (g_game->m_isCheater)
