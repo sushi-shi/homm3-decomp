@@ -249,7 +249,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
             }
         }
     }
-    if (!ourTown->hasBuilding(EXTRA_1_ID, 1)) {
+    if (!ourTown->hasBuilding(EXTRA_1_ID, true)) {
         if (!ourTown->canBuild(EXTRA_1_ID))
             return;
         if (!gates)
@@ -267,7 +267,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
         if (otherTown->m_visitingHeroId >= 0)
             continue;
         newCell = *currentPathCell;
-        if (!otherTown->hasBuilding(EXTRA_1_ID, 1)) {
+        if (!otherTown->hasBuilding(EXTRA_1_ID, true)) {
             if (!otherTown->canBuild(EXTRA_1_ID))
                 continue;
             if (!gates)

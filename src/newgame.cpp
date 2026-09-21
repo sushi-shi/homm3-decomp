@@ -185,28 +185,28 @@ void game::getLossConditionText(char* text)
                 loss.m_townX, loss.m_townY, loss.m_townZ));
             const char* targetType;
             if (targetTown->isCastle())
-                targetType = (*g_generalText)[318];
+                targetType = g_generalText->getText(318);
             else
-                targetType = (*g_generalText)[49];
-            sprintf(text, (*g_generalText)[225], targetType,
+                targetType = g_generalText->getText(49);
+            sprintf(text, g_generalText->getText(225), targetType,
                     targetTown->m_name.c_str());
             break;
         }
         case LOSS_CONDITION_LOSE_HERO: {
             hero* targetHero = getHero(loss.m_heroId);
-            sprintf(text, (*g_generalText)[226], targetHero->m_name);
+            sprintf(text, g_generalText->getText(226), targetHero->m_name);
             break;
         }
         case LOSS_CONDITION_TIME_LIMIT: {
             int month = (loss.m_numDays - 1) / 28 + 1;
             int week = (loss.m_numDays - (month - 1) * 28 - 1) / 7 + 1;
             int dayOfWeek = (loss.m_numDays - 1) % 7 + 1;
-            sprintf(text, (*g_generalText)[227], month, week, dayOfWeek);
+            sprintf(text, g_generalText->getText(227), month, week, dayOfWeek);
             break;
         }
         }
     } else {
-        strcpy(text, (*g_generalText)[228]);
+        strcpy(text, g_generalText->getText(228));
     }
 }
 
@@ -221,34 +221,34 @@ void game::getVictoryConditionText(char* text)
                 victory.m_townX, victory.m_townY, victory.m_townZ));
             const char* targetType;
             if (targetTown->isCastle())
-                targetType = (*g_generalText)[318];
+                targetType = g_generalText->getText(318);
             else
-                targetType = (*g_generalText)[49];
-            sprintf(text, (*g_generalText)[229], targetType,
+                targetType = g_generalText->getText(49);
+            sprintf(text, g_generalText->getText(229), targetType,
                     targetTown->m_name.c_str());
             break;
         }
         case VICTORY_CONDITION_DEFEAT_HERO: {
             hero* targetHero = getHero(victory.m_heroId);
-            sprintf(text, (*g_generalText)[230], targetHero->m_name);
+            sprintf(text, g_generalText->getText(230), targetHero->m_name);
             break;
         }
         case VICTORY_CONDITION_ARTIFACT:
             if (victory.m_artifactNum == ARTIFACT_HOLY_GRAIL) {
-                strcpy(text, (*g_generalText)[231]);
+                strcpy(text, g_generalText->getText(231));
             } else {
-                sprintf(text, (*g_generalText)[232],
+                sprintf(text, g_generalText->getText(232),
                         g_artifactTraits[victory.m_artifactNum].m_name);
             }
             break;
         case VICTORY_CONDITION_TOTAL_RESOURCES:
-            sprintf(text, (*g_generalText)[233], victory.m_resourceAmount,
+            sprintf(text, g_generalText->getText(233), victory.m_resourceAmount,
                     g_resourceNames[victory.m_resourceType]);
             break;
         case VICTORY_CONDITION_UPGRADE_TOWN: {
             town* targetTown = getTown(getTownId(
                 victory.m_townX, victory.m_townY, victory.m_townZ));
-            sprintf(text, (*g_generalText)[319], targetTown->m_name.c_str());
+            sprintf(text, g_generalText->getText(319), targetTown->m_name.c_str());
             break;
         }
         case VICTORY_CONDITION_BUILD_GRAIL: {
@@ -256,10 +256,10 @@ void game::getVictoryConditionText(char* text)
             if (townPos != type_point(-1, -1, -1)) {
                 town* targetTown = getTown(getTownId(
                     victory.m_townX, victory.m_townY, victory.m_townZ));
-                sprintf(text, (*g_generalText)[320],
+                sprintf(text, g_generalText->getText(320),
                         targetTown->m_name.c_str());
             } else {
-                strcpy(text, (*g_generalText)[321]);
+                strcpy(text, g_generalText->getText(321));
             }
             break;
         }
@@ -293,13 +293,13 @@ void game::getVictoryConditionText(char* text)
                 direction = 8;
 
             if (!monsterZ) {
-                sprintf(text, (*g_generalText)[322],
+                sprintf(text, g_generalText->getText(322),
                         victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
                             ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
                             : "",
                         g_directions[direction]);
             } else {
-                sprintf(text, (*g_generalText)[669],
+                sprintf(text, g_generalText->getText(669),
                         victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
                             ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
                             : "",
@@ -308,27 +308,27 @@ void game::getVictoryConditionText(char* text)
             break;
         }
         case VICTORY_CONDITION_TOTAL_CREATURES:
-            sprintf(text, (*g_generalText)[323], victory.m_numCreatures,
+            sprintf(text, g_generalText->getText(323), victory.m_numCreatures,
                     g_creatureTypeTraits[victory.m_creatureType].m_pluralName);
             break;
         case VICTORY_CONDITION_FLAG_ALL_GENERATORS:
-            strcpy(text, (*g_generalText)[324]);
+            strcpy(text, g_generalText->getText(324));
             break;
         case VICTORY_CONDITION_FLAG_ALL_MINES:
-            strcpy(text, (*g_generalText)[325]);
+            strcpy(text, g_generalText->getText(325));
             break;
         case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
             town* targetTown = getTown(getTownId(
                 victory.m_townX, victory.m_townY, victory.m_townZ));
-            sprintf(text, (*g_generalText)[326],
+            sprintf(text, g_generalText->getText(326),
                     g_artifactTraits[victory.m_artifactNum].m_name,
                     targetTown->m_name.c_str());
             break;
         }
         }
         if (victory.m_allowNormalVictory)
-            strcat(text, (*g_generalText)[234]);
+            strcat(text, g_generalText->getText(234));
     } else {
-        strcpy(text, (*g_generalText)[235]);
+        strcpy(text, g_generalText->getText(235));
     }
 }

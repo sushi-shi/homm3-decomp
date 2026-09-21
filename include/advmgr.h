@@ -14,6 +14,7 @@
 
 class BlackBoxData;
 class CNetMsgHandler;
+class CChatEdit;
 class resource;
 class sample;
 class ds_memsample;
@@ -608,8 +609,10 @@ public:
     // TAdventureMapWindow member roster puts chatEdit@0x50 at retail
     // +0x58. KeyboardMessageHandler confirms the result directly with
     // `mov ecx,[advWindow+0x58] / mov al,[ecx+0x6d]`; +0x6d is the
-    // byte-proven textEntryWidget::bHasFocus field.
-    textEntryWidget* m_chatEdit;
+    // byte-proven textEntryWidget::bHasFocus field. Dreamcast's member roster
+    // supplies the stronger source type CChatEdit*; Complete retains the same
+    // inherited field offset.
+    CChatEdit* m_chatEdit;
     // UpdateResourceDisplay (0x403f00) calls through this +0x5c field.
     class TResourceDisplay* m_resourceDisplay;
     class bitmapBackedTextWidget* m_rolloverTextWidget;  // +0x60

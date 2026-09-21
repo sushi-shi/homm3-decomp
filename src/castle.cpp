@@ -356,7 +356,7 @@ int THallWindow::windowHandler(message& msg)
             case DWELLING_5_UPG_ID:
             case DWELLING_6_UPG_ID:
                 if (g_game->townAlreadyBuiltOn(g_townManager->m_townToView->m_id)) {
-                    strcpy(g_text, (*g_generalText)[224]);
+                    strcpy(g_text, g_generalText->getText(224));
                 } else if (g_townManager->m_townToView->hasBuilding(building, false)) {
                     sprintf(g_text, g_hallInfo[4],
                             getBuildingName(g_townManager->m_townToView->m_type, building));

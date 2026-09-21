@@ -297,7 +297,7 @@ void type_sacrifice_window::createArtifactWidgets(
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 600, 593, widgetId++,
-        g_game->m_f1f698 >= 2 ? "AltrArt2.pcx" : "AltarArt.pcx", 0x800);
+        g_game->m_gameVersion >= 2 ? "AltrArt2.pcx" : "AltarArt.pcx", 0x800);
     background->setPlayerPaletteColors(curPlayer);
     m_widgets.push_back(background);
     m_artifactWidgets.push_back(background);
@@ -307,7 +307,7 @@ void type_sacrifice_window::createArtifactWidgets(
     def.m_width = 44;
     def.m_height = 44;
     def.m_image = "artifact.def";
-    long count = g_game->m_f1f698 >= 2 ? 19 : 18;
+    long count = g_game->m_gameVersion >= 2 ? 19 : 18;
     long i;
     for (i = 0; i < count; ++i) {
         def.m_x = g_slotDefinitions[i][0];
@@ -726,7 +726,7 @@ void type_sacrifice_window::updateSlot(long slot)
 VA(0x005629e0, 0x33)  // dc 0x125c34
 void type_sacrifice_window::updateAllSlots()
 {
-    long slotCount = g_game->m_f1f698 >= 2 ? 19 : 18;
+    long slotCount = g_game->m_gameVersion >= 2 ? 19 : 18;
     for (long slot = 0; slot < slotCount; ++slot)
         updateSlot(slot);
 }

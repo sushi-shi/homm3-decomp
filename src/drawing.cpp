@@ -92,16 +92,16 @@ static void getCreatureSpellMessage(char* buffer,
     case CREATURE_ARCHANGEL:
         targetArmy = g_combatManager->findResurrectionTarget(
             currentSide, currentHex, 1);
-        sprintf(buffer, (*g_generalText)[300], targetArmy->getName());
+        sprintf(buffer, g_generalText->getText(300), targetArmy->getName());
         break;
     case CREATURE_MASTER_GENIE:
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
-        sprintf(buffer, (*g_generalText)[302], targetArmy->getName());
+        sprintf(buffer, g_generalText->getText(302), targetArmy->getName());
         break;
     case army::ARMY_CREATURE_PIT_LORD:
         targetArmy = g_combatManager->findDemonicResurrectionTarget(
             currentSide, currentHex);
-        sprintf(buffer, (*g_generalText)[301], targetArmy->getName());
+        sprintf(buffer, g_generalText->getText(301), targetArmy->getName());
         break;
     // Complete adds the null-target message absent from DC line 79. Its
     // retail expansion places format 27 before the named format 28; both
@@ -109,41 +109,41 @@ static void getCreatureSpellMessage(char* buffer,
     case CREATURE_FAERIE_DRAGON:
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
         if (!targetArmy) {
-            sprintf(buffer, (*g_generalText)[27],
+            sprintf(buffer, g_generalText->getText(27),
                     g_spellTraits[currentArmy->m_faerieDragonSpell].m_name);
         } else {
-            sprintf(buffer, (*g_generalText)[28],
+            sprintf(buffer, g_generalText->getText(28),
                     g_spellTraits[currentArmy->m_faerieDragonSpell].m_name,
                     targetArmy->getName());
         }
         break;
     case CREATURE_STORM_ELEMENTAL:
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
-        sprintf(buffer, (*g_generalText)[28],
+        sprintf(buffer, g_generalText->getText(28),
                 g_spellTraits[SPELL_PROTECTION_FROM_AIR].m_name,
                 targetArmy->getName());
         break;
     case CREATURE_ICE_ELEMENTAL:
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
-        sprintf(buffer, (*g_generalText)[28],
+        sprintf(buffer, g_generalText->getText(28),
                 g_spellTraits[SPELL_PROTECTION_FROM_WATER].m_name,
                 targetArmy->getName());
         break;
     case CREATURE_ENERGY_ELEMENTAL:
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
-        sprintf(buffer, (*g_generalText)[28],
+        sprintf(buffer, g_generalText->getText(28),
                 g_spellTraits[SPELL_PROTECTION_FROM_FIRE].m_name,
                 targetArmy->getName());
         break;
     case CREATURE_MAGMA_ELEMENTAL:
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
-        sprintf(buffer, (*g_generalText)[28],
+        sprintf(buffer, g_generalText->getText(28),
                 g_spellTraits[SPELL_PROTECTION_FROM_EARTH].m_name,
                 targetArmy->getName());
         break;
     case CREATURE_OGRE_MAGE:
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
-        sprintf(buffer, (*g_generalText)[28],
+        sprintf(buffer, g_generalText->getText(28),
                 g_spellTraits[SPELL_BLOODLUST].m_name,
                 targetArmy->getName());
         break;
@@ -225,7 +225,7 @@ bool combatManager::showCreatureSpellError(
         cell = &m_cells[m_lastCellIndex];
         targetArmy = cell->getArmy();
         if (!targetArmy) {
-            if (cell->m_attributes & 2) {
+            if (cell->m_attributes & hexcell::blocked) {
                 return false;
             }
             for (i = cell->m_bodiesInHex - 1; i >= 0; i--) {
@@ -254,28 +254,28 @@ bool combatManager::showCreatureSpellError(
 
         if (!currentArmy->m_monInfo.m_hasSpell) {
             if (currentArmy->m_numTroops == 1) {
-                sprintf(buffer, (*g_generalText)[697],
+                sprintf(buffer, g_generalText->getText(697),
                         currentArmy->getName());
             } else {
-                sprintf(buffer, (*g_generalText)[698],
+                sprintf(buffer, g_generalText->getText(698),
                         currentArmy->getName());
             }
             return true;
         }
 
         if (m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS) {
-            strcpy(buffer, (*g_generalText)[699]);
+            strcpy(buffer, g_generalText->getText(699));
             return true;
         }
         if (m_onAntiMagicGarrison) {
-            strcpy(buffer, (*g_generalText)[700]);
+            strcpy(buffer, g_generalText->getText(700));
             return true;
         }
         for (i = 0; i < 2; i++) {
             if (m_heroes[i]
                     && m_heroes[i]->isWieldingArtifact(
                         ARTIFACT_ORB_OF_INHIBITION)) {
-                sprintf(buffer, (*g_generalText)[701],
+                sprintf(buffer, g_generalText->getText(701),
                         g_artifactTraits[ARTIFACT_ORB_OF_INHIBITION].m_name);
                 return true;
             }
@@ -287,14 +287,14 @@ bool combatManager::showCreatureSpellError(
                                       targetArmy->m_creatureType, 0, 0) > 0.0f) {
                 break;
             }
-            sprintf(buffer, (*g_generalText)[181], targetArmy->getName(2),
+            sprintf(buffer, g_generalText->getText(181), targetArmy->getName(2),
                     g_spellTraits[SPELL_BLOODLUST].m_name);
             return true;
         }
 
         case army::ARMY_CREATURE_PIT_LORD: {
             if (!(targetArmy->is(creatureAlive))) {
-                sprintf(buffer, (*g_generalText)[702],
+                sprintf(buffer, g_generalText->getText(702),
                         getArmyName(army::ARMY_CREATURE_DEMON, 2));
                 return true;
             }
@@ -302,10 +302,10 @@ bool combatManager::showCreatureSpellError(
                 break;
             }
             if (targetArmy->m_numTroops == 1) {
-                sprintf(buffer, (*g_generalText)[703], targetArmy->getName(),
+                sprintf(buffer, g_generalText->getText(703), targetArmy->getName(),
                         getArmyName(army::ARMY_CREATURE_DEMON, 2));
             } else {
-                sprintf(buffer, (*g_generalText)[704], targetArmy->getName(),
+                sprintf(buffer, g_generalText->getText(704), targetArmy->getName(),
                         getArmyName(army::ARMY_CREATURE_DEMON, 2));
             }
             return true;
@@ -316,17 +316,17 @@ bool combatManager::showCreatureSpellError(
                 break;
             }
             if (!(targetArmy->is(creatureAlive))) {
-                strcpy(buffer, (*g_generalText)[705]);
+                strcpy(buffer, g_generalText->getText(705));
                 return true;
             }
             if (currentArmy->getResurrectionSize(targetArmy) > 0) {
                 break;
             }
             if (currentArmy->m_numTroops == 1) {
-                sprintf(buffer, (*g_generalText)[706], currentArmy->getName(),
+                sprintf(buffer, g_generalText->getText(706), currentArmy->getName(),
                         targetArmy->getName());
             } else {
-                sprintf(buffer, (*g_generalText)[707], currentArmy->getName(),
+                sprintf(buffer, g_generalText->getText(707), currentArmy->getName(),
                         targetArmy->getName());
             }
             return true;
@@ -357,27 +357,27 @@ void combatManager::combatMessage(int command)
     case COMBAT_COMMAND_NONE:
         if (currentArmy->is(creatureShootingArmy) && currentArmy->m_monInfo.m_numShots == 0
                 && targetArmy)
-            strcpy(g_text, (*g_generalText)[299]);
+            strcpy(g_text, g_generalText->getText(299));
         else
             strcpy(g_text, "");
         break;
 
     case COMBAT_COMMAND_WALK:
-        sprintf(g_text, (*g_generalText)[295], currentArmy->getName());
+        sprintf(g_text, g_generalText->getText(295), currentArmy->getName());
         break;
 
     case COMBAT_COMMAND_FLY:
-        sprintf(g_text, (*g_generalText)[296], currentArmy->getName());
+        sprintf(g_text, g_generalText->getText(296), currentArmy->getName());
         break;
 
     case COMBAT_COMMAND_ATTACK:
         distance = getDistance(currentArmy->m_gridIndex, m_lastMoveToIndex);
         if (g_config.m_combatArmyInfoLevel) {
-            sprintf(g_text, (*g_generalText)[37], targetArmy->getName(),
+            sprintf(g_text, g_generalText->getText(37), targetArmy->getName(),
                     getEstimatedDamage(currentArmy, targetArmy, 0,
                                          distance).c_str());
         } else {
-            sprintf(g_text, (*g_generalText)[221], targetArmy->getName());
+            sprintf(g_text, g_generalText->getText(221), targetArmy->getName());
         }
         priority = 1;
         break;
@@ -390,14 +390,14 @@ void combatManager::combatMessage(int command)
         long currentHits = currentArmy->getTotalHitPoints(0);
         long expectedDamage = aiGetAttackDamage(*(currentArmy), currentHits, *(targetArmy), 1, distance);
         if (!g_config.m_combatArmyInfoLevel) {
-            sprintf(g_text, (*g_generalText)[221], targetArmy->getName());
+            sprintf(g_text, g_generalText->getText(221), targetArmy->getName());
         } else if (currentArmy->m_monInfo.m_numShots == 1) {
-            sprintf(g_text, (*g_generalText)[38], targetArmy->getName(),
+            sprintf(g_text, g_generalText->getText(38), targetArmy->getName(),
                     getEstimatedDamage(currentArmy, targetArmy, 1,
                                          distance).c_str());
         } else {
             // Retail loads text row 297 (table displacement 0x4a4).
-            sprintf(g_text, (*g_generalText)[297], targetArmy->getName(),
+            sprintf(g_text, g_generalText->getText(297), targetArmy->getName(),
                     currentArmy->m_monInfo.m_numShots,
                     getEstimatedDamage(currentArmy, targetArmy, 1,
                                          distance).c_str());
@@ -407,22 +407,22 @@ void combatManager::combatMessage(int command)
     }
 
     case COMBAT_COMMAND_SPELL_BOOK:
-        strcpy(g_text, (*g_generalText)[418]);
+        strcpy(g_text, g_generalText->getText(418));
         break;
 
     case COMBAT_COMMAND_VIEW_OTHER_HERO:
-        strcpy(g_text, (*g_generalText)[419]);
+        strcpy(g_text, g_generalText->getText(419));
         break;
 
     case COMBAT_COMMAND_VIEW_TOWERS:
-        strcpy(g_text, (*g_generalText)[157]);
+        strcpy(g_text, g_generalText->getText(157));
         break;
 
     case COMBAT_COMMAND_VIEW_ARMY:
         if (validHex(m_lastCellIndex)) {
             army* viewedArmy = m_cells[m_lastCellIndex].getArmy();
             if (viewedArmy)
-                sprintf(g_text, (*g_generalText)[298],
+                sprintf(g_text, g_generalText->getText(298),
                         viewedArmy->getName(1));
             else
                 g_text[0] = 0;
@@ -433,7 +433,7 @@ void combatManager::combatMessage(int command)
         int wall;
         for (wall = 0; wall < WALL_TARGET_COUNT; wall++) {
             if (currentArmy->m_slot == s_wallTargets[wall].m_targetHex) {
-                sprintf(g_text, (*g_generalText)[221],
+                sprintf(g_text, g_generalText->getText(221),
                         s_wallTraits[m_defendingTown->m_type]
                                     [s_wallTargets[wall].m_wall].m_name);
                 break;
@@ -450,7 +450,7 @@ void combatManager::combatMessage(int command)
         // DC drawing.cpp:445 reads manager +0x12984, the same side used
         // by get_current_army. Retail reuses actingSide * 21 from that
         // earlier lookup; reading currentArmy->m_side adds another product.
-        sprintf(g_text, (*g_generalText)[420],
+        sprintf(g_text, g_generalText->getText(420),
                 m_armies[m_actingSide]
                     [m_cells[m_lastCellIndex].m_armySlot].getName());
         break;
@@ -689,7 +689,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
 
     if (m_debugShowBlockedHexes) {
         for (int i = 0; i < COMBAT_GRID_CELLS; i++) {
-            if (m_cells[i].m_attributes & 2) {
+            if (m_cells[i].m_attributes & hexcell::blocked) {
                 m_combatShadowBitmap->draw(
                     0, 0, 45, 52, m_saveScreenPostGrid,
                     m_cells[i].m_hexUlx, m_cells[i].m_hexUly, true);
@@ -1038,7 +1038,7 @@ void combatManager::drawFrame(bool update,
     for (row = 0; row < 11; row++) {
         for (column = 1; column < COMBAT_GRID_LAST_COLUMN; column++) {
             hexcell& cell = m_cells[getHexIndex(column, row)];
-            if (cell.m_attributes & 1) {
+            if (cell.m_attributes & hexcell::obstacleOrigin) {
                 TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
                 if (obstacle.m_shape->m_underlay) {
                     if (obstacle.m_isVisible
@@ -1178,7 +1178,7 @@ void combatManager::drawFrame(bool update,
 void combatManager::drawObstacleAt(int hexIndex)
 {
     hexcell& cell = m_cells[hexIndex];
-    if (cell.m_attributes & 1) {
+    if (cell.m_attributes & hexcell::obstacleOrigin) {
         TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
         if (!obstacle.m_shape->m_underlay) {
             if (obstacle.m_isVisible

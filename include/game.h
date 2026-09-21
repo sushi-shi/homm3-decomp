@@ -63,8 +63,8 @@ public:
     virtual void newMapVFn18();
     virtual void newMapVFn1c();
     virtual void newMapVFn20();
-    virtual void newMapVFn24(int heroId, int player);
-    virtual void newMapVFn28(type_point point, int player);
+    virtual void notifyHeroDefeated(int heroId, int player);
+    virtual void notifyMonsterDefeated(type_point point, int player);
     virtual void newMapVFn2c();
     virtual void newMapVFn30();
     virtual void newMapVFn34();
@@ -1063,7 +1063,9 @@ public:
     // The ultimate-artifact coordinate/radius/validity run ends with
     // a byte at +0x1f696; this byte aligns the PC dword at +0x1f698.
     char m_paddingAfterUltimateArtifactPresent;
-    int m_f1f698;
+    // Complete product generation at +0x1f698: init assigns gameVersion;
+    // applySavedGameHeader restores SavedGameHeader::gameVersion here.
+    int m_gameVersion;
     unsigned char m_isCheater;
     // Byte gate town::can_build and get_buildable_mask test before the
     // Castle-Griffin-Tower special case that drops the Blacksmith
@@ -1276,7 +1278,7 @@ private:
     int saveSignPool(TAbstractFile* outfile);  // 0x4b9270
 
 public:
-    bool isHumanAlly(int teamNum) const;
+    bool isHumanAlly(int playerNum) const;
     // event_record.obj owns 0x49d6c0's body.
     void clearEventRecords(char playerId);
     type_point getUndergroundGateExit(const NewmapCell* cell) const;
@@ -1300,8 +1302,8 @@ public:
     void perDay();
     void perWeek();
     void perMonth();
-    void setVisibility(int startX, int startY, int z,
-                       int whichPlayer, int range,
+    void setVisibility(const int startX, const int startY, const int z,
+                       const int whichPlayer, int range,
                        unsigned char remoteMove);  // 0x49cdd0
     // event_record.cpp:1189 in the DC roster (dc 0x8e54c), the negative
     // twin of SetVisibility below and the same five parameters in the same
@@ -1456,14 +1458,12 @@ public:
             return 0;
         return m_mapHeader.m_teamInfo[player1] == m_mapHeader.m_teamInfo[player2];
     }
-    // 0x4c6690, and the Dreamcast's own `?get_alignment@game@@QBA?AW4
-    // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
     // Own the retained inline body here with the game interface. The selected
     // retail copy is in philai.obj; emission does not give that TU ownership.
     VA(0x00529710, 0x34)
     TCreatureType upgradedCreatureType(TCreatureType creature) const
     {
-        if (m_f1f698 == 0
+        if (m_gameVersion == 0
             && (creature == CREATURE_AIR_ELEMENTAL
                 || creature == CREATURE_EARTH_ELEMENTAL
                 || creature == CREATURE_FIRE_ELEMENTAL
@@ -1471,25 +1471,38 @@ public:
             return CREATURE_NONE;
         return ::upgradedCreatureType(creature);
     }
-    // the Dreamcast decoration is `?is_human_ally@game@@QBA_NH@Z` and
-    // for ClaimTown; the canonical body is below in CodeView source order.
-    bool isHumanTeam(int teamNum) const
+    // Dreamcast IsHumanTeam (game.h:839, dc 0x37f64) has a bool result
+    // (_N in its public), a negative-team guard and an IsHuman call.
+    // Complete's expanded copy
+    // in ClaimTown proves the latch-tested eight-player scan: the usual `for`
+    // rotates its final branch, while this source produces all 76 retail
+    // blocks exactly.
+    VA(0x0042b9e0, 0x45)  // dc 0x37f64
+    inline bool isHumanTeam(int teamNum) const
     {
-        for (int player = 0; player < 8; ++player) {
-            if (m_mapHeader.m_teamInfo[player] == teamNum && g_game->isHuman(player))
-                return true;
+        if (teamNum >= 0) {
+            int player = 0;
+            while (1) {
+                if (m_mapHeader.m_teamInfo[player] == teamNum
+                    && g_game->isHuman(player))
+                    return true;
+                ++player;
+                if (player >= 8)
+                    break;
+            }
         }
         return false;
     }
     // Dreamcast Game.h:856 proves ClaimTown's source-visible
     // IsComputerTeam boundary. Complete keeps the same boundary but its
-    // retail lowering calls the exact is_human_ally COMDAT above; retaining
+    // retail lowering calls the exact IsHumanTeam COMDAT above; retaining
     // the wrapper is what preserves the materialized logical negation.
-    inline unsigned char isComputerTeam(int teamNum) const
+    // The DC public ?IsComputerTeam@game@@QBA_NH@Z likewise proves bool.
+    inline bool isComputerTeam(int teamNum) const
     {
         if (teamNum < 0)
             return 0;
-        return !isHumanAlly(teamNum);
+        return !isHumanTeam(teamNum);
     }
     VA(0x004a5960, 0x16)  // exact selected events.obj COMDAT, dc 0x37fbc
     int getTeam(int playerNum) const
@@ -1580,12 +1593,17 @@ public:
                   const town* thisTown, int x, int y,
                   unsigned char showDismiss, unsigned char isQuickView);
     void overview();
+    // DC lines 972..979 prove the null-first branch and leave four source
+    // lines before the successful return. Naming that array element preserves
+    // this retained body and makes cursor's expanded OnRecruitHero keep the
+    // nested GetHero call, as retail does, without an inline-depth pin.
     VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15, dc 0x2eb0
     hero* getHero(int which)
     {
-        if (which == -1)
+        if (which == -1) {
             return 0;
-        return m_heroes + which;
+        }
+        return &m_heroes[which];
     }
     // DC `game::GetCurrHero` (dc 0x2ed4, E:\gamedcs\Game.h:991) and
     // `game::GetCurrTown` (dc 0x1ff40, Game.h:1023) - the acting player's
@@ -1847,7 +1865,7 @@ inline void SavedGameHeader::reset()
         strcpy(m_id, "H3SVG");
 
     m_version = 42;
-    m_gameVersion = g_game->m_f1f698;
+    m_gameVersion = g_game->m_gameVersion;
 
     m_campaign = g_game->m_campaign;
 
@@ -2003,30 +2021,23 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
     return 0;
 }
 
-// E:\gamedcs\Game.h:1370, dc 0x37fd8
-VA(0x0042b9e0, 0x45)  // dc 0x37fd8
-inline bool game::isHumanAlly(int teamNum) const
+// DC game.h:1370, is_human_ally maps a player through the canonical team helpers.
+inline bool game::isHumanAlly(int playerNum) const
 {
-    if (teamNum >= 0) {
-        for (int player = 0; player < 8; ++player) {
-            if (m_mapHeader.m_teamInfo[player] == teamNum
-                && g_game->isHuman(player))
-                return true;
-        }
-    }
-    return false;
+    return isHumanTeam(getTeam(playerNum));
 }
 
-// E:\gamedcs\Game.h:1375, dc 0x2000c
-VA(0x004c6690, 0x43)  // dc 0x2000c
+// Complete's retained body and ClaimTown expansion prove the creature-domain
+// semantics. The nested zero check leaves the body byte-exact while making its
+// VC6 source cost 75, so the 72-budget nested call remains out of line without
+// a pragma. Dreamcast's same-named game.h:1375 helper instead maps player ids.
+VA(0x004c6690, 0x43)
 inline int game::getAlignment(int creature) const
 {
-    if (!m_f1f698
-        && (creature == CREATURE_AIR_ELEMENTAL
-            || creature == CREATURE_EARTH_ELEMENTAL
-            || creature == CREATURE_FIRE_ELEMENTAL
-            || creature == CREATURE_WATER_ELEMENTAL))
-        return -1;
+    if (m_gameVersion == 0) {
+        if (isBaseElemental(creature))
+            return -1;
+    }
     return g_creatureTypeTraits[creature].m_townType;
 }
 

@@ -419,11 +419,13 @@ public:
     // DC names the constructor's timeGetTime snapshot clickTime; retail
     // places it at the first derived dword.
     unsigned long m_clickTime;  // 0x60
-    unsigned char m_flag64;  // 0x64
-    unsigned char m_flag65;  // 0x65
+    // DC loadMode; Complete's constructor separates load and save modes.
+    unsigned char m_loadMode;  // 0x64
+    unsigned char m_saveMode;  // 0x65
     // Third mode byte of the run: SortMaps (0x585050) sorts and refills
     // from TransferHeaders when it is set, HeadersA otherwise.
-    unsigned char m_flag66;  // 0x66
+    // SetupScenarioOptions assigns its randomMaps argument to this byte.
+    unsigned char m_randomMapMode;  // 0x66
     // The three PC mode bytes end at +0x67; textIndex starts at the
     // next dword boundary, +0x68. This byte aligns the integer.
     char m_paddingBeforeTextIndex;
@@ -521,7 +523,7 @@ public:
     // HeadersA: scanned by CheckMissingHeaders with request-flag 0.
     // TransferHeaders: counted by CNewPlayerUpdateProc::Go's init msg;
     // the transfer path walks it. SortMaps sorts one of the two by
-    // m_flag66 and refills SelectionHeaders from it through the
+    // m_randomMapMode and refills SelectionHeaders from it through the
     // mapSizeFilter.
     std::vector<GameSelectionHeadersStruct> m_headersA;  // 0x1030
     std::vector<GameSelectionHeadersStruct> m_transferHeaders;  // 0x1040

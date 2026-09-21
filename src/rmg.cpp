@@ -310,6 +310,9 @@ static void __fastcall assignRmgTeams(
     const unsigned char* players,
     char* teams);
 
+// The Dreamcast build has no RMG compiland. Complete's two expanded instances
+// retain bitset<156>::set and bitset<128>::set while consuming the disabled-byte
+// range through the project's canonical bitset iterator.
 // Invert the disabled-byte range through the shared bitset iterator without
 // an inline-depth pin. The Complete-only wrapper name is inferred; the proxy
 // expansion still differs from retail's retained bitset::set call boundary.
@@ -3482,9 +3485,9 @@ void readRmgTemplateZones(
                 slot->m_parameters0020[5] = atoi(values[19]);
                 slot->m_parameters0020[6] = atoi(values[20]);
                 slot->m_parameters0020[7] = atoi(values[21]);
-                slot->m_flag0040 = 0;
+                slot->m_neutralTownsMatchZone = 0;
                 if (isRmgTemplateFieldSet(values[22]))
-                    slot->m_flag0040 = 1;
+                    slot->m_neutralTownsMatchZone = 1;
                 int townCount;
                 if (mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE)
                     townCount = 9;
@@ -3519,7 +3522,7 @@ void readRmgTemplateZones(
                 case 'a': slot->m_monsterStrength = 3; break;
                 default: slot->m_monsterStrength = 3; break;
                 }
-                slot->m_flag0094 = isRmgTemplateFieldSet(values[56]);
+                slot->m_guardsMatchZone = isRmgTemplateFieldSet(values[56]);
                 for (int monster = 0; monster < 10; ++monster)
                     slot->m_allowedMonsters[monster] =
                         isRmgTemplateFieldSet(values[57 + monster]);
@@ -5775,7 +5778,7 @@ VA(0x00540B20, 0x240) // anchor-callee 0x54203b; thiscall, ret 8; retail-only
 type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
 {
     unsigned char allowed[10];
-    if (zone->m_slot->m_flag0094 && zone->m_alignment != -1) {
+    if (zone->m_slot->m_guardsMatchZone && zone->m_alignment != -1) {
         memset(allowed, 0, sizeof(allowed));
         allowed[zone->m_alignment + 1] = 1;
     } else {
@@ -7533,7 +7536,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     int alignment, int player, unsigned char townOption, int spacing)
 {
     TRmgTownSlot* slot = zone->m_slot;
-    if ((player == -1 && !slot->m_flag0040) || alignment == -1) {
+    if ((player == -1 && !slot->m_neutralTownsMatchZone) || alignment == -1) {
         int count = 0;
         for (int town = 0; town < 9; ++town)
             if (slot->m_allowedTowns[town])
