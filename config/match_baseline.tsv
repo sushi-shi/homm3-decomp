@@ -2111,7 +2111,7 @@ game	?setupAdjacentMons@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca410	tokens1:
 game	?setupFirstPlayer@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0630	tokens1:079d16151b0d
 game	?setupOrigData@game@@QAEXXZ	100.0000	100.0000	100.0000	0xbf1a0	tokens1:02844bd3c2cc
 game	?setupPuzzlePieces@game@@QAEHHH@Z	98.9637	98.9637	98.9637	0xbaf00	tokens1:b5d6cba9c1c2
-game	?setupShipyards@game@@AAEXXZ	81.3920	81.3920	100.0000	0xbcb30	tokens1:339df29ea619
+game	?setupShipyards@game@@AAEXXZ	100.0000	100.0000	100.0000	0xbcb30	tokens1:c2943f7ed770
 game	?showComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca5b0	tokens1:4a7eecf5a20e
 game	?showHeroesLogo@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca780	tokens1:53d6a93d9cbc
 game	?size@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf750	-

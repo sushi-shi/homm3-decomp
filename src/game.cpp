@@ -2449,58 +2449,51 @@ int SavedGameHeader::load(TAbstractFile* infile)
 // boats temporarily expose the object below their occupied cell; the same
 // obscurer is restored once that cell has been inspected. The y/x loop order
 // and its width/height bounds are retail's own packed-type_point schedule.
-// Earlier flattened version was exact: clear() expanded clear and erase
-// while retaining the empty POD _Destroy helper. Restoring the DC-proven
-// hero/boat obscureCell wrappers leaves them expanded correctly, but VC6
-// now retains std::copy in the earlier clear path (81.3920%, HIST 100%).
-// Keep the wrappers and diagnose that separate inliner decision.
+// DC constructs the point before the two obscurer pointers and names the
+// vector operation push_back. That declaration order gives VC6 the retail
+// clear expansion while preserving the hero and boat obscureCell helpers.
 VA(0x004bcb30, 0x26C)  // sole caller game::Load, dc 0xa8144
 void game::setupShipyards()
 {
-    hero* obscuringHero = 0;
-    boat* obscuringBoat = 0;
+    type_point point;
+    hero* currentHero = 0;
+    boat* currentBoat = 0;
     long i;
     for (i = 0; i < 8; ++i) {
         m_players[i].m_shipyards.clear();
     }
 
-    type_point location;
-    for (location.m_z = 0;
-         location.m_z < g_game->m_worldMap.getNumLevels();
-         ++location.m_z) {
-        for (location.m_y = 0; location.m_y < g_mapWidth; ++location.m_y) {
-            for (location.m_x = 0; location.m_x < g_mapHeight; ++location.m_x) {
-                NewmapCell* mapCell = g_game->m_worldMap.cell(location);
+    for (point.m_z = 0; point.m_z < g_game->getNumMapLevels(); ++point.m_z) {
+        for (point.m_y = 0; point.m_y < g_mapWidth; ++point.m_y) {
+            for (point.m_x = 0; point.m_x < g_mapHeight; ++point.m_x) {
+                NewmapCell* cell = g_game->getCell(point);
 
-                if (mapCell->m_type == HERO) {
-                    obscuringHero = g_game->getHero(mapCell->m_extraInfo);
-                    obscuringHero->restoreCell();
+                if (cell->m_type == HERO) {
+                    currentHero = g_game->getHero(cell->m_extraInfo);
+                    currentHero->restoreCell();
                 }
-                if (mapCell->m_type == BOAT) {
-                    obscuringBoat = g_game->getBoat(mapCell->m_extraInfo);
-                    obscuringBoat->restoreCell();
+                if (cell->m_type == BOAT) {
+                    currentBoat = g_game->getBoat(cell->m_extraInfo);
+                    currentBoat->restoreCell();
                 }
 
                 ShipyardInfo* shipyardInfo =
                     static_cast<ShipyardInfo*>(
-                        static_cast<void*>(&mapCell->m_extraInfo));
-                if (mapCell->m_type == SHIPYARD && mapCell->m_isTrigger &&
+                        static_cast<void*>(&cell->m_extraInfo));
+                if (cell->m_type == SHIPYARD && cell->m_isTrigger &&
                     shipyardInfo->m_owner >= 0) {
                     std::vector<type_point>& shipyards =
                         m_players[shipyardInfo->m_owner].m_shipyards;
-                    type_point* shipyardEnd = shipyards.end();
-#pragma inline_depth(0)
-                    shipyards.insert(shipyardEnd, 1, location);
-#pragma inline_depth()
+                    shipyards.push_back(point);
                 }
 
-                if (obscuringHero) {
-                    obscuringHero->obscureCell();
-                    obscuringHero = 0;
+                if (currentHero) {
+                    currentHero->obscureCell();
+                    currentHero = 0;
                 }
-                if (obscuringBoat) {
-                    obscuringBoat->obscureCell();
-                    obscuringBoat = 0;
+                if (currentBoat) {
+                    currentBoat->obscureCell();
+                    currentBoat = 0;
                 }
             }
         }
