@@ -754,8 +754,8 @@ def write_readme(report: dict) -> None:
     denominator = target_fns + zlib_fns
     unmatched = denominator - covered
 
-    rows = [["Module", "Units", "Function exact MAX", "Functions exact CUR",
-             "Fuzzy MAX", "Fuzzy CUR"]]
+    rows = [["Module", "Units", "Functions exact CUR", "Function exact MAX",
+             "Fuzzy CUR", "Fuzzy MAX"]]
     for module in sorted(per_module, key=lambda m: -per_module[m]["fns"]):
         a = per_module[module]
         pct = 100.0 * a["exact"] / a["fns"] if a["fns"] else 0.0
@@ -763,9 +763,9 @@ def write_readme(report: dict) -> None:
         fuzzy = a["wsum"] / a["code"] if a["code"] else 0.0
         fmax = a["wmax"] / a["code"] if a["code"] else 0.0
         rows.append([f"`{module}`", str(a["units"]),
-                     f"{a['exact_max']} / {a['fns']} ({pct_max:.1f}%)",
                      f"{a['exact']} / {a['fns']} ({pct:.1f}%)",
-                     f"{fmax:.2f}%", f"{fuzzy:.2f}%"])
+                     f"{a['exact_max']} / {a['fns']} ({pct_max:.1f}%)",
+                     f"{fuzzy:.2f}%", f"{fmax:.2f}%"])
     if unmatched:
         rows.append(["`(unmatched)`", "—",
                      f"0 / {unmatched:,} (0.0%)",
