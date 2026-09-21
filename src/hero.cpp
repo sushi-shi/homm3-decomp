@@ -1661,7 +1661,7 @@ int hero::heroFn004D9B30(int artifact)
     type_artifact record(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
     std::string text = record.getDescription();
     text += "\n\n";
-    text += g_generalText->getText(734);
+    text += g_generalText->getText(GENERAL_TEXT_COMBINATION_ARTIFACT_DISASSEMBLY_PROMPT);
     normalDialog(text.c_str(), 2, -1, PRIMARY_STAT_DIALOG_Y, -1, 0, -1, 0,
                  -1, 0, -1, 0);
     return g_windowManager->m_dialogReturn;
@@ -1694,7 +1694,7 @@ int hero::heroFn004D9CC0(int artifact)
     type_artifact record(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
     std::string text = record.getDescription();
     text += "\n\n";
-    text += formatString(g_generalText->getText(733),
+    text += formatString(g_generalText->getText(GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT),
                           g_artifactTraits[assembled].m_name);
     normalDialog(text.c_str(), 2, -1, PRIMARY_STAT_DIALOG_Y, 8, assembled,
                  -1, 0, -1, 0, -1, 0);
@@ -2826,7 +2826,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                     g_currentHero->getSpecialTerrain());
                 spellBookWindow.doModal(0);
             } else if (slot == hero::EQUIPPED_SLOT_WAR_MACHINE_4) {
-                normalDialog(g_generalText->getText(313), 1, -1, -1, 8, 3,
+                normalDialog(g_generalText->getText(GENERAL_TEXT_CATAPULT_MUST_BE_EQUIPPED), 1, -1, -1, 8, 3,
                              -1, 0, -1, 0, -1, 0);
             } else if (g_currentPlayer->isLocalHuman()) {
                 g_heroScreenDraggedArtifact = oldArtifact;
@@ -3032,7 +3032,7 @@ void hero::heroFn004DC100(long slot)
     player.m_assembledCombinations[targetCombo] = true;
 
     int assembled = g_combinationArtifacts[targetCombo].m_artifactId;
-    std::string prompt = formatString(g_generalText->getText(733),
+    std::string prompt = formatString(g_generalText->getText(GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT),
                                        g_artifactTraits[assembled].m_name);
     normalDialog(prompt.c_str(), 2, -1, -1, 8, assembled, -1, 0, -1, 0,
                  -1, 0);
@@ -3069,7 +3069,7 @@ std::string hero::getMoraleDescription() const
     std::string result;
 
     if (m_flags & 0x800000) {
-        result = g_generalText->getText(438);
+        result = g_generalText->getText(GENERAL_TEXT_CHEAT_MAXIMUM);
         trackedBonus = 500;
     }
 
@@ -3214,7 +3214,7 @@ std::string hero::getLuckDescription() const
     std::string result;
 
     if (m_flags & 0x400000) {
-        result = g_generalText->getText(438);
+        result = g_generalText->getText(GENERAL_TEXT_CHEAT_MAXIMUM);
         luck = 500;
     }
 
@@ -3616,7 +3616,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             break;
         switch (msg.m_codeY) {
         case HERO_NAME_ID:
-            normalDialog(g_generalText->getText(23), 2, -1, -1, -1, 0,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_DISMISS_HERO_PROMPT), 2, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 exitFlag = 1;
@@ -3714,7 +3714,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             {
                 if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                     break;
-                sprintf(g_text, g_generalText->getText(206),
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
                         g_currentHero->m_name, g_currentHero->m_mana,
                         g_currentHero->getMaxMana());
                 normalDialog(g_text,
@@ -3729,7 +3729,7 @@ int THeroScreenWindow::windowHandler(message& msg)
         case WIDGET_77_ID:
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
-            sprintf(g_text, g_generalText->getText(3),
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
                     g_currentHero->m_level,
                     hero::getExperience(g_currentHero->m_level + 1),
                     g_currentHero->m_experience);
@@ -5315,7 +5315,7 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
                             int assembled =
                                 g_combinationArtifacts[targetCombo].m_artifactId;
                             std::string prompt = formatString(
-                                g_generalText->getText(733),
+                                g_generalText->getText(GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT),
                                 g_artifactTraits[assembled].m_name);
                             normalDialog(prompt.c_str(), 2, -1, -1, 8,
                                          assembled, -1, 0, -1, 0, -1, 0);
@@ -5373,7 +5373,7 @@ int hero::giveExperience(int howMuch, int checkForLevelUp,
                 m_experience = cap;
             if (showCapWindow && g_game->isLocalHuman(m_owner)) {
                 std::string text =
-                    formatString(g_generalText->getText(2), m_name);
+                    formatString(g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_LIMIT), m_name);
                 normalDialog(text.c_str(), 1, -1, -1, 0x11, 0, -1, 0, -1,
                              0, -1, 0);
             }

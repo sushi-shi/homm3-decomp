@@ -128,7 +128,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
         font::HEADING, 0x226, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(0x42, 0xe0, 0x5f, 0x11,
-        g_generalText->getText(347),
+        g_generalText->getText(GENERAL_TEXT_COST_PER_TROOP),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x1f4,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -153,7 +153,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     m_widgets.push_back(new textWidget(0xad, 0xdf, 0x41, 0x15,
-        g_generalText->getText(466),
+        g_generalText->getText(GENERAL_TEXT_RECRUIT_AVAILABLE_LABEL),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x208,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -180,7 +180,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
     m_widgets.push_back(m_quantitySlider);
 
     m_widgets.push_back(new textWidget(0x144, 0xe0, 0x5f, 0x11,
-        g_generalText->getText(467),
+        g_generalText->getText(GENERAL_TEXT_TOTAL_COST),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x20f,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -889,7 +889,7 @@ int recruitUnit::main(message& msg)
                     & g_ctaSiegeWeapon) {
                     if (m_thisHero->getNumberInBackpack(1) + m_numberToBuy
                         > 64) {
-                        normalDialog(g_generalText->getText(327),
+                        normalDialog(g_generalText->getText(GENERAL_TEXT_RECRUIT_BACKPACK_FULL),
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                         break;
                     }
@@ -910,7 +910,7 @@ int recruitUnit::main(message& msg)
                     m_currArmyGroup->add(m_monsterType, m_numberToBuy, -1);
                 } else {
                     if (m_currArmyGroupIsTownGarrison) {
-                        normalDialog(g_generalText->getText(18),
+                        normalDialog(g_generalText->getText(GENERAL_TEXT_RECRUIT_GARRISON_FULL),
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     } else {
                         const char* creatureName;
@@ -925,7 +925,7 @@ int recruitUnit::main(message& msg)
                             creatureName = "";
                         }
                         normalDialog(formatString(
-                            g_generalText->getText(426), creatureName).c_str(),
+                            g_generalText->getText(GENERAL_TEXT_RECRUIT_INSUFFICIENT_PROVISIONS_FORMAT), creatureName).c_str(),
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1208,13 +1208,13 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
 
     sprintf(g_text,
         DATA_COMPGEN(0x00660c98, quickRecruitAvailabilityFormat, "%s %d"),
-        g_generalText->getText(218), *numMon);
+        g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL), *numMon);
     recruitWindow->addWidget(new textWidget(30, 182, 100, 17, g_text,
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x209,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
     recruitWindow->addWidget(new textWidget(32, 218, 96, 19,
-        g_generalText->getText(347),
+        g_generalText->getText(GENERAL_TEXT_COST_PER_TROOP),
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x1f4,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);

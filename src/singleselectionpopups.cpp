@@ -280,7 +280,7 @@ unsigned char CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSp
         return 0;
 
     add(new textWidget(30, 26, m_width - 60, 36,
-        g_generalText->getText(78), "medfont.fnt", font::PRIMARY,
+        g_generalText->getText(GENERAL_TEXT_SCENARIO_STARTING_HERO_CAPTION), "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
     add(new CBitmapWidget((m_width - heroPick->getWidth()) / 2, 56, heroPick));
 
@@ -290,7 +290,7 @@ unsigned char CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSp
         "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
 
     add(new textWidget(30, 122, m_width - 60, 36,
-        g_generalText->getText(79), "medfont.fnt", font::PRIMARY,
+        g_generalText->getText(GENERAL_TEXT_SCENARIO_HERO_SPECIALTY_CAPTION), "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
     add(new CSpriteWidget((m_width - specialtyIcon->getWidth()) / 2, 149,
         specialtyIcon, frame));
@@ -319,14 +319,14 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
         return 0;
 
     add(new textWidget(10, 26, m_width - 20, 36,
-        g_generalText->getText(81), "medfont.fnt", font::PRIMARY,
+        g_generalText->getText(GENERAL_TEXT_SCENARIO_TOWN_ALIGNMENT_CAPTION), "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
     add(new CSpriteWidget((m_width - town->getWidth()) / 2, 60, town, frame));
     add(new textWidget(10, 95, m_width - 20, 18,
         g_townTypeNames[townType + 1], "smalfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
     add(new textWidget(10, 127, m_width - 20, 36,
-        g_generalText->getText(80), "medfont.fnt", font::PRIMARY,
+        g_generalText->getText(GENERAL_TEXT_SCENARIO_ASSOCIATED_CREATURES_CAPTION), "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
 
     int centerX = m_width / 2;
@@ -400,12 +400,12 @@ unsigned char CTeamAlignmentDlg::createWin()
         return 0;
 
     add(new textWidget(10, 20, m_width - 20, 36,
-        g_generalText->getText(658), "medfont.fnt", font::PRIMARY,
+        g_generalText->getText(GENERAL_TEXT_TEAM_ALIGNMENTS_CAPTION), "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
 
     for (int team = 0; team < m_numTeams; ++team) {
         int y = team * 50 + 56;
-        sprintf(tempText, g_generalText->getText(657), team + 1);
+        sprintf(tempText, g_generalText->getText(GENERAL_TEXT_TEAM_NUMBER_FORMAT), team + 1);
         add(new textWidget(10, y, m_width - 20, 18, tempText,
             "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
 
@@ -528,7 +528,7 @@ TRandomMapProgress::TRandomMapProgress(int totalSteps)
     m_drawnPosition = 0;
     m_window = new TDialogBox(240, 236, 320, 128, 0x12);
 
-    const char* caption = g_generalText->getText(761);
+    const char* caption = g_generalText->getText(GENERAL_TEXT_CREATING_MAP);
     int captionWidth = g_mediumFont->getStringWidth(caption);
     int captionX = (m_window->m_width - captionWidth) / 2;
     textWidget* captionWidget = new textWidget(

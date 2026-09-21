@@ -149,13 +149,13 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         g_game->getLocalPlayerGamePos());
 
     m_widgets.push_back(new textWidget(
-        0, 290, 466, 100, g_generalText->getText(408), "BigFont.fnt",
+        0, 290, 466, 100, g_generalText->getText(GENERAL_TEXT_BATTLEFIELD_CASUALTIES), "BigFont.fnt",
         font::HEADING_HIGHLIGHT, BACKGROUND_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        0, 320, 466, 100, g_generalText->getText(409), "BigFont.fnt",
+        0, 320, 466, 100, g_generalText->getText(GENERAL_TEXT_ATTACKER), "BigFont.fnt",
         font::WHITE, BACKGROUND_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        0, 412, 466, 100, g_generalText->getText(410), "BigFont.fnt",
+        0, 412, 466, 100, g_generalText->getText(GENERAL_TEXT_DEFENDER), "BigFont.fnt",
         font::WHITE, BACKGROUND_ID, 1, 0, 8));
 
     if (attacker) {
@@ -247,26 +247,26 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
 
     m_widgets.push_back(new textWidget(
         17, 116, 84, 20,
-        winningSide == 0 ? g_generalText->getText(411)
-                          : g_generalText->getText(412),
+        winningSide == 0 ? g_generalText->getText(GENERAL_TEXT_VICTORIOUS)
+                          : g_generalText->getText(GENERAL_TEXT_DEFEATED),
         "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         367, 116, 84, 20,
-        winningSide == 1 ? g_generalText->getText(411)
-                          : g_generalText->getText(412),
+        winningSide == 1 ? g_generalText->getText(GENERAL_TEXT_VICTORIOUS)
+                          : g_generalText->getText(GENERAL_TEXT_DEFEATED),
         "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
 
     int videoId;
     if (mySide == winningSide) {
         if (g_combatSurrendered)
-            strcpy(g_text, g_generalText->getText(303));
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_ENEMY_SURRENDERED));
         else if (g_combatRetreated)
-            strcpy(g_text, g_generalText->getText(304));
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_ENEMY_FLED));
         else
-            strcpy(g_text, g_generalText->getText(305));
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_VICTORY));
         if (myHero) {
             char temp[150];
-            sprintf(temp, g_generalText->getText(306),
+            sprintf(temp, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_EXPERIENCE_FORMAT),
                 myHero->m_name, experience);
             strcat(g_text, temp);
         }
@@ -279,11 +279,11 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         }
     } else if (myHero) {
         if (g_combatSurrendered)
-            sprintf(g_text, g_generalText->getText(307), myHero->m_name);
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_HERO_SURRENDERED_FORMAT), myHero->m_name);
         else if (g_combatRetreated)
-            sprintf(g_text, g_generalText->getText(308), myHero->m_name);
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_HERO_FLED_FORMAT), myHero->m_name);
         else
-            sprintf(g_text, g_generalText->getText(309), myHero->m_name);
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_HERO_DEFEATED_FORMAT), myHero->m_name);
         if (isSiege && myHero == defender) {
             videoId = 1;
             g_combatResult = 5;
@@ -299,11 +299,11 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         }
     } else {
         if (g_combatSurrendered)
-            strcpy(g_text, g_generalText->getText(310));
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_ARMY_SURRENDERED));
         else if (g_combatRetreated)
-            strcpy(g_text, g_generalText->getText(311));
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_ARMY_FLED));
         else
-            strcpy(g_text, g_generalText->getText(312));
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_ARMY_DEFEATED));
         if (isSiege) {
             videoId = 1;
             g_combatResult = 5;
@@ -362,7 +362,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         int rowY = lossSide ? 440 : 343;
         if (ttlDeadArmies[lossSide] <= 0)
             m_widgets.push_back(new textWidget(
-                42, rowY + 10, 384, 36, g_generalText->getText(32),
+                42, rowY + 10, 384, 36, g_generalText->getText(GENERAL_TEXT_NONE),
                 "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
         int maxToShow = min(ttlDeadArmies[lossSide], 7);
         firstX = (468 - 42 * maxToShow) / 2 + 11;

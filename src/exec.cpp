@@ -28,11 +28,11 @@ VA(0x004b0910, 0x79)  // dc 0x9e520
 int executive::initSystem()
 {
     if (g_inputManager->open(-1))
-        shutDown(g_generalText->getText(131));
+        shutDown(g_generalText->getText(GENERAL_TEXT_INPUT_DEVICE_INITIALIZATION_ERROR));
     if (addManager(g_mouseManager, -1))
-        shutDown(g_generalText->getText(133));
+        shutDown(g_generalText->getText(GENERAL_TEXT_MOUSE_INITIALIZATION_ERROR));
     if (addManager(g_windowManager, -1))
-        shutDown(g_generalText->getText(134));
+        shutDown(g_generalText->getText(GENERAL_TEXT_WINDOWS_INITIALIZATION_ERROR));
     return 0;
 }
 

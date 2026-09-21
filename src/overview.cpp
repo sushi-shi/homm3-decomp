@@ -368,14 +368,14 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             }
 
             g_textWidgetDynamic[slot + curText] = new textWidget(
-                26, row * 116 + 102, 54, 32, g_generalText->getText(266),
+                26, row * 116 + 102, 54, 32, g_generalText->getText(GENERAL_TEXT_CREATURE_BONUSES),
                 "smalfont.fnt", static_cast<font::TColor>(7),
                 rowWidgetId + 97, font::LEFT_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
             g_textWidgetDynamic[slot + curText] = new textWidget(
-                373, row * 116 + 102, 56, 32, g_generalText->getText(267),
+                373, row * 116 + 102, 56, 32, g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE),
                 "smalfont.fnt", static_cast<font::TColor>(7),
                 rowWidgetId + 47, font::LEFT_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
@@ -651,7 +651,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             }
 
             g_textWidgetDynamic[slot + curText] = new textWidget(
-                294, row * 116 + 71, 93, 20, g_generalText->getText(259),
+                294, row * 116 + 71, 93, 20, g_generalText->getText(GENERAL_TEXT_ARTIFACTS),
                 "smalfont.fnt", font::PRIMARY, rowWidgetId + 139,
                 font::CENTER_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
@@ -739,7 +739,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             g_textButtonDynamic[row * 3] = new textButton(
                 386, row * 116 + 70, 108, 16,
-                rowWidgetId + 128, "OvButn3.def", g_generalText->getText(260),
+                rowWidgetId + 128, "OvButn3.def", g_generalText->getText(GENERAL_TEXT_EQUIPPED),
                 "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
             if (!g_textButtonDynamic[row * 3])
                 memError();
@@ -747,7 +747,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             g_textButtonDynamic[row * 3 + 1] = new textButton(
                 498, row * 116 + 70, 108, 16,
-                rowWidgetId + 129, "OvButn3.def", g_generalText->getText(262),
+                rowWidgetId + 129, "OvButn3.def", g_generalText->getText(GENERAL_TEXT_MISCELLANEOUS),
                 "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
             if (!g_textButtonDynamic[row * 3 + 1])
                 memError();
@@ -755,7 +755,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             g_textButtonDynamic[row * 3 + 2] = new textButton(
                 610, row * 116 + 70, 108, 16,
-                rowWidgetId + 138, "OvButn3.def", g_generalText->getText(263),
+                rowWidgetId + 138, "OvButn3.def", g_generalText->getText(GENERAL_TEXT_BACKPACK),
                 "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
             if (!g_textButtonDynamic[row * 3 + 2])
                 memError();
@@ -1349,7 +1349,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
 
             case OVERVIEW_HERO_LEVEL_ID: {
                 int level = currHero->m_level;
-                sprintf(g_text, g_generalText->getText(3), level,
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT), level,
                         hero::getExperience(level + 1),
                         currHero->m_experience);
                 normalDialog(
@@ -1361,7 +1361,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             }
 
             case OVERVIEW_HERO_MANA_ID:
-                sprintf(g_text, g_generalText->getText(206), currHero->m_name,
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT), currHero->m_name,
                         currHero->m_mana, currHero->getMaxMana());
                 normalDialog(
                     g_text,
@@ -2243,7 +2243,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 11:
             case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 12:
             case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 13:
-                sprintf(g_text, g_generalText->getText(589),
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
                         getArmyName(g_townDwellingCreatures[
                             currTown->m_type * TOWN_DWELLING_SLOTS
                             + codeY
@@ -2264,7 +2264,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 11:
             case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 12:
             case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 13:
-                sprintf(g_text, g_generalText->getText(589),
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
                         getArmyName(g_townDwellingCreatures[
                             currTown->m_type * TOWN_DWELLING_SLOTS
                             + codeY
@@ -2273,7 +2273,7 @@ void TOverviewWindow::doRollover(int codeY)
 
             case OVERVIEW_TOWN_SUMMONING_GROWTH_ICON_ID:
             case OVERVIEW_TOWN_SUMMONING_GROWTH_TEXT_ID:
-                sprintf(g_text, g_generalText->getText(589),
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
                         getArmyName(currTown->m_summoningType, 1));
                 break;
 
@@ -2360,7 +2360,7 @@ void TOverviewWindow::doRollover(int codeY)
         }
 
         case OVERVIEW_RESOURCE_TOTAL_ID:
-            strcpy(g_text, g_generalText->getText(256));
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_DAILY_INCOME));
             break;
 
         case OVERVIEW_HELP_FIRST_ID:

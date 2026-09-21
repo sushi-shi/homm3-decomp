@@ -632,10 +632,10 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
     const int noBoatPosition = 0xff;
     if (boatPoint.m_x == noBoatPosition) {
         if (!g_game->getCurrHero()) {
-            normalDialog(g_adventureEventText->getText(189),
+            normalDialog(g_adventureEventText->getText(ADV_EVENT_TEXT_ABANDONED_SHIPYARD),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
-            normalDialog(formatString(g_generalText->getText(135),
+            normalDialog(formatString(g_generalText->getText(GENERAL_TEXT_SHIPYARD_BLOCKED_FORMAT),
                          g_game->getCurrHero()->m_name).c_str(),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -647,14 +647,14 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
     if (boatCell->m_isTrigger
         && (boatCell->m_type == BOAT || boatCell->m_type == HERO
             || g_game->getBoatsBuilt() >= 64)) {
-        normalDialog(g_generalText->getText(52),
+        normalDialog(g_generalText->getText(GENERAL_TEXT_BOAT_BUILD_BLOCKED),
                      1, 208, 40, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
 
     if (g_game->m_players[g_netLocalGamePos].m_resources[GOLD] < 1000
         || g_game->m_players[g_netLocalGamePos].m_resources[WOOD] < 10) {
-        normalDialog(g_generalText->getText(330),
+        normalDialog(g_generalText->getText(GENERAL_TEXT_BOAT_PURCHASE_CANNOT_AFFORD),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -802,14 +802,14 @@ void advManager::fightForArtifact(hero* currentHero, NewmapCell* cell,
     if (humanPlayer) {
         overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
         updBottomView(0, 1, 1);
-        sprintf(g_text, g_generalText->getText(421),
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GUARDED_ARTIFACT_PROMPT_FORMAT),
                 armyGroup::getArmySizeName(amount, 2),
                 getArmyName(monsterType, 2),
                 getArmyName(monsterType, 2));
         normalDialog(g_text, 2, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT) {
-            normalDialog(g_adventureEventText->getText(11),
+            normalDialog(g_adventureEventText->getText(ADV_EVENT_TEXT_ARTIFACT_FIGHT_DECLINED),
                          1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
@@ -825,7 +825,7 @@ void advManager::fightForArtifact(hero* currentHero, NewmapCell* cell,
 
     currentHero->checkLevel();
     if (humanPlayer) {
-        sprintf(g_text, g_adventureEventText->getText(8),
+        sprintf(g_text, g_adventureEventText->getText(ADV_EVENT_TEXT_CUSTOM_GUARDED),
                 g_artifactTraits[artifact].m_name);
         normalDialog(g_text, 1, -1, -1,
                      8, artifact, -1, 0, -1, 0, -1, 0);
@@ -952,7 +952,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
                         guards += getArmyName(guardList.m_armies[i], 2);
                     }
                 }
-                msg = formatString(g_generalText->getText(421),
+                msg = formatString(g_generalText->getText(GENERAL_TEXT_GUARDED_ARTIFACT_PROMPT_FORMAT),
                                     firstGuardAmount.c_str(),
                                     guards.c_str(), firstGuard.c_str());
                 normalDialog(msg.c_str(),
@@ -1123,7 +1123,7 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
     std::string message(text);
     std::string alternate;
     std::vector<type_dialog_resource> rewards;
-    alternate = formatString(g_adventureEventText->getText(175),
+    alternate = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_REWARD_FORMAT),
                               currentHero->m_name);
 
     if (blackBox->m_experienceBonus > 0) {
@@ -1176,10 +1176,10 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
             mana = 999 - currentHero->m_mana;
         } else if (currentHero->m_mana + mana < 0) {
             mana = -currentHero->m_mana;
-            alternate = formatString(g_adventureEventText->getText(176),
+            alternate = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_MANA_FORMAT),
                                       currentHero->m_name);
         } else {
-            alternate = formatString(g_adventureEventText->getText(177),
+            alternate = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_MANA_FORMAT),
                                       currentHero->m_name);
         }
         if (humanPlayer && mana != 0) {
@@ -1193,12 +1193,12 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
         if (humanPlayer) {
             if (blackBox->m_moraleBonus < 0) {
                 addReward(message, formatString(
-                    g_adventureEventText->getText(178),
+                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_MORALE_FORMAT),
                     currentHero->m_name), rewards, RES_BAD_MORALE,
                            blackBox->m_moraleBonus);
             } else {
                 addReward(message, formatString(
-                    g_adventureEventText->getText(179),
+                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_MORALE_FORMAT),
                     currentHero->m_name), rewards, RES_GOOD_MORALE,
                            blackBox->m_moraleBonus);
             }
@@ -1211,12 +1211,12 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
         if (humanPlayer) {
             if (blackBox->m_luckBonus < 0) {
                 addReward(message, formatString(
-                    g_adventureEventText->getText(180),
+                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_LUCK_FORMAT),
                     currentHero->m_name), rewards, RES_BAD_LUCK,
                            blackBox->m_luckBonus);
             } else {
                 addReward(message, formatString(
-                    g_adventureEventText->getText(181),
+                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_LUCK_FORMAT),
                     currentHero->m_name), rewards, RES_GOOD_LUCK,
                            blackBox->m_luckBonus);
             }
@@ -1233,12 +1233,12 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
                 rewardType = k;
                 if (blackBox->m_resQty[k] > 0) {
                     addReward(message, formatString(
-                        g_adventureEventText->getText(183),
+                        g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
                         currentHero->m_name), rewards, EGameResource(rewardType),
                                blackBox->m_resQty[k]);
                 } else {
                     addReward(message, formatString(
-                        g_adventureEventText->getText(182),
+                        g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_TREASURE_FORMAT),
                         currentHero->m_name), rewards, EGameResource(rewardType),
                                blackBox->m_resQty[k] - 100000);
                 }
@@ -1254,7 +1254,7 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
         if (currentHero->getNumberInBackpack(1) < 64) {
             if (humanPlayer) {
                 addReward(message, formatString(
-                    g_adventureEventText->getText(183),
+                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
                     currentHero->m_name), rewards, RES_ARTIFACT,
                            blackBox->m_artifacts[m]);
             }
@@ -1275,12 +1275,12 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
                 if (humanPlayer) {
                     if (rewards.size() != 0) {
                         std::string pendingText = formatString(
-                            g_adventureEventText->getText(188),
+                            g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELLS_FORMAT),
                             currentHero->m_name);
                         message = pendingText;
                     }
                     addReward(message, formatString(
-                        g_adventureEventText->getText(184),
+                        g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELL_FORMAT),
                         currentHero->m_name), rewards, RES_SPELL,
                                blackBox->m_spells[n]);
                 }
@@ -1301,11 +1301,11 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
         if (humanPlayer) {
             if (count == 1)
                 alternate = formatString(
-                    g_adventureEventText->getText(185),
+                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_CREATURE_JOINS_FORMAT),
                     getArmyName(type, 1), currentHero->m_name);
             else
                 alternate = formatString(
-                    g_adventureEventText->getText(186),
+                    g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_CREATURES_JOIN_FORMAT),
                     getArmyName(type, 2), currentHero->m_name);
             addReward(message, alternate, rewards, RES_MONSTER,
                        ((count & 0xffff) << 16) | (type & 0xffff));
@@ -1575,7 +1575,7 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
     cell->setCellVisited(currentHero->m_owner);
     if (cell->m_extraInfo & 0x2000000) {
         if (humanPlayer) {
-            dialogText = formatString(g_adventureEventText->getText(33),
+            dialogText = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_CREATURE_BANK_EMPTY),
                                         name.c_str());
             normalDialog(dialogText.c_str(),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -1584,7 +1584,7 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
     }
 
     if (humanPlayer) {
-        dialogText = formatString(g_adventureEventText->getText(32),
+        dialogText = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_CREATURE_BANK_PROMPT),
                                     name.c_str());
         overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
         updBottomView(0, 1, 1);
@@ -1650,7 +1650,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                 overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
                 updBottomView(0, 1, 1);
                 prompt = formatString(
-                    g_generalText->getText(422), generatorName,
+                    g_generalText->getText(GENERAL_TEXT_GUARDED_OBJECT_PROMPT_FORMAT), generatorName,
                     armyGroup::getArmySizeName(guardQty, 2),
                     getArmyName(guardType, 2));
                 normalDialog(prompt.c_str(),
@@ -1672,7 +1672,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
     if (humanPlayer) {
         if (generatorType != CREATURE_GENERATOR_1) {
             if (generatorType == CREATURE_GENERATOR_4) {
-                sprintf(g_text, g_adventureEventText->getText(36),
+                sprintf(g_text, g_adventureEventText->getText(ADV_EVENT_TEXT_DWELLING_RECRUIT_MULTIPLE_FORMAT),
                         generatorName,
                         getArmyName(currentGenerator.m_type[0], 2),
                         getArmyName(currentGenerator.m_type[1], 2),
@@ -1680,7 +1680,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                         getArmyName(currentGenerator.m_type[3], 2));
             }
         } else {
-            sprintf(g_text, g_adventureEventText->getText(35),
+            sprintf(g_text, g_adventureEventText->getText(ADV_EVENT_TEXT_DWELLING_RECRUIT_ONE_FORMAT),
                     generatorName,
                     getArmyName(currentGenerator.m_type[0], 2));
         }
@@ -1702,16 +1702,16 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                 }
 
                 if (currentGenerator.m_population[i] == 0) {
-                    result += formatString(g_generalText->getText(423),
+                    result += formatString(g_generalText->getText(GENERAL_TEXT_NO_CREATURES_TO_RECRUIT_FORMAT),
                         g_creatureTypeTraits[creature].m_pluralName);
                 } else if (!currentHero->m_army.add(
                                creature, currentGenerator.m_population[i],
                                -1)) {
-                    result += formatString(g_generalText->getText(426),
+                    result += formatString(g_generalText->getText(GENERAL_TEXT_RECRUIT_INSUFFICIENT_PROVISIONS_FORMAT),
                         getArmyName(creature,
                                     currentGenerator.m_population[i]));
                 } else {
-                    result += formatString(g_generalText->getText(424),
+                    result += formatString(g_generalText->getText(GENERAL_TEXT_CREATURES_JOIN_FORMAT),
                         currentGenerator.m_population[i],
                         getArmyName(creature,
                                     currentGenerator.m_population[i]));
@@ -2145,7 +2145,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
     std::vector<type_dialog_resource> spellsExchanged;
     type_dialog_resource spellInfo;
 
-    msg = formatString(g_generalText->getText(140), firstHero->m_name);
+    msg = formatString(g_generalText->getText(GENERAL_TEXT_SCHOLAR_MAGIC_INTRO_FORMAT), firstHero->m_name);
     spellInfo.m_resource = RES_SECONDARY_SKILL;
     spellInfo.m_qualifier = eSecSkillMagicScholar * 3
                            + firstHero->m_skillLevel[eSecSkillMagicScholar] + 2;
@@ -2162,7 +2162,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
         3, 7 - static_cast<int>(spellsLearned.size()));
 
     if (spellsLearned.size()) {
-        msg += g_generalText->getText(141);
+        msg += g_generalText->getText(GENERAL_TEXT_LEARNS_FRAGMENT);
         for (int i = 0; i < spellsLearned.size(); i++) {
             if (i < learnedIconCount) {
                 spellInfo.m_resource = RES_SPELL;
@@ -2177,7 +2177,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             }
             msg += g_spellTraits[spellsLearned[i]].m_name;
         }
-        msg += formatString(g_generalText->getText(143), secondHero->m_name);
+        msg += formatString(g_generalText->getText(GENERAL_TEXT_FROM_HERO_FORMAT), secondHero->m_name);
     }
 
     if (spellsTaught.size()) {
@@ -2185,7 +2185,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             msg += DATA_COMPGEN(0x00660db4, commaText, ",");
             msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
         }
-        msg += g_generalText->getText(148);
+        msg += g_generalText->getText(GENERAL_TEXT_TEACHES_FRAGMENT);
         for (int i = 0; i < spellsTaught.size(); i++) {
             if (i < taughtIconCount) {
                 spellInfo.m_resource = RES_SPELL;
@@ -2200,7 +2200,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             }
             msg += g_spellTraits[spellsTaught[i]].m_name;
         }
-        msg += formatString(g_generalText->getText(149), secondHero->m_name);
+        msg += formatString(g_generalText->getText(GENERAL_TEXT_TO_HERO_FORMAT), secondHero->m_name);
     }
 
     msg += DATA_COMPGEN(0x006603ec, saveExtensionDot, ".");
@@ -3036,7 +3036,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
     if (currentHero->isInSpellbook(spell)) {
         if (!humanPlayer)
             return;
-        result += g_adventureEventText->getText(174);
+        result += g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE_SPELL_KNOWN);
         normalDialog(result.c_str(), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
@@ -3044,7 +3044,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
 
     if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         if (humanPlayer) {
-            result += g_adventureEventText->getText(131);
+            result += g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE_NO_SPELLBOOK);
             normalDialog(result.c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -3053,7 +3053,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
 
     if (g_spellTraits[spell].m_level > currentHero->m_skillLevel[eSecSkillWisdom] + 2) {
         if (humanPlayer) {
-            result += g_adventureEventText->getText(130);
+            result += g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE_NO_WISDOM);
             normalDialog(result.c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -3326,7 +3326,7 @@ void advManager::doTreasureDialog(hero* currentHero, int amount,
     if (humanPlayer) {
         overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
         updBottomView(0, 1, 1);
-        normalDialog(g_adventureEventText->getText(146), 7, -1, -1, GOLD,
+        normalDialog(g_adventureEventText->getText(ADV_EVENT_TEXT_TREASURE_GOLD_OR_EXPERIENCE), 7, -1, -1, GOLD,
                      amount, 0x11, experience, 1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT) {
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CHOICE_1) {
@@ -3519,7 +3519,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
     if (reward->m_artifact != ARTIFACT_NONE) {
         if (currentHero->getNumberInBackpack(1) >= 64) {
             if (humanPlayer)
-                normalDialog(g_adventureEventText->getText(2), 1, -1, -1,
+                normalDialog(g_adventureEventText->getText(ADV_EVENT_TEXT_BACKPACK_FULL), 1, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             if (humanPlayer)
@@ -5266,11 +5266,11 @@ void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point poi
             }
 
             if (currentGenerator.m_population[i] == 0) {
-                result += formatString(g_generalText->getText(423),
+                result += formatString(g_generalText->getText(GENERAL_TEXT_NO_CREATURES_TO_RECRUIT_FORMAT),
                     g_creatureTypeTraits[creature].m_pluralName);
             } else if (!who->m_army.add(creature,
                                       currentGenerator.m_population[i], -1)) {
-                result += formatString(g_generalText->getText(426),
+                result += formatString(g_generalText->getText(GENERAL_TEXT_RECRUIT_INSUFFICIENT_PROVISIONS_FORMAT),
                     getArmyName(creature, currentGenerator.m_population[i]));
             } else {
                 currentGenerator.m_population[i] = 0;
@@ -5357,7 +5357,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
             resource.m_qualifier = bank.m_artifacts[i];
             resources.push_back(resource);
             result = formatString(
-                g_adventureEventText->getText(45),
+                g_adventureEventText->getText(ADV_EVENT_TEXT_ARTIFACT_NAME_WITH_ARTICLE_FORMAT),
                 g_artifactTraits[bank.m_artifacts[i]].m_name);
             rewardStrings.push_back(result);
         }
@@ -5390,7 +5390,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
         // builds the reward line directly into its destination (inlined
         // `_Tidy`, called `assign`), which is worth 89.3406 -> 91.5867.
         std::string rewardText = formatString(
-            g_adventureEventText->getText(34),
+            g_adventureEventText->getText(ADV_EVENT_TEXT_CREATURE_BANK_REWARD_FORMAT),
             getArmyName(leaderMonster, creatureCount), result.c_str());
         extendedDialog(rewardText.c_str(), resources, -1, -1, 0);
     }
@@ -5711,7 +5711,7 @@ void advManager::doWhirlpool(hero* who)
         who->m_army.m_numTroops[weakestArmy] >>= 1;
     }
 
-    normalDialog(g_adventureEventText->getText(168), 1, -1, -1,
+    normalDialog(g_adventureEventText->getText(ADV_EVENT_TEXT_WHIRLPOOL), 1, -1, -1,
                  -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
@@ -6133,12 +6133,12 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
             char text[256];  // DC sText[256]
             const char* target;
             if (rightTown)
-                target = g_generalText->getText(49);
+                target = g_generalText->getText(GENERAL_TEXT_ATTACK_TARGET_TOWN);
             else if (rightHero)
-                target = g_generalText->getText(50);
+                target = g_generalText->getText(GENERAL_TEXT_ATTACK_TARGET_HERO);
             else
-                target = g_generalText->getText(430);
-            sprintf(text, g_generalText->getText(48),
+                target = g_generalText->getText(GENERAL_TEXT_ATTACK_TARGET_GARRISON);
+            sprintf(text, g_generalText->getText(GENERAL_TEXT_TOWN_UNDER_ATTACK_FORMAT),
                     g_game->getPlayerName(rightPlayer), target);
             g_game->waitForPlayer(text, rightPlayer);
         }
@@ -6219,10 +6219,10 @@ combatFinished:
         sprintf(g_text, "pickup%02d.82M", sRandom(1, 7));
         SAMPLE2 sample = loadPlaySample(g_text);
         if (g_combatManager->m_raisedCreatureCount == 1) {
-            sprintf(g_text, g_generalText->getText(147),
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_NECROMANCY_RAISE_ONE_FORMAT),
                     getArmyName(g_combatManager->m_raisedCreatureType, 1));
         } else {
-            sprintf(g_text, g_generalText->getText(146),
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_NECROMANCY_RAISE_MANY_FORMAT),
                     g_combatManager->m_raisedCreatureCount,
                     getArmyName(g_combatManager->m_raisedCreatureType, 2));
         }

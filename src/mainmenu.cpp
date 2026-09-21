@@ -145,7 +145,7 @@ static int mainMenuHandler(message& msg)
     }
 
     if (g_mainMenu->m_showCdMessage && !updatePlease) {
-        const char* fill = g_generalText->getText(GENERAL_TEXT_MAIN_MENU_CD_DEFAULT_ARGUMENT);
+        const char* fill = g_generalText->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
 
         g_mainMenu->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                WINDOW_ALL_WIDGETS_HIGH);
@@ -157,8 +157,8 @@ static int mainMenuHandler(message& msg)
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             const char* drive = g_cdDriveNumber == CD_DRIVE_NUMBER_5
-                ? g_generalText->getText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5)
-                : g_generalText->getText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6);
+                ? g_generalText->getText(GENERAL_TEXT_RESTORATION_OF_ERATHIA)
+                : g_generalText->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
             normalDialog(formatString(
                 g_generalText->getText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT),
                 drive, fill, fill, fill, fill).c_str(),

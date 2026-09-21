@@ -576,7 +576,7 @@ void TObjectTypeTable::load(char* filename)
         throw TRuntimeError();
 
     try {
-        int count = atoi(text->getText(0));
+        int count = atoi(text->getText(OBJECT_TYPE_TEXT_COUNT));
         m_objectTypes.resize(count);
         for (int i = 0; i < count; ++i) {
             std::istrstream row(text->getText(i + 1));

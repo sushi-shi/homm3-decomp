@@ -60,7 +60,7 @@ void checkCombatCheatCode(std::string& chatString)
     }
 
     if (recognized) {
-        *chat = g_generalText->getText(261);
+        *chat = g_generalText->getText(GENERAL_TEXT_CHEATER);
         g_game->m_isCheater = 1;
         if (g_inCampaign) {
             g_game->m_campaign.m_isCheater = 1;

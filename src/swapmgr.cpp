@@ -852,7 +852,7 @@ int swapManager::open(int newPriority)
             MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, hero + 1,
             msg.m_extra);
 
-        sprintf(g_text, g_generalText->getText(139),
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_NAME_LEVEL_CLASS_FORMAT),
                 m_heroes[hero]->m_name, m_heroes[hero]->m_level,
                 m_heroes[hero]->heroFn004D8F70());
         msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -1279,7 +1279,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 
         if (rightClick) {
             if (oldArtifact.m_artifactId == ARTIFACT_SPELLBOOK) {
-                normalDialog(g_generalText->getText(22), 4, -1, 28,
+                normalDialog(g_generalText->getText(GENERAL_TEXT_ITEM_CANNOT_BE_TRADED), 4, -1, 28,
                              -1, 0, -1, 0, -1, 0, -1, 0);
                 return;
             }
@@ -1321,7 +1321,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 
         if (slot == eArtifactSlotSpellbook
             || slot == eArtifactSlotWarMachine4) {
-            normalDialog(g_generalText->getText(22), 1, -1, -1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_ITEM_CANNOT_BE_TRADED), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
@@ -1349,7 +1349,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
         && g_game->m_campaign.m_currentCampaign == ARMAGEDDONS_BLADE_CAMPAIGN
         && g_game->m_campaign.m_currentMap == ARMAGEDDONS_BLADE_MAP
         && ourHero->m_id != ARMAGEDDONS_BLADE_EXEMPT_HERO) {
-        normalDialog(g_generalText->getText(762), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE_GELU_ONLY), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -1789,7 +1789,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(3),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
                                 m_heroes[0]->m_level,
                                 hero::getExperience(m_heroes[0]->m_level + 1),
                                 m_heroes[0]->m_experience);
@@ -1806,7 +1806,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(206),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
                                 m_heroes[0]->m_name, m_heroes[0]->m_mana,
                                 m_heroes[0]->getMaxMana());
                         normalDialog(
@@ -1860,7 +1860,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(3),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
                                 m_heroes[1]->m_level,
                                 hero::getExperience(m_heroes[1]->m_level + 1),
                                 m_heroes[1]->m_experience);
@@ -1877,7 +1877,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(206),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
                                 m_heroes[1]->m_name, m_heroes[1]->m_mana,
                                 m_heroes[1]->getMaxMana());
                         normalDialog(

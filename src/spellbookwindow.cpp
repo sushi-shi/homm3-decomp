@@ -91,11 +91,11 @@ inline TSpellSchool TSpellbookWindow::getSchoolFromPosition(int position)
 static const char* getLevelString(SpellID spell)
 {
     static const char* levelStrings[] = {
-        g_generalText->getText(173),
-        g_generalText->getText(174),
-        g_generalText->getText(175),
-        g_generalText->getText(176),
-        g_generalText->getText(177)
+        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_ONE_LABEL),
+        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_TWO_LABEL),
+        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_THREE_LABEL),
+        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_FOUR_LABEL),
+        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_FIVE_LABEL)
     };
     // DC117 initializes the five labels; DC119 reads the level, subtracts
     // one and indexes this table. Capture that actual index before lookup.
@@ -153,7 +153,7 @@ std::string TSpellbookWindow::getSpellDescription(
             spell,
             traits->m_powerFactor * power + traits->m_masteryBonus[mastery],
             0);
-        sprintf(g_text, g_generalText->getText(344), damage);
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SPELL_DAMAGE_DESCRIPTION_FORMAT), damage);
         result += g_text;
     }
     return result;
@@ -473,7 +473,7 @@ void TSpellbookWindow::gotoPage(int page)
                     g_spellTraits[displaySpell].m_name,
                     getLevelString(displaySpell),
                     g_abbSecondarySkillLevels[entry.m_mastery - 1],
-                    g_generalText->getText(388),
+                    g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_LABEL),
                     const_cast<hero*>(m_hero)->getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
         } else {
@@ -481,7 +481,7 @@ void TSpellbookWindow::gotoPage(int page)
                     DATA_COMPGEN(0x00684bdc, spellInfoWithoutMastery,
                                  "{%s}\n%s\n%s: %d"),
                     g_spellTraits[displaySpell].m_name,
-                    getLevelString(displaySpell), g_generalText->getText(388),
+                    getLevelString(displaySpell), g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_LABEL),
                     const_cast<hero*>(m_hero)->getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
         }
@@ -688,7 +688,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                         exitFlag = 1;
                         msg.m_codeY = m_spellMap[msg.m_codeY - SPELL_0_ID];
                     } else {
-                        sprintf(g_text, g_generalText->getText(207),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_INSUFFICIENT_FORMAT),
                                 manaCost, m_hero->m_mana);
                         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                                      -1, 0, -1, 0);

@@ -210,7 +210,7 @@ inline CHSInputDlg::CHSInputDlg(int maxChars)
         font::WHITE, font::VERT_CENTER_JUSTIFIED, 0, 0, FIELD1_ID,
         0x100, 0, 7, 5);
     m_header1 = new textWidget(
-        13, 13, 205, 100, g_generalText->getText(97),
+        13, 13, 205, 100, g_generalText->getText(GENERAL_TEXT_HIGH_SCORE_NAME_PROMPT),
         DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
         font::WHITE, -1, 1, 0, 8);
     m_widgets.push_back(m_field1);
@@ -380,7 +380,7 @@ int highScoreManager::addScoreToHighScore(int score, int days,
     }
 
     strcpy(scores[rank].m_land,
-        cheater ? g_generalText->getText(261) : land);
+        cheater ? g_generalText->getText(GENERAL_TEXT_CHEATER) : land);
     scores[rank].m_score = score;
     scores[rank].m_days = days;
     scores[rank].m_difficulty = difficulty;
@@ -615,18 +615,18 @@ void THighScoreWindow::update()
                                    false);
 
     g_mediumFont->drawBoundedString(
-        g_generalText->getText(434), g_windowManager->m_screenBitmap,
+        g_generalText->getText(GENERAL_TEXT_HIGH_SCORE_RANK), g_windowManager->m_screenBitmap,
         0x58, 0xb, 0x3a, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     g_mediumFont->drawBoundedString(
-        g_generalText->getText(435), g_windowManager->m_screenBitmap,
+        g_generalText->getText(GENERAL_TEXT_PLAYER), g_windowManager->m_screenBitmap,
         0xa3, 0xb, 0x7a, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     const char* landHeading;
     if (m_isStandard)
-        landHeading = g_generalText->getText(436);
+        landHeading = g_generalText->getText(GENERAL_TEXT_LAND);
     else
-        landHeading = g_generalText->getText(673);
+        landHeading = g_generalText->getText(GENERAL_TEXT_CAMPAIGN);
     g_mediumFont->drawBoundedString(
         landHeading, g_windowManager->m_screenBitmap,
         0x12f, 0xb, 0xd2, 0x1a, font::PRIMARY,
@@ -634,16 +634,16 @@ void THighScoreWindow::update()
 
     const char* valueHeading;
     if (m_isStandard)
-        valueHeading = g_generalText->getText(437);
+        valueHeading = g_generalText->getText(GENERAL_TEXT_DAYS);
     else
-        valueHeading = g_generalText->getText(76);
+        valueHeading = g_generalText->getText(GENERAL_TEXT_HIGH_SCORE_SCORE);
     g_mediumFont->drawBoundedString(
         valueHeading, g_windowManager->m_screenBitmap,
         0x213, 0xb, m_isStandard ? 0x34 : 0x7a, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     if (m_isStandard) {
         g_mediumFont->drawBoundedString(
-            g_generalText->getText(76), g_windowManager->m_screenBitmap,
+            g_generalText->getText(GENERAL_TEXT_HIGH_SCORE_SCORE), g_windowManager->m_screenBitmap,
             0x259, 0xb, 0x34, 0x1a, font::PRIMARY,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     }
@@ -748,7 +748,7 @@ int highScoreWindowHandler(message& msg)
 
         case THighScoreWindow::RESET_ID:
             {
-            normalDialog(g_generalText->getText(667), 2, -1, -1, -1, 0, -1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_RESET_HIGH_SCORES_PROMPT), 2, -1, -1, -1, 0, -1,
                          0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
                 return MESSAGE_DISPATCH_CONSUME;

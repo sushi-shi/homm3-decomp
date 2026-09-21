@@ -193,44 +193,44 @@ TSystemOptionsWindow::TSystemOptionsWindow()
         ANIMATE_SPELLBOOK_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
 
     m_widgets.push_back(new textWidget(
-        26, 19, 432, 28, g_generalText->getText(569), "bigfont.fnt",
+        26, 19, 432, 28, g_generalText->getText(GENERAL_TEXT_SYSTEM_OPTIONS), "bigfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 56, 193, 20, g_generalText->getText(570), "medfont.fnt",
+        26, 56, 193, 20, g_generalText->getText(GENERAL_TEXT_HERO_SPEED), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 122, 193, 20, g_generalText->getText(571), "medfont.fnt",
+        26, 122, 193, 20, g_generalText->getText(GENERAL_TEXT_ENEMY_SPEED), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 188, 193, 20, g_generalText->getText(572), "medfont.fnt",
+        26, 188, 193, 20, g_generalText->getText(GENERAL_TEXT_MAP_SCROLL_SPEED), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 254, 193, 20, g_generalText->getText(21), "medfont.fnt",
+        26, 254, 193, 20, g_generalText->getText(GENERAL_TEXT_VIDEO_QUALITY), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 339, 193, 20, g_generalText->getText(395), "medfont.fnt",
+        26, 339, 193, 20, g_generalText->getText(GENERAL_TEXT_MUSIC_VOLUME), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 406, 193, 20, g_generalText->getText(396), "medfont.fnt",
+        26, 406, 193, 20, g_generalText->getText(GENERAL_TEXT_EFFECTS_VOLUME), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
 
     m_widgets.push_back(new textWidget(
-        282, 55, 182, 24, g_generalText->getText(573), "medfont.fnt",
+        282, 55, 182, 24, g_generalText->getText(GENERAL_TEXT_SHOW_MOVE_PATH), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 87, 182, 24, g_generalText->getText(574), "medfont.fnt",
+        282, 87, 182, 24, g_generalText->getText(GENERAL_TEXT_SHOW_HERO_REMINDER), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 119, 182, 24, g_generalText->getText(575), "medfont.fnt",
+        282, 119, 182, 24, g_generalText->getText(GENERAL_TEXT_QUICK_COMBAT), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 151, 182, 24, g_generalText->getText(576), "medfont.fnt",
+        282, 151, 182, 24, g_generalText->getText(GENERAL_TEXT_VIDEO_SUBTITLES), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 183, 182, 24, g_generalText->getText(577), "medfont.fnt",
+        282, 183, 182, 24, g_generalText->getText(GENERAL_TEXT_TOWN_BUILDING_OUTLINES), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 215, 182, 24, g_generalText->getText(578), "medfont.fnt",
+        282, 215, 182, 24, g_generalText->getText(GENERAL_TEXT_SPELL_BOOK_ANIMATION), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
 
     // DC121 initializes the pointer iterator from begin, checks end at

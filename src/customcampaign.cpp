@@ -351,13 +351,13 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
 VA(0x00484230, 0x46)
 std::string TCampaignSpellBonus::getText() const
 {
-    return formatString(g_generalText->getText(716), g_spellTraits[m_spell].m_name);
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT), g_spellTraits[m_spell].m_name);
 }
 
 VA(0x00484280, 0x46)
 std::string TCampaignSpellScrollBonus::getText() const
 {
-    return formatString(g_generalText->getText(717), g_spellTraits[m_spell].m_name);
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_SCROLL_FORMAT), g_spellTraits[m_spell].m_name);
 }
 
 VA(0x004842d0, 0x3B)
@@ -457,7 +457,7 @@ std::string TCampaignCreatureBonus::getText() const
         name = g_creatureTypeTraits[m_creature].m_name;
     else
         name = g_creatureTypeTraits[m_creature].m_pluralName;
-    return formatString(g_generalText->getText(718), m_count, name);
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_count, name);
 }
 
 VA(0x004845f0, 0x24)
@@ -516,7 +516,7 @@ void TCampaignBuildingBonus::apply(int whichPlayer) const
 VA(0x004847a0, 0x3C)
 std::string TCampaignBuildingBonus::getText() const
 {
-    const char* format = g_generalText->getText(716);
+    const char* format = g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT);
     return formatString(format, getBuildingName(m_town, m_building));
 }
 
@@ -536,7 +536,7 @@ const char* TCampaignArtifactBonus::getIconDefName() const
 VA(0x00484820, 0x40)
 std::string TCampaignArtifactBonus::getText() const
 {
-    return formatString(g_generalText->getText(716),
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT),
                          g_artifactTraits[m_artifact].m_name);
 }
 
@@ -605,7 +605,7 @@ std::string TCampaignPrimarySkillBonus::getText() const
                 list += ", ";
         }
     }
-    list = formatString(g_generalText->getText(716), list.c_str());
+    list = formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT), list.c_str());
     return list;
 }
 
@@ -649,7 +649,7 @@ int TCampaignSecondarySkillBonus::getIconIndex() const
 VA(0x00484c50, 0x4B)
 std::string TCampaignSecondarySkillBonus::getText() const
 {
-    return formatString(g_generalText->getText(719),
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_SKILL_FORMAT),
                          g_secondarySkillLevels[m_level - 1],
                          g_sSkillTraits[m_skill].m_name);
 }
@@ -724,15 +724,15 @@ std::string TCampaignResourceBonus::getText() const
         name = g_resourceNames[m_resource];
         break;
     case CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE:
-        name = g_generalText->getText(722);
+        name = g_generalText->getText(GENERAL_TEXT_CAMPAIGN_WOOD_AND_ORE);
         break;
     case CAMPAIGN_BONUS_RESOURCE_RARE:
-        name = g_generalText->getText(723);
+        name = g_generalText->getText(GENERAL_TEXT_CAMPAIGN_RARE_RESOURCES);
         break;
     case CAMPAIGN_BONUS_RESOURCE_NONE:
         break;
     }
-    return formatString(g_generalText->getText(718), m_amount, name);
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_amount, name);
 }
 
 VA(0x00484e20, 0xDE)
@@ -1026,7 +1026,7 @@ std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
     if (campaign->load())
         campaign->m_scenarios[source]->loadMapHeader(campaign->m_stream,
                                                    &mapHeader, source);
-    return formatString(g_generalText->getText(720), mapHeader.m_mapName.c_str());
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_MAP_HEROES_FORMAT), mapHeader.m_mapName.c_str());
 }
 
 // The player position the pool is handed to. Slot 12 asks with -1 when the
@@ -1114,8 +1114,8 @@ VA(0x00485a90, 0xBA)
 std::string TCampaignStartHeroOption::getText(void* campaign, int which) const
 {
     if (m_choices[which].m_hero == -1)
-        return g_generalText->getText(721);
-    return formatString(g_generalText->getText(716),
+        return g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_RANDOM_HERO);
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT),
                          g_heroTraits[m_choices[which].m_hero].m_defaultName);
 }
 
@@ -2140,7 +2140,7 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
         m_regionMap = intBuffer & 0xff;
         m_campaignName = readLengthPrefixedString(file);
         if (m_campaignName.length() == 0)
-            m_campaignName = g_generalText->getText(509);
+            m_campaignName = g_generalText->getText(GENERAL_TEXT_UNNAMED);
         m_campaignDesc = readLengthPrefixedString(file);
         char charBuffer;
         file->read(&charBuffer, 1);

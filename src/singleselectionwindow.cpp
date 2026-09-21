@@ -1948,23 +1948,23 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         m_widgets.push_back(tempBack);
     }
 
-    sprintf(g_text, "%s:", g_generalText->getText(493));
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_SCENARIO_PLAYER_DIFFICULTY));
     m_widgets.push_back(new textWidget(
         414, 435, 334, 19, g_text, "smalfont.fnt", headerFont,
         132, font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    sprintf(g_text, "%s:", g_generalText->getText(219));
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_RATING));
     m_widgets.push_back(new textWidget(
         665, 435, 84, 19, g_text, "smalfont.fnt", headerFont,
         133, font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        414, 435, 90, 19, g_generalText->getText(495), "smalfont.fnt",
+        414, 435, 90, 19, g_generalText->getText(GENERAL_TEXT_SCENARIO_MAP_DIFFICULTY_LABEL), "smalfont.fnt",
         headerFont, 134,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        422, 27, 278, 18, g_generalText->getText(496), "smalfont.fnt",
+        422, 27, 278, 18, g_generalText->getText(GENERAL_TEXT_SCENARIO_NAME_LABEL), "smalfont.fnt",
         headerFont, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        422, 137, 278, 18, g_generalText->getText(497), "smalfont.fnt",
+        422, 137, 278, 18, g_generalText->getText(GENERAL_TEXT_SCENARIO_DESCRIPTION_LABEL), "smalfont.fnt",
         headerFont, 105, font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     m_descriptionWidget = new CScrollTextWidget(
@@ -1973,10 +1973,10 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     m_widgets.push_back(m_descriptionWidget);
 
     m_widgets.push_back(new textWidget(
-        422, 288, 278, 18, g_generalText->getText(498), "smalfont.fnt",
+        422, 288, 278, 18, g_generalText->getText(GENERAL_TEXT_SCENARIO_VICTORY_CONDITION_LABEL), "smalfont.fnt",
         headerFont, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(
-        422, 344, 278, 18, g_generalText->getText(499), "smalfont.fnt",
+        422, 344, 278, 18, g_generalText->getText(GENERAL_TEXT_SCENARIO_LOSS_CONDITION_LABEL), "smalfont.fnt",
         headerFont, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     if (g_remoteOn && !m_saveMode) {
@@ -1991,12 +1991,12 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         iconWidget::ICON_STYLE_PLAIN));
     // DC2126..2143: the two team headings share this lexical phase.
     {
-        sprintf(g_text, "%s:", g_generalText->getText(391));
+        sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_ALLIES));
         widget* allies = new textWidget(
             414, 403, 44, 23, g_text, "smalfont.fnt", font::WHITE, 100,
             font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
         m_widgets.push_back(allies);
-        sprintf(g_text, "%s:", g_generalText->getText(392));
+        sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_ENEMIES));
         widget* enemies = new textWidget(
             579, 403, 58, 23, g_text, "smalfont.fnt", font::WHITE, 386,
             font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
@@ -2105,7 +2105,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
                 flagName, 0, 1, 0, 0, 2));
 
             m_widgets.push_back(new textWidget(
-                62, (133 + i * 50) + 18, 46, 24, g_generalText->getText(500),
+                62, (133 + i * 50) + 18, 46, 24, g_generalText->getText(GENERAL_TEXT_HUMAN),
                 "tiny.fnt", font::WHITE, 199 + i,
                 font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED,
                 0, 8));
@@ -2165,23 +2165,23 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         }
 
         m_widgets.push_back(new textWidget(
-            58, 90, 104, 36, g_generalText->getText(518),
+            58, 90, 104, 36, g_generalText->getText(GENERAL_TEXT_PLAYER_NAME_HANDICAP_HEADER),
             "smalfont.fnt", headerFont, 339,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
         m_widgets.push_back(new textWidget(
-            163, 90, 75, 36, g_generalText->getText(519),
+            163, 90, 75, 36, g_generalText->getText(GENERAL_TEXT_STARTING_TOWN_HEADER),
             "smalfont.fnt", headerFont, m_townHeadingId,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
         m_widgets.push_back(new textWidget(
-            239, 90, 75, 36, g_generalText->getText(520),
+            239, 90, 75, 36, g_generalText->getText(GENERAL_TEXT_STARTING_HERO_HEADER),
             "smalfont.fnt", headerFont, 343,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
         m_widgets.push_back(new textWidget(
-            315, 90, 75, 36, g_generalText->getText(521),
+            315, 90, 75, 36, g_generalText->getText(GENERAL_TEXT_STARTING_BONUS_HEADER),
             "smalfont.fnt", headerFont, 344,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
         m_widgets.push_back(new textWidget(
-            58, 534, 334, 20, g_generalText->getText(522),
+            58, 534, 334, 20, g_generalText->getText(GENERAL_TEXT_PLAYER_TURN_DURATION_HEADER),
             "smalfont.fnt", headerFont, 340,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
@@ -2232,22 +2232,22 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         if (m_loadMode)
             m_widgets.push_back(new textButton(
                 414, 81, 200, 20, 128, "gspbutt.def",
-                g_generalText->getText(656), "smalfont.fnt",
+                g_generalText->getText(GENERAL_TEXT_SHOW_SAVED_GAMES), "smalfont.fnt",
                 0, 1, 0, 31, 2, font::WHITE));
         else
             m_widgets.push_back(new textButton(
                 414, 81, 200, 20, 128, "gspbutt.def",
-                g_generalText->getText(501), "smalfont.fnt",
+                g_generalText->getText(GENERAL_TEXT_SHOW_AVAILABLE_SCENARIOS), "smalfont.fnt",
                 0, 1, 0, 31, 2, font::WHITE));
         m_widgets.push_back(new textButton(
             414, 509, 200, 20, 129, "gspbutt.def",
-            g_generalText->getText(502), "smalfont.fnt",
+            g_generalText->getText(GENERAL_TEXT_SHOW_ADVANCED_OPTIONS), "smalfont.fnt",
             0, 1, 0, 30, 2, font::WHITE));
         if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1
             || *g_videoGameState == SINGLE_SELECTION_CONTEXT_3) {
             m_widgets.push_back(new textButton(
                 414, 105, 200, 20, 130, "gspbutt.def",
-                g_generalText->getText(760), "smalfont.fnt",
+                g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_BUTTON), "smalfont.fnt",
                 0, 1, 0, 19, 2, font::WHITE));
         }
     }
@@ -2576,7 +2576,7 @@ void TSingleSelectionWindow::createFilterWidgets()
 
     {
         widget* created = new textWidget(
-            58, 82, 99, 31, g_generalText->getText(753), "smalfont.fnt",
+            58, 82, 99, 31, g_generalText->getText(GENERAL_TEXT_MAP_SIZE), "smalfont.fnt",
             font::PRIMARY, 0x118,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8);
         widgets.push_back(created);
@@ -2609,7 +2609,7 @@ void TSingleSelectionWindow::createFilterWidgets()
 
     {
         widget* created = new textWidget(
-            71, 133, 250, 16, g_generalText->getText(754), "smalfont.fnt",
+            71, 133, 250, 16, g_generalText->getText(GENERAL_TEXT_HUMAN_OR_COMPUTER_PLAYERS), "smalfont.fnt",
             font::PRIMARY, 0x11e, font::LEFT_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
@@ -2642,7 +2642,7 @@ void TSingleSelectionWindow::createFilterWidgets()
 
     {
         widget* created = new textWidget(
-            71, 199, 250, 16, g_generalText->getText(755), "smalfont.fnt",
+            71, 199, 250, 16, g_generalText->getText(GENERAL_TEXT_HUMAN_OR_COMPUTER_TEAMS), "smalfont.fnt",
             font::PRIMARY, 0x128, font::LEFT_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
@@ -2674,7 +2674,7 @@ void TSingleSelectionWindow::createFilterWidgets()
 
     {
         widget* created = new textWidget(
-            71, 265, 250, 16, g_generalText->getText(756), "smalfont.fnt",
+            71, 265, 250, 16, g_generalText->getText(GENERAL_TEXT_COMPUTER_ONLY_PLAYERS), "smalfont.fnt",
             font::PRIMARY, 0x132, font::LEFT_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
@@ -2706,7 +2706,7 @@ void TSingleSelectionWindow::createFilterWidgets()
 
     {
         widget* created = new textWidget(
-            71, 331, 250, 16, g_generalText->getText(757), "smalfont.fnt",
+            71, 331, 250, 16, g_generalText->getText(GENERAL_TEXT_COMPUTER_ONLY_TEAMS), "smalfont.fnt",
             font::PRIMARY, 0x13c, font::LEFT_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
@@ -2736,7 +2736,7 @@ void TSingleSelectionWindow::createFilterWidgets()
 
     {
         widget* created = new textWidget(
-            71, 398, 105, 16, g_generalText->getText(758), "smalfont.fnt",
+            71, 398, 105, 16, g_generalText->getText(GENERAL_TEXT_WATER_CONTENT), "smalfont.fnt",
             font::PRIMARY, 0x145, font::LEFT_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
@@ -2758,7 +2758,7 @@ void TSingleSelectionWindow::createFilterWidgets()
 
     {
         widget* created = new textWidget(
-            71, 465, 105, 16, g_generalText->getText(759), "smalfont.fnt",
+            71, 465, 105, 16, g_generalText->getText(GENERAL_TEXT_MONSTER_STRENGTH), "smalfont.fnt",
             font::PRIMARY, 0x14a, font::LEFT_JUSTIFIED, 0, 8);
         widgets.push_back(created);
     }
@@ -3159,8 +3159,8 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
 
     memset(m_localHeader.m_heroAvailability, -1,
            sizeof(m_localHeader.m_heroAvailability));
-    strcpy(m_localHeader.m_title, g_generalText->getText(741));
-    strcpy(m_localHeader.m_description, g_generalText->getText(742));
+    strcpy(m_localHeader.m_title, g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_SCENARIO_NAME));
+    strcpy(m_localHeader.m_description, g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_SCENARIO_DESCRIPTION));
     GameSelectionHeadersStruct& localHeader = m_localHeader;
     localHeader.m_header = header;
 
@@ -3257,7 +3257,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         startMouseThread();
         drawWindow(0, 0xffff0001, 0xffff);
         g_smallFont->drawBoundedString(
-            g_generalText->getText(503), g_windowManager->m_screenBitmap,
+            g_generalText->getText(GENERAL_TEXT_SCENARIO_READING_MAP_FILES), g_windowManager->m_screenBitmap,
             123, 122, 184, 25, font::WHITE, 5, -1);
         this->update();
         m_inScenarioOptions = 1;
@@ -3318,12 +3318,12 @@ void TSingleSelectionWindow::setupAdvancedOptions()
                 const char* gameType;
                 if (*g_videoGameState == 1) {
                     text = g_generalText;
-                    gameType = text->getText(746);
+                    gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
                 } else {
                     text = g_generalText;
-                    gameType = text->getText(747);
+                    gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
                 }
-                const char* compatibilityMessage = text->getText(744);
+                const char* compatibilityMessage = text->getText(GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT);
                 normalDialog(
                     formatString(
                         compatibilityMessage,
@@ -3345,12 +3345,12 @@ void TSingleSelectionWindow::setupAdvancedOptions()
                 const char* gameType;
                 if (*g_videoGameState == 1) {
                     text = g_generalText;
-                    gameType = text->getText(746);
+                    gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
                 } else {
                     text = g_generalText;
-                    gameType = text->getText(747);
+                    gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
                 }
-                const char* compatibilityMessage = text->getText(745);
+                const char* compatibilityMessage = text->getText(GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT);
                 normalDialog(
                     formatString(
                         compatibilityMessage,
@@ -3673,9 +3673,9 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
             int displayFace = getDisplayFace(gamePos);
             if (player->m_heroIndex == -1 && displayFace == -1) {
                 CBonusDlg dlg(!m_saveMode && !m_loadMode);
-                dlg.createWin(g_generalText->getText(102), m_randomHeroBmp,
+                dlg.createWin(g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_HERO_CAPTION), m_randomHeroBmp,
                               g_generalText->getText(GENERAL_TEXT_RANDOM_HERO),
-                              g_generalText->getText(103));
+                              g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_HERO_DESCRIPTION));
                 dlg.doModal(0);
             } else {
                 int heroId = getHeroInPos(gamePos);
@@ -3716,9 +3716,9 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
 
         if (townType == -1) {
             CBonusDlg dlg(!m_saveMode && !m_loadMode);
-            dlg.createWin(g_generalText->getText(104), m_randomTownBmp,
+            dlg.createWin(g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_TOWN_CAPTION), m_randomTownBmp,
                           g_generalText->getText(GENERAL_TEXT_RANDOM_HERO),
-                          g_generalText->getText(105));
+                          g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_TOWN_DESCRIPTION));
             dlg.doModal(0);
         } else {
             CTownDlg dlg(!m_saveMode && !m_loadMode);
@@ -3766,17 +3766,17 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
 
         switch (bonus) {
         case NEW_MAP_BONUS_ARTIFACT:
-            header = g_generalText->getText(84);
-            desc = g_generalText->getText(91);
+            header = g_generalText->getText(GENERAL_TEXT_ARTIFACT_BONUS);
+            desc = g_generalText->getText(GENERAL_TEXT_STARTING_ARTIFACT_DESCRIPTION);
             break;
         case NEW_MAP_BONUS_GOLD:
-            header = g_generalText->getText(85);
+            header = g_generalText->getText(GENERAL_TEXT_GOLD_BONUS);
             sprite = 8;
-            bonusEx = g_generalText->getText(88);
-            desc = g_generalText->getText(93);
+            bonusEx = g_generalText->getText(GENERAL_TEXT_STARTING_GOLD_RANGE);
+            desc = g_generalText->getText(GENERAL_TEXT_STARTING_GOLD_DESCRIPTION);
             break;
         case NEW_MAP_BONUS_RESOURCE:
-            header = g_generalText->getText(86);
+            header = g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS);
             sprite = townType;
             if (sprite == TOWN_CONFLUX)
                 sprite = TOWN_INFERNO;
@@ -3786,9 +3786,9 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
                 sprite = 0;
             break;
         case NEW_MAP_BONUS_RANDOM:
-            header = g_generalText->getText(87);
+            header = g_generalText->getText(GENERAL_TEXT_RANDOM_BONUS);
             sprite = 10;
-            desc = g_generalText->getText(95);
+            desc = g_generalText->getText(GENERAL_TEXT_STARTING_RANDOM_BONUS_DESCRIPTION);
             break;
         }
 
@@ -3982,13 +3982,13 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
             || header->m_header.m_version == MAP_FORMAT_ARMAGEDDONS_BLADE) {
             if (header->m_header.m_isPlayable)
                 return gameFileProblem;
-            strcpy(header->m_description, g_generalText->getText(507));
+            strcpy(header->m_description, g_generalText->getText(GENERAL_TEXT_MAP_NOT_PLAYABLE));
         } else {
             header->m_header.m_lossCondition.m_type = -1;
             header->m_header.m_victoryCondition.m_type = -1;
             header->m_header.m_difficulty = 0;
-            strcpy(header->m_title, g_generalText->getText(431));
-            strcpy(header->m_description, g_generalText->getText(506));
+            strcpy(header->m_title, g_generalText->getText(GENERAL_TEXT_OLD_MAP_FORMAT_LABEL));
+            strcpy(header->m_description, g_generalText->getText(GENERAL_TEXT_MAP_FORMAT_OUTDATED));
         }
         return gameFileProblem;
     }
@@ -3996,13 +3996,13 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
     if (header->m_saved.m_version < 25
         && (header->m_saved.m_version < 16
             || header->m_saved.m_version > 18)) {
-        strcpy(header->m_title, g_generalText->getText(431));
-        strcpy(header->m_description, g_generalText->getText(505));
+        strcpy(header->m_title, g_generalText->getText(GENERAL_TEXT_OLD_MAP_FORMAT_LABEL));
+        strcpy(header->m_description, g_generalText->getText(GENERAL_TEXT_MAP_DATA_INVALID));
     }
 
-    if (_strnicmp(header->m_setup.m_filename, g_generalText->getText(77),
-                  strlen(g_generalText->getText(77))) == 0)
-        strcpy(header->m_title, g_generalText->getText(77));
+    if (_strnicmp(header->m_setup.m_filename, g_generalText->getText(GENERAL_TEXT_AUTOSAVE_NAME),
+                  strlen(g_generalText->getText(GENERAL_TEXT_AUTOSAVE_NAME))) == 0)
+        strcpy(header->m_title, g_generalText->getText(GENERAL_TEXT_AUTOSAVE_NAME));
     return gameFileProblem;
 }
 
@@ -4189,9 +4189,9 @@ const char* TSingleSelectionWindow::getFileName(int which)
             && m_selectionHeaders.size() > static_cast<unsigned int>(which))
         name = m_selectionHeaders[which].m_title;
     else
-        name = g_generalText->getText(508);
+        name = g_generalText->getText(GENERAL_TEXT_EMPTY);
     if (strlen(name) == 0)
-        name = g_generalText->getText(509);
+        name = g_generalText->getText(GENERAL_TEXT_UNNAMED);
     return name;
 }
 
@@ -4199,7 +4199,7 @@ VA(0x00584010, 0xDF)  // dc 0x139b08
 const char* TSingleSelectionWindow::getMapName(int which)
 {
     if (m_randomMapSelected != 0)
-        return g_generalText->getText(741);
+        return g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_SCENARIO_NAME);
     if (which == -1)
         return g_game->m_setup.m_filename;
     if (m_loadMode == 0 && m_saveMode == 0) {
@@ -4208,9 +4208,9 @@ const char* TSingleSelectionWindow::getMapName(int which)
                 && m_selectionHeaders.size() > static_cast<unsigned int>(which))
             name = m_selectionHeaders[which].m_title;
         else
-            name = g_generalText->getText(508);
+            name = g_generalText->getText(GENERAL_TEXT_EMPTY);
         if (strlen(name) == 0)
-            name = g_generalText->getText(509);
+            name = g_generalText->getText(GENERAL_TEXT_UNNAMED);
         return name;
     }
     return m_selectionHeaders[which].m_setup.m_filename;
@@ -4319,7 +4319,7 @@ int TSingleSelectionWindow::update()
         if (g_dPlay->isHost())
             return 1;
         g_smallFont->drawBoundedString(
-            g_generalText->getText(510), g_windowManager->m_screenBitmap,
+            g_generalText->getText(GENERAL_TEXT_RECEIVING_MAP_HEADERS), g_windowManager->m_screenBitmap,
             433, 46, 210, 23, font::WHITE, 4, -1);
     } else {
         drawBasicMapInfo();
@@ -4328,7 +4328,7 @@ int TSingleSelectionWindow::update()
             if (m_selectionHeaders.size() < static_cast<unsigned int>(rows))
                 rows = m_selectionHeaders.size();
             g_smallFont->drawBoundedString(
-                g_generalText->getText(511), g_windowManager->m_screenBitmap,
+                g_generalText->getText(GENERAL_TEXT_MAP_SIZES), g_windowManager->m_screenBitmap,
                 25, 52, 132, 32, font::PRIMARY_HIGHLIGHT, 5, -1);
             int i = 0;
             if (rows > 0) {
@@ -4393,13 +4393,13 @@ int TSingleSelectionWindow::update()
                             26, y - 1, 30, 25, font::TColor(color), 5, -1);
                         const char* sizeText;
                         if (hdr->m_header.m_size == MAP_DIMENSION_SMALL)
-                            sizeText = g_generalText->getText(512);
+                            sizeText = g_generalText->getText(GENERAL_TEXT_MAP_SIZE_SMALL_ABBREVIATION);
                         else if (hdr->m_header.m_size == MAP_DIMENSION_MEDIUM)
-                            sizeText = g_generalText->getText(513);
+                            sizeText = g_generalText->getText(GENERAL_TEXT_MAP_SIZE_MEDIUM_ABBREVIATION);
                         else if (hdr->m_header.m_size == MAP_DIMENSION_LARGE)
-                            sizeText = g_generalText->getText(514);
+                            sizeText = g_generalText->getText(GENERAL_TEXT_MAP_SIZE_LARGE_ABBREVIATION);
                         else
-                            sizeText = g_generalText->getText(515);
+                            sizeText = g_generalText->getText(GENERAL_TEXT_MAP_SIZE_EXTRA_LARGE_ABBREVIATION);
                         strcpy(text, sizeText);
                         g_smallFont->drawBoundedString(
                             text, g_windowManager->m_screenBitmap,
@@ -4445,10 +4445,10 @@ int TSingleSelectionWindow::update()
             updateNames();
             int pos;
             g_bigFont->drawBoundedString(
-                g_generalText->getText(516), g_windowManager->m_screenBitmap,
+                g_generalText->getText(GENERAL_TEXT_ADVANCED_OPTIONS), g_windowManager->m_screenBitmap,
                 58, 24, 334, 25, font::HEADING_HIGHLIGHT, 1, -1);
             g_smallFont->drawBoundedString(
-                g_generalText->getText(517), g_windowManager->m_screenBitmap,
+                g_generalText->getText(GENERAL_TEXT_ADVANCED_OPTIONS_HELP), g_windowManager->m_screenBitmap,
                 58, 48, 334, 34, font::WHITE, 1, -1);
             g_smallFont->drawBoundedString(
                 g_turnDurationText[g_game->m_setup.m_turnDuration],
@@ -4464,10 +4464,10 @@ int TSingleSelectionWindow::update()
         }
         if (m_inFilterOptions) {
             g_bigFont->drawBoundedString(
-                g_generalText->getText(739), g_windowManager->m_screenBitmap,
+                g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_SETUP), g_windowManager->m_screenBitmap,
                 58, 24, 334, 25, font::HEADING_HIGHLIGHT, 1, -1);
             g_smallFont->drawBoundedString(
-                g_generalText->getText(740), g_windowManager->m_screenBitmap,
+                g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_SETUP_HELP), g_windowManager->m_screenBitmap,
                 58, 48, 334, 34, font::WHITE, 1, -1);
             updateFilterWidgets();
         }
@@ -5159,15 +5159,15 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
     case RANDOM_MAP_OK:
         return 1;
     case RANDOM_MAP_FAILED_1:
-        normalDialog(g_generalText->getText(750), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_FILE_CREATE_ERROR), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         break;
     case RANDOM_MAP_FAILED_2:
-        normalDialog(g_generalText->getText(751), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_FILE_WRITE_ERROR), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         break;
     case RANDOM_MAP_FAILED_3:
-        normalDialog(g_generalText->getText(752), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_GENERATION_FAILED), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         break;
     }
@@ -5467,7 +5467,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         // down BEFORE the `test bl,bl`, so only the expansion differs. Both
         // want a caller-shrink or a site pin and neither is available.
         if (generateRandomMap(getRandomMapName().c_str()))
-            normalDialog(g_generalText->getText(749),
+            normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_CREATED),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     }
@@ -5944,7 +5944,7 @@ int TSingleSelectionWindow::windowHandler(message& msg)
 
     if (m_loadMode && g_notifyNoSaved) {
         g_notifyNoSaved = 0;
-        normalDialog(g_generalText->getText(686), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_NO_SAVED_GAMES), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         getWidget(186)->enable(0);
         drawWindow(0, 0xffff0001, 0xffff);
@@ -6219,7 +6219,7 @@ bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
             destroyMsg(netMsg);
             remoteCleanup();
             cancel = true;
-            normalDialog(g_generalText->getText(525), 1, -1, -1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_HOST_LAUNCHED_WITHOUT_PLAYER), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 1;
         }
@@ -6240,7 +6240,7 @@ bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
     case RS_SET_AS_HOST:
         if (g_noCdRom) {
             remoteCleanup();
-            normalDialog(g_generalText->getText(655), 1, -1, -1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_HOST_LEFT_GAME_CD_REQUIRED), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             cancel = true;
             return 1;
@@ -6317,13 +6317,13 @@ bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
         break;
     case RS_GAME_TRANSMIT_PENDING: {
         CHostWaitDlg dlg;
-        dlg.wait(netMsg->m_dpidFrom, g_generalText->getText(731));
+        dlg.wait(netMsg->m_dpidFrom, g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_GENERATING));
         handleNetMsg(dlg.m_msg, cancel);
         break;
     }
     case RS_LAUNCHING_GAME: {
         CHostWaitDlg dlg;
-        dlg.wait(netMsg->m_dpidFrom, g_generalText->getText(534));
+        dlg.wait(netMsg->m_dpidFrom, g_generalText->getText(GENERAL_TEXT_HOST_PREPARING_GAME));
         handleNetMsg(dlg.m_msg, cancel);
         break;
     }
@@ -6573,7 +6573,7 @@ bool TSingleSelectionWindow::onPlayerDroppedMsg(CNetMsg* netMsg)
     m_commonGameVersion = getCommonGameVersion();
     m_newPlayerUpdateMan->playerDropped(netMsg->m_dpidFrom);
     if (player)
-        g_chatMan.playerDropMsg(g_generalText->getText(527), player->m_name);
+        g_chatMan.playerDropMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_LEFT_GAME_FORMAT), player->m_name);
     updateNameLists();
     displayChat();
     drawWindow(0, 0xffff0001, 0xffff);
@@ -6787,7 +6787,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
                 DATA_COMPGEN(0x00683904, incompatibleVersionLog,
                              "New Player has incompatible version #%s"),
                 msg->m_version);
-            const char* errText = g_generalText->getText(666);
+            const char* errText = g_generalText->getText(GENERAL_TEXT_NETWORK_VERSION_MISMATCH_FORMAT);
             CBadVersionMsg reply(m_gameVersion, errText);
             transmitRemoteDataDPID(&reply, netMsg->m_dpidFrom, 0, 1);
             return 1;
@@ -6822,7 +6822,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         }
         sendPlayerPositions(0);
     }
-    g_chatMan.playerEnterMsg(g_generalText->getText(526),
+    g_chatMan.playerEnterMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_ENTERS_GAME_FORMAT),
                    msg->m_playerInfo.m_name);
     displayChat();
     return 1;
@@ -6865,7 +6865,7 @@ unsigned char TSingleSelectionWindow::onGameHeaderInfoInitMsg(CNetMsg* netMsg)
     if (msg->m_size == sizeof(CGameHeaderInfoInitMsgEx))
         hostVersion = msg->m_version;
     if (!isVersionCompatible(hostVersion)) {
-        CBadVersionMsg badMsg(hostVersion, g_generalText->getText(666));
+        CBadVersionMsg badMsg(hostVersion, g_generalText->getText(GENERAL_TEXT_NETWORK_VERSION_MISMATCH_FORMAT));
         onBadVersionMsg(&badMsg);
         return 0;
     }
@@ -7168,9 +7168,9 @@ void TSingleSelectionWindow::onNewHostMsg(CNetMsg* netMsg)
     CNetPlayerHandlerPlayer* p =
         m_players.getPlayer(static_cast<CNewHostMsg*>(netMsg)->m_dpidNewHost);
     if (p)
-        sprintf(text, g_generalText->getText(529), p->m_name);
+        sprintf(text, g_generalText->getText(GENERAL_TEXT_NEW_HOST_FORMAT), p->m_name);
     else
-        sprintf(text, g_generalText->getText(529),
+        sprintf(text, g_generalText->getText(GENERAL_TEXT_NEW_HOST_FORMAT),
                 DATA_COMPGEN(0x00683958, unknownHostName, "????????????"));
     g_chatMan.systemMsg(text);
     drawWindow(0, 0xffff0001, 0xffff);
@@ -7391,12 +7391,12 @@ unsigned char TSingleSelectionWindow::onBeginGame()
             const char* gameType;
             if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
                 text = g_generalText;
-                gameType = text->getText(746);
+                gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
             } else {
                 text = g_generalText;
-                gameType = text->getText(747);
+                gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
             }
-            normalDialog(formatString(text->getText(744), gameType).c_str(), 1, -1, -1,
+            normalDialog(formatString(text->getText(GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT), gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -7413,12 +7413,12 @@ unsigned char TSingleSelectionWindow::onBeginGame()
             const char* gameType;
             if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
                 text = g_generalText;
-                gameType = text->getText(746);
+                gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
             } else {
                 text = g_generalText;
-                gameType = text->getText(747);
+                gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
             }
-            normalDialog(formatString(text->getText(745), gameType).c_str(), 1, -1, -1,
+            normalDialog(formatString(text->getText(GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT), gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -7429,14 +7429,14 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         return 0;
 
     if (m_selectionHeaders.size() == 0 && !m_randomMapSelected) {
-        normalDialog(g_generalText->getText(530), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_NO_MAPS_TO_PLAY), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return 0;
     }
 
     CNetPlayerHandlerPlayer* player = getThisPlayer();
     if (!m_loadMode && player->m_playerPos == -1) {
-        normalDialog(g_generalText->getText(531), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_MULTIPLAYER_POSITION_REQUIRED), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return 0;
     }
@@ -7449,7 +7449,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
                 ++seated;
         }
         if (seated < 2) {
-            normalDialog(g_generalText->getText(83), 1, -1, -1, -1, 0, -1, 0,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_MULTIPLAYER_REQUIRES_TWO_PLAYERS), 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
             return 0;
         }
@@ -7622,7 +7622,7 @@ void TSingleSelectionWindow::updateNameLists()
 VA(0x0058ca80, 0x162)  // dc 0x142e3c
 void TSingleSelectionWindow::turnChatOn(bool update)
 {
-    m_chatToggle->setText(g_generalText->getText(532));
+    m_chatToggle->setText(g_generalText->getText(GENERAL_TEXT_HIDE_CHAT));
     getWidget(105)->hide();
     m_descriptionWidget->hide();
     getWidget(181)->show();
@@ -7644,7 +7644,7 @@ void TSingleSelectionWindow::turnChatOn(bool update)
 VA(0x0058cbf0, 0x152)  // dc 0x142fac
 void TSingleSelectionWindow::turnChatOff(unsigned char update)
 {
-    m_chatToggle->setText(g_generalText->getText(533));
+    m_chatToggle->setText(g_generalText->getText(GENERAL_TEXT_SHOW_CHAT));
     getWidget(105)->show();
     m_descriptionWidget->show();
     getWidget(181)->hide();
@@ -8201,7 +8201,7 @@ void TSingleSelectionWindow::onDeleteFile()
     if (!m_loadMode && !m_saveMode)
         return;
     char* fileName = m_selectionHeaders[m_currentMap].m_setup.m_filename;
-    sprintf(g_text, g_generalText->getText(688), fileName);
+    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_DELETE_SAVE_PROMPT_FORMAT), fileName);
     normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
         return;
