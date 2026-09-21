@@ -578,10 +578,15 @@ unit = "events"
 source = "src/events.cpp"
 flags = "game_o2_ml_gr_windows"
 
+# The /ML profiles of kb, newgame, quickherowindow and quicktownwindow
+# retained an empty std::_Lockit destructor in EH cleanup,
+# colliding with retail LIBCPMT's real lock release at 0x60b634. /MT removes
+# that conflicting definition. Isolated profile probes preserve all 61 kb
+# and 17 newgame/quick-window game-function scores; see docs/vc6/runtime-link.md.
 [[unit]]
 unit = "kb"
 source = "src/kb.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "bottomviewsubwindow"
@@ -664,7 +669,7 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "quickherowindow"
 source = "src/quickherowindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "systemoptionswindow"
@@ -684,7 +689,7 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "newgame"
 source = "src/newgame.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "advspells"
@@ -715,7 +720,7 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "quicktownwindow"
 source = "src/quicktownwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "slider"

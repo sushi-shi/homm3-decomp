@@ -35,7 +35,7 @@ DATA(0x006aace8) TDrawbridgeBounds g_combatAreaLimits;
 // UpdateGrid's private "the grid bitmap has been posted" latch. It is
 // cleared when the caller says the clean battlefield was reposted and set
 // after the complete visible-grid pass. No other retail body references it.
-DATA(0x006969d4) int g_combatGridPosted6969d4;
+DATA(0x006969d4) int g_combatGridPosted;
 
 // NH3API's name crosses to this retail datum by bijective instruction-
 // operand correspondence, not by its contradicted address. Retail accesses
@@ -372,7 +372,7 @@ void combatManager::combatMessage(int command)
 
     case COMBAT_COMMAND_ATTACK:
         distance = getDistance(currentArmy->m_gridIndex, m_lastMoveToIndex);
-        if (g_unnamed698758.m_combatArmyInfoLevel) {
+        if (g_config.m_combatArmyInfoLevel) {
             sprintf(g_text, (*g_generalText)[37], targetArmy->getName(),
                     getEstimatedDamage(currentArmy, targetArmy, 0,
                                          distance).c_str());
@@ -389,7 +389,7 @@ void combatManager::combatMessage(int command)
         long targetHits = targetArmy->getTotalHitPoints(0);
         long currentHits = currentArmy->getTotalHitPoints(0);
         long expectedDamage = aiGetAttackDamage(*(currentArmy), currentHits, *(targetArmy), 1, distance);
-        if (!g_unnamed698758.m_combatArmyInfoLevel) {
+        if (!g_config.m_combatArmyInfoLevel) {
             sprintf(g_text, (*g_generalText)[221], targetArmy->getName());
         } else if (currentArmy->m_monInfo.m_numShots == 1) {
             sprintf(g_text, (*g_generalText)[38], targetArmy->getName(),
@@ -497,12 +497,12 @@ void combatManager::updateCombatArea()
     if (!static_cast<const combatManager*>(this)->isQuickCombat()
             && m_combatShowIt) {
         g_windowManager->updateScreen(
-            g_combatDrawLimits694f18.m_minX,
-            g_combatDrawLimits694f18.m_minY,
-            g_combatDrawLimits694f18.m_maxX
-                - g_combatDrawLimits694f18.m_minX + 1,
-            g_combatDrawLimits694f18.m_maxY
-                - g_combatDrawLimits694f18.m_minY + 1);
+            g_combatDrawLimits.m_minX,
+            g_combatDrawLimits.m_minY,
+            g_combatDrawLimits.m_maxX
+                - g_combatDrawLimits.m_minX + 1,
+            g_combatDrawLimits.m_maxY
+                - g_combatDrawLimits.m_minY + 1);
     }
 }
 
@@ -635,7 +635,7 @@ void combatManager::setupGridForArmy(const army* thisArmy)
         return;
     if (thisArmy->m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
         return;
-    if (!g_unnamed698758.m_showCombatGrid && !m_creaturePlacement)
+    if (!g_config.m_showCombatGrid && !m_creaturePlacement)
         return;
 
     thisArmy->getAttackMask(thisArmy->m_gridIndex, 2, -1);
@@ -679,10 +679,10 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
     }
 
     if (postGridIsClean)
-        g_combatGridPosted6969d4 = 0;
+        g_combatGridPosted = 0;
 
-    if (!g_unnamed698758.m_combatShadeLevel && !m_creaturePlacement
-            && !g_unnamed698758.m_showCombatGrid && !m_debugShowBlockedHexes)
+    if (!g_config.m_combatShadeLevel && !m_creaturePlacement
+            && !g_config.m_showCombatGrid && !m_debugShowBlockedHexes)
         return 0;
 
     unsigned char update = 0;
@@ -698,7 +698,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
         }
     }
 
-    if (g_unnamed698758.m_combatShadeLevel || m_creaturePlacement) {
+    if (g_config.m_combatShadeLevel || m_creaturePlacement) {
         unsigned char newGrid = 0;
         unsigned char oldGrid = 0;
         unsigned char changed = 0;
@@ -763,8 +763,8 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
         }
     }
 
-    if (g_unnamed698758.m_showCombatGrid
-            && (!g_combatGridPosted6969d4 || update)) {
+    if (g_config.m_showCombatGrid
+            && (!g_combatGridPosted || update)) {
         for (int i = 0; i < COMBAT_GRID_CELLS; i++) {
             if (!inInvisibleColumn(i)) {
                 m_combatCellGridBitmap->draw(
@@ -774,7 +774,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
             }
         }
         update = 1;
-        g_combatGridPosted6969d4 = 1;
+        g_combatGridPosted = 1;
     }
 
     memcpy(m_lastDrawGridShade, m_curDrawGridShade, sizeof(m_lastDrawGridShade));
@@ -844,7 +844,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 
     if (m_battleOver
             || static_cast<const combatManager*>(this)->isQuickCombat()
-            || !g_unnamed698758.m_showCombatMouseHex)
+            || !g_config.m_showCombatMouseHex)
         return;
     if (newMouseGridIndex == lastMouseGridIndex && !forceUpdate)
         return;
@@ -894,7 +894,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
         *static_cast<SLimitData*>(static_cast<void*>(&m_drawbridgeBounds));
     const SLimitData& combatDrawLimits =
         *static_cast<const SLimitData*>(static_cast<const void*>(
-            &g_combatDrawLimits694f18));
+            &g_combatDrawLimits));
     SLimitData saveExtent = extent;
     int saveLimitToExtent = m_limitToExtent;
     m_drawbridgeBounds = g_combatAreaLimits;
@@ -1143,16 +1143,16 @@ void combatManager::drawFrame(bool update,
     }
 
     m_combatWindow->drawChatText(0);
-    if (g_unnamed698758.m_combatArmyInfoLevel)
+    if (g_config.m_combatArmyInfoLevel)
         drawCreatureAndHeroSubwindows();
 
     if (doDelayTil) {
-        GameTime::delayTil(g_combatStamp698998);
-        g_combatStamp698998 = GameTime::nextFrameTime(
-            g_combatStamp698998,
+        GameTime::delayTil(g_timers[0]);
+        g_timers[0] = GameTime::nextFrameTime(
+            g_timers[0],
             static_cast<long>(
                 delay
-                * g_combatSpeedFactors[g_unnamed698758.m_combatSpeed]));
+                * g_combatSpeedFactors[g_config.m_combatSpeed]));
     }
 
     if (update) {
@@ -1162,7 +1162,7 @@ void combatManager::drawFrame(bool update,
         }
 
         SLimitData& bounds = m_drawbridgeBounds;
-        const SLimitData& combatDrawLimits = g_combatDrawLimits694f18;
+        const SLimitData& combatDrawLimits = g_combatDrawLimits;
         bounds.clip(combatDrawLimits);
         updateCombatArea(bounds);
     }
@@ -1342,14 +1342,14 @@ void combatManager::drawOccupant(int index, int drawPriority,
     if (drawPriority == COMBAT_DRAW_PRIORITY_SINGLE_PASS)
         return;
 
-    if (index == g_moatColumns[row]
-            || (m_moatIsWide && index == g_outerMoatColumns[row]))
+    if (index == g_moatHexes[row]
+            || (m_moatIsWide && index == g_innerMoatHexes[row]))
         drawMoatOverlay(index);
 
     if (occupant->is(creatureDoubleWide)) {
         int front = index + occupant->offsetToFront(-1);
-        if (front == g_moatColumns[row]
-                || (m_moatIsWide && front == g_outerMoatColumns[row]))
+        if (front == g_moatHexes[row]
+                || (m_moatIsWide && front == g_innerMoatHexes[row]))
             drawMoatOverlay(front);
     }
 
@@ -1476,7 +1476,7 @@ int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
 {
     SLimitData limits(x, y, x + sprite->getWidth() - 1,
                       y + sprite->getHeight() - 1);
-    limits.clip(g_combatDrawLimits694f18);
+    limits.clip(g_combatDrawLimits);
 
     // DC drawing.cpp:1809 calls ScrollTo before extent accumulation.
     // Complete expands the fixed-viewport helper without emitted code.
@@ -1509,7 +1509,7 @@ int combatManager::drawSpriteObject(const CSprite* sprite, int frame,
     SLimitData limits(x, y, x + sprite->getWidth() - 1,
                       y + sprite->getHeight() - 1);
 
-    limits.clip(g_combatDrawLimits694f18);
+    limits.clip(g_combatDrawLimits);
 
     if (m_saveBiggestExtent) {
         m_drawbridgeBounds.include(limits);
@@ -1575,7 +1575,7 @@ int combatManager::drawWall(const Bitmap816* image, int x, int y,
 {
     SLimitData limits(dx, dy, dx + width - 1, dy + height - 1);
 
-    limits.clip(g_combatDrawLimits694f18);
+    limits.clip(g_combatDrawLimits);
 
     if (m_saveBiggestExtent) {
         m_drawbridgeBounds.include(limits);
@@ -1601,7 +1601,7 @@ int combatManager::drawObject(const Bitmap816* image, int x, int y)
                       x + image->getWidth() - 1,
                       y + image->getHeight() - 1);
 
-    limits.clip(g_combatDrawLimits694f18);
+    limits.clip(g_combatDrawLimits);
 
     if (m_saveBiggestExtent) {
         m_drawbridgeBounds.include(limits);
@@ -1628,7 +1628,7 @@ int combatManager::drawMoatOverlay(int index)
         s_wallTraits[m_defendingTown->m_type][WALL_TRAITS_ROW_MOAT];
     SLimitData moatExtent(cell.m_hexUlx, cell.m_hexUly + 36,
                            cell.m_hexUlx + 43, cell.m_hexUly + 41);
-    moatExtent.clip(g_combatDrawLimits694f18);
+    moatExtent.clip(g_combatDrawLimits);
 
     Bitmap816* image = m_combatIcons[WALL_TRAITS_ROW_MOAT][0];
     if (!image)
@@ -1746,7 +1746,7 @@ void combatManager::computeMaxExtent()
         }
     }
 
-    m_drawbridgeBounds.clip(g_combatDrawLimits694f18);
+    m_drawbridgeBounds.clip(g_combatDrawLimits);
 }
 
 VA(0x00495f50, 0x17c)  // dc 0x866ac
@@ -1774,7 +1774,7 @@ void combatManager::computeExtent(const CSprite* sprite, int sequence,
     limits->m_maxY = y + sprite->getCroppedY(sequence, frame)
         + sprite->getCroppedHeight(sequence, frame) - 1;
 
-    limits->clip(g_combatDrawLimits694f18);
+    limits->clip(g_combatDrawLimits);
     if (saveBiggestExtent)
         m_drawbridgeBounds.include(*limits);
 }
@@ -1952,8 +1952,8 @@ void combatManager::cycleCombatScreen()
     g_systemPalette->cycle(112, 119, -1);
     drawFrame(1, 1, 0, 0, 1, 0);
     GameTime::get();
-    g_combatStamp6989b8 =
-        GameTime::nextFrameTime(g_combatStamp6989b8, 100);
+    g_timers[8] =
+        GameTime::nextFrameTime(g_timers[8], 100);
 }
 
 VA(0x00496840, 0x1c5)  // dc 0x86ea0

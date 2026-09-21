@@ -1,4 +1,5 @@
 #include "va.h"
+#include "objnames.h"
 #include "includes.h"
 
 #include <stdlib.h>
@@ -13,6 +14,18 @@
 #include "herospec.h"
 #include "kb.h"
 #include "path.h"
+
+// Initial contents recovered from the pinned Complete image.
+DATA(0x00678150) tilePoint g_normalDirTable[8] = {
+    { 0, -1, 16 },
+    { 1, -1, 16 },
+    { 1, 0, 16 },
+    { 1, 1, 16 },
+    { 0, 1, 16 },
+    { -1, 1, 16 },
+    { -1, 0, 16 },
+    { -1, -1, 16 }
+};
 
 // ai_player.cpp:4643. Kept local because findpath's narrow include set does
 // not otherwise depend on the ai_player class declarations.
@@ -216,8 +229,8 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
 VA(0x004b18c0, 0x1A2)  // dc 0x9f184
 int getTerrainCost(hero* currentHero, type_point start, int direction, int moveLeft)
 {
-    const int destX = start.m_x + g_stepDeltaX[4 * direction];
-    const int destY = start.m_y + g_stepDeltaY[4 * direction];
+    const int destX = start.m_x + g_normalDirTable[direction].m_x;
+    const int destY = start.m_y + g_normalDirTable[direction].m_y;
     NewmapCell* from = g_game->m_worldMap.cell(start.m_x, start.m_y, start.m_z);
     type_point to(destX, destY, start.m_z);
     NewmapCell* dest = g_game->m_worldMap.cell(to.m_x, to.m_y, to.m_z);
@@ -507,8 +520,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
 
     for (long direction = 0; direction < 8; direction++) {
         pathCell candidate = *source;
-        candidate.m_point.m_x = source->m_point.m_x + g_stepDeltaX[4 * direction];
-        candidate.m_point.m_y = source->m_point.m_y + g_stepDeltaY[4 * direction];
+        candidate.m_point.m_x = source->m_point.m_x + g_normalDirTable[direction].m_x;
+        candidate.m_point.m_y = source->m_point.m_y + g_normalDirTable[direction].m_y;
         if (!candidate.m_point.isValid())
             continue;
         if (adjacentMonster) {
@@ -587,10 +600,10 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         }
 
         if (((1 << direction) & 0x83) && srcCell->cellIsTrigger()
-                && g_adventureObjectTraits[srcCell->getMapObject()][1] == 0)
+                && g_adventureObjectTraits[srcCell->getMapObject()].m_trait1 == 0)
             blocked = 1;
         if (((1 << direction) & 0x38) && destCell->cellIsTrigger()
-                && g_adventureObjectTraits[destCell->getMapObject()][1] == 0)
+                && g_adventureObjectTraits[destCell->getMapObject()].m_trait1 == 0)
             continue;
 
         if (destGround == eTerrainWater) {
@@ -600,8 +613,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                     candidate.m_canStop = 0;
                 }
                 if (srcGround == eTerrainWater
-                        && g_stepDeltaX[4 * direction] != 0
-                        && g_stepDeltaY[4 * direction] != 0) {
+                        && g_normalDirTable[direction].m_x != 0
+                        && g_normalDirTable[direction].m_y != 0) {
                     // READ-BACK, not a re-read of `source`. Retail extracts
                     // both coordinates from the dword it has just stored into
                     // the copy (`mov ebx,eax / shl ebx,6` on across_x, `mov
@@ -610,8 +623,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                     // shl bx,6` off the member's own word container.
                     type_point acrossX = source->m_point;
                     type_point acrossY = source->m_point;
-                    acrossX.m_x = acrossX.m_x + g_stepDeltaX[4 * direction];
-                    acrossY.m_y = acrossY.m_y + g_stepDeltaY[4 * direction];
+                    acrossX.m_x = acrossX.m_x + g_normalDirTable[direction].m_x;
+                    acrossY.m_y = acrossY.m_y + g_normalDirTable[direction].m_y;
                     if (g_game->m_worldMap.cell(acrossX.m_x, acrossX.m_y,
                                               acrossX.m_z)->m_groundSet
                                 != eTerrainWater
@@ -793,7 +806,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         }
 
         if (source->m_canStop || !destCell->m_isTrigger
-                || (g_adventureObjectTraits[destCell->m_type][0] == 0
+                || (g_adventureObjectTraits[destCell->m_type].m_blocksLanding == 0
                     && destCell->m_type != TOWN))
             pushPoint(*source, candidate, direction, cost, maxMobility,
                       candidate.m_barrierValue, candidate.m_monster,
@@ -1136,12 +1149,12 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                 || g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP)
             siegePressure = 1;
         if (currentArmy->getTotalHitPoints(0)
-                <= g_townSiegeStrength63bd18[
+                <= g_moatDamage[
                         g_combatManager->m_defendingTown->m_type] * 4)
             siegePressure = 1;
         if (siegePressure
                 && currentArmy->getTotalHitPoints(0)
-                    > g_townSiegeStrength63bd18[
+                    > g_moatDamage[
                             g_combatManager->m_defendingTown->m_type] * 40)
             siegePressure = 0;
     }

@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 #include "includes.h"
 
@@ -20,8 +21,11 @@
 #include "textresource.h"
 #include "winmgr.h"
 
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x0069fab8) std::vector<std::string>* g_seerHutNamesPointer;
+
 void aiEquipArtifacts(hero* currentHero);
-void aiJoinDecision(hero* currentHero, TCreatureType creature, int amount);
+void aiJoinDecision(hero* currentHero, TCreatureType creature, short amount);
 void doMonsterJoinDialog(hero* currentHero, TCreatureType creature,
                             int amount);
 
@@ -77,7 +81,7 @@ __declspec(nothrow) void __cdecl operator delete(void* value);
 // cost vector in edx, summed against the per-player multiplier table the
 // same 0x168-byte player stride reaches. Declared here rather than pulled in
 // from a header - seerhut.cpp is its only consumer in this tree.
-int aiResourceCost(int player, const int* costs);
+int aiResourceCost(long player, const int* costs);
 
 type_quest* createQuest(int questType, unsigned char flags);
 
@@ -85,13 +89,12 @@ std::string formatString(const char* format, ...);
 
 // The seven localized resource names.  The resource-quest string builders
 // walk this array in lockstep with their seven-dword payload.
-DATA(0x006a5e64) extern const char* g_resourceNames[7];
+
 
 // The nine compass phrases describing a quest monster's map region.
 // Retail reaches every cell directly from the initializer below; their
 // clockwise order is north, north-east, east, south-east, south, south-west,
 // west, north-west, then centre.
-DATA(0x006a5c48) extern const char* g_questMonsterDirections[9];
 
 // kb.obj's centred message box, 0x4f6570 - kb.h declares it, but the ten
 // quest dialog bodies below are this compiland's only consumers of that
@@ -304,9 +307,9 @@ std::string type_quest::getTimeLimitText()
     std::string text;
     text = DATA_COMPGEN(0x00660330, questTimeLimitSeparator, " ");
     int remainingDays = m_limit - days;
-    const std::string* row =
+    const TSeerHutTextColumn& row =
         m_seerHut ? g_questTextA[m_textVariant] : g_questTextB[m_textVariant];
-    text += formatString(row[QUEST_TEXT_TIME_LIMIT].c_str(), remainingDays);
+    text += formatString(row.m_completion.c_str(), remainingDays);
     return text;
 }
 
@@ -405,15 +408,15 @@ void type_experience_quest::save(TAbstractFile* file)
 VA(0x0056d720, 0x23E)
 void type_experience_quest::setDefaultText()
 {
-    const std::string* texts = questTexts();
+    const TSeerHutQuestText& texts = questTexts();
     if (m_proposalText.length() == 0)
-        m_proposalText = formatString(texts[QUEST_TEXT_PROPOSAL].c_str(),
+        m_proposalText = formatString(texts.m_text0.c_str(),
                               m_requiredLevel);
     if (m_progressText.length() == 0)
-        m_progressText = formatString(texts[QUEST_TEXT_PROGRESS].c_str(),
+        m_progressText = formatString(texts.m_text1.c_str(),
                               m_requiredLevel);
     if (m_completionText.length() == 0)
-        m_completionText = formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
+        m_completionText = formatString(texts.m_text2.c_str(),
                               m_requiredLevel);
 }
 
@@ -479,9 +482,9 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
     } else {
         std::string requirement = skillRequirementText(missing);
         const char* requirementPointer = requirement.c_str();
-        const std::string* texts = questTexts();
+        const TSeerHutQuestText& texts = questTexts();
         std::string text = formatString(
-            texts[QUEST_TEXT_PROGRESS].c_str(), requirementPointer);
+            texts.m_text1.c_str(), requirementPointer);
         text += getTimeLimitText();
         const char* textPointer = text.c_str();
         {
@@ -602,7 +605,7 @@ std::string type_skill_quest::skillRequirementText(
         if (skills[i] > 0) {
             requirements.push_back(formatString(
                 DATA_COMPGEN(0x00683220, skillRequirementFormat, "%s %i"),
-                g_primarySkillNames[i], m_requiredSkills[i]));
+                g_statNames[i], m_requiredSkills[i]));
         }
     }
     return joinTextList(requirements);
@@ -610,15 +613,15 @@ std::string type_skill_quest::skillRequirementText(
 VA(0x0056e0d0, 0x169)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::setDefaultText()
 {
-    const std::string* texts = questTexts();
+    const TSeerHutQuestText& texts = questTexts();
     std::string requirement = skillRequirementText(m_requiredSkills);
 
     if (m_proposalText.length() == 0)
-        m_proposalText = formatString(texts[QUEST_TEXT_PROPOSAL].c_str(),
+        m_proposalText = formatString(texts.m_text0.c_str(),
                                      requirement.c_str());
     if (m_completionText.length() == 0) {
         std::string formatted =
-            formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
+            formatString(texts.m_text2.c_str(),
                           requirement.c_str());
         m_completionText = formatted;
     }
@@ -732,7 +735,7 @@ void type_defeat_hero_quest::save(TAbstractFile* file)
 VA(0x0056e6f0, 0x29E)
 void type_defeat_hero_quest::setDefaultText()
 {
-    const std::string* texts = questTexts();
+    const TSeerHutQuestText& texts = questTexts();
     hero* defeatedHero;
     for (m_defeatedHero = game::HERO_COUNT - 1; m_defeatedHero > -1;
          --m_defeatedHero) {
@@ -741,13 +744,13 @@ void type_defeat_hero_quest::setDefaultText()
             break;
     }
     if (m_defeatedHero != -1 && m_proposalText.length() == 0)
-        m_proposalText = formatString(texts[QUEST_TEXT_PROPOSAL].c_str(),
+        m_proposalText = formatString(texts.m_text0.c_str(),
                               defeatedHero->m_name);
     if (m_defeatedHero != -1 && m_progressText.length() == 0)
-        m_progressText = formatString(texts[QUEST_TEXT_PROGRESS].c_str(),
+        m_progressText = formatString(texts.m_text1.c_str(),
                               defeatedHero->m_name);
     if (m_defeatedHero != -1 && m_completionText.length() == 0)
-        m_completionText = formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
+        m_completionText = formatString(texts.m_text2.c_str(),
                               defeatedHero->m_name);
 }
 
@@ -756,7 +759,7 @@ std::string type_monster_quest::getRequirementText()
 {
     const char* name = m_monsterId >= 0 && m_monsterId <= 0x96
                            ? g_creatureTypeTraits[m_monsterId].m_pluralName
-                           : g_emptyRolloverText;
+                           : "";
     return name;
 }
 
@@ -767,7 +770,7 @@ std::string type_monster_quest::getQuestDescription()
         questText(QUEST_TEXT_DESCRIPTION).c_str(),
         m_monsterId >= 0 && m_monsterId <= 0x96
             ? g_creatureTypeTraits[m_monsterId].m_pluralName
-            : g_emptyRolloverText);
+            : "");
 }
 
 VA(0x0056ebc0, 0x06)
@@ -909,35 +912,35 @@ void type_monster_quest::setDefaultText()
         return;
 
     const char* monsterName;
-    const std::string* texts =
-        questTextRow() + QUEST_TEXT_COLUMNS * questType();
+    const TSeerHutQuestText& texts =
+        questTextRow()->m_quest[questType()];
     m_monsterId = g_game->m_worldMap.cell(m_position)->m_objectIndex;
     monsterName = m_monsterId >= 0 && m_monsterId <= 0x96
                       ? g_creatureTypeTraits[m_monsterId].m_pluralName
-                      : g_emptyRolloverText;
+                      : "";
 
     std::string direction;
     if (m_position.m_x < g_mapWidth / 3) {
         if (m_position.m_y < g_mapHeight / 3)
-            direction = g_questMonsterDirections[7];
+            direction = g_directions[7];
         else if (m_position.m_y > (2 * g_mapHeight) / 3)
-            direction = g_questMonsterDirections[5];
+            direction = g_directions[5];
         else
-            direction = g_questMonsterDirections[6];
+            direction = g_directions[6];
     } else if (m_position.m_x > (2 * g_mapWidth) / 3) {
         if (m_position.m_y < g_mapHeight / 3)
-            direction = g_questMonsterDirections[1];
+            direction = g_directions[1];
         else if (m_position.m_y > (2 * g_mapHeight) / 3)
-            direction = g_questMonsterDirections[3];
+            direction = g_directions[3];
         else
-            direction = g_questMonsterDirections[2];
+            direction = g_directions[2];
     } else {
         if (m_position.m_y < g_mapHeight / 3)
-            direction = g_questMonsterDirections[0];
+            direction = g_directions[0];
         else if (m_position.m_y > (2 * g_mapHeight) / 3)
-            direction = g_questMonsterDirections[4];
+            direction = g_directions[4];
         else
-            direction = g_questMonsterDirections[8];
+            direction = g_directions[8];
     }
 
     if (m_position.m_z)
@@ -945,13 +948,13 @@ void type_monster_quest::setDefaultText()
                                   " underground");
 
     if (m_proposalText.length() == 0)
-        m_proposalText = formatString(texts[QUEST_TEXT_PROPOSAL].c_str(),
+        m_proposalText = formatString(texts.m_text0.c_str(),
                                      monsterName, direction.c_str());
     if (m_progressText.length() == 0)
-        m_progressText = formatString(texts[QUEST_TEXT_PROGRESS].c_str(),
+        m_progressText = formatString(texts.m_text1.c_str(),
                                      monsterName, direction.c_str());
     if (m_completionText.length() == 0)
-        m_completionText = formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
+        m_completionText = formatString(texts.m_text2.c_str(),
                                        monsterName, direction.c_str());
 }
 
@@ -1034,8 +1037,8 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
     }
 
     if (m_progressText.length() == 0) {
-        const std::string* texts = questTexts();
-        std::string textFormat = texts[QUEST_TEXT_PROGRESS];
+        const TSeerHutQuestText& texts = questTexts();
+        std::string textFormat = texts.m_text1;
         std::string text = formatString(
             textFormat.c_str(),
             joinTextList(requirements).c_str());
@@ -1182,15 +1185,15 @@ void type_artifact_quest::save(TAbstractFile* file)
 VA(0x005701d0, 0x199)
 void type_artifact_quest::setDefaultText()
 {
-    const std::string* texts = questTexts();
+    const TSeerHutQuestText& texts = questTexts();
     std::string requirement;
     requirement = getRequirementText();
 
     if (m_proposalText.length() == 0)
-        m_proposalText = formatString(texts[QUEST_TEXT_PROPOSAL].c_str(),
+        m_proposalText = formatString(texts.m_text0.c_str(),
                                      requirement.c_str());
     if (m_completionText.length() == 0)
-        m_completionText = formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
+        m_completionText = formatString(texts.m_text2.c_str(),
                                        requirement.c_str());
 }
 
@@ -1285,8 +1288,8 @@ void type_creature_quest::doProposalDialog(hero* currentHero)
     }
 
     if (m_progressText.length() == 0) {
-        const std::string* texts = questTexts();
-        std::string textFormat = texts[QUEST_TEXT_PROGRESS];
+        const TSeerHutQuestText& texts = questTexts();
+        std::string textFormat = texts.m_text1;
         text = formatString(
             textFormat.c_str(),
             joinTextList(requirements).c_str());
@@ -1332,8 +1335,7 @@ void type_creature_quest::doProgressDialog()
 
         if (m_proposalText.length() == 0) {
             std::string textFormat =
-                questTextRow()[QUEST_TEXT_COLUMNS * questType()
-                                 + QUEST_TEXT_PROPOSAL];
+                questTextRow()->m_quest[questType()].m_text0;
             if (m_limit >= 0)
                 textFormat += getTimeLimitText();
             text = formatString(
@@ -1445,8 +1447,8 @@ void type_creature_quest::setDefaultText()
 {
     if (m_completionText.length() == 0) {
         std::string requirement = getRequirementText();
-        const std::string* texts = questTexts();
-        std::string text = texts[QUEST_TEXT_COMPLETION];
+        const TSeerHutQuestText& texts = questTexts();
+        std::string text = texts.m_text2;
         m_completionText = formatString(text.c_str(),
                                        requirement.c_str());
     }
@@ -1535,8 +1537,8 @@ void type_resource_quest::doProposalDialog(hero* currentHero)
     }
 
     if (m_progressText.length() == 0) {
-        const std::string* texts = questTexts();
-        std::string textFormat = texts[QUEST_TEXT_PROGRESS];
+        const TSeerHutQuestText& texts = questTexts();
+        std::string textFormat = texts.m_text1;
         text = formatString(
             textFormat.c_str(),
             joinTextList(requirements).c_str());
@@ -1613,8 +1615,8 @@ void type_resource_quest::setDefaultText()
 {
     std::vector<std::string> requirements;
     std::string requirement;
-    const std::string* texts =
-        questTextRow() + QUEST_TEXT_COLUMNS * questType();
+    const TSeerHutQuestText& texts =
+        questTextRow()->m_quest[questType()];
     for (int i = 0; i <= 6; i++) {
         if (m_resources[i] > 0) {
             requirement = formatString(
@@ -1625,10 +1627,10 @@ void type_resource_quest::setDefaultText()
     }
     requirement = joinTextList(requirements);
     if (m_proposalText.length() == 0)
-        m_proposalText = formatString(texts[QUEST_TEXT_PROPOSAL].c_str(),
+        m_proposalText = formatString(texts.m_text0.c_str(),
                               requirement.c_str());
     if (m_completionText.length() == 0)
-        m_completionText = formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
+        m_completionText = formatString(texts.m_text2.c_str(),
                               requirement.c_str());
 }
 
@@ -1692,15 +1694,15 @@ VA(0x00572270, 0x276)
 void type_be_hero_quest::setDefaultText()
 {
     hero* requiredHero = g_game->getHero(m_requiredHero);
-    const std::string* texts = questTexts();
+    const TSeerHutQuestText& texts = questTexts();
     if (m_proposalText.length() == 0)
-        m_proposalText = formatString(texts[QUEST_TEXT_PROPOSAL].c_str(),
+        m_proposalText = formatString(texts.m_text0.c_str(),
                               requiredHero->m_name);
     if (m_progressText.length() == 0)
-        m_progressText = formatString(texts[QUEST_TEXT_PROGRESS].c_str(),
+        m_progressText = formatString(texts.m_text1.c_str(),
                               requiredHero->m_name);
     if (m_completionText.length() == 0)
-        m_completionText = formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
+        m_completionText = formatString(texts.m_text2.c_str(),
                               requiredHero->m_name);
 }
 
@@ -1732,7 +1734,7 @@ std::string type_belong_to_player_quest::getRequirementText()
 VA(0x00572670, 0x19D)
 std::string type_belong_to_player_quest::getQuestDescription()
 {
-    std::string requirement = g_playerColorNames[m_requiredOwner];
+    std::string requirement = g_colors[m_requiredOwner];
     std::transform(requirement.begin(), requirement.end(),
                    requirement.begin(), ::tolower);
     return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
@@ -1792,19 +1794,19 @@ void type_belong_to_player_quest::save(TAbstractFile* file)
 VA(0x00572940, 0x204)
 void type_belong_to_player_quest::setDefaultText()
 {
-    std::string requirement = g_playerColorNames[m_requiredOwner];
+    std::string requirement = g_colors[m_requiredOwner];
     std::transform(requirement.begin(), requirement.end(),
                    requirement.begin(), ::tolower);
-    const std::string* texts =
-        questTextRow() + QUEST_TEXT_COLUMNS * questType();
+    const TSeerHutQuestText& texts =
+        questTextRow()->m_quest[questType()];
     if (m_proposalText.length() == 0)
-        m_proposalText = formatString(texts[QUEST_TEXT_PROPOSAL].c_str(),
+        m_proposalText = formatString(texts.m_text0.c_str(),
                               requirement.c_str());
     if (m_progressText.length() == 0)
-        m_progressText = formatString(texts[QUEST_TEXT_PROGRESS].c_str(),
+        m_progressText = formatString(texts.m_text1.c_str(),
                               requirement.c_str());
     if (m_completionText.length() == 0)
-        m_completionText = formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
+        m_completionText = formatString(texts.m_text2.c_str(),
                               requirement.c_str());
 }
 
@@ -1831,10 +1833,10 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
 
     if (expired) {
         if (humanPlayer) {
-            const std::string* row = m_quest->m_seerHut
+            const TSeerHutTextColumn& row = m_quest->m_seerHut
                 ? g_questTextA[m_quest->m_textVariant]
                 : g_questTextB[m_quest->m_textVariant];
-            normalDialog(row[type_quest::QUEST_TEXT_EXPIRED].c_str(),
+            normalDialog(row.m_name.c_str(),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
@@ -1882,7 +1884,7 @@ VA(0x00572e40, 0x1FF)
 std::string TQuestGuard::questGuardFn00572E40(int player)
 {
     std::string text;
-    text = g_questGuardName;
+    text = g_quickViewText[215];
 
     if (playerHasInfo(player) && m_quest) {
         text += DATA_COMPGEN(0x006603b0, questGuardQuickInfoSeparator, "\n\n");
@@ -1896,7 +1898,7 @@ VA(0x00573040, 0x1FF)
 std::string TQuestGuard::questGuardFn00573040(int player)
 {
     std::string text;
-    text = g_questGuardName;
+    text = g_quickViewText[215];
 
     if (playerHasInfo(player) && m_quest) {
         text += DATA_COMPGEN(0x00660330, questGuardRolloverSeparator, " ");
@@ -2165,7 +2167,7 @@ void TSeerHut::doEmptyDialog()
     std::string text;
     int textIndex = rand() % 3;
     text = formatString(
-        g_questTextA[textIndex][type_quest::QUEST_TEXT_EXPIRED].c_str(),
+        g_questTextA[textIndex].m_name.c_str(),
         getName());
     normalDialog(text.c_str(), 1, -1, -1, -1, 0,
                  -1, 0, -1, 0, -1, 0);
@@ -2476,7 +2478,7 @@ VA(0x00574070, 0x138)  // UpdateQuestLocator caller; HD twin 0x574440
 std::string TSeerHut::getSeerLogText()
 {
     std::string logFormat =
-        m_quest->questTexts()[type_quest::QUEST_TEXT_LOG];
+        m_quest->questTexts().m_text4;
     return formatString(
         logFormat.c_str(),
         m_quest->getRequirementText().c_str(),
@@ -2492,7 +2494,7 @@ VA(0x005741b0, 0x22C)
 std::string TSeerHut::seerHutFn005741B0(int player) const
 {
     if (!playerHasInfo(static_cast<unsigned char>(player)))
-        return g_seerName;
+        return g_quickViewText[83];
 
     std::string text;
     text = formatString(
@@ -2511,7 +2513,7 @@ VA(0x005743e0, 0x22C)
 std::string TSeerHut::seerHutFn005743E0(int player) const
 {
     if (!playerHasInfo(static_cast<unsigned char>(player)))
-        return g_seerName;
+        return g_quickViewText[83];
 
     std::string text;
     text = formatString(

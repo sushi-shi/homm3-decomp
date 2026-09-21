@@ -9,10 +9,7 @@ class town;
 // four .bss string arrays keyed by (townType, buildingId) with the
 // dwelling ids (15, 17..29) taking stride-10 and stride-15 town rows.
 // Names are provisional.
-extern const char* g_buildingNamesCommon[];   // 0x6a64e4, id < 15
-extern const char* g_buildingNamesDwelling[]; // 0x6a53fc, id == 15
-extern const char* g_buildingNamesTown[];     // 0x6a5390, 17 <= id < 30
-extern const char* g_buildingNamesUpgrade[];  // 0x6a6230, id >= 30
+   // 0x6a64e4, id < 15
 
 // Dreamcast names this ten-entry hall-page text table. Complete retail
 // reads entries 0..9 at 0x6a7428..0x6a744c for the same Capitol, dock,
@@ -34,9 +31,7 @@ int canBuy(const town* currTown, int buildingId);
 // Retail extends the Dreamcast hall-screen table with Conflux while
 // preserving the original 18-byte row width. SetupCastle copies one row
 // into its working order and advances entries along their upgrade chains.
-DATA(0x0066cf98)
 extern const unsigned char g_townSpecStructScreen[9][18];
-DATA(0x0066d03c)
 extern const unsigned char g_numOfTownSpecStrScreen[9];
 
 // The four parallel widget bands driven by SetupCastle. Values are the

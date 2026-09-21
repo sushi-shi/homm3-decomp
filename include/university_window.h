@@ -14,7 +14,6 @@ class type_university_window;
 // Shared three-entry Basic/Advanced/Expert display-name row. Its retail
 // storage is claimed by levelupwindow.cpp; the university purchase callback
 // reads the Basic entry when composing its skill dialog.
-extern const char* g_skillMasteryNames[3];
 
 // Retail's two inlined constructor sites prove the iconWidget base followed
 // by the byte click latch and dword skill at +0x48/+0x4c. Dreamcast preserves

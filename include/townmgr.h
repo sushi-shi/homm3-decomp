@@ -79,7 +79,6 @@ extern TPalette16* g_systemPalette;  // retail .bss 0x6aacb0
 // for one dword would widen this compiland by the whole 29-member
 // preference block. Definition and DATA claim stay with misc.obj, whose
 // carved span does not reach 0x698784.
-extern int g_townOutlines;  // retail .bss 0x698784
 
 // One drawable object of the town panorama - a building, its outline
 // and its hotspot - forty-four slots of them on the manager at +0x5c.
@@ -974,6 +973,5 @@ void doShipyard(int type);
 // The shared frame-pacing stamp at .bss 0x698998. cmbtmgr.h owns the
 // DATA claim (advmgr's Open/Main and drawing.cpp share the cell);
 // townManager::Main paces the panorama animation with it.
-extern unsigned long g_combatStamp698998;
 
 #endif  /* HOMM3_TOWNMGR_H */

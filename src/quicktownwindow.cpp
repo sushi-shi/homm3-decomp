@@ -1,5 +1,6 @@
 // DC's retained HasBuilding callee (r11) serves all seven hall, silo and
 // fort tests. Keep every source call and the ordinary canonical town body.
+#include "text.h"
 #include "va.h"
 #include "includes.h"
 
@@ -178,7 +179,7 @@ TQuickTownWindow::TQuickTownWindow(const garrison* thisGarrison,
     m_widgets.push_back(new bitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "townqvbk.pcx", 0x800));
     m_widgets.push_back(new textWidget(
-        77, 13, 110, 24, g_quickViewGarrisonText, "smalfont.fnt",
+        77, 13, 110, 24, g_quickViewText[33], "smalfont.fnt",
         font::WHITE, NAME_ID, 0, 0, 8));
 
     initializeArmyDisplay(thisGarrison->m_garrisonArmy, viewLevel);

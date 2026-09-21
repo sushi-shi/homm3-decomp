@@ -25,8 +25,6 @@ class CSprite;
 // forwards its fastcall frame argument to SmackGoto on the current handle;
 // the second decodes that handle's current frame when playback is active.
 // Their wider ownership and original names remain unattested.
-void __fastcall setCurrentSmackFrame(int frame);
-void drawCurrentSmackFrame();
 
 // CNetMsgHandlerPause is defined in remote.h beside its base class.
 

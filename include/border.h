@@ -15,7 +15,7 @@ public:
     virtual int main(message& msg);  // slot 2, retail 0x44ff60
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const;
     virtual void draw() const;  // slot 4
-    // Slot 13, appended past widget's twelve-plus-_vslot12 exactly as
+    // Slot 13, appended past widget's twelve-plus-_onSleepChange exactly as
     // iconWidget appends its own twin (see iconwdgt.h). Main dispatches
     // it through `call [vptr+0x34]`, i.e. 13*4, which is what fixes the
     // index; the 4-byte `return 0` body ICF-folded onto iconWidget's.

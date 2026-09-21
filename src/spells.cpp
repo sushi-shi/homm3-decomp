@@ -93,8 +93,8 @@ static unsigned char g_teleportSourcePicked;
 // ShootAnimatedMissile's `nsprites` argument and Dreamcast lines 1028/1056
 // prove their source roles. The first row of each pair is visibly five image
 // pointers in retail; the second is five IEEE-754 angles.
-DATA(0x006421ec) extern const char* const g_magicArrowSprites[5];
-DATA(0x00642200) extern const float g_magicArrowAngles[5];
+DATA(0x006421ec) const char* const g_magicArrowSprites[5] = { "c20spx0.def", "c20spx1.def", "c20spx2.def", "c20spx3.def", "c20spx4.def" };
+DATA(0x00642200) const float g_magicArrowAngles[5] = { 0.0f, -16.0f, -34.0f, -56.0f, -83.0f };
 
 // The two mastery-indexed placement counts immediately following the Magic
 // Arrow tables. CastSpell's retail switch reads the first for Quicksand and
@@ -104,13 +104,13 @@ static const int g_quicksandCountByMastery[4] = { 4, 4, 6, 8 };
 DATA(0x00642224)
 static const int g_landMineCountByMastery[4] = { 4, 4, 6, 8 };
 
-DATA(0x00642234) extern const char* const g_iceBoltSprites[5];
-DATA(0x00642248) extern const float g_iceBoltAngles[5];
+DATA(0x00642234) const char* const g_iceBoltSprites[5] = { "c08spw0.def", "c08spw1.def", "c08spw2.def", "c08spw3.def", "c08spw4.def" };
+DATA(0x00642248) const float g_iceBoltAngles[5] = { 0.0f, -16.0f, -34.0f, -56.0f, -83.0f };
 
 // Disrupting Ray has the same source-level projectile pair as the two
 // five-frame missiles above, but retail's call fixes both extents to one.
-DATA(0x0064225c) extern const char* const g_disruptingRaySprites[1];
-DATA(0x00642260) extern const float g_disruptingRayAngles[1];
+DATA(0x0064225c) const char* const g_disruptingRaySprites[1] = { "c07spA0.def" };
+DATA(0x00642260) const float g_disruptingRayAngles[1] = { 0.0f };
 
 // Dreamcast spells.cpp:176 supplies the source switch, the TPickANumber
 // lifetime, and the retained helper boundaries. Complete adds the initial
@@ -361,33 +361,33 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     case SPELL_INFERNO:
     case SPELL_METEOR_SHOWER:
     case SPELL_BERSERK: {
-        int shadeLevel = g_unnamed698758.m_combatShadeLevel;
+        int shadeLevel = g_config.m_combatShadeLevel;
         m_nextAction = creatureSpell == 1 ? AI_ORDER_CREATURE_SPELL
                                       : AI_ORDER_CAST_SPELL;
         m_nextActionExtra = spellToCast;
-        if (shadeLevel && g_unnamed698758.m_showCombatMouseHex)
-            setCombatGrid(g_unnamed698758.m_showCombatGrid, 1, 0, 1);
+        if (shadeLevel && g_config.m_showCombatMouseHex)
+            setCombatGrid(g_config.m_showCombatGrid, 1, 0, 1);
         int x;
         int y;
         g_mouseManager->mouseCoords(x, y);
         updateSpellTarget(g_combatManager->getGridIndex(x, y));
         g_windowManager->doDialog(0, handleCastSpell, 0);
-        if (shadeLevel && g_unnamed698758.m_showCombatMouseHex)
-            setCombatGrid(g_unnamed698758.m_showCombatGrid, 1, 1,
+        if (shadeLevel && g_config.m_showCombatMouseHex)
+            setCombatGrid(g_config.m_showCombatGrid, 1, 1,
                           m_nextAction == 0);
         break;
     }
 
     case SPELL_FORCE_FIELD:
     case SPELL_FIRE_WALL: {
-        int shadeLevel = g_unnamed698758.m_combatShadeLevel;
+        int shadeLevel = g_config.m_combatShadeLevel;
         m_nextAction = 1;
         m_nextActionExtra = spellToCast;
-        if (shadeLevel && g_unnamed698758.m_showCombatMouseHex)
-            setCombatGrid(g_unnamed698758.m_showCombatGrid, 1, 0, 1);
+        if (shadeLevel && g_config.m_showCombatMouseHex)
+            setCombatGrid(g_config.m_showCombatGrid, 1, 0, 1);
         g_windowManager->doDialog(0, handleCastWallSpell, 0);
-        if (shadeLevel && g_unnamed698758.m_showCombatMouseHex)
-            setCombatGrid(g_unnamed698758.m_showCombatGrid, 1, 1,
+        if (shadeLevel && g_config.m_showCombatMouseHex)
+            setCombatGrid(g_config.m_showCombatGrid, 1, 1,
                           m_nextAction == 0);
         break;
     }
@@ -1935,7 +1935,7 @@ void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
                 changed = 1;
         }
     }
-    if (g_unnamed698758.m_showCombatMouseHex) {
+    if (g_config.m_showCombatMouseHex) {
         std::vector<long> hexes;
         if (spell == SPELL_BERSERK) {
             g_combatManager->markBerserkAreaEffect(hex, mastery, hexes);
@@ -2058,7 +2058,7 @@ int handleCastWallSpell(message& msg)
             g_castWallIndexToCastOn = hex;
             g_mouseManager->setPointer(spell + 1, mouseManager::SPELL_SET);
             g_combatManager->spellTargetMessage(spell, hex, 1);
-            if (g_unnamed698758.m_showCombatMouseHex
+            if (g_config.m_showCombatMouseHex
                 && spell != SPELL_FORCE_FIELD) {
                 std::vector<long> hexes;
                 g_combatManager->markWallAreaEffect(hex, mastery, hexes);
@@ -2069,7 +2069,7 @@ int handleCastWallSpell(message& msg)
             g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
             g_combatManager->displayFailureReason(
                 spell, g_generalText->getText(24), hex);
-            if (g_unnamed698758.m_showCombatMouseHex
+            if (g_config.m_showCombatMouseHex
                 && spell != SPELL_FORCE_FIELD) {
                 std::vector<long> hexes;
                 g_combatManager->updateMouseGrid(hex, hexes, 0);
@@ -3444,7 +3444,7 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
 
     delay = static_cast<long>(
         static_cast<float>(delay)
-        * g_combatSpeedFactors[g_unnamed698758.m_combatSpeed]);
+        * g_combatSpeedFactors[g_config.m_combatSpeed]);
     unsigned long delayTil = GameTime::get() + delay;
     int maxBolt = 1;
 
@@ -3757,7 +3757,7 @@ void combatManager::chainLightning(int index, int level, int power)
                     curX = destX;
                     curY = destY;
                     GameTime::delay(static_cast<long>(
-                        g_combatSpeedFactors[g_unnamed698758.m_combatSpeed]
+                        g_combatSpeedFactors[g_config.m_combatSpeed]
                         * 100.0f));
                     drawFrame(1, 0, 0, 0, 1, 0);
                 }
@@ -4553,7 +4553,7 @@ void combatManager::earthquake(int level)
                          g_windowManager->m_screenBitmap->getHeight(),
                          g_windowManager->m_screenBitmap->getPitch());
         long shakeDelay = static_cast<long>(
-            g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 15.0f);
+            g_combatSpeedFactors[g_config.m_combatSpeed] * 15.0f);
         int pass = 3;
         do {
             for (int step = 0; step < 15; step++) {
@@ -4603,7 +4603,7 @@ void combatManager::earthquake(int level)
     if (drawn != 0
         && !static_cast<const combatManager*>(this)->isQuickCombat()) {
         long frameDelay = static_cast<long>(
-            g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 15.0f);
+            g_combatSpeedFactors[g_config.m_combatSpeed] * 15.0f);
         CSprite* blast = ResourceManager::getSprite("SGEXPL.DEF");
         launchSample("WallHit.82m", -1, 3);
         for (int frame = 0; frame < blast->getNumFrames(0); frame++) {
@@ -4625,14 +4625,14 @@ void combatManager::earthquake(int level)
                 bounds->m_minY = top;
                 bounds->m_maxX = right;
                 bounds->m_maxY = bottom;
-                if (bounds->m_minX < g_combatDrawLimits694f18.m_minX)
-                    bounds->m_minX = g_combatDrawLimits694f18.m_minX;
-                if (bounds->m_minY < g_combatDrawLimits694f18.m_minY)
-                    bounds->m_minY = g_combatDrawLimits694f18.m_minY;
-                if (bounds->m_maxX > g_combatDrawLimits694f18.m_maxX)
-                    bounds->m_maxX = g_combatDrawLimits694f18.m_maxX;
-                if (bounds->m_maxY > g_combatDrawLimits694f18.m_maxY)
-                    bounds->m_maxY = g_combatDrawLimits694f18.m_maxY;
+                if (bounds->m_minX < g_combatDrawLimits.m_minX)
+                    bounds->m_minX = g_combatDrawLimits.m_minX;
+                if (bounds->m_minY < g_combatDrawLimits.m_minY)
+                    bounds->m_minY = g_combatDrawLimits.m_minY;
+                if (bounds->m_maxX > g_combatDrawLimits.m_maxX)
+                    bounds->m_maxX = g_combatDrawLimits.m_maxX;
+                if (bounds->m_maxY > g_combatDrawLimits.m_maxY)
+                    bounds->m_maxY = g_combatDrawLimits.m_maxY;
                 if (frame == g_earthquakeImpactFrame) {
                     TWallTargetId wall;
                     memcpy(&wall, &i, sizeof wall);

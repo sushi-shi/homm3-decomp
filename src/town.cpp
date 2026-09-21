@@ -22,14 +22,154 @@
 #include "textresource.h"
 #include "townmgr.h"
 
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x00688e84) const int g_townInitArmyChance[4] = { 33, 33, 20, 13 };
+DATA(0x00688e94) const int g_townInitArmyLow[4] = { 8, 5, 3, 1 };
+DATA(0x00688ea4) const int g_townInitArmyHigh[4] = { 15, 7, 5, 3 };
+DATA(0x00688eb4) int g_siloIncome[9][7] = {
+    { 1, 0, 1, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 1, 0, 0 },
+    { 0, 0, 0, 0, 0, 1, 0 },
+    { 0, 1, 0, 0, 0, 0, 0 },
+    { 1, 0, 1, 0, 0, 0, 0 },
+    { 0, 0, 0, 1, 0, 0, 0 },
+    { 1, 0, 1, 0, 0, 0, 0 },
+    { 1, 0, 1, 0, 0, 0, 0 },
+    { 0, 1, 0, 0, 0, 0, 0 }
+};
+DATA(0x006888c0) const int g_eventBuildingIds[9][41] = {
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 44, 0, 1, 2, 3, 4,
+    6, 26, 17, 22, 21, 44, 30, 37,
+    44, 31, 38, 44, 32, 39, 18, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 44, 0, 1, 2, 3, 4,
+    6, 26, 17, 21, 22, 44, 30, 37,
+    44, 31, 38, 18, 32, 39, 44, 33,
+    40, 44, 34, 41, 24, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 17, 0, 1, 2, 3, 4,
+    6, 26, 22, 23, 21, 44, 30, 37,
+    44, 31, 38, 18, 32, 39, 44, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 44, 0, 1, 2, 3, 4,
+    6, 26, 21, 22, 23, 44, 30, 37,
+    18, 31, 38, 44, 32, 39, 24, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 44, 0, 1, 2, 3, 4,
+    6, 26, 17, 21, 22, 44, 30, 37,
+    18, 31, 38, 44, 32, 39, 44, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 17, 0, 1, 2, 3, 4,
+    6, 26, 21, 22, 23, 44, 30, 37,
+    18, 31, 38, 44, 32, 39, 44, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 44, 0, 1, 2, 3, 4,
+    6, 26, 17, 21, 22, 23, 30, 37,
+    18, 31, 38, 44, 32, 39, 44, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 44, 0, 1, 2, 3, 4,
+    6, 26, 17, 21, 22, 44, 30, 37,
+    18, 31, 38, 44, 32, 39, 44, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 17, 0, 1, 2, 3, 4,
+    6, 26, 21, 44, 44, 44, 30, 37,
+    18, 31, 38, 44, 32, 39, 44, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+}
+};
+DATA(0x0066cd98) __int64 g_bitNumber[64] = {
+    0x0000000000000001i64, 0x0000000000000002i64, 0x0000000000000004i64, 0x0000000000000008i64, 0x0000000000000010i64, 0x0000000000000020i64, 0x0000000000000040i64, 0x0000000000000080i64,
+    0x0000000000000100i64, 0x0000000000000200i64, 0x0000000000000400i64, 0x0000000000000800i64, 0x0000000000001000i64, 0x0000000000002000i64, 0x0000000000004000i64, 0x0000000000008000i64,
+    0x0000000000010000i64, 0x0000000000020000i64, 0x0000000000040000i64, 0x0000000000080000i64, 0x0000000000100000i64, 0x0000000000200000i64, 0x0000000000400000i64, 0x0000000000800000i64,
+    0x0000000001000000i64, 0x0000000002000000i64, 0x0000000004000000i64, 0x0000000008000000i64, 0x0000000010000000i64, 0x0000000020000000i64, 0x0000000040000000i64, 0x0000000080000000i64,
+    0x0000000100000000i64, 0x0000000200000000i64, 0x0000000400000000i64, 0x0000000800000000i64, 0x0000001000000000i64, 0x0000002000000000i64, 0x0000004000000000i64, 0x0000008000000000i64,
+    0x0000010000000000i64, 0x0000020000000000i64, 0x0000040000000000i64, 0x0000080000000000i64, 0x0000100000000000i64, 0x0000200000000000i64, 0x0000400000000000i64, 0x0000800000000000i64,
+    0x0001000000000000i64, 0x0002000000000000i64, 0x0004000000000000i64, 0x0008000000000000i64, 0x0010000000000000i64, 0x0020000000000000i64, 0x0040000000000000i64, 0x0080000000000000i64,
+    0x0100000000000000i64, 0x0200000000000000i64, 0x0400000000000000i64, 0x0800000000000000i64, 0x1000000000000000i64, 0x2000000000000000i64, 0x4000000000000000i64, 0x8000000000000000i64
+};
+DATA(0x006976f0) __int64 g_townEligibleBuildMask[9];
+DATA(0x00697798) __int64 g_hierarchyMask[9][44];
+DATA(0x006747b4) TCreatureType g_townDwellingCreatures[126] = {
+    TCreatureType(0), TCreatureType(2), TCreatureType(4), TCreatureType(6), TCreatureType(8), TCreatureType(10), TCreatureType(12), TCreatureType(1),
+    TCreatureType(3), TCreatureType(5), TCreatureType(7), TCreatureType(9), TCreatureType(11), TCreatureType(13), TCreatureType(14), TCreatureType(16),
+    TCreatureType(18), TCreatureType(20), TCreatureType(22), TCreatureType(24), TCreatureType(26), TCreatureType(15), TCreatureType(17), TCreatureType(19),
+    TCreatureType(21), TCreatureType(23), TCreatureType(25), TCreatureType(27), TCreatureType(28), TCreatureType(30), TCreatureType(32), TCreatureType(34),
+    TCreatureType(36), TCreatureType(38), TCreatureType(40), TCreatureType(29), TCreatureType(31), TCreatureType(33), TCreatureType(35), TCreatureType(37),
+    TCreatureType(39), TCreatureType(41), TCreatureType(42), TCreatureType(44), TCreatureType(46), TCreatureType(48), TCreatureType(50), TCreatureType(52),
+    TCreatureType(54), TCreatureType(43), TCreatureType(45), TCreatureType(47), TCreatureType(49), TCreatureType(51), TCreatureType(53), TCreatureType(55),
+    TCreatureType(56), TCreatureType(58), TCreatureType(60), TCreatureType(62), TCreatureType(64), TCreatureType(66), TCreatureType(68), TCreatureType(57),
+    TCreatureType(59), TCreatureType(61), TCreatureType(63), TCreatureType(65), TCreatureType(67), TCreatureType(69), TCreatureType(70), TCreatureType(72),
+    TCreatureType(74), TCreatureType(76), TCreatureType(78), TCreatureType(80), TCreatureType(82), TCreatureType(71), TCreatureType(73), TCreatureType(75),
+    TCreatureType(77), TCreatureType(79), TCreatureType(81), TCreatureType(83), TCreatureType(84), TCreatureType(86), TCreatureType(88), TCreatureType(90),
+    TCreatureType(92), TCreatureType(94), TCreatureType(96), TCreatureType(85), TCreatureType(87), TCreatureType(89), TCreatureType(91), TCreatureType(93),
+    TCreatureType(95), TCreatureType(97), TCreatureType(98), TCreatureType(100), TCreatureType(104), TCreatureType(106), TCreatureType(102), TCreatureType(108),
+    TCreatureType(110), TCreatureType(99), TCreatureType(101), TCreatureType(105), TCreatureType(107), TCreatureType(103), TCreatureType(109), TCreatureType(111),
+    TCreatureType(118), TCreatureType(112), TCreatureType(115), TCreatureType(114), TCreatureType(113), TCreatureType(120), TCreatureType(130), TCreatureType(119),
+    TCreatureType(127), TCreatureType(123), TCreatureType(129), TCreatureType(125), TCreatureType(121), TCreatureType(131)
+};
+DATA(0x00642e20) const type_building_id g_hordeBuildings[4] = { type_building_id(18), type_building_id(19), type_building_id(24), type_building_id(25) };
+DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[9][4] = {
+    { { TCreatureType(4), 3, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(16), 4, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(22), 2, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(30), 4, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(42), 8, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(46), 3, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(56), 6, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(70), 7, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(84), 8, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(98), 6, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(118), 10, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } }
+};
+
+// Retail table initializers, in the layouts used by their named consumers.
+DATA(0x006782a4) const signed char g_mageGuildBaseSpellCounts[5] = { 5, 4, 3, 2, 1 };
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x0067f570) int g_highMemBuffer = 5;
+DATA(0x006aa5f0) int g_townViewActive;
+DATA(0x00699548) int g_adventureGraphicsPreserveMode;
+DATA(0x0069778c) int g_curWatchPlayer;
+
 // Narrow town.obj-only globals reached by town::View. Their owning
 // compilands remain outside the admitted surface.
-DATA(0x0067f570) extern int g_unnamed67f570;
-DATA(0x006aa5f0) extern int g_unnamed6aa5f0;
-DATA(0x00699548) extern int g_unnamed699548;
-DATA(0x0069778c) extern int g_unnamed69778c;
-DATA(0x006994fc) extern townManager* g_townManager;
-DATA(0x00699500) extern executive* g_executive;
+
+
+
+
+
 
 // DC public ?included_buildings@town@@2PAY0CM@_JA; retail .bss
 // 0x6a8bb8, nine 0x160-stride rows to 0x6a9818. Ownership: the DC
@@ -553,12 +693,12 @@ void town::giveSpells(hero* forceHero) const
 VA(0x005be210, 0xC0)  // dc 0x166688
 void town::view(int alreadyFaded)
 {
-    int threshold = g_unnamed67f570 + 0x514;
-    g_unnamed6aa5f0 = 1;
+    int threshold = g_highMemBuffer + 0x514;
+    g_townViewActive = 1;
     if (threshold > 0xb54)
-        g_unnamed699548 = 2;
+        g_adventureGraphicsPreserveMode = 2;
     else if (threshold > 0x320)
-        g_unnamed699548 = 1;
+        g_adventureGraphicsPreserveMode = 1;
 
     g_townManager->setTown(this);
     g_executive->callManager(g_townManager);
@@ -567,15 +707,15 @@ void town::view(int alreadyFaded)
     int heroId = viewedTown->m_visitingHeroId;
     if (heroId != -1) {
         hero* visitingHero = g_game->getHero(heroId);
-        if (visitingHero->m_owner == g_unnamed69778c) {
+        if (visitingHero->m_owner == g_curWatchPlayer) {
             g_advManager->setHeroContext(visitingHero->m_id, 0, 0, 1);
-            g_unnamed699548 = 0;
-            g_unnamed6aa5f0 = 0;
+            g_adventureGraphicsPreserveMode = 0;
+            g_townViewActive = 0;
             return;
         }
     }
-    g_unnamed699548 = 0;
-    g_unnamed6aa5f0 = 0;
+    g_adventureGraphicsPreserveMode = 0;
+    g_townViewActive = 0;
 }
 
 VA(0x005be2d0, 0xB3)  // dc 0x166720
@@ -1698,7 +1838,7 @@ void town::hire(hero* newHero, long playerId)
     point.m_z = m_mapZ;
     hiredHero->placeInMap(playerId, point, 1);
     giveSpells(0);
-    g_game->finishTownHire(playerId, recruitSlot);
+    g_game->replaceRecruit(playerId, recruitSlot);
 }
 
 VA(0x005c13b0, 0x83)  // dc 0x168b54

@@ -3,8 +3,9 @@
 
 Runs the genuine VC6 SP3 `link.exe` (LINK 6.00.8447 - the generation that built
 retail HEROES3.EXE) under wine over our base `.obj`s. The reconstruction is
-partial (only zlib compiles today), so the EXE is NOT runnable; we link it
-anyway, with `/FORCE`, to study the LAYOUT the linker produces: the `.map`
+partial, but the game links with the real CRT and vendor imports. Every link
+requires a successful exit and no unresolved or duplicate symbols. A clean
+link alone does not establish runtime correctness. The `.map`
 gives every function's link-assigned address and its source object, which is
 what lets us reverse-engineer the retail object order later (intra-TU order =
 source-definition order; cross-TU order = object link order).
@@ -13,8 +14,8 @@ What it does:
   1. assemble the obj list (a dir of <unit>.obj, explicit --obj, or an --order
      file giving the exact link order to test), winepath-translate every path,
      and write a `@response` file (link's argv limit under wine is short);
-  2. run `wine link.exe @rsp`; success signal is "the .EXE exists" (wine spews
-     unrelated noise and can return odd exit codes, exactly like cc_wrap);
+  2. run `wine link.exe @rsp`; require a successful exit, an
+     executable, and no unresolved or duplicate symbol diagnostics;
   3. save the unresolved-externals punch list next to the EXE (the
      drive-to-linkable worklist).
 
@@ -23,8 +24,9 @@ VC6 LINK.EXE's static imports are only mspdb60/msvcrt/kernel32 (verified by
 walking its import table); MSDIS110.DLL is loaded dynamically and only by the
 `/dump /disasm` path. MSPDB60.DLL ships next to link.exe in the toolchain.
 
-Defaults are tuned for layout study, not a shippable binary:
-  /FORCE /NODEFAULTLIB /SUBSYSTEM:WINDOWS /BASE:0x400000 /INCREMENTAL:NO /MAP
+Defaults use the real game startup and explicitly selected libraries:
+  /NODEFAULTLIB /SUBSYSTEM:WINDOWS /BASE:0x400000 /INCREMENTAL:NO /MAP
+  /ENTRY:WinMainCRTStartup
   /OPT:NOREF /OPT:NOICF   (keep EVERY function so the map is complete)
 
 Run inside `nix develop .#build`:
@@ -52,7 +54,7 @@ def die(msg: str) -> None:
     sys.exit(1)
 
 
-def run_wine(cmd: list, cwd, produced: Path):
+def run_wine(cmd: list, cwd):
     """Run a wine command hang-proof; return (output, rc). Mirrors cc_wrap:
     wine can leave a finished-but-unreaped grandchild holding stdio open, so log
     to a temp FILE (no pipe to block on), own process group, bounded wait."""
@@ -70,7 +72,7 @@ def run_wine(cmd: list, cwd, produced: Path):
             except (ProcessLookupError, PermissionError):
                 pass
             proc.wait()
-            rc = 0 if produced.exists() else 1
+            rc = 124
         logf.seek(0)
         return logf.read().decode("latin1", "replace"), rc
 
@@ -104,6 +106,24 @@ def collect_objs(args) -> list:
     return sorted(objs_dir.glob("*.obj"))
 
 
+def unresolved_symbols(output: str) -> list[str]:
+    """Keep LINK's decorated identity, not the first word of its display name."""
+    names = set()
+    for line in output.splitlines():
+        if "unresolved external symbol " not in line:
+            continue
+        name = line.split("unresolved external symbol ", 1)[1].strip()
+        # C++ diagnostics print: "return type readable signature" (?decorated).
+        decorated = re.search(r'\s\(([^\s]+)\)$', name)
+        names.add(decorated[1] if decorated else name)
+    return sorted(names)
+
+
+def link_succeeded(output: str, rc: int, exists: bool) -> bool:
+    return (exists and rc == 0 and not unresolved_symbols(output)
+            and not re.search(r"\bLNK(?:2005|4006|4088)\b", output))
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="VC6 link.exe wrapper (candidate link).")
     ap.add_argument("--out", default="build/exe/HEROES3.candidate.EXE")
@@ -115,7 +135,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--lib", action="append", default=[],
                     help="extra import/static lib to pass to link (repeatable).")
     ap.add_argument("--base", default=None, help="image base (/BASE).")
-    ap.add_argument("--entry", default="_x", help="forced /ENTRY symbol.")
+    ap.add_argument("--entry", default="WinMainCRTStartup",
+                    help="/ENTRY symbol (default: WinMainCRTStartup).")
     ap.add_argument("--keep-all", dest="keep_all", action="store_true", default=True,
                     help="/OPT:NOREF /OPT:NOICF - keep every COMDAT (default).")
     ap.add_argument("--opt-ref", dest="keep_all", action="store_false",
@@ -123,6 +144,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("flags", nargs=argparse.REMAINDER,
                     help="extra link flags after `--`.")
     args = ap.parse_args(argv)
+    extra = args.flags[1:] if args.flags and args.flags[0] == "--" else args.flags
+    if any(re.match(r"^[-/]force(?:[:=]|$)", flag, re.I) for flag in extra):
+        ap.error("/FORCE is unsupported: the game must link without unresolved or duplicate symbols")
     if args.base is None:
         from homm3.core import common
         args.base = hex(common.load_image()[0].image_base)
@@ -150,42 +174,56 @@ def main(argv: list[str] | None = None) -> int:
     os.environ.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
     ensure_wineserver()
 
+    libraries = list(args.lib)
+    from homm3.build.import_libraries import build_vendor_libraries
+    from homm3.core.common import load_image
+    libraries += [str(path) for path in build_vendor_libraries(
+        load_image()[0].data, out.parent / "imports")]
+    for name in ("LIBCMT.LIB", "LIBCPMT.LIB", "KERNEL32.LIB", "USER32.LIB",
+                 "GDI32.LIB", "ADVAPI32.LIB", "WINMM.LIB", "VERSION.LIB",
+                 "WSOCK32.LIB", "DDRAW.LIB", "DINPUT.LIB", "DXGUID.LIB",
+                 "UUID.LIB", "OLE32.LIB", "SHELL32.LIB", "OLDNAMES.LIB"):
+        library = find_ci(msvc / "lib", name)
+        if library is None:
+            die(f"missing toolchain library {name}")
+        libraries.append(str(library))
+
     rsp_lines = [
         f'/OUT:"{winepath_w(out)}"',
         f'/MAP:"{winepath_w(mapf)}"',
-        "/NOLOGO", "/FORCE", "/NODEFAULTLIB", "/SUBSYSTEM:WINDOWS",
+        "/NOLOGO", "/NODEFAULTLIB", "/SUBSYSTEM:WINDOWS",
         f"/BASE:{args.base}", "/INCREMENTAL:NO", f"/ENTRY:{args.entry}",
     ]
     if args.keep_all:
         rsp_lines += ["/OPT:NOREF", "/OPT:NOICF"]
-    extra = args.flags[1:] if args.flags and args.flags[0] == "--" else args.flags
+    else:
+        rsp_lines += ["/OPT:REF", "/OPT:ICF"]
     rsp_lines += list(extra)
     rsp_lines += [f'"{winepath_w(Path(lib)) if os.path.exists(lib) else lib}"'
-                  for lib in args.lib]
+                  for lib in libraries]
     rsp_lines += [f'"{winepath_w(o)}"' for o in objs]
 
     rsp = out.parent / (out.stem + ".objs.rsp")
     rsp.write_text("\n".join(rsp_lines) + "\n")
 
     output, rc = run_wine(["wine", str(link), f"@{winepath_w(rsp)}"],
-                          out.parent, out)
+                          out.parent)
 
-    if not out.exists():
-        sys.stderr.write(f"[link] FAILED to produce {out}\n")
+    log = out.with_suffix(".link.log")
+    log.write_text(output)
+    unresolved = unresolved_symbols(output)
+    punch = out.parent / (out.stem + ".unresolved.txt")
+    punch.write_text("\n".join(unresolved) + ("\n" if unresolved else ""))
+    if not link_succeeded(output, rc, out.exists()):
+        sys.stderr.write(f"[link] FAILED: {out} (link exit {rc}; see {log.name})\n")
         sys.stderr.write("\n".join(output.strip().splitlines()[-20:]) + "\n")
         return rc or 1
 
-    # /FORCE means unresolved externals are EXPECTED (partial reconstruction);
-    # surface the counts but treat the produced EXE as success.
     warns = sum(1 for ln in output.splitlines() if "LNK4006" in ln)
-    unresolved = sorted({m.group(1) for ln in output.splitlines()
-                         if (m := re.search(r"unresolved external symbol (\S+)", ln))})
-    punch = out.parent / (out.stem + ".unresolved.txt")
-    punch.write_text("\n".join(unresolved) + "\n")
     shown = out.relative_to(HOMM3_DIR) if out.is_relative_to(HOMM3_DIR) else out
     print(f"[link] {len(objs)} objs -> {shown} ({out.stat().st_size} B) + {mapf.name}")
     print(f"[link] {len(unresolved)} unresolved externals -> {punch.name}, "
-          f"{warns} dup-symbol warnings (expected: partial reconstruction, /FORCE)")
+          f"{warns} dup-symbol warnings")
     return 0
 
 

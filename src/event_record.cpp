@@ -62,7 +62,7 @@ static void setPlayer(char newPlayer)
     }
     g_netLocalGamePos = newPlayer;
     g_currentPlayer = &g_game->m_players[newPlayer];
-    g_unnamed69ccc4 = 1 << newPlayer;
+    g_curPlayerBit = 1 << newPlayer;
 }
 
 // E:\gamedcs\event_record.cpp:81
@@ -1196,11 +1196,11 @@ void game::playRecordedEvents()
     size = m_eventRecords.size();
     unsigned char interrupted = 0;
     message msg;
-    int savedWalkSpeed = g_unnamed698758.m_computerWalkSpeed;
-    unsigned char savedSuppress = g_unnamed698790 != 0;
-    if (g_unnamed698758.m_computerWalkSpeed > 4)
-        g_unnamed698758.m_computerWalkSpeed = 4;
-    g_unnamed698790 = 0;
+    int savedWalkSpeed = g_config.m_computerWalkSpeed;
+    unsigned char savedSuppress = g_config.m_blackoutComputer != 0;
+    if (g_config.m_computerWalkSpeed > 4)
+        g_config.m_computerWalkSpeed = 4;
+    g_config.m_blackoutComputer = 0;
 
     for (int j = 0; j < size; ++j) {
         unsigned char draw = !interrupted
@@ -1228,8 +1228,8 @@ void game::playRecordedEvents()
     if (currTown != 0)
         g_advManager->setTownContext(currTown->m_id, 0, 1);
 
-    g_unnamed698758.m_computerWalkSpeed = savedWalkSpeed;
-    g_unnamed698790 = savedSuppress;
+    g_config.m_computerWalkSpeed = savedWalkSpeed;
+    g_config.m_blackoutComputer = savedSuppress;
     g_advManager->completeDraw(0);
     g_advManager->updateScreen(0, 0);
 }

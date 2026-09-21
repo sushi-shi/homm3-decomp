@@ -16,7 +16,6 @@ class message;
 // Eleven interleaved rollover/right-click rows at retail 0x6a6968. The
 // combat-window right-click handler consumes the same table as the combat
 // sub-window constructors.
-extern THelpText g_combatSubWindowHelp[11];
 
 // Retail vtable 0x63d528 and Close independently prove the heroWindow base;
 // combatManager::Open allocates the complete 0x8c-byte object. Close deletes

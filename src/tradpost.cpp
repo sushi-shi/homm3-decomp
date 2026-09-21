@@ -1281,8 +1281,8 @@ DATA(0x006aaac0) static int g_giveQuantity;
 
 // The window origin DoMarket stamps (0x64, 3) before constructing each dialog
 // and passes as the (x2, y2) constructor arguments.
-DATA(0x006aaa9c) static int g_windowX;
-DATA(0x006aaaa0) static int g_windowY;
+DATA(0x006aaa9c) static int g_marketWindowX;
+DATA(0x006aaaa0) static int g_marketWindowY;
 
 // Two single-use tables the sell-creature Update reads: the per-army-row Y
 // coordinates it stamps on each populated creature widget (WIDGET_SET_Y) and
@@ -1435,15 +1435,15 @@ void doMarket()
 {
     message msg;
 
-    g_windowX = 0x64;
-    g_windowY = 3;
+    g_marketWindowX = 0x64;
+    g_marketWindowY = 3;
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
     g_mouseManager->showPointer(1);
 
     while (g_marketWindow != MARKET_COMMAND_ID) {
         switch (g_marketWindow) {
         case MARKET_WINDOW_TRADE:
-            g_tradeWindow = new TTradeResourceWindow(g_windowX, g_windowY);
+            g_tradeWindow = new TTradeResourceWindow(g_marketWindowX, g_marketWindowY);
             if (g_tradeWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1462,7 +1462,7 @@ void doMarket()
             break;
 
         case MARKET_WINDOW_GIVE: {
-            g_giveWindow = new TGiveResourceWindow(g_windowX, g_windowY);
+            g_giveWindow = new TGiveResourceWindow(g_marketWindowX, g_marketWindowY);
             if (g_giveWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1489,7 +1489,7 @@ void doMarket()
         }
 
         case MARKET_WINDOW_BUY:
-            g_buyWindow = new TBuyArtifactWindow(g_windowX, g_windowY);
+            g_buyWindow = new TBuyArtifactWindow(g_marketWindowX, g_marketWindowY);
             if (g_buyWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1508,7 +1508,7 @@ void doMarket()
             break;
 
         case MARKET_WINDOW_SELL_ARTIFACT:
-            g_sellArtWindow = new TSellArtifactWindow(g_windowX, g_windowY);
+            g_sellArtWindow = new TSellArtifactWindow(g_marketWindowX, g_marketWindowY);
             if (g_sellArtWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1527,7 +1527,7 @@ void doMarket()
             break;
 
         case MARKET_WINDOW_SELL_CREATURE:
-            g_sellCreatureWindow = new TSellCreatureWindow(g_windowX, g_windowY);
+            g_sellCreatureWindow = new TSellCreatureWindow(g_marketWindowX, g_marketWindowY);
             if (g_sellCreatureWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1896,7 +1896,7 @@ void TTradeResourceWindow::update(unsigned char update)
                             sprintf(g_text, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"), tempTradeRatio);
                     }
                 } else {
-                    sprintf(g_text, g_emptyRolloverText);
+                    sprintf(g_text, "");
                 }
                 broadcastMessage(msg);
                 msg.m_codeX = (g_leftResource == i) ? widget::WIDGET_SET_STATUS
@@ -1921,7 +1921,7 @@ void TGiveResourceWindow::update(bool update)
     if (g_selectedArtifact != -1 && g_leftResource != -1) {
         sprintf(g_text, (*g_generalText)[166],
                 g_resourceNames[g_selectedArtifact],
-                g_playerColorNames[
+                g_colors[
                     m_slotPlayerColor[g_leftResource]]);
     } else {
         if (g_leftDenominated)
@@ -2016,7 +2016,7 @@ void TGiveResourceWindow::update(bool update)
                 msg.m_codeY = 13;
                 broadcastMessage(msg);
                 strcpy(g_text,
-                       g_playerColorNames[
+                       g_colors[
                            m_slotPlayerColor[g_leftResource]]);
                 msg.m_codeX = 3;
                 msg.m_codeY = 12;
@@ -2057,7 +2057,7 @@ void TGiveResourceWindow::update(bool update)
             } else {
                 if (resource < m_recipientCount) {
                     strcpy(g_text,
-                           g_playerColorNames[m_slotPlayerColor[resource]]);
+                           g_colors[m_slotPlayerColor[resource]]);
                     msg.m_codeX = 3;
                     msg.m_codeY = resource + 77;
                     msg.m_extraText = g_text;
@@ -2275,7 +2275,7 @@ void TBuyArtifactWindow::update(unsigned char update)
                             &tempMaxUnitsToTrade);
                         sprintf(g_text, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"), tempTradeRatio);
                     } else {
-                        sprintf(g_text, g_emptyRolloverText);
+                        sprintf(g_text, "");
                     }
                     msg.m_codeX = widget::WIDGET_SET_TEXT;
                     msg.m_codeY = 0x4d + i;
@@ -2440,7 +2440,7 @@ void TSellArtifactWindow::update(unsigned char update)
                     sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                             tempTradeRatio);
                 } else {
-                    sprintf(g_text, g_emptyRolloverText);
+                    sprintf(g_text, "");
                 }
                 broadcastMessage(msg);
                 msg.m_codeX = (g_leftResource == i) ? widget::WIDGET_SET_STATUS
@@ -2682,7 +2682,7 @@ void TSellCreatureWindow::update(bool update)
                                              "%d"),
                                 tempTradeRatio);
                 } else {
-                    sprintf(g_text, g_emptyRolloverText);
+                    sprintf(g_text, "");
                 }
                 broadcastMessage(msg);
 
@@ -3068,7 +3068,7 @@ void TTradeResourceWindow::setRolloverText(int codeY)
         strcpy(g_text, g_resourceNames[codeY - MARKET_BUY_WOOD_ID]);
         break;
     case MARKET_COMMAND_ID: strcpy(g_text, g_marketHelpText[5].m_text); break;
-    default: strcpy(g_text, g_emptyRolloverText); break;
+    default: strcpy(g_text, ""); break;
     }
     message update;
     update.m_extraText = g_text;
@@ -3138,7 +3138,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
                 g_currentPlayer->m_resources[g_selectedArtifact] -= g_rightAmount;
                 int color = m_slotPlayerColor[g_leftResource];
                 g_game->m_players[color].m_resources[g_selectedArtifact] += g_rightAmount;
-                if (g_networkActive69954c && g_game->m_players[color].isHuman()) {
+                if (g_remoteOn && g_game->m_players[color].isHuman()) {
                     CGiftMsg m(g_game->getLocalPlayerGamePos(),
                                g_selectedArtifact, g_rightAmount);
                     transmitRemoteData(&m, color, false, true);
@@ -3204,10 +3204,10 @@ void TGiveResourceWindow::setRolloverText(int codeY)
     case GIVE_RECIPIENT_SLOT_4_ID: case GIVE_RECIPIENT_SLOT_5_ID:
     case GIVE_RECIPIENT_SLOT_6_ID:
         sprintf(g_text, (*g_generalText)[198],
-                g_playerColorNames[m_slotPlayerColor[codeY - GIVE_RECIPIENT_SLOT_0_ID]]);
+                g_colors[m_slotPlayerColor[codeY - GIVE_RECIPIENT_SLOT_0_ID]]);
         break;
     case MARKET_COMMAND_ID: strcpy(g_text, g_giveHelpText[4].m_text); break;
-    default: strcpy(g_text, g_emptyRolloverText); break;
+    default: strcpy(g_text, ""); break;
     }
     message update;
     update.m_extraText = g_text;
@@ -3360,13 +3360,13 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
         TArtifact art =
             g_marketArtifacts[codeY - BUY_ARTIFACT_SLOT_0_ID];
         if (art == ARTIFACT_NONE)
-            strcpy(g_text, g_emptyRolloverText);
+            strcpy(g_text, "");
         else
             strcpy(g_text, g_artifactTraits[art].m_name);
         break;
     }
     case MARKET_COMMAND_ID: strcpy(g_text, g_buyArtHelpText[4].m_text); break;
-    default: strcpy(g_text, g_emptyRolloverText); break;
+    default: strcpy(g_text, ""); break;
     }
     message update;
     update.m_extraText = g_text;
@@ -3593,7 +3593,7 @@ void TSellArtifactWindow::setRolloverText(int codeY)
         strcpy(g_text, g_artifactTraits[artifact.m_artifactId].m_name);
         break;
     }
-    default: strcpy(g_text, g_emptyRolloverText); break;
+    default: strcpy(g_text, ""); break;
     }
     message update;
     update.m_extraText = g_text;
@@ -3766,7 +3766,7 @@ void TSellCreatureWindow::setRolloverText(int codeY)
         break;
     }
     default:
-        strcpy(g_text, g_emptyRolloverText);
+        strcpy(g_text, "");
         break;
     }
     message update;

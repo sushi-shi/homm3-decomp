@@ -119,8 +119,8 @@ VA(0x0044D830, 0x1A3)  // dc 0x50a84
 void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
                    bool useDirtyRects)
 {
-    if (g_unnamed699290 == 0 && g_soundManager->m_ds != 0
-        && g_unnamed698758.m_soundVolume != 0)
+    if (g_noSound == 0 && g_soundManager->m_ds != 0
+        && g_config.m_soundVolume != 0)
         g_binkSound = 1;
     else
         g_binkSound = 0;
@@ -323,7 +323,7 @@ int BinkManager::playBink(int id, int x, int y, int w, int h)
                     // fall through
                 case MESSAGE_LEFT_BUTTON_DOWN:
                 case MESSAGE_RIGHT_BUTTON_DOWN:
-                    if (!g_videoNoSkip) {
+                    if (!g_firstTimeThrough) {
                         aborted = 1;
                         break;
                     }

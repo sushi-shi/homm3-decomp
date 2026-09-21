@@ -165,6 +165,6 @@ private:
 // (the Dreamcast dump carries only `medFont`), which is why this keeps
 // the house ordinal placeholder. Owner TU unlocated - extern only, no
 // DATA claim (the gpWindowManager / gTownSizeNames pattern).
-extern font* g_unnamed698a08;
+extern font* g_smallFont;
 
 #endif  /* HOMM3_FONT_H */

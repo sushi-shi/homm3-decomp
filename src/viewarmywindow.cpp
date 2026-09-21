@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 #include "includes.h"
 
@@ -65,8 +66,6 @@ DATA(0x006a7458) extern THelpText g_viewArmyHelp[16];
 // luck describers (0x4f32a0 / 0x4f3540) read the SAME rows at the same
 // offsets with the same format_string/append shape, which is what fixes
 // both bases and both roles.
-DATA(0x006a57bc) extern const char* g_moraleTexts[42];
-DATA(0x006a532c) extern const char* g_luckTexts[25];
 
 // The single-stack popup: one army's whole record laid out over the
 // 298x311 CrStkPU.pcx plate. EH-bearing (`push -1 / push __ehhandler$ /
@@ -524,33 +523,33 @@ int TViewArmyWindow::windowHandler(message& msg)
             switch (helpID) {
             case g_moraleHelpIndex:
                 if (m_morale > 0) {
-                    text.assign(formatString(g_moraleTexts[3], g_moraleTexts[0]));
+                    text.assign(formatString(g_moraleInfo[3], g_moraleInfo[0]));
                     resType = 14;
                 } else if (m_morale == 0) {
-                    text.assign(formatString(g_moraleTexts[3], g_moraleTexts[1]));
+                    text.assign(formatString(g_moraleInfo[3], g_moraleInfo[1]));
                     resType = 15;
                 } else {
-                    text.assign(formatString(g_moraleTexts[3], g_moraleTexts[2]));
+                    text.assign(formatString(g_moraleInfo[3], g_moraleInfo[2]));
                     resType = 16;
                 }
                 if (m_moraleHelp.length() == 0)
-                    text += g_moraleTexts[23];
+                    text += g_moraleInfo[23];
                 else
                     text += m_moraleHelp;
                 break;
             case g_luckHelpIndex:
                 if (m_luck > 0) {
-                    text.assign(formatString(g_luckTexts[3], g_luckTexts[0]));
+                    text.assign(formatString(g_luckInfo[3], g_luckInfo[0]));
                     resType = 11;
                 } else if (m_luck == 0) {
-                    text.assign(formatString(g_luckTexts[3], g_luckTexts[1]));
+                    text.assign(formatString(g_luckInfo[3], g_luckInfo[1]));
                     resType = 12;
                 } else {
-                    text.assign(formatString(g_luckTexts[3], g_luckTexts[2]));
+                    text.assign(formatString(g_luckInfo[3], g_luckInfo[2]));
                     resType = 13;
                 }
                 if (m_luckHelp.length() == 0)
-                    text += g_luckTexts[18];
+                    text += g_luckInfo[18];
                 else
                     text += m_luckHelp;
                 break;
@@ -604,7 +603,7 @@ int TViewArmyWindow::windowHandler(message& msg)
     } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         int hoverID = findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID != g_lastViewArmyHoverId) {
-            const char* rollover = g_emptyRolloverText;
+            const char* rollover = "";
             g_lastViewArmyHoverId = hoverID;
             if (hoverID != -1) {
                 g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
@@ -765,7 +764,7 @@ void TViewArmyWindow::createAttackWidget(int normalAttackSkill,
                                            int currentAttackSkill)
 {
     m_widgets.push_back(new textWidget(
-        154, 48, 122, 17, g_primarySkillNames[0], "smalfont.fnt",
+        154, 48, 122, 17, g_statNames[0], "smalfont.fnt",
         font::PRIMARY, ATTACK_LABEL_ID, 4, 0, 8));
 
     if (normalAttackSkill == currentAttackSkill)
@@ -783,7 +782,7 @@ void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
                                             int currentDefenseSkill)
 {
     m_widgets.push_back(new textWidget(
-        154, 66, 122, 17, g_primarySkillNames[1], "smalfont.fnt",
+        154, 66, 122, 17, g_statNames[1], "smalfont.fnt",
         font::PRIMARY, DEFENSE_LABEL_ID, 4, 0, 8));
 
     if (normalDefenseSkill == currentDefenseSkill)

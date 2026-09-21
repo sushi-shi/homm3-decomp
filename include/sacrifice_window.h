@@ -95,7 +95,7 @@ enum ESacrificeGeneralText {
 
 // HELP.TXT's second pass at 0x5b9b52 fills exactly twenty stride-8
 // text/right-click pairs from 0x6a6638 through 0x6a66d7.
-DATA(0x006a6638) extern THelpText g_sacrificeWindowHelp[SACRIFICE_HELP_COUNT];
+extern THelpText g_sacrificeWindowHelp[SACRIFICE_HELP_COUNT];
 
 // DC public ?gTransformerWindowHelp@@3PAUTHelpText@@A supplies the name;
 // Complete references the three text/right-click pairs at 0x6a77d0..e7.

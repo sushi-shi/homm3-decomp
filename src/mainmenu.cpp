@@ -23,6 +23,9 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x0069957c) int g_cdDriveNumber;
+
 // DC S_LPROC32 identifies this ordinary callback as TU-local.
 static int mainMenuHandler(message& msg);
 
@@ -38,7 +41,7 @@ DATA(0x0067fa64) static unsigned char g_checkDiskSpace = 1;
 
 // SetupCDDrive's result is stored by kb.obj's startup path and consumed here
 // to select the localized missing-CD wording. No public DC name survives.
-DATA(0x0069957c) extern int g_cdDriveNumber;
+
 
 // DC public gMainMenuHelp; InitializeHelpText fills the same five retail
 // THelpText rows at this address.

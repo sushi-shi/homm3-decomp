@@ -1,3 +1,4 @@
+#include "prefs.h"
 #include "va.h"
 #include "includes.h"
 
@@ -627,7 +628,7 @@ void advManager::teleportTo(hero* who, type_point destination,
         teleportSample = loadPlaySample(sampleName);
         completeDraw(0);
         if (drawChanges && !g_currentPlayer->isLocalHuman()) {
-            if ((g_unnamed698790 == 0
+            if ((g_config.m_blackoutComputer == 0
                  && mapExtraPosAndAdjacentsSet(who->m_x, who->m_y, who->m_z,
                                                g_mapVisibilityBit))
                 || mapExtraPosAndAdjacentsSet(destination.m_x, destination.m_y,
