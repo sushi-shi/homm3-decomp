@@ -214,11 +214,11 @@ class SourceInventoryTest(unittest.TestCase):
         d = replace(definition('writeField'), member=False, va=None)
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            (root / 'config').mkdir()
-            (root / 'config/dc_only.tsv').write_text('file\tfunction\tline\treason\n')
-            (root / 'config/dc_only_generated.tsv').write_text('file\tfunction\tline\treason\n')
-            (root / 'config/win_only_modules.tsv').write_text('file\tfunction\tsignature\treason\n')
-            table = root / 'config/win_only.tsv'
+            (root / 'config/source').mkdir(parents=True)
+            (root / 'config/source/dc_only.tsv').write_text('file\tfunction\tline\treason\n')
+            (root / 'config/source/dc_only_generated.tsv').write_text('file\tfunction\tline\treason\n')
+            (root / 'config/source/win_only_modules.tsv').write_text('file\tfunction\tsignature\treason\n')
+            table = root / 'config/source/win_only.tsv'
             table.write_text('file\tfunction\tsignature\treason\n'
                              f'{d.file}\t{d.name}\t{d.signature}\tReviewed inline residue.\n')
             with patch.object(inventory, 'Project'), \

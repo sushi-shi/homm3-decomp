@@ -1,11 +1,14 @@
 // 17 functions in link order.
-#include <va.h>
-#include <string.h>
 // <new> for its `void __cdecl operator delete(void*) _THROW0();` - the
 // nothrow declaration is what retail's ~Bitmap816 unwind map proves this TU
 // had (see the destructor's note below). NEW.H does NOT declare it.
+#include "va.h"
+
 #include <new>
+#include <string.h>
+
 #include "bitmap816.h"
+
 #include "bitmap16.h"
 #include "pcx.h"
 

@@ -1,6 +1,9 @@
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "towngatewindow.h"
+
 #include "armygrp.h"
 #include "border.h"
 #include "button.h"

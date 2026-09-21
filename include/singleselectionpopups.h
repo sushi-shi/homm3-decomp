@@ -1,13 +1,13 @@
 #ifndef HOMM3_SINGLESELECTIONPOPUPS_H
 #define HOMM3_SINGLESELECTIONPOPUPS_H
 
-#include "widget.h"
 #include "dialogbox.h"
+#include "kbwin.h"
 #include "message.h"
 #include "remote.h"
-#include "kbwin.h"
-#include "winmgr.h"
 #include "rmg.h"
+#include "widget.h"
+#include "winmgr.h"
 
 class CSprite;
 

@@ -1,8 +1,8 @@
 #ifndef HOMM3_BITMAP816_H
 #define HOMM3_BITMAP816_H
 
-#include "resource.h"
 #include "palette.h"
+#include "resource.h"
 
 class Bitmap16Bit;
 

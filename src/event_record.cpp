@@ -1,18 +1,21 @@
+#include "va.h"
+#include "includes.h"
+
 #include <math.h>
-#include <va.h>
+
 #include "event_record.h"
-#include "game.h"
+
 #include "abstractfile.h"
+#include "advmgr.h"
 #include "cursor.h"
+#include "game.h"
 #include "inputmgr.h"
-#include "misc.h"
-#include "textresource.h"
+#include "kb.h"
 #include "kbwin.h"
 #include "message.h"
+#include "misc.h"
 #include "prefs.h"
-#include "advmgr.h"
-#include "kb.h"
-#include "includes.h"
+#include "textresource.h"
 
 // Dreamcast CodeView attests this inline wrapper (Hero.h:196) and game.cpp
 // carries the same local definition. It is what makes VC6 zero-extend the
@@ -826,7 +829,7 @@ void type_record_player_death::undo()
 VA_COMPGEN(0x0049bbd0, 0x21, SCALAR_DELETING_DTOR, type_record_shroud)
 
 // DC0x8f398 has only vector/base cleanup, supplied by the implicit C++
-// destructor; its exact emission is documented in config/dc_only.tsv.
+// destructor; its exact emission is documented in config/source/dc_only.tsv.
 // The implicit destructor the wrapper above calls: the change vector's
 // _Tidy inlined (`operator delete(_First)` then the three-pointer clear)
 // followed by the base's vptr store.

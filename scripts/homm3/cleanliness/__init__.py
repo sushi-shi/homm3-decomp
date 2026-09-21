@@ -2,7 +2,7 @@
 
 The gruntz cleanliness area ported at the size we need today: one board
 (`board.py`) counting banned/debt constructs over the hand-owned tree
-(src/ + include/), a committed baseline (config/cleanliness-baseline.tsv)
+(src/ + include/), a committed baseline (config/cleanliness/baseline.tsv)
 that ratcheted metrics can only push DOWN, and a fatal gate in the
 `homm3 build` tail when a protected metric rises above its floor.
 

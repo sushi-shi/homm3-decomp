@@ -13,12 +13,13 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 **Function exact MAX** — 4,243 / 4,766 current implementations (89.0%) have reached 100%.
 
-**CUR diagnostics** — 4,182 / 4,766 functions exact (87.7%) in this build (4766 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
+**CUR diagnostics** — 4,179 / 4,766 functions exact (87.7%) in this build (4766 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
 
-| Module       | Units |  Function exact MAX | Functions exact CUR | Fuzzy MAX | Fuzzy CUR |
+| Module       | Units | Functions exact CUR |  Function exact MAX | Fuzzy CUR | Fuzzy MAX |
 | :----------- | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`       |   127 | 3831 / 4269 (89.7%) | 3782 / 4269 (88.6%) |    97.10% |    96.76% |
-| `rmg`        |     3 |   303 / 368 (82.3%) |   291 / 368 (79.1%) |    95.03% |    93.53% |
+| `game`       |   123 | 3514 / 3989 (88.1%) | 3563 / 3989 (89.3%) |    96.73% |    97.06% |
+| `rmg`        |     3 |   290 / 368 (78.8%) |   303 / 368 (82.3%) |    93.53% |    95.03% |
+| `network`    |     4 |   266 / 280 (95.0%) |   268 / 280 (95.7%) |    97.68% |    98.18% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
 | `codec`      |     4 |     35 / 43 (81.4%) |     35 / 43 (81.4%) |    94.70% |    94.70% |
 | `victor`     |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |
@@ -28,7 +29,7 @@ _Excluded from the % above — generated/library code, not independent reconstru
 | Category              | Functions | Code (B) | Why excluded                                                       |
 | :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
 | `EH unwind funclets`  |     5,125 |   53,151 | compiler EH unwind funclets; match with their parent function      |
-| `CRT/C++ runtime`     |       913 |  110,536 | CRT/C++ runtime, named not matched (config/retail-runtime-map.tsv) |
+| `CRT/C++ runtime`     |       913 |  110,536 | CRT/C++ runtime, named not matched (config/retail/runtime-map.tsv) |
 | `init/cleanup thunks` |     1,119 |   94,433 | .CRT$XCU dynamic-initializer bodies (compiler-generated)           |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 

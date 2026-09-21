@@ -1,17 +1,16 @@
 #ifndef HOMM3_SINGLESELECTIONWINDOW_H
 #define HOMM3_SINGLESELECTIONWINDOW_H
 
-#include "netplayer.h"
-#include "advmgr_popup.h"
-#include "town.h"
 #include "va.h"
-// The three header lists are std::vectors of GameSelectionHeadersStruct
-// (see the member block), whose element type must be complete here.
+
 #include <vector>
+
+#include "advmgr_popup.h"
+#include "game.h"
+#include "netplayer.h"
 #include "remote.h"
-// Keep the shared request declaration at its original include position for
-// this window's compilation context.
 #include "rmg_request.h"
+#include "town.h"
 
 // Devil / Arch Devil, ids fixed by army.h's Inferno-run arithmetic
 // (Demon 0x30 opens it, 0x35..0x37 close it); the wait dialog rerolls

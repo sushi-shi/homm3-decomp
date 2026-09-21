@@ -2,7 +2,7 @@
 #ifndef HOMM3_SSKILLTRAITS_H
 #define HOMM3_SSKILLTRAITS_H
 
-#include <va.h>
+#include "va.h"
 
 // The 28 secondary-skill rows loaded by herodefs.obj. Rollover text
 // independently proves the 16-byte stride and name at +0; retail's loader

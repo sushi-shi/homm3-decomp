@@ -1,18 +1,21 @@
-#include <va.h>
+#include "va.h"
+
 #include <stdio.h>
+
+#include "scenarioinfo.h"
+
 #include "advmgr.h"
 #include "bitmap816.h"
 #include "border.h"
 #include "button.h"
 #include "csprite.h"
-#include "game.h"
 #include "font.h"
+#include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
 #include "kb.h"
 #include "message.h"
 #include "resourcemanager.h"
-#include "scenarioinfo.h"
 #include "singleselectionpopups.h"
 #include "singleselectionwindow.h"
 #include "slider.h"

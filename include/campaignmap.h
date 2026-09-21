@@ -1,7 +1,8 @@
 #ifndef HOMM3_CAMPAIGNMAP_H
 #define HOMM3_CAMPAIGNMAP_H
 
-#include <va.h>
+#include "va.h"
+
 #include "ownership.h"
 
 // Retail Complete layout, proved by InitializeCampaignMapTraitsTable's

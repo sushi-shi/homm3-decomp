@@ -1,13 +1,15 @@
-#include "terrain.h"
-#include <va.h>
+#include "va.h"
+
 #include "iconwdgt.h"
+
 #include "button.h"
-#include "csprite.h"
 #include "csequence.h"
+#include "csprite.h"
 #include "cspriteframe.h"
 #include "message.h"
 #include "palette.h"
 #include "resourcemanager.h"
+#include "terrain.h"
 #include "window.h"
 #include "winmgr.h"
 

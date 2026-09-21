@@ -10,7 +10,7 @@
 #   51715 run/operand sites (code, switch, data in-run)
 #   5222 of 5353 isolated data pointers whose target is a carved function entry
 #     (5212 of those target entries S2 did NOT itself seed; the remaining 10 land on S2-seeded entries and are the only possible circularity; 43 entries were scalar-seeded in total)
-#   127 isolated sites with function-INTERIOR targets HELD BACK for review (see retail-reloc-evidence.tsv)
+#   127 isolated sites with function-INTERIOR targets HELD BACK for review (see reloc-evidence.tsv)
 #   4 isolated sites with unowned targets dropped
 #   20 unmapped-target sites dropped
 # NO VALIDATION ORACLE EXISTS FOR THIS IMAGE: every local pressing ships an

@@ -3,51 +3,54 @@
 // no standalone retail body because VC6 expands their calls. Their canonical
 // definitions remain in this TU and are included in the source inventory.
 // Platform/interface retirements are recorded by exact identity in dc_only.tsv.
+#include "va.h"
 #include "includes.h"
-#include "creaturetype.h"
 #include "homm3_limit.h"
-#include <va.h>
+
 #include <stdio.h>
 #include <string.h>
-#include "herospec.h"
+
 #include "advmgr.h"
-#include "townmgr.h"
-#include "ai_player.h"
+
 #include "adventureoptionswindow.h"
-#include "university_window.h"
 #include "advmgr_objects.h"
+#include "ai_player.h"
 #include "bitmap16.h"
 #include "bitmap816.h"
 #include "bottomviewsubwindow.h"
 #include "button.h"
-#include "csprite.h"
-#include "game.h"
 #include "creature_bank.h"
+#include "creaturetype.h"
+#include "csprite.h"
 #include "exec.h"
 #include "findpath.h"
+#include "game.h"
+#include "herospec.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
-#include "mousemgr.h"
 #include "misc.h"
+#include "mousemgr.h"
+#include "netgame.h"
 #include "prefs.h"
+#include "puzzlewindow.h"
+#include "questlogwindow.h"
+#include "quickherowindow.h"
+#include "quickinfowindow.h"
+#include "quicktownwindow.h"
 #include "recruit.h"
 #include "remote.h"
-#include "sample.h"
 #include "resourcemanager.h"
-#include "soundmgr.h"
-#include "textntry.h"
-#include "winmgr.h"
-#include "window.h"
-#include "widget.h"
-#include "quickherowindow.h"
-#include "quicktownwindow.h"
-#include "quickinfowindow.h"
-#include "questlogwindow.h"
-#include "puzzlewindow.h"
+#include "sample.h"
 #include "singleselectionwindow.h"
-#include "netgame.h"
+#include "soundmgr.h"
 #include "systemoptionswindow.h"
+#include "textntry.h"
+#include "townmgr.h"
+#include "university_window.h"
+#include "widget.h"
+#include "window.h"
+#include "winmgr.h"
 
 // Adventure-turn ownership for this machine. Dreamcast publishes the
 // original name; retail fixes the dword at 0x697788 through this routine and
@@ -9561,7 +9564,7 @@ VA_COMPGEN(0x0041b110, 0x5, IMPLICIT_DTOR, CHeroWindowEx)
 
 // CodeView marks dc 0x34c8 compiler-generated (compgenx): only the
 // CHeroWindowEx base teardown runs there. The exact Windows-only source
-// exception is reviewed in config/win_only.tsv.
+// exception is reviewed in config/source/win_only.tsv.
 VA(0x0041b120, 0x67)  // dc 0x34c8
 CAdvPopup::~CAdvPopup()
 {

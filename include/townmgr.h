@@ -2,8 +2,8 @@
 #define HOMM3_TOWNMGR_H
 
 #include "advmgr_popup.h"
-#include "remote.h"
 #include "basemgr.h"
+#include "remote.h"
 #include "terrain_type.h"
 
 struct type_point;

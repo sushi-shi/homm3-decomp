@@ -1,9 +1,12 @@
-#include <va.h>
+#include "va.h"
+
 #include <string.h>
+
 #include "csprite.h"
+
 #include "cspriteframe.h"
+#include "hero.h"
 #include "palette.h"
-#include "hero.h"  // hero_seqid animation-file values
 
 // CSprite vtable 0x63d6b0 slot 0. Defining the virtual destructor below
 // naturally emits this wrapper before the importing constructor.

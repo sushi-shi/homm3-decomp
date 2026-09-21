@@ -2,10 +2,11 @@
 #define HOMM3_AI_PLAYER_H
 
 #include <vector>
+
+#include "ai_creature_value.h"
+#include "armygrp.h"
 #include "netmsg.h"
 #include "turn_update_msg.h"
-#include "armygrp.h"
-#include "ai_creature_value.h"
 
 class hero;
 class playerData;

@@ -2,6 +2,7 @@
 #define HOMM3_VIEWARMYWINDOW_H
 
 #include <string>
+
 #include "advmgr_popup.h"
 #include "armygrp.h"
 

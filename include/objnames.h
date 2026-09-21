@@ -8,7 +8,7 @@
 #ifndef HOMM3_OBJNAMES_H
 #define HOMM3_OBJNAMES_H
 
-#include <va.h>
+#include "va.h"
 
 enum {
     // The loader's own bound: it zeroes 232 rows, walks 232 text rows

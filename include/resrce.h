@@ -2,7 +2,7 @@
 #ifndef HOMM3_RESRCE_H
 #define HOMM3_RESRCE_H
 
-#include <va.h>
+#include "va.h"
 
 // Dreamcast-attested resource-type domain; values unattested - grow as
 // consumers prove them.

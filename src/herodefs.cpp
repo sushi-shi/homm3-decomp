@@ -1,7 +1,10 @@
-#include <va.h>
+#include "va.h"
+
 #include <stdlib.h>
 #include <string.h>
+
 #include "herodefs.h"
+
 #include "hero.h"
 #include "resourcemanager.h"
 #include "textresource.h"

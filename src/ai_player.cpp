@@ -3,30 +3,33 @@
 // town.h for why the inline's visibility is scoped.
 // find_all_destinations' grail-spot tail expands the canonical game::getCell
 // wrapper and naturally retains its nested NewfullMap::cell call.
-#include <va.h>
-#include "creaturetype.h"
+#include "va.h"
+#include "includes.h"
+
 #include <algorithm>
 #include <functional>
 #include <math.h>
+
 #include "ai_player.h"
+
 #include "advmgr.h"
 #include "ai_combat.h"
 #include "ai_spellvalue.h"
 #include "armygrp.h"
-#include "mousemgr.h"
-#include "findpath.h"
+#include "creaturetype.h"
 #include "exec.h"
+#include "findpath.h"
 #include "game.h"
 #include "hero.h"
 #include "kb.h"
 #include "misc.h"
+#include "mousemgr.h"
 #include "netgame.h"
+#include "recruit.h"
 #include "remote.h"
 #include "soundmgr.h"
 #include "town.h"
 #include "tradpost.h"
-#include "recruit.h"
-#include "includes.h"
 
 #ifdef min
 #undef min
@@ -2999,7 +3002,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 // Dreamcast call targets: for each retail carve row the cross-unit resolved
 // calls (homm3 sema disasm) form a set that matches a unique ai_player DC
 // callee-set through the RVA scramble. Reciprocal-best pairs; sizes carve-exact
-// from config/retail-functions.tsv; claimed @stub in RVA order (ORDER gate).
+// from config/retail/functions.tsv; claimed @stub in RVA order (ORDER gate).
 //   0x2edd0 find_all_destinations - 7 shared (game::GetTownId, CheckDoMain,
 //           AI_value_of_event, hero::is_in_patrol_radius, ...), marginR=12.
 //   0x2f570 mark_destinations - searchArray ctor/dtor + is_in_patrol_radius +
@@ -4476,7 +4479,7 @@ long type_creature_growth_artifact::getValue(const hero* owner,
 // Each table has the shared deleting destructor 0x433080 at slot 0 and
 // the matching three-argument, ret 0xc getValue at slot 1. The exact
 // Complete-only constructor and virtual definitions are reviewed in
-// config/win_only.tsv; class names remain provisional semantic names.
+// config/source/win_only.tsv; class names remain provisional semantic names.
 VA(0x00432f90, 0xe4)  // vtable-slot 0x63b750 + get_raw_spell_value, retail-only
 long type_spell_artifact::getValue(const hero* owner, unsigned char equipped,
                                     unsigned char exact) const

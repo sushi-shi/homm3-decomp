@@ -2,8 +2,8 @@
 #ifndef HOMM3_NETMSG_H
 #define HOMM3_NETMSG_H
 
-#include "struct.h"
 #include "hero.h"
+#include "struct.h"
 #include "victorylossconditions.h"
 
 // The Dreamcast enumerates this ladder from RS_GAME_TRANSMIT_INIT = 1000

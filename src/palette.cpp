@@ -1,13 +1,15 @@
 // 39 functions in link order.
-#include <va.h>
+#include "va.h"
+
 #include <limits>
 #include <math.h>
 #include <string.h>
+
 #include "palette.h"
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <windows.h>  // external RGBQUAD ABI
+#include <windows.h>
 
 union TFloatLongBits {
     unsigned long m_bits;

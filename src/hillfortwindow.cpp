@@ -1,22 +1,24 @@
+#include "va.h"
+
 #include <stdio.h>
 #include <string.h>
 
-#include <va.h>
+#include "hillfortwindow.h"
+
 #include "advmgr.h"
 #include "border.h"
 #include "button.h"
-#include "hillfortwindow.h"
 #include "creaturetype.h"
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
 #include "kb.h"
 #include "message.h"
-#include "recruit.h"
 #include "mousemgr.h"
+#include "recruit.h"
 #include "soundmgr.h"
-#include "textwdgt.h"
 #include "textresource.h"
+#include "textwdgt.h"
 #include "viewarmywindow.h"
 #include "widget.h"
 #include "winmgr.h"

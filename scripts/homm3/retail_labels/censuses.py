@@ -1,8 +1,8 @@
 """homm3.retail_labels.censuses - the admitted retail inventories: structure only.
 
-config/retail-functions.tsv is the function universe (starts + admitted
+config/retail/functions.tsv is the function universe (starts + admitted
 sizes - unlike gruntz, extents are hand-admitted alongside the starts, not
-derived to the next row). config/retail-vtables.tsv contributes vtable
+derived to the next row). config/retail/vtables.tsv contributes vtable
 starts and slot counts; its hand-admitted `class` column is IDENTITY the
 model consumes (a deliberate divergence from gruntz's structure/identity
 split: source VTBL() macros are retired by user decision 2026-08-06, so the
@@ -18,8 +18,8 @@ from pathlib import Path
 from homm3.core import common
 from homm3.core.tsv import read as read_tsv
 
-FUNCTIONS = common.HOMM3_DIR / "config/retail-functions.tsv"
-VTABLES = common.HOMM3_DIR / "config/retail-vtables.tsv"
+FUNCTIONS = common.HOMM3_DIR / "config/retail/functions.tsv"
+VTABLES = common.HOMM3_DIR / "config/retail/vtables.tsv"
 
 
 def functions(path: Path | None = None) -> list[dict]:

@@ -3,9 +3,6 @@
 
 #include <vector>
 
-// type_point is a value member of several record subclasses below; struct.h is
-// already in this TU's include closure (game.h pulls it in), so parsing it here
-// adds no declarators. hero/boat/NewmapCell appear only as pointer members.
 #include "struct.h"
 
 class TAbstractFile;

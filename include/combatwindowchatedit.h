@@ -4,7 +4,6 @@
 
 #include <string>
 
-// CCombatChatEdit uses the CGameChatEdit base recovered from its vtable.
 #include "remote.h"
 
 // Retail 0x4721d0 allocates 0x74 bytes and installs vtable 0x63d4bc.

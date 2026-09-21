@@ -5,7 +5,7 @@ Run by full `homm3 build`, or directly with `homm3 delink`:
 
     labels (extraction -> claim fragments) -> model (the one join
         -> build/gen/symbol_names.csv) -> synth_pdb -> data_manifest
-        -> vostok-delinker (--reloc-manifest config/retail-relocs.tsv)
+        -> vostok-delinker (--reloc-manifest config/retail/relocs.tsv)
         -> build/delink/<unit>.c.obj (the whole image, ~100 objects)
         -> copy the units.toml-scoped objects to build/objdiff/target/
         -> canonicalize both sides into build/objdiff/normalized/
@@ -75,9 +75,9 @@ def run() -> DelinkResult:
          "--output-path", str(DELINK_DIR),
          "--engine-path", "c:\\proj\\",
          "--reloc-manifest", str(common.HOMM3_DIR /
-                                 "config/retail-relocs.tsv"),
+                                 "config/retail/relocs.tsv"),
          "--reloc-alias-manifest", str(common.HOMM3_DIR /
-                                       "config/delink-reloc-aliases.tsv"),
+                                       "config/retail/reloc-aliases.tsv"),
          "--data-manifest", str(data)],
         check=True)
 

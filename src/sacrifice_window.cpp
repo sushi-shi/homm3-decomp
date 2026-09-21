@@ -1,8 +1,10 @@
-#include <va.h>
-#include "creaturetype.h"
+#include "va.h"
+
 #include "sacrifice_window.h"
+
 #include "border.h"
 #include "button.h"
+#include "creaturetype.h"
 #include "game.h"
 #include "kb.h"
 #include "message.h"
@@ -11,9 +13,9 @@
 #include "resourcemanager.h"
 #include "sample.h"
 #include "slider.h"
+#include "soundmgr.h"
 #include "spellbookwindow.h"
 #include "textresource.h"
-#include "soundmgr.h"
 #include "viewarmywindow.h"
 #include "winmgr.h"
 

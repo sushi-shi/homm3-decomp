@@ -2,6 +2,7 @@
 #define HOMM3_SACRIFICE_WINDOW_H
 
 #include <vector>
+
 #include "advmgr_popup.h"
 #include "hero.h"
 #include "iconwdgt.h"

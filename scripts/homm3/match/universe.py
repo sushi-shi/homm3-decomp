@@ -3,16 +3,16 @@
 classifier (gruntz core/function_universe ported to our evidence rules).
 
 Every consumer of the full-engine denominator uses this module so the
-filters cannot drift apart. Per function of config/retail-functions.tsv,
+filters cannot drift apart. Per function of config/retail/functions.tsv,
 in precedence order:
 
-  eh-funclet    config/retail-funclets.tsv (admitted from the retail EH
+  eh-funclet    config/retail/funclets.tsv (admitted from the retail EH
                 metadata walk, with parentage). Matches with its parent.
-  runtime       config/retail-runtime-map.tsv (LIBCMT + LIBCPMT): named,
+  runtime       config/retail/runtime-map.tsv (LIBCMT + LIBCPMT): named,
                 not matched from source.
-  zlib          config/retail-zlib-map.tsv: a matching TARGET (vendored
+  zlib          config/retail/zlib-map.tsv: a matching TARGET (vendored
                 sources compile), counted inside the main table.
-  init-thunk    config/retail-init-thunks.tsv: `.CRT$XCU` dynamic-
+  init-thunk    config/retail/init-thunks.tsv: `.CRT$XCU` dynamic-
                 initializer bodies (compiler-generated, reconstructed
                 implicitly by VA_COMPGEN).
   import-thunk  a <=8-byte body that is a `FF 25 <IAT slot>` jump, read
@@ -30,17 +30,17 @@ import sys
 
 from homm3.core import common
 
-FUNCTIONS = common.HOMM3_DIR / "config/retail-functions.tsv"
-RUNTIME_MAP = common.HOMM3_DIR / "config/retail-runtime-map.tsv"
-ZLIB_MAP = common.HOMM3_DIR / "config/retail-zlib-map.tsv"
-FUNCLETS = common.HOMM3_DIR / "config/retail-funclets.tsv"
-INIT_THUNKS = common.HOMM3_DIR / "config/retail-init-thunks.tsv"
+FUNCTIONS = common.HOMM3_DIR / "config/retail/functions.tsv"
+RUNTIME_MAP = common.HOMM3_DIR / "config/retail/runtime-map.tsv"
+ZLIB_MAP = common.HOMM3_DIR / "config/retail/zlib-map.tsv"
+FUNCLETS = common.HOMM3_DIR / "config/retail/funclets.tsv"
+INIT_THUNKS = common.HOMM3_DIR / "config/retail/init-thunks.tsv"
 
 EXCLUDED_NOTES = {
     "eh-funclet": "compiler EH unwind funclets; match with their parent "
                   "function",
     "runtime": "CRT/C++ runtime, named not matched "
-               "(config/retail-runtime-map.tsv)",
+               "(config/retail/runtime-map.tsv)",
     "init-thunk": ".CRT$XCU dynamic-initializer bodies "
                   "(compiler-generated)",
     "import-thunk": "FF 25 jumps through the IAT",

@@ -1,9 +1,10 @@
 #ifndef HOMM3_FINDPATH_H
 #define HOMM3_FINDPATH_H
 
-#include <va.h>
-#include <windows.h>
+#include "va.h"
+
 #include <vector>
+#include <windows.h>
 #include <windows.h>
 
 #include "struct.h"
