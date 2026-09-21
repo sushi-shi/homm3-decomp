@@ -233,11 +233,9 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
                        unsigned short* dst, int dstX, int dstY, int dstWidth,
                        int dstHeight, int dstPitch, bool flipped) const
 {
-    int w = srcWidth;
-
     if (dstX < 0) {
         srcX -= dstX;
-        w += dstX;
+        srcWidth += dstX;
         dstX = 0;
     }
     if (dstY < 0) {
@@ -245,38 +243,43 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
         srcHeight += dstY;
         dstY = 0;
     }
-    if (w + dstX > dstWidth)
-        w = dstWidth - dstX;
+    if (srcWidth + dstX > dstWidth)
+        srcWidth = dstWidth - dstX;
     if (srcHeight + dstY > dstHeight)
         srcHeight = dstHeight - dstY;
 
-    if (w > 0 && srcHeight > 0) {
-        Bitmap16ConstMapPointer source;
-        source.m_pixels = getMap(0, srcY);
-        Bitmap16MapPointer target;
-        target.m_pixels = dst;
-        target.m_bytes += dstY * dstPitch;
+    if (srcWidth > 0 && srcHeight > 0) {
+        const unsigned short* src = getMap(srcX, srcY);
+        dst = static_cast<unsigned short*>(static_cast<void*>(
+            static_cast<unsigned char*>(static_cast<void*>(dst))
+            + dstY * dstPitch + dstX * sizeof(unsigned short)));
 
         if (flipped) {
             for (int row = 0; row < srcHeight; ++row) {
-                for (int col = 0; col < w; ++col) {
-                    // BOUND BY `const unsigned short&`: retail loads the
-                    // source pixel twice - once for the key compare and once
-                    // for the store - rather than keeping it in a register.
-                    // 81.3095 -> 83.5794.
-                    const unsigned short& pixel = source.m_pixels[srcX + col];
-                    if (pixel != static_cast<unsigned short>(flipped))
-                        target.m_pixels[dstX + col] = pixel;
+                const unsigned short* in = src;
+                unsigned short* out = dst;
+                for (int col = 0; col < srcWidth; ++col) {
+                    if (*in != static_cast<unsigned short>(flipped))
+                        *out = *in;
+                    ++in;
+                    ++out;
                 }
-                source.m_bytes += m_pitch;
-                target.m_bytes += dstPitch;
+                src = static_cast<const unsigned short*>(static_cast<const void*>(
+                    static_cast<const unsigned char*>(static_cast<const void*>(src))
+                    + m_pitch));
+                dst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(dst))
+                    + dstPitch));
             }
         } else {
             for (int row = 0; row < srcHeight; ++row) {
-                memcpy(target.m_pixels + dstX, source.m_pixels + srcX,
-                       w * sizeof(unsigned short));
-                source.m_bytes += m_pitch;
-                target.m_bytes += dstPitch;
+                memcpy(dst, src, srcWidth * sizeof(unsigned short));
+                src = static_cast<const unsigned short*>(static_cast<const void*>(
+                    static_cast<const unsigned char*>(static_cast<const void*>(src))
+                    + m_pitch));
+                dst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(dst))
+                    + dstPitch));
             }
         }
     }
