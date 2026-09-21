@@ -2840,7 +2840,7 @@ overview	?overview@game@@QAEXXZ	100.0000	100.0000	100.0000	0x11e8d0	tokens1:2470
 overview	?overviewSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x11fa20	tokens1:ff5957e0c8e9
 overview	?processIconSelect@game@@QAEHHE@Z	94.7322	94.7322	94.7322	0x11ee50	tokens1:aa97c0635d35
 overview	?setupDynamicStuff@game@@QAEXHH@Z	91.8499	91.8499	91.8605	0x11bd50	tokens1:175917d347a2
-overview	?setupNewOverviewType@game@@QAEXHE@Z	96.4609	96.4609	100.0000	0x11e330	tokens1:17f5d52fd1c5
+overview	?setupNewOverviewType@game@@QAEXHE@Z	100.0000	100.0000	100.0000	0x11e330	tokens1:5794f48133b7
 overview	?updateBackpack@@YIXH@Z	100.0000	100.0000	100.0000	0x122470	tokens1:6dfc82a6a0f1
 overview	?updateFlaggableIcon@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e670	tokens1:20e361da9ee2
 overview	?updateFlaggableIcons@TOverviewWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x11e7c0	tokens1:64d0f3ddc246

@@ -792,11 +792,9 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 // the source vocabulary; the Complete body proves the changed player fields,
 // slider update, two-message protocol, per-mode title counts, and geometry.
 // E:\gamedcs\overview.cpp:1170
-VA(0x0051e330, 0x33A)
+VA(0x0051e330, 0x33A)  // dc 0x1069fc
 void game::setupNewOverviewType(int whichType, unsigned char update)
 {
-    message msg;
-
     g_overviewType = whichType;
     g_overviewItemCount = g_overviewType == 0
         ? g_game->getLocalPlayer()->m_numHeroes
@@ -814,6 +812,10 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
         g_overviewSlider->setResolution(1);
     }
 
+    // Dreamcast constructs this message after the slider branch. Complete
+    // overwrites all eight fields before the first use, so that lifetime also
+    // lets VC6 remove the constructor's zero stores.
+    message msg;
     msg.m_codeY = 195 + (g_overviewType != 1);
     msg.m_qualifier = 0;
     msg.m_mouseX = 0;
