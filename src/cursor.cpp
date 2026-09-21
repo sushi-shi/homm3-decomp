@@ -1,4 +1,5 @@
 #include "va.h"
+#include "objnames.h"
 
 #include "cursor.h"
 
@@ -549,7 +550,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
             break;
 
         default:
-            if (g_adventureObjectTraits[destCell->m_type][0]
+            if (g_adventureObjectTraits[destCell->m_type].m_blocksLanding
                 && (!curr->isFlying(1)))
                 return handleStopOnTrigger(
                     curr, destCell, isRemoteMove, standEnd,
@@ -651,7 +652,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
             && eventCell->m_type == ANCHOR_POINT)) {
         if ((!curr->isFlying(0)
              || curr->getTarget() == triggerPoint)
-            && (!g_adventureObjectTraits[eventCell->m_type][0]
+            && (!g_adventureObjectTraits[eventCell->m_type].m_blocksLanding
                 || !curr->isFlying(1)
                 || eventCell->m_type == BOAT))
             returnCell = eventCell;
@@ -825,12 +826,12 @@ int advManager::validMove(hero* who, int direction, int computerMove,
     int stepsSouth = dirMask & 0x38;
     if (dirMask & 0x83) {
         if (srcCell->cellIsTrigger()
-                && !g_adventureObjectTraits[srcCell->getMapObject()][1])
+                && !g_adventureObjectTraits[srcCell->getMapObject()].m_trait1)
             return 0;
     }
     if (stepsSouth) {
         if (destCell->cellIsTrigger()
-                && !g_adventureObjectTraits[destCell->getMapObject()][1])
+                && !g_adventureObjectTraits[destCell->getMapObject()].m_trait1)
             return 0;
     }
 

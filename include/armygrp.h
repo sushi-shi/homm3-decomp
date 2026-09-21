@@ -598,7 +598,7 @@ SIZE(SSpellTraits, 136);
 // The 81-entry count is now retail-proven: spelldefs constructs 81 strings
 // and writes the contiguous 136-byte backing rows at 0x685450, whose exact
 // end is this pointer cell (0x685450 + 81*136 == 0x687f58).
-DATA(0x00687f58) extern const SSpellTraits (&g_spellTraits)[81];
+extern const SSpellTraits (&g_spellTraits)[81];
 
 unsigned char spellTargetsASingleArmy(int spell, int sslevel);
 
@@ -693,7 +693,7 @@ const unsigned int g_ctaAlive = 0x10;
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
 // akCreatureTypeTraits (a const reference to the 150-entry array).
-DATA(0x006747b0) extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
+extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
 
 // Creature-card background image by town alignment (CrBkgCas.pcx first,
 // CrBkgEle.pcx last). Retail indexes this biased base with -1 for the
@@ -706,13 +706,12 @@ DATA(0x006747b0) extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
 // initialize_game_data from 100.00% to 96.09% - the include-set class,
 // measured, with no semantic change anywhere. armygrp.cpp and
 // viewarmywindow.cpp are the two TUs that define the macro.
-DATA(0x00682910) extern const char* g_creatureBackgrounds[9];
+extern const char* g_creatureBackgrounds[9];
 
 // Army-size name tables (BSS at 0x6a5bb8, runtime-filled from game
 // text): nine threshold bands x three name sets, 12-byte row stride
 // proven by GetArmySizeName's nine reloc targets. The NAME is a
 // bootstrap invention (no Dreamcast/NH3API name survives for these).
-DATA(0x006a5bb8) extern const char* g_apszArmySizeNames[9][3];
 
 // GetMorale's two town-building tests were bootstrapped here as
 // separate `unsigned int[2]` mask objects (gTavernMask /

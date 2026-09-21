@@ -49,7 +49,7 @@ extern HMENU g_currMenu;                  // 0x6995bc
 extern HMENU g_activeMenu;                // 0x699604
 extern int g_menusSuppressed;            // 0x699618
 extern int g_windowedMode;               // 0x6987b8
-extern int g_videoPaused;                // 0x69954c
+extern int g_networkActive69954c;                // 0x69954c
 extern HMENU g_dfltMenu;                  // 0x6989e4 (CallManager's resume
                                         // arm restores it; name provisional)
 // .bss 0x698a34, the single-player menu gate advmgr's Open tests: when

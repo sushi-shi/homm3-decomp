@@ -132,35 +132,33 @@ enum EAdvmgrRetailObjectType {
 // the object it is standing on in both of its dialogs. The guard is SPLIT
 // around this one declarator rather than moved, so the preprocessed text
 // every quick-info consumer sees is unchanged, line for line.
-DATA(0x006a79ec) extern const char* const g_adventureObjectNames[];
-DATA(0x006a5e84) extern const char* const g_terrainNames[];
-DATA(0x0069778c) extern int g_unnamed69778c;
+extern const char* g_terrainNames[];
+extern int g_unnamed69778c;
 // Paired with gUnnamed6989c8 by every non-local adventure command gate.
 // The role is byte-proven; no surviving symbol attests a semantic name.
-DATA(0x006989c8) extern int g_unnamed6989c8;
+extern int g_unnamed6989c8;
 // Written at startup by InitializeExtraInfoText (28 rows of
 // xtrainfo.txt), so the ELEMENT is not const.
-DATA(0x0069ccd4) extern int g_unnamed69ccd4;
-DATA(0x0069127c) extern const char* g_globalInfoFlagNames[];
+extern int g_unnamed69ccd4;
+extern const char* g_globalInfoFlagNames[];
 // Role-derived retail tables used by SetRolloverText. The generator-name
 // semantics are corroborated by the DC public roster; the x86 bases and
 // owner-color consumer role are fixed directly by the retail switch blocks.
-DATA(0x006a7520) extern const char* const g_borderColorNames[];
+extern const char* g_borderColorNames[];
 // Both written at startup by InitializeCreatureGeneratorNames (80 rows of
 // crgen1.txt and 2 of crgen4.txt), so the ELEMENT is not const.
-DATA(0x006a5898) extern const char* const g_objectOwnerColorNames[8];
-DATA(0x006914fc) extern const char* g_creatureGenerator1RolloverNames[];
+extern const char* g_creatureGenerator1RolloverNames[];
 // InitializeMineNames copies the eight lines of minename.txt here. The mine
 // help-text helper indexes 0..6 by mine type and uses row 7 for an abandoned
 // mine, independently fixing both the extent and the table's consumer role.
-DATA(0x00691354) extern const char* g_creatureGenerator4RolloverNames[];
+extern const char* g_creatureGenerator4RolloverNames[];
 // events.obj joins the gate for the resource pile (0x4a4be0), which
 // strcpy's the resource's own name out of this table and lower-cases its
 // first letter before formatting the pickup line. The guard is SPLIT
 // around the one declarator rather than moved, so the preprocessed text
 // every quick-info consumer sees is unchanged, line for line.
-DATA(0x006a74d0) extern const char* const g_mineDescriptions[8];
-extern const char* g_resourceNames[7];
+extern const char* g_mineDescriptions[8];
+extern const char* g_resourceNames[8];
 // The two mine tables advManager::DoEventMine (0x4a39a0) reads, both
 // text.obj/game-side globals declared here because this is where the
 // adventure-object tables of the events TU already live.
@@ -176,7 +174,7 @@ extern const char* g_resourceNames[7];
 // tables - `?gMineEventText@@3PAPBDA` and `?gMineDescriptions@@3PAPBDA` -
 // and only the ROLE separates them: this one is an event dialog's text,
 // so it takes the event name. PROVISIONAL on that ground alone.
-DATA(0x00678288) extern const int g_mineCharacteristics[7];
+extern const int g_mineCharacteristics[7];
 // Route-arrow frame selector, retail .data 0x6782ac: sixty-four signed
 // bytes read as [previous step direction][current step direction], both
 // in the eight-way order gStepDeltaX/gStepDeltaY use. ShowRoute adds 2 to
@@ -184,8 +182,8 @@ DATA(0x00678288) extern const int g_mineCharacteristics[7];
 // fixed by the matrix itself - the straight-through diagonal runs
 // 8,9,..,15, i.e. 8+dir - and the extent is exact, since 0x6782ec begins
 // unrelated float data.
-DATA(0x006a5e20) extern const char* const g_mineEventText[];
-DATA(0x006782ac) extern const signed char g_routeArrowFrames[8][8];
+extern const char* g_mineEventText[];
+extern const signed char g_routeArrowFrames[8][8];
 
 // advManager::advCommand's domain. The Dreamcast prints the member as a
 // plain T_INT4 (classes.csv list[171], offset 84) and no surviving symbol
@@ -218,19 +216,19 @@ enum EAdvCommand {
 //             returns for the step the route walker is about to take.
 //   0x6968e4  the resource-side walk sample paired with that live handle;
 //             StopCursor clears both after stopping the handle.
-DATA(0x006968e0) extern ds_memsample* g_unnamed6968e0;
+extern ds_memsample* g_unnamed6968e0;
 //   0x6968e8  a cursor-owned byte latch cleared when animate_move finishes.
 //             No surviving symbol names its role, so the name stays ordinal.
-DATA(0x006968e4) extern sample* g_unnamed6968e4;
+extern sample* g_unnamed6968e4;
 extern unsigned char g_unnamed6968e8;
 //   0x69777c  breaks the route step loop when nonzero.
 //   0x698774  suppresses the route teardown and forces ShowRoute
 //             instead; eleven consumers image-wide, three of them here.
-DATA(0x0069777c) extern int g_unnamed69777c;
+extern int g_unnamed69777c;
 //   0x699560  gates both of the hero-view arm's SetEnvironmentOrigin
 //             calls, and UpdateRadar's own AI-shield paint.
-DATA(0x00698774) extern int g_unnamed698774;
-DATA(0x00699560) extern int g_unnamed699560;
+extern int g_unnamed698774;
+extern int g_unnamed699560;
 
 // Retail .bss, three more unattested slots the de-select dispatcher reads.
 // The first two are game::Overview's reply pair - ProcessDeSelect's
@@ -247,7 +245,7 @@ DATA(0x006985c0) extern int g_overviewReturnAction;
 //             can move" end-turn confirm, after game::field_1f69d and
 //             playerData::HasMobileHero.
 DATA(0x0069873c) extern int g_overviewReturnActionExtra;
-DATA(0x00698778) extern int g_unnamed698778;
+extern int g_unnamed698778;
 
 // Retail .bss/.data, three more the hero-context switch reads. Roles are
 // exactly what SetHeroContext's branches prove and nothing wider:
@@ -258,14 +256,14 @@ DATA(0x00698778) extern int g_unnamed698778;
 DATA(0x00682a38) extern unsigned char g_followPlayerMode;
 //   0x6993dc  set to 1 on Open's two hotseat arms alongside the
 //             gCompleteDrawEnabled refresh.
-DATA(0x006989f4) extern int g_unnamed6989f4;
+extern int g_inViewWorld;
 //   0x691209  lets a NON-human acting player through that same gate
 //             without the IsLastHuman probe.
-DATA(0x006993dc) extern int g_unnamed6993dc;
+extern int g_unnamed6993dc;
 //   0x698790  suppresses the visibility scan around the new hero when the
 //             receiving player is not the local human.
-DATA(0x00691209) extern unsigned char g_unnamed691209;
-DATA(0x00698790) extern int g_unnamed698790;
+extern unsigned char g_unnamed691209;
+extern int g_unnamed698790;
 
 // gUnnamed691209's PRODUCER, found while decoding advManager::Main: the
 // "gosolo" console handler at 0x4022e0 sets the byte to 1 and stores
@@ -280,13 +278,13 @@ DATA(0x00698790) extern int g_unnamed698790;
 // ?gbGoSolo@@3_NA / ?giSoloPos@@3HA, but it puts them at 0x691259 and
 // 0x69125c, a different pair fifty bytes up, so the mangled spellings are
 // NOT evidence for these two addresses and are recorded, not adopted.
-DATA(0x0069120c) extern int g_unnamed69120c;
+extern int g_unnamed69120c;
 
 // Retail .data 0x691678 / 0x69167c: once-per-session latches for the two
 // turn-start info popups (general-text rows 332 and 333). Set to 1 the
 // first time StartLocalPlayerTurn shows each dialog; nothing clears them.
-DATA(0x00691678) extern int g_unnamed691678;
-DATA(0x0069167c) extern int g_unnamed69167c;
+extern int g_unnamed691678;
+extern int g_unnamed69167c;
 
 // Retail .bss 0x699544, an ambient-sound resume stamp. The whole image
 // touches it from advmgr.obj alone - Main twice and StartLocalPlayerTurn
@@ -297,23 +295,11 @@ extern unsigned long g_unnamed699544;
 
 // Retail .bss 0x69928c and the manager that lives there. InitMainClasses
 // (0x4edb40) allocates it LAST, immediately after gpSearchArray, and
-// ShutDown (0x4f3690) releases it; advManager::Main is this compiland's
-// only consumer. The body at 0x525e80 takes one stack argument, indexes
-// the 152-byte type_AI_player array at 0x692950 with it and calls
-// type_AI_player::start_turn, so the parameter is a player GAME POSITION
-// and the class is the AI turn driver. BOTH names are address ordinals.
-// The Dreamcast global band that fixes gpMouseManager/gpAdvManager/
-// gpWindowManager/gpSearchArray onto retail 0x699260/0x699268/0x699280/
-// 0x699284 (a flat +0x66b010) has NOTHING at the matching DC 0x2e27c, so
-// no surviving symbol reaches this slot.
-class CAITurnDriver69928c {
-public:
-    // Declared for InitMainClasses' `new`: retail calls a real constructor
-    // (3 B at 0x524360) on the one-byte allocation.
-    CAITurnDriver69928c();
-    void startPlayerTurn(int gamePos);  // 0x525e80
-};
-extern CAITurnDriver69928c* g_unnamed69928c;
+// Complete InitMainClasses calls philAI::philAI (0x524360) and stores
+// the result at 0x69928c; Main calls philAI::doAI (0x525e80). This is
+// the canonical philAI class, formerly declared as CAITurnDriver69928c.
+class philAI;
+extern philAI* g_philAI;
 
 // smackmgr.obj's video-pump bracket (0x5977a0 / 0x597850), the pair
 // ProcessKeyPress's ESC arm puts around its exit confirm. Declared here
@@ -371,12 +357,7 @@ enum EMapDimension {
 #define VIEW_WORLD_TILE_SCALE_FULL 16.0f
 #define VIEW_WORLD_TILE_SCALE_MID 11.84f
 #define VIEW_WORLD_TILE_SCALE_FAR 7.68f
-DATA(0x006a7b84) extern const char* g_treeOfKnowledgeName;
-DATA(0x006a64d8) extern const char* const g_wiseTreePriceNames[];
-DATA(0x006912c4) extern const char* g_knownTreePriceText;
-DATA(0x006a7bb0) extern const char* g_witchHutName;
 
-DATA(0x006912ac) extern const char* g_knownWitchSkillText;
 
 // Retail GetSoundId returns this four-byte enum. The semantic aliases have
 // not been admitted; these ordinal names expose only the values proved by
@@ -511,7 +492,6 @@ class textWidget;
 
 // Only byte +1 of this 16-byte row is named by behavior, so keep the
 // otherwise unknown table raw instead of inventing a partial object type.
-DATA(0x00660428) extern unsigned char (*g_adventureObjectTraits)[16];
 
 // Retail's public .data symbol at 0x65f694. The relocation and final byte
 // load in GetCloudLookup prove a 256-entry lookup indexed by the eight
@@ -522,7 +502,7 @@ extern unsigned char g_cloudType[256];
 // of every GetMapExtra result. Its role is proved by those xrefs; no public
 // retail name survives, so the spelling remains provisional.
 
-DATA(0x0069ccbc) extern unsigned char g_mapVisibilityBit;
+extern unsigned char g_mapVisibilityBit;
 
 // DC publishes this as `int gbInViewWorld`; retail corroborates the role:
 // its xrefs gate CompleteDraw's normal layers, ScanForHeroOrBoat, ViewPuzzle,
@@ -532,13 +512,13 @@ extern int g_inViewWorld;
 // Retail .bss 0x699538. CompleteDraw forces the source origin to (0, 0)
 // while this is set, and DrawShroud uses it to bypass normal fog bounds and
 // visibility tests. No public retail spelling survives.
-DATA(0x00699538) extern int g_completeDrawAllCells;
+extern int g_completeDrawAllCells;
 
 // Retail-only CompleteDraw gates. Their roles and widths are proved by the
 // entry predicate at 0x40f3f0; spellings remain provisional.
 // Dreamcast names this shared cursor-suppression gate. DrawCursorAlpha's
 // second entry predicate and philai's sole writer prove the retail cell.
-DATA(0x006989c0) extern int g_completeDrawEnabled;
+extern int g_completeDrawEnabled;
 DATA(0x006983f8) extern int g_specialHideCursor;
 
 // A .data byte advManager::EraseAndFizzle (0x49e170) saves, CLEARS for the
@@ -549,7 +529,7 @@ DATA(0x006983f8) extern int g_specialHideCursor;
 // taken here and the owning TU keeps it (the winmgr.h gbInDialog
 // precedent). Name is the house ordinal placeholder.
 extern unsigned char g_unnamed67f574;
-DATA(0x00696a04) extern unsigned char g_completeDrawMessageBypass;
+extern unsigned char g_completeDrawMessageBypass;
 
 // Six of these records are filled by ScanForHeroOrBoat. Retail writes the
 // fields at +0/+4/+8/+c with a 0x10 stride; the names and bool type are the
@@ -1387,7 +1367,6 @@ private:
                                bool humanPlayer);
 
 public:
-    void drawAdventureCursor();
     // E:\gamedcs\AdvMgr.h:1245. DC's fixed viewport center is (6,5);
     // Complete's wider view uses (9,8), as the retail recentering paths prove.
     type_point getMapCenter() const
@@ -1514,11 +1493,6 @@ private:
                                  enum TCreatureType creature);
 
 public:
-    // cursor.obj's 0x480000; ai_player's attempt_step (0x42fc50) calls it
-    // to gate the HidePointer that precedes an AI move. The DC census
-    // names it ConsiderHidingMouse; the int return is the bare
-    // `test eax,eax` at that call site.
-    int considerHidingMouse(class hero* currentHero, int direction);
     void animateMove(class hero* curr, int direction, int xInc, int yInc);
     int validMove(class hero* who, int direction, int computerMove,
                   unsigned char landOnly);

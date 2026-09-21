@@ -21,7 +21,8 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x006a7584) THelpText g_systemOptionsHelp[48];
+// The shared Help.txt table is owned and filled by text.cpp.
+// Retail reads column 1 (right-click), four bytes after each row base.
 
 // genrltxt.txt rows this dialog labels itself with. They have no other
 // consumer in the image, so no EGeneralTextIndex name is coined for them;
@@ -442,7 +443,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
             int id = msg.m_codeY;
             int helpID = convertID2HelpID(id);
             if (helpID >= 0)
-                normalDialog(g_systemOptionsHelp[helpID].m_text, 4, -1, -1, -1, 0, -1,
+                normalDialog(g_systemOptionsHelp[helpID].m_rclick, 4, -1, -1, -1, 0, -1,
                              0, -1, 0, -1, 0);
         }
     }

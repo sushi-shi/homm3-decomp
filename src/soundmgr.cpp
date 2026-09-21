@@ -15,6 +15,27 @@
 #include "smackmgr.h"
 #include "terrain.h"
 
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x00684ae8) const char* const g_terrainMusic[9] = { "Water", "Grass", "Snow", "Swamp", "Lava", "Sand", "Dirt", "Rough", "Underground" };
+DATA(0x00678330) unsigned char g_terrainMusicIds[9] = { 8, 7, 3, 4, 5, 9, 10, 6, 2 };
+
+// Shared Miles state. All handles and playback flags begin cleared.
+DATA(0x00699290) int g_noSound;
+DATA(0x00699258) SAMPLE2 g_nullSample2;
+DATA(0x0069fea0) short g_ailDriverState[14];
+DATA(0x006a3258) int g_sampleWasPlaying[14];
+DATA(0x00698760) int g_unk698760;
+DATA(0x00698764) int g_unk698764;
+DATA(0x0069fe78) HSTREAM g_mp3Stream;
+DATA(0x006a3290) char g_mp3Name[260];
+DATA(0x006a3394) char g_mp3NamePlaying[260];
+DATA(0x0069fe90) int g_unk69fe90;
+DATA(0x0069fe9c) int g_unk69fe9c;
+DATA(0x00684ab8) SoundChannelRange g_soundChannels[4] = {
+    { 0, 1, 0 }, { 1, 2, 1 }, { 2, 6, 2 }, { 6, 14, 6 }
+};
+
+
 // Number of live asynchronous sample waiters. WaitEndSampleThread increments
 // and decrements this counter; Close gives them up to one second to drain.
 // The role and storage are retail-byte-proven; no surviving name covers it.
@@ -234,7 +255,7 @@ void soundManager::close()
 {
     if (m_status == STATUS_ACTIVE) {
         g_soundManager->m_playSounds = 1;
-        g_unk691209 = 0;
+        g_unnamed691209 = 0;
         videoShutDown();
 
         if (!g_noSound) {
@@ -276,7 +297,7 @@ void soundManager::resumeSamples()
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_unnamed691209)
         return;
     EnterCriticalSection(&m_sectionSoundCall);
     for (int i = 0; i < m_sampleNum; i++)
@@ -293,7 +314,7 @@ void soundManager::pauseSamples()
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_unnamed691209)
         return;
     EnterCriticalSection(&m_sectionSoundCall);
     for (int i = 0; i < m_sampleNum; i++) {
@@ -318,7 +339,7 @@ void soundManager::stopAllSamples(int stopMusicToo)
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_unnamed691209)
         return;
     memset(g_sampleWasPlaying, 0, sizeof(g_sampleWasPlaying));
     EnterCriticalSection(&m_sectionSoundCall);
@@ -364,7 +385,7 @@ void soundManager::modifySample(ds_memsample* inSample, short functionId, long v
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_unnamed691209)
         return;
     if (!m_samples)
         return;
@@ -422,7 +443,7 @@ void soundManager::adjustSoundVolumes()
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_unnamed691209)
         return;
     for (int i = 1; i < m_sampleNum; i++) {
         ds_memsample* handle = m_sampleHandles[i];
@@ -441,7 +462,7 @@ void soundManager::adjustMusicVolumes()
 {
     if (g_noSound)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_unnamed691209)
         return;
     setMusicVolume();
 }
@@ -456,7 +477,7 @@ void soundManager::switchAmbientMusic(int newMusicFileId)
 VA(0x0059a210, 0x1DB)  // dc 0x14b528
 ds_memsample* soundManager::memorySample(sample* samplePointer)
 {
-    if (!g_noSound && m_ds && (m_playSounds || g_unk691209) && g_unk698764 && samplePointer
+    if (!g_noSound && m_ds && (m_playSounds || g_unnamed691209) && g_unk698764 && samplePointer
         && m_samples && samplePointer->m_memSample.m_memVolume) {
         SoundChannelRange* range = &g_soundChannels[samplePointer->m_memSample.m_memCindex];
         EnterCriticalSection(&m_sectionSoundCall);
@@ -556,7 +577,7 @@ void launchSample(const char* sampleName, int maxTime, int channel)
         return;
     if (!g_soundManager->m_ds)
         return;
-    if (g_soundManager->m_playSounds == 0 && !g_unk691209)
+    if (g_soundManager->m_playSounds == 0 && !g_unnamed691209)
         return;
     if (!g_unk698764)
         return;
@@ -746,7 +767,7 @@ void soundManager::startMP3(const char* filename, int loopCount, unsigned char s
         return;
     if (!m_ds)
         return;
-    if (m_playSounds == 0 && !g_unk691209)
+    if (m_playSounds == 0 && !g_unnamed691209)
         return;
     if (!g_unk698760)
         return;

@@ -29,6 +29,15 @@
 #include "textwdgt.h"
 #include "winmgr.h"
 
+DATA(0x00697774) int g_unnamed697774;
+DATA(0x006976dc) int g_tcpHostStatus;
+
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x00699274) int g_unnamed699274;
+DATA(0x006994e4) int g_unnamed6994e4;
+DATA(0x0069ca50) CHotSeatMan* g_hotSeatMan;
+
 // remote.cpp's CHourGlass wrapper expands these two singleselectionwindow
 // helpers at each use. They stay file-local declarations because this is the
 // only remote consumer and widening the shared header would perturb its TUs.
@@ -220,7 +229,7 @@ DATA(0x00699551) bool g_mPlayerHost;
 DATA(0x00699510) int g_defeatedAllPlayers;
 // Dreamcast publishes gcTCPAddress as char[21]; retail's client launch arm
 // passes this exact cell both to the log formatter and InitConnection.
-DATA(0x00699274) extern int g_unnamed699274;
+
 // The PC layout is crossed from the HD build through whole-function operand
 // correspondence; the names and types are the Dreamcast CodeView globals.
 DATA(0x00697758) char g_tcpAddress[21];
@@ -308,7 +317,7 @@ CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
 {
     if (wasCompressed)
         *wasCompressed = 0;
-    if (!g_videoPaused)
+    if (!g_networkActive69954c)
         return 0;
     if (!m_msgQueue.size())
         return 0;
@@ -1698,7 +1707,6 @@ unsigned char handleMPlayerLaunch()
     g_logFile.log(DATA_COMPGEN(0x00682c50, remoteMPlayerDetected,
                             "Detected MPlayer launch."));
 
-    DATA(0x006994e4) extern int g_unnamed6994e4;
     g_unnamed699274 = 1;
     g_unnamed6994e4 = 1;
     g_mpNetProtocol = MP_TCP;
@@ -2044,7 +2052,7 @@ void handlePlayerDead(int deadGuy, unsigned char showMsg)
         g_defeatedAllPlayers = 0;
         g_gameOver = 1;
     } else {
-        if (!g_unk691209 && showMsg) {
+        if (!g_unnamed691209 && showMsg) {
             sprintf(g_text, g_generalText->getText(6),
                     g_game->getPlayerName(deadGuy));
             normalDialog(g_text, 1, -1, -1, 10, deadGuy, -1, -1,
@@ -2331,7 +2339,6 @@ unsigned char CSaveScreen::isSaved()
 }
 
 void showVideo(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);
-void closeVideo();  // 0x599050
 
 VA(0x00557410, 0x1E)  // dc 0x11ec64
 CGameTransferSmack::CGameTransferSmack()
@@ -2375,7 +2382,7 @@ VA(0x005574b0, 0x12D)  // dc 0x11ece4
 void CGameTransferSmack::setPercentage(float pct)
 {
     m_lastFrame = static_cast<int>(pct * 20.0f);
-    setCurrentSmackFrame(m_lastFrame);
+    SmackManager::gotoSmackerFrame(m_lastFrame);
     drawCurrentFrame();
 
     char text[256];
@@ -2402,7 +2409,7 @@ void CGameTransferSmack::setPercentage(float pct)
 // E:\gamedcs\remote.cpp:2784, dc 0x11ede8
 inline void CGameTransferSmack::drawCurrentFrame()
 {
-    drawCurrentSmackFrame();
+    SmackManager::drawSmackerFrame();
 }
 
 // E:\gamedcs\remote.cpp:2789
@@ -2410,7 +2417,7 @@ VA(0x005575e0, 0x15)  // dc 0x11edec
 void CGameTransferSmack::stop()
 {
     if (m_started) {
-        closeVideo();
+        SmackManager::closeSmacker();
         m_started = 0;
     }
 }

@@ -188,7 +188,7 @@ extern unsigned long g_timers[10];
 
 // Retail .bss pointer cell used by both map-extra accessors. The complete
 // linearization is ((z * height + y) * width + x), with 16-bit elements.
-DATA(0x006989f8) extern unsigned short* g_mapExtra;
+extern unsigned short* g_mapExtra;
 
 // The shared fonts oldmain (0x4ee3e0) loads by name and ShutDown
 // (0x4f3690) releases through the resource vtable, in retail's own .bss
@@ -212,14 +212,14 @@ extern font* g_smallFont;
 // The first cell of the same run: army::DrawToBuffer (0x43e140) draws
 // the troop-count box's number with it, which is the reader the note
 // above was waiting on.
-DATA(0x00698a14) extern font* g_calligraphicFont;
+extern font* g_calligraphicFont;
 // The third cell of the same canonical font run.  CWaitForReadyPlayersDlg
 // passes it to CAnimatedDlg::Setup.
-DATA(0x00698a04) extern font* g_tinyFont;
+extern font* g_tinyFont;
 // The fourth cell of the run (bigfont.fnt): the lobby window's panel
 // titles (TSingleSelectionWindow::Update, 0x584550) draw with it.
-DATA(0x00698a0c) extern font* g_mediumFont;
-DATA(0x00698a10) extern font* g_bigFont;
+extern font* g_mediumFont;
+extern font* g_bigFont;
 
 unsigned short getMapExtra(int x, int y, int z);
 unsigned short* getMapExtraPtr(int x, int y, int z);
@@ -278,7 +278,7 @@ void lostGame();
 // null-checks its result calls it (67 B at 0x4f42c0, no args, sprintf
 // into gText then ShutDown). DC kb.obj MemError, dc 0xe44f0/64 B,
 // kb.cpp:4168 - arity and role both agree.
-DATA(0x006994ec) extern int g_unnamed6994ec;
+extern int g_unnamed6994ec;
 void memError();
 void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg);
 int gameUnsaved();                                       // 0x4f4310

@@ -1147,9 +1147,9 @@ void combatManager::drawFrame(bool update,
         drawCreatureAndHeroSubwindows();
 
     if (doDelayTil) {
-        GameTime::delayTil(g_combatStamp698998);
-        g_combatStamp698998 = GameTime::nextFrameTime(
-            g_combatStamp698998,
+        GameTime::delayTil(g_timers[0]);
+        g_timers[0] = GameTime::nextFrameTime(
+            g_timers[0],
             static_cast<long>(
                 delay
                 * g_combatSpeedFactors[g_unnamed698758.m_combatSpeed]));
@@ -1342,14 +1342,14 @@ void combatManager::drawOccupant(int index, int drawPriority,
     if (drawPriority == COMBAT_DRAW_PRIORITY_SINGLE_PASS)
         return;
 
-    if (index == g_moatColumns[row]
-            || (m_moatIsWide && index == g_outerMoatColumns[row]))
+    if (index == g_moatHexes[row]
+            || (m_moatIsWide && index == g_innerMoatHexes[row]))
         drawMoatOverlay(index);
 
     if (occupant->is(creatureDoubleWide)) {
         int front = index + occupant->offsetToFront(-1);
-        if (front == g_moatColumns[row]
-                || (m_moatIsWide && front == g_outerMoatColumns[row]))
+        if (front == g_moatHexes[row]
+                || (m_moatIsWide && front == g_innerMoatHexes[row]))
             drawMoatOverlay(front);
     }
 
@@ -1952,8 +1952,8 @@ void combatManager::cycleCombatScreen()
     g_systemPalette->cycle(112, 119, -1);
     drawFrame(1, 1, 0, 0, 1, 0);
     GameTime::get();
-    g_combatStamp6989b8 =
-        GameTime::nextFrameTime(g_combatStamp6989b8, 100);
+    g_timers[8] =
+        GameTime::nextFrameTime(g_timers[8], 100);
 }
 
 VA(0x00496840, 0x1c5)  // dc 0x86ea0

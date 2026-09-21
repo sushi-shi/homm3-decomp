@@ -1,6 +1,7 @@
 // 26 Dreamcast functions in link order; 20 compiler-generated $-thunks
 // omitted. Complete adds the two retail-only level-button callbacks below.
 #include "va.h"
+#include "objnames.h"
 #include "includes.h"
 
 #include "viewwrld.h"
@@ -520,8 +521,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
                 if (!playerBit
                     && (!g_vwTerrains
-                        || !g_adventureObjectLandBlocked
-                                [objType->m_objectType][12]))
+                        || !g_adventureObjectTraits[objType->m_objectType].m_trait3))
                     continue;
 
                 if (!objType->m_drawCells[
@@ -547,7 +547,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                         (objType->m_width - objCell->m_cellX - 1) * 32,
                         (objType->m_height - objCell->m_cellY - 1) * 32,
                         32, 32, g_memoryBuffer, 0, 0,
-                        g_unnamed6aacb0->m_data[64 + owner], false);
+                        g_systemPalette->m_data[64 + owner], false);
                 } else {
                     sprPtr->drawAdvObj(
                         (m_animCtr
@@ -609,7 +609,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
             if (row == OBJECT_DRAW_LAYER_HERO_BACK
                 && destY == CURSOR_DEST_Y0
-                && this->m_drawCursor && !::g_unnamed6989f4) {
+                && this->m_drawCursor && !::g_inViewWorld) {
                 if (destX == CURSOR_DEST_X0) {
                     this->drawCursor(0, 0);
                 } else if (destX == CURSOR_DEST_X1) {
@@ -619,7 +619,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 }
             } else if (row == OBJECT_DRAW_LAYER_HERO_FRONT
                        && destY == CURSOR_DEST_Y1
-                       && this->m_drawCursor && !::g_unnamed6989f4) {
+                       && this->m_drawCursor && !::g_inViewWorld) {
                 if (destX == CURSOR_DEST_X0) {
                     this->drawCursor(0, 1);
                 } else if (destX == CURSOR_DEST_X1) {
@@ -750,7 +750,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 
         if (!playerBit
             && (!g_vwTerrains
-                || !g_adventureObjectLandBlocked[objType->m_objectType][12]))
+                || !g_adventureObjectTraits[objType->m_objectType].m_trait3))
             continue;
 
         if (!objType->m_drawCells[
@@ -940,7 +940,7 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 
     if (!g_completeDrawAllCells
         && ((getMapExtra(srcX, srcY, z) & g_mapVisibilityBit)
-            || g_unnamed6989f4)) {
+            || g_inViewWorld)) {
         drawShroud = false;
     } else {
         drawShroud = true;
@@ -967,7 +967,7 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
             lookup = CLOUD_DRAW_FRAME_4;
     }
 
-    if (g_unnamed6989f4)
+    if (g_inViewWorld)
         return;
     if (!drawShroud)
         return;

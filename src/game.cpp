@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 #include "bitset_iterator.h"
 
@@ -53,6 +54,62 @@
 #include "viewarmywindow.h"
 #include "winfile.h"
 #include "winmgr.h"
+
+// Initial contents recovered from the pinned Complete image.
+DATA(0x0063d570) TCreatureType g_creatureGenerator1Types[80] = { TCreatureType(106), TCreatureType(96), TCreatureType(74), TCreatureType(66), TCreatureType(68), TCreatureType(10), TCreatureType(14), TCreatureType(112), TCreatureType(12), TCreatureType(94), TCreatureType(54), TCreatureType(104), TCreatureType(16), TCreatureType(113), TCreatureType(52), TCreatureType(18), TCreatureType(114), TCreatureType(30), TCreatureType(36), TCreatureType(86), TCreatureType(98), TCreatureType(84), TCreatureType(44), TCreatureType(102), TCreatureType(26), TCreatureType(4), TCreatureType(72), TCreatureType(46), TCreatureType(110), TCreatureType(42), TCreatureType(100), TCreatureType(34), TCreatureType(80), TCreatureType(76), TCreatureType(78), TCreatureType(8), TCreatureType(38), TCreatureType(48), TCreatureType(90), TCreatureType(88), TCreatureType(50), TCreatureType(82), TCreatureType(92), TCreatureType(28), TCreatureType(40), TCreatureType(22), TCreatureType(70), TCreatureType(115), TCreatureType(60), TCreatureType(108), TCreatureType(20), TCreatureType(24), TCreatureType(64), TCreatureType(62), TCreatureType(56), TCreatureType(58), TCreatureType(0), TCreatureType(2), TCreatureType(6), TCreatureType(118), TCreatureType(120), TCreatureType(130), TCreatureType(132), TCreatureType(133), TCreatureType(134), TCreatureType(135), TCreatureType(136), TCreatureType(137), TCreatureType(24), TCreatureType(112), TCreatureType(113), TCreatureType(114), TCreatureType(115), TCreatureType(138), TCreatureType(139), TCreatureType(140), TCreatureType(141), TCreatureType(142), TCreatureType(143), TCreatureType(144) };
+DATA(0x00677938) TCreatureType g_creatureGenerator4Types[2][4] = {
+    { TCreatureType(112), TCreatureType(114), TCreatureType(113), TCreatureType(115) },
+    { TCreatureType(32), TCreatureType(33), TCreatureType(116), TCreatureType(117) }
+};
+DATA(0x00677974) const char* g_artifactObjectDefFormat = "ava%04d.def";
+
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x00677998) double g_productionHandicap[3] = { 0.0, 0.15, 0.3 };
+DATA(0x00678170) const int g_initResourcesHuman[5][7] = {
+    { 30, 15, 30, 15, 15, 15, 30000 },
+    { 20, 10, 20, 10, 10, 10, 20000 },
+    { 15, 7, 15, 7, 7, 7, 15000 },
+    { 10, 4, 10, 4, 4, 4, 10000 },
+    { 0, 0, 0, 0, 0, 0, 0 }
+};
+DATA(0x006781fc) const int g_initResourcesComputer[5][7] = {
+    { 5, 2, 5, 2, 2, 2, 5000 },
+    { 10, 4, 10, 4, 4, 4, 7500 },
+    { 15, 7, 15, 7, 7, 7, 10000 },
+    { 15, 7, 15, 7, 7, 7, 10000 },
+    { 15, 7, 15, 7, 7, 7, 10000 }
+};
+
+DATA(0x0069ccb0) playerData* g_currentPlayer;
+DATA(0x0069cca8) int g_netLocalGamePos;
+DATA(0x00699554) int g_localGamePos;
+DATA(0x00691680) int g_unnamed691680;
+
+
+// Retail table initializers, in the layouts used by their named consumers.
+DATA(0x00677958) const char* g_resourceObjectDefs[NUM_RESOURCES] = { "avtwood0.def", "avtmerc0.def", "avtore0.def", "avtsulf0.def", "avtcrys0.def", "avtgems0.def", "avtgold0.def" };
+DATA(0x00677a0c) const char* g_townVillageObjectDefs[9] = { "AVCcast0.def", "AVCramp0.def", "AVCtowr0.def", "AVCinft0.def", "AVCnecr0.def", "AVCdung0.def", "AVCstro0.def", "AVCftrt0.def", "AVChfor0.def" };
+DATA(0x00677a30) const char* g_townFortObjectDefs[9] = { "AVCcasx0.def", "AVCramx0.def", "AVCtowx0.def", "AVCinfx0.def", "AVCnecx0.def", "AVCdunx0.def", "AVCstrx0.def", "AVCftrx0.def", "AVChforx.def" };
+DATA(0x00677a54) const char* g_townCapitolObjectDefs[9] = { "AVCcasz0.def", "AVCramz0.def", "AVCtowz0.def", "AVCinfz0.def", "AVCnecz0.def", "AVCdunz0.def", "AVCstrz0.def", "AVCforz0.def", "AVChforz.def" };
+DATA(0x00677978) int g_mineProduction[7] = { 2, 1, 2, 1, 1, 1, 1000 };
+DATA(0x006779b0) const int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
+DATA(0x0069fbf8) int g_newMapStartingBonus[8];
+DATA(0x0069fb24) int g_unnamed69fb24[8];
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x00697294) TTextResource* g_randomTavernText;
+DATA(0x0069774c) bool g_inCampaign;
+DATA(0x00697750) int g_weekType;
+DATA(0x006983fc) int g_weekTypeExtra;
+DATA(0x00697748) int g_monthType;
+DATA(0x00698834) int g_monthTypeExtra;
+DATA(0x006783c8) int g_mapWidth = 72;
+DATA(0x006783cc) int g_mapHeight = 72;
+DATA(0x0069d810) int g_unnamed69d810;
+DATA(0x0067814c) int g_heroGoldCost = 2500;
+DATA(0x0069950c) int g_unnamed69950c;
+DATA(0x0069951c) unsigned char g_unnamed69951c;
+DATA(0x0069ccc4) unsigned char g_unnamed69ccc4;
 
 type_point aiAttemptPuzzleGuess(long player);
 
@@ -159,24 +216,16 @@ const int g_neutralTownFortifiedReinforcementChance = 80;
 // remaining spellings describe only the retail use proven in DoNewTurn.
 DATA(0x006a79c4) extern const char* g_monthNames[10];
 DATA(0x006a7710) extern const char* g_weekNames[15];
-DATA(0x006a77a8) extern const char* g_lastDayWarningFormat;
-DATA(0x006a77ac) extern const char* g_oneDayWarningFormat;
-DATA(0x006a77b0) extern const char* g_normalMonthFormat;
-DATA(0x006a77b4) extern const char* g_creatureMonthFormat;
-DATA(0x006a77b8) extern const char* g_plagueMonthText;
-DATA(0x006a77bc) extern const char* g_normalWeekFormat;
-DATA(0x006a77c0) extern const char* g_creatureWeekFormat;
-DATA(0x006a77c4) extern const char* g_infernoWeekFormat;
 
 // The 256 canned-rumour text pointers are filled by the game-data loader.
 // Its first store is 0x696d9c and SetCannedRumour is the table's only
 // runtime reader.
-DATA(0x00696d9c) extern const char* g_cannedRumours[256];
+DATA(0x00696d9c) const char* g_cannedRumours[256];
 
 // randtvrn.txt itself, kept alive because the table above points into it.
 // InitializeRandomTavernText is its only writer and nothing else in the
 // image reads the slot.
-DATA(0x00697294) extern TTextResource* g_randomTavernText;
+
 
 const int g_allRandomArtifactClasses = 0x1e;
 const int g_campaignArmyOverrideHero = 45;
@@ -1106,7 +1155,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
 
     g_game->recordHideHero(ourHero, ourHero->m_owner, 0);
 
-    if (g_videoPaused) {
+    if (g_networkActive69954c) {
         CMCHideHero hideHero(ourHero->m_id);
         sendMapChange(&hideHero);
     }
@@ -1684,7 +1733,7 @@ char* playerData::getName()
     if ((!m_isHuman && _strcmpi(m_name, g_generalText->getText(
             GENERAL_TEXT_DEFAULT_PLAYER_NAME)) == 0) ||
         (m_isHuman && _strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")) == 0)) {
-        strcpy(m_name, g_playerColorNames[m_color]);
+        strcpy(m_name, g_colors[m_color]);
     }
     m_name[0] = toupper(m_name[0]);
     return m_name;
@@ -3399,7 +3448,7 @@ void game::giveTroopsToNeutralTown(int townId)
     armyGroup* townArmy = &currentTown->getArmy();
     TCreatureType creature;
     TCreatureType upgradedCreature;
-    TCreatureType upgradedValue = g_townUpgradedDwellingCreatures[
+    TCreatureType upgradedValue = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
         townType * TOWN_DWELLING_SLOTS + monsterLevel];
     creature = g_townDwellingCreatures[
         townType * TOWN_DWELLING_SLOTS + monsterLevel];
@@ -3681,7 +3730,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 // E:\gamedcs\game.cpp:4236
 VA(0x004bfe70, 0x6A8)  // dc 0xaada4
 void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
-                  NewMapCampaignContext* campaignContext, int gameVersion)
+                  TCampaignBrief::ScenarioStruct* campaignContext, int gameVersion)
 {
     g_inSetup698400 = 1;
 
@@ -3737,7 +3786,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
         g_game->m_campaign.doPreLoadCustomization();
     processOnMapHeroes();
     if (campaignContext != NULL)
-        campaignContext->newMapFn00487290();
+        campaignContext->placeCrossoverHeroes();
     createTownHeroes(playerHeroFaces);
 
     for (unsigned int mapDataIndex = 0;
@@ -3778,7 +3827,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                    sizeof(m_players[setupPlayer].m_resources));
             if (m_isTutorial)
                 memcpy(m_players[setupPlayer].m_resources,
-                       &g_neutralTownLevelWeightsEnd,
+                       g_neutralTownLevelWeights + 6,
                        sizeof(m_players[setupPlayer].m_resources));
         } else {
             m_players[setupPlayer].m_personality = random(0, 2);
@@ -3862,7 +3911,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
     }
 
     if (campaignContext != NULL)
-        campaignContext->newMapFn00487900();
+        campaignContext->giveCrossoverArtifacts();
 
     setupAdjacentMons();
     setupNewRumour();
@@ -9442,10 +9491,10 @@ void game::doNewTurn()
 
     if (g_currentPlayer->m_deathCountDown >= 0) {
         if (g_currentPlayer->m_deathCountDown == 1) {
-            sprintf(g_text, g_oneDayWarningFormat,
+            sprintf(g_text, g_newTurn[1],
                     g_currentPlayer->getName());
         } else {
-            sprintf(g_text, g_lastDayWarningFormat,
+            sprintf(g_text, g_newTurn[0],
                     g_currentPlayer->getName(),
                     g_currentPlayer->m_deathCountDown);
         }
@@ -9482,28 +9531,28 @@ void game::doNewTurn()
 
     if (m_week == 1 && g_weekType == g_weekTypeNormal) {
         if (g_monthTypeExtra == g_monthEffectNormal) {
-            sprintf(g_text, g_normalMonthFormat, g_monthNames[g_monthType]);
+            sprintf(g_text, g_newTurn[2], g_monthNames[g_monthType]);
         } else if (g_monthTypeExtra == g_monthEffectCreature) {
             strcpy(temp, getArmyName(g_monthType, 1));
             temp[0] = toupper(temp[0]);
-            sprintf(g_text, g_creatureMonthFormat,
+            sprintf(g_text, g_newTurn[3],
                     getArmyName(g_monthType, 1), temp);
         } else {
-            strcpy(g_text, g_plagueMonthText);
+            strcpy(g_text, g_newTurn[4]);
         }
     } else {
         switch (g_weekType) {
         case g_weekTypeNormal:
-            sprintf(g_text, g_normalWeekFormat, g_weekNames[g_weekTypeExtra]);
+            sprintf(g_text, g_newTurn[5], g_weekNames[g_weekTypeExtra]);
             break;
 
         case g_weekTypeCreature:
             strcpy(temp, getArmyName(g_weekTypeExtra, 1));
-            sprintf(g_text, g_creatureWeekFormat, temp, temp);
+            sprintf(g_text, g_newTurn[6], temp, temp);
             break;
 
         case g_weekTypeInfernoGrail:
-            sprintf(g_text, g_infernoWeekFormat,
+            sprintf(g_text, g_newTurn[7],
                     g_creatureTypeTraits[g_creatureImpId].m_name,
                     g_creatureTypeTraits[g_creatureImpId].m_name,
                     g_creatureTypeTraits[g_creatureImpId].m_growthRate,
@@ -9773,12 +9822,12 @@ void game::setSpecialRumour()
             sprintf(m_currentRumour,
                     g_generalText->getText(
                         g_specialRumourGrailAboveText),
-                    g_questMonsterDirections[direction]);
+                    g_directions[direction]);
         } else {
             sprintf(m_currentRumour,
                     g_generalText->getText(
                         g_specialRumourGrailBelowText),
-                    g_questMonsterDirections[direction]);
+                    g_directions[direction]);
         }
     } else {
         type_point artifactLocation(m_ultimateArtifactX, m_ultimateArtifactY,
@@ -9786,7 +9835,7 @@ void game::setSpecialRumour()
         const NewmapCell* cell = g_advManager->getCell(artifactLocation);
         sprintf(m_currentRumour,
                 g_generalText->getText(g_specialRumourGrailObjectText),
-                g_grailTerrainNames[cell->m_groundSet]);
+                g_rumourTerrainDescriptions[cell->m_groundSet]);
     }
 }
 
@@ -10209,7 +10258,7 @@ bool game::isLastHuman(int gamePos) const
 VA(0x004cec90, 0x18)  // dc 0xbc300
 bool game::isMultiplayer() const
 {
-    if (g_videoPaused || g_mpNetProtocol == MP_HOTSEAT)
+    if (g_networkActive69954c || g_mpNetProtocol == MP_HOTSEAT)
         return true;
     return false;
 }

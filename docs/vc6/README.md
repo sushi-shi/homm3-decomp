@@ -7,6 +7,7 @@ Wine remains the verdict. Do not use leaked compiler source as evidence.
 | Topic | Reference |
 | --- | --- |
 | Compiler binary map and labels | [C2 atlas](c2-atlas.md) |
+| Runtime libraries and strict linking | [Runtime link](runtime-link.md) |
 | Driver options and compiler passes | [Driver passes](driver-passes.md) |
 | Intermediate language | [IL format](il-format.md) |
 | Inlining | [Inliner](inliner.md), [optimization scope](optimization-scope.md) |

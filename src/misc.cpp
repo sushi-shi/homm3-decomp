@@ -6,23 +6,20 @@
 #include "misc.h"
 
 #include "crt_stdio.h"
+#include "kb.h"
 #include "kbwin.h"
 #include "prefs.h"
 #include "wingraph.h"
 #include "winmm_thunks.h"
 
-// The dialog FileSize raises when the open fails. Free /Gr row at
-// retail 0x4f3a60, inside kb.obj's carve bracket and UNCLAIMED, so the
-// name is a house ordinal placeholder (the town.h Unnamed526d20
-// precedent). Body: sprintf's a text-table format against the incoming
-// filename into a 500-byte frame buffer, then NormalDialog.
-void unnamed4f3a60(char* filename);
+// Initial contents recovered from the pinned Complete image.
+DATA(0x00698780) int g_showSubtitles;
 
 // Use the timer during video playback so the game RNG sequence stays unchanged.
 VA(0x0050b1d0, 0x54)  // dc 0xfd81c
 int safeRandom(int min, int max)
 {
-    if (!g_videoPaused) {
+    if (!g_networkActive69954c) {
         if (max == min)
             return max;
         if (max < min)
@@ -737,7 +734,7 @@ long fileSize(char* filename)
 {
     FILE* stream = fopen(filename, DATA_COMPGEN(0x0067ff20, fileSizeOpenMode, "r+b"));
     if (!stream)
-        unnamed4f3a60(filename);
+        fileError(filename);
     fseek(stream, 0, SEEK_END);
     long size = ftell(stream);
     fseek(stream, 0, SEEK_SET);

@@ -321,8 +321,8 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
         std::ostrstream quantityText;
         quantityText << quantity << std::ends;
 
-        int textWidth = g_unnamed698a08->lineWidth(quantityText.str());
-        int fontHeight = g_unnamed698a08->m_fs.m_height;
+        int textWidth = g_smallFont->lineWidth(quantityText.str());
+        int fontHeight = g_smallFont->m_fs.m_height;
 
         m_widgets.push_back(new textWidget((m_width - textWidth) / 2,
             sprite->getHeight() + 55, textWidth, fontHeight,

@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 #include "includes.h"
 
@@ -30,12 +31,13 @@
 #include "widget.h"
 #include "winmgr.h"
 
+DATA(0x0069d5e8) TRecruitWindow* g_recruitWindow;
+DATA(0x0069d5f4) HMENU__* g_recruitSavedMenu;
+
+
 // recruit.cpp-owned rollover text pointers. Each has exactly one retail
 // reader, the SetRolloverText expansion in recruitUnit::Main; the adjacent
 // TRecruitWindow constructor initializes the dialog family that owns them.
-DATA(0x006a7558) extern const char* g_recruitMaximumRolloverText;
-DATA(0x006a7560) extern const char* g_recruitAcceptRolloverText;
-DATA(0x006a7568) extern const char* g_recruitCancelRolloverText;
 
 VA(0x0054e750, 0x64)  // dc 0x118adc
 void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, long* cost)
@@ -113,13 +115,13 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         0x800));
 
     m_widgets.push_back(new coloredBorderFrame(0x40, 0xde, 0x63, 0x4c,
-        0x227, g_unnamed6aacb0->m_data[31], 0x400));
+        0x227, g_systemPalette->m_data[31], 0x400));
     m_widgets.push_back(new coloredBorderFrame(0x142, 0xde, 0x63, 0x4c,
-        0x228, g_unnamed6aacb0->m_data[31], 0x400));
+        0x228, g_systemPalette->m_data[31], 0x400));
     m_widgets.push_back(new coloredBorderFrame(0xac, 0xde, 0x43, 0x2a,
-        0x229, g_unnamed6aacb0->m_data[31], 0x400));
+        0x229, g_systemPalette->m_data[31], 0x400));
     m_widgets.push_back(new coloredBorderFrame(0xf6, 0xde, 0x43, 0x2a,
-        0x22a, g_unnamed6aacb0->m_data[31], 0x400));
+        0x22a, g_systemPalette->m_data[31], 0x400));
 
     m_widgets.push_back(new textWidget(0xf, 0x14, 0x1c8, 0x1a,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
@@ -320,7 +322,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
     m_widgets.push_back(m_creatureWidgets[slot]);
 
     m_widgets.push_back(new coloredBorderFrame(startX - 1, startY - 1,
-        102, 132, slot + 0x21a, g_unnamed6aacb0->m_data[31], 0x400));
+        102, 132, slot + 0x21a, g_systemPalette->m_data[31], 0x400));
 }
 
 VA(0x0054fea0, 0x42E)  // dc 0x11994c
@@ -441,7 +443,7 @@ int recruitUnit::open(int newPriority)
     strcpy(m_mgrName,
         DATA_COMPGEN(0x00682a18, recruitManagerName, "recruitManager"));
 
-    if (g_videoPaused && !g_currentPlayer->isLocalHuman()) {
+    if (g_networkActive69954c && !g_currentPlayer->isLocalHuman()) {
         g_recruitWindow->m_acceptButton->enable(0);
         g_recruitWindow->m_maximumButton->enable(0);
     }
@@ -570,7 +572,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     // block in GetMessage while iconic) read the same way for a
     // network-game flag. Renaming a 275-reference global is the
     // owning lane's call, so the call site keeps the declared name.
-    if (g_videoPaused && !g_currentPlayer->isLocalHuman()) {
+    if (g_networkActive69954c && !g_currentPlayer->isLocalHuman()) {
         g_recruitWindow->m_acceptButton->enable(0);
         g_recruitWindow->m_maximumButton->enable(0);
         g_recruitWindow->m_quantitySlider->enable(0);
@@ -627,31 +629,31 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_0_ID;
-    msg.m_extra = g_unnamed6aacb0->m_data[31];
+    msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_1_ID;
-    msg.m_extra = g_unnamed6aacb0->m_data[31];
+    msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_2_ID;
-    msg.m_extra = g_unnamed6aacb0->m_data[31];
+    msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_3_ID;
-    msg.m_extra = g_unnamed6aacb0->m_data[31];
+    msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = m_selectedPosition + RECRUIT_CREATURE_0_ID;
-    msg.m_extra = g_unnamed6aacb0->m_data[36];
+    msg.m_extra = g_systemPalette->m_data[36];
     g_recruitWindow->broadcastMessage(msg);
 }
 
@@ -662,16 +664,16 @@ inline void recruitUnit::setRolloverText(int codeY)
 {
     switch (codeY) {
     case RECRUIT_MAXIMUM_ID:
-        strcpy(g_text, g_recruitMaximumRolloverText);
+        strcpy(g_text, g_recruitHelp[0].m_text);
         break;
     case RECRUIT_CANCEL_ID:
-        strcpy(g_text, g_recruitCancelRolloverText);
+        strcpy(g_text, g_recruitHelp[2].m_text);
         break;
     case RECRUIT_ACCEPT_ID:
-        strcpy(g_text, g_recruitAcceptRolloverText);
+        strcpy(g_text, g_recruitHelp[1].m_text);
         break;
     default:
-        strcpy(g_text, g_emptyRolloverText);
+        strcpy(g_text, "");
         break;
     }
 
@@ -725,7 +727,7 @@ int recruitUnit::main(message& msg)
 {
     unsigned char abortDialog = g_turnDuration69d630.isExpired();
 
-    if (!abortDialog && g_videoPaused) {
+    if (!abortDialog && g_networkActive69954c) {
         unsigned char msgReceived = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
@@ -920,7 +922,7 @@ int recruitUnit::main(message& msg)
                                 creatureName = g_creatureTypeTraits[
                                     m_monsterType].m_pluralName;
                         } else {
-                            creatureName = g_emptyRolloverText;
+                            creatureName = "";
                         }
                         normalDialog(formatString(
                             g_generalText->getText(426), creatureName).c_str(),

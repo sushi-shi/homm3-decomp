@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 
 #include <stdio.h>
@@ -22,10 +23,13 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x00697784) unsigned long g_dialogDeadline697784;
+
 // Shared absolute deadline used by retail dialogs. Its timer role is proven
 // by this handler and the other dialog handlers that compare GameTime::Get()
 // against it before synthesizing WIDGET_END_DIALOG.
-DATA(0x00697784) extern unsigned long g_dialogDeadline697784;
+
 
 // Both are source-private in the DC levelupwindow compiland. Retail's ctor
 // stores its object through the first, and this handler is the only consumer
@@ -35,7 +39,6 @@ DATA(0x0067fa34) static int g_lastImHoverId = -1;
 
 // Text tables read directly by the retail constructor. The shared four-entry
 // primary-skill table is declared with the other game-wide data in game.h.
-DATA(0x006a7570) extern const char* g_skillMasteryNames[3];
 
 VA(0x004f8880, 0xE7E)  // dc 0xe8344
 TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
@@ -71,7 +74,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
         23, 151, 339, 23, g_text, "medfont.fnt", font::PRIMARY,
         TEXT2_ID, 5, 0, 8));
 
-    sprintf(g_text, "%s +1", g_primarySkillNames[gainedSkill]);
+    sprintf(g_text, "%s +1", g_statNames[gainedSkill]);
     m_widgets.push_back(new textWidget(
         23, 242, 339, 23, g_text, "medfont.fnt", font::PRIMARY,
         TEXT3_ID, 5, 0, 8));
@@ -81,9 +84,9 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
 
     if (secondChoice != -1) {
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_CHOICE],
-                g_skillMasteryNames[firstChoice % 3],
+                g_secondarySkillLevels[firstChoice % 3],
                 g_sSkillTraits[firstChoice / 3 - 1].m_name,
-                g_skillMasteryNames[secondChoice % 3],
+                g_secondarySkillLevels[secondChoice % 3],
                 g_sSkillTraits[secondChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             23, 270, 339, 52, g_text, "medfont.fnt", font::PRIMARY,
@@ -95,13 +98,13 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
 
         m_widgets.push_back(new coloredBorderFrame(
             122, 325, 47, 46, SKILLBORDER_1_ID,
-            g_unnamed6aacb0->m_data[45], 0x400));
+            g_systemPalette->m_data[45], 0x400));
         widget* addedLeft = m_widgets.back();
         addedLeft->setVisible(0);
 
         m_widgets.push_back(new coloredBorderFrame(
             220, 325, 47, 46, SKILLBORDER_2_ID,
-            g_unnamed6aacb0->m_data[45], 0x400));
+            g_systemPalette->m_data[45], 0x400));
         widget* addedRight = m_widgets.back();
         addedRight->setVisible(0);
 
@@ -112,30 +115,30 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             222, 326, 44, 44, SKILLICON_2_ID, "secskill.def",
             secondChoice, 0, 0, 0, 0x10));
 
-        sprintf(g_text, "%s\n%s", g_skillMasteryNames[firstChoice % 3],
+        sprintf(g_text, "%s\n%s", g_secondarySkillLevels[firstChoice % 3],
                 g_sSkillTraits[firstChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             102, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT6_ID, 5, 0, 8));
-        sprintf(g_text, "%s\n%s", g_skillMasteryNames[secondChoice % 3],
+        sprintf(g_text, "%s\n%s", g_secondarySkillLevels[secondChoice % 3],
                 g_sSkillTraits[secondChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             200, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT7_ID, 5, 0, 8));
     } else if (firstChoice != -1) {
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE],
-                g_skillMasteryNames[firstChoice % 3],
+                g_secondarySkillLevels[firstChoice % 3],
                 g_sSkillTraits[firstChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             23, 270, 339, 52, g_text, "medfont.fnt", font::PRIMARY,
             TEXT4_ID, 1, 0, 8));
         m_widgets.push_back(new coloredBorderFrame(
             169, 325, 47, 46, SKILLBORDER_1_ID,
-            g_unnamed6aacb0->m_data[45], 0x400));
+            g_systemPalette->m_data[45], 0x400));
         m_widgets.push_back(new iconWidget(
             170, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
             firstChoice, 0, 0, 0, 0x10));
-        sprintf(g_text, "%s\n%s", g_skillMasteryNames[firstChoice % 3],
+        sprintf(g_text, "%s\n%s", g_secondarySkillLevels[firstChoice % 3],
                 g_sSkillTraits[firstChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
             149, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
@@ -159,7 +162,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
     if (g_turnDuration69d630.isOn()
             && g_turnDuration69d630.isClose(15000))
         g_dialogDeadline697784 = GameTime::get() + 15000;
-    if (g_unk691209)
+    if (g_unnamed691209)
         g_dialogDeadline697784 = GameTime::get() + 2000;
 }
 

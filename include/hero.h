@@ -276,29 +276,13 @@ std::string readLengthPrefixedString(TAbstractFile* infile);
 // rather than in a .cpp because a line-initial `extern` in a .cpp is a
 // cleanliness-floor violation, and here rather than by including
 // kbwin.h / philai.h, whose closures hero.obj does not otherwise need.
-extern const char* g_skillMasteryNames[3];
 // Retail SetupHeroView indexes mastery values 1..3 from the pointer cell
 // immediately before gSkillMasteryNames, giving that biased view its own
 // relocation at 0x6a756c.
 // HeroScrn.txt row declarations shared with swapmgr's hero-exchange screen.
 // src/hero.cpp owns the DATA claims; these declarations only expose the
 // already-proven contiguous runtime text table to its source twin.
-DATA(0x006a756c) extern const char* g_skillMasteryNamesBiased[4];
-extern const char* g_heroScreenText0;
-extern const char* g_heroScreenNameFormat;
-extern const char* g_heroScreenMoraleHighText;
-extern const char* g_heroScreenMoraleNeutralText;
-extern const char* g_heroScreenMoraleLowText;
-extern const char* g_heroScreenLuckHighText;
-extern const char* g_heroScreenLuckNeutralText;
-extern const char* g_heroScreenLuckLowText;
-extern const char* g_heroScreenText9;
-extern const char* g_heroScreenArmyMoveFormat;
-extern const char* g_heroScreenSecondarySkillFormat;
-extern const char* g_heroScreenText22;
-extern const char* g_heroScreenText27;
-extern const char* g_heroScreenMixedArmyHelp;
-extern int g_videoPaused;
+extern int g_networkActive69954c;
 // 0x6aa9d8. DECLARATION ONLY - src/townmgr.cpp:163 owns the DATA claim,
 // and a second claim on one RVA is a fatal duplicate at delink. hero.obj
 // reads it at 0x4db7d3, 0x4dd9f1, 0x4dda8d, 0x4e1bad and 0x4e1c13;
@@ -314,8 +298,6 @@ extern int g_stablesMovementBonus;
 // hero::get_morale_description / get_luck_description. DECLARATION ONLY -
 // viewarmywindow.cpp owns the DATA claims on 0x6a57bc / 0x6a532c, and a
 // second claim on the same RVA is a fatal duplicate at delink time.
-extern const char* g_moraleTexts[42];
-extern const char* g_luckTexts[25];
 
 class hero : public type_obscuring_object {
 public:
@@ -1291,8 +1273,7 @@ public:
 };
 SIZE(type_movement_constants, 0x78);
 extern type_movement_constants g_moveConstants;
-extern int g_landMovement[21];
-DATA(0x0067d868) extern THeroClassTraits g_heroClassTraits[18];
+extern THeroClassTraits g_heroClassTraits[18];
 extern const THeroClassTraits (&g_heroClasses)[18];
 
 // Retail .data 0x67dce8 (reloc-evidence datum; read by strip::DrawOwner
@@ -1301,8 +1282,8 @@ extern const THeroClassTraits (&g_heroClasses)[18];
 // reference. Retail's parser settles the Complete bound: its direct
 // 0x5c-stride walk covers exactly 156 rows. The reference cell's retail
 // value is 0x679dd0; the loader begins at the +0x40 defaultName field.
-DATA(0x00679dd0) extern THeroTraits g_heroTraitsStorage[156];
-DATA(0x0067dce8) extern const THeroTraits (&g_heroTraits)[156];
+extern THeroTraits g_heroTraitsStorage[156];
+extern const THeroTraits (&g_heroTraits)[156];
 
 // E:\gamedcs\hero.cpp:267, dc 0xca7e8
 std::bitset<70> markArtifactSpells(int artifactId);
@@ -1314,21 +1295,21 @@ int heroView(int heroID, int noDismiss, int alreadyFaded,
 // and every artifact-drag path treats the pair as one artifact record.
 // The second is the selected army slot used by the hero-screen message
 // paths. Both spellings are role-derived because no retail symbols survive.
-DATA(0x00698a88) extern type_artifact g_heroScreenDraggedArtifact;
-DATA(0x00697738) extern int g_heroScreenArmySlot;
+extern type_artifact g_heroScreenDraggedArtifact;
+extern int g_heroScreenArmySlot;
 // HeroView stores GetLocalPlayer()->FindHero(gpCurrentHero->id) here before
 // SetupHeroView. UpdateHeroLocator compares it with topHero + locator index.
-DATA(0x00698b20) extern hero* g_currentHero;
+extern hero* g_currentHero;
 // HeroView's second argument, stashed on entry (0x4e1809 stores EDX
 // straight into this cell). SetupHeroView reads it as the "dismiss button
 // stays dead" latch, a full DWORD. The name is role-derived from
 // HeroView's own parameter and is PROVISIONAL.
-DATA(0x00698a84) extern int g_heroScreenHeroPosition;
+extern int g_heroScreenHeroPosition;
 // HeroView's FIRST argument, stashed on entry beside the one above
 // (0x4e1805 stores ECX straight into this cell). Role-derived from that
 // parameter and PROVISIONAL for the same reason.
-DATA(0x00698a90) extern int g_heroScreenNoDismiss;
-DATA(0x00698a50) extern int g_heroScreenHeroId;
+extern int g_heroScreenNoDismiss;
+extern int g_heroScreenHeroId;
 
 // The vtable and destructor prove direct CAdvPopup inheritance. Complete
 // carries nineteen equipped positions, one more than the DC TArtifactSlot
@@ -1444,7 +1425,7 @@ SIZE(THeroScreenWindow, 0x68);
 // it decides whether an EMPTY slot's widget is drawn at all, and it
 // gates both selection-highlight arms of an occupied slot. Role
 // inferred from those three reads; ORDINAL PLACEHOLDER name.
-DATA(0x00698a78) extern THeroScreenWindow* g_heroScreenWindow;
-DATA(0x00698a44) extern int g_heroScreenArmyStripLive;
+extern THeroScreenWindow* g_heroScreenWindow;
+extern int g_heroScreenArmyStripLive;
 
 #endif  /* HOMM3_HERO_H */

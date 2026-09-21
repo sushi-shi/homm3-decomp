@@ -21,7 +21,8 @@
 // active dialog here and its destructor clears it before widget teardown.
 DATA(0x00694f90) static TCombatOptionsWindow* g_combatOptionsWindow;
 
-DATA(0x006a55ac) THelpText g_combatOptionsHelp[39];
+// The shared Help.txt table is owned and filled by text.cpp.
+// Retail reads column 1 (right-click), four bytes after each row base.
 
 VA(0x0046e3b0, 0x1320)  // dc 0x66c48
 TCombatOptionsWindow::TCombatOptionsWindow()
@@ -350,7 +351,7 @@ int combatOptionsWindowHandler(message& msg)
             if (id >= 0) {
                 int helpID = g_combatOptionsWindow->convertID2HelpID(id);
                 if (helpID >= 0)
-                    normalDialog(g_combatOptionsHelp[helpID].m_text,
+                    normalDialog(g_combatOptionsHelp[helpID].m_rclick,
                         4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             }
         }

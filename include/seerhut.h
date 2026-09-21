@@ -19,7 +19,7 @@ struct type_point;
 // Complete's seer-hut name table replaced Dreamcast's const-char pointer
 // array with Dinkumware strings; TSeerHut::GetName keeps the shared header
 // accessor boundary over the revised storage.
-DATA(0x0069fab8) extern std::vector<std::string>* g_seerHutNamesPointer;
+extern std::vector<std::string>* g_seerHutNamesPointer;
 
 #pragma pack(push, 1)
 
@@ -49,7 +49,7 @@ public:
         const unsigned char playerNum) const
     {
         return m_quest
-            && m_quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
+            && m_quest->questTexts().m_text4.length()
             && playerHasInfo(playerNum)
             && m_quest;
     }
@@ -199,7 +199,7 @@ public:
         const unsigned char playerNum) const
     {
         return m_quest
-            && m_quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
+            && m_quest->questTexts().m_text4.length()
             && playerHasInfo(playerNum)
             && m_quest;
     }

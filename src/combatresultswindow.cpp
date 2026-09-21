@@ -23,6 +23,12 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Initial contents recovered from the pinned Complete image.
+DATA(0x006701a8) const char* const g_combatResultMusic[6] = { "win battle", "losecombat", "defend castle", "retreat battle", "surrender battle", "losecastle" };
+
+DATA(0x00695014) int g_combatResultFlag695014;
+
+
 // Source-private in the Dreamcast compiland. Retail's destructor is the only
 // body in this admitted subset that touches the active-window slot.
 DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;

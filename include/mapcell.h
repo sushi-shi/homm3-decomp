@@ -1213,8 +1213,6 @@ void upgradeCellExtraInfo(NewmapCell* cell, int saveVersion);
 // Retail .rdata 0x660428 stores a pointer to sixteen bytes per adventure-
 // object type. can_land proves byte zero as the trigger-object landing veto;
 // the remaining bytes stay opaque.
-DATA(0x00660428)
-extern const unsigned char (*g_adventureObjectLandBlocked)[16];
 
 // --- type_obscuring_object ---
 

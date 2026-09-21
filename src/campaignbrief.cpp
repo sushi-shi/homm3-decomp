@@ -5,6 +5,7 @@
 class message;
 static int campaignBriefHandler(message& msg);
 #include "campaignbrief.h"
+#include "game.h"
 
 #include "advmgr.h"
 #include "border.h"
@@ -54,10 +55,10 @@ void backupGameHeaders(game* dest, game* src);
 // by advancing from 0x006a6cb8 to 0x006a6ce0 in AddBonusIcons.
 DATA(0x006a6cb8) static THelpText g_campaignDifficultyHelp[5];
 
-// Both difficulty arrow buttons retain this shared message callback at
-// retail 0x00457cb0. Its source name is not yet independently recovered;
-// keep the role name provisional until that function is admitted.
-int campaignDifficultyHandler(message& msg);
+// Complete-only arrow callbacks. AddBonusIcons takes 0x457f70 for the
+// left arrow and 0x457fc0 for the right; each responds to left release.
+static int decreaseCampaignDifficulty(message& msg);
+static int increaseCampaignDifficulty(message& msg);
 
 // E:\gamedcs\campaignbrief.cpp:437. The Dreamcast broadcasts the map
 // description as a second widget message; Complete hands it to the
@@ -139,6 +140,36 @@ void TCampaignBrief::select(int which)
     updateDifficultyButtons();
     updateAllyEnemyFlags();
     drawWindow(1, 0xffff0001, 0xffff);
+}
+
+// Retail-only: codeX at +4, qualifier at +0xc, owning window at +0x1c.
+VA(0x00457f70, 0x49)
+static int decreaseCampaignDifficulty(message& msg)
+{
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+            && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        TCampaignBrief* window = static_cast<TCampaignBrief*>(msg.m_window);
+        --g_game->m_setup.m_difficulty;
+        window->updateDifficultyButtons();
+        window->drawWindow(1, 0xffff0001, 0xffff);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
+}
+
+// Retail-only: codeX at +4, qualifier at +0xc, owning window at +0x1c.
+VA(0x00457fc0, 0x49)
+static int increaseCampaignDifficulty(message& msg)
+{
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+            && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        TCampaignBrief* window = static_cast<TCampaignBrief*>(msg.m_window);
+        ++g_game->m_setup.m_difficulty;
+        window->updateDifficultyButtons();
+        window->drawWindow(1, 0xffff0001, 0xffff);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
 }
 
 VA_COMPGEN(0x00457cb0, 0x2B8, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
@@ -323,12 +354,12 @@ void TCampaignBrief::addBonusIcons()
         704, 506, 16, 16, 240,
         DATA_COMPGEN(0x00660e1c, campaignDifficultyArrowSprite,
                      "SlideBuH.def"),
-        campaignDifficultyHandler, 0, 1);
+        decreaseCampaignDifficulty, 0, 1);
     m_difficultyIncrButton = new type_func_button(
         730, 506, 16, 16, 241,
         DATA_COMPGEN(0x00660e1c, campaignDifficultyArrowSprite,
                      "SlideBuH.def"),
-        campaignDifficultyHandler, 2, 3);
+        increaseCampaignDifficulty, 2, 3);
     m_widgets.push_back(m_difficultyDecrButton);
     m_widgets.push_back(m_difficultyIncrButton);
 }
@@ -853,7 +884,7 @@ TCampaignBrief::~TCampaignBrief()
         g_unk698760 = m_oldVolume;
         g_soundManager->switchAmbientMusic(
             g_terrainMusicIds[g_advManager->m_lastTerrain]);
-        *g_game = *g_saveHeader;
+        backupGameHeaders(g_game, g_saveHeader);
         delete g_saveHeader;
         g_saveHeader = 0;
         g_advManager->redrawAdvScreen(1, 0);

@@ -242,6 +242,8 @@ def _dispatch(argv: list[str]) -> int:
         return run_module("homm3.analysis.compiler_warnings", *argv[1:])
     if argv and argv[0] == "victor":
         return run_module("homm3.victor", *argv[1:])
+    if argv and argv[0] == "link":
+        return cmd_link(argparse.Namespace(link_args=argv[1:]))
     if argv and argv[0] == "rmg":
         return run_module("homm3.rmg", *argv[1:])
 

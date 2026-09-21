@@ -145,15 +145,6 @@ enum ESingleSelectionWidgetId {
     SSW_TEAM_ALIGNMENT = 387
 };
 
-// A cross-module dword at 0x6989f0 the game-selection window branches on
-// during teardown; DoModal and ExitDialog each take a distinct path when it
-// equals 3, the only value recoverable here. House ordinal placeholder,
-// exactly the textntry.h EField68 rule - names the domain member so the
-// branch is not a magic compare, without claiming an attested identity.
-enum EWindowMode6989f0 {
-    WINDOW_MODE_6989F0_3 = 3
-};
-
 // Constructor-only domains. DC gives gameMode as int; retail proves the two
 // non-default commands by their load/save setup arms. The context values are
 // intentionally ordinal until the gpVideoGameState owner supplies names.
@@ -199,20 +190,14 @@ struct GameSelectionHeadersStruct;
 // Difficulty mirror (DC lastDiff), teardown mode and constructor headings.
 // Retail addresses: 0x683454, 0x6989f0 and 0x6a8098 respectively.
 extern int g_lastDiff;
-extern int g_unnamed6989f0;
-extern const char* g_unnamed6a8098[];
 
 // Shared selection/scenario presentation tables. Retail scenarioinfo.obj
 // references the same addresses initialized and owned by
 // singleselectionwindow.obj, which proves external rather than file linkage.
 extern const char* g_turnDurationText[11];
 extern int g_difficultyRatingPercent[5];
-extern const char* g_unnamed6a77ec[];
-extern const char* g_unnamed6a7800[3];
-extern const char* g_unnamed6a7e18[];
 // Starting-bonus labels shared by the selection window and the Complete-only
 // scenario-info row renderer. No source symbol survives for the retail table.
-extern const char* g_unnamed6a5e14[];
 
 enum ESingleSelectionGameContext {
     SINGLE_SELECTION_CONTEXT_1 = 1,

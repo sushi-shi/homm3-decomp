@@ -511,7 +511,7 @@ build events: phony build/objdiff/base/events.obj
 build build/objdiff/base/kb.obj: cl src/kb.cpp | $
     scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
     config/units.toml config/project.toml
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = kb
 build kb: phony build/objdiff/base/kb.obj
 build build/objdiff/base/bottomviewsubwindow.obj: cl $
@@ -607,7 +607,7 @@ build fly: phony build/objdiff/base/fly.obj
 build build/objdiff/base/quickherowindow.obj: cl src/quickherowindow.cpp | $
     scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
     config/units.toml config/project.toml
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = quickherowindow
 build quickherowindow: phony build/objdiff/base/quickherowindow.obj
 build build/objdiff/base/systemoptionswindow.obj: cl $
@@ -631,7 +631,7 @@ build viewwrld: phony build/objdiff/base/viewwrld.obj
 build build/objdiff/base/newgame.obj: cl src/newgame.cpp | $
     scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
     config/units.toml config/project.toml
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = newgame
 build newgame: phony build/objdiff/base/newgame.obj
 build build/objdiff/base/advspells.obj: cl src/advspells.cpp | $
@@ -668,7 +668,7 @@ build artifact: phony build/objdiff/base/artifact.obj
 build build/objdiff/base/quicktownwindow.obj: cl src/quicktownwindow.cpp | $
     scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
     config/units.toml config/project.toml
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = quicktownwindow
 build quicktownwindow: phony build/objdiff/base/quicktownwindow.obj
 build build/objdiff/base/slider.obj: cl src/slider.cpp | $

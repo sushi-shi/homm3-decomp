@@ -185,6 +185,6 @@ SIZE(TMultiPlayerWindow, 0x100);
 
 // The singleton the ctor latches to `this` (0x50e050+0x66) and the dtor
 // nulls (0x50ee40+0x51). No DC public names it - provisional house name.
-DATA(0x0069ca28) extern TMultiPlayerWindow* g_multiPlayerWindow;
+extern TMultiPlayerWindow* g_multiPlayerWindow;
 
 #endif  /* HOMM3_MULTIPLAYERWINDOW_H */

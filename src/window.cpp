@@ -589,7 +589,7 @@ unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
         id = hit->m_id;
     if (id != m_rolloverId) {
         m_rolloverId = id;
-        const char* emptyText = g_emptyRolloverText;
+        const char* emptyText = "";
         const char* text = emptyText;
         if (hit) {
             text = hit->getHelpText();

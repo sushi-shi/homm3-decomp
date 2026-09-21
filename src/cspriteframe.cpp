@@ -7,6 +7,11 @@
 #include "palette.h"
 #include "pcx.h"
 
+// Static mask storage, set by SetPixelFormat before sprite drawing.
+DATA(0x006968a4) TBlendMask CSpriteFrame::s_div2mask;
+DATA(0x006968aa) unsigned short CSpriteFrame::s_div4mask;
+
+
 // The retail destructor calls the common nothrow deallocator directly;
 // this declaration keeps /GX from manufacturing an unwind frame.
 __declspec(nothrow) void __cdecl operator delete(void* p);

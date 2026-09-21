@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 
 #include <stdio.h>
@@ -295,14 +296,14 @@ void game::getVictoryConditionText(char* text)
                 sprintf(text, (*g_generalText)[322],
                         victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
                             ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
-                            : g_emptyRolloverText,
-                        g_questMonsterDirections[direction]);
+                            : "",
+                        g_directions[direction]);
             } else {
                 sprintf(text, (*g_generalText)[669],
                         victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
                             ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
-                            : g_emptyRolloverText,
-                        g_questMonsterDirections[direction]);
+                            : "",
+                        g_directions[direction]);
             }
             break;
         }

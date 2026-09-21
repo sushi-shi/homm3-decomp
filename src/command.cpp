@@ -28,6 +28,9 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Retail table initializers, in the layouts used by their named consumers.
+DATA(0x0069773c) int g_combatControlNetPos[2];
+
 // The remaining pending-action rungs, byte-proven by ProcessNextAction's
 // twelve-entry switch. Kept as command-local integral constants instead of
 // enlarging EAIOrder: this TU has a measured VC6 enum-population wall.
@@ -221,15 +224,15 @@ void combatManager::doAnimations()
     if (static_cast<const combatManager*>(this)->isQuickCombat())
         return;
 
-    if (GameTime::elapsedSince(g_combatStamp698998) >= 0) {
+    if (GameTime::elapsedSince(g_timers[0]) >= 0) {
         pollSound();
         long interval = static_cast<long>(
             g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 100.0f);
-        g_combatStamp698998 =
-            GameTime::nextFrameTime(g_combatStamp698998, interval);
+        g_timers[0] =
+            GameTime::nextFrameTime(g_timers[0], interval);
     }
 
-    if (GameTime::elapsedSince(g_combatStamp6989b8) >= 0
+    if (GameTime::elapsedSince(g_timers[8]) >= 0
             && !g_processingCombatAction) {
         g_processingCombatAction = 1;
         cycleCombatScreen();
@@ -246,7 +249,7 @@ int combatManager::main(message& msg)
 
     unsigned char automaticTurn = 0;
     if (!static_cast<const combatManager*>(this)->isQuickCombat()
-            && m_thisNetHasControl && (m_autoCombatOn || g_unk691209)) {
+            && m_thisNetHasControl && (m_autoCombatOn || g_unnamed691209)) {
         if (static_cast<const combatManager*>(this)->isQuickCombat()
                 || isComputerAction(getCurrentArmy())) {
             while (msg.m_id != MESSAGE_KEY_DOWN
@@ -706,7 +709,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 1;
         if (owner->m_skillLevel[20] == 0)
             return 1;
-        if (g_unk691209 && m_thisNetHasControl)
+        if (g_unnamed691209 && m_thisNetHasControl)
             return 1;
         break;
     case CREATURE_CATAPULT:
@@ -716,7 +719,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 1;
         if (owner->m_skillLevel[eSecSkillSiegeBallistics] == 0)
             return 1;
-        if (g_unk691209 && m_thisNetHasControl)
+        if (g_unnamed691209 && m_thisNetHasControl)
             return 1;
         break;
     case CREATURE_FIRST_AID_TENT:
@@ -726,13 +729,13 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 1;
         if (owner->m_skillLevel[27] == 0)
             return 1;
-        if (g_unk691209 && m_thisNetHasControl)
+        if (g_unnamed691209 && m_thisNetHasControl)
             return 1;
         break;
     default:
         if (m_autoCombatOn && g_unnamed698758.m_combatAutoCreatures)
             return 1;
-        if (g_unk691209 && m_thisNetHasControl)
+        if (g_unnamed691209 && m_thisNetHasControl)
             return 1;
         break;
     }
@@ -916,7 +919,7 @@ int combatManager::processCombatMsg(message& msg)
 
     case MESSAGE_MOUSE_MOVE: {
         unsigned char pointerChanged = 0;
-        if ((m_autoCombatOn || g_unk691209)
+        if ((m_autoCombatOn || g_unnamed691209)
                 && (static_cast<const combatManager*>(this)->isQuickCombat()
                     || isComputerAction(getCurrentArmy())))
             break;
@@ -1080,7 +1083,7 @@ int combatManager::processCombatMsg(message& msg)
         case KEYCODE_F:
             if (m_creaturePlacement)
                 break;
-            if ((m_autoCombatOn || g_unk691209)
+            if ((m_autoCombatOn || g_unnamed691209)
                     && (static_cast<const combatManager*>(this)->isQuickCombat()
                         || isComputerAction(getCurrentArmy())))
                 break;
@@ -1870,7 +1873,7 @@ void combatManager::doVictory(int winningGroup)
         g_dialogDeadline697784 = 0;
         dialogtimeout = 0;
     }
-    if (g_unk691209)
+    if (g_unnamed691209)
         g_dialogDeadline697784 = GameTime::get() + 2000;
 
     if (winningGroup != -1 && m_playerIds[winningGroup] != -1
@@ -1889,7 +1892,7 @@ void combatManager::doVictory(int winningGroup)
             showEagleEye(winningGroup, dialogtimeout);
             showLootedArtifacts(lootedArtifacts, dialogtimeout);
         }
-    } else if (!g_unk691209) {
+    } else if (!g_unnamed691209) {
         TCombatResultsWindow resultsWindow(
             m_heroes[0], m_heroes[1], lastAliveSideIndex, winningGroup,
             m_defendingTown != 0, 0);
@@ -2140,7 +2143,7 @@ void combatManager::getControl()
     m_lastCellIndex = -1;
     m_lastCommand = -99;
 
-    if (!m_autoCombatOn && !g_unk691209)
+    if (!m_autoCombatOn && !g_unnamed691209)
         g_inputManager->flush();
 
     if (m_status == STATUS_ACTIVE
@@ -2166,7 +2169,7 @@ void combatManager::getControl()
         m_thisNetHasControl = 1;
 
     if (m_combatWindow && m_combatWindow->m_controlSubWindow) {
-        if ((m_autoCombatOn != zero || g_unk691209)
+        if ((m_autoCombatOn != zero || g_unnamed691209)
                 && isComputerAction()) {
             static_cast<type_combat_sub_window*>(
                 m_combatWindow->m_controlSubWindow)->disableAllButtons();

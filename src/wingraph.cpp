@@ -16,6 +16,9 @@
 #include "soundmgr.h"
 #include "winmgr.h"
 
+DATA(0x006989d4) int g_unnamed6989d4;
+
+
 // Private desktop metrics, written as one consecutive triple by
 // GetDesktopInfo's three GetDeviceCaps calls (BITSPIXEL, HORZRES, VERTRES)
 // and read back by the two six-byte accessors below. No retail or Dreamcast

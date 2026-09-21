@@ -239,7 +239,7 @@ static void upgradeCreatures(hero* currentHero, const town* currentTown)
                 DWELLING_0_UPG_ID + dwelling, 1))
             continue;
 
-        TCreatureType upgrade = g_townUpgradedDwellingCreatures[
+        TCreatureType upgrade = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
             currentTown->m_type * 2 * TOWN_DWELLING_COUNT + dwelling];
 
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
@@ -681,7 +681,7 @@ static void moveHero(hero* currentHero, long* dangerZones,
     g_unnamed69ccd4 = 0;
     g_advManager->m_advWindow->animateBottomView(0);
     if (currentHero->m_movePoints > 0) {
-        if (!g_unnamed698790 && !g_videoPaused
+        if (!g_unnamed698790 && !g_networkActive69954c
             && mapExtraPosAndAdjacentsSet(
                 currentHero->m_x, currentHero->m_y, currentHero->m_z,
                 g_mapVisibilityBit))

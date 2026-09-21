@@ -23,6 +23,9 @@
 #include "winfile.h"
 #include "winmgr.h"
 
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x0069ca28) TMultiPlayerWindow* g_multiPlayerWindow;
+
 unsigned char initRemote(eNetGameType netGameType, const char* userName);
 unsigned char initConnection(char* address, _DPCOMPORTADDRESS* comportInfo);
 void remoteCleanup();
@@ -649,14 +652,14 @@ void TMultiPlayerWindow::update()
                                     g_windowManager->m_screenBitmap, wx + 0x12,
                                     wy, 0, 1);
                     int fontColor = isSelected ? 5 : 1;
-                    g_unnamed698a08->drawBoundedString(
+                    g_smallFont->drawBoundedString(
                         nameBuf, g_windowManager->m_screenBitmap, wx + 0x2b, wy,
                         0x80, 0x16, font::TColor(fontColor), 5, -1);
-                    g_unnamed698a08->drawBoundedString(
+                    g_smallFont->drawBoundedString(
                         userBuf, g_windowManager->m_screenBitmap, wx + 0xad, wy,
                         0x80, 0x16, font::TColor(fontColor), 5, -1);
                     sprintf(countBuf, "%d", numPlayers);
-                    g_unnamed698a08->drawBoundedString(
+                    g_smallFont->drawBoundedString(
                         countBuf, g_windowManager->m_screenBitmap, wx + 0x130,
                         wy, 0x1e, 0x16, font::TColor(fontColor), 5, -1);
                     ++row;

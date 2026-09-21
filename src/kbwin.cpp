@@ -187,7 +187,7 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
                     g_musicWasPlaying = 0;
                     g_soundManager->resumeStream();
                     g_soundManager->resumeSamples();
-                    if (!g_videoPaused)
+                    if (!g_networkActive69954c)
                         videoResume();
                     g_mouseManager->showSystemCursor(0);
                     g_appDeactivated = 0;
@@ -196,7 +196,7 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
                 if (g_soundManager->musicPlaying() || g_soundManager->m_mp3Playing)
                     g_musicWasPlaying = 1;
                 g_soundManager->pauseSamples();
-                if (!g_videoPaused)
+                if (!g_networkActive69954c)
                     videoPause();
                 if (!g_appDeactivated)
                     g_mouseManager->showSystemCursor(1);
@@ -232,13 +232,13 @@ void process1WindowsMessage()
             DispatchMessageA(&message);
             continue;
         }
-        if (IsIconic(g_hwndApp) && !g_videoPaused) {
+        if (IsIconic(g_hwndApp) && !g_networkActive69954c) {
             do {
                 if (GetMessageA(&message, 0, 0, 0)) {
                     TranslateMessage(&message);
                     DispatchMessageA(&message);
                 }
-            } while (IsIconic(g_hwndApp) && !g_videoPaused);
+            } while (IsIconic(g_hwndApp) && !g_networkActive69954c);
         } else {
             break;
         }
@@ -436,8 +436,10 @@ int g_menusSuppressed;
 DATA(0x006987b8)
 int g_windowedMode;
 
+// Former provisional g_videoPaused: this is the network-session latch.
+// It prevents local window deactivation from pausing a live network game.
 DATA(0x0069954c)
-int g_videoPaused;
+int g_networkActive69954c;
 
 DATA(0x006989d0)
 int g_inSetupDialog;

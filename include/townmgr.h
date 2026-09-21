@@ -974,6 +974,5 @@ void doShipyard(int type);
 // The shared frame-pacing stamp at .bss 0x698998. cmbtmgr.h owns the
 // DATA claim (advmgr's Open/Main and drawing.cpp share the cell);
 // townManager::Main paces the panorama animation with it.
-extern unsigned long g_combatStamp698998;
 
 #endif  /* HOMM3_TOWNMGR_H */

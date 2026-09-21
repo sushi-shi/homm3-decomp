@@ -45,7 +45,7 @@ public:
 };
 SIZE(CHotSeatMan, 0xac);
 
-DATA(0x0069ca50) extern CHotSeatMan* g_hotSeatMan;
+extern CHotSeatMan* g_hotSeatMan;
 
 // DC publishes this exact 351-byte record and the cdecl varargs Log
 // signature.  Retail's global at 0x69d648 and its pushed-this call sites
@@ -264,7 +264,6 @@ public:
               font::EJustify justification,
               char* backgroundIcon, int backgroundFrame, int id, int style,
               int readType, int insetX, int insetY);
-    virtual ~CChatEdit();
     virtual int onKeyPress(message* msg);  // slot 15
     virtual unsigned char ignoreKey(message* msg);  // slot 16
     virtual void updateScreen();  // slot 19

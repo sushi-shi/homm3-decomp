@@ -42,6 +42,7 @@
 #include "multiplayerwindow.h"
 #include "newgame.h"
 #include "palette.h"
+#include "philai.h"
 #include "prefs.h"
 #include "remote.h"
 #include "resourcemanager.h"
@@ -60,6 +61,50 @@
 #include "townmgr.h"
 #include "wingraph.h"
 #include "winmgr.h"
+
+// Initial contents recovered from the pinned Complete image.
+DATA(0x0067f558) const float g_mapScoreDifficultyFactor[5] = { 0.800000011920929f, 1.0f, 1.2999999523162842f, 1.600000023841858f, 2.0f };
+
+// Original gText is 768 bytes in DC; retail's next datum starts at +0x300.
+DATA(0x006973d8) char g_text[768];
+// gTimers: ten shared deadlines; button::Select writes slot 2 at 0x6989a0.
+DATA(0x00698998) unsigned long g_timers[10];
+DATA(0x006985a8) CTimer g_globalTimer(0);
+DATA(0x006972b8) int g_gameOver;
+DATA(0x006783d0) unsigned char g_foregroundApp = 1;
+DATA(0x006994f0) int g_unnamed6994f0;
+DATA(0x00698a34) int g_unnamed698a34;
+// Players.pal and game.pal results stored by oldmain, before any dialogs.
+DATA(0x006aaca8) TPalette16* g_playerPalette;
+DATA(0x006aacac) TPalette24* g_playerPalette24;
+DATA(0x006aacb0) TPalette16* g_systemPalette;
+
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x006989f8) unsigned short* g_mapExtra;
+DATA(0x006994ec) int g_unnamed6994ec;
+
+// InitVars loads these five font resources at 0x698a04..0x698a14;
+// smallFont was also declared under the provisional g_unnamed698a08 name.
+DATA(0x00698a04) font* g_tinyFont;
+DATA(0x00698a08) font* g_smallFont;
+DATA(0x00698a0c) font* g_mediumFont;
+DATA(0x00698a10) font* g_bigFont;
+DATA(0x00698a14) font* g_calligraphicFont;
+
+// Manager pointer slots written by InitMainClasses, in its retail call
+// order. Every slot is in the PE zero-fill tail; shutdown owns deletion.
+DATA(0x00699500) executive* g_executive;
+DATA(0x006994e0) inputManager* g_inputManager;
+DATA(0x00699260) mouseManager* g_mouseManager;
+DATA(0x00699280) heroWindowManager* g_windowManager;
+DATA(0x006993c4) soundManager* g_soundManager;
+DATA(0x006994e8) game* g_game;
+DATA(0x00699268) advManager* g_advManager;
+DATA(0x006993d0) combatManager* g_combatManager;
+DATA(0x006994fc) townManager* g_townManager;
+DATA(0x00699284) searchArray* g_searchArray;
+DATA(0x0069928c) philAI* g_philAI;
 
 // type_dialog_icon::set's two Dreamcast min calls and retail's equality exit
 // use the same text-column clamp.
@@ -350,7 +395,7 @@ int earlySetup()
         bool found = 0;
         i = 0;
         while (1) {
-            if (i >= g_videoHeaderCount)
+            if (i >= g_videoCount3)
                 break;
             if (!_strcmpi(g_videoHeader3[i].m_name,
                           DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
@@ -363,7 +408,7 @@ int earlySetup()
         if (!found) {
             i = 0;
             while (1) {
-                if (i >= g_videoHeaderCount)
+                if (i >= g_videoCount3)
                     break;
                 if (!_strcmpi(g_videoHeader3[i].m_name,
                               DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
@@ -401,7 +446,7 @@ void initMainClasses()
     g_combatManager = new combatManager;
     g_townManager = new townManager;
     g_searchArray = new searchArray;
-    g_unnamed69928c = new CAITurnDriver69928c;
+    g_philAI = new philAI;
 }
 
 VA(0x004edda0, 0x407)  // dc 0xdfa3c
@@ -545,9 +590,9 @@ int oldmain()
 
 static void deleteMainClasses()
 {
-    if (g_unnamed69928c)
-        delete g_unnamed69928c;
-    g_unnamed69928c = 0;
+    if (g_philAI)
+        delete g_philAI;
+    g_philAI = 0;
     if (g_searchArray)
         delete g_searchArray;
     g_searchArray = 0;
@@ -866,7 +911,7 @@ int oldmain()
     g_playerPalette24 = ResourceManager::getPalette24("Players.pal");
 
     g_tinyFont = ResourceManager::getFont("tiny.fnt");
-    g_unnamed698a08 = ResourceManager::getFont("smalfont.fnt");
+    g_smallFont = ResourceManager::getFont("smalfont.fnt");
     g_mediumFont = ResourceManager::getFont("medfont.fnt");
     g_bigFont = ResourceManager::getFont("bigfont.fnt");
     g_calligraphicFont = ResourceManager::getFont("Calli10R.fnt");
@@ -1156,7 +1201,7 @@ int oldmain()
                     shutDown((*g_generalText)[1]);
                 unloadProgressBar();
 
-                if (g_videoPaused) {
+                if (g_networkActive69954c) {
                     waitForReadyToPlayMsg();
                     g_game->getLocalPlayer()->m_quickCombat = g_combatQuickMode69877c;
                     CCombatTypeMsg combatTypeMsg(g_combatQuickMode69877c);
@@ -1287,7 +1332,7 @@ int oldmain()
             }
         }
 
-        if (g_videoPaused)
+        if (g_networkActive69954c)
             unused = 1;
     }
 
@@ -1932,27 +1977,27 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
     if (downClick && rightClick) {
         switch (m_resource) {
         case RES_GOOD_LUCK:
-            normalDialog(g_luckTexts[0], NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog(g_luckInfo[0], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_NEUTRAL_LUCK:
-            normalDialog(g_luckTexts[1], NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog(g_luckInfo[1], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_BAD_LUCK:
-            normalDialog(g_luckTexts[2], NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog(g_luckInfo[2], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_GOOD_MORALE:
-            normalDialog(g_moraleTexts[0], NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog(g_moraleInfo[0], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_NEUTRAL_MORALE:
-            normalDialog(g_moraleTexts[1], NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog(g_moraleInfo[1], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_BAD_MORALE:
-            normalDialog(g_moraleTexts[2], NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog(g_moraleInfo[2], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_EXPERIENCE:
@@ -2148,7 +2193,7 @@ void playerDead(int whichPlayer)
             g_game->m_heroAvailability[recruitId] = -1;
     }
 
-    if (g_videoPaused) {
+    if (g_networkActive69954c) {
         if (g_game->isHuman(whichPlayer)) {
             handleRemoteDeadPlayerExit(whichPlayer, 0);
         } else {
@@ -2972,19 +3017,19 @@ void game::showMoraleInfo(hero* thisHero, int mbType)
     std::string text;
 
     if (morale > 0) {
-        text = formatString(g_moraleTexts[3], g_moraleTexts[0]);
+        text = formatString(g_moraleInfo[3], g_moraleInfo[0]);
         icon = 14;
     } else if (morale == 0) {
-        text = formatString(g_moraleTexts[3], g_moraleTexts[1]);
+        text = formatString(g_moraleInfo[3], g_moraleInfo[1]);
         icon = 15;
     } else {
-        text = formatString(g_moraleTexts[3], g_moraleTexts[2]);
+        text = formatString(g_moraleInfo[3], g_moraleInfo[2]);
         icon = 16;
     }
 
     std::string modifiers = thisHero->getMoraleDescription();
     if (modifiers.length() == 0)
-        text += g_moraleTexts[23];
+        text += g_moraleInfo[23];
     else
         text += modifiers;
 
@@ -2999,19 +3044,19 @@ void game::showLuckInfo(hero* thisHero, int mbType)
     int luck = thisHero->getLuck(0, 0, 1);
 
     if (luck > 0) {
-        sprintf(g_text, g_luckTexts[3], g_luckTexts[0]);
+        sprintf(g_text, g_luckInfo[3], g_luckInfo[0]);
         icon = 11;
     } else if (luck == 0) {
-        sprintf(g_text, g_luckTexts[3], g_luckTexts[1]);
+        sprintf(g_text, g_luckInfo[3], g_luckInfo[1]);
         icon = 12;
     } else {
-        sprintf(g_text, g_luckTexts[3], g_luckTexts[2]);
+        sprintf(g_text, g_luckInfo[3], g_luckInfo[2]);
         icon = 13;
     }
 
     std::string modifiers = thisHero->getLuckDescription();
     strcat(g_text,
-           modifiers.length() == 0 ? g_luckTexts[18] : modifiers.c_str());
+           modifiers.length() == 0 ? g_luckInfo[18] : modifiers.c_str());
 
     normalDialog(g_text, mbType, -1, 28, icon, 0,
                  -1, 0, -1, 0, -1, 0);
@@ -3348,7 +3393,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
                 "%d"), base);
             break;
         case CONGRATS_COLUMN_DIFFICULTY:
-            strcpy(temp, g_unnamed6a77ec[g_game->m_setup.m_difficulty]);
+            strcpy(temp, g_difficulty[g_game->m_setup.m_difficulty]);
             break;
         case CONGRATS_COLUMN_SCORE:
             sprintf(temp, DATA_COMPGEN(0x00660a1c, dialogDecimalFormat,
@@ -3394,7 +3439,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
                         break;
                     case CONGRATS_COLUMN_DIFFICULTY:
                         strcpy(temp,
-                               g_unnamed6a77ec[g_game->m_setup.m_difficulty]);
+                               g_difficulty[g_game->m_setup.m_difficulty]);
                         break;
                     case CONGRATS_COLUMN_SCORE:
                         sprintf(temp, DATA_COMPGEN(0x00660a1c,
@@ -3984,7 +4029,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
         break;
 
     case RES_COLOR:
-        m_text = g_playerColorNames[m_qualifier];
+        m_text = g_colors[m_qualifier];
         m_spriteName = DATA_COMPGEN(
             0x006601fc, dialogPlayerCrestSprite, "crest58.def");
         m_spriteFrameIndex = m_qualifier;
@@ -4003,11 +4048,11 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
             m_text = formatString(
                 DATA_COMPGEN(0x006778a4, dialogQuantityFormat, "%d %s"),
                 static_cast<unsigned short>(m_qualifier),
-                g_primarySkillNames[m_spriteFrameIndex]);
+                g_statNames[m_spriteFrameIndex]);
         } else {
             m_text = formatString(
                 DATA_COMPGEN(0x00677278, dialogBonusFormat, "+%d %s"),
-                m_qualifier, g_primarySkillNames[m_spriteFrameIndex]);
+                m_qualifier, g_statNames[m_spriteFrameIndex]);
         }
         break;
 
@@ -4028,7 +4073,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     }
 
     case RES_SECONDARY_SKILL:
-        m_text = g_skillMasteryNames[m_qualifier % 3];
+        m_text = g_secondarySkillLevels[m_qualifier % 3];
         m_text += DATA_COMPGEN(0x00660330, dialogSkillSeparator, " ");
         m_text += g_sSkillTraits[m_qualifier / 3 - 1].m_name;
         m_spriteName = DATA_COMPGEN(
@@ -4115,7 +4160,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 
         int wordWidth = 2;
         while (*current && *current != ' ') {
-            wordWidth += g_unnamed698a08->getCharacterWidth(*current);
+            wordWidth += g_smallFont->getCharacterWidth(*current);
             ++current;
         }
         if (wordWidth > m_textWidth)
@@ -4123,16 +4168,16 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     }
 
     m_textWidth = min(m_textWidth, g_dialogIconMaxTextWidth);
-    int lines = g_unnamed698a08->lineLength(m_text.c_str(), m_textWidth);
-    m_textHeight = g_unnamed698a08->m_fs.m_height * lines;
+    int lines = g_smallFont->lineLength(m_text.c_str(), m_textWidth);
+    m_textHeight = g_smallFont->m_fs.m_height * lines;
 
     while (lines > 1 && m_textHeight > m_textWidth * 2 / 3) {
         // Both retail and the Dreamcast delay slot store the grown width
         // before entering min; the clamp is a second assignment.
         m_textWidth = m_textWidth * 3 / 2;
         m_textWidth = min(m_textWidth, g_dialogIconMaxTextWidth);
-        lines = g_unnamed698a08->lineLength(m_text.c_str(), m_textWidth);
-        m_textHeight = g_unnamed698a08->m_fs.m_height * lines;
+        lines = g_smallFont->lineLength(m_text.c_str(), m_textWidth);
+        m_textHeight = g_smallFont->m_fs.m_height * lines;
         if (m_textWidth == g_dialogIconMaxTextWidth)
             break;
     }
@@ -4450,7 +4495,7 @@ VA_COMPGEN(0x004f6810, 0x179, IMPLICIT_COPY_CTOR, type_dialog_icon)
 VA(0x004f6990, 0xC8C)  // dc 0xe60dc
 void doNormalDialog(TNormalDialogInfo dialogInfo)
 {
-    if (!g_videoPaused
+    if (!g_networkActive69954c
             && !g_turnDuration69d630.isOn()
             && !g_unnamed691209)
         dialogInfo.m_timeout = 0;
@@ -4809,4 +4854,11 @@ VA(0x004f79e0, 0x24)  // decorated identity + map-extents arithmetic
 unsigned short* getMapExtraPtr(int x, int y, int z)
 {
     return &g_mapExtra[(z * g_mapHeight + y) * g_mapWidth + x];
+}
+
+// EarlySetup at 0x4ed66a passes ".\\" in ECX to the shared release ret
+// at 0x5bc690. DC kb.cpp:648 calls the older CLogFile::InitLogFile() instead;
+// Complete's directory-taking hook has no work in this release build.
+void initLogFile(const char* path)
+{
 }

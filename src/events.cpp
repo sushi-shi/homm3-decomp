@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 #include "includes.h"
 
@@ -1391,7 +1392,7 @@ void advManager::doEventBlackBox(hero* currentHero, NewmapCell* cell,
         currentHero->checkLevel();
     }
 
-    if (!giveBlackBoxReward(g_emptyRolloverText, currentHero, cell, point,
+    if (!giveBlackBoxReward("", currentHero, cell, point,
                             humanPlayer, blackBox)) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
@@ -1420,7 +1421,7 @@ void advManager::handleMapEvent(hero* currentHero, NewmapCell* cell,
             } else {
                 normalDialog(text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
-                text = g_emptyRolloverText;
+                text = "";
             }
         }
         if (doCombat(point, currentHero, &currentHero->m_army, -1, 0, 0,
@@ -1595,7 +1596,7 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    creatureBankEvent(currentHero, cell, g_emptyRolloverText, point,
+    creatureBankEvent(currentHero, cell, "", point,
                       humanPlayer);
 }
 
@@ -1775,7 +1776,7 @@ void advManager::doEventDragonCity(hero* currentHero, NewmapCell* cell,
 
     if (!humanPlayer && aiValueOfEvent(currentHero, point) <= 0)
         return;
-    creatureBankEvent(currentHero, cell, g_emptyRolloverText, point,
+    creatureBankEvent(currentHero, cell, "", point,
                       humanPlayer);
 }
 
@@ -2739,13 +2740,13 @@ void advManager::doEventRefugeeCamp(hero* currentHero, NewmapCell* cell,
             sprintf(g_text,
                     g_adventureEventText->getText(
                         ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY),
-                    g_adventureObjectNames[cell->m_type]);
+                    g_quickViewText[cell->m_type]);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
         sprintf(g_text,
                 g_adventureEventText->getText(ADV_EVENT_TEXT_REFUGEE_CAMP),
-                g_adventureObjectNames[cell->m_type],
+                g_quickViewText[cell->m_type],
                 getArmyName(cell->m_objectIndex, 2));
         normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
@@ -3544,7 +3545,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
                              -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             if (humanPlayer)
-                normalDialog(g_emptyRolloverText, 1, -1, -1, 8,
+                normalDialog("", 1, -1, -1, 8,
                              reward->m_artifact, -1, 0, -1, 0, -1, 0);
             // The Complete monster reward stores a decoded map ordinal; type_artifact retains its DC TArtifact constructor.
             type_artifact artifact(static_cast<TArtifact>(reward->m_artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
@@ -3560,7 +3561,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
     do {
         if (*qty) {
             if (humanPlayer)
-                normalDialog(g_emptyRolloverText, 1, -1, -1, resource,
+                normalDialog("", 1, -1, -1, resource,
                              *qty, -1, 0, -1, 0, -1, 0);
             currentHero->giveResource(resource, *qty);
         }
@@ -3607,7 +3608,7 @@ void advManager::monstersFight(hero* currentHero, NewmapCell* cell,
 
 void aiJoinDecision(hero* currentHero, TCreatureType creature, short amount);
 unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
-                                TCreatureType type, int amount,
+                                TCreatureType type, short amount,
                                 long goldCost);
 void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 
@@ -4829,7 +4830,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     }
     case UNIVERSITY:
-        if (!humanPlayer || g_unk691209) {
+        if (!humanPlayer || g_unnamed691209) {
             aiVisitUniversity(currentHero,
                                 cell->getUniversity());
         } else {
@@ -5463,7 +5464,7 @@ void advManager::doEventUndeadLair(hero* currentHero, NewmapCell* cell, const ch
         return;
     }
 
-    creatureBankEvent(currentHero, cell, g_emptyRolloverText, point,
+    creatureBankEvent(currentHero, cell, "", point,
                       humanPlayer);
 }
 

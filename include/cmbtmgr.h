@@ -41,18 +41,6 @@ public:
     virtual ~CCombatOwnedObject();
 };
 
-// Per-projectile launch offsets and frame-angle boundaries. Retail indexes
-// the table at 0x67ff24 with an 84-byte stride: three signed coordinate
-// pairs followed by eighteen float boundaries.
-struct TMissileStartInfo {
-public:
-    short m_offsets[3][2];
-    float m_angles[18];
-};
-SIZE(TMissileStartInfo, 0x54);
-
-extern const TMissileStartInfo* g_missileStartInfo;
-
 // One segment of an animated lightning bolt. THE DREAMCAST DUMP HAS NO
 // MEMBER EVIDENCE FOR THIS TYPE AT ALL - members.csv carries zero rows
 // and the NAME comes only from the three spells.cpp prototypes that take
@@ -312,7 +300,7 @@ public:
     int m_castY;
     int m_castFrame;
 };
-DATA(0x0063bd40) extern const TCombatHeroSprite g_combatHeroSprites[18];
+extern const TCombatHeroSprite g_combatHeroSprites[18];
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
@@ -1107,7 +1095,7 @@ public:
     // routine with the creature-cast selector passed by command.cpp.
     void initiateSpell(SpellID spellToCast, int creatureSpell);
     unsigned char placeObstacle(int obstacleId);
-    void unnamed46a520(army* stack);  // 0x46a520
+    void markMovingArmy(army* stack);  // 0x46a520
     unsigned char checkObstacleAttacks(army* thisArmy,
                                          unsigned char isWalking);
     void lootDeadHero(int side,
@@ -1291,7 +1279,6 @@ public:
     // this declaration alone already costs GetCommand 92.5714 ->
     // 92.5357 unconditionally (include-set class, bisected), so it is
     // scoped to army.cpp and the field waits for the same lane.
-    void markMovingArmy(const army* movingArmy);  // 0x46a520
     // 0x465ad0 (0x443), already carved and carcassed in cmbtmgr.cpp.
     // army::range_attack (0x440160) short-circuits into it for an ARROW
     // TOWER, passing that stack's indexToAttack as the tower position -
@@ -1925,13 +1912,11 @@ extern combatManager* g_combatManager;
 // CheckGetAIMove caches the displayed surrender price here. No surviving
 // retail or Dreamcast symbol supplies a public spelling, so the name keeps
 // its address ordinal.
-DATA(0x00695030) extern long g_surrenderCost695030;
-DATA(0x00698998) extern unsigned long g_combatStamp698998;
-DATA(0x006989b8) extern unsigned long g_combatStamp6989b8;
-DATA(0x006985a3) extern unsigned char g_combatFlag6985a3;
+extern long g_surrenderCost695030;
+extern unsigned char g_combatFlag6985a3;
 // Set while the combat action pump is active; process_move_then_attack clears
 // it on a win before the ResetMouse path. Definition belongs to drawing.cpp.
-DATA(0x00697744) extern unsigned char g_combatFlag697744;
+extern unsigned char g_combatFlag697744;
 DATA(0x006989ec) extern int g_processingCombatAction;
 
 // The combat random seed, .data 0x66d840. SetupCombat parks its iSeed
@@ -1974,7 +1959,7 @@ extern const int g_combatDeploySlots63d1dc[7][7];
 // LowerDoor and RaiseDoor. The current DATA contract cannot express its
 // size, so the stripped target still represents interior relocations as
 // separate symbols; source keeps the retail-proven aggregate shape.
-DATA(0x00694f30) extern TDrawbridgeBounds g_drawbridgeBounds694f30;
+extern TDrawbridgeBounds g_drawbridgeBounds694f30;
 
 // The clip rectangle every combat-drawing pass intersects its dirty
 // region with before handing it to heroWindowManager::UpdateScreen.
@@ -1989,7 +1974,7 @@ DATA(0x00694f30) extern TDrawbridgeBounds g_drawbridgeBounds694f30;
 // choice produces is masked (ResetLimitCreature is exact through the
 // identical aggregate copy). NAME IS A SOURCE-FACING INVENTION and
 // carries its address - no roster row, string or DC global reaches it.
-DATA(0x00694f18) extern TDrawbridgeBounds g_combatDrawLimits694f18;
+extern TDrawbridgeBounds g_combatDrawLimits694f18;
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot
@@ -2042,16 +2027,16 @@ public:
     unsigned int m_flags;  // +0x8
 };
 SIZE(TSpellEffectTraits, 0xc);
-DATA(0x00641e08) extern const TSpellEffectTraits g_spellEffectTraits[];
+extern const TSpellEffectTraits g_spellEffectTraits[];
 
 // The moat's per-town base damage, at .rdata 0x63bd18 and indexed by
 // town type: SetupAndLoadObstacles folds [0x63bd20] for the Tower,
 // which is 0x63bd18 + 4*TOWN_TOWER. searchArray::set_moat (0x4b3290)
 // and mark_firewalls (0x4215e0) read the same table with a live index.
 // Name is a BOOTSTRAP INVENTION - no roster attests it.
-DATA(0x0063bd18) extern const int g_moatDamage[];
+extern const int g_moatDamage[];
 
-DATA(0x006a5d60) extern const char* g_moatDamageMessages[9];
+extern const char* g_moatDamageMessages[9];
 
 // The thirty-two hexes two facing boats occupy, at .rdata 0x63d368.
 // SetupAndLoadObstacles walks it as a POINTER and ends the walk on the
@@ -2059,34 +2044,21 @@ DATA(0x006a5d60) extern const char* g_moatDamageMessages[9];
 // the delinked reference names the combatManager vtable there - so the
 // extent is exactly (0x63d3e8 - 0x63d368) / 4 == 32. Name is a
 // BOOTSTRAP INVENTION.
-DATA(0x0063d368) extern const int g_boatBlockedHexes[];
+extern const int g_boatBlockedHexes[];
 DATA(0x0063c7ca) extern const unsigned short g_obstacleMagicTerrainMasks[];
-DATA(0x0063bec0) extern const unsigned short g_largeObstacleTerrainMasks[];
-DATA(0x0063bec2) extern const unsigned short g_largeObstacleMagicTerrainMasks[];
-DATA(0x0063becc) extern const short g_largeObstacleHexes[];
 
 // LowerDoor's quick-combat bypass and the four redraw-bound sources.
 // Names are address ordinals because no surviving public symbol names
 // them; widths and uses are byte-proven by the retail body.
-DATA(0x0069877c) extern int g_combatQuickMode69877c;
+extern int g_combatQuickMode69877c;
 extern int g_combatActive698a18;
 
-DATA(0x00694ea8) extern int g_combatHexLeft694ea8;
-DATA(0x00694eac) extern int g_combatHexTop694eac;
-DATA(0x00694eb0) extern int g_combatHexRight694eb0;
-DATA(0x00694eb4) extern int g_combatHexBottom694eb4;
-DATA(0x00694ed8) extern int g_combatHexLeft694ed8;
-DATA(0x00694edc) extern int g_combatHexTop694edc;
-DATA(0x00694ee0) extern int g_combatHexRight694ee0;
-DATA(0x00694ee4) extern int g_combatHexBottom694ee4;
-DATA(0x00694ef0) extern int g_combatHexLeft694ef0;
-DATA(0x00694ef4) extern int g_combatHexTop694ef4;
-DATA(0x00694ef8) extern int g_combatHexRight694ef8;
-DATA(0x00694efc) extern int g_combatHexBottom694efc;
-DATA(0x00694f08) extern int g_combatHexLeft694f08;
-DATA(0x00694f0c) extern int g_combatHexTop694f0c;
-DATA(0x00694f10) extern int g_combatHexRight694f10;
-DATA(0x00694f14) extern int g_combatHexBottom694f14;
+// Rectangles built by the retail static initializers at 0x4626a0..0x462759.
+extern SLimitData g_combatHexLimits694ea8;
+extern SLimitData g_combatHexLimits694ed8;
+extern SLimitData g_combatHexLimits694ef0;
+extern SLimitData g_combatHexLimits694f08;
+
 
 // The row-column table one hex LEFT of gCastleWallColumns, at 0x63bce8
 // (retail bytes 0b 1c 2c 3d 4d 5f 6f 81 92 a4 b5 - each entry exactly
@@ -2095,13 +2067,13 @@ DATA(0x00694f14) extern int g_combatHexBottom694f14;
 // IsInMoat walks all eleven entries looking for an exact hit. Name is
 // a BOOTSTRAP INVENTION in the style of gCastleWallColumns - no roster
 // attests it.
-extern const unsigned char g_moatColumns[];
+extern const unsigned char g_moatHexes[];
 
 // The row-column table one hex left again, at 0x63bcf4 (bytes 0a 1b 2b
 // 3c 4c 5e 6e 80 91 a3 b4). Only IsInMoat reads it, and only when the
 // defending town is a Fortress - the second moat ring. Name is a
 // BOOTSTRAP INVENTION.
-extern const unsigned char g_outerMoatColumns[];
+extern const unsigned char g_innerMoatHexes[];
 
 
 // The five wall segments the castle AI checks, at 0x63abe0: the
@@ -2115,7 +2087,6 @@ extern const unsigned char g_outerMoatColumns[];
 // rectangles sixteen separate ints. Neither is defined here - findpath
 // and ai only read them, and an unclaimed extern still pairs.
 extern const long g_castleWallGateTargets[5];   // 0x63abe0
-extern const long g_castleWallGateTargetsEnd[]; // 0x63abf4, one past
 
 
 // Windows fixed-viewport implementations. CE drawing.cpp:513/514 forwards

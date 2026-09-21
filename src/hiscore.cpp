@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 
 #include <fcntl.h>
@@ -26,6 +27,128 @@
 #include "textwdgt.h"
 #include "winmgr.h"
 
+// Initial contents recovered from the pinned Complete image.
+DATA(0x0067f1fc) short g_highScoreCreatureTable[118][2] = {
+    { 4, 42 },
+    { 8, 28 },
+    { 12, 98 },
+    { 16, 70 },
+    { 20, 43 },
+    { 24, 56 },
+    { 28, 84 },
+    { 32, 29 },
+    { 36, 85 },
+    { 40, 0 },
+    { 44, 71 },
+    { 48, 57 },
+    { 52, 99 },
+    { 56, 58 },
+    { 60, 14 },
+    { 64, 1 },
+    { 68, 2 },
+    { 72, 100 },
+    { 76, 59 },
+    { 80, 86 },
+    { 84, 15 },
+    { 88, 16 },
+    { 92, 72 },
+    { 96, 101 },
+    { 100, 44 },
+    { 104, 30 },
+    { 108, 3 },
+    { 112, 88 },
+    { 116, 31 },
+    { 120, 87 },
+    { 124, 17 },
+    { 128, 18 },
+    { 132, 73 },
+    { 136, 45 },
+    { 140, 89 },
+    { 144, 32 },
+    { 148, 60 },
+    { 152, 104 },
+    { 156, 105 },
+    { 160, 61 },
+    { 164, 115 },
+    { 168, 113 },
+    { 172, 19 },
+    { 176, 74 },
+    { 180, 114 },
+    { 184, 4 },
+    { 187, 112 },
+    { 190, 46 },
+    { 193, 75 },
+    { 196, 47 },
+    { 199, 33 },
+    { 202, 90 },
+    { 205, 6 },
+    { 208, 48 },
+    { 211, 5 },
+    { 214, 49 },
+    { 217, 8 },
+    { 220, 22 },
+    { 223, 76 },
+    { 226, 20 },
+    { 229, 21 },
+    { 232, 106 },
+    { 235, 62 },
+    { 238, 34 },
+    { 241, 77 },
+    { 244, 7 },
+    { 247, 116 },
+    { 250, 91 },
+    { 253, 35 },
+    { 256, 107 },
+    { 259, 9 },
+    { 262, 50 },
+    { 265, 117 },
+    { 268, 63 },
+    { 271, 23 },
+    { 274, 78 },
+    { 277, 64 },
+    { 280, 36 },
+    { 283, 102 },
+    { 286, 37 },
+    { 289, 92 },
+    { 292, 103 },
+    { 295, 79 },
+    { 298, 65 },
+    { 301, 93 },
+    { 304, 51 },
+    { 307, 94 },
+    { 310, 108 },
+    { 313, 95 },
+    { 316, 109 },
+    { 319, 80 },
+    { 322, 81 },
+    { 325, 52 },
+    { 328, 24 },
+    { 331, 53 },
+    { 334, 10 },
+    { 337, 38 },
+    { 340, 25 },
+    { 343, 66 },
+    { 346, 11 },
+    { 349, 67 },
+    { 352, 39 },
+    { 355, 96 },
+    { 358, 68 },
+    { 361, 40 },
+    { 364, 110 },
+    { 367, 69 },
+    { 370, 82 },
+    { 373, 26 },
+    { 376, 12 },
+    { 379, 54 },
+    { 382, 111 },
+    { 385, 97 },
+    { 388, 55 },
+    { 391, 41 },
+    { 394, 27 },
+    { 397, 83 },
+    { 32767, 13 }
+};
+
 // The file-name pointer and the threshold/creature pairs are both
 // hiscore.obj-owned retail data.  The latter is deliberately only declared:
 // this TU needs the first two signed shorts of each four-byte record, while
@@ -34,9 +157,7 @@ DATA(0x0067f1f0)
 static const char* g_highScoreFileName =
     DATA_COMPGEN(0x0067f4d0, highScoreFileName, "HiScore.dat");
 DATA(0x0067f1f4) static int g_highScoreRanks[2];
-DATA(0x0067f1fc) extern short g_highScoreCreatureTable[][2];
-DATA(0x006a5ecc) extern char* g_highScoreDefaults0[11][4];
-DATA(0x006a7f08) extern char* g_highScoreDefaults1[11][4];
+
 DATA(0x006991c0) THighScoreWindow* g_highScoreWindow;
 DATA(0x006993cc) highScoreManager* g_highScoreManager;
 DATA(0x0069955c) int g_showHighScore;
@@ -125,7 +246,6 @@ bool CHSInputDlg::onOK()
     return 1;
 }
 
-void unnamed4f3a60(char* filename);
 void memError();
 
 VA(0x004e8fb0, 0xBD)  // dc 0xd7a08
@@ -133,15 +253,15 @@ void highScoreManager::resetHighScores()
 {
     memset(m_highScores, 0, sizeof(m_highScores));
     for (int i = 0; i < 11; ++i) {
-        strncpy(m_highScores[1][i].m_playerName, g_highScoreDefaults1[i][0], 41);
-        strncpy(m_highScores[1][i].m_land, g_highScoreDefaults1[i][1], 41);
-        m_highScores[1][i].m_days = atoi(g_highScoreDefaults1[i][2]);
-        m_highScores[1][i].m_score = atoi(g_highScoreDefaults1[i][3]);
+        strncpy(m_highScores[1][i].m_playerName, g_highScoreStandardDefault[i][0], 41);
+        strncpy(m_highScores[1][i].m_land, g_highScoreStandardDefault[i][1], 41);
+        m_highScores[1][i].m_days = atoi(g_highScoreStandardDefault[i][2]);
+        m_highScores[1][i].m_score = atoi(g_highScoreStandardDefault[i][3]);
 
-        strncpy(m_highScores[0][i].m_playerName, g_highScoreDefaults0[i][0], 41);
-        strncpy(m_highScores[0][i].m_land, g_highScoreDefaults0[i][1], 41);
-        m_highScores[0][i].m_days = atoi(g_highScoreDefaults0[i][2]);
-        m_highScores[0][i].m_score = atoi(g_highScoreDefaults0[i][3]);
+        strncpy(m_highScores[0][i].m_playerName, g_highScoreCampaignDefault[i][0], 41);
+        strncpy(m_highScores[0][i].m_land, g_highScoreCampaignDefault[i][1], 41);
+        m_highScores[0][i].m_days = atoi(g_highScoreCampaignDefault[i][2]);
+        m_highScores[0][i].m_score = atoi(g_highScoreCampaignDefault[i][3]);
     }
 }
 

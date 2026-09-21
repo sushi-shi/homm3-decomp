@@ -29,7 +29,6 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x006a56e0) extern THelpText g_adventureWindowHelp[];
 // 0x6a56e4 is g_adventureWindowHelp[0].m_rclick, not another array.
 // Dreamcast's gQuickViewText belongs to the distinct object-name table.
 

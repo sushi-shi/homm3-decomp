@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 #include "includes.h"
 
@@ -29,28 +30,14 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Retail table initializers, in the layouts used by their named consumers.
+DATA(0x00682910) const char* g_creatureBackgrounds[9] = { "CrBkgCas.pcx", "CrBkgRam.pcx", "CrBkgTow.pcx", "CrBkgInf.pcx", "CrBkgNec.pcx", "CrBkgDun.pcx", "CrBkgStr.pcx", "CrBkgFor.pcx", "CrBkgEle.pcx" };
+
 DATA(0x00693878)
 static TSplitWindow* g_splitWindow;
 
 // Runtime-loaded combat-stat description lines. Their storage addresses and
 // uses are retail-proven here; the text-resource loader owns the definitions.
-DATA(0x006a5384) extern const char* g_cursedGroundLuckText;
-DATA(0x006a5388) extern const char* g_hourglassLuckFormat;
-DATA(0x006a538c) extern const char* g_cloverFieldLuckText;
-DATA(0x006a5828) extern const char* g_cursedGroundMoraleText;
-DATA(0x006a582c) extern const char* g_noMoraleCreatureText;
-DATA(0x006a5830) extern const char* g_alignmentMoraleFormat;
-DATA(0x006a5834) extern const char* g_sameAlignmentMoraleText;
-DATA(0x006a5838) extern const char* g_undeadMoraleText;
-DATA(0x006a583c) extern const char* g_angelMoraleFormat;
-DATA(0x006a5840) extern const char* g_enemyCreatureStatFormat;
-DATA(0x006a5844) extern const char* g_spiritOppressionMoraleFormat;
-DATA(0x006a5848) extern const char* g_alwaysPositiveMoraleFormat;
-DATA(0x006a584c) extern const char* g_otherStatModifiersFormat;
-DATA(0x006a5854) extern const char* g_holyGroundEvilMoraleText;
-DATA(0x006a5858) extern const char* g_holyGroundGoodMoraleText;
-DATA(0x006a585c) extern const char* g_evilFogGoodMoraleText;
-DATA(0x006a5860) extern const char* g_evilFogEvilMoraleText;
 
 inline void TSplitWindow::updateSplitArmy(unsigned char update)
 {
@@ -796,22 +783,22 @@ VA(0x0044ade0, 0x79)  // dc 0x4efec
 const char* armyGroup::getArmySizeName(int howMany, int nameSet)
 {
     if (howMany < 5)
-        return g_apszArmySizeNames[0][nameSet];
+        return g_armySizeNames[0][nameSet];
     if (howMany < 10)
-        return g_apszArmySizeNames[1][nameSet];
+        return g_armySizeNames[1][nameSet];
     if (howMany < 20)
-        return g_apszArmySizeNames[2][nameSet];
+        return g_armySizeNames[2][nameSet];
     if (howMany < 50)
-        return g_apszArmySizeNames[3][nameSet];
+        return g_armySizeNames[3][nameSet];
     if (howMany < 100)
-        return g_apszArmySizeNames[4][nameSet];
+        return g_armySizeNames[4][nameSet];
     if (howMany < 250)
-        return g_apszArmySizeNames[5][nameSet];
+        return g_armySizeNames[5][nameSet];
     if (howMany < 500)
-        return g_apszArmySizeNames[6][nameSet];
+        return g_armySizeNames[6][nameSet];
     if (howMany < 1000)
-        return g_apszArmySizeNames[7][nameSet];
-    return g_apszArmySizeNames[8][nameSet];
+        return g_armySizeNames[7][nameSet];
+    return g_armySizeNames[8][nameSet];
 }
 
 VA(0x0044ae60, 0x29A)  // dc 0x4f078
@@ -1163,7 +1150,7 @@ std::string armyGroup::getMoraleDescription(
     unsigned char groupAlignments) const
 {
     if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
-        return g_cursedGroundMoraleText;
+        return g_moraleInfo[27];
 
     // NOT a named `const TCreatureTypeTraits&`: retail's CSE keeps the
     // 116-byte OFFSET (it stores the `shl eax,2` result, not an address)
@@ -1173,7 +1160,7 @@ std::string armyGroup::getMoraleDescription(
     // `add` per use, a stack slot of its own, and the table base loaded
     // BEFORE the index chain rather than after it.
     if (g_creatureTypeTraits[creature].m_attributes & g_ctaNoMorale)
-        return g_noMoraleCreatureText;
+        return g_moraleInfo[28];
 
     int currentMorale = getMorale(
         ownerHero, ownerTown, otherHero, otherGroup, 0,
@@ -1206,12 +1193,12 @@ std::string armyGroup::getMoraleDescription(
 
         holyGroundGood:
             --morale;
-            result += g_holyGroundGoodMoraleText;
+            result += g_moraleInfo[39];
             goto moraleTerrainDone;
 
         holyGroundEvil:
             ++morale;
-            result += g_holyGroundEvilMoraleText;
+            result += g_moraleInfo[38];
             goto moraleTerrainDone;
         }
         if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
@@ -1234,12 +1221,12 @@ std::string armyGroup::getMoraleDescription(
 
         evilFogGood:
             ++morale;
-            result += g_evilFogGoodMoraleText;
+            result += g_moraleInfo[40];
             goto moraleTerrainDone;
 
         evilFogEvil:
             --morale;
-            result += g_evilFogEvilMoraleText;
+            result += g_moraleInfo[41];
             goto moraleTerrainDone;
         }
 
@@ -1263,21 +1250,21 @@ std::string armyGroup::getMoraleDescription(
 
     if (numAlignments >= 3) {
         int penalty = numAlignments >= 5 ? -3 : 2 - numAlignments;
-        result += formatString(g_alignmentMoraleFormat,
+        result += formatString(g_moraleInfo[29],
                                 numAlignments, penalty);
     } else if (numAlignments == 1) {
-        result += g_sameAlignmentMoraleText;
+        result += g_moraleInfo[30];
     }
 
     if (hasSomeUndead())
-        result += g_undeadMoraleText;
+        result += g_moraleInfo[31];
 
     TCreatureType angelType;
     if (isMember(CREATURE_ANGEL) || isMember(CREATURE_ARCHANGEL)) {
         angelType = CREATURE_ANGEL;
         if (isMember(CREATURE_ARCHANGEL))
             angelType = CREATURE_ARCHANGEL;
-        result += formatString(g_angelMoraleFormat,
+        result += formatString(g_moraleInfo[32],
                                 getArmyName(angelType, 2));
     }
 
@@ -1289,7 +1276,7 @@ std::string armyGroup::getMoraleDescription(
             dragonType = CREATURE_GHOST_DRAGON;
         if (dragonType != CREATURE_NONE)
             result += formatString(
-                g_enemyCreatureStatFormat,
+                g_moraleInfo[33],
                 getArmyName(dragonType, 2));
     }
 
@@ -1306,7 +1293,7 @@ std::string armyGroup::getMoraleDescription(
     if (creature == CREATURE_MINOTAUR
         || creature == CREATURE_MINOTAUR_KING) {
         if (currentMorale < 1) {
-            result += formatString(g_alwaysPositiveMoraleFormat,
+            result += formatString(g_moraleInfo[35],
                                     getArmyName(creature, 2));
             currentMorale = 1;
         }
@@ -1318,7 +1305,7 @@ std::string armyGroup::getMoraleDescription(
                             ARTIFACT_SPIRIT_OF_OPPRESSION))) {
         if (currentMorale > 0) {
             result = formatString(
-                g_spiritOppressionMoraleFormat,
+                g_moraleInfo[34],
                 g_artifactTraits[ARTIFACT_SPIRIT_OF_OPPRESSION].m_name);
             currentMorale = 0;
         }
@@ -1326,7 +1313,7 @@ std::string armyGroup::getMoraleDescription(
 
     morale -= currentMorale;
     if (morale)
-        result += formatString(g_otherStatModifiersFormat, morale);
+        result += formatString(g_moraleInfo[36], morale);
 
     return result;
 }
@@ -1433,13 +1420,13 @@ std::string armyGroup::getLuckDescription(
     const armyGroup* enemyGroup, int magicTerrain) const
 {
     if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
-        return g_cursedGroundLuckText;
+        return g_luckInfo[22];
 
     if ((ourHero && ourHero->isWieldingArtifact(
                         ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))
         || (enemyHero && enemyHero->isWieldingArtifact(
                            ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))) {
-        return formatString(g_hourglassLuckFormat,
+        return formatString(g_luckInfo[23],
                              g_artifactTraits[
                                  ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR].m_name);
     }
@@ -1479,7 +1466,7 @@ std::string armyGroup::getLuckDescription(
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
             luck -= 2;
-            result.append(g_cloverFieldLuckText);
+            result.append(g_luckInfo[24]);
             break;
         default:
             break;
@@ -1495,7 +1482,7 @@ std::string armyGroup::getLuckDescription(
         if (enemyGroup->isMember(CREATURE_ARCH_DEVIL))
             devilType = CREATURE_ARCH_DEVIL;
         if (devilType != CREATURE_NONE)
-            result += formatString(g_enemyCreatureStatFormat,
+            result += formatString(g_moraleInfo[33],
                                     getArmyName(devilType, 2));
     }
 
@@ -1516,7 +1503,7 @@ std::string armyGroup::getLuckDescription(
 
     luck -= currentLuck;
     if (luck)
-        result += formatString(g_otherStatModifiersFormat, luck);
+        result += formatString(g_moraleInfo[36], luck);
 
     return result;
 }

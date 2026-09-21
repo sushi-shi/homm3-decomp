@@ -36,6 +36,17 @@
 #include "townmgr.h"
 #include "winmgr.h"
 
+// Retail table initializers, in the layouts used by their named consumers.
+DATA(0x00660878) const long g_wideDirectionRingIndex[8] = { 0, 1, 2, 4, 5, 6, 7, 3 };
+DATA(0x00660898) const long g_wideDirectionRingOrder[8] = { 0, 1, 2, 7, 3, 4, 5, 6 };
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x00660868) int g_walkingFrom = -1;
+DATA(0x0066086c) int g_walkingFrom2 = -1;
+DATA(0x00660870) int g_walkingTo = -1;
+DATA(0x00660874) int g_walkingTo2 = -1;
+DATA(0x00693858) int g_walkingYMod;
+
 #ifdef min
 #undef min
 #endif

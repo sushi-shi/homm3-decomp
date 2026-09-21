@@ -180,7 +180,7 @@ extern short g_ailDriverState[14];
 // (AdjustMusicVolumes, ResumeSamples, StopAllSamples, PauseSamples,
 // MemorySample). Ordinal placeholder - the role is proven, the NAME is
 // unattested by any source.
-extern unsigned char g_unk691209;
+extern unsigned char g_unnamed691209;
 
 // Retail .bss 0x698760 / 0x698764: the two volume settings
 // ConvertVolume selects between - 0x698760 for VOLUME_TYPE_101 (music,
