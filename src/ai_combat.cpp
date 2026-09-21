@@ -1417,7 +1417,7 @@ VA_COMPGEN(0x004276c0, 0x87, VECTOR_COPY_CTOR, type_monster_data)
 VA_COMPGEN(0x00427750, 0x21, VECTOR_SIZE, type_monster_data)
 
 // Dreamcast STLport instantiations have no retail counterpart: Complete
-// links Dinkumware. Their exclusions live in config/dc_only_generated.tsv.
+// links Dinkumware. Their exclusions live in config/source/dc_only_generated.tsv.
 
 // push_back on the combat AI's monster table retains Dinkumware's
 // three-argument vector::insert specialization in ai_combat.obj. Byte-

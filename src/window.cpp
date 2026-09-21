@@ -508,7 +508,7 @@ void heroWindow::setFocus(int id)
 // E:\gamedcs\window.cpp:934
 // NO VA CLAIM - a CARVE GAP, not a missing body. Retail's handler sits
 // at 0x5ff500, inside the unowned 0x5ff4fc..0x5ff510 run between
-// SetFocus and delete_widgets, and config/retail-functions.tsv has no
+// SetFocus and delete_widgets, and config/retail/functions.tsv has no
 // row there (it is MANUALLY MANAGED; correcting a boundary is not a
 // matcher's call). The twelve bytes are decoded by hand:
 //   mov eax,ecx / push eax / mov ecx,[eax+0x1c] / mov edx,[ecx] /

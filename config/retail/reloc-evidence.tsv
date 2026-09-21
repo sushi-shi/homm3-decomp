@@ -6,7 +6,7 @@
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
-# per-site evidence for retail-relocs.tsv; dispositions explained there
+# per-site evidence for relocs.tsv; dispositions explained there
 site_rva	value	channel	detail	target_class	ctx	disposition
 0x1050	0x6911e8	code	mov	data	mem	kept
 0x10b7	0x691204	code	mov	data	mem	kept

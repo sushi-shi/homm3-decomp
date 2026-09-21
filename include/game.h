@@ -1711,7 +1711,7 @@ public:
 
 // The five .def-name tables game::ConvertObject (0x4c9990) rewrites a
 // converted object's CObjectType::ImageName from. Their sole reader in
-// the whole image is that body (config/retail-reloc-evidence.tsv rows
+// the whole image is that body (config/retail/reloc-evidence.tsv rows
 // 0xc9a33 / 0xc9a42 / 0xc9b04 / 0xc9b50 / 0xc9b63), so they are declared
 // on game.obj's own gate. Contents read from the hash-verified image:
 // the resource row is avtwood0/avtmerc0/avtore0/avtsulf0/avtcrys0/

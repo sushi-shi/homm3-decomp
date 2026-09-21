@@ -19,7 +19,7 @@ class message;
 // retail home: retail is exactly DC minus those two, plus field_2C.
 
 // Virtual roster PROVEN by the retail widget vtable 0x243c90 -
-// THIRTEEN slots, not twelve (config/retail-vtables.tsv row 0x243c90;
+// THIRTEEN slots, not twelve (config/retail/vtables.tsv row 0x243c90;
 // heroWindow's own vtable begins immediately after at 0x243cc4 =
 // 0x243c90 + 13*4, which bounds the count exactly):
 //   0  scalar deleting dtor 0x5fe3b0 (~widget 0x5fe430 inlined - the

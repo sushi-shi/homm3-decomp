@@ -4,7 +4,7 @@
 The gruntz board ported at today's size: metrics counted over src/ +
 include/ with comments and string/char literals stripped first (so the
 extensive `//` annotations and literals never inflate a count), committed
-floors in config/cleanliness-baseline.tsv, and a RATCHET rule - a metric
+floors in config/cleanliness/baseline.tsv, and a RATCHET rule - a metric
 may only go DOWN. `homm3 build` dies when a ratcheted metric rises above
 its floor, and rolls floors with min(count, floor) so a regression stays
 visible instead of being blessed. `board --update` is the one deliberate
@@ -91,7 +91,7 @@ REPO = common.HOMM3_DIR
 ROOTS = ("src", "include")
 EXTS = {".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".inl"}
 _CPP = {".c", ".cpp", ".cc", ".cxx"}
-BASELINE = REPO / "config/cleanliness-baseline.tsv"
+BASELINE = REPO / "config/cleanliness/baseline.tsv"
 
 _BLOCK = re.compile(r"/\*.*?\*/", re.DOTALL)
 _LINE = re.compile(r"//[^\n]*")

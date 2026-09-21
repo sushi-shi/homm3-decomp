@@ -826,7 +826,7 @@ void type_record_player_death::undo()
 VA_COMPGEN(0x0049bbd0, 0x21, SCALAR_DELETING_DTOR, type_record_shroud)
 
 // DC0x8f398 has only vector/base cleanup, supplied by the implicit C++
-// destructor; its exact emission is documented in config/dc_only.tsv.
+// destructor; its exact emission is documented in config/source/dc_only.tsv.
 // The implicit destructor the wrapper above calls: the change vector's
 // _Tidy inlined (`operator delete(_First)` then the three-pointer clear)
 // followed by the base's vptr store.
