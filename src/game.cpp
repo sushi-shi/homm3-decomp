@@ -769,11 +769,12 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
         } else {
             armyGroup* guards = &m_mines[x].m_guards;
             guards->initialize();
-            legacyMineGuard legacy;
-            infile->read(&legacy.m_type, sizeof(legacy.m_type));
-            infile->read(&legacy.m_amount, sizeof(legacy.m_amount));
-            int typeValue = legacy.m_type;
-            int amountValue = legacy.m_amount;
+            signed char legacyAmount;
+            signed char legacyType;
+            infile->read(&legacyType, sizeof(legacyType));
+            infile->read(&legacyAmount, sizeof(legacyAmount));
+            int amountValue = legacyAmount;
+            int typeValue = legacyType;
             if (typeValue != -1 && amountValue > 0)
                 guards->add(typeValue, amountValue, -1);
         }

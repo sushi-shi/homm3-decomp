@@ -2033,7 +2033,7 @@ game	?loadGarrisonPool@game@@AAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.000
 game	?loadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	tokens1:2576a496deb9
 game	?loadLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc3d90	tokens1:f1de65a51af1
 game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	83.1646	83.1646	83.1646	0xc2450	tokens1:b23caa130d8c
-game	?loadMinePool@game@@AAEHPAVTAbstractFile@@H@Z	98.8718	98.8718	100.0000	0xb9340	tokens1:005160e9587e
+game	?loadMinePool@game@@AAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb9340	tokens1:725fad3a2a8f
 game	?loadObjectVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2870	tokens1:0c896143b823
 game	?loadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	tokens1:16710ddf8b29
 game	?loadSignPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070	tokens1:cf53f28ac71f
@@ -4023,7 +4023,7 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCN
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	tokens1:b9f9c72a63cb
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	tokens1:e24d4233f25b
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	tokens1:2d739ed70aef
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:5b3700830a2b
 singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	93.0332	93.0332	93.0332	0x189710	tokens1:3a9c2a4f2228
