@@ -886,14 +886,11 @@ void type_monster_quest::save(TAbstractFile* file)
 // and describes the point by map third (plus an underground suffix). Those
 // two strings are the varargs for each of the three localized text columns.
 
-// The former inline-depth diagnostic around the middle-north assignment was
-// removed. The ordinary const-char assignment improves the unpinned build and
-// keeps the same source form as the other eight direction arms.
-// Residual: `worldMap.cell(position)` below.
-// Retail expands the packed-point wrapper and CALLS the three-scalar
-// accessor (0x408770); this compile expands both. The peak came from a
-// per-TU declaration-only view of cell(int,int,int) - an imposed inline
-// decision, not a source fact - retired 2026-09-05 with game.h's fork.
+// The canonical questTexts call leaves its nested questTextRow selector out of
+// line, reproducing all 77 retail CFG blocks without the former inline-depth
+// diagnostics. The remaining difference is one final retained string::_Eos in
+// retail; operator= and one-argument assign are byte-identical, while naming or
+// lifetime-extending the completion temporary regresses the matching tail.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056ef20, 0x57C)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::setDefaultText()
@@ -903,8 +900,7 @@ void type_monster_quest::setDefaultText()
         return;
 
     const char* monsterName;
-    const std::string* texts =
-        questTextRow() + QUEST_TEXT_COLUMNS * questType();
+    const std::string* texts = questTexts();
     m_monsterId = g_game->m_worldMap.cell(m_position)->m_objectIndex;
     monsterName = m_monsterId >= 0 && m_monsterId <= 0x96
                       ? g_creatureTypeTraits[m_monsterId].m_pluralName
