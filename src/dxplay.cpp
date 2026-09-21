@@ -1,5 +1,5 @@
 // Retail emits this TU in the drawing->event_record gap (0x96c50..0x9a1e0,
-// bracket from evidence/link-order/gaps.tsv); ds_engine, the other alphabetical
+// retail address bracket); ds_engine, the other alphabetical
 // candidate for that gap, is NOT resident here - GetErrorDesc's DPERR switch,
 // the CDPlay/CDPlayLobby/CAutoArray vtables and the cinit tail all place the
 // whole gap in dxplay. Header-inline virtuals retain their canonical bodies

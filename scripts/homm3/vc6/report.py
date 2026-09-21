@@ -10,7 +10,7 @@ recompiles. That means:
     include-set discrepancy does not enter);
   * a collision-free read-only artifact - it proposes nothing to source.
 
-Emits `evidence/vc6/plateau-diagnosis.md`: one row per plateaued function
+Emits `build/vc6/plateau-diagnosis.md`: one row per plateaued function
 (fuzzy in [lo, 99.999%)), its combined wall class, the register/flow distance
 signals, and the catalog knob to try. The mutation SEARCH (which needs
 compiles) is left to `homm3 vc6 why-reg`/`why-branch` on the individual

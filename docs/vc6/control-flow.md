@@ -1,7 +1,7 @@
 # `why-branch` — the control-flow solver (v1)
 
 For the project-wide inventory and controlled reductions, see the
-[goto reconstruction audit](goto-audit.md). Its helper and nested-loop controls
+[goto reconstruction audit](../reconstruction/goto-audit.md). Its helper and nested-loop controls
 show why a matching assembly join alone does not establish an original goto.
 The follow-up also recovers dialog exit flags and switch-arm copies: shared
 source tails can inhibit the compiler merge that ordinary per-arm statements

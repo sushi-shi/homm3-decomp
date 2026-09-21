@@ -3540,7 +3540,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
 // THE FRONT END IS NOW RULED OUT TOO (2026-09-06). `genab run --gen rtm-fe`
 // swaps C1XX 12.00.8168 in beside the RTM back end and sweeps all 146
 // units: this function's bytes are IDENTICAL on both sides (it is absent
-// from evidence/vc6/fe-generation-verdicts.tsv, which lists every function
+// from build/vc6/fe-generation-verdicts.tsv, which lists every function
 // that differs at all), and hero.obj's five functions that DO differ
 // (HeroFn_004E2550, equip_artifact, remove_artifact,
 // THeroScreenWindow::update_slot, update_spell_list) are all back-end-only

@@ -2996,7 +2996,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 // call site before handing it the team.
 
 // The nine functions below are located by the callee-fingerprint join against
-// evidence/dc-xref-graph.tsv: for each retail carve row the cross-unit resolved
+// Dreamcast call targets: for each retail carve row the cross-unit resolved
 // calls (homm3 sema disasm) form a set that matches a unique ai_player DC
 // callee-set through the RVA scramble. Reciprocal-best pairs; sizes carve-exact
 // from config/retail-functions.tsv; claimed @stub in RVA order (ORDER gate).

@@ -8,9 +8,8 @@ any import - a wrong pressing is a hard abort, never a silently wrong atlas.
 
 Idempotent: an existing analyzed project is reused (and re-verified against
 the pinned sha256 that Ghidra recorded at import time); --reimport deletes the
-project and starts over. Runs in-process via pyghidra - the pattern proven by
-scripts/archive/carve/driver.py and scripts/archive/ghidra_recover_structs/
-(analyzeHeadless cannot start PyGhidra for .py postScripts in this setup).
+project and starts over. Runs in-process via pyghidra; analyzeHeadless cannot
+start PyGhidra for .py postScripts in this setup.
 
 Standalone:  python3 scripts/homm3/vc6/ghidra_scripts/import_c2.py [--reimport]
 Pipeline:    imported by homm3.vc6.atlas (loaded by file path; no __init__ in

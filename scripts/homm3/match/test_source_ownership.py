@@ -237,16 +237,15 @@ class OwnershipTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             parsing_project(root)
-            (root / 'evidence/dreamcast').mkdir(parents=True)
-            csv = root / 'evidence/dreamcast/functions.csv'
-            heading = 'offset,file,name,line,params,module\n'
-            csv.write_text(heading + '0x1000,logger.cpp,Logger::write,50,1,logger.obj\n')
+            rows = [dict(offset='0x1000', file='logger.cpp', name='Logger::write',
+                         line='50', params='1', module='logger.obj')]
             with mock.patch('homm3.core.inputs.dreamcast_symbols', return_value=symbols), \
-                 mock.patch('homm3.core.nb11_types.Types.from_symbols', return_value=Types()):
+                 mock.patch('homm3.core.nb11_types.Types.from_symbols', return_value=Types()), \
+                 mock.patch('homm3.analysis.dc_extract.corpus_rows', return_value=(rows, [])):
                 procedures = read_dc(root, include_declarations=True)
                 self.assertEqual(len(procedures), 1)
                 self.assertEqual(procedures[0].argument_types, ('const char *', '...'))
-                csv.write_text(heading)
+                rows.clear()
                 declarations = read_dc(root, include_declarations=True)
                 self.assertEqual(len(declarations), 1)
                 self.assertTrue(declarations[0].declaration_only)
@@ -1006,19 +1005,6 @@ class CoverageTest(unittest.TestCase):
         errors, counts = compare([d], [o], {}, {})
         self.assertEqual(counts, {'signature': 1})
         self.assertTrue(errors[0].startswith('SIGNATURE '))
-
-
-class LinkOrderOriginTest(unittest.TestCase):
-    def test_unannotated_body_consumes_its_own_source_origin(self):
-        from homm3.analysis.link_order import parse_unit
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / 'dialog.cpp'
-            path.write_text('// E:\\gamedcs\\dialog.cpp:10\n'
-                            'int helper() { return 1; }\n'
-                            'VA(0x401000, 8)\nvoid unrelated() {}\n'
-                            '// E:\\gamedcs\\dialog.cpp:20\n'
-                            'VA(0x402000, 8)\nvoid owned() {}\n')
-            self.assertEqual(parse_unit(path), [('dialog.cpp', 20, 'VA', 0x402000, 8)])
 
 
 class HeaderClaimOwnershipTest(unittest.TestCase):

@@ -96,25 +96,25 @@ def read_dc(root: Path = ROOT, *, include_declarations: bool = False, project=No
     types = Types.from_symbols(symbols)
     generated = generated_members(types)
     origins = []
-    with (root / 'evidence/dreamcast/functions.csv').open(newline='') as stream:
-        rows = csv.DictReader(line for line in stream if not line.startswith('#'))
-        for r in rows:
-            proc = symbols.procedures.get(int(r['offset'], 16))
-            function = types.get(proc.type_index) if proc else {}
-            arguments = None
-            const = False
-            if function.get('kind') == 'function':
-                arguments = tuple('...' if t == 0 else types.declaration(t) for t in
-                                  types.get(function['arguments']).get('types', []))
-                this = types.get(function.get('this', 0))
-                if this['kind'] == 'pointer':
-                    const = 'const' in types.get(this['target']).get('qualifiers', [])
-            origins.append(Origin(source_file(r['file']), r['name'], int(r['line'] or 0),
-                                  int(r['params'] or 0), r['module'], r['offset'],
-                                  arguments, const, bool(proc and
-                                      (family_name(proc.name), proc.type_index) in generated),
-                                  return_type=(types.declaration(function['returns'])
-                                               if 'returns' in function else '')))
+    from homm3.analysis.dc_extract import corpus_rows
+    rows, _variables = corpus_rows(symbols)
+    for r in rows:
+        proc = symbols.procedures.get(int(r['offset'], 16))
+        function = types.get(proc.type_index) if proc else {}
+        arguments = None
+        const = False
+        if function.get('kind') == 'function':
+            arguments = tuple('...' if t == 0 else types.declaration(t) for t in
+                              types.get(function['arguments']).get('types', []))
+            this = types.get(function.get('this', 0))
+            if this['kind'] == 'pointer':
+                const = 'const' in types.get(this['target']).get('qualifiers', [])
+        origins.append(Origin(source_file(r['file']), r['name'], int(r['line'] or 0),
+                              int(r['params'] or 0), r['module'], r['offset'],
+                              arguments, const, bool(proc and
+                                  (family_name(proc.name), proc.type_index) in generated),
+                              return_type=(types.declaration(function['returns'])
+                                           if 'returns' in function else '')))
     if include_declarations:
         origins.extend(declaration_origins(types, origins))
     return origins

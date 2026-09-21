@@ -26,8 +26,7 @@ enum EResourceType {
     RESOURCE_TYPE_BITMAP555 = 20,
     RESOURCE_TYPE_BITMAP1555 = 21,
     // Byte-proven by sample::sample (0x566da0 pushes 0x20 into the base
-    // ctor); the value's DC name is RType_sfx (evidence/dreamcast/
-    // enums.csv), respelled to this file's convention.
+    // ctor); the value's DC name is RType_sfx (NB11 enum records), respelled to this file's convention.
     RESOURCE_TYPE_SFX = 32,
     RESOURCE_TYPE_MIDI = 48,
     RESOURCE_TYPE_SPRITE = 64,

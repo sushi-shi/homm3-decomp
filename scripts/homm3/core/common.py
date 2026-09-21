@@ -4,7 +4,7 @@
 ONLY what build/ and match/ actually use lives here (measured, not
 wholesale): repo paths, the pinned-image hash gate, the PE image loader,
 and the provenance header. The carve-era machinery that once surrounded
-these primitives is retired under scripts/archive/carve/.
+these primitives has been retired; Git history retains the bootstrap tools.
 
 The gate is HARD: any byte deviation from the recorded sha256/size aborts.
 The retail exe is provided via $HOMM3_EXE or `homm3 init --exe` and COPIED
@@ -25,9 +25,6 @@ from homm3.core.project import Project
 SCRIPT_DIR = Path(__file__).resolve().parent
 HOMM3_DIR = Path(os.environ.get("HOMM3_DIR") or next(
     (p for p in SCRIPT_DIR.parents if (p / "flake.nix").exists()), SCRIPT_DIR))
-# evidence/ holds GENERATED analysis deliverables (scaffolding, slated for
-# removal); config/ holds hand-admitted retail inventories + build manifests
-EVIDENCE_DIR = HOMM3_DIR / "evidence"
 
 # Offline annotation/provenance facts are admitted project data. Operations
 # that read executable bytes use Project.image and its parsed layout.

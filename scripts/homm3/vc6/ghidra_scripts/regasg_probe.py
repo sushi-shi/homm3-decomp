@@ -42,7 +42,7 @@ import c2_disasm  # noqa: E402
 OUT_DIR = import_c2.RAW_DIR / "regasg"
 BASE = import_c2.IMAGE_BASE
 
-# regasg.c's gap-neighbourhood per evidence/vc6/c2-tu-map.tsv:
+# regasg.c's gap-neighbourhood per build/vc6/c2-tu-map.tsv:
 # ehexcept.c|regasg.c rows from 0x8941f, anchor 0x8b906 (980 B),
 # regasg.c|list.c rows to 0x8cec8+205; the list.c anchor 0x8cf95 bounds it.
 REGASG_LO = 0x8941F
