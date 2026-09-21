@@ -2776,6 +2776,9 @@ void TSingleSelectionWindow::createFilterWidgets()
     }
 }
 
+// Complete-only model: the AI bound selects an operand reference; the
+// player/human bounds use value wrappers. Binding the selected player id
+// before widgetSetStatus preserves the retail argument homes (100%).
 VA(0x0057ef70, 0x3B9)
 void TSingleSelectionWindow::updateFilterWidgets()
 {
@@ -2823,8 +2826,10 @@ void TSingleSelectionWindow::updateFilterWidgets()
     int lastFilter = m_randomMapOptions[3];
     if (lastFilter == -1)
         widgetSetStatus(0x131, 0x10);
-    else
-        widgetSetStatus(min(hi, lastFilter) + 0x129, 0x10);
+    else {
+        int selectedFilter = min(hi, lastFilter);
+        widgetSetStatus(selectedFilter + 0x129, 0x10);
+    }
     for (i = 0x133; i <= 0x13b; ++i)
         widgetClearStatus(i, 0x10);
     for (i = 0x134; i <= 0x13b - lo; ++i)
@@ -2832,7 +2837,7 @@ void TSingleSelectionWindow::updateFilterWidgets()
     for (; i <= 0x13a; ++i)
         widgetSetStatus(i, 0x1000);
     int aiFilter = m_randomMapOptions[4];
-    int n = min(8 - lo, aiFilter);
+    int n = cppMin(8 - lo, aiFilter);
     if (aiFilter == -1) {
         n = 8 - lo;
         widgetSetStatus(0x13b, 0x10);

@@ -110,6 +110,8 @@ void extendedDialog(const char* text,
 // Complete loads quest text from a spreadsheet; Dreamcast initializes a fixed table.
 // The name-row append is inferred from retail. Canonical push_back gives
 // 79.8841%; direct insert formerly hid the remaining inline-context mismatch.
+// Explicit/named string construction, positive validation and the cell
+// accessor do not recover retail's retained string::assign during conversion.
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 VA(0x0056c3e0, 0x183)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
 unsigned char initializeSeerHutText()
@@ -611,12 +613,9 @@ void type_skill_quest::setDefaultText()
     if (m_proposalText.length() == 0)
         m_proposalText = formatString(texts[QUEST_TEXT_PROPOSAL].c_str(),
                                      requirement.c_str());
-    if (m_completionText.length() == 0) {
-        std::string formatted =
-            formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
-                          requirement.c_str());
-        m_completionText = formatted;
-    }
+    if (m_completionText.length() == 0)
+        m_completionText = formatString(texts[QUEST_TEXT_COMPLETION].c_str(),
+                                       requirement.c_str());
 }
 
 VA(0x0056e240, 0xF2)
@@ -887,15 +886,14 @@ void type_monster_quest::save(TAbstractFile* file)
 // and describes the point by map third (plus an underground suffix). Those
 // two strings are the varargs for each of the three localized text columns.
 
-// The former inline-depth diagnostic around the middle-north assignment was
-// removed. The ordinary const-char assignment improves the unpinned build and
-// keeps the same source form as the other eight direction arms.
-// Residual: `worldMap.cell(position)` below.
-// Retail expands the packed-point wrapper and CALLS the three-scalar
-// accessor (0x408770); this compile expands both. The peak came from a
-// per-TU declaration-only view of cell(int,int,int) - an imposed inline
-// decision, not a source fact - retired 2026-09-05 with game.h's fork.
-// E:\gamedcs\seerhut.cpp
+// The packed-point lookup and guarded plural-name lookup correspond to the
+// existing game::getCell and getArmyName helpers. Their declarations have
+// DC evidence; these Complete-only caller expansions are inferred from
+// retail. Keep the canonical calls and ordinary direction assignments.
+// Residual 96.7191%: the middle-north assignment retains string::assign
+// where retail expands it. Moving the name declaration to its use is flat;
+// explicit inner returns in getArmyName worsen this caller to 73.8785% and
+// lower four other consumers, including two exact drawing functions.
 VA(0x0056ef20, 0x57C)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::setDefaultText()
 {
@@ -903,13 +901,10 @@ void type_monster_quest::setDefaultText()
     if (m_position.m_x < 0)
         return;
 
-    const char* monsterName;
     const std::string* texts =
         questTexts();
-    m_monsterId = g_game->m_worldMap.cell(m_position)->m_objectIndex;
-    monsterName = m_monsterId >= 0 && m_monsterId <= 0x96
-                      ? g_creatureTypeTraits[m_monsterId].m_pluralName
-                      : g_emptyRolloverText;
+    m_monsterId = g_game->getCell(m_position)->m_objectIndex;
+    const char* monsterName = getArmyName(m_monsterId, 0);
 
     std::string direction;
     if (m_position.m_x < g_mapWidth / 3) {
@@ -1598,9 +1593,9 @@ void type_resource_quest::save(TAbstractFile* file)
         file->write(m_completionText.c_str(), m_completionText.length());
     }
 }
-// Keep the shared questTexts group selector. Retail calls questTextRow
-// inside its expansion; VC6 currently expands that child too (91.2333%).
-// The earlier flattened group reached 100%, retained in history.
+// The canonical questTexts -> questTextRow chain is exact. Branch returns
+// in the shared row selector preserve the retained child call here; its old
+// conditional-expression body over-expanded that child (91.2333%).
 VA(0x00571cc0, 0x23E)
 void type_resource_quest::setDefaultText()
 {
@@ -1782,9 +1777,9 @@ void type_belong_to_player_quest::save(TAbstractFile* file)
         file->write(m_completionText.c_str(), m_completionText.length());
     }
 }
-// Keep the shared questTexts group selector. Retail calls questTextRow
-// inside its expansion; VC6 currently expands that child too (87.4421%).
-// The earlier flattened group reached 100%, retained in history.
+// The canonical questTexts -> questTextRow chain is exact. Branch returns
+// in the shared row selector preserve the retained child call here; its old
+// conditional-expression body over-expanded that child (87.4421%).
 VA(0x00572940, 0x204)
 void type_belong_to_player_quest::setDefaultText()
 {
@@ -1813,8 +1808,8 @@ TQuestGuard::TQuestGuard()
 
 // Complete-only caller: retail expands the same expiry test retained in
 // hasExpired and the row selector retained at 0x52e6b0. Keep those canonical
-// calls. They currently score 96.25% versus the pasted body's 100%; the
-// remaining inline/lifetime difference is not evidence for duplicate source.
+// calls. Direct predicate use preserves all retail bytes; the intermediate
+// bool result added an absent conversion and measured 96.25%.
 VA(0x00572b60, 0x1FE)
 void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
                           NewmapCell* eventCell, type_point point)
@@ -1822,9 +1817,7 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
     if (!m_quest)
         return;
 
-    bool expired = m_quest->hasExpired();
-
-    if (expired) {
+    if (m_quest->hasExpired()) {
         if (humanPlayer) {
             const std::string* row = m_quest->questTextRow();
             normalDialog(row[type_quest::QUEST_TEXT_EXPIRED].c_str(),

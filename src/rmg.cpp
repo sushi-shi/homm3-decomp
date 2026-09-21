@@ -3,8 +3,8 @@
 // The Dreamcast build has no RMG compiland. Retail's direct caller graph
 // reaches this library from TSingleSelectionWindow::GenerateRandomMap, and
 // the tree node layout proves an eight-byte TPoint value ordered by y, then x.
-// Container end appends/removals use their public helpers, and bound clamps
-// use the shared by-value min/max wrappers. These source calls are inferred
+// Container end appends/removals use their public helpers; bound clamps use
+// the shared min/max wrappers or reference selectors. These calls are inferred
 // from retail and established project helpers; no RMG source spelling is
 // attested by Dreamcast. Calling internal selectors or expanding container
 // bodies had hidden some remaining nested-inline and lifetime differences.
@@ -4123,6 +4123,9 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
     }
 }
 
+// The long reference selectors reproduce both irregular boundary drawers.
+// By-value wrappers add argument homes; int references omit conversion
+// temporaries. The RMG spelling remains a retail-supported source model.
 VA(0x0053BFF0, 0x22B)
 void type_random_map_generator::drawIrregularZoneBoundary(
     TPoint from, TPoint to, int zoneIndex, int level, int roughness)
@@ -4142,7 +4145,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
             }
             int length = perpendicular.length();
             if (length > 1) {
-                int limit = min(length, roughness);
+                int limit = cppMin<long>(length, roughness);
                 int displacement = rand() % limit - limit / 2;
                 perpendicular = perpendicular * displacement / length;
                 midpoint += perpendicular;
@@ -4150,10 +4153,10 @@ void type_random_map_generator::drawIrregularZoneBoundary(
             pending.push_back(to);
             pending.push_back(midpoint);
         } else {
-            long x = max(from.m_x, 0);
-            x = min(x, m_map.m_mapWidth - 1);
-            long y = max(from.m_y, 0);
-            y = min(y, m_map.m_mapHeight - 1);
+            long x = cppMax<long>(from.m_x, 0);
+            x = cppMin<long>(x, m_map.m_mapWidth - 1);
+            long y = cppMax<long>(from.m_y, 0);
+            y = cppMin<long>(y, m_map.m_mapHeight - 1);
             TRmgMapItem* item = m_map.getMapItem(x, y, level);
             item->m_zoneState.m_zone = zoneIndex;
             if (markBoundary)
@@ -4415,7 +4418,7 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
             }
             int length = perpendicular.length();
             if (length > 1) {
-                int limit = min(length / 2, roughness);
+                int limit = cppMin<long>(length / 2, roughness);
                 int displacement = rand() % limit - limit / 2;
                 perpendicular = perpendicular * displacement / length;
                 midpoint += perpendicular;
@@ -4423,10 +4426,10 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
             pending.push_back(to);
             pending.push_back(midpoint);
         } else {
-            long x = max(from.m_x, 0);
-            x = min(x, m_map.m_mapWidth - 1);
-            long y = max(from.m_y, 0);
-            y = min(y, m_map.m_mapHeight - 1);
+            long x = cppMax<long>(from.m_x, 0);
+            x = cppMin<long>(x, m_map.m_mapWidth - 1);
+            long y = cppMax<long>(from.m_y, 0);
+            y = cppMin<long>(y, m_map.m_mapHeight - 1);
             TRmgMapItem* item = m_map.getMapItem(x, y, level);
             if (item->m_zoneState.m_zone == zoneIndex)
                 item->m_tileData.m_zoneBoundary = 1;
@@ -6082,18 +6085,17 @@ unsigned char type_random_map_generator::createGroundConnection(
 // Retail uses a LIFO vector of three-dword positions and cardinal directions
 // 0/2/4/6. Mark admitted neighbours visited, but enqueue only water; gate-marked
 // water cells are traversable. RMG has no Dreamcast counterpart.
-// Exact with the canonical returned-position addition and integer land-kind
-// accessor/snapshots. Copy then += changes the coordinate homes (92.05%);
-// narrowing terrain to a byte adds sign-extension shifts (97.7143%). Direct
-// integer field reads over-expand the seed insertion (99.25%), while retaining
-// the ordinary accessor restores both distinct retail insert boundaries.
+// Exact with push_back, returned-position addition and integer land-kind
+// accessors. Pass the seed position to getMapItem directly: the scalar
+// wrapper retains an extra nested lookup call and scores 82.0071%.
+// Copy then += changes coordinate homes; byte terrain adds sign extensions.
 // The empty _Destroy body is folded with vector<type_artifact> (ret 8).
 VA(0x00541780, 0x18D) // anchor-callee 0x541f1f; thiscall, ret 0x0c
 void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
 {
     std::vector<TRmgMapPosition> openPositions;
     openPositions.push_back(position);
-    m_map.getMapItem(position.m_x, position.m_y, position.m_z)->setConnectionVisited();
+    m_map.getMapItem(position)->setConnectionVisited();
     while (openPositions.size()) {
         position = openPositions.back();
         openPositions.pop_back();
@@ -7226,6 +7228,9 @@ void type_random_map_generator::carveBranchingPaths()
     }
 }
 
+// Residual 99.5699%: the inner neighbor lookup commutes level * mapHeight.
+// All 40 blocks and call expansions agree. A directly constructed position
+// or using the existing position as the loop cursor leaves that pair flat.
 VA(0x005443A0, 0x2F5)
 void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
     TRmgZone* zone)
@@ -7247,7 +7252,7 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
             }
             int length = perpendicular.length();
             if (length > 1) {
-                int limit = min(length, roughness);
+                int limit = cppMin<long>(length, roughness);
                 int displacement = rand() % limit - limit / 2;
                 perpendicular = perpendicular * displacement / length;
                 midpoint += perpendicular;
@@ -7255,10 +7260,10 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
             pending.push_back(to);
             pending.push_back(midpoint);
         } else {
-            long x = max(from.m_x, 0);
-            x = min(x, m_map.m_mapWidth - 1);
-            long y = max(from.m_y, 0);
-            y = min(y, m_map.m_mapHeight - 1);
+            long x = cppMax<long>(from.m_x, 0);
+            x = cppMin<long>(x, m_map.m_mapWidth - 1);
+            long y = cppMax<long>(from.m_y, 0);
+            y = cppMin<long>(y, m_map.m_mapHeight - 1);
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
             if (item->m_zoneState.m_zone == zoneIndex) {
                 if (!item->m_connection.m_present) {
@@ -7266,10 +7271,10 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
                     item->m_tileData.m_subterraneanGate = 1;
                 }
                 TRmgZoneBounds bounds;
-                bounds.m_minimumX = max(x - 1, 0);
-                bounds.m_minimumY = max(y - 1, 0);
-                bounds.m_maximumX = min(x + 2, m_map.m_mapWidth);
-                bounds.m_maximumY = min(y + 2, m_map.m_mapHeight);
+                bounds.m_minimumX = cppMax<long>(x - 1, 0);
+                bounds.m_minimumY = cppMax<long>(y - 1, 0);
+                bounds.m_maximumX = cppMin<long>(x + 2, m_map.m_mapWidth);
+                bounds.m_maximumY = cppMin<long>(y + 2, m_map.m_mapHeight);
                 for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
                     for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
                         TRmgMapItem* nearby = m_map.getMapItem(column, row, position.m_z);

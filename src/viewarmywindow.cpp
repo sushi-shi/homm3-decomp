@@ -488,8 +488,9 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 // value survives those lookups in DC; keep that value for every tooltip arm.
 // Restoring these calls and the value snapshot gives 92.5504%. The former
 // assign/const-reference spellings reached 100% through different nested
-// append decisions. Remaining retail differences are string append/cleanup
-// inlining; the source operators and their text lifetime stay canonical.
+// append decisions. The luck += still retains append where retail expands
+// it. Exit-flag declaration and upgrade-input lifetime controls are flat;
+// the source operators and their shared text lifetime stay canonical.
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
 int TViewArmyWindow::windowHandler(message& msg)

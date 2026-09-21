@@ -1701,6 +1701,10 @@ type_transformer_slot::type_transformer_slot(
 // 0x5654f0 - so neither row is an /OPT:ICF fold.
 VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
+// DC proves push_back and the text-resource subscripts. At 98.3508%, only
+// the final rollover append's growth path retains an extra vector::size.
+// Removing the vector alias or binding its pointer argument locally does
+// not recover that nested expansion; keep the canonical container call.
 VA(0x005654f0, 0xA3C)  // dc 0x1275c0
 type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     : CAdvPopup(100, 67, 600, 485, 18)
@@ -1718,26 +1722,21 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         g_game->getLocalPlayerGamePos());
     m_widgets.push_back(background);
 
-    std::vector<widget*>& widgets = m_widgets;
-    widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         25, 21, 257, 18,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE],
         "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         320, 21, 257, 18,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_TITLE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_TITLE],
         "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         25, 55, 257, 42,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_DESCRIPTION),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_DESCRIPTION],
         "medfont.fnt", font::HEADING, -1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         320, 55, 257, 42,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_DESCRIPTION),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_DESCRIPTION],
         "medfont.fnt", font::HEADING, -1, 1, 0, 8));
 
     createCreatureIcons(
