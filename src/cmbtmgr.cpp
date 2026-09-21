@@ -611,6 +611,10 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
 // retain the byte load and high-bound-first clamp / byte add that retail
 // expands; a generic int clamp instead widens too early and loses three
 // conditional branches.
+// Residual (99.9631%): all 56 blocks, 26 branches and seven calls agree.
+// The only code difference is the commutative SIB encoding in the inlined
+// CheckNativeTerrain loop: [eax+edi] here versus [edi+eax] in retail. Keep
+// the Dreamcast-shaped m_numArmies[side] loop instead of reverse indexing.
 
 VA(0x00463c60, 0x43C)  // anchor-callee, dc 0x5e690
 void combatManager::initNonVisualVars()

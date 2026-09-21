@@ -1684,10 +1684,10 @@ static void collectCrossoverArtifacts(const hero& sourceHero,
 // The canonical collector shared with pruneCrossoverHeroes owns one artifact
 // temporary across both inner loops. Its expansion restores retail's 0x64
 // frame, shared stack home, and the first push_back's retained single-element
-// insert wrapper. All 38 CFG blocks and instruction rows then agree. The
-// 99.9872 report residual is solely retail's ICF label for that wrapper:
-// vector<type_dialog_resource>::insert has the same signature-shaped body as
-// the source-correct vector<type_artifact> specialization.
+// insert wrapper. The two outer loops also reuse one index, restoring the
+// retail -0x14 home. All 38 CFG blocks and instruction rows agree. Retail's
+// ICF label names vector<type_dialog_resource>::insert at the wrapper address;
+// the source-correct vector<type_artifact> specialization resolves there too.
 VA(0x00487900, 0x2CD)  // anchor-caller(game::NewMap +0x5cb), retail-only
 void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
 {
@@ -1700,18 +1700,17 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
         type_artifact artifact;
         std::vector<type_artifact> artifacts = campaign->m_carryoverArtifact[slot];
 
-        for (unsigned int heroIndex = 0;
-             heroIndex < heroes.size(); ++heroIndex) {
-            hero& carried = heroes[heroIndex];
+        unsigned int itemIndex;
+        for (itemIndex = 0; itemIndex < heroes.size(); ++itemIndex) {
+            hero& carried = heroes[itemIndex];
             if (g_game->m_heroAvailability[carried.m_id]
                 != hero::HERO_AVAILABILITY_TAVERN_POOL)
                 continue;
             collectCrossoverArtifacts(carried, artifacts);
         }
 
-        for (unsigned int artifactIndex = 0; artifactIndex < artifacts.size();
-             ++artifactIndex) {
-            artifact = artifacts[artifactIndex];
+        for (itemIndex = 0; itemIndex < artifacts.size(); ++itemIndex) {
+            artifact = artifacts[itemIndex];
             if (artifact.m_artifactId == ARTIFACT_NONE)
                 continue;
             if (!m_crossoverArtifacts.at(artifact.m_artifactId))
@@ -2885,10 +2884,10 @@ VA_COMPGEN(0x0048AE30, 0x5D, CLASS_CTOR, LegacyCampaignHero)
 // 2026-09-07: score reference alone 88.0368%, pool references alone 85.4136%,
 // both 99.6062% (from 78.8074% MAX). Per-write scalar scopes with short word
 // buffers reach 99.9518%; sharing the artifact word reaches 99.9632%; one
-// outer counter across all three runs reaches 99.9858%. All 38 CFG blocks,
-// 16 branches, and 24 calls agree. The 880-byte candidate differs at five
-// non-relocation bytes: frame 0x14 instead of 0x10 and four artifact-buffer
-// offsets -0x14 instead of -0x10. The hero induction slot is otherwise exact.
+// outer counter across all three runs reaches 99.9858%. The canonical
+// by-value writeValue<short> boundary for the two artifact fields restores
+// retail's shared [ebp-0x10] parameter home and 0x10-byte frame. All 880 bytes,
+// 38 CFG blocks, 16 branches, and 24 calls now agree.
 // Controls: narrowing into int gives 97.1048% (movsx); also sharing the inner
 // counters, scoping the hero loop or entire hero phase, hoisting the word
 // to pool/function scope, and unsigned-short buffers are byte-flat at
@@ -2990,10 +2989,9 @@ void SCampaign::save(TAbstractFile* outfile)
             }
             for (unsigned int whichArtifact = 0;
                  whichArtifact < artifactPool.size(); ++whichArtifact) {
-                short word = static_cast<short>(artifactPool[whichArtifact].m_artifactId);
-                outfile->write(&word, sizeof(word));
-                word = static_cast<short>(artifactPool[whichArtifact].m_extra);
-                outfile->write(&word, sizeof(word));
+                writeValue<short>(
+                    outfile, artifactPool[whichArtifact].m_artifactId);
+                writeValue<short>(outfile, artifactPool[whichArtifact].m_extra);
             }
         }
     }
