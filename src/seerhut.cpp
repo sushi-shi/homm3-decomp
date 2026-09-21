@@ -2718,6 +2718,11 @@ void TSeerHut::read(TAbstractFile* infile)
     setRandomName(*this);
 }
 
+// Complete reuses one byte scratch for every scalar read. Routing those reads
+// through the shared value reader restores the constructor's retail inline
+// decisions; open-coded staging blocks expanded it and measured 35.2488%.
+// Dreamcast's older four-line body has one gzread and no comparable quest
+// representation.
 VA(0x00574A90, 0x24A)  // dc 0x12d8e4
 void TSeerHut::load(TAbstractFile* infile, int saveVersion)
 {
@@ -2725,68 +2730,26 @@ void TSeerHut::load(TAbstractFile* infile, int saveVersion)
         int intBuffer;
         infile->read(&intBuffer, sizeof(intBuffer));
         infile->read(&m_reward, sizeof(m_reward));
-        unsigned char noQuest;
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            noQuest = value != 0;
-        }
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            m_completedByPlayer = value;
-        }
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            m_visitedPlayers = value;
-        }
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));  // reserved legacy byte
-        }
-        int textRow;
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            textRow = value;
-        }
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            m_nameIndex = value;
-        }
+        unsigned char noQuest = readValue<unsigned char>(infile) != 0;
+        m_completedByPlayer = readValue<unsigned char>(infile);
+        m_visitedPlayers = readValue<unsigned char>(infile);
+        readValue<unsigned char>(infile);  // reserved legacy byte
+        int textRow = readValue<unsigned char>(infile);
+        m_nameIndex = readValue<unsigned char>(infile);
         if (noQuest || intBuffer == -1)
             m_quest = 0;
         else
             m_quest = new type_artifact_quest(
                 1, static_cast<TArtifact>(intBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
     } else {
-        type_quest* newQuest;
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            newQuest = createQuest(value, 1);
-        }
+        type_quest* newQuest = createQuest(readValue<unsigned char>(infile), 1);
         m_quest = newQuest;
         if (newQuest)
             newQuest->load(infile, saveVersion);
         infile->read(&m_reward, sizeof(m_reward));
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            m_completedByPlayer = value;
-        }
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            m_visitedPlayers = value;
-        }
-        {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            m_nameIndex = value;
-        }
+        m_completedByPlayer = readValue<unsigned char>(infile);
+        m_visitedPlayers = readValue<unsigned char>(infile);
+        m_nameIndex = readValue<unsigned char>(infile);
     }
 }
 

@@ -3773,7 +3773,7 @@ seerhut	?isSatisfied@type_monster_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0
 seerhut	?isSatisfied@type_resource_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x1717b0	tokens1:344c85105109
 seerhut	?isSatisfied@type_skill_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x16da70	tokens1:ae4b4d18fbad
 seerhut	?load@TQuestGuard@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x173480	tokens1:794eb68311a9
-seerhut	?load@TSeerHut@@AAEXPAVTAbstractFile@@H@Z	35.2488	35.2488	100.0000	0x174a90	tokens1:53815aff9df4
+seerhut	?load@TSeerHut@@AAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x174a90	tokens1:f543c283703d
 seerhut	?load@type_artifact_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x16fcb0	tokens1:1949c1cc5262
 seerhut	?load@type_be_hero_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x172200	tokens1:30202185d563
 seerhut	?load@type_belong_to_player_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x172820	tokens1:104ed30cf236
