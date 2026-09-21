@@ -1746,6 +1746,8 @@ long type_AI_spellcaster::getDispelValue(const army* ourArmy, type_enchant_data 
     return getCancelValue(&testArmy, 0);
 }
 
+// DC ai_tactical.cpp:2199 names the by-value min wrapper; its parameter
+// copies reproduce retail's healed/damage stack slots.
 VA(0x00439c30, 0x10F)  // dc 0x403c0
 long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data caster) const
 {
@@ -1753,7 +1755,8 @@ long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data ca
     long value = getCancelValue(&currentArmy, 1);
     int mastery = caster.getMasteryValue();
     int damage = ourArmy->m_topCreatureDamage;
-    int healed = cppMin<int>(mastery + g_spellTraits[SPELL_CURE].m_powerFactor * caster.m_power, damage);
+    int healed = ::min(mastery + g_spellTraits[SPELL_CURE].m_powerFactor * caster.m_power,
+                       damage);
     if (m_winLikely) {
         if (ourArmy->m_topCreatureDamage + ourArmy->getAIExpectedDamage()
                 < ourArmy->m_monInfo.m_hitPoints)

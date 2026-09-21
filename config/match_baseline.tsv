@@ -460,7 +460,7 @@ ai_tactical	?getCancelValue@type_AI_spellcaster@@IBEJPAVarmy@@E@Z	100.0000	100.0
 ai_tactical	?getChainLightningValue@type_AI_spellcaster@@IBEJJW4TSkillMastery@@PAVarmy@@@Z	100.0000	100.0000	100.0000	0x37190	tokens1:47df44a6e1b3
 ai_tactical	?getCloneValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b2e0	tokens1:a1ddde70a93f
 ai_tactical	?getCounterstrokeValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39e80	tokens1:71a6a91f4d61
-ai_tactical	?getCureValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	86.8523	86.8523	100.0000	0x39c30	tokens1:ee6b4b805727
+ai_tactical	?getCureValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39c30	tokens1:b913e0ffbf24
 ai_tactical	?getCurseValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b370	tokens1:252a6aaee44b
 ai_tactical	?getDamageSpellValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x36f60	tokens1:3d38258edaaf
 ai_tactical	?getDamageValue@type_AI_spellcaster@@IBEJHJPBVhero@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x36e30	tokens1:923fb88beaad
