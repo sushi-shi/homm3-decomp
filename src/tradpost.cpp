@@ -1281,8 +1281,8 @@ DATA(0x006aaac0) static int g_giveQuantity;
 
 // The window origin DoMarket stamps (0x64, 3) before constructing each dialog
 // and passes as the (x2, y2) constructor arguments.
-DATA(0x006aaa9c) static int g_windowX;
-DATA(0x006aaaa0) static int g_windowY;
+DATA(0x006aaa9c) static int g_marketWindowX;
+DATA(0x006aaaa0) static int g_marketWindowY;
 
 // Two single-use tables the sell-creature Update reads: the per-army-row Y
 // coordinates it stamps on each populated creature widget (WIDGET_SET_Y) and
@@ -1435,15 +1435,15 @@ void doMarket()
 {
     message msg;
 
-    g_windowX = 0x64;
-    g_windowY = 3;
+    g_marketWindowX = 0x64;
+    g_marketWindowY = 3;
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
     g_mouseManager->showPointer(1);
 
     while (g_marketWindow != MARKET_COMMAND_ID) {
         switch (g_marketWindow) {
         case MARKET_WINDOW_TRADE:
-            g_tradeWindow = new TTradeResourceWindow(g_windowX, g_windowY);
+            g_tradeWindow = new TTradeResourceWindow(g_marketWindowX, g_marketWindowY);
             if (g_tradeWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1462,7 +1462,7 @@ void doMarket()
             break;
 
         case MARKET_WINDOW_GIVE: {
-            g_giveWindow = new TGiveResourceWindow(g_windowX, g_windowY);
+            g_giveWindow = new TGiveResourceWindow(g_marketWindowX, g_marketWindowY);
             if (g_giveWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1489,7 +1489,7 @@ void doMarket()
         }
 
         case MARKET_WINDOW_BUY:
-            g_buyWindow = new TBuyArtifactWindow(g_windowX, g_windowY);
+            g_buyWindow = new TBuyArtifactWindow(g_marketWindowX, g_marketWindowY);
             if (g_buyWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1508,7 +1508,7 @@ void doMarket()
             break;
 
         case MARKET_WINDOW_SELL_ARTIFACT:
-            g_sellArtWindow = new TSellArtifactWindow(g_windowX, g_windowY);
+            g_sellArtWindow = new TSellArtifactWindow(g_marketWindowX, g_marketWindowY);
             if (g_sellArtWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -1527,7 +1527,7 @@ void doMarket()
             break;
 
         case MARKET_WINDOW_SELL_CREATURE:
-            g_sellCreatureWindow = new TSellCreatureWindow(g_windowX, g_windowY);
+            g_sellCreatureWindow = new TSellCreatureWindow(g_marketWindowX, g_marketWindowY);
             if (g_sellCreatureWindow == 0)
                 memError();
             msg.m_id = 0x200;
@@ -3138,7 +3138,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
                 g_currentPlayer->m_resources[g_selectedArtifact] -= g_rightAmount;
                 int color = m_slotPlayerColor[g_leftResource];
                 g_game->m_players[color].m_resources[g_selectedArtifact] += g_rightAmount;
-                if (g_networkActive69954c && g_game->m_players[color].isHuman()) {
+                if (g_remoteOn && g_game->m_players[color].isHuman()) {
                     CGiftMsg m(g_game->getLocalPlayerGamePos(),
                                g_selectedArtifact, g_rightAmount);
                     transmitRemoteData(&m, color, false, true);

@@ -24,7 +24,7 @@
 #include "textwdgt.h"
 #include "winmgr.h"
 
-DATA(0x006a3d08) static int g_unnamed6a3d08;
+DATA(0x006a3d08) static int g_splitArmyMode;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
 DATA(0x006a3d30) swapManager* g_swapManager;
 
@@ -90,7 +90,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
         font::WHITE, font::LEFT_JUSTIFIED, "TStatBar.pcx",
         0, 0x12c, 0x100, 0, 7, 5);
 
-    if (g_networkActive69954c && g_swapManager->m_humanPlayerTrade) {
+    if (g_remoteOn && g_swapManager->m_humanPlayerTrade) {
         m_leftArrow = new bitmapBorder(
             0x16e, 0xfa, 0x43, 0x10f, 0, "trarrowl.pcx", 0x800);
         m_rightArrow = new bitmapBorder(
@@ -750,7 +750,7 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
     m_destinationArmySlot = -1;
     m_givingToAlly = 1;
     m_humanPlayerTrade = 0;
-    if (g_networkActive69954c
+    if (g_remoteOn
         && leftHero->m_owner != rightHero->m_owner
         && g_game->isHuman(leftHero->m_owner)
         && g_game->isHuman(rightHero->m_owner))
@@ -767,7 +767,7 @@ void swapManager::reset()
     message msg;
 
     m_sourceHeroIndex = m_destinationHeroIndex = m_armySelectionPending = m_sourceArmySlot = m_destinationArmySlot = -1;
-    g_unnamed6a3d08 = 0;
+    g_splitArmyMode = 0;
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_STATUS;
@@ -1000,7 +1000,7 @@ void swapManager::drawSelector()
     if (m_sourceArmySlot == -1)
         return;
 
-    if (g_unnamed6a3d08)
+    if (g_splitArmyMode)
     {
         int selectedType = m_heroes[m_sourceHeroIndex]->m_army.m_armies[m_sourceArmySlot];
         x = 0x43;
@@ -1237,12 +1237,12 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
         viewMon();
     else if (m_heroes[m_sourceHeroIndex]->m_owner == g_netLocalGamePos)
     {
-        if ((g_unnamed6a3d08 || shift)
+        if ((g_splitArmyMode || shift)
             && (m_heroes[m_destinationHeroIndex]->m_army.m_armies[m_destinationArmySlot] == CREATURE_NONE
                 || m_heroes[m_destinationHeroIndex]->m_army.m_armies[m_destinationArmySlot]
                        == m_heroes[m_sourceHeroIndex]->m_army.m_armies[m_sourceArmySlot]))
         {
-            g_unnamed6a3d08 = 0;
+            g_splitArmyMode = 0;
             if (canModHero(m_destinationHeroIndex))
                 m_heroes[m_sourceHeroIndex]->m_army.splitArmy(
                     m_sourceArmySlot, &m_heroes[m_destinationHeroIndex]->m_army, m_destinationArmySlot, 1, 1);
@@ -1417,7 +1417,7 @@ void swapManager::handleBackpackClick(long side, long id, unsigned char rightCli
 VA(0x005afbf0, 0x17A)  // dc 0x15d440
 void swapManager::sendHeroUpdate()
 {
-    if (g_networkActive69954c && m_humanPlayerTrade && m_givingToAlly) {
+    if (g_remoteOn && m_humanPlayerTrade && m_givingToAlly) {
         int otherPlayer = getOtherHero()->m_owner;
         if (!m_netMsgHandler->getAbortPopupMsg()) {
             hero* leftHero = m_heroes[0];
@@ -1481,9 +1481,9 @@ int swapManager::main(message& msg)
     unsigned char shift =
         (msg.m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS) != 0;
 
-    if (g_turnDuration69d630.isExpired())
+    if (g_turnDuration.isExpired())
     {
-        if (g_networkActive69954c)
+        if (g_remoteOn)
         {
             CTradeRequestDoneMsg requestDone;
             transmitRemoteData(&requestDone, getOtherHero()->m_owner, 0, 1);
@@ -1491,7 +1491,7 @@ int swapManager::main(message& msg)
         return exitSwapManager(msg);
     }
 
-    if (g_networkActive69954c)
+    if (g_remoteOn)
     {
         m_netMsgHandler->checkHandleNet(0, 0);
         if (static_cast<CSwapMgrNetMsgHandler*>(m_netMsgHandler)->m_field0c)
@@ -1527,7 +1527,7 @@ int swapManager::main(message& msg)
                 break;
 
             case widget::WIDGET_END_DIALOG:
-                if (g_networkActive69954c && m_humanPlayerTrade)
+                if (g_remoteOn && m_humanPlayerTrade)
                 {
                     CTradeRequestDoneMsg requestDone;
                     transmitRemoteData(&requestDone, getOtherHero()->m_owner,
@@ -2374,7 +2374,7 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
 
     case kSwapRefreshLeft:
     case kSwapRefreshRight:
-        g_unnamed6a3d08 = 1;
+        g_splitArmyMode = 1;
         this->update();
         drawSwapWin();
         drawSelector();
@@ -2385,7 +2385,7 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
         break;
 
     case kSwapTradeRequestDone:
-        if (g_networkActive69954c
+        if (g_remoteOn
             && g_currentPlayer->isLocalHuman()
             && m_humanPlayerTrade)
         {

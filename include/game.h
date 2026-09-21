@@ -1745,15 +1745,15 @@ extern const int g_initResourcesComputer[][NUM_RESOURCES];
 extern int g_newMapStartingBonus[8];
 // remote.obj owns the DATA claim. NextPlayer consumes the adjacent recovery
 // latch while retrying a failed turn-state transfer.
-extern int g_unnamed69d810;
-extern unsigned char g_unnamed69d80d;
+extern int g_playerTurn;
+extern unsigned char g_playerDrop;
 // advmgr.cpp owns the retail datum; ResetGame only clears the turn-control
 // latch after rebuilding the session.
 extern int g_thisNetGotAdventureControl;
 extern int g_heroGoldCost;
 // One-byte session latch reset by game::SetupOrigData. No surviving symbol
 // names its wider role, so retain the address-ordinal spelling.
-extern int g_unnamed69950c;
+extern int g_grailOwner;
 // Eight ints indexed by PLAYER, and readHeroData (0x5021c0) CONSUMES an
 // entry: `movsx eax,[owner] / mov ecx,[4*eax + 0x69fb24]`, and when that is
 // not -1 it becomes the hero id and the slot is stored -1 again. A reserved
@@ -1764,14 +1764,14 @@ extern int g_unnamed69950c;
 
 // No Dreamcast or NH3API symbol covers it, so the spelling stays ordinal on
 // gUnnamed69950c's precedent rather than inventing a role name.
-extern unsigned char g_unnamed69951c;
-extern int g_unnamed69fb24[8];
+extern unsigned char g_normalVictory;
+extern int g_startingHeroOverrides[8];
 // Dreamcast public `iCurHourGlassPhase`; game.cpp owns the retail word and
 // philAI::DoAI advances it as computer heroes are processed.
 extern int g_curHourGlassPhase;
 // Retail-only companion word cleared beside the hourglass phase by
 // philAI::GetTurnAIVars. It has no surviving source symbol or other reader.
-extern int g_unnamed691680;
+extern int g_sandAnim;
 // Retail .bss 0x69ccc4, and the SIBLING of advmgr.h's gMapVisibilityBit
 // (0x69ccbc) rather than an alias of it - it has 38 relocation sites of
 // its own, and advManager::ProcessHover gates fog on it with the same
@@ -1780,13 +1780,9 @@ extern int g_unnamed691680;
 // `1 << gUnnamed69778c` (the acting player) while this one takes
 // `1 << gNetLocalGamePos` (this machine's own seat). NAME UNATTESTED -
 // address-ordinal placeholder, as gUnnamed69778c is.
-// 0x69954c, extern-only here: kbwin.cpp owns the DATA claim under the
-// name bVideoPaused, which recruit.cpp already records as CONTRADICTED
-// with the storage correct. remote.h spells the same word
-// gNetworkActive69954c and game::Load's use agrees with remote.h - not
-// networked means the acting player IS the local seat.
-extern unsigned char g_unnamed69ccc4;
-extern int g_networkActive69954c;
+extern unsigned char g_curPlayerBit;
+// Network-session latch; canonical storage is owned by kbwin.cpp.
+extern int g_remoteOn;
 // E:\gamedcs\philai.cpp:4126, `?AI_examine_map@@YAXXZ`); declared here
 void __cdecl aiExamineMap();
 // hero.cpp owns the DATA claim on 0x698400 (name unattested,
@@ -1795,7 +1791,7 @@ void __cdecl aiExamineMap();
 // hero.cpp's note already records THIS call site: every reader treats
 // nonzero as "suppress the interactive path", and game::ClaimTown skips
 // its notify call.
-extern int g_inSetup698400;
+extern int g_inSetup;
 
 // --- the local-player pair, read by GetLocalPlayer and
 // GetLocalPlayerGamePos (both in this TU). The mode selector they
@@ -1804,7 +1800,7 @@ extern int g_inSetup698400;
 // dword eight bytes ahead of gpCurrentPlayer, and range-checked
 // against [0,8) before use. Ordinal placeholder.
 extern int g_netLocalGamePos;                // .bss 0x69cca8
-extern unsigned char g_unnamed69ccc4;
+extern unsigned char g_curPlayerBit;
 
 void startAITheme();
 // 0x699554: the same answer for every other protocol, handed back

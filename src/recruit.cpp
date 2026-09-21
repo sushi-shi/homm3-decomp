@@ -443,7 +443,7 @@ int recruitUnit::open(int newPriority)
     strcpy(m_mgrName,
         DATA_COMPGEN(0x00682a18, recruitManagerName, "recruitManager"));
 
-    if (g_networkActive69954c && !g_currentPlayer->isLocalHuman()) {
+    if (g_remoteOn && !g_currentPlayer->isLocalHuman()) {
         g_recruitWindow->m_acceptButton->enable(0);
         g_recruitWindow->m_maximumButton->enable(0);
     }
@@ -572,7 +572,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     // block in GetMessage while iconic) read the same way for a
     // network-game flag. Renaming a 275-reference global is the
     // owning lane's call, so the call site keeps the declared name.
-    if (g_networkActive69954c && !g_currentPlayer->isLocalHuman()) {
+    if (g_remoteOn && !g_currentPlayer->isLocalHuman()) {
         g_recruitWindow->m_acceptButton->enable(0);
         g_recruitWindow->m_maximumButton->enable(0);
         g_recruitWindow->m_quantitySlider->enable(0);
@@ -725,9 +725,9 @@ inline int exitRecruitUnit(message& msg)
 VA(0x00550940, 0xA08)  // anchor-callee + switch-table bracket, dc 0x11a30c
 int recruitUnit::main(message& msg)
 {
-    unsigned char abortDialog = g_turnDuration69d630.isExpired();
+    unsigned char abortDialog = g_turnDuration.isExpired();
 
-    if (!abortDialog && g_networkActive69954c) {
+    if (!abortDialog && g_remoteOn) {
         unsigned char msgReceived = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {

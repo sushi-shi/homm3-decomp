@@ -24,7 +24,7 @@
 #include "winmgr.h"
 
 // Retail scalar state; startup initial values come from the pinned image.
-DATA(0x00697784) unsigned long g_dialogDeadline697784;
+DATA(0x00697784) unsigned long g_dialogDeadline;
 
 // Shared absolute deadline used by retail dialogs. Its timer role is proven
 // by this handler and the other dialog handlers that compare GameTime::Get()
@@ -49,8 +49,8 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
     m_widgets.reserve(25);
 
     g_levelUpWindow = this;
-    if (g_networkActive69954c && !g_currentPlayer->isLocalHuman())
-        g_dialogDeadline697784 = GameTime::get() + 15000;
+    if (g_remoteOn && !g_currentPlayer->isLocalHuman())
+        g_dialogDeadline = GameTime::get() + 15000;
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
     bitmapBorder* background = new bitmapBorder(
@@ -159,11 +159,11 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             addWidget(*it, -1);
     }
 
-    if (g_turnDuration69d630.isOn()
-            && g_turnDuration69d630.isClose(15000))
-        g_dialogDeadline697784 = GameTime::get() + 15000;
-    if (g_unnamed691209)
-        g_dialogDeadline697784 = GameTime::get() + 2000;
+    if (g_turnDuration.isOn()
+            && g_turnDuration.isClose(15000))
+        g_dialogDeadline = GameTime::get() + 15000;
+    if (g_goSolo)
+        g_dialogDeadline = GameTime::get() + 2000;
 }
 
 VA_COMPGEN(0x004f9700, 0x21, SCALAR_DELETING_DTOR, TLevelUpWindow)
@@ -178,10 +178,10 @@ TLevelUpWindow::~TLevelUpWindow()
 VA(0x004f9780, 0x440)  // vtable slot 9+linkorder, dc 0xe8c64
 int TLevelUpWindow::windowHandler(message& msg)
 {
-    if (!g_dialogDeadline697784) {
+    if (!g_dialogDeadline) {
         int result = CAdvPopup::windowHandler(msg);
         if (result) {
-            if (g_turnDuration69d630.isExpired())
+            if (g_turnDuration.isExpired())
                 g_windowManager->m_dialogReturn = 9999;
             return result;
         }
@@ -189,13 +189,13 @@ int TLevelUpWindow::windowHandler(message& msg)
 
     pollSound();
 
-    unsigned long deadline = g_dialogDeadline697784;
+    unsigned long deadline = g_dialogDeadline;
     if (deadline && GameTime::isPast(deadline)) {
         msg.m_id = MESSAGE_WIDGET;
         g_windowManager->m_dialogReturn = 9999;
         msg.m_codeY = widget::WIDGET_END_DIALOG;
         msg.m_codeX = widget::WIDGET_END_DIALOG;
-        g_dialogDeadline697784 = 0;
+        g_dialogDeadline = 0;
         return MESSAGE_DISPATCH_FORWARD;
     }
 

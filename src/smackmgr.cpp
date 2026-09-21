@@ -306,7 +306,7 @@ int videoPlay(int id, int x, int y, int w, int h)
     unsigned char aborted;
 
     if (id >= VIDEO_ID_FIRST_TABLED
-        && (!g_videoDescriptors[id].m_useBink || !g_unnamed698758.m_binkVideo
+        && (!g_videoDescriptors[id].m_useBink || !g_config.m_binkVideo
             || (id == VIDEO_ID_STATE_GATED
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH))) {
@@ -377,7 +377,7 @@ VA(0x00597570, 0x75)  // dc 0x14ac3c
 void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8)
 {
     if (id >= VIDEO_ID_FIRST_TABLED
-        && (!g_videoDescriptors[id].m_useBink || !g_unnamed698758.m_binkVideo
+        && (!g_videoDescriptors[id].m_useBink || !g_config.m_binkVideo
             || (id == VIDEO_ID_STATE_GATED
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))
@@ -942,7 +942,7 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
                bool advance)
 {
     if (g_noSound == 0 && g_soundManager->m_ds != 0
-        && g_unnamed698758.m_soundVolume != 0)
+        && g_config.m_soundVolume != 0)
         g_smackSound = 1;
     else
         g_smackSound = 0;
@@ -971,7 +971,7 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
             return;
         }
         SmackVolumePan(g_smackVideo2, SMACKTRACKS,
-            3640 * g_unnamed698758.m_soundVolume, 0x8000);
+            3640 * g_config.m_soundVolume, 0x8000);
         SmackToBuffer(g_smackVideo2, x, y,
             g_windowManager->m_screenBitmap->getPitch(),
             g_windowManager->m_screenBitmap->getHeight(),
@@ -996,7 +996,7 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
     g_smackX = x;
     g_smackY = y;
     SmackVolumePan(g_smackVideo, SMACKTRACKS,
-        3640 * g_unnamed698758.m_soundVolume, 0x8000);
+        3640 * g_config.m_soundVolume, 0x8000);
     SmackToBuffer(g_smackVideo, x, y,
         g_windowManager->m_screenBitmap->getPitch(),
         g_windowManager->m_screenBitmap->getHeight(),

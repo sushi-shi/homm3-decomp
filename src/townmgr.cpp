@@ -1,3 +1,4 @@
+#include "prefs.h"
 #include "text.h"
 #include "va.h"
 #include "includes.h"
@@ -442,7 +443,6 @@ DATA(0x0068a9bc) const short g_townObjectPositions[396][3] = {
     { 0, 394, 283 },
     { 10, 43, 0 }
 };
-DATA(0x00698784) int g_townOutlines;
 
 // Retail initial data; dimensions follow the typed table consumers.
 DATA(0x00642eb4) signed char g_townBuildOrder[9][44] = {
@@ -597,9 +597,10 @@ DATA(0x00643064) const char* g_townBuildingSprites[9][44] = {
 DATA(0x006436bc) const char* g_townMusic[9] = { "CstleTown", "Rampart", "TowerTown", "InfernoTown", "necroTown", "dungeon", "StrongHold", "FortressTown", "ElemTown" };
 
 // Retail scalar state; startup initial values come from the pinned image.
-DATA(0x006aa9d8) int g_unnamed6aa9d8;
+// Original DC name: castleOpen; DoTavern brackets the modal window lifetime.
+DATA(0x006aa9d8) int g_castleOpen;
 DATA(0x006aaa5c) unsigned char g_buildAllBuildings;
-DATA(0x0067832c) int g_unnamed67832c = -1;
+DATA(0x0067832c) int g_pendingTownBuild = -1;
 
 void startMouseThread();
 void stopMouseThread();
@@ -640,33 +641,11 @@ DATA(0x00643694) const TTerrainType townManager::s_townNativeTerrains[10] = {
 DATA(0x006aa628) hero* g_tavernHero;
 DATA(0x006aaa48) int g_mapTavern;
 
-// Two more words the manager constructor clears. An image-wide scan of
-// the two absolute addresses separates them: every one of the seventeen
-// references to 0x6aa9ec lands inside townmgr's own bracket
-// (0x1c2a10..0x1df1ff), so it is this compiland's file-static, while
-// 0x6aa9d8 is also read from five sites in game.obj's span (0x4db7d3,
-// 0x4dd9f1, 0x4dda8d, 0x4e1bad, 0x4e1c13) and so belongs to a compiland
-// outside the admitted surface - declared here the way town::View's
-// globals are. Roles are unattested, so the names stay neutral.
-// The "nwczion" cheat's toggle, and this is a NAME rather than an
-// ordinal because the retail bytes prove the semantics twice over. The
-// image has exactly four references: the game-start reset at 0x4cece9
-// clears it, the console at 0x402933/0x40293d flips it when the typed
-// line matches the ROT13 literal at 0x63a558 ("ajpmvba" -> "nwczion",
-// the build-everything cheat, the neighbouring cells being "fcbba" ->
-// "spoon" and "ajpcuvfurecevpr" -> "nwcphisherprice"), and
-// SetupExtraStuff below reads it. Owner TU outside the admitted
-// surface, so it is declared rather than claimed.
-
-// A third, on the same evidence: all seven references to 0x6aa9e8 land
-// inside townmgr's bracket (townObject::Draw 0x5c328e, townManager::Open
-// 0x5c651a, 0x5c77ee/0x5c77fb, ::Main 0x5d34b2, ::CycleOutline 0x5d692e
-// and ::BuildObj 0x5d6e7b), so it is this compiland's file-static too.
-// CycleOutline publishes the objId of the object it is animating into
-// it and townObject::Draw reads it back, which is the whole role.
-
-DATA(0x006aa9e8) static int g_unnamed6aa9e8;
-DATA(0x006aa9ec) static heroWindow* g_unnamed6aa9ec;
+// Descriptive names: CycleOutline and SetCommandAndText publish the object
+// whose outline townObject::Draw renders; DoTavern owns the modal window.
+// Both cells are private to townmgr. Their original names are not recovered.
+DATA(0x006aa9e8) static int g_outlinedTownObjectId;
+DATA(0x006aa9ec) static heroWindow* g_tavernWindow;
 
 // The eight resource icons of the town screen's bottom bar, as x/y
 // pairs; the constructor's one loop walks them. Its single image-wide
@@ -777,7 +756,7 @@ char* getBuildingInfo(const town* thisTown, int buildingId,
 // every one inside townmgr's bracket, so this compiland owns it; only
 // the read in UpdateTownLocator is reconstructed, so the name stays
 // neutral.
-DATA(0x006aaa50) static int g_unnamed6aaa50;
+DATA(0x006aaa50) static int g_currentTownIndex;
 
 // The recruit dialog the fort page runs modally. All sixteen image-wide
 // references sit inside townmgr's bracket, so this compiland owns it;
@@ -903,7 +882,7 @@ DATA(0x0068a2d4) const char* const g_playerFlagSprites[8] = { "PRRed.pcx", "PRBl
 // adventuremapwindow.obj owns this eight-byte rollover/right-click record;
 // Dreamcast supplies the public name and THelpText type. The fort page and
 // SetCommandAndText select its two columns through the shared building map.
-DATA(0x00642e70) const int g_unnamed642e70[8] = { 19, 20, 21, 22, 23, 24, 18, 25 };
+DATA(0x00642e70) const int g_resourceHelpIndices[8] = { 19, 20, 21, 22, 23, 24, 18, 25 };
 
 // The two townObject tables, indexed together by `iObjPos +
 // TOWN_BUILDING_SLOTS * iTownType`. Their EXTENTS chain, which is what
@@ -1008,7 +987,7 @@ townObject::~townObject()
 // Original: townObject::DrawOutline; townmgr.cpp:1913, dc 0x16a224
 void townObject::drawOutline()
 {
-    if (m_objOutline && g_townOutlines)
+    if (m_objOutline && g_config.m_townOutlines)
         m_objOutline->draw(0, 0, m_w, m_h,
                            g_windowManager->m_screenBitmap, m_x, m_y, 1);
 }
@@ -1108,7 +1087,7 @@ void townObject::draw(int incFrame, unsigned char drawHotspots)
                               g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
             }
         }
-        if (g_unnamed6aa9e8 == m_objId)
+        if (g_outlinedTownObjectId == m_objId)
             drawOutline();
         if (drawHotspots)
             drawHotspot();
@@ -1131,11 +1110,11 @@ townManager::townManager()
     m_hallWindow = 0;
     m_saveWin = 0;
     m_objToBuild = -1;
-    g_unnamed6aa9d8 = 0;
+    g_castleOpen = 0;
     m_resourceDisplay = 0;
     m_dialogResourceDisplay = 0;
     m_multiWin = 0;
-    g_unnamed6aa9ec = 0;
+    g_tavernWindow = 0;
     m_netMsgHandler = 0;
     m_netMsgHandlerSave = 0;
     m_panorama = 0;
@@ -1483,7 +1462,7 @@ void TTownScreenWindow::updateTownLocator(int i)
     msg.m_extra = g_game->getTown(townId)->getPortraitFrame(true);
     broadcastMessage(msg);
 
-    if (i + m_topTown != g_unnamed6aaa50)
+    if (i + m_topTown != g_currentTownIndex)
         return;
 
     msg.m_codeX = widget::WIDGET_SET_STATUS;
@@ -1736,7 +1715,7 @@ int townManager::open(int newPriority)
     m_resourceDisplay = 0;
     m_dialogResourceDisplay = 0;
     m_multiWin = 0;
-    g_unnamed6aa9ec = 0;
+    g_tavernWindow = 0;
     m_netMsgHandler = 0;
     m_netMsgHandlerSave = 0;
     memset(m_monPix, 0, sizeof(m_monPix));
@@ -1746,7 +1725,7 @@ int townManager::open(int newPriority)
     m_destIndex = -1;
     m_command = -1;
     m_loadedTownType = -1;
-    g_unnamed6aa9d8 = 0;
+    g_castleOpen = 0;
     m_lastHover = -1;
     m_lastQualifier = 0;
     m_townObjectCount = 0;
@@ -1759,9 +1738,9 @@ int townManager::open(int newPriority)
     m_panorama = 0;
     m_divideStatus = 0;
     strcpy(m_statusText, "");
-    g_unnamed6aa9e8 = -1;
+    g_outlinedTownObjectId = -1;
 
-    g_unnamed6aaa50 = g_game->getLocalPlayer()->findTown(m_townToView->m_id);
+    g_currentTownIndex = g_game->getLocalPlayer()->findTown(m_townToView->m_id);
     setupExtraStuff();
 
     m_resourceDisplay = new TResourceDisplay(m_townWindow, 0);
@@ -1781,7 +1760,7 @@ int townManager::open(int newPriority)
         m_townToView->applySpecialBuildingEffect(
             g_game->getHero(m_townToView->m_visitingHeroId));
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         CTownNetMsgHandler* handler =
             new CTownNetMsgHandler(m_resourceDisplay);
         m_netMsgHandler = handler;
@@ -1966,7 +1945,7 @@ void townManager::setupTown(unsigned char fade)
     msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
 
-    g_turnDuration69d630.pause();
+    g_turnDuration.pause();
     m_townToView->updateShipyard();
 
     sprintf(g_text, g_game->getTownName(m_townToView->m_id));
@@ -2086,7 +2065,7 @@ void townManager::setupTown(unsigned char fade)
     redrawTownScreen();
     if (fade)
         g_windowManager->fadeScreen(0, 4, 0);
-    g_turnDuration69d630.resume();
+    g_turnDuration.resume();
 }
 
 // The garrison strip's icon set is 0xa1 when nobody is standing in the
@@ -2197,7 +2176,7 @@ void townManager::close()
         m_resourceDisplay = 0;
     }
     g_windowManager->fadeScreen(1, 4, 1);
-    if (g_networkActive69954c && m_netMsgHandler) {
+    if (g_remoteOn && m_netMsgHandler) {
         g_dPlay->setNetMsgHandler(m_netMsgHandlerSave);
         delete m_netMsgHandler;
         m_netMsgHandler = 0;
@@ -2409,10 +2388,10 @@ void townManager::setCommandAndText(message* msg)
         && (code = static_cast<TTownScreenWindow*>(m_townWindow)
                        ->m_zBuffer[msg->m_mouseY * 800 + msg->m_mouseX] - 1) >= 0
         && code <= DWELLING_6_UPG_ID) {
-        g_unnamed6aa9e8 = code;
+        g_outlinedTownObjectId = code;
         playImmEffect(DATA_COMPGEN(0x0068c210, guiPopEffectName, "GuiPop"), 1);
     } else {
-        g_unnamed6aa9e8 = -1;
+        g_outlinedTownObjectId = -1;
     }
 
     m_command = -2;
@@ -2682,7 +2661,7 @@ void townManager::setCommandAndText(message* msg)
     case TResourceDisplay::RESOURCE_TEXT_6_ID:
     case TResourceDisplay::RESOURCE_TEXT_7_ID:
         strcpy(m_statusText,
-               g_adventureWindowHelp[g_unnamed642e70[
+               g_adventureWindowHelp[g_resourceHelpIndices[
                    code - TResourceDisplay::RESOURCE_TEXT_0_ID]].m_text);
         break;
     case TResourceDisplay::RESOURCE_BORDER_0_ID:
@@ -2693,7 +2672,7 @@ void townManager::setCommandAndText(message* msg)
     case TResourceDisplay::RESOURCE_BORDER_5_ID:
     case TResourceDisplay::RESOURCE_BORDER_6_ID:
         strcpy(m_statusText,
-               g_adventureWindowHelp[g_unnamed642e70[
+               g_adventureWindowHelp[g_resourceHelpIndices[
                    code - TResourceDisplay::RESOURCE_BORDER_0_ID]].m_text);
         break;
     case TTownScreenWindow::TOWN_HOTSPOT_NONE:
@@ -4873,9 +4852,9 @@ int townManager::main(message& msg)
     unsigned char netMsgSeen;
 
     g_soundManager->serviceSounds();
-    if (g_turnDuration69d630.isExpired())
+    if (g_turnDuration.isExpired())
         return exitTownManager(msg);
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         netMsgSeen = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
@@ -4888,9 +4867,9 @@ int townManager::main(message& msg)
     }
 
     int rclick = (msg.m_qualifier & 0x200) != 0;
-    int build = g_unnamed67832c;
+    int build = g_pendingTownBuild;
     if (build != -1) {
-        g_unnamed67832c = -1;
+        g_pendingTownBuild = -1;
         if (build == TTownScreenWindow::TOWN_CHEAT_BUILD_ALL) {
             for (build = 0; build < 0x2c; build++) {
                 if ((g_townEligibleBuildMask[m_townToView->m_type]
@@ -5254,8 +5233,8 @@ building_popup:
                         static_cast<TTownScreenWindow*>(m_townWindow)
                             ->m_topTown
                         + msg.m_codeY - TTownScreenWindow::TOWN_0_ID;
-                    if (g_unnamed6aaa50 != index) {
-                        g_unnamed6aaa50 = index;
+                    if (g_currentTownIndex != index) {
+                        g_currentTownIndex = index;
                         int id = player->m_townIds[index];
                         m_townToView = g_game->getTown(id);
                         changeTown(1);
@@ -5294,7 +5273,7 @@ building_popup:
             case TResourceDisplay::RESOURCE_TEXT_7_ID:
                 strcpy(text,
                        g_adventureWindowHelp[
-                           g_unnamed642e70[
+                           g_resourceHelpIndices[
                                code
                                - TResourceDisplay::RESOURCE_TEXT_0_ID]].m_rclick);
                 if (rclick)
@@ -5313,7 +5292,7 @@ building_popup:
             case TResourceDisplay::RESOURCE_BORDER_6_ID:
                 strcpy(text,
                        g_adventureWindowHelp[
-                           g_unnamed642e70[
+                           g_resourceHelpIndices[
                                code
                                - TResourceDisplay::
                                      RESOURCE_BORDER_0_ID]].m_rclick);
@@ -5519,24 +5498,24 @@ building_popup:
                 doCommand(9, 0, 0);
             break;
         case KEYCODE_KP_2:
-            if (g_unnamed6aaa50
+            if (g_currentTownIndex
                 < g_game->getLocalPlayer()->m_numTowns - 1) {
                 TTownScreenWindow* win =
                     static_cast<TTownScreenWindow*>(m_townWindow);
                 win->doTownKnob(0);
-                g_unnamed6aaa50++;
-                int id = player->m_townIds[g_unnamed6aaa50];
+                g_currentTownIndex++;
+                int id = player->m_townIds[g_currentTownIndex];
                 m_townToView = g_game->getTown(id);
                 changeTown(1);
             }
             break;
         case KEYCODE_KP_8:
-            if (g_unnamed6aaa50 > 0) {
+            if (g_currentTownIndex > 0) {
                 TTownScreenWindow* win =
                     static_cast<TTownScreenWindow*>(m_townWindow);
                 win->doTownKnob(1);
-                g_unnamed6aaa50--;
-                int id = player->m_townIds[g_unnamed6aaa50];
+                g_currentTownIndex--;
+                int id = player->m_townIds[g_currentTownIndex];
                 m_townToView = g_game->getTown(id);
                 changeTown(1);
             }
@@ -5583,14 +5562,14 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
         if (isGarrison) {
             g_game->viewArmy(*m_destStrip->m_group, m_destIndex,
                              m_destStrip->m_thisHero, 0, 0x77, 0x14,
-                             !g_unnamed6aa9d8
+                             !g_castleOpen
                                  && (m_destStrip != m_heroStrip
                                      || m_destStrip->m_group->getNumArmies() > 1),
                              0);
         } else {
             g_game->viewArmy(*m_destStrip->m_group, m_destIndex,
                              m_destStrip->m_thisHero, m_townToView, 0x77, 0x14,
-                             !g_unnamed6aa9d8
+                             !g_castleOpen
                                  && (!m_destStrip->m_thisHero
                                      || m_destStrip->m_group->getNumArmies() > 1),
                              0);
@@ -5863,7 +5842,7 @@ TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int id)
             memError();
     }
 
-    if (g_networkActive69954c && !g_currentPlayer->isLocalHuman()
+    if (g_remoteOn && !g_currentPlayer->isLocalHuman()
         || g_townManager->m_townToView->m_owner != g_netLocalGamePos)
         getWidget(BUY_BUTTON_ID)->enable(0);
 
@@ -6211,7 +6190,7 @@ VA(0x005d6910, 0x16E)  // dc 0x179a64
 void townManager::cycleOutline(const int objectIndex, const int x, const int y,
                                const int w, const int h)
 {
-    g_unnamed6aa9e8 = m_townObjects[objectIndex]->m_objId;
+    g_outlinedTownObjectId = m_townObjects[objectIndex]->m_objId;
     TPalette16& pal = m_townObjects[objectIndex]->m_objOutline->m_p16;
     unsigned short saved = pal.m_data[96];
 
@@ -6375,7 +6354,7 @@ void townManager::buildObj(int buildingId)
 
     waitEndSample(sample, -1);
     pollSound();
-    g_unnamed6aa9e8 = -1;
+    g_outlinedTownObjectId = -1;
     m_objToBuild = -1;
     g_windowManager->broadcastMessage(MESSAGE_WIDGET,
                                       widget::WIDGET_CLEAR_STATUS,
@@ -6769,11 +6748,11 @@ void doMapTavern(type_point point)
 VA(0x005d7ec0, 0x3EA)  // anchor-caller(DoMapTavern 0x5d7e90) + anchor-callee(TTavernWindow ctor 0x5d70b0 + BroadcastMessage) + arity(bare ret), dc 0x17ad8c
 unsigned char doTavern()
 {
-    g_unnamed6aa9d8 = 1;
-    g_unnamed6aa9ec = new TTavernWindow(0xca, 0x30);
-    if (!g_unnamed6aa9ec)
+    g_castleOpen = 1;
+    g_tavernWindow = new TTavernWindow(0xca, 0x30);
+    if (!g_tavernWindow)
         memError();
-    setWinText(g_unnamed6aa9ec, 0x16);
+    setWinText(g_tavernWindow, 0x16);
 
     message msg;
     msg.m_qualifier = 0;
@@ -6785,43 +6764,43 @@ unsigned char doTavern()
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;
     msg.m_extra = g_game->getLocalPlayerGamePos();
-    g_unnamed6aa9ec->broadcastMessage(msg);
+    g_tavernWindow->broadcastMessage(msg);
 
     msg.m_extraText = g_text;
     if (g_currentPlayer->isLocalHuman()) {
         sprintf(g_text, g_generalText->getText(217), g_game->m_currentRumour);
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = 2;
-        g_unnamed6aa9ec->broadcastMessage(msg);
+        g_tavernWindow->broadcastMessage(msg);
     }
 
     playerData* player = g_game->getLocalPlayer();
     sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), g_heroGoldCost);
     msg.m_codeY = 4;
-    g_unnamed6aa9ec->broadcastMessage(msg);
+    g_tavernWindow->broadcastMessage(msg);
 
     if (player->m_recruits[0] == -1) {
         g_tavernHero = 0;
-        g_unnamed6aa9ec->widgetClearStatus(8, widget::WIDGET_DRAWN);
+        g_tavernWindow->widgetClearStatus(8, widget::WIDGET_DRAWN);
     } else {
         g_tavernHero = &g_game->m_heroes[player->m_recruits[0]];
-        g_unnamed6aa9ec->widgetClearStatus(9, widget::WIDGET_DRAWN);
+        g_tavernWindow->widgetClearStatus(9, widget::WIDGET_DRAWN);
         msg.m_codeX = widget::WIDGET_SET_IMAGE;
         msg.m_codeY = 5;
         msg.m_extraText =
             g_heroTraits[g_game->getHero(player->m_recruits[0])->m_portrait]
                 .m_largePortraitName;
-        g_unnamed6aa9ec->broadcastMessage(msg);
+        g_tavernWindow->broadcastMessage(msg);
     }
 
     if (player->m_recruits[1] == -1) {
-        g_unnamed6aa9ec->widgetClearStatus(9, widget::WIDGET_DRAWN);
+        g_tavernWindow->widgetClearStatus(9, widget::WIDGET_DRAWN);
     } else {
         msg.m_codeY = 6;
         msg.m_extraText =
             g_heroTraits[g_game->getHero(player->m_recruits[1])->m_portrait]
                 .m_largePortraitName;
-        g_unnamed6aa9ec->broadcastMessage(msg);
+        g_tavernWindow->broadcastMessage(msg);
         if (g_tavernHero == 0)
             g_tavernHero = &g_game->m_heroes[player->m_recruits[1]];
     }
@@ -6839,7 +6818,7 @@ unsigned char doTavern()
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = 7;
         msg.m_extraText = g_text;
-        g_unnamed6aa9ec->broadcastMessage(msg);
+        g_tavernWindow->broadcastMessage(msg);
     }
 
     if (player->m_resources[6] < g_heroGoldCost || g_tavernHero == 0
@@ -6849,14 +6828,14 @@ unsigned char doTavern()
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_codeY = TTavernWindow::HIRE_BUTTON_ID;
         msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
-        g_unnamed6aa9ec->broadcastMessage(msg);
+        g_tavernWindow->broadcastMessage(msg);
     }
 
     if (g_currentPlayer->isLocalHuman())
-        g_unnamed6aa9ec->getWidget(TTavernWindow::HIRE_BUTTON_ID)->enable(0);
-    g_unnamed6aa9ec->doModal(0);
-    delete g_unnamed6aa9ec;
-    g_unnamed6aa9d8 = 0;
+        g_tavernWindow->getWidget(TTavernWindow::HIRE_BUTTON_ID)->enable(0);
+    g_tavernWindow->doModal(0);
+    delete g_tavernWindow;
+    g_castleOpen = 0;
     return g_windowManager->m_dialogReturn == TTavernWindow::HIRE_BUTTON_ID;
 }
 
@@ -7718,13 +7697,13 @@ void TCastleWindow::setRolloverText(message* msg)
             if (code >= 0x3e9 && code <= 0x3f0)
                 strcpy(g_text,
                        g_adventureWindowHelp[
-                           g_unnamed642e70[code - 0x3e9]].m_text);
+                           g_resourceHelpIndices[code - 0x3e9]].m_text);
             else
                 strcpy(g_text, "");
         } else {
             strcpy(g_text,
                    g_adventureWindowHelp[
-                       g_unnamed642e70[code - 0x3f1]].m_text);
+                       g_resourceHelpIndices[code - 0x3f1]].m_text);
         }
     } else if (code != EXIT_BUTTON_ID) {
         strcpy(g_text, "");
@@ -7907,7 +7886,7 @@ int TCastleWindow::windowHandler(message& msg)
             case RESOURCE_TEXT_ID + 6:
             case RESOURCE_TEXT_ID + 7:
                 strcpy(g_text, g_adventureWindowHelp[
-                           g_unnamed642e70[
+                           g_resourceHelpIndices[
                                msg.m_codeY - RESOURCE_TEXT_ID]].m_rclick);
                 if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT)
                     normalDialog(g_text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -7923,7 +7902,7 @@ int TCastleWindow::windowHandler(message& msg)
             case RESOURCE_BORDER_ID + 5:
             case RESOURCE_BORDER_ID + 6:
                 strcpy(g_text, g_adventureWindowHelp[
-                           g_unnamed642e70[
+                           g_resourceHelpIndices[
                                msg.m_codeY - RESOURCE_BORDER_ID]].m_rclick);
                 if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT)
                     normalDialog(g_text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -7997,7 +7976,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
     message msg;
     message textMessage;
 
-    g_unnamed6aa9d8 = 1;
+    g_castleOpen = 1;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 0;

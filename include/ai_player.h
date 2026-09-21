@@ -261,7 +261,7 @@ extern char g_aiResourceWarningFormat[];
 // it; named in the gUnnamed69ccc4 style. ai_player.obj is the nearest
 // admitted consumer.
 DATA(0x00693718)
-extern unsigned char g_unnamed693718[];
+extern unsigned char g_oneUseEvents[];
 
 // Dreamcast publishes this object-value table by name. Retail's
 // AI_value_of_observatory indexes the same dword array with the trigger

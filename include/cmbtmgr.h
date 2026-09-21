@@ -357,6 +357,12 @@ enum CombatHeroFrameType {
 
 class combatManager : public baseManager {
 public:
+    // Original DC statics: LeftHeroLimits, RightHeroLimits,
+    // MainBuildingLimits and UpperTowerLimits (GetGridIndex).
+    static const SLimitData s_leftHeroLimits;
+    static const SLimitData s_rightHeroLimits;
+    static const SLimitData s_mainBuildingLimits;
+    static const SLimitData s_upperTowerLimits;
     // drawing.cpp:666, Dreamcast dc 0x841d4. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
     unsigned char scrollTo(int x, int y, unsigned char draw,
@@ -1912,11 +1918,11 @@ extern combatManager* g_combatManager;
 // CheckGetAIMove caches the displayed surrender price here. No surviving
 // retail or Dreamcast symbol supplies a public spelling, so the name keeps
 // its address ordinal.
-extern long g_surrenderCost695030;
-extern unsigned char g_combatFlag6985a3;
+extern long g_surrenderCost;
+extern unsigned char g_combatRetreated;
 // Set while the combat action pump is active; process_move_then_attack clears
 // it on a win before the ResetMouse path. Definition belongs to drawing.cpp.
-extern unsigned char g_combatFlag697744;
+extern unsigned char g_combatSurrendered;
 DATA(0x006989ec) extern int g_processingCombatAction;
 
 // The combat random seed, .data 0x66d840. SetupCombat parks its iSeed
@@ -1935,7 +1941,7 @@ DATA(0x006989ec) extern int g_processingCombatAction;
 // 92.5714 -> 92.5357 by itself, and gating it restores the ceiling. A
 // bulk probe of externs added together evidently does not reproduce what
 // a single extern added to a header this widely included does.
-extern int g_combatSeed66d840;
+extern int g_combatSeed;
 
 // THE FOUR COMBAT DEPLOYMENT TABLES, .rdata, and their BOUNDS ARE PROVEN
 // BY ADJACENCY rather than assumed: 0x63d0a8 + 2*7*4 = 0x63d0e0,
@@ -1950,16 +1956,16 @@ extern int g_combatSeed66d840;
 // chosen turns on the defending hero's formation byte, so the pair is the
 // game's tight/loose deployment split - but no roster row or string
 // reaches any of the four, so the names carry their addresses.
-extern const int g_combatDeployHexes63d0a8[2][7];
-extern const int g_combatDeploySurroundedHexes63d0e0[2][7];
-extern const int g_combatDeploySlots63d118[7][7];
-extern const int g_combatDeploySlots63d1dc[7][7];
+extern const int g_combatDeployHexes[2][7];
+extern const int g_combatDeploySurroundedHexes[2][7];
+extern const int g_combatDeploySpreadSlots[7][7];
+extern const int g_combatDeployGroupedSlots[7][7];
 
 // Source aggregate copied into combatManager+0x13d38 by the constructor,
 // LowerDoor and RaiseDoor. The current DATA contract cannot express its
 // size, so the stripped target still represents interior relocations as
 // separate symbols; source keeps the retail-proven aggregate shape.
-extern TDrawbridgeBounds g_drawbridgeBounds694f30;
+extern TDrawbridgeBounds g_drawbridgeBounds;
 
 // The clip rectangle every combat-drawing pass intersects its dirty
 // region with before handing it to heroWindowManager::UpdateScreen.
@@ -1974,7 +1980,7 @@ extern TDrawbridgeBounds g_drawbridgeBounds694f30;
 // choice produces is masked (ResetLimitCreature is exact through the
 // identical aggregate copy). NAME IS A SOURCE-FACING INVENTION and
 // carries its address - no roster row, string or DC global reaches it.
-extern TDrawbridgeBounds g_combatDrawLimits694f18;
+extern TDrawbridgeBounds g_combatDrawLimits;
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot
@@ -2050,14 +2056,9 @@ DATA(0x0063c7ca) extern const unsigned short g_obstacleMagicTerrainMasks[];
 // LowerDoor's quick-combat bypass and the four redraw-bound sources.
 // Names are address ordinals because no surviving public symbol names
 // them; widths and uses are byte-proven by the retail body.
-extern int g_combatQuickMode69877c;
-extern int g_combatActive698a18;
+extern int g_combatActive;
 
 // Rectangles built by the retail static initializers at 0x4626a0..0x462759.
-extern SLimitData g_combatHexLimits694ea8;
-extern SLimitData g_combatHexLimits694ed8;
-extern SLimitData g_combatHexLimits694ef0;
-extern SLimitData g_combatHexLimits694f08;
 
 
 // The row-column table one hex LEFT of gCastleWallColumns, at 0x63bce8

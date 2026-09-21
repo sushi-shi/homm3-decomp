@@ -202,9 +202,10 @@ char textEntryWidget::getCharPressed(message* msg)
 // Retail .bss cell written here and referenced NOWHERE else in the
 // image - 0x1bb0fe is the only reloc against it in the whole reloc
 // table, and its two neighbours 0x697784/0x697788 are already other
-// units' claims, so the cell is textntry.obj's own. Its role is not
-// recoverable: no body reads it.
-DATA(0x00697780) int g_unnamed697780;
+// units' claims, so the cell is textntry.obj's own. Retail retains only
+// the reset; the corresponding DC OnKeyPress store supplies its name.
+// Original DC name: gbTextEntryEscaped; OnKeyPress clears it after editing.
+DATA(0x00697780) int g_textEntryEscaped;
 
 VA(0x005bac50, 0x4FD)  // dc 0x162c2c
 int textEntryWidget::onKeyPress(message* msg)
@@ -291,7 +292,7 @@ int textEntryWidget::onKeyPress(message* msg)
         draw();
         g_windowManager->updateScreen(xLoc, yLoc, m_width, m_height);
     }
-    g_unnamed697780 = 0;
+    g_textEntryEscaped = 0;
     msg->m_id = MESSAGE_WIDGET;
     msg->m_codeX = WIDGET_SELECT;
     msg->m_codeY = m_id;

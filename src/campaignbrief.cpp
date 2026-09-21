@@ -1,3 +1,4 @@
+#include "prefs.h"
 #include "va.h"
 
 #include <stdio.h>
@@ -738,9 +739,9 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             memError();
     }
 
-    m_oldVolume = g_unk698760;
+    m_oldVolume = g_config.m_musicVolume;
     if (viewFromGame)
-        g_unk698760 /= 2;
+        g_config.m_musicVolume /= 2;
     m_campaign->startMusic();
 
     if (viewFromGame) {
@@ -881,7 +882,7 @@ VA(0x0045afb0, 0x18F)  // dc 0x5a11c
 TCampaignBrief::~TCampaignBrief()
 {
     if (g_saveHeader) {
-        g_unk698760 = m_oldVolume;
+        g_config.m_musicVolume = m_oldVolume;
         g_soundManager->switchAmbientMusic(
             g_terrainMusicIds[g_advManager->m_lastTerrain]);
         backupGameHeaders(g_game, g_saveHeader);
@@ -1158,7 +1159,7 @@ static int campaignBriefHandler(message& msg)
 
         int gamePos = brief->m_campaign->m_scenarios[selected]
                           ->m_options->getPlayer(choice);
-        strcpy(g_game->m_players[gamePos].m_name, g_localPlayerName);
+        strcpy(g_game->m_players[gamePos].m_name, g_config.m_networkDefaultName);
         g_localGamePos = gamePos;
         brief->m_campaign->startScenario(selected, choice);
         incProgressBar(1);

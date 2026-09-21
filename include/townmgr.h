@@ -79,7 +79,6 @@ extern TPalette16* g_systemPalette;  // retail .bss 0x6aacb0
 // for one dword would widen this compiland by the whole 29-member
 // preference block. Definition and DATA claim stay with misc.obj, whose
 // carved span does not reach 0x698784.
-extern int g_townOutlines;  // retail .bss 0x698784
 
 // One drawable object of the town panorama - a building, its outline
 // and its hotspot - forty-four slots of them on the manager at +0x5c.

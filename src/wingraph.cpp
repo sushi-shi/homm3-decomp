@@ -1,3 +1,4 @@
+#include "prefs.h"
 #include "va.h"
 
 #include <ddraw.h>
@@ -16,20 +17,21 @@
 #include "soundmgr.h"
 #include "winmgr.h"
 
-DATA(0x006989d4) int g_unnamed6989d4;
+// Retail SetFullScreenStatus returns before changing modes when this is set.
+// Descriptive name; no original symbol name has been recovered.
+DATA(0x006989d4) int g_fullScreenChangesDisabled;
 
 
 // Private desktop metrics, written as one consecutive triple by
 // GetDesktopInfo's three GetDeviceCaps calls (BITSPIXEL, HORZRES, VERTRES)
-// and read back by the two six-byte accessors below. No retail or Dreamcast
-// symbol attests storage names, so these remain house-ordinal placeholders
-// in their owning TU.
+// and read back by the two six-byte accessors below. Descriptive names from
+// those API queries; the original storage names are not recovered.
 DATA(0x0068c870)
-static int g_unnamed68c870;
+static int g_desktopBitsPerPixel;
 DATA(0x0068c874)
-static int g_unnamed68c874;
+static int g_desktopWidth;
 DATA(0x0068c878)
-static int g_unnamed68c878;
+static int g_desktopHeight;
 
 // DirectDraw's lifecycle cells. The primary/back surfaces are public because
 // the blitters consume them; the DirectDraw and clipper interfaces remain
@@ -41,13 +43,12 @@ DATA(0x006aacd0) static IDirectDrawClipper* g_ddClipper;
 DATA(0x006aacb4) static int g_winGraphBusy;
 DATA(0x006aacd4) static unsigned char g_inDirectDrawError;
 
-// wingraph's own Bitmap16Bit VIEW of the locked back surface, referenced
-// (never owned) at every DDCreateSurface and re-referenced after each
-// successful Blt retry. File-static: 0x6aac70 is touched from exactly four
-// places and all four are rows in this compiland (0x1ffdf5 - the dynamic
-// initializer that constructs it 0x0-by-0x0 - 0x1ffe11, 0x2001a9, 0x2006c2).
-// NAME provisional: no roster attests it.
-DATA(0x006aac70) static Bitmap16Bit g_ddSurfaceBitmap(0, 0);
+// Original DC name: InitWin (winmgr.cpp:112). This shared bitmap references
+// the locked DirectDraw back surface. heroWindowManager::Open reads its
+// Width/Height/Pitch/map at +0x24/+0x28/+0x2c/+0x30; those interior addresses
+// are not independent globals. DirectDraw surface creation/recovery updates
+// the same object's reference.
+DATA(0x006aac70) Bitmap16Bit g_initWin(0, 0);
 
 // DC's PixelFormat, one complete SDK object. GetPixelFormat writes all
 // 32 bytes; its masks are members, not separate mousemgr-owned globals.
@@ -106,7 +107,7 @@ static void ddCreatePrimary()
 static void ddSetupClipper()
 {
     HRESULT result;
-    if (!g_windowedMode) {
+    if (!g_config.m_mainGameFullScreen) {
         result = g_directDraw->CreateClipper(0, &g_ddClipper, 0);
         if (result != DD_OK)
             ddsd(result,
@@ -226,7 +227,7 @@ void robAppBlit(tagRECT* combRect)
             surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
             static_cast<unsigned short*>(surfaceDesc.lpSurface));
     }
-    g_ddSurfaceBitmap.reference(
+    g_initWin.reference(
         surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
         static_cast<unsigned short*>(surfaceDesc.lpSurface));
 
@@ -359,7 +360,7 @@ void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
 VA(0x006003c0, 0x22D)  // recovery sequence + first-caller static emission, dc 0x1990e4
 static void ddRestoreFrontBuffer(tagRECT& dstRect)
 {
-    if (g_windowedMode) {
+    if (g_config.m_mainGameFullScreen) {
         HRESULT result = g_directDraw->SetCooperativeLevel(
             g_hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
         if (result != DD_OK)
@@ -393,7 +394,7 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect)
         OffsetRect(&dstRect, origin.x, origin.y);
         g_ddClipper->Release();
         g_ddClipper = 0;
-        g_windowedMode = 1;
+        g_config.m_mainGameFullScreen = 1;
         SetWindowLongA(g_hwndApp, GWL_STYLE, WS_POPUP | WS_VISIBLE);
         SetWindowLongA(g_hwndApp, GWL_EXSTYLE, WS_EX_TOPMOST);
         kbChangeMenu(0);
@@ -410,7 +411,7 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect)
 
     g_ddsPrimary = ddCreateSurface(800, 600, 1);
 
-    if (!g_windowedMode) {
+    if (!g_config.m_mainGameFullScreen) {
         result = g_ddsPrimary->SetClipper(g_ddClipper);
         if (result != DD_OK)
             ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
@@ -460,7 +461,7 @@ IDirectDrawSurface* ddCreateSurface(unsigned long width, unsigned long height,
                 surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
                 static_cast<unsigned short*>(surfaceDesc.lpSurface));
         }
-        g_ddSurfaceBitmap.reference(
+        g_initWin.reference(
             surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
             static_cast<unsigned short*>(surfaceDesc.lpSurface));
     }
@@ -1149,11 +1150,11 @@ unsigned char getDesktopInfo()
 {
     HDC desktopDC = GetDC(0);
     if (desktopDC) {
-        g_unnamed68c870 = GetDeviceCaps(desktopDC, BITSPIXEL);
-        g_unnamed68c874 = GetDeviceCaps(desktopDC, HORZRES);
-        g_unnamed68c878 = GetDeviceCaps(desktopDC, VERTRES);
+        g_desktopBitsPerPixel = GetDeviceCaps(desktopDC, BITSPIXEL);
+        g_desktopWidth = GetDeviceCaps(desktopDC, HORZRES);
+        g_desktopHeight = GetDeviceCaps(desktopDC, VERTRES);
         ReleaseDC(0, desktopDC);
-        return g_unnamed68c870 == DESKTOP_REQUIRED_BITS_PER_PIXEL;
+        return g_desktopBitsPerPixel == DESKTOP_REQUIRED_BITS_PER_PIXEL;
     }
     return 0;
 }
@@ -1161,13 +1162,13 @@ unsigned char getDesktopInfo()
 VA(0x006014c0, 0x6)  // dc 0x19a41c
 int getDesktopWidth()
 {
-    return g_unnamed68c874;
+    return g_desktopWidth;
 }
 
 VA(0x006014d0, 0x6)  // dc 0x19a424
 int getDesktopHeight()
 {
-    return g_unnamed68c878;
+    return g_desktopHeight;
 }
 
 VA(0x006014e0, 0x5)  // dc 0x19a42c
@@ -1189,7 +1190,7 @@ void ddInitGraphics()
                           "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
              0x9a);
 
-    if (g_windowedMode) {
+    if (g_config.m_mainGameFullScreen) {
         result = g_directDraw->SetCooperativeLevel(
             g_hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
         if (result != DD_OK)
@@ -1296,9 +1297,9 @@ void ddCleanUpWinGraphics()
 VA(0x006019a0, 0x5a)  // dc 0x19a454
 unsigned char setFullScreenStatus(int fullScreenOn)
 {
-    if (g_unnamed6989d4)
+    if (g_fullScreenChangesDisabled)
         return 0;
-    if (fullScreenOn == g_windowedMode)
+    if (fullScreenOn == g_config.m_mainGameFullScreen)
         return 1;
 
     unsigned char changed = ddSetFullScreenStatus(fullScreenOn);
@@ -1316,7 +1317,7 @@ unsigned char setFullScreenStatus(int fullScreenOn)
 // sequence. Keep this ordinary helper and its two argument evaluations.
 void resizeWindow(int windowX, int windowY)
 {
-    if (!g_windowedMode) {
+    if (!g_config.m_mainGameFullScreen) {
         RECT windowRect = {0, 0, 800, 600};
         AdjustWindowRectEx(&windowRect, WINDOWED_WINDOW_STYLE, 1, 0);
         MoveWindow(g_hwndApp, windowX, windowY,
@@ -1360,7 +1361,7 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     int status = newStatus;
     Bitmap16Bit savedScreen(800, 600);
 
-    if (g_windowedMode == newStatus)
+    if (g_config.m_mainGameFullScreen == newStatus)
         return 1;
     if (g_winGraphBusy)
         return 0;
@@ -1390,9 +1391,9 @@ unsigned char ddSetFullScreenStatus(int newStatus)
         status = 1;
         changed = 0;
     }
-    g_windowedMode = status;
+    g_config.m_mainGameFullScreen = status;
 
-    if (g_windowedMode) {
+    if (g_config.m_mainGameFullScreen) {
         SetWindowLong(g_hwndApp, GWL_STYLE, WS_POPUP | WS_VISIBLE);
         SetWindowLong(g_hwndApp, GWL_EXSTYLE, WS_EX_TOPMOST);
     } else {
@@ -1417,7 +1418,7 @@ unsigned char ddSetFullScreenStatus(int newStatus)
     g_mouseManager->reset();
     g_mouseManager->loadFrame(g_mouseManager->getFrame());
 
-    resizeWindow(g_windowX, g_windowY);
+    resizeWindow(g_config.m_mainGameX, g_config.m_mainGameY);
 
     kbChangeMenu(0);
     videoRealignBuffers();

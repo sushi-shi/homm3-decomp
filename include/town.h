@@ -159,7 +159,7 @@ extern const char* g_townBuildingSpriteNames[9];
 
 // town.cpp owns the DATA claim; TResourceDisplay consumes the current
 // player-position selector directly, as its retail bodies do.
-extern int g_unnamed69778c;
+extern int g_curWatchPlayer;
 
 // Retail .data 0x67814c; Dreamcast publishes the same global name. Both
 // hero::hire and town::hire subtract it from the player's gold resource.

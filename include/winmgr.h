@@ -167,6 +167,6 @@ extern int g_dialogNestCount;
 
 // Shared absolute deadline consumed by modal-dialog handlers. The DATA claim
 // currently lives with levelupwindow.cpp, the first admitted owner/consumer.
-extern unsigned long g_dialogDeadline697784;
+extern unsigned long g_dialogDeadline;
 
 #endif  /* HOMM3_WINMGR_H */

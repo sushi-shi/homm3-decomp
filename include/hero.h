@@ -261,8 +261,8 @@ class boat;
 // same RVA is a fatal duplicate at delink time. Declared here rather than
 // by including cmbtmgr.h, which hero.obj's measured include closure does
 // not otherwise need.
-extern unsigned char g_combatFlag6985a3;
-extern unsigned char g_combatFlag697744;
+extern unsigned char g_combatRetreated;
+extern unsigned char g_combatSurrendered;
 
 // 0x485d90, a /Gr free helper claimed in customcampaign.cpp. The returned
 // string's hidden pointer takes ECX and infile takes EDX, as hero::load's
@@ -282,12 +282,12 @@ std::string readLengthPrefixedString(TAbstractFile* infile);
 // HeroScrn.txt row declarations shared with swapmgr's hero-exchange screen.
 // src/hero.cpp owns the DATA claims; these declarations only expose the
 // already-proven contiguous runtime text table to its source twin.
-extern int g_networkActive69954c;
+extern int g_remoteOn;
 // 0x6aa9d8. DECLARATION ONLY - src/townmgr.cpp:163 owns the DATA claim,
 // and a second claim on one RVA is a fatal duplicate at delink. hero.obj
 // reads it at 0x4db7d3, 0x4dd9f1, 0x4dda8d, 0x4e1bad and 0x4e1c13;
 // SetupHeroView treats it as the "hero list is suppressed" latch.
-extern int g_unnamed6aa9d8;
+extern int g_castleOpen;
 // movement.txt row 6 column 5, DECLARATION ONLY - include/events.h:439
 // owns the DATA claim on 0x698a94, and a second claim on one RVA is a
 // fatal duplicate at delink. hero::GetMobility adds it on the flag-bit-1

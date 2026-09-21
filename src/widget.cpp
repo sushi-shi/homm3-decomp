@@ -267,7 +267,7 @@ widget* widget::s_lastHoverWidget;
 
 // Complete-only sleep/wake hook: widget's vtable slot 12 and all inherited
 // copies point to the empty ret 4 body folded at 0x485d80. Keep the body
-// out of the header: button::vslot12 retains its qualified base call.
-void widget::vslot12(int on)
+// out of the header: button::onSleepChange retains its qualified base call.
+void widget::onSleepChange(int on)
 {
 }

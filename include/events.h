@@ -32,7 +32,7 @@ void doEventGarrison(hero* inHero, garrison* thisGarrison);
 // advmgr.h rides in ~40 closures and events.h in two; DoCombat is the
 // first consumer, so events.h holds the claim until the producer is
 // decoded (the iCombatControlNetPos / command.h precedent).
-extern unsigned char g_unnamed691208;
+extern unsigned char g_goSoloTest;
 
 // DoCombat's two AI callees, declared HERE on the DoEventGarrison
 // precedent above: their owning headers cannot enter events.cpp's
@@ -556,7 +556,7 @@ extern int g_stablesMovementBonus;
 // role. Name ordinal; DoCombat is the first consumer, so events.h holds
 // the claim until the band's producer is decoded (the gUnnamed691208
 // rationale above).
-extern int g_unnamed699540;
+extern int g_adventureCombatActive;
 
 // advManager::FizzleCenter's (0x4acbb0) sound selector, also the second
 // argument of advManager::HeroLoses. Retail lowers the two arms as a

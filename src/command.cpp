@@ -227,7 +227,7 @@ void combatManager::doAnimations()
     if (GameTime::elapsedSince(g_timers[0]) >= 0) {
         pollSound();
         long interval = static_cast<long>(
-            g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 100.0f);
+            g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
         g_timers[0] =
             GameTime::nextFrameTime(g_timers[0], interval);
     }
@@ -249,7 +249,7 @@ int combatManager::main(message& msg)
 
     unsigned char automaticTurn = 0;
     if (!static_cast<const combatManager*>(this)->isQuickCombat()
-            && m_thisNetHasControl && (m_autoCombatOn || g_unnamed691209)) {
+            && m_thisNetHasControl && (m_autoCombatOn || g_goSolo)) {
         if (static_cast<const combatManager*>(this)->isQuickCombat()
                 || isComputerAction(getCurrentArmy())) {
             while (msg.m_id != MESSAGE_KEY_DOWN
@@ -661,7 +661,7 @@ unsigned char combatManager::isComputerAction()
 // stack offsets +0x34, +0x288 and +0xf4 prove the explicit army argument.
 
 // THE OPTIONS ARE PREFERENCE FIELDS, NOT STANDALONE GLOBALS. All four
-// dwords this body reads land inside SUnnamed698758 (retail .bss
+// dwords this body reads land inside configStruct (retail .bss
 // 0x698758, claimed in misc.cpp): combatCatapult (+0x44),
 // combatBallista (+0x48), combatFirstAidTent (+0x4c) and
 // combatAutoCreatures (+0x3c) - the same five war-machine flags
@@ -703,39 +703,39 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
     case CREATURE_ARROW_TOWER:
         if (m_creaturePlacement)
             return 0;
-        if (m_autoCombatOn && g_unnamed698758.m_combatBallista)
+        if (m_autoCombatOn && g_config.m_combatBallista)
             return 1;
         if (owner == 0)
             return 1;
         if (owner->m_skillLevel[20] == 0)
             return 1;
-        if (g_unnamed691209 && m_thisNetHasControl)
+        if (g_goSolo && m_thisNetHasControl)
             return 1;
         break;
     case CREATURE_CATAPULT:
         if (m_creaturePlacement)
             return 0;
-        if (m_autoCombatOn && g_unnamed698758.m_combatCatapult)
+        if (m_autoCombatOn && g_config.m_combatCatapult)
             return 1;
         if (owner->m_skillLevel[eSecSkillSiegeBallistics] == 0)
             return 1;
-        if (g_unnamed691209 && m_thisNetHasControl)
+        if (g_goSolo && m_thisNetHasControl)
             return 1;
         break;
     case CREATURE_FIRST_AID_TENT:
         if (m_creaturePlacement)
             return 0;
-        if (m_autoCombatOn && g_unnamed698758.m_combatFirstAidTent)
+        if (m_autoCombatOn && g_config.m_combatFirstAidTent)
             return 1;
         if (owner->m_skillLevel[27] == 0)
             return 1;
-        if (g_unnamed691209 && m_thisNetHasControl)
+        if (g_goSolo && m_thisNetHasControl)
             return 1;
         break;
     default:
-        if (m_autoCombatOn && g_unnamed698758.m_combatAutoCreatures)
+        if (m_autoCombatOn && g_config.m_combatAutoCreatures)
             return 1;
-        if (g_unnamed691209 && m_thisNetHasControl)
+        if (g_goSolo && m_thisNetHasControl)
             return 1;
         break;
     }
@@ -869,13 +869,13 @@ int combatManager::processCombatMsg(message& msg)
             case TCombatWindow::COMBAT_LEFT_COMMAND_0_ID:
                 if (doSurrender()) {
                     if (g_game->m_players[m_playerIds[m_currentSide]].m_resources[6]
-                            < g_surrenderCost695030) {
+                            < g_surrenderCost) {
                         normalDialog(g_generalText->getText(30),
                                      1, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     } else {
                         m_nextAction = 5;
-                        m_nextActionExtra = g_surrenderCost695030;
+                        m_nextActionExtra = g_surrenderCost;
                     }
                 }
                 resetMouse();
@@ -888,7 +888,7 @@ int combatManager::processCombatMsg(message& msg)
 
             case TCombatWindow::COMBAT_PLACEMENT_COMMAND_1_ID:
                 m_lastMovedArmy = 0;
-                if (g_networkActive69954c) {
+                if (g_remoteOn) {
                     // The Dreamcast NB11 stream gives placementMsg its own
                     // nested lexical scope inside the network arm.
                     {
@@ -919,7 +919,7 @@ int combatManager::processCombatMsg(message& msg)
 
     case MESSAGE_MOUSE_MOVE: {
         unsigned char pointerChanged = 0;
-        if ((m_autoCombatOn || g_unnamed691209)
+        if ((m_autoCombatOn || g_goSolo)
                 && (static_cast<const combatManager*>(this)->isQuickCombat()
                     || isComputerAction(getCurrentArmy())))
             break;
@@ -960,7 +960,7 @@ int combatManager::processCombatMsg(message& msg)
             m_combatWindow->m_creatureSubWindows[3]->unShow();
 
             if (gridIndex == COMBAT_HEX_DEFENDER_HERO) {
-                if (m_heroes[1] && g_unnamed698758.m_combatArmyInfoLevel) {
+                if (m_heroes[1] && g_config.m_combatArmyInfoLevel) {
                     m_combatWindow->m_heroSubWindows[1]->update(
                         *m_heroes[1], m_heroes[0],
                         m_magicTerrain
@@ -968,7 +968,7 @@ int combatManager::processCombatMsg(message& msg)
                     m_combatWindow->m_heroSubWindows[1]->show();
                 }
             } else if (gridIndex == COMBAT_HEX_ATTACKER_HERO) {
-                if (m_heroes[0] && g_unnamed698758.m_combatArmyInfoLevel) {
+                if (m_heroes[0] && g_config.m_combatArmyInfoLevel) {
                     m_combatWindow->m_heroSubWindows[0]->update(
                         *m_heroes[0], m_heroes[1],
                         m_magicTerrain
@@ -979,7 +979,7 @@ int combatManager::processCombatMsg(message& msg)
                 if (m_cells[gridIndex].hasArmy()) {
                     army* stack = m_cells[gridIndex].getArmy();
                     hero* owner = stack->getOwner();
-                    if (g_unnamed698758.m_combatArmyInfoLevel
+                    if (g_config.m_combatArmyInfoLevel
                             == TCombatOptionsWindow::
                                 CREATURE_INFO_LEVEL_VERBOSE) {
                         if (stack->m_combatSide == 0) {
@@ -991,7 +991,7 @@ int combatManager::processCombatMsg(message& msg)
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[1]->show();
                         }
-                    } else if (g_unnamed698758.m_combatArmyInfoLevel
+                    } else if (g_config.m_combatArmyInfoLevel
                                == TCombatOptionsWindow::
                                    CREATURE_INFO_LEVEL_COMPACT) {
                         if (stack->m_combatSide == 0) {
@@ -1051,25 +1051,25 @@ int combatManager::processCombatMsg(message& msg)
         switch (msg.m_codeX) {
         case KEYCODE_F5:
             setCombatViewArmy(
-                (g_unnamed698758.m_combatArmyInfoLevel + 1) % 3);
+                (g_config.m_combatArmyInfoLevel + 1) % 3);
             break;
 
         case KEYCODE_F6:
-            setCombatGrid(!g_unnamed698758.m_showCombatGrid,
-                          g_unnamed698758.m_showCombatMouseHex,
-                          g_unnamed698758.m_combatShadeLevel, 1);
+            setCombatGrid(!g_config.m_showCombatGrid,
+                          g_config.m_showCombatMouseHex,
+                          g_config.m_combatShadeLevel, 1);
             break;
 
         case KEYCODE_F7:
-            setCombatGrid(g_unnamed698758.m_showCombatGrid,
-                          !g_unnamed698758.m_showCombatMouseHex,
-                          g_unnamed698758.m_combatShadeLevel, 1);
+            setCombatGrid(g_config.m_showCombatGrid,
+                          !g_config.m_showCombatMouseHex,
+                          g_config.m_combatShadeLevel, 1);
             break;
 
         case KEYCODE_F8:
-            setCombatGrid(g_unnamed698758.m_showCombatGrid,
-                          g_unnamed698758.m_showCombatMouseHex,
-                          !g_unnamed698758.m_combatShadeLevel, 1);
+            setCombatGrid(g_config.m_showCombatGrid,
+                          g_config.m_showCombatMouseHex,
+                          !g_config.m_combatShadeLevel, 1);
             break;
 
         case KEYCODE_KP_MINUS:
@@ -1083,7 +1083,7 @@ int combatManager::processCombatMsg(message& msg)
         case KEYCODE_F:
             if (m_creaturePlacement)
                 break;
-            if ((m_autoCombatOn || g_unnamed691209)
+            if ((m_autoCombatOn || g_goSolo)
                     && (static_cast<const combatManager*>(this)->isQuickCombat()
                         || isComputerAction(getCurrentArmy())))
                 break;
@@ -1155,7 +1155,7 @@ void combatManager::resetRound()
             resetRound();
         }
 
-        if (g_networkActive69954c) {
+        if (g_remoteOn) {
             CEndPlacementPhaseMsg msg;
             transmitRemoteData(&msg,
                                g_combatControlNetPos[1 - m_currentSide],
@@ -1264,9 +1264,9 @@ int combatManager::checkWin(message* msg)
     }
 
     if (m_sideRetreated[0] || m_sideRetreated[1])
-        g_combatFlag6985a3 = 1;
+        g_combatRetreated = 1;
     if (m_sideSurrendered[0] || m_sideSurrendered[1])
-        g_combatFlag697744 = 1;
+        g_combatSurrendered = 1;
 
     doVictory(m_winner);
     msg->m_id = MESSAGE_EXECUTIVE;
@@ -1341,7 +1341,7 @@ int combatManager::getCommand(int newIndex)
     if (newIndex == -1)
         return COMBAT_COMMAND_NONE;
 
-    if (g_networkActive69954c && m_thisNetHasControl == 0)
+    if (g_remoteOn && m_thisNetHasControl == 0)
         return m_cells[newIndex].m_armySide < 0 ? COMBAT_COMMAND_HOVER
                                             : COMBAT_COMMAND_VIEW_ARMY;
 
@@ -1495,7 +1495,7 @@ int combatManager::rightClick(int newIndex)
                                                     m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
             m_combatWindow->m_heroSubWindows[1]->show();
             g_windowManager->doQuickView(0);
-            if (g_unnamed698758.m_combatArmyInfoLevel)
+            if (g_config.m_combatArmyInfoLevel)
                 return 0;
             m_combatWindow->m_heroSubWindows[1]->unShow();
         }
@@ -1508,7 +1508,7 @@ int combatManager::rightClick(int newIndex)
                                                     m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
             m_combatWindow->m_heroSubWindows[0]->show();
             g_windowManager->doQuickView(0);
-            if (g_unnamed698758.m_combatArmyInfoLevel)
+            if (g_config.m_combatArmyInfoLevel)
                 return 0;
             m_combatWindow->m_heroSubWindows[0]->unShow();
         }
@@ -1867,14 +1867,14 @@ void combatManager::doVictory(int winningGroup)
     }
 
     int dialogtimeout = 15000;
-    if (g_networkActive69954c && !g_thisNetGotAdventureControl) {
-        g_dialogDeadline697784 = GameTime::get() + dialogtimeout;
+    if (g_remoteOn && !g_thisNetGotAdventureControl) {
+        g_dialogDeadline = GameTime::get() + dialogtimeout;
     } else {
-        g_dialogDeadline697784 = 0;
+        g_dialogDeadline = 0;
         dialogtimeout = 0;
     }
-    if (g_unnamed691209)
-        g_dialogDeadline697784 = GameTime::get() + 2000;
+    if (g_goSolo)
+        g_dialogDeadline = GameTime::get() + 2000;
 
     if (winningGroup != -1 && m_playerIds[winningGroup] != -1
         && g_game->isLocalHuman(m_playerIds[winningGroup])) {
@@ -1883,7 +1883,7 @@ void combatManager::doVictory(int winningGroup)
                 m_heroes[0], m_heroes[1], winningGroup, winningGroup,
                 m_defendingTown != 0, experience);
             g_soundManager->startMP3(
-                g_combatResultMusic[g_combatResultFlag695014], 1, 1);
+                g_combatResultMusic[g_combatResult], 1, 1);
             resultsWindow.doModal();
         }
         if (m_heroes[winningGroup]) {
@@ -1892,16 +1892,16 @@ void combatManager::doVictory(int winningGroup)
             showEagleEye(winningGroup, dialogtimeout);
             showLootedArtifacts(lootedArtifacts, dialogtimeout);
         }
-    } else if (!g_unnamed691209) {
+    } else if (!g_goSolo) {
         TCombatResultsWindow resultsWindow(
             m_heroes[0], m_heroes[1], lastAliveSideIndex, winningGroup,
             m_defendingTown != 0, 0);
         g_soundManager->startMP3(
-            g_combatResultMusic[g_combatResultFlag695014], 1, 1);
+            g_combatResultMusic[g_combatResult], 1, 1);
         resultsWindow.doModal();
     }
 
-    g_dialogDeadline697784 = 0;
+    g_dialogDeadline = 0;
 }
 
 VA(0x00477a00, 0xB2)  // dc 0x6e898
@@ -1934,9 +1934,9 @@ long combatManager::getSurrenderCost()
 
 inline int combatManager::doSurrender()
 {
-    g_surrenderCost695030 = getSurrenderCost();
+    g_surrenderCost = getSurrenderCost();
     sprintf(g_text, g_generalText->getText(33),
-            m_heroes[1 - m_currentSide]->m_name, g_surrenderCost695030);
+            m_heroes[1 - m_currentSide]->m_name, g_surrenderCost);
     normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     return g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT;
 }
@@ -2105,23 +2105,23 @@ void combatManager::checkGetAIMove()
                     }
                 }
 
-                g_surrenderCost695030 = getSurrenderCost();
+                g_surrenderCost = getSurrenderCost();
                 if ((!m_defendingTown || m_currentSide == 0)
                         && g_game->m_players[m_playerIds[m_currentSide]].m_resources[6]
-                            >= g_surrenderCost695030 + 2500
-                        && combatValue > g_surrenderCost695030 + 2500) {
+                            >= g_surrenderCost + 2500
+                        && combatValue > g_surrenderCost + 2500) {
                     std::string msg;
                     if (isHuman) {
                         msg = formatString(g_generalText->getText(130),
                                             m_heroes[m_currentSide]->m_name,
-                                            g_surrenderCost695030);
+                                            g_surrenderCost);
                         normalDialog(msg.c_str(), 2, -1, -1, 6,
-                                     g_surrenderCost695030, -1, 0,
+                                     g_surrenderCost, -1, 0,
                                      -1, 0, -1, 0);
                         if (g_windowManager->m_dialogReturn
                                 == DIALOG_RETURN_ACCEPT) {
                             m_nextAction = 5;
-                            m_nextActionExtra = g_surrenderCost695030;
+                            m_nextActionExtra = g_surrenderCost;
                             return;
                         }
                     }
@@ -2143,7 +2143,7 @@ void combatManager::getControl()
     m_lastCellIndex = -1;
     m_lastCommand = -99;
 
-    if (!m_autoCombatOn && !g_unnamed691209)
+    if (!m_autoCombatOn && !g_goSolo)
         g_inputManager->flush();
 
     if (m_status == STATUS_ACTIVE
@@ -2156,7 +2156,7 @@ void combatManager::getControl()
     // spelling the repeated integer zero once gives VC6 that allocation.
     int zero = 0;
 
-    if (g_networkActive69954c != zero
+    if (g_remoteOn != zero
             && m_playerIds[0] != -1
             && m_playerIds[1] != -1
             && g_game->isHuman(m_playerIds[1])
@@ -2169,7 +2169,7 @@ void combatManager::getControl()
         m_thisNetHasControl = 1;
 
     if (m_combatWindow && m_combatWindow->m_controlSubWindow) {
-        if ((m_autoCombatOn != zero || g_unnamed691209)
+        if ((m_autoCombatOn != zero || g_goSolo)
                 && isComputerAction()) {
             static_cast<type_combat_sub_window*>(
                 m_combatWindow->m_controlSubWindow)->disableAllButtons();
@@ -2396,7 +2396,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
             drawFrame(1, 0, 0, 0, 1, 0);
     }
 
-    if (m_thisNetHasControl && g_networkActive69954c
+    if (m_thisNetHasControl && g_remoteOn
             && m_playerIds[0] >= 0 && m_playerIds[1] >= 0
             && g_game->isHuman(m_playerIds[1])
             && g_game->isHuman(m_playerIds[0])) {
@@ -2661,7 +2661,7 @@ void combatManager::resetCycleTimers()
 // write, frame refresh and WritePrefs sequence.
 void combatManager::setCombatViewArmy(int newCombatViewArmy)
 {
-    g_unnamed698758.m_combatArmyInfoLevel = newCombatViewArmy;
+    g_config.m_combatArmyInfoLevel = newCombatViewArmy;
     drawFrame(1, 0, 0, 0, 1, 0);
     writePrefs();
 }
@@ -2672,15 +2672,15 @@ void combatManager::setCombatGrid(int combatShowEntireGrid,
                                   int combatGridLevel,
                                   unsigned char drawItNow)
 {
-    if (g_unnamed698758.m_showCombatGrid == combatShowEntireGrid
-            && g_unnamed698758.m_showCombatMouseHex == combatShowMouseHex
-            && g_unnamed698758.m_combatShadeLevel == combatGridLevel)
+    if (g_config.m_showCombatGrid == combatShowEntireGrid
+            && g_config.m_showCombatMouseHex == combatShowMouseHex
+            && g_config.m_combatShadeLevel == combatGridLevel)
         return;
 
     updateMouseGrid(-1, 0);
-    g_unnamed698758.m_showCombatGrid = combatShowEntireGrid;
-    g_unnamed698758.m_showCombatMouseHex = combatShowMouseHex;
-    g_unnamed698758.m_combatShadeLevel = combatGridLevel;
+    g_config.m_showCombatGrid = combatShowEntireGrid;
+    g_config.m_showCombatMouseHex = combatShowMouseHex;
+    g_config.m_combatShadeLevel = combatGridLevel;
 
     m_backgroundDrawn = 0;
     if (combatGridLevel)

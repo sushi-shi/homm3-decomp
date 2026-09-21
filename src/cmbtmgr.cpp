@@ -58,15 +58,15 @@
 DATA(0x0063cf7c) const float g_combatSpeedFactors[3] = { 1.0f, 0.6299999952316284f, 0.4000000059604645f };
 DATA(0x0063bd00) const unsigned char g_castleWallColumns[11] = { 12, 29, 45, 62, 78, 96, 112, 130, 147, 165, 182 };
 DATA(0x0063d368) const int g_boatBlockedHexes[32] = { 6, 7, 8, 9, 24, 25, 26, 58, 59, 60, 75, 76, 77, 92, 93, 94, 109, 110, 111, 126, 127, 128, 159, 160, 161, 162, 163, 176, 177, 178, 179, 180 };
-DATA(0x0063d0a8) const int g_combatDeployHexes63d0a8[2][7] = {
+DATA(0x0063d0a8) const int g_combatDeployHexes[2][7] = {
     { 1, 35, 69, 86, 103, 137, 171 },
     { 15, 49, 83, 100, 117, 151, 185 }
 };
-DATA(0x0063d0e0) const int g_combatDeploySurroundedHexes63d0e0[2][7] = {
+DATA(0x0063d0e0) const int g_combatDeploySurroundedHexes[2][7] = {
     { 57, 61, 90, 93, 96, 125, 129 },
     { 15, 185, 172, 2, 100, 87, 8 }
 };
-DATA(0x0063d118) const int g_combatDeploySlots63d118[7][7] = {
+DATA(0x0063d118) const int g_combatDeploySpreadSlots[7][7] = {
     { 3, 0, 0, 0, 0, 0, 0 },
     { 1, 5, 0, 0, 0, 0, 0 },
     { 1, 3, 5, 0, 0, 0, 0 },
@@ -75,7 +75,7 @@ DATA(0x0063d118) const int g_combatDeploySlots63d118[7][7] = {
     { 0, 1, 2, 4, 5, 6, 0 },
     { 0, 1, 2, 3, 4, 5, 6 }
 };
-DATA(0x0063d1dc) const int g_combatDeploySlots63d1dc[7][7] = {
+DATA(0x0063d1dc) const int g_combatDeployGroupedSlots[7][7] = {
     { 3, 0, 0, 0, 0, 0, 0 },
     { 2, 4, 0, 0, 0, 0, 0 },
     { 2, 3, 4, 0, 0, 0, 0 },
@@ -366,13 +366,13 @@ DATA(0x0063be60) const combatManager::TWallTarget combatManager::s_wallTargets[8
 
 // Retail static constructors 0x462610/0x462640/0x462670 establish these
 // clipping rectangles before combat. Zero-filled placeholders would hide them.
-DATA(0x00694f18) SLimitData g_combatDrawLimits694f18(0, 0, 799, 555);
+DATA(0x00694f18) SLimitData g_combatDrawLimits(0, 0, 799, 555);
 DATA(0x00694ec8) SLimitData g_combatGridAreaLimits(58, 86, 740, 557);
-DATA(0x00694f30) SLimitData g_drawbridgeBounds694f30(365, 211, 542, 380);
-DATA(0x00694ea8) SLimitData g_combatHexLimits694ea8(742, 160, 799, 337);
-DATA(0x00694ed8) SLimitData g_combatHexLimits694ed8(564, 0, 651, 85);
-DATA(0x00694ef0) SLimitData g_combatHexLimits694ef0(741, 16, 799, 127);
-DATA(0x00694f08) SLimitData g_combatHexLimits694f08(0, 16, 57, 127);
+DATA(0x00694f30) SLimitData g_drawbridgeBounds(365, 211, 542, 380);
+DATA(0x00694ea8) const SLimitData combatManager::s_mainBuildingLimits(742, 160, 799, 337);
+DATA(0x00694ed8) const SLimitData combatManager::s_upperTowerLimits(564, 0, 651, 85);
+DATA(0x00694ef0) const SLimitData combatManager::s_rightHeroLimits(741, 16, 799, 127);
+DATA(0x00694f08) const SLimitData combatManager::s_leftHeroLimits(0, 16, 57, 127);
 
 // Retail initial data; dimensions follow the typed table consumers.
 DATA(0x0063d2a0) const char* const g_townCombatBackgrounds[9] = { "SgCsBack.pcx", "SgRmBack.pcx", "SgTwBack.pcx", "SgInBack.pcx", "SgNcBack.pcx", "SgDnBack.pcx", "SgStBack.pcx", "SgFrBack.pcx", "SgElBack.pcx" };
@@ -394,15 +394,14 @@ DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[9][3] = {
 DATA(0x0063bd18) const int g_moatDamage[9] = { 70, 70, 150, 90, 70, 90, 70, 90, 70 };
 DATA(0x0063abe0) const long g_castleWallGateTargets[5] = { 6, 8, 9, 10, 12 };
 
-DATA(0x0066d840) int g_combatSeed66d840 = 1;
-DATA(0x00698a18) int g_combatActive698a18;
+DATA(0x0066d840) int g_combatSeed = 1;
+DATA(0x00698a18) int g_combatActive;
 
 
 // Retail scalar state; startup initial values come from the pinned image.
-DATA(0x00695030) long g_surrenderCost695030;
-DATA(0x006985a3) unsigned char g_combatFlag6985a3;
-DATA(0x00697744) unsigned char g_combatFlag697744;
-DATA(0x0069877c) int g_combatQuickMode69877c;
+DATA(0x00695030) long g_surrenderCost;
+DATA(0x006985a3) unsigned char g_combatRetreated;
+DATA(0x00697744) unsigned char g_combatSurrendered;
 
 VA(0x00462760, 0x127)  // dc 0x5d3e0
 combatManager::combatManager()
@@ -477,8 +476,8 @@ int combatManager::open(int newPriority)
     SAMPLE2 sample;
 
     g_mouseManager->m_noChangePointer = 1;
-    int savedShowMouseHex = g_unnamed698758.m_showCombatMouseHex;
-    g_unnamed698758.m_showCombatMouseHex = 0;
+    int savedShowMouseHex = g_config.m_showCombatMouseHex;
+    g_config.m_showCombatMouseHex = 0;
     m_combatShowIt = 0;
     g_soundManager->stopAllSamples(1);
 
@@ -505,7 +504,7 @@ int combatManager::open(int newPriority)
     memset(m_curDrawGridShade, 0, COMBAT_GRID_CELLS);
 
     m_backgroundDrawn = 0;
-    g_combatActive698a18 = m_combatCycleType;
+    g_combatActive = m_combatCycleType;
     m_powSprite = 0;
     m_powSpellEffect = -1;
 
@@ -555,7 +554,7 @@ int combatManager::open(int newPriority)
         CheckMenuItem(g_activeMenu, 0xb79c, 0);
         CheckMenuItem(g_activeMenu, 0xb79b, 0);
         g_windowManager->updateScreen(0, 0, 800, 600);
-        g_unnamed698758.m_showCombatMouseHex = savedShowMouseHex;
+        g_config.m_showCombatMouseHex = savedShowMouseHex;
         g_mouseManager->m_noChangePointer = 0;
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
         g_mouseManager->showPointer(0);
@@ -604,7 +603,7 @@ void combatManager::close()
     if (!isQuickCombat())
         g_windowManager->fadeScreen(1, 4, 1);
 
-    g_combatActive698a18 = 0;
+    g_combatActive = 0;
     delete m_saveScreenPreGrid;
     delete m_saveScreenPostGrid;
     delete m_combatMouseBackground;
@@ -767,14 +766,14 @@ void combatManager::loadArmies(unsigned char isSurrounded)
             int hex;
             army& thisArmy = m_armies[side][placed];
             if (isSurrounded) {
-                hex = g_combatDeploySurroundedHexes63d0e0[side][placed];
+                hex = g_combatDeploySurroundedHexes[side][placed];
             } else {
                 int ordinal;
                 if (grouped)
-                    ordinal = g_combatDeploySlots63d1dc[layout][placed];
+                    ordinal = g_combatDeployGroupedSlots[layout][placed];
                 else
-                    ordinal = g_combatDeploySlots63d118[layout][placed];
-                hex = g_combatDeployHexes63d0a8[side][ordinal];
+                    ordinal = g_combatDeploySpreadSlots[layout][placed];
+                hex = g_combatDeployHexes[side][ordinal];
             }
             thisArmy.init(group->m_armies[i], group->m_numTroops[i], combatHero,
                           side, placed, hex, i);
@@ -870,7 +869,7 @@ void combatManager::checkNativeTerrain()
 VA(0x004639f0, 0x270)  // dc 0x5e464
 void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int seed, unsigned char isSurrounded)
 {
-    g_combatSeed66d840 = seed;
+    g_combatSeed = seed;
     sRand(x * 0x1aed3 + y * 0x28f79 + 0x13ea1);
     m_mapPoint = point;
     m_combatCell = g_advManager->getCell(point);
@@ -1042,8 +1041,8 @@ void combatManager::initNonVisualVars()
     m_currentSide = 1;
     m_actingSide = 1;
     m_actingSlot = 0;
-    g_combatFlag6985a3 = 0;
-    g_combatFlag697744 = 0;
+    g_combatRetreated = 0;
+    g_combatSurrendered = 0;
     m_sideSurrendered[0] = 0;
     m_sideSurrendered[1] = 0;
     m_sideRetreated[0] = 0;
@@ -1285,21 +1284,21 @@ const char* combatManager::getBackgroundName()
 VA(0x004647a0, 0x17A)  // dc 0x5f058
 int combatManager::getGridIndex(int x, int y) const
 {
-    if (g_combatHexLimits694f08.m_minX <= x && x <= g_combatHexLimits694f08.m_maxX
-            && g_combatHexLimits694f08.m_minY <= y
-            && y <= g_combatHexLimits694f08.m_maxY)
+    if (combatManager::s_leftHeroLimits.m_minX <= x && x <= combatManager::s_leftHeroLimits.m_maxX
+            && combatManager::s_leftHeroLimits.m_minY <= y
+            && y <= combatManager::s_leftHeroLimits.m_maxY)
         return 252;
-    if (g_combatHexLimits694ef0.m_minX <= x && x <= g_combatHexLimits694ef0.m_maxX
-            && g_combatHexLimits694ef0.m_minY <= y
-            && y <= g_combatHexLimits694ef0.m_maxY)
+    if (combatManager::s_rightHeroLimits.m_minX <= x && x <= combatManager::s_rightHeroLimits.m_maxX
+            && combatManager::s_rightHeroLimits.m_minY <= y
+            && y <= combatManager::s_rightHeroLimits.m_maxY)
         return 253;
-    if (g_combatHexLimits694ea8.m_minX <= x && x <= g_combatHexLimits694ea8.m_maxX
-            && g_combatHexLimits694ea8.m_minY <= y
-            && y <= g_combatHexLimits694ea8.m_maxY)
+    if (combatManager::s_mainBuildingLimits.m_minX <= x && x <= combatManager::s_mainBuildingLimits.m_maxX
+            && combatManager::s_mainBuildingLimits.m_minY <= y
+            && y <= combatManager::s_mainBuildingLimits.m_maxY)
         return 254;
-    if (g_combatHexLimits694ed8.m_minX <= x && x <= g_combatHexLimits694ed8.m_maxX
-            && g_combatHexLimits694ed8.m_minY <= y
-            && y <= g_combatHexLimits694ed8.m_maxY)
+    if (combatManager::s_upperTowerLimits.m_minX <= x && x <= combatManager::s_upperTowerLimits.m_maxX
+            && combatManager::s_upperTowerLimits.m_minY <= y
+            && y <= combatManager::s_upperTowerLimits.m_maxY)
         return 255;
 
     int px = x - 14;
@@ -2477,7 +2476,7 @@ void combatManager::makeCreaturesVanish()
         g_windowManager->fizzleForwardX(
             x, y, width, height,
             static_cast<int>(
-                g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 150.0f));
+                g_combatSpeedFactors[g_config.m_combatSpeed] * 150.0f));
     }
 }
 
@@ -2510,7 +2509,7 @@ void combatManager::lowerDoor()
 
     SAMPLE2 sample = loadPlaySample(
         DATA_COMPGEN(0x0066ffb0, drawbridgeSampleName, "drawbrg.82m"));
-    m_drawbridgeBounds = g_drawbridgeBounds694f30;
+    m_drawbridgeBounds = g_drawbridgeBounds;
     for (int state = DRAWBRIDGE_UP; state >= DRAWBRIDGE_DOWN; state--) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -2541,7 +2540,7 @@ void combatManager::raiseDoor()
     }
 
     SAMPLE2 sample = loadPlaySample("drawbrg.82m");
-    m_drawbridgeBounds = g_drawbridgeBounds694f30;
+    m_drawbridgeBounds = g_drawbridgeBounds;
     for (int state = DRAWBRIDGE_DOWN; state <= DRAWBRIDGE_UP; state++) {
         m_drawbridgeState = state;
         drawFrame(1, 0, 1, 100, 1, 1);
@@ -2778,7 +2777,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     Bitmap16Bit saved(width, height);
     TDrawbridgeBounds updateArea = g_combatAreaLimits;
     const int missileperiod = static_cast<int>(
-        g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 100.0f);
+        g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
 
     int frame = 0;
     int step = 0;
@@ -2817,14 +2816,14 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 updateArea.m_maxX = right;
             if (updateArea.m_maxY < bottom)
                 updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits694f18.m_minX)
-                updateArea.m_minX = g_combatDrawLimits694f18.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits694f18.m_minY)
-                updateArea.m_minY = g_combatDrawLimits694f18.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits694f18.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits694f18.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits694f18.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits694f18.m_maxY;
+            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
+                updateArea.m_minX = g_combatDrawLimits.m_minX;
+            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
+                updateArea.m_minY = g_combatDrawLimits.m_minY;
+            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
+                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
+            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
+                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.m_maxX - updateArea.m_minX + 1,
@@ -2907,7 +2906,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     TDrawbridgeBounds updateArea = g_combatAreaLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowDelay = static_cast<int>(
-        g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 33.0f);
+        g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
     int frame = 0;
     int step = 0;
@@ -2939,14 +2938,14 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                 updateArea.m_maxX = right;
             if (updateArea.m_maxY < bottom)
                 updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits694f18.m_minX)
-                updateArea.m_minX = g_combatDrawLimits694f18.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits694f18.m_minY)
-                updateArea.m_minY = g_combatDrawLimits694f18.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits694f18.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits694f18.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits694f18.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits694f18.m_maxY;
+            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
+                updateArea.m_minX = g_combatDrawLimits.m_minX;
+            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
+                updateArea.m_minY = g_combatDrawLimits.m_minY;
+            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
+                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
+            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
+                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.m_maxX - updateArea.m_minX + 1,
@@ -3047,7 +3046,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     TDrawbridgeBounds updateArea = g_combatAreaLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowdelay = static_cast<int>(
-        g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 33.0f);
+        g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
     int bottom = y + height - 1;
     int right = x + width - 1;
@@ -3089,14 +3088,14 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             updateArea.m_maxX = right;
         if (updateArea.m_maxY < bottom)
             updateArea.m_maxY = bottom;
-        if (updateArea.m_minX < g_combatDrawLimits694f18.m_minX)
-            updateArea.m_minX = g_combatDrawLimits694f18.m_minX;
-        if (updateArea.m_minY < g_combatDrawLimits694f18.m_minY)
-            updateArea.m_minY = g_combatDrawLimits694f18.m_minY;
-        if (updateArea.m_maxX > g_combatDrawLimits694f18.m_maxX)
-            updateArea.m_maxX = g_combatDrawLimits694f18.m_maxX;
-        if (updateArea.m_maxY > g_combatDrawLimits694f18.m_maxY)
-            updateArea.m_maxY = g_combatDrawLimits694f18.m_maxY;
+        if (updateArea.m_minX < g_combatDrawLimits.m_minX)
+            updateArea.m_minX = g_combatDrawLimits.m_minX;
+        if (updateArea.m_minY < g_combatDrawLimits.m_minY)
+            updateArea.m_minY = g_combatDrawLimits.m_minY;
+        if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
+            updateArea.m_maxX = g_combatDrawLimits.m_maxX;
+        if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
+            updateArea.m_maxY = g_combatDrawLimits.m_maxY;
         g_windowManager->updateScreen(updateArea.m_minX, updateArea.m_minY,
                                       updateArea.m_maxX - updateArea.m_minX + 1,
                                       updateArea.m_maxY - updateArea.m_minY + 1);
@@ -3822,9 +3821,9 @@ VA(0x0046a070, 0x2D3)  // dc 0x63704
 void combatManager::lootDeadHero(int side,
                                  std::vector<type_artifact>& lootedArtifacts)
 {
-    if (g_combatFlag6985a3)
+    if (g_combatRetreated)
         return;
-    if (g_combatFlag697744)
+    if (g_combatSurrendered)
         return;
     hero* dead = m_heroes[1 - side];
     if (!dead)
@@ -3867,7 +3866,7 @@ VA(0x0046a350, 0x10C)  // dc 0x6388c
 void combatManager::calculateGainedExperience(int side, int* experienceGained)
 {
     int total = experienceValueOfStack(1 - side);
-    if (g_combatFlag6985a3 || g_combatFlag697744)
+    if (g_combatRetreated || g_combatSurrendered)
         total -= 500;
     if (m_defendingTown && side == 0)
         total += 500;
@@ -3899,7 +3898,7 @@ bool combatManager::isQuickCombat() const
 {
     if (g_game->m_isTutorial)
         return false;
-    if (g_networkActive69954c && m_sideIsAi[0] && m_sideIsAi[1]) {
+    if (g_remoteOn && m_sideIsAi[0] && m_sideIsAi[1]) {
         // Retail's three inlined missile callers retain both player aliases;
         // this standalone body folds the same references into direct loads.
         playerData& firstPlayer = g_game->m_players[m_playerIds[0]];
@@ -3908,7 +3907,7 @@ bool combatManager::isQuickCombat() const
             return true;
         return false;
     }
-    return g_unnamed698758.m_quickCombat != 0;
+    return g_config.m_quickCombat != 0;
 }
 
 VA(0x0046a520, 0x44)

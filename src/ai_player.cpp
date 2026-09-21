@@ -221,7 +221,7 @@ static type_AI_initializer g_aiInitializer;
 // Retail startup0x428070 clears 232 one-byte flags and232 long values.
 // Original visibility-array spelling: AI_event_visibility_values.
 DATA(0x00693718)
-unsigned char g_unnamed693718[232];
+unsigned char g_oneUseEvents[232];
 DATA(0x006925ac)
 long g_aiEventVisibilityValues[232];
 
@@ -693,7 +693,7 @@ void type_AI_player::makeGift(long playerId)
             displayedResource.m_qualifier = surplus[resource];
             if (g_game->m_players[playerId].isLocalHuman()) {
                 list.push_back(displayedResource);
-            } else if (g_networkActive69954c) {
+            } else if (g_remoteOn) {
                 CGiftMsg msg(g_netLocalGamePos, displayedResource.m_resource,
                              displayedResource.m_qualifier);
                 transmitRemoteData(&msg, playerId, 0, 1);
@@ -717,7 +717,7 @@ void type_AI_player::makeGift(long playerId)
             requestedResource.m_qualifier = 0;
             if (g_game->m_players[playerId].isLocalHuman()) {
                 list.push_back(requestedResource);
-            } else if (g_networkActive69954c) {
+            } else if (g_remoteOn) {
                 CGiftRequestMsg msg(g_netLocalGamePos, requestedResource.m_resource);
                 transmitRemoteData(&msg, playerId, 0, 1);
             }
@@ -738,7 +738,7 @@ void type_AI_player::makeGift(long playerId)
                 g_colors[m_team]);
         }
         int timeout = 0;
-        if (g_turnDuration69d630.isOn())
+        if (g_turnDuration.isOn())
             timeout = 15000;
         extendedDialog(message.c_str(), list, -1, -1, timeout);
     }
@@ -2874,7 +2874,7 @@ static void markStrategicMap(
         NewmapCell* cell = g_advManager->getCell(point.m_point);
         int type = cell->m_type;
         if (!(getMapExtra(point.m_point.m_x, point.m_point.m_y, point.m_point.m_z)
-              & g_unnamed69ccc4)) {
+              & g_curPlayerBit)) {
             strategicMap[point.m_point.m_z * levelSize
                           + point.m_point.m_y * g_mapWidth + point.m_point.m_x]
                 += point.m_value;
@@ -3252,7 +3252,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
             continue;
         NewmapCell* mapCell = g_advManager->getCell(cell->m_point);
         if (!mapCell->m_isTrigger) {
-            if ((getMapExtra(cell->m_point) & g_unnamed69ccc4)
+            if ((getMapExtra(cell->m_point) & g_curPlayerBit)
                 || g_currentPlayer->m_numTowns == 0)
                 continue;
         }
@@ -3280,7 +3280,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
         if (point.m_point == currentHero->getLocation())
             continue;
 
-        if (g_unnamed693718[mapCell->m_type]
+        if (g_oneUseEvents[mapCell->m_type]
             && point.m_moveCost > friendlyDistances[
                 point.m_point.m_z * levelSize + point.m_point.m_y * g_mapWidth
                 + point.m_point.m_x])
@@ -3288,7 +3288,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
         point.m_moveCost = cell->m_adjustedCost;
         if (hiringHero)
             point.m_moveCost = 10000;
-        if (!(getMapExtra(point.m_point) & g_unnamed69ccc4)
+        if (!(getMapExtra(point.m_point) & g_curPlayerBit)
             && g_currentPlayer->m_numTowns > 0) {
             if (exploreMode) {
                 point.m_value = 100000;
@@ -3435,7 +3435,7 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
     NewmapCell* cell = g_advManager->getCell(point);
     int type = cell->m_type;
     if (cell->m_isTrigger && g_adventureObjectTraits[type].m_blocksLanding) {
-        if (getMapExtra(point.m_x, point.m_y, point.m_z) & g_unnamed69ccc4) {
+        if (getMapExtra(point.m_x, point.m_y, point.m_z) & g_curPlayerBit) {
             destination->m_moveCost -= currentPathCell->m_cost;
             point = currentPathCell->m_lastPoint;
             pathCell* lastCell = currentSearchArray->getCell(point, 0);
@@ -4022,7 +4022,7 @@ static unsigned char getMapShipyard(const playerData* player, long x,
 VA(0x00430f80, 0x1d2)  // dc 0x35910
 void aiBuildShip(const hero* ourHero, long x, long y, long z)
 {
-    if (ourHero->belongsToHuman() && !g_unnamed691209)
+    if (ourHero->belongsToHuman() && !g_goSolo)
         return;
 
     playerData* player = &g_game->m_players[ourHero->m_owner];
@@ -5362,9 +5362,9 @@ type_AI_initializer::type_AI_initializer()
         105, 1, 106, 1, 107, 50, 108, 10, 109, 10, 110, 1,
         111, 50, 112, 10, 113, 50, 0
     };
-    memset(g_unnamed693718, 0, sizeof(g_unnamed693718));
+    memset(g_oneUseEvents, 0, sizeof(g_oneUseEvents));
     for (int event = 0; g_constOneUseEvents[event]; ++event)
-        g_unnamed693718[event] = 1;
+        g_oneUseEvents[event] = 1;
     memset(g_aiEventVisibilityValues, 0, sizeof(g_aiEventVisibilityValues));
     for (int i = 0; g_constVisibilityValues[i]; ++i) {
         int event = g_constVisibilityValues[i++];

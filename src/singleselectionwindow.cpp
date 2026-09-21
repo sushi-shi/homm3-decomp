@@ -1,3 +1,4 @@
+#include "prefs.h"
 #include "va.h"
 
 #include <algorithm>
@@ -50,7 +51,7 @@
 #include "winmgr.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x0069fc2c) char g_unnamed69fc2c[351];
+DATA(0x0069fc2c) char g_saveGameName[351];
 
 DATA(0x00683454) int g_lastDiff = 1;
 
@@ -398,7 +399,7 @@ inline const char* getResourceBonusDescription(int townType)
 unsigned char savedGameExists(char* filename)
 {
     char tempText[100];
-    sprintf(tempText, "%s%s", filename, g_unnamed691268);
+    sprintf(tempText, "%s%s", filename, g_saveGameSuffix);
     _chdir("games");
     int file = _open(tempText, 0);
     _chdir("..");
@@ -449,13 +450,13 @@ unsigned char saveValid(const char* filename)
         }
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
             valid = 1;
-            strcpy(g_unnamed69fc2c, name);
+            strcpy(g_saveGameName, name);
             strcpy(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                                 "NEWGAME.gm1"),
                    name);
             strcat(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                                 "NEWGAME.gm1"),
-                   g_unnamed691268);
+                   g_saveGameSuffix);
         }
     }
     return valid;
@@ -1000,8 +1001,8 @@ static void sliderFileMenu(int state, heroWindow* parentWindow);
 // The live TSingleSelectionWindow (set for the dialog's lifetime; every
 // widget callback and net handler reaches the window through it). All 35
 // retail references sit inside this TU's span, so the cell is file-static.
-// No name is attested anywhere readable - house unnamed-cell spelling.
-DATA(0x0069fbe8) static TSingleSelectionWindow* g_unnamed69fbe8;
+// Descriptive name from the constructor and the callbacks; original unknown.
+DATA(0x0069fbe8) static TSingleSelectionWindow* g_singleSelectionWindow;
 
 // The notice flag and campaign mode are file-static lobby cells.
 // DC names the one-shot empty-save-list notice flag `notifyNoSaved`.
@@ -1016,10 +1017,10 @@ DATA(0x0069fda4) int g_wasHuman[8];
 // DC's `campaignMode` byte survives as a TU-local Complete cell.  The
 // selected campaign row forces the unlimited (10) duration after transfer.
 DATA(0x0069fd90) static bool g_selectionCampaignMode;
-// DC-attested static name (globals.csv lastIMHoverID, this TU); the
-// WindowHandler mouse arm highlights the hero-face row under the cursor
-// through it.
-DATA(0x0069fdc8) static int g_unnamed69fdc8;
+// Descriptive name: list population, scrolling and slider resolution use
+// this row count (18 normally, 16 in the alternate layout).
+DATA(0x0069fdc8) static int g_scenarioListVisibleRows;
+// Original DC lastIMHoverID; tracks the hovered hero-face row.
 DATA(0x00683470) static int g_lastImHoverId = -1;
 
 // The five per-difficulty score ratings DrawBasicMapInfo formats as
@@ -1306,7 +1307,7 @@ int CNetPlayerHandler::getPlayerCount(unsigned char assignedOnly)
 VA(0x00577d70, 0x6C)  // anchor-vtable t_map_list_update vtbl 0x641d38 slot0; Complete-only 0x43b header-count msg from the +0x1044/+0x1048 pair
 void t_map_list_update::go()
 {
-    TSingleSelectionWindow* win = g_unnamed69fbe8;
+    TSingleSelectionWindow* win = g_singleSelectionWindow;
     CTransferHeaderInfoInitMsg msg(
         win->m_transferHeaders.size());
     transmitRemoteDataDPID(&msg, m_dpid, false, true);
@@ -1381,18 +1382,18 @@ void t_map_list_update::tick()
     if (GameTime::elapsedSince(m_lastSendTime) < 75)
         return;
 
-    if (m_nextHeader < g_unnamed69fbe8->m_transferHeaders.size()) {
+    if (m_nextHeader < g_singleSelectionWindow->m_transferHeaders.size()) {
         for (int k = 0; k < 5; ++k) {
             CMapFileNameMsg msg(
                 1, m_nextHeader,
-                g_unnamed69fbe8->m_transferHeaders[m_nextHeader].m_setup.m_filename,
-                g_unnamed69fbe8->m_transferHeaders[m_nextHeader].m_setup.m_alignment,
-                g_unnamed69fbe8->m_transferHeaders[m_nextHeader].m_fileTime);
+                g_singleSelectionWindow->m_transferHeaders[m_nextHeader].m_setup.m_filename,
+                g_singleSelectionWindow->m_transferHeaders[m_nextHeader].m_setup.m_alignment,
+                g_singleSelectionWindow->m_transferHeaders[m_nextHeader].m_fileTime);
             transmitRemoteDataDPID(&msg, m_dpid, true, false);
             ++m_nextHeader;
             if (static_cast<int>(m_requests.size()) != 0)
                 handleRequests();
-            if (m_nextHeader >= g_unnamed69fbe8->m_transferHeaders.size()) {
+            if (m_nextHeader >= g_singleSelectionWindow->m_transferHeaders.size()) {
                 requestConfirmation();
                 break;
             }
@@ -1414,9 +1415,9 @@ inline void CNewPlayerUpdateProc::handleRequests()
     for (int i = 0; i < count; ++i) {
         GameSelectionHeadersStruct* row;
         if (m_requests[i].m_flag)
-            row = &g_unnamed69fbe8->m_transferHeaders[m_requests[i].m_number];
+            row = &g_singleSelectionWindow->m_transferHeaders[m_requests[i].m_number];
         else
-            row = &g_unnamed69fbe8->m_headersA[m_requests[i].m_number];
+            row = &g_singleSelectionWindow->m_headersA[m_requests[i].m_number];
         CGameHeaderInfoMsg msg(m_requests[i].m_flag,
                                m_requests[i].m_number, row);
         msg.remoteFn00512C80(m_dpid, 1, 1);
@@ -1445,11 +1446,11 @@ void t_map_list_update::finish()
     CGameHeaderInfoEndMsg endMsg;
     transmitRemoteDataDPID(&endMsg, m_dpid, false, true);
 
-    CSetFilterMsg filterMsg(g_unnamed69fbe8->m_mapSizeFilter);
+    CSetFilterMsg filterMsg(g_singleSelectionWindow->m_mapSizeFilter);
     transmitRemoteDataDPID(&filterMsg, m_dpid, false, true);
 
-    CScrollMsg scrollMsg(g_unnamed69fbe8->m_currentMap,
-                         g_unnamed69fbe8->m_currentIndex);
+    CScrollMsg scrollMsg(g_singleSelectionWindow->m_currentMap,
+                         g_singleSelectionWindow->m_currentIndex);
     transmitRemoteDataDPID(&scrollMsg, m_dpid, false, true);
 }
 
@@ -1457,9 +1458,9 @@ VA(0x005789F0, 0x9E)  // dc 0x1480cc
 void CNewPlayerUpdateProc::go()
 {
     CGameHeaderInfoInitMsgEx initMsg(
-        g_unnamed69fbe8->m_gameVersion,
-        g_unnamed69fbe8->m_headersA.size(),
-        g_unnamed69fbe8->m_flag64);
+        g_singleSelectionWindow->m_gameVersion,
+        g_singleSelectionWindow->m_headersA.size(),
+        g_singleSelectionWindow->m_flag64);
     transmitRemoteDataDPID(&initMsg, m_dpid, false, true);
 }
 
@@ -1481,26 +1482,26 @@ void CNewPlayerUpdateProc::tick()
     if (GameTime::elapsedSince(m_lastSendTime) < 75)
         return;
 
-    if (m_nextHeader < g_unnamed69fbe8->m_headersA.size()) {
+    if (m_nextHeader < g_singleSelectionWindow->m_headersA.size()) {
         for (int i = 0; i < 5; ++i) {
-            if (g_unnamed69fbe8->m_flag64) {
+            if (g_singleSelectionWindow->m_flag64) {
                 CGameHeaderInfoMsg msg(
                     0, m_nextHeader,
-                    &g_unnamed69fbe8->m_headersA[m_nextHeader]);
+                    &g_singleSelectionWindow->m_headersA[m_nextHeader]);
                 msg.remoteFn00512C80(m_dpid, 1, 1);
             } else {
                 CMapFileNameMsg msg(
                     0, m_nextHeader,
-                    g_unnamed69fbe8->m_headersA[m_nextHeader].m_setup.m_filename,
-                    g_unnamed69fbe8->m_headersA[m_nextHeader].m_setup.m_alignment,
-                    g_unnamed69fbe8->m_headersA[m_nextHeader].m_fileTime);
+                    g_singleSelectionWindow->m_headersA[m_nextHeader].m_setup.m_filename,
+                    g_singleSelectionWindow->m_headersA[m_nextHeader].m_setup.m_alignment,
+                    g_singleSelectionWindow->m_headersA[m_nextHeader].m_fileTime);
                 transmitRemoteDataDPID(&msg, m_dpid, true, false);
             }
 
             ++m_nextHeader;
             if (static_cast<int>(m_requests.size()) != 0)
                 handleRequests();
-            if (m_nextHeader >= g_unnamed69fbe8->m_headersA.size()) {
+            if (m_nextHeader >= g_singleSelectionWindow->m_headersA.size()) {
                 requestConfirmation();
                 break;
             }
@@ -1726,7 +1727,7 @@ int CEnterNameEdit::onEnter()
 {
     int pos = m_id - 353;
     hide();
-    g_unnamed69fbe8->onNameChange(pos, getText());
+    g_singleSelectionWindow->onNameChange(pos, getText());
     return 1;
 }
 
@@ -1757,23 +1758,23 @@ void CNewPlayerUpdateProc::finish()
     CGameHeaderInfoEndMsg endMsg;
     transmitRemoteDataDPID(&endMsg, m_dpid, false, true);
 
-    CSetFilterMsg filterMsg(g_unnamed69fbe8->m_mapSizeFilter);
+    CSetFilterMsg filterMsg(g_singleSelectionWindow->m_mapSizeFilter);
     transmitRemoteDataDPID(&filterMsg, m_dpid, false, true);
 
-    CScrollMsg scrollMsg(g_unnamed69fbe8->m_currentMap,
-                         g_unnamed69fbe8->m_currentIndex);
+    CScrollMsg scrollMsg(g_singleSelectionWindow->m_currentMap,
+                         g_singleSelectionWindow->m_currentIndex);
     transmitRemoteDataDPID(&scrollMsg, m_dpid, false, true);
 
-    g_unnamed69fbe8->sendSetupInfo(m_dpid);
+    g_singleSelectionWindow->sendSetupInfo(m_dpid);
 
-    if (g_unnamed69fbe8->m_inAdvancedOptions) {
+    if (g_singleSelectionWindow->m_inAdvancedOptions) {
         CClickMsg clickMsg(129);
         transmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
     } else {
-        if (g_unnamed69fbe8->m_inScenarioOptions) {
+        if (g_singleSelectionWindow->m_inScenarioOptions) {
             CClickMsg clickMsg(128);
             transmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
-        } else if (g_unnamed69fbe8->m_inFilterOptions) {
+        } else if (g_singleSelectionWindow->m_inFilterOptions) {
             CClickMsg clickMsg(130);
             transmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
         }
@@ -1781,9 +1782,9 @@ void CNewPlayerUpdateProc::finish()
 
     CClickMsg clickMsg(g_game->m_setup.m_difficulty + 107);
     transmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
-    g_unnamed69fbe8->sendPlayerPositions(m_dpid);
-    g_unnamed69fbe8->checkFaces();
-    g_unnamed69fbe8->sendPlayerFaces();
+    g_singleSelectionWindow->sendPlayerPositions(m_dpid);
+    g_singleSelectionWindow->checkFaces();
+    g_singleSelectionWindow->sendPlayerFaces();
 }
 
 VA(0x00579870, 0xEA)  // dc 0x147ea4
@@ -1836,11 +1837,11 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     g_selectionCampaignMode = (g_windowManager->m_dialogReturn
                         == SINGLE_SELECTION_LAUNCHED_FROM_CAMPAIGN
                     || g_inCampaign != 0);
-    g_unnamed69fbe8 = this;
+    g_singleSelectionWindow = this;
     m_flag65 = 0;
     m_flag64 = 0;
     m_flag66 = 0;
-    g_unnamed69fdc8 = 18;
+    g_scenarioListVisibleRows = 18;
 
     m_commonGameVersion = *g_videoGameState;
     m_townHeadingId = 341;
@@ -1853,13 +1854,13 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     } else if (gameMode == SINGLE_SELECTION_SAVE_GAME) {
         m_flag65 = 1;
         m_textIndex = -1;
-        memset(g_unnamed69fc2c, 0, 351);
+        memset(g_saveGameName, 0, 351);
         g_saveHeader = new game;
         backupGameHeaders(g_saveHeader, g_game);
-        g_unnamed69fdc8 = 16;
+        g_scenarioListVisibleRows = 16;
     }
 
-    if (!m_flag64 && !m_flag65 && g_networkActive69954c && g_dPlay)
+    if (!m_flag64 && !m_flag65 && g_remoteOn && g_dPlay)
         g_dPlay->setNetMsgHandler(&m_netMsgHandler);
 
     g_logFile.log(
@@ -1976,7 +1977,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         422, 344, 278, 18, g_generalText->getText(499), "smalfont.fnt",
         headerFont, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-    if (g_networkActive69954c && !m_flag65) {
+    if (g_remoteOn && !m_flag65) {
         m_chatToggle = new textButton(
             622, 81, 128, 20, 131, "gspbut2.def", "",
             "smalfont.fnt", 0, 1, 0, 15, 2, font::WHITE);
@@ -2024,7 +2025,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     if (!m_flag65 && (!m_flag64 || isMultiPlayer()))
         m_widgets.push_back(new CHotspotWidget(456, 402, 310, 25, 387));
 
-    for (i = 0; i < g_unnamed69fdc8; ++i) {
+    for (i = 0; i < g_scenarioListVisibleRows; ++i) {
         textWidget* row = new textWidget(
             57, 122 + i * 25, 314, 25, 0,
             "smalfont.fnt", font::WHITE, 142 + i,
@@ -2080,7 +2081,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         sliderHeight = 428;
     m_fileSlider = new slider(
         375, 92, 16, sliderHeight, 337, 10, sliderFileMenu,
-        slider::BLUE, g_unnamed69fdc8, 0);
+        slider::BLUE, g_scenarioListVisibleRows, 0);
     m_fileSlider->hide();
     m_widgets.push_back(m_fileSlider);
 
@@ -2182,7 +2183,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
             "smalfont.fnt", headerFont, 340,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-        if (g_networkActive69954c && !m_flag65) {
+        if (g_remoteOn && !m_flag65) {
             m_chatWidget = new CChatWidget(
                 416, 131, 315, 128, 0,
                 "smalfont.fnt", font::CHAT, 179,
@@ -2336,10 +2337,10 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         setDifficultyHiLite();
     setHumanSlot();
 
-    if (g_networkActive69954c && !m_flag65)
+    if (g_remoteOn && !m_flag65)
         m_newPlayerUpdateMan = new CNewPlayerUpdateMan;
 
-    if ((m_flag64 && !g_networkActive69954c) || m_flag65) {
+    if ((m_flag64 && !g_remoteOn) || m_flag65) {
         setupScenarioOptions(0);
     } else {
         turnOffFilterOptions();
@@ -2348,7 +2349,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     }
     updateMainWindow();
 
-    if (g_networkActive69954c && !m_flag65) {
+    if (g_remoteOn && !m_flag65) {
         turnChatOn(0);
         if (!isHost())
             getWidget(186)->enable(0);
@@ -2357,7 +2358,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     setHelpText(g_singleSelectionHelp, 104, 345, 0);
     for (i = 0; i < 8; ++i) {
         g_newMapStartingBonus[i] = 3;
-        g_unnamed69fb24[i] = -1;
+        g_startingHeroOverrides[i] = -1;
     }
 
     if (m_flag65) {
@@ -2377,21 +2378,21 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 VA(0x0057C7D0, 0x1B)  // dc 0x13035c
 static void sliderChatWindow(int state, heroWindow*)
 {
-    g_unnamed69fbe8->onChatWindowSlider(state);
+    g_singleSelectionWindow->onChatWindowSlider(state);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:989
 VA(0x0057C7F0, 0x194)  // dc 0x13037c
 static void sliderDuration(int state, heroWindow*)
 {
-    g_unnamed69fbe8->onDurationSlider(state);
+    g_singleSelectionWindow->onDurationSlider(state);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:994
 VA(0x0057C990, 0x1C)  // dc 0x1303dc
 static void sliderFileMenu(int state, heroWindow*)
 {
-    g_unnamed69fbe8->onFileMenuSlider(state);
+    g_singleSelectionWindow->onFileMenuSlider(state);
 }
 
 VA(0x0057C9B0, 0x12)  // dc 0x148678
@@ -2461,7 +2462,7 @@ CChatWidget::~CChatWidget()
 VA(0x0057CC00, 0xF5)  // dc 0x149054
 void CSingleSelectionChatEdit::sendChat(const char* chat, int)
 {
-    g_unnamed69fbe8->sendChat(0, chat);
+    g_singleSelectionWindow->sendChat(0, chat);
 }
 
 VA(0x0057CD00, 0x85)  // dc 0x149080
@@ -2545,8 +2546,8 @@ int CSaveGameEdit::onKeyPress(message* msg)
     if (_strcmpi(m_text.c_str(),
                  DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                               "NEWGAME.gm1")) != 0
-            && g_unnamed69fbe8->m_currentMap != -1)
-        g_unnamed69fbe8->setCurrentMap(-1, 1);
+            && g_singleSelectionWindow->m_currentMap != -1)
+        g_singleSelectionWindow->setCurrentMap(-1, 1);
     return ret;
 }
 
@@ -2877,7 +2878,7 @@ void TSingleSelectionWindow::setupLoadGameMode()
 {
     m_durationIndex = g_game->m_setup.m_turnDuration;
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         getWidget(105)->hide();
         if (isHost()) {
             setNewPlayerSlot(&g_thisNetPlayerInfo);
@@ -2914,7 +2915,7 @@ void TSingleSelectionWindow::setupLoadGameMode()
         g_hotSeatMan = 0;
     } else {
         g_thisNetPlayerInfo.m_dpid = 1;
-        strcpy(g_thisNetPlayerInfo.m_name, g_localPlayerName);
+        strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
         g_thisNetPlayerInfo.m_version = *g_videoGameState;
         setNewPlayerSlot(&g_thisNetPlayerInfo);
     }
@@ -2939,7 +2940,7 @@ void TSingleSelectionWindow::setupNewGameMode()
     g_game->m_setup.m_turnDuration = 10;
     m_durationIndex = 10;
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         getWidget(105)->hide();
         if (isHost()) {
             setNewPlayerSlot(&g_thisNetPlayerInfo);
@@ -2976,7 +2977,7 @@ void TSingleSelectionWindow::setupNewGameMode()
         g_hotSeatMan = 0;
     } else {
         g_thisNetPlayerInfo.m_dpid = 1;
-        strcpy(g_thisNetPlayerInfo.m_name, g_localPlayerName);
+        strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
         g_thisNetPlayerInfo.m_version = *g_videoGameState;
         setNewPlayerSlot(&g_thisNetPlayerInfo);
     }
@@ -3188,7 +3189,7 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
     drawWindow(0, 0xffff0001, 0xffff);
     update();
 
-    if (g_networkActive69954c && g_dPlay->isHost())
+    if (g_remoteOn && g_dPlay->isHost())
         sendPlayerPositions(0);
 }
 
@@ -3208,7 +3209,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         m_flag66 = randomMaps;
         if (randomMaps) {
             if (m_transferHeaders.size() == 0) {
-                if (g_networkActive69954c && !g_dPlay->isHost()) {
+                if (g_remoteOn && !g_dPlay->isHost()) {
                     CNetMsg msg(RS_HEADERS_REQUEST, sizeof(CNetMsg));
                     transmitRemoteDataDPID(&msg, 0, false, true);
                 } else {
@@ -3221,13 +3222,13 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 
     getWidget(101)->show();
     getWidget(361)->show();
-    for (int i = 0; i < g_unnamed69fdc8; ++i)
+    for (int i = 0; i < g_scenarioListVisibleRows; ++i)
         showWidget(i + 142);
 
     m_fileSlider->show();
     m_fileSlider->setResolution(
-        m_selectionHeaders.size() - g_unnamed69fdc8 + 1);
-    if (!g_networkActive69954c)
+        m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
+    if (!g_remoteOn)
         randomMaps = true;
     else
         randomMaps = g_dPlay->isHost();
@@ -3254,7 +3255,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
             123, 122, 184, 25, font::WHITE, 5, -1);
         this->update();
         m_inScenarioOptions = 1;
-        if (g_networkActive69954c && !g_dPlay->isHost() && !m_flag65)
+        if (g_remoteOn && !g_dPlay->isHost() && !m_flag65)
             g_game->setupOrigData();
         else
             getHeaders(&m_headersA);
@@ -3294,7 +3295,7 @@ void TSingleSelectionWindow::setupAdvancedOptions()
         return;
     }
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         if (m_flag64) {
             int gameVersionClass;
             if (m_currentHeader->m_saved.m_gameVersion == GAME_VERSION_SOD)
@@ -3305,7 +3306,7 @@ void TSingleSelectionWindow::setupAdvancedOptions()
 
             if (!static_cast<const std::bitset<4>&>(
                     g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
-                if (g_networkActive69954c && !g_dPlay->isHost())
+                if (g_remoteOn && !g_dPlay->isHost())
                     return;
                 const TTextResource* text;
                 const char* gameType;
@@ -3474,7 +3475,7 @@ void TSingleSelectionWindow::setupAdvancedOptions()
     makeHeroFilter();
     checkFaces();
 
-    if (g_networkActive69954c && isHost()) {
+    if (g_remoteOn && isHost()) {
         sendPlayerPositions(0);
     }
     m_inAdvancedOptions = 1;
@@ -3485,7 +3486,7 @@ void TSingleSelectionWindow::turnOffScenarioOptions()
 {
     getWidget(101)->hide();
     getWidget(361)->hide();
-    for (int i = 0; i < g_unnamed69fdc8; ++i)
+    for (int i = 0; i < g_scenarioListVisibleRows; ++i)
         getWidget(i + 142)->hide();
     m_fileSlider->hide();
     getWidget(137)->hide();
@@ -3505,12 +3506,12 @@ void TSingleSelectionWindow::turnOffScenarioOptions()
 VA(0x00581b20, 0x253)  // dc 0x136e94
 void TSingleSelectionWindow::turnOffAdvancedOptions()
 {
-    if (m_flag64 && !g_networkActive69954c
+    if (m_flag64 && !g_remoteOn
             && g_mpNetProtocol != MP_HOTSEAT)
         return;
     if (m_flag65)
         return;
-    if (!g_networkActive69954c && g_mpNetProtocol != MP_HOTSEAT)
+    if (!g_remoteOn && g_mpNetProtocol != MP_HOTSEAT)
         setFocus(-1);
     getWidget(102)->hide();
     m_durationSlider->hide();
@@ -3519,7 +3520,7 @@ void TSingleSelectionWindow::turnOffAdvancedOptions()
         getWidget(i + 207)->hide();
         getWidget(i + 345)->hide();
         getWidget(i + 263)->hide();
-        if (!g_networkActive69954c && g_mpNetProtocol != MP_HOTSEAT)
+        if (!g_remoteOn && g_mpNetProtocol != MP_HOTSEAT)
             getWidget(i + 353)->hide();
         getWidget(i + 215)->hide();
         getWidget(i + 223)->hide();
@@ -3551,7 +3552,7 @@ void TSingleSelectionWindow::turnOffAdvancedOptions()
 VA(0x00581D80, 0x550)  // anchor-callee SetupAdvancedOptions + ctor; Complete-only random-map pane
 void TSingleSelectionWindow::turnOffFilterOptions()
 {
-    if (m_flag65 || (m_flag64 && !g_networkActive69954c
+    if (m_flag65 || (m_flag64 && !g_remoteOn
                      && g_mpNetProtocol != MP_HOTSEAT))
         return;
 
@@ -3901,7 +3902,7 @@ void TSingleSelectionWindow::windowFn00582e90(
 
     if (m_selectionHeaders.size()) {
         m_fileSlider->setResolution(
-            m_selectionHeaders.size() - g_unnamed69fdc8 + 1);
+            m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
         if (m_flag65 || m_flag64)
             b = highlightFile(
                 DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
@@ -4307,7 +4308,7 @@ VA(0x00584550, 0x698)  // anchor-callee OnGameTransmitInitMsg (0x589b20) calls i
 int TSingleSelectionWindow::update()
 {
     if (m_receivedMaps == 0) {
-        if (g_networkActive69954c == 0)
+        if (g_remoteOn == 0)
             return 1;
         if (g_dPlay->isHost())
             return 1;
@@ -4317,7 +4318,7 @@ int TSingleSelectionWindow::update()
     } else {
         drawBasicMapInfo();
         if (m_inScenarioOptions) {
-            int rows = g_unnamed69fdc8;
+            int rows = g_scenarioListVisibleRows;
             if (m_selectionHeaders.size() < static_cast<unsigned int>(rows))
                 rows = m_selectionHeaders.size();
             g_smallFont->drawBoundedString(
@@ -4689,7 +4690,7 @@ void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
 #pragma inline_depth()
         }
     }
-    if (g_networkActive69954c != 0 && g_dPlay->isHost() && sendSortMsg != 0) {
+    if (g_remoteOn != 0 && g_dPlay->isHost() && sendSortMsg != 0) {
         CSortMapsMsg msg(how, m_sortDirection);
         transmitRemoteDataDPID(&msg, 0, false, true);
     }
@@ -4711,7 +4712,7 @@ void TSingleSelectionWindow::updateAllyEnemyFlags(bool update)
     CNetPlayerHandlerPlayer* player;
 
     if (m_flag65
-        || (m_flag64 && !g_networkActive69954c
+        || (m_flag64 && !g_remoteOn
             && g_mpNetProtocol != MP_HOTSEAT))
         return;
 
@@ -4872,15 +4873,15 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
             break;
         }
         broadcastMessage(msg);
-        if (!g_networkActive69954c || g_dPlay->isHost())
+        if (!g_remoteOn || g_dPlay->isHost())
             updateAllyEnemyFlags(update);
-        if (g_networkActive69954c && !m_flag65 && g_dPlay->isHost()
+        if (g_remoteOn && !m_flag65 && g_dPlay->isHost()
                 && !m_randomMapSelected) {
             CScrollMsg scrollMsg(m_currentMap, m_currentIndex);
             transmitRemoteDataDPID(&scrollMsg, 0, false, true);
         }
     }
-    if (!g_networkActive69954c || g_dPlay->isHost()) {
+    if (!g_remoteOn || g_dPlay->isHost()) {
         widget* w = getWidget(186);
         if (w) {
             if (!m_flag64 && !m_flag65
@@ -4951,7 +4952,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
             }
         }
     }
-    if (g_networkActive69954c && g_dPlay->isHost() && m_mapChanged) {
+    if (g_remoteOn && g_dPlay->isHost() && m_mapChanged) {
         sendPlayerPositions(0);
     }
 }
@@ -5009,11 +5010,11 @@ void TSingleSelectionWindow::setFilter(int size)
         break;
     }
     broadcastMessage(msg);
-    m_fileSlider->setResolution(m_selectionHeaders.size() - g_unnamed69fdc8 + 1);
+    m_fileSlider->setResolution(m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
     setCurrentMap(m_selectionHeaders.size() > 0 ? 0 : -1, 0);
     drawWindow(0, 0xffff0001, 0xffff);
     update();
-    if (g_networkActive69954c != 0 && g_dPlay->isHost()) {
+    if (g_remoteOn != 0 && g_dPlay->isHost()) {
         CSetFilterMsg filterMsg(size);
         transmitRemoteDataDPID(&filterMsg, 0, false, true);
     }
@@ -5221,7 +5222,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                                               unsigned char* exitFlag,
                                               unsigned char remoteClick)
 {
-    if (g_networkActive69954c && !m_flag65 && isHost()) {
+    if (g_remoteOn && !m_flag65 && isHost()) {
         switch (msg->m_codeY) {
         case SSW_DIFFICULTY_FIRST:
         case SSW_DIFFICULTY_FIRST + 1:
@@ -5297,7 +5298,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         if (isMultiPlayer() && !m_flag65)
             remoteCleanup();
         if (m_flag65)
-            memset(g_unnamed69fc2c, 0, 351);
+            memset(g_saveGameName, 0, 351);
         break;
 
     case SSW_BEGIN:
@@ -5614,7 +5615,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         break;
 
     case SSW_CHAT_TOGGLE:
-        if (g_networkActive69954c && !m_receivingMaps) {
+        if (g_remoteOn && !m_receivingMaps) {
             if (m_chatShowing)
                 turnChatOff(1);
             else
@@ -5630,7 +5631,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_HANDICAP_FIRST + 5:
     case SSW_HANDICAP_FIRST + 6:
     case SSW_HANDICAP_LAST: {
-        if (!g_networkActive69954c || isHost() || remoteClick) {
+        if (!g_remoteOn || isHost() || remoteClick) {
             int pos = msg->m_codeY - SSW_HANDICAP_FIRST;
             CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(pos);
             if (!player)
@@ -5729,7 +5730,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                 // jbe`), the first map < size() (`cmp edi,edx / jae`), and
                 // neither carries a separate size() != 0 test.
                 if (m_selectionHeaders.size() > map
-                        && (!g_networkActive69954c || isHost()))
+                        && (!g_remoteOn || isHost()))
                     setCurrentMap(map, 1);
             }
         }
@@ -5760,7 +5761,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
             if (getDisplayTown(i) == -1
                     && thisPlayer->m_startBonusIndex == NEW_MAP_BONUS_RESOURCE)
                 thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_GOLD;
-            if (g_networkActive69954c) {
+            if (g_remoteOn) {
                 CSetAGRMsg msg(i, thisPlayer->m_startBonusIndex);
                 transmitRemoteDataDPID(&msg, 0, false, true);
             }
@@ -5792,7 +5793,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
             if (getDisplayTown(i) == -1
                     && thisPlayer->m_startBonusIndex == NEW_MAP_BONUS_RESOURCE)
                 thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_RANDOM;
-            if (g_networkActive69954c) {
+            if (g_remoteOn) {
                 CSetAGRMsg msg(i, thisPlayer->m_startBonusIndex);
                 transmitRemoteDataDPID(&msg, 0, false, true);
             }
@@ -5890,11 +5891,11 @@ VA(0x00587bc0, 0x138)  // anchor-vtable vtbl 0x241cac slot14 (ExitDialog overrid
 int TSingleSelectionWindow::exitDialog(message& msg)
 {
     if (!m_flag64 && !m_flag65) {
-        if (g_networkActive69954c)
+        if (g_remoteOn)
             g_dPlay->setNetMsgHandler(0);
     }
 
-    if (g_networkActive69954c && !m_flag65) {
+    if (g_remoteOn && !m_flag65) {
         g_chatMan.clearChat();
         g_logFile.log(DATA_COMPGEN(0x0068385c, exitLobbyLog,
             "Starting multiplayer game!!! Or maybe exiting??"));
@@ -5995,12 +5996,12 @@ int TSingleSelectionWindow::windowHandler(message& msg)
                         && m_currentMap < m_selectionHeaders.size() - 1
                         && !m_flag65) {
                     int newMap = m_currentMap + 1;
-                    if (newMap > m_currentIndex + g_unnamed69fdc8 - 1) {
+                    if (newMap > m_currentIndex + g_scenarioListVisibleRows - 1) {
                         ++m_currentIndex;
                         if (m_currentIndex
-                                > m_selectionHeaders.size() - g_unnamed69fdc8)
+                                > m_selectionHeaders.size() - g_scenarioListVisibleRows)
                             m_currentIndex =
-                                m_selectionHeaders.size() - g_unnamed69fdc8;
+                                m_selectionHeaders.size() - g_scenarioListVisibleRows;
                         m_fileSlider->setState(m_currentIndex);
                     }
                     drawWindow(0, 0xffff0001, 0xffff);
@@ -6010,7 +6011,7 @@ int TSingleSelectionWindow::windowHandler(message& msg)
             case KEYCODE_KP_9:
                 if (m_inScenarioOptions) {
                     int offset = m_currentMap - m_currentIndex;
-                    int newTop = m_currentIndex - g_unnamed69fdc8 + 1;
+                    int newTop = m_currentIndex - g_scenarioListVisibleRows + 1;
                     if (newTop < 0)
                         newTop = 0;
                     m_currentIndex = newTop;
@@ -6022,10 +6023,10 @@ int TSingleSelectionWindow::windowHandler(message& msg)
             case KEYCODE_KP_3:
                 if (m_inScenarioOptions) {
                     int offset = m_currentMap - m_currentIndex;
-                    int newTop = m_currentIndex + g_unnamed69fdc8 - 1;
-                    if (m_selectionHeaders.size() > static_cast<unsigned int>(g_unnamed69fdc8)) {
-                        if (newTop > m_selectionHeaders.size() - g_unnamed69fdc8)
-                            newTop = m_selectionHeaders.size() - g_unnamed69fdc8;
+                    int newTop = m_currentIndex + g_scenarioListVisibleRows - 1;
+                    if (m_selectionHeaders.size() > static_cast<unsigned int>(g_scenarioListVisibleRows)) {
+                        if (newTop > m_selectionHeaders.size() - g_scenarioListVisibleRows)
+                            newTop = m_selectionHeaders.size() - g_scenarioListVisibleRows;
                         m_currentIndex = newTop;
                         m_fileSlider->setState(newTop);
                         drawWindow(0, 0xffff0001, 0xffff);
@@ -6052,7 +6053,7 @@ int TSingleSelectionWindow::windowHandler(message& msg)
                         drawHeroAdvancedOption(
                             g_lastImHoverId - 0x107, 1, -1);
                     }
-                    if (!g_networkActive69954c || g_dPlay->isHost()) {
+                    if (!g_remoteOn || g_dPlay->isHost()) {
                         widget* hovered = getWidget(id);
                         hovered->sendMessage(
                             widget::WIDGET_SET_STATUS, 0x10);
@@ -6087,7 +6088,7 @@ inline int TSingleSelectionWindow::getThisPlayerGamePos()
 VA(0x00588330, 0x462)  // dc 0x13f770
 void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer)
 {
-    g_unnamed699274 = 0;
+    g_numHumanPlayers = 0;
     for (int i = 0; i < 8; ++i) {
         g_game->m_players[i].m_isLocal = 0;
         g_game->m_players[i].m_isHuman = 0;
@@ -6104,7 +6105,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
                     g_game->m_players[i].m_isLocal = 1;
                     g_game->m_players[i].m_isHuman = 1;
                 }
-                ++g_unnamed699274;
+                ++g_numHumanPlayers;
             } else {
                 g_game->m_players[i].clearNetInfo();
             }
@@ -6119,13 +6120,13 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
                 g_netLocalGamePos = g_localGamePos;
         }
     } else {
-        g_unnamed699274 = 0;
+        g_numHumanPlayers = 0;
         CNetPlayerHandlerPlayer* player = getThisPlayer();
         if (player) {
             g_localGamePos = player->m_playerPos;
             g_game->m_players[g_localGamePos].m_isHuman = 1;
             g_game->m_players[g_localGamePos].m_isLocal = 1;
-            g_unnamed699274 = 1;
+            g_numHumanPlayers = 1;
         }
     }
 
@@ -6161,10 +6162,10 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
         g_game->setupFirstPlayer();
 
     if (g_mpNetProtocol == MP_HOTSEAT) {
-        g_unnamed69778c = g_netLocalGamePos;
+        g_curWatchPlayer = g_netLocalGamePos;
         g_mapVisibilityBit = 1 << g_netLocalGamePos;
     } else {
-        g_unnamed69778c = g_localGamePos;
+        g_curWatchPlayer = g_localGamePos;
         g_mapVisibilityBit = 1 << g_localGamePos;
     }
     g_completeDrawEnabled = g_game->isLocalHuman(g_netLocalGamePos);
@@ -6545,7 +6546,7 @@ bool TSingleSelectionWindow::onReqHeaderConfirmMsg(CNetMsg* netMsg)
 // call sites and has no corresponding x86 function row.
 static inline void updateTurnDuration()
 {
-    g_turnDuration69d630.setDuration(
+    g_turnDuration.setDuration(
         g_turnDurationMinutes[g_game->m_setup.m_turnDuration] * 60000);
 }
 
@@ -6625,7 +6626,7 @@ bool TSingleSelectionWindow::onGameHeaderInfoEndMsg(CNetMsg* netMsg)
     m_receivingMaps = false;
     if (m_chatShowing)
         getWidget(179)->show();
-    m_fileSlider->setResolution(m_selectionHeaders.size() - g_unnamed69fdc8 + 1);
+    m_fileSlider->setResolution(m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
     if (m_selectionHeaders.size() > 0)
         updateGameVars();
     drawWindow(0, 0xffff0001, 0xffff);
@@ -6687,9 +6688,9 @@ unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
     g_monthTypeExtra = monthTypeExtra;
     g_weekType = weekType;
     g_weekTypeExtra = weekTypeExtra;
-    g_unnamed69778c = g_localGamePos;
+    g_curWatchPlayer = g_localGamePos;
     g_mapVisibilityBit = 1 << g_localGamePos;
-    g_unnamed69d810 = g_netLocalGamePos;
+    g_playerTurn = g_netLocalGamePos;
     updateTurnDuration();
     return 1;
 }
@@ -6769,7 +6770,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
     g_logFile.log(DATA_COMPGEN(0x0068392c, onNewPlayerLog,
                              "OnNewPlayerMsg (%d)"),
                 msg->m_playerInfo.m_dpid);
-    if (!g_networkActive69954c || g_dPlay->isHost()) {
+    if (!g_remoteOn || g_dPlay->isHost()) {
         if (!isVersionCompatible(msg->m_version)) {
             g_logFile.log(
                 DATA_COMPGEN(0x00683904, incompatibleVersionLog,
@@ -6785,7 +6786,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         setNewPlayerSlot(&msg->m_playerInfo);
     if (m_chatShowing)
         turnChatOn(1);
-    if (!g_networkActive69954c || g_dPlay->isHost()) {
+    if (!g_remoteOn || g_dPlay->isHost()) {
         m_newPlayerUpdateMan->newPlayer(netMsg->m_dpidFrom);
         if (m_inAdvancedOptions) {
             CNetPlayerHandlerPlayer* p =
@@ -6913,7 +6914,7 @@ unsigned char TSingleSelectionWindow::onGameHeaderInfoMsg(CNetMsg* netMsg)
 VA(0x0058ADF0, 0x1A)  // dc 0x141410
 bool TSingleSelectionWindow::isHost()
 {
-    if (!g_networkActive69954c)
+    if (!g_remoteOn)
         return 1;
     return g_dPlay->isHost();
 }
@@ -6942,7 +6943,7 @@ inline void TSingleSelectionWindow::onDurationSlider(int newIndex)
 {
     m_durationIndex = newIndex;
     g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
-    if (g_networkActive69954c && isHost())
+    if (g_remoteOn && isHost())
         sendSetupInfo(0);
     drawWindow(0, 0xffff0001, 0xffff);
     update();
@@ -6987,7 +6988,7 @@ void TSingleSelectionWindow::receiveChat(
 VA(0x0058AE80, 0x93)  // dc 0x1416f4
 void TSingleSelectionWindow::displayChat()
 {
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         g_chatMan.updateWidget(m_chatWidget, 0, 8);
         m_chatSlider->setResolution(g_chatMan.getCount());
         m_chatSlider->setState(g_chatMan.getPosition());
@@ -7118,7 +7119,7 @@ unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
     m_currentIndex = 0;
     m_durationIndex = g_game->m_setup.m_turnDuration;
     setCurrentMap(0, 0);
-    m_fileSlider->setResolution(m_selectionHeaders.size() - g_unnamed69fdc8 + 1);
+    m_fileSlider->setResolution(m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
     for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
         if (m_players.m_humanPlayers[i].m_dpid != 0
                 && m_players.m_humanPlayers[i].m_dpid
@@ -7129,51 +7130,51 @@ unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
     if (w) {
         w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_networkActive69954c || g_dPlay->isHost() || m_flag65);
+        w->enable(!g_remoteOn || g_dPlay->isHost() || m_flag65);
     }
     w = getWidget(129);
     if (w) {
         w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_networkActive69954c || g_dPlay->isHost() || m_flag65);
+        w->enable(!g_remoteOn || g_dPlay->isHost() || m_flag65);
     }
     if (g_gameContextFeatures[*g_videoGameState].test(1)) {
         w = getWidget(130);
         if (w) {
             w->sendMessage(widget::WIDGET_SET_STATUS,
                             widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-            w->enable(!g_networkActive69954c || g_dPlay->isHost() || m_flag65);
+            w->enable(!g_remoteOn || g_dPlay->isHost() || m_flag65);
         }
     }
     w = getWidget(107);
     if (w) {
         w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_networkActive69954c || g_dPlay->isHost() || m_flag65);
+        w->enable(!g_remoteOn || g_dPlay->isHost() || m_flag65);
     }
     w = getWidget(108);
     if (w) {
         w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_networkActive69954c || g_dPlay->isHost() || m_flag65);
+        w->enable(!g_remoteOn || g_dPlay->isHost() || m_flag65);
     }
     w = getWidget(109);
     if (w) {
         w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_networkActive69954c || g_dPlay->isHost() || m_flag65);
+        w->enable(!g_remoteOn || g_dPlay->isHost() || m_flag65);
     }
     w = getWidget(110);
     if (w) {
         w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_networkActive69954c || g_dPlay->isHost() || m_flag65);
+        w->enable(!g_remoteOn || g_dPlay->isHost() || m_flag65);
     }
     w = getWidget(111);
     if (w) {
         w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!g_networkActive69954c || g_dPlay->isHost() || m_flag65);
+        w->enable(!g_remoteOn || g_dPlay->isHost() || m_flag65);
     }
 #pragma inline_depth(0)
     showWidget(186);
@@ -7267,7 +7268,7 @@ void TSingleSelectionWindow::onPlayerPosClick(int pos)
         if (mp->m_playerSlotAttributes[pos].m_canBeHuman) {
             m_players.setNextPlayer(pos);
             makeHeroFilter();
-            if (g_networkActive69954c) {
+            if (g_remoteOn) {
                 sendPlayerPositions(0);
                 checkFaces();
                 sendPlayerFaces();
@@ -7393,7 +7394,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
 {
     if (m_randomMapSelected) {
         std::string name = getRandomMapName();
-        if (g_networkActive69954c) {
+        if (g_remoteOn) {
             CNetMsg msg(RS_GAME_TRANSMIT_PENDING, sizeof(CNetMsg));
             transmitRemoteDataDPID(&msg, 0, false, true);
         }
@@ -7482,7 +7483,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         return 0;
     }
 
-    if (g_networkActive69954c || g_mpNetProtocol == MP_HOTSEAT) {
+    if (g_remoteOn || g_mpNetProtocol == MP_HOTSEAT) {
         int seated = 0;
         for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
             if (m_players.m_humanPlayers[i].m_dpid != 0
@@ -7498,7 +7499,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
 
     g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         DPSESSIONDESC2* sessionDesc = g_dPlay->getCurrSession();
         sessionDesc->m_flags |= 0x21;
         g_dPlay->updateSessionDesc(sessionDesc);
@@ -7524,7 +7525,7 @@ unsigned char TSingleSelectionWindow::beginSavedGame()
 
     incProgressBar(1);
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         CLaunchingGameMsg msg;
         transmitRemoteDataDPID(&msg, 0, false, true);
     }
@@ -7540,7 +7541,7 @@ unsigned char TSingleSelectionWindow::beginSavedGame()
     g_monthTypeExtra = monthTypeExtra;
     g_weekType = weekType;
     g_weekTypeExtra = weekTypeExtra;
-    g_unnamed69d810 = g_netLocalGamePos;
+    g_playerTurn = g_netLocalGamePos;
 
     incProgressBar(1);
 
@@ -7556,9 +7557,9 @@ unsigned char TSingleSelectionWindow::beginSavedGame()
 
     updatePlayerPositions(0);
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         sendPlayerPositions(0);
-        g_unnamed69d810 = g_netLocalGamePos;
+        g_playerTurn = g_netLocalGamePos;
         if (!g_game->transmitSaveGame(0x7f, 0, 0, 1)) {
             return 0;
         }
@@ -7590,7 +7591,7 @@ bool TSingleSelectionWindow::beginNewGame()
     updatePlayerPositions(1);
     incProgressBar(1);
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         CLaunchingGameMsg msg;
         transmitRemoteDataDPID(&msg, 0, false, true);
     }
@@ -7599,24 +7600,24 @@ bool TSingleSelectionWindow::beginNewGame()
     incProgressBar(1);
 
     strcpy(g_mapName, g_game->m_setup.m_filename);
-    memset(g_unnamed69fb24, -1, sizeof(g_unnamed69fb24));
+    memset(g_startingHeroOverrides, -1, sizeof(g_startingHeroOverrides));
     for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
         CNetPlayerHandlerPlayer* player = &m_players.m_humanPlayers[i];
         if (player->m_playerPos != -1 && player->m_heroIndex != -1)
-            g_unnamed69fb24[player->m_playerPos] =
+            g_startingHeroOverrides[player->m_playerPos] =
                 player->m_availableHeroes[player->m_heroIndex];
     }
-    g_game->newMap(g_game->m_setup.m_path, g_mapName, g_unnamed69fb24,
+    g_game->newMap(g_game->m_setup.m_path, g_mapName, g_startingHeroOverrides,
                    gameVersionClass);
     incProgressBar(1);
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         CNewMapHeaderInfoMsg mapHeaderMsg(&g_game->m_mapHeader);
         int returnValue = mapHeaderMsg.remoteFn00512D40(0, 0, 1);
         if (!sendPlayerPositions(0))
             return 0;
-        g_unnamed69d810 = g_netLocalGamePos;
-        if (!g_game->transmitSaveGame(0x7f, 0, 0, 1) && !g_unnamed69d80d)
+        g_playerTurn = g_netLocalGamePos;
+        if (!g_game->transmitSaveGame(0x7f, 0, 0, 1) && !g_playerDrop)
             return 0;
     }
 
@@ -7628,7 +7629,7 @@ bool TSingleSelectionWindow::beginNewGame()
 // Original public ?IsMultiPlayer@TSingleSelectionWindow@@QAA_NXZ.
 bool TSingleSelectionWindow::isMultiPlayer()
 {
-    if (g_networkActive69954c)
+    if (g_remoteOn)
         return 1;
     if (g_mpNetProtocol == MP_HOTSEAT)
         return 1;
@@ -7919,7 +7920,7 @@ void TSingleSelectionWindow::onNameChange(int gamePos, const char* newName)
     setFocus(-1);
     if (player) {
         strcpy(player->m_name, newName);
-        strcpy(g_localPlayerName, newName);
+        strcpy(g_config.m_networkDefaultName, newName);
         writePrefs();
     }
     textWidget* w = static_cast<textWidget*>(getWidget(gamePos + 345));
@@ -7953,8 +7954,8 @@ unsigned char TSingleSelectionWindow::highlightFile(char* filename)
                 == 0) {
             m_currentIndex = i;
             m_currentMap = i;
-            if (i + g_unnamed69fdc8 > m_selectionHeaders.size())
-                m_currentIndex = m_selectionHeaders.size() - g_unnamed69fdc8;
+            if (i + g_scenarioListVisibleRows > m_selectionHeaders.size())
+                m_currentIndex = m_selectionHeaders.size() - g_scenarioListVisibleRows;
             if (m_currentIndex < 0)
                 m_currentIndex = 0;
             m_fileSlider->setState(m_currentIndex);
@@ -8193,7 +8194,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
         // `dpid != 0` arms both jump to the gUnnamed6989f0 compare, not
         // past it (branch topology clean at 49/49 once written this way).
         if (getThisPlayerGamePos() == playerPos
-                || ((g_networkActive69954c == 0 || g_dPlay->isHost())
+                || ((g_remoteOn == 0 || g_dPlay->isHost())
                     && p->m_dpid == 0
                     && (canChooseTown(playerPos) || townChosen != 0))
                 || g_mpNetProtocol == MP_HOTSEAT) {
@@ -8213,7 +8214,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
     widget* nameText = getWidget(playerPos + 345);
     nameText->sendMessage(widget::WIDGET_SET_STATUS, 6);
     nameText->draw();
-    if (g_networkActive69954c == 0
+    if (g_remoteOn == 0
             && g_mpNetProtocol != MP_HOTSEAT)
         getWidget(playerPos + 353)->draw();
     if (update)
@@ -8253,7 +8254,7 @@ void TSingleSelectionWindow::onDeleteFile()
 {
     if (m_selectionHeaders.size() == 0)
         return;
-    if (g_networkActive69954c && !m_flag65)
+    if (g_remoteOn && !m_flag65)
         return;
     if (!m_flag64 && !m_flag65)
         return;
@@ -8273,7 +8274,7 @@ void TSingleSelectionWindow::onDeleteFile()
     }
     m_selectionHeaders.erase(m_selectionHeaders.begin() + m_currentMap);
     m_headersA.erase(m_headersA.begin() + i);
-    m_fileSlider->setResolution(m_selectionHeaders.size() - g_unnamed69fdc8 + 1);
+    m_fileSlider->setResolution(m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
     if (m_selectionHeaders.size() != 0) {
         sortMaps(SORT_MAPS_BY_VERSION, 1, 1);
         setCurrentMap(0, 1);
@@ -8292,7 +8293,7 @@ void TSingleSelectionWindow::onDeleteFile()
 VA(0x0058e2d0, 0xB)  // anchor-address-take DoModal + tail target
 static int update(message& msg)
 {
-    return g_unnamed69fbe8->update();
+    return g_singleSelectionWindow->update();
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8758, dc 0x14514c
@@ -8336,38 +8337,38 @@ CNetMsg* CSingleSelectionNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     CNetMsg* msg;
     switch (netMsg->m_subType) {
     case RS_REQUEST_HERO_FACE:
-        g_unnamed69fbe8->onRequestHeroFaceMsg(netMsg, 1);
+        g_singleSelectionWindow->onRequestHeroFaceMsg(netMsg, 1);
         msg = getRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     case RS_TOWN_UPDATE:
-        g_unnamed69fbe8->onTownUpdateMsg(netMsg, 1);
+        g_singleSelectionWindow->onTownUpdateMsg(netMsg, 1);
         msg = getRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     case RS_SETAGR:
-        g_unnamed69fbe8->onSetAGRMsg(netMsg, 1);
+        g_singleSelectionWindow->onSetAGRMsg(netMsg, 1);
         msg = getRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     case RS_REQUEST_HERO_FACE_REPLY:
-        g_unnamed69fbe8->onRequestHeroFaceReplyMsg(netMsg, 1);
+        g_singleSelectionWindow->onRequestHeroFaceReplyMsg(netMsg, 1);
         msg = getRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     case RS_CHAT_MSG:
-        g_unnamed69fbe8->receiveChat(
+        g_singleSelectionWindow->receiveChat(
             netMsg->m_dpidFrom, static_cast<CChatMsg*>(netMsg)->m_text, 1);
         msg = getRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     case RS_SETUP_PING:
-        g_unnamed69fbe8->onPingMsg(netMsg);
+        g_singleSelectionWindow->onPingMsg(netMsg);
         msg = getRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
     case RS_SETUP_PING_RESPONSE:
-        g_unnamed69fbe8->onPingResponseMsg(netMsg, 1);
+        g_singleSelectionWindow->onPingResponseMsg(netMsg, 1);
         msg = getRemoteData(1, 0);
         destroyMsg(msg);
         return 0;
@@ -8387,7 +8388,7 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
 {
     int i;
 
-    if (!m_flag64 && !m_flag65 && g_networkActive69954c && g_dPlay)
+    if (!m_flag64 && !m_flag65 && g_remoteOn && g_dPlay)
         g_dPlay->setNetMsgHandler(0);
 
     delete m_flagBack;
@@ -8417,7 +8418,7 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
         m_newPlayerUpdateMan = 0;
     }
 
-    g_unnamed69fbe8 = 0;
+    g_singleSelectionWindow = 0;
     for (std::vector<widget*>::iterator it = m_widgets.begin();
          it != m_widgets.end(); ++it) {
         if (*it)

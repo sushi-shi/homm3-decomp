@@ -278,7 +278,7 @@ void lostGame();
 // null-checks its result calls it (67 B at 0x4f42c0, no args, sprintf
 // into gText then ShutDown). DC kb.obj MemError, dc 0xe44f0/64 B,
 // kb.cpp:4168 - arity and role both agree.
-extern int g_unnamed6994ec;
+extern int g_totalHighMem;
 void memError();
 void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg);
 int gameUnsaved();                                       // 0x4f4310
@@ -306,7 +306,7 @@ extern int g_gameOver;
 // PC-only zero-fill storage.  The command-line initialization path clears
 // this word and philAI::DoAI is its only reader; no source symbol survives,
 // so keep the address-ordinal spelling instead of inventing a role name.
-extern int g_unnamed6994f0;
+extern int g_limitPlayer;
 int trueFalseDialogHandler(message* msg);
 
 // kb.cpp's shared text scratch buffer (.bss 0x6973d8 in kb's band;

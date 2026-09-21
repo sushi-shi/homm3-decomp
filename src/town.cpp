@@ -159,9 +159,9 @@ DATA(0x006782a4) const signed char g_mageGuildBaseSpellCounts[5] = { 5, 4, 3, 2,
 
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x0067f570) int g_highMemBuffer = 5;
-DATA(0x006aa5f0) int g_unnamed6aa5f0;
-DATA(0x00699548) int g_unnamed699548;
-DATA(0x0069778c) int g_unnamed69778c;
+DATA(0x006aa5f0) int g_townViewActive;
+DATA(0x00699548) int g_adventureGraphicsPreserveMode;
+DATA(0x0069778c) int g_curWatchPlayer;
 
 // Narrow town.obj-only globals reached by town::View. Their owning
 // compilands remain outside the admitted surface.
@@ -694,11 +694,11 @@ VA(0x005be210, 0xC0)  // dc 0x166688
 void town::view(int alreadyFaded)
 {
     int threshold = g_highMemBuffer + 0x514;
-    g_unnamed6aa5f0 = 1;
+    g_townViewActive = 1;
     if (threshold > 0xb54)
-        g_unnamed699548 = 2;
+        g_adventureGraphicsPreserveMode = 2;
     else if (threshold > 0x320)
-        g_unnamed699548 = 1;
+        g_adventureGraphicsPreserveMode = 1;
 
     g_townManager->setTown(this);
     g_executive->callManager(g_townManager);
@@ -707,15 +707,15 @@ void town::view(int alreadyFaded)
     int heroId = viewedTown->m_visitingHeroId;
     if (heroId != -1) {
         hero* visitingHero = g_game->getHero(heroId);
-        if (visitingHero->m_owner == g_unnamed69778c) {
+        if (visitingHero->m_owner == g_curWatchPlayer) {
             g_advManager->setHeroContext(visitingHero->m_id, 0, 0, 1);
-            g_unnamed699548 = 0;
-            g_unnamed6aa5f0 = 0;
+            g_adventureGraphicsPreserveMode = 0;
+            g_townViewActive = 0;
             return;
         }
     }
-    g_unnamed699548 = 0;
-    g_unnamed6aa5f0 = 0;
+    g_adventureGraphicsPreserveMode = 0;
+    g_townViewActive = 0;
 }
 
 VA(0x005be2d0, 0xB3)  // dc 0x166720

@@ -67,7 +67,7 @@ void game::initNewGame(int difficulty, int version,
     m_setup.m_fileInitialized = 0;
     m_setup.m_curSelectedPlayer = -1;
     m_setup.m_initializationNumHumans =
-        static_cast<signed char>(g_unnamed699274);
+        static_cast<signed char>(g_numHumanPlayers);
 
     if (mapHeader) {
         this->m_mapHeader = *mapHeader;
@@ -123,7 +123,7 @@ void game::initNewGame(int difficulty, int version,
         if (m_setup.m_playerPos[slot] != -1)
             continue;
 
-        if (humanCount < g_unnamed699274 && this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman) {
+        if (humanCount < g_numHumanPlayers && this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman) {
             m_setup.m_playerPos[slot] = static_cast<signed char>(humanCount);
             humanCount++;
         } else if (this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeComputer) {

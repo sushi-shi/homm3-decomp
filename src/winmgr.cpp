@@ -23,21 +23,6 @@ DATA(0x00698a1c) int g_sendMouseMoveMessages;
 DATA(0x006aad20) int g_dialogNestCount;
 
 
-// Retail scalar state; startup initial values come from the pinned image.
-DATA(0x006aac94) int g_unnamed6aac94;
-DATA(0x006aac98) int g_unnamed6aac98;
-DATA(0x006aac9c) int g_unnamed6aac9c;
-DATA(0x006aaca0) unsigned short* g_unnamed6aaca0;
-
-// The four screen-geometry slots Open hands to Bitmap16Bit::reference.
-// They are read at exactly one site in the whole image - these four
-// instructions - and written at none, so nothing names them; the widths are
-// the ones `reference(int, int, int, unsigned short*)` imposes.
-
-
-
-
-
 // Original file-static currScreenShot, DC data section 3:0x1fc74.
 // Only the unclaimed release screenshot helper uses this counter.
 static int g_currScreenShot;
@@ -67,8 +52,10 @@ int heroWindowManager::open(int newPriority)
     if (m_screenBitmap == 0)
         memError();
 
-    m_screenBitmap->reference(g_unnamed6aac94, g_unnamed6aac98, g_unnamed6aac9c,
-                            g_unnamed6aaca0);
+    // DC winmgr.cpp:112 calls these four InitWin accessors. Retail expands
+    // them into reads at 0x6aac94/98/9c/a0 within the bitmap at 0x6aac70.
+    m_screenBitmap->reference(g_initWin.getWidth(), g_initWin.getHeight(),
+                            g_initWin.getPitch(), g_initWin.getMap(0, 0));
     m_screenBitmap->fillRect(0, 0, 800, 600, 0);
 
     RECT tempRect;
@@ -442,7 +429,7 @@ void heroWindowManager::doQuickView(heroWindow* window)
                         msg.m_id == MESSAGE_RIGHT_BUTTON_UP
                         || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
                         || msg.m_id == MESSAGE_LEFT_BUTTON_UP;
-                    if (g_networkActive69954c && g_dPlay) {
+                    if (g_remoteOn && g_dPlay) {
                         CNetMsgHandler* pump =
                             g_dPlay->getNetMsgHandler();
                         if (pump) {

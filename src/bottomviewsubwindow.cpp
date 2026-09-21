@@ -897,7 +897,7 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
     allyX = enemyX = 67;
     for (i = 0; i < 8; i++) {
         if (!g_game->m_playerDisabled[i]) {
-            if (g_game->onSameTeam(i, g_unnamed69778c)) {
+            if (g_game->onSameTeam(i, g_curWatchPlayer)) {
                 m_widgets.push_back(new iconWidget(allyX, 102, 15, 20, id++,
                     "itgflags.def", i, 0, 0, 0, 0x10));
                 allyX += 15;

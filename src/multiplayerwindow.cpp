@@ -1,3 +1,4 @@
+#include "prefs.h"
 #include "va.h"
 
 #include <direct.h>
@@ -102,24 +103,24 @@ inline bool CHeroSessions::getSessionInfo(unsigned long index, char* sessName,
 // rollover/right-click help table indexed by (widget id - 101); the two char
 // buffers hold the local player name shown in the entry field and the name of
 // the most recently loaded game (checked for the remote-temp prefix).
-DATA(0x0069880a) char g_loadedGameName[13];
-DATA(0x00698817) char g_localPlayerName[21];
 DATA(0x006a6578) THelpText g_multiPlayerHelp[30];
 
 // Armed by all three retail host paths before they create a DirectPlay
-// session. No public symbol survives for the dword, so the name is ordinal.
-DATA(0x0069927c) int g_unnamed69927c;
+// session. DC DoNewGame/DoLoadGame identifies iMPExtendedType.
+// Original DC name: iMPExtendedType; DoNewGame / DoLoadGame.
+DATA(0x0069927c) int g_mpExtendedType;
 
 // Armed beside the two known multiplayer start flags by Complete's generic
 // join path. Its only other retail writes are in the adjacent host flows.
-DATA(0x00699288) int g_unnamed699288;
+// Original DC name: gbWaitForRemoteReceive; DoNewGame / DoLoadGame.
+DATA(0x00699288) int g_waitForRemoteReceive;
 
 const long g_dplayErrorUserCancel = 0x88770118;
 
 // The sole retail read at 0x50fade promotes the DirectPlay session from the
 // mandatory migrate-host flag to migrate-host|keep-alive. No public symbol
-// survives for the byte, so its name remains ordinal until stronger evidence.
-DATA(0x00681628) static unsigned char g_unnamed681628 = 1;
+// survives for the byte; its descriptive name follows that flag operation.
+DATA(0x00681628) static unsigned char g_sessionKeepAlive = 1;
 
 // The rollover/right-click help pointers the CMPInputDlg and CHotSeatDlg
 // constructors hand to widget::set_help_text. The OK/Back pair (0x6a7760/
@@ -132,13 +133,13 @@ DATA(0x006a7768) char* g_dialogBackHelp;
 
 // The generic network host dialog supplies separate help strings for its two
 // edit controls and a label for the session-name field. Retail proves their
-// cells and uses; no public names survive, so these remain ordinal.
-DATA(0x006a7770) char* g_unnamed6a7770;
-DATA(0x006a7778) char* g_unnamed6a7778;
+// cells and uses; descriptive names follow those controls.
+DATA(0x006a7770) char* g_sessionNameHelp;
+DATA(0x006a7778) char* g_sessionPasswordHelp;
 // The TCP search dialog's address field uses a distinct rollover string. The
-// second field reuses gUnnamed6a7778, while the generic OK/Back buttons keep
+// second field reuses g_sessionPasswordHelp, while the generic OK/Back buttons keep
 // the shared pair above.
-DATA(0x006a7780) char* g_unnamed6a7780;
+DATA(0x006a7780) char* g_sessionNameLabel;
 DATA(0x006a7788) char* g_searchAddressHelp;
 
 // CMPEdit owns the focus-ring links and navigation slots shared by the
@@ -466,7 +467,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
                                     g_generalText->getText(42), "smalfont.fnt",
                                     font::PRIMARY, 128, 1, 0, 8);
     m_playerName = new CMultiPlayerWindowEdit(19, 436, 334, 18, 21,
-                                            g_localPlayerName, "smalfont.fnt",
+                                            g_config.m_networkDefaultName, "smalfont.fnt",
                                             font::WHITE, 0, 0, 0, 125, 0x100, 0,
                                             7, 5);
 
@@ -524,7 +525,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_cancel->setHelpText(g_multiPlayerHelp[23].m_text,
                           g_multiPlayerHelp[23].m_rclick, 0);
 
-    deleteTempSaveGame(g_loadedGameName);
+    deleteTempSaveGame(g_config.m_scFile);
 
     goMainMenu();
 }
@@ -739,8 +740,8 @@ unsigned char TMultiPlayerWindow::onModemHost()
         return 0;
     }
 
-    g_unnamed69927c = 1;
-    g_unnamed6994e4 = 1;
+    g_mpExtendedType = 1;
+    g_mpBaseType = 1;
     ShowCursor(1);
     if (!hostSession(g_generalText->getText(449), 0)) {
         ShowCursor(0);
@@ -954,8 +955,8 @@ unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char
 
     int version = *g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
-        g_localPlayerName, &version, sizeof(version), 0);
-    strcpy(g_thisNetPlayerInfo.m_name, g_localPlayerName);
+        g_config.m_networkDefaultName, &version, sizeof(version), 0);
+    strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
     g_thisNetPlayerInfo.m_version = version;
 
     if (g_dPlay->getLastError())
@@ -971,10 +972,10 @@ unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* 
     char fullName[256];
     sprintf(fullName,
             DATA_COMPGEN(0x006816e4, multiplayerSessionNameFormat, "%s%c%s"),
-            sessName, 0xfa, g_localPlayerName);
+            sessName, 0xfa, g_config.m_networkDefaultName);
 
     unsigned long flags = 4;
-    if (g_unnamed681628)
+    if (g_sessionKeepAlive)
         flags |= 0x40;
     if (g_mpNetProtocol != MP_TCP)
         flags |= 0x2000;
@@ -985,11 +986,11 @@ unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* 
 
     int version = *g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
-        g_localPlayerName, &version, sizeof(version), 0);
+        g_config.m_networkDefaultName, &version, sizeof(version), 0);
     if (!g_thisNetPlayerInfo.m_dpid)
         return 0;
 
-    strcpy(g_thisNetPlayerInfo.m_name, g_localPlayerName);
+    strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
     g_thisNetPlayerInfo.m_version = version;
 
     if (g_mpNetProtocol == MP_TCP)
@@ -1042,8 +1043,8 @@ unsigned char TMultiPlayerWindow::onDirectHost()
         return 0;
     }
 
-    g_unnamed69927c = 1;
-    g_unnamed6994e4 = 1;
+    g_mpExtendedType = 1;
+    g_mpBaseType = 1;
     ShowCursor(1);
 
     if (!hostSession(g_generalText->getText(451), 0)) {
@@ -1069,18 +1070,18 @@ unsigned char TMultiPlayerWindow::onHost()
     if (g_mpNetProtocol == MP_SERIAL)
         return onDirectHost();
 
-    g_unnamed69927c = 1;
-    g_unnamed6994e4 = 1;
-    strcpy(g_localPlayerName, m_playerName->getText());
+    g_mpExtendedType = 1;
+    g_mpBaseType = 1;
+    strcpy(g_config.m_networkDefaultName, m_playerName->getText());
 
 #pragma inline_depth(0)
     CMPInputDlg sessDlg(20, 20);
 #pragma inline_depth()
     sessDlg.m_field1->setText(g_generalText->getText(453));
-    sessDlg.m_header1->setText(g_unnamed6a7780);
+    sessDlg.m_header1->setText(g_sessionNameLabel);
     sessDlg.m_header2->setText(g_generalText->getText(454));
-    sessDlg.m_field1->setHelpText(g_unnamed6a7770, 0, 0);
-    sessDlg.m_field2->setHelpText(g_unnamed6a7778, 0, 0);
+    sessDlg.m_field1->setHelpText(g_sessionNameHelp, 0, 0);
+    sessDlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
     sessDlg.doModal(0);
 
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
@@ -1292,10 +1293,10 @@ unsigned char TMultiPlayerWindow::onJoin()
         return onDirectJoin();
 
     g_windowManager->m_dialogReturn = DIALOG_RETURN_OK;
-    g_unnamed69927c = 2;
-    g_unnamed6994e4 = 1;
-    g_unnamed699288 = 1;
-    strcpy(g_localPlayerName, m_playerName->getText());
+    g_mpExtendedType = 2;
+    g_mpBaseType = 1;
+    g_waitForRemoteReceive = 1;
+    strcpy(g_config.m_networkDefaultName, m_playerName->getText());
 
     char userName[256];
     char sessName[256];
@@ -1315,14 +1316,14 @@ unsigned char TMultiPlayerWindow::onJoin()
     CMPInputDlg dlg(20, 20);
 #pragma inline_depth()
     if (session->isPasswordProtected()) {
-        dlg.m_header1->setText(g_unnamed6a7780);
+        dlg.m_header1->setText(g_sessionNameLabel);
         dlg.m_header2->setText((*g_generalText)[454]);
         dlg.m_field1->enable(0);
         dlg.m_field1->setText(sessName);
         dlg.drawWindow(1, 0xffff0001, 0xffff);
         dlg.setFocus(dlg.m_field2->m_id);
-        dlg.m_field1->setHelpText(g_unnamed6a7780, 0, 0);
-        dlg.m_field2->setHelpText(g_unnamed6a7778, 0, 0);
+        dlg.m_field1->setHelpText(g_sessionNameLabel, 0, 0);
+        dlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
         dlg.doModal(0);
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
             return 0;
@@ -1441,7 +1442,7 @@ unsigned char TMultiPlayerWindow::onSearch()
     searchDlg.m_header1->setText((*g_generalText)[179]);
     searchDlg.m_header2->setText((*g_generalText)[462]);
     searchDlg.m_field1->setHelpText(g_searchAddressHelp, 0, 0);
-    searchDlg.m_field2->setHelpText(g_unnamed6a7778, 0, 0);
+    searchDlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
     searchDlg.disableOK();
     searchDlg.doModal(0);
 

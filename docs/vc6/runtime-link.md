@@ -85,6 +85,35 @@ after the typed quest-text accessor changes. Their previous MAX peaks remain
 where their own source hashes are unchanged. The implementation remains
 partially matched; the successful link does not establish byte identity.
 
+## Shared storage and names
+
+The naming audit reduced `g_unnamed*` / `g_unk*` globals from 83 to one. It
+also removed address suffixes from named globals. Original names come from
+positive Dreamcast references where available, including `gConfig`, `InitWin`,
+`gbRemoteOn`, `currentLoop` and `waitingLoop`; other names describe proven
+retail roles. The sole remaining placeholder, `g_unnamed6968e8`, is a
+retail-only byte cleared by `animateMove`. No reader or original name has been
+established, so its role remains unknown.
+
+Four former screen-geometry globals were fields of `InitWin`, and fourteen
+other definitions duplicated fields of `gConfig`. The consumers now access
+the canonical objects. This matters at runtime: DirectDraw surface updates and
+preference changes must be visible to the window manager, sound and UI code.
+The trading dialogs retain their own separate window coordinates.
+
+`widget::onSleepChange` describes the retail-only virtual slot 12; its empty
+out-of-line definition and button's qualified base call remain intact. Removing
+the redundant `emptyText` local keeps `CHeroWindowEx::processHover` exact, as do
+the corrected `heroWindowManager::open` and renamed button override.
+
+Relative to the linked implementation above, this cleanup changes exact MAX
+from 4,241 to 4,237. Three losses reset unchanged lower CUR scores after a
+source rename (`processDeSelect`, `processSelect`, `updateMouseGrid`). The
+system-options constructor has a new CUR/MAX decrease from 100% to 99.3013%
+after accessing the shared preferences object. `screenScroll` and `earlySetup`
+also reset already-inexact MAX to unchanged CUR. HIST retains every prior peak.
+Exact CUR is 4,176, and executable MAX is 96.87%.
+
 ## Execution status
 
 The linker completed with zero unresolved symbols and zero duplicate

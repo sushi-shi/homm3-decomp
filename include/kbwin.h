@@ -48,14 +48,13 @@ extern unsigned char g_inMessageLoop;    // 0x6995b8
 extern HMENU g_currMenu;                  // 0x6995bc
 extern HMENU g_activeMenu;                // 0x699604
 extern int g_menusSuppressed;            // 0x699618
-extern int g_windowedMode;               // 0x6987b8
-extern int g_networkActive69954c;                // 0x69954c
+extern int g_remoteOn;                // 0x69954c
 extern HMENU g_dfltMenu;                  // 0x6989e4 (CallManager's resume
                                         // arm restores it; name provisional)
 // .bss 0x698a34, the single-player menu gate advmgr's Open tests: when
 // clear, the non-multiplayer LoadMenu pair (0x6f/0x71) is skipped
 // entirely. Role wider than that is unattested; ordinal name.
-extern int g_unnamed698a34;
+extern int g_cheatMenus;
 extern HMENU g_gameMenu;                  // 0x6989e8 (dfltMenu's .bss
                                         // neighbour: kb's InitMainClasses
                                         // loads the pair, kb's CleanUpMenus
@@ -69,8 +68,6 @@ extern char g_appName[];                // 0x67f820 "Heroes III" (homm2 name)
 extern char g_title[];                  // 0x67f82c (homm2 name)
 extern HANDLE g_gameEvent;              // 0x69960c (single-instance event)
 extern char g_commandLine[61];          // 0x6995c0 (homm2 gcCommandLine)
-extern int g_windowX;                    // 0x6987b0 (windowed x, saved on move)
-extern int g_windowY;                    // 0x6987b4
 extern LONG g_appWindowStyle;            // 0x6995a8 (WM_MOVE style snapshot)
 extern RECT g_rcAppWindow;                // 0x699598
 extern int g_closingApp;                 // 0x6989fc (homm2 gbClosingApp)

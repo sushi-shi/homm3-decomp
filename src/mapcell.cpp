@@ -2816,9 +2816,9 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     }
 
     if (heroID == -1) {
-        if (g_unnamed69fb24[charBuffer] != -1) {
-            heroID = g_unnamed69fb24[charBuffer];
-            g_unnamed69fb24[charBuffer] = -1;
+        if (g_startingHeroOverrides[charBuffer] != -1) {
+            heroID = g_startingHeroOverrides[charBuffer];
+            g_startingHeroOverrides[charBuffer] = -1;
         } else {
             TTownType alignment;
             memcpy(&alignment, &g_game->m_setup.m_alignment[charBuffer],

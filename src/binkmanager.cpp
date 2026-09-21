@@ -120,7 +120,7 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
                    bool useDirtyRects)
 {
     if (g_noSound == 0 && g_soundManager->m_ds != 0
-        && g_unnamed698758.m_soundVolume != 0)
+        && g_config.m_soundVolume != 0)
         g_binkSound = 1;
     else
         g_binkSound = 0;

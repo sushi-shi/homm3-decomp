@@ -18,7 +18,7 @@
 // DC roster: 25 owning-cpp records resolve to fifteen retained bodies,
 // four folded virtuals, four expanded helpers (default button constructor,
 // SetPalette, initialize and Deselect), and two absent constructor overloads
-// explained at their inactive records. Complete adds vslot12. The two
+// explained at their inactive records. Complete adds onSleepChange. The two
 // header helpers expand; nine STLport records are the replaced library.
 // Source-audit limits remain explicit: PC drops the focus parameter and
 // the CombatIsOver pump work, and uses sprite Dispose instead of the older
@@ -404,12 +404,12 @@ void button::setPlayerPaletteColors(int whichPlayer)
 // between SetPlayerPaletteColors (0x4569e0) and textButton's scalar
 // deleting dtor (0x456a20), inside button.obj's band. The body is
 // nothing but the qualified base call - it stays a CALL rather than an
-// /Ob2-inlined nothing because widget::_vslot12 has no definition
+// /Ob2-inlined nothing because widget::onSleepChange has no definition
 // visible here (widget.h declares it only, the Close idiom).
 VA(0x00456a10, 0x10)  // anchor-vtable (slot 12 of 0x63bb54/0x63bb88/0x63bbbc), retail-only
-void button::vslot12(int on)
+void button::onSleepChange(int on)
 {
-    widget::vslot12(on);
+    widget::onSleepChange(on);
 }
 
 // E:\gamedcs\button.cpp:488 - textButton::`scalar deleting destructor'

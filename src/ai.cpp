@@ -2362,8 +2362,8 @@ unsigned char combatManager::doSpellAI()
         return 0;
     if (m_playerIds[m_currentSide] >= 0
         && g_game->isHuman(m_playerIds[m_currentSide])
-        && !((m_autoCombatOn || g_unnamed691209)
-             && g_unnamed698758.m_combatAutoSpells)
+        && !((m_autoCombatOn || g_goSolo)
+             && g_config.m_combatAutoSpells)
         && !static_cast<const combatManager*>(this)->isQuickCombat())
         return 0;
     long side = m_currentSide;

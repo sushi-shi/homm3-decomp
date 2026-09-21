@@ -9,15 +9,15 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable MAX: 96.88%** — weighted by function size across 1,999,142 bytes of code included in matching.
+**Executable MAX: 96.87%** — weighted by function size across 1,999,142 bytes of code included in matching.
 
-**Function exact MAX** — 4,241 / 4,768 current implementations (88.9%) have reached 100%.
+**Function exact MAX** — 4,237 / 4,768 current implementations (88.9%) have reached 100%.
 
-**CUR diagnostics** — 4,177 / 4,768 functions exact (87.6%) in this build (4768 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
+**CUR diagnostics** — 4,176 / 4,768 functions exact (87.6%) in this build (4768 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
 
 | Module       | Units | Functions exact CUR |  Function exact MAX | Fuzzy CUR | Fuzzy MAX |
 | :----------- | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`       |   123 | 3512 / 3991 (88.0%) | 3562 / 3991 (89.3%) |    96.73% |    97.01% |
+| `game`       |   123 | 3511 / 3991 (88.0%) | 3558 / 3991 (89.2%) |    96.73% |    96.99% |
 | `rmg`        |     3 |   290 / 368 (78.8%) |   302 / 368 (82.1%) |    93.53% |    94.88% |
 | `network`    |     4 |   266 / 280 (95.0%) |   268 / 280 (95.7%) |    97.68% |    98.18% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |

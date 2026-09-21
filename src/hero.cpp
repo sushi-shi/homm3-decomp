@@ -55,7 +55,7 @@ DATA(0x00698a94) int g_stablesMovementBonus;
 
 
 // Retail scalar state; startup initial values come from the pinned image.
-DATA(0x00698400) int g_inSetup698400;
+DATA(0x00698400) int g_inSetup;
 DATA(0x00697738) int g_heroScreenArmySlot;
 DATA(0x00698b20) hero* g_currentHero;
 DATA(0x00698a84) int g_heroScreenHeroPosition;
@@ -1735,7 +1735,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
 
     type_obscuring_object::restoreCell();
 
-    if (!g_combatFlag697744) {
+    if (!g_combatSurrendered) {
         for (int slot = 0; slot < 7; slot++)
             m_army.dismiss(slot);
     }
@@ -1757,7 +1757,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
     g_advManager->m_advWindow->updateHeroLocators(0, 1, 1);
     g_game->m_heroAvailability[m_id] = -1;
 
-    if (g_combatFlag6985a3 || g_combatFlag697744) {
+    if (g_combatRetreated || g_combatSurrendered) {
         int slot = random(0, 1);
         int other = g_game->m_players[m_owner].m_recruits[slot];
         if (other != -1) {
@@ -1795,7 +1795,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
         m_maxMovePoints = m_movePoints = getMobility((m_flags >> 18) & 1);
     }
 
-    if (!g_combatFlag697744)
+    if (!g_combatSurrendered)
         g_game->setRandomHeroArmies(m_id, 0, 1);
 }
 
@@ -2083,25 +2083,25 @@ void hero::checkLevel()
                     m_lastMagicSchoolLevel = m_level;
             }
 
-            if (!g_inSetup698400 && m_owner >= 0 &&
+            if (!g_inSetup && m_owner >= 0 &&
                 g_game->isLocalHuman(m_owner)) {
                 launchSample("nwherolv.82m", -1, 3);
-                if (g_networkActive69954c)
+                if (g_remoteOn)
                     g_currentPlayer->isLocalHuman();
 
                 if (skills[0] == eSecSkillNone) {
                     TLevelUpWindow window(this, stat, -1, -1);
                     if (g_game->isMultiplayer() &&
-                        g_turnDuration69d630.isExpired())
-                        g_dialogDeadline697784 = 15000;
+                        g_turnDuration.isExpired())
+                        g_dialogDeadline = 15000;
                     window.doModal(0);
                 } else if (skills[1] == eSecSkillNone) {
                     TLevelUpWindow window(
                         this, stat,
                         skills[0] * 3 + 3 + m_skillLevel[skills[0]], -1);
                     if (g_game->isMultiplayer() &&
-                        g_turnDuration69d630.isExpired())
-                        g_dialogDeadline697784 = 15000;
+                        g_turnDuration.isExpired())
+                        g_dialogDeadline = 15000;
                     window.doModal(0);
                     giveSS(skills[0], 1);
                 } else {
@@ -2119,13 +2119,13 @@ void hero::checkLevel()
                             skills[0] * 3 + 3 + m_skillLevel[skills[0]],
                             skills[1] * 3 + 3 + m_skillLevel[skills[1]]);
                         if (g_game->isMultiplayer() &&
-                            g_turnDuration69d630.isExpired())
-                            g_dialogDeadline697784 = 15000;
+                            g_turnDuration.isExpired())
+                            g_dialogDeadline = 15000;
                         window.doModal(0);
                     }
                     if (g_windowManager->m_dialogReturn ==
                         DIALOG_RETURN_TIMEOUT) {
-                        if (!g_inSetup698400 && m_owner >= 0)
+                        if (!g_inSetup && m_owner >= 0)
                             giveSS(aiChooseSecondarySkill(
                                        this, skills[0], skills[1], 1), 1);
                         else
@@ -2142,7 +2142,7 @@ void hero::checkLevel()
             } else if (skills[0] != eSecSkillNone) {
                 if (skills[1] == eSecSkillNone)
                     giveSS(skills[0], 1);
-                else if (!g_inSetup698400 && m_owner >= 0)
+                else if (!g_inSetup && m_owner >= 0)
                     giveSS(aiChooseSecondarySkill(
                                this, skills[0], skills[1], 1), 1);
                 else
@@ -2597,7 +2597,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
         } else if (g_heroScreenArmySlot == slot) {
             sprintf(g_text, g_heroScreen[10],
                     getArmyName(g_currentHero->m_army.m_armies[slot], 1));
-        } else if (g_unnamed6aa9d8 != 0) {
+        } else if (g_castleOpen != 0) {
             if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE)
                 sprintf(g_text, g_heroScreen[10],
                         getArmyName(g_currentHero->m_army.m_armies[slot], 1));
@@ -3813,7 +3813,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                                : g_heroScreenArmySlot == slot) {
                     g_heroScreenArmyStripLive = 0;
                     int showDismiss = 0;
-                    if (!g_unnamed6aa9d8
+                    if (!g_castleOpen
                         && g_currentHero->m_army.getNumArmies() > 1)
                         showDismiss = 1;
                     g_game->viewArmy(g_currentHero->m_army, slot, g_currentHero,
@@ -3822,7 +3822,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                         g_heroScreenArmySlot = HERO_SCREEN_NO_ARMY_SLOT;
                     setupHeroView();
                     drawWindow(1, 0xffff0001, 0xffff);
-                } else if (!rightMouse && g_unnamed6aa9d8) {
+                } else if (!rightMouse && g_castleOpen) {
                     if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE) {
                         g_heroScreenArmySlot = slot;
                         g_currentHero->heroScreenUpdate();
@@ -4602,7 +4602,7 @@ void THeroScreenWindow::setupHeroView()
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
-    if (g_unnamed6aa9d8) {
+    if (g_castleOpen) {
         widgetClearStatus(0x8a, widget::WIDGET_DRAWN);
     } else {
         updateHeroLocators();
@@ -4615,7 +4615,7 @@ void THeroScreenWindow::setupHeroView()
         broadcastMessage(msg);
     }
 
-    if (!noDismiss && !g_unnamed6aa9d8 &&
+    if (!noDismiss && !g_castleOpen &&
         (localPlayer->m_numTowns || localPlayer->m_numHeroes != 1)) {
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x81,
                          widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);

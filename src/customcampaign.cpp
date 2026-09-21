@@ -2250,7 +2250,7 @@ void TCampaignBrief::MapTextStruct::play()
     unsigned char finished = 0;
     unsigned char speechStarted = 0;
     int mp3Started = 0;
-    int savedVolume = g_unk698760;
+    int savedVolume = g_config.m_musicVolume;
     long nextScroll = GameTime::get() + g_campaignScrollInterval;
     int textHeight = g_bigFont->lineLength(m_subtitles.c_str(),
                                             g_campaignSubtitleWidth)
@@ -2275,7 +2275,7 @@ void TCampaignBrief::MapTextStruct::play()
 
     g_windowManager->m_screenBitmap->fillRect(0, 0, 800, 600, 0);
 
-    if (m_subtitles.length() > 0 && (g_showSubtitles || !speechName)) {
+    if (m_subtitles.length() > 0 && (g_config.m_videoSubtitles || !speechName)) {
         if (textHeight < g_campaignSubtitleHeight)
             textHeight = g_campaignSubtitleHeight;
         strip = new Bitmap16Bit(g_campaignSubtitleWidth,
@@ -2387,12 +2387,12 @@ void TCampaignBrief::MapTextStruct::play()
                 }
             } else if (music && AIL_stream_status(g_mp3Stream)
                                     != AIL_STREAM_PLAYING) {
-                g_unk698760 /= 2;
+                g_config.m_musicVolume /= 2;
                 g_soundManager->startMP3(music, 0, 1);
                 mp3Started = 1;
             }
 
-            if (g_showSubtitles)
+            if (g_config.m_videoSubtitles)
                 redraw = 1;
             if (!videoDone && !g_smackVideo) {
                 videoDone = 1;
@@ -2432,7 +2432,7 @@ void TCampaignBrief::MapTextStruct::play()
         speech->dispose();
     }
     delete strip;
-    g_unk698760 = savedVolume;
+    g_config.m_musicVolume = savedVolume;
     videoClose();
 }
 

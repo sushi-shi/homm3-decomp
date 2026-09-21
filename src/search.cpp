@@ -330,7 +330,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
     case BORDER_GATE: {
         unsigned char visited =
             (g_game->m_borderTentVisitFlags[mapCell->m_objectIndex]
-             & g_unnamed69ccc4)
+             & g_curPlayerBit)
             != 0;
         return visited;
     }

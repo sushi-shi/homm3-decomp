@@ -1,15 +1,9 @@
 // prefs.h - the preferences block misc.obj reads from and writes to the
 // registry (retail .bss 0x698758).
 
-// This is a SEPARATE header rather than a section of misc.h on purpose.
-// misc.h is included by soundmgr.cpp, game.cpp, kbwin.cpp and
-// ai_combat.cpp as well as misc.cpp; a struct DEFINITION added there
-// would enter four more TUs' include closures, and the include-set
-// sensitivity class (initialize_game_data precedent, re-measured
-// 2026-08-08) makes that a real codegen risk for bodies that are
-// already exact. Keeping the definition here, included only by the one
-// TU that owns the block, gives the type its home in include/ with the
-// same closure misc.obj had when its bodies were matched.
+// Original DC names: configStruct and gConfig (ReadPrefs, misc.cpp:526).
+// Consumers include this header to access the one preferences object;
+// its volume, display and multiplayer fields must not have separate storage.
 #ifndef HOMM3_PREFS_H
 #define HOMM3_PREFS_H
 
@@ -21,7 +15,7 @@
 // address misc.obj touches lands inside it - which is what makes them
 // MEMBERS and not neighbours.
 
-struct SUnnamed698758 {
+struct configStruct {
     int m_computerWalkSpeed;        // +0x00  "Computer Walk Speed"
     int m_walkSpeed;                // +0x04  "Walk Speed"
     int m_musicVolume;              // +0x08  "Music Volume"
@@ -62,25 +56,16 @@ struct SUnnamed698758 {
     char m_scFile[13];              // +0xb2  "RMT%sSC.BIN" destination
     char m_networkDefaultName[21];  // +0xbf  "Network Default Name"
 };
-SIZE(SUnnamed698758, 212);
+SIZE(configStruct, 212);
 
 // Definition + DATA claim in src/misc.cpp.
-extern SUnnamed698758 g_unnamed698758;
+extern configStruct g_config;
 
 // Four dwords at 0x699524..0x699530, OUTSIDE the prefs block (it ends
 // at 0x69882b), so they are separate globals and not members. Their names are
 // published by Dreamcast CodeView and their roles/addresses are independently
 // confirmed by the retail preference I/O and oldmain benchmark block.
 // Definitions + DATA claims in src/misc.cpp.
-// Retail .bss 0x698780, the subtitle toggle. It sits in the same prefs
-// personality as the four dwords below - the registry reader/writer at
-// 0x50b27d/0x50b294/0x50b536 and the two address-taken checkbox bindings at
-// 0x50b983/0x50bf27 are five of its ten sites - and the campaign prologue
-// player reads it to decide whether the subtitle strip is built and
-// scrolled. Name is a ROLE invention; no DEFINITION or DATA claim yet,
-// because misc.obj's own span has not been carved that far.
-extern int g_showSubtitles;     // 0x698780
-
 extern int g_firstTimeThrough;  // 0x699524, "First Time"
 extern int g_testDecomp;        // 0x699528, "Test Decomp"
 extern int g_testRead;          // 0x69952c, "Test Read"

@@ -119,7 +119,7 @@ static long ftol(double d)
 VA(0x005f73b0, 0x14D)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x192f4c
 void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z)
 {
-    int offset = (32.0f - g_unnamed68c6b8) / 2.0f;
+    int offset = (32.0f - g_viewWorldScaleFloat) / 2.0f;
     x -= offset;
     y -= offset;
 
@@ -609,7 +609,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
             if (row == OBJECT_DRAW_LAYER_HERO_BACK
                 && destY == CURSOR_DEST_Y0
-                && this->m_drawCursor && !::g_inViewWorld) {
+                && this->m_drawCursor && !::g_drawingPuzzle) {
                 if (destX == CURSOR_DEST_X0) {
                     this->drawCursor(0, 0);
                 } else if (destX == CURSOR_DEST_X1) {
@@ -619,7 +619,7 @@ void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 }
             } else if (row == OBJECT_DRAW_LAYER_HERO_FRONT
                        && destY == CURSOR_DEST_Y1
-                       && this->m_drawCursor && !::g_inViewWorld) {
+                       && this->m_drawCursor && !::g_drawingPuzzle) {
                 if (destX == CURSOR_DEST_X0) {
                     this->drawCursor(0, 1);
                 } else if (destX == CURSOR_DEST_X1) {
@@ -940,7 +940,7 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 
     if (!g_completeDrawAllCells
         && ((getMapExtra(srcX, srcY, z) & g_mapVisibilityBit)
-            || g_inViewWorld)) {
+            || g_drawingPuzzle)) {
         drawShroud = false;
     } else {
         drawShroud = true;
@@ -967,7 +967,7 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
             lookup = CLOUD_DRAW_FRAME_4;
     }
 
-    if (g_inViewWorld)
+    if (g_drawingPuzzle)
         return;
     if (!drawShroud)
         return;
@@ -1373,7 +1373,7 @@ int viewWorldUndergroundHandler(message& msg)
 VA(0x005fbf90, 0x2A3)  // dc 0x195b48
 void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 {
-    g_unnamed6aac3c = 1;
+    g_inViewWorld = 1;
     g_viewArtifacts = 0;
     g_viewTowns = 0;
     g_viewHeroes = 0;
@@ -1416,13 +1416,13 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
         break;
     }
 
-    g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
+    g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_MID;
     g_viewWorldScale = 11;
     g_csVwIcons = ResourceManager::getSprite("VWsymbol.def");
     g_memoryBuffer = new Bitmap16Bit(64, 64);
     g_advManager->demobilizeCurrHero(0, 1);
     g_windowManager->m_colorCyclingOn = 0;
-    g_combatActive698a18 = 2;
+    g_combatActive = 2;
     {
         TViewWorldWindow viewWorldWindow;
         type_point mapCenter(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
@@ -1437,11 +1437,11 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
         g_windowManager->m_colorCyclingOn = 1;
         viewWorldWindow.doModal(0);
     }
-    g_unnamed6aac3c = 0;
+    g_inViewWorld = 0;
     updateRadar(0, 1, g_viewMines, g_viewHeroes, g_viewTowns);
     g_windowManager->m_colorCyclingOn = 0;
     redrawAdvScreen(1, 0);
-    g_combatActive698a18 = 0;
+    g_combatActive = 0;
     g_windowManager->m_colorCyclingOn = 1;
 }
 
@@ -1478,7 +1478,7 @@ void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
 
     m_viewableWidth = 608 / g_viewWorldScale;
     m_viewableHeight = 544 / g_viewWorldScale;
-    float skipLevel = 32.0f / g_unnamed68c6b8;
+    float skipLevel = 32.0f / g_viewWorldScaleFloat;
     for (i = 0; i < g_viewWorldScale; i++)
         g_scaleLine[i] = ftol(static_cast<float>(i) * skipLevel);
 
@@ -1714,17 +1714,17 @@ int TViewWorldWindow::windowHandler(message& msg)
         case widget::WIDGET_DESELECT:
             switch (msg.m_codeY) {
             case MAGNIFY_FAR_ID:
-                g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FAR;
+                g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_FAR;
                 g_viewWorldScale = 7;
                 updateViewWorld(&msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_MID_ID:
-                g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
+                g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_MID;
                 g_viewWorldScale = 11;
                 updateViewWorld(&msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_FULL_ID:
-                g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FULL;
+                g_viewWorldScaleFloat = VIEW_WORLD_TILE_SCALE_FULL;
                 g_viewWorldScale = 16;
                 updateViewWorld(&msg);
                 return MESSAGE_DISPATCH_CONSUME;

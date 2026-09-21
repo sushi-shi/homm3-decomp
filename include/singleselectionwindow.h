@@ -807,9 +807,9 @@ SIZE(TSingleSelectionWindow, 0x1970);
 //   0x691268  the extension scratch SaveGame sprintf's (.GM%d / .CGM)
 //   0x69774c  campaign-game byte: picks the .CGM extension
 //   0x697774  set to 1 the moment a save filename is committed
-extern char g_unnamed69fc2c[];
-extern char g_unnamed691268[];
+extern char g_saveGameName[];
+extern char g_saveGameSuffix[];
 extern bool g_inCampaign;
-extern int g_unnamed697774;
+extern int g_saveGameRequested;
 
 #endif  /* HOMM3_SINGLESELECTIONWINDOW_H */

@@ -1,3 +1,4 @@
+#include "prefs.h"
 #include "text.h"
 #include "va.h"
 #include "bitset_iterator.h"
@@ -83,7 +84,8 @@ DATA(0x006781fc) const int g_initResourcesComputer[5][7] = {
 DATA(0x0069ccb0) playerData* g_currentPlayer;
 DATA(0x0069cca8) int g_netLocalGamePos;
 DATA(0x00699554) int g_localGamePos;
-DATA(0x00691680) int g_unnamed691680;
+// Original DC name: iSandAnim; GetTurnAIVars resets it beside iCurHourGlassPhase.
+DATA(0x00691680) int g_sandAnim;
 
 
 // Retail table initializers, in the layouts used by their named consumers.
@@ -94,7 +96,7 @@ DATA(0x00677a54) const char* g_townCapitolObjectDefs[9] = { "AVCcasz0.def", "AVC
 DATA(0x00677978) int g_mineProduction[7] = { 2, 1, 2, 1, 1, 1, 1000 };
 DATA(0x006779b0) const int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
 DATA(0x0069fbf8) int g_newMapStartingBonus[8];
-DATA(0x0069fb24) int g_unnamed69fb24[8];
+DATA(0x0069fb24) int g_startingHeroOverrides[8];
 
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x00697294) TTextResource* g_randomTavernText;
@@ -105,11 +107,12 @@ DATA(0x00697748) int g_monthType;
 DATA(0x00698834) int g_monthTypeExtra;
 DATA(0x006783c8) int g_mapWidth = 72;
 DATA(0x006783cc) int g_mapHeight = 72;
-DATA(0x0069d810) int g_unnamed69d810;
+// Original DC name: g_playerTurn; StartLocalPlayerTurn and remote turn handoff.
+DATA(0x0069d810) int g_playerTurn;
 DATA(0x0067814c) int g_heroGoldCost = 2500;
-DATA(0x0069950c) int g_unnamed69950c;
-DATA(0x0069951c) unsigned char g_unnamed69951c;
-DATA(0x0069ccc4) unsigned char g_unnamed69ccc4;
+DATA(0x0069950c) int g_grailOwner;
+DATA(0x0069951c) unsigned char g_normalVictory;
+DATA(0x0069ccc4) unsigned char g_curPlayerBit;
 
 type_point aiAttemptPuzzleGuess(long player);
 
@@ -117,7 +120,6 @@ type_point aiAttemptPuzzleGuess(long player);
 // game.obj writer. The second dword is the byte-proven autosave preference
 // gate, but no surviving symbol attests a semantic spelling for it.
 DATA(0x00691684) int g_curHourGlassPhase;
-DATA(0x00698770) int g_unnamed698770;
 
 // Hero-setup maps use the native Dinkumware <utility>/<xtree> definitions.
 // Retail retains the pair cleanup at 0x4c4df0 and the tree minimum, insert
@@ -1155,7 +1157,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
 
     g_game->recordHideHero(ourHero, ourHero->m_owner, 0);
 
-    if (g_networkActive69954c) {
+    if (g_remoteOn) {
         CMCHideHero hideHero(ourHero->m_id);
         sendMapChange(&hideHero);
     }
@@ -2576,9 +2578,9 @@ int game::load(TAbstractFile* infile)
     setMapSize(m_mapHeader.m_size, m_mapHeader.m_size);
 
     if (saved.m_version >= 41) {
-        g_unnamed69950c = readValue<char>(infile);
+        g_grailOwner = readValue<char>(infile);
     } else {
-        g_unnamed69950c = -1;
+        g_grailOwner = -1;
     }
 
     if (saved.m_version >= 34) {
@@ -2781,11 +2783,11 @@ int game::load(TAbstractFile* infile)
 
     g_advManager->m_curHeroMobile = 0;
     g_currentPlayer = &g_game->m_players[g_netLocalGamePos];
-    g_unnamed69ccc4 = 1 << g_netLocalGamePos;
-    if (!g_networkActive69954c)
-        g_unnamed69778c = g_netLocalGamePos;
+    g_curPlayerBit = 1 << g_netLocalGamePos;
+    if (!g_remoteOn)
+        g_curWatchPlayer = g_netLocalGamePos;
     setupShipyards();
-    g_mapVisibilityBit = 1 << g_unnamed69778c;
+    g_mapVisibilityBit = 1 << g_curWatchPlayer;
     g_completeDrawEnabled = g_game->isLocalHuman(g_netLocalGamePos);
     setupAdjacentMons();
     aiExamineMap();
@@ -3040,7 +3042,7 @@ int game::save(TAbstractFile* outfile)
         return -1;
 
     {
-        charBuffer = g_unnamed69950c;
+        charBuffer = g_grailOwner;
         outfile->write(&charBuffer, sizeof(charBuffer));
     }
     outfile->write(m_artifactDisabled, sizeof(m_artifactDisabled));
@@ -3287,7 +3289,7 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
         else
             sprintf(saveName,
                     DATA_COMPGEN(0x00677d90, saveSlotNameFormat, "%s.GM%d"),
-                    nameNoExtension, g_unnamed699274);
+                    nameNoExtension, g_numHumanPlayers);
     } else {
         strcpy(saveName, filename);
     }
@@ -3336,8 +3338,8 @@ void game::setupOrigData()
 {
     int i;
 
-    g_unnamed69951c = 0;
-    g_unnamed69950c = -1;
+    g_normalVictory = 0;
+    g_grailOwner = -1;
     m_difficultyRating = 1;
     g_weekTypeExtra = 0;
     g_weekType = 0;
@@ -3348,7 +3350,7 @@ void game::setupOrigData()
     strncpy(m_saveFileName, (*g_generalText)[12], sizeof(m_saveFileName));
     m_saveFileName[sizeof(m_saveFileName) - 1] = 0;
     MEMSET(m_playerDisabled, 0, sizeof(m_playerDisabled), i);
-    memset(g_unnamed69fb24, -1, sizeof(g_unnamed69fb24));
+    memset(g_startingHeroOverrides, -1, sizeof(g_startingHeroOverrides));
 
     m_ultimateArtifactX = -1;
     m_ultimateArtifactY = -1;
@@ -3732,7 +3734,7 @@ VA(0x004bfe70, 0x6A8)  // dc 0xaada4
 void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                   TCampaignBrief::ScenarioStruct* campaignContext, int gameVersion)
 {
-    g_inSetup698400 = 1;
+    g_inSetup = 1;
 
     randomizeHeroPool();
 
@@ -3918,7 +3920,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 
     setMarketArtifacts();
 
-    g_inSetup698400 = 0;
+    g_inSetup = 0;
 }
 
 // Retail-only PC wrapper between the DC NewMap and SetupFirstPlayer rows.
@@ -3973,12 +3975,12 @@ void game::setupFirstPlayer()
 
     g_netLocalGamePos = startingPos;
     g_currentPlayer = &m_players[startingPos];
-    g_unnamed69ccc4 = static_cast<unsigned char>(1 << startingPos);
+    g_curPlayerBit = static_cast<unsigned char>(1 << startingPos);
 
     int currentPlayer = getLocalPlayerGamePos();
-    g_unnamed69778c = currentPlayer;
+    g_curWatchPlayer = currentPlayer;
     g_mapVisibilityBit = static_cast<unsigned char>(1 << currentPlayer);
-    g_unnamed69d810 = startingPos;
+    g_playerTurn = startingPos;
 }
 // E:\gamedcs\game.cpp:4509. On x86 the unchanged award, secondary skill
 // and spell stores fold away, leaving only the randomized primary lane.
@@ -6670,7 +6672,7 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
     if (oldOwner == newPlayerOwner)
         return;
 
-    if (!g_inSetup698400 && !isRemoteMove)
+    if (!g_inSetup && !isRemoteMove)
         recordClaimTown(townId, newPlayerOwner);
 
     thisTown->m_isGrouped = 0;
@@ -7033,10 +7035,10 @@ void game::nextPlayer()
     }
 
     if (g_currentPlayer->isLocalHuman())
-        g_turnDuration69d630.clear();
+        g_turnDuration.clear();
     g_curHourGlassPhase = 0;
 
-    if (g_currentPlayer->isLocalHuman() && g_unnamed698770) {
+    if (g_currentPlayer->isLocalHuman() && g_config.m_autosave) {
         for (i = 0; i < 8; ++i) {
             if (!m_playerDisabled[i]) {
                 humans = i;
@@ -7072,7 +7074,7 @@ void game::nextPlayer()
             if (weekSave) {
                 makeOrig = 1;
                 perDay();
-                if (g_networkActive69954c) {
+                if (g_remoteOn) {
                     m_mapHeader.m_lossCondition.checkForTimeLimitExpired();
                     ::checkEndGame(0);
                     if (g_gameOver)
@@ -7084,34 +7086,34 @@ void game::nextPlayer()
         }
     }
 
-    if (g_unnamed691209 && makeOrig
-        && (!g_networkActive69954c || g_unnamed699274 == 1)) {
+    if (g_goSolo && makeOrig
+        && (!g_remoteOn || g_numHumanPlayers == 1)) {
         g_advManager->drawRolloverText(
             const_cast<char*>(g_generalText->getText(108)));
         saveGame(g_generalText->getText(77), 1, 0, 1, 0);
         g_advManager->drawRolloverText(
             DATA_COMPGEN(0x00691210, nextPlayerSoloEmptyRollover, ""));
 
-        save = g_networkActive69954c;
-        g_networkActive69954c = 1;
-        g_unnamed691209 = 0;
+        save = g_remoteOn;
+        g_remoteOn = 1;
+        g_goSolo = 0;
         normalDialogTimeOut(g_generalText->getText(663), 2, 2000,
                             -1, -1, -1, 0, -1, 0, -1, -1, 0);
-        g_networkActive69954c = save;
+        g_remoteOn = save;
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE) {
-            g_game->m_players[g_unnamed69120c].m_isHuman = 1;
-            g_game->m_players[g_unnamed69120c].m_isLocal = 1;
-            g_unnamed691209 = 0;
-            g_mapVisibilityBit = 1 << g_unnamed69120c;
+            g_game->m_players[g_soloPos].m_isHuman = 1;
+            g_game->m_players[g_soloPos].m_isLocal = 1;
+            g_goSolo = 0;
+            g_mapVisibilityBit = 1 << g_soloPos;
         } else {
-            g_unnamed691209 = 1;
+            g_goSolo = 1;
         }
     }
 
     g_currentPlayer = &g_game->m_players[g_netLocalGamePos];
-    g_unnamed69ccc4 = 1 << g_netLocalGamePos;
+    g_curPlayerBit = 1 << g_netLocalGamePos;
 
-    if (g_networkActive69954c && !g_currentPlayer->isHuman()) {
+    if (g_remoteOn && !g_currentPlayer->isHuman()) {
         CTurnUpdateMsg msg(g_netLocalGamePos);
         transmitRemoteData(&msg, 0x7f, false, true);
     }
@@ -7153,39 +7155,39 @@ void game::nextPlayer()
         showComputerScreen();
         g_completeDrawEnabled = 0;
 
-        if (g_networkActive69954c && isHuman(g_netLocalGamePos)) {
+        if (g_remoteOn && isHuman(g_netLocalGamePos)) {
             toWho = g_netLocalGamePos;
             makeOrig = 0;
             g_thisNetGotAdventureControl = 0;
-            if (g_unnamed69d80d) {
+            if (g_playerDrop) {
                 toWho = 0x7f;
-                g_unnamed69d80d = 0;
+                g_playerDrop = 0;
             }
             if (isLastHuman(getLocalPlayerGamePos())) {
                 toWho = 0x7f;
-                g_unnamed69d80d = 0;
+                g_playerDrop = 0;
                 makeOrig = 1;
             }
             save = transmitSaveGame(toWho, 0, 1, makeOrig);
-            if (!save && g_unnamed69d80d) {
+            if (!save && g_playerDrop) {
                 g_netLocalGamePos = giCurPlayerSave;
-                g_unnamed69d80d = 0;
+                g_playerDrop = 0;
                 g_currentPlayer = &g_game->m_players[g_netLocalGamePos];
-                g_unnamed69ccc4 = 1 << g_netLocalGamePos;
+                g_curPlayerBit = 1 << g_netLocalGamePos;
                 nextPlayer();
                 return;
             }
             g_advManager->updateRadar(1, 1, 0, 0, 0);
-            g_unnamed69d810 = g_netLocalGamePos;
+            g_playerTurn = g_netLocalGamePos;
         }
         g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, -1);
     } else {
         setNoDialogMenus(1);
         g_inputManager->flush();
-        g_unnamed69778c = g_netLocalGamePos;
-        g_mapVisibilityBit = g_unnamed69ccc4;
+        g_curWatchPlayer = g_netLocalGamePos;
+        g_mapVisibilityBit = g_curPlayerBit;
 
-        if (g_unnamed6993dc && g_unnamed699274 > 1) {
+        if (g_blackoutPlayer && g_numHumanPlayers > 1) {
             char textBuffer[256];
             sprintf(textBuffer, g_generalText->getText(
                         GENERAL_TEXT_PLAYER_TURN_FORMAT),
@@ -7194,13 +7196,13 @@ void game::nextPlayer()
         }
 
         if (g_currentPlayer->isLocalHuman()
-            || (g_networkActive69954c && g_currentPlayer->isHuman())) {
+            || (g_remoteOn && g_currentPlayer->isHuman())) {
             cancelComputerScreen();
         }
     }
 
     if (g_currentPlayer->isLocalHuman())
-        g_turnDuration69d630.start();
+        g_turnDuration.start();
     doNewTurn();
     if (g_currentPlayer->isLocalHuman())
         g_advManager->forceNewHover();
@@ -8548,7 +8550,7 @@ void game::showComputerScreen()
     g_advManager->m_advWindow->getWidget(6)->enable(0);
     g_advManager->m_advWindow->getWidget(12)->enable(0);
 
-    if (g_unnamed698790 && !g_currentPlayer->isHuman()) {
+    if (g_config.m_blackoutComputer && !g_currentPlayer->isHuman()) {
         g_currentPlayer->m_isLocal = 1;
         g_completeDrawAllCells = 1;
         g_advManager->completeDraw(1);
@@ -8586,7 +8588,7 @@ void game::showHeroesLogo()
     int x;
     int y;
 
-    if (g_networkActive69954c && g_dPlay) {
+    if (g_remoteOn && g_dPlay) {
         netMsgHandler = g_dPlay->getNetMsgHandler();
         if (netMsgHandler && netMsgHandler->isInPopup())
             return;
@@ -8610,7 +8612,7 @@ void game::showHeroesLogo()
 VA(0x004ca840, 0x19C)  // dc 0xb6640
 void game::waitForPlayer(char* text, int playerId)
 {
-    if (!g_unnamed6993dc || g_unnamed699274 <= 1 || g_networkActive69954c)
+    if (!g_blackoutPlayer || g_numHumanPlayers <= 1 || g_remoteOn)
         return;
 
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
@@ -8840,13 +8842,13 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
         g_advManager->bvMessage((*g_generalText)[99]);
 
-    saveGame(g_loadedGameName, 0, 0, !inGame, 1);
+    saveGame(g_config.m_scFile, 0, 0, !inGame, 1);
 
     char fileName[351];
     sprintf(fileName,
             DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
             DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"),
-            g_loadedGameName);
+            g_config.m_scFile);
 
     if (inGame) {
         File file;
@@ -8918,7 +8920,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     unsigned char done = 0;
     unsigned long numMsgs = 0;
     int curBlock = 0;
-    g_unnamed69d80d = 0;
+    g_playerDrop = 0;
     if (totalBlocks % fileSize)
         ++totalBlocks;
 
@@ -9006,7 +9008,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                         CDestroyPlayerMsg destroyMsg(
                             m_players[toWho].m_dpid);
                         m_players[toWho].clearNetInfo();
-                        g_unnamed69d80d = 1;
+                        g_playerDrop = 1;
                         transmitRemoteDataDPID(&destroyMsg, 0,
                                                false, true);
                         return 0;
@@ -9024,7 +9026,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                                                        false, true);
                             }
                         }
-                        g_unnamed69d80d = 1;
+                        g_playerDrop = 1;
                         delete[] data;
                         return 0;
                     }
@@ -9073,7 +9075,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             case RS_PLAYER_DROPPED:
                 if (getGamePosFromDPID(confirmMsg->m_dpidFrom) == toWho) {
                     handlePlayerDrop(confirmMsg->m_dpidFrom);
-                    g_unnamed69d80d = 1;
+                    g_playerDrop = 1;
                     delete[] data;
                     return 0;
                 }
@@ -9427,7 +9429,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     sprintf(fileName,
             DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
             DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"),
-            g_loadedGameName);
+            g_config.m_scFile);
     int handle = _open(fileName,
                        _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
                        _S_IWRITE);
@@ -9923,7 +9925,7 @@ void game::checkForTimeEvent()
                   : thisEvent->m_applyToComputer)) {
             continue;
         }
-        if (!(g_unnamed69ccc4 & thisEvent->m_playerFlags))
+        if (!(g_curPlayerBit & thisEvent->m_playerFlags))
             continue;
 
         if (thisEvent->m_firstTime == day) {
@@ -9952,7 +9954,7 @@ void game::checkForTownEvent()
                   : thisEvent.m_applyToComputer)) {
             continue;
         }
-        if (!(g_unnamed69ccc4 & thisEvent.m_playerFlags))
+        if (!(g_curPlayerBit & thisEvent.m_playerFlags))
             continue;
 
         if (thisEvent.m_firstTime == day) {
@@ -10258,7 +10260,7 @@ bool game::isLastHuman(int gamePos) const
 VA(0x004cec90, 0x18)  // dc 0xbc300
 bool game::isMultiplayer() const
 {
-    if (g_networkActive69954c || g_mpNetProtocol == MP_HOTSEAT)
+    if (g_remoteOn || g_mpNetProtocol == MP_HOTSEAT)
         return true;
     return false;
 }
@@ -10275,7 +10277,7 @@ void game::resetGame(int difficulty, int version,
     g_buildAllBuildings = 0;
     setupOrigData();
     initNewGame(difficulty, version, defaultMapHeader, 0);
-    g_turnDuration69d630.clear();
+    g_turnDuration.clear();
     g_thisNetGotAdventureControl = 0;
     TSpellbookWindow::reset();
     memset(m_borderTentVisitFlags, 0, sizeof(m_borderTentVisitFlags));

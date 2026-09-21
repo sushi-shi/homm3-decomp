@@ -1210,7 +1210,7 @@ void army::animateMissile(army* armyToAttack)
     }
     if (is(creatureShootsRay)) {
         GameTime::delay(static_cast<long>(
-            g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 115.0f));
+            g_combatSpeedFactors[g_config.m_combatSpeed] * 115.0f));
         long color;
         switch (m_creatureType) {
         case CREATURE_ARCH_MAGE:
@@ -1251,7 +1251,7 @@ void army::animateMissile(army* armyToAttack)
     Bitmap16Bit saved(width, height);
     TDrawbridgeBounds updateArea = g_combatAreaLimits;
     const int missileperiod = static_cast<int>(
-        g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 33.0f);
+        g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
     long frame = 0;
     if (nframes > 0) {
@@ -1294,14 +1294,14 @@ void army::animateMissile(army* armyToAttack)
                 updateArea.m_maxX = right;
             if (updateArea.m_maxY < bottom)
                 updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits694f18.m_minX)
-                updateArea.m_minX = g_combatDrawLimits694f18.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits694f18.m_minY)
-                updateArea.m_minY = g_combatDrawLimits694f18.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits694f18.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits694f18.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits694f18.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits694f18.m_maxY;
+            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
+                updateArea.m_minX = g_combatDrawLimits.m_minX;
+            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
+                updateArea.m_minY = g_combatDrawLimits.m_minY;
+            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
+                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
+            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
+                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.m_maxX - updateArea.m_minX + 1,
@@ -2107,7 +2107,7 @@ void army::doAttack(int direction)
     if (armyToAttack->m_numTroops > 0
         && armyToAttack->canRetaliate(*this) && !killed) {
         GameTime::delay(static_cast<int>(
-            g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 150.0f));
+            g_combatSpeedFactors[g_config.m_combatSpeed] * 150.0f));
         g_combatManager->m_currentSide = 1 - g_combatManager->m_currentSide;
         armyToAttack->doAttack(this, counterDirection);
         g_combatManager->m_currentSide = 1 - g_combatManager->m_currentSide;
@@ -2118,7 +2118,7 @@ void army::doAttack(int direction)
     if (is(creatureTwoAttacks) && armyToAttack->m_numTroops > 0 && !is(creatureShootingArmy)
         && !isIncapacitated() && m_numTroops > 0) {
         GameTime::delay(static_cast<int>(
-            g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 150.0f));
+            g_combatSpeedFactors[g_config.m_combatSpeed] * 150.0f));
         doAttack(armyToAttack, direction);
     }
     if (!armyToAttack->is(creatureImmobilized)) {
@@ -4243,14 +4243,14 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     }
     {
         TDrawbridgeBounds& bounds = g_combatManager->m_drawbridgeBounds;
-        if (bounds.m_minX < g_combatDrawLimits694f18.m_minX)
-            bounds.m_minX = g_combatDrawLimits694f18.m_minX;
-        if (bounds.m_minY < g_combatDrawLimits694f18.m_minY)
-            bounds.m_minY = g_combatDrawLimits694f18.m_minY;
-        if (bounds.m_maxX > g_combatDrawLimits694f18.m_maxX)
-            bounds.m_maxX = g_combatDrawLimits694f18.m_maxX;
-        if (bounds.m_maxY > g_combatDrawLimits694f18.m_maxY)
-            bounds.m_maxY = g_combatDrawLimits694f18.m_maxY;
+        if (bounds.m_minX < g_combatDrawLimits.m_minX)
+            bounds.m_minX = g_combatDrawLimits.m_minX;
+        if (bounds.m_minY < g_combatDrawLimits.m_minY)
+            bounds.m_minY = g_combatDrawLimits.m_minY;
+        if (bounds.m_maxX > g_combatDrawLimits.m_maxX)
+            bounds.m_maxX = g_combatDrawLimits.m_maxX;
+        if (bounds.m_maxY > g_combatDrawLimits.m_maxY)
+            bounds.m_maxY = g_combatDrawLimits.m_maxY;
     }
 
     for (long frame = 0; frame < explosion->getNumFrames(0); frame++) {
@@ -4505,11 +4505,11 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
     if (sequence == 0)
         frameDelay = static_cast<int>(
             static_cast<float>(m_monFrameInfo.m_walkCycleTime)
-            * g_combatSpeedFactors[g_unnamed698758.m_combatSpeed]
+            * g_combatSpeedFactors[g_config.m_combatSpeed]
             / static_cast<float>(m_stdIcon->getNumFrames(0)));
     else
         frameDelay = static_cast<int>(
-            g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 100.0f);
+            g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
 
     TDrawbridgeBounds bounds = g_combatManager->m_drawbridgeBounds;
     for (m_currFrameIndex = startFrame;

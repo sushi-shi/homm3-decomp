@@ -133,13 +133,13 @@ enum EAdvmgrRetailObjectType {
 // around this one declarator rather than moved, so the preprocessed text
 // every quick-info consumer sees is unchanged, line for line.
 extern const char* g_terrainNames[];
-extern int g_unnamed69778c;
+extern int g_curWatchPlayer;
 // Paired with gUnnamed6989c8 by every non-local adventure command gate.
 // The role is byte-proven; no surviving symbol attests a semantic name.
-extern int g_unnamed6989c8;
+extern int g_debugLevel;
 // Written at startup by InitializeExtraInfoText (28 rows of
 // xtrainfo.txt), so the ELEMENT is not const.
-extern int g_unnamed69ccd4;
+extern int g_aiHeroMoveActive;
 extern const char* g_globalInfoFlagNames[];
 // Role-derived retail tables used by SetRolloverText. The generator-name
 // semantics are corroborated by the DC public roster; the x86 bases and
@@ -210,88 +210,30 @@ enum EAdvCommand {
     ADV_COMMAND_SHIPYARD = 8
 };
 
-// Retail .bss, all four unattested and reached only from the adventure
-// command surface. Roles are what the bytes prove:
-//   0x6968e0  the live walk-sample handle soundManager::MemorySample
-//             returns for the step the route walker is about to take.
-//   0x6968e4  the resource-side walk sample paired with that live handle;
-//             StopCursor clears both after stopping the handle.
-extern ds_memsample* g_unnamed6968e0;
-//   0x6968e8  a cursor-owned byte latch cleared when animate_move finishes.
-//             No surviving symbol names its role, so the name stays ordinal.
-extern sample* g_unnamed6968e4;
+// Shared adventure state. Original names and retail evidence live beside
+// the owning definitions; configuration fields are accessed through g_config.
+extern ds_memsample* g_walkSample;
+extern sample* g_newWalkSample;
+// Retail-only byte cleared after animateMove; original name and role unknown.
 extern unsigned char g_unnamed6968e8;
-//   0x69777c  breaks the route step loop when nonzero.
-//   0x698774  suppresses the route teardown and forces ShowRoute
-//             instead; eleven consumers image-wide, three of them here.
-extern int g_unnamed69777c;
-//   0x699560  gates both of the hero-view arm's SetEnvironmentOrigin
-//             calls, and UpdateRadar's own AI-shield paint.
-extern int g_unnamed698774;
-extern int g_unnamed699560;
+extern int g_heroMoveTriggeredEvent;
+extern int g_lowMemory;
 
-// Retail .bss, three more unattested slots the de-select dispatcher reads.
-// The first two are game::Overview's reply pair - ProcessDeSelect's
-// kingdom-overview arm calls Overview (0x51e8d0) and then reads them back
-// to back, and both are written inside that body (relocs at 0x11e8ff and
-// 0x11e904) - and the third gates the end-turn warning dialog.
-//   0x6985c0  the overview screen's exit action; see EOverviewExit.
-//   0x69873c  the town the overview screen exited on, in game::GetTown's
-//             domain: ProcessDeSelect feeds it straight to the accessor
-//             and the -1 arm is emitted, so it carries the same "no town"
-//             sentinel townIds does.
 DATA(0x006985c0) extern int g_overviewReturnAction;
-//   0x698778  third of the three gates on the "you still have heroes who
-//             can move" end-turn confirm, after game::field_1f69d and
-//             playerData::HasMobileHero.
 DATA(0x0069873c) extern int g_overviewReturnActionExtra;
-extern int g_unnamed698778;
 
-// Retail .bss/.data, three more the hero-context switch reads. Roles are
-// exactly what SetHeroContext's branches prove and nothing wider:
-//   0x682a38  cleared for the "is this turn ours to draw" gate, tested
-//             between bVideoPaused and gCompleteDrawMessageBypass.
-//   0x6989f4  set to 1 around ViewPuzzle's grail-reveal CompleteDraw and
-//             cleared right after - a draw-pass mode latch by role.
 DATA(0x00682a38) extern unsigned char g_followPlayerMode;
-//   0x6993dc  set to 1 on Open's two hotseat arms alongside the
-//             gCompleteDrawEnabled refresh.
-extern int g_inViewWorld;
-//   0x691209  lets a NON-human acting player through that same gate
-//             without the IsLastHuman probe.
-extern int g_unnamed6993dc;
-//   0x698790  suppresses the visibility scan around the new hero when the
-//             receiving player is not the local human.
-extern unsigned char g_unnamed691209;
-extern int g_unnamed698790;
+extern int g_drawingPuzzle;
+extern int g_blackoutPlayer;
+extern unsigned char g_goSolo;
 
-// gUnnamed691209's PRODUCER, found while decoding advManager::Main: the
-// "gosolo" console handler at 0x4022e0 sets the byte to 1 and stores
-// `gpGame->GetLocalPlayerGamePos()` into the int at 0x69120c in the same
-// breath (and, when bVideoPaused is clear, forces gMapVisibilityBit to
-// 0xff - the identical three-line block Main's end-of-turn path repeats).
-// So the pair is "this machine handed its turns to the AI" plus "the game
-// position it handed over", and every consumer tests them together as
-// `gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c`. Main reads that
-// conjunction FOUR times without caching it, reloading both globals each
-// time. NAMES REMAIN ORDINAL: the historical external IDA corpus carried
-// ?gbGoSolo@@3_NA / ?giSoloPos@@3HA, but it puts them at 0x691259 and
-// 0x69125c, a different pair fifty bytes up, so the mangled spellings are
-// NOT evidence for these two addresses and are recorded, not adopted.
-extern int g_unnamed69120c;
+extern int g_soloPos;
 
-// Retail .data 0x691678 / 0x69167c: once-per-session latches for the two
-// turn-start info popups (general-text rows 332 and 333). Set to 1 the
-// first time StartLocalPlayerTurn shows each dialog; nothing clears them.
-extern int g_unnamed691678;
-extern int g_unnamed69167c;
+extern int g_lastCheaterState;
+extern int g_lastDebugState;
 
-// Retail .bss 0x699544, an ambient-sound resume stamp. The whole image
-// touches it from advmgr.obj alone - Main twice and StartLocalPlayerTurn
-// once - and Main's use is the complete contract: a non-zero stamp older
-// than six seconds clears itself, re-arms the terrain ambient track and
-// re-centres the environment origin. Name is an address ordinal.
-extern unsigned long g_unnamed699544;
+extern unsigned long g_forceSwitchMusic;
+
 
 // Retail .bss 0x69928c and the manager that lives there. InitMainClasses
 // (0x4edb40) allocates it LAST, immediately after gpSearchArray, and
@@ -329,7 +271,7 @@ enum EOverviewExit {
 // slot is a FLOAT and not the int at 0x68c6bc it is paired with). The only
 // three values UpdateRadar tests against are 16.0f, 11.84f and 7.68f -
 // 0x41800000, 0x413d70a4 and 0x40f5c28f exactly. No attested name.
-extern float g_unnamed68c6b8;
+extern float g_viewWorldScaleFloat;
 
 // The four square map dimensions MAP_WIDTH/MAP_HEIGHT take, named so
 // UpdateRadar's three `switch (MAP_HEIGHT)` bodies case on a domain rather
@@ -507,7 +449,7 @@ extern unsigned char g_mapVisibilityBit;
 // DC publishes this as `int gbInViewWorld`; retail corroborates the role:
 // its xrefs gate CompleteDraw's normal layers, ScanForHeroOrBoat, ViewPuzzle,
 // and the separate view-world renderer.
-extern int g_inViewWorld;
+extern int g_drawingPuzzle;
 
 // Retail .bss 0x699538. CompleteDraw forces the source origin to (0, 0)
 // while this is set, and DrawShroud uses it to bypass normal fog bounds and
@@ -528,7 +470,7 @@ DATA(0x006983f8) extern int g_specialHideCursor;
 // the 87th does not, so this is a DECLARATION ONLY: no DATA claim is
 // taken here and the owning TU keeps it (the winmgr.h gbInDialog
 // precedent). Name is the house ordinal placeholder.
-extern unsigned char g_unnamed67f574;
+extern unsigned char g_colorCyclingEnabled;
 extern unsigned char g_completeDrawMessageBypass;
 
 // Six of these records are filled by ScanForHeroOrBoat. Retail writes the
@@ -1565,8 +1507,8 @@ extern int g_thisNetGotAdventureControl;
 // screen is up and parks the map's size band in 0x699548, which is exactly
 // the nesting Close tests: it skips the ambient-music switch and keeps the
 // shared tile and cursor sprite sets alive while a town is open.
-extern int g_unnamed6aa5f0;
-extern int g_unnamed699548;
+extern int g_townViewActive;
+extern int g_adventureGraphicsPreserveMode;
 
 int mapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
 void computeAdvNetControl();

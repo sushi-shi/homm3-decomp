@@ -1,3 +1,4 @@
+#include "prefs.h"
 #include "va.h"
 
 #include <stdio.h>
@@ -84,7 +85,7 @@ static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
         if (!RegisterClassA(&appClass))
             return 0;
     }
-    if (g_windowedMode) {
+    if (g_config.m_mainGameFullScreen) {
         windowStyle = WS_POPUP | WS_VISIBLE;
         windowExStyle = WS_EX_TOPMOST;
     } else {
@@ -94,11 +95,11 @@ static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
     windowRect.top = windowRect.left = 0;
     windowRect.right = 800;
     windowRect.bottom = 600;
-    AdjustWindowRect(&windowRect, windowStyle, g_windowedMode == 0);
+    AdjustWindowRect(&windowRect, windowStyle, g_config.m_mainGameFullScreen == 0);
     g_hwndApp = CreateWindowExA(windowExStyle, g_appName, g_title, windowStyle,
-        g_windowX, g_windowY,
+        g_config.m_mainGameX, g_config.m_mainGameY,
         windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
-        0, g_windowedMode ? 0 : g_dfltMenu, instance, 0);
+        0, g_config.m_mainGameFullScreen ? 0 : g_dfltMenu, instance, 0);
     if (!g_hwndApp)
         return 0;
     initGraphics();
@@ -134,10 +135,10 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
             g_appWindowStyle = GetWindowLongA(g_hwndApp, GWL_STYLE);
             if (!(g_appWindowStyle & (WS_MINIMIZE | WS_MAXIMIZE)) && !g_closingApp) {
                 immMouseWindowMoved();
-                if (!g_windowedMode) {
+                if (!g_config.m_mainGameFullScreen) {
                     GetWindowRect(window, &g_rcAppWindow);
-                    g_windowX = g_rcAppWindow.left;
-                    g_windowY = g_rcAppWindow.top;
+                    g_config.m_mainGameX = g_rcAppWindow.left;
+                    g_config.m_mainGameY = g_rcAppWindow.top;
                     writePrefs();
                 }
             }
@@ -187,7 +188,7 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
                     g_musicWasPlaying = 0;
                     g_soundManager->resumeStream();
                     g_soundManager->resumeSamples();
-                    if (!g_networkActive69954c)
+                    if (!g_remoteOn)
                         videoResume();
                     g_mouseManager->showSystemCursor(0);
                     g_appDeactivated = 0;
@@ -196,7 +197,7 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
                 if (g_soundManager->musicPlaying() || g_soundManager->m_mp3Playing)
                     g_musicWasPlaying = 1;
                 g_soundManager->pauseSamples();
-                if (!g_networkActive69954c)
+                if (!g_remoteOn)
                     videoPause();
                 if (!g_appDeactivated)
                     g_mouseManager->showSystemCursor(1);
@@ -232,13 +233,13 @@ void process1WindowsMessage()
             DispatchMessageA(&message);
             continue;
         }
-        if (IsIconic(g_hwndApp) && !g_networkActive69954c) {
+        if (IsIconic(g_hwndApp) && !g_remoteOn) {
             do {
                 if (GetMessageA(&message, 0, 0, 0)) {
                     TranslateMessage(&message);
                     DispatchMessageA(&message);
                 }
-            } while (IsIconic(g_hwndApp) && !g_networkActive69954c);
+            } while (IsIconic(g_hwndApp) && !g_remoteOn);
         } else {
             break;
         }
@@ -270,14 +271,14 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
             g_mouseManager->showSystemCursor(0);
             break;
         case KBWIN_MENU_HELP:
-            if (g_windowedMode)
+            if (g_config.m_mainGameFullScreen)
                 SetForegroundWindow(GetDesktopWindow());
             WinHelpA(g_hwndApp,
                 DATA_COMPGEN(0x0067fa20, appCommandHelpFile, ".\\HEROES3.HLP"),
                 HELP_FINDER, 0);
             break;
         case KBWIN_MENU_FULLSCREEN:
-            if (!setFullScreenStatus(1 - g_windowedMode))
+            if (!setFullScreenStatus(1 - g_config.m_mainGameFullScreen))
                 normalDialog(
                     DATA_COMPGEN(0x0067f9b8, appCommandColorModeText,
                         "This game runs in 65536 color mode. You must switch the desktop to this mode before playing the game."),
@@ -323,7 +324,7 @@ void kbChangeMenu(HMENU newMenu)
     else
         g_currMenu = newMenu;
     g_activeMenu = newMenu;
-    if (!g_windowedMode) {
+    if (!g_config.m_mainGameFullScreen) {
         if (newMenu) {
             SetMenu(g_hwndApp, newMenu);
             DrawMenuBar(g_hwndApp);
@@ -433,13 +434,12 @@ HMENU g_activeMenu;
 DATA(0x00699618)
 int g_menusSuppressed;
 
-DATA(0x006987b8)
-int g_windowedMode;
 
 // Former provisional g_videoPaused: this is the network-session latch.
 // It prevents local window deactivation from pausing a live network game.
+// Original DC name: gbRemoteOn; StartLocalPlayerTurn and remote message paths.
 DATA(0x0069954c)
-int g_networkActive69954c;
+int g_remoteOn;
 
 DATA(0x006989d0)
 int g_inSetupDialog;
@@ -462,11 +462,7 @@ HANDLE g_gameEvent;
 DATA(0x006995c0)
 char g_commandLine[61];
 
-DATA(0x006987b0)
-int g_windowX;
 
-DATA(0x006987b4)
-int g_windowY;
 
 DATA(0x006995a8)
 LONG g_appWindowStyle;

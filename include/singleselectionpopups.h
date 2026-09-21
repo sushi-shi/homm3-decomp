@@ -76,7 +76,7 @@ public:
     virtual int handleMessage(message& msg)
     {
         if (msg.m_id != MESSAGE_RIGHT_BUTTON_UP) {
-            if (g_networkActive69954c && g_dPlay) {
+            if (g_remoteOn && g_dPlay) {
                 CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
                 if (handler) {
                     handler->checkHandleNet(1, 0);
