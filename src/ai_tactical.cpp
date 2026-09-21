@@ -2707,7 +2707,7 @@ void type_AI_spellcaster::setMeleeEnemies()
     const army* ourArmy = &g_combatManager->m_armies[m_side][0];
     memset(m_meleeEnemies, 0, sizeof(m_meleeEnemies));
     for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++) {
-        if (ourArmy->cannotAttack() || ourArmy->getSpellTime(SPELL_BLIND))
+        if (ourArmy->cannotAttack() || ourArmy->getSpellTime(SPELL_HYPNOTIZE))
             continue;
         const army* target = ourArmy->getAITarget();
         if (!target || ourArmy->canShoot(0) || target->getAITargetTime() > 1)
