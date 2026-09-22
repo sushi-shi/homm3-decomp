@@ -210,7 +210,7 @@ unsigned char combatManager::aiCheckRetreat()
         if (numTowns > 0) {
             { for (; i < numTowns; i++) {
                     town* currentTown = g_game->getTown(player->m_townIds[i]);
-                    if (currentTown->hasBuilding(TAVERN_ID, 1)) {
+                    if (currentTown->hasBuilding(TAVERN_ID, true)) {
                         count++;
                         if (m_defendingTown == currentTown)
                             besiegedTownOnly = 1;
@@ -221,7 +221,7 @@ unsigned char combatManager::aiCheckRetreat()
                 && (count != 1 || sideFV != 1 || !besiegedTownOnly)
                 && (!m_defendingTown || sideFV != 1
                     || (m_defendingTown->m_type == TOWN_STRONGHOLD
-                        && m_defendingTown->hasBuilding(SPECIAL_BUILDING_ID, 1)))) {
+                        && m_defendingTown->hasBuilding(SPECIAL_BUILDING_ID, true)))) {
                 if (failedSiege())
                     return 1;
 
@@ -1094,16 +1094,16 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
 // that also puts the mover's SECOND cell next to the client, and a tie
 // on that goes by screen x, toward the side the client faces.
 
-// best_time / best_contact are deliberately uninitialised: retail writes
-// neither before the loop and both are only read once *best_hex is no
-// longer -1.
+// DC's best_travel_time / best_hexes_covered are deliberately uninitialised:
+// retail writes neither before the loop and both are only read once *best_hex
+// is no longer -1.
 
 // E:\gamedcs\ai.cpp:1357
 VA(0x004205d0, 0x185)  // linkorder, dc 0x25998
 unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const army* client, long* bestHex, long* openHexes, searchArray* currentSearchArray)
 {
-    long bestTime;
-    long bestContact;
+    long bestTravelTime;
+    long bestHexesCovered;
 
     *openHexes = 0;
     *bestHex = -1;
@@ -1111,7 +1111,7 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
         if (direction >= 6 && !client->is(creatureDoubleWide))
             continue;
         long hex = client->getAdjacentHex(client->m_gridIndex, direction);
-        if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+        if (!combatManager::validHex(hex))
             continue;
         hexcell* cell = &m_cells[hex];
         army* occupant = cell->getArmy();
@@ -1121,22 +1121,23 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
         const pathCell* path = currentSearchArray->getHex(hex);
         if (!path->m_visited)
             continue;
-        long time = m_creaturePlacement
+        long travelTime = m_creaturePlacement
                 ? 1
                 : currentSearchArray->getTravelTime(currentArmy, hex);
-        long contact;
+        long hexesCovered;
         if (currentArmy->is(creatureDoubleWide)
-                && client->isAdjacent(hex + (currentArmy->m_facing ? 1 : -1)))
-            contact = 2;
+                && client->isAdjacent(
+                    hex + currentArmy->offsetToFront(-1)))
+            hexesCovered = 2;
         else
-            contact = 1;
+            hexesCovered = 1;
         if (*bestHex >= 0) {
-            if (time > bestTime)
+            if (travelTime > bestTravelTime)
                 continue;
-            if (time == bestTime) {
-                if (contact < bestContact)
+            if (travelTime == bestTravelTime) {
+                if (hexesCovered < bestHexesCovered)
                     continue;
-                if (contact == bestContact) {
+                if (hexesCovered == bestHexesCovered) {
                     if (client->m_facing == 1) {
                         if (cell->m_refX < m_cells[*bestHex].m_refX)
                             continue;
@@ -1146,9 +1147,9 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
                 }
             }
         }
-        bestTime = time;
-        bestContact = contact;
         *bestHex = hex;
+        bestTravelTime = travelTime;
+        bestHexesCovered = hexesCovered;
     }
     return static_cast<unsigned char>(*bestHex >= 0);
 }
@@ -1565,7 +1566,7 @@ unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estim
     if (estimate->m_ourGroup != 1)
         return 0;
     { for (const long* target = g_castleWallGateTargets;
-           target < g_castleWallGateTargetsEnd; target++) {
+           target < (g_castleWallGateTargets + 5); target++) {
         if (m_wallStrength[*target])
             continue;
         if (!hexIsBlocked(s_wallTargets[*target].getBlockedHex()))
@@ -1583,20 +1584,15 @@ unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estim
     return 1;
 }
 
-// SPELL ID 0x0d IS SPELLED AS A LITERAL ON PURPOSE: the roster lives in
-// armygrp.h, which another lane owns this session. It wants
-// `SPELL_FIRE_WALL = 0xd` and this call should read it - flagged for
-// the next armygrp change rather than reached across for.
-
 VA(0x004214f0, 0x94)  // dc 0x26600
 void combatManager::markFirewalls(const army* currentArmy, long* enemyAttacks, type_AI_combat_parameters* estimate)
 {
     for (long i = 0; i < 187; i++) {
-        if ((m_cells[i].m_attributes & 0x10) == 0)
+        if ((m_cells[i].m_attributes & hexcell::fireWall) == 0)
             continue;
         TObstacle* obstacle = &getObstacle(m_cells[i].m_obstacleIndex);
         long base = obstacle->m_spellDamage;
-        long damage = modifySpellDamage(base, 0xd,
+        long damage = modifySpellDamage(base, SPELL_FIRE_WALL,
                                         m_heroes[obstacle->m_owner],
                                         m_heroes[estimate->m_ourGroup],
                                         currentArmy, 0);
@@ -1615,7 +1611,7 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 
     long row;
     for (row = 0; row < 11; row++) {
-        long hex = g_moatColumns[row];
+        long hex = g_moatHexes[row];
         if (m_drawbridgeState == DRAWBRIDGE_UP
                 || hex != COMBAT_HEX_GATE_MOAT) {
             long damage = g_moatDamage[m_defendingTown->m_type];
@@ -1628,7 +1624,7 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
     if (!m_moatIsWide)
         return;
     for (row = 0; row < 11; row++) {
-        long hex = g_outerMoatColumns[row];
+        long hex = g_innerMoatHexes[row];
         if (m_drawbridgeState == DRAWBRIDGE_UP
                 || hex != COMBAT_HEX_OUTER_MOAT) {
             long damage = g_moatDamage[m_defendingTown->m_type];
@@ -1657,15 +1653,6 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 // cmbtmgr.h's InCastle / combatManager::IsInMoat.
 
 // Things worth knowing about the transcription:
-//   * `budget` is spelled as an assignment from itself rather than an
-//     `if (...) budget = 0;` because retail SELECTS into EAX (`xor eax,
-//     eax` / `mov eax,[ebp-0x30]`) ahead of the teleport branch instead
-//     of storing zero into the slot.
-//   * the disabled-stack predicate is spelled out three fields at a
-//     time everywhere it appears. army::IsIncapacitated is pinned
-//     `auto_inline(off)` in this TU to protect find_move_order's single
-//     retail call, so reaching for it here would emit a CALL where
-//     retail has the fields.
 //   * the two `field_3c = 6` exits store in DIFFERENT orders - the
 //     teleport one writes 3c/40/44, the commit one 40/3c/44. Both are
 //     transcribed as retail has them.
@@ -1704,7 +1691,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     memset(enemyAttacks, 0, sizeof(enemyAttacks));
 
     markFirewalls(currentArmy, enemyAttacks, estimate);
-    if (g_game->m_f1f698 >= 2)
+    if (g_game->m_gameVersion >= 2)
         markMoat(currentArmy, enemyAttacks, estimate);
     if (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[ourGroup])
         markEnemyAttacks(currentArmy, enemyAttacks, &markedEnemies,
@@ -2362,8 +2349,8 @@ unsigned char combatManager::doSpellAI()
         return 0;
     if (m_playerIds[m_currentSide] >= 0
         && g_game->isHuman(m_playerIds[m_currentSide])
-        && !((m_autoCombatOn || g_unk691209)
-             && g_unnamed698758.m_combatAutoSpells)
+        && !((m_autoCombatOn || g_goSolo)
+             && g_config.m_combatAutoSpells)
         && !static_cast<const combatManager*>(this)->isQuickCombat())
         return 0;
     long side = m_currentSide;

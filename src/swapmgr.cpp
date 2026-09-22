@@ -24,12 +24,8 @@
 #include "textwdgt.h"
 #include "winmgr.h"
 
-// Dreamcast names the sparse widget-id lookup gStatNames. Retail folds its
-// biased view into the indexed address 0x6a51c4, so only the admitted case
-// values (115..118 and 145) are valid consumers of this base.
-DATA(0x006a3d08) static int g_unnamed6a3d08;
+DATA(0x006a3d08) static int g_splitArmyMode;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
-DATA(0x006a51c4) extern const char* g_statNames[];
 DATA(0x006a3d30) swapManager* g_swapManager;
 
 // The shared includes.h helper is named by Reset's four Dreamcast xrefs
@@ -82,7 +78,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.reserve(125);
 
     const char* background =
-        g_game->m_f1f698 == GAME_VERSION_SOD ? "trade2.pcx" : "trade.pcx";
+        g_game->m_gameVersion == GAME_VERSION_SOD ? "trade2.pcx" : "trade.pcx";
     m_widgets.push_back(new bitmapBorder(
         0, 0, m_width, m_height, 0, background, 0x800));
 
@@ -94,7 +90,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
         font::WHITE, font::LEFT_JUSTIFIED, "TStatBar.pcx",
         0, 0x12c, 0x100, 0, 7, 5);
 
-    if (g_networkActive69954c && g_swapManager->m_humanPlayerTrade) {
+    if (g_remoteOn && g_swapManager->m_humanPlayerTrade) {
         m_leftArrow = new bitmapBorder(
             0x16e, 0xfa, 0x43, 0x10f, 0, "trarrowl.pcx", 0x800);
         m_rightArrow = new bitmapBorder(
@@ -380,7 +376,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new iconWidget(
         0x113, 0x1cd, 0x2c, 0x2c, 0xa7, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (g_game->m_f1f698 == GAME_VERSION_SOD) {
+    if (g_game->m_gameVersion == GAME_VERSION_SOD) {
         m_widgets.push_back(new iconWidget(
             0x2e, 0x1bd, 0x2c, 0x2c, 0xa8, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
@@ -440,7 +436,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new iconWidget(
         0x2c3, 0x1cd, 0x2c, 0x2c, 0xba, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (g_game->m_f1f698 == GAME_VERSION_SOD) {
+    if (g_game->m_gameVersion == GAME_VERSION_SOD) {
         m_widgets.push_back(new iconWidget(
             0x1de, 0x1bd, 0x2c, 0x2c, 0xbb, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
@@ -500,7 +496,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new iconWidget(
         0x113, 0x1cd, 0x2c, 0x2c, 0x2c, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (g_game->m_f1f698 == GAME_VERSION_SOD) {
+    if (g_game->m_gameVersion == GAME_VERSION_SOD) {
         m_widgets.push_back(new iconWidget(
             0x2e, 0x1bd, 0x2c, 0x2c, 0x2d, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
@@ -560,7 +556,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new iconWidget(
         0x2c3, 0x1cd, 0x2c, 0x2c, 0x3f, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (g_game->m_f1f698 == GAME_VERSION_SOD) {
+    if (g_game->m_gameVersion == GAME_VERSION_SOD) {
         m_widgets.push_back(new iconWidget(
             0x1de, 0x1bd, 0x2c, 0x2c, 0x40, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
@@ -754,7 +750,7 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
     m_destinationArmySlot = -1;
     m_givingToAlly = 1;
     m_humanPlayerTrade = 0;
-    if (g_videoPaused
+    if (g_remoteOn
         && leftHero->m_owner != rightHero->m_owner
         && g_game->isHuman(leftHero->m_owner)
         && g_game->isHuman(rightHero->m_owner))
@@ -771,7 +767,7 @@ void swapManager::reset()
     message msg;
 
     m_sourceHeroIndex = m_destinationHeroIndex = m_armySelectionPending = m_sourceArmySlot = m_destinationArmySlot = -1;
-    g_unnamed6a3d08 = 0;
+    g_splitArmyMode = 0;
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_STATUS;
@@ -856,7 +852,7 @@ int swapManager::open(int newPriority)
             MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, hero + 1,
             msg.m_extra);
 
-        sprintf(g_text, g_generalText->getText(139),
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_NAME_LEVEL_CLASS_FORMAT),
                 m_heroes[hero]->m_name, m_heroes[hero]->m_level,
                 m_heroes[hero]->heroFn004D8F70());
         msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -1004,7 +1000,7 @@ void swapManager::drawSelector()
     if (m_sourceArmySlot == -1)
         return;
 
-    if (g_unnamed6a3d08)
+    if (g_splitArmyMode)
     {
         int selectedType = m_heroes[m_sourceHeroIndex]->m_army.m_armies[m_sourceArmySlot];
         x = 0x43;
@@ -1241,12 +1237,12 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
         viewMon();
     else if (m_heroes[m_sourceHeroIndex]->m_owner == g_netLocalGamePos)
     {
-        if ((g_unnamed6a3d08 || shift)
+        if ((g_splitArmyMode || shift)
             && (m_heroes[m_destinationHeroIndex]->m_army.m_armies[m_destinationArmySlot] == CREATURE_NONE
                 || m_heroes[m_destinationHeroIndex]->m_army.m_armies[m_destinationArmySlot]
                        == m_heroes[m_sourceHeroIndex]->m_army.m_armies[m_sourceArmySlot]))
         {
-            g_unnamed6a3d08 = 0;
+            g_splitArmyMode = 0;
             if (canModHero(m_destinationHeroIndex))
                 m_heroes[m_sourceHeroIndex]->m_army.splitArmy(
                     m_sourceArmySlot, &m_heroes[m_destinationHeroIndex]->m_army, m_destinationArmySlot, 1, 1);
@@ -1283,12 +1279,12 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 
         if (rightClick) {
             if (oldArtifact.m_artifactId == ARTIFACT_SPELLBOOK) {
-                normalDialog(g_generalText->getText(22), 4, -1, 28,
+                normalDialog(g_generalText->getText(GENERAL_TEXT_ITEM_CANNOT_BE_TRADED), 4, -1, 28,
                              -1, 0, -1, 0, -1, 0, -1, 0);
                 return;
             }
 
-            if (g_game->m_f1f698 >= 2) {
+            if (g_game->m_gameVersion >= 2) {
                 int targetCombo =
                     g_artifactTraits[oldArtifact.m_artifactId].m_targetCombo;
                 if (g_artifactTraits[oldArtifact.m_artifactId].m_comboType
@@ -1325,7 +1321,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 
         if (slot == eArtifactSlotSpellbook
             || slot == eArtifactSlotWarMachine4) {
-            normalDialog(g_generalText->getText(22), 1, -1, -1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_ITEM_CANNOT_BE_TRADED), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
@@ -1353,14 +1349,14 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
         && g_game->m_campaign.m_currentCampaign == ARMAGEDDONS_BLADE_CAMPAIGN
         && g_game->m_campaign.m_currentMap == ARMAGEDDONS_BLADE_MAP
         && ourHero->m_id != ARMAGEDDONS_BLADE_EXEMPT_HERO) {
-        normalDialog(g_generalText->getText(762), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE_GELU_ONLY), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
 
     if (oldArtifact.m_artifactId == ARTIFACT_NONE) {
         ourHero->equipArtifact(&g_heroScreenDraggedArtifact, slot);
-        if (g_game->m_f1f698 >= 2)
+        if (g_game->m_gameVersion >= 2)
             ourHero->heroFn004DC100(slot);
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
         this->update();
@@ -1369,7 +1365,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
     } else if (canModHero(side)) {
         ourHero->removeArtifact(slot);
         ourHero->equipArtifact(&g_heroScreenDraggedArtifact, slot);
-        if (g_game->m_f1f698 >= 2)
+        if (g_game->m_gameVersion >= 2)
             ourHero->heroFn004DC100(slot);
         g_heroScreenDraggedArtifact = oldArtifact;
         this->update();
@@ -1421,7 +1417,7 @@ void swapManager::handleBackpackClick(long side, long id, unsigned char rightCli
 VA(0x005afbf0, 0x17A)  // dc 0x15d440
 void swapManager::sendHeroUpdate()
 {
-    if (g_networkActive69954c && m_humanPlayerTrade && m_givingToAlly) {
+    if (g_remoteOn && m_humanPlayerTrade && m_givingToAlly) {
         int otherPlayer = getOtherHero()->m_owner;
         if (!m_netMsgHandler->getAbortPopupMsg()) {
             hero* leftHero = m_heroes[0];
@@ -1485,9 +1481,9 @@ int swapManager::main(message& msg)
     unsigned char shift =
         (msg.m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS) != 0;
 
-    if (g_turnDuration69d630.isExpired())
+    if (g_turnDuration.isExpired())
     {
-        if (g_networkActive69954c)
+        if (g_remoteOn)
         {
             CTradeRequestDoneMsg requestDone;
             transmitRemoteData(&requestDone, getOtherHero()->m_owner, 0, 1);
@@ -1495,7 +1491,7 @@ int swapManager::main(message& msg)
         return exitSwapManager(msg);
     }
 
-    if (g_networkActive69954c)
+    if (g_remoteOn)
     {
         m_netMsgHandler->checkHandleNet(0, 0);
         if (static_cast<CSwapMgrNetMsgHandler*>(m_netMsgHandler)->m_field0c)
@@ -1531,7 +1527,7 @@ int swapManager::main(message& msg)
                 break;
 
             case widget::WIDGET_END_DIALOG:
-                if (g_networkActive69954c && m_humanPlayerTrade)
+                if (g_remoteOn && m_humanPlayerTrade)
                 {
                     CTradeRequestDoneMsg requestDone;
                     transmitRemoteData(&requestDone, getOtherHero()->m_owner,
@@ -1793,7 +1789,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(3),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
                                 m_heroes[0]->m_level,
                                 hero::getExperience(m_heroes[0]->m_level + 1),
                                 m_heroes[0]->m_experience);
@@ -1810,7 +1806,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(206),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
                                 m_heroes[0]->m_name, m_heroes[0]->m_mana,
                                 m_heroes[0]->getMaxMana());
                         normalDialog(
@@ -1864,7 +1860,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(3),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
                                 m_heroes[1]->m_level,
                                 hero::getExperience(m_heroes[1]->m_level + 1),
                                 m_heroes[1]->m_experience);
@@ -1881,7 +1877,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(206),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
                                 m_heroes[1]->m_name, m_heroes[1]->m_mana,
                                 m_heroes[1]->getMaxMana());
                         normalDialog(
@@ -1944,7 +1940,7 @@ int swapManager::main(message& msg)
                 case kSwapRolloverArmyMoveLeft:
                 case kSwapRolloverArmyMoveRight:
                     if (rightMouse)
-                        normalDialog(g_heroScreenMixedArmyHelp, 4,
+                        normalDialog(g_heroScreen[32], 4,
                                      -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     break;
@@ -1985,18 +1981,15 @@ int swapManager::main(message& msg)
 // Dreamcast proves the source order below: three primary-stat bands, hero
 // heading, morale/luck, fixed status rows, two army bands, two skill bands,
 // and the four artifact/backpack bands. Complete shifts the backpack ids by
-// two and adds widget 145, while retail's 215-byte dispatch table fixes every
+// two; retail's 215-byte dispatch table fixes every
 // admitted case range independently. GetArmyName, get_artifact/get_backpack,
 // GetNthSS and get_rollover_text retain their recovered source boundaries;
 // Complete /Ob2 expands the first three where the x86 body proves it.
 // Dreamcast attributes the hero-heading format lookup to
 // TTextResource::operator[]; getText() is the readable byte-identical wrapper.
-// Residual (99.9787%): all 45 CFG blocks, sizes, branches and instruction
-// counts are exact. Two primary-stat loads differ only in relocation naming
-// (gPrimarySkillNames plus a negative addend versus retail's biased effective
-// base); the sole instruction-form residual commutes the base/index registers
-// in the right-skill mastery-byte load. The emitted addresses and semantics
-// agree, so neither flat label spelling is replaced with a source-false alias.
+// Retail primary-stat loads use biased addresses into gStatNames. The
+// 115..118 band subtracts 115 before indexing the canonical four entries.
+// Widget 145 maps to the default arm (dispatch index 19), not this band.
 VA(0x005b08b0, 0x4EF)  // retail byte table + DC statement roster, dc 0x15e308
 void swapManager::setRolloverText(int codeY)
 {
@@ -2007,65 +2000,64 @@ void swapManager::setRolloverText(int codeY)
     {
     case kSwapRolloverStat115: case kSwapRolloverStat116:
     case kSwapRolloverStat117: case kSwapRolloverStat118:
-    case kSwapRolloverStat145:
-        sprintf(g_text, g_heroScreenNameFormat, g_statNames[codeY]);
+        sprintf(g_text, g_heroScreen[1], g_statNames[codeY - kSwapRolloverStat115]);
         break;
 
     case kSwapRolloverLeftPrimary0: case kSwapRolloverLeftPrimary1:
     case kSwapRolloverLeftPrimary2: case kSwapRolloverLeftPrimary3:
-        sprintf(g_text, g_heroScreenNameFormat,
-                g_primarySkillNames[codeY - kSwapRolloverLeftPrimary0]);
+        sprintf(g_text, g_heroScreen[1],
+                g_statNames[codeY - kSwapRolloverLeftPrimary0]);
         break;
 
     case kSwapRolloverRightPrimary0: case kSwapRolloverRightPrimary1:
     case kSwapRolloverRightPrimary2: case kSwapRolloverRightPrimary3:
-        sprintf(g_text, g_heroScreenNameFormat,
-                g_primarySkillNames[codeY - kSwapRolloverRightPrimary0]);
+        sprintf(g_text, g_heroScreen[1],
+                g_statNames[codeY - kSwapRolloverRightPrimary0]);
         break;
 
     case kSwapRolloverHeroLeft: case kSwapRolloverHeroRight:
-        sprintf(g_text, g_generalText->getText(16),
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
                 m_heroes[codeY - kSwapRolloverHeroLeft]->m_name,
                 m_heroes[codeY - kSwapRolloverHeroLeft]->heroFn004D8F70());
         break;
 
     case kSwapRolloverMoraleLeft: case kSwapRolloverMoraleRight:
         if (m_heroes[codeY - kSwapRolloverMoraleLeft]->getMorale(0, 0, 1) > 0)
-            strcpy(g_text, g_heroScreenMoraleHighText);
+            strcpy(g_text, g_heroScreen[3]);
         else if (m_heroes[codeY - kSwapRolloverMoraleLeft]->getMorale(0, 0, 1) == 0)
-            strcpy(g_text, g_heroScreenMoraleNeutralText);
+            strcpy(g_text, g_heroScreen[4]);
         else
-            strcpy(g_text, g_heroScreenMoraleLowText);
+            strcpy(g_text, g_heroScreen[5]);
         break;
 
     case kSwapRolloverLuckLeft: case kSwapRolloverLuckRight:
         if (m_heroes[codeY - kSwapRolloverLuckLeft]->getLuck(0, 0, 1) > 0)
-            strcpy(g_text, g_heroScreenLuckHighText);
+            strcpy(g_text, g_heroScreen[6]);
         else if (m_heroes[codeY - kSwapRolloverLuckLeft]->getLuck(0, 0, 1) == 0)
-            strcpy(g_text, g_heroScreenLuckNeutralText);
+            strcpy(g_text, g_heroScreen[7]);
         else
-            strcpy(g_text, g_heroScreenLuckLowText);
+            strcpy(g_text, g_heroScreen[8]);
         break;
 
     case kSwapRolloverText27Left: case kSwapRolloverText27Right:
-        strcpy(g_text, g_heroScreenText27);
+        strcpy(g_text, g_heroScreen[27]);
         break;
 
     case kSwapRolloverText9Left: case kSwapRolloverText9Right:
-        strcpy(g_text, g_heroScreenText9);
+        strcpy(g_text, g_heroScreen[9]);
         break;
 
     case kSwapRolloverText22Left: case kSwapRolloverText22Right:
-        strcpy(g_text, g_heroScreenText22);
+        strcpy(g_text, g_heroScreen[22]);
         break;
 
     case kSwapRolloverArmyMoveLeft: case kSwapRolloverArmyMoveRight:
-        sprintf(g_text, g_heroScreenArmyMoveFormat,
-                g_generalText->getText(44));
+        sprintf(g_text, g_heroScreen[20],
+                g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL));
         break;
 
     case kSwapRolloverText0Left: case kSwapRolloverText0Right:
-        strcpy(g_text, g_heroScreenText0);
+        strcpy(g_text, g_heroScreen[0]);
         break;
 
     case kSwapRolloverLeftArmy0: case kSwapRolloverLeftArmy1:
@@ -2073,9 +2065,9 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverLeftArmy4: case kSwapRolloverLeftArmy5:
     case kSwapRolloverLeftArmy6:
         if (m_heroes[0]->m_army.m_armies[codeY - kSwapRolloverLeftArmy0] == CREATURE_NONE)
-            strcpy(g_text, g_emptyRolloverText);
+            strcpy(g_text, "");
         else
-            sprintf(g_text, g_heroScreenNameFormat,
+            sprintf(g_text, g_heroScreen[1],
                     getArmyName(m_heroes[0]->m_army.m_armies[
                                     codeY - kSwapRolloverLeftArmy0], 2));
         break;
@@ -2085,9 +2077,9 @@ void swapManager::setRolloverText(int codeY)
     case kSwapRolloverRightArmy4: case kSwapRolloverRightArmy5:
     case kSwapRolloverRightArmy6:
         if (m_heroes[1]->m_army.m_armies[codeY - kSwapRolloverRightArmy0] == CREATURE_NONE)
-            strcpy(g_text, g_emptyRolloverText);
+            strcpy(g_text, "");
         else
-            sprintf(g_text, g_heroScreenNameFormat,
+            sprintf(g_text, g_heroScreen[1],
                     getArmyName(m_heroes[1]->m_army.m_armies[
                                     codeY - kSwapRolloverRightArmy0], 2));
         break;
@@ -2108,8 +2100,8 @@ void swapManager::setRolloverText(int codeY)
         if (codeY - kSwapRolloverLeftSkill0 < m_heroes[0]->m_skillCount) {
             int skill = m_heroes[0]->getNthSS(
                 codeY - kSwapRolloverLeftSkill0);
-            sprintf(g_text, g_heroScreenSecondarySkillFormat,
-                    g_skillMasteryNamesBiased[m_heroes[0]->m_skillLevel[skill]],
+            sprintf(g_text, g_heroScreen[21],
+                    g_secondarySkillLevels[m_heroes[0]->m_skillLevel[skill] - 1],
                     g_sSkillTraits[skill].m_name);
         }
         break;
@@ -2121,8 +2113,8 @@ void swapManager::setRolloverText(int codeY)
         if (codeY - kSwapRolloverRightSkill0 < m_heroes[1]->m_skillCount) {
             int skill = m_heroes[1]->getNthSS(
                 codeY - kSwapRolloverRightSkill0);
-            sprintf(g_text, g_heroScreenSecondarySkillFormat,
-                    g_skillMasteryNamesBiased[m_heroes[1]->m_skillLevel[skill]],
+            sprintf(g_text, g_heroScreen[21],
+                    g_secondarySkillLevels[m_heroes[1]->m_skillLevel[skill] - 1],
                     g_sSkillTraits[skill].m_name);
         }
         break;
@@ -2172,7 +2164,7 @@ void swapManager::setRolloverText(int codeY)
         break;
 
     default:
-        strcpy(g_text, g_emptyRolloverText);
+        strcpy(g_text, "");
         break;
     }
 
@@ -2382,7 +2374,7 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
 
     case kSwapRefreshLeft:
     case kSwapRefreshRight:
-        g_unnamed6a3d08 = 1;
+        g_splitArmyMode = 1;
         this->update();
         drawSwapWin();
         drawSelector();
@@ -2393,7 +2385,7 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
         break;
 
     case kSwapTradeRequestDone:
-        if (g_networkActive69954c
+        if (g_remoteOn
             && g_currentPlayer->isLocalHuman()
             && m_humanPlayerTrade)
         {

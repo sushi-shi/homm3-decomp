@@ -88,6 +88,6 @@ extern int g_thisNetGotAdventureControl;
 // The two remote combat-control player positions. Dreamcast publishes the
 // array name; retail ResetRound indexes [1-currentSide], producing relocs to
 // both the base and its second element.
-DATA(0x0069773c) extern int g_combatControlNetPos[2];
+extern int g_combatControlNetPos[2];
 
 #endif  /* HOMM3_COMMAND_H */

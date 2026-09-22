@@ -129,7 +129,7 @@ public:
     // E:\\gamedcs\\Hero.h:145.  The DC tiny helper is the validity byte;
     // retail folds it into unblock_lith before temporarily restoring the
     // hero's underlying map cell.
-    bool isOnMap() const { return m_valid != 0; }
+    unsigned char isOnMap() const { return m_valid; }
     // E:\gamedcs\Hero.h:150. Dreamcast retains an out-of-line copy, while
     // retail expands the validity test at every admitted Windows caller.
     TAdventureObjectType getObscuredObject() const
@@ -148,7 +148,7 @@ public:
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
     // folds it to the same three field tests; keep the call in source so
     // an exact lowering cannot erase the attested source shape again.
-    __forceinline unsigned char obscuresTown() const
+    unsigned char obscuresTown() const
     {
         return m_valid && m_wasTrigger && m_obscuredType == TOWN;
     }
@@ -223,10 +223,15 @@ public:
     // the -1 sentinel at +4. Retail value_of_town preserves that order in
     // its register allocation even though the eventual by-value pushes are
     // ordered by record layout.
-    // The generated offering constructor at dc 0x128714 calls this
-    // constructor with -1. That proves the default argument: no separate
-    // zero-argument type_artifact constructor exists in the DC class API.
-    explicit type_artifact(TArtifact id = ARTIFACT_NONE)
+    // Complete's generated offering constructor emits the member-initializer
+    // store order of a distinct default constructor. Dreamcast instead calls
+    // the TArtifact overload with -1 here, so this boundary is versioned.
+    type_artifact()
+    {
+        m_extra = -1;
+        m_artifactId = ARTIFACT_NONE;
+    }
+    explicit type_artifact(TArtifact id)
     {
         m_artifactId = id;
         m_extra = -1;
@@ -243,7 +248,8 @@ public:
     // The reconstruction-only (int, int) overload was removed. Ordinary
     // artifacts use the TArtifact constructor; scrolls use SpellID. A
     // separately decoded payload is assigned explicitly by its owning caller.
-    // Both proven constructors retain their DC id-before-payload store order.
+    // The two argument-taking constructors retain their DC
+    // id-before-payload store order.
 
 // townmgr.cpp's blacksmith right-click text (0x5d1aa0) calls this on a
 // copy of the war machine's artifact record; hero.obj owns the
@@ -261,8 +267,8 @@ class boat;
 // same RVA is a fatal duplicate at delink time. Declared here rather than
 // by including cmbtmgr.h, which hero.obj's measured include closure does
 // not otherwise need.
-extern unsigned char g_combatFlag6985a3;
-extern unsigned char g_combatFlag697744;
+extern unsigned char g_combatRetreated;
+extern unsigned char g_combatSurrendered;
 
 // 0x485d90, a /Gr free helper claimed in customcampaign.cpp. The returned
 // string's hidden pointer takes ECX and infile takes EDX, as hero::load's
@@ -276,34 +282,18 @@ std::string readLengthPrefixedString(TAbstractFile* infile);
 // rather than in a .cpp because a line-initial `extern` in a .cpp is a
 // cleanliness-floor violation, and here rather than by including
 // kbwin.h / philai.h, whose closures hero.obj does not otherwise need.
-extern const char* g_skillMasteryNames[3];
 // Retail SetupHeroView indexes mastery values 1..3 from the pointer cell
 // immediately before gSkillMasteryNames, giving that biased view its own
 // relocation at 0x6a756c.
 // HeroScrn.txt row declarations shared with swapmgr's hero-exchange screen.
 // src/hero.cpp owns the DATA claims; these declarations only expose the
 // already-proven contiguous runtime text table to its source twin.
-DATA(0x006a756c) extern const char* g_skillMasteryNamesBiased[4];
-extern const char* g_heroScreenText0;
-extern const char* g_heroScreenNameFormat;
-extern const char* g_heroScreenMoraleHighText;
-extern const char* g_heroScreenMoraleNeutralText;
-extern const char* g_heroScreenMoraleLowText;
-extern const char* g_heroScreenLuckHighText;
-extern const char* g_heroScreenLuckNeutralText;
-extern const char* g_heroScreenLuckLowText;
-extern const char* g_heroScreenText9;
-extern const char* g_heroScreenArmyMoveFormat;
-extern const char* g_heroScreenSecondarySkillFormat;
-extern const char* g_heroScreenText22;
-extern const char* g_heroScreenText27;
-extern const char* g_heroScreenMixedArmyHelp;
-extern int g_videoPaused;
+extern int g_remoteOn;
 // 0x6aa9d8. DECLARATION ONLY - src/townmgr.cpp:163 owns the DATA claim,
 // and a second claim on one RVA is a fatal duplicate at delink. hero.obj
 // reads it at 0x4db7d3, 0x4dd9f1, 0x4dda8d, 0x4e1bad and 0x4e1c13;
 // SetupHeroView treats it as the "hero list is suppressed" latch.
-extern int g_unnamed6aa9d8;
+extern int g_castleOpen;
 // movement.txt row 6 column 5, DECLARATION ONLY - include/events.h:439
 // owns the DATA claim on 0x698a94, and a second claim on one RVA is a
 // fatal duplicate at delink. hero::GetMobility adds it on the flag-bit-1
@@ -314,8 +304,6 @@ extern int g_stablesMovementBonus;
 // hero::get_morale_description / get_luck_description. DECLARATION ONLY -
 // viewarmywindow.cpp owns the DATA claims on 0x6a57bc / 0x6a532c, and a
 // second claim on the same RVA is a fatal duplicate at delink time.
-extern const char* g_moraleTexts[42];
-extern const char* g_luckTexts[25];
 
 class hero : public type_obscuring_object {
 public:
@@ -948,13 +936,13 @@ public:
     // uses checkTerrain=1; Complete expands the helper before calling canLand.
     // These are real shared header bodies, not an ai_player.obj declaration
     // view: cursor.obj proves the same nested IsWieldingArtifact boundary.
-    __forceinline unsigned char isFlying(unsigned char checkTerrain) const
+    unsigned char isFlying(unsigned char checkTerrain) const
     {
         return !(m_flags & 0x40000)
             && (m_flightLevel != -1 || isWieldingArtifact(0x48))
             && (!checkTerrain || !canLand());
     }
-    __forceinline unsigned char canWalkOnWater(unsigned char checkTerrain) const
+    unsigned char canWalkOnWater(unsigned char checkTerrain) const
     {
         return !(m_flags & 0x40000)
             && (m_waterWalkLevel != -1 || isWieldingArtifact(0x5a))
@@ -1082,7 +1070,7 @@ public:
     }
     // E:\gamedcs\Hero.h:976. Dreamcast keeps this const header wrapper as
     // a separate public; Complete folds it at each use into the retail-proven
-    __forceinline int getExperienceIncrement() const
+    int getExperienceIncrement() const
     {
         return getExperienceIncrement(m_level);
     }
@@ -1107,14 +1095,14 @@ public:
     // DC hero.h:991 (0x37dc4) and the class signature record the const
     // long-returning duration accessor used by AI reward valuation.
     long getValueOfDuration() const { return m_valueOfDuration; }
-    __forceinline long getValueOfKnowledge() const
+    long getValueOfKnowledge() const
     {
         return m_valueOfKnowledge;
     }
     // Dreamcast hero.h:1001/1006. Retail folds both one-field accessors into
     // get_skill_value; retaining the source boundaries still emits the direct
     // loads proved at +0x47e/+0x486.
-    __forceinline long getValueOfPower() const
+    long getValueOfPower() const
     {
         return m_valueOfPower;
     }
@@ -1135,27 +1123,27 @@ public:
     // /Ob2 folds them into AI_set_hero_bonuses, but the calls remain
     // authoritative source shape rather than anonymous stores.
     // E:\gamedcs\Hero.h:1021
-    __forceinline void setValueOfDuration(long arg)
+    void setValueOfDuration(long arg)
     {
         m_valueOfDuration = arg;
     }
     // E:\gamedcs\Hero.h:1026
-    __forceinline void setValueOfKnowledge(long arg)
+    void setValueOfKnowledge(long arg)
     {
         m_valueOfKnowledge = arg;
     }
     // E:\gamedcs\Hero.h:1031
-    __forceinline void setValueOfPower(long arg)
+    void setValueOfPower(long arg)
     {
         m_valueOfPower = arg;
     }
     // E:\gamedcs\Hero.h:1036
-    __forceinline void setValueOfSpring(long arg)
+    void setValueOfSpring(long arg)
     {
         m_valueOfSpring = arg;
     }
     // E:\gamedcs\Hero.h:1041
-    __forceinline void setValueOfWell(long arg)
+    void setValueOfWell(long arg)
     {
         m_valueOfWell = arg;
     }
@@ -1291,8 +1279,7 @@ public:
 };
 SIZE(type_movement_constants, 0x78);
 extern type_movement_constants g_moveConstants;
-extern int g_landMovement[21];
-DATA(0x0067d868) extern THeroClassTraits g_heroClassTraits[18];
+extern THeroClassTraits g_heroClassTraits[18];
 extern const THeroClassTraits (&g_heroClasses)[18];
 
 // Retail .data 0x67dce8 (reloc-evidence datum; read by strip::DrawOwner
@@ -1301,8 +1288,8 @@ extern const THeroClassTraits (&g_heroClasses)[18];
 // reference. Retail's parser settles the Complete bound: its direct
 // 0x5c-stride walk covers exactly 156 rows. The reference cell's retail
 // value is 0x679dd0; the loader begins at the +0x40 defaultName field.
-DATA(0x00679dd0) extern THeroTraits g_heroTraitsStorage[156];
-DATA(0x0067dce8) extern const THeroTraits (&g_heroTraits)[156];
+extern THeroTraits g_heroTraitsStorage[156];
+extern const THeroTraits (&g_heroTraits)[156];
 
 // E:\gamedcs\hero.cpp:267, dc 0xca7e8
 std::bitset<70> markArtifactSpells(int artifactId);
@@ -1314,21 +1301,21 @@ int heroView(int heroID, int noDismiss, int alreadyFaded,
 // and every artifact-drag path treats the pair as one artifact record.
 // The second is the selected army slot used by the hero-screen message
 // paths. Both spellings are role-derived because no retail symbols survive.
-DATA(0x00698a88) extern type_artifact g_heroScreenDraggedArtifact;
-DATA(0x00697738) extern int g_heroScreenArmySlot;
+extern type_artifact g_heroScreenDraggedArtifact;
+extern int g_heroScreenArmySlot;
 // HeroView stores GetLocalPlayer()->FindHero(gpCurrentHero->id) here before
 // SetupHeroView. UpdateHeroLocator compares it with topHero + locator index.
-DATA(0x00698b20) extern hero* g_currentHero;
+extern hero* g_currentHero;
 // HeroView's second argument, stashed on entry (0x4e1809 stores EDX
 // straight into this cell). SetupHeroView reads it as the "dismiss button
 // stays dead" latch, a full DWORD. The name is role-derived from
 // HeroView's own parameter and is PROVISIONAL.
-DATA(0x00698a84) extern int g_heroScreenHeroPosition;
+extern int g_heroScreenHeroPosition;
 // HeroView's FIRST argument, stashed on entry beside the one above
 // (0x4e1805 stores ECX straight into this cell). Role-derived from that
 // parameter and PROVISIONAL for the same reason.
-DATA(0x00698a90) extern int g_heroScreenNoDismiss;
-DATA(0x00698a50) extern int g_heroScreenHeroId;
+extern int g_heroScreenNoDismiss;
+extern int g_heroScreenHeroId;
 
 // The vtable and destructor prove direct CAdvPopup inheritance. Complete
 // carries nineteen equipped positions, one more than the DC TArtifactSlot
@@ -1444,7 +1431,7 @@ SIZE(THeroScreenWindow, 0x68);
 // it decides whether an EMPTY slot's widget is drawn at all, and it
 // gates both selection-highlight arms of an occupied slot. Role
 // inferred from those three reads; ORDINAL PLACEHOLDER name.
-DATA(0x00698a78) extern THeroScreenWindow* g_heroScreenWindow;
-DATA(0x00698a44) extern int g_heroScreenArmyStripLive;
+extern THeroScreenWindow* g_heroScreenWindow;
+extern int g_heroScreenArmyStripLive;
 
 #endif  /* HOMM3_HERO_H */

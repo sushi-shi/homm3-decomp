@@ -1,5 +1,7 @@
 
+#include "text.h"
 #include "va.h"
+#include "objnames.h"
 
 #include <stdexcept>
 #include <stdio.h>
@@ -452,48 +454,42 @@ NewfullMap::NewfullMap()
 
 VA_COMPGEN(0x004fd1c0, 0x18, DEFAULT_CTOR_CLOSURE, CObjectType)
 
-// E:\gamedcs\mapcell.cpp:530
-// Original: NewfullMap::Close; mapcell.cpp:537, dc 0xec724.
-// DC lines 539/541/542 own only the cell-array deletion and null assignment.
-// Complete expands this ordinary helper in the destructor and Init. Object
-// data and sprite cleanup below are Complete additions to the destructor.
-void NewfullMap::close()
-{
-    if (m_cellData) {
-        delete[] m_cellData;
-        m_cellData = 0;
-    }
-}
-
-// E:\gamedcs\mapcell.cpp:530. Member destruction follows the explicit cleanup.
-// Current residual (91.59%): Close now retains the correct NewmapCell vector
-// deleting-destructor call; the later vector<BlackBoxData> destructor expands
-// where retail retains it. The remaining folded container labels also differ.
+// Original: NewfullMap::~NewfullMap, mapcell.cpp:530, dc 0xec6a4.
+// DC line 532 calls Close before member destruction. Complete additionally
+// disposes the sprite resources here. Recovering the ordinary member call
+// and Close's shared map-object cleanup makes this body and init both 100%,
+// with no inline-depth control. A cell-only Close gives 97.66% here (init
+// stays 100%): mapObjectData.clear still expands instead of remaining a call.
+// The old pasted body with its clear pin was 95.8833; a whole-body free
+// closeMap helper was not the original boundary and gave 87.7157.
 VA(0x004fd1e0, 0x271)  // anchor-global, dc 0xec6a4
 NewfullMap::~NewfullMap()
 {
     close();
 
     unsigned int i;
-    for (i = 0; i < m_mapObjectData.size(); ++i)
-        delete m_mapObjectData[i];
-    // OVER-INLINE PIN, +2.34 (93.5482 -> 95.8833). Retail calls the
-    // out-of-line vector<CMapObjectData*>::clear COMDAT at 0x48b4a0 here;
-    // unpinned our CL expands clear() into erase(begin(), end()) and calls
-    // erase instead. The sprites clear() below is retail's OWN expansion of
-    // the same member into erase (0x54cdb0) and must stay unpinned - the
-    // two instantiations really do diverge in retail.
-#pragma inline_depth(0)
-    m_mapObjectData.clear();
-#pragma inline_depth()
 
     for (i = 0; i < m_sprites.size(); ++i)
         m_sprites[i]->dispose();
     m_sprites.clear();
 }
 
-// Retail 0x4fd460 takes destructor flags and reads an array cookie: it is
-// NewmapCell's generated vector deleting destructor, not NewfullMap::Close.
+// Original: NewfullMap::Close, mapcell.cpp:537, dc 0xec724.
+// DC lines 539/541/542 prove the guard, array deletion and null store.
+// Complete extends this with map-object deletion/clear: both destructor and
+// init have that same sequence, and restoring it here matches both callers.
+// Sprite disposal remains destructor-only; putting it here would change init.
+void NewfullMap::close()
+{
+    if (m_cellData) {
+        delete[] m_cellData;
+        m_cellData = 0;
+    }
+
+    for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
+        delete m_mapObjectData[i];
+    m_mapObjectData.clear();
+}
 
 VA_COMPGEN(0x004fd460, 0x58, VECTOR_DELETING_DTOR, NewmapCell)
 
@@ -509,9 +505,6 @@ void NewfullMap::init(int size, unsigned char twoLayers)
 
     close();
 
-    for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
-        delete m_mapObjectData[i];
-    m_mapObjectData.clear();
 
     int cellCount = (twoLayers != 0) + 1;
     cellCount *= m_size;
@@ -623,7 +616,7 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
 // So the residual is the handle NUMBERING with the same local set, not a
 // missing or extra local: docs/vc6/handle-order.md's C1-capped class.
 VA(0x004fd950, 0x268)  // caller Load 0xfdbc0; TQuestGuard ctor/load + vector resize/push_back
-void NewfullMap::newfullMapFn004FD950(
+void NewfullMap::loadQuestGuardList(
     TAbstractFile* infile, int saveVersion)
 {
     int count;
@@ -647,8 +640,9 @@ void NewfullMap::newfullMapFn004FD950(
 // count/read/resize/row-load operation. Complete moves the pool into this map,
 // makes row load void, and registers quests in m_mapObjectData. A map-owned
 // member is the inferred replacement interface; its original placement is
-// unknown. Retail expands this operation in load, but VC6 still retains it.
-// Keep that caller residual separate from the exact garrison-copy body.
+// unknown. DC uses one vector subscript per row. Keeping that named row
+// reference makes VC6 expand this helper in load while retaining the nested
+// TSeerHut constructor, as retail does.
 int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
 {
     short seerCount;
@@ -657,12 +651,12 @@ int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
 
     m_seerHutList.resize(seerCount);
     int spriteNum;
-    for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
-    {
-        m_seerHutList[spriteNum].load(infile, saveVersion);
-        if (m_seerHutList[spriteNum].m_quest)
+    for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum) {
+        TSeerHut& seerHut = m_seerHutList[spriteNum];
+        seerHut.load(infile, saveVersion);
+        if (seerHut.m_quest)
             m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
+                static_cast<void*>(seerHut.m_quest)));
     }
     return 0;
 }
@@ -728,7 +722,7 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
         return -1;
 
     if (saveVersion >= 25)
-        newfullMapFn004FD950(infile, saveVersion);
+        loadQuestGuardList(infile, saveVersion);
 
     count = loadTimedEventList(infile, saveVersion);
     if (count < 0)
@@ -1633,11 +1627,9 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         return -1;
     count = value;
     if (count == 0) {
-        // DEPTH LADDER (docs/vc6/inliner.md 6b): this third list's empty arm
-        // is the LONGHAND range erase; the two above it stay `clear()`.
-        // 93.0057 -> 95.3605, and a greedy second round over the other two
-        // finds nothing - the rung is per-site here as everywhere.
-        thisBox->m_spells.erase(thisBox->m_spells.begin(), thisBox->m_spells.end());
+        // Dreamcast mapcell.cpp:1655 calls vector<SpellID>::clear here,
+        // just as the two preceding empty-list arms do.
+        thisBox->m_spells.clear();
     } else {
         thisBox->m_spells.resize(count);
         for (i = 0; i < count; ++i) {
@@ -2676,7 +2668,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             int legalAlignments = 0xff;
             if ((*g_videoGameState == 1
                  || *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
-                && g_game->m_f1f698 >= 1)
+                && g_game->m_gameVersion >= 1)
                 legalAlignments = 0x1ff;
             tempTown.m_townType = pickAlignment(legalAlignments, 0);
         }
@@ -2737,6 +2729,11 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // expansion without de-inlining ReadLengthPrefixedString.  Complete's decoded
 // body has no Random relocation: unlike Dreamcast, an absent custom experience
 // stays zero and is passed unchanged to GetStartingHeroId.
+// With the preserved Owner dataflow restored, MAX is 82.6833 (HIST 92.7472).
+// Unpinned `m_name = heroName` gives 75.34 and expands to 110 CFG blocks
+// against retail's 94; direct assignment from the returned string also
+// over-expands (75.71 before the Owner correction). These are not recovered
+// boundaries, so the assignment pin remains diagnostic debt.
 
 VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
 int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
@@ -2813,20 +2810,24 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         }
     }
 
+    // Owner must survive the scratch-byte reads above. DC lines 3035/3039
+    // use the preserved Owner (sp+0x13); retail likewise uses the original
+    // owner byte for these player-table lookups. charBuffer now contains
+    // the custom-name flag and is not a player index.
     if (heroID == -1) {
-        if (g_unnamed69fb24[charBuffer] != -1) {
-            heroID = g_unnamed69fb24[charBuffer];
-            g_unnamed69fb24[charBuffer] = -1;
+        if (g_startingHeroOverrides[owner] != -1) {
+            heroID = g_startingHeroOverrides[owner];
+            g_startingHeroOverrides[owner] = -1;
         } else {
             TTownType alignment;
-            memcpy(&alignment, &g_game->m_setup.m_alignment[charBuffer],
+            memcpy(&alignment, &g_game->m_setup.m_alignment[owner],
                    sizeof(alignment));
-            heroID = g_game->getStartingHeroId(alignment, charBuffer,
+            heroID = g_game->getStartingHeroId(alignment, owner,
                                                experience);
         }
     }
-    if (g_game->m_setup.m_startingHero[charBuffer] == -1)
-        g_game->m_setup.m_startingHero[charBuffer] = heroID;
+    if (g_game->m_setup.m_startingHero[owner] == -1)
+        g_game->m_setup.m_startingHero[owner] = heroID;
 
     heroData = &g_game->m_heroSetup[heroID];
     heroData->m_owner = owner;
@@ -2992,7 +2993,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         }
     }
 
-    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
+    count = infile->read(padding, sizeof(padding));
+    if (count < sizeof(padding))
         return -1;
 
     // A prison hero is not owned and not in any tavern pool.
@@ -3093,7 +3095,7 @@ void NewfullMap::soDTransformRandomDwellings()
 
         int generatorType;
         if (creature == CREATURE_STONE_GOLEM) {
-            newfullMapFn00505F20(dwelling.m_object, CREATURE_GENERATOR_4,
+            setObjectType(dwelling.m_object, CREATURE_GENERATOR_4,
                                   1, -1);
             newGenerator.m_genClass = CREATURE_GENERATOR_4;
             generatorType = 1;
@@ -3105,7 +3107,7 @@ void NewfullMap::soDTransformRandomDwellings()
                      && generatorType--);
             if (generatorType < 0)
                 continue;
-            newfullMapFn00505F20(dwelling.m_object, CREATURE_GENERATOR_1,
+            setObjectType(dwelling.m_object, CREATURE_GENERATOR_1,
                                   generatorType, -1);
         }
 
@@ -3154,9 +3156,14 @@ void NewfullMap::soDTransformRandomDwellings()
 
 // MINE and LIGHTHOUSE share a compiler-generated tail. Retail calls the three
 // dwelling inserts, both quest-guard inserts, and the quest-guard size query;
-// the site-level inline pins preserve those call boundaries.
+// natural push_back reproduces all three dwelling count-insert calls without
+// pins. Quest-guard insertion still over-expands, so this is not an exact body.
+// Unpinning only RANDOM_DWELLING_LVL measured 61.98%; using push_back also
+// for the faction and quest-data appends measures 61.50% (baseline 61.38%).
+// All 29 virtual read calls agree; DC's gzread calls are the older file API.
+// Complete additionally passes mapVersion and includes the new object arms.
 
-// Residual (97.4369%): register/home only, with the branch sequence intact.
+// Older pinned-model register evidence (97.4369%, not the current residual):
 // Retail's frame is 0x28 and ours is 0x2c. Retail spills three of the arms'
 // temporaries into the DEAD PARAMETER SLOT at [ebp+0x10] - the `mapVersion`
 // argument - where our compile gives each a fresh negative local: the
@@ -3394,13 +3401,7 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
             m_objectTypes[tempObject->m_typeIndex].m_extra);
 
         dwelling.m_object = tempObject;
-        {
-            std::vector<RandomDwellingData>::iterator dwellingEnd
-                = m_randomDwellings.end();
-#pragma inline_depth(0)
-            m_randomDwellings.insert(dwellingEnd, 1, dwelling);
-#pragma inline_depth()
-        }
+        m_randomDwellings.push_back(dwelling);
         break;
     }
 
@@ -3422,13 +3423,7 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         dwelling.m_maxLevel = value;
 
         dwelling.m_object = tempObject;
-        {
-            std::vector<RandomDwellingData>::iterator dwellingEnd
-                = m_randomDwellings.end();
-#pragma inline_depth(0)
-            m_randomDwellings.insert(dwellingEnd, 1, dwelling);
-#pragma inline_depth()
-        }
+        m_randomDwellings.push_back(dwelling);
         break;
     }
 
@@ -3442,9 +3437,7 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         if (tempGuard.m_quest) {
             CMapObjectData* questData = static_cast<CMapObjectData*>(
                 static_cast<void*>(tempGuard.m_quest));
-            std::vector<CMapObjectData*>::iterator dataEnd
-                = m_mapObjectData.end();
-            m_mapObjectData.insert(dataEnd, questData);
+            m_mapObjectData.push_back(questData);
         }
         break;
     }
@@ -3664,12 +3657,12 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
                 DATA_COMPGEN(0x0067fb10, readObjectTypeMissingMask,
                              "Could not load mask file for %s! - Type: %s"),
                 tempObjectType.m_imageName.c_str(),
-                g_adventureObjectNames[tempObjectType.m_objectType]);
+                g_quickViewText[tempObjectType.m_objectType]);
         MessageBoxA(g_hwndApp, g_text, "Error!", 0);
     }
 
     memcpy(&tempObjectType.m_objectType,
-           &g_adventureObjectTraits[tempObjectType.m_objectType][8],
+           &g_adventureObjectTraits[tempObjectType.m_objectType].m_nameRow,
            sizeof(tempObjectType.m_objectType));
 
     count = infile->read(&value, sizeof(value));
@@ -3877,7 +3870,7 @@ std::vector<int> g_invalidPlacementList;
 // resolve to 0x63a608; no DATA_COMPGEN binding exists in mapcell.obj because
 // the literal's physical owner is another compiland.
 VA(0x005042c0, 0x1A5)  // retail body + two callers: readMapObjects/loadMapObjects; no DC roster row
-void NewfullMap::newfullMapFn005042C0()
+void NewfullMap::rebuildObjectTypeIndex()
 {
     for (int objectClass = 0; objectClass < 232; ++objectClass) {
         for (int typeIndex = 0;
@@ -3938,7 +3931,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
             g_invalidPlacementList.push_back(x);
     }
 
-    newfullMapFn005042C0();
+    rebuildObjectTypeIndex();
     incProgressBar(1);
 
     std::vector<CSprite*> oldSprites;
@@ -3982,7 +3975,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
                                      "Invalid Object Referenced!\n\n"
                                      "x: %d y: %d z: %d - Type: %s"),
                         m_objects[x].m_x, m_objects[x].m_y, m_objects[x].m_z,
-                        g_adventureObjectNames[
+                        g_quickViewText[
                             m_objectTypes[m_objects[x].m_typeIndex].m_objectType]);
                 MessageBoxA(g_hwndApp, g_text,
                             DATA_COMPGEN(0x0067fb08,
@@ -4041,7 +4034,7 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
     }
 
     incProgressBar(1);
-    newfullMapFn005042C0();
+    rebuildObjectTypeIndex();
 
     std::vector<CSprite*> oldSprites;
     oldSprites.resize(m_sprites.size());
@@ -4396,21 +4389,21 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
 }
 
 VA(0x00505d20, 0x3F)
-void NewfullMap::newfullMapFn00505D20(int heroId, int player)
+void NewfullMap::notifyHeroDefeated(int heroId, int player)
 {
     for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
-        m_mapObjectData[i]->newMapVFn24(heroId, player);
+        m_mapObjectData[i]->notifyHeroDefeated(heroId, player);
 }
 
 VA(0x00505d60, 0x3F)
-void NewfullMap::newfullMapFn00505D60(type_point point, int player)
+void NewfullMap::notifyMonsterDefeated(type_point point, int player)
 {
     for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
-        m_mapObjectData[i]->newMapVFn28(point, player);
+        m_mapObjectData[i]->notifyMonsterDefeated(point, player);
 }
 
 VA(0x00505da0, 0xF8)
-void NewfullMap::newfullMapFn00505DA0()
+void NewfullMap::loadObjectTypeTemplates()
 {
     TObjectTypeTable objectTypeTable;
     objectTypeTable.load(
@@ -4425,7 +4418,7 @@ void NewfullMap::newfullMapFn00505DA0()
 }
 
 VA(0x00505ea0, 0x80)  // linkorder + this@+0xdc=objectTypeIndex; reverse-find CObjectType by extra, caller game::ConvertObject, retail-only
-CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
+CObjectType* NewfullMap::findObjectType(int objectType, int extra)
 {
     int i = m_objectTypeIndex[objectType].size();
     while (i--) {
@@ -4441,30 +4434,15 @@ CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
 // If the matched record has no resolved objectTypes index yet (field_42 < 0),
 // it appends a copy to objectTypes and its sprite to sprites and records the
 // new index, then writes the resolved index into object->typeIndex.
-// No direct DC counterpart; this is a Complete per-class helper, not a
-// proven DC inline. A missing definition now throws through the same failure
-// helper as 0x505ea0, before publishing an index, adding records or acquiring
-// a sprite. insertObject and SoD_transformRandomDwellings require that result.
-// Residual (97.7099%): intentional failure branch/call absent in retail;
-// vector::at measured 63.1832%, local throw 51.1908%. Actual-body native tests
-// cover reverse precedence, terrain filters, empty/missing classes, cached
-// indices and no publication on failure, with three rejected negative controls.
-// The paired 16-state failure-boundary family also leaves this form best:
-// reverse-index/exit 71.7557%, postdecrement failure 66.5802%, predecrement
-// failure 69.2824%, all independently reproduced with the canonical throw.
-// MATCHING_DEBT: the two vector inserts are pinned with inline_depth(0) (the
-// randomDwellings idiom) with end() and the value hoisted out so operator[]
-// and end() stay inline; sprites is named as a reference so its _Last is read
-// through &sprites, not folded off `this`.
-// EXACT 2026-08-26 (99.9771 -> 100.0000): retail's otherwise-dead third
-// frame slot comes from the non-const bitset operator[] proxy.  Spelling the
-// mask test as `.test(terrain)` emits identical executable operations but
-// lets VC6 compact the frame from 0xc to 0x8.  The three remaining displayed
-// reloc-name rows are cosmetic cross-TU unclaimed STL/data identities and do
-// not score.  A 316-candidate generated declaration/name search was flat;
-// the older reference/push_back hypothesis over-inlines (21 vs 10 branches).
+// No direct DC counterpart; Complete retains both vector count-insert calls.
+// Ordinary push_back calls reproduce them at 100% without inline-depth pins:
+// named/direct record and sprite arguments all reproduce the same exact body.
+// The sprite insert's widget* retail name is a folded pointer-vector alias.
+// The non-const bitset operator[] proxy supplies retail's third frame slot;
+// .test(terrain) instead compacts the frame from 0xc to 0x8. There is no
+// missing-record failure branch in retail; the caller must supply a match.
 VA(0x00505f20, 0x157)  // linkorder + this@+0xdc=objectTypeIndex; caller game::InsertObject, retail-only
-void NewfullMap::newfullMapFn00505F20(CObject* object, int objectType,
+void NewfullMap::setObjectType(CObject* object, int objectType,
                                        int objectIndex, int terrain)
 {
     int i = m_objectTypeIndex[objectType].size();
@@ -4480,18 +4458,9 @@ void NewfullMap::newfullMapFn00505F20(CObject* object, int objectType,
     if (static_cast<short>(m_objectTypeIndex[objectType][i].m_objectTypeIndex) < 0) {
         m_objectTypeIndex[objectType][i].m_objectTypeIndex =
             static_cast<unsigned short>(m_objectTypes.size());
-        CObjectType& newType = m_objectTypeIndex[objectType][i];
-        std::vector<CObjectType>::iterator typeEnd = m_objectTypes.end();
-#pragma inline_depth(0)
-        m_objectTypes.insert(typeEnd, 1, newType);
-#pragma inline_depth()
-        CSprite* sprite = ResourceManager::getSprite(
-            m_objectTypeIndex[objectType][i].m_imageName.c_str());
-        std::vector<CSprite*>& spriteList = m_sprites;
-        std::vector<CSprite*>::iterator spriteEnd = spriteList.end();
-#pragma inline_depth(0)
-        spriteList.insert(spriteEnd, 1, sprite);
-#pragma inline_depth()
+        m_objectTypes.push_back(m_objectTypeIndex[objectType][i]);
+        m_sprites.push_back(ResourceManager::getSprite(
+            m_objectTypeIndex[objectType][i].m_imageName.c_str()));
     }
 
     object->m_typeIndex = m_objectTypeIndex[objectType][i].m_objectTypeIndex;
@@ -4612,6 +4581,7 @@ int NewfullMap::placeObjects()
         placeObject(x, 1);
     return 0;
 }
+
 
 VA_COMPGEN(0x00508cf0, 0x3B9, VECTOR_INSERT, TownExtra)
 

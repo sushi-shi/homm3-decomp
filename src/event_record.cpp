@@ -62,7 +62,7 @@ static void setPlayer(char newPlayer)
     }
     g_netLocalGamePos = newPlayer;
     g_currentPlayer = &g_game->m_players[newPlayer];
-    g_unnamed69ccc4 = 1 << newPlayer;
+    g_curPlayerBit = 1 << newPlayer;
 }
 
 // E:\gamedcs\event_record.cpp:81
@@ -813,7 +813,7 @@ void type_record_player_death::replay(unsigned char draw)
 {
     if (draw) {
         std::string text;
-        text = formatString(g_generalText->getText(6),
+        text = formatString(g_generalText->getText(GENERAL_TEXT_PLAYER_DEFEATED_FORMAT),
                              g_game->getPlayerName(m_extra));
         normalDialog(text.c_str(), 1, -1, -1, 10, m_extra, -1, -1, -1, 5000,
                      -1, 0);
@@ -1016,70 +1016,48 @@ void game::recordTeleport(hero* who, type_point destination)
 }
 
 // E:\gamedcs\event_record.cpp:1136
-// Residual (88.1751% / 87.9349%): the register-homing family.  Retail gives
-// `this` EDI and the inlined GetTeamMask scan ESI; our CL swaps them, and
-// every later row follows.  Frames differ by one dword (0x30 against
-// retail's 0x38).  MEASURED AND REJECTED 2026-09-06: the Dreamcast's own
-// `rect` local (tagRECT at sp+0x44, the four clamp results as one object)
-// does NOT survive into Complete - retail's four results sit at [ebp-0x38],
-// [ebp-0x30], [ebp-0x2c] and a parameter home, which no 16-byte contiguous
-// struct can produce - and spelling it costs 0.04 on both twins (85.6037 /
-// 84.7442).  Spelling the queue guard as the DC's `get_change_count()`
-// accessor instead of `changes.size()` is byte-flat.
-// The positive visibility sweep. The radius test is a REAL sqrt against
-// `range + 0.5` (the double at .rdata 0x63ac70), the clamps are the
-// reference-returning min/max templates above - which is what puts their
-// by-value temporaries in the dead parameter homes - and every cell whose
-// mask actually changes is journalled into a shroud record. The record is
-// queued only for a local, non-empty, non-replay sweep; otherwise it is
-// deleted through the vtable.
+// The DC RECT, distance and teamMask locals reproduce Complete exactly.
+// Both dc 0x8e48c and retail +0x17f branch around addChange and the map-cell
+// store, so unchanged cells are not rewritten. The header getChangeCount
+// helper and vector push_back remain canonical source calls and expand to
+// the retail sequences without inline steering.
 VA(0x0049d160, 0x268)  // anchor-global (0x63df7c + GetMapExtraPtr), dc 0x8e33c
-void game::setVisibility(int startX, int startY, int z, int whichPlayer,
+void game::setVisibility(const int startX, const int startY, const int z,
+                         const int whichPlayer,
                          int range, unsigned char remoteMove)
 {
     if (whichPlayer < 0 || whichPlayer >= 8)
         return;
 
-    unsigned short visMask = getTeamMask(whichPlayer);
-    double limit = range + 0.5;
+    unsigned short teamMask = getTeamMask(whichPlayer);
+    double distance = range + 0.5;
     type_record_shroud* record = new type_record_shroud();
 
-    // dc rows 1152-1155 (and 1206-1209 in resetVisibility) call `max`
-    // [dc 0x1ef28] and `min` [dc 0x2da4] - the includes.h wrappers.
-    int x0 = max(startX - range, 0);
-    int x1 = min(startX + range + 1, g_mapWidth);
-    int y0 = max(startY - range, 0);
-    int y1 = min(startY + range + 1, g_mapHeight);
+    RECT rect;
+    rect.left = max(startX - range, 0);
+    rect.right = min(startX + range + 1, g_mapWidth);
+    rect.top = max(startY - range, 0);
+    rect.bottom = min(startY + range + 1, g_mapHeight);
 
-    for (int y = y0; y < y1; ++y) {
-        int dy = startY - y;
-        for (int x = x0; x < x1; ++x) {
-            int dx = startX - x;
-            if (sqrt(static_cast<double>(dx * dx + dy * dy)) <= limit) {
-                unsigned short* extra = getMapExtraPtr(x, y, z);
-                unsigned short oldValue = *extra;
-                unsigned short newValue = oldValue | visMask;
-                if (oldValue != newValue)
-                    record->addChange(x, y, z, oldValue, newValue);
-                *extra = newValue;
+    for (int y = rect.top; y < rect.bottom; ++y) {
+        for (int x = rect.left; x < rect.right; ++x) {
+            if (sqrt(static_cast<double>(
+                    (startX - x) * (startX - x)
+                    + (startY - y) * (startY - y))) <= distance) {
+                unsigned short* oldValue = getMapExtraPtr(x, y, z);
+                unsigned short newValue = *oldValue | teamMask;
+                if (*oldValue != newValue) {
+                    record->addChange(x, y, z, *oldValue, newValue);
+                    *oldValue = newValue;
+                }
             }
         }
     }
 
     if (!remoteMove && record->getChangeCount() != 0 && !g_completeDrawMessageBypass)
     {
-        // Retail CALLS insert(iterator, n, const T&) here where the smaller
-        // game::record_* bodies expand it, so the site is pinned - with
-        // end() hoisted OUT of the pinned statement, because retail keeps
-        // that one inline (`mov eax,[ecx+8]`).
-        // The record list NAMED AS A REFERENCE: 85.6452 -> 86.7235.  The same
-        // change on `changes` in this body is flat, and on the sibling
-        // ResetVisibility 0x49d3d0 it does not beat MAX.
-        std::vector<type_event_record*>& rEventRecords = m_eventRecords;
-        type_event_record** at = rEventRecords.end();
-#pragma inline_depth(0)
-        rEventRecords.insert(at, 1, record);
-#pragma inline_depth()
+        // Dreamcast line 1178 identifies the canonical source call.
+        m_eventRecords.push_back(record);
     } else {
         delete record;
     }
@@ -1196,11 +1174,11 @@ void game::playRecordedEvents()
     size = m_eventRecords.size();
     unsigned char interrupted = 0;
     message msg;
-    int savedWalkSpeed = g_unnamed698758.m_computerWalkSpeed;
-    unsigned char savedSuppress = g_unnamed698790 != 0;
-    if (g_unnamed698758.m_computerWalkSpeed > 4)
-        g_unnamed698758.m_computerWalkSpeed = 4;
-    g_unnamed698790 = 0;
+    int savedWalkSpeed = g_config.m_computerWalkSpeed;
+    unsigned char savedSuppress = g_config.m_blackoutComputer != 0;
+    if (g_config.m_computerWalkSpeed > 4)
+        g_config.m_computerWalkSpeed = 4;
+    g_config.m_blackoutComputer = 0;
 
     for (int j = 0; j < size; ++j) {
         unsigned char draw = !interrupted
@@ -1228,8 +1206,8 @@ void game::playRecordedEvents()
     if (currTown != 0)
         g_advManager->setTownContext(currTown->m_id, 0, 1);
 
-    g_unnamed698758.m_computerWalkSpeed = savedWalkSpeed;
-    g_unnamed698790 = savedSuppress;
+    g_config.m_computerWalkSpeed = savedWalkSpeed;
+    g_config.m_blackoutComputer = savedSuppress;
     g_advManager->completeDraw(0);
     g_advManager->updateScreen(0, 0);
 }

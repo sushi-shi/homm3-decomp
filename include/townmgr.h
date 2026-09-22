@@ -3,6 +3,7 @@
 
 #include "advmgr_popup.h"
 #include "basemgr.h"
+#include "text.h"
 #include "remote.h"
 #include "terrain_type.h"
 
@@ -79,7 +80,6 @@ extern TPalette16* g_systemPalette;  // retail .bss 0x6aacb0
 // for one dword would widen this compiland by the whole 29-member
 // preference block. Definition and DATA claim stay with misc.obj, whose
 // carved span does not reach 0x698784.
-extern int g_townOutlines;  // retail .bss 0x698784
 
 // One drawable object of the town panorama - a building, its outline
 // and its hotspot - forty-four slots of them on the manager at +0x5c.
@@ -930,6 +930,7 @@ public:
     // one of those through the window rather than through the manager.
     void setupWell(TCastleWindow* wellWin);
     void setupMage(heroWindow* mageWin);
+
     townManager();
     void unloadTown();
     // Retail 0x5c6870 (dc 0x16bba4) and 0x5c77a0 (dc 0x16c940). Neither
@@ -974,6 +975,5 @@ void doShipyard(int type);
 // The shared frame-pacing stamp at .bss 0x698998. cmbtmgr.h owns the
 // DATA claim (advmgr's Open/Main and drawing.cpp share the cell);
 // townManager::Main paces the panorama animation with it.
-extern unsigned long g_combatStamp698998;
 
 #endif  /* HOMM3_TOWNMGR_H */

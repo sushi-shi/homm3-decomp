@@ -201,7 +201,7 @@ type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* n
             break;
         case CURSED_GROUND:
             m_terrain = MAGIC_TERRAIN_CURSED_GROUND;
-            if (g_game->m_f1f698 >= 2)
+            if (g_game->m_gameVersion >= 2)
                 break;
         case GARRISON:
             m_canCastSpells = 0;
@@ -326,15 +326,15 @@ void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
     m_wallSpeedLimit = 0;
     if (enemyTown == 0)
         return;
-    if (enemyTown->hasBuilding(CASTLE_FORT_ID, 0)) {
+    if (enemyTown->hasBuilding(CASTLE_FORT_ID, false)) {
         m_wallArcheryPenalty = 1;
         m_wallSpeedLimit = 4;
     }
-    if (enemyTown->hasBuilding(CASTLE_CITADEL_ID, 0)) {
+    if (enemyTown->hasBuilding(CASTLE_CITADEL_ID, false)) {
         m_wallArcheryPenalty = 1;
         m_wallSpeedLimit = 5;
     }
-    if (enemyTown->hasBuilding(CASTLE_CASTLE_ID, 0)) {
+    if (enemyTown->hasBuilding(CASTLE_CASTLE_ID, false)) {
         m_wallArcheryPenalty = 1;
         m_wallSpeedLimit = 6;
     }

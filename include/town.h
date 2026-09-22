@@ -159,7 +159,7 @@ extern const char* g_townBuildingSpriteNames[9];
 
 // town.cpp owns the DATA claim; TResourceDisplay consumes the current
 // player-position selector directly, as its retail bodies do.
-extern int g_unnamed69778c;
+extern int g_curWatchPlayer;
 
 // Retail .data 0x67814c; Dreamcast publishes the same global name. Both
 // hero::hire and town::hire subtract it from the player's gold resource.
@@ -372,13 +372,13 @@ public:
     void calcNumLevelArchers(int* numArchers, int* archerLevel);
 
     VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
+    // checkIncluded includes buildings supplied by an upgrade (m_active);
+    // false tests only the explicitly constructed buildings (m_built).
     bool hasBuilding(int buildingId, bool checkIncluded) const
     {
-        if (checkIncluded) {
+        if (checkIncluded)
             return (m_active & g_bitNumber[buildingId]) != 0;
-        } else {
-            return (m_built & g_bitNumber[buildingId]) != 0;
-        }
+        return (m_built & g_bitNumber[buildingId]) != 0;
     }
     // Original: town::set_mask; Town.h:331, dc 0x168dfc.
     void setMask(__int64 newMask)
@@ -390,15 +390,15 @@ public:
     // the DC T_UCHAR return record is lowered, as for hasBuilding.
     bool isCastle() const
     {
-        return hasBuilding(CASTLE_FORT_ID, 0)
-            || hasBuilding(CASTLE_CITADEL_ID, 0)
-            || hasBuilding(CASTLE_CASTLE_ID, 0);
+        return hasBuilding(CASTLE_FORT_ID, false)
+            || hasBuilding(CASTLE_CITADEL_ID, false)
+            || hasBuilding(CASTLE_CASTLE_ID, false);
     }
     // E:\gamedcs\Town.h:342. Public ?IsCapitol@town@@QBA_NXZ likewise
     // proves native bool. Both declarations are byte-flat in all consumers.
     bool isCapitol() const
     {
-        return hasBuilding(HALL_CAPITOL_ID, 0);
+        return hasBuilding(HALL_CAPITOL_ID, false);
     }
     void setSummoningGenerator();
     int getPortraitFrame(bool isSmall) const;
@@ -622,13 +622,10 @@ extern int g_siloIncome[9][NUM_RESOURCES];
 extern TCreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 // Biased view of the upgraded half of the same first town row. Retail
 // GiveTroopsToNeutralTown carries a distinct relocation to this address.
-DATA(0x006747d0)
-extern TCreatureType g_townUpgradedDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 
 // Retail .data 0x6782a4: ordinary spell counts for guild levels one
 // through five. initialize_spells generates one extra candidate per row so
 // Tower's Library can expose it.
-DATA(0x006782a4)
 extern const signed char g_mageGuildBaseSpellCounts[5];
 
 // Retail .rdata 0x642e20, the four horde building ids in slot order

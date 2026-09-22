@@ -1,4 +1,6 @@
+#include "text.h"
 #include "va.h"
+#include "objnames.h"
 #include "includes.h"
 #include "homm3_limit.h"
 #include "homm3_minmax.h"
@@ -48,35 +50,39 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x0067dcec) extern const THeroClassTraits (&g_heroClasses)[18];
+DATA(0x00698a88) type_artifact g_heroScreenDraggedArtifact;
+DATA(0x00698a94) int g_stablesMovementBonus;
+
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x00698400) int g_inSetup;
+DATA(0x00697738) int g_heroScreenArmySlot;
+DATA(0x00698b20) hero* g_currentHero;
+DATA(0x00698a84) int g_heroScreenHeroPosition;
+DATA(0x00698a90) int g_heroScreenNoDismiss;
+DATA(0x00698a50) int g_heroScreenHeroId;
+DATA(0x00698a78) THeroScreenWindow* g_heroScreenWindow;
+DATA(0x00698a44) int g_heroScreenArmyStripLive;
+
 // Runtime hero-view state used by the retail-only name getter below. The
 // storage addresses and access widths are byte-proven; no public symbol
 // roster survives for the two name-table pointer spellings, so they are
 // provisional. gpCurrentHero and the hero-screen globals live in hero.h.
 DATA(0x006a7540) extern const char* g_statDesc[4];
-DATA(0x006a66d8) extern const char* g_sharedHeroNames[156];
 // Runtime-loaded artifact rollover text. Retail fixes the three storage
 // cells and their roles; no surviving public names them, so the spellings
 // remain provisional.
-DATA(0x006a6948) extern const char* g_campaignHeroName;
-DATA(0x006a8040) extern const char* g_emptyArtifactRolloverText;
-DATA(0x006a804c) extern const char* g_spellbookRolloverText;
-DATA(0x006a8050) extern const char* g_artifactRolloverFormat;
 
 // Runtime tables loaded by initialize_ballistics_table and its inlined
 // initialize_move_constants tail. The relocation at 0x679c84 makes the
 // public const view an array reference to the four writable 8-byte rows.
+// Original move_constants; the loader and consumers share these fields.
+DATA(0x00698a98) type_movement_constants g_moveConstants;
+
 DATA(0x00698a58) static type_ballistics_traits g_ballisticsTraits[4];
 DATA(0x00679c84)
 const type_ballistics_traits (&g_constBallisticsTraits)[4] =
     g_ballisticsTraits;
-DATA(0x00698a98) extern int g_landMovement[21];
-DATA(0x00698aec) extern int g_seaMovement[kNumMasteries];
-DATA(0x00698afc) extern int g_equestriansGlovesMovementBonus;
-DATA(0x00698b00) extern int g_bootsOfSpeedMovementBonus;
-DATA(0x00698b04) extern int g_oceanGuidanceMovementBonus;
-DATA(0x00698b08) extern int g_seaCaptainsHatMovementBonus;
-DATA(0x00698b0c) extern int g_lighthouseMovementBonus;
 
 // The per-mastery specialty factor rows, one four-float .rdata run per
 // skill (retail 0x63e9f8 / 0x63ea08 / 0x63ea58 / 0x63ea88 / 0x63ea98,
@@ -264,9 +270,9 @@ static unsigned char initializeMoveConstants()
 
     int i;
     for (i = 0; i <= 20; ++i)
-        g_landMovement[i] = atoi(resource->getRow(i + 2)[1]);
+        g_moveConstants.m_land[i] = atoi(resource->getRow(i + 2)[1]);
 
-    int* seaMovement = g_seaMovement;
+    int* seaMovement = g_moveConstants.m_sea;
     for (int row = 2; row < 2 + kNumMasteries; ++row, ++seaMovement) {
         const TSpreadsheetResource::TStringVector& values =
             resource->getRow(row);
@@ -274,12 +280,12 @@ static unsigned char initializeMoveConstants()
     }
 
     i = 2;
-    g_equestriansGlovesMovementBonus = atoi(resource->getRow(i++)[5]);
-    g_bootsOfSpeedMovementBonus = atoi(resource->getRow(i++)[5]);
-    g_oceanGuidanceMovementBonus = atoi(resource->getRow(i++)[5]);
-    g_seaCaptainsHatMovementBonus = atoi(resource->getRow(i++)[5]);
+    g_moveConstants.m_equestriansGlovesBonus = atoi(resource->getRow(i++)[5]);
+    g_moveConstants.m_bootsOfSpeedBonus = atoi(resource->getRow(i++)[5]);
+    g_moveConstants.m_oceanGuidanceBonus = atoi(resource->getRow(i++)[5]);
+    g_moveConstants.m_seaCaptainsHatBonus = atoi(resource->getRow(i++)[5]);
     g_stablesMovementBonus = atoi(resource->getRow(i++)[5]);
-    g_lighthouseMovementBonus = atoi(resource->getRow(i)[5]);
+    g_moveConstants.m_lighthouseBonus = atoi(resource->getRow(i)[5]);
 
     resource->dispose();
     return 1;
@@ -457,7 +463,7 @@ void hero::hire(int playerId, type_point point)
     player->m_resources[GOLD] =
         player->m_resources[GOLD] - g_heroGoldCost;
     placeInMap(playerId, point, 1);
-    g_game->finishTownHire(playerId, recruitSlot);
+    g_game->replaceRecruit(playerId, recruitSlot);
 }
 
 VA(0x004d7900, 0x11B)  // dc 0xcaedc
@@ -956,7 +962,7 @@ void hero::initialize(short index)
     m_dWalkSpellsCast = 0;
     m_visionsPower = eMasteryInvalid;
     m_hasCustomName = 0;
-    m_customName = g_emptyRolloverText;
+    m_customName = "";
     m_isSleeping = 0;
     m_formation = 2;
     m_flags = 0;
@@ -1119,6 +1125,9 @@ void hero::initialize(const HeroExtra* setup)
         // with npos LOADED from its out-of-line definition. Spelling the
         // three-argument form under the same pin is worth 95.0000 ->
         // 96.7770; unpinned it collapses (3-arg 55.7360, 1-arg 55.5946).
+        // Current TU: ordinary operator= gives 49.71% against 97.5831%.
+        // Nesting the campaign-mode gate or all three campaign checks is
+        // byte-flat at 49.71%; it does not recover this assignment boundary.
 #pragma inline_depth(0)
         m_customName.assign(setup->m_name, 0, std::string::npos);
 #pragma inline_depth()
@@ -1167,7 +1176,7 @@ const char* hero::heroFn004D8F70()
 {
     if (m_id == CLASS_NAME_OVERRIDE_HERO_ID && g_inCampaign &&
         g_game->m_campaign.m_currentCampaign == CLASS_NAME_OVERRIDE_SCENARIO)
-        return g_generalText->getText(GENERAL_TEXT_CAMPAIGN_HERO_CLASS);
+        return g_generalText->getText(GENERAL_TEXT_SORCERESS_CLASS_NAME);
     return g_heroClasses[m_heroClass].m_className;
 }
 
@@ -1188,12 +1197,12 @@ const char* hero::heroFn004D8FB0()
     if (g_inCampaign &&
         g_game->m_campaign.m_currentCampaign != CUSTOM_NAME_CAMPAIGN_EXCLUDED_SCENARIO &&
         g_currentHero->m_portrait == CUSTOM_NAME_CAMPAIGN_PORTRAIT)
-        return g_campaignHeroName;
+        return g_heroBio[156];
 
     const char* heroName = m_name;
     const char* defaultName = g_heroTraits[m_id].m_defaultName;
     if (strcmp(heroName, defaultName) == 0)
-        return g_sharedHeroNames[m_id];
+        return g_heroBio[m_id];
     return heroName;
 }
 
@@ -1652,7 +1661,7 @@ int hero::heroFn004D9B30(int artifact)
     type_artifact record(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
     std::string text = record.getDescription();
     text += "\n\n";
-    text += g_generalText->getText(734);
+    text += g_generalText->getText(GENERAL_TEXT_COMBINATION_ARTIFACT_DISASSEMBLY_PROMPT);
     normalDialog(text.c_str(), 2, -1, PRIMARY_STAT_DIALOG_Y, -1, 0, -1, 0,
                  -1, 0, -1, 0);
     return g_windowManager->m_dialogReturn;
@@ -1685,7 +1694,7 @@ int hero::heroFn004D9CC0(int artifact)
     type_artifact record(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
     std::string text = record.getDescription();
     text += "\n\n";
-    text += formatString(g_generalText->getText(733),
+    text += formatString(g_generalText->getText(GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT),
                           g_artifactTraits[assembled].m_name);
     normalDialog(text.c_str(), 2, -1, PRIMARY_STAT_DIALOG_Y, 8, assembled,
                  -1, 0, -1, 0, -1, 0);
@@ -1729,7 +1738,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
 
     type_obscuring_object::restoreCell();
 
-    if (!g_combatFlag697744) {
+    if (!g_combatSurrendered) {
         for (int slot = 0; slot < 7; slot++)
             m_army.dismiss(slot);
     }
@@ -1751,7 +1760,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
     g_advManager->m_advWindow->updateHeroLocators(0, 1, 1);
     g_game->m_heroAvailability[m_id] = -1;
 
-    if (g_combatFlag6985a3 || g_combatFlag697744) {
+    if (g_combatRetreated || g_combatSurrendered) {
         int slot = random(0, 1);
         int other = g_game->m_players[m_owner].m_recruits[slot];
         if (other != -1) {
@@ -1789,7 +1798,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
         m_maxMovePoints = m_movePoints = getMobility((m_flags >> 18) & 1);
     }
 
-    if (!g_combatFlag697744)
+    if (!g_combatSurrendered)
         g_game->setRandomHeroArmies(m_id, 0, 1);
 }
 
@@ -1909,7 +1918,7 @@ void hero::applyBattleLossTemps()
 // notify call, CheckLevel skips the level-up window entirely. Eight
 // references image-wide, three in the body below. NAME UNATTESTED,
 // address-ordinal placeholder.
-DATA(0x00698400) extern int g_inSetup698400;
+
 
 TSecondarySkill aiChooseSecondarySkill(const hero* ourHero,
                                           TSecondarySkill first,
@@ -2046,7 +2055,7 @@ void hero::checkLevel()
 
             m_stats[stat]++;
             char text[200];
-            sprintf(text, "\n%s +1", g_primarySkillNames[stat]);
+            sprintf(text, "\n%s +1", g_statNames[stat]);
             strcat(g_text, text);
 
             TSecondarySkill skills[LEVEL_UP_SKILL_CHOICES];
@@ -2077,34 +2086,34 @@ void hero::checkLevel()
                     m_lastMagicSchoolLevel = m_level;
             }
 
-            if (!g_inSetup698400 && m_owner >= 0 &&
+            if (!g_inSetup && m_owner >= 0 &&
                 g_game->isLocalHuman(m_owner)) {
                 launchSample("nwherolv.82m", -1, 3);
-                if (g_videoPaused)
+                if (g_remoteOn)
                     g_currentPlayer->isLocalHuman();
 
                 if (skills[0] == eSecSkillNone) {
                     TLevelUpWindow window(this, stat, -1, -1);
                     if (g_game->isMultiplayer() &&
-                        g_turnDuration69d630.isExpired())
-                        g_dialogDeadline697784 = 15000;
+                        g_turnDuration.isExpired())
+                        g_dialogDeadline = 15000;
                     window.doModal(0);
                 } else if (skills[1] == eSecSkillNone) {
                     TLevelUpWindow window(
                         this, stat,
                         skills[0] * 3 + 3 + m_skillLevel[skills[0]], -1);
                     if (g_game->isMultiplayer() &&
-                        g_turnDuration69d630.isExpired())
-                        g_dialogDeadline697784 = 15000;
+                        g_turnDuration.isExpired())
+                        g_dialogDeadline = 15000;
                     window.doModal(0);
                     giveSS(skills[0], 1);
                 } else {
                     sprintf(text,
                             g_generalText->getText(
-                                GENERAL_TEXT_LEVEL_UP_CHOICE),
-                            g_skillMasteryNames[m_skillLevel[skills[0]]],
+                                GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT),
+                            g_secondarySkillLevels[m_skillLevel[skills[0]]],
                             g_sSkillTraits[skills[0]].m_name,
-                            g_skillMasteryNames[m_skillLevel[skills[1]]],
+                            g_secondarySkillLevels[m_skillLevel[skills[1]]],
                             g_sSkillTraits[skills[1]].m_name);
                     strcat(g_text, text);
                     {
@@ -2113,13 +2122,13 @@ void hero::checkLevel()
                             skills[0] * 3 + 3 + m_skillLevel[skills[0]],
                             skills[1] * 3 + 3 + m_skillLevel[skills[1]]);
                         if (g_game->isMultiplayer() &&
-                            g_turnDuration69d630.isExpired())
-                            g_dialogDeadline697784 = 15000;
+                            g_turnDuration.isExpired())
+                            g_dialogDeadline = 15000;
                         window.doModal(0);
                     }
                     if (g_windowManager->m_dialogReturn ==
                         DIALOG_RETURN_TIMEOUT) {
-                        if (!g_inSetup698400 && m_owner >= 0)
+                        if (!g_inSetup && m_owner >= 0)
                             giveSS(aiChooseSecondarySkill(
                                        this, skills[0], skills[1], 1), 1);
                         else
@@ -2136,7 +2145,7 @@ void hero::checkLevel()
             } else if (skills[0] != eSecSkillNone) {
                 if (skills[1] == eSecSkillNone)
                     giveSS(skills[0], 1);
-                else if (!g_inSetup698400 && m_owner >= 0)
+                else if (!g_inSetup && m_owner >= 0)
                     giveSS(aiChooseSecondarySkill(
                                this, skills[0], skills[1], 1), 1);
                 else
@@ -2441,11 +2450,11 @@ VA(0x004db350, 0x86)  // dc 0xcd86c
 void type_artifact::getRolloverText(char* buffer) const
 {
     if (m_artifactId == ARTIFACT_NONE)
-        strcpy(buffer, g_emptyArtifactRolloverText);
+        strcpy(buffer, g_heroScreen[11]);
     else if (m_artifactId == ARTIFACT_SPELLBOOK)
-        strcpy(buffer, g_spellbookRolloverText);
+        strcpy(buffer, g_heroScreen[14]);
     else
-        sprintf(buffer, g_artifactRolloverFormat,
+        sprintf(buffer, g_heroScreen[15],
                 g_artifactTraits[m_artifactId].m_name);
 }
 
@@ -2497,44 +2506,43 @@ std::string type_artifact::getDescription() const
 // spelling keyed to the row index. Declared HERE rather than beside the
 // other three so the ~23 new symbols do not shift C1 handle numbers for
 // every already-matched body above.
-DATA(0x006a8014) extern const char* g_heroScreenText0;                 // row 0
-DATA(0x006a8018) extern const char* g_heroScreenNameFormat;            // row 1
-DATA(0x006a8020) extern const char* g_heroScreenMoraleHighText;        // row 3
-DATA(0x006a8024) extern const char* g_heroScreenMoraleNeutralText;     // row 4
-DATA(0x006a8028) extern const char* g_heroScreenMoraleLowText;         // row 5
-DATA(0x006a802c) extern const char* g_heroScreenLuckHighText;          // row 6
-DATA(0x006a8030) extern const char* g_heroScreenLuckNeutralText;       // row 7
-DATA(0x006a8034) extern const char* g_heroScreenLuckLowText;           // row 8
-DATA(0x006a8038) extern const char* g_heroScreenText9;                 // row 9
-DATA(0x006a803c) extern const char* g_heroScreenArmySlotFormat;        // row 10
-DATA(0x006a8044) extern const char* g_heroScreenArmySlotIdleFormat;    // row 12
-DATA(0x006a8048) extern const char* g_heroScreenArmySwapFormat;        // row 13
-DATA(0x006a8054) extern const char* g_heroScreenHeroNameFormat;        // row 16
-DATA(0x006a8058) extern const char* g_heroScreenText17;                // row 17
-DATA(0x006a8060) extern const char* g_heroScreenArmyMergeFormat;       // row 19
-DATA(0x006a8064) extern const char* g_heroScreenArmyMoveFormat;        // row 20
-DATA(0x006a8068) extern const char* g_heroScreenSecondarySkillFormat;  // row 21
-DATA(0x006a806c) extern const char* g_heroScreenText22;                // row 22
-DATA(0x006a8070) extern const char* g_heroScreenText23;                // row 23
-DATA(0x006a8074) extern const char* g_heroScreenText24;                // row 24
-DATA(0x006a8078) extern const char* g_heroScreenFormationGroupedText;  // row 25
-DATA(0x006a807c) extern const char* g_heroScreenFormationSpreadText;   // row 26
+                 // row 0
+            // row 1
+        // row 3
+     // row 4
+         // row 5
+          // row 6
+       // row 7
+           // row 8
+                 // row 9
+        // row 10
+    // row 12
+        // row 13
+        // row 16
+                // row 17
+       // row 19
+        // row 20
+  // row 21
+                // row 22
+                // row 23
+                // row 24
+  // row 25
+   // row 26
 // Rows 28..32 continue the same stride-4 run. WindowHandler's six
 // right-click help arms are what pin them: each hands one of these
 // straight to NormalDialog with dialog type 4, so the role is "help text
 // for widget N" and the names follow the widget they answer for.
-DATA(0x006a8080) extern const char* g_heroScreenText27;                // row 27
-DATA(0x006a8084) extern const char* g_heroScreenHeroNameHelp;          // row 28
-DATA(0x006a8088) extern const char* g_heroScreenWidget7aHelp;          // row 29
-DATA(0x006a808c) extern const char* g_heroScreenWidget7cHelp;          // row 30
-DATA(0x006a8090) extern const char* g_heroScreenFormationHelp;         // row 31
+                // row 27
+          // row 28
+          // row 29
+          // row 30
+         // row 31
 // The quest-log button's help text, and the ONE oddity in the set: it is
 // NOT in the 0x6a8014 run and has exactly one reference image-wide, this
 // call site. Provenance genuinely undetermined - 0x6a5704 is 0x6a56e0 +
 // 0x24, which would make it a cell of townmgr's stride-8 table, but
 // nothing in the bytes decides that. ORDINAL PLACEHOLDER spelling.
-DATA(0x006a8094) extern const char* g_heroScreenMixedArmyHelp;         // row 32
-DATA(0x006a5704) extern const char* g_unnamed6a5704;
+         // row 32
 
 VA(0x004db660, 0x728)  // dc 0xcd9c4
 void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
@@ -2547,8 +2555,8 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
     case PRIMARY_SKILL_1_ID:
     case PRIMARY_SKILL_2_ID:
     case PRIMARY_SKILL_3_ID:
-        sprintf(g_text, g_heroScreenNameFormat,
-                g_primarySkillNames[msg->m_codeY - PRIMARY_SKILL_0_ID]);
+        sprintf(g_text, g_heroScreen[1],
+                g_statNames[msg->m_codeY - PRIMARY_SKILL_0_ID]);
         break;
 
     case PORTRAIT_ID:
@@ -2559,20 +2567,20 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 
     case MORALE_ID:
         if (g_currentHero->getMorale(0, 0, 1) > 0)
-            strcpy(g_text, g_heroScreenMoraleHighText);
+            strcpy(g_text, g_heroScreen[3]);
         else if (g_currentHero->getMorale(0, 0, 1) == 0)
-            strcpy(g_text, g_heroScreenMoraleNeutralText);
+            strcpy(g_text, g_heroScreen[4]);
         else
-            strcpy(g_text, g_heroScreenMoraleLowText);
+            strcpy(g_text, g_heroScreen[5]);
         break;
 
     case LUCK_ID:
         if (g_currentHero->getLuck(0, 0, 1) > 0)
-            strcpy(g_text, g_heroScreenLuckHighText);
+            strcpy(g_text, g_heroScreen[6]);
         else if (g_currentHero->getLuck(0, 0, 1) == 0)
-            strcpy(g_text, g_heroScreenLuckNeutralText);
+            strcpy(g_text, g_heroScreen[7]);
         else
-            strcpy(g_text, g_heroScreenLuckLowText);
+            strcpy(g_text, g_heroScreen[8]);
         break;
 
     case ARMY_SLOT_0_ID:
@@ -2585,36 +2593,36 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
         int slot = msg->m_codeY - ARMY_SLOT_0_ID;
         if (g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
             if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE)
-                sprintf(g_text, g_heroScreenArmySlotFormat,
+                sprintf(g_text, g_heroScreen[10],
                         getArmyName(g_currentHero->m_army.m_armies[slot], 1));
             else
-                strcpy(g_text, g_emptyArtifactRolloverText);
+                strcpy(g_text, g_heroScreen[11]);
         } else if (g_heroScreenArmySlot == slot) {
-            sprintf(g_text, g_heroScreenArmySlotFormat,
+            sprintf(g_text, g_heroScreen[10],
                     getArmyName(g_currentHero->m_army.m_armies[slot], 1));
-        } else if (g_unnamed6aa9d8 != 0) {
+        } else if (g_castleOpen != 0) {
             if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE)
-                sprintf(g_text, g_heroScreenArmySlotFormat,
+                sprintf(g_text, g_heroScreen[10],
                         getArmyName(g_currentHero->m_army.m_armies[slot], 1));
             else
-                strcpy(g_text, g_emptyArtifactRolloverText);
+                strcpy(g_text, g_heroScreen[11]);
         } else if (g_currentHero->m_army.m_armies[slot] == CREATURE_NONE) {
             if (g_heroScreenArmyStripLive)
-                sprintf(g_text, g_heroScreenArmyMoveFormat,
+                sprintf(g_text, g_heroScreen[20],
                         getArmyName(g_currentHero->m_army.m_armies[
                                         g_heroScreenArmySlot],
                                     2));
             else
-                sprintf(g_text, g_heroScreenArmySlotIdleFormat,
+                sprintf(g_text, g_heroScreen[12],
                         getArmyName(g_currentHero->m_army.m_armies[
                                         g_heroScreenArmySlot],
                                     2));
         } else if (g_currentHero->m_army.m_armies[slot]
                    == g_currentHero->m_army.m_armies[g_heroScreenArmySlot]) {
-            sprintf(g_text, g_heroScreenArmyMergeFormat,
+            sprintf(g_text, g_heroScreen[19],
                     getArmyName(g_currentHero->m_army.m_armies[slot], 2));
         } else {
-            sprintf(g_text, g_heroScreenArmySwapFormat,
+            sprintf(g_text, g_heroScreen[13],
                     getArmyName(g_currentHero->m_army.m_armies[
                                     g_heroScreenArmySlot],
                                 1),
@@ -2647,52 +2655,52 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
     case WIDGET_6B_ID:
     case WIDGET_76_ID:
     case WIDGET_8B_ID:
-        strcpy(g_text, g_heroScreenText27);
+        strcpy(g_text, g_heroScreen[27]);
         break;
 
     case WIDGET_6C_ID:
     case WIDGET_70_ID:
     case WIDGET_77_ID:
-        strcpy(g_text, g_heroScreenText9);
+        strcpy(g_text, g_heroScreen[9]);
         break;
 
     case WIDGET_6D_ID:
     case WIDGET_71_ID:
     case WIDGET_78_ID:
-        strcpy(g_text, g_heroScreenText22);
+        strcpy(g_text, g_heroScreen[22]);
         break;
 
     case WIDGET_7A_ID:
-        strcpy(g_text, g_heroScreenText23);
+        strcpy(g_text, g_heroScreen[23]);
         break;
 
     case WIDGET_7C_ID:
-        strcpy(g_text, g_heroScreenText24);
+        strcpy(g_text, g_heroScreen[24]);
         break;
 
     case FORMATION_ID:
         if (g_currentHero->m_formation & HERO_FORMATION_GROUPED)
-            strcpy(g_text, g_heroScreenFormationGroupedText);
+            strcpy(g_text, g_heroScreen[25]);
         else
-            strcpy(g_text, g_heroScreenFormationSpreadText);
+            strcpy(g_text, g_heroScreen[26]);
         break;
 
     case MIXED_ARMY_ID:
-        sprintf(g_text, g_heroScreenArmyMoveFormat,
-                g_generalText->getText(GENERAL_TEXT_MIXED_ARMY));
+        sprintf(g_text, g_heroScreen[20],
+                g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL));
         break;
 
     case WIDGET_80_ID:
-        strcpy(g_text, g_heroScreenText0);
+        strcpy(g_text, g_heroScreen[0]);
         break;
 
     case HERO_NAME_ID:
-        sprintf(g_text, g_heroScreenHeroNameFormat,
+        sprintf(g_text, g_heroScreen[16],
                 g_currentHero->m_name, g_currentHero->heroFn004D8F70());
         break;
 
     case WIDGET_7800_ID:
-        strcpy(g_text, g_heroScreenText17);
+        strcpy(g_text, g_heroScreen[17]);
         break;
 
     default: {
@@ -2712,8 +2720,8 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
         }
         if (nth < g_currentHero->m_skillCount) {
             int skill = g_currentHero->getNthSS(nth);
-            sprintf(g_text, g_heroScreenSecondarySkillFormat,
-                    g_skillMasteryNames[g_currentHero->m_skillLevel[skill] - 1],
+            sprintf(g_text, g_heroScreen[21],
+                    g_secondarySkillLevels[g_currentHero->m_skillLevel[skill] - 1],
                     g_sSkillTraits[skill].m_name);
         } else {
             g_text[0] = 0;
@@ -2724,6 +2732,143 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 
     heroMessageUpdate(g_text);
 }
+
+// DC hero.cpp:2726 handle_artifact_click; Complete adds combination arms.
+// Both combination refreshes use the canonical updateAllSlots loop. Together
+// with removing the three old call-site pins: WindowHandler 74.3672 ->
+// 77.2022%. Helper recovery alone: 77.5329%; unpin alone: 76.4950%.
+// Restoring DC 2730..2765's inspection-before-drag branch order raises the
+// caller to 80.3952%; nesting the occupied-slot guard is byte-identical.
+// DC 2767..2786's empty-slot-first order further gives 80.8337%. Inspection
+// else-chain and positive combined/nested drag guards are score-flat; the
+// combined guard follows both tests attributed to DC 2765.
+// Dreamcast procedure: dc 0xcdf30.
+static void handleArtifactClick(long code, unsigned char rightMouse)
+{
+    // DC locals: old_artifact, spell_book_window.
+    long slot = code;
+    type_artifact oldArtifact = g_currentHero->getArtifact(TArtifactSlot(slot));
+
+    if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
+        if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
+            if (rightMouse) {
+                if (g_game->m_gameVersion >= 2) {
+                    // Retail +0x95d..+0x963 loads both indices before the test.
+                    const TArtifactTraits& traits =
+                        g_artifactTraits[oldArtifact.m_artifactId];
+                    int comboType =
+                        traits.m_comboType;
+                    int targetCombo =
+                        traits.m_targetCombo;
+                    if (comboType != -1) {
+                        if (g_currentHero->heroFn004D9B30(
+                                oldArtifact.m_artifactId)
+                            == DIALOG_RETURN_ACCEPT) {
+                            g_currentHero->heroFn004DC070(slot);
+                            g_currentHero->updateStats();
+                            g_heroScreenWindow->updateAllSlots();
+                            g_heroScreenWindow->drawWindow(1, 0xffff0001,
+                                                           0xffff);
+                        }
+                        return;
+                    }
+                    if (targetCombo != -1) {
+                        std::bitset<144> missing =
+                            g_combinationArtifacts[targetCombo].m_components;
+                        for (int k = 0; k < 19; k++) {
+                            int worn =
+                                g_currentHero->getArtifact(TArtifactSlot(k)).m_artifactId;
+                            if (worn != ARTIFACT_NONE)
+                                missing[worn] = false;
+                        }
+                        // MEASURED NEGATIVE THREE WAYS, do not retry. Retail
+                        // CALLS three bitset members in this block that our CL
+                        // expands: `bitset<144>::operator[]` (0x4cef80, the
+                        // 18-byte reference ctor), `reference::operator=`
+                        // (0x48e9f0, which carries set()'s body inlined) and
+                        // `any()` (0x4e64c0) - our compile instead calls
+                        // `set(size_t,bool)` once and expands any().
+                        // `#pragma inline_depth(0)` reproduces each of those
+                        // calls and every variant LOSES:
+                        //   pin on the whole `if (!missing.any())` statement
+                        //       74.4733 -> 70.80 (recorded 2026-08-20)
+                        //   pin on a HOISTED `bool = !missing.any();` alone,
+                        //       so the guarded body is out of the pin's reach
+                        //       74.4733 -> 70.2438 (2026-08-20)
+                        //   pin on `missing[worn] = false;` alone
+                        //       74.4733 -> 69.5800
+                        //   both site pins together
+                        //       74.4733 -> 70.3412
+                        // So the hoist DOES isolate the pin - the earlier
+                        // "the pin also de-inlines the guarded body" reading is
+                        // wrong - and imposing retail's calls still costs four
+                        // points. The cross-jumping defect below is upstream of
+                        // all of them.
+                        if (!missing.any()) {
+                            if (g_currentHero->heroFn004D9CC0(
+                                    oldArtifact.m_artifactId)
+                                == DIALOG_RETURN_ACCEPT) {
+                                g_currentHero->heroFn004DBF30(targetCombo,
+                                                               slot);
+                                g_currentHero->updateStats();
+                                g_heroScreenWindow->updateAllSlots();
+                                g_heroScreenWindow->drawWindow(
+                                    1, 0xffff0001, 0xffff);
+                            }
+                            return;
+                        }
+                    }
+                }
+                g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+            } else if (slot == hero::EQUIPPED_SLOT_SPELLBOOK) {
+                TSpellbookWindow spellBookWindow(
+                    *g_currentHero, 0, TSpellbookWindow::eContextNeither,
+                    g_currentHero->getSpecialTerrain());
+                spellBookWindow.doModal(0);
+            } else if (slot == hero::EQUIPPED_SLOT_WAR_MACHINE_4) {
+                normalDialog(g_generalText->getText(GENERAL_TEXT_CATAPULT_MUST_BE_EQUIPPED), 1, -1, -1, 8, 3,
+                             -1, 0, -1, 0, -1, 0);
+            } else if (g_currentPlayer->isLocalHuman()) {
+                g_heroScreenDraggedArtifact = oldArtifact;
+                g_currentHero->removeArtifact(slot);
+                g_currentHero->updateStats();
+                g_heroScreenWindow->updateAllSlots();
+                g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+                g_mouseManager->setPointer(
+                    g_heroScreenDraggedArtifact.m_artifactId,
+                    mouseManager::ARTIFACT_SET);
+            }
+        }
+    } else if (!rightMouse && g_currentHero->heroFn004E2840(
+                g_heroScreenDraggedArtifact.m_artifactId, slot)) {
+        if (oldArtifact.m_artifactId == ARTIFACT_NONE) {
+            g_currentHero->equipArtifact(
+                &g_heroScreenDraggedArtifact, slot);
+            if (g_game->m_gameVersion >= 2)
+                g_currentHero->heroFn004DC100(slot);
+            g_currentHero->updateStats();
+            g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
+            g_heroScreenWindow->updateAllSlots();
+            g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+            g_mouseManager->setPointer(0,
+                                       mouseManager::DEFAULT_SET);
+        } else {
+            g_currentHero->removeArtifact(slot);
+            g_currentHero->equipArtifact(
+                &g_heroScreenDraggedArtifact, slot);
+            if (g_game->m_gameVersion >= 2)
+                g_currentHero->heroFn004DC100(slot);
+            g_currentHero->updateStats();
+            g_heroScreenDraggedArtifact = oldArtifact;
+            g_heroScreenWindow->updateAllSlots();
+            g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+            g_mouseManager->setPointer(
+                g_heroScreenDraggedArtifact.m_artifactId,
+                mouseManager::ARTIFACT_SET);
+        }
+    }
+}
+
 
 VA(0x004dbd90, 0x1E)  // dc 0xce140
 long hero::getLastBackpackIndex() const
@@ -2760,6 +2905,8 @@ void hero::rotateBackpackRight()
 }
 
 VA(0x004dbe80, 0xA4)
+// Complete's shared combination predicate: proxy assignment keeps this retained
+// body exact while recovering set/any boundaries in its expanded callers.
 unsigned char hero::heroFn004DBE80(int combination)
 {
     std::bitset<144> missingComponents =
@@ -2767,7 +2914,7 @@ unsigned char hero::heroFn004DBE80(int combination)
     for (int slot = 0; slot < 19; slot++) {
         int artifactId = m_equipped[slot].m_artifactId;
         if (artifactId != ARTIFACT_NONE)
-            missingComponents.reset(artifactId);
+            missingComponents[artifactId] = false;
     }
     return !missingComponents.any();
 }
@@ -2849,58 +2996,43 @@ void hero::heroFn004DC070(long slot)
 // 2 - past what /Ob2 expands here. All three sites are written that way
 // and all three throws collapse into retail's calls.
 
-// Residual (87.3%): the esi/edi/ebx role permutation plus the prologue's
-// unwind-table addend, which is a reloc addend and not a state count. The
-// DC roster has NO row for this function at all, so its call census
-// cannot be consulted.
+// Complete-only combination prompt. Calling the canonical predicate with its
+// proxy-assignment body removes both pins and restores all nine retail calls,
+// including the third bitset<12>::_Xran: 87.2712 -> 96.1808%. The predicate's
+// retained body stays exact. Its reset/none spelling gives 83.5593% here;
+// direct set(false) gives 76.1977%. Remaining differences are in the caller.
+// Naming the equipped artifact ID and indexing traits directly gives 97.4237%,
+// preserving all 25 retail blocks and nine calls. An artifact reference or
+// getArtifact() leaves the prior 96.1808%; copying the traits gives 92.7175%,
+// and reading the artifact before the player gives 87.7345%.
+// Player-pointer ownership (with either equipped-field or getArtifact lookup)
+// is flat at 97.4237%. Binding the combination bitset instead gives 83.2994%;
+// repeating the global player lookup gives 72.5198%. Neither recovers the
+// entry register choices or first bitset-write scheduling.
 VA(0x004dc100, 0x217)  // retail-only, hero member, ret 4
 void hero::heroFn004DC100(long slot)
 {
     playerData& player = g_game->m_players[m_owner];
-    const TArtifactTraits& traits =
-        g_artifactTraits[m_equipped[slot].m_artifactId];
+    int artifactId = m_equipped[slot].m_artifactId;
 
-    if (traits.m_comboType != -1) {
-        player.m_assembledCombinations[traits.m_comboType] = true;
+    if (g_artifactTraits[artifactId].m_comboType != -1) {
+        player.m_assembledCombinations[g_artifactTraits[artifactId].m_comboType] = true;
         return;
     }
 
-    int targetCombo = traits.m_targetCombo;
+    int targetCombo = g_artifactTraits[artifactId].m_targetCombo;
     if (targetCombo == -1)
         return;
     if (player.m_assembledCombinations[targetCombo])
         return;
 
-    std::bitset<144> missing =
-        g_combinationArtifacts[targetCombo].m_components;
-    for (int i = 0; i < 19; i++) {
-        int artifactId = m_equipped[i].m_artifactId;
-        if (artifactId != ARTIFACT_NONE)
-#pragma inline_depth(0)
-            missing.set(artifactId, false);
-#pragma inline_depth()
-    }
-#pragma inline_depth(0)
-    if (missing.any())
-#pragma inline_depth()
+    if (!heroFn004DBE80(targetCombo))
         return;
 
-    // THE ONE SITE OF THE THREE THAT STILL EXPANDS (residual 87.27%), and
-    // it is the budget being handed downstream, not a wrong spelling.
-    // Retail emits `cmp edi,0xc / jb / call bitset<12>::_Xran` at fn+0x12e;
-    // we still build the `invalid bitset<N> position` string at [ebp-0x40]
-    // and the out_of_range at [ebp-0x70] here, which is the whole 44-byte
-    // frame surplus (`sub esp,0x64` against retail's 0x38). Fixing the two
-    // EARLIER sites is what freed the budget this one then spends - the
-    // A9 sequential-charge behaviour, observed from the receiving end.
-    // <bitset> offers no rung deeper than `operator[] -> operator= ->
-    // set -> _Xran` to push it back out: `reset(_P)` and `flip(_P)` sit at
-    // the same depth, and `at(_P)` emits TWO bounds checks where retail
-    // has one.
     player.m_assembledCombinations[targetCombo] = true;
 
     int assembled = g_combinationArtifacts[targetCombo].m_artifactId;
-    std::string prompt = formatString(g_generalText->getText(733),
+    std::string prompt = formatString(g_generalText->getText(GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT),
                                        g_artifactTraits[assembled].m_name);
     normalDialog(prompt.c_str(), 2, -1, -1, 8, assembled, -1, 0, -1, 0,
                  -1, 0);
@@ -2927,150 +3059,125 @@ void hero::heroFn004DC100(long slot)
 VA(0x004dc320, 0x793)  // anchor-caller (armyGroup::get_morale_description), dc 0xce260
 std::string hero::getMoraleDescription() const
 {
-    int morale = 0;
+    // DC proves the text accessor, HasBuilding call and tracked_bonus local.
+    // Separate Grail checks follow DC 2989's nested scopes and recover the
+    // retail append/temporary-cleanup decisions: 100% without an inline pin.
+    // Flattening those checks to && gives 91.5304%; direct player indexing
+    // gives 90.5674% with nested checks (96.28% with &&).
+    // DC local: tracked_bonus.
+    int trackedBonus = 0;
     std::string result;
 
     if (m_flags & 0x800000) {
-        result = g_generalText->getText(438);
-        morale = 500;
+        result = g_generalText->getText(GENERAL_TEXT_CHEAT_MAXIMUM);
+        trackedBonus = 500;
     }
 
     if (this->isWieldingArtifact(0x6c)) {
-        result += g_moraleTexts[26];
-        morale += 3;
+        result += g_moraleInfo[26];
+        trackedBonus += 3;
     }
     if (this->isWieldingArtifact(0x2d)) {
-        result += g_moraleTexts[4];
-        morale++;
+        result += g_moraleInfo[4];
+        trackedBonus++;
     }
     if (this->isWieldingArtifact(0x31)) {
-        result += g_moraleTexts[5];
-        morale++;
+        result += g_moraleInfo[5];
+        trackedBonus++;
     }
     if (this->isWieldingArtifact(0x32)) {
-        result += g_moraleTexts[6];
-        morale++;
+        result += g_moraleInfo[6];
+        trackedBonus++;
     }
     if (this->isWieldingArtifact(0x33)) {
-        result += g_moraleTexts[7];
-        morale++;
+        result += g_moraleInfo[7];
+        trackedBonus++;
     }
 
     if (m_flags & 0x2000000) {
-        result += g_moraleTexts[8];
-        morale++;
+        result += g_moraleInfo[8];
+        trackedBonus++;
     }
     if (m_flags & 0x4) {
-        result += g_moraleTexts[9];
-        morale++;
+        result += g_moraleInfo[9];
+        trackedBonus++;
     }
     if (m_flags & 0x80) {
-        result += g_moraleTexts[10];
-        morale++;
+        result += g_moraleInfo[10];
+        trackedBonus++;
     }
     if (m_flags & 0x100) {
-        result += g_moraleTexts[11];
-        morale++;
+        result += g_moraleInfo[11];
+        trackedBonus++;
     }
     if (m_flags & 0x4000000) {
-        result += g_moraleTexts[12];
-        morale += 2;
+        result += g_moraleInfo[12];
+        trackedBonus += 2;
     }
     if (m_flags & 0x400) {
-        result += g_moraleTexts[13];
-        morale--;
+        result += g_moraleInfo[13];
+        trackedBonus--;
     }
     if (m_flags & 0x200) {
-        result += g_moraleTexts[14];
-        morale--;
+        result += g_moraleInfo[14];
+        trackedBonus--;
     }
     if (m_flags & 0x40) {
-        result += g_moraleTexts[15];
-        morale++;
+        result += g_moraleInfo[15];
+        trackedBonus++;
     }
     if (m_flags & 0x800) {
-        result += g_moraleTexts[16];
-        morale--;
+        result += g_moraleInfo[16];
+        trackedBonus--;
     }
     if (m_flags & 0x10000) {
-        result += g_moraleTexts[17];
-        morale++;
+        result += g_moraleInfo[17];
+        trackedBonus++;
     }
     if (m_flags & 0x4000) {
-        result += g_moraleTexts[18];
-        morale++;
+        result += g_moraleInfo[18];
+        trackedBonus++;
     }
     if (m_flags & 0x200000) {
-        // Residual (91.65%) - MEASURED, BLOCKED BY THE PIN FLOOR
-        // (polish 26).  Retail CALLS append(const char*,size_type) at THIS
-        // rung too (0x4dc71b `repne scasb` + call, a 0x20-byte arm against
-        // our 0x73-byte expansion); the fn-level census is retail 18
-        // PBDI-append calls + 3 _Grow/_Xlen/_Eos expansions against our 17
-        // + 4, and this is the surplus expansion.  Spelling it
-        // `const char* t = gMoraleTexts[19]; result.append(t, strlen(t));`
-        // under a statement `inline_depth(0)` moves the first divergence
-        // from +0x408 to +0x551 and aligns two of the three _Grow sites
-        // exactly - but the freed budget then over-inlines the Grail and
-        // negative-modifier `+=` sites below, so the pin only pays PAIRED
-        // with pins on those two spelled as
-        // `result.append(format_string(...), 0, std::string::npos)`:
-        // 91.65 -> 89.97 (this rung alone) -> 93.21 (+ both `+=` pins)
-        // -> 93.91 (+ the two tail sites respelled as append).  All three
-        // pins are needed together; the same three call-site spellings
-        // WITHOUT the pins score 76.26.  Not shippable while the
-        // cleanliness ratchet holds inline-depth pins at 355 falling-only.
-        // Also rejected: a named `std::string grailText` local for the
-        // Grail temp gives a PERFECT skeleton (109/110 blocks, 0 missing,
-        // 88 exact) and only 92.16 - the extra frame slot costs the tail's
-        // register allocation.
-        result += g_moraleTexts[19];
-        morale -= 3;
+        result += g_moraleInfo[19];
+        trackedBonus -= 3;
     }
 
     if (m_skillLevel[eSecSkillLeadership] == eMasteryBasic) {
-        // Retail CALLS append(const char*, size_type) at THIS rung only -
-        // its `repne scasb` strlen + `call` sit at fn+0x454 where our CL
-        // expanded the append (the extra _Xlen/_Grow/_Eos exposure) - and
-        // expands the Advanced and Expert rungs exactly as we do. The
-        // TownQuickView lever: spell the site at the depth retail stops
-        // at, then the statement pin imposes exactly retail's call.
-        const char* basicText = g_moraleTexts[20];
-        size_t basicTextLen = strlen(basicText);
-#pragma inline_depth(0)
-        result.append(basicText, basicTextLen);
-#pragma inline_depth()
-        morale++;
+        result += g_moraleInfo[20];
+        trackedBonus++;
     }
     if (m_skillLevel[eSecSkillLeadership] == eMasteryAdvanced) {
-        result += g_moraleTexts[21];
-        morale += 2;
+        result += g_moraleInfo[21];
+        trackedBonus += 2;
     }
     if (m_skillLevel[eSecSkillLeadership] == eMasteryExpert) {
-        result += g_moraleTexts[22];
-        morale += 3;
+        result += g_moraleInfo[22];
+        trackedBonus += 3;
     }
 
     if (m_owner >= 0) {
         playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
-            if ((ownedTown->m_active & g_bitNumber[HOLY_GRAIL_ID]) != 0
-                && ownedTown->m_type == TOWN_CASTLE) {
-                result += formatString(
-                    "\n%s +2",
-                    getBuildingName(TOWN_CASTLE, HOLY_GRAIL_ID));
-                morale += 2;
-                break;
+            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true)) {
+                if (ownedTown->m_type == TOWN_CASTLE) {
+                    result += formatString(
+                        "\n%s +2",
+                        getBuildingName(TOWN_CASTLE, HOLY_GRAIL_ID));
+                    trackedBonus += 2;
+                    break;
+                }
             }
         }
     }
 
     int otherModifier =
-        this->getMorale(0, 0, 0) - morale;
+        this->getMorale(0, 0, 0) - trackedBonus;
     if (otherModifier < 0)
-        result += formatString(g_moraleTexts[24], abs(otherModifier));
+        result += formatString(g_moraleInfo[24], abs(otherModifier));
     else if (otherModifier > 0)
-        result += formatString(g_moraleTexts[25], abs(otherModifier));
+        result += formatString(g_moraleInfo[25], abs(otherModifier));
 
     return result;
 }
@@ -3107,77 +3214,73 @@ std::string hero::getLuckDescription() const
     std::string result;
 
     if (m_flags & 0x400000) {
-        result = g_generalText->getText(438);
+        result = g_generalText->getText(GENERAL_TEXT_CHEAT_MAXIMUM);
         luck = 500;
     }
 
     if (this->isWieldingArtifact(0x6c)) {
-        result += g_luckTexts[21];
+        result += g_luckInfo[21];
         luck += 3;
     }
     if (this->isWieldingArtifact(0x2d)) {
-        result += g_luckTexts[4];
+        result += g_luckInfo[4];
         luck++;
     }
     if (this->isWieldingArtifact(0x2e)) {
-        result += g_luckTexts[5];
+        result += g_luckInfo[5];
         luck++;
     }
     if (this->isWieldingArtifact(0x2f)) {
-        result += g_luckTexts[6];
+        result += g_luckInfo[6];
         luck++;
     }
     if (this->isWieldingArtifact(0x30)) {
-        result += g_luckTexts[7];
+        result += g_luckInfo[7];
         luck++;
     }
 
     if (m_flags & 0x8) {
-        result += g_luckTexts[8];
+        result += g_luckInfo[8];
         luck += 2;
     }
     if (m_flags & 0x10) {
-        result += g_luckTexts[9];
+        result += g_luckInfo[9];
         luck++;
     }
     if (m_flags & 0x20) {
-        result += formatString(g_luckTexts[10], "-1");
+        result += formatString(g_luckInfo[10], "-1");
         luck--;
     }
     if (m_flags & 0x8000000) {
-        result += formatString(g_luckTexts[10], "+1");
+        result += formatString(g_luckInfo[10], "+1");
         luck++;
     }
     if (m_flags & 0x10000000) {
-        result += formatString(g_luckTexts[10], "+2");
+        result += formatString(g_luckInfo[10], "+2");
         luck += 2;
     }
     if (m_flags & 0x20000000) {
-        result += formatString(g_luckTexts[10], "+3");
+        result += formatString(g_luckInfo[10], "+3");
         luck += 3;
     }
     if (m_flags & 0x1000) {
-        result += g_luckTexts[11];
+        result += g_luckInfo[11];
         luck -= 2;
     }
     if (m_flags & 0x2000) {
-        result += g_luckTexts[12];
+        result += g_luckInfo[12];
         luck++;
     }
     if (m_flags & 0x8000) {
-        result += g_luckTexts[13];
+        result += g_luckInfo[13];
         luck++;
     }
     if (m_flags & 0x10000) {
-        // Retail CALLS append(const char*, size_type) at THIS rung -
-        // four `repne scasb`+call rungs end at fn+0x486 and [14] is the
-        // last of them - then expands [15],[16],[17] as we do. Same
-        // TownQuickView lever as the morale twin's [20] rung.
-        const char* mistText = g_luckTexts[14];
+        // Retail calls append(const char*, size_type) at this rung. The
+        // recovered caller state now keeps that boundary without a pin.
+        const char* mistText = g_luckInfo[14];
         size_t mistTextLen = strlen(mistText);
-#pragma inline_depth(0)
         result.append(mistText, mistTextLen);
-#pragma inline_depth()
         luck++;
     }
 
@@ -3194,15 +3297,15 @@ std::string hero::getLuckDescription() const
         // the same pin reaches 95.45 (+1.74 over the banked max).
         // Three new pins; not shippable while the ratchet holds pins at
         // 355 falling-only.
-        result += g_luckTexts[15];
+        result += g_luckInfo[15];
         luck++;
     }
     if (m_skillLevel[eSecSkillLuck] == eMasteryAdvanced) {
-        result += g_luckTexts[16];
+        result += g_luckInfo[16];
         luck += 2;
     }
     if (m_skillLevel[eSecSkillLuck] == eMasteryExpert) {
-        result += g_luckTexts[17];
+        result += g_luckInfo[17];
         luck += 3;
     }
 
@@ -3223,11 +3326,61 @@ std::string hero::getLuckDescription() const
 
     int otherModifier = this->getLuck(0, 0, 0) - luck;
     if (otherModifier < 0)
-        result += formatString(g_luckTexts[19], abs(otherModifier));
+        result += formatString(g_luckInfo[19], abs(otherModifier));
     else if (otherModifier > 0)
-        result += formatString(g_luckTexts[20], abs(otherModifier));
+        result += formatString(g_luckInfo[20], abs(otherModifier));
 
     return result;
+}
+
+// DC hero.cpp:3181..3226: inspection precedes dragging, both refreshes
+// call update_all_slots, and get_backpack_error initializes std::string msg.
+// Together these recover WindowHandler 80.8337 -> 88.6383%; order alone
+// gives 87.9454%, helpers + order without the named msg gives 88.5720%.
+// Dreamcast procedure: dc 0xcea3c.
+static void handleBackpackClick(long code, unsigned char rightMouse)
+{
+    // DC locals: old_artifact and msg.
+    long index = code;
+    type_artifact oldArtifact = g_currentHero->getBackpack(index);
+
+    if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
+        if (oldArtifact.m_artifactId == ARTIFACT_NONE)
+            return;
+
+        if (rightMouse) {
+            g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+            return;
+        }
+
+        if (!g_currentPlayer->isLocalHuman())
+            return;
+        g_heroScreenDraggedArtifact = oldArtifact;
+        g_currentHero->removeBackpackArtifact(static_cast<short>(index));
+        updateBackpack();
+        g_heroScreenWindow->updateAllSlots();
+        g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+        g_mouseManager->setPointer(
+            g_heroScreenDraggedArtifact.m_artifactId,
+            mouseManager::ARTIFACT_SET);
+    } else {
+        if (rightMouse)
+            return;
+        if (!g_currentHero->addToBackpack(
+                &g_heroScreenDraggedArtifact, index)) {
+            std::string msg = g_currentHero->getBackpackError(
+                g_heroScreenDraggedArtifact.m_artifactId);
+            normalDialog(msg.c_str(),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        updateBackpack();
+        g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
+        g_heroScreenWindow->updateAllSlots();
+        g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
+        g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+        return;
+    }
 }
 
 // E:\gamedcs\hero.cpp:3229
@@ -3248,209 +3401,8 @@ int THeroScreenWindow::exitDialog(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-static void handleArtifactClick(long code, unsigned char rightMouse)
-{
-    long slot = code;
-    type_artifact record = g_currentHero->getArtifact(TArtifactSlot(slot));
 
-    if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE) {
-        if (rightMouse)
-            return;
-        // Was pinned per SITE, not per function: `predict-inline` reported
-        // HeroFn_004E2840 base x0 vs retail x1 inside WindowHandler, i.e.
-        // retail CALLS 0x4e2840 here where our CL expanded it (this helper
-        // is itself a single-call-site static that /Ob2 folds into
-        // WindowHandler, so the budget reaches through). With two call
-        // sites in the compiland the expansion does not happen, and this
-        // pin and update_slot's sibling are both byte-flat, so both went
-        // (2026-09-06, polish lane 50).
-        if (!g_currentHero->heroFn004E2840(
-                g_heroScreenDraggedArtifact.m_artifactId, slot))
-            return;
-        if (record.m_artifactId != ARTIFACT_NONE) {
-            g_currentHero->removeArtifact(slot);
-            g_currentHero->equipArtifact(
-                &g_heroScreenDraggedArtifact, slot);
-            if (g_game->m_f1f698 >= 2)
-                g_currentHero->heroFn004DC100(slot);
-            g_currentHero->updateStats();
-            g_heroScreenDraggedArtifact = record;
-#pragma inline_depth(0)
-            g_heroScreenWindow->updateAllSlots();
-#pragma inline_depth()
-            g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
-            g_mouseManager->setPointer(
-                g_heroScreenDraggedArtifact.m_artifactId,
-                mouseManager::ARTIFACT_SET);
-        } else {
-            g_currentHero->equipArtifact(
-                &g_heroScreenDraggedArtifact, slot);
-            if (g_game->m_f1f698 >= 2)
-                g_currentHero->heroFn004DC100(slot);
-            g_currentHero->updateStats();
-            g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
-#pragma inline_depth(0)
-            g_heroScreenWindow->updateAllSlots();
-#pragma inline_depth()
-            g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
-            g_mouseManager->setPointer(0,
-                                       mouseManager::DEFAULT_SET);
-        }
-        return;
-    }
 
-    if (record.m_artifactId == ARTIFACT_NONE)
-        return;
-
-    if (rightMouse) {
-        if (g_game->m_f1f698 >= 2) {
-            if (g_artifactTraits[record.m_artifactId].m_comboType
-                != -1) {
-                if (g_currentHero->heroFn004D9B30(
-                        record.m_artifactId)
-                    == DIALOG_RETURN_ACCEPT) {
-                    g_currentHero->heroFn004DC070(slot);
-                    g_currentHero->updateStats();
-                    for (long i = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
-                         i < THeroScreenWindow::ARTIFACT_SLOT_COUNT; i++)
-                        g_heroScreenWindow->updateSlot(TArtifactSlot(i));
-                    g_heroScreenWindow->drawWindow(1, 0xffff0001,
-                                                   0xffff);
-                }
-                return;
-            }
-            int targetCombo =
-                g_artifactTraits[record.m_artifactId].m_targetCombo;
-            if (targetCombo != -1) {
-                std::bitset<144> missing =
-                    g_combinationArtifacts[targetCombo].m_components;
-                for (int k = 0; k < 19; k++) {
-                    int worn =
-                        g_currentHero->getArtifact(TArtifactSlot(k)).m_artifactId;
-                    if (worn != ARTIFACT_NONE)
-                        missing[worn] = false;
-                }
-                // MEASURED NEGATIVE THREE WAYS, do not retry. Retail
-                // CALLS three bitset members in this block that our CL
-                // expands: `bitset<144>::operator[]` (0x4cef80, the
-                // 18-byte reference ctor), `reference::operator=`
-                // (0x48e9f0, which carries set()'s body inlined) and
-                // `any()` (0x4e64c0) - our compile instead calls
-                // `set(size_t,bool)` once and expands any().
-                // `#pragma inline_depth(0)` reproduces each of those
-                // calls and every variant LOSES:
-                //   pin on the whole `if (!missing.any())` statement
-                //       74.4733 -> 70.80 (recorded 2026-08-20)
-                //   pin on a HOISTED `bool = !missing.any();` alone,
-                //       so the guarded body is out of the pin's reach
-                //       74.4733 -> 70.2438 (2026-08-20)
-                //   pin on `missing[worn] = false;` alone
-                //       74.4733 -> 69.5800
-                //   both site pins together
-                //       74.4733 -> 70.3412
-                // So the hoist DOES isolate the pin - the earlier
-                // "the pin also de-inlines the guarded body" reading is
-                // wrong - and imposing retail's calls still costs four
-                // points. The cross-jumping defect below is upstream of
-                // all of them.
-                if (!missing.any()) {
-                    if (g_currentHero->heroFn004D9CC0(
-                            record.m_artifactId)
-                        == DIALOG_RETURN_ACCEPT) {
-                        g_currentHero->heroFn004DBF30(targetCombo,
-                                                       slot);
-                        g_currentHero->updateStats();
-                        for (long i = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
-                             i < THeroScreenWindow::ARTIFACT_SLOT_COUNT; i++)
-                            g_heroScreenWindow->updateSlot(TArtifactSlot(i));
-                        g_heroScreenWindow->drawWindow(
-                            1, 0xffff0001, 0xffff);
-                    }
-                    return;
-                }
-            }
-        }
-        g_currentHero->viewArtifact(&record, rightMouse);
-        return;
-    }
-
-    if (slot == hero::EQUIPPED_SLOT_SPELLBOOK) {
-#pragma inline_depth(0)
-        TSpellbookWindow spellbook(
-            *g_currentHero, 0, TSpellbookWindow::eContextNeither,
-            g_currentHero->getSpecialTerrain());
-#pragma inline_depth()
-        spellbook.doModal(0);
-        return;
-    }
-    if (slot == hero::EQUIPPED_SLOT_WAR_MACHINE_4) {
-        normalDialog(g_generalText->getText(313), 1, -1, -1, 8, 3,
-                     -1, 0, -1, 0, -1, 0);
-        return;
-    }
-    if (!g_currentPlayer->isLocalHuman())
-        return;
-    g_heroScreenDraggedArtifact = record;
-    g_currentHero->removeArtifact(slot);
-    g_currentHero->updateStats();
-#pragma inline_depth(0)
-    g_heroScreenWindow->updateAllSlots();
-#pragma inline_depth()
-    g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
-    g_mouseManager->setPointer(
-        g_heroScreenDraggedArtifact.m_artifactId,
-        mouseManager::ARTIFACT_SET);
-}
-
-static void handleBackpackClick(long code, unsigned char rightMouse)
-{
-    long index = code;
-    type_artifact record = g_currentHero->getBackpack(index);
-
-    if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE) {
-        if (rightMouse)
-            return;
-        if (!g_currentHero->addToBackpack(
-                &g_heroScreenDraggedArtifact, index)) {
-            normalDialog(
-                g_currentHero
-                    ->getBackpackError(
-                        g_heroScreenDraggedArtifact.m_artifactId)
-                    .c_str(),
-                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-            return;
-        }
-        updateBackpack();
-        g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
-        for (long i = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
-             i < THeroScreenWindow::ARTIFACT_SLOT_COUNT; i++)
-            g_heroScreenWindow->updateSlot(TArtifactSlot(i));
-        g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
-        g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
-        return;
-    }
-
-    if (record.m_artifactId == ARTIFACT_NONE)
-        return;
-
-    if (rightMouse) {
-        g_currentHero->viewArtifact(&record, rightMouse);
-        return;
-    }
-
-    if (!g_currentPlayer->isLocalHuman())
-        return;
-    g_heroScreenDraggedArtifact = record;
-    g_currentHero->removeBackpackArtifact(static_cast<short>(index));
-    updateBackpack();
-    for (long j = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
-         j < THeroScreenWindow::ARTIFACT_SLOT_COUNT; j++)
-        g_heroScreenWindow->updateSlot(TArtifactSlot(j));
-    g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
-    g_mouseManager->setPointer(
-        g_heroScreenDraggedArtifact.m_artifactId,
-        mouseManager::ARTIFACT_SET);
-}
 
 // E:\gamedcs\hero.cpp:3486. Retail has 5182 bytes; the DC caller has
 // 3128 and retains calls to the two click handlers and its widget-update
@@ -3664,7 +3616,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             break;
         switch (msg.m_codeY) {
         case HERO_NAME_ID:
-            normalDialog(g_generalText->getText(23), 2, -1, -1, -1, 0,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_DISMISS_HERO_PROMPT), 2, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 exitFlag = 1;
@@ -3762,7 +3714,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             {
                 if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                     break;
-                sprintf(g_text, g_generalText->getText(206),
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
                         g_currentHero->m_name, g_currentHero->m_mana,
                         g_currentHero->getMaxMana());
                 normalDialog(g_text,
@@ -3777,7 +3729,7 @@ int THeroScreenWindow::windowHandler(message& msg)
         case WIDGET_77_ID:
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
-            sprintf(g_text, g_generalText->getText(3),
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
                     g_currentHero->m_level,
                     hero::getExperience(g_currentHero->m_level + 1),
                     g_currentHero->m_experience);
@@ -3808,7 +3760,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                                : g_heroScreenArmySlot == slot) {
                     g_heroScreenArmyStripLive = 0;
                     int showDismiss = 0;
-                    if (!g_unnamed6aa9d8
+                    if (!g_castleOpen
                         && g_currentHero->m_army.getNumArmies() > 1)
                         showDismiss = 1;
                     g_game->viewArmy(g_currentHero->m_army, slot, g_currentHero,
@@ -3817,7 +3769,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                         g_heroScreenArmySlot = HERO_SCREEN_NO_ARMY_SLOT;
                     setupHeroView();
                     drawWindow(1, 0xffff0001, 0xffff);
-                } else if (!rightMouse && g_unnamed6aa9d8) {
+                } else if (!rightMouse && g_castleOpen) {
                     if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE) {
                         g_heroScreenArmySlot = slot;
                         g_currentHero->heroScreenUpdate();
@@ -3881,13 +3833,14 @@ int THeroScreenWindow::windowHandler(message& msg)
         case HERO_LOCATOR_4_ID: case HERO_LOCATOR_5_ID:
         case HERO_LOCATOR_6_ID: case HERO_LOCATOR_7_ID:
             if (rightMouse) {
-                TQuickHeroWindow quick(
+                // DC local: infowin.
+                TQuickHeroWindow infoWin(
                     g_game->getHero(localPlayer->m_heroes[
                         m_topHero + msg.m_codeY - HERO_LOCATOR_0_ID]),
                     TQuickHeroWindow::ViewAll);
-                quick.m_x = 0x1a4;
-                quick.m_y = 0x172;
-                quick.quickWindowWait();
+                infoWin.m_x = 0x1a4;
+                infoWin.m_y = 0x172;
+                infoWin.quickWindowWait();
                 break;
             }
             if (g_heroScreenArmySlot != HERO_SCREEN_NO_ARMY_SLOT)
@@ -3904,32 +3857,32 @@ int THeroScreenWindow::windowHandler(message& msg)
 
         case WIDGET_80_ID:
             if (rightMouse)
-                normalDialog(g_unnamed6a5704, 4, -1, -1, -1, 0,
+                normalDialog(g_adventureWindowHelp[4].m_rclick, 4, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             break;
         case HERO_NAME_ID:
             if (rightMouse)
-                normalDialog(g_heroScreenHeroNameHelp, 4, -1, -1, -1, 0,
+                normalDialog(g_heroScreen[28], 4, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             break;
         case WIDGET_7A_ID:
             if (rightMouse)
-                normalDialog(g_heroScreenWidget7aHelp, 4, -1, -1, -1, 0,
+                normalDialog(g_heroScreen[29], 4, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             break;
         case WIDGET_7C_ID:
             if (rightMouse)
-                normalDialog(g_heroScreenWidget7cHelp, 4, -1, -1, -1, 0,
+                normalDialog(g_heroScreen[30], 4, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             break;
         case FORMATION_ID:
             if (rightMouse)
-                normalDialog(g_heroScreenFormationHelp, 4, -1, -1, -1, 0,
+                normalDialog(g_heroScreen[31], 4, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             break;
         case MIXED_ARMY_ID:
             if (rightMouse)
-                normalDialog(g_heroScreenMixedArmyHelp, 4, -1, -1, -1, 0,
+                normalDialog(g_heroScreen[32], 4, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
             break;
 
@@ -4000,7 +3953,7 @@ THeroScreenWindow::THeroScreenWindow()
     m_field64 = m_widgets.back();
 
     const char* background =
-        g_game->m_f1f698 >= 2 ? "heroscr4.pcx" : "heroscr3.pcx";
+        g_game->m_gameVersion >= 2 ? "heroscr4.pcx" : "heroscr3.pcx";
     m_widgets.push_back(new bitmapBorder(
         0, 0, m_width, m_height, 0, background, 0x800));
     m_widgets.push_back(new textWidget(
@@ -4251,7 +4204,7 @@ THeroScreenWindow::THeroScreenWindow()
     m_widgets.push_back(new iconWidget(
         0x221, 0x12f, 0x2c, 0x2c, 0x26, "artifact.def",
         0, 0, 0, 0, 0x10));
-    if (g_game->m_f1f698 >= 2)
+    if (g_game->m_gameVersion >= 2)
         m_widgets.push_back(new iconWidget(
             0x13c, 0x11f, 0x2c, 0x2c, 0x27, "artifact.def",
             0, 0, 0, 0, 0x10));
@@ -4309,7 +4262,7 @@ THeroScreenWindow::THeroScreenWindow()
     m_widgets.push_back(new iconWidget(
         0x221, 0x12f, 0x2c, 0x2c, 0x13, "artifact.def",
         0, 0, 0, 0, 0x10));
-    if (g_game->m_f1f698 >= 2)
+    if (g_game->m_gameVersion >= 2)
         m_widgets.push_back(new iconWidget(
             0x13c, 0x11f, 0x2c, 0x2c, 0x14, "artifact.def",
             0, 0, 0, 0, 0x10));
@@ -4597,7 +4550,7 @@ void THeroScreenWindow::setupHeroView()
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
-    if (g_unnamed6aa9d8) {
+    if (g_castleOpen) {
         widgetClearStatus(0x8a, widget::WIDGET_DRAWN);
     } else {
         updateHeroLocators();
@@ -4610,7 +4563,7 @@ void THeroScreenWindow::setupHeroView()
         broadcastMessage(msg);
     }
 
-    if (!noDismiss && !g_unnamed6aa9d8 &&
+    if (!noDismiss && !g_castleOpen &&
         (localPlayer->m_numTowns || localPlayer->m_numHeroes != 1)) {
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x81,
                          widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
@@ -4716,7 +4669,7 @@ void THeroScreenWindow::setupHeroView()
             broadcastMessage(msg);
 
             strcpy(g_text,
-                   g_skillMasteryNamesBiased[g_currentHero->m_skillLevel[skill]]);
+                   g_secondarySkillLevels[g_currentHero->m_skillLevel[skill] - 1]);
             msg.m_codeY = i + 0x5f;
             broadcastMessage(msg);
 
@@ -4944,7 +4897,7 @@ void hero::transferArtifacts(hero* src)
 VA(0x004e2550, 0x2EC)  // retail-only, hero member, ret 8
 unsigned char hero::heroFn004E2550(long artifact, long slot)
 {
-    if (g_game->m_f1f698 < 2 && slot == EQUIPPED_SLOT_SOD_MISC)
+    if (g_game->m_gameVersion < 2 && slot == EQUIPPED_SLOT_SOD_MISC)
         return 0;
 
     long remaining = 1;
@@ -5340,26 +5293,21 @@ unsigned char hero::addToBackpack(const type_artifact* artifact, long slot)
 // DC's older GiveArtifact has no combination-assembly path; it proves only
 // the equipment/backpack and end-check helper boundaries here. The remaining
 // per-site inlining decision needs positive Complete/VC6 evidence.
+// Current shared-predicate recovery supersedes the flattened-loop controls
+// above: heroFn004DBE80 with proxy assignment removes the remaining set pin
+// and raises 79.8138 -> 85.8421%. Its reset/none and direct-set controls give
+// 83.2510/76.7044%; the retained predicate is exact in all three forms.
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
 unsigned char hero::giveArtifact(const type_artifact* artifact,
                                  unsigned char announce,
                                  unsigned char checkEnd)
 {
     if (equipArtifact(artifact, -1)) {
-        if (g_game->m_f1f698 >= 2) {
+        if (g_game->m_gameVersion >= 2) {
             int targetCombo =
                 g_artifactTraits[artifact->m_artifactId].m_targetCombo;
             if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {
-                std::bitset<144> missing =
-                    g_combinationArtifacts[targetCombo].m_components;
-                for (int i = 0; i < 19; i++) {
-                    int artifactId = m_equipped[i].m_artifactId;
-                    if (artifactId != ARTIFACT_NONE)
-#pragma inline_depth(0)
-                        missing.set(artifactId, false);
-#pragma inline_depth()
-                }
-                if (!missing.any()) {
+                if (heroFn004DBE80(targetCombo)) {
                     playerData& player = g_game->m_players[m_owner];
                     if (announce) {
                         if (m_owner == g_game->getLocalPlayerGamePos() &&
@@ -5367,7 +5315,7 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
                             int assembled =
                                 g_combinationArtifacts[targetCombo].m_artifactId;
                             std::string prompt = formatString(
-                                g_generalText->getText(733),
+                                g_generalText->getText(GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT),
                                 g_artifactTraits[assembled].m_name);
                             normalDialog(prompt.c_str(), 2, -1, -1, 8,
                                          assembled, -1, 0, -1, 0, -1, 0);
@@ -5425,7 +5373,7 @@ int hero::giveExperience(int howMuch, int checkForLevelUp,
                 m_experience = cap;
             if (showCapWindow && g_game->isLocalHuman(m_owner)) {
                 std::string text =
-                    formatString(g_generalText->getText(2), m_name);
+                    formatString(g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_LIMIT_FORMAT), m_name);
                 normalDialog(text.c_str(), 1, -1, -1, 0x11, 0, -1, 0, -1,
                              0, -1, 0);
             }
@@ -5493,7 +5441,7 @@ int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
         playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
-            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1) &&
+            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
                 ownedTown->m_type == TOWN_RAMPART) {
                 luck += 2;
                 break;
@@ -5539,7 +5487,7 @@ int hero::getMorale(const hero* otherHero, unsigned char onCursedGround,
         playerData& player = g_game->m_players[m_owner];
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
-            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1) &&
+            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
                 ownedTown->m_type == TOWN_CASTLE) {
                 morale += 2;
                 break;
@@ -5794,11 +5742,11 @@ float hero::getLogisticsFactor() const
 // E:\gamedcs\hero.cpp:5734.
 long hero::getNavigationFactor() const
 {
-    long movement = g_seaMovement[m_skillLevel[eSecSkillNavigation]];
+    long movement = g_moveConstants.m_sea[m_skillLevel[eSecSkillNavigation]];
     if (m_skillLevel[eSecSkillNavigation] > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillNavigation)
-            movement += m_level * g_seaMovement[0] / 20;
+            movement += m_level * g_moveConstants.m_sea[0] / 20;
     }
     return movement;
 }
@@ -5852,19 +5800,19 @@ int hero::getMobility(unsigned char seaMovement) const
 
         if (m_owner != -1)
             mobility += g_game->mineTypesOwned(m_owner, 100) *
-                        g_lighthouseMovementBonus;
+                        g_moveConstants.m_lighthouseBonus;
 
         if (isWieldingArtifact(0x7b))
-            mobility += g_lighthouseMovementBonus;
+            mobility += g_moveConstants.m_lighthouseBonus;
 
         for (unsigned int t = 0; t < g_game->m_towns.size(); t++) {
             if (g_game->m_towns[t].m_type == TOWN_CASTLE &&
-                g_game->m_towns[t].hasBuilding(SPECIAL_BUILDING_ID, 0))
-                mobility += g_lighthouseMovementBonus;
+                g_game->m_towns[t].hasBuilding(SPECIAL_BUILDING_ID, false))
+                mobility += g_moveConstants.m_lighthouseBonus;
         }
 
         if (isWieldingArtifact(0x47))
-            mobility += g_oceanGuidanceMovementBonus;
+            mobility += g_moveConstants.m_oceanGuidanceBonus;
     } else {
         int slowest = 20;
         for (int slot = 0; slot < 7; slot++) {
@@ -5885,13 +5833,13 @@ int hero::getMobility(unsigned char seaMovement) const
             }
         }
 
-        mobility = g_landMovement[slowest];
+        mobility = g_moveConstants.m_land[slowest];
         mobility = static_cast<int>(mobility * getLogisticsFactor());
 
         if (isWieldingArtifact(0x62))
-            mobility += g_bootsOfSpeedMovementBonus;
+            mobility += g_moveConstants.m_bootsOfSpeedBonus;
         if (isWieldingArtifact(0x46))
-            mobility += g_equestriansGlovesMovementBonus;
+            mobility += g_moveConstants.m_equestriansGlovesBonus;
         if (m_flags & 2)
             mobility += g_stablesMovementBonus;
     }
@@ -6248,7 +6196,7 @@ long hero::getHitPointBonus(int creatureType) const
         bonus++;
     if (isWieldingArtifact(ARTIFACT_VIAL_OF_LIFEBLOOD))
         bonus += 2;
-    if ((g_creatureTypeTraits[creatureType].m_attributes & 0x10)
+    if ((g_creatureTypeTraits[creatureType].m_attributes & creatureAlive)
         && isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))
         bonus += g_creatureTypeTraits[creatureType].m_hitPoints / 4;
     return bonus;
@@ -6269,7 +6217,7 @@ unsigned char hero::canLand() const
     }
     if (!(cell->m_flags0011 & 0x40))
         return 0;
-    if (cell->m_isTrigger && g_adventureObjectLandBlocked[cell->m_type][0])
+    if (cell->m_isTrigger && g_adventureObjectTraits[cell->m_type].m_blocksLanding)
         return 0;
     return 1;
 }

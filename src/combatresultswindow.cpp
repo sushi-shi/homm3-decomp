@@ -23,6 +23,12 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Initial contents recovered from the pinned Complete image.
+DATA(0x006701a8) const char* const g_combatResultMusic[6] = { "win battle", "losecombat", "defend castle", "retreat battle", "surrender battle", "losecastle" };
+
+DATA(0x00695014) int g_combatResult;
+
+
 // Source-private in the Dreamcast compiland. Retail's destructor is the only
 // body in this admitted subset that touches the active-window slot.
 DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
@@ -143,13 +149,13 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         g_game->getLocalPlayerGamePos());
 
     m_widgets.push_back(new textWidget(
-        0, 290, 466, 100, (*g_generalText)[408], "BigFont.fnt",
+        0, 290, 466, 100, g_generalText->getText(GENERAL_TEXT_BATTLEFIELD_CASUALTIES), "BigFont.fnt",
         font::HEADING_HIGHLIGHT, BACKGROUND_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        0, 320, 466, 100, (*g_generalText)[409], "BigFont.fnt",
+        0, 320, 466, 100, g_generalText->getText(GENERAL_TEXT_ATTACKER), "BigFont.fnt",
         font::WHITE, BACKGROUND_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
-        0, 412, 466, 100, (*g_generalText)[410], "BigFont.fnt",
+        0, 412, 466, 100, g_generalText->getText(GENERAL_TEXT_DEFENDER), "BigFont.fnt",
         font::WHITE, BACKGROUND_ID, 1, 0, 8));
 
     if (attacker) {
@@ -241,75 +247,75 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
 
     m_widgets.push_back(new textWidget(
         17, 116, 84, 20,
-        winningSide == 0 ? (*g_generalText)[411]
-                          : (*g_generalText)[412],
+        winningSide == 0 ? g_generalText->getText(GENERAL_TEXT_VICTORIOUS)
+                          : g_generalText->getText(GENERAL_TEXT_DEFEATED),
         "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         367, 116, 84, 20,
-        winningSide == 1 ? (*g_generalText)[411]
-                          : (*g_generalText)[412],
+        winningSide == 1 ? g_generalText->getText(GENERAL_TEXT_VICTORIOUS)
+                          : g_generalText->getText(GENERAL_TEXT_DEFEATED),
         "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
 
     int videoId;
     if (mySide == winningSide) {
-        if (g_combatFlag697744)
-            strcpy(g_text, (*g_generalText)[303]);
-        else if (g_combatFlag6985a3)
-            strcpy(g_text, (*g_generalText)[304]);
+        if (g_combatSurrendered)
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_ENEMY_SURRENDERED));
+        else if (g_combatRetreated)
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_ENEMY_FLED));
         else
-            strcpy(g_text, (*g_generalText)[305]);
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_VICTORY));
         if (myHero) {
             char temp[150];
-            sprintf(temp, (*g_generalText)[306],
+            sprintf(temp, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_EXPERIENCE_FORMAT),
                 myHero->m_name, experience);
             strcat(g_text, temp);
         }
         if (isSiege && myHero == defender) {
             videoId = 4;
-            g_combatResultFlag695014 = 2;
+            g_combatResult = 2;
         } else {
             videoId = 0;
-            g_combatResultFlag695014 = 0;
+            g_combatResult = 0;
         }
     } else if (myHero) {
-        if (g_combatFlag697744)
-            sprintf(g_text, (*g_generalText)[307], myHero->m_name);
-        else if (g_combatFlag6985a3)
-            sprintf(g_text, (*g_generalText)[308], myHero->m_name);
+        if (g_combatSurrendered)
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_HERO_SURRENDERED_FORMAT), myHero->m_name);
+        else if (g_combatRetreated)
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_HERO_FLED_FORMAT), myHero->m_name);
         else
-            sprintf(g_text, (*g_generalText)[309], myHero->m_name);
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_HERO_DEFEATED_FORMAT), myHero->m_name);
         if (isSiege && myHero == defender) {
             videoId = 1;
-            g_combatResultFlag695014 = 5;
-        } else if (g_combatFlag697744) {
+            g_combatResult = 5;
+        } else if (g_combatSurrendered) {
             videoId = 3;
-            g_combatResultFlag695014 = 4;
-        } else if (g_combatFlag6985a3) {
+            g_combatResult = 4;
+        } else if (g_combatRetreated) {
             videoId = 2;
-            g_combatResultFlag695014 = 3;
+            g_combatResult = 3;
         } else {
             videoId = 5;
-            g_combatResultFlag695014 = 1;
+            g_combatResult = 1;
         }
     } else {
-        if (g_combatFlag697744)
-            strcpy(g_text, (*g_generalText)[310]);
-        else if (g_combatFlag6985a3)
-            strcpy(g_text, (*g_generalText)[311]);
+        if (g_combatSurrendered)
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_ARMY_SURRENDERED));
+        else if (g_combatRetreated)
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_ARMY_FLED));
         else
-            strcpy(g_text, (*g_generalText)[312]);
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESULT_ARMY_DEFEATED));
         if (isSiege) {
             videoId = 1;
-            g_combatResultFlag695014 = 5;
-        } else if (g_combatFlag697744) {
+            g_combatResult = 5;
+        } else if (g_combatSurrendered) {
             videoId = 3;
-            g_combatResultFlag695014 = 4;
-        } else if (g_combatFlag6985a3) {
+            g_combatResult = 4;
+        } else if (g_combatRetreated) {
             videoId = 2;
-            g_combatResultFlag695014 = 3;
+            g_combatResult = 3;
         } else {
             videoId = 5;
-            g_combatResultFlag695014 = 1;
+            g_combatResult = 1;
         }
     }
 
@@ -356,7 +362,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         int rowY = lossSide ? 440 : 343;
         if (ttlDeadArmies[lossSide] <= 0)
             m_widgets.push_back(new textWidget(
-                42, rowY + 10, 384, 36, (*g_generalText)[32],
+                42, rowY + 10, 384, 36, g_generalText->getText(GENERAL_TEXT_NONE),
                 "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
         int maxToShow = min(ttlDeadArmies[lossSide], 7);
         firstX = (468 - 42 * maxToShow) / 2 + 11;
@@ -445,7 +451,7 @@ int combatResultsWindowHandler(message& msg)
 
     // DC445 calls IsPast; retail 0x471bc5 expands Get/sub/js. Preserve
     // the canonical helper, including its ElapsedSince delegation.
-    unsigned long deadline = g_dialogDeadline697784;
+    unsigned long deadline = g_dialogDeadline;
     if (deadline > 0
         && GameTime::isPast(deadline)) {
         msg.m_codeY = DIALOG_RETURN_SPLIT_ACCEPT;
@@ -457,7 +463,7 @@ int combatResultsWindowHandler(message& msg)
         g_windowManager->m_dialogReturn = msg.m_codeY;
         msg.m_codeY = widget::WIDGET_END_DIALOG;
         msg.m_codeX = widget::WIDGET_END_DIALOG;
-        g_dialogDeadline697784 = 0;
+        g_dialogDeadline = 0;
         return MESSAGE_DISPATCH_FORWARD;
     }
 

@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 #include "includes.h"
 
@@ -65,8 +66,6 @@ DATA(0x006a7458) extern THelpText g_viewArmyHelp[16];
 // luck describers (0x4f32a0 / 0x4f3540) read the SAME rows at the same
 // offsets with the same format_string/append shape, which is what fixes
 // both bases and both roles.
-DATA(0x006a57bc) extern const char* g_moraleTexts[42];
-DATA(0x006a532c) extern const char* g_luckTexts[25];
 
 // The single-stack popup: one army's whole record laid out over the
 // 298x311 CrStkPU.pcx plate. EH-bearing (`push -1 / push __ehhandler$ /
@@ -271,7 +270,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     createNameWidget(getArmyName(m_armyType, 2));
 
     int townType;
-    if (!g_game->m_f1f698 && isBaseElemental(m_armyType))
+    if (!g_game->m_gameVersion && isBaseElemental(m_armyType))
         townType = -1;
     else
         townType = g_creatureTypeTraits[m_armyType].m_townType;
@@ -364,7 +363,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     createNameWidget(traits->m_pluralName);
 
     int townType;
-    if (!g_game->m_f1f698 && isBaseElemental(armyType))
+    if (!g_game->m_gameVersion && isBaseElemental(armyType))
         townType = -1;
     else
         townType = g_creatureTypeTraits[armyType].m_townType;
@@ -482,27 +481,15 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 // spells whose effect has no turn count (Bind, Berserk, Disrupting Ray)
 // the strip gets a fixed descriptor instead of Duration.
 //
-// EXACT (2026-09-06), and the road there is worth keeping because three
-// separate levers each closed a different third of it.
-// (1) The exits are the Dreamcast's `bExitFlag` device, not gotos. The
-// dossier names the byte local (sp+0x33), zeroes it right before the
-// qualifier test (line 412), sets it in the UPGRADE and DISMISS arms'
-// accept tests and in the ACCEPT arm (511-520), and tests it ONCE after
-// the three arms (583): `if (bExitFlag) { msg->id = WIDGET; dialogReturn =
-// codeY; codeY = codeX = END_DIALOG; return 2; }` followed by the one
-// animation step behind `GameTime::IsPast(glTimers[..])` (588) and
-// `return 1`. That is the whole of the placement the earlier notes fought
-// with `check_accept:`/`accepted:`/`animate_tail:` labels and a duplicated
-// right-click animation copy: VC6 threads the constant flag into a shared
-// return-2 block, cross-jumps the dismiss arm into the upgrade arm's
-// NormalDialog+test tail by itself, and the IsPast form is what puts the
-// glTimers load ahead of the GameTime::Get call. 77.26 -> 92.57 on that one
-// accessor. Same device as townManager::Main and advManager::ProcessKeyPress.
-// (2) THE DEPTH LADDER on the seven help-text stores (polish 29):
-// `text.assign(X)` rather than `text = X`, 92.5744 -> 99.1520. The note at
-// the help arm records what else was measured there.
-// (3) The rollover arm's `spell` BOUND BY `const int&`, 99.1520 -> 100.0000
-// - see the width sweep recorded at that declaration.
+// DC lines 412/511-583 prove the shared exit flag, and 420-475 prove one
+// help-text string with seven operator= stores followed by the dialog.
+// DC text subscripts at 510/517/555-561 forward to the getText accessor
+// used here. The selected spell value survives those lookups in DC.
+// Keeping that value snapshot gives 92.5744%. The former
+// assign/const-reference spellings reached 100% through different nested
+// append decisions. The luck += still retains append where retail expands
+// it. Exit-flag declaration and upgrade-input lifetime controls are flat;
+// the source operators and their shared text lifetime stay canonical.
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
 int TViewArmyWindow::windowHandler(message& msg)
@@ -524,39 +511,39 @@ int TViewArmyWindow::windowHandler(message& msg)
             switch (helpID) {
             case g_moraleHelpIndex:
                 if (m_morale > 0) {
-                    text.assign(formatString(g_moraleTexts[3], g_moraleTexts[0]));
+                    text = formatString(g_moraleInfo[3], g_moraleInfo[0]);
                     resType = 14;
                 } else if (m_morale == 0) {
-                    text.assign(formatString(g_moraleTexts[3], g_moraleTexts[1]));
+                    text = formatString(g_moraleInfo[3], g_moraleInfo[1]);
                     resType = 15;
                 } else {
-                    text.assign(formatString(g_moraleTexts[3], g_moraleTexts[2]));
+                    text = formatString(g_moraleInfo[3], g_moraleInfo[2]);
                     resType = 16;
                 }
                 if (m_moraleHelp.length() == 0)
-                    text += g_moraleTexts[23];
+                    text += g_moraleInfo[23];
                 else
                     text += m_moraleHelp;
                 break;
             case g_luckHelpIndex:
                 if (m_luck > 0) {
-                    text.assign(formatString(g_luckTexts[3], g_luckTexts[0]));
+                    text = formatString(g_luckInfo[3], g_luckInfo[0]);
                     resType = 11;
                 } else if (m_luck == 0) {
-                    text.assign(formatString(g_luckTexts[3], g_luckTexts[1]));
+                    text = formatString(g_luckInfo[3], g_luckInfo[1]);
                     resType = 12;
                 } else {
-                    text.assign(formatString(g_luckTexts[3], g_luckTexts[2]));
+                    text = formatString(g_luckInfo[3], g_luckInfo[2]);
                     resType = 13;
                 }
                 if (m_luckHelp.length() == 0)
-                    text += g_luckTexts[18];
+                    text += g_luckInfo[18];
                 else
                     text += m_luckHelp;
                 break;
             default:
                 if (helpID >= 0)
-                    text.assign(g_viewArmyHelp[helpID].m_rclick);
+                    text = g_viewArmyHelp[helpID].m_rclick;
                 break;
             }
             if (text.length() > 0)
@@ -581,8 +568,7 @@ int TViewArmyWindow::windowHandler(message& msg)
                 }
                 if (resource >= 0)
                     amount = cost[resource];
-                normalDialog(g_generalText->getText(
-                                 GENERAL_TEXT_UPGRADE_ARMY_PROMPT),
+                normalDialog(g_generalText->getText(GENERAL_TEXT_UPGRADE_ARMY_PROMPT),
                              2, -1, -1, 6, cost[6], resource, amount,
                              -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
@@ -590,8 +576,7 @@ int TViewArmyWindow::windowHandler(message& msg)
                 break;
             }
             case DISMISS_ID:
-                normalDialog(g_generalText->getText(
-                                 GENERAL_TEXT_DISMISS_ARMY_PROMPT),
+                normalDialog(g_generalText->getText(GENERAL_TEXT_DISMISS_ARMY_PROMPT),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
                     exitFlag = 1;
@@ -604,7 +589,7 @@ int TViewArmyWindow::windowHandler(message& msg)
     } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         int hoverID = findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID != g_lastViewArmyHoverId) {
-            const char* rollover = g_emptyRolloverText;
+            const char* rollover = "";
             g_lastViewArmyHoverId = hoverID;
             if (hoverID != -1) {
                 g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
@@ -613,33 +598,26 @@ int TViewArmyWindow::windowHandler(message& msg)
                     if (hoverID >= AFFECTING_SPELLS_0_ID
                         && hoverID <= AFFECTING_SPELLS_2_ID
                         && m_influence[hoverID - AFFECTING_SPELLS_0_ID] != -1) {
-                        const int& spell =
+                        int spell =
                             m_influence[hoverID - AFFECTING_SPELLS_0_ID];
                         if (spell == SPELL_BIND)
                             sprintf(g_text,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
-                                    g_spellTraits[SPELL_BIND].m_name,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_ARMY_SPELL_BIND));
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
+                                    g_spellTraits[spell].m_name,
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_BIND));
                         else if (spell == SPELL_BERSERK)
                             sprintf(g_text,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
-                                    g_spellTraits[SPELL_BERSERK].m_name,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_ARMY_SPELL_BERSERK));
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
+                                    g_spellTraits[spell].m_name,
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_BERSERK));
                         else if (spell == SPELL_DISRUPTING_RAY)
                             sprintf(g_text,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
-                                    g_spellTraits[SPELL_DISRUPTING_RAY].m_name,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY));
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
+                                    g_spellTraits[spell].m_name,
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY));
                         else
                             sprintf(g_text,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT),
+                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT),
                                     g_spellTraits[spell].m_name,
                                     m_duration[hoverID - AFFECTING_SPELLS_0_ID]);
                         rollover = g_text;
@@ -765,7 +743,7 @@ void TViewArmyWindow::createAttackWidget(int normalAttackSkill,
                                            int currentAttackSkill)
 {
     m_widgets.push_back(new textWidget(
-        154, 48, 122, 17, g_primarySkillNames[0], "smalfont.fnt",
+        154, 48, 122, 17, g_statNames[0], "smalfont.fnt",
         font::PRIMARY, ATTACK_LABEL_ID, 4, 0, 8));
 
     if (normalAttackSkill == currentAttackSkill)
@@ -783,7 +761,7 @@ void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
                                             int currentDefenseSkill)
 {
     m_widgets.push_back(new textWidget(
-        154, 66, 122, 17, g_primarySkillNames[1], "smalfont.fnt",
+        154, 66, 122, 17, g_statNames[1], "smalfont.fnt",
         font::PRIMARY, DEFENSE_LABEL_ID, 4, 0, 8));
 
     if (normalDefenseSkill == currentDefenseSkill)
@@ -819,7 +797,7 @@ void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
 {
     m_widgets.push_back(new textWidget(
         154, 104, 122, 17,
-        (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE],
+        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE),
         "smalfont.fnt", font::PRIMARY, DAMAGE_LABEL_ID, 4, 0, 8));
 
     int low = traits.m_damageLowBound;
@@ -853,7 +831,7 @@ void TViewArmyWindow::createShotsWidget(const TCreatureTypeTraits& traits,
     if (traits.m_attributes & g_ctaShooter) {
         m_widgets.push_back(new textWidget(
             154, 85, 122, 17,
-            (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SHOTS],
+            g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SHOTS),
             "smalfont.fnt", font::PRIMARY, SHOTS_LABEL_ID, 4, 0, 8));
 
         if (normalShots == currentShots)
@@ -907,7 +885,7 @@ void TViewArmyWindow::createSpeedWidget(int normalSpeed,
 {
     m_widgets.push_back(new textWidget(
         154, 161, 122, 17,
-        (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED],
+        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED),
         "smalfont.fnt", font::PRIMARY, SPEED_LABEL_ID, 4, 0, 8));
 
     normalSpeed = max(0, normalSpeed);
@@ -946,55 +924,33 @@ inline void TViewArmyWindow::createLuckWidget(int newLuck)
         limit(-3, m_luck, 3) + 3, 0, 0, 0, 0x10));
 }
 
-// The fixed three-slot row shows the newest standing spell influences. The
-// queue's VC6 deque layout, its 16-byte iterator and the two 81-dword spell
-// rows are independently byte-proven in army.h; this body is their first UI
-// consumer. Retail always visits all three display slots, writing -1 into an
-// unused Influence entry so WindowHandler can suppress its help text.
-
-// Residual (86.65703%): this is a cyclic VC6 inliner wall. The named iterator
-// plus the statement-scoped pin below reproduces retail's 16-byte begin()
-// temporary and its one out-of-line operator+= call, but our remaining budget
-// expands the first vector::_Ucopy loop (18 branches against retail's 16).
-// The natural deque subscript, including bounded inline-depth 1 and 2 probes,
-// makes that vector insertion take retail's call-form but expands the deque's
-// map/block arithmetic here instead (79.8430%). An explicit begin()+i is
-// 79.3512%, direct vector::insert 84.6860%, and the non-const iterator path
-// 79.5413%. The outer loop, member offsets, widget arguments and return agree;
-// the remaining choice is one front-end inline budget spent at either of two
-// nested STL sites.
+// DC lines 849--862 prove an xp-controlled three-slot loop, natural deque
+// subscripting and separate advances of the widget id, queue index and x.
+// Retail confirms the same two adjacent three-int member rows.
 // E:\gamedcs\viewarmywindow.cpp:837
 VA(0x005f65b0, 0x2B5)  // queue iterator arithmetic + SpellInt.def + widget ids
 void TViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
 {
     int x = 127;
-    unsigned int first = cppMax<int>(
+    int widgetId = AFFECTING_SPELLS_0_ID;
+    unsigned int spell = cppMax<int>(
         0, static_cast<int>(thisArmy->m_spellInfluenceQueue.size()) - NSPELLS);
-    unsigned int i = first;
-    int* influence = m_influence;
-    int widgetId = AFFECTING_SPELLS_0_ID - first;
-    int count = NSPELLS;
 
-    do {
-        if (i < thisArmy->m_spellInfluenceQueue.size()) {
-            army::TSpellQueue::const_iterator position =
-                thisArmy->m_spellInfluenceQueue.begin();
-#pragma inline_depth(0)
-            position += i;
-#pragma inline_depth()
-            *influence = *position;
-            influence[NSPELLS] = thisArmy->m_spellInfluence[*influence];
+    for (int xp = 0; xp < NSPELLS; ++xp) {
+        if (spell < thisArmy->m_spellInfluenceQueue.size()) {
+            m_influence[xp] = thisArmy->m_spellInfluenceQueue[spell];
+            m_duration[xp] = thisArmy->getSpellTime(m_influence[xp]);
             m_widgets.push_back(new iconWidget(
-                x, 186, 48, 36, widgetId + i,
+                x, 186, 48, 36, widgetId,
                 DATA_COMPGEN(0x006700a4, viewArmySpellIcons, "spellint.def"),
-                *influence + 1, 0, 0, 0, 0x10));
+                m_influence[xp] + 1, 0, 0, 0, 0x10));
         } else {
-            *influence = -1;
+            m_influence[xp] = -1;
         }
-        ++influence;
+        ++widgetId;
+        ++spell;
         x += 52;
-        ++i;
-    } while (--count);
+    }
 }
 
 VA(0x005f6870, 0x264)  // dc 0x192a28

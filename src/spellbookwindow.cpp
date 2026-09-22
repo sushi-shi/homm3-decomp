@@ -18,6 +18,7 @@
 #include "resourcemanager.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
+#include "text.h"
 #include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"
@@ -62,7 +63,8 @@ DATA(0x00641d94) static const char* const g_levelSprites[] = {
 
 // Complete indexes this four-pointer table directly, unlike the pointer
 // form attested for Dreamcast's gSecondarySkillLevels.
-DATA(0x006a5d48) const char* g_secondarySkillLevels[4];
+// The positive mastery branch reads the three abbreviated labels owned
+// by text.cpp at 0x6a5d4c. Retail folds the -1 subscript into 0x6a5d48.
 
 // E:\gamedcs\spellbookwindow.cpp:82
 int TSpellbookWindow::getPositionFromSchool(unsigned schoolMask)
@@ -89,11 +91,11 @@ inline TSpellSchool TSpellbookWindow::getSchoolFromPosition(int position)
 static const char* getLevelString(SpellID spell)
 {
     static const char* levelStrings[] = {
-        (*g_generalText)[173],
-        (*g_generalText)[174],
-        (*g_generalText)[175],
-        (*g_generalText)[176],
-        (*g_generalText)[177]
+        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_ONE_LABEL),
+        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_TWO_LABEL),
+        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_THREE_LABEL),
+        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_FOUR_LABEL),
+        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_FIVE_LABEL)
     };
     // DC117 initializes the five labels; DC119 reads the level, subtracts
     // one and indexes this table. Capture that actual index before lookup.
@@ -151,7 +153,7 @@ std::string TSpellbookWindow::getSpellDescription(
             spell,
             traits->m_powerFactor * power + traits->m_masteryBonus[mastery],
             0);
-        sprintf(g_text, (*g_generalText)[344], damage);
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SPELL_DAMAGE_DESCRIPTION_FORMAT), damage);
         result += g_text;
     }
     return result;
@@ -386,6 +388,11 @@ void TSpellbookWindow::close(unsigned char update)
     heroWindow::close(update);
 }
 
+// DC uses push_back for the available-spell entry. Restoring that wrapper
+// leaves sort's _Unguarded_insert retained where retail expands it (88.8745%,
+// formerly exact with direct insert). Conditional or single-value school
+// selection does not recover it. Retail retains getSpellLevel here; DC's
+// older caller uses GetSpellSchoolLevel, so keep Complete's spell-id contract.
 VA(0x0059c9a0, 0x691)  // dc 0x14c904
 void TSpellbookWindow::gotoPage(int page)
 {
@@ -408,8 +415,7 @@ void TSpellbookWindow::gotoPage(int page)
                 school = highestSchool;
             TSkillMastery mastery = m_hero->getSpellLevel(
                 spell, m_onMagicPlains);
-            availableSpells.insert(availableSpells.end(),
-                          TSpellbookEntry(spell, school, mastery));
+            availableSpells.push_back(TSpellbookEntry(spell, school, mastery));
         }
     }
 
@@ -466,8 +472,8 @@ void TSpellbookWindow::gotoPage(int page)
                                  "{%s}\n%s/%s\n%s: %d"),
                     g_spellTraits[displaySpell].m_name,
                     getLevelString(displaySpell),
-                    g_secondarySkillLevels[entry.m_mastery],
-                    (*g_generalText)[388],
+                    g_abbSecondarySkillLevels[entry.m_mastery - 1],
+                    g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_LABEL),
                     const_cast<hero*>(m_hero)->getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
         } else {
@@ -475,7 +481,7 @@ void TSpellbookWindow::gotoPage(int page)
                     DATA_COMPGEN(0x00684bdc, spellInfoWithoutMastery,
                                  "{%s}\n%s\n%s: %d"),
                     g_spellTraits[displaySpell].m_name,
-                    getLevelString(displaySpell), (*g_generalText)[388],
+                    getLevelString(displaySpell), g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_LABEL),
                     const_cast<hero*>(m_hero)->getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
         }
@@ -523,7 +529,7 @@ void TSpellbookWindow::displayNewSchool(int position)
     if (getSchool() == getSchoolFromPosition(position))
         return;
 
-    if (g_unnamed698758.m_animateSpellBook)
+    if (g_config.m_animateSpellBook)
         videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
     setSchool(getSchoolFromPosition(position));
     gotoPage(0);
@@ -596,7 +602,7 @@ int TSpellbookWindow::windowHandler(message& msg)
         switch (msg.m_codeX) {
         case KEYCODE_KP_4: // left
             if (m_previousPageWidget->m_status & widget::WIDGET_ACTIVE) {
-                if (g_unnamed698758.m_animateSpellBook)
+                if (g_config.m_animateSpellBook)
                     videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                 previousPage();
                 drawWindow(1, -65535, 65535);
@@ -605,7 +611,7 @@ int TSpellbookWindow::windowHandler(message& msg)
 
         case KEYCODE_KP_6: // right
             if (m_nextPageWidget->m_status & widget::WIDGET_ACTIVE) {
-                if (g_unnamed698758.m_animateSpellBook)
+                if (g_config.m_animateSpellBook)
                     videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                 nextPage();
                 drawWindow(1, -65535, 65535);
@@ -632,7 +638,7 @@ int TSpellbookWindow::windowHandler(message& msg)
 
         case KEYCODE_A: // adventure spells
             if (m_contextMask != eAdventureContextMask) {
-                if (g_unnamed698758.m_animateSpellBook)
+                if (g_config.m_animateSpellBook)
                     videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                 setContext(eContextAdventure);
                 gotoPage(0);
@@ -642,7 +648,7 @@ int TSpellbookWindow::windowHandler(message& msg)
 
         case KEYCODE_C: // combat spells
             if (m_contextMask != eCombatContextMask) {
-                if (g_unnamed698758.m_animateSpellBook)
+                if (g_config.m_animateSpellBook)
                     videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                 setContext(eContextCombat);
                 gotoPage(0);
@@ -682,7 +688,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                         exitFlag = 1;
                         msg.m_codeY = m_spellMap[msg.m_codeY - SPELL_0_ID];
                     } else {
-                        sprintf(g_text, (*g_generalText)[207],
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_INSUFFICIENT_FORMAT),
                                 manaCost, m_hero->m_mana);
                         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                                      -1, 0, -1, 0);
@@ -706,7 +712,7 @@ int TSpellbookWindow::windowHandler(message& msg)
 
             case COMBAT_SPELLS_ID:
                 if (getContextMask() != eCombatContextMask) {
-                    if (g_unnamed698758.m_animateSpellBook)
+                    if (g_config.m_animateSpellBook)
                         videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                     setContext(eContextCombat);
                     gotoPage(0);
@@ -716,7 +722,7 @@ int TSpellbookWindow::windowHandler(message& msg)
 
             case ADVENTURE_SPELLS_ID:
                 if (getContextMask() != eAdventureContextMask) {
-                    if (g_unnamed698758.m_animateSpellBook)
+                    if (g_config.m_animateSpellBook)
                         videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                     setContext(eContextAdventure);
                     gotoPage(0);
@@ -725,14 +731,14 @@ int TSpellbookWindow::windowHandler(message& msg)
                 break;
 
             case PREVIOUS_PAGE_ID:
-                if (g_unnamed698758.m_animateSpellBook)
+                if (g_config.m_animateSpellBook)
                     videoPlay(0x24, m_x + 13, m_y + 14, -1, -1);
                 previousPage();
                 drawWindow(1, -65535, 65535);
                 break;
 
             case NEXT_PAGE_ID:
-                if (g_unnamed698758.m_animateSpellBook)
+                if (g_config.m_animateSpellBook)
                     videoPlay(0x25, m_x + 13, m_y + 14, -1, -1);
                 nextPage();
                 drawWindow(1, -65535, 65535);

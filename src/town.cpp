@@ -22,14 +22,154 @@
 #include "textresource.h"
 #include "townmgr.h"
 
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x00688e84) const int g_townInitArmyChance[4] = { 33, 33, 20, 13 };
+DATA(0x00688e94) const int g_townInitArmyLow[4] = { 8, 5, 3, 1 };
+DATA(0x00688ea4) const int g_townInitArmyHigh[4] = { 15, 7, 5, 3 };
+DATA(0x00688eb4) int g_siloIncome[9][7] = {
+    { 1, 0, 1, 0, 0, 0, 0 },
+    { 0, 0, 0, 0, 1, 0, 0 },
+    { 0, 0, 0, 0, 0, 1, 0 },
+    { 0, 1, 0, 0, 0, 0, 0 },
+    { 1, 0, 1, 0, 0, 0, 0 },
+    { 0, 0, 0, 1, 0, 0, 0 },
+    { 1, 0, 1, 0, 0, 0, 0 },
+    { 1, 0, 1, 0, 0, 0, 0 },
+    { 0, 1, 0, 0, 0, 0, 0 }
+};
+DATA(0x006888c0) const int g_eventBuildingIds[9][41] = {
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 44, 0, 1, 2, 3, 4,
+    6, 26, 17, 22, 21, 44, 30, 37,
+    44, 31, 38, 44, 32, 39, 18, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 44, 0, 1, 2, 3, 4,
+    6, 26, 17, 21, 22, 44, 30, 37,
+    44, 31, 38, 18, 32, 39, 44, 33,
+    40, 44, 34, 41, 24, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 17, 0, 1, 2, 3, 4,
+    6, 26, 22, 23, 21, 44, 30, 37,
+    44, 31, 38, 18, 32, 39, 44, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 44, 0, 1, 2, 3, 4,
+    6, 26, 21, 22, 23, 44, 30, 37,
+    18, 31, 38, 44, 32, 39, 24, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 44, 0, 1, 2, 3, 4,
+    6, 26, 17, 21, 22, 44, 30, 37,
+    18, 31, 38, 44, 32, 39, 44, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 17, 0, 1, 2, 3, 4,
+    6, 26, 21, 22, 23, 44, 30, 37,
+    18, 31, 38, 44, 32, 39, 44, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 44, 0, 1, 2, 3, 4,
+    6, 26, 17, 21, 22, 23, 30, 37,
+    18, 31, 38, 44, 32, 39, 44, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 44, 0, 1, 2, 3, 4,
+    6, 26, 17, 21, 22, 44, 30, 37,
+    18, 31, 38, 44, 32, 39, 44, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+},
+    {
+    11, 12, 13, 7, 8, 9, 5, 16,
+    14, 15, 17, 0, 1, 2, 3, 4,
+    6, 26, 21, 44, 44, 44, 30, 37,
+    18, 31, 38, 44, 32, 39, 44, 33,
+    40, 44, 34, 41, 44, 35, 42, 36,
+    43
+}
+};
+DATA(0x0066cd98) __int64 g_bitNumber[64] = {
+    0x0000000000000001i64, 0x0000000000000002i64, 0x0000000000000004i64, 0x0000000000000008i64, 0x0000000000000010i64, 0x0000000000000020i64, 0x0000000000000040i64, 0x0000000000000080i64,
+    0x0000000000000100i64, 0x0000000000000200i64, 0x0000000000000400i64, 0x0000000000000800i64, 0x0000000000001000i64, 0x0000000000002000i64, 0x0000000000004000i64, 0x0000000000008000i64,
+    0x0000000000010000i64, 0x0000000000020000i64, 0x0000000000040000i64, 0x0000000000080000i64, 0x0000000000100000i64, 0x0000000000200000i64, 0x0000000000400000i64, 0x0000000000800000i64,
+    0x0000000001000000i64, 0x0000000002000000i64, 0x0000000004000000i64, 0x0000000008000000i64, 0x0000000010000000i64, 0x0000000020000000i64, 0x0000000040000000i64, 0x0000000080000000i64,
+    0x0000000100000000i64, 0x0000000200000000i64, 0x0000000400000000i64, 0x0000000800000000i64, 0x0000001000000000i64, 0x0000002000000000i64, 0x0000004000000000i64, 0x0000008000000000i64,
+    0x0000010000000000i64, 0x0000020000000000i64, 0x0000040000000000i64, 0x0000080000000000i64, 0x0000100000000000i64, 0x0000200000000000i64, 0x0000400000000000i64, 0x0000800000000000i64,
+    0x0001000000000000i64, 0x0002000000000000i64, 0x0004000000000000i64, 0x0008000000000000i64, 0x0010000000000000i64, 0x0020000000000000i64, 0x0040000000000000i64, 0x0080000000000000i64,
+    0x0100000000000000i64, 0x0200000000000000i64, 0x0400000000000000i64, 0x0800000000000000i64, 0x1000000000000000i64, 0x2000000000000000i64, 0x4000000000000000i64, 0x8000000000000000i64
+};
+DATA(0x006976f0) __int64 g_townEligibleBuildMask[9];
+DATA(0x00697798) __int64 g_hierarchyMask[9][44];
+DATA(0x006747b4) TCreatureType g_townDwellingCreatures[126] = {
+    TCreatureType(0), TCreatureType(2), TCreatureType(4), TCreatureType(6), TCreatureType(8), TCreatureType(10), TCreatureType(12), TCreatureType(1),
+    TCreatureType(3), TCreatureType(5), TCreatureType(7), TCreatureType(9), TCreatureType(11), TCreatureType(13), TCreatureType(14), TCreatureType(16),
+    TCreatureType(18), TCreatureType(20), TCreatureType(22), TCreatureType(24), TCreatureType(26), TCreatureType(15), TCreatureType(17), TCreatureType(19),
+    TCreatureType(21), TCreatureType(23), TCreatureType(25), TCreatureType(27), TCreatureType(28), TCreatureType(30), TCreatureType(32), TCreatureType(34),
+    TCreatureType(36), TCreatureType(38), TCreatureType(40), TCreatureType(29), TCreatureType(31), TCreatureType(33), TCreatureType(35), TCreatureType(37),
+    TCreatureType(39), TCreatureType(41), TCreatureType(42), TCreatureType(44), TCreatureType(46), TCreatureType(48), TCreatureType(50), TCreatureType(52),
+    TCreatureType(54), TCreatureType(43), TCreatureType(45), TCreatureType(47), TCreatureType(49), TCreatureType(51), TCreatureType(53), TCreatureType(55),
+    TCreatureType(56), TCreatureType(58), TCreatureType(60), TCreatureType(62), TCreatureType(64), TCreatureType(66), TCreatureType(68), TCreatureType(57),
+    TCreatureType(59), TCreatureType(61), TCreatureType(63), TCreatureType(65), TCreatureType(67), TCreatureType(69), TCreatureType(70), TCreatureType(72),
+    TCreatureType(74), TCreatureType(76), TCreatureType(78), TCreatureType(80), TCreatureType(82), TCreatureType(71), TCreatureType(73), TCreatureType(75),
+    TCreatureType(77), TCreatureType(79), TCreatureType(81), TCreatureType(83), TCreatureType(84), TCreatureType(86), TCreatureType(88), TCreatureType(90),
+    TCreatureType(92), TCreatureType(94), TCreatureType(96), TCreatureType(85), TCreatureType(87), TCreatureType(89), TCreatureType(91), TCreatureType(93),
+    TCreatureType(95), TCreatureType(97), TCreatureType(98), TCreatureType(100), TCreatureType(104), TCreatureType(106), TCreatureType(102), TCreatureType(108),
+    TCreatureType(110), TCreatureType(99), TCreatureType(101), TCreatureType(105), TCreatureType(107), TCreatureType(103), TCreatureType(109), TCreatureType(111),
+    TCreatureType(118), TCreatureType(112), TCreatureType(115), TCreatureType(114), TCreatureType(113), TCreatureType(120), TCreatureType(130), TCreatureType(119),
+    TCreatureType(127), TCreatureType(123), TCreatureType(129), TCreatureType(125), TCreatureType(121), TCreatureType(131)
+};
+DATA(0x00642e20) const type_building_id g_hordeBuildings[4] = { type_building_id(18), type_building_id(19), type_building_id(24), type_building_id(25) };
+DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[9][4] = {
+    { { TCreatureType(4), 3, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(16), 4, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(22), 2, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(30), 4, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(42), 8, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(46), 3, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(56), 6, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(70), 7, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(84), 8, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(98), 6, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { TCreatureType(118), 10, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } }
+};
+
+// Retail table initializers, in the layouts used by their named consumers.
+DATA(0x006782a4) const signed char g_mageGuildBaseSpellCounts[5] = { 5, 4, 3, 2, 1 };
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x0067f570) int g_highMemBuffer = 5;
+DATA(0x006aa5f0) int g_townViewActive;
+DATA(0x00699548) int g_adventureGraphicsPreserveMode;
+DATA(0x0069778c) int g_curWatchPlayer;
+
 // Narrow town.obj-only globals reached by town::View. Their owning
 // compilands remain outside the admitted surface.
-DATA(0x0067f570) extern int g_unnamed67f570;
-DATA(0x006aa5f0) extern int g_unnamed6aa5f0;
-DATA(0x00699548) extern int g_unnamed699548;
-DATA(0x0069778c) extern int g_unnamed69778c;
-DATA(0x006994fc) extern townManager* g_townManager;
-DATA(0x00699500) extern executive* g_executive;
+
+
+
+
+
 
 // DC public ?included_buildings@town@@2PAY0CM@_JA; retail .bss
 // 0x6a8bb8, nine 0x160-stride rows to 0x6a9818. Ownership: the DC
@@ -360,73 +500,73 @@ VA(0x005bd8e0, 0x551)  // dc 0x165ea0
 void town::applySpecialBuildingEffect(hero* townHero)
 {
     if (m_type == TOWN_DUNGEON && m_manaVortexFull
-        && hasBuilding(EXTRA_0_ID, 0)) {
+        && hasBuilding(EXTRA_0_ID, false)) {
         int maxMana = townHero->getMaxMana() * 2;
         if (townHero->m_mana < maxMana) {
             if (g_game->isLocalHuman(m_owner))
-                normalDialog(g_generalText->getText(580), // Mana Vortex
+                normalDialog(g_generalText->getText(GENERAL_TEXT_MANA_VORTEX_VISIT), // Mana Vortex
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             townHero->m_mana = static_cast<short>(maxMana);
             m_manaVortexFull = 0;
         }
     }
 
-    if (m_type == TOWN_CASTLE && hasBuilding(EXTRA_0_ID, 0)
+    if (m_type == TOWN_CASTLE && hasBuilding(EXTRA_0_ID, false)
         && !(townHero->m_flags & 2)) {
         townHero->m_flags |= 2;
         townHero->m_maxMovePoints += g_stablesMovementBonus;
         townHero->m_movePoints += g_stablesMovementBonus;
         if (g_game->isLocalHuman(townHero->m_owner))
-            normalDialog(g_generalText->getText(581), // Stables
+            normalDialog(g_generalText->getText(GENERAL_TEXT_STABLES_VISIT), // Stables
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 
-    if (m_type == TOWN_TOWER && hasBuilding(EXTRA_2_ID, 0)
+    if (m_type == TOWN_TOWER && hasBuilding(EXTRA_2_ID, false)
         && !townHero->m_townSpecialGrantedMask.test(m_id)) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(3, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
-                g_generalText->getText(582), // Wall of Knowledge
+                g_generalText->getText(GENERAL_TEXT_WALL_OF_KNOWLEDGE_VISIT), // Wall of Knowledge
                 1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
     }
 
-    if (m_type == TOWN_INFERNO && hasBuilding(EXTRA_2_ID, 0)
+    if (m_type == TOWN_INFERNO && hasBuilding(EXTRA_2_ID, false)
         && !townHero->m_townSpecialGrantedMask[m_id]) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(2, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
-            normalDialog(g_generalText->getText(583), // Order of Fire
+            normalDialog(g_generalText->getText(GENERAL_TEXT_ORDER_OF_FIRE_VISIT), // Order of Fire
                          1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
     }
 
-    if (m_type == TOWN_DUNGEON && hasBuilding(EXTRA_2_ID, 0)
+    if (m_type == TOWN_DUNGEON && hasBuilding(EXTRA_2_ID, false)
         && !townHero->m_townSpecialGrantedMask[m_id]) {
         int experience = static_cast<int>(
             townHero->getExperienceBonusFactor() * 1000.0f);
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
-                g_generalText->getText(584), // Battle Scholar Academy
+                g_generalText->getText(GENERAL_TEXT_BATTLE_SCHOLAR_ACADEMY_VISIT), // Battle Scholar Academy
                 1, -1, -1, 0x11, experience, -1, 0, -1, 0, -1, 0);
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->giveExperience(experience, 1, 1);
     }
 
-    if (m_type == TOWN_STRONGHOLD && hasBuilding(EXTRA_2_ID, 0)
+    if (m_type == TOWN_STRONGHOLD && hasBuilding(EXTRA_2_ID, false)
         && !townHero->m_townSpecialGrantedMask[m_id]) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
-                g_generalText->getText(585), // Hall of Valhalla
+                g_generalText->getText(GENERAL_TEXT_HALL_OF_VALHALLA_VISIT), // Hall of Valhalla
                 1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(0, 1);
     }
 
-    if (m_type == TOWN_FORTRESS && hasBuilding(SPECIAL_BUILDING_ID, 0)
+    if (m_type == TOWN_FORTRESS && hasBuilding(SPECIAL_BUILDING_ID, false)
         && !townHero->m_townSpecialGrantedMask[m_id]) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
-                g_generalText->getText(586), // Cage of Warlords
+                g_generalText->getText(GENERAL_TEXT_CAGE_OF_WARLORDS_VISIT), // Cage of Warlords
                 1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(1, 1);
@@ -520,7 +660,7 @@ void town::giveSpells(hero* forceHero) const
 
         if (currentHero) {
             if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-                if (hasBuilding(MAGE_GUILD_ID, 1)) {
+                if (hasBuilding(MAGE_GUILD_ID, true)) {
                     if (m_type == TOWN_CONFLUX
                         && (m_active & g_bitNumber[HOLY_GRAIL_ID])) {
                         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
@@ -553,12 +693,12 @@ void town::giveSpells(hero* forceHero) const
 VA(0x005be210, 0xC0)  // dc 0x166688
 void town::view(int alreadyFaded)
 {
-    int threshold = g_unnamed67f570 + 0x514;
-    g_unnamed6aa5f0 = 1;
+    int threshold = g_highMemBuffer + 0x514;
+    g_townViewActive = 1;
     if (threshold > 0xb54)
-        g_unnamed699548 = 2;
+        g_adventureGraphicsPreserveMode = 2;
     else if (threshold > 0x320)
-        g_unnamed699548 = 1;
+        g_adventureGraphicsPreserveMode = 1;
 
     g_townManager->setTown(this);
     g_executive->callManager(g_townManager);
@@ -567,15 +707,15 @@ void town::view(int alreadyFaded)
     int heroId = viewedTown->m_visitingHeroId;
     if (heroId != -1) {
         hero* visitingHero = g_game->getHero(heroId);
-        if (visitingHero->m_owner == g_unnamed69778c) {
+        if (visitingHero->m_owner == g_curWatchPlayer) {
             g_advManager->setHeroContext(visitingHero->m_id, 0, 0, 1);
-            g_unnamed699548 = 0;
-            g_unnamed6aa5f0 = 0;
+            g_adventureGraphicsPreserveMode = 0;
+            g_townViewActive = 0;
             return;
         }
     }
-    g_unnamed699548 = 0;
-    g_unnamed6aa5f0 = 0;
+    g_adventureGraphicsPreserveMode = 0;
+    g_townViewActive = 0;
 }
 
 VA(0x005be2d0, 0xB3)  // dc 0x166720
@@ -717,23 +857,10 @@ void town::initializeSpells(const TownExtra* townSetup)
 
     int guildLevel = 5;
     while (guildLevel > 0
-           && !(m_built & g_bitNumber[guildLevel - 1]))
+           && !hasBuilding(guildLevel - 1, false))
         --guildLevel;
-    m_mageLevel = static_cast<unsigned char>(guildLevel);
-    memset(m_mageGuildSpellCounts, 0, sizeof(m_mageGuildSpellCounts));
-
-    for (int availableLevel = 1;
-         availableLevel <= static_cast<signed char>(m_mageLevel);
-         ++availableLevel) {
-        int count = g_mageGuildBaseSpellCounts[availableLevel - 1];
-        if (m_type == TOWN_TOWER && (m_active & g_bitNumber[EXTRA_1_ID]))
-            ++count;
-        while (count > 0
-               && m_mageGuildSpells[availableLevel - 1][count - 1] == -1)
-            --count;
-        m_mageGuildSpellCounts[availableLevel - 1] =
-            static_cast<signed char>(count);
-    }
+    m_mageLevel = static_cast<signed char>(guildLevel);
+    setSpellsAvailable();
 }
 
 // E:\gamedcs\town.cpp:1206
@@ -742,7 +869,7 @@ void town::setSpellsAvailable()
     memset(m_mageGuildSpellCounts, 0, sizeof(m_mageGuildSpellCounts));
     for (int level = 1; level <= m_mageLevel; level++) {
         int count = g_mageGuildBaseSpellCounts[level - 1];
-        if (m_type == TOWN_TOWER && hasBuilding(EXTRA_1_ID, 1))
+        if (m_type == TOWN_TOWER && hasBuilding(EXTRA_1_ID, true))
             count++;
         while (count > 0
                && m_mageGuildSpells[level - 1][count - 1] == -1)
@@ -864,7 +991,7 @@ type_building_id town::buildBuilding(int buildingId,
             int team = m_owner;
             if (team >= 0)
                 team = g_game->m_mapHeader.m_teamInfo[team];
-            if (!g_game->isHumanAlly(team))
+            if (!g_game->isHumanTeam(team))
                 m_builtThisTurn = 2;
             else
                 m_builtThisTurn = 1;
@@ -982,9 +1109,9 @@ void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
 VA(0x005bf570, 0x86)  // dc 0x1673dc
 long town::getCastleGrowthBonus(TCreatureType creature) const
 {
-    if (m_built & g_bitNumber[CASTLE_CASTLE_ID])
+    if (hasBuilding(CASTLE_CASTLE_ID, false))
         return g_creatureTypeTraits[creature].m_growthRate;
-    if (m_built & g_bitNumber[CASTLE_CITADEL_ID])
+    if (hasBuilding(CASTLE_CITADEL_ID, false))
         return g_creatureTypeTraits[creature].m_growthRate / 2;
     return 0;
 }
@@ -1135,16 +1262,7 @@ short town::getGrowthRate(short dwelling) const
                 m_type * TOWN_DWELLING_SLOTS + dwellingIndex];
             long legionGrowth =
                 g_creatureTypeTraits[legionCreature].m_growthRate;
-            long castleBonus;
-#pragma inline_depth(0)
-            if (m_built & g_bitNumber[CASTLE_CASTLE_ID])
-                castleBonus = legionGrowth;
-            else if (hasBuilding(CASTLE_CITADEL_ID, 0))
-                castleBonus =
-                    g_creatureTypeTraits[legionCreature].m_growthRate / 2;
-            else
-                castleBonus = 0;
-#pragma inline_depth()
+            long castleBonus = getCastleGrowthBonus(legionCreature);
             legionBonus = (legionGrowth + castleBonus) / 2;
         }
         growth += legionBonus;
@@ -1318,7 +1436,7 @@ void showBuildingRewards(const town* thisTown,
         }
         text += getBuildingName(thisTown->m_type, (*rewards)[i].m_qualifier);
     }
-    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_BUILDINGS),
+    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_BUILDINGS_FORMAT),
                          thisTown->m_name.c_str(), text.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)
@@ -1355,7 +1473,7 @@ void showCreatureRewards(const town* thisTown,
         text += getArmyName(creature, count);
     }
     long firstCount = (*rewards)[0].m_qualifier >> 16;
-    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES),
+    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES_FORMAT),
                          firstCount, text.c_str(), thisTown->m_name.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)
@@ -1536,32 +1654,37 @@ void town::updateFullBuildingMask()
 {
     m_active = m_built;
     for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (hasBuilding(i, 0))
+        if (hasBuilding(i, false))
             m_active |= s_includedBuildings[m_type][i];
     }
 }
 
 // E:\gamedcs\town.cpp:2097
+// DC names the short parameter building_id and the 64-bit local
+// building_mask. Its source rows retain TownAlreadyBuiltOn,
+// is_legal_building, CanBuildDock and get_building_mask; Complete expands
+// those same source calls and matches this body exactly.
 VA(0x005c0d20, 0x13D)  // anchor-global, dc 0x168504
 unsigned char town::canBuild(short buildingId) const
 {
-    if (!g_game->m_towns[m_id].m_builtThisTurn) {
-        int legalId = buildingId;
-        if (g_bitNumber[buildingId] & m_available) {
-            if (buildingId == DOCK_ID)
-                return m_dockSite != TOWN_DOCK_SITE_NONE;
-            if (buildingId == HALL_CAPITOL_ID)
-                return !g_game->m_players[m_owner].hasCapitol();
-            char townType = m_type;
-            __int64 requirements = g_hierarchyMask[townType][buildingId];
-            if (g_game->m_isTutorial && buildingId == DWELLING_2_ID
-                && townType == TOWN_CASTLE)
-                requirements &= ~g_bitNumber[BLACKSMITH_ID];
-            if (!(m_active & g_bitNumber[buildingId])
-                && (m_active & requirements) == requirements)
-                return 1;
-        }
-    }
+    if (g_game->townAlreadyBuiltOn(m_id))
+        return 0;
+    if (!isLegalBuilding(type_building_id(buildingId)))
+        return 0;
+    if (buildingId == DOCK_ID)
+        return canBuildDock();
+    if (buildingId == HALL_CAPITOL_ID)
+        return !g_game->m_players[m_owner].hasCapitol();
+
+    char townType = m_type;
+    __int64 requirements = g_hierarchyMask[townType][buildingId];
+    __int64 buildingMask = getBuildingMask();
+    if (g_game->m_isTutorial && buildingId == DWELLING_2_ID
+        && townType == TOWN_CASTLE)
+        requirements &= ~g_bitNumber[BLACKSMITH_ID];
+    if (!(buildingMask & g_bitNumber[buildingId])
+        && (buildingMask & requirements) == requirements)
+        return 1;
     return 0;
 }
 
@@ -1698,7 +1821,7 @@ void town::hire(hero* newHero, long playerId)
     point.m_z = m_mapZ;
     hiredHero->placeInMap(playerId, point, 1);
     giveSpells(0);
-    g_game->finishTownHire(playerId, recruitSlot);
+    g_game->replaceRecruit(playerId, recruitSlot);
 }
 
 VA(0x005c13b0, 0x83)  // dc 0x168b54

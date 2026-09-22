@@ -215,3 +215,13 @@ void type_text_scroller::setText(const char* text)
         m_lineImages[i]->setText(m_textLines[i].c_str());
     textFont->dispose();
 }
+
+// Retail vtable 0x642d0c slots 3/4 share the empty ret 8 / ret bodies
+// at 0x5bc7e0 / 0x5bc690. Child widgets draw the scroller's contents.
+void type_text_scroller::zBufferDraw(unsigned short* zBuffer, int id) const
+{
+}
+
+void type_text_scroller::draw() const
+{
+}

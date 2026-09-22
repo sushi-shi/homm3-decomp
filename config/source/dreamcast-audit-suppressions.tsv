@@ -286,23 +286,23 @@ events.obj	0x923b0	a044db463230	8	Dreamcast CodeView records the older/lowered u
 events.obj	0x92540	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x925fc	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x92814	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
-events.obj	0x92d40	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x92d40	a044db463230	8	Dreamcast public symbol at this address encodes the human-player parameter as _N (bool); the unsigned-char formal record is compiler lowering, not a source-type difference.
 events.obj	0x92dec	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x92fa8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x9312c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x93298	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
-events.obj	0x93368	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x93368	a044db463230	8	Dreamcast public symbol at this address encodes the human-player parameter as _N (bool); the unsigned-char formal record is compiler lowering, not a source-type difference.
 events.obj	0x939bc	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x93b18	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x93bf8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x93db0	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x93f6c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x94088	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
-events.obj	0x941c8	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x941c8	a044db463230	8	Dreamcast public symbol at this address encodes the human-player parameter as _N (bool); the unsigned-char formal record is compiler lowering, not a source-type difference.
 events.obj	0x94314	4608771dfff1	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x944d4	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x9459c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
-events.obj	0x946b4	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
+events.obj	0x946b4	a044db463230	8	Dreamcast public symbol at this address encodes the human-player parameter as _N (bool); the unsigned-char formal record is compiler lowering, not a source-type difference.
 events.obj	0x94760	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x949e0	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
 events.obj	0x94c8c	a044db463230	8	Dreamcast CodeView records the older/lowered unsigned-char parameter; Complete retains the semantic bool parameter required by its retail interface.
@@ -547,7 +547,6 @@ mapcell.obj	0xf43e8	690c3c64705a	9	Complete exact body materializes the signed c
 kb.obj	0xe3e48	7a0d92280c12	8	Dreamcast local association records SmackTag *, but Complete exact named calls and object use require Smack *; retain the Complete-specific body mapping.
 game.obj	0xa2da0	b9b55f9baefd	9	Complete exact body materializes the int local representation; Dreamcast records short, an older width, signedness, or domain choice.
 game.obj	0xa3c68	c4f2280e5385	9	Complete exact body materializes the signed char local representation; Dreamcast records int, an older width, signedness, or domain choice.
-game.obj	0xa3d50	0b2b9da603de	9	Complete exact body materializes the unsigned char local representation; Dreamcast records int, an older width, signedness, or domain choice.
 game.obj	0xa410c	0b2b9da603de	9	Complete exact body materializes the unsigned char local representation; Dreamcast records int, an older width, signedness, or domain choice.
 game.obj	0xa4548	0b2b9da603de	9	Complete exact body materializes the unsigned char local representation; Dreamcast records int, an older width, signedness, or domain choice.
 game.obj	0xa6274	3921bb04fc72	9	Complete exact body materializes the unsigned int local representation; Dreamcast records int, an older width, signedness, or domain choice.
@@ -638,6 +637,5 @@ bottomviewsubwindow.obj	0x55df4	390575ecf500	9	Dreamcast records a three-element
 bitmap16.obj	0x519c4	cd36e5c477dd	8	Dreamcast records row as unsigned short *, but Complete advances the bitmap using a byte pitch and needs both byte and pixel views; Bitmap16MapPointer preserves the exact stored pointer without reinterpret-cast debt.
 ai.obj	0x2389c	40a64905e496	5	Dreamcast records iSideFV as int[2], while the recovered Complete condition uses one scalar current-side value in its tavern and defending-town tests; the array record cannot be mapped to those retail semantics without inventing additional state.
 advmgr.obj	0xf3a8	16fafcfa58e6	7	Dreamcast records new_cursor as type_adventure_cursor, but Complete combines helper-returned integer cursor ids with an arithmetic cursor-mode offset; restoring the enum independently would require casts at every assignment and the compound addition without changing the stored retail values.
-advmgr.obj	0x19674	acf1a6a7d83e	10	Dreamcast records thisTown as a const pointer to mutable town, but Complete retail calls the const town::get_army overload at four sites; the candidate's pointer-to-const type is required by those x86 relocation targets.
-advmgr.obj	0x19674	ba43bd58cc99	9	Dreamcast records building as type_building_id, but the recovered Complete loop increments it across the full building range and VC6 does not permit incrementing this enum; the int carrier is converted only at the typed isLegalBuilding boundary.
+advmgr.obj	0x19674	344482042c7a	10	Dreamcast records thisTown as a const pointer to mutable town, but Complete retail calls the const town::get_army overload at four sites; the recovered const town *const preserves the proven pointer qualifier and adds the pointee constness required by those x86 relocation targets.
 town.obj	0x166950	03e9c832459b	10	Dreamcast's STLport bitset exposes its unsigned-long storage word as a second template argument; Complete retail uses VC6 Dinkumware, whose bitset accepts only the bit count, so std::bitset<70> is the corresponding platform-library type.

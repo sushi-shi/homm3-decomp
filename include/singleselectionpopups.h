@@ -3,6 +3,7 @@
 
 #include "dialogbox.h"
 #include "kbwin.h"
+#include "includes.h"
 #include "message.h"
 #include "remote.h"
 #include "rmg.h"
@@ -76,7 +77,7 @@ public:
     virtual int handleMessage(message& msg)
     {
         if (msg.m_id != MESSAGE_RIGHT_BUTTON_UP) {
-            if (g_videoPaused && g_dPlay) {
+            if (g_remoteOn && g_dPlay) {
                 CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
                 if (handler) {
                     handler->checkHandleNet(1, 0);
@@ -185,10 +186,17 @@ public:
     TRandomMapProgress(int totalSteps);
     virtual ~TRandomMapProgress();
     virtual void setTotal(int totalSteps);
-    virtual void advance(int amount);
-    // Ordinal name, retained from the earlier singleselectionwindow.h model
-    // because that TU already calls it by this spelling.
-    void loadProgFn00577180();  // retail 0x577180
+    // The retained vtable body and GenerateRandomMap's expanded final step
+    // share this operation. Header visibility is inferred from retail; this
+    // Complete-only class has no Dreamcast source-location evidence.
+    VA(0x00577320, 0x31)
+    virtual void advance(int amount)
+    {
+        m_done = min(m_done + amount, m_steps);
+        updateProgressBar();
+    }
+    // Descriptive name inferred from the retained progress-bar repaint body.
+    void updateProgressBar();  // retail 0x577180
 };
 // Check this provisional view; exact retail extent remains unresolved.
 SIZE(TRandomMapProgress, 0x2c);

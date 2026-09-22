@@ -12,6 +12,11 @@
 
 class TObjectTypeFilter;
 
+// objects.txt begins with the number of object-template rows.
+enum EObjectTypeTextIndex {
+    OBJECT_TYPE_TEXT_COUNT = 0
+};
+
 enum EObjectTypeFilterConstants {
     OBJECT_TYPE_FILTER_COUNT = 15
 };

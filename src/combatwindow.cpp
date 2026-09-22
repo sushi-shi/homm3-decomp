@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 
 #include "combatwindow.h"
@@ -59,7 +60,7 @@ void checkCombatCheatCode(std::string& chatString)
     }
 
     if (recognized) {
-        *chat = (*g_generalText)[261];
+        *chat = g_generalText->getText(GENERAL_TEXT_CHEATER);
         g_game->m_isCheater = 1;
         if (g_inCampaign) {
             g_game->m_campaign.m_isCheater = 1;
@@ -269,7 +270,7 @@ unsigned char TCombatWindow::processRightSelect(const message* msg)
     if (helpID < 0)
         return 0;
 
-    const char* text = g_combatSubWindowHelp[helpID].m_rclick;
+    const char* text = g_combatWindowHelp[helpID].m_rclick;
     int width;
     int height;
     getQuickviewSize(text, &width, &height);
@@ -402,7 +403,7 @@ void TCombatWindow::combatMessage(const char* newText,
         m_combatMessages.push_back(new std::string(temp));
     } else {
         temp[split] = ' ';
-        if (g_unnamed698a08->lineLength(
+        if (g_smallFont->lineLength(
                 temp.c_str(), m_controlSubWindow->m_rolloverWidget->m_width) < 2) {
             m_combatMessages.push_back(new std::string(temp));
         } else {

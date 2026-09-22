@@ -52,7 +52,7 @@ SIZE(highScoreManager, 0x8d4);
 
 // Retail oldmain opens this manager and invokes ViewHiScore through the
 // pointer at 0x6993cc; hiscore.cpp owns the DATA definition.
-DATA(0x006993cc) extern highScoreManager* g_highScoreManager;
+extern highScoreManager* g_highScoreManager;
 DATA(0x0069955c) extern int g_showHighScore;
 
 // DC names the three CHeroWindowEx-tail pointers at +0x4c/+0x50/+0x54.

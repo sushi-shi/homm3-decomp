@@ -35,7 +35,7 @@ class message;
 //   9  enable 0x5fe940
 //   10 OnSetFocus / 11 OnKillFocus - both 0x4df0, the /OPT:ICF-folded
 //      empty inline (DC order fixes which name is which)
-//   12 _vslot12 0x485d80 - RETAIL-ONLY (slots 0..11 reproduce the DC
+//   12 onSleepChange 0x485d80 - RETAIL-ONLY (slots 0..11 reproduce the DC
 //      roster order exactly, with Open inserted; DC's list ends at
 //      OnKillFocus, so 12 is appended). One dword argument (`ret 4`)
 //      and an empty body that ICF folded into the program-wide `ret 4`
@@ -43,11 +43,9 @@ class message;
 //      widget::Close precedent. Overridden in exactly one place in the
 //      whole image: button's three vtables (0x23bb54/0x23bb88/
 //      0x23bbbc) point slot 12 at 0x456a10, whose entire body is an
-//      explicit `widget::_vslot12(arg)` call; the other 25
-//      widget-family vtables inherit 0x485d80. UNATTESTED NAME - DC
-//      has no such virtual, so this is the house _vslotN placeholder.
-//      Its role is byte-fixed even though its name is not: it is the
-//      per-widget sleep/wake edge hook.
+//      explicit `widget::onSleepChange(arg)` call; the other 25
+//      widget-family vtables inherit 0x485d80. The original name is unknown;
+//      onSleepChange describes the first-sleep/final-wake calls in sleep().
 class widget {
 public:
     heroWindow* m_parentWindow;
@@ -200,10 +198,10 @@ public:
     {
         if (on) {
             if (m_sleepCount++ == 0)
-                vslot12(1);
+                onSleepChange(1);
         } else {
             if (--m_sleepCount == 0)
-                vslot12(0);
+                onSleepChange(0);
         }
     }
     // Dreamcast header inlines used by mode-switch paths.
@@ -235,12 +233,9 @@ protected:
     static widget* s_lastHoverWidget;
 
 public:
-    // Slot 12. DECLARED ONLY, exactly like Close: retail's body is the
-    // empty `ret 4` that ICF folded to the shared 0x485d80, so it has
-    // no claimable home, and leaving it undefined here is also what
-    // keeps button's override (0x456a10) emitting a real call instead
-    // of an /Ob2-inlined nothing.
-    virtual void vslot12(int on);  // slot 12
+    // Slot 12. The empty body lives in widget.cpp so button's qualified
+    // base call stays out of line. Retail ICF folds it to 0x485d80.
+    virtual void onSleepChange(int on);  // slot 12
 };
 SIZE(widget, 48);
 

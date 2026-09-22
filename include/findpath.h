@@ -143,9 +143,10 @@ public:
                       unsigned char seedContinuation);
     int buildPath(const hero* currentHero, long limit);
 
+    // E:\gamedcs\FindPath.h:211-213, dc 0x200e8: vector::clear.
     void clearPath()
     {
-        m_result.erase(m_result.begin(), m_result.end());
+        m_result.clear();
     }
     // Dreamcast FindPath.h:216/226. Both const header helpers retain public
     // SH4 copies, while Complete expands build_path's calls into the result
@@ -289,10 +290,11 @@ private:
     long* m_dangerZones;
 };
 
-// E:\gamedcs\FindPath.h:265, dc 0x37e98
-inline long* getDangerCell(long* dangerZones, type_point point)
+// Original: get_danger_cell; E:\gamedcs\FindPath.h:265, dc 0x37e98.
+// CodeView proves a long& result referring to the existing map element.
+inline long& getDangerCell(long* dangerZones, type_point point)
 {
-    return &dangerZones[(point.m_z * g_mapHeight + point.m_y) * g_mapWidth + point.m_x];
+    return dangerZones[(point.m_z * g_mapHeight + point.m_y) * g_mapWidth + point.m_x];
 }
 
 // E:\gamedcs\FindPath.h:270, dc 0x37eec
@@ -301,7 +303,7 @@ inline long searchArray::getDangerValue(type_point point) const
 {
     if (!m_dangerZones)
         return 0;
-    return *getDangerCell(m_dangerZones, point);
+    return getDangerCell(m_dangerZones, point);
 }
 
 // Retail .rdata 0x63bd18, nine dwords indexed by town::type:
@@ -313,7 +315,7 @@ inline long searchArray::getDangerValue(type_point point) const
 // tables (0x63bce8) and combatManager::wallTargets (0x63be60), so the owning
 // TU is not settled, and the tenth dword reads 0 - it may or may not be
 // part of the array. Name is an address ordinal.
-extern const long g_townSiegeStrength63bd18[];
+extern const int g_moatDamage[];
 
 // Retail .bss 0x699284; the DATA claim lands with findpath.cpp's
 // globals when that TU's data is modeled.
@@ -323,9 +325,7 @@ extern searchArray* g_searchArray;
 // (dx, dy, 0x10, 0) for N, NE, E, SE, S, SW, W, NW in that order.
 // Dreamcast publishes the source name/type as `tilePoint* normalDirTable`;
 // retail names the same base and reads its x/y fields at +0/+1. The two
-// stride-four aliases remain temporarily for already-exact legacy callers,
-// while reconstructed source uses the aggregate and lets reloc normalization
-// canonicalize owner+field-addend against retail's interior symbols.
+// legacy stride-four aliases are now expressed as fields of this aggregate.
 struct tilePoint {
 public:
     signed char m_x;
@@ -346,9 +346,7 @@ enum EMapDirection {
     MAP_DIRECTION_COUNT = 8
 };
 
-DATA(0x00678150) extern tilePoint g_normalDirTable[8];
-extern const signed char g_stepDeltaX[];   // 0x678150, stride 4
-extern const signed char g_stepDeltaY[];   // 0x678151, stride 4
+extern tilePoint g_normalDirTable[8];
 
 // 0x56a360, search.obj's, still @stub there. Declared here because
 // TestPossibleDirections calls it as a free fastcall (hero* in ECX,

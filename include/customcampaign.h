@@ -115,13 +115,6 @@ public:
     // operator delete on _First, then all three words zeroed - so the slot
     // is a std::vector over a 4-byte element whose identity is unproven.
     std::vector<int> m_assignedCarryover;
-    // Restoring these canonical header bodies preserves all banked RVAs but
-    // changes their VC6 emission/expansion decisions. The constructor's
-    // standalone comparison is missing (0%, MAX 100); TCampaignWindow's ctor
-    // moves 97.27 -> 84.30, game's ctor 87.85 -> 77.16, SavedGameHeader's ctor
-    // 98.88 -> 66.98, and oldmain 78.94 -> 77.03. The changed include closure
-    // also removes kb's retained CSprite::Draw occurrence (MAX 100). No dummy
-    // emitter or private alternate body is introduced; all peaks remain banked.
     // E:\gamedcs\CustomCampaign.h:199, dc 0xbcd90
     VA(0x00489500, 0x88)  // dc 0xbcd90
     SCampaign()
@@ -151,10 +144,10 @@ public:
     void applyBriefingChoice(int option);
     void doPreLoadCustomization();
     // E:\gamedcs\CustomCampaign.h:212, dc 0xe6ef8
-    VA(0x004897d0, 0x43)  // dc 0xe6ef8
     // Original CampaignComplete@SCampaign@@QAA_NXZ (native bool, mutable).
     // DC's older fixed-array body also marks campaignCompleted. Retail's
     // 67-byte vector scan has no such store; preserve the Complete behavior.
+    VA(0x004897d0, 0x43)  // dc 0xe6ef8
     bool campaignComplete()
     {
         for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
@@ -487,7 +480,7 @@ enum ECampaignStartOptionType {
 // when the town is set (41 rows a town). Neither table is claimed yet, so
 // the outer bound is left open rather than invented.
 extern const char* g_campaignBuildingIconNames[][44];
-extern const int g_campaignBuildingRemap[][41];
+extern const int g_eventBuildingIds[][41];
 
 // The two mixed resource selectors a resource bonus can carry beside the
 // seven EGameResource rows, byte-read off the ten-entry jump tables the
@@ -503,7 +496,7 @@ enum ECampaignBonusResource {
 // newgame.h / tradpost.cpp already declare them; the resource
 // bonus's description indexes the same table and this is the cheaper
 // include-set edge.
-extern const char* g_resourceNames[7];
+extern const char* g_resourceNames[8];
 
 // The three sentinel hero selectors a campaign bonus can carry, byte-read
 // off the picker's own jump chain at 0x4840d0 (`cmp ecx,-3 / -2 / -1`

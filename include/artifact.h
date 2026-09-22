@@ -141,7 +141,6 @@ extern type_artifact g_blacksmithArtifacts[];
 // Four signed primary-skill deltas per artifact. remove_artifact walks all
 // 144 rows when dismantling a combination; the adjacent address is a real
 // retail data symbol and is used as the pointer-loop bound.
-DATA(0x0063e758)
 extern const signed char g_artifactPrimarySkillBonuses[][4];
 DATA(0x0063e998)
 extern const signed char g_artifactPrimarySkillBonusesEnd[];

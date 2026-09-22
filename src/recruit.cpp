@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 #include "includes.h"
 
@@ -30,12 +31,13 @@
 #include "widget.h"
 #include "winmgr.h"
 
+DATA(0x0069d5e8) TRecruitWindow* g_recruitWindow;
+DATA(0x0069d5f4) HMENU__* g_recruitSavedMenu;
+
+
 // recruit.cpp-owned rollover text pointers. Each has exactly one retail
 // reader, the SetRolloverText expansion in recruitUnit::Main; the adjacent
 // TRecruitWindow constructor initializes the dialog family that owns them.
-DATA(0x006a7558) extern const char* g_recruitMaximumRolloverText;
-DATA(0x006a7560) extern const char* g_recruitAcceptRolloverText;
-DATA(0x006a7568) extern const char* g_recruitCancelRolloverText;
 
 VA(0x0054e750, 0x64)  // dc 0x118adc
 void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, long* cost)
@@ -113,20 +115,20 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         0x800));
 
     m_widgets.push_back(new coloredBorderFrame(0x40, 0xde, 0x63, 0x4c,
-        0x227, g_unnamed6aacb0->m_data[31], 0x400));
+        0x227, g_systemPalette->m_data[31], 0x400));
     m_widgets.push_back(new coloredBorderFrame(0x142, 0xde, 0x63, 0x4c,
-        0x228, g_unnamed6aacb0->m_data[31], 0x400));
+        0x228, g_systemPalette->m_data[31], 0x400));
     m_widgets.push_back(new coloredBorderFrame(0xac, 0xde, 0x43, 0x2a,
-        0x229, g_unnamed6aacb0->m_data[31], 0x400));
+        0x229, g_systemPalette->m_data[31], 0x400));
     m_widgets.push_back(new coloredBorderFrame(0xf6, 0xde, 0x43, 0x2a,
-        0x22a, g_unnamed6aacb0->m_data[31], 0x400));
+        0x22a, g_systemPalette->m_data[31], 0x400));
 
     m_widgets.push_back(new textWidget(0xf, 0x14, 0x1c8, 0x1a,
         DATA_COMPGEN(0x00691210, recruitEmptyText, ""),
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
         font::HEADING, 0x226, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(0x42, 0xe0, 0x5f, 0x11,
-        g_generalText->getText(347),
+        g_generalText->getText(GENERAL_TEXT_COST_PER_TROOP),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x1f4,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -151,7 +153,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     m_widgets.push_back(new textWidget(0xad, 0xdf, 0x41, 0x15,
-        g_generalText->getText(466),
+        g_generalText->getText(GENERAL_TEXT_RECRUIT_AVAILABLE_LABEL),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x208,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -161,7 +163,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         font::PRIMARY, 0x209,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(0xf7, 0xdf, 0x41, 0x15,
-        g_generalText->getText(17),
+        g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x20d,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -178,7 +180,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
     m_widgets.push_back(m_quantitySlider);
 
     m_widgets.push_back(new textWidget(0x144, 0xe0, 0x5f, 0x11,
-        g_generalText->getText(467),
+        g_generalText->getText(GENERAL_TEXT_TOTAL_COST),
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x20f,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -309,7 +311,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
     m_widgets.push_back(new bitmapBorder(startX, startY, 100, 130,
         slot + 0x21e,
         g_creatureBackgrounds[
-            g_game->m_f1f698 == 0
+            g_game->m_gameVersion == 0
                 && isBaseElemental(creature)
             ? -1 : g_creatureTypeTraits[creature].m_townType],
         0x800));
@@ -320,7 +322,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
     m_widgets.push_back(m_creatureWidgets[slot]);
 
     m_widgets.push_back(new coloredBorderFrame(startX - 1, startY - 1,
-        102, 132, slot + 0x21a, g_unnamed6aacb0->m_data[31], 0x400));
+        102, 132, slot + 0x21a, g_systemPalette->m_data[31], 0x400));
 }
 
 VA(0x0054fea0, 0x42E)  // dc 0x11994c
@@ -441,7 +443,7 @@ int recruitUnit::open(int newPriority)
     strcpy(m_mgrName,
         DATA_COMPGEN(0x00682a18, recruitManagerName, "recruitManager"));
 
-    if (g_videoPaused && !g_currentPlayer->isLocalHuman()) {
+    if (g_remoteOn && !g_currentPlayer->isLocalHuman()) {
         g_recruitWindow->m_acceptButton->enable(0);
         g_recruitWindow->m_maximumButton->enable(0);
     }
@@ -524,7 +526,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     updateCost();
 
     sprintf(g_text, "%s %s",
-        (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
+        g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE),
         getArmyName(m_monsterType, 2));
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -570,7 +572,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     // block in GetMessage while iconic) read the same way for a
     // network-game flag. Renaming a 275-reference global is the
     // owning lane's call, so the call site keeps the declared name.
-    if (g_videoPaused && !g_currentPlayer->isLocalHuman()) {
+    if (g_remoteOn && !g_currentPlayer->isLocalHuman()) {
         g_recruitWindow->m_acceptButton->enable(0);
         g_recruitWindow->m_maximumButton->enable(0);
         g_recruitWindow->m_quantitySlider->enable(0);
@@ -627,31 +629,31 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_0_ID;
-    msg.m_extra = g_unnamed6aacb0->m_data[31];
+    msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_1_ID;
-    msg.m_extra = g_unnamed6aacb0->m_data[31];
+    msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_2_ID;
-    msg.m_extra = g_unnamed6aacb0->m_data[31];
+    msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = RECRUIT_CREATURE_3_ID;
-    msg.m_extra = g_unnamed6aacb0->m_data[31];
+    msg.m_extra = g_systemPalette->m_data[31];
     g_recruitWindow->broadcastMessage(msg);
 
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_COLOR;
     msg.m_codeY = m_selectedPosition + RECRUIT_CREATURE_0_ID;
-    msg.m_extra = g_unnamed6aacb0->m_data[36];
+    msg.m_extra = g_systemPalette->m_data[36];
     g_recruitWindow->broadcastMessage(msg);
 }
 
@@ -662,16 +664,16 @@ inline void recruitUnit::setRolloverText(int codeY)
 {
     switch (codeY) {
     case RECRUIT_MAXIMUM_ID:
-        strcpy(g_text, g_recruitMaximumRolloverText);
+        strcpy(g_text, g_recruitHelp[0].m_text);
         break;
     case RECRUIT_CANCEL_ID:
-        strcpy(g_text, g_recruitCancelRolloverText);
+        strcpy(g_text, g_recruitHelp[2].m_text);
         break;
     case RECRUIT_ACCEPT_ID:
-        strcpy(g_text, g_recruitAcceptRolloverText);
+        strcpy(g_text, g_recruitHelp[1].m_text);
         break;
     default:
-        strcpy(g_text, g_emptyRolloverText);
+        strcpy(g_text, "");
         break;
     }
 
@@ -723,9 +725,9 @@ inline int exitRecruitUnit(message& msg)
 VA(0x00550940, 0xA08)  // anchor-callee + switch-table bracket, dc 0x11a30c
 int recruitUnit::main(message& msg)
 {
-    unsigned char abortDialog = g_turnDuration69d630.isExpired();
+    unsigned char abortDialog = g_turnDuration.isExpired();
 
-    if (!abortDialog && g_videoPaused) {
+    if (!abortDialog && g_remoteOn) {
         unsigned char msgReceived = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
@@ -887,7 +889,7 @@ int recruitUnit::main(message& msg)
                     & g_ctaSiegeWeapon) {
                     if (m_thisHero->getNumberInBackpack(1) + m_numberToBuy
                         > 64) {
-                        normalDialog(g_generalText->getText(327),
+                        normalDialog(g_generalText->getText(GENERAL_TEXT_RECRUIT_BACKPACK_FULL),
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                         break;
                     }
@@ -908,7 +910,7 @@ int recruitUnit::main(message& msg)
                     m_currArmyGroup->add(m_monsterType, m_numberToBuy, -1);
                 } else {
                     if (m_currArmyGroupIsTownGarrison) {
-                        normalDialog(g_generalText->getText(18),
+                        normalDialog(g_generalText->getText(GENERAL_TEXT_RECRUIT_GARRISON_FULL),
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     } else {
                         const char* creatureName;
@@ -920,10 +922,10 @@ int recruitUnit::main(message& msg)
                                 creatureName = g_creatureTypeTraits[
                                     m_monsterType].m_pluralName;
                         } else {
-                            creatureName = g_emptyRolloverText;
+                            creatureName = "";
                         }
                         normalDialog(formatString(
-                            g_generalText->getText(426), creatureName).c_str(),
+                            g_generalText->getText(GENERAL_TEXT_RECRUIT_INSUFFICIENT_PROVISIONS_FORMAT), creatureName).c_str(),
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -1196,7 +1198,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
 
     recruitWindow->addWidget(new bitmapBorder(30, 44, 100, 130, 0x21e,
         g_creatureBackgrounds[
-            g_game->m_f1f698 == 0
+            g_game->m_gameVersion == 0
                 && isBaseElemental(monType)
             ? -1 : g_creatureTypeTraits[monType].m_townType],
         0x800), -1);
@@ -1206,13 +1208,13 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
 
     sprintf(g_text,
         DATA_COMPGEN(0x00660c98, quickRecruitAvailabilityFormat, "%s %d"),
-        g_generalText->getText(218), *numMon);
+        g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL), *numMon);
     recruitWindow->addWidget(new textWidget(30, 182, 100, 17, g_text,
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x209,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
     recruitWindow->addWidget(new textWidget(32, 218, 96, 19,
-        g_generalText->getText(347),
+        g_generalText->getText(GENERAL_TEXT_COST_PER_TROOP),
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x1f4,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);

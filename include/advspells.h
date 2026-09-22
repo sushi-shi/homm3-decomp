@@ -27,7 +27,7 @@
 // is declared HERE, in advspells.obj's own narrow header, rather than in
 // advmgr.h - which twenty-odd translation units include. Name is a role
 // description; nothing attests a spelling.
-DATA(0x00691250) extern SLimitData g_advMapViewLimits;
+extern SLimitData g_advMapViewLimits;
 
 // The world extents advManager::SummonBoat's eight-neighbour scan clamps
 // against before asking for a cell. DECLARATIONS ONLY - game.h owns the

@@ -4,6 +4,8 @@
 // find_all_destinations' grail-spot tail expands the canonical game::getCell
 // wrapper and naturally retains its nested NewfullMap::cell call.
 #include "va.h"
+#include "objnames.h"
+#include "text.h"
 #include "includes.h"
 
 #include <algorithm>
@@ -30,6 +32,157 @@
 #include "soundmgr.h"
 #include "town.h"
 #include "tradpost.h"
+
+// Initial contents recovered from the pinned Complete image.
+DATA(0x00660838) char g_aiResourceWarningFormat[] = "Warning!  AI player has %i %s.\n";
+DATA(0x0063ac7c) const int g_aiArtifactEffectDefinitions[637] = {
+    2, 16, 5000, 6, 17, 0, 5, 17, 1, 4, 17, 2, 3, 17, 3, 2, 17, 4, 1, 17, 5, 1, 17, 6, 1, -1,
+    7, 0, 1, -1,
+    8, 0, 2, -1,
+    9, 0, 3, -1,
+    10, 0, 4, -1,
+    11, 0, 5, -1,
+    12, 0, 9, -1,
+    13, 0, 1, -1,
+    14, 0, 2, -1,
+    15, 0, 3, -1,
+    16, 0, 4, -1,
+    17, 0, 5, -1,
+    18, 0, 9, -1,
+    19, 2, 1, -1,
+    20, 2, 2, -1,
+    21, 2, 3, -1,
+    22, 2, 4, -1,
+    23, 2, 5, -1,
+    24, 2, 12, 1, -3, -1,
+    25, 1, 1, -1,
+    26, 1, 2, -1,
+    27, 1, 3, -1,
+    28, 1, 4, -1,
+    29, 1, 5, -1,
+    30, 1, 12, 2, -3, -1,
+    31, 0, 2, 1, 1, 2, 1, -1,
+    32, 0, 4, 1, 2, 2, 2, -1,
+    33, 0, 6, 1, 3, 2, 3, -1,
+    34, 0, 8, 1, 4, 2, 4, -1,
+    35, 0, 10, 1, 5, 2, 5, -1,
+    36, 0, 12, 1, 6, 2, 6, -1,
+    37, 0, 2, -1,
+    38, 0, 4, -1,
+    39, 0, 6, -1,
+    40, 0, 8, -1,
+    41, 1, 1, 2, 1, -1,
+    42, 1, 2, 2, 2, -1,
+    43, 1, 3, 2, 3, -1,
+    44, 1, 4, 2, 4, -1,
+    45, 4, 1, 3, 1, -1,
+    46, 4, 1, -1,
+    47, 4, 1, -1,
+    48, 4, 1, -1,
+    49, 3, 1, -1,
+    50, 3, 1, -1,
+    51, 3, 1, -1,
+    52, 5, 1, -1,
+    53, 5, 1, -1,
+    54, 6, 5, -1,
+    55, 6, 10, -1,
+    56, 6, 15, -1,
+    57, 7, 1, -1,
+    58, 7, 3, -1,
+    59, 7, 5, -1,
+    60, 19, 2, -1,
+    61, 19, 5, -1,
+    62, 19, 7, -1,
+    63, 7, 1, -1,
+    64, 7, 2, -1,
+    65, 7, 3, -1,
+    66, 7, 1, -1,
+    67, 7, 2, -1,
+    68, 7, 3, -1,
+    98, 8, 25, -1,
+    70, 8, 12, -1,
+    71, 8, 25, -1,
+    72, 8, 50, -1,
+    73, 9, 2, -1,
+    74, 9, 4, -1,
+    75, 9, 6, -1,
+    76, 10, 1, -1,
+    77, 10, 2, -1,
+    78, 10, 3, -1,
+    79, 11, 1, 100, -1,
+    80, 11, 8, 100, -1,
+    81, 11, 2, 100, -1,
+    82, 11, 4, 100, -1,
+    83, 13, 3, -1,
+    84, 14, -1,
+    85, 15, -1,
+    86, 12, 2, -1,
+    87, 12, 1, -1,
+    88, 12, 4, -1,
+    89, 12, 8, -1,
+    90, 7, 5, -1,
+    91, 19, 5, -1,
+    92, 7, 2, -1,
+    93, 7, 10, -1,
+    94, 7, 1, -1,
+    95, 7, 1, -1,
+    96, 7, 2, -1,
+    97, 7, 5, -1,
+    69, 7, 5, -1,
+    99, 7, 10, -1,
+    100, 7, 1, -1,
+    101, 7, 10, -1,
+    102, 7, 1, -1,
+    103, 7, 5, -1,
+    104, 7, 5, -1,
+    105, 7, 1, -1,
+    106, 7, 10, -1,
+    107, 7, 1, -1,
+    108, 7, 10, -1,
+    109, 16, 1, 4, -1,
+    110, 16, 1, 5, -1,
+    111, 16, 1, 1, -1,
+    112, 16, 1, 2, -1,
+    113, 16, 1, 3, -1,
+    114, 16, 1, 0, -1,
+    115, 16, 1000, 6, -1,
+    116, 16, 750, 6, -1,
+    117, 16, 500, 6, -1,
+    118, 17, 1, 5, -1,
+    119, 17, 2, 4, -1,
+    120, 17, 3, 3, -1,
+    121, 17, 4, 2, -1,
+    122, 17, 5, 1, -1,
+    123, 8, 5, -1,
+    124, 9, 20, -1,
+    125, 7, 5, -1,
+    126, 13, 0, -1,
+    128, 0, 6, 1, 3, 2, 6, -1,
+    127, 0, 10, -1,
+    129, 20, -1,
+    130, 21, -1,
+    131, 22, -1,
+    132, 7, 15, 0, 6, 19, 10, -1,
+    133, 23, -1,
+    134, 0, 12, 1, 6, 2, 6, 7, 10, -1,
+    135, 18, 57, -1,
+    136, 8, 12, -1,
+    137, 19, 7, -1,
+    138, 9, 10, -1,
+    139, 10, 50, -1,
+    140, 16, 4, 4, 16, 4, 5, 16, 4, 1, 16, 4, 3, -1,
+    -100
+};
+
+// AIInitialize's eight 0x98-byte records and GetAttackBonus's two floats.
+DATA(0x00692950) type_AI_player g_aiPlayers[8];
+DATA(0x006604f8) float type_AI_player::s_attackComputerBonus = 0.5f;
+DATA(0x006604fc) float type_AI_player::s_attackHumanBonus = 0.5f;
+
+
+// Retail table initializers, in the layouts used by their named consumers.
+DATA(0x00660518) int g_heroLimits[5] = { 2, 3, 4, 5, 6 };
+DATA(0x0066052c) int g_globalLimits[5] = { 8, 11, 14, 17, 20 };
 
 #ifdef min
 #undef min
@@ -68,7 +221,7 @@ static type_AI_initializer g_aiInitializer;
 // Retail startup0x428070 clears 232 one-byte flags and232 long values.
 // Original visibility-array spelling: AI_event_visibility_values.
 DATA(0x00693718)
-unsigned char g_unnamed693718[232];
+unsigned char g_oneUseEvents[232];
 DATA(0x006925ac)
 long g_aiEventVisibilityValues[232];
 
@@ -402,7 +555,7 @@ void type_AI_player::endTurn()
     if (townIndex < player->m_numTowns) {
         while (true) {
             town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
-            if (currentTown->hasBuilding(MARKETPLACE_ID, 1)) {
+            if (currentTown->hasBuilding(MARKETPLACE_ID, true)) {
                 for (short playerId = 0; playerId < 8; playerId++) {
                     if (!g_game->m_playerDisabled[playerId]
                         && playerId != m_team
@@ -540,7 +693,7 @@ void type_AI_player::makeGift(long playerId)
             displayedResource.m_qualifier = surplus[resource];
             if (g_game->m_players[playerId].isLocalHuman()) {
                 list.push_back(displayedResource);
-            } else if (g_networkActive69954c) {
+            } else if (g_remoteOn) {
                 CGiftMsg msg(g_netLocalGamePos, displayedResource.m_resource,
                              displayedResource.m_qualifier);
                 transmitRemoteData(&msg, playerId, 0, 1);
@@ -551,8 +704,8 @@ void type_AI_player::makeGift(long playerId)
     std::string message;
     if (g_game->m_players[playerId].isLocalHuman()) {
         message = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED),
-            g_playerColorNames[m_team]);
+            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT),
+            g_colors[m_team]);
         extendedDialog(message.c_str(), list, -1, -1, 0);
     }
 
@@ -564,7 +717,7 @@ void type_AI_player::makeGift(long playerId)
             requestedResource.m_qualifier = 0;
             if (g_game->m_players[playerId].isLocalHuman()) {
                 list.push_back(requestedResource);
-            } else if (g_networkActive69954c) {
+            } else if (g_remoteOn) {
                 CGiftRequestMsg msg(g_netLocalGamePos, requestedResource.m_resource);
                 transmitRemoteData(&msg, playerId, 0, 1);
             }
@@ -575,17 +728,17 @@ void type_AI_player::makeGift(long playerId)
         if (list.size() == 1) {
             message = formatString(
                 g_generalText->getText(
-                    GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
-                g_playerColorNames[m_team],
+                    GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT),
+                g_colors[m_team],
                 g_resourceNames[list[0].m_resource]);
         } else {
             message = formatString(
                 g_generalText->getText(
-                    GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST),
-                g_playerColorNames[m_team]);
+                    GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST_FORMAT),
+                g_colors[m_team]);
         }
         int timeout = 0;
-        if (g_turnDuration69d630.isOn())
+        if (g_turnDuration.isOn())
             timeout = 15000;
         extendedDialog(message.c_str(), list, -1, -1, timeout);
     }
@@ -1312,7 +1465,7 @@ unsigned char type_AI_player::purchaseBuilding(
          ++townIndex) {
         town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
         __int64 buildMask = currentTown->getBuildableMask();
-        if (g_game->m_towns[currentTown->m_id].m_builtThisTurn)
+        if (g_game->townAlreadyBuiltOn(currentTown->m_id))
             continue;
 
         memset(extraCosts, 0, sizeof(extraCosts));
@@ -1323,7 +1476,7 @@ unsigned char type_AI_player::purchaseBuilding(
                 int ordinal = building;
                 memcpy(&buildingId, &ordinal, sizeof buildingId);
                 if (!currentTown->isLegalBuilding(buildingId)
-                    || (currentTown->m_active & g_bitNumber[building])
+                    || currentTown->hasBuilding(building, 1)
                     || building == HOLY_GRAIL_ID) {
                     basicValue[building] = -1;
                     continue;
@@ -1381,7 +1534,7 @@ unsigned char type_AI_player::purchaseBuilding(
         bestTown->getBuildCost(buildingId, cost);
     }
     tradeResources(cost, 1);
-    if (g_game->m_towns[bestTown->m_id].m_builtThisTurn)
+    if (g_game->townAlreadyBuiltOn(bestTown->m_id))
         return 0;
     if (bestBuilding >= HALL_VILLAGE_ID
         && bestBuilding <= MARKETPLACE_SILO_ID) {
@@ -1612,8 +1765,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     if (g_game->townAlreadyBuiltOn(currentTown->m_id))
         return;
     if (!g_game->m_setup.m_difficulty
-        && !g_game->isHumanAlly(
-               g_game->getTeam(g_netLocalGamePos)))
+        && !g_game->isHumanAlly(g_netLocalGamePos))
         return;
     short amount;
     const TCreatureTypeTraits* traits;
@@ -1888,19 +2040,14 @@ void type_AI_creature_swapper::doSwap(hero* currentHero,
 // Complete adds the Angelic-Alliance byte used by the three philai callers;
 // retail proves its store at +8 and folds calculate_improvement plus the
 // consolidation helper into this selected body.
-// Residual (92.5052%): all calls and computations agree. The candidate
-// promotes `value` into EDI after the consolidation loop, splitting one exit
-// edge (16 blocks versus retail's 15); retail keeps it at [ebp-4]. A volatile
-// control forced 15 blocks but changed the surrounding allocation and fell to
-// 80.38%, so the source-false qualifier is rejected.
 VA(0x0042c4a0, 0x108)  // DC method/locals + Complete parameter, dc 0x31864
 long type_AI_creature_swapper::getSwapValue(
     const hero* currentHero, const armyGroup* sourceArmy,
     const hero* secondHero, unsigned char newHasAngelicAlliance)
 {
+    long value = 0;
     armyGroup localArmy(currentHero->m_army);
     armyGroup localSource(*sourceArmy);
-    long value = 0;
 
     m_hasAngelicAlliance = newHasAngelicAlliance;
     m_army = &localArmy;
@@ -1971,7 +2118,7 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // it, and reloads, which frees EDI for shooterCount and cascades into every
 // later binding - the traits address spilling instead of staying live, the
 // checkAlignments byte loaded to BL on retail's side and compared in memory on
-// ours, and the reverse for g_game->m_f1f698. why-reg's model says the value
+// ours, and the reverse for g_game->m_gameVersion. why-reg's model says the value
 // that must move first is `this`, and the front end proves that unreachable:
 // `il-locals` gives isShooter 0xca55, checkAlignments 0xca56, this 0xca58, then
 // shooterCount 0xca5a and the rest, and handle-order.md measures
@@ -1979,7 +2126,7 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // `this` to EDI, which needs shooterCount created first - no declaration order
 // reaches it. Same verdict and same root as get_simple_attack_effect.
 // Byte-flat: `traits.m_townType` for the repeated subscript, and
-// `!g_game->m_f1f698` for the `== 0` test.
+// `!g_game->m_gameVersion` for the `== 0` test.
 VA(0x0042c690, 0x192)  // DC method + retail body/caller; dc 0x31a00
 long type_AI_creature_swapper::chooseWeakestArmy(
     unsigned char isShooter, unsigned char checkAlignments)
@@ -2011,7 +2158,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
         if (checkAlignments) {
             int alignment;
-            if (g_game->m_f1f698 == 0
+            if (g_game->m_gameVersion == 0
                 && isBaseElemental(type)) {
                 alignment = -1;
             } else {
@@ -2074,7 +2221,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     long moraleArmyValue = 0;
 
     int alignment;
-    if (g_game->m_f1f698 == 0
+    if (g_game->m_gameVersion == 0
         && isBaseElemental(type)) {
         alignment = -1;
     } else {
@@ -2091,7 +2238,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
         int minimumMorale;
-        if (g_game->m_f1f698 == 0
+        if (g_game->m_gameVersion == 0
             && isBaseElemental(type)) {
             minimumMorale = 1;
         } else {
@@ -2136,8 +2283,8 @@ long type_AI_creature_swapper::valueOfAddingArmy(
         }
     }
     if (slowestSpeed > traits->m_speed) {
-        long oldMove = g_landMovement[slowestSpeed];
-        long newMove = g_landMovement[traits->m_speed];
+        long oldMove = g_moveConstants.m_land[slowestSpeed];
+        long newMove = g_moveConstants.m_land[traits->m_speed];
         long armyValue = m_army->getAIValue() + 500;
         value += static_cast<long>(
             static_cast<double>(newMove) * armyValue
@@ -2614,9 +2761,9 @@ static void markDangerZones(const hero* ourHero, hero* enemyHero,
              visitedIndex--;) {
             const type_point& point = g_searchArray->getVisitedCell(visitedIndex)->m_point;
             if (value >= -500000000) {
-                *getDangerCell(dangerZones, point) += value;
+                getDangerCell(dangerZones, point) += value;
             } else {
-                *getDangerCell(dangerZones, point) =
+                getDangerCell(dangerZones, point) =
                     -1000000000;
             }
         }
@@ -2721,7 +2868,7 @@ static void markStrategicMap(
         NewmapCell* cell = g_advManager->getCell(point.m_point);
         int type = cell->m_type;
         if (!(getMapExtra(point.m_point.m_x, point.m_point.m_y, point.m_point.m_z)
-              & g_unnamed69ccc4)) {
+              & g_curPlayerBit)) {
             strategicMap[point.m_point.m_z * levelSize
                           + point.m_point.m_y * g_mapWidth + point.m_point.m_x]
                 += point.m_value;
@@ -2729,7 +2876,7 @@ static void markStrategicMap(
         }
 
         wasTrigger = cell->m_isTrigger;
-        if (g_adventureObjectTraits[type][0])
+        if (g_adventureObjectTraits[type].m_blocksLanding)
             cell->m_isTrigger = 0;
 
         rect.left = max(0L, static_cast<long>(point.m_point.m_x) - 5);
@@ -2744,7 +2891,7 @@ static void markStrategicMap(
             59999, 0);
 
         short nearbyCost;
-        if (!g_adventureObjectTraits[type][0]) {
+        if (!g_adventureObjectTraits[type].m_blocksLanding) {
             nearbyCost = 0;
         } else {
             cell->m_isTrigger = wasTrigger;
@@ -2994,10 +3141,6 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
     return rawValue;
 }
 
-// is_human_ally (dc 0x37fd8, game.h:1370) is claimed at its retail COMDAT
-// slot below (0x42b9e0); the callers additionally expand GetTeam at the
-// call site before handing it the team.
-
 // The nine functions below are located by the callee-fingerprint join against
 // Dreamcast call targets: for each retail carve row the cross-unit resolved
 // calls (homm3 sema disasm) form a set that matches a unique ai_player DC
@@ -3099,7 +3242,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
             continue;
         NewmapCell* mapCell = g_advManager->getCell(cell->m_point);
         if (!mapCell->m_isTrigger) {
-            if ((getMapExtra(cell->m_point) & g_unnamed69ccc4)
+            if ((getMapExtra(cell->m_point) & g_curPlayerBit)
                 || g_currentPlayer->m_numTowns == 0)
                 continue;
         }
@@ -3127,7 +3270,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
         if (point.m_point == currentHero->getLocation())
             continue;
 
-        if (g_unnamed693718[mapCell->m_type]
+        if (g_oneUseEvents[mapCell->m_type]
             && point.m_moveCost > friendlyDistances[
                 point.m_point.m_z * levelSize + point.m_point.m_y * g_mapWidth
                 + point.m_point.m_x])
@@ -3135,7 +3278,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
         point.m_moveCost = cell->m_adjustedCost;
         if (hiringHero)
             point.m_moveCost = 10000;
-        if (!(getMapExtra(point.m_point) & g_unnamed69ccc4)
+        if (!(getMapExtra(point.m_point) & g_curPlayerBit)
             && g_currentPlayer->m_numTowns > 0) {
             if (exploreMode) {
                 point.m_value = 100000;
@@ -3281,8 +3424,8 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
     type_point point = destination->m_point;
     NewmapCell* cell = g_advManager->getCell(point);
     int type = cell->m_type;
-    if (cell->m_isTrigger && g_adventureObjectTraits[type][0]) {
-        if (getMapExtra(point.m_x, point.m_y, point.m_z) & g_unnamed69ccc4) {
+    if (cell->m_isTrigger && g_adventureObjectTraits[type].m_blocksLanding) {
+        if (getMapExtra(point.m_x, point.m_y, point.m_z) & g_curPlayerBit) {
             destination->m_moveCost -= currentPathCell->m_cost;
             point = currentPathCell->m_lastPoint;
             pathCell* lastCell = currentSearchArray->getCell(point, 0);
@@ -3290,14 +3433,14 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
         }
     }
 
-    long value = *getDangerCell(strategicMap, point)
+    long value = getDangerCell(strategicMap, point)
         + currentPathCell->m_barrierValue;
     if (currentPathCell->m_dangerValue <= -500000000 && value >= 1968)
         currentPathCell->m_dangerValue = -2500000;
     if (value >= -500000000)
         value += currentPathCell->m_dangerValue;
 
-    if (!g_adventureObjectTraits[type][0]) {
+    if (!g_adventureObjectTraits[type].m_blocksLanding) {
         type_point monsterPos;
         if (g_advManager->findAdjacentMonster(destination->m_point,
                                               &monsterPos,
@@ -3355,7 +3498,7 @@ static unsigned char attemptTeleport(hero* currentHero,
 static void considerHidingMouse(hero* currentHero, int direction)
 {
     if (g_mouseManager->isVis()
-        && g_advManager->considerHidingMouse(currentHero, direction)) {
+        && g_advManager->getMoveShowIt(currentHero, direction)) {
         int saveDraw = g_completeDrawEnabled;
         g_completeDrawEnabled = 1;
         g_mouseManager->hidePointer();
@@ -3634,7 +3777,7 @@ static unsigned char attemptTeleport(hero* currentHero,
     return 1;
 }
 // E:\gamedcs\ai_player.cpp:4155, dc 0x34a7c.
-static __forceinline void checkGatePurchase(type_point point)
+static inline void checkGatePurchase(type_point point)
 {
     int townId = g_game->getTownId(point.m_x, point.m_y, point.m_z);
     if (townId >= 0) {
@@ -3869,7 +4012,7 @@ static unsigned char getMapShipyard(const playerData* player, long x,
 VA(0x00430f80, 0x1d2)  // dc 0x35910
 void aiBuildShip(const hero* ourHero, long x, long y, long z)
 {
-    if (ourHero->belongsToHuman() && !g_unk691209)
+    if (ourHero->belongsToHuman() && !g_goSolo)
         return;
 
     playerData* player = &g_game->m_players[ourHero->m_owner];
@@ -3877,7 +4020,7 @@ void aiBuildShip(const hero* ourHero, long x, long y, long z)
     if (!shipyardTown) {
         if (!getMapShipyard(player, x, y, z))
             return;
-    } else if (!shipyardTown->hasBuilding(DOCK_ID, 1)
+    } else if (!shipyardTown->hasBuilding(DOCK_ID, true)
                && !shipyardTown->buyBuilding(DOCK_ID)) {
         return;
     }
@@ -3902,7 +4045,7 @@ long aiGetShipCost(const hero* ourHero, type_point point)
     if (!shipyardTown) {
         if (!getMapShipyard(player, point.m_x, point.m_y, point.m_z))
             return -200000;
-    } else if (!shipyardTown->hasBuilding(DOCK_ID, 1)) {
+    } else if (!shipyardTown->hasBuilding(DOCK_ID, true)) {
         shipyardTown->getBuildCost(DOCK_ID, cost);
     }
 
@@ -4003,7 +4146,7 @@ bool considerHiring(long playerId, hero* candidate)
         if (currentTown->m_visitingHeroId >= 0)
             continue;
         long value = total;
-        if (!currentTown->hasBuilding(TAVERN_ID, 1)) {
+        if (!currentTown->hasBuilding(TAVERN_ID, true)) {
             if (!currentTown->canBuild(TAVERN_ID))
                 continue;
             if (!canBuy(currentTown, TAVERN_ID))
@@ -4020,7 +4163,7 @@ bool considerHiring(long playerId, hero* candidate)
     if (bestTown == 0)
         return 0;
 
-    if (!bestTown->hasBuilding(TAVERN_ID, 1)) {
+    if (!bestTown->hasBuilding(TAVERN_ID, true)) {
         if (!bestTown->buyBuilding(TAVERN_ID))
             return 0;
         if (player.m_resources[GOLD] < g_heroGoldCost)
@@ -4442,13 +4585,13 @@ long type_creature_growth_artifact::getValue(const hero* owner,
             return 0;
 
         town* currentTown = g_game->getTown(townId);
-        if (!currentTown->hasBuilding(DWELLING_0_ID + m_bonus, 1))
+        if (!currentTown->hasBuilding(DWELLING_0_ID + m_bonus, true))
             return 0;
         if (currentTown->m_garrisonHeroId != owner->m_id)
             return 1;
 
         int dwelling = m_bonus;
-        if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, 1))
+        if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, true))
             dwelling += TOWN_DWELLING_COUNT;
         TCreatureType creature = g_townDwellingCreatures[
             currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling];
@@ -4457,10 +4600,10 @@ long type_creature_growth_artifact::getValue(const hero* owner,
 
     for (int i = 0; i < player.m_numTowns; ++i) {
         town* currentTown = g_game->getTown(player.m_townIds[i]);
-        if (!currentTown->hasBuilding(DWELLING_0_ID + m_bonus, 1))
+        if (!currentTown->hasBuilding(DWELLING_0_ID + m_bonus, true))
             continue;
         int dwelling = m_bonus;
-        if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, 1))
+        if (currentTown->hasBuilding(DWELLING_0_UPG_ID + m_bonus, true))
             dwelling += TOWN_DWELLING_COUNT;
         TCreatureType creature = g_townDwellingCreatures[
             currentTown->m_type * TOWN_DWELLING_SLOTS + dwelling];
@@ -4506,7 +4649,7 @@ long type_shooter_bonus_artifact::getValue(const hero* owner, unsigned char, uns
     long total = 0;
     for (int i = 0; i < 7; i++) {
         int type = owner->m_army.m_armies[i];
-        if (type != -1 && (g_creatureTypeTraits[type].m_attributes & 0x4))
+        if (type != -1 && (g_creatureTypeTraits[type].m_attributes & creatureShootingArmy))
             total += g_creatureTypeTraits[type].m_aiValue * owner->m_army.m_numTroops[i];
     }
     return m_bonus * total / 100;
@@ -4529,7 +4672,7 @@ long type_angelic_alliance_artifact::getValue(
             int creature = currentHero->m_army.m_armies[heroSlot];
             if (creature == CREATURE_NONE)
                 continue;
-            if (g_game->m_f1f698 == 0
+            if (g_game->m_gameVersion == 0
                 && isBaseElemental(creature)) {
                 continue;
             }
@@ -4551,7 +4694,7 @@ long type_angelic_alliance_artifact::getValue(
             int creature = townArmy.m_armies[townSlot];
             if (creature == CREATURE_NONE)
                 continue;
-            if (g_game->m_f1f698 == 0
+            if (g_game->m_gameVersion == 0
                 && isBaseElemental(creature)) {
                 continue;
             }
@@ -4643,7 +4786,7 @@ long type_elixir_of_life_artifact::getValue(const hero* owner, unsigned char, un
     long total = 0;
     for (int i = 0; i < 7; i++) {
         int type = owner->m_army.m_armies[i];
-        if (type != -1 && (g_creatureTypeTraits[type].m_attributes & 0x10))
+        if (type != -1 && (g_creatureTypeTraits[type].m_attributes & creatureAlive))
             total += g_creatureTypeTraits[type].m_aiValue * owner->m_army.m_numTroops[i];
     }
     return total / 8;
@@ -4749,10 +4892,10 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
                 const TCreatureTypeTraits& traits =
                     g_creatureTypeTraits[creature];
                 if (firstAid >= traits.m_hitPoints)
-                    value = cppMax(value,
-                                     static_cast<long>(traits.m_aiValue));
+                    value = max(value,
+                                static_cast<long>(traits.m_aiValue));
                 else
-                    value = cppMax(
+                    value = max(
                         value, static_cast<long>(
                                    traits.m_aiValue * firstAid
                                    / traits.m_hitPoints));
@@ -5209,9 +5352,9 @@ type_AI_initializer::type_AI_initializer()
         105, 1, 106, 1, 107, 50, 108, 10, 109, 10, 110, 1,
         111, 50, 112, 10, 113, 50, 0
     };
-    memset(g_unnamed693718, 0, sizeof(g_unnamed693718));
+    memset(g_oneUseEvents, 0, sizeof(g_oneUseEvents));
     for (int event = 0; g_constOneUseEvents[event]; ++event)
-        g_unnamed693718[event] = 1;
+        g_oneUseEvents[event] = 1;
     memset(g_aiEventVisibilityValues, 0, sizeof(g_aiEventVisibilityValues));
     for (int i = 0; g_constVisibilityValues[i]; ++i) {
         int event = g_constVisibilityValues[i++];

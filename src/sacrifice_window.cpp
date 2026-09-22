@@ -239,7 +239,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceWidget = new textWidget(
-        44, 468, 66, 16, g_emptyRolloverText, "smalfont.fnt",
+        44, 468, 66, 16, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_experienceWidget);
 
@@ -249,7 +249,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceTotalWidget = new textWidget(
-        41, 536, 66, 16, g_emptyRolloverText, "smalfont.fnt",
+        41, 536, 66, 16, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_experienceTotalWidget);
 
@@ -267,7 +267,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
     m_widgets.push_back(newWidget);
 
     m_rolloverText = new textWidget(
-        8, 567, 584, 18, g_emptyRolloverText, "smalfont.fnt",
+        8, 567, 584, 18, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_rolloverText);
 
@@ -286,9 +286,6 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:360
-// Residual (99.9983%): all 102 CFG blocks and instruction rows agree. The
-// remaining bytes are the member-store order in artifactOffering's generated
-// constructor; the declaration order below follows the Dreamcast line table.
 VA(0x00560380, 0xD67)  // ctor caller + dc name/order/locals, dc 0x1246b8
 void type_sacrifice_window::createArtifactWidgets(
     long& widgetId, int curPlayer)
@@ -297,7 +294,7 @@ void type_sacrifice_window::createArtifactWidgets(
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 600, 593, widgetId++,
-        g_game->m_f1f698 >= 2 ? "AltrArt2.pcx" : "AltarArt.pcx", 0x800);
+        g_game->m_gameVersion >= 2 ? "AltrArt2.pcx" : "AltarArt.pcx", 0x800);
     background->setPlayerPaletteColors(curPlayer);
     m_widgets.push_back(background);
     m_artifactWidgets.push_back(background);
@@ -307,7 +304,7 @@ void type_sacrifice_window::createArtifactWidgets(
     def.m_width = 44;
     def.m_height = 44;
     def.m_image = "artifact.def";
-    long count = g_game->m_f1f698 >= 2 ? 19 : 18;
+    long count = g_game->m_gameVersion >= 2 ? 19 : 18;
     long i;
     for (i = 0; i < count; ++i) {
         def.m_x = g_slotDefinitions[i][0];
@@ -361,7 +358,7 @@ void type_sacrifice_window::createArtifactWidgets(
         long textY = itemY + 47;
         for (count = g_rowSize[j]; count > 0; --count) {
             currentTextWidget = new textWidget(
-                textX, textY, 48, 16, g_emptyRolloverText,
+                textX, textY, 48, 16, "",
                 "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
             m_widgets.push_back(currentTextWidget);
             m_artifactWidgets.push_back(currentTextWidget);
@@ -460,7 +457,7 @@ void type_sacrifice_window::createCreatureWidgets(
     m_creatureWidgets.push_back(currentTextWidget);
 
     m_creatureNameWidget = new textWidget(
-        29, 56, 256, 42, g_emptyRolloverText, "medfont.fnt",
+        29, 56, 256, 42, "", "medfont.fnt",
         font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_creatureNameWidget);
     m_creatureWidgets.push_back(m_creatureNameWidget);
@@ -521,7 +518,7 @@ void type_sacrifice_window::createCreatureWidgets(
     }
 
     m_currentCreature.m_creatureCountText = new textWidget(
-        145, 493, 66, 16, g_emptyRolloverText, "smalfont.fnt",
+        145, 493, 66, 16, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_currentCreature.m_creatureCountText->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_CREATURE_AMOUNT].m_text,
@@ -539,7 +536,7 @@ void type_sacrifice_window::createCreatureWidgets(
     m_currentCreature.m_sourceSelectionFrame = 0;
 
     m_currentCreature.m_experienceText = new textWidget(
-        391, 493, 66, 16, g_emptyRolloverText, "smalfont.fnt",
+        391, 493, 66, 16, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_currentCreature.m_experienceText->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_AMOUNT].m_text,
@@ -605,7 +602,7 @@ long type_sacrifice_window::createCreatureIcons(
     for (long row = 0; row < rows; ++row) {
         for (long column = 0; column < columns; ++column) {
             textWidgets[count] = new textWidget(
-                textX, textY, 66, 16, g_emptyRolloverText,
+                textX, textY, 66, 16, "",
                 "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
             textWidgets[count]->setHelpText(
                 g_sacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLOT].m_text,
@@ -726,7 +723,7 @@ void type_sacrifice_window::updateSlot(long slot)
 VA(0x005629e0, 0x33)  // dc 0x125c34
 void type_sacrifice_window::updateAllSlots()
 {
-    long slotCount = g_game->m_f1f698 >= 2 ? 19 : 18;
+    long slotCount = g_game->m_gameVersion >= 2 ? 19 : 18;
     for (long slot = 0; slot < slotCount; ++slot)
         updateSlot(slot);
 }
@@ -1627,7 +1624,7 @@ VA(0x005653f0, 0x3b)  // dc 0x12743c
 void type_sacrifice_window::handleWidgetHover(widget* currentWidget)
 {
     if (!currentWidget->getHelpText())
-        m_rolloverText->setText(g_emptyRolloverText);
+        m_rolloverText->setText("");
     else
         m_rolloverText->setText(currentWidget->getHelpText());
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -1705,6 +1702,10 @@ type_transformer_slot::type_transformer_slot(
 // 0x5654f0 - so neither row is an /OPT:ICF fold.
 VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
+// DC proves push_back; its text subscripts forward to getText. At 98.3508%,
+// the final rollover append's growth path retains an extra vector::size.
+// Removing the vector alias or binding its pointer argument locally does
+// not recover that nested expansion; keep the canonical container call.
 VA(0x005654f0, 0xA3C)  // dc 0x1275c0
 type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     : CAdvPopup(100, 67, 600, 485, 18)
@@ -1722,8 +1723,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         g_game->getLocalPlayerGamePos());
     m_widgets.push_back(background);
 
-    std::vector<widget*>& widgets = m_widgets;
-    widgets.insert(widgets.end(), new textWidget(
+    m_widgets.push_back(new textWidget(
         25, 21, 257, 18,
         g_generalText->getText(
             SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE),
@@ -1782,7 +1782,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     m_widgets.push_back(exitButton);
 
     m_rolloverText = new textWidget(
-        8, 459, 585, 19, g_emptyRolloverText, "smalfont.fnt",
+        8, 459, 585, 19, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_rolloverText);
 
@@ -1972,7 +1972,7 @@ VA(0x00566720, 0x38)  // dc 0x128098
 void type_skeleton_window::handleWidgetHover(widget* currentWidget)
 {
     if (!currentWidget->getHelpText())
-        m_rolloverText->setText(g_emptyRolloverText);
+        m_rolloverText->setText("");
     else
         m_rolloverText->setText(currentWidget->getHelpText());
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -1994,7 +1994,7 @@ void type_skeleton_window::createCreatureIcons(
     for (row = 0; row < rows; ++row) {
         for (column = 0; column < columns; ++column) {
             textWidgets[count] = new textWidget(
-                textX, textY, 66, 16, g_emptyRolloverText,
+                textX, textY, 66, 16, "",
                 "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
             m_widgets.push_back(textWidgets[count]);
 
@@ -2008,8 +2008,7 @@ void type_skeleton_window::createCreatureIcons(
                 widgetId++, "TwCrPort.def");
             m_widgets.push_back(selectionWidgets[count]);
             selectionWidgets[count]->setIconFrame(1);
-            selectionWidgets[count]->sendMessage(
-                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+            selectionWidgets[count]->setVisible(0);
 
             ++count;
             textX += 83;

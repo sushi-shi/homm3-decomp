@@ -104,6 +104,6 @@ private:
 };
 SIZE(TSystemOptionsWindow, 0x68);
 
-DATA(0x006a7584) extern THelpText g_systemOptionsHelp[48];
+extern THelpText g_systemOptionsHelp[48];
 
 #endif  /* HOMM3_SYSTEMOPTIONSWINDOW_H */

@@ -1,5 +1,6 @@
 // DC's retained HasBuilding callee (r11) serves all seven hall, silo and
 // fort tests. Keep every source call and the ordinary canonical town body.
+#include "text.h"
 #include "va.h"
 #include "includes.h"
 
@@ -79,11 +80,11 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
 
     std::string townSizeName;
     int hallLevel;
-    if (thisTown->hasBuilding(HALL_TOWN_ID, 0))
+    if (thisTown->hasBuilding(HALL_TOWN_ID, false))
         hallLevel = 1;
-    else if (thisTown->hasBuilding(HALL_CITY_ID, 0))
+    else if (thisTown->hasBuilding(HALL_CITY_ID, false))
         hallLevel = 2;
-    else if (thisTown->hasBuilding(HALL_CAPITOL_ID, 0))
+    else if (thisTown->hasBuilding(HALL_CAPITOL_ID, false))
         hallLevel = 3;
     else
         hallLevel = 0;
@@ -100,7 +101,7 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
                 0x800));
         }
 
-        if (thisTown->hasBuilding(MARKETPLACE_SILO_ID, 1)) {
+        if (thisTown->hasBuilding(MARKETPLACE_SILO_ID, true)) {
             int* siloIncome = thisTown->getSiloIncome();
             // DC resource is sp+0x5c; after the prologue's 68-byte SP
             // decrement this is r14+24, precisely the loop counter slot.
@@ -151,11 +152,11 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
     // DC116/118/120 reuses HasBuilding through r11 with ids7/8/9 and
     // checkIncluded=0. Retail reads the built mask through these expansions.
     int castleLevel;
-    if (thisTown->hasBuilding(CASTLE_FORT_ID, 0))
+    if (thisTown->hasBuilding(CASTLE_FORT_ID, false))
         castleLevel = 0;
-    else if (thisTown->hasBuilding(CASTLE_CITADEL_ID, 0))
+    else if (thisTown->hasBuilding(CASTLE_CITADEL_ID, false))
         castleLevel = 1;
-    else if (thisTown->hasBuilding(CASTLE_CASTLE_ID, 0))
+    else if (thisTown->hasBuilding(CASTLE_CASTLE_ID, false))
         castleLevel = 2;
     else
         castleLevel = 3;
@@ -178,7 +179,7 @@ TQuickTownWindow::TQuickTownWindow(const garrison* thisGarrison,
     m_widgets.push_back(new bitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "townqvbk.pcx", 0x800));
     m_widgets.push_back(new textWidget(
-        77, 13, 110, 24, g_quickViewGarrisonText, "smalfont.fnt",
+        77, 13, 110, 24, g_quickViewText[33], "smalfont.fnt",
         font::WHITE, NAME_ID, 0, 0, 8));
 
     initializeArmyDisplay(thisGarrison->m_garrisonArmy, viewLevel);

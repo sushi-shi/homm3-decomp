@@ -596,3 +596,9 @@ void slider::enable(unsigned char arg)
         sendMessage(WIDGET_SET_STATUS, WIDGET_STYLE_AUTO_REPEAT);
     }
 }
+
+// Retail vtable 0x641d50 slot 16 is the shared empty return at 0x5bc690.
+// The scenario text slider overrides this optional change notification.
+void slider::close()
+{
+}
