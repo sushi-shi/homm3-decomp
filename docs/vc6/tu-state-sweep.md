@@ -47,3 +47,13 @@ These probes establish reachability in a compiler state, not recovered source.
 An authentic source change still requires the ordinary VC6 build and retail
 comparison. Historical exact observations may remain out of reach in today's
 source and header population; see [historical match evidence](../reconstruction/historical-matches.md).
+
+The wide 20-TU validation used seed `20260906`, `forest,mixed`, `--insertion
+both`, 40 trials per TU, and `--max-declarations 64`. All 800 candidates
+compiled and produced 97,440 function-score observations. A second compile
+reproduced three MAX gains: `CSpriteFrame::drawAdvObjShadowImpl` 94.3325 →
+94.3573 and `CSpriteFrame::drawTileShadow` 99.9308 → 99.9597 from the same
+`forest` trial 7, and `hero::giveArtifact` 83.1093 → 85.8421 from `mixed`
+trial 26. The latter two reached new HIST peaks. The winning trial bodies
+contained 13,352 and 32,953 bytes of disposable declarations across their two
+insertion sites; none was added to authored source.
