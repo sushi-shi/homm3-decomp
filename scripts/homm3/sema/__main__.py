@@ -71,6 +71,8 @@ class _Parser(argparse.ArgumentParser):
                 self.error("--jobs must be positive")
             if result.data_only and result.require_data_complete:
                 self.error("--require-data-complete requires the full declaration-aware report")
+            if result.data_only and result.build_vendor:
+                self.error("--build-vendor requires the full vendor-aware report")
         return result
 
 
@@ -185,7 +187,8 @@ def _build_parser() -> argparse.ArgumentParser:
     raw.add_argument("--json", action="store_true")
 
     coverage = ss.add_parser("coverage", help="every retail file/image byte, including unknowns and shared owners")
-    coverage.add_argument("--output", metavar="DIR", help="write accounting, DATA declarations/gaps/issues TSVs and summary.json")
+    coverage.add_argument("--output", metavar="DIR", help="write retail, DATA and vendor accounting TSVs and summary.json")
+    coverage.add_argument("--build-vendor", action="store_true", help="compile fresh zlib accounting objects with pinned VC6 when needed")
     coverage.add_argument("--json", action="store_true")
     coverage.add_argument("--jobs", type=int, default=4, help="Clang DATA extraction workers (default 4)")
     coverage.add_argument("--require-data-complete", action="store_true", help="fail on DATA gaps, overlaps, extern-only storage or incomplete analysis")

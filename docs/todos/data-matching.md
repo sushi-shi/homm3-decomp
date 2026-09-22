@@ -15,6 +15,12 @@ See [complete retail byte accounting](../tooling/data-coverage.md) for measured
 totals and evidence policy. Binding to emitted VC6 storage, enrollment and
 pointer/access-width verification remain separate unfinished tasks.
 
+The [vendor contribution pass](../tooling/vendor-data-coverage.md) accounts for
+relocation-anchored Microsoft runtime/zlib storage and named DLL import records.
+Use `data-unaccounted.tsv` for the remaining DATA gaps after those contributions;
+candidate and conflicting vendor ranges are retained for review. This pass does
+not establish that every vendor contribution has been reached.
+
 ## Implementation checklist
 
 1. **Make data enrollment explicit.** Display disabled data comparison as such.

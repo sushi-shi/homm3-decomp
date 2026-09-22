@@ -12,7 +12,8 @@ class SemaCliTests(unittest.TestCase):
         args = _build_parser().parse_args(['coverage', '--require-data-complete', '--jobs', '2'])
         self.assertTrue(args.require_data_complete)
         self.assertEqual(args.jobs, 2)
-        for flags in (['--jobs', '0'], ['--data-only', '--require-data-complete']):
+        self.assertTrue(_build_parser().parse_args(['coverage', '--build-vendor']).build_vendor)
+        for flags in (['--jobs', '0'], ['--data-only', '--require-data-complete'], ['--data-only', '--build-vendor']):
             with self.subTest(flags=flags), contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
                 _build_parser().parse_args(['coverage', *flags])
 

@@ -21,7 +21,8 @@ HOMM3_DIR="$PWD" PYTHONPATH=scripts python3 -m homm3 sema coverage \
 
 The executable is loaded through the normal hash gate. Only output artifacts
 are written; source claims, the score ledger and comparison policy are unchanged.
-No candidate compilation is required. `--data-only` retains the earlier
+Ordinary reporting requires no candidate compilation. Optional `--build-vendor`
+prepares private VC6 zlib objects for vendor attribution. `--data-only` retains the earlier
 `.rdata`/`.data`/zero-tail report for compatibility.
 
 ## DATA declaration comparison
@@ -87,6 +88,11 @@ project/vendor and actual analysis include contents, manifests, compiler argumen
 libclang identity and extraction/profile implementations. It is not another
 source-owned symbol registry. No source declarations or comparison objects are
 rewritten by the census.
+
+The [vendor contribution layer](vendor-data-coverage.md) further explains which
+DATA gaps belong to matching Microsoft/zlib storage or named DLL import records.
+`data-gaps.tsv` retains the complete declaration-gap total;
+`data-unaccounted.tsv` excludes only verified, unambiguous vendor contributions.
 
 ## Artifacts and how to act on them
 

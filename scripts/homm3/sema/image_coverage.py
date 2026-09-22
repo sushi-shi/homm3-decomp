@@ -170,7 +170,7 @@ def audit_partition(rows, domain, total):
         raise ValueError(f'{domain}: accounting ends at {cursor}, expected {total}')
 
 
-def generate(root, image, *, jobs=4):
+def generate(root, image, *, jobs=4, build_vendor=False):
     layout = Layout(image.data)
     claims, labels, inputs, limitations = retail_claims.collect(root, layout, image)
     inputs.extend(['config/retail/relocs.tsv', 'config/retail/reloc-evidence.tsv'])
@@ -181,6 +181,16 @@ def generate(root, image, *, jobs=4):
     from homm3.sema import data_coverage
     declared = data_declarations.extract(root, layout.base, jobs=jobs)
     rows, data_issues, data_summary = data_coverage.overlay(layout, rows, declared)
+    from homm3.analysis import vendor_data
+    from homm3.sema import vendor_coverage
+    vendor_rows, vendor_issues, vendor_analysis = vendor_data.extract(root, layout, build=build_vendor)
+    vendor_rows.extend(vendor_coverage.import_contributions(layout))
+    for index, row in enumerate(vendor_rows):
+        row['id'] = index
+    rows, vendor_summary = vendor_coverage.overlay(layout, rows, vendor_rows)
+    vendor_issues.extend(vendor_coverage.overlap_issues(rows))
+    vendor_summary['analysis'] = vendor_analysis
+    vendor_summary['issue_counts'] = dict(Counter(i['kind'] for i in vendor_issues))
     summaries = {}
     for domain, total in [('file', len(image.data)), ('image', layout.image_size)]:
         audit_partition(rows, domain, total)
@@ -194,12 +204,15 @@ def generate(root, image, *, jobs=4):
     implementations = ['scripts/homm3/sema/image_coverage.py', 'scripts/homm3/sema/retail_claims.py',
                        'scripts/homm3/sema/retail_layout.py', 'scripts/homm3/sema/coverage.py',
                        'scripts/homm3/vc6/tryblocks.py', 'scripts/homm3/analysis/data_declarations.py',
-                       'scripts/homm3/sema/data_coverage.py', 'build/gen/data-declarations.json']
+                       'scripts/homm3/sema/data_coverage.py', 'build/gen/data-declarations.json',
+                       'scripts/homm3/analysis/vendor_data.py', 'scripts/homm3/sema/vendor_coverage.py',
+                       'scripts/homm3/build/canonicalize_data_symbols.py']
     inputs.extend(implementations)
     return dict(schema='homm3.retail-accounting.v1', image_base=layout.base,
                 image_sha256=hashlib.sha256(image.data).hexdigest(), domains=summaries,
                 regions=[asdict(r) for r in layout.file_regions + layout.image_regions],
                 data_declarations=declared['declarations'], data_issues=data_issues, data_coverage=data_summary,
+                vendor_data=vendor_rows, vendor_issues=vendor_issues, vendor_coverage=vendor_summary,
                 claims=claims, labels=dict(labels), references=references, rows=rows, problems=problems,
                 input_sha256={p: hashlib.sha256((root / p).read_bytes()).hexdigest() for p in sorted(set(inputs))},
                 limitations=limitations + [
@@ -256,20 +269,30 @@ def export(report, directory):
         tsv.write(directory / 'data-issues.tsv', ['# Extraction, unknown extent and overlapping declaration diagnostics.'],
                   ['id', 'kind', 'unit', 'source', 'rva', 'end', 'detail', 'declaration_ids'],
                   [render(dict(id=i, **r)) for i, r in enumerate(report['data_issues'])])
-    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues')}
+    if 'vendor_data' in report:
+        from homm3.sema import vendor_coverage
+        vendor_rows = report['vendor_data']
+        tsv.write(directory / 'vendor-data.tsv', ['# Relocation-anchored vendor contributions and PE imports; rejected/candidate rows do not cover gaps.'],
+                  list(vendor_rows[0]) if vendor_rows else ['id', 'library', 'rva', 'size', 'status'],
+                  [render(r) for r in vendor_rows])
+        tsv.write(directory / 'vendor-issues.tsv', ['# Missing inputs and unmatched admitted code anchors remain explicit.'],
+                  ['kind', 'library', 'member', 'rva', 'end', 'vendor_ids', 'detail'], [render(r) for r in report['vendor_issues']])
+        tsv.write(directory / 'data-unaccounted.tsv', ['# DATA gaps with no verified, unambiguous vendor contribution.'],
+                  fields, [render(r) for r in vendor_coverage.unaccounted(report['rows'])])
+    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues')}
     (directory / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
 
 
 def run(args):
     image, _ = common.load_image()
     try:
-        report = generate(common.HOMM3_DIR, image, jobs=args.jobs)
+        report = generate(common.HOMM3_DIR, image, jobs=args.jobs, build_vendor=args.build_vendor)
         if args.output:
             export(report, Path(args.output))
     except (ValueError, OSError) as exc:
         from homm3.sema._common import die
         die(str(exc))
-    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues')}
+    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues')}
     if args.json:
         print(json.dumps(summary, indent=2))
     else:
@@ -279,6 +302,8 @@ def run(args):
                   ', '.join(f'{k}={v:,}' for k, v in totals['bytes_by_category'].items()))
         print(f"{len(report['problems'])} invalid extents; {len(report['references']):,} reference sites retained.")
         print('DATA coverage: ' + json.dumps(report['data_coverage'], sort_keys=True))
+        print('Vendor accounting: ' + json.dumps({k: v for k, v in report['vendor_coverage'].items()
+                                                if k != 'analysis'}, sort_keys=True))
         if args.output:
             print(f'Actionable byte map: {args.output}/coverage.tsv; prioritized work: {args.output}/backlog.tsv')
         for limitation in report['limitations']:

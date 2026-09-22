@@ -53,11 +53,15 @@ def pe_regions(data):
     return sections, regions, optional
 
 
-def system_claims(data, sections, optional):
+def system_claims(data, sections, optional, *, with_library=False):
     """PE import structures, including terminators; no guessed string extents."""
     claims = []
+    library = ''
     def add(rva, size, evidence):
-        claims.append(dict(rva=rva, size=size, category='system', evidence=evidence))
+        row = dict(rva=rva, size=size, category='system', evidence=evidence)
+        if with_library:
+            row['library'] = library
+        claims.append(row)
     def raw(rva, size=1):
         for s in sections:
             if s['rva'] <= rva and rva + size <= s['rva'] + s['raw_size']:
@@ -81,10 +85,14 @@ def system_claims(data, sections, optional):
     for offset in range(0, size - 19, 20):
         descriptor = imports + offset
         ilt, timestamp, chain, name, iat = struct.unpack_from('<5I', data, raw(descriptor, 20))
-        add(descriptor, 20, 'PE import descriptor')
         if not any((ilt, timestamp, chain, name, iat)):
+            library = ''
+            add(descriptor, 20, 'PE import descriptor')
             terminated = True
             break
+        name_size = string(name)
+        library = data[raw(name):raw(name) + name_size - 1].decode('ascii')
+        add(descriptor, 20, 'PE import descriptor')
         add(name, string(name), 'PE import DLL name including NUL')
         lookup = ilt or iat
         index = 0
@@ -102,7 +110,7 @@ def system_claims(data, sections, optional):
     if not terminated:
         raise ValueError('import directory has no bounded terminator')
     # Several imports may share a hint/name object; count one physical extent.
-    return list({(c['rva'], c['size'], c['evidence']): c for c in claims}.values())
+    return list({(c['rva'], c['size'], c['evidence'], c.get('library')): c for c in claims}.values())
 
 
 def partition(regions, claims, anchors=()):
