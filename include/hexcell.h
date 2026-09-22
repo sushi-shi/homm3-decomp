@@ -13,6 +13,22 @@ class army;
 // fields are independently byte-proven by the retail GenerateMap body.
 class hexcell {
 public:
+    // DC TAttributes: IS_OBSTACLE_ORIGIN, IS_BLOCKED, IS_QUICKSAND,
+    // IS_LANDMINE, IS_FIREWALL, IS_STONEWALL, IS_OBSTACLIZED and
+    // IS_MAGIC_OBSTACLE. Retail spell placement and
+    // removal use these same bits; keep the integer field's existing ABI.
+    enum TAttributes {
+        obstacleOrigin = 0x01,
+        blocked = 0x02,
+        quicksand = 0x04,
+        landMine = 0x08,
+        fireWall = 0x10,
+        stoneWall = 0x20,
+        obstacleMask = obstacleOrigin | blocked | quicksand | landMine
+                       | fireWall | stoneWall,
+        magicObstacleMask = quicksand | landMine | fireWall | stoneWall
+    };
+
     // Screen-space bounds initialized by combatManager::GenerateMap.
     // Names remain ordinal until drawing/hit-test readers establish the
     // individual edge roles; the seven geometry fields are shorts.

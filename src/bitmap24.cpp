@@ -21,7 +21,7 @@ __declspec(nothrow) void __cdecl operator delete(void* value);
 // dossier proves its double parameter and sole named local, const unsigned long
 // magic; reusing d's representation is what gives retail its shared qword home.
 // DC bitmap24.cpp:40 initializes magic, line 42 updates d, and line 43 reads
-// its low word. Removing the unsupported __forceinline attribute produces
+// its low word. Removing the unsupported forced-inline attribute produces
 // the same code object: AdjustHSV stays 95.7470% and all seven exact siblings
 // hold. The ordinary static helper expands naturally through HSVToRGB.
 // Original: ftol; bitmap24.cpp:39, dc 0x525b4
@@ -147,11 +147,8 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
 // two GetPitch boundaries. Retail independently fixes the 24-bit-to-16-bit
 // channel conversion and brackets this 353-byte body immediately after the
 // Bitmap16Bit wrapper above.
-// Row-boundary residual (85.0312%): advance source/destination only before
-// a following row; final-row guards score 72.2734%, unchecked control 100%.
-// DC's const source bytes and channel scales, separate GetPitch/dpitch
-// boundaries and channel work are retained. Native tests
-// use different pitches and clipped origins at the last allocation row.
+// Dreamcast line 342 advances both row pointers after the inner pixel loop;
+// Complete retains the same post-row induction.
 VA(0x0044f010, 0x161)  // source-order bracket + RGB mask/data flow, dc 0x52968
 void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                        int dx, int dy, int dw, int dh, int dpitch) const
@@ -184,12 +181,6 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
         const unsigned int bm1 = (Bitmap16Bit::s_blueMask << 1) & ~Bitmap16Bit::s_blueMask;
 
         for (int y = 0; y < sh; ++y) {
-            if (y) {
-                dst = static_cast<unsigned short*>(static_cast<void*>(
-                    static_cast<unsigned char*>(static_cast<void*>(dst))
-                    + dpitch));
-                src += getPitch();
-            }
             const unsigned char* in = src;
             unsigned short* out = dst;
             for (int x = 0; x < sw; ++x) {
@@ -204,6 +195,10 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                 *out++ = static_cast<unsigned short>(blue | red | green);
                 in += 3;
             }
+            dst = static_cast<unsigned short*>(static_cast<void*>(
+                static_cast<unsigned char*>(static_cast<void*>(dst))
+                + dpitch));
+            src += getPitch();
         }
     }
 }

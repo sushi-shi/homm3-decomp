@@ -116,7 +116,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
                     disguiseCreature = creature;
             }
         } else if (thisHero->m_disguiseLevel == TQuickHeroWindow::DisguiseExpert) {
-            int creature = g_game->m_f1f698 ? 145 : 118;
+            int creature = g_game->m_gameVersion ? 145 : 118;
             int owner = thisHero->m_owner;
             while (creature--) {
                 int townType = g_game->getAlignment(creature);

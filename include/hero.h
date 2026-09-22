@@ -129,7 +129,7 @@ public:
     // E:\\gamedcs\\Hero.h:145.  The DC tiny helper is the validity byte;
     // retail folds it into unblock_lith before temporarily restoring the
     // hero's underlying map cell.
-    bool isOnMap() const { return m_valid != 0; }
+    unsigned char isOnMap() const { return m_valid; }
     // E:\gamedcs\Hero.h:150. Dreamcast retains an out-of-line copy, while
     // retail expands the validity test at every admitted Windows caller.
     TAdventureObjectType getObscuredObject() const
@@ -148,7 +148,7 @@ public:
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
     // folds it to the same three field tests; keep the call in source so
     // an exact lowering cannot erase the attested source shape again.
-    __forceinline unsigned char obscuresTown() const
+    unsigned char obscuresTown() const
     {
         return m_valid && m_wasTrigger && m_obscuredType == TOWN;
     }
@@ -223,10 +223,15 @@ public:
     // the -1 sentinel at +4. Retail value_of_town preserves that order in
     // its register allocation even though the eventual by-value pushes are
     // ordered by record layout.
-    // The generated offering constructor at dc 0x128714 calls this
-    // constructor with -1. That proves the default argument: no separate
-    // zero-argument type_artifact constructor exists in the DC class API.
-    explicit type_artifact(TArtifact id = ARTIFACT_NONE)
+    // Complete's generated offering constructor emits the member-initializer
+    // store order of a distinct default constructor. Dreamcast instead calls
+    // the TArtifact overload with -1 here, so this boundary is versioned.
+    type_artifact()
+    {
+        m_extra = -1;
+        m_artifactId = ARTIFACT_NONE;
+    }
+    explicit type_artifact(TArtifact id)
     {
         m_artifactId = id;
         m_extra = -1;
@@ -243,7 +248,8 @@ public:
     // The reconstruction-only (int, int) overload was removed. Ordinary
     // artifacts use the TArtifact constructor; scrolls use SpellID. A
     // separately decoded payload is assigned explicitly by its owning caller.
-    // Both proven constructors retain their DC id-before-payload store order.
+    // The two argument-taking constructors retain their DC
+    // id-before-payload store order.
 
 // townmgr.cpp's blacksmith right-click text (0x5d1aa0) calls this on a
 // copy of the war machine's artifact record; hero.obj owns the
@@ -930,13 +936,13 @@ public:
     // uses checkTerrain=1; Complete expands the helper before calling canLand.
     // These are real shared header bodies, not an ai_player.obj declaration
     // view: cursor.obj proves the same nested IsWieldingArtifact boundary.
-    __forceinline unsigned char isFlying(unsigned char checkTerrain) const
+    unsigned char isFlying(unsigned char checkTerrain) const
     {
         return !(m_flags & 0x40000)
             && (m_flightLevel != -1 || isWieldingArtifact(0x48))
             && (!checkTerrain || !canLand());
     }
-    __forceinline unsigned char canWalkOnWater(unsigned char checkTerrain) const
+    unsigned char canWalkOnWater(unsigned char checkTerrain) const
     {
         return !(m_flags & 0x40000)
             && (m_waterWalkLevel != -1 || isWieldingArtifact(0x5a))
@@ -1064,7 +1070,7 @@ public:
     }
     // E:\gamedcs\Hero.h:976. Dreamcast keeps this const header wrapper as
     // a separate public; Complete folds it at each use into the retail-proven
-    __forceinline int getExperienceIncrement() const
+    int getExperienceIncrement() const
     {
         return getExperienceIncrement(m_level);
     }
@@ -1089,14 +1095,14 @@ public:
     // DC hero.h:991 (0x37dc4) and the class signature record the const
     // long-returning duration accessor used by AI reward valuation.
     long getValueOfDuration() const { return m_valueOfDuration; }
-    __forceinline long getValueOfKnowledge() const
+    long getValueOfKnowledge() const
     {
         return m_valueOfKnowledge;
     }
     // Dreamcast hero.h:1001/1006. Retail folds both one-field accessors into
     // get_skill_value; retaining the source boundaries still emits the direct
     // loads proved at +0x47e/+0x486.
-    __forceinline long getValueOfPower() const
+    long getValueOfPower() const
     {
         return m_valueOfPower;
     }
@@ -1117,27 +1123,27 @@ public:
     // /Ob2 folds them into AI_set_hero_bonuses, but the calls remain
     // authoritative source shape rather than anonymous stores.
     // E:\gamedcs\Hero.h:1021
-    __forceinline void setValueOfDuration(long arg)
+    void setValueOfDuration(long arg)
     {
         m_valueOfDuration = arg;
     }
     // E:\gamedcs\Hero.h:1026
-    __forceinline void setValueOfKnowledge(long arg)
+    void setValueOfKnowledge(long arg)
     {
         m_valueOfKnowledge = arg;
     }
     // E:\gamedcs\Hero.h:1031
-    __forceinline void setValueOfPower(long arg)
+    void setValueOfPower(long arg)
     {
         m_valueOfPower = arg;
     }
     // E:\gamedcs\Hero.h:1036
-    __forceinline void setValueOfSpring(long arg)
+    void setValueOfSpring(long arg)
     {
         m_valueOfSpring = arg;
     }
     // E:\gamedcs\Hero.h:1041
-    __forceinline void setValueOfWell(long arg)
+    void setValueOfWell(long arg)
     {
         m_valueOfWell = arg;
     }

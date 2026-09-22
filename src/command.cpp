@@ -299,9 +299,7 @@ int combatManager::main(message& msg)
                 } else if (static_cast<const combatManager*>(this)->isQuickCombat()
                         || isComputerAction(getCurrentArmy())) {
                     unnamed465f20();
-#pragma inline_depth(0)
                     resetMouse();
-#pragma inline_depth()
                     towerTurn = 1;
                 } else {
                     towerTurn = 0;
@@ -848,7 +846,7 @@ int combatManager::processCombatMsg(message& msg)
 
             case TCombatWindow::COMBAT_RIGHT_COMMAND_0_ID:
                 if (!m_heroes[m_currentSide]) {
-                    normalDialog(g_generalText->getText(128),
+                    normalDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_NO_HERO_FOR_SPELL),
                                  1, -1, -1, -1, 0,
                                  -1, 0, -1, 0, -1, 0);
                 } else {
@@ -858,7 +856,7 @@ int combatManager::processCombatMsg(message& msg)
                 break;
 
             case TCombatWindow::COMBAT_LEFT_COMMAND_1_ID:
-                normalDialog(g_generalText->getText(29),
+                normalDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_RETREAT_PROMPT),
                              2, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
@@ -870,7 +868,7 @@ int combatManager::processCombatMsg(message& msg)
                 if (doSurrender()) {
                     if (g_game->m_players[m_playerIds[m_currentSide]].m_resources[6]
                             < g_surrenderCost) {
-                        normalDialog(g_generalText->getText(30),
+                        normalDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_NOT_ENOUGH_GOLD),
                                      1, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     } else {
@@ -1005,7 +1003,7 @@ int combatManager::processCombatMsg(message& msg)
                         }
                     }
                 } else if (m_debugShowBlockedHexes
-                           && (m_cells[gridIndex].m_attributes & 2)
+                           && (m_cells[gridIndex].m_attributes & hexcell::blocked)
                            && m_cells[gridIndex].m_obstacleIndex != -1) {
                     TObstacle& obstacle =
                         m_obstacles[m_cells[gridIndex].m_obstacleIndex];
@@ -1687,8 +1685,8 @@ void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
         reward.m_qualifier = spell;
         if (rewards.size() == 0) {
             // General text 222 is the "<hero> learns <spell>" opener;
-            // the row has no enumerator in this tree yet.
-            msg = formatString(g_generalText->getText(222), winner->m_name,
+            // its enum name describes those two arguments.
+            msg = formatString(g_generalText->getText(GENERAL_TEXT_EAGLE_EYE_LEARNS_SPELL_FORMAT), winner->m_name,
                                 g_spellTraits[spell].m_name);
         } else {
             if (x == m_eagleEyeData[winningGroup].end()
@@ -1738,13 +1736,18 @@ void combatManager::showLootedArtifacts(
                               random(1, 7))
                     .c_str(),
                 -1, 3);
-            extendedDialog(g_generalText->getText(31), rewards, -1, -1,
+            extendedDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_CAPTURED_ARTIFACT), rewards, -1, -1,
                             dialogTimeout);
             rewards.clear();
         }
     }
 }
 
+// DC command.cpp:2624 assigns min directly to the defender's mana. Keeping
+// that expression recovers the retail operand homes; separate mana/cap
+// snapshots leave 99.8293% despite an otherwise identical call sequence.
+// Complete darkens the screen after freeArmies; the older port's earlier
+// text drawing and extra results-dialog fade/surface setup are absent.
 VA(0x00477470, 0x58C)  // dc 0x6e1c8
 void combatManager::doVictory(int winningGroup)
 {
@@ -1824,10 +1827,7 @@ void combatManager::doVictory(int winningGroup)
         m_heroes[1]->setPrimarySkill(1, m_originalDefenseSkill);
         m_heroes[1]->setPrimarySkill(2, m_originalPowerSkill);
         if (m_defendingTown) {
-            int currentMana = m_heroes[1]->m_mana;
-            int manaCap = m_originalMana;
-            int newMana = std::_cpp_min(manaCap, currentMana);
-            m_heroes[1]->m_mana = newMana;
+            m_heroes[1]->m_mana = min(m_originalMana, m_heroes[1]->m_mana);
         }
     }
 
@@ -1935,7 +1935,7 @@ long combatManager::getSurrenderCost()
 inline int combatManager::doSurrender()
 {
     g_surrenderCost = getSurrenderCost();
-    sprintf(g_text, g_generalText->getText(33),
+    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_SURRENDER_OFFER_FORMAT),
             m_heroes[1 - m_currentSide]->m_name, g_surrenderCost);
     normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     return g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT;
@@ -2052,8 +2052,10 @@ void combatManager::turnOffHighlighter(unsigned char drawIt)
 // the two twenty-stack value loops; retail homes one extra four-byte scratch
 // and binds the row walk to EDI/ECX where this build uses EDX/EDI. A named
 // side is codegen-inert; explicit current-hero locals score 87.19%/80.53%;
-// and spelling the DC-attested IsActive call directly scores 84.86% because
-// it consumes an inline-budget slot and leaves a second string _Tidy call.
+// and an earlier IsActive-call probe scored 84.86%. The current source keeps
+// IsActive (DC line 3085); the text lookups at 3058/3105 use the underlying
+// getText accessor here. FullUpdate after each dialog is DC-only here:
+// retail continues directly to the response checks without that redraw.
 // Keeping a named army-row base is the best measured natural spelling.
 // Countdown sweep 2026-09-06: retail computes ONE `&armies[currentSide][0]
 // .numTroops` (edi at fn+0x4b2, disp 0x5518 folded into the lea) and shares
@@ -2078,7 +2080,7 @@ void combatManager::checkGetAIMove()
         if (isHuman) {
             if (m_autoRetreatOn) {
                 std::string result = formatString(
-                    g_generalText->getText(414), m_heroes[m_currentSide]->m_name);
+                    g_generalText->getText(GENERAL_TEXT_COMBAT_RETREAT_OVERWHELMED_FORMAT), m_heroes[m_currentSide]->m_name);
                 normalDialog(result.c_str(), 2, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn
@@ -2097,8 +2099,7 @@ void combatManager::checkGetAIMove()
                 army* currentArmies = m_armies[m_currentSide];
                 for (int slot = 0; slot < 20; ++slot) {
                     army* currentArmy = &currentArmies[slot];
-                    if (currentArmy->m_creatureType >= 0
-                            && currentArmy->m_numTroops > 0) {
+                    if (currentArmy->isActive()) {
                         combatValue +=
                             g_creatureTypeTraits[currentArmy->m_creatureType].m_cost[6]
                             * currentArmy->m_numTroops;
@@ -2112,7 +2113,7 @@ void combatManager::checkGetAIMove()
                         && combatValue > g_surrenderCost + 2500) {
                     std::string msg;
                     if (isHuman) {
-                        msg = formatString(g_generalText->getText(130),
+                        msg = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_SAVE_ARMY_PROMPT_FORMAT),
                                             m_heroes[m_currentSide]->m_name,
                                             g_surrenderCost);
                         normalDialog(msg.c_str(), 2, -1, -1, 6,
@@ -2197,7 +2198,7 @@ void combatManager::getControl()
                     || (m_currentSide == 1 && m_defendingTown
                         && (m_defendingTown->m_type != TOWN_STRONGHOLD
                             || !m_defendingTown->hasBuilding(
-                                SPECIAL_BUILDING_ID, 1))))
+                                SPECIAL_BUILDING_ID, true))))
                 m_combatWindow->widgetSetStatus(
                     0x7d2, 0x1000);
             else
@@ -2345,7 +2346,7 @@ void combatManager::processFirstAid(army* currentArmy)
                    currentArmy->getController()->getFirstAidFactor()
                    * 100.0f));
         int result = targetArmy->m_topCreatureDamage;
-        result = std::_cpp_min(maximum, result);
+        result = min(maximum, result);
         targetArmy->m_topCreatureDamage -= result;
         currentArmy->m_monInfo.m_attributes |= creatureDone;
 
@@ -2354,7 +2355,7 @@ void combatManager::processFirstAid(army* currentArmy)
                 DATA_COMPGEN(0x00660a94, regenerSampleName,
                              "Regener.wav"));
             std::string text = formatString(
-                g_generalText->getText(415), currentArmy->getName(),
+                g_generalText->getText(GENERAL_TEXT_FIRST_AID_HEAL_FORMAT), currentArmy->getName(),
                 targetArmy->getName(), result);
             m_combatWindow->combatMessage(text.c_str(), 1, 0);
             spellEffect(eSpellEffectRegeneration, targetArmy, 100, 0);
@@ -2367,12 +2368,12 @@ void combatManager::processFirstAid(army* currentArmy)
 // switch domain and source calls. Retail independently fixes all twelve
 // pending-action arms and shows that VC6 expanded ResetMouse,
 // ResetCycleTimers and CheckChangeSelector into this body.
-// Exact with every GetName -> GetArmyName and timer/selector boundary intact.
-// The canonical name lookup's conditional return inside the existing else
-// recovers all4180 retail bytes and all163 relocation positions; the prior
-// explicit inner if/else left99.7272%. Removing the outer else changes other
-// callers' inline decisions, so retain that source scope. No inline-depth pin
-// or copied helper body is needed.
+// Keep GetName -> GetArmyName, timer/selector calls, DC3653's max and the
+// text-resource getters. Residual 99.7272%: the wait-arm string constructor
+// retains _Tidy where retail expands it. Naming the defend-bonus result is
+// flat; naming its percentage input is worse. Neither justifies flattening
+// max or changing the DC string lifetimes.
+// DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
 VA(0x00478d80, 0x1054)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
 int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 {
@@ -2491,7 +2492,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     case g_combatActionRetreat:
         if ((m_heroes[0] && m_heroes[0]->isWieldingArtifact(125))
                 || (m_heroes[1] && m_heroes[1]->isWieldingArtifact(125))) {
-            sprintf(g_text, g_generalText->getText(341),
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SHACKLES_PREVENT_RETREAT_FORMAT),
                     m_heroes[m_currentSide]->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
@@ -2505,7 +2506,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     case g_combatActionSurrender:
         if ((m_heroes[0] && m_heroes[0]->isWieldingArtifact(125))
                 || (m_heroes[1] && m_heroes[1]->isWieldingArtifact(125))) {
-            sprintf(g_text, g_generalText->getText(342),
+            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SHACKLES_PREVENT_SURRENDER_FORMAT),
                     m_heroes[m_currentSide]->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
@@ -2524,15 +2525,15 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
             if (!m_creaturePlacement && !currentArmy->is(creatureSiegeWeapon)) {
                 std::string message;
                 currentArmy->m_monInfo.m_attributes |= creatureDefending;
-                currentArmy->m_defendBonus = std::_cpp_max(
+                currentArmy->m_defendBonus = max(
                     currentArmy->m_monInfo.m_defenseSkill * 20 / 100, 1);
 
                 if (currentArmy->m_numTroops == 1)
-                    message = formatString(g_generalText->getText(121),
+                    message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_DEFEND_ONE_FORMAT),
                                             currentArmy->getName(),
                                             currentArmy->m_defendBonus);
                 else
-                    message = formatString(g_generalText->getText(122),
+                    message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_DEFEND_MANY_FORMAT),
                                             currentArmy->getName(),
                                             currentArmy->m_defendBonus);
                 m_combatWindow->combatMessage(message.c_str(), 1, 0);
@@ -2551,10 +2552,10 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
         if (!m_creaturePlacement) {
             std::string message;
             if (currentArmy->m_numTroops == 1)
-                message = formatString(g_generalText->getText(137),
+                message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_WAIT_ONE_FORMAT),
                                         currentArmy->getName());
             else
-                message = formatString(g_generalText->getText(138),
+                message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_WAIT_MANY_FORMAT),
                                         currentArmy->getName());
             m_combatWindow->combatMessage(message.c_str(), 1, 0);
         }

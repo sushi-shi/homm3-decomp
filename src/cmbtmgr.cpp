@@ -638,7 +638,7 @@ void combatManager::loadIcons()
         TWallTraits* traits = s_wallTraits[m_defendingTown->m_type];
         for (int wall = 0; wall < 18; wall++) {
             for (int icon = 0; icon < 5; icon++) {
-                if ((g_game->m_f1f698 >= 2
+                if ((g_game->m_gameVersion >= 2
                         || m_defendingTown->m_type != TOWN_STRONGHOLD
                         || wall != WALL_TRAITS_ROW_MOAT)
                         && traits[wall].m_filenames[icon] != 0)
@@ -687,7 +687,7 @@ void combatManager::freeIcons()
         if (obstacle->m_sprite)
             obstacle->m_sprite->dispose();
     }
-    m_obstacles.erase(m_obstacles.begin(), m_obstacles.end());
+    m_obstacles.clear();
 
     for (int side = 0; side < 2; ++side) {
         if (m_creatureSprites[side])
@@ -907,13 +907,13 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
             m_fortificationLevel = COMBAT_FORTIFICATION_CITADEL;
             m_moatOn = rightTown->m_type != TOWN_TOWER
                          && (rightTown->m_type != TOWN_STRONGHOLD
-                             || g_game->m_f1f698 >= 2);
+                             || g_game->m_gameVersion >= 2);
             m_moatIsWide = rightTown->m_type == TOWN_FORTRESS;
         } else if (rightTown->hasBuilding(CASTLE_CASTLE_ID, false)) {
             m_fortificationLevel = COMBAT_FORTIFICATION_CASTLE;
             m_moatOn = rightTown->m_type != TOWN_TOWER
                          && (rightTown->m_type != TOWN_STRONGHOLD
-                             || g_game->m_f1f698 >= 2);
+                             || g_game->m_gameVersion >= 2);
             m_moatIsWide = rightTown->m_type == TOWN_FORTRESS;
         } else {
             m_fortificationLevel = COMBAT_FORTIFICATION_NONE;
@@ -985,28 +985,28 @@ void combatManager::initNonVisualVars()
         if (m_defendingTown) {
             switch (m_defendingTown->m_type) {
             case TOWN_TOWER:
-                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, 0))
+                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, false))
                     m_heroes[1]->m_mana = static_cast<short>(
                         m_heroes[1]->m_mana + 150);
                 break;
             case TOWN_INFERNO:
-                if (m_defendingTown->hasBuilding(EXTRA_0_ID, 1))
+                if (m_defendingTown->hasBuilding(EXTRA_0_ID, true))
                     m_heroes[1]->adjustPrimarySkill(2, 2);
                 break;
             case TOWN_DUNGEON:
-                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, 0))
+                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, false))
                     m_heroes[1]->adjustPrimarySkill(2, 12);
                 break;
             case TOWN_STRONGHOLD:
-                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, 0))
+                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, false))
                     m_heroes[1]->adjustPrimarySkill(0, 20);
                 break;
             case TOWN_FORTRESS:
-                if (m_defendingTown->hasBuilding(EXTRA_0_ID, 1))
+                if (m_defendingTown->hasBuilding(EXTRA_0_ID, true))
                     m_heroes[1]->adjustPrimarySkill(0, 2);
-                if (m_defendingTown->hasBuilding(EXTRA_1_ID, 1))
+                if (m_defendingTown->hasBuilding(EXTRA_1_ID, true))
                     m_heroes[1]->adjustPrimarySkill(1, 2);
-                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, 1)) {
+                if (m_defendingTown->hasBuilding(HOLY_GRAIL_ID, true)) {
                     m_heroes[1]->adjustPrimarySkill(0, 10);
                     m_heroes[1]->adjustPrimarySkill(1, 10);
                 }
@@ -1379,7 +1379,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
         SAMPLE2 sample = loadPlaySample(
             DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
         spellEffect(20, stack, 100, 0);
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_MORALE),
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_MORALE_FORMAT),
             getArmyName(stack->m_creatureType, stack->m_numTroops));
         m_combatWindow->combatMessage(g_text, 1, 0);
         waitEndSample(sample, -1);
@@ -1400,7 +1400,7 @@ int combatManager::checkApplyBadMorale(int group, int index)
                     SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
                         0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
                     sprintf(g_text,
-                        g_generalText->getText(GENERAL_TEXT_BAD_MORALE),
+                        g_generalText->getText(GENERAL_TEXT_BAD_MORALE_FORMAT),
                         getArmyName(stack->m_creatureType, stack->m_numTroops));
                     m_combatWindow->combatMessage(g_text, 1, 0);
                     spellEffect(30, stack, 100, 1);
@@ -1444,7 +1444,7 @@ unsigned char combatManager::unnamed464d40(army* selected)
         SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
             0x0066ff88, fearSampleName, "Fear.wav"));
         sprintf(g_text,
-                g_generalText->getText(GENERAL_TEXT_COMBAT_FEAR),
+                g_generalText->getText(GENERAL_TEXT_COMBAT_FEAR_FORMAT),
                 getArmyName(CREATURE_AZURE_DRAGON, azureDragons),
                 getArmyName(selected->m_creatureType, selected->m_numTroops));
         m_combatWindow->combatMessage(g_text, 1, 0);
@@ -1584,18 +1584,7 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
 //     command-bar rearm), which is also where bCreaturePlacement and
 //     the compare chain's default edge go.
 
-// 75.89 -> 87.51% 2026-08-20, and the lever was the INLINER again, the
-// same reading place_obstacle's note records. predict-inline named it
-// in one line - retail CALLS basic_string::assign in BOTH message arms
-// and our /Ob2 expanded it in the plural arm only - and the scoped
-// inline_depth(0) on that one statement is the whole fix. Worth
-// stressing that the two arms are spelled IDENTICALLY, so no source
-// difference explains why the budget ran out between them and nothing
-// but the pragma reaches it. inline_depth(1) and (2) were both
-// measured and both leave the expansion in place (75.8883, flat), so
-// only 0 works.
-
-// DREAMCAST SHAPE RESTORED 2026-08-30, byte-flat at 99.64975%. Raw NB11
+// DREAMCAST SHAPE RESTORED. Raw NB11
 // records `result` as the sole non-optimized local inside the mana-drain
 // sample scope. Its xrefs prove two Army.h get_controlling_side calls,
 // two Army.h GetName calls and the named GetControl tail. The old source
@@ -1606,17 +1595,12 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
 // Three frozen missing-call rows retire; fatal rules now reject putting any
 // of those flattened spellings back.
 
-// Residual (99.6498%, rechecked 2026-09-01): 73 of 74 CFG blocks are exact
-// and the remaining block differs by one instruction. The two string
-// temporaries' frame slots are
-// TRANSPOSED (retail singular -0x34 / plural -0x44; ours -0x44/-0x34)
-// because the named local allocates in the named-local region while
-// retail's two unnamed temps take creation order - ~10 masked lines of
-// pure slot renumber; one `lea edx,[ebp-0x34] / push edx` where retail
-// propagates the RVO address still in eax (`push eax`); and the
-// unwind-table push addend (0x0 vs 0x8), the unscored prologue class.
-// All three are the price of the named-local device and no spelling
-// that keeps the dtor out of the pin can avoid it.
+// DC lines 2399 and 2403 each put format_string, basic_string::operator=
+// and the returned temporary's destructor on one statement row. Restoring
+// the same direct assignment in both arms makes the complete message region
+// byte-exact and removes the diagnostic inline-depth fence. Recovering the
+// two player references in isQuickCombat then restores retail's expansion
+// here as well: all 0x4f6 bytes, 74 blocks, 44 branches and 27 calls match.
 VA(0x00465330, 0x4F6)  // anchor-global, dc 0x5f934
 void combatManager::setNextArmy(int group, int index)
 {
@@ -1668,31 +1652,15 @@ void combatManager::setNextArmy(int group, int index)
                     if (stack->m_numTroops == 1)
                         result = formatString(
                             g_generalText->getText(
-                                GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE),
+                                GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE_FORMAT),
                             stack->getName(),
                             drained->m_name);
-                    else {
-                        // OVER-INLINE, pinned. Retail CALLS
-                        // basic_string::assign in BOTH arms; our /Ob2
-                        // expands it in this one only - erase x2 plus
-                        // _Grow, _Eos and the _Nullstr compare, which is
-                        // the whole 53-vs-44 conditional-branch gap. The
-                        // asymmetry is the inline budget running out at
-                        // a different point, not a spelling difference:
-                        // the two arms are written identically.
-                        // SPLIT: the temporary named in its own statement
-                        // so the pin misses its destructor -
-                        // the dtor runs at the brace, outside the pinned
-                        // statement, and stays inline as retail has it.
-                        std::string many = formatString(
+                    else
+                        result = formatString(
                             g_generalText->getText(
-                                GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY),
+                                GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY_FORMAT),
                             stack->getName(),
                             drained->m_name);
-#pragma inline_depth(0)
-                        result.assign(many, 0, std::string::npos);
-#pragma inline_depth()
-                    }
                     if (m_combatWindow)
                         m_combatWindow->combatMessage(result.c_str(), 1, 0);
                     spellEffect(77, stack, 100, 0);
@@ -1802,7 +1770,7 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
         case WALL_TARGET_4:
         case WALL_TARGET_5: {
             int blockedHex = s_wallTargets[targetWall].getBlockedHex();
-            m_cells[blockedHex].m_attributes &= ~2;
+            m_cells[blockedHex].m_attributes &= ~hexcell::blocked;
             break;
         }
         case WALL_TARGET_3:
@@ -2020,7 +1988,7 @@ void combatManager::resetHitByCreature()
 VA(0x00466010, 0x243)  // dc 0x60354
 unsigned char combatManager::placeObstacle(int obstacleId)
 {
-    const TObstacleInfo* shape = &s_obstacleInfo[obstacleId];
+    const TObstacleInfo* const shape = &s_obstacleInfo[obstacleId];
     TPickANumber picker(0x12, 0xa8);
     int hex;
     while (1) {
@@ -2036,7 +2004,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                 continue;
             if (shape->m_width + column > 15)
                 continue;
-            if (m_cells[hex].m_attributes & 0x3f)
+            if (m_cells[hex].m_attributes & hexcell::obstacleMask)
                 continue;
             const unsigned char baseRowIsOdd = rowIsOdd(row);
             unsigned char overlap = 0;
@@ -2046,7 +2014,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
                     cellIndex--;
                 int cellColumn = gridX(cellIndex);
                 if (cellColumn <= 2 || cellColumn >= 14
-                        || (m_cells[cellIndex].m_attributes & 0x3f)) {
+                        || (m_cells[cellIndex].m_attributes & hexcell::obstacleMask)) {
                     overlap = 1;
                     break;
                 }
@@ -2054,7 +2022,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             if (overlap)
                 continue;
 
-            if (g_game->m_f1f698 < 2 && m_fortificationLevel >= 2
+            if (g_game->m_gameVersion < 2 && m_fortificationLevel >= 2
                     && m_defendingTown->m_type == TOWN_STRONGHOLD) {
                 int wallColumn = g_castleWallColumns[row];
                 if (wallColumn == COMBAT_HEX_GATE)
@@ -2073,11 +2041,8 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             obstacle.m_duration = 0;
             obstacle.m_dispelEffect = -1;
             m_obstacles.push_back(obstacle);
-            // Keep placeObstacle out of line at this call site.
             int obstacleSlot = m_obstacles.size() - 1;
-#pragma inline_depth(0)
-            placeObstacle(&obstacle, obstacleSlot, hex, 2);
-#pragma inline_depth()
+            placeObstacle(obstacle, obstacleSlot, hex, hexcell::blocked);
             return 1;
         }
     }
@@ -2136,7 +2101,7 @@ void combatManager::setupAndLoadObstacles()
         }
 
         for (int row = 0; row < 11; row++)
-            m_cells[g_castleWallColumns[row]].m_attributes |= 2;
+            m_cells[g_castleWallColumns[row]].m_attributes |= hexcell::blocked;
 
         // A Tower's moat is a minefield. Row 5 is the gate hex and is
         // skipped; every other row gets one obstacle whose damage is the
@@ -2150,7 +2115,7 @@ void combatManager::setupAndLoadObstacles()
                 int hex = g_moatHexes[row];
 
                 long damage;
-                if (g_game->m_f1f698 >= 2) {
+                if (g_game->m_gameVersion >= 2) {
                     damage = g_moatDamage[TOWN_TOWER];
                     if (m_heroes[1]) {
                         long cast = computeSpellDamage(
@@ -2182,16 +2147,14 @@ void combatManager::setupAndLoadObstacles()
                 newLandmine.m_spellDamage = damage;
                 newLandmine.m_duration = 0;
                 newLandmine.m_dispelEffect = 0x3b;
-                m_obstacles.insert(m_obstacles.end(), 1, newLandmine);
+                m_obstacles.push_back(newLandmine);
                 int landmineSlot = m_obstacles.size();
                 landmineSlot--;
-#pragma inline_depth(0)
-                placeObstacle(&newLandmine, landmineSlot, hex, 8);
-#pragma inline_depth()
+                placeObstacle(newLandmine, landmineSlot, hex, hexcell::landMine);
             }
         }
 
-        if (g_game->m_f1f698 >= 2)
+        if (g_game->m_gameVersion >= 2)
             return;
         if (m_defendingTown->m_type != TOWN_STRONGHOLD)
             return;
@@ -2206,7 +2169,7 @@ void combatManager::setupAndLoadObstacles()
             && m_heroes[1] && (m_heroes[1]->m_flags & 0x40000)) {
         for (const int* hex = g_boatBlockedHexes;
                 hex < g_boatBlockedHexes + 32; hex++)
-            m_cells[*hex].m_attributes |= 2;
+            m_cells[*hex].m_attributes |= hexcell::blocked;
         return;
     }
 
@@ -2259,7 +2222,7 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
             int i = 0;
             const short* hex = s_elevationOverlay[obstacleId].m_blockedSquares;
             for (; i < 25 && *hex != -1; ++i, ++hex) {
-                m_cells[*hex].m_attributes |= 2;
+                m_cells[*hex].m_attributes |= hexcell::blocked;
                 ++count;
             }
             m_largeObstacleId = obstacleId;
@@ -2271,20 +2234,20 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
 }
 
 VA(0x004669b0, 0xBF)  // dc 0x609d0
-void combatManager::placeObstacle(const combatManager::TObstacle* obstacle, int id, int hex, unsigned attributes)
+void combatManager::placeObstacle(const combatManager::TObstacle& obstacle, int id, int hex, unsigned attributes)
 {
-    const TObstacleInfo* shape = obstacle->m_shape;
-    unsigned char rowIsOdd = static_cast<unsigned char>((hex / 0x11) & 1);
-    for (int i = 0; i < shape->m_extraHexCount; i++) {
-        int cellIndex = shape->m_extraHexOffsets[i] + hex;
-        if (rowIsOdd && ((cellIndex / 0x11) & 1) == 0)
+    const TObstacleInfo* const info = obstacle.m_shape;
+    bool oddRow = rowIsOdd(gridY(hex));
+    for (int i = 0; i < info->m_extraHexCount; i++) {
+        int cellIndex = info->m_extraHexOffsets[i] + hex;
+        if (oddRow && !rowIsOdd(gridY(cellIndex)))
             cellIndex--;
         hexcell& cell = m_cells[cellIndex];
         cell.m_attributes |= attributes;
         cell.m_obstacleIndex = id;
     }
     hexcell& anchor = m_cells[hex];
-    anchor.m_attributes |= 1;
+    anchor.m_attributes |= hexcell::obstacleOrigin;
     anchor.m_obstacleIndex = id;
 }
 
@@ -2330,11 +2293,11 @@ void combatManager::removeObstacle(int index)
         if (rowIsOdd && ((cellIndex / 0x11) & 1) == 0)
             cellIndex--;
         hexcell& cell = m_cells[cellIndex];
-        cell.m_attributes &= ~0x3f;
+        cell.m_attributes &= ~hexcell::obstacleMask;
         cell.m_obstacleIndex = -1;
     }
     hexcell& anchor = m_cells[obstacle->m_hex];
-    anchor.m_attributes &= ~1;
+    anchor.m_attributes &= ~hexcell::obstacleOrigin;
     anchor.m_obstacleIndex = -1;
     obstacle->m_sprite->dispose();
     obstacle->m_sprite = 0;
@@ -2671,7 +2634,7 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
         } else {
             for (int wall = 0; wall < 11; wall++) {
                 if (hex == g_castleWallColumns[wall]) {
-                    if (m_cells[g_castleWallColumns[wall]].m_attributes & 2)
+                    if (m_cells[g_castleWallColumns[wall]].m_attributes & hexcell::blocked)
                         return 0;
                 }
             }
@@ -3659,7 +3622,7 @@ unsigned char combatManager::hexIsBlocked(int index) const
             && (index == COMBAT_HEX_GATE || index == COMBAT_HEX_GATE_MOAT)) {
         if (m_drawbridgeState == DRAWBRIDGE_UP && !doorCanBeLowered())
             return 1;
-    } else if (m_cells[index].m_attributes & 2)
+    } else if (m_cells[index].m_attributes & hexcell::blocked)
         return 1;
     return 0;
 }
@@ -3673,11 +3636,11 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
     std::string message;
     if (attackerQty == 1)
         message = formatString(
-            g_generalText->getText(GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER),
+            g_generalText->getText(GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER_FORMAT),
             attacker, damage);
     else
         message = formatString(
-            g_generalText->getText(GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS),
+            g_generalText->getText(GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS_FORMAT),
             attacker, damage);
 
     if (deaths > 0) {
@@ -3688,23 +3651,23 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
             name = defender->getName(deaths);
             if (defender->is(creatureSiegeWeapon)) {
                 deathText = formatString(
-                    g_generalText->getText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT),
+                    g_generalText->getText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT_FORMAT),
                     name);
                 stackWipedOut = true;
             }
         } else {
             if (deaths == 1)
-                name = g_generalText->getText(GENERAL_TEXT_MIXED_ARMY_ONE);
+                name = g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_SINGULAR);
             else
-                name = g_generalText->getText(GENERAL_TEXT_MIXED_ARMY);
+                name = g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL);
         }
         if (!stackWipedOut) {
             if (deaths == 1)
                 deathText = formatString(
-                    g_generalText->getText(GENERAL_TEXT_COMBAT_ONE_DEATH), name);
+                    g_generalText->getText(GENERAL_TEXT_COMBAT_ONE_DEATH_FORMAT), name);
             else
                 deathText = formatString(
-                    g_generalText->getText(GENERAL_TEXT_COMBAT_MANY_DEATHS),
+                    g_generalText->getText(GENERAL_TEXT_COMBAT_MANY_DEATHS_FORMAT),
                     deaths, name);
         }
         message += deathText;
@@ -3747,7 +3710,7 @@ VA(0x00469e50, 0xC1)
 unsigned char combatManager::unnamed469e50(
     int hex, army* stack, unsigned char playSound)
 {
-    if (g_game->m_f1f698 >= 2 && stack->m_numTroops && isInMoat(hex, 0)) {
+    if (g_game->m_gameVersion >= 2 && stack->m_numTroops && isInMoat(hex, 0)) {
         if (playSound)
             stack->stopSample(army::WALK_SAMPLE);
 
@@ -3775,7 +3738,7 @@ void combatManager::raiseSkeletons(int side)
             m_raisedCreatureType, m_raisedCreatureCount, -1);
         if (!added) {
             TCreatureType upgradedType = m_raisedCreatureType;
-            if (!g_game->m_f1f698
+            if (!g_game->m_gameVersion
                 && isBaseElemental(upgradedType)) {
                 upgradedType = CREATURE_NONE;
             } else {
@@ -3899,10 +3862,12 @@ bool combatManager::isQuickCombat() const
     if (g_game->m_isTutorial)
         return false;
     if (g_remoteOn && m_sideIsAi[0] && m_sideIsAi[1]) {
-        // Retail's three inlined missile callers retain both player aliases;
-        // this standalone body folds the same references into direct loads.
-        playerData& firstPlayer = g_game->m_players[m_playerIds[0]];
-        playerData& secondPlayer = g_game->m_players[m_playerIds[1]];
+        // DC's single line gap before the test and both retail expansions
+        // compute the two player addresses before reading either flag. This
+        // also closes Open, DamageMessage and ShootAnimatedMissile while
+        // improving both remaining missile callers.
+        const playerData& firstPlayer = g_game->m_players[m_playerIds[0]],
+            &secondPlayer = g_game->m_players[m_playerIds[1]];
         if (firstPlayer.m_quickCombat && secondPlayer.m_quickCombat)
             return true;
         return false;

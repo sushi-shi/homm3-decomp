@@ -78,7 +78,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.reserve(125);
 
     const char* background =
-        g_game->m_f1f698 == GAME_VERSION_SOD ? "trade2.pcx" : "trade.pcx";
+        g_game->m_gameVersion == GAME_VERSION_SOD ? "trade2.pcx" : "trade.pcx";
     m_widgets.push_back(new bitmapBorder(
         0, 0, m_width, m_height, 0, background, 0x800));
 
@@ -376,7 +376,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new iconWidget(
         0x113, 0x1cd, 0x2c, 0x2c, 0xa7, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (g_game->m_f1f698 == GAME_VERSION_SOD) {
+    if (g_game->m_gameVersion == GAME_VERSION_SOD) {
         m_widgets.push_back(new iconWidget(
             0x2e, 0x1bd, 0x2c, 0x2c, 0xa8, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
@@ -436,7 +436,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new iconWidget(
         0x2c3, 0x1cd, 0x2c, 0x2c, 0xba, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (g_game->m_f1f698 == GAME_VERSION_SOD) {
+    if (g_game->m_gameVersion == GAME_VERSION_SOD) {
         m_widgets.push_back(new iconWidget(
             0x1de, 0x1bd, 0x2c, 0x2c, 0xbb, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
@@ -496,7 +496,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new iconWidget(
         0x113, 0x1cd, 0x2c, 0x2c, 0x2c, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (g_game->m_f1f698 == GAME_VERSION_SOD) {
+    if (g_game->m_gameVersion == GAME_VERSION_SOD) {
         m_widgets.push_back(new iconWidget(
             0x2e, 0x1bd, 0x2c, 0x2c, 0x2d, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
@@ -556,7 +556,7 @@ TSwapWindow::TSwapWindow(hero** heroes)
     m_widgets.push_back(new iconWidget(
         0x2c3, 0x1cd, 0x2c, 0x2c, 0x3f, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (g_game->m_f1f698 == GAME_VERSION_SOD) {
+    if (g_game->m_gameVersion == GAME_VERSION_SOD) {
         m_widgets.push_back(new iconWidget(
             0x1de, 0x1bd, 0x2c, 0x2c, 0x40, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
@@ -852,7 +852,7 @@ int swapManager::open(int newPriority)
             MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, hero + 1,
             msg.m_extra);
 
-        sprintf(g_text, g_generalText->getText(139),
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_NAME_LEVEL_CLASS_FORMAT),
                 m_heroes[hero]->m_name, m_heroes[hero]->m_level,
                 m_heroes[hero]->heroFn004D8F70());
         msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -1279,12 +1279,12 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 
         if (rightClick) {
             if (oldArtifact.m_artifactId == ARTIFACT_SPELLBOOK) {
-                normalDialog(g_generalText->getText(22), 4, -1, 28,
+                normalDialog(g_generalText->getText(GENERAL_TEXT_ITEM_CANNOT_BE_TRADED), 4, -1, 28,
                              -1, 0, -1, 0, -1, 0, -1, 0);
                 return;
             }
 
-            if (g_game->m_f1f698 >= 2) {
+            if (g_game->m_gameVersion >= 2) {
                 int targetCombo =
                     g_artifactTraits[oldArtifact.m_artifactId].m_targetCombo;
                 if (g_artifactTraits[oldArtifact.m_artifactId].m_comboType
@@ -1321,7 +1321,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 
         if (slot == eArtifactSlotSpellbook
             || slot == eArtifactSlotWarMachine4) {
-            normalDialog(g_generalText->getText(22), 1, -1, -1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_ITEM_CANNOT_BE_TRADED), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
@@ -1349,14 +1349,14 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
         && g_game->m_campaign.m_currentCampaign == ARMAGEDDONS_BLADE_CAMPAIGN
         && g_game->m_campaign.m_currentMap == ARMAGEDDONS_BLADE_MAP
         && ourHero->m_id != ARMAGEDDONS_BLADE_EXEMPT_HERO) {
-        normalDialog(g_generalText->getText(762), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE_GELU_ONLY), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
 
     if (oldArtifact.m_artifactId == ARTIFACT_NONE) {
         ourHero->equipArtifact(&g_heroScreenDraggedArtifact, slot);
-        if (g_game->m_f1f698 >= 2)
+        if (g_game->m_gameVersion >= 2)
             ourHero->heroFn004DC100(slot);
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
         this->update();
@@ -1365,7 +1365,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
     } else if (canModHero(side)) {
         ourHero->removeArtifact(slot);
         ourHero->equipArtifact(&g_heroScreenDraggedArtifact, slot);
-        if (g_game->m_f1f698 >= 2)
+        if (g_game->m_gameVersion >= 2)
             ourHero->heroFn004DC100(slot);
         g_heroScreenDraggedArtifact = oldArtifact;
         this->update();
@@ -1789,7 +1789,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(3),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
                                 m_heroes[0]->m_level,
                                 hero::getExperience(m_heroes[0]->m_level + 1),
                                 m_heroes[0]->m_experience);
@@ -1806,7 +1806,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(206),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
                                 m_heroes[0]->m_name, m_heroes[0]->m_mana,
                                 m_heroes[0]->getMaxMana());
                         normalDialog(
@@ -1860,7 +1860,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(3),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
                                 m_heroes[1]->m_level,
                                 hero::getExperience(m_heroes[1]->m_level + 1),
                                 m_heroes[1]->m_experience);
@@ -1877,7 +1877,7 @@ int swapManager::main(message& msg)
                     if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(g_text, g_generalText->getText(206),
+                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
                                 m_heroes[1]->m_name, m_heroes[1]->m_mana,
                                 m_heroes[1]->getMaxMana());
                         normalDialog(
@@ -2016,7 +2016,7 @@ void swapManager::setRolloverText(int codeY)
         break;
 
     case kSwapRolloverHeroLeft: case kSwapRolloverHeroRight:
-        sprintf(g_text, g_generalText->getText(16),
+        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
                 m_heroes[codeY - kSwapRolloverHeroLeft]->m_name,
                 m_heroes[codeY - kSwapRolloverHeroLeft]->heroFn004D8F70());
         break;
@@ -2053,7 +2053,7 @@ void swapManager::setRolloverText(int codeY)
 
     case kSwapRolloverArmyMoveLeft: case kSwapRolloverArmyMoveRight:
         sprintf(g_text, g_heroScreen[20],
-                g_generalText->getText(44));
+                g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL));
         break;
 
     case kSwapRolloverText0Left: case kSwapRolloverText0Right:

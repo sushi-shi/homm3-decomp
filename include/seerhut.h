@@ -151,8 +151,8 @@ private:
     // into DoSeerEvent's no-quest arm.
     void doEmptyDialog();
     // Dreamcast's next private helper owns the completion dialog and reward
-    // application. Complete revises both models, while retaining the source
-    // boundary inside DoSeerEvent's human arm.
+    // application. Complete revises both models and shares the accepted human
+    // reward tail with the AI arm, superseding this older event boundary.
     void doCompletionDialog(hero* currentHero, bool humanPlayer);
     // Dreamcast proves this nested no-local switch helper as the first call
     // made by DoCompletionDialog. Complete retains the boundary while

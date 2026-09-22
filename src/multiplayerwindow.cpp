@@ -244,18 +244,22 @@ public:
     textWidget* m_header2;   // +0x5c
     textWidget* m_rollover;  // +0x60
 
-    __forceinline CMPInputDlg(int maxChars1, int maxChars2);
+    // DC OnHost/OnJoin retain calls to this source constructor, while
+    // Complete expands it only in OnSearch. Standard inline gives VC6 those
+    // three natural decisions; the prior forced-inline reconstruction required
+    // artificial caller pins.
+    inline CMPInputDlg(int maxChars1, int maxChars2);
     virtual ~CMPInputDlg();
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     virtual textWidget* getRolloverWidget();
     unsigned char onOK();
     virtual void updateOK();  // slot 14, retail 0x510980
-    __forceinline void disableOK();
+    inline void disableOK();
 };
 SIZE(CMPInputDlg, 0x64);
 
 VA(0x00510060, 0x6F7)  // dc 0x1022f4
-__forceinline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
+inline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     : CHeroWindowEx(284, 194, 232, 212, 18)
 {
     m_widgets.reserve(6);
@@ -310,7 +314,7 @@ inline unsigned char CMPInputDlg::onOK()
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:521, dc 0x10286c
-__forceinline void CMPInputDlg::disableOK()
+inline void CMPInputDlg::disableOK()
 {
     getWidget(OKAY_ID)->enable(0);
 }
@@ -461,10 +465,10 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_cancel = new button(373, 424, 64, 48, 124, "muBcanc.def", 0, 1, 0, 1, 2);
 
     m_sessNameHeader = new textWidget(216 - m_x, 146 - m_y, 127, 18,
-                                    g_generalText->getText(41), "smalfont.fnt",
+                                    g_generalText->getText(GENERAL_TEXT_SESSION_NAME), "smalfont.fnt",
                                     font::PRIMARY, 127, 1, 0, 8);
     m_userNameHeader = new textWidget(346 - m_x, 146 - m_y, 127, 18,
-                                    g_generalText->getText(42), "smalfont.fnt",
+                                    g_generalText->getText(GENERAL_TEXT_USER_NAME), "smalfont.fnt",
                                     font::PRIMARY, 128, 1, 0, 8);
     m_playerName = new CMultiPlayerWindowEdit(19, 436, 334, 18, 21,
                                             g_config.m_networkDefaultName, "smalfont.fnt",
@@ -501,8 +505,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
 
     int sessionRowY = 112;
     for (int i = 0; sessionRowY < 412; sessionRowY += 25, i++)
-        m_widgets.insert(m_widgets.end(),
-                       new textWidget(18, sessionRowY, 317, 22, 0,
+        m_widgets.push_back(new textWidget(18, sessionRowY, 317, 22, 0,
                                       "smalfont.fnt", font::PRIMARY, 110 + i, 1,
                                       0, 8));
 
@@ -739,7 +742,7 @@ void TMultiPlayerWindow::checkSessions()
 unsigned char TMultiPlayerWindow::onModemHost()
 {
     if (!initRemote(g_mpNetProtocol, 0, 0)) {
-        normalDialog(g_generalText->getText(448), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_MODEM_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -747,7 +750,7 @@ unsigned char TMultiPlayerWindow::onModemHost()
     g_mpExtendedType = 1;
     g_mpBaseType = 1;
     ShowCursor(1);
-    if (!hostSession(g_generalText->getText(449), 0)) {
+    if (!hostSession(g_generalText->getText(GENERAL_TEXT_MODEM_SESSION), 0)) {
         ShowCursor(0);
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         remoteCleanup();
@@ -783,7 +786,7 @@ inline unsigned char TMultiPlayerWindow::onIPX()
         return 1;
     }
 
-    normalDialog(g_generalText->getText(461), 1, -1, -1,
+    normalDialog(g_generalText->getText(GENERAL_TEXT_IPX_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                  -1, 0, -1, 0, -1, 0, -1, 0);
     return 0;
 }
@@ -1042,7 +1045,7 @@ VA(0x0050fc50, 0x14F)  // dc 0x100f94
 unsigned char TMultiPlayerWindow::onDirectHost()
 {
     if (!initRemote(MP_SERIAL, 0, 0)) {
-        normalDialog(g_generalText->getText(450), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_SERIAL_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -1051,10 +1054,10 @@ unsigned char TMultiPlayerWindow::onDirectHost()
     g_mpBaseType = 1;
     ShowCursor(1);
 
-    if (!hostSession(g_generalText->getText(451), 0)) {
+    if (!hostSession(g_generalText->getText(GENERAL_TEXT_SERIAL_SESSION), 0)) {
         ShowCursor(0);
         if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
-            normalDialog(g_generalText->getText(452), 1, -1, -1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_SERIAL_CONNECTION_HOST_ERROR), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         remoteCleanup();
@@ -1078,12 +1081,10 @@ unsigned char TMultiPlayerWindow::onHost()
     g_mpBaseType = 1;
     strcpy(g_config.m_networkDefaultName, m_playerName->getText());
 
-#pragma inline_depth(0)
     CMPInputDlg sessDlg(20, 20);
-#pragma inline_depth()
-    sessDlg.m_field1->setText(g_generalText->getText(453));
+    sessDlg.m_field1->setText(g_generalText->getText(GENERAL_TEXT_MY_GAME));
     sessDlg.m_header1->setText(g_sessionNameLabel);
-    sessDlg.m_header2->setText(g_generalText->getText(454));
+    sessDlg.m_header2->setText(g_generalText->getText(GENERAL_TEXT_PASSWORD));
     sessDlg.m_field1->setHelpText(g_sessionNameHelp, 0, 0);
     sessDlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
     sessDlg.doModal(0);
@@ -1206,7 +1207,7 @@ unsigned char TMultiPlayerWindow::onModemJoin()
 {
     if (!initRemote(MP_MODEM, 0, 0)) {
         if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
-            normalDialog(g_generalText->getText(448), 1, -1, -1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_MODEM_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -1226,7 +1227,7 @@ unsigned char TMultiPlayerWindow::onModemJoin()
     if (!m_sessions->getCount()) {
         ShowCursor(0);
         if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
-            normalDialog(g_generalText->getText(455), 1, -1, -1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_NETWORK_NO_SESSIONS_FOUND), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -1236,7 +1237,7 @@ unsigned char TMultiPlayerWindow::onModemJoin()
     Sleep(1000);
     if (!joinSession(session, 0)) {
         if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
-            normalDialog(g_generalText->getText(456), 1, -1, -1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_SESSION_CONNECTION_ERROR), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -1247,7 +1248,7 @@ VA(0x00510cb0, 0x282)  // dc 0x101374
 unsigned char TMultiPlayerWindow::onDirectJoin()
 {
     if (!initRemote(MP_SERIAL, 0, 0)) {
-        normalDialog(g_generalText->getText(450), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_SERIAL_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -1271,7 +1272,7 @@ unsigned char TMultiPlayerWindow::onDirectJoin()
 
     if (!m_sessions->getCount()) {
         ShowCursor(0);
-        normalDialog(g_generalText->getText(457), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_NETWORK_GAME_NOT_FOUND), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         remoteCleanup();
         g_mpNetProtocol = MP_SERIAL;
@@ -1281,7 +1282,7 @@ unsigned char TMultiPlayerWindow::onDirectJoin()
     ShowCursor(0);
     CDPlaySession* session = m_sessions->get(0);
     if (!joinSession(session, 0)) {
-        normalDialog(g_generalText->getText(456), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_SESSION_CONNECTION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -1316,12 +1317,10 @@ unsigned char TMultiPlayerWindow::onJoin()
         return 0;
 
     const char* password = 0;
-#pragma inline_depth(0)
     CMPInputDlg dlg(20, 20);
-#pragma inline_depth()
     if (session->isPasswordProtected()) {
         dlg.m_header1->setText(g_sessionNameLabel);
-        dlg.m_header2->setText((*g_generalText)[454]);
+        dlg.m_header2->setText(g_generalText->getText(GENERAL_TEXT_PASSWORD));
         dlg.m_field1->enable(0);
         dlg.m_field1->setText(sessName);
         dlg.drawWindow(1, 0xffff0001, 0xffff);
@@ -1337,9 +1336,9 @@ unsigned char TMultiPlayerWindow::onJoin()
     if (joinSession(session, password))
         return 1;
 
-    const char* errorText = (*g_generalText)[456];
+    const char* errorText = g_generalText->getText(GENERAL_TEXT_SESSION_CONNECTION_ERROR);
     if (g_dPlay->getLastError() == static_cast<long>(0x88770154))
-        errorText = (*g_generalText)[458];
+        errorText = g_generalText->getText(GENERAL_TEXT_INVALID_PASSWORD);
     normalDialog(errorText, 1, -1, -1,
                  -1, 0, -1, 0, -1, 0, -1, 0);
     return 0;
@@ -1385,7 +1384,7 @@ unsigned char TMultiPlayerWindow::onTCP()
     char ipAddress[80];
 
     if (!initRemote(MP_TCP, 0, 0)) {
-        normalDialog(g_generalText->getText(459), 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_TCP_IP_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -1405,7 +1404,7 @@ unsigned char TMultiPlayerWindow::onTCP()
                 IP_ADDRESS_ID, 1, 0, 8);
             m_widgets.push_back(ipWidget);
             addWidget(ipWidget, -1);
-            sprintf(addressText, g_generalText->getText(460), ipAddress);
+            sprintf(addressText, g_generalText->getText(GENERAL_TEXT_IP_ADDRESS_FORMAT), ipAddress);
             ipWidget->setText(addressText);
         }
     }
@@ -1443,8 +1442,8 @@ unsigned char TMultiPlayerWindow::onSearch()
     // sentinel is copy-propagated byte-flat, as the register model predicts;
     // the remaining role swap is not a statement-level lever.
     CMPInputDlg searchDlg(20, 20);
-    searchDlg.m_header1->setText((*g_generalText)[179]);
-    searchDlg.m_header2->setText((*g_generalText)[462]);
+    searchDlg.m_header1->setText(g_generalText->getText(GENERAL_TEXT_NETWORK_HOST_ADDRESS_PROMPT));
+    searchDlg.m_header2->setText(g_generalText->getText(GENERAL_TEXT_PASSWORD_OPTIONAL));
     searchDlg.m_field1->setHelpText(g_searchAddressHelp, 0, 0);
     searchDlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
     searchDlg.disableOK();
@@ -1454,48 +1453,36 @@ unsigned char TMultiPlayerWindow::onSearch()
         return 0;
 
     remoteCleanup();
-    const char* address = searchDlg.m_field1->getText();
-#pragma inline_depth(0)
-    if (!initRemote(MP_TCP, address, 0)) {
-#pragma inline_depth()
-        normalDialog((*g_generalText)[459], 1, -1, -1,
+    if (!initRemote(MP_TCP, searchDlg.m_field1->getText(), 0)) {
+        normalDialog(g_generalText->getText(GENERAL_TEXT_TCP_IP_CONNECTION_INITIALIZATION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
 
     CHourGlass hourGlass(1);
-#pragma inline_depth(0)
     m_sessions->destroy();
-#pragma inline_depth()
     g_dPlay->enumSessions(m_sessions, 5000, 0x42);
 
     if (!m_sessions->getCount()) {
-        normalDialog((*g_generalText)[463], 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_IP_ADDRESS_WAS_NOT_FOUND), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         remoteCleanup();
-#pragma inline_depth(0)
         initRemote(MP_TCP, 0, 0);
-#pragma inline_depth()
         return 0;
     }
 
-#pragma inline_depth(0)
     if (!joinSession(m_sessions->get(0), 0)) {
-#pragma inline_depth()
+        // Original DC local name: sErr.
         char errorText[256];
         long lastError = g_dPlay->getLastError();
-        normalDialog((*g_generalText)[456], 1, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_SESSION_CONNECTION_ERROR), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         g_dPlay->getErrorDesc(lastError, errorText);
         normalDialog(errorText, 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         remoteCleanup();
-#pragma inline_depth(0)
         initRemote(MP_TCP, 0, 0);
-#pragma inline_depth()
-#pragma inline_depth(0)
         return 0;
-#pragma inline_depth()
     }
     return 1;
 }
@@ -1536,7 +1523,7 @@ CHotSeatDlg::CHotSeatDlg()
     m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, BACKGROUND_ID,
                                        "muhotsea.pcx", 0x800));
     m_widgets.push_back(new textWidget(0, 30, m_width, 150,
-                                     g_generalText->getText(447), "bigfont.fnt",
+                                     g_generalText->getText(GENERAL_TEXT_HOTSEAT_NAME_PROMPT), "bigfont.fnt",
                                      font::WHITE, HEADER_ID, 1, 0, 8));
 
     int sy = 178;

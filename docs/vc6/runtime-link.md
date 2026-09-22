@@ -197,19 +197,33 @@ Two subsequent front-end failures came from control-flow reconstruction:
   `memError`. This was a missing optional-widget guard, not evidence of a
   failed or oversized allocation. Dreamcast multiplayerwindow.cpp:938/939
   (dc 0x100124..0x100138) and retail 0x50e630..0x50e64e both conditionally
-  insert the Host button. The constructor now preserves that guard.
+  insert the Host button. The constructor now preserves that guard. An
+  ignored diagnostic executable returning legacy CD result 5 also reaches
+  the multiplayer window with hosting absent, independently verifying the
+  guard rather than relying on the normal Complete path to allocate Host.
 
 The Complete intro plays, confirmed by advancing captured frames. A launch
 with both control-flow fixes reaches the main menu without the CD warning
 and opens New Game → Multiplayer, also confirmed by the user. The user then
 exited Multiplayer and selected Single Scenario, producing a separate access
-violation in
-`strncpy` (linked address 0x6274a6 in the pre-integration test executable).
+violation in `strncpy` (linked address 0x6274a6 in the pre-integration test executable).
 The shorter New Game → Single Scenario reproduction is suspected but not yet
 verified. Map, battle and gameplay remain unverified.
 
-The two control-flow corrections pass the full build and link. On the
-pre-integration branch, `earlySetup` MAX changes from 99.0146% to 98.4298%
-and the multiplayer constructor from 83.4274% to 83.0167%; their retained
-HIST peaks are unchanged. These are measured score dips for corrections
-supported by runtime behavior and retail evidence, not new exact matches.
+The updated base had left `TDebugBreak::TDebugBreak` declaration-only,
+creating an unresolved symbol in dxplay, objecttype and objnames. Its ordinary
+out-of-line definition now supplies the empty three-byte retail constructor
+(`mov eax, ecx; ret`, folded at 0x524360). Visibility before the message-error
+constructor permits its elided base call, while the other TUs retain theirs.
+No separate retail address is claimed; the source-file placement is provisional.
+
+Further test launches use a dedicated Xvfb display and the game's `/i0 /s0`
+options (skip intro, disable sound), with Wine's PulseAudio/ALSA drivers also
+disabled. The game does not open windows or play audio on the user's desktop.
+
+After integration with the current base, the full build and link pass.
+`earlySetup` MAX changes from 99.0146% to 98.4298%; the multiplayer constructor
+changes from 83.7661% to 83.7907%. Their HIST peaks remain unchanged. The
+startup guard's score dip is retained because the runtime behavior and retail
+control flow require skipping the legacy scan for Complete. The displayed
+executable MAX remains 97.10%; the six recovered initializers remain exact.

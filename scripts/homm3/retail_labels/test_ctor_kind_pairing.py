@@ -17,6 +17,7 @@ judge rather than guess at.
 """
 
 import unittest
+from unittest.mock import patch
 
 from homm3.retail_labels import source
 
@@ -28,6 +29,7 @@ def claim(rva, marker, size=0x100, channel="src-VA_COMPGEN"):
 
 COPY = "$implicit_copy_ctor$"
 PLAIN = "$class_ctor$"
+NONCOPY = "$class_noncopy_ctor$"
 
 #: the real singleselectionwindow groups, base-obj content sizes
 NEWSMAP = [("??0NewSMapHeader@@QAE@XZ", 0x1a3),
@@ -37,10 +39,54 @@ MAPHEADER = [("??0CMapHeaderData@@QAE@XZ", 0x101),
 
 
 class CtorKindPairingTest(unittest.TestCase):
+    def join(self, rows, group, digests=None):
+        for row in rows:
+            row["kind"] = "func"
+        with patch.object(source, "_base_authority_scan",
+                          return_value=({"x_x": group}, digests or {})):
+            source.join_unit("u", rows)
+
+    def test_lone_wrong_overload_cannot_join_by_count_or_size(self):
+        for marker, symbol in ((NONCOPY, NEWSMAP[1][0]), (COPY, NEWSMAP[0][0])):
+            for size in (0x100, 0x160):
+                with self.subTest(marker=marker, size=size):
+                    rows = [claim(0x87bd0, marker, size)]
+                    self.join(rows, [(symbol, 0x160)])
+                    self.assertNotIn("joined", rows[0])
+
+    def test_kind_rejects_crossed_size_pairing(self):
+        rows = [claim(0x1000, NONCOPY, NEWSMAP[1][1]),
+                claim(0x2000, COPY, NEWSMAP[0][1])]
+        self.join(rows, list(reversed(NEWSMAP)))
+        self.assertTrue(all("joined" not in r for r in rows))
+
+    def test_missing_noncopy_cannot_borrow_equal_sized_copy(self):
+        copies = [(NEWSMAP[1][0], 0x160),
+                  (MAPHEADER[1][0], 0x100)]
+        rows = [claim(0x87bd0, NONCOPY, 0x160)]
+        self.join(rows, copies)
+        self.assertNotIn("joined", rows[0])
+
+    def test_icf_does_not_erase_a_constructor_kind_mismatch(self):
+        copies = [(NEWSMAP[1][0], 0x100), (MAPHEADER[1][0], 0x100)]
+        rows = [claim(0x87bd0, NONCOPY, 0x160)]
+        self.join(rows, copies, {n: "same-bytes" for n, _ in copies})
+        self.assertNotIn("joined", rows[0])
+
     def test_a_lone_copy_claim_takes_the_copy_ctor(self):
         rows = [claim(0x18fa60, COPY, 426)]
         self.assertEqual(source._ctor_kind_pairing(rows, NEWSMAP),
                          {0x18fa60: "??0NewSMapHeader@@QAE@ABV0@@Z"})
+
+    def test_generic_class_ctor_keeps_explicit_library_copy_support(self):
+        rows = [claim(0x1000, PLAIN)]
+        self.join(rows, [NEWSMAP[1]])
+        self.assertEqual(rows[0]["joined"], NEWSMAP[1][0])
+
+    def test_explicit_noncopy_selects_noncopy_from_mixed_group(self):
+        rows = [claim(0x1000, NONCOPY)]
+        self.join(rows, NEWSMAP)
+        self.assertEqual(rows[0]["joined"], NEWSMAP[0][0])
 
     def test_the_sizes_could_not_have_done_it(self):
         # the control on the control: 426 is neither 419 nor 462, so the

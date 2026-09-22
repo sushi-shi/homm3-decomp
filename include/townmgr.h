@@ -3,6 +3,7 @@
 
 #include "advmgr_popup.h"
 #include "basemgr.h"
+#include "text.h"
 #include "remote.h"
 #include "terrain_type.h"
 
@@ -929,6 +930,7 @@ public:
     // one of those through the window rather than through the manager.
     void setupWell(TCastleWindow* wellWin);
     void setupMage(heroWindow* mageWin);
+
     townManager();
     void unloadTown();
     // Retail 0x5c6870 (dc 0x16bba4) and 0x5c77a0 (dc 0x16c940). Neither

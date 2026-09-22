@@ -17,18 +17,18 @@
 #include "customcampaign.h"
 
 #include "abstractfile.h"
-#include "abstractfile.h"
 #include "artifact.h"
-#include "bitmap16.h"
+#include "packed_bits.h"
 #include "campaignbrief.h"
-#include "campaignmap.h"
 #include "castle.h"
-#include "creaturetype.h"
 #include "customcampaign_legacy.h"
-#include "font.h"
-#include "game.h"
 #include "gzinflatebuf.h"
 #include "hero.h"
+#include "bitmap16.h"
+#include "campaignmap.h"
+#include "creaturetype.h"
+#include "font.h"
+#include "game.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -351,13 +351,13 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
 VA(0x00484230, 0x46)
 std::string TCampaignSpellBonus::getText() const
 {
-    return formatString(g_generalText->getText(716), g_spellTraits[m_spell].m_name);
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT), g_spellTraits[m_spell].m_name);
 }
 
 VA(0x00484280, 0x46)
 std::string TCampaignSpellScrollBonus::getText() const
 {
-    return formatString(g_generalText->getText(717), g_spellTraits[m_spell].m_name);
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_SCROLL_FORMAT), g_spellTraits[m_spell].m_name);
 }
 
 VA(0x004842d0, 0x3B)
@@ -381,7 +381,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
          g_game->m_campaign.m_currentMap == g_creatureBonusTownScenarioB)) {
         int creature = m_creature;
         int faction;
-        if (g_game->m_f1f698 == 0 &&
+        if (g_game->m_gameVersion == 0 &&
             isBaseElemental(creature))
             faction = -1;
         else
@@ -457,7 +457,7 @@ std::string TCampaignCreatureBonus::getText() const
         name = g_creatureTypeTraits[m_creature].m_name;
     else
         name = g_creatureTypeTraits[m_creature].m_pluralName;
-    return formatString(g_generalText->getText(718), m_count, name);
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_count, name);
 }
 
 VA(0x004845f0, 0x24)
@@ -516,7 +516,7 @@ void TCampaignBuildingBonus::apply(int whichPlayer) const
 VA(0x004847a0, 0x3C)
 std::string TCampaignBuildingBonus::getText() const
 {
-    const char* format = g_generalText->getText(716);
+    const char* format = g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT);
     return formatString(format, getBuildingName(m_town, m_building));
 }
 
@@ -536,7 +536,7 @@ const char* TCampaignArtifactBonus::getIconDefName() const
 VA(0x00484820, 0x40)
 std::string TCampaignArtifactBonus::getText() const
 {
-    return formatString(g_generalText->getText(716),
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT),
                          g_artifactTraits[m_artifact].m_name);
 }
 
@@ -600,12 +600,12 @@ std::string TCampaignPrimarySkillBonus::getText() const
                 m_skills[stat], g_statNames[stat]);
             --remaining;
             if (remaining == 1)
-                list += g_generalText->getText(142);
+                list += g_generalText->getText(GENERAL_TEXT_LIST_AND);
             else if (remaining > 0)
                 list += ", ";
         }
     }
-    list = formatString(g_generalText->getText(716), list.c_str());
+    list = formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT), list.c_str());
     return list;
 }
 
@@ -649,7 +649,7 @@ int TCampaignSecondarySkillBonus::getIconIndex() const
 VA(0x00484c50, 0x4B)
 std::string TCampaignSecondarySkillBonus::getText() const
 {
-    return formatString(g_generalText->getText(719),
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_SKILL_FORMAT),
                          g_secondarySkillLevels[m_level - 1],
                          g_sSkillTraits[m_skill].m_name);
 }
@@ -724,15 +724,15 @@ std::string TCampaignResourceBonus::getText() const
         name = g_resourceNames[m_resource];
         break;
     case CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE:
-        name = g_generalText->getText(722);
+        name = g_generalText->getText(GENERAL_TEXT_CAMPAIGN_WOOD_AND_ORE);
         break;
     case CAMPAIGN_BONUS_RESOURCE_RARE:
-        name = g_generalText->getText(723);
+        name = g_generalText->getText(GENERAL_TEXT_CAMPAIGN_RARE_RESOURCES);
         break;
     case CAMPAIGN_BONUS_RESOURCE_NONE:
         break;
     }
-    return formatString(g_generalText->getText(718), m_amount, name);
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_amount, name);
 }
 
 VA(0x00484e20, 0xDE)
@@ -1026,7 +1026,7 @@ std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
     if (campaign->load())
         campaign->m_scenarios[source]->loadMapHeader(campaign->m_stream,
                                                    &mapHeader, source);
-    return formatString(g_generalText->getText(720), mapHeader.m_mapName.c_str());
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_MAP_HEROES_FORMAT), mapHeader.m_mapName.c_str());
 }
 
 // The player position the pool is handed to. Slot 12 asks with -1 when the
@@ -1114,8 +1114,8 @@ VA(0x00485a90, 0xBA)
 std::string TCampaignStartHeroOption::getText(void* campaign, int which) const
 {
     if (m_choices[which].m_hero == -1)
-        return g_generalText->getText(721);
-    return formatString(g_generalText->getText(716),
+        return g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_RANDOM_HERO);
+    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT),
                          g_heroTraits[m_choices[which].m_hero].m_defaultName);
 }
 
@@ -1212,32 +1212,6 @@ std::string readLengthPrefixedString(TAbstractFile* infile)
         remaining -= count;
     }
     return text;
-}
-
-// The three packed-bit reads use the same temporary-then-member-copy shape
-// in retail ScenarioStruct::Read. Keep that value-returning serialization
-// operation together; the helper name is provisional for this Complete code.
-// The three expansions restore retail's 45-block caller from 62 blocks and
-// raise 55.04 -> 70.55%; no separate retail helper body is claimed.
-// After the caller's pointer/lifetime corrections, default zero construction
-// reaches 83.29%; the unsigned-long(0) constructor is the 80.95% control.
-// Direct proxy assignment plus an explicit prerequisite-loop body scope
-// originally raised the caller to 84.92324%. After restoring its text-reader
-// and scalar lifetimes, naming the proxy changes VC6's nested scheduling and
-// raises 87.4222 -> 89.4456 without changing any other customcampaign score.
-// The three loops still call bitset::set rather than retail's proxy assignment;
-// naming only the Boolean value is byte-flat.
-template <size_t N>
-std::bitset<N> readPackedCampaignBits(TAbstractFile* infile)
-{
-    std::bitset<N> result;
-    unsigned char packed[(N + 7) / 8];
-    infile->read(packed, sizeof(packed));
-    for (unsigned int index = 0; index < N; ++index) {
-        typename std::bitset<N>::reference bit = result[index];
-        bit = (packed[index >> 3] & (1 << (index & 7))) != 0;
-    }
-    return result;
 }
 
 VA(0x00485f50, 0x8B)
@@ -1874,7 +1848,7 @@ void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(unsigned char* wanted)
 // virtual reads, contradicting retail, and is not retained.
 // Keeping inflated-size's temporary in the function scope gives it retail's
 // local home instead of reusing the infile parameter slot (86.4073 -> 87.4222).
-// A named proxy in readPackedCampaignBits changes the nested code generation
+// A named proxy in the shared readPackedBits changes the nested code generation
 // in all three expansions (87.4222 -> 89.4456); the proxy-call boundary itself
 // remains unfinished.
 void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
@@ -1948,12 +1922,12 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
         m_retainArtifacts = (flags >> 4) & 1;
     }
 
-    m_crossoverCreatures = readPackedCampaignBits<g_crossoverCreatureBits>(infile);
+    m_crossoverCreatures = readPackedBits<g_crossoverCreatureBits>(infile);
 
     if (campaignVersion >= g_campaignVersionWideArtifacts) {
-        m_crossoverArtifacts = readPackedCampaignBits<g_crossoverArtifactBits>(infile);
+        m_crossoverArtifacts = readPackedBits<g_crossoverArtifactBits>(infile);
     } else {
-        std::bitset<129> legacyArtifacts = readPackedCampaignBits<129>(infile);
+        std::bitset<129> legacyArtifacts = readPackedBits<129>(infile);
         std::copy(
             bitset_iterator<129>(legacyArtifacts, 0),
             bitset_iterator<129>(legacyArtifacts, g_crossoverLegacyArtifactBits),
@@ -2166,7 +2140,7 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
         m_regionMap = intBuffer & 0xff;
         m_campaignName = readLengthPrefixedString(file);
         if (m_campaignName.length() == 0)
-            m_campaignName = g_generalText->getText(509);
+            m_campaignName = g_generalText->getText(GENERAL_TEXT_UNNAMED);
         m_campaignDesc = readLengthPrefixedString(file);
         char charBuffer;
         file->read(&charBuffer, 1);
@@ -2185,12 +2159,12 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
     int mapOffset = m_stream->pubseekoff(0, std::ios::cur, std::ios::in);
     NewSMapHeader mapHeader;
     for (int scenario2 = 0; scenario2 < numScenarios; ++scenario2) {
-        ScenarioStruct* scenario = m_scenarios[scenario2];
-        scenario->m_offset = mapOffset;
-        if (scenario->m_inflatedSize > 0) {
-            mapOffset += scenario->m_inflatedSize;
-            scenario->loadMapHeader(m_stream, &mapHeader, scenario2);
-            applyCampaignMapHeader(*scenario, mapHeader);
+        m_scenarios[scenario2]->m_offset = mapOffset;
+        if (m_scenarios[scenario2]->m_inflatedSize > 0) {
+            mapOffset += m_scenarios[scenario2]->m_inflatedSize;
+            m_scenarios[scenario2]->loadMapHeader(m_stream, &mapHeader,
+                                                 scenario2);
+            applyCampaignMapHeader(*m_scenarios[scenario2], mapHeader);
         }
     }
     return true;
@@ -3154,7 +3128,7 @@ VA(0x0048b2e0, 0x8C)
 void SCampaign::applyBriefingChoice(int option)
 {
     m_briefingChoice = option;
-    m_assignedCarryover.erase(m_assignedCarryover.begin(), m_assignedCarryover.end());
+    m_assignedCarryover.clear();
     if (m_currentCampaign == ALIGNMENT_CHOICE_CAMPAIGN_A
         && m_currentMap == ALIGNMENT_CHOICE_MAP)
         g_game->m_setup.m_alignment[2] = TOWN_INFERNO;
@@ -3215,7 +3189,8 @@ VA_COMPGEN(0x0048e850, 0x2A, STD_FILL, hero)
 // COMDAT pairing: hero::_Ufill, mnemonic agreement 0.913.
 VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)
 
-VA_COMPGEN(0x00404700, 0x157, CLASS_CTOR, out_of_range)
+// CatchableType's copyFunction selects this overload, not the string ctor.
+VA_COMPGEN(0x00404700, 0x157, IMPLICIT_COPY_CTOR, out_of_range)
 
 // COMDAT pairing: vector<vector<hero>>::_Destroy - reached from game and from
 // two sites in this unit's own segment.

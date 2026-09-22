@@ -266,7 +266,7 @@ void TCampaignBrief::addBonusIcons()
     int i;
 
     m_widgets.push_back(new textWidget(
-        476, 425, 194, 30, (*g_generalText)[72],
+        476, 425, 194, 30, g_generalText->getText(GENERAL_TEXT_CAMPAIGN_CHOOSE_BONUS),
         DATA_COMPGEN(0x0065f2ec, campaignBonusMediumFont, "medfont.fnt"),
         static_cast<font::TColor>(4), 242, 5, 0, 8));
 
@@ -340,7 +340,7 @@ void TCampaignBrief::addBonusIcons()
     }
 
     m_widgets.push_back(new textWidget(
-        680, 425, 90, 30, (*g_generalText)[441],
+        680, 425, 90, 30, g_generalText->getText(GENERAL_TEXT_DIFFICULTY_LEVEL),
         DATA_COMPGEN(0x0065f2ec, campaignDifficultyMediumFont,
                      "medfont.fnt"),
         static_cast<font::TColor>(4), -1, 5, 0, 8));
@@ -465,14 +465,9 @@ void TCampaignBrief::updateDifficultyButtons()
 // unused numPreReqs local is retained as a positive source-shape fact.
 // The DC public ??0TCampaignBrief@@QAA@_N0@Z proves two native bools;
 // its lowered unsigned-char parameter records do not override that signature.
-// DEPTH LADDER (docs/vc6/inliner.md 6b), 2026-09-06: every append here is
-// `Widgets.insert(Widgets.end(), new W(...))`, not `push_back`.  Polish 29
-// re-opened this row on the five APPENDS IT COULD SEE (85.7661 -> 86.6820,
-// its line-anchored sweep skipped the twelve whose argument list wraps);
-// spelling all seventeen the same way is worth a further 86.6820 -> 88.1039.
-// The rung's sign is per-site: flipping the five back to `push_back` is
-// -0.92, so the shallower level is the one this body's /Ob2 budget wants at
-// all seventeen.
+// Older insert(end(), value) experiments changed VC6's inline depth, but
+// did not establish original source spelling. Keep ordinary push_back
+// appends, as in the DC widget-construction sequence.
 // LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): four of this
 // body's nine zero-initialised `for` counters are `unsigned int`, not `int`.
 // They only pay TOGETHER - 89.0593 / 90.0586 / 90.1377 / 90.9771 / 91.1880 as
@@ -521,12 +516,12 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         switch (m_campaign->m_fileError) {
         case CampaignHeaderStruct::CAMPAIGN_FILE_OPEN_FAILED:
             normalDialog(
-                formatString((*g_generalText)[11], campaignFilename).c_str(),
+                formatString(g_generalText->getText(GENERAL_TEXT_FILE_OPEN_ERROR_FORMAT), campaignFilename).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case CampaignHeaderStruct::CAMPAIGN_FILE_VERSION_UNSUPPORTED:
             normalDialog(
-                formatString((*g_generalText)[724], campaignFilename).c_str(),
+                formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_FILE_PARSE_ERROR_FORMAT), campaignFilename).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         }
@@ -541,7 +536,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         preview.m_gameSetup = g_game->m_setup;
         for (unsigned int i = 0;
              i < static_cast<int>(m_campaign->m_scenarios.size()); ++i) {
-            m_scenarios.insert(m_scenarios.end(), preview);
+            m_scenarios.push_back(preview);
         }
     } else {
         NewSMapHeader mapHeader;
@@ -558,7 +553,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             }
             static_cast<NewSMapHeader&>(preview) = g_game->m_mapHeader;
             preview.m_gameSetup = g_game->m_setup;
-            m_scenarios.insert(m_scenarios.end(), preview);
+            m_scenarios.push_back(preview);
         }
     }
 
@@ -570,7 +565,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
 
     const TCampaignMapTraits& mapTraits =
         g_campaignMapTraits[m_campaign->m_regionMap];
-    widgets.insert(widgets.end(), new bitmapBorder16(
+    widgets.push_back(new bitmapBorder16(
                     0, 0, 800, 600, BACKGROUND_ID, mapTraits.m_imageName, 0x800));
 
     for (int regionIndex = 0;
@@ -583,18 +578,18 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             // at each of the three image-name subscripts.  88.3754 -> 89.0593.
             const int& color = scenario->m_regionColor;
             if (g_game->m_campaign.m_mapScores[regionIndex].m_completed) {
-                widgets.insert(widgets.end(), new bitmapBorder(
+                widgets.push_back(new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_CONQUERED_1_ID + regionIndex,
                                 region.m_conqueredImageName[color], 0x800));
                 m_scenarios[regionIndex].m_available = false;
             }
             if (m_scenarios[regionIndex].m_available) {
-                widgets.insert(widgets.end(), new bitmapBorder(
+                widgets.push_back(new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_ENABLED_1_ID + regionIndex,
                                 region.m_enabledImageName[color], 0x800));
-                widgets.insert(widgets.end(), new bitmapBorder(
+                widgets.push_back(new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_SELECTED_1_ID + regionIndex,
                                 region.m_selectedImageName[color], 0x800));
@@ -604,48 +599,48 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         }
     }
 
-    widgets.insert(widgets.end(), new bitmapBorder(
+    widgets.push_back(new bitmapBorder(
                     456, 6, 330, 585, BACKGROUND_ID,
                     DATA_COMPGEN(0x00660ea8, campaignBriefPanel, "campbrf.pcx"),
                     0x800));
 
     if (viewFromGame) {
-        widgets.insert(widgets.end(), new button(
+        widgets.push_back(new button(
                         476, 536, 146, 40, RESTART_ID,
                         DATA_COMPGEN(0x00660e9c, campaignBriefRestartButton,
                                      "CBRESTB.DEF"),
                         0, 1, 0, 19, 2));
-        widgets.insert(widgets.end(), new button(
+        widgets.push_back(new button(
                         705, 214, 64, 30, VIDEO_ID,
                         DATA_COMPGEN(0x00660e90, campaignBriefVideoButton,
                                      "CBVIDEB.DEF"),
                         0, 1, 0, 47, 2));
     } else {
-        widgets.insert(widgets.end(), new button(
+        widgets.push_back(new button(
                         476, 536, 146, 40, 0x7802,
                         DATA_COMPGEN(0x00660e84, campaignBriefBeginButton,
                                      "CBBEGIB.DEF"),
                         0, 1, 0, 28, 2));
         widgets.back()->enable(0);
     }
-    widgets.insert(widgets.end(), new button(
+    widgets.push_back(new button(
                     624, 536, 146, 40, 0x7801,
                     DATA_COMPGEN(0x00660e78, campaignBriefCancelButton,
                                  "CBCANCB.DEF"),
                     0, 1, 0, 1, 2));
 
     if (m_campaign->getCampaignName().length() > 0) {
-        widgets.insert(widgets.end(), new textWidget(
+        widgets.push_back(new textWidget(
                         481, 22, 246, 32, m_campaign->getCampaignName().c_str(),
                         DATA_COMPGEN(0x00660b24, campaignBriefBigFont, "bigfont.fnt"),
                         static_cast<font::TColor>(8), CAMPAIGN_NAME_ID, 4, 0, 8));
     }
-    widgets.insert(widgets.end(), new textWidget(
-                    481, 63, 270, 108, (*g_generalText)[39],
+    widgets.push_back(new textWidget(
+                    481, 63, 270, 108, g_generalText->getText(GENERAL_TEXT_CAMPAIGN_DESCRIPTION),
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     static_cast<font::TColor>(2), CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
     if (m_campaign->getCampaignDescription().length() > 0) {
-        widgets.insert(widgets.end(), new textWidget(
+        widgets.push_back(new textWidget(
                         481, 86, 277, 120,
                         m_campaign->getCampaignDescription().c_str(),
                         DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont,
@@ -655,13 +650,13 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
 
     setupCurrentTerritory();
 
-    widgets.insert(widgets.end(), new textWidget(
+    widgets.push_back(new textWidget(
                     481, 213, viewFromGame ? 217 : 281, 32,
                     m_scenarios[m_selectedScenario].m_mapName.c_str(),
                     DATA_COMPGEN(0x00660b24, campaignBriefBigFont, "bigfont.fnt"),
                     static_cast<font::TColor>(8), MAP_NAME_ID, 4, 0, 8));
-    widgets.insert(widgets.end(), new textWidget(
-                    481, 253, 270, 108, (*g_generalText)[497],
+    widgets.push_back(new textWidget(
+                    481, 253, 270, 108, g_generalText->getText(GENERAL_TEXT_SCENARIO_DESCRIPTION_LABEL),
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     static_cast<font::TColor>(2), CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
     m_scroller = new type_text_scroller(
@@ -669,9 +664,9 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         481, 278, 277, 108,
         DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
         font::WHITE, slider::BLUE);
-    widgets.insert(widgets.end(), m_scroller);
+    widgets.push_back(m_scroller);
 
-    widgets.insert(widgets.end(), new iconWidget(
+    widgets.push_back(new iconWidget(
                     735, 26, 29, 23, WHICHMAP_ID,
                     DATA_COMPGEN(0x00660e68, campaignBriefScenarioMapSize,
                                  "scnrmpsz.def"),
@@ -679,15 +674,15 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
 
     sprintf(g_text,
             DATA_COMPGEN(0x00660d28, campaignBriefLabelFormat, "%s:"),
-            (*g_generalText)[391]);
-    widgets.insert(widgets.end(), new textWidget(
+            g_generalText->getText(GENERAL_TEXT_ALLIES));
+    widgets.push_back(new textWidget(
                     480, 404, 44, 23, g_text,
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     font::WHITE, 100, 6, 0, 8));
     sprintf(g_text,
             DATA_COMPGEN(0x00660d28, campaignBriefLabelFormat, "%s:"),
-            (*g_generalText)[392]);
-    widgets.insert(widgets.end(), new textWidget(
+            g_generalText->getText(GENERAL_TEXT_ENEMIES));
+    widgets.push_back(new textWidget(
                     612, 404, 58, 23, g_text,
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     font::WHITE, 100, 6, 0, 8));
@@ -701,16 +696,8 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
         w->sendMessage(widget::WIDGET_CLEAR_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        // TCampaignBrief::TCampaignBrief -> vector<widget*>::insert: DC proves
-        // the source operation is push_back, while retail retains its nested
-        // three-argument insert at 0x54d120.  This narrow depth-0 control stops
-        // the otherwise expanded size/_Ucopy/_Ufill/_Destroy family, although
-        // it currently stops one layer early at push_back.  Negative controls:
-        // ordinary depth and depth 1 both produce 73.58% / 216 blocks; pinning
-        // only this site leaves 202 blocks / 80.97%, versus 185 in retail.
-#pragma inline_depth(0)
-        widgets.insert(widgets.end(), w);
-#pragma inline_depth()
+        // Dreamcast proves the canonical widget-vector append here.
+        widgets.push_back(w);
 
         w = new iconWidget(
             673 + flagIndex * 15, 406, 15, 20,
@@ -720,13 +707,8 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
         w->sendMessage(widget::WIDGET_CLEAR_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        // The second DC push_back independently reaches the same retained
-        // retail insert.  Its one-pin negative control leaves 200 blocks and
-        // 81.38%; both controls together give the current 187-block / 85.72%
-        // checkpoint while the natural source-state threshold is recovered.
-#pragma inline_depth(0)
-        widgets.insert(widgets.end(), w);
-#pragma inline_depth()
+        // The second DC append has the same source operation.
+        widgets.push_back(w);
     }
 
     addBonusIcons();

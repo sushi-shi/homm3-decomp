@@ -714,8 +714,8 @@ unsigned char initializeCreditsText()
         DATA_COMPGEN(0x00688768, creditsTextName, "Credits.txt"));
     if (!g_creditsText)
         return 0;
-    g_credits[0] = g_creditsText->getText(1);
-    g_credits[1] = g_creditsText->getText(2);
+    g_credits[0] = g_creditsText->getText(CREDITS_TEXT_STAFF);
+    g_credits[1] = g_creditsText->getText(CREDITS_TEXT_LEGAL);
     return 1;
 }
 

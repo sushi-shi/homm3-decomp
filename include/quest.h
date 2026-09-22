@@ -219,14 +219,18 @@ public:
     VA(0x0052e6b0, 0x2E)
     const TSeerHutTextColumn* questTextRow()
     {
-        return m_seerHut ? &g_questTextA[m_textVariant] : &g_questTextB[m_textVariant];
+        if (m_seerHut)
+            return &g_questTextA[m_textVariant];
+        return &g_questTextB[m_textVariant];
     }
     // The five-column text group for this quest type. Keep the selector
     // call and virtual discriminator in the same expression: retail's
     // retained and expanded instances evaluate their operands differently.
     const TSeerHutQuestText& questTexts()
     {
-        return questTextRow()->m_quest[questType()];
+        const TSeerHutQuestText& texts =
+            questTextRow()->m_quest[questType()];
+        return texts;
     }
     const std::string& questText(int column)
     {

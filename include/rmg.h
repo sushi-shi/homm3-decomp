@@ -377,7 +377,8 @@ struct TRmgTownSlot {
     int m_maximumPlayers;               // +0x18
     int m_playerIndex;                  // +0x1c
     int m_parameters0020[8];
-    unsigned char m_flag0040;
+    // Template column 22: preserve zone alignment for neutral towns.
+    unsigned char m_neutralTownsMatchZone; // +0x40, provisional retail role
     unsigned char m_allowedTowns[9];    // +0x41
     int m_parameters004c[7];
     int m_parameters0068[7];
@@ -386,7 +387,8 @@ struct TRmgTownSlot {
     unsigned char m_useNativeTerrain;
     unsigned char m_allowedTerrain[8];  // +0x85
     int m_monsterStrength;              // +0x90
-    unsigned char m_flag0094;
+    // Template column 56: restrict guards to the zone's town alignment.
+    unsigned char m_guardsMatchZone;    // +0x94, provisional retail role
     unsigned char m_allowedMonsters[10]; // +0x95
     TRmgTreasureRange m_treasure[3];     // +0xa0
     std::vector<TRmgZoneConnection> m_connections; // +0xc4

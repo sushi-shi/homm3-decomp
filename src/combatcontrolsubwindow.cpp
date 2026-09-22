@@ -330,7 +330,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
     m_portrait = new bitmapBorder(10, 6, 58, 64, 0x835, 0, 0x800);
     m_widgets.push_back(m_portrait);
 
-    sprintf(g_text, "%s:", (*g_generalText)[381]);
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_ATTACK_ABBREVIATION));
     m_widgets.push_back(new textWidget(
         9, 75, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x836, 0, 0, 8));
@@ -339,7 +339,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x837, 2, 0, 8);
     m_widgets.push_back(m_attackText);
 
-    sprintf(g_text, "%s:", (*g_generalText)[382]);
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_DEFENSE_ABBREVIATION));
     m_widgets.push_back(new textWidget(
         9, 87, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x838, 0, 0, 8));
@@ -348,7 +348,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x839, 2, 0, 8);
     m_widgets.push_back(m_defenseText);
 
-    sprintf(g_text, "%s:", (*g_generalText)[383]);
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_POWER_ABBREVIATION));
     m_widgets.push_back(new textWidget(
         9, 99, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x83a, 0, 0, 8));
@@ -357,7 +357,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x83b, 2, 0, 8);
     m_widgets.push_back(m_powerText);
 
-    sprintf(g_text, "%s:", (*g_generalText)[384]);
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_KNOWLEDGE_ABBREVIATION));
     m_widgets.push_back(new textWidget(
         9, 111, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x83c, 0, 0, 8));
@@ -366,7 +366,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x83d, 2, 0, 8);
     m_widgets.push_back(m_knowledgeText);
 
-    sprintf(g_text, "%s:", (*g_generalText)[385]);
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_MORALE));
     m_widgets.push_back(new textWidget(
         9, 131, 60, 12, g_text, "tiny.fnt", font::PRIMARY,
         0x83e, 0, 0, 8));
@@ -375,7 +375,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         iconWidget::ICON_STYLE_PLAIN);
     m_widgets.push_back(m_moraleIcon);
 
-    sprintf(g_text, "%s:", (*g_generalText)[386]);
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_LUCK));
     m_widgets.push_back(new textWidget(
         9, 143, 60, 12, g_text, "tiny.fnt", font::PRIMARY,
         0x840, 0, 0, 8));
@@ -445,7 +445,7 @@ void TCombatHeroSubWindow::update(const hero& info, const hero* otherHero,
     m_luckIcon->setIconFrame(
         mutableInfo.getLuck(otherHero, onCursedGround, 1) + 3);
 
-    sprintf(buffer, "%s\n%d/%d", (*g_generalText)[388], info.m_mana,
+    sprintf(buffer, "%s\n%d/%d", g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_LABEL), info.m_mana,
             mutableInfo.getMaxMana());
     m_manaText->setText(buffer);
 }
@@ -540,7 +540,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             iconWidget::ICON_STYLE_PLAIN);
         m_widgets.push_back(m_creatureIcon);
 
-        const char* attackName = (*g_generalText)[381];
+        const char* attackName = g_generalText->getText(GENERAL_TEXT_ATTACK_ABBREVIATION);
         sprintf(g_text, "%s:", attackName);
         m_widgets.push_back(new textWidget(
             9, 75, 60, 12, g_text, "tiny.fnt", font::WHITE,
@@ -550,7 +550,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             0x89b, 2, 0, 8);
         m_widgets.push_back(m_attackText);
 
-        const char* defenseName = (*g_generalText)[382];
+        const char* defenseName = g_generalText->getText(GENERAL_TEXT_DEFENSE_ABBREVIATION);
         sprintf(g_text, "%s:", defenseName);
         m_widgets.push_back(new textWidget(
             9, 87, 60, 12, g_text, "tiny.fnt", font::WHITE,
@@ -560,7 +560,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             0x89d, 2, 0, 8);
         m_widgets.push_back(m_defenseText);
 
-        const char* damageName = (*g_generalText)[387];
+        const char* damageName = g_generalText->getText(GENERAL_TEXT_DAMAGE_ABBREVIATION);
         sprintf(g_text, "%s:", damageName);
         m_widgets.push_back(new textWidget(
             9, 99, 60, 12, g_text, "tiny.fnt", font::WHITE,
@@ -570,7 +570,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             0x89f, 2, 0, 8);
         m_widgets.push_back(m_damageText);
 
-        const char* speedName = (*g_generalText)[390];
+        const char* speedName = g_generalText->getText(GENERAL_TEXT_HEALTH_LABEL);
         sprintf(g_text, "%s:", speedName);
         m_widgets.push_back(new textWidget(
             9, 111, 60, 12, g_text, "tiny.fnt", font::WHITE,
@@ -580,7 +580,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             0x8a1, 2, 0, 8);
         m_widgets.push_back(m_speedText);
 
-        const char* moraleName = (*g_generalText)[385];
+        const char* moraleName = g_generalText->getText(GENERAL_TEXT_MORALE);
         sprintf(g_text, "%s:", moraleName);
         m_widgets.push_back(new textWidget(
             9, 131, 60, 12, g_text, "tiny.fnt", font::WHITE,
@@ -590,7 +590,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             iconWidget::ICON_STYLE_PLAIN);
         m_widgets.push_back(m_moraleIcon);
 
-        const char* luckName = (*g_generalText)[386];
+        const char* luckName = g_generalText->getText(GENERAL_TEXT_LUCK);
         sprintf(g_text, "%s:", luckName);
         m_widgets.push_back(new textWidget(
             9, 143, 60, 12, g_text, "tiny.fnt", font::WHITE,
@@ -715,7 +715,7 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
     }
 
     if (info.m_spellInfluenceQueue.size() == 0)
-        m_spellText->setText((*g_generalText)[675]);
+        m_spellText->setText(g_generalText->getText(GENERAL_TEXT_NO_ACTIVE_SPELLS));
     else
         m_spellText->setText("");
 }

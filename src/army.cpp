@@ -182,9 +182,6 @@ void army::stopSample(army::TSampleID id)
 // register - that slot is then reused for the two dead erase
 // iterators at the bottom.
 
-// Retail calls vector<SpellID>::erase at both clear sites. Keep begin() and
-// end() outside the pinned erase statement.
-
 // Residual (92.6261%): the register-homing family. Retail fills the
 // two by-value iterator temps through EDI as scratch with EAX/EDX
 // holding the slot pointers; ours picks the mirror assignment, and the
@@ -203,19 +200,7 @@ void army::initClean()
     m_roundsLeftBeforeVanish = -1;
     m_numSpellInfluences = 0;
     memset(m_spellInfluence, 0, sizeof(m_spellInfluence));
-    {
-        // clear() spelled through its own body with the erase pinned:
-        // retail expands clear and CALLS deque::erase (0x448db0), and
-        // our CL - the InitClean residual note below - inlines erase
-        // and starves. The statement-scoped depth(0) reproduces the
-        // rejection; begin()/end() build their 16-byte temps inline in
-        // the two unpinned statements exactly as retail does.
-        TSpellQueue::iterator queueEnd = m_spellInfluenceQueue.end();
-        TSpellQueue::iterator queueBegin = m_spellInfluenceQueue.begin();
-#pragma inline_depth(0)
-        m_spellInfluenceQueue.erase(queueBegin, queueEnd);
-#pragma inline_depth()
-    }
+    m_spellInfluenceQueue.clear();
     m_lastFidgetTime = GameTime::get();
     if (m_stdIcon)
         m_stdIcon->dispose();
@@ -258,7 +243,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     TCreatureTypeTraits* traits = &m_monInfo;
     *traits = g_creatureTypeTraits[type];
     traits->m_townType =
-        (g_game->m_f1f698 == 0
+        (g_game->m_gameVersion == 0
          && isBaseElemental(type))
             ? -1
             : g_creatureTypeTraits[type].m_townType;
@@ -823,7 +808,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
              && !g_combatManager->m_cells[m_gridIndex + step]
                      .getArmy()
                      ->m_isMoving)
-            || (g_combatManager->m_cells[m_gridIndex + step].m_attributes & 2)) {
+            || (g_combatManager->m_cells[m_gridIndex + step].m_attributes & hexcell::blocked)) {
             xoff -= 0x25;
             yoff = -0xf;
         } else {
@@ -1076,19 +1061,19 @@ unsigned char army::setInsideAreaEffect(unsigned char arg)
     return 1;
 }
 
-// Original: army::EndWalk; army.cpp:1062, dc 0x45204.
-// Ordinary helper expanded in both Walk and WalkTo. The standalone retail
-// slot in this DC pair belongs to SetInsideAreaEffect, not EndWalk.
+// E:\gamedcs\army.cpp:1062
+// DC EndWalk (0x45204), called at Walk:1163 and WalkTo:2439.
+// Retail expands this ordinary helper; no standalone body is claimed.
 void army::endWalk()
 {
-    if (g_combatManager->isQuickCombat())
-        return;
-    playSample(POST_WALK_SAMPLE);
-    if (m_armySample[WALK_SAMPLE])
-        g_soundManager->stopSample(
-            m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
-    playAnimation(cs_postwalk, -1, 0);
-    playAnimation(cs_wait, 1, 0);
+    if (!g_combatManager->isQuickCombat()) {
+        playSample(POST_WALK_SAMPLE);
+        if (m_armySample[WALK_SAMPLE])
+            g_soundManager->stopSample(
+                m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
+        playAnimation(cs_postwalk, -1, 0);
+        playAnimation(cs_wait, 1, 0);
+    }
 }
 
 // One hex of a walk: turn to face the step if it needs turning, publish
@@ -1775,18 +1760,18 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                 const char* targetName =
                     target->getName(target->m_numTroops + killedCount);
                 if (m_numTroops - deadVampires == 1)
-                    text = formatString((*g_generalText)[362],
+                    text = formatString(g_generalText->getText(GENERAL_TEXT_LIFE_DRAIN_ONE_FORMAT),
                                          getName(m_numTroops - deadVampires),
                                          damageRecovered, targetName);
                 else
-                    text = formatString((*g_generalText)[363],
+                    text = formatString(g_generalText->getText(GENERAL_TEXT_LIFE_DRAIN_MANY_FORMAT),
                                          getName(m_numTroops - deadVampires),
                                          damageRecovered, targetName);
                 if (deadVampires > 0) {
                     if (deadVampires == 1)
-                        text += (*g_generalText)[364];
+                        text += g_generalText->getText(GENERAL_TEXT_LIFE_DRAIN_RAISE_ONE_SUFFIX);
                     else
-                        text += formatString((*g_generalText)[365],
+                        text += formatString(g_generalText->getText(GENERAL_TEXT_LIFE_DRAIN_RAISE_MANY_SUFFIX_FORMAT),
                                               deadVampires);
                 }
                 if (!static_cast<const combatManager*>(g_combatManager)
@@ -1817,11 +1802,11 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                     target->m_monInfo.m_hitPoints * dead - target->m_topCreatureDamage;
                 std::string text;
                 if (dead == 1)
-                    text = formatString((*g_generalText)[119],
+                    text = formatString(g_generalText->getText(GENERAL_TEXT_DEATH_STARE_ONE_FORMAT),
                                          target->getName(dead),
                                          getName());
                 else
-                    text = formatString((*g_generalText)[120],
+                    text = formatString(g_generalText->getText(GENERAL_TEXT_DEATH_STARE_MANY_FORMAT),
                                          dead,
                                          target->getName(dead),
                                          getName());
@@ -1859,7 +1844,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                              g_combatManager)
                              ->isQuickCombat()) {
                         text = formatString(
-                            (*g_generalText)[368],
+                            g_generalText->getText(GENERAL_TEXT_LIGHTNING_STRIKE_FORMAT),
                             target->getName());
                         g_combatManager->m_combatWindow->combatMessage(
                             text.c_str(), 1, 0);
@@ -2156,92 +2141,26 @@ unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 // Champion's joustBonus with the step count - and re-wire auras and
 // facing at the end.
 
-// WHAT IS INLINE AND WHAT IS NOT, read off the bytes: GetSpeed expands
-// at both of its sites (the slowRounds float re-time with its floor at
-// 1), remove_aura expands whole (both teardown loops with erase_item
-// CALLS kept), remove_binding stays a call, play_sample(POST_WALK)
-// expands with its own IsQuickCombat re-test under the outer one, and
-// the WALK_SAMPLE stop is written straight through gpSoundManager -
-// stop_sample's inline would re-test IsQuickCombat a third time and
-// retail has exactly two. Walk's direction argument re-reads the path
-// cell's bitfield rather than the `direction` local the two adjacency
-// calls share - do not cache what retail reloads.
-
-// `stop` doubles as the loop bound: a moat or trap RAISES it to the
-// current index so the walk ends on this step. The explicit-else
-// spelling and the `(stop = ...) < 0` condition-assignment measure
-// IDENTICALLY (89.7721) - both give retail's shared zero-store block -
-// and the `long stop = 0;` pre-initialized form is 1.0 WORSE
-// (88.7607); the init store must not exist ahead of the branch.
-
-// Residual (89.7721%): the register-mirror family. Retail homes
-// gpSearchArray in EBX and the counts in EDI for the whole body; our
-// C2 picks the mirror image at the first definition and every
-// downstream pairing follows, plus the `stop` slot takes its zero from
-// an immediate store where ours routes a zeroed register. Same B1
-// handle-state class as attack_hex's direction-search note. Calls,
-// call order, and every block pair off (24/24 calls after the
-// remove_aura longhand below).
-// 89.8063 -> 93.3162 (2026-08-21): the two blocked-hex else-arms must
-// write `succeeded = 0; stop = i;` in THAT order while the moat arms
-// write `stop = i; succeeded = 0;` - the asymmetry is what stops our
-// CL cross-jumping the four arm tails into one shared block, which
-// retail keeps duplicated per arm (why-branch's D8 jne->je pair, and
-// the whole 343-vs-351 instruction gap). Residual (93.32): the walk
-// region's ebx/edi roles and the stop/conversion-temp slots are
-// permuted - retail homes `stop` at [ebp-0x4] and reloads it per
-// iteration where we keep it in EBX; why-reg's model reads the first
-// ESI/EBX/EDI definitions as agreeing on both sides, so the flip is
-// mid-function creation order past the model's reach. Global-load
-// census agrees 23=23, so it is not a cache-vs-reload spelling.
+// DC names/types: save_facing (int), initial_walk (unsigned char),
+// direction and both next_cell locals (const int). Its named calls recover
+// remove_aura, EndWalk, GetObstacle, Is, OffsetToFront and
+// check_obstacle_attacks instead of pasted helper bodies.
+// Removing the five aura pins through removeAura() is byte-flat at 93.3162;
+// restoring the remaining helpers/types reaches 99.32%. Stopping before
+// revealing the obstacle (DC 2459 before GetObstacle:2461, likewise
+// 2481/2483) closes the two store-order differences: 100% without pins.
+// Merely swapping stop/succeeded after the visibility store cross-jumps
+// the trap arms and gives 95.78%; the full statement order matters.
+// Complete has no emitted CancelSpellType(AFTER_MOVE) operation here;
+// its cancelSpellType handles only AFTER_ATTACK and AFTER_DAMAGE.
 VA(0x00441fa0, 0x461)  // anchor-global, dc 0x472f4
 unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
 {
     m_side = m_slot = -1;
     if (!findPath(destIndex, getSpeed(), 0, 0))
         return 0;
-    long originalFacing = m_facing;
-    // remove_aura()'s body, spelled through so the two erase_item
-    // sites can carry the pins retail's own expansion decisions need:
-    // both stay CALLS here (our CL otherwise inlines one), the first
-    // size() and clear() expand, the second size() and clear() stay
-    // out of line.
-    long sourceCount = m_auraSources.size();
-    while (sourceCount-- > 0) {
-        army* source = m_auraSources[sourceCount];
-#pragma inline_depth(0)
-        eraseItem(source->m_auraClients, this);
-#pragma inline_depth()
-    }
-    {
-        // Retail reads _First and _Last through the VECTOR'S OWN ADDRESS -
-        // `mov eax,[ebx+8] / mov ecx,[ebx+4]`, the same EBX it then hands the
-        // erase as `this` - where `aura_sources.begin()` makes VC6 fold the
-        // member offset into each load off `this` (`[esi+0x52c]` and
-        // `[esi+0x528]`) and form EBX only for the call. Naming the vector as
-        // a reference is what puts the base in a register first:
-        // 89.7721 -> 89.8063. NARROW, and measured: naming BOTH vectors at
-        // the top of the remove_aura block instead puts the row back at
-        // exactly 89.7721, so this is per-site, not a style to spread.
-        std::vector<army*>& sources = m_auraSources;
-        army** first = sources.begin();
-        army** end = sources.end();
-#pragma inline_depth(0)
-        sources.erase(first, end);
-#pragma inline_depth()
-    }
-#pragma inline_depth(0)
-    long clientCount = m_auraClients.size();
-#pragma inline_depth()
-    while (clientCount-- > 0) {
-        army* client = m_auraClients[clientCount];
-#pragma inline_depth(0)
-        eraseItem(client->m_auraSources, this);
-#pragma inline_depth()
-    }
-#pragma inline_depth(0)
-    m_auraClients.clear();
-#pragma inline_depth()
+    int saveFacing = m_facing;
+    removeAura();
     removeBinding();
     unsigned char succeeded = 1;
     long stop;
@@ -2253,14 +2172,14 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
         stop = 0;
     }
     long last = g_searchArray->getPathSteps() - 1;
-    unsigned char atRest = 1;
+    unsigned char initialWalk = 1;
     m_isMoving = 1;
     m_joustBonus = last - stop + 1;
     for (long i = last; i >= stop; i--) {
         const int direction = g_searchArray->getStep(i);
-        long nextHex = getAdjacentCellIndex(m_gridIndex, direction);
-        if (g_combatManager->shouldLowerDoor(this, nextHex)) {
-            if (!atRest) {
+        const int nextCell = getAdjacentCellIndex(m_gridIndex, direction);
+        if (g_combatManager->shouldLowerDoor(this, nextCell)) {
+            if (!initialWalk) {
                 endWalk();
                 m_currFrameType = cs_wait;
                 m_currFrameIndex = 0;
@@ -2268,44 +2187,43 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
             }
             g_combatManager->lowerDoor();
             g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
-            atRest = 1;
+            initialWalk = 1;
         }
-        if (g_searchArray->isMoat(static_cast<short>(nextHex))) {
+        if (g_searchArray->isMoat(static_cast<short>(nextCell))) {
             stop = i;
             succeeded = 0;
-        } else if (g_combatManager->m_cells[nextHex].m_attributes & 4) {
-            g_combatManager->m_obstacles
-                [g_combatManager->m_cells[nextHex].m_obstacleIndex]
+        } else if (g_combatManager->m_cells[nextCell].m_attributes & hexcell::quicksand) {
+            stop = i;
+            succeeded = 0;
+            g_combatManager->getObstacle(
+                g_combatManager->m_cells[nextCell].m_obstacleIndex)
                 .m_isVisible = 1;
-            succeeded = 0;
-            stop = i;
         }
         if (is(creatureDoubleWide)) {
-            long secondHex = getAdjacentCellIndex(m_gridIndex, direction)
-                              + (m_facing ? 1 : -1);
+            const int nextCell = getAdjacentCellIndex(m_gridIndex, direction)
+                                 + offsetToFront(-1);
             if (g_searchArray
-                    ->isMoat(static_cast<short>(secondHex))) {
+                    ->isMoat(static_cast<short>(nextCell))) {
                 stop = i;
                 succeeded = 0;
-            } else if (g_combatManager->m_cells[secondHex].m_attributes & 4) {
-                g_combatManager->m_obstacles
-                    [g_combatManager->m_cells[secondHex].m_obstacleIndex]
+            } else if (g_combatManager->m_cells[nextCell].m_attributes & hexcell::quicksand) {
+                stop = i;
+                succeeded = 0;
+                g_combatManager->getObstacle(
+                    g_combatManager->m_cells[nextCell].m_obstacleIndex)
                     .m_isVisible = 1;
-                succeeded = 0;
-                stop = i;
             }
         }
-        walk(g_searchArray->getStep(i), i == stop, atRest);
-        atRest = 0;
-        if (m_creatureType != ARMY_CREATURE_ARROW_TOWER)
-            g_combatManager->checkObstacleAttacks(this, i != stop);
+        walk(g_searchArray->getStep(i), i == stop, initialWalk);
+        initialWalk = 0;
+        checkObstacleAttacks(i != stop);
         if (m_numTroops <= 0) {
             succeeded = 0;
             break;
         }
     }
     if (m_numTroops > 0) {
-        if (m_facing != originalFacing && restoreFacing)
+        if (m_facing != saveFacing && restoreFacing)
             turn(1);
         addAura();
         m_currFrameType = cs_wait;
@@ -2313,7 +2231,8 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
     }
     m_isMoving = 0;
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
-    g_combatManager->testRaiseDoor();
+    // Complete folded DC TestRaiseDoor's occupancy checks into RaiseDoor.
+    g_combatManager->raiseDoor();
     return succeeded;
 }
 
@@ -2331,7 +2250,7 @@ inline void army::checkLuck()
                 launchSample(DATA_COMPGEN(0x00660a20, goodLuckSampleName,
                                            "goodluck.82m"),
                               -1, 3);
-                sprintf(g_text, (*g_generalText)[46], getName());
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_LUCK_FORMAT), getName());
                 g_combatManager->m_combatWindow->combatMessage(g_text, 1, 0);
                 g_combatManager->spellEffect(
                     combatManager::eSpellEffectFortune, this, 100, 0);
@@ -2838,13 +2757,13 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
                     std::string text;
                     if (m_numTroops == 1)
                         text = formatString(
-                            g_generalText->getText(369),
+                            g_generalText->getText(GENERAL_TEXT_HATRED_DAMAGE_ONE_FORMAT),
                             ::getArmyName(m_creatureType, m_numTroops),
                             ::getArmyName(defender->m_creatureType,
                                     defender->m_numTroops));
                     else
                         text = formatString(
-                            g_generalText->getText(370),
+                            g_generalText->getText(GENERAL_TEXT_HATRED_DAMAGE_MANY_FORMAT),
                             ::getArmyName(m_creatureType, m_numTroops),
                             ::getArmyName(defender->m_creatureType,
                                     defender->m_numTroops));
@@ -2907,7 +2826,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
                 std::string text;
                 const char* creatureName;
                 creatureName = getName();
-                text = formatString(g_generalText->getText(366),
+                text = formatString(g_generalText->getText(GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT),
                                      creatureName);
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);
@@ -2923,10 +2842,10 @@ int army::computeAttackerDamageBonuses(int baseDamage,
                      ->isQuickCombat()) {
                 std::string text;
                 if (m_numTroops == 1)
-                    text = formatString(g_generalText->getText(366),
+                    text = formatString(g_generalText->getText(GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT),
                                          getName());
                 else
-                    text = formatString(g_generalText->getText(367),
+                    text = formatString(g_generalText->getText(GENERAL_TEXT_DOUBLE_DAMAGE_MANY_FORMAT),
                                          getName());
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);
@@ -3369,6 +3288,9 @@ void army::adjustHitpoints()
 // `erase(it)` = `erase(it, it + 1)` with the two 16-byte iterators
 // built on the stack - the second and last call site of the
 // deque::erase COMDAT at 0x448db0.
+// DC 3790..3792 names iterator si and the single-iterator erase overload.
+// Restoring that source call removes the iterator-advance pin and reaches
+// 100%; the hand-expanded range erase left BIND's clear under-inlined.
 
 VA(0x00444510, 0x3DB)  // anchor-global, dc 0x49748
 void army::cancelIndividualSpell(int spell)
@@ -3421,15 +3343,10 @@ void army::cancelIndividualSpell(int spell)
         m_monInfo.m_defenseSkill += m_diseaseDefensePenalty;
         break;
     }
-    TSpellQueue::iterator it = std::find(m_spellInfluenceQueue.begin(),
-                                         m_spellInfluenceQueue.end(), spell);
-    if (it != m_spellInfluenceQueue.end()) {
-        TSpellQueue::iterator next = it;
-#pragma inline_depth(0)
-        next += 1;
-        m_spellInfluenceQueue.erase(it, next);
-#pragma inline_depth()
-    }
+    TSpellQueue::iterator si = std::find(m_spellInfluenceQueue.begin(),
+                                        m_spellInfluenceQueue.end(), spell);
+    if (si != m_spellInfluenceQueue.end())
+        m_spellInfluenceQueue.erase(si);
 }
 
 // Cancel spells with positive durations. Complete has 81 spell entries;
@@ -4667,11 +4584,11 @@ void army::newTurn()
                 std::string text;
                 if (m_numTroops == 1)
                     text = formatString(
-                        g_generalText->getText(371),
+                        g_generalText->getText(GENERAL_TEXT_REGENERATION_ONE_FORMAT),
                         getName());
                 else
                     text = formatString(
-                        g_generalText->getText(372),
+                        g_generalText->getText(GENERAL_TEXT_REGENERATION_MANY_FORMAT),
                         getName());
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);

@@ -58,7 +58,7 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
         case JoinPrice:
             sprintf(g_text,
                     g_generalText->getText(
-                        GENERAL_TEXT_QUICK_CREATURE_JOIN_COST),
+                        GENERAL_TEXT_QUICK_CREATURE_JOIN_COST_FORMAT),
                     cost);
             break;
         }
