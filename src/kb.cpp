@@ -341,8 +341,12 @@ static int checkMem();
 // claim that an unconditional retail back edge proved source goto was
 // too strong. Changing these headers to conventional for-tests, including
 // the earlier found-result variant, scores 94.2515%.
-// The remaining retail guard is an unconditional jump over the CD scans;
-// the current source retains its meaningful g_cdDriveNumber predicate.
+// Retail 0x4ed9df unconditionally skips the CD-version scans, leaving the
+// SetupCDDrive result 7 intact. Preserve the legacy scans for their actual
+// CD-result domain, but exclude Complete's no-CD-required result. Without
+// that guard, installed video archives overwrite 7 with 5/6, spuriously
+// disabling single-player/hosting and showing a CD warning. The pinned
+// binary's unconditional short jump still differs from this source guard.
 // Checking each scan's exhaustion independently instead of taking its found
 // exit scores 99.0000% for the first scan, 92.4123% for the fallback, and
 // 91.8275% together, versus 99.5994%. Both must skip the version fallback
@@ -393,7 +397,8 @@ int earlySetup()
     if (!loadSoundHeaders())
         shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
             "Unable to initialize resources - possible disk problem."));
-    if (g_cdDriveNumber) {
+    if (g_cdDriveNumber &&
+        g_cdDriveNumber != CD_DRIVE_NUMBER_NO_CD_REQUIRED) {
         int i;
 
         bool found = 0;

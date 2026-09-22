@@ -478,7 +478,11 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_widgets.push_back(m_modem);
     m_widgets.push_back(m_direct);
     m_widgets.push_back(m_online);
-    m_widgets.push_back(m_host);
+    // DC multiplayerwindow.cpp:938/939 and retail 0x50e630..0x50e64e
+    // skip the host entry when no-CD mode deliberately omits that button.
+    // A null entry makes addWidgetsToMessageStream report a memory error.
+    if (m_host)
+        m_widgets.push_back(m_host);
     m_widgets.push_back(m_join);
     m_widgets.push_back(m_search);
     m_widgets.push_back(m_cancel);

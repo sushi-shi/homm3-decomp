@@ -182,11 +182,34 @@ also checked independently of objdiff's relaxed relocation scoring. No
 gameplay function was added. The sprite fix changes no existing function
 scores, so the README matching totals remain unchanged.
 
-The Complete intro plays, confirmed by advancing captured frames, and the
-main menu now renders correctly. A spurious CD-version warning remains:
-`earlySetup` conditionally enters its legacy video-archive scan, whereas
-the pinned retail body unconditionally jumps over it. That control-flow
-mismatch is separate from the recovered data initializers. After dismissing
-the warning, the user reached the menu and reported an “Out of memory”
-termination when selecting multiplayer. Its cause has not yet been traced;
-map, battle and gameplay execution remain unverified.
+Two subsequent front-end failures came from control-flow reconstruction:
+
+- `setupCDDrive` returns 7 in Complete. Retail `earlySetup` jumps over the
+  legacy video-archive scan at 0x4ed9df, preserving that no-CD-required result.
+  The reconstruction entered the scan and replaced 7 with 5/6, which made
+  `setupCDRom` disable single-player/hosting and show a spurious CD warning.
+  The scan now excludes the named no-CD-required result while preserving
+  the existing legacy result handling. The source guard remains a byte
+  mismatch against the pinned binary's unconditional jump.
+- The resulting no-CD mode deliberately leaves `TMultiPlayerWindow::m_host`
+  null. Its unconditional insertion into `m_widgets` then reaches
+  `heroWindow::addWidgetsToMessageStream`, whose null-entry check calls
+  `memError`. This was a missing optional-widget guard, not evidence of a
+  failed or oversized allocation. Dreamcast multiplayerwindow.cpp:938/939
+  (dc 0x100124..0x100138) and retail 0x50e630..0x50e64e both conditionally
+  insert the Host button. The constructor now preserves that guard.
+
+The Complete intro plays, confirmed by advancing captured frames. A launch
+with both control-flow fixes reaches the main menu without the CD warning
+and opens New Game → Multiplayer, also confirmed by the user. The user then
+exited Multiplayer and selected Single Scenario, producing a separate access
+violation in
+`strncpy` (linked address 0x6274a6 in the pre-integration test executable).
+The shorter New Game → Single Scenario reproduction is suspected but not yet
+verified. Map, battle and gameplay remain unverified.
+
+The two control-flow corrections pass the full build and link. On the
+pre-integration branch, `earlySetup` MAX changes from 99.0146% to 98.4298%
+and the multiplayer constructor from 83.4274% to 83.0167%; their retained
+HIST peaks are unchanged. These are measured score dips for corrections
+supported by runtime behavior and retail evidence, not new exact matches.

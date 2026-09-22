@@ -2419,7 +2419,7 @@ kb	?doSinglePlayerWindow@@YIHXZ	99.1549	99.1549	99.1549	0xf0490	tokens1:cee39aff
 kb	?draw@Bitmap16Bit@@QBEXHHHHPAV1@HH_N@Z	100.0000	100.0000	100.0000	0xf0010	tokens1:9d47bed3d147
 kb	?draw@CSprite@@QBEXHHHHHHPAVBitmap16Bit@@HH_N1@Z	100.0000	100.0000	100.0000	0xf0050	tokens1:4ce1fa236a75
 kb	?drawProgressCount@@YIXXZ	100.0000	100.0000	100.0000	0xed230	tokens1:e326c6d5ce56
-kb	?earlySetup@@YIHXZ	99.0146	99.0146	99.5994	0xed650	tokens1:e7e1818154e7
+kb	?earlySetup@@YIHXZ	98.4298	98.4298	99.5994	0xed650	tokens1:6479982cac16
 kb	?eventWindowHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf0fc0	tokens1:f34baf899132
 kb	?extendedDialog@@YIXPBDAAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@JJJ@Z	92.7911	92.7911	92.7911	0xf7690	tokens1:5a8d6a85eaf6
 kb	?fileError@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3a60	tokens1:0ef789d71e3f
@@ -2645,7 +2645,7 @@ misc	?sRand@@YIXH@Z	100.0000	100.0000	100.0000	0x10c5f0	tokens1:d2d3a3638580
 misc	?safeRandom@@YIHHH@Z	100.0000	100.0000	100.0000	0x10b1d0	tokens1:ecbe5a8c9a7e
 misc	?setDefaultCombatOptions@@YIXXZ	100.0000	100.0000	100.0000	0x10b700	tokens1:8fdb81d12bc6
 misc	?setGameDefaults@@YIXXZ	100.0000	100.0000	100.0000	0x10b4d0	tokens1:f18809fcceca
-misc	?setupCDDrive@@YIHXZ	100.0000	100.0000	100.0000	0x10c1c0	tokens1:ed795eb0fca9
+misc	?setupCDDrive@@YIHXZ	100.0000	100.0000	100.0000	0x10c1c0	tokens1:65afcad06a70
 misc	?writePrefs@@YIXXZ	100.0000	100.0000	100.0000	0x10c1b0	tokens1:62ee6b394fe6
 misc	?writePrefsToRegistry@@YIXXZ	100.0000	100.0000	100.0000	0x10be10	tokens1:6cc8df24f930
 monframeinfo	?initializeCreatureAnimationTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x10ca00	tokens1:34d0b956b772
@@ -2669,7 +2669,7 @@ multiplayerwindow	??0CHotSeatDlg@@QAE@XZ	97.4317	100.0000	100.0000	0x111e20	toke
 multiplayerwindow	??0CMPEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0x110760	tokens1:aadfd57343a8
 multiplayerwindow	??0CMPInputDlg@@QAE@HH@Z	100.0000	100.0000	100.0000	0x110060	tokens1:662993b1fa48
 multiplayerwindow	??0CMPInputEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0x111cd0	tokens1:e6584d9126f4
-multiplayerwindow	??0TMultiPlayerWindow@@QAE@XZ	83.4274	83.4274	92.9147	0x10e050	tokens1:016ef3366508
+multiplayerwindow	??0TMultiPlayerWindow@@QAE@XZ	83.0167	83.0167	92.9147	0x10e050	tokens1:205111d8828a
 multiplayerwindow	??1CHeroSessions@@UAE@XZ	100.0000	100.0000	100.0000	0x158350	-
 multiplayerwindow	??1CHotSeatDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1123d0	tokens1:138f269701ed
 multiplayerwindow	??1CMPInputDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1108a0	tokens1:c5dbf2f4471a
@@ -3636,7 +3636,7 @@ sacrifice_window	?allCreatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000	
 sacrifice_window	?artifactClick@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0	tokens1:bd63f2d8458f
 sacrifice_window	?backpackClick@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1636c0	tokens1:36487fe7fbbc
 sacrifice_window	?convertWithCommas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660	tokens1:0bb4a7234f40
-sacrifice_window	?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z	99.5918	99.9983	100.0000	0x160380	tokens1:c0af5c043712
+sacrifice_window	?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z	99.9983	99.9983	100.0000	0x160380	tokens1:c0af5c043712
 sacrifice_window	?createCreatureIcons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70	tokens1:8908d3cf447c
 sacrifice_window	?createCreatureIcons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	32.7974	32.7974	100.0000	0x166760	tokens1:b7c903a8cf26
 sacrifice_window	?createCreatureWidgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0	tokens1:8ab8b0a10df1

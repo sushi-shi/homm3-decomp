@@ -9,7 +9,7 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable MAX: 96.87%** — weighted by function size across 1,999,142 bytes of code included in matching.
+**Executable MAX: 96.86%** — weighted by function size across 1,999,142 bytes of code included in matching.
 
 **Function exact MAX** — 4,237 / 4,768 current implementations (88.9%) have reached 100%.
 
@@ -19,7 +19,7 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 | :----------- | ----: | ------------------: | ------------------: | --------: | --------: |
 | `game`       |   123 | 3511 / 3991 (88.0%) | 3558 / 3991 (89.2%) |    96.73% |    96.99% |
 | `rmg`        |     3 |   290 / 368 (78.8%) |   302 / 368 (82.1%) |    93.53% |    94.88% |
-| `network`    |     4 |   266 / 280 (95.0%) |   268 / 280 (95.7%) |    97.68% |    98.18% |
+| `network`    |     4 |   266 / 280 (95.0%) |   268 / 280 (95.7%) |    97.65% |    98.16% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
 | `codec`      |     4 |     35 / 43 (81.4%) |     35 / 43 (81.4%) |    94.70% |    94.70% |
 | `victor`     |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |
@@ -89,8 +89,8 @@ homm3 link --out build/exe/HEROES3.linked.EXE
 This passes without unresolved or duplicate symbols. With the Bink, Miles,
 Smacker and IFC20 DLLs and original game resources from an installed copy, an
 isolated Wine launch plays the intro video and reaches the main menu with
-correctly rendered buttons. A spurious CD-version warning remains; selecting
-multiplayer has produced an “Out of memory” error. Gameplay remains unverified.
+correctly rendered buttons and no CD-version warning. New Game → Multiplayer
+opens successfully; Single Scenario currently crashes. Gameplay remains unverified.
 `homm3 link` always requires a clean link, without `/FORCE`.
 See [linking and runtime evidence](docs/vc6/runtime-link.md).
 
