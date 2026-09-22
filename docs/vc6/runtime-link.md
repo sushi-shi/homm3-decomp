@@ -161,13 +161,32 @@ The retry exposed two more missing initializers in the resource manager:
   97 bytes, including 18 resolved relocations. They refer to the existing
   globals rather than copies, so LoadSoundHeaders updates reach the readers.
 
-All three fixes pass the full build and link gates without MAX regressions.
-The four newly enrolled entries are existing retail CRT initializers: the
-context binding, its network-player consumer and the two resource tables.
-They all score 100%; their address operands were also checked independently
-of objdiff's relaxed relocation scoring. No gameplay function was added.
+The next `/i0` launch reached the main menu, but general-RLE sprites were
+corrupt: buttons and dialog borders read a zero literal-run marker. Retail
+0x47c260 initializes that marker at 0x6968a6 to 255; 0x47c270 initializes its
+companion maximum run length at 0x6968b0 to 256. Dreamcast identifies the
+file-static constants as `kGeneralRLEOpaqueRunCode` (`const unsigned char`)
+and `kGeneralRLEMaxRunLength` (`const unsigned int`). Its initializer line
+rows at cspriteframe.cpp:46/47 (dc 0x745b0/0x745d8) call the unsigned-char
+numeric limit, with an added one for the maximum length. Restoring those
+expressions reproduces both retail initializer bodies (8 and 11 bytes),
+including their destination relocations. The CRT entries at 0x65e41c/0x65e420
+run them before the decoders copy the marker into function-local statics.
+A fresh launch verifies correctly rendered menu buttons and dialog borders.
 
-A fresh launch with the three fixes reaches and plays the Complete intro;
-two window captures show advancing frames. An additional `/i0` launch used the
-game's existing intro-skip option, but no main-menu result was captured. Menu,
+All four fixes pass the full build and link gates without MAX regressions.
+The six newly enrolled entries are existing retail CRT initializers: the
+context binding, its network-player consumer, the two resource tables and
+the two sprite constants. They all score 100%; their address operands were
+also checked independently of objdiff's relaxed relocation scoring. No
+gameplay function was added. The sprite fix changes no existing function
+scores, so the README matching totals remain unchanged.
+
+The Complete intro plays, confirmed by advancing captured frames, and the
+main menu now renders correctly. A spurious CD-version warning remains:
+`earlySetup` conditionally enters its legacy video-archive scan, whereas
+the pinned retail body unconditionally jumps over it. That control-flow
+mismatch is separate from the recovered data initializers. After dismissing
+the warning, the user reached the menu and reported an “Out of memory”
+termination when selecting multiplayer. Its cause has not yet been traced;
 map, battle and gameplay execution remain unverified.

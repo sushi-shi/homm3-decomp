@@ -88,8 +88,10 @@ homm3 link --out build/exe/HEROES3.linked.EXE
 
 This passes without unresolved or duplicate symbols. With the Bink, Miles,
 Smacker and IFC20 DLLs and original game resources from an installed copy, an
-isolated Wine launch now plays the intro video. Main-menu startup and gameplay
-remain unverified. `homm3 link` always requires a clean link, without `/FORCE`.
+isolated Wine launch plays the intro video and reaches the main menu with
+correctly rendered buttons. A spurious CD-version warning remains; selecting
+multiplayer has produced an “Out of memory” error. Gameplay remains unverified.
+`homm3 link` always requires a clean link, without `/FORCE`.
 See [linking and runtime evidence](docs/vc6/runtime-link.md).
 
 ### IDE setup
