@@ -9,8 +9,10 @@ from pathlib import Path
 from homm3.match.status import MatchRow
 from homm3.vc6.tu_state_sweep import (
     _files_digest, _initial_include_insertion, _project_header_pool, affected_by_unit,
-    bank_rows, insertion_for, insert_variant, make_variants,
+    _focus_plan, _variants, bank_rows, insertion_for, insert_variant,
+    make_variants, UnitPlan, Variant,
 )
+from homm3.vc6 import tu_state_variants
 
 
 class TuStateSweepTests(unittest.TestCase):
@@ -61,6 +63,68 @@ class TuStateSweepTests(unittest.TestCase):
                             for item in left))
         self.assertTrue(all(len(set(item.body.splitlines())) ==
                             len(item.body.splitlines()) for item in left))
+
+    def test_declaration_families_vary_kind_and_are_replayable(self):
+        families = ("forest", "typedef", "enum", "struct", "class", "packed",
+                    "member", "extern", "static-data", "prototype", "function",
+                    "mixed", "typedef-count")
+        first = tu_state_variants.make_variants(len(families), families, 42)
+        self.assertEqual(first, tu_state_variants.make_variants(len(families), families, 42))
+        self.assertEqual(tuple(item.family for item in first), families)
+        self.assertIn("typedef", first[0].body)
+        self.assertIn("class", first[0].body)
+        self.assertIn("#pragma pack(pop)", first[5].body)
+        self.assertIn("HOMM3_TU_COUNT_TYPEDEF_0013", first[-1].body)
+        self.assertEqual(len({item.tag for item in first}), len(first))
+
+    def test_top_target_and_both_insertions_keep_original_text(self):
+        source = ("#include <x>\n\nint first;\n"
+                  "VA(0x00400100, 4)\nint target() { return first; }\n")
+        top = _initial_include_insertion(source)
+        target = insertion_for(source, (0x100,))
+        sites = ((top[0], top[1], 0), (target[0], target[1], 0x100))
+        for placement, expected in (("top", ("TOP",)),
+                                    ("target", ("TARGET",)),
+                                    ("both", ("TOP", "TARGET"))):
+            with self.subTest(placement=placement):
+                variant = Variant(1, "tag", "int TOP;\n" if placement != "target"
+                                  else "int TARGET;\n", "struct", placement,
+                                  "int TARGET;\n")
+                candidate = insert_variant(source, sites, variant)
+                self.assertEqual(candidate.count("#line"), len(expected))
+                self.assertIn(source.split("VA(")[1], candidate)
+                for token in expected:
+                    self.assertIn(token, candidate)
+
+    def test_focused_plan_and_mixed_family_cache_identity(self):
+        text = ("#include <x>\n\nint first;\n"
+                "VA(0x00400100, 4)\nint firstFn() { return first; }\n")
+        top = _initial_include_insertion(text)
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            plan = UnitPlan("unit", root / "unit.cpp", text, "digest",
+                            ((top[0], top[1], 0),),
+                            (("unit", "firstFn"),),
+                            (("unit", "firstFn"), ("unit", "otherFn")),
+                            b"", "initial", root, tuple(f"header{i}.h" for i in range(20)))
+            rows = {("unit", "firstFn"): MatchRow(80, 80, 100, 0x100)}
+            # The production plan writes only ignored trial files; replace
+            # its root here to keep this a pure temporary-directory test.
+            from unittest.mock import patch
+            from homm3.core import common
+            with patch.object(common, "HOMM3_DIR", root):
+                focused = _focus_plan(plan, rows, "firstFn", "target",
+                                      ("forest",), 7, 4, 10)
+                other = _focus_plan(plan, rows, "firstFn", "both",
+                                    ("forest",), 7, 4, 10)
+            self.assertNotEqual(focused.context, other.context)
+            self.assertEqual(len(focused.insertions), 2)
+            self.assertEqual(focused.scored, plan.scored)
+            variants = _variants(focused, 4, 7, ("includes", "forest"), "target", 10)
+            self.assertEqual(tuple(v.family for v in variants),
+                             ("includes", "forest", "includes", "forest"))
+            self.assertEqual(variants[0].placement, "top")
+            self.assertEqual(variants[1].placement, "target")
 
     def test_trailing_include_comment_does_not_swallow_injected_header(self):
         for ending in (' // reason\n', ' /* reason */\r\n', ''):

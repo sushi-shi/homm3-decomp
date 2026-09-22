@@ -2,7 +2,8 @@
 
 Discover every configured function whose preserved ``MAX`` is below ``HIST``,
 group the functions by translation unit, then compile deterministic random
-include sets per TU. One candidate object scores every function in that TU.
+include sets or Gruntz-style declaration forests per TU. One candidate object
+scores every selected function in that TU.
 
 Each trial adds one shuffled block of five to ten project headers absent from
 that TU's transitive include closure. The block exists only in a source copy under
@@ -11,7 +12,7 @@ observations are reproduced with a second compile before
 ``--bank`` raises MAX (and HIST when a genuinely new all-time peak is found).
 CUR always remains the clean-build score.
 
-The include-state strategy follows Gruntz's TU-state search.
+The declaration families are adapted from Gruntz's TU-state search.
 """
 from __future__ import annotations
 
@@ -25,7 +26,7 @@ import shutil
 import subprocess
 import tempfile
 from collections import Counter, defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
 
@@ -34,9 +35,10 @@ from homm3.build import normalize_objs as normalize
 from homm3.core import common
 from homm3.match import status
 from homm3.vc6._unit import compile_text, source_for_unit
+from homm3.vc6 import tu_state_variants
 
 
-GENERATOR_VERSION = 7
+GENERATOR_VERSION = 8
 DEFAULT_SEED = 20260906
 DEFAULT_TRIALS = 30
 MIN_HEADERS_PER_TRIAL = 5
@@ -80,6 +82,9 @@ class Variant:
     trial: int
     tag: str
     body: str
+    family: str = "includes"
+    placement: str = "top"
+    other_body: str = ""
 
     def block(self, logical_line: int) -> str:
         return f"{self.body}#line {logical_line}\n"
@@ -162,11 +167,16 @@ def insertions_for(text: str, rvas: tuple[int, ...]) -> tuple[tuple[int, int, in
 
 def insert_variant(original: str, insertions: tuple[tuple[int, int, int], ...],
                    variant: Variant) -> str:
-    """Insert a variant at each requested site (one site for include sweeps)."""
+    """Insert a variant at top, beside the target, or at both sites."""
     candidate = original
     for offset, line, rva in sorted(insertions, reverse=True):
+        if rva and variant.placement == "top":
+            continue
+        if not rva and variant.placement == "target":
+            continue
+        body = variant.other_body if rva and variant.placement == "both" else variant.body
         separator = "\n" if offset and candidate[offset - 1] != "\n" else ""
-        candidate = (candidate[:offset] + separator + f"{variant.body}#line {line}\n"
+        candidate = (candidate[:offset] + separator + f"{body}#line {line}\n"
                      + candidate[offset:])
     return candidate
 
@@ -459,6 +469,10 @@ def run_trial(plan: UnitPlan, variant: Variant, *, cache: bool = True) -> dict:
         "context": plan.context,
         "trial": variant.trial,
         "tag": variant.tag,
+        "family": variant.family,
+        "placement": variant.placement,
+        "body": variant.body,
+        "other_body": variant.other_body,
         "headers": _INCLUDE_DIRECTIVE.findall(variant.body),
         "scores": scores,
     }
@@ -586,17 +600,105 @@ def bank_rows(rows: dict, reproduced: dict, live_hashes: dict) -> tuple[dict, li
     return updated, changes
 
 
+def _requested_families(raw: str) -> tuple[str, ...]:
+    families = tuple(part.strip() for part in raw.split(",") if part.strip())
+    unknown = set(families) - ({"includes"} | set(tu_state_variants.FAMILIES))
+    if not families or unknown:
+        common.die("unknown or empty state families: " + ", ".join(sorted(unknown)))
+    return families
+
+
+def _variants(plan: UnitPlan, count: int, seed: int,
+              families: tuple[str, ...], insertion: str,
+              max_declarations: int) -> tuple[Variant, ...]:
+    """Mix include and declaration families in a deterministic trial series."""
+    unit_seed = int.from_bytes(
+        hashlib.sha256(f"{seed}:{plan.unit}".encode()).digest()[:4], "big")
+    include_variants = (make_variants(count, seed, plan.unit, plan.include_pool)
+                        if "includes" in families else ())
+    declaration_variants = {
+        family: tu_state_variants.make_variants(
+            count, (family,), unit_seed, max_declarations)
+        for family in families if family != "includes"
+    }
+    second_variants = ({
+        family: tu_state_variants.make_variants(
+            count, (family,), unit_seed ^ 0x5f3759df, max_declarations)
+        for family in declaration_variants
+    } if insertion == "both" else {})
+    result = []
+    for trial in range(1, count + 1):
+        family = families[(trial - 1) % len(families)]
+        if family == "includes":
+            original = include_variants[trial - 1]
+            result.append(Variant(trial, f"includes:{original.tag}",
+                                  original.body))
+            continue
+        first = declaration_variants[family][trial - 1]
+        second = (second_variants[family][trial - 1].body
+                  if insertion == "both" else "")
+        result.append(Variant(trial, f"{family}:{first.tag}", first.body,
+                              family, insertion, second))
+    return tuple(result)
+
+
+def _focus_plan(plan: UnitPlan, rows: dict, selector: str | None,
+                insertion: str, families: tuple[str, ...], seed: int,
+                trials: int, max_declarations: int) -> UnitPlan:
+    if selector:
+        matches = tuple(key for key in plan.affected if selector == key[1])
+        if not matches:
+            matches = tuple(key for key in plan.affected if selector in key[1])
+        if len(matches) != 1:
+            common.die(f"{plan.unit}:{selector}: expected one MAX < HIST symbol, "
+                       f"found {len(matches)}")
+        # The selector chooses a nearby insertion point, never the score set:
+        # a parser-state change can improve any function in this TU.
+        affected, scored = matches, plan.scored
+    else:
+        affected, scored = plan.affected, plan.scored
+    sites = list(plan.insertions)
+    if insertion in ("target", "both") and any(f != "includes" for f in families):
+        rvas = tuple(rows[key].rva for key in affected if rows[key].rva is not None)
+        if not rvas:
+            common.die(f"{plan.unit}: target insertion needs an RVA-backed row")
+        offset, line = insertion_for(plan.original, (min(rvas),))
+        if offset == sites[0][0]:
+            common.die(f"{plan.unit}: target marker not found for insertion")
+        sites.append((offset, line, min(rvas)))
+    identity = hashlib.sha256()
+    for item in (plan.context, selector or "", insertion, repr(families),
+                 repr(sites), str(seed), str(trials), str(max_declarations)):
+        identity.update(item.encode())
+        identity.update(b"\0")
+    context = identity.hexdigest()[:16]
+    result_dir = (common.HOMM3_DIR / "build/tu-state-sweep/results" /
+                  plan.unit / context)
+    result_dir.mkdir(parents=True, exist_ok=True)
+    return replace(plan, insertions=tuple(sites), affected=affected,
+                   scored=scored, context=context, result_dir=result_dir)
+
+
 def run(args) -> int:
     if args.trials < 1 or args.jobs < 1:
         common.die("state-sweep requires positive --trials and --jobs")
+    if args.max_declarations < 10:
+        common.die("state-sweep requires --max-declarations >= 10")
+    families = _requested_families(args.families)
+    if args.fn and (not args.unit or "," in args.unit):
+        common.die("state-sweep --fn requires exactly one --unit")
+    insertion = args.insertion or ("top" if families == ("includes",) else "target")
     inputs_digest = _shared_inputs_digest()
     rows = status.load_baseline()
     units = ({part.strip() for part in args.unit.split(",") if part.strip()}
              if args.unit else None)
-    plans = _plans(rows, units, args.seed, args.trials, inputs_digest)
+    plans = tuple(_focus_plan(plan, rows, args.fn, insertion, families,
+                              args.seed, args.trials, args.max_declarations)
+                  for plan in _plans(rows, units, args.seed, args.trials,
+                                     inputs_digest))
     variants_by_unit = {
-        plan.unit: make_variants(
-            args.trials, args.seed, plan.unit, plan.include_pool)
+        plan.unit: _variants(plan, args.trials, args.seed, families,
+                             insertion, args.max_declarations)
         for plan in plans
     }
     baseline_digest = _sha256(status.BASELINE.read_bytes())
@@ -624,6 +726,8 @@ def run(args) -> int:
             except Exception as exc:
                 failures.append({
                     "unit": plan.unit, "trial": variant.trial,
+                    "family": variant.family,
+                    "placement": variant.placement,
                     "headers": _INCLUDE_DIRECTIVE.findall(variant.body),
                     "error": str(exc),
                 })
@@ -688,8 +792,12 @@ def run(args) -> int:
         len(result["scores"])
         for unit_results in results.values() for result in unit_results)
     summary = {
-        "generator": "random-project-includes",
+        "generator": "vc6-tu-state-families",
         "generator_version": GENERATOR_VERSION,
+        "families": families,
+        "insertion": insertion,
+        "function": args.fn,
+        "max_declarations": args.max_declarations,
         "inputs_digest": inputs_digest,
         "contexts": {plan.unit: plan.context for plan in plans},
         "seed": args.seed,
@@ -715,7 +823,7 @@ def run(args) -> int:
         ",".join(f"{plan.unit}:{plan.context}" for plan in plans).encode()
     ).hexdigest()[:8]
     summary_path = (common.HOMM3_DIR / "build/tu-state-sweep" /
-                    f"summary-includes-{args.seed}-{args.trials}-{scope}.json")
+                    f"summary-state-{args.seed}-{args.trials}-{scope}.json")
     _write_json(summary_path, summary)
     for item in summary["reproduced_improvements"]:
         action = "BANK" if args.bank else "WOULD BANK"

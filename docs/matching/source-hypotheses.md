@@ -33,14 +33,27 @@ before rendering (default 256).
 
 The runner compiles a canonical baseline, then candidates in parallel, directly
 through the TU's normal compiler wrapper. Each compile has its own source and
-object directory. All scored functions in that TU are recorded to expose
-collateral. Ranked results, input fingerprints, top sources and their objects
+object directory. All scored functions in that TU are recorded. The best
+improving candidate for each function is retained even when the named ranking
+function is unchanged. Ranked results, per-function improvements, input
+fingerprints, top sources and their objects
 live under `build/hypotheses/`, or the new directory specified by `--output`.
-`results.json` contains the canonical `baseline`, ranked `results`, source/target
+`results.json` contains the canonical `baseline`, ranked `results`,
+`improvements` for the whole TU, source/target
 hashes and the shared-input fingerprint. Raw and normalized objects are retained
 for the top candidates. Source, ledger, headers, compiler and scoring inputs must stay unchanged during
 a batch. Exit 0 means at least one target scores exactly 100%; 1 means no exact
 candidate. Malformed manifests and invalidated observations are errors.
+
+`homm3 vc6 ast-variants --unit army --fn '?doAttack@army@@QAEEPAV1@H@Z'
+--allow-external-errors --limit 128 --run` scans VA-annotated functions across
+the TU, prioritizing functions with lost historical MAX. It generates bounded,
+one-function-at-a-time AST variants (operand order, terminal return order,
+declaration split/merge, and local renames), then scores every function in the
+TU. Use `--va 0x00441610` to restrict mutation generation to one function and
+optionally combine it with `--state-trials`. Generated manifests live under
+`build/hypotheses/`. `--allow-external-errors` only tolerates Clang diagnostics
+outside the function being mutated; the authored VC6 build remains the verdict.
 
 Run the required retail/Dreamcast evidence pass before designing hypotheses.
 Scores do not authorize changing proven source facts. The runner never applies

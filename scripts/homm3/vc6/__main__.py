@@ -27,9 +27,9 @@ Subcommands
         block's [tryLow, tryHigh] state range, the type each arm catches
         and the catch funclet addresses. A body where retail has a try and
         we have none is a target, not an inliner wall.
-  state-sweep [--trials 30] [--jobs 4] [--bank]
-        Add 5-10 unused headers once per TU, score every function in TUs with
-        MAX < HIST rows, reproduce gains, and optionally bank MAX.
+  state-sweep [--families includes,forest] [--insertion top|target|both]
+        Search disposable include or declaration contexts for MAX < HIST rows,
+        reproduce gains, and optionally bank MAX.
   check [--argv|--il|--inline|--reg|--locator|--all]
         The gates (each ships a negative control).
 
@@ -172,14 +172,42 @@ def _build_parser() -> argparse.ArgumentParser:
     ph.add_argument("--keep-top", type=int, default=8)
     ph.add_argument("--output")
 
+    pa = ss.add_parser("ast-variants", help="generate AST-backed source variants and score their whole TU")
+    pa.add_argument("--unit", required=True)
+    pa.add_argument("--fn", required=True, help="scored function used to rank the batch")
+    pa.add_argument("--va", help="optional VA to restrict mutation generation to one function")
+    pa.add_argument("-o", "--output")
+    pa.add_argument("--families", default="commutative_order,relational_order,"
+                    "terminal_return_order,declaration_split,declaration_merge,identifier_rename")
+    pa.add_argument("--depth", type=int, default=2)
+    pa.add_argument("--limit", type=int, default=128)
+    pa.add_argument("--state-trials", type=int, default=0)
+    pa.add_argument("--state-family", default="forest")
+    pa.add_argument("--state-insertion", choices=("top", "target"), default="target")
+    pa.add_argument("--seed", type=int, default=20260906)
+    pa.add_argument("--allow-external-errors", action="store_true")
+    pa.add_argument("--run", action="store_true", help="run the generated hypotheses batch")
+    pa.add_argument("-j", "--jobs", type=int, default=4)
+    pa.add_argument("--keep-top", type=int, default=8)
+
     ps = ss.add_parser("state-sweep", help="batch transient TU-state search for "
-                       "all MAX < HIST rows")
+                       "MAX < HIST rows")
     ps.add_argument("--trials", type=int, default=30,
                     help="random include-set trials per TU (default 30)")
     ps.add_argument("--seed", type=int, default=20260906)
     ps.add_argument("--jobs", type=int, default=4,
                     help="parallel VC6 compiles (default 4)")
     ps.add_argument("--unit", help="optional comma-separated affected TU filter")
+    ps.add_argument("--fn", help="one exact function symbol or unique substring; requires --unit")
+    ps.add_argument("--families", default="includes",
+                    help="comma-separated state families: includes, forest, typedef, "
+                         "typedef-count, enum, struct, class, packed, member, "
+                         "extern, static-data, prototype, function, mixed")
+    ps.add_argument("--insertion", choices=("top", "target", "both"),
+                    help="where to place disposable declarations (default: top for "
+                         "includes, target for declaration families)")
+    ps.add_argument("--max-declarations", type=int, default=64,
+                    help="largest declaration-forest width (default 64)")
     ps.add_argument("--bank", action="store_true",
                     help="write reproduced improvements to MAX/HIST")
 
@@ -213,6 +241,7 @@ _TOOLS = {
     "queue": ("queue", "run"),
     "state-sweep": ("tu_state_sweep", "run"),
     "hypotheses": ("hypotheses", "run"),
+    "ast-variants": ("ast_variants", "run"),
     "tryblocks": ("tryblocks", "run"),
     "check": ("census", "run_check"),
 }

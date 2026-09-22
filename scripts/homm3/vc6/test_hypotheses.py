@@ -52,6 +52,16 @@ class ManifestTests(unittest.TestCase):
             dict(name="baseline"), dict(name="same", replace="int x;")])])
         self.assertEqual(len(h.variants(data[4], data[5])), 1)
 
+    def test_improvement_in_other_function_is_retained(self):
+        baseline = {"scores": {"focus": 80.0, "other": 40.0}}
+        rows = [{"index": 0, "name": "focus edit", "error": None,
+                 "scores": {"focus": 81.0, "other": 40.0}},
+                {"index": 1, "name": "other edit", "error": None,
+                 "scores": {"focus": 80.0, "other": 90.0}}]
+        winners = h.improvements(baseline, rows)
+        self.assertEqual(winners["focus"]["index"], 0)
+        self.assertEqual(winners["other"]["index"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
