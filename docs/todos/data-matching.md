@@ -7,10 +7,13 @@ quality. Candidate object sizes alone cannot prove retail boundaries.
 
 The independent whole-file/image accounting layer is implemented in
 `homm3 sema coverage --output build/retail-accounting`; start with its
-`backlog.tsv`. See [complete retail byte accounting](../tooling/data-coverage.md)
-for the measured totals, evidence policy and remaining identification work.
-Source/candidate binding, enrollment and pointer/access-width verification
-remain separate unfinished tasks.
+`backlog.tsv` for retail identification and `data-gaps.tsv` for ranges with no
+usable sized DATA declaration. Compiler-bound source declarations and parsed
+definitions are now overlaid on the accounting map, with unknown sizes,
+overlaps and incomplete analysis retained in `data-issues.tsv`.
+See [complete retail byte accounting](../tooling/data-coverage.md) for measured
+totals and evidence policy. Binding to emitted VC6 storage, enrollment and
+pointer/access-width verification remain separate unfinished tasks.
 
 ## Implementation checklist
 

@@ -207,6 +207,37 @@ percentage is inferred from this report. Those tasks remain in the
 
 ## Measured retail result
 
+The 2026-09-23 DATA follow-up was measured after merging
+`decomp-complete-4.0` at `0dbc798f`. It parsed 138 source TUs, binding 1,061 DATA
+declaration sites; 1,048 have usable, unambiguous ranges within a PE section.
+
+| Data-section image bytes | Count |
+| --- | ---: |
+| Fixed denominator | 470,624 |
+| Declared coverage, including overlaps | 205,235 |
+| Parsed source-definition coverage | 205,235 |
+| Extern-only coverage | 0 |
+| Overlapping distinct declarations | 293 |
+| No usable sized DATA declaration | **265,389** |
+
+The gaps include 123,263 `.rdata` bytes and 142,126 `.data` bytes, including
+zero-filled storage. This is a partial analysis: 26 TUs required skipped bodies,
+7 DATA sites remain unbound, 3 sizes are unknown, 2 sizes conflict, and 8 sites
+have conflicting addresses. Another 1,535 compiler-generated annotation sites
+have no inferred extent; 16 overlap intervals require review. No TU failed both
+parse attempts. The issues include inconsistent `g_townNames`/`g_viewArmyHelp`
+array sizes and help-text globals assigned multiple addresses. These are
+diagnostics, not automatically resolved source corrections.
+
+The refreshed complete map accounts for all 2,732,032 file bytes and 2,842,624
+image RVAs. Independently identified extents cover 2,399,639 bytes per domain;
+84,398 remain provisional, with 247,995 unknown file bytes and 358,587 unknown
+image bytes. An independent audit of the exported TSVs checked each byte,
+declaration-owner set, definition status and gap, including already identified
+retail objects without DATA. All 125 extraction/sema tests pass.
+
+The original retail-only measurement below is retained for comparison.
+
 The 2026-09-21 run used the pinned SHA-256
 `057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274`.
 

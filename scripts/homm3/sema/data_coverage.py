@@ -117,7 +117,8 @@ def overlay(layout, rows, snapshot):
             issues[-1]['end'] = issue['end']
         else:
             issues.append(issue)
-    counts = Counter()
+    counts = Counter({key + '_bytes': 0 for key in
+                      ('total', 'covered', 'overlap', 'uncovered', 'declared', 'defined', 'extern-only')})
     by_section = defaultdict(Counter)
     for row in result:
         if row['domain'] != 'image' or row['data_coverage_status'] == 'not-data-scope':

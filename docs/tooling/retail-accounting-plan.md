@@ -100,3 +100,13 @@ expose the exact skipped ranges, including already identified retail objects;
 overlapping symbols to remain visible without duplicate byte counts; externs
 to remain distinguishable from definitions; and unknown sizes, failed/skipped
 parses and unbound annotation sites to prevent a clean completion verdict.
+
+The follow-up is implemented and verified against target commit `0dbc798f`.
+All 125 extraction/sema tests pass, including array removal/shortening/movement,
+overlap union accounting, header-site deduplication, extern/definition binding,
+reference cells, ABI packing and cache invalidation. Independent exported-TSV
+audits confirm the complete retail partitions and reconstruct DATA byte coverage
+from the declaration table, preserving all uncovered rows regardless of retail
+identification. The current report exposes **265,389 / 470,624 data bytes** with
+no usable sized DATA declaration; partial extraction and contradictory source
+claims remain explicit. See the [measured result](data-coverage.md#measured-retail-result).
