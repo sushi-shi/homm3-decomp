@@ -85,3 +85,18 @@ This completes tooling and exhaustive accounting, not semantic identification
 of all objects. The remaining 248,141 unknown file bytes (358,733 image RVAs)
 and 84,398 provisional bytes are the explicit, actionable reconstruction
 backlog. File and image counts must never be added together.
+
+## Follow-up: compare accounting with DATA
+
+The retail-only completion audit above did not establish declaration coverage.
+The accepted follow-up adds `analysis/data_declarations.py` for compiler-bound
+DATA storage ranges and `sema/data_coverage.py` for the interval join. The existing
+`image_coverage.py` exporter incorporates these fields in `coverage.tsv` and
+writes `data-declarations.tsv`, `data-gaps.tsv` and `data-issues.tsv`. Retail
+identification and declared/source-definition coverage remain separate axes.
+
+Acceptance requires removal, shortening or movement of a DATA annotation to
+expose the exact skipped ranges, including already identified retail objects;
+overlapping symbols to remain visible without duplicate byte counts; externs
+to remain distinguishable from definitions; and unknown sizes, failed/skipped
+parses and unbound annotation sites to prevent a clean completion verdict.

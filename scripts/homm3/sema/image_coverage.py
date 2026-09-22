@@ -170,13 +170,17 @@ def audit_partition(rows, domain, total):
         raise ValueError(f'{domain}: accounting ends at {cursor}, expected {total}')
 
 
-def generate(root, image):
+def generate(root, image, *, jobs=4):
     layout = Layout(image.data)
     claims, labels, inputs, limitations = retail_claims.collect(root, layout, image)
     inputs.extend(['config/retail/relocs.tsv', 'config/retail/reloc-evidence.tsv'])
     references = reference_facts(root, layout)
     problems = validate_claims(layout, claims)
     rows = partition(layout, claims, labels, references)
+    from homm3.analysis import data_declarations
+    from homm3.sema import data_coverage
+    declared = data_declarations.extract(root, layout.base, jobs=jobs)
+    rows, data_issues, data_summary = data_coverage.overlay(layout, rows, declared)
     summaries = {}
     for domain, total in [('file', len(image.data)), ('image', layout.image_size)]:
         audit_partition(rows, domain, total)
@@ -189,11 +193,13 @@ def generate(root, image):
                                  shared_bytes=sum(r['size'] for r in domain_rows if r['shared']))
     implementations = ['scripts/homm3/sema/image_coverage.py', 'scripts/homm3/sema/retail_claims.py',
                        'scripts/homm3/sema/retail_layout.py', 'scripts/homm3/sema/coverage.py',
-                       'scripts/homm3/vc6/tryblocks.py']
+                       'scripts/homm3/vc6/tryblocks.py', 'scripts/homm3/analysis/data_declarations.py',
+                       'scripts/homm3/sema/data_coverage.py', 'build/gen/data-declarations.json']
     inputs.extend(implementations)
     return dict(schema='homm3.retail-accounting.v1', image_base=layout.base,
                 image_sha256=hashlib.sha256(image.data).hexdigest(), domains=summaries,
                 regions=[asdict(r) for r in layout.file_regions + layout.image_regions],
+                data_declarations=declared['declarations'], data_issues=data_issues, data_coverage=data_summary,
                 claims=claims, labels=dict(labels), references=references, rows=rows, problems=problems,
                 input_sha256={p: hashlib.sha256((root / p).read_bytes()).hexdigest() for p in sorted(set(inputs))},
                 limitations=limitations + [
@@ -239,20 +245,31 @@ def export(report, directory):
     if report['references']:
         tsv.write(directory / 'references.tsv', ['# Admitted and withheld reference sites; raw words re-read from retail.'],
                   list(report['references'][0]), [render(r) for r in report['references']])
-    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows')}
+    if 'data_declarations' in report:
+        from homm3.sema import data_coverage
+        declarations = report['data_declarations']
+        tsv.write(directory / 'data-declarations.tsv', ['# Source DATA storage extents; Clang layout is not a VC6 byte verdict.'],
+                  list(declarations[0]) if declarations else ['id', 'rva', 'size', 'end', 'source', 'status'],
+                  [render(r) for r in declarations])
+        tsv.write(directory / 'data-gaps.tsv', ['# No sized DATA declaration covers these image intervals, regardless of retail identification.'],
+                  fields, [render(r) for r in data_coverage.gaps(report['rows'])])
+        tsv.write(directory / 'data-issues.tsv', ['# Extraction, unknown extent and overlapping declaration diagnostics.'],
+                  ['id', 'kind', 'unit', 'source', 'rva', 'end', 'detail', 'declaration_ids'],
+                  [render(dict(id=i, **r)) for i, r in enumerate(report['data_issues'])])
+    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues')}
     (directory / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
 
 
 def run(args):
     image, _ = common.load_image()
     try:
-        report = generate(common.HOMM3_DIR, image)
+        report = generate(common.HOMM3_DIR, image, jobs=args.jobs)
         if args.output:
             export(report, Path(args.output))
     except (ValueError, OSError) as exc:
         from homm3.sema._common import die
         die(str(exc))
-    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows')}
+    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues')}
     if args.json:
         print(json.dumps(summary, indent=2))
     else:
@@ -261,10 +278,16 @@ def run(args):
             print(f"{domain}: {totals['accounted_bytes']:,}/{totals['total_bytes']:,} bytes accounted; " +
                   ', '.join(f'{k}={v:,}' for k, v in totals['bytes_by_category'].items()))
         print(f"{len(report['problems'])} invalid extents; {len(report['references']):,} reference sites retained.")
+        print('DATA coverage: ' + json.dumps(report['data_coverage'], sort_keys=True))
         if args.output:
             print(f'Actionable byte map: {args.output}/coverage.tsv; prioritized work: {args.output}/backlog.tsv')
         for limitation in report['limitations']:
             print(f'  {limitation}')
     counts = [d['bytes_by_category'] for d in report['domains'].values()]
-    return int(bool(report['problems'] or any(c.get('conflict', 0) for c in counts) or
+    data_complete = (report['data_coverage']['analysis_complete'] and
+                     not report['data_coverage'].get('uncovered_bytes', 0) and
+                     not report['data_coverage'].get('overlap_bytes', 0) and
+                     not report['data_coverage'].get('extern-only_bytes', 0) and
+                     not report['data_coverage']['issue_counts'])
+    return int(bool((args.require_data_complete and not data_complete) or report['problems'] or any(c.get('conflict', 0) for c in counts) or
                     (args.require_complete and any(c.get('unknown', 0) or c.get('provisional', 0) for c in counts))))

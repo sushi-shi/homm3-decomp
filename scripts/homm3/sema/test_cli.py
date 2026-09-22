@@ -8,6 +8,14 @@ from homm3.sema.__main__ import _build_parser
 
 
 class SemaCliTests(unittest.TestCase):
+    def test_data_coverage_gate_and_workers(self):
+        args = _build_parser().parse_args(['coverage', '--require-data-complete', '--jobs', '2'])
+        self.assertTrue(args.require_data_complete)
+        self.assertEqual(args.jobs, 2)
+        for flags in (['--jobs', '0'], ['--data-only', '--require-data-complete']):
+            with self.subTest(flags=flags), contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                _build_parser().parse_args(['coverage', *flags])
+
     def test_structure_selects_explicit_default_view(self):
         args = _build_parser().parse_args(
             ["diff", "ProcessCombatMsg", "--structure"])

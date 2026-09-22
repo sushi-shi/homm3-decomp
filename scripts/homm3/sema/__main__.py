@@ -66,6 +66,11 @@ class _Parser(argparse.ArgumentParser):
             if detailed and (result.summary or result.why_bytes or result.json):
                 self.error("--summary, --why-bytes and --json combine with each other; "
                            "select a detailed view separately")
+        if getattr(result, "sema", None) == "coverage":
+            if result.jobs < 1:
+                self.error("--jobs must be positive")
+            if result.data_only and result.require_data_complete:
+                self.error("--require-data-complete requires the full declaration-aware report")
         return result
 
 
@@ -180,8 +185,10 @@ def _build_parser() -> argparse.ArgumentParser:
     raw.add_argument("--json", action="store_true")
 
     coverage = ss.add_parser("coverage", help="every retail file/image byte, including unknowns and shared owners")
-    coverage.add_argument("--output", metavar="DIR", help="write coverage.json and coverage.tsv")
+    coverage.add_argument("--output", metavar="DIR", help="write accounting, DATA declarations/gaps/issues TSVs and summary.json")
     coverage.add_argument("--json", action="store_true")
+    coverage.add_argument("--jobs", type=int, default=4, help="Clang DATA extraction workers (default 4)")
+    coverage.add_argument("--require-data-complete", action="store_true", help="fail on DATA gaps, overlaps, extern-only storage or incomplete analysis")
     coverage.add_argument("--data-only", action="store_true", help="legacy data-region-only report")
     coverage.add_argument("--require-complete", action="store_true",
                           help="fail if any unknown or provisional bytes remain")

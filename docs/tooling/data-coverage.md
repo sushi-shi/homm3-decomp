@@ -24,6 +24,70 @@ are written; source claims, the score ledger and comparison policy are unchanged
 No candidate compilation is required. `--data-only` retains the earlier
 `.rdata`/`.data`/zero-tail report for compatibility.
 
+## DATA declaration comparison
+
+The complete byte map is now overlaid with compiler-bound `DATA` declarations.
+`analysis/data_declarations.py` scans the annotations, parses each source TU
+using its configured Windows compiler profile, and binds the actual VarDecl.
+`sema/data_coverage.py` overlays the resulting half-open storage intervals onto
+both retail coordinate domains. This is a declared-storage comparison, not an
+initializer-byte or relocation verdict.
+
+The main `coverage.tsv` adds `data_coverage_status`, `declaration_ids`,
+`declared_owners`, `declared_ranges`, declaration/definition source locations,
+`definition_status`, `size_evidence`, `coverage_issues`, and `data_next_action`.
+Its original retail identification category remains independent. An identified
+vtable with no sized DATA declaration is still a DATA gap.
+
+Three additional TSVs make the comparison actionable:
+
+- **`data-declarations.tsv`**: each distinct annotated source site, address,
+  type, declared size/end, compiler spelling, owning TUs, and known source
+  definitions. Repeated header sites are deduplicated; externs remain distinct
+  from definitions. Unannotated definitions of the same compiler entity can
+  supply a complete array type or establish that a source definition exists.
+- **`data-gaps.tsv`**: every uncovered image interval in `.rdata`, `.data`,
+  `.bss` and their raw/zero tails, even if retail already identifies its purpose.
+  Declaration boundaries split the complete map, exposing partial-object gaps.
+- **`data-issues.tsv`**: parse failures, skipped bodies, unbound annotations,
+  unknown/conflicting sizes, inconsistent addresses, invalid extents and every
+  intersecting set of distinct DATA declarations. Overlaps are reported for
+  review, not automatically accepted as source aliases.
+
+Sizes are explicitly tagged `clang-i686-msvc-layout`. They describe source
+storage under the analysis ABI; VC6 emitted storage is not yet verified. Arrays
+use their complete declared size, pointers occupy pointer cells, and references
+also occupy pointer cells rather than `sizeof(the referent)`. Candidate-derived
+sizes never establish retail object boundaries or change identification grades.
+
+Incomplete types and conflicted entities cannot erase gaps. A TU with errors
+may be parsed with function bodies skipped to recover file/header declarations;
+its missing local coverage and diagnostics remain explicit. The lexical scanner
+cross-checks individual DATA sites against successful AST bindings. `DATA_COMPGEN`
+and guard sites are retained as `compgen-extent-unbound` issues: they are not
+ordinary VarDecls and this pass does not invent their extents.
+
+`summary.json` reports declared bytes, definition-covered bytes, extern-only
+bytes, overlaps and uncovered bytes separately. When extraction is partial,
+`analysis_complete` is false: these are observed ranges and potential gaps,
+not a claim of complete source understanding. Definition coverage means a parsed
+source definition, not a linked or even emitted VC6 definition.
+
+```sh
+homm3 sema coverage --output build/retail-accounting --jobs 4
+homm3 sema coverage --require-data-complete
+```
+
+The latter fails on DATA gaps, extern-only coverage, overlaps or unresolved
+analysis/annotation issues. It is separate from the existing retail-identification
+`--require-complete` gate and cannot be combined with legacy `--data-only`.
+
+The disposable `build/gen/data-declarations.json` cache is keyed by source,
+project/vendor and actual analysis include contents, manifests, compiler arguments,
+libclang identity and extraction/profile implementations. It is not another
+source-owned symbol registry. No source declarations or comparison objects are
+rewritten by the census.
+
 ## Artifacts and how to act on them
 
 - **`coverage.tsv`** is the exhaustive partition. Each row contains its coordinate
