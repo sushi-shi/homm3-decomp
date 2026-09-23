@@ -1828,8 +1828,8 @@ void aiVisitWarFactory(hero* currentHero)
 // cost row before the value accumulator at 530, and 541/542 refuses excess
 // cost. Preserve those boundaries and the canonical type_artifact constructor.
 // Indexed costs score 96.5185%; walking the cost row raises this to 99.4198%.
-// Mac retail uses indexed cost/resource loads and a separate double index;
-// the indexed source raises its admitted pair from 51.70% to 58.24%.
+// Mac indexed loads do not prove indexed C++: the shared pointer walk
+// supplies the same costs and resource values on both targets.
 // An explicit sum or index declaration move is neutral; 78 traversal states
 // (14 objects) leave the funds/value increment ordering unresolved. A further
 // six distinct source states restore the early refusal and cost-row order;
@@ -1845,15 +1845,6 @@ static long valueOfWarFactory(const hero* currentHero,
         type_artifact(engine), currentHero, false, true);
     TCreatureType creature = siegeArtifactToCreature(engine);
     const int* costs = g_creatureTypeTraits[creature].m_cost;
-#if defined(HOMM3_TARGET_MAC)
-    long resourceCost = 0;
-    for (int resource = 0; resource < 7; ++resource) {
-        if (g_currentPlayer->m_resources[resource] < costs[resource])
-            return 0;
-        resourceCost += costs[resource]
-            * g_currentPlayer->m_ai.m_resourceValue[resource];
-    }
-#else
     const double* resourceValues = g_currentPlayer->m_ai.m_resourceValue;
     long resourceCost = 0;
     for (int resource = 0; resource < 7; ++resource, ++costs) {
@@ -1861,7 +1852,6 @@ static long valueOfWarFactory(const hero* currentHero,
             return 0;
         resourceCost += *costs * resourceValues[resource];
     }
-#endif
 
     if (moveCost <= 500)
         resourceCost = 0;
@@ -2581,20 +2571,11 @@ void philAI::getTurnAIVars(int whichPlayer)
     }
 
     float difficultyValue = static_cast<float>(difficulty);
-    // Complete computes the human term before multiplying; DC and Mac
-    // share difficulty * 0.25f first. The shared-step spelling drops the
-    // Windows match to 91.28%, so retain Complete's arithmetic order here.
-    // The Mac branch raises its 416-byte match from 79.76% to 88.70% with
-    // both named calls preserved. A direct two-expression call falls to
-    // 87.26%; reversing the two local declarations is byte-flat.
-#if defined(HOMM3_TARGET_MAC)
-    float difficultyQuarter = difficultyValue * 0.25f;
-    float computerBonus = 0.75f - difficultyQuarter;
-    float humanBonus = 0.25f + difficultyQuarter;
-#else
+    // Both expressions operate on an exact signed-byte difficulty value;
+    // compiler reassociation does not justify a platform-specific formula.
     float humanBonus = (difficultyValue + 1.0f) * 0.25f;
     float computerBonus = 0.75f - difficultyValue * 0.25f;
-#endif
+
     type_AI_player::setAttackBonuses(computerBonus, humanBonus);
 }
 

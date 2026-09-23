@@ -765,14 +765,7 @@ int game::saveSignPool(TAbstractFile* outfile)
 VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
 int game::loadMinePool(TAbstractFile* infile, int saveVersion)
 {
-    // Dreamcast names separate uchar_buffer and char_buffer locals. Mac keeps
-    // the one-byte read buffer; Complete Windows uses an int slot whose low
-    // byte receives the same wire-format value.
-#ifdef HOMM3_TARGET_MAC
     unsigned char count;
-#else
-    int count;
-#endif
     int x;
     char charBuffer;
     if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))

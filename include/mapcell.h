@@ -318,8 +318,9 @@ SIZE(ShipyardInfo, 4);
 //   * bit  18     dont_grow                   (named by the DC, unread here)
 //   * bits 19..26 index                       `shr eax,0x13 / and eax,0xff`
 //   * bit  31     custom                      `shr edx,0x1f / test dl,1`
-// The DC names six fields for twenty-eight bits, so the four bits between
-// index and custom stay unnamed padding rather than being invented.
+// Dreamcast's older index is 12 bits. Complete uses an eight-bit index and
+// clears the intervening four bits explicitly; Windows readMonsterData's
+// 0x87fbffff mask and Mac code0+0x123e64..0x123e6c prove that clearing.
 // GATED: this is a type DEFINITION in a header that rides initialize.cpp's
 // include closure - see the cellFlags note inside the class for what an
 // ungated one costs there.
@@ -930,26 +931,11 @@ public:
 };
 SIZE(CObjectType, 0x44);
 
-class CObject {
+// CodeView CObject records 0x30aa and 0x6401 both give the public
+// ExtraInfoUnion base at +0, x/y/z at +4/+5/+6, TypeID at +8 and frameOffset
+// at +0xa. Complete's readers/writers use the same payload and offsets.
+class CObject : public ExtraInfoUnion {
 public:
-    // readScholarData reaches the scholar lanes of this dword directly -
-    // it switches on a SIGNED three-bit award (`shl 0x1d / sar 0x1d`),
-    // which no mask spelling over the plain dword produces. Only that one
-    // arm is carried here; the other five typed views stay events-only.
-
-    // readObject (0x502e00) adds two more arms of the same dword, and both
-    // are bitfield stores no mask spelling over the plain dword produces:
-    // its SHIPYARD arm clears the low byte with `and cl,0` before merging
-    // the owner in, and its SHRINE arm writes a signed ten-bit lane thirteen
-    // bits up. The shipyard's record is the one game::ClaimShipyard already
-    // reads off the CELL - the same encoding, because the object's dword is
-    // what ends up in NewmapCell::extraInfo.
-    union {
-        unsigned long m_extraInfo;
-        ScholarInfo m_scholarInfo;
-        ShipyardInfo m_shipyardInfo;
-        ShrineInfo m_shrineInfo;
-    };
     unsigned char m_x;
     unsigned char m_y;
     unsigned char m_z;

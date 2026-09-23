@@ -2298,20 +2298,16 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // Hoisting one shared int for the resource and artifact reads regressed to
 // 96.84 by extending its lifetime without shrinking the frame; the
 // `rawIdentifier` split above is banked at +0.58 so a collapse must beat that.
-// Mac 0:0x123b10 signed-char plus direct one-bit-field assignments scored
-// 61.13%; direct fields alone scored 60.83% versus the retained 64.07%.
+// Both Complete builds write MonsterInfo fields and clear bits 27..30
+// after dontGrow. Mac code0+0x123e64..0x123e6c proves the latter store;
+// the Windows mask 0x87fbffff combines it with the dontGrow assignment.
+// Shared typed-field probes preserve Windows 97.3333% and its call structure.
 VA(0x005013b0, 0x3DC)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing, dc 0xf0390
 int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 {
     int customIndex = m_customMonsterList.size();
 
     monsterObject->m_extraInfo = 0;
-#if defined(HOMM3_TARGET_MAC)
-    // Use the shared payload type for the Mac compiler's bitfield writes.
-    ExtraInfoUnion& monsterInfo =
-        *static_cast<ExtraInfoUnion*>(
-            static_cast<void*>(&monsterObject->m_extraInfo));
-#endif
 
     int identifier;
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
@@ -2333,22 +2329,13 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 #endif
     }
 
-#if defined(HOMM3_TARGET_MAC)
-    // Mac retail swaps this file halfword, stores it, then reloads it with
-    // lhz for the unsigned 12-bit quantity lane; signed short adds extsh.
-    unsigned short quantity;
-#else
     short quantity;
-#endif
     if (infile->read(&quantity, sizeof(quantity)) < sizeof(quantity))
         return -1;
 #if defined(HOMM3_TARGET_MAC)
     quantity = __lhbrx(&quantity, 0);
-    monsterInfo.m_monsterInfo.m_qty = quantity;
-#else
-    monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffff000)
-        | (quantity & 0xfff);
 #endif
+    monsterObject->m_monsterInfo.m_qty = quantity;
 
     // DC records unsigned char_buffer at line 2598, then the signed
     // disposition result separately across the switch arms at 2606..2630.
@@ -2357,7 +2344,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         return -1;
 
     // DC and Mac leave disposition untouched for an out-of-range input.
-    // Complete x86 loads charBuffer in the default arm at retail 0x5013b0.
+    // The former Windows-only default assignment was a codegen workaround:
+    // removing it raises Windows from 97.3333% to 98.4017%.
     char disposition;
     switch (static_cast<signed char>(charBuffer)) {
     case MONSTER_QTY_UNRESOLVED:
@@ -2376,17 +2364,9 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         disposition = 10;
         break;
     default:
-#if !defined(HOMM3_TARGET_MAC)
-        disposition = static_cast<char>(charBuffer);
-#endif
         break;
     }
-#if defined(HOMM3_TARGET_MAC)
-    monsterInfo.m_monsterInfo.m_disposition = disposition;
-#else
-    monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffe0fff)
-        | ((disposition & 0x1f) << 12);
-#endif
+    monsterObject->m_monsterInfo.m_disposition = disposition;
 
     if (infile->read(&charBuffer, sizeof(charBuffer))
         < sizeof(charBuffer))
@@ -2431,37 +2411,22 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 
         if (customIndex < 4000) {
             m_customMonsterList.push_back(tempMonster);
-#if defined(HOMM3_TARGET_MAC)
-            monsterInfo.m_monsterInfo.m_custom = 1;
-            monsterInfo.m_monsterInfo.m_index = customIndex;
-#else
-            monsterObject->m_extraInfo = (((customIndex & 0xff) | 0xfffff000)
-                                        << 19)
-                | (monsterObject->m_extraInfo & 0xf807ffff);
-#endif
+            monsterObject->m_monsterInfo.m_custom = 1;
+            monsterObject->m_monsterInfo.m_index = customIndex;
         }
     }
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
-#if defined(HOMM3_TARGET_MAC)
-    monsterInfo.m_monsterInfo.m_neverFlee = charBuffer & 1;
-#else
-    monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffdffff)
-        | ((charBuffer & 1) << 17);
-#endif
+    monsterObject->m_monsterInfo.m_neverFlee = charBuffer & 1;
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     // The mask retail computes clears bits 27..30 alongside bit 18, so this
     // write lands on more than the one flag; transcribed as the object does
     // it rather than narrowed to the single bit.
-#if defined(HOMM3_TARGET_MAC)
-    monsterInfo.m_monsterInfo.m_dontGrow = charBuffer & 1;
-#else
-    monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0x87fbffff)
-        | ((charBuffer & 1) << 18);
-#endif
+    monsterObject->m_monsterInfo.m_dontGrow = charBuffer & 1;
+    monsterObject->m_monsterInfo.m_unused27 = 0;
 
     char padding[2];
     if (infile->read(padding, sizeof(padding)) < sizeof(padding))
@@ -3928,10 +3893,10 @@ std::vector<int> g_invalidPlacementList;
 // the literal's physical owner is another compiland.
 // Mac 0:0x1270c0..0x127278 is the same later helper: it clears 232 per-class
 // lists, scans 0x38-byte types backwards by extra and image name, and has the
-// same two reader calls. Its signed index store and extra-first comparison
-// justify the narrow Mac spellings below. O4 yields 440/440 bytes and the
-// same string::compare call at 94.7727%; GPR ownership and the frame size
-// remain different. No DC procedure is claimed for this Complete addition.
+// same two reader calls. Declaration order, equality operand order and
+// signedness of a narrowed index are shared source decisions; differing
+// instruction choices do not establish a platform fork. No DC procedure
+// is claimed for this Complete addition.
 VA(0x005042c0, 0x1A5)  // retail body + two callers: readMapObjects/loadMapObjects; no DC roster row
 void NewfullMap::rebuildObjectTypeIndex()
 {
@@ -3944,30 +3909,17 @@ void NewfullMap::rebuildObjectTypeIndex()
 
     for (int i = 0; i < m_objectTypes.size(); ++i) {
         int objectClass = m_objectTypes[i].m_objectType;
-#if defined(HOMM3_TARGET_MAC)
-        int typeIndex = m_objectTypeIndex[objectClass].size();
-        int extra = m_objectTypes[i].m_extra;
-#else
         int extra = m_objectTypes[i].m_extra;
         int typeIndex = m_objectTypeIndex[objectClass].size();
-#endif
         while (typeIndex--) {
             CObjectType& candidate = m_objectTypeIndex[objectClass][typeIndex];
-#if defined(HOMM3_TARGET_MAC)
-            if (extra == candidate.m_extra
-#else
             if (candidate.m_extra == extra
-#endif
                 && candidate.m_imageName == m_objectTypes[i].m_imageName)
                 break;
         }
         if (typeIndex >= 0)
             m_objectTypeIndex[objectClass][typeIndex].m_objectTypeIndex =
-#if defined(HOMM3_TARGET_MAC)
-                static_cast<short>(i);
-#else
                 static_cast<unsigned short>(i);
-#endif
     }
 }
 

@@ -70,19 +70,48 @@ ordinary project headers and native library inputs. The 73-entry body manifest,
 compiler path are gone. Original game helper bodies remain in their owning
 headers/source. Profile loading rejects the retired header-view settings.
 
-All 66 admitted pairs still load. All twelve admitted units now produce native
-objects through ordinary headers. Under `HOMM3_TARGET_MAC`, `mapcell` uses the
-existing `ExtraInfoUnion` view of `m_extraInfo` for its bitfield writes, replacing
-accesses to a member supplied only by the deleted alternate declaration.
-The shared game-class layout is unchanged. Compilation success does not imply
-that all byte comparisons are available or exact.
+All 66 admitted pairs still load. All twelve admitted units produce native
+objects through ordinary headers. `CObject` now inherits the ordinary
+`ExtraInfoUnion` base, as recorded independently in Dreamcast CodeView records
+0x30aa and 0x6401: base at +0, coordinates at +4/+5/+6, TypeID at +8,
+frameOffset at +0xa, total size 12. Complete's readers/writers corroborate these
+offsets. This replaces the reconstruction's partial union and makes the monster
+fields inherited members; no new union arm or payload cast is required.
+Compilation success does not imply that all byte comparisons are available or exact.
 
-The integrated build before the final Mac-only `mapcell` repair rebuilt 129
-Windows units and passed the Windows/source gates: 4,304 / 4,781 exact MAX,
-97.20% weighted MAX. Mac comparisons were available for 28 / 66 pairs; the
-remaining 38 prevented a complete Mac checkpoint. The subsequent `mapcell`
-compiler check passed, but the full comparison sweep has not been repeated.
-No test suites were run for this checkpoint.
+The integrated checkpoint has 4,305 / 4,781 Windows functions at exact
+MAX and 28 / 66 available Mac comparisons. Missing native-library and TOC
+mappings still prevent a complete Mac checkpoint. Windows/source gates, including
+cleanliness, pass with no MAX losses. The full command exits unsuccessfully
+because 38 Mac comparisons remain unavailable. No test suites were run.
+
+### Source conditionals
+
+The audit removes compiler-specific source spellings rather than treating an
+instruction-order difference as proof of a platform difference:
+
+| Owner | Shared source |
+|---|---|
+| `game::loadMinePool` | One unsigned byte count and the existing scalar-reader helpers; Windows stays exact. |
+| `valueOfWarFactory` | One cost-pointer traversal for both compilers. |
+| `philAI::getTurnAIVars` | One bonus formula; signed-byte difficulty makes the quarter arithmetic exact. |
+| `NewfullMap::rebuildObjectTypeIndex` | One declaration order, comparison and unsigned-short conversion. |
+| `NewfullMap::readMonsterData` | One signed-short quantity, inherited monster fields, and switch without an invented default assignment. Windows rises from 97.3333% to 98.4017%. Both Complete builds explicitly clear bits 27..30. |
+| `hero::getLevel` | One ordinary helper. VC6 chooses to expand it without a compiler-specific `inline` keyword. |
+
+This removes thirteen `HOMM3_TARGET_MAC` conditionals and one `_MSC_VER` inline
+fork. The seven remaining Mac guards in source files cover four little-endian
+file conversions, the two explicitly reviewed ballista multiply/divide
+expressions, and the platform CRT include selection. Existing Windows resource
+error reporting and compiler-specific SDK syntax are separate dependencies.
+The Mac sprite retry path at code0+0x153ff0..0x154014 contains two archive
+lookups and no reporter call, supporting the Windows-only diagnostic calls.
+The Clang palette-temporary branch handles VC6's extension that binds a
+temporary to a mutable reference; it is an editor compatibility case.
+No compiler switches or false inline declarations were added to improve scores.
+With shared source, the Mac comparisons for `valueOfWarFactory` and
+`getTurnAIVars` fall to 51.7045% and 79.2857%, respectively; their named call
+sequences still agree. Their Windows scores remain 99.4198% and 97.8723%.
 
 A real comparison through this path reproduced all 148 bytes of
 `hero::getHighestSchool`. This control does not validate all pairs or older
@@ -98,7 +127,8 @@ shared declarations without importing their platform-specific UI APIs.
 
 Other fixes add missing owning includes, use native MSL for the VC6 min/max
 fallback and CRT spelling differences, and keep VC6-only delete annotations in
-the VC6 branch. No game fields, base classes or virtual rosters were changed.
+the VC6 branch. The platform boundary does not change game fields or virtual
+rosters. The source-evidenced CObject base restoration is described above.
 The unsupported `giveExperience` parameter fork was removed: neither the raw
 PEF nor any expanded section contains the alleged retail symbol. Both compiler
 candidates now use the existing Windows/DC unsigned-char declaration.

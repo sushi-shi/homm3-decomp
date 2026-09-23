@@ -1835,15 +1835,12 @@ int hero::getExperienceIncrement(int level)
 // E:\gamedcs\hero.cpp:1862
 // No retail row: the carve is gap-free from GetExperienceIncrement
 // straight into ApplyBattleWinTemps, and hero::GiveExperience carries
-// the whole body expanded. `inline` reproduces the absence, the
-// strip::DrawNumber precedent. Same table and same 1.2 extrapolation as
+// the whole body expanded. The ordinary helper reproduces that decision;
+// no compiler-specific inline is needed. Same table and 1.2 extrapolation as
 // GetExperience above, walked forwards instead of indexed. Classic Mac and
 // Dreamcast retain a callable GetLevel body; Mac giveExperience calls it at
 // 0x1041f4. VC6 expands this body in giveExperience and has no retained row.
 
-#ifdef _MSC_VER
-inline
-#endif
 int hero::getLevel(int experience)
 {
     int heroLevel = 1;
@@ -1961,8 +1958,8 @@ TSecondarySkill getSkillAward(const hero* currentHero,
 // TLevelUpWindow locals in three mutually exclusive arms plus /GX give
 // the fs:[0] frame and the 0/1/2 trylevel by themselves, and the
 // prologue's `push 0xb` is a relocation ADDEND, not a state count.
-// hero::GetLevel is /Ob2-expanded at the top (it is `inline` and defined
-// above); get_skill_award is not, and must not be. The magic-school test
+// hero::GetLevel is /Ob2-expanded at the top (its ordinary body is defined
+// above); get_skill_award remains a call. The magic-school test
 // on skills[0] really is emitted TWICE - once before skills[1] is drawn
 // and again inside the two-entry loop - so it is written twice here.
 // The inner braces in the third arm are load-bearing: that window's
