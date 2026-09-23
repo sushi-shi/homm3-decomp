@@ -1676,6 +1676,8 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
 // four functions down does: once at the top for the waitingPlayer byte
 // this passes on to SetHeroContext/SetTownContext, and once more inside
 // the town arm's guard, uncached.
+// DC line 1981 retains HideRoute(1, 0, 1) in the town arm. The canonical
+// source call keeps this Windows function exact.
 
 VA(0x004097e0, 0x290)  // dc 0x9330
 int advManager::processSelect(const message* msg, type_point* triggerPoint, NewmapCell** peventCell)
@@ -1716,40 +1718,8 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
     case TAdventureMapWindow::TOWN_4_ID: {
         int townSlot = msg->m_codeY - TAdventureMapWindow::TOWN_0_ID;
         int townId = localPlayer->m_townIds[m_advWindow->m_topTown + townSlot];
-        if (!waitingPlayer) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
-                                 0, 1);
-                    g_windowManager->updateScreen(ADVENTURE_SCREEN_X,
-                                                  ADVENTURE_SCREEN_Y,
-                                                  ADVENTURE_SCREEN_WIDTH,
-                                                  ADVENTURE_SCREEN_HEIGHT);
-
-                    unsigned long curTime = GameTime::get();
-                    if (static_cast<long>(
-                            curTime
-                            - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
-                            >= 0
-                        && !m_animCtrPaused) {
-                        ++m_animCtr;
-                        long elapsedTime =
-                            curTime
-                            - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-                        g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                            cppMax(static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED),
-                                   elapsedTime);
-                    }
-                    process1WindowsMessage();
-                }
-            }
-        }
+        if (!waitingPlayer)
+            hideRoute(1, 0, 1);
         if (townId == localPlayer->m_currTownId) {
             m_advCommand = ADV_COMMAND_VIEW_TOWN;
             *peventCell = doAdvCommand(triggerPoint);
