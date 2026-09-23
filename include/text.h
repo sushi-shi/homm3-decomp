@@ -33,6 +33,7 @@ extern const char* g_rumourTerrainDescriptions[10];
 extern const char* g_constWiseTreePriceText[3];
 extern const char* g_personality[4];
 extern const char* g_newTurn[8];
+extern const char* g_townNames[9][16];
 
 // Other Arraytxt.txt and building-text destinations shared with their readers.
 extern const char* g_agrText[3];

@@ -18,7 +18,7 @@ class TPalette16;
 class TSpreadsheetResource;
 class TTextResource;
 
-extern int* g_videoGameState;
+extern int& g_gameContext;
 // Claimed by resourcemanager.obj; the adventure-map phisher-price command
 // toggles it before selecting the palette transform.
 extern unsigned char g_graphicsSaturated;  // retail 0x69e5b0

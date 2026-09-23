@@ -119,8 +119,187 @@ Exact CUR is 4,176, and executable MAX is 96.87%.
 The linker completed with zero unresolved symbols and zero duplicate
 warnings. The PE entry point was verified to be `WinMainCRTStartup`.
 
-A launch in the isolated Wine prefix exits with loader status `c0000135`: the
-runtime DLLs BINKW32.DLL, MSS32.DLL, SMACKW32.DLL and IFC20.dll are unavailable.
-The repository does not distribute those DLLs or the game resources. No menu,
-map, battle or gameplay execution has been verified. A successful link is not
-proof that remaining reconstruction differences are safe at runtime.
+The first isolated Wine launch lacked BINKW32.DLL, MSS32.DLL, SMACKW32.DLL
+and IFC20.dll. Both local Steam installations provide identical 32-bit copies
+with all 81 required exports. A disposable copy of the standard installation's
+libraries and game data lets the reconstructed executable load them successfully.
+The repository does not distribute those files.
+
+That launch exposed a missing CRT initializer, not a missing DLL: the global
+network-player record read through the zero-initialized `g_videoGameState`.
+Retail also starts its cell at 0x69923c as zero, but initializer 0x4eccf0 binds
+it to the initialized dword 3 at 0x67f554. The CRT table lists this initializer
+at 0x65e7d4, before the player-record initializer 0x552290 at 0x65ebf0.
+
+`gamecontext.cpp` now owns that storage and binding as `g_installedGameContext`
+and `g_gameContext`. A mutable reference to the initialized dword reproduces
+the 11-byte initializer; a literal or const scalar makes VC6 introduce an
+extra temporary/value store. The reference preserves the former mutable
+pointee contract. Existing consumers retain their instruction bytes. Both
+startup initializers are enrolled explicitly and match retail, including
+independently resolved relocation targets/addends; the backing dword also
+matches. The real link places the binding before the player-record initializer.
+
+This illustrates why initial data bytes and function scores alone are
+insufficient: the missing binding cell was correctly zero-filled, and the
+consumer's instructions were correct, while the required initializer was
+unenrolled and absent. Data validation must cover backing values, reference
+identity, generated startup code and its execution order together.
+
+The retry exposed two more missing initializers in the resource manager:
+
+- `ResourceManager::open` dereferenced the zero archive-index pointer in
+  `g_resourceArchiveContexts[3].m_sprites`. Retail 0x559320 builds four 24-byte
+  contexts from twelve read-only archive-index arrays. Reconstructing the
+  descriptor constructor and explicit array temporaries reproduces all 209
+  initializer bytes, including 16 resolved relocations. The twelve lists
+  occupy 100 bytes at 0x641028..0x64108b and independently match retail.
+- With archive selection working, `ResourceManager::getSoundFile` dereferenced
+  a zero count pointer in `g_soundHeaderDescriptors`. Retail 0x5592b0 binds three
+  descriptors to the live sound-header, count and file-handle globals. The
+  reconstructed descriptor constructor and array initialization reproduce all
+  97 bytes, including 18 resolved relocations. They refer to the existing
+  globals rather than copies, so LoadSoundHeaders updates reach the readers.
+
+The next `/i0` launch reached the main menu, but general-RLE sprites were
+corrupt: buttons and dialog borders read a zero literal-run marker. Retail
+0x47c260 initializes that marker at 0x6968a6 to 255; 0x47c270 initializes its
+companion maximum run length at 0x6968b0 to 256. Dreamcast identifies the
+file-static constants as `kGeneralRLEOpaqueRunCode` (`const unsigned char`)
+and `kGeneralRLEMaxRunLength` (`const unsigned int`). Its initializer line
+rows at cspriteframe.cpp:46/47 (dc 0x745b0/0x745d8) call the unsigned-char
+numeric limit, with an added one for the maximum length. Restoring those
+expressions reproduces both retail initializer bodies (8 and 11 bytes),
+including their destination relocations. The CRT entries at 0x65e41c/0x65e420
+run them before the decoders copy the marker into function-local statics.
+A fresh launch verifies correctly rendered menu buttons and dialog borders.
+
+All four fixes pass the full build and link gates without MAX regressions.
+The six newly enrolled entries are existing retail CRT initializers: the
+context binding, its network-player consumer, the two resource tables and
+the two sprite constants. They all score 100%; their address operands were
+also checked independently of objdiff's relaxed relocation scoring. No
+gameplay function was added. The sprite fix changes no existing function
+scores, so the README matching totals remain unchanged.
+
+Two subsequent front-end failures came from control-flow reconstruction:
+
+- `setupCDDrive` returns 7 in Complete. Retail `earlySetup` jumps over the
+  legacy video-archive scan at 0x4ed9df, preserving that no-CD-required result.
+  The reconstruction entered the scan and replaced 7 with 5/6, which made
+  `setupCDRom` disable single-player/hosting and show a spurious CD warning.
+  The scan now excludes the named no-CD-required result while preserving
+  the existing legacy result handling. The source guard remains a byte
+  mismatch against the pinned binary's unconditional jump.
+- The resulting no-CD mode deliberately leaves `TMultiPlayerWindow::m_host`
+  null. Its unconditional insertion into `m_widgets` then reaches
+  `heroWindow::addWidgetsToMessageStream`, whose null-entry check calls
+  `memError`. This was a missing optional-widget guard, not evidence of a
+  failed or oversized allocation. Dreamcast multiplayerwindow.cpp:938/939
+  (dc 0x100124..0x100138) and retail 0x50e630..0x50e64e both conditionally
+  insert the Host button. The constructor now preserves that guard. An
+  ignored diagnostic executable returning legacy CD result 5 also reaches
+  the multiplayer window with hosting absent, independently verifying the
+  guard rather than relying on the normal Complete path to allocate Host.
+
+The Complete intro plays, confirmed by advancing captured frames. A launch
+with both control-flow fixes reaches the main menu without the CD warning
+and opens New Game → Multiplayer, also confirmed by the user. The user then
+exited Multiplayer and selected Single Scenario, producing a separate access
+violation in `strncpy` (linked address 0x6274a6 in the pre-integration test executable).
+The shorter New Game → Single Scenario path reproduces the same invalid
+portrait lookup, without first opening multiplayer. A temporary resource-load
+trace shows all 156 reconstructed hero portraits loading before entry 156
+passes unrelated memory as a bitmap filename.
+
+`g_heroTraitsStorage` incorrectly used the text parser's 156-row limit as its
+array extent. Complete stores 163 rows at 0x679dd0..0x67d863, and the retail
+selection constructor loads all 163 portraits (0x57c438..0x57c457). Restoring
+the seven portrait-only rows and the 163-element reference prevents that
+out-of-bounds access; the text parser still fills 156 heroes. An independent
+COFF check resolves and checks all 326 portrait string relocations and verifies
+all 14,996 table bytes against retail, including the restored 644-byte tail.
+The temporary logging and memory-dump code are not part of the fix.
+A final silent Xvfb run reaches Single Scenario with the selected map name,
+description, victory/loss conditions and player settings rendered. No resource
+error or access violation occurs on either the direct path or after opening
+and exiting Multiplayer. Matching scores are unchanged by this table fix.
+
+Starting Arrogance exposed a second failure: `processOnMapTowns` read a null
+town-name pointer (linked 0x4d61ad in `HEROES3.scenario-fixed.EXE`). The loader
+filled text.cpp's `g_townNames[9][16]`, while game.cpp defined and read a
+separate `[9][17]` array. Different C++ mangled names let both link, leaving
+the reader's table empty. Retail's writer (0x5b9647) and reader (0x4cad13)
+both use the single table at 0x6a6048 with a 16-pointer faction stride.
+The sole definition now belongs to text.cpp, with the common declaration in
+text.h. `processOnMapTowns` rises from 98.6258% to 100%; the text loader remains
+exact, and no MAX scores fall. The full build and plain link pass.
+
+The fixed Arrogance run reaches the adventure map, displays and dismisses its
+opening event, opens Torosar's hero screen and the starting town (Facture),
+moves the hero one step, and advances from Day 1 to Day 2 after the end-turn
+confirmation. Gold rises from 20,900 to 21,900. No access violation is logged
+during these checks. The final full-build executable has identical `.text`,
+`.rdata` and `.data` sections to this runtime-tested executable.
+
+The striped minimap and sidebar came from `advManager::updateRadar`
+(0x412c40): the bitmap pitch is measured in bytes, but row advancement used
+`unsigned short*` arithmetic. That doubled the stride and wrote radar pixels
+below the minimap into the sidebar. Preserve the Dreamcast-proven pixel
+pointers and advance rows through the existing `Bitmap16MapPointer` byte view,
+as the retail instructions do. All four map-size branches need this correction.
+The function's MAX changes from 91.2477% to 90.5495%; its HIST is retained.
+The retail-supported stride correction loses no exact function matches.
+
+Maps with seers exposed an additional missing startup binding: the cell at
+0x69fab8 must refer to the name vector at 0x69faa8. Restore the mutable C++
+reference and its compiler-generated initializer at 0x56c3d0. All eleven bytes
+match retail with both address relocations independently resolved; existing
+name-reader matches remain unchanged.
+
+Battle of the Sexes then failed with `std::length_error` while reading a quest.
+`type_defeat_hero_quest`, `type_monster_quest` and
+`type_belong_to_player_quest` lacked `loadFromMap` overrides. Inheriting the
+base reader skipped each class's payload, shifting the stream before reading
+the deadline and length-prefixed strings. Retail vtables 0x641800 and 0x64183c
+slot 12 share the 43-byte body at 0x56edf0; 0x641968 slot 12 shares the 49-byte
+body at 0x572230. Restore all three overrides without claiming these folded
+addresses twice. Each emitted body matches all retail bytes, including its
+resolved base-reader call, and each emitted virtual slot targets its override.
+These Complete quest classes have no Dreamcast counterpart.
+
+The corrected executable loads Arrogance (36x36), All for One (72x72),
+Battle of the Sexes (108x108), and A Viking We Shall Go (144x144). The minimap
+and sidebar render cleanly at all four scales. On Arrogance, hero/town views,
+a hero step and advancing to Day 2 also work with the corrected radar stride.
+All launches use the isolated silent environment below. Battles, save/load
+and extended gameplay remain untested.
+
+Town panorama animation also ran at loop speed: `townManager::main` advanced
+its timer by `cppMin(delta, 150)`, leaving the deadline immediately due.
+Dreamcast townmgr.cpp:5917-5920 proves the elapsed-time guard and a call to
+`max(150, elapsed)`. Retail 0x5d33c2..0x5d33e3 likewise selects the larger
+interval. Restore that existing source helper. Offscreen sampling over three
+seconds observed a changed panorama on every sample at 100 Hz before the fix,
+and 6.67 frame changes per second afterwards, matching the 150 ms interval.
+The missing `max` source-audit finding is resolved; unrelated findings and
+Clang coverage gaps remain. `townManager::main` MAX changes from 91.1545% to
+91.0406%, with its 91.2622% HIST retained. No exact functions are lost.
+
+The updated base had left `TDebugBreak::TDebugBreak` declaration-only,
+creating an unresolved symbol in dxplay, objecttype and objnames. Its ordinary
+out-of-line definition now supplies the empty three-byte retail constructor
+(`mov eax, ecx; ret`, folded at 0x524360). Visibility before the message-error
+constructor permits its elided base call, while the other TUs retain theirs.
+No separate retail address is claimed; the source-file placement is provisional.
+
+Further test launches use a dedicated Xvfb display and the game's `/i0 /s0`
+options (skip intro, disable sound), with Wine's PulseAudio/ALSA drivers also
+disabled. The game does not open windows or play audio on the user's desktop.
+
+After integration with the current base, the full build and link pass.
+`earlySetup` MAX changes from 99.0146% to 98.4298%; the multiplayer constructor
+changes from 83.7661% to 83.7907%. Their HIST peaks remain unchanged. The
+startup guard's score dip is retained because the runtime behavior and retail
+control flow require skipping the legacy scan for Complete. The displayed
+executable MAX remains 97.10%; all seven recovered initializers are exact.

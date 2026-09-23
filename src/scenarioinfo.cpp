@@ -193,8 +193,8 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     int gameTypeId = 341;
-    if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1
-            || *g_videoGameState == SINGLE_SELECTION_CONTEXT_3)
+    if (g_gameContext == SINGLE_SELECTION_CONTEXT_1
+            || g_gameContext == SINGLE_SELECTION_CONTEXT_3)
         gameTypeId = 342;
     widgets.push_back(new textWidget(
         160, 84, 75, 36, g_generalText->getText(GENERAL_TEXT_STARTING_TOWN_HEADER), "smalfont.fnt",

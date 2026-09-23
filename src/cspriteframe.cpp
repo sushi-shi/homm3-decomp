@@ -1,6 +1,7 @@
 #include "va.h"
 
 #include <string.h>
+#include <limits>
 
 #include "cspriteframe.h"
 
@@ -16,10 +17,12 @@ DATA(0x006968aa) unsigned short CSpriteFrame::s_div4mask;
 // this declaration keeps /GX from manufacturing an unwind frame.
 __declspec(nothrow) void __cdecl operator delete(void* p);
 
-// The TU initializer at 0x47c260 installs the general-RLE literal-run code.
-// Draw copies it into a function-local static on first use, accounting for
-// the guard and one-byte local-static storage seen in retail.
-DATA(0x006968a6) unsigned char g_rleLiteralRunCode;
+DATA(0x006968a6) static const unsigned char g_generalRleOpaqueRunCode =
+    (std::numeric_limits<unsigned char>::max)();
+VA_COMPGEN(0x0047c260, 0x08, STATIC_CTOR, g_generalRleOpaqueRunCode)
+DATA(0x006968b0) static const unsigned int g_generalRleMaxRunLength =
+    (std::numeric_limits<unsigned char>::max)() + 1;
+VA_COMPGEN(0x0047c270, 0x0b, STATIC_CTOR, g_generalRleMaxRunLength)
 
 // Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:67, dc 0x74600.
 CSpriteFrame::CSpriteFrame()
@@ -295,14 +298,14 @@ unsigned char CSpriteFrame::getPixel(int x, int y) const
             unsigned char code = *source++;
             unsigned int run = *source++ + 1;
             if (position + run > static_cast<unsigned int>(x)) {
-                if (code == g_rleLiteralRunCode)
+                if (code == g_generalRleOpaqueRunCode)
                     pixel = source[x - position];
                 else
                     pixel = code;
                 break;
             }
             position += run;
-            if (code == g_rleLiteralRunCode)
+            if (code == g_generalRleOpaqueRunCode)
                 source += run;
         }
         break;
@@ -447,7 +450,7 @@ void CSpriteFrame::encode(TEncodingMethod method)
 // Original: CSpriteFrame::EncodeGeneral; cspriteframe.cpp:791, dc 0x750d8.
 void CSpriteFrame::encodeGeneral()
 {
-    static const unsigned char opaqueRunCode = g_rleLiteralRunCode;
+    static const unsigned char opaqueRunCode = g_generalRleOpaqueRunCode;
     // DC's cspriteframe.cpp:47 initializer is max<unsigned char>() + 1.
     static const unsigned int maxRunLength = 256;
     unsigned int newDataSize = m_croppedHeight * sizeof(unsigned int);
@@ -862,7 +865,7 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
     }
 
     const unsigned int* lineOffset;
-    static const unsigned char opaqueRunCode = g_rleLiteralRunCode;
+    static const unsigned char opaqueRunCode = g_generalRleOpaqueRunCode;
     clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
 
     if (sw > 0 && sh > 0) {
@@ -1035,7 +1038,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
     }
 
     const TOffset* lineOffset;
-    static const unsigned char opaqueRunCode = g_rleLiteralRunCode;
+    static const unsigned char opaqueRunCode = g_generalRleOpaqueRunCode;
     clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
 
     lineOffset =
@@ -2704,7 +2707,7 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
     const unsigned int* lineOffset;
     // DC 0x77664 local palette, bound after the line table at line 3811.
     const unsigned short* palette;
-    static const unsigned char opaqueRunCode = g_rleLiteralRunCode;
+    static const unsigned char opaqueRunCode = g_generalRleOpaqueRunCode;
     clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
 
     if (sw > 0 && sh > 0) {

@@ -312,6 +312,7 @@ public:
     virtual int questType();
     virtual void notifyHeroDefeated(int heroId, int player);
     virtual void load(TAbstractFile* file, int version);
+    virtual void loadFromMap(TAbstractFile* file);
     virtual void doProposalDialog(hero* currentHero);
     virtual void doProgressDialog();
     virtual void save(TAbstractFile* file);
@@ -332,6 +333,7 @@ public:
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual int questType();
     virtual void load(TAbstractFile* file, int version);
+    virtual void loadFromMap(TAbstractFile* file);
     virtual void doProposalDialog(hero* currentHero);
     virtual void doProgressDialog();
     virtual void notifyMonsterDefeated(TQuestPosition where, int player);
@@ -459,6 +461,7 @@ public:
     virtual std::string getRequirementText();
     virtual std::string getQuestDescription();
     virtual void load(TAbstractFile* file, int version);
+    virtual void loadFromMap(TAbstractFile* file);
     virtual void doProposalDialog(hero* currentHero);
     virtual void doProgressDialog();
     virtual void save(TAbstractFile* file);

@@ -33,6 +33,18 @@ struct SoundHeaderStruct {
 };
 SIZE(SoundHeaderStruct, 0x30);
 
+// Shared sound archives; ResourceManager's descriptors refer to these cells.
+extern HANDLE g_soundFile;
+extern HANDLE g_soundFileCd;
+extern HANDLE g_soundFileCampaign;
+extern SoundHeaderStruct* g_soundHeader;
+extern SoundHeaderStruct* g_soundHeaderCd;
+extern SoundHeaderStruct* g_soundHeaderCampaign;
+extern int g_soundCount;
+extern int g_soundCountCd;
+extern int g_soundCountCampaign;
+
+
 // LoadAnimHeaders (0x598210) allocates (11*count + 22) * 4 bytes
 // and reads 44*count. OpenSmackerTrack (0x598790) walks 0x2c-byte
 // records, compares the name at +0 and seeks to the offset at +0x28.
@@ -76,7 +88,7 @@ extern Smack* g_smackVideo;
 extern Smack* g_smackVideo2;
 
 // Foreign globals without an owning header yet (all provisional):
-extern int* g_videoGameState;    // .bss 0x69923c - the forced-bink state pair
+extern int& g_gameContext;
 extern int g_firstTimeThrough;        // .bss 0x699524 - nonzero blocks the user abort
        // .bss 0x699290 - nonzero suppresses the video sound tracks
 

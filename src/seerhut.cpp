@@ -21,8 +21,8 @@
 #include "textresource.h"
 #include "winmgr.h"
 
-// Retail scalar state; startup initial values come from the pinned image.
-DATA(0x0069fab8) std::vector<std::string>* g_seerHutNamesPointer;
+DATA(0x0069fab8) std::vector<std::string>& g_seerHutNameList = g_seerHutNames;
+VA_COMPGEN(0x0056c3d0, 0x0b, STATIC_CTOR, g_seerHutNameList)
 
 void aiEquipArtifacts(hero* currentHero);
 void aiJoinDecision(hero* currentHero, TCreatureType creature, short amount);
@@ -855,6 +855,24 @@ void type_experience_quest::loadFromMap(TAbstractFile* file)
 
     file->read(&level, sizeof(level));
     m_requiredLevel = level;
+    type_quest::loadFromMap(file);
+}
+
+void type_defeat_hero_quest::loadFromMap(TAbstractFile* file)
+{
+    int id;
+
+    file->read(&id, sizeof(id));
+    m_mapHero = id;
+    type_quest::loadFromMap(file);
+}
+
+void type_monster_quest::loadFromMap(TAbstractFile* file)
+{
+    int id;
+
+    file->read(&id, sizeof(id));
+    m_mapMonster = id;
     type_quest::loadFromMap(file);
 }
 
@@ -1710,6 +1728,15 @@ void type_be_hero_quest::loadFromMap(TAbstractFile* file)
     m_requiredHero = id;
     type_quest::loadFromMap(file);
 }
+void type_belong_to_player_quest::loadFromMap(TAbstractFile* file)
+{
+    unsigned char id;
+
+    file->read(&id, sizeof(id));
+    m_requiredOwner = id;
+    type_quest::loadFromMap(file);
+}
+
 VA(0x00572270, 0x276)
 void type_be_hero_quest::setDefaultText()
 {
@@ -2079,7 +2106,7 @@ int TQuestGuard::save(TAbstractFile* outfile)
 // construct availability, remove names used by this map, then select one.
 inline void TSeerHut::setRandomName(TSeerHut& thisHut)
 {
-    std::vector<unsigned char> nameAvailable(g_seerHutNamesPointer->size());
+    std::vector<unsigned char> nameAvailable(g_seerHutNameList.size());
     unsigned int name;
     for (name = 0; name < nameAvailable.size(); ++name)
         nameAvailable[name] = 1;
@@ -2506,7 +2533,7 @@ std::string TSeerHut::getSeerLogText()
     return formatString(
         logFormat.c_str(),
         m_quest->getRequirementText().c_str(),
-        (*g_seerHutNamesPointer)[m_nameIndex].c_str());
+        g_seerHutNameList[m_nameIndex].c_str());
 }
 
 // The TQuestGuard pair's TSeerHut twin, and it splits CROSSWISE: 0x5741b0
@@ -2523,7 +2550,7 @@ std::string TSeerHut::seerHutFn005741B0(int player) const
     std::string text;
     text = formatString(
         g_generalText->getText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
-        (*g_seerHutNamesPointer)[m_nameIndex].c_str());
+        g_seerHutNameList[m_nameIndex].c_str());
 
     if (m_quest) {
         text += DATA_COMPGEN(0x00660330, seerHutRolloverSeparator, " ");
@@ -2542,7 +2569,7 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
     std::string text;
     text = formatString(
         g_generalText->getText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
-        (*g_seerHutNamesPointer)[m_nameIndex].c_str());
+        g_seerHutNameList[m_nameIndex].c_str());
 
     if (m_quest) {
         text += DATA_COMPGEN(0x006603b0, seerHutQuickInfoSeparator, "\n\n");

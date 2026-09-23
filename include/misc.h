@@ -32,7 +32,8 @@ enum ECDDriveNumber {
     CD_DRIVE_NUMBER_3 = 3,
     CD_DRIVE_NUMBER_4 = 4,
     CD_DRIVE_NUMBER_5 = 5,
-    CD_DRIVE_NUMBER_6 = 6
+    CD_DRIVE_NUMBER_6 = 6,
+    CD_DRIVE_NUMBER_NO_CD_REQUIRED = 7
 };
 
 // Registry-path state owned by misc.cpp. AppPath's 351-byte extent is

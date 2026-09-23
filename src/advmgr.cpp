@@ -5897,26 +5897,30 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
     unsigned char visibilityBit = g_mapVisibilityBit;
     for (int y = 0; y <= lastRow; y++) {
         unsigned short* dest = destRow;
+        // Bitmap pitch is measured in bytes.
+        Bitmap16MapPointer nextRow;
+        nextRow.m_pixels = destRow;
         switch (g_mapHeight) {
         case MAP_DIMENSION_SMALL:
-            destRow += 4 * g_windowManager->m_screenBitmap->getPitch();
+            nextRow.m_bytes += 4 * g_windowManager->m_screenBitmap->getPitch();
             break;
         case MAP_DIMENSION_MEDIUM:
-            destRow += 2 * g_windowManager->m_screenBitmap->getPitch();
+            nextRow.m_bytes += 2 * g_windowManager->m_screenBitmap->getPitch();
             break;
         case MAP_DIMENSION_LARGE:
-            destRow += g_windowManager->m_screenBitmap->getPitch();
+            nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
             if (++rowPhase > 2) {
                 rowPhase = 0;
-                destRow += g_windowManager->m_screenBitmap->getPitch();
+                nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
             } else if (rowPhase == 0) {
-                destRow += g_windowManager->m_screenBitmap->getPitch();
+                nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
             }
             break;
         case MAP_DIMENSION_EXTRA_LARGE:
-            destRow += g_windowManager->m_screenBitmap->getPitch();
+            nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
             break;
         }
+        destRow = nextRow.m_pixels;
 
         for (int x = 0; x <= lastColumn; x++) {
             NewmapCell* cell = m_fullMap->cell(x, y, origin.m_z);

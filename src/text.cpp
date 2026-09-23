@@ -83,7 +83,7 @@ TTextResource* g_mineEventTextResource;
 DATA(0x006a6040)
 TSpreadsheetResource* g_specialBuildingText;
 
-// 0x006a6048 - datum claimed at src/game.cpp:10974
+DATA(0x006a6048)
 const char* g_townNames[9][16];
 
 DATA(0x006a6288)

@@ -96,7 +96,7 @@ TCampaignSetWindow::TCampaignSetWindow()
     m_widgets.push_back(sodPlate);
     sodPlate->setHotkey(0x1f);
 
-    if (*g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+    if (g_gameContext == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
         type_func_button* armPlate = new type_func_button(
             486, 242, 305, 119, widgetId++,
             DATA_COMPGEN(0x00660df0, campaignSetArmSprite, "CSSarm.def"),
@@ -259,7 +259,7 @@ int TCampaignSetWindow::handleMessage(message& msg)
 
     if (videoNeedsUpdate() || hoverChanged) {
         int lastPlate = LAST_PLATE_ID;
-        if (*g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
+        if (g_gameContext == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
             lastPlate = LAST_PLATE_WITH_AB_ID;
         drawWindow(0, SOD_PLATE_ID, lastPlate);
         g_windowManager->updateScreen(482, 9, 308, 562);

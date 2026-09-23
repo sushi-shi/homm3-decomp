@@ -308,8 +308,8 @@ int videoPlay(int id, int x, int y, int w, int h)
     if (id >= VIDEO_ID_FIRST_TABLED
         && (!g_videoDescriptors[id].m_useBink || !g_config.m_binkVideo
             || (id == VIDEO_ID_STATE_GATED
-                && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
-                && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH))) {
+                && g_gameContext != VIDEO_GAME_STATE_FORCED_BINK_LOW
+                && g_gameContext != VIDEO_GAME_STATE_FORCED_BINK_HIGH))) {
         vh = h;
         vw = w;
         g_soundManager->m_playSounds = 1;
@@ -379,8 +379,8 @@ void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8)
     if (id >= VIDEO_ID_FIRST_TABLED
         && (!g_videoDescriptors[id].m_useBink || !g_config.m_binkVideo
             || (id == VIDEO_ID_STATE_GATED
-                && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
-                && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))
+                && g_gameContext != VIDEO_GAME_STATE_FORCED_BINK_LOW
+                && g_gameContext != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))
         showVideo(id, x, y, w, h, a6, a7, a8);
     else
         BinkManager::openBink(id, x, y, w, h, a6, a7);
@@ -709,8 +709,8 @@ unsigned char loadAnimHeaders()
         g_videoFile3 = 0;
     }
 
-    if (*g_videoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
-        || *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+    if (g_gameContext == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
+        || g_gameContext == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
         g_videoFile1 = CreateFileA("data\\h3ab_ahd.vid", GENERIC_READ,
             FILE_SHARE_READ, 0, OPEN_EXISTING,
             FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
@@ -771,8 +771,8 @@ unsigned char loadSoundHeaders()
     g_soundHeader = new SoundHeaderStruct[g_soundCount + 2];
     ReadFile(g_soundFile, g_soundHeader, 48 * g_soundCount, &nread, 0);
 
-    if (*g_videoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
-        || *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+    if (g_gameContext == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
+        || g_gameContext == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
         g_soundFileCd = CreateFileA("data\\h3ab_ahd.snd", GENERIC_READ,
             FILE_SHARE_READ, 0, OPEN_EXISTING,
             FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
@@ -839,7 +839,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
     strcpy(name, stem);
     strcat(name, ".smk");
 
-    if (*g_videoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES) {
+    if (g_gameContext == VIDEO_GAME_STATE_EXPANSION_ARCHIVES) {
         for (i = 0; i < g_videoCount1; i++) {
             if (_strcmpi(g_videoHeader1[i].m_name, name) == 0) {
                 g_soundManager->serviceSounds();
@@ -875,7 +875,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
         }
     }
 
-    if (*g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+    if (g_gameContext == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
         for (i = 0; i < g_videoCount1; i++) {
             if (_strcmpi(g_videoHeader1[i].m_name, name) == 0) {
                 g_soundManager->serviceSounds();

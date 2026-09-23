@@ -482,7 +482,8 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_widgets.push_back(m_modem);
     m_widgets.push_back(m_direct);
     m_widgets.push_back(m_online);
-    m_widgets.push_back(m_host);
+    if (m_host)
+        m_widgets.push_back(m_host);
     m_widgets.push_back(m_join);
     m_widgets.push_back(m_search);
     m_widgets.push_back(m_cancel);
@@ -956,7 +957,7 @@ unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char
                              const_cast<char*>(password)))
         return 0;
 
-    int version = *g_videoGameState;
+    int version = g_gameContext;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
         g_config.m_networkDefaultName, &version, sizeof(version), 0);
     strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
@@ -987,7 +988,7 @@ unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* 
                              const_cast<char*>(password)))
         return 0;
 
-    int version = *g_videoGameState;
+    int version = g_gameContext;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
         g_config.m_networkDefaultName, &version, sizeof(version), 0);
     if (!g_thisNetPlayerInfo.m_dpid)

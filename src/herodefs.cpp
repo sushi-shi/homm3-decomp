@@ -12,7 +12,7 @@
 // Retail initial data: parsers fill names and numeric traits later; hero
 // portraits, starting skills/stacks and availability already exist at startup.
 DATA(0x00679dd0)
-THeroTraits g_heroTraitsStorage[156] = {
+THeroTraits g_heroTraitsStorage[163] = {
     { 0, 7, THeroClass(0), 6, 1, 1, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(2), TCreatureType(4), "HPS000Kn.PCX", "HPL000Kn.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
     { 1, 7, THeroClass(0), 6, 1, 1, 1, 0, { 0, 0, 0 }, -1, TCreatureType(2), TCreatureType(2), TCreatureType(2), "HPS001Kn.PCX", "HPL001Kn.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 7, THeroClass(0), 6, 1, 23, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(4), TCreatureType(4), "HPS002Kn.PCX", "HPL002Kn.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
@@ -169,6 +169,14 @@ THeroTraits g_heroTraitsStorage[156] = {
     { 1, 7, THeroClass(10), 19, 1, 13, 1, 1, { 0, 0, 0 }, 15, TCreatureType(70), TCreatureType(72), TCreatureType(74), "HPS008Sh.PCX", "HPL008Sh.PCX", { 65792 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 7, THeroClass(12), 22, 1, 19, 1, 0, { 0, 0, 0 }, -1, TCreatureType(84), TCreatureType(86), TCreatureType(88), "HPS001Sh.PCX", "HPL001Sh.PCX", { 65792 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 7, THeroClass(6), 6, 1, 19, 1, 0, { 0, 0, 0 }, -1, TCreatureType(42), TCreatureType(46), TCreatureType(46), "HPS131Dm.PCX", "HPL131Dm.PCX", { 65792 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
+    // Portrait-only rows; these are not loaded from the playable-hero text table.
+    { 1, 7, THeroClass(0), 6, 1, 22, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(2), TCreatureType(4), "HPS129Mk.PCX", "HPL129Mk.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 7, THeroClass(0), 6, 1, 22, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(2), TCreatureType(4), "HPS002Sh.PCX", "HPL002Sh.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 7, THeroClass(0), 6, 1, 22, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(2), TCreatureType(4), "HPS132Wl.PCX", "HPL132Wl.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 7, THeroClass(0), 6, 1, 22, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(2), TCreatureType(4), "HPS133Nc.PCX", "HPL133Nc.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 7, THeroClass(0), 6, 1, 22, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(2), TCreatureType(4), "HPS134Nc.PCX", "HPL134Nc.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 7, THeroClass(0), 6, 1, 22, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(2), TCreatureType(4), "HPS135Wi.PCX", "HPL135Wi.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
+    { 0, 7, THeroClass(0), 6, 1, 22, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(2), TCreatureType(4), "HPS136Wi.PCX", "HPL136Wi.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
 };
 DATA(0x0067d868)
 THeroClassTraits g_heroClassTraits[18] = {
@@ -193,7 +201,7 @@ THeroClassTraits g_heroClassTraits[18] = {
 };
 
 DATA(0x00698cf0) TSSkillTraits g_sSkillTraitsStorage[28];
-DATA(0x0067dce8) const THeroTraits (&g_heroTraits)[156] = g_heroTraitsStorage;
+DATA(0x0067dce8) const THeroTraits (&g_heroTraits)[163] = g_heroTraitsStorage;
 DATA(0x0067dcec) const THeroClassTraits (&g_heroClasses)[18] = g_heroClassTraits;
 DATA(0x0067dcf0) const TSSkillTraits (&g_sSkillTraits)[28] = g_sSkillTraitsStorage;
 

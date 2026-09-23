@@ -1985,7 +1985,7 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
     }
 
     if (m_gameVersion == 1 &&
-        *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW)
+        g_gameContext == VIDEO_GAME_STATE_FORCED_BINK_LOW)
         return -1;
 
     char compatibilityBuffer[32];
