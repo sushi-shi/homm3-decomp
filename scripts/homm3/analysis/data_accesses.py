@@ -366,10 +366,11 @@ def compare(retail, candidate):
 
 
 class Storage:
-    """Independent source-bound storage, with conflicting intervals withheld."""
+    """Independent storage anchors; source bounds remain separate from COFF spans."""
     def __init__(self, image_base, projections):
         self.base = image_base
         self.extents = defaultdict(set)
+        self.source_extents = defaultdict(set)
         self.emitted = defaultdict(set)
         self.conflicts = []
         for p in projections:
@@ -377,6 +378,8 @@ class Storage:
                 self.conflicts.append((p['rva'], p['rva']+p['size']))
             else:
                 self.extents[p['rva']].add(p['size'])
+                if p.get('macro') != 'VENDOR':
+                    self.source_extents[p['rva']].add(p['size'])
                 if p.get('physical_size') is not None:
                     self.emitted[p['rva']].add((p.get('unit', ''), p['physical_size']))
         self.starts = sorted(self.extents)
@@ -409,7 +412,7 @@ class Storage:
         owner = owners[0][0]
         offset = E.make([(f, c) for f, c in expression.terms if f != (('storage', owner),)])
         span = affine_range(offset, bounds or {})
-        sizes = self.extents.get(owner, ())
+        sizes = self.source_extents.get(owner, ())
         size = next(iter(sizes)) if len(sizes) == 1 else None
         status = ('range-unproved' if span is None else 'extent-unproved' if size is None else
                   'outside-source-extent' if span[0] < 0 or span[1]+width > size else 'within-source-extent')

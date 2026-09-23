@@ -182,7 +182,8 @@ def generate(root, image, *, jobs=4, build_vendor=False):
     candidate_evidence = candidate_data.extract(root, declared)
     from homm3.sema import data_match
     from homm3.analysis import data_initialization, data_accesses
-    evidence = data_match.prepare(root, declared=declared, candidate_report=candidate_evidence)
+    evidence = data_match.prepare(root, declared=declared, candidate_report=candidate_evidence,
+                                  build_vendor=build_vendor)
     data_matching = data_match.generate(root, evidence=evidence)
     initialization = data_initialization.generate(root, evidence=evidence, static_report=data_matching, claims=claims)
     consumers = data_accesses.generate(root, evidence=evidence, static_report=data_matching)

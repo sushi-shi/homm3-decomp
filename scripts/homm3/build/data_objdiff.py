@@ -15,7 +15,6 @@ from pathlib import Path
 import struct
 
 from homm3.analysis.vendor_data import image_bytes
-from homm3.build.canonicalize_data_symbols import CoffObject
 from homm3.build import compiled_freshness
 from homm3.build.normalized_freshness import ValidationContext, write_stamp, freshness_problems
 from homm3.core import tsv
@@ -85,15 +84,15 @@ def export(root, report):
     layout = Layout(image.data)
     if hashlib.sha256(layout.data).hexdigest() != report['retail_sha256']:
         raise ValueError('retail changed before objdiff data projection')
-    objects, inputs = {}, {'retail': image.path}
+    from homm3.sema.data_match import load_objects
+    objects = load_objects(root, report['input_sha256'], report.get('object_paths'))
+    inputs = {'retail': image.path}
     for path, expected in report['input_sha256'].items():
         source = root/path
         raw = source.read_bytes()
         if hashlib.sha256(raw).hexdigest() != expected:
             raise ValueError(f'{path}: stale data comparison evidence')
         inputs[path] = source
-        if path.endswith('.obj'):
-            objects[Path(path).stem] = CoffObject(raw)
     inputs['data_objdiff.py'] = Path(__file__)
     pairs, ledger = project(layout, report, objects)
     directory = root/'build/objdiff/data'

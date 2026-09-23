@@ -47,7 +47,8 @@ class Identities:
                 continue
             row = by_id[binding['candidate_ids'][0]]
             anchor = dict(rva=binding['rva'], size=binding['size'],
-                          evidence='source-'+binding['macro']+' binding', binding_id=binding['id'], candidate_id=row['id'])
+                          evidence=binding.get('proof') or 'source-'+binding['macro']+' binding',
+                          binding_id=binding['id'], candidate_id=row['id'])
             self.locations[row['unit'], row['section_ordinal']].append((row['section_offset'], anchor))
             for name, scope in zip(row['symbols'], row['scopes']):
                 if scope == 'external':
@@ -113,8 +114,9 @@ def enroll(candidates, bindings):
                           rva=binding['rva'], size=binding['size'], binding_ids=[binding['id']],
                           section_ordinal=row['section_ordinal'], section_offset=row['section_offset'],
                           physical_size=row['physical_size'], storage=row['storage'],
-                          extent_evidence='source projection; retail object boundary unproved',
+                          extent_evidence=binding.get('retail_extent') or 'source projection; retail object boundary unproved',
                           identity=binding['literal_sha256'] or binding.get('source_identity') or binding['name'],
+                          linker_identity=binding.get('linker_identity', ''),
                           macro=binding['macro'], status='enrolled')
         grouped[key] = projection
         projections.append(projection)
@@ -125,6 +127,9 @@ def enroll(candidates, bindings):
                 break
             compatible = ((left['rva'], left['size'], left['macro'], left['identity']) ==
                           (right['rva'], right['size'], right['macro'], right['identity']))
+            compatible |= bool(left['linker_identity'] and
+                (left['rva'], left['size'], left['linker_identity']) ==
+                (right['rva'], right['size'], right['linker_identity']))
             if not compatible:
                 left['status'] = right['status'] = 'binding-conflict'
     return projections
@@ -269,7 +274,40 @@ def partition(layout, segments):
     return result
 
 
-def prepare(root, *, declared=None, candidate_report=None, jobs=4):
+def load_objects(root, hashes, object_paths=None):
+    """Validate all inputs, loading only explicitly selected raw COFF objects.
+
+    Private vendor builds can share basenames with source objects. Provenance
+    inputs are not an object-selection map and must never overwrite a candidate.
+    """
+    paths = object_paths
+    if paths is None:
+        paths = {}
+        for p in hashes:
+            if p.endswith('.obj'):
+                unit = Path(p).stem
+                if unit in paths and paths[unit] != p:
+                    raise ValueError(f'{unit}: ambiguous raw-object basename; explicit selection required')
+                paths[unit] = p
+    missing = set(paths.values())-hashes.keys()
+    if missing:
+        raise ValueError(f'raw objects missing from provenance: {sorted(missing)}')
+    selected = defaultdict(list)
+    for unit, path in paths.items():
+        selected[path].append(unit)
+    objects = {}
+    for path, expected in hashes.items():
+        payload = (root/path).read_bytes()
+        if hashlib.sha256(payload).hexdigest() != expected:
+            raise ValueError(f'{path}: candidate evidence changed before data comparison')
+        if path in selected:
+            obj = CoffObject(payload)
+            for unit in selected[path]:
+                objects[unit] = obj
+    return objects
+
+
+def prepare(root, *, declared=None, candidate_report=None, jobs=4, build_vendor=False):
     """Shared fresh evidence for static bytes, initialization and consumers."""
     from homm3.analysis import candidate_data, data_declarations
     from homm3.core.project import Project
@@ -279,13 +317,8 @@ def prepare(root, *, declared=None, candidate_report=None, jobs=4):
     candidate_report = candidate_report if candidate_report is not None else candidate_data.extract(root, declared)
     if candidate_report['declaration_fingerprint'] != declared['fingerprint']:
         raise ValueError('candidate bindings and source declarations have different fingerprints')
-    objects = {}
-    for path, expected in candidate_report['input_sha256'].items():
-        payload = (root/path).read_bytes()
-        if hashlib.sha256(payload).hexdigest() != expected:
-            raise ValueError(f'{path}: candidate evidence changed before data comparison')
-        if path.endswith('.obj'):
-            objects[Path(path).stem] = CoffObject(payload)
+    object_paths = {Path(p).stem: p for p in candidate_report['input_sha256'] if p.endswith('.obj')}
+    objects = load_objects(root, candidate_report['input_sha256'], object_paths)
     admitted = {int(r['rva'], 0) for r in tsv.read(root/'config/retail/functions.tsv')[2]}
     code_claims, issues = [], []
     for unit in declared['units']:
@@ -302,8 +335,30 @@ def prepare(root, *, declared=None, candidate_report=None, jobs=4):
             rva = int(row['rva'], 0)
             if rva in admitted:
                 code_claims.append(dict(symbol=row['name'], rva=rva, unit=row.get('unit'), evidence=path))
+    from homm3.analysis import vendor_bindings
+    vendor = vendor_bindings.extract(root, layout,
+        first_id=max((b['id'] for b in candidate_report['data_bindings']), default=-1)+1,
+        build=build_vendor, source_objects=objects)
+    by_id = {r['id']: r for r in candidate_report['candidate_data']}
+    bindings = []
+    for binding in candidate_report['data_bindings']:
+        binding = dict(binding)
+        if binding['status'] == 'bound':
+            row = by_id[binding['candidate_ids'][0]]
+            if binding['size'] == row['physical_size']:
+                binding['linker_identity'] = vendor_bindings.linker_identity(objects[row['unit']], row)
+        bindings.append(binding)
+    hashes = dict(candidate_report['input_sha256'], **vendor['input_sha256'])
+    object_paths.update(vendor['object_paths'])
+    objects = load_objects(root, hashes, object_paths)
+    candidate_report = dict(candidate_report,
+        candidate_data=candidate_report['candidate_data']+vendor['candidate_data'],
+        data_bindings=bindings+vendor['data_bindings'], input_sha256=hashes,
+        object_paths=object_paths,
+        candidate_issues=candidate_report['candidate_issues']+vendor['issues'])
     return dict(layout=layout, declared=declared, candidate_report=candidate_report, objects=objects,
-                code_claims=code_claims, issues=issues, paths=paths)
+                code_claims=code_claims+vendor['code_claims'], issues=issues, paths=paths,
+                vendor_bindings={k: v for k, v in vendor.items() if k not in ('objects', 'candidate_data')})
 
 
 def generate(root, *, declared=None, candidate_report=None, jobs=4, evidence=None):
@@ -320,11 +375,16 @@ def generate(root, *, declared=None, candidate_report=None, jobs=4, evidence=Non
     report['summary']['unadmitted_code_anchors'] = len(issues)
     report['summary']['source_issue_counts'] = dict(Counter(i['kind'] for i in declared['issues']))
     report['retail_sha256'] = hashlib.sha256(layout.data).hexdigest()
-    report['policy'] = dict(enrollment='all fresh source-bound projections; conflicting identities cannot match',
+    report['policy'] = dict(enrollment='fresh source and code-anchored vendor projections; conflicting identities cannot match',
                            relocations='independent owner/addend proof; unknown or unsupported is not exact',
                            zero_fill='static zero agreement only; dynamic initialization is not verified')
     report['input_sha256'] = dict(candidate_report['input_sha256'], **{
         p: hashlib.sha256((root/p).read_bytes()).hexdigest() for p in paths})
+    if 'object_paths' in candidate_report:
+        report['object_paths'] = candidate_report['object_paths']
+    if 'vendor_bindings' in evidence:
+        report['vendor_bindings'] = evidence['vendor_bindings']
+        report['summary']['vendor_bindings'] = evidence['vendor_bindings']['summary']
     return report
 
 
@@ -377,6 +437,9 @@ def exact(report):
 
 
 def export(report, directory):
+    if 'vendor_bindings' in report:
+        from homm3.analysis import vendor_bindings
+        vendor_bindings.export(report['vendor_bindings'], directory)
     for name, key, default in [('data-enrollment', 'enrollment', ['id', 'rva', 'size', 'status']),
                               ('data-matches', 'matches', ['id', 'rva', 'size', 'status']),
                               ('data-relocations', 'relocations', ['id', 'site_rva', 'status']),
@@ -392,7 +455,7 @@ def export(report, directory):
                   list(dict.fromkeys(k for row in rows for k in row)) if rows else default, rendered)
     (directory/'data-match-summary.json').write_text(json.dumps(
         {k: v for k, v in report.items() if k not in ('enrollment', 'matches', 'relocations', 'byte_verdicts',
-                                                   'withheld_bindings', 'source_issues')}, indent=2)+'\n')
+                                                   'withheld_bindings', 'source_issues', 'vendor_bindings')}, indent=2)+'\n')
 
 
 def run(args):

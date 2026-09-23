@@ -44,7 +44,7 @@ def schedule(root, targets=None):
 
 def run(root, *, require_exact=False):
     from homm3.analysis import data_initialization, data_accesses
-    evidence = data_match.prepare(root)
+    evidence = data_match.prepare(root, build_vendor=True)
     report = data_match.generate(root, evidence=evidence)
     directory = root/'build/data-match'
     data_match.export(report, directory)

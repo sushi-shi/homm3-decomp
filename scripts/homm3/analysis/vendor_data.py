@@ -187,8 +187,8 @@ def compare(layout, rva, raw, relocs, *, code=False):
     return fixed
 
 
-def match(layout, objects, seeds):
-    """Follow matched code/data edges; conflicting placements never erase gaps."""
+def graph_nodes(objects):
+    """Raw COFF contribution topology shared by attribution and strict binding."""
     nodes, definitions, symbol_nodes = {}, defaultdict(list), {}
     for oi, obj in enumerate(objects):
         coff = obj.coff
@@ -218,6 +218,12 @@ def match(layout, objects, seeds):
             if sym.storage_class == 2:
                 definitions[sym.name].append((key, offset))
 
+    return nodes, definitions, symbol_nodes
+
+
+def match(layout, objects, seeds):
+    """Follow matched code/data edges; conflicting placements never erase gaps."""
+    nodes, definitions, symbol_nodes = graph_nodes(objects)
     locations, origins = defaultdict(set), defaultdict(set)
     queue, seen, accepted, rejected, roots = deque(), set(), {}, {}, set()
     symbol_addresses = defaultdict(set)

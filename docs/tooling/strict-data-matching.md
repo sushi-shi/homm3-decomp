@@ -142,3 +142,7 @@ Full builds also run [consumer contracts](data-consumer-contracts.md): typed tab
 shapes, supported access bounds, read-only call relationships and shared storage.
 These reports do not add static-byte credit. `--require-data-exact` includes their
 explicit differences and missing proof.
+
+The [vendor matching stage](vendor-data-matching.md) adds independently code-bound
+archive/zlib storage to this same checkpoint and objdiff project. Its measurements
+extend the source-only static-data checkpoint above.

@@ -2,6 +2,9 @@
 from dataclasses import replace
 import struct
 import unittest
+import tempfile
+import hashlib
+from pathlib import Path
 
 from homm3.analysis.candidate_data import inventory
 from homm3.analysis.test_candidate_data import coff
@@ -54,6 +57,26 @@ class DataMatchTest(unittest.TestCase):
         report = self.compare(coff())
         self.assertEqual(report['matches'][0]['bytes_by_status']['fixed-mismatch'], 1)
         self.assertEqual(report['matches'][0]['status'], 'not-exact')
+
+    def test_provenance_basename_collision_does_not_replace_selected_object(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source, private = root/'source/a.obj', root/'private/a.obj'
+            source.parent.mkdir()
+            private.parent.mkdir()
+            source.write_bytes(coff(raw=b'original').data)
+            private.write_bytes(coff(raw=b'changed!').data)
+            hashes = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in (source, private)}
+            result = data.load_objects(root, hashes, {'a': str(source), 'vendor': str(private)})
+            self.assertEqual(result['a'].data, source.read_bytes())
+            self.assertEqual(result['vendor'].data, private.read_bytes())
+            with self.assertRaisesRegex(ValueError, 'ambiguous raw-object basename'):
+                data.load_objects(root, hashes)
+            private.write_bytes(b'tampered')
+            with self.assertRaisesRegex(ValueError, 'candidate evidence changed'):
+                data.load_objects(root, hashes, {'a': str(source)})
+            with self.assertRaisesRegex(ValueError, 'missing from provenance'):
+                data.load_objects(root, hashes, {'a': 'missing.obj'})
 
     def test_right_pointer_requires_independent_owner_and_addend(self):
         obj, bindings = self.pointers()

@@ -191,6 +191,13 @@ bytes agree. Test generic defect patterns, plus actual retail/candidate expressi
 
 ### 6. Remaining vendor candidates, declarations and gap recovery
 
+Vendor enrollment is implemented on `codex/vendor-data-matching`, stacked on
+the consumer-contract stage. [Vendor strict matching](vendor-data-matching.md)
+adds code-only address proofs, explicit COFF coalescing rules and ordinary
+objdiff comparison, gaining 25,646 enrolled bytes and 18,892 matched initialized
+bytes. Game/compiler-pool recovery, remaining declaration reconciliation and
+the final gap review are still in progress; this does not close stage 6.
+
 Apply the shared model to vendor candidates, unresolved external pointers,
 alternative archive members, pooled data and compiler-created storage. Resolve
 supported ambiguities with independent anchors; never lower proof thresholds

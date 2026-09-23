@@ -52,6 +52,15 @@ class ConsumerContractsTest(unittest.TestCase):
         self.assertEqual(row['source_size'],1)
         self.assertEqual(row['emitted_spans'],[dict(unit='u',size=4)])
 
+    def test_vendor_contribution_span_does_not_prove_source_array_bounds(self):
+        storage=Storage(0x400000,[dict(rva=0x1000,size=16,physical_size=16,unit='vendor',
+                                      macro='VENDOR',status='enrolled')])
+        row=storage.extent(storage.normalize(E.constant(0x401004)),4)
+        self.assertEqual(row['status'],'extent-unproved')
+        self.assertIsNone(row['source_size'])
+        self.assertEqual(row['owner_rva'],0x1000)
+        self.assertTrue(row['within_all_emitted_spans'])
+
 
 if __name__ == '__main__':
     unittest.main()
