@@ -3546,10 +3546,11 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
 // E:\gamedcs\advmgr.cpp:4385
 // DC records mouseManager::GetFrame in the scroll-zone fallback. Calling its
 // shared inline getter changes VC6's inliner decision at the earlier GetCell:
-// retail's retained NewfullMap::zCell call now appears in the candidate too,
-// raising this function from 95.1433% to 99.9667%. All 15 Windows calls and
-// 27 branches agree; Mac source shape has 16/16 direct calls but no exact
-// byte verdict. A shared rx/ry scope was tested and rejected earlier.
+// retail's retained NewfullMap::zCell call now appears in the candidate too.
+// Retail's final branch destinations prove an outside-range frame must reset
+// the pointer; correcting the earlier inverted predicate makes Windows exact
+// (15/15 calls, 27/27 branches). Mac shape has 16/16 direct calls but no
+// exact byte verdict. A shared rx/ry scope was tested and rejected earlier.
 VA(0x0040deb0, 0x3CF)  // anchor-callee, dc 0xed7c
 int advManager::processWaitingHover(int mouseX, int mouseY)
 {
@@ -3612,11 +3613,10 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
         return 1;
     }
 
-    if (g_mouseManager->getFrame() >= HOVER_SCROLL_POINTER_FIRST
-        && g_mouseManager->getFrame() <= HOVER_SCROLL_POINTER_LAST) {
-        if (!mouseInScrollZone())
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-    }
+    if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
+        || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
+        || !mouseInScrollZone())
+        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
     m_advWindow->processHover(mouseX, mouseY);
     return 1;
