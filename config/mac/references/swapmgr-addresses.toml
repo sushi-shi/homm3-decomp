@@ -1,0 +1,199 @@
+# Reviewed address identities; source owns names and compiler symbols remain unbound.
+
+[[functions]]
+retail_va = 0x5aaa80
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x19be6c
+mac_size = 0x9d30
+target_sha256 = "f6155aa223d6454a35a80b57a862a41d98540b163d8d630b5be283216e240c21"
+evidence = "TSwapWindow ctor installs window vtable1+0x535c0, calls heroWindow ctor0x20ae1c with 800x600 and constructs the two-hero swap widgets; next entry is vtable destructor."
+
+[[functions]]
+retail_va = 0x5ae370
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1aa048
+mac_size = 0x48
+target_sha256 = "ded9f177a910bd81919b048dcc47542aac944cb5177b2e5229ddf602f848145f"
+evidence = "CSwapManagerChatEdit vtable1+0x536fc sendChat override resolves0x1aa048; forwards to global sendChat0x212d70 then invokes cleanup virtual."
+
+[[functions]]
+retail_va = 0x5ae3c0
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a5b9c
+mac_size = 0xb0
+target_sha256 = "5d361d557a7c9be511e7a3313a2fac6274f6d927aaeeb7ef71015b2d26bfb16c"
+evidence = "TSwapWindow RTTI1+0x53584/vtable1+0x535c0 slot0 resolves0x1a5b9c; deletes widgets and calls heroWindow destructor0x20aebc."
+
+[[functions]]
+retail_va = 0x5ae430
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a5c4c
+mac_size = 0x12c
+target_sha256 = "3c304ba8db3ad25c8ba8a809e90f557df649a9b27d7bb26908acc88debeb543a"
+evidence = "UpdateArrows calls isLeftHero0x1a9bcc twice, toggles left/right arrow statuses through widget sendMessage0x20aa0c and receive button enable."
+
+[[functions]]
+retail_va = 0x5ae500
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a5d78
+mac_size = 0x13c
+target_sha256 = "f52db6bc7ac2696134424c4cf1250822fa07ffe74f15d2e0cc77ddfd27eba329"
+evidence = "SwapManager ctor initializes two hero pointers and -1 selection sentinels, tests both human owners via game helper0xe6bf4, calls isLeftHero0x1a9bcc and stores global manager."
+
+[[functions]]
+retail_va = 0x5ae5b0
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a5eb4
+mac_size = 0x2c0
+target_sha256 = "cd49cde9fdd7debe7355b44e867783569415175574eb4a5f85d17b0af9568b07"
+evidence = "Reset clears selection state and broadcasts six widget messages through heroWindow::broadcastMessage0x20b3e8 for IDs103/104 and morale/luck icons."
+
+[[functions]]
+retail_va = 0x5ae750
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a61d8
+mac_size = 0x478
+target_sha256 = "609223e690a069e673259fef69e74b4f41d709e51736340eb7767ab4ac72a33c"
+evidence = "SwapManager vtable1+0x5351c slot0 resolves open0x1a61d8; allocates TSwapWindow0x19be6c, calls reset0x1a5eb4 and opens widget/modal/network state."
+
+[[functions]]
+retail_va = 0x5aeb00
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a6778
+mac_size = 0x60
+target_sha256 = "bf5c10ac43ed822dccef17d76b90c533950d1b5d66aa73d085d3de4b8e182008"
+evidence = "CSwapMgrNetMsgHandler RTTI/vtable1+0x53574 slot0 resolves handleNetMsg0x1a6778; forwards to swap manager message handler0x215568."
+
+[[functions]]
+retail_va = 0x5aed20
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a6650
+mac_size = 0x128
+target_sha256 = "31532d8cea065a6d18345ee7dbaf2cf7f09b9a2930f491ae55abab4b51de4dc3"
+evidence = "SwapManager vtable1+0x5351c slot1 resolves close0x1a6650; disposes border/window, restores prior network handler and reactivates advManager."
+
+[[functions]]
+retail_va = 0x5aedc0
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a67d8
+mac_size = 0x204
+target_sha256 = "1eda6e4d48c25373f335e3c60c1a44dcb09a9f968ac21ab0d9cf98eca37a4737"
+evidence = "DrawSelector checks source slot/split mode, draws Bitmap816 selection frames through0x5df50 and updates screen0x20df2c."
+
+[[functions]]
+retail_va = 0x5aef00
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a6aa0
+mac_size = 0x17c
+target_sha256 = "3b2e221d4f0a3da306e58379620402f1c74db15c474479f64179a0772b2ad4e0"
+evidence = "UpdateSlot checks artifact slot masks and sends selected/empty icon pairs via helper0x1a69dc; called by updateAllSlots0x1a6c1c."
+
+[[functions]]
+retail_va = 0x5af150
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a6d94
+mac_size = 0x160
+target_sha256 = "e7e3f2852ce0ccf1fea9e0a19617e43060fdb85d1148013b489e7d196fc9dd5a"
+evidence = "UpdateBackpack loops five item widgets through helper0x1a6c8c and emits four backpack arrow/status messages via broadcast0x20b3e8."
+
+[[functions]]
+retail_va = 0x5af2b0
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a6ef4
+mac_size = 0x2b0
+target_sha256 = "6a70e2e2ef5e49c77d0fdf1e758a3e4c3e4ed584bceede42813ad329dcc46943"
+evidence = "HandleMonster routes right-click viewArmy, creature movement/split and source/destination reset; calls viewMon0x1a8cd4 and reset0x1a5eb4."
+
+[[functions]]
+retail_va = 0x5af590
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a71a4
+mac_size = 0x450
+target_sha256 = "000f91d27624709dd14719a8d13b016834b3941cb29ce1699347fdea5bff2c62"
+evidence = "HandleArtifactClick checks artifact slots and equipment, calls normalDialog0x117f10 and selector/redraw helpers; neighboring backpack-click body follows."
+
+[[functions]]
+retail_va = 0x5af990
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a75f4
+mac_size = 0x1a8
+target_sha256 = "ebe4833aa7628254d52c0f9b0dc8658c053f576f260b7a8af5b10590b2721895"
+evidence = "HandleBackpackClick processes item pickup/drop with hero backpack helpers, calls updateBackpack0x1a6d94 and mouse pointer0x216fc0."
+
+[[functions]]
+retail_va = 0x5afbf0
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a779c
+mac_size = 0x144
+target_sha256 = "c1ad35b433caf8f60236f384dbd1537eb9ea01326324923ddd3b15837130941e"
+evidence = "SendHeroUpdate checks remote/trade flags, constructs hero snapshot message and transmits via network helper0x212bf0; next body tears down snapshot strings."
+
+[[functions]]
+retail_va = 0x5afdf0
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a7954
+mac_size = 0xdc0
+target_sha256 = "9cfe3c40bf65979adc82025acc1869634b49b25b78ad84f9612ef3b001e51ca6"
+evidence = "SwapManager vtable1+0x5351c slot2 resolves main0x1a7954; dispatcher calls drawSelector/update, battle/artifact/backpack handlers and source-owned helper families."
+
+[[functions]]
+retail_va = 0x5b08b0
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a872c
+mac_size = 0x5a8
+target_sha256 = "253545d2a5f0dc50806c8df70f549b5ca9c6712473937a1f117738656e0fb70a"
+evidence = "SetRolloverText is the large string/help dispatcher following main; calls game-text helpers and formats hero morale/luck/skill descriptions."
+
+[[functions]]
+retail_va = 0x5b0da0
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a8d74
+mac_size = 0x1ac
+target_sha256 = "e8261dc520fdcfc67110361358ba2075f8b2a44fded8ad03c20629bb6a130ab7"
+evidence = "SwapMons checks source/destination army counts0x58528, modification guard0x1a9ca4 and invokes armyGroup::swap0x58710."
+
+[[functions]]
+retail_va = 0x5b0ef0
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a8f20
+mac_size = 0x2a4
+target_sha256 = "6e97f76bfe521d5fdc15185af66a3b2a336b09c4a1774ae16b18249074863b5e"
+evidence = "Update loops two heroes and skill/army widgets, formats numbers0x28dfa8, broadcasts messages0x20b3e8 and calls updateAllSlots0x1a6c1c."
+
+[[functions]]
+retail_va = 0x5b10d0
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a9998
+mac_size = 0x234
+target_sha256 = "99ed9830ead5188f4bdddb621b2e15f58c1196e11e3fca7da3ac63150588e72d"
+evidence = "OnWidgetDeselect handles backpack rotations through updateBackpack/drawSwapWin/sendHeroUpdate, then quest/refresh/trade cases through isLeftHero and selector helpers."
+
+[[functions]]
+retail_va = 0x5b1380
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a9bcc
+mac_size = 0x4c
+target_sha256 = "25df9243cff8eb6b3ac90aeb223342fef5055590d41e62ff5e2f4ea6c095eeb9"
+evidence = "IsLeftHero compares first hero owner with game local-player position via0xe6cc4; paired isRightHero0x1a9c18 follows."
