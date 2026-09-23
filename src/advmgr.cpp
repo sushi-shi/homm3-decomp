@@ -1911,8 +1911,9 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
 }
 
 // DC lines 2373/2420 call UpdateScreen after each map repaint. Mac source
-// shape retains both updateScreen calls (14/14 direct-call count); VC6
-// expands them and remains at 98.5013% with the canonical calls restored.
+// shape retains both updateScreen calls. DC lines 2410-2413 name the
+// includes.h by-value max/min wrappers; restoring those four calls gives
+// exact VC6 retail bytes, CFG, and all 21 ordered calls.
 VA(0x0040a0c0, 0x50D)  // dc 0xa168
 void advManager::processRadarSelect(const message* msg)
 {
@@ -1995,10 +1996,10 @@ void advManager::processRadarSelect(const message* msg)
                 (dragMsg.m_codeY - m_advWindow->m_radarWidget->m_y) / radarScale);
             int dragX = static_cast<int>(
                 (dragMsg.m_codeX - m_advWindow->m_radarWidget->m_x) / radarScale);
-            dragX = cppMax(dragX, 0);
-            dragX = cppMin(dragX, g_mapWidth - 1);
-            dragY = cppMax(dragY, 0);
-            dragY = cppMin(dragY, g_mapWidth - 1);
+            dragX = max(dragX, 0);
+            dragX = min(dragX, g_mapWidth - 1);
+            dragY = max(dragY, 0);
+            dragY = min(dragY, g_mapWidth - 1);
             m_radarOrigin.m_x = dragX - 9;
             m_radarOrigin.m_y = dragY - 8;
 
