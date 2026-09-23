@@ -17,7 +17,7 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 | Module        | Units | Functions exact CUR |  Function exact MAX | Fuzzy CUR | Fuzzy MAX |
 | :------------ | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`        |   123 | 3535 / 3990 (88.6%) | 3590 / 3990 (90.0%) |    97.01% |    97.35% |
+| `game`        |   123 | 3535 / 3990 (88.6%) | 3590 / 3990 (90.0%) |    97.01% |    97.34% |
 | `rmg`         |     3 |   291 / 368 (79.1%) |   301 / 368 (81.8%) |    93.19% |    94.37% |
 | `network`     |     4 |   267 / 280 (95.4%) |   268 / 280 (95.7%) |    97.72% |    98.08% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
@@ -91,9 +91,10 @@ This passes without unresolved or duplicate symbols. With the Bink, Miles,
 Smacker and IFC20 DLLs and original game resources from an installed copy, an
 isolated Wine launch plays the intro video and reaches the main menu with
 correctly rendered buttons and no CD-version warning. New Game → Multiplayer
-opens successfully, as does New Game → Single Scenario. The Arrogance scenario
-loads; hero/town views, a hero step and advancing to Day 2 work. Adventure-map
-minimap and sidebar rendering remain corrupted; broader gameplay is unverified.
+opens successfully, as does New Game → Single Scenario. Small, medium, large
+and extra-large scenarios load with clean minimap and sidebar rendering. On
+Arrogance, hero/town views, a hero step and advancing to Day 2 work. Broader
+gameplay is unverified.
 `homm3 link` always requires a clean link, without `/FORCE`.
 See [linking and runtime evidence](docs/vc6/runtime-link.md).
 

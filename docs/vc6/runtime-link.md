@@ -242,10 +242,38 @@ confirmation. Gold rises from 20,900 to 21,900. No access violation is logged
 during these checks. The final full-build executable has identical `.text`,
 `.rdata` and `.data` sections to this runtime-tested executable.
 
-This is a basic single-player smoke test, not complete gameplay verification.
-The adventure-map minimap and right-hand controls show substantial stripe
-corruption, while the hero and town screens render. That rendering defect
-remains unresolved. Battles, save/load, other maps and longer play are untested.
+The striped minimap and sidebar came from `advManager::updateRadar`
+(0x412c40): the bitmap pitch is measured in bytes, but row advancement used
+`unsigned short*` arithmetic. That doubled the stride and wrote radar pixels
+below the minimap into the sidebar. Preserve the Dreamcast-proven pixel
+pointers and advance rows through the existing `Bitmap16MapPointer` byte view,
+as the retail instructions do. All four map-size branches need this correction.
+The function's MAX changes from 91.2477% to 90.5495%; its HIST is retained.
+The retail-supported stride correction loses no exact function matches.
+
+Maps with seers exposed an additional missing startup binding: the cell at
+0x69fab8 must refer to the name vector at 0x69faa8. Restore the mutable C++
+reference and its compiler-generated initializer at 0x56c3d0. All eleven bytes
+match retail with both address relocations independently resolved; existing
+name-reader matches remain unchanged.
+
+Battle of the Sexes then failed with `std::length_error` while reading a quest.
+`type_defeat_hero_quest`, `type_monster_quest` and
+`type_belong_to_player_quest` lacked `loadFromMap` overrides. Inheriting the
+base reader skipped each class's payload, shifting the stream before reading
+the deadline and length-prefixed strings. Retail vtables 0x641800 and 0x64183c
+slot 12 share the 43-byte body at 0x56edf0; 0x641968 slot 12 shares the 49-byte
+body at 0x572230. Restore all three overrides without claiming these folded
+addresses twice. Each emitted body matches all retail bytes, including its
+resolved base-reader call, and each emitted virtual slot targets its override.
+These Complete quest classes have no Dreamcast counterpart.
+
+The corrected executable loads Arrogance (36x36), All for One (72x72),
+Battle of the Sexes (108x108), and A Viking We Shall Go (144x144). The minimap
+and sidebar render cleanly at all four scales. On Arrogance, hero/town views,
+a hero step and advancing to Day 2 also work with the corrected radar stride.
+All launches use the isolated silent environment below. Battles, save/load
+and extended gameplay remain untested.
 
 The updated base had left `TDebugBreak::TDebugBreak` declaration-only,
 creating an unresolved symbol in dxplay, objecttype and objnames. Its ordinary
@@ -263,4 +291,4 @@ After integration with the current base, the full build and link pass.
 changes from 83.7661% to 83.7907%. Their HIST peaks remain unchanged. The
 startup guard's score dip is retained because the runtime behavior and retail
 control flow require skipping the legacy scan for Complete. The displayed
-executable MAX remains 97.10%; the six recovered initializers remain exact.
+executable MAX remains 97.10%; all seven recovered initializers are exact.

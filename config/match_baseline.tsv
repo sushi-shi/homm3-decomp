@@ -179,7 +179,7 @@ advmgr	?updBottomViewNewTurn@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x15
 advmgr	?updBottomViewResMsg@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x16160	tokens1:f9f4916afa8c
 advmgr	?updBottomViewTown@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x164f0	tokens1:13be7d476c67
 advmgr	?updateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790	tokens1:a45831bfb7b7
-advmgr	?updateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	91.2477	91.2477	91.2477	0x12c40	tokens1:7dda67679d5c
+advmgr	?updateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	90.5495	90.5495	91.2477	0x12c40	tokens1:9bf41fdd05ad
 advmgr	?updateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270	tokens1:e97a1d8db3b7
 advmgr	?viewPuzzle@advManager@@QAEXXZ	91.4152	91.4152	91.4152	0x1a7f0	tokens1:d0320d9e10bd
 advmgr	?what@logic_error@std@@UBEPBDXZ	100.0000	100.0000	100.0000	0x1bc00	-
@@ -3763,7 +3763,7 @@ seerhut	?getRequirementText@type_monster_quest@@UAE?AV?$basic_string@DU?$char_tr
 seerhut	?getRequirementText@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x171580	tokens1:704171db0086
 seerhut	?getRequirementText@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d960	tokens1:6dc21f9ae2b3
 seerhut	?getRewardExtra@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	0x173f10	tokens1:27b398e60214
-seerhut	?getSeerLogText@TSeerHut@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x174070	tokens1:2acc39e1aa46
+seerhut	?getSeerLogText@TSeerHut@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x174070	tokens1:568c81fe1f37
 seerhut	?getTimeLimitText@type_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	93.4944	93.4944	100.0000	0x16d040	tokens1:80918ba7b5a6
 seerhut	?getValue@TSeerHut@@QAEHPAVhero@@@Z	100.0000	100.0000	100.0000	0x1735a0	tokens1:3581031cec3d
 seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	0x173a70	tokens1:35368d302207
@@ -3821,8 +3821,8 @@ seerhut	?save@type_monster_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100
 seerhut	?save@type_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16cf70	tokens1:f18948c66898
 seerhut	?save@type_resource_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x171be0	tokens1:09ea428fae9b
 seerhut	?save@type_skill_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16dec0	tokens1:c6f277dfa308
-seerhut	?seerHutFn005741B0@TSeerHut@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x1741b0	tokens1:0f5e9a48c1c1
-seerhut	?seerHutFn005743E0@TSeerHut@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x1743e0	tokens1:dcec17865fb2
+seerhut	?seerHutFn005741B0@TSeerHut@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x1741b0	tokens1:19c7697a3c93
+seerhut	?seerHutFn005743E0@TSeerHut@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x1743e0	tokens1:4dd2c1ff9069
 seerhut	?setDefaultText@type_artifact_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x1701d0	tokens1:50ed8c2500a6
 seerhut	?setDefaultText@type_be_hero_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x172270	tokens1:41af3765c2a7
 seerhut	?setDefaultText@type_belong_to_player_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x172940	tokens1:178f3a9443f1
@@ -3836,6 +3836,7 @@ seerhut	?skillRequirementText@type_skill_quest@@QAE?AV?$basic_string@DU?$char_tr
 seerhut	?takePayment@type_artifact_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f860	tokens1:ab8ea75d4945
 seerhut	?takePayment@type_creature_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1707c0	tokens1:f2a8f6259c12
 seerhut	?takePayment@type_resource_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171800	tokens1:91837ae6c5be
+seerhut	__h3cg$seerhut$static_ctor$g_seerHutNameList	100.0000	100.0000	100.0000	0x16c3d0	-
 seerhuttext	??0TSeerHutQuestText@@QAE@XZ	100.0000	100.0000	100.0000	0x16bed0	-
 seerhuttext	??0TSeerHutTextColumn@@QAE@XZ	100.0000	100.0000	100.0000	0x16bde0	-
 seerhuttext	??1TSeerHutQuestText@@QAE@XZ	100.0000	100.0000	100.0000	0x16bf30	-
