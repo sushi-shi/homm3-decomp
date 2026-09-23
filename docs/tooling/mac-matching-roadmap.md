@@ -251,16 +251,16 @@ byte verdict; use `homm3 mac diff` for that stricter comparison when needed.
 
    ```toml
    mode = "paired_bodies"
-   flags = ["-O1", "-proc", "750", "-nolink"]
+   flags = ["-O3", "-proc", "750", "-nolink"]
    helpers = [] # optional additional source-owned VA definitions
    ```
 
-   Start with the shared toolchain flags. Treat a different `-O` level as a
-   provisional comparison lens until exact source controls distinguish it:
-   source differences can also change instruction alignment. Exact controls
-   currently require `-O1` for `hero::getHighestSchool` and `-O3` for
-   `type_AI_creature_swapper::getSwapValue` with the same authored bodies, but
-   this does not establish how the original project arranged its settings.
+   Use `-O3` as the shared working assumption for game code. Historical
+   same-source probes gave an exact `hero::getHighestSchool` body at `-O1` and
+   an exact `type_AI_creature_swapper::getSwapValue` body at `-O3`; this does
+   not establish different original project settings. `mapcell` previously
+   aligned best at `-O4`, and `recruit` at `-O2`, with their current sources.
+   Revisit source shape and compiler context before admitting a flag exception.
    Preserve real helper calls, declarations, body visibility and source order.
    Candidate inputs preserve
    the source file's include prefix and read the ordinary game headers. Native

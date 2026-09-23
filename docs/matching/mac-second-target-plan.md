@@ -42,11 +42,13 @@ The ordinary-header migration and its current limitations are tracked in
   `-O1 -proc 750 -nolink` produces named `MWOBPPC` code hunks with the pinned
   compiler. The 750 scheduling profile is distinguished by the non-leaf
   patrol function's prologue and epilogue; both leaf controls remain exact.
-  The profile still needs controls outside hero before applying it broadly.
+  This `-O1` control is historical evidence; the current game-wide working
+  comparison uses `-O3` pending broader source and compiler calibration.
 - The source change in `src/hero.cpp` that removes the synthetic `else` and
   puts `bestLevel` before `bestSchool` is already in this worktree. The Windows
-  full checkpoint reports that function exact, and the automated Mac control
-  reproduces it byte for byte.
+  full checkpoint reports that function exact. The earlier `-O1` Mac control
+  reproduced it byte for byte; the shared `-O3` profile must be assessed
+  separately.
 
 ## Labeling rule
 

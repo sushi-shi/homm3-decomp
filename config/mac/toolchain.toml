@@ -1,9 +1,8 @@
 # User-supplied CodeWarrior Pro 6 command-line PowerPC compiler and disassembler.
 # Files are staged under ignored build/mac/toolchain after hash verification.
 version = "CodeWarrior C/C++ 2.4 build 0131 (September 2000)"
-# Calibrated on the admitted hero leaf functions and the non-leaf patrol body.
-# The 750 scheduler fixes the patrol prologue/epilogue ordering exactly.
-flags = ["-O1", "-proc", "750", "-nolink"]
+# Shared game-code working profile. The 750 scheduler is calibrated on hero.
+flags = ["-O3", "-proc", "750", "-nolink"]
 # MWLinkPPC -help: collapse unused RTOC-reload slots after direct local calls.
 # Verified against an actual linked PEF control and the patrol function's calls.
 collapse_reloads = true
