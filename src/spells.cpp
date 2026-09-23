@@ -488,14 +488,16 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
 // boundary and fastcall argument placement. Mac's lightly optimized body
 // confirms that an out-of-range hex still reaches validSpellTarget: the
 // inInvisibleColumn helper rejects invalid indices without blocking that call.
+// Keeping the spell and casting hero locals ahead of creatureSpell gives VC6
+// retail's prologue register assignment; Windows bytes are exact.
 VA(0x0059f700, 0x192)  // retail-only factored helper
 static int updateSpellTarget(long hex)
 {
     combatManager* manager = g_combatManager;
     unsigned char markArea = 0;
-    int creatureSpell = manager->m_nextAction == AI_ORDER_CREATURE_SPELL;
     SpellID spell = manager->m_nextActionExtra;
     hero* castingHero = manager->m_heroes[manager->m_currentSide];
+    int creatureSpell = manager->m_nextAction == AI_ORDER_CREATURE_SPELL;
     unsigned int spellFlags = g_spellTraits[spell].m_flags;
     int mastery;
     if (!castingHero)
