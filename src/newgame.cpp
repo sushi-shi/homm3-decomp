@@ -210,6 +210,13 @@ void game::getLossConditionText(char* text)
     }
 }
 
+// Residual: Windows MAX 99.98% has the same 83 CFG blocks, 34 branches and
+// 12 calls. The first byte difference is the two type_point stack slots in
+// BUILD_GRAIL: candidate townPos is [ebp-0x14], retail uses [ebp-0xc]. DC
+// records named anytown_loc and town_loc; Mac 0x132d28 constructs the point
+// and compares its coordinates to -1. A named anyTown before townPos moves
+// the slots into retail order but adds an ESI copy and falls to 99.46%; const
+// and reversed-comparison variants do not recover the original codegen.
 VA(0x005139e0, 0x64C)  // dc 0x103a08
 void game::getVictoryConditionText(char* text)
 {
