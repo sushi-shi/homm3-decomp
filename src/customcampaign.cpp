@@ -2582,12 +2582,12 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
     pruneCrossoverHeroes(campaignHeader);
 }
 
-// This helper and the four ordinary Complete-only helpers below recover the
-// source boundaries visible in pruneCrossoverHeroes. VC6 expands them into
-// that caller: the header pass retains its vector size calls, the scenario
-// queries preserve their temporary homes, and the collector owns one hero
-// receiver across the two artifact loops. The flattened spelling has 91 CFG
-// blocks against retail's 62; these calls restore the retail source shape.
+// Four ordinary helpers have retained Mac bodies: markRequiredCampaignHeroes
+// at code+0x96cd8 (including the wanted-array clear), usesCrossoverPool at
+// +0x96060, getMaxCrossoverHeroes at +0x95ea8, and collectCrossoverArtifacts
+// at +0x95a78. Mac pruneCrossoverHeroes (+0x98934) calls all four. VC6 expands
+// them into this caller; the flattened spelling has 91 CFG blocks against
+// retail's 62. getCampaignScenarioCount remains a Windows-side inference.
 static int getCampaignScenarioCount(TCampaignBrief::CampaignHeaderStruct& header)
 {
     return header.m_scenarios.size();
@@ -2595,6 +2595,7 @@ static int getCampaignScenarioCount(TCampaignBrief::CampaignHeaderStruct& header
 
 static void markRequiredCampaignHeroes(TCampaignBrief::CampaignHeaderStruct& header, unsigned char* wanted)
 {
+    memset(wanted, 0, game::HERO_COUNT);
     for (unsigned int mapIndex = 0; mapIndex < header.m_scenarios.size(); ++mapIndex) {
         if (!g_game->m_campaign.m_mapScores[mapIndex].m_completed)
             header.m_scenarios[mapIndex]->markCrossoverHeroes(wanted);
@@ -2639,8 +2640,6 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
 
     unsigned char wanted[game::HERO_COUNT];
-    memset(wanted, 0, sizeof wanted);
-
     markRequiredCampaignHeroes(*header, wanted);
 
     for (int pool = m_carryOverHeroes.size(); pool--;) {
