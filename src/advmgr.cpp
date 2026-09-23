@@ -3747,8 +3747,14 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // `get_trigger_cell()->get_map_extraInfo()` at all four sites.  One
 // `ExtraInfoUnion cellExtra;` per big block scores 91.6133 and one per ARM
 // scores the same, against 91.6263 - retail re-reads.
-// DC's mouseManager::GetFrame is restored in the scroll fallback; the
-// Windows lowering stays byte-flat at the current 92.1875%.
+// DC's mouseManager::GetFrame is restored in the scroll fallback. Its
+// GetCurrHero/get_location calls at lines 4642/4645 are also restored.
+// The pair currently lowers to 88.6107% in Windows (from 92.1875% with
+// direct field reads); each helper was isolated and both together beat the
+// GetCurrHero-only 85.8737%; /MT leaves the score unchanged. The Mac shape
+// aligns 435/677 instructions with both calls, versus 433/677 when the
+// latter helper is omitted. Keep the
+// source-backed helper boundaries through this compiler-state score dip.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::processHover(int mouseX, int mouseY)
 {
@@ -3819,14 +3825,9 @@ int advManager::processHover(int mouseX, int mouseY)
             return 1;
         } else {
 
-        hero* currHero = g_game->getHero(g_currentPlayer->m_currHeroId);
-        // FIELD ASSIGNMENT, not the ctor, at this ONE site: the ctor form
-        // that is worth +2.5 to +5.7 in the neighbouring hover/context
-        // bodies costs 0.62 here (83.5000 -> 82.8763). Measured per site.
+        hero* currHero = g_game->getCurrHero();
         type_point heroPoint;
-        heroPoint.m_x = currHero->m_x;
-        heroPoint.m_y = currHero->m_y;
-        heroPoint.m_z = currHero->m_z;
+        heroPoint = currHero->getLocation();
         if (heroPoint == m_lastMapHover) {
             g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
             m_advCommand = 2;
