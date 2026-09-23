@@ -10,11 +10,12 @@ from pathlib import Path
 import re
 import tempfile
 
+from homm3.analysis import data_body_recovery
 from homm3.core import compiler_profile
 from homm3.core.project import Project
 from homm3.retail_labels import source
 
-SCHEMA = 'homm3.data-declarations.v7'
+SCHEMA = 'homm3.data-declarations.v8'
 SUFFIXES = {'.c', '.cpp', '.cxx', '.h', '.hpp', '.hxx'}
 
 
@@ -113,18 +114,22 @@ def parse_unit(task):
     language = source_language(task['source'], task['args'])
     result = dict(unit=task['unit'], source=task['source'], facts=[], definitions=[],
                   storage_declarations=[], anonymous_namespace_files=[],
-                  language=language,
+                  language=language, parse_mode='full', body_recovery={},
                   errors=[], full_errors=[], skipped_bodies=False, active_macros=[], function_claims=[])
     try:
         index = cx.Index.create()
         options = cx.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
-        tu = index.parse(str(path), args=task['args'], options=options)
+        args = [*task['args'], '-ferror-limit=0']
+        tu = index.parse(str(path), args=args, options=options)
         errors = [str(d) for d in tu.diagnostics if d.severity >= cx.Diagnostic.Error]
         if errors:
             result['full_errors'] = errors
-            tu = index.parse(str(path), args=task['args'],
-                             options=options | cx.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
+            recovered, result['body_recovery'] = data_body_recovery.recover(
+                index, tu, path, args, options, lambda ty: (storage_extent(ty), type_shape(ty)))
             result['skipped_bodies'] = True
+            result['parse_mode'] = 'isolated-bodies' if recovered is not None else 'all-bodies-skipped'
+            tu = recovered if recovered is not None else index.parse(str(path), args=args,
+                options=options | cx.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
             errors = [str(d) for d in tu.diagnostics if d.severity >= cx.Diagnostic.Error]
         result['errors'] = errors
         if errors:
@@ -226,7 +231,8 @@ def summarize(units, sites):
                                rva=None, detail='\n'.join(unit['errors'])))
         elif unit['skipped_bodies']:
             issues.append(dict(kind='bodies-skipped', unit=unit['unit'], source=unit['source'],
-                               rva=None, detail='\n'.join(unit['full_errors'])))
+                               rva=None, detail=unit.get('parse_mode', 'all-bodies-skipped')+'; '+
+                               '\n'.join(unit['full_errors'])))
         for fact in unit['definitions']:
             definitions[fact['usr']].append(fact)
         for fact in unit.get('storage_declarations', []):
@@ -294,7 +300,8 @@ def fingerprint(root, profiles, tasks):
         if directory.is_dir():
             paths.update(p for p in directory.rglob('*') if p.is_file())
     paths.update(root / p for p in ('config/project.toml', 'config/units.toml',
-        'scripts/homm3/analysis/data_declarations.py', 'scripts/homm3/retail_labels/source.py',
+        'scripts/homm3/analysis/data_declarations.py', 'scripts/homm3/analysis/data_body_recovery.py',
+        'scripts/homm3/retail_labels/source.py',
         'scripts/homm3/core/compiler_profile.py', 'scripts/homm3/core/clang.py',
         'scripts/homm3/core/project.py'))
     digest = hashlib.sha256(json.dumps([SCHEMA, tasks, cx.Config.library_path, cx.Config.library_file], sort_keys=True).encode())

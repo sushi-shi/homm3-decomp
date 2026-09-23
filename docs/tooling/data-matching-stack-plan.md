@@ -230,13 +230,29 @@ matching: every previous distinct byte verdict is preserved, and nine padding
 bytes remain excluded from source bounds. Archive selection and the final gap
 review still need attention.
 
-A disposable AST probe locates all three remaining source extents in otherwise
-valid functions of TUs whose unrelated body diagnostics triggered the global
-skip-bodies fallback. Excluding only the failing bodies in an unsaved parse
-recovers sizes of 16, 16 and eight bytes without editing the source. A following
-recovery stage must prove that retained declarations are outside the excluded
-spans, preserve diagnostics and preprocessing/source coordinates, and reject
-uncontained errors. This probe is a lead, not admitted source or byte credit.
+[Selective declaration recovery](data-body-recovery.md), on
+`codex/data-body-recovery` above vendor extents, isolates diagnosed bodies in
+unsaved analysis parses while checking that retained storage facts do not change.
+Eight TUs recover their unaffected bodies; excluded regions and diagnostics stay
+in TSV evidence. This proves all three remaining unknown code-bound extents,
+but one code-derived binding remains withheld because loop-limit addresses
+exceed its logical span; its DATA annotation independently permits comparison.
+The union gains 160 enrolled bytes (56 initialized matches, 104 zero-fill
+agreements), with no prior credit lost. A general address-use proof must separate
+loop sentinels from memory accesses before admitting those outside references.
+
+The next range-proof stage should add `analysis/code_reference_roles.py` and
+invoke it from `code_data_bindings.py` at the existing extent check. Decode the
+exact relocation-bearing operand in independently anchored raw code, recording
+comparison immediates separately from memory displacements. Export the operand,
+site, owner-relative addend and proof with the binding. Keep pointer-data checks,
+logical source bounds, conflicting placements and unsupported accesses strict;
+consumer bounds remain a separate requirement. Controls must distinguish
+`cmp register, address` from `cmp [address], value`, including wrong relocation
+fields/types and real outside loads/stores. A read-only scan finds 41 current
+bindings whose outside references are comparison immediates, spanning 53,360
+retail bytes; 2,512 are currently unenrolled. These are leads, not new match
+credit or a proof of valid loop bounds.
 
 Apply the shared model to vendor candidates, unresolved external pointers,
 alternative archive members, pooled data and compiler-created storage. Resolve

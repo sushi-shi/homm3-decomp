@@ -4,6 +4,7 @@ import struct
 import unittest
 import tempfile
 import hashlib
+import json
 from pathlib import Path
 
 from homm3.analysis.candidate_data import inventory
@@ -204,6 +205,23 @@ class DataMatchTest(unittest.TestCase):
             bindings = [binding(user_rows[0], 0x2000, 4), binding(owner_rows[1], 0x2020, 4)]
             report = data.compare(self.layout, user_rows+owner_rows, bindings, {'user': user, 'owner': owner})
             self.assertEqual(report['relocations'][0]['status'], expected)
+
+    def test_excluded_source_bodies_stay_visible_in_tsv_and_prevent_exactness(self):
+        from homm3.core import tsv
+        self.put(0x2000, b'abcdefgh')
+        report = self.compare(coff())
+        self.assertTrue(data.exact(report))
+        report['summary']['source_issue_counts'] = {'bodies-skipped': 1}
+        report['source_parses'] = [dict(unit='a', source='src/a.cpp', parse_mode='isolated-bodies',
+            errors=[], original_errors=['body error\nretained diagnostic'], body_recovery=dict(
+                status='isolated-bodies', regions=[dict(start=10, end=30, function='?bad@@YAXXZ')]))]
+        self.assertFalse(data.exact(report))
+        with tempfile.TemporaryDirectory() as directory:
+            data.export(report, Path(directory))
+            row, = tsv.read(Path(directory)/'data-parse-regions.tsv')[2]
+            self.assertEqual(row['parse_mode'], 'isolated-bodies')
+            self.assertEqual(json.loads(row['original_errors']), report['source_parses'][0]['original_errors'])
+            self.assertEqual(json.loads(row['body_recovery']), report['source_parses'][0]['body_recovery'])
 
     def test_accounting_overlay_preserves_denominators_and_point_metadata(self):
         from homm3.sema.image_coverage import partition, audit_partition

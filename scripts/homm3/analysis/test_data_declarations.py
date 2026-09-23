@@ -290,7 +290,8 @@ DATA_COMPGEN(0x401300, string, "a,b");
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             paths = ['src/a.cpp', 'include/a.h', 'include/types.inc', 'vendor/a.h', 'config/project.toml', 'config/units.toml',
-                     'scripts/homm3/analysis/data_declarations.py', 'scripts/homm3/retail_labels/source.py',
+                     'scripts/homm3/analysis/data_declarations.py', 'scripts/homm3/analysis/data_body_recovery.py',
+                     'scripts/homm3/retail_labels/source.py',
                      'scripts/homm3/core/compiler_profile.py', 'scripts/homm3/core/clang.py', 'scripts/homm3/core/project.py']
             for name in paths:
                 p = root / name

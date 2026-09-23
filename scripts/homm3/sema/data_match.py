@@ -397,6 +397,7 @@ def prepare(root, *, declared=None, candidate_report=None, jobs=4, build_vendor=
     for report in (vendor, code):
         report['summary']['binding_statuses'] = dict(Counter(b['status'] for b in report['data_bindings']))
     paths.append('scripts/homm3/analysis/data_emissions.py')
+    paths.append('scripts/homm3/analysis/data_body_recovery.py')
     candidate_report = dict(candidate_report,
         candidate_data=candidate_report['candidate_data']+vendor['candidate_data'],
         data_bindings=bindings+vendor['data_bindings']+code['data_bindings'], input_sha256=hashes,
@@ -419,6 +420,10 @@ def generate(root, *, declared=None, candidate_report=None, jobs=4, evidence=Non
     report['analysis_issues'] = issues + candidate_report['candidate_issues']
     report['withheld_bindings'] = [b for b in candidate_report['data_bindings'] if b['status'] != 'bound']
     report['source_issues'] = declared['issues']
+    report['source_parses'] = [dict(unit=u['unit'], source=u['source'],
+        parse_mode=u.get('parse_mode', 'full'), errors=u['errors'], original_errors=u['full_errors'],
+        body_recovery=u.get('body_recovery', {})) for u in declared['units']]
+    report['summary']['source_parse_modes'] = dict(Counter(r['parse_mode'] for r in report['source_parses']))
     report['emission_copies'] = evidence.get('emission_copies', [])
     report['summary']['emission_copy_statuses'] = dict(Counter(r['status'] for r in report['emission_copies']))
     report['summary']['unavailable_units'] = len(candidate_report['candidate_issues'])
@@ -506,7 +511,8 @@ def export(report, directory):
                               ('data-byte-verdicts', 'byte_verdicts', ['rva', 'size', 'status']),
                               ('data-enrollment-issues', 'withheld_bindings', ['id', 'rva', 'status']),
                               ('data-source-issues', 'source_issues', ['kind', 'source', 'detail']),
-                              ('data-emission-copies', 'emission_copies', ['source_unit', 'copy_unit', 'status'])]:
+                              ('data-emission-copies', 'emission_copies', ['source_unit', 'copy_unit', 'status']),
+                              ('data-parse-regions', 'source_parses', ['unit', 'source', 'parse_mode'])]:
         rows = report.get(key, [])
         rendered = [{k: '' if v is None else json.dumps(v, ensure_ascii=True) if isinstance(v, (list, dict)) or
                      isinstance(v, str) and any(c in v for c in '\t\r\n')
@@ -516,7 +522,7 @@ def export(report, directory):
                   list(dict.fromkeys(k for row in rows for k in row)) if rows else default, rendered)
     (directory/'data-match-summary.json').write_text(json.dumps(
         {k: v for k, v in report.items() if k not in ('enrollment', 'matches', 'relocations', 'byte_verdicts',
-                                                   'withheld_bindings', 'source_issues', 'vendor_bindings', 'emission_copies',
+                                                   'withheld_bindings', 'source_issues', 'source_parses', 'vendor_bindings', 'emission_copies',
                                                    'code_data_bindings')}, indent=2)+'\n')
 
 

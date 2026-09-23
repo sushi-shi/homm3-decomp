@@ -159,3 +159,8 @@ private COFF offsets, never from the retail pointer fields being compared.
 vendor TUs and `data-emission-copies.tsv` for independently compiled evidence
 copies. Shared emission identity preserves both comparisons and does not merge
 Microsoft archive alternatives or turn physical padding into source bounds.
+
+[Selective body recovery](data-body-recovery.md) retains unaffected local data
+when unrelated Clang body errors can be isolated. `data-parse-regions.tsv` records
+the excluded spans and original diagnostics; skipped bodies remain incomplete
+source evidence for the exactness gate.
