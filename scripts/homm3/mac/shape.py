@@ -41,11 +41,20 @@ def inspect(pair, pef, tools_dir) -> dict:
         hunks = parse_code_hunks(listing)
         if pair.mac_symbol:
             hunk = select_hunk(listing, pair.mac_symbol)
-        elif len(hunks) == 1:
-            hunk = hunks[0]
         else:
-            raise ValueError(f"compile probe emitted {len(hunks)} code hunks; "
-                             "record the reviewed mac_symbol on this address reference")
+            function_name = pair.signature.rsplit("::", 1)[-1].split("(", 1)[0].strip()
+            named = [item for item in hunks
+                     if item.name.startswith(f".{function_name}__")]
+            if len(named) == 1:
+                hunk = named[0]
+            else:
+                authored = [item for item in hunks
+                            if not item.name.startswith((".__sinit_", ".__sti__"))]
+                if len(authored) == 1:
+                    hunk = authored[0]
+                else:
+                    raise ValueError(f"compile probe emitted {len(hunks)} code hunks; "
+                                     "record the reviewed mac_symbol on this address reference")
     candidate = _words(hunk.data)
     target = _words(pef.code(pair.mac_section, pair.mac_offset, pair.mac_size))
     removed = []
