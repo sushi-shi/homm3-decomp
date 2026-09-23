@@ -1,7 +1,7 @@
 // homm3.vc6.shim/sample_tu.cpp - fixed input for the shim byte-identity gate.
 //
 // shim/build.py compiles this TU twice with the game profile
-// (/c /O2 /Ob2 /Oy- /Op /ML /Gr /GX): once through the real toolchain and
+// (/c /O2 /Ob2 /Oy- /Op /MT /Gr /GX): once through the real toolchain and
 // once through the shim overlay.  The two .obj files must be byte-identical
 // outside the COFF TimeDateStamp (file bytes 4..7) - see docs/vc6/shim.md.
 //

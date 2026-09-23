@@ -13,7 +13,7 @@
 // A bare `struct _iobuf;` FORWARD declaration is in the proven-inert
 // set (blank lines, comments, typedefs, `extern int` and bare
 // `struct X;` do NOT move the class), so this header buys the CRT calls
-// with no type DEFINITION at all. _CRTIMP is empty under /ML, so these
+// with no type DEFINITION at all. _CRTIMP is empty for the static CRT, so these
 // match the real declarations and the CRT's own linkage.
 
 // Same doctrine as winmm_thunks.h: a declaration whose SPELLING is
