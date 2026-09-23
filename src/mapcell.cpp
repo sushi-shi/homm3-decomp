@@ -2309,7 +2309,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 #if defined(HOMM3_TARGET_MAC)
     // Use the shared payload type for the Mac compiler's bitfield writes.
     ExtraInfoUnion& monsterInfo =
-        *reinterpret_cast<ExtraInfoUnion*>(&monsterObject->m_extraInfo);
+        *static_cast<ExtraInfoUnion*>(
+            static_cast<void*>(&monsterObject->m_extraInfo));
 #endif
 
     int identifier;

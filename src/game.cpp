@@ -757,17 +757,11 @@ int game::saveSignPool(TAbstractFile* outfile)
     return 0;
 }
 
-// Mac loadMinePool (0:0xcb404) retains 13/13 ordered calls and 655/676 bytes;
-// its 21 remaining byte differences are only frame size and local offsets.
-// CodeWarrior -sym on and swapping the two byte-local declarations were flat;
-// delaying the guard-type load until after the second read cut Mac to 61.83%.
-// Complete Windows reaches 99.9795% with the two guard-byte reads followed by
-// both signed loads; raw COFF differs only in their opposite stack slots.
-// Replacing the locals with a two-byte array fell to 98.87% and was reverted.
-// Swapping the Windows-only guardType/guardAmount declaration order is also
-// byte-flat at 99.9795%, with all 25 CFG blocks and 18 calls unchanged.
-// Restoring DC's separate Mac int count plus uchar_buffer is byte-flat at
-// 96.8935%: CodeWarrior still assigns the same byte buffer and frame slots.
+// Legacy guard reads use the shared scalar reader. VC6 inlines both calls
+// and reproduces the retail body exactly; shared direct reads scored 97.44%.
+// Mac retains the first signed result across the second read. This does not
+// justify platform-specific statement ordering. DC predates this branch.
+// Full native-header Mac comparison awaits the reviewed MSL resize binding.
 VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
 int game::loadMinePool(TAbstractFile* infile, int saveVersion)
 {
@@ -804,23 +798,8 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
         } else {
             armyGroup* guards = &m_mines[x].m_guards;
             guards->initialize();
-            // Mac retains the first signed value across the second read.
-            // Complete Windows loads both byte locals after the reads.
-#ifdef HOMM3_TARGET_MAC
-            signed char guardType;
-            signed char guardAmount;
-            infile->read(&guardType, sizeof(guardType));
-            int typeValue = guardType;
-            infile->read(&guardAmount, sizeof(guardAmount));
-            int amountValue = guardAmount;
-#else
-            signed char guardType;
-            signed char guardAmount;
-            infile->read(&guardType, sizeof(guardType));
-            infile->read(&guardAmount, sizeof(guardAmount));
-            int typeValue = guardType;
-            int amountValue = guardAmount;
-#endif
+            int typeValue = readValue<signed char>(infile);
+            int amountValue = readValue<signed char>(infile);
             if (typeValue != -1 && amountValue > 0)
                 guards->add(typeValue, amountValue, -1);
         }
