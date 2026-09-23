@@ -7733,6 +7733,8 @@ void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigne
 // temporary at the SeedTo call (99.27). Dreamcast nevertheless proves the
 // named hero::get_target boundary before SeedTo; restoring that inline
 // helper is byte-flat and is source-shape truth rather than a score lever.
+// DC lines 9648/9671 also retain Reseed(0, 0) and get_map_center;
+// restoring them is Windows byte-flat at the current 97.0315%.
 VA(0x00417b20, 0x63E)  // anchor-global, dc 0x1a878
 void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPlayer, unsigned char drawChanges)
 {
@@ -7810,7 +7812,7 @@ void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
 
     if (drawChanges && !inMove
         && (m_status == STATUS_ACTIVE || g_currentPlayer->isLocalHuman())) {
-        m_seedingValid = 0;
+        reseed(0, 0);
         if (curr->m_pathTargetX >= 0) {
             type_point routeTarget = curr->getTarget();
             seedTo(routeTarget);
@@ -7831,17 +7833,7 @@ void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
                                       HOVER_SCREEN_HEIGHT);
     }
 
-    // The same merged y|z store ProcessDeSelect's kingdom-overview arm
-    // needs: both values have to be in hand before the first bitfield
-    // write or VC6 emits two read-modify-write inserts instead of one
-    // masked store.
-    type_point viewCentre;
-    int centreX = m_radarOrigin.m_x + 9;
-    int centreY = m_radarOrigin.m_y + 8;
-    int centreZ = m_radarOrigin.m_z;
-    viewCentre.m_x = centreX;
-    viewCentre.m_y = centreY;
-    viewCentre.m_z = centreZ;
+    type_point viewCentre = getMapCenter();
     setEnvironmentOrigin(viewCentre, 1);
 
     if (cell->m_groundSet != m_lastTerrain && drawChanges) {
