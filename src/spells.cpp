@@ -3648,14 +3648,9 @@ static const int g_earthquakeShakeOffsets[15][2] = {
 // one particular DEF - rather than a count.
 const int g_earthquakeImpactFrame = 5;
 
-// Residual (96.2%): two sites. The `_cpp_min(_cpp_max(d, 8), 30)` chain
-// makes ONE by-value copy our CL does not fold - retail lets the
-// address _cpp_max returned flow straight into _cpp_min and compares the
-// raw distance in both tests, where we dereference and re-copy between
-// them. A reference-taking _cpp_min was tried for exactly that and
-// MEASURED 96.19 -> 95.62, so the by-value template stays. The rest is
-// the `&cells[index]` scratch register and reloc names on the three
-// callees this TU has not reconstructed.
+// An earlier 96.2% residual suggested changing the limit helper, but a
+// reference-taking variant fell to 95.62%. Keep the by-value helper: the
+// source calls and coordinate temporaries below now reproduce retail.
 
 // Chain Lightning: hit the aimed stack, then bounce to the nearest stack
 // not yet hit, halving the damage each time, for as many stacks as the
@@ -3683,16 +3678,20 @@ const int g_earthquakeImpactFrame = 5;
 // `effected` IS COPIED OUT to every stack's bShowPowEffect at the end
 // rather than being read there, which is how the single PowEffect call
 // that follows knows which stacks to flash.
+// Dreamcast and Mac retain ClearEffects and ComputeSpellDamage, and DC
+// records ValidHex and army::get_owning_side. VC6 expands all four calls.
+// Mac computes the X and Y deltas separately, in that order (PEF
+// 0x197278..0x19727c); matching that source order through dx and dy closes
+// the remaining register and stack-slot difference. Exact Windows match:
+// 0x34a bytes, 22 blocks, 14 branches, 24 calls.
 VA(0x005a6360, 0x34A)  // order-map+arity, dc 0x155664
 void combatManager::chainLightning(int index, int level, int power)
 {
-    memset(m_effected, 0, sizeof(m_effected));
+    clearEffects();
     g_mouseManager->hidePointer();
 
-    long baseDamage = modifySpellDamage(
-        g_spellTraits[SPELL_CHAIN_LIGHTNING].m_masteryBonus[level]
-            + g_spellTraits[SPELL_CHAIN_LIGHTNING].m_powerFactor * power,
-        SPELL_CHAIN_LIGHTNING, 0, 0, 0, 0);
+    long baseDamage = computeSpellDamage(SPELL_CHAIN_LIGHTNING, power, level,
+                                         0, 0, 0, 0);
     int currentDamage = baseDamage;
     int totalKilled = 0;
     // NOT initialised, and that is retail's own shape: the pen is only
@@ -3702,7 +3701,7 @@ void combatManager::chainLightning(int index, int level, int power)
     int curY;
 
     { for (int i = 0; i < g_chainLightningTargets[level]; i++) {
-        if (index >= 0 && index < COMBAT_GRID_CELLS) {
+        if (validHex(index)) {
             army* target = m_cells[index].getArmy();
             if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
                 if (i == 0) {
@@ -3712,10 +3711,11 @@ void combatManager::chainLightning(int index, int level, int power)
                 } else {
                     const int destX = target->midX();
                     long destY = target->midY();
+                    const int dx = destX - curX;
+                    const int dy = destY - curY;
                     long distance = static_cast<long>(
                         sqrt(static_cast<double>(
-                            (destY - curY) * (destY - curY)
-                            + (destX - curX) * (destX - curX))))
+                            dx * dx + dy * dy)))
                         / 10;
                     const int segmentLength = limit(8, distance, 30);
                     doBolt(0, curX, curY, destX, destY, 0, 80, 9, 2,
@@ -3729,7 +3729,7 @@ void combatManager::chainLightning(int index, int level, int power)
                         * 100.0f));
                     drawFrame(1, 0, 0, 0, 1, 0);
                 }
-                if (i <= 2 && target->m_combatSide == m_currentSide)
+                if (i <= 2 && target->getOwningSide() == m_currentSide)
                     m_playDoh[m_currentSide] = 1;
             }
             totalKilled += target->damage(modifySpellDamage(
@@ -3765,9 +3765,9 @@ void combatManager::clearEffects()
 }
 
 // The mass-spell applier ClearEffects clears `effected` for, and the
-// body is what slices that row: it rolls the cast SEPARATELY per stack -
-// the same `Random(1, 100) <= chance * 100.0f` SpellCastWorks uses on a
-// single target - and records the ones that took it.
+// body is what slices that row: it rolls the cast separately per stack
+// through SpellCastWorks and records the ones that took it. Dreamcast and
+// Mac retain the ordinary helper call; VC6 expands it in retail.
 
 VA(0x005a66d0, 0xE5)  // dc 0x155a20
 void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell,
@@ -3780,11 +3780,8 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
         for (int i = 0; i < m_numArmies[side]; i++) {
             if (m_armies[side][i].m_spellInfluence[60])
                 continue;
-            if (random(1, 100)
-                <= static_cast<long>(spellCastWorkChance(spell, castingSide,
-                                                         &m_armies[side][i], 0, 1,
-                                                         creatureSpell)
-                                     * 100.0f)) {
+            if (spellCastWorks(spell, castingSide, &m_armies[side][i], 0,
+                               creatureSpell)) {
                 m_armies[side][i].setSpellInfluence(spell, power, level,
                                                   castingHero);
                 m_effected[side][i] = 1;
