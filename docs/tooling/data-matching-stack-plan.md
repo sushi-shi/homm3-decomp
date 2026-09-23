@@ -298,6 +298,16 @@ relationships remain unproved. Bounded aggregate-copy effects, switch/loop
 evidence, indirect referent bodies and guard/select diagnostics must be extended
 generically before the goal can complete.
 
+The next [bounded-copy stage](repeated-data-effects.md), on
+`codex/repeated-data-effects` above the audit, models repeated startup copies and
+stores generically. The same tooling now diagnoses the archive-context writes
+missing on the base and proves all 96 repaired bytes on the head. Fresh full
+builds and independent replay preserve all earlier exact effects; head effect
+coverage rises from 374 to 470 bytes. Static verdicts and consumer exports are
+unchanged. The case audit records this follow-up separately from its original
+PR #93 measurements. Switch/loop, indirect-referent, generated-anchor and
+guard/select work remains open.
+
 Produce `docs/tooling/pr78-data-contract-audit.md` with a case-by-case matrix:
 generic rule, before evidence, after evidence, byte/relationship coverage, and
 remaining uncertainty. Cases include hero-table extent, town shared storage,

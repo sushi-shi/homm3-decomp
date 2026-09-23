@@ -34,6 +34,7 @@ iterate on a function.
 - [Address comparisons and data identity](tooling/data-reference-roles.md)
 - [Remaining data gaps before the PR #78 audit](tooling/data-gap-review.md)
 - [PR #78 data-contract audit and missing checks](tooling/pr78-data-contract-audit.md)
+- [Bounded repeated startup writes](tooling/repeated-data-effects.md)
 - [Executable libraries](reference/executable-libraries.md)
 - [RMG undefined behavior](reference/rmg-undefined-behavior.md) and [Voronoi provenance](reference/rmg-voronoi-provenance.md)
 

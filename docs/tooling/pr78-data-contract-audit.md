@@ -3,10 +3,14 @@
 The generic checks detect several repaired defects, but they do **not yet cover
 every case in PR #78**. Missing startup bindings, conflicting town declarations,
 wrong quest vtable targets and missing link definitions have concrete diagnostics.
-The complete hero-table bound, minimap stride, aggregate-copy initializer and
+The complete hero-table bound, minimap stride and
 some control-flow relationships still need stronger general checks. A non-exact
 function score or an unproved expression is not a specific diagnosis of those
 defects. This audit remains open.
+
+The initial matrix below records tooling through PR #93. The subsequent
+[bounded-copy extension](#bounded-copy-replay) now closes the archive-context
+initializer case on both audited revisions; the other open cases remain.
 
 ## Revisions and method
 
@@ -126,3 +130,35 @@ in the read-only summary invocation; no claim here relies on those labels.
 
 The byte-accounting stack remains useful and the failures above are explicit,
 but this matrix does not satisfy the goal's completion criteria yet.
+
+## Bounded-copy replay
+
+The [repeated startup-write analysis](repeated-data-effects.md) was applied to
+both unchanged source revisions with identical tooling (513 checked files).
+Both full builds and gates pass. Static byte verdicts and consumer exports are
+unchanged. Actual objdiff still compares 4,133 base projections and 4,168 head
+projections across 233 units. Independent raw-instruction replay verifies all
+14 base and 19 head exact initializer pairs, covering 326 and 470 effect bytes.
+
+The retail archive initializer at `0x559320` now has a complete 24-dword write
+map. Its 96-byte owner at `0x69e538` changes from no observed writes to
+`retail-startup-write-not-observed-in-candidate` on the base. On the head, unique
+shared storage pairs the emitted initializer and its complete write map is
+`effects-exact`: all 96 bytes, including independently resolved pointer values,
+agree. The rule does not know this initializer's name, address or count.
+
+| Startup measurement | Base | Head |
+|---|---:|---:|
+| Paired registrations | 25 | 30 |
+| Exact effect pairs | 14 | 19 |
+| Proved constant-effect bytes | 326 | 470 |
+
+All previously exact pairs remain exact. A further initializer in `ai_player`
+now pairs by observed storage on both revisions, but remains `effects-unproved`;
+it earns no effect bytes. The head also exposes one additional registration-order
+inversion in `resourcemanager`, with no observed dependency bytes. This is an
+order diagnostic, not proof of a harmful dependency or complete startup order.
+
+The aggregate-copy portion of follow-up 1 is therefore covered. Generated
+initializer anchors, conflicting-storage diagnostics and the remaining
+switch/loop, indirect-referent and guard/select obligations are still open.

@@ -44,9 +44,28 @@ class State:
     registers: dict
     stack: dict
     top: tuple = (None, None, None, None)
+    direction: int | None = 1  # i386 C ABI: DF is clear at function entry.
 
     def copy(self):
-        return State(dict(self.registers), dict(self.stack), self.top)
+        return State(dict(self.registers), dict(self.stack), self.top, self.direction)
+
+    def load(self, address, width):
+        if address is None or address[0] != 'stack':
+            return None
+        start = address[1]
+        if (start, width) in self.stack:
+            return self.stack[start, width]
+        # Read bytes only from independently known integer stores. A symbolic
+        # pointer survives an exact-width copy, never truncation/reassembly.
+        result = 0
+        for index in range(width):
+            byte = next(((value[1] >> (8*(start+index-offset))) & 255
+                         for (offset, size), value in self.stack.items()
+                         if offset <= start+index < offset+size and value[0] == 'integer'), None)
+            if byte is None:
+                return None
+            result |= byte << (8*index)
+        return integer(result)
 
     def reg(self, name):
         full, width, shift = ALIASES.get(name, (name, 32, 0))
@@ -94,20 +113,26 @@ class State:
 def joined(left, right):
     return State({k: v for k, v in left.registers.items() if right.registers.get(k) == v},
                  {k: v for k, v in left.stack.items() if right.stack.get(k) == v},
-                 tuple(a if a == b else None for a, b in zip(left.top, right.top)))
+                 tuple(a if a == b else None for a, b in zip(left.top, right.top)),
+                 left.direction if left.direction == right.direction else None)
 
 
-def analyze(raw, start=0, *, relocation=None, call_pop=None):
+def analyze(raw, start=0, *, relocation=None, call_pop=None, entry_direction=1):
     """Return reachable writes, calls and explicit incomplete-effect reasons.
 
     relocation(instruction, field) returns (present, symbolic value) for `imm`
     or `disp`. A present unresolved relocation has value None. Integer values
     are linked addresses; `code` tokens preserve unmapped local callbacks.
+    entry_direction is +1 for the i386 C ABI, -1 for an explicitly known set
+    DF, or None when no entry convention is proved. REP effects are bounded to
+    4096 bytes per instruction; larger/unknown counts remain incomplete.
     """
     disassembler = cs.Cs(cs.CS_ARCH_X86, cs.CS_MODE_32)
     disassembler.detail = True
     instructions = {i.address: i for i in disassembler.disasm(raw, start)}
-    states = {start: State({'esp': ('stack', 0)}, {})}
+    if entry_direction not in (None, -1, 1):
+        raise ValueError('entry_direction must be -1, 1 or None')
+    states = {start: State({'esp': ('stack', 0)}, {}, direction=entry_direction)}
     pending = deque([start])
     outcomes, edges = {}, {}
 
@@ -145,7 +170,7 @@ def analyze(raw, start=0, *, relocation=None, call_pop=None):
                 present, linked = relocated['imm']
                 return linked if present else integer(op.imm)
             addr = address(op)
-            return state.stack.get((addr[1], op.size)) if addr and addr[0] == 'stack' else None
+            return state.load(addr, op.size)
 
         def assign(op, val):
             if op.type == x86.X86_OP_REG:
@@ -158,12 +183,66 @@ def analyze(raw, start=0, *, relocation=None, call_pop=None):
                 state.store(addr, op.size, val)
 
         mnemonic = ins.mnemonic
+        string_op = mnemonic.split()[-1]
+        string_width = {'movsb': 1, 'movsw': 2, 'movsd': 4,
+                        'stosb': 1, 'stosw': 2, 'stosd': 4}.get(string_op)
+        # MOVSD also names an SSE instruction. The string forms have implicit
+        # ESI/EDI operands and opcode A4/A5/AA/AB, not the SSE 0F opcode.
+        string_width = string_width if ins.opcode[0] in (0xa4, 0xa5, 0xaa, 0xab) else None
         for op in ops:
-            if op.type == x86.X86_OP_MEM and op.access & cs.CS_AC_READ and mnemonic != 'lea':
+            if op.type == x86.X86_OP_MEM and op.access & cs.CS_AC_READ and mnemonic != 'lea' and not string_width:
                 addr = address(op)
                 if not addr or addr[0] != 'stack':
                     events.append(dict(kind='read', site=ins.address, address=addr, width=op.size, value=None))
-        if mnemonic == 'mov' and len(ops) == 2:
+        if string_width:
+            repeated = ins.prefix[0] == 0xf3
+            count_value = state.reg('ecx') if repeated else integer(1)
+            count = count_value[1] if count_value and count_value[0] == 'integer' else None
+            # The ABI supplies flat default DS/ES. An explicit segment or
+            # address-size override needs evidence this analysis does not have.
+            supported = ins.addr_size == 4 and ins.prefix[0] in (0, 0xf3) and not ins.prefix[1]
+            reason = ('unsupported-string-addressing' if not supported else
+                      'unbounded-string-count' if count is None or count*string_width > 4096 else
+                      'unknown-string-direction' if count and state.direction is None else None)
+            copying = string_op.startswith('movs')
+            if reason:
+                issues.append(dict(site=ins.address, kind=reason, instruction=mnemonic))
+                # Unknown range may overwrite any tracked stack cell. Keep an
+                # explicit unknown write; do not retain stale local constants.
+                events.append(dict(kind='write', site=ins.address, address=None,
+                                   width=string_width, value=None))
+                state.store(None, string_width, None)
+                state.set_reg('edi', None)
+                if copying:
+                    state.set_reg('esi', None)
+                if repeated:
+                    state.set_reg('ecx', None)
+            else:
+                for index in range(count):
+                    source = state.reg('esi') if copying else None
+                    destination = state.reg('edi')
+                    val = state.load(source, string_width) if copying else state.reg(
+                        {1: 'al', 2: 'ax', 4: 'eax'}[string_width])
+                    proof = dict(iteration=index, count=count, width=string_width,
+                                 direction=state.direction, source=source, destination=destination)
+                    if copying and (source is None or source[0] != 'stack'):
+                        events.append(dict(kind='read', site=ins.address, address=source,
+                                           width=string_width, value=None, string_operation=proof))
+                    if destination is None or destination[0] != 'stack':
+                        events.append(dict(kind='write', site=ins.address, address=destination,
+                                           width=string_width, value=val, string_operation=proof))
+                    # Sequential stores preserve real overlap semantics; this
+                    # is not a snapshot or memmove assumption.
+                    state.store(destination, string_width, val)
+                    delta = integer(state.direction*string_width)
+                    state.set_reg('edi', arithmetic(destination, delta, 'add'))
+                    if copying:
+                        state.set_reg('esi', arithmetic(source, delta, 'add'))
+                if repeated:
+                    state.set_reg('ecx', integer(0))
+        elif mnemonic in ('cld', 'std'):
+            state.direction = 1 if mnemonic == 'cld' else -1
+        elif mnemonic == 'mov' and len(ops) == 2:
             assign(ops[0], value(ops[1]))
         elif mnemonic in ('movzx', 'movsx') and len(ops) == 2:
             val = value(ops[1])
@@ -217,6 +296,7 @@ def analyze(raw, start=0, *, relocation=None, call_pop=None):
             for reg in ('eax', 'ecx', 'edx'):
                 state.set_reg(reg, None)
             state.stack.clear()
+            state.direction = None  # No modeled callee/return-ABI proof here.
             pop = call_pop(target) if call_pop else None
             state.set_reg('esp', arithmetic(stack, integer(pop), 'add') if pop is not None else None)
         elif mnemonic == 'leave':
@@ -230,6 +310,8 @@ def analyze(raw, start=0, *, relocation=None, call_pop=None):
                     assign(op, None)
             for reg in ins.regs_access()[1]:
                 state.set_reg(ins.reg_name(reg), None)
+                if ins.reg_name(reg) == 'eflags':
+                    state.direction = None
         return state, events, issues
 
     while pending:
