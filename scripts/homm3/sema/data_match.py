@@ -54,13 +54,15 @@ class Identities:
                 if scope == 'external':
                     self.externals[name].append(anchor)
         for claim in code_claims:
-            # Function identities prove entries, not offset correspondence inside
-            # non-exact functions. Nonzero code addends remain unresolved.
+            # Function identities prove entries, not offsets inside non-exact
+            # functions. Checked local labels prove their exact symbol index;
+            # nonzero code addends remain unresolved in either case.
             anchor = dict(rva=claim['rva'], size=0, evidence=claim['evidence'],
                           binding_id=None, candidate_id='')
             coff = objects.get(claim.get('unit'))
             symbols = [s for s in coff.symbols.values() if s.section > 0 and
-                       s.name == claim['symbol'] and s.typ & 0x20] if coff else []
+                       s.name == claim['symbol'] and
+                       (s.index == claim['symbol_index'] if 'symbol_index' in claim else bool(s.typ & 0x20))] if coff else []
             if (not claim.get('unit') or claim.get('linkage') == 'EXTERNAL' or
                     not claim.get('linkage') and any(s.storage_class == 2 for s in symbols)):
                 self.externals[claim['symbol']].append(anchor)
@@ -361,6 +363,7 @@ def prepare(root, *, declared=None, candidate_report=None, jobs=4, build_vendor=
         declared, code_claims+vendor['code_claims'],
         first_id=max((b['id'] for b in bindings+vendor['data_bindings']), default=-1)+1)
     paths.append('scripts/homm3/analysis/code_data_bindings.py')
+    paths.append('scripts/homm3/analysis/compiler_eh.py')
     candidate_report = dict(candidate_report,
         candidate_data=candidate_report['candidate_data']+vendor['candidate_data'],
         data_bindings=bindings+vendor['data_bindings']+code['data_bindings'], input_sha256=hashes,
@@ -445,6 +448,7 @@ def exact(report):
     summary = report['summary']
     return (not report.get('analysis_issues') and summary['compared_allocations'] > 0 and
             not summary.get('code_data_bindings', {}).get('issue_counts') and
+            not summary.get('code_data_bindings', {}).get('compiler_issue_counts') and
             summary['static_exact_allocations'] == summary['compared_allocations'] and
             all(status == 'bound' or count == 0 for status, count in summary['binding_statuses'].items()) and
             not any(count for kind, count in summary.get('source_issue_counts', {}).items()

@@ -165,12 +165,14 @@ def relocation_target(layout, rva, raw, rel):
     return target - addend
 
 
+def compared_code_size(raw):
+    """The checked code extent excludes at most fifteen trailing alignment NOPs."""
+    return len(raw)-min(15, len(raw)-len(raw.rstrip(b'\x90')))
+
+
 def compare(layout, rva, raw, relocs, *, code=False):
     """Compare every nonrelocation byte; only code alignment NOPs may be trimmed."""
-    size = len(raw)
-    if code:
-        trimmed = min(15, len(raw) - len(raw.rstrip(b'\x90')))
-        size -= trimmed
+    size = compared_code_size(raw) if code else len(raw)
     if not size:
         raise ValueError('empty contribution')
     actual = image_bytes(layout, rva, size)

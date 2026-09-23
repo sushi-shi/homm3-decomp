@@ -202,6 +202,15 @@ through checked code. This gains another 12,960 enrolled bytes and 10,158 matche
 initialized bytes. Remaining compiler metadata, declaration reconciliation and
 the final gap review are still in progress; this does not close stage 6.
 
+[EH metadata matching](compiler-eh-data-matching.md), on `codex/compiler-eh-data`
+above that allocation stage, extends the same model to typed private compiler
+contributions, associative COMDAT ownership and checked local code labels. It
+adds 886 typed records while excluding inter-record spacing. Remaining ordinary
+source extents, linker selection and the final gap review still need attention.
+The verified union gain is 33,004 enrolled bytes and 34,004 initialized matches;
+remaining unknown code-bound extents fall from 492 to 65. The next declaration
+pass must reconcile compiler ABI spellings without using names alone as proof.
+
 Apply the shared model to vendor candidates, unresolved external pointers,
 alternative archive members, pooled data and compiler-created storage. Resolve
 supported ambiguities with independent anchors; never lower proof thresholds

@@ -121,6 +121,17 @@ class DataMatchTest(unittest.TestCase):
         self.assertFalse(identities.resolve('user', user.symbols[1], 0))
         self.assertEqual(identities.resolve('local', local.symbols[0], 0)[0]['target_rva'], 0x1000)
 
+    def test_checked_local_labels_keep_their_exact_symbol_index(self):
+        obj = CoffObject(_coff((FixtureSection('.text$a', b'abcdefgh', ()),
+                               FixtureSection('.text$b', b'ijklmnop', ())),
+                              (_symbol('label', 2, 1, 0, 6), _symbol('label', 2, 2, 0, 6))))
+        claims = [dict(unit='a', symbol='label', symbol_index=0, rva=0x1002,
+                       evidence='checked code offset', linkage='INTERNAL')]
+        identities = data.Identities([], [], {'a': obj}, claims)
+        self.assertEqual(identities.resolve('a', obj.symbols[0], 0)[0]['target_rva'], 0x1002)
+        self.assertFalse(identities.resolve('a', obj.symbols[1], 0))
+        self.assertFalse(identities.resolve('a', obj.symbols[0], 1))
+
     def test_missing_candidate_relocation_cannot_pass_equal_numeric_word(self):
         raw = struct.pack('<II', 0x402010, 0)
         self.put(0x2000, raw)

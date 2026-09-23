@@ -3,7 +3,8 @@
 Named allocations use compiler-derived source extents. Complete COMDAT symbol
 spans retain their distinct COFF extent evidence. Neither data values nor pointer initializer
 fields supply addresses. Ordinary candidate section spacing is never imposed on
-retail: each allocation needs its own code reference.
+retail: each allocation needs its own code reference. Typed private EH maps use
+local offsets within one code-anchored compiler contribution.
 """
 from bisect import bisect_right
 from collections import Counter, defaultdict
@@ -11,7 +12,7 @@ import hashlib
 import json
 import re
 
-from homm3.analysis import candidate_data, data_declarations, vendor_bindings, vendor_data
+from homm3.analysis import candidate_data, compiler_eh, data_declarations, vendor_bindings, vendor_data
 
 
 def definitions(declared, rows):
@@ -37,7 +38,7 @@ def definitions(declared, rows):
     return result
 
 
-def extent(row, facts, bindings, coff):
+def extent(row, facts, bindings, coff, records=()):
     """Keep source size, physical span and unknown extent distinguishable."""
     declarations = [d for f in facts for d in f.get('declarations', [])]
     sizes = {f['size'] for f in facts+declarations if f.get('size')}
@@ -56,6 +57,11 @@ def extent(row, facts, bindings, coff):
         if size > row['physical_size']:
             return size, 'source', 'truncated-storage'
         return size, 'source', 'bound'
+    if records:
+        extents = {(r['kind'], r['size']) for r in records}
+        if len(extents) != 1:
+            return None, 'compiler-record', 'conflicting-compiler-extent'
+        return records[0]['size'], 'compiler-record', 'bound'
     # A narrow, complete scalar suffix is positive VC6 type evidence even when
     # Clang skipped the owning body. Arrays, records and pointers deliberately
     # require other evidence; neither padding nor a symbol's suggestive name
@@ -139,6 +145,21 @@ def bind(layout, objects, rows, source_bindings, declared, code_claims, *, first
                             candidate_addend=addend, candidate_symbol_offset=symbol_offset,
                             section_symbol=section_symbol, contribution_rva=placement['rva'])
             proposals[row['id'], rva].append(evidence)
+    proposal_locations = defaultdict(set)
+    for candidate, rva in proposals:
+        proposal_locations[candidate].add(rva)
+    compiler_roots = {(candidate, rva): refs for (candidate, rva), refs in proposals.items()
+                      if len(proposal_locations[candidate]) == 1 and
+                      not any(b['rva'] != rva for b in existing[candidate])}
+    records, compiler_issues = compiler_eh.infer(objects, rows, compiler_roots, units, code_claims)
+    compiler_extents = defaultdict(list)
+    for record in records:
+        compiler_extents[record['candidate_id']].append(record)
+        if record['candidate_id'] != record['root_candidate_id']:
+            for ref in record['references']:
+                proposals[record['candidate_id'], record['rva']].append(dict(ref,
+                    compiler_contribution_root=record['root_candidate_id'],
+                    compiler_record_kind=record['kind']))
     bindings = []
     by_id = {r['id']: r for r in rows}
     locations = defaultdict(set)
@@ -147,7 +168,7 @@ def bind(layout, objects, rows, source_bindings, declared, code_claims, *, first
     for (candidate, rva), refs in sorted(proposals.items()):
         row = by_id[candidate]
         facts, prior = typed[candidate], existing[candidate]
-        size, kind, status = extent(row, facts, prior, objects[row['unit']])
+        size, kind, status = extent(row, facts, prior, objects[row['unit']], compiler_extents[candidate])
         if len(locations[candidate]) != 1:
             status = 'conflicting-code-placement'
         elif prior and any(b['rva'] != rva for b in prior):
@@ -159,21 +180,27 @@ def bind(layout, objects, rows, source_bindings, declared, code_claims, *, first
                 s.rva <= rva < rva+size <= s.rva+s.mapped_size for s in layout.sections):
             status = 'outside-retail-data'
         if size and any(not 0 <= ref['candidate_symbol_offset']+ref['candidate_addend']-
-                        row['section_offset'] <= size for ref in refs):
+                        row['section_offset'] <= size for ref in refs if not ref.get('compiler_contribution_root')):
             status = 'code-reference-outside-source-extent'
         identity = next((f['usr'] for f in facts if f.get('usr')), '')
+        compiler_identities = {r['linker_identity'] for r in compiler_extents[candidate]}
+        linker_identity = next(iter(compiler_identities)) if len(compiler_identities) == 1 else ''
+        if not linker_identity and size == row['physical_size']:
+            linker_identity = vendor_bindings.linker_identity(objects[row['unit']], row)
         bindings.append(dict(id=first_id+len(bindings), name='|'.join(row['symbols']), macro='CODE',
             source=';'.join(sorted({f"{f['path']}:{f['line']}" for f in facts})), declaration_id='',
             rva=rva, size=size, units=[row['unit']], candidate_ids=[candidate], status=status,
-            proof='independently matched code reference to one emitted allocation',
+            proof='checked EH root and local COFF contribution offsets' if any(
+                ref.get('compiler_contribution_root') for ref in refs) else
+                'independently matched code reference to one emitted allocation',
             retail_extent='source extent; retail boundary unproved' if kind == 'source' else
                           'compiler scalar type; retail boundary unproved' if kind == 'compiler-type' else
+                          'compiler record extent; retail boundary unproved' if kind == 'compiler-record' else
                           'COFF symbol span; source and retail boundaries unproved',
             extent_kind=kind, candidate_match='not-compared', literal_sha256='',
             source_identity=candidate, source_usr=identity,
-            linker_identity=vendor_bindings.linker_identity(objects[row['unit']], row)
-                if size == row['physical_size'] else '',
-            references=refs, definitions=facts))
+            linker_identity=linker_identity,
+            references=refs, definitions=facts, compiler_records=compiler_extents[candidate]))
     # A wrong code addend can contradict a correctly annotated data owner.
     # Preserve that independent anchor so consumer comparisons can expose the
     # access error; the new code binding remains explicitly non-exact.
@@ -202,18 +229,24 @@ def bind(layout, objects, rows, source_bindings, declared, code_claims, *, first
             continue
         oi, ordinal = anchor['node']
         obj = contributions[oi].coff
+        checked_size = vendor_data.compared_code_size(obj.section_bytes(obj.sections[ordinal-1]))
         for symbol in obj.symbols.values():
-            if symbol.section == ordinal and symbol.typ & 0x20 and 0 <= symbol.value < obj.sections[ordinal-1].raw_size:
+            if (symbol.section == ordinal and (symbol.typ & 0x20 or symbol.storage_class == 6) and
+                    0 <= symbol.value < checked_size):
                 claims.append(dict(unit=units[oi], symbol=symbol.name, rva=anchor['rva']+symbol.value,
+                    symbol_index=symbol.index,
                     linkage='EXTERNAL' if symbol.storage_class == 2 else 'INTERNAL',
                     evidence='independently matched source code path'))
     return dict(data_bindings=bindings, source_bindings=list(source_bindings), code=code, issues=issues,
         declarations=declaration_rows, code_claims=claims,
+        compiler_records=records, compiler_issues=compiler_issues,
         provenance=[dict(object_index=i, unit=unit, object_sha256=contributions[i].digest)
                     for i, unit in enumerate(units)],
         summary=dict(binding_statuses=dict(Counter(b['status'] for b in bindings)),
                      code_statuses=dict(Counter(c['status'] for c in code)),
                      issue_counts=dict(Counter(i['kind'] for i in issues)),
+                     compiler_issue_counts=dict(Counter(i['kind'] for i in compiler_issues)),
+                     compiler_record_counts=dict(Counter(r['kind'] for r in records)),
                      source_address_disagreements=len(contradicted & existing.keys()),
                      storage_declarations=len(declaration_rows)))
 
@@ -223,7 +256,8 @@ def export(report, directory):
     from homm3.core import tsv
     for filename, key in (('code-data-bindings', 'data_bindings'), ('code-data-anchors', 'code'),
                           ('code-data-objects', 'provenance'), ('code-data-issues', 'issues'),
-                          ('code-data-declarations', 'declarations')):
+                          ('code-data-declarations', 'declarations'),
+                          ('code-compiler-records', 'compiler_records'), ('code-compiler-issues', 'compiler_issues')):
         rows = report.get(key, [])
         fields = list(dict.fromkeys(k for row in rows for k in row)) or ['detail']
         tsv.write(Path(directory)/(filename+'.tsv'), ['# Allocation addresses from checked code; initializer bytes do not bind addresses.'],

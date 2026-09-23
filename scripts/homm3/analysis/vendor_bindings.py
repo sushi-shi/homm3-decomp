@@ -197,11 +197,15 @@ def bind(layout, objects, seeds, *, first_id=0, source_definitions=None):
         if anchor['status'] != 'anchored':
             continue
         oi, section = anchor['node']
+        checked_size = vendor_data.compared_code_size(objects[oi].coff.section_bytes(
+            objects[oi].coff.sections[section-1]))
         if unit_name(objects[oi]) not in used:
             continue
         for symbol in objects[oi].coff.symbols.values():
-            if symbol.section == section and symbol.typ & 0x20:
+            if (symbol.section == section and (symbol.typ & 0x20 or symbol.storage_class == 6) and
+                    0 <= symbol.value < checked_size):
                 code_claims.append(dict(unit=unit_name(objects[oi]), symbol=symbol.name,
+                    symbol_index=symbol.index,
                     rva=anchor['rva']+symbol.value,
                     linkage='EXTERNAL' if symbol.storage_class == 2 else 'INTERNAL',
                     evidence='independently matched vendor code path'))

@@ -150,3 +150,7 @@ extend the source-only static-data checkpoint above.
 The [code-derived allocation stage](code-data-matching.md) adds unannotated game
 storage and complete compiler pools, retains reader declarations, and keeps
 source bounds distinct from physical COFF spans.
+
+[EH metadata matching](compiler-eh-data-matching.md) adds typed exception records
+and checked local cleanup labels. Metadata addresses come from code roots and
+private COFF offsets, never from the retail pointer fields being compared.
