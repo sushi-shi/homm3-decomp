@@ -3544,14 +3544,12 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
 }
 
 // E:\gamedcs\advmgr.cpp:4385
-// RETAIL-RECONSTRUCTED 2026-08-11 (80.9400%). Retail proves the complete
-// map-area, packed-hover, visibility/current-level, rollover, owned hero/town
-// cursor and scroll-zone fallback paths. The 27-branch and four-return counts
-// and every symbolic branch target agree. The remaining delta is VC6
-// register/stack scheduling around the inlined point helpers: retail retains
-// mouseY/mouseX in EBX/EDI and reuses their parameter homes for local-player
-// state, giving an eight-byte local frame; this compile spills that state and
-// uses sixteen bytes. A shared rx/ry scope was tested and rejected (80.27%).
+// DC records mouseManager::GetFrame in the scroll-zone fallback. Calling its
+// shared inline getter changes VC6's inliner decision at the earlier GetCell:
+// retail's retained NewfullMap::zCell call now appears in the candidate too,
+// raising this function from 95.1433% to 99.9667%. All 15 Windows calls and
+// 27 branches agree; Mac source shape has 16/16 direct calls but no exact
+// byte verdict. A shared rx/ry scope was tested and rejected earlier.
 VA(0x0040deb0, 0x3CF)  // anchor-callee, dc 0xed7c
 int advManager::processWaitingHover(int mouseX, int mouseY)
 {
@@ -3614,8 +3612,8 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
         return 1;
     }
 
-    if (g_mouseManager->m_frame >= HOVER_SCROLL_POINTER_FIRST
-        && g_mouseManager->m_frame <= HOVER_SCROLL_POINTER_LAST) {
+    if (g_mouseManager->getFrame() >= HOVER_SCROLL_POINTER_FIRST
+        && g_mouseManager->getFrame() <= HOVER_SCROLL_POINTER_LAST) {
         if (!mouseInScrollZone())
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
     }
@@ -3749,6 +3747,8 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // `get_trigger_cell()->get_map_extraInfo()` at all four sites.  One
 // `ExtraInfoUnion cellExtra;` per big block scores 91.6133 and one per ARM
 // scores the same, against 91.6263 - retail re-reads.
+// DC's mouseManager::GetFrame is restored in the scroll fallback; the
+// Windows lowering stays byte-flat at the current 92.1875%.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::processHover(int mouseX, int mouseY)
 {
@@ -3954,8 +3954,8 @@ int advManager::processHover(int mouseX, int mouseY)
         }
         }
     } else {
-        if (g_mouseManager->m_frame < HOVER_SCROLL_POINTER_FIRST
-            || g_mouseManager->m_frame > HOVER_SCROLL_POINTER_LAST
+        if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
+            || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
             || !mouseInScrollZone())
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         m_advWindow->processHover(mouseX, mouseY);
