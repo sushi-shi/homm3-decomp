@@ -20,7 +20,7 @@ Subcommands
         config/units.toml (homm3.build.configure; ninja also re-runs it as a
         generator rule).
 
-  build [--fast] [TU ...] [-- <ninja args>]
+  build [--fast | --require-data-exact] [TU ...] [-- <ninja args>]
         The final checkpoint (homm3.build.build): configure -> ninja (base objs via
         the pinned `wine cl`) -> delink and normalize comparison copies -> objdiff
         report -> overall %% line -> checkpoint-ledger refresh + observational
@@ -29,6 +29,9 @@ Subcommands
         compile the selected manifest unit, keep existing retail targets,
         and stop after the %% line.
         Run a full `homm3 build` for the final checkpoint.
+        Full builds compare enrolled data, including a separate objdiff data
+        project at build/objdiff/data/objdiff.json. --require-data-exact makes
+        unresolved bindings and static data differences fatal.
 
   warnings [--compiler both|clang|msvc] [--unit TU] [--jobs N]
         Generate a fresh compiler-diagnostic report with Clang -Weverything
@@ -58,7 +61,7 @@ Subcommands
         reports source edits whose new MAX falls below the prior MAX without
         gating. Unrelated CUR dips are silent; HIST preserves older peaks.
 
-  sema <xref|diff|disasm|rva|strings|data|coverage|candidates|compare> ...
+  sema <xref|diff|disasm|rva|strings|data|data-match|coverage|candidates|compare> ...
         Read-only navigation over the retail image (homm3.sema): caller
         trees + exact data refs (xref --to = every referencing site),
         base-vs-target diffs (skeleton by default; --summary = every

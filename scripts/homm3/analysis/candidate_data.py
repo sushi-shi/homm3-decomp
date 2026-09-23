@@ -201,6 +201,7 @@ def bind(declared, rows, objects):
                              candidate_ids=sorted({r['id'] for r in choices}), status=status,
                              proof=proof, retail_extent='unproved', candidate_match='not-compared'))
         bindings[-1]['literal_sha256'] = literal_sha256
+        bindings[-1]['source_identity'] = ''
 
     for declaration in declared['declarations']:
         choices = named_candidates(declaration, rows)
@@ -220,6 +221,7 @@ def bind(declared, rows, objects):
         add(declaration['name'], 'DATA', declaration['source'], declaration['rva'], size,
             choices, status, 'compiler-declaration and exact emitted symbol identity',
             declaration['id'], declaration['units'])
+        bindings[-1]['source_identity'] = declaration['usr']
 
     active = defaultdict(dict)
     for unit in declared['units']:

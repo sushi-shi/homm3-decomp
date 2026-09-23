@@ -14,7 +14,7 @@ from homm3.core import compiler_profile
 from homm3.core.project import Project
 from homm3.retail_labels import source
 
-SCHEMA = 'homm3.data-declarations.v2'
+SCHEMA = 'homm3.data-declarations.v3'
 SUFFIXES = {'.c', '.cpp', '.cxx', '.h', '.hpp', '.hxx'}
 
 
@@ -58,7 +58,7 @@ def parse_unit(task):
     root = Path(task['root'])
     path = root / task['source']
     result = dict(unit=task['unit'], source=task['source'], facts=[], definitions=[],
-                  errors=[], full_errors=[], skipped_bodies=False, active_macros=[])
+                  errors=[], full_errors=[], skipped_bodies=False, active_macros=[], function_claims=[])
     try:
         index = cx.Index.create()
         options = cx.TranslationUnit.PARSE_DETAILED_PROCESSING_RECORD
@@ -93,6 +93,14 @@ def parse_unit(task):
                          cx.CursorKind.CONSTRUCTOR, cx.CursorKind.DESTRUCTOR) and node.location.file:
             functions.append(dict(path=location(node)['path'], start=node.extent.start.offset,
                                   end=node.extent.end.offset, symbol=node.mangled_name))
+            for attribute in children:
+                if attribute.kind != cx.CursorKind.ANNOTATE_ATTR:
+                    continue
+                claim = re.fullmatch(r'va:(0x[0-9a-fA-F]+) size:(0x[0-9a-fA-F]+|[0-9]+)', attribute.spelling)
+                if claim:
+                    result['function_claims'].append(dict(location(node), unit=task['unit'],
+                        symbol=node.mangled_name, rva=int(claim[1], 0)-task['image_base'],
+                        size=int(claim[2], 0), evidence='compiler-bound source VA annotation'))
         if node.kind == cx.CursorKind.MACRO_INSTANTIATION and node.spelling in (
                 'DATA_COMPGEN', 'DATA_COMPGEN_GUARD'):
             result['active_macros'].append(dict(location(node), macro=node.spelling))

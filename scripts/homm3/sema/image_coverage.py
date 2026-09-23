@@ -197,6 +197,10 @@ def generate(root, image, *, jobs=4, build_vendor=False):
     compiler_rows, compiler_issues = compiler_data.collect(root, layout, claims, labels, references)
     rows, compiler_summary = compiler_data.overlay(rows, compiler_rows)
     compiler_summary['issue_counts'] = dict(Counter(i['kind'] for i in compiler_issues))
+    from homm3.sema import data_match
+    data_matching = data_match.generate(root, declared=declared, candidate_report=candidate_evidence)
+    rows, data_match_summary = data_match.overlay(layout, rows, data_matching)
+    data_match_summary.update(data_matching['summary'])
     summaries = {}
     for domain, total in [('file', len(image.data)), ('image', layout.image_size)]:
         audit_partition(rows, domain, total)
@@ -215,11 +219,13 @@ def generate(root, image, *, jobs=4, build_vendor=False):
                        'scripts/homm3/build/canonicalize_data_symbols.py', 'scripts/homm3/sema/compiler_data.py']
     inputs.extend(implementations)
     inputs.extend(candidate_evidence['input_sha256'])
+    inputs.extend(data_matching['input_sha256'])
     return dict(schema='homm3.retail-accounting.v1', image_base=layout.base,
                 image_sha256=hashlib.sha256(image.data).hexdigest(), domains=summaries,
                 regions=[asdict(r) for r in layout.file_regions + layout.image_regions],
                 data_declarations=declared['declarations'], data_issues=data_issues, data_coverage=data_summary,
                 candidate_evidence=candidate_evidence, candidate_coverage=candidate_evidence['summary'],
+                data_matching=data_matching, data_match_coverage=data_match_summary,
                 vendor_data=vendor_rows, vendor_issues=vendor_issues, vendor_coverage=vendor_summary,
                 compiler_data=compiler_rows, compiler_issues=compiler_issues, compiler_coverage=compiler_summary,
                 claims=claims, labels=dict(labels), references=references, rows=rows, problems=problems,
@@ -298,7 +304,10 @@ def export(report, directory):
     if 'candidate_evidence' in report:
         from homm3.analysis import candidate_data
         candidate_data.export(report['candidate_evidence'], directory)
-    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues', 'candidate_evidence')}
+    if 'data_matching' in report:
+        from homm3.sema import data_match
+        data_match.export(report['data_matching'], directory)
+    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues', 'candidate_evidence', 'data_matching')}
     (directory / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
 
 
@@ -311,7 +320,7 @@ def run(args):
     except (ValueError, OSError) as exc:
         from homm3.sema._common import die
         die(str(exc))
-    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues', 'candidate_evidence')}
+    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues', 'candidate_evidence', 'data_matching')}
     if args.json:
         print(json.dumps(summary, indent=2))
     else:
@@ -325,6 +334,7 @@ def run(args):
                                                 if k != 'analysis'}, sort_keys=True))
         print('Compiler structure accounting: ' + json.dumps(report['compiler_coverage'], sort_keys=True))
         print('Candidate data bindings: ' + json.dumps(report['candidate_coverage'], sort_keys=True))
+        print('Strict data comparison: ' + json.dumps(report['data_match_coverage'], sort_keys=True))
         if args.output:
             print(f'Actionable byte map: {args.output}/coverage.tsv; prioritized work: {args.output}/backlog.tsv')
         for limitation in report['limitations']:

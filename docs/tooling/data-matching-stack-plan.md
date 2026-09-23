@@ -123,6 +123,13 @@ bindings or explicit failures. No candidate extent alone proves a retail boundar
 
 ### 3. Strict data comparison and ordinary build enrollment
 
+Implemented on `codex/strict-data-matching`: strict raw-COFF/retail comparison,
+automatic freshness repair, exhaustive TSV verdicts and actual objdiff data
+comparison in a companion project. Explicit packed allocation projections retain
+known extents without inventing retail gaps or section layout; the function
+project keeps its existing score history. See [policy, files and measured
+coverage](strict-data-matching.md). Initialization and consumers remain below.
+
 Add `sema/data_match.py` over those bindings. Compare every enrolled fixed byte
 and resolve relocation identity/addends independently. Extend build configuration,
 normalization/freshness, CLI and checkpoint reporting so the ordinary build runs

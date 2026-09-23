@@ -29,10 +29,15 @@ def _run(*command: str) -> int:
 def main(argv=None) -> int:
     argv = list(argv or [])
     fast = "--fast" in argv
-    ninja_args = [a for a in argv if a != "--fast"]
+    require_data_exact = '--require-data-exact' in argv
+    ninja_args = [a for a in argv if a not in ('--fast', '--require-data-exact')]
 
-    from homm3.build import configure, normalize_objs
+    from homm3.build import configure, normalize_objs, data_checkpoint
     from homm3.match import status
+
+    if fast and require_data_exact:
+        print('[build] --require-data-exact requires a full build', file=sys.stderr)
+        return 1
 
     if fast and not any((ROOT / "build/objdiff/target").glob("*.c.obj")):
         print("[build] retail targets missing; run `homm3 build` before `--fast`",
@@ -48,7 +53,8 @@ def main(argv=None) -> int:
             return 1
 
     configure.configure()
-    if _run("ninja", *ninja_args):
+    stale = data_checkpoint.schedule(ROOT, targets=ninja_args if fast else None)
+    if _run("ninja", *ninja_args, *(u for u in stale if u not in ninja_args)):
         return 1
     if fast:
         normalize_objs.normalize_all()
@@ -58,13 +64,22 @@ def main(argv=None) -> int:
         from homm3.build import delink
         delink.run()
 
+    data_failures = []
+    if not fast:
+        try:
+            data_failures = data_checkpoint.run(ROOT, require_exact=require_data_exact)
+        except (ValueError, OSError, RuntimeError) as exc:
+            data_failures = [f'data comparison unavailable: {exc}']
+        for failure in data_failures:
+            print(f'[build] {failure}', file=sys.stderr)
+
     report = status.refresh_report()
     fingerprint_pair = status.source_hash_pair()
     print(f"[build] {status.overall_line(report, fingerprint_pair=fingerprint_pair)}")
     print(f"[build] CUR diagnostic report: {status.REPORT.relative_to(ROOT)}")
 
     if fast:
-        print("[build] fast: delink + checkpoint ledger + gates + README skipped - "
+        print("[build] fast: delink + data checkpoint + checkpoint ledger + gates + README skipped - "
               "run `homm3 build` before committing")
         return 0
 
@@ -85,7 +100,7 @@ def main(argv=None) -> int:
     # Run every independent evidence/source gate, even after one fails.
     # Report unavailable evidence as fatal; dependent checks cannot certify it.
     # These gates, not a local objdiff maximum, decide admissibility.
-    failed = False
+    failed = bool(data_failures)
 
     # banked_rows runs alongside cmd_check, not inside it: the ratchet
     # compares the rows that ARE in the baseline, this one asks whether a
