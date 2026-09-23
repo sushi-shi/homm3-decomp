@@ -1650,7 +1650,7 @@ events	?combatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_poi
 events	?creatureBankEvent@advManager@@AAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	85.5134	85.5134	91.5889	0xabdc0	tokens1:ef75037aea0a
 events	?dispatchEvent@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.4678	99.4678	99.9911	0xa84f0	tokens1:c2282ccec92f
 events	?doAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	tokens1:cf82ee4e903c
-events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	96.7959	96.7959	99.1139	0xad470	tokens1:0b9a6260dab4
+events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	96.5095	96.7959	99.1139	0xad470	tokens1:0b9a6260dab4
 events	?doCustomArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	98.2381	99.1492	0x9f070	tokens1:9b193d3a4c1c
 events	?doCustomResource@advManager@@AAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	tokens1:f5f5e827b9bd
 events	?doCustomSpellScroll@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	tokens1:0de535a306f0
@@ -2032,7 +2032,7 @@ game	?loadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	tokens1:8314
 game	?loadGarrisonPool@game@@AAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	tokens1:1c6e01a99913
 game	?loadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	tokens1:2576a496deb9
 game	?loadLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc3d90	tokens1:f1de65a51af1
-game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	78.5738	78.5738	78.5738	0xc2450	tokens1:e4b0a82ea421
+game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	78.5738	78.5738	83.1646	0xc2450	tokens1:e4b0a82ea421
 game	?loadMinePool@game@@AAEHPAVTAbstractFile@@H@Z	99.9795	99.9795	100.0000	0xb9340	tokens1:8235c6e30dae
 game	?loadObjectVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2870	tokens1:0c896143b823
 game	?loadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	tokens1:16710ddf8b29
@@ -2222,7 +2222,7 @@ hero	?getMobility@hero@@QBEHE@Z	100.0000	100.0000	100.0000	0xe4990	tokens1:f1951
 hero	?getMobility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4d90	tokens1:af68624efd12
 hero	?getMobilityFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5330	tokens1:170e6f789ec6
 hero	?getMorale@hero@@QBEHPBV1@EE@Z	100.0000	100.0000	100.0000	0xe39b0	tokens1:14894bb18868
-hero	?getMoraleDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	90.5452	90.5452	97.9467	0xdc320	tokens1:63e8d44b4d1a
+hero	?getMoraleDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	90.5452	90.5452	100.0000	0xdc320	tokens1:63e8d44b4d1a
 hero	?getMysticismBonus@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe3f40	tokens1:5c5aa371c439
 hero	?getNecromancyCreature@hero@@QAE?AW4TCreatureType@@XZ	100.0000	100.0000	100.0000	0xe3c60	tokens1:1e1c32ce6d8d
 hero	?getNecromancyFactor@hero@@QBEME@Z	100.0000	100.0000	100.0000	0xe3cd0	tokens1:435222896680
@@ -2243,7 +2243,7 @@ hero	?getStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?getStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110	tokens1:4b11cd54c3cc
 hero	?getSurrenderCostFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe4580	tokens1:a7b572659fd1
 hero	?getVisibility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4070	tokens1:498f41cfaf60
-hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	95.3644	95.3644	95.4534	0xe3070	tokens1:08f71725ca13
+hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	95.4534	95.4534	95.4534	0xe3070	tokens1:08f71725ca13
 hero	?giveExperience@hero@@QAEHHHE@Z	97.6632	97.6632	100.0000	0xe33b0	tokens1:25088d3c1900
 hero	?giveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	tokens1:7cfba9aeace3
 hero	?giveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	tokens1:b7eb1dec2edc
@@ -3504,7 +3504,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:9ffb396c8413
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	tokens1:f84e27622dc7
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:962fea18ce8c
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	96.3552	96.3552	96.3552	0x149cb0	tokens1:6fbd72185624
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	96.3552	96.3552	96.3646	0x149cb0	tokens1:6fbd72185624
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:c9c09a93db3c
 rmg	__h3cg$rmg$list_dtor$TPoint	0.0000	100.0000	100.0000	0x14c6a0	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-

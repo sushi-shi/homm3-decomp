@@ -43,7 +43,8 @@ They require no per-method manifest or extraction marker.
 
 `include/compiler.h` supplies compiler spelling compatibility. Native profiles
 also enable CodeWarrior's documented `-msext on` to parse Microsoft anonymous
-structs. These settings do not turn an ordinary helper into an inline helper.
+structs and define `HOMM3_TARGET_MAC=1` on the compiler command line. These
+settings do not turn an ordinary helper into an inline helper.
 The SDK include paths are added automatically after project include paths.
 
 The compiler performs preprocessing. Tooling snapshots and fingerprints the
@@ -71,8 +72,7 @@ A compiler probe using the new input snapshot compiled the unchanged
 `include/recruit.h` after its existing creature-type prerequisite header.
 Another object-data probe confirmed that `#pragma pack(push, 1)` gives a
 `char`/`int` record size of 5 and `#pragma pack(pop)` restores its size to 8.
-These pragmas need no target-specific replacement. No test suites or full
-matching checkpoint were run for this migration step.
+These pragmas need no target-specific replacement. No test suites were run.
 
 With compiler spelling compatibility and Microsoft extensions enabled,
 `include/hero.h` now compiles with the native SDK. Its five enum-bitfield
@@ -101,3 +101,21 @@ headers. Reuse existing declarations/helpers where possible; show game-class
 changes before applying them. Keep the approved ballista multiply/divide
 conditional. Byte-order work must preserve the observed file format and source
 helper boundaries, rather than inventing a generic new serialization layer.
+
+## Windows verification of enum decoding
+
+A full comparison run after `95c00a90` rebuilt 78 affected VC6 units and
+refreshed all retail targets. Windows retains 4,304 / 4,781 exact MAX and
+97.20% weighted MAX. No exact function was lost and no MAX decreased;
+`hero::giveArtifact` MAX increased from 95.3644% to 95.4534%. All 4,781
+reported function sizes stayed unchanged; two already-nonexact current scores
+moved. This is not a claim that every emitted instruction stayed identical.
+The existing Mac profiles compared all 66 admitted functions, with 13 exact.
+
+Banked rows, VA claims, single-view, source ownership and source inventory
+passed. The full command exited unsuccessfully on the cleanliness gate because
+`HOMM3_TARGET_MAC` had been defined in `include/compiler.h`. Moving that selector
+to native compiler flags fixed the violation; the failed gate was rerun and
+passed. This correction changes no active Windows or legacy Mac compilation
+input. Native hero-header compilation was checked with the corrected flags.
+The full command was not repeated after that gate-only correction.

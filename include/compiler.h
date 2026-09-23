@@ -4,7 +4,6 @@
 // Compiler spelling only. Game declarations and helper bodies remain in
 // their ordinary headers; each compiler supplies its own standard library.
 #if defined(__MWERKS__) && defined(__POWERPC__)
-#define HOMM3_TARGET_MAC 1
 #define __int64 long long
 #define __cdecl
 #define __stdcall

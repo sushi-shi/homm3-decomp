@@ -80,7 +80,7 @@ def _profile_hash(source: bytes, pair: Pair) -> str:
     header_inputs = profiles.headers(ROOT, profile) if profile else {}
     flags = tuple(profile.flags or spec["flags"] if profile else spec["flags"])
     if profile and profile.native_headers:
-        flags += ("-msext", "on")
+        flags += ("-msext", "on", "-DHOMM3_TARGET_MAC=1")
     data = json.dumps({"source": _digest(source), "flags": flags,
                        "profile": asdict(profile) if profile else None,
                        "headers": {name: _digest(data) for name, data in header_inputs.items()},
@@ -185,7 +185,7 @@ def _compile_locked(pair: Pair, tools_dir: Path, work: Path) -> CompiledCode:
         Path(env["WINEPREFIX"]).mkdir(parents=True, exist_ok=True)
         flags = profile.flags or toolchain.specification()["flags"] if profile else toolchain.specification()["flags"]
         if profile and profile.native_headers:
-            flags = (*flags, "-msext", "on")
+            flags = (*flags, "-msext", "on", "-DHOMM3_TARGET_MAC=1")
         _run(["wine", str(tools_dir / "MWCPPC.exe"), *flags,
               "-o", obj.name, generated.name], work, env)
         if not obj.is_file() or not obj.read_bytes().startswith(b"MWOBPPC "):
