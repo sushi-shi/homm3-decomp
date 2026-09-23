@@ -7398,6 +7398,9 @@ void advManager::townQuickView(int townId, int x, int y,
 // E:\gamedcs\advmgr.cpp:9243
 // DC garrison_quick_view calls game::GetGarrison. Its inline accessor
 // reproduces the same Windows bytes as direct array indexing here.
+// DC lines 9253/9257 assign Expert to identifyLevel for friendly/debug
+// viewers, then test it separately; lines 9263/9267/9271 assign each view
+// level in its own branch. This also matches retail VC6 byte for byte.
 VA(0x00416f80, 0x1CD)  // anchor-callee, dc 0x19cdc
 void advManager::garrisonQuickView(int id, int x, int y)
 {
@@ -7412,14 +7415,16 @@ void advManager::garrisonQuickView(int id, int x, int y)
 
     TQuickTownWindow::TViewLevel level;
     if (g_game->onSameTeam(thisGarrison->m_playerOwner, g_curWatchPlayer)
-        || m_debugViewAll || identifyLevel == eMasteryExpert)
+        || m_debugViewAll)
+        identifyLevel = eMasteryExpert;
+    if (identifyLevel == eMasteryExpert)
         level = TQuickTownWindow::ViewAll;
     else if (g_game->getNumThievesGuilds(g_curWatchPlayer) >= 2)
         level = TQuickTownWindow::ViewArmySizes;
+    else if (g_game->getNumThievesGuilds(g_curWatchPlayer) >= 1)
+        level = TQuickTownWindow::ViewArmyTypes;
     else
-        level = g_game->getNumThievesGuilds(g_curWatchPlayer) >= 1
-                    ? TQuickTownWindow::ViewArmyTypes
-                    : TQuickTownWindow::ViewNone;
+        level = TQuickTownWindow::ViewNone;
 
     TQuickTownWindow window(thisGarrison, level);
     window.center(x, y);
