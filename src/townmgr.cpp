@@ -702,15 +702,17 @@ DATA(0x0068a340) static const char* const g_boatDefNames[9] = {
 // creature table land inside townmgr's bracket, so this compiland owns
 // it; the artifact table is also read from advmgr's town-event path
 // (0x525903), so it is a definition rather than a file-static.
-// (146 ballista, 147 first aid tent, 148 ammo cart - no enumerator for
-// the war machines exists yet and armygrp.h is not this lane's to grow.)
+// Each faction's blacksmith creature is stored as a four-byte creature id.
 
 // The artifact table is a table of RECORDS, not of int pairs:
 // SetRightClickText 0x5d1aa0 copies both dwords of a row into an 8-byte
 // local and calls type_artifact::get_description on it, which is the
 // artifact record's own member. The pair spelling was a placeholder.
-DATA(0x00642e90) static const int g_blacksmithMachines[9] = {
-    146, 147, 148, 148, 147, 146, 148, 147, 146
+DATA(0x00642e90) static const H3_ENUM_STORAGE(TCreatureType, int)
+    g_blacksmithMachines[9] = {
+    CREATURE_BALLISTA, CREATURE_FIRST_AID_TENT, CREATURE_AMMO_CART,
+    CREATURE_AMMO_CART, CREATURE_FIRST_AID_TENT, CREATURE_BALLISTA,
+    CREATURE_AMMO_CART, CREATURE_FIRST_AID_TENT, CREATURE_BALLISTA
 };
 DATA(0x006aa9f8) type_artifact g_blacksmithArtifacts[9];
 
@@ -1534,22 +1536,26 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
     std::string rightText;
     TCreatureType creature;
 
-    int j;
-    MEMSET(m_bonusCreatures, CREATURE_NONE, sizeof(m_bonusCreatures), j);
+    for (int j = 0; j < 8; ++j)
+        m_bonusCreatures[j] = CREATURE_NONE;
 
-    for (int i = 0; i < TOWN_DWELLING_COUNT; i++) {
+    int i;
+    for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         if (currTown->hasBuilding(DWELLING_0_ID + i, true)) {
             int slot = i;
             if (currTown->hasBuilding(DWELLING_0_UPG_ID + i, true))
                 slot = i + TOWN_DWELLING_COUNT;
 
-            creature = g_townDwellingCreatures[
-                currTown->m_type * (2 * TOWN_DWELLING_COUNT) + slot];
-            long growth = g_creatureTypeTraits[creature].m_growthRate;
+            // The dwelling table retains four-byte creature storage.
+            creature = H3_ENUM_DECODE(TCreatureType,
+                g_townDwellingCreatures[
+                    currTown->m_type * (2 * TOWN_DWELLING_COUNT) + slot]);
+            long growth = H3_AT(g_creatureTypeTraits, creature).m_growthRate;
             int offsetToMon = currTown->getGrowthRate(slot) - growth;
             const char* name;
-            if (creature >= 0 && creature <= 0x96)
-                name = g_creatureTypeTraits[creature].m_name;
+            if (creature >= CREATURE_ROSTER_BEGIN
+                && creature <= CREATURE_ACCEPTED_RANGE_MAX)
+                name = H3_AT(g_creatureTypeTraits, creature).m_name;
             else
                 name = "";
 
@@ -1642,7 +1648,8 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                     getBuildingName(currTown->m_type, HOLY_GRAIL_ID),
                     offsetToMon);
 
-            m_growthBonusIcon[count]->setIconFrame(creature + 2);
+            // The icon resource uses creature ordinal + 2 as its frame id.
+            m_growthBonusIcon[count]->setIconFrame(H3_IDX(creature) + 2);
             m_growthBonusIcon[count]->setHelpText(helpText.c_str(),
                                                     rightText.c_str(), 1);
             m_growthBonusIcon[count]->setVisible(1);
@@ -1663,17 +1670,18 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             currTown->setSummoningGenerator();
         if (currTown->m_summoningType != CREATURE_NONE) {
             const char* name;
-            if (currTown->m_summoningType >= 0
-                && currTown->m_summoningType <= 0x96)
-                name = g_creatureTypeTraits[currTown->m_summoningType].m_name;
+            if (currTown->m_summoningType >= CREATURE_ROSTER_BEGIN
+                && currTown->m_summoningType <= CREATURE_ACCEPTED_RANGE_MAX)
+                name = H3_AT(g_creatureTypeTraits, currTown->m_summoningType).m_name;
             else
                 name = "";
 
             helpText = formatString(g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT), name);
             rightText = formatString(g_generalText->getText(GENERAL_TEXT_WEEKLY_GROWTH_IS_FORMAT), name, 0);
 
+            // The icon resource uses creature ordinal + 2 as its frame id.
             m_growthBonusIcon[count]->setIconFrame(
-                currTown->m_summoningType + 2);
+                H3_IDX(currTown->m_summoningType) + 2);
             m_growthBonusIcon[count]->setHelpText(helpText.c_str(),
                                                     rightText.c_str(), 1);
             m_growthBonusIcon[count]->setVisible(1);
@@ -1893,13 +1901,17 @@ void TTownScreenWindow::doTownKnob(unsigned char up)
 // E:\gamedcs\townmgr.cpp:2547
 void TTownScreenWindow::bonusRightClick(long id)
 {
-    int creature = m_bonusCreatures[id];
-    if (creature != -1) {
+    // Bonus rows retain four-byte storage for the creature domain.
+    TCreatureType creature =
+        H3_ENUM_DECODE(TCreatureType, m_bonusCreatures[id]);
+    if (creature != CREATURE_NONE) {
         widget* w = m_growthBonusIcon[id];
         // DC 0x16b0b2 calls widget::get_rclick_text; retail Main expands
         // the same right-click/rollover fallback at both bonus arms.
         const char* popupText = w->getRclickText();
-        normalDialog(popupText, 4, w->m_x + w->m_width, w->m_y, 0x15, creature,
+        // Dialog qualifier 0x15 consumes the creature's numeric ordinal.
+        normalDialog(popupText, 4, w->m_x + w->m_width, w->m_y, 0x15,
+                     H3_IDX(creature),
                      -1, 0, -1, 0, -1, 0);
     }
 }
@@ -2055,10 +2067,10 @@ void townManager::setupTown(unsigned char fade)
         else
             m_currentDwellingIdOff[slot] = slot;
         m_monPix[slot] = ResourceManager::getSprite(
-            g_creatureTypeTraits[g_townDwellingCreatures
+            H3_AT(g_creatureTypeTraits, g_townDwellingCreatures
                                      [m_townToView->m_type * 2
                                           * TOWN_DWELLING_COUNT
-                                      + m_currentDwellingIdOff[slot]]]
+                                      + m_currentDwellingIdOff[slot]])
                 .m_spriteName);
     }
 
@@ -2262,10 +2274,12 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
     }
 
     if (m_srcStrip == m_destStrip && m_srcIndex == m_destIndex) {
-        int id = m_srcStrip->m_group->m_armies[m_srcIndex];
+        // Army slots retain four-byte storage for the creature domain.
+        TCreatureType id = H3_ENUM_DECODE(
+            TCreatureType, m_srcStrip->m_group->m_armies[m_srcIndex]);
         const char* name;
-        if (id >= 0 && id <= 150)
-            name = g_creatureTypeTraits[id].m_pluralName;
+        if (isCreatureTypeInAcceptedRange(id))
+            name = H3_AT(g_creatureTypeTraits, id).m_pluralName;
         else
             name = "";
         sprintf(m_statusText, g_townCommand[4], name);
@@ -2279,13 +2293,16 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
         return;
     }
 
-    int anchorId = m_destStrip->m_group->m_armies[m_destIndex];
-    int selId = m_srcStrip->m_group->m_armies[m_srcIndex];
+    // Army slots retain four-byte storage for the creature domain.
+    TCreatureType anchorId = H3_ENUM_DECODE(
+        TCreatureType, m_destStrip->m_group->m_armies[m_destIndex]);
+    TCreatureType selId = H3_ENUM_DECODE(
+        TCreatureType, m_srcStrip->m_group->m_armies[m_srcIndex]);
     if (anchorId == selId && selOwner == m_destStrip->m_owner) {
         if (splitEnabled) {
             const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_name;
+            if (isCreatureTypeInAcceptedRange(selId))
+                name = H3_AT(g_creatureTypeTraits, selId).m_name;
             else
                 name = "";
             sprintf(m_statusText, g_townCommand[0], name);
@@ -2297,8 +2314,8 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
             return;
         }
         const char* name;
-        if (selId >= 0 && selId <= 150)
-            name = g_creatureTypeTraits[selId].m_name;
+        if (isCreatureTypeInAcceptedRange(selId))
+            name = H3_AT(g_creatureTypeTraits, selId).m_name;
         else
             name = "";
         sprintf(m_statusText, g_townCommand[2], name);
@@ -2307,10 +2324,10 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
     }
 
     if (splitEnabled) {
-        if (anchorId == -1) {
+        if (anchorId == CREATURE_NONE) {
             const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_name;
+            if (isCreatureTypeInAcceptedRange(selId))
+                name = H3_AT(g_creatureTypeTraits, selId).m_name;
             else
                 name = "";
             sprintf(m_statusText, g_townCommand[3], name);
@@ -2318,14 +2335,14 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
             return;
         }
     } else {
-        if (anchorId == -1) {
+        if (anchorId == CREATURE_NONE) {
             if (flag) {
                 strcpy(m_statusText, g_townCommand[5]);
                 return;
             }
             const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_pluralName;
+            if (isCreatureTypeInAcceptedRange(selId))
+                name = H3_AT(g_creatureTypeTraits, selId).m_pluralName;
             else
                 name = "";
             sprintf(m_statusText, g_townCommand[6], name);
@@ -2339,13 +2356,13 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
         return;
     }
     const char* nameAnchor;
-    if (anchorId >= 0 && anchorId <= 150)
-        nameAnchor = g_creatureTypeTraits[anchorId].m_pluralName;
+    if (isCreatureTypeInAcceptedRange(anchorId))
+        nameAnchor = H3_AT(g_creatureTypeTraits, anchorId).m_pluralName;
     else
         nameAnchor = "";
     const char* nameSel;
-    if (selId >= 0 && selId <= 150)
-        nameSel = g_creatureTypeTraits[selId].m_pluralName;
+    if (isCreatureTypeInAcceptedRange(selId))
+        nameSel = H3_AT(g_creatureTypeTraits, selId).m_pluralName;
     else
         nameSel = "";
     sprintf(m_statusText, g_townCommand[7], nameSel, nameAnchor);
@@ -2430,12 +2447,14 @@ void townManager::setCommandAndText(message* msg)
         break;
     case HORDE_ID:
     case HORDE_UPG_ID: {
-        TCreatureType creature = g_townDwellingCreatures[
+        // The dwelling table retains four-byte creature storage.
+        TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+            g_townDwellingCreatures[
             m_townToView->m_type * TOWN_DWELLING_SLOTS
-            + g_hordeDwellingSlot[m_townToView->m_type][code - HORDE_ID]];
+            + g_hordeDwellingSlot[m_townToView->m_type][code - HORDE_ID]]);
         const char* name;
-        if (creature >= 0 && creature <= 0x96)
-            name = g_creatureTypeTraits[creature].m_pluralName;
+        if (creature >= CREATURE_ROSTER_BEGIN && creature <= CREATURE_ACCEPTED_RANGE_MAX)
+            name = H3_AT(g_creatureTypeTraits, creature).m_pluralName;
         else
             name = "";
         sprintf(m_statusText, g_townCommand[21], name);
@@ -2443,12 +2462,14 @@ void townManager::setCommandAndText(message* msg)
     }
     case HORDE_2_ID:
     case HORDE_2_UPG_ID: {
-        TCreatureType creature = g_townDwellingCreatures[
+        // The dwelling table retains four-byte creature storage.
+        TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+            g_townDwellingCreatures[
             m_townToView->m_type * TOWN_DWELLING_SLOTS
-            + g_horde2DwellingSlot[m_townToView->m_type][code - HORDE_2_ID]];
+            + g_horde2DwellingSlot[m_townToView->m_type][code - HORDE_2_ID]]);
         const char* name;
-        if (creature >= 0 && creature <= 0x96)
-            name = g_creatureTypeTraits[creature].m_pluralName;
+        if (creature >= CREATURE_ROSTER_BEGIN && creature <= CREATURE_ACCEPTED_RANGE_MAX)
+            name = H3_AT(g_creatureTypeTraits, creature).m_pluralName;
         else
             name = "";
         sprintf(m_statusText, g_townCommand[21], name);
@@ -2555,10 +2576,12 @@ void townManager::setCommandAndText(message* msg)
         if (m_srcIndex == -2 || m_srcIndex < 0) {
             strcpy(m_statusText, g_townCommand[3]);
         } else {
-            int id = m_srcStrip->m_group->m_armies[m_srcIndex];
+            // Army slots retain four-byte storage for the creature domain.
+            TCreatureType id = H3_ENUM_DECODE(
+                TCreatureType, m_srcStrip->m_group->m_armies[m_srcIndex]);
             const char* name;
-            if (id >= 0 && id <= 0x96)
-                name = g_creatureTypeTraits[id].m_pluralName;
+            if (isCreatureTypeInAcceptedRange(id))
+                name = H3_AT(g_creatureTypeTraits, id).m_pluralName;
             else
                 name = "";
             sprintf(m_statusText, g_townCommand[0], name);
@@ -2578,11 +2601,14 @@ void townManager::setCommandAndText(message* msg)
     case DWELLING_4_UPG_ID:
     case DWELLING_5_UPG_ID:
     case DWELLING_6_UPG_ID: {
-        TCreatureType creature = g_townDwellingCreatures[
-            m_townToView->m_type * TOWN_DWELLING_SLOTS + code - DWELLING_0_ID];
+        // The dwelling table retains four-byte creature storage.
+        TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+            g_townDwellingCreatures[
+                m_townToView->m_type * TOWN_DWELLING_SLOTS
+                + code - DWELLING_0_ID]);
         const char* name;
-        if (creature >= 0 && creature <= 0x96)
-            name = g_creatureTypeTraits[creature].m_pluralName;
+        if (creature >= CREATURE_ROSTER_BEGIN && creature <= CREATURE_ACCEPTED_RANGE_MAX)
+            name = H3_AT(g_creatureTypeTraits, creature).m_pluralName;
         else
             name = "";
         sprintf(m_statusText, g_townCommand[21], name);
@@ -2705,18 +2731,19 @@ void townManager::selectArmy(strip* fromStrip, long slot,
     m_currStrip = fromStrip;
     m_currIndex = slot;
 
-    if (!fromStrip->m_group || fromStrip->m_group->m_armies[slot] < 0) {
+    if (!fromStrip->m_group
+        || fromStrip->m_group->m_armies[slot] < CREATURE_ROSTER_BEGIN) {
         strcpy(m_statusText, g_townCommand[11]);
         m_command = -2;
         return;
     }
 
     const char* name;
-    if (fromStrip->m_group->m_armies[slot] <= 150) {
+    if (fromStrip->m_group->m_armies[slot] <= CREATURE_ACCEPTED_RANGE_MAX) {
         if (fromStrip->m_group->m_numTroops[slot] == 1)
-            name = g_creatureTypeTraits[fromStrip->m_group->m_armies[slot]].m_name;
+            name = H3_AT(g_creatureTypeTraits, fromStrip->m_group->m_armies[slot]).m_name;
         else
-            name = g_creatureTypeTraits[fromStrip->m_group->m_armies[slot]]
+            name = H3_AT(g_creatureTypeTraits, fromStrip->m_group->m_armies[slot])
                        .m_pluralName;
     } else {
         name = "";
@@ -2946,9 +2973,12 @@ void TThievesGuildWindow::setRolloverText(int codeY)
                 strcpy(g_text, "");
             }
         } else {
-            int slot = g_creatureArmies[codeY - 0x352].m_armies[g_creatureWidgetMap1[codeY - CREATURE_P0]];
-            if (slot >= 0 && slot <= 0x96)
-                strcpy(g_text, g_creatureTypeTraits[slot].m_pluralName);
+            // Army slots retain four-byte storage for the creature domain.
+            TCreatureType slot = H3_ENUM_DECODE(TCreatureType,
+                g_creatureArmies[codeY - 0x352].m_armies[
+                    g_creatureWidgetMap1[codeY - CREATURE_P0]]);
+            if (isCreatureTypeInAcceptedRange(slot))
+                strcpy(g_text, H3_AT(g_creatureTypeTraits, slot).m_pluralName);
             else
                 strcpy(g_text, "");
         }
@@ -3851,14 +3881,17 @@ void type_garrison_base_window::setCommandAndText(message* msg)
         if (mgr->m_srcIndex == -2) {
             strcpy(mgr->m_statusText, g_townCommand[3]);
         } else {
-            int creature = mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex];
+            // Army slots retain four-byte storage for the creature domain.
+            TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+                mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex]);
             // The traits row's own bound, spelled as the literal
-            // retail compares against: armygrp.h's ARMY_CREATURE_LAST
+            // retail compares against: armygrp.h's CREATURE_ACCEPTED_RANGE_MAX
             // is a member of `army`, which this compiland's include
             // closure does not define and must not grow to.
             sprintf(mgr->m_statusText, g_townCommand[0],
-                    creature >= 0 && creature <= 0x96
-                        ? g_creatureTypeTraits[creature].m_name
+                    creature >= CREATURE_ROSTER_BEGIN
+                        && creature <= CREATURE_ACCEPTED_RANGE_MAX
+                        ? H3_AT(g_creatureTypeTraits, creature).m_name
                         : "");
         }
         break;
@@ -3895,7 +3928,7 @@ void type_garrison_base_window::viewArmy()
     int slot = g_townManager->m_currIndex;
     strip* thisStrip = g_townManager->m_currStrip;
     armyGroup* group = thisStrip->m_group;
-    if (group->m_armies[slot] != -1)
+    if (group->m_armies[slot] != CREATURE_NONE)
         g_game->viewArmy(*group, slot, thisStrip->m_thisHero, 0, 119, 20, 0, 1);
 }
 
@@ -3991,9 +4024,11 @@ int type_garrison_base_window::windowHandler(message& msg)
         case widget::WIDGET_DESELECT:
             if (msg.m_codeY == DIVIDE_BUTTON_ID) {
                 townManager* mgr = g_townManager;
-                enum TCreatureType creature;
+                TCreatureType creature;
                 {
-                    creature = TCreatureType(mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex]);
+                    // Army slots retain four-byte creature storage.
+                    creature = H3_ENUM_DECODE(TCreatureType,
+                        mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex]);
                 }
                 mgr->m_divideStatus = 1;
                 g_townManager->m_garrisonStrip->draw(creature);
@@ -4047,13 +4082,15 @@ type_monster_join_window::type_monster_join_window(hero* inHero,
         }
 
         const char* name;
-        int type = monsters->m_armies[i];
-        if (type < 0 || type > 150)
+        // Army slots retain four-byte storage for the creature domain.
+        TCreatureType type =
+            H3_ENUM_DECODE(TCreatureType, monsters->m_armies[i]);
+        if (!isCreatureTypeInAcceptedRange(type))
             name = "";
         else if (monsters->m_numTroops[i] == 1)
-            name = g_creatureTypeTraits[type].m_name;
+            name = H3_AT(g_creatureTypeTraits, type).m_name;
         else
-            name = g_creatureTypeTraits[type].m_pluralName;
+            name = H3_AT(g_creatureTypeTraits, type).m_pluralName;
         title = formatString(g_generalText->getText(GENERAL_TEXT_TOWN_GARRISON_MAKE_ROOM_FORMAT), name);
     }
 
@@ -4135,7 +4172,7 @@ VA(0x005d1360, 0x69A)  // dc 0x1732e8
 TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
     : CAdvPopup(235, 106, 329, 388, 0x12)
 {
-    int cost = g_creatureTypeTraits[g_blacksmithMachines[inTownType]].m_cost[6];
+    int cost = H3_AT(g_creatureTypeTraits, g_blacksmithMachines[inTownType]).m_cost[6];
     m_townType = inTownType;
     m_widgets.reserve(12);
 
@@ -4143,7 +4180,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
                                        "TPSmith.pcx", 0x800));
 
     sprintf(g_text, g_generalText->getText(GENERAL_TEXT_BUILD_NEW_FORMAT),
-            g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
+            H3_AT(g_creatureTypeTraits, g_blacksmithMachines[m_townType]).m_name);
     m_widgets.push_back(new textWidget(0, 15, m_width, 30, g_text, "bigfont.fnt",
                                      font::HEADING, 1, 1, 0, 8));
     m_widgets.push_back(new textWidget(0, 210, m_width, 30, 0, "medfont.fnt",
@@ -4158,7 +4195,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
                                        "tpsmitbk.pcx", 0x800));
     m_machineIcon = new iconWidget(
         64, 50, 200, 150, 6,
-        g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_spriteName,
+        H3_AT(g_creatureTypeTraits, g_blacksmithMachines[m_townType]).m_spriteName,
         0, 2, 0, 0, 0x12);
     m_widgets.push_back(m_machineIcon);
 
@@ -4240,11 +4277,11 @@ void TBlacksmithWindow::setRolloverText(int id)
     switch (id) {
     case CANCEL_BUTTON_ID:
         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_DO_NOT_BUILD_FORMAT),
-                g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
+                H3_AT(g_creatureTypeTraits, g_blacksmithMachines[m_townType]).m_name);
         break;
     case BUY_BUTTON_ID:
         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_BUILD_FORMAT),
-                g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
+                H3_AT(g_creatureTypeTraits, g_blacksmithMachines[m_townType]).m_name);
         break;
     default:
         strcpy(g_text, "");
@@ -4343,11 +4380,11 @@ void doBlacksmith(int heroId, int townType)
         g_game->getHero(heroId)->giveArtifact(
             &g_blacksmithArtifacts[townType], 1, 1);
         const int* cost =
-            g_creatureTypeTraits[g_blacksmithMachines[townType]].m_cost;
+            H3_AT(g_creatureTypeTraits, g_blacksmithMachines[townType]).m_cost;
         for (int i = 0; i < 7; i++)
             g_currentPlayer->m_resources[6] -= cost[i];
         sprintf(g_text, g_townCommand[31],
-                g_creatureTypeTraits[g_blacksmithMachines[townType]].m_name);
+                H3_AT(g_creatureTypeTraits, g_blacksmithMachines[townType]).m_name);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 }
@@ -4572,8 +4609,10 @@ void townManager::doPortalOfSummoning()
         m_townToView->setSummoningGenerator();
 
     if (m_townToView->m_summoningType != CREATURE_NONE) {
+        // Town state retains four-byte storage for the creature domain.
         g_recruitUnit = new recruitUnit(&m_townToView->getArmy(), 1,
-                                        m_townToView->m_summoningType,
+                                        H3_ENUM_DECODE(TCreatureType,
+                                            m_townToView->m_summoningType),
                                         &m_townToView->m_summoningPopulation,
                                         CREATURE_NONE, 0, CREATURE_NONE, 0,
                                         CREATURE_NONE, 0);
@@ -5426,7 +5465,7 @@ building_popup:
                         }
                         if (m_currStrip->m_group
                             && m_currStrip->m_group->m_armies[m_currIndex]
-                                   != -1) {
+                                   != CREATURE_NONE) {
                             g_game->viewArmy(*m_currStrip->m_group,
                                              m_currIndex,
                                              m_currStrip->m_thisHero,
@@ -5458,9 +5497,11 @@ building_popup:
                 break;
             }
             case TTownScreenWindow::DIVIDE_ID: {
-                enum TCreatureType id;
+                TCreatureType id;
                 {
-                    id = TCreatureType(m_srcStrip->m_group->m_armies[m_srcIndex]);
+                    // Army slots retain four-byte creature storage.
+                    id = H3_ENUM_DECODE(TCreatureType,
+                        m_srcStrip->m_group->m_armies[m_srcIndex]);
                 }
                 m_garrisonStrip->draw(id);
                 m_heroStrip->draw(id);
@@ -5586,7 +5627,9 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
         if (g_currentPlayer->isLocalHuman()) {
             if (m_destStrip != m_srcStrip) {
                 armyGroup* destGroup = m_destStrip->m_group;
-                int creature = m_srcStrip->m_group->m_armies[m_srcIndex];
+                // Army slots retain four-byte creature storage.
+                TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+                    m_srcStrip->m_group->m_armies[m_srcIndex]);
                 if (destGroup->m_armies[m_destIndex] != creature) {
                     int i;
                     for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
@@ -5599,7 +5642,7 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
             }
             m_destStrip->m_group->m_numTroops[m_destIndex]
                 += m_srcStrip->m_group->m_numTroops[m_srcIndex];
-            m_srcStrip->m_group->m_armies[m_srcIndex] = -1;
+            m_srcStrip->m_group->m_armies[m_srcIndex] = CREATURE_NONE;
             m_srcStrip->m_group->m_numTroops[m_srcIndex] = 0;
             resetStrips();
         }
@@ -5761,7 +5804,9 @@ void townManager::redrawTownScreen()
     TCreatureType creature = CREATURE_NONE;
     if (m_divideStatus)
     {
-        creature = TCreatureType(m_srcStrip->m_group->m_armies[m_srcIndex]);
+        // Army slots retain four-byte creature storage.
+        creature = H3_ENUM_DECODE(
+            TCreatureType, m_srcStrip->m_group->m_armies[m_srcIndex]);
     }
     m_resourceDisplay->update(1, 0);
     m_garrisonStrip->drawIcons(0, creature);
@@ -6954,12 +6999,12 @@ TCastleWindow::TCastleWindow()
 
     if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
         && (g_townManager->m_townToView->m_built & g_bitNumber[EXTRA_1_ID])
-        && g_townManager->m_townToView->m_summoningType == -1)
+        && g_townManager->m_townToView->m_summoningType == CREATURE_NONE)
         g_townManager->m_townToView->setSummoningGenerator();
 
     if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
         && (g_townManager->m_townToView->m_built & g_bitNumber[EXTRA_1_ID])
-        && g_townManager->m_townToView->m_summoningType != -1) {
+        && g_townManager->m_townToView->m_summoningType != CREATURE_NONE) {
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0, "TPCastl8.pcx", 0x800));
         m_use8 = 1;
     } else {
@@ -7010,12 +7055,14 @@ TCastleWindow::TCastleWindow()
     m_widgets.push_back(new bitmapBorder(563, 292, 100, 120, -1, g_text, 0x800));
     if (m_use8) {
         m_widgets.push_back(new bitmapBorder(169, 425, 100, 120, -1, g_text, 0x800));
-        int summoned = g_townManager->m_townToView->m_summoningType;
+        // Town state retains four-byte storage for the creature domain.
+        TCreatureType summoned = H3_ENUM_DECODE(
+            TCreatureType, g_townManager->m_townToView->m_summoningType);
         strcpy(g_text, g_townCastleDefNames[
                    ((!g_game->m_gameVersion
                      && isBaseElemental(summoned))
                         ? -1
-                        : g_creatureTypeTraits[summoned].m_townType)
+                        : H3_AT(g_creatureTypeTraits, summoned).m_townType)
                    + 1]);
         m_widgets.push_back(new bitmapBorder(563, 425, 100, 120, -1, g_text, 0x800));
     } else {
@@ -7091,51 +7138,51 @@ TCastleWindow::TCastleWindow()
     }
 
     m_spriteWidget[0] = new iconWidget(169, 26, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                                     H3_AT(g_creatureTypeTraits, g_townDwellingCreatures[
                          g_townManager->m_currentDwellingIdOff[0]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                         + whichTown * TOWN_DWELLING_SLOTS]).m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[1] = new iconWidget(563, 26, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                                     H3_AT(g_creatureTypeTraits, g_townDwellingCreatures[
                          g_townManager->m_currentDwellingIdOff[1]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                         + whichTown * TOWN_DWELLING_SLOTS]).m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[2] = new iconWidget(169, 159, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                                     H3_AT(g_creatureTypeTraits, g_townDwellingCreatures[
                          g_townManager->m_currentDwellingIdOff[2]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                         + whichTown * TOWN_DWELLING_SLOTS]).m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[3] = new iconWidget(563, 159, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                                     H3_AT(g_creatureTypeTraits, g_townDwellingCreatures[
                          g_townManager->m_currentDwellingIdOff[3]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                         + whichTown * TOWN_DWELLING_SLOTS]).m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[4] = new iconWidget(169, 292, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                                     H3_AT(g_creatureTypeTraits, g_townDwellingCreatures[
                          g_townManager->m_currentDwellingIdOff[4]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                         + whichTown * TOWN_DWELLING_SLOTS]).m_spriteName,
                                      0, 2, 0, 0, 0x12);
     m_spriteWidget[5] = new iconWidget(563, 292, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                                     H3_AT(g_creatureTypeTraits, g_townDwellingCreatures[
                          g_townManager->m_currentDwellingIdOff[5]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                         + whichTown * TOWN_DWELLING_SLOTS]).m_spriteName,
                                      0, 2, 0, 0, 0x12);
     if (m_use8) {
         m_spriteWidget[6] = new iconWidget(169, 425, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                                     H3_AT(g_creatureTypeTraits, g_townDwellingCreatures[
                          g_townManager->m_currentDwellingIdOff[6]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                         + whichTown * TOWN_DWELLING_SLOTS]).m_spriteName,
                                      0, 2, 0, 0, 0x12);
         m_spriteWidget[7] = new iconWidget(563, 425, 99, 119, -1,
-                                     g_creatureTypeTraits[
-                     g_townManager->m_townToView->m_summoningType].m_spriteName,
+                                     H3_AT(g_creatureTypeTraits,
+                     g_townManager->m_townToView->m_summoningType).m_spriteName,
                                      0, 2, 0, 0, 0x12);
         m_widgets.push_back(m_spriteWidget[7]);
     } else {
         m_spriteWidget[6] = new iconWidget(365, 425, 99, 119, -1,
-                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                                     H3_AT(g_creatureTypeTraits, g_townDwellingCreatures[
                          g_townManager->m_currentDwellingIdOff[6]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
+                         + whichTown * TOWN_DWELLING_SLOTS]).m_spriteName,
                                      0, 2, 0, 0, 0x12);
     }
 
@@ -7597,12 +7644,14 @@ void TCastleWindow::setRolloverText(message* msg)
     } else if (code >= 0x11 && code <= 0x17) {
         int dwelling = g_townManager->m_currentDwellingIdOff[code - 0x11];
         if (g_townManager->m_townToView->m_active & g_bitNumber[DWELLING_0_ID + dwelling]) {
-            TCreatureType rowCreature =
-                g_townDwellingCreatures[g_townManager->m_townToView->m_type
-                                       * TOWN_DWELLING_SLOTS + dwelling];
+            // The dwelling table retains four-byte creature storage.
+            TCreatureType rowCreature = H3_ENUM_DECODE(TCreatureType,
+                g_townDwellingCreatures[
+                    g_townManager->m_townToView->m_type
+                    * TOWN_DWELLING_SLOTS + dwelling]);
             const char* creatureName;
-            if (rowCreature >= 0 && rowCreature <= 150)
-                creatureName = g_creatureTypeTraits[rowCreature].m_pluralName;
+            if (isCreatureTypeInAcceptedRange(rowCreature))
+                creatureName = H3_AT(g_creatureTypeTraits, rowCreature).m_pluralName;
             else
                 creatureName = "";
             sprintf(g_text, "%s %s", g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE), creatureName);
@@ -7776,7 +7825,8 @@ int TCastleWindow::windowHandler(message& msg)
             case ROW_STAT_LABEL_6_ID + ROW_SUMMONING_OFFSET:
                 g_recruitUnit = new recruitUnit(
                     &g_townManager->m_townToView->getArmy(), 1,
-                    g_townManager->m_townToView->m_summoningType,
+                    H3_ENUM_DECODE(TCreatureType,
+                        g_townManager->m_townToView->m_summoningType),
                     &g_townManager->m_townToView->m_summoningPopulation,
                     CREATURE_NONE, 0, CREATURE_NONE, 0, CREATURE_NONE, 0);
                 if (!g_recruitUnit)
@@ -7930,12 +7980,14 @@ void townManager::setupWell(TCastleWindow* wellWin)
             wellWin->broadcastMessage(msg);
         }
         msg.m_codeY = i + 0x19;
-        TCreatureType rowCreature =
-            g_townDwellingCreatures[m_townToView->m_type * TOWN_DWELLING_SLOTS
-                                   + m_currentDwellingIdOff[i]];
+        // The dwelling table retains four-byte creature storage.
+        TCreatureType rowCreature = H3_ENUM_DECODE(TCreatureType,
+            g_townDwellingCreatures[
+                m_townToView->m_type * TOWN_DWELLING_SLOTS
+                + m_currentDwellingIdOff[i]]);
         const char* creatureName;
-        if (rowCreature >= 0 && rowCreature <= 150)
-            creatureName = g_creatureTypeTraits[rowCreature].m_pluralName;
+        if (isCreatureTypeInAcceptedRange(rowCreature))
+            creatureName = H3_AT(g_creatureTypeTraits, rowCreature).m_pluralName;
         else
             creatureName = "";
         strcpy(g_text, creatureName);
@@ -7952,10 +8004,11 @@ void townManager::setupWell(TCastleWindow* wellWin)
 
         msg.m_codeY = 0x20;
         const char* summonName;
-        if (g_townManager->m_townToView->m_summoningType >= 0
-            && g_townManager->m_townToView->m_summoningType <= 150)
+        if (g_townManager->m_townToView->m_summoningType >= CREATURE_ROSTER_BEGIN
+            && g_townManager->m_townToView->m_summoningType
+                   <= CREATURE_ACCEPTED_RANGE_MAX)
             summonName =
-                g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType].m_pluralName;
+                H3_AT(g_creatureTypeTraits, g_townManager->m_townToView->m_summoningType).m_pluralName;
         else
             summonName = "";
         strcpy(g_text, summonName);
@@ -7965,9 +8018,9 @@ void townManager::setupWell(TCastleWindow* wellWin)
 
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         TCreatureTypeTraits monInfo =
-            g_creatureTypeTraits[g_townDwellingCreatures[
+            H3_AT(g_creatureTypeTraits, g_townDwellingCreatures[
                 m_townToView->m_type * TOWN_DWELLING_SLOTS
-                + m_currentDwellingIdOff[i]]];
+                + m_currentDwellingIdOff[i]]);
         sprintf(g_text, "%d", monInfo.m_attackSkill);
         textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
@@ -8005,7 +8058,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
 
     if (wellWin->m_use8) {
         TCreatureTypeTraits monInfo =
-            g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType];
+            H3_AT(g_creatureTypeTraits, g_townManager->m_townToView->m_summoningType);
         sprintf(g_text, "%d", monInfo.m_attackSkill);
         textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x30,
@@ -8085,7 +8138,8 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
             (thievesGuilds == TTownScreenWindow::GUILD_COUNT_2) ? 4 : 2;
 
     int numDisabled = 0;
-    for (int k = 0; k < 8; k++) {
+    int k;
+    for (k = 0; k < 8; k++) {
         if (g_game->m_playerDisabled[k])
             numDisabled++;
     }
@@ -8227,20 +8281,22 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                         font::PRIMARY, -1, 1, 0, 8));
                     addWidget(m_widgets.back(), -1);
                     if (thievesGuilds >= 4) {
-                        int bestCreature = -1;
+                        TCreatureType bestCreature = CREATURE_NONE;
                         long bestValue = 0;
                         for (unsigned int n = 0; n < g_game->m_players[who].m_numTowns; n++) {
                             int id = g_game->m_players[who].m_townIds[n];
                             const town* t = g_game->getTown(id);
                             for (unsigned int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
-                                if (t->getArmy().m_armies[slot] != -1
+                                if (t->getArmy().m_armies[slot] != CREATURE_NONE
                                     && t->getArmy().m_numTroops[slot] > 0
-                                    && g_creatureTypeTraits[t->getArmy().m_armies[slot]]
+                                    && H3_AT(g_creatureTypeTraits, t->getArmy().m_armies[slot])
                                                .m_aiValue
                                            > bestValue) {
-                                    bestCreature = t->getArmy().m_armies[slot];
-                                    bestValue = g_creatureTypeTraits[
-                                        t->getArmy().m_armies[slot]].m_aiValue;
+                                    // Army slots retain four-byte creature storage.
+                                    bestCreature = H3_ENUM_DECODE(TCreatureType,
+                                        t->getArmy().m_armies[slot]);
+                                    bestValue = H3_AT(g_creatureTypeTraits,
+                                        t->getArmy().m_armies[slot]).m_aiValue;
                                     g_creatureArmies[column] = t->getArmy();
                                     g_creatureWidgetMap1[column] = slot;
                                 }
@@ -8250,26 +8306,29 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                             int id = g_game->m_players[who].m_heroes[k];
                             hero* h = g_game->getHero(id);
                             for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
-                                if (h->m_army.m_armies[slot] != -1
+                                if (h->m_army.m_armies[slot] != CREATURE_NONE
                                     && h->m_army.m_numTroops[slot] > 0
-                                    && g_creatureTypeTraits[h->m_army.m_armies[slot]]
+                                    && H3_AT(g_creatureTypeTraits, h->m_army.m_armies[slot])
                                                .m_aiValue
                                            > bestValue) {
-                                    bestCreature = h->m_army.m_armies[slot];
-                                    bestValue = g_creatureTypeTraits[
-                                        h->m_army.m_armies[slot]].m_aiValue;
+                                    // Army slots retain four-byte creature storage.
+                                    bestCreature = H3_ENUM_DECODE(TCreatureType,
+                                        h->m_army.m_armies[slot]);
+                                    bestValue = H3_AT(g_creatureTypeTraits,
+                                        h->m_army.m_armies[slot]).m_aiValue;
                                     g_creatureArmies[column] = h->m_army;
                                     g_creatureWidgetMap1[column] = slot;
                                 }
                             }
                         }
-                        if (bestCreature != -1) {
+                        if (bestCreature != CREATURE_NONE) {
                             m_widgets.push_back(new iconWidget(
                                 66 * column + 0xff, 0x1de, 0x3a, 0x40,
                                 column + CREATURE_P0,
                                 DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                                              "twcrport.def"),
-                                bestCreature + 2, 2, 0, 0, 0x11));
+                                // The portrait resource uses ordinal + 2.
+                                H3_IDX(bestCreature) + 2, 2, 0, 0, 0x11));
                             addWidget(m_widgets.back(), -1);
                         }
                     }

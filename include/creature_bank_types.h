@@ -22,7 +22,7 @@ struct type_creature_bank {
 public:
     armyGroup m_guards;
     int m_resources[7];
-    TCreatureType m_rewardCreature;
+    H3_ENUM_STORAGE(TCreatureType, int) m_rewardCreature;
     signed char m_rewardCreatures;
     std::vector<TArtifact> m_artifacts;
     // Raw DC publics encode bool (QAA_N) for both record operations.

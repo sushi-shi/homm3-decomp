@@ -127,7 +127,7 @@ public:
         char m_resourceCost[12];  // +0x14
         long m_cost[7];             // +0x20
         int m_resourceIndex;        // +0x3c
-        TCreatureType m_type;                 // +0x40 (TCreatureType domain)
+        H3_ENUM_STORAGE(TCreatureType, int) m_type;  // +0x40
         int m_count;                // +0x44
         int m_level;                // +0x48
         int m_state;                // +0x4c
@@ -168,7 +168,11 @@ private:
     // Original: UpgradeAll, hillfortwindow.cpp:500.
     void upgradeAll();
     // Original: GetCreatureType, HillFortWindow.h:170; const receiver proven.
-    TCreatureType getCreatureType(int slotnum) const { return m_slot[slotnum].m_type; }
+    TCreatureType getCreatureType(int slotnum) const
+    {
+        // Hill-fort slots retain four-byte creature storage.
+        return H3_ENUM_DECODE(TCreatureType, m_slot[slotnum].m_type);
+    }
 };
 SIZE(THillFortWindow, 0x2a0);
 

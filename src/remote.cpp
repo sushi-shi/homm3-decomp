@@ -1424,15 +1424,15 @@ void CWaitForReadyPlayersDlg::wait()
     m_startTime = GameTime::get();
     sRand(m_startTime);
 
-    int creature;
+    TCreatureType creature;
     do {
         // Complete calls Random (retail 0x554f10+0x13b); DC1723 calls SRandom.
-        creature = random(0, 111);
+        creature = H3_ENUM_DECODE(TCreatureType, random(0, 111));
     } while (creature == CREATURE_ARCH_DEVIL
              || creature == CREATURE_DEVIL);
 
     setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_READY_PLAYERS), g_mediumFont,
-          g_creatureTypeTraits[creature].m_spriteName, 0);
+          H3_AT(g_creatureTypeTraits, creature).m_spriteName, 0);
     doModal(0);
 
     if (g_dPlay->isHost()) {
@@ -2131,14 +2131,15 @@ void CLevelPickWaitDlg::waitForLevels(int fromWho)
     m_fromWho = fromWho;
     sRand(GameTime::get());
 
-    int creature;
+    TCreatureType creature;
     do {
-        creature = random(0, 111);
+        // The random number generator returns a raw roster ordinal.
+        creature = H3_ENUM_DECODE(TCreatureType, random(0, 111));
     } while (creature == CREATURE_ARCH_DEVIL
              || creature == CREATURE_DEVIL);
 
     setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_LEVEL_SELECTION), g_mediumFont,
-          g_creatureTypeTraits[creature].m_spriteName, 0);
+          H3_AT(g_creatureTypeTraits, creature).m_spriteName, 0);
     doModal(0);
 }
 
@@ -2237,9 +2238,11 @@ VA(0x00557090, 0x5C)  // dc 0x11e948
 void CWaitForRemoteBattleDlg::wait(int playerPos)
 {
     m_playerPos = playerPos;
-    int creature = random(0, 111);
+    // The random number generator returns a raw roster ordinal.
+    TCreatureType creature =
+        H3_ENUM_DECODE(TCreatureType, random(0, 111));
     setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_REMOTE_BATTLE), g_mediumFont,
-          g_creatureTypeTraits[creature].m_spriteName, 12);
+          H3_AT(g_creatureTypeTraits, creature).m_spriteName, 12);
     doModal(0);
 }
 

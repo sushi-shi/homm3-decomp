@@ -335,14 +335,17 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
     int creatureBase = townType * (2 * TOWN_DWELLING_COUNT);
     int slot;
     for (slot = 0; slot < 3; ++slot) {
-        int creature = g_townDwellingCreatures[creatureBase + slot];
+        // The dwelling roster is fixed-width creature storage.
+        TCreatureType creature = H3_ENUM_DECODE(
+            TCreatureType, g_townDwellingCreatures[creatureBase + slot]);
         iconWidget* portrait = new iconWidget(
             iconX, 159, 32, 32, slot, "cprsmall.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
         add(portrait);
-        portrait->setIconFrame(creature + 2);
+        // The icon resource uses creature ordinal + 2 as its frame id.
+        portrait->setIconFrame(H3_IDX(creature) + 2);
         add(new textWidget(textX, 193, 52, 32,
-            g_creatureTypeTraits[creature].m_name, "tiny.fnt",
+            H3_AT(g_creatureTypeTraits, creature).m_name, "tiny.fnt",
             font::PRIMARY, -1, 1, 0, 8));
         iconX += 52;
         textX += 52;
@@ -351,14 +354,17 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
     iconX = centerX - 88;
     textX = iconX - 10;
     for (slot = 3; slot < TOWN_DWELLING_COUNT; ++slot) {
-        int creature = g_townDwellingCreatures[creatureBase + slot];
+        // The dwelling roster is fixed-width creature storage.
+        TCreatureType creature = H3_ENUM_DECODE(
+            TCreatureType, g_townDwellingCreatures[creatureBase + slot]);
         iconWidget* portrait = new iconWidget(
             iconX, 235, 32, 32, slot, "cprsmall.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
         add(portrait);
-        portrait->setIconFrame(creature + 2);
+        // The icon resource uses creature ordinal + 2 as its frame id.
+        portrait->setIconFrame(H3_IDX(creature) + 2);
         add(new textWidget(textX, 267, 52, 32,
-            g_creatureTypeTraits[creature].m_name, "tiny.fnt",
+            H3_AT(g_creatureTypeTraits, creature).m_name, "tiny.fnt",
             font::PRIMARY, -1, 1, 0, 8));
         iconX += 52;
         textX += 52;

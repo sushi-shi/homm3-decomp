@@ -31,13 +31,15 @@ public:
         DISMISS_ID = 0x7803
     };
 
-    TViewArmyWindow(int armyType, int x0, int y0, unsigned char showOk);
+    TViewArmyWindow(H3_ENUM_PARAM(TCreatureType, int) armyType,
+        int x0, int y0, unsigned char showOk);
     TViewArmyWindow(const army* thisArmy, int x0, int y0,
                     unsigned char showOk);
     // Complete adds the tenth groupAlignments argument (ret 0x28) and
     // uses the mutable group pointer required by GetArmyMorale/GetArmyLuck.
     TViewArmyWindow(armyGroup* group, int iarmy, const hero* thisHero,
-                    const town* thisTown, int x0, int y0, int upgrade,
+                    const town* thisTown, int x0, int y0,
+                    H3_ENUM_PARAM(TCreatureType, int) upgrade,
                     unsigned char showDismiss, unsigned char showOk,
                     unsigned char groupAlignments);
     virtual ~TViewArmyWindow();
@@ -103,13 +105,13 @@ private:
     int convertID2HelpID(int id) const;
 
     // retail keeps this four-byte field at +0x60. Upgrade below is int.
-    TCreatureType m_armyType;
+    H3_ENUM_STORAGE(TCreatureType, int) m_armyType;
     int m_armySize;
     int m_morale;
     std::string m_moraleHelp;
     int m_luck;
     std::string m_luckHelp;
-    int m_upgrade;
+    H3_ENUM_STORAGE(TCreatureType, int) m_upgrade;
     unsigned char m_showingUpgradeButton;
     unsigned char m_showingDismissButton;
     unsigned char m_showingOkButton;

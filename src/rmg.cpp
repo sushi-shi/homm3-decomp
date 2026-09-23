@@ -1429,7 +1429,7 @@ rmgWitchHutObject::rmgWitchHutObject(TRmgObjectPropertiesRef* properties)
 rmgBlackBoxObject::rmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
     : type_object(properties)
 {
-    m_creatureType = -1;
+    m_creatureType = CREATURE_NONE;
     m_creatureCount = 0;
     m_experience = 0;
     memset(m_resources, 0, sizeof(m_resources));
@@ -1585,7 +1585,7 @@ rmgSeerHutObject::rmgSeerHutObject(TRmgObjectPropertiesRef* properties)
     m_artifact = -1;
     m_resourceType = 6;
     m_resourceCount = 0;
-    m_creatureType = -1;
+    m_creatureType = CREATURE_NONE;
     m_creatureCount = 0;
 }
 
@@ -1682,7 +1682,7 @@ void rmgBlackBoxObject::write(TAbstractFile* outfile, int version)
         char spell = m_spells[i];
         outfile->write(&spell, sizeof(spell));
     }
-    if (m_creatureType == -1) {
+    if (m_creatureType == CREATURE_NONE) {
         char creatureCount = 0;
         outfile->write(&creatureCount, sizeof(creatureCount));
     } else {
@@ -1691,10 +1691,10 @@ void rmgBlackBoxObject::write(TAbstractFile* outfile, int version)
             outfile->write(&creatureCount, sizeof(creatureCount));
         }
         if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-            short creatureType = m_creatureType;
+            H3_ENUM_STORAGE(TCreatureType, short) creatureType = m_creatureType;
             outfile->write(&creatureType, sizeof(creatureType));
         } else {
-            char creatureType = m_creatureType;
+            H3_ENUM_STORAGE(TCreatureType, char) creatureType = m_creatureType;
             outfile->write(&creatureType, sizeof(creatureType));
         }
         {
@@ -1815,16 +1815,16 @@ void rmgSeerHutObject::write(TAbstractFile* outfile, int version)
             int experience = m_experience;
             outfile->write(&experience, sizeof(experience));
         }
-    } else if (m_creatureType != -1) {
+    } else if (m_creatureType != CREATURE_NONE) {
         {
             char rewardKind = 10;
             outfile->write(&rewardKind, sizeof(rewardKind));
         }
         if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
-            short creature = m_creatureType;
+            H3_ENUM_STORAGE(TCreatureType, short) creature = m_creatureType;
             outfile->write(&creature, sizeof(creature));
         } else {
-            char creature = m_creatureType;
+            H3_ENUM_STORAGE(TCreatureType, char) creature = m_creatureType;
             outfile->write(&creature, sizeof(creature));
         }
         {
@@ -2062,13 +2062,14 @@ type_object* type_artifact_def::generate(TRmgObjectPropertiesRef* properties,
 }
 
 VA(0x00534250, 0xB5)
-type_black_box_creature_def::type_black_box_creature_def(int newCreatureType)
+type_black_box_creature_def::type_black_box_creature_def(
+    H3_ENUM_PARAM(TCreatureType, int) newCreatureType)
     : type_treasure_def(6, 0, -1, 3),
       m_creatureType(newCreatureType)
 {
     m_adjustedValue =
-        g_rmgCreatureValueByLevel[g_creatureTypeTraits[newCreatureType].m_level]
-        / g_creatureTypeTraits[newCreatureType].m_aiValue;
+        g_rmgCreatureValueByLevel[H3_AT(g_creatureTypeTraits, newCreatureType).m_level]
+        / H3_AT(g_creatureTypeTraits, newCreatureType).m_aiValue;
 
     if (m_adjustedValue > 50)
         m_adjustedValue = ((m_adjustedValue + 5) / 10) * 10;
@@ -2085,10 +2086,11 @@ VA(0x00534310, 0x64)
 int type_black_box_creature_def::getValue(
     TRmgZone* zone, type_random_map_generator* generator)
 {
-    int alignment = g_creatureTypeTraits[m_creatureType].m_townType;
+    int alignment = H3_AT(g_creatureTypeTraits, m_creatureType).m_townType;
     if (alignment != zone->m_townType2)
         return -1;
-    int value = g_creatureTypeTraits[m_creatureType].m_aiValue * m_adjustedValue;
+    int value = H3_AT(g_creatureTypeTraits, m_creatureType).m_aiValue
+        * m_adjustedValue;
     int alignmentCount = 0;
     if (alignment != -1)
         alignmentCount = generator->m_activeZoneCountsByAlignment[alignment];
@@ -2154,8 +2156,8 @@ type_object* type_dwelling_def::generate(TRmgObjectPropertiesRef* properties,
 VA(0x005347F0, 0x79)
 int type_map_dwelling_def::getValue(TRmgZone* zone, type_random_map_generator* generator)
 {
-    const TCreatureTypeTraits& creature =
-        g_creatureTypeTraits[g_creatureGenerator1Types[m_subtype]];
+    const TCreatureTypeTraits& creature = H3_AT(
+        g_creatureTypeTraits, g_creatureGenerator1Types[m_subtype]);
     if (creature.m_townType != zone->m_townType2)
         return -1;
 
@@ -3561,9 +3563,13 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(4, 0, 3000, 50));
 
     {
-        int creatureCount = m_mapVersion >= 1 ? 145 : 118;
-        for (int creature = creatureCount; creature--;) {
-            if (g_creatureTypeTraits[creature].m_level >= 0)
+        // The exclusive bounds are the first expansion creature (Pixie) and
+        // the first war machine (Catapult).
+        H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creatureCount =
+            m_mapVersion >= 1 ? CREATURE_ROSTER_END : CREATURE_ROE_ROSTER_END;
+        for (H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature = creatureCount;
+             creature--;) {
+            if (H3_AT(g_creatureTypeTraits, creature).m_level >= 0)
                 m_objectGenerators.push_back(
                     new type_black_box_creature_def(creature));
         }
@@ -3680,9 +3686,12 @@ void type_random_map_generator::initializeObjectGenerators()
     m_objectGenerators.push_back(new type_treasure_def(82, 0, 1500, 500));
 
     for (int quest = 0; quest < m_objectPrototypes[83].size(); ++quest) {
-        int creatureCount = m_mapVersion >= 1 ? 145 : 118;
-        for (int creature = creatureCount; creature--;) {
-            if (g_creatureTypeTraits[creature].m_level >= 0)
+        // Same creature-domain bounds as the black-box generator scan above.
+        H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creatureCount =
+            m_mapVersion >= 1 ? CREATURE_ROSTER_END : CREATURE_ROE_ROSTER_END;
+        for (H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature = creatureCount;
+             creature--;) {
+            if (H3_AT(g_creatureTypeTraits, creature).m_level >= 0)
                 m_objectGenerators.push_back(
                     new type_quest_creature_def(creature, quest));
         }
@@ -5784,37 +5793,43 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     } else {
         memcpy(allowed, zone->m_slot->m_allowedMonsters, sizeof(allowed));
     }
-    int prototypeIndices[RMG_GUARD_CREATURE_COUNT];
+    int prototypeIndices[CREATURE_ROSTER_COUNT];
     memset(prototypeIndices, -1, sizeof(prototypeIndices));
     for (unsigned int index = 0; index < m_objectPrototypes[MONSTER].size(); ++index) {
         TRmgObjectPropertiesRef* properties = m_objectPrototypes[MONSTER][index];
-        prototypeIndices[properties->m_prototype->m_subtype] = index;
+        // Monster object subtypes store raw creature ordinals.
+        TCreatureType prototypeCreature = H3_ENUM_DECODE(
+            TCreatureType, properties->m_prototype->m_subtype);
+        H3_AT(prototypeIndices, prototypeCreature) = index;
     }
     int eligibleCount = 0;
-    int creature = RMG_GUARD_CREATURE_COUNT;
+    H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature =
+        CREATURE_ROSTER_END;
     if (m_mapVersion < RMG_MAP_ARMAGEDDONS_BLADE) {
-        while (--creature >= RMG_GUARD_ROE_EXCLUDED_FIRST)
-            prototypeIndices[creature] = -1;
+        while (--creature >= CREATURE_ROE_ROSTER_END)
+            H3_AT(prototypeIndices, creature) = -1;
     }
-    for (--creature; creature >= 0; --creature) {
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+    for (--creature; creature >= CREATURE_ROSTER_BEGIN; --creature) {
+        const TCreatureTypeTraits& traits = H3_AT(g_creatureTypeTraits, creature);
         if ((traits.m_wanderingHigh + traits.m_wanderingLow) / 2 * traits.m_aiValue <= value
             && value <= traits.m_aiValue * RMG_GUARD_MAXIMUM_COUNT
             && traits.m_level >= 0 && allowed[traits.m_townType + 1]) {
             ++eligibleCount;
         } else {
-            prototypeIndices[creature] = -1;
+            H3_AT(prototypeIndices, creature) = -1;
         }
     }
     if (!eligibleCount)
         return 0;
     int chosen = rand() % eligibleCount;
-    for (creature = RMG_GUARD_CREATURE_COUNT - 1; creature >= 0; --creature) {
-        if (prototypeIndices[creature] >= 0 && --chosen < 0)
+    for (creature = CREATURE_ROSTER_END - 1;
+         creature >= CREATURE_ROSTER_BEGIN; --creature) {
+        if (H3_AT(prototypeIndices, creature) >= 0 && --chosen < 0)
             break;
     }
-    TRmgObjectPropertiesRef* properties = m_objectPrototypes[MONSTER][prototypeIndices[creature]];
-    int aiValue = g_creatureTypeTraits[creature].m_aiValue;
+    TRmgObjectPropertiesRef* properties =
+        m_objectPrototypes[MONSTER][H3_AT(prototypeIndices, creature)];
+    int aiValue = H3_AT(g_creatureTypeTraits, creature).m_aiValue;
     int count = (value + aiValue / 2) / aiValue;
     int variation = count / 4 + 1;
     if (variation > 1) {

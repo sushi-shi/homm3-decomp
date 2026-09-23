@@ -105,15 +105,15 @@ DATA(0x0063bd40) const TCombatHeroSprite g_combatHeroSprites[18] = {
     { "CH17.DEF", 95, 52, 5 }
 };
 DATA(0x0063cf88) const TSiegeArcherInfo g_siegeArcherInfo[9] = {
-    { 2, { { 780, 238 }, { 648, 566 }, { 596, 80 } }, "plcbowx.def" },
-    { 18, { { 786, 240 }, { 625, 563 }, { 595, 81 } }, "pelfx.def" },
-    { 34, { { 753, 251 }, { 609, 578 }, { 600, 92 } }, "pmagex.def" },
-    { 44, { { 765, 230 }, { 623, 565 }, { 595, 80 } }, "cprgogx.def" },
-    { 64, { { 755, 365 }, { 625, 570 }, { 593, 90 } }, "PLICH.def" },
-    { 76, { { 785, 217 }, { 625, 560 }, { 596, 80 } }, "pmedusx.def" },
-    { 88, { { 785, 222 }, { 615, 557 }, { 596, 80 } }, "porchx.def" },
-    { 100, { { 795, 230 }, { 626, 575 }, { 580, 85 } }, "pplizax.def" },
-    { 127, { { 783, 225 }, { 636, 575 }, { 595, 105 } }, "cprgtix.def" }
+    { CREATURE_ARCHER, { { 780, 238 }, { 648, 566 }, { 596, 80 } }, "plcbowx.def" },
+    { CREATURE_WOOD_ELF, { { 786, 240 }, { 625, 563 }, { 595, 81 } }, "pelfx.def" },
+    { CREATURE_MAGE, { { 753, 251 }, { 609, 578 }, { 600, 92 } }, "pmagex.def" },
+    { CREATURE_GOG, { { 765, 230 }, { 623, 565 }, { 595, 80 } }, "cprgogx.def" },
+    { CREATURE_LICH, { { 755, 365 }, { 625, 570 }, { 593, 90 } }, "PLICH.def" },
+    { CREATURE_MEDUSA, { { 785, 217 }, { 625, 560 }, { 596, 80 } }, "pmedusx.def" },
+    { CREATURE_ORC, { { 785, 222 }, { 615, 557 }, { 596, 80 } }, "porchx.def" },
+    { CREATURE_LIZARDMAN, { { 795, 230 }, { 626, 575 }, { 580, 85 } }, "pplizax.def" },
+    { CREATURE_STORM_ELEMENTAL, { { 783, 225 }, { 636, 575 }, { 595, 105 } }, "cprgtix.def" }
 };
 DATA(0x00641e08) const TSpellEffectTraits g_spellEffectTraits[83] = {
     { "C10spW.def", "Prayer", 256 },
@@ -1034,8 +1034,8 @@ void combatManager::initNonVisualVars()
     m_eagleEyeData[1].clear();
 
     m_nextAction = 0;
-    m_summonedElemental[0] = -1;
-    m_summonedElemental[1] = -1;
+    m_summonedElemental[0] = CREATURE_NONE;
+    m_summonedElemental[1] = CREATURE_NONE;
     m_lastCellIndex = -1;
     m_lastCommand = -99;
     m_currentSide = 1;
@@ -1337,8 +1337,11 @@ void combatManager::combineGroups(armyGroup* src, armyGroup* dest)
 
     int i;
     for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-        if (dest->isMember(src->m_armyTypes[i])) {
-            dest->add(src->m_armies[i], src->m_numTroops[i], -1);
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType creature = H3_ENUM_DECODE(
+            TCreatureType, src->m_armies[i]);
+        if (dest->isMember(creature)) {
+            dest->add(creature, src->m_numTroops[i], -1);
             src->dismiss(i);
         }
     }
@@ -1633,7 +1636,7 @@ void combatManager::setNextArmy(int group, int index)
         }
 
         switch (stack->m_creatureType) {
-        case army::ARMY_CREATURE_WRAITH:
+        case CREATURE_WRAITH:
             if (m_inSecondPhase)
                 break;
             {
@@ -1668,10 +1671,10 @@ void combatManager::setNextArmy(int group, int index)
                 }
             }
             break;
-        case army::ARMY_CREATURE_FAERIE_DRAGON:
+        case CREATURE_FAERIE_DRAGON:
             stack->faerieDragonSpell();
             break;
-        case army::ARMY_CREATURE_ENCHANTER:
+        case CREATURE_ENCHANTER:
             if (m_turnSinceLastEnchanter[m_currentSide] > 2 && stack->unnamed447fe0())
                 m_turnSinceLastEnchanter[m_currentSide] = 0;
             break;
@@ -1692,7 +1695,7 @@ unsigned char combatManager::combatIsOver() const
         unsigned char hasArmy = 0;
         for (int slot = 0; slot < 20; slot++) {
             const army& currentArmy = m_armies[side][slot];
-            if (currentArmy.m_creatureType == -1)
+            if (currentArmy.m_creatureType == CREATURE_NONE)
                 continue;
             if (currentArmy.is(creatureImmobilized))
                 continue;
@@ -1715,7 +1718,7 @@ unsigned char combatManager::isWinner(int thisSide) const
     bool noStacks = 1;
     for (int slot = 0; slot < 20; slot++) {
         const army& a = m_armies[thisSide][slot];
-        if (a.m_creatureType == -1)
+        if (a.m_creatureType == CREATURE_NONE)
             continue;
         if (a.is(creatureSummoned))
             continue;
@@ -1731,7 +1734,7 @@ unsigned char combatManager::isWinner(int thisSide) const
     if (!m_sideSurrendered[otherSide] && !m_sideRetreated[otherSide]) {
         for (other = 0; other < 20; other++) {
             const army& a = m_armies[otherSide][other];
-            if (a.m_creatureType == -1)
+            if (a.m_creatureType == CREATURE_NONE)
                 continue;
             if (a.is(creatureImmobilized))
                 continue;
@@ -1855,7 +1858,7 @@ void combatManager::keepAttack(int towerPos)
         break;
     }
     TArcher* archer = &m_archers[archerIndex];
-    const SMonFrameInfo* info = &g_monFrameInfo[archer->m_creatureType];
+    const SMonFrameInfo* info = &H3_AT(g_monFrameInfo, archer->m_creatureType);
     army* target = &m_armies[0][towerPos];
 
     SAMPLE2 sample;
@@ -1877,7 +1880,7 @@ void combatManager::keepAttack(int towerPos)
         sprintf(g_text,
                 DATA_COMPGEN(0x0066ffa4, towerShotSampleFormat,
                              "%sshot.82m"),
-                g_creatureTypeTraits[archer->m_creatureType].m_samplePrefix);
+                H3_AT(g_creatureTypeTraits, archer->m_creatureType).m_samplePrefix);
         sample = loadPlaySample(g_text);
 
         int frames = info->m_attackFrames;
@@ -1967,9 +1970,10 @@ int combatManager::experienceValueOfStack(int whichGroup)
     int total = 0;
     for (int slot = 0; slot < 20; ++slot) {
         const army& a = m_armies[whichGroup][slot];
-        if (a.m_creatureType != -1 && !a.is(creatureSummoned) && !a.is(creatureSiegeWeapon))
+        if (a.m_creatureType != CREATURE_NONE
+            && !a.is(creatureSummoned) && !a.is(creatureSiegeWeapon))
             total += (a.m_origNumTroops - a.m_numTroops)
-                * g_creatureTypeTraits[a.m_creatureType].m_hitPoints;
+                * H3_AT(g_creatureTypeTraits, a.m_creatureType).m_hitPoints;
     }
     if (m_heroes[whichGroup])
         total += 500;
@@ -2314,7 +2318,7 @@ void combatManager::initializeArchers()
     const TSiegeArcherInfo& info = g_siegeArcherInfo[m_defendingTown->m_type];
     TArcherLoadState locals;
     locals.m_spriteName =
-        g_creatureTypeTraits[info.m_creatureType].m_spriteName;
+        H3_AT(g_creatureTypeTraits, info.m_creatureType).m_spriteName;
 
     archer->m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
@@ -3542,13 +3546,14 @@ void combatManager::updateArmyLuckAndMorale()
 // DC cmbtmgr.cpp:4584 names const SMonFrameInfo& sMonFrameInfo; retail
 // loads the same 0x67ff24 reference cell owned by monframeinfo.cpp.
 VA(0x00469880, 0x190)  // dc 0x62fe4
-void combatManager::getMissileStartingPosition(int armyType, int x, int y, int facing,
+void combatManager::getMissileStartingPosition(
+    H3_ENUM_PARAM(TCreatureType, int) armyType, int x, int y, int facing,
                                 int destX, int destY,
                                 const CSprite* missile, int* startX,
                                 int* startY, int* armyDir,
                                 int* missileFrame)
 {
-    const SMonFrameInfo& monFrameInfo = g_monFrameInfo[armyType];
+    const SMonFrameInfo& monFrameInfo = H3_AT(g_monFrameInfo, armyType);
     if (!facing)
         *startX = x - monFrameInfo.m_missileOffset[2];
     else
@@ -3737,7 +3742,9 @@ void combatManager::raiseSkeletons(int side)
         added = m_armyGroups[side]->add(
             m_raisedCreatureType, m_raisedCreatureCount, -1);
         if (!added) {
-            TCreatureType upgradedType = m_raisedCreatureType;
+            // Combat state retains the raised creature in fixed-width storage.
+            TCreatureType upgradedType = H3_ENUM_DECODE(
+                TCreatureType, m_raisedCreatureType);
             if (!g_game->m_gameVersion
                 && isBaseElemental(upgradedType)) {
                 upgradedType = CREATURE_NONE;

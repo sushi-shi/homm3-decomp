@@ -91,10 +91,11 @@ public:
 
 class type_black_box_creature_def : public type_treasure_def {
 public:
-    int m_creatureType;
+    H3_ENUM_STORAGE(TCreatureType, int) m_creatureType;
     int m_adjustedValue;
 
-    type_black_box_creature_def(int creatureType);
+    type_black_box_creature_def(
+        H3_ENUM_PARAM(TCreatureType, int) creatureType);
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
@@ -240,7 +241,8 @@ public:
 
 class type_quest_creature_def : public type_black_box_creature_def {
 public:
-    inline type_quest_creature_def(int creatureType, int questIndex)
+    inline type_quest_creature_def(
+        H3_ENUM_PARAM(TCreatureType, int) creatureType, int questIndex)
         : type_black_box_creature_def(creatureType)
     {
         m_objectType = 83;
@@ -610,13 +612,9 @@ enum ERmgConnectionConstants {
     RMG_WATER_RANDOM = 3
 };
 
-// Complete's guard selector 0x540b20 uses these bounds, not the full combat
-// creature array. Its RoE exclusion starts at 118 even though evaluation
-// stops before 117; keep that observed boundary distinct.
+// Complete's guard selector 0x540b20 uses the typed roster endpoints from
+// TCreatureType. Its non-creature tuning values remain local to RMG.
 enum ERmgGuardConstants {
-    RMG_GUARD_CREATURE_COUNT = 145,
-    RMG_GUARD_ROE_CREATURE_LIMIT = 117,
-    RMG_GUARD_ROE_EXCLUDED_FIRST = 118,
     RMG_GUARD_MAXIMUM_COUNT = 100,
     RMG_GUARD_DISPOSITION = 3
 };
@@ -886,7 +884,7 @@ class rmgBlackBoxObject : public type_object {
 public:
     int m_experience;                  // +0x1c
     int m_resources[7];                // +0x20, gold at +0x38
-    int m_creatureType;                // +0x3c, -1 means no creature reward
+    H3_ENUM_STORAGE(TCreatureType, int) m_creatureType; // +0x3c, CREATURE_NONE means no reward
     int m_creatureCount;               // +0x40
     std::vector<int> m_spells;         // +0x44
 
@@ -904,7 +902,7 @@ public:
     int m_experience;                  // +0x20
     int m_resourceType;                // +0x24, defaults to gold (6)
     int m_resourceCount;               // +0x28
-    int m_creatureType;                // +0x2c, defaults to -1
+    H3_ENUM_STORAGE(TCreatureType, int) m_creatureType; // +0x2c, defaults to CREATURE_NONE
     int m_creatureCount;               // +0x30
 
     rmgSeerHutObject(TRmgObjectPropertiesRef* properties);

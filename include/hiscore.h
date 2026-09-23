@@ -3,6 +3,7 @@
 
 #include "basemgr.h"
 #include "bitmap16.h"
+#include "creaturetype_fwd.h"
 #include "textntry.h"
 #include "window.h"
 
@@ -45,7 +46,8 @@ struct HighScoreRec {
     void viewHiScore();
     int addScoreToHighScore(int score, int days, int difficulty,
                             int scoreType, const char* land);
-    static int getMonType(int score, int scoreType);
+    static H3_ENUM_RETURN(TCreatureType, int)
+        getMonType(int score, int scoreType);
 };
 SIZE(highScoreManager::HighScoreRec, 0x64);
 SIZE(highScoreManager, 0x8d4);

@@ -244,7 +244,7 @@ public:
     virtual void read(TAbstractFile* file);
 
     int m_hero;
-    int m_creature;
+    H3_ENUM_STORAGE(TCreatureType, int) m_creature;
     int m_count;
 };
 

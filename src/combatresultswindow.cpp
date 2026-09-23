@@ -133,7 +133,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
 
     long amount;
     TCreatureType type;
-    int deadArmyTypes[2][20];
+    H3_ENUM_STORAGE(TCreatureType, int) deadArmyTypes[2][20];
     int deadArmyNumTroops[2][20];
 
     // The hero whose result the window narrates.
@@ -171,31 +171,34 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         // in the plural as soon as more than one stack is alive. The war
         // machine (0x95) never counts.
         amount = 0;
-        type = TCreatureType(0);
+        int strongestSlot = 0;
         int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
             army& stack = g_combatManager->m_armies[0][slot];
-            if (stack.m_creatureType != -1 &&
+            if (stack.m_creatureType != CREATURE_NONE &&
                     stack.m_creatureType != CREATURE_ARROW_TOWER) {
                 numMons++;
                 int value = stack.m_monInfo.m_aiValue;
                 if (value > amount) {
                     amount = value;
-                    type = TCreatureType(slot);
+                    strongestSlot = slot;
                 }
             }
         }
         m_widgets.push_back(new textWidget(
             89, 37, 115, 20,
             numMons > 1
-                ? g_combatManager->m_armies[0][type].m_monInfo.m_pluralName
-                : g_combatManager->m_armies[0][type].m_monInfo.m_name,
+                ? g_combatManager->m_armies[0][strongestSlot]
+                      .m_monInfo.m_pluralName
+                : g_combatManager->m_armies[0][strongestSlot].m_monInfo.m_name,
             "smalfont.fnt", font::WHITE, ATTACKER_NAME, 0, 0, 8));
         m_widgets.push_back(new iconWidget(
             21, 38, 58, 64, ATTACKER_PORTRAIT, "TwCrPort.def",
             0, 0, 0, 0, 0x10));
+        // The result portrait resource uses creature ordinal + 2.
         static_cast<iconWidget*>(m_widgets.back())->setIconFrame(
-            g_combatManager->m_armies[0][type].m_creatureType + 2);
+            H3_IDX(g_combatManager->m_armies[0][strongestSlot].m_creatureType)
+                + 2);
     }
 
     m_widgets.push_back(new textWidget(
@@ -211,31 +214,34 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             g_heroTraits[defender->m_portrait].m_largePortraitName, 0x800));
     } else {
         amount = 0;
-        type = TCreatureType(0);
+        int strongestSlot = 0;
         int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
             army& stack = g_combatManager->m_armies[1][slot];
-            if (stack.m_creatureType != -1 &&
+            if (stack.m_creatureType != CREATURE_NONE &&
                     stack.m_creatureType != CREATURE_ARROW_TOWER) {
                 numMons++;
                 int value = stack.m_monInfo.m_aiValue;
                 if (value > amount) {
                     amount = value;
-                    type = TCreatureType(slot);
+                    strongestSlot = slot;
                 }
             }
         }
         m_widgets.push_back(new textWidget(
             266, 37, 115, 20,
             numMons > 1
-                ? g_combatManager->m_armies[1][type].m_monInfo.m_pluralName
-                : g_combatManager->m_armies[1][type].m_monInfo.m_name,
+                ? g_combatManager->m_armies[1][strongestSlot]
+                      .m_monInfo.m_pluralName
+                : g_combatManager->m_armies[1][strongestSlot].m_monInfo.m_name,
             "smalfont.fnt", font::WHITE, DEFENDER_NAME, 2, 0, 8));
         m_widgets.push_back(new iconWidget(
             392, 38, 58, 64, DEFENDER_PORTRAIT, "TwCrPort.def",
             0, 0, 1, 0, 0x10));
+        // The result portrait resource uses creature ordinal + 2.
         static_cast<iconWidget*>(m_widgets.back())->setIconFrame(
-            g_combatManager->m_armies[1][type].m_creatureType + 2);
+            H3_IDX(g_combatManager->m_armies[1][strongestSlot].m_creatureType)
+                + 2);
     }
 
     // Retail's defender status text repeats the defender NAME rectangle
@@ -339,10 +345,12 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     for (int side = 0; side < 2; side++) {
         ttlDeadArmies[side] = 0;
         for (int slot = 0; slot < 20; slot++) {
-            type = g_combatManager->m_armies[side][slot].m_creatureType;
+            // Combat stacks retain creature ids in fixed-width storage.
+            type = H3_ENUM_DECODE(TCreatureType,
+                g_combatManager->m_armies[side][slot].m_creatureType);
             amount = g_combatManager->m_armies[side][slot].m_origNumTroops
                 - g_combatManager->m_armies[side][slot].m_numTroops;
-            if (type != -1 && amount > 0) {
+            if (type != CREATURE_NONE && amount > 0) {
                 int row;
                 for (row = 0; row < ttlDeadArmies[side]; row++)
                     if (deadArmyTypes[side][row] == type)
@@ -368,9 +376,11 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         firstX = (468 - 42 * maxToShow) / 2 + 11;
         for (int row = 0; row < maxToShow; row++) {
             int x = firstX + 42 * row;
+            // The loss portrait resource uses creature ordinal + 2.
             m_widgets.push_back(new iconWidget(
                 x, rowY, 32, 32, BACKGROUND_ID, "cprsmall.def",
-                deadArmyTypes[lossSide][row] + 2, 0, 0, 0, 0x10));
+                H3_IDX(deadArmyTypes[lossSide][row]) + 2,
+                0, 0, 0, 0x10));
             sprintf(text, "%d", deadArmyNumTroops[lossSide][row]);
             m_widgets.push_back(new textWidget(
                 x - 5, rowY + 38, 32, 32, text, "smalfont.fnt",

@@ -676,13 +676,14 @@ public:
     {
         m_forWho = forWho;
         sRand(GameTime::get());
-        int creature;
+        TCreatureType creature;
         do {
-            creature = random(0, 111);
-        } while (creature == WAIT_CREATURE_ARCH_DEVIL
-                 || creature == WAIT_CREATURE_DEVIL);
+            // The random number generator returns a raw roster ordinal.
+            creature = H3_ENUM_DECODE(TCreatureType, random(0, 111));
+        } while (creature == CREATURE_ARCH_DEVIL
+                 || creature == CREATURE_DEVIL);
         setup(text, g_mediumFont,
-              g_creatureTypeTraits[creature].m_spriteName, 0);
+              H3_AT(g_creatureTypeTraits, creature).m_spriteName, 0);
         doModal(0);
     }
 

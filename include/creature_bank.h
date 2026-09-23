@@ -41,7 +41,7 @@ enum type_creature_bank_guard_shape {
 struct type_creature_bank_level {
     armyGroup m_guards;
     int m_resources[7];
-    TCreatureType m_rewardCreature;
+    H3_ENUM_STORAGE(TCreatureType, int) m_rewardCreature;
     signed char m_rewardCreatures;
     signed char m_chance;
     signed char m_upgradeChance;

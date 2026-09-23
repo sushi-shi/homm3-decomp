@@ -609,7 +609,7 @@ SIZE(type_skeleton_info, 4);
 struct MapArtifactInfo {
 public:
     ArtifactPrices m_price : 4;
-    TCreatureType m_guard : 9;
+    H3_ENUM_BITFIELD(TCreatureType, signed long) m_guard : 9;
     EGameResource m_resourcePrice : 4;
     unsigned long m_guardQty : 14;
     unsigned long m_custom : 1;
@@ -1507,7 +1507,11 @@ inline bool ExtraInfoUnion::playerKnowsCell(short player) const
 // the value-returning helper preserved retail's shr/test of the top bit.
 inline bool ExtraInfoUnion::isCustomized() const { return m_artifactInfo.m_custom != 0; }
 
-inline TCreatureType ExtraInfoUnion::getArtifactDefender() const { return m_artifactInfo.m_guard; }
+inline TCreatureType ExtraInfoUnion::getArtifactDefender() const
+{
+    // The packed map bitfield is the serialized creature boundary.
+    return H3_ENUM_DECODE(TCreatureType, m_artifactInfo.m_guard);
+}
 
 inline ArtifactPrices ExtraInfoUnion::getArtifactPrice() const { return m_artifactInfo.m_price; }
 

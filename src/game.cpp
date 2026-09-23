@@ -58,10 +58,10 @@
 #include "winmgr.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x0063d570) TCreatureType g_creatureGenerator1Types[80] = { TCreatureType(106), TCreatureType(96), TCreatureType(74), TCreatureType(66), TCreatureType(68), TCreatureType(10), TCreatureType(14), TCreatureType(112), TCreatureType(12), TCreatureType(94), TCreatureType(54), TCreatureType(104), TCreatureType(16), TCreatureType(113), TCreatureType(52), TCreatureType(18), TCreatureType(114), TCreatureType(30), TCreatureType(36), TCreatureType(86), TCreatureType(98), TCreatureType(84), TCreatureType(44), TCreatureType(102), TCreatureType(26), TCreatureType(4), TCreatureType(72), TCreatureType(46), TCreatureType(110), TCreatureType(42), TCreatureType(100), TCreatureType(34), TCreatureType(80), TCreatureType(76), TCreatureType(78), TCreatureType(8), TCreatureType(38), TCreatureType(48), TCreatureType(90), TCreatureType(88), TCreatureType(50), TCreatureType(82), TCreatureType(92), TCreatureType(28), TCreatureType(40), TCreatureType(22), TCreatureType(70), TCreatureType(115), TCreatureType(60), TCreatureType(108), TCreatureType(20), TCreatureType(24), TCreatureType(64), TCreatureType(62), TCreatureType(56), TCreatureType(58), TCreatureType(0), TCreatureType(2), TCreatureType(6), TCreatureType(118), TCreatureType(120), TCreatureType(130), TCreatureType(132), TCreatureType(133), TCreatureType(134), TCreatureType(135), TCreatureType(136), TCreatureType(137), TCreatureType(24), TCreatureType(112), TCreatureType(113), TCreatureType(114), TCreatureType(115), TCreatureType(138), TCreatureType(139), TCreatureType(140), TCreatureType(141), TCreatureType(142), TCreatureType(143), TCreatureType(144) };
+DATA(0x0063d570) TCreatureType g_creatureGenerator1Types[80] = { CREATURE_BASILISK, CREATURE_BEHEMOTH, CREATURE_BEHOLDER, CREATURE_BLACK_KNIGHT, CREATURE_BONE_DRAGON, CREATURE_CAVALIER, CREATURE_CENTAUR, CREATURE_AIR_ELEMENTAL, CREATURE_ANGEL, CREATURE_CYCLOPS, CREATURE_DEVIL, CREATURE_SERPENT_FLY, CREATURE_DWARF, CREATURE_EARTH_ELEMENTAL, CREATURE_EFREETI, CREATURE_WOOD_ELF, CREATURE_FIRE_ELEMENTAL, CREATURE_STONE_GARGOYLE, CREATURE_GENIE, CREATURE_WOLF_RIDER, CREATURE_GNOLL, CREATURE_GOBLIN, CREATURE_GOG, CREATURE_GORGON, CREATURE_GREEN_DRAGON, CREATURE_GRIFFIN, CREATURE_HARPY, CREATURE_HELL_HOUND, CREATURE_HYDRA, CREATURE_IMP, CREATURE_LIZARDMAN, CREATURE_MAGE, CREATURE_MANTICORE, CREATURE_MEDUSA, CREATURE_MINOTAUR, CREATURE_MONK, CREATURE_NAGA, CREATURE_DEMON, CREATURE_OGRE, CREATURE_ORC, CREATURE_PIT_FIEND, CREATURE_RED_DRAGON, CREATURE_ROC, CREATURE_GREMLIN, CREATURE_GIANT, CREATURE_DENDROID_GUARD, CREATURE_TROGLODYTE, CREATURE_WATER_ELEMENTAL, CREATURE_WIGHT, CREATURE_WYVERN, CREATURE_PEGASUS, CREATURE_UNICORN, CREATURE_LICH, CREATURE_VAMPIRE, CREATURE_SKELETON, CREATURE_WALKING_DEAD, CREATURE_PIKEMAN, CREATURE_ARCHER, CREATURE_SWORDSMAN, CREATURE_PIXIE, CREATURE_PSYCHIC_ELEMENTAL, CREATURE_FIREBIRD, CREATURE_AZURE_DRAGON, CREATURE_CRYSTAL_DRAGON, CREATURE_FAERIE_DRAGON, CREATURE_RUST_DRAGON, CREATURE_ENCHANTER, CREATURE_SHARPSHOOTER, CREATURE_UNICORN, CREATURE_AIR_ELEMENTAL, CREATURE_EARTH_ELEMENTAL, CREATURE_FIRE_ELEMENTAL, CREATURE_WATER_ELEMENTAL, CREATURE_HALFLING, CREATURE_PEASANT, CREATURE_BOAR, CREATURE_MUMMY, CREATURE_NOMAD, CREATURE_ROGUE, CREATURE_TROLL };
 DATA(0x00677938) TCreatureType g_creatureGenerator4Types[2][4] = {
-    { TCreatureType(112), TCreatureType(114), TCreatureType(113), TCreatureType(115) },
-    { TCreatureType(32), TCreatureType(33), TCreatureType(116), TCreatureType(117) }
+    { CREATURE_AIR_ELEMENTAL, CREATURE_FIRE_ELEMENTAL, CREATURE_EARTH_ELEMENTAL, CREATURE_WATER_ELEMENTAL },
+    { CREATURE_STONE_GOLEM, CREATURE_IRON_GOLEM, CREATURE_GOLD_GOLEM, CREATURE_DIAMOND_GOLEM }
 };
 DATA(0x00677974) const char* g_artifactObjectDefFormat = "ava%04d.def";
 
@@ -196,8 +196,8 @@ const int g_weekNameLast = 14;
 const int g_weeksPerMonth = 4;
 const int g_specialWeekRollMax = 4;
 const int g_creatureWeekGrowthBonus = 5;
-const int g_creatureImpId = 0x2a;
-const int g_creatureFamiliarId = 0x2b;
+const TCreatureType g_creatureImpId = CREATURE_IMP;
+const TCreatureType g_creatureFamiliarId = CREATURE_FAMILIAR;
 const int g_monthEffectNormal = 0;
 const int g_monthEffectCreature = 1;
 const int g_monthEffectPlague = 2;
@@ -320,7 +320,7 @@ const int g_productionArtifactEndlessSackOfGold = 0x73;
 const int g_productionArtifactEndlessBagOfGold = 0x74;
 const int g_productionArtifactEndlessPurseOfGold = 0x75;
 const int g_productionArtifactCornucopia = 0x8c;
-const int g_productionCreatureCrystalDragon = 0x85;
+const TCreatureType g_productionCreatureCrystalDragon = CREATURE_CRYSTAL_DRAGON;
 const int g_gameDifficultyEasy = 0;
 const int g_gameDifficultyExpert = 3;
 const int g_gameDifficultyImpossible = 4;
@@ -388,11 +388,10 @@ bool generator::load(TAbstractFile* infile)
     int loaded;
     for (int slot = 0; slot < 4; slot++) {
         infile->read(&loaded, 1);
-        int creature = loaded & 0xff;
-        {
-            m_type[slot] = TCreatureType(creature);
-        }
-        if (creature == g_savedCreatureNone)
+        int creatureOrdinal = loaded & 0xff;
+        // Generator saves store each creature as a byte ordinal.
+        m_type[slot] = H3_ENUM_DECODE(TCreatureType, creatureOrdinal);
+        if (creatureOrdinal == g_savedCreatureNone)
             m_type[slot] = CREATURE_NONE;
     }
 
@@ -420,7 +419,7 @@ bool generator::save(TAbstractFile* outfile)
     outfile->write(&m_genType, sizeof(m_genType));
 
     for (int slot = 0; slot < 4; slot++) {
-        char creatureType = m_type[slot];
+        H3_ENUM_STORAGE(TCreatureType, char) creatureType = m_type[slot];
         outfile->write(&creatureType, sizeof(creatureType));
     }
 
@@ -469,12 +468,12 @@ inline void generator::updateBonus()
         return;
 
     playerData& player = g_game->m_players[m_playerOwner];
-    int creature = m_type[0];
+    H3_ENUM_STORAGE(TCreatureType, int) creature = m_type[0];
     if (!g_game->m_gameVersion &&
         isBaseElemental(creature))
         return;
 
-    int townType = g_creatureTypeTraits[creature].m_townType;
+    int townType = H3_AT(g_creatureTypeTraits, creature).m_townType;
     if (townType == -1)
         return;
 
@@ -532,13 +531,13 @@ void generator::grow(int unusedArg)
 {
     m_guards.initialize();
     for (long i = 0; i < 4; i++) {
-        if (m_type[i] != -1) {
-            m_population[i] = g_creatureTypeTraits[m_type[i]].m_growthRate;
+        if (m_type[i] != CREATURE_NONE) {
+            m_population[i] = H3_AT(g_creatureTypeTraits, m_type[i]).m_growthRate;
             // DC game.cpp:614 records this traits assignment after the
             // population write.  That source order also makes VC6 retain
             // grow at both Complete call sites while preserving this body.
             const TCreatureTypeTraits* traits =
-                &g_creatureTypeTraits[m_type[i]];
+                &H3_AT(g_creatureTypeTraits, m_type[i]);
             if (traits->m_level >= 4)
                 m_guards.add(m_type[i], m_population[i] * 3, -1);
         }
@@ -606,13 +605,9 @@ void game::calculateProduction()
         // `currentTown` is `town&`; the static_cast selects retail's
         // const get_army overload, and the Dreamcast-public QB query then
         // consumes its const armyGroup directly.
-        {
-            int storage;
-            storage = g_productionCreatureCrystalDragon;
-            if (static_cast<const town&>(currentTown).getArmy()
-                    .getCreatureTotal(TCreatureType(storage)) > 0)
-                crystalDragonIncome[currentTown.m_owner] = 1;
-        }
+        if (static_cast<const town&>(currentTown).getArmy()
+                .getCreatureTotal(g_productionCreatureCrystalDragon) > 0)
+            crystalDragonIncome[currentTown.m_owner] = 1;
 
         if (currentTown.m_type == TOWN_RAMPART && m_day == 1) {
             if (currentTown.hasBuilding(EXTRA_1_ID, true))
@@ -649,12 +644,9 @@ void game::calculateProduction()
         const hero& currHero = m_heroes[i];
         if (currHero.m_owner == -1)
             continue;
-        {
-            int storage;
-            storage = g_productionCreatureCrystalDragon;
-            if (currHero.m_army.getCreatureTotal(TCreatureType(storage)) > 0)
-                crystalDragonIncome[currHero.m_owner] = 1;
-        }
+        if (currHero.m_army.getCreatureTotal(
+                g_productionCreatureCrystalDragon) > 0)
+            crystalDragonIncome[currHero.m_owner] = 1;
         long (&production)[NUM_RESOURCES] =
             m_players[currHero.m_owner].m_ai.m_turnProductionResource;
         if (g_heroSpecificAbilities[i].m_type == eHeroAbilityResource) {
@@ -776,13 +768,14 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
             armyGroup* guards = &m_mines[x].m_guards;
             guards->initialize();
             signed char legacyAmount;
-            signed char legacyType;
+            H3_ENUM_STORAGE(TCreatureType, signed char) legacyType;
             infile->read(&legacyType, sizeof(legacyType));
             infile->read(&legacyAmount, sizeof(legacyAmount));
             int amountValue = legacyAmount;
-            int typeValue = legacyType;
+            int typeValue = H3_IDX(legacyType);
             if (typeValue != -1 && amountValue > 0)
-                guards->add(typeValue, amountValue, -1);
+                guards->add(H3_ENUM_DECODE(TCreatureType, typeValue),
+                    amountValue, -1);
         }
 
         if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
@@ -3373,21 +3366,25 @@ void game::giveTroopsToNeutralTown(int townId)
     armyGroup* townArmy = &currentTown->getArmy();
     TCreatureType creature;
     TCreatureType upgradedCreature;
-    TCreatureType upgradedValue = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
-        townType * TOWN_DWELLING_SLOTS + monsterLevel];
-    creature = g_townDwellingCreatures[
-        townType * TOWN_DWELLING_SLOTS + monsterLevel];
+    // The dwelling roster is fixed-width creature storage.
+    TCreatureType upgradedValue = H3_ENUM_DECODE(TCreatureType,
+        (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
+            townType * TOWN_DWELLING_SLOTS + monsterLevel]);
+    creature = H3_ENUM_DECODE(TCreatureType, g_townDwellingCreatures[
+        townType * TOWN_DWELLING_SLOTS + monsterLevel]);
     upgradedCreature = upgradedValue;
     if (townArmy->getCreatureTotal(upgradedCreature))
         creature = upgradedCreature;
 
-    long amount = g_creatureTypeTraits[creature].m_growthRate;
+    long amount = H3_AT(g_creatureTypeTraits, creature).m_growthRate;
     if (!townArmy->canJoin(creature)) {
         long worstArmy = -1;
-        long worstValue = g_creatureTypeTraits[creature].m_aiValue * amount;
+        long worstValue = H3_AT(g_creatureTypeTraits, creature).m_aiValue
+            * amount;
         for (long slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-            long value = g_creatureTypeTraits[townArmy->m_armies[slot]].m_aiValue
-                       * townArmy->m_numTroops[slot];
+            long value = H3_AT(
+                g_creatureTypeTraits, townArmy->m_armies[slot]).m_aiValue
+                * townArmy->m_numTroops[slot];
             if (value < worstValue) {
                 worstArmy = slot;
                 worstValue = value;
@@ -3571,7 +3568,9 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
             victory.m_monsterX, victory.m_monsterY, victory.m_monsterZ);
         if (thisCell->m_type == MONSTER && thisCell->m_isTrigger) {
             {
-                victory.m_creatureType = TCreatureType(thisCell->m_objectIndex);
+                // Monster map cells store the creature as a raw object ordinal.
+                victory.m_creatureType = H3_ENUM_DECODE(
+                    TCreatureType, thisCell->m_objectIndex);
             }
         } else {
             victory.m_type = -1;
@@ -4676,7 +4675,7 @@ void game::randomizeEvents()
                 case MINE:
                     id = getMineId(x, y, z);
                     if (m_mines[id].m_isAbandoned) {
-                        m_mines[id].m_guards.m_armies[0] = 0x46;
+                        m_mines[id].m_guards.m_armies[0] = CREATURE_TROGLODYTE;
                         m_mines[id].m_guards.m_numTroops[0] = random(100, 200);
                     }
                     claimMine(id, m_mines[id].m_playerOwner,
@@ -4685,8 +4684,10 @@ void game::randomizeEvents()
 
                 case MONSTER:
                     if ((tempCell->m_extraInfo & 0xfff) == 0) {
+                        // Monster objectIndex is a serialized creature ordinal.
                         tempCell->m_monsterInfo.m_qty =
-                            getRandomNumTroops(tempCell->m_objectIndex);
+                            getRandomNumTroops(H3_ENUM_DECODE(
+                                TCreatureType, tempCell->m_objectIndex));
                     }
                     break;
 
@@ -4716,9 +4717,10 @@ void game::randomizeEvents()
                 case REFUGEE_CAMP:
                     {
                         TCreatureType creature = getRandomMonster(0, 6);
-                        tempCell->m_objectIndex = creature;
+                        // Map objectIndex stores the creature ordinal.
+                        tempCell->m_objectIndex = H3_IDX(creature);
                         tempCell->m_extraInfo =
-                            g_creatureTypeTraits[creature].m_growthRate;
+                            H3_AT(g_creatureTypeTraits, creature).m_growthRate;
                     }
                     break;
 
@@ -5150,17 +5152,22 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
     }
 
     case VICTORY_CONDITION_TOTAL_CREATURES: {
+        // Map headers serialize this domain as a byte in RoE and a word later.
         if (m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
             int intBuffer;
             infile->read(&intBuffer, sizeof(char));
             {
-                m_victoryCondition.m_creatureType = TCreatureType(intBuffer & 0xff);
+                // RoE victory records store a one-byte creature ordinal.
+                m_victoryCondition.m_creatureType =
+                    H3_ENUM_DECODE(TCreatureType, intBuffer & 0xff);
             }
         } else {
             short shortBuffer;
             infile->read(&shortBuffer, sizeof(shortBuffer));
             {
-                m_victoryCondition.m_creatureType = TCreatureType(shortBuffer);
+                // Later victory records store a two-byte creature ordinal.
+                m_victoryCondition.m_creatureType =
+                    H3_ENUM_DECODE(TCreatureType, shortBuffer);
             }
         }
         {
@@ -5311,7 +5318,8 @@ int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
     }
 
     case VICTORY_CONDITION_TOTAL_CREATURES: {
-        char creature = m_victoryCondition.m_creatureType;
+        H3_ENUM_STORAGE(TCreatureType, char) creature =
+            m_victoryCondition.m_creatureType;
         outfile->write(&creature, sizeof(creature));
         intBuffer = m_victoryCondition.m_numCreatures;
         count = outfile->write(&intBuffer, sizeof(intBuffer));
@@ -5440,10 +5448,12 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     }
 
     case VICTORY_CONDITION_TOTAL_CREATURES: {
-        int creature;
-        infile->read(&creature, sizeof(char));
+        int creatureOrdinal;
+        infile->read(&creatureOrdinal, sizeof(char));
+        // RoE victory records serialize the creature domain as one byte.
         {
-            m_victoryCondition.m_creatureType = TCreatureType(creature & 0xff);
+            m_victoryCondition.m_creatureType =
+                H3_ENUM_DECODE(TCreatureType, creatureOrdinal & 0xff);
         }
         count = infile->read(&intBuffer, sizeof(intBuffer));
         if (count < sizeof(intBuffer))
@@ -6647,7 +6657,9 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                     const town* thisTown, int x, int y,
                     unsigned char showDismiss, unsigned char isQuickView)
 {
-    TCreatureType armyType = group.m_armyTypes[iarmy];
+    // Army slots retain creature ids in fixed-width storage.
+    TCreatureType armyType = H3_ENUM_DECODE(
+        TCreatureType, group.m_armies[iarmy]);
     const int numTroops = group.m_numTroops[iarmy];
     unsigned char hasAngelicAlliance = 0;
     TCreatureType upgradeToType = CREATURE_NONE;
@@ -6673,10 +6685,15 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
             g_heroSpecificAbilities[thisHero->m_id];
         if (ability.m_type == eHeroAbilityCreatureUpgrade) {
             if (armyType == ability.m_creature
-                || armyType == upgradedCreatureType(ability.m_creature)
+                // Hero-specialty records retain creature ids in fixed-width
+                // storage.
+                || armyType == upgradedCreatureType(
+                    H3_ENUM_DECODE(TCreatureType, ability.m_creature))
                 || armyType == ability.m_upgradeAlternateSubject
-                || armyType == upgradedCreatureType(ability.m_upgradeAlternateSubject))
-                upgradeToType = ability.m_upgradeResult;
+                || armyType == upgradedCreatureType(H3_ENUM_DECODE(
+                    TCreatureType, ability.m_upgradeAlternateSubject)))
+                upgradeToType = H3_ENUM_DECODE(
+                    TCreatureType, ability.m_upgradeResult);
         }
     }
 
@@ -6720,10 +6737,11 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
 
 // Original GetRandomNumTroops, game.cpp:7572, dc 0xb1f1c. Ordinary
 // member expanded in RandomizeEvents; no retained retail row is known.
-int game::getRandomNumTroops(int whichMon)
+int game::getRandomNumTroops(
+    H3_ENUM_PARAM(TCreatureType, int) creature)
 {
-    return random(g_creatureTypeTraits[whichMon].m_wanderingLow,
-                  g_creatureTypeTraits[whichMon].m_wanderingHigh);
+    return random(H3_AT(g_creatureTypeTraits, creature).m_wanderingLow,
+                  H3_AT(g_creatureTypeTraits, creature).m_wanderingHigh);
 }
 
 
@@ -7388,7 +7406,7 @@ VA(0x004c8780, 0x7B7)  // PerDay/PerMonth bracket + dc lines/callees, dc 0xb41e0
 void game::perWeek()
 {
     hero* obscuringHero;
-    int align;
+    H3_ENUM_STORAGE_STEPPED(TCreatureType, int) align;
     TCreatureType alternateBonus;
     long bonusAmount;
     int x;
@@ -7414,50 +7432,48 @@ void game::perWeek()
         && random(1, g_specialWeekRollMax) == 1) {
         g_weekType = g_weekTypeCreature;
 
-        for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
+        for (align = m_gameVersion ? CREATURE_ROSTER_END
+                                   : CREATURE_ROE_ROSTER_END;
              align--;) {
             if ((m_gameVersion
                  || !isBaseElemental(align))
-                && g_creatureTypeTraits[align].m_townType != -1
-                && g_creatureTypeTraits[align].m_level >= 0)
+                && H3_AT(g_creatureTypeTraits, align).m_townType != -1
+                && H3_AT(g_creatureTypeTraits, align).m_level >= 0)
                 ++i;
         }
 
         i = rand() % i;
-        for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
+        for (align = m_gameVersion ? CREATURE_ROSTER_END
+                                   : CREATURE_ROE_ROSTER_END;
              align--;) {
             if ((m_gameVersion
                  || !isBaseElemental(align))
-                && g_creatureTypeTraits[align].m_townType != -1
-                && g_creatureTypeTraits[align].m_level >= 0) {
+                && H3_AT(g_creatureTypeTraits, align).m_townType != -1
+                && H3_AT(g_creatureTypeTraits, align).m_level >= 0) {
                 if ((m_gameVersion
                      || align == CREATURE_AIR_ELEMENTAL
                      || align == CREATURE_EARTH_ELEMENTAL
                      || align == CREATURE_FIRE_ELEMENTAL
                      || align == CREATURE_WATER_ELEMENTAL
-                     || g_creatureTypeTraits[align].m_townType != TOWN_CONFLUX)
+                     || H3_AT(g_creatureTypeTraits, align).m_townType != TOWN_CONFLUX)
                     && i-- <= 0)
                     break;
             }
         }
-        g_weekTypeExtra = align;
-        {
-            bonusCreature = TCreatureType(align);
-        }
+        // Calendar state stores the selected creature as a raw ordinal.
+        g_weekTypeExtra = H3_IDX(align);
+        bonusCreature = H3_ENUM_DECODE(TCreatureType, align);
     }
 
     for (i = 0; i < m_towns.size(); ++i) {
         if (m_towns[i].m_type == TOWN_INFERNO
             && m_towns[i].hasBuilding(HOLY_GRAIL_ID, false)) {
             g_weekType = g_weekTypeInfernoGrail;
-            {
-                bonusCreature = TCreatureType(g_creatureImpId);
-            }
-            {
-                alternateBonus = TCreatureType(g_creatureFamiliarId);
-            }
-            bonusAmount = g_creatureTypeTraits[g_creatureImpId].m_growthRate;
-            g_weekTypeExtra = g_creatureImpId;
+            bonusCreature = g_creatureImpId;
+            alternateBonus = g_creatureFamiliarId;
+            bonusAmount = H3_AT(g_creatureTypeTraits, g_creatureImpId).m_growthRate;
+            // Calendar state stores the selected creature as a raw ordinal.
+            g_weekTypeExtra = H3_IDX(g_creatureImpId);
             break;
         }
     }
@@ -7527,9 +7543,11 @@ void game::perWeek()
 
                 case REFUGEE_CAMP: {
                     TCreatureType creature = g_game->getRandomMonster(0, 6);
-                    mapCell->m_objectIndex = creature;
+                    // objectIndex is a packed map field shared by many object
+                    // domains; this assignment is its creature encoding edge.
+                    mapCell->m_objectIndex = H3_IDX(creature);
                     mapCell->m_extraInfo =
-                        g_creatureTypeTraits[creature].m_growthRate;
+                        H3_AT(g_creatureTypeTraits, creature).m_growthRate;
                     break;
                 }
 
@@ -7602,7 +7620,8 @@ void game::perMonth()
     int monthRoll = random(1, g_monthRollMax);
     if (g_weekType == g_weekTypeInfernoGrail) {
         g_monthTypeExtra = g_monthEffectCreature;
-        g_monthType = g_creatureImpId;
+        // Calendar state stores the selected creature as a raw ordinal.
+        g_monthType = H3_IDX(g_creatureImpId);
     } else if (monthRoll > g_monthNormalRollMax && !m_isTutorial) {
         if (monthRoll <= g_monthCreatureRollMax) {
             g_monthTypeExtra = g_monthEffectCreature;
@@ -7624,7 +7643,8 @@ void game::perMonth()
                     && g_weekType != g_weekTypeInfernoGrail
                     && g_townDwellingCreatures[
                         currTown->m_type * TOWN_DWELLING_SLOTS + j]
-                       == g_monthType) {
+                       // Calendar state stores a raw creature ordinal.
+                       == H3_ENUM_DECODE(TCreatureType, g_monthType)) {
                     currTown->m_population[j] *= 2;
                 }
 
@@ -7652,7 +7672,9 @@ void game::perMonth()
                         && random(1, g_monthMonsterSpawnRollMax) == 1) {
                         insertObject(x, y, z, RANDOM_MONSTER,
                                      g_monthType, 0);
-                        tempCell->m_monsterInfo.m_qty = 2 * getRandomNumTroops(g_monthType);
+                        // Calendar state stores a raw creature ordinal.
+                        tempCell->m_monsterInfo.m_qty = 2 * getRandomNumTroops(
+                            H3_ENUM_DECODE(TCreatureType, g_monthType));
                         tempCell->m_monsterInfo.m_disposition =
                             random(1, g_monthMonsterDispositionMax);
                     }
@@ -7674,12 +7696,12 @@ void game::perMonth()
 // The width is 145, and retail proves it twice: bitset<145>::_Tidy writes
 // five words and trims the last with 0x1ffff == (1<<17)-1, which is
 // 145 % 32 == 17, and the traits sweep runs to 0x41b4 == 145 * 0x74 ==
-// 145 * sizeof(TCreatureTypeTraits). CREATURE_CATAPULT is exactly 145:
-// the traits table holds 150 rows but the last five are war machines, so
-// the roll domain is every id BELOW the first of them.
+// 145 * sizeof(TCreatureTypeTraits). CREATURE_ROSTER_COUNT is exactly 145:
+// the traits table holds 150 rows but the last five are war machines, so the
+// roll domain ends at the CREATURE_ROSTER_END sentinel before the first one.
 
-// f_1f698 == 0 is the no-expansion map - everything from CREATURE_PIXIE
-// up is struck out. On an expansion map only the six Armageddon's Blade
+// f_1f698 == 0 is the no-expansion map - everything from
+// CREATURE_ROE_ROSTER_END up is struck out. On an expansion map only the six Armageddon's Blade
 // neutral specials go, plus, in a Shadow of Death campaign, the ten
 // Conflux-exclusive creatures.
 
@@ -7702,61 +7724,65 @@ void game::perMonth()
 VA(0x004c92c0, 0x202)  // anchor-global, dc 0xb4b58
 TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
 {
-    int i;
+    H3_ENUM_STORAGE_STEPPED(TCreatureType, int) creature;
     int totalInClass;
     int curCount;
-    int x;
+    H3_ENUM_STORAGE_STEPPED(TCreatureType, int) selectedCreature;
 
-    std::bitset<CREATURE_CATAPULT> monsterOk;
+    std::bitset<CREATURE_ROSTER_COUNT> monsterOk;
     monsterOk.set();
 
     if (!m_gameVersion) {
-        bitset_iterator<CREATURE_CATAPULT> it;
-        it = bitset_iterator<CREATURE_CATAPULT>(monsterOk, CREATURE_PIXIE);
-        bitset_iterator<CREATURE_CATAPULT> end(monsterOk, CREATURE_CATAPULT);
+        bitset_iterator<CREATURE_ROSTER_COUNT> it;
+        it = bitset_iterator<CREATURE_ROSTER_COUNT>(
+            monsterOk, CREATURE_ROE_ROSTER_COUNT);
+        bitset_iterator<CREATURE_ROSTER_COUNT> end(
+            monsterOk, CREATURE_ROSTER_COUNT);
         for (; it != end; ++it) {
             *it = false;
         }
     } else {
-        monsterOk[CREATURE_AZURE_DRAGON] = false;
-        monsterOk[CREATURE_CRYSTAL_DRAGON] = false;
-        monsterOk[CREATURE_FAERIE_DRAGON] = false;
-        monsterOk[CREATURE_RUST_DRAGON] = false;
-        monsterOk[CREATURE_ENCHANTER] = false;
-        monsterOk[CREATURE_SHARPSHOOTER] = false;
+        H3_AT(monsterOk, CREATURE_AZURE_DRAGON) = false;
+        H3_AT(monsterOk, CREATURE_CRYSTAL_DRAGON) = false;
+        H3_AT(monsterOk, CREATURE_FAERIE_DRAGON) = false;
+        H3_AT(monsterOk, CREATURE_RUST_DRAGON) = false;
+        H3_AT(monsterOk, CREATURE_ENCHANTER) = false;
+        H3_AT(monsterOk, CREATURE_SHARPSHOOTER) = false;
         if (g_inCampaign
             && m_campaign.m_currentCampaign >= g_firstShadowOfDeathCampaign) {
-            monsterOk[CREATURE_PIXIE] = false;
-            monsterOk[CREATURE_SPRITE] = false;
-            monsterOk[CREATURE_PSYCHIC_ELEMENTAL] = false;
-            monsterOk[CREATURE_MAGIC_ELEMENTAL] = false;
-            monsterOk[CREATURE_ICE_ELEMENTAL] = false;
-            monsterOk[CREATURE_MAGMA_ELEMENTAL] = false;
-            monsterOk[CREATURE_STORM_ELEMENTAL] = false;
-            monsterOk[CREATURE_ENERGY_ELEMENTAL] = false;
-            monsterOk[CREATURE_FIREBIRD] = false;
-            monsterOk[CREATURE_PHOENIX] = false;
+            H3_AT(monsterOk, CREATURE_PIXIE) = false;
+            H3_AT(monsterOk, CREATURE_SPRITE) = false;
+            H3_AT(monsterOk, CREATURE_PSYCHIC_ELEMENTAL) = false;
+            H3_AT(monsterOk, CREATURE_MAGIC_ELEMENTAL) = false;
+            H3_AT(monsterOk, CREATURE_ICE_ELEMENTAL) = false;
+            H3_AT(monsterOk, CREATURE_MAGMA_ELEMENTAL) = false;
+            H3_AT(monsterOk, CREATURE_STORM_ELEMENTAL) = false;
+            H3_AT(monsterOk, CREATURE_ENERGY_ELEMENTAL) = false;
+            H3_AT(monsterOk, CREATURE_FIREBIRD) = false;
+            H3_AT(monsterOk, CREATURE_PHOENIX) = false;
         }
     }
 
-    for (i = 0; i < CREATURE_CATAPULT; ++i) {
-        if (g_creatureTypeTraits[i].m_level < minLevel
-            || g_creatureTypeTraits[i].m_level > maxLevel)
-            monsterOk[i] = false;
+    for (creature = CREATURE_ROSTER_BEGIN;
+         creature != CREATURE_ROSTER_END; ++creature) {
+        if (H3_AT(g_creatureTypeTraits, creature).m_level < minLevel
+            || H3_AT(g_creatureTypeTraits, creature).m_level > maxLevel)
+            H3_AT(monsterOk, creature) = false;
     }
 
     totalInClass = monsterOk.count();
     curCount = random(0, totalInClass - 1);
-    x = 0;
+    selectedCreature = CREATURE_ROSTER_BEGIN;
     for (;;) {
-        if (monsterOk[x]) {
+        if (H3_AT(monsterOk, selectedCreature)) {
             if (curCount == 0)
                 break;
             --curCount;
         }
-        ++x;
+        ++selectedCreature;
     }
-    return TCreatureType(x);
+    // The stepped loop variable carries a creature-domain ordinal.
+    return H3_ENUM_DECODE(TCreatureType, selectedCreature);
 }
 
 VA(0x004c94d0, 0xCD)  // dc 0xb4c84
@@ -7885,7 +7911,7 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
 
     long i;
     for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-        currentArmy->m_armies[i] = -1;
+        currentArmy->m_armies[i] = CREATURE_NONE;
         currentArmy->m_numTroops[i] = 0;
     }
 
@@ -7898,7 +7924,7 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     }
 
     i = 1;
-    if (random(1, 100) <= 88 && traits->m_secondStack != -1) {
+    if (random(1, 100) <= 88 && traits->m_secondStack != CREATURE_NONE) {
         if (traits->m_secondStack == CREATURE_BALLISTA) {
             type_artifact artifact;
             artifact.m_artifactId = ARTIFACT_BALLISTA;
@@ -7915,7 +7941,7 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
         }
     }
 
-    if (random(1, 100) <= 25 && traits->m_thirdStack != -1) {
+    if (random(1, 100) <= 25 && traits->m_thirdStack != CREATURE_NONE) {
         currentArmy->m_armies[i] = traits->m_thirdStack;
         currentArmy->m_numTroops[i] = random(traits->m_thirdStackLow,
                                             traits->m_thirdStackHigh);
@@ -8246,7 +8272,8 @@ void game::makeTerrainVisible(int whichPlayer, unsigned short visMask)
 }
 
 VA(0x004ca340, 0x6F)  // dc 0xb6054
-void game::giveArmy(armyGroup* thisMonInfo, int monType, int monNum, int slot)
+void game::giveArmy(armyGroup* thisMonInfo,
+    H3_ENUM_PARAM(TCreatureType, int) monType, int monNum, int slot)
 {
     if (slot >= 0) {
         thisMonInfo->m_armies[slot] = monType;
@@ -8260,7 +8287,7 @@ void game::giveArmy(armyGroup* thisMonInfo, int monType, int monNum, int slot)
         }
     }
     for (int j = 0; j < 7; j++) {
-        if (thisMonInfo->m_armies[j] < 0) {
+        if (thisMonInfo->m_armies[j] < CREATURE_ROSTER_BEGIN) {
             thisMonInfo->m_armies[j] = monType;
             thisMonInfo->m_numTroops[j] = monNum;
             return;
@@ -8274,7 +8301,7 @@ int game::experienceValueOfStack(const armyGroup* whichGroup, const hero* whichH
     int value = 0;
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (whichGroup->m_numTroops[i] > 0)
-            value += g_creatureTypeTraits[whichGroup->m_armies[i]].m_hitPoints
+            value += H3_AT(g_creatureTypeTraits, whichGroup->m_armies[i]).m_hitPoints
                      * whichGroup->m_numTroops[i];
     }
     if (whichHero)
@@ -9312,10 +9339,14 @@ void game::doNewTurn()
         if (g_monthTypeExtra == g_monthEffectNormal) {
             sprintf(g_text, g_newTurn[2], g_monthNames[g_monthType]);
         } else if (g_monthTypeExtra == g_monthEffectCreature) {
-            strcpy(temp, getArmyName(g_monthType, 1));
+            // Calendar state stores a raw creature ordinal.
+            strcpy(temp, getArmyName(
+                H3_ENUM_DECODE(TCreatureType, g_monthType), 1));
             temp[0] = toupper(temp[0]);
+            // Calendar state stores a raw creature ordinal.
             sprintf(g_text, g_newTurn[3],
-                    getArmyName(g_monthType, 1), temp);
+                    getArmyName(H3_ENUM_DECODE(TCreatureType, g_monthType), 1),
+                    temp);
         } else {
             strcpy(g_text, g_newTurn[4]);
         }
@@ -9326,17 +9357,19 @@ void game::doNewTurn()
             break;
 
         case g_weekTypeCreature:
-            strcpy(temp, getArmyName(g_weekTypeExtra, 1));
+            // Calendar state stores a raw creature ordinal.
+            strcpy(temp, getArmyName(
+                H3_ENUM_DECODE(TCreatureType, g_weekTypeExtra), 1));
             sprintf(g_text, g_newTurn[6], temp, temp);
             break;
 
         case g_weekTypeInfernoGrail:
             sprintf(g_text, g_newTurn[7],
-                    g_creatureTypeTraits[g_creatureImpId].m_name,
-                    g_creatureTypeTraits[g_creatureImpId].m_name,
-                    g_creatureTypeTraits[g_creatureImpId].m_growthRate,
-                    g_creatureTypeTraits[g_creatureFamiliarId].m_name,
-                    g_creatureTypeTraits[g_creatureImpId].m_growthRate);
+                    H3_AT(g_creatureTypeTraits, g_creatureImpId).m_name,
+                    H3_AT(g_creatureTypeTraits, g_creatureImpId).m_name,
+                    H3_AT(g_creatureTypeTraits, g_creatureImpId).m_growthRate,
+                    H3_AT(g_creatureTypeTraits, g_creatureFamiliarId).m_name,
+                    H3_AT(g_creatureTypeTraits, g_creatureImpId).m_growthRate);
             break;
         }
     }

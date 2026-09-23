@@ -132,7 +132,7 @@ public:
     {
         m_number = *newAmount;
     }
-    TCreatureType m_type;
+    H3_ENUM_STORAGE(TCreatureType, int) m_type;
     short* m_ptr;
     short m_number;
     unsigned char m_isFree;

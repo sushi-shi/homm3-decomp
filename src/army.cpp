@@ -120,9 +120,9 @@ army::~army()
 void army::setRetaliationCount()
 {
     m_retaliationCount = 1;
-    if (m_creatureType == ARMY_CREATURE_GRIFFIN)
+    if (m_creatureType == CREATURE_GRIFFIN)
         m_retaliationCount++;
-    if (m_creatureType == ARMY_CREATURE_ROYAL_GRIFFIN)
+    if (m_creatureType == CREATURE_ROYAL_GRIFFIN)
         m_retaliationCount = 5000;
     if (m_spellInfluence[SPELL_COUNTERSTRIKE])
         m_retaliationCount += m_counterstrokeBonus;
@@ -241,12 +241,12 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     m_numTroops = number;
     m_drawPriority = 4;
     TCreatureTypeTraits* traits = &m_monInfo;
-    *traits = g_creatureTypeTraits[type];
+    *traits = H3_AT(g_creatureTypeTraits, type);
     traits->m_townType =
         (g_game->m_gameVersion == 0
          && isBaseElemental(type))
             ? -1
-            : g_creatureTypeTraits[type].m_townType;
+            : H3_AT(g_creatureTypeTraits, type).m_townType;
     if (owner != 0)
         owner->heroFn004E6120(type, traits);
     if (g_combatManager->m_magicTerrain
@@ -286,11 +286,13 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
 }
 
 VA(0x0043d8b0, 0x135)  // dc 0x43d9c
-void army::init(int armyId, int newNumTroops, const hero* owner, int side,
+void army::init(H3_ENUM_PARAM(TCreatureType, int) armyId,
+                int newNumTroops, const hero* owner, int side,
                 int inIndex, int gridIndex, int origPos)
 {
-    initialize(TCreatureType(armyId), newNumTroops, owner, side, inIndex,
-               gridIndex);
+    // The retail ABI carries this domain through an int parameter slot.
+    initialize(H3_ENUM_DECODE(TCreatureType, armyId), newNumTroops,
+        owner, side, inIndex, gridIndex);
     if (g_combatManager->validHex(m_gridIndex)) {
         hexcell* cell = &g_combatManager->m_cells[m_gridIndex];
         cell->m_armySide = static_cast<signed char>(m_combatSide);
@@ -317,7 +319,7 @@ void army::loadResources()
             ->isQuickCombat())
         return;
 
-    memcpy(m_monFrameInfo.m_missileOffset, &g_monFrameInfo[m_creatureType],
+    memcpy(m_monFrameInfo.m_missileOffset, &H3_AT(g_monFrameInfo, m_creatureType),
            sizeof(SMonFrameInfo));
     m_origWalkCycleTime = m_monFrameInfo.m_walkCycleTime;
 
@@ -433,7 +435,7 @@ void army::loadResources()
     }
 
     CSprite* icon =
-        ResourceManager::getSprite(g_creatureTypeTraits[m_creatureType]
+        ResourceManager::getSprite(H3_AT(g_creatureTypeTraits, m_creatureType)
                                        .m_spriteName);
     if (m_stdIcon)
         m_stdIcon->dispose();
@@ -487,8 +489,8 @@ void army::loadResources()
             missileName = DATA_COMPGEN(0x00660950, orcMissileName,
                                        "porchx.def");
             break;
-        case ARMY_CREATURE_CYCLOPS:
-        case ARMY_CREATURE_CYCLOPS_KING:
+        case CREATURE_CYCLOPS:
+        case CREATURE_CYCLOPS_KING:
             missileName = DATA_COMPGEN(0x00660944, cyclopsMissileName,
                                        "PCYCLBX.def");
             break;
@@ -969,15 +971,15 @@ void army::addAura()
         army* other = g_combatManager->m_cells[hex].getArmy();
         if (!other)
             continue;
-        if ((other->m_creatureType == ARMY_CREATURE_UNICORN
-             || other->m_creatureType == ARMY_CREATURE_WAR_UNICORN)
+        if ((other->m_creatureType == CREATURE_UNICORN
+             || other->m_creatureType == CREATURE_WAR_UNICORN)
             && other->getControllingSide() == getOwningSide()
             && !other->is(creatureImmobilized)) {
             addItem(other->m_auraClients, this);
             addItem(m_auraSources, other);
         }
-        if ((m_creatureType == ARMY_CREATURE_UNICORN
-             || m_creatureType == ARMY_CREATURE_WAR_UNICORN)
+        if ((m_creatureType == CREATURE_UNICORN
+             || m_creatureType == CREATURE_WAR_UNICORN)
             && other->getOwningSide() == getControllingSide()
             && !other->is(creatureImmobilized)) {
             addItem(other->m_auraSources, this);
@@ -1189,7 +1191,7 @@ void army::animateMissile(army* armyToAttack)
     int arrowtraveldist = static_cast<int>(sqrt(
         static_cast<double>(deltaY * deltaY + deltaX * deltaX)));
 
-    if (m_creatureType == ARMY_CREATURE_ENCHANTER) {
+    if (m_creatureType == CREATURE_ENCHANTER) {
         g_combatManager->unnamed59FDE0(startX, startY, armyToAttack);
         return;
     }
@@ -1486,7 +1488,7 @@ void army::rangeAttack()
     if (m_slot < 0)
         return;
     army* target = &g_combatManager->m_armies[m_side][m_slot];
-    if (m_creatureType == ARMY_CREATURE_ARROW_TOWER) {
+    if (m_creatureType == CREATURE_ARROW_TOWER) {
         g_combatManager->keepAttack(m_slot);
         return;
     }
@@ -1504,7 +1506,7 @@ void army::rangeAttack()
     rangeAttack(target);
     if (is(creatureTwoAttacks) && target->m_numTroops > 0)
         rangeAttack(target);
-    if (m_creatureType == ARMY_CREATURE_BALLISTA && target->m_numTroops > 0
+    if (m_creatureType == CREATURE_BALLISTA && target->m_numTroops > 0
         && getController() && getController()->m_skillLevel[eSecSkillBattlefieldBallistics] > 1) {
         rangeAttack(target);
     }
@@ -1614,8 +1616,8 @@ unsigned char army::checkSpecialAttack(army* target)
                                                target, 1, 1))
             target->m_postPowSpellToCast = SPELL_DISEASE;
         return 0;
-    case ARMY_CREATURE_UNICORN:
-    case ARMY_CREATURE_WAR_UNICORN:
+    case CREATURE_UNICORN:
+    case CREATURE_WAR_UNICORN:
         if (random(1, 100) <= 20 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_BLIND,
                                                getControllingSide(),
@@ -2013,7 +2015,7 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
             || direction == COMBAT_DIRECTION_0) {
             if (behind && m_stdIcon->isValidSeq(cs_special_ur))
                 m_showAttackFrameType = cs_special_ur;
-            else if (m_creatureType == ARMY_CREATURE_BALLISTA)
+            else if (m_creatureType == CREATURE_BALLISTA)
                 m_showAttackFrameType = cs_range_ur;
             else
                 m_showAttackFrameType = cs_attack_ur;
@@ -2021,7 +2023,7 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
                    || direction == COMBAT_DIRECTION_4) {
             if (behind && m_stdIcon->isValidSeq(cs_special_r)) {
                 m_showAttackFrameType = cs_special_r;
-            } else if (m_creatureType == ARMY_CREATURE_BALLISTA) {
+            } else if (m_creatureType == CREATURE_BALLISTA) {
                 m_showAttackFrameType = cs_range_r;
             } else {
                 m_showAttackFrameType = cs_attack_r;
@@ -2029,7 +2031,7 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
         } else {
             if (behind && m_stdIcon->isValidSeq(cs_special_dr))
                 m_showAttackFrameType = cs_special_dr;
-            else if (m_creatureType == ARMY_CREATURE_BALLISTA)
+            else if (m_creatureType == CREATURE_BALLISTA)
                 m_showAttackFrameType = cs_range_dr;
             else
                 m_showAttackFrameType = cs_attack_dr;
@@ -2128,7 +2130,7 @@ void army::doAttack(int direction)
 VA(0x00441f70, 0x26)  // dc 0x47270
 unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 {
-    if (m_creatureType == ARMY_CREATURE_ARROW_TOWER)
+    if (m_creatureType == CREATURE_ARROW_TOWER)
         return 0;
     return g_combatManager->checkObstacleAttacks(this, isWalking);
 }
@@ -2294,7 +2296,7 @@ long army::getAttackModifier(const army* enemy,
                                unsigned char rangedAttack) const
 {
     return getAdjustedAttack(enemy, rangedAttack)
-        - g_creatureTypeTraits[m_creatureType].m_attackSkill;
+        - H3_AT(g_creatureTypeTraits, m_creatureType).m_attackSkill;
 }
 
 VA(0x00442590, 0xC2)  // dc 0x477e8
@@ -2305,9 +2307,9 @@ long army::getAdjustedDefense(const army* enemy,
         return 0;
     long defense = m_monInfo.m_defenseSkill;
     if (enemy) {
-        if (enemy->m_creatureType == ARMY_CREATURE_BEHEMOTH)
+        if (enemy->m_creatureType == CREATURE_BEHEMOTH)
             defense = static_cast<long>(defense - defense * 0.4f);
-        else if (enemy->m_creatureType == ARMY_CREATURE_ANCIENT_BEHEMOTH)
+        else if (enemy->m_creatureType == CREATURE_ANCIENT_BEHEMOTH)
             defense = static_cast<long>(defense - defense * 0.8f);
     }
     if (g_combatManager->m_moatOn) {
@@ -2327,7 +2329,7 @@ VA(0x00442660, 0x29)  // dc 0x478c8
 long army::getDefenseModifier() const
 {
     return getAdjustedDefense(0, 1)
-        - g_creatureTypeTraits[m_creatureType].m_defenseSkill;
+        - H3_AT(g_creatureTypeTraits, m_creatureType).m_defenseSkill;
 }
 
 // E:\gamedcs\army.cpp:2680
@@ -2395,7 +2397,7 @@ unsigned char isNaturalEnemy(TCreatureType attacker, TCreatureType defender)
     case CREATURE_BLACK_DRAGON:
         return defender == CREATURE_TITAN;
     case CREATURE_TITAN:
-        return defender == army::ARMY_CREATURE_BLACK_DRAGON;
+        return defender == CREATURE_BLACK_DRAGON;
     }
     return 0;
 }
@@ -2462,8 +2464,8 @@ unsigned char army::isEnemy(const army* arg) const
 VA(0x004428f0, 0xF6)  // dc 0x47c04
 inline unsigned char army::canShoot(const army* excluded) const
 {
-    if (m_creatureType == ARMY_CREATURE_BALLISTA
-        || m_creatureType == ARMY_CREATURE_ARROW_TOWER)
+    if (m_creatureType == CREATURE_BALLISTA
+        || m_creatureType == CREATURE_ARROW_TOWER)
         return 1;
     if (!is(creatureShootingArmy) || m_monInfo.m_numShots <= 0)
         return 0;
@@ -2528,7 +2530,7 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     double attack = attackDiff * 0.05 + 1.0;
     if (!ranged && is(creatureShootingArmy))
         attack = attack * 0.5;
-    if (m_creatureType == ARMY_CREATURE_BALLISTA) {
+    if (m_creatureType == CREATURE_BALLISTA) {
         if (getController()) {
             if (getController()
                     ->m_skillLevel[eSecSkillBattlefieldBallistics] > 1)
@@ -2548,7 +2550,7 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     if (ranged && is(creatureTwoAttacks))
         attack = attack + attack;
     double result = sqrt(attack * defense)
-                    * g_creatureTypeTraits[m_creatureType].m_baseFightValue;
+                    * H3_AT(g_creatureTypeTraits, m_creatureType).m_baseFightValue;
     if (is(creatureSiegeWeapon | creatureSummoned)) {
         long total = getTotalHitPoints(0);
         long sum = 0;
@@ -2661,7 +2663,7 @@ int army::computeBaseDamage(unsigned char simulateOnly) const
 
     int low;
     int high;
-    if (m_creatureType == ARMY_CREATURE_BALLISTA) {
+    if (m_creatureType == CREATURE_BALLISTA) {
         const hero* shooter = getController();
         low = (shooter->getPrimarySkill(0) + 1) * m_monInfo.m_damageLowBound;
         high = (shooter->getPrimarySkill(0) + 1) * m_monInfo.m_damageHighBound;
@@ -2703,7 +2705,8 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
     int bonus = 0;
     if ((m_creatureType == CREATURE_CAVALIER
          || m_creatureType == CREATURE_CHAMPION)
-        && defender->m_creatureType != 0 && defender->m_creatureType != 1) {
+        && defender->m_creatureType != CREATURE_PIKEMAN
+        && defender->m_creatureType != CREATURE_HALBERDIER) {
         bonus = static_cast<long>(static_cast<double>(baseDamage)
                                   * distance * 0.05);
     }
@@ -2747,8 +2750,10 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
             break;
         }
 
-        unsigned char hates =
-            isNaturalEnemy(m_creatureType, defender->m_creatureType);
+        // Combat armies retain four-byte storage for the creature domain.
+        unsigned char hates = isNaturalEnemy(
+            H3_ENUM_DECODE(TCreatureType, m_creatureType),
+            H3_ENUM_DECODE(TCreatureType, defender->m_creatureType));
         if (hates) {
             bonus += baseDamage / 2;
             if (announce) {
@@ -2813,7 +2818,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
     int result = computeAttackerBonus(baseDamage, isShooting, defender,
                                         simulateOnly == 0, distance);
     switch (m_creatureType) {
-    case ARMY_CREATURE_BALLISTA: {
+    case CREATURE_BALLISTA: {
         hero* controlling =
             g_combatManager->m_heroes[getControllingSide()];
         long mastery =
@@ -2882,12 +2887,12 @@ double army::computeAttackerDamageReduction(const army* defender,
             factor = 0.3;
         reduction = factor;
     }
-    if (m_creatureType == ARMY_CREATURE_PSYCHIC_ELEMENTAL
+    if (m_creatureType == CREATURE_PSYCHIC_ELEMENTAL
             && defender->is(creatureImmuneToMindSpells))
         reduction *= 0.5;
-    if (m_creatureType == ARMY_CREATURE_MAGIC_ELEMENTAL
-            && (defender->m_creatureType == ARMY_CREATURE_MAGIC_ELEMENTAL
-                || defender->m_creatureType == ARMY_CREATURE_BLACK_DRAGON))
+    if (m_creatureType == CREATURE_MAGIC_ELEMENTAL
+            && (defender->m_creatureType == CREATURE_MAGIC_ELEMENTAL
+                || defender->m_creatureType == CREATURE_BLACK_DRAGON))
         reduction *= 0.5;
     if (isShooting) {
         int hex = m_gridIndex;
@@ -3064,7 +3069,7 @@ int army::damage(int damage)
 // separately claimed retained retail body.
 unsigned long army::strength()
 {
-    return m_numTroops * g_creatureTypeTraits[m_creatureType].m_baseFightValue;
+    return m_numTroops * H3_AT(g_creatureTypeTraits, m_creatureType).m_baseFightValue;
 }
 
 // E:\gamedcs\army.cpp:3492
@@ -3675,7 +3680,7 @@ void army::getBerserkTargets(std::vector<army*>& armies) const
                 continue;
             if (target == this)
                 continue;
-            if (target->m_creatureType == ARMY_CREATURE_ARROW_TOWER)
+            if (target->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
             long value;
             if (canShootTarget) {
@@ -3948,11 +3953,11 @@ void army::attackWall(int targetGridIndex)
         level = controller->m_skillLevel[eSecSkillSiegeBallistics];
         break;
 
-    case ARMY_CREATURE_CYCLOPS:
+    case CREATURE_CYCLOPS:
         level = 1;
         break;
 
-    case ARMY_CREATURE_CYCLOPS_KING:
+    case CREATURE_CYCLOPS_KING:
         level = 2;
         break;
     }
@@ -4566,9 +4571,9 @@ void army::newTurn()
         return;
     if (m_topCreatureDamage > 0) {
         if (m_creatureType == CREATURE_WIGHT
-            || m_creatureType == ARMY_CREATURE_WRAITH
+            || m_creatureType == CREATURE_WRAITH
             || m_creatureType == CREATURE_TROLL
-            || ((g_creatureTypeTraits[m_creatureType].m_attributes
+            || ((H3_AT(g_creatureTypeTraits, m_creatureType).m_attributes
                  & g_ctaAlive)
                 && g_combatManager->m_heroes[m_combatSide] != 0
                 && g_combatManager->m_heroes[m_combatSide]
@@ -4663,7 +4668,7 @@ long army::getResurrectionSize(const army* target) const
     }
     int totalLife = target->m_monInfo.m_hitPoints * target->m_origNumTroops;
     int raised = cppMin(totalLife, m_numTroops * 50)
-        / g_creatureTypeTraits[ARMY_CREATURE_DEMON].m_hitPoints;
+        / H3_AT(g_creatureTypeTraits, CREATURE_DEMON).m_hitPoints;
     return cppMin(raised, target->m_origNumTroops);
 }
 
@@ -4671,14 +4676,14 @@ VA(0x004473d0, 0x13D)  // dc 0x4be64
 bool army::canCastResurrect(long hex) const
 {
     if ((m_creatureType != CREATURE_ARCHANGEL
-         && m_creatureType != ARMY_CREATURE_PIT_LORD)
+         && m_creatureType != CREATURE_PIT_LORD)
         || m_monInfo.m_hasSpell <= 0)
         return 0;
     long side = getControllingSide();
     if (!g_combatManager->canCastSpells(side, 0))
         return 0;
     army* target;
-    if (m_creatureType == ARMY_CREATURE_PIT_LORD)
+    if (m_creatureType == CREATURE_PIT_LORD)
         target = g_combatManager->findDemonicResurrectionTarget(side, hex);
     else
         target = g_combatManager->findResurrectionTarget(side, hex, 1);
@@ -4753,7 +4758,7 @@ unsigned char army::canCastSpell(long hex) const
     army* target = g_combatManager->m_cells[hex].getArmy();
     switch (m_creatureType) {
     case CREATURE_ARCHANGEL:
-    case ARMY_CREATURE_PIT_LORD:
+    case CREATURE_PIT_LORD:
         return canCastResurrect(hex);
     case CREATURE_MASTER_GENIE:
         return target && getValidCaliphSpells(target) > 0;
@@ -5023,7 +5028,7 @@ unsigned char army::unnamed447fe0()
         long side = getControllingSide();
         army* stack = g_combatManager->m_armies[side];
         for (long i = 0; i < g_combatManager->m_numArmies[side]; i++, stack++) {
-            if (stack->m_creatureType == ARMY_CREATURE_ENCHANTER
+            if (stack->m_creatureType == CREATURE_ENCHANTER
                 && stack->m_spellInfluence[SPELL_BLIND] == 0
                 && stack->m_spellInfluence[SPELL_STONE] == 0
                 && stack->m_spellInfluence[SPELL_PARALYZE] == 0
@@ -5100,7 +5105,7 @@ void army::castSpell(long hex)
     case CREATURE_ARCHANGEL:
         castResurrect(hex);
         break;
-    case ARMY_CREATURE_PIT_LORD:
+    case CREATURE_PIT_LORD:
         castDemonicResurrect(hex);
         break;
     case CREATURE_MASTER_GENIE:
@@ -5191,7 +5196,7 @@ long army::getMultiHeadDirections(long ourHex, const army* enemy,
     long mask = 0xff;
     if (!is(creatureDoubleWide))
         mask = 0x3f;
-    if (m_creatureType == ARMY_CREATURE_CERBERUS) {
+    if (m_creatureType == CREATURE_CERBERUS) {
         long direction = getAttackDirection(ourHex, enemy, enemyHex);
 
         mask = 1 << direction;

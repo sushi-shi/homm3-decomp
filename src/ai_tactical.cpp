@@ -2281,7 +2281,7 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const arm
                                              creatureCast))
             continue;
         int resurrected = (g_spellTraits[choice.m_spell].m_masteryBonus[choice.m_mastery]
-                            + g_creatureTypeTraits[victim->m_creatureType].m_hitPoints
+                            + H3_AT(g_creatureTypeTraits, victim->m_creatureType).m_hitPoints
                             + choice.m_power)
                            * victim->m_numTroops / healedArmy->m_monInfo.m_hitPoints;
         int missing = healedArmy->m_origNumTroops - healedArmy->m_numTroops;
@@ -2641,7 +2641,7 @@ void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
         choice.m_value = power * 1000;
     } else {
         TCreatureType summoned = getElementalType(choice.m_spell);
-        choice.m_value = g_creatureTypeTraits[summoned].m_aiValue * power;
+        choice.m_value = H3_AT(g_creatureTypeTraits, summoned).m_aiValue * power;
     }
     choice.m_castNow = 1;
 }

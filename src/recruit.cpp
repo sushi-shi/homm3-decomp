@@ -42,8 +42,8 @@ DATA(0x0069d5f4) HMENU__* g_recruitSavedMenu;
 VA(0x0054e750, 0x64)  // dc 0x118adc
 void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, long* cost)
 {
-    const int* toCost = g_creatureTypeTraits[upgrade].m_cost;
-    const int* fromCost = g_creatureTypeTraits[creature].m_cost;
+    const int* toCost = H3_AT(g_creatureTypeTraits, upgrade).m_cost;
+    const int* fromCost = H3_AT(g_creatureTypeTraits, creature).m_cost;
 
     for (int i = 0; i < 7; i++) {
         if (toCost[i] > fromCost[i])
@@ -54,10 +54,10 @@ void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, 
 }
 
 VA(0x0054e7c0, 0x31)  // dc 0x118b38
-void getMonsterCost(int monId, int* resCost)
+void getMonsterCost(H3_ENUM_PARAM(TCreatureType, int) creature, int* resCost)
 {
     int resource;
-    MEMCPY(resCost, g_creatureTypeTraits[monId].m_cost,
+    MEMCPY(resCost, H3_AT(g_creatureTypeTraits, creature).m_cost,
            7 * sizeof(resCost[0]), resource);
 }
 
@@ -242,29 +242,40 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
     m_creatureWidgets[3] = 0;
 
     if (recruitInfo->m_monType4 != CREATURE_NONE) {
+        // Recruit records retain creature ids in fixed-width storage fields.
         addCreatureWidgets(0x1c, 0x41, 0xb4,
-                             recruitInfo->m_monType1, 0);
+                             H3_ENUM_DECODE(TCreatureType,
+                                 recruitInfo->m_monType1), 0);
         addCreatureWidgets(0x8a, 0x41, 0xb4,
-                             recruitInfo->m_monType2, 1);
+                             H3_ENUM_DECODE(TCreatureType,
+                                 recruitInfo->m_monType2), 1);
         addCreatureWidgets(0xf8, 0x41, 0xb4,
-                             recruitInfo->m_monType3, 2);
+                             H3_ENUM_DECODE(TCreatureType,
+                                 recruitInfo->m_monType3), 2);
         addCreatureWidgets(0x166, 0x41, 0xb4,
-                             recruitInfo->m_monType4, 3);
+                             H3_ENUM_DECODE(TCreatureType,
+                                 recruitInfo->m_monType4), 3);
     } else if (recruitInfo->m_monType3 != CREATURE_NONE) {
         addCreatureWidgets(0x1e, 0x41, 0xb4,
-                             recruitInfo->m_monType1, 0);
+                             H3_ENUM_DECODE(TCreatureType,
+                                 recruitInfo->m_monType1), 0);
         addCreatureWidgets(0xc1, 0x41, 0xb4,
-                             recruitInfo->m_monType2, 1);
+                             H3_ENUM_DECODE(TCreatureType,
+                                 recruitInfo->m_monType2), 1);
         addCreatureWidgets(0x164, 0x41, 0xb4,
-                             recruitInfo->m_monType3, 2);
+                             H3_ENUM_DECODE(TCreatureType,
+                                 recruitInfo->m_monType3), 2);
     } else if (recruitInfo->m_monType2 != CREATURE_NONE) {
         addCreatureWidgets(0x85, 0x41, 0xb4,
-                             recruitInfo->m_monType1, 0);
+                             H3_ENUM_DECODE(TCreatureType,
+                                 recruitInfo->m_monType1), 0);
         addCreatureWidgets(0xfd, 0x41, 0xb4,
-                             recruitInfo->m_monType2, 1);
+                             H3_ENUM_DECODE(TCreatureType,
+                                 recruitInfo->m_monType2), 1);
     } else {
         addCreatureWidgets(0xc1, 0x41, 0xb4,
-                             recruitInfo->m_monType1, 0);
+                             H3_ENUM_DECODE(TCreatureType,
+                                 recruitInfo->m_monType1), 0);
     }
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -313,11 +324,11 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
         g_creatureBackgrounds[
             g_game->m_gameVersion == 0
                 && isBaseElemental(creature)
-            ? -1 : g_creatureTypeTraits[creature].m_townType],
+            ? -1 : H3_AT(g_creatureTypeTraits, creature).m_townType],
         0x800));
 
     m_creatureWidgets[slot] = new iconWidget(startX, startY, 100, 130,
-        slot + 0x216, g_creatureTypeTraits[creature].m_spriteName,
+        slot + 0x216, H3_AT(g_creatureTypeTraits, creature).m_spriteName,
         0, 2, 0, 0, iconWidget::ICON_STYLE_CREATURE);
     m_widgets.push_back(m_creatureWidgets[slot]);
 
@@ -347,8 +358,9 @@ int recruitUnit::open(int newPriority)
     g_recruitWindow->broadcastMessage(msg);
 
     const char* creatureName;
-    if (m_monsterType >= 0 && m_monsterType <= 150)
-        creatureName = g_creatureTypeTraits[m_monsterType].m_pluralName;
+    if (m_monsterType >= CREATURE_ROSTER_BEGIN
+        && m_monsterType <= CREATURE_ACCEPTED_RANGE_MAX)
+        creatureName = H3_AT(g_creatureTypeTraits, m_monsterType).m_pluralName;
     else
         creatureName = "";
     sprintf(g_text, "%s %s",
@@ -535,9 +547,11 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     g_recruitWindow->broadcastMessage(msg);
 
     m_numAvail = m_available[slot];
-    if (g_creatureTypeTraits[m_monsterType].m_attributes & g_ctaSiegeWeapon) {
+    if (H3_AT(g_creatureTypeTraits, m_monsterType).m_attributes
+        & g_ctaSiegeWeapon) {
         *m_numAvail = 1 - m_thisHero->hasArtifact(
-            siegeMonsterToSiegeArtifact(m_monsterType));
+            siegeMonsterToSiegeArtifact(
+                H3_ENUM_DECODE(TCreatureType, m_monsterType)));
         if (*m_numAvail < 0)
             *m_numAvail = 0;
         sprintf(g_text, "%d", *m_numAvail - m_numberToBuy);
@@ -751,8 +765,12 @@ int recruitUnit::main(message& msg)
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
             max(100, elapsed);
 
+        // Recruit slots retain four-byte creature storage.
         const TCreatureType monType[4] = {
-            m_monType1, m_monType2, m_monType3, m_monType4
+            H3_ENUM_DECODE(TCreatureType, m_monType1),
+            H3_ENUM_DECODE(TCreatureType, m_monType2),
+            H3_ENUM_DECODE(TCreatureType, m_monType3),
+            H3_ENUM_DECODE(TCreatureType, m_monType4)
         };
         for (int slot = 0; slot < 4; slot++) {
             if (g_recruitWindow->m_creatureWidgets[slot]) {
@@ -885,7 +903,7 @@ int recruitUnit::main(message& msg)
                 if (m_numberToBuy == 0 && m_monType2 == CREATURE_NONE)
                     return exitRecruitUnit(msg);
 
-                if (g_creatureTypeTraits[m_monsterType].m_attributes
+                if (H3_AT(g_creatureTypeTraits, m_monsterType).m_attributes
                     & g_ctaSiegeWeapon) {
                     if (m_thisHero->getNumberInBackpack(1) + m_numberToBuy
                         > 64) {
@@ -914,13 +932,16 @@ int recruitUnit::main(message& msg)
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     } else {
                         const char* creatureName;
-                        if (m_monsterType >= 0 && m_monsterType <= 150) {
+                        if (m_monsterType != CREATURE_NONE
+                            && m_monsterType <= CREATURE_ACCEPTED_RANGE_MAX) {
                             if (m_numberToBuy == 1)
-                                creatureName = g_creatureTypeTraits[
-                                    m_monsterType].m_name;
+                                creatureName = H3_AT(
+                                    g_creatureTypeTraits,
+                                    m_monsterType).m_name;
                             else
-                                creatureName = g_creatureTypeTraits[
-                                    m_monsterType].m_pluralName;
+                                creatureName = H3_AT(
+                                    g_creatureTypeTraits,
+                                    m_monsterType).m_pluralName;
                         } else {
                             creatureName = "";
                         }
@@ -1099,9 +1120,9 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     m_currArmyGroup = const_cast<armyGroup*>(&newTown->getArmy());
     m_currArmyGroupIsTownGarrison = 1;
     m_viewOnly = newTown->m_owner != g_netLocalGamePos;
-    m_monType2 = (TCreatureType)-1;
-    m_monType3 = (TCreatureType)-1;
-    m_monType4 = (TCreatureType)-1;
+    m_monType2 = CREATURE_NONE;
+    m_monType3 = CREATURE_NONE;
+    m_monType4 = CREATURE_NONE;
     m_selectedPosition = 0;
     m_monType1 = m_monsterType;
     m_available[0] = m_numAvail;
@@ -1140,9 +1161,11 @@ TRecruitQuickWindow::~TRecruitQuickWindow()
 VA(0x00551750, 0x24)  // dc 0x11affc
 void quickViewRecruit(town* newTown, int newDwellingIndex)
 {
+    // The dwelling table retains four-byte creature storage.
     quickViewRecruit(
-        g_townDwellingCreatures[newTown->m_type * TOWN_DWELLING_SLOTS
-                               + newDwellingIndex],
+        H3_ENUM_DECODE(TCreatureType,
+            g_townDwellingCreatures[
+                newTown->m_type * TOWN_DWELLING_SLOTS + newDwellingIndex]),
         &newTown->m_population[newDwellingIndex]);
 }
 
@@ -1189,8 +1212,8 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
     recruitWindow->broadcastMessage(msg);
 
     recruitWindow->addWidget(new textWidget(0, 20, 161, 20,
-        monType >= 0 && monType <= 150
-            ? g_creatureTypeTraits[monType].m_pluralName
+        monType >= CREATURE_ROSTER_BEGIN && monType <= CREATURE_ACCEPTED_RANGE_MAX
+            ? H3_AT(g_creatureTypeTraits, monType).m_pluralName
             : DATA_COMPGEN(0x00691210, quickRecruitEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x222,
@@ -1200,10 +1223,10 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         g_creatureBackgrounds[
             g_game->m_gameVersion == 0
                 && isBaseElemental(monType)
-            ? -1 : g_creatureTypeTraits[monType].m_townType],
+            ? -1 : H3_AT(g_creatureTypeTraits, monType).m_townType],
         0x800), -1);
     recruitWindow->addWidget(new iconWidget(30, 44, 100, 130, 0x216,
-        g_creatureTypeTraits[monType].m_spriteName,
+        H3_AT(g_creatureTypeTraits, monType).m_spriteName,
         0, 2, 0, 0, iconWidget::ICON_STYLE_CREATURE), -1);
 
     sprintf(g_text,

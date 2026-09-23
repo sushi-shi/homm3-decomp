@@ -1204,7 +1204,8 @@ public:
     TArtifact getRandomArtifactId(int artifactClass);  // 0x4c94d0
     void setupTowns();
     void checkHeroConsistency();
-    int getRandomNumTroops(int whichMon);
+    int getRandomNumTroops(
+        H3_ENUM_PARAM(TCreatureType, int) creature);
     void setupDynamicStuff(int update, int forceUpdate);  // 0x51bd50
     void setupNewOverviewType(int whichType,
                               unsigned char update);  // 0x51e330
@@ -1226,7 +1227,8 @@ public:
     // 0x4baf00, its link-order neighbour. countOnly stops at the piece
     // count; otherwise the shared puzzlePiecesRemoved bitset is re-rolled.
     int setupPuzzlePieces(int whichPlayer, int countOnly);
-    void giveArmy(armyGroup* thisMonInfo, int monType,
+    void giveArmy(armyGroup* thisMonInfo,
+                  H3_ENUM_PARAM(TCreatureType, int) monType,
                   int monNum, int slot);  // 0x4ca340
     int experienceValueOfStack(const armyGroup* whichGroup,
                                const hero* whichHero);  // 0x4ca3b0
@@ -1245,7 +1247,7 @@ public:
     // i.e. an eight-entry int array of pre-chosen starting heroes that
     // overrides GetStartingHeroId for human players.
     void createTownHeroes(int* startingHeroIds);
-    int getAlignment(int creature) const;
+    int getAlignment(H3_ENUM_PARAM(TCreatureType, int) creature) const;
     void claimShipyard(type_point location, int newPlayerOwner);  // 0x4c6a30
     void claimTown(int townId, int newPlayerOwner,
                    unsigned char isRemoteMove,
@@ -2025,13 +2027,13 @@ inline bool game::isHumanAlly(int playerNum) const
 // VC6 source cost 75, so the 72-budget nested call remains out of line without
 // a pragma. Dreamcast's same-named game.h:1375 helper instead maps player ids.
 VA(0x004c6690, 0x43)
-inline int game::getAlignment(int creature) const
+inline int game::getAlignment(H3_ENUM_PARAM(TCreatureType, int) creature) const
 {
     if (m_gameVersion == 0) {
         if (isBaseElemental(creature))
             return -1;
     }
-    return g_creatureTypeTraits[creature].m_townType;
+    return H3_AT(g_creatureTypeTraits, creature).m_townType;
 }
 
 // Game.h:1380. DispatchEvent expands this cell accessor; the

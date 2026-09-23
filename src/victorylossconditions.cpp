@@ -141,10 +141,14 @@ unsigned char VictoryConditionStruct::checkForTotalCreatures()
                 int i;
                 for (i = 0; i < g_currentPlayer->m_numHeroes; ++i)
                     total += g_game->getHero(g_currentPlayer->m_heroes[i])
-                        ->m_army.getCreatureTotal(m_creatureType);
+                        // Victory records retain creature ids in fixed-width
+                        // storage.
+                        ->m_army.getCreatureTotal(H3_ENUM_DECODE(
+                            TCreatureType, m_creatureType));
                 for (i = 0; i < g_currentPlayer->m_numTowns; ++i)
                     total += g_game->getTown(g_currentPlayer->m_townIds[i])
-                        ->getArmy().getCreatureTotal(m_creatureType);
+                        ->getArmy().getCreatureTotal(H3_ENUM_DECODE(
+                            TCreatureType, m_creatureType));
                 if (total >= m_numCreatures) {
                     m_playerWinner = static_cast<signed char>(g_netLocalGamePos);
                     m_gameWon = 1;

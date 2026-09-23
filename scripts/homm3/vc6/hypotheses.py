@@ -172,6 +172,21 @@ def variants(original: bytes, axes: tuple[Axis, ...]) -> list[Variant]:
     return result
 
 
+def improvements(baseline: dict, rows: list[dict]) -> dict:
+    """Keep the best observed candidate for every scored TU function."""
+    winners = {}
+    for name, old_score in baseline["scores"].items():
+        improved = [row for row in rows if not row["error"]
+                    and row["scores"].get(name, 0.0) > old_score + 1e-9]
+        if improved:
+            winner = max(improved, key=lambda row: (row["scores"][name], -row["index"]))
+            winners[name] = {"baseline": old_score,
+                             "best": winner["scores"][name],
+                             "index": winner["index"],
+                             "name": winner["name"]}
+    return winners
+
+
 @dataclass(frozen=True)
 class ScoreContext:
     # The subset of the TU-state scorer's context used for a source batch.
@@ -254,7 +269,15 @@ def run(args) -> int:
         ranked = sorted(rows, key=lambda row: (
             -(row["score"] if row["score"] is not None else -1), row["index"]))
         by_index = {candidate.index: candidate for candidate in candidates}
-        for rank, row in enumerate(ranked[:args.keep_top], 1):
+        # Keep each scored function's best improving candidate, even when the
+        # function used to rank the batch did not improve. A source change is
+        # compiled as a whole TU and can shift unrelated codegen.
+        winners = improvements(baseline, rows)
+        retained = {row["index"]: row for row in ranked[:args.keep_top]}
+        retained.update({item["index"]: next(row for row in rows
+                                               if row["index"] == item["index"])
+                         for item in winners.values()})
+        for rank, row in enumerate(retained.values(), 1):
             if row["error"]:
                 continue
             stem = f"rank-{rank:02d}-{row['index']:04d}"
@@ -266,10 +289,11 @@ def run(args) -> int:
                       unique_states=len(candidates), context=fingerprint,
                       source_sha256=hashlib.sha256(original).hexdigest(),
                       target_sha256=hashlib.sha256(target_bytes).hexdigest(),
-                      baseline=baseline, results=ranked)
+                      baseline=baseline, improvements=winners, results=ranked)
         (output / "results.json").write_text(json.dumps(result, indent=2) + "\n")
     exact = sum(row["score"] == 100.0 for row in rows)
-    print(f"[hypotheses] {exact} exact; results: {output}", flush=True)
+    print(f"[hypotheses] {exact} focused exact; {len(winners)} TU functions "
+          f"improved; results: {output}", flush=True)
     return 0 if exact else 1
 
 

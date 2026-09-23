@@ -211,14 +211,18 @@ void TQuickTownWindow::initializeArmyDisplay(
     int widgetId = ARMY_1_SPRITE_ID;
     int displaySlot = 0;
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        int creature = currentArmyGroup.m_armies[slot];
+        // Army slots retain creature ids in fixed-width storage.
+        TCreatureType creature = H3_ENUM_DECODE(
+            TCreatureType, currentArmyGroup.m_armies[slot]);
         if (creature == CREATURE_NONE)
             continue;
 
         m_widgets.push_back(new iconWidget(
             g_quickTownArmyPositions[displaySlot][0],
             g_quickTownArmyPositions[displaySlot][1], 32, 32, widgetId++,
-            "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
+            "cprsmall.def",
+            // The portrait resource uses creature ordinal + 2.
+            H3_IDX(creature) + 2, 0, 0, 0, 0x10));
 
         if (viewLevel >= ViewArmySizes) {
             int count = currentArmyGroup.m_numTroops[slot];

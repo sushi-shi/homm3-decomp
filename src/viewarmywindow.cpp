@@ -111,7 +111,7 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     // (army.h's sMonInfo slice); the table row is the unmodified one.
     const TCreatureTypeTraits* stackTraits = &thisArmy->m_monInfo;
     const TCreatureTypeTraits& typeTraits =
-        g_creatureTypeTraits[thisArmy->m_creatureType];
+        H3_AT(g_creatureTypeTraits, thisArmy->m_creatureType);
 
     // 97.20%: 67/67 blocks exact, every reloc and call agrees, and the
     // sole residual is one stack slot - retail spills the shooting-attack
@@ -162,14 +162,15 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
         ourTown = g_combatManager->m_defendingTown;
     // DC lines 98/107 append the returned strings, and retail retains the
     // append calls. Complete reloads ArmyType for each added creature arg.
+    // Window state retains four-byte storage for the creature domain.
     m_moraleHelp += group->getMoraleDescription(
-        m_armyType, m_morale, thisHero, ourTown,
+        H3_ENUM_DECODE(TCreatureType, m_armyType), m_morale, thisHero, ourTown,
         enemyHero, enemies, g_combatManager->m_magicTerrain,
         groupAlignments);
 
     createLuckWidget(thisArmy->getLuck(0));
     m_luckHelp += group->getLuckDescription(
-        m_armyType, m_luck, thisHero, ourTown,
+        H3_ENUM_DECODE(TCreatureType, m_armyType), m_luck, thisHero, ourTown,
         enemyHero, enemies, g_combatManager->m_magicTerrain);
 
     createSpellInfluenceWidgets(thisArmy);
@@ -240,22 +241,23 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 VA(0x005f3b50, 0x6B2)  // vtable-store + builder call set + describer pair, dc 0x190e78
 TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
                                  const hero* thisHero, const town* thisTown,
-                                 int x0, int y0, int upgrade,
+                                 int x0, int y0,
+                                 H3_ENUM_PARAM(TCreatureType, int) upgrade,
                                  unsigned char showDismiss,
                                  unsigned char showOk,
                                  unsigned char groupAlignments)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
-      m_armyType(group->m_armyTypes[iarmy]),
+      m_armyType(group->m_armies[iarmy]),
       m_armySize(group->m_numTroops[iarmy]),
       m_showingOkButton(showOk)
 {
     if (!showOk) {
-        upgrade = -1;
+        upgrade = CREATURE_NONE;
         showDismiss = 0;
     }
     m_upgrade = upgrade;
 
-    const TCreatureTypeTraits* typeTraits = &g_creatureTypeTraits[m_armyType];
+    const TCreatureTypeTraits* typeTraits = &H3_AT(g_creatureTypeTraits, m_armyType);
     TCreatureTypeTraits traits = *typeTraits;
 
     // The widget vector NAMED AS A REFERENCE (three uses): 90.4657 ->
@@ -273,7 +275,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     if (!g_game->m_gameVersion && isBaseElemental(m_armyType))
         townType = -1;
     else
-        townType = g_creatureTypeTraits[m_armyType].m_townType;
+        townType = H3_AT(g_creatureTypeTraits, m_armyType).m_townType;
     createPortraitWidget(traits.m_spriteName, townType,
                            group->m_numTroops[iarmy]);
 
@@ -289,26 +291,27 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 
     createMoraleWidget(group->getArmyMorale(
         iarmy, thisHero, thisTown, -1, groupAlignments, 0));
+    // Window state retains four-byte storage for the creature domain.
     m_moraleHelp = group->getMoraleDescription(
-        m_armyType, m_morale, thisHero, thisTown,
+        H3_ENUM_DECODE(TCreatureType, m_armyType), m_morale, thisHero, thisTown,
         0, 0, -1, groupAlignments);
 
     createLuckWidget(group->getArmyLuck(iarmy, thisHero, thisTown, -1, 1));
     m_luckHelp = group->getLuckDescription(
-        m_armyType, m_luck, thisHero, thisTown,
+        H3_ENUM_DECODE(TCreatureType, m_armyType), m_luck, thisHero, thisTown,
         0, 0, -1);
 
     if (showOk)
         createOkWidget();
 
-    if (upgrade != -1) {
+    if (upgrade != CREATURE_NONE) {
         createUpgradeWidget();
         m_showingUpgradeButton = 1;
     }
     if (showDismiss) {
         createDismissWidget();
         m_showingDismissButton = 1;
-    } else if (upgrade == -1 && traits.m_specialAbility) {
+    } else if (upgrade == CREATURE_NONE && traits.m_specialAbility) {
         widgets.push_back(new textWidget(
             20, 232, 192, 41, traits.m_specialAbility, "smalfont.fnt",
             font::WHITE, -1, 0, 0, 8));
@@ -328,10 +331,10 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     }
 
     // The upgrade button greys itself out when the player cannot pay.
-    if (upgrade != -1) {
+    if (upgrade != CREATURE_NONE) {
         long cost[7];
-        getUpgradeCost(m_armyType,
-                         TCreatureType(upgrade), m_armySize, cost);
+        getUpgradeCost(H3_ENUM_DECODE(TCreatureType, m_armyType),
+            H3_ENUM_DECODE(TCreatureType, upgrade), m_armySize, cost);
         for (int i = 0; i < 7; i++) {
             if (g_currentPlayer->m_resources[i] < cost[i]) {
                 widgetSetStatus(UPGRADE_ID, 8);
@@ -342,17 +345,18 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 }
 
 VA(0x005f4210, 0x3C1)  // dc 0x19148c
-TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
-                                 unsigned char showOk)
+TViewArmyWindow::TViewArmyWindow(
+    H3_ENUM_PARAM(TCreatureType, int) armyType, int x0, int y0,
+    unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
       // Retail initialises the creature type in the member list, before the
       // widget run; assigning it in the body costs 94.4475 against 97.1745.
-      m_armyType(TCreatureType(armyType)),
+      m_armyType(armyType),
       m_showingUpgradeButton(0),
       m_showingDismissButton(0),
       m_showingOkButton(showOk)
 {
-    const TCreatureTypeTraits* traits = &g_creatureTypeTraits[armyType];
+    const TCreatureTypeTraits* traits = &H3_AT(g_creatureTypeTraits, armyType);
 
     m_widgets.reserve(NWIDGETS);
 
@@ -366,7 +370,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     if (!g_game->m_gameVersion && isBaseElemental(armyType))
         townType = -1;
     else
-        townType = g_creatureTypeTraits[armyType].m_townType;
+        townType = H3_AT(g_creatureTypeTraits, armyType).m_townType;
     createPortraitWidget(traits->m_spriteName, townType, 0);
 
     createAttackWidget(traits->m_attackSkill, traits->m_attackSkill);
@@ -557,9 +561,10 @@ int TViewArmyWindow::windowHandler(message& msg)
                 long cost[7];
                 int amount;
                 amount = 0;
-                int upgradeType;
-                upgradeType = m_upgrade;
-                getUpgradeCost(m_armyType, TCreatureType(upgradeType),
+                TCreatureType upgradeType;
+                // Window state retains four-byte creature storage.
+                upgradeType = H3_ENUM_DECODE(TCreatureType, m_upgrade);
+                getUpgradeCost(H3_ENUM_DECODE(TCreatureType, m_armyType), upgradeType,
                                  m_armySize, cost);
                 int resource;
                 for (resource = 5; resource >= 0; resource--) {
@@ -646,7 +651,7 @@ int TViewArmyWindow::windowHandler(message& msg)
     }
 
     if (GameTime::isPast(g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])) {
-        if (isSiegeWeapon(m_armyType))
+        if (isSiegeWeapon(H3_ENUM_DECODE(TCreatureType, m_armyType)))
             m_spriteWidget->nextRandomSiegeEngineFrame();
         else
             m_spriteWidget->nextRandomFrame();

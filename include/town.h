@@ -185,7 +185,7 @@ SIZE(type_dialog_resource, 8);
 // store), dwelling @6 (16-bit store).
 struct type_horde_effect {
 public:
-    TCreatureType m_creature;
+    H3_ENUM_STORAGE(TCreatureType, int) m_creature;
     short m_bonus;
     short m_dwelling;
 };
@@ -275,7 +275,7 @@ public:
     // akCreatureTypeTraits with it). Not gated: it is a rename plus an
     // int-to-enum retype of an EXISTING member, so no view of this class
     // gains or loses a declarator.
-    TCreatureType m_summoningType;
+    H3_ENUM_STORAGE(TCreatureType, int) m_summoningType;
     // +0x40. DC `summoningPopulation`, a T_SHORT at its own 56 - the row
     // straight after `summoningType` at 52.
     // Sliced 2026-08-14 for townManager::SetupWell (0x5dd5fa), which
@@ -619,7 +619,8 @@ extern int g_siloIncome[9][NUM_RESOURCES];
 // BEFORE scaling (`[4*(esi+slot) + table]`, one reloc, no second base
 // register) - a two-dimensional subscript compiles to the three-term
 // form instead. Name INVENTED (no DC symbol); owner TU unlocated.
-extern TCreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
+extern TCreatureType
+    g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 // Biased view of the upgraded half of the same first town row. Retail
 // GiveTroopsToNeutralTown carries a distinct relocation to this address.
 

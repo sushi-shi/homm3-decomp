@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "basemgr.h"
+#include "domains.h"
 #include "palette.h"
 #include "slider.h"
 #include "window.h"
@@ -17,11 +18,13 @@ class iconWidget;
 class recruitUnit;
 class town;
 
-void getMonsterCost(int monId, int* resCost);
-void getUpgradeCost(enum TCreatureType creature, enum TCreatureType upgrade,
+H3_ENUM_FORWARD_SPLIT(TCreatureType, int);
+
+void getMonsterCost(H3_ENUM_PARAM(TCreatureType, int) creature, int* resCost);
+void getUpgradeCost(TCreatureType creature, TCreatureType upgrade,
     long amount, long* cost);
 void quickViewRecruit(town* newTown, int newDwellingIndex);
-void quickViewRecruit(enum TCreatureType monType, short* numMon);
+void quickViewRecruit(TCreatureType monType, short* numMon);
 
 // Recruit-window message ids, fixed by the constructor's widget ids and by
 // recruitUnit::Main's retail switch tables.
@@ -142,13 +145,13 @@ public:
     int m_currentSpriteFrame[4];
     int m_type;
     unsigned char m_viewOnly;
-    TCreatureType m_monsterType;
+    H3_ENUM_STORAGE(TCreatureType, int) m_monsterType;
     short* m_numAvail;
     int m_selectedPosition;
-    TCreatureType m_monType1;
-    TCreatureType m_monType2;
-    TCreatureType m_monType3;
-    TCreatureType m_monType4;
+    H3_ENUM_STORAGE(TCreatureType, int) m_monType1;
+    H3_ENUM_STORAGE(TCreatureType, int) m_monType2;
+    H3_ENUM_STORAGE(TCreatureType, int) m_monType3;
+    H3_ENUM_STORAGE(TCreatureType, int) m_monType4;
     short* m_available[4];
     hero* m_thisHero;
     // Dreamcast primitive pointer 0x474 and NH3API: int* at +0x80.

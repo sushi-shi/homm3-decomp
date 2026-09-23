@@ -512,7 +512,7 @@ void checkAdvCheatCode(std::string& chatString)
         && currentHero) {
         cheatUsed = true;
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
-            if (currentHero->m_army.m_armies[slot] == -1)
+            if (currentHero->m_army.m_armies[slot] == CREATURE_NONE)
                 currentHero->m_army.add(CREATURE_ARCHANGEL, 5, slot);
         }
         g_advManager->updBottomView(1, 1, 1);
@@ -521,7 +521,7 @@ void checkAdvCheatCode(std::string& chatString)
                && currentHero) {
         cheatUsed = true;
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
-            if (currentHero->m_army.m_armies[slot] == -1)
+            if (currentHero->m_army.m_armies[slot] == CREATURE_NONE)
                 currentHero->m_army.add(CREATURE_BLACK_KNIGHT, 10, slot);
         }
         g_advManager->updBottomView(1, 1, 1);

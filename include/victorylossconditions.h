@@ -35,7 +35,7 @@ public:
     // checker needs the enum type for its armyGroup call; display-only
     // consumers use the same proven representation without pulling the enum
     // through fragile include cycles.
-    TCreatureType m_creatureType;
+    H3_ENUM_STORAGE(TCreatureType, int) m_creatureType;
     int m_numCreatures;
     int m_resourceType;
     int m_resourceAmount;

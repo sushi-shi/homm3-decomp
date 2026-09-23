@@ -124,34 +124,34 @@ DATA(0x0066cd98) __int64 g_bitNumber[64] = {
 DATA(0x006976f0) __int64 g_townEligibleBuildMask[9];
 DATA(0x00697798) __int64 g_hierarchyMask[9][44];
 DATA(0x006747b4) TCreatureType g_townDwellingCreatures[126] = {
-    TCreatureType(0), TCreatureType(2), TCreatureType(4), TCreatureType(6), TCreatureType(8), TCreatureType(10), TCreatureType(12), TCreatureType(1),
-    TCreatureType(3), TCreatureType(5), TCreatureType(7), TCreatureType(9), TCreatureType(11), TCreatureType(13), TCreatureType(14), TCreatureType(16),
-    TCreatureType(18), TCreatureType(20), TCreatureType(22), TCreatureType(24), TCreatureType(26), TCreatureType(15), TCreatureType(17), TCreatureType(19),
-    TCreatureType(21), TCreatureType(23), TCreatureType(25), TCreatureType(27), TCreatureType(28), TCreatureType(30), TCreatureType(32), TCreatureType(34),
-    TCreatureType(36), TCreatureType(38), TCreatureType(40), TCreatureType(29), TCreatureType(31), TCreatureType(33), TCreatureType(35), TCreatureType(37),
-    TCreatureType(39), TCreatureType(41), TCreatureType(42), TCreatureType(44), TCreatureType(46), TCreatureType(48), TCreatureType(50), TCreatureType(52),
-    TCreatureType(54), TCreatureType(43), TCreatureType(45), TCreatureType(47), TCreatureType(49), TCreatureType(51), TCreatureType(53), TCreatureType(55),
-    TCreatureType(56), TCreatureType(58), TCreatureType(60), TCreatureType(62), TCreatureType(64), TCreatureType(66), TCreatureType(68), TCreatureType(57),
-    TCreatureType(59), TCreatureType(61), TCreatureType(63), TCreatureType(65), TCreatureType(67), TCreatureType(69), TCreatureType(70), TCreatureType(72),
-    TCreatureType(74), TCreatureType(76), TCreatureType(78), TCreatureType(80), TCreatureType(82), TCreatureType(71), TCreatureType(73), TCreatureType(75),
-    TCreatureType(77), TCreatureType(79), TCreatureType(81), TCreatureType(83), TCreatureType(84), TCreatureType(86), TCreatureType(88), TCreatureType(90),
-    TCreatureType(92), TCreatureType(94), TCreatureType(96), TCreatureType(85), TCreatureType(87), TCreatureType(89), TCreatureType(91), TCreatureType(93),
-    TCreatureType(95), TCreatureType(97), TCreatureType(98), TCreatureType(100), TCreatureType(104), TCreatureType(106), TCreatureType(102), TCreatureType(108),
-    TCreatureType(110), TCreatureType(99), TCreatureType(101), TCreatureType(105), TCreatureType(107), TCreatureType(103), TCreatureType(109), TCreatureType(111),
-    TCreatureType(118), TCreatureType(112), TCreatureType(115), TCreatureType(114), TCreatureType(113), TCreatureType(120), TCreatureType(130), TCreatureType(119),
-    TCreatureType(127), TCreatureType(123), TCreatureType(129), TCreatureType(125), TCreatureType(121), TCreatureType(131)
+    CREATURE_PIKEMAN, CREATURE_ARCHER, CREATURE_GRIFFIN, CREATURE_SWORDSMAN, CREATURE_MONK, CREATURE_CAVALIER, CREATURE_ANGEL, CREATURE_HALBERDIER,
+    CREATURE_MARKSMAN, CREATURE_ROYAL_GRIFFIN, CREATURE_CRUSADER, CREATURE_ZEALOT, CREATURE_CHAMPION, CREATURE_ARCHANGEL, CREATURE_CENTAUR, CREATURE_DWARF,
+    CREATURE_WOOD_ELF, CREATURE_PEGASUS, CREATURE_DENDROID_GUARD, CREATURE_UNICORN, CREATURE_GREEN_DRAGON, CREATURE_CENTAUR_CAPTAIN, CREATURE_BATTLE_DWARF, CREATURE_GRAND_ELF,
+    CREATURE_SILVER_PEGASUS, CREATURE_DENDROID_SOLDIER, CREATURE_WAR_UNICORN, CREATURE_GOLD_DRAGON, CREATURE_GREMLIN, CREATURE_STONE_GARGOYLE, CREATURE_STONE_GOLEM, CREATURE_MAGE,
+    CREATURE_GENIE, CREATURE_NAGA, CREATURE_GIANT, CREATURE_MASTER_GREMLIN, CREATURE_OBSIDIAN_GARGOYLE, CREATURE_IRON_GOLEM, CREATURE_ARCH_MAGE, CREATURE_MASTER_GENIE,
+    CREATURE_NAGA_QUEEN, CREATURE_TITAN, CREATURE_IMP, CREATURE_GOG, CREATURE_HELL_HOUND, CREATURE_DEMON, CREATURE_PIT_FIEND, CREATURE_EFREETI,
+    CREATURE_DEVIL, CREATURE_FAMILIAR, CREATURE_MAGOG, CREATURE_CERBERUS, CREATURE_HORNED_DEMON, CREATURE_PIT_LORD, CREATURE_EFREET_SULTAN, CREATURE_ARCH_DEVIL,
+    CREATURE_SKELETON, CREATURE_WALKING_DEAD, CREATURE_WIGHT, CREATURE_VAMPIRE, CREATURE_LICH, CREATURE_BLACK_KNIGHT, CREATURE_BONE_DRAGON, CREATURE_SKELETON_WARRIOR,
+    CREATURE_ZOMBIE, CREATURE_WRAITH, CREATURE_VAMPIRE_LORD, CREATURE_POWER_LICH, CREATURE_DREAD_KNIGHT, CREATURE_GHOST_DRAGON, CREATURE_TROGLODYTE, CREATURE_HARPY,
+    CREATURE_BEHOLDER, CREATURE_MEDUSA, CREATURE_MINOTAUR, CREATURE_MANTICORE, CREATURE_RED_DRAGON, CREATURE_INFERNAL_TROGLODYTE, CREATURE_HARPY_HAG, CREATURE_EVIL_EYE,
+    CREATURE_MEDUSA_QUEEN, CREATURE_MINOTAUR_KING, CREATURE_SCORPICORE, CREATURE_BLACK_DRAGON, CREATURE_GOBLIN, CREATURE_WOLF_RIDER, CREATURE_ORC, CREATURE_OGRE,
+    CREATURE_ROC, CREATURE_CYCLOPS, CREATURE_BEHEMOTH, CREATURE_HOBGOBLIN, CREATURE_WOLF_RAIDER, CREATURE_ORC_CHIEFTAIN, CREATURE_OGRE_MAGE, CREATURE_THUNDERBIRD,
+    CREATURE_CYCLOPS_KING, CREATURE_ANCIENT_BEHEMOTH, CREATURE_GNOLL, CREATURE_LIZARDMAN, CREATURE_SERPENT_FLY, CREATURE_BASILISK, CREATURE_GORGON, CREATURE_WYVERN,
+    CREATURE_HYDRA, CREATURE_GNOLL_MARAUDER, CREATURE_LIZARD_WARRIOR, CREATURE_DRAGON_FLY, CREATURE_GREATER_BASILISK, CREATURE_MIGHTY_GORGON, CREATURE_WYVERN_MONARCH, CREATURE_CHAOS_HYDRA,
+    CREATURE_PIXIE, CREATURE_AIR_ELEMENTAL, CREATURE_WATER_ELEMENTAL, CREATURE_FIRE_ELEMENTAL, CREATURE_EARTH_ELEMENTAL, CREATURE_PSYCHIC_ELEMENTAL, CREATURE_FIREBIRD, CREATURE_SPRITE,
+    CREATURE_STORM_ELEMENTAL, CREATURE_ICE_ELEMENTAL, CREATURE_ENERGY_ELEMENTAL, CREATURE_MAGMA_ELEMENTAL, CREATURE_MAGIC_ELEMENTAL, CREATURE_PHOENIX
 };
 DATA(0x00642e20) const type_building_id g_hordeBuildings[4] = { type_building_id(18), type_building_id(19), type_building_id(24), type_building_id(25) };
 DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[9][4] = {
-    { { TCreatureType(4), 3, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
-    { { TCreatureType(16), 4, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(22), 2, 0 }, { TCreatureType(-1), 0, 0 } },
-    { { TCreatureType(30), 4, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
-    { { TCreatureType(42), 8, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(46), 3, 0 }, { TCreatureType(-1), 0, 0 } },
-    { { TCreatureType(56), 6, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
-    { { TCreatureType(70), 7, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
-    { { TCreatureType(84), 8, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
-    { { TCreatureType(98), 6, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
-    { { TCreatureType(118), 10, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } }
+    { { CREATURE_GRIFFIN, 3, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 } },
+    { { CREATURE_DWARF, 4, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_DENDROID_GUARD, 2, 0 }, { CREATURE_NONE, 0, 0 } },
+    { { CREATURE_STONE_GARGOYLE, 4, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 } },
+    { { CREATURE_IMP, 8, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_HELL_HOUND, 3, 0 }, { CREATURE_NONE, 0, 0 } },
+    { { CREATURE_SKELETON, 6, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 } },
+    { { CREATURE_TROGLODYTE, 7, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 } },
+    { { CREATURE_GOBLIN, 8, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 } },
+    { { CREATURE_GNOLL, 6, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 } },
+    { { CREATURE_PIXIE, 10, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_NONE, 0, 0 } }
 };
 
 // Retail table initializers, in the layouts used by their named consumers.
@@ -492,7 +492,7 @@ void town::setSummoningGenerator()
         }
         m_summoningType = thisGenerator.m_type[i];
         m_summoningPopulation =
-            g_creatureTypeTraits[m_summoningType].m_growthRate;
+            H3_AT(g_creatureTypeTraits, m_summoningType).m_growthRate;
     }
 }
 
@@ -589,8 +589,8 @@ town::town()
     m_mageLevel = 0;
     m_owner = -1;
     m_garrisonHeroId = -1;
-    int slot;
-    MEMSET(m_garrison.m_armies, -1, sizeof(m_garrison.m_armies), slot);
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot)
+        m_garrison.m_armies[slot] = CREATURE_NONE;
     m_summoningType = CREATURE_NONE;
     m_builtThisTurn = 0;
     m_manaVortexFull = 1;
@@ -603,7 +603,9 @@ void town::initializeHordes()
     for (short townType = 0; townType < TOWN_TYPE_COUNT; townType++) {
         for (short entry = 0; entry < 4; entry += 2) {
             type_horde_effect* effect = &s_constHordeEffects[townType][entry];
-            TCreatureType creature = effect->m_creature;
+            // Horde records retain four-byte creature storage.
+            TCreatureType creature =
+                H3_ENUM_DECODE(TCreatureType, effect->m_creature);
             type_horde_effect* upgrade = effect + 1;
             short slot;
             for (slot = 0; slot <= TOWN_DWELLING_COUNT; slot++) {
@@ -909,8 +911,8 @@ type_building_id town::createBuilding(type_building_id building)
 
     if (building >= DWELLING_0_ID && building <= DWELLING_6_ID) {
         short slot = building - DWELLING_0_ID;
-        m_population[slot] = g_creatureTypeTraits[g_townDwellingCreatures[
-            m_type * (2 * TOWN_DWELLING_COUNT) + slot]].m_growthRate;
+        m_population[slot] = H3_AT(g_creatureTypeTraits, g_townDwellingCreatures[
+            m_type * (2 * TOWN_DWELLING_COUNT) + slot]).m_growthRate;
     }
     if (building >= DWELLING_0_UPG_ID && building <= DWELLING_6_UPG_ID) {
         short slot = building - DWELLING_0_UPG_ID;
@@ -1110,9 +1112,9 @@ VA(0x005bf570, 0x86)  // dc 0x1673dc
 long town::getCastleGrowthBonus(TCreatureType creature) const
 {
     if (hasBuilding(CASTLE_CASTLE_ID, false))
-        return g_creatureTypeTraits[creature].m_growthRate;
+        return H3_AT(g_creatureTypeTraits, creature).m_growthRate;
     if (hasBuilding(CASTLE_CITADEL_ID, false))
-        return g_creatureTypeTraits[creature].m_growthRate / 2;
+        return H3_AT(g_creatureTypeTraits, creature).m_growthRate / 2;
     return 0;
 }
 
@@ -1167,8 +1169,8 @@ long town::getAssembledLegionBonus(long dwelling)
 {
     long bonus = 0;
     if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
-        long growth = g_creatureTypeTraits[g_townDwellingCreatures[
-            m_type * (2 * TOWN_DWELLING_COUNT) + dwelling]].m_growthRate;
+        long growth = H3_AT(g_creatureTypeTraits, g_townDwellingCreatures[
+            m_type * (2 * TOWN_DWELLING_COUNT) + dwelling]).m_growthRate;
         if (m_built & g_bitNumber[CASTLE_CASTLE_ID])
             bonus = growth;
         else if (m_built & g_bitNumber[CASTLE_CITADEL_ID])
@@ -1250,18 +1252,21 @@ short town::getGrowthRate(short dwelling) const
         && (m_active & g_bitNumber[DWELLING_0_UPG_ID + dwellingIndex]))
         return 0;
 
-    TCreatureType creature = g_townDwellingCreatures[
-        m_type * TOWN_DWELLING_SLOTS + dwellingIndex];
-    short growth = g_creatureTypeTraits[creature].m_growthRate;
+    // The dwelling table retains four-byte creature storage.
+    TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+        g_townDwellingCreatures[
+            m_type * TOWN_DWELLING_SLOTS + dwellingIndex]);
+    short growth = H3_AT(g_creatureTypeTraits, creature).m_growthRate;
     growth += getCastleGrowthBonus(creature);
 
     if (m_owner >= 0) {
         long legionBonus = 0;
         if (g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
-            TCreatureType legionCreature = g_townDwellingCreatures[
-                m_type * TOWN_DWELLING_SLOTS + dwellingIndex];
+            TCreatureType legionCreature = H3_ENUM_DECODE(TCreatureType,
+                g_townDwellingCreatures[
+                    m_type * TOWN_DWELLING_SLOTS + dwellingIndex]);
             long legionGrowth =
-                g_creatureTypeTraits[legionCreature].m_growthRate;
+                H3_AT(g_creatureTypeTraits, legionCreature).m_growthRate;
             long castleBonus = getCastleGrowthBonus(legionCreature);
             legionBonus = (legionGrowth + castleBonus) / 2;
         }
@@ -1290,8 +1295,10 @@ void town::increasePopulation(TCreatureType bonusCreature,
     for (short dwelling = 0; dwelling < TOWN_DWELLING_SLOTS; dwelling++) {
         short growth = getGrowthRate(dwelling);
         if (growth > 0) {
-            TCreatureType creature =
-                g_townDwellingCreatures[TOWN_DWELLING_SLOTS * m_type + dwelling];
+            // The dwelling table retains four-byte creature storage.
+            TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+                g_townDwellingCreatures[
+                    TOWN_DWELLING_SLOTS * m_type + dwelling]);
             if (creature == bonusCreature || creature == alternateBonus)
                 growth += bonusAmount;
             if (m_owner == -1)
@@ -1399,19 +1406,21 @@ void town::giveEventReward(const TTownEvent* thisEvent)
                 reward.m_resource = 0x15;
                 m_population[i + TOWN_DWELLING_COUNT] +=
                     thisEvent->m_generatorBonuses[i];
+                // The reward dialog packs the creature ordinal in the low word.
                 reward.m_qualifier = (thisEvent->m_generatorBonuses[i] << 16)
-                    | static_cast<unsigned short>(
+                    | static_cast<unsigned short>(H3_IDX(
                           g_townDwellingCreatures[
                               m_type * (2 * TOWN_DWELLING_COUNT)
-                              + i + TOWN_DWELLING_COUNT]);
+                              + i + TOWN_DWELLING_COUNT]));
                 rewards.push_back(reward);
             } else if (m_active & g_bitNumber[DWELLING_0_ID + i]) {
                 reward.m_resource = 0x15;
                 m_population[i] += thisEvent->m_generatorBonuses[i];
+                // The reward dialog packs the creature ordinal in the low word.
                 reward.m_qualifier = (thisEvent->m_generatorBonuses[i] << 16)
-                    | static_cast<unsigned short>(
+                    | static_cast<unsigned short>(H3_IDX(
                           g_townDwellingCreatures[
-                              m_type * (2 * TOWN_DWELLING_COUNT) + i]);
+                              m_type * (2 * TOWN_DWELLING_COUNT) + i]));
                 rewards.push_back(reward);
             }
             if (rewards.size() == g_rewardDialogBatch)
@@ -1462,7 +1471,10 @@ void showCreatureRewards(const town* thisTown,
     std::string text;
     for (int i = 0; i < rewards->size(); i++) {
         long count = (*rewards)[i].m_qualifier >> 16;
-        int creature = static_cast<unsigned short>((*rewards)[i].m_qualifier);
+        // The reward record stores the creature ordinal in its low word.
+        TCreatureType creature = H3_ENUM_DECODE(
+            TCreatureType,
+            static_cast<unsigned short>((*rewards)[i].m_qualifier));
         if (i > 0) {
             if (i == rewards->size() - 1)
                 text += g_generalText->getText(GENERAL_TEXT_LIST_AND);
@@ -1499,29 +1511,40 @@ static void initializeArmy(town* currentTown, const TownExtra* townSetup)
             currentTown->getArmy().m_numTroops[slot] =
                 townSetup->m_townArmy.m_numTroops[slot];
             if (currentTown->getArmy().m_numTroops[slot] > 0) {
-                int troop = townSetup->m_townArmy.m_armies[slot];
-                if (troop <= -2) {
-                    int tier = (-2 - troop) / 2;
-                    if (troop & 1)
+                // Army slots retain four-byte creature storage.
+                TCreatureType troop = H3_ENUM_DECODE(
+                    TCreatureType, townSetup->m_townArmy.m_armies[slot]);
+                if (troop <= CREATURE_RANDOM_TIER_1) {
+                    // Random-tier selectors are the map format's negative
+                    // base/upgraded pairs, not creature table indices.
+                    int tier = (H3_IDX(CREATURE_RANDOM_TIER_1)
+                                   - H3_IDX(troop))
+                        / 2;
+                    if (H3_IDX(troop) & 1)
                         tier += TOWN_DWELLING_COUNT;
-                    troop = g_townDwellingCreatures[
-                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                    troop = H3_ENUM_DECODE(TCreatureType,
+                        g_townDwellingCreatures[
+                            currentTown->m_type * (2 * TOWN_DWELLING_COUNT)
+                            + tier]);
                 }
                 currentTown->getArmy().m_armies[slot] = troop;
             } else {
-                currentTown->getArmy().m_armies[slot] = -1;
+                currentTown->getArmy().m_armies[slot] = CREATURE_NONE;
             }
         }
     } else {
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
-            currentTown->getArmy().m_armies[slot] = -1;
+            currentTown->getArmy().m_armies[slot] = CREATURE_NONE;
             currentTown->getArmy().m_numTroops[slot] = 0;
         }
         if (currentTown->m_owner < 0) {
             for (int tier = 0; tier < 4; tier++) {
                 if (random(1, 100) <= g_townInitArmyChance[tier]) {
-                    int creature = g_townDwellingCreatures[
-                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                    // The dwelling table retains four-byte creature storage.
+                    TCreatureType creature = H3_ENUM_DECODE(TCreatureType,
+                        g_townDwellingCreatures[
+                            currentTown->m_type * (2 * TOWN_DWELLING_COUNT)
+                            + tier]);
                     currentTown->getArmy().add(creature,
                         random(g_townInitArmyLow[tier], g_townInitArmyHigh[tier]),
                         -1);

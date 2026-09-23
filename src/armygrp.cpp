@@ -91,7 +91,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
 
     sprintf(g_text,
             g_generalText->getText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT),
-            g_creatureTypeTraits[m_creature].m_pluralName);
+            H3_AT(g_creatureTypeTraits, m_creature).m_pluralName);
     m_widgets.push_back(new textWidget(
         0, 20, m_width, 30, g_text, "bigfont.fnt", font::HEADING,
         1, 1, 0, 8));
@@ -104,7 +104,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
     m_widgets.push_back(new bitmapBorder(
         177, 54, 100, 130, -1, g_text, 0x800));
 
-    strcpy(g_text, g_creatureTypeTraits[m_creature].m_spriteName);
+    strcpy(g_text, H3_AT(g_creatureTypeTraits, m_creature).m_spriteName);
     m_widgets.push_back(new iconWidget(
         20, 54, 100, 130, 2, g_text, 0, 2, 0, 0, 0x12));
     m_widgets.push_back(new iconWidget(
@@ -161,7 +161,9 @@ TSplitWindow::~TSplitWindow()
 VA(0x00449e90, 0x2EF)  // dc 0x4e180
 void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned char inSrcRestricted, unsigned char inDestRestricted)
 {
-    g_splitWindow = new TSplitWindow(0xb1, 0x14, m_armyTypes[srcIndex]);
+    // Army slots retain four-byte storage for the creature domain.
+    g_splitWindow = new TSplitWindow(0xb1, 0x14,
+        H3_ENUM_DECODE(TCreatureType, m_armies[srcIndex]));
     if (!g_splitWindow)
         memError();
 
@@ -237,7 +239,7 @@ inline void TSplitWindow::setRolloverText(int codeY)
     case DIALOG_RETURN_SPLIT_ACCEPT:
         sprintf(g_text,
                 g_generalText->getText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT),
-                g_creatureTypeTraits[m_creature].m_pluralName);
+                H3_AT(g_creatureTypeTraits, m_creature).m_pluralName);
         break;
     default:
         strcpy(g_text, "");
@@ -361,7 +363,7 @@ VA(0x0044a4d0, 0x52E)  // linkorder, dc 0x4e644
 float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* const castingHero, const hero* const targetHero)
 {
     float chance;
-    const TCreatureTypeTraits* creatureRec = &g_creatureTypeTraits[targetArmyType];
+    const TCreatureTypeTraits* creatureRec = &H3_AT(g_creatureTypeTraits, targetArmyType);
     unsigned int attrs = creatureRec->m_attributes;
     const SSpellTraits* spellRec = &g_spellTraits[spell];
     if (targetHero && spellRec->m_level <= 4
@@ -585,7 +587,7 @@ unsigned char armyGroup::hasAllUndead() const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        if (!(g_creatureTypeTraits[m_armies[i]].m_attributes & g_ctaUndead))
+        if (!(H3_AT(g_creatureTypeTraits, m_armies[i]).m_attributes & g_ctaUndead))
             return 0;
     }
     return 1;
@@ -600,7 +602,7 @@ unsigned char armyGroup::hasSomeUndead() const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        if (g_creatureTypeTraits[m_armies[i]].m_attributes & g_ctaUndead)
+        if (H3_AT(g_creatureTypeTraits, m_armies[i]).m_attributes & g_ctaUndead)
             return 1;
     }
     return 0;
@@ -633,7 +635,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[m_armies[i]];
+        const TCreatureTypeTraits& traits = H3_AT(g_creatureTypeTraits, m_armies[i]);
         if (traits.m_attributes & g_ctaSiegeWeapon)
             continue;
         int alignment;
@@ -660,7 +662,7 @@ int armyGroup::getHomogeneityMoraleAdjust() const
 }
 
 VA(0x0044ac50, 0x2E)  // dc 0x4ecb0
-int armyGroup::canJoin(int monType) const
+int armyGroup::canJoin(H3_ENUM_PARAM(TCreatureType, int) monType) const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == monType || m_armies[i] == CREATURE_NONE)
@@ -675,7 +677,7 @@ long armyGroup::getAIValue() const
     long value = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] != CREATURE_NONE)
-            value += g_creatureTypeTraits[m_armies[i]].m_aiValue * m_numTroops[i];
+            value += H3_AT(g_creatureTypeTraits, m_armies[i]).m_aiValue * m_numTroops[i];
     }
     return value;
 }
@@ -692,7 +694,8 @@ int armyGroup::getNumArmies() const
 }
 
 VA(0x0044ace0, 0x76)  // dc 0x4ed4c
-int armyGroup::add(int armyType, int newNumTroops, int newIndex)
+int armyGroup::add(H3_ENUM_PARAM(TCreatureType, int) armyType,
+    int newNumTroops, int newIndex)
 {
     if (newIndex == -1) {
         for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -722,7 +725,9 @@ int armyGroup::add(int armyType, int newNumTroops, int newIndex)
 VA(0x0044ad60, 0x36)  // dc 0x4edcc
 void armyGroup::swap(int srcIndex, armyGroup* destGroup, int destIndex)
 {
-    int army = m_armies[srcIndex];
+    // Army slots retain four-byte storage for the creature domain.
+    TCreatureType army =
+        H3_ENUM_DECODE(TCreatureType, m_armies[srcIndex]);
     m_armies[srcIndex] = destGroup->m_armies[destIndex];
     destGroup->m_armies[destIndex] = army;
     short troops = m_numTroops[srcIndex];
@@ -762,7 +767,7 @@ int armyGroup::getCreatureTotal() const
 {
     int total = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; i++) {
-        if (m_armies[i] != -1)
+        if (m_armies[i] != CREATURE_NONE)
             total += m_numTroops[i];
     }
     return total;
@@ -854,14 +859,16 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
-    if (g_creatureTypeTraits[m_armies[index]].m_attributes & g_ctaNoMorale)
+    if (H3_AT(g_creatureTypeTraits, m_armies[index]).m_attributes & g_ctaNoMorale)
         return 0;
     int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
-        int type = m_armies[index];
+        // Army slots retain four-byte storage for the creature domain.
+        TCreatureType type =
+            H3_ENUM_DECODE(TCreatureType, m_armies[index]);
         if (g_game->m_gameVersion != 0 || !isBaseElemental(type)) {
             do {
-                switch (g_creatureTypeTraits[type].m_townType) {
+                switch (H3_AT(g_creatureTypeTraits, type).m_townType) {
                 case TOWN_CASTLE:
                 case TOWN_RAMPART:
                 case TOWN_TOWER:
@@ -882,9 +889,10 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     }
     do {
         if (mode == MAGIC_TERRAIN_EVIL_FOG) {
-            int type = m_armies[index];
+            TCreatureType type =
+                H3_ENUM_DECODE(TCreatureType, m_armies[index]);
             if (g_game->m_gameVersion != 0 || !isBaseElemental(type)) {
-                switch (g_creatureTypeTraits[type].m_townType) {
+                switch (H3_AT(g_creatureTypeTraits, type).m_townType) {
                 case TOWN_CASTLE:
                 case TOWN_RAMPART:
                 case TOWN_TOWER:
@@ -904,7 +912,8 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
         }
     } while (0);
 
-    int type = m_armies[index];
+    TCreatureType type =
+        H3_ENUM_DECODE(TCreatureType, m_armies[index]);
     if ((type == CREATURE_MINOTAUR || type == CREATURE_MINOTAUR_KING)
         && morale < 1)
         morale = 1;
@@ -947,10 +956,12 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
         return 0;
     int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
-        int creature = m_armies[index];
+        // Army slots retain four-byte storage for the creature domain.
+        TCreatureType creature =
+            H3_ENUM_DECODE(TCreatureType, m_armies[index]);
         if (g_game->m_gameVersion != 0 || !isBaseElemental(creature)) {
             do {
-                switch (g_creatureTypeTraits[creature].m_townType) {
+                switch (H3_AT(g_creatureTypeTraits, creature).m_townType) {
                 case TOWN_CASTLE:
                 case TOWN_RAMPART:
                 case TOWN_TOWER:
@@ -1105,7 +1116,7 @@ void armyGroup::mergeArmies(armyGroup& source)
         for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
             if (m_armies[i] == CREATURE_NONE)
                 break;
-            long value = g_creatureTypeTraits[m_armies[i]].m_aiValue
+            long value = H3_AT(g_creatureTypeTraits, m_armies[i]).m_aiValue
                          * m_numTroops[i];
             if (weakestIndex < 0 || weakestValue >= value) {
                 weakestValue = value;
@@ -1115,7 +1126,7 @@ void armyGroup::mergeArmies(armyGroup& source)
         for (int j = 0; j < ARMY_GROUP_SLOT_COUNT; ++j) {
             if (source.m_armies[j] == CREATURE_NONE)
                 continue;
-            long gain = g_creatureTypeTraits[source.m_armies[j]].m_aiValue
+            long gain = H3_AT(g_creatureTypeTraits, source.m_armies[j]).m_aiValue
                         * source.m_numTroops[j];
             if (!canJoin(source.m_armies[j]))
                 gain -= weakestValue;
@@ -1159,7 +1170,7 @@ std::string armyGroup::getMoraleDescription(
     // reference makes VC6 materialise the ADDRESS instead - one extra
     // `add` per use, a stack slot of its own, and the table base loaded
     // BEFORE the index chain rather than after it.
-    if (g_creatureTypeTraits[creature].m_attributes & g_ctaNoMorale)
+    if (H3_AT(g_creatureTypeTraits, creature).m_attributes & g_ctaNoMorale)
         return g_moraleInfo[28];
 
     int currentMorale = getMorale(
@@ -1175,7 +1186,7 @@ std::string armyGroup::getMoraleDescription(
     {
         if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
             && (g_game->m_gameVersion != 0 || !isBaseElemental(creature))) {
-            switch (g_creatureTypeTraits[creature].m_townType) {
+            switch (H3_AT(g_creatureTypeTraits, creature).m_townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -1203,7 +1214,7 @@ std::string armyGroup::getMoraleDescription(
         }
         if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
             && (g_game->m_gameVersion != 0 || !isBaseElemental(creature))) {
-            switch (g_creatureTypeTraits[creature].m_townType) {
+            switch (H3_AT(g_creatureTypeTraits, creature).m_townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -1408,7 +1419,7 @@ std::string armyGroup::getLuckDescription(
         // in the no-op arms VC6 sees two outcomes, collapses the whole
         // switch, and emits the range test `cmp 6 / jl` + `cmp 8 / jg`
         // instead of the tables.
-        switch (g_creatureTypeTraits[creature].m_townType) {
+        switch (H3_AT(g_creatureTypeTraits, creature).m_townType) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
         case TOWN_TOWER:
@@ -1473,7 +1484,7 @@ TTerrainType armyGroup::getNativeTerrain() const
         if (g_game->m_gameVersion == 0 && isBaseElemental(m_armies[i]))
             alignment = -1;
         else
-            alignment = g_creatureTypeTraits[m_armies[i]].m_townType;
+            alignment = H3_AT(g_creatureTypeTraits, m_armies[i]).m_townType;
         TTerrainType terrain = townManager::getNativeTerrain(alignment);
         if (native != TERRAIN_NONE) {
             if (terrain != native)

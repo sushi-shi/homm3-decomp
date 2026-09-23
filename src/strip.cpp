@@ -59,9 +59,12 @@ void strip::drawIcons(unsigned char update, TCreatureType divideCreature)
         if (m_group == 0) {
             drawMonster(i, 0);
         } else {
-            int type = m_group->m_armies[i];
+            // Army slots retain four-byte storage for the creature domain.
+            TCreatureType type =
+                H3_ENUM_DECODE(TCreatureType, m_group->m_armies[i]);
             if (type != CREATURE_NONE && m_group->m_numTroops[i] > 0) {
-                drawMonster(i, type + 2);
+                // The strip portrait resource uses creature ordinal + 2.
+                drawMonster(i, H3_IDX(type) + 2);
                 sprintf(g_text, "%d", m_group->m_numTroops[i]);
                 drawNumber(i);
                 if (divideCreature == type && i != m_current)

@@ -667,9 +667,10 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
         owner != 0 ? owner->m_owner : g_game->getLocalPlayerGamePos());
 
     if (m_viewLevel == 1) {
-        m_creatureIcon->setIconFrame(info.m_creatureType + 2);
+        // The combat portrait resource uses creature ordinal + 2.
+        m_creatureIcon->setIconFrame(H3_IDX(info.m_creatureType) + 2);
         const TCreatureTypeTraits& normalTraits =
-            g_creatureTypeTraits[info.m_creatureType];
+            H3_AT(g_creatureTypeTraits, info.m_creatureType);
 
         unsigned char canShoot = info.canShoot(0);
         long attack = info.getAdjustedAttack(0, canShoot);

@@ -196,9 +196,7 @@ enum ESwapRolloverWidgetId {
     kSwapNoRefreshWidget = 300,
 };
 
-enum ESwapRolloverCreatureDomain {
-    kSwapRolloverCreatureLast = 0x96,
-};
+
 
 // Complete's campaign-only guard in handle_artifact_click. Retail fixes the
 // scenario ordinals and the one exempt hero id directly.

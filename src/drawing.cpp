@@ -98,7 +98,7 @@ static void getCreatureSpellMessage(char* buffer,
         targetArmy = g_combatManager->m_cells[currentHex].getArmy();
         sprintf(buffer, g_generalText->getText(GENERAL_TEXT_COMBAT_CAST_SPELL_CURSOR_FORMAT), targetArmy->getName());
         break;
-    case army::ARMY_CREATURE_PIT_LORD:
+    case CREATURE_PIT_LORD:
         targetArmy = g_combatManager->findDemonicResurrectionTarget(
             currentSide, currentHex);
         sprintf(buffer, g_generalText->getText(GENERAL_TEXT_COMBAT_SUMMON_DEMONS_CURSOR_FORMAT), targetArmy->getName());
@@ -216,7 +216,7 @@ bool combatManager::showCreatureSpellError(
     char* buffer, const army* currentArmy)
 {
     if (validHex(m_lastCellIndex) && (currentArmy->m_creatureType == CREATURE_ARCHANGEL
-            || currentArmy->m_creatureType == army::ARMY_CREATURE_PIT_LORD
+            || currentArmy->m_creatureType == CREATURE_PIT_LORD
             || currentArmy->m_creatureType == CREATURE_OGRE_MAGE)) {
         hexcell* cell;
         army* targetArmy;
@@ -248,7 +248,7 @@ bool combatManager::showCreatureSpellError(
             return false;
         }
         if (!(targetArmy->is(creatureImmobilized))
-                && currentArmy->m_creatureType == army::ARMY_CREATURE_PIT_LORD) {
+                && currentArmy->m_creatureType == CREATURE_PIT_LORD) {
             return false;
         }
 
@@ -283,8 +283,11 @@ bool combatManager::showCreatureSpellError(
 
         switch (currentArmy->m_creatureType) {
         case CREATURE_OGRE_MAGE: {
+            // Combat armies retain four-byte storage for the creature domain.
             if (getSpellWorkChance(SPELL_BLOODLUST,
-                                      targetArmy->m_creatureType, 0, 0) > 0.0f) {
+                    H3_ENUM_DECODE(TCreatureType,
+                        targetArmy->m_creatureType),
+                    0, 0) > 0.0f) {
                 break;
             }
             sprintf(buffer, g_generalText->getText(GENERAL_TEXT_SPELL_IMMUNITY_FORMAT), targetArmy->getName(2),
@@ -292,10 +295,10 @@ bool combatManager::showCreatureSpellError(
             return true;
         }
 
-        case army::ARMY_CREATURE_PIT_LORD: {
+        case CREATURE_PIT_LORD: {
             if (!(targetArmy->is(creatureAlive))) {
                 sprintf(buffer, g_generalText->getText(GENERAL_TEXT_SUMMON_DEMONS_LIVING_CORPSES_ONLY_FORMAT),
-                        getArmyName(army::ARMY_CREATURE_DEMON, 2));
+                        getArmyName(CREATURE_DEMON, 2));
                 return true;
             }
             if (currentArmy->getResurrectionSize(targetArmy) > 0) {
@@ -303,10 +306,10 @@ bool combatManager::showCreatureSpellError(
             }
             if (targetArmy->m_numTroops == 1) {
                 sprintf(buffer, g_generalText->getText(GENERAL_TEXT_SUMMON_DEMONS_INSUFFICIENT_CORPSE_ONE_FORMAT), targetArmy->getName(),
-                        getArmyName(army::ARMY_CREATURE_DEMON, 2));
+                        getArmyName(CREATURE_DEMON, 2));
             } else {
                 sprintf(buffer, g_generalText->getText(GENERAL_TEXT_SUMMON_DEMONS_INSUFFICIENT_CORPSES_MANY_FORMAT), targetArmy->getName(),
-                        getArmyName(army::ARMY_CREATURE_DEMON, 2));
+                        getArmyName(CREATURE_DEMON, 2));
             }
             return true;
         }
@@ -633,7 +636,7 @@ void combatManager::setupGridForArmy(const army* thisArmy)
 {
     if (isQuickCombat())
         return;
-    if (thisArmy->m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
+    if (thisArmy->m_creatureType == CREATURE_ARROW_TOWER)
         return;
     if (!g_config.m_showCombatGrid && !m_creaturePlacement)
         return;
@@ -1270,14 +1273,14 @@ void combatManager::drawWallAt(int hexIndex, int dx)
                     if (!archer->m_facing) {
                         drawX = archer->m_x - archer->m_sprite->getWidth();
                         drawX += COMBAT_ARCHER_X_BIAS;
-                        if (g_creatureTypeTraits[archer->m_creatureType].m_attributes
+                        if (H3_AT(g_creatureTypeTraits, archer->m_creatureType).m_attributes
                                 & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                             drawX += COMBAT_WALL_HEX_WIDTH;
                         if (archer->m_creatureType == CREATURE_MEDUSA)
                             drawX -= 5;
                     } else {
                         drawX = archer->m_x - COMBAT_ARCHER_X_BIAS;
-                        if (g_creatureTypeTraits[archer->m_creatureType].m_attributes
+                        if (H3_AT(g_creatureTypeTraits, archer->m_creatureType).m_attributes
                                 & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                             drawX -= COMBAT_WALL_HEX_WIDTH;
                         if (archer->m_creatureType == CREATURE_MEDUSA)
@@ -1725,14 +1728,14 @@ void combatManager::computeMaxExtent()
             if (!archer.m_facing) {
                 drawX = archer.m_x - archer.m_sprite->getWidth()
                          + COMBAT_ARCHER_X_BIAS;
-                if (g_creatureTypeTraits[archer.m_creatureType].m_attributes
+                if (H3_AT(g_creatureTypeTraits, archer.m_creatureType).m_attributes
                         & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                     drawX += COMBAT_WALL_HEX_WIDTH;
                 if (archer.m_creatureType == CREATURE_MEDUSA)
                     drawX -= 5;
             } else {
                 drawX = archer.m_x - COMBAT_ARCHER_X_BIAS;
-                if (g_creatureTypeTraits[archer.m_creatureType].m_attributes
+                if (H3_AT(g_creatureTypeTraits, archer.m_creatureType).m_attributes
                         & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
                     drawX -= COMBAT_WALL_HEX_WIDTH;
                 if (archer.m_creatureType == CREATURE_MEDUSA)
@@ -1822,7 +1825,7 @@ void combatManager::cycleCombatScreen()
             army* stack = &m_armies[side][slot];
             if (!(stack->is(creatureImmobilized))
                     && !stack->isIncapacitated()
-                    && stack->m_creatureType != army::ARMY_CREATURE_ARROW_TOWER
+                    && stack->m_creatureType != CREATURE_ARROW_TOWER
                     && (stack->m_currFrameType == cs_fidget
                         || (stack->m_currFrameType == cs_wait
                             && stack->m_stdIcon->getNumFrames(cs_fidget) > 0

@@ -300,8 +300,10 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                         monsterY[item] + row * 116 + 27,
                         32, 32, rowWidgetId + item + 5,
                         "cprsmall.def",
-                        static_cast<const town*>(currTown)->getArmy()
-                                .m_armies[item] + 2,
+                        // The portrait resource uses creature ordinal + 2.
+                        H3_IDX(static_cast<const town*>(currTown)->getArmy()
+                                   .m_armies[item])
+                            + 2,
                         0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
@@ -344,7 +346,8 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                             monsterY[item] + row * 116 + 27,
                             32, 32, rowWidgetId + item + 54,
                             "cprsmall.def",
-                            occupyingHero->m_army.m_armies[item] + 2,
+                            // The portrait resource uses creature ordinal + 2.
+                            H3_IDX(occupyingHero->m_army.m_armies[item]) + 2,
                             0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
                         if (!g_iconWidgetDynamic[slot + curBitmap])
                             memError();
@@ -389,12 +392,16 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                             DWELLING_0_UPG_ID + item, true))
                         lookup = item + TOWN_DWELLING_COUNT;
 
-                    creature = g_townDwellingCreatures[
-                        currTown->m_type * TOWN_DWELLING_SLOTS + lookup];
+                    // The dwelling roster is fixed-width creature storage.
+                    creature = H3_ENUM_DECODE(TCreatureType,
+                        g_townDwellingCreatures[
+                            currTown->m_type * TOWN_DWELLING_SLOTS + lookup]);
                     g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
                         offsetToMon * 37 + 78, row * 116 + 102,
                         32, 32, rowWidgetId + lookup + 69,
-                        "cprsmall.def", creature + 2, 0, 0, 0,
+                        "cprsmall.def",
+                        // The portrait resource uses creature ordinal + 2.
+                        H3_IDX(creature) + 2, 0, 0, 0,
                         iconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
@@ -416,7 +423,9 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
                         offsetToMon * 37 + 431, row * 116 + 102,
                         32, 32, rowWidgetId + lookup + 19,
-                        "cprsmall.def", creature + 2, 0, 0, 0,
+                        "cprsmall.def",
+                        // The portrait resource uses creature ordinal + 2.
+                        H3_IDX(creature) + 2, 0, 0, 0,
                         iconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
@@ -445,7 +454,9 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
                         offsetToMon * 37 + 78, row * 116 + 102,
                         32, 32, rowWidgetId + 99,
-                        "cprsmall.def", currTown->m_summoningType + 2,
+                        "cprsmall.def",
+                        // The portrait resource uses creature ordinal + 2.
+                        H3_IDX(currTown->m_summoningType) + 2,
                         0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
@@ -464,7 +475,9 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
                         offsetToMon * 37 + 431, row * 116 + 102,
                         32, 32, rowWidgetId + 101,
-                        "cprsmall.def", currTown->m_summoningType + 2,
+                        "cprsmall.def",
+                        // The portrait resource uses creature ordinal + 2.
+                        H3_IDX(currTown->m_summoningType) + 2,
                         0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
@@ -565,7 +578,9 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
                         offsetToMon - 11, row * 116 + 101,
                         32, 32, rowWidgetId + item + 105,
-                        "cprsmall.def", currHero->m_army.m_armies[item] + 2,
+                        "cprsmall.def",
+                        // The portrait resource uses creature ordinal + 2.
+                        H3_IDX(currHero->m_army.m_armies[item]) + 2,
                         0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
@@ -1524,13 +1539,18 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             case OVERVIEW_TOWN_SUMMONING_PORTAL_ICON_ID:
             case OVERVIEW_TOWN_SUMMONING_PORTAL_TEXT_ID:
                 if (rightMouse) {
-                    quickViewRecruit(currTown->m_summoningType,
+                    // Town state retains the summoned creature in fixed-width
+                    // storage.
+                    quickViewRecruit(H3_ENUM_DECODE(
+                                         TCreatureType,
+                                         currTown->m_summoningType),
                                      &currTown->m_summoningPopulation);
                 } else {
                     recruitUnit* recruit = new recruitUnit(
                         &const_cast<armyGroup&>(
                             static_cast<const town*>(currTown)->getArmy()),
-                        1, currTown->m_summoningType,
+                        1, H3_ENUM_DECODE(
+                               TCreatureType, currTown->m_summoningType),
                         &currTown->m_summoningPopulation,
                         CREATURE_NONE, 0, CREATURE_NONE, 0,
                         CREATURE_NONE, 0);
@@ -2321,8 +2341,8 @@ void TOverviewWindow::doRollover(int codeY)
                 int itemType = m_flaggableItems[item].m_itemType;
                 if (itemType < 80) {
                     strcpy(g_text,
-                           g_creatureTypeTraits[
-                               g_creatureGenerator1Types[itemType]]
+                           H3_AT(g_creatureTypeTraits,
+                               g_creatureGenerator1Types[itemType])
                                .m_pluralName);
                 } else {
                     switch (itemType) {

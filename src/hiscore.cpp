@@ -448,7 +448,8 @@ textWidget* CHSInputDlg::getRolloverWidget()
 VA_COMPGEN(0x004e9800, 0x21, SCALAR_DELETING_DTOR, CHSInputDlg)
 
 VA(0x004e9830, 0x48)  // dc 0xd7e0c
-int highScoreManager::getMonType(int score, int scoreType)
+H3_ENUM_RETURN(TCreatureType, int)
+highScoreManager::getMonType(int score, int scoreType)
 {
     if (!scoreType)
         score /= 5;
@@ -456,8 +457,8 @@ int highScoreManager::getMonType(int score, int scoreType)
     int i = 0;
     while (score > g_highScoreCreatureTable[i][0])
         ++i;
-    int monsterType = g_highScoreCreatureTable[i][1];
-    return monsterType;
+    // The score table stores creature ordinals in its second integer column.
+    return H3_ENUM_DECODE(TCreatureType, g_highScoreCreatureTable[i][1]);
 }
 
 // Four controls precede the two 11-icon score families.  The family-one
@@ -524,10 +525,11 @@ THighScoreWindow::THighScoreWindow()
     for (i = 0; i < 11; ++i) {
         m_creatures[1][i] = new iconWidget(
             649, 26 + 50 * i, 64, 64, 1004 + i,
+            // World-map lookup consumes the creature as an object subtype.
             g_game->m_worldMap.findObjectType(
-                MONSTER, highScoreManager::getMonType(
+                MONSTER, H3_IDX(highScoreManager::getMonType(
                     g_highScoreManager->m_highScores[1][i].m_score,
-                    1))->m_imageName.c_str(),
+                    1)))->m_imageName.c_str(),
             0, 0, 0, 0,
             iconWidget::ICON_STYLE_PLAIN);
         m_creatures[1][i]->hide();
@@ -536,10 +538,11 @@ THighScoreWindow::THighScoreWindow()
     for (i = 0; i < 11; ++i) {
         m_creatures[0][i] = new iconWidget(
             649, 26 + 50 * i, 64, 64, 1015 + i,
+            // World-map lookup consumes the creature as an object subtype.
             g_game->m_worldMap.findObjectType(
-                MONSTER, highScoreManager::getMonType(
+                MONSTER, H3_IDX(highScoreManager::getMonType(
                     g_highScoreManager->m_highScores[0][i].m_score,
-                    0))->m_imageName.c_str(),
+                    0)))->m_imageName.c_str(),
             0, 0, 0, 0,
             iconWidget::ICON_STYLE_PLAIN);
         m_creatures[0][i]->hide();
@@ -758,19 +761,24 @@ int highScoreWindowHandler(message& msg)
             writeHighScores();
 
             for (int reset = 0; reset < 11; ++reset) {
-                int monsterType = highScoreManager::getMonType(
+                // The retail helper returns the creature in an int ABI slot.
+                TCreatureType monsterType = H3_ENUM_DECODE(
+                    TCreatureType, highScoreManager::getMonType(
                     g_highScoreManager->m_highScores[1][reset].m_score,
-                    1);
+                    1));
+                // World-map lookup consumes the creature as an object subtype.
                 g_highScoreWindow->m_creatures[1][reset]->setSprite(
                     g_game->m_worldMap.findObjectType(
-                        MONSTER, monsterType)->m_imageName.c_str());
+                        MONSTER, H3_IDX(monsterType))->m_imageName.c_str());
                 g_highScoreWindow->m_creatures[1][reset]->setIconFrame(0);
-                monsterType = highScoreManager::getMonType(
+                monsterType = H3_ENUM_DECODE(
+                    TCreatureType, highScoreManager::getMonType(
                     g_highScoreManager->m_highScores[0][reset].m_score,
-                    0);
+                    0));
+                // World-map lookup consumes the creature as an object subtype.
                 g_highScoreWindow->m_creatures[0][reset]->setSprite(
                     g_game->m_worldMap.findObjectType(
-                        MONSTER, monsterType)->m_imageName.c_str());
+                        MONSTER, H3_IDX(monsterType))->m_imageName.c_str());
                 g_highScoreWindow->m_creatures[0][reset]->setIconFrame(0);
             }
             }
