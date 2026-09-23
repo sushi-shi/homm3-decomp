@@ -75,20 +75,26 @@ These pragmas need no target-specific replacement. No test suites or full
 matching checkpoint were run for this migration step.
 
 With compiler spelling compatibility and Microsoft extensions enabled,
-`include/hero.h` reaches five errors in `include/mapcell.h`: integer-backed
-fields returned implicitly as `TCreatureType`, `ArtifactPrices`, or
-`EGameResource`. Explicit casts in those five getters have been proposed for
-user review. No game-class edits have been made in this migration yet.
+`include/hero.h` now compiles with the native SDK. Its five enum-bitfield
+return errors are resolved with the existing `H3_ENUM_DECODE` convention from
+`codex/name-disguise-creature-bounds` (`693a49b0`). That branch already used
+this macro in `getArtifactDefender`. Its `include/domains.h` was reused without
+modification; the broader typed-domain migration was not imported.
 
-The proposed returns are:
+CodeWarrior presents these bitfield reads as narrow integer values. The shared
+macro converts them to the declared enum return type while preserving member
+types and layout. The five getter returns now use:
 
-| Getter | Proposed expression |
+| Getter | Expression |
 | --- | --- |
-| `getArtifactDefender` | `static_cast<TCreatureType>(m_artifactInfo.m_guard)` |
-| `getArtifactPrice` | `static_cast<ArtifactPrices>(m_artifactInfo.m_price)` |
-| `getGardenResource` | `static_cast<EGameResource>(m_gardenInfo.m_resource)` |
-| `getWagonResource` | `static_cast<EGameResource>(m_wagonInfo.m_resource)` |
-| `getWindmillResource` | `static_cast<EGameResource>(m_windmillInfo.m_resource)` |
+| `getArtifactDefender` | `H3_ENUM_DECODE(TCreatureType, m_artifactInfo.m_guard)` |
+| `getArtifactPrice` | `H3_ENUM_DECODE(ArtifactPrices, m_artifactInfo.m_price)` |
+| `getGardenResource` | `H3_ENUM_DECODE(EGameResource, m_gardenInfo.m_resource)` |
+| `getWagonResource` | `H3_ENUM_DECODE(EGameResource, m_wagonInfo.m_resource)` |
+| `getWindmillResource` | `H3_ENUM_DECODE(EGameResource, m_windmillInfo.m_resource)` |
+
+This verifies header compilation, not Windows byte matching or migration of
+all admitted hero bodies to ordinary headers.
 
 Further layout, packing and OS dependencies must be examined through the real
 headers. Reuse existing declarations/helpers where possible; show game-class

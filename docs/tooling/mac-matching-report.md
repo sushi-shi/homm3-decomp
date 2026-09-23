@@ -9,7 +9,7 @@ inlines them. A runnable Mac port is not required. The declaration views and
 marker extraction described in the checkpoint below are being replaced by
 [ordinary-header compilation with the real SDK](mac-native-headers.md).
 The native compiler path is implemented; existing profiles have not switched
-while game-header changes await review. Earlier scores below describe the
+while remaining ordinary-header dependencies are reviewed. Earlier scores below describe the
 previous declaration-view checkpoint, not validation of native-header output.
 
 ## Current phase

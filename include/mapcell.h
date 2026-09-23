@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "artifact.h"
+#include "domains.h"
 #include "herospec.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
@@ -1515,9 +1516,15 @@ inline bool ExtraInfoUnion::playerKnowsCell(short player) const
 // the value-returning helper preserved retail's shr/test of the top bit.
 inline bool ExtraInfoUnion::isCustomized() const { return m_artifactInfo.m_custom != 0; }
 
-inline TCreatureType ExtraInfoUnion::getArtifactDefender() const { return m_artifactInfo.m_guard; }
+inline TCreatureType ExtraInfoUnion::getArtifactDefender() const
+{
+    return H3_ENUM_DECODE(TCreatureType, m_artifactInfo.m_guard);
+}
 
-inline ArtifactPrices ExtraInfoUnion::getArtifactPrice() const { return m_artifactInfo.m_price; }
+inline ArtifactPrices ExtraInfoUnion::getArtifactPrice() const
+{
+    return H3_ENUM_DECODE(ArtifactPrices, m_artifactInfo.m_price);
+}
 
 inline enum EGameResource ExtraInfoUnion::getArtifactResourceCost() const
 {
@@ -1587,7 +1594,10 @@ inline void ExtraInfoUnion::fillGarden(enum EGameResource resource)
 // `test` on cell+1 instead.
 inline unsigned char ExtraInfoUnion::gardenIsFull() const { return m_gardenInfo.m_full; }
 
-inline enum EGameResource ExtraInfoUnion::getGardenResource() const { return m_gardenInfo.m_resource; }
+inline enum EGameResource ExtraInfoUnion::getGardenResource() const
+{
+    return H3_ENUM_DECODE(EGameResource, m_gardenInfo.m_resource);
+}
 
 // Original SetGarden, MapCell.h:1028..1032, dc 0xbc9b0.
 inline void ExtraInfoUnion::setGarden(short id, EGameResource resource)
@@ -1711,7 +1721,10 @@ inline short ExtraInfoUnion::getWagonAmount() const { return m_wagonInfo.m_resou
 
 inline int ExtraInfoUnion::getWagonArtifact() const { return m_wagonInfo.m_artifact; }
 
-inline enum EGameResource ExtraInfoUnion::getWagonResource() const { return m_wagonInfo.m_resource; }
+inline enum EGameResource ExtraInfoUnion::getWagonResource() const
+{
+    return H3_ENUM_DECODE(EGameResource, m_wagonInfo.m_resource);
+}
 
 inline bool ExtraInfoUnion::wagonHasArtifact() const { return m_wagonInfo.m_hasArtifact; }
 
@@ -1782,7 +1795,10 @@ inline void ExtraInfoUnion::setWheelGold(short amount) { m_waterWheelInfo.m_gold
 
 inline short ExtraInfoUnion::getWindmillAmount() const { return m_windmillInfo.m_amount; }
 
-inline enum EGameResource ExtraInfoUnion::getWindmillResource() const { return m_windmillInfo.m_resource; }
+inline enum EGameResource ExtraInfoUnion::getWindmillResource() const
+{
+    return H3_ENUM_DECODE(EGameResource, m_windmillInfo.m_resource);
+}
 
 inline void ExtraInfoUnion::setWindmill(enum EGameResource resource, short amount)
 {
