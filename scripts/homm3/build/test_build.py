@@ -4,6 +4,7 @@ from __future__ import annotations
 import contextlib
 import io
 from pathlib import Path
+from types import SimpleNamespace
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -11,6 +12,7 @@ from unittest.mock import patch
 from homm3.build import build, configure, delink, normalize_objs
 from homm3.cleanliness import board
 from homm3.core import inputs
+from homm3.build import data_checkpoint
 from homm3.core.nb11 import NB11Error
 from homm3.match import banked_rows, single_view, source_ownership, source_inventory, status, verify_va_claims
 
@@ -33,8 +35,10 @@ class BuildModeTest(unittest.TestCase):
 
         for name, module, function, result in [
             ("configure", configure, "configure", None),
+            ("schedule", data_checkpoint, "schedule", []),
             ("compile", build, "_run", 0),
-            ("delink", delink, "run", 0),
+            ("delink", delink, "run", SimpleNamespace(data_evidence={})),
+            ("data", data_checkpoint, "run", []),
             ("normalize", normalize_objs, "normalize_all", 0),
             ("report", status, "refresh_report", {}),
             ("fingerprints", status, "source_hash_pair", ({}, {})),
@@ -57,7 +61,7 @@ class BuildModeTest(unittest.TestCase):
 
     def test_full_build_refreshes_existing_targets_before_checkpoint(self):
         self.assertEqual(build.main([]), 0)
-        self.assertEqual(self.events, ["configure", "compile", "delink", "report",
+        self.assertEqual(self.events, ["configure", "schedule", "compile", "delink", "data", "report",
                                       "fingerprints", "history", "check", "checkpoint", "banked", "claims",
                                       "single_view", "origins", "ownership", "inventory", "cleanliness", "readme"])
         self.mocks["compile"].assert_called_once_with("ninja")
@@ -114,7 +118,8 @@ class BuildModeTest(unittest.TestCase):
 
     def test_fast_build_preserves_targets_and_skips_checkpoint(self):
         self.assertEqual(build.main(["--fast", "cursor"]), 0)
-        self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report", "fingerprints"])
+        self.assertEqual(self.events, ["configure", "schedule", "compile", "normalize", "configure", "report", "fingerprints"])
+        self.mocks['data'].assert_not_called()
         self.mocks["compile"].assert_called_once_with("ninja", "cursor")
         self.assertEqual(self.target.read_bytes(), b"existing retail target")
         self.mocks["delink"].assert_not_called()
@@ -125,6 +130,27 @@ class BuildModeTest(unittest.TestCase):
         self.target.unlink()
         self.assertEqual(build.main(["--fast", "cursor"]), 1)
         self.assertEqual(self.events, [])
+
+    def test_full_build_repairs_stale_units_outside_requested_target(self):
+        self.mocks['schedule'].side_effect = lambda *a, **kw: ['hero', 'cursor']
+        self.assertEqual(build.main(['cursor']), 0)
+        self.mocks['compile'].assert_called_once_with('ninja', 'cursor', 'hero')
+        self.mocks['schedule'].assert_called_once_with(self.root, targets=None)
+
+    def test_data_unavailability_fails_but_preserves_independent_diagnostics(self):
+        self.mocks['data'].side_effect = ValueError('stale data inputs')
+        self.assertEqual(build.main([]), 1)
+        self.assertIn('stale data inputs', self.stderr.getvalue())
+        self.mocks['inventory'].assert_called_once()
+        self.mocks['cleanliness'].assert_called_once_with(write=False, dc_origins=[])
+
+    def test_require_data_exact_is_not_forwarded_to_ninja_or_ignored_in_fast_build(self):
+        self.assertEqual(build.main(['--require-data-exact']), 0)
+        self.mocks['data'].assert_called_once_with(self.root, require_exact=True, evidence={})
+        self.mocks['compile'].assert_called_once_with('ninja')
+        before = list(self.events)
+        self.assertEqual(build.main(['--fast', 'cursor', '--require-data-exact']), 1)
+        self.assertEqual(self.events, before)
 
     def test_failed_compilation_cannot_delink_from_stale_objects(self):
         self.mocks["compile"].side_effect = lambda *args: 1

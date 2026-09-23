@@ -1696,7 +1696,7 @@ def load_compgen_claim_names(path: Path | None, unit: str | None):
         return frozenset(row["name"] for row in rows if row["unit"] == unit)
 
 
-def load_compgen_data_claims(path: Path | None, unit: str | None):
+def load_compgen_data_claims(path: Path | None, unit: str | None, payload: bytes | None = None):
     if path is None or unit is None:
         return ()
     if not path.exists():
@@ -1707,18 +1707,26 @@ def load_compgen_data_claims(path: Path | None, unit: str | None):
             (line for line in stream if not line.lstrip().startswith("#")),
             delimiter="\t")
         claims = []
+        coff = CoffObject(payload) if payload is not None else None
         for row in rows:
-            if not row["provenance"].startswith("source-DATA_COMPGEN:"):
+            if not row["provenance"].startswith(("source-DATA_COMPGEN:", "source-DATA_COMPGEN_GUARD:", "delink-definition")):
                 continue
             object_unit = row["object"].replace("\\", "/")
             if object_unit.lower().endswith(".c"):
                 object_unit = object_unit[:-2]
             if object_unit != unit:
                 continue
+            section, offset = int(row['section_ordinal'], 0), int(row['section_offset'], 0)
+            if (payload is not None and row.get('object_sha256') and
+                    hashlib.sha256(payload).hexdigest() != row['object_sha256']):
+                continue  # Fresh full delink required after recompilation.
+            if coff is not None and row.get('symbol'):
+                matches = [s for s in coff.symbols.values() if s.name == row['symbol'] and s.section > 0]
+                if len(matches) != 1:
+                    continue
+                section, offset = matches[0].section, matches[0].value
             claims.append(CompgenDataClaim(
-                row["name"],
-                int(row["section_ordinal"], 0),
-                int(row["section_offset"], 0),
+                row["name"], section, offset,
                 int(row["size"], 0),
                 row["storage"],
                 row["scope"],

@@ -758,6 +758,8 @@ def write_readme(report: dict) -> None:
              "Fuzzy CUR", "Fuzzy MAX"]]
     for module in sorted(per_module, key=lambda m: -per_module[m]["fns"]):
         a = per_module[module]
+        if not a["fns"]:
+            continue  # Data-only objdiff units have no function-score denominator.
         pct = 100.0 * a["exact"] / a["fns"] if a["fns"] else 0.0
         pct_max = 100.0 * a["exact_max"] / a["fns"] if a["fns"] else 0.0
         fuzzy = a["wsum"] / a["code"] if a["code"] else 0.0

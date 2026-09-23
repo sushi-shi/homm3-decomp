@@ -37,6 +37,7 @@
         pname = "vostok-delinker";
         version = "0.1.0";
         src = vostok-delinker-src;
+        patches = [ ./patches/vostok-reviewed-data-aliases.patch ];
         cargoHash = "sha256-ZwFdbqUyh4b0S+fUYKGMN1fWaxRu1zU2ozKpe7CbcYs=";
       };
 

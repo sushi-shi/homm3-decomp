@@ -56,6 +56,7 @@ class DelinkResult:
     data_manifest: Path
     targets: tuple[Path, ...]
     missing: tuple[str, ...]
+    data_evidence: dict
 
 
 def run() -> DelinkResult:
@@ -63,8 +64,10 @@ def run() -> DelinkResult:
     if rc:
         raise RuntimeError("source label extraction failed; delinking stopped")
     inventory = model.generate()
-    pdb = synth_pdb.generate(inventory)
-    data = data_manifest.generate()
+    from homm3.sema import data_match
+    evidence = data_match.prepare(common.HOMM3_DIR, build_vendor=True)
+    data = data_manifest.generate(evidence=evidence)
+    pdb = synth_pdb.generate(inventory, data_names=data_manifest.data_names())
 
     if DELINK_DIR.exists():
         shutil.rmtree(DELINK_DIR)
@@ -82,6 +85,17 @@ def run() -> DelinkResult:
         check=True)
 
     _build, _profiles, units = configure.load_manifest()
+    for extra in data_manifest.extra_units():
+        units.append(dict(unit=extra["unit"]))
+        if extra["path"]:
+            shutil.copy2(common.HOMM3_DIR/extra["path"],
+                         common.HOMM3_DIR/f'build/objdiff/base/{extra["unit"]}.obj')
+        else:
+            configure.write_dummy(common.HOMM3_DIR/f'build/objdiff/base/{extra["unit"]}.obj')
+    expected_vendor = {r["unit"]+".obj" for r in data_manifest.extra_units() if r["path"]}
+    for stale in (common.HOMM3_DIR/"build/objdiff/base").glob("vendor_*.obj"):
+        if stale.name not in expected_vendor:
+            stale.unlink()
     TARGET_DIR.mkdir(parents=True, exist_ok=True)
     copied, missing = 0, []
     for unit in units:
@@ -105,8 +119,9 @@ def run() -> DelinkResult:
     normalize_objs.normalize_all()
     _prune_normalized(units)
     configure.configure()
+    data_manifest.verify_delivery()
     return DelinkResult(inventory, pdb, data,
-                        tuple(TARGET_DIR / name for name in sorted(expected)), tuple(missing))
+                        tuple(TARGET_DIR / name for name in sorted(expected)), tuple(missing), evidence)
 
 
 def main(argv=None) -> int:

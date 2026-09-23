@@ -42,6 +42,9 @@ spelling that names exactly one retail symbol)
   strings [0x<addr>] [--find TEXT]
         A function's literal evidence / the functions referencing a
         matching literal.
+  coverage [--output DIR] [--json] [--require-complete]
+        Every retail file byte and image RVA, with unknown spans, shared
+        ownership, evidence and references; independent of match scores.
 
 rc: 0 = answered, 1 = answered-NO (differs), 2 = error.
 Every invocation appends one line to build/homm3_sema.log.
@@ -63,6 +66,14 @@ class _Parser(argparse.ArgumentParser):
             if detailed and (result.summary or result.why_bytes or result.json):
                 self.error("--summary, --why-bytes and --json combine with each other; "
                            "select a detailed view separately")
+        if getattr(result, "sema", None) in ("coverage", "data-match"):
+            if result.jobs < 1:
+                self.error("--jobs must be positive")
+        if getattr(result, "sema", None) == "coverage":
+            if result.data_only and result.require_data_complete:
+                self.error("--require-data-complete requires the full declaration-aware report")
+            if result.data_only and result.build_vendor:
+                self.error("--build-vendor requires the full vendor-aware report")
         return result
 
 
@@ -176,6 +187,20 @@ def _build_parser() -> argparse.ArgumentParser:
     raw.add_argument("--count", type=int, help="pointer slots (default 16; vtable defaults to admitted extent)")
     raw.add_argument("--json", action="store_true")
 
+    coverage = ss.add_parser("coverage", help="every retail file/image byte, including unknowns and shared owners")
+    coverage.add_argument("--output", metavar="DIR", help="write retail, DATA and vendor accounting TSVs and summary.json")
+    coverage.add_argument("--build-vendor", action="store_true", help="compile fresh zlib accounting objects with pinned VC6 when needed")
+    coverage.add_argument("--json", action="store_true")
+    coverage.add_argument("--jobs", type=int, default=4, help="Clang DATA extraction workers (default 4)")
+    coverage.add_argument("--require-data-complete", action="store_true", help="fail on DATA gaps, overlaps, extern-only storage or incomplete analysis")
+    coverage.add_argument("--data-only", action="store_true", help="legacy data-region-only report")
+    coverage.add_argument("--require-complete", action="store_true",
+                          help="fail if any unknown or provisional bytes remain")
+
+    matching = ss.add_parser('data-match', help='strict raw data bytes and independently resolved pointer targets')
+    matching.add_argument('--output', default='build/data-match', help='write enrollment, verdict and relocation TSVs')
+    matching.add_argument('--jobs', type=int, default=4)
+    matching.add_argument('--require-exact', action='store_true', help='fail on mismatches or incomplete source/emission proof')
     candidates = ss.add_parser("candidates", help="search emitted functions; optional retail mnemonic ranking")
     candidates.add_argument("target", nargs="?", help="retail selector to rank against")
     candidates.add_argument("--find", help="candidate name substring (mangled or demangled)")
@@ -196,7 +221,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return ap
 
 
-COMMANDS = ("xref", "diff", "disasm", "rva", "strings", "data", "candidates", "compare")
+COMMANDS = ("xref", "diff", "disasm", "rva", "strings", "data", "data-match", "coverage", "candidates", "compare")
 
 # What agents typed under `homm3 sema` that lives elsewhere (usage-log
 # audit): the vc6 solvers, dreamcast lookups, and flag spellings guessed
@@ -233,10 +258,13 @@ def _redirect(argv: list[str]) -> None:
 def _dispatch(argv):
     _redirect(argv)
     args = _build_parser().parse_args(argv)
-    from homm3.sema import diff, disasm, rva, strings, xref, data, candidates, compare
+    from homm3.sema import diff, disasm, rva, strings, xref, data, data_match, candidates, compare, coverage
     tool = {"xref": xref, "diff": diff, "disasm": disasm,
-            "rva": rva, "strings": strings, "data": data,
-            "candidates": candidates, "compare": compare}[args.sema]
+            "rva": rva, "strings": strings, "data": data, "coverage": coverage,
+            "candidates": candidates, "compare": compare, 'data-match': data_match}[args.sema]
+    if args.sema == "coverage" and not args.data_only:
+        from homm3.sema import image_coverage
+        tool = image_coverage
     return tool.run(args) or 0
 
 

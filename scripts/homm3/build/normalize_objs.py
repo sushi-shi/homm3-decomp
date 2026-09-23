@@ -45,6 +45,7 @@ from homm3.build.normalized_freshness import freshness_problems, write_stamp, Va
 from homm3.core import common
 
 OBJDIFF = common.HOMM3_DIR / "build/objdiff"
+DATA_BINDINGS = common.HOMM3_DIR / "build/gen/delink_data_bindings.tsv"
 COMPGEN_MANIFEST = common.HOMM3_DIR / "build/gen/compgen_claims.tsv"
 
 CNT_CODE = 0x00000020
@@ -854,42 +855,6 @@ def _canonicalize_matching_eh_handler_owners(
     return bytes(data), tuple(admitted)
 
 
-def _drop_data_sections(payload: bytes) -> bytes:
-    """Truncate every non-code section in a comparison copy to zero.
-
-    The matching scope is FUNCTIONS ONLY for now (user decision
-    2026-08-06): data comparison returns later as its own phase. The
-    raw base/delinked objects keep their data sections untouched -
-    only the disposable objdiff copies are scoped, so flipping this
-    call back re-admits data wholesale. Section headers stay in place
-    (no renumbering); raw size and relocation count drop to zero."""
-    data = bytearray(payload)
-    nsec, = struct.unpack_from("<H", data, 2)
-    dropped = set()
-    for index in range(nsec):
-        offset = 20 + index * 40
-        characteristics, = struct.unpack_from("<I", data, offset + 36)
-        if characteristics & CNT_CODE:
-            continue
-        dropped.add(index + 1)
-        struct.pack_into("<I", data, offset + 16, 0)   # SizeOfRawData
-        struct.pack_into("<H", data, offset + 32, 0)   # NumberOfRelocations
-    # Symbols defined in a dropped section become undefined externs in
-    # the copy - .text relocations keep resolving them by name, and the
-    # differ no longer sees extents pointing past the emptied section.
-    symoff, nsyms = struct.unpack_from("<II", data, 8)
-    o, i = symoff, 0
-    while i < nsyms:
-        section, = struct.unpack_from("<h", data, o + 12)
-        if section in dropped:
-            struct.pack_into("<I", data, o + 8, 0)     # Value
-            struct.pack_into("<h", data, o + 12, 0)    # SectionNumber
-        aux = data[o + 17]
-        o += 18 * (1 + aux)
-        i += 1 + aux
-    return bytes(data)
-
-
 def _retain_matching_target_padding(base_payload: bytes,
                                     target_payload: bytes) -> tuple[bytes, int]:
     """Retain linked-target NOP fill when the logical function sizes agree.
@@ -975,6 +940,8 @@ def _canonicalize_side(side: str, obj: Path, context=None) -> bool:
     stamp_inputs.update(canon.anon_ns_stamp_inputs())
     if COMPGEN_MANIFEST.is_file():
         stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
+    if DATA_BINDINGS.is_file():
+        stamp_inputs["data_bindings"] = DATA_BINDINGS
     if (out.exists() and sidecar.is_file()
             and not freshness_problems(out, required_inputs=stamp_inputs, context=context)):
         return False
@@ -983,9 +950,10 @@ def _canonicalize_side(side: str, obj: Path, context=None) -> bool:
     if COMPGEN_MANIFEST.is_file():
         claims = canon.load_compgen_claims(COMPGEN_MANIFEST, unit)
         accounted = canon.load_compgen_claim_names(COMPGEN_MANIFEST, unit)
-    result = canon.canonicalize_coff(obj.read_bytes(), claims,
+    data_claims = canon.load_compgen_data_claims(DATA_BINDINGS, unit, obj.read_bytes()) if side == "base" and DATA_BINDINGS.is_file() else ()
+    result = canon.canonicalize_coff(obj.read_bytes(), claims, data_claims,
                                      compgen_accounted=accounted, unit=unit)
-    out.write_bytes(_drop_data_sections(result.data))
+    out.write_bytes(result.data)
     sidecar.write_bytes(canon.sidecar_bytes(result.rows))
     write_stamp(out, stamp_inputs, context=context)
     return True
@@ -1017,6 +985,9 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None) -> Coun
     if COMPGEN_MANIFEST.is_file():
         stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
         target_stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
+    if DATA_BINDINGS.is_file():
+        stamp_inputs["data_bindings"] = DATA_BINDINGS
+        target_stamp_inputs["data_bindings"] = DATA_BINDINGS
     # Verify both complete paired stamps, including content hashes. A fresh
     # raw-only stamp from _canonicalize_side is not proof of a paired result.
     # This avoids reparsing every COFF object on unchanged fast builds/diffs.

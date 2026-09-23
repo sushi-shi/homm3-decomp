@@ -21,6 +21,7 @@ class NormalizeUnitTest(unittest.TestCase):
         self.enterContext(patch.object(normalize_objs, "retail_image_base", return_value=0x400000))
         self.dir = tempfile.TemporaryDirectory()
         root = Path(self.dir.name)
+        self.enterContext(patch.object(normalize_objs, "DATA_BINDINGS", root/"absent-bindings.tsv"))
         self.objdiff = root / "objdiff"
         (self.objdiff / "base").mkdir(parents=True)
         (self.objdiff / "target").mkdir(parents=True)
@@ -68,6 +69,28 @@ class NormalizeUnitTest(unittest.TestCase):
         self.assertEqual(counts["wrote"], 1)
         self.assertTrue((self.objdiff / "normalized/base/lonely.obj").is_file())
         self.assertFalse((self.objdiff / "normalized/target/lonely.c.obj").exists())
+
+    def test_data_bytes_and_relocations_survive_normalization(self):
+        from homm3.build.canonicalize_data_symbols import CoffObject
+        import struct
+        from homm3.build.test_eh_handler_normalization import FixtureSection, _coff, _symbol
+        payload = bytearray(_coff((FixtureSection('.data', b'abcd'+bytes(4), ((4, 1, 6),)),),
+                                 (_symbol('table', 0, 1, 0, 2), _symbol('referent', 0, 0, 0, 2))))
+        struct.pack_into('<I', payload, 20+36, 0xc0300040)
+        (self.objdiff/'base/probe.obj').write_bytes(payload)
+        (self.objdiff/'target/probe.c.obj').write_bytes(payload)
+        normalize_objs.normalize_unit('probe')
+        raw = CoffObject((self.objdiff/'base/probe.obj').read_bytes())
+        normalized = CoffObject((self.objdiff/'normalized/base/probe.obj').read_bytes())
+        for a, b in zip(raw.sections, normalized.sections):
+            if a.characteristics & 0x20:
+                continue
+            self.assertEqual(a.raw_size, b.raw_size)
+            self.assertEqual(raw.section_bytes(a), normalized.section_bytes(b))
+        self.assertEqual([(r.section, r.site, r.typ) for r in raw.relocations if
+                          not raw.sections[r.section-1].characteristics & 0x20],
+                         [(r.section, r.site, r.typ) for r in normalized.relocations if
+                          not normalized.sections[r.section-1].characteristics & 0x20])
 
     def test_unknown_unit_is_a_no_op(self):
         self.assertEqual(normalize_objs.normalize_unit("nothing")["wrote"], 0)

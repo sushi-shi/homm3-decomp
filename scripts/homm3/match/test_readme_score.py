@@ -22,7 +22,8 @@ class ReadmeScoreTest(unittest.TestCase):
             ("unit", "historic"): status.MatchRow(None, 90, 100),
             ("unit", "near"): status.MatchRow(99.9995, 99.9995, 99.9995),
         }
-        report = {"units": [{"name": "unit", "functions": functions}]}
+        report = {"units": [{"name": "unit", "functions": functions},
+                            {"name": "vendor_data_only", "functions": []}]}
         with tempfile.TemporaryDirectory() as tmp:
             readme = Path(tmp) / "README.md"
             readme.write_text(f"before\n{status.RM_START}\nold\n{status.RM_END}\nafter\n")
@@ -42,6 +43,7 @@ class ReadmeScoreTest(unittest.TestCase):
                 status.write_readme(report)
                 self.assertEqual(readme.read_text(), first)
 
+        self.assertNotIn("vendor_data_only", first)
         self.assertIn("**Executable MAX: 65.00%**", first)
         self.assertIn("**CUR diagnostics** — 1 / 6 functions exact (16.7%)", first)
         self.assertIn("**Function exact MAX** — 2 / 6 current implementations "
@@ -49,8 +51,8 @@ class ReadmeScoreTest(unittest.TestCase):
         table = [[c.strip() for c in line.strip("|").split("|")]
                  for line in first.splitlines() if line.startswith("|")]
         self.assertIn("Function exact MAX", table[0])
-        self.assertEqual(table[2][2:4], ["2 / 4 (50.0%)", "1 / 4 (25.0%)"])
-        self.assertEqual(table[2][4:], ["97.50%", "56.25%"])
+        self.assertEqual(table[2][2:4], ["1 / 4 (25.0%)", "2 / 4 (50.0%)"])
+        self.assertEqual(table[2][4:], ["56.25%", "97.50%"])
         self.assertEqual(table[3][2:4], ["0 / 2 (0.0%)", "0 / 2 (0.0%)"])
         self.assertTrue(first.startswith("before\n"))
         self.assertTrue(first.endswith("\nafter\n"))
@@ -85,7 +87,7 @@ class ReadmeScoreTest(unittest.TestCase):
         self.assertIn("**CUR diagnostics** — 0 / 1 functions exact", text)
         self.assertIn("**Function exact MAX** — 1 / 1 current implementations",
                       text)
-        self.assertRegex(text, r"\|\s*100\.00% \|\s*25\.00% \|")
+        self.assertRegex(text, r"\|\s*25\.00% \|\s*100\.00% \|")
 
 
     def test_excluded_linked_bodies_do_not_inflate_progress(self):

@@ -88,7 +88,7 @@ def _run_cl(cmd, out):
         except subprocess.TimeoutExpired:
             try: os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
             except (ProcessLookupError, PermissionError): pass
-            proc.wait(); rc = 0 if out.exists() else 1
+            proc.wait(); rc = 124
         logf.seek(0); return logf.read().decode("latin1", "replace"), rc
 
 def main():
@@ -115,10 +115,17 @@ def main():
     from homm3.core.project import Project
     project_includes = Project(HOMM3_DIR).includes
     incs = [msvc / "include", *(p for p in project_includes if p.is_dir())]
+    from homm3.build import compiled_freshness
+    compiled_freshness.stamp_path(out).unlink(missing_ok=True)
+    before = compiled_freshness.snapshot(HOMM3_DIR, src, flags, incs, msvc)
+    # Compiler profiles are the complete option source. CL/_CL_ can otherwise
+    # silently inject options before/after the command line (including /I).
+    os.environ['CL'] = ''
+    os.environ['_CL_'] = ''
     os.environ["INCLUDE"] = ";".join(winepath_w(p) for p in incs)
     cmd = ["wine", str(cl), *flags, f"/Fo{winepath_w(out)}", winepath_w(src)]
     output, rc = _run_cl(cmd, out)
-    if not out.exists():
+    if rc or not out.exists():
         diagnostic_log = out.with_suffix(".compile.log")
         diagnostic_log.write_text(output)
         sys.stderr.write(f"[cc_wrap] full diagnostics: {diagnostic_log}\n")
@@ -128,6 +135,11 @@ def main():
     deps = scan_header_deps(src, *project_includes)
     dep_list = " ".join(d.replace(" ", "\\ ") for d in deps)
     Path(str(out) + ".d").write_text(f"{a.out}: {dep_list}\n")
+    try:
+        compiled_freshness.write(out, before,
+            compiled_freshness.snapshot(HOMM3_DIR, src, flags, incs, msvc))
+    except ValueError as exc:
+        die(str(exc))
     sys.exit(0)
 
 if __name__ == "__main__": main()
