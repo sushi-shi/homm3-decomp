@@ -1708,7 +1708,7 @@ def load_compgen_data_claims(path: Path | None, unit: str | None):
             delimiter="\t")
         claims = []
         for row in rows:
-            if not row["provenance"].startswith("source-DATA_COMPGEN:"):
+            if not row["provenance"].startswith(("source-DATA_COMPGEN:", "source-DATA_COMPGEN_GUARD:")):
                 continue
             object_unit = row["object"].replace("\\", "/")
             if object_unit.lower().endswith(".c"):

@@ -19,10 +19,10 @@ the manifest only assigns ownership/extent/topology):
   build/gen/delink_data_bindings.tsv     NOT a vostok input - the
       canonicalizer's DATA_COMPGEN binding table (homm2 10-column shape:
       name object rva size storage alignment section_ordinal
-      section_offset scope provenance). Rows appear when DATA_COMPGEN
-      annotations land in src/ and candidate objects exist to bind
-      against; emitted empty-with-header now (lesson 1: the machinery
-      exists before its first user).
+      section_offset scope provenance). Fresh source-to-COFF bindings
+      include DATA, narrow literals and owner-proved byte guards. The
+      ordinary comparison remains code-only pending strict enrollment;
+      binding does not change data byte scores or target topology.
 
 config/retail/reloc-aliases.tsv (--reloc-alias-manifest, header
 `function_rva target_rva site_rva owner addend occurrences`,
@@ -31,11 +31,13 @@ once if absent and never rewrites it.
 """
 from __future__ import annotations
 
+import csv
 import sys
 
 from pathlib import Path
 
 from homm3.core import common
+from homm3.core import tsv
 
 DATA_OUT = common.HOMM3_DIR / "build/gen/delink_data_manifest.tsv"
 SECTIONS_OUT = common.HOMM3_DIR / "build/gen/delink_data_sections.tsv"
@@ -55,8 +57,48 @@ BINDINGS_HEADER = ("name\tobject\trva\tsize\tstorage\talignment\t"
                    "section_ordinal\tsection_offset\tscope\tprovenance")
 
 
-def generate() -> Path:
+def binding_rows(report, names):
+    """Canonicalizer inputs use candidate topology, never guessed retail spans.
+
+    One physical pool allocation may have many annotated uses. Give it the
+    generated retail model's shared semantic identity, retaining every use in
+    data-bindings.tsv. Ambiguities stay out of the canonicalizer input.
+    """
+    candidates = {r['id']: r for r in report['candidate_data']}
+    rows, seen, issues = [], set(), []
+    for binding in report['data_bindings']:
+        if binding['status'] != 'bound':
+            continue
+        row = candidates[binding['candidate_ids'][0]]
+        key = (row['id'], binding['rva'], binding['size'])
+        if key in seen:
+            continue
+        seen.add(key)
+        name = names.get(binding['rva']) if binding['macro'] != 'DATA' else (
+            row['symbols'][0] if len(row['symbols']) == 1 else None)
+        if (not name or row['section_ordinal'] == 0 or len(row['scopes']) != 1 or
+                row['alignment'] is None):
+            issues.append(dict(binding_id=binding['id'], candidate_id=row['id'],
+                               reason='missing model identity, concrete section, unique symbol or alignment'))
+            continue
+        rows.append(dict(name=name, object=row['unit']+'.c', rva=hex(binding['rva']),
+                         size=hex(binding['size']), storage=row['storage'], alignment=hex(row['alignment']),
+                         section_ordinal=str(row['section_ordinal']), section_offset=hex(row['section_offset']),
+                         scope=row['scopes'][0], provenance='source-'+binding['macro']+':'+binding['source']))
+    return rows, issues
+
+
+def generate(candidate_report=None) -> Path:
     image, _info = common.load_image()
+    if candidate_report is None:
+        from homm3.analysis import candidate_data, data_declarations
+        declarations = data_declarations.extract(common.HOMM3_DIR, image.image_base)
+        candidate_report = candidate_data.extract(common.HOMM3_DIR, declarations)
+        candidate_data.export(candidate_report, common.HOMM3_DIR/'build/gen/data')
+    with (common.HOMM3_DIR/'build/gen/symbol_names.csv').open() as stream:
+        names = {int(r['rva'], 0): r['name'] for r in csv.DictReader(
+            line for line in stream if not line.startswith('#')) if r['kind'] == 'data'}
+    bindings, binding_issues = binding_rows(candidate_report, names)
     secmap = {s.name: s for s in image.sections}
     rdata, dat = secmap[".rdata"], secmap[".data"]
 
@@ -86,12 +128,13 @@ def generate() -> Path:
         "src/data_section_manifest.rs @ 1393e24); header-only until\n"
         "# candidate data topology starts - packed sections are the "
         "default.\n" + provenance + "\n" + SECTIONS_HEADER + "\n")
-    BINDINGS_OUT.write_text(
-        "# GENERATED - the canonicalizer's DATA_COMPGEN binding table "
-        "(homm2 shape, NOT a vostok input).\n"
-        "# Rows appear when DATA_COMPGEN annotations land in src/ and "
-        "candidate objects exist.\n" + provenance + "\n"
-        + BINDINGS_HEADER + "\n")
+    tsv.write(BINDINGS_OUT, [
+        '# GENERATED - fresh candidate topology for source-bound data; NOT a vostok input.',
+        '# Binding does not prove retail extent or byte equality. Rejections: build/gen/data/data-bindings.tsv.',
+        *provenance.splitlines()], BINDINGS_HEADER.split('\t'), bindings)
+    tsv.write(BINDINGS_OUT.with_name('delink_data_binding_issues.tsv'),
+              ['# Bound source sites withheld from canonicalization.'],
+              ['binding_id', 'candidate_id', 'reason'], binding_issues)
     created = not ALIASES.is_file()
     if created:
         ALIASES.write_text(
@@ -102,7 +145,7 @@ def generate() -> Path:
             + ALIASES_HEADER + "\n")
 
     print(f"[build data_manifest] {len(rows)} data rows -> {DATA_OUT.name};"
-          f" sections/bindings headers emitted; aliases "
+          f" {len(bindings)} candidate bindings, {len(binding_issues)} withheld; aliases "
           f"{'created' if created else 'kept'}: {ALIASES.name}")
     return DATA_OUT
 

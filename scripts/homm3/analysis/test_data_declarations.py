@@ -99,6 +99,26 @@ DATA(0x401100) int* pointer;
             self.assertFalse(result['analysis_complete'])
             self.assertEqual({i['kind'] for i in result['issues']}, {'parse-failure', 'annotation-unbound'})
 
+    def test_active_compgen_macros_retain_their_enclosing_function_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            unit = self.parse(Path(directory), '''
+#define DATA_COMPGEN(a,n,v) v
+#define DATA_COMPGEN_GUARD(a,n,o)
+#if 0
+const char* inactive = DATA_COMPGEN(0x401100, inactiveText, "hidden");
+#endif
+const char* active() {
+    DATA_COMPGEN_GUARD(0x401200, guard, value)
+    static int value;
+    return DATA_COMPGEN(0x401300, message, "visible");
+}
+''')
+            self.assertFalse(unit['errors'])
+            macros = unit['active_macros']
+            self.assertEqual(len(macros), 2)
+            self.assertEqual({m['macro'] for m in macros}, {'DATA_COMPGEN', 'DATA_COMPGEN_GUARD'})
+            self.assertTrue(all(m['function_symbol'].startswith('?active@@') for m in macros))
+
     def test_lexical_scanner_ignores_comments_and_retains_inactive_and_compgen(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

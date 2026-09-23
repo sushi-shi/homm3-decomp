@@ -27,6 +27,7 @@ iterate on a function.
 
 - [Data flow](tooling/data-flow.md), [telemetry](tooling/telemetry.md), [performance measurement](tooling/performance.md), [compiler warnings](tooling/compiler-warnings.md)
 - [Complete retail byte accounting](tooling/data-coverage.md)
+- [Candidate data bindings](tooling/candidate-data-bindings.md)
 - [Executable libraries](reference/executable-libraries.md)
 - [RMG undefined behavior](reference/rmg-undefined-behavior.md) and [Voronoi provenance](reference/rmg-voronoi-provenance.md)
 

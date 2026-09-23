@@ -98,6 +98,14 @@ records, overlap, missing owners and partial evidence remain visible.
 
 ### 2. Source-to-COFF bindings, including DATA_COMPGEN
 
+Implemented on `codex/candidate-data-bindings`: 2,565 sites bind to fresh emitted
+storage, projecting onto 194,314 distinct retail bytes. All eleven annotated
+guards have one-byte candidate ownership proof. Ninety-six binding-site failures
+remain explicit. See [candidate binding evidence](candidate-data-bindings.md).
+Canonicalizer bindings now carry real candidate topology. Target topology and
+ordinary data enrollment move together in stage 3, so this stage cannot manufacture
+complete retail sections from partial bindings or claim byte equality.
+
 Add `analysis/candidate_data.py` and a reusable binding layer using the existing
 COFF parser, source annotation scanner and declaration evidence. Extend
 `build/data_manifest.py` to emit actual enrolled storage topology and compiler-data

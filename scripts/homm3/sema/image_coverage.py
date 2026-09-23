@@ -180,6 +180,8 @@ def generate(root, image, *, jobs=4, build_vendor=False):
     from homm3.analysis import data_declarations
     from homm3.sema import data_coverage
     declared = data_declarations.extract(root, layout.base, jobs=jobs)
+    from homm3.analysis import candidate_data
+    candidate_evidence = candidate_data.extract(root, declared)
     rows, data_issues, data_summary = data_coverage.overlay(layout, rows, declared)
     from homm3.analysis import vendor_data
     from homm3.sema import vendor_coverage
@@ -212,10 +214,12 @@ def generate(root, image, *, jobs=4, build_vendor=False):
                        'scripts/homm3/analysis/vendor_data.py', 'scripts/homm3/sema/vendor_coverage.py',
                        'scripts/homm3/build/canonicalize_data_symbols.py', 'scripts/homm3/sema/compiler_data.py']
     inputs.extend(implementations)
+    inputs.extend(candidate_evidence['input_sha256'])
     return dict(schema='homm3.retail-accounting.v1', image_base=layout.base,
                 image_sha256=hashlib.sha256(image.data).hexdigest(), domains=summaries,
                 regions=[asdict(r) for r in layout.file_regions + layout.image_regions],
                 data_declarations=declared['declarations'], data_issues=data_issues, data_coverage=data_summary,
+                candidate_evidence=candidate_evidence, candidate_coverage=candidate_evidence['summary'],
                 vendor_data=vendor_rows, vendor_issues=vendor_issues, vendor_coverage=vendor_summary,
                 compiler_data=compiler_rows, compiler_issues=compiler_issues, compiler_coverage=compiler_summary,
                 claims=claims, labels=dict(labels), references=references, rows=rows, problems=problems,
@@ -291,7 +295,10 @@ def export(report, directory):
                   [render(r) for r in compiler_rows])
         tsv.write(directory / 'compiler-issues.tsv', ['# Invalid structures and missing function/class ownership evidence.'],
                   ['compiler_id', 'rva', 'kind', 'detail'], [render(r) for r in report['compiler_issues']])
-    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues')}
+    if 'candidate_evidence' in report:
+        from homm3.analysis import candidate_data
+        candidate_data.export(report['candidate_evidence'], directory)
+    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues', 'candidate_evidence')}
     (directory / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
 
 
@@ -304,7 +311,7 @@ def run(args):
     except (ValueError, OSError) as exc:
         from homm3.sema._common import die
         die(str(exc))
-    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues')}
+    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues', 'candidate_evidence')}
     if args.json:
         print(json.dumps(summary, indent=2))
     else:
@@ -317,6 +324,7 @@ def run(args):
         print('Vendor accounting: ' + json.dumps({k: v for k, v in report['vendor_coverage'].items()
                                                 if k != 'analysis'}, sort_keys=True))
         print('Compiler structure accounting: ' + json.dumps(report['compiler_coverage'], sort_keys=True))
+        print('Candidate data bindings: ' + json.dumps(report['candidate_coverage'], sort_keys=True))
         if args.output:
             print(f'Actionable byte map: {args.output}/coverage.tsv; prioritized work: {args.output}/backlog.tsv')
         for limitation in report['limitations']:

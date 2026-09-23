@@ -93,9 +93,9 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
             "cl",
             command=("PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=scripts "
                      "python3 -m homm3.core.cc_wrap "
-                     "--out $out --src $in -- $flags"),
+                     "--out $object --src $in -- $flags"),
             description="VC6 $unit",
-            depfile="$out.d",
+            depfile="$object.d",
             deps="gcc",
         )
         writer.rule(
@@ -123,9 +123,12 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
                 obj,
                 "cl",
                 inputs=unit["source"],
+                implicit_outputs=[obj + '.compile.json'],
                 implicit=["scripts/homm3/core/cc_wrap.py", "scripts/homm3/core/project.py",
+                          "scripts/homm3/build/compiled_freshness.py",
                           "config/units.toml", "config/project.toml"],
                 variables={
+                    "object": obj,
                     "flags": " ".join(profiles[unit["flags"]]),
                     "unit": unit["unit"],
                 },
