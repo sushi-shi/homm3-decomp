@@ -485,7 +485,9 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
 // Complete factors the live rollover update out of InitiateSpell and the
 // dialog handler. There is no Dreamcast counterpart, so the name is
 // behaviour-derived; the retained body and its three callers prove the
-// boundary and fastcall argument placement.
+// boundary and fastcall argument placement. Mac's lightly optimized body
+// confirms that an out-of-range hex still reaches validSpellTarget: the
+// inInvisibleColumn helper rejects invalid indices without blocking that call.
 VA(0x0059f700, 0x192)  // retail-only factored helper
 static int updateSpellTarget(long hex)
 {
@@ -506,8 +508,7 @@ static int updateSpellTarget(long hex)
         markArea = 1;
 
     int result;
-    if (combatManager::validHex(hex)
-            && !combatManager::inInvisibleColumn(hex)
+    if (!combatManager::inInvisibleColumn(hex)
             && g_combatManager->validSpellTarget(
                 spell, mastery, hex, g_combatManager->m_currentSide, 1,
                 creatureSpell)
@@ -4218,6 +4219,8 @@ void combatManager::demonicResurrection(const army* caster, army* target)
 // its last frame for as long as the death sequence lasts, and the stack
 // drops to cs_wait once the (possibly longer) effect sprite outlives it.
 
+// Dreamcast attributes the name lookup to army::GetName; its inline body
+// expands to the global getArmyName call in retail and Mac.
 // Residual (90.6%): scheduling only, no shape difference. Retail forms
 // `raised` and tests it against 1 BEFORE loading creatureType for the
 // name lookup where our CL loads the type first, and the arithmetic
@@ -4267,10 +4270,10 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
         long raised = targetArmy->m_numTroops - oldCount;
         if (raised != 1)
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
-                    getArmyName(targetArmy->m_creatureType, raised));
+                    targetArmy->getName(raised));
         else
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
-                    getArmyName(targetArmy->m_creatureType, raised));
+                    targetArmy->getName(raised));
         m_combatWindow->combatMessage(g_text, 1, 0);
 
         int effect = g_spellTraits[SPELL_RESURRECTION].m_effect;
