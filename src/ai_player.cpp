@@ -5068,10 +5068,12 @@ void aiEquipArtifacts(hero* ourHero)
     }
 }
 
+// DC 0x377f0, 0x37898 and 0x37acc call the TArtifact(-1) constructor for
+// these artifact locals; that member-store order also matches retail VC6.
 VA(0x00433bb0, 0xad)  // dc 0x377f0
 long removeNegativeArtifacts(hero* ourHero)
 {
-    type_artifact artifact;
+    type_artifact artifact(ARTIFACT_NONE);
     long bestValue = getFullValue(ourHero);
     if (ourHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
         return bestValue;
@@ -5149,7 +5151,7 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
     if (ourHero->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
         return 0;
 
-    type_artifact oldArtifact;
+    type_artifact oldArtifact(ARTIFACT_NONE);
     int bestSlot = THeroScreenWindow::ARTIFACT_SLOT_COUNT;
     long bestValue;
     long bestSourceValue;
@@ -5220,7 +5222,7 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
 VA(0x00433fe0, 0xf5)  // dc 0x37acc
 void aiSwapArtifacts(hero* source, hero* dest)
 {
-    type_artifact artifact;
+    type_artifact artifact(ARTIFACT_NONE);
     long sourceValue = removeNegativeArtifacts(source);
     long destValue = removeNegativeArtifacts(dest);
 
