@@ -2158,8 +2158,9 @@ void advManager::processRadarSelect(const message* msg)
 
 // Restoring GetCell alone measured 87.5712%; restoring the retail-proven
 // live-member reads as well measured 84.9222%. DC line 2438 and retail call
-// #1 both retain GetLocalPlayer for a playerData* local; restoring that local
-// brings the current body to 87.9507%. Cell/register homes and the duplicated
+// #1 both retain GetLocalPlayer for a playerData* local; DC lines 2478/2481
+// and 2602 name GetCurrHeroId and GetTown. Restoring these calls brings the
+// current body to 89.6774%. Cell/register homes and the duplicated
 // VIEW_HERO dispatch remain different. Historical explicit-goto models changed
 // the wrong CFG (88.463%);
 // hoisting the DC locals alone was byte-flat in that older context.
@@ -2197,8 +2198,8 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
         if (g_currentPlayer == player
             && m_lastHoverX == HERO_VIEW_TILE_X
             && m_lastHoverY == HERO_VIEW_TILE_Y
-            && g_currentPlayer->m_currHeroId != -1 && m_curHeroMobile) {
-            objIndex = g_currentPlayer->m_currHeroId;
+            && g_game->getCurrHeroId() != -1 && m_curHeroMobile) {
+            objIndex = g_game->getCurrHeroId();
             objType = HERO;
         } else {
             objType = cell->m_type;
@@ -2285,7 +2286,7 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
         }
         if (clickedIndex == -1)
             return;
-        town* clickedTown = &g_game->m_towns[clickedIndex];
+        town* clickedTown = g_game->getTown(clickedIndex);
         unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
         if (g_game->onSameTeam(g_curWatchPlayer, clickedTown->m_owner)
             || m_debugViewAll)
