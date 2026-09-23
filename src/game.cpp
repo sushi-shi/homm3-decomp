@@ -8435,11 +8435,6 @@ DATA(0x006971a0)
 // Previous project spelling: gRandomTownNames.
 static TPickRandomTownName g_randomTownNames[9];
 
-// The Complete table has a 17-pointer faction stride. The picker intentionally
-// uses only indices 0..15; the seventeenth entry is outside its random domain.
-DATA(0x006a6048)
-const char* g_townNames[9][17];
-
 // E:\gamedcs\game.cpp:9803, dc 0xb6944.
 inline const char* getRandomTownName(int townType)
 {

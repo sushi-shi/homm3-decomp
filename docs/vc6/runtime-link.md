@@ -224,8 +224,28 @@ A final silent Xvfb run reaches Single Scenario with the selected map name,
 description, victory/loss conditions and player settings rendered. No resource
 error or access violation occurs on either the direct path or after opening
 and exiting Multiplayer. Matching scores are unchanged by this table fix.
-Starting a map, battles and
-gameplay remain unverified.
+
+Starting Arrogance exposed a second failure: `processOnMapTowns` read a null
+town-name pointer (linked 0x4d61ad in `HEROES3.scenario-fixed.EXE`). The loader
+filled text.cpp's `g_townNames[9][16]`, while game.cpp defined and read a
+separate `[9][17]` array. Different C++ mangled names let both link, leaving
+the reader's table empty. Retail's writer (0x5b9647) and reader (0x4cad13)
+both use the single table at 0x6a6048 with a 16-pointer faction stride.
+The sole definition now belongs to text.cpp, with the common declaration in
+text.h. `processOnMapTowns` rises from 98.6258% to 100%; the text loader remains
+exact, and no MAX scores fall. The full build and plain link pass.
+
+The fixed Arrogance run reaches the adventure map, displays and dismisses its
+opening event, opens Torosar's hero screen and the starting town (Facture),
+moves the hero one step, and advances from Day 1 to Day 2 after the end-turn
+confirmation. Gold rises from 20,900 to 21,900. No access violation is logged
+during these checks. The final full-build executable has identical `.text`,
+`.rdata` and `.data` sections to this runtime-tested executable.
+
+This is a basic single-player smoke test, not complete gameplay verification.
+The adventure-map minimap and right-hand controls show substantial stripe
+corruption, while the hero and town screens render. That rendering defect
+remains unresolved. Battles, save/load, other maps and longer play are untested.
 
 The updated base had left `TDebugBreak::TDebugBreak` declaration-only,
 creating an unresolved symbol in dxplay, objecttype and objnames. Its ordinary
