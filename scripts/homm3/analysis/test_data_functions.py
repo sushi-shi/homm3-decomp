@@ -39,6 +39,23 @@ class DataFunctionsTest(unittest.TestCase):
         self.assertFalse(profile['writes'])
         self.assertEqual(profile['issues'][0]['kind'], 'unresolved-write')
 
+    def test_same_function_spelling_in_another_unit_does_not_supply_identity(self):
+        obj = CoffObject(_coff((FixtureSection('.text', b'\xc3', ()),),
+                              (_symbol('helper', 0, 1, 0x20, 3),)))
+        provider = Functions(Layout(fixture()), {}, defaultdict(set), {'a': obj, 'b': obj}, None,
+                             [dict(unit='a', symbol='helper', rva=0x1000)])
+        self.assertEqual(provider.anchors['a', 0], {0x1000})
+        self.assertFalse(provider.anchors['b', 0])
+
+    def test_scope_free_runtime_anchor_requires_external_linkage(self):
+        def obj(storage):
+            return CoffObject(_coff((FixtureSection('.text', b'\xc3', ()),),
+                                   (_symbol('helper', 0, 1, 0x20, storage),)))
+        provider = Functions(Layout(fixture()), {}, defaultdict(set), {'a': obj(2), 'b': obj(3)}, None,
+                             [dict(symbol='helper', rva=0x1000)])
+        self.assertEqual(provider.anchors['a', 0], {0x1000})
+        self.assertFalse(provider.anchors['b', 0])
+
 
 if __name__ == '__main__':
     unittest.main()

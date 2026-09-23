@@ -164,6 +164,12 @@ Unsupported dynamic effects remain unproved rather than guessed through names.
 
 ### 5. Consumer extents and byte/element units
 
+In progress on `codex/data-consumer-contracts`: the first audited raw-expression
+and counted-loop pass is implemented locally, with 278,344 recorded access sites.
+It is not yet build-integrated or published. Path/call propagation, shared
+consumer contracts and semantic units remain required before this stage closes;
+see [current evidence and remaining work](data-consumer-contracts.md).
+
 Add `analysis/data_accesses.py` for retail and candidate accesses, building on
 existing disassembly/CFG tools and compiler-bound source layout where useful.
 Compare access widths and address expressions (base + index*scale + displacement),

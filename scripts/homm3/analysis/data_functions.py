@@ -22,7 +22,7 @@ class Functions:
             return
         claims = defaultdict(set)
         for claim in code_claims:
-            claims[claim['symbol']].add(claim['rva'])
+            claims[claim.get('unit') or None, claim['symbol']].add(claim['rva'])
         for unit, obj in objects.items():
             sections = defaultdict(list)
             for symbol in obj.symbols.values():
@@ -40,7 +40,9 @@ class Functions:
                     self.locations[unit, ordinal, symbol.value] = key
                     if symbol.storage_class == 2:
                         self.external[symbol.name].append(key)
-                    self.anchors[key].update(claims[symbol.name])
+                    self.anchors[key].update(claims[unit, symbol.name])
+                    if symbol.storage_class == 2:
+                        self.anchors[key].update(claims[None, symbol.name])
 
     def body(self, key):
         if self.objects is None:
@@ -94,9 +96,7 @@ class Functions:
             self.pop_counts[key] = next(iter(counts)) if len(counts) == 1 else None
         return self.pop_counts[key]
 
-    def analyze(self, key):
-        if key in self.effects:
-            return self.effects[key]
+    def relocation_resolver(self, key):
         raw, start = self.body(key)
         resolver = None
         if self.objects is not None:
@@ -133,6 +133,13 @@ class Functions:
                 if symbol.section == 0 and symbol.typ & 0x20 and not addend:
                     return True, ('external', symbol.name)
                 return True, None
+        return resolver
+
+    def analyze(self, key):
+        if key in self.effects:
+            return self.effects[key]
+        raw, start = self.body(key)
+        resolver = self.relocation_resolver(key)
         result = data_effects.analyze(raw, start, relocation=resolver, call_pop=self.pop_count)
         self.effects[key] = result
         return result
