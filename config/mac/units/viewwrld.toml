@@ -1,0 +1,5 @@
+mode = "paired_bodies"
+# vwDrawSprite relocation-masked instruction alignment: O3 76/107, O2 61/107,
+# O1 60/107. This is a source-shape profile, not an exact Mac calibration.
+flags = ["-O3", "-proc", "750", "-nolink"]
+helpers = []

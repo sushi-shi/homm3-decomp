@@ -238,6 +238,15 @@ compiler calibration, current admitted pairs and exact-comparison constraints.
 
 ## Extending a unit
 
+For a reviewed address reference that is not yet an admitted exact pair, add
+the unit's compiler profile and run `homm3 mac shape <Windows-VA>`. This compiles
+the ordinary source and headers with CodeWarrior, then aligns its instructions
+with the pinned PEF while masking TOC displacements and branch targets. It
+reports retained direct calls in source and retail order. No global-data or
+callee relocation manifest is needed for this source-shape pass. Its assumed
+linker reload-slot collapse and masked addresses cannot establish an exact Mac
+byte verdict; use `homm3 mac diff` for that stricter comparison when needed.
+
 1. Create `config/mac/units/<TU>.toml` with compiler settings:
 
    ```toml

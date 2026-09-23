@@ -65,6 +65,9 @@ def main(argv=None) -> int:
     p = sub.add_parser("diff", help="compile one shared body and compare Mac bytes")
     p.add_argument("selector")
     p.add_argument("--json", action="store_true", help="byte verdict, provenance and call comparison")
+    p = sub.add_parser("shape", help="compile and compare instructions with relocation operands masked")
+    p.add_argument("selector")
+    p.add_argument("--json", action="store_true", help="include every unaligned instruction region")
     p = sub.add_parser("pair", help="prepare or admit a reviewed source-VA/Mac-span pairing")
     p.add_argument("va", type=lambda value: int(value, 0))
     p.add_argument("--unit", required=True)
@@ -306,7 +309,7 @@ def main(argv=None) -> int:
             pair = SimpleNamespace(mac_section=address.section, mac_offset=address.offset, mac_size=args.size)
             print("[mac] Raw inspection span; function boundaries are unverified.")
         else:
-            pair = _select(args.selector, include_references=args.command in ("show", "disasm"))
+            pair = _select(args.selector, include_references=args.command in ("show", "disasm", "shape"))
         pef = _image()
         target = pef.code(pair.mac_section, pair.mac_offset, pair.mac_size)
         if args.command == "show":
@@ -354,6 +357,11 @@ def main(argv=None) -> int:
                         note += f" ({label})"
                 print(f"{instruction.address:08x}: {instruction.bytes.hex().upper()}  "
                       f"{instruction.mnemonic} {instruction.op_str}{note}")
+            return 0
+        if args.command == "shape":
+            from homm3.mac import shape
+            report = shape.inspect(pair, pef, toolchain.stage())
+            print(json.dumps(report, indent=2) if args.json else shape.render(report))
             return 0
         if args.command == "diff" and args.json:
             from dataclasses import asdict
