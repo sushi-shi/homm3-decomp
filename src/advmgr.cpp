@@ -1910,6 +1910,9 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
     return 1;
 }
 
+// DC lines 2373/2420 call UpdateScreen after each map repaint. Mac source
+// shape retains both updateScreen calls (14/14 direct-call count); VC6
+// expands them and remains at 98.5013% with the canonical calls restored.
 VA(0x0040a0c0, 0x50D)  // dc 0xa168
 void advManager::processRadarSelect(const message* msg)
 {
@@ -1955,22 +1958,7 @@ void advManager::processRadarSelect(const message* msg)
 
     updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
     completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
-    g_windowManager->updateScreen(ADVENTURE_SCREEN_X, ADVENTURE_SCREEN_Y,
-                                  ADVENTURE_SCREEN_WIDTH,
-                                  ADVENTURE_SCREEN_HEIGHT);
-
-    unsigned long curTime = GameTime::get();
-    if (static_cast<long>(
-            curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
-        && !m_animCtrPaused) {
-        ++m_animCtr;
-        long elapsedTime =
-            curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-        g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            cppMax(static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED),
-                   elapsedTime);
-    }
-    process1WindowsMessage();
+    updateScreen(0, 0);
 
     message dragMsg;
     message event;
@@ -2016,25 +2004,7 @@ void advManager::processRadarSelect(const message* msg)
 
             updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
             completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
-            g_windowManager->updateScreen(ADVENTURE_SCREEN_X,
-                                          ADVENTURE_SCREEN_Y,
-                                          ADVENTURE_SCREEN_WIDTH,
-                                          ADVENTURE_SCREEN_HEIGHT);
-
-            unsigned long dragTime = GameTime::get();
-            if (static_cast<long>(
-                    dragTime
-                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
-                && !m_animCtrPaused) {
-                ++m_animCtr;
-                long dragElapsed =
-                    dragTime
-                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-                g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                    cppMax(static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED),
-                           dragElapsed);
-            }
-            process1WindowsMessage();
+            updateScreen(0, 0);
             dragMsg.m_id = 0;
         }
     } while (event.m_id != MESSAGE_LEFT_BUTTON_UP);
