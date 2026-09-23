@@ -62,7 +62,7 @@ source = "src/kb.cpp"
 mac_section = 0
 mac_offset = 0x1194d8
 mac_size = 0x254
-mac_symbol = ".extendedDialog__FPCcRQ23std30vector<20type_dialog_resource>lll"
+mac_symbol = ".extendedDialog__FPCcRQ23std72vector<20type_dialog_resource,Q23std33allocator<20type_dialog_resource>>lll"
 target_sha256 = "a711b2f6fa7b9f6cdb8b8a24ba3b3ef65da283535a81fe193b75d0e8ce94acf0"
 evidence = "Canonical five-parameter extendedDialog repeats TNormalDialogInfo construction over up to eight resource records; Mac 0x1194d8 reads vector size at +4, data pointer at +8 and eight-byte elements, sets active and empty icons, calls calculateNormalDialogSize 0x117220 and doNormalDialog 0x1181e0 by value, destroys both records and loops to the next page. Prior doNormalDialog ends BLR 0x1194d4; own final BLR is 0x119728 and the next getMapExtra leaf begins 0x11972c."
 

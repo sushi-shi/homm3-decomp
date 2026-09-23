@@ -215,6 +215,9 @@ def _compile_locked(pair: Pair, tools_dir: Path, work: Path) -> CompiledCode:
         "emitted_symbols": sorted(emitted),
         "emitted_hunks": [{"symbol": h.name, "size": len(h.data), "references": h.xrefs} for h in hunks],
         "metadata_hunks": [asdict(h) for h in metadata],
+        "unavailable_data_payloads": [{"name": h.name, "size": h.declared_size,
+                                       "reason": "truncated MWLink listing"}
+                                      for h in data_hunks if h.data is None],
         "comparison_scope": "function_code_only; exception metadata is not compared",
         "unpaired_probe": f"0x{pair.retail_va:08x}" if hunk is None else None,
         "missing_paired_symbols": [p.mac_symbol for p in peers if p.mac_symbol not in emitted],

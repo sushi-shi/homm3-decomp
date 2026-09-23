@@ -21,6 +21,15 @@ source = "MSL_-_C_-_PPC-68k_-_Libraries/MSL/MSL_C/MSL_MacOS/Include"
 file_count = 25
 sha256 = "7c196b3535bb6a9d6b50f3596d585a34e4d76acdf5ae46cafdbb8f84a87a3a31"
 
+# The Windows reconstruction's OS declarations, imported by platform.h.
+# This tree is supplied by the existing pinned VC6 toolchain, not by MSL.
+[[trees]]
+name = "windows"
+provider = "vc6"
+source = "include"
+file_count = 1011
+sha256 = "66c1b21a89ce539c19a7a0b7cdd107adbeba300cab3eb5994e7e2970cebdf025"
+
 [[trees]]
 name = "universal"
 source = "PPC-68k_Dev_-_Standard_C_-_Libraries/MacOS_Support/Universal/Interfaces/CIncludes"

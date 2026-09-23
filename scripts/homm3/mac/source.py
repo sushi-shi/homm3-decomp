@@ -6,6 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 import re
 import tomllib
+import hashlib
 
 from homm3 import manifest as units_manifest
 from homm3.mac import profiles
@@ -522,20 +523,47 @@ def candidate_source(pair: Pair) -> str:
         start, _, body = source_helper(text, selector, pair.source)
         if start not in {at for at, _ in definitions}:
             definitions.append((start, body))
-    data_vas = {va for peer in peers for va in peer.data}
-    claims = {claim.retail_va: claim for claim in load_data(root)} if data_vas else {}
-    for va in data_vas:
-        if va not in claims:
-            raise SourceError(f"{pair.unit}: missing Mac data pair {va:#x}")
-        definition = claims[va].definition
-        if not definition:
-            raise SourceError(f"{pair.unit}: qualified data {va:#x} must be declared in its ordinary class header")
-        start = text.find(definition)
-        if start < 0:
-            raise SourceError(f"{pair.unit}: data definition {va:#x} is outside owning source")
-        definitions.append((start, definition))
-    return ('#include "include/compiler.h"\n' + source_preamble(text) + '\n\n' +
-            "\n\n".join(definition for _, definition in sorted(definitions)) + "\n")
+    # Keep the actual TU's declarations, globals, namespaces and class bodies.
+    # The existing Clang inventory identifies function extents; no game/header
+    # declarations are reconstructed from names or separate Mac manifests.
+    header_hash = hashlib.sha256()
+    for name, data in sorted(profiles.headers(root, profile).items()):
+        header_hash.update(name.encode() + b'\0' + hashlib.sha256(data).digest())
+    header_hash.update((root / "config/units.toml").read_bytes())
+    inventory = _source_definitions(root, pair.unit, text, header_hash.hexdigest())
+    selected = {at for at, _ in definitions}
+    masked = _masked_source(text)
+    edits = []
+    for definition in inventory:
+        if (definition.class_offset is not None or definition.inline or definition.template
+                or any(definition.offset <= at < definition.end for at in selected)):
+            continue
+        opening = masked.find('{', definition.offset, definition.end)
+        if opening < 0:
+            raise SourceError(f"{pair.unit}: missing body for {definition.name}")
+        # Class methods already have their declarations in ordinary headers.
+        # Free functions keep their original declarator as a prototype, at the
+        # same source position where their definition declared them before.
+        if definition.member or re.search(r'\b\w+::(?:~?\w+)\s*\(', masked[definition.offset:opening]):
+            edits.append((definition.offset, definition.end, ''))
+        else:
+            edits.append((opening, definition.end, ';'))
+    for start, end, replacement in sorted(edits, reverse=True):
+        text = text[:start] + replacement + text[end:]
+    return '#include "include/compiler.h"\n' + text
+
+
+@lru_cache(maxsize=24)
+def _source_definitions(root: Path, unit: str, text: str, header_hash: str):
+    """Cache only within this process, keyed by source and complete header inputs."""
+    from homm3.match.source_ownership import scan_unit
+    entry = units_manifest.by_unit(root / "config/units.toml")[unit]
+    definitions, errors, _ = scan_unit(entry, root)
+    if errors:
+        raise SourceError("cannot prepare Mac source declarations:\n" + '\n'.join(errors))
+    if (root / entry['source']).read_text() != text:
+        raise SourceError(f"{unit}: source changed during declaration inventory")
+    return tuple(d for d in definitions if d.file == entry['source'])
 
 
 def compile_scope(pair: Pair) -> str:

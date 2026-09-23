@@ -3,7 +3,7 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include <windows.h>
+#include "platform.h"
 
 #include "spells.h"
 

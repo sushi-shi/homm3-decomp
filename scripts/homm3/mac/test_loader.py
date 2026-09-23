@@ -106,6 +106,21 @@ XRef: Kind=HUNK_XREF_32BIT Offset=$00000000 Class=RW Name="@14"(1)
         with self.assertRaises(ObjectError):
             parse_data_hunks(listing.replace("Size=8", "Size=12"))
 
+    def test_truncated_data_is_unavailable_instead_of_zero_filled(self):
+        listing = '''Hunk: Kind=HUNK_GLOBAL_IDATA Align=4 Class=RO Name="large"(1) Size=32
+00000000: 01 02 03 04
+  ...
+0000001C: AA BB CC DD
+'''
+        hunk, = parse_data_hunks(listing)
+        self.assertIsNone(hunk.data)
+        self.assertEqual(hunk.declared_size, 32)
+        self.assertTrue(hunk.initialized)
+        with self.assertRaises(ObjectError):
+            parse_data_hunks(listing.replace('  ...\n', ''))
+        with self.assertRaises(ObjectError):
+            parse_data_hunks(listing.replace('0000001C', '00000020'))
+
     def test_exception_table_metadata_is_explicit_and_not_fabricated_data(self):
         listing = '''Hunk: Kind=HUNK_LOCAL_IDATA Align=2 Class=TB Name="@12"(1) Size=18
 Saved Registers: r30-r31

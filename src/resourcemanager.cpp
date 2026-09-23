@@ -8,8 +8,10 @@
 #include <string>
 #include <string.h>
 #include <utility>
-#include <windows.h>
+#include "platform.h"
+#if defined(_MSC_VER)
 #include <yvals.h>
+#endif
 
 #include "resourcemanager.h"
 

@@ -1,11 +1,10 @@
 # Mac second-target tooling rollout
 
-The core two-target matching workflow and actionable work queue are implemented.
-The initial tooling checkpoint passed and six workers have resumed with disjoint
-unit packets. Pairing/setup tasks must be completed before those functions enter
-source matching. New functions continue to expose targeted tooling and platform
-coverage requirements; see the [implementation report](mac-matching-report.md)
-for the expanded checkpoint and remaining work.
+The byte-comparison and call-report tooling is implemented. The initial
+checkpoint below predates the removal of duplicate headers; its scores and
+worker authorization are historical. Workers are currently stopped. The active
+work is ordinary-header compilation and reference coverage; see the
+[native-header status](mac-native-headers.md).
 
 ## Required end state
 

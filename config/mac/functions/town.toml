@@ -7,7 +7,7 @@ source = "src/town.cpp"
 mac_section = 0
 mac_offset = 0x1b5970
 mac_size = 0x220
-mac_symbol = ".showCreatureRewards__FPC4townPQ23std30vector<20type_dialog_resource>"
+mac_symbol = ".showCreatureRewards__FPC4townPQ23std72vector<20type_dialog_resource,Q23std33allocator<20type_dialog_resource>>"
 target_sha256 = "2f91f3f18a13e291dee80b6881e52c6426a98da7959d9af14d87b27004caadf1"
 evidence = "Reward vector +4/+8 qualifier high/low halves, general text IDs 0x8e and 0x24c, formatString %d count then 0x74-stride creature singular/plural name, local-human extendedDialog and vector clear; prior BLR 0x1b596c, own prologue 0x1b5970, final BLR 0x1b5b8c and next prologue 0x1b5b90."
 

@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string>
 #include <strstream>
-#include <windows.h>
+#include "platform.h"
 
 #include "quickherowindow.h"
 

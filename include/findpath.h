@@ -4,8 +4,8 @@
 #include "va.h"
 
 #include <vector>
-#include <windows.h>
-#include <windows.h>
+#include "platform.h"
+#include "platform.h"
 
 #include "struct.h"
 

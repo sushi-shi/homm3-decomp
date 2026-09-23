@@ -9,6 +9,9 @@
 #define __stdcall
 #define __fastcall
 #define __forceinline inline
+#include <extras.h>
+// Native MSL provides the equivalent CRT entry under this spelling.
+#define _strcmpi _stricmp
 #endif
 
 #endif

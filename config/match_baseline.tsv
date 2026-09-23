@@ -1650,7 +1650,7 @@ events	?combatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_poi
 events	?creatureBankEvent@advManager@@AAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	85.5134	85.5134	91.5889	0xabdc0	tokens1:ef75037aea0a
 events	?dispatchEvent@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.4678	99.4678	99.9911	0xa84f0	tokens1:c2282ccec92f
 events	?doAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	tokens1:cf82ee4e903c
-events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	96.5095	96.7959	99.1139	0xad470	tokens1:0b9a6260dab4
+events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	96.7959	96.7959	99.1139	0xad470	tokens1:0b9a6260dab4
 events	?doCustomArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	98.2381	99.1492	0x9f070	tokens1:9b193d3a4c1c
 events	?doCustomResource@advManager@@AAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	tokens1:f5f5e827b9bd
 events	?doCustomSpellScroll@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	tokens1:0de535a306f0
@@ -2243,8 +2243,8 @@ hero	?getStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?getStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110	tokens1:4b11cd54c3cc
 hero	?getSurrenderCostFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe4580	tokens1:a7b572659fd1
 hero	?getVisibility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4070	tokens1:498f41cfaf60
-hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	95.4534	95.4534	95.4534	0xe3070	tokens1:08f71725ca13
-hero	?giveExperience@hero@@QAEHHHE@Z	97.6632	97.6632	100.0000	0xe33b0	tokens1:25088d3c1900
+hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	95.3644	95.4534	95.4534	0xe3070	tokens1:08f71725ca13
+hero	?giveExperience@hero@@QAEHHHE@Z	97.6632	97.6632	100.0000	0xe33b0	tokens1:bf106b3792bf
 hero	?giveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	tokens1:7cfba9aeace3
 hero	?giveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	tokens1:b7eb1dec2edc
 hero	?hasArtifact@hero@@QBEEH@Z	100.0000	100.0000	100.0000	0xd91b0	tokens1:29e20864179b
@@ -2889,7 +2889,7 @@ philai	?aiChooseMagicSkill@@YI?AW4TPrimarySkill@@PAVhero@@@Z	100.0000	100.0000	1
 philai	?aiChooseResourceOrExperience@@YIEPBVhero@@W4EGameResource@@HH@Z	100.0000	100.0000	100.0000	0x127fe0	tokens1:29066812688b
 philai	?aiChooseSecondarySkill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0	tokens1:0141472f1291
 philai	?aiEnterGarrison@@YIXPAVhero@@PAVgarrison@@@Z	100.0000	100.0000	100.0000	0x124370	tokens1:35953fb62cf4
-philai	?aiEnterTown@@YIXPAVhero@@PAVtown@@@Z	97.8000	97.8000	100.0000	0x1253d0	tokens1:9c7e19edec40
+philai	?aiEnterTown@@YIXPAVhero@@PAVtown@@@Z	97.7739	97.8000	100.0000	0x1253d0	tokens1:9c7e19edec40
 philai	?aiExamineMap@@YAXXZ	100.0000	100.0000	100.0000	0x12b9c0	tokens1:54d56ee09a1d
 philai	?aiFriendlyHeroMeeting@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x125dc0	tokens1:83b2cb2d7aeb
 philai	?aiGetSpellValue@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640	tokens1:046c4b86d05d
@@ -3376,7 +3376,7 @@ rmg	?generate@type_black_box_spells_def@@UAEPAVtype_object@@PAUTRmgObjectPropert
 rmg	?generate@type_dwelling_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134790	tokens1:4468cdbc2f47
 rmg	?generate@type_key_tent_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134fd0	tokens1:ab2c6cc9b477
 rmg	?generate@type_prison_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x1348d0	tokens1:1746df4389f2
-rmg	?generate@type_quest_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134b90	tokens1:ffc0094852d7
+rmg	?generate@type_quest_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	99.7349	100.0000	100.0000	0x134b90	tokens1:ffc0094852d7
 rmg	?generate@type_quest_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134cc0	tokens1:a1ef81e4b817
 rmg	?generate@type_quest_gold_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134db0	tokens1:360854964b74
 rmg	?generate@type_random_map_generator@@QAEEXZ	99.9357	99.9357	99.9357	0x149930	tokens1:291c27ca7ddb
@@ -3504,7 +3504,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:9ffb396c8413
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	tokens1:f84e27622dc7
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:962fea18ce8c
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	96.3552	96.3552	96.3646	0x149cb0	tokens1:6fbd72185624
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	96.3646	96.3646	96.3646	0x149cb0	tokens1:6fbd72185624
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:c9c09a93db3c
 rmg	__h3cg$rmg$list_dtor$TPoint	0.0000	100.0000	100.0000	0x14c6a0	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-

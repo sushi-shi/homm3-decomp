@@ -20,7 +20,9 @@ class NewmapCell;
 // operator delete was visible as nothrow. Declaring it so here is what
 // makes those two byte-exact; the retail target is the 11-byte free
 // thunk at 0x60ab30, which indeed cannot throw.
+#if defined(_MSC_VER)
 __declspec(nothrow) void __cdecl operator delete(void* p);
+#endif
 
 // The AI's quick-combat speed bands. Retail compares the band against
 // type_monster_data::catagory as a plain signed int (get_attack

@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <stdio.h>
 #include <string.h>
-#include <windows.h>
+#include "platform.h"
 
 #include "mapcell.h"
 
@@ -2306,6 +2306,11 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     int customIndex = m_customMonsterList.size();
 
     monsterObject->m_extraInfo = 0;
+#if defined(HOMM3_TARGET_MAC)
+    // Use the shared payload type for the Mac compiler's bitfield writes.
+    ExtraInfoUnion& monsterInfo =
+        *reinterpret_cast<ExtraInfoUnion*>(&monsterObject->m_extraInfo);
+#endif
 
     int identifier;
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
@@ -2338,7 +2343,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         return -1;
 #if defined(HOMM3_TARGET_MAC)
     quantity = __lhbrx(&quantity, 0);
-    monsterObject->m_monsterInfo.m_qty = quantity;
+    monsterInfo.m_monsterInfo.m_qty = quantity;
 #else
     monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffff000)
         | (quantity & 0xfff);
@@ -2376,7 +2381,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         break;
     }
 #if defined(HOMM3_TARGET_MAC)
-    monsterObject->m_monsterInfo.m_disposition = disposition;
+    monsterInfo.m_monsterInfo.m_disposition = disposition;
 #else
     monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffe0fff)
         | ((disposition & 0x1f) << 12);
@@ -2426,8 +2431,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         if (customIndex < 4000) {
             m_customMonsterList.push_back(tempMonster);
 #if defined(HOMM3_TARGET_MAC)
-            monsterObject->m_monsterInfo.m_custom = 1;
-            monsterObject->m_monsterInfo.m_index = customIndex;
+            monsterInfo.m_monsterInfo.m_custom = 1;
+            monsterInfo.m_monsterInfo.m_index = customIndex;
 #else
             monsterObject->m_extraInfo = (((customIndex & 0xff) | 0xfffff000)
                                         << 19)
@@ -2439,7 +2444,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
 #if defined(HOMM3_TARGET_MAC)
-    monsterObject->m_monsterInfo.m_neverFlee = charBuffer & 1;
+    monsterInfo.m_monsterInfo.m_neverFlee = charBuffer & 1;
 #else
     monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffdffff)
         | ((charBuffer & 1) << 17);
@@ -2451,7 +2456,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     // write lands on more than the one flag; transcribed as the object does
     // it rather than narrowed to the single bit.
 #if defined(HOMM3_TARGET_MAC)
-    monsterObject->m_monsterInfo.m_dontGrow = charBuffer & 1;
+    monsterInfo.m_monsterInfo.m_dontGrow = charBuffer & 1;
 #else
     monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0x87fbffff)
         | ((charBuffer & 1) << 18);

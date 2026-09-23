@@ -2,7 +2,7 @@
 #include "va.h"
 
 #include <stdio.h>
-#include <windows.h>
+#include "platform.h"
 
 #include "university_window.h"
 

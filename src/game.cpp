@@ -5,9 +5,13 @@
 #include "packed_bits.h"
 #include <algorithm>
 #include <ctype.h>
+#if defined(HOMM3_TARGET_MAC)
+#include <unistd.h>
+#else
 #include <direct.h>
-#include <fcntl.h>
 #include <io.h>
+#endif
+#include <fcntl.h>
 #include <math.h>
 #include <memory>
 #include <stdio.h>

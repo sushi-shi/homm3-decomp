@@ -5415,21 +5415,16 @@ int hero::giveRandomArtifact()
     return artifact.m_artifactId;
 }
 
-// The Classic Mac retained symbol is .giveExperience__4heroFiii: its third
-// parameter is int even though the body tests its low byte. Complete VC6's
-// ?giveExperience@hero@@QAEHHHE@Z and Dreamcast's debug signature both use
-// unsigned char. Preserve each port's independently observed member ABI.
+// Complete VC6 and Dreamcast both declare showCapWindow as unsigned char.
+// The stripped Mac executable contains no giveExperience symbol; a candidate
+// mangled name does not establish a different source parameter type.
 // Current residual: VC6 97.66%, with the first ESI/EBX swap at the expanded
 // getExperience result. The one-run why-reg model classifies it as C1 handle
 // order and proposes no source-local edit. Mac 95.7071%, same 396-byte size
 // and all 11 calls; remaining bytes schedule normalDialog's literal arguments.
 VA(0x004e33b0, 0x24A)  // dc 0xd3e88
 int hero::giveExperience(int howMuch, int checkForLevelUp,
-#ifdef _MSC_VER
                          unsigned char showCapWindow)
-#else
-                         int showCapWindow)
-#endif
 {
     int entryLevel = m_level;
     if (g_game->m_mapHeader.m_maxHeroLevel > 0) {

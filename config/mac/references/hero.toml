@@ -176,7 +176,7 @@ unit = "hero"
 mac_section = 0
 mac_offset = 0x104098
 mac_size = 0x18c
-mac_symbol = ".giveExperience__4heroFiii"
+mac_symbol = ".giveExperience__4heroFiiUc"
 target_sha256 = "8696df08e73d1e318d6238a482d9c895cef66bf324cdce267bac00e618fafeab"
 evidence = "Hero::initialize calls the source-owned three-argument giveExperience. The Mac body at 0:0x104098 updates hero experience at +0x51 and level at +0x55, reads the game maximum-level cap, calls getExperience and checkLevel, then returns the gained amount. Preceding BLR at 0x104094, own BLR at 0x104220 and next prologue at 0x104224 bound 0x18c bytes. This binds callee identity, not a giveExperience byte match."
 

@@ -1,10 +1,12 @@
 #ifndef HOMM3_SOUNDMGR_H
 #define HOMM3_SOUNDMGR_H
 
+#include "platform.h"
+#if !defined(HOMM3_TARGET_MAC)
 #include <bink.h>
+#endif
 #include <dsound.h>
 #include <Mss.h>
-#include <windows.h>
 
 #include "basemgr.h"
 #include "crt_process.h"

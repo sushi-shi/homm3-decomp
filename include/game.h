@@ -2,12 +2,17 @@
 #define HOMM3_GAME_H
 
 #include <ctype.h>
+#if defined(HOMM3_TARGET_MAC)
+#include <unistd.h>
+#else
 #include <direct.h>
+#endif
 #include <map>
 #include <memory>
 #include <string.h>
 #include <vector>
 
+#include "advmgr.h"
 #include "advmgr_objects.h"
 #include "creature_bank_types.h"
 #include "creaturetype.h"

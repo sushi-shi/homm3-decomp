@@ -3,7 +3,11 @@
 #include "includes.h"
 
 #include <stdio.h>
+#if defined(_MSC_VER)
 #include <xutility>
+#else
+#include <algorithm>
+#endif
 
 #include "recruit.h"
 

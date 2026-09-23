@@ -14,8 +14,9 @@ homm3 mac sdk                       # verify the staged headers
 ```
 
 `HOMM3_MAC_SDK` can supply the extracted archive root. Paths, file counts and
-tree hashes are pinned in `config/mac/sdk.toml`. The four unmodified header
-trees are staged under ignored `build/mac/sdk/`; no SDK header is committed.
+tree hashes are pinned in `config/mac/sdk.toml`. The four unmodified CodeWarrior
+header trees and Windows SDK declarations from the existing pinned VC6 toolchain
+are staged under ignored `build/mac/sdk/`; no SDK header is committed.
 Both byte contents and relative names participate in each tree hash, preserving
 the original encodings and line endings. Sources are all verified before any
 staged tree is replaced. No sibling installation is discovered implicitly.
@@ -31,13 +32,21 @@ helpers = []
 source_helpers = []
 ```
 
-The example describes configuration, not a claim that all hero bodies currently
-compile with ordinary headers. Candidate input reuses the original source file's
-leading includes, pragmas and interspersed forward declarations. Project include
-paths come from `config/units.toml`; there is no per-Mac header list. Source-owned
-functions and data are still selected in original source order. Header methods are read directly by the compiler,
-including helpers that were absent from the former minimal declaration views.
-They require no per-method manifest or extraction marker.
+Candidate input starts from the original source file. The existing Clang source
+inventory identifies definition spans using the project's Windows declaration
+profile. The generator preserves includes, globals, constants, namespaces,
+source-local classes, prototypes and source order. Selected function bodies,
+source helpers, templates and authored inline bodies remain present. Other
+free-function bodies become declarations using their own written declarators;
+out-of-line class methods already declared in headers are omitted. CodeWarrior
+then preprocesses the candidate and reads the ordinary game headers itself.
+A source-inventory error stops preparation; it cannot yield an empty candidate.
+
+Project include paths come from `config/units.toml`. There is no separate Mac
+header roster or game-class definition. Header methods require no extraction
+markers, location lists or copied bodies. `mac_symbol` in a pair is the expected
+**candidate** linkage name, not a claim that the stripped executable retains
+that name. Native MSL vector specializations include their allocator argument.
 
 `include/compiler.h` supplies compiler spelling compatibility. Native profiles
 also enable CodeWarrior's documented `-msext on` to parse Microsoft anonymous
@@ -61,19 +70,43 @@ ordinary project headers and native library inputs. The 73-entry body manifest,
 compiler path are gone. Original game helper bodies remain in their owning
 headers/source. Profile loading rejects the retired header-view settings.
 
-All 66 admitted pairs still load, and their candidate source is generated from
-the ordinary include prefixes. This does not assert that they all compile:
-platform dependencies and stricter compiler diagnostics remain explicit
-compilation blockers. Earlier declaration-view scores are historical evidence,
-not current native-header verdicts. Cached staged headers and build stamps from
-the old path have been removed; provenance checks invalidate old observations.
+All 66 admitted pairs still load. All twelve admitted units now produce native
+objects through ordinary headers. Under `HOMM3_TARGET_MAC`, `mapcell` uses the
+existing `ExtraInfoUnion` view of `m_extraInfo` for its bitfield writes, replacing
+accesses to a member supplied only by the deleted alternate declaration.
+The shared game-class layout is unchanged. Compilation success does not imply
+that all byte comparisons are available or exact.
 
-The first full HERO candidate compile through this path reports incomplete
-`THelpText` array declarations in `include/text.h` and platform-header errors.
-The former isolated `hero.h` probe passed; the full source include prefix
-exposes additional dependencies. These failures are explicit and are not
-replaced by new duplicate declarations. Game-class changes remain subject to
-user review.
+The integrated build before the final Mac-only `mapcell` repair rebuilt 129
+Windows units and passed the Windows/source gates: 4,304 / 4,781 exact MAX,
+97.20% weighted MAX. Mac comparisons were available for 28 / 66 pairs; the
+remaining 38 prevented a complete Mac checkpoint. The subsequent `mapcell`
+compiler check passed, but the full comparison sweep has not been repeated.
+No test suites were run for this checkpoint.
+
+A real comparison through this path reproduced all 148 bytes of
+`hero::getHighestSchool`. This control does not validate all pairs or older
+scores. Native-library linkage names and references need current validation;
+missing mappings remain unavailable comparisons.
+
+`include/platform.h` isolates the remaining Windows SDK dependency. Windows
+uses its usual SDK. For the Mac compiler, a scoped compatibility import reads
+the genuine SDK declarations and Miles headers; it does not implement Windows
+APIs on Mac or establish native Mac layouts for platform classes. MSL stays
+first on the C/C++ library path. Opaque Bink and Smacker handles suffice for the
+shared declarations without importing their platform-specific UI APIs.
+
+Other fixes add missing owning includes, use native MSL for the VC6 min/max
+fallback and CRT spelling differences, and keep VC6-only delete annotations in
+the VC6 branch. No game fields, base classes or virtual rosters were changed.
+The unsupported `giveExperience` parameter fork was removed: neither the raw
+PEF nor any expanded section contains the alleged retail symbol. Both compiler
+candidates now use the existing Windows/DC unsigned-char declaration.
+
+MWLink's listing truncates large initialized data. The object reader records
+these payloads as unavailable, with their declared extent, instead of filling
+the missing bytes. A function requiring one of those payloads cannot receive a
+byte verdict. Unrelated function comparisons can still run.
 
 The original MSL headers compile with the pinned compiler. An object-data probe
 measured `sizeof(std::string) == 4`, `sizeof(std::vector<int>) == 12`, and

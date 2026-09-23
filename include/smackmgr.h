@@ -3,7 +3,13 @@
 
 #include "va.h"
 
+#if defined(HOMM3_TARGET_MAC)
+// Only opaque vendor handles are needed by the shared game declarations.
+struct SmackTag;
+typedef SmackTag Smack;
+#else
 #include <SMACK.H>
+#endif
 
 // DC CodeView independently proves the complete SDK record extent; retail
 // consumes Width, Height, Frames, FrameNum and the LastRect quartet.

@@ -48,13 +48,19 @@ def stage(source: str | Path | None = None, *, root: Path | None = None) -> Path
     root = root or common.HOMM3_DIR
     destination = root / "build/mac/sdk"
     supplied = source if source is not None else os.environ.get("HOMM3_MAC_SDK")
-    if not supplied:
-        inputs(root)
-        return destination
-    origin = Path(supplied).expanduser().resolve()
+    origin = Path(supplied).expanduser().resolve() if supplied else None
     rows = specification(root)["trees"]
     # Verify every source before replacing any staged tree.
-    captured = [(row, _verified(origin / row["source"], row)) for row in rows]
+    captured = []
+    for row in rows:
+        if row.get("provider") == "vc6":
+            from homm3.core.cc_wrap import msvc_dir
+            directory = msvc_dir(root) / row["source"]
+        elif origin is not None:
+            directory = origin / row["source"]
+        else:
+            directory = destination / row["name"]
+        captured.append((row, _verified(directory, row)))
     destination.parent.mkdir(parents=True, exist_ok=True)
     with (destination.parent / "sdk-stage.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)

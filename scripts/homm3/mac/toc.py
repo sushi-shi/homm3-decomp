@@ -207,6 +207,8 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
             continue
         indirect = kind == "HUNK_XREF_16BIT_IL"
         values = [hunk for hunk in hunks if hunk.name == name and hunk.storage_class in ("RW", "RO", "TD")]
+        if any(value.data is None for value in values):
+            raise ObjectError(f"TOC symbol {name!r} has a truncated MWLink data listing; payload unavailable")
         external = (name in named and named[name][2]) or name in external_vtables
         if name in descriptors:
             target, code_name = descriptors[name]

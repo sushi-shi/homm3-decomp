@@ -1,7 +1,7 @@
 #ifndef HOMM3_DC_PRECOMPILEDHEADERS_H
 #define HOMM3_DC_PRECOMPILEDHEADERS_H
 
-#include <windows.h>
+#include "platform.h"
 
 // E:\gamedcs\DC_precompiledheaders.h:33, dc 0x20d04
 template<class T>

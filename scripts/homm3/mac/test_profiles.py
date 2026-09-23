@@ -23,7 +23,11 @@ class TestMacProfiles(unittest.TestCase):
             "VA(0x00400100, 4)\nint first() { return VALUE; }\n"
             "VA(0x00400200, 4)\nint second() { return first(); }\n")
         (root / "config/units.toml").write_text(
-            '[[unit]]\nunit="test"\nsource="src/test.cpp"\n')
+            '[build]\nincludes=["include"]\n'
+            '[flags]\nfixture=["/DVA(a,b)=", "/DVALUE=1"]\n'
+            '[[unit]]\nunit="test"\nsource="src/test.cpp"\nflags="fixture"\n')
+        (root / "config/project.toml").write_text(
+            '[toolchain]\nlocations=["build/no-toolchain/msvc"]\n')
         (root / "config/mac/units.toml").write_text(
             '[units.test]\nmode="paired_bodies"\n'
             'flags=["-O1", "-nolink"]\n')
@@ -65,7 +69,8 @@ class TestMacProfiles(unittest.TestCase):
             generated = candidate_source(second)
             self.assertEqual(generated.count("int second() {"), 1)
             self.assertIn("int second();", generated)
-            self.assertNotIn("int unrelated()", generated)
+            self.assertIn("int unrelated() ;", generated)
+            self.assertNotIn("return 7;", generated)
             before = source_identity(second, generated.encode())
             source_path.write_text(source_path.read_text().replace("return first();", "return first() + 1;"))
             self.assertNotEqual(before, source_identity(second, candidate_source(second).encode()))

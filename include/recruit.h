@@ -1,5 +1,6 @@
 #ifndef HOMM3_RECRUIT_H
 #define HOMM3_RECRUIT_H
+#include "creaturetype_fwd.h"
 
 #include "va.h"
 

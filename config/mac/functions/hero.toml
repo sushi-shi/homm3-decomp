@@ -85,9 +85,9 @@ source = "src/hero.cpp"
 mac_section = 0
 mac_offset = 0x104098
 mac_size = 0x18c
-mac_symbol = ".giveExperience__4heroFiii"
+mac_symbol = ".giveExperience__4heroFiiUc"
 target_sha256 = "8696df08e73d1e318d6238a482d9c895cef66bf324cdce267bac00e618fafeab"
-evidence = "Bounded Classic Mac body receives three int parameters, updates hero experience at +0x51, checks maximum level byte at game+0x1f103, calls getExperience and checkLevel, shows capped dialog through text/formatString/normalDialog, then computes new level. Preceding giveArtifact BLR is 0x104094; this body ends BLR 0x104220 before the next prologue 0x104224. Hero::initialize calls this entry at 0xf4904. Mac mangling Fiii independently proves the third-parameter port ABI, while VC6 and DC use unsigned char."
+evidence = "Bounded Classic Mac body receives three parameters, updates hero experience at +0x51, checks maximum level byte at game+0x1f103, calls getExperience and checkLevel, shows capped dialog through text/formatString/normalDialog, then computes new level. Preceding giveArtifact BLR is 0x104094; this body ends BLR 0x104220 before the next prologue 0x104224. Hero::initialize calls this entry at 0xf4904. The candidate uses the VC6/DC unsigned-char declaration; the stripped Mac executable does not retain a symbol that proves another parameter type."
 
 [[functions]]
 retail_va = 0x4dc320

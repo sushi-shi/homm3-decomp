@@ -14,12 +14,12 @@ and the Classic Mac PowerPC PEF, plus the pinned CodeWarrior tools.
 
 **Function exact MAX** — 4,291 / 4,768 current implementations (90.0%) have reached 100%.
 
-**CUR diagnostics** — 4,226 / 4,768 functions exact (88.6%) in this build (4768 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
+**CUR diagnostics** — 4,225 / 4,768 functions exact (88.6%) in this build (4768 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
 
 | Module       | Units | Functions exact CUR |  Function exact MAX | Fuzzy CUR | Fuzzy MAX |
 | :----------- | ----: | ------------------: | ------------------: | --------: | --------: |
 | `game`       |   123 | 3559 / 3991 (89.2%) | 3613 / 3991 (90.5%) |    97.16% |    97.42% |
-| `rmg`        |     3 |   291 / 368 (79.1%) |   301 / 368 (81.8%) |    93.19% |    94.37% |
+| `rmg`        |     3 |   290 / 368 (78.8%) |   301 / 368 (81.8%) |    93.19% |    94.37% |
 | `network`    |     4 |   267 / 280 (95.4%) |   268 / 280 (95.7%) |    97.72% |    98.08% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
 | `codec`      |     4 |     35 / 43 (81.4%) |     35 / 43 (81.4%) |    94.70% |    94.70% |
@@ -70,7 +70,8 @@ size        8,425,752 bytes
 sha256      cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736
 ```
 
-The second exact target is the **Classic Mac OS PowerPC PEF**:
+The **Classic Mac OS PowerPC PEF** is a lightly optimized reference build
+used to recover source structure for Windows matching:
 
 ```
 file        Heroes_III_raw.pef
@@ -78,31 +79,6 @@ size        3,418,835 bytes
 sha256      650be8880cfda81ffa7704ce3bcdb9c5a6528f67afdf77c0c0c63e8259250d86
 format      Joy!peffpwpc (CodeWarrior PowerPC)
 ```
-
-The matching compiler is CodeWarrior Pro 6 (`MWCPPC.exe` and `MWLinkPPC.exe`);
-their binaries and supporting DLLs are verified against
-[pinned hashes](config/mac/toolchain.toml). They are user supplied and staged
-under ignored `build/mac/toolchain/`.
-The admitted hero controls use `-O1 -proc 750` and the linker's
-`-collapsereloads on` behavior. Named direct calls are compared with their
-resolved Mac destinations; unsupported relocation kinds remain explicit errors.
-Imported and indirect calls retain their required TOC restores. Per-unit
-Mac profiles compile admitted bodies together in source order from the same
-authored C++, with explicit coverage. **Windows is the game being rebuilt.**
-Mac is a source reference: its retained calls and simpler code can reveal helper
-boundaries, statement order and local lifetimes hidden by VC6's optimizer.
-Restore supported helpers and calls in the Windows source, then check Windows
-retail bytes. An exact comparison on both architectures strengthens the source
-evidence, but does not establish a unique original spelling.
-
-Mac comparisons use the ordinary game headers and the original CodeWarrior
-library headers, staged with `homm3 mac sdk PATH`. The duplicate Mac declaration
-headers, body-extraction markers and their manifest have been removed. Candidate
-inputs retain each source file's original include prefix; profiles contain
-compiler settings and source-helper selection only. Remaining ordinary-header
-compilation errors are explicit coverage gaps; earlier declaration-view scores
-are historical checkpoints. See the [native-header path](docs/tooling/mac-native-headers.md).
-This tooling does not require a runnable Mac port.
 
 ## Quickstart
 
@@ -118,7 +94,7 @@ HOMM3_MAC_EXE=/absolute/path/to/Heroes_III_raw.pef \
 HOMM3_MAC_TOOLCHAIN=/absolute/path/to/CodeWarrior/tools \
   homm3 init
 
-homm3 build          # build all modules, compare both exact targets, and run checks
+homm3 build          # build all modules, compare Windows and Mac bytes, and run checks
 ```
 
 `homm3 init` verifies all executables and both compilers, and sets up Wine.

@@ -2,7 +2,7 @@
 
 #include <ddraw.h>
 #include <string.h>
-#include <windows.h>
+#include "platform.h"
 
 #include "mousemgr.h"
 

@@ -9,7 +9,7 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <windows.h>
+#include "platform.h"
 
 union TFloatLongBits {
     unsigned long m_bits;

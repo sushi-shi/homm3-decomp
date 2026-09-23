@@ -29,10 +29,13 @@ class CodeHunk:
 class DataHunk:
     name: str
     storage_class: str
-    data: bytes
+    data: bytes | None
     xrefs: tuple[tuple[int, str, str | None], ...]
     # UDATA reserves zero-filled storage but supplies no object initializer.
     initialized: bool = True
+    # MWLink omits the middle of initialized data larger than 1 KiB. Such a
+    # listing proves an extent, but not a payload. Never fill the gap with zeros.
+    declared_size: int | None = None
 
 
 @dataclass(frozen=True)
@@ -84,11 +87,14 @@ def parse_data_hunks(output: str) -> list[DataHunk]:
     current = None
     data = bytearray()
     xrefs = []
+    truncated = gap_allowed = False
+    last_end = 0
 
     def finish():
         if current is not None:
             name, storage_class, size, initialized = current
-            if ((not initialized and size <= 0) or (initialized and len(data) != size)
+            if ((not initialized and size <= 0)
+                    or (initialized and (last_end != size or (not truncated and len(data) != size)))
                     or (not initialized and data)
                     or (not initialized and xrefs)
                     or any(offset < 0 or offset + 4 > size for offset, _, _ in xrefs)):
@@ -96,8 +102,8 @@ def parse_data_hunks(output: str) -> list[DataHunk]:
             # Materialize the loader's zero-filled memory for size/hash checks,
             # while retaining whether MWOB actually emitted initializer bytes.
             result.append(DataHunk(name, storage_class,
-                                   bytes(data) if initialized else bytes(size),
-                                   tuple(xrefs), initialized))
+                                   (None if truncated else bytes(data)) if initialized else bytes(size),
+                                   tuple(xrefs), initialized, size))
 
     for raw in output.splitlines():
         line = raw.strip()
@@ -106,6 +112,8 @@ def parse_data_hunks(output: str) -> list[DataHunk]:
             finish()
             current = None
             data, xrefs = bytearray(), []
+            truncated = gap_allowed = False
+            last_end = 0
             kind = match.group(1)
             if kind in ("HUNK_GLOBAL_IDATA", "HUNK_LOCAL_IDATA",
                         "HUNK_GLOBAL_UDATA", "HUNK_LOCAL_UDATA"):
@@ -117,11 +125,20 @@ def parse_data_hunks(output: str) -> list[DataHunk]:
                 current = (match.group(2), storage.group(1), int(match.group(3)),
                            kind.endswith("_IDATA"))
         elif current is not None:
+            if line == "...":
+                truncated = gap_allowed = True
+                continue
             match = re.match(r'^([0-9A-Fa-f]{8}):\s+((?:[0-9A-Fa-f]{2}(?:\s+|$))+)', line)
             if match:
-                if int(match.group(1), 16) != len(data):
+                offset = int(match.group(1), 16)
+                if offset < last_end or (not gap_allowed and offset != last_end):
                     raise ObjectError(f"{current[0]}: noncontiguous data hunk")
-                data.extend(bytes.fromhex(match.group(2)))
+                payload = bytes.fromhex(match.group(2))
+                last_end = offset + len(payload)
+                if last_end > current[2]:
+                    raise ObjectError(f"{current[0]}: data exceeds hunk size")
+                data.extend(payload)
+                gap_allowed = False
             else:
                 match = _XREF.match(line)
                 if match:

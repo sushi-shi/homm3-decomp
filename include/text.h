@@ -1,8 +1,9 @@
 #ifndef HOMM3_TEXT_H
 #define HOMM3_TEXT_H
 
+#include "window.h"
+
 // Shared text storage filled by the resource loaders in text.cpp.
-struct THelpText;
 
 // Named rows from Credits.txt consumed by initializeCreditsText.
 enum ECreditsTextIndex {

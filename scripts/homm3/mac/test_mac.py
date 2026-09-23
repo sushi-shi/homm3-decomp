@@ -109,7 +109,7 @@ XRef: Kind=HUNK_XREF_24BIT Offset=$00000000 Class=PR Name=".callee"(5)
         generated = candidate_source(pair)
         self.assertEqual(generated.count("static short g_experienceForLevel[12]"), 1)
         self.assertIn(claim.definition, generated)
-        self.assertNotIn("DATA(", generated)
+        self.assertIn("DATA(0x00679c88)", generated)
 
     def test_call_relocation_and_reload_slot_collapse(self):
         hunk = CodeHunk(".caller", bytes.fromhex(
