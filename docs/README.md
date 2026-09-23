@@ -32,6 +32,8 @@ iterate on a function.
 - [Vendor source extents and compiler copies](tooling/vendor-data-extents.md)
 - [Data declarations outside unsupported bodies](tooling/data-body-recovery.md)
 - [Address comparisons and data identity](tooling/data-reference-roles.md)
+- [Remaining data gaps before the PR #78 audit](tooling/data-gap-review.md)
+- [PR #78 data-contract audit and missing checks](tooling/pr78-data-contract-audit.md)
 - [Executable libraries](reference/executable-libraries.md)
 - [RMG undefined behavior](reference/rmg-undefined-behavior.md) and [Voronoi provenance](reference/rmg-voronoi-provenance.md)
 

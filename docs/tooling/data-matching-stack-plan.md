@@ -253,6 +253,14 @@ conflicts. Initialized-match credit stays unchanged. Unsupported outside accesse
 and consumer loop bounds remain explicit; this placement evidence does not prove
 memory safety or shared runtime storage.
 
+The [baseline gap review](data-gap-review.md) reconciles every remaining status
+against the exhaustive partition at PR #93. Of 181,031 unenrolled bytes, 52,673
+have compiler attribution, 14,678 have vendor attribution and 113,680 still lack
+established ownership. No code-bound source extent remains unknown. Unresolved
+archive selection, absent independent compiler/code anchors, import-link layout,
+source-evidence gaps and provisional string/padding leads remain explicit. This
+review supplies the baseline for stage 7; it does not claim those bytes match.
+
 Apply the shared model to vendor candidates, unresolved external pointers,
 alternative archive members, pooled data and compiler-created storage. Resolve
 supported ambiguities with independent anchors; never lower proof thresholds
@@ -275,6 +283,20 @@ symbol spellings, hero counts, town dimensions or rendering sizes.
 Metadata refreshed on 2026-09-23 now reports head `6e854110`, with the same
 `0dbc798f` base. This is a navigation update, not a completed before/after audit;
 refresh again when that audit starts.
+
+The audit started against head `6e854110c776eccf6f6e962ba23d4550779ebcdf` and
+base `0dbc798f804317c176c014ac28936ac59dbd1b49`, with identical tooling through
+PR #93 (`675101a669b6de4fd4854ec0f8736f44f8c5527f`) in an isolated head worktree.
+The generic link check already distinguishes the base's unresolved TDebugBreak
+constructor from the head's clean link. Consumer evidence is not yet sufficient
+for every case: the minimap's indirect switch branches stop analysis before most
+pixel writes, so a general expression difference is not a verified stride
+diagnosis. The [case matrix](pr78-data-contract-audit.md) now records both full
+builds, links, independent audits and exhaustive exports. The head gains 1,314
+initialized-match bytes and 48 constant-effect bytes, but several required
+relationships remain unproved. Bounded aggregate-copy effects, switch/loop
+evidence, indirect referent bodies and guard/select diagnostics must be extended
+generically before the goal can complete.
 
 Produce `docs/tooling/pr78-data-contract-audit.md` with a case-by-case matrix:
 generic rule, before evidence, after evidence, byte/relationship coverage, and
