@@ -1,0 +1,127 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x44df70
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5be20
+mac_size = 0xc4
+target_sha256 = "d990562bf2a528ea37bf8d29cd4b9b568e7d710df3a73a8615608577a25646cd"
+evidence = "Bitmap16Bit(w,h) calls Resource base ctor 0x151400, stores w/h at +0x24/+0x28, pitch2*w at +0x2c and allocates pixel buffer; complete BLR."
+
+[[functions]]
+retail_va = 0x44e050
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5bee4
+mac_size = 0xc0
+target_sha256 = "3212a5a16956a99741dfcf95ef9702dbcadcd79dfbffe123bdd23a5ef9056529"
+evidence = "Named Bitmap16Bit ctor calls Resource base ctor 0x151400 with type0x12, stores same width/height/pitch and allocates pixel buffer; complete BLR."
+
+[[functions]]
+retail_va = 0x44e100
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5bfa4
+mac_size = 0x7c
+target_sha256 = "3405fc5c60cd01ae2295df95aac61bcff7c1422a63aa3ff95392393a76cf1095"
+evidence = "Bitmap16Bit canonical destructor is Mac delete-flag body, conditionally frees nonreferenced map at +0x30 then calls Resource dtor 0x15147c; complete BLR."
+
+[[functions]]
+retail_va = 0x44e240
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5c020
+mac_size = 0xc
+target_sha256 = "8c9d1b1b98d7babe94f35752520288de7613ff6de9017158c2c5222a6f41881a"
+evidence = "Bitmap16Bit getSize is a 12-byte leaf returning Resource data size + sizeof(Bitmap16Bit)=0x38; precedes reference method."
+
+[[functions]]
+retail_va = 0x44e250
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5c02c
+mac_size = 0x68
+target_sha256 = "b05b6d078ff3c3f7907b28f420c42c95fd451d6d2d08705e3cbe22fbcfb4e840"
+evidence = "Bitmap16Bit reference clears prior map through 0x5c094, writes width/height/pitch/data and marks +0x34 referenced; complete BLR."
+
+[[functions]]
+retail_va = 0x44e2b0
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5c0f8
+mac_size = 0x158
+target_sha256 = "3172ce4da707f6ef6cfbbf2d8f9f5b40bcd9566446f32b71f8f584da300168af"
+evidence = "Bitmap16Bit draw clips source rectangle and copies pixels to destination; first large raster body after reference/clear, complete BLR."
+
+[[functions]]
+retail_va = 0x44e3f0
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5c250
+mac_size = 0xf8
+target_sha256 = "6fc0eae31311d2db5766b83216f05c94c6621c5c20cf643524bc4136ddf223e5"
+evidence = "Bitmap16Bit grab clips destination to width/height fields and copies pixels from source, matching six-coordinate source signature; complete BLR."
+
+[[functions]]
+retail_va = 0x44e4c0
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5c348
+mac_size = 0xec
+target_sha256 = "81c629182b0c49713a42bba7e857aebf18fa6c004b16366011c29d5c618ccd13"
+evidence = "Bitmap16Bit fillRect clips x/y/w/h then writes uniform 16-bit pixels; view-world surface clear calls it at 0x209850 with (8,8,592,544,0)."
+
+[[functions]]
+retail_va = 0x44e540
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5c434
+mac_size = 0x11c
+target_sha256 = "3c81f443dc9bbf0d7e4701d364c6103225bed99d622a53ce29440a9d7658930f"
+evidence = "Bitmap16Bit frameRect clips rectangle and writes border pixels, adjacent to fillRect and two darken overloads; complete BLR."
+
+[[functions]]
+retail_va = 0x44e5f0
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5c550
+mac_size = 0x1a8
+target_sha256 = "a59929dac95adad491a536a516e118796b099f9fccb609e8b0b4e7c518dcd85a"
+evidence = "Bitmap16Bit darken without mask clips rectangle and applies component halving using source RGB masks; complete BLR."
+
+[[functions]]
+retail_va = 0x44e6a0
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5c6f8
+mac_size = 0x10c
+target_sha256 = "324052f0ad772dd50f94c595e6c682043dbf013bf4bba3faf30bafe454c631ed"
+evidence = "Bitmap16Bit darken with Bitmap816 mask reads mask stride at argument object +0x2c and darkens selected 16-bit pixels; complete BLR."
+
+[[functions]]
+retail_va = 0x44e780
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5c804
+mac_size = 0x1b0
+target_sha256 = "51e25fb7d19f58c9b53f7014552cf36db6c4a303e566f152a8bc1ae5483d4b73"
+evidence = "Bitmap16Bit integer-color colorize computes channel levels then calls float-hue/saturation overload 0x5c9b4 at 0x5c998; complete BLR."
+
+[[functions]]
+retail_va = 0x44e940
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5c9b4
+mac_size = 0x328
+target_sha256 = "72a465378bc2c0d00de71aca5ca620e55d8595f668c45970346430ff895ad516"
+evidence = "Bitmap16Bit float-hue/saturation colorize is the callee of integer-color overload 0x5c804, performs multi-channel raster transform; complete BLR before gray helper."
+
+[[helpers]]
+source_helper = "Bitmap16Bit::clear"
+unit = "bitmap16"
+mac_section = 0x0
+mac_offset = 0x5c094
+mac_size = 0x64
+target_sha256 = "6516fb5548504b1798abaec70fc01299921ad3ba7ede3997f6af07dbb24af619"
+evidence = "Source clear resets width/height and frees owned pixel buffer; reference method 0x5c02c calls it."

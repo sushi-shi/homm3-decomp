@@ -1,0 +1,792 @@
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11d404
+mac_size = 0x130
+unit = "mapcell"
+target_sha256 = "73cd21ec2a83839606ac65c1057637d345224c4f4582e21dc96841e2980ddc50"
+evidence = "Contiguous mapcell TU order corroborated by body: player signedshort0..7;game team lookup;8visited bits. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fbf90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11d534
+mac_size = 0xbc
+unit = "mapcell"
+target_sha256 = "5e12e71f3eea7203e74fcee621a17069ff092a9cfc0af8602654bbcd7754e4b4"
+evidence = "Contiguous mapcell TU order corroborated by body: countread;vectorresize129eb8;TTimedEventread11d5f0. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fc000
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11d5f0
+mac_size = 0x284
+unit = "mapcell"
+target_sha256 = "37e4f8eedf0be1f14dbffad98bba20e52d6b3c97efe300d0f1335d567536f0da"
+evidence = "Contiguous mapcell TU order corroborated by body: two readStringdc878;7resources;version28humanflag;day increment;padding16. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fc1a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11d874
+mac_size = 0xc4
+unit = "mapcell"
+target_sha256 = "2edc4eb0def553b57b8b8c04c8e8df17969f6d771971e965a90a3823d63ab9ce"
+evidence = "Contiguous mapcell TU order corroborated by body: writescount;iterates timedvector calling11d938. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fc390
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11d938
+mac_size = 0x1e4
+unit = "mapcell"
+target_sha256 = "f7272e5a79af2d884392c4f705a9c8da728deeae1e1cd1c4877949f433ed7172"
+evidence = "Contiguous mapcell TU order corroborated by body: saveStringced3c;resources and applyflags;date/repeat. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fc440
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11db1c
+mac_size = 0xbc
+unit = "mapcell"
+target_sha256 = "031197fc21f7cd8dc613ecd013472a669891d250d3fbf75b591703d7169f0611"
+evidence = "Contiguous mapcell TU order corroborated by body: reads count;resize129eb8;TTimedEventload11dbd8. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fc500
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11dbd8
+mac_size = 0x1f0
+unit = "mapcell"
+target_sha256 = "bf2ac435cf80daf2c5480c30177d51b11a1023edc8ca6b95f8bac218130b40b8"
+evidence = "Contiguous mapcell TU order corroborated by body: loadStringcec38;resource reads;version42;dates. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fc6a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11df10
+mac_size = 0xbc
+unit = "mapcell"
+target_sha256 = "cbe8d54bc992640210e3f206d7194461b5b4f84978ee73f35dafbeece9f232a8"
+evidence = "Contiguous mapcell TU order corroborated by body: countwrite;town-event stride;TTownEventsave11dfcc. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fc770
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11e08c
+mac_size = 0xb0
+unit = "mapcell"
+target_sha256 = "8ca69dfcf465ca074f4b73a615ddb34b005d6de39c54b7a534453ee23ba6b593"
+evidence = "Contiguous mapcell TU order corroborated by body: countread;resize12a0e0;TTownEventload11e13c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fc870
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11e21c
+mac_size = 0x130
+unit = "mapcell"
+target_sha256 = "393a930d0364ffedfa6628a469adbe0030fa75cd20bccc92fd3bf9a2634e9af0"
+evidence = "Contiguous mapcell TU order corroborated by body: trigger/object conditions0/3/26/36;getTrigger120ab8;packed map position. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fcaa0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11e454
+mac_size = 0xc0
+unit = "mapcell"
+target_sha256 = "0b566ede5eb81a647da72821769761618b6ab52a99ee4bb4c63d53e3c3127c8c"
+evidence = "Contiguous mapcell TU order corroborated by body: hero34/boat8 obscuredtrigger;otherwise celltriggerbit. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fcc80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11e514
+mac_size = 0xe4
+unit = "mapcell"
+target_sha256 = "902a2e2a0b0c64d5716e425042290ca07cc6efa65631e8ba2b70973f0d37caf7"
+evidence = "Contiguous mapcell TU order corroborated by body: water8/rock9;special object exclusions;calls getMapObject11e34c/getObjectType120a98. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fccf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11e5f8
+mac_size = 0xb4
+unit = "mapcell"
+target_sha256 = "d8eb7c0131b000549580d6293fdb82a9f25b5bb3829f6557c3d804cf443e77a7"
+evidence = "Contiguous mapcell TU order corroborated by body: eventtype26;localplayer calls;event trigger conditions. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fcdc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11e6ac
+mac_size = 0x14c
+unit = "mapcell"
+target_sha256 = "2bdf2270f80be22d189c437fcc79c7c134952b502fcf89c280e74789444bedce"
+evidence = "Contiguous mapcell TU order corroborated by body: hero/boat obscuring;garrison33;objects21/46/222/231;objectType lookup. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fce20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11e7f8
+mac_size = 0x88
+unit = "mapcell"
+target_sha256 = "4ce70386f590ef1fb870373aee9fbd5b3cd8fdf9269c61f8ffdea2d743a19c13"
+evidence = "Contiguous mapcell TU order corroborated by body: calls11e6ac then type228/226/46/231/230 magicterrain mapping. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fcf40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11e880
+mac_size = 0x19c
+unit = "mapcell"
+target_sha256 = "7c8eb24ae963003bbe2df96ed91c6c3292fc40ac7f6ee01e812d498afb0c8331"
+evidence = "Contiguous mapcell TU order corroborated by body: initializes13vectors andcellData+9c;array232 objecttype vectors. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fd060
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11ef58
+mac_size = 0x22c
+unit = "mapcell"
+target_sha256 = "a01cc04f4a4592439c037fbec2084e8af15949963471e97d0ae4a6bfb201ec11"
+evidence = "Contiguous mapcell TU order corroborated by body: callsclose11f184;deletes sprites;232objecttypearray destructors;vector destructors;MacdeletingABI. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fd1e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11f28c
+mac_size = 0xc8
+unit = "mapcell"
+target_sha256 = "defe3ba3327c669a2b473aa69c3a511960ea46221bd8c2ac03b01997bcefa2c4"
+evidence = "Contiguous mapcell TU order corroborated by body: dimensions+a0/twolayers+a4;close;sizeSquared*layers allocation stride34;map scratch allocation. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fd4f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11f3dc
+mac_size = 0x1f0
+unit = "mapcell"
+target_sha256 = "c5cd602138f8729cdda98bbd5eda2f205c81d56377e4b23d147bb38b032c11e1"
+evidence = "Contiguous mapcell TU order corroborated by body: init11f28c;two readMapLayer11fd20 calls;reset pools;readMapObjects127278. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fd690
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11f834
+mac_size = 0x114
+unit = "mapcell"
+target_sha256 = "62b2a90fd79ab5ecb2dd4634d427c21dd95ef29bffb9e223b1a3ab6949710267"
+evidence = "Contiguous mapcell TU order corroborated by body: shortcount;resize129e1c;QuestGuardload1698b8;appendquest pointers. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fd950
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11f948
+mac_size = 0x274
+unit = "mapcell"
+target_sha256 = "d47d68cff63156a028bd1233a83f82d85a55fd6781ed9624daec027e61ce6d9b"
+evidence = "Contiguous mapcell TU order corroborated by body: init11f28c;two loadMapLayer1206c0;mapobjects1277f0;pool/load event calls. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fdbc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11fbbc
+mac_size = 0x164
+unit = "mapcell"
+target_sha256 = "ba6a5e7f2e11edaf2a4bd545770bb78370f30859b5e81921e9861b8496a596af"
+evidence = "Contiguous mapcell TU order corroborated by body: two saveMapLayer1200b4;mapobjects1276b8;blackbox/treasure/monster/quest/seer/event list calls. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fdf40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11fd20
+mac_size = 0x394
+unit = "mapcell"
+target_sha256 = "4c82de741b947cb1c95cf6895bf3deb3ef0ba59e9fbbfaa3e1ff42bf16940296"
+evidence = "Contiguous mapcell TU order corroborated by body: nestedxy;7terrain byte reads;water/rock checks;stride34. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fe220
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1200b4
+mac_size = 0x334
+unit = "mapcell"
+target_sha256 = "ef95d61b774875818d862fc4782d1b284061c1d15937d954ded3479ff2617f99"
+evidence = "Contiguous mapcell TU order corroborated by body: writesground/river/road/cell fields;short+1e/+20 andextra. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fe490
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1203e8
+mac_size = 0x2d8
+unit = "mapcell"
+target_sha256 = "0a7afe6af836ee1d801916f8d5f0b94965a4eccec352ca96d2091aef7903cbda"
+evidence = "Contiguous mapcell TU order corroborated by body: version25;objecttype63/22/5/54/105/101/108 dispatch;bitfield updates. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fe6c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1206c0
+mac_size = 0x354
+unit = "mapcell"
+target_sha256 = "ab1bb46fe6a26c8cca3e9a4590f5f0b55b52ff9f57deb64d558bf01b70b728d9"
+evidence = "Contiguous mapcell TU order corroborated by body: samefieldreads as save;append objectcells128db8;upgradeCellExtra1203e8. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fe920
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x120a98
+mac_size = 0x20
+unit = "mapcell"
+target_sha256 = "92215743bf3af69a2abded11e9bf08c3d5f9ac4000a0562e631addbd3184deac"
+evidence = "Contiguous mapcell TU order corroborated by body: object typeIndex+8 times0x38 indexes globalmap objecttype vector. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fec10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x120b38
+mac_size = 0x114
+unit = "mapcell"
+target_sha256 = "d371662ee9693af408aaac22594402ab98a218430381828759be9065e99d0265"
+evidence = "Contiguous mapcell TU order corroborated by body: mask scan rows/cols;bitset lookup1c82c;outputs x/y offsets. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fec30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x120c4c
+mac_size = 0x148
+unit = "mapcell"
+target_sha256 = "497d23655747e95249a85fed3c1529ec0e1ff75b0490d7557731575d4fa7f65c"
+evidence = "Contiguous mapcell TU order corroborated by body: generatorcreationca11c;owner/paddingreads;findTrigger120b38;generatorinitca778;vectorappend12a6c0. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fed40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x120f14
+mac_size = 0x180
+unit = "mapcell"
+target_sha256 = "db641ee99134c479ec065e5178ac976b38cbbdd90b8831f770c3991311042dea"
+evidence = "Contiguous mapcell TU order corroborated by body: readStringdc878;hasguards flag;version14 creaturewidth;7army slots. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fee50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x121158
+mac_size = 0x90
+unit = "mapcell"
+target_sha256 = "df52d8822285eba3554a1f8c9145de8cd0eb1571211edb145c2c087c9f3502d2"
+evidence = "Contiguous mapcell TU order corroborated by body: saveStringced3c;hasguardwrite;armysave57f30. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fef10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1211e8
+mac_size = 0xc4
+unit = "mapcell"
+target_sha256 = "4beffa93b550050d4cf05509760948aecc90c883ac57211af4cef4ac6d36c381"
+evidence = "Contiguous mapcell TU order corroborated by body: shortcount;resize129558;loadTreasureData1212ac. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4fef60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x12134c
+mac_size = 0x118
+unit = "mapcell"
+target_sha256 = "5ca86e2a919a93514b46749d0679cc7ef00351e4ac8b2b4d035887cc6dfe0dc0"
+evidence = "Contiguous mapcell TU order corroborated by body: optionaltreasure;readTreasureData120f14;indexcap4000;append129428;stores artifactInfo bitfield. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4ff120
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1214bc
+mac_size = 0x168
+unit = "mapcell"
+target_sha256 = "ea70ac6fb29f9ea9a40d9e9f6d266299e2781769b1664d25ba7013e4f54e1c04"
+evidence = "Contiguous mapcell TU order corroborated by body: treasurebranch;append129428;two extra reads;spellscroll overlay. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4ff2f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x121624
+mac_size = 0x17c
+unit = "mapcell"
+target_sha256 = "ddc4b48393d21e978b3074243f67f9460281d5cd844cada44899811d15ba4b30"
+evidence = "Contiguous mapcell TU order corroborated by body: treasurebranch;append129428;resource amount read and bitfield. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4ff4d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x121878
+mac_size = 0x570
+unit = "mapcell"
+target_sha256 = "59e7d2275118969bf1bb1077429180295864a5fbc1a7764292b3bae2e3131279"
+evidence = "Contiguous mapcell TU order corroborated by body: optionaltreasure120f14;7resource/4primary loops;artifact/skill/spell vectors;creatures;version gates. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4ff6b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x121de8
+mac_size = 0x180
+unit = "mapcell"
+target_sha256 = "2ddfe288fe2f724c67d783548fa898548444f0e37a5644e5690c3ecdc4c148c1"
+evidence = "Contiguous mapcell TU order corroborated by body: constructsBlackBox;calls121878;indexcap400;append1297b4;RAII cleanup. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4ffbf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1221bc
+mac_size = 0x4b0
+unit = "mapcell"
+target_sha256 = "598d9e88c10373bab7578f7d8dd8701f3687ed14186f00df0dc090f9f93edb79"
+evidence = "Contiguous mapcell TU order corroborated by body: calls saveTreasureData121158;resources7/primary4;vector element writes;army serialization. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4ffea0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x12266c
+mac_size = 0xb4
+unit = "mapcell"
+target_sha256 = "0cc7699cf6759a04ac2bb9b31079ad3ed472daecbb12f7ad01bafb1ff850167d"
+evidence = "Contiguous mapcell TU order corroborated by body: shortcount;resize129af4;loadBlackBox122720. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x500200
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x122720
+mac_size = 0x49c
+unit = "mapcell"
+target_sha256 = "75020c3fa3f902afc82933c63238c9d4d5c21ad295f03fa8df105b0f272b1985"
+evidence = "Contiguous mapcell TU order corroborated by body: loadTreasureData1212ac;resources7/primary4;vectorloads;version helper12180c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x500430
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x122bbc
+mac_size = 0x3b0
+unit = "mapcell"
+target_sha256 = "a23166df3dcbf39c4d9fbd2cd38b01d9fc6bdc669ed198b5f819e65354d4a94e"
+evidence = "Contiguous mapcell TU order corroborated by body: BlackBoxconstruction;readBlackBox121878;extra event flags;appendsbox;cleanup. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5008b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x122f6c
+mac_size = 0x318
+unit = "mapcell"
+target_sha256 = "4455df337a410bfa3755368cc62bcfd6d7f7889ba5b907209eadd4da0c4d6c57"
+evidence = "Contiguous mapcell TU order corroborated by body: randomkind0..2;kind/skill/spell branches;random130cf4;bitset availability. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x500b30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1232e8
+mac_size = 0x264
+unit = "mapcell"
+target_sha256 = "f6455e4ecbd9d8df0c6c82d7367b99428e9ef249df2e27e14e99ad0254fd99c5"
+evidence = "Contiguous mapcell TU order corroborated by body: scans type87;nearby waterterrain8;sets shipyard coordinates. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x500de0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1235f0
+mac_size = 0x154
+unit = "mapcell"
+target_sha256 = "c1696943740a8c0bbb69c873c79b0542ae03e3ff9fbf53ca8a88d6f298388f6a"
+evidence = "Contiguous mapcell TU order corroborated by body: army initialization;ownerbyte;padding;trigger120b38;appendmine12a590. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x501020
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x123744
+mac_size = 0x2e0
+unit = "mapcell"
+target_sha256 = "8e2ca5e4c4618dba1d973b2463281f493bef62769512c8277820e28f79edb2f8"
+evidence = "Contiguous mapcell TU order corroborated by body: minearmy;resourceflags;randomresource selection;trigger120b38;appendmine12a590. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x501130
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x123a24
+mac_size = 0xec
+unit = "mapcell"
+target_sha256 = "ea54dca0fed51c5d16aa45c06d9d14a5210bd6a554fa2df7854493ce694e049f"
+evidence = "Contiguous mapcell TU order corroborated by body: message readStringdc878;signvectorappend12a4d8;padding read;stringcleanup. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x501270
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x124008
+mac_size = 0xc4
+unit = "mapcell"
+target_sha256 = "7e5aa3e1766efb900690af9a6356d3ae2adacb0ebe492d1388a199659bcbb9c8"
+evidence = "Contiguous mapcell TU order corroborated by body: shortcount;resize129710;loadMonsterData1241a4. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x501790
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1240cc
+mac_size = 0xd8
+unit = "mapcell"
+target_sha256 = "a3343c6c3a0ad100fb357fc329be6f292de79f7291da5856874fb385e9abb833"
+evidence = "Contiguous mapcell TU order corroborated by body: saveStringced3c;7resourcesloop;artifactwrite. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x501980
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x124278
+mac_size = 0x700
+unit = "mapcell"
+target_sha256 = "d4b2830330563ad21ae6900614e3ad6214d0d0a7c24630d916604f50b8154347"
+evidence = "Contiguous mapcell TU order corroborated by body: owner/version14;name readString;army7slots;spell bitsets;town events11ddc8;townvector. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5019f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x124a84
+mac_size = 0x998
+unit = "mapcell"
+target_sha256 = "f48ae287c2ad3d935d3e965e6be543ad810c41c02171b6575531dc816e5eb619"
+evidence = "Contiguous mapcell TU order corroborated by body: version14/21;getStartingHeroIdcc788;name/experience/army/artifact/spell fields;findTrigger120b38. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5021c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x12541c
+mac_size = 0x1d4
+unit = "mapcell"
+target_sha256 = "8e7ee6b457f3930db9fa71d7a1ad565a18a116f6707fe5ffc959519134c52543"
+evidence = "Contiguous mapcell TU order corroborated by body: owner;7army slots;version14;trigger120b38;appendgarrison12a758. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x502a00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x125b78
+mac_size = 0x280
+unit = "mapcell"
+target_sha256 = "01a72db62b6a4ff3f20ed17e3e35f8310f688797cbf4d63d7ade9c136415b254"
+evidence = "Contiguous mapcell TU order corroborated by body: random130cf4;generator creationca11c;setObjectType128a2c;trigger120b38;generatorappend. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x502b60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x125ebc
+mac_size = 0x3ac
+unit = "mapcell"
+target_sha256 = "9982a30fed66414fe0f6fbace2879de19ff4032ba67b414b2cf915f51bc9fe9b"
+evidence = "Contiguous mapcell TU order corroborated by body: objecttype dispatch;reads initialcoordinates/typeindex;calls monster123b10/town124278/hero124a84 and allotherreaders. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x502e00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x126268
+mac_size = 0x108
+unit = "mapcell"
+target_sha256 = "953dd18ee6a2cf2096afe8b77bf757772307d64fed4d8be29404c72d9bcf55a9"
+evidence = "Contiguous mapcell TU order corroborated by body: four virtual writes of object record fields. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x503640
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x126370
+mac_size = 0x108
+unit = "mapcell"
+target_sha256 = "113e9066089fe71aa81757458927e2ed20066727b826d075ca8443d2ea470851"
+evidence = "Contiguous mapcell TU order corroborated by body: matching four virtual reads of object record fields. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5036d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x126478
+mac_size = 0x528
+unit = "mapcell"
+target_sha256 = "1b1ac9a271bca06732da3074f982da78d759f05003e5db885d0a465ec7b15cc3"
+evidence = "Contiguous mapcell TU order corroborated by body: readsname;mask resource154660/read154728;four masks;reversebits;e98b8;terrain/type. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x503780
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1269a0
+mac_size = 0x3a0
+unit = "mapcell"
+target_sha256 = "019a75a03f4663964b14c15a220a20fdef05785ba0e63be1e546807432d1722f"
+evidence = "Contiguous mapcell TU order corroborated by body: saveStringced3c;four6byte mask packs;terrain/type/extra/priorities. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x503c40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x126d40
+mac_size = 0x380
+unit = "mapcell"
+target_sha256 = "0498326bd5ae9d6fe685fc91c1005a6b229b3ab6407ae212bb804f467c3317a7"
+evidence = "Contiguous mapcell TU order corroborated by body: loadStringcec38;four masks decoded e98b8;type fields. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x503f00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x127278
+mac_size = 0x440
+unit = "mapcell"
+target_sha256 = "8d38b544a851e6ad9151050e9900c9f93ffeececed2d4ecd0179d854c286fda2"
+evidence = "Contiguous mapcell TU order corroborated by body: resizeobjecttypes;reader126478;index rebuild1270c0;getsprite153fcc;object reader125ebc;random flags. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x504470
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1276b8
+mac_size = 0x138
+unit = "mapcell"
+target_sha256 = "0dca80dc77ef4abcdf20ff1a7f9f6583e77e36bf142d8847d4fbd8d86faf478c"
+evidence = "Contiguous mapcell TU order corroborated by body: typecount/typewriter1269a0;objectcount/objectwriter126268. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x504a40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1277f0
+mac_size = 0x2a8
+unit = "mapcell"
+target_sha256 = "b746d834d2268ad4cff1f5669ac88eb24340b35eca846299837dbb2e499d06a1"
+evidence = "Contiguous mapcell TU order corroborated by body: typecount/reader126d40;rebuild1270c0;sprites153fcc;objectreader126370. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x504b70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x127a98
+mac_size = 0x1a0
+unit = "mapcell"
+target_sha256 = "2c77320896082eb60d58a00341071db97ee71113bc56fb0376be42818a4c84e4"
+evidence = "Contiguous mapcell TU order corroborated by body: clears48bytes;8x6heightgrid;fourflipped mask traversals;bitset1c82c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x505060
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x127c4c
+mac_size = 0x320
+unit = "mapcell"
+target_sha256 = "c198756d1cd998ef0119a078c2a064d8a8c9957dd73ddd01b360019818d7d430"
+evidence = "Contiguous mapcell TU order corroborated by body: generateHeightMap127a98;sprite frames20f1d4;objectcell vector insertion129004. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x505230
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x127f6c
+mac_size = 0x48c
+unit = "mapcell"
+target_sha256 = "c244fb9d8df252cff1cf337190ee488f955c1285c32ed4266906fc29267c6e6e"
+evidence = "Contiguous mapcell TU order corroborated by body: objectcell iteration;ground9/8;bitmask/height;object triggers and overlays. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x505610
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x12850c
+mac_size = 0x1fc
+unit = "mapcell"
+target_sha256 = "9007fc2e69a16f7d885117bb2b54e7b362eb65658f1c558309f87b1fe932a190"
+evidence = "Contiguous mapcell TU order corroborated by body: heightmap127a98;type120a98;stamp127c4c;calculate128408;object exclusions36/34/70/214/8/26. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x505b20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x128764
+mac_size = 0x70
+unit = "mapcell"
+target_sha256 = "7cf159ab2081bbb009032cc25991ce2753d4a80c8b9ecb8338aad04569ce99c8"
+evidence = "Contiguous mapcell TU order corroborated by body: loopsmapObjectData pointers and virtualslot0x2c withheroid/player. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x505d20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1287d4
+mac_size = 0x88
+unit = "mapcell"
+target_sha256 = "9c07abad688dfc6616093a0d3c77c953667e68345eca3d65f1369fc90f273b1c"
+evidence = "Contiguous mapcell TU order corroborated by body: loopsmapObjectData pointers and virtualslot0x30 withpoint/player. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x505d60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x12885c
+mac_size = 0xb4
+unit = "mapcell"
+target_sha256 = "665b12a4a851554149084f109fd057247ae14bd83b5193e88c6a94a9be562d2d"
+evidence = "Contiguous mapcell TU order corroborated by body: objecttable224224;CObjectTypeconstructor128be8;type-index append;e7d24. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x505da0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x128a2c
+mac_size = 0x158
+unit = "mapcell"
+target_sha256 = "fe31a029baee82cb744afe6a7b83eb4974e29da4ca4a2b0b5ba4371a530cf750"
+evidence = "Contiguous mapcell TU order corroborated by body: finds/appends type;updatesobjectindex;getSprite153fcc;vectorappend. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x505f20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x128be8
+mac_size = 0x1c4
+unit = "mapcell"
+target_sha256 = "7ed54a1289717bd002ace193309fb54f005fcdc9076d501c1ba9bbfe698fb692"
+evidence = "Contiguous mapcell TU order corroborated by body: constructsMSLstring/fourbitsets;copiesTObjectType fields;four mask conversions;class-list insertion. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x506080
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x11ddc8
+mac_size = 0x148
+unit = "mapcell"
+target_sha256 = "888279faf8ba7b62d5123b275e89531be41014dbc8c7bc3b3a3265636ccf89ae"
+evidence = "Source helper without standalone Windows VA. TU order plus callsTTimedEventread11d5f0;town-specificbuildings mask and7growth values"
+source_helper = "TTownEvent::read"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x11dfcc
+mac_size = 0xc0
+unit = "mapcell"
+target_sha256 = "30684574da27e5979c9824dc869acfaa5f0c67bfc8be692d8d2f11d474c5e557"
+evidence = "Source helper without standalone Windows VA. TU order plus callsTTimedEventsave11d938;town-specificbuildings/growth writes"
+source_helper = "TTownEvent::save"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x11e13c
+mac_size = 0xc0
+unit = "mapcell"
+target_sha256 = "99089a11aba942f25f6ae5df9ff4080d31fb29e96aca8dbb893f1e3c470cf7ac"
+evidence = "Source helper without standalone Windows VA. TU order plus callsTTimedEventload11dbd8;town-specificbuildings/growth reads"
+source_helper = "TTownEvent::load"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x11e1fc
+mac_size = 0x20
+unit = "mapcell"
+target_sha256 = "48a8c45f821bf735fbeae98c4f01ec73d60d77eb5e0150cdf36a68eb0dd2f17b"
+evidence = "Source helper without standalone Windows VA. TU order plus indexword into globalmap CObject arraystride12"
+source_helper = "NewmapCell::TObjectCell::getObject"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x11f184
+mac_size = 0xa0
+unit = "mapcell"
+target_sha256 = "cc08891ce340cd870e610dc7f8e53f853ed2d934f2c92b65312da922dc62c70c"
+evidence = "Source helper without standalone Windows VA. TU order plus frees cellarray;deletesmapobjectdata and clears pointers"
+source_helper = "NewfullMap::close"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x11f67c
+mac_size = 0x11c
+unit = "mapcell"
+target_sha256 = "94dc06c312e3d5edfdffbbb1e5ee1cf082fc3ca69175ece048cd5420788a3229"
+evidence = "Source helper without standalone Windows VA. TU order plus shortcount;seervector+48resize129ce0;TSeerload16b01c;questpointerregistration"
+source_helper = "NewfullMap::loadSeerList"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x120a14
+mac_size = 0x84
+unit = "mapcell"
+target_sha256 = "8930d6e5944fff9765ba22f73b702ea7881b90f28e484b5a6c3a413468d7c2e9"
+evidence = "Source helper without standalone Windows VA. TU order plus objecttypeextra;findTrigger120b38;createBoatce070;storesobjectextra"
+source_helper = "NewfullMap::readBoatData"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x120ab8
+mac_size = 0x80
+unit = "mapcell"
+target_sha256 = "bfb586d8536098d61ba08ec772b3eaafc31bbf734b41e0651acd70c598196934"
+evidence = "Source helper without standalone Windows VA. TU order plus callsfindTrigger120b38;constructspackedpoint including z"
+source_helper = "CObject::getTrigger"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x120d94
+mac_size = 0xdc
+unit = "mapcell"
+target_sha256 = "22eb23462a9e9ac9c70e84832cc5191c874cb74b1bb16e1e452b64ded6604c44"
+evidence = "Source helper without standalone Windows VA. TU order plus reads radiusbyte;storesgame ultimatexyz/radius;3bytepadding"
+source_helper = "NewfullMap::readHolyGrailData"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x120e70
+mac_size = 0xa4
+unit = "mapcell"
+target_sha256 = "dec6e464bede2f0d84d74b1f71dec51d6fdcb62ff50134c9ae7080250a1741a5"
+evidence = "Source helper without standalone Windows VA. TU order plus reads spellbyte;stores shrine overlay;3bytepadding"
+source_helper = "NewfullMap::readShrineData"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x121094
+mac_size = 0xc4
+unit = "mapcell"
+target_sha256 = "edf689f637dc23da0353e5635960613f2bdedab07930703c7229f4fbebbdfc1a"
+evidence = "Source helper without standalone Windows VA. TU order plus countwrite;iteratesvector calling121158"
+source_helper = "NewfullMap::saveTreasureList"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1212ac
+mac_size = 0xa0
+unit = "mapcell"
+target_sha256 = "2668c52ec465d6f4555c5f0e122e99e456b49e48b3f8abdb2954cfab950b232f"
+evidence = "Source helper without standalone Windows VA. TU order plus loadStringcec38;guardian flag;armyload57fc0"
+source_helper = "NewfullMap::loadTreasureData"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1220f8
+mac_size = 0xc4
+unit = "mapcell"
+target_sha256 = "4014b2acabb0ec68299ccdc4e853811df601049ac9aa47dfa4e3362ebee2e690"
+evidence = "Source helper without standalone Windows VA. TU order plus countwrite;iteratesvector calling1221bc"
+source_helper = "NewfullMap::saveBlackBoxList"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x12354c
+mac_size = 0xa4
+unit = "mapcell"
+target_sha256 = "4cf485b0838abf7d5c1834bc10d0141938fb4c882831d59f245e4f63886094a3"
+evidence = "Source helper without standalone Windows VA. TU order plus reads ownerbyte;3bytepadding;setsboatX/boatY255"
+source_helper = "NewfullMap::readShipyardData"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x123f44
+mac_size = 0xc4
+unit = "mapcell"
+target_sha256 = "638054ef11f29faa2da9ed12c1ae0cce782a81b2df522a85154efef22b4ac7a2"
+evidence = "Source helper without standalone Windows VA. TU order plus countwrite;calls1240ccforeachmonster"
+source_helper = "NewfullMap::saveMonsterList"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1241a4
+mac_size = 0xd4
+unit = "mapcell"
+target_sha256 = "43779861cd3b8c8012928babf18a51de747c9d866cd65b63fab0c6fffafa8f32"
+evidence = "Source helper without standalone Windows VA. TU order plus loadStringcec38;7resource reads;artifactbyte255sentinel"
+source_helper = "NewfullMap::loadMonsterData"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1255f0
+mac_size = 0xe8
+unit = "mapcell"
+target_sha256 = "0b5c4343ac2fde5fec520624acc31c5beb5d51be53c7cdbc1cd89f29442cb221"
+evidence = "Source helper without standalone Windows VA. TU order plus TSeerconstructor169ac4/read16aae8;append129c18;questregistration"
+source_helper = "NewfullMap::readSeerData"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x128708
+mac_size = 0x5c
+unit = "mapcell"
+target_sha256 = "1b03a83557611db2d0566dd8efa409148d1b1f654d0a4b9458fa8479bbe8cda8"
+evidence = "Source helper without standalone Windows VA. TU order plus loopsallmapobjects callingplaceObject12850c"
+source_helper = "NewfullMap::placeObjects"
+

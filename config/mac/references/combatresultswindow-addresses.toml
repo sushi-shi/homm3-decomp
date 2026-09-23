@@ -1,0 +1,55 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x4702d0
+unit = "combatresultswindow"
+mac_section = 0x0
+mac_offset = 0x7df80
+mac_size = 0x1aec
+target_sha256 = "cd1da2330500dc7dea0ef3eb498d20efb1b2fc2a483ab17ea4c1a5d71c7117ec"
+evidence = "NEW: Results ctor heroWindow165,19,470,561, creates result background and attacker/defender portraits, two-side casualty vectors using army stride0x524, experience text, OK button and result video0x25e5e4. End0x7fa6c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x471a70
+unit = "combatresultswindow"
+mac_section = 0x0
+mac_offset = 0x7fa6c
+mac_size = 0xb4
+target_sha256 = "3b0a4ab2f43d851b42c5cd8c4cec424d970119d7da35a5a68b70c0e230b55dac"
+evidence = "NEW: Results dtor disposes background and heroWindow0x20aebc, optional delete; direct victory caller0x853cc. End0x7fb20; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x471af0
+unit = "combatresultswindow"
+mac_section = 0x0
+mac_offset = 0x7fb20
+mac_size = 0x98
+target_sha256 = "0c98a27d7fe3dcc4894deb4d559bacc6331bb6d2f66e6c06c46c8278c18c5aaa"
+evidence = "NEW: Open calls heroWindow0x20af50, video start0x25e748 and screen redraw0x20df2c. End0x7fbb8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x471b50
+unit = "combatresultswindow"
+mac_section = 0x0
+mac_offset = 0x7fbb8
+mac_size = 0x44
+target_sha256 = "2414df7a018eb9db61a4233b5c0be6f5e7398378d80c8bb3ac33823ccc03d7e0"
+evidence = "NEW: Close calls video stop0x25e660 then heroWindow close0x20b158. End0x7fbfc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x471b70
+unit = "combatresultswindow"
+mac_section = 0x0
+mac_offset = 0x7fbfc
+mac_size = 0x34
+target_sha256 = "ea642c1dd1e5f080910d340b73b1ac5ee26f607cc7a4391f1a68db4c11fa8c82"
+evidence = "NEW: Modal wrapper installs handler0x7fc30 with window manager0x20d6c0. End0x7fc30; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x471b90
+unit = "combatresultswindow"
+mac_section = 0x0
+mac_offset = 0x7fc30
+mac_size = 0x104
+target_sha256 = "cdcaec369bd20eb4dbe38298eecaedbc55e6e3d8b8d3207ce37a207b4f1c2d40"
+evidence = "NEW: Results handler mouse/UI animations0x10eaf0 and GameTime0x20fc5c, accepts widget200/OK0x7802/key13 and timeout. End0x7fd34; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."

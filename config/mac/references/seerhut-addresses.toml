@@ -1,0 +1,1117 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x2545ec
+mac_size = 0x124
+unit = "seerhut"
+target_sha256 = "4edb530b4d9acd039398aa24f80aecad1397cc57c977e555fc55fe310a7620cb"
+evidence = "Sole seerhut.txt TOC xref2545f8, spreadsheet153c6c,60-row minimum,3 columns from1/4 via2543f0 and nonempty names fromrow50; virtual dispose. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56c3e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x163ff4
+mac_size = 0x98
+unit = "seerhut"
+target_sha256 = "0a0f086eb5af886a56806184c28206522676cfa8d135fe0843e505375c23dd2a"
+evidence = "Base quest vptr, three MSL strings at+8/+c/+10, flag+4, rand modulo3 variant+14 and limit-1 at+18. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56cb80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16408c
+mac_size = 0x78
+unit = "seerhut"
+target_sha256 = "477189859f0ac87ae925f9e86dd796b0eeb2ac02bf3077ba1f45334463717c71"
+evidence = "Restores same base quest vptr, destroys three strings in reverse order and optional Mac delete flag. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56cc10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16410c
+mac_size = 0x60
+unit = "seerhut"
+target_sha256 = "0f22ba212da6e2fdc1cf14b6f7519df44cd5205051e283899f4d0093d60102ca"
+evidence = "Negative limit returns false; date arithmetic from game day/week/month then compares limit. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56ccb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x164178
+mac_size = 0x134
+unit = "seerhut"
+target_sha256 = "f4e4837f421e64c6ced6fb82cd2d79b96aa0dde6bc309ee7ec99aa38b396924f"
+evidence = "Savegame base quest read: flag byte, variant byte, limit32, then three length-prefixed strings93f48 with assignment/cleanup. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56cd00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1642ac
+mac_size = 0xe0
+unit = "seerhut"
+target_sha256 = "66c1b9ddb8be87ec0d78ccd439cb647c83d410f36c56f685903dad57b14638a8"
+evidence = "Map base quest read: limit32 and same three string reads93f48; no savegame flag/variant reads. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56ce50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16438c
+mac_size = 0x180
+unit = "seerhut"
+target_sha256 = "5da0e94ad26e5ac58c2c791b0052b0a66f760c24e654a3268d837efa77be1149"
+evidence = "Writes flag/variant bytes, limit32 then three string length32/data pairs. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56cf70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16450c
+mac_size = 0x108
+unit = "seerhut"
+target_sha256 = "bf418de4c2d7fbf5bb82a74fb6bb784ed32e5a07197a602f7c2df09fb2a72870"
+evidence = "Current turn calculation, deadline subtraction, separator string and quest-table completion suffix formatted131520. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56d040
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x164614
+mac_size = 0x78
+unit = "seerhut"
+target_sha256 = "064e2779f007e6ff799ae80091cc23c256fc07b86da659265ed9123a590a88a0"
+evidence = "Returns progress string+0xc for negative limit or appends getTimeLimitText16450c via concatenation16468c. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56d240
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1647ac
+mac_size = 0x34
+unit = "seerhut"
+target_sha256 = "a08c4f4d76bbfb4bdb1b94f20422ac414644fbabe60ce2bdd101fee6eddd49d6"
+evidence = "Formats required level+0x1c through decimal format and131520. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56d3e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1647e0
+mac_size = 0x9c
+unit = "seerhut"
+target_sha256 = "0c20ca57902416ca7c1e8f55d2b76d5fd4d828eb0633feda96f2c39786041258"
+evidence = "Experience quest type/table lookup then formats required level+0x1c into description. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56d410
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x164884
+mac_size = 0x1c
+unit = "seerhut"
+target_sha256 = "3e7de7aae4e09129e03023631fb2bed9b956100182e8396c626dfbaa7925ae99"
+evidence = "Compares hero signed level against required level and returns satisfaction flag; adjacent type leaf16487c returns1. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56d490
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1648a0
+mac_size = 0x80
+unit = "seerhut"
+target_sha256 = "9eda11e931867797417626c875f4c24e8df52e90b86f92d9f3be9685e3509483"
+evidence = "Proposal getter164614 then normalDialog117f10 with picture0x11 and required level. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56d4b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x164920
+mac_size = 0x80
+unit = "seerhut"
+target_sha256 = "ef634173303db88b1f69541f939ee2d6b6ceb205b824d121de44850a3280035d"
+evidence = "Progress getter1646f4 then same experience picture0x11 dialog. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56d550
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1649a0
+mac_size = 0x7c
+unit = "seerhut"
+target_sha256 = "63ed8ad5915a70a7094c8cf4532c5e29074970f09dfaf31c0599d6eb4db76595"
+evidence = "Reads required level16 then base savegame loader164178. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56d5f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x164a1c
+mac_size = 0x68
+unit = "seerhut"
+target_sha256 = "ca12410c710876fbb70b18e6ca33686bc251e05d657f9057facd96948c62a63f"
+evidence = "Reads required level32 then base map loader1642ac; distinct width from savegame reader. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56edf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x164a84
+mac_size = 0x68
+unit = "seerhut"
+target_sha256 = "fe8bdeecc6cab95b67b69357acdfd0e417670707d63906a0dd2ccc69e003744e"
+evidence = "Writes required level16 then calls retained base writer16438c; Windows currently expands base source body. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56d630
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x164aec
+mac_size = 0x14c
+unit = "seerhut"
+target_sha256 = "f9cd15ce6aedc181ae312beabbd81b7d51aa776bce5ba6d860470659cb64e859"
+evidence = "Initializes only empty proposal/progress/completion strings, formatting required level into per-kind quest texts. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56d720
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x164c84
+mac_size = 0x30
+unit = "seerhut"
+target_sha256 = "a38ae5fd6a83d933e8725001bf4c58feaa85823c6e39f4f6ce909f46b33f51b6"
+evidence = "Calls skillRequirementText1652cc with this+0x1c four skill bytes and forwards hidden string result. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56d960
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x164cb4
+mac_size = 0xb8
+unit = "seerhut"
+target_sha256 = "0a3663f2d2a0e9b0ff6e04fddace81f43de9f582a5358cc529e11f9eaa0ed9f4"
+evidence = "Skill requirement text1652cc and per-kind description template formatted131520, temporary cleanup. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56d990
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x164d74
+mac_size = 0xd0
+unit = "seerhut"
+target_sha256 = "7d2e633f0fbcc05d43f32a2a36e2a38bf5566d711c065ebfc4220d971d2ffa1a"
+evidence = "Four primary skills are clamped as hero getters then compared to signed required bytes; returns failure early or1. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56da70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x164f04
+mac_size = 0x250
+unit = "seerhut"
+target_sha256 = "516b616bd5ee72341a3cce4e8ed1f4dcd413c5b9efb36a7d45fb5e825697fe6a"
+evidence = "Computes unmet four-skill requirements, proposal/time-limit text paths and two shared skill-picture calls164e44; complete two-arm body. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56dad0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1651a8
+mac_size = 0x6c
+unit = "seerhut"
+target_sha256 = "abdfbf45f8f409fbbba41f545a847a174e589ae9148e478f30efcc797a49c4bf"
+evidence = "Reads four required skill bytes then base savegame loader164178. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56de60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165214
+mac_size = 0x5c
+unit = "seerhut"
+target_sha256 = "1bdaed20d2780a2b2887e6d02a165aacd48e9111d874b37bafa10f22a6a02eca"
+evidence = "Reads four required skill bytes then base map loader1642ac. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56de90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165270
+mac_size = 0x5c
+unit = "seerhut"
+target_sha256 = "54208774f93b18e45d94a02ac1eac74d033819228489ab00a34c516c93ae8782"
+evidence = "Writes four required skill bytes then retained base writer16438c. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56dec0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1652cc
+mac_size = 0xc4
+unit = "seerhut"
+target_sha256 = "936e350af41b1618767d551b63576abac1e7df6e942b754ce13ed6008819ba78"
+evidence = "Four required skill values, name/number formatting and string list assembly helper163f0c. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56dfa0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165390
+mac_size = 0x144
+unit = "seerhut"
+target_sha256 = "78f31bae0451a13f9fee5db53b68b840dd012a52fbc6fafd2e91d1726fe39fb0"
+evidence = "Skill requirement list1652cc, quest-table default proposal/progress/completion assignments only when empty. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
+retail_va = 0x56e0d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165520
+mac_size = 0x54
+unit = "seerhut"
+target_sha256 = "6b4622e9210af5297d6d70fde48e41b39f939cb77592cb94d8437c451810973d"
+evidence = "Defeat-hero requirement: target+0x20, game hero stride0x486, name+0x23, hidden string result. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56e240
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165574
+mac_size = 0xc8
+unit = "seerhut"
+target_sha256 = "1dd7d45b8cc61eb0cd0b779229ffba4b3c6efa5db1d69add73bac1f5de1ca784"
+evidence = "Defeat-hero description combines quest text column+0xc with same hero-name lookup and formatString131520. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56e340
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16563c
+mac_size = 0x8
+unit = "seerhut"
+target_sha256 = "a963069fd417e2eaddd4eeb6f689cf8838cc71f63c571df163fe3a54ff8f0744"
+evidence = "Returns3; defeat-hero vtable slot0x28 resolves this exact leaf. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56e3d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165644
+mac_size = 0x38
+unit = "seerhut"
+target_sha256 = "d485ff41312b55bac8b4a11d49e8589e0411552c8805fad02b17d2d9f1e2dc83"
+evidence = "Hero owner signed8+0x22, nonnegative guard, satisfied mask+0x24 and shifted bit. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56e3e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16567c
+mac_size = 0x74
+unit = "seerhut"
+target_sha256 = "83fa4cd4ea7b70b09230d67d035b32bfb5c575d599298fe73bb582d57f6095b0"
+evidence = "Defeat-hero vtable slot0x18; base proposal164614 then normalDialog117f10 with no picture. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56e410
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1656f0
+mac_size = 0x74
+unit = "seerhut"
+target_sha256 = "5e652b2408b757d5a85553964c4d2fae1e5b63bdacd060e06924595ef14abecd"
+evidence = "Defeat-hero vtable slot0x1c; base progress1646f4 then normalDialog117f10. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56e4b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165764
+mac_size = 0x30
+unit = "seerhut"
+target_sha256 = "7722112496568c5500b7c7fc5dc6840fcb0208c55061e5b5c99df034c2f1a187"
+evidence = "Receiver r3, defeated hero r4 compared+0x20, player r5 nonnegative then OR mask+0x24. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56e550
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165794
+mac_size = 0xc0
+unit = "seerhut"
+target_sha256 = "e458fa7aec05a76078ef735dc0aac5f657e40b919d696fb1b5da19af3d2c1cfa"
+evidence = "Reads hero16 and version-gated mask8; version thresholds30/36, then base load164178. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56e580
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1658bc
+mac_size = 0x8c
+unit = "seerhut"
+target_sha256 = "47cb309e257d09bff3b9fbb1609e97190781e679ceb08b2ed9ea76b6c3a786cf"
+evidence = "Writes hero16/mask8 then base save16438c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56e5f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165948
+mac_size = 0x1e4
+unit = "seerhut"
+target_sha256 = "35a9e9fd5414abb50dfe75aa14917b339f448edc21d09fa39792e2fbfac17b56"
+evidence = "Reverse hero scan from156, match map-order then fills three empty text strings with hero name. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56e6f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165b7c
+mac_size = 0x54
+unit = "seerhut"
+target_sha256 = "ddde81a112242289ced573db24515f07c14b4372116dddd5322e22947c87e193"
+evidence = "Monster ID bounds0..150, creature traits stride0x74 plural name, hidden string return. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56ea30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165bd0
+mac_size = 0xc8
+unit = "seerhut"
+target_sha256 = "d6b26ce3bf6e31a4b42c07db6e688eeb2292781e997dfc8326ea3568888b4036"
+evidence = "Same monster plural lookup plus quest description column and formatString131520. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56eb30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165c98
+mac_size = 0x8
+unit = "seerhut"
+target_sha256 = "fe9c110b732955f4deec1dfac58f1e6efe4f68d3a99c9b6c005a30e659c54080"
+evidence = "Returns4; monster vtable slot0x28 resolves exact leaf. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56ebc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165ca0
+mac_size = 0x28
+unit = "seerhut"
+target_sha256 = "33e93010786c51d053b90bde152bc09d7ad4494ad2d0e9a4a3d1d0607d9f91ac"
+evidence = "Nonnegative hero owner equals stored defeating player+0x28. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56ebd0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165cc8
+mac_size = 0x80
+unit = "seerhut"
+target_sha256 = "31fe1da5f33048815fe6793465982e90ffa06b425f74a1a369ec40e829327145"
+evidence = "Monster proposal vtable slot0x18, base proposal164614 and dialog picture0x15 with monster ID. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56ec00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165d48
+mac_size = 0x80
+unit = "seerhut"
+target_sha256 = "c812c77e5b66a368faa502c928a3c8e4648399b658b2d8312a8b6e12bfa62ac1"
+evidence = "Monster progress vtable slot0x1c, base progress1646f4 and same monster picture. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56eca0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165dc8
+mac_size = 0xb0
+unit = "seerhut"
+target_sha256 = "659503d30e6753dedb8742cbdcf2103cf9a528ce6ed5f4fd3daa2727a0bf092e"
+evidence = "Packed position passed by value r4, player r5; compares all three components before storing defeating player+0x28. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56ed40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165e78
+mac_size = 0xc0
+unit = "seerhut"
+target_sha256 = "31ac3ca49c97e8aff34128272fee3f477f64adf96db4c97ad0d5c1c988b74398"
+evidence = "Reads position32, monster16, defeating player8 then base load164178. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56ed90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x165fa0
+mac_size = 0xac
+unit = "seerhut"
+target_sha256 = "8f62a9c135c327323b3d2e4f26c6b8bca76d3ecd5330c0be8fd3e436f7cb2a18"
+evidence = "Writes position32, monster16, defeating player8 then base save16438c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56ee20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16604c
+mac_size = 0x490
+unit = "seerhut"
+target_sha256 = "9046f0440f8fa987432ba157bddd45d500fca0c4206959bbae1d89db801e7c4d"
+evidence = "Resolves editor monster identifier via e7154, map cell via coordinates, creature plural, thirds/direction and underground text before three defaults. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56ef20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x166540
+mac_size = 0x78
+unit = "seerhut"
+target_sha256 = "5b1d5238234daff60dda56e1d6463995d0d5abea6200bef259c68bcca37bd5e6"
+evidence = "Artifact vector iteration creates artifact pair with spell=-1 and calls aiGetValueOfArtifact38cf4 using player r4. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56f5a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x166670
+mac_size = 0xb4
+unit = "seerhut"
+target_sha256 = "7efadce228a599311f1326f2cec08d9c645173fb380cec025563b1018a11f7bf"
+evidence = "Iterates artifact vector names into string vector; joins via163f0c and cleans temporary strings/vector. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56f5f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x166724
+mac_size = 0xc0
+unit = "seerhut"
+target_sha256 = "06dc4d97cbe89a43150466b1b245cc2125a4a536ef589f73f06957f27eb8864c"
+evidence = "Artifact description vtable slot0x24, virtual requirement string then quest-column formatter131520. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56f730
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1667ec
+mac_size = 0x9c
+unit = "seerhut"
+target_sha256 = "229c4df8f51e48a3ee492143a101d64135889789d0e3d24b6afec3a34a7cd76d"
+evidence = "Empty artifact list fails; every artifact checked by hero hasArtifactf4d94. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56f800
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x166888
+mac_size = 0x74
+unit = "seerhut"
+target_sha256 = "ec00c1a940210136ebcb6d3b8fbdc60e238369fd74b0b0f02872085ae76edba0"
+evidence = "Iterates artifact list and calls hero removeArtifact103b04. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56f860
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1668fc
+mac_size = 0x1e8
+unit = "seerhut"
+target_sha256 = "ee7d03f0ffedb19be21571ff694ebc5631a87318fbb470278f9fbdf3bc4a1529"
+evidence = "Filters missing artifacts using f4d94, constructs name list and picture resources, invokes artifact dialog helper166b38. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56f8a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x166ae4
+mac_size = 0x54
+unit = "seerhut"
+target_sha256 = "6f59504db90935e208a8763cecf1dae0712df7dad5d3299b022d2f6860b60801"
+evidence = "Base progress1646f4 then artifact picture helper166b38; vtable slot0x1c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56fbc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x166bdc
+mac_size = 0xac
+unit = "seerhut"
+target_sha256 = "e880d0e712799fc1517f4d1182e23c8747e3786835c835414a88e89d7e9d05c6"
+evidence = "Reads count8 and repeated artifact16, appends89ae8 then base load164178. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56fcb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x166c88
+mac_size = 0xc0
+unit = "seerhut"
+target_sha256 = "d1ced20b4ed8aed894401c2ec5677aba6b59262ecc43dd2399aec6ec1fb30d9b"
+evidence = "Same artifact reads plus disabled-artifact byte store, base mapload1642ac. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x56fea0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x166d48
+mac_size = 0xac
+unit = "seerhut"
+target_sha256 = "2b8fb75a7a65289d6412b9404d9e1d7748fd5c769f5b3b723f316fb808279774"
+evidence = "Writes artifact count8 and repeated artifact16 then base save16438c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5700a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x166df4
+mac_size = 0x160
+unit = "seerhut"
+target_sha256 = "96ae6d095e80920820ba1f5e725639ad5c731770367770ae9412deac97ad6723"
+evidence = "Artifact default text vtable slot0x40, virtual requirement and fills proposal/completion only. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5701d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x166fe0
+mac_size = 0x100
+unit = "seerhut"
+target_sha256 = "3ddccf84dc48e94fafac95e2d841793dbd9a76be3c79dd9be7bd9701d2ae2ac2"
+evidence = "Creature traits stride0x74 AI values multiplied by parallel count vector then summed. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x570480
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1670e0
+mac_size = 0x12c
+unit = "seerhut"
+target_sha256 = "d68ddc3b9b14814fb500fda049cf95a88193bb2ae9ab013ce3e8dc62d6f71a33"
+evidence = "Parallel type/count vectors, singular/plural creature names, quantity format and joinTextList163f0c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5704e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16720c
+mac_size = 0xc0
+unit = "seerhut"
+target_sha256 = "088b99b148b1b6204516db3e94fcfc1e4b8a5217339cb1ceeeba0193f1566e87"
+evidence = "Creature description vtable slot0x24: requirement string and quest description format. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x570690
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1672d4
+mac_size = 0xa4
+unit = "seerhut"
+target_sha256 = "a96f318858c949f812946ed6163e895277f1cf87f7651790ad8d680ab8168150"
+evidence = "Empty creature list fails, army totals587e0 compared against parallel count vector. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x570760
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x167378
+mac_size = 0xc0
+unit = "seerhut"
+target_sha256 = "9ddf15ca4cf96c7f175793f76d479a7d60b07670a5bcb6cdfed92d7eee442921"
+evidence = "Iterates required creature types and seven army slots; decrements counts or dismisses via581dc. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5707c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x167438
+mac_size = 0x28c
+unit = "seerhut"
+target_sha256 = "12936df41e5e168fa3533ac8a932b204772017236b3f61904fc025e4327ece7e"
+evidence = "Missing-creature filtering via587e0, names/counts and picture0x15, extended dialog1194d8. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x570880
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1676c4
+mac_size = 0x2b8
+unit = "seerhut"
+target_sha256 = "8d5fb5cad820ab97c1fc50f51c3127126d6f5c0a5e9c78ca994a8624d3db9deb"
+evidence = "Full creature list and picture0x15, proposal deadline16450c or base progress1646f4, extended dialog1194d8. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x570b80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16797c
+mac_size = 0x138
+unit = "seerhut"
+target_sha256 = "452e61d18f4fd5bdc2c64d7a8400554b9eb257b0316d513d4630b6b7802ecc44"
+evidence = "Reads count8 then type16/amount32, appends to paired vectors, base load164178. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x570e60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x167ab4
+mac_size = 0x134
+unit = "seerhut"
+target_sha256 = "8539ac408a77f1129c23758312056be517461222de40f1c98afdb8d31a32bdd5"
+evidence = "Map form reads count8 then type16/amount16, paired vector appends, base mapload1642ac. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571070
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x167be8
+mac_size = 0xe4
+unit = "seerhut"
+target_sha256 = "4657eb191b2e98c62a2aa861f00234c3d110fd1c6ebac26f7c57cab8e7cb4439"
+evidence = "Writes count8 then type16/amount32 followed by base save16438c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571280
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x167ccc
+mac_size = 0x118
+unit = "seerhut"
+target_sha256 = "b7f9d7a0ea5f8695f805bdf4380dfdd1fd9493d8b89c7bf6de781d0d9e4038db"
+evidence = "Creature vtable default text: only empty completion string filled from virtual requirement and quest completion column. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5713c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x167e30
+mac_size = 0x2c
+unit = "seerhut"
+target_sha256 = "6c55d1f0aa59e9dd166a45224e3f440a05013ac4ae3d1d48b87c55c51fbee06a"
+evidence = "Rearranges receiver/player to aiResourceCost140db8(player, this+0x1c). Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571560
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x167e5c
+mac_size = 0xe0
+unit = "seerhut"
+target_sha256 = "f2ff0ed58612d656de8fdba883ae9835ffa12e5968a13a46c5df7a8dd71872b4"
+evidence = "Seven resource amounts, positive entries format quantity/name and join string list163f0c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571580
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x167f3c
+mac_size = 0xc0
+unit = "seerhut"
+target_sha256 = "7ae639b6c241965fc433fd776eab0705793040051c3511245b9496fb6eac6a13"
+evidence = "Resource description vtable slot0x24, virtual requirement and description formatter. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5716e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168004
+mac_size = 0xf0
+unit = "seerhut"
+target_sha256 = "a5b543c0397252a21b396cc9dad60445e41b143bf7902dc797b5c3e2b5d634d9"
+evidence = "Nonnegative hero owner selects player stride0x15c; seven treasury entries compared to quest resources. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5717b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1680f4
+mac_size = 0x94
+unit = "seerhut"
+target_sha256 = "08d80f1799f44fd8d88d84030a02a51afc16956962950c610ab4c6b51f40604f"
+evidence = "Subtracts seven quest resource amounts from hero-owner treasury, same player stride0x15c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571800
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168188
+mac_size = 0x234
+unit = "seerhut"
+target_sha256 = "367c0f62965ffdfd52dcc08a06578809b984bb76c56006be74d81ab796e21c37"
+evidence = "Missing resources filtered against player treasury, quantity strings and resource pictures then extendedDialog1194d8. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571840
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1683bc
+mac_size = 0xb4
+unit = "seerhut"
+target_sha256 = "c58b6005bfdccde9a254ae8c1a7491abb8a2bddea5922ff29f7c8e55059004d7"
+evidence = "Positive resource amounts become pictures, passes stored proposal string to extendedDialog1194d8. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571ae0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168470
+mac_size = 0x80
+unit = "seerhut"
+target_sha256 = "ecb6236b52551105a6c7fdfee2d57e0269cedb56b86680cca95155f3cf8657e0"
+evidence = "Seven individual32-bit reads into resources, then base load164178; platform file representation retained. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571b80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1684f0
+mac_size = 0x78
+unit = "seerhut"
+target_sha256 = "c51a03ff4df39bf3623ebe253e685bd8ce00e2f63da48de5939398899784138c"
+evidence = "Seven individual32-bit reads into resources then base mapload1642ac. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571bb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168568
+mac_size = 0x78
+unit = "seerhut"
+target_sha256 = "6309ca9bc1372f48186daa9e3c337dbe6eb3e57ed2445fbb2b785917e3713c27"
+evidence = "Seven individual32-bit writes then base save16438c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571be0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1685e0
+mac_size = 0x1e0
+unit = "seerhut"
+target_sha256 = "7d71fda8c5e21500baeaeac57afa3216e571bbbc6579145a2f96fc9a1ecd8dea"
+evidence = "Positive seven-resource names/amounts joined, fills empty proposal/completion texts. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571cc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168800
+mac_size = 0x18
+unit = "seerhut"
+target_sha256 = "8d092fd867076772765d37cb255711ddad9c57683b43a665f71ea692250f59a8"
+evidence = "Hero ID32 at+0x1a compared to required hero at quest+0x1c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571f00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168818
+mac_size = 0x74
+unit = "seerhut"
+target_sha256 = "33c84b8c34154eda04c961367cc3dec0103f0f14d379c1e8476f5724364171b8"
+evidence = "Be-hero vtable slot0x18, base proposal164614 then normal dialog with no picture. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571f20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16888c
+mac_size = 0x74
+unit = "seerhut"
+target_sha256 = "1da38b07cefb0719723a0ad54a2d72436a16dc316545d0ac3b5251baea626e5e"
+evidence = "Be-hero vtable slot0x1c, base progress1646f4 then normal dialog. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x571fc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168900
+mac_size = 0x54
+unit = "seerhut"
+target_sha256 = "1b185b0af76270fe68bc245835fd5679edd8315be6565016623d9454db03c02d"
+evidence = "Required hero+0x1c selects game hero stride0x486 and name+0x23. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572060
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168954
+mac_size = 0xc8
+unit = "seerhut"
+target_sha256 = "a4050ee52fafd9acc2c5311339300cca3886f2bba1cf37b7df98ab68da589566"
+evidence = "Same required hero/name lookup plus quest description formatter. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572160
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168a1c
+mac_size = 0x8
+unit = "seerhut"
+target_sha256 = "6523ed091725299b3edc74d6604f7a727568bb0fe66ff9d81fdf2c6e759010ce"
+evidence = "Returns8; be-hero vtable slot0x28 resolves exact leaf. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5721f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168a24
+mac_size = 0x7c
+unit = "seerhut"
+target_sha256 = "89f5727b2277d8c4139ed17e34d5f72a01389c5d0963bc666e64999b75356279"
+evidence = "Reads required hero16 then base load164178. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572200
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168aa0
+mac_size = 0x64
+unit = "seerhut"
+target_sha256 = "0268c771e20d689cc5912ff7442de3b056e1fd7c965c15b12f348e97deb99b9f"
+evidence = "Reads required hero8 then base mapload1642ac. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572230
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168b6c
+mac_size = 0x184
+unit = "seerhut"
+target_sha256 = "02f1db0baad9e91458d5113b7f9290afced6f52707ff9ebdef93b5cc612a7a8c"
+evidence = "Required hero name and three empty string defaults in be-hero vtable slot0x40. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572270
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168d30
+mac_size = 0x1c
+unit = "seerhut"
+target_sha256 = "17ac1b41c334e355f0653d58d566370bcd3afdd21c928b8c6c832a01b6427d51"
+evidence = "Hero signed owner8+0x22 compared to required owner32 at quest+0x1c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5724f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168d4c
+mac_size = 0x74
+unit = "seerhut"
+target_sha256 = "ad75985674f7e53ced4ae9e1f48b5abac5d3f8ccb9ed162255bd070b2e9f12b6"
+evidence = "Owner-quest vtable slot0x18, base proposal164614 and normal dialog. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572510
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168dc0
+mac_size = 0x74
+unit = "seerhut"
+target_sha256 = "b54371c4c83a445f1dff204f6d2172b8bac00c612cbaba59123f688946e0495c"
+evidence = "Owner-quest vtable slot0x1c, base progress1646f4 and normal dialog. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5725b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168e34
+mac_size = 0x24
+unit = "seerhut"
+target_sha256 = "8f6c710de1bea5b5dfaabc5f03e4c95890635309d9cfd0c68183214efcaf2cf2"
+evidence = "Empty MSL string construction46c8; owner-quest requirement vtable slot0x20. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572650
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168e58
+mac_size = 0xb4
+unit = "seerhut"
+target_sha256 = "e2eb4308d0b0a9f56021eeb43b086278da7d03836f45a8d6db8cc1a1a3a46e45"
+evidence = "Color name by required owner, lowercase routine26afe8 and description formatter131520. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572670
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168f0c
+mac_size = 0x8
+unit = "seerhut"
+target_sha256 = "85f13cee6f32f1b9cbf5927e011b2603f40991a1b56aca0a9f16fa9f504575b4"
+evidence = "Returns9; owner-quest vtable slot0x28 resolves exact leaf. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572810
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168f14
+mac_size = 0x74
+unit = "seerhut"
+target_sha256 = "bd80b1e83beb6b072fc31efa476e89a0a29cba9fe68aafb26627d877cb81c6f8"
+evidence = "Reads owner8 then base load164178. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572820
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168fec
+mac_size = 0x64
+unit = "seerhut"
+target_sha256 = "a657bfaf5b3dff4a809fdd3be15a1761df9a0be0be524502f1a91e617649a0c9"
+evidence = "Writes owner8 then base save16438c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572860
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x169050
+mac_size = 0x168
+unit = "seerhut"
+target_sha256 = "3ff5b6ae3e7cb4b70ad212f4fdbafa9ab0c27150379d9389c7a2a2f739434679"
+evidence = "Owner color name lowercased via26afe8 then three empty text defaults. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572940
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1691b8
+mac_size = 0x10
+unit = "seerhut"
+target_sha256 = "d29f68d4edef123a859ab80dca6297d6fc2bdde71a30b05b64ef121602faf5b0"
+evidence = "Constructor zeroes quest pointer+0 and visited mask byte+4. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572b50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1691c8
+mac_size = 0x250
+unit = "seerhut"
+target_sha256 = "37f3c3fe151a5f72eee8764cb3195de35ac64e30f6edbcef3fbbb5e698edc879"
+evidence = "Receiver/hero/human/cell/point r3..r7, expiry16410c, quest virtuals, visited bit, completion dialog and eraseAndFizzle a94f0. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572b60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16943c
+mac_size = 0xc8
+unit = "seerhut"
+target_sha256 = "269cfb91ee2c380bf6cd5d6236d33a7bd8095118192d447a750b31da764a8740"
+evidence = "Guard log: quest requirement virtual then quest log column formatString131520, hidden result pointer. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572d60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x169504
+mac_size = 0x110
+unit = "seerhut"
+target_sha256 = "5f1857f19ddf99cb88e853ae78bbca471369f4554dabb5794f5e8f4a477c8948"
+evidence = "Quick-view string215, visited mask/quest test and description; actual TOC-0x2a62 bytes are newline newline. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x572e40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x169614
+mac_size = 0x110
+unit = "seerhut"
+target_sha256 = "66569947d37256f095b15dfa8eb910d06a0b35d6310630e9c19d67fe9790163c"
+evidence = "Same guard text flow, actual TOC-0x2a68 string is one space, proving rollover identity. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x573040
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x169724
+mac_size = 0x194
+unit = "seerhut"
+target_sha256 = "88b0d6d94ccbd605f31b77228a962aa10c7e525d3bc34d33a09f4ca209a45174"
+evidence = "Nine-way quest factory allocates exact family sizes0x20/28/2c/34/38 and calls corresponding constructors; includes all internal switch labels. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x573240
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1698b8
+mac_size = 0xb4
+unit = "seerhut"
+target_sha256 = "efd3090d0a08d68fe0f01d84a6d17acaf0f2ca38d820e7c769eaafea05b474ff"
+evidence = "Reads quest kind8, factory169724 flags0, virtual load with version then visited byte/result. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x573480
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16996c
+mac_size = 0x80
+unit = "seerhut"
+target_sha256 = "c63acab78123281f69e726814fdf23440dcf6a27512158d40353447d2b505c5f"
+evidence = "Reads quest kind8, factory169724 flags0 then virtual mapload; no visited-byte read. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5734e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1699ec
+mac_size = 0xd8
+unit = "seerhut"
+target_sha256 = "803cd896e5848306501408e37475e353f52b7f959f52827e9f31ee66b0b3c603"
+evidence = "Writes null/type quest byte, virtual save then visited byte, return last write result. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x573520
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x169b0c
+mac_size = 0xf0
+unit = "seerhut"
+target_sha256 = "fe5013a069ba538e65f90054bab4f6979627c1d4332b6a0f0e99830c85013eca"
+evidence = "Reward getValue169ed0, unseen max20, otherwise quest expiry/satisfaction and reward-minus-questAI value. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5735a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x169bfc
+mac_size = 0x2d4
+unit = "seerhut"
+target_sha256 = "d8c2e5c2d5e2103279b33bd26ad937113881e2406e75e150512981997d98a073"
+evidence = "Seer event: empty/expired dialog, quest virtuals, completion extra16a3c8/icon16a4c4, AI getValue169b0c and giveReward16a138. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x573670
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x169ed0
+mac_size = 0x268
+unit = "seerhut"
+target_sha256 = "b95536bf4567466cf8b2ea7bb18d54b51495c0fd109052ef1c675da4d830a70b"
+evidence = "Ten-way reward value switch: experience factor, hero knowledge/power, morale/luck/resource/skill/artifact/spell/creature valuations; includes internal cases. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x573a70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16a138
+mac_size = 0x290
+unit = "seerhut"
+target_sha256 = "7d83cfce059dd4c364b74b77af0f96189e3a936bf91b01182dbfec577db2fe75"
+evidence = "Ten-way reward application, experience105514/104098, capped mana999, skills102ec4, artifact103da8/equip39344, spells and army585a4. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x573c80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16a3c8
+mac_size = 0xfc
+unit = "seerhut"
+target_sha256 = "a6e483d994c8a84970581547a2bf11ecce2e10e7b8d82c57e9ca47a939657011"
+evidence = "Reward-extra switch handles experience bonus105514, scalar fields, secondary icon skill*3+bonus+2 and packed creature/count16 halves. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x573f10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16a588
+mac_size = 0x13c
+unit = "seerhut"
+target_sha256 = "46807cff150c763979f97d955866c7e30dc6fa27b4b51478549c7c6c19d0dfba"
+evidence = "Writes quest type/virtual save,12-byte reward, completion/visited/name bytes at+0x12/+4/+0x11. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x573fd0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16a6c4
+mac_size = 0x108
+unit = "seerhut"
+target_sha256 = "a1f081c6cf4a755173dbf8b9e164484c38cbd5658fea171273b99e520ddd60c5"
+evidence = "Seer log quest requirement plus name-table indexed by name byte+0x11 and quest log column formatter. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x574070
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16a7cc
+mac_size = 0x150
+unit = "seerhut"
+target_sha256 = "646198491490d3c8aba378576d61244f7155ad335cc80efb383e3d654271f5ab"
+evidence = "Visited bit, quick text83 or seer name format348; actual TOC-0x2a68 one-space separator before quest description. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5741b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16a91c
+mac_size = 0x150
+unit = "seerhut"
+target_sha256 = "1bdeeb84f4526ffb011a3886a52118d1e07801aa6c24db887038f20a59083d11"
+evidence = "Same seer text flow, TOC-0x2a62 newline-newline separator proves quick-info twin. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x5743e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16aae8
+mac_size = 0x534
+unit = "seerhut"
+target_sha256 = "25e94e28f33ebcdc8c6b4edf163a56e03bc551e7f4cfe4ffbd930ea3a6738b28"
+evidence = "Map version14 legacy artifact quest vs helper16aa6c, ten reward-kind decoder and random unused-name selection; includes all switch targets and cleanup. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x574610
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16b01c
+mac_size = 0x27c
+unit = "seerhut"
+target_sha256 = "0fd66c11d4317d9be5b9f4cfafb374f93795b87d01ec85af3783850e3307a292"
+evidence = "Save version<28 legacy record/optional artifact quest vs modern factory169724,12-byte reward and completion/visited/name bytes. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
+retail_va = 0x574a90
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1654d4
+mac_size = 0x4c
+unit = "seerhut"
+target_sha256 = "5f8e15519cef153a09c9dddebedac3270129fe27b3ec6eee5be49eee3652d31f"
+evidence = "Factory case3, flags r4 forwarded to base163ff4; mapHero0, defeatedHero-1, satisfiedMask0, vptr TOC-70c0."
+source_helper = "type_defeat_hero_quest::type_defeat_hero_quest"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x165b2c
+mac_size = 0x50
+unit = "seerhut"
+target_sha256 = "2900d72f3308d2c5485f790a484cd9c104c8da79de19d07fd369db09471da7dd"
+evidence = "Factory case4, flags r4 forwarded to base, packed position x=-1 and monster/defeatingPlayer=-1, vptr TOC-70c4."
+source_helper = "type_monster_quest::type_monster_quest"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x166f54
+mac_size = 0x84
+unit = "seerhut"
+target_sha256 = "eea6fd7247483e28dd3a89e6f8350066792322cd94a8c8536c5cf6b039520814"
+evidence = "Factory case6, flags r4 to base, two vector constructors and vptr TOC-70cc."
+source_helper = "type_creature_quest::type_creature_quest"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x167de4
+mac_size = 0x4c
+unit = "seerhut"
+target_sha256 = "d89f38f90f39fbad8cb8eaf5162da1e5409a248f88914e9232d36d269ccd4c95"
+evidence = "Factory case7, flags r4 to base, zero28 resource bytes via26ad3c and vptr TOC-70d0."
+source_helper = "type_resource_quest::type_resource_quest"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1687c0
+mac_size = 0x40
+unit = "seerhut"
+target_sha256 = "05b9e92706a2912cecc69659df36886685d3cebc635b742dbf8ed158384f8e17"
+evidence = "Factory case8, flags r4 to base, requiredHero=-1 and vptr TOC-70d4."
+source_helper = "type_be_hero_quest::type_be_hero_quest"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x168cf0
+mac_size = 0x40
+unit = "seerhut"
+target_sha256 = "0b47efe7687f0718b1f82b6fc1e190a5d488dfe613e8f0511b1708cb814f16a3"
+evidence = "Factory case9, flags r4 to base, requiredOwner0 and vptr TOC-70d8."
+source_helper = "type_belong_to_player_quest::type_belong_to_player_quest"
+

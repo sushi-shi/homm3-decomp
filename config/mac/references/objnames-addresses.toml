@@ -1,0 +1,10 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x21d350
+mac_size = 0x6dc
+unit = "objnames"
+target_sha256 = "718b50b4fe79e5abdb1ae1f0d33a9bbdb5a23ae6b6f501090d5b7995eb5999f9"
+evidence = "Contiguous objnames TU order corroborated by body: initializes232-object-traits-stride16,overrides-flags,loads-objnames.txt-via-xref21d800-and-getText153ad8,copies-name-rows. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41b500
+

@@ -1,0 +1,73 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x4e75f0
+unit = "hillfortwindow"
+mac_section = 0x0
+mac_offset = 0x10843c
+mac_size = 0xe20
+target_sha256 = "653097a6842c440a5d9af76e353afed77905fedd58e5b465bf180baf13a157f9"
+evidence = "Constructs HillFort popup and uses APhlftBk.pcx at 1+0x49f64/0x1084e4, APhlftrt.pcx and aphlf4y.def button resources; creates seven troop/resource widget rows and installs class vtable. BLR 0x109258, next destructor 0x10925c."
+
+[[functions]]
+retail_va = 0x4e7e10
+unit = "hillfortwindow"
+mac_section = 0x0
+mac_offset = 0x10925c
+mac_size = 0xb4
+target_sha256 = "053a6e05678550b5a8c185ccb3f60f1e26bdc044cbb572c6df29e300a4a7b9b4"
+evidence = "Combined Mac THillFortWindow destructor installs class vtable, deletes widget vector entries and calls CAdvPopup base destructor before optional operator delete under r4. BLR 0x10930c; Windows deleting thunk remains separately unresolved."
+
+[[functions]]
+retail_va = 0x4e7e90
+unit = "hillfortwindow"
+mac_section = 0x0
+mac_offset = 0x109310
+mac_size = 0x48
+target_sha256 = "86ebf3cb17b95638c3daa3a3eee100b4b002d6d0a57e275c66c6e17dbe21ceb7"
+evidence = "THillFortWindow modal wrapper calls recalculate 0x109408 with zero then g_windowManager::doDialog 0x20d6c0 using handler pointer from TOC 1+0xc74. BLR 0x109354; next tiny helper 0x109358."
+
+[[functions]]
+retail_va = 0x4e7eb0
+unit = "hillfortwindow"
+mac_section = 0x0
+mac_offset = 0x109408
+mac_size = 0x734
+target_sha256 = "69a0495b77494d7bd734dd9eee54e6217f4fb975caa1ec3115de50195224295b"
+evidence = "Recalculate takes this and update flag, reads g_currentPlayer/g_game, walks seven 0x50-byte troop slots, forms resource costs and status widgets with g_generalText. Sole doModal caller at 0x109328. BLR 0x109b38; next upgradeSlot 0x109b3c."
+
+[[functions]]
+retail_va = 0x4e8500
+unit = "hillfortwindow"
+mac_section = 0x0
+mac_offset = 0x109b3c
+mac_size = 0x260
+target_sha256 = "48b6ba3f6dff6630c3093bf5336baced16e4e4bed9f56fdf86863d4d1e277e46"
+evidence = "UpgradeSlot takes slot index r4, scales by 0x50 into troop slot state, branches on upgrade-status field +0x94, reads g_currentPlayer/g_game and displays resource dialogs; BLR 0x109d98, next handleClick 0x109d9c."
+
+[[functions]]
+retail_va = 0x4e8690
+unit = "hillfortwindow"
+mac_section = 0x0
+mac_offset = 0x109eb8
+mac_size = 0x210
+target_sha256 = "7b8725789f19555a0b6e7853ef8f1e54b7a2fd38829a7d438055b01ac338e40a"
+evidence = "handleClick reads message codeY and right-click qualifier, dispatches hero portrait and seven creature count/portrait IDs, uses g_game/currentPlayer and TViewArmyWindow to show creature or hero dialog. BLR 0x10a0c4; next free handler 0x10a0c8."
+
+[[functions]]
+retail_va = 0x4e8850
+unit = "hillfortwindow"
+mac_section = 0x0
+mac_offset = 0x10a0c8
+mac_size = 0x32c
+target_sha256 = "5245f7c02778e80d814a5878f2c595a000f94f2b4d80483c1ef55a1052efbcfd"
+evidence = "Free HillFort message handler starts pollSound 0x10eaf0, handles MESSAGE_WIDGET=0x200 and keyboard events, tracks hover through g_mouseManager/g_creatureTypeTraits, dispatches clicked troop and upgrade controls. BLR 0x10a3f0; next prologue 0x10a3f4."
+
+[[helpers]]
+source_helper = "THillFortWindow::upgradeAll"
+unit = "hillfortwindow"
+mac_section = 0x0
+mac_offset = 0x109d9c
+mac_size = 0x11c
+target_sha256 = "e77adf5ea30e8dcc3912903b9c4932e61c20ad42aa12fd808cc6cff1ba9ede29"
+evidence = "Unique source-owned upgradeAll helper switches on aggregate upgrade state at this+0x294 for values 0,1,2, forms general-text dialogs, and in affordable case upgrades all seven slots. BLR 0x109eb4; next handleClick 0x109eb8."

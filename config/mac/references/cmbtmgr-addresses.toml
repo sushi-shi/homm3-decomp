@@ -1,0 +1,645 @@
+# Address-only references discovered from CMBTMGR TU order, then independently verified.
+# Names remain owned by src/cmbtmgr.cpp VA claims; no compiled Mac target admission.
+
+[[functions]]
+retail_va = 0x00462760
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6de48
+mac_size = 0x150
+target_sha256 = "939f157f0295c21f03289eb0f085f2050da7b9dc5f164af1657e18dc8e3607b1"
+evidence = "NEW: Manager base ctor0x5bc04; constructs187 hex cells stride0x70,42 armies stride0x524, two side arrays, obstacle vector and three archer objects; initializes combat state. End0x6df98; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00462990
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6e140
+mac_size = 0xe0
+target_sha256 = "c17e7bfdeb825a9efbc3b242d0c015842974a03f3b65921c2a567634c25895fd"
+evidence = "NEW: Loads text resource0x153c6c, parses179 rows with9town*18wall entries and atoi0x28fb1c. End0x6e220; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00462a20
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6e220
+mac_size = 0x5c4
+target_sha256 = "031c1912081492dcd8263b5519d151d1a8e318a37e73f18199dc101c800ab96c"
+evidence = "NEW: Combat open stops sounds, quick-combat branches, loads icons0x6e938/archers0x72e88, init vars0x6f3e8/obstacles0x722b8, constructs combatWindow0x8008c then starts nextArmy0x70b74. End0x6e7e4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00463260
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6e7e4
+mac_size = 0x154
+target_sha256 = "a6e5c649c1f0c8e33c456b31e3811316e469698ad3be2f8904d906ae43f5bcde"
+evidence = "NEW: Combat close quick-combat/audio/UI cleanup; freeArmies0x6f08c and freeIcons0x6eb08, virtual disposal. End0x6e938; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00463370
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6e938
+mac_size = 0x1d0
+target_sha256 = "0cc070685a6ad403df69f579217b5ef0e094c1086d4c58900a1472fa9585cb3c"
+evidence = "NEW: Loads four base icons0x152df8, siege walls18 and archer/troop sprites0x153fcc, side masks and terrain. End0x6eb08; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00463500
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6eb08
+mac_size = 0x164
+target_sha256 = "1e37ff4ce4375adfaa56c0d68a48556a069a97315e1b53749a1f532fe9560523"
+evidence = "NEW: Disposes base sprites, obstacle vector clear0x770dc, effects0x19a9cc and two-side icon resources. End0x6ec6c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00463600
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6ec6c
+mac_size = 0x420
+target_sha256 = "f60c789019735b83c66d6a70534c7c91c025a07dc848f7b129d4ffad3571879c"
+evidence = "NEW: Initializes20 army slots, seven real armies via0x492e0/loadResources0x4941c, war machines from hero artifacts0xf4dfc and town archers0x1b4b80. End0x6f08c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004639e0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6f08c
+mac_size = 0x2c
+target_sha256 = "98462cb5664850de44c750ee9d3e51f469e4bb7fc912ffd48b33cabdb74d7f90"
+evidence = "NEW: Free-armies body simply calls sound-manager stopAll0x2188f0. End0x6f0b8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004639f0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6f0b8
+mac_size = 0x330
+target_sha256 = "473fed6e75587be88b67082911038f3ebf47dc43ace653d1bb31effe86f6268e"
+evidence = "NEW: Setup combat stores heroes/groups/seed/point, determines player AI via0xe6bf4/0xe6c3c, terrain0x6fd04 and background0x6ffc8. End0x6f3e8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00463c60
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6f3e8
+mac_size = 0x484
+target_sha256 = "c7692079c76b56e92eed9ad10941391671c05d74fcdc27cc2e091ac9e82936ca"
+evidence = "NEW: Initializes side spell state and map cells; setupAdjacency0x6f8d8/generateMap0x6fbfc/loadArmies0x6ec6c, final army summary0x6f86c. End0x6f86c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004640a0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6f8d8
+mac_size = 0x1fc
+target_sha256 = "b0da6e42d0c93ea9fa9e0d1f23d361375127f915cf523fe69c2da5d836328d9a"
+evidence = "NEW: 187hex*6direction adjacency grid, row width17 and edge10/16 constraints; initializes invalid neighbors then checks each coordinate. End0x6fad4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004641f0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6fad4
+mac_size = 0x128
+target_sha256 = "a9f90396d9b9edb40d4bf6f4b013674cd0bc6003997be1cfb16dc93f33b97f94"
+evidence = "NEW: Copies live army survivors back to seven group slots, using side stride0x6bf4 and original indices; zero/NONE handling. End0x6fbfc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004642d0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6fbfc
+mac_size = 0x108
+target_sha256 = "44c77b854ef23c5c2f58a54158a6d8d010c74141f8dcf69b597f70b5b7b693f8"
+evidence = "NEW: Builds11 rows of17 hex cells, pixel x/y steps44/42 and cell stride0x70, assigns map coordinates. End0x6fd04; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004643b0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6fd04
+mac_size = 0x2c4
+target_sha256 = "28b4e263562ab2ce14c48c2a41ef4c135c1745ad73ac9109640147c613fd1773"
+evidence = "NEW: Town native terrain0x1b6fa4, map object probes0x11e34c/0x11e3e4/0x11e6ac and magic terrain objects224/46/33/21/222/229/227/226/231. End0x6ffc8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004646d0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6ffc8
+mac_size = 0x110
+target_sha256 = "0d8fc14667302b0e5d2497711c4c46af82b03238d71c8efb853dd4a89e1f0cc3"
+evidence = "NEW: Background name from terrain/magic-terrain/fortification and random choice0x1bab4; returns indexed name table. End0x700d8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004647a0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x700d8
+mac_size = 0x2fc
+target_sha256 = "57643a8f71ff7a118f710846add15422edab2847a4bb2929b1a0fed81dd1bf4c"
+evidence = "NEW: Pixel bounds748x472, loops11rows17cols and offsets42/44/22; abs0x288778 for hex hit-test. End0x703d4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00464920
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x703d4
+mac_size = 0x204
+target_sha256 = "d38d0ccb27944686a3774752671300b585cfa45f019c880fe0124bad9ee5dc21"
+evidence = "NEW: Good morale clamp-3..3, random0x1314b4, sound/text/animation and redraw; indexes army by side0x6bf4/slot0x524. End0x705d8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00464b40
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x705d8
+mac_size = 0x1d8
+target_sha256 = "1c2a11e9d20f84a177548526b85c2268bd169a16b0d9e3aac3a48682f2c0f5bf"
+evidence = "NEW: Bad morale negative check, two random rolls0x1314b4, sound/text/animation, returns skipped-turn decision. End0x707b0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00464d40
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x707b0
+mac_size = 0x208
+target_sha256 = "0dd9476176e3d6918852651b7426d0559fe6ba356ead07e9163c95277b8dc4cc"
+evidence = "NEW: Fear/azure-dragon132 check across sides, random0x28e00c, text/sound fear effect and selected stack flag. End0x709b8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00464f50
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x709b8
+mac_size = 0x1bc
+target_sha256 = "0c4797c22935326398ef24cbc2e656d7e509e228dad821879702e177d8a08ecf"
+evidence = "NEW: Army turn priority comparison with six getSpeed0x55028 calls, wait/done status and equal-speed side tie-break. End0x70b74; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00465080
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x70b74
+mac_size = 0x328
+target_sha256 = "6c249fc71235479d83bbed2d07355419d51e03adae44f3b587f635ff8601f7fe"
+evidence = "NEW: Scans two armies, priority0x709b8, newTurn0x5339c, bad morale0x705d8/fear0x707b0 and setNextArmy0x70e9c. End0x70e9c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00465330
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x70e9c
+mac_size = 0x508
+target_sha256 = "ee9d5a83b8125ae611f18b0f66610b85e6370312f8845b1dc44103f0481cd3c5"
+evidence = "NEW: Selects active side/slot, artifact buffs via0xf4dfc/0x194a34/0x190540, faerie dragon0x53a3c and creature automatic cast0x54700. End0x713a4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00465830
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x713a4
+mac_size = 0x170
+target_sha256 = "aa93ee7a073af2179ebfe4dc8bff11d47e48884fdbfebaccdc690b9a2544f6b0"
+evidence = "NEW: Checks flee/retreat and both sides for surviving non-summoned stacks; unrolled NONE checks across group roster. End0x71514; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004658b0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x71514
+mac_size = 0x264
+target_sha256 = "907cb2992aa45152f2655f6d47aacb295b5d356be06fab4fb4516a8dd9dfa085"
+evidence = "NEW: Winner predicate checks opponent army side stride0x6bf4 and surviving non-summoned stacks, side flags and army-group NONE slots. End0x71778; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00465970
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x71778
+mac_size = 0xac
+target_sha256 = "4ab7054115ef117b9dc5e5453930924137606438917afd06470ef9624f5e50a7"
+evidence = "NEW: Eight unrolled wall-grid table comparisons stride12, returns wall index0..7 or-1. End0x71824; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00465990
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x71824
+mac_size = 0x164
+target_sha256 = "51a28691948d7db1cdd3aeb9001bf689a4f8d472a06dd85e56be2801e716edd9"
+evidence = "NEW: Wall target table stride12, decrements strength and standing flags, updates blocked hex and tower army state for wall3/7/6. End0x71988; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00465ad0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x71988
+mac_size = 0x408
+target_sha256 = "a2008a6a8af87e1f3b2719086d0be7a786aabad90b79bf346458447b383b2908"
+evidence = "NEW: Archer tower attack uses midX/midY0x527c0/0x52754, projectile0x74654, random damage, defender reduction0x4fd04 and damage0x5004c. End0x71d90; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00465f20
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x71d90
+mac_size = 0xc0
+target_sha256 = "df3e2afc95da720707287d08b60eae19cab82929213559f5f97185845ba0ac03"
+evidence = "NEW: Town archer count/level0x1b4b80, keep hex254 halves count otherwise, chooseBallistaTarget0x1f2b4, writes next action/target. End0x71e50; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00465fe0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x71f28
+mac_size = 0x88
+target_sha256 = "86eb4378cfd690781d49696da33efcd3680e6c9f855788666980f51f01e8fcfa"
+evidence = "NEW: Two sides*20 armies stride0x524; clears hitByCreature field. End0x71fb0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00466010
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x71fb0
+mac_size = 0x294
+target_sha256 = "6baea75a853c92d0b179fe43466666df9f8fffef44643daa56845dd2e7b61673"
+evidence = "NEW: Obstacle picker0x131590/0x1315f0, field shape stride20, random grid fit row17, loads sprite0x153fcc and appends obstacle0x76f7c, place helper0x72ca0. End0x72244; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00466290
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x722b8
+mac_size = 0x818
+target_sha256 = "d7c8bdacf777a8963abaccc478dbd2832654b0ef4b28c9044198be6203e7e27d"
+evidence = "NEW: Siege wall traits stride0x288 and18walls, Tower landmine hero spell damage, boat/terrain blockers, random budget and obstacle picker; calls largeObstacle0x72ad0 and placeObstacle0x71fb0. End0x72ad0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004668a0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x72ad0
+mac_size = 0x1d0
+target_sha256 = "eed3bde57d98caa8aaadd0ab142c54fab3d99cf67769816a0f9262cfb8296ae0"
+evidence = "NEW: Large obstacle terrain/magic masks, picker0x131590/0x1315f0, large shape stride0x44, marks occupied cells and destroys picker data. End0x72ca0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004669b0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x72ca0
+mac_size = 0xb8
+target_sha256 = "6d505e0d392ae0a3b19c583a91d24bf243862cfab6d530fd4a36159504b448d8"
+evidence = "NEW: Shape signed-byte offsets+8/count+6, oddrow correction via division17, cell stride0x70; sets attributes and obstacle ID then origin bit. End0x72d58; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00466b30
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x72d58
+mac_size = 0x130
+target_sha256 = "b8d67fdafd4db0fd4c654a17865332e5e916606bf96c53b30e224dbce66216c2"
+evidence = "NEW: Validates obstacle index/vector count, mirrors oddrow shape walk clearing hex flags/indices, sprite virtual dispose. End0x72e88; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00466c50
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x72e88
+mac_size = 0x234
+target_sha256 = "4dcbe46425ed9e2c7a52cb0b289e310109c6c974f1179efdb7d88582c743dce3"
+evidence = "NEW: Zeroes archer state, loads/disposes six siege archer sprites based fortification/town creature traits. End0x730bc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00466e00
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x730bc
+mac_size = 0x26c
+target_sha256 = "c807287b3e13296fa5b3f6cd8115f4902f19fc3557e81b1648f1e347b57e12e3"
+evidence = "NEW: Two-side vanish scan, excludes tower149, marks/draws animation then clears grid for vanished stacks; quick-combat visual bypass. End0x73328; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00467130
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x73328
+mac_size = 0xa8
+target_sha256 = "71431770315dda4a26f146e848d347be7879598497dacbc5c9bf20d4d425874e"
+evidence = "NEW: Door-lowering predicate checks defending town, side1, gate/moat hex and wide facing geometry. End0x733d0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004671c0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x733d0
+mac_size = 0xdc
+target_sha256 = "0271cb2f9a5d2dc132244a80f592e56ad035f35dacfe7bd6ed376b044745909c"
+evidence = "NEW: Lower door quick-combat bypass then sound0x218f58, frame states down to1, searchArray lowerDoor0xc772c and wait sample. End0x734ac; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004672e0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x734ac
+mac_size = 0xd0
+target_sha256 = "d1ce6b58dd749e2361a3d6ccc5b8d5b9fc4d2df1e1a5433dfffc050b4f79091c"
+evidence = "NEW: Raise door visual routine quick-combat bypass, drawbridge sound and frame loop through3; occupancy test is retained separately at0x7357c. End0x7357c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00467490
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x73644
+mac_size = 0x38
+target_sha256 = "fca790d290df27ec1d7be405ab634eb877be59729a736ac24892e9c35a882e86"
+evidence = "NEW: Computes index/17 and compares against moat hex table, returns strictly left relation. End0x7367c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004674c0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x7367c
+mac_size = 0xfc
+target_sha256 = "c49e8dc8882190022192ba9172faaefb13676bc017d600444b12bb552e159e18"
+evidence = "NEW: Validates both hex indices0..186 then compares second against first adjacent direction row stride12. End0x73778; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00467510
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x73778
+mac_size = 0x114
+target_sha256 = "ee9ee5a1081339b7c5583db48872917697f169d70041f488e596f873e5455703"
+evidence = "NEW: Checks both inCastle0x73610 calls, hero artifact immunity0xf4dfc, arrowtower149 exemption and line-of-sight0x739c0. End0x7388c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00467600
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x7388c
+mac_size = 0x134
+target_sha256 = "5555b37ca74abaaa0e780480dd62a7b2a11614758540969ebeda2cdf725d8f4b"
+evidence = "NEW: Suboptimal shot checks hero artifact, arrowtower149/sharpshooter137, wide second hex0x52874 and distance0x75cd8 threshold10. End0x739c0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00467840
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x739c0
+mac_size = 0x284
+target_sha256 = "d8ef84f6bf5dcce29e4f87d0b7eb8018f3e570fb7c51e8a3eb4331eeec436e5a"
+evidence = "NEW: Line-of-sight traces row17 hex geometry with abs0x288778, wall/gate blockers including hex96, cell stride0x70. End0x73c44; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00467a00
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x73c44
+mac_size = 0x488
+target_sha256 = "be888b56d28142d02d60ee2a2cc89b769527afd3de2f45d3f6324a54f7099b11"
+evidence = "NEW: Ballistic trajectory uses sqrt0x2a1b68 and abs, temporary sprite0x5be20, frame timer and blit0x8a76c then destructor. End0x740cc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00467db0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x740cc
+mac_size = 0x588
+target_sha256 = "8b26ac968938ae0fe5d802317f25c2551bc085dbd7e3c0b87e9b00612223c626"
+evidence = "NEW: Animated missile multi-sprite path uses sqrt/atan0x2a1820, loads filename sprites0x153fcc, advances animation and disposes loaded resources. End0x74654; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00468220
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x74654
+mac_size = 0x5c4
+target_sha256 = "03ceb3bf87c6c5683cb3aba23714f48a87b9da8a5e6aa4286b8ea942bdda48de"
+evidence = "NEW: Static missile angle table selection, sqrt/atan projection, frame timing and blit; no filename resource loads unlike animated overload. End0x74c18; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004686b0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x74c18
+mac_size = 0x7c
+target_sha256 = "22ee47b705b6fcfa010fafd81cbe021718a58e6c7b49c79627008a826dc6c4ee"
+evidence = "NEW: Builds combat options window0x7b3b0, invokes options dialog0x7d50c, refreshes and destructor0x7d418. End0x74c94; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00468730
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x74c94
+mac_size = 0x7c
+target_sha256 = "b07ffeac8cb9511d4d1598f3bb17b2e451d856565446ace68b47569ca270b173"
+evidence = "NEW: Removes army grid side/index from one or both hex cells stride0x70 depending wide/facing flags. End0x74d10; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004687c0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x74d10
+mac_size = 0xbc
+target_sha256 = "4b18299e449fa18306660fd19f23d01bf4bae440c74b5a43b4d324f1539ce634"
+evidence = "NEW: Places army side/index at requested hex and second wide hex, cell stride0x70. End0x74dcc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00468860
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x74dcc
+mac_size = 0x120
+target_sha256 = "3a56fa19b604150864037cd2066cc1a8ac44c4881634f1755e1d21cfe62ffa52"
+evidence = "NEW: Allocates viewArmyWindow0x1ff748; places view near grid, opens0x200790/0x2007bc, dispose; popup coordinate bounds502/275/301. End0x74eec; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00468990
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x74eec
+mac_size = 0xb30
+target_sha256 = "d3535a622d6e4657cba55704b67d9269fcd728eeb853f4c0be61cc4ee4b7790e"
+evidence = "NEW: Pow-effect animation traverses both sides, plays army samples0x48ec4, applies pending spells0x190540, death0x500f8 and vanish0x730bc. End0x75a1c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004693a0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x75a1c
+mac_size = 0xc0
+target_sha256 = "2f465557ee43a93909051c5d3668b9d0e58c270cbc7087f0661e6c580d18ddad"
+evidence = "NEW: Side cleanup scans living stacks except tower149, calls battle state0x86180 and processDeath0x500f8. End0x75adc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00469440
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x75adc
+mac_size = 0x160
+target_sha256 = "3057f8cda0ce6d51f54a8635aeccdb108b2958b0e88b47d06250540c9c31d49a"
+evidence = "NEW: Phoenix131 rebirth probability, random0x28e00c, sample0x219150 and resurrection0x1986ec across two sides. End0x75c3c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00469600
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x75c3c
+mac_size = 0x9c
+target_sha256 = "1ec44aa566322149c612857e16695f22390bdb7f36d2481030736d1ef4dcc043"
+evidence = "NEW: Six adjacent cells using stride12, resolves army0x1081f8, excludes supplied pointer and isEnemy0x4e7d0. End0x75cd8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00469670
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x75cd8
+mac_size = 0x138
+target_sha256 = "402411db12ae495dd00f4f4744b2dd56d5bb44b1d3ace62fe3fadadcef396044"
+evidence = "NEW: Hex distance with row division17 and four abs0x2887a0 evaluations, odd/even row diagonal adjustment. End0x75e10; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00469750
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x75e10
+mac_size = 0x108
+target_sha256 = "6be6c14b9887adbda3aaa890ab68abb5bb55a2ac6630b57f10137bc98bed8a70"
+evidence = "NEW: Both side army loops call army setLuck0x49b90 and setMorale0x49ce0 with opposing heroes/groups and magic terrain. End0x75f18; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00469880
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x75f18
+mac_size = 0x214
+target_sha256 = "58d7a16cde82858c7f3c84223a06914a6032bcbbf0084357ef041a45c11dff3b"
+evidence = "NEW: Missile origin/frame uses army missile data stride0x54, facing and destination angle via atan0x2a1820; writes four out-parameters. End0x7612c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00469a10
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x7618c
+mac_size = 0x78
+target_sha256 = "4f56e3d3d3613f37943fef304cfc70d1ba28ef5528d95703c416082301373524"
+evidence = "NEW: Blocked gate95/96 honors drawbridge state3 and retained gate-clear0x7612c; otherwise tests cell blocked bit. End0x76204; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00469a90
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x76204
+mac_size = 0x2c0
+target_sha256 = "9fa41ac4bd966987574ab9816e9513625e4fbb68d46533d3932f18f09cdbc249"
+evidence = "NEW: Damage/death message selects localized strings by quantities, formats std strings0x131520 and passes battle text0x80d48; quick-combat bypass. End0x764c4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00469e50
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x76598
+mac_size = 0x144
+target_sha256 = "25d5851c9dc2fdba94eea0d117e026edac9d343985e5c9dc0d3caf10e2e0262c"
+evidence = "NEW: Version>=2 moat check0x764c4; stops/restarts walking sample, damage0x5004c, message0x76204, pow0x74eec and rebirth0x75adc. End0x766dc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00469f20
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x766dc
+mac_size = 0x114
+target_sha256 = "dd815489decfcd2448942e8ab93134860b0f12aa80bf43b4d8a0a877be659084"
+evidence = "NEW: Adds raised creatures0x585a4; if no room obtains upgrade0x889a0 and scales raised count(2*n+2)/3, retries add. End0x767f0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00469fe0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x767f0
+mac_size = 0xf0
+target_sha256 = "899a4bbaf1fffd88e7b133ba52a50d41ea753ccc376240ee2bf0c466cee08956"
+evidence = "NEW: Iterates EagleEye spell set helpers0x768e8/0x768e0, artifact book0xf4dfc, adds spell0xf4fec and advances set0x76e9c. End0x768e0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0046a070
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x768f0
+mac_size = 0x1a4
+target_sha256 = "8fbbc16988c857d9fbb7d8d6064596348c2938fe5a1f88fa071d2ea271d31687"
+evidence = "NEW: Dead hero artifact transfer reads worn/backpack slots0x103da8/0x103854/0x103a54 and appends0x7703c;19equipment slots with forbidden artifact categories. End0x76a94; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0046a350
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x76a94
+mac_size = 0xdc
+target_sha256 = "e77afdc86b29bb0b9d40a88abe76bffbb528b78967bab43b11c91f2546fdb70e"
+evidence = "NEW: Gained experience calls retained stack-experience0x71e50 and hero experience factor0x105514, handles dead hero500 bonus. End0x76b70; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0046a460
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x76b70
+mac_size = 0x58
+target_sha256 = "e9b881e2127afc71029759b5ce934c53ca35bc6e98b6e5ea552343ed684898a5"
+evidence = "NEW: Tower marker dispatches grid254/251/256 to three archer state flags. End0x76bc8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0046a4a0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x76bc8
+mac_size = 0xac
+target_sha256 = "5280dd8d9f159565a2bec421f3b7474bf9c1d449298fe6c062ab559ac6e1b23c"
+evidence = "NEW: Quick-combat predicate reads player control and both hero/player town records stride0x15c, combines skip/AI flags. End0x76c74; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0046a520
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x76c74
+mac_size = 0x7c
+target_sha256 = "11128810cf02c8e86b3e41b7ad061c10195483af11e3582be11050bb502836df"
+evidence = "NEW: Clears moving-grid mask with memset0x26ad3c, sets current grid and getSecondGridIndex0x52874 for wide creature. End0x76cf0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0046a570
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x76cf0
+mac_size = 0x15c
+target_sha256 = "3bf95402228895c5a6bc487afad7217eb969d98981310b208b7dc435cbddeec1"
+evidence = "NEW: Obstacle attacks invoke landmine0x190358/firewall0x190164/moat0x76598 for current and second wide grid0x52874. End0x76e4c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00462920
+compgen_kind = "CLASS_CTOR"
+compgen_type = "TArcher"
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6e02c
+mac_size = 0x10
+target_sha256 = "bc46cf81975d49b65125b88cfeca4f7388dab7b64fd958c71f54b70c37d67329"
+evidence = "NEW: TArcher ctor zeroes sprite handles+4/+8; manager array-constructor0x6df34 uses3 elements stride0x24 and function descriptor data1+0x6d28 resolves code0x6e02c."
+
+[[functions]]
+retail_va = 0x00462930
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "TArcher"
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6df98
+mac_size = 0x94
+target_sha256 = "0a72e1cb7dc5c5dc4ac43d37d426e970ebcdd0df1dcdf4f3a14282c6eab78187"
+evidence = "NEW: TArcher destructor disposes handles+8 then+4, optional delete; manager array-constructor0x6df34 destructor descriptor data1+0x6d20 resolves code0x6df98."

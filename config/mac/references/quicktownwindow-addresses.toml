@@ -1,0 +1,54 @@
+[[functions]]
+retail_va = 0x00530120
+unit = "quicktownwindow"
+mac_section = 0
+mac_offset = 0x14be1c
+mac_size = 0xa90
+target_sha256 = "a0f20160ea2bf69b5b74893652426259b583c7f2d5ea5404d6a90479adc8927b"
+evidence = "NEW: Town ctor: heroWindow x/y200 size194x186 flag0x12; townqvbk.pcx data1+0x4c7cc xref0x14be88; long hall/castle/gold/widget path; final blr0x14c8a8 before next ctor. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x005307d0
+unit = "quicktownwindow"
+mac_section = 0
+mac_offset = 0x14c8ac
+mac_size = 0x234
+target_sha256 = "3a1371f4e46dc343007eb115178a53a92c6517a4f9723ef96f1a7c8d835fd570"
+evidence = "NEW: Garrison ctor: heroWindow x/y200 size188x182 flag0x12; second townqvbk.pcx xref0x14c90c, text and initializeArmyDisplay call; final blr0x14cadc before destructor. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x00530920
+unit = "quicktownwindow"
+mac_section = 0
+mac_offset = 0x14cae0
+mac_size = 0xac
+target_sha256 = "ee9a01ad7d0b6771d2d4d128bb5c3fd29b5848b8b4fdb4ac6348509d8ad0a7ba"
+evidence = "NEW: Destructor: quicktown vtable, widget vector virtual delete loop, base heroWindow destructor and optional Mac delete flag; final blr0x14cb88. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x00530990
+unit = "quicktownwindow"
+mac_section = 0
+mac_offset = 0x14cb8c
+mac_size = 0x340
+target_sha256 = "58c5a96f5fcc9089ab967eed98e6296797b49fcfb34e9c05866bacf05aadd33a"
+evidence = "NEW: Army display: getNumArmies0x58528, view-level guard, seven army-slot loop and icon/text widgets with cprsmall.def; final blr0x14cec8 before center. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x00530ca0
+unit = "quicktownwindow"
+mac_section = 0
+mac_offset = 0x14cecc
+mac_size = 0xe4
+target_sha256 = "58fb5dbe421bf3b59e5aa33d821997dc22477ca46f93b0a2c4c6e70c5fe84a59"
+evidence = "NEW: Center leaf: half-width and half-height clamps against 799 and599; stores x+0x18,y+0x1c; final blr0x14cfac before quickWindowWait. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x00530d30
+unit = "quicktownwindow"
+mac_section = 0
+mac_offset = 0x14cfb0
+mac_size = 0x2c
+target_sha256 = "676d28d5befc315dfebac117843be2218342fe936a9938e801d3049a5b51d20d"
+evidence = "NEW: Quick-view wrapper: g_windowManager call doQuickView0x20dd08; final blr0x14cfd8 before static initializer. Full span SHA verified."
+

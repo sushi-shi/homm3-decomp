@@ -1,0 +1,145 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x455ef0
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x62c6c
+mac_size = 0x12c
+target_sha256 = "13a20b8fa86017359a359cb2ef218b3aac5eff170fb6ecdd1cbb0e060e24b7c7"
+evidence = "widget parameterized ctor0x20a504, hotkey vector push, sprite loader0x153fcc and frame fields; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4560f0
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x62d98
+mac_size = 0x9c
+target_sha256 = "978cd774d3d0e05677b2de49b3a1d14055fa139737e4d723d71d3be461b8ada0"
+evidence = "disposes sprite, destroys hotkey vector/string and widget base; Mac optional delete flag integrated; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x456190
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x62f68
+mac_size = 0x554
+target_sha256 = "204810affeb996e5a4294ce00c00ce08f9d6d2b77246a8ed9c8ccd1cd69f77e5"
+evidence = "button message dispatcher calls setPalette0x62e34, select0x634bc, deselect0x635e0, widget::main, and input event polling; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x456860
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x634bc
+mac_size = 0x124
+target_sha256 = "b4312ddddd18539896bd6caa0ec03fe90cace7fccd7f299b16a6dde01ffdfd9f"
+evidence = "click sample playback0x218d54, draw dispatch and winmgr updateScreen0x20df2c, sets widget select message and repeat timer; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x456940
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x636d4
+mac_size = 0x114
+target_sha256 = "371484366edafb0056bf4886591fac0e5a26d10f7e0758b6569289d74cc40441"
+evidence = "chooses normal/selected/dimmed frame and calls CSprite::drawInterface0x8ab04; button vtable slot4; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4569e0
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x637e8
+mac_size = 0x54
+target_sha256 = "3d44ae684064ccadf638507bab5724bc19809a9d43dd249b665714fabae14b96"
+evidence = "retrieves two sprite palette forms and calls player-palette helpers0x20c684/0x20c6c8; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x456a10
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x6383c
+mac_size = 0x20
+target_sha256 = "91ea1cc0b1df22f41835ea4c71b254bfd2db8a374886b435839a2608ac830c80"
+evidence = "button-family vtable hook forwards to widget::onSleepChange0x20ac58; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x456a50
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x6385c
+mac_size = 0xd4
+target_sha256 = "2575c50f4eb4cc8a4fe2de37ebd0afbdefcb2900975c1952363623af26f8bae4"
+evidence = "calls button default ctor0x62ab8, initialize0x62e94, constructs text string and loads font0x153944; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x456bf0
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x63930
+mac_size = 0x74
+target_sha256 = "a396940ad105200943341d12dfb065952a9e1c26e4b45be821574f671f396d65"
+evidence = "disposes font then delegates button destructor0x62d98; Mac optional delete flag integrated; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x456ca0
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x639a4
+mac_size = 0xf4
+target_sha256 = "0f42fc9a31ce0c8a479dd18e29dc083240f8c3e8f1bf2897bf6e454bb0071502"
+evidence = "calls button::draw0x636d4 then font::drawBoundedString0xc9238 with selected offset; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x456d30
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x63a98
+mac_size = 0x6c
+target_sha256 = "775b9487c51b4fa023fbb4c1494a5ea094aaeb85174794015f7249247252242c"
+evidence = "forwards widget/image/frame arguments to button ctor0x62c6c then stores handler; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x456db0
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x63b94
+mac_size = 0x60
+target_sha256 = "3ddd6a0d25f1637382ba3920d6f1cc98663d5afc947012e1e8c4a209d1b857af"
+evidence = "delegates button destructor0x62d98; Mac optional delete flag integrated; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x456e50
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x63b04
+mac_size = 0x90
+target_sha256 = "27005a5d9266800816c2bc557475e27e70841810b50cb5b831c66674c187a9d5"
+evidence = "calls button::main0x62f68 then handler through function pointer on eligible widget event; complete adjacent PowerPC span."
+
+[[helpers]]
+source_helper = "button::setPalette"
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x62e34
+mac_size = 0x60
+target_sha256 = "d919f1250917afcd4acb8d39d7108d2947b67b98f3cb3d8ca4cdbc4e96ee6a67"
+evidence = "loads palette0x1533e0 and applies it to sprite; called by button::main; complete adjacent PowerPC span."
+
+[[helpers]]
+source_helper = "button::initialize"
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x62e94
+mac_size = 0xd4
+target_sha256 = "60e6f5be24b6df284f02d41af2352a636b199caff3ed5090a370086d18b11ef4"
+evidence = "widget::initialize0x20a618, hotkey vector push, sprite load0x153fcc; called by textButton ctor; complete adjacent PowerPC span."
+
+[[helpers]]
+source_helper = "button::deselect"
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x635e0
+mac_size = 0xf4
+target_sha256 = "9cf58d18e17225bcc152fd7bfb8fb9fe3c30d3955f0286a9e7f8b9f5fca9fa90"
+evidence = "draw and winmgr updateScreen0x20df2c, stamps deselect/end-dialog event; called by button::main; complete adjacent PowerPC span."

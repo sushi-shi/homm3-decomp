@@ -1,0 +1,57 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x45e7c0
+unit = "campaignwindow"
+mac_section = 0x0
+mac_offset = 0x69dec
+mac_size = 0x190
+target_sha256 = "b9469f865e8a6ba184133b49f7efb366601b270928a02e7facde5de8c16d8045"
+evidence = "NEW: openPreview: 0x50-byte campaign row, videoOpen0x25e5e4 with 200x116, BinkPause and 0x30-byte Bink-state copy, bitmapBorder16 widget insertion; next prologue0x69f7c. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x45ea40
+unit = "campaignwindow"
+mac_section = 0x0
+mac_offset = 0x69f7c
+mac_size = 0xb78
+target_sha256 = "aeb457e13aa013896d4bb6e721e163acbbb1a764f5085c11faed7ca28f9af03d"
+evidence = "NEW: Ctor: heroWindow800x600, g_game and campaign global stores, CampChk.pcx0x35324 and unique campbkx2/campback/cmpscan string xrefs at0x6a520..0x6a5cc, preview rows; final blr0x6aaf0. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x45f110
+unit = "campaignwindow"
+mac_section = 0x0
+mac_offset = 0x6aaf4
+mac_size = 0xc8
+target_sha256 = "d850a82302748a62daad6b710ffbf4de3c33bf46d5da2013af821b2da0e79b0e"
+evidence = "NEW: Implicit SCampaign destructor: destroys four vector members at offsets0x30/0x3c/0x48/0x54 then std::string+0x14, with optional Mac deallocation; final blr0x6abb8. Full span SHA verified."
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "SCampaign"
+
+[[functions]]
+retail_va = 0x45f210
+unit = "campaignwindow"
+mac_section = 0x0
+mac_offset = 0x6abbc
+mac_size = 0x18c
+target_sha256 = "d3005d4c02c628e24b7edf66100124fb8b597bcd80d94b29c3ddd3c7b498d5ec"
+evidence = "NEW: TCampaignWindow destructor: restores six campaign Bink snapshots, closeBink0x25dc20, widget deletion loop and base destructor; final blr0x6ad44. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x45f2c0
+unit = "campaignwindow"
+mac_section = 0x0
+mac_offset = 0x6ad48
+mac_size = 0x58
+target_sha256 = "cba6d76b2ade5e7a90fcd0e2a6ffcc19ff38526ecc58d58583b6550a1e4a5e6f"
+evidence = "NEW: doModal: startMP3(MainMenu)0x21938c then windowManager dialog call; final blr0x6ad9c. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x45f2f0
+unit = "campaignwindow"
+mac_section = 0x0
+mac_offset = 0x6ada0
+mac_size = 0x318
+target_sha256 = "4d9744bdf6fc9850087d2369c42db9a32dc7522f75d858cff2bcd2596d68ae6d"
+evidence = "NEW: Handler: message/video-widget dispatch, BinkPause0x2a1910 and restartBink0x25d930, virtual widget calls; final blr0x6b0b4. Full span SHA verified."

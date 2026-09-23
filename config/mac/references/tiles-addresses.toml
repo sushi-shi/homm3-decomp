@@ -1,0 +1,10 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25bcd4
+mac_size = 0xf8
+unit = "tiles"
+target_sha256 = "f8984e1df5dde65451475160f65810c116ea0a89884aa60a29f1518f4f74a996"
+evidence = "Contiguous tiles TU order corroborated by body: eight-byte-fill-then-top1/7/0-bottom3/5/4-left5/7/6-right3/1/2-edge-mask;five-arguments-r3-to-r7;callers2223d4-and258a8c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5bc910
+

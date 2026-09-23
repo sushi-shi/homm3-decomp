@@ -205,10 +205,10 @@ retail_va = 0x0059acb0
 unit = "soundmgr"
 mac_section = 0
 mac_offset = 0x21938c
-mac_size = 0x374
+mac_size = 0x344
 mac_symbol = ".startMP3__12soundManagerFPCciUc"
-target_sha256 = "f7d0de9d5723342a24d1822028d7ad962775e2566d2aa1d951be21e8bc1feef2"
-evidence = "showCongrats passes soundManager, Win Scenario, zero loop count and stop-samples byte one at Mac 0x115e4c. This Mac body checks sound availability, compares the requested filename with current streams, conditionally stops samples, selects one of three stream handles and updates loop count, the Mac audio counterpart of canonical src/soundmgr.cpp startMP3. Own prologue 0x21938c, final BLR 0x2196cc and next helper starts 0x2196d0, bounding all 884 bytes. Platform audio APIs differ."
+target_sha256 = "6c465e4de9734ef0fabf1f1810b0f39893123390a730b3a59ad381b21a0007ec"
+evidence = "showCongrats passes soundManager, Win Scenario, zero loop count and stop-samples byte one at Mac 0x115e4c. This Mac body checks sound availability, compares the requested filename with current streams, conditionally stops samples, selects one of three stream handles and updates loop count, the Mac audio counterpart of canonical src/soundmgr.cpp startMP3. Own prologue 0x21938c, final BLR 0x2196cc and next helper starts 0x2196d0, bounding all 836 bytes. Platform audio APIs differ."
 
 [[functions]]
 retail_va = 0x004e91d0

@@ -1,0 +1,221 @@
+# Reviewed compiler-generated class addresses. Source annotations own identities.
+
+[[functions]]
+retail_va = 0x4ce4b0
+unit = "game"
+compgen_kind = "CLASS_CTOR"
+compgen_type = "HeroExtra"
+mac_section = 0x0
+mac_offset = 0xe66d4
+mac_size = 0x74
+target_sha256 = "d1801b1167dd897811ceb9dcd356c465bc871ca8d7a2f1deedc84dd12d004e76"
+evidence = "Known game ctor0xe5784 calls construct_array at0xe57d4 on game+0xa0 with stride0x328 count156. TOC-0x7460 resolves descriptor1+0x7788 to this ctor; it constructs19 and64 artifact entries at+0x68/+0x100, MSL string+0x308 and spells+0x314, proving HeroExtra. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4ce520
+unit = "game"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "HeroExtra"
+mac_section = 0x0
+mac_offset = 0xe667c
+mac_size = 0x58
+target_sha256 = "485d55d961e48265eaeef1ca7974a803e1672f8c5bfdd3d14379b6079cbff9f4"
+evidence = "Same game HeroExtra array construction uses TOC-0x7464 as destructor; game::~game passes it at0xe6b50 with receiver+0xa0 stride0x328 count156. Body destroys exactly string+0x308 then optional CodeWarrior deletion. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4ce570
+unit = "game"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "playerData"
+mac_section = 0x0
+mac_offset = 0xe65b0
+mac_size = 0x68
+target_sha256 = "9daf2b1b4d039bac23966239361637ee1221e2ab6dbb704c6dd9457d7f41cc24"
+evidence = "Known game constructor0xe5784 playerData array at+0x1ff48 has stride0x15c count8; construct_array0xe5a20 uses ctor0xcc2a0 and destructor descriptor through TOC-0x746c to0xe65b0. Known game destructor repeats same receiver/stride/count at0xe69f8. This body destroys shipyards vector+0x8c via0xe924c. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4bdf80
+unit = "game"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "SavedGameHeader"
+mac_section = 0x0
+mac_offset = 0xd23c8
+mac_size = 0x140
+target_sha256 = "d159601379dc45c28b47a5f761e6b99ae498c4791044ee789503e80a42b8a085"
+evidence = "Immediately after reviewed game::load0xd051c..0xd23c8; destructor reverses confirmed SavedGameHeader ctor0xcf490: filename+0x508, embedded SCampaign+0x4a8 with four vectors and string+0x4bc, NewSMapHeader+0x10 with eight player slots stride0x40. Distinct nested layout proves class independently of TU order. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4b9230
+unit = "game"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "Sign"
+mac_section = 0x0
+mac_offset = 0xe8408
+mac_size = 0x58
+target_sha256 = "c2111c1142501c74bf5028ac0231198db8572b9dc773b149891ef201b7ad6e1f"
+evidence = "Reviewed game::loadSignPool0xcb1f0 calls sign-vector resize0xe8358 on game+0x4d03c. Resize constructs eight-byte Sign with flag0 and string+4; adjacent retained destructor0xe8408 destroys string+4. Independent game destructor reaches vector clear0xeea3c with the same eight-byte stride and string+4. Loader retains descriptor1+0x76f8 for the class destructor. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4caa40
+unit = "game"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "TPickRandomTownName"
+mac_section = 0x0
+mac_offset = 0xf0ef8
+mac_size = 0x74
+target_sha256 = "07bd0d360889c3ead0467b288c8e391a29225b5cd2883be69abf4ce6a797171f"
+evidence = "Known resetRandomTownNames0xe1f98 addresses TOC-0x5b48 and loops9 objects stride0x14. Initializer0xf0e90 uses same global and construct_array count9 stride0x14 at0xf0ea4, ctor TOC-0x7484=>0xf0f6c passes bounds0,15 to TPickANumber0x131590, destructor TOC-0x7488=>0xf0ef8 destroys vector+8. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4cbcf0
+unit = "game"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "CGameTransferDlg"
+mac_section = 0x0
+mac_offset = 0xe3134
+mac_size = 0x7c
+target_sha256 = "2b0a7e0b4842604255750afe3936196dc7946a8a4a0964f609577e2c00e3f301"
+evidence = "CGameTransferDlg RTTI string1+0x59498/typeinfo1+0x59520/vtable1+0x59528 destructor slot resolves descriptor1+0x7790 to0xe3134. Body installs same vtable through TOC-0x7448, destroys CGameTransferSmack+0x54 via0x215074 then CTextDialog base0xa15c0. Follows reviewed transmitSaveGame which owns this local. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4d4450
+unit = "game"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "TownExtra"
+mac_section = 0x0
+mac_offset = 0x124a2c
+mac_size = 0x58
+target_sha256 = "944de99f7f03c741ed0cc70ba78cfe62903d2634081c48ba9ce3b15589e2c460"
+evidence = "Reviewed NewfullMap::readTownData0x124278..0x124978 constructs TownExtra; its emitted cleanup group contains descriptor-retained dtor0x124a2c destroying string+0x58. Independently game::~game tears down m_scenarioTowns at+0x94 through0xe92b0/0xee95c, which walks0x7c-byte records and destroys exactly+0x58. Complete terminal BLR extent; next ordinary entry is readHeroData."
+
+[[functions]]
+retail_va = 0x45fc90
+unit = "game"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "hero"
+mac_section = 0x0
+mac_offset = 0x9d060
+mac_size = 0x58
+target_sha256 = "905a3148e77745c005b9264f307b3d2a2cff6595dd2025912ebe1463ed9df3af"
+evidence = "Known game constructor at0xe5a54 and destructor at0xe69c0 pass hero array receiver game+0x20a34, stride0x486 count156. Destructor callback TOC-0x7474 resolves1+0x6ee0 to0x9d060. Body destroys hero string+0x3da, independently seen in events hero cleanup. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x49bc00
+unit = "event_record"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "type_record_shroud"
+mac_section = 0x0
+mac_offset = 0xc26d0
+mac_size = 0x7c
+target_sha256 = "35f63a9ac1f3116d70dd7f77c137730611bc27e94a92343e875e615da7cbb3d7"
+evidence = "type_record_shroud RTTI name1+0x42148 leads typeinfo1+0x42184/vtable1+0x4218c; destructor slot1+0x42194 resolves descriptor1+0x7400 to0xc26d0. Body installs own table, destroys changes vector+8 via0xc36ec, then base type_event_record0xbef78. Maps implicit complete destructor only; Windows scalar-deleting wrapper remains separate. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4aaa40
+unit = "events"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "type_university_window"
+mac_section = 0x0
+mac_offset = 0xb7a90
+mac_size = 0x98
+target_sha256 = "eb75b4e66047426565d471b9742e3170e53d50d6c3264a2c99a2390ee61ced31"
+evidence = "type_university_window RTTI string1+0x58967=>typeinfo1+0x589fc=>vtable1+0x58a04 destructor slot resolves0xb7a90. Body installs same table, destroys two vectors+0xe0/+0xd4 via0x745c and base heroWindow0x1be60, matching source class two vector members. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4ad130
+unit = "events"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "ccombatinitmsg"
+mac_section = 0x0
+mac_offset = 0xba7cc
+mac_size = 0x90
+target_sha256 = "538e8cfe4b7bcdfa6478746870e2de981eb369d1182f928210a2eeed04258845"
+evidence = "Retained descriptor1+0x7398; body installs CCombatInitMsg vtable through TOC-0x74fc (RTTI name1+0x420c4=>typeinfo1+0x42100=>vtable1+0x42108). Destroys right hero+0x68e/string+0xa68, left hero+0x208/string+0x5e2, town+0xac/string+0x170. Identical member topology is independently expanded at+0x78 in proven CWaitForRemoteBattleDlg dtor0xbc548. Source annotation spelling ccombatinitmsg retained. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4aeb00
+unit = "events"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "clevelpickwaitdlg"
+mac_section = 0x0
+mac_offset = 0xbc4dc
+mac_size = 0x6c
+target_sha256 = "7e2ad5f812a6fd9f5a4e26636a076a1cec0ed9c01d53c1e46a98b03929693752"
+evidence = "CLevelPickWaitDlg RTTI name1+0x5961c=>typeinfo1+0x59654=>vtable1+0x5965c destructor slot resolves0xbc4dc. Body installs own table, destroys CNetMsgHandlerPause+0x78 via0x215c94, then CAnimatedDlg0x213028. Source annotation spelling clevelpickwaitdlg retained. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4ad0e0
+unit = "events"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "town"
+mac_section = 0x0
+mac_offset = 0xba85c
+mac_size = 0x58
+target_sha256 = "91108882553eddbb57eb6520c7de8a49778546fb77fea98fb43d1f0cd3b1fa4a"
+evidence = "Retained descriptor1+0x73a0 after CCombatInitMsg cleanup; destroys town name string+0xc4. Independent known game::~game town vector at+0x20a28 calls0xe93b4/0xee9cc, whose elements stride0x15c and destroy string+0xc4; CCombatInitMsg cleanup selects same town+0xac/string+0x170. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4aea00
+unit = "events"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "CWaitForRemoteBattleDlg"
+mac_section = 0x0
+mac_offset = 0xbc548
+mac_size = 0xb8
+target_sha256 = "d346da959c240e564f8a9f82438373644edb0dbafa91e237657bc970ae74d77f"
+evidence = "CWaitForRemoteBattleDlg RTTI name1+0x59564=>typeinfo1+0x595d4=>vtable1+0x595dc destructor slot resolves0xbc548. Body destroys pause handler+0xb8c, embedded CCombatInitMsg+0x78 including two hero strings and town string, then CAnimatedDlg0x213028. Complete terminal BLR extent."
+
+[[functions]]
+retail_va = 0x4cf0b0
+unit = "game"
+compgen_kind = "VECTOR_DTOR"
+compgen_type = "TownExtra"
+mac_section = 0x0
+mac_offset = 0xe92b0
+mac_size = 0x64
+target_sha256 = "5c959e234dfb4f618346f7af6ff2d8e8fc2cb9a8fd2abdec2c926cd4f0859e17"
+evidence = "Known game::~game m_scenarioTowns receiver+0x94 calls0xe92b0; it calls clear0xee95c (stride0x7c string+0x58 TownExtra), frees allocation+8, and optionally self. Actual vector<TownExtra> destructor; Address identity only; no equivalence between the two library implementations is asserted."
+
+[[functions]]
+retail_va = 0x4cf3d0
+unit = "game"
+compgen_kind = "VECTOR_DTOR"
+compgen_type = "town"
+mac_section = 0x0
+mac_offset = 0xe93b4
+mac_size = 0x64
+target_sha256 = "39877b6fc950fdb0b4802a3ed6599ea62cf8ac36a26c78c0fcb0120461bb6245"
+evidence = "Known game::~game m_towns receiver+0x20a28 calls0xe93b4; clear0xee9cc walks town stride0x15c and string+0xc4 then frees allocation+8. Independent processOnMapTowns0xe2024 accesses same vector. Actual vector<town> destructor; Address identity only; no equivalence between the two library implementations is asserted."
+
+[[functions]]
+retail_va = 0x4cf6f0
+unit = "game"
+compgen_kind = "VECTOR_DTOR"
+compgen_type = "Sign"
+mac_section = 0x0
+mac_offset = 0xe9418
+mac_size = 0x64
+target_sha256 = "5406b1b7df932f4d3a3b3b139fe64f0c18783093168221be8842d68a71261237"
+evidence = "Known game destructor receiver+0x4d03c and loadSignPool same vector; clear0xeea3c walks Sign stride8 string+4, then allocation+8 freed. Actual vector<Sign> destructor; Address identity only; no equivalence between the two library implementations is asserted."
+
+[[functions]]
+retail_va = 0x4cf780
+unit = "game"
+compgen_kind = "VECTOR_DTOR"
+compgen_type = "type_creature_bank"
+mac_section = 0x0
+mac_offset = 0xe9670
+mac_size = 0x64
+target_sha256 = "5ce26b77431a33c383f324ab92c7109262d541e35e08eb03e3165cd92ef93a40"
+evidence = "Known game destructor receiver+0x4d084 calls this dtor; clear0xeeb90 walks creature-bank stride0x68 and nested vector+0x5c. Source type_creature_bank has exactly that member topology. Actual vector<type_creature_bank> destructor; Address identity only; no equivalence between the two library implementations is asserted."
+
+[[functions]]
+retail_va = 0x4cf7c0
+unit = "game"
+compgen_kind = "VECTOR_DTOR"
+compgen_type = "TRumour"
+mac_section = 0x0
+mac_offset = 0xe96d4
+mac_size = 0x64
+target_sha256 = "83f6c2d94e0150d7d27d667f5094660bb34b8fdf91f6b3a9423e2ac7247c4eec"
+evidence = "Known game destructor receiver+0x4d2f0 calls this dtor; reviewed rumour readers use same vector. Clear0xeec08 walks TRumour stride8 with string+0 then frees allocation+8. Actual vector<TRumour> destructor; Address identity only; no equivalence between the two library implementations is asserted."

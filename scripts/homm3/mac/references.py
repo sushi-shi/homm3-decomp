@@ -1,7 +1,8 @@
 """Reviewed source-owned callee identities without claiming a compiled match.
 
-These spans resolve callers while the callee's Mac compilation support is
-unfinished. Source VA claims or uniquely selected canonical helper definitions
+These spans record addresses before compilation support is finished. References
+with a verified compiler symbol also resolve candidate calls; address-only
+references must not invent a linkage name. Source VA claims or helper definitions
 own their names. Boundary, hash and overlap checks also apply to helpers with
 no established Windows VA; none enter the exact-score denominator.
 """
@@ -23,7 +24,7 @@ class Reference:
     mac_section: int
     mac_offset: int
     mac_size: int
-    mac_symbol: str
+    mac_symbol: str | None
     target_sha256: str
     evidence: str
     source_helper: str | None = None
@@ -76,10 +77,12 @@ def load(root: Path) -> list[Reference]:
                 _, signature, _ = source_helper(source.read_text(), selector, source)
             elif row.get("compgen_kind"):
                 kind, type_name = row["compgen_kind"], row.get("compgen_type")
-                if (kind not in ("CLASS_CTOR", "IMPLICIT_COPY_CTOR", "IMPLICIT_DTOR")
+                if (kind not in ("CLASS_CTOR", "IMPLICIT_COPY_CTOR", "IMPLICIT_DTOR", "VECTOR_DTOR")
                         or not isinstance(type_name, str)
                         or not re.fullmatch(r"[A-Za-z_]\w*", type_name)):
                     raise SourceError(f"{path}: invalid compiler-generated callee claim {va:#x}")
+                if kind == "VECTOR_DTOR" and row.get("mac_symbol") is not None:
+                    raise SourceError(f"{path}: vector destructor references currently support addresses only")
                 pattern = (r"^\s*VA_COMPGEN\(\s*" + re.escape(f"0x{va:08x}")
                            + r"\s*,\s*[^,]+,\s*" + kind + r"\s*,\s*" + type_name + r"\s*\)")
                 if len(re.findall(pattern, source.read_text(), re.MULTILINE | re.IGNORECASE)) != 1:
@@ -88,11 +91,13 @@ def load(root: Path) -> list[Reference]:
             else:
                 _, signature = _claim(source.read_text(), va, source, allow_declaration=True)
             ref = Reference(va, unit, source, signature, row["mac_section"],
-                            row["mac_offset"], row["mac_size"], row["mac_symbol"],
+                            row["mac_offset"], row["mac_size"], row.get("mac_symbol"),
                             row["target_sha256"], row["evidence"], selector)
             key = ref.identity
             if (ref.mac_section < 0 or ref.mac_offset < 0 or ref.mac_size <= 0
-                    or ref.mac_offset % 4 or ref.mac_size % 4 or not ref.mac_symbol
+                    or ref.mac_offset % 4 or ref.mac_size % 4
+                    or (ref.mac_symbol is not None and
+                        (not isinstance(ref.mac_symbol, str) or not ref.mac_symbol))
                     or not ref.evidence.strip()
                     or not re.fullmatch(r"[0-9a-f]{64}", ref.target_sha256)):
                 raise SourceError(f"{path}: invalid callee reference {key}")
@@ -101,7 +106,8 @@ def load(root: Path) -> list[Reference]:
                     raise SourceError(f"{path}: conflicting callee reference {key}")
                 continue
             if va in paired:
-                if location(paired[va]) != location(ref):
+                if (location(paired[va])[:3] != location(ref)[:3]
+                        or ref.mac_symbol is not None and paired[va].mac_symbol != ref.mac_symbol):
                     raise SourceError(f"{path}: callee reference contradicts admitted pair {va:#x}")
                 # Keep the reviewed hash check even if the scored legacy pair
                 # did not record a per-span hash.
@@ -109,14 +115,15 @@ def load(root: Path) -> list[Reference]:
                     raise SourceError(f"{path}: callee/pair hash conflict {va:#x}")
                 seen[key] = ref
                 continue
-            if ref.mac_symbol in names:
+            if ref.mac_symbol is not None and ref.mac_symbol in names:
                 raise SourceError(f"{path}: duplicate callee symbol {ref.mac_symbol!r}")
             for other in spans:
                 if (other.mac_section == ref.mac_section
                         and ref.mac_offset < other.mac_offset + other.mac_size
                         and other.mac_offset < ref.mac_offset + ref.mac_size):
                     raise SourceError(f"{path}: callee {key} overlaps {other.mac_symbol}")
-            names[ref.mac_symbol] = key
+            if ref.mac_symbol is not None:
+                names[ref.mac_symbol] = key
             spans.append(ref)
             seen[key] = ref
     return list(seen.values())

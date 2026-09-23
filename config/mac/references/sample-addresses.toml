@@ -1,0 +1,28 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x566da0
+unit = "sample"
+mac_section = 0x0
+mac_offset = 0x15da8c
+mac_size = 0x84
+target_sha256 = "60011e0d6ab0a18749ab3845868d1a00f5ffffaf895ce71777bd294a42707eff"
+evidence = "Direct resource constructor call at 0x15dabc with type0x20 (SFX); sets sample vtable and channel/volume/loop/size/data fields, allocates and copies PCM payload. Full BLR/next prologue."
+
+[[functions]]
+retail_va = 0x566e60
+unit = "sample"
+mac_section = 0x0
+mac_offset = 0x15db68
+mac_size = 0x8c
+target_sha256 = "082122d5982842a8c31d4d1b6a3508728cc4e530354ae004b7273d11fd55472a"
+evidence = "Canonical destructor maps to Mac delete-flag body: resets sample vtable, releases owned sound data, zeroes size/volume, invokes resource base destructor 0x15147c and optionally operator delete. BLR before compact size accessor."
+
+[[functions]]
+retail_va = 0x566e90
+unit = "sample"
+mac_section = 0x0
+mac_offset = 0x15dbf4
+mac_size = 0xc
+target_sha256 = "92438a4841b1c5d0ead1fab06e805e6d24a868c3c9609ddf9fe2abe40e5d657f"
+evidence = "Sample vtable at 1+0x4d268 points through descriptor 1+0x7d18 to this getSize slot; adjacent descriptors 1+0x7d20/7d28 point to sample destructor/delete wrapper. Mac leaf loads m_memSample.m_size at +0x2c and returns; unlike Windows source it omits sizeof(sample), a verified platform semantic difference. Complete BLR/next prologue."

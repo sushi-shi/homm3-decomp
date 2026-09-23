@@ -1,0 +1,19 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x558720
+unit = "resource"
+mac_section = 0x0
+mac_offset = 0x151400
+mac_size = 0x7c
+target_sha256 = "42a76b650e886e912c5619eef6b8d1afb136198fa2e098d9d9872de944898182"
+evidence = "Direct font constructor call at 0xc8d0c; stores resource vtable, strncpy 12-byte name and null terminator, type at +0x14 and reference count at +0x18, with null-name alternate. Complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5587a0
+unit = "resource"
+mac_section = 0x0
+mac_offset = 0x15147c
+mac_size = 0x48
+target_sha256 = "ed57b3134982abdd144449732cbc371b73cafebde92d04517bb79caf7b6a86e0"
+evidence = "Canonical empty destructor maps to Mac delete-flag body: vtable reset and optional operator delete; direct font destructor call at 0xc8de0. Complete BLR/next prologue."

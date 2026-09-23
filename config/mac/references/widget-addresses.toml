@@ -1,0 +1,100 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x5fe340
+unit = "widget"
+mac_section = 0x0
+mac_offset = 0x20a504
+mac_size = 0x54
+target_sha256 = "ae81e90273ac2c4356401d264c74ea5d4fa2b20dbef03f3a3b8b51e0fb159e18"
+evidence = "Six-argument constructor stores x/y/width/height/id/style short fields at +0x18..+0x14, vtable and active/drawn status 6; ends BLR."
+
+[[functions]]
+retail_va = 0x5fe410
+unit = "widget"
+mac_section = 0x0
+mac_offset = 0x20a558
+mac_size = 0x28
+target_sha256 = "f50410ca8ddf0dfd6b689673079aef9be19018c6396a71aed92c85ef4032e6aa"
+evidence = "Default constructor sets widget vtable, empty help pointers, freeText byte and active/drawn status 6; ends BLR before destructor."
+
+[[functions]]
+retail_va = 0x5fe430
+unit = "widget"
+mac_section = 0x0
+mac_offset = 0x20a580
+mac_size = 0x98
+target_sha256 = "0d8d8079062efbff1a37ca5517437f0f426196f6436f16c2db3b45a3816af71f"
+evidence = "Canonical destructor maps to Mac delete-flag body: clears s_lastHoverWidget if same object, frees rollover/right-click text when owned, optional operator delete; full BLR."
+
+[[functions]]
+retail_va = 0x5fe480
+unit = "widget"
+mac_section = 0x0
+mac_offset = 0x20a618
+mac_size = 0x54
+target_sha256 = "91bc8896f7582ce174f73ed7eda60d90ca2e5b0e2c524a42f1d7171545515cd4"
+evidence = "initialize stores null links, six coordinate/id/style shorts, status 6 and priority -1; leaf BLR then open leaf."
+
+[[functions]]
+retail_va = 0x5fe4d0
+unit = "widget"
+mac_section = 0x0
+mac_offset = 0x20a66c
+mac_size = 0x14
+target_sha256 = "ada18a6eebe0ebd50e1de9a640d6eef52126b8274d2a6aea6868f0475ba60d06"
+evidence = "open stores short priority +0x12, parent pointer +4 and returns zero; next address is empty close body."
+
+[[functions]]
+retail_va = 0x5fe4f0
+unit = "widget"
+mac_section = 0x0
+mac_offset = 0x20a684
+mac_size = 0x388
+target_sha256 = "b413593b1c601d2a6166876c70a4c960fff6f2c56d57b711c205b72d4c665383"
+evidence = "Message dispatch reads sleep count/status/geometry and handles mouse move plus widget commands; makes virtual draw calls and updateScreen 0x20df2c; ends before reviewed sendMessage."
+
+[[functions]]
+retail_va = 0x5fe800
+unit = "widget"
+mac_section = 0x0
+mac_offset = 0x20aa80
+mac_size = 0x54
+target_sha256 = "81d96af8f83e23297f313d5b21e44947f29f6ecbde09e75210e30684c1d64101"
+evidence = "dim computes widget+parent coordinates and calls screenBitmap::darken 0x5c550 with width/height; full BLR before setHelpText."
+
+[[functions]]
+retail_va = 0x5fe840
+unit = "widget"
+mac_section = 0x0
+mac_offset = 0x20aad4
+mac_size = 0x110
+target_sha256 = "7bab5522928e9387b63bbea574c4fbb5f70483038b80987cd8bb201fdd606ca4"
+evidence = "setHelpText frees old owned text, allocates/copies optional rollover/right-click strings through strlen/strcpy and records ownership flag; full BLR."
+
+[[functions]]
+retail_va = 0x5fe930
+unit = "widget"
+mac_section = 0x0
+mac_offset = 0x20abe4
+mac_size = 0x34
+target_sha256 = "e2178d761a0ce189c7cab348eac041809d28e7018533d2cde7c73e30c81e58cb"
+evidence = "processHover invokes virtual handler through glue after loading hover state; short complete BLR before enable."
+
+[[functions]]
+retail_va = 0x5fe940
+unit = "widget"
+mac_section = 0x0
+mac_offset = 0x20ac18
+mac_size = 0x44
+target_sha256 = "d5f39245767ab71afbe6f40eb2f915d69f75b4dbc92e56bf0f62f96dd0deb053"
+evidence = "enable branches on requested state and calls reviewed sendMessage 0x20aa0c twice with status commands; complete BLR."
+
+[[helpers]]
+source_helper = "widget::close"
+unit = "widget"
+mac_section = 0x0
+mac_offset = 0x20a680
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "Canonical empty close body is the single BLR immediately after widget::open; source has no Windows VA because retail folds identical empty body."

@@ -37,7 +37,8 @@ def _select(value: str, *, include_references=False):
         else:
             matches = [pair for pair in pairs if pair.retail_va == address]
     if len(matches) != 1:
-        raise ValueError(f"selector {value!r} found {len(matches)} admitted Mac pairs")
+        scope = "reviewed Mac identities" if include_references else "admitted Mac pairs"
+        raise ValueError(f"selector {value!r} found {len(matches)} {scope}")
     return matches[0]
 
 
@@ -55,7 +56,7 @@ def main(argv=None) -> int:
     p.add_argument("--fast", action="store_true", help="skip the Mac MAX checkpoint")
     p.add_argument("units", nargs="*", help="unit names (normally with --fast)")
     sub.add_parser("labels", help="list admitted Mac section offsets and inherited source labels")
-    p = sub.add_parser("show", help="show an admitted Windows/Mac pair")
+    p = sub.add_parser("show", help="show a reviewed Mac address or admitted byte target")
     p.add_argument("selector", help="Windows VA, mac:section:offset, unit, or function name substring")
     p = sub.add_parser("disasm", help="disassemble a pinned Mac code span")
     p.add_argument("selector")
@@ -140,6 +141,8 @@ def main(argv=None) -> int:
                 va = f"0x{pair.retail_va:08x}" if pair.retail_va is not None else ""
                 if pair.retail_va is None:
                     role = "source_helper_reference_only"
+                elif pair.mac_symbol is None:
+                    role = "address_reference_only"
                 print(f"{pair.mac_section}\t0x{pair.mac_offset:x}\t0x{pair.mac_size:x}\t"
                       f"{va}\t{pair.unit}\t{role}\t{pair.signature}")
             return 0
@@ -303,13 +306,14 @@ def main(argv=None) -> int:
             pair = SimpleNamespace(mac_section=address.section, mac_offset=address.offset, mac_size=args.size)
             print("[mac] Raw inspection span; function boundaries are unverified.")
         else:
-            pair = _select(args.selector)
+            pair = _select(args.selector, include_references=args.command in ("show", "disasm"))
         pef = _image()
         target = pef.code(pair.mac_section, pair.mac_offset, pair.mac_size)
         if args.command == "show":
-            print(f"Windows VA {pair.retail_va:#010x}  {pair.signature}  [{pair.unit}]")
+            identity = f"Windows VA {pair.retail_va:#010x}" if pair.retail_va is not None else "Source helper"
+            print(f"{identity}  {pair.signature}  [{pair.unit}]")
             print(f"Mac PEF section {pair.mac_section}+{pair.mac_offset:#x}, {pair.mac_size:#x} bytes")
-            print(f"CodeWarrior symbol {pair.mac_symbol}")
+            print(f"CodeWarrior symbol {pair.mac_symbol or 'not yet bound (address only)'}")
             print(f"Evidence: {pair.evidence}")
             return 0
         if args.command == "disasm":
@@ -317,6 +321,8 @@ def main(argv=None) -> int:
             decoder = Cs(CS_ARCH_PPC, CS_MODE_32 | CS_MODE_BIG_ENDIAN)
             names = {(address.section, address.offset): name
                      for name, address in symbols.addresses(common.HOMM3_DIR, pef).items()}
+            for ref in references.load(common.HOMM3_DIR):
+                names.setdefault((ref.mac_section, ref.mac_offset), ref.signature)
             loader = Loader(pef)
             toc = loader.toc()
             data_names = {(claim.mac_section, claim.mac_offset): claim.name

@@ -1,0 +1,64 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x5c2370
+unit = "towngatewindow"
+mac_section = 0x0
+mac_offset = 0x1b8544
+mac_size = 0xc8
+target_sha256 = "f31578af7b2d527b0e31ecba00d285892e4c0367b9b16b6561989811db7f369f"
+evidence = "Canonical destructor maps to Mac delete-flag body: virtual widget deletion loop, base destructor and optional operator delete; Windows deleting wrapper remains separate."
+
+[[functions]]
+retail_va = 0x5c2400
+unit = "towngatewindow"
+mac_section = 0x0
+mac_offset = 0x1b860c
+mac_size = 0x94
+target_sha256 = "ffe58bad777769558461f23fc4a94c2c4270821e514af838a391b97cc3fa5b41"
+evidence = "push_back of a short town id into m_towns vector: tests capacity through compressed-pair helper 0x215c, grows via reserve 0x47b0, appends item. Adjacent full bounds."
+
+[[functions]]
+retail_va = 0x5c25b0
+unit = "towngatewindow"
+mac_section = 0x0
+mac_offset = 0x1b86a0
+mac_size = 0x21c
+target_sha256 = "f575d16666e26ffa2876afe678eedaff6102324e51e2f4a0072d8b86fecaa1bf"
+evidence = "Constructs widget status/text/color messages, calls broadcastMessage six times, town-name strcpy and selection positioning; direct target of updateTownLocators. Full BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5c2770
+unit = "towngatewindow"
+mac_section = 0x0
+mac_offset = 0x1b897c
+mac_size = 0xac
+target_sha256 = "5367dfa541cf9438264e5d7462073d4d9326c552256c8db527c180a65d9c7f7e"
+evidence = "Broadcasts slider resolution, calls unannotated updateTownLocators at 0x1b88bc, disables OK widget, calls heroWindow::doModal. Full BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5c2840
+unit = "towngatewindow"
+mac_section = 0x0
+mac_offset = 0x1b8a28
+mac_size = 0x154
+target_sha256 = "243cbaa3d43a1e81196624be95bfbc1ede568803e15d28e4dd9387ac31486d3f"
+evidence = "Calls CAdvPopup::windowHandler 0x1bf2c, handles row selection and OK/cancel, getWidget and updateTownLocators 0x1b88bc; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5c2980
+unit = "towngatewindow"
+mac_section = 0x0
+mac_offset = 0x1b8b7c
+mac_size = 0x54
+target_sha256 = "e7c2499ca460d1fb7a585c60266d652bea73054041a97c1db640008129716e9a"
+evidence = "Callback stores slider state into current gate window, calls updateTownLocators 0x1b88bc and virtual drawWindow. Complete BLR/next prologue."
+
+[[helpers]]
+source_helper = "TTownGateWindow::updateTownLocators"
+unit = "towngatewindow"
+mac_section = 0x0
+mac_offset = 0x1b88bc
+mac_size = 0xc0
+target_sha256 = "9c75e29c2203042c8ed784ba37d4829ad2297d72817be52e7e750237c3dfcbd1"
+evidence = "Unannotated canonical helper calls updateTownLocator at 0x1b86a0 in a nine-entry loop, broadcasts selector clear, and invokes drawWindow; direct calls from doModal/windowHandler/slider callback bound this retained Mac body."

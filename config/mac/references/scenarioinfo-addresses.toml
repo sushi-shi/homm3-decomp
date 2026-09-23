@@ -1,0 +1,46 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x567290
+unit = "scenarioinfo"
+mac_section = 0x0
+mac_offset = 0x15ddc0
+mac_size = 0x2640
+target_sha256 = "9e365a60563edaf1d6899fcaacf73328ac651720a9984f299f4410a5a615b73f"
+evidence = "NEW: Ctor: scnrmpsz.def data1+0x4d2ac at0x15e614 with exact x711/y22/w29/h23/id189; multiple scenario widgets/sprites and CAdvPopup base; prologue0x15ddc0, blr0x1603fc, next prologue0x160400. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x569800
+unit = "scenarioinfo"
+mac_section = 0x0
+mac_offset = 0x160400
+mac_size = 0x114
+target_sha256 = "92a2e86a1eff73d9d98b170a5c54a6e112e7f8f62a06302e940683fe3affe1df"
+evidence = "NEW: CScenarioInfoDlg dtor: vtable1+0x4d618, virtual dispose of five sprite fields and eight panel/flag pairs, CAdvPopup dtor0x1be60; optional Mac deallocation; ends0x160514. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x5698a0
+unit = "scenarioinfo"
+mac_section = 0x0
+mac_offset = 0x160514
+mac_size = 0x34
+target_sha256 = "1eb44f0654b88da25a46475bd9818e5f222a0e524f1767ff332f378ab62f3218"
+evidence = "NEW: onWidgetDeselect: compares accept widget id0xbc, sets exitFlag then calls base handler0x20c198; ends0x160548. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x5698c0
+unit = "scenarioinfo"
+mac_section = 0x0
+mac_offset = 0x160548
+mac_size = 0x158
+target_sha256 = "7aec0116f0156f72b606ca0d685ae8fba2636d8f8482db420e916d0e9e95e447"
+evidence = "NEW: updateAllyEnemyFlags: getLocalPlayerGamePos0xe6cc4, eight-player loop clearing getWidget ids0x78 and0x70 plus team conditional flags; ends0x1606a0. Full span SHA verified."
+
+[[functions]]
+retail_va = 0x5699c0
+unit = "scenarioinfo"
+mac_section = 0x0
+mac_offset = 0x1606a0
+mac_size = 0x390
+target_sha256 = "81e91196b050e2ac02dae4eb8ca99c7059827e523c82a87ab3668421a6f2e77a"
+evidence = "NEW: processRightSelect: switch id0x16a..0x184, team/town/hero/bonus popup cases and helper calls; ends0x160a30. Full span SHA verified."

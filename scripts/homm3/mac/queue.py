@@ -198,7 +198,7 @@ def generate(root: Path, *, source_hashes: dict | None = None) -> dict:
                         comparison_error=observation.get("comparison_error") if observation else None)
         if va in callee_refs and routing["state"] == "pairing_needed":
             routing.update(state="compilation_needed",
-                           action="Callee identity is reviewed; prepare its Mac declaration view and compile the shared body before admitting a byte target.",
+                           action="Mac address is reviewed; compile the shared body through ordinary headers and bind its emitted symbol before admitting a byte target.",
                            command=f"homm3 mac compile 0x{va:08x} --unit {callee_refs[va].unit}")
         # Unresolved calls can coexist with unequal counts: keep their setup
         # requirement visible and do not dispatch an incomplete byte target.

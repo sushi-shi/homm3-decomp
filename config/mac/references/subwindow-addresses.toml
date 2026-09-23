@@ -1,0 +1,73 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x5aa340
+unit = "subwindow"
+mac_section = 0x0
+mac_offset = 0x19b838
+mac_size = 0x90
+target_sha256 = "1090929372360ad060cbe6e5a4fafeb112bfef37d7bb35da36d9bd390502d7b6"
+evidence = "Default ctor installs TSubWindow vtable, zeroes x/y/width/height/parent, initializes vector at +0x14, sets low=0xffff/high=0xffff0001 and background=null."
+
+[[functions]]
+retail_va = 0x5aa3c0
+unit = "subwindow"
+mac_section = 0x0
+mac_offset = 0x19b8c8
+mac_size = 0x94
+target_sha256 = "b3ec8cfed6801d7c57dc06f50059b0440f38c4a7f8d0867e27593ecbea589a9b"
+evidence = "Parameterized ctor installs same vtable, stores x/y/width/height and parent at +0x20, initializes vector and sentinel widget IDs."
+
+[[functions]]
+retail_va = 0x5aa410
+unit = "subwindow"
+mac_section = 0x0
+mac_offset = 0x19b95c
+mac_size = 0x94
+target_sha256 = "3c916baede4cd7e2acf7071cc08ea2ac91a1d74e15c8aaab096c7ef1161c5421"
+evidence = "Canonical destructor is Mac delete-flag body after constructors; deletes background at +0x2c, destroys vector and optionally frees self."
+
+[[functions]]
+retail_va = 0x5aa470
+unit = "subwindow"
+mac_section = 0x0
+mac_offset = 0x19b9f0
+mac_size = 0x18
+target_sha256 = "df3cb514d99a31688b0f50fe3cf505cd733e47780a34e3ec0d0687d9f0916a4b"
+evidence = "Initialize is six stores at +4,+8,+0xc,+0x10,+0x20 followed by BLR, matching canonical field assignment."
+
+[[functions]]
+retail_va = 0x5aa4a0
+unit = "subwindow"
+mac_section = 0x0
+mac_offset = 0x19ba08
+mac_size = 0x6c
+target_sha256 = "adaaa31cc7dca176f438f5a97c04ea42185bfdddb58970f991b62f43d93436d8"
+evidence = "AddWidget adjusts widget x/y by subwindow origin, updates low/high ID sentinels and calls parent heroWindow::addWidget 0x20b1dc."
+
+[[functions]]
+retail_va = 0x5aa4f0
+unit = "subwindow"
+mac_section = 0x0
+mac_offset = 0x19ba74
+mac_size = 0xa4
+target_sha256 = "37678b5b4fbde88f4d308324403c36b68fdd792d2312706cc0197c211db26f11"
+evidence = "Draw selects stored low/high widget ID bounds, invokes parent drawWindow virtual and conditionally updates screen 0x20df2c."
+
+[[functions]]
+retail_va = 0x5aa560
+unit = "subwindow"
+mac_section = 0x0
+mac_offset = 0x19bb18
+mac_size = 0x9c
+target_sha256 = "f9caf496e3cee653071ae7c7422fbde84f8fa185f6d64345c04053cad860b99f"
+evidence = "SaveBackground allocates Bitmap16Bit 0x5be20, calls pollSound 0x10eaf0 on both sides of bitmap grab 0x5c250."
+
+[[functions]]
+retail_va = 0x5aa610
+unit = "subwindow"
+mac_section = 0x0
+mac_offset = 0x19bbb4
+mac_size = 0xf8
+target_sha256 = "3200d6ed69aef1220906c24fb92db4bce29a9dc00e696c3cb76c44eaa33b663e"
+evidence = "RestoreBackground invokes Bitmap16Bit draw 0x5c0f8, screen update 0x20df2c and deletes stored bitmap."

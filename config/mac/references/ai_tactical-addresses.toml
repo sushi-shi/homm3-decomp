@@ -1,0 +1,704 @@
+# Address-only references discovered from AI_TACTICAL TU order, then independently verified.
+# Names remain owned by src/ai_tactical.cpp VA claims; no compiled Mac target admission.
+
+[[functions]]
+retail_va = 0x00435830
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3cca4
+mac_size = 0x28
+target_sha256 = "ff9d02066372f23096dab61d49bbda8ea5f9e903144fc79b5ae9252ab6988f86"
+evidence = "NEW: Morale wrapper loads good/bad morale multipliers and calls shared value0x3cb04; positively used by Mirth0x3fd1c/Sorrow0x3fe68. End0x3cccc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00435850
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3cb04
+mac_size = 0x1a0
+target_sha256 = "e89d8b0966be1acb83f02e6f4a4258d8592be42488912e9d36de8bb5503df7ba"
+evidence = "NEW: Shared luck/morale change with signed clamps-3/+3 and piecewise positive/negative floating multipliers; both wrappers0x3cca4/0x3cccc call it. End0x3cca4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00435960
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3cccc
+mac_size = 0x28
+target_sha256 = "415172c65cd47c1ee19b3a5ca6b41d60629d62d1e4d0c53d56898a27d315f638"
+evidence = "NEW: Luck wrapper loads luck multipliers and calls0x3cb04; Misfortune0x41228 calls this wrapper. End0x3ccf4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00435980
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3cfd8
+mac_size = 0x44
+target_sha256 = "1069fa0bc55b44e0c3efbb853c2ee6e0b36d3b59f12333c0f5f1ec26bdf0687e"
+evidence = "NEW: Converts input hitpoints to creature count using per-creature HP then calls army average damage0x4e6f4. End0x3d01c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004359b0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3d0dc
+mac_size = 0x19c
+target_sha256 = "4cefeda39594689bcdc063333e5b8f518be2d1525e42f97d914032085686e2a9"
+evidence = "NEW: Simulated attack checks canShoot0x4e840, calls retained one-hit0x3d01c up to three times for retaliation and double attack. End0x3d278; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00435b90
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3d278
+mac_size = 0x108
+target_sha256 = "2e634188d436fb66ca73b587c2469c80c06414e080db5bd1fdae6e0c6659dde7"
+evidence = "NEW: Explicit hitpoint simple-attack overload calls canShoot0x4e840, simulateAttack0x3d0dc and both loss values0x4ee24. End0x3d380; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00435cb0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3d3fc
+mac_size = 0x1dc
+target_sha256 = "b9f90276e5c8ae2eedb0b2294b2cf2844bbe0aaceb0608acde883b6fe88e5e47"
+evidence = "NEW: Ranged value starts simpleAttack0x3d380, four speed/time calls0x55028/0x54fb8; excludes war machines147/148 and tactical distance5. End0x3d5d8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00435dc0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3d5d8
+mac_size = 0x144
+target_sha256 = "664ba3d37e01805bf75f16f5ff8458460ecc3f6e32d408400dd7557bdaf7832d"
+evidence = "NEW: Exchange effect gets both totalHP0x4ef38, simulates attacks0x3d0dc both ways and differences both loss values0x4ee24. End0x3d71c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00436180
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3da90
+mac_size = 0x1f0
+target_sha256 = "7765a733b41a83d8b63bb1d06d040437bfec967c422c47687dcad28ddba67859"
+evidence = "NEW: Six adjacent hexes, check bitmap, cell0x1081f8, canShoot0x4e840 and unit value0x4e9ec ranged-minus-melee. End0x3dc80; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00436300
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3dcec
+mac_size = 0x384
+target_sha256 = "fa9f88fef2fdabcd751adf3a5a7c157290de70e571e5e0d4e8a944554fb0695e"
+evidence = "NEW: Adjacent search cells stride12, retained attackTime0x3dc80, attackValue0x3da90, multihead0x3ccf4/breath0x3ce78 for both combatants and jouster10/11 tie-break. End0x3e070; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00436620
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3ccf4
+mac_size = 0x184
+target_sha256 = "caabc28b28820db91d7970f2b7063be0bd1140b6b40e450156cb96e47d618a46"
+evidence = "NEW: Multihead direction mask0x54f18, eight adjacent directions0x13d260, army average/HP/loss0x4e6f4/0x4ef38/0x4ee24. End0x3ce78; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00436760
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3ce78
+mac_size = 0x160
+target_sha256 = "cb0b14089466c9acc48df0c990c9f9d85cd7bddb7cc1c654f8722bb9e402e63c"
+evidence = "NEW: Breath behind enemy: direction0x517b4, adjacent0x13d260/0x13d1d0, target cell0x1081f8 and damage/loss helpers. End0x3cfd8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00436930
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3e22c
+mac_size = 0x28
+target_sha256 = "64290d7c7fa9ec154de49ba00ea0d014e21881306c3d0bff64329a1f00709408"
+evidence = "NEW: Spell row stride0x88 plus mastery*4 reads mastery value at+0x34; returns at0x3e250. End0x3e254; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00436950
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3e254
+mac_size = 0x58
+target_sha256 = "775d5230615a2203aad3a52baa01c3c8981277354150b17d205c6dfbbae8752d"
+evidence = "NEW: Default choice ctor calls enchant-data0x3e210 with spell-1/mastery0/power0/duration0 then initializes choice fields. End0x3e2ac; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00436980
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3e2ac
+mac_size = 0x48
+target_sha256 = "be9c13fdb1bfbb3f3776e656e16fb5f57aa64d54b1de7b60464596c37ee60b6d"
+evidence = "NEW: Parameterized choice ctor forwards four parameters to0x3e210 and initializes extra choice fields. End0x3e2f4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00436c60
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3e600
+mac_size = 0x1d4
+target_sha256 = "55c81d1c86bdc1ca6fd5db76ad931f76c638069e68c2645cda08da6c3ee995cb"
+evidence = "NEW: Attack-now decision examines enemy ordering0x3e528, speed/time0x55028/0x54fb8, canShoot0x4e840 and tower149. End0x3e7d4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00436e30
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3e7d4
+mac_size = 0x234
+target_sha256 = "49bf1080180752abee1a22297ddf1e459c5a69cde53d57e66f9d21f84e3af9db"
+evidence = "NEW: Spell damage value modifySpellDamage0x198d18/work chance0x199858; totalHP, shooter state and loss/total combat values0x4ee24/0x4ecf8. End0x3ea08; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00436f60
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3ea08
+mac_size = 0x84
+target_sha256 = "fa1a9d83c4b5ee1de79ffd78513a5297f9e43049fc29cedb3b01863104e1b159"
+evidence = "NEW: Damage spell wrapper computes mastery0x3e22c+power*spell-factor at stride0x88 and calls damageValue0x3e7d4. End0x3ea8c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00436fb0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3eb24
+mac_size = 0xc4
+target_sha256 = "f1e31bf5de6248c48bfe6fc83cc203a1f782fe7a53c5f566fad3705e70fde243"
+evidence = "NEW: Mass enemy-minus-friendly damage effect scales by side combat-value estimates, handles zero values and win-likely. End0x3ebe8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00437040
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3ebe8
+mac_size = 0x100
+target_sha256 = "66376a7fb87128f5a278603daf3c2052474b43bddac16d214feb261a7d5c9ac1"
+evidence = "NEW: Builds affected-army vector via area spell0x1953c0, sums damage0x3e7d4 by side then mass effect0x3eb24 and destroys vector. End0x3ece8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00437190
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3ede8
+mac_size = 0x148
+target_sha256 = "dcf5217872740e5be0872259e5a7d9235e3c0efd3d1821f93a3665650fdd769c"
+evidence = "NEW: Chain lightning traverses combat chain helper0x1975a4/0x196fa0, validates hex187, alternating side damage0x3e7d4 then mass effect. End0x3ef30; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00437310
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3ef30
+mac_size = 0xe8
+target_sha256 = "d1e376b568e0777dec5b5225d42b868ccb86bb5b0fb50399842b000e319abf8e"
+evidence = "NEW: Scans target armies at side stride0x6bf4, spell validity0x19459c and chain value0x3ede8, selects best target. End0x3f018; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004373f0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3f0d8
+mac_size = 0x58
+target_sha256 = "b9564e250c283b5c9fcf5d43184830107feb5f7b29843d91208f42ded0325f5d"
+evidence = "NEW: If win-likely returns0 else army total combat value0x4ecf8 divided3. End0x3f130; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00437430
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3f314
+mac_size = 0xe8
+target_sha256 = "157a51c370086ac8e7edb2e34b83592f53007e5e58d8570f87d8842a5b1146e4"
+evidence = "NEW: Bless checks target/time<=1 via0x55028/0x54fb8, average damage0x4e61c and boosted high damage, calls attackBoost0x3f278. End0x3f3fc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004375d0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3f3fc
+mac_size = 0x174
+target_sha256 = "8395def7fa99216b1e7f9d49c2c04015937e90433b8dd172ed7c0dd28117fe5c"
+evidence = "NEW: Frenzy gets both HP, computes attack0x3cfd8, simulates exchange0x3d0dc then second attack, halves double-shot contribution and calls boost0x3f278. End0x3f570; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00437800
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3f570
+mac_size = 0x598
+target_sha256 = "13d14210338c6f29156b43d662f8012e95f8f6eba83c2a44f585a82ad81121f3"
+evidence = "NEW: Copies army including deque0x46c1c/four vectors0x469b4, modifies attack skill, compares two estimated damages0x4fd8c then boost0x3f278 and army dtor0x48cf0. End0x3fb08; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438100
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3fc4c
+mac_size = 0xd0
+target_sha256 = "c8254251032b4dc54cc758ce21712b55e308c6d839243830cf99065dd23e42ac"
+evidence = "NEW: Bloodlust rejects shooters, requires target/time<=1 then attack-skill value0x3f570 using mastery bonus. End0x3fd1c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438170
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3fd1c
+mac_size = 0x14c
+target_sha256 = "ce19ea2dc5a602d0365d28ef22fd812a191017030e690dab306b4bf6884c32ab"
+evidence = "NEW: Mirth morale clamp-3..3, aiValueOfMorale0x3cca4, duration0x42038 and total combat value0x4ecf8. End0x3fe68; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004382c0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3fe68
+mac_size = 0x1e8
+target_sha256 = "077e1becf7767155fa9da32054f8b8e6c0cfb654b0eeeb541384591faa9d56c0"
+evidence = "NEW: Sorrow negative morale0x3cca4, spell work chance0x199858, duration0x42038 and total combat value. End0x40050; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438490
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x40050
+mac_size = 0x1a0
+target_sha256 = "b8cc73f1227634d551a57625986f592a3f04119dd8a02264b240581b25135e2a"
+evidence = "NEW: Fortune target/time gate, ranged damage0x4e6f4 and two attackBoost0x3f130 evaluations; luck clamp-3..3. End0x401f0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004387c0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x401f0
+mac_size = 0x1d0
+target_sha256 = "0712945c777f07c44cedc4f6cb99d61c055d0567fa2c903cde1d4215238ca69d"
+evidence = "NEW: Defense boost compares incoming average damage0x4e6f4, HP0x4ef38 and square-root0x2a1b68, duration0x42038 and combat total. End0x403c0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438910
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x403c0
+mac_size = 0x5a0
+target_sha256 = "7d2aaeeb665f57841ab8d4b5198cf6f8af4f258e94d0f610095b629950f3972b"
+evidence = "NEW: Defense skill copies army via deque/four vectors, changes defense, compares estimated damage0x4fd8c twice, defense boost0x401f0 and destructor. End0x40960; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438a10
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x40960
+mac_size = 0x174
+target_sha256 = "435c88ae7a506f15839e41c68aadb5de09ce0b79cd1e9e086948f3d34b8fc3f6"
+evidence = "NEW: Disease total combat value0x4ecf8 and workChance0x199858, divides combined attack/defense reduction effect. End0x40ad4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438ac0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x40ad4
+mac_size = 0xcc
+target_sha256 = "4235fb0d31f85992a3f3449370702ae1963c668d6214e0f07621b897954aa68a"
+evidence = "NEW: Prayer adds defenseSkill0x403c0, speedValue0x41a08 and gated attackSkill0x3f570 using same mastery bonus. End0x40ba0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438b50
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x40ba0
+mac_size = 0xd0
+target_sha256 = "52c552480519b7ea11fc39715e4d2394d701e2155e8879b5c999a2157def1794"
+evidence = "NEW: Precision requires canShoot0x4e840 and target/time<=1, then attackSkill0x3f570. End0x40c70; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438bc0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x40c70
+mac_size = 0xd4
+target_sha256 = "150efac3092e0cb3e7b598dae118ec3925e038191d10bbaf15dc695d42edc556"
+evidence = "NEW: AirShield converts mastery reduction percent into defense boost0x401f0 for enemy shooting damage. End0x40d44; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438c60
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x40d44
+mac_size = 0xd4
+target_sha256 = "666d75e689bb8a778df615abb7a30a6a1e77787422a5735b2da692b6239475c8"
+evidence = "NEW: Shield same defense-boost helper0x401f0 with melee defense modifier, distinct spell trait row from AirShield. End0x40e18; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438d00
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x40e18
+mac_size = 0xe8
+target_sha256 = "70954be44744b6a93e74c356f5af1cb4399c918f5ffce628a05c937428aec5fc"
+evidence = "NEW: Slayer target/time gate and enemy level/mastery conditions2/3 before attackSkill0x3f570. End0x40f00; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438d90
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x40f00
+mac_size = 0x50
+target_sha256 = "f5b37633294d86a1bff9c3c2b6a632b6f93eb00c2f4b5174a315ef8717efaee5"
+evidence = "NEW: ToughSkin wrapper reads mastery bonus and calls defenseSkill0x403c0. End0x40f50; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438dc0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x40f50
+mac_size = 0x1c4
+target_sha256 = "71a03c3d45821567e674c2efaaf1d7189fb9ed51182840cf88245a68e5d1b98e"
+evidence = "NEW: DisruptingRay enemy combat total0x4ecf8, defense ratio sqrt0x2a1b68 and workChance0x199858, weighted cached incoming damage. End0x41114; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438ed0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x41114
+mac_size = 0x114
+target_sha256 = "88f3b9ba114abbada4c88d18a91668aa644c742da6589f292a47b1beb70513cc"
+evidence = "NEW: Weakness checks enemy attack target/time<=1 and invokes negative attackSkill0x3f570 with spell bonus. End0x41228; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00438f60
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x41228
+mac_size = 0x1c0
+target_sha256 = "6098effc1562e3df94207e608ca22c298eb5a69a45c3ea33c3096932c8820ad3"
+evidence = "NEW: Misfortune luck clamp-3..3, aiValueOfLuck0x3cccc, workChance0x199858, duration0x42038 and combat total. End0x413e8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00439100
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x413e8
+mac_size = 0x1d8
+target_sha256 = "3a377518bc09ca095b240955e1bac5fec129e132ffbb42e87d22587055721a27"
+evidence = "NEW: Blind target status gates, combat total and sqrt damage fraction0x2a1b68, duration0x42038 and spell chance0x199858. End0x415c0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00439270
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x4164c
+mac_size = 0x330
+target_sha256 = "34714aec0b02aaf6a266f3fe1b448640c9184a98d683567270215c5b3928c774"
+evidence = "NEW: Slow/muck speed changes use army speed/time repeatedly, exchange helper0x415c0, shooter gates, combat total and workChance0x199858. End0x4197c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00439500
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x4197c
+mac_size = 0x8c
+target_sha256 = "9efec40cb197dc86ddbf2ef50adcb1ec6ad4c40dad2a2f806ab21a6e7ea5d536"
+evidence = "NEW: Poison rejects shooting preference, computes proportional hit loss and army loss combat value0x4ee24. End0x41a08; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00439550
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x41a08
+mac_size = 0x16c
+target_sha256 = "2f345829240a7c9c676af8613b6aab8210a5a75757fdd37de889b297586c7e50"
+evidence = "NEW: Speed valuation compares old/new speed/time and exchanges0x415c0 then scales army combat total0x4ecf8. End0x41b74; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004396b0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x41b74
+mac_size = 0x64
+target_sha256 = "61eadac51f1a6d1926391409c8cfaa4ba6741e542972162270526dc1abcd7bbc"
+evidence = "NEW: Haste obtains mastery value0x3e22c and calls speedValue0x41a08 with duration. End0x41bd8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004396e0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x41bd8
+mac_size = 0x2d8
+target_sha256 = "e5ace091eff159048c869309e57a874de814e46c7fc5e9ba670e584d12c6a9ca"
+evidence = "NEW: Protection scans70 spells, checks hero casting/mastery/power0x10600c/0x10621c, target validity and modified damage/chance/loss, duration0x42038. End0x41eb0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004399a0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x41eb0
+mac_size = 0x58
+target_sha256 = "496b0f87245b14bf349d369be4f6c4434a9bfe7a53b67118f88e8940cf59a2de"
+evidence = "NEW: Air-protection wrapper sends Air school mask1 and protection level/amount to0x41bd8. End0x41f08; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004399d0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x41f08
+mac_size = 0x58
+target_sha256 = "613ef6f576fab17d4b8992aae083c2b72e0a94f57efbaf3a836203daac8c5687"
+evidence = "NEW: Fire-protection wrapper sends Fire school mask2 to0x41bd8. End0x41f60; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00439a00
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x41f60
+mac_size = 0x6c
+target_sha256 = "7ffce176c3bbaa58056732f365c25b7269023012076fee69cae0984fe7ea107d"
+evidence = "NEW: Earth-protection wrapper calls mastery0x3e22c then protection0x41bd8 with Earth mask4. End0x41fcc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00439a40
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x41fcc
+mac_size = 0x6c
+target_sha256 = "883075d712ad74a61e332c72db8a4d3333e417f5ea3b097b29f174d3fbc88be4"
+evidence = "NEW: Water-protection wrapper calls mastery0x3e22c then protection0x41bd8 with Water mask8. End0x42038; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00439a80
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x420cc
+mac_size = 0x18c
+target_sha256 = "212e485a5ab07a148b8fc75713774e40e438b6fc78db06e4bc8bf4abe4354e61"
+evidence = "NEW: Cancellation loops spell indices71..80 and normal effects, fetches member function0x45174 and calls via member-dispatch glue0x2a32d8; removes influence0x50580 temporarily. End0x42258; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00439bc0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x42258
+mac_size = 0x4f0
+target_sha256 = "ad8c121333b55a4daa4d154acec953a18b430ddd838d4bd554283c64cdbd2382"
+evidence = "NEW: Dispel copies full army with deque/vector calls, invokes cancelValue0x420cc and destroys copy0x48cf0. End0x42748; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00439c30
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x42748
+mac_size = 0x61c
+target_sha256 = "3b76acd77a3d733787da43ea553082529672ef45bd3d61ee541d4a4645fadbd5"
+evidence = "NEW: Cure copies army, cancelValue0x420cc bad-only, mastery0x3e22c healing, unit combat value0x4e9ec and destructor. End0x42d64; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00439d40
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x42d64
+mac_size = 0x538
+target_sha256 = "e2a6d11cc3c916477b82e343da1facac13a25103ae1149474bea077cf226c42b"
+evidence = "NEW: Antimagic copies army, cancelValue0x420cc and protectionValue0x41bd8, then army destructor. End0x4329c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00439de0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x4329c
+mac_size = 0x520
+target_sha256 = "984a2a721459ed0e51398c70fc4faa7ce61950b0357dbf4b7315301f98f56d4e"
+evidence = "NEW: Backlash/MagicMirror copies army, mastery0x3e22c and protection0x41bd8, restores via destructor. End0x437bc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00439e80
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x437bc
+mac_size = 0x20c
+target_sha256 = "84a60c62d06e0baa108338e2658aeb2a24062367f4ec661a380a18ad5676f2bd"
+evidence = "NEW: Counterstrike handles Griffin4/Royal5, both target hitpoint/damage projections, attack0x3cfd8 and boost0x3f278. End0x439c8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043a110
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x439c8
+mac_size = 0x1ac
+target_sha256 = "f917b7e3b4f3932ef1950c04d006c807ae698012ec9ac7572a2c5cb10ac58317"
+evidence = "NEW: FireShield excludes EfreetSultan53/immune state, mastery0x3e22c, incoming average damage0x4e6f4 and boost0x3f278. End0x43b74; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043a340
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x43b74
+mac_size = 0xf0
+target_sha256 = "308a1ee353dc49ba8bff1a22ae164b194e8ac908a3205e83998fbd4ebb395c95"
+evidence = "NEW: Traitor exchange gets both HP and shooting status, simulatesAttack0x3d0dc then loss combat values0x4ee24 on both sides. End0x43c64; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043a400
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x43c64
+mac_size = 0xdc
+target_sha256 = "016c834eeb8a2a2eb689848e20c31c1d5a1241fc0ce51affe544563edb7b0497"
+evidence = "NEW: Berserk builds target vector via army getBerserkTargets0x514cc, scores traitor0x43b74, destroys vector. End0x43d40; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043a500
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x43d40
+mac_size = 0x228
+target_sha256 = "c1fd5f9d0eb1c01faf668edee430f7c1c5144b9e1fbd9f669d42502f180324c0"
+evidence = "NEW: Hypnotize scans enemy-side adjacent target possibilities, combat helper0xc64ac and traitor0x43b74, rejects war machines147/148. End0x43f68; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043a670
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x43f68
+mac_size = 0x2cc
+target_sha256 = "dfa6e46f98efae63787e956a1d8e7cf9aaf4cbd87e88fc357bab1db4aba2affb"
+evidence = "NEW: Single enchantment chooses member function0x45174, target validity0x19459c, pointer-member glue, mirror effect0x54de4 and attack-now0x3e600. End0x44234; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043a910
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x44234
+mac_size = 0x1dc
+target_sha256 = "7d43a9a69799c32efd6f72147c31e29649486a29ed1cd9bdd8bf755b1a1cacda"
+evidence = "NEW: Enchantment single-target predicate0x18e73c routes0x43f68; mass side scan uses0x45174/0x19459c/member glue to sum effects. End0x44410; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043aa60
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x44410
+mac_size = 0x218
+target_sha256 = "5de334817041312712ba5f3833615dae11232d92461dd69455f042fc77f1730d"
+evidence = "NEW: Teleport validates targets, canShoot0x4e840, position choice0x242d4 twice, enemy order0x3e528 and findAITargets0x25100. End0x44628; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043aca0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x44628
+mac_size = 0x2e0
+target_sha256 = "87d59de3fec872193b0f2554b5c1d8427a529f7cfc085e508dc7628d37caf7ad"
+evidence = "NEW: Resurrection considers dead/living hex targets0x194888/0x1945d8, wide second hex0x52874, spell38/39 and unit combat value0x4e9ec. End0x44908; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043af50
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x44908
+mac_size = 0x274
+target_sha256 = "bf070d6c1cca7eea6b5194534556813db345648d57100be29fdae01a43710ca6"
+evidence = "NEW: Sacrifice detailed target loops donor armies, mastery0x3e22c and creature HP stride0x74; net healed combat value minus donor total0x4ecf8. End0x44b7c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043b1e0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x44b7c
+mac_size = 0x134
+target_sha256 = "450634c38d3e38c590e3f8da37f985ddf331e32c1ff0ac0a9a5acfb7ab45e622"
+evidence = "NEW: Sacrifice outer scan validates dead targets0x194888/0x1945d8 including second hex0x52874, calls detailed sacrifice0x44908. End0x44cb0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043b2e0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x44cb0
+mac_size = 0xe4
+target_sha256 = "cacd093eed198b5999ee1eac527f88874933459588d6a6cc03fef1de200ad049"
+evidence = "NEW: Clone immediate-attack/time gate, ranged average damage0x4e6f4 and loss value0x4ee24 for duplicate stack. End0x44d94; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043b370
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x44d94
+mac_size = 0x1f8
+target_sha256 = "9efad66d8aa0db3e6a4cd86e8c28c0cc73e361f4e8b94b6128b0e285bd4f8d50"
+evidence = "NEW: Curse total combat value, old average damage0x4e61c, reduced min-damage ratio sqrt0x2a1b68, duration and workChance. End0x44f8c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043b500
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x44f8c
+mac_size = 0x1e0
+target_sha256 = "ee3faa611bfa0fcca5fdc2830ace535e3374510ea65fd701b5d716650b960a6e"
+evidence = "NEW: Forgetfulness compares shooting/melee unit combat values0x4e9ec, totalHP and spell duration/chance0x42038/0x199858. End0x4516c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043b680
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x4516c
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "NEW: Unimplemented spell evaluator is li r3,0; blr; referenced by member-function table. End0x45174; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043b690
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x45174
+mac_size = 0x500
+target_sha256 = "d4ae097ed01538fbf2c6a47e54eca1e82033b5b2d9da4c3f30e16a52483f79b8"
+evidence = "NEW: Switch spell15..75 copies12-byte CodeWarrior member-function pointer from TOC entries; switch return labels are internal, final fallback returns at0x45670. End0x45674; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043b8f0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x45674
+mac_size = 0x330
+target_sha256 = "434bdc31835efc71d9611b41112fd50e88089d97babc41898ca06ed9a0df3c76"
+evidence = "NEW: Earthquake prices remaining walls0x73610, mastery0x3e22c, shooter total combat and wall penalty0x73778 across sides. End0x459a4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043bb20
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x45a54
+mac_size = 0x22c
+target_sha256 = "b16cbe060fb5182e940edbb193fa885b8e0f2bf722da5d8897e8c33ae6db888b"
+evidence = "NEW: Spell consideration dispatch IDs35/19/14/27/24/63/40/38/70/66 to resurrect0x44628, chain0x3ef30, enchant0x44234, earthquake0x45674, sacrifice0x44b7c, summon0x459a4 and teleport0x44410. End0x45c80; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043bf20
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x45c80
+mac_size = 0x190
+target_sha256 = "816aaae2f978fce5cb7556141538c4aa5fbf65f3dc9b271757d8ce2641eb87b6"
+evidence = "NEW: Zeroes cached melee enemy arrays then scans side, shooter/time gates and average damage0x4e6f4, skips147/148. End0x45e10; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043c040
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x45f34
+mac_size = 0x244
+target_sha256 = "cda9609b81f0a168dfc24e388e009832f6a4e5af7963800dd8a667d34f2d8f94"
+evidence = "NEW: Clears two attack estimate arrays, setMeleeEnemies0x45c80, totalHP and shooter checks, retained damage0x45e94 and accumulate0x45e10 helpers. End0x46178; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043c800
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x46664
+mac_size = 0x350
+target_sha256 = "170da01db0131af70ad56c4075c6b2e2331fe335d5a8f6d230de6bd994a28849"
+evidence = "NEW: Hero spell casting builds choice0x3e254, checks artifacts/spell legality/mastery/power, loops to70, considerSpell0x45a54, value sqrt0x2a1b68 and random0x130cf4. End0x469b4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."

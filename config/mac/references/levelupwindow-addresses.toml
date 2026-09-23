@@ -1,0 +1,28 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x4f8880
+unit = "levelupwindow"
+mac_section = 0x0
+mac_offset = 0x119b74
+mac_size = 0x1280
+target_sha256 = "5bdf5b4cff62564ad9ed5fee8585ad16e9730b15810b8b870c4e1acc18d98b1d"
+evidence = "Constructs CAdvPopup with x=205 y=65 width=385 height=470, receives hero/skill/two choices, reads g_sSkillTraits and g_secondarySkillLevels, uses lvlupbkg.pcx string at 1+0x4accc/0x119c60, creates primary/secondary skill widgets and button, and stores level-up window global. BLR 0x11adf0; next destructor 0x11adf4."
+
+[[functions]]
+retail_va = 0x4f9730
+unit = "levelupwindow"
+mac_section = 0x0
+mac_offset = 0x11adf4
+mac_size = 0x68
+target_sha256 = "5608b3c23c1f9436578e82bb00c3bfe13d83cd377e99ce8fb91f0b3da370d08f"
+evidence = "Combined Mac destructor installs LevelUpWindow vtable at +0, invokes widget teardown at 0x20bc50 and CAdvPopup base destructor at 0x1be60, then optionally frees this under r4. BLR 0x11ae58; next handler 0x11ae5c."
+
+[[functions]]
+retail_va = 0x4f9780
+unit = "levelupwindow"
+mac_section = 0x0
+mac_offset = 0x11ae5c
+mac_size = 0x57c
+target_sha256 = "da7a5372bcb7db9afeb77def9a9578cab176871559cd78cf1b09e868caf9f193"
+evidence = "Handler gates CAdvPopup::windowHandler on global dialog deadline, calls pollSound, handles timed end dialog with return 9999, keyboard left/right skill choices, right-click skill help from g_sSkillTraits, and widget selection/hover. BLR 0x11b3d4; next prologue 0x11b3d8."

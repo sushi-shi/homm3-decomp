@@ -1,0 +1,55 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x4eb730
+unit = "initialize"
+mac_section = 0x0
+mac_offset = 0x10d9b0
+mac_size = 0x28
+target_sha256 = "c0e9e44b4ff11609ab23d9771dbf7a5ba78a03e091e6cb949d4c1b47475c1c6a"
+evidence = "InitializeGameData calls createBuildingMasks 0x10d8ec, createIncludedMasks 0x10d794 and town::initializeHordes 0x1b3358 in canonical order; complete BLR."
+
+[[functions]]
+retail_va = 0x4ebb10
+unit = "initialize"
+mac_section = 0x0
+mac_offset = 0x10d630
+mac_size = 0x88
+target_sha256 = "84dac4c5701f9c243ba3c4ac1642cde012fddb265baf0a5685541bbacad880f3"
+evidence = "AddToIncludedMask reads g_bitNumber through TOC and ORs low/high 64-bit words for direct requirements and transitive included-building bits until negative sentinels."
+
+[[functions]]
+retail_va = 0x4ebb70
+unit = "initialize"
+mac_section = 0x0
+mac_offset = 0x10d6b8
+mac_size = 0xdc
+target_sha256 = "6cbd5485e6d9f9352183c87e3da02d4b0f117f341039d49986786593997ec8b6"
+evidence = "CreateIncludedMask zeroes exactly 44 eight-byte entries, then calls addToIncludedMask 0x10d630 for common list and town-specific list."
+
+[[functions]]
+retail_va = 0x4ebc50
+unit = "initialize"
+mac_section = 0x0
+mac_offset = 0x10d828
+mac_size = 0xc4
+target_sha256 = "5036b7c3155e37751c50670592f2a918d976a4a2a875ab8f94d5824b868d6715"
+evidence = "CreateRequirementMasks zeroes legal 64-bit mask, reads building IDs and ORs g_bitNumber plus transitive requirement masks until negative sentinels."
+
+[[helpers]]
+source_helper = "createIncludedMasks"
+unit = "initialize"
+mac_section = 0x0
+mac_offset = 0x10d794
+mac_size = 0x94
+target_sha256 = "c4465fa45180b2b83aa911c66cc8d2ef44d9383d957598f07d28285be3252dde"
+evidence = "Source-owned static helper calls createIncludedMask 0x10d6b8 nine times in town order 0,1,3,2,4,5,6,7,8; initializer invokes it."
+
+[[helpers]]
+source_helper = "createBuildingMasks"
+unit = "initialize"
+mac_section = 0x0
+mac_offset = 0x10d8ec
+mac_size = 0xc4
+target_sha256 = "d9055cebf4cac02b1cf8e03d6353de766f4dc9616b2c2676aab1ad6396b2b4cb"
+evidence = "Source-owned static helper calls createRequirementMasks 0x10d828 nine times using 0x160-byte town rows and 8-byte legal-mask stride."

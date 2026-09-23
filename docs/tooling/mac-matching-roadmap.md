@@ -2,8 +2,9 @@
 
 The byte-comparison and call-report tooling is implemented. The initial
 checkpoint below predates the removal of duplicate headers; its scores and
-worker authorization are historical. Workers are currently stopped. The active
-work is ordinary-header compilation and reference coverage; see the
+worker authorization are historical. Reviewed Mac addresses now cover most
+non-exact game functions, and Windows matching is underway. Ordinary-header
+compilation status is recorded in the
 [native-header status](mac-native-headers.md).
 
 ## Required end state
@@ -100,10 +101,25 @@ Unresolved callees and data references still prevent an exact verdict.
 
 `config/mac/references/<TU>.toml` admits callee identities independently of
 their compilation support. Each `[[functions]]` row carries the source Windows
-VA, owning unit, emitted Mac symbol, complete Mac span, SHA-256 and pairing
+VA, owning unit, complete Mac span, SHA-256 and pairing
 evidence. Names come from the owning source annotation, including annotated
-forward declarations. These entries resolve calls and appear in `mac labels`
-as `callee_reference_only`; they never enter the byte-score denominator.
+forward declarations. Omit `mac_symbol` while locating addresses. Such entries
+appear in `mac labels` as `address_reference_only`; `mac show` and `mac disasm`
+accept their Windows VA or source name immediately. A reviewed address is not
+a compiled comparison. Once the emitted CodeWarrior symbol is verified, adding
+`mac_symbol` lets the reference resolve candidate calls. References never enter
+the byte-score denominator; scored pairs remain separately admitted.
+
+Reviewed `VA_COMPGEN` class constructors/destructors and typed `VECTOR_DTOR`
+annotations can also own address references. Vector destructor references are
+address-only: their different standard-library implementations require separate
+compiler-binding work before they can resolve candidate calls.
+
+TU/source order narrows the search. Confirm each identity using calls, field
+accesses, constants, strings or vtables and review its boundaries before recording
+it. Retained helpers, template instances and cleanup bodies can intervene; do not
+zip the two function lists by ordinal position. Record unresolved leads under
+ignored `build/mac/address-discovery/`, keeping only reviewed spans in manifests.
 For an annotation owned by a header, set `source = "include/...h"` (or a
 registered `.inl` fragment). The reference resolves the canonical claim there;
 it does not require a duplicate VA annotation in the TU.

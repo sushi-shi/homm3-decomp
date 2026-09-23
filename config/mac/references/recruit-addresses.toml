@@ -1,0 +1,136 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x14d19c
+mac_size = 0x70
+unit = "recruit"
+target_sha256 = "ff55973527fd4801d615a7cb9be883d399b8b0abbdb300bc657d86f1bef9cbb7"
+evidence = "Contiguous recruit TU order corroborated by body: creature stride0x74 cost+0x20 seven resources and positive difference times amount. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x54e750
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x14d288
+mac_size = 0x88
+unit = "recruit"
+target_sha256 = "cdcd485ee961d464603cadd1b80169c0c2fc8c50cc8912d59cc1fbda3a058b8a"
+evidence = "Contiguous recruit TU order corroborated by body: numberToBuy+0xb8 enable button and update0x14f46c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x54e800
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x14d310
+mac_size = 0x186c
+unit = "recruit"
+target_sha256 = "645f393385c38d42405e65df0b613eafcd3017e8d60c0ce185077490b6b5b55c"
+evidence = "Contiguous recruit TU order corroborated by body: heroWindow0x20ae1c fixed widget sequence dimensions485x395 and recruit cards. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x54e850
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x14eb7c
+mac_size = 0xac
+unit = "recruit"
+target_sha256 = "5e7d007b5f617fc20200ced8c08a7d436bbebebdbbb61c05ef9e8b5aef81e02f"
+evidence = "Contiguous recruit TU order corroborated by body: child objects/base destruction and Mac deleting flag. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x54fb20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x14ec28
+mac_size = 0x2a0
+unit = "recruit"
+target_sha256 = "9a59a6d5b4a6adf99e8192e65fcc311b6e7184e8ace64386383857aa70da0422"
+evidence = "Contiguous recruit TU order corroborated by body: creature portrait/name widgets constructors0x5e7a0/0x10c3f0/0x5e58c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x54fb90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x14eec8
+mac_size = 0x438
+unit = "recruit"
+target_sha256 = "d35ae1102fe33fc79b2ada72c2657115b172ebd9f3eb19ce89fe76a9821a3d42"
+evidence = "Contiguous recruit TU order corroborated by body: TRecruitWindow constructor0x14d310 and resource/widget initialization. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x54fea0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x14f300
+mac_size = 0xcc
+unit = "recruit"
+target_sha256 = "141a8a24dafc5b2f4c81824dd2b930b63be341867476cf3b7e9b01ead806d54d"
+evidence = "Contiguous recruit TU order corroborated by body: remove window delete recruit window broadcast0x7800 and town strips/resources. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5502d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x14fb54
+mac_size = 0xb8c
+unit = "recruit"
+target_sha256 = "3286a66eb790cd6de471112bdec62ea37c3e971132f1b117e80a90b7781e697a"
+evidence = "Contiguous recruit TU order corroborated by body: message dispatch constants0x200/4/13/12/15/0x21b and recruit update/cost paths. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x550940
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x15093c
+mac_size = 0x130
+unit = "recruit"
+target_sha256 = "3e209cf4460fa16ff82a8b5f0f17ecf3359001c38537db3591cf500634311b01"
+evidence = "Contiguous recruit TU order corroborated by body: town overload base0x5bc04 building98 and dwelling7 loop. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x551560
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x150ac4
+mac_size = 0xac
+unit = "recruit"
+target_sha256 = "5ece252083d9323a92cbb36aa9de7985b3adb50e65d43765a0413e14554a7e3a"
+evidence = "Contiguous recruit TU order corroborated by body: child/base destruction and Mac deleting flag. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5516e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x150b70
+mac_size = 0x48
+unit = "recruit"
+target_sha256 = "2693980f2efbbe8c63185f04b6cebabcd82d3b2846e51011d50f63f45f5d5d14"
+evidence = "Contiguous recruit TU order corroborated by body: town overload selects dwelling and calls creature overload0x150bb8. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x551750
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x150bb8
+mac_size = 0x688
+unit = "recruit"
+target_sha256 = "5c01d757160014531fa90d73bb4f642d6ae1c79cb56d0ef44038c18a6ab0e94d"
+evidence = "Contiguous recruit TU order corroborated by body: creature overload getMonsterCost0x14d20c quick-window0x150a6c and resource widgets. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x551780
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x14fa38
+mac_size = 0xec
+unit = "recruit"
+target_sha256 = "eaf6cce9b13d1a0314863a48ce58baa1344954eb951a69a52212fcc527ab2471"
+evidence = "Source helper without standalone Windows VA. TU order plus rollover codes0x7801/0x214/0x7803 strings and widget0x200"
+source_helper = "recruitUnit::setRolloverText"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x14fb24
+mac_size = 0x30
+unit = "recruit"
+target_sha256 = "ddaba8df1d06d1ca6efc5b5649ea749bcee14a253dd54f6edf4482f1a8113f25"
+evidence = "Source helper without standalone Windows VA. TU order plus message fields0x4000,4,10 and return2"
+source_helper = "exitRecruitUnit"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x150a6c
+mac_size = 0x58
+unit = "recruit"
+target_sha256 = "22be284dd81f9daab6e568fdb42ca6450dfb004ce5231c734a8fab47cbaee6f0"
+evidence = "Source helper without standalone Windows VA. TU order plus heroWindow0x20ae1c and window type0x31"
+source_helper = "TRecruitQuickWindow::TRecruitQuickWindow"
+

@@ -406,10 +406,10 @@ retail_va = 0x00436840
 unit = "ai_tactical"
 mac_section = 0
 mac_offset = 0x3e070
-mac_size = 0x1e4
+mac_size = 0x1a0
 mac_symbol = ".findAttackHex__26type_AI_attack_hex_chooserFv"
-target_sha256 = "d3ef8041eec57c592d9c11e892fe6ebd3a3bb3e4786abab23277c4f6fbcd2aa0"
-evidence = "Mac chooseMeleeTarget calls this best attack-hex selection at 0+0x23b38; source-owned Windows 0x436840 and the Dreamcast named call corroborate identity. Final BLR at 0+0x3e250 precedes the next function at 0+0x3e254."
+target_sha256 = "4c675d98168e57eda7f5e8322f49b33540c52968027a46a871cb8f59c751f3e8"
+evidence = "Mac chooseMeleeTarget calls this best attack-hex selection at 0+0x23b38; source-owned Windows 0x436840 and the Dreamcast named call corroborate identity. Final BLR at 0+0x3e20c; separate enchant-data constructor begins0x3e210 and mastery getter begins0x3e22c. The previous span incorrectly included both helpers."
 
 [[functions]]
 retail_va = 0x00420a80

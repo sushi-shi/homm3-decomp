@@ -1,0 +1,226 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x5f73b0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x202fa4
+mac_size = 0x1ac
+target_sha256 = "9c605f9da267e5ec6f8dc6c7976c20a49238247f324bbd2bdc5dcfbcf3734a1e"
+evidence = "Shared view-world sprite blit is called five times by vwDrawSymbols 0x2040e0, reads owner/flag and draws selected sprite; complete BLR."
+
+[[functions]]
+retail_va = 0x5f7500
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x203150
+mac_size = 0x530
+target_sha256 = "93d3c080de9db06722b20fabef2d4b62ded2a011915a8e981998dc03556c80e0"
+evidence = "Hero-part renderer is called by vwDrawAdvObj 0x20435c; its five drawHero branches mirror boat/flag/portrait parts; complete BLR."
+
+[[functions]]
+retail_va = 0x5f7900
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x203680
+mac_size = 0x530
+target_sha256 = "044784acfc07d051f9c382604ef3f256f61d952c30654571dba5de783b1f944a"
+evidence = "Hero-part shadow renderer is called by vwDrawAdvObjShadow 0x204ea0 and mirrors five drawHeroShadow branches; complete BLR."
+
+[[functions]]
+retail_va = 0x5f7d00
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x203bb0
+mac_size = 0x298
+target_sha256 = "74a92d8d4ddcdc25e8370a428935248a1328fd57788f6711c4a70c6781cbba1e"
+evidence = "Boat-part renderer is called by vwDrawAdvObj 0x20435c and has boat sprite/flag draw branches; complete BLR."
+
+[[functions]]
+retail_va = 0x5f7ef0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x203e48
+mac_size = 0x298
+target_sha256 = "c7412434f199fbd6c5003ba92b2ed40bf09e757288149df5b669d251ca336fde"
+evidence = "Boat-part shadow renderer is called by vwDrawAdvObjShadow 0x204ea0 and mirrors boat shadow draw branches; complete BLR."
+
+[[functions]]
+retail_va = 0x5f80e0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x2040e0
+mac_size = 0x27c
+target_sha256 = "bb2fe67df52a45c6adcddc31969d545481b89855876d404ebc1d020dc08efbf9"
+evidence = "vwDrawSymbols gates symbol types and calls shared vwDrawSprite 0x202fa4 five times; vwCompleteDraw calls it last at 0x209a88."
+
+[[functions]]
+retail_va = 0x5f82e0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x20435c
+mac_size = 0x9bc
+target_sha256 = "f7ebda9a1d7d92b275ddb8123ad1acb06cda081a090fbf35dd1ba5eae258e607"
+evidence = "vwDrawAdvObj calls hero part 0x203150, boat part 0x203bb0 and clipped buffer helper 0x204d18; vwCompleteDraw calls it after shadow pass."
+
+[[functions]]
+retail_va = 0x5f8be0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x204ea0
+mac_size = 0x5e4
+target_sha256 = "e27d102b24199e951ad8554d1222a2562956c110ff6d77af6846c6e92b5fab0d"
+evidence = "vwDrawAdvObjShadow calls hero shadow 0x203680, boat shadow 0x203e48 and clipped buffer helper 0x204d18; vwCompleteDraw calls it before main object pass."
+
+[[functions]]
+retail_va = 0x5f9220
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x205484
+mac_size = 0x2cc
+target_sha256 = "8a4e9eaf37e5de44b442b35af43efee9e390a1cc41fc7b5db2ff466b609ccd13"
+evidence = "vwDrawRiver is the first of paired 0x2cc terrain overlay loops, called by vwCompleteDraw 0x2098c8 before road 0x205750."
+
+[[functions]]
+retail_va = 0x5f95b0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x205750
+mac_size = 0x2cc
+target_sha256 = "2e6065b31b6bcadb4481d61ba928a755bfc92772b473d2a912ba5efe79e83ef3"
+evidence = "vwDrawRoad is the second paired 0x2cc terrain overlay loop, called by vwCompleteDraw 0x209910 after river 0x205484."
+
+[[functions]]
+retail_va = 0x5f9940
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x205a1c
+mac_size = 0x4dc
+target_sha256 = "c9e2ba1fcb8c2d8b2087d85e03852c3cf4898207a64e69281a9d5ddff837cf8a"
+evidence = "vwDrawShroud applies view mask with two clip-helper calls and is conditionally called by vwCompleteDraw 0x209a40 after object passes."
+
+[[functions]]
+retail_va = 0x5f9d90
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x204d18
+mac_size = 0x188
+target_sha256 = "da063c7e90acdd4ae8c84a494cacb4d5e75f49ee6b431266dccde14e7bbd9e87"
+evidence = "Clipped scale helper checks screen x>=8/x<600 and y>=8/y<552, then copies nonzero pixels through scale table; called by object, shroud and terrain drawing."
+
+[[functions]]
+retail_va = 0x5f9ed0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x205ef8
+mac_size = 0x370
+target_sha256 = "69d1b911e5e50575a7567e63f8bf4fb58524c2ceff2e5d3766a7eadf689b50a9"
+evidence = "vwDrawUnderlay draws terrain underlays and uses clip helper 0x204d18; vwCompleteDraw calls it at 0x209958 after river and road."
+
+[[functions]]
+retail_va = 0x5fa1e0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x206268
+mac_size = 0x574
+target_sha256 = "6866679475a06f90082c6965efea747af1b0e7addbd1700b9543877bd63e9a4e"
+evidence = "vwDrawGround is the first scaled terrain pass, calls clip helper 0x204d18 and is called first by vwCompleteDraw at 0x209880."
+
+[[functions]]
+retail_va = 0x5fbd60
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x208d70
+mac_size = 0xe8
+target_sha256 = "8f821255ddd716d2c433ce672b058060e5b94a59473dc319699aefe34dfd8d26"
+evidence = "ViewWorld canonical destructor is delete-flag cleanup immediately after resource-anchored ctor 0x2067dc; complete BLR."
+
+[[functions]]
+retail_va = 0x5fbdf0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x208e58
+mac_size = 0xe4
+target_sha256 = "b22cde4c5966c307891779fea1781109cea5077b6e5dd8009101d7a5055239e3"
+evidence = "Surface level callback toggles selected widgets 0x20aa0c, invokes drawWindow 0x2097b0 and updates screen; paired Underground callback follows."
+
+[[functions]]
+retail_va = 0x5fbec0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x208f3c
+mac_size = 0xe4
+target_sha256 = "b40b07a12e75cfdc78c617132f07ccae588d0a84e47b70f5b1f75fc1f7fb68f7"
+evidence = "Underground level callback mirrors Surface widgets, invokes drawWindow 0x2097b0 and updates screen; complete BLR."
+
+[[functions]]
+retail_va = 0x5fbf90
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x209020
+mac_size = 0x27c
+target_sha256 = "9909c34ff028e899955f0289f633eb4851d033efa0ec3706b48e8008a4ac8010"
+evidence = "viewWorld creates anchored ViewWorld window 0x2067dc, calls init 0x20929c and drawWindow 0x2097b0, runs modal and deletes it."
+
+[[functions]]
+retail_va = 0x5fc240
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x20929c
+mac_size = 0x514
+target_sha256 = "a1b13f9b3215670a8ad907e445a3424990fdb7dc031233d58e063c830e29da4d"
+evidence = "ViewWorld init derives view dimensions/scale-line table and calls mouse pointer, radar 0x1382c and widget messages; viewWorld calls it at 0x209214."
+
+[[functions]]
+retail_va = 0x5fc4c0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x209808
+mac_size = 0x2b8
+target_sha256 = "05f9de210a80f2e2e174ac28bdcee1f072fde2a56eddfe82bb7e838eb17ef879"
+evidence = "vwCompleteDraw calls eight passes in source order: ground 0x206268, river 0x205484, road 0x205750, underlay 0x205ef8, shadow 0x204ea0, objects 0x20435c, shroud 0x205a1c, symbols 0x2040e0."
+
+[[functions]]
+retail_va = 0x5fc7a0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x209ac0
+mac_size = 0x178
+target_sha256 = "afaa2eed2279105208d267c9323023575b041993b0de75f6f3ff7f2e3a87deaf"
+evidence = "updateViewWorld broadcasts three scale buttons, invokes init 0x20929c and drawWindow 0x2097b0, then blits screen; handler calls it twice."
+
+[[functions]]
+retail_va = 0x5fc8f0
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x209c38
+mac_size = 0x2a8
+target_sha256 = "5948977eade42559d711e40599b4101aabbf87ef50a079052121e9917e733350"
+evidence = "updateRadar clamps radar coordinates and redraws map through window manager, calls drawWindow 0x2097b0; handler calls it on radar drag."
+
+[[functions]]
+retail_va = 0x5fcb10
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x209ee0
+mac_size = 0x464
+target_sha256 = "640aac9c857291a6ab2454bfc8f66a1999874a0365dcf5deec1cc590bd4c0aaa"
+evidence = "ViewWorld handler calls base CAdvPopup 0x1bf2c, routes view toggle to updateViewWorld 0x209ac0 and radar drag to updateRadar 0x209c38; complete BLR before widget TU."
+
+[[functions]]
+retail_va = 0x5fa600
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x2067dc
+mac_size = 0x2594
+target_sha256 = "e8f4747cce43798a05e843762882415f8d81d870d95eaf9a3d057ee22322bc0f"
+evidence = "VWorld.pcx setup at 0:0x206864, then VWsymbol.def and VWMag1/2/4, VWPuz.def, iam010/003, iOkay32 resources in source constructor order; complete body BLR 0x208d6c, next prologue 0x208d70."
+
+[[helpers]]
+source_helper = "TViewWorldWindow::drawWindow"
+unit = "viewwrld"
+mac_section = 0x0
+mac_offset = 0x2097b0
+mac_size = 0x58
+target_sha256 = "09983845a256981c4eb153b2a84309f8a209b9d455c3181d82f43ad27169ef7e"
+evidence = "Retained ordinary drawWindow forwards five origin/dimension arguments to vwCompleteDraw 0x209808; level callbacks and viewWorld call it."

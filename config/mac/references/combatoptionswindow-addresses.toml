@@ -1,0 +1,37 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x46e3b0
+unit = "combatoptionswindow"
+mac_section = 0x0
+mac_offset = 0x7b3b0
+mac_size = 0x2068
+target_sha256 = "95fdd6743d66dda173e6658e8c058832df3654a90b90606466a671ed335ef158"
+evidence = "NEW: Options ctor heroWindow159,84,481,431; creates speed/grid/audio controls, icon/text widgets and initializes radio groups0x7d56c/0x7d5e4/0x7d618/0x7d64c. End0x7d418; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46f700
+unit = "combatoptionswindow"
+mac_section = 0x0
+mac_offset = 0x7d418
+mac_size = 0xb4
+target_sha256 = "b0cf5f88f0f87c34beef0895881b42e0b4f21c1cf391e8829126c5f993cf4bb1"
+evidence = "NEW: Options destructor releases owned background, calls heroWindow dtor0x20aebc and optional delete; combatSystemOptions caller0x74c18. End0x7d4cc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46f780
+unit = "combatoptionswindow"
+mac_section = 0x0
+mac_offset = 0x7d50c
+mac_size = 0x60
+target_sha256 = "fdad3350b055f572fd05bb148687e1da69bf5dc07278ed02f3493b76d6c9b36e"
+evidence = "NEW: Modal wrapper installs handler0x7d680 via0x20d6c0 then conditionally writes preferences0x1312c8; prefs-changed flag reset. End0x7d56c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46f7b0
+unit = "combatoptionswindow"
+mac_section = 0x0
+mac_offset = 0x7d680
+mac_size = 0x6f4
+target_sha256 = "9cabe515144dbc91e1d8e9049e1c35986f184303357ff33c3ee1e47b52276d53"
+evidence = "NEW: Options message handler dispatches widgets201..238, default settings0x131180, audio volume0x218cc0/0x218bf4 and check/radio widget updates; case labels internal through shared epilogue0x7dd70. End0x7dd74; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."

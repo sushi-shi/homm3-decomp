@@ -1,0 +1,109 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x4b5070
+unit = "font"
+mac_section = 0x0
+mac_offset = 0xc8cdc
+mac_size = 0xb8
+target_sha256 = "fb906bad0672d63d761cfac64bb472aacaac621ec26a4bf3d95845137a1d0423"
+evidence = "Font constructor calls resource constructor 0x151400, allocates m_data, copies fontspec/data and returns; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x4b5110
+unit = "font"
+mac_section = 0x0
+mac_offset = 0xc8d94
+mac_size = 0x7c
+target_sha256 = "f2f69ce826d834dc0138a637d5db8cdb18ed1c41a669b5bb7e2d48c97401ec91"
+evidence = "Canonical destructor maps to Mac delete-flag body: frees m_data, tears down palette/resource base and optional operator delete; complete BLR before getColor leaf."
+
+[[functions]]
+retail_va = 0x4b5180
+unit = "font"
+mac_section = 0x0
+mac_offset = 0xc8e4c
+mac_size = 0x24
+target_sha256 = "4a5cb4a7839324948b74cb38af1e2a4b3180df253cb3af0d534254be4dd278f1"
+evidence = "setPalette adjusts this to palette member +0x103c and invokes palette copy-assignment 0x13ba78; complete BLR before drawCharacter."
+
+[[functions]]
+retail_va = 0x4b51a0
+unit = "font"
+mac_section = 0x0
+mac_offset = 0xc8e70
+mac_size = 0xd0
+target_sha256 = "8ef5d7f92d62f4ea3f58868cabe4ea34cf625a1a4b9bdc6bcce4cd60f8222364"
+evidence = "drawCharacter tests character 0..255, indexes 12-byte ABC metrics and glyph offset table, paints nonzero pixels from palette; BLR before drawCursor."
+
+[[functions]]
+retail_va = 0x4b5250
+unit = "font"
+mac_section = 0x0
+mac_offset = 0xc8f84
+mac_size = 0xc
+target_sha256 = "73b56ae2b98d7a5bb499b4c911e401f778af7d495b9f9138d4fd9e16bacb8943"
+evidence = "getSize leaf loads m_dataSize at +0x125c, adds sizeof(font) 0x1260 and returns; single BLR before drawStringExecute."
+
+[[functions]]
+retail_va = 0x4b5260
+unit = "font"
+mac_section = 0x0
+mac_offset = 0xc8f90
+mac_size = 0x2a8
+target_sha256 = "1641a7bb33d2c5b36285093e255459cea6435f0dc87abf05da6c30a3c4663c1f"
+evidence = "drawStringExecute scans/clips text, calls getCharacterWidth 0xc9600 and retained drawCharacter 0xc8e70 and drawCursor 0xc8f40; full BLR/next prologue."
+
+[[functions]]
+retail_va = 0x4b5490
+unit = "font"
+mac_section = 0x0
+mac_offset = 0xc9238
+mac_size = 0x3c8
+target_sha256 = "79f7df47fd7604aa36fe48ca0df665f38b1e9a8914bc5abe76a836d3a643b390"
+evidence = "drawBoundedString calls lineLength 0xc9690 and getCharacterWidth 0xc9600, updates per-line clipping and cursor position; full BLR before getCharacterWidth."
+
+[[functions]]
+retail_va = 0x4b57d0
+unit = "font"
+mac_section = 0x0
+mac_offset = 0xc9628
+mac_size = 0x68
+target_sha256 = "ed50b69798278aa2d310c0e03243a482f5530246d2351ed55682f1e2f0888260"
+evidence = "getStringWidth walks text and calls getCharacterWidth 0xc9600 for each glyph; full BLR/next prologue."
+
+[[functions]]
+retail_va = 0x4b5920
+unit = "font"
+mac_section = 0x0
+mac_offset = 0xc97dc
+mac_size = 0xac
+target_sha256 = "2eea77f493d32ce8df58887e09c6a75f4a8168e7918b88559e4119a616a1b79a"
+evidence = "lineWidth calls strlen and getCharacterWidth 0xc9600 while respecting newline/markup; full BLR before reviewed longestLineWidth."
+
+[[functions]]
+retail_va = 0x4b5b90
+unit = "font"
+mac_section = 0x0
+mac_offset = 0xc9b78
+mac_size = 0x270
+target_sha256 = "dd5463234d90853e43c0e416eb7c17431000699daaa43a5ed0c70b3a716fc420"
+evidence = "fillLinesVector builds line strings with width/wrap scans, repeated getCharacterWidth 0xc9600 and std::string/vector operations; full BLR then adjacent static initializer."
+
+[[helpers]]
+source_helper = "font::getColor"
+unit = "font"
+mac_section = 0x0
+mac_offset = 0xc8e10
+mac_size = 0x3c
+target_sha256 = "3250f0c47c76b53335ad6e1de594507af76574561db6faa9b21d94985388d66b"
+evidence = "Checks custom-color bit, default +9 palette bias and primary/white/heading highlight increment; direct drawStringExecute caller 0xc9064."
+
+[[helpers]]
+source_helper = "font::drawCursor"
+unit = "font"
+mac_section = 0x0
+mac_offset = 0xc8f40
+mac_size = 0x44
+target_sha256 = "4b3bfea5af8958854ab01e9b08a1694335d20af59a488b2b9bde02c89ba6974c"
+evidence = "Loads underscore glyph and forwards bitmap/position/color arguments to drawCharacter 0xc8e70; direct drawStringExecute caller 0xc90a8."

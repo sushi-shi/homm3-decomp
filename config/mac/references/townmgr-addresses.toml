@@ -1,0 +1,937 @@
+# Reviewed address identities; source owns names and compiler symbols remain unbound.
+
+[[functions]]
+retail_va = 0x5c2ea0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1b8d90
+mac_size = 0x1c4
+target_sha256 = "e6dcbe3ca8948e671873491dba6617aebdd2a7d988bbad7d090ed798cd37c5e4"
+evidence = "Town object constructor formats %s.def at 0x1b8de0 and %s.pcx at 0x1b8ef4 for town sprite/backdrop resource names; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5c34d0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1b994c
+mac_size = 0x3a7c
+target_sha256 = "b6dd056d6f2c77c5109703871e18a6ac0337280c5be9a392020eeafb8ba449a0"
+evidence = "TownScreen constructor loads unique townscrn.pcx at 0x1b9b54 and subsequent town crest/hero/button resources; townManager::open directly calls it at 0x1be284. Complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5c63c0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1be22c
+mac_size = 0x2f4
+target_sha256 = "cb00662b01bdfb46f1fa4250ef56aba8b81cb36a2273d289f89ba1b39ad7aa03"
+evidence = "townManager::open calls TownScreen constructor 0x1b994c at 0x1be284, reads GameTime, and uses townManager string at 0x1be410; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5c6870
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1be888
+mac_size = 0x738
+target_sha256 = "de3bbddba9e91ea822793d6f02d8f70bda147f86acb6800732d283e690cf0651"
+evidence = "setupTown owns %sBack.pcx format at 0x1beaac and scene loading, then invokes town-screen updates; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5c8190
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c085c
+mac_size = 0x21f4
+target_sha256 = "4ad576b73c6d207476541b96ff2c5515809747856f0e020ac30f1fad2fc70c02"
+evidence = "ThievesGuild constructor contains unique PRRed.pcx/PRStrips.def/TPRank.pcx xrefs in source widget creation order; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5c9be0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c3050
+mac_size = 0x351c
+target_sha256 = "421200b5071d31fa572aa43c9d736ce465f15feeff84f21414f4b045f6920334"
+evidence = "Hall constructor contains TPTHBar.def and TPTHBkCs.pcx resources in source setup sequence; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5cc980
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c661c
+mac_size = 0x2804
+target_sha256 = "76099e1c96631055ab221d4e21bea32e82c402ebd4fd61ab75c42abdbd714315"
+evidence = "MageGuild constructor contains TPMageS.def, spellscr.def and TPMage.pcx resources in source setup sequence; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5ce830
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c9800
+mac_size = 0x2d70
+target_sha256 = "a58bfb679e1e9597c23ce4c11f9c475bbd4938a8c368158bc352cdecb4200374"
+evidence = "Garrison base window constructor contains unique garrison.pcx at 0x1c98a8 with town crest/portrait setup; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5d1360
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cd298
+mac_size = 0xc54
+target_sha256 = "282814ad2d39a68527bf9afdbb140b8bca68886c8b7a3814481a9245e488b0bf"
+evidence = "Blacksmith constructor contains unique TPSmith.pcx at 0x1cd34c and corresponding title/widget setup; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5d1ef0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1ce510
+mac_size = 0xd18
+target_sha256 = "9550a8f11c1eaee933741580eacf3c9441ceb9e7e9df82feab24f948bead78cf"
+evidence = "Ship window constructor contains unique TPShip.pcx at 0x1ce5a8 and title/widget setup; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5d55c0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d267c
+mac_size = 0xaf8
+target_sha256 = "7848f87ab252ef3e233ead43b626286e339731f3f8a48a6ee0749e2b67f17a52"
+evidence = "BuyBuild constructor contains unique TPuBuild.pcx at 0x1d270c; townManager::buyBuild calls this body at 0x1d3670. Complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5d5f30
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d35a4
+mac_size = 0x53c
+target_sha256 = "6b2c3740fb35dbca021548b9058286fe4bc26d39df521ee7522429916b319adc"
+evidence = "townManager::buyBuild calls BuyBuild constructor 0x1d267c, uses Resource.def at 0x1d35c4 for purchase icons, then runs dialog/resource branch. Complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5d70b0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d4680
+mac_size = 0xed0
+target_sha256 = "45cb85efd6d2098606d2a37dba39e85341997fb84cde42b9927a77cbdeb5999f"
+evidence = "Tavern constructor owns unique TPTavSel/TPTavern/TPTavDes/TPTavRol resource sequence in source widget order; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5d86f0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d6668
+mac_size = 0xa4e0
+target_sha256 = "61c2fd29ca8972d33df82928c86e7ae88598f4141609540dca059658bf33cec9"
+evidence = "Castle constructor contains unique TPCastl8.pcx and TPCastl7.pcx at 0x1d67cc/0x1d6898 plus extensive source castle sprite/widget setup; body ends BLR immediately before next prologue."
+
+[[functions]]
+retail_va = 0x5c58e0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1bd3c8
+mac_size = 0xcc
+target_sha256 = "80b93fc79dd8f979d82d4715cdffbc54c558b20369316ece5605d9edd393d2cd"
+evidence = "TownScreen canonical destructor maps to Mac delete-flag body: virtual widget deletion loop, base destructor, optional delete; follows anchored constructor directly."
+
+[[functions]]
+retail_va = 0x5c5970
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1bd494
+mac_size = 0x1c4
+target_sha256 = "a5b270629a58ffd8bef80ca33593d6c7c856d5341f8313714632edbb39333d39"
+evidence = "Town locator update broadcasts icon/status changes for one local town and selected marker; six calls to heroWindow::broadcastMessage 0x20b3e8, directly called by updateTownLocators 0x1bd694."
+
+[[functions]]
+retail_va = 0x5c5aa0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1bd658
+mac_size = 0x11c
+target_sha256 = "dd51a7192fa113ee0a72acb11159521965a063ae9ab39b7b892129d2363475e9"
+evidence = "Broadcasts selector clear, loops exactly three locator updates through 0x1bd494, then dims/undims arrow widgets and draws window; full BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5c5b40
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1bd8d0
+mac_size = 0x95c
+target_sha256 = "0ab2adac649a8612483f599c9b73df32a862f4203128fc3a1536f102dbc6ee53"
+evidence = "Growth-bonus formatter initializes two strings, walks dwelling slots and horde/artifact/grail bonuses, calls repeated formatting/string append and widget update helpers; full BLR immediately before townManager::open."
+
+[[functions]]
+retail_va = 0x5c9690
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c2a50
+mac_size = 0xd0
+target_sha256 = "62b78fabe4b421fc96b827b53b5bbe123f60d6002d27b879b31167176e28454a"
+evidence = "ThievesGuild canonical destructor maps to Mac delete-flag widget cleanup and optional operator delete; follows unique resource-anchored ctor."
+
+[[functions]]
+retail_va = 0x5c9710
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c2b20
+mac_size = 0x230
+target_sha256 = "344f5759435f49b7f19268613b2aa084b3da1214b5103be52f82d066a5a99406"
+evidence = "ThievesGuild rollover formatter calls strlen/sprintf and generalText lookups for ranking lines, then updates status text; complete BLR and next handler prologue."
+
+[[functions]]
+retail_va = 0x5c9930
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c2d50
+mac_size = 0x300
+target_sha256 = "e25fd2c0c9e517368381ee2ac16b009d2064a4383ba2f5cbc06d1377f1b15b18"
+evidence = "ThievesGuild window handler calls CAdvPopup::windowHandler 0x1bf2c, routes hover/click and dialog text with repeated normalDialog 0x117f10; complete BLR before Hall ctor."
+
+[[functions]]
+retail_va = 0x5cc910
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c656c
+mac_size = 0xb0
+target_sha256 = "bf788cc0de35b75201edd2aaecaafb10fcf1de592f198c303ffa32d40ad18fd2"
+evidence = "Hall canonical destructor maps to Mac delete-flag widget cleanup and optional operator delete; complete BLR directly before anchored MageGuild ctor."
+
+[[functions]]
+retail_va = 0x5ce150
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c8e20
+mac_size = 0xb0
+target_sha256 = "989e53bec99c5536ebdfb16b1c967bfa7d64c36b19db6fc69ae0735371836d8d"
+evidence = "MageGuild canonical destructor maps to Mac delete-flag widget cleanup and optional operator delete; complete BLR after anchored ctor."
+
+[[functions]]
+retail_va = 0x5ce1c0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c8ed0
+mac_size = 0x21c
+target_sha256 = "df5f7fca7bd74fdb35806c0977cac5325e21000e791ca0cf06947729ac0a4908"
+evidence = "MageGuild rollover text maps thirty spell slots into levels, resolves spell names/generalText and writes status line; handler directly calls it at 0x1c925c."
+
+[[functions]]
+retail_va = 0x5ce370
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c90ec
+mac_size = 0x2f0
+target_sha256 = "a6907fe8ba66a3c14eaaf1ec44bae6240f2e959e3f78dff2afc4a0012d8819b9"
+evidence = "MageGuild handler calls CAdvPopup::windowHandler 0x1bf2c, hover rollover 0x1c8ed0, checks spell slots and calls normalDialog; complete BLR before resource-bar helper."
+
+[[functions]]
+retail_va = 0x5ce560
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c9480
+mac_size = 0x380
+target_sha256 = "1a9e392cfe34ebf57c1324f8731abb51c5ea625eab0db4077c443852bf37cc3e"
+evidence = "townManager mage-guild click path follows popup-bank helper 0x1c93dc, checks garrison/visiting hero, uses dialog/spellbook calls; complete BLR directly before anchored Garrison ctor."
+
+[[functions]]
+retail_va = 0x5d0580
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cc570
+mac_size = 0xb0
+target_sha256 = "09e3093569d2b1f3adcb3032938ab41ab642a5e0ce25856fb24a017dd7f22b94"
+evidence = "Garrison base canonical destructor maps to Mac delete-flag widget cleanup and optional operator delete; follows unique garrison ctor."
+
+[[functions]]
+retail_va = 0x5d05f0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cc620
+mac_size = 0x1ac
+target_sha256 = "7687d309ea32703e785ec7dc12907815606278749d673c7b9d0e003b5a477d72"
+evidence = "Garrison command/status dispatcher calls manager armyCommand at 0x1c0704 for both seven-slot runs, writes status text and calls retained showText helper 0x1cc7cc; handler calls it at 0x1cc9f4."
+
+[[functions]]
+retail_va = 0x5d0910
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cc924
+mac_size = 0x25c
+target_sha256 = "1896eba1a3727a12221b9996ac0ec5eb50b475da3c143339ed42688b25da6fb5"
+evidence = "Garrison handler calls CAdvPopup::windowHandler 0x1bf2c, dispatches troop click to setCommandAndText 0x1cc620 and right-click viewArmy helper 0x1cc8ac; complete BLR before next dialog ctor."
+
+[[functions]]
+retail_va = 0x5d0b40
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1ccb80
+mac_size = 0x284
+target_sha256 = "9abc49c07820790a8c3d5536e267caa405481759414324d771252dfd5f5df1d8"
+evidence = "Monster-join constructor calls garrison base constructor 0x1c9800 and creates the source text and icon widgets; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5d0e00
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cce04
+mac_size = 0x238
+target_sha256 = "26394388fae7b3a845082523f7b73fed6f71bf5fcddcbdf13d14e0a5f68f061b"
+evidence = "Garrison derived constructor calls garrison base constructor 0x1c9800 then creates source text and icon widgets; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5d1130
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cd03c
+mac_size = 0x70
+target_sha256 = "ab5f2e3fe543aa3731b2df2891e12f62a1560028dff49c1950850d9e15294bd4"
+evidence = "Event-garrison wrapper calls Garrison derived constructor 0x1cce04, doModal 0x20bb48, and garrison base destructor 0x1cc570; complete BLR before deleting wrapper."
+
+[[functions]]
+retail_va = 0x5d11d0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cd10c
+mac_size = 0xa8
+target_sha256 = "e702bedc952414b59084e9805e720b25bcbfbd5bfa858a9351ea236e798341ac"
+evidence = "Creature-type monster join creates army group then calls monster-join constructor 0x1ccb80, mouse-pointer setup, doModal 0x20bb48 and garrison destructor 0x1cc570; complete BLR before deleting wrapper."
+
+[[functions]]
+retail_va = 0x5d12b0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cd214
+mac_size = 0x84
+target_sha256 = "887861f120a4658306864c806a6cada505e415303b88a6817ed5c40d30e1d72a"
+evidence = "Army-group monster join calls monster-join constructor 0x1ccb80, mouse-pointer setup, doModal 0x20bb48 and garrison destructor 0x1cc570; complete BLR/next Blacksmith prologue."
+
+[[functions]]
+retail_va = 0x5d1a30
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cdeec
+mac_size = 0xb0
+target_sha256 = "2f89ef558b4861d9b7592e8edc142d72491683a5272dec15c6f793f1be11c32b"
+evidence = "Blacksmith canonical destructor is the delete-flag widget cleanup body following the unique Blacksmith ctor; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5d1aa0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cdf9c
+mac_size = 0x9c
+target_sha256 = "ad164e5875b2bcfa53dd8211bb6c322c830965261d5fe8afa97d486d43a81583"
+evidence = "Blacksmith right-click text gets artifact description 0xf7550 and calls normalDialog 0x117f10; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x5d1b60
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1ce038
+mac_size = 0x148
+target_sha256 = "39c3092f3b3f25abc338830d42a4f5ca33bdc58d3c004b69f3cb471c24bc5f94"
+evidence = "Blacksmith rollover handles two localized button lines, then broadcast/draw/updateScreen; handler calls this body at 0x1ce220."
+
+[[functions]]
+retail_va = 0x5d1c60
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1ce180
+mac_size = 0x158
+target_sha256 = "9c035fe59e7f3c79eacf4afbf9a3d7d4fccea91ce5af698863aa2aee2675a346"
+evidence = "Blacksmith handler calls CAdvPopup handler 0x1bf2c, right-click text 0x1cdf9c, hover text 0x1ce038 and machine frame update; complete BLR."
+
+[[functions]]
+retail_va = 0x5d1d30
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1ce2d8
+mac_size = 0x238
+target_sha256 = "b8539ad006030826abf53c0390784463418ebee5086899e62e2b40cbfc6503e3"
+evidence = "doBlacksmith constructs anchored Blacksmith window 0x1cd298, runs modal dialog, and checks purchase state; complete BLR before Ship ctor."
+
+[[functions]]
+retail_va = 0x5d2530
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cf228
+mac_size = 0xb0
+target_sha256 = "22175efe05b23252c27167f75709eaaa0a4f70abb5436a1742d74d95a2b999a1"
+evidence = "Ship canonical destructor is the delete-flag widget cleanup body immediately after anchored Ship ctor; complete BLR."
+
+[[functions]]
+retail_va = 0x5d25a0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cf3dc
+mac_size = 0x1c8
+target_sha256 = "16e6c723cec794362bb1bbe9ca1815da0dfaaa350ffda71d62c1a9403afa126f"
+evidence = "Ship handler calls CAdvPopup handler 0x1bf2c, empty right-click leaf 0x1cf2d8, rollover 0x1cf2dc and boat frame update; complete BLR."
+
+[[functions]]
+retail_va = 0x5d2720
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cf5a4
+mac_size = 0x98
+target_sha256 = "a00cdda2c3ad8c1198038b4cc6af43a97736296a85092bd9eb0a84613b374c91"
+evidence = "doShipyard allocates Ship window, calls anchored Ship ctor 0x1ce510, runs doModal and deletes it; complete BLR."
+
+[[functions]]
+retail_va = 0x5d27b0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cf63c
+mac_size = 0x188
+target_sha256 = "342ed7ebb848fe1c7b02b93a3ce3280ff98fc22916827ae1f6467df313db9bfd"
+evidence = "doHall allocates anchored Hall window 0x1c3050, calls popup-bank helper 0x1c93dc, modal and locator/redraw paths; complete BLR."
+
+[[functions]]
+retail_va = 0x5d2950
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cf7c4
+mac_size = 0x12c
+target_sha256 = "206851c5a2a75df1d821fa9f1c728ad133edd00a6b7000c089c975cc5ab040c1"
+evidence = "Portal path calls summoning generator 0x1b28ec, recruit-window creation 0x1507b8 or no-creature normalDialog 0x117f10; complete BLR."
+
+[[functions]]
+retail_va = 0x5d2a40
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cf8f0
+mac_size = 0x208
+target_sha256 = "3736771377d15b9de0468f4f37cf19d739cc75ff4f4cc3282b7552fa46f33992"
+evidence = "getBuildingInfo branches by building range, concatenates localized strings, calls getBuildingName 0x131520 and writes global info text; complete BLR."
+
+[[functions]]
+retail_va = 0x5d2da0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cfbf0
+mac_size = 0x174
+target_sha256 = "ff17867fbb09afc69d6671568328dbe054219bde995d10e464e7ee4466e9b736"
+evidence = "doUniversity invokes building-info/dialog helper 0x1cfaf8 in no-hero branch, otherwise calls initializeMagicSkills 0x1cfbcc and university window/modal; complete BLR."
+
+[[functions]]
+retail_va = 0x5d2f90
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cfd64
+mac_size = 0xd4
+target_sha256 = "c7c3514d8e7a8365caff57911451449f4589ff64f54f824752f0f5f83151f1ea"
+evidence = "Skeleton transformer selects town or hero army, constructs skeleton window, calls doModal 0x20bb48 and resets strips via 0x1d2518/0x1d23cc; complete BLR."
+
+[[functions]]
+retail_va = 0x5d30d0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cfe38
+mac_size = 0x288
+target_sha256 = "8a22b90544154fcfe8b4cfafe8c69a9519d8bc5e2d95601f6475f0ab92055bb2"
+evidence = "Hall-click checks Grail/artifact 0xf4d94 and town legality, routes prompt/accept, and calls doHall 0x1cf63c; complete BLR before main."
+
+[[functions]]
+retail_va = 0x5d3240
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d00c0
+mac_size = 0x19e4
+target_sha256 = "45ed279b3be42e2c349a6a965dcea55fc3b9a14472d4448297174ac21a85d768"
+evidence = "Town main is the large command dispatcher after hall-click and before doCommand; calls redraw 0x1d23cc, reset 0x1d2518 and services sound/input in source loop; complete BLR."
+
+[[functions]]
+retail_va = 0x5d4c10
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d1aa4
+mac_size = 0x5d8
+target_sha256 = "6ac0bfd3334e60ddac588cfad689c1de76ea4c354a5df5be1c3dce540c1d4121"
+evidence = "Town doCommand dispatches troop moves/merge and calls reset 0x1d2518 and army/strip helpers; complete BLR before swapHeroes."
+
+[[functions]]
+retail_va = 0x5d5150
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d207c
+mac_size = 0x74
+target_sha256 = "72590ed37bb40643c667ced40ff8336a03a8310549a18f72236aaec0846a408c"
+evidence = "swapHeroes checks local-human status 0xcdba4, invokes addGarrisonHero 0x1b3910, deletes/rebuilds strips; complete BLR."
+
+[[functions]]
+retail_va = 0x5d5220
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d20f0
+mac_size = 0x108
+target_sha256 = "b0bfa01cb34ed385270d49e562556628c8993600808834131b149c2467829842"
+evidence = "moveHeroFromGarrison checks hero cap and army, calls removeGarrisonHero 0xcc4fc, then rebuilds troop strips; complete BLR."
+
+[[functions]]
+retail_va = 0x5d5410
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d23cc
+mac_size = 0x14c
+target_sha256 = "7a3bf6bfcbc19f72b94bcf294593997c6c63eee6ca09ba42e076022a30de3cbf"
+evidence = "redrawTownScreen calls drawTown 0x1d25c4, broadcasts status 0x20b3e8, draws two strips and updates full screen; complete BLR."
+
+[[functions]]
+retail_va = 0x5d5530
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d2518
+mac_size = 0xac
+target_sha256 = "5f521bf1d62a269e878fb9205e686bb8e0884196bf5483ce9614effd83e30e1b"
+evidence = "resetStrips writes -2 to both selected indices, draws two strips 0x19aff0 and broadcasts status 0x20d404; complete BLR."
+
+[[functions]]
+retail_va = 0x5d5b70
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d3174
+mac_size = 0xb0
+target_sha256 = "b6ffe496ef6cee06b154f99a3e2b645c7588fa8adff281a635e4eda95c570704"
+evidence = "BuyBuild canonical destructor is delete-flag widget cleanup directly after anchored BuyBuild ctor; complete BLR."
+
+[[functions]]
+retail_va = 0x5d5be0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d3224
+mac_size = 0x380
+target_sha256 = "d476d15ebb15f26f7da3f95a9d2e79acc4803ba627c3fa1c628b6f169c3b0a4e"
+evidence = "BuyBuild prerequisite text measures font widths 0xc9628 and enumerates building requirements, then updates popup status; complete BLR before buyBuild."
+
+[[functions]]
+retail_va = 0x5d6810
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d3c04
+mac_size = 0xcc
+target_sha256 = "b26988fec52bbd8f81eba44f53c75c893e93b6aad843357bd65721ba54b07e49"
+evidence = "BuyBuild handler calls CAdvPopup 0x1bf2c, empty right-click leaf 0x1d3c00 and rollover 0x1d3ae0; complete BLR."
+
+[[functions]]
+retail_va = 0x5d6910
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d3cd0
+mac_size = 0x10c
+target_sha256 = "60fdc3ae3d4db2870297ba654a380bcdccc9da9c08650278e910732055f9666e"
+evidence = "cycleOutline draws and erases town-object outline by calling panorama drawTown 0x1d25c4 in both arms; complete BLR."
+
+[[functions]]
+retail_va = 0x5d6a80
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d3ddc
+mac_size = 0x5e8
+target_sha256 = "831815e15a3cbdff1d1c6188bfd7a4face3757f1261f714bcf774175e55d268b"
+evidence = "buildObj branches through town build/animation, repeatedly calls drawTown 0x1d25c4 and cycleOutline 0x1d3cd0; complete BLR."
+
+[[functions]]
+retail_va = 0x5d6ef0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d43c4
+mac_size = 0x2bc
+target_sha256 = "d79ad3d8a1673e131204937b918f2d07d1f5d676fe15de444a3ec9c5bb060b86"
+evidence = "setupMage populates mage-guild widgets and status through repeated broadcastMessage 0x20b3e8; complete BLR before Tavern ctor."
+
+[[functions]]
+retail_va = 0x5d78b0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d5550
+mac_size = 0xb0
+target_sha256 = "bc9f7c92dd7451d69f3c12a10f263efbf13cda905c6bc8f298acf51d3837aeef"
+evidence = "Tavern canonical destructor is delete-flag widget cleanup directly after unique-resource Tavern ctor; complete BLR."
+
+[[functions]]
+retail_va = 0x5d7920
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d5600
+mac_size = 0x270
+target_sha256 = "33456329a602d4989775aac6da8e9240c9542ed0a0af2e8107361cf4bed8df7b"
+evidence = "Tavern rollover checks local player, resolves hero/creature text and writes status line; handler calls this body in hover path."
+
+[[functions]]
+retail_va = 0x5d7b30
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d5870
+mac_size = 0x3a4
+target_sha256 = "9079e09f5e65780ec222eac7414c5eede13e0201132c429f2409b6b5dd3b3437"
+evidence = "Tavern handler calls CAdvPopup 0x1bf2c, constructs anchored ThievesGuild 0x1c085c for guild button, and routes hover to 0x1d5600; complete BLR."
+
+[[functions]]
+retail_va = 0x5d7e20
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d5c14
+mac_size = 0x84
+target_sha256 = "3fc2363ae6ac1d71ceb9c81902340b00cce36cae3866b4184c4aae9040658349"
+evidence = "Tavern open calls window manager activation 0x25e5e4 and base open 0x20af50; complete BLR before close."
+
+[[functions]]
+retail_va = 0x5d7e70
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d5c98
+mac_size = 0x44
+target_sha256 = "9ea06c69f0ee1d339a2d6e3ff94e3a1622a9a4e48acfd5a7149230c53ddadade"
+evidence = "Tavern close calls window manager deactivate 0x25e660 and base close 0x20b158; complete BLR."
+
+[[functions]]
+retail_va = 0x5d7e90
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d6180
+mac_size = 0x48
+target_sha256 = "fcaaaddae01fd187e68b333ec194ef0910aa1d0a88700eb1da96433fa279e39d"
+evidence = "doMapTavern calls doTavern 0x1d5cdc then map return helper 0xf287c; complete BLR before doTownTavern."
+
+[[functions]]
+retail_va = 0x5d7ec0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d5cdc
+mac_size = 0x4a4
+target_sha256 = "54bddba43b834bfd5abd73c19cb20588ce31c35ae00a2d26ac878e8f190eba20"
+evidence = "doTavern allocates anchored Tavern window 0x1d4680, drives modal/hero choice and cleans up; called by doMapTavern 0x1d6180."
+
+[[functions]]
+retail_va = 0x5d82b0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d61c8
+mac_size = 0x1f4
+target_sha256 = "2ad708f05abdb4c85ec7c3ffbb1e767023ad5c6150ec4882f3f53ff4897578de"
+evidence = "doTownTavern invokes doTavern 0x1d5cdc, then redraw 0x1d23cc and hero/strip update path; complete BLR."
+
+[[functions]]
+retail_va = 0x5d8480
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d63bc
+mac_size = 0x1f8
+target_sha256 = "ea61ee7afab92a377d312063c2da6593cb42abae65a65c36f9b320a25cc3e8ac"
+evidence = "doTownGate constructs TownGate window 0x1b7448, adds towns 0x1b860c and runs modal 0x1b897c; complete BLR."
+
+[[functions]]
+retail_va = 0x5dcb80
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1e0b48
+mac_size = 0xb0
+target_sha256 = "8fb2b8419c59f3ed1a36b647bf05c8b0fc00fa9673a0d5a1e45b7651e9227668"
+evidence = "Castle canonical destructor is delete-flag widget cleanup directly after unique-resource Castle ctor; complete BLR."
+
+[[functions]]
+retail_va = 0x5dcbf0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1e0cc8
+mac_size = 0x238
+target_sha256 = "d9c293a42d28dc4138dc88c7ad3abb09707c2dc7d68a7b9958a48510b9cc49aa"
+evidence = "Castle rollover selects local text by widget code and calls ShowText 0x1e0bf8; handler owns its call at 0x1e12xx; complete BLR."
+
+[[functions]]
+retail_va = 0x5dce50
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1e0f00
+mac_size = 0x148
+target_sha256 = "19271c3c814204a5e61cbb499afea375e1c79492050fa11c193d63a570408e86"
+evidence = "Castle recruit builds recruitUnit 0x15093c for selected dwelling, runs dialog and refreshes resource/count widgets; called seven times by Castle handler."
+
+[[functions]]
+retail_va = 0x5dcf80
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1e1048
+mac_size = 0x538
+target_sha256 = "140f74c27c35585edcc3d5bf088e4e1be05c692aaa594010162ec144aca20cdf"
+evidence = "Castle handler calls CAdvPopup 0x1bf2c, dispatches seven row codes to recruit 0x1e0f00 and owns dwelling animation; complete BLR."
+
+[[functions]]
+retail_va = 0x5dd390
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1e1580
+mac_size = 0x6c4
+target_sha256 = "69a01b64b07d75d7a2d71faf577683a3c9a28dd4c1c81e56766f5b31ab845c48"
+evidence = "setupWell populates Castle window widget/resource and growth status via repeated broadcastMessage 0x20b3e8; complete BLR."
+
+[[functions]]
+retail_va = 0x5dda10
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1e1c44
+mac_size = 0x1140
+target_sha256 = "a05203861772fb9a4e2b241774d41a383d4def4ef7e4e79ade11b5b63ff69840"
+evidence = "ThievesGuild setup assembles per-player statistics and guild widgets; calls getCategoryStats 0x1e2d84 and sortStats 0x1e3164 in source order; complete BLR."
+
+[[functions]]
+retail_va = 0x5dee70
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1e2d84
+mac_size = 0x3e0
+target_sha256 = "454f69902283cf6b68a58620a917a429158f6b69b5db861786231cde6e941177"
+evidence = "getCategoryStats switches over nine categories using a code table; player disabled byte and signed player-count loop match source; complete BLR immediately before leaf sortStats."
+
+[[functions]]
+retail_va = 0x5df160
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1e3164
+mac_size = 0xa4
+target_sha256 = "be2e85c99fb9656cf44b949348910f7d753145b62b406990d3f5f1fa667eec91"
+evidence = "sortStats is a leaf descending selection sort over value and byte-index arrays; signed player count is reread from game object each loop; complete BLR."
+
+[[functions]]
+retail_va = 0x5c2ff0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1b9104
+mac_size = 0x580
+target_sha256 = "3fe5bbcbf57051ffd274e26f41e781da88aac11cb9219a7e7ca5bb994dac5fba"
+evidence = "townObject draw owns eight CSprite/Bitmap draws 0x8a76c and conditionally calls drawOutline 0x1b9020 and drawHotspot 0x1b9090; complete BLR."
+
+[[functions]]
+retail_va = 0x5c3310
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1b9684
+mac_size = 0x154
+target_sha256 = "33e9bcdb8c35cc0f4b9259593e74fc63c57158ab1ee58f303602344475f844f4"
+evidence = "Town manager constructor initializes page fields and 0x100000 buffer via 0x26ad3c; occurs directly before setupExtraStuff and anchored TownScreen ctor."
+
+[[functions]]
+retail_va = 0x5c33f0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1b97d8
+mac_size = 0x174
+target_sha256 = "c2f93f87f0cc415921d91432fcde26dcfa101fd62b871879828af34ea7c45c82"
+evidence = "setupExtraStuff initializes resource display 0x1b43ac and three widget/resource records 0x1b3e3c; called from Mac changeTown 0x1be544."
+
+[[functions]]
+retail_va = 0x5c66b0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1e3208
+mac_size = 0x3c
+target_sha256 = "64c81b68838b6c10420e519a21444e7ca846925604df3a4b9b2a45398f6a649b"
+evidence = "CTownNetMsgHandler gift override calls base gift handler 0x66ac then resourceDisplay::update 0x151acc with (1,1), matching the complete source body; BLR before unrelated initializer."
+
+[[functions]]
+retail_va = 0x5c66d0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1be5cc
+mac_size = 0x2bc
+target_sha256 = "a5e6b78ed7b3281e9e1e0fc9c48d94acb93ecc7421667847029dd7f63beb63d4"
+evidence = "updateTownInfo broadcasts three hall/fort/income messages 0x20b3e8 then calls TownScreen setBonusDisplay 0x1bd8d0; complete BLR."
+
+[[functions]]
+retail_va = 0x5c6e10
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1befc0
+mac_size = 0x308
+target_sha256 = "93f9b30dc6999df9f60ea5058858b55310218bc82a6ac3f5d58120c04dbcc346"
+evidence = "newStrips constructs visiting/garrison troop strips and optionally gives spells; called by swap/move-hero paths; complete BLR."
+
+[[functions]]
+retail_va = 0x5c70b0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1bf2c8
+mac_size = 0x13c
+target_sha256 = "30e947a70df000f5930e5dea6b183bcdd09097a00012c2fc85efdd7d7ba80ae7"
+evidence = "unloadTown deletes town sprites/objects and removes widgets; close calls it at 0x1bf420; complete BLR."
+
+[[functions]]
+retail_va = 0x5c71b0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1bf404
+mac_size = 0x11c
+target_sha256 = "2eda97e72e1195ae967e64daecefdd5131f9887273521f9f85e1b3466c608622"
+evidence = "close first calls unloadTown 0x1bf2c8, then frees page/resource display and restores network handler; complete BLR before delete wrapper."
+
+[[functions]]
+retail_va = 0x5c7250
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1bf590
+mac_size = 0x1ec
+target_sha256 = "ff38c24ef60a4e6b94cf7b74adcb4043d6586729ed10f2bb2b9355e0dd86cb58"
+evidence = "setHeroCommand checks selected strips and hero ownership, then formats status lines from town command strings; setCommandAndText calls it."
+
+[[functions]]
+retail_va = 0x5c7400
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1bf77c
+mac_size = 0x454
+target_sha256 = "ca75ae6ab4316fb7df2a1a02e1d8fbeb011f17a052399bd7e451a35fe16e75c3"
+evidence = "setArmyCommand handles same and cross-strip creature slots and repeated status formats, calls selectArmy 0x1c05b0; complete BLR."
+
+[[functions]]
+retail_va = 0x5c77a0
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1bfbd0
+mac_size = 0x9e0
+target_sha256 = "9918673a9a564caa09ab446b9eb29f3748340ca29a910fbd1aa25287ef6b36f2"
+evidence = "setCommandAndText dispatches page hover/command status, calls setHeroCommand 0x1bf590 and armyCommand 0x1c0704; complete BLR."
+
+[[functions]]
+retail_va = 0x5c8080
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c05b0
+mac_size = 0x154
+target_sha256 = "816b20baab9443667a0a1686e685c1d9a202553af0df469325721eda72bb9a99"
+evidence = "selectArmy stores strip/index fields at +0x124/+0x128 and formats selected creature status; armyCommand calls it at 0x1c0778."
+
+[[helpers]]
+source_helper = "townManager::createPopupBank"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c93dc
+mac_size = 0xa4
+target_sha256 = "1aa3f046bd6429ff537a976223e0e02d0c624e9d024fb99aee1eef5671f3bc47"
+evidence = "Deletes prior popup resource display, allocates replacement at 0x151684, updates it at 0x151acc and installs into network handler; precedes mage-guild click."
+
+[[helpers]]
+source_helper = "type_garrison_base_window::showText"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cc7cc
+mac_size = 0xe0
+target_sha256 = "2bb09b707f9f58986d331bccc590fdf2a88ae499b9f3968de4b5351ba50f18e0"
+evidence = "Builds MESSAGE_WIDGET SET_TEXT for status widget 0xc9 and broadcasts; direct caller setCommandAndText at 0x1cc7b4."
+
+[[helpers]]
+source_helper = "type_garrison_base_window::viewArmy"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cc8ac
+mac_size = 0x78
+target_sha256 = "545adf7db6f9a269fbbd549af5b1272d08a862945c89c24efc1a30d6dab600d2"
+evidence = "Reads manager current strip/slot, checks creature presence and calls game::viewArmy 0xdd324; direct handler calls at 0x1cca58/1cca84."
+
+[[helpers]]
+source_helper = "TShipWindow::setRightClickText"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cf2d8
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "Empty source method compiles to four-byte BLR and is called by Ship handler 0x1cf44c."
+
+[[helpers]]
+source_helper = "TShipWindow::setRolloverText"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1cf2dc
+mac_size = 0x100
+target_sha256 = "f21bba8cd80c12c8f6e276e57db127422dbe741efb75660fa13ea89bbbedd31e"
+evidence = "Two shipyard button lines and broadcast/draw/updateScreen tail; called by Ship handler 0x1cf488."
+
+[[helpers]]
+source_helper = "townManager::drawTown"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d25c4
+mac_size = 0xb8
+target_sha256 = "7770e06280185e814ae6598ddbdedf9ef61db7551aec334d30dc235f74817fd7"
+evidence = "Panorama draw, sound polling and town-object loop with optional full-width update; redrawTownScreen calls it at 0x1d23f0."
+
+[[helpers]]
+source_helper = "TBuyBuildWindow::setRolloverText"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d3ae0
+mac_size = 0x120
+target_sha256 = "a4e3508bd5ff17d69b652337c78b73fab7aa1068db8e5c424648b64b6c0f3cdd"
+evidence = "BuyBuild two button hover messages and broadcast/draw tail, called by handler 0x1d3cac."
+
+[[helpers]]
+source_helper = "TBuyBuildWindow::setRightClickText"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d3c00
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "Empty source method is a four-byte BLR, called by handler 0x1d3c68."
+
+[[helpers]]
+source_helper = "townManager::moveHero"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d65b4
+mac_size = 0xb4
+target_sha256 = "222f2c1a63934b2f758f987548150689f65e7008e10ec75bb7e1885b03fbbb47"
+evidence = "Unannotated source method moves selected hero through teleportTo 0x1ec20 and town move helper 0x1b3460, directly before Castle ctor."
+
+[[helpers]]
+source_helper = "TCastleWindow::showText"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1e0bf8
+mac_size = 0xd0
+target_sha256 = "16049514309b40569052babcf55cbc21b2bfba00c6b4e58bcdb959080b3cb013"
+evidence = "Castle status helper broadcasts text, draws status strip and updates screen; called by rollover 0x1e0ee8."
+
+[[helpers]]
+source_helper = "townObject::drawOutline"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1b9020
+mac_size = 0x70
+target_sha256 = "95a94819e96adace6b371370e111a4c9a5998be65c084e5779b08a02556d9525"
+evidence = "Outline drawing helper called by townObject::draw at 0x1b965c."
+
+[[helpers]]
+source_helper = "townObject::drawHotspot"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1b9090
+mac_size = 0x74
+target_sha256 = "f2c6eba8101518584f1d8eb76bd1966e3968d3a1a91fda28671f81533b8e95eb"
+evidence = "Hotspot drawing helper called by townObject::draw at 0x1b966c."
+
+[[helpers]]
+source_helper = "townManager::changeTown"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1be520
+mac_size = 0xac
+target_sha256 = "710e4b607d0df54bab4c4ee3e68731109f8b30d9a829412d53a7001071a17b8f"
+evidence = "Calls setupExtraStuff 0x1b97d8, setupTown 0x1be888 and setCommandAndText 0x1bfbd0 between mouse-thread calls."
+
+[[helpers]]
+source_helper = "townManager::armyCommand"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c0704
+mac_size = 0x88
+target_sha256 = "8385b8fc079cb79bd335374d336785ca57062c6eed9371d57c02fb8babfc7f6b"
+evidence = "Selected army command routes to setArmyCommand 0x1bf77c or selectArmy 0x1c05b0; complete BLR."
+
+[[helpers]]
+source_helper = "townManager::showText"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1c078c
+mac_size = 0xd0
+target_sha256 = "5502c1754faf9bf46d60746c75256ee0a7d5af3041588c99bf3c3d1e2ed71207"
+evidence = "Town page status text helper broadcasts +0x97, draws status and updates the 0x2de by 0x13 screen strip."

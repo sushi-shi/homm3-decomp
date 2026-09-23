@@ -1,0 +1,46 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x4b46c0
+unit = "fly"
+mac_section = 0x0
+mac_offset = 0xc8070
+mac_size = 0x14c
+target_sha256 = "9e25985c83222488146813eb8d8171e58063170aacc8867f7dbf935d0aaa0237"
+evidence = "validFlight tests hex range 0..0xba, speed/distance0x75cd8 and canFit0x53028; calls two-argument and one-argument findFlyerAttackCell helpers at0xc7f1c/0xc7fe8; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4b49c0
+unit = "fly"
+mac_section = 0x0
+mac_offset = 0xc81bc
+mac_size = 0xe4
+target_sha256 = "f11766bc44d7e92f69bad83bdbb80bde0d02d7bf0137d26acbcae5ec7d465501"
+evidence = "flyTo validates hex and calls removeAura0x4aa84, removeBinding0x4ab2c, fly0xc82a0, addAura0x4a904, turn/playAnimation/obstacle/door; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4b4a40
+unit = "fly"
+mac_section = 0x0
+mac_offset = 0xc82a0
+mac_size = 0x5dc
+target_sha256 = "7bc0d901e213a094ec5dd12a28eac9f084dbc8f8efd1bfa23d5279506771d7dc"
+evidence = "fly computes grid geometry, calls setupAnimation0x52aac and MathLib sqrt0x2a1b68, then frame/timer/draw loop and placement; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4b4e90
+unit = "fly"
+mac_section = 0x0
+mac_offset = 0xc887c
+mac_size = 0xe4
+target_sha256 = "642959105a692b2f12aeeb49792b0f1a86a0a38f2ff1c143cceaf0dc86630736"
+evidence = "teleportTo validates hex and calls same aura/binding/turn/animation/obstacle sequence as flyTo but distinct teleport0xc8960; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4b4f10
+unit = "fly"
+mac_section = 0x0
+mac_offset = 0xc8960
+mac_size = 0x1bc
+target_sha256 = "3f7e2c47ef42464b9542997eff81fc98f778f0709f6c781042409c0ddf31a35f"
+evidence = "teleport computes grid facing, calls setupAnimation0x52aac, removes and places army, quick-combat gates animations, cancels spell; complete adjacent PowerPC span."

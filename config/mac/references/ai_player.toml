@@ -26,10 +26,10 @@ retail_va = 0x4e4ec0
 unit = "hero"
 mac_section = 0
 mac_offset = 0x105cac
-mac_size = 0xb0
+mac_size = 0x1b0
 mac_symbol = ".heroFn004E4EC0__4heroFv"
-target_sha256 = "07a9d43f9fa9fd6570f4b2c8c1d0f14aa02cc4b175feb871fa8b02bfea7adf72"
-evidence = "Source-owned hero.cpp 0x4e4ec0 builds a packed point from hero coordinates, tests the (-1,-1,-1) sentinel, then reads the map cell special terrain. Mac 0:0x105cac performs the same packed-point construction and sentinel test, loads g_game and calls the map-cell terrain accessor at 0x11e6ac; it returns at 0x105e58 and the next distinct prologue begins 0x105e5c. Complete 0xb0-byte span is pinned by SHA."
+target_sha256 = "247a44208380c195ae345f6c8800474701b98221f6a4814bb0c2fe861b28c5b9"
+evidence = "Source-owned hero.cpp 0x4e4ec0 builds a packed point from hero coordinates, tests the (-1,-1,-1) sentinel, then reads the map cell special terrain. Mac 0:0x105cac performs the same packed-point construction and sentinel test, loads g_game and calls the map-cell terrain accessor at 0x11e6ac; it returns at 0x105e58 and the next distinct prologue begins 0x105e5c. Complete 0x1b0-byte span is pinned by SHA."
 
 [[functions]]
 retail_va = 0x4e4fa0

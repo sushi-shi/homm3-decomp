@@ -1,0 +1,136 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1fd30c
+mac_size = 0xc0
+unit = "victorylossconditions"
+target_sha256 = "be4d525d704b7b1314856da725b466fd76c952d310a2aa3e0c5dbe4791c8267a"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: applies-to-computer flag else matching-team/human loop8. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f15a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1fd818
+mac_size = 0x1e4
+unit = "victorylossconditions"
+target_sha256 = "5b52b8d93e85d1c98fca52703eccea111bd68e06e1052505ea1b84b2d65a8522"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: victory type1 hero/town armies and count helper0x587e0. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f1b10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1fe094
+mac_size = 0x90
+unit = "victorylossconditions"
+target_sha256 = "1feeb04765184cf7c18981e974642d021cb442c5adde3eb5dc1583772b882c1b"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: victory type5 hero ID winner/lost status. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f2100
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1fe124
+mac_size = 0x184
+unit = "victorylossconditions"
+target_sha256 = "bc43b50958ec1337bff5f3eded31db98c7fbfeb586d849e28df877ef2777521b"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: town coordinates and wildcard -1 target axes. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f2160
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1fe2a8
+mac_size = 0x6c
+unit = "victorylossconditions"
+target_sha256 = "c10d4126473e10ee8103421be0d60ae0b15f2e3cfa54d6da437e602d90bdbe16"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: victory type6 and town location lookup0xceb24. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f2260
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1fe314
+mac_size = 0x154
+unit = "victorylossconditions"
+target_sha256 = "33c9fbf59cfa3c3c41ae2702216c5804dacdf46d31a5f785ca1fc38166403712"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: victory type6 active player/team and town location0xceb24. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f22a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1fe468
+mac_size = 0x3a8
+unit = "victorylossconditions"
+target_sha256 = "735b68e34afc21ddb2bbdb8661282d8a6851458a37080f2a22d43541c98de47f"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: monster54 campaign11 branches and monster-coordinate comparison. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f2390
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1fe810
+mac_size = 0x194
+unit = "victorylossconditions"
+target_sha256 = "6f2659624c1fff1660944e3c23a6e8848179f9825c476294c263314f2e7dc062"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: victory type8 and generator owner loop. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f2600
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1fe9a4
+mac_size = 0x190
+unit = "victorylossconditions"
+target_sha256 = "27df567cfb837bd4beafec64ca30180cdb0bb8a834cdc29668393dfd3f02c386"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: victory type9 and mine owner loop. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f2720
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1feb34
+mac_size = 0x6c
+unit = "victorylossconditions"
+target_sha256 = "4e1c0aa3c887008ad32e721361a5238191ec9c2e9ff50dd008c71425ccdc4cd9"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: victory type12 month/week/day elapsed formula. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f2810
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1feba0
+mac_size = 0x2bc
+unit = "victorylossconditions"
+target_sha256 = "9bfed34bd7a7b88c2ed0917a0afbc4628a3e29b5330bcff7f3b4910b9ecfdc4f"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: victory type10 town coordinates and hasArtifact0xf4d94. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f2860
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1fee5c
+mac_size = 0x448
+unit = "victorylossconditions"
+target_sha256 = "2191c8f6b1e1134778e9e25577f7feea13bf25e361aea5d12c80e500c9e88d3e"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: campaign/map hero IDs and artifact79/82/80/81/126/11/129 checks. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f2a40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1ff2a4
+mac_size = 0x60
+unit = "victorylossconditions"
+target_sha256 = "89570880f9ac09e5335875aa1c0ed3aad4012bc7fa25d939ac283710730fd723"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: checkForDefeatedHeroLoss0x1fee5c then loss type1 hero ID/lost stores. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f2e10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1ff304
+mac_size = 0x140
+unit = "victorylossconditions"
+target_sha256 = "437faa8ef9748cbdcc8704f73ea385979bb66d182a748b2cd76dd4f1cb8f6cb3"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: loss type0 town coordinate equality and loser/gameLost fields. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f2e40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1ff444
+mac_size = 0x78
+unit = "victorylossconditions"
+target_sha256 = "9ea3dbb6fae855e63f5272cdc67d8bb1fa1025030bc8e839781eec632c44a165"
+evidence = "Contiguous victorylossconditions TU order corroborated by body: loss type2 day formula compared numDays+0x20. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5f2f20
+

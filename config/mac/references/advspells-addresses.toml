@@ -1,0 +1,91 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1cf84
+mac_size = 0x224
+unit = "advspells"
+target_sha256 = "f03961a60f45dc5a5dbcb072bfe666d883c2783a76ca704f6b83a4e8023f7d2e"
+evidence = "Contiguous advspells TU order corroborated by body: current hero spell selector and spell texts748/685; calls castSpell0x1d1a8. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41c2f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1d1a8
+mac_size = 0x1bc
+unit = "advspells"
+target_sha256 = "7638b1db84d807dbe90e0e6c685afa270f0c1e5a1ebd8a7735a4bd8dc8118ac3"
+evidence = "Contiguous advspells TU order corroborated by body: spell switch into summon/skuttle/dimension/town and retained identify/waterWalk/disguise/flight helpers. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41c490
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1d364
+mac_size = 0x650
+unit = "advspells"
+target_sha256 = "eeb02265f15df11180e555f508d4717b6ba48d09f14dcb19e4893bafbddbb527"
+evidence = "Contiguous advspells TU order corroborated by body: water terrain8 adjacent cell search summonable boat and texts334/335. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41c8a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1d9b4
+mac_size = 0x310
+unit = "advspells"
+target_sha256 = "3a61bbdee5cbf73e97b7bbca6b108d162592ce7dc70735c02a82a82ae7a48551"
+evidence = "Contiguous advspells TU order corroborated by body: skuttle target window0xa3038 mouse map cell0x81f8 and text338. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41cdf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1dcc4
+mac_size = 0x404
+unit = "advspells"
+target_sha256 = "d73a81c169e2ba53a904acda61bfb43764b7ff4856e2924f2a744627ef5a80e5"
+evidence = "Contiguous advspells TU order corroborated by body: dimension target window0xa2b94 spell8 mastery and teleportTo0x1ec20. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41d090
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1e0c8
+mac_size = 0x6c0
+unit = "advspells"
+target_sha256 = "752de2a0486b6aa8bc8ffc45726c533ba6856be1945f2ccaa8ecb2cd493dd6e0"
+evidence = "Contiguous advspells TU order corroborated by body: town availability selector0x1b7448 town window and teleportTo0x1ec20. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41d360
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1e798
+mac_size = 0x138
+unit = "advspells"
+target_sha256 = "4e8a9cad1b136677d081072a3073217a5a8a4e730bddb6d9dee093b2ddc0ecda"
+evidence = "Source helper without standalone Windows VA. TU order plus visions level store text66 and spell2 mana cost"
+source_helper = "advManager::identify"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1e8d0
+mac_size = 0x128
+unit = "advspells"
+target_sha256 = "88da463981ed595501360d85b8e70f1a911a192c37446d14edd278df1ac8e8e9"
+evidence = "Source helper without standalone Windows VA. TU order plus artifact90 gate walkOnWater0x106cd8 reseed0xf07c and spell7 mana"
+source_helper = "advManager::waterWalk"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1e9f8
+mac_size = 0xc8
+unit = "advspells"
+target_sha256 = "edab0d2979f6822405daafa227e85281959bbf7d3842407392313a5f8ef0e9ae"
+evidence = "Source helper without standalone Windows VA. TU order plus disguise level store and spell4 mana cost"
+source_helper = "advManager::disguise"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1eac0
+mac_size = 0x160
+unit = "advspells"
+target_sha256 = "e71636207f42e7961ca2187b00d9ad2f02f2a3197cf15a32b7b63f877bf17213"
+evidence = "Source helper without standalone Windows VA. TU order plus artifact72 gate boat text193 fly0x1069d0 and reseed0xf07c"
+source_helper = "advManager::flight"
+

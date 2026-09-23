@@ -1,0 +1,28 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x18e73c
+mac_size = 0x7c
+unit = "spelldefs"
+target_sha256 = "37321664e72f4b217ee47a9f5b75e99033b0f0ec47020e46b9e78bad4dac2c96"
+evidence = "Contiguous spelldefs TU order corroborated by body: spelltraits stride0x88 target flags and mastery1/2 tests. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x59e060
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x18e7b8
+mac_size = 0x13c
+unit = "spelldefs"
+target_sha256 = "57a9ce417194913c0592f723d9a9b081dcf824037f75e8d0bda1b2e4007e56e0"
+evidence = "Contiguous spelldefs TU order corroborated by body: sptraits.txt pointer xref0x18e7c0 spreadsheet minimum92rows loops10/60/11. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x59e090
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x18e8f4
+mac_size = 0x3a4
+unit = "spelldefs"
+target_sha256 = "b3d6712915ac62613c8f937f6733ff4784ecc643b3b091c8d63801ddcde2b1ef"
+evidence = "Contiguous spelldefs TU order corroborated by body: static string ownership school character fields costs/powers probabilities9 and description3. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x59e150
+

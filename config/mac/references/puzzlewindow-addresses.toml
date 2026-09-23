@@ -1,0 +1,109 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x52c1e0
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x14727c
+mac_size = 0x548
+target_sha256 = "634277d3acb5b99f31ebb6a7bb03daacd0ec92ca1d6fcd2901c1fe088b71418c"
+evidence = "Puzzle window constructor calls CAdvPopup(0,0,800,600), loads puzzle.pcx through TOC at code0+0x147300, creates puzzle logo, text, button and resource bar, loops 48 puzzle pieces. BLR 0x1477c0; next destructor 0x1477c4."
+
+[[functions]]
+retail_va = 0x52c5a0
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x1477c4
+mac_size = 0x10c
+target_sha256 = "e5a8b9a29bd6a9eeb6f44e618e03345fabf8d947f343c1a2f1874bea2a0c3369"
+evidence = "Puzzle window destructor disposes exactly 48 piece bitmaps at this+0x64, deletes widget vector and TResourceDisplay at +0x60, then CAdvPopup base. BLR 0x1478cc; next handler 0x1478d0."
+
+[[functions]]
+retail_va = 0x52c640
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x1478d0
+mac_size = 0xfc
+target_sha256 = "8f5238fdeef117eadecf774e1214a7307aac9140cd3bb6ddd3aa6faa72526b5a"
+evidence = "Puzzle window handler delegates CAdvPopup::windowHandler 0x1bf2c, polls sound, recognizes key/widget accept 0x7802 and writes dialog return; BLR 0x1479c8; next updatePuzzle 0x1479cc."
+
+[[functions]]
+retail_va = 0x52c6c0
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x1479cc
+mac_size = 0xec
+target_sha256 = "95a19dc74bb39df8c2195785424f72efc90bfb842ba95b0b2deb45d2f12405e7"
+evidence = "updatePuzzle traverses 48 pieces using 192-byte coordinate rows and calls resource bar update 0x151acc; returns shown piece count. BLR 0x147ab4; next tile default ctor 0x147ab8."
+
+[[functions]]
+retail_va = 0x52c770
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x147b28
+mac_size = 0x1e0
+target_sha256 = "b10d2d3f6aaed379ebed40dda6775842c0e76a1e893eb12599b3db0dd3c00270"
+evidence = "type_AI_puzzle_tile ctor takes NewmapCell and type_point, packs terrain/river/road and visibility, calls isDiggable 0x11e514, compares point to ultimate artifact and derives object type/relative offsets. BLR 0x147d04; next tile equality helper 0x147d08."
+
+[[functions]]
+retail_va = 0x52c8b0
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x147e80
+mac_size = 0xf0
+target_sha256 = "c4250730026386e31194dc0fddaa9054526c5e8c9c00c7d22eb1be4d8231c0a9"
+evidence = "Bitmap816::markPuzzle clips 32-pixel samples against 608x544, uses bitmap width/pitch/map at +0x24/+0x2c/+0x30, clears entries in 19-wide visible array. Early return and terminal BLR 0x147f6c; next markAIPuzzle 0x147f70."
+
+[[functions]]
+retail_va = 0x52cf10
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x148488
+mac_size = 0x574
+target_sha256 = "41b034a2da000fd84d03a6c40b49b06659a3639bc2c228b465a118d83c5c91fa"
+evidence = "matchPuzzle constructs default tile 0x147ab8, scans 19x17 visible grid and extents, tests candidate positions through checkMatch 0x148248, returns best point. BLR 0x1489f8; next aiAttemptPuzzleGuess 0x1489fc."
+
+[[functions]]
+retail_va = 0x52c9b0
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x1489fc
+mac_size = 0x5e8
+target_sha256 = "f149b19a9cb722ac143ac407ef73e2b0f914305568e6711bb37ec977c250c5bd"
+evidence = "aiAttemptPuzzleGuess calls game::setupPuzzlePieces then compares discovered fraction against difficulty threshold, calls markAIPuzzle 0x147f70, createAIPuzzleMap 0x1480b8 and matchPuzzle 0x148488, examines five-by-five diggable neighborhood. BLR 0x148fe0; next quest callback 0x148fe4."
+
+[[helpers]]
+source_helper = "getPuzzleBitmap"
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x14723c
+mac_size = 0x40
+target_sha256 = "0edd5056577ad8d0063117a33fd2e332698db9e19561b2a10d4558d21d516566"
+evidence = "Unique static source helper formats puzzle piece filename through indexed prefix table and number then calls ResourceManager::getBitmap816 0x152df8. BLR 0x147278; next puzzle window ctor 0x14727c."
+
+[[helpers]]
+source_helper = "markAIPuzzle"
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x147f70
+mac_size = 0x148
+target_sha256 = "8d74381f9195dd04473c0e70ff407fc3e47610b7d27498234d3ac95c2f72f7a7"
+evidence = "Unique source static helper checks player alignment and ultimate artifact, fills 17x19 visibility, loops 48 pieces, calls getPuzzleBitmap 0x14723c and Bitmap816::markPuzzle 0x147e80, disposes each bitmap. BLR 0x1480b4; next createAIPuzzleMap 0x1480b8."
+
+[[helpers]]
+source_helper = "createAIPuzzleMap"
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x1480b8
+mac_size = 0x190
+target_sha256 = "4cd9681dafd6b51e3539fcf4d03a48b919cdb44a25ccb5f50ba0c050a89086d5"
+evidence = "Unique source static helper traverses 17 rows x19 columns, checks point validity/visible cells and constructs type_AI_puzzle_tile via 0x147b28 for each map cell. BLR 0x148244; next checkMatch 0x148248."
+
+[[helpers]]
+source_helper = "checkMatch"
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x148248
+mac_size = 0x240
+target_sha256 = "15018e0c81621d78c0e0b3523f3140320b4f6edf3734d7b0a2f99890c5b9b3c8"
+evidence = "Unique source static helper receives player, firstX/firstY, point origin and tile map; rebases origin, traverses 17x19 grid, uses player-mask map-extra and tile equality, returning zero on mismatch. BLR 0x148484; next matchPuzzle 0x148488."

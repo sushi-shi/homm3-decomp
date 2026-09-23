@@ -1,0 +1,254 @@
+# Address-only references discovered from ARMYGRP TU order, then independently verified.
+# Names remain owned by src/armygrp.cpp VA claims; no compiled Mac target admission.
+
+[[functions]]
+retail_va = 0x004496a0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x56454
+mac_size = 0x94
+target_sha256 = "1dcd4ccaaaaa1687c86d2be1ddc0f6196dbfc8fb4e98a7b1a83c39874199edf8"
+evidence = "NEW: Unrolled seven-slot creature array scan against NONE(-1); returns whether any army exists. End0x564e8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004496c0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x565dc
+mac_size = 0x50
+target_sha256 = "7f6bce5c40a337503a16a123e9c2a3636a2b62a55c492e77c4454e33d99da7dc"
+evidence = "NEW: Slider callback reads global split window, adds minimum to state, updates destination/source troop counts and invokes updateSplitArmy0x564e8. End0x5662c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00449790
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x5662c
+mac_size = 0xb2c
+target_sha256 = "82a6b73c3d537889765da894916718617b52aab4cd8ec08c82d683c60b7aaabb"
+evidence = "NEW: Split window ctor invokes CAdvPopup0x1bd60 and adds text/buttons/slider resource widgets; creature traits stride0x74 and redraw call. Loader vtable proves boundary0x57158. End0x57158; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00449e20
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x57158
+mac_size = 0xac
+target_sha256 = "46d901cb8f2d14d1baffa5c1f652ffd767f9e04671bcbc818fc7c9bf334b6860"
+evidence = "NEW: Split window destructor resets vtable, disposes resource via virtual glue, calls popup destructor0x1be60 and optional CodeWarrior deletion. End0x57204; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00449e90
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x57204
+mac_size = 0x318
+target_sha256 = "1a202d2e505324715cf0e0ea0d6069f5d22eaad6c40dbb684a5ef64098228f63"
+evidence = "NEW: Allocates split window ctor0x5662c, configures source/destination restrictions with getNumArmies0x58528, updates split and shows modal dialog. End0x5751c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044a180
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x57634
+mac_size = 0x280
+target_sha256 = "2f1e6559e9cedf9a9e21aa678e115310bf8019e1deb1e5f2d0d7ff9a7d5ed85e"
+evidence = "NEW: Message handler calls popup base0x1bf2c, dispatches widget200 and keyboard13/12, text-to-number0x28fb1c, slider update and split refresh0x564e8. End0x578b4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044a460
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x578b4
+mac_size = 0x108
+target_sha256 = "3ffff4a6dfb50f7c87b5a56a3ee17bb1bb247b020c19f6bc90a8230e5ca47b47"
+evidence = "NEW: Static alignment bitset initialization guard, zero ctor0x5a280 then five set calls0x5a28c; returns bitset storage. End0x579bc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044a4d0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x579bc
+mac_size = 0x574
+target_sha256 = "fb21581149b6dc72948258931fd208f6f07e7deab9e98327ebc6c093132f9733"
+evidence = "NEW: Spell resistance chance: creature traits0x74/spell0x88, artifact immunity checks0xf4dfc and hero resistance0x1053ec, per-creature/spell switch. Loader switch labels are internal; single final return0x57f2c. End0x57f30; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044aa00
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x57f30
+mac_size = 0x90
+target_sha256 = "a669b6c4d956c12218b8c78f4749b09b489b26f2240829aaf0674ccab438d69f"
+evidence = "NEW: Two abstract-file virtual write calls, each28 bytes for seven army types and troop counts; requires full writes. End0x57fc0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044aaa0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x58080
+mac_size = 0x8c
+target_sha256 = "3e90846b66ba7805a9954d057ed99a96d90a5630664804e5ce7dc28d97ce097d"
+evidence = "NEW: Calls initialize0x5810c then spreads amount across seven slots with share=amount/(7-i). End0x5810c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044ab20
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x5814c
+mac_size = 0x48
+target_sha256 = "8f8d5276d5a3bc22a7fc5afc82e0578dc2223f5c0be53411396eb2471a1c12b6"
+evidence = "NEW: Seven occupied slots check undead bit in traits stride0x74; false on first living, true at completion. End0x58194; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044ab60
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x581dc
+mac_size = 0x1c
+target_sha256 = "4ff35cd0ab66520986d631014751d4031c201eacfc708902268e0d4c4f71a054"
+evidence = "NEW: Indexed creature store NONE(-1), indexed count at+28 store0. End0x581f8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044ab80
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x581f8
+mac_size = 0x94
+target_sha256 = "20c2d3762ec2f874e2e99c8ef6813a0987055e143aa6416b7c32bb541cdddead"
+evidence = "NEW: Seven unrolled comparisons of creature ID to requested member; returns boolean. End0x5828c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044abb0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x5828c
+mac_size = 0x17c
+target_sha256 = "7dc345a18d80990b43fbb11f905a24d33c64e8deb93a039c10c34ef44051ce5f"
+evidence = "NEW: Ten-byte alignment census, skips NONE and siege trait, game-version elemental special case; counts nonempty alignment buckets. End0x58408; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044ac50
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x58408
+mac_size = 0xcc
+target_sha256 = "ec95d8701fd6e45c1697bcd560a9dacacff623784ebdb9cef79287cd63f7a449"
+evidence = "NEW: Seven slots each compare requested creature or NONE, returns whether stack can join. End0x584d4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044ad60
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x58710
+mac_size = 0x3c
+target_sha256 = "16012cd99ae1eeb11aa888a6a8aa18d6dd100c5f08a6ba4847e1c90e00220828"
+evidence = "NEW: Swaps selected creature IDs and corresponding counts at+28 across two armyGroup objects. End0x5874c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044adc0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x587e0
+mac_size = 0x94
+target_sha256 = "2a1ca4b39f1ad9d968d20788799b93ca81fced666ebc0bac389c59a7a9236d5c"
+evidence = "NEW: Seven unrolled creature equality checks, sums only matching count slots at+28. End0x58874; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044ade0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x58874
+mac_size = 0xd0
+target_sha256 = "6a10d0a1b4722f84f025de42b04cc7e891339b1f03a33b063395043698b25377"
+evidence = "NEW: Amount bands5/10/20/50/100/250/500/1000 select army-size text by nameset. End0x58944; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044ae60
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x58944
+mac_size = 0x21c
+target_sha256 = "5f44aaace88e0ad5cb1fa6783eaf6df9ccc697fecd94fa3f74f61e555926ccc8"
+evidence = "NEW: Morale combines hero morale0x10464c, alignments0x5828c and morale bitset0x578b4, some-undead0x58194 and creature membership0x581f8; clamps-3..3. End0x58b60; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044b100
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x58b60
+mac_size = 0x270
+target_sha256 = "811293a2bc033c7e5e2b2dcb7e518a7c8a8aa8e9fa37f48d11de79c052fea98d"
+evidence = "NEW: Per-stack morale calls base0x58944, applies magic terrain6/3/9 and creature78/79 override; caps-3..3. End0x58dd0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044b2d0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x58dd0
+mac_size = 0x178
+target_sha256 = "a0a6ef1d74d40a1cefd61d39c98d2ebdf14e7b71c33cf27736882f34ad8a3785"
+evidence = "NEW: Luck combines hero artifacts0xf4dfc and hero luck0x10434c, membership0x581f8 for luck creatures; clamps-3..3. End0x58f48; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044b3c0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x58f48
+mac_size = 0x178
+target_sha256 = "3228f108763f788c3b530eac1dea8155cbf635cdaf31c7be974e223b5af977b1"
+evidence = "NEW: Per-stack luck calls base0x58dd0, terrain6/3/9 and creature138 leprechaun, caps-3..3. End0x590c0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044b4b0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x590c0
+mac_size = 0x140
+target_sha256 = "b118b5bc1da786f20afd6e7a4eae671e3d25ab4dfab3261e98c039b285ef8d0e"
+evidence = "NEW: Spell damage reduction switch creature117/112/33/32/115/114/126/124/123/129/128 and spell26/17/19/57/16/20/23; final damage scaling. End0x59200; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044b620
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x59200
+mac_size = 0x3c4
+target_sha256 = "cdd8dbfe1d869176783e1325a3c3f87df21582b8735f8f03ec2e30f1f731f438"
+evidence = "NEW: Builds temporary groups with ctor0x58050, seven-slot duplicate consolidation and merge capacity selection. End0x595c4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044b820
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x595c4
+mac_size = 0x170
+target_sha256 = "b128cf178584356ba6b75bcdd31de611377f883aff2b909e6bdc5dbde6d68f62"
+evidence = "NEW: Merge-armies iterates source seven slots, checks canJoin0x58408, adds0x585a4 and dismisses source0x581dc. End0x59734; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044b960
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x59734
+mac_size = 0x714
+target_sha256 = "6aab980ef1eb0d2c625dd5c9912e6a083e5b51867d287688852456f339ad32e8"
+evidence = "NEW: Morale text constructs strings, calls getMorale0x58944, hero description0xf88cc, alignment/undead/member checks and appends text for terrain/artifact effects. End0x59e48; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044c1c0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x59e48
+mac_size = 0x3a8
+target_sha256 = "acc6535cba3002d2cb1155194334025f27174a3378d65cde4a7d891d190bdb3f"
+evidence = "NEW: Luck text uses getLuck0x58dd0 and hero description0xf8ea8, artifact checks and membership, terrain6/3/9 and leprechaun138 descriptions. End0x5a1f0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0044c590
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x5a1f0
+mac_size = 0x90
+target_sha256 = "d39d8a51a0c7a81015e09a79e6409b4c8dd581ce6f7fdd9341142a5096174337"
+evidence = "NEW: Scans seven slots, skips NONE, game-version elemental exception, creature town terrain mapping and mixed-terrain rejection. End0x5a280; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."

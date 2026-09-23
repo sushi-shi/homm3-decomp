@@ -1,0 +1,910 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xa936c
+mac_size = 0x44
+unit = "events"
+target_sha256 = "264e303082547a4675a24ca9f1258b944c34e021d90067f230ad05cb25f9545a"
+evidence = "Unique advevent.txt loader pointer/use, getText0x153ad8 and stored resource global. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49e0e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xa93b0
+mac_size = 0xa0
+unit = "events"
+target_sha256 = "faf32ffc58d05d3fe5fc368ef56ce4fb3fd535d8cf165584ebb4ac1777e0e7c5"
+evidence = "Unique artevent.txt loader pointer/use and144 text pointers. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49e100
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xa9450
+mac_size = 0xa0
+unit = "events"
+target_sha256 = "88ef91dc60c9532daa1dc069ed1b6acf4a54b8be39078de230e905400822aa0e"
+evidence = "Unique randsign.txt loader pointer/use and25 text pointers. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49e140
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xa94f0
+mac_size = 0x90
+unit = "events"
+target_sha256 = "b68fa6d50e59f34fa8611edeaa6aa2d6cb87559bcf96a1e4098958ead9aad427"
+evidence = "Preserves animation pause/color cycling, completeDraw0xff28,updateScreen0xf6f0,eraseObj0xb7cbc,fizzleCenter0xba25c. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49e170
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xa9580
+mac_size = 0x400
+unit = "events"
+target_sha256 = "a549774126da9ed3a0b3d1cd91f413a713b7000185669e660eb2ecb434c12817"
+evidence = "Adventure text resource indices [189] corroborate event identity; reviewed associated gameplay fields and named calls in a9580..a9980 texts=[189, 135, 330, 52] calls=0x17d78,0xdd08c,0xe42ac,0x1cf5a4,0xce070. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49e2e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xa9980
+mac_size = 0x104
+unit = "events"
+target_sha256 = "0d5415cccb5f9578d329eb4bfdeeef066503b4e04f928e526a1fa011b41e56f9"
+evidence = "Artifact136 gate, mobility change0x105898, boarding helper0xf4cf0, fizzle0xba25c and0x90b18. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49e670
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xa9ab0
+mac_size = 0x1cc
+unit = "events"
+target_sha256 = "45422a45debaac219d029db8adc89c7d8d637af110a45c47195089d0117befde"
+evidence = "Adventure text resource indices [1, 0] corroborate event identity; reviewed associated gameplay fields and named calls in a9ab0..a9c7c texts=[1, 0] calls=0x1063d8,0x106400. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49e7d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xa9c7c
+mac_size = 0xac
+unit = "events"
+target_sha256 = "ad4e39d52dc74312081293e3d3ac2716ffa4a93e393424a05bc80f339f6073b4"
+evidence = "Hero giveArtifact0x103da8, artifact bookkeeping0x39344, eraseAndFizzle0xa94f0 and checkLevelUp0xf6ac0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49e8f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xa9dcc
+mac_size = 0x290
+unit = "events"
+target_sha256 = "00a0a82ebd56968380e7c8bb35c9cafce781b325683e64c9b1bb450f62dc0187"
+evidence = "Adventure text resource indices [11, 8] corroborate event identity; reviewed associated gameplay fields and named calls in a9dcc..aa05c texts=[11, 8] calls=0x58874,0x147048,0xb9480,0xf6ac0,0xa9c7c. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49ea40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaa05c
+mac_size = 0x260
+unit = "events"
+target_sha256 = "4dfbcefd514cc259e29a941a2059f0f15db5c99a8e0dac347e231493f57aaa0a"
+evidence = "Adventure text resource indices [13, 12] corroborate event identity; reviewed associated gameplay fields and named calls in aa05c..aa2bc texts=[13, 12] calls=0x28e218,0x147048,0xa9c7c. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49ed50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaa36c
+mac_size = 0x20
+unit = "events"
+target_sha256 = "a872a3daf670466a7ba735df4db0c265f455f964a5a03108a85634525977ac78"
+evidence = "Treasure-pool index from packed extra info and pool-member pointer arithmetic. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49f040
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaa38c
+mac_size = 0x590
+unit = "events"
+target_sha256 = "5d5cebfe47918c279101eb3b4f06f77737a35a6b46b907f3f2ee0feb61420464"
+evidence = "Adventure text resource indices [8] corroborate event identity; reviewed associated gameplay fields and named calls in aa38c..aa91c texts=[44, 142, 8] calls=0xaa36c,0x58528,0x58050,0x5810c,0x585a4,0x58528,0x58874,0x28e1dc,0x445c,0x28e1dc,0x445c,0x1c094,0x28e1dc,0x445c,0x28e1dc,0x1c480,0x28e1dc,0x1c480,0x58874,0x28e1dc. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49f070
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaa91c
+mac_size = 0x260
+unit = "events"
+target_sha256 = "8938a56e648d11bd91de62edfa534fdc6f8656d2be95b77834ec66bd43ce2761"
+evidence = "Adventure text resource indices [2, 3, 4, 5, 6, 7] corroborate event identity; reviewed associated gameplay fields and named calls in aa91c..aab7c texts=[2, 3, 4, 5, 6, 7] calls=0xf4c84,0xaa38c,0xa9dcc,0xa9d28,0xaa2bc,0xaa2bc,0xaa05c,0xaa05c,0xaa05c. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49f7e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaac80
+mac_size = 0xab0
+unit = "events"
+target_sha256 = "0f67ee302578f6adc9cfa8da33fdbcf9c292ebe77d1dbe88a60a708e3bd15381"
+evidence = "Adventure text resource indices [175, 176, 177, 178, 179, 180, 181, 183, 182, 183, 188, 184, 185, 186] corroborate event identity; reviewed associated gameplay fields and named calls in aac80..ab730 texts=[175, 176, 177, 178, 179, 180, 181, 183, 182, 183, 188, 184, -1] calls=0x4568,0x66a4,0x1c094,0x105514,0xaabf8,0xaabf8,0x102ec4,0x102ec4,0xaabf8,0x1c094,0x1c094,0xaabf8,0xaabf8,0xaabf8,0xaabf8,0xaabf8,0xaab7c,0xaabf8,0xaabf8,0x104224. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x49fa90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaab7c
+mac_size = 0x7c
+unit = "events"
+target_sha256 = "f23b87b3ff90414ae60a20ad010cedd831ad1f7808ee6f3a66140e1ffc17b079"
+evidence = "Resource vector threshold then extendedDialog0x1194d8, string erase and vector clear0x1c790. Retained before addReward and giveBlackBoxReward. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a0b00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xab730
+mac_size = 0x1c
+unit = "events"
+target_sha256 = "af9434396f26d06206268746a17bb1f0519517f6429a84d8ffe866a2310350a9"
+evidence = "Packed low-ten-bit index into BlackBox pool; leaf immediately after reward function. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a0c20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xab74c
+mac_size = 0x268
+unit = "events"
+target_sha256 = "7104f04769f9ef3b5caae959ed5931bc8dbdf2eb31a69632951205739ddeabd4"
+evidence = "Adventure text resource indices [14, 16, 15] corroborate event identity; reviewed associated gameplay fields and named calls in ab74c..ab9b4 texts=[14, 16, 15] calls=0x5f94,0x28e1dc,0x147048,0x58528,0xbad6c,0xf6ac0,0xaac80,0xa94f0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a0c50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xab9b4
+mac_size = 0x1f0
+unit = "events"
+target_sha256 = "eba242b2819cebf3cbc37a2ce0999e94aefbb810ffed14cce4ef01bca5113cea"
+evidence = "Adventure text resource indices [16] corroborate event identity; reviewed associated gameplay fields and named calls in ab9b4..abba4 texts=[16] calls=0x58528,0xbad6c,0xf6ac0,0xaac80,0x1fd818,0x114cdc,0x1fd9fc,0x114cdc. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a0ed0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xabba4
+mac_size = 0x148
+unit = "events"
+target_sha256 = "ecca725f020d8eea208a6c14083c0c34db27147b548df94e93f384281c3518f3"
+evidence = "Hero restoreCell, artifact136 gate, boat movement0x105898, local-human check0xe6c3c, boardBoat0xf4d40 and redraw. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a1010
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xac3dc
+mac_size = 0x124
+unit = "events"
+target_sha256 = "2982d51083674e4ec5f307b959b33e13d7e5a8f9b7b58ef4f5993d28c1f021ef"
+evidence = "Adventure text resource indices [23] corroborate event identity; reviewed associated gameplay fields and named calls in ac3dc..ac500 texts=[23] calls=0x104224,0x104224,0xa94f0,0x18a3c. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a1120
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xac500
+mac_size = 0x324
+unit = "events"
+target_sha256 = "f8539106c348e41c6a834b2cbd9306272508798e12505779fa0c90620cb2a74b"
+evidence = "Adventure text resource indices [62, 62, 62, 63] corroborate event identity; reviewed associated gameplay fields and named calls in ac500..ac824 texts=[63, 62, 62, 62] calls=. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a12f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xac824
+mac_size = 0x154
+unit = "events"
+target_sha256 = "d7cda8b71b7e1849a82a4ee80accc48b8784baa7e62a740ee912f6221bacfb8a"
+evidence = "Adventure text resource indices [31] corroborate event identity; reviewed associated gameplay fields and named calls in ac824..ac978 texts=[31] calls=0x212bf0,0xc274c,0xde438,0xff28,0xf6f0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a14b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xac978
+mac_size = 0x274
+unit = "events"
+target_sha256 = "16aea2e9429d9acf7b63933d6ba4b6683200e4d8fa2a0fd105b157f33c220361"
+evidence = "Adventure text resource indices [33, 32] corroborate event identity; reviewed associated gameplay fields and named calls in ac978..acbec texts=[33, 32] calls=0x1c628,0x11d404,0x1c094,0x1c094,0x147048,0xb8ca8. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a15a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xacbec
+mac_size = 0x7c8
+unit = "events"
+target_sha256 = "9efe2ff1cd7951b97ee4e85c4632c849adde7147947621d484338398f6bc3463"
+evidence = "Generator type17, game getGeneratorId0xcebdc, troop cost/add, claimGenerator0xdce74 and recruitment wrapper0xb89bc. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a18b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xad3b4
+mac_size = 0x224
+unit = "events"
+target_sha256 = "20318526285d45a8fe0435c0008d88c847e5b4b0d837c570f3d2dfd63a09f65c"
+evidence = "Adventure text resource indices [40, 39] corroborate event identity; reviewed associated gameplay fields and named calls in ad3b4..ad5d8 texts=[40, 39] calls=. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a2050
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xad5d8
+mac_size = 0x18c
+unit = "events"
+target_sha256 = "debd264089daceb38b275080f089138e4f7d2a26496a2b817e39b159db89b65f"
+evidence = "Adventure text resource indices [47] corroborate event identity; reviewed associated gameplay fields and named calls in ad5d8..ad764 texts=[425, 47] calls=0x11d404,0x147048,0xb8ca8. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a2140
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xad964
+mac_size = 0x234
+unit = "events"
+target_sha256 = "09215844e6e4fad781b1da0f63adc4e6a70fd4d60cac1740a51c7c0a572c1a5f"
+evidence = "Adventure text resource indices [51, 52, 53, 54] corroborate event identity; reviewed associated gameplay fields and named calls in ad964..adb98 texts=[51, 52, 53, 54] calls=0x104224,0x104224,0x104224,0x104224,0x104224,0xa94f0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a2230
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xadb98
+mac_size = 0x318
+unit = "events"
+target_sha256 = "bb79e01143b2a25308b0a70b0ccad8638c138c90ffacf6fc0b48642d14ea5643"
+evidence = "Adventure text resource indices [56, 55, 55] corroborate event identity; reviewed associated gameplay fields and named calls in adb98..adeb0 texts=[56, 55, 55] calls=0x11d404. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a2480
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xadeb0
+mac_size = 0x24c
+unit = "events"
+target_sha256 = "c1b6ecb40956d9578ab410fba60aec121ef2ddb173f0ee7cf5e464757f506553"
+evidence = "Adventure text resource indices [58, 57] corroborate event identity; reviewed associated gameplay fields and named calls in adeb0..ae0fc texts=[58, 57] calls=0x2b44. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a25f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xae0fc
+mac_size = 0x224
+unit = "events"
+target_sha256 = "d22fa0b59c38ace80b54110f46be981d6d8a4f54c49211c26813d4076714ec6f"
+evidence = "Adventure text resource indices [60, 59] corroborate event identity; reviewed associated gameplay fields and named calls in ae0fc..ae320 texts=[60, 59] calls=. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a2710
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaeab8
+mac_size = 0x1c0
+unit = "events"
+target_sha256 = "5e074df291f9f4e4c0100e7ffb57afe94d5280ce029831ab2871a64674d296e4"
+evidence = "Deactivates hero0x17e58, sound, exchangeSpells0xae320, heroSwap0xb7eec, town id/event or combat0xbad6c. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a2800
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xae320
+mac_size = 0x6dc
+unit = "events"
+target_sha256 = "12ec910f9ee155657df9149fce44f5a96b91b7b4ffc45303cf8738a2aa5ad7b5"
+evidence = "Two70-spell candidate vectors, spellbook/learn flags, Scholar transfer text140..149, sort0xbdef8 and vector destructors. Following0xae9fc is cleanup destructor. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a2940
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaec78
+mac_size = 0x170
+unit = "events"
+target_sha256 = "69b20660877344ef92fd8a43cc2a1fdb4ed27ccd5aa8de477076d7df81c9f47c"
+evidence = "Adventure text resource indices [65, 64] corroborate event identity; reviewed associated gameplay fields and named calls in aec78..aede8 texts=[65, 64] calls=0x104224. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a31a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaede8
+mac_size = 0x2ac
+unit = "events"
+target_sha256 = "7efea3c8f75317fcdcac2fd57a9150c38373a701efb97739c1621aaedd805211"
+evidence = "Adventure text resource indices [67, 66, 68] corroborate event identity; reviewed associated gameplay fields and named calls in aede8..af094 texts=[67, 66, 68] calls=. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a3280
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaf1a8
+mac_size = 0x330
+unit = "events"
+target_sha256 = "3389923230b3c76742453258882f97921658d6b9ce06b7bafa1d1b6427ee29a6"
+evidence = "Adventure text resource indices [72, 73, 71] corroborate event identity; reviewed associated gameplay fields and named calls in af1a8..af4d8 texts=[72, 73, 71] calls=0x147048,0x143bd4. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a33e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaf4d8
+mac_size = 0x330
+unit = "events"
+target_sha256 = "e7f0bd8871cfb50fd38f65c9a65d04959fca2b6a4d2b053457f11dabe90fcbad"
+evidence = "Adventure text resource indices [75, 76, 74] corroborate event identity; reviewed associated gameplay fields and named calls in af4d8..af808 texts=[75, 76, 74] calls=0x105768,0x2b44. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a3590
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaf808
+mac_size = 0x304
+unit = "events"
+target_sha256 = "c56bb98a65476ff2ed43b97d6d5b02d5e76a41a54622e966e567de21f908770d"
+evidence = "Adventure text resource indices [78, 79, 77] corroborate event identity; reviewed associated gameplay fields and named calls in af808..afb0c texts=[78, 79, 77] calls=0x105768,0x2b44. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a3730
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xafb0c
+mac_size = 0x224
+unit = "events"
+target_sha256 = "3cd5b578824debc3f35989715477dced3a438325f487149b8af77a1c281d44e3"
+evidence = "Adventure text resource indices [81, 80] corroborate event identity; reviewed associated gameplay fields and named calls in afb0c..afd30 texts=[81, 80] calls=. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a38b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xaff30
+mac_size = 0x368
+unit = "events"
+target_sha256 = "4b3aa1ce082dc89a99905f6525d35093faa060b936259008b46819a34572507c"
+evidence = "Adventure text resource indices [84, 187, 85] corroborate event identity; reviewed associated gameplay fields and named calls in aff30..b0298 texts=[84, 187, 85] calls=0x1cd214,0x56454,0x147048,0x58528,0xb9480,0x5810c,0xbad6c,0xf25e4,0xdcd68. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a39a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb0298
+mac_size = 0x168
+unit = "events"
+target_sha256 = "48e88dddc7dd674d283ed026b93ca1a962cff05b7e8c1e2e19467e864a0e1a26"
+evidence = "Adventure text resource indices [93, 92] corroborate event identity; reviewed associated gameplay fields and named calls in b0298..b0400 texts=[93, 92] calls=0x104224. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a3bc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb0400
+mac_size = 0x24c
+unit = "events"
+target_sha256 = "1c64b834b92daee26193ee1559cda5a55b2bd182354349b8499de4757f6afa01"
+evidence = "Adventure text resource indices [94, 95] corroborate event identity; reviewed associated gameplay fields and named calls in b0400..b064c texts=[94, 95] calls=0x2b44. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a3ca0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb064c
+mac_size = 0x224
+unit = "events"
+target_sha256 = "0f501834a3021c07fcebf79a56b850655bdaa46f3f2bba188fd1a63559ada8aa"
+evidence = "Adventure text resource indices [101, 100] corroborate event identity; reviewed associated gameplay fields and named calls in b064c..b0870 texts=[101, 100] calls=. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a3dc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb0870
+mac_size = 0x348
+unit = "events"
+target_sha256 = "d7f8acc79ec3d0bbec133359018a1dfc539b06243c4d1ba3b201413bd1c884b7"
+evidence = "Prison release text102..104, erase/fizzle, recordShowHero0xc2058, hero mobility/obscureCell and map-change send. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a3eb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb0bb8
+mac_size = 0x368
+unit = "events"
+target_sha256 = "7c718a19cc1ab9828c8a1e41d43ec7e91e36b9829a1565ec4a637be270a74fd4"
+evidence = "Adventure text resource indices [105, 107, 106, 109, 108] corroborate event identity; reviewed associated gameplay fields and named calls in b0bb8..b0f20 texts=[105, 107, 106, 109, 108] calls=0x147048,0x11d404,0xb9480,0xf6ac0,0xf4dfc,0x28e2b0,0x28e2b0,0xf4fec. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a4230
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb0f20
+mac_size = 0x280
+unit = "events"
+target_sha256 = "81738f1804a56b1f7041db10175ca08695d9bf3566667cd2e09d69cc2dab36d1"
+evidence = "Adventure text resource indices [110, 111] corroborate event identity; reviewed associated gameplay fields and named calls in b0f20..b11a0 texts=[110, 111] calls=0x2b44,0x2b44. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a44c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb11a0
+mac_size = 0x194
+unit = "events"
+target_sha256 = "436a8dc421ed74c8441d17607accf1497289a4c97afc75aff4f14a7122757528"
+evidence = "Adventure text resource indices [44, 112] corroborate event identity; reviewed associated gameplay fields and named calls in b11a0..b1334 texts=[44] calls=0xb8914. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a4600
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb1334
+mac_size = 0x300
+unit = "events"
+target_sha256 = "d97a3f330d7bd12fd5ef7efeaef224e3856237d851a3715712fb96e59f4cefbe"
+evidence = "Adventure text resource indices [113, 113] corroborate event identity; reviewed associated gameplay fields and named calls in b1334..b1634 texts=[113, 113] calls=0xaa36c,0x58528,0x147048,0xbad6c,0xf6ac0,0x104224,0x28e218,0x16990,0xa94f0,0x28e218,0x16990,0x104224,0xa94f0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a4780
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb1634
+mac_size = 0x128
+unit = "events"
+target_sha256 = "1e2ba9c23bf3b1f867097b72bd6ed91e294eb457130ea4eae9288cd1cdd87c62"
+evidence = "Adventure text resource indices [113] corroborate event identity; reviewed associated gameplay fields and named calls in b1634..b175c texts=[113] calls=0xb1334,0x104224,0x28e218,0x16990,0xa94f0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a4be0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb175c
+mac_size = 0x238
+unit = "events"
+target_sha256 = "e812473cb9ad51ed7f7b86f21a4ec7b36372f2d04616f7b3ac8c52e6356ce6b5"
+evidence = "Adventure text resource indices [115, 115, 115] corroborate event identity; reviewed associated gameplay fields and named calls in b175c..b1994 texts=[115, 115, 115] calls=0xf4dfc,0xf4fec,0x102ec4,0xa94f0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a4dc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb1994
+mac_size = 0x228
+unit = "events"
+target_sha256 = "6de9b9ad807d29bc75f254d00048370a09dbcec31bd213c37af3852a77851c4b"
+evidence = "Adventure text resource indices [116, 118, 117] corroborate event identity; reviewed associated gameplay fields and named calls in b1994..b1bbc texts=[117, 118, 116] calls=0xf4c84,0x103da8,0x104224,0x39344,0x104224,0xa94f0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a5030
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb1bbc
+mac_size = 0x174
+unit = "events"
+target_sha256 = "3fff5666e8a06a7883f1bfcb7447400ec4c8d5ca140d5823ad01ef07b1ebf211"
+evidence = "Adventure text resource indices [125, 126] corroborate event identity; reviewed associated gameplay fields and named calls in b1bbc..b1d30 texts=[125, 126] calls=0xf4c84,0x103da8,0x39344,0xa94f0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a52a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb1d30
+mac_size = 0x244
+unit = "events"
+target_sha256 = "f07f00d9b793b3f17d169b9d394fab5dc9205fa41a5bbb85d7f8fdc704a7e108"
+evidence = "Adventure text resource indices [37, 38] corroborate event identity; reviewed associated gameplay fields and named calls in b1d30..b1f74 texts=[37, 47, 38] calls=0xf4c84,0x103da8,0x39344,0x104224. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a5480
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb1f74
+mac_size = 0x3fc
+unit = "events"
+target_sha256 = "f72dc99cbc53b7723dcb5f73b4eb2eba5338972a4d3f604e5e2df8b52642463d"
+evidence = "Adventure text resource indices [174, 131, 130] corroborate event identity; reviewed associated gameplay fields and named calls in b1f74..b2370 texts=[174, 131, 130] calls=0x1c094,0x11d404,0x28e1dc,0x1c480,0xf4dfc,0x28e1dc,0x1c480,0x28e1dc,0x1c480,0xf4fec. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a5610
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb2370
+mac_size = 0x18c
+unit = "events"
+target_sha256 = "41f46edf475a084a2130c026dd9e064a51b741296b7634acaaea201f2f27e987"
+evidence = "Adventure text resource indices [133, 132, 134] corroborate event identity; reviewed associated gameplay fields and named calls in b2370..b24fc texts=[133, 132, 134] calls=0x144b68,0x104098. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a5980
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb24fc
+mac_size = 0x328
+unit = "events"
+target_sha256 = "94e5d85f1336b73e341c336cc70a5e9613df5076ded0293af5e94b81d761c36b"
+evidence = "Adventure text resource indices [8, 135] corroborate event identity; reviewed associated gameplay fields and named calls in b24fc..b2824 texts=[8, 135] calls=0xaa36c,0x58528,0x147048,0xbad6c,0xf6ac0,0x103da8,0x39344,0xa94f0,0x1c094,0x103da8,0x39344,0xa94f0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a5a80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb2824
+mac_size = 0x190
+unit = "events"
+target_sha256 = "c43f5e6683ec4ea7339351340444168bc21165ca268034f3ef38b327f5b33ac1"
+evidence = "Adventure text resource indices [2, 135] corroborate event identity; reviewed associated gameplay fields and named calls in b2824..b29b4 texts=[2, 135] calls=0xf4c84,0xb24fc,0x103da8,0x39344,0xa94f0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a5ea0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb29b4
+mac_size = 0x23c
+unit = "events"
+target_sha256 = "067cfc81d852e3f3e459fefe325d99c6fdbea3339e715ca4ab5917f6758539e1"
+evidence = "Adventure text resource indices [136, 137, 138, 139] corroborate event identity; reviewed associated gameplay fields and named calls in b29b4..b2bf0 texts=[136, 137, 138, 139] calls=0x2b44,0x102f5c,0x102fa8. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a60a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb2bf0
+mac_size = 0x280
+unit = "events"
+target_sha256 = "fcd6360dbc1b7a402498b95b4ee89095ee2ecf50a346c31d5c5bc3d80a0779a6"
+evidence = "Adventure text resource indices [140, 140, 141] corroborate event identity; reviewed associated gameplay fields and named calls in b2bf0..b2e70 texts=[141, 140, 140] calls=. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a6200
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb2e70
+mac_size = 0x274
+unit = "events"
+target_sha256 = "6bb65f0dad3de785ba9b3d3e88db9f786c5fce0e5a8d25a325c2527cbf181312"
+evidence = "Adventure text resource indices [144, 143] corroborate event identity; reviewed associated gameplay fields and named calls in b2e70..b30e4 texts=[144, 143] calls=0x105514,0x104098,0xf6ac0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a6330
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb30e4
+mac_size = 0x174
+unit = "events"
+target_sha256 = "9d4fb836260dd678c97d84985f45e53f52e9116046e46ea867d6e06e532c86e2"
+evidence = "Adventure text resource indices [146] corroborate event identity; reviewed associated gameplay fields and named calls in b30e4..b3258 texts=[146] calls=0x105514,0x145970,0x104224,0x104098. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a6440
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb3258
+mac_size = 0x164
+unit = "events"
+target_sha256 = "1023ca935e5e76ae8dd5892ebf5427d7413a504169c6d60ea00717f1ebb2bd0f"
+evidence = "Adventure text resource indices [145] corroborate event identity; reviewed associated gameplay fields and named calls in b3258..b33bc texts=[145] calls=0xf4c84,0x103da8,0x39344,0xb30e4,0xb30e4,0xa94f0,0xf6ac0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a6520
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb33bc
+mac_size = 0x480
+unit = "events"
+target_sha256 = "60836157d16fd408c411b7d3a0c82f09fd0af0e23616de85dac6e50142dd9a46"
+evidence = "Adventure text resource indices [147, 148, 150, 149, 152, 151] corroborate event identity; reviewed associated gameplay fields and named calls in b33bc..b383c texts=[147, 148, 150, 149, 152, 151] calls=0x11d404,0xf6348,0x145970,0x145970,0x104098,0xf6ac0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a6710
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb383c
+mac_size = 0x204
+unit = "events"
+target_sha256 = "e57aec16c419575d17cdcdbd227819c192075e8a7982cce4fa05f116fdb56426"
+evidence = "Adventure text resource indices [156, 155, 154] corroborate event identity; reviewed associated gameplay fields and named calls in b383c..b3a40 texts=[156, 155, 154] calls=0x11d404,0xf4c84,0x103da8,0x39344,0x104224. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a69b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb3a40
+mac_size = 0x1d8
+unit = "events"
+target_sha256 = "4ea0a9a0913ac19b7966fb70eebf0c7857b564ac34c0e71d0ad69c30ba6a4e3a"
+evidence = "Adventure text resource indices [2] corroborate event identity; reviewed associated gameplay fields and named calls in b3a40..b3c18 texts=[2] calls=0xf4c84,0x103da8,0x39344,0x104224. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a6b30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb3c18
+mac_size = 0x10c
+unit = "events"
+target_sha256 = "be2a20bbe4666c0aaa7d64d8152607df5e842efe72295f6c12bf5047077b0d82"
+evidence = "Calls combatMonsterEvent0xb9480 then monstersGiveReward0xb3a40 and monster victory0x1fe468. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a6c60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb3d24
+mac_size = 0x18c
+unit = "events"
+target_sha256 = "cb35a0f417653e38b2876d917c096539f561651b072c3e1fbb0da1ed37c761e1"
+evidence = "Flee dialog, fight0xb3c18 fallback or removal0x1287d4, erase/fizzle and monster victory. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a6df0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb3eb0
+mac_size = 0x1fc
+unit = "events"
+target_sha256 = "0e828a750ccc210e3dbb2610e2aef6c56eb44324fd93fd4d5ff336a51be6a381"
+evidence = "Join dialog, object removal0x1287d4, army add0x585a4, split dialog0x1cd10c, rewards0xb3a40. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a7000
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb40ac
+mac_size = 0x330
+unit = "events"
+target_sha256 = "718d58bb16896f087e75ddaa829cd59af0ec387b0673d9bc37020ab48c101e3d"
+evidence = "Recruitment price0x145890, cost format, remove object/add army/split dialog and rewards. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a7250
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb43dc
+mac_size = 0x154
+unit = "events"
+target_sha256 = "da4fe9a12160bb3f9488bfdb632289b6d009121580bf83173eaba51cee4aec50"
+evidence = "Upgraded creature0x889a0/unupgraded0x88a0c and elemental variants123/125/127/129; army-slot similarity count. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a75c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb4530
+mac_size = 0x70
+unit = "events"
+target_sha256 = "afd83014a5a384e5ec7c23e50d789b95dd1f7ce2ed7fde5a2258c54fa6d8e8f4"
+evidence = "Force-ratio threshold leaf with multiple early returns; called at0xb46d0 by wandering result. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a76c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb45a0
+mac_size = 0x2e4
+unit = "events"
+target_sha256 = "09532d41d583e985969498f32d2162e8723fba96994e844ecbb973ba570f2ec2"
+evidence = "Diplomacy0x296ec, like0xb43dc and force0xb4530, fight/join/sell/flee calls in outcome branches. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a7740
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb4884
+mac_size = 0xd0
+unit = "events"
+target_sha256 = "f0c858c648ee3b1638cea8d4466cb384f710dc0acd93d489c30cda6cc567c992"
+evidence = "Reads monster amount/type from map cell, redraws and calls wandering result0xb45a0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a79c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb4954
+mac_size = 0x39c
+unit = "events"
+target_sha256 = "3b16e33507fae2a9191b9fcc108f49b6d78a7f47f164ab6e61118452326b4693"
+evidence = "Adventure text resource indices [159, 160, 158] corroborate event identity; reviewed associated gameplay fields and named calls in b4954..b4cf0 texts=[159, 160, 158] calls=0xf6348,0x145970. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a7a40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb4cf0
+mac_size = 0x274
+unit = "events"
+target_sha256 = "7da858510c705f8f058a705acaad8b8225c5782ab2278cb0b7e2eaa1b4dc0eb9"
+evidence = "Adventure text resource indices [161, 162, 163] corroborate event identity; reviewed associated gameplay fields and named calls in b4cf0..b4f64 texts=[161, 162, 163] calls=0xf4c84,0xf4c84,0x103da8,0x39344,0x11d404. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a7c30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb4f64
+mac_size = 0x128
+unit = "events"
+target_sha256 = "70eeb0cf2f6c7c53a40827b1e76745253039a2a8aa2280e7c2d5dcc319f7a945"
+evidence = "Adventure text resource indices [165, 164] corroborate event identity; reviewed associated gameplay fields and named calls in b4f64..b508c texts=[165, 164] calls=0x11d404,0x104224. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a7de0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb508c
+mac_size = 0x24c
+unit = "events"
+target_sha256 = "bf506fa3980e974f07ecc6bc50962db75a3bb54f0aef56ac15e2c77a8ca44e33"
+evidence = "Adventure text resource indices [167, 166] corroborate event identity; reviewed associated gameplay fields and named calls in b508c..b52d8 texts=[167, 166] calls=0x2b44. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a7ea0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb52d8
+mac_size = 0x140
+unit = "events"
+target_sha256 = "7b6443deb6de383dc9a4fb5f2a52098a5883e45809671a0590ffb9da2c0136a2"
+evidence = "Adventure text resource indices [169, 170] corroborate event identity; reviewed associated gameplay fields and named calls in b52d8..b5418 texts=[169, 170] calls=0x11d404,0x104224. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a7fc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb5418
+mac_size = 0x334
+unit = "events"
+target_sha256 = "35e7b1a10a0c8d6185d68b1829f6c5686930b84e8e7be30fe2025ecdf654332d"
+evidence = "Adventure text resource indices [190, 172, 173, 171] corroborate event identity; reviewed associated gameplay fields and named calls in b5418..b574c texts=[190, 172, 173, 171] calls=0x11d404,0x102ec4. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a8080
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb574c
+mac_size = 0x1a8
+unit = "events"
+target_sha256 = "b8c15db3c8418313c47b15c3b704d22ffe57a9a356d135b35c6fd6f43a7e2049"
+evidence = "Calls one-way game getRandomLithExit0xe55ac, reveal0xc2314, hero encounter and teleport0x1ec20. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a8230
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb58f4
+mac_size = 0x1b0
+unit = "events"
+target_sha256 = "5537826f82215d3d40196462698a0960561ce522ce0578891a9fad5a3743be93"
+evidence = "Calls two-way game getRandomLith0xe55e4, reveal0xc2314, hero encounter and teleport0x1ec20. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a8390
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb5b24
+mac_size = 0x1f6c
+unit = "events"
+target_sha256 = "9053dfc110759fad72441796464d20ccfd13a480911e7eab01410935c6485300"
+evidence = "Adventure text resource indices [24, 28, 25, 26, 27, 41, 42, 43, 18, 48, 61, 70, 96, 97, 98, 99, 114, 119, 120, 121, 122, 123, 124, 127, 128, 129, 142, 153, 157] corroborate event identity; reviewed associated gameplay fields and named calls in b5b24..b7a90 texts=[24, 28, 25, 26, 27, 43, 42, 41, 48, 61, 70, 96, 97, 98, 99, 114, 121, 120, 119, 124, 123, 122, 127, 128, 129, 142, 153, 157] calls=0x17d78,0x216fc0,0x217a34,0xe6cc4,0x1556b8,0x20b870,0x15b680,0xf07c,0x158d5c,0xa9980,0xa9ab0,0xaa91c,0xab74c,0x13de98,0x1f4f44,0xabba4,0xabcec,0xabec0,0xabff0,0xac3dc. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4a84f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb7b28
+mac_size = 0x194
+unit = "events"
+target_sha256 = "ec1b7c9c7c495e865be5d1600c463cf90a58fdd11f69d516b87121cf902abfa5"
+evidence = "Sets up context, event sound wrapper0xa9a84, dispatch0xb5b24, movement/UI refresh and victory checks. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4aaaa0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb7cbc
+mac_size = 0x230
+unit = "events"
+target_sha256 = "f92a1714bc9c2edb48a3a398b67c3131bdc0a87c9861e59fa1f46313e1a0965c"
+evidence = "Records erase0xc1cd0, updates map object/vector0xbe618, calculateCellExtra0x128408, adjacent monsters0xe17d8, sends map change. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4aabb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb7eec
+mac_size = 0x164
+unit = "events"
+target_sha256 = "e413c22911bff3d8b6b8a0a3b4e1439b9db7ef95fa8dd862be8683f5d9cd2326"
+evidence = "Hero-exchange window0x1a5d78/modal0x115edc, human flags, two hero copies0xf3e2c, network handling and refresh. Ends before destructor0xb8050. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4aadf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb80c4
+mac_size = 0x4e4
+unit = "events"
+target_sha256 = "e8ea1adb11aca4409fd5b76be2584e008d28afb571d20d8fa1e9595ad2f083b4"
+evidence = "Town ID0xceb24, garrison/visiting armies, combat0xbad6c and claimTown0xdc98c, building refresh and victory checks. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4aafd0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb85a8
+mac_size = 0x36c
+unit = "events"
+target_sha256 = "28e614bfff3e7f06043f0db62ab3f42c945de6ade1f6796c54507ab07724e026"
+evidence = "Object-type sound switch and concatenated sound-name string construction, reached by cell overload0xa9a84. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4ab410
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb89bc
+mac_size = 0x2ec
+unit = "events"
+target_sha256 = "57d80bf1bd186434d6624d6917e9e6b684bb6cbe0f17815f03f1e87ea3e6fbb1"
+evidence = "Generator lookup0xcebdc, troop costs/army additions, recruit window0x1507b8 and modal0x115edc. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4aba50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb8ca8
+mac_size = 0x618
+unit = "events"
+target_sha256 = "25baa539060d9a6f5514e04b2f677fa1513380a997874972e003ca0993da7be5"
+evidence = "Creature-bank army construction, combat0xbad6c, reward vector push0xbe4d4 and resource rewards. Excludes following vector destructor0xb92c0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4abdc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb9324
+mac_size = 0x15c
+unit = "events"
+target_sha256 = "2f5f10785e7e5864516aa094e7ad81b6c1e9d173c05cb62ecb6603687c8e032f"
+evidence = "Undead-lair flags, AI valuation0x147048, visited check0x11d404 and creature-bank event0xb8ca8. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4ac490
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb9480
+mac_size = 0xb98
+unit = "events"
+target_sha256 = "75ed07e39f03140bc8450fc0edce7c8a34e3d1b58e973e466e95ac0e8b793e9e"
+evidence = "Builds enemy army groups0x58050/0x584d4/0x587e0, random grouping, combat0xbad6c and surviving troop-count update. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4ac580
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xba018
+mac_size = 0xd8
+unit = "events"
+target_sha256 = "d130b36ab25b7b8d7ca4a0cb739cb6bcf1ac067a51eaa1eff9994a89bf2ad04d"
+evidence = "Redraw, hero deallocate0xf5d3c, fizzle0xba25c, UI and lost-hero victory0x1ff2a4. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4ac930
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xba0f0
+mac_size = 0x16c
+unit = "events"
+target_sha256 = "1b6c508cbde7db54253da31587c869312499cdfb3c78a1c5b985695518e2bd33"
+evidence = "Adventure text resource indices [168] corroborate event identity; reviewed associated gameplay fields and named calls in ba0f0..ba25c texts=[168] calls=0xe6bf4,0xf4dfc,0x58528. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4acaa0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xba25c
+mac_size = 0x10c
+unit = "events"
+target_sha256 = "9c3a81f4a359438279328b576cb8e749d58eea4939954fab6dd9e48a5adfcfe7"
+evidence = "Randomized fizzle sound0x219150, audio/bitmap transition calls and final redraw. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4acbb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xba368
+mac_size = 0x134
+unit = "events"
+target_sha256 = "d6357d90f2768fa7b1afe0a0135d24740ec214e7f8cef7249d64d93c2898aad7"
+evidence = "Dispatch0xb5b24, checkLevelUp0xf6ac0 and artifact/troop victory checks. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4acca0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xba49c
+mac_size = 0x330
+unit = "events"
+target_sha256 = "6788a97f73891f1bdaa3b33ffcb81eb5289ea2a0a51fcf48b18ebeeaeba64cb0"
+evidence = "Network combat message construction/read and receiveHeroTownData0xbd314, context setup, combat0xbad6c and sendHeroTownData0xbc6c0. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4acd70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xba8b4
+mac_size = 0x290
+unit = "events"
+target_sha256 = "2b48422b30ddc93baa3e60cd1ab6a5cd53a0679e571dd704335cb1908926119d"
+evidence = "Combat message read slots then two army load0x57fc0, town load0x1b1c9c and hero load0xf2ab4 calls. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4ad1f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbab44
+mac_size = 0x228
+unit = "events"
+target_sha256 = "0510ab5f96fc11875507b59309c2158044c5f40819740a61b5d3b40e0659b320"
+evidence = "Inverse combat message writer: two army save0x57f30, town save0x1b2290 and hero save0xf34b8 calls. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4ad340
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbc600
+mac_size = 0xc0
+unit = "events"
+target_sha256 = "5b7d64b06bd13ee2b461d8ffed80d1a82545dec034dd3e9e4e30319bda347444"
+evidence = "Resume turn duration0x215bc0 and conditional solo-seat player flags reset. Mac destructor includes optional delete ABI. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4ae9b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbad6c
+mac_size = 0x1770
+unit = "events"
+target_sha256 = "cd50176c7e9c6e9b7989e703cab8984dc69be980a728a342f287c0e0c09c32f8"
+evidence = "Turn duration pause0x215b84, player/AI/network branch setup, combat initialization, sendHeroTownData and final winner/seat reset; excludes following cleanup destructors. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4ad470
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbc6c0
+mac_size = 0xc54
+unit = "events"
+target_sha256 = "f555f3ecf0876435c03c124297321bdee9ba9ee22e8385bdc3727ec899ad1cec"
+evidence = "Builds CCombatInitMsg, two army copies, optional town/hero copies and remote send; fields include owner gold, winner/retreat/surrender. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4aeb50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbd314
+mac_size = 0xbe4
+unit = "events"
+target_sha256 = "7612c72294ef0e17701598fe272e2023ae6ff12b3f431659b02a016c571b2f45"
+evidence = "Initializes output pointers, allocates/copies two army groups and optional town/hero objects, extracts owners/gold/seed/winner flags. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+retail_va = 0x4aeee0
+

@@ -1,0 +1,280 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x493650
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa3c9c
+mac_size = 0xe0
+target_sha256 = "4037d9843be2e36cd5e5a1775c22c8c1863be9ca7dde8ad7c276845862097b8b"
+evidence = "Unique %d.%dk format string at Mac data1+0x417ec has one TOC code use at 0xa3d30; body branches on 1000/10000, rounds amount by 50 or 500 and calls formatString for integer, thousands or decimal thousands. Bounded Mac body code0+0xa3c9c..0xa3d7c; terminal BLR at 0xa3d78, next prologue at 0xa3d7c."
+
+[[functions]]
+retail_va = 0x4933d0
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa3d7c
+mac_size = 0x208
+target_sha256 = "2aafdd9713e56ac31464d17d64619694ee6cb69ea4ae9408467082b4389a7fdf"
+evidence = "Computes damage low/high from army damage bounds +0xd0/+0xd4 and troop count +0x4c; handles spell influence +0x23c/+0x240 and ballista creature 0x92, adjusts damage twice and calls formatRounded 0xa3c9c in equal/range cases. combatMessage calls it three times. Bounded Mac body code0+0xa3d7c..0xa3f84; terminal BLR at 0xa3f80, next prologue at 0xa3f84."
+
+[[functions]]
+retail_va = 0x4922f0
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa3f84
+mac_size = 0x724
+target_sha256 = "68e18824f188247fe246ba0b57b20d6afcb751c3e6d53a74711183e36ed30efd"
+evidence = "Reads combatManager last-cell field +0x12cec, validates 0..186, dispatches named creature types 0x0d/0x33/0x5b and spell-error message paths. combatMessage calls it at 0xa4e30. Bounded Mac body code0+0xa3f84..0xa46a8; terminal BLR at 0xa46a4, next prologue at 0xa46a8."
+
+[[functions]]
+retail_va = 0x492840
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa46a8
+mac_size = 0x7c4
+target_sha256 = "b93159e2c5e97bc5e304a5ccae30f88f17b35bb79fed3565c630d05229f7076a"
+evidence = "Checks combat display state then dispatches command to message text, calls estimated-damage helper 0xa3d7c at 0xa48c4/0xa4aa4/0xa4b40 and spell-error helper 0xa3f84 at 0xa4e30 before posting combatWindow message. Bounded Mac body code0+0xa46a8..0xa4e6c; terminal BLR at 0xa4e68, next prologue at 0xa4e6c."
+
+[[functions]]
+retail_va = 0x493710
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa4e6c
+mac_size = 0x84
+target_sha256 = "3764a8f3b3f8842844cac1c85767e6b8601824e5fb12d26418cf1bffd628820a"
+evidence = "Zeros creature-effect 0x28-byte array and archer-effect 3-byte array with bzero, clears hero and flag effect bytes, copies four drawbridge-bound words from global limits. Bounded Mac body code0+0xa4e6c..0xa4ef0; terminal BLR at 0xa4eec, next prologue at 0xa4ef0."
+
+[[functions]]
+retail_va = 0x493780
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa4ef0
+mac_size = 0x7c
+target_sha256 = "8477e65fd99eda462c09da3b5be89155cbf9a4c15ea7588a291700f69722938b"
+evidence = "Guards isQuickCombat and combatShowIt at manager+0x12d18; reads four global combat draw bounds and invokes windowManager updateScreen with inclusive width/height. Bounded Mac body code0+0xa4ef0..0xa4f6c; terminal BLR at 0xa4f68, next prologue at 0xa4f6c."
+
+[[functions]]
+retail_va = 0x4937d0
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa4f6c
+mac_size = 0x1c8
+target_sha256 = "c6fad82b8e4d571ee61ac3cc178ef57dcc051068229dbd88d4074e0eca6f4507"
+evidence = "Checks quick combat, arrow-tower creature type 0x95 and grid display preference; calls getAttackMask 0x13cee8, clears 187 grid-shade bytes, then walks combat cells and movement masks. Bounded Mac body code0+0xa4f6c..0xa5134; terminal BLR at 0xa5130, next prologue at 0xa5134."
+
+[[functions]]
+retail_va = 0x493930
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa5134
+mac_size = 0x4b8
+target_sha256 = "19d2e27b24b731ca440d9f151355222c9bdc2ce35aba7013fab7e7be7e3e8d56"
+evidence = "Grid update checks quick combat, calls setupGridForArmy 0xa4f6c at 0xa51f0 and updates combat grid/cell display state, ending in screen-post call. Bounded Mac body code0+0xa5134..0xa55ec; terminal BLR at 0xa55e8, next prologue at 0xa55ec."
+
+[[functions]]
+retail_va = 0x493cf0
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa55ec
+mac_size = 0x230
+target_sha256 = "2b8866f7889c21b7cc17f412a5b85dc42d58506b1817e47b0df62e7deaafc9ce"
+evidence = "Background drawing checks quick combat/backgroundDrawn, calls backdrop/bitmap draw and moat overlay paths, calls updateGrid 0xa5134 at 0xa57a4 and posts screen bitmap. Bounded Mac body code0+0xa55ec..0xa581c; terminal BLR at 0xa5818, next prologue at 0xa581c."
+
+[[functions]]
+retail_va = 0x493ea0
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa581c
+mac_size = 0x5d8
+target_sha256 = "e38ba71d8c27ef35d6a721b956911303e20992439efe6208330f968af39dede0"
+evidence = "Three-argument mouse-grid updater owns TOC static prior index, vector<long> construction, old/new hex shading and calls simpler mouse-grid updater 0xa5f6c at 0xa5cf4. Bounded Mac body code0+0xa581c..0xa5df4; terminal BLR at 0xa5df0, next prologue at 0xa5df4."
+
+[[functions]]
+retail_va = 0x494390
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa5df4
+mac_size = 0x178
+target_sha256 = "3464cdfe29d672cf24247f72e48d5b5f1d704a91ead5fd8ebb7e7f53d3f79cbf"
+evidence = "Two-argument mouse-grid updater checks display state, constructs vector<long>, calls three-argument overload 0xa581c at 0xa5f44 and tears vector down. Bounded Mac body code0+0xa5df4..0xa5f6c; terminal BLR at 0xa5f68, next prologue at 0xa5f6c."
+
+[[functions]]
+retail_va = 0x494440
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa5f6c
+mac_size = 0x758
+target_sha256 = "2cc25d93db939e9f9f2aaa21591e2e1692879d3c26f6aa1b4d13a88dd6e8654d"
+evidence = "Six-parameter drawFrame tests battleOver/quickCombat/combatShowIt, handles chatChanged/refreshBackground, calls drawBackground 0xa55ec twice and updateCombatArea 0xa4ef0 at 0xa6690, then final screen/delay work. Bounded Mac body code0+0xa5f6c..0xa66c4; terminal BLR at 0xa66c0, next prologue at 0xa66c4."
+
+[[functions]]
+retail_va = 0x494c20
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa6778
+mac_size = 0x36c
+target_sha256 = "6d52ea22dca5d74f26a12236070b9967f2b9feab9c628f10138c875ecd0895ea"
+evidence = "Wall-section loop reads defending town wall-traits table and iterates section images, calls drawWall 0xa77c0 four times and archer renderer 0xa6cfc for tower cover. Body bounded by prior BLR and terminal BLR at code0+0xa6ae0; next entry 0xa6ae4."
+
+[[functions]]
+retail_va = 0x494f40
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa6b68
+mac_size = 0x194
+target_sha256 = "99745dee58171f0470cd0b571843ef096a6c3b04bd36ef5091a8f1d53f3086d5"
+evidence = "Four-argument occupant draw checks 0..186 hex, computes cell stride 0x70 and row, filters draw priority 8, hidden army/double-wide facing, draws army and optionally calls moat overlay 0xa7b2c twice. Body bounded by prior BLR and terminal BLR at code0+0xa6cf8; next entry 0xa6cfc."
+
+[[functions]]
+retail_va = 0x495090
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa6cfc
+mac_size = 0x1bc
+target_sha256 = "fcaaea866a770e6663ff717ccb2d7127f49db618a20744c98c4c98e1a2b92e20"
+evidence = "Archer renderer accepts sprite/sequence/frame/x/y/limits/flip/color; calls computeExtent 0xa81c0 and sprite draw 0x8a818, with distinctive 0xe8 height and palette-row 0x60. Body bounded by prior BLR and terminal BLR at code0+0xa6eb4; next entry 0xa6eb8."
+
+[[functions]]
+retail_va = 0x4951b0
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa6eb8
+mac_size = 0x19c
+target_sha256 = "5d41b02d93a87d456438ee7c6ed93c7ee0a279a62c8e3da3e5f5ef75ad83bd77"
+evidence = "Creature renderer accepts limits and stack color/flip, calls computeExtent 0xa81c0 and sprite draw 0x8a818 with sprite width and height and caller color. Body bounded by prior BLR and terminal BLR at code0+0xa7050; next entry 0xa7054."
+
+[[functions]]
+retail_va = 0x4952b0
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa7054
+mac_size = 0x198
+target_sha256 = "cb9859306e45cafbc6b1776df87129420c57ce4caeb0f8361cdb28818377597f"
+evidence = "Combat-hero renderer accepts limits and r10 flipped flag without the creature color argument; calls computeExtent 0xa81c0 and sprite draw 0x8a818 with fixed zero color. Body bounded by prior BLR and terminal BLR at code0+0xa71e8; next entry 0xa71ec."
+
+[[functions]]
+retail_va = 0x4953b0
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa71ec
+mac_size = 0x1f8
+target_sha256 = "7949c6803a8806bd3bf36fc8778f3dfefb73c8c4669b1d10278e70c57a2d5b2b"
+evidence = "Spell-effect renderer computes clipped extent from sprite width/height and x/y, handles limit/biggest extent, calls CSprite spell-effect drawing target 0x8af98. Body bounded by prior BLR and terminal BLR at code0+0xa73e0; next entry 0xa73e4."
+
+[[functions]]
+retail_va = 0x495500
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa73e4
+mac_size = 0x1f4
+target_sha256 = "41d9e00df288d4178d9bca332b2a8d687526b7a07d38ef03f71edde683a2abdd"
+evidence = "Sprite-object renderer computes clipped extent from sprite width/height and x/y, handles limit/biggest extent, calls ordinary CSprite draw target 0x8a76c. Body bounded by prior BLR and terminal BLR at code0+0xa75d4; next entry 0xa75d8."
+
+[[functions]]
+retail_va = 0x495650
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa75d8
+mac_size = 0x14c
+target_sha256 = "c8e4061787ef61fb5114b93fe8f87dc208035006fcd7704d95375022024f297a"
+evidence = "Reads combatWindow subwindow array; six repeated visible tests and six draw calls to 0x19ba74 cover two hero and four creature panels. Body bounded by prior BLR and terminal BLR at code0+0xa7720; next entry 0xa7724."
+
+[[functions]]
+retail_va = 0x495730
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa7724
+mac_size = 0x9c
+target_sha256 = "3b5101316d91ef0ed899231712a24114e3a06c11535c4a9d8f06e39179c73c71"
+evidence = "Takes hexcell reference, loads obstacle index +0x14 and obstacle sprite, computes row-based y offset 42, calls drawSpriteObject 0xa73e4. Body bounded by prior BLR and terminal BLR at code0+0xa77bc; next entry 0xa77c0."
+
+[[functions]]
+retail_va = 0x4957b0
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa77c0
+mac_size = 0x1bc
+target_sha256 = "93eaa0bef32459a03f53142942f94b8aeda2875deec24dd034d60bf71438c264"
+evidence = "Bitmap wall renderer clips source/destination rectangle to combat draw bounds, handles extent-only/limit modes and calls Bitmap816 draw 0x5df50. Body bounded by prior BLR and terminal BLR at code0+0xa7978; next entry 0xa797c."
+
+[[functions]]
+retail_va = 0x4958e0
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa797c
+mac_size = 0x1b0
+target_sha256 = "8a98ae8787bf8ca04ea4e2988e5c869bfdcf47e3de3a7d43caea708d87839833"
+evidence = "Bitmap object renderer takes image and x/y, clips image width/height to combat draw bounds, handles extent-only/limit modes and calls Bitmap816 draw 0x5df50. Body bounded by prior BLR and terminal BLR at code0+0xa7b28; next entry 0xa7b2c."
+
+[[functions]]
+retail_va = 0x495a10
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa7b2c
+mac_size = 0x28c
+target_sha256 = "3b5b51ab88b0bcc9ba147ea51e62415518929153cd74ad735993bf9f7bbe93e7"
+evidence = "Moat overlay takes cell index, computes hexcell stride 0x70 and moat trait image/rectangle, clips to 43x6 cell strip and calls Bitmap816 draw 0x5df50. Body bounded by prior BLR and terminal BLR at code0+0xa7db4; next entry 0xa7db8."
+
+[[functions]]
+retail_va = 0x495bf0
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa7db8
+mac_size = 0x408
+target_sha256 = "979fb012cd563d8954fe79a1680d342d9e3a871cb47be44f88db7db284b38023"
+evidence = "Max-extent computation traverses side/army effect rows, hero and flag sprites, obstacles and archers; calls computeExtent 0xa81c0 three times and archer renderer 0xa6cfc. Body bounded by prior BLR and terminal BLR at code0+0xa81bc; next entry 0xa81c0."
+
+[[functions]]
+retail_va = 0x495f50
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa81c0
+mac_size = 0x1e8
+target_sha256 = "3b6c0022292ab2ea0c6c2c12aa3a1e38c8ac2805900cd64d6d9e89c8c389c9b1"
+evidence = "Extent calculator uses sprite crop width/height fields and flip flag to derive four bounds then clips and optionally includes drawbridge extent; direct PPC field math is leaf without calls, matching source helper. Body bounded by prior BLR and terminal BLR at code0+0xa83a4; next entry 0xa83a8."
+
+[[functions]]
+retail_va = 0x4960d0
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa83a8
+mac_size = 0x8ec
+target_sha256 = "1a1809b4f28cb5e4fc4bdf30948bf022e47fbe78b88e79187628fc004d93e6b6"
+evidence = "Combat screen cycle begins with resetLimitCreature 0xa4e6c, advances flag/hero/obstacle/archer effect frames, calls computeMaxExtent 0xa7db8 and drawFrame 0xa5f6c near end. Body bounded by prior BLR and terminal BLR at code0+0xa8c90; next entry 0xa8c94."
+
+[[functions]]
+retail_va = 0x496840
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa8c94
+mac_size = 0x29c
+target_sha256 = "a4d8df66974603fcfbb8d3702bc9e8f4e44392881968330173b8e2f64ac4a92e"
+evidence = "Spell effect overload takes army pointer in r5; checks effect index <83 and targetArmy frame state, updates target army showPowEffect, repeatedly calls drawFrame 0xa5f6c for wince and spell frames. Body bounded by prior BLR and terminal BLR at code0+0xa8f2c; next entry 0xa8f30."
+
+[[functions]]
+retail_va = 0x496a10
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa8f30
+mac_size = 0x278
+target_sha256 = "31ce8ddef56da4712b982f3b6e90ed03640f5010a2604793c5fdf666e5b3b656"
+evidence = "Spell effect overload takes hex index in r5; checks effect index <83, computes x/y from cell by 0x70 stride and placement flags, draws effect 0x8af98, updates combat area 0xa4ef0 and calls drawFrame 0xa5f6c. Body bounded by prior BLR and terminal BLR at code0+0xa91a4; next entry 0xa91a8."
+
+[[helpers]]
+source_helper = "combatManager::drawObstacleAt"
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa66c4
+mac_size = 0xb4
+target_sha256 = "98c11dc3f735fa75019b819b1d21180ace9fab1be053f1dda3a57d7fc65514fc"
+evidence = "Unique canonical source helper in drawing.cpp: scales hex index by 0x70, tests obstacleOrigin and visibility/owner/local-side flags, then calls drawObstacle 0xa7724. Mac body terminal BLR at 0xa6774, next prologue at 0xa6778."
+
+[[helpers]]
+source_helper = "combatManager::drawDeadOccupants"
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa6ae4
+mac_size = 0x84
+target_sha256 = "96fd0b2e3a0f87a3e478ac962833aad5aec0732ee55559e74e6b6f991fe1808f"
+evidence = "Unique canonical source helper in drawing.cpp: cell stride 0x70, loops bodiesInHex at +0x1c, gets dead army 0x108238, compares facing against per-body byte +0x3c and calls army::drawToBuffer 0x49ed4. Mac body terminal BLR at 0xa6b64, next prologue at 0xa6b68."

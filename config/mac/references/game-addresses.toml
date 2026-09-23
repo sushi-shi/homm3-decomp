@@ -1,0 +1,1549 @@
+# Reviewed TU-order address discoveries. No compiler symbol or byte-match verdict is claimed.
+[[functions]]
+retail_va = 0x004b9070
+unit = "game"
+mac_section = 0
+mac_offset = 0xcb1f0
+mac_size = 0x118
+target_sha256 = "86f63e74d38da2ef5185cfffd3692f2d98bfe41a7068724423b4a80cfd98f48b"
+evidence = "After calculateProduction; signed count, sign-vector at +0x4d03c, stride eight, loadString then hasText byte via read slot 0xc. Reviewed extent code0+0xcb1f0..0xcb308; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b9270
+unit = "game"
+mac_section = 0
+mac_offset = 0xcb308
+mac_size = 0xfc
+target_sha256 = "7abb6594a5518676585e265fb538cf227bc5ab70a77cb51b896032a19c439a58"
+evidence = "Same sign vector/stride as preceding reader; saveString 0xced3c and write slot 0x10; next entry is admitted loadMinePool. Reviewed extent code0+0xcb308..0xcb404; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b9580
+unit = "game"
+mac_section = 0
+mac_offset = 0xcb6a8
+mac_size = 0x214
+target_sha256 = "1c8e76e8e37bd1af8b18abed92340a237a116351ea4c3fbde92a1ca7a3081679"
+evidence = "Immediately after admitted loadMinePool; same mine vector +0x4d048, stride0x40, owner/type/abandoned, army save0x57f30, coordinates+0x3c..3e via write slot0x10. Reviewed extent code0+0xcb6a8..0xcb8bc; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b96f0
+unit = "game"
+mac_section = 0
+mac_offset = 0xcb8bc
+mac_size = 0x1f8
+target_sha256 = "8d4ac2dd2074f68bb3b0b94da8be36cf4ef80b7220a7a431825e283c524135a9"
+evidence = "Garrison vector+0x4d060; stride0x40; army load0x57fc0; coordinates+0x3d..3f; save-version28 and g_inCampaign determine removable troops. Reviewed extent code0+0xcb8bc..0xcbab4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b98c0
+unit = "game"
+mac_section = 0
+mac_offset = 0xcbab4
+mac_size = 0x1c8
+target_sha256 = "707f84478043b694a5932511001696ad5e89613640e203a4e91c53c383b5c00f"
+evidence = "Same garrison vector/stride as reader; army save0x57f30, owner/coordinates and trailing removable flag through write slot0x10. Reviewed extent code0+0xcbab4..0xcbc7c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b9a00
+unit = "game"
+mac_section = 0
+mac_offset = 0xcbc7c
+mac_size = 0x28c
+target_sha256 = "1eeeee7dd4422ea252e9d067c7f099853278079d4781d653df02b7dabce3acf4"
+evidence = "Boat vector+0x4d06c resized at0xe7400; stride0x28; seven scalar field reads including occupying-hero halfword; retained obscuring-object load0xf22e0. Reviewed extent code0+0xcbc7c..0xcbf08; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b9c40
+unit = "game"
+mac_section = 0
+mac_offset = 0xcbf08
+mac_size = 0x260
+target_sha256 = "5969c66dbef611876625ae7334ee531f32a868ab8558df4559d7b47159ca902e"
+evidence = "Boat vector+0x4d06c stride0x28; inverse writer of preceding reader including occupying-hero halfword and obscuring-object save0xf26e8. Reviewed extent code0+0xcbf08..0xcc168; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::loadObeliskPool"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc168
+mac_size = 0x9c
+target_sha256 = "9578214627c218ee8259db6bbe25329a0239fd4bc40fbf00be4a9002d071e50d"
+evidence = "Two read-slot0xc calls: one byte to obelisk count+0x4d090 and48 flag bytes at+0x4d091. Ordinary helper expanded in Windows. Reviewed extent code0+0xcc168..0xcc204; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::saveObeliskPool"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc204
+mac_size = 0x9c
+target_sha256 = "c5fb4edf360fbf61b7dcfa7aa366d88c086f4f89749b2abe350fc50e56cab01d"
+evidence = "Two write-slot0x10 calls for obelisk count and48 flags at the exact preceding reader offsets. Ordinary helper expanded in Windows. Reviewed extent code0+0xcc204..0xcc2a0; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b9df0
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc2a0
+mac_size = 0x5c
+target_sha256 = "a0332f9fec91e426333cc4b7867c6fed18adbb42274df8acd321ce7bfe5e7c6a"
+evidence = "Empty authored constructor emits shipyard vector construction at+0x8c and bitset12 initialization at+0xe4; returns this before adjacent generated destructor. Reviewed extent code0+0xcc2a0..0xcc2fc; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b9e20
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc360
+mac_size = 0x10c
+target_sha256 = "a78c0f5c91978c45867c23f350aaa978d2fe27a441230c2f9e1ef731b17b9c94"
+evidence = "Clears player state, initializes recruits at+0x28/+0x2c to-1, puzzle packed coords at+0x39..3c; clears AI0x74 bytes,72 town IDs; calls clearNetInfo0xcc72c. Reviewed extent code0+0xcc360..0xcc46c; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "playerData::setName"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc6b8
+mac_size = 0x28
+target_sha256 = "6aae9760257d84274bb4828b81086a6609ea832ebcebe3ab543db2f14d6aae22"
+evidence = "Calls strncpy0x28e250 with destination this+0xc8 and limit20; called by adjacent assignNetInfo. Reviewed extent code0+0xcc6b8..0xcc6e0; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ba130
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc6e0
+mac_size = 0x4c
+target_sha256 = "ed7389d6e1ffb5af82b1cf17f68af07b02c5af55fca98da5e27f6849b3e96a02"
+evidence = "Calls setName0xcc6b8 with CNetPlayerInfo name; then copies dpid and sets isHuman. Reviewed extent code0+0xcc6e0..0xcc72c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ba170
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc72c
+mac_size = 0x5c
+target_sha256 = "13f7ed74cdaf1106619c2857fa9d5f1659099f919b16e54fd3a2f59174bd10d0"
+evidence = "Looks up default-name text index0x1d5, strcpy to this+0xc8 and clears dpid/isHuman/isLocal. Reviewed extent code0+0xcc72c..0xcc788; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ba1c0
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc788
+mac_size = 0x78
+target_sha256 = "6c012ca52b9bf27952313918cced260e753a19b741d8b74deec012d9c7a22749"
+evidence = "One-byte read; sentinel255->-1; equality test mapVersion14 remaps hero128/129. Reviewed extent code0+0xcc788..0xcc800; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ba210
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc800
+mac_size = 0x78
+target_sha256 = "bce7a8ebd1c9176a95612c9c3ccfb0fcba382a52e0d9a683f3eeb74061fe4ad6"
+evidence = "One-byte read; sentinel255->-1; saveVersion<25 remaps hero128/129; distinct from preceding equality-to14 reader. Reviewed extent code0+0xcc800..0xcc878; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ba260
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc8ec
+mac_size = 0x490
+target_sha256 = "99d1eedd9ebbf0a933c762ca1e008d960b45b622daf87869c89f03258979400b"
+evidence = "Reads player fields in source order, calls loadHeroId0xcc800, loops8 heroes/72 towns/7resources and handles version37 bitset12 tail. Reviewed extent code0+0xcc8ec..0xccd7c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ba670
+unit = "game"
+mac_section = 0
+mac_offset = 0xccd7c
+mac_size = 0x4fc
+target_sha256 = "af9ec14f2fd0dbdd44654666f8d9846fd7f7ce11d55e91a75042f1f8726b63b6"
+evidence = "Inverse slot0x10 writer of player fields with8/72/7 loops; bitset12 test at0xe9bcc and trailing2bytes. Reviewed extent code0+0xccd7c..0xcd278; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::loadPlayerData"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd278
+mac_size = 0x80
+target_sha256 = "73898b2150cf486082b1b8f2d57cc5a209f798580e655f6ca08cf66fd6d7eff0"
+evidence = "Eight calls to playerData::load0xcc8ec with saveVersion, returns first negative result. Reviewed extent code0+0xcd278..0xcd2f8; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::savePlayerData"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd2f8
+mac_size = 0x70
+target_sha256 = "0ac17e61270629c3c410cdc982e0cc57b105ff3a4e10a1534e95b957de8eb829"
+evidence = "Eight calls to playerData::save0xccd7c, returns first negative result. Reviewed extent code0+0xcd2f8..0xcd368; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::loadTownPool"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd368
+mac_size = 0xb4
+target_sha256 = "c7d1b5e26f4a93a36a537cfabbaf0bf60cf9216a774c1f2bb72ae5ea33ce5d9d"
+evidence = "Reads byte town count, resizes vector at0xe82c0, loops town records stride0x15c calling load0x1b1c9c with version. Reviewed extent code0+0xcd368..0xcd41c; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::saveTownPool"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd41c
+mac_size = 0xb8
+target_sha256 = "2bd8ca7addcfb28e59cc02e45f0beafd27f81e76081c2f0e8c8c481fad6790d0"
+evidence = "Writes byte town count and loops same stride0x15c vector calling save0x1b2290. Reviewed extent code0+0xcd41c..0xcd4d4; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::saveHeroPool"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd4d4
+mac_size = 0x70
+target_sha256 = "db01a1212d197c1f500b2a5654e844babe2956f3fc486a49712914d898261045"
+evidence = "Loops156 hero records stride0x486 calling hero save0xf34b8, returns first error. Reviewed extent code0+0xcd4d4..0xcd544; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::loadHeroPool"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd544
+mac_size = 0x7c
+target_sha256 = "53620b16c9efeb337b8141d7b9180ecf58cb996b3b042960f39edaa2b9691c90"
+evidence = "Version25 selects128 versus156 hero records; stride0x486 loop calls hero load0xf2ab4 with version. Reviewed extent code0+0xcd544..0xcd5c0; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ba9e0
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd5c0
+mac_size = 0x44
+target_sha256 = "46f55e6d55f4be544c8ec9a952289bcaf0c0f015652aaaa6aabaa65074490301"
+evidence = "Rejects id-1, scans signed numHeroes at+1 and int hero IDs at+4, returns matching index or-1. Reviewed extent code0+0xcd5c0..0xcd604; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004baa10
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd604
+mac_size = 0x48
+target_sha256 = "d3d745531cec9fbf922b8fd28c0101d34b82eba513863a2a20535d2f15edfe01"
+evidence = "Rejects id-1, scans signed numTowns+0x3e and byte town IDs+0x40, returns matching index or-1. Reviewed extent code0+0xcd604..0xcd64c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004baa40
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd64c
+mac_size = 0x128
+target_sha256 = "cd6eb9aa1f32c655a0a4d069604bed1f19ae887d2e3f8f1c2fb9bf0871fb73ae"
+evidence = "Calls findHero0xcd5c0 then two wraparound roster loops with hero isMobile0x106e6c and sleeping-byte check. Reviewed extent code0+0xcd64c..0xcd774; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bab40
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd774
+mac_size = 0x94
+target_sha256 = "3033ca1623f48ff594d0c36165a2ebe349685cf0aae10a2719a60faf9347c791"
+evidence = "Signed numTowns+0x3e; current-player townId+0x3f; first-town shortcut and modulo successor through byte IDs+0x40. Reviewed extent code0+0xcd774..0xcd808; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bab90
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd808
+mac_size = 0x2c
+target_sha256 = "65a97a0133f427cf356693a94c92343415bc1e710a6101096fde63fe6b85d770"
+evidence = "Calls nextHero0xcd64c and converts result!=-1 to bool. Reviewed extent code0+0xcd808..0xcd834; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004baba0
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd834
+mac_size = 0x128
+target_sha256 = "5bdbdf11f780399da81a809aafa3a0e3d52c80cc63de105cf1292414b5e50580"
+evidence = "Counts player-bit hits in48 flags at g_game+0x4d091; eight unrolled steps repeated6times; setupPuzzlePieces calls it three times. Reviewed extent code0+0xcd834..0xcd95c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004babd0
+unit = "game"
+mac_section = 0
+mac_offset = 0xcd95c
+mac_size = 0x120
+target_sha256 = "c40987ec233ca8d28d149cf45596f154401211c80214381c5003f15f5cb0f7be"
+evidence = "Scans player heroes then garrison heroes in owned towns; hero stride0x486, town stride0x15c,19 equipped stride8 records compared to artifact argument. Reviewed extent code0+0xcd95c..0xcda7c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bada0
+unit = "game"
+mac_section = 0
+mac_offset = 0xcdbf0
+mac_size = 0x18
+target_sha256 = "e0a00700393304c7afa02a83aabd3bf9d561e6e5e8306fba578b89e96084e589"
+evidence = "Converts unsigned byte this+0xde to bool; used by adjacent isLocalHuman/getName. Reviewed extent code0+0xcdbf0..0xcdc08; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004badb0
+unit = "game"
+mac_section = 0
+mac_offset = 0xcdc08
+mac_size = 0xd0
+target_sha256 = "518e04660f8b05f9114a1cb1c856db2476af2b0d1762e465cf7b3ca032d500e4"
+evidence = "Calls isHuman, case-insensitive default-name comparisons, color-name copy via g_colors, uppercase-table conversion of first name byte at+0xc8. Reviewed extent code0+0xcdc08..0xcdcd8; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bae50
+unit = "game"
+mac_section = 0
+mac_offset = 0xcdcd8
+mac_size = 0x38
+target_sha256 = "b212d47d0f93d9ff73e43e53182a2ee62287e26e62bf8262df36bec4d404cab3"
+evidence = "Calls aiAttemptPuzzleGuess0x1489fc with result buffer and player argument; stores returned packed point at this+0x39. Reviewed extent code0+0xcdcd8..0xcdd10; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bae70
+unit = "game"
+mac_section = 0
+mac_offset = 0xcdd10
+mac_size = 0x54
+target_sha256 = "bf1fb477d41c3221f82169582b0fb1a6710ef308fa268f849bfb22e3696547df"
+evidence = "Counts owner/type matches in mine vector at+0x4d048, stride0x40 and bytes+0/+1. Reviewed extent code0+0xcdd10..0xcdd64; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004baed0
+unit = "game"
+mac_section = 0
+mac_offset = 0xcdd64
+mac_size = 0x3c
+target_sha256 = "e97e785264179df603342fba1adb69c277226bfd48a955bd15f0acb3de14aa5e"
+evidence = "Indexes g_game players with stride0x15c and base+0x1ff48; forwards player index to guessGrailLocation0xcdcd8. Reviewed extent code0+0xcdd64..0xcdda0; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004baf00
+unit = "game"
+mac_section = 0
+mac_offset = 0xcdda0
+mac_size = 0x220
+target_sha256 = "744df1e280b641daa2feb764d2f0c8830b978c87e523e82deee98f4e4af36947"
+evidence = "Three calls to getNumObelisks0xcd834,48-piece cap, quadratic float fraction; seeded random and bitset48 reset/test/set tail. Reviewed extent code0+0xcdda0..0xcdfc0; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bb160
+unit = "game"
+mac_section = 0
+mac_offset = 0xcdfc0
+mac_size = 0xc
+target_sha256 = "c438689bed57dd81c1e6430fe6ee4bfac762b760eeaf4cb26ddede540c775659"
+evidence = "Leaf returns this+worldMap using addis/addi; adjacent to independently identified setupPuzzlePieces/getNewBoatId. Reviewed extent code0+0xcdfc0..0xcdfcc; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bb170
+unit = "game"
+mac_section = 0
+mac_offset = 0xcdfcc
+mac_size = 0xa4
+target_sha256 = "4f6b983db48471dbff77a1b9a732afed96ea31c7d1c208e83247c2e678adb326"
+evidence = "Scans allocated-byte in boat vector stride0x28, maximum64; constructs/pushes new boat then returns size-1 or-1. Reviewed extent code0+0xcdfcc..0xce070; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bb250
+unit = "game"
+mac_section = 0
+mac_offset = 0xce070
+mac_size = 0x158
+target_sha256 = "57ce9ba694e3ce11184a8377782ce359be5c994a35e9813dcbd4d6d6a9dad28c"
+evidence = "Calls getNewBoatId0xcdfcc, network show-boat path, initializes obscuring payload0xf22a4, fills id/owner/facing/coordinates and calls obscureCell0xf2474. Reviewed extent code0+0xce070..0xce1c8; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bb400
+unit = "game"
+mac_section = 0
+mac_offset = 0xce1c8
+mac_size = 0x1d0
+target_sha256 = "eb5b88329a0571e7dff94596175ef9445ddeb8fbb45c2175fc3af2957104d403"
+evidence = "Town-alignment switch selects class pair; scans156 heroes and pool bitset8 availability, falls back to unrestricted class scan and random(1,count)-1. Next body is admitted getNewHeroId. Reviewed extent code0+0xce1c8..0xce398; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::getMineId"
+unit = "game"
+mac_section = 0
+mac_offset = 0xceb80
+mac_size = 0x5c
+target_sha256 = "8b594d7558e01960106dfa4a21601727f9d02a14d5070e654ccc86d6c315f639"
+evidence = "Mine vector+0x4d048, stride0x40, coordinate bytes+0x3c/+0x3d/+0x3e; same x/y/z argument checks as source. Reviewed extent code0+0xceb80..0xcebdc; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bb900
+unit = "game"
+mac_section = 0
+mac_offset = 0xcebdc
+mac_size = 0x5c
+target_sha256 = "6771673ce060d7aed22e0153aa80a404d67b8231329b2693399bcc3fdd45bb93"
+evidence = "Generator vector+0x4d054, stride0x5c, coordinate bytes+0x54/+0x55/+0x56; returns index or-1. Reviewed extent code0+0xcebdc..0xcec38; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bb990
+unit = "game"
+mac_section = 0
+mac_offset = 0xcec38
+mac_size = 0x104
+target_sha256 = "48d3fdbcf1e52da28bc3df70192ecfab10cc9cb1fd6678905bfe392d64a0884b"
+evidence = "Two-byte length read and positive-length allocation/read/string assign/delete; empty-string erase path. Called by paired sign reader and following rumour reader. Reviewed extent code0+0xcec38..0xced3c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bbb60
+unit = "game"
+mac_section = 0
+mac_offset = 0xced3c
+mac_size = 0xf0
+target_sha256 = "78684cdd42b51a26aeb973e0b29e228fc416818291a442036779daac0f990106"
+evidence = "Writes halfword string length, allocates/zeroes length+1, strcpy then writes length payload and deletes buffer; paired with preceding loadString. Reviewed extent code0+0xced3c..0xcee2c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bbc20
+unit = "game"
+mac_section = 0
+mac_offset = 0xcee2c
+mac_size = 0x194
+target_sha256 = "37ca95720abe1ca10228ca454357a055e1532e0af4670e72fbd279fad6f8bc8b"
+evidence = "Constructs currentRumour string, calls saveString, writes rumour state/count then loops per-text saveString and availability byte; all paths destroy temporary. Reviewed extent code0+0xcee2c..0xcefc0; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bbe40
+unit = "game"
+mac_section = 0
+mac_offset = 0xcefc0
+mac_size = 0x1b8
+target_sha256 = "52a078405ebdc7c8503fe2fb311e3b8ed0f64f309128892e0aca006e6a3adfd6"
+evidence = "Constructs empty string, calls loadString then strcpy to current rumour, reads state/count, resizes rumour vector and loops strings plus availability flag. Reviewed extent code0+0xcefc0..0xcf178; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "type_creature_bank::load"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcf2f0
+mac_size = 0xf0
+target_sha256 = "9e07aa62fe73ccac533f1bad8f9905ff7cc5df99682cd440d98500c7fdac0649"
+evidence = "Reads guards0x38 bytes/resources0x1c/reward creature4/reward count4 then invokes artifact-vector loader0xe75ec. Reviewed extent code0+0xcf2f0..0xcf3e0; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "type_creature_bank::save"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcf3e0
+mac_size = 0xb0
+target_sha256 = "1da9751d94e7e9105f183fcc91d34160a3368e6fe62f4c15cd953d3099954ab2"
+evidence = "Writes same four fixed bands as preceding loader without guards on each return then invokes artifact-vector writer0xe7860. Reviewed extent code0+0xcf3e0..0xcf490; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c9dd0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe1030
+mac_size = 0x3c0
+target_sha256 = "920607577ec4ec6620d17250124063e2942e64ffe11e502974ce66afa49e6a9f"
+evidence = "After admitted convertObject; map-cell stride0x22, random monster/artifact/resource switch, calls getRandomMonster0xdfed4/getRandomArtifactId0xe0278 and convertObject0xe0be8 in every corresponding arm. Reviewed extent code0+0xe1030..0xe13f0; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ca040
+unit = "game"
+mac_section = 0
+mac_offset = 0xe13f0
+mac_size = 0x1dc
+target_sha256 = "8d6410ce6f25ebd3b5469c5db3c80890fe68a1885daefc22209f6f107fbceae8"
+evidence = "Eight player-slots, getTownId0xceb24, two getStartingHeroId0xce1c8 calls, town placement/spells and campaign8/scenario3 bonus via getExperience0xf6290 and giveExperience0x104098. Reviewed extent code0+0xe13f0..0xe15cc; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ca240
+unit = "game"
+mac_section = 0
+mac_offset = 0xe15cc
+mac_size = 0x1bc
+target_sha256 = "ebcbe549d2ad9aae251c3b7b2745fd34c898b238b859703c3346be63a18a2751"
+evidence = "Player0..7 validation, team-bitmask construction, map dimensions and0x22-byte cells; terrain bit tests update halfword visibility via getMapExtraPtr0x119764. Reviewed extent code0+0xe15cc..0xe1788; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ca3b0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe1788
+mac_size = 0x50
+target_sha256 = "e4e6d1d22c7692fa66b54d5911e4ac2a34945ae68b63323c633d45f37775d234"
+evidence = "Seven army slots; positive troop counts multiplied by creature hitpoints at trait stride0x74 offset0x4c; adds500 for nonnull hero. Reviewed extent code0+0xe1788..0xe17d8; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ca410
+unit = "game"
+mac_section = 0
+mac_offset = 0xe17d8
+mac_size = 0x138
+target_sha256 = "ca7b8e7e5ba204fd62a0cd5cd78b72c61df55c821a954a199af4d7c99680f326"
+evidence = "Packed excluded point255/255/255, nested map loops, findAdjacentMonster0x1aed0 and getMapExtraPtr0x119764; sets or clears0x100 halfword flag. Reviewed extent code0+0xe17d8..0xe1910; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ca530
+unit = "game"
+mac_section = 0
+mac_offset = 0xe19d4
+mac_size = 0x50
+target_sha256 = "653577a3a003dfc5a8a4c7c7fcd2678d16aec8480f8c3700308f6adf0b5142e8"
+evidence = "Sets complete-draw flag, calls updateRadar with1/1/0/0/0 then shared four-widget enabling helper0xe1910. Reviewed extent code0+0xe19d4..0xe1a24; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ca5b0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe1a24
+mac_size = 0x1d8
+target_sha256 = "9971289045c3e50d7d4575e7c1d96bee594c6e3deca4d8e67455c78e452d019c"
+evidence = "Disables widgets through helper0xe1910, player isHuman/isLocalHuman checks, blackout redraw/locator/resource update sequence, ends with conditional showHeroesLogo0xe1bfc. Reviewed extent code0+0xe1a24..0xe1bfc; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ca780
+unit = "game"
+mac_section = 0
+mac_offset = 0xe1bfc
+mac_size = 0x100
+target_sha256 = "6c085c6326de036ae5f8daaa11cc604d7bd6a9c036215074b40558ea61c491f2"
+evidence = "Remote popup/heroLogoShowing early exits, bitmap acquisition0x152df8, radar geometry draw/update and virtual release. Reviewed extent code0+0xe1bfc..0xe1cfc; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ca840
+unit = "game"
+mac_section = 0
+mac_offset = 0xe1cfc
+mac_size = 0x21c
+target_sha256 = "00f570620ee9bb2947456c2359f7390ebc1817898d406613e40da975cb00b3c3"
+evidence = "Local human/bottom view selection; stop sound/load sample, full redraw and locator/resource reset; showHeroesLogo0xe1bfc, normalDialog0x117f10 and wait sample closeout. Reviewed extent code0+0xe1cfc..0xe1f18; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "getRandomTownName"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe1f18
+mac_size = 0x80
+target_sha256 = "3bd9659a1d06b0c2a4173dc3a1ccc736daef377f479379c34b27933e68a9aadc"
+evidence = "Twenty-byte no-repeat sampler per faction; pick0x1315f0 and random0..8 retries; indexes sixteen string pointers per faction. Reviewed extent code0+0xe1f18..0xe1f98; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "resetRandomTownNames"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe1f98
+mac_size = 0x8c
+target_sha256 = "2a52df63d7d7e3be818cf4a33a1533acce9040346355025c2e6b28178d2386cd"
+evidence = "Resets nine20-byte faction samplers in a loop; immediately precedes caller processOnMapTowns. Reviewed extent code0+0xe1f98..0xe2024; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004caa70
+unit = "game"
+mac_section = 0
+mac_offset = 0xe2024
+mac_size = 0x1bc
+target_sha256 = "5398cd3ac35106786237f9fc5e92f82096bb21d91d50c363e4d07530ef285e66"
+evidence = "Calls resetRandomTownNames, resizes town vector, scans map types98/77; transfers TownExtra strings, random town names and special-building setup; convertObject calls corroborate. Reviewed extent code0+0xe2024..0xe21e0; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cae10
+unit = "game"
+mac_section = 0
+mac_offset = 0xe21e0
+mac_size = 0x230
+target_sha256 = "8e0d837c12d027a8bc358def718dd2604588004e31ab013f62b9afab470fc107"
+evidence = "Map types98/65, hero initializer0xf454c and obscuring0xf2474; sets visibility0xc2314; final156-hero loop initializes unplaced heroes. Reviewed extent code0+0xe21e0..0xe2410; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ce900
+unit = "game"
+mac_section = 0
+mac_offset = 0xe6ba0
+mac_size = 0x54
+target_sha256 = "e72da3abdfe05cd39626a21368531c5af071baeebc47b8a80daa0f8f5235ff11"
+evidence = "Boat vector stride0x28; allocated+0x18, occupyingHero+0x20 and occupied+0x24 checks; returns matching pointer or null. Reviewed extent code0+0xe6ba0..0xe6bf4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cea70
+unit = "game"
+mac_section = 0
+mac_offset = 0xe6d54
+mac_size = 0xe0
+target_sha256 = "cd4430f64062a7f8db18e908aeeeae362c15769fb1032b09ddbd5ff068bc8c1f"
+evidence = "Packed ultimate-artifact coordinates minus9/minus8; seed coefficients81901/67843/79451, two random(-2,2) calls0x1314b4. Reviewed extent code0+0xe6d54..0xe6e34; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cec20
+unit = "game"
+mac_section = 0
+mac_offset = 0xe6e7c
+mac_size = 0xe4
+target_sha256 = "3d1268ea56a09fa46bb7bfbeb7841813f0daa289889bda1f53263d63d5d6f9e1"
+evidence = "Eight unrolled dpid comparisons at player stride0x15c, returns matching index0..7 else-1. Reviewed extent code0+0xe6e7c..0xe6f60; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cec50
+unit = "game"
+mac_section = 0
+mac_offset = 0xe6f60
+mac_size = 0x64
+target_sha256 = "f0d8c436892a2b5723bc72c117b6bce8acd8c87e874b1c97ce0db58c29e8f87f"
+evidence = "Scans player indices after argument through7, calls game::isHuman0xe6bf4 and returns false on first human. Reviewed extent code0+0xe6f60..0xe6fc4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cec90
+unit = "game"
+mac_section = 0
+mac_offset = 0xe6fc4
+mac_size = 0x30
+target_sha256 = "ff202992974b25b7708d10479df9fd91687b4dfa6df3b391e58176d76b830ac2"
+evidence = "Returns bool of remote flag or network protocol3 (hotseat). Reviewed extent code0+0xe6fc4..0xe6ff4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cecb0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe7054
+mac_size = 0xc4
+target_sha256 = "d0ee6c071e45e60a6e0c82daf9b1dacb31fe4c95c20dc29f9be31f7e85405590"
+evidence = "Eight playerData::init calls0xcc360; clears setup flags, setupOrigData0xd47e4, initNewGame0x1323a0, timer and spellbook reset and tent-flags bzero. Reviewed extent code0+0xe7054..0xe7118; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cef10
+unit = "game"
+mac_section = 0
+mac_offset = 0xe7154
+mac_size = 0x78
+target_sha256 = "fb20cb0490acb568fdf2d35054446e4e4f61d2253c626cf89e1352d3f9bc3f76"
+evidence = "Reverse stride8 scan of identifier vector+0x4d410, copies matching packed point to return buffer; fallback sets all three packed coordinates to-1. Reviewed extent code0+0xe7154..0xe71cc; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cafd0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe2414
+mac_size = 0xd20
+target_sha256 = "262e95ac34c8340a00a05177219ac159c2e347882ad56dec2b4fdb3dee1b6144"
+evidence = "Outgoing network save path after processOnMapHeroes: saveGame0xd44fc, file compression/read, send-control/data loops with0x7e4 payload,30s timeout and header/player broadcasts. Following0xe3134 is cleanup destructor, not next gameplay function. Reviewed extent code0+0xe2414..0xe3134; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cbd40
+unit = "game"
+mac_section = 0
+mac_offset = 0xe31b0
+mac_size = 0xc0c
+target_sha256 = "1bff5a9924366e32b3003a07a623fb1666a2753f6488fe2eb65060788b031c5e"
+evidence = "Incoming network transfer,0x7e4 data blocks/30s timeout, file write and decompression; restores UI, then calls nextPlayer0xdd7dc. Follows transfer cleanup helper and precedes doNewTurn. Reviewed extent code0+0xe31b0..0xe3dbc; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cc7d0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe3dbc
+mac_size = 0x4f0
+target_sha256 = "e96e8ebd5e285af1f927470b22730d4a42d4148803b0d2a2834d1aa985032508"
+evidence = "Time/town event calls0xe50c8/0xe51d4, loss/victory checks and hero selection; new-week/month sample/message branches, sprintf and normalDialog0x117f10. Reviewed extent code0+0xe3dbc..0xe42ac; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ccdd0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe42ac
+mac_size = 0x40
+target_sha256 = "11e144c3d9649723ea2996ca9b354a63d846cb792bd518f73522204d16eb72bf"
+evidence = "Counts nonzero allocated byte+0x18 in boat vector stride0x28 at game+0x4d06c. Reviewed extent code0+0xe42ac..0xe42ec; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cce30
+unit = "game"
+mac_section = 0
+mac_offset = 0xe42ec
+mac_size = 0xc4
+target_sha256 = "416fdc91240c622e76964b0cb15339405963d7dd071706fc9b7342f6f8118b73"
+evidence = "Player stride0x15c; owned-town traversal; built64-bit masks for tavern5 and castle extra22, castle type0 special case. Reviewed extent code0+0xe42ec..0xe43b0; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ccef0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe43b0
+mac_size = 0x38
+target_sha256 = "1e7086ce46140d2ea6888a11d8963aeadb1d917d4b81bf0bee3ec0814daa5e87"
+evidence = "Stores width/height through independently mapped globals and calls searchArray close0xc4830. Reviewed extent code0+0xe43b0..0xe43e8; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::setMarketArtifacts"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe43e8
+mac_size = 0xa0
+target_sha256 = "d941feedbb6e91646d7ba979c3d6daec881b291024149d71854eb4cb2b4dc858"
+evidence = "Seven calls getRandomArtifactId0xe0278 with categories2,2,2,4,4,4,8; stores consecutive market array at+0x1eef4. Reviewed extent code0+0xe43e8..0xe4488; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::setSummoningGenerators"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe4488
+mac_size = 0xe4
+target_sha256 = "9dbafdeea932110e40f11ef5b54bf14801dd66443a696d3e8253025fddd2a069"
+evidence = "Eight active players and owned towns; dungeon type5 and building-mask check, then town setSummoningGenerator0x1b28ec. Reviewed extent code0+0xe4488..0xe456c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ccf20
+unit = "game"
+mac_section = 0
+mac_offset = 0xe456c
+mac_size = 0x1a4
+target_sha256 = "2ebcfce6780829596a17e17356ff93baea2fd14af932ebcc1352b89d4cb99825"
+evidence = "Counts available canned rumours, resets availability with bzero if exhausted; random choice, marks chosen entry and strcpy current rumour. Reviewed extent code0+0xe456c..0xe4710; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ccfb0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe4710
+mac_size = 0x12c
+target_sha256 = "1241c93ab7201fa44a391f11ffdeebba0d73791b95be530598b8ac26309dafd1"
+evidence = "Map rumour vector availability pass, fallback setCannedRumour0xe456c, random choice and strcpy selected MSL string. Reviewed extent code0+0xe4710..0xe483c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cd170
+unit = "game"
+mac_section = 0
+mac_offset = 0xe483c
+mac_size = 0x4fc
+target_sha256 = "9ed4b0e8dc67a6947351034926d165d416fa7624a6b35e18f610ad00e17af260"
+evidence = "Random branch thresholds80/50, thieves-guild score inquiries, player-name/sprintf variants and grail-location direction/terrain text paths; fallback canned rumour. Reviewed extent code0+0xe483c..0xe4d38; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::setupNewRumour"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe4d38
+mac_size = 0x64
+target_sha256 = "58d7b86d34628b20a771c5deb6533684d80f29f431553bbfd465417f016726ea"
+evidence = "random1..100, thresholds33/66 select canned0xe456c/map0xe4710/special0xe483c. Reviewed extent code0+0xe4d38..0xe4d9c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cd710
+unit = "game"
+mac_section = 0
+mac_offset = 0xe4d9c
+mac_size = 0x2a8
+target_sha256 = "f5c820c17fa031002765f107275df84bc60b5bbe7fb1954da088579126c238db"
+evidence = "Seven resource adjustment records and dialog vector helpers; local-human dialog, campaign day36/campaign8/map condition halves town population. Reviewed extent code0+0xe4d9c..0xe5044; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::giveTownEventReward"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe5044
+mac_size = 0x84
+target_sha256 = "4ce2c923d232a3a82facc0134ce194899ae25a279e2a7eb767d96c929088f94e"
+evidence = "Selects town by event town index, checks local owner, calls giveTimeEventReward0xe4d9c then town giveEventReward0x1b5b90. Reviewed extent code0+0xe5044..0xe50c8; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cd910
+unit = "game"
+mac_section = 0
+mac_offset = 0xe50c8
+mac_size = 0x10c
+target_sha256 = "d13dbe8f520b841d9dd81a37ecfcc1404711f6b5db0a80502b9d6b92af7367ff"
+evidence = "Computes day((month*4+week-5)*7+day), loops timed events, human/computer/player-mask filters, first-day/repeat modulo cases both call0xe4d9c. Reviewed extent code0+0xe50c8..0xe51d4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cda10
+unit = "game"
+mac_section = 0
+mac_offset = 0xe51d4
+mac_size = 0x10c
+target_sha256 = "396ded9a5dd034dc91ae8576d7b60483ba676fa2b3973942cef488a47a7e46d9"
+evidence = "Same date/filter recurrence as timed-event predecessor but town-event vector and two calls to giveTownEventReward0xe5044. Reviewed extent code0+0xe51d4..0xe52e0; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cdb80
+unit = "game"
+mac_section = 0
+mac_offset = 0xe52e0
+mac_size = 0x2cc
+target_sha256 = "ffe7944345291bef99bd82c0eed1c2f6d29568a46780c57a0305000c6ca5a271"
+evidence = "Vector point filtering with exclusion, map stride0x22 and occupied hero stride0x486; selects viable destination with random0x130cf4; three adjacent wrappers fix domain. Reviewed extent code0+0xe52e0..0xe55ac; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cddc0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe55ac
+mac_size = 0x38
+target_sha256 = "079d2f419ebacd42d59fe0dde96a24d0316a270585dd73850e0735cbd1518837"
+evidence = "Color selects12-byte exit vector at+0x4d380, calls generic lith0xe52e0 with type44 and excluded-1. Reviewed extent code0+0xe55ac..0xe55e4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cddf0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe55e4
+mac_size = 0x3c
+target_sha256 = "781e23eb15ce606ebfd70206407403f9c62058efd1e3463dff3557bef6a323e2"
+evidence = "Color selects12-byte two-way vector+0x4d320, forwards excluded argument and type45 to0xe52e0. Reviewed extent code0+0xe55e4..0xe5620; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cde20
+unit = "game"
+mac_section = 0
+mac_offset = 0xe5620
+mac_size = 0x30
+target_sha256 = "4656ce4d9851452587d68c6cf16cf50d0e61045260be3792d1f88eb4f005d9c7"
+evidence = "Whirlpool vector+0x4d3e0, forwards excluded index and type111 to generic lith0xe52e0. Reviewed extent code0+0xe5620..0xe5650; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cde40
+unit = "game"
+mac_section = 0
+mac_offset = 0xe5650
+mac_size = 0x134
+target_sha256 = "59934d21095e9b91b78d79136214032731f143d60562894f5f9ee2d8897853b5"
+evidence = "Gate partner index from+0x4d400, point vector+0x4d3f4; negative returns sentinel; map cell validation accepts trigger hero34 or gate103. Reviewed extent code0+0xe5650..0xe5784; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004cdf20
+unit = "game"
+mac_section = 0
+mac_offset = 0xe5784
+mac_size = 0x97c
+target_sha256 = "30ed9a812bc4ee67211701e55187c2c58c3b77391e8de80390f86d4dac774df0"
+evidence = "Large constructor initializes map-header strings, NewfullMap0x11e880, hero/player arrays and all game vectors in layout order; ends with base game state setup. Compiler-generated container helpers follow. Reviewed extent code0+0xe5784..0xe6100; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004ce5b0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe67ac
+mac_size = 0x3f4
+target_sha256 = "321e3984b4972efd729b27755b4da724e210fe928091506846353cb922d9f888"
+evidence = "Destructor begins with clearEventRecords0xc2ae8 then reverse member destruction, NewfullMap0x11ef58, strings and arrays; optional operator delete flag tail is Mac destructor ABI, not Windows wrapper equivalence. Reviewed extent code0+0xe67ac..0xe6ba0; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b8410
+unit = "game"
+mac_section = 0
+mac_offset = 0xc9fa8
+mac_size = 0xa0
+target_sha256 = "90deea38b3aa2d5bd8637410b0c0dd9f1690d13641d26cce96fded0f14f94ddf"
+evidence = "Loads tavern text resource via0x153ad8; null check and256-entry loop copying text pointers; first game TU body before HeroExtra initialization. Reviewed extent code0+0xc9fa8..0xca048; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b8450
+unit = "game"
+mac_section = 0
+mac_offset = 0xca048
+mac_size = 0xd4
+target_sha256 = "68484c5e72b56893a6064d892e2e1c7e8b8709c6cd8575bbb9d98cb51856f669"
+evidence = "Stores owner/id and packed all-minus-one location, clears custom-data flags and replaces custom name string via MSL construction/assignment/destruction. Reviewed extent code0+0xca048..0xca11c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b8550
+unit = "game"
+mac_section = 0
+mac_offset = 0xca11c
+mac_size = 0x88
+target_sha256 = "57cfb6094e83f3e32f8b6bd3f9761cd03e3cb4e2951c52b3b297f8b339bcb916"
+evidence = "Initializes armyGroup, generator class/type/owner/coords/town=-1 and four creature slots=-1 with zero populations. Reviewed extent code0+0xca11c..0xca1a4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b85a0
+unit = "game"
+mac_section = 0
+mac_offset = 0xca1a4
+mac_size = 0x200
+target_sha256 = "7a180a251607d9f17fa3e40409f418639e2e1211a8915d0ec9e99969f2e37907"
+evidence = "File read-slot0xc, owner/class/type bytes, four creatureIDs with255 sentinel,8-byte population block, coordinates, armyGroup load0x57fc0 and town byte. Reviewed extent code0+0xca1a4..0xca3a4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b86e0
+unit = "game"
+mac_section = 0
+mac_offset = 0xca3a4
+mac_size = 0x188
+target_sha256 = "8154cf74c4b1e9a7efdc1cfbd6e923247f4a641eac7e405fcca7c130c57021b8"
+evidence = "Inverse writer of preceding generator reader through slot0x10; four creature IDs, populations, coordinates, armyGroup save0x57f30 and town byte. Reviewed extent code0+0xca3a4..0xca52c; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "generator::removeBonus"
+unit = "game"
+mac_section = 0
+mac_offset = 0xca52c
+mac_size = 0xf8
+target_sha256 = "b311d469df5d07b9ee0e9dcb070eec3574c607eeca14696ec278754c831806d0"
+evidence = "Owned-generator alignment/town traversal; changeGeneratorBonus0x1b56d8 receives-1 at0xca5f4. Reviewed extent code0+0xca52c..0xca624; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b87a0
+unit = "game"
+mac_section = 0
+mac_offset = 0xca624
+mac_size = 0xf8
+target_sha256 = "b999ff1a03eb8dce301f38cda9304a842b515fd71c8cc68049ce4ed92bafabcb"
+evidence = "Same town/creature alignment traversal as removeBonus but changeGeneratorBonus receives+1 at0xca6ec. Reviewed extent code0+0xca624..0xca71c; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "generator::setOwner"
+unit = "game"
+mac_section = 0
+mac_offset = 0xca71c
+mac_size = 0x5c
+target_sha256 = "14b8c52b9dd0cccb6a8570c3a11486f2bbefe8aa777b18ecac226b5a89ac6be2"
+evidence = "Owner unchanged fast exit; calls removeBonus0xca52c, stores owner byte+0x57, calls updateBonus0xca624. Reviewed extent code0+0xca71c..0xca778; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b8860
+unit = "game"
+mac_section = 0
+mac_offset = 0xca778
+mac_size = 0xf4
+target_sha256 = "f7d696a1e43b98093a6cc9d413c8338ba6998ddeab98f3e57fa4827980281b01"
+evidence = "Clears four creature/population slots and guard army; class17 chooses single versus four creature table, calls grow0xca86c and setOwner0xca71c. Reviewed extent code0+0xca778..0xca86c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004b8a60
+unit = "game"
+mac_section = 0
+mac_offset = 0xca86c
+mac_size = 0xa8
+target_sha256 = "c97b904adb3d820cbb35a3c17f21523245557d2f0524225f89f5049afe804d1d"
+evidence = "Initializes guard army then four valid creature slots; copies traits growth, level>=4 adds triple growth troops using army add0x585a4. Reviewed extent code0+0xca86c..0xca914; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "getDayBonus"
+unit = "game"
+mac_section = 0
+mac_offset = 0xca914
+mac_size = 0x64
+target_sha256 = "aaefc9991e587eb6d12a68fb855b9a4cc795b4b91622be4168db8a8e3e73f49e"
+evidence = "Signed divide/remainder by7, weekday/resource rotation and extra-unit remainder check; adjacent caller calculateProduction. Reviewed extent code0+0xca914..0xca978; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bcb30
+unit = "game"
+mac_section = 0
+mac_offset = 0xd02a8
+mac_size = 0x274
+target_sha256 = "87647aee77604fe5c33cc5f7c1fa5bca4fde26fdbe3a3f5ae40872e945af2e1a"
+evidence = "Clears eight shipyard vectors; scans mapcells0x22bytes, temporarily restores hero34/boat8 obscurers, shipyard87 owner/trigger filtering, pushes point then re-obscures. Reviewed extent code0+0xd02a8..0xd051c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bcda0
+unit = "game"
+mac_section = 0
+mac_offset = 0xd051c
+mac_size = 0x1eac
+target_sha256 = "209315dcea11886ee1dd0060b1597374a74d854f0552df925eadee6d4d037e8e"
+evidence = "SavedGameHeader construction/load/application then known rumour,sign,mine,garrison,boat,obelisk,player,town,hero loaders in source order; setupShipyards0xd02a8 and setupAdjacentMons0xe17d8 closeout. Large repeated cleanup is emitted inside the body. Reviewed extent code0+0xd051c..0xd23c8; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004be140
+unit = "game"
+mac_section = 0
+mac_offset = 0xd2508
+mac_size = 0x228
+target_sha256 = "0c7de6cd9889327b7be53c017f50ff86ca094b955e17a474e5cc628a2fae6304"
+evidence = "Header save0xcfa20 calls this writer; setup field writes through virtual slot0x10 including eight starting-hero entries, ends before matching reader. Reviewed extent code0+0xd2508..0xd2730; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004be260
+unit = "game"
+mac_section = 0
+mac_offset = 0xd2730
+mac_size = 0x224
+target_sha256 = "80c7f76f82a3330e07bf6d3d22114db40489ddac1e7b407a445ad9bb4eda7aab"
+evidence = "Header load0xcfc34 calls this versioned reader; setup reads and version28 branch, eight starting hero IDs through loadHeroId0xcc800. Reviewed extent code0+0xd2730..0xd2954; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004be3f0
+unit = "game"
+mac_section = 0
+mac_offset = 0xd2954
+mac_size = 0x1ba8
+target_sha256 = "7760daa1ac20a4fabfaefec233ad85b735355848a51f9b8a7348824e15e9f440"
+evidence = "SavedGameHeader capture/save then known rumour,sign,mine,garrison,boat,obelisk,player,town,hero writers in source order; inverse of0xd051c load. Reviewed extent code0+0xd2954..0xd44fc; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004beea0
+unit = "game"
+mac_section = 0
+mac_offset = 0xd44fc
+mac_size = 0x2e8
+target_sha256 = "3f2a2722145724fe8092900f6333dcfead78d9d639634b7a254d5332490fc3b1"
+evidence = "Save-name formatting/resource text, file object creation and game::save0xd2954; success/failure dialog and exception cleanup. Reviewed extent code0+0xd44fc..0xd47e4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bf1a0
+unit = "game"
+mac_section = 0
+mac_offset = 0xd47e4
+mac_size = 0x3fc
+target_sha256 = "6d1dabef1ceed35ed4b752d19110bc84081448acf2c92a270ad9959313d01708"
+evidence = "Text lookup/strncpy; 156 HeroExtra initializers at0xca048 and hero initialization0xf3fe4. Reviewed extent code0+0xd47e4..0xd4be0; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bf330
+unit = "game"
+mac_section = 0
+mac_offset = 0xd4be0
+mac_size = 0x14c
+target_sha256 = "4cbb312e894ae7b1add95ae256bd60b66936c6c963f86a0875bdcff177985e06"
+evidence = "Calls setupOrigData0xd47e4, file constructor0x221b9c and game load0xd051c; close/catch cleanup. Reviewed extent code0+0xd4be0..0xd4d2c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bf570
+unit = "game"
+mac_section = 0
+mac_offset = 0xd4d2c
+mac_size = 0x2d4
+target_sha256 = "516df741eaf6aff7213b01ca9d788cd92eb9f0963e70fcfd122a32973a0e980d"
+evidence = "Random creature selection, town getArmy0x1b6fdc and army helpers, creature traits stride0x74 and town stride0x15c. Reviewed extent code0+0xd4d2c..0xd5000; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::giveTroopsToNeutralTowns"
+unit = "game"
+mac_section = 0
+mac_offset = 0xd5000
+mac_size = 0x13c
+target_sha256 = "87e9ce7aa98e0f69298f11ea6e2ed87d94113208b3b3d94be7b51ccea25f76ce"
+evidence = "Random thresholds80/40 and two calls to single-town helper0xd4d2c. Reviewed extent code0+0xd5000..0xd513c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bf780
+unit = "game"
+mac_section = 0
+mac_offset = 0xd513c
+mac_size = 0x960
+target_sha256 = "c727c5c5e0140803826306f929c58c8840a50cb2113c7d945e911ae5513c06bd"
+evidence = "Calls isHuman0xe6bf4, getTownId0xceb24 and isHumanTeam0x2d3e4; victory/loss/campaign condition dispatch. Reviewed extent code0+0xd513c..0xd5a9c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004bfe70
+unit = "game"
+mac_section = 0
+mac_offset = 0xd5a9c
+mac_size = 0x8b4
+target_sha256 = "867cc1295cf532a4996d063799c7b002cae112d19fef6e045ddc8f5a8ae8918d"
+evidence = "Calls loadMap0xd82cc, processRandomObjects0xe1030, randomizeEvents0xd72e0, gates0xd7160, grail0xd6dec, towns0xe2024, heroes0xe21e0 and victory validation0xd513c in source order. Reviewed extent code0+0xd5a9c..0xd6350; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c0520
+unit = "game"
+mac_section = 0
+mac_offset = 0xd6350
+mac_size = 0xc0
+target_sha256 = "792f80b58c1660b406ecabfda951e03cb147ed206082d0258aa736b563e2567d"
+evidence = "File constructor, stream newMap0xd5a9c, close/catch; independently paired stream overload. Reviewed extent code0+0xd6350..0xd6410; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c0630
+unit = "game"
+mac_section = 0
+mac_offset = 0xd6410
+mac_size = 0xbc
+target_sha256 = "d55214b60c1fa799d2d45a9c7b1975725a8f79f739690521aec3a07571b6c92a"
+evidence = "Eight player scan calling isHuman0xe6bf4; local position setup using0xe6cc4. Reviewed extent code0+0xd6410..0xd64cc; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c06f0
+unit = "game"
+mac_section = 0
+mac_offset = 0xd6b44
+mac_size = 0x13c
+target_sha256 = "93149494759d16a7b2a7fd0a588b8a419a145a72070d11f3f905893826d5b47a"
+evidence = "28 secondary skills, four random picks and bitset accessors. Reviewed extent code0+0xd6b44..0xd6c80; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "randomizeWitchHut"
+unit = "game"
+mac_section = 0
+mac_offset = 0xd6c80
+mac_size = 0x16c
+target_sha256 = "38000142d2839d43a0e2d12250c696c7f8222343140914fc5a5ff9c42809f3e1"
+evidence = "28-skill mask selection and bitset complement; called in randomizeEvents witch-hut arm. Reviewed extent code0+0xd6c80..0xd6dec; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c0870
+unit = "game"
+mac_section = 0
+mac_offset = 0xd6dec
+mac_size = 0x270
+target_sha256 = "1b169099e2b49af2bb6c7ed255a75934a7d718d6aa769f45a31765005191b2d8"
+evidence = "Map coordinate/layer candidate scan, random selection and obscured map object0x11e514; mapcell stride0x22. Reviewed extent code0+0xd6dec..0xd705c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c0aa0
+unit = "game"
+mac_section = 0
+mac_offset = 0xd705c
+mac_size = 0x104
+target_sha256 = "d5c6b22b67dc8e492bb30e43e0aaaa19623e28a2a80e8a279ca5ad611a3aecb1"
+evidence = "Scans artifact map objects of type5, artifact availability mask and memcpy; next entry is paired gate matcher. Reviewed extent code0+0xd705c..0xd7160; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c0cc0
+unit = "game"
+mac_section = 0
+mac_offset = 0xd72e0
+mac_size = 0xebc
+target_sha256 = "9b975b643094da18e94de56f8c19431cf60bf1c7d545660e28373a7ac5da9453"
+evidence = "Large map-object switch follows paired gate matcher; calls retained random artifact/monster/spell/university/witch-hut helpers in corresponding source arms. Reviewed extent code0+0xd72e0..0xd819c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c2450
+unit = "game"
+mac_section = 0
+mac_offset = 0xd82cc
+mac_size = 0xbcc
+target_sha256 = "1a10d3e2fa690655848f235c57a49aa783af4aa8c398d0f77c06a44021f8fc34"
+evidence = "Calls map header read0xdab84, availability0xdb6b0, map size0xe43b0, hero setups0xd8ec0 and NewfullMap load0x11f3dc; artifact144/spell70/hero156 counts. Reviewed extent code0+0xd82cc..0xd8e98; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c2ce0
+unit = "game"
+mac_section = 0
+mac_offset = 0xd8ec0
+mac_size = 0x460
+target_sha256 = "4f931ccce5db9f9e112e6a692639f2dcba6ddfaba73e87d57da460bae2c19b8c"
+evidence = "File read sequence with19 artifact slots,70 spells,four primary stats and156 hero records. Reviewed extent code0+0xd8ec0..0xd9320; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c3200
+unit = "game"
+mac_section = 0
+mac_offset = 0xd9320
+mac_size = 0x588
+target_sha256 = "e4de69fa0dc448f299b973756e48ed5036e25f7dea9642fcd6840a830f83fd0e"
+evidence = "Condition tag below12; file read slot,255 sentinels and victory validation0xd513c. Reviewed extent code0+0xd9320..0xd98a8; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c35a0
+unit = "game"
+mac_section = 0
+mac_offset = 0xd98a8
+mac_size = 0x4cc
+target_sha256 = "37b6b916fa61bb83c01cb6b44b2ea75fc70f728aceb0ceb76ad67037a13099c9"
+evidence = "Write-slot inverse of preceding victory-condition reader and independently identified save header caller. Reviewed extent code0+0xd98a8..0xd9d74; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c3890
+unit = "game"
+mac_section = 0
+mac_offset = 0xd9d74
+mac_size = 0x500
+target_sha256 = "90802c889d3ceab3355e670364fae0fef02fa83abbf5dd58d2d5778f7753567f"
+evidence = "Versioned save-condition reader; loadHeroId0xcc800 and matching header load caller. Reviewed extent code0+0xd9d74..0xda274; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c3c80
+unit = "game"
+mac_section = 0
+mac_offset = 0xda274
+mac_size = 0x16c
+target_sha256 = "7f0932bc20f827ae01992ddba68a44da0046c58cdb62a8171951836d654bc2b7"
+evidence = "Loss tags0,1,3; coordinate byte reads and short time-limit read. Reviewed extent code0+0xda274..0xda3e0; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "NewSMapHeader::saveLossCondition"
+unit = "game"
+mac_section = 0
+mac_offset = 0xda3e0
+mac_size = 0x138
+target_sha256 = "a9dcf007371f65de5498d175a2452d622517cfffb88bf758d10aedcae1df8688"
+evidence = "Loss tags0,1,3 writer; town coordinates bytes, saved hero ID and time limit shorts. Called by header save0xdb804. Reviewed extent code0+0xda3e0..0xda518; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c3d90
+unit = "game"
+mac_section = 0
+mac_offset = 0xda518
+mac_size = 0x19c
+target_sha256 = "685bce2f958ec42964fedaec7373ef381edbf195d3a7eda3cb882d2632769353"
+evidence = "Loss reader with version16 coordinate branch versus saved hero ID and remapping helper0xcc878. Reviewed extent code0+0xda518..0xda6b4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c3ef0
+unit = "game"
+mac_section = 0
+mac_offset = 0xda6b4
+mac_size = 0x478
+target_sha256 = "be1b0714023d1bedd0d82cb2b13897ba99f9bd44721432836545e959634fb375"
+evidence = "Map version14/21 branches, readHeroId0xcc788, HeroExtra/string calls and player flags; next entry is cleanup destructor. Reviewed extent code0+0xda6b4..0xdab2c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c4390
+unit = "game"
+mac_section = 0
+mac_offset = 0xdab84
+mac_size = 0xa60
+target_sha256 = "e498e337e12aef301df09dccedd137286f416bcaa84e2152a729f9fbf4b496b5"
+evidence = "Version/signature reads, readString0xdc878, player slots0xda6b4, victory0xd9320/loss0xda274, bitsets and heroes. Reviewed extent code0+0xdab84..0xdb5e4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c4cc0
+unit = "game"
+mac_section = 0
+mac_offset = 0xdb644
+mac_size = 0x48
+target_sha256 = "6e06775c645db74f9d6754fb755394b28e06b7ca36f33a7e3f11c0f1e7276dd6"
+evidence = "Stores portrait, copies MSL string via0x1c628 and bitset8 availability; constructor caller in map-header hero record loop. Reviewed extent code0+0xdb644..0xdb68c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c4e30
+unit = "game"
+mac_section = 0
+mac_offset = 0xdb6b0
+mac_size = 0x154
+target_sha256 = "34ef382546f8171db3a628b91d024ff9c0aa328ca167948c850cfeda4e99683a"
+evidence = "156-hero availability bitset loop, player-specific availability overrides, artifact victory reservation. Reviewed extent code0+0xdb6b0..0xdb804; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c4f10
+unit = "game"
+mac_section = 0
+mac_offset = 0xdb804
+mac_size = 0x6f0
+target_sha256 = "aa6a176ecb58d1acf3d82dcf7d05eb9a71559127ef027815b0be64e14a32fd1c"
+evidence = "Two saveString0xced3c calls, victory writer0xd98a8 and loss writer0xda3e0, header field serialization. Reviewed extent code0+0xdb804..0xdbef4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c5630
+unit = "game"
+mac_section = 0
+mac_offset = 0xdbef4
+mac_size = 0x8b8
+target_sha256 = "bfb0b5475169a53a7dcca3fd8884bd298986597d028d5d15bee7f7fca8f42f7f"
+evidence = "Two loadString0xcec38 calls, loadHeroId0xcc800 and victory/loss readers0xd9d74/0xda518; next body is admitted header get. Reviewed extent code0+0xdbef4..0xdc7ac; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c61e0
+unit = "game"
+mac_section = 0
+mac_offset = 0xdc98c
+mac_size = 0x3dc
+target_sha256 = "80f4a2c0da333e588ce64097bc9e4eba3d6a6bafc7e5923df8a5280d02d7f833"
+evidence = "Town stride0x15c, generator removeBonus0xca52c/updateBonus0xca624, team check, town deallocate0x1b3768 and getArmy0x1b6fdc, victory capture and four visibility calls. Reviewed extent code0+0xdc98c..0xdcd68; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c66e0
+unit = "game"
+mac_section = 0
+mac_offset = 0xdcd68
+mac_size = 0x10c
+target_sha256 = "12dc2069a8c84ef55987f12b39dc75a95967eb8f058d3df9b75bcdfe193ff605"
+evidence = "Record claim0xc1a88, visibility0xc2314 and flagged-mine victory0x1fe9a4 then checkEndGame0x114cdc. Reviewed extent code0+0xdcd68..0xdce74; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c67b0
+unit = "game"
+mac_section = 0
+mac_offset = 0xdce74
+mac_size = 0x11c
+target_sha256 = "a0577f05d2f09e59862a2c96e0dced250ca155094107bd4615598d6196c47719"
+evidence = "Generator stride0x5c, sendMapChange0x919f0, setOwner0xca71c, visibility and flagged-generator victory0x1fe810. Reviewed extent code0+0xdce74..0xdcf90; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c6960
+unit = "game"
+mac_section = 0
+mac_offset = 0xdcf90
+mac_size = 0xfc
+target_sha256 = "6b81779f8287c0540575075a5c7df733b573d8be8462ea681c963922f5307505"
+evidence = "Map-change send0x919f0 and visibility0xc2314; owner assignment and signed owner!=-1 gate. Reviewed extent code0+0xdcf90..0xdd08c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c6a30
+unit = "game"
+mac_section = 0
+mac_offset = 0xdd08c
+mac_size = 0x298
+target_sha256 = "b0da66a6272deceb432fd127fff645b9f10903cca419ca56eb386742133cbd85"
+evidence = "Map-cell type34 obscuring hero restore0xf25e4, shipyard vector erase/push, visibility/sendMapChange and re-obscure0xf2474. Reviewed extent code0+0xdd08c..0xdd324; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c6c50
+unit = "game"
+mac_section = 0
+mac_offset = 0xdd324
+mac_size = 0x3e8
+target_sha256 = "0b7a26bd7d9f229eaf47cd759bf1c8b7f1d6baf8a066f4a46339fa69f14d7e6f"
+evidence = "Creature upgrade checks, player hasGivenArtifact0xcda7c and hero isWieldingArtifact0xf4dfc; view army window ctor/modal, dismiss0x581dc and upgrade cost0x14d19c. Reviewed extent code0+0xdd324..0xdd70c; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::getRandomNumTroops"
+unit = "game"
+mac_section = 0
+mac_offset = 0xdd70c
+mac_size = 0x38
+target_sha256 = "19a0f5d9b4483badbdfa55f41636728718d9f98d1dff3918e0f8c226aa11bd8e"
+evidence = "Creature traits stride0x74, wandering low/high fields passed to random0x130cf4. Reviewed extent code0+0xdd70c..0xdd744; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c6f40
+unit = "game"
+mac_section = 0
+mac_offset = 0xdd744
+mac_size = 0x54
+target_sha256 = "4ec73205fabd6f5d72658c227273f8c2a13f7ff7e3dc56fffc41d44da160a505"
+evidence = "Random1..3, sprintf0x28dfa8 and sound startMP3 at0x21938c; paired neighboring music wrapper. Reviewed extent code0+0xdd744..0xdd798; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c6f80
+unit = "game"
+mac_section = 0
+mac_offset = 0xdd798
+mac_size = 0x30
+target_sha256 = "884f57bbace6776c5eef711416f0b7d2df650ee5ad8e15fae35f9e8215c6d31d"
+evidence = "Calls startAITheme0xdd744 then clears sound-manager playSounds field. Reviewed extent code0+0xdd798..0xdd7c8; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c6fd0
+unit = "game"
+mac_section = 0
+mac_offset = 0xdd7c8
+mac_size = 0x14
+target_sha256 = "5306dccf4a05149ca7ee442373292b220cf9266eadb308344fabae7a4df0ea64"
+evidence = "Sets same sound-manager field to1; bounded by paired on-music and nextPlayer entries. Reviewed extent code0+0xdd7c8..0xdd7dc; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c6fe0
+unit = "game"
+mac_section = 0
+mac_offset = 0xdd7dc
+mac_size = 0x89c
+target_sha256 = "e1a3508110bc89981ac2e234d30e7c875dc590d568f4b4d13c461f1db1770124"
+evidence = "Victory-condition sweep, paired player human predicates, saveGame0xd44fc, perDay0xde818, hero mobility0x105be0, computer-screen/music/wait branches, recursive nextPlayer and transmitSaveGame0xe2414. Reviewed extent code0+0xdd7dc..0xde078; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c7930
+unit = "game"
+mac_section = 0
+mac_offset = 0xde078
+mac_size = 0x308
+target_sha256 = "20d539c8a4e2d9ff9ecd31b9ee4161735860332300255333c487694d76a50010"
+evidence = "Player/town gold income0x1b4cac, estates0x1050a8, three artifact-count0xcd95c calls with1000/750/500 multipliers, human difficulty branch. Reviewed extent code0+0xde078..0xde380; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c8450
+unit = "game"
+mac_section = 0
+mac_offset = 0xdf0ac
+mac_size = 0x238
+target_sha256 = "0c071715f916fc06ea59139ddda097a419e5136cafd396766d78d2c0a478376f"
+evidence = "Two recruit slots and tutorial week branches, new hero0xce398, backpack/equip helpers0x1035fc/0x103a54, mana0x105768 and random armies0xe0910. Reviewed extent code0+0xdf0ac..0xdf2e4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c86a0
+unit = "game"
+mac_section = 0
+mac_offset = 0xdf2e4
+mac_size = 0x164
+target_sha256 = "a5b7585d85576147539d1d3cd620808dbc13b0eaa38f36ef39f9ba3bd3c2ef1c"
+evidence = "Player stride0x15c, opposite recruit class, new hero0xce398, mana0x105768 and setRandomHeroArmies0xe0910 with minimal1. Reviewed extent code0+0xdf2e4..0xdf448; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::setRecruits"
+unit = "game"
+mac_section = 0
+mac_offset = 0xdf448
+mac_size = 0x90
+target_sha256 = "e739dbe49a62d39ea45ed3ac1cc208c91a59898a63b26d3a42f851aa665a581a"
+evidence = "Two eight-player loops; clearRecruits0xdeefc then setWeeklyRecruits0xdf0ac for enabled players. Reviewed extent code0+0xdf448..0xdf4d8; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c92c0
+unit = "game"
+mac_section = 0
+mac_offset = 0xdfed4
+mac_size = 0x398
+target_sha256 = "143a5efed4c279c4cd4024f73cb8bc8ad34560de9f553a54ae1b256a7c75e618"
+evidence = "145-creature bitset; Complete creature exclusions, level filtering, bitset count0xe7308 and random0x130cf4; next0xe026c is separate bitset helper. Reviewed extent code0+0xdfed4..0xe026c; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c94d0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe0278
+mac_size = 0x398
+target_sha256 = "9ef0598e2d36de46e3ca5010317d2a76f1242a082abc5a4a495e797292ea93aa"
+evidence = "Artifact class/disabled/used passes; random0x130cf4 then two recursive calls to restart class or all-class pool. Reviewed extent code0+0xe0278..0xe0610; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c95a0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe0610
+mac_size = 0x1e4
+target_sha256 = "10566ca564cca32863e0efb69ee09f18512e5ca6e4a85276ce0e9a8373cbb5c2"
+evidence = "Three70-spell passes, bitset5 test0xea048, random ordinal and recursive retry; following0xe07f4 is separate level wrapper. Reviewed extent code0+0xe0610..0xe07f4; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::randomizeHeroPool"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe085c
+mac_size = 0xb4
+target_sha256 = "360a24a2fed3956fc834de6833214fd9bc9ebe5b3cd4f25647515ca84cf60b65"
+evidence = "156 heroes: random experience40..90, setRandomHeroArmies0xe0910, mobility0x105be0, random seed1..255 and tracking-byte resets. Reviewed extent code0+0xe085c..0xe0910; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c9730
+unit = "game"
+mac_section = 0
+mac_offset = 0xe0910
+mac_size = 0x1c4
+target_sha256 = "303aa45cf5e0add54b8fd112720c2a5bec4e7d92474cd903c1981c075d3c1fb5"
+evidence = "Hero stride0x486/traits0x5c, campaign hero45/campaign14 override, random thresholds88/25, special ballista146/tent147 calls to giveArtifact0x103da8. Reviewed extent code0+0xe0910..0xe0ad4; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004c9890
+unit = "game"
+mac_section = 0
+mac_offset = 0xe0ad4
+mac_size = 0x114
+target_sha256 = "feed8d4aff0ced36ec4cbf33dc122ca6eb912e9861f7b40a4fea5d889aba073a"
+evidence = "Random monster type71 normalization, terrain-hole124 special case, setObjectType0x128a2c, object-vector push0xe7e84 and placeObject0x12850c. Reviewed extent code0+0xe0ad4..0xe0be8; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004d2870
+unit = "game"
+mac_section = 0
+mac_offset = 0xe7af0
+mac_size = 0xbc
+target_sha256 = "a818da0b257cc6c355c9b1c4b8b3ce31b987d467a04799663f3e4fbff7c5ff12"
+evidence = "Two-byte count read, creature-bank vector resize0xee304 and per-record load0xcf2f0; called for game creature-bank member. Reviewed extent code0+0xe7af0..0xe7bac; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004d2ac0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe7550
+mac_size = 0x9c
+target_sha256 = "b21b42c040ce5b07ef6e1d78034752eb2e3a95589474712da39d011b27a6d401"
+evidence = "Two-byte count and contiguous point payload writer; game save0xd420c/0xd42c8/0xd437c/0xd438c pass lith,exit,whirlpool,gate vectors. Windows long specialization folds to this VA; Mac long writer separately remains at0xe78fc. Reviewed extent code0+0xe7550..0xe75ec; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004d2b20
+unit = "game"
+mac_section = 0
+mac_offset = 0xe7998
+mac_size = 0x9c
+target_sha256 = "27be4238046ce2699f7a4dcbb38d8856738db4d472d7da288be1f3ce9e4e2125"
+evidence = "Two-byte count and16-byte element payload writer; game save0xd43ac passes university vector+0x4d078, separate from preceding long vector call. Reviewed extent code0+0xe7998..0xe7a34; terminal return and following entry separate the span."
+
+[[functions]]
+retail_va = 0x004d2b80
+unit = "game"
+mac_section = 0
+mac_offset = 0xe7bac
+mac_size = 0xbc
+target_sha256 = "5ecb49cf0057294286b6ead9db0ccb91b8cd1a73aa90ce4206dd2812084d9de6"
+evidence = "Two-byte count writer then per-record save0xcf3e0; game save0xd43bc passes creature-bank vector+0x4d084. Reviewed extent code0+0xe7bac..0xe7c68; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::clearRecruits"
+unit = "game"
+mac_section = 0
+mac_offset = 0xdeefc
+mac_size = 0x9c
+target_sha256 = "ab96166a6a1cb105b2265d9ee544d0cfb20a79e0b6f0cd2649d5cb2b3df2a1a5"
+evidence = "Two recruit slots; nonnegative id clears hero availability and stores-1; hero stride0x486. Called by setRecruits0xdf448. Reviewed extent code0+0xdeefc..0xdef98; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "getNewHero"
+unit = "game"
+mac_section = 0
+mac_offset = 0xdef98
+mac_size = 0x114
+target_sha256 = "cf8b8c7880f7def6fb55da954995996ecc779497016af7d9e059b30422a573c4"
+evidence = "Hero-class scan over availability, tutorial cleric/pagan/heretic paths call this helper from setWeeklyRecruits0xdf0ac. Reviewed extent code0+0xdef98..0xdf0ac; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "randomizeScholar"
+unit = "game"
+mac_section = 0
+mac_offset = 0xd64cc
+mac_size = 0xb4
+target_sha256 = "3eefd6252fcda41dd3e3dc28de3ac912b18c32871ed085b6cec6028c3eeae923"
+evidence = "Scholar packed award lane check, random primary skill0..3 and preserved secondary/spell lanes. Reviewed extent code0+0xd64cc..0xd6580; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "randomizeArtifact"
+unit = "game"
+mac_section = 0
+mac_offset = 0xd6580
+mac_size = 0x50
+target_sha256 = "abba60b7c1586d8cd8151de01f11e72714079d2ca072461aec0a4cdc300056b0"
+evidence = "Customization-bit test, random0..99 and low-nibble clearing; corresponding randomizeEvents artifact arm calls this body. Reviewed extent code0+0xd6580..0xd65d0; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "randomizeSeaChest"
+unit = "game"
+mac_section = 0
+mac_offset = 0xd662c
+mac_size = 0x9c
+target_sha256 = "989ef32935b5744b3ac9796fc7ecb1060499b9b986667c832682b97eb6eb9b1e"
+evidence = "Random0..99 thresholds20/90; highest reward calls artifact draw0xe0278 with class2. Reviewed extent code0+0xd662c..0xd66c8; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "randomizeShrine"
+unit = "game"
+mac_section = 0
+mac_offset = 0xd66c8
+mac_size = 0x64
+target_sha256 = "76d01fb3038f96e0400d75b2f5622dae3f52c2f3d07a852893cfb9f8fca2e4e7"
+evidence = "Packed spell==-1 gate, level-taking spell wrapper0xe07f4 and visited-bit clear; shared source now expresses level mask directly. Reviewed extent code0+0xd66c8..0xd672c; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "randomizeWagon"
+unit = "game"
+mac_section = 0
+mac_offset = 0xd672c
+mac_size = 0x118
+target_sha256 = "f417f91ccecc6d1c4c68ff51ecd84f966280c0b7acb8fdaadb13a347d81fb9f9"
+evidence = "Three random calls for outcome/resource/amount, thresholds10/50 and class6 artifact draw0xe0278. Reviewed extent code0+0xd672c..0xd6844; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "randomizeWiseTree"
+unit = "game"
+mac_section = 0
+mac_offset = 0xd6844
+mac_size = 0x60
+target_sha256 = "539718c6f8a884f620063a292ce5a8e1624fa432404beab98182d7782928277b"
+evidence = "Stores five-bit id, clears visited bits and writes random0..2 price lane. Reviewed extent code0+0xd6844..0xd68a4; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "randomizeTreasure"
+unit = "game"
+mac_section = 0
+mac_offset = 0xd68a4
+mac_size = 0xe8
+target_sha256 = "2e4139746062a0d09310d405e354506c863ceac5044752c6ca46730df890fc43"
+evidence = "Tutorial override60; thresholds32/64/95; gold reward2/3/4 or class2 artifact draw0xe0278. Reviewed extent code0+0xd68a4..0xd698c; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "randomizeTomb"
+unit = "game"
+mac_section = 0
+mac_offset = 0xd698c
+mac_size = 0xa0
+target_sha256 = "b372f155c4047ba4a78c7af594cdff0bf1bcba45650eb7fa063630b587017d83"
+evidence = "Random thresholds30/80/95 select artifact classes2/4/8/16 before draw0xe0278 and packed tomb store. Reviewed extent code0+0xd698c..0xd6a2c; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "randomizePyramid"
+unit = "game"
+mac_section = 0
+mac_offset = 0xd6a2c
+mac_size = 0x118
+target_sha256 = "56f9f227fbbba8aca97aff7821ff97788c679a819640299317b86a446fc7c8e1"
+evidence = "Temporary spell vector;70spell loop level5 and disabled/school checks, push_back0xbe580, random selection and vector destruction0xbe748. Reviewed extent code0+0xd6a2c..0xd6b44; terminal return and following entry separate the span."
+

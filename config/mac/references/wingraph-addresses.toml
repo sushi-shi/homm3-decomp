@@ -1,0 +1,19 @@
+# Reviewed address identities; source owns names and compiler symbols remain unbound.
+
+[[functions]]
+retail_va = 0x5ffe20
+unit = "wingraph"
+mac_section = 0x0
+mac_offset = 0x20c684
+mac_size = 0x44
+target_sha256 = "8bab932a1c03a17bd1a51e9dbc13ffc4594997ef4ad73d8392d65277515f686a"
+evidence = "BitmapBorder::setPlayerPaletteColors 0x5eabc calls this first helper; source index is player*0x40+0x1c, destination +0x1c0, memcpy 0x40 bytes for 32 RGB555 colors."
+
+[[functions]]
+retail_va = 0x5ffe40
+unit = "wingraph"
+mac_section = 0x0
+mac_offset = 0x20c6c8
+mac_size = 0x44
+target_sha256 = "92d4531e6afe41e8baa86e59e82741cc6f721de7c308110fe9696f92d9b41d99"
+evidence = "BitmapBorder::setPlayerPaletteColors 0x5eabc calls this second helper; source index is player*0x60+0x1c, destination +0x2bc, memcpy 0x60 bytes for 32 RGB triples."

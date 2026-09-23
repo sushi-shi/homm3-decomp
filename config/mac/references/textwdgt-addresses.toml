@@ -1,0 +1,84 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x5bc280
+unit = "textwdgt"
+mac_section = 0x0
+mac_offset = 0x1b149c
+mac_size = 0xb4
+target_sha256 = "afb492d8db9f5ccba4e3cc3114931267437e833180c0d5cdff94ab9239cd8daf"
+evidence = "widget base ctor0x20a504, font getFont0x153944, string assignment and textWidget vtable; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x5bc3b0
+unit = "textwdgt"
+mac_section = 0x0
+mac_offset = 0x1b1550
+mac_size = 0x80
+target_sha256 = "e05d187bd4e8e07efc2ee2729f402b7d52fcd8a80e15a865d74a6287a000dfb5"
+evidence = "disposes font, destroys string and widget base; Mac optional delete flag is integrated; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x5bc440
+unit = "textwdgt"
+mac_section = 0x0
+mac_offset = 0x1b15d0
+mac_size = 0x260
+target_sha256 = "0bc7d985eb6a087857ab8209d9ca65997c0d032a41cdf98437a215c9b8ffd968"
+evidence = "message dispatch tests sleep/status and widget IDs, sends text/color changes, then widget::main0x20a684; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x5bc5f0
+unit = "textwdgt"
+mac_section = 0x0
+mac_offset = 0x1b1834
+mac_size = 0xfc
+target_sha256 = "deded0d5cd86b2c0658bfb2c147c7de654ccf55cde8412d26335ec4905b15228"
+evidence = "draws optional background and calls font::drawBoundedString0xc9238; vtable draw slot resolves here; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x5bc690
+unit = "textwdgt"
+mac_section = 0x0
+mac_offset = 0x1b1930
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "single BLR; inherited textEntryWidget vtable slot8 at data1+0x53c94 resolves via descriptor1+0x8578 to this dim body; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x5bc6d0
+unit = "textwdgt"
+mac_section = 0x0
+mac_offset = 0x1b1a7c
+mac_size = 0x60
+target_sha256 = "453b07ffffc5bfa083dc143cfdb254f43b9ee25d391121d81d1726829f690541"
+evidence = "bitmapBackedTextWidget dtor vtable descriptor1+0x8560; delegates textWidget dtor0x1b1550 with optional delete flag; complete adjacent PowerPC span."
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "bitmapBackedTextWidget"
+
+[[functions]]
+retail_va = 0x5bc760
+unit = "textwdgt"
+mac_section = 0x0
+mac_offset = 0x1b1934
+mac_size = 0x78
+target_sha256 = "1f0204641bcb62c5b121d05d1660f2dde73fd912b32251f04bde14adfa9f387b"
+evidence = "calls textWidget ctor0x1b149c then ResourceManager::getBitmap8160x152df8 for background; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x5bc7e0
+unit = "textwdgt"
+mac_section = 0x0
+mac_offset = 0x1b1830
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "single BLR; inherited textEntryWidget vtable slot3 at data1+0x53c80 resolves via descriptor1+0x8588 to zBufferDraw; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x5bc7f0
+unit = "textwdgt"
+mac_section = 0x0
+mac_offset = 0x1b19ac
+mac_size = 0xd0
+target_sha256 = "c715b9cb23988dcbee9e374edc983be0ceffbe535fba07d75e4b523322cc60d1"
+evidence = "clamps bitmap dimensions, calls Bitmap816 draw0x5df50 then textWidget draw0x1b1834; complete adjacent PowerPC span."

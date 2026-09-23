@@ -1,0 +1,532 @@
+# Reviewed address identities; source owns names and compiler symbols remain unbound.
+
+[[functions]]
+retail_va = 0x55fc30
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x1552ec
+mac_size = 0xe0
+target_sha256 = "465443f887f0dd95a4e88693eab5bc4308bb2d9a4046e8522e2deca6e9096efb"
+evidence = "artifact offering copies id/extra/source, class value switch, calls hero experience factor0x105514; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x55fce0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15544c
+mac_size = 0x40
+target_sha256 = "9ba838cf50f193b1502bb08b98a1e12347d3ae115af0e09400c3008a5bd3f2d5"
+evidence = "doll click forwards slot/right click to artifactClick0x159d18; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x55fd10
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15550c
+mac_size = 0x40
+target_sha256 = "562b8dd0f869b8e516f5dc7e322f9790bbcf270bd87fb5f759101f2a199b0e3d"
+evidence = "backpack click forwards slot/right click to backpackClick0x159fa4; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x55fd40
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x1555b8
+mac_size = 0x40
+target_sha256 = "5b56516989747fe797baaf459f8f0021f4b90dfbc1a64211daa271a667a6ceb4"
+evidence = "offering click forwards item/right click to offeringClick0x15a120; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x55fda0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x155674
+mac_size = 0x44
+target_sha256 = "a54364ca034af57858ea9f2c4fb7c46ba67f620a5c680f09362601c0464077c1"
+evidence = "army click forwards slot/right click/leftPane to creatureClick0x15b2a4; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x55fdd0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x1556b8
+mac_size = 0x820
+target_sha256 = "2adb78882a2ca181972a1dd7f5d9687e498498cd4de0d37e62642e37294e2108"
+evidence = "sacrifice-window constructor calls CAdvPopup0x1bd60, createArtifactWidgets0x155fc0 and createCreatureWidgets0x157428, then builds AltSacr.def button; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x560380
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x155fc0
+mac_size = 0x1468
+target_sha256 = "14dfbddc31f049edf92797ca055c6dc1e3c0c5dd8129b558a418b1f96fbcc41c"
+evidence = "artifact widget builder emits repeated bitmap/icon/text constructions and artifact/offering slot grids; called by ctor0x1556b8; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5610f0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x157428
+mac_size = 0x14c8
+target_sha256 = "8114858587587dcb81912aa1f603c86a427661914e056ec4dc9907f14471a5f4"
+evidence = "creature widget builder emits repeated bitmap/icon/text constructions and calls createCreatureIcons0x1588f0 twice; called by ctor0x1556b8; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x561f70
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x1588f0
+mac_size = 0x46c
+target_sha256 = "bb63536e76e4e6e2368456a2edf9ce15f8de17063cee989b39517e66bee3f87c"
+evidence = "creature icon grid builds slot widgets and text labels; called twice by createCreatureWidgets0x157428; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5623a0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x158d5c
+mac_size = 0x148
+target_sha256 = "14545a08cc2e78fe4bf575c377b1255fd46444784d345b9d4f05a13bdb4efd88"
+evidence = "sacrifice-window destructor destroys widgets and CAdvPopup base, with integrated Mac delete flag; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x562500
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x158f98
+mac_size = 0x118
+target_sha256 = "80a18875093b403b3a893608d45e431210a26de517df4215ed11743dccf15c1e"
+evidence = "experience updater calls hero::getExperience0xf6290, convertWithCommas0x158ea4 twice, and sets two text widgets/button; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x562660
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x158ea4
+mac_size = 0xf4
+target_sha256 = "ebd34511021c40f5f2a2e885fb4cfbbe969ef76b222bf80a759c5ec4acbe4ec1"
+evidence = "convertWithCommas formats decimal text then inserts comma byte0x2c at three-digit boundaries; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x562840
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x159248
+mac_size = 0x144
+target_sha256 = "8545fa3e1d9016b6ecaec52990aa4068ec45c3ae9d4f43b2e039144c1ae99d4e"
+evidence = "artifact slot updater calls hero getArtifact0x1034d8 and updateArtifactWidget0x1590b0 in two visual arms; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5629e0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15938c
+mac_size = 0x7c
+target_sha256 = "89cbcf700a670e1d738c4b932dbb1a59a0f963467748775863942839df8a14ed"
+evidence = "version-dependent 18/19 artifact slot loop calls updateSlot0x159248; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x562a20
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x159408
+mac_size = 0x1d8
+target_sha256 = "22d834049b52c7cdaca7c18afed4faab0c9a338f0312d3184efaa84a02e7e463"
+evidence = "artifact-mode widget visibility, updateAllSlots0x15938c, updateOffering0x159150 and experience updater0x158f98; own BLR at0x1595dc; following sacrificeValue helper starts0x1595e0."
+
+[[functions]]
+retail_va = 0x562c70
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x159150
+mac_size = 0xf8
+target_sha256 = "7246a6b1d4f1fff07f942847b47a178902de6b263870c5ca7ec846d4c767d2ea"
+evidence = "offering widget visibility/help and numeric text; calls convertWithCommas0x158ea4; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x562da0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x159614
+mac_size = 0x3a8
+target_sha256 = "d5993ee7651ce4a430fd44644bcbed17e515a5e0541e0a42cb39bc03baf13dfd"
+evidence = "creature offering text/icons, sacrificeValue0x1595e0 and convertWithCommas0x158ea4 across group/amount branches; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x563150
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x1599bc
+mac_size = 0x1f4
+target_sha256 = "f351a60d8b81e570952923d2f1f22bd376d2147e533ca16a3570f29b8aa23800"
+evidence = "creature-mode visibility and seven offering records; calls updateCreatureOffering0x159614 and updateExperience0x158f98; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5632a0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x159d18
+mac_size = 0x1d4
+target_sha256 = "d65a5719bd7d9f717e041cdd21babc85148a8d11b29031b1cb8f0591c65881f5"
+evidence = "equipped artifact click calls updateSlot0x159248 and pickUp/putDown helpers0x159bb0/0x159c74; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5636c0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x159fa4
+mac_size = 0x13c
+target_sha256 = "38d2a47b5faff79cfe4668d43409cff70d5e2b2e1e4c613c1f46bf8517bf16d5"
+evidence = "backpack click calls updateBackpack0x159eec and pickUp/putDown helpers0x159bb0/0x159c74; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5639e0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x1590b0
+mac_size = 0xa0
+target_sha256 = "966fc595a2b12466f8ed3967700f51d92491ae09166c908dc6916ddaaa40e1e3"
+evidence = "artifact widget empty/nonempty visibility, icon frame and help text; called twice by updateSlot0x159248; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x563a40
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15a0e0
+mac_size = 0x40
+target_sha256 = "583088fcc208ebb4c9306e4052c914719bb346fda2d2db5317d504c1a1fc8ee1"
+evidence = "indexes artifact offering widget/value vectors and forwards to updateOffering0x159150; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x563a80
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15a120
+mac_size = 0x118
+target_sha256 = "ae0445278c97215ab172988b241ff1844c5d9c47c7dd544281c92f4867fcde5d"
+evidence = "offering click calls updateArtifactOffering0x15a0e0 and pickUp/putDown0x159bb0/0x159c74; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x563da0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15a238
+mac_size = 0xd4
+target_sha256 = "ef7d6796528358f068fdb40ccda7ecd7cdc3c70531dfc32223c618f60b2ecf9b"
+evidence = "left backpack callback handles help and rotation, calls updateBackpack0x159eec; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x563f00
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15a30c
+mac_size = 0xd4
+target_sha256 = "8eff6af60ed87eb960ba793ebc62f9f990115dc7199121a435778d88d8835165"
+evidence = "right backpack callback handles help and opposite rotation, calls updateBackpack0x159eec; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x564060
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15a60c
+mac_size = 0xd4
+target_sha256 = "74fd97cd16212be222166ffb7a3cf803e91f2a191a560e50601d0bbc65a2d450"
+evidence = "empty-backpack callback invokes helper0x15a4b4 then updateExperience0x158f98 and redraw; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x564340
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15a6e0
+mac_size = 0x154
+target_sha256 = "71781a0c608c2d38c64243fa4292436dd58c49543962f961021b5fae1c4b16fd"
+evidence = "all-artifacts callback scans equipped slots using addArtifact0x15a3e0, updateSlot0x159248 and emptyBackpack0x15a4b4; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5646a0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15a834
+mac_size = 0x2a8
+target_sha256 = "faaf974bbb4094ec4374e4b2f20c83a4448cf5b8af381bda3b503d430a99e23c"
+evidence = "sacrifice callback clears artifact offerings or creature armies, calls updateCreatureOffering0x159614 and updateExperience0x158f98; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x564910
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15aadc
+mac_size = 0xd4
+target_sha256 = "f4421a3997ffbafa63841c3082eeace463ca305e9168d2676388c24a4344c0eb"
+evidence = "creature-mode callback calls clear0x15ac44 and setCreatureMode0x1599bc; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x564a80
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15acf4
+mac_size = 0xc8
+target_sha256 = "6dde3c58835a51ee1905750b0ec09561a2b1bd20d8542993d7e53128865f5dd3"
+evidence = "exit callback calls clear0x15ac44 and writes WIDGET_END_DIALOG message; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x564c00
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15adbc
+mac_size = 0x224
+target_sha256 = "1c36ec041b0786cb170cbd6afb06087b3c57602d4ae1d860e9d8448cfceefa86"
+evidence = "sets creature offering count and experience delta via bonus factor then refreshes creature offering0x159614; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x564cf0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15afe0
+mac_size = 0x120
+target_sha256 = "99bacedd5416261401ddc6cb2f4471d18094015db778f534c81941ae11253169"
+evidence = "all-creatures callback sets offerings across seven groups, updates experience0x158f98 and redraws; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x564de0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15b100
+mac_size = 0xd0
+target_sha256 = "795ce4700f8ab43d42f2f2b455a1af6723b5b283ec6d4a5f4de41983677c0d3f"
+evidence = "maximum-creatures callback sets slider and calls creatureSliderChange0x15b618; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x564e70
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15b1d0
+mac_size = 0xd4
+target_sha256 = "4765df5180b3b706370be32eb70c6fffeb19b7073094b0aefc8595c2bb3bdf83"
+evidence = "artifact-mode callback calls clear0x15ac44 and setArtifactMode0x159408; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x564fe0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15b2a4
+mac_size = 0x374
+target_sha256 = "2c0cd3a490131a10d3be028fd6f21b1ebdd628c1e7d68c320a6254917f29b00d"
+evidence = "creature click drives army view, selected-border state, offering refresh0x159614 and slider update; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x565380
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15b618
+mac_size = 0x68
+target_sha256 = "a15f6c43778cbea324b23ce3912719d61fb68bc8a3c310143add5ac792e74bee"
+evidence = "slider callback calls setCreatureSacrifice0x15adbc and updateExperience0x158f98; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5653b0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15b680
+mac_size = 0x60
+target_sha256 = "8d6402261103bf78576738e430f709985668031775c93147dae7e758f898ec58"
+evidence = "modal entry chooses setArtifactMode0x159408 or setCreatureMode0x1599bc before heroWindow::doModal; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5653f0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15b6e0
+mac_size = 0x8c
+target_sha256 = "4f3623622ae147fa0bbdef1475a8c0f20839f05ea0ae5afcd16ddafaecbae6ef"
+evidence = "hover text selection and redraw through virtual widget help and window draw; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x565430
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15b7c8
+mac_size = 0x70
+target_sha256 = "f8d6edfbcea1f97d14b697095788eef4bd52cc2cdd187c1b260ee7e7b03b00a5"
+evidence = "exitDialog writes WIDGET_END_DIALOG and conditionally calls returnArtifact0x15abb0; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5654c0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15b8b8
+mac_size = 0x48
+target_sha256 = "dc41a19f3eb3e1944177fdf7b937756f17cb67252f44597c036cf848abd7612b"
+evidence = "transformer slot click forwards group/slot/right click to skeleton creatureClick0x15c954; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5654f0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15b900
+mac_size = 0x99c
+target_sha256 = "ec5097458262bae71c6b403ffa7c07ab34cc134cc2a2911aad2e2f0e26b4683c"
+evidence = "skeleton-window ctor calls CAdvPopup, builds transformer widgets and calls createCreatureIcons0x15ccfc repeatedly; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x565f60
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15c320
+mac_size = 0xd8
+target_sha256 = "d5a2c6ceb98aba0ed8e018c13dd0b5e814ea10b24869fb7c915874e910f4bf01"
+evidence = "skeleton-window destructor stops/disposes sample vector and deletes widgets/base popup; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x566030
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15c570
+mac_size = 0x3e4
+target_sha256 = "608ea2fbe984071ccd612d281dd6b1a46d0284dc4eade12d169d49acf16c38fc"
+evidence = "skeleton updater formats count/name and transformed-creature help across empty/source/destination branches; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x566490
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15c954
+mac_size = 0x294
+target_sha256 = "95aec88eb1816ee134dce9bdbbea46e983f0d335419461224b9e68e2915faba3"
+evidence = "skeleton creature click opens army view or swaps/merges armies and calls update0x15c570 twice; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5666f0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15cbe8
+mac_size = 0x88
+target_sha256 = "b0ec6aac00e23ab9cda97d559a998346d6dfd46dd267c36d293fa448295dcf9a"
+evidence = "skeleton window handler calls CAdvPopup::windowHandler0x1bf2c then hover conversion0x20d3d8; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x566720
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15cc70
+mac_size = 0x8c
+target_sha256 = "9c4d20c194b9169ad11d95ac9eeb56d1f1632e0557302c022eee0b3e058ca93a"
+evidence = "skeleton hover handler chooses help text and redraws; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x566760
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15ccfc
+mac_size = 0x32c
+target_sha256 = "cf06f9516a524a9037f7b42fce5ed5fed56935b8640ffbb4f8dc08b8c02212b1"
+evidence = "skeleton icon-grid builder constructs transformer slots0x15b838 and text widgets; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x5669f0
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15d0ac
+mac_size = 0x11c
+target_sha256 = "c8ed1cfa9915af17122a5368d4ad691f6da008de6c7efdf556d6d527dc2f50e5"
+evidence = "all-creatures callback calls moveAllArmies0x15d028, update0x15c570 twice per slot and redraw; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x566b30
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15d1c8
+mac_size = 0xdc
+target_sha256 = "a45260a05c09e9d498963ff3b7286426c943d2aa546a32f32f7343f349b88e4f"
+evidence = "exit callback calls reverse moveAllArmies0x15d028 and writes modal-end message; complete bounded PowerPC span."
+
+[[functions]]
+retail_va = 0x566c20
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15d2a4
+mac_size = 0x1e0
+target_sha256 = "95177b57af278508e201ea6d6dab33dab7d1aeca55cc87bdff7638960e0e5cab"
+evidence = "transform callback reads death-creature table, creates sample and updates destination slots0x15c570; complete bounded PowerPC span."
+
+[[helpers]]
+source_helper = "type_sacrifice_window::pickUpArtifact"
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x159bb0
+mac_size = 0xc4
+target_sha256 = "1e34c2a6f2b486702b06f1af8cc982c7e725d254a847ab70b109ce368721b78e"
+evidence = "calls offering.set0x1552ec, updateExperience0x158f98, updateOffering0x159150, updateAllSlots0x15938c; complete bounded PowerPC span."
+
+[[helpers]]
+source_helper = "type_sacrifice_window::putDownArtifact"
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x159c74
+mac_size = 0xa4
+target_sha256 = "639a7e1a81e21712c089874cfc57578383f62c5ec6086dbec03d2d3d444d5407"
+evidence = "conditionally updates experience then clears holding record, updates offering and slots; complete bounded PowerPC span."
+
+[[helpers]]
+source_helper = "type_sacrifice_window::updateBackpack"
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x159eec
+mac_size = 0xb8
+target_sha256 = "93f2fcf14e261059fe204384805d055d3fb50966c4b29eccec4d9f856a5dd08d"
+evidence = "walks backpack widgets with updateArtifactWidget0x1590b0 and toggles scroll buttons; complete bounded PowerPC span."
+
+[[helpers]]
+source_helper = "type_sacrifice_window::addArtifact"
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15a3e0
+mac_size = 0xd4
+target_sha256 = "c706dae90a3e9cb8ca5f44032e1d2ff01a80ba555068567e5d5e76c9cbf7026b"
+evidence = "finds first empty offering, calls offering.set0x1552ec and updateArtifactOffering0x15a0e0; complete bounded PowerPC span."
+
+[[helpers]]
+source_helper = "type_sacrifice_window::returnArtifact"
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15abb0
+mac_size = 0x94
+target_sha256 = "90cce5d37cb033ed6807e69dce39c2e221670601214e43fa5b2ccbf537c1dfa8"
+evidence = "tries original equipment slot, arbitrary slot, backpack then fallback equipment; complete bounded PowerPC span."
+
+[[helpers]]
+source_helper = "type_sacrifice_window::clear"
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15ac44
+mac_size = 0xb0
+target_sha256 = "b7c7bfc8022111455d22df74665e7f6ca487a3a5751abb820ea7887a09ab9513"
+evidence = "walks offering vector and held artifact, calls returnArtifact0x15abb0 twice; complete bounded PowerPC span."
+
+[[helpers]]
+source_helper = "type_skeleton_window::updateButtons"
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15c3f8
+mac_size = 0x178
+target_sha256 = "8d1264012167c8d1b86d6f9e96d0c84b7d623801697a9dc03bad32405bed883c"
+evidence = "seven-slot transformed-creature scan and two terminal button enable calls; complete bounded PowerPC span."
+
+[[helpers]]
+source_helper = "moveAllArmies"
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15d028
+mac_size = 0x84
+target_sha256 = "85b4ef28a4ec5f3e58308921677ee1b891872d35249017725a3d8a3d133091bf"
+evidence = "seven-slot move into destination army with add/dismiss; called by both transformer callbacks; complete bounded PowerPC span."
+
+[[helpers]]
+source_helper = "sacrificeValue"
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x1595e0
+mac_size = 0x34
+target_sha256 = "448ff8799ab3e8b3dafcd44063b6a9439c39aef3cbd01adbb0b6cbd574f923ee"
+evidence = "source trait aiValue field+0x40, signed divide by 40 reciprocal0x66666667, multiply by five; called by creature offering; complete adjacent PowerPC span."

@@ -1,0 +1,34 @@
+# Reviewed generated bodies. Other ABI/library identities remain explicit gaps.
+
+[[functions]]
+retail_va = 0x5336b0
+unit = "rmg"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "rmgBlackBoxObject"
+mac_section = 0x0
+mac_offset = 0x251488
+mac_size = 0x7c
+target_sha256 = "b1998ccd0d52e51f98549a0c0392d0c634b46ea29800a6d9d5ed708b713d2ddc"
+evidence = "Black-box object canonical destructor: ctor230c2c and this body install the same TOC-0x6ba4 vtable. Vtable destructor entry data1+0x5d474 resolves descriptor data1+0x8d28 to code251488; write slot resolves independently to verified black-box writer230cac. Destroys spell vector+0x44 via be748, calls base type_object destructor230448 with flag0, then optional receiver deletion for signed16 incoming r4>0. This is the canonical Mac destructor with combined optional-delete ABI, not a separate MSVC scalar-deleting wrapper."
+
+[[functions]]
+retail_va = 0x536b60
+unit = "rmg"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "TRmgObjectPlacementRule"
+mac_section = 0x0
+mac_offset = 0x235010
+mac_size = 0x84
+target_sha256 = "29639528100294f7026c9880a68167314be2ae8765f6cdfe55078b81fe8c7257"
+evidence = "Placement-rule canonical destructor: destroys vector<int> members at+0x38 then+0x2c via745c, followed by optional receiver deletion. readObjectPlacementRules23486c identifies its rule temporary at stack+0x44: pushed into m_placementRules at234a88, then the same member cleanup is expanded at234a8c..234ac0 (stack+0x7c/+0x70). Rule indexing at234ae8 proves Mac stride0x44; +0x2c/+0x38 are independently populated from adjacent/blocked score columns at234b08/234b54. Full separate body ends235090."
+
+[[functions]]
+retail_va = 0x5477c0
+unit = "rmg"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "TRmgTreasureGroup"
+mac_section = 0x0
+mac_offset = 0x24ba40
+mac_size = 0x90
+target_sha256 = "ea3aa6a4c078df2f08873b7103ae7ebb99d1d93ab853e0700931a99be9269b41"
+evidence = "Treasure-group canonical destructor: destroys outline vector at+0x34 via25211c, object pointer vector+0x28 via745c, and contained type_random_map+0 via22d450 flag-1, followed by optional receiver deletion. Verified placeZoneTreasures24b6e8 keeps group at stack+0x54 and expands identical cleanup at24b9f0..24ba28: outline stack+0x88, objects+0x7c and map+0x54. Member offsets agree with shared class after 12-byte Mac vector layout. Full separate body ends24bacc."

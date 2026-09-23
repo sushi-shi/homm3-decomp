@@ -1,0 +1,136 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x51bd50
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x133448
+mac_size = 0x290c
+target_sha256 = "a4406ccb5958d6aadcfe49309d7dedbd045e70557affd95b71b136065695f19f"
+evidence = "overviewSliderCallback 0x137e8c calls 0x133448 after changing overview top. Callee uses overview global tables/top/type via TOC 1+0xdd0/+0xdcc/+0xde0, expands game hero/town and flaggable rows, updates overview widgets; own prologue, BLR 0x135d50 and next setupNewOverviewType 0x135d54 bound large body."
+
+[[functions]]
+retail_va = 0x51e330
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x135d54
+mac_size = 0x3d4
+target_sha256 = "5820659e9c6aeda0a29aefb90630ef1a18e6a7d5aee5a44fc73c018807901043"
+evidence = "setupNewOverviewType takes game receiver,type,update; writes overview type global at TOC 1+0xde0, reads local player signed owner +1 or +0x3e for hero/town type, adjusts top/count and updates row widgets. BLR 0x136124; next updateFlaggableIcon 0x136128."
+
+[[functions]]
+retail_va = 0x51e670
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x136128
+mac_size = 0x188
+target_sha256 = "55e113d82b01e83c523abe24ff9d509643e338dd69b8a8f8b26f3ab0088ebd4f"
+evidence = "updateFlaggableIcon builds MESSAGE_WIDGET for id i+40, compares top+i with this+0x60 vector size, clears or sets icon/status, formats count using formatString 0x131520 at 0x136240 and textWidget virtual setText. BLR 0x1362ac; next seven-row updater 0x1362b0."
+
+[[functions]]
+retail_va = 0x51e7c0
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x1362b0
+mac_size = 0x74
+target_sha256 = "d8ba0307e633ac8bc495d4175e040f5e9c33405751c3cfec56a1fb4ae97ae915"
+evidence = "updateFlaggableIcons loops i=0..6 calling 0x136128, then invokes virtual drawWindow with full bounds. BLR 0x136320; next button switch 0x136324."
+
+[[functions]]
+retail_va = 0x51e7f0
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x136324
+mac_size = 0xc0
+target_sha256 = "690909e25fd464e4feae6d8cd6773eb7106f0a6992b9e603bbf950ba101a815d"
+evidence = "doFlaggableButtons switches which=0..3 to home/previous/next/end using overview top at TOC 1+0xd94, calls seven-row update 0x1362b0 then windowManager updateScreen(731,45,66,398). BLR 0x1363e0; next game::overview 0x1363e4."
+
+[[functions]]
+retail_va = 0x51e8d0
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x1363e4
+mac_size = 0x8cc
+target_sha256 = "ff04d0eb366ecedfd35caed831c3a86b59ec1829fe8da0260eb4b3e1b27c8da4"
+evidence = "game::overview owns the overview main setup/render pass with game receiver, player/map/hero/town rows and window manager interactions, ending by writing overview window global and finishing at BLR 0x136cac. Next independent overview row helper 0x136cb0."
+
+[[functions]]
+retail_va = 0x51fa20
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x137e8c
+mac_size = 0x44
+target_sha256 = "50893ac1d773dfd707903d532501f12665ce7a99314dc9e184c7e503de3e037b"
+evidence = "overviewSliderCallback stores state at g_overviewTop[g_overviewType] using TOC globals, calls game::setupDynamicStuff 0x133448 with update=1,force=0. BLR 0x137ecc; next constructor 0x137ed0."
+
+[[functions]]
+retail_va = 0x51fa40
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x137ed0
+mac_size = 0x1e48
+target_sha256 = "ea149305969722887ff5c051ff7f330a77da98f39b6881941d11aa141ab00b5a"
+evidence = "TOverviewWindow ctor calls CAdvPopup(0,0,800,600), reserves 100 widgets, loads OvCast.pcx at 0x137f88 and OvTitle.pcx at 0x138024 through unique TOC string xrefs, creates four OVSlot rows and remainder of overview widgets, then collects flaggable item counts. BLR 0x139d14; next vector cleanup 0x139d18."
+
+[[functions]]
+retail_va = 0x520d90
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x139e00
+mac_size = 0xe4
+target_sha256 = "2fed60237aced7d110b8b9ac8aa08c31da28d39e4c17b22132ea5c001c724202"
+evidence = "TOverviewWindow destructor stores class vptr, iterates widget vector this+0x34/+0x38 and invokes deleting virtual destructor, cleans flaggable vectors at +0x68/+0x5c and CAdvPopup base. BLR 0x139ee0; next item-count helper 0x139ee4."
+
+[[functions]]
+retail_va = 0x520e30
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x13a018
+mac_size = 0xc18
+target_sha256 = "69e16cd0d4872dc4108b2f424d5b45a3277450a2be5bf85a06b6933d81aed7f8"
+evidence = "doRollover first tests codeY>=200, decodes four 200-id hero/town bands, selects overview top/hero or town data and text for many controls, then uses rollover text update. BLR 0x13ac2c; next independent helper 0x13ac30."
+
+[[functions]]
+retail_va = 0x521960
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x13aca4
+mac_size = 0x690
+target_sha256 = "123b2c40428c6d302d9e3114b069783c73ad591e16104740fac07ab3d220dc81"
+evidence = "TOverviewWindow windowHandler delegates CAdvPopup::windowHandler 0x1bf2c, dispatches MESSAGE_WIDGET IDs and selection pages, calls overview helpers and updates screen; own prologue 0x13aca4 and BLR 0x13b330, next vector insertion helper 0x13b334."
+
+[[functions]]
+retail_va = 0x522470
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x136cb0
+mac_size = 0x1cc
+target_sha256 = "9a526bceffef7b1cc7c33afde88156875d7a5af3c7aa8e6dd87634d6ece69bad"
+evidence = "Free updateBackpack takes slot r3, computes 200-ID row offset and overview top, obtains hero and last backpack index, loops up to eight artifact slots, broadcasts icon frame/status, draws 130..137 row and updates screen at (293,91+116*slot,428,46). BLR 0x136e78; next getLastBackpackIndex 0x136e7c."
+
+[[functions]]
+retail_va = 0x5225d0
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x136e7c
+mac_size = 0x90
+target_sha256 = "5afa2f97b3aa162d49549ee19faab49134bfc3bbb2e8e6d4077b4626d397a8d6"
+evidence = "Free getLastBackpackIndex checks heroNumber against signed local player numHeroes at player+1, reads local player's hero ID array, resolves hero pointer using 0x486 stride and calls hero getLastBackpackIndex 0xf8290; BLR 0x136f08; next backpack scroll helper 0x136f0c."
+
+[[functions]]
+retail_va = 0x51ee50
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x1370fc
+mac_size = 0xd90
+target_sha256 = "3730dec4c2f7d5116a779fd54a31feec25439ca3ccf683a412697a14b0303f39"
+evidence = "game::processIconSelect receives game, codeY r4 and rightMouse r5, starts with codeY>=200 && <=999 and /200 slot bands, uses overview top/type and player hero/town data, dispatches icon IDs and right-click help. BLR 0x137e88; next slider callback 0x137e8c."
+
+[[helpers]]
+source_helper = "TOverviewWindow::updateRollover"
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x139f84
+mac_size = 0x94
+target_sha256 = "95d1d4431dee36d9ef77fd9327b4b0206549e6d1ff4a95a3403aa938d3b88145"
+evidence = "Unique source helper builds MESSAGE_WIDGET SET_TEXT code3 for widget37, broadcasts through g_overWin then draws range 36..37 via virtual drawWindow. BLR 0x13a014; next doRollover 0x13a018."

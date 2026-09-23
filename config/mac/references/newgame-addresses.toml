@@ -1,0 +1,55 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x5132b0
+unit = "newgame"
+mac_section = 0x0
+mac_offset = 0x132158
+mac_size = 0xc4
+target_sha256 = "67172c1ee66c0806bf83280c5bc1995c666f6c1dcc468369479d888edcb1de5a"
+evidence = "Leaf unroll counts set bits at positions 0 through 8 in alignment mask and returns count; pickAlignment calls it at 0x132238."
+
+[[functions]]
+retail_va = 0x5132d0
+unit = "newgame"
+mac_section = 0x0
+mac_offset = 0x13221c
+mac_size = 0x184
+target_sha256 = "8229a6339da2cbfe864b9febd53494675f4b4497955457e6adcb43cb419d092a"
+evidence = "pickAlignment calls nine-bit count 0x132158 and random helper 0x130cf4, then walks the same nine bits to return selected town type; complete BLR."
+
+[[functions]]
+retail_va = 0x513320
+unit = "newgame"
+mac_section = 0x0
+mac_offset = 0x1323a0
+mac_size = 0x3bc
+target_sha256 = "d54155f3b03093bd1ce67e812b69b8e6807b533213c41bcbd9410fa87007af71"
+evidence = "initNewGame fills setup bytes, copies/reads map header and calls pickAlignment 0x13221c for eight player slots; complete BLR before scenario-info modal."
+
+[[functions]]
+retail_va = 0x513740
+unit = "newgame"
+mac_section = 0x0
+mac_offset = 0x13275c
+mac_size = 0x94
+target_sha256 = "f553384e963bafbc6cd1447094ce71a86166a200c6a038743c496ea122e4993d"
+evidence = "showScenInfo campaign branch constructs campaign brief, otherwise calls reviewed CScenarioInfoDlg ctor 0x15ddc0 at 0x1327c4; complete BLR."
+
+[[functions]]
+retail_va = 0x513800
+unit = "newgame"
+mac_section = 0x0
+mac_offset = 0x1327f0
+mac_size = 0x278
+target_sha256 = "d0847dce6b5534de8f9fd6cf2e2d64f35a310bf1b53149727055c8fc7ed3bd48"
+evidence = "getLossConditionText branches by lose-town/hero/time and formats localized text with 28-day/7-day arithmetic; complete BLR before victory formatter."
+
+[[functions]]
+retail_va = 0x5139e0
+unit = "newgame"
+mac_section = 0x0
+mac_offset = 0x132a68
+mac_size = 0x820
+target_sha256 = "062e5983685e8b36325ef2979c7e0bef9246df3b8de08db6b4c10ebc4600c906"
+evidence = "getVictoryConditionText switches victory condition types and formats town, hero, artifact, resource and Grail clauses; terminal BLR 0x133284 before next prologue 0x133288."

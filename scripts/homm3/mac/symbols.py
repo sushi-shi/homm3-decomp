@@ -26,7 +26,7 @@ def targets(root: Path, pef: PEF) -> dict[str, CallTarget]:
         if pair.target_sha256 and hashlib.sha256(data).hexdigest() != pair.target_sha256:
             raise SourceError(f"Mac pair {pair.retail_va:#x} has changed target bytes or extent")
     for ref in references.load(root):
-        if ref.mac_symbol in result:
+        if ref.mac_symbol is None or ref.mac_symbol in result:
             data = pef.code(ref.mac_section, ref.mac_offset, ref.mac_size)
         else:
             data = add(ref.mac_symbol, ref.mac_section, ref.mac_offset, ref.mac_size)

@@ -23,7 +23,8 @@ def analysis_hash(root: Path) -> str:
 
 
 def labels(root: Path) -> dict[str, str]:
-    return {pair.mac_symbol: pair.signature for pair in [*references.load(root), *load_pairs(root)]}
+    return {pair.mac_symbol: pair.signature for pair in [*references.load(root), *load_pairs(root)]
+            if pair.mac_symbol is not None}
 
 
 def inspect(root: Path, pair: Pair, pef: PEF, tools_dir: Path) -> dict:

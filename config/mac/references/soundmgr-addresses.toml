@@ -1,0 +1,181 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x5997d0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218578
+mac_size = 0x160
+target_sha256 = "331e56c5ef4688974a8490ab4cc923a8eae2b80b642674fdb9ac6113fb2c29e1"
+evidence = "Mac soundManager open initializes audio service and driver, calls close 0x2186d8 for prior state and sets manager fields; complete BLR after anchored ctor."
+
+[[functions]]
+retail_va = 0x599a90
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x2186d8
+mac_size = 0x11c
+target_sha256 = "dcccb88a8cdb449a8d4315c4e9206363e1e796b4061e4591576cc6d151bfe9b3"
+evidence = "Mac soundManager close releases repeated sound handles through 0x277688 and closes driver; called by open 0x2185c4; platform audio APIs differ."
+
+[[functions]]
+retail_va = 0x599d90
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x2188f0
+mac_size = 0x78
+target_sha256 = "e4bd003402d705632b0bde868f659f45b211fd113a52cef3ee9890607787044e"
+evidence = "stopAllSamples checks no-sound/play state, calls audio stop 0x2777bc, and if stopMusicToo calls stopMP3 0x2196d0; startMP3 calls it at 0x2194a0."
+
+[[functions]]
+retail_va = 0x599e80
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218968
+mac_size = 0x50
+target_sha256 = "a9adb9e6bb77a89b6c3ed61bb7f83a869fd2b18cd1080ba06c99078ee4e1a621"
+evidence = "stopSample checks no-sound and nonnull handle, resolves sample 0x277744 and stops it 0x27713c; complete BLR."
+
+[[functions]]
+retail_va = 0x599ec0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x2189b8
+mac_size = 0x90
+target_sha256 = "1e36c0d8e5020ee4c1ac5ad2b49fcf6221c57c14589ba1e861aa3d1b8114c467"
+evidence = "waitSample normalizes negative timeout, uses GameTime 0x20fc5c and audio status 0x27725c in event-poll loop; complete BLR."
+
+[[functions]]
+retail_va = 0x599f40
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218a48
+mac_size = 0x100
+target_sha256 = "0929e45c546fa9d03236d50c7894a113e052bdcf5e191db169dd17ceab8f399f"
+evidence = "modifySample checks sound state, then converts volume via anchored convertVolume 0x218434 and updates audio handle through 0x277284; complete BLR."
+
+[[functions]]
+retail_va = 0x59a030
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218b48
+mac_size = 0xac
+target_sha256 = "ac04cc59bd13066a0c6dee506ed89b69979ab85654870cf768d7b7ab9237a82e"
+evidence = "getSampleInfo switches operation 1 or 4 and reads audio handle volume/status via 0x277744, matching source query contract; complete BLR."
+
+[[functions]]
+retail_va = 0x59a0c0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218bf4
+mac_size = 0xcc
+target_sha256 = "1ce19bf40b3111961d9b0da8aa124560b3108f536dbd212797cef6cdf17b894c"
+evidence = "adjustSoundVolumes loops handles and calls convertVolume 0x218434 twice plus audio volume update 0x277284; complete BLR."
+
+[[functions]]
+retail_va = 0x59a1b0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218cc0
+mac_size = 0x4c
+target_sha256 = "4f201b67700413caf7d5725ebee83057cdae2c5839322b23c6e8704573824b84"
+evidence = "adjustMusicVolumes checks sound state then calls anchored setMusicVolume 0x21832c; complete BLR."
+
+[[functions]]
+retail_va = 0x59a1e0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218d0c
+mac_size = 0x48
+target_sha256 = "382efa2c01f1cd094eb14db29d3aa8b83779411f31a117b93a4b1bfdbcfabda8"
+evidence = "switchAmbientMusic range-checks terrain ID and calls reviewed startMP3 0x21938c; complete BLR."
+
+[[functions]]
+retail_va = 0x59a210
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218d54
+mac_size = 0x1b4
+target_sha256 = "84008afa0592240c7280397d411e042688b15261636735791a29da460a5af3e5"
+evidence = "memorySample checks sound/config/sample state, selects channel and calls convertVolume 0x218434 and audio play routine; complete BLR."
+
+[[functions]]
+retail_va = 0x59a3f0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x219378
+mac_size = 0x14
+target_sha256 = "7c2fddb547a5cab714eecc28f39ebe53283a48beb154ced1d338ea58cea9a136"
+evidence = "musicPlaying is a 0x14-byte leaf that reduces m_mp3Playing field at +0x30 to boolean return, immediately before reviewed startMP3."
+
+[[functions]]
+retail_va = 0x59a410
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218f08
+mac_size = 0x50
+target_sha256 = "076f2386c1e8cc78f92d05c0c2a20e21d2b206eca4242bdcb6a8a69b694a8d21"
+evidence = "clearMemSample checks sample pointer and shutdown flag then calls virtual sample dispose; waitEndSample 0x219080 and service loop 0x219114 call it."
+
+[[functions]]
+retail_va = 0x59a470
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218f58
+mac_size = 0xa8
+target_sha256 = "3e54179a47b39e9d6f3f03c307df1608806070f270dc170d2e88c5eefd0fcc47"
+evidence = "loadPlaySample returns null pair for missing name/sample, obtains ResourceManager sample 0x153f78 and calls memorySample 0x218d54; complete BLR."
+
+[[functions]]
+retail_va = 0x59a4c0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x219000
+mac_size = 0xa0
+target_sha256 = "6898157c4c4f4f252f2dde5b890021cab5eb80517d315b5f6c0875948277cd96"
+evidence = "waitEndSample defaults timeout to 4000, polls sample status 0x27725c and event/sound services, then calls clearMemSample 0x218f08."
+
+[[functions]]
+retail_va = 0x59a590
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x219150
+mac_size = 0x118
+target_sha256 = "e21ee97ffb951377e6035f8890fb88a6d8361b19787ff15db2abaaa0003a56ed"
+evidence = "launchSample checks audio/config/name, loads sample via 0x153f78, calls memorySample 0x218d54 and audio cleanup helper 0x219268; complete BLR."
+
+[[functions]]
+retail_va = 0x59b010
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x2196d0
+mac_size = 0x30
+target_sha256 = "8a12390bdb058f5d0cf9275eef1ce8ca609b98a27686e6ba62a021ab127498e2"
+evidence = "stopMP3 is a Mac leaf that clears current stream pointer and schedules negative volume fade; startMP3 calls it at 0x21948c. Audio implementation is platform-specific."
+
+[[functions]]
+retail_va = 0x5994b0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x21832c
+mac_size = 0x108
+target_sha256 = "5777396f8b4e77fa650854ba9583f3078192a31449d6ced09c511f04ef981d4c"
+evidence = "Only combat%02d TOC use at 0:0x2183cc; checks g_noSound, calls volume converter with 127/type101, then MP3/resume/terrain branches and startMP3. Complete BLR 0x218430; next function 0x218434."
+
+[[functions]]
+retail_va = 0x5996c0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218434
+mac_size = 0xdc
+target_sha256 = "4a7393522b7a4e51b6f324a7887408fec8ab68d6e1c04be5c3f29e3f7b69b4cb"
+evidence = "Direct callee of setMusicVolume at 0:0x21835c with 127/type101; selects two config volume fields at +8/+0xc, clamps 0..127 and converts to Mac float scale. BLR 0x21850c; next prologue 0x218510."
+
+[[functions]]
+retail_va = 0x599760
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218510
+mac_size = 0x68
+target_sha256 = "3d46019696d9380d0cafdd0f01ce103cdc1751fe7a8e48bf7eae1829e466751f"
+evidence = "baseManager constructor at 0x218528, soundManager vtable store, bzero 14 short driver states, clear members and return this. BLR 0x218574; next prologue 0x218578."

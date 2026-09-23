@@ -1,0 +1,118 @@
+# Reviewed source-owned mouseManager addresses and retained Mac-only helpers.
+
+[[functions]]
+retail_va = 0x50cb50
+unit = "mousemgr"
+mac_section = 0
+mac_offset = 0x216dc8
+mac_size = 0x7c
+target_sha256 = "4d5bb47db08864151f774b3b7cbb5bce1228713b26d744efa3033b7229e1d623"
+evidence = "Calls reviewed baseManager constructor 0x5bc04, installs mouse vtable, strcpy of mouseManager name, initializes frame -1, sprite zero, hide count one at +0x68. Caller 0x10ed34 allocates the manager; terminal BLR 0x216e40."
+
+[[functions]]
+retail_va = 0x50cbf0
+unit = "mousemgr"
+mac_section = 0
+mac_offset = 0x216e8c
+mac_size = 0x88
+target_sha256 = "73ea6a216151f64bce12478c450fd1c4e971b72e7851c44e23a5e534a67bb81b"
+evidence = "Sets no-change pointer +0x38 to zero, calls reset 0x216f90, hides cursor, sets id 0x40, priority from r4 and status +0x30 to one. Loader vtable pointer 1+0x8960, BLR 0x216f10."
+
+[[functions]]
+retail_va = 0x50cc40
+unit = "mousemgr"
+mac_section = 0
+mac_offset = 0x216f14
+mac_size = 0x7c
+target_sha256 = "5bbf0a70b3b645711bf3bf69de9ba33ca1a4fb70d2b93608d877a2206502cc34"
+evidence = "Checks active status +0x30, restores system cursor, disposes sprite by virtual call, clears sprite +0x58. Loader vtable pointer 1+0x8958, BLR 0x216f8c."
+
+[[functions]]
+retail_va = 0x50cc80
+unit = "mousemgr"
+mac_section = 0
+mac_offset = 0x216f90
+mac_size = 0x28
+target_sha256 = "eae24b98c73c290a8131450ca9aec39f2f263fd67d01eb115b6461dc0620b00e"
+evidence = "Zeroes saved rectangle fields +0x40..+0x4c, image coordinates +0x5c/+0x60 and current coordinates +0x6c/+0x70. Called by open at 0x216eb4; BLR 0x216fb4."
+
+[[functions]]
+retail_va = 0x50cd90
+unit = "mousemgr"
+mac_section = 0
+mac_offset = 0x217120
+mac_size = 0x62c
+target_sha256 = "681800de8b68aaeeea91e6f124f88e3b0e324509343e14af73148ed6ac116d86"
+evidence = "Mouse update draws/restores pointer through source-local saveAndDraw 0x2177f4 and restoreUnderlying 0x217944; calls getPointerPosition 0x217abc and loadFrame 0x217c68, sets +0x74 busy flag. Five inbound calls include setPointer, hide/showPointer and checkUpdate. BLR 0x217748."
+
+[[functions]]
+retail_va = 0x50d500
+unit = "mousemgr"
+mac_section = 0
+mac_offset = 0x21774c
+mac_size = 0xa8
+target_sha256 = "bfe4f18fe198d2163c2ee4a5f188909c543c479bd06de147179f49ac95c4aa61"
+evidence = "Mac mouseCoords accepts two out pointers in r4/r5, obtains cursor position, clamps x to 0..799 and y to 0..599, then stores both output dwords. Six inbound calls include getPointerPosition at 0x217ad8; BLR 0x2177f0."
+
+[[functions]]
+retail_va = 0x50d680
+unit = "mousemgr"
+mac_section = 0
+mac_offset = 0x217b00
+mac_size = 0x168
+target_sha256 = "2e33b59f6e152154f8e1f7cd254c4ce2422440884d4f501f19a14a9ad8d3a8f5"
+evidence = "Two lazy timer values initialized with GameTime::get plus 33 and 100; checks +0x74 busy, updates pointer at 0x217ba8 and animates SPELL_SET=3 through loadFrame 0x217c40. Inbound calls 0x10eb2c/0x20ff94; BLR 0x217c64."
+
+[[functions]]
+retail_va = 0x50d8b0
+unit = "mousemgr"
+mac_section = 0
+mac_offset = 0x217c68
+mac_size = 0x150
+target_sha256 = "689d4e0ce56341ba911ff39372ef6e9fa4e98371c93ca29a088bc9689946fef2"
+evidence = "Accepts new frame in r4, builds bitmap/surface, invokes CSprite::drawPointer at 0x217d88 and stores frame at this+0x54. Called by setPointer and checkUpdate; BLR 0x217db4."
+
+[[functions]]
+retail_va = 0x50da20
+unit = "mousemgr"
+mac_section = 0
+mac_offset = 0x217db8
+mac_size = 0x58
+target_sha256 = "a863f4840b85cae4412f22b9faafe3913c91e03a7124199fb38deea5b6fb71c0"
+evidence = "Boolean r4 branches to Mac InitCursor plus hidePointer or showPointer plus HideCursor. Eight inbound calls from cursor/window paths; BLR 0x217e0c."
+
+[[helpers]]
+unit = "mousemgr"
+source_helper = "mouseManager::main"
+mac_section = 0
+mac_offset = 0x216fb8
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "Four-byte return-zero implementation, loader vtable pointer 1+0x8950 and source-owned mouseManager::main body."
+
+[[helpers]]
+unit = "mousemgr"
+source_helper = "mouseManager::saveAndDraw"
+mac_section = 0
+mac_offset = 0x2177f4
+mac_size = 0x150
+target_sha256 = "735b4ad5e5f94b6a885b24b9ff2dd78e9c739c2322f8b191db57e80f730aeb61"
+evidence = "Tests rectangle extent, copies adjusted rectangles and draws saved surface then visible pointer; two direct calls from mouseManager::update at 0x2173d4/0x2176c4."
+
+[[helpers]]
+unit = "mousemgr"
+source_helper = "mouseManager::restoreUnderlying"
+mac_section = 0
+mac_offset = 0x217944
+mac_size = 0x9c
+target_sha256 = "1b22aa2658ad96b9a6ffc1ac9f63f0bbac90e53c8d48cb918dba1c6eaffdb495"
+evidence = "Checks rectangle extent, builds origin rectangle and blits saved underlying surface; two calls from mouseManager::update at 0x217434/0x2175fc."
+
+[[helpers]]
+unit = "mousemgr"
+source_helper = "mouseManager::getPointerPosition"
+mac_section = 0
+mac_offset = 0x217abc
+mac_size = 0x44
+target_sha256 = "eacfa8168c59fa7f9fa1e0bc9ff0dbfe6c8ad44792f7376220aaedb85ebe04f9"
+evidence = "Calls mouseCoords 0x21774c with two stack outputs, stores current x/y at +0x6c/+0x70; called by update and showPointer."

@@ -1,0 +1,353 @@
+# Address-only references discovered from PHILAI TU order, then independently verified.
+# Names remain owned by src/town.cpp VA claims; no compiled Mac target admission.
+
+[[functions]]
+retail_va = 0x005bcd60
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b1c9c
+mac_size = 0x5f4
+target_sha256 = "727a1760f5da838e1e0edab1d0188565adbce347d9440f20fe5e5589c400e4a9"
+evidence = "NEW: Ten byte reads through virtual infile+0xc; army load0x57fc0; loadHeroId0xcc800 twice; version25 town-name gate; population28, guild5, building masks8 and spell-buffer70 reads. Span ends at0x1b2290; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bd2f0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b2290
+mac_size = 0x5e8
+target_sha256 = "34de50f110517273df23d4bd2f1fdac690031ede27920f982fc2acfac66e4b44"
+evidence = "NEW: Symmetric virtual outfile writes including ten byte fields, army save0x57f30, name length and 70 spell flags; no version argument/branch. Adjacent to load. Span ends at0x1b2878; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bd700
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b2878
+mac_size = 0x74
+target_sha256 = "fee3c57b87cc4773da162febfe8fd8982c26974bf6e965f62304187ae38a54b1"
+evidence = "NEW: Leaf tests castle-fort mask, scales town type by2 or(type+9)*2, adds builtThisTurn and small-portrait flag contribution. Span ends at0x1b28ec; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bd750
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b28ec
+mac_size = 0x29c
+target_sha256 = "66fba1b8ee2ebeea75f2c33f91f76d4727d9809b8281bd9f8816faddd279828a"
+evidence = "NEW: Town summoning generator setup calls game generator lookup0xca11c, constructs/deletes vector scratch, scans four creature choices with trait stride0x74 and random selection. Span ends at0x1b2b88; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bde80
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b3288
+mac_size = 0xd0
+target_sha256 = "c2a061e9da7efc91c6c459d52073f2ac021431d3f1a093493829824b7e84d398"
+evidence = "NEW: Town constructor calls string constructor0x46c8, spell-bitset constructor0xe7378 and army constructor0x58050; initializes town byte/id/mask fields. Span ends at0x1b3358; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bdf60
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b3358
+mac_size = 0xbc
+target_sha256 = "29f5e167352095d2877bbe462fc1532a52f44813c79d05d4746bd06bad5a9ad3"
+evidence = "NEW: Initializes static horde-effect dwelling indices by matching seven town dwelling creatures, four horde slots and nine town types. Span ends at0x1b3414; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bdfe0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b3414
+mac_size = 0x4c
+target_sha256 = "53e44fa48ab7c8de6fa35c9fa69a9ff7e7d971dae8e4f93097437394701471ba"
+evidence = "NEW: Gets selected town army0x1b6fdc then tests hasCreatures0x56454; fallback guard reads garrison/visiting hero IDs. Span ends at0x1b3460; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005be210
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b3664
+mac_size = 0x104
+target_sha256 = "1fe3dc9c1fa22af299ef3aca03696ecdc11db8ea7dd10ade6c1c1d05bd999a45"
+evidence = "NEW: Sets town view global/current town context, calls adventure/town presentation0xc3fc8 and restores hero context0x18220; incoming alreadyFaded flag retained. Span ends at0x1b3768; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005be2d0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b3768
+mac_size = 0x134
+target_sha256 = "3b356ebae1790c2ce5589f8e2ef9e554e230230d568a1c7701ead867eda7862a"
+evidence = "NEW: Deallocates town name then removes town ID from player town roster using player stride0x15c and shifts remaining town IDs. Span ends at0x1b389c; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005be390
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b389c
+mac_size = 0x74
+target_sha256 = "8f26dbb6bb06092131075f59610ac1444005f4c71d2656c479dcc6b666062093"
+evidence = "NEW: Reads garrison hero ID, resolves hero with0x486 stride, calls town placeInMap0x1b6f1c and clears garrison slot. Span ends at0x1b3910; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bec60
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b41dc
+mac_size = 0x1c8
+target_sha256 = "65cdcb8ad177c52f187fa7ae7d19206747168a8478f6badea1a1e79cbb623c86"
+evidence = "NEW: Owner player-town loop, tests/clears duplicate capitol building mask, calls retained remove-capitol helper0x1b43a4 and map convertObject0xe0be8. Span ends at0x1b43a4; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bf210
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b47cc
+mac_size = 0x17c
+target_sha256 = "57cce622b9c8f380a4a2e72dfdf08c3c14da8c6d25ce9221a9582a85e5b028d0"
+evidence = "NEW: Dock coordinates/map cells at0x22 stride; checks water8 and hero object34; updates masks via0x1b66f4/createBuilding0x1b3e3c. Span ends at0x1b4948; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bf3c0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b4948
+mac_size = 0x224
+target_sha256 = "e85c26b441269cb4bcd70125b4a603dd43d95a83b08f48b77db6194c08ad09bb"
+evidence = "NEW: Calls admitted canBuild0x1b67f8/getBuildCostArray0x1b6c0c, player affordability, PHILAI resource-trade wrapper0x140df0 then buildBuilding0x1b43ac. Span ends at0x1b4b6c; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bf4f0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b4b80
+mac_size = 0xa0
+target_sha256 = "a3a02c7f4d8a546d508dc1e6ae582b18d8f7b9d9c002bf0354d2dd3c2634a60d"
+evidence = "NEW: Writes archer level10 and base count4, scans44 buildings checking isLegalBuilding0x1b6de0 and built mask, increments output count. Span ends at0x1b4c20; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bf570
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b4c20
+mac_size = 0x8c
+target_sha256 = "078aa5de48226f7cfd44e022180f871a80f9bf8444315a1207764e02aa665523"
+evidence = "NEW: Castle/citadel built bits select creature0x74-stride growth value or half value, otherwise zero. Span ends at0x1b4cac; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bf600
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b4cac
+mac_size = 0x130
+target_sha256 = "ef239d1a5bbdd0aac1b2207fcc3026403649d86cd72a936672172b3c522424da"
+evidence = "NEW: Gold income starts500; hall bits select1000/2000/4000, optional silo via0x1b6dc8, active grail adds5000. Span ends at0x1b4ddc; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bf6d0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b4ddc
+mac_size = 0x14c
+target_sha256 = "0c1c508cf7011facd3df005c3a06ad530bc778bd711ebb05ece62bd0032c6f11"
+evidence = "NEW: Active dwelling bit gate, four horde-building masks and horde-effect dwelling equality; returns matching building ID or sentinel44. Span ends at0x1b4f28; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bf770
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b4f28
+mac_size = 0x138
+target_sha256 = "9a1580aa26802c35ec395384141dceae236f7bf3c52ae4869c1e72223235fbf2"
+evidence = "NEW: Same active dwelling/four horde masks as getHorde; loads matching horde-effect bonus field instead of building ID and defaults zero. Span ends at0x1b5060; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bf810
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b5060
+mac_size = 0xc0
+target_sha256 = "71feba082e6664a146d2f7d99938e5873ec6cfe8face733d4eef52a62533ecd0"
+evidence = "NEW: Owner player hasGivenArtifact0xcda7c with assembled Legion133, resolves creature growth and calls castle-growth bonus0x1b4c20, halves sum. Span ends at0x1b5120; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bf900
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b5120
+mac_size = 0x2f4
+target_sha256 = "faf1062b4c291b18f2f23417db5a39138017684775f0d759953de5917921b290"
+evidence = "NEW: Garrison/visiting hero resolution including map fallback, dwelling modulo7 tier switch; ten isWieldingArtifact calls for Legion pieces118..122. Span ends at0x1b5414; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bfb60
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b5414
+mac_size = 0x1fc
+target_sha256 = "d9214ec2be3e5ee4710d11cdf260b85bfab1bef402d93349dbe6f41544f2c18d"
+evidence = "NEW: Upgraded dwelling normalization and creature growth, castle bonus0x1b4c20, assembled Legion0x1b5060, Legion pieces0x1b5120 and remaining growth bonuses. Span ends at0x1b5610; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bfdd0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b5610
+mac_size = 0xc8
+target_sha256 = "823b660e7e8f655103020b9ac065788793195c9a15e198cda095c3393cf631ff"
+evidence = "NEW: Fourteen dwelling creature checks and paired base/upgraded slots; calls growth-rate0x1b5414 for default bonus and increments population. Span ends at0x1b56d8; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bfe50
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b56d8
+mac_size = 0x100
+target_sha256 = "e51bac2b4679e028e986f5049ca88516068c3ecd1dfe275723e83c6483a81967"
+evidence = "NEW: Scans14 base/upgraded dwelling creatures, loops first7 to apply generator bonus when creature matches; modifies per-dwelling count. Span ends at0x1b57d8; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005bfeb0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b5b90
+mac_size = 0x3f4
+target_sha256 = "a61d6b67934e87b8baab0669840fefff91139b3c9763982559e5a58f0492462b"
+evidence = "NEW: Processes event building and creature rewards; calls buildBuilding0x1b43ac, appends dialog resources and calls showBuildingRewards0x1b57d8/showCreatureRewards0x1b5970 twice each. Span ends at0x1b5f84; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c0220
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b57d8
+mac_size = 0x198
+target_sha256 = "6d3c8618c81356e3f81c2c9b3dd800ac34db03377177887df49cbedd20bdd718"
+evidence = "NEW: Builds string from awarded building names, formats aggregate reward, local-human extendedDialog0x1194d8 then clears reward vector; adjacent admitted creature counterpart. Span ends at0x1b5970; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c0670
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6638
+mac_size = 0xbc
+target_sha256 = "ba9335d926fae2243b64885a2d20fc0249c57baf5fe587f57a17437d2cf418bc"
+evidence = "NEW: Copies setup/claims town through0xdc98c, calls initializeArmy0x1b648c, initializeBuildings0x1b604c, updateFullBuildingMask0x1b66f4 and initializeSpells0x1b3abc. Span ends at0x1b66f4; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c08c0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b604c
+mac_size = 0x440
+target_sha256 = "441247a187ce2083841df3a384b320d8e3c913ce197a367dbec061f65c316c44"
+evidence = "NEW: Zeros population, creates village hall, checks grail-target and two dock positions via0x1b5f84, remaps44 custom buildings, otherwise creates fort/tavern/dwellings with random<=30. Span ends at0x1b648c; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c0c90
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b5f84
+mac_size = 0xc8
+target_sha256 = "6194c8c167c52f5331ae7aeb2e147e1ac346b0f14da4bc45aaeb015f5df90c06"
+evidence = "NEW: Bounds x/y against map dimensions, selects0x22-stride cell, tests terrain water8 and blocking flags, permits boat8 and writes dock x/y bytes. Span ends at0x1b604c; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c0e60
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6994
+mac_size = 0xf8
+target_sha256 = "dbd6d97a6b3d50eb2124ce4e7f2c952bdf4ebf34f1137405efc45ba729bb565f"
+evidence = "NEW: Legal-building test, dock6/capitol13 exceptions and hierarchy-mask subset against active|available; no built-this-turn gate unlike canBuild neighbor. Span ends at0x1b6a8c; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c10f0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6c74
+mac_size = 0x40
+target_sha256 = "27fe7d3d158c5da3dd3e4b2803cd309157fa2884e3afe5c5fbbee6780aedad10"
+evidence = "NEW: Calls admitted getBuildCostArray0x1b6c0c then memcpy0x28aa6c with28 bytes into provided resource array. Span ends at0x1b6cb4; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c1180
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6cb4
+mac_size = 0xb4
+target_sha256 = "58c7bf8e1ccdd62144de496e71e5e5b66a57f4de894d0be59c5e1f9f9047cc5e"
+evidence = "NEW: Calls getBuildCostArray then zeroes28bytes output; seven costs loop copies only positive entries into compact type/amount arrays and returns short count. Span ends at0x1b6d68; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c1230
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6d68
+mac_size = 0x60
+target_sha256 = "902753b24f4b93ba35ea3afc6a386d3f7ce9d7474e0ed28f8c306400e6e5c54a"
+evidence = "NEW: Four-element horde building ID search, returns null if no match or town-type/slot indexed horde-effect row. Span ends at0x1b6dc8; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c1280
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6dc8
+mac_size = 0x18
+target_sha256 = "7bdfd90a2911e948fdcc99b946d2177a625d5f99e926d90082ef750e11a9d587"
+evidence = "NEW: Signed town type at+4 times28 bytes added to silo income table pointer. Span ends at0x1b6de0; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c12e0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6e58
+mac_size = 0xc4
+target_sha256 = "4cc05d8c68329fb3e0d422c0e2a53e1bb26ca00e5e460449f707fd09b7b521a7"
+evidence = "NEW: Searches two player recruit IDs, subtracts hero gold cost, placeInMap0x1b6f1c, giveSpells0x1b3460 then replaces recruit0xdf2e4. Span ends at0x1b6f1c; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c13b0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6f1c
+mac_size = 0x88
+target_sha256 = "dff40ba713028f7798447249c783ecd4c1437e89f3b93748dffbe087fc34174e"
+evidence = "NEW: Resolves heroID with0x486 stride, constructs point from town x/y/z bytes and delegates hero placeInMap0xf2928 with player/reset flags. Span ends at0x1b6fa4; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c1440
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6fa4
+mac_size = 0x1c
+target_sha256 = "dcaeb72ff6226c1a0c245ee71cf4cfdc219fc629c46ad31b2f892adb5ad01284"
+evidence = "NEW: Leaf reads signed town type+4 and returns corresponding32-bit native-terrain table entry through TOC-0x7768. Span ends at0x1b6fc0; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c1450
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6fc0
+mac_size = 0x1c
+target_sha256 = "71a6bc7021f7d61f97b311fdc215b91d992aafb2502926da0086caae992d94e0"
+evidence = "NEW: Leaf reads signed town type+4 and returns corresponding town-type-name pointer through separate TOC-0x7920. Span ends at0x1b6fdc; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c14a0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b7064
+mac_size = 0x28
+target_sha256 = "12c1ec5988993b7fd2801e967cd5623e74b616652ac28880555d8d640681a0d6"
+evidence = "NEW: Leaf maps horde18->19 and24->25; every other dwelling ID adds7. Span ends at0x1b708c; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+
+[[functions]]
+retail_va = 0x005c14c0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b708c
+mac_size = 0x158
+target_sha256 = "a95913b798f279d28e32819a39f28e2dac07d0ade5f8964a3a3808a16887f7fb"
+evidence = "NEW: Loads building.txt spreadsheet, loops9towns x9special costs,17neutral rows,9towns x14dwellings; calls retained seven-atoi helper0x1b71e4 three sites, disposes spreadsheet. Span ends at0x1b71e4; last word0x4e800020; adjacent entries and call-flow boundary inspected."

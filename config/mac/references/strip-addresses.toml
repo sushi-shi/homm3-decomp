@@ -1,0 +1,64 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x5a9d20
+unit = "strip"
+mac_section = 0x0
+mac_offset = 0x19af44
+mac_size = 0x6c
+target_sha256 = "9b0fef132f9d66a5dc112584de266d675a2ee715810ff30f2282261782b43319"
+evidence = "stores x/y/owner/hero/group/window and -2 current selection; calls drawIcons0x19b040; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x5a9d80
+unit = "strip"
+mac_section = 0x0
+mac_offset = 0x19aff0
+mac_size = 0x50
+target_sha256 = "ee5ee464a19d1db617941936c178c24f815276dfc98da4be75a800fa2310c46a"
+evidence = "calls drawIcons0x19b040 then winmgr updateScreen0x20df2c with width494 and height64; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x5a9db0
+unit = "strip"
+mac_section = 0x0
+mac_offset = 0x19b040
+mac_size = 0x15c
+target_sha256 = "45714d4c16499f2591b0e3fc7f76d46c6038fb9e2e3f581c673fe4c98f32a0e0"
+evidence = "calls drawOwner0x19b244, loops seven troop slots calling drawMonster0x19b490, sprintf, drawNumber0x19b19c and drawSelector0x19b5cc; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x5aa060
+unit = "strip"
+mac_section = 0x0
+mac_offset = 0x19b244
+mac_size = 0x24c
+target_sha256 = "5f0dc0811a76843ef581ae666faf5a1e09f0af8a15ec189d17607a753dfd3971"
+evidence = "owner portrait/widget control with IDs100/122/123/124/125 and multiple heroWindow broadcastMessage calls; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x5aa230
+unit = "strip"
+mac_section = 0x0
+mac_offset = 0x19b490
+mac_size = 0x13c
+target_sha256 = "0f8392520141043f436812a88d9e569aa33504113d0b38cac508c30849235062"
+evidence = "monster widget controller uses slots101/126, text108/133 and selector115/140 with broadcastMessage calls; complete adjacent PowerPC span."
+
+[[helpers]]
+source_helper = "strip::drawNumber"
+unit = "strip"
+mac_section = 0x0
+mac_offset = 0x19b19c
+mac_size = 0xa8
+target_sha256 = "4d59632bbf139c9fff01115009dd2d65ae42f61f29d01c95d49dc1ca02e93439"
+evidence = "widget message IDs108/133 and SET_TEXT/SET_STATUS sequence; called by drawIcons0x19b040; complete adjacent PowerPC span."
+
+[[helpers]]
+source_helper = "strip::drawSelector"
+unit = "strip"
+mac_section = 0x0
+mac_offset = 0x19b5cc
+mac_size = 0xac
+target_sha256 = "c833c5de3b409b40fa5022c644227650f7452013721eab6a293fade026db5b41"
+evidence = "selector message and widget ID sequence; three drawIcons0x19b040 call sites; complete adjacent PowerPC span."
