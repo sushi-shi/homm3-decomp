@@ -527,9 +527,12 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 // byte-flat under VC6. Reviewed retail ABI aliases for gpCurrentPlayer and
 // gSystemPalette make the named relocations agree but do not change the
 // 99.989845% score, so this source keeps the canonical global names.
-// The reviewed Mac Update body is 1484 B and has the same 33 ordered calls
-// under the -O2 recruit profile; its remaining save/stack and TOC addressing
-// differences do not identify a different source expression here.
+// The reviewed Mac Update body is 1484 B and retains 33 calls. The current
+// native-header candidate cannot complete byte comparison until its
+// g_recruitWindow TOC reference is resolved; that gap does not identify a
+// different source expression at the Windows multiplication sites.
+// DC line 521 calls TTextResource::operator[] for the recruit title. Restoring
+// that canonical source call is VC6 byte-flat and clears its audit finding.
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
 void recruitUnit::update(unsigned char newMonster, long slot)
 {
@@ -541,7 +544,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     updateCost();
 
     sprintf(g_text, "%s %s",
-        g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE),
+        (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
         getArmyName(m_monsterType, 2));
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;

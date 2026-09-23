@@ -7320,11 +7320,14 @@ void game::perDay()
 // Complete passes a player index instead of the older recruits/align pair.
 // The two-slot loop, tutorial choices and equipment/mana/army closeout identify
 // this body; DC's nullary set_recruits is the surrounding all-player operation.
+// Mac 0xdf0ac initializes the local artifact's id before its extra field.
+// The TArtifact constructor preserves that order in VC6; the default
+// constructor reverses the two stores in this caller.
 VA(0x004c8450, 0x248)
 void game::setWeeklyRecruits(int playerPos)
 {
     playerData* player = &m_players[playerPos];
-    type_artifact artifact;
+    type_artifact artifact(ARTIFACT_NONE);
     int recruitSlot;
 
     for (recruitSlot = 0; recruitSlot < 2; ++recruitSlot) {

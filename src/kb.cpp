@@ -4835,15 +4835,19 @@ static int waitHandler(message& msg)
 // the expansion flag are left for CalculateNormalDialogSize to fill in - they
 // are never written here and are read straight out of the block when the
 // by-value argument is built.
+// DC records the page index as long i; Mac 0x1194d8 advances it separately
+// from the eight-icon slot index. This restores the named local without a
+// VC6 byte change. Mac byte comparison awaits the MSL string constructor
+// relocation used by this body's TNormalDialogInfo construction.
 VA(0x004f7690, 0x312)  // anchor-global + dc parameter list, dc 0xe6cf0
 void extendedDialog(const char* text,
                      std::vector<type_dialog_resource>& resources,
                      long x, long y, long timeout)
 {
-    unsigned int shown = 0;
+    long i = 0;
 
     do {
-        int count = resources.size() - shown;
+        int count = resources.size() - i;
         if (count > 8)
             count = 8;
 
@@ -4861,8 +4865,8 @@ void extendedDialog(const char* text,
 
         int icon;
         for (icon = 0; icon < count; ++icon) {
-            dialogInfo.m_icons[icon].set(static_cast<EGameResource>(resources[shown].m_resource) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resources[shown].m_qualifier);
-            ++shown;
+            dialogInfo.m_icons[icon].set(static_cast<EGameResource>(resources[i].m_resource) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resources[i].m_qualifier);
+            ++i;
         }
         // DC 5943 advances the index before set; retail VC6 advances the
         // icon pointer before the same call.
@@ -4873,7 +4877,7 @@ void extendedDialog(const char* text,
         text = "";
         calculateNormalDialogSize(dialogInfo);
         doNormalDialog(dialogInfo);
-    } while (shown < resources.size());
+    } while (i < resources.size());
 }
 
 VA(0x004f79b0, 0x25)  // decorated identity + map-extents arithmetic
