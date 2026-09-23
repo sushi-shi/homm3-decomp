@@ -8430,15 +8430,17 @@ DATA(0x0063a66c) static const int g_scrollSpeedInc[3] = { 1, 2, 3 };
 // build uses direct TOC scalar storage at 1+0x3d20.
 
 // E:\gamedcs\advmgr.cpp:10624
+// VC6 matches retail exactly when scrollInc is declared before the two map
+// origin locals. The Mac source shape retains all six ordered direct calls.
 VA(0x004195c0, 0x258)  // anchor-callee, dc 0x1c7e4
 void advManager::screenScroll(int dir, int changeMouse)
 {
     g_config.m_windowScrollSpeed =
         limit(0, g_config.m_windowScrollSpeed, 2);
 
+    int inc = g_scrollSpeedInc[g_config.m_windowScrollSpeed];
     int x = m_radarOrigin.m_x;
     int y = m_radarOrigin.m_y;
-    int inc = g_scrollSpeedInc[g_config.m_windowScrollSpeed];
     g_lastMapScrollTime = GameTime::get();
 
     switch (dir) {
