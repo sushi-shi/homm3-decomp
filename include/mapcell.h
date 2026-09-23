@@ -1195,9 +1195,7 @@ public:
     // assigns.  The Dreamcast declarator's enum is preserved in the name.
     int m_artifact;
     // E:\gamedcs\MapCell.h:735, dc 0xf4a50
-// HOMM3_MAC_SHARED_BEGIN mapcell_monster_data_ctor
     MonsterData() { m_artifact = ARTIFACT_NONE; }
-// HOMM3_MAC_SHARED_END mapcell_monster_data_ctor
 };
 SIZE(MonsterData, 0x30);
 
@@ -1436,7 +1434,6 @@ public:
 
 // Canonical inline definitions in Dreamcast MapCell.h source-line order.
 
-// HOMM3_MAC_SHARED_BEGIN mapcell_get_num_levels
 // MapCell.h:769 in the DC roster (dc 0x2e48), i.e. a header inline of
 // this class - and retail keeps no out-of-line row for it either.
 // advManager::ProcessDeSelect's elevation-toggle arm expands it in
@@ -1446,7 +1443,6 @@ public:
 // (victorylossconditions' z bound in CheckForDefeatedMonsterWin is
 // the same movzx/inc shape, 2026-08-20).
 inline int NewfullMap::getNumLevels() { return m_hasTwoLevels + 1; }
-// HOMM3_MAC_SHARED_END mapcell_get_num_levels
 
 // Const route lookup retains the recovered helper and level arithmetic.
 // E:\gamedcs\MapCell.h:847, dc 0xbc8dc
@@ -1455,7 +1451,6 @@ inline const NewmapCell* NewfullMap::zCell(int x, int y, int z) const
     return m_cellData + x + y * m_size + z * m_size * m_size;
 }
 
-// HOMM3_MAC_SHARED_BEGIN mapcell_z_cell
 // MapCell.h:850, dc 0x1f974. This worker reproduces all 49 retail bytes
 // at 0x408770, including the boat callers' retained zero-coordinate lookup.
 // The former scalar-cell claim incorrectly distinguished 49 x86 bytes from
@@ -1467,7 +1462,6 @@ inline NewmapCell* NewfullMap::zCell(int x, int y, int z)
 {
     return m_cellData + x + y * m_size + z * m_size * m_size;
 }
-// HOMM3_MAC_SHARED_END mapcell_z_cell
 
 // E:\gamedcs\MapCell.h:889, dc 0xbc930
 inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
@@ -1481,7 +1475,6 @@ inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
 // WinCE build's out-of-line copy of a header inline - so it is a header
 // inline for EVERY compiland. DC line 907 calls zCell directly.
 
-// HOMM3_MAC_SHARED_BEGIN mapcell_cell_xyz
 // DC MapCell.h:897 calls zCell. The unrecorded line 896 does not prove
 // a release VERIFY. Removing the inferred storage check preserves this
 // helper chain and restores the boat callers' retail expansion decisions;
@@ -1490,7 +1483,6 @@ inline NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
     return zCell(x, y, z);
 }
-// HOMM3_MAC_SHARED_END mapcell_cell_xyz
 
 inline NewmapCell* NewfullMap::cell(type_point point)
 {

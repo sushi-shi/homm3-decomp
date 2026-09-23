@@ -13,14 +13,12 @@
 
 #include <vector>
 
-// HOMM3_MAC_SHARED_BEGIN max_int
 // E:\gamedcs\includes.h:97, dc 0x1ef28. The wrapper owns argument
 // copies, then dereferences the selector's returned argument address.
 inline int max(int left, int right)
 {
     return cppMax(left, right);
 }
-// HOMM3_MAC_SHARED_END max_int
 
 // E:\gamedcs\includes.h:114, dc 0x2da4.
 inline int min(int left, int right)
@@ -34,7 +32,6 @@ inline double min(double left, double right)
     return cppMin(left, right);
 }
 
-// HOMM3_MAC_SHARED_BEGIN t_limit
 // E:\gamedcs\includes.h:124, dc 0x20d2c. CodeView types all three
 // parameters and the return as const references. The retained retail body and
 // ordinary limit expansions use maximum < value for the upper clamp. Retail
@@ -52,14 +49,11 @@ inline const T& tLimit(const T& minimum, const T& value,
         return value;
     }
 }
-// HOMM3_MAC_SHARED_END t_limit
-// HOMM3_MAC_SHARED_BEGIN limit
 // E:\gamedcs\includes.h:134
 inline int limit(int minimum, int value, int maximum)
 {
     return tLimit(minimum, value, maximum);
 }
-// HOMM3_MAC_SHARED_END limit
 
 // The no-repeat random picker. Retail's ctor/Pick pair byte-proves the
 // VC6 generic vector<unsigned char> representation at +8: allocator

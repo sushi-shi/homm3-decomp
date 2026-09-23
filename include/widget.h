@@ -204,19 +204,15 @@ public:
                 onSleepChange(0);
         }
     }
-// HOMM3_MAC_SHARED_BEGIN widget_hide
     // Dreamcast header inlines used by mode-switch paths.
     void hide()
     {
         sendMessage(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
     }
-// HOMM3_MAC_SHARED_END widget_hide
-// HOMM3_MAC_SHARED_BEGIN widget_show
     void show()
     {
         sendMessage(WIDGET_SET_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
     }
-// HOMM3_MAC_SHARED_END widget_show
     VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263, dc 0x56df8
     void setVisible(unsigned char arg)
     {

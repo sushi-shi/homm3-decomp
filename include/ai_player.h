@@ -75,21 +75,17 @@ public:
     // inlined into type_income_artifact::get_value, whose by-value double
     // return temp at [ebp-8] is what the retail bytes home under /Op.
     long getResourceValue(int* resources) const;
-// HOMM3_MAC_SHARED_BEGIN ai_player_get_resource_value
     double getResourceValue(enum EGameResource resource) const
     {
         return m_resourceValue[resource];
     }
-// HOMM3_MAC_SHARED_END ai_player_get_resource_value
     void startTurn();  // 0x4297c0
-// HOMM3_MAC_SHARED_BEGIN ai_player_set_attack_bonuses
     static void setAttackBonuses(float computerBonus,
                                    float humanBonus)
     {
         s_attackComputerBonus = computerBonus;
         s_attackHumanBonus = humanBonus;
     }
-// HOMM3_MAC_SHARED_END ai_player_set_attack_bonuses
 
 protected:
     void makeGift(long playerId);  // 0x429110

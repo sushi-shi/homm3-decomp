@@ -95,9 +95,7 @@ public:
     }
     // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
     // source helper while Complete's /Ob2 lowers it to the field_68 test.
-// HOMM3_MAC_SHARED_BEGIN mousemgr_is_vis
 unsigned char isVis() const { return m_hideCount == 0; }
-// HOMM3_MAC_SHARED_END mousemgr_is_vis
 
 private:
     void saveAndDraw(IDirectDrawSurface* dstSurface,

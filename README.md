@@ -95,12 +95,14 @@ Restore supported helpers and calls in the Windows source, then check Windows
 retail bytes. An exact comparison on both architectures strengthens the source
 evidence, but does not establish a unique original spelling.
 
-Ordinary-header compilation now supports the original CodeWarrior library
-headers, staged with `homm3 mac sdk PATH`. Existing profiles still use declaration
-views while their ordinary-header compilation errors are reviewed. Replacing
-those views and the marked-body extraction is ongoing; new profiles should use
-the [native-header path](docs/tooling/mac-native-headers.md). This comparison
-tooling does not require a runnable Mac port.
+Mac comparisons use the ordinary game headers and the original CodeWarrior
+library headers, staged with `homm3 mac sdk PATH`. The duplicate Mac declaration
+headers, body-extraction markers and their manifest have been removed. Candidate
+inputs retain each source file's original include prefix; profiles contain
+compiler settings and source-helper selection only. Remaining ordinary-header
+compilation errors are explicit coverage gaps; earlier declaration-view scores
+are historical checkpoints. See the [native-header path](docs/tooling/mac-native-headers.md).
+This tooling does not require a runnable Mac port.
 
 ## Quickstart
 

@@ -115,10 +115,10 @@ For a canonical ordinary helper without an established Windows VA, use a
 `retail_va`. The selector must locate exactly one supported definition in the
 owning TU or registered fragment; declarations, ambiguous overloads and
 unsupported scopes fail.
-For an in-class inline without a Windows VA, `source` may name a registered
-canonical `.inl` fragment under `include/`; the selector must find its one
-definition there. The Mac declaration view includes that fragment directly,
-so the helper does not need a duplicate out-of-class body in the unit profile.
+Keep in-class helper bodies in their ordinary owning headers. CodeWarrior
+reads those definitions directly through the source include prefix; do not
+extract them into fragments or add duplicate out-of-class definitions. A
+reference identity that tooling cannot yet resolve remains an explicit gap.
 To select an overload, append its exact authored parameter declaration,
 including parameter names and trailing `const` (whitespace is ignored), for
 example `"Owner::set(TCreatureType newType, short* newAmount)"`.
@@ -223,21 +223,20 @@ compiler calibration, current admitted pairs and exact-comparison constraints.
 
 ## Extending a unit
 
-1. Create `config/mac/units/<TU>.toml` and its shared declaration view:
+1. Create `config/mac/units/<TU>.toml` with compiler settings:
 
    ```toml
    mode = "paired_bodies"
-   preamble = "config/mac/include/<TU>.h"
-   include_dirs = ["include", "config/mac/include"]
    flags = ["-O1", "-proc", "750", "-nolink"]
    helpers = [] # optional additional source-owned VA definitions
    ```
 
    Calibrate flags against that unit's Mac code. Preserve real helper calls,
-   declarations, body visibility and source order. Header inputs are captured
-   and staged from the project; missing or macro-generated includes report an
-   adaptation requirement. Shared Mac declaration views must not duplicate or
-   alter game function bodies. Their layouts require binary evidence.
+   declarations, body visibility and source order. Candidate inputs preserve
+   the source file's include prefix and read the ordinary game headers. Native
+   MSL headers are staged with `homm3 mac sdk PATH`. Missing platform headers or
+   compiler errors remain explicit coverage gaps. Do not add replacement game
+   declarations or extracted header bodies.
 
 2. Run `homm3 mac compile <Windows-VA> --unit <TU>`. This exposes emitted
    MWOB hunk names, sizes and references under `build/mac/objects/probe-<VA>/`.

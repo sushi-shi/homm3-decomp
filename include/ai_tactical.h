@@ -114,9 +114,7 @@ public:
 
     // Original: type_AI_combat_parameters::get_enemy_group; ai_tactical.h:82, dc 0x27fd4.
     long getEnemyGroup() const { return m_enemyGroup; }
-// HOMM3_MAC_SHARED_BEGIN ai_parameters_get_group
     long getGroup() const { return m_ourGroup; }
-// HOMM3_MAC_SHARED_END ai_parameters_get_group
     long getRangedAttackValue(const army& currentArmy, const army& enemy) const;
     long getSimpleAttackEffect(const army& currentArmy, long ourTotal,
                                   const army& enemy, long enemyTotal,
@@ -168,17 +166,11 @@ public:
     // dc 0x3d154. Inlined into check_adjacent_hexes and carrying no
     // retail body of its own.
     long getAttackTime(const pathCell* cell) const;
-// HOMM3_MAC_SHARED_BEGIN ai_attack_chooser_get_attack_time
     // DC ai_tactical.h:471..482 (0x27fdc/0x27fe0/0x27fe4) returns
     // best_attack_time, best_hex and best_value, at the retail-proven offsets.
     long getAttackTime() const { return m_bestAttackTime; }
-// HOMM3_MAC_SHARED_END ai_attack_chooser_get_attack_time
-// HOMM3_MAC_SHARED_BEGIN ai_attack_chooser_get_best_hex
     long getBestHex() const { return m_bestHex; }
-// HOMM3_MAC_SHARED_END ai_attack_chooser_get_best_hex
-// HOMM3_MAC_SHARED_BEGIN ai_attack_chooser_get_hex_value
     long getHexValue() const { return m_bestValue; }
-// HOMM3_MAC_SHARED_END ai_attack_chooser_get_hex_value
 
 protected:
     void checkAdjacentHexes(long enemyHex, long startDirection,

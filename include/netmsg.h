@@ -141,7 +141,6 @@ public:
     int m_subType;
     unsigned long m_size;
     int m_uncompressedSize;
-// HOMM3_MAC_SHARED_BEGIN netmsg_cnetmsg_ctor
     VA(0x004f2930, 0x23)  // anchor-callee + exact body, retail-only slot
     CNetMsg(eRS_Messages subType, unsigned long size)
     {
@@ -151,7 +150,6 @@ public:
         m_dpidFrom = 0;
         m_uncompressedSize = 0;
     }
-// HOMM3_MAC_SHARED_END netmsg_cnetmsg_ctor
     // Original: CNetMsg::IsCompressed; netmsg.h:179, dc 0x11f5f4
     unsigned char isCompressed()
     {
@@ -515,7 +513,6 @@ class CPlayerWonMsg : public CNetMsg {
 public:
     int m_gamePos;
     VictoryConditionStruct m_victoryCondition;
-// HOMM3_MAC_SHARED_BEGIN netmsg_player_won_ctor
     // Dreamcast netmsg.h:505 fixes the reference parameter and statement
     // order. Complete expands this constructor into DisplayVCWinLoss while
     // retaining or expanding the CNetMsg base constructor per call site.
@@ -526,7 +523,6 @@ public:
         this->m_gamePos = gamePos;
         m_victoryCondition = victoryConditionStruct;
     }
-// HOMM3_MAC_SHARED_END netmsg_player_won_ctor
 };
 SIZE(CPlayerWonMsg, 0x64);
 
@@ -534,7 +530,6 @@ class CPlayerLostMsg : public CNetMsg {
 public:
     int m_loser;
     LossConditionStruct m_lossCondition;
-// HOMM3_MAC_SHARED_BEGIN netmsg_player_lost_ctor
     // kb.obj's SendPlayerLost builds this at all three DisplayLCWinLoss
     // arms. The member's own default constructor runs before the body's
     // assignment - retail stores Type/-1, GameLost/0 and playerLoser/-1
@@ -547,7 +542,6 @@ public:
         this->m_loser = loser;
         m_lossCondition = lossConditionStruct;
     }
-// HOMM3_MAC_SHARED_END netmsg_player_lost_ctor
 };
 SIZE(CPlayerLostMsg, 0x3c);
 

@@ -62,8 +62,10 @@ claim. This avoids pretending that section offsets are Windows VAs.
 
 The current admitted control is `hero::getHighestSchool` at Windows VA
 `0x004e51c0` and Mac section `0` offset `0x106188`. The target toolchain
-compiles the admitted bodies in `src/hero.cpp` together through shared Mac
-declarations, in authored source order. All `0x94` target bytes match. The adjacent `hero::getSpellSchoolLevel` is
+originally compiled the admitted bodies in `src/hero.cpp` through temporary
+declaration views. Those duplicate headers have now been removed: candidates
+reuse the source include prefix and ordinary project headers. The following
+scores describe the historical declaration-view controls, in authored source order. All `0x94` target bytes match. The adjacent `hero::getSpellSchoolLevel` is
 paired at Windows VA `0x004e5100` and Mac section `0` offset `0x106090`;
 its unique switch prefix, skill offsets and boundary at the next paired
 function support the label. A natural `if/else` with one shared return resolved

@@ -32,7 +32,6 @@ class Pair:
     unit: str
     source: Path
     signature: str
-    shim: Path
     mac_section: int
     mac_offset: int
     mac_size: int
@@ -184,7 +183,7 @@ def load_data(root: Path) -> list[DataPair]:
             if same_tu_definition:
                 # A source-owned uninitialized global still has a real
                 # definition in its original TU. CodeWarrior can address that
-                # storage directly from the TOC; an extern-only shim cannot.
+                # storage directly from the TOC; an extern-only declaration cannot.
                 # Keep this narrow: no initializer, pointer, reference, or
                 # qualified member declarator is inferred from the row.
                 match = re.fullmatch(
@@ -311,15 +310,15 @@ def load_pairs(root: Path, extra_rows: list[dict] | None = None) -> list[Pair]:
             raise SourceError(f"Mac pair {va:#x} is not owned by unit {row['unit']}")
         _, signature = _claim(source.read_text(), va, source, allow_declaration=True)
         profile = profiles.load(root, row["unit"])
-        if profile and "shim" in row:
-            raise SourceError(f"{row['unit']}: paired-body profile replaces per-function shims")
-        if not profile and "shim" not in row:
-            raise SourceError(f"{row['unit']}: pair needs a Mac unit profile or bootstrap shim")
+        if "shim" in row:
+            raise SourceError(f"{row['unit']}: duplicate declaration headers are not supported")
+        if not profile:
+            raise SourceError(f"{row['unit']}: pair needs a Mac unit compiler profile")
         pairs.append(Pair(va, row["unit"], source,
-                          signature, root / (profile.preamble if profile else row["shim"]),
+                          signature,
                           row["mac_section"], row["mac_offset"],
                           row["mac_size"], row["mac_symbol"], row["evidence"],
-                          tuple(row.get("data", [])), row["unit"] if profile else None,
+                          tuple(row.get("data", [])), row["unit"],
                           digest, root))
     return pairs
 
@@ -422,9 +421,49 @@ def individual_source(pair: Pair) -> str:
             if va not in claims:
                 raise SourceError(f"{pair.signature}: missing Mac data pair {va:#x}")
             if not claims[va].definition:
-                raise SourceError(f"{pair.signature}: qualified data {va:#x} must be declared in its class view")
+                raise SourceError(f"{pair.signature}: qualified data {va:#x} must be declared in its ordinary class header")
             definitions.append(claims[va].definition)
-    return "\n\n".join([pair.shim.read_text().rstrip(), *definitions, extract_body(pair)])
+    return "\n\n".join([source_preamble(pair.source.read_text()), *definitions, extract_body(pair)])
+
+
+def source_preamble(text: str) -> str:
+    """Reuse the source's leading include/pragma directives in their exact order.
+
+    Preserve forward declarations interspersed with includes. Stop at the
+    first definition. A conditional that crosses into definitions cannot be
+    detached safely and is reported instead of generating a different view.
+    """
+    masked = _masked_source(text)
+    end = 0
+    depth = 0
+    continuation = False
+    while end < len(masked):
+        stop = masked.find("\n", end)
+        stop = len(masked) if stop < 0 else stop + 1
+        line = masked[end:stop]
+        directive = re.match(r'\s*#\s*(\w+)', line)
+        if not continuation and line.strip() and not directive:
+            forward = re.match(
+                r'\s*(?:(?:class|struct)\s+\w+\s*;|'
+                r'(?:[\w:*&]+\s+)+[\w:]+\s*\([^;{}]*\)\s*(?:const\s*)?;)',
+                masked[end:])
+            if not forward or re.search(r'\b(?:VA|DATA|VA_COMPGEN|DATA_COMPGEN)\s*\(', forward[0]):
+                break
+            end += forward.end()
+            continue
+        if directive and not continuation:
+            name = directive[1]
+            if name in ("if", "ifdef", "ifndef"):
+                depth += 1
+            elif name == "endif":
+                depth -= 1
+                if depth < 0:
+                    raise SourceError("unbalanced source include prefix")
+        continuation = line.rstrip().endswith("\\")
+        end = stop
+    if depth or continuation:
+        raise SourceError("source include prefix crosses a conditional C++ declaration")
+    return text[:end].rstrip()
 
 
 def source_identity(pair: Pair, generated: bytes) -> bytes:
@@ -452,7 +491,7 @@ def source_identity(pair: Pair, generated: bytes) -> bytes:
 
 def candidate_source(pair: Pair) -> str:
     if not pair.compile_group:
-        return individual_source(pair)
+        raise SourceError("Mac candidates require an ordinary-header unit profile")
     root = pair.project_root or pair.source.parent.parent
     profile = profiles.load(root, pair.compile_group)
     peers = [p for p in load_pairs(root) if p.compile_group == pair.compile_group]
@@ -473,7 +512,7 @@ def candidate_source(pair: Pair) -> str:
     for va in profile.helpers:
         if va not in seen:
             _, signature = _claim(text, va, pair.source, allow_declaration=True)
-            peers.append(Pair(va, pair.unit, pair.source, signature, pair.shim,
+            peers.append(Pair(va, pair.unit, pair.source, signature,
                               0, 0, 4, "", "source helper"))
             seen.add(va)
     for peer in peers:
@@ -490,16 +529,14 @@ def candidate_source(pair: Pair) -> str:
             raise SourceError(f"{pair.unit}: missing Mac data pair {va:#x}")
         definition = claims[va].definition
         if not definition:
-            raise SourceError(f"{pair.unit}: qualified data {va:#x} must be declared in its class view")
+            raise SourceError(f"{pair.unit}: qualified data {va:#x} must be declared in its ordinary class header")
         start = text.find(definition)
         if start < 0:
             raise SourceError(f"{pair.unit}: data definition {va:#x} is outside owning source")
         definitions.append((start, definition))
-    header_names = (["include/compiler.h"] if profile.native_headers else [])
-    header_names += [profile.preamble, *profile.extra_headers]
-    return ('\n'.join('#include "' + name + '"' for name in header_names) + '\n\n' +
+    return ('#include "include/compiler.h"\n' + source_preamble(text) + '\n\n' +
             "\n\n".join(definition for _, definition in sorted(definitions)) + "\n")
 
 
 def compile_scope(pair: Pair) -> str:
-    return "paired_bodies_in_source_order" if pair.compile_group else "isolated_function_with_layout_shim"
+    return "paired_bodies_with_ordinary_headers"

@@ -11,19 +11,22 @@ from homm3.mac.source import candidate_source, load_pairs, source_identity
 class TestMacProfiles(unittest.TestCase):
     def fixture(self, root):
         (root / "src").mkdir()
-        (root / "config/mac/include").mkdir(parents=True)
+        (root / "config/mac").mkdir(parents=True)
         (root / "include").mkdir()
+        (root / "include/compiler.h").write_text("// Compiler compatibility\n")
+        (root / "config/mac/sdk.toml").write_text("trees=[]\n")
         (root / "include/value.h").write_text("#define VALUE 1\n")
-        (root / "config/mac/include/test.h").write_text(
-            '// declaration view\n#include "value.h"\nint first();\nint second();\n')
+        (root / "include/test.h").write_text(
+            '// Ordinary project header\n#include "value.h"\nint first();\nint second();\n')
         (root / "src/test.cpp").write_text(
+            '#include "test.h"\n'
             "VA(0x00400100, 4)\nint first() { return VALUE; }\n"
             "VA(0x00400200, 4)\nint second() { return first(); }\n")
         (root / "config/units.toml").write_text(
             '[[unit]]\nunit="test"\nsource="src/test.cpp"\n')
         (root / "config/mac/units.toml").write_text(
-            '[units.test]\nmode="paired_bodies"\npreamble="config/mac/include/test.h"\n'
-            'include_dirs=["include"]\nflags=["-O1", "-nolink"]\n')
+            '[units.test]\nmode="paired_bodies"\n'
+            'flags=["-O1", "-nolink"]\n')
         (root / "config/mac/functions.toml").write_text("\n".join(
             f'[[functions]]\nretail_va={va}\nunit="test"\nsource="src/test.cpp"\n'
             f'mac_section=0\nmac_offset={at}\nmac_size=4\nmac_symbol=".{name}"\nevidence="control"'
@@ -106,18 +109,29 @@ class TestMacProfiles(unittest.TestCase):
                 self.assertEqual(a.source_hash, c.source_hash)
                 self.assertNotEqual(a.build_hash, c.build_hash)
 
-    def test_missing_macro_and_external_headers_fail_explicitly(self):
+    def test_mac_headers_are_captured_verbatim(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             self.fixture(root)
             profile = profiles.load(root, "test")
-            header = root / profile.preamble
-            for text in ('#include "missing.h"\n', '#include HEADER\n',
-                         '#include "/etc/passwd"\n'):
-                with self.subTest(text=text):
-                    header.write_text(text)
-                    with self.assertRaises(ValueError):
-                        profiles.headers(root, profile)
+            header = root / "include/test.h"
+            # The actual compiler diagnoses missing or macro-selected includes.
+            header.write_text('#include HEADER\n')
+            self.assertEqual(profiles.headers(root, profile)["include/test.h"],
+                             b'#include HEADER\n')
+            header.unlink()
+            header.symlink_to("/etc/passwd")
+            with self.assertRaises(ValueError):
+                profiles.headers(root, profile)
+
+    def test_duplicate_header_profile_is_rejected(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            self.fixture(root)
+            path = root / "config/mac/units.toml"
+            path.write_text(path.read_text() + 'preamble="alternate.h"\n')
+            with self.assertRaisesRegex(ValueError, "retired header settings"):
+                profiles.load(root, "test")
 
 
 if __name__ == "__main__":

@@ -52,7 +52,7 @@ class TestMacQueue(unittest.TestCase):
         digest = lambda value: hashlib.sha256(value).hexdigest()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            pair = Pair(0x400100, "test", root / "src/test.cpp", "void test", root / "shim",
+            pair = Pair(0x400100, "test", root / "src/test.cpp", "void test",
                         0, 0x100, 4, ".test", "fixture")
             work = root / "build/mac/objects/00400100"
             work.mkdir(parents=True)

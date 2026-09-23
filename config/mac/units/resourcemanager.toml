@@ -1,6 +1,4 @@
 mode = "paired_bodies"
-preamble = "config/mac/include/resourcemanager.h"
-include_dirs = ["include", "config/mac/include"]
 # Same-source control: -O3 preserves getBitmapResourceSize at 91.9118%,
 # while open rises from 28.9773% (-O1) to 68.3712% and recovers retail's
 # r21-r31 save set plus r27/r28 vector-field cursor setup.

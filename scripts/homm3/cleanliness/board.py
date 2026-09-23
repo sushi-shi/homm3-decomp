@@ -82,8 +82,8 @@ The rows (all ratcheted; floors start at the tree's current counts):
                       not a scaffold) and whatever include/va.h defines
                       (the annotation/verify machinery). The one target
                       selector `HOMM3_TARGET_MAC` is exempt only in
-                      conditionals: the Mac declaration view defines it
-                      outside src/include, while a source-local #define or
+                      conditionals: the Mac compiler command line defines it,
+                      while a source-local #define or
                       #undef remains a counted scaffold. Ratchets to zero.
 
 Every invocation self-tests first: each metric's embedded positive
@@ -379,8 +379,8 @@ VA_HEADER = REPO / "include/va.h"
 _OWNERSHIP_ANNOTATION_SWITCH = "HOMM3" + "_SOURCE_OWNERSHIP"
 _ANNOTATION_CONDITIONAL = re.compile(r"^[ \t]*\#[ \t]*(?:if|ifdef|elif)\b")
 # This names a retail platform, not a per-TU declaration or inline switch.
-# It is introduced by config/mac/include/*, outside the source tree scanned
-# here. A source #define/#undef is still debt and must fail the zero floor.
+# It is introduced by the Mac compiler command line. A source #define/#undef
+# is still debt and must fail the zero floor.
 _MAC_TARGET_SWITCH = "HOMM3" + "_TARGET_MAC"
 _TARGET_CONDITIONAL = re.compile(r"^[ \t]*\#[ \t]*(?:if|ifdef|ifndef|elif)\b")
 

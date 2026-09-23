@@ -138,14 +138,12 @@ public:
             return m_obscuredType;
         return NOTHING;
     }
-// HOMM3_MAC_SHARED_BEGIN obscuring_object_get_location
     // E:\gamedcs\Hero.h:157
     VA(0x0042ec70, 0x4f)  // exact body/callers x2, dc 0x1fb2c
     type_point getLocation() const
     {
         return type_point(m_x, m_y, m_z);
     }
-// HOMM3_MAC_SHARED_END obscuring_object_get_location
     bool load(void* infile);
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
     // folds it to the same three field tests; keep the call in source so
@@ -221,7 +219,6 @@ struct type_artifact {
 public:
     TArtifact m_artifactId;
     int m_extra;
-// HOMM3_MAC_SHARED_BEGIN type_artifact_constructors
 // Shared constructor bodies included inside the canonical type_artifact
 // declaration and the reviewed Mac declaration view. DC attribution: Hero.h.
     // DC Hero.h:211 stores the artifact argument at +0, then line 212 stores
@@ -249,7 +246,6 @@ public:
         m_artifactId = ARTIFACT_SPELL_SCROLL;
         m_extra = spell;
     }
-// HOMM3_MAC_SHARED_END type_artifact_constructors
     void getRolloverText(char* buffer) const;
     // The reconstruction-only (int, int) overload was removed. Ordinary
     // artifacts use the TArtifact constructor; scrolls use SpellID. A
@@ -934,13 +930,11 @@ public:
     // xrefs put direct calls in both hero-screen functions and the combat
     // sub-window update; the retail sites expand it byte-for-byte under
     // /Ob2. Keep the recovered header helper canonical for every consumer.
-// HOMM3_MAC_SHARED_BEGIN hero_get_max_mana
     int getMaxMana() const
     {
         return static_cast<int>(
             getPrimarySkill(3) * 10 * getIntelligenceFactor());
     }
-// HOMM3_MAC_SHARED_END hero_get_max_mana
     // Hero.h source helpers retained as calls by Dreamcast and expanded in
     // Complete's AI_AttemptMove and cursor movement family. check_terrain is
     // honored by the Hero.h:645/654 can_land call. The movement driver
@@ -966,7 +960,6 @@ public:
     {
         return getObscuredTown();
     }
-// HOMM3_MAC_SHARED_BEGIN hero_get_primary_skill
     VA(0x005bde40, 0x31)  // exact body + sole caller above, dc 0x2c668
     int getPrimarySkill(int skill) const
     {
@@ -976,7 +969,6 @@ public:
             return m_stats[skill];
         return skill >= 2 ? 1 : 0;
     }
-// HOMM3_MAC_SHARED_END hero_get_primary_skill
     void obscureCell()
     {
         type_obscuring_object::obscureCell(HERO, m_id);
@@ -989,9 +981,7 @@ public:
     // before the byte store. A direct `stats[i] = field` narrows the
     // load to `mov r8, byte ptr [..]` instead; the int PARAMETER is what
     // keeps the dword.
-// HOMM3_MAC_SHARED_BEGIN hero_set_primary_skill
     void setPrimarySkill(int skill, int amount) { m_stats[skill] = amount; }
-// HOMM3_MAC_SHARED_END hero_set_primary_skill
     // `?AdjustPrimarySkill@hero@@QAAXHH@Z`, a Hero.h inline the Dreamcast
     // build calls OUT OF LINE and retail's /Ob2 expands. The DC line table
     // for advManager::DoEventLibrary (dc 0x93bf8) is what found it: source
@@ -1005,9 +995,7 @@ public:
     // i.e. the amount materialised in a register and reused, which is what
     // an inlined int PARAMETER produces and not what a literal in an `+=`
     // does. No clamp - the byte read-modify-write is all there is.
-// HOMM3_MAC_SHARED_BEGIN hero_adjust_primary_skill
     void adjustPrimarySkill(int skill, int amount) { m_stats[skill] += amount; }
-// HOMM3_MAC_SHARED_END hero_adjust_primary_skill
     // Original ViewStat is the ordinary hero.cpp:1709 body at 0x4d9990.
     void viewStat(int whichStat, int isQuickView);
     int giveSS(int whichSS, int numLevelsToGive);
@@ -1041,7 +1029,6 @@ public:
     {
         return m_army.isMember(type);
     }
-// HOMM3_MAC_SHARED_BEGIN hero_get_mana_cost
     // E:\gamedcs\Hero.h:707, dc 0x23058
     int getManaCost(int whichSpell) const
     {
@@ -1049,7 +1036,6 @@ public:
             whichSpell, 0,
             getSpecialTerrain());
     }
-// HOMM3_MAC_SHARED_END hero_get_mana_cost
     // Original: hero::GetSpellSchoolLevel; Hero.h:712, dc 0xd5914.
     // Complete's two-argument member0x4e5100 accepts the terrain id so the
     // four expansion magic terrains remain distinct from Magic Plains.
@@ -1057,13 +1043,11 @@ public:
     {
         return getSpellSchoolLevel(schoolMask, getSpecialTerrain());
     }
-// HOMM3_MAC_SHARED_BEGIN hero_get_spell_level
     // E:\gamedcs\Hero.h:718, dc 0x2308c
     TSkillMastery getSpellLevel(SpellID spell) const
     {
         return getSpellLevel(spell, getSpecialTerrain());
     }
-// HOMM3_MAC_SHARED_END hero_get_spell_level
     float getNecromancyFactor(unsigned char applyLimit) const;
     int getHeroSpellBonus(int spellId, int targetLevel, int value) const;
     // E:\gamedcs\Hero.h:724. Dreamcast retains this header helper as a
@@ -1080,19 +1064,15 @@ public:
     // LF_MFUNCTION returns const type_artifact&, with TArtifactSlot as the
     // equipped-slot domain. UI-decoded indices convert to that domain at use.
     // E:\gamedcs\Hero.h:965, dc 0x27e8c
-// HOMM3_MAC_SHARED_BEGIN hero_get_artifact
     const type_artifact& getArtifact(TArtifactSlot slot) const
     {
         return m_equipped[slot];
     }
-// HOMM3_MAC_SHARED_END hero_get_artifact
-// HOMM3_MAC_SHARED_BEGIN hero_get_backpack
     // E:\gamedcs\Hero.h:970, dc 0x27e9c
     const type_artifact& getBackpack(long slot) const
     {
         return m_backpack[slot];
     }
-// HOMM3_MAC_SHARED_END hero_get_backpack
     // E:\gamedcs\Hero.h:976, dc 0x2e60. Dreamcast keeps this const header wrapper as
     // a separate public; Complete folds it at each use into the retail-proven
     int getExperienceIncrement() const
@@ -1108,7 +1088,6 @@ public:
         // into its CodeView-proven enum domain at this boundary.
         return TSkillMastery(m_skillLevel[skill]);
     }
-// HOMM3_MAC_SHARED_BEGIN hero_get_target
     // E:\gamedcs\Hero.h:986, dc 0x1fd30. SetHeroContext preserves this
     // header-inline helper in source. Retail folds its packed-point
     // construction into SetHeroContext and move_hero, so the canonical
@@ -1117,26 +1096,21 @@ public:
     {
         return type_point(m_pathTargetX, m_pathTargetY, m_pathTargetZ);
     }
-// HOMM3_MAC_SHARED_END hero_get_target
 
     // DC hero.h:991 (0x37dc4) and the class signature record the const
     // long-returning duration accessor used by AI reward valuation.
     long getValueOfDuration() const { return m_valueOfDuration; }
-// HOMM3_MAC_SHARED_BEGIN hero_get_value_of_knowledge
     __forceinline long getValueOfKnowledge() const
     {
         return m_valueOfKnowledge;
     }
-// HOMM3_MAC_SHARED_END hero_get_value_of_knowledge
     // Dreamcast hero.h:1001/1006. Retail folds both one-field accessors into
     // get_skill_value; retaining the source boundaries still emits the direct
     // loads proved at +0x47e/+0x486.
-// HOMM3_MAC_SHARED_BEGIN hero_get_value_of_power
     __forceinline long getValueOfPower() const
     {
         return m_valueOfPower;
     }
-// HOMM3_MAC_SHARED_END hero_get_value_of_power
 
     // DC hero.h:1006/1011, dc 0x114b88/0x114b90; each is one
     // cached-value load, also expanded by the retail philai callers.
@@ -1178,14 +1152,12 @@ public:
     {
         m_valueOfWell = arg;
     }
-// HOMM3_MAC_SHARED_BEGIN hero_spell_is_available
     // DC-attested inline helper; SetShrineHelpText proves the direct
     // byte-indexed availability read in retail.
     unsigned char spellIsAvailable(int spell) const
     {
         return m_availableSpells[spell];
     }
-// HOMM3_MAC_SHARED_END hero_spell_is_available
     TCreatureType getNecromancyCreature();
     const char* heroFn004D8FB0();
     unsigned char heroFn004DBE80(int combination);

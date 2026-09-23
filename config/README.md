@@ -31,8 +31,8 @@ source-owned external storage bindings and compiler literal pools independently.
 Identical shared references coalesce; conflicting identities or spans fail.
 Literal `units` scopes distinguish equal payloads in different linked pools.
 
-[`mac/shared-bodies.toml`](mac/shared-bodies.toml) names method bodies in their
-ordinary owning headers. The Mac compiler stages those marked bodies into its
-declaration view, so each method has one authored definition. The remaining
+Mac candidates reuse the owning source file's include prefix and read ordinary
+project headers with the native CodeWarrior library. Duplicate declaration
+headers and the body-extraction manifest have been removed. The remaining
 [`source/header-fragments.toml`](source/header-fragments.toml) records ordinary
 shared headers that still need include-site ownership.

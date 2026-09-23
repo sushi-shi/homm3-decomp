@@ -8580,13 +8580,11 @@ void advManager::forceNewHover()
     }
 }
 
-// HOMM3_MAC_SHARED_BEGIN advmgr_scroll_speed_inc
 
 // The per-speed scroll step. Dreamcast advmgr.obj publishes the static
 // (S_LDATA32 akScrollSpeedInc); retail's ScreenScroll indexes the same
 // three-int row.
 DATA(0x0063a66c) static const int g_scrollSpeedInc[3] = { 1, 2, 3 };
-// HOMM3_MAC_SHARED_END advmgr_scroll_speed_inc
 
 // ScreenScroll stamps this tick and CheckScreenScroll reads it. The Mac
 // build uses direct TOC scalar storage at 1+0x3d20.

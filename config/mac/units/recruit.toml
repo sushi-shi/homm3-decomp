@@ -1,6 +1,4 @@
 mode = "paired_bodies"
-preamble = "config/mac/include/recruit.h"
-include_dirs = ["include", "config/mac/include"]
 # Source-identical update calibrates to 1484 B and 58.2210% at -O2;
 # -O1 emits 1588 B / 19.5844%, -O3 emits 1472 B / 21.0243%.
 # All three preserve the retail sequence of 33 calls.

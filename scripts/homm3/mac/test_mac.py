@@ -143,7 +143,7 @@ XRef: Kind=HUNK_XREF_24BIT Offset=$00000000 Class=PR Name=".callee"(5)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             pair = Pair(0x400100, "control", root / "control.cpp", "void control",
-                        root / "shim.h", 0, 0x100, 4, ".control", "test")
+                        0, 0x100, 4, ".control", "test")
             profile = {"flags": ["-O1"], "files": {}, "collapse_reloads": True}
             compiles = []
 
@@ -168,7 +168,7 @@ XRef: Kind=HUNK_XREF_24BIT Offset=$00000000 Class=PR Name=".callee"(5)
                 build.compile_pair(pair, root / "tools")
                 (work / "candidate.dis.txt").write_text("stale listing")
                 build.compile_pair(pair, root / "tools")
-                source.return_value = "body B including changed shim"
+                source.return_value = "body B including changed headers"
                 second = build.compile_pair(pair, root / "tools")
                 self.assertNotEqual(first.source_hash, second.source_hash)
                 profile["flags"] = ["-O1", "-proc", "750"]

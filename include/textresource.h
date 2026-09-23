@@ -895,15 +895,11 @@ public:
     TTextResource(const char* name, int size, const char* data);
     virtual ~TTextResource();
     virtual unsigned int getSize() const;
-// HOMM3_MAC_SHARED_BEGIN textresource_get_text
     // E:\gamedcs\TextResource.h:66
     VA(0x005cc8d0, 0x10)  // anchor-callee THallWindow ctor + /Gy COMDAT, dc 0x2d74
     const char* getText(int r) const { return m_text[r]; }
-// HOMM3_MAC_SHARED_END textresource_get_text
-// HOMM3_MAC_SHARED_BEGIN textresource_index
     // E:\gamedcs\TextResource.h:73
     const char* operator[](int i) const { return getText(i); }
-// HOMM3_MAC_SHARED_END textresource_index
 
 private:
     TTextArray m_text;  // +0x1c (_First +0x20)

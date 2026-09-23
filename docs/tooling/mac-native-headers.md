@@ -26,18 +26,16 @@ An ordinary-header profile uses the existing paired-body compiler mode:
 
 ```toml
 mode = "paired_bodies"
-native_headers = true
-preamble = "include/hero.h"
-extra_headers = [] # Other ordinary project headers needed by selected bodies.
-include_dirs = ["include"]
 flags = ["-O1", "-proc", "750", "-nolink", "-char", "unsigned"]
 helpers = []
 source_helpers = []
 ```
 
 The example describes configuration, not a claim that all hero bodies currently
-compile with these includes. Source-owned functions and data are still selected
-in original source order. Header methods are read directly by the compiler,
+compile with ordinary headers. Candidate input reuses the original source file's
+leading includes, pragmas and interspersed forward declarations. Project include
+paths come from `config/units.toml`; there is no per-Mac header list. Source-owned
+functions and data are still selected in original source order. Header methods are read directly by the compiler,
 including helpers that were absent from the former minimal declaration views.
 They require no per-method manifest or extraction marker.
 
@@ -57,11 +55,25 @@ symbols remain unavailable comparisons, never exact results.
 
 ## Migration status
 
-Native input staging and the profile/compiler path are implemented. Existing
-unit profiles have not yet switched: removing their declaration views and the
-legacy marker extractor depends on reviewing the ordinary-header blockers.
-Do not interpret the earlier declaration-view scores as validation of the new
-header path.
+All 16 duplicate Mac declaration headers have been removed. All profiles use
+ordinary project headers and native library inputs. The 73-entry body manifest,
+146 marker comments, generated method fragments and fallback declaration-view
+compiler path are gone. Original game helper bodies remain in their owning
+headers/source. Profile loading rejects the retired header-view settings.
+
+All 66 admitted pairs still load, and their candidate source is generated from
+the ordinary include prefixes. This does not assert that they all compile:
+platform dependencies and stricter compiler diagnostics remain explicit
+compilation blockers. Earlier declaration-view scores are historical evidence,
+not current native-header verdicts. Cached staged headers and build stamps from
+the old path have been removed; provenance checks invalidate old observations.
+
+The first full HERO candidate compile through this path reports incomplete
+`THelpText` array declarations in `include/text.h` and platform-header errors.
+The former isolated `hero.h` probe passed; the full source include prefix
+exposes additional dependencies. These failures are explicit and are not
+replaced by new duplicate declarations. Game-class changes remain subject to
+user review.
 
 The original MSL headers compile with the pinned compiler. An object-data probe
 measured `sizeof(std::string) == 4`, `sizeof(std::vector<int>) == 12`, and
@@ -93,8 +105,8 @@ types and layout. The five getter returns now use:
 | `getWagonResource` | `H3_ENUM_DECODE(EGameResource, m_wagonInfo.m_resource)` |
 | `getWindmillResource` | `H3_ENUM_DECODE(EGameResource, m_windmillInfo.m_resource)` |
 
-This verifies header compilation, not Windows byte matching or migration of
-all admitted hero bodies to ordinary headers.
+This verifies header compilation, not Windows byte matching or successful compilation of
+all admitted hero bodies with their complete include prefix.
 
 Further layout, packing and OS dependencies must be examined through the real
 headers. Reuse existing declarations/helpers where possible; show game-class

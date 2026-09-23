@@ -114,7 +114,6 @@ public:
     searchArray();
     ~searchArray();
     void close();
-// HOMM3_MAC_SHARED_BEGIN search_get_hex
     // Retail 0x4b3b90 checks receiver+0x24 for null, then indexes the
     // 30-byte pathCell array and returns ret 4. FindCombatPath calls at
     // 0x4b382f/0x4b3881/0x4b393e/0x4b3990 correspond to the four
@@ -127,8 +126,6 @@ public:
             return 0;
         return &m_cellData[x];
     }
-// HOMM3_MAC_SHARED_END search_get_hex
-// HOMM3_MAC_SHARED_BEGIN search_get_cell
     VA(0x0042ecc0, 0x62)  // hd-crossbuild + exact body/callers x2, dc 0x20064
     pathCell* getCell(type_point point, bool flying) const
     {
@@ -137,7 +134,6 @@ public:
         return &m_cellData[((point.m_z * 2 + flying) * g_mapHeight + point.m_y)
                          * g_mapWidth + point.m_x];
     }
-// HOMM3_MAC_SHARED_END search_get_cell
     long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
     void seedPosition(hero* currentHero, type_point start,
                       type_point target, int maxMobility,
@@ -203,12 +199,10 @@ public:
                             long baseSpeed);
     // Dreamcast FindPath.h:252. MoveHero brackets its move_hero call with
     // this setter; Complete expands both calls to the +0x6c store.
-// HOMM3_MAC_SHARED_BEGIN search_set_danger_zones
     void setDangerZones(long* dangerZoneMap)
     {
         m_dangerZones = dangerZoneMap;
     }
-// HOMM3_MAC_SHARED_END search_set_danger_zones
     // E:\gamedcs\FindPath.h:257, dc 0x37e84
     void setRectangle(tagRECT& rect)
     {

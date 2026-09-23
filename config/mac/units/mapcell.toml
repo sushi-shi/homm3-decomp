@@ -1,6 +1,4 @@
 mode = "paired_bodies"
-preamble = "config/mac/include/mapcell.h"
-include_dirs = ["include", "config/mac/include"]
 # O4 preserves the pinned four-way 58-iteration loop and indexed string load:
 # 440/440 bytes and 94.7727%. O3 emitted an extra address add; O2 did not
 # unroll the 232 classes and shrank the body to 292 bytes.

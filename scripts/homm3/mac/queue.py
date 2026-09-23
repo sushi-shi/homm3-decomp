@@ -33,7 +33,7 @@ def observation_problem(root: Path, pair, row: dict | None, report: dict) -> str
     try:
         source = candidate_source(pair).encode()
         if row.get("source_hash") != _digest(source_identity(pair, source)):
-            return "source, data definition or layout shim changed"
+            return "source, data definition or ordinary headers changed"
         fingerprint = build._profile_hash(source, pair)
         if row.get("build_hash") != fingerprint:
             return "compiler profile changed"

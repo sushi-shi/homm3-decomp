@@ -59,7 +59,7 @@ class Result:
     resolved_data: tuple[ResolvedData, ...] = ()
     calls: dict | None = None
     restored_reload_slots: tuple[int, ...] = ()
-    compile_scope: str = "isolated_function_with_layout_shim"
+    compile_scope: str = "paired_bodies_with_ordinary_headers"
     analysis_sha256: str | None = None
     executable_sha256: str = inputs.MAC.sha256
     comparison_scope: str = "function_code_and_reviewed_jump_tables; exception metadata and external initializers are not scored"
@@ -79,7 +79,7 @@ def _profile_hash(source: bytes, pair: Pair) -> str:
     profile = profiles.load(ROOT, pair.compile_group) if pair.compile_group else None
     header_inputs = profiles.headers(ROOT, profile) if profile else {}
     flags = tuple(profile.flags or spec["flags"] if profile else spec["flags"])
-    if profile and profile.native_headers:
+    if profile:
         flags += ("-msext", "on", "-DHOMM3_TARGET_MAC=1")
     data = json.dumps({"source": _digest(source), "flags": flags,
                        "profile": asdict(profile) if profile else None,
@@ -116,7 +116,7 @@ def _run(command: list[str], cwd: Path, env: dict[str, str]) -> str:
 
 def compile_pair(pair: Pair, tools_dir: Path) -> CompiledCode:
     profile = profiles.load(ROOT, pair.compile_group) if pair.compile_group else None
-    if profile and profile.native_headers:
+    if profile:
         from homm3.mac import sdk
         sdk.stage(root=ROOT)
     work = object_directory(ROOT, pair)
@@ -184,7 +184,7 @@ def _compile_locked(pair: Pair, tools_dir: Path, work: Path) -> CompiledCode:
         env.setdefault("WINEDEBUG", "-all")
         Path(env["WINEPREFIX"]).mkdir(parents=True, exist_ok=True)
         flags = profile.flags or toolchain.specification()["flags"] if profile else toolchain.specification()["flags"]
-        if profile and profile.native_headers:
+        if profile:
             flags = (*flags, "-msext", "on", "-DHOMM3_TARGET_MAC=1")
         _run(["wine", str(tools_dir / "MWCPPC.exe"), *flags,
               "-o", obj.name, generated.name], work, env)
@@ -200,7 +200,7 @@ def _compile_locked(pair: Pair, tools_dir: Path, work: Path) -> CompiledCode:
     listing = disassembly.read_text()
     hunk = select_hunk(listing, pair.mac_symbol) if pair.mac_symbol else None
     if candidate_source(pair).encode() != source or _profile_hash(source, pair) != fingerprint:
-        raise MacBuildError(f"source/shim changed during Mac compilation of {pair.signature}")
+        raise MacBuildError(f"source/headers changed during Mac compilation of {pair.signature}")
     peers = [p for p in load_pairs(ROOT) if p.compile_group == pair.compile_group] if profile else [pair]
     hunks = parse_code_hunks(listing)
     data_hunks = tuple(parse_data_hunks(listing))
@@ -211,7 +211,7 @@ def _compile_locked(pair: Pair, tools_dir: Path, work: Path) -> CompiledCode:
         "paired_bodies": [f"0x{p.retail_va:08x}" for p in peers],
         "additional_source_helpers": [f"0x{va:08x}" for va in profile.helpers] if profile else [],
         "helpers_without_windows_va": list(profile.source_helpers) if profile else [],
-        "native_headers": bool(profile and profile.native_headers),
+        "native_headers": bool(profile),
         "emitted_symbols": sorted(emitted),
         "emitted_hunks": [{"symbol": h.name, "size": len(h.data), "references": h.xrefs} for h in hunks],
         "metadata_hunks": [asdict(h) for h in metadata],

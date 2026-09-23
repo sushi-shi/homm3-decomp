@@ -185,9 +185,7 @@ DATA(0x0063e678) static const char g_monType[12] = {
 // Complete artifact 138, the Wizard's Well combination. PerDay is the
 // identifying retail body: wearing it restores full mana every day instead
 // of applying the ordinary Mysticism increment.
-// HOMM3_MAC_SHARED_BEGIN game_artifact_wizards_well_id
 const int g_artifactWizardsWellId = 0x8a;
-// HOMM3_MAC_SHARED_END game_artifact_wizards_well_id
 
 // Calendar-period values written by PerWeek. The ordinary creature week is
 // followed by the Inferno Grail's forced Imp week.

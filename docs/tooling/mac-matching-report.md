@@ -6,13 +6,12 @@ Windows is the game being rebuilt. Mac disassembly and comparisons serve only
 to recover Windows source structure and helper boundaries. Recovered helper
 bodies and calls belong in ordinary Windows source/headers, including where VC6
 inlines them. A runnable Mac port is not required. The declaration views and
-marker extraction described in the checkpoint below are being replaced by
-[ordinary-header compilation with the real SDK](mac-native-headers.md).
-The native compiler path is implemented; existing profiles have not switched
-while remaining ordinary-header dependencies are reviewed. Earlier scores below describe the
-previous declaration-view checkpoint, not validation of native-header output.
+marker extraction used by the historical checkpoint below have been removed.
+Every profile now uses [ordinary-header compilation with the real SDK](mac-native-headers.md).
+Remaining platform/header errors are compilation coverage gaps; the historical
+scores below do not certify the new inputs.
 
-## Current phase
+## Historical matching checkpoint
 
 The core dual-target tooling is implemented. Six workers ran the first
 matching wave. Each supported function can now be compiled from the shared
@@ -92,9 +91,9 @@ Mac exposed many retained calls to small helpers and helped recover their
 boundaries. In particular, SEERHUT's shared dialog helper and KB's
 `sendPlayerLost` remain ordinary source helpers: marking them `inline` would
 misrepresent the Mac call pattern. These bodies now live in their normal owning
-headers. The Mac compiler stages the same marked bodies into its declaration
-view; the former extracted `include/inline/` directory was a tooling
-organization choice, not evidence of source-level `inline` declarations.
+headers/source. The Mac compiler now reads the ordinary headers directly;
+the former extracted fragments and declaration views have been removed. Their
+existence was never evidence of source-level `inline` declarations.
 Dreamcast and source evidence establish the declaration spelling;
 Mac independently tests whether CodeWarrior retained calls or expanded them.
 We have not established a corpus-wide count of newly discovered source-level
@@ -265,8 +264,8 @@ Compilation/report locks and merged unit reports support concurrent workers
 without discarding the other units' provenance.
 
 Shared method bodies reside in canonical headers at their original positions.
-The [Mac shared-body map](../../config/mac/shared-bodies.toml) points to those
-positions; staging extracts the enclosed text for CodeWarrior. The remaining
+CodeWarrior now reads those headers directly. The former body map, extraction
+markers and generated fragments have been removed. The remaining
 [fragment registry](../../config/source/header-fragments.toml) covers ordinary
 shared headers and retains physical definition and ownership checks.
 

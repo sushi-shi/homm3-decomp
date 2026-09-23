@@ -14,7 +14,7 @@ rtti_section = 1
 rtti_offset = 0x4caac
 rtti_size = 0xc
 rtti_sha256 = "851f075808584d07d28cba707aaa33d2b60af5635056523487ede27ad61a531a"
-evidence = "The armyGroup and hero recruit constructors at 0:0x1507f8 and 0:0x1508b8 load TOC 1+0xe24, whose loader pointer targets this 20-byte vtable at 1+0x4cab4. Its first word points to the recruitUnit RTTI chain at 1+0x4caac, the second is zero, and the three virtual slots point through 8-byte transition vectors to reviewed open, close, and main entries. The matching class has exactly those three inherited slots in the canonical and Mac declaration views."
+evidence = "The armyGroup and hero recruit constructors at 0:0x1507f8 and 0:0x1508b8 load TOC 1+0xe24, whose loader pointer targets this 20-byte vtable at 1+0x4cab4. Its first word points to the recruitUnit RTTI chain at 1+0x4caac, the second is zero, and the three virtual slots point through 8-byte transition vectors to reviewed open, close, and main entries. The matching class has exactly those three inherited slots in the ordinary project declarations."
 
 [[vtables.declarations]]
 source = "include/basemgr.h"
@@ -23,17 +23,6 @@ methods = ["virtual int open(int) = 0", "virtual void close() = 0", "virtual int
 
 [[vtables.declarations]]
 source = "include/recruit.h"
-class = "recruitUnit"
-base = "baseManager"
-methods = ["virtual int open(int newPriority)", "virtual void close()", "virtual int main(message& msg)"]
-
-[[vtables.declarations]]
-source = "config/mac/include/recruit.h"
-class = "baseManager"
-methods = ["virtual int open(int) = 0", "virtual void close() = 0", "virtual int main(message&) = 0"]
-
-[[vtables.declarations]]
-source = "config/mac/include/recruit.h"
 class = "recruitUnit"
 base = "baseManager"
 methods = ["virtual int open(int newPriority)", "virtual void close()", "virtual int main(message& msg)"]

@@ -1,6 +1,4 @@
 mode = "paired_bodies"
-preamble = "config/mac/include/seerhut.h"
-include_dirs = ["include", "config/mac/include"]
 flags = ["-O3", "-proc", "750", "-nolink"]
 helpers = []
 source_helpers = ["type_skill_quest::showSkillRequirementsDialog"]

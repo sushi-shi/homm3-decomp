@@ -25,8 +25,8 @@ def candidate(root: Path, va: int, unit: str, data=()) -> Pair:
     _, signature = _claim(source.read_text(), va, source, allow_declaration=True)
     profile = profiles.load(root, unit)
     if profile is None:
-        raise SourceError(f"create config/mac/units/{unit}.toml with shared declarations before admission")
-    return Pair(va, unit, source, signature, root / profile.preamble,
+        raise SourceError(f"create config/mac/units/{unit}.toml with compiler settings before admission")
+    return Pair(va, unit, source, signature,
                 0, 0, 4, "", "unpaired compiler probe", tuple(data), unit, None, root)
 
 
