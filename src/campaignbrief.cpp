@@ -209,11 +209,12 @@ static int g_campaignBriefPlayerSlot;
 // (ENEMY_FLAG1_ID..) of the local player's slot, hiding every flag first and skipping
 // the positions the scenario leaves empty.
 
-// LANDED: naming the briefing-choice argument before the scenario lookup and
-// retaining the scenario pointer as a source local restores retail's evaluation
-// order; declaring the loop index before the two running widget ids restores its
-// EDI lifetime. Together these move 86.8125 -> 99.8958 with all nine CFG blocks,
-// five branches and thirteen calls exact. The remaining byte is the commutative
+// Naming the briefing-choice argument before the scenario lookup and retaining
+// the scenario pointer restores retail's evaluation order. The Mac loop keeps
+// separate zero-based enemy and ally counters and adds each widget ID at use;
+// CodeWarrior's three counter registers follow that declaration order. VC6
+// remains at 99.8958 with all nine CFG blocks, five branches and thirteen calls
+// exact. The remaining byte is the commutative
 // SIB spelling in the second teamInfo lookup inside Dreamcast-proven OnSameTeam:
 // candidate [ecx+eax+0x1f879], retail [eax+ecx+0x1f879]. Naming either the player
 // slot or the game receiver is byte-flat, so keep the canonical helper boundary.
@@ -225,23 +226,23 @@ void TCampaignBrief::updateAllyEnemyFlags()
         m_campaign->m_scenarios[m_selectedScenario];
     g_campaignBriefPlayerSlot =
         scenario->m_options->getPlayer(briefingChoice);
+    int enemyFlag = 0;
+    int allyFlag = 0;
     int i = 0;
-    int enemyFlagId = ENEMY_FLAG1_ID;
-    int allyFlagId = ALLY_FLAG1_ID;
     for (; i < 8; i++) {
         getWidget(i + ENEMY_FLAG1_ID)->hide();
         getWidget(i + ALLY_FLAG1_ID)->hide();
         if (g_game->m_setup.m_playerPos[i] >= 0) {
             if (g_game->onSameTeam(i, g_campaignBriefPlayerSlot)) {
-                getWidget(allyFlagId)->show();
-                getWidget(allyFlagId)->sendMessage(
+                getWidget(ALLY_FLAG1_ID + allyFlag)->show();
+                getWidget(ALLY_FLAG1_ID + allyFlag)->sendMessage(
                     widget::WIDGET_SET_ICON_FRAME, i);
-                allyFlagId++;
+                allyFlag++;
             } else {
-                getWidget(enemyFlagId)->show();
-                getWidget(enemyFlagId)->sendMessage(
+                getWidget(ENEMY_FLAG1_ID + enemyFlag)->show();
+                getWidget(ENEMY_FLAG1_ID + enemyFlag)->sendMessage(
                     widget::WIDGET_SET_ICON_FRAME, i);
-                enemyFlagId++;
+                enemyFlag++;
             }
         }
     }
