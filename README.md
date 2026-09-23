@@ -91,7 +91,7 @@ This passes without unresolved or duplicate symbols. With the Bink, Miles,
 Smacker and IFC20 DLLs and original game resources from an installed copy, an
 isolated Wine launch plays the intro video and reaches the main menu with
 correctly rendered buttons and no CD-version warning. New Game → Multiplayer
-opens successfully. Single Scenario crashed during testing; gameplay remains unverified.
+opens successfully, as does New Game → Single Scenario. Gameplay remains unverified.
 `homm3 link` always requires a clean link, without `/FORCE`.
 See [linking and runtime evidence](docs/vc6/runtime-link.md).
 

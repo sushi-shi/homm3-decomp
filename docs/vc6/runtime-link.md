@@ -207,8 +207,25 @@ with both control-flow fixes reaches the main menu without the CD warning
 and opens New Game → Multiplayer, also confirmed by the user. The user then
 exited Multiplayer and selected Single Scenario, producing a separate access
 violation in `strncpy` (linked address 0x6274a6 in the pre-integration test executable).
-The shorter New Game → Single Scenario reproduction is suspected but not yet
-verified. Map, battle and gameplay remain unverified.
+The shorter New Game → Single Scenario path reproduces the same invalid
+portrait lookup, without first opening multiplayer. A temporary resource-load
+trace shows all 156 reconstructed hero portraits loading before entry 156
+passes unrelated memory as a bitmap filename.
+
+`g_heroTraitsStorage` incorrectly used the text parser's 156-row limit as its
+array extent. Complete stores 163 rows at 0x679dd0..0x67d863, and the retail
+selection constructor loads all 163 portraits (0x57c438..0x57c457). Restoring
+the seven portrait-only rows and the 163-element reference prevents that
+out-of-bounds access; the text parser still fills 156 heroes. An independent
+COFF check resolves and checks all 326 portrait string relocations and verifies
+all 14,996 table bytes against retail, including the restored 644-byte tail.
+The temporary logging and memory-dump code are not part of the fix.
+A final silent Xvfb run reaches Single Scenario with the selected map name,
+description, victory/loss conditions and player settings rendered. No resource
+error or access violation occurs on either the direct path or after opening
+and exiting Multiplayer. Matching scores are unchanged by this table fix.
+Starting a map, battles and
+gameplay remain unverified.
 
 The updated base had left `TDebugBreak::TDebugBreak` declaration-only,
 creating an unresolved symbol in dxplay, objecttype and objnames. Its ordinary
