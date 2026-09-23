@@ -460,32 +460,23 @@ int highScoreManager::getMonType(int score, int scoreType)
     return monsterType;
 }
 
-// Four controls precede the two 11-icon score families.  The family-one
-// records are emitted first into the second pointer bank, then family zero;
-// constant-folding GetMonType in each loop accounts for the one inline divide
-// by five in the latter family only.
-// Residual (99.9766%): all 46 CFG flows and 35 named call sites agree.
-// DC884..911 assigns, hides and registers each icon; the Complete layout
-// uses two eleven-row families. Computing y as 26 + 50 * i restores retail's
-// retained index and its call-crossing zero/this/vector registers, including
-// the complete setup/control prefix. The old independent y induction reached
-// 90.7049%; its index-bound control falls to 86.4942%. Binding GetMonType's
-// return value to int then restores the lookup and argument registers, leaving
-// one EAX/ECX SIB base/index order in the second family's score load. The
-// displayed +2 table-result offsets resolve to retail's separately named
-// second column. This is no longer a whole-function C1 wall.
-// The 24-state row/button/helper family emitted six distinct objects, all six
-// reproduced, with all other 18 hiscore rows exact. Button declaration/reuse
-// and ordinary GetMonType for/while forms do not improve the coordinate form.
-// The subsequent 36-state icon/index/return family emitted 16 objects with ten
-// reproduced elites. The int result reaches 99.9766% with all 18 siblings
-// exact; a short result loses the exact retained helper, and per-row index
-// scopes stop at 99.9578%. No slot reference or allocation-result alias is
-// needed by the retained form. A further 24-state bank-access, result-site
-// and prefix/postfix increment family emits one object, flat at 99.9766%.
-// Earlier controls: i/y declaration order and canonical hide/show calls were
-// byte-flat at 90.7049%; volatile i reached 77.7892%, reference-bound IDs
-// 90.6581%. No diagnostic qualifiers or alternate helper bodies are retained.
+// Mac code 0x10b024 retains this source-local wrapper between getMonType
+// and THighScoreWindow's constructor; the constructor calls it for both icon
+// families. It loads the score, resolves the monster type, and returns the
+// selected object's image name.
+static const char* highScoreCreatureImageName(int index, int scoreType)
+{
+    int score = g_highScoreManager->m_highScores[scoreType][index].m_score;
+    int monsterType = highScoreManager::getMonType(score, scoreType);
+    return g_game->m_worldMap.findObjectType(
+        MONSTER, monsterType)->m_imageName.c_str();
+}
+
+// Four controls precede two 11-icon score families. Mac code 0x10b084 calls
+// the retained source-local image-name helper at 0x10b024 for each family.
+// VC6 inlines that ordinary helper into both loops; naming its score and
+// monster-type locals restores the retail second-loop register order. The
+// Windows constructor then reaches MAX 100% with 46 matching CFG blocks.
 // E:\gamedcs\hiscore.cpp:858
 VA(0x004e9880, 0x506)  // vtable/global/widget/resource xrefs, dc 0xd7e3c
 THighScoreWindow::THighScoreWindow()
@@ -524,10 +515,7 @@ THighScoreWindow::THighScoreWindow()
     for (i = 0; i < 11; ++i) {
         m_creatures[1][i] = new iconWidget(
             649, 26 + 50 * i, 64, 64, 1004 + i,
-            g_game->m_worldMap.findObjectType(
-                MONSTER, highScoreManager::getMonType(
-                    g_highScoreManager->m_highScores[1][i].m_score,
-                    1))->m_imageName.c_str(),
+            highScoreCreatureImageName(i, 1),
             0, 0, 0, 0,
             iconWidget::ICON_STYLE_PLAIN);
         m_creatures[1][i]->hide();
@@ -536,10 +524,7 @@ THighScoreWindow::THighScoreWindow()
     for (i = 0; i < 11; ++i) {
         m_creatures[0][i] = new iconWidget(
             649, 26 + 50 * i, 64, 64, 1015 + i,
-            g_game->m_worldMap.findObjectType(
-                MONSTER, highScoreManager::getMonType(
-                    g_highScoreManager->m_highScores[0][i].m_score,
-                    0))->m_imageName.c_str(),
+            highScoreCreatureImageName(i, 0),
             0, 0, 0, 0,
             iconWidget::ICON_STYLE_PLAIN);
         m_creatures[0][i]->hide();
