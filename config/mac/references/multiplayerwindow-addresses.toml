@@ -188,3 +188,39 @@ mac_offset = 0x21d044
 mac_size = 0x74
 target_sha256 = "73ee08f73a367b1616a30212588ed90a1781df9cd0c308af3272ba52de72ead2"
 evidence = "CMultiPlayerWindowEdit RTTI1+0x5b4e4 and vtable1+0x5b518 slot15 resolve0x21d044; body calls getCharPressed0x1afaa0, base onKeyPress0x1afb44 and TMultiPlayerWindow::update0x21ace4."
+
+[[functions]]
+retail_va = 0x50fda0
+unit = "multiplayerwindow"
+mac_section = 0x0
+mac_offset = 0x21b208
+mac_size = 0x4fc
+target_sha256 = "07036d71c5b5c766e7e7ef2b0b9af65e968b48a8b1f8f7e57244419ed3af0709"
+evidence = "Mac onWidgetDeselect HOST_ID calls 0x21b208; body builds host-name/password dialog with widget IDs 501..506, invokes doModal 0x20bb48, passes entered session name to 0x21b18c and handles dialog/network failure. BLR 0x21b700, next prologue 0x21b704. Mac omits Windows modem/serial host arms."
+
+[[functions]]
+retail_va = 0x510f40
+unit = "multiplayerwindow"
+mac_section = 0x0
+mac_offset = 0x21c398
+mac_size = 0x50
+target_sha256 = "97c60b930fecf03e8863f625a98a8b2dc9934bb94701b2550c1999f1b45e1e45"
+evidence = "Mac onWidgetDeselect JOIN_ID calls 0x21c398; body dispatches protocol values 1 and 2 to separate join paths 0x21b7dc/0x21bca8 and returns false otherwise. BLR 0x21c3e4, next prologue 0x21c3e8."
+
+[[functions]]
+retail_va = 0x5112e0
+unit = "multiplayerwindow"
+mac_section = 0x0
+mac_offset = 0x21c3e8
+mac_size = 0xc0
+target_sha256 = "74fa489af278c008993ec127ff25768197d7d67370e17904b7cd3da47f1d7049"
+evidence = "Mac getIPAddress accepts output buffer, checks network protocol, invokes Mac address enumeration 0x26c638/0x26afa4, and formats address text. Mac onTCP 0x21c4a8 calls it at 0x21c528. BLR 0x21c4a4, next prologue 0x21c4a8; WinSock implementation differs."
+
+[[functions]]
+retail_va = 0x5113f0
+unit = "multiplayerwindow"
+mac_section = 0x0
+mac_offset = 0x21c4a8
+mac_size = 0x1d4
+target_sha256 = "bdaff260a03ac425effd2802dcbdb738a9e997894f9987994b4f1f7104275af1"
+evidence = "Mac onTCP sets network protocol 2 and host/join state, shows relevant widgets, calls getIPAddress 0x21c3e8, adds IP_ADDRESS_ID 126 text widget, formats address text and calls update 0x21ace4. Called from onWidgetDeselect TCP_ID. BLR 0x21c678, next prologue 0x21c67c; network initialization differs."
