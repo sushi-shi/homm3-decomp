@@ -3993,7 +3993,9 @@ void advManager::reseed(int targetX, int targetY)
 
 // DC line 4878 constructs the point argument and calls GetCell on the same
 // row. Restoring that natural temporary and helper raises 93.7323% to 98.5243%.
-// The CheckDimNextHeroBut tail already uses its canonical source call.
+// The CheckDimNextHeroBut tail already uses its canonical source call. DC
+// line 4965 also calls Reseed(0, 0); restoring it is Windows byte-flat at
+// the current 96.5199%.
 VA(0x0040ec90, 0x5AD)  // anchor-callee, dc 0xfd84
 int advManager::processSearch(int x, int y, int z)
 {
@@ -4121,7 +4123,7 @@ int advManager::processSearch(int x, int y, int z)
 
     checkDimHero();
 
-    m_seedingValid = 0;
+    reseed(0, 0);
     return 1;
 }
 
