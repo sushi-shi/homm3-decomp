@@ -275,6 +275,17 @@ a hero step and advancing to Day 2 also work with the corrected radar stride.
 All launches use the isolated silent environment below. Battles, save/load
 and extended gameplay remain untested.
 
+Town panorama animation also ran at loop speed: `townManager::main` advanced
+its timer by `cppMin(delta, 150)`, leaving the deadline immediately due.
+Dreamcast townmgr.cpp:5917-5920 proves the elapsed-time guard and a call to
+`max(150, elapsed)`. Retail 0x5d33c2..0x5d33e3 likewise selects the larger
+interval. Restore that existing source helper. Offscreen sampling over three
+seconds observed a changed panorama on every sample at 100 Hz before the fix,
+and 6.67 frame changes per second afterwards, matching the 150 ms interval.
+The missing `max` source-audit finding is resolved; unrelated findings and
+Clang coverage gaps remain. `townManager::main` MAX changes from 91.1545% to
+91.0406%, with its 91.2622% HIST retained. No exact functions are lost.
+
 The updated base had left `TDebugBreak::TDebugBreak` declaration-only,
 creating an unresolved symbol in dxplay, objecttype and objnames. Its ordinary
 out-of-line definition now supplies the empty three-byte retail constructor

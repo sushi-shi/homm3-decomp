@@ -93,8 +93,8 @@ isolated Wine launch plays the intro video and reaches the main menu with
 correctly rendered buttons and no CD-version warning. New Game → Multiplayer
 opens successfully, as does New Game → Single Scenario. Small, medium, large
 and extra-large scenarios load with clean minimap and sidebar rendering. On
-Arrogance, hero/town views, a hero step and advancing to Day 2 work. Broader
-gameplay is unverified.
+Arrogance, hero/town views, a hero step and advancing to Day 2 work. Town
+animations use the retail 150 ms interval. Broader gameplay is unverified.
 `homm3 link` always requires a clean link, without `/FORCE`.
 See [linking and runtime evidence](docs/vc6/runtime-link.md).
 

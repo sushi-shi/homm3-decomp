@@ -4497,7 +4497,7 @@ townmgr	?handleGiftMsg@CTownNetMsgHandler@@UAEXPAVCNetMsg@@@Z	100.0000	100.0000	
 townmgr	?handleHallClick@townManager@@AAEXXZ	100.0000	100.0000	100.0000	0x1d30d0	tokens1:67487a19240c
 townmgr	?handleMageGuildClick@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ce560	tokens1:6f1ed1dceac2
 townmgr	?initializeMagicSkills@type_university@@QAEPAU1@XZ	100.0000	100.0000	100.0000	0x1d2d80	tokens1:43f8f3500567
-townmgr	?main@townManager@@UAEHAAVmessage@@@Z	91.1545	91.1545	91.2622	0x1d3240	tokens1:bc07e2db5607
+townmgr	?main@townManager@@UAEHAAVmessage@@@Z	91.0406	91.0406	91.2622	0x1d3240	tokens1:51fd2ed67344
 townmgr	?moveHeroFromGarrison@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5220	tokens1:be543fee2ce3
 townmgr	?newStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c6e10	tokens1:d73063a04e4d
 townmgr	?open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20	tokens1:c3d548988bd3
