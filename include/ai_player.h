@@ -360,13 +360,15 @@ public:
                            unsigned char exact) const;
 };
 
-// The recovered Complete type inventory names this no-data base. Retail's
-// initializer keeps the type_combat_artifact constructor call for both
-// necromancy branches; the extra inline layer reproduces those boundaries
-// without adding storage or a distinct vtable.
+// The recovered Complete type inventory names this no-data base. Mac retains
+// its getValue body at 0:0x36f38 and calls it from both derived classes;
+// retail VC6 expands those calls. Its override occupies the inherited
+// virtual slot and adds no data or vptr.
 class type_base_necromancy_artifact : public type_combat_artifact {
 public:
     type_base_necromancy_artifact(long newBonus);
+    virtual long getValue(const hero* owner, unsigned char equipped,
+                          unsigned char exact) const;
 };
 
 class type_necromancy_artifact : public type_base_necromancy_artifact {

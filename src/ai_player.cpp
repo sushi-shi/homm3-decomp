@@ -4431,17 +4431,11 @@ long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigne
     return owner->getValueOfKnowledge() * m_bonus;
 }
 
-// E:\gamedcs\ai_player.cpp:5152
-// DC line 5168 calls std::min on two long lvalues; Complete instead copies
-// both values into [ebp+8]/[ebp+0xc] before choosing their addresses. The
-// by-value min wrapper scores 85.8871%; cppMin scored 79.9194% and is rejected.
-// Moving effect's declaration above the early skill guard is byte-flat at
-// 85.8871%; it does not change retail's delayed ESI save.
-VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
-long type_necromancy_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char) const
+// Mac 0:0x36f38 retains this evaluator as a base-class call from both
+// necromancy artifacts. VC6 expands it in their retail getValue bodies.
+long type_base_necromancy_artifact::getValue(
+    const hero* owner, unsigned char equipped, unsigned char) const
 {
-    if (owner->m_skillLevel[12] == 0)
-        return 0;
     long effect = static_cast<long>(
         (1.0f - owner->getNecromancyFactor(0)) * 100.0f);
     if (equipped) {
@@ -4454,6 +4448,19 @@ long type_necromancy_artifact::getValue(const hero* owner, unsigned char equippe
     if (effect <= 0)
         return 0;
     return owner->m_army.getAIValue() * effect / 250;
+}
+
+// E:\gamedcs\ai_player.cpp:5152
+// Mac keeps the base evaluator call after the mastery guard. Restoring the
+// same source call lets VC6 expand it and matches all 12 retail CFG blocks.
+// DC's older body contains the calculation directly; its std::min call
+// corroborates the shared evaluator's minimum operation.
+VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
+long type_necromancy_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char exact) const
+{
+    if (owner->m_skillLevel[12] == 0)
+        return 0;
+    return type_base_necromancy_artifact::getValue(owner, equipped, exact);
 }
 
 VA(0x004326e0, 0x38)  // dc 0x3652c
@@ -4777,35 +4784,17 @@ long type_angelic_alliance_artifact::getValue(
     return ownArmyValue + total * 5 / 100;
 }
 
-// Residual (96.78%): all 29 blocks and all 12 branches agree. The remaining
-// code delta is the first `/ 250` return's quotient register schedule (retail
-// keeps it in edx across the split epilogue; this compiler spelling moves it
-// through eax), plus cosmetic names for two float constants and the creature
-// traits relocation. The later `/ 250` arm is instruction-exact. A bounded
-// why-reg sweep found six local/declaration candidates flat or worse; naming
-// either the numerator or the completed quotient in this early arm is also
-// byte-flat. Keep the direct expression rather than manufacture a register
-// carrier.
-VA(0x004333a0, 0x174)  // vtable-slot 0x63b768 (provisional type), retail-only
+// Mac calls the shared base evaluator twice, once for each mastery path.
+// The canonical calls give VC6 the retail quotient register schedule in both
+// expansions; all 29 CFG blocks and 12 branches now agree.
+VA(0x004333a0, 0x174)  // vtable slot 0x63b768, Mac 0:0x384a4
 long type_undead_king_cloak_artifact::getValue(const hero* owner,
                                                 unsigned char equipped,
-                                                unsigned char) const
+                                                unsigned char exact) const
 {
-    int necromancy;
-    if (owner->m_skillLevel[12] == 0) {
-        necromancy = static_cast<int>(
-            (1.0f - owner->getNecromancyFactor(0)) * 100.0f);
-        if (equipped) {
-            if (necromancy > 0)
-                necromancy = 0;
-            necromancy += m_bonus;
-        } else {
-            necromancy = cppMin(necromancy, static_cast<int>(m_bonus));
-        }
-        if (necromancy <= 0)
-            return 0;
-        return owner->m_army.getAIValue() * necromancy / 250;
-    }
+    if (owner->m_skillLevel[12] == 0)
+        return type_base_necromancy_artifact::getValue(
+            owner, equipped, exact);
 
     TCreatureType creature;
     switch (owner->m_skillLevel[12]) {
@@ -4824,21 +4813,8 @@ long type_undead_king_cloak_artifact::getValue(const hero* owner,
         (static_cast<float>(g_creatureTypeTraits[creature].m_aiValue) -
          static_cast<float>(g_creatureTypeTraits[CREATURE_SKELETON].m_aiValue)) /
         static_cast<float>(g_creatureTypeTraits[CREATURE_SKELETON].m_aiValue);
-    necromancy = static_cast<int>(
-        (1.0f - owner->getNecromancyFactor(0)) * 100.0f);
-    if (equipped) {
-        if (necromancy > 0)
-            necromancy = 0;
-        necromancy += m_bonus;
-    } else {
-        necromancy = cppMin(necromancy, static_cast<int>(m_bonus));
-    }
-
-    long value;
-    if (necromancy <= 0)
-        value = 0;
-    else
-        value = owner->m_army.getAIValue() * necromancy / 250;
+    long value = type_base_necromancy_artifact::getValue(
+        owner, equipped, exact);
     return static_cast<long>(value * multiplier);
 }
 
