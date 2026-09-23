@@ -195,7 +195,11 @@ Vendor enrollment is implemented on `codex/vendor-data-matching`, stacked on
 the consumer-contract stage. [Vendor strict matching](vendor-data-matching.md)
 adds code-only address proofs, explicit COFF coalescing rules and ordinary
 objdiff comparison, gaining 25,646 enrolled bytes and 18,892 matched initialized
-bytes. Game/compiler-pool recovery, remaining declaration reconciliation and
+bytes. [Code-derived allocations](code-data-matching.md), on
+`codex/code-data-bindings` above the vendor stage, retain all static-storage
+declarations and place individual game allocations and complete compiler pools
+through checked code. This gains another 12,960 enrolled bytes and 10,158 matched
+initialized bytes. Remaining compiler metadata, declaration reconciliation and
 the final gap review are still in progress; this does not close stage 6.
 
 Apply the shared model to vendor candidates, unresolved external pointers,
@@ -216,6 +220,10 @@ its base/head with the same tooling and policies. The inspected snapshot is base
 `0dbc798f`, head `cd529268`; refresh these identities before the final audit.
 Use isolated worktrees and fresh outputs. Do not tune rules around its addresses,
 symbol spellings, hero counts, town dimensions or rendering sizes.
+
+Metadata refreshed on 2026-09-23 now reports head `6e854110`, with the same
+`0dbc798f` base. This is a navigation update, not a completed before/after audit;
+refresh again when that audit starts.
 
 Produce `docs/tooling/pr78-data-contract-audit.md` with a case-by-case matrix:
 generic rule, before evidence, after evidence, byte/relationship coverage, and

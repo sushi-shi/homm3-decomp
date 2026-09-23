@@ -31,14 +31,25 @@ def linker_identity(coff, row):
     if row['allocation'] == 'common-request':
         return 'common:'+names[0]
     section = coff.sections[row['section_ordinal']-1]
-    if (not section.characteristics & 0x1000 or row['section_offset'] or
-            row['physical_size'] != section.raw_size):
+    if not section.characteristics & 0x1000:
         return ''
     headers = [s for s in coff.symbols.values() if s.section == section.index and
                s.name == section.name and s.storage_class == 3 and s.aux_count == 1]
     if len(headers) != 1:
         return ''
     selection = coff.data[headers[0].offset+18+14]
+    # VC6 /GR vftables use LARGEST (6) with a locator before the public symbol;
+    # /GR- copies use ANY (2) and start at that symbol. These selections can
+    # coalesce by their public key. Match only the complete named tail, never
+    # give an anonymous prefix the public symbol's identity.
+    externals = [s for s in coff.symbols.values() if s.section == section.index and s.storage_class == 2]
+    if (selection in (2, 6) and len(externals) == 1 and
+            row['section_offset'] == externals[0].value and
+            row['section_offset']+row['physical_size'] == section.raw_size and
+            (selection == 6 or row['section_offset'] == 0)):
+        return 'comdat:any-largest:'+names[0]
+    if row['section_offset'] or row['physical_size'] != section.raw_size:
+        return ''
     return f'comdat:{selection}:{names[0]}' if selection in (2, 3, 4) else ''
 
 
@@ -191,7 +202,9 @@ def bind(layout, objects, seeds, *, first_id=0, source_definitions=None):
         for symbol in objects[oi].coff.symbols.values():
             if symbol.section == section and symbol.typ & 0x20:
                 code_claims.append(dict(unit=unit_name(objects[oi]), symbol=symbol.name,
-                    rva=anchor['rva']+symbol.value, evidence='independently matched vendor code path'))
+                    rva=anchor['rva']+symbol.value,
+                    linkage='EXTERNAL' if symbol.storage_class == 2 else 'INTERNAL',
+                    evidence='independently matched vendor code path'))
     return dict(candidate_data=rows, data_bindings=bindings, objects=used, code_claims=code_claims,
                 provenance=provenance, placements=placements, code=code,
                 summary=dict(objects=len(used), placements=len(placements),

@@ -14,7 +14,7 @@ from homm3.core import compiler_profile
 from homm3.core.project import Project
 from homm3.retail_labels import source
 
-SCHEMA = 'homm3.data-declarations.v4'
+SCHEMA = 'homm3.data-declarations.v5'
 SUFFIXES = {'.c', '.cpp', '.cxx', '.h', '.hpp', '.hxx'}
 
 
@@ -49,8 +49,13 @@ def storage_extent(ty):
     if canonical.kind in (cx.TypeKind.LVALUEREFERENCE, cx.TypeKind.RVALUEREFERENCE):
         # Profiles select the pinned i686 Windows ABI, not the host pointer size.
         return 4, 4, True
-    size, alignment = canonical.get_size(), canonical.get_align()
-    return size if size >= 0 else None, alignment if alignment >= 0 else None, False
+    size = canonical.get_size()
+    # libclang may crash in get_align for an incomplete array whose record
+    # element is also incomplete. No object extent exists to align here.
+    if size < 0:
+        return None, None, False
+    alignment = canonical.get_align()
+    return size, alignment if alignment >= 0 else None, False
 
 
 def type_shape(ty):
@@ -93,6 +98,7 @@ def parse_unit(task):
     root = Path(task['root'])
     path = root / task['source']
     result = dict(unit=task['unit'], source=task['source'], facts=[], definitions=[],
+                  storage_declarations=[],
                   errors=[], full_errors=[], skipped_bodies=False, active_macros=[], function_claims=[])
     try:
         index = cx.Index.create()
@@ -135,7 +141,8 @@ def parse_unit(task):
                 if claim:
                     result['function_claims'].append(dict(location(node), unit=task['unit'],
                         symbol=node.mangled_name, rva=int(claim[1], 0)-task['image_base'],
-                        size=int(claim[2], 0), evidence='compiler-bound source VA annotation'))
+                        size=int(claim[2], 0), linkage=node.linkage.name,
+                        evidence='compiler-bound source VA annotation'))
         if node.kind == cx.CursorKind.MACRO_INSTANTIATION and node.spelling in (
                 'DATA_COMPGEN', 'DATA_COMPGEN_GUARD'):
             result['active_macros'].append(dict(location(node), macro=node.spelling))
@@ -147,7 +154,7 @@ def parse_unit(task):
             local = parent_kind in (cx.CursorKind.FUNCTION_DECL, cx.CursorKind.CXX_METHOD,
                                     cx.CursorKind.CONSTRUCTOR, cx.CursorKind.DESTRUCTOR)
             static_storage = not local or storage in ('STATIC', 'EXTERN')
-            if attributes or (node.is_definition() and static_storage):
+            if attributes or static_storage:
                 size, alignment, reference = storage_extent(node.type)
                 fact = dict(location(node), usr=node.get_usr(), name=node.spelling,
                             symbol=node.mangled_name, type=node.type.spelling,
@@ -158,6 +165,8 @@ def parse_unit(task):
                             local=local,
                             parent_symbol=node.semantic_parent.mangled_name if local else '',
                             unit=task['unit'], size_evidence='clang-i686-msvc-layout')
+                if static_storage:
+                    result['storage_declarations'].append(fact)
                 if node.is_definition() and static_storage:
                     result['definitions'].append(fact)
                 for attribute in attributes:
@@ -178,6 +187,7 @@ def parse_unit(task):
 def summarize(units, sites):
     """Deduplicate header sites, retain disagreements and match unannotated definitions."""
     issues, grouped, definitions = [], defaultdict(list), defaultdict(list)
+    declarations_by_usr = defaultdict(list)
     for unit in units:
         if unit['errors']:
             issues.append(dict(kind='parse-failure', unit=unit['unit'], source=unit['source'],
@@ -187,6 +197,8 @@ def summarize(units, sites):
                                rva=None, detail='\n'.join(unit['full_errors'])))
         for fact in unit['definitions']:
             definitions[fact['usr']].append(fact)
+        for fact in unit.get('storage_declarations', []):
+            declarations_by_usr[fact['usr']].append(fact)
         for fact in unit['facts']:
             grouped[(fact['annotation_path'], fact['annotation_offset'], fact['rva'], fact['usr'])].append(fact)
     declarations, bound_sites = [], set()
@@ -197,8 +209,9 @@ def summarize(units, sites):
         # External declarations share an entity; internal/header statics retain
         # their source identity and candidate TU copies in the evidence lists.
         entity_defs = definitions.get(usr, []) if usr else []
-        sizes = {f['size'] for f in [*facts, *entity_defs] if f['size'] is not None}
-        shapes = {json.dumps(f['shape'], sort_keys=True) for f in [*facts, *entity_defs] if 'shape' in f}
+        observations = [*facts, *entity_defs, *declarations_by_usr.get(usr, [])]
+        sizes = {f['size'] for f in observations if f['size'] is not None}
+        shapes = {json.dumps(f['shape'], sort_keys=True) for f in observations if 'shape' in f}
         shape_rows = [json.loads(s) for s in sorted(shapes)]
         conflict = len(sizes) > 1
         size = next(iter(sizes)) if len(sizes) == 1 else None
@@ -236,7 +249,7 @@ def summarize(units, sites):
             issues.append(dict(kind='annotation-unbound', source=f"{site['path']}:{site['line']}", unit='',
                                rva=site['rva'], detail='DATA site not bound by a successful AST parse (possibly inactive preprocessor branch)'))
     return dict(schema=SCHEMA, declarations=declarations, issues=issues,
-                units=[{k: v for k, v in u.items() if k not in ('facts', 'definitions')} for u in units],
+                units=[{k: v for k, v in u.items() if k != 'facts'} for u in units],
                 sites=sites, analysis_complete=not any(i['kind'] != 'compgen-extent-unbound' for i in issues))
 
 

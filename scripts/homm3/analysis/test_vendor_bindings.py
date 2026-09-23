@@ -143,6 +143,22 @@ class VendorBindingsTest(unittest.TestCase):
             report = self.bind(retail, [self.pooled_object(bytes(4), 'a.obj'), second])
             self.assertEqual(self.compare(retail, report)['summary']['bytes_by_status']['binding-conflict'], 4)
 
+    def test_largest_comdat_public_tail_can_share_any_identity_without_claiming_prefix(self):
+        raw = bytearray(_coff((FixtureSection('.data', b'HEADbody', ()),),
+                             (_symbol('.data', 0, 1, 0, 3, _section_aux(8, 0, selection=6)),
+                              _symbol('_pool', 4, 1, 0, 2))))
+        struct.pack_into('<I', raw, 56, 0x40301040)
+        largest = vendor_data.load_object('test.lib', 'large.obj', 'test.lib', bytes(raw))
+        from homm3.analysis.candidate_data import inventory
+        rows = inventory('large', largest.coff, largest.digest)
+        self.assertFalse(bindings.linker_identity(largest.coff, rows[0]))
+        any_copy = self.pooled_object(b'body', 'any.obj')
+        any_row = inventory('any', any_copy.coff, any_copy.digest)[0]
+        self.assertEqual(bindings.linker_identity(largest.coff, rows[1]),
+                         bindings.linker_identity(any_copy.coff, any_row))
+        self.assertTrue(bindings.linker_identity(largest.coff, rows[1]))
+        self.assertFalse(bindings.linker_identity(largest.coff, dict(rows[1], physical_size=3)))
+
     def test_common_copies_require_same_name_size_and_location(self):
         raw = b'abcdefgh'+bytes(4)+b'\xc3'
         first = obj([FixtureSection('.text', raw, ((8, 1, 6),))],

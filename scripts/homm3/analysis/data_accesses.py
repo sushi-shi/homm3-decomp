@@ -378,7 +378,7 @@ class Storage:
                 self.conflicts.append((p['rva'], p['rva']+p['size']))
             else:
                 self.extents[p['rva']].add(p['size'])
-                if p.get('macro') != 'VENDOR':
+                if p.get('extent_kind', 'coff-contribution' if p.get('macro') == 'VENDOR' else 'source') == 'source':
                     self.source_extents[p['rva']].add(p['size'])
                 if p.get('physical_size') is not None:
                     self.emitted[p['rva']].add((p.get('unit', ''), p['physical_size']))

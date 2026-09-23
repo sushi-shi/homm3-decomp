@@ -58,12 +58,15 @@ class Identities:
             # non-exact functions. Nonzero code addends remain unresolved.
             anchor = dict(rva=claim['rva'], size=0, evidence=claim['evidence'],
                           binding_id=None, candidate_id='')
-            self.externals[claim['symbol']].append(anchor)
             coff = objects.get(claim.get('unit'))
+            symbols = [s for s in coff.symbols.values() if s.section > 0 and
+                       s.name == claim['symbol'] and s.typ & 0x20] if coff else []
+            if (not claim.get('unit') or claim.get('linkage') == 'EXTERNAL' or
+                    not claim.get('linkage') and any(s.storage_class == 2 for s in symbols)):
+                self.externals[claim['symbol']].append(anchor)
             if coff:
-                for symbol in coff.symbols.values():
-                    if symbol.section > 0 and symbol.name == claim['symbol'] and symbol.typ & 0x20:
-                        self.locations[claim['unit'], symbol.section].append((symbol.value, anchor))
+                for symbol in symbols:
+                    self.locations[claim['unit'], symbol.section].append((symbol.value, anchor))
 
     def resolve(self, unit, symbol, addend):
         anchors = []
@@ -115,6 +118,8 @@ def enroll(candidates, bindings):
                           section_ordinal=row['section_ordinal'], section_offset=row['section_offset'],
                           physical_size=row['physical_size'], storage=row['storage'],
                           extent_evidence=binding.get('retail_extent') or 'source projection; retail object boundary unproved',
+                          extent_kind=binding.get('extent_kind',
+                              'coff-contribution' if binding['macro'] == 'VENDOR' else 'source'),
                           identity=binding['literal_sha256'] or binding.get('source_identity') or binding['name'],
                           linker_identity=binding.get('linker_identity', ''),
                           macro=binding['macro'], status='enrolled')
@@ -351,13 +356,19 @@ def prepare(root, *, declared=None, candidate_report=None, jobs=4, build_vendor=
     hashes = dict(candidate_report['input_sha256'], **vendor['input_sha256'])
     object_paths.update(vendor['object_paths'])
     objects = load_objects(root, hashes, object_paths)
+    from homm3.analysis import code_data_bindings
+    code = code_data_bindings.bind(layout, objects, candidate_report['candidate_data'], bindings,
+        declared, code_claims+vendor['code_claims'],
+        first_id=max((b['id'] for b in bindings+vendor['data_bindings']), default=-1)+1)
+    paths.append('scripts/homm3/analysis/code_data_bindings.py')
     candidate_report = dict(candidate_report,
         candidate_data=candidate_report['candidate_data']+vendor['candidate_data'],
-        data_bindings=bindings+vendor['data_bindings'], input_sha256=hashes,
+        data_bindings=bindings+vendor['data_bindings']+code['data_bindings'], input_sha256=hashes,
         object_paths=object_paths,
         candidate_issues=candidate_report['candidate_issues']+vendor['issues'])
     return dict(layout=layout, declared=declared, candidate_report=candidate_report, objects=objects,
-                code_claims=code_claims+vendor['code_claims'], issues=issues, paths=paths,
+                code_claims=code_claims+vendor['code_claims']+code['code_claims'], issues=issues, paths=paths,
+                code_data_bindings={k: v for k, v in code.items() if k != 'source_bindings'},
                 vendor_bindings={k: v for k, v in vendor.items() if k not in ('objects', 'candidate_data')})
 
 
@@ -375,7 +386,7 @@ def generate(root, *, declared=None, candidate_report=None, jobs=4, evidence=Non
     report['summary']['unadmitted_code_anchors'] = len(issues)
     report['summary']['source_issue_counts'] = dict(Counter(i['kind'] for i in declared['issues']))
     report['retail_sha256'] = hashlib.sha256(layout.data).hexdigest()
-    report['policy'] = dict(enrollment='fresh source and code-anchored vendor projections; conflicting identities cannot match',
+    report['policy'] = dict(enrollment='fresh source and independently code-anchored allocations; conflicting identities cannot match',
                            relocations='independent owner/addend proof; unknown or unsupported is not exact',
                            zero_fill='static zero agreement only; dynamic initialization is not verified')
     report['input_sha256'] = dict(candidate_report['input_sha256'], **{
@@ -385,6 +396,9 @@ def generate(root, *, declared=None, candidate_report=None, jobs=4, evidence=Non
     if 'vendor_bindings' in evidence:
         report['vendor_bindings'] = evidence['vendor_bindings']
         report['summary']['vendor_bindings'] = evidence['vendor_bindings']['summary']
+    if 'code_data_bindings' in evidence:
+        report['code_data_bindings'] = evidence['code_data_bindings']
+        report['summary']['code_data_bindings'] = evidence['code_data_bindings']['summary']
     return report
 
 
@@ -430,6 +444,7 @@ def overlay(layout, rows, report):
 def exact(report):
     summary = report['summary']
     return (not report.get('analysis_issues') and summary['compared_allocations'] > 0 and
+            not summary.get('code_data_bindings', {}).get('issue_counts') and
             summary['static_exact_allocations'] == summary['compared_allocations'] and
             all(status == 'bound' or count == 0 for status, count in summary['binding_statuses'].items()) and
             not any(count for kind, count in summary.get('source_issue_counts', {}).items()
@@ -437,6 +452,9 @@ def exact(report):
 
 
 def export(report, directory):
+    if 'code_data_bindings' in report:
+        from homm3.analysis import code_data_bindings
+        code_data_bindings.export(report['code_data_bindings'], directory)
     if 'vendor_bindings' in report:
         from homm3.analysis import vendor_bindings
         vendor_bindings.export(report['vendor_bindings'], directory)
@@ -455,7 +473,8 @@ def export(report, directory):
                   list(dict.fromkeys(k for row in rows for k in row)) if rows else default, rendered)
     (directory/'data-match-summary.json').write_text(json.dumps(
         {k: v for k, v in report.items() if k not in ('enrollment', 'matches', 'relocations', 'byte_verdicts',
-                                                   'withheld_bindings', 'source_issues', 'vendor_bindings')}, indent=2)+'\n')
+                                                   'withheld_bindings', 'source_issues', 'vendor_bindings',
+                                                   'code_data_bindings')}, indent=2)+'\n')
 
 
 def run(args):

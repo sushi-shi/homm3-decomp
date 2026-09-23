@@ -108,6 +108,38 @@ DATA(0x401100) Pixel* pointer;
             self.assertIsNone(report['declarations'][0]['size'])
             self.assertFalse(report['declarations'][0]['definition'])
 
+    def test_unannotated_storage_declarations_and_local_statics_survive_export(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            unit = self.parse(root, '''
+extern int table[7];
+int table[7];
+void f() { static short saved[3]; int automatic; }
+''')
+            report = data.summarize([unit], [])
+            emitted = report['units'][0]
+            self.assertEqual({f['name'] for f in emitted['definitions']}, {'table', 'saved'})
+            self.assertEqual([f['name'] for f in emitted['storage_declarations']], ['table', 'table', 'saved'])
+            self.assertFalse(report['declarations'])
+
+    def test_incomplete_record_array_does_not_request_invalid_alignment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            unit = self.parse(Path(directory), 'class Incomplete; extern Incomplete records[];')
+            self.assertFalse(unit['errors'])
+            fact = unit['storage_declarations'][0]
+            self.assertIsNone(fact['size'])
+            self.assertIsNone(fact['alignment'])
+            self.assertEqual(fact['shape']['dimensions'], [None])
+
+    def test_unannotated_extern_reader_participates_in_annotated_shape_check(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            a = self.parse(root, 'DATA(0x401000) int shared[2][6];', 'a.cpp')
+            b = self.parse(root, 'extern int shared[3][4];', 'b.cpp')
+            report = data.summarize([a,b], data.annotation_sites(root, 0x400000))
+            self.assertEqual(report['declarations'][0]['size'], 48)
+            self.assertTrue(report['declarations'][0]['shape_conflict'])
+
     def test_repeated_header_site_deduplicates_but_disagreement_is_retained(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

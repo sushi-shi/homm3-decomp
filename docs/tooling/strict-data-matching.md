@@ -146,3 +146,7 @@ explicit differences and missing proof.
 The [vendor matching stage](vendor-data-matching.md) adds independently code-bound
 archive/zlib storage to this same checkpoint and objdiff project. Its measurements
 extend the source-only static-data checkpoint above.
+
+The [code-derived allocation stage](code-data-matching.md) adds unannotated game
+storage and complete compiler pools, retains reader declarations, and keeps
+source bounds distinct from physical COFF spans.

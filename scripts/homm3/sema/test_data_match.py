@@ -110,6 +110,17 @@ class DataMatchTest(unittest.TestCase):
             report = self.compare(obj, code_claims=[dict(symbol='_fn', rva=0x1000, evidence='admitted')])
             self.assertEqual(report['relocations'][0]['status'], verdict)
 
+    def test_local_code_identity_cannot_resolve_another_units_external_pointer(self):
+        local = CoffObject(_coff((FixtureSection('.text', b'abcdefgh', ()),),
+                                (_symbol('_fn', 0, 1, 0x20, 3),)))
+        user = coff(raw=bytes(8), symbols=[_symbol('_ptr', 0, 1, 0, 2),
+                    _symbol('_fn', 0, 0, 0x20, 2)], relocations=((0, 1, 6),))
+        rows = inventory('user', user, 'sha')
+        claims = [dict(unit='local', symbol='_fn', rva=0x1000, evidence='local annotation', linkage='INTERNAL')]
+        identities = data.Identities(rows, [], {'local': local, 'user': user}, claims)
+        self.assertFalse(identities.resolve('user', user.symbols[1], 0))
+        self.assertEqual(identities.resolve('local', local.symbols[0], 0)[0]['target_rva'], 0x1000)
+
     def test_missing_candidate_relocation_cannot_pass_equal_numeric_word(self):
         raw = struct.pack('<II', 0x402010, 0)
         self.put(0x2000, raw)
