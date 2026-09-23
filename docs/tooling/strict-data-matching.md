@@ -154,3 +154,8 @@ source bounds distinct from physical COFF spans.
 [EH metadata matching](compiler-eh-data-matching.md) adds typed exception records
 and checked local cleanup labels. Metadata addresses come from code roots and
 private COFF offsets, never from the retail pointer fields being compared.
+
+[Vendor source extents](vendor-data-extents.md) adds typed bounds from admitted
+vendor TUs and `data-emission-copies.tsv` for independently compiled evidence
+copies. Shared emission identity preserves both comparisons and does not merge
+Microsoft archive alternatives or turn physical padding into source bounds.

@@ -42,6 +42,64 @@ void f() { DATA(0x401400) static int local[3]; DATA(0x401500) int automatic; }
             self.assertFalse(any(i['kind'] == 'annotation-unbound' for i in result['issues']))
             self.assertEqual({i['kind'] for i in result['issues']}, {'unknown-size', 'automatic-storage'})
 
+    def test_admitted_vendor_c_definitions_and_consumed_headers_retain_logical_extents(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            library = root/'vendor/library'
+            library.mkdir(parents=True)
+            (library/'table.h').write_text('extern int shared[2][3];\n')
+            (library/'table.c').write_text('''
+#include "table.h"
+int shared[2][3];
+static const unsigned char order[19] = {0};
+int* f(void) { static int local[3]; return local; }
+''')
+            (library/'unused.c').write_text('int unrelated;\n')
+            before = {p:p.read_bytes() for p in library.iterdir()}
+            unit = data.parse_unit(dict(root=str(root), source='vendor/library/table.c', unit='table',
+                image_base=0x400000, args=['--target=i686-pc-windows-msvc', '-x', 'c']))
+            self.assertFalse(unit['errors'])
+            self.assertFalse(unit['skipped_bodies'])
+            facts = {f['name']:f for f in unit['definitions']}
+            self.assertEqual(set(facts), {'shared','order','local'})
+            self.assertEqual(facts['order']['size'], 19)
+            self.assertEqual(facts['shared']['shape']['dimensions'], [2,3])
+            self.assertTrue(facts['shared']['tentative_definition'])
+            self.assertEqual(facts['local']['parent_symbol'], '_f')
+            self.assertEqual(facts['local']['parent_name'], 'f')
+            self.assertEqual(facts['local']['symbol'], '_local')
+            self.assertEqual({f['path'] for f in unit['storage_declarations']},
+                             {'vendor/library/table.h','vendor/library/table.c'})
+            game = self.parse(root, '#include "../vendor/library/table.h"\n')
+            self.assertEqual(game['storage_declarations'][0]['symbol'], '?shared@@3PAY02HA')
+            # This C++ declaration lacks extern "C": its different emitted name
+            # remains evidence rather than being rewritten to the C definition.
+            self.assertNotEqual(game['storage_declarations'][0]['symbol'], facts['shared']['symbol'])
+            self.assertEqual(before, {p:p.read_bytes() for p in library.iterdir()})
+
+    def test_c_tentative_definitions_are_not_extern_or_cpp_c_linkage_declarations(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/'src').mkdir()
+            path = root/'src/fixture.c'
+            path.write_text('extern int declared[3]; int tentative[4]; static int internal[2]; '
+                            '__declspec(dllimport) int imported[5];\n')
+            unit = data.parse_unit(dict(root=str(root), source='src/fixture.c', unit='fixture',
+                image_base=0x400000, args=['--target=i686-pc-windows-msvc','/TC','--driver-mode=cl']))
+            self.assertFalse(unit['errors'])
+            self.assertEqual({f['name'] for f in unit['definitions']}, {'tentative','internal'})
+            self.assertTrue(all(f['tentative_definition'] for f in unit['definitions']))
+            cpp = self.parse(root, 'extern "C" int declared[3]; extern "C" {int defined[4];}\n')
+            self.assertFalse(cpp['errors'])
+            self.assertEqual([f['name'] for f in cpp['definitions']], ['defined'])
+            self.assertFalse(any(f['tentative_definition'] for f in cpp['storage_declarations']))
+
+    def test_manifest_language_override_takes_precedence_over_file_suffix(self):
+        self.assertEqual(data.source_language('fixture.cpp', ['/TC']), 'c')
+        self.assertEqual(data.source_language('fixture.c', ['/TP']), 'c++')
+        self.assertEqual(data.source_language('fixture.cpp', ['-x','c']), 'c')
+        self.assertEqual(data.source_language('fixture.c', ['/TC','/TP']), 'c++')
+
     def test_abi_evidence_retains_namespace_origins_and_array_reference_kind(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

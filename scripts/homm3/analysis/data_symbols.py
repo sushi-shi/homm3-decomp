@@ -47,6 +47,19 @@ def spelling(fact, emitted, unit):
     source = fact.get('symbol', '')
     if not source:
         return None
+    # Clang's C local-static spelling omits its enclosing function. It must
+    # never join an ordinary _name global, even when that spelling is exact.
+    if fact.get('local') and source == '_'+fact.get('name', ''):
+        parent = fact.get('parent_name', '')
+        if (fact.get('unit') != unit or fact.get('storage') != 'STATIC' or fact.get('language') != 'c' or
+                not re.fullmatch(r'[A-Za-z_]\w*', parent) or
+                not re.fullmatch(r'(?:_'+re.escape(parent)+r'(?:@[0-9]+)?|@'+re.escape(parent)+r'@[0-9]+)',
+                                 fact.get('parent_symbol', '')) or
+                not re.fullmatch(r'_\?'+re.escape(fact['name'])+r'@\?(?:[0-9]|[A-P]+@)\?\?'+
+                                 re.escape(parent)+r'@@9@9', emitted)):
+            return None
+        return dict(source_symbol=source, emitted_symbol=emitted, unit=unit,
+                    rules=['c-local-static-scope'], anonymous_origins=[])
     rules, origins = [], []
     a, b = source, emitted
     # ABI bridges require a proven owning TU. Exact external spellings may be

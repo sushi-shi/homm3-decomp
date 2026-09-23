@@ -219,12 +219,24 @@ The union gains 23,497 enrolled bytes and 17,296 initialized matches, with no
 previous byte credit lost. Unknown code-bound source extents fall from 65 to 30.
 Linker selection, the remaining gaps and the refreshed PR #78 audit remain open.
 
-A read-only parse of all admitted zlib TUs succeeds and finds 29 exact
-source-to-COFF symbol joins. Twenty-six correspond to the remaining unknown
-code-bound source extents, covering 8,775 bytes already compared through vendor
-contributions. The next vendor declaration pass should retain their logical
-array bounds and reader/writer identities without counting those bytes again.
-Two C-local spellings need separate evidence; the vendor tree stays pristine.
+[Vendor source extents](vendor-data-extents.md), on
+`codex/vendor-declaration-extents` above the declaration ABI stage, parses all
+admitted vendor TUs and consumed headers, including C tentative definitions and
+checked C-local static spellings. It proves 27 more source extents (8,779 logical
+bytes), leaving three unknown code-bound extents. Explicit compiler-input/COFF
+proofs recognize 13 independent copies of the same manifest compilation while
+retaining both byte comparisons. These bytes were already covered by vendor
+matching: every previous distinct byte verdict is preserved, and nine padding
+bytes remain excluded from source bounds. Archive selection and the final gap
+review still need attention.
+
+A disposable AST probe locates all three remaining source extents in otherwise
+valid functions of TUs whose unrelated body diagnostics triggered the global
+skip-bodies fallback. Excluding only the failing bodies in an unsaved parse
+recovers sizes of 16, 16 and eight bytes without editing the source. A following
+recovery stage must prove that retained declarations are outside the excluded
+spans, preserve diagnostics and preprocessing/source coordinates, and reject
+uncontained errors. This probe is a lead, not admitted source or byte credit.
 
 Apply the shared model to vendor candidates, unresolved external pointers,
 alternative archive members, pooled data and compiler-created storage. Resolve
@@ -254,7 +266,8 @@ generic rule, before evidence, after evidence, byte/relationship coverage, and
 remaining uncertainty. Cases include hero-table extent, town shared storage,
 archive-selection tables, live sound/global bindings, startup initialization,
 sprite decoder constants, minimap stride, CD-result overwrite, optional Host
-guard and the missing out-of-line constructor. Incorporate later rendering fixes
+guard, the missing out-of-line constructor, seer-name initialization, quest-loader
+virtual slots and payload consumption, and the town animation timer. Incorporate later rendering fixes
 from the user's branch without overwriting their work.
 
 Data layout, identity and initialization cases must be exercised by the generic

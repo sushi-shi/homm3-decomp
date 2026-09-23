@@ -20,6 +20,45 @@ def local(**changes):
 
 
 class DataSymbolsTest(unittest.TestCase):
+    def test_c_local_scope_requires_static_storage_parent_abi_and_owning_tu(self):
+        f = local(symbol='_table', parent_name='function', parent_symbol='_function', storage='STATIC', language='c')
+        emitted = '_?table@?1??function@@9@9'
+        for parent in ['_function', '_function@8', '@function@8']:
+            self.assertEqual(data_symbols.spelling(dict(f, parent_symbol=parent), emitted, 'a')['rules'],
+                             ['c-local-static-scope'])
+        for changed in [dict(f, parent_name='other'), dict(f, parent_symbol='_other'),
+                        dict(f, parent_symbol='?function@@YAXXZ'), dict(f, storage='EXTERN'),
+                        dict(f, unit='b'), dict(f, parent_name=''), dict(f, language='c++')]:
+            self.assertIsNone(data_symbols.spelling(changed, emitted, 'a'))
+        for wrong in ['_table', emitted.replace('@@9@9', '@@9@4PAHA'),
+                      emitted.replace('function', 'other'), emitted.replace('table@', 'other@')]:
+            self.assertIsNone(data_symbols.spelling(f, wrong, 'a'))
+
+    def test_c_local_spelling_cannot_capture_a_file_scope_object(self):
+        global_fact = fact(symbol='_table', local=False, usr='global')
+        local_fact = local(symbol='_table', parent_name='function', parent_symbol='_function', usr='local', language='c')
+        rows = [dict(id='global', unit='a', symbols=['_table'], physical_size=12),
+                dict(id='local', unit='a', symbols=['_?table@?1??function@@9@9'], physical_size=12)]
+        declared = dict(units=[dict(unit='a', errors=[], definitions=[global_fact,local_fact],
+                                    storage_declarations=[global_fact,local_fact])])
+        matches = code_data_bindings.definitions(declared, rows)
+        self.assertEqual([f['usr'] for f in matches['global']], ['global'])
+        self.assertEqual([f['usr'] for f in matches['local']], ['local'])
+        for row in rows:
+            self.assertEqual(code_data_bindings.extent(row, matches[row['id']], [], None)[2], 'bound')
+
+    def test_c_repeated_local_blocks_preserve_all_emissions(self):
+        a = local(symbol='_table', parent_name='function', parent_symbol='_function', usr='first', language='c')
+        b = dict(a, usr='second')
+        rows = [dict(id=str(i), unit='a', symbols=[f'_?table@?{i}??function@@9@9'], physical_size=12)
+                for i in (2,3)]
+        declared = dict(units=[dict(unit='a', errors=[], definitions=[a,b], storage_declarations=[a,b])])
+        matches = code_data_bindings.definitions(declared, rows)
+        for row in rows:
+            self.assertEqual({f['usr'] for f in matches[row['id']]}, {'first','second'})
+            self.assertEqual(code_data_bindings.extent(row, matches[row['id']], [], None)[2],
+                             'ambiguous-source-definition')
+
     def test_anonymous_scope_requires_observed_origin_in_owning_tu(self):
         proof = data_symbols.spelling(fact(), ANON, 'a')
         self.assertEqual(proof['rules'], ['anonymous-namespace-origin'])

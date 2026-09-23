@@ -14,7 +14,7 @@ from homm3.core import compiler_profile
 from homm3.core.project import Project
 from homm3.retail_labels import source
 
-SCHEMA = 'homm3.data-declarations.v6'
+SCHEMA = 'homm3.data-declarations.v7'
 SUFFIXES = {'.c', '.cpp', '.cxx', '.h', '.hpp', '.hxx'}
 
 
@@ -93,12 +93,27 @@ def conflicting_shapes(left, right):
     return False
 
 
+def source_language(source_path, args):
+    """Retain the language selected by the manifest's translated driver flags."""
+    language = 'c' if Path(source_path).suffix.lower() == '.c' else 'c++'
+    for index, arg in enumerate(args):
+        if arg in ('/TC', '-xc'):
+            language = 'c'
+        elif arg in ('/TP', '-xc++'):
+            language = 'c++'
+        elif arg == '-x' and index+1 < len(args):
+            language = args[index+1]
+    return language
+
+
 def parse_unit(task):
     import clang.cindex as cx
     root = Path(task['root']).resolve()
     path = root / task['source']
+    language = source_language(task['source'], task['args'])
     result = dict(unit=task['unit'], source=task['source'], facts=[], definitions=[],
                   storage_declarations=[], anonymous_namespace_files=[],
+                  language=language,
                   errors=[], full_errors=[], skipped_bodies=False, active_macros=[], function_claims=[])
     try:
         index = cx.Index.create()
@@ -127,7 +142,7 @@ def parse_unit(task):
     def visit(node):
         if node.location.file:
             node_path = Path(node.location.file.name).resolve()
-            if not any(node_path.is_relative_to(root / d) for d in ('src', 'include')):
+            if not any(node_path.is_relative_to(root / d) for d in ('src', 'include', 'vendor')):
                 return
         children = list(node.get_children())
         if node.kind == cx.CursorKind.NAMESPACE and not node.spelling and node.location.file:
@@ -157,6 +172,12 @@ def parse_unit(task):
                                     cx.CursorKind.CONSTRUCTOR, cx.CursorKind.DESTRUCTOR)
             static_storage = not local or storage in ('STATIC', 'EXTERN')
             if attributes or static_storage:
+                # libclang does not call a C tentative definition a definition.
+                # Its typed allocation request is useful, but does not prove
+                # which strong/COMMON definition the linker ultimately chooses.
+                tentative = (language == 'c' and not node.is_definition() and
+                    parent_kind == cx.CursorKind.TRANSLATION_UNIT and storage in ('NONE', 'STATIC'))
+                definition = node.is_definition() or tentative
                 size, alignment, reference = storage_extent(node.type)
                 referent = node.type.get_canonical().get_pointee() if reference else None
                 const_array_reference = bool(referent is not None and
@@ -167,13 +188,15 @@ def parse_unit(task):
                             const_array_reference=const_array_reference,
                             shape=type_shape(node.type),
                             linkage=node.linkage.name, storage=storage,
-                            static_storage=static_storage, definition=node.is_definition(),
+                            static_storage=static_storage, definition=definition,
+                            tentative_definition=tentative, language=language,
                             local=local,
                             parent_symbol=node.semantic_parent.mangled_name if local else '',
+                            parent_name=node.semantic_parent.spelling if local else '',
                             unit=task['unit'], size_evidence='clang-i686-msvc-layout')
                 if static_storage:
                     result['storage_declarations'].append(fact)
-                if node.is_definition() and static_storage:
+                if definition and static_storage:
                     result['definitions'].append(fact)
                 for attribute in attributes:
                     result['facts'].append(dict(fact, rva=int(attribute.spelling[5:], 16) - task['image_base'],
@@ -233,7 +256,8 @@ def summarize(units, sites):
                    units=sorted({f['unit'] for f in facts}),
                    definition_units=sorted({f['unit'] for f in entity_defs}),
                    definitions=sorted(entity_defs, key=lambda f: (f['unit'], f['path'], f['offset'])),
-                   local=fact['local'], parent_symbol=fact['parent_symbol'],
+                   local=fact['local'], parent_symbol=fact['parent_symbol'], parent_name=fact['parent_name'],
+                   language=fact['language'], storage=fact['storage'],
                    sizes=sorted(sizes), alignments=sorted({f['alignment'] for f in facts if f['alignment'] is not None}),
                    shapes=shape_rows,
                    shape_conflict=any(conflicting_shapes(a, b) for i, a in enumerate(shape_rows) for b in shape_rows[i+1:]),
@@ -284,8 +308,7 @@ def extract(root, image_base, jobs=4):
     project = Project(root)
     profiles = compiler_profile.Profiles(project)
     tasks = [dict(root=str(root), source=u['source'], unit=u['unit'], image_base=image_base,
-                  args=profiles.for_source(root / u['source'])) for u in project.manifest['unit']
-             if (root / u['source']).is_relative_to(root / 'src')]
+                  args=profiles.for_source(root / u['source'])) for u in project.manifest['unit']]
     key = fingerprint(root, profiles, tasks)
     dest = root / 'build/gen/data-declarations.json'
     if dest.is_file():

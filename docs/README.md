@@ -29,6 +29,7 @@ iterate on a function.
 - [Complete retail byte accounting](tooling/data-coverage.md)
 - [Candidate data bindings](tooling/candidate-data-bindings.md)
 - [Clang/VC6 data declaration bindings](tooling/data-declaration-abi.md)
+- [Vendor source extents and compiler copies](tooling/vendor-data-extents.md)
 - [Executable libraries](reference/executable-libraries.md)
 - [RMG undefined behavior](reference/rmg-undefined-behavior.md) and [Voronoi provenance](reference/rmg-voronoi-provenance.md)
 

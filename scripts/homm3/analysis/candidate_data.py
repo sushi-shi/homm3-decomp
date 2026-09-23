@@ -161,7 +161,8 @@ def named_matches(declaration, rows, *, index=None):
     # Summaries retain original observed spellings for exact matching. Bridges
     # use per-TU typed definitions, not properties borrowed across header uses.
     for symbol in declaration['symbols']:
-        facts.append(dict(symbol=symbol))
+        if not declaration.get('local'):
+            facts.append(dict(symbol=symbol))
         if 'unit' in declaration:
             facts.append(dict(declaration, symbol=symbol))
         else:
@@ -170,6 +171,8 @@ def named_matches(declaration, rows, *, index=None):
     index = named_index(rows) if index is None else index
     keys = {symbol_key(f.get('symbol', '')) for f in facts}
     keys.add('_'+declaration['name'])
+    if declaration.get('local'):
+        keys.add('?'+declaration['name'])
     candidates = {key: row for name in sorted(keys) for key, row in index.get(name, {}).items()}
     matches = {}
     for row in candidates.values():
@@ -234,6 +237,8 @@ def bind(declared, rows, objects):
             continue
         for fact in unit.get('definitions', []):
             keys = {symbol_key(fact['symbol'])}
+            if fact.get('local'):
+                keys.add('?'+fact['name'])
             if fact.get('linkage') == 'INTERNAL' and not fact.get('local', True):
                 keys.add('_'+fact['name'])
             for key in keys:

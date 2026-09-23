@@ -38,6 +38,7 @@ class Identities:
     def __init__(self, candidates, bindings, objects, code_claims=()):
         self.locations = defaultdict(list)
         self.externals = defaultdict(list)
+        self.emissions = defaultdict(list)
         self.objects = objects
         by_id = {r['id']: r for r in candidates}
         self.candidates = by_id
@@ -50,6 +51,8 @@ class Identities:
                           evidence=binding.get('proof') or 'source-'+binding['macro']+' binding',
                           binding_id=binding['id'], candidate_id=row['id'])
             self.locations[row['unit'], row['section_ordinal']].append((row['section_offset'], anchor))
+            if row.get('emission_identity'):
+                self.emissions[row['emission_identity']].append(anchor)
             for name, scope in zip(row['symbols'], row['scopes']):
                 if scope == 'external':
                     self.externals[name].append(anchor)
@@ -83,6 +86,17 @@ class Identities:
                     anchors.append(dict(anchor, target_rva=anchor['rva']+position-start,
                                         owner_addend=position-start))
             row = self.by_symbol.get((unit, symbol.index))
+            # A private compilation of this same manifest TU can independently
+            # place the identical emitted owner. Its anchor supplies the address;
+            # neither this pointer value nor equal initializer bytes supply it.
+            if row and row.get('emission_identity'):
+                owner_addend = position-row['section_offset']
+                for anchor in self.emissions[row['emission_identity']]:
+                    if anchor['candidate_id'] != row['id'] and 0 <= owner_addend <= anchor['size']:
+                        anchors.append(dict(anchor, target_rva=anchor['rva']+owner_addend,
+                            owner_addend=owner_addend, emission_identity=row['emission_identity'],
+                            emission_candidate_id=row['id'],
+                            evidence='same manifest emission; '+anchor['evidence']))
             # VC6 narrow-string COMDAT copies have one external linker identity.
             # Reuse a source-bound copy only after checking the complete emitted
             # bytes, not the symbol's hash spelling alone. This uses another
@@ -115,6 +129,8 @@ def enroll(candidates, bindings):
             grouped[key]['binding_ids'].append(binding['id'])
             continue
         row = by_id[key[0]]
+        if binding.get('emission_identity') and binding.get('emission_physical_size') != row['physical_size']:
+            raise ValueError('emission-copy extent disagrees with the raw allocation')
         projection = dict(id=len(projections), candidate_id=row['id'], unit=row['unit'],
                           rva=binding['rva'], size=binding['size'], binding_ids=[binding['id']],
                           section_ordinal=row['section_ordinal'], section_offset=row['section_offset'],
@@ -124,6 +140,7 @@ def enroll(candidates, bindings):
                               'coff-contribution' if binding['macro'] == 'VENDOR' else 'source'),
                           identity=binding['literal_sha256'] or binding.get('source_identity') or binding['name'],
                           linker_identity=binding.get('linker_identity', ''),
+                          emission_identity=binding.get('emission_identity', ''),
                           macro=binding['macro'], status='enrolled')
         grouped[key] = projection
         projections.append(projection)
@@ -137,6 +154,15 @@ def enroll(candidates, bindings):
             compatible |= bool(left['linker_identity'] and
                 (left['rva'], left['size'], left['linker_identity']) ==
                 (right['rva'], right['size'], right['linker_identity']))
+            same_emission = (left['emission_identity'] and left['emission_identity'] == right['emission_identity'] and
+                             left['rva'] == right['rva'] and left['physical_size'] == right['physical_size'])
+            # A typed object and its complete emitted span can differ by trailing
+            # padding. Keep both views, without promoting the physical span into
+            # a logical array bound. Two differing source extents still conflict.
+            compatible |= bool(same_emission and (left['size'] == right['size'] or any(
+                whole['extent_kind'] == 'coff-contribution' and whole['size'] == whole['physical_size'] and
+                part['extent_kind'] in ('source', 'compiler-type', 'compiler-record') and
+                part['size'] <= whole['size'] for whole, part in ((left, right), (right, left)))))
             if not compatible:
                 left['status'] = right['status'] = 'binding-conflict'
     return projections
@@ -364,6 +390,13 @@ def prepare(root, *, declared=None, candidate_report=None, jobs=4, build_vendor=
         first_id=max((b['id'] for b in bindings+vendor['data_bindings']), default=-1)+1)
     paths.append('scripts/homm3/analysis/code_data_bindings.py')
     paths.append('scripts/homm3/analysis/compiler_eh.py')
+    from homm3.analysis import data_emissions
+    copies = data_emissions.identify(root, objects, vendor['objects'])
+    data_emissions.attach(copies, bindings+vendor['data_bindings']+code['data_bindings'],
+                          candidate_report['candidate_data']+vendor['candidate_data'])
+    for report in (vendor, code):
+        report['summary']['binding_statuses'] = dict(Counter(b['status'] for b in report['data_bindings']))
+    paths.append('scripts/homm3/analysis/data_emissions.py')
     candidate_report = dict(candidate_report,
         candidate_data=candidate_report['candidate_data']+vendor['candidate_data'],
         data_bindings=bindings+vendor['data_bindings']+code['data_bindings'], input_sha256=hashes,
@@ -372,7 +405,8 @@ def prepare(root, *, declared=None, candidate_report=None, jobs=4, build_vendor=
     return dict(layout=layout, declared=declared, candidate_report=candidate_report, objects=objects,
                 code_claims=code_claims+vendor['code_claims']+code['code_claims'], issues=issues, paths=paths,
                 code_data_bindings={k: v for k, v in code.items() if k != 'source_bindings'},
-                vendor_bindings={k: v for k, v in vendor.items() if k not in ('objects', 'candidate_data')})
+                vendor_bindings={k: v for k, v in vendor.items() if k not in ('objects', 'candidate_data')},
+                emission_copies=copies)
 
 
 def generate(root, *, declared=None, candidate_report=None, jobs=4, evidence=None):
@@ -385,6 +419,8 @@ def generate(root, *, declared=None, candidate_report=None, jobs=4, evidence=Non
     report['analysis_issues'] = issues + candidate_report['candidate_issues']
     report['withheld_bindings'] = [b for b in candidate_report['data_bindings'] if b['status'] != 'bound']
     report['source_issues'] = declared['issues']
+    report['emission_copies'] = evidence.get('emission_copies', [])
+    report['summary']['emission_copy_statuses'] = dict(Counter(r['status'] for r in report['emission_copies']))
     report['summary']['unavailable_units'] = len(candidate_report['candidate_issues'])
     report['summary']['unadmitted_code_anchors'] = len(issues)
     report['summary']['source_issue_counts'] = dict(Counter(i['kind'] for i in declared['issues']))
@@ -449,6 +485,8 @@ def exact(report):
     return (not report.get('analysis_issues') and summary['compared_allocations'] > 0 and
             not summary.get('code_data_bindings', {}).get('issue_counts') and
             not summary.get('code_data_bindings', {}).get('compiler_issue_counts') and
+            not any(count for status, count in summary.get('emission_copy_statuses', {}).items()
+                    if status != 'same-manifest-emission') and
             summary['static_exact_allocations'] == summary['compared_allocations'] and
             all(status == 'bound' or count == 0 for status, count in summary['binding_statuses'].items()) and
             not any(count for kind, count in summary.get('source_issue_counts', {}).items()
@@ -467,7 +505,8 @@ def export(report, directory):
                               ('data-relocations', 'relocations', ['id', 'site_rva', 'status']),
                               ('data-byte-verdicts', 'byte_verdicts', ['rva', 'size', 'status']),
                               ('data-enrollment-issues', 'withheld_bindings', ['id', 'rva', 'status']),
-                              ('data-source-issues', 'source_issues', ['kind', 'source', 'detail'])]:
+                              ('data-source-issues', 'source_issues', ['kind', 'source', 'detail']),
+                              ('data-emission-copies', 'emission_copies', ['source_unit', 'copy_unit', 'status'])]:
         rows = report.get(key, [])
         rendered = [{k: '' if v is None else json.dumps(v, ensure_ascii=True) if isinstance(v, (list, dict)) or
                      isinstance(v, str) and any(c in v for c in '\t\r\n')
@@ -477,7 +516,7 @@ def export(report, directory):
                   list(dict.fromkeys(k for row in rows for k in row)) if rows else default, rendered)
     (directory/'data-match-summary.json').write_text(json.dumps(
         {k: v for k, v in report.items() if k not in ('enrollment', 'matches', 'relocations', 'byte_verdicts',
-                                                   'withheld_bindings', 'source_issues', 'vendor_bindings',
+                                                   'withheld_bindings', 'source_issues', 'vendor_bindings', 'emission_copies',
                                                    'code_data_bindings')}, indent=2)+'\n')
 
 
