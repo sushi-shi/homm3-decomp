@@ -255,8 +255,14 @@ byte verdict; use `homm3 mac diff` for that stricter comparison when needed.
    helpers = [] # optional additional source-owned VA definitions
    ```
 
-   Calibrate flags against that unit's Mac code. Preserve real helper calls,
-   declarations, body visibility and source order. Candidate inputs preserve
+   Start with the shared toolchain flags. Treat a different `-O` level as a
+   provisional comparison lens until exact source controls distinguish it:
+   source differences can also change instruction alignment. Exact controls
+   currently require `-O1` for `hero::getHighestSchool` and `-O3` for
+   `type_AI_creature_swapper::getSwapValue` with the same authored bodies, but
+   this does not establish how the original project arranged its settings.
+   Preserve real helper calls, declarations, body visibility and source order.
+   Candidate inputs preserve
    the source file's include prefix and read the ordinary game headers. Native
    MSL headers are staged with `homm3 mac sdk PATH`. Missing platform headers or
    compiler errors remain explicit coverage gaps. Do not add replacement game

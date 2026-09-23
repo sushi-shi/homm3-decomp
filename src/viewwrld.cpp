@@ -116,19 +116,24 @@ static long ftol(double d)
 // leave a separate copy of the origin untouched, which retail proves by
 // keeping x and y live in ESI/EDI across the whole clip block and pushing
 // those, never the clamped copies.
+// The reviewed Mac body retains adjusted x/y separately and updates frame
+// before the draw; that source shape aligns 99/107 Mac instructions at -O3.
+// Its left clip computes width as 32 - tilex, while Windows retail emits
+// baseX + 24. Substituting the former here changed Windows control flow and
+// lowered its byte match, so the retail expression remains below.
 VA(0x005f73b0, 0x14D)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x192f4c
 void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z)
 {
     int offset = (32.0f - g_viewWorldScaleFloat) / 2.0f;
-    x -= offset;
-    y -= offset;
+    int drawY = y - offset;
+    int drawX = x - offset;
 
     int tilex = 0;
     int tiley = 0;
     int tilew = 32;
     int tileh = 32;
-    int baseX = x;
-    int baseY = y;
+    int baseX = drawX;
+    int baseY = drawY;
 
     if (baseX < 8) {
         tilex = 8 - baseX;
@@ -153,14 +158,13 @@ void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
     else if (hasFlag(thisCell->m_type))
         owner = getFlaggedObjectOwner(thisCell);
 
-    int framenum;
     if (owner >= 0)
-        framenum = frame + owner * 19;
+        frame += owner * 19;
     else
-        framenum = frame + 8 * 19;
+        frame += 8 * 19;
 
-    srcIcon->draw(0, framenum, tilex, tiley, tilew, tileh,
-                  g_windowManager->m_screenBitmap, x, y, false, true);
+    srcIcon->draw(0, frame, tilex, tiley, tilew, tileh,
+                  g_windowManager->m_screenBitmap, drawX, drawY, false, true);
 }
 
 inline void vwClipScaleToScreenBuffer(int destX, int destY)

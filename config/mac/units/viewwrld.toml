@@ -1,5 +1,6 @@
 mode = "paired_bodies"
-# vwDrawSprite relocation-masked instruction alignment: O3 76/107, O2 61/107,
-# O1 60/107. This is a source-shape profile, not an exact Mac calibration.
+# Provisional source-shape lens for vwDrawSprite: O3 aligns 99/107 instructions
+# after restoring separate adjusted coordinates and frame mutation. This is
+# not an exact flag calibration; the source and Mac x-clipping code still differ.
 flags = ["-O3", "-proc", "750", "-nolink"]
 helpers = []
