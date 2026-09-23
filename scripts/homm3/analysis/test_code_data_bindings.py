@@ -121,6 +121,116 @@ class CodeDataBindingsTest(unittest.TestCase):
         self.assertEqual({b['status'] for b in report['data_bindings']}, {'conflicting-code-placement'})
         self.assertEqual(self.compare(retail, candidate, report)['summary']['enrolled_bytes'], 0)
 
+    def comparison_objects(self, *, addend=6, second_same=False, second_load=False, section_symbol=False):
+        raw = bytearray(b'\x90'*8+b'\x81\xf9'+struct.pack('<i',addend))
+        refs = [(10,3 if section_symbol else 1,6)]
+        if second_same:
+            refs.append((len(raw)+2,1,6))
+            raw.extend(b'\x81\xfa'+struct.pack('<i',addend))
+        else:
+            refs.append((len(raw)+1,1 if second_load else 2,6))
+            raw.extend((b'\xa1' if second_load else b'\xb8')+struct.pack('<i',addend if second_load else 0))
+        raw.append(0xc3)
+        symbols = [_symbol('_func',0,1,0x20,2),_symbol('_one',0,2,0,2),_symbol('_two',8,2,0,2)]
+        if section_symbol:symbols.append(_symbol('.data',0,2,0,3,_section_aux(16,0)))
+        candidate = obj([FixtureSection('.text',bytes(raw),tuple(refs)),
+                         FixtureSection('.data',b'firstPADsecond!!',())],symbols).coff
+        retail=fixture();struct.pack_into('<I',retail,0x178+36,0x60000020)
+        linked=bytearray(raw);struct.pack_into('<I',linked,refs[0][0],0x402010+addend)
+        struct.pack_into('<I',linked,refs[1][0],0x402010+addend if second_load else
+                         0x402050+addend if second_same else 0x402050)
+        put(retail,0x1000,linked);put(retail,0x2010,b'first');put(retail,0x2050,b'second!!')
+        return retail,candidate
+
+    def test_outside_comparison_places_named_storage_without_expanding_the_extent(self):
+        for addend in (-1,6,99):
+            retail,candidate=self.comparison_objects(addend=addend)
+            report=self.bind(retail,candidate)
+            row=report['data_bindings'][0]
+            self.assertEqual((row['rva'],row['size'],row['status']),(0x2010,5,'bound'))
+            proof=row['references'][0]['extent_role']
+            self.assertTrue(proof['accepted_outside_comparison'])
+            self.assertEqual(proof['candidate_relative_offset'],addend)
+            strict=self.compare(retail,candidate,report)
+            self.assertEqual(strict['summary']['matched_initialized_bytes'],13)
+            put(retail,0x2011,b'!')
+            self.assertEqual(self.compare(retail,candidate,self.bind(retail,candidate))['summary']['bytes_by_status']['fixed-mismatch'],1)
+
+    def test_comparison_in_section_padding_does_not_invent_a_logical_owner(self):
+        retail,candidate=self.comparison_objects(section_symbol=True)
+        report=self.bind(retail,candidate)
+        self.assertEqual(report['data_bindings'][0]['status'],'code-reference-outside-source-extent')
+        self.assertEqual(report['reference_roles'][0]['proof']['role'],'comparison-immediate')
+        self.assertFalse(report['reference_roles'][0]['accepted_outside_comparison'])
+
+    def test_good_comparison_does_not_hide_an_outside_memory_load(self):
+        retail,candidate=self.comparison_objects(second_load=True)
+        report=self.bind(retail,candidate)
+        self.assertEqual([b['status'] for b in report['data_bindings']],['code-reference-outside-source-extent'])
+        self.assertEqual([r['accepted_outside_comparison'] for r in report['reference_roles']],[True,False])
+        self.assertEqual(report['reference_roles'][1]['proof']['role'],'memory-displacement')
+        self.assertEqual(self.compare(retail,candidate,report)['summary']['enrolled_bytes'],0)
+
+    def test_comparison_proof_does_not_overrule_competing_placements_or_source_address(self):
+        retail,candidate=self.comparison_objects(second_same=True)
+        report=self.bind(retail,candidate)
+        self.assertEqual({b['status'] for b in report['data_bindings']},{'conflicting-code-placement'})
+        self.assertEqual(report['summary']['source_address_disagreements'],0)
+        self.assertTrue(all(r['accepted_outside_comparison'] for r in report['reference_roles']))
+        self.assertEqual(self.compare(retail,candidate,report)['summary']['enrolled_bytes'],0)
+        retail,candidate=self.comparison_objects()
+        prior=dict(id=100,name='one',candidate_ids=['a:2:0'],size=5,rva=0x2020,
+                   status='bound',macro='DATA',literal_sha256='',source_identity='one')
+        report=self.bind(retail,candidate,bindings=[prior])
+        self.assertEqual(report['data_bindings'][0]['status'],'conflicting-source-address')
+        self.assertEqual(report['source_bindings'],[prior])
+        self.assertEqual(report['summary']['source_address_disagreements'],1)
+
+    def test_comparison_proof_cannot_supply_a_missing_or_conflicting_source_extent(self):
+        retail,candidate=self.comparison_objects()
+        self.assertEqual(self.bind(retail,candidate,definitions=[])['data_bindings'][0]['status'],'source-extent-unproved')
+        self.assertEqual(self.bind(retail,candidate,declarations=[fact('one',7)])['data_bindings'][0]['status'],'conflicting-source-size')
+        put(retail,0x1000,b'\xcc')
+        report=self.bind(retail,candidate)
+        self.assertFalse(report['data_bindings'])
+        self.assertFalse(report['reference_roles'])
+
+    def test_separate_writer_and_reader_storage_cannot_merge_because_both_are_zero(self):
+        retail,original=self.comparison_objects()
+        candidate=obj([FixtureSection('.text',original.section_bytes(original.sections[0]),
+                        tuple((r.site,r.symbol_index,r.typ) for r in original.relocations)),
+                       FixtureSection('.bss',bytes(16),())],
+                      [_symbol('_func',0,1,0x20,2),_symbol('_one',0,2,0,2),_symbol('_two',8,2,0,2)]).coff
+        reader=obj([FixtureSection('.bss',bytes(5),())],[_symbol('_other',0,1,0,3)]).coff
+        put(retail,0x2010,bytes(5));put(retail,0x2050,bytes(8))
+        rows=candidate_data.inventory('a',candidate,'a')+candidate_data.inventory('reader',reader,'b')
+        prior=dict(id=100,name='other',candidate_ids=['reader:1:0'],size=5,rva=0x2010,
+                   status='bound',macro='DATA',literal_sha256='',source_identity='reader-local')
+        declared=dict(units=[dict(unit='a',errors=[],definitions=[fact('one',5),fact('two',8)],storage_declarations=[])])
+        objects={'a':candidate,'reader':reader}
+        report=code.bind(Layout(retail),objects,rows,[prior],declared,[dict(unit='a',symbol='_func',rva=0x1000)])
+        self.assertEqual(report['data_bindings'][0]['status'],'bound')
+        before=data_match.compare(Layout(retail),rows,[prior],objects)
+        after=data_match.compare(Layout(retail),rows,[prior]+report['data_bindings'],objects)
+        self.assertEqual(before['summary']['zero_fill_agreement_bytes'],5)
+        self.assertEqual(after['summary']['bytes_by_status']['binding-conflict'],5)
+        self.assertEqual({r['candidate_id'] for r in after['enrollment'] if r['status']=='binding-conflict'},
+                         {'a:2:0','reader:1:0'})
+
+    def test_comparison_address_does_not_resolve_an_outside_pointer_initializer(self):
+        raw=b'\x90'*8+b'\x81\xf9'+struct.pack('<i',9)+b'\xb8'+bytes(4)+b'\xc3'
+        candidate=obj([FixtureSection('.text',raw,((10,1,6),(15,2,6))),
+                       FixtureSection('.data',b'abcdefgh'+struct.pack('<i',9),((8,1,6),))],
+                      [_symbol('_func',0,1,0x20,2),_symbol('_one',0,2,0,2),_symbol('_two',8,2,0,2)]).coff
+        retail=fixture();struct.pack_into('<I',retail,0x178+36,0x60000020)
+        linked=bytearray(raw);struct.pack_into('<I',linked,10,0x402019);struct.pack_into('<I',linked,15,0x402050)
+        put(retail,0x1000,linked);put(retail,0x2010,b'abcdefgh');put(retail,0x2050,struct.pack('<I',0x402019))
+        report=self.bind(retail,candidate,definitions=[fact('one',8),fact('two',4)])
+        self.assertTrue(all(b['status']=='bound' for b in report['data_bindings']))
+        strict=self.compare(retail,candidate,report)
+        self.assertEqual(strict['relocations'][0]['status'],'pointer-unresolved')
+        self.assertEqual(strict['summary']['bytes_by_status']['pointer-unresolved'],4)
+
     def test_complete_comdat_keeps_physical_extent_separate_from_source_type(self):
         candidate = vendor_fixtures.VendorBindingsTest().pooled_object(b'word', 'a.obj').coff
         retail = fixture()

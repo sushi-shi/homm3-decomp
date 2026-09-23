@@ -241,18 +241,17 @@ The union gains 160 enrolled bytes (56 initialized matches, 104 zero-fill
 agreements), with no prior credit lost. A general address-use proof must separate
 loop sentinels from memory accesses before admitting those outside references.
 
-The next range-proof stage should add `analysis/code_reference_roles.py` and
-invoke it from `code_data_bindings.py` at the existing extent check. Decode the
-exact relocation-bearing operand in independently anchored raw code, recording
-comparison immediates separately from memory displacements. Export the operand,
-site, owner-relative addend and proof with the binding. Keep pointer-data checks,
-logical source bounds, conflicting placements and unsupported accesses strict;
-consumer bounds remain a separate requirement. Controls must distinguish
-`cmp register, address` from `cmp [address], value`, including wrong relocation
-fields/types and real outside loads/stores. A read-only scan finds 41 current
-bindings whose outside references are comparison immediates, spanning 53,360
-retail bytes; 2,512 are currently unenrolled. These are leads, not new match
-credit or a proof of valid loop bounds.
+[Address operand roles](data-reference-roles.md), on
+`codex/data-reference-roles` above body recovery, proves comparison immediates
+from typed function entries and raw relocation fields. It exports instruction
+paths and operand proofs without expanding source bounds or relaxing pointer
+initializer checks. All 49 comparison references are proved; 35 additional
+allocations become code-bound while independent placement conflicts remain.
+Seven new loader projections expose separate reader allocations: 316 previously
+credited zero-fill bytes and 12 previously unenrolled bytes become binding
+conflicts. Initialized-match credit stays unchanged. Unsupported outside accesses
+and consumer loop bounds remain explicit; this placement evidence does not prove
+memory safety or shared runtime storage.
 
 Apply the shared model to vendor candidates, unresolved external pointers,
 alternative archive members, pooled data and compiler-created storage. Resolve

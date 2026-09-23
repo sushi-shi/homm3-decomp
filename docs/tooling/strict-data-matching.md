@@ -164,3 +164,9 @@ Microsoft archive alternatives or turn physical padding into source bounds.
 when unrelated Clang body errors can be isolated. `data-parse-regions.tsv` records
 the excluded spans and original diagnostics; skipped bodies remain incomplete
 source evidence for the exactness gate.
+
+[Address operand roles](data-reference-roles.md) admit independently anchored
+comparison addresses outside named source extents without expanding those
+extents. `code-data-reference-roles.tsv` preserves the operand proofs. Newly
+located distinct writer/reader allocations remain conflicts even when both
+contain zeros; comparison evidence never relaxes initializer-pointer bounds.

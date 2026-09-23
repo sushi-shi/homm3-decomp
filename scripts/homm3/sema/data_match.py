@@ -389,6 +389,7 @@ def prepare(root, *, declared=None, candidate_report=None, jobs=4, build_vendor=
         declared, code_claims+vendor['code_claims'],
         first_id=max((b['id'] for b in bindings+vendor['data_bindings']), default=-1)+1)
     paths.append('scripts/homm3/analysis/code_data_bindings.py')
+    paths.append('scripts/homm3/analysis/code_reference_roles.py')
     paths.append('scripts/homm3/analysis/compiler_eh.py')
     from homm3.analysis import data_emissions
     copies = data_emissions.identify(root, objects, vendor['objects'])

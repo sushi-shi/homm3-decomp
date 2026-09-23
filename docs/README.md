@@ -31,6 +31,7 @@ iterate on a function.
 - [Clang/VC6 data declaration bindings](tooling/data-declaration-abi.md)
 - [Vendor source extents and compiler copies](tooling/vendor-data-extents.md)
 - [Data declarations outside unsupported bodies](tooling/data-body-recovery.md)
+- [Address comparisons and data identity](tooling/data-reference-roles.md)
 - [Executable libraries](reference/executable-libraries.md)
 - [RMG undefined behavior](reference/rmg-undefined-behavior.md) and [Voronoi provenance](reference/rmg-voronoi-provenance.md)
 

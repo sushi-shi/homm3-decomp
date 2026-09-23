@@ -12,7 +12,7 @@ import hashlib
 import json
 import re
 
-from homm3.analysis import candidate_data, compiler_eh, data_declarations, vendor_bindings, vendor_data
+from homm3.analysis import candidate_data, code_reference_roles, compiler_eh, data_declarations, vendor_bindings, vendor_data
 
 
 def definitions(declared, rows):
@@ -154,7 +154,7 @@ def bind(layout, objects, rows, source_bindings, declared, code_claims, *, first
         proposal_locations[candidate].add(rva)
     compiler_roots = {(candidate, rva): refs for (candidate, rva), refs in proposals.items()
                       if len(proposal_locations[candidate]) == 1 and
-                      not any(b['rva'] != rva for b in existing[candidate])}
+                      not any(b['rva'] != rva for b in existing.get(candidate, []))}
     records, compiler_issues = compiler_eh.infer(objects, rows, compiler_roots, units, code_claims)
     compiler_extents = defaultdict(list)
     for record in records:
@@ -164,14 +164,15 @@ def bind(layout, objects, rows, source_bindings, declared, code_claims, *, first
                 proposals[record['candidate_id'], record['rva']].append(dict(ref,
                     compiler_contribution_root=record['root_candidate_id'],
                     compiler_record_kind=record['kind']))
-    bindings = []
+    bindings, reference_roles = [], []
+    operand_roles = code_reference_roles.Roles()
     by_id = {r['id']: r for r in rows}
     locations = defaultdict(set)
     for candidate, rva in proposals:
         locations[candidate].add(rva)
     for (candidate, rva), refs in sorted(proposals.items()):
         row = by_id[candidate]
-        facts, prior = typed[candidate], existing[candidate]
+        facts, prior = typed[candidate], existing.get(candidate, [])
         size, kind, status = extent(row, facts, prior, objects[row['unit']], compiler_extents[candidate])
         if len(locations[candidate]) != 1:
             status = 'conflicting-code-placement'
@@ -183,9 +184,28 @@ def bind(layout, objects, rows, source_bindings, declared, code_claims, *, first
         elif size and not any(s.name in ('.rdata', '.data', '.bss') and
                 s.rva <= rva < rva+size <= s.rva+s.mapped_size for s in layout.sections):
             status = 'outside-retail-data'
-        if size and any(not 0 <= ref['candidate_symbol_offset']+ref['candidate_addend']-
-                        row['section_offset'] <= size for ref in refs if not ref.get('compiler_contribution_root')):
-            status = 'code-reference-outside-source-extent'
+        for ref in refs:
+            if not size or ref.get('compiler_contribution_root'):
+                continue
+            relative = ref['candidate_symbol_offset']+ref['candidate_addend']-row['section_offset']
+            if 0 <= relative <= size:
+                continue
+            (parent_oi, ordinal), parent_rva = ref['parent']
+            role = operand_roles.inspect(contributions[parent_oi].coff, ordinal, ref['site_rva']-parent_rva)
+            # A section-symbol address in padding does not identify the intended
+            # logical owner. Only the already-identified named allocation can
+            # borrow the comparison-only operand proof for an outside addend.
+            accepted = (role['role'] == 'comparison-immediate' and not ref['section_symbol'] and
+                        role['addend'] == ref['candidate_addend'] and
+                        role['relocation_type'] == ref['relocation_type'])
+            ref['extent_role'] = dict(role, candidate_relative_offset=relative,
+                logical_size=size, accepted_outside_comparison=accepted)
+            reference_roles.append(dict(candidate_id=candidate, rva=rva, source_size=size,
+                site_rva=ref['site_rva'], parent=ref['parent'], unit=units[parent_oi],
+                candidate_relative_offset=relative, section_symbol=ref['section_symbol'],
+                accepted_outside_comparison=accepted, proof=role))
+            if not accepted:
+                status = 'code-reference-outside-source-extent'
         identity = next((f['usr'] for f in facts if f.get('usr')), '')
         compiler_identities = {r['linker_identity'] for r in compiler_extents[candidate]}
         linker_identity = next(iter(compiler_identities)) if len(compiler_identities) == 1 else ''
@@ -242,7 +262,7 @@ def bind(layout, objects, rows, source_bindings, declared, code_claims, *, first
                     linkage='EXTERNAL' if symbol.storage_class == 2 else 'INTERNAL',
                     evidence='independently matched source code path'))
     return dict(data_bindings=bindings, source_bindings=list(source_bindings), code=code, issues=issues,
-        declarations=declaration_rows, code_claims=claims,
+        declarations=declaration_rows, code_claims=claims, reference_roles=reference_roles,
         compiler_records=records, compiler_issues=compiler_issues,
         provenance=[dict(object_index=i, unit=unit, object_sha256=contributions[i].digest)
                     for i, unit in enumerate(units)],
@@ -252,7 +272,9 @@ def bind(layout, objects, rows, source_bindings, declared, code_claims, *, first
                      compiler_issue_counts=dict(Counter(i['kind'] for i in compiler_issues)),
                      compiler_record_counts=dict(Counter(r['kind'] for r in records)),
                      source_address_disagreements=len(contradicted & existing.keys()),
-                     storage_declarations=len(declaration_rows)))
+                     storage_declarations=len(declaration_rows),
+                     outside_reference_roles=dict(Counter(r['proof']['role'] for r in reference_roles)),
+                     proved_comparison_references=sum(r['accepted_outside_comparison'] for r in reference_roles)))
 
 
 def export(report, directory):
@@ -261,6 +283,7 @@ def export(report, directory):
     for filename, key in (('code-data-bindings', 'data_bindings'), ('code-data-anchors', 'code'),
                           ('code-data-objects', 'provenance'), ('code-data-issues', 'issues'),
                           ('code-data-declarations', 'declarations'),
+                          ('code-data-reference-roles', 'reference_roles'),
                           ('code-compiler-records', 'compiler_records'), ('code-compiler-issues', 'compiler_issues')):
         rows = report.get(key, [])
         fields = list(dict.fromkeys(k for row in rows for k in row)) or ['detail']
