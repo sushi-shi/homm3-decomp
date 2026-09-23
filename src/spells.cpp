@@ -1897,8 +1897,10 @@ int handleCastSacrifice(message& msg)
 
 // E:\gamedcs\spells.cpp:2061
 // THE AREA-SPELL ROLLOVER. The stack pass is Complete's: where the
-// Dreamcast asks ValidSpellTargetArmy, retail rolls SpellCastWorkChance
-// and flags every stack that answers > 0, reading the collector's own
+// Dreamcast line 2081 and the Mac body at 0x18f348 both call
+// ValidSpellTargetArmy. VC6 expands this ordinary source call into retail's
+// SpellCastWorkChance comparison and flags every stack that answers > 0,
+// reading the collector's own
 // `effected` byte back for each (a hit that CHANGES the flag is what
 // earns the redraw). The hex pass only runs behind the "Show Combat
 // Mouse Hex" preference, drops every hex whose stack was not flagged,
@@ -1908,13 +1910,11 @@ int handleCastSacrifice(message& msg)
 // below, expanded here by /Ob2 (the sete/inc radius and setne centre
 // flag are its body); the hex-side one is written out longhand, as the
 // Dreamcast lines 2094..2102 have it.
-// Residual (98.5000%): a scratch-register rotation spans the chance call,
-// effect-byte argument and hex-vector construction. DC 2081/2082 and
-// 2109/2110 prove independent rejection/invalid-hex continue scopes. Restoring
-// both is flat; recomputing thisArmy from indices loses 85.8304% versus the
-// retained pointer walk. Eight states / two reproduced objects isolate these
-// choices. Complete's chance test still rejects unordered results as retail
-// does, so the negative guard is !(chance > 0), not chance <= 0.
+// Exact Windows match (100%). The former 98.5000% residual rotated scratch
+// registers across the chance test, effect byte and hex-vector construction;
+// restoring the helper call resolved it. DC 2081/2082 and 2109/2110 prove
+// independent rejection/invalid-hex continue scopes. Recomputing thisArmy
+// from indices previously fell to 85.8304% versus the retained pointer walk.
 void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
 {
     std::vector<army*> targets;
@@ -1926,9 +1926,8 @@ void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
              i++, thisArmy++) {
             if (thisArmy->is(creatureImmobilized))
                 continue;
-            if (!(g_combatManager->spellCastWorkChance(
-                    spell, g_combatManager->m_currentSide, thisArmy, 0, 1, 0)
-                > 0.0))
+            if (!g_combatManager->validSpellTargetArmy(
+                    spell, g_combatManager->m_currentSide, thisArmy, 1, 0))
                 continue;
             if (thisArmy->setInsideAreaEffect(
                     g_combatManager->m_effected[side][i]))
@@ -2778,10 +2777,10 @@ void combatManager::markAreaEffect(SpellID spell, long hex, long mastery,
 // order are now literal below. Its statement rows also prove SpellEffect,
 // vector construction, mark_area_effect, per-target damage, victim selection,
 // the multiple-target tail and PowEffect in that order. Complete adds the
-// retail-proven Random/SpellCastWorkChance roll around the shared failed-
-// target clear; this is retail-only revision shape, not a reason to erase the
-// compatible Dreamcast facts. Retain the recovered locals, call order and
-// shared branch state while judging the candidate against retail x86.
+// retail-proven failed-target clear. Dreamcast line 3348 retains a call to
+// SpellCastWorks, as does the lightly optimized Mac body at 0x1954f0. The
+// canonical source call below expands under VC6 and reproduces retail x86.
+// Retain the recovered locals, call order and shared branch state.
 
 // ComputeSpellDamage (0x5a7890) is EXPANDED at both sites: the mastery
 // row and the power product appear inline and only ModifySpellDamage
@@ -2792,13 +2791,10 @@ void combatManager::markAreaEffect(SpellID spell, long hex, long mastery,
 // then starts the outer argument list - i.e. the inner result was a
 // temporary in source, not a subexpression.
 
-// THE ROLL IS AN UNNAMED TEMPORARY, and that is worth 10 points
-// (84.23 -> 94.06) in the direction OPPOSITE to SpellCastWorks
-// (0x5a8640), which needs `int chance = ...`. With the local named, C2
-// gives it a frame slot and `this` keeps EBX; unnamed, the roll takes
-// EBX for its one call-crossing interval and `this` is memory-homed at
-// [ebp-0x18] and reloaded at each of its four uses, which is what
-// retail does. Same lever, opposite sign, two functions apart.
+// SpellCastWorks (0x5a8640) owns the roll. Restoring that ordinary source
+// call lets VC6 expand its unnamed temporary here. A caller-local `chance`
+// previously gave the roll a frame slot and kept `this` in EBX; the helper
+// call yields the retail [ebp-0x18] home and the correct scratch registers.
 
 // THE LOOP IS `while (i--)`, NOT `while (i-- > 0)` (+1.07 and both
 // branch kinds): retail tests the pre-decrement value with `test/je`
@@ -2807,17 +2803,11 @@ void combatManager::markAreaEffect(SpellID spell, long hex, long mastery,
 // another 3.9 - deaths and victim are initialised BEFORE casting_hero is
 // loaded, and `damage` is never initialised at all.
 
-// Residual (99.85646%, unchanged by the DC-local restoration): candidate and
-// retail are both 585 bytes with 18 blocks, 8 branches and 1 return. Only
-// source-diff B7 differs: a three-register rotation (eax->edx, ecx->eax,
-// edx->ecx) across the five instructions that clear
-// `effected[side][slot]` on a failed roll. Retail computes `side*5` in place
-// (`lea eax,[eax+4*eax]`) where our CL takes a fresh scratch. The register
-// classifier reports its B10/B14 scratch-preference class; `homm3 vc6
-// why-reg` enumerated ten mutations, four neutral and six worse. Tried and
-// rejected: naming side or slot separately, naming both together, splitting
-// and moving the optimized-out deaths/victim declarations, making the loop
-// target pointer const, and an if/else in place of `continue` (all byte-flat).
+// Exact Windows match (100%, 585 bytes, 18 blocks, 8 branches, 14 calls).
+// The old 99.85646% residual rotated three scratch registers in the failed
+// roll's `effected[side][slot]` clear. Naming side or slot, moving the
+// optimized-out locals, making the target pointer const, and replacing
+// `continue` with `else` were byte-flat; restoring SpellCastWorks resolved it.
 VA(0x005a4970, 0x249)  // order-map+arity, dc 0x153b60
 void combatManager::areaEffect(long targetCell, SpellID spellType,
                                long mastery, long power)
@@ -2835,10 +2825,7 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
     int i = targets.size();
     while (i--) {
         army* target = targets[i];
-        if (random(1, 100)
-            > static_cast<long>(spellCastWorkChance(spellType, m_currentSide,
-                                                    target, 0, 1, 0)
-                                * 100.0f)) {
+        if (!spellCastWorks(spellType, m_currentSide, target, 0, 0)) {
             m_effected[target->m_combatSide][target->m_bitIndex] = 0;
             continue;
         }
@@ -4116,7 +4103,7 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
             TPickANumber picker(0, 10);
             while (1) {
                 int pick = picker.pick();
-                int candidate = getHexIndex(column, pick);
+                const int candidate = getHexIndex(column, pick);
                 if (pick < 0)
                     break;
                 if (summoned.canFit(candidate, 0, 0))
