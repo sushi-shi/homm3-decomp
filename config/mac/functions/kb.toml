@@ -1,0 +1,100 @@
+# Reviewed source-owned Mac pairs.
+
+[[functions]]
+retail_va = 0x4f4ba0
+unit = "kb"
+source = "src/kb.cpp"
+mac_section = 0
+mac_offset = 0x1163f0
+mac_size = 0xcc
+mac_symbol = ".getNextHumanPlayer__Fi"
+target_sha256 = "a7d058272352660c19fcfad8e95985e8cbd214a0d98f45cefa1d65390664a74d"
+evidence = "Two signed modulo-eight updates, eight-attempt exit, game::isHuman call at 0xe6bf4, disabled-player byte at game+0x1eec6, wrap guard and -1 exits; preceding BLR at 0x1163ec, own prologue, BLR at 0x1164b8, next prologue at 0x1164bc; incoming call at 0x116500 matches adjacent remote-dead-player handler."
+
+[[functions]]
+retail_va = 0x4f0490
+unit = "kb"
+source = "src/kb.cpp"
+mac_section = 0
+mac_offset = 0x11171c
+mac_size = 0xec
+mac_symbol = ".doSinglePlayerWindow__Fv"
+target_sha256 = "212922f69dac9523dbe7c82e388494cbf7f0f98b6762b074eb66b49982a39672"
+evidence = "Game tutorial-byte clear at +0x1ef29, TSingleSelectionWindow stack construction at 0x170b90, doModal at 0x17c860 and destruction at 0x17b504; dialog cancel/okay 0x7801/0x7802, map-header get at 0xdc7ac, final map-name copy and cancel result; preceding BLR 0x111718, own prologue, BLR 0x111804, next prologue 0x111808; four linked callers."
+
+[[functions]]
+retail_va = 0x4f4eb0
+unit = "kb"
+source = "src/kb.cpp"
+mac_section = 0
+mac_offset = 0x1167a0
+mac_size = 0xa80
+mac_symbol = ".set__16type_dialog_iconF13EGameResourcel"
+target_sha256 = "81e6a9967e795492c7984bfdeece2626e9c31a035a1c62a34433d1d9a7356774"
+evidence = "Resource switch bound 0x24, artifact/spell/skill trait strides and text wrap; pskill.def/twcrport.def/ilck82.def TOC anchors; preceding BLR at 0x11679c, own prologue, final BLR at 0x11721c, next prologue at 0x117220; seven linked callers."
+
+[[functions]]
+retail_va = 0x4f3f60
+unit = "kb"
+source = "src/kb.cpp"
+mac_section = 0
+mac_offset = 0x115c34
+mac_size = 0x2a8
+mac_symbol = ".showCongrats__Fi"
+target_sha256 = "47b87338e0fcb5985151cde71042a2d2de3291c9327fd2d74025850aef850df2"
+evidence = "Mac function follows BLR 0x115c30, begins saved-r23 prologue 0x115c34, ends BLR 0x115ed8 before next prologue 0x115edc. Scenario/campaign score branch, calendar expansion, creature-name lookup, generalText[261], Win Scenario TOC string and ordered videoOpen/startMP3/congratsWait/videoClose/addScore/fadeScreen calls identify the canonical Windows showCongrats(int) at 0x004f3f60, Dreamcast kb.cpp:4102. All source-owned callees and data are separately reviewed."
+
+[[functions]]
+retail_va = 0x4f6570
+unit = "kb"
+source = "src/kb.cpp"
+mac_section = 0
+mac_offset = 0x117f10
+mac_size = 0x224
+mac_symbol = ".normalDialog__FPCciiiiiiiiiii"
+target_sha256 = "e9dfb4f58cedd597003566700fc560cb4c5378b453586bdde97970e417423354"
+evidence = "Twelve-argument dialog entry follows its forwarding wrapper BLR at code0:0x117f0c, constructs TNormalDialogInfo at stack+0x218, calls three type_dialog_icon::set instances plus a five-iteration set loop at 0x117fe0..0x11802c, calls calculateNormalDialogSize at 0x117220 and doNormalDialog at 0x1181e0 by value, then destroys the record; own BLR at 0x118130 and next copy-constructor prologue at 0x118134."
+
+[[functions]]
+retail_va = 0x4f7690
+unit = "kb"
+source = "src/kb.cpp"
+mac_section = 0
+mac_offset = 0x1194d8
+mac_size = 0x254
+mac_symbol = ".extendedDialog__FPCcRQ23std30vector<20type_dialog_resource>lll"
+target_sha256 = "a711b2f6fa7b9f6cdb8b8a24ba3b3ef65da283535a81fe193b75d0e8ce94acf0"
+evidence = "Canonical five-parameter extendedDialog repeats TNormalDialogInfo construction over up to eight resource records; Mac 0x1194d8 reads vector size at +4, data pointer at +8 and eight-byte elements, sets active and empty icons, calls calculateNormalDialogSize 0x117220 and doNormalDialog 0x1181e0 by value, destroys both records and loops to the next page. Prior doNormalDialog ends BLR 0x1194d4; own final BLR is 0x119728 and the next getMapExtra leaf begins 0x11972c."
+
+[[functions]]
+retail_va = 0x4f5d80
+unit = "kb"
+source = "src/kb.cpp"
+mac_section = 0
+mac_offset = 0x117220
+mac_size = 0xa8c
+mac_symbol = ".calculateNormalDialogSize__FR17TNormalDialogInfo"
+target_sha256 = "e1a77adde243f01e5b9e268df6f14425e2ae672801cd41e3b5b9fe0565efd2c6"
+evidence = "Canonical dialog geometry function at Windows 0x004f5d80, Dreamcast kb.obj dc:0xe5960. Mac body loops eight 0x34-byte icons, computes row and text geometry using font longest-word/line/wrapped-line methods, has four icon-row placement arms, and is called by admitted normalDialog 0x11802c and extendedDialog 0x117d50. Prior setter ends BLR 0x11721c, this body's final BLR is 0x117ca8, and the next getQuickviewSize prologue starts 0x117cac; the former 0xb78 reference span wrongly included that next function. Full 0xa8c-byte code hash pinned."
+
+[[functions]]
+retail_va = 0x4f15e0
+unit = "kb"
+source = "src/kb.cpp"
+mac_section = 0
+mac_offset = 0x113208
+mac_size = 0x154c
+mac_symbol = ".displayVCWinLoss__FR22VictoryConditionStructRiRib"
+target_sha256 = "cbfa87ad07e5c0a8f53b2bf59f0775412dab10e2ce6667c92a141443b2608c28"
+evidence = "Dreamcast and Mac dispatch signed victory type through an explicit -1 sentinel and Complete arms 0..12; target calls getTeamNames at 0x112dd4, sendPlayerWon at 0x113068 and normalDialog at 0x117f10. Preceding BLR 0x113204, own prologue 0x113208, final BLR 0x114750 and next prologue 0x114754 bound the full body."
+
+[[functions]]
+retail_va = 0x4f2960
+unit = "kb"
+source = "src/kb.cpp"
+mac_section = 0
+mac_offset = 0x114924
+mac_size = 0x3b8
+mac_symbol = ".displayLCWinLoss__FR19LossConditionStructRiRiUc"
+target_sha256 = "c6394b4b5de4fa924da2fe30e51336ffc9c8d0fa8692b434e08c9a8163f85a27"
+evidence = "Dreamcast kb.cpp:3440 names DisplayLCWinLoss and its three loss-condition arms. Mac code0:0x114924 tests m_gameLost at +0x22 and signed m_playerLoser at +0x23, formats town/hero/time-limit rows 252/254/671/255, calls reviewed sendPlayerLost at 0x11312c three times and normalDialog at 0x117f10 three times. Previous BLR 0x114920, own BLR 0x114cd8, next prologue 0x114cdc bound the full body; canonical Windows function is 0x004f2960."

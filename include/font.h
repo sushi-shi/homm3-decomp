@@ -163,8 +163,10 @@ private:
 // `height` byte, then renders that same string with 'smalfont.fnt' - so
 // the object is the small font, but NO roster attests a name for it
 // (the Dreamcast dump carries only `medFont`), which is why this keeps
-// the house ordinal placeholder. Owner TU unlocated - extern only, no
-// DATA claim (the gpWindowManager / gTownSizeNames pattern).
+// the house ordinal placeholder. Owner TU unlocated; this extern claims
+// the storage identity, not a definition. Mac KB's icon setter independently
+// loads the pointer cell through TOC 1+0x908.
+DATA(0x00698a08)
 extern font* g_unnamed698a08;
 
 #endif  /* HOMM3_FONT_H */

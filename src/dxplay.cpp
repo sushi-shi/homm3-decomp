@@ -1432,9 +1432,15 @@ VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 // around a call here; gzinflatebuf retains and calls 0x4d6b80.
 
 // The body is the base list. RTTI proves the empty TDebugBreak base;
-// its canonical empty default constructor is visible in exceptions.h. The
+// the message overload of its constructor is empty.
 VA(0x0049a0c0, 0xF9)
 TRuntimeError::TRuntimeError(const char* text)
-    : std::runtime_error(std::string(text))
+    : TDebugBreak(text), std::runtime_error(std::string(text))
+{
+}
+
+// The retained empty-base calls at 0x41b62a and 0x514dbd reach a body
+// folded with philAI::philAI at 0x524360. Its original TU is unknown.
+TDebugBreak::TDebugBreak()
 {
 }

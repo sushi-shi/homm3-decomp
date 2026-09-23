@@ -1,0 +1,3 @@
+# User-directed deferral; retain these modules in coverage reports.
+deferred_modules = ["rmg", "zlib-1.1.3", "codec", "victor"]
+workers_after_tooling = 6

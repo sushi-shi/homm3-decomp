@@ -327,7 +327,7 @@ void videoResume();
 // kb.h as gbGameOver; advManager::Main tests it twice - once on entry
 // and once after the dispatch - and turns a set latch into the
 // executive's terminate-loop message.
-extern int g_gameOver;
+DATA(0x006972b8) extern int g_gameOver;
 
 // giOverviewReturnAction's domain. ONE value is byte-proven - the kingdom-
 // overview arm answers 2 by viewing giOverviewReturnActionExtra's town and suppressing the
@@ -1581,6 +1581,7 @@ inline int getMapExtra(type_point point)
 }
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
+DATA(0x00699268)
 extern advManager* g_advManager;
 extern int g_thisNetGotAdventureControl;
 

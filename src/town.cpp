@@ -673,10 +673,12 @@ void town::initializeSpells(const TownExtra* townSetup)
     for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         // Complete builds this mask one bit at a time; retail 0x5be668
         // retains Dinkumware's set(position,bool), without a game adapter.
-        prohibited.set(spell,
-            m_spells[spell] || g_game->m_spellDisabledInfo[spell]);
+        prohibited[spell] =
+            m_spells[spell] || g_game->m_spellDisabledInfo[spell];
     }
 
+    // Mac retail materializes bitset reference temporaries at both guild
+    // assignments; DC town.cpp:1192 names reference::operator= at the tail.
     for (int level = 1; level <= 5; ++level) {
         for (int slot = 0;
              slot < g_mageGuildBaseSpellCounts[level - 1] + 1; ++slot) {
@@ -689,7 +691,7 @@ void town::initializeSpells(const TownExtra* townSetup)
                         g_spellTraits[spell].m_townProbability[m_type];
                     if (townSetup->m_fixedSpells[spell]) {
                         m_mageGuildSpells[level - 1][slot] = spell;
-                        prohibited.set(spell);
+                        prohibited[spell] = true;
                         break;
                     }
                 }
@@ -711,29 +713,15 @@ void town::initializeSpells(const TownExtra* townSetup)
                 }
             }
             m_mageGuildSpells[level - 1][slot] = spell;
-            prohibited.set(spell);
+            prohibited[spell] = true;
         }
     }
 
     int guildLevel = 5;
-    while (guildLevel > 0
-           && !(m_built & g_bitNumber[guildLevel - 1]))
+    while (guildLevel > 0 && !hasBuilding(guildLevel - 1, false))
         --guildLevel;
-    m_mageLevel = static_cast<unsigned char>(guildLevel);
-    memset(m_mageGuildSpellCounts, 0, sizeof(m_mageGuildSpellCounts));
-
-    for (int availableLevel = 1;
-         availableLevel <= static_cast<signed char>(m_mageLevel);
-         ++availableLevel) {
-        int count = g_mageGuildBaseSpellCounts[availableLevel - 1];
-        if (m_type == TOWN_TOWER && (m_active & g_bitNumber[EXTRA_1_ID]))
-            ++count;
-        while (count > 0
-               && m_mageGuildSpells[availableLevel - 1][count - 1] == -1)
-            --count;
-        m_mageGuildSpellCounts[availableLevel - 1] =
-            static_cast<signed char>(count);
-    }
+    m_mageLevel = guildLevel;
+    setSpellsAvailable();
 }
 
 // E:\gamedcs\town.cpp:1206
@@ -861,10 +849,7 @@ type_building_id town::buildBuilding(int buildingId,
 
     if (setBuiltFlag && buildingId != DOCK_WITH_BOAT_ID) {
         if (g_game->m_setup.m_difficulty < 2) {
-            int team = m_owner;
-            if (team >= 0)
-                team = g_game->m_mapHeader.m_teamInfo[team];
-            if (!g_game->isHumanAlly(team))
+            if (!g_game->isHumanAlly(m_owner))
                 m_builtThisTurn = 2;
             else
                 m_builtThisTurn = 1;
@@ -895,7 +880,8 @@ type_building_id town::buildBuilding(int buildingId,
     if (m_type == TOWN_TOWER) {
         if (buildingId == EXTRA_0_ID) {
             g_game->setVisibility(m_mapX, m_mapY, m_mapZ, m_owner, 20, 0);
-        } else if (buildingId == HOLY_GRAIL_ID) {
+        }
+        if (buildingId == HOLY_GRAIL_ID) {
             g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 0, m_owner,
                                   g_mapWidth, 0);
             if (g_game->m_worldMap.getNumLevels() > 1)
@@ -1545,20 +1531,20 @@ void town::updateFullBuildingMask()
 VA(0x005c0d20, 0x13D)  // anchor-global, dc 0x168504
 unsigned char town::canBuild(short buildingId) const
 {
-    if (!g_game->m_towns[m_id].m_builtThisTurn) {
-        int legalId = buildingId;
-        if (g_bitNumber[buildingId] & m_available) {
+    if (!g_game->townAlreadyBuiltOn(m_id)) {
+        if (isLegalBuilding(type_building_id(buildingId))) {
             if (buildingId == DOCK_ID)
-                return m_dockSite != TOWN_DOCK_SITE_NONE;
+                return canBuildDock();
             if (buildingId == HALL_CAPITOL_ID)
                 return !g_game->m_players[m_owner].hasCapitol();
             char townType = m_type;
             __int64 requirements = g_hierarchyMask[townType][buildingId];
+            __int64 buildingMask = getBuildingMask();
             if (g_game->m_isTutorial && buildingId == DWELLING_2_ID
                 && townType == TOWN_CASTLE)
                 requirements &= ~g_bitNumber[BLACKSMITH_ID];
-            if (!(m_active & g_bitNumber[buildingId])
-                && (m_active & requirements) == requirements)
+            if (!(buildingMask & g_bitNumber[buildingId])
+                && (buildingMask & requirements) == requirements)
                 return 1;
         }
     }

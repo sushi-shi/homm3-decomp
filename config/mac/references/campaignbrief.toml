@@ -1,0 +1,39 @@
+[[functions]]
+retail_va = 0x005feff0
+unit = "window"
+mac_section = 0
+mac_offset = 0x20b564
+mac_size = 0x28
+mac_symbol = ".getWidget__10heroWindowFi"
+target_sha256 = "a9c0713cbf94ef76f948db17aef6620887b8b3721d23249ad6881fc8ef88d1bb"
+evidence = "Campaign-brief Mac flag loop calls 0x20b564 six times with window receiver and IDs 0x71/0x79 plus index. The complete leaf loads m_tailWidget at +0x2c, compares widget m_id at +0x10, follows m_prevWidget at +8 and returns the pointer or null, matching canonical heroWindow::getWidget in src/window.cpp at retail 0x5feff0. Prior BLR at 0x20b560, terminal BLR at 0x20b588 and next prologue at 0x20b58c bound all 0x28 bytes."
+
+[[helpers]]
+unit = "campaignbrief"
+source_helper = "TCampaignBrief::resetMapAndDescription"
+mac_section = 0
+mac_offset = 0x6439c
+mac_size = 0xb0
+mac_symbol = ".resetMapAndDescription__14TCampaignBriefFi"
+target_sha256 = "1f5e888028ff7f72fddf87f6ded779eddcc1df42677d221bce22eea4c63c5d9c"
+evidence = "Mac select calls 0x6439c after storing the selected scenario. The retained body multiplies the scenario index by 0x498, builds a MESSAGE_WIDGET text update for MAP_NAME_ID 0x67 from scenario+0x2ac, broadcasts it, then calls the scroller setter using scenario+0x2b0. Canonical resetMapAndDescription in src/campaignbrief.cpp owns this helper without a Windows VA. Prior BLR 0x64398, terminal BLR 0x64448 and next helper prologue 0x6444c bound the span."
+
+[[helpers]]
+unit = "campaignbrief"
+source_helper = "TCampaignBrief::clearSelected"
+mac_section = 0
+mac_offset = 0x6444c
+mac_size = 0x88
+mac_symbol = ".clearSelected__14TCampaignBriefFv"
+target_sha256 = "9932b5178268d0c549c9ab0302165010154116144b622f7b14dc46d8ad417250"
+evidence = "Mac select calls 0x6444c immediately after its scenario-availability guard. The retained body walks campaign scenario count at campaign+0x1c, tests each 0x498-byte preview's available byte at +0x494, and hides widget 0xc2+index for available rows. Canonical clearSelected in src/campaignbrief.cpp owns this helper without a Windows VA. Prior BLR 0x64448, terminal BLR 0x644d0 and next setupCurrentTerritory entry 0x644d4 bound the span."
+
+[[functions]]
+retail_va = 0x005fe7c0
+unit = "widget"
+mac_section = 0
+mac_offset = 0x20aa0c
+mac_size = 0x74
+mac_symbol = ".sendMessage__6widgetFQ26widget9ECommandsi"
+target_sha256 = "e28915d25ab8a42cb6871fa46ce837c4fb7d19e755744d4464024aae0f7b88ae"
+evidence = "Campaign-brief Mac flag loop calls 0x20aa0c six times with widget receiver, command 6/5/4 and status mask 6 or player index. The complete body builds MESSAGE_WIDGET 0x200 from command, widget id at +0x10 and extra, then dispatches through the widget virtual message slot, matching canonical widget::sendMessage in src/widget.cpp at retail 0x5fe7c0. Prior BLR at 0x20aa08, terminal BLR at 0x20aa7c and next prologue at 0x20aa80 bound all 0x74 bytes."

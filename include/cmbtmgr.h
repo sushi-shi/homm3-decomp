@@ -354,7 +354,7 @@ enum EAIOrder {
 // FREE fastcall function, not a method (the DC name is scoped to
 // combatManager, so retail moved it out of the class). It is declared
 // here because the Dreamcast-proven TWallTarget inline below uses it.
-extern const unsigned char g_castleWallColumns[];
+DATA(0x0063bd00) extern const unsigned char g_castleWallColumns[];
 
 // The combat-hero sprite state is stored as an int rather than as a
 // CodeView enum. One is the timed idle fidget; the two event-driven states
@@ -1210,16 +1210,7 @@ public:
     int drawArcher(const CSprite* sprite, int sequence, int frame,
                    int x, int y, SLimitData* limits,
                    bool isFlipped, unsigned char colorRow);
-    // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). Its S_PUB32
-    // identity is ?ValidHex@combatManager@@SA_NH@Z: static bool. No retail
-    // body; place_shooter (0x422060) carries two copies of it, one on
-    // the loop index (which VC6 strength-reduces onto the same 30-byte
-    // induction variable the cellData walk uses, so it reads as a
-    // `test/jl` plus `cmp 0x15ea/jge` pair) and one on the adjacent hex.
-    static bool validHex(int hex)
-    {
-        return hex >= 0 && hex < COMBAT_GRID_CELLS;
-    }
+#include "inline/combat_valid_hex.inl"
     // command.cpp:224 (0x474040) paces the frame loop and hands each frame
     // to drawing.cpp's CycleCombatScreen (0x4960d0).
     void doAnimations();
@@ -1768,10 +1759,7 @@ public:
     {
         return m_wallStrength[s_wallTargets[target].m_wall];
     }
-    // DC header inline (cmbtmgr.h:1478, dc 0x27efc); the DC xref graph
-    // lists it among DoCompAI's callees and retail carries no
-    // out-of-line copy, so it is the /Ob2 inline-away case.
-    army* getCurrentArmy() { return &m_armies[m_actingSide][m_actingSlot]; }
+#include "inline/combat_get_current_army.inl"
     // Original: combatManager::get_current_army; CmbtMgr.h:1483, dc 0x1581b8.
     const army* getCurrentArmy() const
     {
@@ -1800,23 +1788,9 @@ public:
     {
         return (y & 1) != 0;
     }
-    // LF_MFUNCTION has no this type: this is a static header helper.
-    // E:\gamedcs\CmbtMgr.h:1513, dc 0x27f34
-    static int gridY(int index) { return index / COMBAT_GRID_ROW_STRIDE; }
-    static int gridX(int index)
-    {
-        return index % COMBAT_GRID_ROW_STRIDE;
-    }
-    // DC header inline (cmbtmgr.h:1525, dc 0x27f64). mark_teleport's
-    // retail expansion retains the ValidHex bounds checks and the two
-    // invisible edge columns, 0 and 16 of each 17-cell row.
-    static bool inInvisibleColumn(int index)
-    {
-        if (!validHex(index))
-            return false;
-        int column = gridX(index);
-        return column == 0 || column == COMBAT_GRID_LAST_COLUMN;
-    }
+#include "inline/combat_grid_y.inl"
+#include "inline/combat_grid_x.inl"
+#include "inline/combat_in_invisible_column.inl"
     // Returns a REFERENCE on its own public
     // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z); the roster text
     // renders every reference as a pointer, which is what this

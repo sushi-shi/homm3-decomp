@@ -42,6 +42,9 @@ spelling that names exactly one retail symbol)
   strings [0x<addr>] [--find TEXT]
         A function's literal evidence / the functions referencing a
         matching literal.
+  coverage [--output DIR] [--json] [--require-complete]
+        Exhaustive retail data accounting with explicit unknown spans,
+        extent evidence and pointer/reference leads; independent of scores.
 
 rc: 0 = answered, 1 = answered-NO (differs), 2 = error.
 Every invocation appends one line to build/homm3_sema.log.
@@ -176,6 +179,12 @@ def _build_parser() -> argparse.ArgumentParser:
     raw.add_argument("--count", type=int, help="pointer slots (default 16; vtable defaults to admitted extent)")
     raw.add_argument("--json", action="store_true")
 
+    coverage = ss.add_parser("coverage", help="exhaustive retail data byte map, including unknowns")
+    coverage.add_argument("--output", metavar="DIR", help="write coverage.json and coverage.tsv")
+    coverage.add_argument("--json", action="store_true")
+    coverage.add_argument("--require-complete", action="store_true",
+                          help="fail if any unknown or provisional bytes remain")
+
     candidates = ss.add_parser("candidates", help="search emitted functions; optional retail mnemonic ranking")
     candidates.add_argument("target", nargs="?", help="retail selector to rank against")
     candidates.add_argument("--find", help="candidate name substring (mangled or demangled)")
@@ -196,7 +205,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return ap
 
 
-COMMANDS = ("xref", "diff", "disasm", "rva", "strings", "data", "candidates", "compare")
+COMMANDS = ("xref", "diff", "disasm", "rva", "strings", "data", "coverage", "candidates", "compare")
 
 # What agents typed under `homm3 sema` that lives elsewhere (usage-log
 # audit): the vc6 solvers, dreamcast lookups, and flag spellings guessed
@@ -233,9 +242,9 @@ def _redirect(argv: list[str]) -> None:
 def _dispatch(argv):
     _redirect(argv)
     args = _build_parser().parse_args(argv)
-    from homm3.sema import diff, disasm, rva, strings, xref, data, candidates, compare
+    from homm3.sema import diff, disasm, rva, strings, xref, data, candidates, compare, coverage
     tool = {"xref": xref, "diff": diff, "disasm": disasm,
-            "rva": rva, "strings": strings, "data": data,
+            "rva": rva, "strings": strings, "data": data, "coverage": coverage,
             "candidates": candidates, "compare": compare}[args.sema]
     return tool.run(args) or 0
 

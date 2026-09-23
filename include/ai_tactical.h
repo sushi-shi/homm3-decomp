@@ -114,7 +114,7 @@ public:
 
     // Original: type_AI_combat_parameters::get_enemy_group; ai_tactical.h:82, dc 0x27fd4.
     long getEnemyGroup() const { return m_enemyGroup; }
-    long getGroup() const { return m_ourGroup; }
+#include "inline/ai_parameters_get_group.inl"
     long getRangedAttackValue(const army& currentArmy, const army& enemy) const;
     long getSimpleAttackEffect(const army& currentArmy, long ourTotal,
                                   const army& enemy, long enemyTotal,
@@ -166,11 +166,9 @@ public:
     // dc 0x3d154. Inlined into check_adjacent_hexes and carrying no
     // retail body of its own.
     long getAttackTime(const pathCell* cell) const;
-    // DC ai_tactical.h:471..482 (0x27fdc/0x27fe0/0x27fe4) returns
-    // best_attack_time, best_hex and best_value, at the retail-proven offsets.
-    long getAttackTime() const { return m_bestAttackTime; }
-    long getBestHex() const { return m_bestHex; }
-    long getHexValue() const { return m_bestValue; }
+#include "inline/ai_attack_chooser_get_attack_time.inl"
+#include "inline/ai_attack_chooser_get_best_hex.inl"
+#include "inline/ai_attack_chooser_get_hex_value.inl"
 
 protected:
     void checkAdjacentHexes(long enemyHex, long startDirection,

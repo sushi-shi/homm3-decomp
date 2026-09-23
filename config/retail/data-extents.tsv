@@ -1,0 +1,5 @@
+# MANUALLY MANAGED: independent retail data extents, never candidate-derived sizes.
+# Names remain source-owned. Evidence must cite the retail boundary justification.
+# Categories: object, system, padding, provisional. End = rva + size, exclusive.
+# Vtables and PE import structures are read directly by sema coverage; do not duplicate them here.
+rva	size	category	evidence

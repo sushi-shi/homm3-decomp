@@ -1,0 +1,79 @@
+# CodeWarrior's signed-int-to-double conversion bias used by the admitted
+# gate-pairing body. The anonymous candidate pool name is context-dependent.
+
+[[data]]
+retail_va = 0x0063e668
+source = "src/game.cpp"
+mac_section = 0
+mac_offset = 0x2a4d4c
+mac_size = 16
+sha256 = "e9decb8d201a0dbc794d887dd560ce7c058915213ab5e5fa574ee2e6ddd6a011"
+evidence = "game::perDay at Mac code0+0xdeb5c indexes the source-owned static const g_resources[4] through loader TOC 1+0x24c8 -> code0+0x2a4d4c. The complete 16-byte big-endian payload is {1,3,4,5}, exactly MERCURY, SULFUR, CRYSTAL, GEMS from DATA(0x0063e668); following bytes start a distinct code-pool item."
+
+[[data]]
+retail_va = 0x006972b8
+source = "include/advmgr.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x526bfc
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "game::perDay loads g_gameOver through loader TOC 1+0x70c -> zero-filled storage 1+0x526bfc at Mac code0+0xde824. The source-owned DATA(0x006972b8) declaration in include/advmgr.h binds the external address only, without supplying an initializer."
+
+[[data]]
+retail_va = 0x00677958
+source = "include/game.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x425e0
+mac_size = 28
+sha256 = "3babf870af4558404976ce9f7fed2e2e6620dec6adb5f4793b3f880771339ebe"
+evidence = "Mac convertObject at code0+0xe0cc4 loads TOC 1+0xbdc -> 1+0x425e0 and indexes seven loader-relocated pointers. Their complete strings are avtwood0.def, avtmerc0.def, avtore0.def, avtsulf0.def, avtcrys0.def, avtgems0.def and avtgold0.def, matching DATA g_resourceObjectDefs[7]. External address binding only."
+
+[[data]]
+retail_va = 0x00677974
+source = "include/game.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x42608
+mac_size = 4
+sha256 = "4c5350f9fa8a07d90d71ddecd0929424911d6fb71bcc157e00a2d20a957f3da5"
+evidence = "Mac convertObject at code0+0xe0cd8 loads TOC 1+0xbd8 -> pointer storage 1+0x42608. Its loader-relocated pointer selects the complete format string ava%04d.def at 1+0x425fc before sprintf; DATA g_artifactObjectDefFormat owns the external pointer cell."
+
+[[data]]
+retail_va = 0x00677a54
+source = "include/game.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x42c20
+mac_size = 36
+sha256 = "460b1201ba3e70f8a733516438e928f5de0459c64ff4d7348859000f1b1f604d"
+evidence = "Mac convertObject at code0+0xe0d88 indexes TOC 1+0xbd4 -> 1+0x42c20 in the isCapitol branch. All nine loader-relocated strings are faction AVC...z0.def Capitol graphics, matching DATA g_townCapitolObjectDefs[9]. External address binding only."
+
+[[data]]
+retail_va = 0x00677a30
+source = "include/game.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x42b84
+mac_size = 36
+sha256 = "8396baa8dd329a9a19370f35952379968f629954565b5e40ec08bc3bd3583167"
+evidence = "Mac convertObject at code0+0xe0e2c indexes TOC 1+0xbd0 -> 1+0x42b84 in the isCastle branch. All nine loader-relocated strings are faction AVC...x0.def Fort graphics, matching DATA g_townFortObjectDefs[9]. External address binding only."
+
+[[data]]
+retail_va = 0x00677a0c
+source = "include/game.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x42ae8
+mac_size = 36
+sha256 = "b0c2b26af566dbdae2d407d1a4546749d6a50731139af3cae8e73aa3ba66d69c"
+evidence = "Mac convertObject at code0+0xe0e48 indexes TOC 1+0xbcc -> 1+0x42ae8 in the remaining town branch. All nine loader-relocated strings are faction AVC...0.def Village graphics, matching DATA g_townVillageObjectDefs[9]. External address binding only."
+
+[[constants]]
+units = ["game"]
+mac_section = 1
+mac_offset = 0x4be0
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "Mac matchUndergroundGates at code 0:0xd7220 loads the signed-integer conversion bias through loader-relocated TOC 1+0x2534 -> data 1+0x4be0. The eight big-endian bytes are 0x4330000080000000, and the CodeWarrior candidate emits that exact anonymous double payload while converting dx*dx+dy*dy before MathLib sqrt."

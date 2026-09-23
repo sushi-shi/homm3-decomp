@@ -1,0 +1,6 @@
+mode = "paired_bodies"
+preamble = "config/mac/include/kb.h"
+include_dirs = ["include", "config/mac/include"]
+flags = ["-O3", "-proc", "750", "-nolink"]
+helpers = []
+source_helpers = ["sendPlayerLost"]

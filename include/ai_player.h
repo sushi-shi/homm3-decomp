@@ -75,17 +75,9 @@ public:
     // inlined into type_income_artifact::get_value, whose by-value double
     // return temp at [ebp-8] is what the retail bytes home under /Op.
     long getResourceValue(int* resources) const;
-    double getResourceValue(enum EGameResource resource) const
-    {
-        return m_resourceValue[resource];
-    }
+#include "ai_player_get_resource_value.inl"
     void startTurn();  // 0x4297c0
-    static void setAttackBonuses(float computerBonus,
-                                   float humanBonus)
-    {
-        s_attackComputerBonus = computerBonus;
-        s_attackHumanBonus = humanBonus;
-    }
+#include "ai_player_set_attack_bonuses.inl"
 
 protected:
     void makeGift(long playerId);  // 0x429110
@@ -112,13 +104,14 @@ protected:
     // DC ?purchase_buildings@type_AI_player@@IAAXXZ: ordinary protected
     // helper; the prohibited-creature array belongs to its body.
     void purchaseBuildings();
-    static float s_attackHumanBonus;
-    static float s_attackComputerBonus;
+    DATA(0x006604fc) static float s_attackHumanBonus;
+    DATA(0x006604f8) static float s_attackComputerBonus;
 };
 
 // Retail .bss 0x692950, eight adjacent 152-byte AI records. make_gift
 // recalculates the recipient's demand through this array before giving
 // resources to another computer player. Owner TU remains unlocated.
+DATA(0x00692950)
 extern type_AI_player g_aiPlayers[8];
 
 // Dreamcast records this exact 12-byte value object, and retail's

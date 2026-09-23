@@ -1606,25 +1606,9 @@ inline int army::getLuck(unsigned char applyLimits) const
         return applyLimits ? limit(-3, m_luck, 3) : m_luck;
     }
 
-    // E:\gamedcs\Army.h:736
-VA(0x00445cd0, 0x38)  // anchor-caller + exact header-inline body, dc 0x27c9c
-inline int army::offsetToFront(int direction) const
-    {
-        if (direction >= 0 && direction <= 2)
-            return 1;
-        if (direction >= 3 && direction <= 5)
-            return -1;
-        return m_facing ? 1 : -1;
-    }
+#include "inline/army_offset_to_front.inl"
 
-    // E:\gamedcs\Army.h:752
-inline void army::clearAIValues()
-    {
-        m_aiExpectedDamage = 0;
-        m_aiTarget = 0;
-        m_aiTargetTime = 0;
-        m_aiTargetValue = 0;
-    }
+#include "inline/army_clear_ai_values.inl"
 
     // E:\gamedcs\Army.h:760
 inline bool army::needToTurn(int direction) const
@@ -1632,12 +1616,7 @@ inline bool army::needToTurn(int direction) const
         return direction < 6 && (m_facing == 0) != (direction >= 3);
     }
 
-    // Original: army::Is; E:\gamedcs\Army.h:765, dc 0x27ce4.
-    // Any requested attribute suffices, including a combined trait mask.
-inline bool army::is(unsigned attribute) const
-    {
-        return (m_monInfo.m_attributes & attribute) != 0;
-    }
+#include "inline/army_is.inl"
 
     // E:\gamedcs\Army.h:770
 inline long army::getAIExpectedDamage() const
@@ -1645,11 +1624,7 @@ inline long army::getAIExpectedDamage() const
         return m_aiExpectedDamage;
     }
 
-    // E:\gamedcs\Army.h:775
-inline const army* army::getAITarget() const
-    {
-        return m_aiTarget;
-    }
+#include "inline/army_get_ai_target.inl"
 
     // E:\gamedcs\Army.h:780
 inline long army::getAITargetValue() const
@@ -1657,11 +1632,7 @@ inline long army::getAITargetValue() const
         return m_aiTargetValue;
     }
 
-    // E:\gamedcs\Army.h:785
-inline long army::getAITargetTime() const
-    {
-        return getAITargetTime(getSpeed());
-    }
+#include "inline/army_get_ai_target_time.inl"
 
     // E:\gamedcs\Army.h:790
 inline long army::getAIPossibleTargets() const
@@ -1696,12 +1667,7 @@ inline const char* army::getName(int count) const
         return getArmyName(m_creatureType, count);
     }
 
-    // SpellID is still represented by its retail-width int domain here.
-    // E:\gamedcs\Army.h:820
-inline long army::getSpellTime(int spell) const
-    {
-        return m_spellInfluence[spell];
-    }
+#include "inline/army_get_spell_time.inl"
 
     // E:\gamedcs\Army.h:825
 inline TSkillMastery army::getSpellLevel(int spell) const
@@ -1709,11 +1675,7 @@ inline TSkillMastery army::getSpellLevel(int spell) const
         return TSkillMastery(m_spellLevel[spell]);
     }
 
-    // E:\gamedcs\Army.h:830
-inline bool army::isActive() const
-    {
-        return m_creatureType >= 0 && m_numTroops > 0;
-    }
+#include "inline/army_is_active.inl"
 
     // E:\gamedcs\Army.h:835
 inline bool army::isInAura() const
@@ -1721,12 +1683,7 @@ inline bool army::isInAura() const
         return m_auraSources.size() > 0;
     }
 
-VA(0x0041f380, 0x27)  // anchor-callee, dc 0x27d9c
-inline bool army::isIncapacitated() const
-    {
-        return m_spellInfluence[62] || m_spellInfluence[70]
-               || m_spellInfluence[74];
-    }
+#include "inline/army_is_incapacitated.inl"
 
     // E:\gamedcs\Army.h:847
 inline bool army::canRetaliate(const army& attacker) const
@@ -1735,16 +1692,7 @@ inline bool army::canRetaliate(const army& attacker) const
                && m_retaliationCount > 0;
     }
 
-    // E:\gamedcs\Army.h:855
-// Complete's inlined copy in consider_single_enchantment keeps the recovered
-// incapacity/attribute prefix but directly contradicts Dreamcast's final
-// Psychic/Magic Elemental pair: retail compares First Aid Tent and Ammo Cart.
-inline bool army::cannotAttack() const
-    {
-        return isIncapacitated() || is(creatureImmobilized)
-               || m_creatureType == ARMY_CREATURE_FIRST_AID_TENT
-               || m_creatureType == ARMY_CREATURE_AMMO_CART;
-    }
+#include "inline/army_cannot_attack.inl"
 
     // E:\gamedcs\Army.h:864
 inline long army::getAdjacentHex(long direction) const

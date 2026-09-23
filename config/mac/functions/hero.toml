@@ -1,0 +1,112 @@
+# Reviewed source-owned Mac pairs.
+
+[[functions]]
+retail_va = 0x4d8720
+unit = "hero"
+source = "src/hero.cpp"
+mac_section = 0
+mac_offset = 0xf3fe4
+mac_size = 0x568
+mac_symbol = ".initialize__4heroFs"
+target_sha256 = "7ee5c1f6c187455b6e7f9378f2243fa925b997576a0f95b01c00c684becd3a0c"
+evidence = "Preceding BLR at 0xf3fe0 and next initializer prologue at 0xf454c bound 0x568 bytes. Short hero-index entry indexes 0x5c-byte g_heroTraits rows, calls the obscuring-object base initializer at 0xf22a4, clears two 70-byte spell arrays, fills 19 equipped and 64 backpack artifact records at eight-byte stride, sets primary and secondary skills, then copies the trait name and initializes aggression, movement and mana. These operations and the emitted .initialize__4heroFs symbol independently identify the source body."
+
+[[functions]]
+retail_va = 0x4d9260
+unit = "hero"
+source = "src/hero.cpp"
+mac_section = 0
+mac_offset = 0xf4ec0
+mac_size = 0x8c
+mac_symbol = ".destroySiegeWeaponArtifact__4heroFi"
+target_sha256 = "aa4ad74b83f9c498f07c0218bd12c18762417160615261654008f97a21837c2c"
+evidence = "Switch on creature IDs 0x91..0x94 maps to artifact IDs 4,6,5; 19 stride-8 equipped slots at this+0x12d; matching one helper call; preceding BLR at 0xf4ebc and next prologue at 0xf4f4c fix boundaries."
+
+[[functions]]
+retail_va = 0x4d97f0
+unit = "hero"
+source = "src/hero.cpp"
+mac_section = 0
+mac_offset = 0xf56b8
+mac_size = 0x240
+mac_symbol = ".updateArmies__4heroFv"
+target_sha256 = "26be3731168736a3654cd6816cc2c3e898faa619131b95e95a71fd63397526cd"
+evidence = "Preceding BLR at 0xf56b4 and next prologue at 0xf58f8 bound the body. Seven-slot loop reads army IDs at this+0x91 and counts at +0xad; widget IDs slot+0x36/0x3d/0x44 and repeated broadcast calls identify updateArmies."
+
+[[functions]]
+retail_va = 0x4dad00
+unit = "hero"
+source = "src/hero.cpp"
+data = [0x00679cbc]
+mac_section = 0
+mac_offset = 0xf66f0
+mac_size = 0x3d0
+mac_symbol = ".getSkillAward__FPC4hero13TSkillMastery13TSkillMastery15TSecondarySkill"
+target_sha256 = "2b586e102e845eb774b58b3dc2c8e4d8f0be4090aff0d3923be3a482d5a54cce"
+evidence = "Preceding BLR at 0xf66ec and next prologue at 0xf6ac0 bound the complete 0x3d0 body. Four argument entry, hero class at +0x30, eight-skill cap at +0x101, Wisdom and magic-school gates, four-school loops, two 28-skill weighted loops, and two Random calls identify getSkillAward. Shared campaign predicate at 0xf66a0 has independent xref in checkLevel."
+
+[[functions]]
+retail_va = 0x4d8b30
+unit = "hero"
+source = "src/hero.cpp"
+mac_section = 0
+mac_offset = 0xf454c
+mac_size = 0x528
+mac_symbol = ".initialize__4heroFPC9HeroExtra"
+target_sha256 = "99cec6d7fd34e7bc5e7b1570a887a5db59e52a7a07208f845c7aca30d2118804"
+evidence = "Preceding hero initializer ends in BLR at 0xf4548 and next prologue begins at 0xf4a74, bounding 0x528 bytes. This two-argument body copies HeroExtra object reference +0x08, packed location +0x301, patrol +0x305, 13-byte name, primary and secondary skills, seven army slots, 70 spells, 19 equipped and 64 backpack artifacts, then sex/name/experience/mana/movement into the hero. Mac suffix fields move back 0x0c for its four-byte embedded string."
+
+[[functions]]
+retail_va = 0x4e2bd0
+unit = "hero"
+source = "src/hero.cpp"
+mac_section = 0
+mac_offset = 0x103854
+mac_size = 0x200
+mac_symbol = ".removeArtifact__4heroFl"
+target_sha256 = "dbbc611ad743827ac5a190fa54dc00fc811dd6fa9804ebcb23239791ead40517"
+evidence = "Named siege and initialize calls reach 0x103854. The two-argument body copies a stride-eight equipped record from hero+0x12d/+0x131; its combination arm indexes 0x18-byte records, tests 144 components, subtracts four primary-skill deltas, clears the equipped slot, and optionally rebuilds spells. Preceding BLR at 0x103850 and next prologue at 0x103a54 bound 0x200 bytes."
+
+[[functions]]
+retail_va = 0x4e3070
+unit = "hero"
+source = "src/hero.cpp"
+mac_section = 0
+mac_offset = 0x103da8
+mac_size = 0x2f0
+mac_symbol = ".giveArtifact__4heroFPC13type_artifactUcUc"
+target_sha256 = "63daa9b7e020a5425bd5c967b401e01c1a7d6bd405d241982bba702694f4895f"
+evidence = "Bounded retail Mac body at 0:0x103da8..0x104098 calls equipArtifact at 0x1035fc, tests combination state and signed owner, calls the retained component helper at 0xf83ec, branches through local-player announce and dialog, falls back to addToBackpack at 0x103c74, then checks artifact victory and end game. The preceding body ends at blr 0x103da4 and the next prologue starts 0x104098. PHILAI buyArtifacts calls this exact entry at 0x13ddc0. Source and candidate emit .giveArtifact__4heroFPC13type_artifactUcUc."
+
+[[functions]]
+retail_va = 0x4e33b0
+unit = "hero"
+source = "src/hero.cpp"
+mac_section = 0
+mac_offset = 0x104098
+mac_size = 0x18c
+mac_symbol = ".giveExperience__4heroFiii"
+target_sha256 = "8696df08e73d1e318d6238a482d9c895cef66bf324cdce267bac00e618fafeab"
+evidence = "Bounded Classic Mac body receives three int parameters, updates hero experience at +0x51, checks maximum level byte at game+0x1f103, calls getExperience and checkLevel, shows capped dialog through text/formatString/normalDialog, then computes new level. Preceding giveArtifact BLR is 0x104094; this body ends BLR 0x104220 before the next prologue 0x104224. Hero::initialize calls this entry at 0xf4904. Mac mangling Fiii independently proves the third-parameter port ABI, while VC6 and DC use unsigned char."
+
+[[functions]]
+retail_va = 0x4dc320
+unit = "hero"
+source = "src/hero.cpp"
+mac_section = 0
+mac_offset = 0xf88cc
+mac_size = 0x5dc
+mac_symbol = ".getMoraleDescription__4heroCFv"
+target_sha256 = "87d83a5e886aadc46cc879e41ac7ed644234fac79dca5a5cce5cfffc440aa803"
+evidence = "Preceding BLR at 0xf88c8 and next prologue at 0xf8ea8 bound the body. Opening hero flags +0x105 bit 0x800000, generalText[438], artifact 0x6c, Grail text, and signed residuals ending in getMorale identify the source function; adjacent next body starts the analogous luck description. The Grail text literal at data1+0x44c2c has an indirect TOC-cell load in this body at 0xf88d4."
+
+[[functions]]
+retail_va = 0x4dcac0
+unit = "hero"
+source = "src/hero.cpp"
+mac_section = 0
+mac_offset = 0xf8ea8
+mac_size = 0x5d4
+mac_symbol = ".getLuckDescription__4heroCFv"
+target_sha256 = "631890cf620dc455dc76bdfdd73ce81494333f4a990a37152c9c021a9f9cb622"
+evidence = "Preceding getMoraleDescription BLR at 0xf8ea4 and next hero body prologue at 0xf947c bound this 0x5d4-byte function. It tests hero flag+0x105 bit0x400000, indexes generalText[438], artifact0x6c and luck text table, checks Grail building through active bits, then calls getLuck and formats signed residuals. Source and Dreamcast identify the analogous luck description; Mac body calls the 16-byte vector indexer at0x948 through TTextResource+0x1c."

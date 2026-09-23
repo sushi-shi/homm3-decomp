@@ -1,0 +1,45 @@
+# Reviewed source-owned Mac pairs.
+
+[[functions]]
+retail_va = 0x5c0400
+unit = "town"
+source = "src/town.cpp"
+mac_section = 0
+mac_offset = 0x1b5970
+mac_size = 0x220
+mac_symbol = ".showCreatureRewards__FPC4townPQ23std30vector<20type_dialog_resource>"
+target_sha256 = "2f91f3f18a13e291dee80b6881e52c6426a98da7959d9af14d87b27004caadf1"
+evidence = "Reward vector +4/+8 qualifier high/low halves, general text IDs 0x8e and 0x24c, formatString %d count then 0x74-stride creature singular/plural name, local-human extendedDialog and vector clear; prior BLR 0x1b596c, own prologue 0x1b5970, final BLR 0x1b5b8c and next prologue 0x1b5b90."
+
+[[functions]]
+retail_va = 0x5be600
+unit = "town"
+source = "src/town.cpp"
+mac_section = 0
+mac_offset = 0x1b3abc
+mac_size = 0x298
+mac_symbol = ".initializeSpells__4townFPC9TownExtra"
+target_sha256 = "d9206303fec8564c0b15edc1c73bfdab3c57449d19c4764b783ea01615c0467d"
+evidence = "Mac body at 0x1b3abc takes town r3 and TownExtra r4, tests town bitset at +0xc8 and setup fixed-spell bitset at +0x70, scans 70 spells with 0x88-byte traits and weighted random, sets guild rows, stores mage level at town+0x14, then calls the independently bounded setSpellsAvailable helper at 0x1b3d54. Dreamcast town.cpp:1150..1200 names the same generation and tail helper; retail Windows 0x5be600 uses the same first-loop disabled-spell merge and five guild rows. Previous BLR is 0x1b3ab8, own BLR is 0x1b3d50, next prologue is 0x1b3d54."
+
+[[functions]]
+retail_va = 0x5c0d20
+unit = "town"
+source = "src/town.cpp"
+mac_section = 0
+mac_offset = 0x1b67f8
+mac_size = 0x19c
+mac_symbol = ".canBuild__4townCFs"
+target_sha256 = "3320e728b9ab5de43704f1b61db611634cddb68d809d96480993ea9aaa6f3856"
+evidence = "Mac canBuild at 0:0x1b67f8 takes town r3 and short building r4, checks builtThisTurn via town ID, calls isLegalBuilding 0x1b6de0, canBuildDock 0x1b4b6c, and playerData::hasCapitol 0xcc46c, then tests hierarchy and bit masks with the tutorial Castle exception. Previous BLR 0x1b67f4, own BLR 0x1b6990, next prologue 0x1b6994; canonical Windows 0x005c0d20 is exact."
+
+[[functions]]
+retail_va = 0x5bede0
+unit = "town"
+source = "src/town.cpp"
+mac_section = 0
+mac_offset = 0x1b43ac
+mac_size = 0x420
+mac_symbol = ".buildBuilding__4townFiUcUc"
+target_sha256 = "f35e1bc312e452dde2b12b8c3b75866cb5cb189ba28aba1db49a40ae1a968c70"
+evidence = "Mac 0:0x1b43ac takes town r3, building int r4 and two byte flags r5/r6. It calls createBuilding 0x1b3e3c, isHumanTeam 0x2d3e4, updateFullBuildingMask 0x1b66f4, setSpellsAvailable twice, giveSpells 0x1b3460, convertObject 0xe0be8, checkForUpgradedTown 0x1fdb2c, checkEndGame 0x114cdc, setVisibility three times and applySpecialBuildingEffect twice. Previous BLR 0x1b43a8, own BLR 0x1b47c8, next prologue 0x1b47cc. Dreamcast town.cpp:1340 names the owning source and Windows 0x005bede0 has the matching three-argument signature."

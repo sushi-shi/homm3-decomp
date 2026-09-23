@@ -3,7 +3,7 @@
 
 Runs the genuine VC6 SP3 `link.exe` (LINK 6.00.8447 - the generation that built
 retail HEROES3.EXE) under wine over our base `.obj`s. The reconstruction is
-partial (only zlib compiles today), so the EXE is NOT runnable; we link it
+partial, so the EXE is NOT runnable; we link it
 anyway, with `/FORCE`, to study the LAYOUT the linker produces: the `.map`
 gives every function's link-assigned address and its source object, which is
 what lets us reverse-engineer the retail object order later (intra-TU order =
@@ -104,6 +104,18 @@ def collect_objs(args) -> list:
     return sorted(objs_dir.glob("*.obj"))
 
 
+def unresolved_symbols(output: str) -> list[str]:
+    """VC6 prints C++ declarations in quotes, followed by the decorated name."""
+    symbols = set()
+    for line in output.splitlines():
+        match = re.search(r"unresolved external symbol\s+(.+)", line)
+        if match:
+            text = match.group(1).strip()
+            decorated = re.search(r"\(([^\s()]+)\)$", text)
+            symbols.add(decorated.group(1) if decorated else text)
+    return sorted(symbols)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="VC6 link.exe wrapper (candidate link).")
     ap.add_argument("--out", default="build/exe/HEROES3.candidate.EXE")
@@ -169,6 +181,7 @@ def main(argv: list[str] | None = None) -> int:
 
     output, rc = run_wine(["wine", str(link), f"@{winepath_w(rsp)}"],
                           out.parent, out)
+    out.with_suffix(".link.log").write_text(output)
 
     if not out.exists():
         sys.stderr.write(f"[link] FAILED to produce {out}\n")
@@ -178,8 +191,7 @@ def main(argv: list[str] | None = None) -> int:
     # /FORCE means unresolved externals are EXPECTED (partial reconstruction);
     # surface the counts but treat the produced EXE as success.
     warns = sum(1 for ln in output.splitlines() if "LNK4006" in ln)
-    unresolved = sorted({m.group(1) for ln in output.splitlines()
-                         if (m := re.search(r"unresolved external symbol (\S+)", ln))})
+    unresolved = unresolved_symbols(output)
     punch = out.parent / (out.stem + ".unresolved.txt")
     punch.write_text("\n".join(unresolved) + "\n")
     shown = out.relative_to(HOMM3_DIR) if out.is_relative_to(HOMM3_DIR) else out

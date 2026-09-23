@@ -1,0 +1,34 @@
+# Reviewed source-owned Mac pairs.
+
+[[functions]]
+retail_va = 0x5503a0
+unit = "recruit"
+source = "src/recruit.cpp"
+mac_section = 0
+mac_offset = 0x14f46c
+mac_size = 0x5cc
+mac_symbol = ".update__11recruitUnitFUcl"
+target_sha256 = "e679c37e54458d60791ace8570d5e99b870f5787b6e6f43b7920260c77aaccc5"
+evidence = "Entry at 0:0x14f46c has mflr/stmw and slot==-1/default-position check; calls source-owned updateCost 0:0x1506e0, siegeMonsterToSiegeArtifact 0:0x14f3cc, hero::hasArtifact 0:0xf4d94, sprintf and twelve broadcastMessage sites; final selected-border update returns at 0:0x14fa34, adjacent 0:0x14fa38 has a new mflr prologue; nine direct callers target the entry. Real MWOB symbol from focused source compile."
+
+[[functions]]
+retail_va = 0x551460
+unit = "recruit"
+source = "src/recruit.cpp"
+mac_section = 0
+mac_offset = 0x15087c
+mac_size = 0xc0
+mac_symbol = ".__ct__11recruitUnitFP4hero13TCreatureTypePs13TCreatureTypePs13TCreatureTypePs13TCreatureTypePs"
+target_sha256 = "f371048da67522893e0ce165d77936fbad867ae94641c94e4dc3e726a92e90fd"
+evidence = "Dreamcast constructor dc0x11adb4 and Mac code0:0x15087c share hero plus four creature/short-pointer pairs, baseManager ctor, GameTime::get, updateCost, and field-store order. Adjacent town ctor starts0:0x15093c; real MWOB symbol verified by compile-only probe."
+
+[[functions]]
+retail_va = 0x551350
+unit = "recruit"
+source = "src/recruit.cpp"
+mac_section = 0
+mac_offset = 0x1507b8
+mac_size = 0xc4
+mac_symbol = ".__ct__11recruitUnitFP9armyGroupUc13TCreatureTypePs13TCreatureTypePs13TCreatureTypePs13TCreatureTypePs"
+target_sha256 = "1632da437e052b838bd394071d2b1379d8eb3ed21d12d7a08642a3d548223295"
+evidence = "Dreamcast dc0x11ad04 armyGroup constructor and Mac code0:0x1507b8 share baseManager ctor, field-store sequence, GameTime::get and updateCost. Mac body ends at blr0:0x150878, adjacent hero constructor begins with mflr0:0x15087c. TOC1+0xe24 loads the reviewed recruitUnit vtable; real MWOB ctor symbol from compile-only probe."

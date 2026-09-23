@@ -1,0 +1,104 @@
+# AI-addressed source externs and numeric pool literals.
+
+[[data]]
+retail_va = 0x0063bd00
+source = "include/cmbtmgr.h"
+declaration_only = true
+mac_section = 0
+mac_offset = 0x2a400e
+mac_size = 11
+sha256 = "7867ae4f8f8192b325ee181199bf92d8cbed0e56854695f9e5d1400a642cd101"
+evidence = "Retail chooseMeleeTarget indexes the source-declared castle-wall column byte table at 0x63bd00. Mac body 0:0x24048 reads TOC 1+0x7b4 -> 0+0x2a400e and indexes 11 row bytes 0c 1d 2d 3e 4e 60 70 82 93 a5 b6; neighboring byte tables flank its exact 11-byte span. Address binding only because the Mac table lives in the code section."
+
+[[data]]
+retail_va = 0x00699284
+source = "include/findpath.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528930
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "External search-array pointer storage at retail 0x699284. Mac findAITargets loads the zero-filled pointer through loader-relocated TOC 1+0x720 -> 1+0x528930; address binding only, no initializer comparison."
+
+# Numeric pool directly read by Mac aiCheckRetreat at code 0+0x1f874..0x20058.
+# Each row is a uniquely bounded payload in the retained AI literal pool.
+
+[[constants]]
+units = ["ai"]
+mac_section = 1
+mac_offset = 0x3df8
+mac_size = 8
+sha256 = "289f198464cd1deb3bbed7ce42582e16e12f913ee22edc7a69206f16ab0cccfa"
+evidence = "IEEE binary64 0.16 for final threshold cap, loaded at code 0+0x1ffd4."
+
+[[constants]]
+units = ["ai"]
+mac_section = 1
+mac_offset = 0x3e00
+mac_size = 4
+sha256 = "2df805aaa329c6b33c5b7a186c2796dfa37fde678c298567616cdb8f473197ea"
+evidence = "IEEE float32 0.03 experience-bonus cap, loaded near code 0+0x1ffb8."
+
+[[constants]]
+units = ["ai"]
+mac_section = 1
+mac_offset = 0x3e08
+mac_size = 8
+sha256 = "dcd0bb7ce6b2306a6232984608d46debc66535662a4eaedcae71395b54a416ca"
+evidence = "IEEE binary64 0.03 comparison bound for experience bonus, loaded near code 0+0x1ffb8."
+
+[[constants]]
+units = ["ai"]
+mac_section = 1
+mac_offset = 0x3e10
+mac_size = 8
+sha256 = "e9ae0139c6963c30eb367979067f23391c28057c182db7278efa642cee2b0c02"
+evidence = "IEEE binary64 0.015 difficulty scaling factor, loaded at code 0+0x1ff7c."
+
+[[constants]]
+units = ["ai"]
+mac_section = 1
+mac_offset = 0x3e18
+mac_size = 4
+sha256 = "af054f935dbf2d785eef36c5a7e3ea34c58fe67ea4244c21cb931f108a09b5a3"
+evidence = "IEEE float32 0.04 increment for the positive-artifact threshold arm, loaded at code 0+0x1ff24."
+
+[[constants]]
+units = ["ai"]
+mac_section = 1
+mac_offset = 0x3e1c
+mac_size = 4
+sha256 = "6547fdd5a34358ca5188d98386325ae2d18aac0e8eb45da7e5c417074ca19b2c"
+evidence = "IEEE float32 0.05 increment for the mid-artifact threshold arm, loaded at code 0+0x1ff10."
+
+[[constants]]
+units = ["ai"]
+mac_section = 1
+mac_offset = 0x3e20
+mac_size = 4
+sha256 = "de1e85862e03a5340c415c93fdb154785b403519bca243fbbc8450c8188f2472"
+evidence = "IEEE float32 0.06 increment for the high-artifact threshold arm, loaded at code 0+0x1fefc."
+
+[[constants]]
+units = ["ai"]
+mac_section = 1
+mac_offset = 0x3e24
+mac_size = 4
+sha256 = "086c41c38a6a61614fc116d17f04086ed0aebcd0e2cb4a6e8ce55ecdc1d93cfd"
+evidence = "IEEE float32 0.16 initial threshold, loaded at code 0+0x1fef4."
+
+[[constants]]
+units = ["ai"]
+mac_section = 1
+mac_offset = 0x3e28
+mac_size = 8
+sha256 = "e249d440595d313db3ae276d9b00150d87a19101435213caa5e9cbef5b5f9f9e"
+evidence = "IEEE binary64 1.1 fight-value adjustment, loaded at code 0+0x1fe14."
+
+[[constants]]
+units = ["ai"]
+mac_section = 1
+mac_offset = 0x3e30
+mac_size = 8
+sha256 = "68fc9699adeb966781bc946940815e1b7c835aa25ec8f810ac38f52073584984"
+evidence = "IEEE binary64 1.2 active-army adjustment, loaded at code 0+0x1fd30."

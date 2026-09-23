@@ -49,65 +49,88 @@
 // Residual (99.8919%): all 40 blocks, 27 branches, 16 calls and masked
 // opcodes agree; only the five local stack homes cycle. Dreamcast does not
 // list `damage`, but folding it into the value expression falls to 96.29%;
-// moving its declaration after result is byte-flat.
+// moving its declaration after estimate keeps Windows 99.8919% and moves the
+// Mac estimate to its exact stack home. One `why-reg --model` probe named the
+// side's army count; its distance worsened from 48 to 87. The model capped
+// the source-local creation-order lever, so further register-only spellings
+// need new source or TU context evidence.
+// Mac Complete's 0+0x1f2b4 body calls the same defender-factor helper at
+// 0+0x4fd04 (Air Shield, Petrify, hero defense factor) but divides by its
+// returned factor in both scans. Windows retail uses FMUL and DC ai.cpp:61/89
+// calls __muld. Keep that port difference at the expression itself. The
+// shared retry condition, default-five arm, and result/best assignment order
+// preserve Windows 99.8919%. Placing damage after estimate raises Mac to
+// 97.5636% (921/944 bytes, all 14 calls in order). Reusing one scan index,
+// consistent with DC's r11 across both loops, raises Mac to 97.9873%
+// (925/944); the first scan is exact and the second only differs in its army
+// pointer register. Windows stays 99.8919%. Naming a divided `damage` local
+// lowered Mac to 95.3390% and was removed.
 
 VA(0x0041e190, 0x2A8)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets, dc 0x23450
 int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int averageDamage)
 {
-    double damage;
     long bestValue = 0;
     long result = -1;
     type_AI_combat_parameters estimate(this, 1 - targetGroup);
+    double damage;
 
     findAITargets(targetGroup, 0, 0, &estimate, 0);
 
-    { for (long i = 0; i < m_numArmies[targetGroup]; i++) {
+    long i;
+    { for (i = 0; i < m_numArmies[targetGroup]; i++) {
             army* currentArmy = &m_armies[targetGroup][i];
             if (currentArmy->is(creatureImmobilized))
                 continue;
+#ifdef HOMM3_TARGET_MAC
+            long value = static_cast<long>(
+                averageDamage / currentArmy->computeDefenderDamageReduction(1));
+#else
             damage = averageDamage;
             long value = static_cast<long>(
                 damage * currentArmy->computeDefenderDamageReduction(1));
+#endif
             value = currentArmy->getLossCombatValue(
                 estimate.m_lowestAttack, estimate.m_lowestDefense, 1, value,
                 estimate.m_killsOnly);
-            if (!currentArmy->cannotAttack() && currentArmy->getAITarget()
-                    && currentArmy->getAITargetTime() <= 5)
-                value /= currentArmy->getAITargetTime();
-            else
+            if (currentArmy->cannotAttack() || !currentArmy->getAITarget()
+                    || currentArmy->getAITargetTime() > 5)
                 value /= 5;
+            else
+                value /= currentArmy->getAITargetTime();
             if (value >= bestValue) {
-                bestValue = value;
                 result = i;
+                bestValue = value;
             }
         }
     }
 
-    if (!estimate.m_killsOnly)
-        return result;
-    if (result >= 0 && bestValue > 0)
+    if (!estimate.m_killsOnly || (result >= 0 && bestValue > 0))
         return result;
 
-    { { for (long i = 0; i < m_numArmies[targetGroup]; i++) {
+    { for (i = 0; i < m_numArmies[targetGroup]; i++) {
                 army* currentArmy = &m_armies[targetGroup][i];
                 if (currentArmy->is(creatureImmobilized))
                     continue;
+#ifdef HOMM3_TARGET_MAC
+                long value = static_cast<long>(
+                    averageDamage / currentArmy->computeDefenderDamageReduction(1));
+#else
                 damage = averageDamage;
                 long value = static_cast<long>(
                     damage * currentArmy->computeDefenderDamageReduction(1));
+#endif
                 value = currentArmy->getLossCombatValue(
                     estimate.m_lowestAttack, estimate.m_lowestDefense, 1, value, 0);
-                if (!currentArmy->cannotAttack() && currentArmy->getAITarget()
-                        && currentArmy->getAITargetTime() <= 5)
-                    value /= currentArmy->getAITargetTime();
-                else
+                if (currentArmy->cannotAttack() || !currentArmy->getAITarget()
+                        || currentArmy->getAITargetTime() > 5)
                     value /= 5;
+                else
+                    value /= currentArmy->getAITargetTime();
                 if (value >= bestValue) {
-                    bestValue = value;
                     result = i;
+                    bestValue = value;
                 }
             }
-        }
     }
     return result;
 }
@@ -177,8 +200,9 @@ unsigned char combatManager::failedSiege()
 // price plus 2500, and finally compares our side's share of the total
 // fight value against a difficulty- and experience-adjusted threshold.
 
-// The guards are written as retail wrote them - ONE `return 0` at the
-// bottom of a nested-if pyramid. Written as thirteen early returns the
+// The first hero guard returns 0 explicitly (DC ai.cpp:164..165 and Mac
+// 0+0x1f8ac). The remaining guards share the bottom return in a nested-if
+// pyramid. Written as thirteen early returns the
 // body scores 60.44 with seventeen epilogues against retail's four; the
 // pyramid alone is +24.22 and makes the branch census exact (54/54
 // branches, 4/4 rets).
@@ -192,8 +216,9 @@ unsigned char combatManager::failedSiege()
 VA(0x0041e570, 0x546)  // order-map(DC ai.obj head) + anchor-callee failed_siege, dc 0x2389c
 unsigned char combatManager::aiCheckRetreat()
 {
-    if (m_heroes[m_currentSide]
-        && (m_sideIsAi[m_currentSide]
+    if (!m_heroes[m_currentSide])
+        return 0;
+    if ((m_sideIsAi[m_currentSide]
             || (g_game->m_setup.m_difficulty
                 && (g_game->m_setup.m_difficulty != 1 || random(1, 100) > 50)))
         && (!m_heroes[0] || !m_heroes[0]->isWieldingArtifact(0x7d))
@@ -292,17 +317,16 @@ unsigned char combatManager::aiCheckRetreat()
                         fightValues[1 - m_currentSide] = static_cast<long>(
                             fightValues[1 - m_currentSide] * 1.1);
 
+                        // Mac 0+0x1fef4..0x1ff2c loads 0.16f and adds
+                        // 0.06f, 0.05f, or 0.04f in the selected arm.
+                        // VC6 also needs the third increment: 0.16f +
+                        // 0.04f rounds to retail 0x3e4ccccc in single
+                        // precision; the decimal 0.2f is 0x3e4ccccd.
                         float threshold = 0.16f;
                         if (combatValue > 10000)
-                            threshold = 0.22f;
+                            threshold += 0.06f;
                         else if (combatValue > 5000)
-                            threshold = 0.21f;
-                        // The third arm is an INCREMENT, not a literal:
-                        // retail stores 0x3e4ccccc where `threshold = 0.2f`
-                        // gives 0x3e4ccccd.  VC6 constant-propagates the
-                        // 0.16f initialiser and folds `0.16f + 0.04f` in
-                        // SINGLE precision, which lands one ulp below the
-                        // correctly-rounded decimal.  95.3935 -> 95.3960.
+                            threshold += 0.05f;
                         else if (combatValue > 0)
                             threshold += 0.04f;
                         threshold -= (4 - g_game->m_setup.m_difficulty) * 0.015;
@@ -897,19 +921,23 @@ void findAttackHexes(const army* ourArmy, long targetHex, long start,
 // the ENEMY's, and the enemy's facing picks both the tail hex and which
 // half of the direction ring is searched.
 
-static void findAttackHexes(const army* ourArmy, const army* enemy, const searchArray* currentSearchArray, std::vector<long>* result)
+// DC ai.cpp:1124 calls vector::clear at this helper's entry. Mac Complete's
+// retained body at 0+0x21bc0 likewise zeros the result size before its first
+// getSpeed/findAttackHexes calls. The result is a reference in DC CodeView.
+static void findAttackHexes(const army* ourArmy, const army* enemy, const searchArray* currentSearchArray, std::vector<long>& result)
 {
+    result.clear();
     long sides = (ourArmy->is(creatureDoubleWide)) ? 8 : 6;
     findAttackHexes(ourArmy, ourArmy->m_gridIndex, 0, sides,
-                      enemy->getSpeed(), currentSearchArray, result);
+                      enemy->getSpeed(), currentSearchArray, &result);
     if (enemy->is(creatureDoubleWide)) {
         long secondHex = ourArmy->m_gridIndex - (enemy->m_facing ? 1 : -1);
         if (enemy->m_facing == 0)
             findAttackHexes(ourArmy, secondHex, 0, 3, enemy->getSpeed(),
-                              currentSearchArray, result);
+                              currentSearchArray, &result);
         else
             findAttackHexes(ourArmy, secondHex, 3, 6, enemy->getSpeed(),
-                              currentSearchArray, result);
+                              currentSearchArray, &result);
     }
 }
 
@@ -927,33 +955,31 @@ static void findAttackHexes(const army* ourArmy, const army* enemy, const search
 // and `counted` is re-zeroed per defending stack so one stack cannot pay
 // for the same hex twice.
 
-// `hexes.clear()` is LOAD-BEARING and not a tidier spelling of
-// `erase(begin(), end())`: written out longhand the erase body lands at
-// depth 1 and takes so much budget that the whole shape collapses
-// (67.13% against 94.54%). clear() is itself free (<=40) and pushes
-// erase to depth 2, which is also where the three find_attack_hexes
-// expansions have to be.
+// The vector clear belongs to the four-argument helper above, as both DC
+// ai.cpp:1124 and the retained Mac helper prove. An earlier caller-local
+// `clear()` was only a temporary inlining model.
 
-// Residual (94.5%): ONE inline decision - retail leaves
-// std::vector<long>::erase an out-of-line CALL (0x54cdb0) where our CL
-// still has budget for it, so our copy of the clear() carries the
-// Dinkumware copy loop inline. By the RE'd rule that puts retail's
-// caller_cb at or under the 500 that clamps the budget to the 1000
-// floor and ours just over it; no statement in this body is spare
-// enough to give back. Everything downstream of the erase - the whole
-// direction walk, both marks and the danger arithmetic - is
-// instruction-for-instruction identical apart from one EDX/ECX tie on
-// the `facing ? 1 : -1` temp.
+// Moving clear() into the DC/Mac-proven wrapper makes Complete VC6 retain
+// vector<long>::erase at +0x148 and matches all 758 body bytes and 38 CFG
+// blocks. The retail symbol is vector<int>::erase; both 32-bit template
+// instantiations have the same emitted call bytes. DC locals place the vector
+// below the two 187-byte marks; declaring priced, counted, then hexes gives
+// the paired Mac body the same stack-object order and keeps Windows exact.
+// Mac 0+0x21cc0 now has equal size, all ten calls at exact offsets, and
+// 601/636 matching bytes. Remaining differences are a uniform four-byte
+// stack-object displacement, one getHex null-path branch, two array-address
+// register choices, and the vector destructor's nondeleting flag.
 // E:\gamedcs\ai.cpp:1152
 VA(0x0041fd60, 0x2F6)  // anchor-callee, dc 0x2544c
 void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy, long* enemyAttacks, long limitValue, searchArray* currentSearchArray, type_AI_combat_parameters* estimate) const
 {
-    const army* other = m_armies[estimate->m_ourGroup];
+    const army* other = m_armies[estimate->getGroup()];
     long value = -estimate->getSimpleAttackEffect(*(enemy), *(ourArmy), 0, 0);
-    std::vector<long> hexes;
     unsigned char priced[COMBAT_GRID_CELLS];
+    unsigned char counted[COMBAT_GRID_CELLS];
+    std::vector<long> hexes;
     memset(priced, 0, COMBAT_GRID_CELLS);
-    for (long i = m_numArmies[estimate->m_ourGroup]; i-- > 0; other++) {
+    for (long i = m_numArmies[estimate->getGroup()]; i-- > 0; other++) {
         if (other->is(creatureImmobilized))
             continue;
         if (other == ourArmy)
@@ -967,10 +993,8 @@ void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy,
         const pathCell* cell = currentSearchArray->getHex(other->m_gridIndex);
         if (cell->m_cost > enemy->getSpeed())
             continue;
-        unsigned char counted[COMBAT_GRID_CELLS];
         memset(counted, 0, COMBAT_GRID_CELLS);
-        hexes.clear();
-        findAttackHexes(other, enemy, currentSearchArray, &hexes);
+        findAttackHexes(other, enemy, currentSearchArray, hexes);
         for (long j = hexes.size(); j-- > 0; ) {
             long hex = hexes[j];
             long directions = enemy->getMultiHeadDirections(
@@ -980,7 +1004,7 @@ void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy,
                 if ((directions & (1 << direction)) == 0)
                     continue;
                 long target = enemy->getAdjacentHex(hex, direction);
-                if (target < 0 || target >= COMBAT_GRID_CELLS)
+                if (!validHex(target))
                     continue;
                 if (counted[target])
                     continue;
@@ -1097,6 +1121,11 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
 // best_time / best_contact are deliberately uninitialised: retail writes
 // neither before the loop and both are only read once *best_hex is no
 // longer -1.
+// DC lines 1379 and 1400 name ValidHex and OffsetToFront; lines 1432-1434
+// write best_hex, best_travel_time, then best_hexes_covered. Restoring those
+// calls and that order makes the Complete VC6 body byte-exact. The paired Mac
+// body at code 0+0x223e4 has the same four ordered callees but still differs
+// in its register assignment and local code schedule under the AI profile.
 
 // E:\gamedcs\ai.cpp:1357
 VA(0x004205d0, 0x185)  // linkorder, dc 0x25998
@@ -1111,7 +1140,7 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
         if (direction >= 6 && !client->is(creatureDoubleWide))
             continue;
         long hex = client->getAdjacentHex(client->m_gridIndex, direction);
-        if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+        if (!validHex(hex))
             continue;
         hexcell* cell = &m_cells[hex];
         army* occupant = cell->getArmy();
@@ -1126,7 +1155,7 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
                 : currentSearchArray->getTravelTime(currentArmy, hex);
         long contact;
         if (currentArmy->is(creatureDoubleWide)
-                && client->isAdjacent(hex + (currentArmy->m_facing ? 1 : -1)))
+                && client->isAdjacent(hex + currentArmy->offsetToFront(-1)))
             contact = 2;
         else
             contact = 1;
@@ -1146,9 +1175,9 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
                 }
             }
         }
+        *bestHex = hex;
         bestTime = time;
         bestContact = contact;
-        *bestHex = hex;
     }
     return static_cast<unsigned char>(*bestHex >= 0);
 }
@@ -1338,20 +1367,29 @@ VA_COMPGEN(0x00420cf0, 0x26, IMPLICIT_DTOR, type_spellvalue)
 
 // EH-bearing (P2.2) and NOT blocked by it: the fs:[0] frame is the local
 // type_AI_spellcaster's unwind scaffolding, one state.
+// Windows is byte-exact with one `i` initialized before the caster; a
+// separate count local moves the loop decrement. Mac -O3 is 98.5981%:
+// 428 bytes and all ten calls agree, with only six references to this
+// stack caster at SP+0x40 instead of retail SP+0x44. The full canonical
+// 0x410 Mac class layout and -O4 leave those offsets unchanged. No DC
+// local or retail operation supports adding a source word just for padding.
 
 // E:\gamedcs\ai.cpp:1635
 VA(0x00420d20, 0x1D5)  // anchor-callee, dc 0x2600c
 unsigned char combatManager::chooseCreatureSpell(const army* currentArmy, long* bestValue, type_AI_combat_parameters* estimate)
 {
-    long side = estimate->m_ourGroup;
-    long count = m_numArmies[side];
+    // Dreamcast calls getGroup again in the loop; Complete's Mac body keeps
+    // this side in a register across the loop, and Windows retains the same
+    // loop CFG only when the side is cached before construction.
+    long side = estimate->getGroup();
+    long i = m_numArmies[side];
     long bestHex = -1;
     long ourValue = currentArmy->getTotalCombatValue(
             estimate->m_lowestAttack, estimate->m_lowestDefense);
-    type_AI_spellcaster caster(this, estimate->m_ourGroup, 1);
+    type_AI_spellcaster caster(this, estimate->getGroup(), 1);
     if (*bestValue != 0 && random(1, 100) <= 30)
         return 0;
-    for (long i = count; i-- > 0; ) {
+    for (; i-- > 0; ) {
         const army* target = &m_armies[side][i];
         if (target == currentArmy)
             continue;
@@ -1404,6 +1442,12 @@ unsigned char combatManager::chooseCreatureSpell(const army* currentArmy, long* 
 // byte-flat. The independently fixed address lets the cross-build symbol
 // contribute the private bool/reference declarator below, but that stronger
 // source typing is likewise byte-identical and does not change the wall.
+// Mac Complete's paired 0+0x22e64 body (0x130 bytes) has the same four
+// ordered calls. It stores bestValue before bestHex in the acceptance arm;
+// that source order raises the Mac match from 95.0658% to 97.6974% while
+// Windows stays 94.52% with the exact thirteen-block CFG and four calls.
+// The remaining Mac differences are caster stack/frame offsets; the
+// Windows residual remains the currentArmy/bestHex register-home swap.
 VA(0x00420f00, 0xFB)
 bool combatManager::sodChooseFaerieDragonSpell(
         const army* currentArmy, long& bestValue,
@@ -1421,8 +1465,8 @@ bool combatManager::sodChooseFaerieDragonSpell(
             continue;
         if (bestHex >= 0 && value <= bestValue)
             continue;
-        bestHex = hex;
         bestValue = value;
+        bestHex = hex;
     }
     if (bestHex < 0)
         return 0;
@@ -1684,7 +1728,13 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 // Keep chooser.getAttackTime() at its query and acceptance sites (1976,
 // 2027/2028, 2052) and the by-value max at 2059. A prematurely cached attack
 // time is unnecessary; VC6 can hoist the repeated accessor itself.
-// Residual: register scheduling and the final movement tails remain non-exact.
+// Windows 0x421680: 97.08%; 28 named calls agree, but retail retains a third
+// final moveToward call and ten returns where VC6 merges that tail into an
+// earlier call and emits nine returns. Mac 0+0x23724: 601/3000 bytes (20.03%)
+// with all 30 direct calls resolved; register/stack layout differs from entry.
+// Moving enemyAttacks below the scalar declarations is byte-flat on Mac.
+// A branch-model unsigned-char ourGroup proposal contradicts the Dreamcast
+// CodeView long local, so retain the proven type pending new source evidence.
 // E:\gamedcs\ai.cpp:1896
 VA(0x00421680, 0x8F9)  // linkorder, dc 0x266d4
 unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned char teleport, long* actionValue, type_AI_combat_parameters* estimate)
@@ -1988,29 +2038,13 @@ void combatManager::placeShooter(const army* currentArmy)
 // it is written out - a stack that is neither a shooter nor a ballista
 // dispatches to choose_melee_action either way.
 
-// Residual (98.5%): ONE instruction, an `and eax, 0xff` retail keeps
-// between `not al` and `and eax, 1` and our CL folds away. It is the
-// zero-extension of a byte-wide intermediate, and no spelling of that
-// intermediate reproduces it - measured, all identical at 98.4697:
-// `2 | ((unsigned char)~flying & 1)`, a two-statement `flying =
-// ~flying;` then `2 | (flying & 1)`, `(flying & 1) ? 2 : 3`, the
-// complement moved inside the cast, an intermediate `unsigned`
-// variable, and routing it through the army::Is inline. Writing the
-// mask twice by hand (`& 0xffu & 1`) is strictly WORSE (87.8) because
-// VC6 then drops the `not` shape entirely, and `% 2` in place of `& 1`
-// is worse again (81.4). Filed with the compiler-generation class.
-// E:\gamedcs\ai.cpp:2272
-// Residual (98.4697%): retail widens the complemented flying bit through a
-// byte before the caller's mask - `shr eax / not al / AND EAX,0xFF / and eax,1
-// / or al,2` against our `shr eax / not al / and eax,1 / or al,2`.  The extra
-// zero-extension is what an `unsigned char`-returning attribute test emits;
-// the Dreamcast public settles our declaration instead (`?Is@army@@QBA_NI@Z`,
-// `_N` = bool), so the widening cannot come from this caller and the return
-// type is not ours to change.  Measured and rejected, all byte-flat at
-// 98.4697 unless noted: `static_cast<unsigned char>(Is(...)) ? 2 : 3`,
-// `2 | (static_cast<unsigned char>(~Is(...)) & 1)`, a named `unsigned char`
-// local holding Is(...), `2 | !Is(...)`, dropping the parentheses;
-// `2 + !Is(...)` falls to 97.5510 and `3 - (Is(...) & 1)` to 90.9694.
+// DC lines 2289-2292 put army::Is in a nested branch, then attribute the
+// assignments of 2 and 3 to separate scoped arms. The ternary spelling
+// emitted the same behavior but omitted retail's `and eax,0xff` after
+// `not al`. Restoring the separate arms makes VC6 exact: 9/9 CFG blocks,
+// all five calls, and all 71 instructions. The canonical army::is returns
+// bool as its DC mangled signature says. Mac 0:0x245e4 remains exact at
+// 272 bytes with the same five ordered calls.
 VA(0x004221f0, 0xD0)  // anchor-callee, dc 0x27138
 void combatManager::doCompAI(int whichGroup)
 {
@@ -2023,8 +2057,10 @@ void combatManager::doCompAI(int whichGroup)
     if (currentArmy->canShoot(0)
             || currentArmy->m_creatureType == CREATURE_BALLISTA)
         action = 1;
+    else if (currentArmy->is(creatureFlyingArmy))
+        action = 2;
     else
-        action = (currentArmy->is(creatureFlyingArmy)) ? 2 : 3;
+        action = 3;
     m_nextAction = 3;
     if (action == 1) {
         if (m_creaturePlacement)
@@ -2274,7 +2310,14 @@ void combatManager::simulateCombat(long ourGroup, unsigned char checkingSurrende
     m_nextActionGridIndex2 = saved48;
 }
 
-// E:\gamedcs\ai.cpp:2608
+// E:\gamedcs\ai.cpp:2608..2693, dc 0x27888: separate outer/inner pointer
+// inductions, a split shooter guard, and source calls to getSpellTime and
+// clearAIValues. Complete's x86 and Mac bodies clear four AI target fields
+// through the retail-era helper without clearing expectedDamage, unlike the
+// older DC helper. Windows is byte-exact after restoring these boundaries.
+// Mac 0:0x25100 has the same 724-byte size and all 11 ordinary calls; its
+// remaining null-path branch order comes from the canonical getHex expansion.
+// A named pathCell pointer at that call site was byte-flat and was removed.
 VA(0x00422b20, 0x278)  // anchor-caller(choose_shooter_action/choose_melee_action) + anchor-callee(SeedCombatPosition), dc 0x27888
 void combatManager::findAITargets(long ourGroup, const army* currentArmy,
                                     unsigned char meleeOnly,
@@ -2285,12 +2328,13 @@ void combatManager::findAITargets(long ourGroup, const army* currentArmy,
     if (currentSearchArray == 0)
         currentSearchArray = g_searchArray;
 
-    for (long i = 0; i < m_numArmies[ourGroup]; i++) {
-        army* ours = &m_armies[ourGroup][i];
-        m_armies[ourGroup][i].m_aiTarget = 0;
-        m_armies[ourGroup][i].m_aiTargetValue = 0;
-        m_armies[ourGroup][i].m_aiPossibleTargets = 0;
-        m_armies[ourGroup][i].m_aiTargetTime = 0;
+    long i;
+    long j;
+    army* ours = m_armies[ourGroup];
+    army* theirs;
+    unsigned char shooter;
+    for (i = 0; i < m_numArmies[ourGroup]; i++, ours++) {
+        ours->clearAIValues();
         if (ours->is(creatureImmobilized))
             continue;
         if (ours->is(creatureSiegeWeapon)
@@ -2298,31 +2342,31 @@ void combatManager::findAITargets(long ourGroup, const army* currentArmy,
             continue;
         if (data->m_simulated && ours->getTotalHitPoints(1) == 0)
             continue;
-        if (ours->m_spellInfluence[70] > 1)
+        if (ours->getSpellTime(70) > 1)
             continue;
-        if (ours->m_spellInfluence[62] > 1)
+        if (ours->getSpellTime(62) > 1)
             continue;
-        if (ours->m_spellInfluence[60])
+        if (ours->getSpellTime(60))
             continue;
-        if (ours->m_spellInfluence[59])
+        if (ours->getSpellTime(59))
             continue;
         if (ours == currentArmy)
             continue;
 
-        unsigned char shooter = ours->canShoot(0);
-        if (shooter) {
+        shooter = ours->canShoot(0);
+        if (shooter && meleeOnly)
+            continue;
+        if (!shooter) {
             if (meleeOnly)
-                continue;
-        } else if (meleeOnly) {
-            currentSearchArray->seedCombatPosition(ours, ourGroup, ours->getSpeed(),
-                                             m_creaturePlacement, -1);
-        } else {
-            currentSearchArray->seedCombatPosition(ours, ourGroup, 0x7f,
-                                             m_creaturePlacement, -1);
+                currentSearchArray->seedCombatPosition(
+                    ours, ourGroup, ours->getSpeed(), m_creaturePlacement, -1);
+            else
+                currentSearchArray->seedCombatPosition(
+                    ours, ourGroup, 0x7f, m_creaturePlacement, -1);
         }
 
-        for (long j = 0; j < m_numArmies[enemyGroup]; j++) {
-            army* theirs = &m_armies[enemyGroup][j];
+        theirs = m_armies[enemyGroup];
+        for (j = 0; j < m_numArmies[enemyGroup]; j++, theirs++) {
             if (theirs->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
             if (meleeOnly && theirs->m_expectedMoveOrder >= ours->m_expectedMoveOrder)

@@ -8014,23 +8014,13 @@ void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
     if (heroId == -1)
         return;
 
-    if (waitingPlayer) {
-        g_game->getLocalPlayer()->m_currTownId = -1;
-    } else {
-        g_currentPlayer->m_currTownId = -1;
-        if (drawChanges) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_unnamed6989c8 && g_unnamed69ccd4)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                if (m_showRoute)
-                    m_showRoute = 0;
-            }
-        }
-    }
-
+    // DC advmgr.cpp:9548/9551 and Mac 0+0x18264/0x18288 retain these
+    // helpers in this order. hideRoute's third flag performs the same
+    // button-status update as the former expanded block, with no screen
+    // redraw or target removal.
+    deactivateCurrTown(waitingPlayer);
+    if (!waitingPlayer && drawChanges)
+        hideRoute(0, 0, 1);
     deactivateCurrHero(waitingPlayer);
 
     playerData* player = g_currentPlayer;
@@ -8750,15 +8740,11 @@ void advManager::forceNewHover()
     }
 }
 
-// The per-speed scroll step. Dreamcast advmgr.obj publishes the static
-// (S_LDATA32 akScrollSpeedInc); retail's ScreenScroll indexes the same
-// three-int row.
-DATA(0x0063a66c) static const int g_scrollSpeedInc[3] = { 1, 2, 3 };
+#include "../include/inline/advmgr_scroll_speed_inc.inl"
 
-// Written on every scroll tick with the fresh GameTime::Get stamp; no
-// located reader yet. Nearest consumer holds the declaration (the
-// town.cpp gUnnamed69778c precedent); ownership stays open for the data
-// phase.
+// ScreenScroll stamps this tick and CheckScreenScroll reads it. Its storage
+// owner remains unlocated; the Mac build uses direct TOC scalar storage at
+// 1+0x3d20, while this Complete TU carries only the extern declaration.
 DATA(0x00691674) extern unsigned long g_unnamed691674;
 
 // E:\gamedcs\advmgr.cpp:10624
@@ -8821,21 +8807,11 @@ void advManager::screenScroll(int dir, int changeMouse)
         demobilizeCurrHero(0, 0);
         m_radarOrigin.m_x = x;
         m_radarOrigin.m_y = y;
-        updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
-        completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
-        g_windowManager->updateScreen(0, 8, 608, 544);
-
-        unsigned long now = GameTime::get();
-        if (static_cast<long>(
-                now - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
-            && !m_animCtrPaused) {
-            m_animCtr++;
-            g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] += cppMax(
-                static_cast<long>(
-                    now - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]),
-                180L);
-        }
-        process1WindowsMessage();
+        // Dreamcast and Mac retain these three helper calls. Complete VC6
+        // expands them here, preserving the retail nine-call sequence.
+        updateRadar(1, 1, 0, 0, 0);
+        completeDraw(0);
+        updateScreen(0, 0);
     }
 }
 

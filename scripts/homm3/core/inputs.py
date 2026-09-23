@@ -33,6 +33,7 @@ class Executable:
 _project = Project(common.HOMM3_DIR)
 RETAIL = _project.executable('retail')
 DREAMCAST = _project.executable('dreamcast')
+MAC = _project.executable('mac')
 
 
 def _verify(data: bytes, path: Path, *, size: int, sha256: str) -> None:

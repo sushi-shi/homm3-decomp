@@ -149,7 +149,7 @@ public:
 
 // Retail .bss 0x699280 (DC ?gpWindowManager@@3PAVheroWindowManager@@A);
 // the DATA claim lands with winmgr.cpp.
-extern heroWindowManager* g_windowManager;
+DATA(0x00699280) extern heroWindowManager* g_windowManager;
 
 // Three cross-TU dialog globals DoDialog drives. None of them is
 // winmgr-owned - they are declared here (the gUnnamed69d808 precedent)

@@ -1,0 +1,492 @@
+# Reviewed source-owned callees for the paired combat AI bodies. These spans
+# resolve call relocations; their own bodies are not scored by this AI profile.
+
+[[helpers]]
+unit = "ai"
+source_helper = "findAttackHexes(const army* ourArmy, const army* enemy, const searchArray* currentSearchArray, std::vector<long>& result)"
+mac_section = 0
+mac_offset = 0x21bc0
+mac_size = 0x100
+mac_symbol = ".findAttackHexes__FPC4armyPC4armyPC11searchArrayRQ23std9vector<l>"
+target_sha256 = "073c61db6190705a4de76db78701f67ff1fcdd0c7924b0c354e6981ee1e659e7"
+evidence = "Sole caller markMultiheadedEnemy at 0+0x21df4 passes four arguments; the retained helper clears vector size at +4, then chooses six or eight sides, calls the seven-argument findAttackHexes 0+0x21a9c, and conditionally scans the enemy's second hex. Dreamcast ai.obj dc:0x253a8 names the same static source helper and calls vector::clear on its first body line. Prior BLR at 0+0x21bbc and final BLR at 0+0x21cbc bound the 256-byte body."
+
+[[functions]]
+retail_va = 0x00448ab0
+unit = "army"
+mac_section = 0
+mac_offset = 0x54f18
+mac_size = 0xa0
+mac_symbol = ".getMultiHeadDirections__4armyCFlPC4armyl"
+target_sha256 = "512fca188445dd407fafaa81e450e61fb4cb239e3573c4c53970a0377c23ea27"
+evidence = "markMultiheadedEnemy calls 0+0x54f18 with enemy, attack hex, allied army and allied grid index. The callee reads creature wide bit +0x84 and type +0x34, computes a direction mask, and returns at BLR 0+0x54fb4 before the next prologue 0+0x54fb8. Windows army::getMultiHeadDirections 0x448ab0 and Dreamcast dc:0x4c82c corroborate the identity."
+
+[[functions]]
+retail_va = 0x0041e440
+unit = "ai"
+mac_section = 0
+mac_offset = 0x1f664
+mac_size = 0x210
+mac_symbol = ".failedSiege__13combatManagerFv"
+target_sha256 = "cf05a39763c2cd115172eeec90a24702b52daccf60de1fa7782aeccf944ce8fa"
+evidence = "aiCheckRetreat calls 0+0x1f664 at 0+0x1fad0. Its fortification/drawbridge/army/wall scan matches source-owned failedSiege at Windows 0x41e440; preceding BLR is 0+0x1f660 and final BLR 0+0x1f870 precedes aiCheckRetreat prologue at 0+0x1f874."
+
+[[functions]]
+retail_va = 0x00477a00
+unit = "command"
+mac_section = 0
+mac_offset = 0x85b14
+mac_size = 0x184
+mac_symbol = ".getSurrenderCost__13combatManagerFv"
+target_sha256 = "4dd0ff8809da677d310ad14bd5c3c2a152f2a822553a88f6d341b0b063284938"
+evidence = "aiCheckRetreat calls 0+0x85b14 at 0+0x1fc88. The callee totals active army surrender values and adjusts by the current hero, matching source-owned getSurrenderCost at Windows 0x477a00; prior BLR at 0+0x85b10 and final BLR at 0+0x85c94 precede the next prologue 0+0x85c98."
+
+[[functions]]
+retail_va = 0x00422a40
+unit = "ai"
+mac_section = 0
+mac_offset = 0x25024
+mac_size = 0xdc
+mac_symbol = ".simulateCombat__13combatManagerFlUc"
+target_sha256 = "cf11f1566cc82d03bd0a9890cba1a1be0a7519213b8128c7bca83db29ee21840"
+evidence = "aiCheckRetreat calls 0+0x25024 at 0+0x1fca0 with side and checkingSurrender=1. Callee constructs army action order, saves action fields, and invokes the AI simulation path; previous BLR at 0+0x25020 and final BLR at 0+0x250fc precede findAITargets prologue 0+0x25100."
+
+[[functions]]
+retail_va = 0x00435ec0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3d71c
+mac_size = 0x290
+mac_symbol = ".__ct__25type_AI_combat_parametersFPC13combatManagerl"
+target_sha256 = "a16e9ccd307567db1696087f9ffe12311fb0fdf2a57af864df410545ec90418a"
+evidence = "chooseBallistaTarget passes its stack estimate, combat manager and 1-targetGroup to 0+0x3d71c. This constructor writes estimate +0/+4/+8/+9/+0x20 and scans the two combat sides; it ends at BLR 0+0x3d9a8 before the next prologue at 0+0x3d9ac."
+
+[[functions]]
+retail_va = 0x00443d90
+unit = "army"
+mac_section = 0
+mac_offset = 0x4fd04
+mac_size = 0x88
+mac_symbol = ".computeDefenderDamageReduction__4armyCFUc"
+target_sha256 = "35cc890dfd5799fff029fd59d55f0ae8d1bfba4744648ecaa67ef3a93ba1e056"
+evidence = "Both chooseBallistaTarget passes call 0+0x4fd04 with army and isShooting=1. Body checks Air Shield +0x208, Petrify +0x2b0, and hero defense factor; prior BLR at 0+0x4fd00 and final BLR at 0+0x4fd88 precede next prologue at 0+0x4fd8c."
+
+[[functions]]
+retail_va = 0x00442fd0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4ee24
+mac_size = 0x114
+mac_symbol = ".getLossCombatValue__4armyCFllUclUc"
+target_sha256 = "d64066720728e4e29f03af4a0832f452a2365b3586055643e6663e667f9b63dc"
+evidence = "Both chooseBallistaTarget passes call 0+0x4ee24 with estimate low attack/defense, ranged=1, converted damage and killsOnly. Body calls army value arithmetic and returns an integer loss value; final BLR at 0+0x4ef34 precedes next leaf at 0+0x4ef38."
+
+[[functions]]
+retail_va = 0x00448cd0
+unit = "army"
+mac_section = 0
+mac_offset = 0x55028
+mac_size = 0x6c
+mac_symbol = ".getSpeed__4armyCFv"
+target_sha256 = "b3b713f305342dea8f05c299df19e2890186408943b93704069ed69e8d416459"
+evidence = "chooseBallistaTarget zero-argument getAITargetTime inline calls 0+0x55028 before 0+0x54fb8 four times. This leaf reads speed +0xc4 and slow/haste influence +0x270/+0x84, with returns at 0+0x55048 and 0+0x55090 before next prologue at 0+0x55094."
+
+[[functions]]
+retail_va = 0x00448bd0
+unit = "army"
+mac_section = 0
+mac_offset = 0x54fb8
+mac_size = 0x70
+mac_symbol = ".getAITargetTime__4armyCFl"
+target_sha256 = "e87015d4c77f6504c670d336273320422c7d58d750d53e58d4ade8f723d7b236"
+evidence = "chooseBallistaTarget passes army and computed speed to 0+0x54fb8 four times. Body handles canShoot, zero speed, and divides cached AI target time at +0x51c by speed, clamping to one; preceding BLR is 0+0x54fb4 and final BLR 0+0x55024 precedes getSpeed at 0+0x55028."
+
+[[functions]]
+retail_va = 0x00477e10
+unit = "command"
+mac_section = 0
+mac_offset = 0x86180
+mac_size = 0xfc
+mac_symbol = ".turnOffHighlighter__13combatManagerFUc"
+target_sha256 = "c241df8276d4baad2de3857bb57e6d7f2bbf3d69912996ea8502d023e236d1b9"
+evidence = "doCompAI calls 0+0x86180 with this and restore=1. Its body checks the highlighter byte at this+0x12ce4, conditionally redraws and resets the highlighted hex; preceding BLR is 0x8617c and following prologue is 0x8627c."
+
+[[functions]]
+retail_va = 0x004428f0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e840
+mac_size = 0x118
+mac_symbol = ".canShoot__4armyCFPC4army"
+target_sha256 = "853f1e8a40014a3091d4ac83d3cbcb9cb7492c0c5cc629c9eaf09ef5c5a3f644"
+evidence = "doCompAI passes the current army and null exclusion to 0+0x4e840. Body first accepts ballista 0x92 and arrow tower 0x95, then tests shooting attribute at army+0x84; preceding BLR is 0x4e83c and following prologue is 0x4e958."
+
+[[functions]]
+retail_va = 0x00422060
+unit = "ai"
+mac_section = 0
+mac_offset = 0x243f8
+mac_size = 0x1ec
+mac_symbol = ".placeShooter__13combatManagerFPC4army"
+target_sha256 = "f627624bc56ac4054358f9d4e513bf6e9d8783d75542e3b095532adb6d307f74"
+evidence = "doCompAI placement arm calls 0+0x243f8 with the current army. Body uses that army's grid index at +0x38, scans combat hexes and sets nextAction/nextActionGridIndex at manager+0x3c/+0x44; preceding BLR is 0x243f4 and following doCompAI prologue is 0x245e4."
+
+[[functions]]
+retail_va = 0x0041f060
+unit = "ai"
+mac_section = 0
+mac_offset = 0x20990
+mac_size = 0x124
+mac_symbol = ".chooseShooterAction__13combatManagerFPC4armyUcl"
+target_sha256 = "e6495aa9b5f44bf24e10d58a02ff6e6dfe152283365375d64e6efaa6ed04df19"
+evidence = "doCompAI shooter arm calls 0+0x20990 with army, simulated=0 and current side. Body constructs AI parameters, chooses a shooter target and stores nextAction=7 with a grid index; preceding BLR is 0x2098c and following prologue is 0x20ab4."
+
+[[functions]]
+retail_va = 0x00421f80
+unit = "ai"
+mac_section = 0
+mac_offset = 0x242d4
+mac_size = 0x124
+mac_symbol = ".chooseMeleeAction__13combatManagerFPC4armyUcUcl"
+target_sha256 = "541bb0a71ebd482fb28c515decb171ce62abea9f56363d7d48a3572eef862da7"
+evidence = "doCompAI melee arm calls 0+0x242d4 with army, two zero flags and current side. Body constructs AI parameters, selects a melee action and writes manager action fields; preceding BLR is 0x242d0 and following placeShooter prologue is 0x243f8."
+
+[[functions]]
+retail_va = 0x00523df0
+unit = "path"
+mac_section = 0
+mac_offset = 0x13d260
+mac_size = 0x8c
+mac_symbol = ".getAdjacentHex__4armyCFll"
+target_sha256 = "6d0591884f72475e1d7dec4054292687d9b8e85f6b974818e0ee36df7a85d86b"
+evidence = "chooseDefenseHex passes client, gridIndex and direction to 0+0x13d260. Body tests double-wide at army+0x84, adjusts the index according to facing+0x44 and direction, then calls the adjacent-cell accessor; preceding BLR is 0x13d25c and following leaf starts at 0x13d2ec."
+
+[[functions]]
+retail_va = 0x004e7170
+unit = "hexcell"
+mac_section = 0
+mac_offset = 0x1081f8
+mac_size = 0x40
+mac_symbol = ".getArmy__7hexcellCFv"
+target_sha256 = "67099edb5b03608bba54f97dc9f62235df8eacaf93ee15cfb61535f011bd0880"
+evidence = "chooseDefenseHex calls 0+0x1081f8 on the selected hexcell. Body checks signed side/slot bytes at +0x18/+0x19, returns null for empty, otherwise indexes the combat army array with 0x6bf4 side and 0x524 slot strides; alternate returns end at 0x108234 and the next leaf starts 0x108238."
+
+[[functions]]
+retail_va = 0x004b3f20
+unit = "findpath"
+mac_section = 0
+mac_offset = 0xc7744
+mac_size = 0x64
+mac_symbol = ".getTravelTime__11searchArrayCFPC4armyl"
+target_sha256 = "9e498f01f0543a17027b100daa0f1b5bcefa52e89f810237e9e074ea2710923a"
+evidence = "chooseDefenseHex calls 0+0xc7744 with search array, army and hex. Body indexes 0x1e-byte path cells from +0x24, calls army speed and divides cell cost at +0x18, clamping to one; preceding BLR is 0xc7740 and following prologue is 0xc77a8."
+
+[[functions]]
+retail_va = 0x004466c0
+unit = "army"
+mac_section = 0
+mac_offset = 0x528ac
+mac_size = 0x8c
+mac_symbol = ".isAdjacent__4armyCFi"
+target_sha256 = "094f6d6bef8319a9e04b82462b82fb2e33a57826096e6baae58e3b33ddd1b0c5"
+evidence = "chooseDefenseHex calls 0+0x528ac with client and neighbor hex. Body asks combatManager adjacency for gridIndex+0x38, then for its second hex only when double-wide bit at +0x84 is set; preceding BLR is 0x528a8 and following prologue is 0x52938."
+
+[[functions]]
+retail_va = 0x00442e60
+unit = "army"
+mac_section = 0
+mac_offset = 0x4ecf8
+mac_size = 0x12c
+mac_symbol = ".getTotalCombatValue__4armyCFll"
+target_sha256 = "44980752a375ed0534f5ea36df2125c80879916b9d58b3677adc8da16a6d0382"
+evidence = "chooseCreatureSpell calls 0+0x4ecf8 twice with army and lowest attack/defense. Body returns zero for numTroops+0x4c <= 0, otherwise computes combat value; prior BLR 0x4ecf4 and next prologue 0x4ee24 bound it."
+
+[[functions]]
+retail_va = 0x004369c0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3e330
+mac_size = 0xec
+mac_symbol = ".__ct__19type_AI_spellcasterFP13combatManagerlUc"
+target_sha256 = "764e6759b344b783c6874ed614ce5b08b483a7a5c2d00156a22294ec401e0c3d"
+evidence = "chooseCreatureSpell constructs its stack caster at 0+0x3e330 with manager, side and creatureSpell=1. Ctor initializes embedded estimate+0x20, writes byte+0x1d, allocates deputy size 0x410; prior BLR 0x3e32c and next ctor prologue 0x3e41c."
+
+[[functions]]
+retail_va = 0x0050b230
+unit = "misc"
+mac_section = 0
+mac_offset = 0x130cf4
+mac_size = 0x6c
+mac_symbol = ".random__Fii"
+target_sha256 = "4a958021d052fb336ede21bdcb86ea4860c75552ea68635cd886e47bf707a1b1"
+evidence = "chooseCreatureSpell calls 0+0x130cf4 with bounds 1 and 100; body tests equal/reversed bounds then reduces rand into inclusive range. Prior BLR 0x130cf0 and next prologue 0x130d60 bound it."
+
+[[functions]]
+retail_va = 0x00436c30
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3e4a0
+mac_size = 0x88
+mac_symbol = ".__dt__19type_AI_spellcasterFv"
+target_sha256 = "20606c0df07324a2b06c46e4108b29ba62065f92e7aef064fa8e109ad7160fe1"
+evidence = "chooseCreatureSpell calls 0+0x3e4a0 on all three exits with its stack caster and deleting flag -1. Body tests deputy+0x48/ownership+0x4c and invokes deputy virtual deletion; prior deputy ctor BLR 0x3e49c and next leaf begins 0x3e528."
+
+[[functions]]
+retail_va = 0x004476c0
+unit = "army"
+mac_section = 0
+mac_offset = 0x53bc8
+mac_size = 0x338
+mac_symbol = ".canCastSpell__4armyCFl"
+target_sha256 = "ec15e2de0e38a2d789f572b742fd9810c3bcf4030e262c62838b0a50f3ce69c2"
+evidence = "chooseCreatureSpell passes target gridIndex+0x38 to 0+0x53bc8; body first tests army hasSpell+0xdc then checks target hex and cast constraints. Prior BLR 0x53bc4 and next prologue 0x53f00 bound it."
+
+[[functions]]
+retail_va = 0x0043c4a0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x46250
+mac_size = 0x140
+mac_symbol = ".getCaliphValue__19type_AI_spellcasterCFPC4army"
+target_sha256 = "34becf81980e29552b1f22d20b445a88eb33ef2c3bbf04706bd8bd6db3574dd0"
+evidence = "chooseCreatureSpell dispatches creatureType 0x25 to 0+0x46250. Body scans 0x46 spells and averages positive values, matching source getCaliphValue; prior BLR 0x4624c and following prologue 0x46390."
+
+[[functions]]
+retail_va = 0x0043c330
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x46178
+mac_size = 0xd8
+mac_symbol = ".getOgreMageValue__19type_AI_spellcasterCFPC4army"
+target_sha256 = "f168b31abc58e5e202b938c55da46d65d2f068e5fa7e7f4d1900fa943518af1a"
+evidence = "chooseCreatureSpell dispatches creatureType 0x5b to 0+0x46178. Body checks target spell influence+0x244 before evaluating a spell choice, matching getOgreMageValue; prior BLR 0x46174 and following prologue 0x46250."
+
+[[functions]]
+retail_va = 0x00443080
+unit = "army"
+mac_section = 0
+mac_offset = 0x4ef38
+mac_size = 0x68
+mac_symbol = ".getTotalHitPoints__4armyCFUc"
+target_sha256 = "06490e2c3967506b4ab083f627f4c8331eb766a2b8272becdcd965419abe1a3c"
+evidence = "findAITargets calls 0+0x4ef38 twice with simulated=1. Body tests clone bit at army+0x84 and computes remaining HP from troop count, health and expected damage; leaf starts at 0x4ef38 and ends BLR 0x4ef9c before next prologue 0x4efa0."
+
+[[functions]]
+retail_va = 0x004b2da0
+unit = "findpath"
+mac_section = 0
+mac_offset = 0xc64ac
+mac_size = 0x2c0
+mac_symbol = ".seedCombatPosition__11searchArrayFPC4armyllUcl"
+target_sha256 = "5a3e93bd4a27e3af7d9d84633145eeab94cd69bbd6f4350f0f6a883fa9a808d5"
+evidence = "findAITargets calls 0+0xc64ac twice with army, group, speed or 127, placement and -1. Body seeds 0x1e-stride cells and marks reachable combat hexes; starts after prior BLR 0xc64a8, ends BLR 0xc6768 before next prologue 0xc676c."
+
+[[functions]]
+retail_va = 0x00435c70
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3d380
+mac_size = 0x7c
+mac_symbol = ".getSimpleAttackEffect__25type_AI_combat_parametersCFRC4armyRC4armyUcl"
+target_sha256 = "04fc98a020bc0e07220410f779200ad7dfeb8b15d6275ce8cfe152f1e8a6c0d6"
+evidence = "findAITargets calls 0+0x3d380 twice with two army references, ranged and time. Body calls getTotalHitPoints twice then the neighboring overload at 0x3d278; starts after prior BLR 0x3d37c, ends BLR 0x3d3f8 before next prologue 0x3d3fc."
+
+[[functions]]
+retail_va = 0x00448840
+unit = "army"
+mac_section = 0
+mac_offset = 0x54e40
+mac_size = 0xd8
+mac_symbol = ".considerAttack__4armyFPC4armyll"
+target_sha256 = "1073e5bdf4b7a7ab6a331db9ce6b9a1b101a861756d0235c3ee6cba51a393bad"
+evidence = "findAITargets calls 0+0x54e40 with enemy, effect and time. Body uses getSpeed, sets possible target mask at +0x520 and updates target/value/time at +0x514/+0x518/+0x51c; starts after prior BLR 0x54e3c, ends BLR 0x54f14 before next prologue 0x54f18."
+
+[[functions]]
+retail_va = 0x004214f0
+unit = "ai"
+mac_section = 0
+mac_offset = 0x23520
+mac_size = 0xdc
+mac_symbol = ".markFirewalls__13combatManagerFPC4armyPlP25type_AI_combat_parameters"
+target_sha256 = "f3d607a79f51c8f0a75cca5de1e329b0d2fc1823c4da92be35e5808e0d4e044d"
+evidence = "Mac chooseMeleeTarget calls this firewall danger pass at 0+0x237a4; source-owned Windows 0x4214f0 and the Dreamcast named call corroborate identity. Final BLR at 0+0x235f8 precedes the next function at 0+0x235fc."
+
+[[functions]]
+retail_va = 0x00421590
+unit = "ai"
+mac_section = 0
+mac_offset = 0x235fc
+mac_size = 0x128
+mac_symbol = ".markMoat__13combatManagerFPC4armyPlP25type_AI_combat_parameters"
+target_sha256 = "440facc9e2489ab26f023222cf488886f7df8b8bb84c274a141a70d94a07f9f6"
+evidence = "Mac chooseMeleeTarget calls this moat danger pass at 0+0x237cc; source-owned Windows 0x421590 and the Dreamcast named call corroborate identity. Final BLR at 0+0x23720 precedes the next function at 0+0x23724."
+
+[[functions]]
+retail_va = 0x00420260
+unit = "ai"
+mac_section = 0
+mac_offset = 0x21fc0
+mac_size = 0x424
+mac_symbol = ".markEnemyAttacks__13combatManagerCFPC4armyPlPlP25type_AI_combat_parameters"
+target_sha256 = "dba6dd43546c6c84f0999f981f449ce830f8fb7ec02a9fe828b31606a5ed9455"
+evidence = "Mac chooseMeleeTarget calls this enemy threat map at 0+0x2380c; source-owned Windows 0x420260 and the Dreamcast named call corroborate identity. Final BLR at 0+0x223e0 precedes the next function at 0+0x223e4."
+
+[[functions]]
+retail_va = 0x0041fb60
+unit = "ai"
+mac_section = 0
+mac_offset = 0x21860
+mac_size = 0x23c
+mac_symbol = ".markFriendlyArmies__13combatManagerCFPC4armyPllPC25type_AI_combat_parameters"
+target_sha256 = "fee009468f5b5944c0833b758cadd84b316d0142d0810de8382c16c788137c62"
+evidence = "Mac chooseMeleeTarget calls this friendly-army map at 0+0x23850; source-owned Windows 0x41fb60 and the Dreamcast named call corroborate identity. Final BLR at 0+0x21a98 precedes the next function at 0+0x21a9c."
+
+[[functions]]
+retail_va = 0x004b2ff0
+unit = "findpath"
+mac_section = 0
+mac_offset = 0xc676c
+mac_size = 0x29c
+mac_symbol = ".markTeleport__11searchArrayFPC4armyl"
+target_sha256 = "4abdea3e7eadb8e230b38df059865d206e8babb74136c41463af44492da12c41"
+evidence = "Mac chooseMeleeTarget calls this teleport reachability over 187 cells at 0+0x238b4; source-owned Windows 0x4b2ff0 and the Dreamcast named call corroborate identity. Final BLR at 0+0xc6a04 precedes the next function at 0+0xc6a08."
+
+[[functions]]
+retail_va = 0x004213f0
+unit = "ai"
+mac_section = 0
+mac_offset = 0x233c0
+mac_size = 0x160
+mac_symbol = ".shouldStayInCastle__13combatManagerFP25type_AI_combat_parameters"
+target_sha256 = "b025f08adc8ba3eb230ef742e752ebcc05ad86fa82b90e6425e92f92d190cb68"
+evidence = "Mac chooseMeleeTarget calls this castle-stay decision at 0+0x238e4; source-owned Windows 0x4213f0 and the Dreamcast named call corroborate identity. Final BLR at 0+0x2351c precedes the next function at 0+0x23520."
+
+[[functions]]
+retail_va = 0x00467460
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x73610
+mac_size = 0x34
+mac_symbol = ".inCastle__13combatManagerFi"
+target_sha256 = "48129cc37e28dfafa3e674bdfbb3273f7a8e09424d16ef0fbf695541d5a98982"
+evidence = "Mac chooseMeleeTarget calls this index/17 comparison against castle-wall columns at 0+0x239b8/239d8; source-owned Windows 0x467460 and the Dreamcast named call corroborate identity. Final BLR at 0+0x73640 precedes the next function at 0+0x73644."
+
+[[functions]]
+retail_va = 0x004466a0
+unit = "army"
+mac_section = 0
+mac_offset = 0x52874
+mac_size = 0x38
+mac_symbol = ".getSecondGridIndex__4armyCFv"
+target_sha256 = "f4561d5bcb92d6a82032464e218db64e0314912ede46400f556761e73065858a"
+evidence = "Mac chooseMeleeTarget calls this double-wide second hex at 0+0x239d4; source-owned Windows 0x4466a0 and the Dreamcast named call corroborate identity. Final BLR at 0+0x528a8 precedes the next function at 0+0x528ac."
+
+[[functions]]
+retail_va = 0x0041f3b0
+unit = "ai"
+mac_section = 0
+mac_offset = 0x20f94
+mac_size = 0x15c
+mac_symbol = ".getAttackChange__13combatManagerFPC4armyPC4armyR25type_AI_combat_parameters"
+target_sha256 = "742e3bef3749abcb06a871f7503a68c75fc48da2636abdd8303bc9c2fb09c385"
+evidence = "Mac chooseMeleeTarget calls this reachable enemy attack change at 0+0x23b10; source-owned Windows 0x41f3b0 and the Dreamcast named call corroborate identity. Final BLR at 0+0x210ec precedes the next function at 0+0x210f0."
+
+[[functions]]
+retail_va = 0x004360c0
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3d9ac
+mac_size = 0xe4
+mac_symbol = ".__ct__26type_AI_attack_hex_chooserFPC4armyPC4armyPClP11searchArrayPC25type_AI_combat_parameters"
+target_sha256 = "69d3a4d9a1260e8cdca9963d370ed6f355272277fa0a5fd7e276025243b71974"
+evidence = "Mac chooseMeleeTarget calls this attack-hex chooser construction at 0+0x23b30; source-owned Windows 0x4360c0 and the Dreamcast named call corroborate identity. Final BLR at 0+0x3da8c precedes the next function at 0+0x3da90."
+
+[[functions]]
+retail_va = 0x00436840
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3e070
+mac_size = 0x1e4
+mac_symbol = ".findAttackHex__26type_AI_attack_hex_chooserFv"
+target_sha256 = "d3ef8041eec57c592d9c11e892fe6ebd3a3bb3e4786abab23277c4f6fbcd2aa0"
+evidence = "Mac chooseMeleeTarget calls this best attack-hex selection at 0+0x23b38; source-owned Windows 0x436840 and the Dreamcast named call corroborate identity. Final BLR at 0+0x3e250 precedes the next function at 0+0x3e254."
+
+[[functions]]
+retail_va = 0x00420a80
+unit = "ai"
+mac_section = 0
+mac_offset = 0x229c4
+mac_size = 0x28c
+mac_symbol = ".hasRangedAdvantage__13combatManagerFP25type_AI_combat_parameters"
+target_sha256 = "c9f944fe06d7f237131c33083ca6bbf718b96bb98a76d732db9f76baf3a77c5e"
+evidence = "Mac chooseMeleeTarget calls this ranged advantage gate at 0+0x23ca4/24190; source-owned Windows 0x420a80 and the Dreamcast named call corroborate identity. Final BLR at 0+0x22c4c precedes the next function at 0+0x22c50."
+
+[[functions]]
+retail_va = 0x00421280
+unit = "ai"
+mac_section = 0
+mac_offset = 0x23278
+mac_size = 0x148
+mac_symbol = ".chooseSpellAction__13combatManagerFPC4armyPlP25type_AI_combat_parameters"
+target_sha256 = "4fb0d305c90e4f85e0c9a3f67b2c6ff740ff7762e077bed2d3c7cad8e878a999"
+evidence = "Mac chooseMeleeTarget calls this spell-action fallback at 0+0x23fa0; source-owned Windows 0x421280 and the Dreamcast named call corroborate identity. Final BLR at 0+0x233bc precedes the next function at 0+0x233c0."
+
+[[functions]]
+retail_va = 0x0041f580
+unit = "ai"
+mac_section = 0
+mac_offset = 0x210f0
+mac_size = 0x3cc
+mac_symbol = ".moveToward__13combatManagerFPC4armylPClUc"
+target_sha256 = "39fbb734a3da48385aaaf9e96986054bdea67eb73b367540d3413cc633ab057f"
+evidence = "Mac chooseMeleeTarget calls this three melee movement exits at 0+0x2400c/24118/2429c; source-owned Windows 0x41f580 and the Dreamcast named call corroborate identity. Final BLR at 0+0x214b8 precedes the next function at 0+0x214bc."
+
+[[functions]]
+retail_va = 0x00469dc0
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x764c4
+mac_size = 0xd4
+mac_symbol = ".isInMoat__13combatManagerFiPi"
+target_sha256 = "1e341aed2b26d297b16df74889aceb397a6e6b83b2e03288a25659e49f64a624"
+evidence = "Mac chooseMeleeTarget calls this 11-row primary/outer moat scan at 0+0x2409c/240d8; source-owned Windows 0x469dc0 and the Dreamcast named call corroborate identity. Final BLR at 0+0x76594 precedes the next function at 0+0x76598."
+
+[[functions]]
+retail_va = 0x0041f920
+unit = "ai"
+mac_section = 0
+mac_offset = 0x21594
+mac_size = 0x254
+mac_symbol = ".getAreaEffect__13combatManagerCFlPC4armylPC25type_AI_combat_parameters"
+target_sha256 = "8b6855d63e423b467fa9165373365928ac5b12adf0f4f0ab25e17a25b881c1b6"
+evidence = "Mac chooseMeleeTarget calls this area-effect defensive score at 0+0x241c8; source-owned Windows 0x41f920 and the Dreamcast named call corroborate identity. Final BLR at 0+0x217e4 precedes the next function at 0+0x217e8."
+
+[[functions]]
+retail_va = 0x00420760
+unit = "ai"
+mac_section = 0
+mac_offset = 0x225d0
+mac_size = 0x1ac
+mac_symbol = ".attemptShooterDefense__13combatManagerFPC4armyP11searchArrayPC25type_AI_combat_parameters"
+target_sha256 = "ea7befd53ec6eb81ca944701d1e5043dad664306a21b1d66f1f4fbb6285ca688"
+evidence = "Mac chooseMeleeTarget calls this shooter-defense fallback at 0+0x241e4; source-owned Windows 0x420760 and the Dreamcast named call corroborate identity. Final BLR at 0+0x22778 precedes the next function at 0+0x2277c."
+
+[[functions]]
+retail_va = 0x004208f0
+unit = "ai"
+mac_section = 0
+mac_offset = 0x2277c
+mac_size = 0x248
+mac_symbol = ".chooseToRun__13combatManagerFPC4armyPClPC11searchArray"
+target_sha256 = "9fb0f5e7fefef6e1e1e868bbb079a56a33b42a12e7419a6f792997381c44d006"
+evidence = "Mac chooseMeleeTarget calls this no-target retreat fallback at 0+0x2421c; source-owned Windows 0x4208f0 and the Dreamcast named call corroborate identity. Final BLR at 0+0x229c0 precedes the next function at 0+0x229c4."
+
+[[functions]]
+retail_va = 0x0043c620
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x46390
+mac_size = 0x198
+mac_symbol = ".getFaerieDragonSpellValue__19type_AI_spellcasterFlli"
+target_sha256 = "15721110262fec5151ce9c739f125ecc5d5f9b51472fa91e6ce38f0b4accf0e8"
+evidence = "Mac Faerie Dragon chooser calls this body once at 0+0x22f14 with caster, hex, five times army troop count, and army spell +0x4cc; it is the sole code caller. Body begins after previous BLR 0+0x4638c, evaluates spell/hex combat values, and ends BLR 0+0x46524 before next prologue 0+0x46528. Canonical source owns Windows 0x43c620."

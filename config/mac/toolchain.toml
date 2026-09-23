@@ -1,0 +1,16 @@
+# User-supplied CodeWarrior Pro 6 command-line PowerPC compiler and disassembler.
+# Files are staged under ignored build/mac/toolchain after hash verification.
+version = "CodeWarrior C/C++ 2.4 build 0131 (September 2000)"
+# Calibrated on the admitted hero leaf functions and the non-leaf patrol body.
+# The 750 scheduler fixes the patrol prologue/epilogue ordering exactly.
+flags = ["-O1", "-proc", "750", "-nolink"]
+# MWLinkPPC -help: collapse unused RTOC-reload slots after direct local calls.
+# Verified against an actual linked PEF control and the patrol function's calls.
+collapse_reloads = true
+
+[files]
+"MWCPPC.exe" = "96377c7da7864e3fa067eda9da00e6c01505d2935425d21cfda93c48d9f892ac"
+"MWLinkPPC.exe" = "1fe73016f9d8f4ce8ea7ff07d09fd900422c08b818c19e281212b131ca52118e"
+"MWCRTL60.DLL" = "f6ef7352db92e0b2d6b96db52f3dfa5f7dabc5d6fc5fa28a8854cb9501ca3d5a"
+"lmgr326b.dll" = "bd9415ab11f4aef42c372e8547a8303b02464b59549745be597cf09e460737e8"
+"license.dat" = "62dd45ab6db4ca0d70845028deef55e44a8db7db504c88844fdd8fa153fc4166"

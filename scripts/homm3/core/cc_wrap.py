@@ -91,6 +91,23 @@ def _run_cl(cmd, out):
             proc.wait(); rc = 0 if out.exists() else 1
         logf.seek(0); return logf.read().decode("latin1", "replace"), rc
 
+def _compile_staged(out, command, *, run=_run_cl):
+    """Publish a new object only after the compiler has produced it.
+
+    A failed Wine launch must not erase the previous object. Ninja can still
+    report the failed rebuild, while --no-build retains a usable last build.
+    """
+    staged = out.with_name(f".{out.stem}.{os.getpid()}.tmp.obj")
+    staged.unlink(missing_ok=True)
+    try:
+        output, rc = run(command(staged), staged)
+        if not staged.is_file():
+            return output, rc, False
+        staged.replace(out)
+        return output, rc, True
+    finally:
+        staged.unlink(missing_ok=True)
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True); ap.add_argument("--src", required=True)
@@ -103,7 +120,6 @@ def main():
     src = Path(a.src).resolve(); out = Path(a.out).resolve()
     if not src.exists(): die(f"source missing: {src}")
     out.parent.mkdir(parents=True, exist_ok=True)
-    if out.exists(): out.unlink()
     os.environ.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
     # Same anti-stale anchor. Test the string first: Path("") is PosixPath("."),
     # whose is_dir() is True, so an ABSENT WINEPREFIX used to satisfy this guard
@@ -116,9 +132,10 @@ def main():
     project_includes = Project(HOMM3_DIR).includes
     incs = [msvc / "include", *(p for p in project_includes if p.is_dir())]
     os.environ["INCLUDE"] = ";".join(winepath_w(p) for p in incs)
-    cmd = ["wine", str(cl), *flags, f"/Fo{winepath_w(out)}", winepath_w(src)]
-    output, rc = _run_cl(cmd, out)
-    if not out.exists():
+    output, rc, produced = _compile_staged(
+        out, lambda staged: ["wine", str(cl), *flags,
+                             f"/Fo{winepath_w(staged)}", winepath_w(src)])
+    if not produced:
         diagnostic_log = out.with_suffix(".compile.log")
         diagnostic_log.write_text(output)
         sys.stderr.write(f"[cc_wrap] full diagnostics: {diagnostic_log}\n")

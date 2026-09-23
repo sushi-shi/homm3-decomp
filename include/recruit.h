@@ -89,7 +89,7 @@ SIZE(TRecruitWindow, 0x6c);
 // gp<Type> house convention); recruitUnit::Open builds it,
 // recruitUnit::Close RemoveWindow()s and deletes it, and Update
 // broadcasts every widget refresh through it.
-extern TRecruitWindow* g_recruitWindow;
+DATA(0x0069d5e8) extern TRecruitWindow* g_recruitWindow;
 
 // recruit.obj's own .bss 0x69d5f4 - the menu recruitUnit::Open parks
 // before switching to the default one, and the menu ::Close puts back.
@@ -99,7 +99,7 @@ extern struct HMENU__* g_recruitSavedMenu;
 
 // The game palette uses indices 31 and 36 for normal and selected recruit
 // borders, index 45 for level-up selection, and indices starting at 64 for players.
-extern TPalette16* g_unnamed6aacb0;
+DATA(0x006aacb0) extern TPalette16* g_unnamed6aacb0;
 
 class TRecruitQuickWindow : public heroWindow {
 public:

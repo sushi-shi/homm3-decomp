@@ -83,9 +83,8 @@ type_quest* createQuest(int questType, unsigned char flags);
 
 std::string formatString(const char* format, ...);
 
-// The seven localized resource names.  The resource-quest string builders
-// walk this array in lockstep with their seven-dword payload.
-DATA(0x006a5e64) extern const char* g_resourceNames[7];
+// The seven localized resource names come from the ai_player.h declaration.
+// src/text.cpp owns DATA(0x006a5e64) and the spare eighth pointer.
 
 // The nine compass phrases describing a quest monster's map region.
 // Retail reaches every cell directly from the initializer below; their
@@ -441,6 +440,25 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
     return 1;
 }
 
+// Mac Complete retains this common skill-picture dialog at code0:0x164e44
+// (three callers), taking text and four signed skill values after `this`.
+// Windows Complete expands it in slot 5; preserve one ordinary source body.
+void type_skill_quest::showSkillRequirementsDialog(
+    const char* text, const signed char* skills)
+{
+    std::vector<type_dialog_resource> dialogResources;
+    for (int i = 0; i < 4; ++i) {
+        if (skills[i] > 0) {
+            type_dialog_resource resource;
+            resource.m_resource = 0x1f + i;
+            resource.m_qualifier = 0x10000
+                | static_cast<unsigned short>(skills[i]);
+            dialogResources.push_back(resource);
+        }
+    }
+    extendedDialog(text, dialogResources, -1, -1, 0);
+}
+
 // Slot 4 reports only the primary-skill requirements the visiting hero still
 // lacks. A custom progress line takes the direct path; otherwise retail
 // formats the missing-skill list into the table's progress column and appends
@@ -461,21 +479,7 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
     if (m_progressText.length() > 0) {
         std::string text = getProposalDialogText();
         const char* textPointer = text.c_str();
-        {
-            std::vector<type_dialog_resource> dialogResources;
-            type_dialog_resource resource;
-            for (int i = 0; i < 4; ++i) {
-                if (missing[i] > 0) {
-                    resource.m_resource = 0x1f + i;
-                    resource.m_qualifier = 0x10000
-                        | static_cast<unsigned short>(missing[i]);
-                    type_dialog_resource* position = dialogResources.end();
-                    dialogResources.insert(position, resource);
-                }
-            }
-            extendedDialog(
-                textPointer, dialogResources, -1, -1, 0);
-        }
+        showSkillRequirementsDialog(textPointer, missing);
     } else {
         std::string requirement = skillRequirementText(missing);
         const char* requirementPointer = requirement.c_str();
@@ -484,66 +488,24 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
             texts[QUEST_TEXT_PROGRESS].c_str(), requirementPointer);
         text += getTimeLimitText();
         const char* textPointer = text.c_str();
-        {
-            std::vector<type_dialog_resource> dialogResources;
-            type_dialog_resource resource;
-            for (int i = 0; i < 4; ++i) {
-                if (missing[i] > 0) {
-                    resource.m_resource = 0x1f + i;
-                    resource.m_qualifier = 0x10000
-                        | static_cast<unsigned short>(missing[i]);
-                    type_dialog_resource* position = dialogResources.end();
-                    dialogResources.insert(position, resource);
-                }
-            }
-            extendedDialog(
-                textPointer, dialogResources, -1, -1, 0);
-        }
+        showSkillRequirementsDialog(textPointer, missing);
     }
 }
 
 // Slot 5 presents one primary-skill picture for every positive requirement.
 // The picture class advances from 0x1f with the skill index, while the
 // qualifier packs the displayed value below a high-word one.
-// Residual (96.6180%, 2026-09-07): the resource vector has an inner scope,
-// ending before the lifetime-extended text. This removes the three post-delete
-// zero stores and restores retail's 0x30 frame and EBX loop down-counter
-// (76.2135 -> 94.2360%). Declaring the skill cursor before the vector also
-// restores its initialization schedule (96.6180%). The three-variable walk
-// preserves retail's inc-cursor/dec-count loop and picture-id induction.
-// Controls: indexed i < 4 within the scope gives 82.5169%; a named string
-// instead of the const reference is byte-flat at 94.2360%. Moving the picture
-// resource outside the loop is byte-flat after the cursor-order repair.
-// Remaining: c_str reloads the return slot instead of dereferencing returned
-// EAX, and string destruction uses ECX rather than retail's EAX/ECX pair.
-// The earlier bare c_str pointer destroyed the temporary before the loop and
-// is invalid; mutable/const lifetime-extending references gave the same bytes.
+// Mac Complete calls the shared skill-picture helper, and its temporary
+// progress string lives through that call before destruction. This direct
+// full-expression form matches the Mac slot-5 body byte for byte. Windows
+// expands the ordinary helper; the previous local loop scored 96.6180%.
 // This Complete quest has no Dreamcast counterpart to settle the source form.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056dd60, 0xF5)  // anchor-vtable 0x6417c4 slot 5 + dialog picture rows, retail-only
 void type_skill_quest::doProgressDialog()
 {
-    const std::string& text = getProgressDialogText();
-    const char* textPointer = text.c_str();
-    {
-        const signed char* skill = m_requiredSkills;
-        std::vector<type_dialog_resource> dialogResources;
-        int picture = 0x1f;
-        int remaining = 4;
-        do {
-            if (*skill > 0) {
-                type_dialog_resource resource;
-                resource.m_resource = picture;
-                resource.m_qualifier = 0x10000
-                    | static_cast<unsigned short>(*skill);
-                dialogResources.push_back(resource);
-            }
-            ++skill;
-            ++picture;
-            --remaining;
-        } while (remaining);
-        extendedDialog(textPointer, dialogResources, -1, -1, 0);
-    }
+    showSkillRequirementsDialog(
+        getProgressDialogText().c_str(), m_requiredSkills);
 }
 
 VA(0x0056de60, 0x29)

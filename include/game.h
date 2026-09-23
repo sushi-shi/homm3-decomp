@@ -229,6 +229,9 @@ enum EVictoryCastleLevel {
 };
 
 enum EVictoryConditionType {
+    // VictoryConditionStruct initializes m_type to -1; DC and Mac
+    // displayVCWinLoss both dispatch this empty condition separately.
+    VICTORY_CONDITION_NONE = -1,
     // 0x5f1610 CheckForArtifactWin's main arm gates on `cmp Type,0`,
     // the map-format acquire-artifact ordinal.
     VICTORY_CONDITION_ARTIFACT = 0,
@@ -981,7 +984,7 @@ class game;
 // player's record). Names provisional. 2,264 dir32 references
 // image-wide make gpGame the central object.
 DATA(0x006994e8) extern game* g_game;
-extern playerData* g_currentPlayer;
+DATA(0x0069ccb0) extern playerData* g_currentPlayer;
 
 // Head model: GetWorldMapData hands out the embedded map record at
 // 0x1fb70. Names provisional. (Merged 2026-08-07 with the second `game`
@@ -1284,7 +1287,7 @@ private:
     int saveSignPool(TAbstractFile* outfile);  // 0x4b9270
 
 public:
-    bool isHumanAlly(int teamNum) const;
+    bool isHumanAlly(int playerNum) const;
     // event_record.obj owns 0x49d6c0's body.
     void clearEventRecords(char playerId);
     type_point getUndergroundGateExit(const NewmapCell* cell) const;
@@ -1460,14 +1463,7 @@ public:
     // recruit index; hero::hire uses the same closeout call. The body
     // remains outside the admitted surface.
     void finishTownHire(long playerId, int recruitSlot);
-    // Dreamcast's public symbol is `?OnSameTeam@game@@QBA_NHH@Z`: bool,
-    VA(0x005296d0, 0x37)  // hd-crossbuild + anchor-callee x3, dc 0x1febc
-    bool onSameTeam(int player1, int player2) const
-    {
-        if (player1 < 0 || player2 < 0)
-            return 0;
-        return m_mapHeader.m_teamInfo[player1] == m_mapHeader.m_teamInfo[player2];
-    }
+#include "inline/game_on_same_team.inl"
     // 0x4c6690, and the Dreamcast's own `?get_alignment@game@@QBA?AW4
     // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
     // Own the retained inline body here with the game interface. The selected
@@ -1483,33 +1479,18 @@ public:
             return CREATURE_NONE;
         return ::upgradedCreatureType(creature);
     }
-    // the Dreamcast decoration is `?is_human_ally@game@@QBA_NH@Z` and
-    // for ClaimTown; the canonical body is below in CodeView source order.
-    bool isHumanTeam(int teamNum) const
-    {
-        for (int player = 0; player < 8; ++player) {
-            if (m_mapHeader.m_teamInfo[player] == teamNum && g_game->isHuman(player))
-                return true;
-        }
-        return false;
-    }
+#include "game_is_human_team.inl"
     // Dreamcast Game.h:856 proves ClaimTown's source-visible
     // IsComputerTeam boundary. Complete keeps the same boundary but its
-    // retail lowering calls the exact is_human_ally COMDAT above; retaining
+    // retail lowering calls the retained IsHumanTeam COMDAT above; retaining
     // the wrapper is what preserves the materialized logical negation.
     inline unsigned char isComputerTeam(int teamNum) const
     {
         if (teamNum < 0)
             return 0;
-        return !isHumanAlly(teamNum);
+        return !isHumanTeam(teamNum);
     }
-    VA(0x004a5960, 0x16)  // exact selected events.obj COMDAT, dc 0x37fbc
-    int getTeam(int playerNum) const
-    {
-        if (playerNum < 0)
-            return playerNum;
-        return m_mapHeader.m_teamInfo[playerNum];
-    }
+#include "game_get_team.inl"
     // Game.h:877. DispatchEvent's obelisk arm preserves this named helper;
     // retail /Ob2 folds both it and GetTeam into the arm. MoveHero's
     // Dreamcast line stream names the same nested pair, and Complete folds
@@ -1592,13 +1573,7 @@ public:
                   const town* thisTown, int x, int y,
                   unsigned char showDismiss, unsigned char isQuickView);
     void overview();
-    VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15, dc 0x2eb0
-    hero* getHero(int which)
-    {
-        if (which == -1)
-            return 0;
-        return m_heroes + which;
-    }
+#include "game_get_hero.inl"
     // DC `game::GetCurrHero` (dc 0x2ed4, E:\gamedcs\Game.h:991) and
     // `game::GetCurrTown` (dc 0x1ff40, Game.h:1023) - the acting player's
     // pair, and NOT GetHero/GetTown applied to the id. Two retail facts
@@ -1621,12 +1596,7 @@ public:
     // null arm placed after, whereas GetHero's `if (id == -1) return 0;`
     // lays the arms out the other way round. DC sizes them apart too - 68 B
     // against GetHero's 36 - so this is a separate inline, not a forwarder.
-    hero* getCurrHero()
-    {
-        if (g_currentPlayer->m_currHeroId != -1)
-            return &m_heroes[g_currentPlayer->m_currHeroId];
-        return 0;
-    }
+#include "inline/game_get_curr_hero.inl"
     // DC-attested inline Game.h member (dc 0x2f18). Retail CheckCastSpell
     // expands it to the acting player's widened currHero load; no standalone
     // retail row exists in the adventure-map header-method bracket.
@@ -1634,13 +1604,7 @@ public:
     {
         return g_currentPlayer->m_currHeroId;
     }
-    VA(0x0042ba30, 0x24)  // hd-crossbuild + exact body/callers x5, dc 0x2f24
-    town* getTown(int townId)
-    {
-        if (townId == -1)
-            return 0;
-        return &m_towns[townId];
-    }
+#include "inline/game_get_town.inl"
     // Original: game::GetTown; Game.h:1022, dc 0x169c60.
     // The const overload indexes directly; the non-const overload above
     // separately handles the -1 sentinel.
@@ -1691,7 +1655,7 @@ public:
     void nextPlayer();
     // DC Game.h:1197. The Dreamcast keeps this header helper as a row;
     // retail expands the map's byte flag plus one at both cheat loops.
-    int getNumMapLevels() { return m_worldMap.getNumLevels(); }
+#include "inline/game_get_num_map_levels.inl"
     void showScenInfo();
 
     // DC Game.h:1197. The Dreamcast keeps this header helper as a row;
@@ -1785,7 +1749,7 @@ DATA(0x0069fb24) extern int g_unnamed69fb24[8];
 extern int g_curHourGlassPhase;
 // Retail-only companion word cleared beside the hourglass phase by
 // philAI::GetTurnAIVars. It has no surviving source symbol or other reader.
-extern int g_unnamed691680;
+DATA(0x00691680) extern int g_unnamed691680;
 // Retail .bss 0x69ccc4, and the SIBLING of advmgr.h's gMapVisibilityBit
 // (0x69ccbc) rather than an alias of it - it has 38 relocation sites of
 // its own, and advManager::ProcessHover gates fog on it with the same
@@ -1817,6 +1781,7 @@ extern int g_inSetup698400;
 // 0x69cca8: the hot-seat game position of this machine's player - the
 // dword eight bytes ahead of gpCurrentPlayer, and range-checked
 // against [0,8) before use. Ordinal placeholder.
+DATA(0x0069cca8)
 extern int g_netLocalGamePos;                // .bss 0x69cca8
 extern unsigned char g_unnamed69ccc4;
 
@@ -2023,19 +1988,7 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
     return 0;
 }
 
-// E:\gamedcs\Game.h:1370, dc 0x37fd8
-VA(0x0042b9e0, 0x45)  // dc 0x37fd8
-inline bool game::isHumanAlly(int teamNum) const
-{
-    if (teamNum >= 0) {
-        for (int player = 0; player < 8; ++player) {
-            if (m_mapHeader.m_teamInfo[player] == teamNum
-                && g_game->isHuman(player))
-                return true;
-        }
-    }
-    return false;
-}
+#include "game_is_human_ally.inl"
 
 // E:\gamedcs\Game.h:1375, dc 0x2000c
 VA(0x004c6690, 0x43)  // dc 0x2000c
@@ -2050,22 +2003,9 @@ inline int game::getAlignment(int creature) const
     return g_creatureTypeTraits[creature].m_townType;
 }
 
-// Game.h:1380. DispatchEvent expands this cell accessor; the
-// out-of-line copy is ai_player.obj's, 0x42ed80.
-// E:\gamedcs\game.h:1380. Retail retains this header-inline copy in
-// ai_player.obj; all consumers use the same canonical body.
-VA(0x0042ed80, 0x4D)  // anchor-global, dc 0x38000
-inline NewmapCell* game::getCell(type_point point)
-{
-    return m_worldMap.cell(point.m_x, point.m_y, point.m_z);
-}
+#include "inline/game_get_cell.inl"
 
-// Game.h:1390 in the DC roster. Retail expands this short calendar
-// accessor at every game.obj call site and retains no standalone row.
-inline short game::getCurrentTurn() const
-{
-    return (m_month * 4 + m_week - 5) * 7 + m_day;
-}
+#include "inline/game_get_current_turn.inl"
 
 // Original: game::get_liths; Game.h:1395, dc 0x12ca94.
 inline const std::vector<type_point>& game::getLiths(long color) const
@@ -2085,13 +2025,7 @@ inline const std::vector<type_point>& game::getWhirlpools() const
     return m_whirlpools;
 }
 
-// Dreamcast Game.h:1410 names this ordinary inline query and retains a
-// selected out-of-line copy in ai_player.obj. THallWindow expands the
-// same source operation to the retail town-vector lookup.
-inline bool game::townAlreadyBuiltOn(int townId) const
-{
-    return m_towns[townId].m_builtThisTurn != 0;
-}
+#include "game_town_already_built.inl"
 
 // --- type_creature_bank ---
 

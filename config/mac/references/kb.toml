@@ -1,0 +1,331 @@
+# Source-owned game callee used by the paired KB helper. This reference
+# resolves the call; it does not score or compile game::isHuman for Mac.
+[[functions]]
+retail_va = 0x004ce940
+unit = "game"
+mac_section = 0
+mac_offset = 0xe6bf4
+mac_size = 0x48
+mac_symbol = ".isHuman__4gameCFi"
+target_sha256 = "6e94b37ddd52b3a40611232d70776c4b5f77d0ae6ab1209c67327634f6664d6a"
+evidence = "Both bodies clamp gamePos to 0..7, index game player records and call the player human test; Mac 0xe6bf4 has its own prologue after BLR 0xe6bf0, ends at BLR 0xe6c38 before the next prologue 0xe6c3c, and has 59 linked callers including KB 0x116464."
+
+[[functions]]
+retail_va = 0x00579960
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x170b90
+mac_size = 0x4a20
+mac_symbol = ".__ct__22TSingleSelectionWindowFi"
+target_sha256 = "6ebe460fdf6b37aac508712cc50587884448fafd9ada8e08dc8205af7af8afa4"
+evidence = "KB single-player helper calls this body with the stack selection window and gameMode zero; its prologue passes 800x600 to the base window constructor and initializes the selection object. Preceding BLR 0x170b8c and next prologue 0x1755b0 bound its final BLR at 0x1755ac."
+
+[[functions]]
+retail_va = 0x00584bf0
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x17c860
+mac_size = 0x90
+mac_symbol = ".doModal__22TSingleSelectionWindowFb"
+target_sha256 = "7fe10838efdaba8330afe991eef63fdb7f6fde0dac8023774b929ab20c7076de"
+evidence = "KB calls this method on its selection window; the Mac body tests the two mode flags at +0x60/+0x61, conditionally sets slider state 11, then enters modal management. Preceding BLR 0x17c85c and next prologue 0x17c8f0 bound the body ending BLR 0x17c8ec."
+
+[[functions]]
+retail_va = 0x00583b40
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x17b504
+mac_size = 0x3a8
+mac_symbol = ".__dt__22TSingleSelectionWindowFv"
+target_sha256 = "14d859c28a21aa447a99d28cdd2f47d4ee4a6a309a58d035de2d39de04ced4cf"
+evidence = "KB destroys its stack selection window after doModal; the Mac body clears its own vtable, releases selection controls and calls base destructors. Preceding BLR 0x17b500 and next prologue 0x17b8ac bound the body ending BLR at 0x17b8a8."
+
+[[functions]]
+retail_va = 0x004c5e00
+unit = "game"
+mac_section = 0
+mac_offset = 0xdc7ac
+mac_size = 0xcc
+mac_symbol = ".get__13NewSMapHeaderFPCcPCci"
+target_sha256 = "4c6d78988aba2e31d2a076bff59f60c9786cfe9706630422ef939378f0cf972c"
+evidence = "KB passes map header, path, filename and zero campaign flag; Mac body builds a path from path and filename, invokes map-header read, and returns zero/-1 with cleanup. Preceding BLR 0xdc7a8 and next prologue 0xdc878 bound its BLR at 0xdc874."
+
+[[functions]]
+retail_va = 0x004610e0
+unit = "castle"
+mac_section = 0
+mac_offset = 0x6c9b0
+mac_size = 0x70
+mac_symbol = ".getBuildingName__Fii"
+target_sha256 = "792b05aae0107874c564e4cc7e8c4257b08718d60a1040c2894cebabf0d2d11f"
+evidence = "Canonical src/castle.cpp defines getBuildingName(int,int) at Windows 0x4610e0. KB setter passes resource ordinal minus 22 and qualifier at Mac 0x116860..0x11686c. Mac callee branches on building IDs 17, 15, and 30, indexing common/town/upgrade name tables with strides 11 or 14 as the source does. Previous function ends before 0x6c9b0; four return BLRs culminate at 0x6ca1c and the next function starts 0x6ca20, bounding all 112 bytes."
+
+[[functions]]
+retail_va = 0x0050c600
+unit = "misc"
+mac_section = 0
+mac_offset = 0x131520
+mac_size = 0x70
+mac_symbol = ".formatString__FPCce"
+target_sha256 = "441ff81f8fd7180b2c95d6288d04fef67ec0270788f4db1c378946f9346a56f6"
+evidence = "Canonical src/misc.cpp defines variadic formatString returning std::string. KB setter passes hidden string return buffer, format and qualifier. Mac callee saves r5..r10 varargs, loads shared formatting buffer, calls formatting code 0x28df60 then string constructor 0x4568 into hidden return receiver. Previous body ends before 0x131520; final BLR 0x13158c and next prologue 0x131590 bound all 112 bytes."
+
+[[functions]]
+retail_va = 0x004b57a0
+unit = "font"
+mac_section = 0
+mac_offset = 0xc9600
+mac_size = 0x28
+mac_symbol = ".getCharacterWidth__4fontCFUc"
+target_sha256 = "5dde517ab43d00dad3b1d984b44bec7505cc9552ef50ec4183523dcda05de4b4"
+evidence = "Canonical src/font.cpp defines getCharacterWidth(unsigned char) const. KB setter passes an unsigned text byte before accumulating word width at Mac 0x1170d4. Mac callee masks index to eight bits, indexes 12-byte ABC records at font+0x3c and sums all three widths. Final BLR 0xc9624 and following function prologue 0xc9628 bound 40 bytes."
+
+[[functions]]
+retail_va = 0x004b5820
+unit = "font"
+mac_section = 0
+mac_offset = 0xc9690
+mac_size = 0x14c
+mac_symbol = ".lineLength__4fontCFPCci"
+target_sha256 = "ad6b88a9077e23675e6cdf2758c658272b6adf78c1be9fe1b22f06306228fcb5"
+evidence = "Canonical src/font.cpp defines lineLength(const char*,int) const with strlen and repeated getCharacterWidth calls; KB setter passes its text cursor and width at Mac 0x1171. Mac body calls strlen 0x28e1dc and font width 0xc9600, scans until newline/width bound, and returns the line count. Previous body ends at 0xc968c, final BLR 0xc97d8 and next prologue 0xc97dc bound all 332 bytes."
+
+[[functions]]
+retail_va = 0x004f3e30
+unit = "kb"
+mac_section = 0
+mac_offset = 0x115aec
+mac_size = 0xd0
+mac_symbol = ".getBaseMapScore__4gameCFv"
+target_sha256 = "174d875f893be8c46ed3bbcb279f8ff9df50ad575f01cb4476f431e9ffc96ca2"
+evidence = "The canonical src/kb.cpp game::getBaseMapScore short-return body is called by showCongrats at Mac 0x115c80. Mac 0x115aec computes calendar turns from game day/week/month, derives player score through game helpers 0xe6c88/0xe6cc4 and applies the same round/difficulty/cheat adjustment. Own prologue follows the prior body, final BLR 0x115bb8 and next getMapScore prologue 0x115bbc bound all 208 bytes."
+
+[[functions]]
+retail_va = 0x004f3eb0
+unit = "kb"
+mac_section = 0
+mac_offset = 0x115bbc
+mac_size = 0x78
+mac_symbol = ".getMapScore__4gameCFv"
+target_sha256 = "60503f616f6d588e0b67e50cc21bce9fda8d59bc8c0e4f9dc69938cf3f94f7a8"
+evidence = "The canonical src/kb.cpp game::getMapScore short-return body is called by showCongrats at Mac 0x115c8c. The Mac body calls getBaseMapScore 0x115aec, reads signed difficulty at game+0x1ef64, multiplies by the difficulty float table TOC 1+0xcd0 and converts to integer. Preceding BLR 0x115bb8, final BLR 0x115c30 and next showCongrats prologue 0x115c34 bound all 120 bytes."
+
+[[functions]]
+retail_va = 0x004f3ab0
+unit = "kb"
+mac_section = 0
+mac_offset = 0x115694
+mac_size = 0x458
+mac_symbol = ".congratsWait__FiPciii"
+target_sha256 = "cf0c31d87590e9c564f0a51f93c6b803f7ee1bba1b6023420099df99ee58b1b0"
+evidence = "The canonical src/kb.cpp congratsWait(mode,rank,base,score,dayz) is called by showCongrats at Mac 0x115e64 with those five arguments. Mac body draws five ranked text rows, reads generalText indices 439..442 and 677, handles the scenario difficulty line, then loops over the congrats window until input; source operation family agrees. Own prologue is 0x115694, final BLR 0x115ae8 and next getBaseMapScore prologue 0x115aec bound all 1112 bytes."
+
+[[functions]]
+retail_va = 0x0050d540
+unit = "mousemgr"
+mac_section = 0
+mac_offset = 0x2179e0
+mac_size = 0x54
+mac_symbol = ".hidePointer__12mouseManagerFv"
+target_sha256 = "abf9e09269f87ec40779741900a610570dd5a4d5fd73bb0c0970ad32fe31eb06"
+evidence = "showCongrats calls hidePointer on the mouse manager at Mac 0x115c64. This callee increments its +0x68 hide counter and changes pointer visibility only on the zero-to-one transition, matching canonical src/mousemgr.cpp. Own prologue 0x2179e0, final BLR 0x217a30 and next showPointer prologue 0x217a34 bound all 84 bytes."
+
+[[functions]]
+retail_va = 0x0050d5b0
+unit = "mousemgr"
+mac_section = 0
+mac_offset = 0x217a34
+mac_size = 0x88
+mac_symbol = ".showPointer__12mouseManagerFb"
+target_sha256 = "998d804166313c53bd895801c58bf63e6c9c1d72d7236b2105a250793c66e3db"
+evidence = "showCongrats passes false to showPointer at Mac 0x115e98. This callee conditionally resets the +0x68 hide count for true, decrements it and restores pointer visibility on transition to zero, matching canonical src/mousemgr.cpp. Prior hidePointer ends 0x217a30, final BLR 0x217ab8 and next method starts 0x217abc, bounding all 136 bytes."
+
+[[functions]]
+retail_va = 0x0048b200
+unit = "customcampaign"
+mac_section = 0
+mac_offset = 0x999c0
+mac_size = 0x74
+mac_symbol = ".getScore__9SCampaignCFv"
+target_sha256 = "714e05a9dfe47b85de7a22ec189c24fe94f64e73fc8c2831cc8f8f79eecec047"
+evidence = "showCongrats passes game+0x1ed04 as SCampaign receiver at Mac 0x115d20. This callee walks +0x4c count of 0x14-byte scenario entries through +0x50, adds nonnegative scores at +8 for active entries, averages with rounding and multiplies by five as src/customcampaign.cpp getScore does. Early BLR 0x99a18 and final BLR 0x99a30 precede getTotalTime at 0x99a34, bounding all 116 bytes."
+
+[[functions]]
+retail_va = 0x0048b280
+unit = "customcampaign"
+mac_section = 0
+mac_offset = 0x99a34
+mac_size = 0x44
+mac_symbol = ".getTotalTime__9SCampaignCFv"
+target_sha256 = "119f58c6247dfbc0981476c0bcec18251434c8f327094e113a4c280c44b78098"
+evidence = "showCongrats calls this with the same SCampaign receiver at Mac 0x115d38. The body walks +0x4c count of 0x14-byte scenario entries and totals active-entry time at +4, matching canonical src/customcampaign.cpp getTotalTime. Prior getScore BLR 0x99a30, own final BLR 0x99a74 and next prologue 0x99a78 bound all 68 bytes."
+
+[[functions]]
+retail_va = 0x0045bc10
+unit = "campaignbrief"
+mac_section = 0
+mac_offset = 0x6824c
+mac_size = 0x94
+mac_symbol = ".getCampaignName__Fv"
+target_sha256 = "9366b581242cad586eba09a4b76e5e1be3a909a7659416588e2b4f130c3f46a4"
+evidence = "showCongrats calls the free getCampaignName with hidden string result at Mac 0x115d4c. Callee reads g_game campaign+0x1ed04, obtains the campaign filename via 0x6774c, constructs/loads a campaign header and copies its name to the return string, matching canonical src/campaignbrief.cpp. Own prologue 0x6824c ends BLR 0x682dc; next helper begins 0x682e0, bounding all 148 bytes."
+
+[[functions]]
+retail_va = 0x004e9830
+unit = "hiscore"
+mac_section = 0
+mac_offset = 0x10afd0
+mac_size = 0x54
+mac_symbol = ".getMonType__16highScoreManagerFii"
+target_sha256 = "74245f784b2ab136ad87768278db74b0f0408b77196c1977a96cc49db6ea51b6"
+evidence = "showCongrats passes score and scoreType at Mac 0x115d78. Callee divides scenario scores by five when scoreType is zero, advances through a short threshold/creature table at TOC 1+0x2724 and returns the creature ID from the second column, matching src/hiscore.cpp. Own entry 0x10afd0, BLR 0x10b020 and next prologue 0x10b024 bound all 84 bytes."
+
+[[functions]]
+retail_va = 0x00597570
+unit = "smackmgr"
+mac_section = 0
+mac_offset = 0x25e5e4
+mac_size = 0x7c
+mac_symbol = ".videoOpen__Fiiiiiibb"
+target_sha256 = "73ad07c2865e31e3a7d94b91b74463703b7dec7ee3dc5d246c505e4ee886c50f"
+evidence = "showCongrats passes movie ID 35 and the seven remaining video options to this callee at Mac 0x115e34. Canonical src/smackmgr.cpp videoOpen chooses the active video backend; this Mac body checks the 0x1c movie threshold, 0x14-byte video table flags and game state before dispatching to backend open entries 0x25d6ac/0x25f6e4. Own prologue 0x25e5e4, final BLR 0x25e65c and videoClose prologue 0x25e660 bound all 124 bytes. Platform backend bodies may differ."
+
+[[functions]]
+retail_va = 0x005975f0
+unit = "smackmgr"
+mac_section = 0
+mac_offset = 0x25e660
+mac_size = 0x50
+mac_symbol = ".videoClose__Fv"
+target_sha256 = "d0dc7d94f7e7a5538eadd191a4b4ecf082fa5829796dfda3af4201f1b71946e7"
+evidence = "showCongrats closes its movie through this no-argument function at Mac 0x115e68. Canonical src/smackmgr.cpp videoClose services active video state, closes sound/video and restores display; the Mac body waits while its video-active global remains set, then calls sound/video cleanup entries. Prior videoOpen BLR 0x25e65c, final BLR 0x25e6ac and next function prologue 0x25e6b0 bound all 80 bytes. Platform backend operations differ."
+
+[[functions]]
+retail_va = 0x0059acb0
+unit = "soundmgr"
+mac_section = 0
+mac_offset = 0x21938c
+mac_size = 0x374
+mac_symbol = ".startMP3__12soundManagerFPCciUc"
+target_sha256 = "f7d0de9d5723342a24d1822028d7ad962775e2566d2aa1d951be21e8bc1feef2"
+evidence = "showCongrats passes soundManager, Win Scenario, zero loop count and stop-samples byte one at Mac 0x115e4c. This Mac body checks sound availability, compares the requested filename with current streams, conditionally stops samples, selects one of three stream handles and updates loop count, the Mac audio counterpart of canonical src/soundmgr.cpp startMP3. Own prologue 0x21938c, final BLR 0x2196cc and next helper starts 0x2196d0, bounding all 884 bytes. Platform audio APIs differ."
+
+[[functions]]
+retail_va = 0x004e91d0
+unit = "hiscore"
+mac_section = 0
+mac_offset = 0x10a980
+mac_size = 0x5b8
+mac_symbol = ".addScoreToHighScore__16highScoreManagerFiiiiPCc"
+target_sha256 = "69a809065c53ca6fc1e0ddbaef83dc14a652def5ed824f6e4437863c8b2f556d"
+evidence = "showCongrats passes score, day count, rating, score type and land-name pointer to this callee at Mac 0x115e8c. The Mac body selects one of two score tables, derives cheat rank, shifts 0x64-byte records, prompts for player name, writes land/score/days/difficulty/cheat fields at +0x29/+0x54/+0x58/+0x5c/+0x60 and persists the table, matching canonical src/hiscore.cpp. Own prologue 0x10a980, BLR 0x10af34 and next prologue 0x10af38 bound all 1464 bytes."
+
+[[functions]]
+retail_va = 0x00602c50
+unit = "winmgr"
+mac_section = 0
+mac_offset = 0x20e03c
+mac_size = 0xb4
+mac_symbol = ".fadeScreen__17heroWindowManagerFiiUc"
+target_sha256 = "f5c1019e32923bbc451e3ed546b05c881fb2094cc3056f6091cc9933bf40c01a"
+evidence = "showCongrats passes fade direction one, speed four and expectation zero at Mac 0x115eb8. Mac callee branches on direction, handles conditional mouse hiding, fades and updates its +0x48 fade latch, matching canonical src/winmgr.cpp heroWindowManager::fadeScreen. Own prologue 0x20e03c, final BLR 0x20e0ec and next prologue 0x20e0f0 bound all 180 bytes."
+[[functions]]
+retail_va = 0x004f6990
+unit = "kb"
+mac_section = 0
+mac_offset = 0x1181e0
+mac_size = 0x12f8
+mac_symbol = ".doNormalDialog__F17TNormalDialogInfo"
+target_sha256 = "550296d421d3a187167d95f3699d85fe43c6606b1b6f327291e8c38297253505"
+evidence = "Canonical src/kb.cpp defines doNormalDialog with TNormalDialogInfo passed by value. normalDialog builds the by-value copy and calls code0:0x1181e0 at 0x1180dc; the callee reads dialog fields, creates the modal frame and runs its controls. Own prologue follows the icon-copy constructor BLR 0x1181dc, final BLR is 0x1194d4 after vector cleanup, and the next extended-dialog prologue begins 0x1194d8."
+
+[[functions]]
+retail_va = 0x004f6810
+unit = "kb"
+compgen_kind = "IMPLICIT_COPY_CTOR"
+compgen_type = "type_dialog_icon"
+mac_section = 0
+mac_offset = 0x118134
+mac_size = 0xac
+mac_symbol = ".__ct__16type_dialog_iconFRC16type_dialog_icon"
+target_sha256 = "00bd39a1437dcb8769d7430738303ae9ef8634a3ba194c7f7cc57e84e226cd6d"
+evidence = "Canonical src/kb.cpp marks the retail type_dialog_icon implicit copy constructor at 0x4f6810. normalDialog's by-value TNormalDialogInfo copy loops over eight 0x34-byte icons and calls this Mac constructor at code0:0x1180a8. The callee copies resource/qualifier, copy-constructs two string handles and copies nine geometry words; own prologue follows normalDialog BLR 0x118130, final BLR 0x1181dc and next doNormalDialog prologue at 0x1181e0 bound all 172 bytes."
+
+[[functions]]
+retail_va = 0x004bb870
+unit = "game"
+mac_section = 0
+mac_offset = 0xceb24
+mac_size = 0x5c
+mac_symbol = ".getTownId__4gameFiii"
+target_sha256 = "7b2d4c9131c7bc3cef78532fc86cab21d7728e2588e349688b34f5ae1f4938b8"
+evidence = "Canonical src/game.cpp getTownId scans the town vector for matching x/y/z. KB's Mac loss dispatcher passes its three coordinate bytes to code0:0xceb24; the callee reads town vector count/pointer at game+0x20a2c/+0x20a30, compares town bytes +5/+6/+7 with 0x15c stride, and returns index or -1. Previous BLR 0xceb20, own final BLR 0xceb7c, next body starts 0xceb80."
+
+[[functions]]
+retail_va = 0x004ceb60
+unit = "game"
+mac_section = 0
+mac_offset = 0xe6e34
+mac_size = 0x48
+mac_symbol = ".getPlayerName__4gameFi"
+target_sha256 = "0f53f9d8639384f39550bda7b9c0f17be841faae475acf2b5649fafd76c66eb9"
+evidence = "Canonical src/game.cpp getPlayerName clamps the player position to 0..7, selects the player record and calls getName. KB's Mac hero-loss arm calls code0:0xe6e34; the callee clamps the index, multiplies by 0x15c and calls the name helper 0xcdc08. Previous BLR 0xe6e30, own final BLR 0xe6e78, next body starts 0xe6e7c."
+
+[[functions]]
+retail_va = 0x004b5990
+unit = "font"
+mac_section = 0
+mac_offset = 0xc9888
+mac_size = 0xc4
+mac_symbol = ".longestLineWidth__4fontCFPCc"
+target_sha256 = "26fd763d6ff8c7353d507324b16543b693451f74924516ea6a67355a206cc620"
+evidence = "Canonical src/font.cpp longestLineWidth walks lines separated by newline, skips brace markup and accumulates getCharacterWidth; Mac code0:0xc9888 clamps by strlen and calls getCharacterWidth while scanning the same characters. KB sizing calls this body at 0x1174f8. Previous BLR 0xc9884, own BLR 0xc9948, next prologue 0xc994c."
+
+[[functions]]
+retail_va = 0x004b5a10
+unit = "font"
+mac_section = 0
+mac_offset = 0xc994c
+mac_size = 0xd4
+mac_symbol = ".longestWordLength__4fontCFPCc"
+target_sha256 = "9d37d93500b87c3adc8ea20eb3f2b04b836bd66b9b675b23ccb7554fd2139fd6"
+evidence = "Canonical src/font.cpp longestWordLength skips spaces/newlines and measures unbroken words through getCharacterWidth; Mac code0:0xc994c has that delimiter loop and brace-markup skip. KB sizing calls it at 0x1174bc. Previous BLR 0xc9948, own BLR 0xc9a1c, next prologue 0xc9a20."
+
+[[functions]]
+retail_va = 0x004b5a80
+unit = "font"
+mac_section = 0
+mac_offset = 0xc9a20
+mac_size = 0x158
+mac_symbol = ".longestWrappedLineWidth__4fontCFPCci"
+target_sha256 = "832639c69285c8a894fc6a9294970daa5cd54841f91deb113c46ca93f6a6105f"
+evidence = "Canonical src/font.cpp longestWrappedLineWidth measures and wraps rows at boxWidth, excluding brace markup; Mac code0:0xc9a20 calls strlen and getCharacterWidth in the two nested wrap scans. KB sizing calls it at 0x1175ac. Previous BLR 0xc9a1c, own BLR 0xc9b74, next prologue 0xc9b78."
+[[functions]]
+retail_va = 0x004f1460
+unit = "kb"
+mac_section = 0
+mac_offset = 0x112dd4
+mac_size = 0x294
+mac_symbol = ".getTeamNames__FiPc"
+target_sha256 = "803d96ebe5336558d57ca1f33c5696f69b3e4d204aa2a723fa818a9c3846744c"
+evidence = "Canonical getTeamNames(int,char*) calls game::getTeamMask, checks disabled players, emits one name or joins multiple names with comma/ampersand separators. Mac body at 0x112dd4 indexes game team bytes and disabled flags, calls getPlayerName, strcpy and strcat, ends BLR 0x113064 before the next prologue 0x113068. DisplayVCWinLoss calls it in its loss message arms."
+
+[[helpers]]
+unit = "kb"
+source_helper = "sendPlayerWon"
+mac_section = 0
+mac_offset = 0x113068
+mac_size = 0xc4
+mac_symbol = ".sendPlayerWon__Fv"
+target_sha256 = "4739cf90763f706804c2aab62fc9dc92060fe6f7e55de97535fd0c29d5d1b338"
+evidence = "Dreamcast kb.cpp:2867 names the inline sendPlayerWon helper; Mac 0x113068 reads the network flag through TOC 1+0x5d4, constructs the 0x64-byte player-won message with subtype 1019, copies the map victory condition and calls transmitRemoteData, then sets gameOver. Final BLR 0x113128 and next sendPlayerLost prologue 0x11312c bound 0xc4 bytes; DisplayVCWinLoss calls this retained helper."
+
+[[helpers]]
+unit = "kb"
+source_helper = "sendPlayerLost"
+mac_section = 0
+mac_offset = 0x11312c
+mac_size = 0xdc
+mac_symbol = ".sendPlayerLost__Fv"
+target_sha256 = "417c8f8fb6d58256cfcfeb7a0cc6e2e38028bd75a51a8d8249c3bfd74463e461"
+evidence = "Dreamcast kb.cpp:2878 emits a separate global SendPlayerLost body. Mac body follows sendPlayerWon BLR 0x113128, begins at 0x11312c, reads the network flag through TOC 1+0x5d4, constructs the 0x3c-byte player-lost message with subtype 1020, copies the map loss condition, calls transmitRemoteData at 0x1131e8, sets gameOver and ends BLR 0x113204 before displayVCWinLoss prologue 0x113208. displayLCWinLoss branches here from 0x114a68, 0x114be8, and 0x114c4c."

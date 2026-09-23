@@ -206,15 +206,8 @@ public:
                 vslot12(0);
         }
     }
-    // Dreamcast header inlines used by mode-switch paths.
-    void hide()
-    {
-        sendMessage(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
-    }
-    void show()
-    {
-        sendMessage(WIDGET_SET_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
-    }
+#include "inline/widget_hide.inl"
+#include "inline/widget_show.inl"
     VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263, dc 0x56df8
     void setVisible(unsigned char arg)
     {

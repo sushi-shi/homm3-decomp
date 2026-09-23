@@ -24,6 +24,10 @@ extern int* g_videoGameState;
 extern unsigned char g_graphicsSaturated;  // retail 0x69e5b0
 
 namespace ResourceManager {
+// Retail exception type name is ResourceManager::t_open_errors on Windows
+// and Mac; the archive opener catches this shared domain in open().
+enum t_open_errors { openErrorGeneric = 0, openErrorRequiredArchive = 1 };
+
 void remapGraphics();
 void saturateGraphics();
 // Complete adds an error-code output to Dreamcast's two-boolean form. The

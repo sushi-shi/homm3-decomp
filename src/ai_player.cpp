@@ -650,14 +650,30 @@ void type_AI_player::resetMagusHutValue()
     m_magusHutValue = findMagusHutValue(m_team, 0);
 }
 
+// DC ai_player.cpp:752..813 and Mac 0:0x2c9d8..0x2cc84 preserve the
+// two nested loops and direct type/amount/value writes in the creature record.
+// DC function-scope locals give Windows 93.01% (29/31 exact blocks). Indexed
+// town population access reproduces Mac's town-base cursor and scores Mac
+// 84.50%, while Windows is 92.72% with the same 31-block CFG. Retail Windows
+// spills the town pointer and advances population in EDI; VC6 keeps town in
+// EDI. Three retained vector template target aliases are still unresolved.
+// DC records creature_info, total_cost[7] and cost[7] in function scope;
+// the long total_cost type is distinct from int cost. Mac's final resource
+// index sign-extends each iteration: short restores its counted loop and
+// leaves Windows bytes unchanged. Mac's two zeroing calls target the verified
+// .bzero port mapping at 0:0x26ad3c; reversing function-scope POD/vector
+// declarations matches the Mac local slots and is Windows byte-flat. A
+// dwelling-first index operand order is byte-flat, so it is not retained.
 VA(0x00429ad0, 0x280)  // anchor-callee, dc 0x2f280
 void type_AI_player::calculateReserve()
 {
     playerData* player = &g_game->m_players[m_team];
+    int cost[7];
+    long totalCost[7];
+    type_creature_value creatureInfo;
     std::vector<type_creature_value> creatures;
     memset(m_reservedFunds, 0, sizeof(m_reservedFunds));
     short dwelling;
-    short* population;
     town* currentTown;
 
     for (short townIndex = 0; townIndex < player->m_numTowns; townIndex++) {
@@ -665,17 +681,11 @@ void type_AI_player::calculateReserve()
         creatures.clear();
 
         dwelling = 0;
-        population = currentTown->m_population;
-        for (; dwelling < 14; dwelling++, population++) {
-            if (*population > 0) {
-                type_creature_value creatureInfo;
-                {
-                    int value = g_townDwellingCreatures[
-                        currentTown->m_type * 14 + dwelling];
-                    memcpy(&creatureInfo.m_type, &value,
-                           sizeof creatureInfo.m_type);
-                }
-                creatureInfo.m_amount = *population;
+        for (; dwelling < 14; dwelling++) {
+            if (currentTown->m_population[dwelling] > 0) {
+                creatureInfo.m_type = g_townDwellingCreatures[
+                    currentTown->m_type * 14 + dwelling];
+                creatureInfo.m_amount = currentTown->m_population[dwelling];
                 creatureInfo.m_value = static_cast<short>(creatureInfo.m_amount
                     * g_creatureTypeTraits[creatureInfo.m_type].m_aiValue);
                 creatures.push_back(creatureInfo);
@@ -683,11 +693,7 @@ void type_AI_player::calculateReserve()
         }
 
         std::sort(creatures.begin(), creatures.end());
-        // Dreamcast names total_cost as long[7], distinct from int cost[7].
-        // Restoring that type is byte-flat at 91.2557%.
-        long totalCost[7];
         memset(totalCost, 0, sizeof(totalCost));
-        int cost[7];
         for (short creature = static_cast<short>(creatures.size() - 1);
              creature >= 0 && creature >= creatures.size() - 2;
              creature--) {
@@ -697,7 +703,7 @@ void type_AI_player::calculateReserve()
                     * creatures[creature].m_amount;
         }
 
-        for (int reserveResource = 0; reserveResource < 7; reserveResource++) {
+        for (short reserveResource = 0; reserveResource < 7; reserveResource++) {
             if (totalCost[reserveResource] > m_reservedFunds[reserveResource])
                 m_reservedFunds[reserveResource] = totalCost[reserveResource];
         }
@@ -1295,6 +1301,12 @@ static void markValues(long* fullValue, long totalValue,
 // counter spills to the frame where retail keeps it in EDX, and why the
 // three growth arms' scratch registers are rotated by one against
 // retail's. Branches, rets and the frame are all exact.
+// DC lines 1710/1776 call game::TownAlreadyBuiltOn and line 1721 calls
+// town::HasBuilding. Mac purchaseBuilding at 0:0x2ed58 expands both town
+// vector built flags and the active-building mask in those positions.
+// Restoring these canonical calls moves the current Windows comparison from
+// 84.31% to 84.78% and raises exact CFG blocks from 8 to 30; the changed
+// inliner state additionally retains game::getHero in valueOfBuilding.
 VA(0x0042ae00, 0x718)  // retail callee set + arity, dc 0x30d6c
 unsigned char type_AI_player::purchaseBuilding(
     unsigned char* prohibitedCreatures)
@@ -1312,7 +1324,7 @@ unsigned char type_AI_player::purchaseBuilding(
          ++townIndex) {
         town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
         __int64 buildMask = currentTown->getBuildableMask();
-        if (g_game->m_towns[currentTown->m_id].m_builtThisTurn)
+        if (g_game->townAlreadyBuiltOn(currentTown->m_id))
             continue;
 
         memset(extraCosts, 0, sizeof(extraCosts));
@@ -1323,7 +1335,7 @@ unsigned char type_AI_player::purchaseBuilding(
                 int ordinal = building;
                 memcpy(&buildingId, &ordinal, sizeof buildingId);
                 if (!currentTown->isLegalBuilding(buildingId)
-                    || (currentTown->m_active & g_bitNumber[building])
+                    || currentTown->hasBuilding(building, true)
                     || building == HOLY_GRAIL_ID) {
                     basicValue[building] = -1;
                     continue;
@@ -1381,7 +1393,7 @@ unsigned char type_AI_player::purchaseBuilding(
         bestTown->getBuildCost(buildingId, cost);
     }
     tradeResources(cost, 1);
-    if (g_game->m_towns[bestTown->m_id].m_builtThisTurn)
+    if (g_game->townAlreadyBuiltOn(bestTown->m_id))
         return 0;
     if (bestBuilding >= HALL_VILLAGE_ID
         && bestBuilding <= MARKETPLACE_SILO_ID) {
@@ -1533,7 +1545,12 @@ long valueOfHall(town* currentTown, type_building_id building)
     }
 }
 
-// E:\gamedcs\ai_player.cpp:1808, dc 0x31030.
+// E:\gamedcs\ai_player.cpp:1808, dc 0x31030..0x31092: the static
+// MaxBuyableCreatures(const long*, TCreatureType, int). Classic Mac retains
+// the same helper at code 0:0x2f178..0x2f20c (0x94 bytes): it calls
+// getMonsterCost at 0:0x2f1a0, loops exactly seven costs, divides positive
+// funds by positive costs, and lowers the limit. Both Mac doBestPurchase
+// call sites branch to 0:0x2f178. No Windows retail VA is established.
 static int __cdecl maxBuyableCreatures(
     const long* funds, TCreatureType type, int limit)
 {
@@ -1609,11 +1626,24 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     // where retail calls insert(pos,x), plus mask-loop register scheduling.
     // TownAlreadyBuiltOn, short morale, the other recorded local scopes,
     // and the constructor's header/initializer form are byte-flat controls.
+    // Mac O3 agrees on all 22 retained calls; cleanup and register allocation
+    // remain different with the MSL-shaped vector declaration view. An empty
+    // explicit purchaser destructor leaves Mac bytes flat; modeling the MSL
+    // vector as implicit without its complete base destructor instead emits
+    // an unsupported base-destructor call, so neither probe is retained.
+    // DC line 1873 calls is_human_ally(player_number), which expands GetTeam
+    // then IsHumanTeam. The retained scan at Windows 0x42b9e0 / Mac 0x2d3e4
+    // is IsHumanTeam, not that wrapper. Restoring both canonical boundaries
+    // keeps Mac bytes/calls unchanged; VC6 currently retains a later _Destroy
+    // and scores 91.04% (prior misnamed/flattened implementation 95.29%).
+    // Replacing the single-candidate push_back with direct insert(end(),x)
+    // changes the call overload but leaves the Windows body byte-flat. An
+    // ordinary int index plus enum bestBuilding lowers Mac to 19.37% and
+    // delays the bitNumber load, so the original spelling stays here.
     if (g_game->townAlreadyBuiltOn(currentTown->m_id))
         return;
     if (!g_game->m_setup.m_difficulty
-        && !g_game->isHumanAlly(
-               g_game->getTeam(g_netLocalGamePos)))
+        && !g_game->isHumanAlly(g_netLocalGamePos))
         return;
     short amount;
     const TCreatureTypeTraits* traits;
@@ -1635,7 +1665,9 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
             traits = &g_creatureTypeTraits[creature];
             int* cost = currentTown->getBuildCostArray(building.m_id);
             unsigned char affordable = 1;
-            for (int resource = 0; resource < 7; ++resource) {
+            // Mac 0:0x2f4ec increments and sign-extends this index before
+            // comparing it with seven; the short spelling gives that loop.
+            for (short resource = 0; resource < 7; ++resource) {
                 funds[resource] = player->m_resources[resource] - cost[resource];
                 if (funds[resource] < 0)
                     affordable = 0;
@@ -1888,19 +1920,19 @@ void type_AI_creature_swapper::doSwap(hero* currentHero,
 // Complete adds the Angelic-Alliance byte used by the three philai callers;
 // retail proves its store at +8 and folds calculate_improvement plus the
 // consolidation helper into this selected body.
-// Residual (92.5052%): all calls and computations agree. The candidate
-// promotes `value` into EDI after the consolidation loop, splitting one exit
-// edge (16 blocks versus retail's 15); retail keeps it at [ebp-4]. A volatile
-// control forced 15 blocks but changed the surrounding allocation and fell to
-// 80.38%, so the source-false qualifier is rejected.
+// Declaring the ordinary accumulator before the two army copies keeps it in
+// retail's [ebp-4] slot. Windows is exact (15 blocks, eight branches, seven
+// calls and relocations); Mac is also exact (412 bytes, six named calls).
+// Declaring it after both copies promoted it into EDI on Windows and scored
+// 92.5052%; a volatile qualifier scored 80.38% and was rejected.
 VA(0x0042c4a0, 0x108)  // DC method/locals + Complete parameter, dc 0x31864
 long type_AI_creature_swapper::getSwapValue(
     const hero* currentHero, const armyGroup* sourceArmy,
     const hero* secondHero, unsigned char newHasAngelicAlliance)
 {
+    long value = 0;
     armyGroup localArmy(currentHero->m_army);
     armyGroup localSource(*sourceArmy);
-    long value = 0;
 
     m_hasAngelicAlliance = newHasAngelicAlliance;
     m_army = &localArmy;
@@ -2242,10 +2274,10 @@ void type_AI_creature_purchaser::set(TCreatureType newType,
 // edges. Retail proves the Complete purchaser tail: two independent cost
 // arrays, optional resource trading, a seven-resource affordability cap, and
 // the three-quarter cap on the cost penalty that selects the best source.
-// DC's parameter is an unsigned char, not C++ bool. Residual (97.27%): 217
-// of 219 instructions agree; the remaining delta is VC6 stack-slot coloring
-// around the best-source state (`why-reg` distance 70), after equivalent
-// declaration and expression orders were exhausted.
+// DC's parameter is an unsigned char, not C++ bool. Its callback `slot` and
+// `best_slot` are function-scope shorts; restoring slot's scope raises
+// Windows 97.27% to 97.29% while leaving Mac 81.10% byte-flat. The remaining
+// Windows delta is VC6 stack-slot coloring around the best-source state.
 // Census 2026-09-04: base 217 vs retail 219; the two surplus retail rows are
 // a dword copy of best_number out of its recycled [ebp+8] parameter home into
 // a fresh [ebp-0x8] slot, which frees [ebp+8] to carry the resource loop's
@@ -2254,10 +2286,23 @@ void type_AI_creature_purchaser::set(TCreatureType newType,
 // source - a fresh `short count` from MaxBuyableCreatures, and `short count =
 // best_number` after the assignment - are byte-flat at 97.2740, so the extra
 // slot is the allocator's, not a source local.
+// Mac O3 agrees on all nine named calls and unrolls the resource deduction.
+// The Mac declaration view now follows MSL vector's data()+index access;
+// this raised the score from 61.01% to 81.10%. Declaring function-scope slot
+// before resourceCost raises Mac to 81.25%, restores retail's 0xf0 frame and
+// moves the first mismatch from +0x2b to +0x77. Windows stays at 97.29%.
+// Mac still places resourceCost and slot four bytes earlier than retail.
+// Moving sourceIndex after the initialized best-state locals regresses Mac
+// to 78.72%, so that order was not retained.
+// Putting bestSlot before bestValue lowers Mac to 79.17%. A final-loop int counter
+// raises Mac to 81.25% and matches the 0xf0 frame, but lowers VC6 to 96.74%;
+// the retail dword counter is also emitted from this short spelling, so the
+// type is not independently proved.
 VA(0x0042d420, 0x264)  // DC method/callgraph + exact retail caller; dc 0x32038
 long type_AI_creature_purchaser::doBestPurchase(
     unsigned char tradeAllowed)
 {
+    short slot;
     int resourceCost[7];
     short sourceIndex;
     int bestValue = 0;
@@ -2283,7 +2328,6 @@ long type_AI_creature_purchaser::doBestPurchase(
             }
 
             if (number > 0) {
-                short slot;
                 long value = valueOfAddingArmy(
                     type, number, slot, false);
                 if (value > 0) {
@@ -2350,12 +2394,12 @@ void type_AI_creature_purchaser::doPurchase(
 // copies both armies and all seven resources, so the valuation can run the
 // real purchaser loop without mutating any caller-owned state. The adjacent
 // local is constructed even when the optional source pointer is null.
-// Residual (97.33%): all 13 blocks, all 86 instructions, every call and the
-// flow graph agree. Only two caller-saved allocation sites differ inside the
-// inlined consolidation walk (EAX/ECX versus ECX/EDX, then ECX versus EDX).
-// `why-reg` measures distance 12; both model and guided sweeps, declaration
-// lifetime/order probes, direct-loop expansion and alternate call operands
-// either leave it unchanged or worsen it.
+// Mac retail stores m_adjacentArmy in each null/non-null branch. Spelling the
+// two assignments in those branches also restores VC6's register allocation
+// inside the inlined consolidation walk. The Windows body is 100% exact:
+// all 13 blocks, 7 branches, 4 calls, and 4 relocations agree.
+// Mac remains 85.15% with all five named calls in order and equal linked size;
+// its residual is copy scheduling at +0x8/+0x24/+0x110..+0x148.
 VA(0x0042d780, 0xEF)  // DC method/locals + retail Complete tail; dc 0x322f8
 long type_AI_creature_purchaser::getPurchaseValue(
     const armyGroup* newArmy, short newMorale,
@@ -2365,20 +2409,20 @@ long type_AI_creature_purchaser::getPurchaseValue(
     armyGroup localArmy(*newArmy);
     armyGroup localAdjacentArmy;
     long localFunds[7];
-    memcpy(localFunds, newFunds, sizeof localFunds);
     long value = 0;
+    memcpy(localFunds, newFunds, sizeof localFunds);
 
     m_army = &localArmy;
     m_morale = newMorale;
     m_funds = localFunds;
     m_hasAngelicAlliance = newHasAngelicAlliance;
 
-    armyGroup* localAdjacent = 0;
-    if (newAdjacentArmy) {
+    if (!newAdjacentArmy) {
+        m_adjacentArmy = 0;
+    } else {
         localAdjacentArmy = *newAdjacentArmy;
-        localAdjacent = &localAdjacentArmy;
+        m_adjacentArmy = &localAdjacentArmy;
     }
-    m_adjacentArmy = localAdjacent;
 
     aiConsolidateArmy(*m_army);
     dumpExtraCreature();
@@ -3180,7 +3224,9 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
 // function-scope local scores 83.00 (a copy through a temporary, not the
 // merge); the constructor form on `target` scores 88.25, because retail
 // reassigns that one in the is_valid arm and so declares it uninitialised.
-// Residual (91.70%): a whole-body EBX/EDI transposition - retail keeps
+// The two canonical getLocation calls raise Windows 91.1693% to 92.1885%; all
+// 30 CFG blocks retain their flow and all nine calls agree in order. The
+// remaining residual is a whole-body EBX/EDI transposition - retail keeps
 // `current_hero` in EBX and the packing temp in EDI, we do the reverse.
 // E:\gamedcs\ai_player.cpp:3044
 // Seeds the hero's own search, then for every OTHER hero of the current
@@ -3188,6 +3234,10 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
 // position when the target is invalid) and folds each visited cell's cost
 // plus the friend's remaining-target cost into the friendly-distance map,
 // clipped to the patrol radius. Returns the danger under the hero's feet.
+// DC lines 3060/3078 nest get_location in get_danger_value/SeedPosition;
+// Complete expands both into separate point temporaries at entry. DC's
+// GetNumMapLevels product at line 3054 has no retained retail use, so the
+// indexed distance map keeps only its single-level stride.
 VA(0x0042f570, 0x40e)  // anchor-callee + arity, dc 0x32a84
 long markDestinations(hero* currentHero, long maxDistance,
                        searchArray* currentSearchArray,
@@ -3199,14 +3249,11 @@ long markDestinations(hero* currentHero, long maxDistance,
     long movePoints = currentHero->m_movePoints;
     long heroDanger;
     type_point point;
-    {
-        type_point dangerPoint(currentHero->m_x, currentHero->m_y,
-                                currentHero->m_z);
-        heroDanger = currentSearchArray->getDangerValue(dangerPoint);
-    }
+    heroDanger = currentSearchArray->getDangerValue(
+        currentHero->getLocation());
     g_advManager->m_advWindow->animateBottomView(0);
-    type_point start(currentHero->m_x, currentHero->m_y, currentHero->m_z);
-    currentSearchArray->seedPosition(currentHero, start, type_point(-1, -1, -1),
+    currentSearchArray->seedPosition(currentHero, currentHero->getLocation(),
+                               type_point(-1, -1, -1),
                                maxDistance,
                                (currentHero->m_flags >> 18) & 1, searchType,
                                movePoints, 0);
@@ -3266,6 +3313,9 @@ long markDestinations(hero* currentHero, long maxDistance,
 // edx<->ecx x15 / eax<->ebx x12 rename family plus retail's RMW
 // `add [dest+8], ecx` where we load-add-store - handle-state, no local
 // spelling reaches it (measured 2026-08-27).
+// Dreamcast line 3539 calls type_point::operator!= after FindAdjacentMonster;
+// Complete expands the same three-field inequality. Restoring that source
+// call clears the audit finding and is byte-flat at 85.34764% in VC6.
 // E:\gamedcs\ai_player.cpp:3498
 // Prices one candidate destination: a pickupable trigger already visited by
 // this player refunds the final step (move_cost re-based to last_point's
@@ -3302,7 +3352,7 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
         if (g_advManager->findAdjacentMonster(destination->m_point,
                                               &monsterPos,
                                               destination->m_point)) {
-            if (!(currentPathCell->m_monster == monsterPos)
+            if (currentPathCell->m_monster != monsterPos
                 && value >= -500000000)
                 value += aiValueOfEvent(currentHero, monsterPos,
                                            destination->m_moveCost);
@@ -3502,6 +3552,12 @@ DATA(0x00660500) static const long g_constThresholds[6] = {
     1000, 150, 100, 75, 50, 25
 };
 
+// Windows 99.9755%: all 63 CFG blocks and seven calls agree. After
+// teleportTo, retail loads manaCost from [ebp-0x44] through EDX before
+// useSpell; VC6 chooses EAX for the same slot. The why-reg model's named
+// step-test probe and moving manaCost's declaration to its initializer are
+// byte-flat. Mac 0:0x340a4 agrees on all nine calls but retains a 0x190
+// frame against this view's 0x180; neither result proves an extra local.
 static unsigned char attemptTeleport(hero* currentHero,
                                       std::vector<pathCell>& path,
                                       long step)
@@ -3516,11 +3572,6 @@ static unsigned char attemptTeleport(hero* currentHero,
     long savings;
     long destinationIndex;
     long threshold;
-
-    // Dreamcast's leading line 4001 emits no SH4 bytes immediately before
-    // the first path[step] access. A release-elided bounds assertion is a
-    // plausible source for that row and states the invariant this body needs.
-    HOMM3_RELEASE_VERIFY(step < path.size());
 
     if (!path[step].m_lastCanStop)
         return 0;
@@ -4232,6 +4283,9 @@ long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigne
 }
 
 // E:\gamedcs\ai_player.cpp:5152
+// DC line 5168 calls std::min on two long lvalues; Complete instead copies
+// both values into [ebp+8]/[ebp+0xc] before choosing their addresses. The
+// by-value min wrapper scores 85.8871%; cppMin scored 79.9194% and is rejected.
 VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
 long type_necromancy_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char) const
 {
@@ -4689,6 +4743,10 @@ long type_statue_of_legion_artifact::getValue(
 // first-aid temporary homes and the two effect-vector loop schedules; 42 of 55
 // CFG blocks are instruction-exact. An authentic inline first-aid helper was
 // tested and rejected (88.3639%).
+// DC line 5578 calls hero::get_secondary_skill(20). Mac's ballista arm
+// expands it to the skill byte at hero+0xdd; retain the canonical typed call.
+// DC line 5620 calls the by-value max(int,int), and both first-aid arms in
+// retail make separate argument-home copies before choosing an address.
 VA(0x004336c0, 0x320)  // anchor-callee unique (hero::GetFirstAidFactor), dc 0x37194
 long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned char equipped, unsigned char exact)
 {
@@ -4720,7 +4778,8 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
         value = static_cast<long>(
             sqrt(static_cast<double>(owner->getPrimarySkill(0) + 1))
             * 500.0);
-        value += value * owner->m_skillLevel[20] / 2;
+        value += value * owner->getSecondarySkill(
+            eSecSkillBattlefieldBallistics) / 2;
         long armyValue =
             owner->m_army.getAIValue()
             * (const_cast<hero*>(owner)->getPrimarySkillTotal() + 40)
@@ -4749,13 +4808,13 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
                 const TCreatureTypeTraits& traits =
                     g_creatureTypeTraits[creature];
                 if (firstAid >= traits.m_hitPoints)
-                    value = cppMax(value,
-                                     static_cast<long>(traits.m_aiValue));
+                    value = max(static_cast<int>(value),
+                                static_cast<int>(traits.m_aiValue));
                 else
-                    value = cppMax(
-                        value, static_cast<long>(
-                                   traits.m_aiValue * firstAid
-                                   / traits.m_hitPoints));
+                    value = max(
+                        static_cast<int>(value),
+                        static_cast<int>(traits.m_aiValue * firstAid
+                                         / traits.m_hitPoints));
             }
         }
         return value;

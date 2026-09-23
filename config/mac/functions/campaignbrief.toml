@@ -1,0 +1,12 @@
+# Reviewed source-owned Mac pairs.
+
+[[functions]]
+retail_va = 0x458010
+unit = "campaignbrief"
+source = "src/campaignbrief.cpp"
+mac_section = 0
+mac_offset = 0x64584
+mac_size = 0x19c
+mac_symbol = ".updateAllyEnemyFlags__14TCampaignBriefFv"
+target_sha256 = "c7f455fea5811ae79718e04825ed3d7c2bef66eefeb51665cb081a2179a90c95"
+evidence = "Mac 0:0x64584 own prologue after BLR 0x64580, terminal BLR at 0x6471c and next prologue at 0x64720; callers 0x64004 and 0x681b0; 8-player loop, enemy/ally widget IDs 0x79/0x71, signed playerPos test, inline onSameTeam equality, six getWidget calls, six sendMessage calls, vector begin and option virtual call match DC campaignbrief.cpp:481-516 and Windows 0x458010. Full code SHA c7f455fea5811ae79718e04825ed3d7c2bef66eefeb51665cb081a2179a90c95."

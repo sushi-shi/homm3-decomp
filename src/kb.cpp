@@ -340,10 +340,12 @@ int earlySetup()
     g_cdDriveNumber = setupCDDrive();
     if (!loadAnimHeaders())
         shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
-            "Unable to initialize resources - possible disk problem."));
+            "Unable to initialize resources - possible "
+            "disk problem."));
     if (!loadSoundHeaders())
         shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
-            "Unable to initialize resources - possible disk problem."));
+            "Unable to initialize resources - possible "
+            "disk problem."));
     if (g_cdDriveNumber) {
         int i;
 
@@ -1608,21 +1610,21 @@ static int doSinglePlayerWindow()
         singleSelectionWindow.doModal(0);
     }
 
-    // Both Dreamcast and retail normalize the adjacent cancel/okay results.
-    // This spelling preserves all six retail blocks; Complete uses DEC where
-    // VC6 emits CMP 1 here. Negative controls using a consumed pre-decrement,
-    // both as a compact predicate and as nested guards, add a redundant TEST
-    // and fall to 95.76%; an early-return spelling adds a block and falls to
-    // 83.31%. Keep the source-proven non-mutating comparison.
-    // A four-state switch family also fails: an explicit cancel/okay switch
-    // and an okay-only switch score94.9296, while switching the normalized
-    // result scores98.5915. The two line2003 branch rows therefore support
-    // a dispatch hypothesis but do not identify a matching switch spelling.
+    // DC and Windows normalize the adjacent cancel/okay results. The Mac
+    // explicit-case switch raises its score to 66.5323% but lowers Windows
+    // to 94.9296%; a normalized switch scores 98.5915% Windows and 42.4603%
+    // Mac. An unused post-decrement of dialogResult is byte-flat on both;
+    // a consumed pre-decrement adds a VC6 test after dec (98.5915% Windows)
+    // and scores 89.8305% Mac, even when nested in a separate scope.
+    // Capturing the window manager before the modal call scores 58.8983% Mac.
+    // Keep this six-block Windows form. Mac loads g_game once for the
+    // map-header call's three arguments, then reloads it after the call.
     int dialogResult =
         g_windowManager->m_dialogReturn - DIALOG_RETURN_CANCEL;
     if (dialogResult && dialogResult == 1) {
-        if (!g_game->m_mapHeader.get(g_game->m_setup.m_path,
-                                   g_game->m_setup.m_filename, 0)
+        game* currentGame = g_game;
+        if (!currentGame->m_mapHeader.get(currentGame->m_setup.m_path,
+                                        currentGame->m_setup.m_filename, 0)
             && g_game->m_mapHeader.m_minNumHumanPlayers <= g_unnamed699274)
             strcpy(g_mapName, g_game->m_setup.m_filename);
     }
@@ -2297,12 +2299,14 @@ inline void sendPlayerWon()
     }
 }
 
-// E:\gamedcs\kb.cpp:2878, SendPlayerWon's twin. Retail expands it at every
-// DisplayLCWinLoss arm; the record it builds - RS_PLAYER_LOST, 0x3c bytes,
+// E:\gamedcs\kb.cpp:2878, SendPlayerWon's twin. Dreamcast emits one retained
+// global body, Mac calls that body at all three loss arms, and VC6 auto-inlines
+// the ordinary visible definition at each arm. The record it builds -
+// RS_PLAYER_LOST, 0x3c bytes,
 // the losing seat at +0x14 and the map's own loss condition assigned over a
 // default-constructed member at +0x18 - is what proves CPlayerLostMsg's
 // layout and its constructor's statement order.
-inline void sendPlayerLost()
+void sendPlayerLost()
 {
     if (g_networkActive69954c) {
         CPlayerLostMsg msg(g_game->m_mapHeader.m_lossCondition.m_playerLoser,
@@ -2325,6 +2329,8 @@ inline void sendPlayerLost()
 // A campaign text ID selector scores 95.1482%; a pointer plus explicit
 // found flag stays at 94.9521%. Do not test the text pointer itself as a
 // success flag: that would change behavior if a text lookup returns null.
+// An explicit first-campaign send/dialog followed by switch break adds a
+// second CNetMsg construction and falls to 94.8657% (59 versus 57 calls).
 // The remaining call-stream displacement is the shared TransmitRemoteData/
 // NormalDialog pair, still emitted twice on both sides. The apparent extra
 // self-call difference is the switch table's shifted +0x1318/+0x1314 addend.
@@ -2332,9 +2338,15 @@ VA(0x004f15e0, 0x1348)  // linkorder + anchor-string/callee, dc 0xe29a8
 bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                       int& gameWon, int& gameLost, bool remoteCheck)
 {
+    // A 512-byte Mac-only buffer matches the target frame size but changes
+    // just one compared byte; Dreamcast records 256 and Windows uses 0x168.
     char names[256];
 
     switch (victoryCondition.m_type) {
+    // Dreamcast dispatches type+1 over -1..10; Mac Complete uses -1..12.
+    // The sentinel exits through the common switch tail on both targets.
+    case VICTORY_CONDITION_NONE:
+        break;
     case VICTORY_CONDITION_ARTIFACT:
         if (victoryCondition.m_gameWon) {
             if (g_game->onSameTeam(g_game->getLocalPlayerGamePos(),
@@ -2790,6 +2802,14 @@ int getEnemyCount()
 // CPlayerLostMsg's DC netmsg.h:519 calls both base/member ctors, then 520
 // stores loser and 521 copies the condition. Moving loser into the initializer
 // list or flattening the default constructor would discard that evidence.
+// Mac identity is verified at code0:0x114924..0x114cdc (952 B), now an
+// admitted pair. Removing the unsupported inline qualifier on sendPlayerLost
+// preserves Windows 79.1107% and restores all three Mac retained calls;
+// Mac scores 43.2773% with 16/16 calls. Its two remaining call-target
+// differences are text-vector begin versus operator[] in the hero arm.
+// An MSL-style begin route in a scratch Mac view inlined all four text lookups,
+// so retain the canonical getText source. The earlier -O1 inline profile
+// also expanded the sender.
 VA(0x004f2960, 0x37E)  // decorated identity (kb.h) + anchor-caller (CheckEndGame), dc 0xe3558
 unsigned char displayLCWinLoss(LossConditionStruct& lossCondition,
                                int& gameWon, int& gameLost,
@@ -3450,46 +3470,48 @@ std::string getCampaignName();
 // or the cheat row when gpGame's cheat latch is up.  Then the closing
 // movie and "Win Scenario" run under CongratsWait, and the result is
 // banked before the screen fades.
+// Moving temp[30] ahead of landName is byte-flat in both retail comparisons:
+// Windows remains 97.51938%, Mac 19.2647% with all 23 calls aligned.
+// Moving temp[30] to the DC line gap before GetMonType is likewise byte-flat
+// in both compilers; it does not change CodeWarrior's buffer stack slot.
 VA(0x004f3f60, 0x357)  // anchor-callee (CongratsWait/AddScoreToHighScore) + "Win Scenario", dc 0xe4330
 void showCongrats(int hsType)
 {
-    std::string land;
-    int base;
+    std::string landName;
+    int baseScore;
     int score;
     int dayz;
     int rating;
-    char temp[32];
+    char temp[30];
 
     g_mouseManager->hidePointer();
     g_windowManager->m_colorCyclingOn = 0;
     if (hsType == 1) {
-        base = g_game->getBaseMapScore();
+        baseScore = g_game->getBaseMapScore();
         score = g_game->getMapScore();
         dayz = g_game->getCurrentTurn();
         rating = static_cast<int>(
             g_mapScoreDifficultyFactor[g_game->m_setup.m_difficulty] * 100.0f);
-        land = g_game->m_mapHeader.m_mapName.c_str();
+        landName = g_game->m_mapHeader.m_mapName.c_str();
     } else {
-        base = score = g_game->m_campaign.getScore();
+        baseScore = score = g_game->m_campaign.getScore();
         dayz = g_game->m_campaign.getTotalTime();
         rating = 100;
-        land = getCampaignName();
+        landName = getCampaignName();
     }
 
     int monType = highScoreManager::getMonType(score, hsType);
-    sprintf(temp, monType >= 0 && monType <= 150
-                       ? g_creatureTypeTraits[monType].m_name
-                       : "");
+    sprintf(temp, getArmyName(monType, 1));
     if (g_game->m_isCheater)
-        strcpy(temp, g_generalText->getText(261));
+        strcpy(temp, (*g_generalText)[261]);
     temp[0] = static_cast<char>(toupper(temp[0]));
     videoOpen(0x23, 0, 0, 0, 0, 1, 0, 1);
     g_soundManager->startMP3(
         DATA_COMPGEN(0x0066c29c, congratsMusicName, "Win Scenario"), 0, 1);
-    congratsWait(hsType, temp, base, score, dayz);
+    congratsWait(hsType, temp, baseScore, score, dayz);
     videoClose();
     g_highScoreManager->addScoreToHighScore(score, dayz, rating, hsType,
-                                           land.c_str());
+                                           landName.c_str());
     g_mouseManager->showPointer(0);
     g_windowManager->m_colorCyclingOn = 1;
     g_windowManager->fadeScreen(1, 4, 0);
@@ -3778,31 +3800,27 @@ void cleanUpMenus()
 VA(0x004f4ba0, 0x5F)  // anchor-caller (remote 0x556780), dc 0xe519c
 int getNextHumanPlayer(int start)
 {
-    // DC kb.cpp:4787..4800 tests the scan condition before advancing,
-    // returns -1 after eight failures, then rejects a wrap to start.
-    // Keep that while-loop and separate final guard; the previous positive
-    // if/for(;;) rewrite is byte-flat at 95.1191% across this TU.
-    // Residual: retail delays mov ebx,ecx until after the initial modulo's
-    // and; VC6 hoists it and uses EBX instead of ECX for the opening lea.
-    // Initializing player before checked moves the counter zero below the
-    // modulo join (66.5476%; inlined caller 100 -> 99.0610%). Counter-first
-    // preserves retail's early zero and the caller's exact bytes.
-    // Earlier controls: 33 loop/initialization/shared-exit states and 30
-    // counter-width/parameter-hint combinations never exceed 95.1191%.
+    // DC r8 and Mac r28 mutate the incoming seat while r9/r29 preserve it.
+    // This spelling matches Windows, its inlined remote caller, and Mac at
+    // the KB -O3 profile exactly. The prior separate player local scored
+    // 95.1191% Windows and 25.9804% Mac at -O1.
+    // Earlier loop/initialization and counter-width controls did not improve
+    // the separate-local spelling; an early initialized player regressed it.
     int checked = 0;
-    int player = (start + 1) % 8;
+    int originalStart = start;
+    start = (start + 1) % 8;
 
-    while (!g_game->isHuman(player) || g_game->m_playerDisabled[player]) {
-        player = (player + 1) % 8;
+    while (!g_game->isHuman(start) || g_game->m_playerDisabled[start]) {
+        start = (start + 1) % 8;
         ++checked;
         if (checked >= 8) {
             return -1;
         }
     }
-    if (player == start) {
+    if (start == originalStart) {
         return -1;
     }
-    return player;
+    return start;
 }
 
 VA(0x004f4c00, 0x2AA)  // dc 0xe5214
@@ -4186,6 +4204,8 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // and improves to 99.9762% by fixing the height-sum operands at +0x2a0/+0x2a4.
 // Element references/pointers fall to 99.7143/99.7186%; center-icon bindings
 // do not help. All 45 exact kb siblings stayed exact.
+// Reversing the commutative triple-row spriteX/spriteWidth operands was byte-flat
+// at 99.9762%; retain the DC5407 spriteX-first load order.
 VA(0x004f5d80, 0x51C)  // anchor-caller (get_quickview_size/NormalDialog) + dc-order-map, dc 0xe5960
 void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
 {
@@ -4226,8 +4246,11 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
     dialogInfo.m_width = 40;
     if (numIcons > 0) {
         int perRow = (numIcons + iconRows - 1) / iconRows;
-        dialogInfo.m_width = max(40, (perRow - 1) * (spacing + 40)
-                                         + perRow * widestIcon + 40);
+        // Mac retail reloads the initialized width for this maximum;
+        // Dreamcast's max<long> call fixes the operand type.
+        dialogInfo.m_width = max(static_cast<long>(dialogInfo.m_width),
+                                 (perRow - 1) * (spacing + 40)
+                                     + perRow * widestIcon + 40);
     }
 
     font* currentFont = g_mediumFont;
@@ -4415,13 +4438,13 @@ void normalDialog(const char* text, int mbType, int x, int y,
     dialogInfo.m_dialogText = text;
     dialogInfo.m_x = x;
     dialogInfo.m_y = y;
-    dialogInfo.m_mbType = static_cast<EMBType>(mbType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-    dialogInfo.m_special = special;
-    dialogInfo.m_timeout = timeout;
     dialogInfo.m_width = 256;
     dialogInfo.m_height = 128;
     dialogInfo.m_textWidgetX = 20;
     dialogInfo.m_textWidgetY = 30;
+    dialogInfo.m_mbType = static_cast<EMBType>(mbType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+    dialogInfo.m_special = special;
+    dialogInfo.m_timeout = timeout;
     dialogInfo.m_icons[0].set(static_cast<EGameResource>(resType1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resExtra1);
     dialogInfo.m_icons[1].set(static_cast<EGameResource>(resType2) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resExtra2);
     dialogInfo.m_icons[2].set(static_cast<EGameResource>(resType3) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resExtra3);
@@ -4791,9 +4814,13 @@ void extendedDialog(const char* text,
             dialogInfo.m_icons[icon].set(static_cast<EGameResource>(resources[shown].m_resource) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */, resources[shown].m_qualifier);
             ++shown;
         }
-        for (; icon < 8; ++icon)
-            dialogInfo.m_icons[icon].set(const_no_resource, -1);
+        // DC 5943 advances the index before set; retail VC6 advances the
+        // icon pointer before the same call.
+        while (icon < 8)
+            dialogInfo.m_icons[icon++].set(const_no_resource, -1);
 
+        // Only the first resource page uses the supplied description.
+        text = "";
         calculateNormalDialogSize(dialogInfo);
         doNormalDialog(dialogInfo);
     } while (shown < resources.size());

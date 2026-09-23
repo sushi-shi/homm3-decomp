@@ -23,11 +23,11 @@ public:
     // empty-constructor representative 0x524360 on the base at +0x1d.
     // That folded address also represents philAI's proven constructor;
     // it does not independently identify this base's original source file.
-    // TRuntimeError(const char*) at 0x49a0c0 elides this same empty base
-    // initialization. No evidence supports a separate message overload.
-    // Shared-header visibility is reconstructed from the elided and retained
-    // calls; the folded body is already represented by philAI's VA claim.
-    TDebugBreak() {}
+    // The default error paths retain this empty-base call; the message
+    // path elides its separate empty overload. The folded default body is
+    // already represented by philAI's VA claim.
+    TDebugBreak();
+    TDebugBreak(const char*) {}
 };
 
 class TRuntimeError : public TDebugBreak, public std::runtime_error {

@@ -114,9 +114,7 @@ public:
     short m_numDays;
     unsigned char m_gameLost;
     signed char m_playerLoser;
-    VA(0x0045bac0, 0xE)  // retained retail body; formerly enrolled by CLASS_CTOR
-    LossConditionStruct()
-      : m_type(-1), m_gameLost(0), m_playerLoser(-1) {}
+#include "inline/loss_condition_ctor.inl"
     unsigned char checkForDefeatedHeroLoss(const hero* loser);
     unsigned char heroKilled(const hero* loser);
     unsigned char checkForDefeatedTownLoss(int oldOwner,

@@ -1,0 +1,46 @@
+# Reviewed source-owned Mac pairs.
+
+[[functions]]
+retail_va = 0x4c0b60
+unit = "game"
+source = "src/game.cpp"
+mac_section = 0
+mac_offset = 0xd7160
+mac_size = 0x180
+mac_symbol = ".matchUndergroundGates__4gameFv"
+target_sha256 = "54d578f01c668bcfb2e78f7cb9c1e665d170d14e048b9873d200a7295b79300a"
+evidence = "Mac body follows BLR at 0xd715c and ends BLR at 0xd72dc before next prologue. It scans the gate-exit and partner arrays at game+0x4d3ec/+0x4d3f8, compares packed z coordinates, squares signed x/y differences, calls MathLib sqrt once at 0xd7258, and stores symmetric partner indices. Its sole caller at 0xd5ce4 is between randomizeEvents and randomizeHolyGrail in newMap, matching the authored game.cpp sequence and Dreamcast game::match_underground_gates."
+
+[[functions]]
+retail_va = 0x4b9340
+unit = "game"
+source = "src/game.cpp"
+mac_section = 0
+mac_offset = 0xcb404
+mac_size = 0x2a4
+mac_symbol = ".loadMinePool__4gameFP13TAbstractFilei"
+target_sha256 = "804878dc3c13d7c35b40ebbd9694673df850a0c20f833f590f709a82a8c5fa16"
+evidence = "Bounded by BLR at 0xcb400 and 0xcb6a4 with next prologue 0xcb6a8. Reads count through TAbstractFile slot 0xc; resizes mine vector at game+0x4d048, iterates 0x40-byte mine records, stores owner/type/abandoned at +0/+1/+2, branches on saveVersion 25, loads or initializes guards at +4 and conditionally adds legacy guards, then reads coordinates at +0x3c/+0x3d/+0x3e. Matches source-owned game::loadMinePool and DC 0xa3e5c."
+
+[[functions]]
+retail_va = 0x4bb5e0
+unit = "game"
+source = "src/game.cpp"
+mac_section = 0
+mac_offset = 0xce398
+mac_size = 0x78c
+mac_symbol = ".getNewHeroId__4gameFi10THeroClassUc10THeroClass"
+target_sha256 = "2a20008d2ceba151baeca2888ff62f648a358568a6156d339902cca8242568fb"
+evidence = "Preceding body ends BLR at 0xce394; this prologue is 0xce398, ending BLR 0xceb20 before next body 0xceb24. Its 18-class weight and count arrays, Mac game hero availability at +0x4cbdc, pool map at +0x4cc78, 156-hero scan at +0x20a64 stride 0x486, Conflux class restrictions, and two weighted random calls at 0xce998/0xcea78 independently match source-owned game::getNewHeroId and retail VA 0x004bb5e0."
+
+[[functions]]
+retail_va = 0x4c7fe0
+unit = "game"
+source = "src/game.cpp"
+mac_section = 0
+mac_offset = 0xde818
+mac_size = 0x6e4
+mac_symbol = ".perDay__4gameFv"
+target_sha256 = "5fdcdcb456d93bca94f925d79a36d108435bab059e5ea542e87c0bbbb29698f4"
+evidence = "Preceding body ends BLR at 0xde814; perDay begins mflr/stmw at 0xde818 and returns at 0xdeef8 before the next leaf at 0xdeefc. Caller at 0xdda78, day/week handling, town and hero loops, production, and grail reset identify source game::perDay; g_resources is independently pinned at code0+0x2a4d4c."
+data = [0x63e668]

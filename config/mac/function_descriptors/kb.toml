@@ -1,0 +1,30 @@
+# CodeWarrior emits transition vectors for implicit dialog-icon special
+# members passed to the array construction and destruction helpers.
+
+[[descriptors]]
+unit = "kb"
+owner_vas = [0x004f6570, 0x004f7690]
+symbol = "__dt__16type_dialog_iconFv"
+code_symbol = ".__dt__16type_dialog_iconFv"
+mac_section = 1
+mac_offset = 0x7928
+sha256 = "f22d1c6373b54865b58be1b0d43baa58469f3f4b3c04ca5a07f3d0fc6f943133"
+code_section = 0
+code_offset = 0x117e04
+code_size = 0x64
+code_sha256 = "6e43369eb4aa576404534d508c952884d59a6df15ef94857d6b5e34145200889"
+evidence = "normalDialog loads TOC 1+0xcc0 at code0:0x117f1c and passes the result as the icon-array destructor; loader points to this eight-byte transition vector, whose first word relocates to code0:0x117e04 and second to TOC1+0x8000. The callee destroys the two string handles at icon+0xc/+8, ending BLR at 0x117e64 before the next ctor prologue at 0x117e68; canonical src/kb.cpp claims its Windows compiler-generated destructor at 0x4f64c0."
+
+[[descriptors]]
+unit = "kb"
+owner_vas = [0x004f6570, 0x004f7690]
+symbol = "__ct__16type_dialog_iconFv"
+code_symbol = ".__ct__16type_dialog_iconFv"
+mac_section = 1
+mac_offset = 0x7930
+sha256 = "974eab38915012f44304db3da2c53ac89810e97b51f6536dab95588ce79fe588"
+code_section = 0
+code_offset = 0x117e68
+code_size = 0x48
+code_sha256 = "5d023e71f6de0768c5cb6426bda8045788a5f81506d789b90c2cc05eb83b5823"
+evidence = "normalDialog loads TOC 1+0xcc4 at code0:0x117f70 and passes the result as the icon-array constructor; loader points to this eight-byte transition vector, whose first word relocates to code0:0x117e68 and second to TOC1+0x8000. The callee constructs two string handles at icon+8/+0xc, ending BLR at 0x117eac before the next body at 0x117eb0; canonical src/kb.cpp claims its Windows compiler-generated icon constructor at 0x4f6490."

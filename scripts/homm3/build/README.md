@@ -59,6 +59,12 @@ shared-header edits do not compile every including TU on each iteration. Run
 full `homm3 build` to rebuild affected units, refresh retail targets, and run
 the final checkpoint.
 
+Run VC6 compilation inside `nix develop .#build` so the Wine client matches
+the project's prefix. `cc_wrap` compiles to a temporary object beside the
+requested output and replaces the old object only after VC6 produces one. A
+Wine or compiler failure still fails Ninja, but leaves the last raw object
+available for read-only inspection; it is not a fresh result for edited source.
+
 Dreamcast NB11 records are parsed into the compiler-neutral
 `homm3.debug-shape.v1` model in `homm3.analysis.debug_shape`. The model carries
 function extents, locals, scopes, source/breakpoint rows, emitted sizes, calls,

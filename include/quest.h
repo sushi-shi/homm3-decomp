@@ -288,6 +288,7 @@ public:
 
     std::string skillRequirementText(
         const signed char (&skills)[4]);
+    void showSkillRequirementsDialog(const char* text, const signed char* skills);
 
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual void doProposalDialog(hero* currentHero);

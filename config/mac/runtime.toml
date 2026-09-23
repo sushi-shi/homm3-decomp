@@ -1,0 +1,522 @@
+# Reviewed library call destinations; these are not game reconstruction scores.
+
+[[functions]]
+symbol = ".__nw__FUl"
+mac_section = 0
+mac_offset = 0x26897c
+mac_size = 0x1b0
+sha256 = "ff6e60f59fa7321f1f508efcf15f7854033a181ff825acb6c1436a3dbf504f19"
+evidence = "CodeWarrior emits this named scalar operator new(unsigned long) hunk for ResourceManager::getSprite allocations. The Mac target calls 0:0x26897c with sizes 0x38, 0x48, 0x21c and 0x31c; the callee implements heap allocation and returns at 0x268b28. The next operator delete body begins at 0x268b2c. Runtime identity only."
+
+[[functions]]
+symbol = ".__nwa__FUl"
+mac_section = 0
+mac_offset = 0x268c14
+mac_size = 0x20
+sha256 = "dfcaea543f8be03240ac66e646071a79456ba6bccb637272a55e692663e380f5"
+evidence = "CodeWarrior emits this named operator new[](unsigned long) for the getSprite sequence arrays. Mac target calls 0:0x268c14 at +0x128, +0x16c and +0x198; the complete 32-byte callee forwards the size in r3 to scalar new at 0x26897c and returns at 0x268c30. Preceding BLR at 0x268c10 and next array delete prologue at 0x268c34 bound the span. Runtime identity only."
+
+[[functions]]
+symbol = ".__dl__FPv"
+mac_section = 0
+mac_offset = 0x268b2c
+mac_size = 0xe8
+sha256 = "bdb5c66d21461b5a03666ff5cb86e7234cdcbbbf5754627360a98cedb27e9ec4"
+evidence = "CodeWarrior MSL scalar operator delete(void*) starts at 0:0x268b2c, checks null and releases the allocation. The Mac array delete wrapper at 0x268c34 calls this body with the pointer unchanged. Final BLR at 0x268c10 and next array new prologue at 0x268c14 bound its 232 bytes. Runtime identity only."
+
+[[functions]]
+symbol = ".__dla__FPv"
+mac_section = 0
+mac_offset = 0x268c34
+mac_size = 0x20
+sha256 = "4ec424ef1927f7c2111f9495ad079bfabb6ae081fdf52713040213f0e37243b6"
+evidence = "CodeWarrior emits this named operator delete[](void*) for getSprite's temporary sequence arrays. The Mac target calls 0:0x268c34 at +0x4a0, +0x4a8 and +0x4c4. The 32-byte wrapper forwards its pointer argument to scalar delete at 0x268b2c and returns at 0x268c50; next prologue at 0x268c54 bounds the body. Runtime identity only."
+
+[[functions]]
+symbol = ".__construct_array"
+mac_section = 0
+mac_offset = 0x28022c
+mac_size = 0x100
+sha256 = "40f4b064f04cee6deb556254c31df3aa3f7e3072a846873d3be7a3285d998164"
+evidence = "CodeWarrior emits this runtime array-construction call for TNormalDialogInfo::m_icons at normalDialog+0x70. Retail passes the icon array in r3, constructor transition vector in r4, destructor vector in r5, stride 0x34 in r6, and count 8 in r7 to code0:0x28022c. The callee invokes each constructor through __ptr_glue and unwinds partial construction through the destructor pointer. Final BLR at 0x280328 and next array-destructor prologue at 0x28032c bound all 256 bytes. Runtime identity only."
+
+[[functions]]
+symbol = ".__destroy_arr"
+mac_section = 0
+mac_offset = 0x28032c
+mac_size = 0x78
+sha256 = "1f3f71201d7a144366c0eedae18b5f8488c8632633553c58460875e1634391c2"
+evidence = "CodeWarrior emits this runtime array-destruction call twice in normalDialog: after doNormalDialog for the by-value copy and again for its local record. Retail passes array address in r3, icon destructor transition vector in r4, stride 0x34 in r5 and count 8 in r6. The callee walks backward through elements and invokes the pointer via __ptr_glue. Final BLR at 0x2803a0 and next prologue at 0x2803a4 bound all 120 bytes. Runtime identity only."
+
+[[functions]]
+symbol = ".__ct__Q23std6stringFRCQ23std6string"
+mac_section = 0
+mac_offset = 0x1c628
+mac_size = 0xc8
+sha256 = "28a934a277fc95694c22552e6c95c0f7ef21d3b503c933fd67066e1a77c61a3a"
+evidence = "normalDialog copies TNormalDialogInfo by value after calculateNormalDialogSize; its emitted std::string copy constructor call takes destination and source handles in r3/r4. Retail calls code0:0x1c628 at +0x134, and that callee copies the representation pointer, increments shared count when nonzero, or constructs a new 16-byte representation when needed. Final BLR at 0x1c6ec and next prologue at 0x1c6f0 bound all 200 bytes. Library identity only."
+
+[[functions]]
+symbol = ".__ct__Q310Metrowerks7details66compressed_pair_imp<Q23std32allocator<19type_creature_value>,Ul,1>FUl"
+mac_section = 0
+mac_offset = 0x2bb9c
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "AI calculateReserve constructs its vector<type_creature_value> storage with this named Metrowerks compressed_pair_imp constructor. The retail call reaches 0:0x2bb9c with vector address in r3 and zero in r4; the entire callee stores r4 at +0 and returns. Candidate CodeWarrior emits the same 8-byte named hunk; next function begins at 0x2bba4. Runtime template identity only."
+
+[[functions]]
+symbol = ".__ct__Q310Metrowerks7details62compressed_pair_imp<Q23std28allocator<15HeroDestination>,Ul,1>FUl"
+mac_section = 0
+mac_offset = 0x33a70
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "AI_PLAYER valueOfHiring constructs its vector<HeroDestination> capacity pair at caller 0:0x35270. The emitted named CodeWarrior hunk receives the pair in r3 and zero in r4. The pinned Mac callee at 0:0x33a70 is exactly stw r4,0(r3); blr, ending at 0x33a78 before the next function. Library template identity only."
+
+[[functions]]
+symbol = ".clear__Q23std29vector<19type_creature_value>Fv"
+mac_section = 0
+mac_offset = 0x25ca4
+mac_size = 0x3c
+sha256 = "ca811356059aab177fa016fafcc46908f87923c31e93b46ccdcb7ffebfa33b20"
+evidence = "AI calculateReserve calls this named std::vector<type_creature_value>::clear at its reserve body +0x9c; the vector destructor independently calls it at 0:0x25a24. It reads 12-byte element count and data at vector+4/+8, runs the element destruction loop and stores zero size at +4. Final blr at 0x25cdc and next prologue at 0x25ce0 bound the 60-byte body. Runtime template identity only."
+
+[[functions]]
+symbol = ".push_back__Q23std29vector<19type_creature_value>FRC19type_creature_value"
+mac_section = 0
+mac_offset = 0x3ad64
+mac_size = 0xa8
+sha256 = "7387ba9366f44492d21acfe4c87b3938d5a68b43c49714b71556329a13e5e089"
+evidence = "AI calculateReserve appends a source-owned 12-byte type_creature_value record through this named vector instantiation at 0:0x3ad64. The callee grows vector storage through 0x3c370 when full, copies three words into the next slot and increments size. Final blr at 0x3ae08 and next prologue at 0x3ae0c bound the 168-byte body. Runtime template call identity only."
+
+[[functions]]
+symbol = ".__dt__Q23std29vector<19type_creature_value>Fv"
+mac_section = 0
+mac_offset = 0x25a00
+mac_size = 0x64
+sha256 = "d2fd2f69c922f6911d54bb0aaa272f9f8603921dda0a367e96f6f58852dd0d11"
+evidence = "AI calculateReserve destroys its local vector<type_creature_value> through this named CodeWarrior destructor. It calls the verified clear at 0x25ca4, frees backing data through 0x268b2c and conditionally deletes the object for a positive deleting flag. Final blr at 0x25a60 and next body starts at 0x25a64. Runtime template identity only."
+
+[[functions]]
+symbol = ".sort<19type_creature_value>__3stdFP19type_creature_valueP19type_creature_value"
+mac_section = 0
+mac_offset = 0x39fbc
+mac_size = 0x228
+sha256 = "96390a38cee3c407ad6a6c944f44bda88f1ea39857152256a17043268b88eaa6"
+evidence = "AI calculateReserve sorts its vector's 12-byte value records through this named std::sort instantiation. The callee computes record count from a 12-byte pointer difference, uses insertion sort for runs of 20 or fewer and dispatches larger ranges through the library sorter. Final blr at 0x3a1e0 and next prologue at 0x3a1e4 bound the 552-byte body. Runtime template call identity only."
+
+[[functions]]
+symbol = ".resize__Q23std13vector<4mine>FUl"
+mac_section = 0
+mac_offset = 0xe8460
+mac_size = 0xc4
+sha256 = "77ec8f1a6e78e05c8bdd7debbcb66287759648f6cf72893761e364e79cc33796"
+evidence = "game::loadMinePool at 0:0xcb454 passes its mine vector at game+0x4d048 and the one-byte count to this std::vector<mine>::resize instantiation. The callee compares the count with vector size at +4, constructs a default 0x40-byte mine at stack+0x60, inserts copies as needed, or erases excess elements. Final blr at 0xe8520 and next prologue at 0xe8524 bound all 196 bytes. Runtime template call identity only."
+
+[[functions]]
+symbol = ".__ct__Q23std9vector<l>Fv"
+mac_section = 0
+mac_offset = 0x74b8
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "AI markMultiheadedEnemy constructs its stack vector<long> at caller 0:0x21d18..0x21d20, passing vector address in r3 and zero in r4. This named CodeWarrior template constructor stores r4 at receiver+0 and returns. Preceding BLR at 0x74b4 and next prologue at 0x74c0 bound the complete eight-byte body. Runtime template identity only."
+
+[[functions]]
+symbol = ".__ct__Q310Metrowerks7details46compressed_pair_imp<Q23std12allocator<l>,Ul,1>FUl"
+mac_section = 0
+mac_offset = 0x74b8
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "The canonical MSL vector<long> compressed-pair declaration view emits this named base constructor at AI markMultiheadedEnemy caller +0x64. It receives vector storage in r3 and zero in r4, stores r4 at receiver+0 and returns, exactly the eight-byte retained body at 0:0x74b8. This is an ABI alias of the simple vector constructor symbol for the same code span, not an additional target. Preceding BLR at 0x74b4 and next prologue at 0x74c0 bound it."
+
+[[functions]]
+symbol = ".__ct__Q310Metrowerks7details55compressed_pair_imp<Q23std21allocator<P8pathCell>,Ul,1>FUl"
+mac_section = 0
+mac_offset = 0x74b8
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "AI_PLAYER valueOfHiring constructs its vector<pathCell*> at caller 0:0x352c0 through this emitted MSL compressed_pair_imp constructor. The pinned 8-byte callee at 0:0x74b8 stores r4 at pair+0 and returns, ending before the next body at 0x74c0. This is a template ABI alias of the already reviewed vector<long> constructor at the same address, not another game target."
+
+[[functions]]
+symbol = ".second__Q310Metrowerks7details55compressed_pair_imp<Q23std21allocator<P8pathCell>,Ul,1>Fv"
+mac_section = 0
+mac_offset = 0x215c
+mac_size = 0x4
+sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "The canonical MSL pointer-vector push_back used in AI_PLAYER valueOfHiring emits three calls to this compressed-pair second() accessor. The pinned callee at 0:0x215c consists solely of blr: the receiver is already in r3, so it returns the member reference unchanged. Its next function starts with mflr at 0x2160. Library template identity only."
+
+[[functions]]
+symbol = ".second__Q210Metrowerks49compressed_pair<Q23std21allocator<P8pathCell>,Ul>Fv"
+mac_section = 0
+mac_offset = 0x215c
+mac_size = 0x4
+sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "Installed CodeWarrior MSL msl_utility:859 defines compressed_pair::second as return base::second(). Restoring MSL's empty vector -> __vector_imp -> __vector_pod constructor layer makes valueOfHiring emit this wrapper at candidate +0x428/+0x440/+0x454 for capacity_ access. Retail calls the corresponding details::compressed_pair_imp::second at +0x400/+0x418/+0x42c. Both receive the same pair address in r3 and return its second-member reference; the emitted wrapper's full four-byte body is blr, identical to the independently bounded pinned 0:0x215c accessor before the next prologue at 0x2160. This is a verified library-template ABI alias, not a source-owned game helper."
+
+[[functions]]
+symbol = ".reserve__Q23std24__vector_pod<P8pathCell>FUl"
+mac_section = 0
+mac_offset = 0x47b0
+mac_size = 0x10c
+sha256 = "3cc56d7f3bda84ce4151786be7cb0db34f1f42098209e911577824ad30971999"
+evidence = "AI_PLAYER valueOfHiring's canonical MSL vector<pathCell*> push_back emits this named POD reserve call at candidate +0x464; Mac retail calls the body at 0:0x47b0 from 0:0x354b4. The callee compares requested capacity, allocates and copies pointer entries, frees the previous buffer, and updates capacity. Its final return precedes the next body at 0x48bc. Library template identity only."
+
+[[functions]]
+symbol = ".__dt__Q23std25vector<15HeroDestination>Fv"
+mac_section = 0
+mac_offset = 0x3b1ac
+mac_size = 0x64
+sha256 = "1ef86ceaf20ed281b851916449f60b47d8fa70473ce83f5bd013516f9adc1cb9"
+evidence = "AI_PLAYER valueOfHiring calls this named vector<HeroDestination> destructor at 0:0x357ac with deleting flag zero. The 100-byte body calls its element deleter at 0x3c70c, frees backing data and conditionally deletes the vector itself; its final return precedes the next prologue at 0x3b210. Runtime template identity only."
+
+[[functions]]
+symbol = ".__dt__Q23std9vector<l>Fv"
+mac_section = 0
+mac_offset = 0x745c
+mac_size = 0x5c
+sha256 = "d5321bd30d8796d5377aaab7f653e75f7723cab7f5d5884e13946194798e8bee"
+evidence = "AI markMultiheadedEnemy destroys its local vector<long> at 0:0x21f1c..0x21f24 with deleting flag zero. This named CodeWarrior template destructor frees backing data at receiver+8 and conditionally deletes the receiver. Entry follows preceding BLR at 0x7458 and final BLR at 0x74b4 precedes the vector constructor. Runtime template identity only."
+
+[[functions]]
+symbol = ".__dt__Q23std18vector<P8pathCell>Fv"
+mac_section = 0
+mac_offset = 0x745c
+mac_size = 0x5c
+sha256 = "d5321bd30d8796d5377aaab7f653e75f7723cab7f5d5884e13946194798e8bee"
+evidence = "AI_PLAYER valueOfHiring calls this named vector<pathCell*> destructor at 0:0x357a0 with deleting flag zero. The complete callee at 0:0x745c frees backing data at receiver+8 and conditionally deletes the receiver, ending before the constructor at 0x74b8. It shares the reviewed vector<long> runtime span as an ABI alias, not an additional game byte target."
+
+[[functions]]
+symbol = ".bzero"
+mac_section = 0
+mac_offset = 0x26ad3c
+mac_size = 0x84
+sha256 = "0e74282c0341e4f476e287b0e0a28cbb5634e1dcd5712dd76b9c3daccd840357"
+evidence = "AI markMultiheadedEnemy zeroes two 187-byte arrays through the two-argument Mac port routine at 0:0x26ad3c, passing destination in r3 and count in r4. A declaration-view probe emits the named .bzero call for the same canonical memset-to-zero source operation. The callee aligns and clears large regions with dcbz, then zeros remaining bytes; smaller regions use a byte loop. Preceding BLR at 0x26ad38, final BLR at 0x26adbc and next prologue at 0x26adc0 bound all 132 bytes. Runtime call identity only."
+
+[[data]]
+symbol = "__upper_map"
+mac_section = 1
+mac_offset = 0x61328
+mac_size = 0x100
+sha256 = "d8feb40390c91aa6d8dcd2863be7a3698628dde0897b132bbfe7f61a9814878b"
+evidence = "CodeWarrior Pro 6 MSL cctype declares extern unsigned char __upper_map[] and inlines toupper(c) as EOF-or-table lookup after unsigned-char conversion. Mac showCongrats at code 0:0x115e00 reads the table through loader-relocated TOC 1+0xc14 -> initialized data 1+0x61328. The full 256-byte table maps ASCII lowercase to uppercase and retains the Mac Roman high-byte cases. Candidate KB emits an external IL/TC reference; this binds library data identity and address only, not a game source DATA claim."
+
+[[functions]]
+symbol = ".test__Q23std10bitset<70>CFUl"
+mac_section = 0
+mac_offset = 0xe99a0
+mac_size = 0xe4
+sha256 = "58e060ea260b389edb0ba9ba3a56af5618279b82a273aee93c8e3b383c1782e6"
+evidence = "Instantiated std::bitset<70>::test(unsigned long) used by canonical HeroExtra::m_spells.test(i) in hero::initialize. Retail caller passes setup+0x314 and indices 0..69 at +0x2a0; callee bounds-checks against 70, selects a 32-bit word, masks the indexed bit and returns bool. Candidate emits this named template symbol. Final blr at 0xe9a80 and next prologue at 0xe9a84 bound all 228 bytes. Runtime identity only, not a candidate template-body match or a Windows VA claim."
+
+[[functions]]
+symbol = ".test__Q23std9bitset<8>CFUl"
+mac_section = 0
+mac_offset = 0xe9d98
+mac_size = 0xe4
+sha256 = "99932086e58bb01c051432c8d3fbe5111f33e312706dcdacda86725c2819a23c"
+evidence = "The source-owned game::getNewHeroId candidate emits this named std::bitset<8>::test(unsigned long) call for the hero-pool eligibility test. The Mac target calls 0xe9d98 in both hero scans and passes the pool-map word with player position. The callee bounds-checks against eight, masks the selected bit, and returns bool; preceding BLR at 0xe9d94 and own BLR at 0xe9e78 before next prologue 0xe9e7c bound all 228 bytes. Runtime template identity only."
+
+[[functions]]
+symbol = ".test__Q23std10bitset<12>CFUl"
+mac_section = 0
+mac_offset = 0xe9bcc
+mac_size = 0xe4
+sha256 = "5ed75d357a2c5d5ff6b4c0f2e8805b887564d0c708a9e0e0b929b98fb03eae3d"
+evidence = "The Mac hero::giveArtifact body tests playerData::m_assembledCombinations through this named bitset<12>::test(unsigned long) instantiation. The complete callee bounds-checks twelve, selects the word, masks the indexed bit and returns bool. Its last BLR is at 0xe9cac and the next prologue begins 0xe9cb0. Runtime template call identity only."
+
+[[functions]]
+symbol = ".set__Q23std10bitset<12>FUlb"
+mac_section = 0
+mac_offset = 0xe9cb0
+mac_size = 0xe8
+sha256 = "2254e14ecd76cf615ef3781f9b93640001857e346d0667cbed30e052d1b18a78"
+evidence = "The Mac hero::giveArtifact source sets playerData::m_assembledCombinations[targetCombo] and emits the named bitset<12>::set(unsigned long,bool) instantiation. The complete callee bounds-checks twelve and sets or clears the selected bit. Its last BLR is at 0xe9d94 before the next prologue at 0xe9d98. Runtime template call identity only."
+
+[[functions]]
+symbol = ".test__Q23std11bitset<144>CFUl"
+mac_section = 0
+mac_offset = 0x3b2f4
+mac_size = 0xe4
+sha256 = "a0ae3b2aa10bb831eac59843939e261299a11b87f69347a95c12984dffa45dfc"
+evidence = "HERO removeArtifact emits named std::bitset<144>::test(unsigned long) at object +0x88; its Mac caller passes indices 0..143 and reaches 0x3b2f4. Callee bounds-checks 144, selects one of five 32-bit words, masks the indexed bit and returns bool. Final BLR 0x3b3d4 and next function prologue 0x3b3d8 bound all 228 bytes. Runtime identity only, not a candidate template-body match."
+
+[[functions]]
+symbol = ".__dt__Q23std30vector<20type_creature_source>Fv"
+mac_section = 0
+mac_offset = 0x3b0a8
+mac_size = 0x64
+sha256 = "bf19cbd1ac457175f989d5efc66ca03d1028859aaabbdf07ed250665abf47bd5"
+evidence = "Library template instantiated by source-owned type_AI_creature_purchaser::m_creatures (include/ai_player.h). Three buyCreatures calls pass purchaser+0x2c (stack+0xa4), matching this vector member and the emitted CodeWarrior destructor symbol. Full body null-checks this, calls clear at 0x3b06c, frees data at this+8 through 0x268b2c, and deletes this iff the signed-short deleting flag is positive; returns this. Final blr at 0x3b108 and next entry at 0x3b10c bound the span. This is a retained runtime binding, not a candidate template-body match."
+
+[[functions]]
+symbol = ".memset"
+mac_section = 0
+mac_offset = 0x28b040
+mac_size = 0x4c
+sha256 = "f43e784c6795493a4a8a817ef3cd137d0a44506c9eaa80337494fe9bd4937916"
+evidence = "Named 80-byte .memset hunk in CodeWarrior Pro 6 MSL C.PPC.Lib: all 48 executable bytes match after resolving .__fill_mem to 0x28b17c and removing its +0x18 reload slot. The full 76-byte retail span also retains the library's named traceback trailer; its sole changed trailer word is the function-relative traceback offset, 0x34 to 0x30 after that removal. The 224-byte named .__fill_mem hunk matches retail exactly without relocations. Runtime identity only; traceback rewriting is not generalized into the game comparator."
+
+[[functions]]
+symbol = ".memcpy"
+mac_section = 0
+mac_offset = 0x28aa6c
+mac_size = 0x2f0
+sha256 = "29f4dce16802ccc3b9dd784021de042b108f0c5aacf189a250d89737952fd63a"
+evidence = "All 752 bytes exactly equal the named .memcpy code hunk in the installed CodeWarrior Pro 6 MSL C.PPC.Lib, with no relocations. Library extent includes the final copy paths after the earlier return at +0x2d0; that return alone is not the function boundary."
+
+[[functions]]
+symbol = ".sprintf"
+mac_section = 0
+mac_offset = 0x28dfa8
+mac_size = 0x64
+sha256 = "7956b996488068b19a859d64cd4cc2487abfd581925bd1aeee1f56e2681698b8"
+evidence = "Named .sprintf 100-byte hunk from CodeWarrior Pro 6 MSL C.PPC.Lib matches every retail byte after resolving its sole .vsnprintf branch at +0x34 to code 0x28decc. Varargs wrapper and updateArmies formatting call independently agree."
+
+[[functions]]
+symbol = ".strcpy"
+mac_section = 0
+mac_offset = 0x28e218
+mac_size = 0x38
+sha256 = "453be70191526c38d62f145285a57f89e0dacd1cf48c6a46770f31439b1fcd04"
+evidence = "Unique exact occurrence of all 56 bytes of the named .strcpy hunk in CodeWarrior Pro 6 MSL C.PPC.Lib; no relocations. Copies through and including the terminating zero and returns destination."
+
+[[functions]]
+symbol = ".strlen"
+mac_section = 0
+mac_offset = 0x28e1dc
+mac_size = 0x20
+sha256 = "c5431bb2faeaf28c92459e7378c633b1a06a7cf3d042e9b50f24ad768b8f44ef"
+evidence = "All 32 executable bytes exactly equal the named .strlen hunk's instructions in CodeWarrior Pro 6 MSL C.PPC.Lib string.c; the unlinked hunk's remaining bytes are traceback metadata. Retail ends at blr 0x28e1f8, and 433 linked callers include KB setter's string-assignment path at 0x11684c. Runtime identity only, not a source-template match."
+
+[[functions]]
+symbol = ".assign__Q23std6stringFPCcUl"
+mac_section = 0
+mac_offset = 0x445c
+mac_size = 0x64
+sha256 = "8ffe91edc1ec2a914b2b06a7230d384d25540d36cfd7dde950b2986c00ab791f"
+evidence = "KB setter's char-pointer assignment compiles through a source-view inline operator=(const char*) into named std::string::assign(const char*, unsigned long): strlen first, then receiver/pointer/length in r3/r4/r5. Retail repeats the same call sequence at 0x116848..0x11685c and calls this callee at 0x445c. The callee passes length to string storage helper 0x4ad4, copies with .memcpy, returns receiver; own prologue follows preceding BLR, final BLR 0x44bc, next destructor prologue 0x44c0 bound all 100 bytes. Runtime identity and ABI evidence only; no candidate library-body score."
+
+[[functions]]
+symbol = ".assign__Q23std6stringFRCQ23std6stringUlUl"
+mac_section = 0
+mac_offset = 0x1c094
+mac_size = 0x250
+sha256 = "d3b56bb17fa8233c223e3f186ceff91d3b3e779b6a2e219459be246577de1cef"
+evidence = "Retail KB formatString temporary assignment passes destination r3, source r4, position zero r5 and npos r6 to 0x1c094 at 0x116914..0x116924. Source-view inline std::string::operator=(const string&) now exposes the same named assign(const string&, unsigned long, unsigned long) ABI. Callee uses source string length and storage, returns destination; final BLR 0x1c2e0 and next prologue 0x1c2e4 bound all 592 bytes. Library call identity only, not a template-body score."
+
+[[functions]]
+symbol = ".__dt__Q23std6stringFv"
+mac_section = 0
+mac_offset = 0x44c0
+mac_size = 0xa8
+sha256 = "6b1832d7920128a61af4112c4bfbdf946fcfa98f59f4f50cb37869132736fdf6"
+evidence = "KB destroys each stack formatString temporary after assignment, passing receiver r3 and deleting flag -1 r4 to this string destructor at 0x44c0. Callee updates shared-storage count, frees storage only at zero and conditionally frees receiver for positive flag. Own prologue follows assign BLR 0x44bc, final BLR 0x4564 and next constructor prologue 0x4568 bound all 168 bytes. Library identity only, not a template-body score."
+
+[[functions]]
+symbol = ".__ct__Q23std6stringFv"
+mac_section = 0
+mac_offset = 0x46c8
+mac_size = 0xe8
+sha256 = "0efce2295baf13b484dceb6934f3454a1f0a6ddf71f3021ac3def4a82157327b"
+evidence = "The KB showCongrats Mac view emits the named std::string default constructor with its local string receiver at candidate +0x24; retail calls 0x46c8 with its stack string receiver at 0x115c5c. Callee allocates a 16-byte representation, seeds storage/count and zero length, writes the empty terminator, then returns its receiver. Own prologue 0x46c8, final BLR 0x47ac and next constructor prologue 0x47b0 bound all 232 bytes. Runtime library identity only, not a candidate string-body score."
+
+[[functions]]
+symbol = ".__ct__Q23std6stringFRCQ23std12allocator<c>"
+mac_section = 0
+mac_offset = 0x46c8
+mac_size = 0xe8
+sha256 = "0efce2295baf13b484dceb6934f3454a1f0a6ddf71f3021ac3def4a82157327b"
+evidence = "MAPCELL readMonsterData's Mac source view passes a stack allocator temporary in r4 to this CodeWarrior string constructor. Retail prepares receiver r3 at code 0:0x123cb4 and allocator r4 at 0:0x123cb8 before calling code 0:0x46c8 at 0:0x123cbc. The emitted allocator-argument symbol has the same 232-byte retained body as the reviewed no-argument MSL constructor row above; the shared callee does not use r4. The pinned whole-span hash and adjacent BLR/prologue bounds are identical. This alias resolves a compiler-generated library call, not a game-function match."
+
+[[functions]]
+symbol = ".__vc__Q23std10vector<Pc>CFi"
+mac_section = 0
+mac_offset = 0x2a0c
+mac_size = 0x10
+sha256 = "680dea8ae86a092b429256ac5e937163c668865b1794dcb179c9529761499f3f"
+evidence = "Canonical TTextResource::operator[] calls getText, indexing its m_text vector at object+0x1c. The KB Mac view now emits named std::vector<char*>::operator[](int) from that shared inline body. Retail KB setter repeatedly adds +0x1c to the resource before calling 0x2a0c; its four instructions load vector first pointer at +8, scale index by 4, return element address, and end with BLR 0x2a18 before the next entry 0x2a1c. Runtime template identity only, not a vector-body score; the byte-identical 0x948 entry is not used by this caller."
+
+[[functions]]
+symbol = ".append__Q23std6stringFPCcUl"
+mac_section = 0
+mac_offset = 0x1c480
+mac_size = 0x80
+sha256 = "51a0fdcfd08cb2182ca226a0cc81035f5d81b3343df62dc64a81e03af85ce4c1"
+evidence = "KB secondary-skill text uses canonical string += char-pointer statements. Retail first calls strlen at 0x116db0 then passes receiver/pointer/length in r3/r4/r5 to 0x1c480 at 0x116dc0, repeating at 0x116dec..0x116dfc. Source-view inline operator+= exposes the same named append(const char*, unsigned long) call. Callee grows storage via 0x4ad4, then .memcpy at 0x28aa6c, returns receiver; final BLR 0x1c4fc and next prologue 0x1c500 bound all 128 bytes. Runtime identity only, not a library-body score."
+
+[[functions]]
+symbol = ".append__Q23std6stringFRCQ23std6stringUlUl"
+mac_section = 0
+mac_offset = 0x1c500
+mac_size = 0x128
+sha256 = "2392ce5a9bcb3eeb17259fdd82ae2d6621bbfa3f54a6f05b4e13f694297f9bbc"
+evidence = "The TOWN creature reward helper passes destination string r3, temporary source r4, position zero r5 and npos r6 at 0x1b5a2c..0x1b5a3c, matching the canonical operator+=(const string&) source-view expansion. This callee copies source length/data, grows destination via 0x4ad4 and copies through .memcpy; preceding char-append BLR at 0x1c4fc, final BLR at 0x1c624 and next prologue at 0x1c628 bound all 296 bytes. Runtime identity only."
+
+[[functions]]
+symbol = ".clear__Q23std30vector<20type_dialog_resource>Fv"
+mac_section = 0
+mac_offset = 0x1c790
+mac_size = 0x38
+sha256 = "cdc70e474f8e878affe097f9c1a18ecefdbdd70d519dd8f37e4161e96fa0c8a4"
+evidence = "TOWN reward helper calls vector<type_dialog_resource>::clear at 0x1b5b6c after its optional extendedDialog. The callee computes 8-byte element distance from size and data pointer, then stores zero to vector size at +4; prior push-back BLR at 0x1c78c, own BLR at 0x1c7c4 and next vector destructor prologue at 0x1c7c8 bound 56 bytes. Runtime template identity only."
+
+[[functions]]
+symbol = ".__ct__Q310Metrowerks7details67compressed_pair_imp<Q23std33allocator<20type_dialog_resource>,Ul,1>FUl"
+mac_section = 0
+mac_offset = 0x66a4
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "The selected Seer Hut view emits this exact CodeWarrior MSL compressed_pair_imp constructor for vector<type_dialog_resource> at caller +0x44. The retail shared four-skill dialog helper calls 0x66a4 at 0x164e6c with its stack vector address in r3 and zero capacity in r4, then zeros size/data. The entire target body is `stw r4,0(r3); blr`, bounded by its return at 0x66a8 and the next prologue at 0x66ac; all eight bytes are pinned by SHA. Loader xrefs identify 16 code callers, including the Seer Hut helper and TOWN dialog setup. This binds one emitted library-template identity, not a game helper or broader alias."
+
+[[functions]]
+symbol = ".push_back__Q23std36__vector_imp<20type_dialog_resource>FRC20type_dialog_resource"
+mac_section = 0
+mac_offset = 0x1c6f0
+mac_size = 0xa0
+sha256 = "fb6d891be3b5ce597de85373ad3b7b60ffa541bcdafe9bce2c8f75035268704f"
+evidence = "The installed CodeWarrior MSL vector classifies this custom record as non-POD (default class_has_trivial_* traits are false), and its __vector_imp<T,false>::push_back definition matches the selected view's emitted symbol at caller +0x88. Retail's shared four-skill dialog helper calls 0x1c6f0 at 0x164eb4 with vector receiver r3 and an eight-byte record r4. The full 0xa0-byte callee tests size against capacity, reserves when full, conditionally copies both words into data[size] with constructed-local cleanup metadata, and increments size. Its preceding helper returns at 0x1c6ec, this one at 0x1c78c, and clear begins at 0x1c790; 23 linked callers include Seer Hut and TOWN dialog builders. This binds only the non-POD library-template identity."
+
+[[functions]]
+symbol = ".__dt__Q23std30vector<20type_dialog_resource>Fv"
+mac_section = 0
+mac_offset = 0x1c7c8
+mac_size = 0x64
+sha256 = "d671677ee7e33cb6836e8364b4ded77d717a80214c4a4a521afaaf5d4827c551"
+evidence = "The selected non-POD MSL view emits this vector destructor at doProgressDialog candidate +0xc4. Retail's shared four-skill dialog helper calls 0x1c7c8 at 0x164ee4 with the constructed vector receiver and deleting flag -1. Its full body calls the reviewed vector::clear at 0x1c790, frees the data pointer if present, then conditionally frees the vector receiver for a positive deleting flag, as in the installed MSL vector lifetime. The preceding clear returns at 0x1c7c4 and this body returns at 0x1c828; 18 code callers include the Seer Hut helper and other dialog builders. This is a library-template identity, not a game helper."
+
+[[functions]]
+symbol = ".strncpy"
+mac_section = 0
+mac_offset = 0x28e250
+mac_size = 0x60
+sha256 = "185b801a4449e3847142ead8e612085f2ae3e9d4ba253b981b18a1dd0fde0393"
+evidence = "All 96 bytes equal the named .strncpy hunk from CodeWarrior Pro 6 MSL C.PPC.Lib, without relocations. The full extent includes the zero-padding loop after the early return at +0x40; hero::initialize calls this entry."
+
+[[functions]]
+symbol = ".abs"
+mac_section = 0
+mac_offset = 0x288778
+mac_size = 0x10
+sha256 = "224cb73d9c41a3021c6b869de415325429a4b38f620242ae322b7dd389971b2d"
+evidence = "Four-instruction signed int absolute value (cmpwi r3,0; bgelr; neg r3,r3; blr). Both named abs calls in the paired hero::isInPatrolRadius reach this entry."
+
+[[functions]]
+symbol = ".__ptr_glue"
+mac_section = 0
+mac_offset = 0x2a3310
+mac_size = 0x14
+sha256 = "6770c5490d20d4da79988bb471aa2afcfb9d37c78c6aed7996ac82cd2a081e4a"
+call_kind = "indirect_tvector"
+evidence = "Exact five-instruction __ptr_glue body from CodeWarrior runtime.c and MSL RuntimePPC.Lib. Function-pointer and virtual-call controls emit a named call to this glue; MWLink retains the following slot as lwz r2,20(r1). Retail has 3237 direct branches to this dynamic-dispatch helper."
+
+[[functions]]
+symbol = ".__ct__Q23std19__vector_deleter<i>FUl"
+mac_section = 0
+mac_offset = 0x152b94
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "ResourceManager::open calls this vector<int> storage constructor at 0x152958 with the requested reserve count in r4. The entire body stores r4 at receiver+0 and returns; next function prologue begins at 0x152b9c. Source-view CodeWarrior emits the exact named MSL template call. Runtime identity only."
+
+[[functions]]
+symbol = ".reserve__Q23std9vector<i>FUl"
+mac_section = 0
+mac_offset = 0x154954
+mac_size = 0xf0
+sha256 = "c197589ba0a8bd4b3480265e0d04ad8daa0d6d30d60e0dfff5eda2148b02af87"
+evidence = "ResourceManager::open calls this vector<int>::reserve at 0x152978. It compares the requested capacity in r4 to receiver+0, allocates four bytes per element, copies old elements, swaps storage and destroys the temporary. Its blr at 0x154a40 precedes the next helper at 0x154a44; source-view CodeWarrior emits this named MSL template call. Runtime identity only."
+
+[[functions]]
+symbol = ".__throw"
+mac_section = 0
+mac_offset = 0x27fc44
+mac_size = 0xb0
+sha256 = "bdd2d8e1139eba4b9e4fe57ad87cf54b4745d8afcc97c5111e2e2821b5e5c513"
+evidence = "Five exception arms in ResourceManager::open call CodeWarrior runtime __throw at 0x27fc44. It saves integer and floating registers, records the thrown object/type arguments and enters the exception runtime at 0x27f998. Final blr at 0x27fcf0 and next __end__catch prologue at 0x27fcf4 bound the full span. Runtime identity only."
+
+[[functions]]
+symbol = ".pop_back__Q23std9vector<i>Fv"
+mac_section = 0
+mac_offset = 0x152b34
+mac_size = 0x4
+sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "ResourceManager::open rollback calls the retained vector<int>::pop_back at 0x152b34. This retail entry is a single blr; the next function begins with a prologue at 0x152b38. Source-view CodeWarrior emits the named MSL call. Runtime identity only; the empty body is not inferred to describe other vector instantiations."
+
+[[functions]]
+symbol = ".__end__catch"
+mac_section = 0
+mac_offset = 0x27fcf4
+mac_size = 0x44
+sha256 = "2a450b18f7e15a1a48b48e5bbd7eadc0a01644022b78ad6fd544eaf23480d1da"
+evidence = "ResourceManager::open catch cleanup calls CodeWarrior runtime __end__catch at 0x27fcf4. It conditionally dispatches the thrown object's destructor through __ptr_glue, then returns at 0x27fd34; the next function starts at 0x27fd38. Runtime identity only."
+
+[[functions]]
+symbol = ".__dt__Q23std9vector<i>Fv"
+mac_section = 0
+mac_offset = 0x154a58
+mac_size = 0x64
+sha256 = "dc864884c86cd99f34b4993889da3b68a027b02756d3ce9cfbebae6189face58"
+evidence = "ResourceManager::open destroys its stack vector<int> through this MSL destructor at 0x154a58. The callee clears elements at 0x154abc, frees storage at receiver+8, conditionally deletes the receiver for a positive flag, and returns at 0x154ab8 before the clear helper starts at 0x154abc. Runtime identity only."
+
+[[functions]]
+symbol = ".reset__Q23std10bitset<48>Fv"
+mac_section = 0
+mac_offset = 0xe73a8
+mac_size = 0x10
+sha256 = "765d467aef28897a16c69e550974242c7e115dedbd156d3e0451e5ebd9b2e0b8"
+evidence = "Hero initialize(short) calls this retained MSL bitset<48>::reset at code 0xf417c. Its complete four-instruction body zeroes the two 32-bit words at receiver offsets 0 and 4 and returns at 0xe73b4; the next bitset helper begins at 0xe73b8. The emitted MWOB relocation names this instantiation exactly. Runtime call identity only."
+
+[[functions]]
+symbol = ".compare__Q23std6stringCFUlUlPCcUl"
+mac_section = 0
+mac_offset = 0x41c4
+mac_size = 0x154
+sha256 = "a6dbd751832b5e9823eb9e0a2b2ed88612cde06289360a0aa3077b9f9278755d"
+evidence = "NewfullMap::newfullMapFn005042C0 calls the retained MSL string compare at code 0x127218. The candidate's named call takes string receiver, position, count, byte pointer and length in r3-r7; the retail body bounds-checks the position, calls strncmp at 0x28b11c and returns at 0x4314. The next prologue at 0x4318 bounds the full helper. Runtime call identity only."
+
+[[functions]]
+symbol = ".begin__Q23std10vector<Pc>CFv"
+mac_section = 0
+mac_offset = 0x5eec
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Recruit update calls the retained MSL vector<char*>::begin accessor at code 0x14f4dc. The complete body at 0x5eec returns receiver+8 then blr; its next neighbor begins at 0x5ef4. The emitted MWOB call is named .begin__Q23std10vector<Pc>CFv, and the Mac image has 349 direct calls to this small accessor. Runtime call identity only."
+
+[[functions]]
+symbol = ".begin__Q23std43vector<PQ214TCampaignBrief14ScenarioStruct>CFv"
+mac_section = 0
+mac_offset = 0x5eec
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Campaign-brief ally/enemy flag body calls 0x5eec at 0x645b8 on its vector<ScenarioStruct*> at campaign header +0x18. This exact MSL leaf returns the receiver+8 iterator slot and BLR; the emitted specialization has the same pointer-vector ABI as the already reviewed vector<char*> alias. Runtime call identity only."
+
+[[functions]]
+symbol = ".reset__Q23std10bitset<70>Fv"
+mac_section = 0
+mac_offset = 0xe7378
+mac_size = 0x14
+sha256 = "1f57a9e7fd6ea30160ea07cfe7ac4e4a42647e04ba9018c22c46348019cde391"
+evidence = "Town initializeSpells calls the retained MSL bitset<70>::reset. Its complete body clears three 32-bit words and returns at 0xe7388; the next body begins at 0xe738c. The emitted MWOB relocation names this instantiation. Runtime call identity only."
+
+[[functions]]
+symbol = ".set__Q23std10bitset<70>FUlb"
+mac_section = 0
+mac_offset = 0xe9a84
+mac_size = 0xe8
+sha256 = "13e49a6bf1fd32c623779b55529e994e063108a75c9fd42dbe82f555519e755f"
+evidence = "Town initializeSpells calls this retained MSL bitset<70>::set at 0x1b3b40 with receiver r3, bit index r4 and bool r5. It checks the 70-bit bound, sets or clears the selected word, returns the receiver, and ends at BLR 0xe9b68 before the next body at 0xe9b6c. Runtime call identity only."
+
+[[functions]]
+symbol = ".push_back__Q23std21vector<11MonsterData>FRC11MonsterData"
+mac_section = 0
+mac_offset = 0x129618
+mac_size = 0xf8
+sha256 = "78650eaee44bf3abdb60ff8ff3f74acb18e8f7c9aad6cb5cb56a0a943ce04cf6"
+evidence = "NewfullMap::readMonsterData calls this retained MSL vector<MonsterData>::push_back at 0x123db0 with receiver this+0x30 and a local element. The complete body grows capacity through 0x12d7f0 when needed, uses 0x24-byte elements, copies their string and eight dwords, increments size, then returns at 0x12970c before the next prologue at 0x129710. Candidate MWOB names this instantiation. Runtime call identity only."
+
+[[functions]]
+symbol = ".__vc__Q23std10vector<Pc>CFUl"
+mac_section = 0
+mac_offset = 0x948
+mac_size = 0x10
+sha256 = "680dea8ae86a092b429256ac5e937163c668865b1794dcb179c9529761499f3f"
+evidence = "HERO getMoraleDescription at 0xf88fc and getLuckDescription at 0xf8efc both call code 0:0x948 after adding 0x1c to TTextResource, passing text index 438 in r4. The complete 16-byte body loads vector data at receiver+8, scales the index by four, adds it to the data pointer and returns the element address; BLR is at 0x954 and the next prologue starts 0x958. The pinned MSL vector<T>::operator[](size_type) forwards through its POD indexer, and CodeWarrior emits the named `.__vc__Q23std10vector<Pc>CFUl` call in the shared HERO candidate. Runtime template identity only, with no Windows VA claim."

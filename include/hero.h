@@ -129,7 +129,7 @@ public:
     // E:\\gamedcs\\Hero.h:145.  The DC tiny helper is the validity byte;
     // retail folds it into unblock_lith before temporarily restoring the
     // hero's underlying map cell.
-    bool isOnMap() const { return m_valid != 0; }
+    unsigned char isOnMap() const { return m_valid; }
     // E:\gamedcs\Hero.h:150. Dreamcast retains an out-of-line copy, while
     // retail expands the validity test at every admitted Windows caller.
     TAdventureObjectType getObscuredObject() const
@@ -138,12 +138,7 @@ public:
             return m_obscuredType;
         return NOTHING;
     }
-    // E:\gamedcs\Hero.h:157
-    VA(0x0042ec70, 0x4f)  // exact body/callers x2, dc 0x1fb2c
-    type_point getLocation() const
-    {
-        return type_point(m_x, m_y, m_z);
-    }
+#include "inline/obscuring_object_get_location.inl"
     bool load(void* infile);
     // Dreamcast proves this Hero.h helper boundary. Retail SetupHeroView
     // folds it to the same three field tests; keep the call in source so
@@ -219,26 +214,7 @@ struct type_artifact {
 public:
     TArtifact m_artifactId;
     int m_extra;
-    // DC Hero.h:211 stores the artifact argument at +0, then line 212 stores
-    // the -1 sentinel at +4. Retail value_of_town preserves that order in
-    // its register allocation even though the eventual by-value pushes are
-    // ordered by record layout.
-    // The generated offering constructor at dc 0x128714 calls this
-    // constructor with -1. That proves the default argument: no separate
-    // zero-argument type_artifact constructor exists in the DC class API.
-    explicit type_artifact(TArtifact id = ARTIFACT_NONE)
-    {
-        m_artifactId = id;
-        m_extra = -1;
-    }
-    // Dreamcast Hero.h:214-218. A spell scroll is represented by artifact
-    // id 1 and its SpellID payload; this semantic constructor is distinct
-    // from the generic TArtifact constructor above.
-    explicit type_artifact(SpellID spell)
-    {
-        m_artifactId = ARTIFACT_SPELL_SCROLL;
-        m_extra = spell;
-    }
+#include "type_artifact_constructors.inl"
     void getRolloverText(char* buffer) const;
     // The reconstruction-only (int, int) overload was removed. Ordinary
     // artifacts use the TArtifact constructor; scrolls use SpellID. A
@@ -747,6 +723,9 @@ public:
     // DC hero.cpp:1862 has only the experience parameter, no receiver;
     // retail GiveExperience expands the same receiver-independent helper.
     static int getLevel(int experience);
+    // Mac retains one predicate body at 0xf66a0, called by both level-up paths.
+    // Its original source spelling is unknown.
+    bool isLevelUpCampaignOverride() const;
     // 0x4da720, hero.cpp:2147 in the Dreamcast roster (dc 0xcd17c) - the
     // no-argument level-up check advManager::TownEvent runs after each
     // combat it starts. Declared only; the body is not reconstructed and
@@ -937,11 +916,7 @@ public:
     // xrefs put direct calls in both hero-screen functions and the combat
     // sub-window update; the retail sites expand it byte-for-byte under
     // /Ob2. Keep the recovered header helper canonical for every consumer.
-    int getMaxMana() const
-    {
-        return static_cast<int>(
-            getPrimarySkill(3) * 10 * getIntelligenceFactor());
-    }
+#include "inline/hero_get_max_mana.inl"
     // Hero.h source helpers retained as calls by Dreamcast and expanded in
     // Complete's AI_AttemptMove and cursor movement family. check_terrain is
     // honored by the Hero.h:645/654 can_land call. The movement driver
@@ -967,15 +942,7 @@ public:
     {
         return getObscuredTown();
     }
-    VA(0x005bde40, 0x31)  // exact body + sole caller above, dc 0x2c668
-    int getPrimarySkill(int skill) const
-    {
-        if (m_stats[skill] > 99)
-            return 99;
-        if (m_stats[skill] > 0)
-            return m_stats[skill];
-        return skill >= 2 ? 1 : 0;
-    }
+#include "inline/hero_get_primary_skill.inl"
     void obscureCell()
     {
         type_obscuring_object::obscureCell(HERO, m_id);
@@ -988,7 +955,7 @@ public:
     // before the byte store. A direct `stats[i] = field` narrows the
     // load to `mov r8, byte ptr [..]` instead; the int PARAMETER is what
     // keeps the dword.
-    void setPrimarySkill(int skill, int amount) { m_stats[skill] = amount; }
+#include "inline/hero_set_primary_skill.inl"
     // `?AdjustPrimarySkill@hero@@QAAXHH@Z`, a Hero.h inline the Dreamcast
     // build calls OUT OF LINE and retail's /Ob2 expands. The DC line table
     // for advManager::DoEventLibrary (dc 0x93bf8) is what found it: source
@@ -1002,7 +969,7 @@ public:
     // i.e. the amount materialised in a register and reused, which is what
     // an inlined int PARAMETER produces and not what a literal in an `+=`
     // does. No clamp - the byte read-modify-write is all there is.
-    void adjustPrimarySkill(int skill, int amount) { m_stats[skill] += amount; }
+#include "inline/hero_adjust_primary_skill.inl"
     // Original ViewStat is the ordinary hero.cpp:1709 body at 0x4d9990.
     void viewStat(int whichStat, int isQuickView);
     int giveSS(int whichSS, int numLevelsToGive);
@@ -1036,13 +1003,7 @@ public:
     {
         return m_army.isMember(type);
     }
-    // E:\gamedcs\Hero.h:707, dc 0x23058
-    int getManaCost(int whichSpell) const
-    {
-        return getManaCost(
-            whichSpell, 0,
-            getSpecialTerrain());
-    }
+#include "inline/hero_get_mana_cost.inl"
     // Original: hero::GetSpellSchoolLevel; Hero.h:712, dc 0xd5914.
     // Complete's two-argument member0x4e5100 accepts the terrain id so the
     // four expansion magic terrains remain distinct from Magic Plains.
@@ -1050,11 +1011,7 @@ public:
     {
         return getSpellSchoolLevel(schoolMask, getSpecialTerrain());
     }
-    // E:\gamedcs\Hero.h:718, dc 0x2308c
-    TSkillMastery getSpellLevel(SpellID spell) const
-    {
-        return getSpellLevel(spell, getSpecialTerrain());
-    }
+#include "inline/hero_get_spell_level.inl"
     float getNecromancyFactor(unsigned char applyLimit) const;
     int getHeroSpellBonus(int spellId, int targetLevel, int value) const;
     // E:\gamedcs\Hero.h:724. Dreamcast retains this header helper as a
@@ -1071,16 +1028,9 @@ public:
     // LF_MFUNCTION returns const type_artifact&, with TArtifactSlot as the
     // equipped-slot domain. UI-decoded indices convert to that domain at use.
     // E:\gamedcs\Hero.h:965, dc 0x27e8c
-    const type_artifact& getArtifact(TArtifactSlot slot) const
-    {
-        return m_equipped[slot];
-    }
-    // E:\gamedcs\Hero.h:970, dc 0x27e9c
-    const type_artifact& getBackpack(long slot) const
-    {
-        return m_backpack[slot];
-    }
-    // E:\gamedcs\Hero.h:976. Dreamcast keeps this const header wrapper as
+#include "inline/hero_get_artifact.inl"
+#include "inline/hero_get_backpack.inl"
+    // E:\gamedcs\Hero.h:976, dc 0x2e60. Dreamcast keeps this const header wrapper as
     // a separate public; Complete folds it at each use into the retail-proven
     __forceinline int getExperienceIncrement() const
     {
@@ -1095,29 +1045,16 @@ public:
         // into its CodeView-proven enum domain at this boundary.
         return TSkillMastery(m_skillLevel[skill]);
     }
-    // E:\gamedcs\Hero.h:986, dc 0x1fd30. SetHeroContext preserves this
-    // header-inline helper in source. Retail folds its packed-point
-    // construction into SetHeroContext and move_hero, so the canonical
-    // declaration belongs to hero rather than either TU's private view.
-    type_point getTarget() const
-    {
-        return type_point(m_pathTargetX, m_pathTargetY, m_pathTargetZ);
-    }
+#include "inline/hero_get_target.inl"
 
     // DC hero.h:991 (0x37dc4) and the class signature record the const
     // long-returning duration accessor used by AI reward valuation.
     long getValueOfDuration() const { return m_valueOfDuration; }
-    __forceinline long getValueOfKnowledge() const
-    {
-        return m_valueOfKnowledge;
-    }
+#include "inline/hero_get_value_of_knowledge.inl"
     // Dreamcast hero.h:1001/1006. Retail folds both one-field accessors into
     // get_skill_value; retaining the source boundaries still emits the direct
     // loads proved at +0x47e/+0x486.
-    __forceinline long getValueOfPower() const
-    {
-        return m_valueOfPower;
-    }
+#include "inline/hero_get_value_of_power.inl"
 
     // DC hero.h:1006/1011, dc 0x114b88/0x114b90; each is one
     // cached-value load, also expanded by the retail philai callers.
@@ -1159,12 +1096,7 @@ public:
     {
         m_valueOfWell = arg;
     }
-    // DC-attested inline helper; SetShrineHelpText proves the direct
-    // byte-indexed availability read in retail.
-    unsigned char spellIsAvailable(int spell) const
-    {
-        return m_availableSpells[spell];
-    }
+#include "inline/hero_spell_is_available.inl"
     TCreatureType getNecromancyCreature();
     const char* heroFn004D8FB0();
     unsigned char heroFn004DBE80(int combination);

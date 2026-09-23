@@ -9,6 +9,8 @@
     C-style casts are banned at 0) + README score block.
 
 Full builds refresh retail targets before comparison and checkpointing.
+Admitted Classic Mac counterparts are compiled from the same authored function
+bodies after the Windows comparison and keep a separate checkpoint ledger.
 `--fast <TU>` keeps the existing targets, normalizes comparison copies, and
 stops after the report. Run a full build first to establish those targets.
 """
@@ -41,7 +43,7 @@ def main(argv=None) -> int:
 
     if not fast:
         try:
-            for executable in (inputs.RETAIL, inputs.DREAMCAST):
+            for executable in (inputs.RETAIL, inputs.DREAMCAST, inputs.MAC):
                 inputs.stage_executable(executable)
         except inputs.InputError as exc:
             print(f"[build] {exc}", file=sys.stderr)
@@ -63,10 +65,33 @@ def main(argv=None) -> int:
     print(f"[build] {status.overall_line(report, fingerprint_pair=fingerprint_pair)}")
     print(f"[build] CUR diagnostic report: {status.REPORT.relative_to(ROOT)}")
 
+    from homm3.mac import build as mac_build
+    try:
+        # Ninja accepts manifest unit names as its positional build targets.
+        # Options (and explicit non-unit targets) leave the Mac scope broad so
+        # we do not silently skip an admitted counterpart.
+        from homm3 import manifest as units_manifest
+        manifest_units = {unit["unit"] for unit in
+                          units_manifest.load(ROOT / "config/units.toml")["unit"]}
+        selected = {arg for arg in ninja_args if arg in manifest_units}
+        mac_units = selected if fast and selected else None
+        mac_build.run(mac_units, checkpoint=not fast)
+    except (ValueError, OSError) as exc:
+        print(f"[build] Mac target error: {exc}", file=sys.stderr)
+        mac_failed = True
+    else:
+        mac_failed = False
+
     if fast:
+        from homm3.mac import queue as mac_queue
+        try:
+            mac_queue.refresh(ROOT, source_hashes=fingerprint_pair[0])
+        except (ValueError, OSError) as exc:
+            print(f"[build] Mac queue error: {exc}", file=sys.stderr)
+            mac_failed = True
         print("[build] fast: delink + checkpoint ledger + gates + README skipped - "
               "run `homm3 build` before committing")
-        return 0
+        return 1 if mac_failed else 0
 
     # A byte score is a checkpoint, not an admissibility invariant. Coherent
     # restoration of a Dreamcast-proven source shape may lower several local
@@ -85,7 +110,7 @@ def main(argv=None) -> int:
     # Run every independent evidence/source gate, even after one fails.
     # Report unavailable evidence as fatal; dependent checks cannot certify it.
     # These gates, not a local objdiff maximum, decide admissibility.
-    failed = False
+    failed = mac_failed
 
     # banked_rows runs alongside cmd_check, not inside it: the ratchet
     # compares the rows that ARE in the baseline, this one asks whether a
@@ -131,6 +156,13 @@ def main(argv=None) -> int:
         status.write_readme(report)
     except Exception as exc:  # the score block must never fail a build
         print(f"[build] README block skipped: {exc}")
+
+    from homm3.mac import queue as mac_queue
+    try:
+        mac_queue.refresh(ROOT, source_hashes=fingerprint_pair[0])
+    except (ValueError, OSError) as exc:
+        print(f"[build] Mac queue error: {exc}", file=sys.stderr)
+        failed = True
 
     return 1 if failed else 0
 

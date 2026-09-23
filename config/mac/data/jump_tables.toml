@@ -1,0 +1,42 @@
+# Compiler-generated switch tables paired through their owning source function
+# and retail TOC reader. Emitted @number names are intentionally not pinned.
+
+[[jump_tables]]
+owner_va = 0x00524690
+unit = "philai"
+mac_section = 1
+mac_offset = 0x4b748
+mac_size = 112
+reference_offset = 0xb4
+sha256 = "a27ff37adae0da9d72c23a2a9f9dde47e0d25f00fea320a45b3a2e5464ed38df"
+evidence = "getSkillValue dispatches 28 secondary skills. Retail load at code 0x13e20c selects TOC 1+0x2a3c, whose loader pointer selects this 28-word table. Every word is loader-relocated to an aligned instruction inside the admitted 0x13e158..0x13e904 owner. Candidate's sole 112-byte local switch table has one HUNK_XREF_32BIT to the emitted owning function per word. Candidate labels are rebased through reload collapse and compared, never replaced with retail labels."
+
+[[jump_tables]]
+owner_va = 0x004f4eb0
+unit = "kb"
+mac_section = 1
+mac_offset = 0x4ab10
+mac_size = 148
+reference_offset = 0x84
+sha256 = "f0c9b697534e831b076f224d08fb922d0114c9da1c12e2b5e7d54ac5e98a8c5b"
+evidence = "type_dialog_icon::set(EGameResource,long) uses a 0x24 switch bound. Retail TOC load at code 0x116824 selects pointer 1+0x27c4 to this 37-word table; every loader-relocated destination lies in the admitted setter 0x1167a0..0x117220. The first seven entries select 0x116894, entry 7 selects 0x117014 and entry 36 selects 0x1169a0. Candidate has one 148-byte switch table with 37 relocations to its own setter symbol. Pairing admits its address, while separately linked candidate entries remain part of the byte verdict."
+
+[[jump_tables]]
+owner_va = 0x004f15e0
+unit = "kb"
+mac_section = 1
+mac_offset = 0x4a95c
+mac_size = 56
+reference_offset = 0x4c
+sha256 = "961c0d8486b5075f84d33b737abba961da5fa29a575765d043a9a20dbffadcf2"
+evidence = "Dreamcast DisplayVCWinLoss and the Mac Complete target both add one to signed victory type before a bounded switch. Mac code0:0x113254 loads TOC 1+0x2810 -> 1+0x4a95c, whose 14 relocated words select the -1 exit and 0..12 victory arms within owner code0:0x113208..0x114754. The source-backed -1 case yields one emitted 56-byte table with all 14 relocations to its owning function. All target labels remain byte-scored after link rebasing."
+
+[[jump_tables]]
+owner_va = 0x004195c0
+unit = "advmgr"
+mac_section = 1
+mac_offset = 0x2902c
+mac_size = 32
+reference_offset = 0xa0
+sha256 = "42956ac188e2eaad23fefcd1427ab8d1081b72da13159151b6f113fcaebfe6a0"
+evidence = "Mac screenScroll at code 0+0x19cdc bounds unsigned dir to 0..7, then code 0+0x19ce8 reads TOC 1+0x1c18 -> data 1+0x2902c and branches through its eight loader-relocated words. They point in order to 0+0x19cfc, 0x19d04, 0x19d10, 0x19d18, 0x19d24, 0x19d2c, 0x19d38, 0x19d40, all inside the 0+0x19c48..0x19e50 owner. The candidate emits one eight-word local switch table whose entry relocs target its own function; all 32 entry bytes remain scored after rebasing."

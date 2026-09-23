@@ -151,7 +151,6 @@ bitmap816.obj	0x53b0c	3050f065a375	9	Dreamcast and Complete use different platfo
 game.obj	0xa68d8	3fe59789a14d	10	Dreamcast has 128 hero ids; Complete retail extends the hero roster to 156 and requires the larger local array.
 game.obj	0xa6cd4	102a4fef253b	10	Dreamcast has sixteen hero classes; Complete adds the two Conflux classes and requires eighteen class-count entries.
 game.obj	0xa6cd4	9dd6ecc5101b	10	Dreamcast has sixteen hero classes; Complete adds the two Conflux classes and requires eighteen class-count entries.
-kb.obj	0xe4330	22587511fd20	8	Dreamcast and Complete use different fixed formatting-buffer extents; retain Complete retail's 32-byte local.
 puzzlewindow.obj	0x115f64	3ec91a153b05	10	Dreamcast and Complete use different puzzle-map dimensions; Complete retail requires the 19x17 tile grid.
 puzzlewindow.obj	0x115f64	b90508ea6a76	10	Dreamcast and Complete use different puzzle-map extents; Complete retail requires the 323-cell visibility array.
 quickherowindow.obj	0x1170bc	5cb60656ab21	9	Dreamcast formats into a fixed character buffer; Complete retail constructs the ostrstream path, an implementation-version difference.

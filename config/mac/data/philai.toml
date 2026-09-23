@@ -1,0 +1,259 @@
+# Address-only PHILAI globals and their reviewed Mac literals. The global
+# records bind storage; they do not compare external initializers.
+
+[[data]]
+retail_va = 0x006989c0
+source = "include/advmgr.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x527e38
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Windows MoveHero stores and restores the DATA-claimed g_completeDrawEnabled at 0x6989c0. Mac MoveHero loads TOC 1+0x774 -> zero-filled storage 1+0x527e38 at 0x1405a4 and writes it at 0x140684/0x140694; the same pointer is used by restoreMouse at 0x13d72c."
+
+[[data]]
+retail_va = 0x006972b8
+source = "include/advmgr.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x526bfc
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Canonical advmgr.h identifies the retail game-over latch at 0x6972b8; Windows MoveHero returns on it before movement setup. Mac MoveHero loads TOC 1+0x70c -> zero-filled storage 1+0x526bfc at 0x14060c, taking the same early-return arm."
+
+[[data]]
+retail_va = 0x0069ccd4
+source = "include/advmgr.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52c088
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Windows MoveHero clears the DATA-claimed g_unnamed69ccd4 after the game-over gate. Mac MoveHero clears zero-filled storage 1+0x52c088 via TOC 1+0x670 at 0x14061c, immediately after the same gate."
+
+[[data]]
+retail_va = 0x00698790
+source = "include/advmgr.h"
+declaration_only = true
+mac_symbol = "g_config"
+mac_section = 1
+mac_offset = 0x527d40
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Windows MoveHero tests standalone DATA-claimed g_unnamed698790 at 0x698790 to suppress its local visibility scan. Dreamcast MoveHero at 0x10ece4 reads ?gConfig@@3UconfigStruct@@A+0x38 at the same gate. Mac MoveHero at 0x140644 loads TOC 1+0x5c4 -> zero-filled config base 1+0x527d40 and reads +0x38; the Mac declaration view projects only that evidenced field, mapping the platform-specific storage to the canonical source expression."
+
+[[data]]
+retail_va = 0x0069954c
+source = "src/kbwin.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528990
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "src/kbwin.cpp already owns DATA(0x69954c) on g_videoPaused. Windows MoveHero tests it between the visibility-scan flag and mapExtraPosAndAdjacentsSet. Mac MoveHero loads TOC 1+0x5d4 -> zero-filled storage 1+0x528990 at 0x140654 and tests it at 0x14065c in the same guard."
+
+[[data]]
+retail_va = 0x0069ccbc
+source = "include/advmgr.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52c084
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Windows MoveHero passes the DATA-claimed g_mapVisibilityBit to mapExtraPosAndAdjacentsSet. Mac MoveHero loads one byte from storage 1+0x52c084 via TOC 1+0x5d0 at 0x140664 before that named call; the initialized byte is zero."
+
+[[data]]
+retail_va = 0x006783c8
+source = "include/game.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x432f4
+mac_size = 4
+sha256 = "a5e537813128ccca735d65a9027cd5057d164fc78f25e55128e17a501851d585"
+evidence = "Windows DATA 0x6783c8 is g_mapWidth. Mac convertObject loads TOC 1+0x76c -> initialized 72 at 1+0x432f4 into r28 and compares object x at +4 minus horizontal offset against that value at 0xe0f38..0xe0f4c. MoveHero multiplies the two equal dimensions, which does not establish their order."
+
+[[data]]
+retail_va = 0x006783cc
+source = "include/game.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x432f8
+mac_size = 4
+sha256 = "a5e537813128ccca735d65a9027cd5057d164fc78f25e55128e17a501851d585"
+evidence = "Windows DATA 0x6783cc is g_mapHeight. Mac convertObject loads TOC 1+0x770 -> initialized 72 at 1+0x432f8 into r29 and compares object y at +5 minus vertical offset against that value at 0xe0f18..0xe0f2c. MoveHero multiplies the two equal dimensions, which does not establish their order."
+
+[[data]]
+retail_va = 0x0069cca8
+source = "include/game.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52c080
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Windows MoveHero passes DATA-claimed g_netLocalGamePos to isHumanAlly. Mac MoveHero loads TOC 1+0x624 -> zero-filled 1+0x52c080 at 0x140748 before the sole player-to-team lookup and isHumanTeam call."
+
+[[data]]
+retail_va = 0x00699268
+source = "include/advmgr.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52893c
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Windows aiEnterTown references ?gpAdvManager@@3PAVadvManager@@A at 0x699268 (retail alias ledger). Mac aiEnterTown at 0x13fbd4 loads TOC 1+0x628 -> zero-filled pointer storage 1+0x52893c before demobilizeCurrHero; address-only binding."
+
+[[data]]
+retail_va = 0x006aa9f8
+source = "src/townmgr.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x552f60
+mac_size = 72
+sha256 = "834a709ba2534ebe3ee1397fd4f7bd288b2acc1d20a08d6c862dcd99b6f04400"
+evidence = "Source-owned g_blacksmithArtifacts[9] is a nine-record type_artifact table at Windows 0x6aa9f8. Mac aiEnterTown at 0x13fb4c loads TOC 1+0xdfc -> 1+0x552f60 and indexes it by signed town type times eight; its 72-byte storage is zero-filled before runtime initialization. Address-only binding."
+
+[[data]]
+retail_va = 0x00640380
+owner_va = 0x00524690
+source = "src/philai.cpp"
+mac_section = 0
+mac_offset = 0x2a63d4
+mac_size = 12
+sha256 = "c72c075ad5705c94cd3909bd4dc89d95504b02c1d0d5bf2552342037f0071116"
+evidence = "Source-owned constArcheryValue[3] at getSkillValue case Archery is {16,7,11}. Mac getSkillValue at 0x13e270 loads TOC 1+0x2a44, whose loader pointer targets the sole 12-byte big-endian sequence {16,7,11} at 0+0x2a63d4."
+
+[[data]]
+retail_va = 0x0064038c
+owner_va = 0x00524690
+source = "src/philai.cpp"
+mac_section = 0
+mac_offset = 0x2a63e0
+mac_size = 12
+sha256 = "d3d5fa6310e34b57884f8bac61c9dcc1fa409f5c960dbd0093df666a909cb316"
+evidence = "Source-owned constEstateValue[3] at getSkillValue case Estates is {725,725,1550}. Mac getSkillValue at 0x13e164 loads TOC 1+0x2a40, whose loader pointer targets the sole 12-byte big-endian sequence {725,725,1550} at 0+0x2a63e0."
+
+[[data]]
+retail_va = 0x00681860
+source = "src/philai.cpp"
+mac_section = 1
+mac_offset = 0x4b730
+mac_size = 24
+sha256 = "c67b75b071dd015f876ce5f864fc20f1fa02f81a5e576ad3828d328fc9ad8806"
+evidence = "Source-owned g_aiPathfindingMapFactor[3] initializes three doubles to 1.0. Mac getSkillValue at 0x13e240 loads a TOC pointer 1+0x2a48 to 1+0x4b730 and indexes it by mastery*8. The pathfinding-factor writer at 0x146bac uses the same TOC pointer; the 24-byte initial payload is three big-endian doubles of 1.0."
+
+[[data]]
+retail_va = 0x00681878
+source = "src/philai.cpp"
+mac_section = 1
+mac_offset = 0x5180
+mac_size = 8
+sha256 = "54ade53a579f5389ecae3af42df9e96aa30fcf3fc02a7475afc18c3e4835f6f7"
+evidence = "Source-owned g_aiWaterMapFraction initializes to double 1.0 and is later updated by the map-factor writer. Mac getSkillValue Navigation loads the double directly from TOC 1+0x5180 at 0x13e308; that same cell is written at 0x146de0. Its eight big-endian bytes encode 1.0."
+
+[[data]]
+retail_va = 0x00691684
+source = "src/game.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x634f0
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Windows getTurnAIVars relocation +0x0f targets data_291684, the DATA-claimed iCurHourGlassPhase word. Mac loader relocates TOC 1+0xbe4 to zero-filled storage 1+0x634f0; getTurnAIVars clears it at 0x141c30, incrementHourGlass updates it at 0x13d68c, and a game path clears it at 0xdd8e4. Address-only external binding."
+
+[[data]]
+retail_va = 0x00691680
+source = "include/game.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x634f4
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Windows getTurnAIVars relocation +0x15 targets data_291680, the adjacent companion cleared by this function. Mac loader relocates TOC 1+0xdf8 to zero-filled storage 1+0x634f4, written at 0x141c34; no other Mac TOC reader is present. Address-only external binding."
+
+[[data]]
+retail_va = 0x00660b68
+source = "src/artifact.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x2ac28
+mac_size = 4
+sha256 = "bf6ee8501e6a4657b8d1b7033b731f7e497d34cbd258963c42ef11871b846049"
+evidence = "Windows getTurnAIVars relocation +0x73 uses the DATA-claimed reference-to-144-artifact-traits array at 0x660b68. Mac loader relocates TOC 1+0x6b0 to pointer storage 1+0x2ac28, used at 0x141c1c; its 0x000646e8 payload points to the Mac trait table with 0x20-byte records. Address-only binding, not an initializer comparison."
+
+[[data]]
+retail_va = 0x006604f8
+source = "include/ai_player.h"
+declaration_only = true
+mac_symbol = "s_attackComputerBonus__14type_AI_player"
+mac_section = 1
+mac_offset = 0x29408
+mac_size = 4
+sha256 = "1b9e0fe7b740b4e583727aa1c9d27ff8c01491f911d2de0747f8c997ef6b3498"
+evidence = "Dreamcast type_AI_player has static float attack_computer_bonus and public ?attack_computer_bonus@type_AI_player@@1MA at seg3 0x26c0. Windows getTurnAIVars relocs +0xde/+0x134 target 0x6604f8, whose pinned bytes are little-endian float 0.5. Mac getTurnAIVars stores through TOC 1+0x854 to 1+0x29408, also read by type_AI_player::getAttackBonus at 0x2b424; its big-endian bytes are float 0.5. The defining translation unit is unproven, so this binds the canonical class declaration without claiming an initializer."
+
+[[data]]
+retail_va = 0x006604fc
+source = "include/ai_player.h"
+declaration_only = true
+mac_symbol = "s_attackHumanBonus__14type_AI_player"
+mac_section = 1
+mac_offset = 0x2940c
+mac_size = 4
+sha256 = "1b9e0fe7b740b4e583727aa1c9d27ff8c01491f911d2de0747f8c997ef6b3498"
+evidence = "Dreamcast type_AI_player has static float attack_human_bonus and public ?attack_human_bonus@type_AI_player@@1MA at seg3 0x26c4. Windows getTurnAIVars relocs +0xe8/+0x122 target 0x6604fc, whose pinned bytes are little-endian float 0.5. Mac getTurnAIVars stores through TOC 1+0x858 to 1+0x2940c, also read by type_AI_player::getAttackBonus at 0x2b418; its big-endian bytes are float 0.5. The defining translation unit is unproven, so this binds the canonical class declaration without claiming an initializer."
+
+[[constants]]
+units = ["philai"]
+mac_section = 1
+mac_offset = 0x528c
+mac_size = 4
+sha256 = "de620abd6d3615746360c1d15ce3a56291236d37424124054a49d25e947ffc4d"
+evidence = "IEEE float32 1.0, loaded at getTurnAIVars 0x141d38 for the zero-difficulty computer attack bonus."
+
+[[constants]]
+units = ["philai"]
+mac_section = 1
+mac_offset = 0x5288
+mac_size = 4
+sha256 = "ca68d1c427c04dd3137aef15b068cf8623e3c6925cfc41b3a723d4e3133f8278"
+evidence = "IEEE float32 -0.4, loaded at getTurnAIVars 0x141d40 for the zero-difficulty human attack bonus."
+
+[[constants]]
+units = ["philai"]
+mac_section = 1
+mac_offset = 0x5284
+mac_size = 4
+sha256 = "9fa19f3d2af14b74a561e94d6f080c015d9a963c89737bd362bec36dd44e344f"
+evidence = "IEEE float32 0.25, loaded at getTurnAIVars 0x141d58 for difficulty-scaled attack bonuses."
+
+[[constants]]
+units = ["philai"]
+mac_section = 1
+mac_offset = 0x5280
+mac_size = 4
+sha256 = "6c49047666986cfff6a1787c9b624f0478e689b1036914cafabd43fd2f529760"
+evidence = "IEEE float32 0.75, loaded at getTurnAIVars 0x141d60 for the computer attack bonus intercept."
+
+[[constants]]
+units = ["philai"]
+mac_section = 1
+mac_offset = 0x52d8
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "IEEE binary64 0x4330000080000000 signed-int conversion bias. PHILAI code loads it through loader-relocated TOC 1+0x2a4c: valueOfWarFactory at 0x13f118 and getTurnAIVars at 0x141cf0, among 60 uses. A byte-identical hero pool at 1+0x4d18 has a distinct loader cell 1+0x265c and is scoped to hero."
+
+[[constants]]
+units = ["philai"]
+mac_section = 1
+mac_offset = 0x52d0
+mac_size = 8
+sha256 = "90dc6b31c4a13d0f2fd03aa88ca9d5a1a7f3ddf2591dc235c4f8ba8849575706"
+evidence = "IEEE binary64 0.25 loaded directly at getSkillValue 0x13e250 to divide pathfinding value by four after multiplying its map factor."
+
+[[constants]]
+units = ["philai"]
+mac_section = 1
+mac_offset = 0x52c8
+mac_size = 8
+sha256 = "ace5732151a42e3c2ce91e039d0bd2d3a86dce1bccb6b874852b1aaa7f01d3bd"
+evidence = "IEEE binary64 0.5 loaded directly at getSkillValue 0x13e310 to divide navigation value by two after multiplying its water-map fraction."

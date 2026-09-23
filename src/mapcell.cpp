@@ -64,8 +64,10 @@ int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 // The apply-to-human flag is version-gated at save version 28, the same
 // boundary game::LoadGarrisonPool uses for its removable-units flag; below it
 // the flag is forced on rather than read.
-// DC locals prove int count, string throwAway, and char padding[16]. The
-// read/guard pairs and failure scopes are separate at mapcell.cpp:93..120.
+// DC locals prove int count, string throwAway, and char padding[16]. At
+// mapcell.cpp:89/91 both readString results are stored in count's sp+0x14
+// slot, as are the later gzread results. The read/guard pairs and failure
+// scopes are separate at mapcell.cpp:93..120.
 // The 24-state family emitted four reproduced code results: recovered count
 // placement, char padding and error braces keep 99.4737%. Removing the old
 // cleanup pin gives 72.9210% in every corresponding control. That retained
@@ -76,8 +78,8 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
 {
     int count;
     std::string throwAway;
-    NewSMapHeader::readString(infile, throwAway);
-    NewSMapHeader::readString(infile, m_message);
+    count = NewSMapHeader::readString(infile, throwAway);
+    count = NewSMapHeader::readString(infile, m_message);
 
     count = infile->read(m_resQty, sizeof(m_resQty));
     if (count < sizeof(m_resQty)) {
@@ -2323,23 +2325,47 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         // 94.96.
         int rawIdentifier;
         infile->read(&rawIdentifier, sizeof(rawIdentifier));
+#if defined(HOMM3_TARGET_MAC)
+        // Mac map data is little endian; the retail PowerPC load uses lwbrx.
+        identifier = __lwbrx(&rawIdentifier, 0);
+#else
         identifier = rawIdentifier;
+#endif
     }
 
+#if defined(HOMM3_TARGET_MAC)
+    // Mac retail swaps this file halfword, stores it, then reloads it with
+    // lhz for the unsigned 12-bit quantity lane; signed short adds extsh.
+    unsigned short quantity;
+#else
     short quantity;
+#endif
     if (infile->read(&quantity, sizeof(quantity)) < sizeof(quantity))
         return -1;
+#if defined(HOMM3_TARGET_MAC)
+    quantity = __lhbrx(&quantity, 0);
+    monsterObject->m_monsterInfo.m_qty = quantity;
+#else
     monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffff000)
         | (quantity & 0xfff);
+#endif
 
-    // DC names one `disposition` byte. Sharing it as the switch result adds
-    // retail's missing block and raises 97.12 -> 97.29. A separate promoted
-    // selector is optimized back to the two-byte 97.12 shape.
-    char disposition;
-    if (infile->read(&disposition, sizeof(disposition)) < sizeof(disposition))
+    // DC reads its unsigned char_buffer at line 2598, then records the signed
+    // disposition result separately across the switch arms at 2606..2630.
+    // Retail preserves the input byte for the default arm and jumps from the
+    // fixed-10 arm to the common result join.
+    unsigned char charBuffer;
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
 
-    switch (disposition) {
+    // The older Dreamcast and Mac code leave disposition untouched for an
+    // out-of-range input; Complete x86 carries the input through that arm.
+#if defined(HOMM3_TARGET_MAC)
+    char disposition;
+#else
+    char disposition = static_cast<char>(charBuffer);
+#endif
+    switch (static_cast<signed char>(charBuffer)) {
     case MONSTER_QTY_UNRESOLVED:
         disposition = -4;
         break;
@@ -2358,10 +2384,13 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     default:
         break;
     }
+#if defined(HOMM3_TARGET_MAC)
+    monsterObject->m_monsterInfo.m_disposition = disposition;
+#else
     monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffe0fff)
         | ((disposition & 0x1f) << 12);
+#endif
 
-    unsigned char charBuffer;
     if (infile->read(&charBuffer, sizeof(charBuffer))
         < sizeof(charBuffer))
         return -1;
@@ -2381,6 +2410,9 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
             if (infile->read(&quantityRead, sizeof(quantityRead))
                 < sizeof(quantityRead))
                 return -1;
+#if defined(HOMM3_TARGET_MAC)
+            quantityRead = __lwbrx(&quantityRead, 0);
+#endif
             tempMonster.m_resQty[i] = quantityRead;
         }
 
@@ -2392,30 +2424,47 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         } else {
             short wide;
             infile->read(&wide, sizeof(wide));
+#if defined(HOMM3_TARGET_MAC)
+            artifact = static_cast<short>(__lhbrx(&wide, 0));
+#else
             artifact = wide;
+#endif
         }
         tempMonster.m_artifact = artifact;
 
         if (customIndex < 4000) {
             m_customMonsterList.push_back(tempMonster);
+#if defined(HOMM3_TARGET_MAC)
+            monsterObject->m_monsterInfo.m_custom = 1;
+            monsterObject->m_monsterInfo.m_index = customIndex;
+#else
             monsterObject->m_extraInfo = (((customIndex & 0xff) | 0xfffff000)
                                         << 19)
                 | (monsterObject->m_extraInfo & 0xf807ffff);
+#endif
         }
     }
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
+#if defined(HOMM3_TARGET_MAC)
+    monsterObject->m_monsterInfo.m_neverFlee = charBuffer & 1;
+#else
     monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffdffff)
         | ((charBuffer & 1) << 17);
+#endif
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     // The mask retail computes clears bits 27..30 alongside bit 18, so this
     // write lands on more than the one flag; transcribed as the object does
     // it rather than narrowed to the single bit.
+#if defined(HOMM3_TARGET_MAC)
+    monsterObject->m_monsterInfo.m_dontGrow = charBuffer & 1;
+#else
     monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0x87fbffff)
         | ((charBuffer & 1) << 18);
+#endif
 
     char padding[2];
     if (infile->read(padding, sizeof(padding)) < sizeof(padding))
@@ -3876,6 +3925,12 @@ std::vector<int> g_invalidPlacementList;
 // COFF symbol and the target's source-owned pooled empty-literal symbol both
 // resolve to 0x63a608; no DATA_COMPGEN binding exists in mapcell.obj because
 // the literal's physical owner is another compiland.
+// Mac 0:0x1270c0..0x127278 is the same later helper: it clears 232 per-class
+// lists, scans 0x38-byte types backwards by extra and image name, and has the
+// same two reader calls. Its signed index store and extra-first comparison
+// justify the narrow Mac spellings below. O4 yields 440/440 bytes and the
+// same string::compare call at 94.7727%; GPR ownership and the frame size
+// remain different. No DC procedure is claimed for this Complete addition.
 VA(0x005042c0, 0x1A5)  // retail body + two callers: readMapObjects/loadMapObjects; no DC roster row
 void NewfullMap::newfullMapFn005042C0()
 {
@@ -3888,17 +3943,30 @@ void NewfullMap::newfullMapFn005042C0()
 
     for (int i = 0; i < m_objectTypes.size(); ++i) {
         int objectClass = m_objectTypes[i].m_objectType;
+#if defined(HOMM3_TARGET_MAC)
+        int typeIndex = m_objectTypeIndex[objectClass].size();
+        int extra = m_objectTypes[i].m_extra;
+#else
         int extra = m_objectTypes[i].m_extra;
         int typeIndex = m_objectTypeIndex[objectClass].size();
+#endif
         while (typeIndex--) {
             CObjectType& candidate = m_objectTypeIndex[objectClass][typeIndex];
+#if defined(HOMM3_TARGET_MAC)
+            if (extra == candidate.m_extra
+#else
             if (candidate.m_extra == extra
+#endif
                 && candidate.m_imageName == m_objectTypes[i].m_imageName)
                 break;
         }
         if (typeIndex >= 0)
             m_objectTypeIndex[objectClass][typeIndex].m_objectTypeIndex =
+#if defined(HOMM3_TARGET_MAC)
+                static_cast<short>(i);
+#else
                 static_cast<unsigned short>(i);
+#endif
     }
 }
 
@@ -4024,6 +4092,8 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
 
 // Neither list read has the `count == 0 -> clear()` arm readTimedEventList
 // needs: both go straight into resize, which is loadBlackBox's shape.
+// DC mapcell.cpp:3974 names the shared loop counter `int x`; restoring that
+// signed local closes Complete's final error-cleanup block (61/61 CFG blocks).
 
 VA(0x00504b70, 0x4E9)  // dc 0xf318c
 int NewfullMap::loadMapObjects(TAbstractFile* infile)
@@ -4034,9 +4104,9 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
 
     m_objectTypes.resize(count);
 
-    unsigned int i;
-    for (i = 0; i < m_objectTypes.size(); ++i) {
-        if (loadObjectType(infile, &m_objectTypes[i]) < 0)
+    int x;
+    for (x = 0; x < m_objectTypes.size(); ++x) {
+        if (loadObjectType(infile, &m_objectTypes[x]) < 0)
             return -1;
     }
 
@@ -4045,21 +4115,21 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
 
     std::vector<CSprite*> oldSprites;
     oldSprites.resize(m_sprites.size());
-    for (i = 0; i < m_sprites.size(); ++i)
-        oldSprites[i] = m_sprites[i];
+    for (x = 0; x < m_sprites.size(); ++x)
+        oldSprites[x] = m_sprites[x];
 
     m_sprites.resize(m_objectTypes.size());
-    for (i = 0; i < m_objectTypes.size(); ++i) {
-        m_sprites[i] =
-            ResourceManager::getSprite(m_objectTypes[i].m_imageName.c_str());
-        if (i == m_objectTypes.size() / 3)
+    for (x = 0; x < m_objectTypes.size(); ++x) {
+        m_sprites[x] =
+            ResourceManager::getSprite(m_objectTypes[x].m_imageName.c_str());
+        if (x == m_objectTypes.size() / 3)
             incProgressBar(1);
-        if (i == m_objectTypes.size() / 3 * 2)
+        if (x == m_objectTypes.size() / 3 * 2)
             incProgressBar(1);
     }
 
-    for (i = 0; i < oldSprites.size(); ++i)
-        oldSprites[i]->dispose();
+    for (x = 0; x < oldSprites.size(); ++x)
+        oldSprites[x]->dispose();
     oldSprites.clear();
 
     incProgressBar(1);
@@ -4068,10 +4138,10 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
         return -1;
 
     m_objects.resize(count);
-    for (i = 0; i < m_objects.size(); ++i) {
-        if (loadObject(infile, &m_objects[i]) < 0)
+    for (x = 0; x < m_objects.size(); ++x) {
+        if (loadObject(infile, &m_objects[x]) < 0)
             return -1;
-        m_objects[i].m_animationOffset = static_cast<unsigned char>(random(0, 255));
+        m_objects[x].m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
 
     incProgressBar(1);

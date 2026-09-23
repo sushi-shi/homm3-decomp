@@ -510,7 +510,11 @@ void type_record_show_boat::undo()
     m_currentBoat->m_z = m_previousLocation.m_z;
 }
 
-inline type_record_erase::type_record_erase(type_point location,
+// DC cpp:533 defaults m_location before the line-534 assignment. Spelling
+// that default as `: m_location()` or spelling the base initializer explicitly
+// is byte-flat at recordEraseObject (88.7023%). The ordinary definition is
+// also byte-flat; nested vector _Ufill still gets budget 55 against cost 56.
+type_record_erase::type_record_erase(type_point location,
                                             long objectId,
                                             unsigned long extraInfo,
                                             long objectIndex)

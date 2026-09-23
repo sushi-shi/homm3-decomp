@@ -16,6 +16,14 @@ sha256 = "cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736"
 env = "HOMM3_DREAMCAST_EXE"
 option = "--dreamcast-exe"
 
+[inputs.mac]
+name = "Classic Mac PowerPC executable"
+path = "build/orig/mac/Heroes_III_raw.pef"
+size = 3418835
+sha256 = "650be8880cfda81ffa7704ce3bcdb9c5a6528f67afdf77c0c0c63e8259250d86"
+env = "HOMM3_MAC_EXE"
+option = "--mac-exe"
+
 # Positive CodeView/source spelling equivalences reviewed for this project.
 # Used only by the Dreamcast source-fact audit, never by the generic comparator.
 [type_aliases.dreamcast]

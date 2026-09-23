@@ -1,0 +1,69 @@
+# Source-owned AI data. The threshold initializer is verified; the external
+# bindings below establish addresses without claiming their initializers.
+
+[[constants]]
+units = ["ai_player"]
+mac_section = 1
+mac_offset = 0x3fa0
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Mac valueOfHiring 0:0x351bc directly loads the four-byte IEEE float +0.0 literal from RTOC-0x4060 and stores it to hero+0x109; CodeWarrior emits the identical four-byte anonymous @787 literal for the canonical `m_turnExperienceToRvRatio = 0` source statement."
+
+[[data]]
+retail_va = 0x0067814c
+source = "include/game.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x430c0
+mac_size = 4
+sha256 = "98d3000581236168e6ea565531ceceb18011fee777c43077c033810bb4f7ebc7"
+evidence = "Source-owned DATA declaration in game.h identifies g_heroGoldCost at Windows 0x67814c. Mac valueOfHiring 0:0x351d8 loads loader-backed TOC 1+0x83c -> data 1:0x430c0, which contains big-endian 2500, and subtracts it from the active player's gold. Declaration-only binding; no initializer owner is claimed."
+
+[[data]]
+retail_va = 0x00660500
+source = "src/ai_player.cpp"
+mac_section = 1
+mac_offset = 0x294e0
+mac_size = 0x18
+sha256 = "65f9cc2b86044147aabb40d95c2819daf6673cdba85e0686cbd18ae091283d63"
+evidence = "The source-owned static six-long threshold table at Windows 0x660500 has values 1000,150,100,75,50,25. The unique big-endian 24-byte sequence occurs at Mac data 1:0x294e0; loader TOC 1+0x1d38 points directly there, and its sole code use is attemptTeleport 0:0x34284. The six values and complete span match the authored initializer."
+
+[[data]]
+retail_va = 0x00692950
+source = "include/ai_player.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x64090
+mac_size = 0x4a0
+sha256 = "7081ba3d8887be22551f56b5f50da675bda7dd02f40e9fcb150ac84fccbe387f"
+evidence = "Windows doBestPurchase relocates the eight-record AI array at 0x692950 and computes its 0x98-byte record stride; Mac doBestPurchase code 0:0x30a10 loads loader-backed TOC 1+0x848 -> data 1:0x64090 and code 0:0x30a9c multiplies the player index by its 0x94-byte stride. All eight Mac records occupy this zero-filled 0x4a0-byte span. Source owner and initializer are unlocated; address binding only."
+
+[[data]]
+retail_va = 0x006747b4
+source = "include/town.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x3ee88
+mac_size = 0x1f8
+sha256 = "0be8a8deb63bc1e8b85fd0540b789cbc1e5c5d3523db52701f79735edfce730f"
+evidence = "Windows buyCreatures and 56 other users relocate the flat dwelling table at 0x6747b4; the upgraded-half alias is 0x6747d0. Mac buyCreatures code 0:0x2f284 loads loader-backed TOC 1+0x850 -> data 1:0x3ee88. All 126 big-endian Mac creature indices equal the 126 little-endian Windows values, including each town's base and upgrade rows. No Mac loader relocation falls within the table. Source owner and initializer are unlocated; address binding only."
+
+[[data]]
+retail_va = 0x0066cd98
+source = "include/town.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x354c8
+mac_size = 0x200
+sha256 = "03cb29647bde2f8a5530d9c9259a195be44f7521693895639fc77e979155044e"
+evidence = "Windows buyCreatures relocates bitNumber at base 0x66cd98 plus 0xf0 and 0x120; the base has 75 retail data sites. Mac buyCreatures code 0:0x2f288 loads loader-backed TOC 1+0x690 -> data 1:0x354c8. All 64 big-endian Mac 64-bit powers of two equal the 64 little-endian Windows entries. No Mac loader relocation falls within the table. External address binding only."
+
+[[data]]
+retail_va = 0x0069cca8
+source = "include/game.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52c080
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Windows buyCreatures reads the local game position at 0x69cca8 before the human-ally check, among 316 retail data sites. Mac corresponding code 0:0x2f3d0 loads loader-backed TOC 1+0x624 -> data 1:0x52c080, reads its signed dword and indexes the map team table. The Mac cell is zero-filled BSS; external address binding only."

@@ -1,0 +1,11 @@
+# Compiler scope is explicit. These are authored bodies in source order with
+# shared Mac declarations, not a claim that the full Windows TU builds for Mac.
+[units.hero]
+mode = "paired_bodies"
+preamble = "config/mac/include/hero.h"
+include_dirs = ["include"]
+flags = ["-O1", "-proc", "750", "-nolink", "-char", "unsigned"]
+# Additional source-owned VA definitions can be made visible as ordinary
+# helpers without admitting them as scored Mac pairs.
+helpers = []
+source_helpers = ["hero::getLevel", "hero::isLevelUpCampaignOverride"]

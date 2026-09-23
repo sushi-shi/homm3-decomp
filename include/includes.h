@@ -13,12 +13,7 @@
 
 #include <vector>
 
-// E:\gamedcs\includes.h:97, dc 0x1ef28. The wrapper owns argument
-// copies, then dereferences the selector's returned argument address.
-inline int max(int left, int right)
-{
-    return cppMax(left, right);
-}
+#include "inline/max_int.inl"
 
 // E:\gamedcs\includes.h:114, dc 0x2da4.
 inline int min(int left, int right)
@@ -32,29 +27,8 @@ inline double min(double left, double right)
     return cppMin(left, right);
 }
 
-// E:\gamedcs\includes.h:124, dc 0x20d2c. CodeView types all three
-// parameters and the return as const references. The retained retail body and
-// ordinary limit expansions use maximum < value for the upper clamp. Retail
-// expands this helper through the by-value limit wrapper in the adventure and
-// small-window TUs.
-template <class T>
-inline const T& tLimit(const T& minimum, const T& value,
-                       const T& maximum)
-{
-    if (value < minimum) {
-        return minimum;
-    } else if (maximum < value) {
-        return maximum;
-    } else {
-        return value;
-    }
-}
-
-// E:\gamedcs\includes.h:134
-inline int limit(int minimum, int value, int maximum)
-{
-    return tLimit(minimum, value, maximum);
-}
+#include "inline/t_limit.inl"
+#include "inline/limit.inl"
 
 // The no-repeat random picker. Retail's ctor/Pick pair byte-proves the
 // VC6 generic vector<unsigned char> representation at +8: allocator

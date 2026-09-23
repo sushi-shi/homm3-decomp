@@ -2821,11 +2821,12 @@ void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightReso
             *inMaxUnitsToTrade =
                 g_marketHero->m_army.m_numTroops[inLeftResource] / *inTradeRatio;
     } else {
-        *inLeftDenominated = 1;
         if (ratio == 0.0f) {
+            *inLeftDenominated = 1;
             *inTradeRatio = 0;
             *inMaxUnitsToTrade = 0;
         } else {
+            *inLeftDenominated = 1;
             *inTradeRatio = static_cast<long>(1.0f / ratio + 0.5);
             if (g_marketHero->m_army.getNumArmies() == 1)
                 *inMaxUnitsToTrade =
@@ -2835,13 +2836,9 @@ void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightReso
                     g_marketHero->m_army.m_numTroops[inLeftResource];
         }
     }
-    // Residual (97.60%): all nine CFG blocks and the float/control semantics
-    // agree. The inverted arm allocates its throwaway pointer/scratch registers
-    // as edx/eax/ecx where retail rotates ecx/edx/eax; the denominated arm's
-    // idiv pins iInTradeRatio in esi and matches exactly. why-reg measured 20
-    // slots. Its v2 creation-order probes were either ill-typed or byte-flat;
-    // the guided 1.0f/name probes were flat and volatile ratio added 12 slots.
-    // This is a front-end handle-order register wall, not a missing branch.
+    // DC 2268 and 2274 store bInLeftDenominated in the zero and nonzero
+    // inverted-ratio arms separately. VC6 merges those stores in retail but
+    // their source placement fixes the final arm's register order.
 }
 
 // The four private helpers below survive only as inlined bodies in the retail

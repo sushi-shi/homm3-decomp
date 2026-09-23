@@ -1194,7 +1194,7 @@ public:
     // assigns.  The Dreamcast declarator's enum is preserved in the name.
     int m_artifact;
     // E:\gamedcs\MapCell.h:735, dc 0xf4a50
-    MonsterData() { m_artifact = ARTIFACT_NONE; }
+#include "inline/mapcell_monster_data_ctor.inl"
 };
 SIZE(MonsterData, 0x30);
 
@@ -1435,15 +1435,7 @@ public:
 
 // Canonical inline definitions in Dreamcast MapCell.h source-line order.
 
-// MapCell.h:769 in the DC roster (dc 0x2e48), i.e. a header inline of
-// this class - and retail keeps no out-of-line row for it either.
-// advManager::ProcessDeSelect's elevation-toggle arm expands it in
-// place: `movzx edx,[gpGame+0x1fc48] / inc edx / cmp edx,1 / jle`, the
-// zero-extended flag plus one, tested against one. Gated to the
-// compilation personalities whose call sites prove the expansion
-// (victorylossconditions' z bound in CheckForDefeatedMonsterWin is
-// the same movzx/inc shape, 2026-08-20).
-inline int NewfullMap::getNumLevels() { return m_hasTwoLevels + 1; }
+#include "inline/mapcell_get_num_levels.inl"
 
 // Const route lookup retains the recovered helper and level arithmetic.
 // E:\gamedcs\MapCell.h:847, dc 0xbc8dc
@@ -1452,17 +1444,7 @@ inline const NewmapCell* NewfullMap::zCell(int x, int y, int z) const
     return m_cellData + x + y * m_size + z * m_size * m_size;
 }
 
-// MapCell.h:850, dc 0x1f974. This worker reproduces all 49 retail bytes
-// at 0x408770, including the boat callers' retained zero-coordinate lookup.
-// The former scalar-cell claim incorrectly distinguished 49 x86 bytes from
-// 82 SH4 bytes and alleged a zCell bounds test absent on both platforms.
-// Identical folded bodies cannot prove a unique original retail symbol;
-// this annotation owns the emitted canonical worker, not a renamed wrapper.
-VA(0x00408770, 0x31)  // exact body + anchor-callees, dc 0x1f974
-inline NewmapCell* NewfullMap::zCell(int x, int y, int z)
-{
-    return m_cellData + x + y * m_size + z * m_size * m_size;
-}
+#include "inline/mapcell_z_cell.inl"
 
 // E:\gamedcs\MapCell.h:889, dc 0xbc930
 inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
@@ -1476,14 +1458,7 @@ inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
 // WinCE build's out-of-line copy of a header inline - so it is a header
 // inline for EVERY compiland. DC line 907 calls zCell directly.
 
-// DC MapCell.h:897 calls zCell. The unrecorded line 896 does not prove
-// a release VERIFY. Removing the inferred storage check preserves this
-// helper chain and restores the boat callers' retail expansion decisions;
-// the retained 49-byte arithmetic body is owned by zCell above.
-inline NewmapCell* NewfullMap::cell(int x, int y, int z)
-{
-    return zCell(x, y, z);
-}
+#include "inline/mapcell_cell_xyz.inl"
 
 inline NewmapCell* NewfullMap::cell(type_point point)
 {

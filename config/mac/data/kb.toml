@@ -1,0 +1,326 @@
+# KB's selection helper refers to globals owned by remote.cpp. These rows
+# bind external Mac storage addresses; their initial contents are not scored.
+[[data]]
+retail_va = 0x00699274
+source = "src/remote.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528988
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "The Mac single-player helper loads its comparison scalar through TOC 1+0xc00 -> 1+0x528988 and compares it with mapHeader.minNumHumanPlayers; src/remote.cpp owns the matching DATA(0x00699274) int. Four zero-filled bytes are read as external storage only."
+
+[[data]]
+retail_va = 0x006993e0
+source = "src/remote.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528af4
+mac_size = 0x20
+sha256 = "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+evidence = "The Mac single-player helper passes TOC 1+0xd04 -> 1+0x528af4 directly as the strcpy destination for the selected map filename. The next loader-addressed global starts at 1+0x528b14, 0x20 bytes later; Mac does not establish the Windows char[260] extent, so only this bounded external address span is recorded, without claiming an initializer."
+
+[[data]]
+retail_va = 0x00698a08
+source = "include/font.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x527090
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "The Mac dialog-icon setter loads its font pointer cell through TOC 1+0x908 at code 0x1167dc, then dereferences it for character width and line height. Windows KB and bottomviewsubwindow read the canonical retail BSS address; owner TU remains unlocated. This binds external pointer storage only."
+
+[[data]]
+retail_va = 0x00698a0c
+source = "include/kb.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52708c
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Canonical include/kb.h claims g_mediumFont at retail 0x00698a0c. Mac calculateNormalDialogSize loads the medium-font pointer through TOC 1+0xbc0 -> zero-filled external storage 1+0x52708c at code0:0x1174a0, then calls font geometry methods. This binds pointer storage only, without an initializer claim."
+
+[[data]]
+retail_va = 0x006a5d5c
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x550a30
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "The Mac dialog-icon setter loads TOC 1+0x618 into r28, dereferencing that pointer at 0x116938 and later for general text rows. The canonical src/text.cpp definition owns retail .data 0x006a5d5c; external pointer storage is bound without an initializer claim."
+
+[[data]]
+retail_va = 0x006a5390
+source = "include/game.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x5502ec
+mac_size = 0x10
+sha256 = "374708fff7719dd5979ec875d56cd2286f6d3cf7ec317a3b25632aab28ec37bb"
+evidence = "The Mac dialog-icon primary-skill arm indexes a four-pointer table loaded from TOC 1+0xad0 at 0x116c0c and 0x116c48. The source-owned array is g_primarySkillNames; external address binding covers its four Mac pointer cells, not their runtime contents."
+
+[[data]]
+retail_va = 0x00687f58
+source = "include/armygrp.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52450
+mac_size = 4
+sha256 = "25349d1ff00af3f97683cdaa7ec881a93d65789a88e135e03ab662a73c8da758"
+evidence = "The Mac spell arm loads TOC 1+0x6c8 -> pointer cell 1+0x52450 at 0x116b04, then indexes traits with a 0x88 stride and reads name +0x10. The source-owned reference-to-array identifies g_spellTraits; only its external pointer cell is bound."
+
+[[data]]
+retail_va = 0x0067f578
+source = "src/townmgr.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x4aa64
+mac_size = 0x24
+sha256 = "800f66a16efe470777468d69bb460cbf091eeae84f6a3d7a538709a20b27a931"
+evidence = "The Mac building icon arm indexes nine sprite-name pointers from TOC 1+0xcc8 -> 1+0x4aa64 at 0x116838. The canonical townmgr source owns the nine-entry array; this external binding does not compare its Windows initializer."
+
+[[data]]
+retail_va = 0x00660b68
+source = "src/artifact.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x2ac28
+mac_size = 4
+sha256 = "bf6ee8501e6a4657b8d1b7033b731f7e497d34cbd258963c42ef11871b846049"
+evidence = "The Mac artifact icon arm loads TOC 1+0x6b0 -> pointer cell 1+0x2ac28 at 0x116aac, then indexes 0x20-byte traits and reads the name. The canonical Windows reference cell is 0x00660b68; only external pointer storage is bound."
+
+[[data]]
+retail_va = 0x006a7df8
+source = "src/text.cpp"
+mac_symbol = "g_playerColorNames"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x550300
+mac_size = 0x20
+sha256 = "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+evidence = "Windows setter's g_playerColorNames relocation and retail address 0x006a7df8 identify the canonical g_colors[8] definition in src/text.cpp. The Mac player-color arm indexes eight pointer cells at TOC 1+0x77c -> BSS 1+0x550300. mac_symbol records the KB view's source alias while the DATA definition owns identity; only external storage is bound."
+
+[[data]]
+retail_va = 0x006a7570
+source = "src/levelupwindow.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x5502dc
+mac_size = 0xc
+sha256 = "15ec7bf0b50732b49f8228e07d24365338f9e3ab994b00af08e5a3bffe55fd8b"
+evidence = "The Mac secondary-skill arm loads TOC 1+0xacc -> three-pointer BSS span 1+0x5502dc at 0x116d74 and indexes qualifier modulo three. The source-owned g_skillMasteryNames extern supplies the Windows identity; external storage only."
+
+[[data]]
+retail_va = 0x0067dcf0
+source = "include/sskilltraits.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x49ed8
+mac_size = 4
+sha256 = "c72d77b2c524533d868febb7d4e46a6d622e851c81ae8dca0d80f38eec495d84"
+evidence = "The Mac secondary-skill arm loads TOC 1+0x6c0 -> pointer cell 1+0x49ed8 at 0x116dc8, then indexes 0x10-byte trait rows. The canonical source reference-to-array supplies the Windows identity; only its Mac pointer cell is bound."
+
+[[data]]
+retail_va = 0x00699260
+source = "include/mousemgr.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528950
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Windows showCongrats reads retail mouseManager pointer 0x699260 at its hide/show call sites; Mac reads TOC 1+0x5f0 -> pointer storage 1+0x528950 at 0x115c44 and 0x115e94. Canonical header extern is annotated; no owning definition is located. Four zero-filled BSS bytes bind external address only."
+
+[[data]]
+retail_va = 0x006993c4
+source = "include/soundmgr.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528948
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Windows showCongrats reads retail soundManager pointer 0x6993c4 before startMP3; Mac reads TOC 1+0x738 -> pointer storage 1+0x528948 at 0x115e38. Canonical header extern is annotated; no owning definition is located. Four zero-filled BSS bytes bind external address only."
+
+[[data]]
+retail_va = 0x006993cc
+source = "include/hiscore.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528944
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Windows showCongrats reads retail highScoreManager pointer 0x6993cc before addScoreToHighScore; Mac reads TOC 1+0xc94 -> pointer storage 1+0x528944 at 0x115e6c. Existing canonical header DATA extern supplies identity; four zero-filled BSS bytes bind external address only."
+
+[[data]]
+retail_va = 0x0067f558
+source = "include/kb.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x4a604
+mac_size = 0x14
+sha256 = "bb9d9abaf1cc38e7dda07c3a647b7d3f2848075833e8cae4b2e4cd45407bb089"
+evidence = "Windows showCongrats indexes retail score multipliers at 0x67f558 and game::getMapScore uses the same table. Mac showCongrats TOC 1+0xcd0 -> 1+0x4a604 indexes five floats 0.8,1.0,1.3,1.6,2.0 at 0x115cbc; getMapScore reads it at 0x115c04. Canonical extern is owner-unlocated. Complete initialized 20-byte table and address are pinned."
+
+# The setter's twelve adjacent sprite/format literals are loaded through
+# TOC 1+0x27c8..0x27f4. Each payload and loader-selected address is reviewed;
+# duplicates elsewhere in the executable remain outside this KB binding.
+[[constants]]
+mac_section = 1
+mac_offset = 0x4e88
+mac_size = 3
+units = ["kb"]
+sha256 = "0b782fc3030dbdf3756f17e7adf2ce5808dfc513ca7589adeb679c7d25eaef6f"
+evidence = "The Mac setter uses the direct TOC address 1+0x4e88 for its NUL-terminated %d decimal format at 0x1168a4, 0x11690c, 0x1169b0, and later resource arms. Full three-byte payload and direct TOC uses are pinned; the same payload at Recruit's distinct 1+0x5404 cell does not establish this address."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4a905
+mac_size = 58
+units = ["kb"]
+sha256 = "7141ac8709afc65044c38141a1d9a9d17053c0a07cfea40c7dbf24382ae45ad2"
+evidence = "Canonical displayVCWinLoss uses the 58-byte NUL-terminated all-monsters victory message. The Mac target loads its pointer through TOC 1+0x2818 at 0x1141bc in the defeat-all-monsters arm; the loader selects data 1+0x4a905. Full payload and unique source use are pinned."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4a93f
+mac_size = 29
+units = ["kb"]
+sha256 = "fd860762f2377da904ed7f582da6247d76a975dca4d1c05bf87f3e919615deb5"
+evidence = "Canonical displayVCWinLoss uses the 29-byte NUL-terminated survive-time victory message. The Mac target loads its pointer through TOC 1+0x2814 at 0x114210 in that arm; the loader selects data 1+0x4a93f. Full payload and unique source use are pinned."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4ab04
+mac_size = 11
+units = ["kb"]
+sha256 = "11b7efb567eea6a60363dd15800b2624c12a059c7fc43df747522aa185a83ffb"
+evidence = "ilck82.def NUL at the setter's TOC 1+0x27c8; loaded into r18 at 0x1167ac."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4aaf9
+mac_size = 11
+units = ["kb"]
+sha256 = "316152d1163c7b877559a13c7505bcbaecf93431cb596c82311f73a8476f75c0"
+evidence = "imrl82.def NUL at the setter's TOC 1+0x27cc; loaded into r19 at 0x1167b0."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4aaed
+mac_size = 12
+units = ["kb"]
+sha256 = "7762152b5ba11edc61cc66cafa49916ac7e17e10f785dc6480babc97f3e69591"
+evidence = "secsk82.def NUL at the setter's TOC 1+0x27d0; loaded into r17 at 0x1167b4."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4aae0
+mac_size = 13
+units = ["kb"]
+sha256 = "df26798845972d29a56ca88d4c7775a0eba349bf00206d28f382701aa4c0a70a"
+evidence = "twcrport.def NUL at the setter's TOC 1+0x27d4; loaded into r20 at 0x1167b8."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4aad9
+mac_size = 7
+units = ["kb"]
+sha256 = "e88de777dec2df9256779d098d450144fd7cb4f3cd1d94af56947adf34954b9f"
+evidence = "+%d %s NUL at the setter's TOC 1+0x27d8; loaded at 0x116c40."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4aad3
+mac_size = 6
+units = ["kb"]
+sha256 = "9e1e6b266dafae0b5861bc2cbd82f4eac16f907c76d447dc285317098dbe3181"
+evidence = "%d %s NUL at the setter's TOC 1+0x27dc; loaded into r29 at 0x1167c0."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4aac8
+mac_size = 11
+units = ["kb"]
+sha256 = "bec56185d56b689030ce7a335c1bfdd652585707a694bfd18983197b382f2955"
+evidence = "pskill.def NUL at the setter's TOC 1+0x27e0; loaded into r22 at 0x1167c4."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4aabc
+mac_size = 12
+units = ["kb"]
+sha256 = "203e7d3b23c3915fd87b50c2c4b632cc57ab0ea07bdf1b21f080b183d1dc4269"
+evidence = "crest58.def NUL at the setter's TOC 1+0x27e4; loaded into r23 at 0x1167c8."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4aaaf
+mac_size = 13
+units = ["kb"]
+sha256 = "158cd8c029ffa9ce5bfba1bbd452e2b4c3a87fb763b383c857d6ba3fa65521b6"
+evidence = "spellScr.def NUL at the setter's TOC 1+0x27e8; loaded into r24 at 0x1167cc."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4aaa2
+mac_size = 13
+units = ["kb"]
+sha256 = "48f07f4d83661a3e14d3d54e3ab294abe46d087d18394b9299c49cb573fc78e7"
+evidence = "artifact.def NUL at the setter's TOC 1+0x27ec; loaded into r25 at 0x1167d0."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4aa95
+mac_size = 13
+units = ["kb"]
+sha256 = "2fb1d678c134b8e8b2de99d0405c274ee18e4920cabd4ae1b442d739e608c5d3"
+evidence = "resource.def NUL at the setter's TOC 1+0x27f0; loaded into r26 at 0x1167d4."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4aa88
+mac_size = 13
+units = ["kb"]
+sha256 = "be49670ac48ebeb545fb2f6d00816ab0354041d394775cac60ea12b3bd6bc208"
+evidence = "resour82.def NUL at the setter's TOC 1+0x27f4; loaded into r27 at 0x1167d8."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4e87
+mac_size = 1
+units = ["kb"]
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "NUL empty string addressed directly from TOC 1+0x4e87 by the setter's zero-skill and invalid-monster branches at 0x116bd0 and 0x116d1c; the candidate emitted one-byte anonymous literal."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4e8b
+mac_size = 2
+units = ["kb"]
+sha256 = "869f1dfb999a452f497a4cf7f44db2d6ee661f74a9e7e05251bc1420e50672d4"
+evidence = "Space NUL separator addressed directly from TOC 1+0x4e8b by the setter's secondary-skill string append at 0x116dac; the candidate emitted the same two-byte anonymous literal."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4a7d7
+mac_size = 13
+units = ["kb"]
+sha256 = "eea46e60d4844961d6df0dfea67e07fe822e1a06750589de73e686d45c27acaa"
+evidence = "Win Scenario NUL is canonical congratsMusicName DATA_COMPGEN at Windows 0x66c29c in src/kb.cpp. Mac showCongrats loads its pointer via TOC 1+0x2838 -> 1+0x4a7d7 at 0x115e40 immediately before startMP3. All 13 bytes including NUL are pinned."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4ed0
+mac_size = 4
+units = ["kb"]
+sha256 = "9dc1b62d60acff118f222dc22cb76a1c7e9f2fcc1ae7d16c56861eb0301bd59a"
+evidence = "The Mac showCongrats scenario rating multiplies its difficulty factor by single-precision 100.0; target code 0x115ca0 loads this 0x42c80000 payload directly from TOC 1+0x4ed0. Candidate emits the same four-byte anonymous @53 literal."
+[[data]]
+retail_va = 0x006a5e64
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x550348
+mac_size = 0x20
+sha256 = "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+evidence = "Canonical src/text.cpp owns eight g_resourceNames pointers at retail 0x006a5e64; the seerhut consumer independently names the same address. Mac DisplayVCWinLoss loads TOC 1+0x780 -> zero-filled external table 1+0x550348 at 0x113214 and indexes its resource-name pointer at 0x1138cc. Eight pointer cells are address-bound without claiming initialized contents."

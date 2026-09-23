@@ -1953,14 +1953,15 @@ void TOverviewWindow::updateRollover(char* text)
 // checkpoint (97.85 -> 98.25; function-wide lifetime 98.51) but creates a
 // 134th x86 block and destroys the otherwise exact 133-block flow pairing.
 // Dreamcast retains only iSlot, so the repeated source expression is kept.
+// Swapping the guard's addition operands is byte-flat. Reversing its compare
+// raises 97.85 to 97.93 but emits jl instead of retail's jg; a short-lived
+// selectedIndex for the guard and first hero lookup emits 135 x86 blocks.
 // E:\gamedcs\overview.cpp:2115
 VA(0x00520e30, 0xB2C)  // vtable/caller/order-map + exhaustive body, dc 0x10906c
 void TOverviewWindow::doRollover(int codeY)
 {
-    int slot;
-
     if (codeY >= 200 && codeY <= 999) {
-        slot = (codeY - 200) / 200;
+        int slot = (codeY - 200) / 200;
         if (g_overviewTop[g_overviewType] + slot
                 > g_overviewItemCounts[g_overviewType])
             return;

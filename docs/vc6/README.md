@@ -23,6 +23,14 @@ For experiments, see [source families](source-families.md),
 [source hypotheses](../matching/source-hypotheses.md) and
 [TU state sweeps](tu-state-sweep.md). Keep generated results under `build/`.
 
+`homm3 sema diff --asm` masks stack-slot displacements. A 99.98% byte result
+can therefore show identical masked assembly and CFG while two locals occupy
+the opposite stack slots. In `game::loadMinePool` at 0x004b9340, raw base and
+target COFF disassembly showed the signed guard bytes swapped at `[ebp-1]` and
+`[ebp-2]`; `--why-bytes` reported the first alignment as a missing instruction.
+Inspect the raw normalized objects for this specific residual before changing
+control flow or inventing an operation.
+
 Recovered source models and cleanup audits live in
 [reconstruction](../README.md#reconstruction); outstanding work lives in
 [todos](../README.md#outstanding-work).

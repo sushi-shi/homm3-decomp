@@ -114,26 +114,8 @@ public:
     searchArray();
     ~searchArray();
     void close();
-    // Retail 0x4b3b90 checks receiver+0x24 for null, then indexes the
-    // 30-byte pathCell array and returns ret 4. FindCombatPath calls at
-    // 0x4b382f/0x4b3881/0x4b393e/0x4b3990 correspond to the four
-    // expansions of DC mark_enemy's get_hex call.
-    // E:\gamedcs\FindPath.h:194, dc 0x27fe8
-    VA(0x004b3b90, 0x20)  // caller/get_hex correlation, dc 0x27fe8
-    pathCell* getHex(long x) const
-    {
-        if (m_cellData == 0)
-            return 0;
-        return &m_cellData[x];
-    }
-    VA(0x0042ecc0, 0x62)  // hd-crossbuild + exact body/callers x2, dc 0x20064
-    pathCell* getCell(type_point point, bool flying) const
-    {
-        if (!m_cellData)
-            return m_cellData;
-        return &m_cellData[((point.m_z * 2 + flying) * g_mapHeight + point.m_y)
-                         * g_mapWidth + point.m_x];
-    }
+#include "inline/search_get_hex.inl"
+#include "inline/search_get_cell.inl"
     long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
     void seedPosition(hero* currentHero, type_point start,
                       type_point target, int maxMobility,
@@ -198,10 +180,7 @@ public:
                             long baseSpeed);
     // Dreamcast FindPath.h:252. MoveHero brackets its move_hero call with
     // this setter; Complete expands both calls to the +0x6c store.
-    void setDangerZones(long* dangerZoneMap)
-    {
-        m_dangerZones = dangerZoneMap;
-    }
+#include "inline/search_set_danger_zones.inl"
     // E:\gamedcs\FindPath.h:257, dc 0x37e84
     void setRectangle(tagRECT& rect)
     {
@@ -315,9 +294,9 @@ inline long searchArray::getDangerValue(type_point point) const
 // part of the array. Name is an address ordinal.
 extern const long g_townSiegeStrength63bd18[];
 
-// Retail .bss 0x699284; the DATA claim lands with findpath.cpp's
-// globals when that TU's data is modeled.
-extern searchArray* g_searchArray;
+// Retail .bss 0x699284. The Mac AI view binds its zero-filled pointer
+// storage through the loader pointer at TOC 1+0x720.
+DATA(0x00699284) extern searchArray* g_searchArray;
 
 // The eight-direction step table at 0x678150, four bytes a row:
 // (dx, dy, 0x10, 0) for N, NE, E, SE, S, SW, W, NW in that order.

@@ -125,7 +125,7 @@ DATA(0x0063e678) static const char g_monType[12] = {
 // Complete artifact 138, the Wizard's Well combination. PerDay is the
 // identifying retail body: wearing it restores full mana every day instead
 // of applying the ordinary Mysticism increment.
-const int g_artifactWizardsWellId = 0x8a;
+#include "../include/inline/game_artifact_wizards_well_id.inl"
 
 // Calendar-period values written by PerWeek. The ordinary creature week is
 // followed by the Inferno Grail's forced Imp week.
@@ -558,7 +558,14 @@ static long getDayBonus(EGameResource resource, long weekBonus, long day)
     return result;
 }
 
-// E:\gamedcs\game.cpp:643
+// E:\gamedcs\game.cpp:643. Complete's calculateProduction has 71/71
+// CFG blocks and 13/13 calls in retail order. Its two Rampart
+// hasBuilding(..., true) expansions differ in bitNumber/active-mask load
+// scheduling; reversing the true arm's commutative operands in the canonical
+// hasBuilding helper is byte-flat for this caller and its exact retained body.
+// Mac 0:0xca978..0xcb1f0 has the same seven artifact-count calls followed by
+// daily gold; the proposed pair remains in ignored build/mac/notes until the
+// wider game declaration view is supported.
 VA(0x004b8af0, 0x573)  // mine/town/player production consumers, dc 0xa3474
 void game::calculateProduction()
 {
@@ -740,10 +747,26 @@ int game::saveSignPool(TAbstractFile* outfile)
     return 0;
 }
 
+// Mac loadMinePool (0:0xcb404) retains 13/13 ordered calls and 655/676 bytes;
+// its 21 remaining byte differences are only frame size and local offsets.
+// CodeWarrior -sym on and swapping the two byte-local declarations were flat;
+// delaying the guard-type load until after the second read cut Mac to 61.83%.
+// Complete Windows reaches 99.9795% with the two guard-byte reads followed by
+// both signed loads; raw COFF differs only in their opposite stack slots.
+// Replacing the locals with a two-byte array fell to 98.87% and was reverted.
+// Swapping the Windows-only guardType/guardAmount declaration order is also
+// byte-flat at 99.9795%, with all 25 CFG blocks and 18 calls unchanged.
 VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
 int game::loadMinePool(TAbstractFile* infile, int saveVersion)
 {
+    // Dreamcast names separate uchar_buffer and char_buffer locals. Mac keeps
+    // the one-byte read buffer; Complete Windows uses an int slot whose low
+    // byte receives the same wire-format value.
+#ifdef HOMM3_TARGET_MAC
+    unsigned char count;
+#else
     int count;
+#endif
     int x;
     char charBuffer;
     if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
@@ -769,11 +792,23 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
         } else {
             armyGroup* guards = &m_mines[x].m_guards;
             guards->initialize();
-            legacyMineGuard legacy;
-            infile->read(&legacy.m_type, sizeof(legacy.m_type));
-            infile->read(&legacy.m_amount, sizeof(legacy.m_amount));
-            int typeValue = legacy.m_type;
-            int amountValue = legacy.m_amount;
+            // Mac retains the first signed value across the second read.
+            // Complete Windows loads both byte locals after the reads.
+#ifdef HOMM3_TARGET_MAC
+            signed char guardType;
+            signed char guardAmount;
+            infile->read(&guardType, sizeof(guardType));
+            int typeValue = guardType;
+            infile->read(&guardAmount, sizeof(guardAmount));
+            int amountValue = guardAmount;
+#else
+            signed char guardType;
+            signed char guardAmount;
+            infile->read(&guardType, sizeof(guardType));
+            infile->read(&guardAmount, sizeof(guardAmount));
+            int typeValue = guardType;
+            int amountValue = guardAmount;
+#endif
             if (typeValue != -1 && amountValue > 0)
                 guards->add(typeValue, amountValue, -1);
         }
@@ -1947,12 +1982,21 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 }
 
 // E:\gamedcs\game.cpp:2275
+// Mac counterpart 0:0xce398 has the same five ordered bzero/bitset/random
+// calls; the 18-class and 156-hero loops identify its full 1932-byte span.
+// Restoring DC's THeroClass induction local raises CodeWarrior O3 20.96% to
+// 27.59% without changing Windows 98.98% or its exact CFG/call sequence. O2
+// falls to 10.30%, O4 and swapping array declarations are flat. The Windows
+// residual is register homing at the Complete-only Conflux guard. Mac's
+// bitset<8>::reference layout stages the pool pointer and index before test;
+// restoring operator[] at both sites raises Mac to 539/1932 (27.90%) while
+// the focused VC6 build stays 98.98% with the same exact CFG and call order.
 VA(0x004bb5e0, 0x282)  // anchor-global, dc 0xa6cd4
 int game::getNewHeroId(int playerPos, THeroClass excluded,
                        unsigned char preferAlignment,
                        THeroClass preferredClass)
 {
-    int heroClass;
+    THeroClass heroClass;
     long totalCount;
     long choice = 0;
     long counts[18];
@@ -1970,14 +2014,14 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
 
     memset(counts, 0, sizeof(counts));
     for (heroClass = classKnight; heroClass < kNumHeroClasses;
-         heroClass++) {
+         heroClass = THeroClass(heroClass + 1)) {
         weights[heroClass] =
             g_heroClasses[heroClass].m_foundInTownType[alignment];
     }
 
     for (heroId = 0; heroId < HERO_COUNT; heroId++) {
         if (m_heroAvailability[heroId] == -1
-            && (playerPos == -1 || m_heroPoolMap[heroId].test(playerPos))) {
+            && (playerPos == -1 || m_heroPoolMap[heroId][playerPos])) {
             totalCount++;
             counts[m_heroes[heroId].m_heroClass]++;
         }
@@ -1987,7 +2031,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
         return -1;
 
     for (heroClass = classKnight; heroClass < kNumHeroClasses;
-         heroClass++) {
+         heroClass = THeroClass(heroClass + 1)) {
         if (counts[heroClass] == 0)
             weights[heroClass] = 0;
     }
@@ -2011,13 +2055,13 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     if (preferAlignment) {
         alignedCount = 0;
         for (heroClass = classKnight; heroClass < kNumHeroClasses;
-             heroClass++) {
+             heroClass = THeroClass(heroClass + 1)) {
             if (g_heroClasses[heroClass].m_townType == alignment)
                 alignedCount += weights[heroClass];
         }
         if (alignedCount > 0) {
             for (heroClass = classKnight; heroClass < kNumHeroClasses;
-                 heroClass++) {
+                 heroClass = THeroClass(heroClass + 1)) {
                 if (g_heroClasses[heroClass].m_townType != alignment)
                     weights[heroClass] = 0;
             }
@@ -2029,12 +2073,12 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     } else {
         totalCount = 0;
         for (heroClass = classKnight; heroClass < kNumHeroClasses;
-             heroClass++) {
+             heroClass = THeroClass(heroClass + 1)) {
             totalCount += weights[heroClass];
         }
         choice = random(1, totalCount);
         for (heroClass = classKnight; heroClass < kNumHeroClasses;
-             heroClass++) {
+             heroClass = THeroClass(heroClass + 1)) {
             choice -= weights[heroClass];
             if (choice <= 0)
                 break;
@@ -2044,7 +2088,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     choice = random(1, counts[heroClass]);
     for (heroId = 0; heroId < HERO_COUNT; heroId++) {
         if (m_heroAvailability[heroId] == -1
-            && (playerPos == -1 || m_heroPoolMap[heroId].test(playerPos))
+            && (playerPos == -1 || m_heroPoolMap[heroId][playerPos])
             && m_heroes[heroId].m_heroClass == heroClass
             && --choice == 0) {
             return heroId;
@@ -4282,6 +4326,22 @@ void game::initRandomArtifacts()
     }
 }
 
+// Mac 0:0xd7160..0xd72e0 (384 bytes, SHA-256
+// 54d578f01c668bcfb2e78f7cb9c1e665d170d14e048b9873d200a7295b79300a)
+// is the same gate-pairing body: it walks the exit/pair arrays, rejects equal
+// packed z coordinates, squares x/y differences, calls MathLib sqrt once,
+// then stores both partner indices. Its sole caller at 0xd5ce4 sits between
+// randomizeEvents and randomizeHolyGrail in newMap's call sequence. The
+// preceding/following BLR/prologue bound the admitted Mac target. The current
+// shared-source O3 candidate resolves the MathLib sqrt call and conversion
+// constant but remains 408 versus 384 bytes (24.02%); the game declaration
+// view and compiler profile still need calibration on another body.
+// Isolated Mac declaration probes: a word-copy point view makes 392 bytes
+// (29.08%), but retains different vector access and register allocation;
+// the short-bitfield view alone emits two halfword stores where retail emits
+// one word store. Layering the installed MSL vector accessors was byte-flat.
+// Neither unverified view replaced the admitted declaration. VC6 why-reg's
+// eight declaration/store-order controls were flat or worse at 94.67%.
 // E:\\gamedcs\\game.cpp:4950
 VA(0x004c0b60, 0x160)  // dc-order + NewMap caller, dc 0xac63c
 void game::matchUndergroundGates()
@@ -6371,6 +6431,10 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 // versioned migrations: max hero level, widened alignment masks, custom hero
 // records, and per-player availability masks.  The two old campaign hero ids
 // use the same pre-25 remap as the other saved-game readers.
+// Complete's availability loop has no DC spelling record. The direct
+// bitset::set spelling used by the scenario reader lowers this saved-header
+// reader from 90.8783% to 90.13% (84 to 83 exact CFG blocks); retail's
+// retained bitset<8>::_Xran call still does not appear. Keep the proxy form.
 
 VA(0x004c5630, 0x7CD)  // DC Load + saved-header callers + helper edges, dc 0xb0754
 int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
@@ -7322,6 +7386,16 @@ void game::resetAllPlayerVisibility()
     }
 }
 
+// Dreamcast game.cpp:8123 passes town.m_owner directly to is_human_ally.
+// Its canonical GetTeam wrapper performs the one team lookup visible in
+// Windows retail at +0xa5; pre-mapping here made the candidate look it up twice.
+// Dreamcast lines 8124 and 8126 place the zero store before the decrement.
+// Mac retail retains that arm order; the zero-first condition also preserves
+// the exact Windows body.
+// Mac perDay is 1746/1764 bytes with 15/15 calls. Its remaining 18 bytes
+// encode only a 0xe0 target versus 0xd0 candidate frame and the consequent
+// scratch-slot displacements; DC's typed array/reference locals and town_id
+// have been restored without changing that frame.
 VA(0x004c7fe0, 0x462)  // dc 0xb3858
 void game::perDay()
 {
@@ -7339,36 +7413,40 @@ void game::perDay()
 
     int i;
     for (i = 0; i < m_towns.size(); ++i) {
-        if (g_game->m_setup.m_difficulty < 2) {
-            int team = m_towns[i].m_owner;
-            if (team >= 0)
-                team = m_mapHeader.m_teamInfo[team];
-            if (!isHumanAlly(team) && m_towns[i].m_builtThisTurn) {
-                --m_towns[i].m_builtThisTurn;
-                continue;
-            }
+        if (g_game->m_setup.m_difficulty >= 2
+            || isHumanAlly(m_towns[i].m_owner)
+            || !m_towns[i].m_builtThisTurn) {
+            m_towns[i].m_builtThisTurn = 0;
+        } else {
+            --m_towns[i].m_builtThisTurn;
         }
-        m_towns[i].m_builtThisTurn = 0;
     }
 
     for (i = 0; i < HERO_COUNT; ++i) {
-        hero* currHero = &m_heroes[i];
-        currHero->m_flags &= 0xfffdfffeU;
-        currHero->m_disguiseLevel = -1;
-        currHero->m_flightLevel = -1;
-        currHero->m_waterWalkLevel = -1;
-        currHero->m_visionsPower = -1;
-        currHero->m_dWalkSpellsCast = 0;
+        hero& currHero = m_heroes[i];
+        currHero.m_flags &= 0xfffdfffeU;
+        currHero.m_disguiseLevel = -1;
+        currHero.m_flightLevel = -1;
+        currHero.m_waterWalkLevel = -1;
+        currHero.m_visionsPower = -1;
+        currHero.m_dWalkSpellsCast = 0;
     }
 
+    // The VC6 inline pin preserves the exact Windows call. CodeWarrior
+    // accepts its opening pragma but rejects the empty reset, leaving every
+    // later Mac helper out of line; Mac retail expands those helpers.
+#if defined(_MSC_VER) && !defined(__clang__)
 #pragma inline_depth(0)
+#endif
     if (growCoverOfDarkness())
+#if defined(_MSC_VER) && !defined(__clang__)
 #pragma inline_depth()
+#endif
         resetAllPlayerVisibility();
 
     if (m_day == 1) {
-        for (i = 0; i < m_towns.size(); ++i) {
-            town& currentTown = m_towns[i];
+        for (long townId = 0; townId < m_towns.size(); ++townId) {
+            town& currentTown = m_towns[townId];
             if (currentTown.m_type == TOWN_RAMPART
                 && currentTown.hasBuilding(SPECIAL_BUILDING_ID, 1)) {
                 currentTown.m_pondResource = g_resources[random(0, 3)];
@@ -7383,10 +7461,11 @@ void game::perDay()
     calculateProduction();
     for (i = 0; i < 8; ++i) {
         if (!m_playerDisabled[i]) {
-            long* production = m_players[i].m_ai.m_turnProductionResource;
-            long* playerResources = m_players[i].m_resources;
+            long (&production)[NUM_RESOURCES] =
+                m_players[i].m_ai.m_turnProductionResource;
+            long (&resources)[NUM_RESOURCES] = m_players[i].m_resources;
             for (int j = 0; j < NUM_RESOURCES; ++j)
-                playerResources[j] += production[j];
+                resources[j] += production[j];
         }
     }
 
@@ -7394,18 +7473,18 @@ void game::perDay()
         checkEndGame(0);
 
     for (i = 0; i < HERO_COUNT; ++i) {
-        hero* currHero = &m_heroes[i];
-        int maxMana = currHero->getMaxMana();
-        if (currHero->isWieldingArtifact(g_artifactWizardsWellId)) {
-            if (maxMana > currHero->m_mana)
-                currHero->m_mana = maxMana;
+        hero& currHero = m_heroes[i];
+        int maxMana = currHero.getMaxMana();
+        if (currHero.isWieldingArtifact(g_artifactWizardsWellId)) {
+            if (maxMana > currHero.m_mana)
+                currHero.m_mana = maxMana;
         } else {
-            int tempMana = currHero->m_mana;
-            tempMana += currHero->getMysticismBonus();
+            int tempMana = currHero.m_mana;
+            tempMana += currHero.getMysticismBonus();
             if (tempMana > maxMana)
                 tempMana = maxMana;
-            if (tempMana > currHero->m_mana)
-                currHero->m_mana = tempMana;
+            if (tempMana > currHero.m_mana)
+                currHero.m_mana = tempMana;
         }
     }
 
@@ -8607,10 +8686,10 @@ DATA(0x006971a0)
 // Previous project spelling: gRandomTownNames.
 static TPickRandomTownName g_randomTownNames[9];
 
-// The Complete table has a 17-pointer faction stride. The picker intentionally
-// uses only indices 0..15; the seventeenth entry is outside its random domain.
+// Retail indexes this table with a 16-pointer faction stride (`shl 4`),
+// agreeing with initializeTownNameText's sixteen filled slots per faction.
 DATA(0x006a6048)
-const char* g_townNames[9][17];
+const char* g_townNames[9][16];
 
 // E:\gamedcs\game.cpp:9803, dc 0xb6944.
 inline const char* getRandomTownName(int townType)
@@ -8638,6 +8717,11 @@ void game::checkHeroConsistency()
 }
 
 // E:\gamedcs\game.cpp:9833
+// Complete's town-name lookup has a 16-pointer faction stride, matching
+// initializeTownNameText and the Mac initializer at 0:0x1adff8. Correcting
+// that declaration makes this Windows body exact (57/57 CFG, 18/18 calls).
+// The Mac body is independently bounded at 0:0xe2024..0xe21e0; its pair
+// proposal stays in build/mac/pairing until the game declaration view grows.
 VA(0x004caa70, 0x39C)  // DC name/order + retail map/vector/string shape, dc 0xb69f4
 void game::processOnMapTowns()
 {

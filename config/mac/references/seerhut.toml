@@ -1,0 +1,21 @@
+# Reviewed source-owned callees retained by the selected skill-dialog pair.
+
+[[functions]]
+retail_va = 0x56d310
+unit = "seerhut"
+mac_section = 0
+mac_offset = 0x1646f4
+mac_size = 0x78
+mac_symbol = ".getProgressDialogText__10type_questFv"
+target_sha256 = "24c8922f37863992174b6c30bd33fa741a4e8e5fe1b580f26a5f462beba6ab03"
+evidence = "Source-owned type_quest::getProgressDialogText at seerhut.cpp 0x56d310 reads the base quest limit, copies the proposal string when negative, otherwise obtains the time-limit text and appends it. Mac 0:0x1646f4 checks limit at this+0x18, copies the string at this+0x08 on the negative branch, and constructs/appends the time-limit string on the other branch. The prior function returns at 0x1646f0, this one at 0x164768, next prologue at 0x16476c. Skill quest slot 5 calls it at 0x165170; seven other quest-dialog callers share the same target. Complete 0x78-byte span is pinned by SHA."
+
+[[helpers]]
+unit = "seerhut"
+source_helper = "type_skill_quest::showSkillRequirementsDialog"
+mac_section = 0
+mac_offset = 0x164e44
+mac_size = 0xc0
+mac_symbol = ".showSkillRequirementsDialog__16type_skill_questFPCcPCSc"
+target_sha256 = "b127471c2e39341917452c6717dea5c8855611901dc172eec3afa3b37d4f4725"
+evidence = "The canonical ordinary member helper precedes both skill-dialog callers in src/seerhut.cpp. Its Mac body starts at 0x164e44 after the preceding return and ends at its own return 0x164f00, before the next prologue 0x164f04. It receives this in r3, text in r4 and four signed skill bytes in r5; the 0..3 loop constructs picture IDs 0x1f+i and qualifiers 0x10000 | (unsigned short)skills[i], appends non-POD dialog records, calls extendedDialog at 0x1194d8 and destroys the vector. Exactly three direct callers at 0x165028, 0x165124 and 0x165184 correspond to both proposal arms and progress. The entire 0xc0-byte span is pinned by SHA; the Windows progress body expands this loop."

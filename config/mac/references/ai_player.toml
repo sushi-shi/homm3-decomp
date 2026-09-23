@@ -1,0 +1,343 @@
+# Source-owned Mac callees used by the admitted AI purchaser packet. These
+# identities resolve calls; their bodies are outside this packet's score.
+
+[[functions]]
+retail_va = 0x42edd0
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x31f7c
+mac_size = 0x558
+mac_symbol = ".findAllDestinations__FP4heroP11searchArrayRQ23std25vector<15HeroDestination>lUcUcUc"
+target_sha256 = "2bd0e7b141207149b06d7b95fe2651e87e33083b93463b2d51a7058b6318b871"
+evidence = "Source-owned ai_player.cpp 0x42edd0 accepts hero, searchArray, destination vector, max distance and three flags. Mac 0:0x31f7c takes these seven inputs in r3..r9, multiplies map dimensions, allocates the friendly-distance map, selects the search type and calls the destination/marking helpers; valueOfHiring calls it at 0x352b4. It returns at 0x324d0 and the next function starts 0x324d4. Full 0x558-byte span is pinned by SHA."
+
+[[functions]]
+retail_va = 0x412bd0
+unit = "advmgr"
+mac_section = 0
+mac_offset = 0x13770
+mac_size = 0xbc
+mac_symbol = ".getCell__10advManagerF10type_point"
+target_sha256 = "05ae5f3f66c3118e697cfc21e2ebe951a85283cc31d3dc9a59e5b34d2083cf4e"
+evidence = "Source-owned advmgr.cpp 0x412bd0 accepts a packed point and returns a map cell, using the full map's zero cell for invalid coordinates. Mac 0:0x13770 checks packed x/y against TOC-backed map dimensions, returns m_fullMap->m_cellData for invalid points, otherwise computes a 0x22-byte cell offset; valueOfHiring calls it at 0x35374. It returns at 0x13828 and next entry begins 0x1382c. Full 0xbc-byte span is pinned by SHA."
+
+[[functions]]
+retail_va = 0x4e4ec0
+unit = "hero"
+mac_section = 0
+mac_offset = 0x105cac
+mac_size = 0xb0
+mac_symbol = ".heroFn004E4EC0__4heroFv"
+target_sha256 = "07a9d43f9fa9fd6570f4b2c8c1d0f14aa02cc4b175feb871fa8b02bfea7adf72"
+evidence = "Source-owned hero.cpp 0x4e4ec0 builds a packed point from hero coordinates, tests the (-1,-1,-1) sentinel, then reads the map cell special terrain. Mac 0:0x105cac performs the same packed-point construction and sentinel test, loads g_game and calls the map-cell terrain accessor at 0x11e6ac; it returns at 0x105e58 and the next distinct prologue begins 0x105e5c. Complete 0xb0-byte span is pinned by SHA."
+
+[[functions]]
+retail_va = 0x4e4fa0
+unit = "hero"
+mac_section = 0
+mac_offset = 0x105e5c
+mac_size = 0x1b0
+mac_symbol = ".getSpecialTerrain__4heroCFv"
+target_sha256 = "12d9b7a5c6450de44c5cb00773f282d7432382ec9511b1923c76f71683707d6a"
+evidence = "Source-owned hero.cpp 0x4e4fa0 obtains getLocation, tests the (-1,-1,-1) sentinel, then uses g_game->getCell and getMagicTerrainType. Mac 0:0x105e5c follows the same point construction and sentinel branch, loads g_game, computes the packed map-cell address and calls its terrain accessor at 0x11e7f8. It returns at 0x106008; the next entry begins 0x10600c. Complete 0x1b0-byte span is pinned by SHA."
+
+[[functions]]
+retail_va = 0x4e5240
+unit = "hero"
+mac_section = 0
+mac_offset = 0x10621c
+mac_size = 0xec
+mac_symbol = ".getManaCost__4heroCFiPC9armyGroupi"
+target_sha256 = "2a973c215d31041500fde7404300a476b87cb864c982b2af2c578dfc280aa9c2"
+evidence = "Source-owned hero.cpp 0x4e5240 is the terrain-aware getManaCost overload with spell, optional enemy army and terrain arguments. Mac 0:0x10621c tests the spell sentinel, calls terrain-aware getSpellLevel at 0x10600c, reads g_spellTraits cost by 0x88 stride, adjusts for enemy and own army membership and clamps cost to one. It returns at 0x106304; next distinct body starts 0x106308. Complete 0xec-byte span is pinned by SHA."
+
+[[functions]]
+retail_va = 0x4e5080
+unit = "hero"
+mac_section = 0
+mac_offset = 0x10600c
+mac_size = 0x84
+mac_symbol = ".getSpellLevel__4heroCF7SpellIDi"
+target_sha256 = "cbbd196551dce61881cc0663af2f7d2b3eb9ebfe38884eebd8bfed345db351db"
+evidence = "Source-owned hero.cpp 0x4e5080 is the spell and terrain overload. Mac 0:0x10600c checks Armageddon 0x1a and artifact 0x80, otherwise reads g_spellTraits school at record +0x1c and calls getSpellSchoolLevel at 0x106090. It returns at 0x10608c, before that next callee starts. Full 0x84-byte span is pinned by SHA."
+
+[[functions]]
+retail_va = 0x41d930
+unit = "advspells"
+mac_section = 0
+mac_offset = 0x1ec20
+mac_size = 0x4d4
+mac_symbol = ".teleportTo__10advManagerFP4hero10type_pointPCcUcUcUc"
+target_sha256 = "905e0112f9d639d1ed29bf95330e3dbbadbf5183aca93567175213c3b14de2a2"
+evidence = "Source-owned advspells.cpp 0x41d930 is advManager::teleportTo(hero*,type_point,const char*,three flags). The Mac attemptTeleport call at 0:0x345e4 passes its hero, packed destination, null sample and flags 0,1,0 to 0:0x1ec20. That Mac body handles the map-change, hero context, sound and visibility flow, returns at 0x1f0f0; next distinct prologue begins 0x1f0f4. Full 0x4d4-byte span is pinned by SHA."
+
+[[functions]]
+retail_va = 0x4d92d0
+unit = "hero"
+mac_section = 0
+mac_offset = 0xf4f4c
+mac_size = 0xa0
+mac_symbol = ".useSpell__4heroFi"
+target_sha256 = "fdd4188cfd95a9836e925f6f10f5d5558e6c52ab4d63780dc725f0c864b8848a"
+evidence = "Source-owned hero.cpp 0x4d92d0 clamps mana-cost subtraction to zero, stores remaining mana, then conditionally updates the hero locator for the active local human. Mac 0:0xf4f4c follows the same max/short-store and g_advManager status, g_currentPlayer and locator calls, returns at 0xf4fe8; next addSpell body starts 0xf4fec. Full 0xa0-byte span is pinned by SHA."
+
+[[functions]]
+retail_va = 0x44aa80
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x58050
+mac_size = 0x30
+mac_symbol = ".__ct__9armyGroupFv"
+target_sha256 = "715ec51a5282650c96df14a2077cbb3321a81583d5a1bf45074758a7b6342f3c"
+evidence = "armyGroup default ctor: Mac 0:0x58050 enters after the 0x5804c return, calls shared zero/empty initialization at 0x5810c, returns this at 0x5807c, and the next ctor enters at 0x58080; Windows source claim src/armygrp.cpp 0x44aa80 names the same default initialization."
+
+[[functions]]
+retail_va = 0x42d870
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x30ee0
+mac_size = 0x94
+mac_symbol = ".aiConsolidateArmy__FR9armyGroup"
+target_sha256 = "91e5c9aca5492536868c40418c13316503208d4560bf06d70df0232a2ec5688e"
+evidence = "Mac 0:0x30ee0 follows the getPurchaseValue return at 0x30edc, scans six first slots and later duplicates across seven army entries, adds duplicate counts at +0x1c, calls armyGroup::dismiss at 0x581dc, returns at 0x30f70, and is followed by next entry 0x30f74; same semantics and source owner at Windows 0x42d870."
+
+[[functions]]
+retail_va = 0x42c5b0
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2fffc
+mac_size = 0x11c
+mac_symbol = ".dumpExtraCreature__24type_AI_creature_swapperFv"
+target_sha256 = "fb5679ecd753708f36c10b6593d465109eb0594d1d7b8a82994333bb4a542b14"
+evidence = "Mac 0:0x2fffc follows a return at 0x2fff8, tests adjacent army and seven-slot/full/one-army guards, scans creature slots, dismisses a slot, refreshes alignments, values or adds the displaced creature, returns at 0x30114, and next entry starts 0x30118; Windows source claim 0x42c5b0 has that named sequence."
+
+[[functions]]
+retail_va = 0x42c060
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2fa08
+mac_size = 0xc8
+mac_symbol = ".getAlignments__24type_AI_creature_swapperFv"
+target_sha256 = "ec824f63fbf14a543e6fbcc25537e55f942b1714cc4a419ae636f12909aa1c02"
+evidence = "Mac 0:0x2fa08 follows a return at 0x2fa04, calls armyGroup::getAlignments into purchaser +0xe, stores count at +0xc, combines Angelic-Alliance alignments across ten slots, returns at 0x2facc, and next addCreatures entry starts 0x2fad0; Windows source claim 0x42c060 names this method."
+
+[[functions]]
+retail_va = 0x54e7c0
+unit = "recruit"
+mac_section = 0
+mac_offset = 0x14d20c
+mac_size = 0x7c
+mac_symbol = ".getMonsterCost__FiPi"
+target_sha256 = "c1516f90a869f5965743f7022f5c0fb37603250c229ead296599090eb01fe4a5"
+evidence = "Mac 0:0x14d20c copies seven four-byte resource costs from the 0x74-byte creature trait row +0x20 into the output array, returns at 0x14d284, and next function begins 0x14d288; source owner recruit.cpp Windows 0x54e7c0 has the same seven-cost getter."
+
+[[functions]]
+retail_va = 0x42a470
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2e438
+mac_size = 0x148
+mac_symbol = ".tradeResources__14type_AI_playerFPCil"
+target_sha256 = "3f461906bc0d1d47a5c285ac6d062a01a0e28608a923dee26b78ad8c19c99734"
+evidence = "Mac 0:0x2e438 receives AI player, seven-cost pointer and quantity, performs the resource-trading walk, returns at 0x2e57c, and next function begins 0x2e580; Windows source owner ai_player.cpp 0x42a470 names tradeResources with the same arguments, and doBestPurchase calls this address for affordable sources."
+
+[[functions]]
+retail_va = 0x42c830
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x302b0
+mac_size = 0x3d4
+mac_symbol = ".valueOfAddingArmy__24type_AI_creature_swapperF13TCreatureTypesRsUc"
+target_sha256 = "6ffb8a94e6ddf1687a15b1045b2a38e697e2ff0d245eadbd5a9a7f3bb302183b"
+evidence = "Mac 0:0x302b0 takes creature type, short count, short slot reference and mustReplace byte, evaluates the 0x74-byte creature trait value against current and adjacent armies, stores the slot, returns at 0x30680, and next function begins 0x30684; Windows source owner ai_player.cpp 0x42c830 names this exact signature."
+
+[[functions]]
+retail_va = 0x526cc0
+unit = "philai"
+mac_section = 0
+mac_offset = 0x140db8
+mac_size = 0x38
+mac_symbol = ".aiResourceCost__FlPCi"
+target_sha256 = "c5d4db939720401b81d6032ad394e842a944a81a151977d4b9b987702e7d88f1"
+evidence = "Mac 0:0x140db8 multiplies player id by the 0x15c Mac playerData stride, selects that record from g_game and calls the resource-array overload at 0x140d40; return is 0x140dec and next entry 0x140df0. Windows philai.cpp source claim 0x526cc0 is aiResourceCost(long,const int*) with the same delegation."
+
+[[functions]]
+retail_va = 0x42c130
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2fad0
+mac_size = 0xe0
+mac_symbol = ".addCreatures__24type_AI_creature_swapperF13TCreatureTypess"
+target_sha256 = "2a454f9a79aac913760da71210bc9a72b76f395f5980538873ac9cea48e83d8c"
+evidence = "Mac 0:0x2fad0 follows getAlignments return at 0x2facc, accepts creature type, short amount and short slot, adjusts army value and slot count, returns at 0x2fbac, and next function begins 0x2fbb0; Windows ai_player.cpp source claim 0x42c130 has the same addCreatures signature."
+
+[[functions]]
+retail_va = 0x42ce30
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x307d0
+mac_size = 0x90
+mac_symbol = ".__ct__26type_AI_creature_purchaserFlP4town"
+target_sha256 = "616438c86751c9c132be436ce4811910d1b82ad81636d5ed4cff6152565e8f1b"
+evidence = "Mac 0:0x307d0 receives player id and town, constructs the swapper and vector, sets purchaser player +0x20/funds +0x24/subtract +0x28, then calls set(town) at 0x30838; return at 0x3085c and next ctor begins 0x30860. Windows source claim 0x42ce30 is the same town purchaser constructor."
+
+[[functions]]
+retail_va = 0x42d1b0
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x308f4
+mac_size = 0xa8
+mac_symbol = ".set__26type_AI_creature_purchaserFP4town"
+target_sha256 = "8009f64c91e27b7408a0a62c00bcc9e6e45eb8bd816a9e22d12715ce16715a29"
+evidence = "Mac 0:0x308f4 clears purchaser vector at +0x2c, walks town dwelling sources, returns at 0x30998, and next set(creature,amount) entry begins 0x3099c; Windows ai_player.cpp 0x42d1b0 names set(town)."
+
+[[functions]]
+retail_va = 0x42d690
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x30ca8
+mac_size = 0xa4
+mac_symbol = ".doPurchase__26type_AI_creature_purchaserFP9armyGroupsP9armyGroupPlUcUc"
+target_sha256 = "5d60e882f6f5c1682a0dab651f14ef030b5e8739123d2a035454ab90b744bdeb"
+evidence = "Mac 0:0x30ca8 writes purchaser army, adjacent, morale, funds, alliance fields at +0/+4/+0xa/+0x24/+8; calls aiConsolidateArmy, dumpExtraCreature, doBestPurchase in a positive-result loop, then writes source amounts back; return at 0x30d48 and next getPurchaseValue entry at 0x30d4c. Windows source claim 0x42d690 has this exact operation order."
+
+[[functions]]
+retail_va = 0x42c3b0
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2fd9c
+mac_size = 0xc4
+mac_symbol = ".doSwap__24type_AI_creature_swapperFP4heroP9armyGroupP4heroUc"
+target_sha256 = "3025713385ab149367d8ec53f998ba3daea8e69da555f6f4907ba05b9c00c788"
+evidence = "Mac 0:0x2fd9c receives hero, source army, optional second hero and alliance byte, sets swapper fields then runs its swap helper; return at 0x2fe5c and next getSwapValue entry at 0x2fe60. Windows source claim 0x42c3b0 names doSwap with the same inputs."
+
+[[functions]]
+retail_va = 0x5c1460
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6fdc
+mac_size = 0x44
+mac_symbol = ".getArmy__4townCFv"
+target_sha256 = "1fe1b65ee20c24578b8104e5c9996f0840d39d260d273bcea12755e549f45cef"
+evidence = "Mac 0:0x1b6fdc selects town garrison army at +0xd4 if hero id +0xc is negative, otherwise selects g_game hero army with the 0x486 hero stride; both returns are within 0x1b701c and the next function begins 0x1b7020. Windows town.cpp 0x5c1460 names the const getArmy method."
+
+[[functions]]
+retail_va = 0x4bacb0
+unit = "game"
+mac_section = 0
+mac_offset = 0xcda7c
+mac_size = 0x128
+mac_symbol = ".hasGivenArtifact__10playerDataFi"
+target_sha256 = "6c32d02c3a1c26ec4d5a462b58a8c01ef032bb0a37671eeba72e74694bbed33c"
+evidence = "Mac 0:0xcda7c scans a playerData hero roster for the requested artifact, returns at 0xcdba0, and next function begins 0xcdba4; Windows game.cpp 0x4bacb0 names playerData::hasGivenArtifact(int)."
+
+[[functions]]
+retail_va = 0x4e39b0
+unit = "hero"
+mac_section = 0
+mac_offset = 0x10464c
+mac_size = 0x2b8
+mac_symbol = ".getMorale__4heroCFPC4heroUcUc"
+target_sha256 = "8d31abf0f69cc8975a4c656c68ee8abf9b53a5843d0f02b49e6c48fa286e754d"
+evidence = "Mac 0:0x10464c reads hero army and morale modifiers under the three-argument interface used twice by buyCreatures, returns at 0x104900, and next function begins 0x104904; Windows hero.cpp 0x4e39b0 names hero::getMorale with identical arguments."
+
+[[functions]]
+retail_va = 0x5c0f20
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6a8c
+mac_size = 0x180
+mac_symbol = ".getBuildableMask__4townCFv"
+target_sha256 = "431d28a94b5f9138b4f4be0352499f18faa5a2673833e16b154198b3456a45c3"
+evidence = "Mac 0:0x1b6a8c computes a two-word building mask from town active/available state and prerequisite checks, returns at 0x1b6c08, and next function starts 0x1b6c0c; Windows town.cpp 0x5c0f20 is the matching getBuildableMask method."
+
+[[functions]]
+retail_va = 0x5c1080
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6c0c
+mac_size = 0x68
+mac_symbol = ".getBuildCostArray__4townCF16type_building_id"
+target_sha256 = "4733e3b3820be53831df68f9c610318ae8e6dfd5f8fb6272528463f3bf1cce45"
+evidence = "Mac 0:0x1b6c0c tests ordinary, special and dwelling building-id bands and returns the selected seven-resource cost array by 0x1b6c70; next function begins 0x1b6c74. Windows town.cpp 0x5c1080 names getBuildCostArray(type_building_id)."
+
+[[functions]]
+retail_va = 0x5bede0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b43ac
+mac_size = 0x420
+mac_symbol = ".buildBuilding__4townFiUcUc"
+target_sha256 = "f35e1bc312e452dde2b12b8c3b75866cb5cb189ba28aba1db49a40ae1a968c70"
+evidence = "Mac 0:0x1b43ac is the large town construction action taking building id and two byte flags; buyCreatures calls it after choosing the best dwelling, it returns at 0x1b47c8, and the next function begins 0x1b47cc. Windows town.cpp 0x5bede0 names town::buildBuilding with this signature."
+
+[[helpers]]
+unit = "ai_player"
+source_helper = "maxBuyableCreatures"
+mac_section = 0
+mac_offset = 0x2f178
+mac_size = 0x94
+mac_symbol = ".maxBuyableCreatures__FPCl13TCreatureTypei"
+target_sha256 = "0ab67542bf206e7aa859d889fb639d1bb89b929e27bf01b493732ae899b5eef4"
+evidence = "Unique static MaxBuyableCreatures definition in ai_player.cpp, Dreamcast ai_player.obj dc:0x31030..0x31092 with const long*, creature type, and limit. Mac 0:0x2f178..0x2f20c calls getMonsterCost, loops seven costs, divides positive funds by positive costs, and lowers the limit. Mac doBestPurchase calls it at 0:0x30ac0 and 0:0x30bcc. No Windows VA is claimed."
+
+[[functions]]
+retail_va = 0x0042b9e0
+unit = "game"
+source = "include/game_is_human_team.inl"
+mac_section = 0
+mac_offset = 0x2d3e4
+mac_size = 0x94
+mac_symbol = ".isHumanTeam__4gameCFi"
+target_sha256 = "f47b5783d05545c2954445d282a7af023ec8b8966f6337034d1ce0cf0d461531"
+evidence = "Canonical game.h IsHumanTeam (DC Game.h:839-850, dc 0x37f64) is claimed at Windows 0x42b9e0. Mac retained body 0:0x2d3e4..0x2d478 checks team>=0, scans eight signed team-info bytes at game+0x1f105, calls gpGame->IsHuman on a matching player, and returns one or zero. Mac buyCreatures calls it at 0:0x2f3f0 after expanding the distinct is_human_ally wrapper and GetTeam. The body ends in blr 0x2d474; next function starts 0x2d478. The old isHumanAlly label confused this scan with the player-number wrapper at dc 0x37fd8; that wrapper has no proven standalone Windows VA."
+
+[[helpers]]
+unit = "ai_player"
+source_helper = "type_AI_creature_purchaser::set(TCreatureType newType, short* newAmount)"
+mac_section = 0
+mac_offset = 0x3099c
+mac_size = 0x6c
+mac_symbol = ".set__26type_AI_creature_purchaserF13TCreatureTypePs"
+target_sha256 = "11a906c5ce8d37f3b97de45399618c3d0bab907683c546e738a2b8d7cbf5a9e7"
+evidence = "Unique authored two-parameter set overload in ai_player.cpp after set(town*). Dreamcast ai_player.obj dc:0x31ffc..0x32036 identifies clear, one type_creature_source constructor and vector push_back in four source rows. Mac body 0:0x3099c..0x30a08 accesses purchaser vector at this+0x2c, clears it at 0x3b06c, materializes the 12-byte element from type and short*, and appends it via 0x3ac1c. Mac buyCreatures calls this retained helper at 0:0x2f518. No Windows VA is claimed."
+
+[[helpers]]
+unit = "ai_player"
+source_helper = "calculateImprovement"
+mac_section = 0
+mac_offset = 0x2fd40
+mac_size = 0x5c
+mac_symbol = ".calculateImprovement__FPC4heroPC4hero"
+target_sha256 = "a8da8353a820b341b2ae3378d64d0f7bb035285bcc5bc1805d8b43c9750dcb19"
+evidence = "Unique static calculateImprovement definition in ai_player.cpp, Dreamcast ai_player.obj dc:0x31820 and authored immediately before doSwap. Mac 0:0x2fd40..0x2fd9c calls hero::getPrimarySkillTotal for the two hero pointers, subtracts and clamps a negative improvement to zero. doSwap calls this body at 0:0x2fdf4 and getSwapValue at 0:0x2ff98. No Windows VA is claimed."
+
+[[functions]]
+retail_va = 0x42c280
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2fbb0
+mac_size = 0x190
+mac_symbol = ".doBestSwap__24type_AI_creature_swapperFb"
+target_sha256 = "baa3a39fb0ba3e5188765efc7219ec3e5882d8645e148dd42cf16478339a3886"
+evidence = "Mac 0:0x2fbb0..0x2fd40 is bounded by a prologue, return and following calculateImprovement entry. It iterates the seven creature slots and calls valueOfAddingArmy and addCreatures to choose a swap; Windows source VA 0x42c280 owns type_AI_creature_swapper::doBestSwap(bool). getSwapValue calls it at 0:0x2ffe4."
+
+[[functions]]
+retail_va = 0x44acc0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x58528
+mac_size = 0x7c
+mac_symbol = ".getNumArmies__9armyGroupCFv"
+target_sha256 = "ac65e433465c37d204c9041171f1c798976447dfef6d836c0c2648fa39cedba4"
+evidence = "Mac 0:0x58528..0x585a4 counts the seven nonempty armyGroup creature slots and returns; next function starts at 0x585a4. Windows armygrp.cpp VA 0x44acc0 declares the const getNumArmies method, called by getSwapValue at 0:0x2ffc4."
+
+[[functions]]
+retail_va = 0x4e5960
+unit = "hero"
+mac_section = 0
+mac_offset = 0x106948
+mac_size = 0x88
+mac_symbol = ".getPrimarySkillTotal__4heroCFv"
+target_sha256 = "a3eebc8105d1f81244bcdb2f20c61c39d03faa0c7344cbf824ac4db004fdcf04"
+evidence = "Mac 0:0x106948..0x1069d0 reads four signed primary skill bytes at hero+0x46a and sums them. Windows hero.cpp VA 0x4e5960 owns getPrimarySkillTotal; Mac calculateImprovement calls this body twice at 0:0x2fd58 and 0:0x2fd70."

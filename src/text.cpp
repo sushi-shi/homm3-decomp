@@ -65,7 +65,9 @@ const char* g_tavernInfo[8];
 DATA(0x006a5e60)
 TSpreadsheetResource* g_campaignDialogResource;
 
-// 0x006a5e64 - datum claimed at src/seerhut.cpp:290
+// The seerhut consumer also identifies retail 0x006a5e64; this definition
+// owns the full eight-pointer table, including the spare final cell.
+DATA(0x006a5e64)
 const char* g_resourceNames[8];
 
 DATA(0x006a5e84)

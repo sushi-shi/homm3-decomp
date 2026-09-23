@@ -9,14 +9,20 @@ Recover C++ that reproduces Heroes III Complete's retail MSVC 6.0 object code.
   [README.md](README.md#pinned-target).
 - Dreamcast's embedded debug symbols prove source facts for an older,
   cross-architecture build; x86 identities require retail proof.
+- The pinned Classic Mac PowerPC PEF is a second exact byte target for
+  hand-admitted shared functions. Mac addresses are PEF section-relative
+  offsets paired with existing Windows VA claims; unpaired functions have no
+  Mac verdict. See [the Mac target plan](docs/matching/mac-second-target-plan.md).
 
 The verdict is VC6 SP3 under Wine; clang/clangd is editor tooling only. Use the
 per-TU compiler profiles in `config/units.toml`.
 
 Use `homm3 build --fast <TU>` (for example, `homm3 build --fast cursor`) for the
 inner loop. Normally supply the active TU so shared-header edits rebuild only
-that TU during iteration. Run `homm3 build` for the final checkpoint: it rebuilds
-affected TUs, refreshes retail targets through delinking, and runs the gates.
+that TU during iteration. Admitted Mac counterparts in that TU are compiled
+with CodeWarrior and compared in the same loop. Run `homm3 build` for the final
+checkpoint: it rebuilds affected TUs, refreshes retail targets through delinking,
+checks every admitted Mac pair, and runs the gates.
 
 ## Required DC evidence: source layout as well as statements
 
@@ -54,6 +60,23 @@ homm3 sema diff 0x00524dd0 --summary
 homm3 sema diff 0x00524dd0 --structure
 homm3 sema diff 0x00524dd0 --source
 ```
+
+For an admitted Mac counterpart, also run `homm3 mac show <Windows-VA>`,
+`homm3 mac disasm <Windows-VA>` and `homm3 mac diff <Windows-VA>` before
+speculative rewrites. The Mac byte comparison is a separate exact verdict;
+its stripped PEF does not supply Dreamcast's names or line tables. Match the
+same authored C++ body against both targets, and document evidenced platform
+differences at the owning source.
+
+`homm3 mac calls <Windows-VA>` compares call sites and ordered targets.
+Indirect calls through the reviewed Mac glue remain explicitly unknown;
+equal aggregate counts do not prove a matching helper/inlining decision.
+`homm3 mac queue --unit <TU>` names missing pairing, compilation and reference
+prerequisites. Follow the [Mac tooling guide](docs/tooling/mac-matching-roadmap.md)
+to create a shared unit profile, inspect emitted symbols and admit a reviewed
+span. Compile admitted bodies and extra source helpers in original source order;
+do not duplicate game bodies in Mac declaration headers. Each worker owns its
+unit profile and pair file; coordinate changes to shared runtime/data manifests.
 
 Use `homm3 dreamcast find NAME` to locate counterparts. Selectors also accept
 unambiguous names, `module.obj:0xOFF`, and `dc:0xOFF`. `show` gives the dossier;

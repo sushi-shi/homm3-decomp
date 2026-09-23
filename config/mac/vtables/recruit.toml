@@ -1,0 +1,66 @@
+# The constructor references the compiler-generated recruitUnit vtable. Its
+# object leaves the table external; these records bind only the reviewed Mac
+# target address and all loader-linked entries, without emitting an initializer.
+[[vtables]]
+owner_vas = [0x00551350, 0x00551460]
+symbol = "__vt__11recruitUnit"
+toc_section = 1
+toc_offset = 0xe24
+mac_section = 1
+mac_offset = 0x4cab4
+mac_size = 0x14
+sha256 = "66f1a298caac032fe5bfc1d670c569feb11667559e67208380704307032e4643"
+rtti_section = 1
+rtti_offset = 0x4caac
+rtti_size = 0xc
+rtti_sha256 = "851f075808584d07d28cba707aaa33d2b60af5635056523487ede27ad61a531a"
+evidence = "The armyGroup and hero recruit constructors at 0:0x1507f8 and 0:0x1508b8 load TOC 1+0xe24, whose loader pointer targets this 20-byte vtable at 1+0x4cab4. Its first word points to the recruitUnit RTTI chain at 1+0x4caac, the second is zero, and the three virtual slots point through 8-byte transition vectors to reviewed open, close, and main entries. The matching class has exactly those three inherited slots in the canonical and Mac declaration views."
+
+[[vtables.declarations]]
+source = "include/basemgr.h"
+class = "baseManager"
+methods = ["virtual int open(int) = 0", "virtual void close() = 0", "virtual int main(message& msg) = 0"]
+
+[[vtables.declarations]]
+source = "include/recruit.h"
+class = "recruitUnit"
+base = "baseManager"
+methods = ["virtual int open(int newPriority)", "virtual void close()", "virtual int main(message& msg)"]
+
+[[vtables.declarations]]
+source = "config/mac/include/recruit.h"
+class = "baseManager"
+methods = ["virtual int open(int) = 0", "virtual void close() = 0", "virtual int main(message&) = 0"]
+
+[[vtables.declarations]]
+source = "config/mac/include/recruit.h"
+class = "recruitUnit"
+base = "baseManager"
+methods = ["virtual int open(int newPriority)", "virtual void close()", "virtual int main(message& msg)"]
+
+[[vtables.slots]]
+section = 1
+offset = 0x7b58
+sha256 = "3417f83871fd892681b76aa21c97eae83c89c45862edd8d94e6478848a7e9bcd"
+code_section = 0
+code_offset = 0x14eec8
+code_size = 0x438
+code_sha256 = "d35ae1102fe33fc79b2ada72c2657115b172ebd9f3eb19ce89fe76a9821a3d42"
+
+[[vtables.slots]]
+section = 1
+offset = 0x7b50
+sha256 = "3f8ad02af95bad06a95078e5112a0a95577f516fbf9116c8fa275ee048483edc"
+code_section = 0
+code_offset = 0x14f300
+code_size = 0xcc
+code_sha256 = "141a8a24dafc5b2f4c81824dd2b930b63be341867476cf3b7e9b01ead806d54d"
+
+[[vtables.slots]]
+section = 1
+offset = 0x7b48
+sha256 = "6be55da4ceb4ede669b9b0fccda879628c67f3ccbf9f6f564cb103a6b88594e0"
+code_section = 0
+code_offset = 0x14fb54
+code_size = 0xb8c
+code_sha256 = "3286a66eb790cd6de471112bdec62ea37c3e971132f1b117e80a90b7781e697a"

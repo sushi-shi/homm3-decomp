@@ -1,0 +1,19 @@
+[[data]]
+retail_va = 0x00694dcc
+source = "src/campaignbrief.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x659f0
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Canonical src/campaignbrief.cpp owns the file-static zero-initialized player slot at retail DATA(0x00694dcc). This selected-body Mac compilation omits the TU-level definition and addresses that storage as an external through an indirect TOC load. The retained body stores the selected player through TOC 1+0x95c -> zero-filled 1+0x659f0 and reloads it for each occupied player. This row binds its address only, not an initializer or source linkage change."
+
+[[data]]
+retail_va = 0x00694de8
+source = "src/campaignbrief.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x43ec
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Canonical src/campaignbrief.cpp defines DATA(0x00694de8) as an uninitialized file-static unsigned byte. The Mac select body at 0:0x63e1c reads it directly with lbz r0,-0x3c14(r2): TOC 1+0x8000 minus 0x3c14 is 1+0x43ec. The pinned target byte there is zero, with no loader pointer at or to that address. The selected-body MWOB emits one HUNK_LOCAL_UDATA Class=TD Size=1 and a direct 16-bit relocation to the same symbol."
