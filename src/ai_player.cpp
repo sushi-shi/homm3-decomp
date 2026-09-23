@@ -4787,7 +4787,7 @@ long type_angelic_alliance_artifact::getValue(
 // Mac calls the shared base evaluator twice, once for each mastery path.
 // The canonical calls give VC6 the retail quotient register schedule in both
 // expansions; all 29 CFG blocks and 12 branches now agree.
-VA(0x004333a0, 0x174)  // vtable slot 0x63b768, Mac 0:0x384a4
+VA(0x004333a0, 0x174)  // vtable slot 0x63b768, Mac 0:0x384e0
 long type_undead_king_cloak_artifact::getValue(const hero* owner,
                                                 unsigned char equipped,
                                                 unsigned char exact) const

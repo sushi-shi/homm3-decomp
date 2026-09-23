@@ -1333,9 +1333,8 @@ int advManager::main(message& msg)
                     curTime
                     - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
                 g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                    cppMax(elapsedTime,
-                             static_cast<long>(
-                                 ADVENTURE_ANIMATION_MAX_ELAPSED));
+                    cppMax(static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED),
+                           elapsedTime);
             }
             process1WindowsMessage();
         }
@@ -1814,9 +1813,8 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
                             curTime
                             - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
                         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                            cppMax(elapsedTime,
-                                     static_cast<long>(
-                                         ADVENTURE_ANIMATION_MAX_ELAPSED));
+                            cppMax(static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED),
+                                   elapsedTime);
                     }
                     process1WindowsMessage();
                 }
