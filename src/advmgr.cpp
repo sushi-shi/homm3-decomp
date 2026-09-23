@@ -7636,10 +7636,12 @@ void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
 // the parameter off the stack (85.39 -> 88.13 for that one line). It also
 // reaches RedrawAdvScreen through the gpAdvManager global, not `this`.
 
-// Residual (88.13%): instruction selection only - branch sequences agree
-// mnemonic-for-mnemonic (14 branches, 1 return) and the call multisets are
-// identical; what is left is the register choice in the GetTown index
-// chain and reloc-name-only rows on data.
+// DC lines 9513/9528/9530 retain HideRoute(0, 0, 1), get_map_center and
+// town::get_location. Restoring these helper calls raises Windows to 99.0045%.
+// The remaining eight masked instruction rows are register choices in the
+// GetTown index chain; CFG and all 16 direct calls agree. The reviewed Mac
+// address aligns 134/159 instructions with 15/14 direct calls in the source
+// shape view; it has no exact byte verdict.
 VA(0x00417830, 0x2EB)  // anchor-global, dc 0x1a65c
 void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigned char update)
 {
@@ -7675,24 +7677,14 @@ void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigne
         m_advWindow->updateSleepButton(0);
     }
 
-    if (g_currentPlayer->isLocalHuman()
-        || (g_debugLevel && g_aiHeroMoveActive)) {
-        g_windowManager->broadcastMessage(
-            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-            TAdventureMapWindow::MOVE_ID,
-            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-        if (m_showRoute)
-            m_showRoute = 0;
-    }
+    hideRoute(0, 0, 1);
 
     g_advManager->redrawAdvScreen(update, 0);
 
-    type_point point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8, m_radarOrigin.m_z);
+    type_point point = getMapCenter();
     setEnvironmentOrigin(point, 1);
 
-    point.m_x = currTown->m_mapX;
-    point.m_y = currTown->m_mapY;
-    point.m_z = currTown->m_mapZ;
+    point = currTown->getLocation();
 
     int ground = getCell(point)->m_groundSet;
     if (ground != m_lastTerrain) {
