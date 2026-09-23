@@ -169,9 +169,7 @@ THeroTraits g_heroTraitsStorage[163] = {
     { 1, 7, THeroClass(10), 19, 1, 13, 1, 1, { 0, 0, 0 }, 15, TCreatureType(70), TCreatureType(72), TCreatureType(74), "HPS008Sh.PCX", "HPL008Sh.PCX", { 65792 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 7, THeroClass(12), 22, 1, 19, 1, 0, { 0, 0, 0 }, -1, TCreatureType(84), TCreatureType(86), TCreatureType(88), "HPS001Sh.PCX", "HPL001Sh.PCX", { 65792 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 7, THeroClass(6), 6, 1, 19, 1, 0, { 0, 0, 0 }, -1, TCreatureType(42), TCreatureType(46), TCreatureType(46), "HPS131Dm.PCX", "HPL131Dm.PCX", { 65792 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
-    // Complete also stores seven portrait-only rows at 0x67d5e0..0x67d863.
-    // The text loader fills 156 heroes; the selection window preloads all
-    // 163 portraits (retail 0x57c438..0x57c457). Keep the full backing array.
+    // Portrait-only rows; these are not loaded from the playable-hero text table.
     { 1, 7, THeroClass(0), 6, 1, 22, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(2), TCreatureType(4), "HPS129Mk.PCX", "HPL129Mk.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 7, THeroClass(0), 6, 1, 22, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(2), TCreatureType(4), "HPS002Sh.PCX", "HPL002Sh.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 7, THeroClass(0), 6, 1, 22, 1, 0, { 0, 0, 0 }, -1, TCreatureType(0), TCreatureType(2), TCreatureType(4), "HPS132Wl.PCX", "HPL132Wl.PCX", { 257 }, { 0, 0, 0, 0 }, 0, 0, 0, 0, 0, 0, 0 },

@@ -8,13 +8,6 @@
 
 #include "gamecontext.h"
 
-// Retail 0x4eccf0 binds the context cell at 0x69923c to the initialized
-// dword 3 at 0x67f554 before remote's player-record initializer (0x552290).
-// Of 78 retail references, one binds the cell and the others read it;
-// there is no surviving Dreamcast counterpart or original identifier.
-// The backing dword is in retail .data. Binding its storage preserves the
-// two-level access; binding a literal or const scalar makes VC6 copy the
-// value into another temporary with an extra runtime store absent in retail.
 DATA(0x0067f554) static int g_installedGameContext = 3;
 DATA(0x0069923c) int& g_gameContext = g_installedGameContext;
 VA_COMPGEN(0x004eccf0, 0x0b, STATIC_CTOR, g_gameContext)

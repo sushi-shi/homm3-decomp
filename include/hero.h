@@ -1282,13 +1282,8 @@ extern type_movement_constants g_moveConstants;
 extern THeroClassTraits g_heroClassTraits[18];
 extern const THeroClassTraits (&g_heroClasses)[18];
 
-// Retail .data 0x67dce8 (reloc-evidence datum; read by strip::DrawOwner
-// as pointer+index). The IDA-lineage mangling
-// ?akHeroTraits@@3AAY0KD@$$CBUTHeroTraits@@A types it as an array
-// reference. Complete stores 163 rows at 0x679dd0..0x67d863; its text
-// parser fills only the first 156. The selection window also loads the
-// seven portrait-only tail rows. The reference cell points to 0x679dd0;
-// the loader begins at the +0x40 defaultName field.
+// The text parser fills 156 playable heroes; selection also uses the
+// seven portrait-only rows at the end of the table.
 extern THeroTraits g_heroTraitsStorage[163];
 extern const THeroTraits (&g_heroTraits)[163];
 

@@ -1694,9 +1694,7 @@ TResourceLODSlot g_resourceLodSlots[8] = {
     DATA_COMPGEN(0x00682e88, resourceAbPSpriteArchiveName, "h3abp_sp.lod")
 };
 
-// Retail 0x559320 initializes all four rows before WinMain. The read-only
-// index arrays at 0x641028..0x64108b encode archive precedence, including
-// the patched RoE/AB archives. No corresponding DC context table survives.
+// Archive search order for each installed-game context.
 DATA(0x00641028) static const int g_roeSpriteArchives[2] = { 5, 1 };
 DATA(0x00641030) static const int g_roeBitmapArchives[2] = { 4, 0 };
 DATA(0x00641038) static const int g_roeSoundArchives[2] = { 1, 0 };

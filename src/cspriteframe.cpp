@@ -17,13 +17,6 @@ DATA(0x006968aa) unsigned short CSpriteFrame::s_div4mask;
 // this declaration keeps /GX from manufacturing an unwind frame.
 __declspec(nothrow) void __cdecl operator delete(void* p);
 
-// DC names these file-static constants kGeneralRLEOpaqueRunCode (const
-// unsigned char) and kGeneralRLEMaxRunLength (const unsigned int), and retains
-// numeric_limits<unsigned char>::max calls at cspriteframe.cpp:46/47
-// (dc 0x745b0/0x745d8). Retail's CRT initializers
-// 0x47c260/0x47c270 store 255/256 before any frame decoder copies the literal
-// marker into its local static. Leaving the marker zero misreads transparent
-// runs as literal pixels and corrupts interface sprites at startup.
 DATA(0x006968a6) static const unsigned char g_generalRleOpaqueRunCode =
     (std::numeric_limits<unsigned char>::max)();
 VA_COMPGEN(0x0047c260, 0x08, STATIC_CTOR, g_generalRleOpaqueRunCode)

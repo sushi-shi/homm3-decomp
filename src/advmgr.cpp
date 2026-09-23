@@ -5897,9 +5897,7 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
     unsigned char visibilityBit = g_mapVisibilityBit;
     for (int y = 0; y <= lastRow; y++) {
         unsigned short* dest = destRow;
-        // Pitch is bytes; destRow is a pointer to 16-bit pixels. Retail
-        // advances 4/2/1 screen rows here, not 8/4/2. Doubling this
-        // stride made the minimap overwrite the adventure sidebar.
+        // Bitmap pitch is measured in bytes.
         Bitmap16MapPointer nextRow;
         nextRow.m_pixels = destRow;
         switch (g_mapHeight) {

@@ -1431,16 +1431,10 @@ VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 // Objnames' 0x41b500 expands the derived allocation-error initialization
 // around a call here; gzinflatebuf retains and calls 0x4d6b80.
 
-// The empty base constructor shares retail's three-byte representative at
-// 0x524360 with philAI. Keep a real out-of-line definition for the retained
-// calls in objnames/objecttype, visible here for the message constructor's
-// elided base call. This TU placement is provisional; RTTI and call sites
-// establish the body and ABI, not the original Windows source filename.
 TDebugBreak::TDebugBreak()
 {
 }
 
-// RTTI proves the empty TDebugBreak base; the body is the base list.
 VA(0x0049a0c0, 0xF9)
 TRuntimeError::TRuntimeError(const char* text)
     : std::runtime_error(std::string(text))

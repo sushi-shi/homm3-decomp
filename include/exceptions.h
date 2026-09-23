@@ -25,9 +25,6 @@ public:
     // it does not independently identify this base's original source file.
     // TRuntimeError(const char*) at 0x49a0c0 elides this same empty base
     // initialization. No evidence supports a separate message overload.
-    // The folded body is already represented by philAI's VA claim. Its
-    // out-of-line definition in dxplay.cpp preserves the default-error
-    // callers' retained calls and the message constructor's elision.
     TDebugBreak();
 };
 

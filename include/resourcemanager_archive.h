@@ -23,8 +23,6 @@ public:
     TResourceArchiveList m_bitmaps;
     TResourceArchiveList m_sounds;
 
-    // Retail 0x559320 constructs each 24-byte descriptor in one temporary,
-    // then copies it into the four-context array. This expansion is PC-only.
     TResourceArchiveContext(int spriteCount, const int* spriteIndices,
                             int bitmapCount, const int* bitmapIndices,
                             int soundCount, const int* soundIndices)
@@ -61,8 +59,7 @@ public:
     int* m_count;
     HANDLE* m_file;
 
-    // Retail's PC-only 0x5592b0 initializer binds live header/count/handle
-    // cells, so later LoadSoundHeaders updates are visible to the readers.
+    // Refer to the live cells updated by loadSoundHeaders.
     TSoundHeaderDescriptor(SoundHeaderStruct** sounds, int* count, HANDLE* file)
         : m_sounds(sounds), m_count(count), m_file(file)
     {

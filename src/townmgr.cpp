@@ -4887,9 +4887,6 @@ int townManager::main(message& msg)
     {
         int delta = GameTime::get() - g_timers[0];
         if (delta >= 0) {
-            // DC townmgr.cpp:5920 calls max(150, elapsed); retail
-            // 0x5d33c2..0x5d33e3 also selects the larger interval.
-            // A minimum leaves the timer due and runs animation at loop speed.
             g_timers[0] += max(150, delta);
             drawTown(1, 1, 0);
         }

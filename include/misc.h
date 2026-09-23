@@ -33,7 +33,6 @@ enum ECDDriveNumber {
     CD_DRIVE_NUMBER_4 = 4,
     CD_DRIVE_NUMBER_5 = 5,
     CD_DRIVE_NUMBER_6 = 6,
-    // Complete's SetupCDDrive returns 7 and startup bypasses CD probing.
     CD_DRIVE_NUMBER_NO_CD_REQUIRED = 7
 };
 

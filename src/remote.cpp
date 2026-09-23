@@ -241,7 +241,6 @@ DATA(0x0069d804) unsigned char g_gameMode;
 DATA(0x0069d80d) unsigned char g_playerDrop;
 DATA(0x0069d80e) unsigned char g_weMoved;
 DATA(0x0069d608) CNetPlayerInfo g_thisNetPlayerInfo;
-// Retail CRT initializer reads the context bound earlier by gamecontext.cpp.
 VA_COMPGEN(0x00552290, 0x1a, STATIC_CTOR, g_thisNetPlayerInfo)
 DATA(0x006989f0) eNetGameType g_mpNetProtocol;
 // Dreamcast publishes gMapName as char[260]. LobbyLaunchConnect copies the

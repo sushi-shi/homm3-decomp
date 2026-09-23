@@ -3,7 +3,7 @@
 
 #include <bitset>
 
-// Retail-only installed-game context, backed by the initialized dword at 0x67f554.
+// Installed-game context shared by resource selection and networking.
 extern int& g_gameContext;
 
 // Provisional name for the four installed-game feature masks at 0x699240.

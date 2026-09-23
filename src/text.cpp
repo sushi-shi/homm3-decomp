@@ -83,9 +83,6 @@ TTextResource* g_mineEventTextResource;
 DATA(0x006a6040)
 TSpreadsheetResource* g_specialBuildingText;
 
-// Retail InitializeTownNameText and game::ProcessOnMapTowns both index
-// this one table with a 16-pointer faction stride (0x5b9647 / 0x4cad13).
-// A separate 17-column game.cpp definition left the reader uninitialized.
 DATA(0x006a6048)
 const char* g_townNames[9][16];
 
