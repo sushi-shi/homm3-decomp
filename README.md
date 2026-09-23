@@ -9,7 +9,9 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable MAX: 97.10%** — weighted by function size across 1,999,142 bytes of code included in matching.
+**Code MAX: 97.10%** — weighted by function size across 1,999,142 bytes of code included in matching.
+
+**Data CUR (objdiff): 23.57%** — 68,763 / 291,743 compared data bytes. Includes vendor data and object layout; uncovered retail gaps are outside this denominator.
 
 **Function exact MAX** — 4,266 / 4,768 current implementations (89.5%) have reached 100%.
 

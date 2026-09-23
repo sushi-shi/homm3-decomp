@@ -784,10 +784,19 @@ def write_readme(report: dict) -> None:
 
     pct = 100.0 * matched / denominator if denominator else 0.0
     pct_max = 100.0 * matched_max / denominator if denominator else 0.0
+    measures = report.get("measures", {})
+    data_total = int(measures.get("total_data") or 0)
+    data_matched = int(measures.get("matched_data") or 0)
+    if data_total:
+        data_line = (f"**Data CUR (objdiff): {100.0 * data_matched / data_total:.2f}%** — "
+                     f"{data_matched:,} / {data_total:,} compared data bytes. "
+                     "Includes vendor data and object layout; uncovered retail gaps are outside this denominator.")
+    else:
+        data_line = "**Data CUR (objdiff): unavailable** — this report contains no compared data bytes."
     block = [RM_START, "",
-             f"**Executable MAX: {exe_pct:.2f}%** — weighted by function size "
+             f"**Code MAX: {exe_pct:.2f}%** — weighted by function size "
              f"across {unfiltered_bytes:,} bytes of code included in matching.",
-             "",
+             "", data_line, "",
              f"**Function exact MAX** — {matched_max:,} / {denominator:,} "
              f"current implementations ({pct_max:.1f}%) have reached 100%.", "",
              f"**CUR diagnostics** — {matched:,} / {denominator:,} functions "
@@ -824,7 +833,7 @@ def write_readme(report: dict) -> None:
     if new != text:
         README_PATH.write_text(new)
         print("[status] README match-score block refreshed")
-    print(f"[status] executable MAX: {exe_pct:.2f}% "
+    print(f"[status] code MAX: {exe_pct:.2f}% "
           f"(MAX-weighted bytes / {unfiltered_bytes:,} unfiltered B)")
 
 

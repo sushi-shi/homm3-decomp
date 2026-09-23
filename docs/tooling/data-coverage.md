@@ -49,6 +49,11 @@ Objdiff compares the real delinked target objects with raw-candidate comparison
 copies. Data is no longer truncated during normalization. Its totals describe
 object sections, including padding, copies and unrecovered fallback fragments;
 they are **not** the unique retail-byte coverage denominator.
+The README labels the retained function score **Code MAX** and reports
+**Data CUR (objdiff)** separately. Data CUR uses the current report's matched and
+total data bytes; it does not reuse function MAX history. Data-section comparison
+is enabled, while objdiff's function-relocation mode remains its default
+`name_address`, not `all`. This is not a whole-executable strict-match score.
 
 The default build also exports `build/data-match/data-byte-verdicts.tsv` and
 `data-match-summary.json` from the same fresh binding evidence. This bounded
