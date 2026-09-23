@@ -92,7 +92,9 @@ rewritten by the census.
 The [vendor contribution layer](vendor-data-coverage.md) further explains which
 DATA gaps belong to matching Microsoft/zlib storage or named DLL import records.
 `data-gaps.tsv` retains the complete declaration-gap total;
-`data-unaccounted.tsv` excludes only verified, unambiguous vendor contributions.
+`data-unaccounted.tsv` excludes verified, unambiguous vendor contributions and
+independently validated [compiler/linker structures](compiler-data-coverage.md).
+Their candidate-match verdict stays explicitly unverified.
 
 ## Artifacts and how to act on them
 

@@ -191,6 +191,10 @@ def generate(root, image, *, jobs=4, build_vendor=False):
     vendor_issues.extend(vendor_coverage.overlap_issues(rows))
     vendor_summary['analysis'] = vendor_analysis
     vendor_summary['issue_counts'] = dict(Counter(i['kind'] for i in vendor_issues))
+    from homm3.sema import compiler_data
+    compiler_rows, compiler_issues = compiler_data.collect(root, layout, claims, labels, references)
+    rows, compiler_summary = compiler_data.overlay(rows, compiler_rows)
+    compiler_summary['issue_counts'] = dict(Counter(i['kind'] for i in compiler_issues))
     summaries = {}
     for domain, total in [('file', len(image.data)), ('image', layout.image_size)]:
         audit_partition(rows, domain, total)
@@ -206,13 +210,14 @@ def generate(root, image, *, jobs=4, build_vendor=False):
                        'scripts/homm3/vc6/tryblocks.py', 'scripts/homm3/analysis/data_declarations.py',
                        'scripts/homm3/sema/data_coverage.py', 'build/gen/data-declarations.json',
                        'scripts/homm3/analysis/vendor_data.py', 'scripts/homm3/sema/vendor_coverage.py',
-                       'scripts/homm3/build/canonicalize_data_symbols.py']
+                       'scripts/homm3/build/canonicalize_data_symbols.py', 'scripts/homm3/sema/compiler_data.py']
     inputs.extend(implementations)
     return dict(schema='homm3.retail-accounting.v1', image_base=layout.base,
                 image_sha256=hashlib.sha256(image.data).hexdigest(), domains=summaries,
                 regions=[asdict(r) for r in layout.file_regions + layout.image_regions],
                 data_declarations=declared['declarations'], data_issues=data_issues, data_coverage=data_summary,
                 vendor_data=vendor_rows, vendor_issues=vendor_issues, vendor_coverage=vendor_summary,
+                compiler_data=compiler_rows, compiler_issues=compiler_issues, compiler_coverage=compiler_summary,
                 claims=claims, labels=dict(labels), references=references, rows=rows, problems=problems,
                 input_sha256={p: hashlib.sha256((root / p).read_bytes()).hexdigest() for p in sorted(set(inputs))},
                 limitations=limitations + [
@@ -277,9 +282,16 @@ def export(report, directory):
                   [render(r) for r in vendor_rows])
         tsv.write(directory / 'vendor-issues.tsv', ['# Missing inputs and unmatched admitted code anchors remain explicit.'],
                   ['kind', 'library', 'member', 'rva', 'end', 'vendor_ids', 'detail'], [render(r) for r in report['vendor_issues']])
-        tsv.write(directory / 'data-unaccounted.tsv', ['# DATA gaps with no verified, unambiguous vendor contribution.'],
+        tsv.write(directory / 'data-unaccounted.tsv', ['# DATA gaps with no verified vendor contribution or validated compiler/linker structure.'],
                   fields, [render(r) for r in vendor_coverage.unaccounted(report['rows'])])
-    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues')}
+    if 'compiler_data' in report:
+        compiler_rows = report['compiler_data']
+        tsv.write(directory / 'compiler-data.tsv', ['# Validated retail structures; ownership gaps remain explicit and candidate bytes are not yet compared.'],
+                  list(compiler_rows[0]) if compiler_rows else ['id', 'rva', 'size', 'kind', 'status'],
+                  [render(r) for r in compiler_rows])
+        tsv.write(directory / 'compiler-issues.tsv', ['# Invalid structures and missing function/class ownership evidence.'],
+                  ['compiler_id', 'rva', 'kind', 'detail'], [render(r) for r in report['compiler_issues']])
+    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues')}
     (directory / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
 
 
@@ -292,7 +304,7 @@ def run(args):
     except (ValueError, OSError) as exc:
         from homm3.sema._common import die
         die(str(exc))
-    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues')}
+    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues')}
     if args.json:
         print(json.dumps(summary, indent=2))
     else:
@@ -304,6 +316,7 @@ def run(args):
         print('DATA coverage: ' + json.dumps(report['data_coverage'], sort_keys=True))
         print('Vendor accounting: ' + json.dumps({k: v for k, v in report['vendor_coverage'].items()
                                                 if k != 'analysis'}, sort_keys=True))
+        print('Compiler structure accounting: ' + json.dumps(report['compiler_coverage'], sort_keys=True))
         if args.output:
             print(f'Actionable byte map: {args.output}/coverage.tsv; prioritized work: {args.output}/backlog.tsv')
         for limitation in report['limitations']:

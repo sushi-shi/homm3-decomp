@@ -81,6 +81,10 @@ BSS as initialized-byte success, or silently migrate historical code scores.
 
 ### 1. Compiler/linker structures
 
+Implemented on `codex/compiler-data-accounting`: the measured structural layer
+accounts for another 84,612 gap bytes and leaves 142,147 unaccounted. Candidate
+compared/matched bytes remain zero. See [evidence and validation](compiler-data-coverage.md).
+
 Add `sema/compiler_data.py`; extend the accounting overlay/export in
 `sema/image_coverage.py`. Reuse validated EH records, vtables and bounded PE
 structures. Attach records to owning handlers/functions/classes where supported;
