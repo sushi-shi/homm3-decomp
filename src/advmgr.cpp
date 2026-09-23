@@ -1418,6 +1418,12 @@ unsigned char saveGame(unsigned char campaignWinMode);
 // ebx/edi pushes past it (a 5-instruction `xor eax,eax` exit) where we
 // push all three in the prologue, and the SPACE arm's type_point cell
 // lookup keeps `fullMap` in a register slot where ours reloads it.
+// Current source (92.7551%) restores DC's ordinary HideRoute calls at
+// lines 1834/1855/1900, GetCurrHero at 1767/1892/1894, GetCurrHeroId at
+// 1890, and Reseed(0, 0) at 1918. Their first Windows restoration raised
+// the current score from 87.6584%; the historical 97.61% predates these
+// helper facts. Mac shape aligns 326/571 instructions and 52/52 direct
+// call counts; this is source-shape evidence, not a Mac byte verdict.
 VA(0x00408c40, 0xB9D)  // anchor-callee, dc 0x8b70
 int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
 {
@@ -1443,19 +1449,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             break;
 
         if (!m_curHeroMobile) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
-                                 0, 1);
-                    this->updateScreen(0, 0);
-                }
-            }
+            hideRoute(1, 0, 1);
             setHeroContext(localPlayer->m_currHeroId, 0, 0, 1);
         }
 
@@ -1539,7 +1533,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
     case KEYCODE_D:
         if (waitingPlayer)
             break;
-        if (!g_game->getHero(g_currentPlayer->m_currHeroId))
+        if (!g_game->getCurrHero())
             break;
         processSearch(-1, -1, -1);
         return 1;
@@ -1608,21 +1602,8 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         int townId = localPlayer->nextTown();
         if (townId == -1)
             break;
-        if (!waitingPlayer) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
-                                 0, 1);
-                    this->updateScreen(0, 0);
-                }
-            }
-        }
+        if (!waitingPlayer)
+            hideRoute(1, 0, 1);
         setTownContext(townId, waitingPlayer, 1);
         return 1;
     }
@@ -1640,21 +1621,8 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             doAdvCommand(triggerPoint);
             return 1;
         }
-        if (!waitingPlayer) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
-                                 0, 1);
-                    this->updateScreen(0, 0);
-                }
-            }
-        }
+        if (!waitingPlayer)
+            hideRoute(1, 0, 1);
         setHeroContext(localPlayer->m_currHeroId, 0, waitingPlayer, 1);
         return 1;
 
@@ -1662,47 +1630,10 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         break;
     }
     if (moveDir >= 0 && !waitingPlayer
-        && g_currentPlayer->m_currHeroId != -1) {
-        walker = &g_game->m_heroes[g_currentPlayer->m_currHeroId];
-        if (validMove(walker, moveDir, 0, 1)) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                int heroId = g_currentPlayer->m_currHeroId;
-                if (heroId != -1) {
-                    hero* pathHero = &g_game->m_heroes[heroId];
-                    pathHero->m_pathTargetX = -1;
-                    pathHero->m_pathTargetY = -1;
-                }
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
-                                 0, 1);
-                    g_windowManager->updateScreen(ADVENTURE_SCREEN_X,
-                                                  ADVENTURE_SCREEN_Y,
-                                                  ADVENTURE_SCREEN_WIDTH,
-                                                  ADVENTURE_SCREEN_HEIGHT);
-
-                    unsigned long curTime = GameTime::get();
-                    if (static_cast<long>(
-                            curTime
-                            - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
-                            >= 0
-                        && !m_animCtrPaused) {
-                        ++m_animCtr;
-                        long elapsedTime =
-                            curTime
-                            - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-                        g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                            cppMax(static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED),
-                                   elapsedTime);
-                    }
-                    process1WindowsMessage();
-                }
-            }
+        && g_game->getCurrHeroId() != -1) {
+        walker = g_game->getCurrHero();
+        if (validMove(g_game->getCurrHero(), moveDir, 0, 1)) {
+            hideRoute(1, 1, 1);
 
             g_mouseManager->hidePointer();
             walker->m_pathTargetX = walker->m_x + g_normalDirTable[moveDir].m_x;
@@ -1724,7 +1655,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
                 doEvent(*peventCell, walkTrigger);
                 *peventCell = 0;
             }
-            m_seedingValid = 0;
+            reseed(0, 0);
 
             forceNewHover();
             updBottomView(1, 1, 1);
