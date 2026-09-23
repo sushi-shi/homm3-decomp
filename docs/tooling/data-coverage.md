@@ -52,8 +52,18 @@ they are **not** the unique retail-byte coverage denominator.
 The README labels the retained function score **Code MAX** and reports
 **Data CUR (objdiff)** separately. Data CUR uses the current report's matched and
 total data bytes; it does not reuse function MAX history. Data-section comparison
-is enabled, while objdiff's function-relocation mode remains its default
-`name_address`, not `all`. This is not a whole-executable strict-match score.
+and function-relocation comparison are enabled with `functionRelocDiffs=all`
+in both the project configuration (GUI) and report command (CLI). Both binaries
+use the same patched objdiff core: the HoMM2 addend and complete-data-section
+fixes, with the addend guard also applied to data relocations. Wrong offsets
+against the same absolute symbol, unnamed tail bytes and missing data
+relocations cannot silently score exact. This is not a whole-executable score:
+unbound retail gaps remain outside objdiff's denominator.
+
+The baseline header records the comparison policy. Changing it reseeds MAX from
+the new report and preserves older peaks only in HIST; source hashes remain
+unchanged. The report command's upstream default was `none`, which ignored
+function relocation targets, while the GUI default was `name_address`.
 
 The default build also exports `build/data-match/data-byte-verdicts.tsv` and
 `data-match-summary.json` from the same fresh binding evidence. This bounded

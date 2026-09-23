@@ -184,6 +184,8 @@ def write_objdiff(build: dict, units: list[dict]) -> None:
         "build_base": False,
         "build_target": False,
         "watch_patterns": ["*.obj"],
+        "options": {"functionRelocDiffs": "all",
+                    "combineDataSections": True, "combineTextSections": True},
         "units": entries,
     }, indent=2) + "\n")
 

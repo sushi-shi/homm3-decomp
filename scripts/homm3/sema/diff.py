@@ -18,9 +18,9 @@ the flat asm diff is the opt-in):
               /Z7 source statements; metadata is attached after comparison.
               A compiler-generated body (no /Z7 statements) falls back to
               the block-skeleton diff with a note instead of failing.
-  --calls     the ordered callee sequences, judged like `objdiff-cli diff`
-              (function_reloc_diffs=name_address); an unclaimed retail label
-              is marked, and the ratchet's =none verdict is stated beside it
+  --calls     ordered callee sequences compared by kind, symbol and addend;
+              unclaimed retail labels are marked. The objdiff report separately
+              checks resolved addresses and referenced data.
   --relocs    the same over every relocation, calls and data
   --summary   one screen: every view's verdict, the first divergence, the
               next view to run
@@ -507,17 +507,11 @@ def _source_diff_full(base_text: str, target_text: str, source_map,
 
 # --- --calls / --relocs: the ordered reference sequences ---------------------------
 #
-# What objdiff compares, spelled out. `objdiff-cli diff` (the interactive
-# tool) defaults to function_reloc_diffs=name_address: a relocation pair is
-# equal when its kind, symbol name and addend match. `objdiff-cli report
-# generate` (the ratchet) runs at =none and ignores the target entirely,
-# which is why a function calling `exe_fopen` where we call `_fopen` scores
-# 100 there. These views judge like the interactive default and state the
-# report-level verdict next to it. The retail side names an UNCLAIMED
-# callee/global with a carve label (sub_f6570, data_2a5d5c, exe_new) that
-# MSVC can never emit. Source-claimed carcasses also have non-compiler labels;
-# their admission comes from the generated inventory's provenance. Neither
-# case proves that a differing compiler symbol refers to the same address.
+# These views compare reference kind, symbol name and addend. They cannot
+# predict the strict objdiff report: it also resolves section/pool addresses
+# and compares referenced data literals. Show the actual report separately.
+# Retail carve labels (sub_f6570, data_2a5d5c, exe_new) do not themselves prove
+# that a differently named compiler symbol refers to the same address.
 
 _EMITTABLE = re.compile(r"^[?_@]")
 _IND_DISP = re.compile(r"[+-]\s*(0x[0-9a-f]+)\s*\]")
@@ -604,9 +598,8 @@ def _refs_compare(base_refs: list, target_refs: list, *,
     could never match by spelling (source-claimed / unclaimed / local /
     compgen) or None. Admission only annotates the row; it never aliases
     symbols, changes pairing, or suppresses a name/addend difference.
-    agree = no ~/-/+ (objdiff name_address); report_agree = what the
-    ratchet's function_reloc_diffs=none sees: every pair the same kind and
-    nothing one-sided. Pairing is a SequenceMatcher over (class, name)
+    agree = no ~/-/+. This reference listing does not predict the strict
+    objdiff score. Pairing is a SequenceMatcher over (class, name)
     keys where a name the other side never spells is a wildcard, so one
     retail-inlined call shifts nothing - positional pairing would mislabel
     every later row."""
@@ -662,10 +655,7 @@ def _refs_compare(base_refs: list, target_refs: list, *,
                                if row[0] == "~" and row[3] == category)
     counts["real"] = counts["~"] - counts["synthetic"]
     agree = counts["~"] + counts["-"] + counts["+"] == 0
-    report_agree = (counts["-"] + counts["+"] == 0 and all(
-        cls(row[1][1]) == cls(row[2][1]) for row in rows if row[0] in "=~"))
-    return {"rows": rows, "counts": counts, "agree": agree,
-            "report_agree": report_agree}
+    return {"rows": rows, "counts": counts, "agree": agree}
 
 
 def _ref_name(ref) -> str:
@@ -688,9 +678,8 @@ def _refs_view(base_text: str, target_text: str, rva: int, name: str,
         target_refs = [r for r in target_refs if r[1] in flow]
     what = "call" if calls_only else "reloc"
     out = [f"[{what} diff: BASE (compiled) vs TARGET (retail) @ 0x{rva:08x} {name}]",
-           "[judged like `objdiff-cli diff` (function_reloc_diffs=name_address): "
-           "kind, symbol and addend must match; the ratchet report runs at =none "
-           "and ignores names]"]
+           "[reference listing: kind, symbol and addend must match; "
+           "the strict objdiff verdict also checks resolved addresses and data]"]
     for side, stop in (("base", bstop), ("target", tstop)):
         if stop is not None:
             out.append(f"[{side} stream truncated at +0x{stop:x} - jump-table "
@@ -740,10 +729,8 @@ def _refs_view(base_text: str, target_text: str, rva: int, name: str,
                f"{c['+']} target-only")
     seq = "CALL SEQUENCES" if calls_only else "REFERENCE SEQUENCES"
     if res["agree"]:
-        out.append(f"  name_address: {seq} AGREE   |   report (none): AGREE - "
-                   "whatever is left is not the reference structure.")
+        out.append(f"  reference listing: {seq} AGREE.")
     else:
-        report = "AGREE" if res["report_agree"] else "DIFFER"
         if c["-"] or c["+"]:
             hint = ("a one-sided reference can reflect inlining or control-flow "
                     "differences; inspect the named call sites")
@@ -758,7 +745,7 @@ def _refs_view(base_text: str, target_text: str, rva: int, name: str,
                      "so check declarations and relocation identities")
         if c["unclaimed"]:
             hint += f"; claim the {c['unclaimed']} unclaimed references to compare them by name"
-        out.append(f"  name_address: {seq} DIFFER   |   report (none): {report} - {hint}.")
+        out.append(f"  reference listing: {seq} DIFFER - {hint}.")
     return "\n".join(out) + "\n", res["agree"]
 
 
@@ -769,7 +756,7 @@ _DIVERGENCE_KINDS = (
     "branch target; opcode = different mnemonic; immediate = different literal; "
     "register = different register operands; encoding = same asm, different bytes; "
     "reloc-target = same bytes, a different symbol or addend ('unclaimed' = a retail "
-    "label our side cannot emit, which the ratchet report ignores)]")
+    "label our side cannot emit)]")
 
 
 def _zeroed(raw: bytes, off: int, relocs) -> bytes:
@@ -956,7 +943,7 @@ def _summary_lines(facts: dict) -> tuple[list[str], bool, str]:
     lines = [f"[summary: BASE (compiled) vs TARGET (retail) @ 0x{rva:08x} "
              f"{facts['name']} [{facts['unit']}]]"]
     pct = facts.get("pct")
-    lines.append("  objdiff       " + (f"{pct:.2f}%  (report; function_reloc_diffs=none)"
+    lines.append("  objdiff       " + (f"{pct:.2f}%  (report; function_reloc_diffs=all)"
                                        if pct is not None else "n/a (no report entry)"))
     nb, nt = census["blocks"]
     lines.append(f"  skeleton      {'same' if census['same'] else 'DIFFERS':<11} base {nb} vs "
@@ -971,7 +958,6 @@ def _summary_lines(facts: dict) -> tuple[list[str], bool, str]:
     def refline(label, res):
         c = res["counts"]
         status = "AGREE" if res["agree"] else "DIFFERS"
-        report = "AGREE" if res["report_agree"] else "DIFFERS"
         parts = [f"{c['=']} same"]
         if c["~"]:
             labels = []
@@ -985,7 +971,7 @@ def _summary_lines(facts: dict) -> tuple[list[str], bool, str]:
             parts.append(f"{c['-']} base-only")
         if c["+"]:
             parts.append(f"{c['+']} target-only")
-        return f"  {label:<13} {status:<11} {', '.join(parts)}   | report-level: {report}"
+        return f"  {label:<13} {status:<11} {', '.join(parts)}"
     lines.append(refline("calls", calls))
     lines.append(refline("relocs", relocs))
     lines.append("  asm (masked)  " + (f"{'equal':<11}" if asm["equal"] else

@@ -9,22 +9,22 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Code MAX: 97.10%** — weighted by function size across 1,999,142 bytes of code included in matching.
+**Code MAX: 96.63%** — weighted by function size across 1,999,142 bytes of code included in matching.
 
-**Data CUR (objdiff): 23.57%** — 68,763 / 291,743 compared data bytes. Includes vendor data and object layout; uncovered retail gaps are outside this denominator.
+**Data CUR (objdiff): 19.22%** — 56,060 / 291,743 compared data bytes. Includes vendor data and object layout; uncovered retail gaps are outside this denominator.
 
-**Function exact MAX** — 4,266 / 4,768 current implementations (89.5%) have reached 100%.
+**Function exact MAX** — 2,283 / 4,768 current implementations (47.9%) have reached 100%.
 
-**CUR diagnostics** — 4,199 / 4,768 functions exact (88.1%) in this build (4767 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
+**CUR diagnostics** — 2,283 / 4,768 functions exact (47.9%) in this build (4767 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
 
 | Module        | Units | Functions exact CUR |  Function exact MAX | Fuzzy CUR | Fuzzy MAX |
 | :------------ | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`        |   123 | 3533 / 3990 (88.5%) | 3588 / 3990 (89.9%) |    97.01% |    97.35% |
-| `rmg`         |     3 |   291 / 368 (79.1%) |   301 / 368 (81.8%) |    93.19% |    94.37% |
-| `network`     |     4 |   266 / 280 (95.0%) |   268 / 280 (95.7%) |    97.68% |    98.08% |
-| `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
-| `codec`       |     4 |     35 / 43 (81.4%) |     35 / 43 (81.4%) |    94.70% |    94.70% |
-| `victor`      |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |
+| `game`        |   123 | 1780 / 3990 (44.6%) | 1780 / 3990 (44.6%) |    96.92% |    96.92% |
+| `rmg`         |     3 |   221 / 368 (60.1%) |   221 / 368 (60.1%) |    93.12% |    93.12% |
+| `network`     |     4 |   196 / 280 (70.0%) |   196 / 280 (70.0%) |    97.60% |    97.60% |
+| `zlib-1.1.3`  |    14 |     61 / 69 (88.4%) |     61 / 69 (88.4%) |    99.99% |    99.99% |
+| `codec`       |     4 |     20 / 43 (46.5%) |     20 / 43 (46.5%) |    94.61% |    94.61% |
+| `victor`      |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.39% |    85.39% |
 | `(unmatched)` |     — |        0 / 1 (0.0%) |        0 / 1 (0.0%) |      0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
@@ -39,10 +39,12 @@ _Excluded from the % above — generated/library code, not independent reconstru
 <!-- match-score:end -->
 
 The score ledger always keeps `CUR <= MAX <= HIST`. CUR is the latest full
-build; MAX is the best score observed for the function's current source hash;
-HIST is its all-time peak across source revisions. Tooling prioritizes MAX.
+build; MAX is the best score observed for the function's current source hash
+and comparison policy; HIST is its all-time peak across source revisions and
+policies (including earlier, weaker relocation checks). Tooling prioritizes MAX.
 Unrelated CUR dips keep MAX and are silent. A function's own hash change resets
-MAX to its new CUR; a lower MAX is reported, but is not a build failure.
+MAX to its new CUR. A comparison-policy change also resets MAX; a lower MAX
+is reported, but is not a build failure.
 `HIST > MAX` identifies historical peaks worth investigating.
 
 See the [documentation](docs/README.md) and [reconstruction debt checklist](docs/todos/reconstruction_debt.md).

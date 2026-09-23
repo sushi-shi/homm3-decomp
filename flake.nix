@@ -42,8 +42,10 @@
       };
 
       objdiffVersion = "3.7.3";
-      objdiffUrl = name:
-        "https://github.com/encounter/objdiff/releases/download/v${objdiffVersion}/${name}";
+      objdiffPatches = [
+        ./patches/objdiff-score-reloc-addend.patch
+        ./patches/objdiff-complete-data-sections.patch
+      ];
       objdiffGuiLibs = with pkgs; [
         libGL
         libxkbcommon
@@ -61,6 +63,7 @@
         pname = "objdiff-cli";
         version = objdiffVersion;
         src = objdiff-src;
+        patches = objdiffPatches;
         cargoHash = "sha256-Z9vyUj35nrHuUoOYM54RLCn7CzcQ6k3A6FsDYKCVqVM=";
         cargoBuildFlags = [ "-p" "objdiff-cli" ];
         cargoTestFlags = [ "-p" "objdiff-core" "-p" "objdiff-cli" ];
@@ -69,18 +72,19 @@
         OBJDIFF_REGENERATE_PROTO = "1";
       };
 
-      objdiff = pkgs.stdenv.mkDerivation {
+      # Build the GUI from the same patched core as the score-producing CLI.
+      objdiff = nightly-rustPlatform.buildRustPackage {
         pname = "objdiff";
         version = objdiffVersion;
-        src = pkgs.fetchurl {
-          url = objdiffUrl "objdiff-linux-x86_64";
-          hash = "sha256-1pzhzJUl/BJQP2XS333KIfkx1YYi8ZyRdPMv5MnJGyA=";
-        };
-        dontUnpack = true;
-        nativeBuildInputs = [ pkgs.autoPatchelfHook pkgs.makeWrapper ];
-        buildInputs = [ pkgs.stdenv.cc.cc.lib ] ++ objdiffGuiLibs;
-        installPhase = ''
-          install -Dm755 $src $out/bin/objdiff
+        src = objdiff-src;
+        patches = objdiffPatches;
+        cargoHash = "sha256-Z9vyUj35nrHuUoOYM54RLCn7CzcQ6k3A6FsDYKCVqVM=";
+        cargoBuildFlags = [ "-p" "objdiff-gui" ];
+        cargoTestFlags = [ "-p" "objdiff-gui" ];
+        cargoInstallFlags = [ "-p" "objdiff-gui" ];
+        nativeBuildInputs = [ pkgs.pkg-config pkgs.protobuf pkgs.makeWrapper ];
+        buildInputs = objdiffGuiLibs;
+        postInstall = ''
           wrapProgram $out/bin/objdiff \
             --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath objdiffGuiLibs}"
         '';

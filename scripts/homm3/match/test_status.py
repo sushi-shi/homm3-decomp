@@ -379,5 +379,52 @@ class BankedRowsTest(unittest.TestCase):
         self.assertEqual(selftest(), [])
 
 
+
+
+class ComparisonPolicyTest(unittest.TestCase):
+    def test_old_policy_peaks_survive_only_in_hist(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'baseline.tsv'
+            for header in ('', '# comparison_policy: older-policy\n'):
+                path.write_text(header + 'unit\tfn\t99\t100\t100\t0x1000\ttokens1:same\n'
+                                'unit\tmissing\t90\t95\t100\t0x2000\ttokens1:missing\n')
+                old = status.load_baseline(path)
+                self.assertEqual(old['unit', 'fn'], MatchRow(None, 0, 100, 0x1000, 'tokens1:same'))
+                rows, _ = update_rows({('unit', 'fn'): 80}, old,
+                                      {('unit', 'fn'): 0x1000}, {('unit', 'fn'): 'tokens1:same'})
+                self.assertEqual(rows['unit', 'fn'], MatchRow(80, 80, 100, 0x1000, 'tokens1:same'))
+                self.assertEqual(rows['unit', 'missing'], old['unit', 'missing'])
+
+    def test_same_policy_retains_max_and_roundtrips_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'baseline.tsv'
+            rows = {('unit', 'fn'): MatchRow(80, 85, 100, 0x1000, 'tokens1:same')}
+            with mock.patch.object(status, 'BASELINE', path):
+                status.write_baseline(rows)
+                self.assertEqual(status.load_baseline(), rows)
+                updated, _ = update_rows({('unit', 'fn'): 70}, status.load_baseline(),
+                                         {('unit', 'fn'): 0x1000}, {('unit', 'fn'): 'tokens1:same'})
+            self.assertEqual(updated['unit', 'fn'], MatchRow(70, 85, 100, 0x1000, 'tokens1:same'))
+
+    def test_gui_project_enables_strict_relocations(self):
+        import json
+        from homm3.build import configure
+        with tempfile.TemporaryDirectory() as directory, \
+                mock.patch.object(configure, 'ROOT', Path(directory)):
+            configure.write_objdiff({}, [])
+            config = json.loads((Path(directory) / 'build/objdiff/objdiff.json').read_text())
+            self.assertEqual(config['options'], {'functionRelocDiffs': 'all',
+                                                 'combineDataSections': True,
+                                                 'combineTextSections': True})
+
+    def test_cli_explicitly_overrides_relaxed_report_default(self):
+        import subprocess
+        from homm3.build.report import generate
+        run = mock.Mock(return_value=subprocess.CompletedProcess([], 0, '', ''))
+        generate(Path('/unused'), run=run)
+        args = run.call_args.args[0]
+        self.assertIn(['-c', 'functionRelocDiffs=all'], [args[i:i + 2] for i in range(len(args))])
+
+
 if __name__ == "__main__":
     unittest.main()

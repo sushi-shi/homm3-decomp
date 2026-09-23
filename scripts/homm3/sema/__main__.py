@@ -125,9 +125,8 @@ def _build_parser() -> argparse.ArgumentParser:
                       help="statement-grouped diff labelled with candidate "
                            "source from a verified /Z7 object")
     mode.add_argument("--calls", action="store_true",
-                      help="ordered callee-sequence comparison judged like "
-                           "`objdiff-cli diff` (function_reloc_diffs="
-                           "name_address); unclaimed retail labels are marked")
+                      help="ordered callee-sequence comparison by kind, symbol "
+                           "and addend; unclaimed retail labels are marked")
     mode.add_argument("--relocs", action="store_true",
                       help="ordered comparison of every reloc reference, "
                            "calls AND data (--calls is this view restricted "
