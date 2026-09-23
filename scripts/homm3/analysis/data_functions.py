@@ -144,6 +144,54 @@ class Functions:
         self.effects[key] = result
         return result
 
+    def control_flow(self, key):
+        """Prove local code-table edges without supplying strict data identity."""
+        from homm3.analysis.access_switches import graph
+        from homm3.build.canonicalize_data_symbols import RELOCATION_WIDTHS
+        raw, start = self.body(key)
+        validate = None
+        if self.objects is None:
+            section = next((s for s in self.layout.sections if
+                s.rva <= key < key+len(raw) <= s.rva+s.mapped_size), None)
+            immutable = bool(section and section.flags & 0x20000000 and not section.flags & 0x80000000)
+            def resolve(site, width, role, decoded):
+                return decoded if immutable or role in ('branch', 'literal') else None
+        else:
+            obj = self.objects[key[0]]
+            ordinal = self.bodies[key][0]
+            section = obj.sections[ordinal-1]
+            immutable = bool(section.characteristics & 0x20 and not section.characteristics & 0x80000000)
+            refs = [r for r in obj.relocations if r.section == ordinal and
+                    start <= r.site+RELOCATION_WIDTHS.get(r.typ, 4) and r.site < start+len(raw)]
+            def overlapping(site, width):
+                return [r for r in refs if r.site < site+width and site < r.site+RELOCATION_WIDTHS.get(r.typ, 4)]
+            def validate(ins):
+                fields = {ins.address+offset: size for offset, size in (
+                    (ins.imm_offset, ins.imm_size), (ins.disp_offset, ins.disp_size)) if size}
+                seen = set()
+                for ref in overlapping(ins.address, ins.size):
+                    if ref.site in seen or ref.typ not in (6, 20) or fields.get(ref.site) != 4:
+                        return False
+                    seen.add(ref.site)
+                return True
+            def resolve(site, width, role, decoded):
+                found = overlapping(site, width)
+                if role == 'literal':
+                    return None if found else decoded
+                if not found:
+                    return decoded if role == 'branch' else None
+                if not immutable and role != 'branch':
+                    return None
+                if (len(found) != 1 or width != 4 or found[0].site != site or
+                        found[0].typ != (20 if role == 'branch' else 6)):
+                    return None
+                symbol = obj.symbols.get(found[0].symbol_index)
+                if symbol is None or symbol.section != ordinal:
+                    return None
+                addend = int.from_bytes(raw[site-start:site-start+width], 'little', signed=True)
+                return symbol.value+addend
+        return graph(raw, start, resolve_field=resolve, validate_instruction=validate)
+
     def closure(self, key, *, limit=256):
         """Collect reachable direct-call effects; cutoffs and unknown calls stay gaps.
 

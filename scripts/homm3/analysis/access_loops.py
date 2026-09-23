@@ -17,11 +17,14 @@ def is_branch(instruction):
         instruction.group(cs.CS_GRP_BRANCH_RELATIVE) and not instruction.group(cs.CS_GRP_CALL))
 
 
-def candidates(instructions, start):
+def candidates(instructions, start, edges=None):
     ordered = sorted(instructions)
     positions = {site: i for i, site in enumerate(ordered)}
     jumps = [(i.address, i.operands[0].imm) for i in instructions.values()
              if is_branch(i) and i.operands and i.operands[0].type == x86.X86_OP_IMM]
+    if edges is not None:
+        jumps = [(site, target) for site, targets in edges.items() if is_branch(instructions[site])
+                 for target in targets]
     result = {}
     for site, header in jumps:
         latch = instructions[site]

@@ -308,6 +308,16 @@ unchanged. The case audit records this follow-up separately from its original
 PR #93 measurements. Switch/loop, indirect-referent, generated-anchor and
 guard/select work remains open.
 
+[Switch-path evidence](data-switch-paths.md), on `codex/data-switch-paths` above
+repeated effects, now proves 656 bounded embedded tables and 5,539 case edges on
+each PR #78 revision. The same general rule reaches all three minimap switches
+and exposes 25,348 additional corpus memory-access observations. Both full builds
+and independent per-case raw-code replays pass; all static and initialization
+verdict TSVs remain unchanged. Minimap stride, complete loop domains and the
+remaining relationship checks still need further work. In particular, preserve
+the distinction between a fresh local memory observation and an entry-state
+value, and recover supported call summaries after context/depth cutoffs.
+
 Produce `docs/tooling/pr78-data-contract-audit.md` with a case-by-case matrix:
 generic rule, before evidence, after evidence, byte/relationship coverage, and
 remaining uncertainty. Cases include hero-table extent, town shared storage,

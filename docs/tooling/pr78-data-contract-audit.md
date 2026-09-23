@@ -11,6 +11,8 @@ defects. This audit remains open.
 The initial matrix below records tooling through PR #93. The subsequent
 [bounded-copy extension](#bounded-copy-replay) now closes the archive-context
 initializer case on both audited revisions; the other open cases remain.
+The later [switch-path replay](#switch-path-replay) reaches the minimap writes,
+while leaving their complete byte-stride relationship open.
 
 ## Revisions and method
 
@@ -162,3 +164,25 @@ order diagnostic, not proof of a harmful dependency or complete startup order.
 The aggregate-copy portion of follow-up 1 is therefore covered. Generated
 initializer anchors, conflicting-storage diagnostics and the remaining
 switch/loop, indirect-referent and guard/select obligations are still open.
+
+## Switch-path replay
+
+The [bounded jump-table checks](data-switch-paths.md) run with identical tooling
+on the same two source revisions. Both full builds pass. Independent raw-code
+audits verify 656 switches and 5,539 edges per revision by executing all 29,032
+guarded cases. Static and startup-effect TSVs remain unchanged; the 96-byte
+archive initialization proof is preserved.
+
+All three `updateRadar` switches now have explicit proofs, covering index
+domains of 109, 144 and 109 values. The function has no remaining
+`indirect-control-flow` gaps. Observed writes rise from one per side to 28 retail
+and 27 candidate sites on both source revisions. This exposes the previously
+skipped paths, but neither a site count nor the now broader expression difference
+verifies the stride repair. No scale-change diagnostic is yet emitted.
+
+The next obligation is to compare byte-address relationships on those paths while
+preserving uncertainty about loads after calls/mutations and values entering
+loops. The complete hero-table loop, indirect referent bodies, generated
+initializer anchors, conflicting-storage diagnostics and guard/select cases also
+remain open. Broader call traversal exposed a context-dependent summary gap;
+cached incomplete call summaries must not prevent a later supported proof.

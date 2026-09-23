@@ -59,7 +59,8 @@ class Summaries:
                                    caller_bounds=bounds) if profile is not None else None
             result = analyze(raw, start, relocation=self.provider.relocation_resolver(key),
                              normalize_address=self.normalize, call_pop=self.provider.pop_count,
-                             call_effect=call_effect)
+                             call_effect=call_effect,
+                             control_flow=self.provider.control_flow(key) if hasattr(self.provider, 'control_flow') else None)
             self.cache[key] = result
             return result
         finally:

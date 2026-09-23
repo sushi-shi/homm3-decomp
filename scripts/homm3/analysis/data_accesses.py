@@ -68,12 +68,12 @@ class State:
         self.stack[start, width] = value
 
 
-def analyze(raw, start=0, *, relocation=None, normalize_address=lambda e: e, call_pop=None, call_effect=None):
-    disassembler = cs.Cs(cs.CS_ARCH_X86, cs.CS_MODE_32)
-    disassembler.detail = True
-    instructions = {i.address: i for i in disassembler.disasm(raw, start)}
-    from homm3.analysis import access_loops
-    loop_candidates = access_loops.candidates(instructions, start)
+def analyze(raw, start=0, *, relocation=None, normalize_address=lambda e: e, call_pop=None, call_effect=None,
+            control_flow=None):
+    from homm3.analysis import access_loops, access_switches
+    control_flow = control_flow if control_flow is not None else access_switches.graph(raw, start)
+    instructions = control_flow['instructions']
+    loop_candidates = access_loops.candidates(instructions, start, control_flow['edges'])
     loop_domains = {}
     states = {start: State(dict(esp=E.atom('stack'), **{
         reg: E.atom('entry-register', reg) for reg in ('ecx', 'edx', 'ebx', 'esi', 'edi', 'ebp')}), {})}
@@ -302,29 +302,13 @@ def analyze(raw, start=0, *, relocation=None, normalize_address=lambda e: e, cal
                 states[site].set_reg(spec['register'], domain['value'])
                 states[site].bounds[domain['atom']] = domain['bounds']
         after, accesses, calls, issues, returns = transfer(ins, states[site])
-        successors = []
-        if ins.group(cs.CS_GRP_RET):
-            pass
-        elif access_loops.is_branch(ins):
-            if ins.operands and ins.operands[0].type == x86.X86_OP_IMM:
-                target = ins.operands[0].imm
-                if start <= target < start+len(raw):
-                    successors.append(target)
-                else:
-                    issues.append(dict(site=site, kind='external-tail-edge'))
-            else:
-                issues.append(dict(site=site, kind='indirect-control-flow'))
-            if ins.mnemonic != 'jmp':
-                successors.append(site+ins.size)
-        else:
-            successors.append(site+ins.size)
+        successors = control_flow['edges'].get(site, [])
         outcomes[site] = accesses, calls, issues, returns
         edges[site] = successors
         for index, successor in enumerate(successors):
             outgoing = after.copy()
-            if access_loops.is_branch(ins) and ins.mnemonic != 'jmp':
-                taken = bool(ins.operands and ins.operands[0].type == x86.X86_OP_IMM and
-                             successor == ins.operands[0].imm and index == 0)
+            if access_loops.is_branch(ins) and ins.mnemonic != 'jmp' and len(successors) > 1:
+                taken = successor != site+ins.size
                 refined = access_bounds.refine(after.bounds, after.predicate, ins.mnemonic, taken)
                 if refined is None:
                     continue
@@ -335,14 +319,15 @@ def analyze(raw, start=0, *, relocation=None, normalize_address=lambda e: e, cal
                 pending.append(successor)
     accesses = [a for site in sorted(outcomes) for a in outcomes[site][0]]
     calls = [a for site in sorted(outcomes) for a in outcomes[site][1]]
-    issues = [a for site in sorted(outcomes) for a in outcomes[site][2]]
+    issues = [*control_flow['issues'], *[a for site in sorted(outcomes) for a in outcomes[site][2]]]
     for row in accesses:
         row['status'] = 'expression-known' if row['address'] is not None else 'address-unproved'
     return dict(accesses=accesses, calls=calls, issues=issues,
                 returns=[r for site in sorted(outcomes) for r in outcomes[site][3]],
                 branch_sites=[s for s, targets in edges.items() if len(targets) > 1],
                 back_edges=[(s, t) for s, targets in edges.items() for t in targets if t <= s],
-                loops={s: d for s, d in loop_domains.items() if d is not None})
+                loops={s: d for s, d in loop_domains.items() if d is not None},
+                switches=control_flow['switches'])
 
 
 def compare(retail, candidate):
@@ -428,7 +413,7 @@ def generate(root, *, evidence=None, static_report=None, jobs=4):
     from homm3.analysis.data_functions import Functions
     from homm3.core import tsv
     from homm3.sema import data_match
-    paths = ['scripts/homm3/analysis/'+n+'.py' for n in ('data_accesses', 'access_expressions', 'access_loops', 'access_bounds', 'access_calls', 'data_consumers', 'data_functions')]
+    paths = ['scripts/homm3/analysis/'+n+'.py' for n in ('data_accesses', 'access_expressions', 'access_loops', 'access_bounds', 'access_calls', 'access_switches', 'data_consumers', 'data_functions', 'data_effects')]
     implementation_hashes = {p: hashlib.sha256((root/p).read_bytes()).hexdigest() for p in paths}
     evidence = evidence or data_match.prepare(root, jobs=jobs)
     static_report = static_report or data_match.generate(root, evidence=evidence)
@@ -446,7 +431,7 @@ def generate(root, *, evidence=None, static_report=None, jobs=4):
     storage = Storage(layout.base, projections)
     from homm3.analysis.access_calls import Summaries
     summaries = {id(p): Summaries(p, storage.normalize) for p in (retail, candidate)}
-    accesses, comparisons, issues, analyzed, calls = [], [], [], {}, []
+    accesses, comparisons, issues, analyzed, calls, switches = [], [], [], {}, [], []
 
     def profile(provider, key, side):
         cache_key = (side, key)
@@ -464,6 +449,8 @@ def generate(root, *, evidence=None, static_report=None, jobs=4):
                                  extent=extent,
                                  loop_bounds=list(result['loops'].values())))
         issues.extend(dict(row, function_id=index, side=side) for row in result['issues'])
+        switches.extend(dict(row, function_id=index, side=side,
+                             function=list(key) if isinstance(key, tuple) else key) for row in result['switches'])
         for call in result['calls']:
             callee = provider.key(call['target'])
             anchors = ({callee} if provider.objects is None and callee is not None else provider.anchors.get(callee, set()))
@@ -503,7 +490,7 @@ def generate(root, *, evidence=None, static_report=None, jobs=4):
         if hashlib.sha256((root/path).read_bytes()).hexdigest() != expected:
             raise ValueError(f'{path}: consumer inputs changed during analysis')
     return dict(schema='homm3.data-accesses.v1', retail_sha256=static_report['retail_sha256'],
-        accesses=accesses, comparisons=comparisons, calls=calls, storage=storage_roles, issues=issues,
+        accesses=accesses, comparisons=comparisons, calls=calls, switches=switches, storage=storage_roles, issues=issues,
         analysis_issues=static_report['analysis_issues'],
         input_sha256=input_hashes,
         summary=dict(functions=len(analyzed), retail_functions=len(sizes), pairs=len(comparisons),
@@ -511,6 +498,7 @@ def generate(root, *, evidence=None, static_report=None, jobs=4):
                      extent_statuses=dict(Counter(r['extent']['status'] for r in accesses)),
                      comparison_statuses=dict(Counter(r['status'] for r in comparisons)),
                      call_statuses=dict(Counter(r['status'] for r in calls)),
+                     switches=len(switches), switch_edges=sum(len(s['targets']) for s in switches),
                      scale_changes=sum(len(r['scale_changes']) for r in comparisons),
                      range_changes=sum(len(r['range_changes']) for r in comparisons),
                      storage_relationship_differences=len(storage_differences),
@@ -538,6 +526,7 @@ def export(report, directory):
         ('data-accesses', 'accesses', ['function_id', 'side', 'function', 'site', 'operand', 'access', 'width', 'address', 'instruction', 'status', 'execution', 'extent', 'bounds', 'loop_bounds', 'call_path', 'value']),
         ('data-access-matches', 'comparisons', ['unit', 'symbol', 'rva', 'candidate_function_id', 'retail_function_id', 'status', 'missing', 'extra', 'scale_changes', 'range_changes', 'complete_observation', 'policy']),
         ('data-consumer-calls', 'calls', ['function_id', 'side', 'site', 'target', 'callee', 'callee_anchors', 'arguments', 'registers', 'bounds', 'memory_clean', 'status']),
+        ('data-access-switches', 'switches', ['function_id', 'side', 'function', 'site', 'compare_site', 'guard_site', 'index_register', 'index_domain', 'default_target', 'table', 'lookup', 'entries', 'targets', 'case_targets', 'instruction_path']),
         ('data-consumer-storage', 'storage', ['rva', 'declarations', 'retail_read_functions', 'retail_write_functions', 'candidate_read_functions', 'candidate_write_functions']),
         ('data-contract-issues', 'issues', ['kind', 'side', 'function_id', 'details'])):
         rows = []
@@ -548,7 +537,7 @@ def export(report, directory):
             rows.append({k: json.dumps(row[k], sort_keys=True, separators=(',', ':')) if isinstance(row.get(k), (dict, list, bool))
                          else '' if row.get(k) is None else row[k] for k in fields})
         tsv.write(directory/(name+'.tsv'), ['# Raw consumer expressions; unresolved evidence never matches.'], fields, rows)
-    summary = {k: v for k, v in report.items() if k not in ('accesses', 'comparisons', 'calls', 'storage', 'issues')}
+    summary = {k: v for k, v in report.items() if k not in ('accesses', 'comparisons', 'calls', 'switches', 'storage', 'issues')}
     (directory/'data-access-summary.json').write_text(json.dumps(summary, indent=2)+'\n')
 
 
