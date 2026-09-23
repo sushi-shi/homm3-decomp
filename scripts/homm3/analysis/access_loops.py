@@ -10,11 +10,18 @@ from homm3.analysis.access_expressions import Expression as E
 from homm3.analysis.data_effects import ALIASES
 
 
+def is_branch(instruction):
+    # LOOP/LOOPE/LOOPNE are relative branches even though Capstone does not
+    # put them in CS_GRP_JUMP. Calls also belong to BRANCH_RELATIVE.
+    return instruction.group(cs.CS_GRP_JUMP) or (
+        instruction.group(cs.CS_GRP_BRANCH_RELATIVE) and not instruction.group(cs.CS_GRP_CALL))
+
+
 def candidates(instructions, start):
     ordered = sorted(instructions)
     positions = {site: i for i, site in enumerate(ordered)}
     jumps = [(i.address, i.operands[0].imm) for i in instructions.values()
-             if i.group(cs.CS_GRP_JUMP) and i.operands and i.operands[0].type == x86.X86_OP_IMM]
+             if is_branch(i) and i.operands and i.operands[0].type == x86.X86_OP_IMM]
     result = {}
     for site, header in jumps:
         latch = instructions[site]
@@ -23,11 +30,11 @@ def candidates(instructions, start):
             continue
         body = [instructions[s] for s in ordered[positions[header]:positions[site]]]
         prefix = [instructions[s] for s in ordered if start <= s < header]
-        if not body or any(i.group(cs.CS_GRP_JUMP) or i.group(cs.CS_GRP_RET) for i in prefix):
+        if not body or any(is_branch(i) or i.group(cs.CS_GRP_RET) for i in prefix):
             continue
         if any(start <= target < header and source >= header for source, target in jumps):
             continue  # An enclosing loop can change the initial counter.
-        if any(i.group(cs.CS_GRP_JUMP) or i.group(cs.CS_GRP_CALL) or i.group(cs.CS_GRP_RET) for i in body):
+        if any(is_branch(i) or i.group(cs.CS_GRP_CALL) or i.group(cs.CS_GRP_RET) for i in body):
             continue
         if any(header <= target <= site and not header <= source <= site for source, target in jumps):
             continue

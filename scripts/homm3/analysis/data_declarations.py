@@ -14,7 +14,7 @@ from homm3.core import compiler_profile
 from homm3.core.project import Project
 from homm3.retail_labels import source
 
-SCHEMA = 'homm3.data-declarations.v3'
+SCHEMA = 'homm3.data-declarations.v4'
 SUFFIXES = {'.c', '.cpp', '.cxx', '.h', '.hpp', '.hxx'}
 
 
@@ -51,6 +51,41 @@ def storage_extent(ty):
         return 4, 4, True
     size, alignment = canonical.get_size(), canonical.get_align()
     return size if size >= 0 else None, alignment if alignment >= 0 else None, False
+
+
+def type_shape(ty):
+    """Compiler-derived dimensions and byte strides; never parse type spellings."""
+    import clang.cindex as cx
+    ty = ty.get_canonical()
+    dimensions, strides = [], []
+    while ty.kind in (cx.TypeKind.CONSTANTARRAY, cx.TypeKind.INCOMPLETEARRAY):
+        count = ty.get_array_size()
+        element = ty.get_array_element_type()
+        size = element.get_size()
+        dimensions.append(count if count >= 0 else None)
+        strides.append(size if size >= 0 else None)
+        ty = element.get_canonical()
+    size = ty.get_size()
+    pointee_size = None
+    if ty.kind in (cx.TypeKind.POINTER, cx.TypeKind.LVALUEREFERENCE, cx.TypeKind.RVALUEREFERENCE):
+        pointee = ty.get_pointee().get_size()
+        pointee_size = pointee if pointee >= 0 else None
+    return dict(dimensions=dimensions, strides_bytes=strides, element_type=ty.spelling,
+                element_kind=ty.kind.name, element_bytes=size if size >= 0 else None,
+                pointee_bytes=pointee_size, evidence='clang-i686 canonical type/layout; not semantic unit names')
+
+
+def conflicting_shapes(left, right):
+    # Canonical spelling can still omit default template arguments in another
+    # TU. Spelling is retained as evidence, not used as a physical-shape verdict.
+    for key in ('dimensions', 'strides_bytes', 'element_kind', 'element_bytes', 'pointee_bytes'):
+        a, b = left[key], right[key]
+        if isinstance(a, list) and isinstance(b, list):
+            if len(a) != len(b) or any(x is not None and y is not None and x != y for x, y in zip(a, b)):
+                return True
+        elif a is not None and b is not None and a != b:
+            return True
+    return False
 
 
 def parse_unit(task):
@@ -117,6 +152,7 @@ def parse_unit(task):
                 fact = dict(location(node), usr=node.get_usr(), name=node.spelling,
                             symbol=node.mangled_name, type=node.type.spelling,
                             size=size, alignment=alignment, reference_cell=reference,
+                            shape=type_shape(node.type),
                             linkage=node.linkage.name, storage=storage,
                             static_storage=static_storage, definition=node.is_definition(),
                             local=local,
@@ -162,6 +198,8 @@ def summarize(units, sites):
         # their source identity and candidate TU copies in the evidence lists.
         entity_defs = definitions.get(usr, []) if usr else []
         sizes = {f['size'] for f in [*facts, *entity_defs] if f['size'] is not None}
+        shapes = {json.dumps(f['shape'], sort_keys=True) for f in [*facts, *entity_defs] if 'shape' in f}
+        shape_rows = [json.loads(s) for s in sorted(shapes)]
         conflict = len(sizes) > 1
         size = next(iter(sizes)) if len(sizes) == 1 else None
         identity = hashlib.sha256(json.dumps(key).encode()).hexdigest()[:16]
@@ -175,6 +213,8 @@ def summarize(units, sites):
                    definitions=sorted(entity_defs, key=lambda f: (f['unit'], f['path'], f['offset'])),
                    local=fact['local'],
                    sizes=sorted(sizes), alignments=sorted({f['alignment'] for f in facts if f['alignment'] is not None}),
+                   shapes=shape_rows,
+                   shape_conflict=any(conflicting_shapes(a, b) for i, a in enumerate(shape_rows) for b in shape_rows[i+1:]),
                    static_storage=all(f['static_storage'] for f in facts),
                    size_evidence='clang-i686-msvc-layout', reference_cell=fact['reference_cell'],
                    linkage=fact['linkage'], status='sized' if size and not conflict else
@@ -182,6 +222,9 @@ def summarize(units, sites):
         if not row['static_storage']:
             row['status'] = 'automatic-storage'
         declarations.append(row)
+        if row['shape_conflict']:
+            issues.append(dict(kind='conflicting-shape', unit=','.join(row['units']), source=row['source'],
+                               rva=rva, detail='same source entity has different canonical dimensions, strides or element types'))
         if row['status'] != 'sized':
             issues.append(dict(kind=row['status'], unit=','.join(row['units']), source=row['source'], rva=rva,
                                detail=f"{row['type']} {row['name']}; observed sizes={sorted(sizes)}"))

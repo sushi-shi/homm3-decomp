@@ -136,6 +136,14 @@ class DataAccessesTest(unittest.TestCase):
         a = code('31c0 89c1 8b14ce 41 83f904 7cf7 40 83f803 7cef c3')
         self.assertFalse(a['loops'])
 
+    def test_unsupported_loop_control_does_not_keep_first_iteration_address(self):
+        # Capstone puts LOOP in BRANCH_RELATIVE, but not its JUMP group.
+        # Its ECX mutation and back edge must still invalidate the first address.
+        a = code('b904000000 b800104000 8b1488 e2fb c3')
+        self.assertTrue(a['back_edges'])
+        self.assertIsNone(a['accesses'][0]['address'])
+        self.assertFalse(compare(a, a)['complete_observation'])
+
     def test_loop_bounds_agree_with_independent_counter_execution(self):
         predicates = {0x7c: lambda a, b: a < b, 0x7e: lambda a, b: a <= b,
                       0x7f: lambda a, b: a > b, 0x7d: lambda a, b: a >= b,

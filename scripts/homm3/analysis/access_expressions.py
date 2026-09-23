@@ -64,6 +64,50 @@ class Expression:
 ZERO = Expression.constant(0)
 
 
+def substitute(expression, arguments, registers, *, memory_clean=True, namespace=None):
+    """Instantiate a callee expression without identifying unrelated inputs.
+
+    Argument values are snapshots in the caller and are returned unchanged.
+    A callee memory load is a fresh read; it cannot reuse the caller's initial
+    memory identity after a mutation. Unsupported/local atoms stay unknown.
+    """
+    if expression is None:
+        return None
+
+    def atom_value(atom):
+        kind = atom[0]
+        if kind == 'argument':
+            offset, width = atom[1:]
+            if offset % 4 or offset//4 >= len(arguments) or width not in (1, 2, 4):
+                return None
+            value = arguments[offset//4]
+            if value is None or width == 4:
+                return value
+            number = value.number()
+            return Expression.constant(number & ((1 << (width*8))-1)) if number is not None else Expression.atom('mask', (1 << (width*8))-1, value.terms)
+        if kind == 'entry-register':
+            return registers.get(atom[1])
+        if kind == 'storage':
+            return Expression.atom(*atom)
+        if kind in ('load', 'mask', 'movsx', 'movzx'):
+            inner = substitute(Expression(atom[2]), arguments, registers,
+                               memory_clean=memory_clean, namespace=namespace)
+            if inner is None or kind == 'load' and not memory_clean:
+                return None
+            return Expression.atom(kind, atom[1], inner.terms)
+        if kind == 'loop-iteration' and namespace is not None:
+            return Expression.atom('context-loop', namespace, *atom[1:])
+        return None
+
+    result = ZERO
+    for factors, coefficient in expression.terms:
+        term = Expression.constant(coefficient)
+        for atom in factors:
+            term = term.times(atom_value(atom)) if term is not None else None
+        result = result.plus(term) if result is not None else None
+    return result
+
+
 def affine_range(expression, bounds):
     """Inclusive mathematical range; reject nonlinear and 32-bit wrapping sums.
 

@@ -164,11 +164,13 @@ Unsupported dynamic effects remain unproved rather than guessed through names.
 
 ### 5. Consumer extents and byte/element units
 
-In progress on `codex/data-consumer-contracts`: the first audited raw-expression
-and counted-loop pass is implemented locally, with 278,344 recorded access sites.
-It is not yet build-integrated or published. Path/call propagation, shared
-consumer contracts and semantic units remain required before this stage closes;
-see [current evidence and remaining work](data-consumer-contracts.md).
+Implemented on `codex/data-consumer-contracts`: raw byte-address expressions,
+branch/counting bounds, read-only call summaries, typed array shapes and shared
+reader/writer storage checks. Full builds and coverage export the same TSVs;
+unsupported effects remain explicit and the optional exact gate rejects the
+backlog. See [evidence, measurements and limits](data-consumer-contracts.md).
+The refreshed PR #78 audit below must still test the repaired cases and extend
+reusable rules where needed.
 
 Add `analysis/data_accesses.py` for retail and candidate accesses, building on
 existing disassembly/CFG tools and compiler-bound source layout where useful.

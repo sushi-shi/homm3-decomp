@@ -66,7 +66,7 @@ class _Parser(argparse.ArgumentParser):
             if detailed and (result.summary or result.why_bytes or result.json):
                 self.error("--summary, --why-bytes and --json combine with each other; "
                            "select a detailed view separately")
-        if getattr(result, "sema", None) in ("coverage", "data-match", "data-initialization"):
+        if getattr(result, "sema", None) in ("coverage", "data-match", "data-initialization", "data-accesses"):
             if result.jobs < 1:
                 self.error("--jobs must be positive")
         if getattr(result, "sema", None) == "coverage":
@@ -205,6 +205,10 @@ def _build_parser() -> argparse.ArgumentParser:
     initialization.add_argument('--output', default='build/data-initialization')
     initialization.add_argument('--jobs', type=int, default=4)
     initialization.add_argument('--require-exact', action='store_true', help='fail on unpaired initialization or unproved effects')
+    accesses = ss.add_parser('data-accesses', help='consumer byte-address expressions, bounds, calls and shared storage')
+    accesses.add_argument('--output', default='build/data-accesses')
+    accesses.add_argument('--jobs', type=int, default=4)
+    accesses.add_argument('--require-exact', action='store_true', help='fail on consumer differences or incomplete access evidence')
 
     candidates = ss.add_parser("candidates", help="search emitted functions; optional retail mnemonic ranking")
     candidates.add_argument("target", nargs="?", help="retail selector to rank against")
@@ -226,7 +230,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return ap
 
 
-COMMANDS = ("xref", "diff", "disasm", "rva", "strings", "data", "data-match", "data-initialization", "coverage", "candidates", "compare")
+COMMANDS = ("xref", "diff", "disasm", "rva", "strings", "data", "data-match", "data-initialization", "data-accesses", "coverage", "candidates", "compare")
 
 # What agents typed under `homm3 sema` that lives elsewhere (usage-log
 # audit): the vc6 solvers, dreamcast lookups, and flag spellings guessed
@@ -264,11 +268,11 @@ def _dispatch(argv):
     _redirect(argv)
     args = _build_parser().parse_args(argv)
     from homm3.sema import diff, disasm, rva, strings, xref, data, data_match, candidates, compare, coverage
-    from homm3.analysis import data_initialization
+    from homm3.analysis import data_initialization, data_accesses
     tool = {"xref": xref, "diff": diff, "disasm": disasm,
             "rva": rva, "strings": strings, "data": data, "coverage": coverage,
             "candidates": candidates, "compare": compare, 'data-match': data_match,
-            'data-initialization': data_initialization}[args.sema]
+            'data-initialization': data_initialization, 'data-accesses': data_accesses}[args.sema]
     if args.sema == "coverage" and not args.data_only:
         from homm3.sema import image_coverage
         tool = image_coverage

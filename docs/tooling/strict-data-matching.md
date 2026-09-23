@@ -137,3 +137,8 @@ Registration and supported startup effects now have a separate
 independent retail table extents and byte-versus-pixel stride arithmetic remain
 following stages of the [stack plan](data-matching-stack-plan.md). Zero agreement
 and static byte equality do not establish those relationships.
+
+Full builds also run [consumer contracts](data-consumer-contracts.md): typed table
+shapes, supported access bounds, read-only call relationships and shared storage.
+These reports do not add static-byte credit. `--require-data-exact` includes their
+explicit differences and missing proof.

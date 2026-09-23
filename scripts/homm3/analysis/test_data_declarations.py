@@ -61,6 +61,39 @@ DATA(0x401100) int* pointer;
 ''')
             self.assertEqual([f['size'] for f in unit['facts']], [5, 4])
 
+    def test_array_shape_preserves_byte_strides_and_typedef_element_layout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            unit = self.parse(Path(directory), '''
+typedef unsigned short Pixel;
+DATA(0x401000) Pixel table[3][5];
+DATA(0x401100) Pixel* pointer;
+''')
+            shapes = {f['name']: f['shape'] for f in unit['facts']}
+            self.assertEqual(shapes['table']['dimensions'], [3, 5])
+            self.assertEqual(shapes['table']['strides_bytes'], [10, 2])
+            self.assertEqual(shapes['table']['element_bytes'], 2)
+            self.assertEqual(shapes['pointer']['element_bytes'], 4)
+            self.assertEqual(shapes['pointer']['pointee_bytes'], 2)
+
+    def test_equal_total_bytes_do_not_hide_inconsistent_row_dimensions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            a = self.parse(root, 'DATA(0x401000) extern int shared[2][6];', 'a.cpp')
+            b = self.parse(root, 'int shared[3][4];', 'b.cpp')
+            report = data.summarize([a,b], data.annotation_sites(root, 0x400000))
+            row = report['declarations'][0]
+            self.assertEqual(row['size'], 48)
+            self.assertTrue(row['shape_conflict'])
+            self.assertIn('conflicting-shape', {i['kind'] for i in report['issues']})
+
+    def test_displayed_default_template_arguments_are_not_a_shape_contradiction(self):
+        a=dict(dimensions=[],strides_bytes=[],element_kind='RECORD',element_bytes=16,
+               pointee_bytes=None,element_type='Container<char>')
+        b=dict(a,element_type='Container<char, Traits<char>>')
+        self.assertFalse(data.conflicting_shapes(a,b))
+        self.assertFalse(data.conflicting_shapes(a,dict(b,element_bytes=None)))
+        self.assertTrue(data.conflicting_shapes(a,dict(b,element_bytes=20)))
+
     def test_unannotated_definition_completes_extern_without_inventing_definition(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

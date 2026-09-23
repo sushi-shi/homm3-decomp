@@ -43,13 +43,15 @@ def schedule(root, targets=None):
 
 
 def run(root, *, require_exact=False):
-    from homm3.analysis import data_initialization
+    from homm3.analysis import data_initialization, data_accesses
     evidence = data_match.prepare(root)
     report = data_match.generate(root, evidence=evidence)
     directory = root/'build/data-match'
     data_match.export(report, directory)
     initialization = data_initialization.generate(root, evidence=evidence, static_report=report)
     data_initialization.export(initialization, directory)
+    consumers = data_accesses.generate(root, evidence=evidence, static_report=report)
+    data_accesses.export(consumers, directory)
     objdiff_directory = data_objdiff.export(root, report)
     data_objdiff.generate_report(objdiff_directory)
     summary = report['summary']
@@ -69,10 +71,17 @@ def run(root, *, require_exact=False):
     init = initialization['summary']
     print(f"[build] DATA initialization: {init['paired_initializers']}/{init['retail_slots']} retail registrations paired; "
           f"{init['matched_effect_bytes']} bytes of proved constant effects; {init['rtti']['structures']} validated RTTI records")
+    accesses = consumers['summary']
+    print(f"[build] DATA consumers: {accesses['pairs']} entry pairs; "
+          f"{accesses['access_statuses'].get('expression-known', 0):,}/{accesses['accesses']:,} address expressions known; "
+          f"{accesses['storage_relationship_differences']} observed storage relationships differ")
     failures = [f'data analysis unavailable: {issue}' for issue in report['analysis_issues']]
     failures.extend(f'initialization analysis unavailable: {issue}' for issue in initialization['analysis_issues'])
+    failures.extend(f'consumer analysis unavailable: {issue}' for issue in consumers['analysis_issues'])
     if require_exact and not data_match.exact(report):
         failures.append('static DATA is not exact; inspect build/data-match/data-match-summary.json')
     if require_exact and not data_initialization.exact(initialization):
         failures.append('DATA initialization is not exact; inspect build/data-match/data-initialization-summary.json')
+    if require_exact and not data_accesses.exact(consumers):
+        failures.append('DATA consumers are not exact; inspect build/data-match/data-access-summary.json')
     return failures
