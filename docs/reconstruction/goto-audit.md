@@ -405,8 +405,8 @@ are 4,062 to 4,064 exact, 96.37% to 96.38% linked fuzzy, and 96.10% to 96.11%
 executable matched. Older serializer scores quoted in source comments belong
 to earlier implementations, not the recorded audit baseline.
 
-The score report compares with `function_reloc_diffs=none`; exactness claims
-here use that project's metric. Strict named-call review also checks the actual
+This historical audit used `function_reloc_diffs=none`; its exactness claims
+use that earlier metric. The current project uses `all`. Strict named-call review also checks the actual
 helpers. `stampObject`'s six differently named calls resolve to folded POD
 `_Construct`/`_Ucopy`/`_Ufill` bodies, verified byte-for-byte against retail
 (9/47/38 bytes). `equipArtifact`'s unlabeled call is its raw x86 self-call.

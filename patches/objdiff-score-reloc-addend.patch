@@ -1,0 +1,196 @@
+Score the relocation ADDEND on relocation types that store it inline.
+
+objdiff renders a relocated operand as the target symbol and compares that, on the
+grounds that the linked-address bytes are meaningless before the link. On x86 COFF
+that reasoning has a hole: `IMAGE_REL_I386_DIR32` has no addend field, so the addend
+lives INSIDE the instruction's displacement - the very field the diff masks. objdiff
+already recovers it (`Arch::relocation_override` reads the 4 bytes at the reloc site
+into `Relocation::addend`). Under the strict `all` mode, an accidentally equal
+section-relative address can still rescue a same-named symbol whose addend differs.
+
+Compare the addend when BOTH sides resolve to the same symbol and the relocation
+type's addend is a plain symbol-relative offset. Site-relative REL32 forms are not
+comparable between objects and remain unchanged.
+
+Adapted from the local Gruntz matcher toolchain patch.
+
+diff -u -r '--unified=3' objdiff-orig/objdiff-core/src/arch/mod.rs objdiff-src/objdiff-core/src/arch/mod.rs
+--- a/objdiff-core/src/arch/mod.rs
++++ b/objdiff-core/src/arch/mod.rs
+@@ -454,6 +454,17 @@
+ 
+     fn reloc_name(&self, _flags: RelocationFlags) -> Option<&'static str> { None }
+ 
++    /// Whether this relocation type's addend is a plain offset from the target
++    /// symbol, rather than a value relative to the relocation site.
++    ///
++    /// Only such an addend is directly comparable between two objects, so only such
++    /// an addend takes part in the diff. Formats with an implicit addend keep it in
++    /// the instruction's own displacement field, which the diff otherwise masks as
++    /// part of the relocated operand - `g_tbl + 0x20000` and `g_tbl + 0x1fffe` are
++    /// the same symbol and differ only here. Defaults to `false` so an architecture
++    /// must opt in.
++    fn reloc_addend_is_symbol_offset(&self, _flags: RelocationFlags) -> bool { false }
++
+     fn data_reloc_size(&self, flags: RelocationFlags) -> usize;
+ 
+     fn symbol_address(&self, address: u64, _kind: SymbolKind) -> u64 { address }
+diff -u -r '--unified=3' objdiff-orig/objdiff-core/src/arch/x86.rs objdiff-src/objdiff-core/src/arch/x86.rs
+--- a/objdiff-core/src/arch/x86.rs
++++ b/objdiff-core/src/arch/x86.rs
+@@ -334,6 +334,25 @@
+         Ok(Some(RelocationOverride { target: RelocationOverrideTarget::Keep, addend }))
+     }
+ 
++    fn reloc_addend_is_symbol_offset(&self, flags: RelocationFlags) -> bool {
++        // The absolute types only: their inline displacement holds `sym + K`, so K is
++        // comparable across objects. Every REL32 form is relative to the reloc site,
++        // and the GOT/PLT forms are relative to a per-object GOT, so neither is.
++        match self.arch {
++            Architecture::X86 => matches!(
++                flags,
++                RelocationFlags::Coff(pe::IMAGE_REL_I386_DIR32 | pe::IMAGE_REL_I386_DIR32NB)
++                    | RelocationFlags::Elf(elf::R_386_32)
++            ),
++            Architecture::X86_64 => matches!(
++                flags,
++                RelocationFlags::Coff(
++                    pe::IMAGE_REL_AMD64_ADDR64 | pe::IMAGE_REL_AMD64_ADDR32NB
++                ) | RelocationFlags::Elf(elf::R_X86_64_32 | elf::R_X86_64_64)
++            ),
++        }
++    }
++
+     fn reloc_name(&self, flags: RelocationFlags) -> Option<&'static str> {
+         match self.arch {
+             Architecture::X86 => match flags {
+diff -u -r '--unified=3' objdiff-orig/objdiff-core/src/diff/code.rs objdiff-src/objdiff-core/src/diff/code.rs
+--- a/objdiff-core/src/diff/code.rs
++++ b/objdiff-core/src/diff/code.rs
+@@ -282,6 +282,30 @@
+     }
+ }
+ 
++/// Compare the relocation ADDEND, where that is a meaningful thing to do.
++///
++/// A relocated operand is rendered (and diffed) as its target symbol, because the
++/// linked address is not yet known. But a format with an implicit addend keeps the
++/// addend in the instruction's displacement, i.e. INSIDE that masked operand, so
++/// `g_tbl + 0x20000` and `g_tbl + 0x1fffe` otherwise score identical even though one
++/// of them indexes a different array element.
++///
++/// Two guards keep this from firing on differences that are not differences: the
++/// architecture decides whether the type's addend is symbol-relative at all
++/// (site-relative ones like `REL32` legitimately differ between two objects), and
++/// the two sides must resolve to the SAME symbol - addends against different symbols
++/// are not commensurable, and naming an interior address after a neighbouring symbol
++/// shifts the addend without moving the referenced byte.
++pub(crate) fn addend_eq(
++    obj: &Object,
++    left: ResolvedRelocation,
++    right: ResolvedRelocation,
++) -> bool {
++    left.relocation.addend == right.relocation.addend
++        || left.symbol.name != right.symbol.name
++        || !obj.arch.reloc_addend_is_symbol_offset(left.relocation.flags)
++}
++
+ pub(crate) fn section_name_eq(
+     left_obj: &Object,
+     right_obj: &Object,
+@@ -344,6 +368,7 @@
+         (Some(sl), Some(sr)) => {
+             // Match if section and name or address match
+             section_name_eq(left_obj, right_obj, *sl, *sr)
++                && addend_eq(left_obj, left_reloc, right_reloc)
+                 && (diff_config.function_reloc_diffs == FunctionRelocDiffs::DataValue
+                     || symbol_name_addend_matches
+                     || address_eq(left_reloc, right_reloc))
+--- a/objdiff-core/src/diff/data.rs
++++ b/objdiff-core/src/diff/data.rs
+@@ -6,7 +6,7 @@
+ 
+ use super::{
+     DataDiff, DataDiffKind, DataDiffRow, DataRelocationDiff, ObjectDiff, SectionDiff, SymbolDiff,
+-    code::{address_eq, section_name_eq},
++    code::{addend_eq, address_eq, section_name_eq},
+ };
+ use crate::obj::{Object, Relocation, ResolvedRelocation, Symbol, SymbolFlag, SymbolKind};
+ 
+@@ -61,6 +61,7 @@
+         (Some(sl), Some(sr)) => {
+             // Match if section and name+addend or address match
+             section_name_eq(left_obj, right_obj, sl, sr)
++                && addend_eq(left_obj, left, right)
+                 && (symbol_name_addend_matches || address_eq(left, right))
+         }
+         (Some(_), None) | (None, Some(_)) | (None, None) => symbol_name_addend_matches,
+--- a/objdiff-core/tests/arch_x86.rs
++++ b/objdiff-core/tests/arch_x86.rs
+@@ -122,3 +122,66 @@
+     let output = common::display_diff(&obj, &diff, symbol_idx, &diff_config);
+     insta::assert_snapshot!(output);
+ }
++
++// A same-named pool symbol at a different section offset must not rescue a
++// different absolute addend. Keep the pool/name-address and REL32 controls.
++#[test]
++#[cfg(feature = "x86")]
++fn diff_absolute_addend_in_code_and_data() {
++    use obj::{Relocation, RelocationFlags, Section, SectionData, SectionKind, Symbol, SymbolKind};
++    fn fixture(base: bool, flags: u16) -> obj::Object {
++        let mut object = obj::read::parse(
++            include_object!("data/x86/rtest.obj"),
++            &diff::DiffObjConfig::default(),
++            diff::DiffSide::Base,
++        ).unwrap();
++        let relocation = Relocation {
++            flags: RelocationFlags::Coff(flags), address: 1, target_symbol: 1,
++            addend: if base { 0 } else { 4 },
++        };
++        object.sections = vec![
++            Section {
++                id: ".text".into(), name: ".text".into(), size: 6,
++                kind: SectionKind::Code,
++                data: SectionData(vec![0xb8, 0, 0, 0, 0, 0xc3]),
++                relocations: vec![relocation.clone()], ..Default::default()
++            },
++            Section {
++                id: ".data".into(), name: ".data".into(), size: 8,
++                kind: SectionKind::Data, data: SectionData(vec![0; 8]),
++                relocations: vec![Relocation { address: 0, ..relocation }],
++                ..Default::default()
++            },
++        ];
++        object.symbols = vec![
++            Symbol { name: "function".into(), size: 6, kind: SymbolKind::Function,
++                     section: Some(0), ..Default::default() },
++            Symbol { name: "table".into(), address: if base { 4 } else { 0 },
++                     size: if base { 0 } else { 4 }, kind: SymbolKind::Object,
++                     section: Some(1), ..Default::default() },
++        ];
++        object
++    }
++    let config = diff::DiffObjConfig {
++        function_reloc_diffs: diff::FunctionRelocDiffs::All, ..Default::default()
++    };
++    let scores = |target: &obj::Object, base: &obj::Object| {
++        let code = diff::code::diff_code(target, base, 0, 0, &config).unwrap().0;
++        let data = diff::data::diff_data_section(
++            target, base, &Default::default(), &Default::default(), 1, 1,
++        ).unwrap().0;
++        (code.match_percent.unwrap(), data.match_percent.unwrap())
++    };
++    let target = fixture(false, object::pe::IMAGE_REL_I386_DIR32);
++    assert_eq!(scores(&target, &target), (100.0, 100.0));
++    let mut base = fixture(true, object::pe::IMAGE_REL_I386_DIR32);
++    let (code, data) = scores(&target, &base);
++    assert!(code < 100.0, "wrong absolute addend in code scored exact");
++    assert!(data < 100.0, "wrong absolute addend in data scored exact");
++    // A differently named pool can legitimately encode the same byte.
++    base.symbols[1].name = "pool".into();
++    assert_eq!(scores(&target, &base), (100.0, 100.0));
++    let target = fixture(false, object::pe::IMAGE_REL_I386_REL32);
++    let base = fixture(true, object::pe::IMAGE_REL_I386_REL32);
++    assert_eq!(scores(&target, &base), (100.0, 100.0));
++}

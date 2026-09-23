@@ -159,7 +159,7 @@ def patch_symbol_records_stream(pdb: Path):
     pdb.write_bytes(d)
 
 
-def generate(inventory: Path = INVENTORY) -> Path:
+def generate(inventory: Path = INVENTORY, *, data_names=None) -> Path:
     exe = Path(common.resolve_exe())
     sections = read_sections(exe)
 
@@ -173,6 +173,7 @@ def generate(inventory: Path = INVENTORY) -> Path:
 
     per_unit_funcs = defaultdict(list)
     data_rows = []
+    data_names = dict(data_names or {})
     for r in rows:
         rva = int(r["rva"], 16)
         seg, off = seg_of(rva)
@@ -183,7 +184,12 @@ def generate(inventory: Path = INVENTORY) -> Path:
             per_unit_funcs[unit].append(
                 (seg, off, int(r["size"], 0), r["name"]))
         else:
-            data_rows.append((seg, off, r["name"]))
+            data_rows.append((seg, off, data_names.pop(rva, r["name"])))
+    for rva, name in sorted(data_names.items()):
+        seg, off = seg_of(rva)
+        if seg is None:
+            raise ValueError(f"data symbol {name} lies outside the image")
+        data_rows.append((seg, off, name))
 
     yaml = [
         "MSF:",

@@ -93,9 +93,9 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
             "cl",
             command=("PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=scripts "
                      "python3 -m homm3.core.cc_wrap "
-                     "--out $out --src $in -- $flags"),
+                     "--out $object --src $in -- $flags"),
             description="VC6 $unit",
-            depfile="$out.d",
+            depfile="$object.d",
             deps="gcc",
         )
         writer.rule(
@@ -123,9 +123,12 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
                 obj,
                 "cl",
                 inputs=unit["source"],
+                implicit_outputs=[obj + '.compile.json'],
                 implicit=["scripts/homm3/core/cc_wrap.py", "scripts/homm3/core/project.py",
+                          "scripts/homm3/build/compiled_freshness.py",
                           "config/units.toml", "config/project.toml"],
                 variables={
+                    "object": obj,
                     "flags": " ".join(profiles[unit["flags"]]),
                     "unit": unit["unit"],
                 },
@@ -153,6 +156,8 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
 def write_objdiff(build: dict, units: list[dict]) -> None:
     directory = ROOT / "build/objdiff"
     write_dummy(directory / "dummy.obj")
+    from homm3.build import data_manifest
+    units = [*units, *data_manifest.extra_units()]
     entries = []
     for unit in units:
         name = unit["unit"]
@@ -165,7 +170,8 @@ def write_objdiff(build: dict, units: list[dict]) -> None:
             # the raw objs stay authoritative for everything else
             "base_path": ("./normalized/base/%s.obj" % name
                           if norm_base.is_file()
-                          else "./base/%s.obj" % name),
+                          else "./base/%s.obj" % name if (directory/"base"/(name+".obj")).is_file()
+                          else "./dummy.obj"),
             "target_path": ("./normalized/target/%s.c.obj" % name
                             if norm_target.is_file() else "./dummy.obj"),
             "scratch": {
@@ -178,6 +184,8 @@ def write_objdiff(build: dict, units: list[dict]) -> None:
         "build_base": False,
         "build_target": False,
         "watch_patterns": ["*.obj"],
+        "options": {"functionRelocDiffs": "all",
+                    "combineDataSections": True, "combineTextSections": True},
         "units": entries,
     }, indent=2) + "\n")
 

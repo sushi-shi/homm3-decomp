@@ -1,0 +1,86 @@
+--- a/src/relocs.rs
++++ b/src/relocs.rs
+@@ -137,6 +137,20 @@
+     }
+ 
+     Ok(Some((alias.addend, alias.owner)))
++}
++
++// Reviewed aliases may point one-past an allocation. Resolve their explicit
++// owner first, rather than materializing another four-byte fallback copy.
++pub(crate) fn reviewed_alias(
++    manifest: &DataManifest,
++    target_rva: usize,
++    addend: u32,
++    name: RawString<'static>,
++) -> bool {
++    target_rva.checked_sub(addend as usize)
++        .and_then(|rva| manifest.owner_and_addend_for_rva(rva))
++        .is_some_and(|(owner, offset)| offset == 0
++            && owner.symbol_name == name && addend as usize <= owner.size)
+ }
+ 
+ #[derive(Copy, Clone)]
+@@ -220,7 +234,9 @@
+         reloc_rva,
+         target_rva,
+     )? {
+-        let kind = if is_static {
++        let kind = if reviewed_alias(data_manifest, target_rva, addend, owner) {
++            RelocKind::ReviewedData { symbol: owner }
++        } else if is_static {
+             RelocKind::ConjuredStatic {
+                 symbol: owner,
+                 target_rva,
+@@ -725,9 +741,10 @@
+                 coff_data_reloc.copy_from_slice(&addend.to_le_bytes());
+                 relocs_rva.insert(
+                     reloc_rva,
+-                    RelocKind::ConjuredConstant {
+-                        symbol: owner,
+-                        target_rva,
++                    if reviewed_alias(data_manifest, target_rva, addend, owner) {
++                        RelocKind::ReviewedData { symbol: owner }
++                    } else {
++                        RelocKind::ConjuredConstant { symbol: owner, target_rva }
+                     },
+                 );
+                 return Ok(());
+@@ -807,9 +824,10 @@
+                 coff_data_reloc.copy_from_slice(&addend.to_le_bytes());
+                 relocs_rva.insert(
+                     reloc_rva,
+-                    RelocKind::ConjuredStatic {
+-                        symbol: owner,
+-                        target_rva,
++                    if reviewed_alias(data_manifest, target_rva, addend, owner) {
++                        RelocKind::ReviewedData { symbol: owner }
++                    } else {
++                        RelocKind::ConjuredStatic { symbol: owner, target_rva }
+                     },
+                 );
+                 return Ok(());
+--- a/src/data_manifest.rs
++++ b/src/data_manifest.rs
+@@ -391,6 +391,21 @@
+     }
+ 
+     #[test]
++    fn reviewed_alias_preserves_interior_and_one_past_owner() {
++        let data = parse(&manifest("a.c\t0x100\t0x20\tdata\t4\t-\t-\tlocal")).unwrap();
++        let name = RawString::from(&b"table"[..]);
++        let other = RawString::from(&b"wrong"[..]);
++        for addend in [0, 4, 0x20] {
++            assert!(crate::relocs::reviewed_alias(&data, 0x100 + addend, addend as u32, name));
++        }
++        assert!(!crate::relocs::reviewed_alias(&data, 0x121, 0x21, name));
++        assert!(!crate::relocs::reviewed_alias(&data, 0x100, 0, other));
++        assert!(!crate::relocs::reviewed_alias(&data, 0x104, 0, name));
++        assert!(!crate::relocs::reviewed_alias(&data, 0, 1, name));
++        assert!(!crate::relocs::reviewed_alias(&DataManifest::default(), 0x100, 0, name));
++    }
++
++    #[test]
+     fn absent_manifest_supplies_no_reviewed_definitions() {
+         let parsed = DataManifest::load(None, &symbols()).unwrap();
+         assert!(parsed.definitions().is_empty());

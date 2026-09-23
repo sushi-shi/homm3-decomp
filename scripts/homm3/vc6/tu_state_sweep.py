@@ -394,7 +394,7 @@ def _report_scores(
     env["RAYON_NUM_THREADS"] = "1"
     proc = subprocess.run(
         ["objdiff-cli", "-C", str(directory), "-L", "error", "report",
-         "generate", "-o", "report.json"],
+         "generate", "-o", "report.json", "-c", "functionRelocDiffs=all"],
         capture_output=True, text=True, env=env)
     if proc.returncode:
         raise RuntimeError((proc.stdout + proc.stderr).strip())

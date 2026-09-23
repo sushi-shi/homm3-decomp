@@ -22,7 +22,9 @@ class ReadmeScoreTest(unittest.TestCase):
             ("unit", "historic"): status.MatchRow(None, 90, 100),
             ("unit", "near"): status.MatchRow(99.9995, 99.9995, 99.9995),
         }
-        report = {"units": [{"name": "unit", "functions": functions}]}
+        report = {"measures": {"total_data": "1000", "matched_data": "100"},
+                  "units": [{"name": "unit", "functions": functions},
+                            {"name": "vendor_data_only", "functions": []}]}
         with tempfile.TemporaryDirectory() as tmp:
             readme = Path(tmp) / "README.md"
             readme.write_text(f"before\n{status.RM_START}\nold\n{status.RM_END}\nafter\n")
@@ -41,16 +43,26 @@ class ReadmeScoreTest(unittest.TestCase):
                 first = readme.read_text()
                 status.write_readme(report)
                 self.assertEqual(readme.read_text(), first)
+                # Data is current byte comparison, never a held function MAX.
+                report['measures']['matched_data'] = '0'
+                status.write_readme(report)
+                self.assertIn('**Data CUR (objdiff): 0.00%**', readme.read_text())
+                self.assertIn('**Code MAX: 65.00%**', readme.read_text())
 
-        self.assertIn("**Executable MAX: 65.00%**", first)
+        self.assertIn('**Data CUR (objdiff): 10.00%**', first)
+        self.assertIn('100 / 1,000 compared data bytes', first)
+        self.assertIn('uncovered retail gaps are outside this denominator', first)
+        self.assertNotIn('Executable MAX', first)
+        self.assertNotIn("vendor_data_only", first)
+        self.assertIn("**Code MAX: 65.00%**", first)
         self.assertIn("**CUR diagnostics** — 1 / 6 functions exact (16.7%)", first)
         self.assertIn("**Function exact MAX** — 2 / 6 current implementations "
                       "(33.3%)", first)
         table = [[c.strip() for c in line.strip("|").split("|")]
                  for line in first.splitlines() if line.startswith("|")]
         self.assertIn("Function exact MAX", table[0])
-        self.assertEqual(table[2][2:4], ["2 / 4 (50.0%)", "1 / 4 (25.0%)"])
-        self.assertEqual(table[2][4:], ["97.50%", "56.25%"])
+        self.assertEqual(table[2][2:4], ["1 / 4 (25.0%)", "2 / 4 (50.0%)"])
+        self.assertEqual(table[2][4:], ["56.25%", "97.50%"])
         self.assertEqual(table[3][2:4], ["0 / 2 (0.0%)", "0 / 2 (0.0%)"])
         self.assertTrue(first.startswith("before\n"))
         self.assertTrue(first.endswith("\nafter\n"))
@@ -81,11 +93,12 @@ class ReadmeScoreTest(unittest.TestCase):
                 status.write_readme(report)
                 text = readme.read_text()
 
-        self.assertIn("**Executable MAX: 100.00%**", text)
+        self.assertIn("**Data CUR (objdiff): unavailable**", text)
+        self.assertIn("**Code MAX: 100.00%**", text)
         self.assertIn("**CUR diagnostics** — 0 / 1 functions exact", text)
         self.assertIn("**Function exact MAX** — 1 / 1 current implementations",
                       text)
-        self.assertRegex(text, r"\|\s*100\.00% \|\s*25\.00% \|")
+        self.assertRegex(text, r"\|\s*25\.00% \|\s*100\.00% \|")
 
 
     def test_excluded_linked_bodies_do_not_inflate_progress(self):
@@ -114,7 +127,7 @@ class ReadmeScoreTest(unittest.TestCase):
                 status.write_readme(report)
                 text = readme.read_text()
 
-        self.assertIn("**Executable MAX: 75.00%**", text)
+        self.assertIn("**Code MAX: 75.00%**", text)
         self.assertIn("**Function exact MAX** — 1 / 2", text)
         self.assertIn("**CUR diagnostics** — 1 / 2", text)
         self.assertIn("(2 in linked units)", text)

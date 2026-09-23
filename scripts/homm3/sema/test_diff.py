@@ -75,13 +75,12 @@ class RefsCompareTest(unittest.TestCase):
     def test_identical_sequences_agree(self):
         rows, res = self.rows(_calls("?a@@YAXXZ", "?b@@YAXXZ"), _calls("?a@@YAXXZ", "?b@@YAXXZ"))
         self.assertEqual([r[0] for r in rows], ["=", "="])
-        self.assertTrue(res["agree"] and res["report_agree"])
+        self.assertTrue(res["agree"])
 
-    def test_unclaimed_retail_label_differs_but_report_agrees(self):
+    def test_unclaimed_retail_label_differs(self):
         rows, res = self.rows(_calls("?f@@YAXXZ"), _calls("sub_f6570"))
         self.assertEqual(rows, [("~", "?f@@YAXXZ", "sub_f6570", "unclaimed")])
         self.assertFalse(res["agree"])
-        self.assertTrue(res["report_agree"])
         self.assertEqual((res["counts"]["synthetic"], res["counts"]["real"]), (1, 0))
 
     def test_two_real_names_differ_without_annotation(self):
@@ -108,7 +107,6 @@ class RefsCompareTest(unittest.TestCase):
         res = diff._refs_compare(diff._ref_seq(base)[0], diff._ref_seq(target)[0],
                                  claimed_names=names)
         self.assertFalse(res["agree"])
-        self.assertTrue(res["report_agree"])
         self.assertEqual(res["counts"]["source-claimed"], 1)
         self.assertEqual(res["counts"]["unclaimed"], 0)
         text, agree = diff._refs_view(base, target, 0x1000, "fn", True,
@@ -151,7 +149,6 @@ class RefsCompareTest(unittest.TestCase):
         self.assertEqual(sorted(r[0] for r in rows), ["-", "=", "=", "~", "~"])
         self.assertEqual((rows[0], rows[-1][0]), (("=", "?A@@YAXXZ", "?A@@YAXXZ", None), "="))
         self.assertEqual(res["counts"]["-"], 1)
-        self.assertFalse(res["report_agree"])
 
     def test_addend_and_kind_count_as_differences(self):
         base = _listing(("mov eax, dword ptr [0x18]", "a1 18 00 00 00", [(1, "DIR32", "_z_errmsg")]), RET)
@@ -180,7 +177,7 @@ class RefsCompareTest(unittest.TestCase):
         self.assertIn("  #0   +000   =  ?A@@YAXXZ", text)
         self.assertIn("~  ?B@@YAXXZ -> sub_1234  (retail label - unclaimed)", text)
         self.assertIn("1 same, 1 different (1 unclaimed retail labels, 0 real), 0 base-only, 0 target-only", text)
-        self.assertIn("name_address: CALL SEQUENCES DIFFER   |   report (none): AGREE", text)
+        self.assertIn("reference listing: CALL SEQUENCES DIFFER", text)
         text, agree = diff._refs_view(_listing(RET), _listing(RET), 0x1000, "fn", calls_only=False)
         self.assertTrue(agree)
         self.assertIn("no relocations on either side.", text)
@@ -260,7 +257,7 @@ class FirstDivergenceTest(unittest.TestCase):
 class SummaryLinesTest(unittest.TestCase):
     def facts(self, **over):
         agree = {"rows": [], "counts": {"=": 1, "~": 0, "-": 0, "+": 0, "synthetic": 0, "real": 0},
-                 "agree": True, "report_agree": True}
+                 "agree": True}
         facts = {"rva": 0x1000, "name": "fn", "unit": "u", "pct": 100.0,
                  "census": {"blocks": (2, 2), "exact": 2, "size": 0, "shift": 0,
                             "flow": 0, "missing": 0, "rows": [], "first_flow": None,
@@ -279,11 +276,11 @@ class SummaryLinesTest(unittest.TestCase):
         self.assertTrue(agree)
         self.assertIsNone(nxt)
         self.assertIn("  next: (nothing - all views agree)", lines)
-        self.assertIn("  objdiff       100.00%  (report; function_reloc_diffs=none)", lines)
+        self.assertIn("  objdiff       100.00%  (report; function_reloc_diffs=all)", lines)
 
     def test_next_rungs(self):
         differ = {"rows": [], "counts": {"=": 0, "~": 1, "-": 0, "+": 0, "synthetic": 1, "real": 0},
-                  "agree": False, "report_agree": True}
+                  "agree": False}
         self.assertEqual(diff._summary_lines(self.facts(calls=differ, relocs=differ))[2], "--calls")
         self.assertEqual(diff._summary_lines(self.facts(
             branches={"status": "flips", "kind": "SIGNEDNESS", "rows": [], "nbr": 1, "nbr_t": 1, "rets": (1, 1)}))[2],
