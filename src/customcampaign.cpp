@@ -1741,7 +1741,9 @@ static void collectCrossoverArtifacts(const hero& sourceHero,
 // temporary across both inner loops. Its expansion restores retail's 0x64
 // frame, shared stack home, and the first push_back's retained single-element
 // insert wrapper. The two outer loops also reuse one index, restoring the
-// retail -0x14 home. All 38 CFG blocks and instruction rows agree. Retail's
+// retail -0x14 home. Mac code+0x95bc4..0x95bd4 initializes the local artifact's
+// ID word before its payload word, supporting the TArtifact constructor here;
+// this also makes the Windows body exact. Retail's
 // ICF label names vector<type_dialog_resource>::insert at the wrapper address;
 // the source-correct vector<type_artifact> specialization resolves there too.
 VA(0x00487900, 0x2CD)  // anchor-caller(game::NewMap +0x5cb), retail-only
@@ -1753,7 +1755,7 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
     int slot = m_options->slot5(this, choice);
     if (slot >= 0) {
         std::vector<hero>& heroes = campaign->m_carryOverHeroes[slot];
-        type_artifact artifact;
+        type_artifact artifact(ARTIFACT_NONE);
         std::vector<type_artifact> artifacts = campaign->m_carryoverArtifact[slot];
 
         unsigned int itemIndex;
