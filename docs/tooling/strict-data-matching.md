@@ -21,6 +21,10 @@ expected. This switch requires exact enrolled data, not enrollment of the entire
 retail denominator. Unenrolled bytes always remain visible. Fast function builds
 skip the data checkpoint and reject `--require-data-exact`.
 
+The following stack stage also adds [initialization checks](data-initialization.md)
+to full builds and this exactness gate. The measurements below describe the
+static-data stage; initialization effects remain a separate evidence layer.
+
 ## Files and interactions
 
 1. `build/data_checkpoint.py` checks compiler provenance before Ninja. Missing or
@@ -128,7 +132,8 @@ reconstructs all comparison images from raw COFF and the PE section table and
 verifies the complete 470,624-byte partition. The strict exactness command exits
 nonzero on the present backlog.
 
-Dynamic initialization, shared writer/reader accesses, independent retail table
-extents and byte-versus-pixel stride arithmetic remain the following stages of
-the [stack plan](data-matching-stack-plan.md). Zero agreement and static byte
-equality do not establish those relationships.
+Registration and supported startup effects now have a separate
+[initialization report](data-initialization.md). Shared writer/reader accesses,
+independent retail table extents and byte-versus-pixel stride arithmetic remain
+following stages of the [stack plan](data-matching-stack-plan.md). Zero agreement
+and static byte equality do not establish those relationships.

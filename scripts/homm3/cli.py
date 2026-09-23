@@ -31,7 +31,7 @@ Subcommands
         Run a full `homm3 build` for the final checkpoint.
         Full builds compare enrolled data, including a separate objdiff data
         project at build/objdiff/data/objdiff.json. --require-data-exact makes
-        unresolved bindings and static data differences fatal.
+        unresolved bindings, static differences and initialization gaps fatal.
 
   warnings [--compiler both|clang|msvc] [--unit TU] [--jobs N]
         Generate a fresh compiler-diagnostic report with Clang -Weverything
@@ -61,7 +61,7 @@ Subcommands
         reports source edits whose new MAX falls below the prior MAX without
         gating. Unrelated CUR dips are silent; HIST preserves older peaks.
 
-  sema <xref|diff|disasm|rva|strings|data|data-match|coverage|candidates|compare> ...
+  sema <xref|diff|disasm|rva|strings|data|data-match|data-initialization|coverage|candidates|compare> ...
         Read-only navigation over the retail image (homm3.sema): caller
         trees + exact data refs (xref --to = every referencing site),
         base-vs-target diffs (skeleton by default; --summary = every

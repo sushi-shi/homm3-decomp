@@ -269,7 +269,8 @@ def partition(layout, segments):
     return result
 
 
-def generate(root, *, declared=None, candidate_report=None, jobs=4):
+def prepare(root, *, declared=None, candidate_report=None, jobs=4):
+    """Shared fresh evidence for static bytes, initialization and consumers."""
     from homm3.analysis import candidate_data, data_declarations
     from homm3.core.project import Project
     from homm3.sema.retail_layout import Layout
@@ -301,6 +302,14 @@ def generate(root, *, declared=None, candidate_report=None, jobs=4):
             rva = int(row['rva'], 0)
             if rva in admitted:
                 code_claims.append(dict(symbol=row['name'], rva=rva, unit=row.get('unit'), evidence=path))
+    return dict(layout=layout, declared=declared, candidate_report=candidate_report, objects=objects,
+                code_claims=code_claims, issues=issues, paths=paths)
+
+
+def generate(root, *, declared=None, candidate_report=None, jobs=4, evidence=None):
+    evidence = evidence or prepare(root, declared=declared, candidate_report=candidate_report, jobs=jobs)
+    layout, declared, candidate_report, objects, code_claims, issues, paths = (
+        evidence[k] for k in ('layout', 'declared', 'candidate_report', 'objects', 'code_claims', 'issues', 'paths'))
     pointers = [int(r['site_rva'], 0) for r in tsv.read(root/paths[1])[2]]
     report = compare(layout, candidate_report['candidate_data'], candidate_report['data_bindings'],
                      objects, code_claims=code_claims, retail_pointers=pointers)

@@ -175,13 +175,20 @@ def generate(root, image, *, jobs=4, build_vendor=False):
     claims, labels, inputs, limitations = retail_claims.collect(root, layout, image)
     inputs.extend(['config/retail/relocs.tsv', 'config/retail/reloc-evidence.tsv'])
     references = reference_facts(root, layout)
-    problems = validate_claims(layout, claims)
-    rows = partition(layout, claims, labels, references)
     from homm3.analysis import data_declarations
     from homm3.sema import data_coverage
     declared = data_declarations.extract(root, layout.base, jobs=jobs)
     from homm3.analysis import candidate_data
     candidate_evidence = candidate_data.extract(root, declared)
+    from homm3.sema import data_match
+    from homm3.analysis import data_initialization
+    evidence = data_match.prepare(root, declared=declared, candidate_report=candidate_evidence)
+    data_matching = data_match.generate(root, evidence=evidence)
+    initialization = data_initialization.generate(root, evidence=evidence, static_report=data_matching, claims=claims)
+    additional = data_initialization.structures(initialization)
+    claims.extend(retail_claims.claim(r['rva'], r['size'], r['kind'], r['evidence']) for r in additional)
+    problems = validate_claims(layout, claims)
+    rows = partition(layout, claims, labels, references)
     rows, data_issues, data_summary = data_coverage.overlay(layout, rows, declared)
     from homm3.analysis import vendor_data
     from homm3.sema import vendor_coverage
@@ -194,11 +201,9 @@ def generate(root, image, *, jobs=4, build_vendor=False):
     vendor_summary['analysis'] = vendor_analysis
     vendor_summary['issue_counts'] = dict(Counter(i['kind'] for i in vendor_issues))
     from homm3.sema import compiler_data
-    compiler_rows, compiler_issues = compiler_data.collect(root, layout, claims, labels, references)
+    compiler_rows, compiler_issues = compiler_data.collect(root, layout, claims, labels, references, additional=additional)
     rows, compiler_summary = compiler_data.overlay(rows, compiler_rows)
     compiler_summary['issue_counts'] = dict(Counter(i['kind'] for i in compiler_issues))
-    from homm3.sema import data_match
-    data_matching = data_match.generate(root, declared=declared, candidate_report=candidate_evidence)
     rows, data_match_summary = data_match.overlay(layout, rows, data_matching)
     data_match_summary.update(data_matching['summary'])
     summaries = {}
@@ -220,12 +225,14 @@ def generate(root, image, *, jobs=4, build_vendor=False):
     inputs.extend(implementations)
     inputs.extend(candidate_evidence['input_sha256'])
     inputs.extend(data_matching['input_sha256'])
+    inputs.extend(initialization['input_sha256'])
     return dict(schema='homm3.retail-accounting.v1', image_base=layout.base,
                 image_sha256=hashlib.sha256(image.data).hexdigest(), domains=summaries,
                 regions=[asdict(r) for r in layout.file_regions + layout.image_regions],
                 data_declarations=declared['declarations'], data_issues=data_issues, data_coverage=data_summary,
                 candidate_evidence=candidate_evidence, candidate_coverage=candidate_evidence['summary'],
                 data_matching=data_matching, data_match_coverage=data_match_summary,
+                data_initialization=initialization, initialization_coverage=initialization['summary'],
                 vendor_data=vendor_rows, vendor_issues=vendor_issues, vendor_coverage=vendor_summary,
                 compiler_data=compiler_rows, compiler_issues=compiler_issues, compiler_coverage=compiler_summary,
                 claims=claims, labels=dict(labels), references=references, rows=rows, problems=problems,
@@ -307,7 +314,10 @@ def export(report, directory):
     if 'data_matching' in report:
         from homm3.sema import data_match
         data_match.export(report['data_matching'], directory)
-    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues', 'candidate_evidence', 'data_matching')}
+    if 'data_initialization' in report:
+        from homm3.analysis import data_initialization
+        data_initialization.export(report['data_initialization'], directory)
+    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues', 'candidate_evidence', 'data_matching', 'data_initialization')}
     (directory / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
 
 
@@ -320,7 +330,7 @@ def run(args):
     except (ValueError, OSError) as exc:
         from homm3.sema._common import die
         die(str(exc))
-    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues', 'candidate_evidence', 'data_matching')}
+    summary = {k: v for k, v in report.items() if k not in ('claims', 'labels', 'references', 'rows', 'data_declarations', 'data_issues', 'vendor_data', 'vendor_issues', 'compiler_data', 'compiler_issues', 'candidate_evidence', 'data_matching', 'data_initialization')}
     if args.json:
         print(json.dumps(summary, indent=2))
     else:
@@ -335,6 +345,7 @@ def run(args):
         print('Compiler structure accounting: ' + json.dumps(report['compiler_coverage'], sort_keys=True))
         print('Candidate data bindings: ' + json.dumps(report['candidate_coverage'], sort_keys=True))
         print('Strict data comparison: ' + json.dumps(report['data_match_coverage'], sort_keys=True))
+        print('Initialization evidence: ' + json.dumps(report['initialization_coverage'], sort_keys=True))
         if args.output:
             print(f'Actionable byte map: {args.output}/coverage.tsv; prioritized work: {args.output}/backlog.tsv')
         for limitation in report['limitations']:

@@ -35,7 +35,7 @@ def handler_owners(layout, claims, references):
     return owners
 
 
-def collect(root, layout, claims, labels, references):
+def collect(root, layout, claims, labels, references, *, additional=()):
     """Join existing proven extent claims to structured compiler ownership facts."""
     classes = {int(r['rva'], 0): r.get('class', '') for r in
                table_rows(root / 'config/retail/vtables.tsv')}
@@ -65,9 +65,25 @@ def collect(root, layout, claims, labels, references):
             associations[extent].add(info)
 
     result, issues = [], []
+    extra = {(r['kind'], r['rva'], r['size']): r for r in additional}
     for claim_id, claim in enumerate(claims):
         kind, start, size = claim['kind'], claim['start'], claim['size']
         if claim['confidence'] != 'proven' or claim['domain'] != 'image':
+            continue
+        proved = extra.get((kind, start, size))
+        if proved is not None:
+            owner_rvas = proved['owner_rvas']
+            result.append(dict(id=len(result), claim_id=claim_id, rva=start, end=start+size,
+                size=size, kind=kind, status='accounted', owner_kind='type' if proved['class_name'] else
+                'function' if owner_rvas else 'unresolved', class_name=proved['class_name'],
+                owner_rvas=[hex(r) for r in owner_rvas],
+                owner_names=sorted({label['name'] for r in owner_rvas for label in labels.get(r, [])}),
+                owner_sources=sorted({label['source'] for r in owner_rvas for label in labels.get(r, []) if label['source']}),
+                info_rvas=[], handler_rvas=[], slot_targets=[], evidence=[proved['evidence']],
+                ownership_gaps=[] if owner_rvas or proved['class_name'] else ['Source owner unresolved; structural roots retained in initialization/RTTI tables'],
+                candidate_status='not-compared', candidate_matched_bytes=0))
+            for detail in result[-1]['ownership_gaps']:
+                issues.append(dict(compiler_id=result[-1]['id'], rva=start, kind='unresolved-owner', detail=detail))
             continue
         terminator = (kind == 'import-structure' and size == 20 and
                       claim['evidence'] == 'PE import descriptor' and layout.read(start, size) == bytes(20))

@@ -132,3 +132,15 @@ class CompilerDataTest(unittest.TestCase):
         rows, summary = compiler_data.overlay([row], structures)
         self.assertEqual(rows[0]['compiler_status'], 'conflict')
         self.assertEqual(summary['newly_accounted_gap_bytes'], 0)
+
+    def test_validated_initialization_extent_adds_only_structural_credit(self):
+        extra = dict(rva=0x10c0, size=16, kind='crt-initializer-table', evidence='independent CRT walk',
+                     owner_rvas=[0x2000], class_name='')
+        self.claims.append(claim(extra['rva'], extra['size'], extra['kind'], extra['evidence']))
+        rows, issues = compiler_data.collect(self.root, Layout(self.data), self.claims, self.labels,
+                                             self.references, additional=[extra])
+        self.assertFalse(issues)
+        added = next(r for r in rows if r['kind'] == extra['kind'])
+        self.assertEqual(added['owner_rvas'], ['0x2000'])
+        self.assertEqual(added['candidate_matched_bytes'], 0)
+        self.assertEqual(added['candidate_status'], 'not-compared')

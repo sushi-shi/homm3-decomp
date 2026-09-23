@@ -144,6 +144,13 @@ Pointer masks cannot turn an incorrect relationship into an exact match.
 
 ### 4. Initialization, initializer arrays and RTTI
 
+Implemented on `codex/data-initialization`: bounded CRT tables, candidate
+registrations, conservative write/callback evidence, within-object order checks,
+per-storage initialization diagnostics and validated RTTI graphs. The ordinary
+checkpoint runs these checks and retains unsupported effects explicitly. See
+[evidence flow and measurements](data-initialization.md). Consumer analysis and
+remaining candidate/vendor closure continue in the following stages.
+
 Add `analysis/data_initialization.py`; extend compiler-data parsing and the
 shared binding/relocation graph. Prove CRT initializer-array bounds and slots
 against retail, bind emitted initializer entries to functions, and compare
