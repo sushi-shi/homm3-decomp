@@ -14,6 +14,15 @@ Recover C++ that reproduces Heroes III Complete's retail MSVC 6.0 object code.
   offsets paired with existing Windows VA claims; unpaired functions have no
   Mac verdict. See [the Mac target plan](docs/matching/mac-second-target-plan.md).
 
+Windows is the game being rebuilt. Use Mac solely as evidence for recovering
+the Windows source, particularly helper boundaries, source calls and function
+structure hidden by VC6 optimization. Restore evidenced helpers in ordinary
+Windows game headers/source and keep their call sites; a retained Mac call does
+not require VC6 to retain that call. Exact bytes on both architectures strengthen
+the reconstruction without proving a unique C++ spelling. A runnable Mac port
+is not a project requirement. Use native library headers for Mac comparisons;
+do not add duplicate game declarations or extracted header-body fragments.
+
 The verdict is VC6 SP3 under Wine; clang/clangd is editor tooling only. Use the
 per-TU compiler profiles in `config/units.toml`.
 

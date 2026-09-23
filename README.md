@@ -88,11 +88,19 @@ The admitted hero controls use `-O1 -proc 750` and the linker's
 resolved Mac destinations; unsupported relocation kinds remain explicit errors.
 Imported and indirect calls retain their required TOC restores. Per-unit
 Mac profiles compile admitted bodies together in source order from the same
-authored C++, with shared declarations and explicit coverage. Shared game
-method bodies live in their normal owning headers; the Mac compile input
-extracts the marked bodies into its Mac ABI declaration views. Those views are
-needed while the reconstructed Windows header tree still contains VC6-only
-interfaces and Windows-pinned layouts.
+authored C++, with explicit coverage. **Windows is the game being rebuilt.**
+Mac is a source reference: its retained calls and simpler code can reveal helper
+boundaries, statement order and local lifetimes hidden by VC6's optimizer.
+Restore supported helpers and calls in the Windows source, then check Windows
+retail bytes. An exact comparison on both architectures strengthens the source
+evidence, but does not establish a unique original spelling.
+
+Ordinary-header compilation now supports the original CodeWarrior library
+headers, staged with `homm3 mac sdk PATH`. Existing profiles still use declaration
+views while their ordinary-header compilation errors are reviewed. Replacing
+those views and the marked-body extraction is ongoing; new profiles should use
+the [native-header path](docs/tooling/mac-native-headers.md). This comparison
+tooling does not require a runnable Mac port.
 
 ## Quickstart
 

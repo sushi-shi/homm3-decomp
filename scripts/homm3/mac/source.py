@@ -495,7 +495,9 @@ def candidate_source(pair: Pair) -> str:
         if start < 0:
             raise SourceError(f"{pair.unit}: data definition {va:#x} is outside owning source")
         definitions.append((start, definition))
-    return ('#include "' + profile.preamble + '"\n\n' +
+    header_names = (["include/compiler.h"] if profile.native_headers else [])
+    header_names += [profile.preamble, *profile.extra_headers]
+    return ('\n'.join('#include "' + name + '"' for name in header_names) + '\n\n' +
             "\n\n".join(definition for _, definition in sorted(definitions)) + "\n")
 
 

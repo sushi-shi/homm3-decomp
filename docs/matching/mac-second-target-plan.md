@@ -6,6 +6,12 @@ the [implementation report](../tooling/mac-matching-report.md).
 
 ## Objective
 
+The product is the reconstructed **Windows game**. Mac compilation and byte
+comparison exist only to recover its source: retained helper calls, clearer
+control flow and local lifetimes inform the Windows implementation. Preserve
+supported helper definitions and source calls in that implementation even when
+VC6 expands them. No runnable Mac game or Mac OS implementation is required.
+
 Match recovered C++ against both the pinned Windows VC6 executable and the
 Classic Mac OS PowerPC PEF. `homm3 build --fast <TU>` should compile and compare
 both targets for admitted Mac counterparts in that TU; a full `homm3 build`
@@ -17,6 +23,9 @@ The Mac build becomes the preferred cross-reference for source spelling and
 ordinary helper boundaries where a counterpart is paired. Dreamcast CodeView
 remains evidence for names, types, locals, line positions and older source
 facts that the stripped Mac executable cannot provide.
+
+The ordinary-header migration and its current limitations are tracked in
+[native header compilation](../tooling/mac-native-headers.md).
 
 ## Verified starting point
 

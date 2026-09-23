@@ -78,7 +78,10 @@ def _profile_hash(source: bytes, pair: Pair) -> str:
     spec = toolchain.specification()
     profile = profiles.load(ROOT, pair.compile_group) if pair.compile_group else None
     header_inputs = profiles.headers(ROOT, profile) if profile else {}
-    data = json.dumps({"source": _digest(source), "flags": profile.flags or spec["flags"] if profile else spec["flags"],
+    flags = tuple(profile.flags or spec["flags"] if profile else spec["flags"])
+    if profile and profile.native_headers:
+        flags += ("-msext", "on")
+    data = json.dumps({"source": _digest(source), "flags": flags,
                        "profile": asdict(profile) if profile else None,
                        "headers": {name: _digest(data) for name, data in header_inputs.items()},
                        "tools": spec["files"], "collapse_reloads": spec["collapse_reloads"],
@@ -112,6 +115,10 @@ def _run(command: list[str], cwd: Path, env: dict[str, str]) -> str:
 
 
 def compile_pair(pair: Pair, tools_dir: Path) -> CompiledCode:
+    profile = profiles.load(ROOT, pair.compile_group) if pair.compile_group else None
+    if profile and profile.native_headers:
+        from homm3.mac import sdk
+        sdk.stage(root=ROOT)
     work = object_directory(ROOT, pair)
     work.mkdir(parents=True, exist_ok=True)
     # Multiple selectors of a shared group reuse one object. Concurrent build
@@ -173,10 +180,12 @@ def _compile_locked(pair: Pair, tools_dir: Path, work: Path) -> CompiledCode:
         env["WINEPREFIX"] = os.environ.get(
             "HOMM3_MAC_WINEPREFIX", str(ROOT / "build/mac/wineprefix" / version))
         env["MWCIncludes"] = ";".join([".", "_inputs", *(
-            "_inputs/" + directory for directory in profile.include_dirs)]) if profile else "."
+            "_inputs/" + directory for directory in profiles.include_dirs(ROOT, profile))]) if profile else "."
         env.setdefault("WINEDEBUG", "-all")
         Path(env["WINEPREFIX"]).mkdir(parents=True, exist_ok=True)
         flags = profile.flags or toolchain.specification()["flags"] if profile else toolchain.specification()["flags"]
+        if profile and profile.native_headers:
+            flags = (*flags, "-msext", "on")
         _run(["wine", str(tools_dir / "MWCPPC.exe"), *flags,
               "-o", obj.name, generated.name], work, env)
         if not obj.is_file() or not obj.read_bytes().startswith(b"MWOBPPC "):
@@ -202,6 +211,7 @@ def _compile_locked(pair: Pair, tools_dir: Path, work: Path) -> CompiledCode:
         "paired_bodies": [f"0x{p.retail_va:08x}" for p in peers],
         "additional_source_helpers": [f"0x{va:08x}" for va in profile.helpers] if profile else [],
         "helpers_without_windows_va": list(profile.source_helpers) if profile else [],
+        "native_headers": bool(profile and profile.native_headers),
         "emitted_symbols": sorted(emitted),
         "emitted_hunks": [{"symbol": h.name, "size": len(h.data), "references": h.xrefs} for h in hunks],
         "metadata_hunks": [asdict(h) for h in metadata],

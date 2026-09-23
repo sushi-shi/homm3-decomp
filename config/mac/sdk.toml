@@ -1,0 +1,28 @@
+# Unmodified SDK headers from the user-supplied CodeWarrior Pro 6 archive.
+# Only names, counts and hashes belong in Git; header bytes stay in build/mac/sdk.
+# Tree digest: sorted UTF-8 relative name + NUL + SHA-256 hex + newline.
+version = "CodeWarrior Pro 6 MSL and Mac OS Universal Interfaces"
+
+[[trees]]
+name = "cxx"
+source = "MSL_-_C++_-_Common_-_Libs"
+file_count = 88
+sha256 = "9f2a622d2a0cdadb22a8db56262ff47e204aeb14222b50367ba76d1a1dca5e62"
+
+[[trees]]
+name = "c"
+source = "MSL_-_C_-_Common_-_Libs"
+file_count = 89
+sha256 = "1d3f5451acb4b4670852979830a84a849cafcb802deebf801c905fbb32329d78"
+
+[[trees]]
+name = "mac"
+source = "MSL_-_C_-_PPC-68k_-_Libraries/MSL/MSL_C/MSL_MacOS/Include"
+file_count = 25
+sha256 = "7c196b3535bb6a9d6b50f3596d585a34e4d76acdf5ae46cafdbb8f84a87a3a31"
+
+[[trees]]
+name = "universal"
+source = "PPC-68k_Dev_-_Standard_C_-_Libraries/MacOS_Support/Universal/Interfaces/CIncludes"
+file_count = 320
+sha256 = "ecce2913d722ab47382aa11091a2a2b6cc8a912d023385ec44b39b51119a1fad"

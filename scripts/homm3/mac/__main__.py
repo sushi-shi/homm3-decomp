@@ -49,6 +49,8 @@ def _image():
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="homm3 mac", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
+    p = sub.add_parser("sdk", help="stage or verify native CodeWarrior library headers for source comparison")
+    p.add_argument("path", nargs="?", help="extracted CodeWarrior Pro 6 archive root (or HOMM3_MAC_SDK)")
     p = sub.add_parser("build", help="compile and compare admitted Mac counterparts")
     p.add_argument("--fast", action="store_true", help="skip the Mac MAX checkpoint")
     p.add_argument("units", nargs="*", help="unit names (normally with --fast)")
@@ -104,6 +106,11 @@ def main(argv=None) -> int:
     p.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
     try:
+        if args.command == "sdk":
+            from homm3.mac import sdk
+            destination = sdk.stage(args.path)
+            print(f"[mac] verified native library headers: {destination}")
+            return 0
         if args.command == "compile":
             probe = pairing.candidate(common.HOMM3_DIR, args.va, args.unit, args.data)
             build.compile_pair(probe, toolchain.stage())

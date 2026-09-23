@@ -1,5 +1,17 @@
 # Mac matching tooling: implementation report
 
+## Scope clarification and header migration
+
+Windows is the game being rebuilt. Mac disassembly and comparisons serve only
+to recover Windows source structure and helper boundaries. Recovered helper
+bodies and calls belong in ordinary Windows source/headers, including where VC6
+inlines them. A runnable Mac port is not required. The declaration views and
+marker extraction described in the checkpoint below are being replaced by
+[ordinary-header compilation with the real SDK](mac-native-headers.md).
+The native compiler path is implemented; existing profiles have not switched
+while game-header changes await review. Earlier scores below describe the
+previous declaration-view checkpoint, not validation of native-header output.
+
 ## Current phase
 
 The core dual-target tooling is implemented. Six workers ran the first
