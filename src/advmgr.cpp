@@ -1697,9 +1697,8 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
                             curTime
                             - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
                         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                            cppMax(elapsedTime,
-                                     static_cast<long>(
-                                         ADVENTURE_ANIMATION_MAX_ELAPSED));
+                            cppMax(static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED),
+                                   elapsedTime);
                     }
                     process1WindowsMessage();
                 }
@@ -2088,8 +2087,8 @@ void advManager::processRadarSelect(const message* msg)
         long elapsedTime =
             curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            cppMax(elapsedTime,
-                     static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED));
+            cppMax(static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED),
+                   elapsedTime);
     }
     process1WindowsMessage();
 
@@ -2128,10 +2127,12 @@ void advManager::processRadarSelect(const message* msg)
                 (dragMsg.m_codeY - m_advWindow->m_radarWidget->m_y) / radarScale);
             int dragX = static_cast<int>(
                 (dragMsg.m_codeX - m_advWindow->m_radarWidget->m_x) / radarScale);
-            int newX = cppMin(cppMax(0, dragX), g_mapWidth - 1);
-            int newY = cppMin(cppMax(0, dragY), g_mapWidth - 1);
-            m_radarOrigin.m_x = newX - 9;
-            m_radarOrigin.m_y = newY - 8;
+            dragX = cppMax(dragX, 0);
+            dragX = cppMin(dragX, g_mapWidth - 1);
+            dragY = cppMax(dragY, 0);
+            dragY = cppMin(dragY, g_mapWidth - 1);
+            m_radarOrigin.m_x = dragX - 9;
+            m_radarOrigin.m_y = dragY - 8;
 
             updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
             completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
@@ -2150,9 +2151,8 @@ void advManager::processRadarSelect(const message* msg)
                     dragTime
                     - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
                 g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                    cppMax(dragElapsed,
-                             static_cast<long>(
-                                 ADVENTURE_ANIMATION_MAX_ELAPSED));
+                    cppMax(static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED),
+                           dragElapsed);
             }
             process1WindowsMessage();
             dragMsg.m_id = 0;
