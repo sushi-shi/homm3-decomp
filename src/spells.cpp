@@ -4492,7 +4492,7 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 // makes VC6 fold the member into `this + 0x13d38` addressing and reload
 // the sprite's Width and Height at every use.
 
-// Residual (84.96%): the register-homing class, and it is one decision.
+// Earlier residual (84.96%): the register-homing class.
 // Retail memory-homes `this` at [ebp-8] and reloads it, which frees all
 // three callee-saved registers for the animation body's own
 // call-crossing values - ESI takes `&drawbridgeBounds`, EDI the
@@ -4506,8 +4506,13 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 // TU - and all twenty other mutations are worse still.
 // THE NUMERATOR IS ALSO RULED OUT (2026-08-20): the `if (0)` cb instrument
 // at 8, 32 and 128 inert statements is byte-flat at 84.9579, so no
-// caller-size dose re-prices this body's inline decisions and the
-// register-homing reading above stands as the whole residual.
+// caller-size dose re-prices this body's inline decisions.
+// Dreamcast line 5271 records SLimitData's four-argument constructor, line
+// 5277 its Clip call, and line 5288 its Width/Height calls. Restoring these
+// source boundaries lifts 84.9579% to 86.91573% in VC6. Mac keeps the
+// rectangle operations in its lightly optimized body, while Windows
+// expands the calls. The remaining mismatch is register homing; 45 of 46
+// CFG blocks now have exact shape, with all 25 branches and calls aligned.
 VA(0x005a7c80, 0x408)  // order-map+arity, dc 0x156ec4
 void combatManager::earthquake(int level)
 {
@@ -4586,26 +4591,15 @@ void combatManager::earthquake(int level)
                 int top = y - h / 2;
                 int bottom = y + (h - h / 2) - 1;
                 TDrawbridgeBounds* bounds = &m_drawbridgeBounds;
-                bounds->m_minX = left;
-                bounds->m_minY = top;
-                bounds->m_maxX = right;
-                bounds->m_maxY = bottom;
-                if (bounds->m_minX < g_combatDrawLimits.m_minX)
-                    bounds->m_minX = g_combatDrawLimits.m_minX;
-                if (bounds->m_minY < g_combatDrawLimits.m_minY)
-                    bounds->m_minY = g_combatDrawLimits.m_minY;
-                if (bounds->m_maxX > g_combatDrawLimits.m_maxX)
-                    bounds->m_maxX = g_combatDrawLimits.m_maxX;
-                if (bounds->m_maxY > g_combatDrawLimits.m_maxY)
-                    bounds->m_maxY = g_combatDrawLimits.m_maxY;
+                *bounds = TDrawbridgeBounds(left, top, right, bottom);
+                bounds->clip(g_combatDrawLimits);
                 if (frame == g_earthquakeImpactFrame) {
                     TWallTargetId wall;
                     memcpy(&wall, &i, sizeof wall);
                     damageWall(wall, counts[i]);
                 }
                 blast->draw(0, frame, 0, 0,
-                            bounds->m_maxX - bounds->m_minX + 1,
-                            bounds->m_maxY - bounds->m_minY + 1,
+                            bounds->width(), bounds->height(),
                             g_windowManager->m_screenBitmap->getMap(0, 0),
                             x - blast->getWidth() / 2, y - blast->getHeight() / 2,
                             g_windowManager->m_screenBitmap->getWidth(),
@@ -4613,8 +4607,7 @@ void combatManager::earthquake(int level)
                             g_windowManager->m_screenBitmap->getPitch(), 0, 1);
                 g_windowManager->updateScreen(
                     bounds->m_minX, bounds->m_minY,
-                    bounds->m_maxX - bounds->m_minX + 1,
-                    bounds->m_maxY - bounds->m_minY + 1);
+                    bounds->width(), bounds->height());
             }
             GameTime::delayTil(frameTil);
         }
