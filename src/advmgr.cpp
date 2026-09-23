@@ -2178,9 +2178,11 @@ void advManager::processRadarSelect(const message* msg)
 // arm. 77.76 -> 90.90 on that one edit.
 
 // Restoring GetCell alone measured 87.5712%; restoring the retail-proven
-// live-member reads as well is 84.9222%. Keep those reads despite the score
-// dip. Cell/register homes and the duplicated VIEW_HERO dispatch remain
-// different. Historical explicit-goto models changed the wrong CFG (88.463%);
+// live-member reads as well measured 84.9222%. DC line 2438 and retail call
+// #1 both retain GetLocalPlayer for a playerData* local; restoring that local
+// brings the current body to 87.9507%. Cell/register homes and the duplicated
+// VIEW_HERO dispatch remain different. Historical explicit-goto models changed
+// the wrong CFG (88.463%);
 // hoisting the DC locals alone was byte-flat in that older context.
 // The redundant `currHeroId != -1` guard is retail's own: its inlined
 // GetHero re-tests the id off the same flags and leaves a dead
@@ -2190,7 +2192,7 @@ VA(0x0040a5d0, 0x606)  // anchor-callee, dc 0xa88c
 void advManager::processMapSelect(const message* msg, type_point* triggerPoint, NewmapCell** peventCell)
 {
     int visibilityBit = 1 << g_game->getLocalPlayerGamePos();
-    int localPlayer = g_game->getLocalPlayerGamePos();
+    playerData* player = g_game->getLocalPlayer();
 
     type_point point = m_lastMapHover;
     if (!point.isValid())
@@ -2213,7 +2215,7 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
 
         TAdventureObjectType objType;
         int objIndex;
-        if (g_currentPlayer == &g_game->m_players[localPlayer]
+        if (g_currentPlayer == player
             && m_lastHoverX == HERO_VIEW_TILE_X
             && m_lastHoverY == HERO_VIEW_TILE_Y
             && g_currentPlayer->m_currHeroId != -1 && m_curHeroMobile) {
