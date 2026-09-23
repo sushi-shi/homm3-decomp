@@ -4243,8 +4243,8 @@ bool considerHiring(long playerId, hero* candidate)
 // also names the non-const town::get_army overload. The normalized retail
 // target labels the one surviving ICF-folded body with the const public, but
 // that synthesized name cannot prove which identical source overload called
-// it. A const-receiver cast is byte/score-flat and violates the positive DC
-// fact, so it is not an admissible reconstruction.
+// it. Keep the DC-proven mutable receiver; VC6 folds both overload bodies
+// into the same target and this source correction is byte-flat.
 // Residual (99.95219%): all 56 blocks and 481 instructions agree; only two
 // stack-color classes differ. Retail uses {player_id,-0x14; i,-0x1c} where
 // our CL swaps them (their later best-value/touched partners follow), and
@@ -4261,7 +4261,7 @@ long valueOfHiring(town* currentTown, hero* candidate,
     short playerId = currentTown->m_owner;
     playerData* player = &g_game->m_players[currentTown->m_owner];
     armyGroup heroArmy = candidate->m_army;
-    armyGroup townArmy = static_cast<const town*>(currentTown)->getArmy();
+    armyGroup townArmy = currentTown->getArmy();
     type_AI_creature_purchaser purchaser(playerId, currentTown);
 
     candidate->m_turnExperienceToRvRatio = 0;
