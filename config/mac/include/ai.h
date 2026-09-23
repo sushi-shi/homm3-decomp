@@ -89,7 +89,7 @@ typedef int SpellID;
 struct type_artifact {
     TArtifact m_artifactId;
     int m_extra;
-#include "type_artifact_constructors.inl"
+#include "mac_shared/type_artifact_constructors.h"
 };
 
 struct TArtifactTraits {
@@ -101,8 +101,8 @@ extern const TArtifactTraits (&g_artifactTraits)[144];
 extern long long g_bitNumber[];
 extern const unsigned char g_castleWallColumns[];
 long aiGetValueOfArtifact(const type_artifact& artifact, long playerId);
-#include "inline/cpp_max.inl"
-#include "inline/max_int.inl"
+#include "mac_shared/cpp_max.h"
+#include "mac_shared/max_int.h"
 
 int random(int min, int max);
 class army;
@@ -149,7 +149,7 @@ public:
     long long m_built;
     long long m_active;
     char m_tail[0x15c - 0x154];
-#include "inline/town_has_building.inl"
+#include "mac_shared/town_has_building.h"
 };
 
 class hero {
@@ -165,8 +165,8 @@ public:
     unsigned char m_artifactSlotCounts[15];
     type_artifact m_backpack[64];
     unsigned char isWieldingArtifact(int artifact) const;
-#include "inline/hero_get_artifact.inl"
-#include "inline/hero_get_backpack.inl"
+#include "mac_shared/hero_get_artifact.h"
+#include "mac_shared/hero_get_backpack.h"
 };
 #pragma options align=reset
 
@@ -174,7 +174,7 @@ class game {
 public:
     // chooseMeleeTarget's second pre-map gate reads this word at +0x1ef24.
     char m_beforeVersion[0x1ef24];
-    int m_f1f698;
+    int m_gameVersion;
     char m_beforeSetup[0x1ef64 - 0x1ef28];
     MacGameSetup m_setup;
     char m_beforeMapHeader[0x1f0f8 - 0x1ef65];
@@ -183,7 +183,7 @@ public:
     playerData m_players[8];
     char m_beforeTowns[0x20a30 - 0x1ff48 - 8 * sizeof(playerData)];
     town* m_towns;
-#include "inline/game_get_town.inl"
+#include "mac_shared/game_get_town.h"
 };
 extern game* g_game;
 
@@ -206,7 +206,7 @@ struct type_AI_combat_parameters {
     type_AI_combat_parameters(const combatManager* combat, long side);
     long getSimpleAttackEffect(const army& currentArmy, const army& enemy,
                                unsigned char ranged, long distance) const;
-#include "inline/ai_parameters_get_group.inl"
+#include "mac_shared/ai_parameters_get_group.h"
     long getEnemyGroup() const { return m_enemyGroup; }
 };
 
@@ -228,9 +228,9 @@ struct type_AI_attack_hex_chooser {
                                const long* attackArray, searchArray* search,
                                const type_AI_combat_parameters* combatData);
     unsigned char findAttackHex();
-#include "inline/ai_attack_chooser_get_attack_time.inl"
-#include "inline/ai_attack_chooser_get_best_hex.inl"
-#include "inline/ai_attack_chooser_get_hex_value.inl"
+#include "mac_shared/ai_attack_chooser_get_attack_time.h"
+#include "mac_shared/ai_attack_chooser_get_best_hex.h"
+#include "mac_shared/ai_attack_chooser_get_hex_value.h"
 };
 
 struct type_AI_spellcaster {
@@ -285,7 +285,7 @@ class searchArray {
     char pad[0x24];
     pathCell* m_cellData;
 public:
-#include "inline/search_get_hex.inl"
+#include "mac_shared/search_get_hex.h"
     long getTravelTime(const army* currentArmy, long hex) const;
     void seedCombatPosition(const army* thisArmy, long currentGroup,
                             long limit, unsigned char inPlacementPhase,
@@ -353,19 +353,19 @@ public:
     void considerAttack(const army* enemy, long value, long attackDistance);
 };
 
-#include "inline/army_is.inl"
-#include "inline/army_offset_to_front.inl"
-#include "inline/army_get_ai_target.inl"
-#include "inline/army_get_ai_target_time.inl"
-#include "inline/army_is_incapacitated.inl"
-#include "inline/army_cannot_attack.inl"
-#include "inline/army_get_spell_time.inl"
-#include "inline/army_clear_ai_values.inl"
-#include "inline/army_is_active.inl"
+#include "mac_shared/army_is.h"
+#include "mac_shared/army_offset_to_front.h"
+#include "mac_shared/army_get_ai_target.h"
+#include "mac_shared/army_get_ai_target_time.h"
+#include "mac_shared/army_is_incapacitated.h"
+#include "mac_shared/army_cannot_attack.h"
+#include "mac_shared/army_get_spell_time.h"
+#include "mac_shared/army_clear_ai_values.h"
+#include "mac_shared/army_is_active.h"
 
 class combatManager {
 public:
-#include "inline/combat_valid_hex.inl"
+#include "mac_shared/combat_valid_hex.h"
     char pad0[0x3c];
     int m_nextAction;
     int m_nextActionExtra;
@@ -404,7 +404,7 @@ public:
     bool sodChooseFaerieDragonSpell(const army* currentArmy, long& bestValue,
                                     type_AI_combat_parameters& estimate);
     void turnOffHighlighter(unsigned char restore);
-#include "inline/combat_get_current_army.inl"
+#include "mac_shared/combat_get_current_army.h"
     void placeShooter(const army* currentArmy);
     void chooseShooterAction(const army* currentArmy,
                              unsigned char simulated, long side);
@@ -443,9 +443,9 @@ public:
     unsigned char chooseToRun(const army* currentArmy,
                               const long* enemyAttacks,
                               const searchArray* currentSearchArray);
-#include "inline/combat_grid_y.inl"
-#include "inline/combat_grid_x.inl"
-#include "inline/combat_in_invisible_column.inl"
+#include "mac_shared/combat_grid_y.h"
+#include "mac_shared/combat_grid_x.h"
+#include "mac_shared/combat_in_invisible_column.h"
     int chooseBallistaTarget(int targetGroup, int attackSkill, int averageDamage);
     void findAITargets(long ourGroup, const army* currentArmy,
                        unsigned char meleeOnly,

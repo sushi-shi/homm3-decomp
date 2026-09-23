@@ -25,6 +25,8 @@ enum TTownType { TOWN_CASTLE = 0, TOWN_TOWER = 2 };
 extern "C" char* strcpy(char* destination, const char* source);
 extern "C" unsigned long strlen(const char* text);
 extern "C" int sprintf(char* destination, const char* format, ...);
+// The Mac object names the same eight player-color pointers differently.
+#define g_colors g_playerColorNames
 // CodeWarrior MSL cctype uses its library-owned Mac Roman table and preserves
 // EOF. See ../macos/cw/all/MSL_-_C_-_Common_-_Libs/cctype.
 extern "C" unsigned char __upper_map[];
@@ -125,7 +127,7 @@ struct LossConditionStruct {
     char m_beforeLossFlags[0x22 - 0x20];
     unsigned char m_gameLost;
     signed char m_playerLoser;
-#include "inline/loss_condition_ctor.inl"
+#include "mac_shared/loss_condition_ctor.h"
 };
 enum {
     LOSS_CONDITION_LOSE_TOWN = 0,
@@ -188,19 +190,19 @@ public:
     int m_subType;
     unsigned long m_size;
     int m_uncompressedSize;
-#include "inline/netmsg_cnetmsg_ctor.inl"
+#include "mac_shared/netmsg_cnetmsg_ctor.h"
 };
 class CPlayerLostMsg : public CNetMsg {
 public:
     int m_loser;
     LossConditionStruct m_lossCondition;
-#include "inline/netmsg_player_lost_ctor.inl"
+#include "mac_shared/netmsg_player_lost_ctor.h"
 };
 class CPlayerWonMsg : public CNetMsg {
 public:
     int m_gamePos;
     VictoryConditionStruct m_victoryCondition;
-#include "inline/netmsg_player_won_ctor.inl"
+#include "mac_shared/netmsg_player_won_ctor.h"
 };
 int transmitRemoteData(CNetMsg* msg, int toWho, bool compressMsg, bool guaranteed);
 
@@ -236,9 +238,9 @@ public:
 private:
     NewmapCell* zCell(int x, int y, int z);
 };
-#include "inline/mapcell_get_num_levels.inl"
-#include "inline/mapcell_z_cell.inl"
-#include "inline/mapcell_cell_xyz.inl"
+#include "mac_shared/mapcell_get_num_levels.h"
+#include "mac_shared/mapcell_z_cell.h"
+#include "mac_shared/mapcell_cell_xyz.h"
 
 extern unsigned long long g_bitNumber[];
 class town {
@@ -284,10 +286,10 @@ public:
     unsigned char canBuild(short buildingId) const;
     unsigned char canBuildDock() const;
     unsigned char isLegalBuilding(type_building_id building) const;
-#include "inline/town_get_building_mask.inl"
-#include "inline/town_has_building.inl"
-#include "inline/town_is_castle.inl"
-#include "inline/town_is_capitol.inl"
+#include "mac_shared/town_get_building_mask.h"
+#include "mac_shared/town_has_building.h"
+#include "mac_shared/town_is_castle.h"
+#include "mac_shared/town_is_capitol.h"
     type_building_id createBuilding(type_building_id building);
     void updateFullBuildingMask();
     void giveSpells(hero* forceHero) const;
@@ -354,15 +356,15 @@ public:
     playerData m_players[8];
     std::vector<town> m_towns;  // Mac first pointer at game+0x20a30.
     hero m_heroes[156];  // Mac stride 0x486, first hero game+0x20a34.
-    #include "game_get_hero.inl"
-    #include "inline/game_get_town.inl"
+    #include "mac_shared/game_get_hero.h"
+    #include "mac_shared/game_get_town.h"
     bool townAlreadyBuiltOn(int townId) const;
     bool isHumanAlly(int playerNum) const;
     bool isHumanTeam(int teamNum) const;
-#include "game_get_team.inl"
+#include "mac_shared/game_get_team.h"
     bool isHuman(int gamePos) const;  // Mac call 0xe6bf4.
     int getLocalPlayerGamePos() const;
-#include "inline/game_on_same_team.inl"
+#include "mac_shared/game_on_same_team.h"
     int getTownId(int x, int y, int z);
     char* getPlayerName(int gamePos);
     short getBaseMapScore() const;
@@ -373,18 +375,18 @@ public:
                        int playerNum, int radius, int sourceType);
 };
 
-#include "inline/game_get_current_turn.inl"
-#include "game_town_already_built.inl"
-#include "game_is_human_ally.inl"
+#include "mac_shared/game_get_current_turn.h"
+#include "mac_shared/game_town_already_built.h"
+#include "mac_shared/game_is_human_ally.h"
 
 extern game* g_game;  // TOC 1+0x630 -> pointer storage 1+0x528940.
 extern int g_gameOver;
 extern bool g_inCampaign;  // TOC 1+0x614 -> flag at 1+0x5270a4.
 extern char g_text[];
 // Canonical Windows declarations name the same 0x69954c cell differently.
-// The Mac loss sender reads the externally bound g_videoPaused storage.
-extern int g_videoPaused;
-#define g_networkActive69954c g_videoPaused
+// The Mac loss sender reads the externally bound g_remoteOn storage.
+extern int g_remoteOn;
+#define g_networkActive69954c g_remoteOn
 void sendPlayerLost();
 void sendPlayerWon();
 unsigned char getTeamNames(int player, char* names);
@@ -435,7 +437,7 @@ public:
 };
 
 enum { DIALOG_RETURN_CANCEL = 0x7801 };
-extern int g_unnamed699274;
+extern int g_numHumanPlayers;
 extern char g_mapName[];
 
 // The Mac dialog icon setter stores two four-byte string handles at +8/+12,
@@ -539,8 +541,8 @@ extern const SSpellTraits (&g_spellTraits)[81];
 extern const TSSkillTraits (&g_sSkillTraits)[28];
 extern const char* g_townBuildingSpriteNames[9];
 extern char* g_playerColorNames[];
-extern const char* g_primarySkillNames[4];
-extern const char* g_skillMasteryNames[3];
+extern const char* g_statNames[4];
+extern const char* g_secondarySkillLevels[3];
 extern const char* g_resourceNames[8];
 
 // The canonical getArmyName header body indexes 0x74-byte Mac creature
@@ -558,10 +560,72 @@ class TTextResource {
 public:
     char m_beforeText[0x1c];
     std::vector<char*> m_text;
-#include "inline/textresource_get_text.inl"
-#include "inline/textresource_index.inl"
+#include "mac_shared/textresource_get_text.h"
+#include "mac_shared/textresource_index.h"
 };
 extern const TTextResource* g_generalText;
+// Numeric IDs mirror the canonical GENERAL_TEXT enum in include/textresource.h.
+// This Mac declaration view compiles only admitted source bodies.
+enum {
+    GENERAL_TEXT_ALLIED_ARTIFACT_VICTORY_FORMAT = 638,
+    GENERAL_TEXT_ALLIED_BUILD_GRAIL_VICTORY_FORMAT = 642,
+    GENERAL_TEXT_ALLIED_KILL_MONSTER_VICTORY_FORMAT = 645,
+    GENERAL_TEXT_ALLIED_TRANSPORT_ARTIFACT_VICTORY_FORMAT = 652,
+    GENERAL_TEXT_ALLIED_UPGRADE_TOWN_VICTORY_FORMAT = 639,
+    GENERAL_TEXT_ANGELIC_ALLIANCE_COMPONENTS_RECOVERED = 738,
+    GENERAL_TEXT_ANGELIC_ALLIANCE_RECOVERED = 764,
+    GENERAL_TEXT_ARMAGEDDONS_BLADE_COMPLETE = 714,
+    GENERAL_TEXT_CHEATER = 261,
+    GENERAL_TEXT_ENEMY_ARTIFACT_VICTORY_FORMAT = 282,
+    GENERAL_TEXT_ENEMY_BUILD_GRAIL_VICTORY = 286,
+    GENERAL_TEXT_ENEMY_CAPTURE_TOWN_VICTORY_FORMAT = 251,
+    GENERAL_TEXT_ENEMY_CREATURE_COUNT_VICTORY_FORMAT = 278,
+    GENERAL_TEXT_ENEMY_FLAG_DWELLINGS_VICTORY = 290,
+    GENERAL_TEXT_ENEMY_FLAG_MINES_VICTORY = 292,
+    GENERAL_TEXT_ENEMY_KILL_MONSTER_VICTORY = 288,
+    GENERAL_TEXT_ENEMY_RESOURCE_COUNT_VICTORY_FORMAT = 280,
+    GENERAL_TEXT_ENEMY_TRANSPORT_ARTIFACT_VICTORY = 294,
+    GENERAL_TEXT_ENEMY_UPGRADE_TOWN_VICTORY = 284,
+    GENERAL_TEXT_EVENT_CREATURES_FORMAT = 588,
+    GENERAL_TEXT_LIST_AND = 142,
+    GENERAL_TEXT_LOCAL_ARTIFACT_VICTORY_FORMAT = 281,
+    GENERAL_TEXT_LOCAL_BUILD_GRAIL_VICTORY = 285,
+    GENERAL_TEXT_LOCAL_CAPTURE_TOWN_VICTORY_FORMAT = 250,
+    GENERAL_TEXT_LOCAL_CREATURE_COUNT_VICTORY_FORMAT = 277,
+    GENERAL_TEXT_LOCAL_DEFEAT_HERO_VICTORY_FORMAT = 253,
+    GENERAL_TEXT_LOCAL_FLAG_DWELLINGS_VICTORY = 289,
+    GENERAL_TEXT_LOCAL_FLAG_MINES_VICTORY = 291,
+    GENERAL_TEXT_LOCAL_KILL_MONSTER_VICTORY = 287,
+    GENERAL_TEXT_LOCAL_RESOURCE_COUNT_VICTORY_FORMAT = 279,
+    GENERAL_TEXT_LOCAL_TRANSPORT_ARTIFACT_VICTORY = 293,
+    GENERAL_TEXT_LOCAL_UPGRADE_TOWN_VICTORY = 283,
+    GENERAL_TEXT_LOSE_HERO_DEFEAT_FORMAT = 254,
+    GENERAL_TEXT_LOSE_TOWN_DEFEAT_FORMAT = 252,
+    GENERAL_TEXT_LOSS_HERO_DEFEATED_FORMAT = 671,
+    GENERAL_TEXT_ONE_LEVEL_BONUS = 443,
+    GENERAL_TEXT_PER_DAY_FORMAT = 4,
+    GENERAL_TEXT_RECRUIT_TITLE = 17,
+    GENERAL_TEXT_REMOTE_PLAYER_ARTIFACT_VICTORY_FORMAT = 632,
+    GENERAL_TEXT_REMOTE_PLAYER_BUILD_GRAIL_VICTORY_FORMAT = 643,
+    GENERAL_TEXT_REMOTE_PLAYER_CREATURE_COUNT_VICTORY_FORMAT = 634,
+    GENERAL_TEXT_REMOTE_PLAYER_FLAG_DWELLINGS_VICTORY_FORMAT = 648,
+    GENERAL_TEXT_REMOTE_PLAYER_FLAG_MINES_VICTORY_FORMAT = 650,
+    GENERAL_TEXT_REMOTE_PLAYER_KILL_MONSTER_VICTORY_FORMAT = 646,
+    GENERAL_TEXT_REMOTE_PLAYER_RESOURCE_COUNT_VICTORY_FORMAT = 636,
+    GENERAL_TEXT_REMOTE_PLAYER_TRANSPORT_ARTIFACT_VICTORY_FORMAT = 653,
+    GENERAL_TEXT_REMOTE_PLAYER_UPGRADE_TOWN_VICTORY_FORMAT = 640,
+    GENERAL_TEXT_REMOTE_TEAM_ARTIFACT_VICTORY_FORMAT = 633,
+    GENERAL_TEXT_REMOTE_TEAM_BUILD_GRAIL_VICTORY_FORMAT = 644,
+    GENERAL_TEXT_REMOTE_TEAM_CREATURE_COUNT_VICTORY_FORMAT = 635,
+    GENERAL_TEXT_REMOTE_TEAM_FLAG_DWELLINGS_VICTORY_FORMAT = 649,
+    GENERAL_TEXT_REMOTE_TEAM_FLAG_MINES_VICTORY_FORMAT = 651,
+    GENERAL_TEXT_REMOTE_TEAM_KILL_MONSTER_VICTORY_FORMAT = 647,
+    GENERAL_TEXT_REMOTE_TEAM_RESOURCE_COUNT_VICTORY_FORMAT = 637,
+    GENERAL_TEXT_REMOTE_TEAM_TRANSPORT_ARTIFACT_VICTORY_FORMAT = 654,
+    GENERAL_TEXT_REMOTE_TEAM_UPGRADE_TOWN_VICTORY_FORMAT = 641,
+    GENERAL_TEXT_SPELL_POINTS_LABEL = 388,
+    GENERAL_TEXT_TIME_LIMIT_DEFEAT = 255,
+};
 
 struct MacFontSettings {
     char m_beforeHeight[0x21];
@@ -576,7 +640,7 @@ public:
     int longestWrappedLineWidth(const char* text, int width) const;
     int longestWordLength(const char* text) const;
 };
-extern font* g_unnamed698a08;
+extern font* g_smallFont;
 extern font* g_mediumFont;  // Mac TOC 1+0xbc0 -> external pointer 1+0x52708c.
 // The owning KB TU defines this constant as 110; the Mac target uses li 110.
 static const int g_dialogIconMaxTextWidth = 110;
@@ -601,7 +665,7 @@ CSprite* getSprite(const char* name);
 
 std::string formatString(const char* format, ...);
 const char* getBuildingName(int townType, int buildingId);
-#include "inline/creaturetype_get_army_name.inl"
+#include "mac_shared/creaturetype_get_army_name.h"
 inline int max(int left, int right) { return left > right ? left : right; }
 inline int min(int left, int right) { return left < right ? left : right; }
 #define HIWORD(value) (static_cast<unsigned short>((static_cast<unsigned long>(value) >> 16)))

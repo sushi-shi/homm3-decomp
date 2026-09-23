@@ -7,7 +7,7 @@ source = "src/mapcell.cpp"
 mac_section = 0
 mac_offset = 0x1270c0
 mac_size = 0x1b8
-mac_symbol = ".newfullMapFn005042C0__10NewfullMapFv"
+mac_symbol = ".rebuildObjectTypeIndex__10NewfullMapFv"
 target_sha256 = "39148d7b1a3be8446296eb06db52aaf71e9ed0750c47ba3f02ac8e7a2cc3b1ea"
 evidence = "The Mac body at 0:0x1270c0 clears resolved halfword indices at +0x36 across 232 per-class vectors using four unrolled groups of 58, then scans 0x38-byte objectType records backward, compares extra and image names, and stores the source object index. Its prologue follows the prior blr at 0x1270bc; its blr at 0x127274 precedes the next prologue at 0x127278. Exactly two inbound calls at 0x1273d8 and 0x127890 follow the two object-type readers, matching Windows readMapObjects and loadMapObjects."
 

@@ -55,7 +55,7 @@ struct type_point {
     short m_y : 10;
     short m_z : 4;
     type_point() {}
-#include "inline/type_point_ctor.inl"
+#include "mac_shared/type_point_ctor.h"
 };
 
 #pragma options align=packed
@@ -100,7 +100,7 @@ class searchArray {
     unsigned char m_beforeCellData[0x24];
     pathCell* m_cellData;
 public:
-#include "inline/search_get_cell.inl"
+#include "mac_shared/search_get_cell.h"
 };
 
 class armyGroup {
@@ -299,7 +299,7 @@ private:
     unsigned char m_wasTrigger;
 public:
     char m_paddingBeforeExtraInfo[3];
-#include "inline/obscuring_object_get_location.inl"
+#include "mac_shared/obscuring_object_get_location.h"
 private:
     unsigned long m_extraInfo;
 };
@@ -334,11 +334,11 @@ public:
     int getManaCost(int whichSpell, const armyGroup* enemy,
                     int magicTerrain) const;
     TSkillMastery getSpellLevel(SpellID spell, int magicTerrain) const;
-#include "inline/hero_spell_is_available.inl"
+#include "mac_shared/hero_spell_is_available.h"
     TAdventureObjectType heroFn004E4EC0();
-#include "inline/hero_get_mana_cost.inl"
-#include "inline/hero_get_spell_level.inl"
-#include "inline/hero_get_target.inl"
+#include "mac_shared/hero_get_mana_cost.h"
+#include "mac_shared/hero_get_spell_level.h"
+#include "mac_shared/hero_get_target.h"
     void useSpell(int cost);
 private:
     unsigned char m_beforeFlags[0x105 - 0x91 - sizeof(armyGroup)];
@@ -409,17 +409,17 @@ public:
     playerData m_players[8];
     std::vector<town> m_towns;
     hero m_heroes[156];
-#include "game_get_hero.inl"
-#include "inline/game_get_town.inl"
+#include "mac_shared/game_get_hero.h"
+#include "mac_shared/game_get_town.h"
     bool townAlreadyBuiltOn(int townId) const;
     bool isHumanTeam(int teamNum) const;
     bool isHumanAlly(int playerNum) const;
-#include "game_get_team.inl"
+#include "mac_shared/game_get_team.h"
     NewmapCell* getCell(type_point point);
 };
-#include "inline/game_get_cell.inl"
-#include "game_town_already_built.inl"
-#include "game_is_human_ally.inl"
+#include "mac_shared/game_get_cell.h"
+#include "mac_shared/game_town_already_built.h"
+#include "mac_shared/game_is_human_ally.h"
 extern game* g_game;
 extern int g_netLocalGamePos;
 
@@ -463,8 +463,8 @@ public:
 };
 #pragma options align=reset
 
-#include "inline/mapcell_z_cell.inl"
-#include "inline/mapcell_cell_xyz.inl"
+#include "mac_shared/mapcell_z_cell.h"
+#include "mac_shared/mapcell_cell_xyz.h"
 
 class advManager {
 public:

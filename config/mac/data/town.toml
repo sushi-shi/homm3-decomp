@@ -10,7 +10,7 @@ evidence = "Mac initializeSpells loads TOC 1+0x690 -> 1+0x354c8 and indexes eigh
 
 [[data]]
 retail_va = 0x006782a4
-source = "include/town.h"
+source = "src/town.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x43218

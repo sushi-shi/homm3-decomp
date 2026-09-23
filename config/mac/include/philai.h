@@ -11,6 +11,7 @@
 #define __forceinline inline
 typedef long long __int64;
 enum TCreatureType { CREATURE_NONE = -1 };
+enum { creatureShootingArmy = 0x00000004U };
 #include "herospec.h"
 
 enum EGameResource { WOOD = 0, GOLD = 6 };
@@ -39,7 +40,7 @@ typedef int SpellID;
 struct type_artifact {
     TArtifact m_artifactId;
     int m_extra;
-#include "type_artifact_constructors.inl"
+#include "mac_shared/type_artifact_constructors.h"
 };
 
 struct armyGroup {
@@ -54,10 +55,11 @@ class mouseManager {
 public:
     char m_beforeHideCount[0x68];
     int m_hideCount;
-#include "inline/mousemgr_is_vis.inl"
+#include "mac_shared/mousemgr_is_vis.h"
     void showPointer(bool restore);
 };
 extern mouseManager* g_mouseManager;
+extern int g_sandAnim;
 
 #pragma options align=packed
 class hero {
@@ -68,9 +70,9 @@ public:
     long getNumberInBackpack(unsigned char countWarMachines) const;
     unsigned char giveArtifact(const type_artifact* artifact,
                                unsigned char announce, unsigned char checkEnd);
-#include "inline/hero_get_primary_skill.inl"
-#include "inline/hero_get_value_of_power.inl"
-#include "inline/hero_get_value_of_knowledge.inl"
+#include "mac_shared/hero_get_primary_skill.h"
+#include "mac_shared/hero_get_value_of_power.h"
+#include "mac_shared/hero_get_value_of_knowledge.h"
     unsigned char isWieldingArtifact(int artifact) const;
     static int getExperienceIncrement(int level);
     // Mac getSkillValue reads the troop IDs at +0x91, counts at +0xad,
@@ -185,7 +187,7 @@ public:
     void applySpecialBuildingEffect(hero* townHero);
     const armyGroup& getArmy() const;
     void swapHeroes();
-#include "inline/town_has_building.inl"
+#include "mac_shared/town_has_building.h"
 };
 #pragma options align=reset
 
@@ -212,7 +214,7 @@ struct NewfullMap {
     unsigned char m_hasTwoLevels;
     int getNumLevels();
 };
-#include "inline/mapcell_get_num_levels.inl"
+#include "mac_shared/mapcell_get_num_levels.h"
 struct game {
     char m_beforeSetup[0x1ef64];
     gameSetup m_setup;
@@ -226,18 +228,18 @@ struct game {
     // game+0x20a34 + which*0x486 immediately after the 12-byte vector.
     std::vector<town> m_towns;
     hero m_heroes[156];
-#include "game_get_hero.inl"
+#include "mac_shared/game_get_hero.h"
     int getTownId(int x, int y, int z);
-#include "inline/game_get_town.inl"
-#include "inline/game_get_curr_hero.inl"
-#include "inline/game_get_num_map_levels.inl"
-#include "game_get_team.inl"
+#include "mac_shared/game_get_town.h"
+#include "mac_shared/game_get_curr_hero.h"
+#include "mac_shared/game_get_num_map_levels.h"
+#include "mac_shared/game_get_team.h"
     bool isHumanTeam(int teamNum) const;
     bool isHumanAlly(int playerNum) const;
     bool townAlreadyBuiltOn(int townId) const;
 };
 extern game* g_game;
-#include "game_is_human_ally.inl"
+#include "mac_shared/game_is_human_ally.h"
 
 // The Mac artifact-trait table has 0x20-byte rows and disabled at +0x1c.
 struct TArtifactTraits {
@@ -256,14 +258,14 @@ public:
 };
 class type_AI_player {
 public:
-#include "ai_player_set_attack_bonuses.inl"
+#include "mac_shared/ai_player_set_attack_bonuses.h"
     void buyCreatures(hero* currentHero, town* currentTown);
     void buyMageGuild(hero* currentHero, town* currentTown);
     // Estate valuation loads GOLD's value at player +0x8c and indexes
     // g_aiPlayers with a 0x94-byte stride, so the seven doubles start +0x5c.
     char m_beforeResourceValue[0x5c];
     double m_resourceValue[7];
-#include "ai_player_get_resource_value.inl"
+#include "mac_shared/ai_player_get_resource_value.h"
     static float s_attackHumanBonus;
     static float s_attackComputerBonus;
 };
@@ -290,21 +292,21 @@ class searchArray {
 public:
     char m_beforeDangerZones[0x60];
     long* m_dangerZones;
-#include "inline/search_set_danger_zones.inl"
+#include "mac_shared/search_set_danger_zones.h"
 };
 extern searchArray* g_searchArray;
 extern int g_gameOver;
-extern int g_unnamed69ccd4;
+extern int g_aiHeroMoveActive;
 // DC MoveHero reads ?gConfig@@3UconfigStruct@@A+0x38; the Mac body does
 // likewise through TOC 1+0x5c4. Complete owns the equivalent standalone
 // visibility flag at g_unnamed698790 (0x698790).
 struct MacConfig {
     char m_beforeVisibilityFlag[0x38];
-    int m_visibilityScanSuppressed;
+    int m_blackoutComputer;
 };
 extern MacConfig g_config;
-#define g_unnamed698790 (g_config.m_visibilityScanSuppressed)
-extern int g_videoPaused;
+#define g_unnamed698790 (g_config.m_blackoutComputer)
+extern int g_remoteOn;
 extern unsigned char g_mapVisibilityBit;
 extern int g_completeDrawEnabled;
 extern int g_netLocalGamePos;

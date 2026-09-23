@@ -26,12 +26,160 @@
 #include "wingraph.h"
 #include "winmgr.h"
 
+// Initial contents recovered from the pinned Complete image.
+DATA(0x006839c0) SVideoDescriptor g_videoDescriptors[141] = {
+    { "Win3", "", 1, 0, 0, 0, { 0 } },
+    { "LoseCstl", "LoseCslp", 1, 0, 0, 0, { 0 } },
+    { "rtstart", "rtloop", 1, 0, 0, 0, { 0 } },
+    { "Surrender", "", 1, 0, 0, 0, { 0 } },
+    { "Defendall", "defendloop", 1, 0, 0, 0, { 0 } },
+    { "lbstart", "lbloop", 1, 0, 0, 0, { 0 } },
+    { "Tavern", "", 1, 0, 0, 0, { 0 } },
+    { "cgood1", "", 1, 0, 0, 1, { 0 } },
+    { "cgood2", "", 1, 0, 0, 1, { 0 } },
+    { "cgood3", "", 1, 0, 0, 1, { 0 } },
+    { "cneutral", "", 1, 0, 0, 1, { 0 } },
+    { "cevil1", "", 1, 0, 0, 1, { 0 } },
+    { "cevil2", "", 1, 0, 0, 1, { 0 } },
+    { "csecret", "", 1, 0, 0, 1, { 0 } },
+    { "C1ab7", "", 1, 0, 0, 1, { 0 } },
+    { "C1db2", "", 1, 0, 0, 1, { 0 } },
+    { "C1ds1", "", 1, 0, 0, 1, { 0 } },
+    { "C1fl3", "", 1, 0, 0, 1, { 0 } },
+    { "C1fw1", "", 1, 0, 0, 1, { 0 } },
+    { "C1pf2", "", 1, 0, 0, 1, { 0 } },
+    { "hack", "", 1, 0, 0, 1, { 0 } },
+    { "birth", "", 1, 0, 0, 1, { 0 } },
+    { "new", "", 1, 0, 0, 1, { 0 } },
+    { "elixir", "", 1, 0, 0, 1, { 0 } },
+    { "rise", "", 1, 0, 0, 1, { 0 } },
+    { "unholy", "", 1, 0, 0, 1, { 0 } },
+    { "spectre", "", 1, 0, 0, 1, { 0 } },
+    { "Testing", "", 1, 0, 0, 0, { 0 } },
+    { "3DOLogo", "", 0, 0, 1, 0, { 0 } },
+    { "NWCLogo", "", 1, 0, 1, 0, { 0 } },
+    { "H3Intro", "", 1, 0, 1, 0, { 0 } },
+    { "H3x1intr", "", 1, 0, 1, 0, { 0 } },
+    { "Endgame", "", 1, 0, 0, 0, { 0 } },
+    { "Credits", "", 0, 0, 0, 0, { 0 } },
+    { "LoseGame", "", 0, 0, 0, 0, { 0 } },
+    { "hsAnim", "hsloop", 0, 0, 0, 0, { 0 } },
+    { "PgTrnLft", "", 0, 0, 0, 0, { 0 } },
+    { "PgTrnRgh", "", 0, 0, 0, 0, { 0 } },
+    { "Good1A", "", 0, 0, 0, 0, { 0 } },
+    { "Good1B", "", 0, 0, 0, 0, { 0 } },
+    { "Good1C", "", 0, 0, 0, 0, { 0 } },
+    { "NeutralA", "", 0, 0, 0, 0, { 0 } },
+    { "NeutralB", "", 0, 0, 0, 0, { 0 } },
+    { "NeutralC", "", 0, 0, 0, 0, { 0 } },
+    { "NeutralC", "", 0, 0, 0, 0, { 0 } },
+    { "Evil1A", "", 0, 0, 0, 0, { 0 } },
+    { "Evil1B", "", 0, 0, 0, 0, { 0 } },
+    { "Evil1C", "", 0, 0, 0, 0, { 0 } },
+    { "Good2A", "", 0, 0, 0, 0, { 0 } },
+    { "Good2B", "", 0, 0, 0, 0, { 0 } },
+    { "Good2C", "", 0, 0, 0, 0, { 0 } },
+    { "Good2D", "", 0, 0, 0, 0, { 0 } },
+    { "Good3A", "", 0, 0, 0, 0, { 0 } },
+    { "Good3B", "", 0, 0, 0, 0, { 0 } },
+    { "Good3C", "", 0, 0, 0, 0, { 0 } },
+    { "Evil2A", "", 0, 0, 0, 0, { 0 } },
+    { "Evil2B", "", 0, 0, 0, 0, { 0 } },
+    { "Evil2C", "", 0, 0, 0, 0, { 0 } },
+    { "Evil2D", "", 0, 0, 0, 0, { 0 } },
+    { "SecretA", "", 0, 0, 0, 0, { 0 } },
+    { "SecretB", "", 0, 0, 0, 0, { 0 } },
+    { "SecretC", "", 0, 0, 0, 0, { 0 } },
+    { "Evil2ap1", "Evil2ap2", 0, 1, 1, 0, { 0 } },
+    { "ProgressBar", "", 0, 0, 0, 1, { 0 } },
+    { "h3abab1", "", 0, 0, 0, 0, { 0 } },
+    { "h3abab2", "", 0, 0, 0, 0, { 0 } },
+    { "h3abab3", "", 0, 0, 0, 0, { 0 } },
+    { "h3abab4", "", 0, 0, 0, 0, { 0 } },
+    { "h3abab5", "", 0, 0, 0, 0, { 0 } },
+    { "h3abab6", "", 0, 0, 0, 0, { 0 } },
+    { "h3abab7", "", 0, 0, 0, 0, { 0 } },
+    { "h3abab8", "", 0, 0, 0, 0, { 0 } },
+    { "h3abab9", "", 0, 0, 0, 0, { 0 } },
+    { "h3abdb1", "", 0, 0, 0, 0, { 0 } },
+    { "h3abdb2", "", 0, 0, 0, 0, { 0 } },
+    { "h3abdb3", "", 0, 0, 0, 0, { 0 } },
+    { "h3abdb4", "h3abdb4b", 0, 0, 0, 0, { 0 } },
+    { "h3abdb5", "", 0, 0, 0, 0, { 0 } },
+    { "h3abds1", "", 0, 0, 0, 0, { 0 } },
+    { "h3abds2", "", 0, 0, 0, 0, { 0 } },
+    { "h3abds3", "", 0, 0, 0, 0, { 0 } },
+    { "h3abds4", "", 0, 0, 0, 0, { 0 } },
+    { "h3abds5", "", 0, 0, 0, 0, { 0 } },
+    { "h3abfl1", "", 0, 0, 0, 0, { 0 } },
+    { "h3abfl2", "", 0, 0, 0, 0, { 0 } },
+    { "h3abfl3", "", 0, 0, 0, 0, { 0 } },
+    { "h3abfl4", "", 0, 0, 0, 0, { 0 } },
+    { "h3abfl5", "", 0, 0, 0, 0, { 0 } },
+    { "h3abfw1", "", 0, 0, 0, 0, { 0 } },
+    { "h3abfw2", "", 0, 0, 0, 0, { 0 } },
+    { "h3abfw3", "", 0, 0, 0, 0, { 0 } },
+    { "h3abfw4", "", 0, 0, 0, 0, { 0 } },
+    { "h3abfw5", "", 0, 0, 0, 0, { 0 } },
+    { "h3abpf1", "", 0, 0, 0, 0, { 0 } },
+    { "h3abpf2", "", 0, 0, 0, 0, { 0 } },
+    { "h3abpf3", "", 0, 0, 0, 0, { 0 } },
+    { "h3abpf4", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_HSa", "", 0, 0, 0, 0, { 0 } },
+    { "Evil2C", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_HSc", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_HSd", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_HSe", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_BBa", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_BBb", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_BBc", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_BBd", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_BBe", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_BBf", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_NBa", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_NBb", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_NBc", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_NBd", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_NBe", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_ELa", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_ELb", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_ELc", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_ELd", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_ELe", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_RNa", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_RNb", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_RNc", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_RNd", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_RNe1", "H3x2_RNe2", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAa", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAb", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAc", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAd", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAe", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAf", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAg", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAh", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAi", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAj", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAk", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAl", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_UAm", "", 1, 0, 0, 0, { 0 } },
+    { "H3x2_SPa", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_SPb", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_SPc", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_SPd", "", 0, 0, 0, 0, { 0 } },
+    { "H3x2_SPe", "", 0, 0, 0, 0, { 0 } }
+};
+
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x006839b8) char g_archiveDriveLetter = 'd';
+
 // The drive letter the misc.obj install scan settled on. It is WRITTEN at
 // 0x50c278 inside that scan (still unclaimed) and READ only there and by
 // GetDriveArchivePath below, which is why the definition is left with its
 // owning TU: 0x6839b8's .data neighbours are singleselectionwindow's and
 // spellbookwindow's blocks, not smackmgr's. Retail initialises it to 'd'.
-DATA(0x006839b8) extern char g_archiveDriveLetter;
+
 
 // The Smack/Bink handle views and import declarations come from the SDK
 // headers included by smackmgr.h / binkmanager.h.
@@ -158,7 +306,7 @@ int videoPlay(int id, int x, int y, int w, int h)
     unsigned char aborted;
 
     if (id >= VIDEO_ID_FIRST_TABLED
-        && (!g_videoDescriptors[id].m_useBink || !g_unnamed698758.m_binkVideo
+        && (!g_videoDescriptors[id].m_useBink || !g_config.m_binkVideo
             || (id == VIDEO_ID_STATE_GATED
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH))) {
@@ -198,7 +346,7 @@ int videoPlay(int id, int x, int y, int w, int h)
                             // fall through
                         case MESSAGE_LEFT_BUTTON_DOWN:
                         case MESSAGE_RIGHT_BUTTON_DOWN:
-                            if (!g_videoNoSkip) {
+                            if (!g_firstTimeThrough) {
                                 aborted = 1;
                                 break;
                             }
@@ -229,7 +377,7 @@ VA(0x00597570, 0x75)  // dc 0x14ac3c
 void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8)
 {
     if (id >= VIDEO_ID_FIRST_TABLED
-        && (!g_videoDescriptors[id].m_useBink || !g_unnamed698758.m_binkVideo
+        && (!g_videoDescriptors[id].m_useBink || !g_config.m_binkVideo
             || (id == VIDEO_ID_STATE_GATED
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))
@@ -567,8 +715,8 @@ unsigned char loadAnimHeaders()
             FILE_SHARE_READ, 0, OPEN_EXISTING,
             FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
         if (g_videoFile1 == INVALID_HANDLE_VALUE) {
-            MessageBoxA(g_hwndApp, g_generalText->getText(535),
-                g_generalText->getText(536), 0);
+            MessageBoxA(g_hwndApp, g_generalText->getText(GENERAL_TEXT_VIDEO_FILE_OPEN_ERROR),
+                g_generalText->getText(GENERAL_TEXT_VIDEO_FILE_ERROR), 0);
             return 0;
         }
         ReadFile(g_videoFile1, &g_videoCount1, 4, &nread, 0);
@@ -579,8 +727,8 @@ unsigned char loadAnimHeaders()
     g_videoFile2 = CreateFileA("data\\Video.vid", GENERIC_READ, FILE_SHARE_READ,
         0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
     if (g_videoFile2 == INVALID_HANDLE_VALUE) {
-        MessageBoxA(g_hwndApp, g_generalText->getText(535),
-            g_generalText->getText(536), 0);
+        MessageBoxA(g_hwndApp, g_generalText->getText(GENERAL_TEXT_VIDEO_FILE_OPEN_ERROR),
+            g_generalText->getText(GENERAL_TEXT_VIDEO_FILE_ERROR), 0);
         return 0;
     }
     ReadFile(g_videoFile2, &g_videoCount2, 4, &nread, 0);
@@ -615,8 +763,8 @@ unsigned char loadSoundHeaders()
     g_soundFile = CreateFileA("data\\heroes3.snd", GENERIC_READ, FILE_SHARE_READ,
         0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
     if (g_soundFile == INVALID_HANDLE_VALUE) {
-        MessageBoxA(g_hwndApp, g_generalText->getText(664),
-            g_generalText->getText(665), 0);
+        MessageBoxA(g_hwndApp, g_generalText->getText(GENERAL_TEXT_SOUND_ARCHIVE_OPEN_ERROR),
+            g_generalText->getText(GENERAL_TEXT_SOUND_FILE_ERROR), 0);
         return 0;
     }
     ReadFile(g_soundFile, &g_soundCount, 4, &nread, 0);
@@ -629,8 +777,8 @@ unsigned char loadSoundHeaders()
             FILE_SHARE_READ, 0, OPEN_EXISTING,
             FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
         if (g_soundFileCd == INVALID_HANDLE_VALUE) {
-            MessageBoxA(g_hwndApp, g_generalText->getText(664),
-                g_generalText->getText(665), 0);
+            MessageBoxA(g_hwndApp, g_generalText->getText(GENERAL_TEXT_SOUND_ARCHIVE_OPEN_ERROR),
+                g_generalText->getText(GENERAL_TEXT_SOUND_FILE_ERROR), 0);
             return 0;
         }
         ReadFile(g_soundFileCd, &g_soundCountCd, 4, &nread, 0);
@@ -793,8 +941,8 @@ VA(0x00598af0, 0x385)
 void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
                bool advance)
 {
-    if (g_unnamed699290 == 0 && g_soundManager->m_ds != 0
-        && g_unnamed698758.m_soundVolume != 0)
+    if (g_noSound == 0 && g_soundManager->m_ds != 0
+        && g_config.m_soundVolume != 0)
         g_smackSound = 1;
     else
         g_smackSound = 0;
@@ -823,7 +971,7 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
             return;
         }
         SmackVolumePan(g_smackVideo2, SMACKTRACKS,
-            3640 * g_unnamed698758.m_soundVolume, 0x8000);
+            3640 * g_config.m_soundVolume, 0x8000);
         SmackToBuffer(g_smackVideo2, x, y,
             g_windowManager->m_screenBitmap->getPitch(),
             g_windowManager->m_screenBitmap->getHeight(),
@@ -848,7 +996,7 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
     g_smackX = x;
     g_smackY = y;
     SmackVolumePan(g_smackVideo, SMACKTRACKS,
-        3640 * g_unnamed698758.m_soundVolume, 0x8000);
+        3640 * g_config.m_soundVolume, 0x8000);
     SmackToBuffer(g_smackVideo, x, y,
         g_windowManager->m_screenBitmap->getPitch(),
         g_windowManager->m_screenBitmap->getHeight(),

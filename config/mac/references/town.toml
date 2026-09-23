@@ -19,16 +19,6 @@ target_sha256 = "34066e45ba6da8a2ea87d8f5c23a37e88426ad31f50df0121cf6b5c9e9d1e71
 evidence = "Source-owned playerData::isLocalHuman at game.cpp 0x4bad80 checks the two player flags. TOWN reward helper calls Mac 0xcdba4 before comparing local game position. Mac callee calls its isHuman leaf at 0xcdbf0, tests the local byte at +0xdd, returns bool; preceding BLR at 0xcdba0, own BLR at 0xcdbec, next leaf entry at 0xcdbf0 bound 76 bytes."
 
 [[functions]]
-retail_va = 0x004c9990
-unit = "game"
-mac_section = 0
-mac_offset = 0xe0be8
-mac_size = 0x448
-mac_symbol = ".convertObject__4gameFP10NewmapCell"
-target_sha256 = "324ad74b149106d4c88f10483bc66283017595fc158300c8329916a5772cace7"
-evidence = "TOWN buildBuilding calls the independently bounded game::convertObject body at 0:e0be8. It ends at BLR 0xe102c and the next prologue starts 0xe1030; object type switch, sprite lookup and calculateCellExtra agree with canonical src/game.cpp and Dreamcast game.cpp:9195..9316. This remains a callee-only reference while its source body has unresolved CodeWarrior vector push_back relocation and cannot receive a byte verdict."
-
-[[functions]]
 retail_va = 0x005bf4e0
 unit = "town"
 mac_section = 0

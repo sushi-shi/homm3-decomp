@@ -26,10 +26,9 @@ TTownType pickNextAlignment(int legalAlignments, TTownType type);
 // The seven resource names (retail 0x6a5e64, DATA-claimed by seerhut.cpp);
 // GetVictoryConditionText's resource arm formats one. Consumer-side plain
 // extern, the advmgr.h / ai_player.h pattern.
-extern const char* g_resourceNames[7];
+extern const char* g_resourceNames[8];
 // The nine map-region names (retail 0x6a5c48, DATA-claimed by seerhut.cpp;
 // game.h exposes them only to its own view). The defeat-monster arm of
 // GetVictoryConditionText indexes them by the map-third direction.
-extern const char* g_questMonsterDirections[9];
 
 #endif  /* HOMM3_NEWGAME_H */

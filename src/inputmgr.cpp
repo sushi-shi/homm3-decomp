@@ -5,6 +5,7 @@
 #include "inputmgr.h"
 
 #include "advmgr.h"
+#include "remote.h"
 #include "kbwin.h"
 #include "message.h"
 #include "mousemgr.h"

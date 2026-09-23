@@ -172,7 +172,7 @@ public:
     std::string m_message;
     int m_resQty[7];
     int m_artifact;
-#include "inline/mapcell_monster_data_ctor.inl"
+#include "mac_shared/mapcell_monster_data_ctor.h"
 };
 class game {
     char m_beforeMapHeader[0x1f0f8];
@@ -208,7 +208,7 @@ private:
     char m_beforeObjectTypeIndex[0xa8 - 0x30 - sizeof(std::vector<MonsterData>)];
 public:
     std::vector<CObjectType> m_objectTypeIndex[232];
-    void newfullMapFn005042C0();
+    void rebuildObjectTypeIndex();
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
     int loadObjectType(TAbstractFile* infile, CObjectType* objectType);
     int loadObject(TAbstractFile* infile, CObject* object);

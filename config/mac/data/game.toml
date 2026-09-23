@@ -22,7 +22,7 @@ evidence = "game::perDay loads g_gameOver through loader TOC 1+0x70c -> zero-fil
 
 [[data]]
 retail_va = 0x00677958
-source = "include/game.h"
+source = "src/game.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x425e0
@@ -32,7 +32,7 @@ evidence = "Mac convertObject at code0+0xe0cc4 loads TOC 1+0xbdc -> 1+0x425e0 an
 
 [[data]]
 retail_va = 0x00677974
-source = "include/game.h"
+source = "src/game.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x42608
@@ -42,7 +42,7 @@ evidence = "Mac convertObject at code0+0xe0cd8 loads TOC 1+0xbd8 -> pointer stor
 
 [[data]]
 retail_va = 0x00677a54
-source = "include/game.h"
+source = "src/game.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x42c20
@@ -52,7 +52,7 @@ evidence = "Mac convertObject at code0+0xe0d88 indexes TOC 1+0xbd4 -> 1+0x42c20 
 
 [[data]]
 retail_va = 0x00677a30
-source = "include/game.h"
+source = "src/game.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x42b84
@@ -62,7 +62,7 @@ evidence = "Mac convertObject at code0+0xe0e2c indexes TOC 1+0xbd0 -> 1+0x42b84 
 
 [[data]]
 retail_va = 0x00677a0c
-source = "include/game.h"
+source = "src/game.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x42ae8

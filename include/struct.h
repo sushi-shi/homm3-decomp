@@ -27,7 +27,15 @@ public:
     short m_y : 10;
     short m_z : 4;
     type_point() {}
-#include "inline/type_point_ctor.inl"
+// HOMM3_MAC_SHARED_BEGIN type_point_ctor
+    VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
+    type_point(short newX, short newY, short newZ)
+    {
+        m_x = newX;
+        m_y = newY;
+        m_z = newZ;
+    }
+// HOMM3_MAC_SHARED_END type_point_ctor
     // DC S_PUB32 ?is_valid@type_point@@QBA_NXZ proves a const bool member.
     bool isValid() const;
     // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,

@@ -8,13 +8,9 @@
 // data TU is unlocated; these are consumer-side declarations (the
 // gBuildingNames* precedent - reloc names on unclaimed data are cosmetic).
 // Kept in this narrow header so only townmgr's include closure sees them.
-extern const char* g_buildingDescCommon[];     // 0x6a7e24, buildingId < 15
-extern const char* g_buildingDescDwelling[];   // 0x6a7834, buildingId == 15, [type*11]
-extern const char* g_buildingDescBlacksmith[]; // 0x6a7e70, buildingId == 16, [type]
-extern const char* g_buildingDescTown[];       // 0x6a77c8, 17 <= buildingId < 30, [type*11 + id]
-extern const char* g_buildingDescUpgrade[];    // 0x6a694c, buildingId >= 30, [id + type*14]
-extern const char* g_rampartCustomText[];      // 0x6a5e64, [town::field_38]
-extern const char* g_rampartExtraDesc;         // 0x6a7838
+     // 0x6a7e24, buildingId < 15
+      // 0x6a5e64, [town::field_38]
+         // 0x6a7838
 
 // The .bss scratch GetBuildingInfo assembles its result into and returns.
 extern char g_infoText[];                       // 0x6aa820

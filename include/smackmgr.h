@@ -14,6 +14,8 @@ namespace SmackManager {
 extern bool g_updateScreen;
 extern bool g_needsUpdate;
 extern bool g_playingSmacker;
+void drawSmackerFrame();  // 0x598e80
+void gotoSmackerFrame(unsigned long frame);  // 0x5990a0
 void closeSmacker();                                     // 0x599050
 void setPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x598a40
@@ -75,8 +77,8 @@ extern Smack* g_smackVideo2;
 
 // Foreign globals without an owning header yet (all provisional):
 extern int* g_videoGameState;    // .bss 0x69923c - the forced-bink state pair
-extern int g_videoNoSkip;        // .bss 0x699524 - nonzero blocks the user abort
-extern int g_unnamed699290;       // .bss 0x699290 - nonzero suppresses the video sound tracks
+extern int g_firstTimeThrough;        // .bss 0x699524 - nonzero blocks the user abort
+       // .bss 0x699290 - nonzero suppresses the video sound tracks
 
 // Video ids as the wrappers dispatch them. Names are bootstrap ROLE
 // inventions (no DC/NH3API roster survives for the numeric ids): ids
@@ -142,7 +144,7 @@ SIZE(VideoHeaderStruct, 0x2c);
 // is the third of them plus the shared entry count EarlySetup and the
 // loader both read.
 DATA(0x0069fe2c) extern VideoHeaderStruct* g_videoHeader3;
-DATA(0x0069fe3c) extern int g_videoHeaderCount;
+extern int g_videoCount3;
 
 // ...and the other two thirds of the same trio, plus the three archive
 // handles they index. binkmanager.obj's GetBinkFilePtr (0x44d5a0) is the

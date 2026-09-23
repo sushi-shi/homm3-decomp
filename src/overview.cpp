@@ -368,14 +368,14 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             }
 
             g_textWidgetDynamic[slot + curText] = new textWidget(
-                26, row * 116 + 102, 54, 32, (*g_generalText)[266],
+                26, row * 116 + 102, 54, 32, g_generalText->getText(GENERAL_TEXT_CREATURE_BONUSES),
                 "smalfont.fnt", static_cast<font::TColor>(7),
                 rowWidgetId + 97, font::LEFT_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
             g_textWidgetDynamic[slot + curText] = new textWidget(
-                373, row * 116 + 102, 56, 32, (*g_generalText)[267],
+                373, row * 116 + 102, 56, 32, g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE),
                 "smalfont.fnt", static_cast<font::TColor>(7),
                 rowWidgetId + 47, font::LEFT_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
@@ -651,7 +651,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             }
 
             g_textWidgetDynamic[slot + curText] = new textWidget(
-                294, row * 116 + 71, 93, 20, (*g_generalText)[259],
+                294, row * 116 + 71, 93, 20, g_generalText->getText(GENERAL_TEXT_ARTIFACTS),
                 "smalfont.fnt", font::PRIMARY, rowWidgetId + 139,
                 font::CENTER_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
@@ -739,7 +739,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             g_textButtonDynamic[row * 3] = new textButton(
                 386, row * 116 + 70, 108, 16,
-                rowWidgetId + 128, "OvButn3.def", (*g_generalText)[260],
+                rowWidgetId + 128, "OvButn3.def", g_generalText->getText(GENERAL_TEXT_EQUIPPED),
                 "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
             if (!g_textButtonDynamic[row * 3])
                 memError();
@@ -747,7 +747,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             g_textButtonDynamic[row * 3 + 1] = new textButton(
                 498, row * 116 + 70, 108, 16,
-                rowWidgetId + 129, "OvButn3.def", (*g_generalText)[262],
+                rowWidgetId + 129, "OvButn3.def", g_generalText->getText(GENERAL_TEXT_MISCELLANEOUS),
                 "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
             if (!g_textButtonDynamic[row * 3 + 1])
                 memError();
@@ -755,7 +755,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             g_textButtonDynamic[row * 3 + 2] = new textButton(
                 610, row * 116 + 70, 108, 16,
-                rowWidgetId + 138, "OvButn3.def", (*g_generalText)[263],
+                rowWidgetId + 138, "OvButn3.def", g_generalText->getText(GENERAL_TEXT_BACKPACK),
                 "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
             if (!g_textButtonDynamic[row * 3 + 2])
                 memError();
@@ -792,11 +792,9 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 // the source vocabulary; the Complete body proves the changed player fields,
 // slider update, two-message protocol, per-mode title counts, and geometry.
 // E:\gamedcs\overview.cpp:1170
-VA(0x0051e330, 0x33A)
+VA(0x0051e330, 0x33A)  // dc 0x1069fc
 void game::setupNewOverviewType(int whichType, unsigned char update)
 {
-    message msg;
-
     g_overviewType = whichType;
     g_overviewItemCount = g_overviewType == 0
         ? g_game->getLocalPlayer()->m_numHeroes
@@ -814,6 +812,10 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
         g_overviewSlider->setResolution(1);
     }
 
+    // Dreamcast constructs this message after the slider branch. Complete
+    // overwrites all eight fields before the first use, so that lifetime also
+    // lets VC6 remove the constructor's zero stores.
+    message msg;
     msg.m_codeY = 195 + (g_overviewType != 1);
     msg.m_qualifier = 0;
     msg.m_mouseX = 0;
@@ -1347,7 +1349,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
 
             case OVERVIEW_HERO_LEVEL_ID: {
                 int level = currHero->m_level;
-                sprintf(g_text, (*g_generalText)[3], level,
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT), level,
                         hero::getExperience(level + 1),
                         currHero->m_experience);
                 normalDialog(
@@ -1359,7 +1361,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             }
 
             case OVERVIEW_HERO_MANA_ID:
-                sprintf(g_text, (*g_generalText)[206], currHero->m_name,
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT), currHero->m_name,
                         currHero->m_mana, currHero->getMaxMana());
                 normalDialog(
                     g_text,
@@ -1617,38 +1619,10 @@ void overviewSliderCallback(int state, heroWindow* parentWindow)
 // vtable store, exact following destructor and address-taken slider callback
 // jointly fix this identity and extent.
 // E:\gamedcs\overview.cpp:2017
-// DIAGNOSED 2026-09-06, and it is NOT missing source mass: this compile
-// emits MORE than retail, not less - 268 blocks against 241, 127 branches
-// against 108, and ELEVEN base-only calls, every one of them the guts of
-// `vector<overview_item_record>::insert` (_Ufill, _Ucopy x2, _Destroy,
-// operator new/delete) plus five out-of-line `_Construct`.  Retail CALLS
-// insert at all six append sites (its first one pairs with ours at fn+0xfdc)
-// and INLINES `_Construct`; we do the exact inverse at five of the six,
-// which is one /Ob2 budget decision showing up in both directions at once -
-// expanding insert spends the budget, and the later `_Construct` sites are
-// then starved out of line.  27 blocks / 6 sites is one insert expansion
-// each, so the whole structural deficit is that decision.
-// THE LADDER IS PER-SITE HERE, AND THAT IS THE WHOLE FIX (polish 31,
-// 2026-09-06).  Every BULK dose of `insert(end(), x)` loses - all six
-// item-record appends 80.9765, all forty-two appends in the body 79.1932,
-// both against 82.7097 - which is what the 2026-09-06 note above concluded
-// from.  Titrating all 42 sites ONE AT A TIME instead: forty are flat or
-// worse and exactly two pay, the shipyard 'W' record append (+6.89) and the
-// per-player flag label `Widgets.push_back(field_70.back())` (+0.60 on top),
-// 82.7097 -> 89.6021 -> 90.2053.  A third greedy round over the remaining
-// forty markers finds nothing, so this pair is the peak.  Read the earlier
-// paragraph's census with that in mind: retail calls `insert` at all six
-// item-record sites, but only ONE of them is the site whose budget decides
-// the rest.  The lever the doctrine names for
-// an OVER-inline this size is caller-shrink, but the six item-record search
-// loops are identical enough to fold into one helper and the Dreamcast
-// overview.obj roster names no such function (its own ctor is a different,
-// 2692 B revision), so that helper would be invented source.
-// Also measured and rejected 2026-09-06: declaring all six `record`
-// temporaries `const` is BYTE-FLAT (82.7097, 268 blocks unchanged), so the
-// argument's constness does not reach push_back's expansion decision either.
-// Both library-level spellings the doctrine offers are therefore bounded,
-// and the site is a /Ob2 quotient with no admissible source lever.
+// Retail retains vector::insert beneath the item-record push_back calls;
+// our current VC6 context expands several of those workers. Direct insert
+// spellings and a shipyard-vector alias previously hid part of this residual.
+// Keep the canonical appends while recovering the remaining inline decisions.
 VA(0x0051fa40, 0x1311)  // exhaustive ctor/callback/dtor identity, dc 0x1084f0
 TOverviewWindow::TOverviewWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
@@ -1683,10 +1657,10 @@ TOverviewWindow::TOverviewWindow()
             739, i * 57 + 47, 50, 50, i + 40, "FlagPort.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
         m_flaggableCountWidgets.push_back(new textWidget(
-            739, i * 57 + 81, 50, 16, g_emptyRolloverText,
+            739, i * 57 + 81, 50, 16, "",
             "smalfont.fnt", font::PRIMARY, -1,
             font::RIGHT_JUSTIFIED, 0, 8));
-        m_widgets.insert(m_widgets.end(), m_flaggableCountWidgets.back());
+        m_widgets.push_back(m_flaggableCountWidgets.back());
     }
 
     // SEVEN resource icons, not six (found 2026-09-05 by the tree-wide
@@ -1793,12 +1767,6 @@ TOverviewWindow::TOverviewWindow()
             }
             if (item < 0) {
                 item = m_flaggableItems.size();
-                // The mine arm's append is `push_back`, not a pinned
-                // `insert(end(), record)`: the pin was worth +1.82 when it
-                // was written and is worth -0.65 now (78.9297 unpinned
-                // against 78.2776 pinned, both under the 80.0954 the row
-                // banked in an older delink generation), so the debt buys
-                // nothing and goes.
                 overview_item_record record = { 'U', 0 };
                 m_flaggableItems.push_back(record);
             }
@@ -1882,16 +1850,7 @@ TOverviewWindow::TOverviewWindow()
         if (item < 0) {
             item = m_flaggableItems.size();
             overview_item_record record = { 'W', 0 };
-            // See the constructor's ladder note: this append and the flag-label
-        // one are the only two of the 42 whose `insert(end(), x)` spelling
-        // pays (+6.89 here).  NAMING THE VECTOR on top of it is another
-        // +0.24 (90.2053 -> 90.4407): retail reads `_Last` through the
-        // vector's own address instead of folding the member offset off
-        // `this`, and it is one of the two frame dwords this body is short.
-        // The same reference on the flag-label append LOSES 0.60, and both
-        // together 0.61 - per-site, like everything else about this lever.
-        std::vector<overview_item_record>& items = m_flaggableItems;
-        items.insert(items.end(), record);
+            m_flaggableItems.push_back(record);
         }
         ++m_flaggableItems[item].m_count;
     }
@@ -1985,7 +1944,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_VIEW_ICON_ID:
             case OVERVIEW_HERO_VIEW_NAME_ID:
                 sprintf(g_text,
-                        (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
+                        g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
                         currHero->m_name, currHero->heroFn004D8F70());
                 break;
 
@@ -1996,7 +1955,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID + 4:
             case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID + 5:
             case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID + 6:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(currHero->m_army.m_armies[
                             codeY - OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID],
                                     2));
@@ -2009,7 +1968,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_ARMY_FIRST_ID + 4:
             case OVERVIEW_HERO_ARMY_FIRST_ID + 5:
             case OVERVIEW_HERO_ARMY_FIRST_ID + 6:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(currHero->m_army.m_armies[
                                         codeY - OVERVIEW_HERO_ARMY_FIRST_ID],
                                     2));
@@ -2019,37 +1978,37 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID + 1:
             case OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID + 2:
             case OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID + 3:
-                sprintf(g_text, g_heroScreenNameFormat,
-                        g_primarySkillNames[
+                sprintf(g_text, g_heroScreen[1],
+                        g_statNames[
                             codeY - OVERVIEW_HERO_PRIMARY_STAT_FIRST_ID]);
                 break;
 
             case OVERVIEW_HERO_MORALE_ID:
                 if (currHero->getMorale(0, 0, 1) > 0)
-                    sprintf(g_text, g_heroScreenMoraleHighText);
+                    sprintf(g_text, g_heroScreen[3]);
                 else if (currHero->getMorale(0, 0, 1) == 0)
-                    sprintf(g_text, g_heroScreenMoraleNeutralText);
+                    sprintf(g_text, g_heroScreen[4]);
                 else
-                    sprintf(g_text, g_heroScreenMoraleLowText);
+                    sprintf(g_text, g_heroScreen[5]);
                 break;
 
             case OVERVIEW_HERO_LUCK_ID:
                 if (currHero->getLuck(0, 0, 1) > 0)
-                    sprintf(g_text, g_heroScreenLuckHighText);
+                    sprintf(g_text, g_heroScreen[6]);
                 else if (currHero->getLuck(0, 0, 1) == 0)
-                    sprintf(g_text, g_heroScreenLuckNeutralText);
+                    sprintf(g_text, g_heroScreen[7]);
                 else
-                    sprintf(g_text, g_heroScreenLuckLowText);
+                    sprintf(g_text, g_heroScreen[8]);
                 break;
 
             case OVERVIEW_HERO_SPECIALTY_ID:
-                sprintf(g_text, g_heroScreenText27);
+                sprintf(g_text, g_heroScreen[27]);
                 break;
             case OVERVIEW_HERO_LEVEL_ID:
-                sprintf(g_text, g_heroScreenText9);
+                sprintf(g_text, g_heroScreen[9]);
                 break;
             case OVERVIEW_HERO_MANA_ID:
-                sprintf(g_text, g_heroScreenText22);
+                sprintf(g_text, g_heroScreen[22]);
                 break;
 
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID:
@@ -2079,8 +2038,8 @@ void TOverviewWindow::doRollover(int codeY)
                 int nth = codeY - OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID;
                 if (nth < currHero->m_skillCount) {
                     int skill = currHero->getNthSS(nth);
-                    sprintf(g_text, g_heroScreenSecondarySkillFormat,
-                            g_skillMasteryNames[
+                    sprintf(g_text, g_heroScreen[21],
+                            g_secondarySkillLevels[
                                 currHero->m_skillLevel[skill] - 1],
                             g_sSkillTraits[skill].m_name);
                 }
@@ -2115,7 +2074,7 @@ void TOverviewWindow::doRollover(int codeY)
                     getLastBackpackIndex(
                         g_overviewTop[g_overviewType] + slot) + 1;
                 if (!lastBackpackIndex) {
-                    strcpy(g_text, g_emptyRolloverText);
+                    strcpy(g_text, "");
                     break;
                 }
                 currHero->getBackpack(
@@ -2127,14 +2086,14 @@ void TOverviewWindow::doRollover(int codeY)
             }
 
             default:
-                strcpy(g_text, g_emptyRolloverText);
+                strcpy(g_text, "");
                 break;
             }
         } else {
             town* currTown = g_game->getTown(
                 g_game->getLocalPlayer()->m_townIds[
                     g_overviewTop[g_overviewType] + slot]);
-            strcpy(g_text, g_emptyRolloverText);
+            strcpy(g_text, "");
 
             switch (codeY) {
             case OVERVIEW_TOWN_VISITING_HERO_LEFT_ID:
@@ -2145,8 +2104,8 @@ void TOverviewWindow::doRollover(int codeY)
                     hero* currHero =
                         g_game->getHero(currTown->m_visitingHeroId);
                     sprintf(g_text,
-                            (*g_generalText)[
-                                GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
+                            g_generalText->getText(
+                                GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
                             currHero->m_name,
                             currHero->heroFn004D8F70());
                 }
@@ -2159,8 +2118,8 @@ void TOverviewWindow::doRollover(int codeY)
                     hero* currHero =
                         g_game->getHero(currTown->m_garrisonHeroId);
                     sprintf(g_text,
-                            (*g_generalText)[
-                                GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
+                            g_generalText->getText(
+                                GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
                             currHero->m_name,
                             currHero->heroFn004D8F70());
                 }
@@ -2173,7 +2132,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 4:
             case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 6:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(static_cast<const town*>(currTown)
                                         ->getArmy().m_armies[
                             codeY
@@ -2188,7 +2147,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 4:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 6:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(static_cast<const town*>(currTown)
                                         ->getArmy().m_armies[
                             codeY - OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID],
@@ -2204,7 +2163,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_VISITING_ARMY_SECOND_ROW_FIRST_ID + 6:
                 if (currTown->m_visitingHeroId < 0)
                     break;
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(
                             g_game->getHero(currTown->m_visitingHeroId)
                                 ->m_army.m_armies[
@@ -2222,7 +2181,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_VISITING_ARMY_FIRST_ID + 6:
                 if (currTown->m_visitingHeroId < 0)
                     break;
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(
                             g_game->getHero(currTown->m_visitingHeroId)
                                 ->m_army.m_armies[
@@ -2245,7 +2204,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 11:
             case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 12:
             case OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID + 13:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(g_townDwellingCreatures[
                             currTown->m_type * TOWN_DWELLING_SLOTS + codeY
                             - OVERVIEW_TOWN_RECRUIT_SECOND_ROW_FIRST_ID], 1));
@@ -2265,7 +2224,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 11:
             case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 12:
             case OVERVIEW_TOWN_RECRUIT_FIRST_ID + 13:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(g_townDwellingCreatures[
                             currTown->m_type * TOWN_DWELLING_SLOTS + codeY
                             - OVERVIEW_TOWN_RECRUIT_FIRST_ID], 1));
@@ -2285,7 +2244,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 11:
             case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 12:
             case OVERVIEW_TOWN_GROWTH_TEXT_FIRST_ID + 13:
-                sprintf(g_text, (*g_generalText)[589],
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
                         getArmyName(g_townDwellingCreatures[
                             currTown->m_type * TOWN_DWELLING_SLOTS
                             + codeY
@@ -2306,7 +2265,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 11:
             case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 12:
             case OVERVIEW_TOWN_GROWTH_ICON_FIRST_ID + 13:
-                sprintf(g_text, (*g_generalText)[589],
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
                         getArmyName(g_townDwellingCreatures[
                             currTown->m_type * TOWN_DWELLING_SLOTS
                             + codeY
@@ -2315,18 +2274,18 @@ void TOverviewWindow::doRollover(int codeY)
 
             case OVERVIEW_TOWN_SUMMONING_GROWTH_ICON_ID:
             case OVERVIEW_TOWN_SUMMONING_GROWTH_TEXT_ID:
-                sprintf(g_text, (*g_generalText)[589],
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT),
                         getArmyName(currTown->m_summoningType, 1));
                 break;
 
             case OVERVIEW_TOWN_SUMMONING_PORTAL_ICON_ID:
             case OVERVIEW_TOWN_SUMMONING_PORTAL_TEXT_ID:
-                sprintf(g_text, g_heroScreenNameFormat,
+                sprintf(g_text, g_heroScreen[1],
                         getArmyName(currTown->m_summoningType, 1));
                 break;
 
             default:
-                strcpy(g_text, g_emptyRolloverText);
+                strcpy(g_text, "");
                 break;
             }
         }
@@ -2382,7 +2341,7 @@ void TOverviewWindow::doRollover(int codeY)
                         break;
                     case 'S':
                     case 'T':
-                        strcpy(g_text, g_quickViewGarrisonText);
+                        strcpy(g_text, g_quickViewText[33]);
                         break;
                     case 'U':
                         strcpy(g_text, g_mineDescriptions[7]);
@@ -2396,13 +2355,13 @@ void TOverviewWindow::doRollover(int codeY)
                     }
                 }
             } else {
-                strcpy(g_text, g_emptyRolloverText);
+                strcpy(g_text, "");
             }
             break;
         }
 
         case OVERVIEW_RESOURCE_TOTAL_ID:
-            strcpy(g_text, (*g_generalText)[256]);
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_DAILY_INCOME));
             break;
 
         case OVERVIEW_HELP_FIRST_ID:
@@ -2432,7 +2391,7 @@ void TOverviewWindow::doRollover(int codeY)
             break;
 
         default:
-            strcpy(g_text, g_emptyRolloverText);
+            strcpy(g_text, "");
             break;
         }
     }
@@ -2445,21 +2404,19 @@ void TOverviewWindow::doRollover(int codeY)
 // independently fixes the four 200-id hero rows, three artifact-page buttons
 // and two backpack arrows per row, plus the keyboard paging extension.
 
-// Residual (80.10% MAX): VC6 expands all four doFlaggableButtons sites,
-// including updateFlaggableIcons in HOME/PREVIOUS; retail retains the latter
-// and calls doFlaggableButtons for NEXT/END. The current C2 caller is 1321
-// before expansion (budget 2642); updateFlaggableIcons costs 68 against
-// HOME/PREVIOUS nested budgets 81/69. Later backpack getHero calls also
-// over-expand. Retain the canonical helper bodies and source calls.
-// Retail jump-table order is HOME/PREVIOUS/NEXT/END/control, and keyboard
-// PRIOR/NEXT/HOME/END. Its twelve artifact-page arms read overviewTop[0].
-// The mouse cache-hit return precedes the store/rollover/second return.
-// Controls: sharing the keyboard refresh through a common switch exit gives
-// 79.8825%; reusing heroNumber for the selected hero id gives 69.7888% and
-// does not preserve get_last_backpack_index's DC early-return scope.
-// Restoring that helper's static linkage or placing its definition before
-// the backpack steppers is byte-flat. No extra caller statements or inline
-// controls are retained to alter the budget.
+// DC lines 2597..2738 group the equipped-page actions across all four rows,
+// followed by every increment arrow (2773..2798), every decrement arrow
+// (2801..2826), and the flaggable actions (2829..2841). Complete's third page
+// stays with the other page actions. This source order raises the retail match
+// from 80.10% to 83.20%; interleaving arrows by row gives 81.04%, and placing
+// the third page after the arrows gives 74.86%.
+//
+// Residual: VC6 still expands more of doFlaggableButtons and its nested
+// updateFlaggableIcon calls than retail, while later backpack expansions retain
+// a different getHero frontier. Keep the canonical helpers and source calls.
+// Retail's flaggable jump-table order is HOME/PREVIOUS/NEXT/END/control, its
+// keyboard order is PRIOR/NEXT/HOME/END, and all page arms read overviewTop[0].
+// The mouse cache-hit return precedes the store, rollover, and second return.
 // E:\gamedcs\overview.cpp:2546
 VA(0x00521960, 0xB03)  // vtable slot 9 + exhaustive call/CFG identity, dc 0x10997c
 int TOverviewWindow::windowHandler(message& msg)
@@ -2484,23 +2441,6 @@ int TOverviewWindow::windowHandler(message& msg)
 
         case widget::WIDGET_DESELECT:
             switch (msg.m_codeY) {
-            case OVERVIEW_FLAGGABLE_HOME_ID:
-                doFlaggableButtons(OVERVIEW_FLAGGABLE_HOME);
-                break;
-            case OVERVIEW_FLAGGABLE_PREVIOUS_ID:
-                doFlaggableButtons(OVERVIEW_FLAGGABLE_PREVIOUS);
-                break;
-            case OVERVIEW_FLAGGABLE_NEXT_ID:
-                doFlaggableButtons(OVERVIEW_FLAGGABLE_NEXT);
-                break;
-            case OVERVIEW_FLAGGABLE_END_ID:
-                doFlaggableButtons(OVERVIEW_FLAGGABLE_END);
-                break;
-            case OVERVIEW_CONTROL_14_ID:
-                res = 1;
-                g_windowManager->m_dialogReturn = msg.m_codeY;
-                break;
-
             case OVERVIEW_SELECT_HEROES_ID:
                 if (g_overviewType != 0)
                     g_game->setupNewOverviewType(0, 1);
@@ -2526,6 +2466,7 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
+
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
                         && g_overviewHeroArtifactPage[
@@ -2536,17 +2477,6 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
-            case OVERVIEW_ROW_FIRST_ID
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
-                if (g_overviewType == 0)
-                    decrementBackpackStart(0);
-                break;
-            case OVERVIEW_ROW_FIRST_ID
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
-                if (g_overviewType == 0)
-                    incrementBackpackStart(0);
-                break;
-
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
                 if (g_overviewType == 0) {
@@ -2565,6 +2495,7 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
+
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
@@ -2577,17 +2508,6 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
-            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
-                if (g_overviewType == 0)
-                    decrementBackpackStart(1);
-                break;
-            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
-                if (g_overviewType == 0)
-                    incrementBackpackStart(1);
-                break;
-
             case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
                 if (g_overviewType == 0) {
@@ -2606,6 +2526,7 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
+
             case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
@@ -2618,17 +2539,6 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
-            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
-                if (g_overviewType == 0)
-                    decrementBackpackStart(2);
-                break;
-            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
-                if (g_overviewType == 0)
-                    incrementBackpackStart(2);
-                break;
-
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
                 if (g_overviewType == 0) {
@@ -2647,6 +2557,7 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
+
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
@@ -2659,15 +2570,64 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
-            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+
+            case OVERVIEW_ROW_FIRST_ID
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
                 if (g_overviewType == 0)
-                    decrementBackpackStart(3);
+                    incrementBackpackStart(0);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
+                if (g_overviewType == 0)
+                    incrementBackpackStart(1);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
+                if (g_overviewType == 0)
+                    incrementBackpackStart(2);
                 break;
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_BACKPACK_SCROLL_RIGHT_ID:
                 if (g_overviewType == 0)
                     incrementBackpackStart(3);
+                break;
+
+            case OVERVIEW_ROW_FIRST_ID
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+                if (g_overviewType == 0)
+                    decrementBackpackStart(0);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+                if (g_overviewType == 0)
+                    decrementBackpackStart(1);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+                if (g_overviewType == 0)
+                    decrementBackpackStart(2);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_BACKPACK_SCROLL_LEFT_ID:
+                if (g_overviewType == 0)
+                    decrementBackpackStart(3);
+                break;
+
+            case OVERVIEW_FLAGGABLE_HOME_ID:
+                doFlaggableButtons(OVERVIEW_FLAGGABLE_HOME);
+                break;
+            case OVERVIEW_FLAGGABLE_PREVIOUS_ID:
+                doFlaggableButtons(OVERVIEW_FLAGGABLE_PREVIOUS);
+                break;
+            case OVERVIEW_FLAGGABLE_NEXT_ID:
+                doFlaggableButtons(OVERVIEW_FLAGGABLE_NEXT);
+                break;
+            case OVERVIEW_FLAGGABLE_END_ID:
+                doFlaggableButtons(OVERVIEW_FLAGGABLE_END);
+                break;
+            case OVERVIEW_CONTROL_14_ID:
+                res = 1;
+                g_windowManager->m_dialogReturn = msg.m_codeY;
                 break;
             }
             break;

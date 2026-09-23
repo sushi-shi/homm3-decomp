@@ -79,10 +79,11 @@ reviewed inputs in [config/mac](../../config/mac/).
 Mac exposed many retained calls to small helpers and helped recover their
 boundaries. In particular, SEERHUT's shared dialog helper and KB's
 `sendPlayerLost` remain ordinary source helpers: marking them `inline` would
-misrepresent the Mac call pattern. The extracted `include/inline/` directory
-currently has 65 fragments, 19 with explicit `inline` declarations, but that
-is a source-organization count. It does not mean Mac discovered 19 new inline
-functions. Dreamcast and source evidence establish the declaration spelling;
+misrepresent the Mac call pattern. These bodies now live in their normal owning
+headers. The Mac compiler stages the same marked bodies into its declaration
+view; the former extracted `include/inline/` directory was a tooling
+organization choice, not evidence of source-level `inline` declarations.
+Dreamcast and source evidence establish the declaration spelling;
 Mac independently tests whether CodeWarrior retained calls or expanded them.
 We have not established a corpus-wide count of newly discovered source-level
 inline functions attributable to Mac alone.
@@ -251,11 +252,11 @@ inputs are tracked so stale results cannot become current matching evidence.
 Compilation/report locks and merged unit reports support concurrent workers
 without discarding the other units' provenance.
 
-Shared inline bodies were exposed through canonical header fragments. The
-[fragment registry](../../config/source/header-fragments.toml) preserves their
-original header ownership and order while retaining checks for duplicates,
-signatures and physical definitions. Evidence comments move with the bodies;
-the registry is not an ownership exemption.
+Shared method bodies reside in canonical headers at their original positions.
+The [Mac shared-body map](../../config/mac/shared-bodies.toml) points to those
+positions; staging extracts the enclosed text for CodeWarrior. The remaining
+[fragment registry](../../config/source/header-fragments.toml) covers ordinary
+shared headers and retains physical definition and ownership checks.
 
 Validation:
 

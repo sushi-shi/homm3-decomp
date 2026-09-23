@@ -78,10 +78,10 @@ Subcommands
         Navigate and byte-compare admitted Classic Mac PowerPC counterparts.
 
   link [<homm3.build.link args>] [-- <extra link flags>]
-        OPT-IN candidate link (also `ninja candidate`): genuine VC6 link.exe
-        over the base objs with /FORCE /NODEFAULTLIB /MAP into
-        build/exe/HEROES3.candidate.EXE. Not runnable - it exists for the .map
-        layout study and the unresolved-externals punch list.
+        Link the base objects with genuine VC6, the game runtime and vendor
+        imports into build/exe/HEROES3.candidate.EXE (also `ninja candidate`).
+        Unresolved or duplicate symbols fail the link. A .map and full linker
+        diagnostics accompany the executable; runtime execution is unverified.
 
   clean
         Nuke build/ + stray root artifacts (build.ninja/*.obj/.ninja_*) so
@@ -251,6 +251,8 @@ def _dispatch(argv: list[str]) -> int:
         return run_module("homm3.analysis.compiler_warnings", *argv[1:])
     if argv and argv[0] == "victor":
         return run_module("homm3.victor", *argv[1:])
+    if argv and argv[0] == "link":
+        return cmd_link(argparse.Namespace(link_args=argv[1:]))
     if argv and argv[0] == "rmg":
         return run_module("homm3.rmg", *argv[1:])
 

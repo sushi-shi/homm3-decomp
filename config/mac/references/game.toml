@@ -1,5 +1,45 @@
 # Independently bounded source-owned GAME callees; identity only.
 [[functions]]
+retail_va = 0x00505a10
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x128408
+mac_size = 0x104
+mac_symbol = ".calculateCellExtra__10NewfullMapFP10NewmapCellUc"
+target_sha256 = "d7f4de73f64e0648d1c4a7216c84471462edb0b57165a01fff4e751cdb4b7cb1"
+evidence = "game::convertObject calls code0+0x128408 at 0xe0ff0 with NewfullMap, cell and set-extra flag. It calls NewmapCell::getMapObject, skips event type 0x1a, restores obscuring hero/boat objects, calls calcCellExtra at 0x127f6c, then re-obscures them, matching source-owned NewfullMap::calculateCellExtra VA 0x00505a10. Final BLR at 0x128508 and next prologue at 0x12850c bound the 0x104-byte body. Callee identity only."
+
+[[functions]]
+retail_va = 0x00505ea0
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x1289dc
+mac_size = 0x50
+mac_symbol = ".findObjectType__10NewfullMapFii"
+target_sha256 = "d84d7744877d3a2a8f034629ba8c92bf18eddf4124547a80afbaec17fe1d9d81"
+evidence = "game::convertObject calls this body at code0+0xe0d00 with NewfullMap, object type and extra. It indexes the 0xc-byte object-type vector at map+0xac, scans 0x38-byte entries backward for m_extra at element+0x30 and returns the matching entry pointer, matching source-owned NewfullMap::findObjectType VA 0x00505ea0. Final BLR at 0x128a28 and next prologue at 0x128a2c bound the 0x50-byte body. Callee identity only."
+
+[[functions]]
+retail_va = 0x004fcbd0
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x11e34c
+mac_size = 0x98
+mac_symbol = ".getMapObject__10NewmapCellCFv"
+target_sha256 = "8ebf57fa659e5e514ba8d3a3097d7ccd22a40f413027d1b18fa920dee0c041d4"
+evidence = "game::convertObject calls this leaf at code0+0xe0c6c. It checks cell type 0x22 (hero) and 8 (boat), traverses the corresponding game arrays and returns each object's obscured type, or the cell type for all others, matching source-owned NewmapCell::getMapObject VA 0x004fcbd0. Multiple BLRs end by 0x11e3e0, followed immediately by getMapExtraInfo at 0x11e3e4. Callee identity only."
+
+[[functions]]
+retail_va = 0x004fcc30
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x11e3e4
+mac_size = 0x70
+mac_symbol = ".getMapExtraInfo__10NewmapCellCFv"
+target_sha256 = "e09076ed499e820d420bcb5d996fc0e5465a32955af3669fc191205ab62076be"
+evidence = "game::convertObject calls this leaf at code0+0xe0d2c. It checks cell type 0x22 (hero) and 8 (boat), returns the obscured extra information at hero+0x14 or boat+0x14, otherwise the cell's extra field, matching source-owned NewmapCell::getMapExtraInfo VA 0x004fcc30. Entry follows getMapObject's BLR; its own BLR at 0x11e450 precedes the next body at 0x11e454. Callee identity only."
+
+[[functions]]
 retail_va = 0x004c7ba0
 unit = "game"
 mac_section = 0

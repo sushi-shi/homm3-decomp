@@ -22,7 +22,7 @@ evidence = "The Mac single-player helper passes TOC 1+0xd04 -> 1+0x528af4 direct
 
 [[data]]
 retail_va = 0x00698a08
-source = "include/font.h"
+source = "src/kb.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x527090
@@ -32,7 +32,7 @@ evidence = "The Mac dialog-icon setter loads its font pointer cell through TOC 1
 
 [[data]]
 retail_va = 0x00698a0c
-source = "include/kb.h"
+source = "src/kb.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x52708c
@@ -52,17 +52,17 @@ evidence = "The Mac dialog-icon setter loads TOC 1+0x618 into r28, dereferencing
 
 [[data]]
 retail_va = 0x006a5390
-source = "include/game.h"
+source = "src/text.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x5502ec
 mac_size = 0x10
 sha256 = "374708fff7719dd5979ec875d56cd2286f6d3cf7ec317a3b25632aab28ec37bb"
-evidence = "The Mac dialog-icon primary-skill arm indexes a four-pointer table loaded from TOC 1+0xad0 at 0x116c0c and 0x116c48. The source-owned array is g_primarySkillNames; external address binding covers its four Mac pointer cells, not their runtime contents."
+evidence = "The Mac dialog-icon primary-skill arm indexes a four-pointer table loaded from TOC 1+0xad0 at 0x116c0c and 0x116c48. The source-owned array is g_statNames; external address binding covers its four Mac pointer cells, not their runtime contents."
 
 [[data]]
 retail_va = 0x00687f58
-source = "include/armygrp.h"
+source = "src/spelldefs.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x52450
@@ -103,17 +103,17 @@ evidence = "Windows setter's g_playerColorNames relocation and retail address 0x
 
 [[data]]
 retail_va = 0x006a7570
-source = "src/levelupwindow.cpp"
+source = "src/text.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x5502dc
 mac_size = 0xc
 sha256 = "15ec7bf0b50732b49f8228e07d24365338f9e3ab994b00af08e5a3bffe55fd8b"
-evidence = "The Mac secondary-skill arm loads TOC 1+0xacc -> three-pointer BSS span 1+0x5502dc at 0x116d74 and indexes qualifier modulo three. The source-owned g_skillMasteryNames extern supplies the Windows identity; external storage only."
+evidence = "The Mac secondary-skill arm loads TOC 1+0xacc -> three-pointer BSS span 1+0x5502dc at 0x116d74 and indexes qualifier modulo three. The source-owned g_secondarySkillLevels extern supplies the Windows identity; external storage only."
 
 [[data]]
 retail_va = 0x0067dcf0
-source = "include/sskilltraits.h"
+source = "src/herodefs.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x49ed8
@@ -143,7 +143,7 @@ evidence = "Windows showCongrats reads retail soundManager pointer 0x6993c4 befo
 
 [[data]]
 retail_va = 0x006993cc
-source = "include/hiscore.h"
+source = "src/hiscore.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x528944

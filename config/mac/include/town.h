@@ -28,7 +28,6 @@ extern playerData* g_currentPlayer;
 extern int g_netLocalGamePos;
 
 enum {
-    GENERAL_TEXT_LIST_AND = 142,
     GENERAL_TEXT_EVENT_CREATURES = 588
 };
 

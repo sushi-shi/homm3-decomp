@@ -29,7 +29,6 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x006a56e0) extern THelpText g_adventureWindowHelp[];
 // 0x6a56e4 is g_adventureWindowHelp[0].m_rclick, not another array.
 // Dreamcast's gQuickViewText belongs to the distinct object-name table.
 
@@ -185,21 +184,26 @@ void TAdventureMapWindow::setSleepImage(int image)
 class CAdventurMapChatEdit : public CGameChatEdit {
 public:
     CAdventurMapChatEdit(
-        int x, int y, int w, int h, int textSize, char* text,
-        char* fontName, font::TColor color, font::EJustify justification,
-        char* backgroundIcon, int backgroundFrame, int id, int style,
-        int readType, int insetX, int insetY);
+        int textWidgetX, int textWidgetY, int textWidgetWidth,
+        int textWidgetHeight, int textStringSize, char* textString,
+        char* textFontName, font::TColor colorIndex,
+        font::EJustify justification,
+        char* backgroundIconName, int backgroundFrame, int textWidgetId,
+        int textWidgetStyle, int readType, int textInsetX, int textInsetY);
     virtual void sendChat(const char* text, int toWho);
 };
 
-inline CAdventurMapChatEdit::CAdventurMapChatEdit(
-    int x, int y, int w, int h, int textSize, char* text, char* fontName,
-    font::TColor color, font::EJustify justification, char* backgroundIcon,
-    int backgroundFrame, int id, int style, int readType, int insetX,
-    int insetY)
-    : CGameChatEdit(x, y, w, h, textSize, text, fontName, color,
-                    justification, backgroundIcon, backgroundFrame, id,
-                    style, readType, insetX, insetY)
+CAdventurMapChatEdit::CAdventurMapChatEdit(
+    int textWidgetX, int textWidgetY, int textWidgetWidth,
+    int textWidgetHeight, int textStringSize, char* textString,
+    char* textFontName, font::TColor colorIndex, font::EJustify justification,
+    char* backgroundIconName, int backgroundFrame, int textWidgetId,
+    int textWidgetStyle, int readType, int textInsetX, int textInsetY)
+    : CGameChatEdit(textWidgetX, textWidgetY, textWidgetWidth,
+                    textWidgetHeight, textStringSize, textString,
+                    textFontName, colorIndex, justification,
+                    backgroundIconName, backgroundFrame, textWidgetId,
+                    textWidgetStyle, readType, textInsetX, textInsetY)
 {
 }
 
@@ -409,14 +413,8 @@ TAdventureMapWindow::TAdventureMapWindow()
         54, 100, 520, 440, 0,
         DATA_COMPGEN(0x0065F2EC, adventureMediumFont, "medfont.fnt"),
         font::CHAT, CHAT_TEXT_ID, font::BOTTOM_JUSTIFIED, 0, 8);
-    {
-        widget* chatText = m_chatTextWidget;
-        std::vector<widget*>& widgets = m_widgets;
-        std::vector<widget*>::iterator chatTextEnd = widgets.end();
-#pragma inline_depth(0)
-        widgets.insert(chatTextEnd, 1, chatText);
-#pragma inline_depth()
-    }
+    // Dreamcast line 457 proves the canonical widget-vector append.
+    m_widgets.push_back(m_chatTextWidget);
 
     m_chatEdit = new CAdventurMapChatEdit(
         8, 556, 592, 18, 127,
@@ -483,18 +481,18 @@ void CAdventurMapChatEdit::sendChat(const char* chat, int toWho)
         checkAdvCheatCode(chatString);
 
     if (chatString == DATA_COMPGEN(0x0065f3cc, advChatGoSolo, "gosolo")) {
-        if (!g_networkActive69954c)
+        if (!g_remoteOn)
             g_mapVisibilityBit = 0xff;
-        g_unnamed691209 = 1;
-        g_unnamed69120c = g_game->getLocalPlayerGamePos();
-        g_unnamed698758.m_combatBallista = 1;
-        g_unnamed698758.m_combatCatapult = 1;
-        g_unnamed698758.m_combatAutoCreatures = 1;
-        g_unnamed698758.m_combatFirstAidTent = 1;
-        g_unnamed698758.m_combatAutoSpells = 1;
-        g_unnamed698758.m_combatSpeed = 2;
-        g_unnamed698758.m_computerWalkSpeed = 4;
-        g_unnamed698758.m_walkSpeed = 4;
+        g_goSolo = 1;
+        g_soloPos = g_game->getLocalPlayerGamePos();
+        g_config.m_combatBallista = 1;
+        g_config.m_combatCatapult = 1;
+        g_config.m_combatAutoCreatures = 1;
+        g_config.m_combatFirstAidTent = 1;
+        g_config.m_combatAutoSpells = 1;
+        g_config.m_combatSpeed = 2;
+        g_config.m_computerWalkSpeed = 4;
+        g_config.m_walkSpeed = 4;
     }
 
     ::sendChat(chatString.c_str(), toWho);
@@ -640,7 +638,7 @@ void checkAdvCheatCode(std::string& chatString)
     }
 
     if (cheatUsed) {
-        chatString = (*g_generalText)[261];
+        chatString = g_generalText->getText(GENERAL_TEXT_CHEATER);
         g_game->m_isCheater = 1;
         if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;

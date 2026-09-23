@@ -1,7 +1,7 @@
 # Names and C++ definitions come from the owning DATA annotation.
 [[data]]
 retail_va = 0x006994e8
-source = "include/game.h"
+source = "src/kb.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x528940
@@ -68,7 +68,7 @@ evidence="TOC 1+0x2c00; four 24-byte context rows, initialized by code 0x154af4;
 
 [[data]]
 retail_va=0x00697738
-source="include/hero.h"
+source="src/hero.cpp"
 declaration_only=true
 mac_section=1
 mac_offset=0x527d3c
@@ -78,7 +78,7 @@ evidence="TOC 1+0xc68, updateArmies slot reader at code 0xf56e0; external addres
 
 [[data]]
 retail_va=0x00698a78
-source="include/hero.h"
+source="src/hero.cpp"
 declaration_only=true
 mac_section=1
 mac_offset=0x5281b8
@@ -88,7 +88,7 @@ evidence="TOC 1+0xc6c, updateArmies window reader at code 0xf56e8; external addr
 
 [[data]]
 retail_va=0x00698a44
-source="include/hero.h"
+source="src/hero.cpp"
 declaration_only=true
 mac_section=1
 mac_offset=0x5281bc
@@ -98,7 +98,7 @@ evidence="TOC 1+0xc60, updateArmies live-strip reader at code 0xf56d8; external 
 
 [[data]]
 retail_va=0x006747b0
-source="include/armygrp.h"
+source="src/creaturetype.cpp"
 declaration_only=true
 mac_section=1
 mac_offset=0x3ee84
@@ -134,7 +134,7 @@ evidence="Canonical unsized shared scratch buffer. Windows updateArmies pushes V
 
 [[data]]
 retail_va=0x0069ccb0
-source="include/game.h"
+source="src/game.cpp"
 declaration_only=true
 mac_section=1
 mac_offset=0x52c07c

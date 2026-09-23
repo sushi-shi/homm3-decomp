@@ -485,6 +485,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STD_DISTANCE", "STD_DISTANCE_TAGGED",
                  "LOCAL_STATIC_DTOR",
                  "CLASS_CTOR",
+                 "CLASS_NONCOPY_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
 COMPGEN_KINDS |= {member.upper() for member in CHAR_STREAM_MEMBER_KINDS}
@@ -1812,7 +1813,7 @@ def vc6_function_name(mangled: str, candidates, unit: str) -> str | None:
 
 
 def ir_bind(unit: str, rows: list[dict], ir_names: dict,
-            problems: list[str], banked_inlines: dict | None = None) -> set:
+            problems: list[str], banked_unemitted: dict | None = None) -> set:
     """Bind VA() claims to the mangled names clang paired them with, in
     place; returns the mangled names taken (which the lexical join must
     then leave alone).
@@ -1836,14 +1837,14 @@ def ir_bind(unit: str, rows: list[dict], ir_names: dict,
             continue          # not compiled here (a `#if 0` carcass stub)
         confirmed = vc6_function_name(mangled, content, unit)
         if content and confirmed is None:
-            if (banked_inlines or {}).get(row['rva']) == mangled:
+            if (banked_unemitted or {}).get(row['rva']) == mangled:
                 row['joined'] = mangled
                 row['channel'] = 'src-VA+ir'
                 taken.add(mangled)
                 problems.append(
                     f"{unit}: VA(0x{row['rva'] + common.IMAGE_BASE:08x}) - "
                     f"no retained {mangled!r}; keeping its active canonical "
-                    "inline identity and banked carrier to report the missing body")
+                    "source identity and banked carrier to report the missing body")
                 continue
             # The obj contradicts the compiler's own pairing, so it is the
             # LAST thing that may name this claim: handing the row to the
@@ -2110,6 +2111,15 @@ def _icf_group_pairing(candidates: list[dict], mangled_group: list,
     return {row["rva"]: names[0]}
 
 
+def _ctor_kind_compatible(row: dict, name: str) -> bool:
+    """Constructor kind is evidence, not a hint overridden by size/order."""
+    if "$implicit_copy_ctor$" in row["name"]:
+        return name.startswith("??0") and bool(COPY_CTOR_TAIL_RE.search(name))
+    if "$class_noncopy_ctor$" in row["name"]:
+        return name.startswith("??0") and not COPY_CTOR_TAIL_RE.search(name)
+    return True
+
+
 def _ctor_kind_pairing(candidates: list[dict], mangled_group: list,
                        used: set | None = None) -> dict:
     """{claim rva -> mangled} for the constructor halves a group's CLAIM
@@ -2138,14 +2148,15 @@ def _ctor_kind_pairing(candidates: list[dict], mangled_group: list,
     used = used or set()
     free = [name for name, _content in mangled_group
             if name not in used and name.startswith("??0")]
-    halves = (("$implicit_copy_ctor$",
+    halves = ((("$implicit_copy_ctor$",),
                [n for n in free if COPY_CTOR_TAIL_RE.search(n)]),
-              ("$class_ctor$",
+              (("$class_ctor$", "$class_noncopy_ctor$"),
                [n for n in free if not COPY_CTOR_TAIL_RE.search(n)]))
     out = {}
-    for marker, names in halves:
+    for markers, names in halves:
         rows = [r for r in candidates
-                if marker in r["name"] and r["channel"] != "src-VA+base"]
+                if any(marker in r["name"] for marker in markers)
+                and r["channel"] != "src-VA+base"]
         if len(rows) == 1 and len(names) == 1:
             out[rows[0]["rva"]] = names[0]
     return out
@@ -2560,7 +2571,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             claim_keys.setdefault(
                 f"{owner}@local_static_dtor", []).append(row)
             continue
-        if "$class_ctor$" in row["name"]:
+        if ("$class_ctor$" in row["name"]
+                or "$class_noncopy_ctor$" in row["name"]):
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}_{owner}", []).append(row)
             continue
@@ -2635,6 +2647,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             if pairing is None:
                 pairing = [name for name, _content in mangled_group]
             for row, mangled in zip(by_rva, pairing):
+                if not _ctor_kind_compatible(row, mangled):
+                    continue
                 row["joined"] = mangled
                 row["channel"] = "src-VA+base"
             continue
@@ -2644,12 +2658,13 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         # when the assignment is unambiguous both ways.
         for row in candidates:
             fits = [name for name, content in mangled_group
-                    if content == row["size"]]
+                    if content == row["size"] and _ctor_kind_compatible(row, name)]
             if len(fits) != 1:
                 continue
             mangled = fits[0]
             claim_fits = [r for r in candidates
-                          if any(c == r["size"]
+                          if _ctor_kind_compatible(r, mangled)
+                          and any(c == r["size"]
                                  for n, c in mangled_group
                                  if n == mangled)]
             if len(claim_fits) != 1:
@@ -2678,7 +2693,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         pairing = _icf_group_pairing(unbound, free, digests)
         for row in unbound:
             mangled = pairing.get(row["rva"])
-            if mangled is not None:
+            if mangled is not None and _ctor_kind_compatible(row, mangled):
                 row["joined"] = mangled
                 row["channel"] = "src-VA+base"
 
@@ -2710,14 +2725,14 @@ def src_files() -> list:
 
 
 def _extract_one(path, functions: set, ir_names: dict | None,
-                 problems: list[str], banked_inlines: dict | None = None) -> list[dict]:
+                 problems: list[str], banked_unemitted: dict | None = None) -> list[dict]:
     """One unit's rows, IR-bound where clang reached the TU and lexically
     joined for the rest."""
     unit = path.stem
     rows = scan_file(path, functions, problems)
     taken = set()
     if ir_names is not None:
-        taken = ir_bind(unit, rows, ir_names, problems, banked_inlines)
+        taken = ir_bind(unit, rows, ir_names, problems, banked_unemitted)
     join_unit(unit, rows, taken)
     return rows
 
@@ -2740,13 +2755,19 @@ def ast_names(path: Path, definitions, ir_names: dict | None,
     return names
 
 
-def banked_inline_names(path: Path, definitions, banked: set) -> dict:
-    """Only an active inline body can keep an existing missing comparison."""
+def banked_unemitted_names(path: Path, definitions, banked: set) -> dict:
+    """Keep the identity of an active body VC6 may legitimately not emit.
+
+    Explicit inline bodies and ordinary file-static helpers can both disappear
+    after all calls expand. External ordinary functions must still emit and
+    therefore do not receive this fallback.
+    """
     from homm3.match.source_ownership import claim_definitions
     relative = path.relative_to(common.HOMM3_DIR).as_posix()
     return {d.va - common.IMAGE_BASE: d.mangled
             for d in claim_definitions(definitions)
-            if d.file == relative and d.inline and d.va is not None and d.mangled
+            if d.file == relative and (d.inline or d.internal)
+            and d.va is not None and d.mangled
             and (path.stem, d.va - common.IMAGE_BASE) in banked}
 
 
@@ -2802,7 +2823,7 @@ def run(only_units: list[str] | None = None,
         ir_names = ast_names(path, definitions, ir_names, problems)
         rows_by_unit[path.stem] = _extract_one(
             path, functions, ir_names, problems,
-            banked_inline_names(path, definitions, banked))
+            banked_unemitted_names(path, definitions, banked))
     headers.project(header_paths, functions,
                     {p.stem: names for p, names in zip(todo, ir_maps)},
                     rows_by_unit, problems, policy=policy, ownership=(definitions, errors, _reached))

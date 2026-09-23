@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 
 #include <fcntl.h>
@@ -26,6 +27,128 @@
 #include "textwdgt.h"
 #include "winmgr.h"
 
+// Initial contents recovered from the pinned Complete image.
+DATA(0x0067f1fc) short g_highScoreCreatureTable[118][2] = {
+    { 4, 42 },
+    { 8, 28 },
+    { 12, 98 },
+    { 16, 70 },
+    { 20, 43 },
+    { 24, 56 },
+    { 28, 84 },
+    { 32, 29 },
+    { 36, 85 },
+    { 40, 0 },
+    { 44, 71 },
+    { 48, 57 },
+    { 52, 99 },
+    { 56, 58 },
+    { 60, 14 },
+    { 64, 1 },
+    { 68, 2 },
+    { 72, 100 },
+    { 76, 59 },
+    { 80, 86 },
+    { 84, 15 },
+    { 88, 16 },
+    { 92, 72 },
+    { 96, 101 },
+    { 100, 44 },
+    { 104, 30 },
+    { 108, 3 },
+    { 112, 88 },
+    { 116, 31 },
+    { 120, 87 },
+    { 124, 17 },
+    { 128, 18 },
+    { 132, 73 },
+    { 136, 45 },
+    { 140, 89 },
+    { 144, 32 },
+    { 148, 60 },
+    { 152, 104 },
+    { 156, 105 },
+    { 160, 61 },
+    { 164, 115 },
+    { 168, 113 },
+    { 172, 19 },
+    { 176, 74 },
+    { 180, 114 },
+    { 184, 4 },
+    { 187, 112 },
+    { 190, 46 },
+    { 193, 75 },
+    { 196, 47 },
+    { 199, 33 },
+    { 202, 90 },
+    { 205, 6 },
+    { 208, 48 },
+    { 211, 5 },
+    { 214, 49 },
+    { 217, 8 },
+    { 220, 22 },
+    { 223, 76 },
+    { 226, 20 },
+    { 229, 21 },
+    { 232, 106 },
+    { 235, 62 },
+    { 238, 34 },
+    { 241, 77 },
+    { 244, 7 },
+    { 247, 116 },
+    { 250, 91 },
+    { 253, 35 },
+    { 256, 107 },
+    { 259, 9 },
+    { 262, 50 },
+    { 265, 117 },
+    { 268, 63 },
+    { 271, 23 },
+    { 274, 78 },
+    { 277, 64 },
+    { 280, 36 },
+    { 283, 102 },
+    { 286, 37 },
+    { 289, 92 },
+    { 292, 103 },
+    { 295, 79 },
+    { 298, 65 },
+    { 301, 93 },
+    { 304, 51 },
+    { 307, 94 },
+    { 310, 108 },
+    { 313, 95 },
+    { 316, 109 },
+    { 319, 80 },
+    { 322, 81 },
+    { 325, 52 },
+    { 328, 24 },
+    { 331, 53 },
+    { 334, 10 },
+    { 337, 38 },
+    { 340, 25 },
+    { 343, 66 },
+    { 346, 11 },
+    { 349, 67 },
+    { 352, 39 },
+    { 355, 96 },
+    { 358, 68 },
+    { 361, 40 },
+    { 364, 110 },
+    { 367, 69 },
+    { 370, 82 },
+    { 373, 26 },
+    { 376, 12 },
+    { 379, 54 },
+    { 382, 111 },
+    { 385, 97 },
+    { 388, 55 },
+    { 391, 41 },
+    { 394, 27 },
+    { 397, 83 },
+    { 32767, 13 }
+};
+
 // The file-name pointer and the threshold/creature pairs are both
 // hiscore.obj-owned retail data.  The latter is deliberately only declared:
 // this TU needs the first two signed shorts of each four-byte record, while
@@ -34,9 +157,7 @@ DATA(0x0067f1f0)
 static const char* g_highScoreFileName =
     DATA_COMPGEN(0x0067f4d0, highScoreFileName, "HiScore.dat");
 DATA(0x0067f1f4) static int g_highScoreRanks[2];
-DATA(0x0067f1fc) extern short g_highScoreCreatureTable[][2];
-DATA(0x006a5ecc) extern char* g_highScoreDefaults0[11][4];
-DATA(0x006a7f08) extern char* g_highScoreDefaults1[11][4];
+
 DATA(0x006991c0) THighScoreWindow* g_highScoreWindow;
 DATA(0x006993cc) highScoreManager* g_highScoreManager;
 DATA(0x0069955c) int g_showHighScore;
@@ -89,7 +210,7 @@ inline CHSInputDlg::CHSInputDlg(int maxChars)
         font::WHITE, font::VERT_CENTER_JUSTIFIED, 0, 0, FIELD1_ID,
         0x100, 0, 7, 5);
     m_header1 = new textWidget(
-        13, 13, 205, 100, (*g_generalText)[97],
+        13, 13, 205, 100, g_generalText->getText(GENERAL_TEXT_HIGH_SCORE_NAME_PROMPT),
         DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
         font::WHITE, -1, 1, 0, 8);
     m_widgets.push_back(m_field1);
@@ -125,7 +246,6 @@ bool CHSInputDlg::onOK()
     return 1;
 }
 
-void unnamed4f3a60(char* filename);
 void memError();
 
 VA(0x004e8fb0, 0xBD)  // dc 0xd7a08
@@ -133,15 +253,15 @@ void highScoreManager::resetHighScores()
 {
     memset(m_highScores, 0, sizeof(m_highScores));
     for (int i = 0; i < 11; ++i) {
-        strncpy(m_highScores[1][i].m_playerName, g_highScoreDefaults1[i][0], 41);
-        strncpy(m_highScores[1][i].m_land, g_highScoreDefaults1[i][1], 41);
-        m_highScores[1][i].m_days = atoi(g_highScoreDefaults1[i][2]);
-        m_highScores[1][i].m_score = atoi(g_highScoreDefaults1[i][3]);
+        strncpy(m_highScores[1][i].m_playerName, g_highScoreStandardDefault[i][0], 41);
+        strncpy(m_highScores[1][i].m_land, g_highScoreStandardDefault[i][1], 41);
+        m_highScores[1][i].m_days = atoi(g_highScoreStandardDefault[i][2]);
+        m_highScores[1][i].m_score = atoi(g_highScoreStandardDefault[i][3]);
 
-        strncpy(m_highScores[0][i].m_playerName, g_highScoreDefaults0[i][0], 41);
-        strncpy(m_highScores[0][i].m_land, g_highScoreDefaults0[i][1], 41);
-        m_highScores[0][i].m_days = atoi(g_highScoreDefaults0[i][2]);
-        m_highScores[0][i].m_score = atoi(g_highScoreDefaults0[i][3]);
+        strncpy(m_highScores[0][i].m_playerName, g_highScoreCampaignDefault[i][0], 41);
+        strncpy(m_highScores[0][i].m_land, g_highScoreCampaignDefault[i][1], 41);
+        m_highScores[0][i].m_days = atoi(g_highScoreCampaignDefault[i][2]);
+        m_highScores[0][i].m_score = atoi(g_highScoreCampaignDefault[i][3]);
     }
 }
 
@@ -260,7 +380,7 @@ int highScoreManager::addScoreToHighScore(int score, int days,
     }
 
     strcpy(scores[rank].m_land,
-        cheater ? (*g_generalText)[261] : land);
+        cheater ? g_generalText->getText(GENERAL_TEXT_CHEATER) : land);
     scores[rank].m_score = score;
     scores[rank].m_days = days;
     scores[rank].m_difficulty = difficulty;
@@ -404,7 +524,7 @@ THighScoreWindow::THighScoreWindow()
     for (i = 0; i < 11; ++i) {
         m_creatures[1][i] = new iconWidget(
             649, 26 + 50 * i, 64, 64, 1004 + i,
-            g_game->m_worldMap.newfullMapFn00505EA0(
+            g_game->m_worldMap.findObjectType(
                 MONSTER, highScoreManager::getMonType(
                     g_highScoreManager->m_highScores[1][i].m_score,
                     1))->m_imageName.c_str(),
@@ -416,7 +536,7 @@ THighScoreWindow::THighScoreWindow()
     for (i = 0; i < 11; ++i) {
         m_creatures[0][i] = new iconWidget(
             649, 26 + 50 * i, 64, 64, 1015 + i,
-            g_game->m_worldMap.newfullMapFn00505EA0(
+            g_game->m_worldMap.findObjectType(
                 MONSTER, highScoreManager::getMonType(
                     g_highScoreManager->m_highScores[0][i].m_score,
                     0))->m_imageName.c_str(),
@@ -495,18 +615,18 @@ void THighScoreWindow::update()
                                    false);
 
     g_mediumFont->drawBoundedString(
-        (*g_generalText)[434], g_windowManager->m_screenBitmap,
+        g_generalText->getText(GENERAL_TEXT_HIGH_SCORE_RANK), g_windowManager->m_screenBitmap,
         0x58, 0xb, 0x3a, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     g_mediumFont->drawBoundedString(
-        (*g_generalText)[435], g_windowManager->m_screenBitmap,
+        g_generalText->getText(GENERAL_TEXT_PLAYER), g_windowManager->m_screenBitmap,
         0xa3, 0xb, 0x7a, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     const char* landHeading;
     if (m_isStandard)
-        landHeading = (*g_generalText)[436];
+        landHeading = g_generalText->getText(GENERAL_TEXT_LAND);
     else
-        landHeading = (*g_generalText)[673];
+        landHeading = g_generalText->getText(GENERAL_TEXT_CAMPAIGN);
     g_mediumFont->drawBoundedString(
         landHeading, g_windowManager->m_screenBitmap,
         0x12f, 0xb, 0xd2, 0x1a, font::PRIMARY,
@@ -514,16 +634,16 @@ void THighScoreWindow::update()
 
     const char* valueHeading;
     if (m_isStandard)
-        valueHeading = (*g_generalText)[437];
+        valueHeading = g_generalText->getText(GENERAL_TEXT_DAYS);
     else
-        valueHeading = (*g_generalText)[76];
+        valueHeading = g_generalText->getText(GENERAL_TEXT_HIGH_SCORE_SCORE);
     g_mediumFont->drawBoundedString(
         valueHeading, g_windowManager->m_screenBitmap,
         0x213, 0xb, m_isStandard ? 0x34 : 0x7a, 0x1a, font::PRIMARY,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     if (m_isStandard) {
         g_mediumFont->drawBoundedString(
-            (*g_generalText)[76], g_windowManager->m_screenBitmap,
+            g_generalText->getText(GENERAL_TEXT_HIGH_SCORE_SCORE), g_windowManager->m_screenBitmap,
             0x259, 0xb, 0x34, 0x1a, font::PRIMARY,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     }
@@ -628,7 +748,7 @@ int highScoreWindowHandler(message& msg)
 
         case THighScoreWindow::RESET_ID:
             {
-            normalDialog((*g_generalText)[667], 2, -1, -1, -1, 0, -1,
+            normalDialog(g_generalText->getText(GENERAL_TEXT_RESET_HIGH_SCORES_PROMPT), 2, -1, -1, -1, 0, -1,
                          0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
                 return MESSAGE_DISPATCH_CONSUME;
@@ -642,14 +762,14 @@ int highScoreWindowHandler(message& msg)
                     g_highScoreManager->m_highScores[1][reset].m_score,
                     1);
                 g_highScoreWindow->m_creatures[1][reset]->setSprite(
-                    g_game->m_worldMap.newfullMapFn00505EA0(
+                    g_game->m_worldMap.findObjectType(
                         MONSTER, monsterType)->m_imageName.c_str());
                 g_highScoreWindow->m_creatures[1][reset]->setIconFrame(0);
                 monsterType = highScoreManager::getMonType(
                     g_highScoreManager->m_highScores[0][reset].m_score,
                     0);
                 g_highScoreWindow->m_creatures[0][reset]->setSprite(
-                    g_game->m_worldMap.newfullMapFn00505EA0(
+                    g_game->m_worldMap.findObjectType(
                         MONSTER, monsterType)->m_imageName.c_str());
                 g_highScoreWindow->m_creatures[0][reset]->setIconFrame(0);
             }

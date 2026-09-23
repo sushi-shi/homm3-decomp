@@ -157,103 +157,86 @@ DATA(0x0069e5a0) int g_lastMaskBits;
 // Only this TU uses the path. File-static linkage makes CodeWarrior address
 // the same-TU object directly through TOC 1+0x5494, as at Mac 0:0x15221c.
 DATA(0x0069e4f0) static std::string g_resourcePath;
+// Complete-only common diagnostic, reconstructed from the identical seven-part
+// messages in 0x559510, 0x5599e0 and both 0x55c3c0 error paths. Retail evaluates
+// typeName.c_str() before constructing the stream; an ordinary shared helper
+// recovers that argument boundary and the stream's short lifetime. VC6 expands
+// this body naturally: no source inline keyword or inline-depth controls.
+// Both typed reporters are byte-exact with ordinary string assignments. Pasting
+// this body into those callers gives 78.49/72.05 and the wrong stream expansion.
+// The original helper name and exact source location are not available.
+static void reportMissingResource(const char* caller, const char* typeName,
+                                  const char* resourceName)
+{
+    std::ostringstream message;
+    message
+        << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
+                        "ResourceManager::")
+        << caller
+        << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
+                        " could not find the \"")
+        << typeName
+        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
+        << resourceName
+        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
+    MessageBoxA(
+        GetForegroundWindow(), message.str().c_str(),
+        DATA_COMPGEN(0x00682f08, resourceManagerCaption,
+                     "ResourceManager"),
+        0);
+}
 
 // Complete's common missing-resource reporter has no Dreamcast identity, but
 // its thirteen retail callers prove the fastcall surface. The dense 0..96
 // dispatch maps the admitted resource values to names and renders every gap
 // as `0x` plus a hexadecimal value before building the diagnostic shown by
 // the callers.
-// WALL (89.3910%): all twelve named cases, the hexadecimal default, seven-part
-// message and MessageBox call are closed, and all 29 retail blocks now agree
-// in flow (23 exact, six size-only). Retail calls assign at the first eight
-// cases and expands four late sites. Hoisting strlen before a pinned two-arg
-// assign in the first four cases preserves those calls while reproducing the
-// late expansion budget. The threshold ratchet was N=0 77.3910, N=1 82.2494,
-// N=2 flat, N=3 83.5393 (negative control), and N=4 89.3910. The residual six
-// size-only blocks are the default/message stream's frame coloring: an added
-// message scope regresses to 87.0742, and predict-inline leaves only one
-// ios_base destructor and one string::_Tidy over-inlined.
+// 100%: ordinary string assignments plus reportMissingResource recover all
+// retail calls and lifetimes without inline-depth pins. The former bootstrap
+// C linkage suppressed EH cleanup; keep the ordinary C++ declaration.
 VA(0x00559510, 0x4C1)  // caller ABI + retail type-name jump table/message graph
-void __fastcall game_null_159510(const char* caller,
-                                 int resourceType,
-                                 const char* resourceName)
+void __fastcall reportMissingTypedResource(const char* caller,
+                                          int resourceType,
+                                          const char* resourceName)
 {
     std::string typeName;
     switch (resourceType) {
-    case RESOURCE_TYPE_NONE: {
-        const char* value =
-            DATA_COMPGEN(0x00682fc8, nullResourceType, "null");
-        std::string::size_type length = strlen(value);
-// INLINE BOUNDARY: game_null_159510 -> basic_string::assign(ptr,len).
-// Retail keeps the first eight assign calls and expands four late cases;
-// hoisting strlen makes this pin govern assign alone. Flattening all four
-// restores the 77.3910 baseline; the N=3 control is 83.5393 vs N=4 89.3910.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_NONE:
+        typeName = DATA_COMPGEN(0x00682fc8, nullResourceType, "null");
         break;
-    }
-    case RESOURCE_TYPE_DATA: {
-        const char* value =
-            DATA_COMPGEN(0x00682fc0, dataResourceType, "data");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=3/N=4 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_DATA:
+        typeName = DATA_COMPGEN(0x00682fc0, dataResourceType, "data");
         break;
-    }
-    case RESOURCE_TYPE_TEXT: {
-        const char* value =
-            DATA_COMPGEN(0x00682fb8, textResourceType, "text");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=3/N=4 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_TEXT:
+        typeName = DATA_COMPGEN(0x00682fb8, textResourceType, "text");
         break;
-    }
-    case RESOURCE_TYPE_BITMAP: {
-        const char* value =
-            DATA_COMPGEN(0x00682fb0, bitmap8ResourceType, "bitmap8");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=3/N=4 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_BITMAP:
+        typeName = DATA_COMPGEN(0x00682fb0, bitmap8ResourceType, "bitmap8");
         break;
-    }
     case RESOURCE_TYPE_BITMAP24:
-        typeName.assign(
-            DATA_COMPGEN(0x00682fa4, bitmap24ResourceType, "bitmap24"));
+        typeName = DATA_COMPGEN(0x00682fa4, bitmap24ResourceType, "bitmap24");
         break;
     case RESOURCE_TYPE_BITMAP16:
-        typeName.assign(
-            DATA_COMPGEN(0x00682f98, bitmap16ResourceType, "bitmap16"));
+        typeName = DATA_COMPGEN(0x00682f98, bitmap16ResourceType, "bitmap16");
         break;
     case RESOURCE_TYPE_BITMAP565:
-        typeName.assign(
-            DATA_COMPGEN(0x00682f8c, bitmap565ResourceType, "bitmap565"));
+        typeName = DATA_COMPGEN(0x00682f8c, bitmap565ResourceType, "bitmap565");
         break;
     case RESOURCE_TYPE_BITMAP555:
-        typeName.assign(
-            DATA_COMPGEN(0x00682f80, bitmap555ResourceType, "bitmap555"));
+        typeName = DATA_COMPGEN(0x00682f80, bitmap555ResourceType, "bitmap555");
         break;
     case RESOURCE_TYPE_BITMAP1555:
-        typeName.assign(DATA_COMPGEN(0x00682f74, bitmap1555ResourceType,
-                                     "bitmap1555"));
+        typeName = DATA_COMPGEN(0x00682f74, bitmap1555ResourceType,
+                                     "bitmap1555");
         break;
     case RESOURCE_TYPE_MIDI:
-        typeName.assign(
-            DATA_COMPGEN(0x00682f6c, midiResourceType, "midi"));
+        typeName = DATA_COMPGEN(0x00682f6c, midiResourceType, "midi");
         break;
     case RESOURCE_TYPE_FONT:
-        typeName.assign(
-            DATA_COMPGEN(0x00682f64, fontResourceType, "font"));
+        typeName = DATA_COMPGEN(0x00682f64, fontResourceType, "font");
         break;
     case RESOURCE_TYPE_PALETTE:
-        typeName.assign(
-            DATA_COMPGEN(0x00682f5c, paletteResourceType, "palette"));
+        typeName = DATA_COMPGEN(0x00682f5c, paletteResourceType, "palette");
         break;
     default: {
         std::ostringstream numericType;
@@ -265,130 +248,58 @@ void __fastcall game_null_159510(const char* caller,
     }
     }
 
-#pragma inline_depth(0)
-    std::ostringstream message;
-#pragma inline_depth()
-    message
-        << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
-                        "ResourceManager::")
-        << caller
-        << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
-                        " could not find the \"")
-        << typeName.c_str()
-        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
-        << resourceName
-        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
-    MessageBoxA(
-        GetForegroundWindow(), message.str().c_str(),
-        DATA_COMPGEN(0x00682f08, resourceManagerCaption,
-                     "ResourceManager"),
-        0);
-#pragma inline_depth(0)
+    reportMissingResource(caller, typeName.c_str(), resourceName);
 }
-#pragma inline_depth()
 
 // Complete splits sprite-family diagnostics from the common resource
 // reporter above. GetSprite's two calls prove the fastcall ABI and the retail
-// jump table proves the complete 64..79 type-name mapping. WALL (86.1324%):
-// all eleven named cases, the hexadecimal default, seven-part message and
-// MessageBox call agree, and all 28 retail blocks now agree in flow (22 exact,
-// six size-only). Retail calls assign for the early cases and expands four
-// late sites. The explicit strlen plus assign-only pin ratchets N=0 70.5441,
-// N=1 flat, N=2 76.7853, N=3 flat, N=4 78.4735 (negative control), and N=5
-// 86.1324 -> 86.9559: the message stream is BLOCK-SCOPED. Retail's frame is
-// 0xac against our 0x130, and the 0x84 surplus is exactly one ostringstream -
-// retail overlays the default arm's `numericType` onto `message`, which VC6
-// will only do once `message` has a scope of its own. The frame is now
-// retail's to the byte. MEASURED AND REJECTED: the identical scope in
-// game_null_159510 above COSTS 2.62 (89.3910 -> 86.7726) even though it makes
-// that frame exact too - it adds five early-return destructor blocks there,
-// so this is a per-function verdict, not a rule. Predict-inline leaves only
-// one ios_base destructor and one string::_Tidy over-inlined; the remaining
-// six blocks are size-only stream frame coloring rather than a missing
-// semantic branch.
-VA(0x005599e0, 0x448)  // anchor-caller + retail type-name jump table; wall
-void __fastcall game_sprite_1599e0(const char* caller,
-                                   int resourceType,
-                                   const char* resourceName)
+// jump table proves the complete 64..79 type-name mapping. Like the common
+// reporter, this is 100% with ordinary assignments and reportMissingResource;
+// no artificial message scope or inline-depth control is needed.
+VA(0x005599e0, 0x448)  // anchor-caller + retail type-name jump table
+void __fastcall reportMissingSpriteResource(const char* caller,
+                                           int resourceType,
+                                           const char* resourceName)
 {
     std::string typeName;
     switch (resourceType) {
-    case RESOURCE_TYPE_SPRITE: {
-        const char* value =
-            DATA_COMPGEN(0x0067555c, spriteResourceType, "sprite");
-        std::string::size_type length = strlen(value);
-// INLINE BOUNDARY: game_sprite_1599e0 -> basic_string::assign(ptr,len).
-// Retail keeps the early assign calls and expands four late cases; hoisting
-// strlen makes this pin govern assign alone. Flattening all five restores the
-// 70.5441 baseline; the N=4 control is 78.4735 vs N=5 86.1324.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_SPRITE:
+        typeName = DATA_COMPGEN(0x0067555c, spriteResourceType, "sprite");
         break;
-    }
-    case RESOURCE_TYPE_SPRITE_DEFINITION: {
-        const char* value = DATA_COMPGEN(
+    case RESOURCE_TYPE_SPRITE_DEFINITION:
+        typeName = DATA_COMPGEN(
             0x00682ff4, spriteDefinitionResourceType, "spritedef");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=4/N=5 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
         break;
-    }
-    case RESOURCE_TYPE_CREATURE: {
-        const char* value =
-            DATA_COMPGEN(0x00675550, creatureResourceType, "creature");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=4/N=5 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_CREATURE:
+        typeName = DATA_COMPGEN(0x00675550, creatureResourceType, "creature");
         break;
-    }
-    case RESOURCE_TYPE_ADVENTURE_OBJECT: {
-        const char* value = DATA_COMPGEN(
+    case RESOURCE_TYPE_ADVENTURE_OBJECT:
+        typeName = DATA_COMPGEN(
             0x00675548, adventureObjectResourceType, "advobj");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=4/N=5 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
         break;
-    }
-    case RESOURCE_TYPE_HERO: {
-        const char* value =
-            DATA_COMPGEN(0x00675540, heroResourceType, "hero");
-        std::string::size_type length = strlen(value);
-        // Same caller/callee boundary and N=4/N=5 ratchet as above.
-#pragma inline_depth(0)
-        typeName.assign(value, length);
-#pragma inline_depth()
+    case RESOURCE_TYPE_HERO:
+        typeName = DATA_COMPGEN(0x00675540, heroResourceType, "hero");
         break;
-    }
     case RESOURCE_TYPE_TILESET:
-        typeName.assign(
-            DATA_COMPGEN(0x00675538, tilesetResourceType, "tileset"));
+        typeName = DATA_COMPGEN(0x00675538, tilesetResourceType, "tileset");
         break;
     case RESOURCE_TYPE_POINTER:
-        typeName.assign(
-            DATA_COMPGEN(0x00675530, pointerResourceType, "pointer"));
+        typeName = DATA_COMPGEN(0x00675530, pointerResourceType, "pointer");
         break;
     case RESOURCE_TYPE_INTERFACE:
-        typeName.assign(
-            DATA_COMPGEN(0x00675524, interfaceResourceType, "interface"));
+        typeName = DATA_COMPGEN(0x00675524, interfaceResourceType, "interface");
         break;
     case RESOURCE_TYPE_SPRITE_FRAME:
-        typeName.assign(DATA_COMPGEN(0x00682fe4, spriteFrameResourceType,
-                                     "sprite frame"));
+        typeName = DATA_COMPGEN(0x00682fe4, spriteFrameResourceType,
+                                     "sprite frame");
         break;
     case RESOURCE_TYPE_COMBAT_HERO:
-        typeName.assign(DATA_COMPGEN(0x00682fd8, combatHeroResourceType,
-                                     "combat hero"));
+        typeName = DATA_COMPGEN(0x00682fd8, combatHeroResourceType,
+                                     "combat hero");
         break;
     case RESOURCE_TYPE_ADVENTURE_MASK:
-        typeName.assign(DATA_COMPGEN(0x00682fd0, adventureMaskResourceType,
-                                     "advmask"));
+        typeName = DATA_COMPGEN(0x00682fd0, adventureMaskResourceType,
+                                     "advmask");
         break;
     default: {
         std::ostringstream numericType;
@@ -400,29 +311,8 @@ void __fastcall game_sprite_1599e0(const char* caller,
     }
     }
 
-    {
-#pragma inline_depth(0)
-    std::ostringstream message;
-#pragma inline_depth()
-    message
-        << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
-                        "ResourceManager::")
-        << caller
-        << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
-                        " could not find the \"")
-        << typeName.c_str()
-        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
-        << resourceName
-        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
-    MessageBoxA(
-        GetForegroundWindow(), message.str().c_str(),
-        DATA_COMPGEN(0x00682f08, resourceManagerCaption,
-                     "ResourceManager"),
-        0);
-    }
-#pragma inline_depth(0)
+    reportMissingResource(caller, typeName.c_str(), resourceName);
 }
-#pragma inline_depth()
 
 VA(0x00559e30, 0x1E5)
 void ResourceManager::remapGraphics()
@@ -741,7 +631,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
         LODFile* lodFile = pointToBitmapResource(name);
 
         if (!lodFile) {
-            game_null_159510(
+            reportMissingTypedResource(
                 DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
                              "GetBitmap816"),
                 RESOURCE_TYPE_BITMAP, name);
@@ -751,7 +641,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
             lodFile = pointToBitmapResource(fallbackName);
 
             if (!lodFile) {
-                game_null_159510(
+                reportMissingTypedResource(
                     DATA_COMPGEN(0x00683030, getBitmap816ErrorContext,
                                  "GetBitmap816"),
                     RESOURCE_TYPE_BITMAP, fallbackName);
@@ -838,7 +728,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
         }
 
         if (!lodFile) {
-            game_null_159510(
+            reportMissingTypedResource(
                 DATA_COMPGEN(0x00683040, loadBitmap16ErrorContext,
                              "GetBitmap16"),
                 RESOURCE_TYPE_BITMAP16, name);
@@ -861,7 +751,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
             }
 
             if (!lodFile) {
-                game_null_159510(
+                reportMissingTypedResource(
                     DATA_COMPGEN(0x00683040, loadBitmap16ErrorContext,
                                  "GetBitmap16"),
                     RESOURCE_TYPE_BITMAP16, fallbackName);
@@ -968,7 +858,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
     }
 
     if (!lodFile) {
-        game_null_159510(
+        reportMissingTypedResource(
             DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                          "GetPalette"),
             RESOURCE_TYPE_PALETTE, name);
@@ -991,7 +881,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
         }
 
         if (!lodFile) {
-            game_null_159510(
+            reportMissingTypedResource(
                 DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                              "GetPalette"),
                 RESOURCE_TYPE_PALETTE, fallbackName);
@@ -1071,7 +961,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
     LODFile* lodFile = pointToBitmapResource(name);
 
     if (!lodFile) {
-        game_null_159510(
+        reportMissingTypedResource(
             DATA_COMPGEN(0x0068304c, loadPaletteErrorContext, "GetPalette"),
             RESOURCE_TYPE_PALETTE, name);
 
@@ -1080,7 +970,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
         lodFile = pointToBitmapResource(fallbackName);
 
         if (!lodFile) {
-            game_null_159510(
+            reportMissingTypedResource(
                 DATA_COMPGEN(0x0068304c, loadPaletteErrorContext,
                              "GetPalette"),
                 RESOURCE_TYPE_PALETTE, fallbackName);
@@ -1167,7 +1057,7 @@ font* ResourceManager::loadFont(const char* name)
     LODFile* lodFile = pointToBitmapResource(name);
 
     if (!lodFile) {
-        game_null_159510(
+        reportMissingTypedResource(
             DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
             RESOURCE_TYPE_FONT, name);
 
@@ -1176,7 +1066,7 @@ font* ResourceManager::loadFont(const char* name)
         lodFile = pointToBitmapResource(fallbackName);
 
         if (!lodFile) {
-            game_null_159510(
+            reportMissingTypedResource(
                 DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
                 RESOURCE_TYPE_FONT, fallbackName);
             return 0;
@@ -1249,7 +1139,7 @@ TTextResource* ResourceManager::loadText(const char* name)
     }
 
     if (!lodFile) {
-        game_null_159510(
+        reportMissingTypedResource(
             DATA_COMPGEN(0x00683060, loadTextErrorContext, "GetText"),
             RESOURCE_TYPE_TEXT, name);
         return 0;
@@ -1322,7 +1212,7 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
     }
 
     if (!lodFile) {
-        game_null_159510(
+        reportMissingTypedResource(
             DATA_COMPGEN(0x00683068, loadSpreadsheetErrorContext,
                          "GetSpreadsheet"),
             RESOURCE_TYPE_TEXT, name);
@@ -1458,40 +1348,18 @@ namespace ResourceManager {
 sample* loadSample(const char* name);
 }
 
-// Inferred diagnostic operation plus the sample-specific context below.
-// Both helpers auto-inline: retail loadSample contains two stream/message-box
-// expansions, each ending in the ostringstream vbase-destructor closure.
-// A single sample-only helper instead expands that closure into two calls
-// and scores 98.5810%; these two ordinary boundaries reproduce 100% without
-// a pragma. Names, interfaces and linkage remain inferred, not DC-proven.
-static void reportMissingResource(const char* caller, const char* kind,
-                                  const char* name)
-{
-    std::ostringstream message;
-    message
-        << DATA_COMPGEN(0x00682f18, sampleErrorPrefix,
-                        "ResourceManager::")
-        << caller
-        << DATA_COMPGEN(0x00682f2c, missingResourcePrefix,
-                        " could not find the \"")
-        << kind
-        << DATA_COMPGEN(0x00682f44, missingResourceMiddle, "\" resource \"")
-        << name
-        << DATA_COMPGEN(0x00682f54, missingResourceSuffix, "\".");
-    MessageBoxA(
-        GetForegroundWindow(), message.str().c_str(),
-        DATA_COMPGEN(0x00682f08, resourceManagerCaption,
-                     "ResourceManager"),
-        0);
-}
-
+// The shared diagnostic restores all 25 retail blocks (23 exact) and leaves
+// only the two message-stream vbase-destructor closures over-expanded:
+// 98.2289 MAX, with the former pasted-body implementation's 100 retained in
+// HIST. The reproduced VC6 trace has caller cb=445 (budget floor 1000);
+// the closures cost 43 and receive 96/62 inside reportMissingResource.
+// Do not paste the helper back or add an inline-depth control to suppress them.
 static void reportMissingSample(const char* name)
 {
     reportMissingResource(
         DATA_COMPGEN(0x00683078, getSampleErrorContext, "GetSample"),
         DATA_COMPGEN(0x00683084, sampleResourceKind, "sfx"), name);
 }
-
 VA(0x0055c3c0, 0x356)  // GetSample callee + GetSoundFile/default.wav graph
 sample* ResourceManager::loadSample(const char* name)
 {
@@ -1607,9 +1475,8 @@ CSprite* ResourceManager::getSprite(const char* name)
 
     if (!lodFile) {
 #ifdef _WIN32
-        // Complete reports each failed archive lookup; Mac 0:0x153ff4..
-        // 0x154014 retries once and returns null without either reporter.
-        game_sprite_1599e0(
+        // Complete reports failed archive lookups; Mac retries without a reporter.
+        reportMissingSpriteResource(
             DATA_COMPGEN(0x00683088, getSpriteErrorContext, "GetSprite"),
             RESOURCE_TYPE_SPRITE, name);
 #endif
@@ -1618,7 +1485,7 @@ CSprite* ResourceManager::getSprite(const char* name)
 
         if (!lodFile) {
 #ifdef _WIN32
-            game_sprite_1599e0(
+            reportMissingSpriteResource(
                 DATA_COMPGEN(0x00683088, getSpriteErrorContext, "GetSprite"),
                 RESOURCE_TYPE_SPRITE, name);
 #endif
@@ -1796,7 +1663,7 @@ void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
                      destBmap, 0, 0, false);
         source->dispose();
     } else {
-        game_null_159510(
+        reportMissingTypedResource(
             DATA_COMPGEN(0x00683094, getBackdropErrorContext, "GetBackdrop"),
             RESOURCE_TYPE_BITMAP, resName);
     }

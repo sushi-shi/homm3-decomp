@@ -102,8 +102,8 @@ public:
 
     virtual ~button();
     // widget slot 12, overridden at 0x456a10 - the only override of it
-    // in the image. Placeholder name inherited from widget.h.
-    virtual void vslot12(int on);
+    // in the image. Descriptive name inherited from widget.h.
+    virtual void onSleepChange(int on);
     void setPlayerPaletteColors(int whichPlayer);
 };
 

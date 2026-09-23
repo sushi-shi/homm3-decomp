@@ -53,7 +53,7 @@ extern long long g_bitNumber[];
 extern int g_mapWidth;
 extern int g_mapHeight;
 void checkEndGame(int arg);
-#include "inline/game_artifact_wizards_well_id.inl"
+#include "mac_shared/game_artifact_wizards_well_id.h"
 enum { TOWN_RAMPART = 1, SPECIAL_BUILDING_ID = 17, MAGE_GUILD_ID = 0,
        NUM_RESOURCES = 7 };
 enum EGameResource { MERCURY = 1, SULFUR = 3, CRYSTAL = 4, GEMS = 5 };
@@ -133,7 +133,7 @@ public:
     void resize(unsigned long size);
     T& operator[](unsigned long index) { return m_data[index]; }
     const T& operator[](unsigned long index) const { return m_data[index]; }
-    T& back() { return m_data[m_size - 1]; }
+    T& back() { return *(end() - 1); }
     void push_back(const T& value);
     T* begin() { return m_data; }
     T* end() { return m_data + m_size; }
@@ -141,6 +141,52 @@ public:
 }
 
 class CSprite;
+// Mac's installed MSL expands vector<CSprite*>::push_back in convertObject.
+// Its three capacity accessor calls and one reserve call are retained at
+// code0+0xe0e98..0xe0eec; the 12-byte POD-vector layout is also visible in
+// NewfullMap's sprite-vector fields at +0x18/+0x1c/+0x20.
+namespace std { template<class T> class allocator {}; }
+namespace Metrowerks {
+namespace details {
+template<class Allocator, class Size, int Version> class compressed_pair_imp;
+template<class Allocator, class Size>
+class compressed_pair_imp<Allocator, Size, 1> : private Allocator {
+    Size m_second;
+public:
+    Size& second() { return m_second; }
+};
+}
+template<class Allocator, class Size>
+class compressed_pair : private details::compressed_pair_imp<Allocator, Size, 1> {
+    typedef details::compressed_pair_imp<Allocator, Size, 1> base;
+public:
+    Size& second() { return base::second(); }
+};
+}
+namespace std {
+template<class T> class __vector_pod {
+protected:
+    Metrowerks::compressed_pair<allocator<T>, unsigned long> capacity_;
+    unsigned long size_;
+    T* data_;
+    unsigned long& cap() { return capacity_.second(); }
+    T*& data() { return data_; }
+    void reserve(unsigned long n);
+    void push_back(const T& value) {
+        if (size_ == cap())
+            reserve(cap() != 0 ? 2 * cap() : 1);
+        data()[size_++] = value;
+    }
+};
+template<> class vector<CSprite*> : private __vector_pod<CSprite*> {
+public:
+    unsigned long size() const { return this->size_; }
+    CSprite*& operator[](unsigned long index) { return this->data_[index]; }
+    void push_back(CSprite* const& value) {
+        __vector_pod<CSprite*>::push_back(value);
+    }
+};
+}
 #pragma options align=packed
 class CObjectType {
 public:
@@ -197,15 +243,15 @@ private:
     unsigned char m_hasTwoLevels;
     char m_afterCellData[0xb88 - 0xa5];
 public:
-    CObjectType* newfullMapFn00505EA0(int type, int objectIndex);
+    CObjectType* findObjectType(int type, int objectIndex);
     void calculateCellExtra(NewmapCell* cell, unsigned char flag);
     NewmapCell* cell(int x, int y, int z);
 private:
     NewmapCell* zCell(int x, int y, int z);
 };
 #pragma options align=reset
-#include "inline/mapcell_z_cell.inl"
-#include "inline/mapcell_cell_xyz.inl"
+#include "mac_shared/mapcell_z_cell.h"
+#include "mac_shared/mapcell_cell_xyz.h"
 
 namespace ResourceManager { CSprite* getSprite(const char* name); }
 
@@ -228,9 +274,9 @@ public:
     char m_beforeStats[0x46a - 0x12d];
     signed char m_stats[4];
     char m_afterStats[0x486 - 0x46e];
-#include "inline/hero_get_primary_skill.inl"
+#include "mac_shared/hero_get_primary_skill.h"
     float getIntelligenceFactor() const;
-#include "inline/hero_get_max_mana.inl"
+#include "mac_shared/hero_get_max_mana.h"
     unsigned char isWieldingArtifact(int artifact) const;
     int getMysticismBonus() const;
 };
@@ -255,9 +301,9 @@ public:
     long long m_built;
     long long m_active;
     char m_afterActive[0x15c - 0x154];
-#include "inline/town_has_building.inl"
-#include "inline/town_is_castle.inl"
-#include "inline/town_is_capitol.inl"
+#include "mac_shared/town_has_building.h"
+#include "mac_shared/town_is_castle.h"
+#include "mac_shared/town_is_capitol.h"
 };
 #pragma options align=reset
 
@@ -305,7 +351,7 @@ public:
 private:
     unsigned char m_beforeVersion[0x1ef24 - 0x1eed2];
 public:
-    int m_f1f698;
+    int m_gameVersion;
 private:
     char m_beforeAlignment[0x1ef3c - 0x1ef28];
 public:
@@ -346,15 +392,15 @@ public:
     void convertObject(NewmapCell* tempCell);
     bool isHumanTeam(int teamNum) const;
     bool isHumanAlly(int playerNum) const;
-#include "game_get_team.inl"
+#include "mac_shared/game_get_team.h"
     bool growCoverOfDarkness();
     void resetAllPlayerVisibility();
     void calculateProduction();
-#include "game_get_hero.inl"
-#include "inline/game_get_town.inl"
+#include "mac_shared/game_get_hero.h"
+#include "mac_shared/game_get_town.h"
 };
 
 extern game* g_game;
-#include "game_is_human_ally.inl"
+#include "mac_shared/game_is_human_ally.h"
 
 #endif

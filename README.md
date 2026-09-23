@@ -10,17 +10,17 @@ and the Classic Mac PowerPC PEF, plus the pinned CodeWarrior tools.
 
 <!-- match-score:start -->
 
-**Executable MAX: 97.05%** — weighted by function size across 1,998,996 bytes of code included in matching.
+**Executable MAX: 97.20%** — weighted by function size across 1,999,142 bytes of code included in matching.
 
-**Function exact MAX** — 4,274 / 4,766 current implementations (89.7%) have reached 100%.
+**Function exact MAX** — 4,291 / 4,768 current implementations (90.0%) have reached 100%.
 
-**CUR diagnostics** — 4,215 / 4,766 functions exact (88.4%) in this build (4766 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
+**CUR diagnostics** — 4,226 / 4,768 functions exact (88.6%) in this build (4768 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
 
 | Module       | Units | Functions exact CUR |  Function exact MAX | Fuzzy CUR | Fuzzy MAX |
 | :----------- | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`       |   123 | 3550 / 3989 (89.0%) | 3594 / 3989 (90.1%) |    96.87% |    97.19% |
-| `rmg`        |     3 |   290 / 368 (78.8%) |   303 / 368 (82.3%) |    93.53% |    95.03% |
-| `network`    |     4 |   266 / 280 (95.0%) |   268 / 280 (95.7%) |    97.68% |    98.18% |
+| `game`       |   123 | 3559 / 3991 (89.2%) | 3613 / 3991 (90.5%) |    97.16% |    97.42% |
+| `rmg`        |     3 |   291 / 368 (79.1%) |   301 / 368 (81.8%) |    93.19% |    94.37% |
+| `network`    |     4 |   267 / 280 (95.4%) |   268 / 280 (95.7%) |    97.72% |    98.08% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
 | `codec`      |     4 |     35 / 43 (81.4%) |     35 / 43 (81.4%) |    94.70% |    94.70% |
 | `victor`     |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |
@@ -38,7 +38,7 @@ _Excluded from the % above — generated/library code, not independent reconstru
 
 <!-- mac-match-score:start -->
 
-**Classic Mac PowerPC second target (last full checkpoint):** 13 / 64 admitted functions exact; 53.29% of 57,860 compared bytes match. The admitted-pair count is coverage, not the whole Mac game.
+**Classic Mac PowerPC second target (last full checkpoint):** 13 / 66 admitted functions exact; 52.58% of 59,304 compared bytes match. The admitted-pair count is coverage, not the whole Mac game.
 
 <!-- mac-match-score:end -->
 
@@ -88,7 +88,11 @@ The admitted hero controls use `-O1 -proc 750` and the linker's
 resolved Mac destinations; unsupported relocation kinds remain explicit errors.
 Imported and indirect calls retain their required TOC restores. Per-unit
 Mac profiles compile admitted bodies together in source order from the same
-authored C++, with shared declarations and explicit coverage.
+authored C++, with shared declarations and explicit coverage. Shared game
+method bodies live in their normal owning headers; the Mac compile input
+extracts the marked bodies into its Mac ABI declaration views. Those views are
+needed while the reconstructed Windows header tree still contains VC6-only
+interfaces and Windows-pinned layouts.
 
 ## Quickstart
 

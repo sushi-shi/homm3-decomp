@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 #include "homm3_minmax.h"
 
@@ -25,7 +26,6 @@
 // the image reads the two dwords below it, so the table could in principle
 // begin earlier, and the eleven-row extent is a floor rather than a
 // measured end.
-DATA(0x006a6968) extern THelpText g_combatSubWindowHelp[11];
 
 // It is an 800x44 strip at (0, 556) with a ten-slot reserve, a
 // bitmapBorder over the caller's sprite and SEVEN buttons -
@@ -64,44 +64,44 @@ type_combat_sub_window::type_combat_sub_window(
     // The hotkeys are scancodes: S, R, O, A, C, W, then D and SPACE.
     button* b = new button(54, 5, 48, 36, 0x7d1, "icm001.def",
         0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[0].m_text,
-        g_combatSubWindowHelp[0].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[0].m_text,
+        g_combatWindowHelp[0].m_rclick, 1);
     b->setHotkey(0x1f);
     m_widgets.push_back(b);
 
     b = new button(105, 5, 48, 36, 0x7d2, "icm002.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[1].m_text,
-        g_combatSubWindowHelp[1].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[1].m_text,
+        g_combatWindowHelp[1].m_rclick, 1);
     b->setHotkey(0x13);
     m_widgets.push_back(b);
 
     b = new button(3, 5, 48, 36, 0x7d3, "icm003.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[2].m_text,
-        g_combatSubWindowHelp[2].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[2].m_text,
+        g_combatWindowHelp[2].m_rclick, 1);
     b->setHotkey(0x18);
     m_widgets.push_back(b);
 
     b = new button(156, 5, 48, 36, 0x7d4, "icm004.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[3].m_text,
-        g_combatSubWindowHelp[3].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[3].m_text,
+        g_combatWindowHelp[3].m_rclick, 1);
     b->setHotkey(0x1e);
     m_widgets.push_back(b);
 
     b = new button(645, 5, 48, 36, 0x7d8, "icm005.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[6].m_text,
-        g_combatSubWindowHelp[6].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[6].m_text,
+        g_combatWindowHelp[6].m_rclick, 1);
     b->setHotkey(0x2e);
     m_widgets.push_back(b);
 
     b = new button(696, 5, 48, 36, 0x7d9, "icm006.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[7].m_text,
-        g_combatSubWindowHelp[7].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[7].m_text,
+        g_combatWindowHelp[7].m_rclick, 1);
     b->setHotkey(0x11);
     m_widgets.push_back(b);
 
     b = new button(747, 5, 48, 36, 0x7da, "icm007.def", 0, 1, 0, 0, 2);
-    b->setHelpText(g_combatSubWindowHelp[8].m_text,
-        g_combatSubWindowHelp[8].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[8].m_text,
+        g_combatWindowHelp[8].m_rclick, 1);
     b->setHotkey(0x20);
     b->setHotkey(0x39);
     m_widgets.push_back(b);
@@ -181,22 +181,22 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
 
     m_rolloverWidget = new bitmapBackedTextWidget(214, 7, 400, 32, "",
         "smalfont.fnt", "cRollovr.pcx", font::PRIMARY, 0x7d5, 1, 8);
-    m_rolloverWidget->setHelpText(g_combatSubWindowHelp[4].m_text,
-        g_combatSubWindowHelp[4].m_rclick, 1);
+    m_rolloverWidget->setHelpText(g_combatWindowHelp[4].m_text,
+        g_combatWindowHelp[4].m_rclick, 1);
     newWidgets.push_back(m_rolloverWidget);
 
     m_logScrollUpButton = new type_func_button(624, 5, 18, 17, 0x7d6,
         "ComSlide.def", TCombatWindow::scrollUp, 0, 1);
-    m_logScrollUpButton->setHelpText(g_combatSubWindowHelp[5].m_text,
-        g_combatSubWindowHelp[5].m_rclick, 1);
+    m_logScrollUpButton->setHelpText(g_combatWindowHelp[5].m_text,
+        g_combatWindowHelp[5].m_rclick, 1);
     m_logScrollUpButton->setDisabledFrame(1);
     m_logScrollUpButton->setHotkey(KEYCODE_KP_8);
     newWidgets.push_back(m_logScrollUpButton);
 
     m_logScrollDownButton = new type_func_button(624, 24, 18, 17, 0x7d7,
         "ComSlide.def", TCombatWindow::scrollDown, 2, 3);
-    m_logScrollDownButton->setHelpText(g_combatSubWindowHelp[5].m_text,
-        g_combatSubWindowHelp[5].m_rclick, 1);
+    m_logScrollDownButton->setHelpText(g_combatWindowHelp[5].m_text,
+        g_combatWindowHelp[5].m_rclick, 1);
     m_logScrollDownButton->setHotkey(KEYCODE_KP_2);
     m_logScrollDownButton->setDisabledFrame(3);
     newWidgets.push_back(m_logScrollDownButton);
@@ -283,14 +283,14 @@ TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
     // literal. The hotkeys are the SPACE and ENTER scancodes.
     widget* b = new button(213, 4, 198, 36, 0x8fc, "ICM011.def",
         0, 1, 0, 0x39, 2);
-    b->setHelpText(g_combatSubWindowHelp[9].m_text,
-        g_combatSubWindowHelp[9].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[9].m_text,
+        g_combatWindowHelp[9].m_rclick, 1);
     buttons.push_back(b);
 
     b = new button(419, 4, 198, 36, 0x7802, "ICM012.def",
         0, 1, 0, 0x1c, 2);
-    b->setHelpText(g_combatSubWindowHelp[10].m_text,
-        g_combatSubWindowHelp[10].m_rclick, 1);
+    b->setHelpText(g_combatWindowHelp[10].m_text,
+        g_combatWindowHelp[10].m_rclick, 1);
     buttons.push_back(b);
 
     for (widget** it = buttons.begin(); it != buttons.end(); ++it) {
@@ -330,7 +330,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
     m_portrait = new bitmapBorder(10, 6, 58, 64, 0x835, 0, 0x800);
     m_widgets.push_back(m_portrait);
 
-    sprintf(g_text, "%s:", (*g_generalText)[381]);
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_ATTACK_ABBREVIATION));
     m_widgets.push_back(new textWidget(
         9, 75, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x836, 0, 0, 8));
@@ -339,7 +339,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x837, 2, 0, 8);
     m_widgets.push_back(m_attackText);
 
-    sprintf(g_text, "%s:", (*g_generalText)[382]);
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_DEFENSE_ABBREVIATION));
     m_widgets.push_back(new textWidget(
         9, 87, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x838, 0, 0, 8));
@@ -348,7 +348,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x839, 2, 0, 8);
     m_widgets.push_back(m_defenseText);
 
-    sprintf(g_text, "%s:", (*g_generalText)[383]);
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_POWER_ABBREVIATION));
     m_widgets.push_back(new textWidget(
         9, 99, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x83a, 0, 0, 8));
@@ -357,7 +357,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x83b, 2, 0, 8);
     m_widgets.push_back(m_powerText);
 
-    sprintf(g_text, "%s:", (*g_generalText)[384]);
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_KNOWLEDGE_ABBREVIATION));
     m_widgets.push_back(new textWidget(
         9, 111, 60, 12, g_text, "tiny.fnt", font::WHITE,
         0x83c, 0, 0, 8));
@@ -366,7 +366,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x83d, 2, 0, 8);
     m_widgets.push_back(m_knowledgeText);
 
-    sprintf(g_text, "%s:", (*g_generalText)[385]);
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_MORALE));
     m_widgets.push_back(new textWidget(
         9, 131, 60, 12, g_text, "tiny.fnt", font::PRIMARY,
         0x83e, 0, 0, 8));
@@ -375,7 +375,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         iconWidget::ICON_STYLE_PLAIN);
     m_widgets.push_back(m_moraleIcon);
 
-    sprintf(g_text, "%s:", (*g_generalText)[386]);
+    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_LUCK));
     m_widgets.push_back(new textWidget(
         9, 143, 60, 12, g_text, "tiny.fnt", font::PRIMARY,
         0x840, 0, 0, 8));
@@ -445,7 +445,7 @@ void TCombatHeroSubWindow::update(const hero& info, const hero* otherHero,
     m_luckIcon->setIconFrame(
         mutableInfo.getLuck(otherHero, onCursedGround, 1) + 3);
 
-    sprintf(buffer, "%s\n%d/%d", (*g_generalText)[388], info.m_mana,
+    sprintf(buffer, "%s\n%d/%d", g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_LABEL), info.m_mana,
             mutableInfo.getMaxMana());
     m_manaText->setText(buffer);
 }
@@ -540,7 +540,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             iconWidget::ICON_STYLE_PLAIN);
         m_widgets.push_back(m_creatureIcon);
 
-        const char* attackName = (*g_generalText)[381];
+        const char* attackName = g_generalText->getText(GENERAL_TEXT_ATTACK_ABBREVIATION);
         sprintf(g_text, "%s:", attackName);
         m_widgets.push_back(new textWidget(
             9, 75, 60, 12, g_text, "tiny.fnt", font::WHITE,
@@ -550,7 +550,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             0x89b, 2, 0, 8);
         m_widgets.push_back(m_attackText);
 
-        const char* defenseName = (*g_generalText)[382];
+        const char* defenseName = g_generalText->getText(GENERAL_TEXT_DEFENSE_ABBREVIATION);
         sprintf(g_text, "%s:", defenseName);
         m_widgets.push_back(new textWidget(
             9, 87, 60, 12, g_text, "tiny.fnt", font::WHITE,
@@ -560,7 +560,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             0x89d, 2, 0, 8);
         m_widgets.push_back(m_defenseText);
 
-        const char* damageName = (*g_generalText)[387];
+        const char* damageName = g_generalText->getText(GENERAL_TEXT_DAMAGE_ABBREVIATION);
         sprintf(g_text, "%s:", damageName);
         m_widgets.push_back(new textWidget(
             9, 99, 60, 12, g_text, "tiny.fnt", font::WHITE,
@@ -570,7 +570,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             0x89f, 2, 0, 8);
         m_widgets.push_back(m_damageText);
 
-        const char* speedName = (*g_generalText)[390];
+        const char* speedName = g_generalText->getText(GENERAL_TEXT_HEALTH_LABEL);
         sprintf(g_text, "%s:", speedName);
         m_widgets.push_back(new textWidget(
             9, 111, 60, 12, g_text, "tiny.fnt", font::WHITE,
@@ -580,7 +580,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             0x8a1, 2, 0, 8);
         m_widgets.push_back(m_speedText);
 
-        const char* moraleName = (*g_generalText)[385];
+        const char* moraleName = g_generalText->getText(GENERAL_TEXT_MORALE);
         sprintf(g_text, "%s:", moraleName);
         m_widgets.push_back(new textWidget(
             9, 131, 60, 12, g_text, "tiny.fnt", font::WHITE,
@@ -590,7 +590,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             iconWidget::ICON_STYLE_PLAIN);
         m_widgets.push_back(m_moraleIcon);
 
-        const char* luckName = (*g_generalText)[386];
+        const char* luckName = g_generalText->getText(GENERAL_TEXT_LUCK);
         sprintf(g_text, "%s:", luckName);
         m_widgets.push_back(new textWidget(
             9, 143, 60, 12, g_text, "tiny.fnt", font::WHITE,
@@ -614,7 +614,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             spellY += 38;
         }
         m_spellText = new textWidget(
-            15, 169, 48, 36, g_emptyRolloverText, "tiny.fnt", font::PRIMARY,
+            15, 169, 48, 36, "", "tiny.fnt", font::PRIMARY,
             0x8aa, 1, 0, 8);
     } else {
         m_backgroundWidget = new bitmapBorder(
@@ -630,7 +630,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
             spellY += 38;
         }
         m_spellText = new textWidget(
-            15, 7, 48, 36, g_emptyRolloverText, "tiny.fnt", font::PRIMARY,
+            15, 7, 48, 36, "", "tiny.fnt", font::PRIMARY,
             0x8aa, 1, 0, 8);
     }
 
@@ -715,7 +715,7 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
     }
 
     if (info.m_spellInfluenceQueue.size() == 0)
-        m_spellText->setText((*g_generalText)[675]);
+        m_spellText->setText(g_generalText->getText(GENERAL_TEXT_NO_ACTIVE_SPELLS));
     else
         m_spellText->setText("");
 }

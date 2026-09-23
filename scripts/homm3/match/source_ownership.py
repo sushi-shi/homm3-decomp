@@ -56,6 +56,7 @@ class Definition:
     declaration_only_type: int = 0
     original_name: str = ""
     template: bool = False
+    internal: bool = False
     source_owner: str = ""
     owner_include_offset: int | None = None
 
@@ -794,7 +795,9 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None
                     line_indexes[relative], char_offset(cursor.location.offset)),
                 template=template,
                 source_owner=fragments.get(relative, ('', None))[0],
-                owner_include_offset=fragments.get(relative, ('', None))[1]))
+                owner_include_offset=fragments.get(relative, ('', None))[1],
+                internal=(cursor.kind == k.FUNCTION_DECL
+                          and cursor.storage_class == cindex.StorageClass.STATIC)))
             if instances:
                 instance_requests.append((first, cursor.location.offset))
                 extras = []

@@ -1432,10 +1432,10 @@ VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 // around a call here; gzinflatebuf retains and calls 0x4d6b80.
 
 // The body is the base list. RTTI proves the empty TDebugBreak base;
-// the message overload of its constructor is empty.
+// its default constructor is declared in exceptions.h. The
 VA(0x0049a0c0, 0xF9)
 TRuntimeError::TRuntimeError(const char* text)
-    : TDebugBreak(text), std::runtime_error(std::string(text))
+    : std::runtime_error(std::string(text))
 {
 }
 

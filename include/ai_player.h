@@ -20,8 +20,8 @@ void aiMarkDangerZones(hero* currentHero, long* dangerZones);
 
 // Five-entry AI hero caps indexed by game difficulty. Dreamcast names both
 // compiland statics; retail hire_heroes proves these corresponding addresses.
-DATA(0x00660518) extern int g_heroLimits[5];
-DATA(0x0066052c) extern int g_globalLimits[5];
+extern int g_heroLimits[5];
+extern int g_globalLimits[5];
 
 long aiGetValueOfArtifact(type_artifact artifact, const hero* owner,
                               unsigned char equipped, unsigned char exact);
@@ -75,9 +75,21 @@ public:
     // inlined into type_income_artifact::get_value, whose by-value double
     // return temp at [ebp-8] is what the retail bytes home under /Op.
     long getResourceValue(int* resources) const;
-#include "ai_player_get_resource_value.inl"
+// HOMM3_MAC_SHARED_BEGIN ai_player_get_resource_value
+    double getResourceValue(enum EGameResource resource) const
+    {
+        return m_resourceValue[resource];
+    }
+// HOMM3_MAC_SHARED_END ai_player_get_resource_value
     void startTurn();  // 0x4297c0
-#include "ai_player_set_attack_bonuses.inl"
+// HOMM3_MAC_SHARED_BEGIN ai_player_set_attack_bonuses
+    static void setAttackBonuses(float computerBonus,
+                                   float humanBonus)
+    {
+        s_attackComputerBonus = computerBonus;
+        s_attackHumanBonus = humanBonus;
+    }
+// HOMM3_MAC_SHARED_END ai_player_set_attack_bonuses
 
 protected:
     void makeGift(long playerId);  // 0x429110
@@ -244,7 +256,7 @@ unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown);
 long findMagusHutValue(long playerId, unsigned char exploreMode);
 void fillProhibitedArray(playerData* player, unsigned char* prohibited);
 
-extern const char* g_resourceNames[7];
+extern const char* g_resourceNames[8];
 extern char g_aiResourceWarningFormat[];
 
 // Retail .bss 0x693718, one byte per TAdventureObjectType.
@@ -254,7 +266,7 @@ extern char g_aiResourceWarningFormat[];
 // it; named in the gUnnamed69ccc4 style. ai_player.obj is the nearest
 // admitted consumer.
 DATA(0x00693718)
-extern unsigned char g_unnamed693718[];
+extern unsigned char g_oneUseEvents[];
 
 // Dreamcast publishes this object-value table by name. Retail's
 // AI_value_of_observatory indexes the same dword array with the trigger
@@ -273,7 +285,7 @@ public:
     type_artifact_effect();
     virtual ~type_artifact_effect();
     virtual long getValue(const hero* owner, unsigned char equipped,
-                           unsigned char exact) const;
+                           unsigned char exact) const = 0;
 };
 
 // Dreamcast names this table `const_artifact_effects`; retail indexes the
@@ -282,7 +294,10 @@ extern std::vector<type_artifact_effect*> g_constArtifactEffects[144];
 
 // Complete's 0x63ac7c sentinel stream selects the concrete effect class
 // created for each artifact. The numeric order is retail's jump table at
-// 0x434530; the Dreamcast initializer corroborates the shared class family.
+// 0x434530: slots 12..15 are tome, antimagic, antimorale, antiluck.
+// The source arm order differs from that numeric order; interchanging them
+// makes artifact 83 consume the wrong number of operands. Dreamcast
+// corroborates the shared class family, not Complete's effect-id ordering.
 enum EArtifactEffectKind {
     ARTIFACT_EFFECT_MIGHT,
     ARTIFACT_EFFECT_POWER,
@@ -296,10 +311,10 @@ enum EArtifactEffectKind {
     ARTIFACT_EFFECT_SPELLCASTER,
     ARTIFACT_EFFECT_DURATION,
     ARTIFACT_EFFECT_SCHOOL,
+    ARTIFACT_EFFECT_TOME,
     ARTIFACT_EFFECT_ANTIMAGIC,
     ARTIFACT_EFFECT_ANTIMORALE,
     ARTIFACT_EFFECT_ANTILUCK,
-    ARTIFACT_EFFECT_TOME,
     ARTIFACT_EFFECT_INCOME,
     ARTIFACT_EFFECT_CREATURE_GROWTH,
     ARTIFACT_EFFECT_SPELL,

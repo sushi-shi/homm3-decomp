@@ -13,6 +13,10 @@
 #include "sample.h"
 #include "spells.h"
 
+// Initial contents recovered from the pinned Complete image.
+DATA(0x00660858) const long g_hypnotizeTurns[4] = { 1, 1, 2, 3 };
+DATA(0x0063b7c8) const long g_chainLightningTargets[4] = { 4, 4, 5, 5 };
+
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the
 // <algorithm> min/max macros expand to those) but they are NOT the
@@ -1746,6 +1750,8 @@ long type_AI_spellcaster::getDispelValue(const army* ourArmy, type_enchant_data 
     return getCancelValue(&testArmy, 0);
 }
 
+// DC ai_tactical.cpp:2199 names the by-value min wrapper; its parameter
+// copies reproduce retail's healed/damage stack slots.
 VA(0x00439c30, 0x10F)  // dc 0x403c0
 long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data caster) const
 {
@@ -1753,7 +1759,8 @@ long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data ca
     long value = getCancelValue(&currentArmy, 1);
     int mastery = caster.getMasteryValue();
     int damage = ourArmy->m_topCreatureDamage;
-    int healed = cppMin<int>(mastery + g_spellTraits[SPELL_CURE].m_powerFactor * caster.m_power, damage);
+    int healed = ::min(mastery + g_spellTraits[SPELL_CURE].m_powerFactor * caster.m_power,
+                       damage);
     if (m_winLikely) {
         if (ourArmy->m_topCreatureDamage + ourArmy->getAIExpectedDamage()
                 < ourArmy->m_monInfo.m_hitPoints)
@@ -1952,25 +1959,20 @@ long type_AI_spellcaster::getBerserkValue(const army* enemy, type_enchant_data c
     return total / targets.size();
 }
 
+// DC ai_tactical.cpp:2417/2427/2445 names cannot_attack and the by-value
+// min/max wrappers. The wrappers' parameter copies are visible in retail as
+// the two stack temporaries around each reference-returning selector. Clang
+// cannot choose between this project's int and double overloads for Win32
+// long, but VC6 selects the int wrapper and reproduces retail exactly.
 VA(0x0043a500, 0x16E)  // dc 0x40ac0
 long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data caster) const
 {
-    if (m_winLikely)
+    if (m_winLikely || enemy->cannotAttack())
         return 0;
-    if (enemy->m_spellInfluence[62])
-        return 0;
-    if (enemy->m_spellInfluence[70])
-        return 0;
-    if (enemy->m_spellInfluence[74])
-        return 0;
-    if (enemy->is(creatureImmobilized))
-        return 0;
-    if (enemy->m_creatureType == CREATURE_FIRST_AID_TENT
-            || enemy->m_creatureType == CREATURE_AMMO_CART)
-        return 0;
-    long best = 0;
+    long total = 0;
     const army* enemyRow = g_combatManager->m_armies[m_enemySide];
-    long turns = cppMin(g_hypnotizeTurns[caster.m_mastery], m_estimate.m_roundsLeft);
+    long turns = ::min(g_hypnotizeTurns[caster.m_mastery],
+                       m_estimate.m_roundsLeft);
     if (enemy->is(creatureDone))
         turns--;
     if (turns == 0)
@@ -1984,9 +1986,9 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
             continue;
         if (!g_combatManager->m_cells[enemyRow->m_gridIndex].m_validMove)
             continue;
-        best = cppMax(getTraitorValue(enemy, enemyRow), best);
+        total = ::max(getTraitorValue(enemy, enemyRow), total);
     }
-    return best;
+    return total;
 }
 
 VA(0x0043a670, 0x291)  // dc 0x40bb8
@@ -2278,16 +2280,16 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const arm
         if (!g_combatManager->validSpellTargetArmy(choice.m_spell, m_side, victim, 0,
                                              creatureCast))
             continue;
-        long resurrected = (g_spellTraits[choice.m_spell].m_masteryBonus[choice.m_mastery]
+        int resurrected = (g_spellTraits[choice.m_spell].m_masteryBonus[choice.m_mastery]
                             + g_creatureTypeTraits[victim->m_creatureType].m_hitPoints
                             + choice.m_power)
                            * victim->m_numTroops / healedArmy->m_monInfo.m_hitPoints;
-        long missing = healedArmy->m_origNumTroops - healedArmy->m_numTroops;
+        int missing = healedArmy->m_origNumTroops - healedArmy->m_numTroops;
         if (resurrected > missing
                 && missing < healedArmy->m_origNumTroops * 3 / 4
                 && !m_winLikely)
             continue;
-        long healed = cppMin(resurrected, missing);
+        long healed = ::min(resurrected, missing);
         if (healed < 1)
             continue;
         long value = static_cast<long>(
@@ -2709,7 +2711,7 @@ void type_AI_spellcaster::setMeleeEnemies()
     const army* ourArmy = &g_combatManager->m_armies[m_side][0];
     memset(m_meleeEnemies, 0, sizeof(m_meleeEnemies));
     for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++) {
-        if (ourArmy->cannotAttack() || ourArmy->getSpellTime(SPELL_BLIND))
+        if (ourArmy->cannotAttack() || ourArmy->getSpellTime(SPELL_HYPNOTIZE))
             continue;
         const army* target = ourArmy->getAITarget();
         if (!target || ourArmy->canShoot(0) || target->getAITargetTime() > 1)

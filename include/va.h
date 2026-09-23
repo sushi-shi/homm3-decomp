@@ -18,6 +18,8 @@
  *                                  source definition to sit on; kind is
  *                                  STATIC_INIT_DISPATCH / STATIC_ATEXIT /
  *                                  STATIC_DTOR / STATIC_CTOR /
+ *                                  CLASS_NONCOPY_CTOR (explicitly excludes
+ *                                  the copy overload; CLASS_CTOR is generic) /
  *                                  DEFAULT_CTOR_CLOSURE /
  *                                  VECTOR_DELETING_DTOR / VECTOR_DTOR /
  *                                  VECTOR_* / BITSET_* / TREE_* / MAP_* / STD_* /

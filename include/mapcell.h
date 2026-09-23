@@ -758,7 +758,7 @@ public:
     enum EGameResource getWindmillResource() const;
     void setWindmill(enum EGameResource resource, short amount);
     int getWitchSkill() const;
-    void setWitchSkill(int skill);
+    void setWitchSkill(TSecondarySkill skill);
 };
 SIZE(ExtraInfoUnion, 4);
 
@@ -1194,7 +1194,9 @@ public:
     // assigns.  The Dreamcast declarator's enum is preserved in the name.
     int m_artifact;
     // E:\gamedcs\MapCell.h:735, dc 0xf4a50
-#include "inline/mapcell_monster_data_ctor.inl"
+// HOMM3_MAC_SHARED_BEGIN mapcell_monster_data_ctor
+    MonsterData() { m_artifact = ARTIFACT_NONE; }
+// HOMM3_MAC_SHARED_END mapcell_monster_data_ctor
 };
 SIZE(MonsterData, 0x30);
 
@@ -1213,8 +1215,6 @@ void upgradeCellExtraInfo(NewmapCell* cell, int saveVersion);
 // Retail .rdata 0x660428 stores a pointer to sixteen bytes per adventure-
 // object type. can_land proves byte zero as the trigger-object landing veto;
 // the remaining bytes stay opaque.
-DATA(0x00660428)
-extern const unsigned char (*g_adventureObjectLandBlocked)[16];
 
 // --- type_obscuring_object ---
 
@@ -1305,15 +1305,13 @@ public:
     // 0x4fd950, `ret 8`. One of the four retail-only rows this compiland's
     // span audit already flags as having no Dreamcast counterpart; Load
     // reaches it, and only when the save version is at least 25.
-    void newfullMapFn004FD950(TAbstractFile* infile, int saveVersion);
+    void loadQuestGuardList(TAbstractFile* infile, int saveVersion);
     // 0x5042c0, nullary. Reached by BOTH readMapObjects and loadMapObjects,
     // right after the object-type list is deserialized. It rebuilds the
-    // per-class object-type index: the 232-entry array of vectors at
-    // NewfullMap+0xdc that this tree does not model yet. Named for its
-    // address on NewfullMapFn_00505F20's precedent - the Dreamcast mapcell
-    // roster runs loadObjectType -> $E482..$E485 -> readMapObjects with
-    // nothing between, so no surviving symbol names it.
-    void newfullMapFn005042C0();
+    // per-class object-type index: the 232-entry array of vectors at +0xdc.
+    // This role-based name is provisional: the Dreamcast roster has no
+    // corresponding procedure between loadObjectType and readMapObjects.
+    void rebuildObjectTypeIndex();
     void soDTransformRandomDwellings();
     void loadShipyards();
     int readObjectType(TAbstractFile* infile, CObjectType& objectType);
@@ -1323,8 +1321,8 @@ public:
     int loadObject(TAbstractFile* infile, CObject* object);
 
 private:
-    void close();
     void init(int size, unsigned char twoLayers);
+    void close();  // Original: Close, mapcell.cpp:537, dc 0xec724.
     // `ret 0xc`: the layer index is the third argument, and the return is
     // the cell count (size * size), not a status.
     int readMapLayer(TAbstractFile* infile, int size, int layer);
@@ -1409,22 +1407,24 @@ private:
     void calcCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
 
 public:
-    // (0x4ad470) calls it at 0x4ae45a/0x4ae483 with (hero->id, opposing player)
-    void newfullMapFn00505D20(int heroId, int player);
-    void newfullMapFn00505D60(type_point point, int player);
-    void newfullMapFn00505DA0();
+    // Role-based names. DoCombat (0x4ad470) broadcasts the defeated hero
+    // and winning player at 0x4ae45a/0x4ae483; monster removal broadcasts
+    // the defeated/joined/fled stack's location. Quest slots +0x24/+0x28
+    // implement the same notifications (hero_defeated/monster_defeated).
+    void notifyHeroDefeated(int heroId, int player);
+    void notifyMonsterDefeated(type_point point, int player);
+    void loadObjectTypeTemplates();
     // Retail-only helper at 0x505f20. Its behavior selects or appends the
     // matching object-type/sprite pair and writes the resulting type index.
-    // No surviving symbol names it, so the address-bearing spelling remains
-    // provisional until a source identity is proven.
-    void newfullMapFn00505F20(CObject* object, int objectType,
+    // No surviving symbol names it; setObjectType describes its retail role.
+    void setObjectType(CObject* object, int objectType,
                                int objectIndex, int terrain);
     // Retail-only helper at 0x505ea0, used by ConvertObject and hiscore.
     // It scans m_objectTypeIndex[objectType] backwards for a matching extra
     // and returns its address. The array is a Complete addition absent in
     // CodeView NewfullMap type 0x3450. No surviving symbol names the helper;
-    // its address-bearing spelling remains provisional.
-    CObjectType* newfullMapFn00505EA0(int objectType, int extra);
+    // findObjectType is a provisional role-based name.
+    CObjectType* findObjectType(int objectType, int extra);
     NewfullMap();
     ~NewfullMap();
     void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
@@ -1435,7 +1435,17 @@ public:
 
 // Canonical inline definitions in Dreamcast MapCell.h source-line order.
 
-#include "inline/mapcell_get_num_levels.inl"
+// HOMM3_MAC_SHARED_BEGIN mapcell_get_num_levels
+// MapCell.h:769 in the DC roster (dc 0x2e48), i.e. a header inline of
+// this class - and retail keeps no out-of-line row for it either.
+// advManager::ProcessDeSelect's elevation-toggle arm expands it in
+// place: `movzx edx,[gpGame+0x1fc48] / inc edx / cmp edx,1 / jle`, the
+// zero-extended flag plus one, tested against one. Gated to the
+// compilation personalities whose call sites prove the expansion
+// (victorylossconditions' z bound in CheckForDefeatedMonsterWin is
+// the same movzx/inc shape, 2026-08-20).
+inline int NewfullMap::getNumLevels() { return m_hasTwoLevels + 1; }
+// HOMM3_MAC_SHARED_END mapcell_get_num_levels
 
 // Const route lookup retains the recovered helper and level arithmetic.
 // E:\gamedcs\MapCell.h:847, dc 0xbc8dc
@@ -1444,7 +1454,19 @@ inline const NewmapCell* NewfullMap::zCell(int x, int y, int z) const
     return m_cellData + x + y * m_size + z * m_size * m_size;
 }
 
-#include "inline/mapcell_z_cell.inl"
+// HOMM3_MAC_SHARED_BEGIN mapcell_z_cell
+// MapCell.h:850, dc 0x1f974. This worker reproduces all 49 retail bytes
+// at 0x408770, including the boat callers' retained zero-coordinate lookup.
+// The former scalar-cell claim incorrectly distinguished 49 x86 bytes from
+// 82 SH4 bytes and alleged a zCell bounds test absent on both platforms.
+// Identical folded bodies cannot prove a unique original retail symbol;
+// this annotation owns the emitted canonical worker, not a renamed wrapper.
+VA(0x00408770, 0x31)  // exact body + anchor-callees, dc 0x1f974
+inline NewmapCell* NewfullMap::zCell(int x, int y, int z)
+{
+    return m_cellData + x + y * m_size + z * m_size * m_size;
+}
+// HOMM3_MAC_SHARED_END mapcell_z_cell
 
 // E:\gamedcs\MapCell.h:889, dc 0xbc930
 inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
@@ -1458,7 +1480,16 @@ inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
 // WinCE build's out-of-line copy of a header inline - so it is a header
 // inline for EVERY compiland. DC line 907 calls zCell directly.
 
-#include "inline/mapcell_cell_xyz.inl"
+// HOMM3_MAC_SHARED_BEGIN mapcell_cell_xyz
+// DC MapCell.h:897 calls zCell. The unrecorded line 896 does not prove
+// a release VERIFY. Removing the inferred storage check preserves this
+// helper chain and restores the boat callers' retail expansion decisions;
+// the retained 49-byte arithmetic body is owned by zCell above.
+inline NewmapCell* NewfullMap::cell(int x, int y, int z)
+{
+    return zCell(x, y, z);
+}
+// HOMM3_MAC_SHARED_END mapcell_cell_xyz
 
 inline NewmapCell* NewfullMap::cell(type_point point)
 {
@@ -1542,8 +1573,9 @@ inline unsigned char ExtraInfoUnion::magicSpringIsFull() const { return m_magicS
 
 inline void ExtraInfoUnion::fillMagicSpring(unsigned char full) { m_magicSpringInfo.m_full = full; }
 
-// Original: ExtraInfoUnion::FillGarden; MapCell.h:1012, dc 0xbc974
-inline void ExtraInfoUnion::fillGarden(EGameResource resource)
+// DC MapCell.h:1012..1015 records the resource store followed by the full
+// flag store, and game::PerWeek calls this canonical helper.
+inline void ExtraInfoUnion::fillGarden(enum EGameResource resource)
 {
     m_gardenInfo.m_resource = resource;
     m_gardenInfo.m_full = 1;
@@ -1557,7 +1589,7 @@ inline unsigned char ExtraInfoUnion::gardenIsFull() const { return m_gardenInfo.
 
 inline enum EGameResource ExtraInfoUnion::getGardenResource() const { return m_gardenInfo.m_resource; }
 
-// Original: ExtraInfoUnion::SetGarden; MapCell.h:1028, dc 0xbc9b0
+// Original SetGarden, MapCell.h:1028..1032, dc 0xbc9b0.
 inline void ExtraInfoUnion::setGarden(short id, EGameResource resource)
 {
     m_gardenInfo.m_id = id;
@@ -1567,7 +1599,7 @@ inline void ExtraInfoUnion::setGarden(short id, EGameResource resource)
 
 inline void ExtraInfoUnion::setGardenEmpty() { m_gardenInfo.m_full = 0; }
 
-// Original: ExtraInfoUnion::SetMagicSpring; MapCell.h:1040, dc 0xbca04
+// Original SetMagicSpring, MapCell.h:1040..1043, dc 0xbca04.
 inline void ExtraInfoUnion::setMagicSpring(short id, unsigned char full)
 {
     m_magicSpringInfo.m_id = id;
@@ -1695,9 +1727,9 @@ inline bool ExtraInfoUnion::wagonHasArtifact() const { return m_wagonInfo.m_hasA
 inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
 
 // DC 1177..1181 writes resource, amount, full, has_artifact, visited_bits.
-// The Complete masks prove the corresponding five fields. The prior
-// combined mask and these recovered stores both fully expand in
-// RandomizeEvents; neither currently emits the retained 0x4c2360 body.
+// The Complete masks prove the corresponding five fields. With the shrine
+// bitset default-constructed and unpinned, RandomizeEvents retains this call
+// and the 0x4c2360 body matches exactly.
 // E:\gamedcs\MapCell.h:1176, dc 0xbcac8
 VA(0x004c2360, 0x27)
 inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
@@ -1761,10 +1793,13 @@ inline void ExtraInfoUnion::setWindmill(enum EGameResource resource, short amoun
 inline int ExtraInfoUnion::getWitchSkill() const { return m_witchHutInfo.m_skill; }
 
 // E:\gamedcs\MapCell.h:1251, dc 0xbcbdc
+// DC lines 1252/1253 assign the typed skill, then clear visits. Retail folds
+// those field stores into the combined 0xfff0001f mask; retain the source fields.
 VA(0x004c23c0, 0x1c)
-inline void ExtraInfoUnion::setWitchSkill(int skill)
+inline void ExtraInfoUnion::setWitchSkill(TSecondarySkill skill)
 {
-    m_value = (m_value & 0xfff0001f) | ((skill & 0x7f) << 13);
+    m_witchHutInfo.m_skill = skill;
+    m_cellVisitedInfo.m_visited = 0;
 }
 
 // MapCell.h:1260. Dreamcast returns TArtifact; this foundational header

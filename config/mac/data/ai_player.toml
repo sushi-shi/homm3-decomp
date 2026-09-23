@@ -11,7 +11,7 @@ evidence = "Mac valueOfHiring 0:0x351bc directly loads the four-byte IEEE float 
 
 [[data]]
 retail_va = 0x0067814c
-source = "include/game.h"
+source = "src/game.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x430c0

@@ -1,3 +1,4 @@
+#include "text.h"
 #include "va.h"
 
 #include <stdio.h>
@@ -133,7 +134,7 @@ type_university_window::type_university_window(
     m_selectionWidgets.push_back(background);
 
     widget* newWidget = new textWidget(
-        21, 16, 422, 20, (*g_generalText)[603], "medfont.fnt",
+        21, 16, 422, 20, g_generalText->getText(GENERAL_TEXT_UNIVERSITY), "medfont.fnt",
         font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(newWidget);
     m_selectionWidgets.push_back(newWidget);
@@ -150,7 +151,7 @@ type_university_window::type_university_window(
     m_selectionWidgets.push_back(newWidget);
 
     newWidget = new textWidget(
-        27, 129, 410, 70, (*g_generalText)[604], "smalfont.fnt",
+        27, 129, 410, 70, g_generalText->getText(GENERAL_TEXT_UNIVERSITY_INTRODUCTION), "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(newWidget);
     m_selectionWidgets.push_back(newWidget);
@@ -189,7 +190,7 @@ type_university_window::type_university_window(
         newWidget = new textWidget(
             m_skills[i].m_bottomBar->m_x, m_skills[i].m_bottomBar->m_y,
             m_skills[i].m_bottomBar->m_width, m_skills[i].m_bottomBar->m_height,
-            g_skillMasteryNames[0], "smalfont.fnt",
+            g_secondarySkillLevels[0], "smalfont.fnt",
             font::PRIMARY, -1, 1, 0, 8);
         m_widgets.push_back(newWidget);
         m_selectionWidgets.push_back(newWidget);
@@ -215,7 +216,7 @@ type_university_window::type_university_window(
 
     m_selectedSkill.m_topBar = 0;
     m_selectedSkill.m_textWidget = new textWidget(
-        179, 27, 100, 16, g_emptyRolloverText, "smalfont.fnt",
+        179, 27, 100, 16, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_selectedSkill.m_textWidget);
     m_purchaseWidgets.push_back(m_selectedSkill.m_textWidget);
@@ -227,13 +228,13 @@ type_university_window::type_university_window(
     m_selectedSkill.m_bottomBar = 0;
 
     newWidget = new textWidget(
-        179, 97, 100, 16, g_skillMasteryNames[0], "smalfont.fnt",
+        179, 97, 100, 16, g_secondarySkillLevels[0], "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(newWidget);
     m_purchaseWidgets.push_back(newWidget);
 
     m_purchaseTextWidget = new textWidget(
-        28, 133, 409, 67, g_emptyRolloverText, "smalfont.fnt",
+        28, 133, 409, 67, "", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_purchaseTextWidget);
     m_purchaseWidgets.push_back(m_purchaseTextWidget);
@@ -243,7 +244,7 @@ type_university_window::type_university_window(
         0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
     resourceIcon->setIconFrame(6);
     resourceIcon->setHelpText(
-        (*g_generalText)[626], (*g_generalText)[243], 1);
+        g_generalText->getText(GENERAL_TEXT_VIEW_WORLD_GOLD), g_generalText->getText(GENERAL_TEXT_RESOURCES_HELP), 1);
     m_widgets.push_back(resourceIcon);
     m_purchaseWidgets.push_back(resourceIcon);
 
@@ -277,7 +278,7 @@ type_university_window::type_university_window(
     m_purchaseWidgets.push_back(cancelButton);
 
     m_rolloverWidget = new textWidget(
-        8, 362, 448, 18, g_emptyRolloverText, "smalfont.fnt",
+        8, 362, 448, 18, "", "smalfont.fnt",
         font::PRIMARY, widgetId, 1, 0, 8);
     m_widgets.push_back(m_rolloverWidget);
 
@@ -319,20 +320,20 @@ void type_university_window::updateSkillButton(type_university_skill& skill)
     std::string text;
 
     if (m_currentHero->m_skillLevel[skill.m_skill] > 0) {
-        text = (*g_generalText)[605];
+        text = g_generalText->getText(GENERAL_TEXT_HERO_ALREADY_KNOWS_THIS_SKILL);
         skill.m_topBar->setIconFrame(0);
         skill.m_bottomBar->setIconFrame(0);
     } else if (g_heroClasses[m_currentHero->m_heroClass]
                    .m_gainSecondarySkillChance[skill.m_skill] == 0) {
-        text = (*g_generalText)[606];
+        text = g_generalText->getText(GENERAL_TEXT_HERO_CANNOT_LEARN_THIS_SKILL);
         skill.m_topBar->setIconFrame(2);
         skill.m_bottomBar->setIconFrame(2);
     } else if (m_currentHero->m_skillCount == MAX_SECONDARY_SKILLS) {
-        text = (*g_generalText)[607];
+        text = g_generalText->getText(GENERAL_TEXT_HERO_CANNOT_LEARN_ANY_MORE_SKILLS);
         skill.m_topBar->setIconFrame(2);
         skill.m_bottomBar->setIconFrame(2);
     } else {
-        text = formatString((*g_generalText)[608], g_skillMasteryNames[0],
+        text = formatString(g_generalText->getText(GENERAL_TEXT_UNIVERSITY_COST_FORMAT), g_secondarySkillLevels[0],
                              g_sSkillTraits[skill.m_skill].m_name, TUITION);
         if (skill.m_topBar)
             skill.m_topBar->setIconFrame(1);
@@ -358,18 +359,18 @@ void type_university_window::skillClick(TSecondarySkill skill)
     unsigned int i;
 
     if (m_currentHero->m_skillLevel[skill] > 0) {
-        normalDialog((*g_generalText)[605], NORMAL_DIALOG_DEFAULT, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_HERO_ALREADY_KNOWS_THIS_SKILL), NORMAL_DIALOG_DEFAULT, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
     if (g_heroClasses[m_currentHero->m_heroClass]
             .m_gainSecondarySkillChance[skill] == 0) {
-        normalDialog((*g_generalText)[606], NORMAL_DIALOG_DEFAULT, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_HERO_CANNOT_LEARN_THIS_SKILL), NORMAL_DIALOG_DEFAULT, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
     if (m_currentHero->m_skillCount == MAX_SECONDARY_SKILLS) {
-        normalDialog((*g_generalText)[607], NORMAL_DIALOG_DEFAULT, -1, -1,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_HERO_CANNOT_LEARN_ANY_MORE_SKILLS), NORMAL_DIALOG_DEFAULT, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -382,13 +383,13 @@ void type_university_window::skillClick(TSecondarySkill skill)
     std::string newText;
     const char* skillName = g_sSkillTraits[skill].m_name;
 
-    newText = formatString((*g_generalText)[609], g_skillMasteryNames[0],
+    newText = formatString(g_generalText->getText(GENERAL_TEXT_UNIVERSITY_TUITION_FORMAT), g_secondarySkillLevels[0],
                              skillName, TUITION);
     m_selectedSkill.m_skill = skill;
     m_selectedSkill.m_button->setSkill(skill, 1);
     m_selectedSkill.m_textWidget->setText(skillName);
     m_purchaseTextWidget->setText(newText.c_str());
-    newText = formatString((*g_generalText)[610], skillName);
+    newText = formatString(g_generalText->getText(GENERAL_TEXT_PURCHASE_FORMAT), skillName);
     m_purchaseButton->setHelpText(newText.c_str(), 0, 1);
     updateSkillButton(m_selectedSkill);
     m_purchaseButton->enable(
@@ -429,7 +430,7 @@ void type_university_window::handleWidgetHover(widget* currentWidget)
     // DC 420 obtains the help pointer once before the 422..425 arms.
     const char* helpText = currentWidget->getHelpText();
     if (!helpText)
-        m_rolloverWidget->setText(g_emptyRolloverText);
+        m_rolloverWidget->setText("");
     else
         m_rolloverWidget->setText(helpText);
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -497,7 +498,7 @@ int type_university_window::purchaseClick(message& msg)
         int skill = window->m_selectedSkill.m_skill;
         const char* skillName = g_sSkillTraits[skill].m_name;
         result = formatString(
-            g_universitySkillHelpFormat, g_skillMasteryNames[0],
+            g_universitySkillHelpFormat, g_secondarySkillLevels[0],
             skillName, 2000);
         normalDialog(result.c_str(), 4, -1, -1,
                      20, skill * 3 + 3, -1, 0, -1, 0, -1, 0);

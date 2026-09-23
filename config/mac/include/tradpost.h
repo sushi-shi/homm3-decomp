@@ -23,8 +23,8 @@ class TTextResource {
     char m_beforeText[0x1c];
 public:
     std::vector<char*> m_text;
-#include "inline/textresource_get_text.inl"
-#include "inline/textresource_index.inl"
+#include "mac_shared/textresource_get_text.h"
+#include "mac_shared/textresource_index.h"
 };
 extern const TTextResource* g_generalText;
 

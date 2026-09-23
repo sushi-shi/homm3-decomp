@@ -9,7 +9,21 @@
 // GetArmyName's retail range guard proves the inclusive upper bound.
 const int g_creatureTypeLast = 0x96;
 
-#include "inline/creaturetype_get_army_name.inl"
+// HOMM3_MAC_SHARED_BEGIN creaturetype_get_army_name
+// E:\gamedcs\CreatureType.h:296. Complete retains the army.obj copy;
+// events.cpp also expands this at monsters_flee/join/sell_out, passing a
+// literal count so each singular/plural selection folds at its call site.
+VA(0x00440100, 0x3E)  // two-register /Gr ABI + trait lookup, dc 0x1ef94
+inline const char* getArmyName(int type, int count)
+{
+    if (type < 0 || type > g_creatureTypeLast) {
+        return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
+    } else {
+        return count == 1 ? g_creatureTypeTraits[type].m_name
+                          : g_creatureTypeTraits[type].m_pluralName;
+    }
+}
+// HOMM3_MAC_SHARED_END creaturetype_get_army_name
 
 #define isBaseElemental(type) \
     ((type) == CREATURE_AIR_ELEMENTAL || (type) == CREATURE_EARTH_ELEMENTAL \

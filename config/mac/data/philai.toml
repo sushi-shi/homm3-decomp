@@ -3,7 +3,7 @@
 
 [[data]]
 retail_va = 0x006989c0
-source = "include/advmgr.h"
+source = "src/advmgr.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x527e38
@@ -23,7 +23,7 @@ evidence = "Canonical advmgr.h identifies the retail game-over latch at 0x6972b8
 
 [[data]]
 retail_va = 0x0069ccd4
-source = "include/advmgr.h"
+source = "src/advmgr.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x52c088
@@ -32,15 +32,15 @@ sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
 evidence = "Windows MoveHero clears the DATA-claimed g_unnamed69ccd4 after the game-over gate. Mac MoveHero clears zero-filled storage 1+0x52c088 via TOC 1+0x670 at 0x14061c, immediately after the same gate."
 
 [[data]]
-retail_va = 0x00698790
-source = "include/advmgr.h"
+retail_va = 0x00698758
+source = "src/misc.cpp"
 declaration_only = true
 mac_symbol = "g_config"
 mac_section = 1
 mac_offset = 0x527d40
 mac_size = 4
 sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
-evidence = "Windows MoveHero tests standalone DATA-claimed g_unnamed698790 at 0x698790 to suppress its local visibility scan. Dreamcast MoveHero at 0x10ece4 reads ?gConfig@@3UconfigStruct@@A+0x38 at the same gate. Mac MoveHero at 0x140644 loads TOC 1+0x5c4 -> zero-filled config base 1+0x527d40 and reads +0x38; the Mac declaration view projects only that evidenced field, mapping the platform-specific storage to the canonical source expression."
+evidence = "Windows MoveHero reads g_config.m_blackoutComputer at +0x38 from DATA-claimed g_config at 0x698758. Dreamcast MoveHero at 0x10ece4 reads ?gConfig@@3UconfigStruct@@A+0x38 at the same gate. Mac MoveHero at 0x140644 loads TOC 1+0x5c4 -> zero-filled config base 1+0x527d40 and reads +0x38; the Mac declaration view projects only that evidenced field, mapping the platform-specific storage to the canonical source expression."
 
 [[data]]
 retail_va = 0x0069954c
@@ -54,7 +54,7 @@ evidence = "src/kbwin.cpp already owns DATA(0x69954c) on g_videoPaused. Windows 
 
 [[data]]
 retail_va = 0x0069ccbc
-source = "include/advmgr.h"
+source = "src/advmgr.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x52c084
@@ -64,7 +64,7 @@ evidence = "Windows MoveHero passes the DATA-claimed g_mapVisibilityBit to mapEx
 
 [[data]]
 retail_va = 0x006783c8
-source = "include/game.h"
+source = "src/game.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x432f4
@@ -74,7 +74,7 @@ evidence = "Windows DATA 0x6783c8 is g_mapWidth. Mac convertObject loads TOC 1+0
 
 [[data]]
 retail_va = 0x006783cc
-source = "include/game.h"
+source = "src/game.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x432f8
@@ -162,7 +162,7 @@ evidence = "Windows getTurnAIVars relocation +0x0f targets data_291684, the DATA
 
 [[data]]
 retail_va = 0x00691680
-source = "include/game.h"
+source = "src/game.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x634f4

@@ -23,6 +23,9 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// Retail scalar state; startup initial values come from the pinned image.
+DATA(0x0069957c) int g_cdDriveNumber;
+
 // DC S_LPROC32 identifies this ordinary callback as TU-local.
 static int mainMenuHandler(message& msg);
 
@@ -38,7 +41,7 @@ DATA(0x0067fa64) static unsigned char g_checkDiskSpace = 1;
 
 // SetupCDDrive's result is stored by kb.obj's startup path and consumed here
 // to select the localized missing-CD wording. No public DC name survives.
-DATA(0x0069957c) extern int g_cdDriveNumber;
+
 
 // DC public gMainMenuHelp; InitializeHelpText fills the same five retail
 // THelpText rows at this address.
@@ -142,22 +145,22 @@ static int mainMenuHandler(message& msg)
     }
 
     if (g_mainMenu->m_showCdMessage && !updatePlease) {
-        const char* fill = (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_DEFAULT_ARGUMENT];
+        const char* fill = g_generalText->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
 
         g_mainMenu->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                WINDOW_ALL_WIDGETS_HIGH);
         if (g_cdDriveNumber != CD_DRIVE_NUMBER_5 &&
             g_cdDriveNumber != CD_DRIVE_NUMBER_6) {
             normalDialog(formatString(
-                (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT],
+                g_generalText->getText(GENERAL_TEXT_CD_REQUIRED_GENERIC_FORMAT),
                 fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             const char* drive = g_cdDriveNumber == CD_DRIVE_NUMBER_5
-                ? (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5]
-                : (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6];
+                ? g_generalText->getText(GENERAL_TEXT_RESTORATION_OF_ERATHIA)
+                : g_generalText->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
             normalDialog(formatString(
-                (*g_generalText)[GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT],
+                g_generalText->getText(GENERAL_TEXT_WRONG_CD_EDITION_FORMAT),
                 drive, fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -195,7 +198,7 @@ static int mainMenuHandler(message& msg)
             if (msg.m_codeY == TMainMenu::QUIT_ID) {
                 videoPause();
                 if (!g_lobbyLaunched) {
-                    normalDialog((*g_generalText)[GENERAL_TEXT_QUIT],
+                    normalDialog(g_generalText->getText(GENERAL_TEXT_QUIT),
                                  2, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
                     videoResume();

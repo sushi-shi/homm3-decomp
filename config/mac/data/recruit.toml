@@ -22,7 +22,7 @@ evidence = "Retail recruitUnit::update and recruitUnit::open use .bss 0x69d5e8 f
 
 [[data]]
 retail_va = 0x006aacb0
-source = "include/recruit.h"
+source = "src/kb.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x553448

@@ -43,8 +43,8 @@ public:
     virtual void dim() const;
     virtual void enable(unsigned char on);
     int sendMessage(ECommands command, int extra);
-#include "inline/widget_hide.inl"
-#include "inline/widget_show.inl"
+#include "mac_shared/widget_hide.h"
+#include "mac_shared/widget_show.h"
 };
 
 class heroWindow {
@@ -148,7 +148,7 @@ public:
 private:
 public:
     NewSMapHeader m_mapHeader;
-#include "inline/game_on_same_team.inl"
+#include "mac_shared/game_on_same_team.h"
 };
 extern game* g_game;  // Mac TOC 1+0x630 -> pointer storage 1+0x528940.
 // Canonical src/campaignbrief.cpp owns this same-TU byte at retail

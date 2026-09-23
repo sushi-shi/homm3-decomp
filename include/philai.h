@@ -72,19 +72,19 @@ long valueOfGarrison(const hero* currentHero, NewmapCell* cell);
 long valueOfIdol(const hero* currentHero, long moveCost);
 int valueOfFlotsam(playerData* player);
 int valueOfGarden(const hero* currentHero, NewmapCell* cell);
-__forceinline int valueOfLeanTo(NewmapCell* cell, playerData* player);
-__forceinline long valueOfHeroEvent(
+inline int valueOfLeanTo(NewmapCell* cell, playerData* player);
+inline long valueOfHeroEvent(
     const hero* currentHero, NewmapCell* cell, short x, short y, short z,
     short moveCost);
-__forceinline long valueOfHillFort(const hero* currentHero,
+inline long valueOfHillFort(const hero* currentHero,
                                       long moveCost);
-__forceinline int valueOfLibrary(const hero* currentHero,
+inline int valueOfLibrary(const hero* currentHero,
                                  NewmapCell* cell);
-__forceinline int valueOfLighthouse(NewmapCell* cell);
+inline int valueOfLighthouse(NewmapCell* cell);
 int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell);
-__forceinline int valueOfMercenaryCamp(const hero* currentHero,
+inline int valueOfMercenaryCamp(const hero* currentHero,
                                        NewmapCell* cell);
-__forceinline long valueOfMagusHut(long playerId);
+inline long valueOfMagusHut(long playerId);
 int valueOfMine(const hero* currentHero, NewmapCell* cell);
 long valueOfMonsters(const hero* currentHero, NewmapCell* cell,
                        type_point point);
@@ -104,7 +104,7 @@ long valueOfResource(const hero* currentHero, NewmapCell* cell,
 int valueOfSeaChest(const hero* currentHero, NewmapCell* cell);
 int valueOfSkeleton(const hero* currentHero, NewmapCell* cell);
 int valueOfScroll(const hero* currentHero, NewmapCell* cell);
-__forceinline int valueOfShrine(const hero* currentHero, NewmapCell* cell);
+inline int valueOfShrine(const hero* currentHero, NewmapCell* cell);
 int valueOfSirens(const hero* currentHero);
 int valueOfStables(const hero* currentHero, long& moveCost);
 long valueOfTown(const hero* currentHero, int x, int y, int z,

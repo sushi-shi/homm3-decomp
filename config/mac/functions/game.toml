@@ -44,3 +44,14 @@ mac_symbol = ".perDay__4gameFv"
 target_sha256 = "5fdcdcb456d93bca94f925d79a36d108435bab059e5ea542e87c0bbbb29698f4"
 evidence = "Preceding body ends BLR at 0xde814; perDay begins mflr/stmw at 0xde818 and returns at 0xdeef8 before the next leaf at 0xdeefc. Caller at 0xdda78, day/week handling, town and hero loops, production, and grail reset identify source game::perDay; g_resources is independently pinned at code0+0x2a4d4c."
 data = [0x63e668]
+
+[[functions]]
+retail_va = 0x4c9990
+unit = "game"
+source = "src/game.cpp"
+mac_section = 0
+mac_offset = 0xe0be8
+mac_size = 0x448
+mac_symbol = ".convertObject__4gameFP10NewmapCell"
+target_sha256 = "324ad74b149106d4c88f10483bc66283017595fc158300c8329916a5772cace7"
+evidence = "TOWN buildBuilding calls code0+0xe0be8 with game and NewmapCell; pinned body 0xe0be8..0xe1030 returns at BLR 0xe102c, next prologue 0xe1030. Mac body reads object index at cell+0x20, pushes 0x38-byte CObjectType, switches on map object type 5/54/71/77/79/98, loads named object graphics tables, calls ResourceManager getSprite at 0x153fcc, updates 0x22-byte cells, and calls calculateCellExtra. Dreamcast game.cpp:9195..9316 and Windows VA 0x004c9990 own the same operation."

@@ -110,3 +110,14 @@ mac_size = 0x5d4
 mac_symbol = ".getLuckDescription__4heroCFv"
 target_sha256 = "631890cf620dc455dc76bdfdd73ce81494333f4a990a37152c9c021a9f9cb622"
 evidence = "Preceding getMoraleDescription BLR at 0xf8ea4 and next hero body prologue at 0xf947c bound this 0x5d4-byte function. It tests hero flag+0x105 bit0x400000, indexes generalText[438], artifact0x6c and luck text table, checks Grail building through active bits, then calls getLuck and formats signed residuals. Source and Dreamcast identify the analogous luck description; Mac body calls the 16-byte vector indexer at0x948 through TTextResource+0x1c."
+
+[[functions]]
+retail_va = 0x4db3e0
+unit = "hero"
+source = "src/hero.cpp"
+mac_section = 0
+mac_offset = 0xf7550
+mac_size = 0x15c
+mac_symbol = ".getDescription__13type_artifactCFv"
+target_sha256 = "4194d43e85d0c72ab6c22bbaf232032a44a240f62b2d808f695a53c778c2f280"
+evidence = "Preceding artifact rollover BLR at 0xf754c and next hero-screen status prologue at 0xf76ac bound the 0x15c-byte body. This member reads type_artifact id+0 and spell id+4, indexes 0x20-byte artifact traits to description+0x10, constructs and appends a string through the bracket parser, indexes 0x88-byte spell traits to name+0x10, then appends the remainder. The pinned CodeWarrior candidate emits the exact .getDescription__13type_artifactCFv hunk, and Dreamcast hero.cpp:2450..2468 independently identifies the source order."

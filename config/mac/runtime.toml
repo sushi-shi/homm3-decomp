@@ -153,12 +153,28 @@ sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
 evidence = "Installed CodeWarrior MSL msl_utility:859 defines compressed_pair::second as return base::second(). Restoring MSL's empty vector -> __vector_imp -> __vector_pod constructor layer makes valueOfHiring emit this wrapper at candidate +0x428/+0x440/+0x454 for capacity_ access. Retail calls the corresponding details::compressed_pair_imp::second at +0x400/+0x418/+0x42c. Both receive the same pair address in r3 and return its second-member reference; the emitted wrapper's full four-byte body is blr, identical to the independently bounded pinned 0:0x215c accessor before the next prologue at 0x2160. This is a verified library-template ABI alias, not a source-owned game helper."
 
 [[functions]]
+symbol = ".second__Q310Metrowerks7details54compressed_pair_imp<Q23std20allocator<P7CSprite>,Ul,1>Fv"
+mac_section = 0
+mac_offset = 0x215c
+mac_size = 0x4
+sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "GAME convertObject's installed-MSL vector<CSprite*> push_back emits three calls to this compressed-pair capacity accessor at candidate +0x2dc/+0x2fc/+0x314; the target has three calls to the same four-byte BLR body at code0+0x215c. The template element changes its MWOB spelling only, and the accessor returns the receiver in r3 unchanged. Runtime template ABI alias only."
+
+[[functions]]
 symbol = ".reserve__Q23std24__vector_pod<P8pathCell>FUl"
 mac_section = 0
 mac_offset = 0x47b0
 mac_size = 0x10c
 sha256 = "3cc56d7f3bda84ce4151786be7cb0db34f1f42098209e911577824ad30971999"
 evidence = "AI_PLAYER valueOfHiring's canonical MSL vector<pathCell*> push_back emits this named POD reserve call at candidate +0x464; Mac retail calls the body at 0:0x47b0 from 0:0x354b4. The callee compares requested capacity, allocates and copies pointer entries, frees the previous buffer, and updates capacity. Its final return precedes the next body at 0x48bc. Library template identity only."
+
+[[functions]]
+symbol = ".reserve__Q23std23__vector_pod<P7CSprite>FUl"
+mac_section = 0
+mac_offset = 0x47b0
+mac_size = 0x10c
+sha256 = "3cc56d7f3bda84ce4151786be7cb0db34f1f42098209e911577824ad30971999"
+evidence = "GAME convertObject's installed-MSL vector<CSprite*> push_back emits this POD reserve call at candidate +0x330 when capacity is full; the Mac target calls code0+0x47b0 at +0x304. The body copies four-byte pointer elements, expands capacity and returns; element-type spelling differs from the already reviewed pathCell* instantiation but the pinned code body is the same. Runtime template ABI alias only."
 
 [[functions]]
 symbol = ".__dt__Q23std25vector<15HeroDestination>Fv"
@@ -305,12 +321,28 @@ sha256 = "d3b56bb17fa8233c223e3f186ceff91d3b3e779b6a2e219459be246577de1cef"
 evidence = "Retail KB formatString temporary assignment passes destination r3, source r4, position zero r5 and npos r6 to 0x1c094 at 0x116914..0x116924. Source-view inline std::string::operator=(const string&) now exposes the same named assign(const string&, unsigned long, unsigned long) ABI. Callee uses source string length and storage, returns destination; final BLR 0x1c2e0 and next prologue 0x1c2e4 bound all 592 bytes. Library call identity only, not a template-body score."
 
 [[functions]]
+symbol = ".append__Q23std6stringFUlc"
+mac_section = 0
+mac_offset = 0x1c388
+mac_size = 0xf8
+sha256 = "32d260bd698fcd15717a56fda5a8c03c294ebe62bff969b7067acbbd0be2637e"
+evidence = "The pinned CodeWarrior MSL string header defines operator+=(char) as append(1, char); HERO type_artifact::getDescription emits the exact named append(unsigned long,char) call at candidate +0x94. Retail calls 0x1c388 at code 0xf75d8 with count one in r4 and character in r5. The callee checks count and capacity, grows string storage, then writes the byte through memset. Its final BLR at 0x1c47c and next append(const char*,unsigned long) prologue at 0x1c480 bound the full 248-byte SHA-verified body. Runtime library identity only."
+
+[[functions]]
 symbol = ".__dt__Q23std6stringFv"
 mac_section = 0
 mac_offset = 0x44c0
 mac_size = 0xa8
 sha256 = "6b1832d7920128a61af4112c4bfbdf946fcfa98f59f4f50cb37869132736fdf6"
 evidence = "KB destroys each stack formatString temporary after assignment, passing receiver r3 and deleting flag -1 r4 to this string destructor at 0x44c0. Callee updates shared-storage count, frees storage only at zero and conditionally frees receiver for positive flag. Own prologue follows assign BLR 0x44bc, final BLR 0x4564 and next constructor prologue 0x4568 bound all 168 bytes. Library identity only, not a template-body score."
+
+[[functions]]
+symbol = ".__ct__Q23std6stringFPCcRCQ23std12allocator<c>"
+mac_section = 0
+mac_offset = 0x4568
+mac_size = 0xdc
+sha256 = "c4cafd34c0430f98133a12603038811c79a560b389707f82c61458d6b8abd865"
+evidence = "The named CodeWarrior MSL basic_string(const char*, const allocator&) constructor is emitted at type_artifact::getDescription candidate +0x50; the source-view declaration follows the pinned MSL string header. Retail getDescription calls 0x4568 at code 0xf759c with destination r3, artifact description r4 and stack allocator r5. The callee stores an empty handle, calls strlen on r4, checks the length and initializes from the source range. Its prologue follows the prior destructor BLR at 0x4564, final BLR is 0x4640 and the next prologue starts 0x4644. Full 220-byte pinned PEF span was SHA-verified. Runtime library identity only."
 
 [[functions]]
 symbol = ".__ct__Q23std6stringFv"
@@ -512,6 +544,14 @@ mac_offset = 0x129618
 mac_size = 0xf8
 sha256 = "78650eaee44bf3abdb60ff8ff3f74acb18e8f7c9aad6cb5cb56a0a943ce04cf6"
 evidence = "NewfullMap::readMonsterData calls this retained MSL vector<MonsterData>::push_back at 0x123db0 with receiver this+0x30 and a local element. The complete body grows capacity through 0x12d7f0 when needed, uses 0x24-byte elements, copies their string and eight dwords, increments size, then returns at 0x12970c before the next prologue at 0x129710. Candidate MWOB names this instantiation. Runtime call identity only."
+
+[[functions]]
+symbol = ".push_back__Q23std21vector<11CObjectType>FRC11CObjectType"
+mac_section = 0
+mac_offset = 0xe7d24
+mac_size = 0xac
+sha256 = "592e867f45b9822ac232a3a68256c3920411eb0579076644a7b42bf6097162f8"
+evidence = "Mac game::convertObject calls this MSL vector<CObjectType>::push_back at 0xe0c40 with receiver the NewfullMap object-type vector and a 0x38-byte CObjectType element. The complete body checks size against capacity, grows through 0xeab64, copies the element at 0xe7dd0, increments size, and returns at BLR 0xe7dcc before the copy constructor's distinct prologue at 0xe7dd0. Candidate MWOB names the exact instantiation. Runtime call identity only."
 
 [[functions]]
 symbol = ".__vc__Q23std10vector<Pc>CFUl"

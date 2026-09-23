@@ -58,6 +58,25 @@ def headers(root: Path, profile: Profile) -> dict[str, bytes]:
     from homm3.retail_labels.source import mask_lexical_noise
     root = root.resolve()
     result = {}
+    shared = {}
+    manifest = root / "config/mac/shared-bodies.toml"
+    if manifest.is_file():
+        for row in tomllib.loads(manifest.read_text()).get("bodies", []):
+            name, owner = row["name"], row["owner"]
+            if (not re.fullmatch(r"[A-Za-z0-9_]+", name)
+                    or not owner.startswith(("include/", "src/"))
+                    or ".." in Path(owner).parts):
+                raise ValueError("invalid Mac shared-body entry")
+            owner_path = root / owner
+            source = owner_path.read_text()
+            begin = f"// HOMM3_MAC_SHARED_BEGIN {name}\n"
+            end = f"// HOMM3_MAC_SHARED_END {name}\n"
+            if source.count(begin) != 1 or source.count(end) != 1:
+                raise ValueError(f"{owner}: missing or duplicate Mac shared body {name}")
+            body = source.split(begin, 1)[1].split(end, 1)[0]
+            if not body.strip() or name in shared:
+                raise ValueError(f"{owner}: empty or duplicate Mac shared body {name}")
+            shared[f"include/mac_shared/{name}.h"] = body.encode()
     include = re.compile(r'^[ \t]*#[ \t]*include\s*[<"]([^>"]+)[>"]', re.MULTILINE)
     directive = re.compile(r'^[ \t]*#[ \t]*include\b', re.MULTILINE)
 
@@ -68,7 +87,9 @@ def headers(root: Path, profile: Profile) -> dict[str, bytes]:
         name = path.relative_to(root).as_posix()
         if name in result:
             return
-        data = path.read_bytes()
+        data = shared.get(name)
+        if data is None:
+            data = path.read_bytes()
         result[name] = data
         text = data.decode()
         # Mask comments but preserve string literals for include operands.
@@ -82,7 +103,9 @@ def headers(root: Path, profile: Profile) -> dict[str, bytes]:
         for match in matches:
             target = match.group(1)
             choices = [path.parent / target, *(root / base / target for base in profile.include_dirs)]
-            found = next((candidate for candidate in choices if candidate.is_file()), None)
+            found = next((candidate for candidate in choices
+                          if candidate.is_file()
+                          or candidate.resolve().relative_to(root).as_posix() in shared), None)
             if found is None:
                 raise ValueError(f"{name}: missing Mac include {target!r}; extend the unit profile")
             visit(found)

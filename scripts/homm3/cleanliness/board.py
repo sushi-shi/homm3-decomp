@@ -36,6 +36,12 @@ The rows (all ratcheted; floors start at the tree's current counts):
   inline-depth pins   source-false compiler-steering debt. Local experiments
                       are useful, but committed pins only ratchet down while
                       the natural declaration/TU/compiler state is recovered.
+  end-position inserts  insert(end(), ...) sites to review for a recovered
+                      push_back or other container helper. Count bulk/range
+                      inserts too; the census does not prove they are wrong.
+  std internal references  authored std::_ names, including explicit library
+                      specializations. Restore the public/source helper in
+                      callers; retained library definitions need review.
   cpp extern decls    a declaration re-spelled in a consumer .cpp instead
                       of living in its OWNER's header. Fix: declare once
                       in the owner header and #include it.
@@ -302,6 +308,36 @@ _INLINE_GATE = re.compile(r"\bINLINE_GATE\s*\(")
 _INLINE_DEPTH_ZERO = re.compile(
     r"^[ \t]*#[ \t]*pragma[ \t]+inline_depth[ \t]*\([ \t]*0[ \t]*\)",
     re.MULTILINE)
+_INSERT_CALL = re.compile(r"\binsert\s*\(")
+_END_ARGUMENT = re.compile(r"(?:^|\.|->)\s*end\s*\(\s*\)\s*$")
+_STD_INTERNAL = re.compile(r"\bstd\s*::\s*_[A-Za-z_]\w*\b")
+
+
+def _end_insert_sites(code: str, _ctx) -> list:
+    """Count an end() first argument, including multiline/nested receivers.
+
+    An end() in a later range/value argument is not the insertion position.
+    Keep this a source census: a range insertion can be legitimate and still
+    needs inspection, unlike a single-value append spelled to steer inlining.
+    """
+    out = []
+    for call in _INSERT_CALL.finditer(code):
+        depth = 0
+        for pos in range(call.end(), len(code)):
+            char = code[pos]
+            if char in "([":
+                depth += 1
+            elif char in ")]":
+                if depth == 0:
+                    break
+                depth -= 1
+            elif char == "," and depth == 0:
+                if _END_ARGUMENT.search(code[call.end():pos].strip()):
+                    out.append(call.start())
+                break
+            elif char in ";{}":
+                break
+    return out
 
 # One preprocessor directive may span several physical lines. Count every
 # view identifier in the complete logical directive, while `_strip` keeps
@@ -439,6 +475,12 @@ METRICS = (
     ("inline-depth pins", _regex_sites(_INLINE_DEPTH_ZERO), False,
      "do not add committed compiler-steering pins; use them only as local "
      "diagnostics, then recover the natural declaration/body/TU state"),
+    ("end-position inserts", _end_insert_sites, False,
+     "review the source evidence for push_back or another container helper; "
+     "do not bypass a helper to steer inlining; bulk/range inserts may be genuine"),
+    ("std internal references", _regex_sites(_STD_INTERNAL), False,
+     "restore the public/source helper at call sites; retain internal library "
+     "definitions only where supported by evidence"),
     ("cpp extern decls", _regex_sites(_CPP_EXTERN), True,
      "declare it ONCE in the owner's header and #include that - a "
      "consumer .cpp never re-declares"),
@@ -612,6 +654,32 @@ _SAMPLES = {
         ("#pragma inline_depth()",
          "#pragma inline_depth(1)",
          "// #pragma inline_depth(0) was a probe")),
+    "end-position inserts": (
+        ("values.insert(values.end(), value);",
+         "values.insert(\n values.end(),\n 1, value);",
+         "values.insert(values.end(), first, last);",
+         "values->insert(values->end(), value);",
+         "insert(end(), value);",
+         "values.insert(getValues(a, b).end(), value);",
+         "values.insert(buckets[slot(a, b)].end(), value);"),
+        ("values.push_back(value);",
+         "values.insert(values.begin(), value);",
+         "values.insert(where, other.begin(), other.end());",
+         "values.insert(where, other.end());",
+         "values.insert(values.endPosition(), value);",
+         "insertInto(values.end(), value);",
+         'trace("values.insert(values.end(), value)");',
+         "// values.insert(values.end(), value) was removed")),
+    "std internal references": (
+        ("std::_cpp_min<long>(a, b);",
+         "std ::\n _MIN(a, b);",
+         "void std::_Construct(widget** slot, widget* const& value) {}"),
+        ("std::min(a, b);",
+         "other_std::_helper();",
+         "std::vector<int> values;",
+         'VA_STL(0x1234, 9, "std::_Construct");',
+         "// std::_Sort is a compiler-generated symbol",
+         "/* std::_cpp_min(a, b) */")),
     "cpp extern decls": (
         ("extern int g_heroCount;",
          '  extern "C" void mm_init();'),
@@ -748,6 +816,10 @@ _SAMPLES["per-TU preprocessor scaffolds"] = (
 # continuation-line blindness above survived - the joined sample still
 # scored on its first line. These must count to the digit.
 _MULTI_SAMPLES = {
+    "end-position inserts": (
+        ("a.insert(a.end(), x); b.insert(\nb.end(), y);", 2),),
+    "std internal references": (
+        ("std::_cpp_min(a, std::_cpp_max(b, c));", 2),),
     "view preprocessor artifacts": (
         (_VIEW_IF_SAMPLE, 2),),
     "per-TU preprocessor scaffolds": (

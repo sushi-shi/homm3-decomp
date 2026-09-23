@@ -9,6 +9,9 @@
 #include "magicterrain.h"
 #include "message_record.h"
 typedef unsigned long size_t;
+enum { GENERAL_TEXT_HERO_EXPERIENCE_LIMIT_FORMAT = 2,
+       GENERAL_TEXT_CHEAT_MAXIMUM = 438,
+       GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT = 733 };
 
 extern "C" int abs(int);
 extern "C" int sprintf(char*, const char*, ...);
@@ -100,10 +103,12 @@ enum TArtifact { ARTIFACT_NONE = -1, ARTIFACT_SPELLBOOK = 0,
                  ARTIFACT_SPELL_SCROLL = 1, ARTIFACT_CATAPULT = 3 };
 enum SpellID { MAC_SPELL_PLACEHOLDER = 0 };
 enum TArtifactSlot { MAC_ARTIFACT_SLOT_PLACEHOLDER = 0 };
+namespace std { class string; }
 struct type_artifact {
     TArtifact m_artifactId;
     int m_extra;
-#include "type_artifact_constructors.inl"
+#include "mac_shared/type_artifact_constructors.h"
+    std::string getDescription() const;
 };
 namespace std {
 template <class T> class allocator {
@@ -137,6 +142,7 @@ public:
     // allocator by const reference; the Mac caller passes its stack address.
     explicit string(const allocator<char>& a = allocator<char>());
     string(const string&);
+    string(const char* s, const allocator<char>& a = allocator<char>());
     ~string();
     // Pinned MSL string inlines operator=(s) -> assign(s) ->
     // assign(s, traits::length(s)). char_traits<char>::length calls strlen.
@@ -145,11 +151,13 @@ public:
     string& assign(const char*, unsigned long);
     string& assign(const string&, unsigned long, unsigned long);
     string& append(const char*, unsigned long);
+    string& append(unsigned long, char);
     string& append(const string&, unsigned long, unsigned long);
     // Pinned MSL string: operator+= forwards through these append overloads.
     string& append(const char* s) { return append(s, strlen(s)); }
     string& append(const string& s) { return append(s, 0, npos); }
     string& operator+=(const char* s) { return append(s); }
+    string& operator+=(char c) { return append(1, c); }
     string& operator+=(const string& s) { return append(s); }
     const char* c_str() const { return m_handle->m_data; }
 };
@@ -219,18 +227,26 @@ struct TCombinationArtifact {
     std::bitset<144> m_components;
 };
 extern const TArtifactTraits (&g_artifactTraits)[144];
+// Mac getDescription at 0xf7550 reads spell names at +0x10 in 0x88-byte
+// records; the canonical record is declared in include/armygrp.h.
+struct SSpellTraits {
+    char m_beforeName[0x10];
+    const char* m_name;
+    char m_remaining[0x88 - 0x14];
+};
+extern const SSpellTraits (&g_spellTraits)[81];
 extern const TCombinationArtifact* g_combinationArtifacts;
 extern const signed char g_artifactPrimarySkillBonuses[][4];
 class TTextResource {
 public:
     char m_beforeText[0x1c];
     std::vector<char*> m_text;
-#include "inline/textresource_get_text.inl"
-#include "inline/textresource_index.inl"
+#include "mac_shared/textresource_get_text.h"
+#include "mac_shared/textresource_index.h"
 };
 extern const TTextResource* g_generalText;
-extern const char* g_moraleTexts[42];
-extern const char* g_luckTexts[25];
+extern const char* g_moraleInfo[42];
+extern const char* g_luckInfo[25];
 extern unsigned long long g_bitNumber[];
 const char* getBuildingName(int townType, int buildingId);
 std::string formatString(const char* format, ...);
@@ -359,14 +375,14 @@ public:
     void updateArmies();
     void destroySiegeWeaponArtifact(int creatureType);
     void removeArtifact(long slot);
-#include "inline/hero_adjust_primary_skill.inl"
+#include "mac_shared/hero_adjust_primary_skill.h"
     void updateSpellList();
     void initialize(short index);
     void initialize(const HeroExtra* setup);
     int giveSS(int whichSS, int numLevelsToGive);
-#include "inline/hero_set_primary_skill.inl"
+#include "mac_shared/hero_set_primary_skill.h"
     void addSpell(int whichSpell);
-#include "inline/hero_get_artifact.inl"
+#include "mac_shared/hero_get_artifact.h"
     unsigned char equipArtifact(const type_artifact* artifact, long slot);
     unsigned char addToBackpack(const type_artifact* artifact, long slot);
     unsigned char heroFn004DBE80(int combination);
@@ -383,9 +399,9 @@ public:
                   unsigned char ignoreNullifyMorale) const;
     int getLuck(const hero* otherHero, unsigned char onCursedGround,
                 unsigned char ignoreNullifyLuck) const;
-#include "inline/hero_get_primary_skill.inl"
+#include "mac_shared/hero_get_primary_skill.h"
     float getIntelligenceFactor() const;
-#include "inline/hero_get_max_mana.inl"
+#include "mac_shared/hero_get_max_mana.h"
     int getMobility(unsigned char seaMovement) const;
     int getMobility() const;
     bool isLevelUpCampaignOverride() const;
@@ -461,7 +477,7 @@ public:
     unsigned long long m_built;
     unsigned long long m_active;
     char m_afterActive[0x15c - 0x154];
-#include "inline/town_has_building.inl"
+#include "mac_shared/town_has_building.h"
 };
 struct VictoryConditionStruct {
     unsigned char checkForArtifactWin();
@@ -476,7 +492,7 @@ class game {
 public:
     mac_campaign m_campaign;
     char m_beforeVersion[0x1ef24 - 0x1ed0c];
-    int m_f1f698;
+    int m_gameVersion;
     char m_beforeMapHeader[0x1f0f8 - 0x1ef28];
     MacMapHeader m_mapHeader;
     char m_beforePlayers[0x1ff48 - 0x1f0f8 - sizeof(MacMapHeader)];
@@ -487,7 +503,7 @@ public:
     char m_ssDisabled[28];
     bool isLocalHuman(int gamePos) const;
     int getLocalPlayerGamePos() const;
-#include "inline/game_get_town.inl"
+#include "mac_shared/game_get_town.h"
 };
 extern game* g_game;
 #pragma options align=reset

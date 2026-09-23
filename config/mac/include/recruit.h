@@ -40,8 +40,8 @@ class TTextResource {
     char m_beforeText[0x1c];
 public:
     std::vector<char*> m_text;
-#include "inline/textresource_get_text.inl"
-#include "inline/textresource_index.inl"
+#include "mac_shared/textresource_get_text.h"
+#include "mac_shared/textresource_index.h"
 };
 extern const TTextResource* g_generalText;
 extern char g_text[];
@@ -61,7 +61,7 @@ public:
     unsigned char isLocalHuman() const;
 };
 extern playerData* g_currentPlayer;
-extern int g_videoPaused;
+extern int g_remoteOn;
 
 class widget {
 public:
@@ -107,7 +107,7 @@ class TPalette16 {
 public:
     unsigned short m_data[256];
 };
-extern TPalette16* g_unnamed6aacb0;
+extern TPalette16* g_systemPalette;
 
 class baseManagerCore {
     char m_beforeStatus[0x30];
@@ -179,6 +179,6 @@ template <class T> inline const T& min(const T& left, const T& right)
     return left < right ? left : right;
 }
 TArtifact siegeMonsterToSiegeArtifact(TCreatureType type);
-#include "inline/creaturetype_get_army_name.inl"
+#include "mac_shared/creaturetype_get_army_name.h"
 
 #endif

@@ -1606,9 +1606,32 @@ inline int army::getLuck(unsigned char applyLimits) const
         return applyLimits ? limit(-3, m_luck, 3) : m_luck;
     }
 
-#include "inline/army_offset_to_front.inl"
+// HOMM3_MAC_SHARED_BEGIN army_offset_to_front
+    // E:\gamedcs\Army.h:736
+VA(0x00445cd0, 0x38)  // anchor-caller + exact header-inline body, dc 0x27c9c
+inline int army::offsetToFront(int direction) const
+    {
+        if (direction >= 0 && direction <= 2)
+            return 1;
+        if (direction >= 3 && direction <= 5)
+            return -1;
+        return m_facing ? 1 : -1;
+    }
+// HOMM3_MAC_SHARED_END army_offset_to_front
 
-#include "inline/army_clear_ai_values.inl"
+// HOMM3_MAC_SHARED_BEGIN army_clear_ai_values
+    // E:\gamedcs\Army.h:752, dc 0x27ccc. The older DC helper clears
+    // expectedDamage, target, time and value. Complete's x86 findAITargets
+    // at 0x422b20 and Mac at 0:0x25100 instead clear target, value,
+    // possibleTargets and time in this order, leaving expectedDamage intact.
+inline void army::clearAIValues()
+    {
+        m_aiTarget = 0;
+        m_aiTargetValue = 0;
+        m_aiPossibleTargets = 0;
+        m_aiTargetTime = 0;
+    }
+// HOMM3_MAC_SHARED_END army_clear_ai_values
 
     // E:\gamedcs\Army.h:760
 inline bool army::needToTurn(int direction) const
@@ -1616,7 +1639,14 @@ inline bool army::needToTurn(int direction) const
         return direction < 6 && (m_facing == 0) != (direction >= 3);
     }
 
-#include "inline/army_is.inl"
+// HOMM3_MAC_SHARED_BEGIN army_is
+    // Original: army::Is; E:\gamedcs\Army.h:765, dc 0x27ce4.
+    // Any requested attribute suffices, including a combined trait mask.
+inline bool army::is(unsigned attribute) const
+    {
+        return (m_monInfo.m_attributes & attribute) != 0;
+    }
+// HOMM3_MAC_SHARED_END army_is
 
     // E:\gamedcs\Army.h:770
 inline long army::getAIExpectedDamage() const
@@ -1624,7 +1654,13 @@ inline long army::getAIExpectedDamage() const
         return m_aiExpectedDamage;
     }
 
-#include "inline/army_get_ai_target.inl"
+// HOMM3_MAC_SHARED_BEGIN army_get_ai_target
+    // E:\gamedcs\Army.h:775
+inline const army* army::getAITarget() const
+    {
+        return m_aiTarget;
+    }
+// HOMM3_MAC_SHARED_END army_get_ai_target
 
     // E:\gamedcs\Army.h:780
 inline long army::getAITargetValue() const
@@ -1632,7 +1668,13 @@ inline long army::getAITargetValue() const
         return m_aiTargetValue;
     }
 
-#include "inline/army_get_ai_target_time.inl"
+// HOMM3_MAC_SHARED_BEGIN army_get_ai_target_time
+    // E:\gamedcs\Army.h:785
+inline long army::getAITargetTime() const
+    {
+        return getAITargetTime(getSpeed());
+    }
+// HOMM3_MAC_SHARED_END army_get_ai_target_time
 
     // E:\gamedcs\Army.h:790
 inline long army::getAIPossibleTargets() const
@@ -1667,7 +1709,14 @@ inline const char* army::getName(int count) const
         return getArmyName(m_creatureType, count);
     }
 
-#include "inline/army_get_spell_time.inl"
+// HOMM3_MAC_SHARED_BEGIN army_get_spell_time
+    // SpellID is still represented by its retail-width int domain here.
+    // E:\gamedcs\Army.h:820
+inline long army::getSpellTime(int spell) const
+    {
+        return m_spellInfluence[spell];
+    }
+// HOMM3_MAC_SHARED_END army_get_spell_time
 
     // E:\gamedcs\Army.h:825
 inline TSkillMastery army::getSpellLevel(int spell) const
@@ -1675,7 +1724,13 @@ inline TSkillMastery army::getSpellLevel(int spell) const
         return TSkillMastery(m_spellLevel[spell]);
     }
 
-#include "inline/army_is_active.inl"
+// HOMM3_MAC_SHARED_BEGIN army_is_active
+    // E:\gamedcs\Army.h:830
+inline bool army::isActive() const
+    {
+        return m_creatureType >= 0 && m_numTroops > 0;
+    }
+// HOMM3_MAC_SHARED_END army_is_active
 
     // E:\gamedcs\Army.h:835
 inline bool army::isInAura() const
@@ -1683,7 +1738,14 @@ inline bool army::isInAura() const
         return m_auraSources.size() > 0;
     }
 
-#include "inline/army_is_incapacitated.inl"
+// HOMM3_MAC_SHARED_BEGIN army_is_incapacitated
+VA(0x0041f380, 0x27)  // anchor-callee, dc 0x27d9c
+inline bool army::isIncapacitated() const
+    {
+        return m_spellInfluence[62] || m_spellInfluence[70]
+               || m_spellInfluence[74];
+    }
+// HOMM3_MAC_SHARED_END army_is_incapacitated
 
     // E:\gamedcs\Army.h:847
 inline bool army::canRetaliate(const army& attacker) const
@@ -1692,7 +1754,18 @@ inline bool army::canRetaliate(const army& attacker) const
                && m_retaliationCount > 0;
     }
 
-#include "inline/army_cannot_attack.inl"
+// HOMM3_MAC_SHARED_BEGIN army_cannot_attack
+    // E:\gamedcs\Army.h:855
+// Complete's inlined copy in consider_single_enchantment keeps the recovered
+// incapacity/attribute prefix but directly contradicts Dreamcast's final
+// Psychic/Magic Elemental pair: retail compares First Aid Tent and Ammo Cart.
+inline bool army::cannotAttack() const
+    {
+        return isIncapacitated() || is(creatureImmobilized)
+               || m_creatureType == ARMY_CREATURE_FIRST_AID_TENT
+               || m_creatureType == ARMY_CREATURE_AMMO_CART;
+    }
+// HOMM3_MAC_SHARED_END army_cannot_attack
 
     // E:\gamedcs\Army.h:864
 inline long army::getAdjacentHex(long direction) const
@@ -1728,8 +1801,8 @@ inline bool army::isInAreaHighlight() const
 // to say where. Sliced by army::get_clockwise / get_counter_clockwise,
 // whose only located expansion is get_multi_head_directions
 // (0x448ab0). Names are bootstrap inventions - no roster attests them.
-DATA(0x00660878) extern const long g_wideDirectionRingIndex[8];
-DATA(0x00660898) extern const long g_wideDirectionRingOrder[8];
+extern const long g_wideDirectionRingIndex[8];
+extern const long g_wideDirectionRingOrder[8];
 
 // The five globals a walk publishes for the redraw, and their NAMES ARE
 // THE DREAMCAST LITERAL POOL'S - army::Walk's own SH4 body (dc 0x45254)
@@ -1740,11 +1813,11 @@ DATA(0x00660898) extern const long g_wideDirectionRingOrder[8];
 // one-hex one; all four are reset to -1 once the move has been placed.
 // They sit immediately below akWideDirectionRingIndex at 0x660878,
 // which is the four dwords 0x660868..0x660874 exactly.
-DATA(0x00660868) extern int g_walkingFrom;
-DATA(0x0066086c) extern int g_walkingFrom2;
-DATA(0x00660870) extern int g_walkingTo;
-DATA(0x00660874) extern int g_walkingTo2;
-DATA(0x00693858) extern int g_walkingYMod;
+extern int g_walkingFrom;
+extern int g_walkingFrom2;
+extern int g_walkingTo;
+extern int g_walkingTo2;
+extern int g_walkingYMod;
 
 unsigned char isValidCaliphSpell(SpellID spell, const army* target);
 // 0x447a80 (1065 B), the worker is_valid_caliph_spell tail-jumps to

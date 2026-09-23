@@ -14,8 +14,8 @@ enum { ADV_SCROLL_POINTER = 32, ADV_SCROLL_NORTH = 32,
        ADV_SCROLL_SOUTHWEST = 37, ADV_SCROLL_WEST = 38,
        ADV_SCROLL_NORTHWEST = 39,
        GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT = 0 };
-#include "inline/t_limit.inl"
-#include "inline/limit.inl"
+#include "mac_shared/t_limit.h"
+#include "mac_shared/limit.h"
 namespace GameTime { unsigned long get(); }
 namespace widget {
 enum { WIDGET_SET_STATUS = 5, WIDGET_DIMMED = 8, WIDGET_UPDATE = 16384 };
@@ -26,7 +26,7 @@ struct type_point {
     short m_y : 10;
     short m_z : 4;
     type_point() {}
-#include "inline/type_point_ctor.inl"
+#include "mac_shared/type_point_ctor.h"
     bool isValid() const;
 };
 
@@ -60,7 +60,7 @@ private:
 public:
     hero_seqid getStandSequence();
     void restoreCell();
-#include "inline/hero_get_target.inl"
+#include "mac_shared/hero_get_target.h"
 };
 #pragma options align=reset
 
@@ -200,8 +200,8 @@ extern soundManager* g_soundManager;
 extern inputManager* g_inputManager;
 extern advManager* g_advManager;
 extern int g_unnamed6989c8;
-extern int g_unnamed69ccd4;
-extern int g_videoPaused;
+extern int g_aiHeroMoveActive;
+extern int g_remoteOn;
 extern unsigned char g_followPlayerMode;
 extern unsigned char g_completeDrawMessageBypass;
 extern unsigned char g_unnamed691209;
@@ -210,19 +210,19 @@ extern unsigned char g_unnamed691209;
 struct MacConfig {
     char m_beforeScrollSpeed[0x34];
     int m_windowScrollSpeed;
-    int m_visibilityScanSuppressed;
+    int m_blackoutComputer;
 };
 extern MacConfig g_config;
 #define g_unnamed698758 g_config
-#define g_unnamed698790 (g_config.m_visibilityScanSuppressed)
+#define g_unnamed698790 (g_config.m_blackoutComputer)
 extern unsigned char g_mapVisibilityBit;
 extern int g_completeDrawEnabled;
 extern unsigned char g_terrainMusicIds[9];
 extern mouseManager* g_mouseManager;
 extern int g_mapWidth;
 extern int g_mapHeight;
-extern unsigned long g_unnamed691674;
-#include "inline/advmgr_scroll_speed_inc.inl"
+extern unsigned long g_lastMapScrollTime;
+#include "mac_shared/advmgr_scroll_speed_inc.h"
 int mapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
 
 #endif

@@ -1,4 +1,5 @@
 #include "va.h"
+#include "includes.h"
 
 #include <bitset>
 #include <stdio.h>
@@ -20,6 +21,91 @@
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
+#include "includes.h"
+
+// Retail coordinates occupy nine 192-byte rows: 48 X words then 48 Y
+// words; the old g_puzzlePieceY symbol was a +0x60 view of the same array.
+DATA(0x006818a4) TPuzzleCoordinates g_puzzleCoordinates[9] = {
+    { { 8, 8, 8, 8, 8, 8, 17, 23, 71, 73, 102, 107, 107, 115, 127, 129, 153, 155, 158, 167, 186, 213, 215, 218, 236, 246, 267, 289, 299, 322, 347, 355, 356, 376, 383, 409, 409, 422, 423, 427, 437, 459, 487, 488, 518, 521, 525, 526 },
+      { 8, 30, 102, 156, 202, 320, 8, 406, 301, 194, 332, 8, 31, 60, 329, 191, 347, 239, 429, 470, 127, 335, 191, 226, 147, 77, 384, 288, 8, 177, 67, 459, 397, 162, 255, 32, 111, 147, 466, 8, 238, 336, 8, 144, 145, 68, 234, 327 } },
+    { { 8, 8, 8, 8, 8, 8, 62, 98, 99, 109, 116, 130, 135, 158, 161, 163, 165, 175, 179, 188, 191, 216, 256, 266, 278, 279, 293, 295, 311, 331, 340, 340, 345, 362, 364, 399, 401, 405, 422, 430, 431, 463, 470, 487, 500, 512, 517, 526 },
+      { 8, 101, 195, 310, 378, 449, 8, 42, 201, 308, 461, 366, 8, 188, 309, 441, 126, 390, 188, 258, 24, 272, 443, 323, 45, 383, 196, 266, 8, 493, 8, 167, 108, 239, 385, 310, 130, 436, 127, 8, 106, 393, 270, 8, 481, 255, 48, 169 } },
+    { { 8, 8, 8, 8, 27, 28, 28, 29, 29, 38, 60, 77, 92, 115, 119, 133, 164, 172, 193, 213, 229, 232, 294, 298, 298, 299, 299, 313, 321, 341, 351, 351, 356, 358, 377, 389, 408, 422, 437, 446, 446, 464, 478, 498, 500, 504, 538, 557 },
+      { 8, 52, 243, 486, 391, 31, 89, 303, 336, 234, 77, 462, 245, 31, 323, 87, 370, 255, 8, 483, 95, 205, 380, 190, 260, 8, 89, 462, 261, 17, 121, 174, 371, 469, 289, 8, 45, 284, 159, 8, 211, 422, 29, 153, 108, 281, 418, 215 } },
+    { { 8, 8, 8, 8, 8, 8, 17, 42, 51, 52, 81, 82, 92, 116, 142, 154, 165, 174, 174, 188, 195, 201, 205, 240, 241, 272, 277, 297, 298, 307, 318, 328, 349, 349, 371, 402, 408, 422, 454, 456, 461, 476, 489, 505, 516, 518, 533, 557 },
+      { 8, 16, 95, 271, 308, 464, 164, 378, 471, 101, 260, 48, 143, 8, 360, 269, 55, 101, 492, 160, 388, 373, 282, 469, 8, 163, 255, 428, 281, 8, 17, 84, 142, 342, 405, 103, 40, 508, 215, 377, 170, 319, 412, 8, 67, 211, 305, 335 } },
+    { { 8, 8, 8, 8, 9, 15, 16, 35, 56, 56, 58, 95, 109, 120, 125, 132, 140, 146, 149, 176, 201, 202, 211, 248, 251, 263, 294, 304, 319, 346, 357, 358, 363, 383, 383, 422, 423, 429, 430, 444, 453, 466, 470, 477, 538, 548, 560, 559 },
+      { 8, 188, 329, 403, 8, 138, 8, 374, 82, 150, 281, 188, 344, 424, 256, 8, 92, 371, 42, 200, 291, 66, 482, 98, 227, 8, 373, 286, 173, 444, 8, 386, 38, 8, 119, 164, 249, 52, 101, 132, 239, 441, 300, 20, 249, 430, 140, 8 } },
+    { { 8, 8, 8, 8, 31, 34, 58, 63, 64, 84, 95, 100, 114, 157, 166, 173, 178, 195, 205, 237, 239, 246, 248, 248, 254, 302, 324, 324, 329, 330, 340, 358, 375, 375, 393, 401, 402, 423, 437, 439, 450, 454, 472, 478, 481, 486, 537, 542 },
+      { 8, 125, 353, 394, 101, 219, 171, 8, 90, 471, 117, 8, 258, 146, 288, 388, 36, 235, 502, 320, 8, 75, 396, 459, 152, 233, 8, 178, 342, 428, 8, 141, 8, 236, 439, 291, 103, 381, 8, 336, 131, 161, 267, 64, 456, 8, 197, 22 } },
+    { { 8, 8, 8, 8, 13, 33, 33, 37, 40, 48, 50, 71, 102, 112, 124, 139, 141, 145, 150, 159, 192, 203, 219, 220, 223, 263, 280, 280, 304, 321, 327, 334, 363, 366, 381, 393, 428, 446, 447, 460, 464, 485, 489, 490, 530, 530, 559, 564 },
+      { 8, 229, 405, 465, 8, 245, 277, 337, 15, 115, 178, 8, 35, 311, 156, 423, 224, 136, 452, 475, 68, 12, 349, 285, 96, 8, 166, 425, 314, 109, 146, 160, 26, 441, 297, 242, 275, 85, 424, 347, 53, 210, 8, 303, 8, 421, 87, 261 } },
+    { { 8, 8, 8, 8, 8, 24, 33, 43, 48, 57, 72, 88, 91, 105, 117, 135, 176, 192, 201, 217, 222, 226, 240, 246, 249, 262, 263, 298, 310, 321, 324, 327, 332, 346, 354, 359, 382, 401, 429, 449, 452, 454, 463, 466, 487, 493, 518, 550 },
+      { 8, 152, 306, 388, 434, 417, 232, 137, 440, 19, 8, 219, 26, 397, 345, 215, 168, 428, 326, 98, 398, 235, 8, 40, 208, 439, 134, 352, 99, 262, 404, 200, 20, 178, 8, 290, 399, 65, 160, 293, 94, 424, 397, 8, 163, 184, 304, 8 } },
+    { { 8, 8, 8, 8, 16, 46, 49, 87, 94, 100, 102, 105, 108, 125, 135, 182, 183, 190, 193, 193, 202, 204, 229, 236, 243, 276, 279, 291, 292, 309, 311, 313, 318, 324, 328, 331, 350, 350, 408, 422, 429, 468, 482, 490, 505, 505, 508, 543 },
+      { 8, 54, 227, 426, 48, 375, 249, 500, 55, 245, 354, 175, 14, 296, 8, 466, 200, 381, 40, 364, 124, 330, 293, 39, 335, 488, 202, 80, 115, 225, 158, 24, 8, 443, 253, 36, 330, 426, 191, 430, 246, 90, 13, 346, 113, 190, 8, 436 } }
+};
+DATA(0x006976e8) std::bitset<48> g_puzzlePiecesRemoved;
+
+// Retail initial data; dimensions follow the typed table consumers.
+DATA(0x00681f64) short g_puzzlePieceOrder[432] = {
+    2, 7, 47, 39, 4, 19, 45, 11,
+    10, 38, 46, 13, 5, 14, 36, 9,
+    31, 44, 25, 8, 37, 28, 15, 40,
+    3, 16, 32, 12, 18, 33, 20, 17,
+    43, 24, 21, 34, 35, 6, 41, 30,
+    1, 26, 42, 0, 27, 29, 23, 22,
+    10, 0, 43, 44, 3, 12, 47, 22,
+    7, 30, 42, 11, 1, 28, 41, 15,
+    2, 46, 29, 4, 6, 38, 5, 8,
+    36, 25, 13, 31, 45, 16, 40, 33,
+    17, 32, 9, 37, 39, 14, 34, 20,
+    19, 35, 23, 24, 21, 18, 26, 27,
+    0, 42, 33, 11, 10, 35, 43, 46,
+    2, 30, 22, 4, 1, 25, 44, 34,
+    7, 39, 45, 3, 13, 40, 17, 41,
+    5, 32, 8, 27, 12, 18, 37, 6,
+    9, 26, 15, 47, 29, 38, 20, 19,
+    31, 14, 16, 36, 28, 21, 23, 24,
+    5, 1, 27, 30, 18, 11, 44, 47,
+    4, 2, 29, 37, 8, 9, 45, 23,
+    21, 35, 28, 34, 20, 6, 33, 43,
+    46, 3, 13, 31, 39, 14, 0, 36,
+    38, 10, 17, 24, 42, 7, 16, 40,
+    15, 41, 32, 12, 22, 26, 25, 19,
+    1, 29, 43, 25, 12, 36, 30, 6,
+    10, 45, 38, 15, 13, 31, 37, 16,
+    2, 22, 47, 0, 33, 46, 18, 3,
+    41, 35, 8, 17, 40, 23, 5, 7,
+    44, 34, 11, 26, 14, 42, 19, 9,
+    39, 21, 32, 4, 20, 27, 28, 24,
+    1, 45, 18, 32, 3, 46, 11, 40,
+    44, 26, 9, 47, 6, 38, 23, 41,
+    20, 36, 5, 43, 29, 30, 10, 39,
+    19, 31, 21, 22, 33, 13, 28, 0,
+    2, 34, 4, 12, 37, 16, 15, 42,
+    8, 14, 35, 7, 27, 17, 25, 24,
+    11, 37, 45, 2, 0, 32, 19, 4,
+    25, 47, 3, 20, 46, 33, 1, 17,
+    41, 18, 29, 27, 7, 42, 5, 40,
+    9, 28, 10, 35, 22, 24, 38, 44,
+    6, 43, 8, 15, 39, 21, 13, 34,
+    12, 23, 36, 30, 14, 31, 16, 26,
+    10, 41, 34, 4, 46, 43, 25, 22,
+    8, 37, 30, 23, 17, 32, 36, 15,
+    20, 19, 28, 27, 16, 26, 33, 18,
+    3, 40, 1, 39, 2, 47, 11, 45,
+    13, 38, 0, 42, 5, 7, 44, 6,
+    12, 35, 14, 9, 31, 21, 29, 24,
+    0, 32, 47, 7, 1, 14, 25, 3,
+    18, 31, 33, 9, 27, 37, 46, 19,
+    28, 43, 2, 4, 44, 15, 12, 45,
+    40, 10, 23, 41, 36, 6, 42, 39,
+    17, 11, 35, 5, 8, 30, 24, 13,
+    34, 21, 16, 38, 22, 26, 29, 20
+};
+DATA(0x006822c8) double g_puzzleGuessThreshold[5] = { 1.1, 0.5, 0.25, 0.0, 0.0 };
+DATA(0x00681880) const char* g_puzzleFilePrefixes[9] = { "cas", "ram", "tow", "inf", "nec", "dun", "str", "for", "Ele" };
 
 // E:\gamedcs\puzzlewindow.cpp:103
 static Bitmap816* getPuzzleBitmap(long puzzle, long piece)
@@ -153,8 +239,8 @@ int TPuzzleWindow::updatePuzzle(int full)
         if (full || !g_puzzlePiecesRemoved.test(i)) {
             int piece = g_puzzlePieceOrder[m_puzWhich * 48 + i];
             Bitmap816* bitmap = m_puzzlePieces[piece];
-            const short* xCoordinate = g_puzzlePieceX + m_puzWhich * 96;
-            const short* yCoordinate = g_puzzlePieceY + m_puzWhich * 96;
+            const short* xCoordinate = g_puzzleCoordinates[m_puzWhich].m_x;
+            const short* yCoordinate = g_puzzleCoordinates[m_puzWhich].m_y;
             bitmap->draw(0, 0, bitmap->getWidth(), bitmap->getHeight(),
                          g_windowManager->m_screenBitmap,
                          xCoordinate[piece], yCoordinate[piece], 1);
@@ -320,8 +406,8 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
             continue;
         int piece = g_puzzlePieceOrder[puzzle * 48 + i];
         Bitmap816* bitmap = getPuzzleBitmap(puzzle, piece);
-        const short* xCoordinate = g_puzzlePieceX + puzzle * 96;
-        const short* yCoordinate = g_puzzlePieceY + puzzle * 96;
+        const short* xCoordinate = g_puzzleCoordinates[puzzle].m_x;
+        const short* yCoordinate = g_puzzleCoordinates[puzzle].m_y;
         bitmap->markPuzzle(visible, xCoordinate[piece] - 8,
                             yCoordinate[piece] - 8);
         bitmap->dispose();
@@ -464,105 +550,45 @@ static long checkMatch(long player, long firstX, long firstY,
 // of line, called from AI_attempt_puzzle_guess above; the declaration lives
 // in puzzlewindow.h so both sides of that call agree.
 
-// Three phases. First a bounding-box sweep of the uncovered puzzle tiles that
-// also remembers the FIRST visible one in row-major order - `found` is a
-// separate latch because first_x/first_y are the scan's anchor, not the box's
-// corner. Then the scan window, four nested _cpp_min/_cpp_max pairs whose
-// const-reference temporaries are what put every operand in its own stack
-// slot; the +9/+8 biases are the same puzzle-centre offsets
-// AI_attempt_puzzle_guess re-applies to the answer. Finally the map sweep:
-// every (x, y, z) the anchor could sit on is scored by check_match, the best
-// score wins, and a tie count above two answers (-1,-1,-1) - retail builds
-// that refusal in the dead `puzzle_map` parameter home rather than reusing
-// `result`.
-
-// The MAP_WIDTH in the Y window's first bound is retail's own: the second
-// operand of that pair reads MAP_HEIGHT, and the two globals are loaded
-// separately, so no CSE could have produced it. Transcribed as found.
-
-// Residual (79.1843%): ONE structural fact, and everything else is its
-// shift. Retail strength-reduces the bounding-box sweep's inner subscript
-// into a running pointer - `[ebp-8] = puzzle_map + x*0x110 + 0xc`, then
-// `add edi,0x10` per column - so its inner-loop head is a single block that
-// the outer head falls into. Ours keeps `x*17` in a slot and rebuilds
-// `(that + y) << 4` every iteration, which needs a rotated entry (`jmp`
-// past the reload) and puts our whole block list one ahead of retail's from
-// B1 on; 49 of the 70 blocks then pair as flow-kind mismatches purely from
-// that offset. The blocker is that our `_cpp_min`/`_cpp_max` calls bind
-// their const references DIRECTLY to `x`, `y` and the four accumulators -
-// `lea ecx,[ebp-0x24]` on the counter's own home - which takes the
-// induction variable's address and forbids the rewrite, while retail copies
-// every operand into the same two temporaries ([ebp-0x30]/[ebp-0x2c]).
-
-// 79.1843 -> 85.9430 (2026-09-05), and the note above named the answer
-// without reaching it: the operand form IS the lever, and the spelling that
-// supplies it is a NAMED LOCAL, not a cast.
-//  - `int cur_x = x; int cur_y = y;` inside the visible arm, with the four
-//    reducers reading those instead of the induction variables: 79.1843 ->
-//    82.6674, and the block skeleton goes from ZERO exact blocks to 57 of
-//    70 with flow-kind and target-shift both at 0. Copying only x (77.12)
-//    or only y (82.22) is worse than copying both; copying the four
-//    accumulators as well is worse again (80.76); naming `x + 1` / `y + 1`
-//    costs 2.9. `x + 0` scores 82.78 and is not shipped - it is an invented
-//    token for the same effect the local gets honestly.
-//  - the two window bounds are then NESTED reducer calls whose INNER result
-//    retail lands in a temp of its own: `int span_x = _cpp_max(first_x - 9,
-//    first_x - min_x); int start_x = _cpp_max(span_x, 0);` and the same for
-//    limit_x/end_x/span_y/limit_y. Naming the two start bounds' inners is
-//    +2.16, naming all four is +2.99 (-> 85.6551), and it retires the last
-//    two branch-polarity flips: branches now AGREE 40 = 40.
-//  - the four reducers are then emitted MINS FIRST: min_x, min_y, max_x,
-//    max_y is 85.9430 against 85.6551 for the x-then-y pairing, 85.81 for
-//    two per-axis blocks, 85.68 for maxes first and 85.17 for interleaved.
-
-// 85.9430 -> 92.4118 (2026-09-06), and again the note below named the answer
-// without reaching it. "Retail runs every reducer operand through ONE pair of
-// temporaries" is what VC6 emits when BOTH const-reference arguments need a
-// CONVERSION - an `int` lvalue pair binds directly and copies nothing, however
-// it is spelled. The explicit `long` template argument supplies the conversion
-// on both sides: `std::_cpp_min<long>` / `std::_cpp_max<long>` at the four
-// reducers and the four window bounds takes the skeleton to 70 = 70 blocks
-// with 64 exact, 0 flow-kind, 0 target-shift, branches 40 = 40 and calls
-// agreeing. Swapping the two min reducers' argument order is worth a further
-// 0.02 (92.3936 -> 92.4118) and is kept because it also puts retail's
-// `cmp _Y,_X` operand order back; swapping the maxes as well loses 0.01.
-
-// Residual (92.41%): 6 size-only blocks, all of it slot layout - retail's
-// frame is 0x80 against our 0x84 and it memory-homes `min_x` at [ebp-0x80],
-// re-reading it per iteration, where we spread the copies over four slots and keep
-// min_x in ESI. Our frame is 0x84 against retail's 0x80 for that reason.
+// DC puzzlewindow.cpp:523-579 names first, result, point, and the two RECT
+// locals extents/rect. Lines 547-550 update left/right/top/bottom in that
+// order; lines 560-577 clamp each rect member through the shared min/max
+// wrappers. Their by-value operands explain retail's temporary copies.
+// Complete scans 19x17 cells instead of DC's 13x12. Retail and DC both use
+// map width in the Y window's first upper bound; preserve that asymmetry.
+// Restoring the rectangles, point constructors and map-level accessor gives
+// 95.3093%, from 92.4089% with scalar carriers and explicit long selectors.
+// Omitting DC's unused first-tile snapshot gives the same score. The remaining
+// differences are four size-only blocks with matching branch/call structure.
+// VC6 resolves the RECT LONG/LONG min calls to the integer wrapper; Clang
+// considers the integer/double overloads ambiguous, leaving an audit gap.
 VA(0x0052cf10, 0x5B4)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
 type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
 {
-    type_point result;
-    result.m_x = -1;
-    result.m_y = -1;
-    result.m_z = -1;
-
+    type_AI_puzzle_tile first;
     unsigned char found = 0;
+    type_point result(-1, -1, -1);
     int firstX;
     int firstY;
-    int minX = 19;
-    int maxX = 0;
-    int minY = 17;
-    int maxY = 0;
+    RECT extents;
+    extents.left = 19;
+    extents.right = 0;
+    extents.top = 17;
+    extents.bottom = 0;
 
-    // MAX 92.4725 was measured with `x != 19` - an unnamed domain compare
-    // that fails the cleanliness floor (docs/vc6/behavior-catalog.md D24).
     for (int x = 0; x < 19; ++x) {
         for (int y = 0; y < 17; ++y) {
             if (puzzleMap[x][y].m_visible) {
                 if (!found) {
+                    first = puzzleMap[x][y];
                     firstX = x;
                     firstY = y;
                     found = 1;
                 }
-                int curX = x;
-                int curY = y;
-                minX = std::_cpp_min<long>(minX, curX);
-                minY = std::_cpp_min<long>(minY, curY);
-                maxX = std::_cpp_max<long>(maxX, curX + 1);
-                maxY = std::_cpp_max<long>(maxY, curY + 1);
+                extents.left = min(extents.left, x);
+                extents.right = max(extents.right, x + 1);
+                extents.top = min(extents.top, y);
+                extents.bottom = max(extents.bottom, y + 1);
             }
         }
     }
@@ -570,48 +596,46 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
     if (!found)
         return result;
 
+    type_point point;
     int ties = 0;
     int best = 0;
 
-    int spanX = std::_cpp_max<long>(firstX - 9, firstX - minX);
-    int startX = std::_cpp_max<long>(spanX, 0);
-    int limitX = std::_cpp_min<long>(g_mapWidth - maxX + firstX,
-                                g_mapWidth + firstX - 9);
-    int endX = std::_cpp_min<long>(g_mapWidth, limitX);
-    int spanY = std::_cpp_max<long>(firstY - 8, firstY - minY);
-    int startY = std::_cpp_max<long>(spanY, 0);
-    int limitY = std::_cpp_min<long>(g_mapWidth - maxY + firstY,
-                                g_mapHeight + firstY - 8);
-    int endY = std::_cpp_min<long>(g_mapHeight, limitY);
+    RECT rect;
+    rect.left = firstX - 9;
+    rect.left = max(rect.left, firstX - extents.left);
+    rect.left = max(rect.left, 0);
+    rect.right = g_mapWidth + firstX - 9;
+    rect.right = min(rect.right, g_mapWidth - extents.right + firstX);
+    rect.right = min(rect.right, g_mapWidth);
+    rect.top = firstY - 8;
+    rect.top = max(rect.top, firstY - extents.top);
+    rect.top = max(rect.top, 0);
+    rect.bottom = g_mapHeight + firstY - 8;
+    rect.bottom = min(rect.bottom, g_mapWidth - extents.bottom + firstY);
+    rect.bottom = min(rect.bottom, g_mapHeight);
 
-    type_point scan;
-    for (scan.m_z = 0; scan.m_z < g_game->m_worldMap.getNumLevels(); ++scan.m_z) {
-        for (scan.m_y = startY; scan.m_y < endY; ++scan.m_y) {
-            for (scan.m_x = startX; scan.m_x < endX; ++scan.m_x) {
+    for (point.m_z = 0; point.m_z < g_game->getNumMapLevels(); ++point.m_z) {
+        for (point.m_y = rect.top; point.m_y < rect.bottom; ++point.m_y) {
+            for (point.m_x = rect.left; point.m_x < rect.right; ++point.m_x) {
                 int count =
-                    checkMatch(player, firstX, firstY, scan, puzzleMap);
+                    checkMatch(player, firstX, firstY, point, puzzleMap);
                 if (count != 0 && count >= best && count * 2 >= best) {
                     ++ties;
                     if (count > best) {
                         if (count > best * 2)
                             ties = 1;
                         best = count;
-                        result.m_x = scan.m_x - firstX + 9;
-                        result.m_y = scan.m_y - firstY + 8;
-                        result.m_z = scan.m_z;
+                        result.m_x = point.m_x - firstX + 9;
+                        result.m_y = point.m_y - firstY + 8;
+                        result.m_z = point.m_z;
                     }
                 }
             }
         }
     }
 
-    if (ties > 2) {
-        type_point ambiguous;
-        ambiguous.m_x = -1;
-        ambiguous.m_y = -1;
-        ambiguous.m_z = -1;
-        return ambiguous;
-    }
+    if (ties > 2)
+        return type_point(-1, -1, -1);
     return result;
 }
 

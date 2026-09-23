@@ -41,18 +41,6 @@ public:
     virtual ~CCombatOwnedObject();
 };
 
-// Per-projectile launch offsets and frame-angle boundaries. Retail indexes
-// the table at 0x67ff24 with an 84-byte stride: three signed coordinate
-// pairs followed by eighteen float boundaries.
-struct TMissileStartInfo {
-public:
-    short m_offsets[3][2];
-    float m_angles[18];
-};
-SIZE(TMissileStartInfo, 0x54);
-
-extern const TMissileStartInfo* g_missileStartInfo;
-
 // One segment of an animated lightning bolt. THE DREAMCAST DUMP HAS NO
 // MEMBER EVIDENCE FOR THIS TYPE AT ALL - members.csv carries zero rows
 // and the NAME comes only from the three spells.cpp prototypes that take
@@ -312,7 +300,7 @@ public:
     int m_castY;
     int m_castFrame;
 };
-DATA(0x0063bd40) extern const TCombatHeroSprite g_combatHeroSprites[18];
+extern const TCombatHeroSprite g_combatHeroSprites[18];
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
@@ -369,6 +357,12 @@ enum CombatHeroFrameType {
 
 class combatManager : public baseManager {
 public:
+    // Original DC statics: LeftHeroLimits, RightHeroLimits,
+    // MainBuildingLimits and UpperTowerLimits (GetGridIndex).
+    static const SLimitData s_leftHeroLimits;
+    static const SLimitData s_rightHeroLimits;
+    static const SLimitData s_mainBuildingLimits;
+    static const SLimitData s_upperTowerLimits;
     // drawing.cpp:666, Dreamcast dc 0x841d4. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
     unsigned char scrollTo(int x, int y, unsigned char draw,
@@ -1107,7 +1101,7 @@ public:
     // routine with the creature-cast selector passed by command.cpp.
     void initiateSpell(SpellID spellToCast, int creatureSpell);
     unsigned char placeObstacle(int obstacleId);
-    void unnamed46a520(army* stack);  // 0x46a520
+    void markMovingArmy(army* stack);  // 0x46a520
     unsigned char checkObstacleAttacks(army* thisArmy,
                                          unsigned char isWalking);
     void lootDeadHero(int side,
@@ -1161,7 +1155,7 @@ public:
     const char* getBackgroundName();
     void generateMap();
     void combatSystemOptions();
-    void placeObstacle(const TObstacle* obstacle, int id, int hex,
+    void placeObstacle(const TObstacle& obstacle, int id, int hex,
                        unsigned attributes);
     void removeObstacle(int index);
     void placeAllObstacles();
@@ -1210,7 +1204,18 @@ public:
     int drawArcher(const CSprite* sprite, int sequence, int frame,
                    int x, int y, SLimitData* limits,
                    bool isFlipped, unsigned char colorRow);
-#include "inline/combat_valid_hex.inl"
+// HOMM3_MAC_SHARED_BEGIN combat_valid_hex
+    // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). Its S_PUB32
+    // identity is ?ValidHex@combatManager@@SA_NH@Z: static bool. No retail
+    // body; place_shooter (0x422060) carries two copies of it, one on
+    // the loop index (which VC6 strength-reduces onto the same 30-byte
+    // induction variable the cellData walk uses, so it reads as a
+    // `test/jl` plus `cmp 0x15ea/jge` pair) and one on the adjacent hex.
+    static bool validHex(int hex)
+    {
+        return hex >= 0 && hex < COMBAT_GRID_CELLS;
+    }
+// HOMM3_MAC_SHARED_END combat_valid_hex
     // command.cpp:224 (0x474040) paces the frame loop and hands each frame
     // to drawing.cpp's CycleCombatScreen (0x4960d0).
     void doAnimations();
@@ -1282,7 +1287,6 @@ public:
     // this declaration alone already costs GetCommand 92.5714 ->
     // 92.5357 unconditionally (include-set class, bisected), so it is
     // scoped to army.cpp and the field waits for the same lane.
-    void markMovingArmy(const army* movingArmy);  // 0x46a520
     // 0x465ad0 (0x443), already carved and carcassed in cmbtmgr.cpp.
     // army::range_attack (0x440160) short-circuits into it for an ARROW
     // TOWER, passing that stack's indexToAttack as the tower position -
@@ -1759,7 +1763,12 @@ public:
     {
         return m_wallStrength[s_wallTargets[target].m_wall];
     }
-#include "inline/combat_get_current_army.inl"
+// HOMM3_MAC_SHARED_BEGIN combat_get_current_army
+    // DC header inline (cmbtmgr.h:1478, dc 0x27efc); the DC xref graph
+    // lists it among DoCompAI's callees and retail carries no
+    // out-of-line copy, so it is the /Ob2 inline-away case.
+    army* getCurrentArmy() { return &m_armies[m_actingSide][m_actingSlot]; }
+// HOMM3_MAC_SHARED_END combat_get_current_army
     // Original: combatManager::get_current_army; CmbtMgr.h:1483, dc 0x1581b8.
     const army* getCurrentArmy() const
     {
@@ -1788,9 +1797,29 @@ public:
     {
         return (y & 1) != 0;
     }
-#include "inline/combat_grid_y.inl"
-#include "inline/combat_grid_x.inl"
-#include "inline/combat_in_invisible_column.inl"
+// HOMM3_MAC_SHARED_BEGIN combat_grid_y
+    // LF_MFUNCTION has no this type: this is a static header helper.
+    // E:\gamedcs\CmbtMgr.h:1513, dc 0x27f34
+    static int gridY(int index) { return index / COMBAT_GRID_ROW_STRIDE; }
+// HOMM3_MAC_SHARED_END combat_grid_y
+// HOMM3_MAC_SHARED_BEGIN combat_grid_x
+    static int gridX(int index)
+    {
+        return index % COMBAT_GRID_ROW_STRIDE;
+    }
+// HOMM3_MAC_SHARED_END combat_grid_x
+// HOMM3_MAC_SHARED_BEGIN combat_in_invisible_column
+    // DC header inline (cmbtmgr.h:1525, dc 0x27f64). mark_teleport's
+    // retail expansion retains the ValidHex bounds checks and the two
+    // invisible edge columns, 0 and 16 of each 17-cell row.
+    static bool inInvisibleColumn(int index)
+    {
+        if (!validHex(index))
+            return false;
+        int column = gridX(index);
+        return column == 0 || column == COMBAT_GRID_LAST_COLUMN;
+    }
+// HOMM3_MAC_SHARED_END combat_in_invisible_column
     // Returns a REFERENCE on its own public
     // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z); the roster text
     // renders every reference as a pointer, which is what this
@@ -1899,13 +1928,11 @@ extern combatManager* g_combatManager;
 // CheckGetAIMove caches the displayed surrender price here. No surviving
 // retail or Dreamcast symbol supplies a public spelling, so the name keeps
 // its address ordinal.
-DATA(0x00695030) extern long g_surrenderCost695030;
-DATA(0x00698998) extern unsigned long g_combatStamp698998;
-DATA(0x006989b8) extern unsigned long g_combatStamp6989b8;
-DATA(0x006985a3) extern unsigned char g_combatFlag6985a3;
+extern long g_surrenderCost;
+extern unsigned char g_combatRetreated;
 // Set while the combat action pump is active; process_move_then_attack clears
 // it on a win before the ResetMouse path. Definition belongs to drawing.cpp.
-DATA(0x00697744) extern unsigned char g_combatFlag697744;
+extern unsigned char g_combatSurrendered;
 DATA(0x006989ec) extern int g_processingCombatAction;
 
 // The combat random seed, .data 0x66d840. SetupCombat parks its iSeed
@@ -1924,7 +1951,7 @@ DATA(0x006989ec) extern int g_processingCombatAction;
 // 92.5714 -> 92.5357 by itself, and gating it restores the ceiling. A
 // bulk probe of externs added together evidently does not reproduce what
 // a single extern added to a header this widely included does.
-extern int g_combatSeed66d840;
+extern int g_combatSeed;
 
 // THE FOUR COMBAT DEPLOYMENT TABLES, .rdata, and their BOUNDS ARE PROVEN
 // BY ADJACENCY rather than assumed: 0x63d0a8 + 2*7*4 = 0x63d0e0,
@@ -1939,16 +1966,16 @@ extern int g_combatSeed66d840;
 // chosen turns on the defending hero's formation byte, so the pair is the
 // game's tight/loose deployment split - but no roster row or string
 // reaches any of the four, so the names carry their addresses.
-extern const int g_combatDeployHexes63d0a8[2][7];
-extern const int g_combatDeploySurroundedHexes63d0e0[2][7];
-extern const int g_combatDeploySlots63d118[7][7];
-extern const int g_combatDeploySlots63d1dc[7][7];
+extern const int g_combatDeployHexes[2][7];
+extern const int g_combatDeploySurroundedHexes[2][7];
+extern const int g_combatDeploySpreadSlots[7][7];
+extern const int g_combatDeployGroupedSlots[7][7];
 
 // Source aggregate copied into combatManager+0x13d38 by the constructor,
 // LowerDoor and RaiseDoor. The current DATA contract cannot express its
 // size, so the stripped target still represents interior relocations as
 // separate symbols; source keeps the retail-proven aggregate shape.
-DATA(0x00694f30) extern TDrawbridgeBounds g_drawbridgeBounds694f30;
+extern TDrawbridgeBounds g_drawbridgeBounds;
 
 // The clip rectangle every combat-drawing pass intersects its dirty
 // region with before handing it to heroWindowManager::UpdateScreen.
@@ -1963,7 +1990,7 @@ DATA(0x00694f30) extern TDrawbridgeBounds g_drawbridgeBounds694f30;
 // choice produces is masked (ResetLimitCreature is exact through the
 // identical aggregate copy). NAME IS A SOURCE-FACING INVENTION and
 // carries its address - no roster row, string or DC global reaches it.
-DATA(0x00694f18) extern TDrawbridgeBounds g_combatDrawLimits694f18;
+extern TDrawbridgeBounds g_combatDrawLimits;
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot
@@ -2016,16 +2043,16 @@ public:
     unsigned int m_flags;  // +0x8
 };
 SIZE(TSpellEffectTraits, 0xc);
-DATA(0x00641e08) extern const TSpellEffectTraits g_spellEffectTraits[];
+extern const TSpellEffectTraits g_spellEffectTraits[];
 
 // The moat's per-town base damage, at .rdata 0x63bd18 and indexed by
 // town type: SetupAndLoadObstacles folds [0x63bd20] for the Tower,
 // which is 0x63bd18 + 4*TOWN_TOWER. searchArray::set_moat (0x4b3290)
 // and mark_firewalls (0x4215e0) read the same table with a live index.
 // Name is a BOOTSTRAP INVENTION - no roster attests it.
-DATA(0x0063bd18) extern const int g_moatDamage[];
+extern const int g_moatDamage[];
 
-DATA(0x006a5d60) extern const char* g_moatDamageMessages[9];
+extern const char* g_moatDamageMessages[9];
 
 // The thirty-two hexes two facing boats occupy, at .rdata 0x63d368.
 // SetupAndLoadObstacles walks it as a POINTER and ends the walk on the
@@ -2033,34 +2060,16 @@ DATA(0x006a5d60) extern const char* g_moatDamageMessages[9];
 // the delinked reference names the combatManager vtable there - so the
 // extent is exactly (0x63d3e8 - 0x63d368) / 4 == 32. Name is a
 // BOOTSTRAP INVENTION.
-DATA(0x0063d368) extern const int g_boatBlockedHexes[];
+extern const int g_boatBlockedHexes[];
 DATA(0x0063c7ca) extern const unsigned short g_obstacleMagicTerrainMasks[];
-DATA(0x0063bec0) extern const unsigned short g_largeObstacleTerrainMasks[];
-DATA(0x0063bec2) extern const unsigned short g_largeObstacleMagicTerrainMasks[];
-DATA(0x0063becc) extern const short g_largeObstacleHexes[];
 
 // LowerDoor's quick-combat bypass and the four redraw-bound sources.
 // Names are address ordinals because no surviving public symbol names
 // them; widths and uses are byte-proven by the retail body.
-DATA(0x0069877c) extern int g_combatQuickMode69877c;
-extern int g_combatActive698a18;
+extern int g_combatActive;
 
-DATA(0x00694ea8) extern int g_combatHexLeft694ea8;
-DATA(0x00694eac) extern int g_combatHexTop694eac;
-DATA(0x00694eb0) extern int g_combatHexRight694eb0;
-DATA(0x00694eb4) extern int g_combatHexBottom694eb4;
-DATA(0x00694ed8) extern int g_combatHexLeft694ed8;
-DATA(0x00694edc) extern int g_combatHexTop694edc;
-DATA(0x00694ee0) extern int g_combatHexRight694ee0;
-DATA(0x00694ee4) extern int g_combatHexBottom694ee4;
-DATA(0x00694ef0) extern int g_combatHexLeft694ef0;
-DATA(0x00694ef4) extern int g_combatHexTop694ef4;
-DATA(0x00694ef8) extern int g_combatHexRight694ef8;
-DATA(0x00694efc) extern int g_combatHexBottom694efc;
-DATA(0x00694f08) extern int g_combatHexLeft694f08;
-DATA(0x00694f0c) extern int g_combatHexTop694f0c;
-DATA(0x00694f10) extern int g_combatHexRight694f10;
-DATA(0x00694f14) extern int g_combatHexBottom694f14;
+// Rectangles built by the retail static initializers at 0x4626a0..0x462759.
+
 
 // The row-column table one hex LEFT of gCastleWallColumns, at 0x63bce8
 // (retail bytes 0b 1c 2c 3d 4d 5f 6f 81 92 a4 b5 - each entry exactly
@@ -2069,13 +2078,13 @@ DATA(0x00694f14) extern int g_combatHexBottom694f14;
 // IsInMoat walks all eleven entries looking for an exact hit. Name is
 // a BOOTSTRAP INVENTION in the style of gCastleWallColumns - no roster
 // attests it.
-extern const unsigned char g_moatColumns[];
+extern const unsigned char g_moatHexes[];
 
 // The row-column table one hex left again, at 0x63bcf4 (bytes 0a 1b 2b
 // 3c 4c 5e 6e 80 91 a3 b4). Only IsInMoat reads it, and only when the
 // defending town is a Fortress - the second moat ring. Name is a
 // BOOTSTRAP INVENTION.
-extern const unsigned char g_outerMoatColumns[];
+extern const unsigned char g_innerMoatHexes[];
 
 
 // The five wall segments the castle AI checks, at 0x63abe0: the
@@ -2089,7 +2098,6 @@ extern const unsigned char g_outerMoatColumns[];
 // rectangles sixteen separate ints. Neither is defined here - findpath
 // and ai only read them, and an unclaimed extern still pairs.
 extern const long g_castleWallGateTargets[5];   // 0x63abe0
-extern const long g_castleWallGateTargetsEnd[]; // 0x63abf4, one past
 
 
 // Windows fixed-viewport implementations. CE drawing.cpp:513/514 forwards

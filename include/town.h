@@ -159,7 +159,7 @@ extern const char* g_townBuildingSpriteNames[9];
 
 // town.cpp owns the DATA claim; TResourceDisplay consumes the current
 // player-position selector directly, as its retail bodies do.
-extern int g_unnamed69778c;
+extern int g_curWatchPlayer;
 
 // Retail .data 0x67814c; Dreamcast publishes the same global name. Both
 // hero::hire and town::hire subtract it from the player's gold resource.
@@ -345,7 +345,11 @@ public:
     // deleting them alone cost sacrifice_window's
     // create_artifact_widgets 100.0 -> 99.59, a cross-jump/reload
     // quirk in a textWidget arm; count restored, the row returns).
-#include "inline/town_get_building_mask.inl"
+// HOMM3_MAC_SHARED_BEGIN town_get_building_mask
+    // DC Town.h:299/300 returns full_building_mask (+0x150 in DC).
+    // Retail's +0x158 band is m_active; getBuildableMask expands this read.
+    __int64 getBuildingMask() const { return m_active; }
+// HOMM3_MAC_SHARED_END town_get_building_mask
     long getCastleGrowthBonus(TCreatureType creature) const;
     // DC Town.h:305-306, dc 0x181404, returns generatorBonus[dwelling].
     // set_bonus_display calls this header helper; retail 0x5c5b40 expands it.
@@ -370,15 +374,41 @@ public:
     }
     void calcNumLevelArchers(int* numArchers, int* archerLevel);
 
-#include "inline/town_has_building.inl"
+// HOMM3_MAC_SHARED_BEGIN town_has_building
+    VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
+    bool hasBuilding(int buildingId, bool checkIncluded) const
+    {
+        if (checkIncluded) {
+            return (m_active & g_bitNumber[buildingId]) != 0;
+        } else {
+            return (m_built & g_bitNumber[buildingId]) != 0;
+        }
+    }
+// HOMM3_MAC_SHARED_END town_has_building
     // Original: town::set_mask; Town.h:331, dc 0x168dfc.
     void setMask(__int64 newMask)
     {
         m_built = newMask;
         updateFullBuildingMask();
     }
-#include "inline/town_is_castle.inl"
-#include "inline/town_is_capitol.inl"
+// HOMM3_MAC_SHARED_BEGIN town_is_castle
+    // E:\gamedcs\Town.h:337. Public ?IsCastle@town@@QBA_NXZ proves bool;
+    // the DC T_UCHAR return record is lowered, as for hasBuilding.
+    bool isCastle() const
+    {
+        return hasBuilding(CASTLE_FORT_ID, 0)
+            || hasBuilding(CASTLE_CITADEL_ID, 0)
+            || hasBuilding(CASTLE_CASTLE_ID, 0);
+    }
+// HOMM3_MAC_SHARED_END town_is_castle
+// HOMM3_MAC_SHARED_BEGIN town_is_capitol
+    // E:\gamedcs\Town.h:342. Public ?IsCapitol@town@@QBA_NXZ likewise
+    // proves native bool. Both declarations are byte-flat in all consumers.
+    bool isCapitol() const
+    {
+        return hasBuilding(HALL_CAPITOL_ID, 0);
+    }
+// HOMM3_MAC_SHARED_END town_is_capitol
     void setSummoningGenerator();
     int getPortraitFrame(bool isSmall) const;
     town();
@@ -603,13 +633,10 @@ DATA(0x006747b4)
 extern TCreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 // Biased view of the upgraded half of the same first town row. Retail
 // GiveTroopsToNeutralTown carries a distinct relocation to this address.
-DATA(0x006747d0)
-extern TCreatureType g_townUpgradedDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 
 // Retail .data 0x6782a4: ordinary spell counts for guild levels one
 // through five. initialize_spells generates one extra candidate per row so
 // Tower's Library can expose it.
-DATA(0x006782a4)
 extern const signed char g_mageGuildBaseSpellCounts[5];
 
 // Retail .rdata 0x642e20, the four horde building ids in slot order

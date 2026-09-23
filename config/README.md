@@ -31,7 +31,8 @@ source-owned external storage bindings and compiler literal pools independently.
 Identical shared references coalesce; conflicting identities or spans fail.
 Literal `units` scopes distinguish equal payloads in different linked pools.
 
-[`source/header-fragments.toml`](source/header-fragments.toml) records canonical
-header fragments shared by both compiler views. Ownership validation requires
-one literal include in the original header and checks source order at that
-position; physical definition identity and duplicate checks remain intact.
+[`mac/shared-bodies.toml`](mac/shared-bodies.toml) names method bodies in their
+ordinary owning headers. The Mac compiler stages those marked bodies into its
+declaration view, so each method has one authored definition. The remaining
+[`source/header-fragments.toml`](source/header-fragments.toml) records ordinary
+shared headers that still need include-site ownership.

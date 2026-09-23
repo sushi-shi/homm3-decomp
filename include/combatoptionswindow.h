@@ -95,11 +95,8 @@ SIZE(TCombatOptionsWindow, 0x54);
 // byte-proven TDialogHandler type.
 int combatOptionsWindowHandler(message& msg);
 
-// The rollover/right-click pairs this dialog's help path indexes with
-// convertID2HelpID's answer. Stride 8 and base 0x6a55ac are byte-proven by
-// the handler's `mov ecx,[8*eax + 0x6a55ac]`; the ID mapping reaches 38,
-// so at least 39 rows exist (the next initialised datum is 0x6a5704, which
-// leaves room for 43). Definition + DATA claim in src/combatoptionswindow.cpp.
+// Shared Help.txt rows owned by text.cpp at 0x6a55a8. The handler reads
+// m_rclick, explaining the load base 0x6a55ac and the eight-byte stride.
 extern THelpText g_combatOptionsHelp[39];
 
 // The "Default" button's callee is misc.obj's SetDefaultCombatOptions

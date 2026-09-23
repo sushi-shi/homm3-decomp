@@ -12,7 +12,7 @@ evidence = "Dreamcast names static akScrollSpeedInc and source owns the DATA-cla
 
 [[data]]
 retail_va = 0x00696a04
-source = "include/advmgr.h"
+source = "src/advmgr.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x67658
@@ -22,7 +22,7 @@ evidence = "Source DATA declaration names the Complete draw-message bypass byte.
 
 [[data]]
 retail_va = 0x006989c8
-source = "include/advmgr.h"
+source = "src/advmgr.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x527e40
@@ -42,7 +42,7 @@ evidence = "Source-owned g_followPlayerMode is the byte checked between g_videoP
 
 [[data]]
 retail_va = 0x00691209
-source = "include/advmgr.h"
+source = "src/advmgr.cpp"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x630e4

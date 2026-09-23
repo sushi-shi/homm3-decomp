@@ -185,11 +185,11 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
         && !(g_game->m_week == 1 && g_game->m_month == 1)) {
         iconName = g_newWeekIcons[
             static_cast<unsigned short>(g_game->m_week)];
-        text = formatString("%s %d", g_generalText->getText(64),
+        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_CALENDAR_WEEK),
             static_cast<unsigned short>(g_game->m_week));
     } else {
         iconName = "NewDay.def";
-        text = formatString("%s %d", g_generalText->getText(65),
+        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_CALENDAR_DAY),
             static_cast<unsigned short>(g_game->m_day));
         launchSample("newday.wav", 30000, 3);
     }
@@ -321,8 +321,8 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
         std::ostrstream quantityText;
         quantityText << quantity << std::ends;
 
-        int textWidth = g_unnamed698a08->lineWidth(quantityText.str());
-        int fontHeight = g_unnamed698a08->m_fs.m_height;
+        int textWidth = g_smallFont->lineWidth(quantityText.str());
+        int fontHeight = g_smallFont->m_fs.m_height;
 
         m_widgets.push_back(new textWidget((m_width - textWidth) / 2,
             sprite->getHeight() + 55, textWidth, fontHeight,
@@ -704,11 +704,11 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 
     int hallLevel = 0;
-    if (which->hasBuilding(HALL_TOWN_ID, 0))
+    if (which->hasBuilding(HALL_TOWN_ID, false))
         hallLevel = 1;
-    else if (which->hasBuilding(HALL_CITY_ID, 0))
+    else if (which->hasBuilding(HALL_CITY_ID, false))
         hallLevel = 2;
-    else if (which->hasBuilding(HALL_CAPITOL_ID, 0))
+    else if (which->hasBuilding(HALL_CAPITOL_ID, false))
         hallLevel = 3;
 
     std::string townSizeName = g_townSizeNames[hallLevel];
@@ -717,11 +717,11 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         hallLevel, 0, 0, 0, 0x10));
 
     int fortLevel;
-    if (which->hasBuilding(CASTLE_FORT_ID, 0))
+    if (which->hasBuilding(CASTLE_FORT_ID, false))
         fortLevel = 0;
-    else if (which->hasBuilding(CASTLE_CITADEL_ID, 0))
+    else if (which->hasBuilding(CASTLE_CITADEL_ID, false))
         fortLevel = 1;
-    else if (which->hasBuilding(CASTLE_CASTLE_ID, 0))
+    else if (which->hasBuilding(CASTLE_CASTLE_ID, false))
         fortLevel = 2;
     else
         fortLevel = 3;
@@ -733,7 +733,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         m_widgets.push_back(new bitmapBorder(149, 76, 22, 30, 0x7d8,
             "townqkgh.pcx", 0x800));
 
-    if (which->hasBuilding(MARKETPLACE_SILO_ID, 1)) {
+    if (which->hasBuilding(MARKETPLACE_SILO_ID, true)) {
         int* resource = which->getSiloIncome();
         int slots[2];
         int found = 0;
@@ -865,11 +865,11 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 
     for (i = 0; i < g_currentPlayer->m_numTowns; i++) {
         town* which = g_game->getTown(g_currentPlayer->m_townIds[i]);
-        if (which->hasBuilding(HALL_CAPITOL_ID, 1))
+        if (which->hasBuilding(HALL_CAPITOL_ID, true))
             townCount[3]++;
-        else if (which->hasBuilding(HALL_CITY_ID, 1))
+        else if (which->hasBuilding(HALL_CITY_ID, true))
             townCount[2]++;
-        else if (which->hasBuilding(HALL_TOWN_ID, 1))
+        else if (which->hasBuilding(HALL_TOWN_ID, true))
             townCount[1]++;
         else
             townCount[0]++;
@@ -886,10 +886,10 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
                 font::WHITE, -1, 1, 0, 8));
     }
 
-    text = formatString("%s:", g_generalText->getText(391));
+    text = formatString("%s:", g_generalText->getText(GENERAL_TEXT_ALLIES));
     m_widgets.push_back(new textWidget(10, 103, 57, 20, text.c_str(),
         "smalfont.fnt", font::WHITE, -1, 0, 0, 8));
-    text = formatString("%s:", g_generalText->getText(392));
+    text = formatString("%s:", g_generalText->getText(GENERAL_TEXT_ENEMIES));
     m_widgets.push_back(new textWidget(10, 134, 57, 20, text.c_str(),
         "smalfont.fnt", font::WHITE, -1, 0, 0, 8));
 
@@ -897,7 +897,7 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
     allyX = enemyX = 67;
     for (i = 0; i < 8; i++) {
         if (!g_game->m_playerDisabled[i]) {
-            if (g_game->onSameTeam(i, g_unnamed69778c)) {
+            if (g_game->onSameTeam(i, g_curWatchPlayer)) {
                 m_widgets.push_back(new iconWidget(allyX, 102, 15, 20, id++,
                     "itgflags.def", i, 0, 0, 0, 0x10));
                 allyX += 15;
@@ -971,7 +971,7 @@ TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
 
     if (g_currentPlayer->isHuman()) {
         m_widgets.push_back(new textWidget(0, 20, 176, 31,
-            g_generalText->getText(631), "medfont.fnt", font::PRIMARY,
+            g_generalText->getText(GENERAL_TEXT_CURRENT_PLAYER_IS), "medfont.fnt", font::PRIMARY,
             -1, 1, 0, 8));
         m_widgets.push_back(new textWidget(0, 123, 176, 31,
             g_currentPlayer->m_name, "medfont.fnt", font::PRIMARY,

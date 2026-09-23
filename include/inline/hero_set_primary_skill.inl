@@ -1,1 +1,0 @@
-    void setPrimarySkill(int skill, int amount) { m_stats[skill] = amount; }

@@ -166,7 +166,7 @@ TResourceDisplay::~TResourceDisplay()
 VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
 void TResourceDisplay::update(bool drawRequested, bool update)
 {
-    int playerPos = g_unnamed69778c;
+    int playerPos = g_curWatchPlayer;
     playerData& player = g_game->m_players[playerPos];
     m_backgroundWidget->setPlayerPaletteColors(playerPos);
     for (int i = 0; i < NUM_RESOURCES; ++i) {
@@ -176,11 +176,11 @@ void TResourceDisplay::update(bool drawRequested, bool update)
 
     const TTextResource* labels = g_generalText;
     sprintf(g_text, "%s: %d, %s: %d, %s: %d",
-        (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_0],
+        (*labels)[GENERAL_TEXT_CALENDAR_MONTH],
         static_cast<unsigned short>(g_game->m_month),
-        (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_1],
+        (*labels)[GENERAL_TEXT_CALENDAR_WEEK],
         static_cast<unsigned short>(g_game->m_week),
-        (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_2],
+        (*labels)[GENERAL_TEXT_CALENDAR_DAY],
         static_cast<unsigned short>(g_game->m_day));
     m_dayWidget->setText(g_text);
     if (drawRequested)
@@ -190,17 +190,17 @@ void TResourceDisplay::update(bool drawRequested, bool update)
 VA(0x00559020, 0xA4)  // dc 0x1210b4
 void TResourceDisplay::clear()
 {
-    m_backgroundWidget->setPlayerPaletteColors(g_unnamed69778c);
+    m_backgroundWidget->setPlayerPaletteColors(g_curWatchPlayer);
     for (int i = 0; i < NUM_RESOURCES; ++i)
         m_resourceWidgets[i]->setText("");
 
     const TTextResource* labels = g_generalText;
     sprintf(g_text, "%s: %d, %s: %d, %s: %d",
-        (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_0],
+        (*labels)[GENERAL_TEXT_CALENDAR_MONTH],
         static_cast<unsigned short>(g_game->m_month),
-        (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_1],
+        (*labels)[GENERAL_TEXT_CALENDAR_WEEK],
         static_cast<unsigned short>(g_game->m_week),
-        (*labels)[GENERAL_TEXT_RESOURCE_DISPLAY_2],
+        (*labels)[GENERAL_TEXT_CALENDAR_DAY],
         static_cast<unsigned short>(g_game->m_day));
     m_dayWidget->setText(g_text);
     draw(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);

@@ -114,8 +114,30 @@ public:
     searchArray();
     ~searchArray();
     void close();
-#include "inline/search_get_hex.inl"
-#include "inline/search_get_cell.inl"
+// HOMM3_MAC_SHARED_BEGIN search_get_hex
+    // Retail 0x4b3b90 checks receiver+0x24 for null, then indexes the
+    // 30-byte pathCell array and returns ret 4. FindCombatPath calls at
+    // 0x4b382f/0x4b3881/0x4b393e/0x4b3990 correspond to the four
+    // expansions of DC mark_enemy's get_hex call.
+    // E:\gamedcs\FindPath.h:194, dc 0x27fe8
+    VA(0x004b3b90, 0x20)  // caller/get_hex correlation, dc 0x27fe8
+    pathCell* getHex(long x) const
+    {
+        if (m_cellData == 0)
+            return 0;
+        return &m_cellData[x];
+    }
+// HOMM3_MAC_SHARED_END search_get_hex
+// HOMM3_MAC_SHARED_BEGIN search_get_cell
+    VA(0x0042ecc0, 0x62)  // hd-crossbuild + exact body/callers x2, dc 0x20064
+    pathCell* getCell(type_point point, bool flying) const
+    {
+        if (!m_cellData)
+            return m_cellData;
+        return &m_cellData[((point.m_z * 2 + flying) * g_mapHeight + point.m_y)
+                         * g_mapWidth + point.m_x];
+    }
+// HOMM3_MAC_SHARED_END search_get_cell
     long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
     void seedPosition(hero* currentHero, type_point start,
                       type_point target, int maxMobility,
@@ -125,9 +147,10 @@ public:
                       unsigned char seedContinuation);
     int buildPath(const hero* currentHero, long limit);
 
+    // E:\gamedcs\FindPath.h:211-213, dc 0x200e8: vector::clear.
     void clearPath()
     {
-        m_result.erase(m_result.begin(), m_result.end());
+        m_result.clear();
     }
     // Dreamcast FindPath.h:216/226. Both const header helpers retain public
     // SH4 copies, while Complete expands build_path's calls into the result
@@ -180,7 +203,12 @@ public:
                             long baseSpeed);
     // Dreamcast FindPath.h:252. MoveHero brackets its move_hero call with
     // this setter; Complete expands both calls to the +0x6c store.
-#include "inline/search_set_danger_zones.inl"
+// HOMM3_MAC_SHARED_BEGIN search_set_danger_zones
+    void setDangerZones(long* dangerZoneMap)
+    {
+        m_dangerZones = dangerZoneMap;
+    }
+// HOMM3_MAC_SHARED_END search_set_danger_zones
     // E:\gamedcs\FindPath.h:257, dc 0x37e84
     void setRectangle(tagRECT& rect)
     {
@@ -268,10 +296,11 @@ private:
     long* m_dangerZones;
 };
 
-// E:\gamedcs\FindPath.h:265, dc 0x37e98
-inline long* getDangerCell(long* dangerZones, type_point point)
+// Original: get_danger_cell; E:\gamedcs\FindPath.h:265, dc 0x37e98.
+// CodeView proves a long& result referring to the existing map element.
+inline long& getDangerCell(long* dangerZones, type_point point)
 {
-    return &dangerZones[(point.m_z * g_mapHeight + point.m_y) * g_mapWidth + point.m_x];
+    return dangerZones[(point.m_z * g_mapHeight + point.m_y) * g_mapWidth + point.m_x];
 }
 
 // E:\gamedcs\FindPath.h:270, dc 0x37eec
@@ -280,7 +309,7 @@ inline long searchArray::getDangerValue(type_point point) const
 {
     if (!m_dangerZones)
         return 0;
-    return *getDangerCell(m_dangerZones, point);
+    return getDangerCell(m_dangerZones, point);
 }
 
 // Retail .rdata 0x63bd18, nine dwords indexed by town::type:
@@ -292,7 +321,7 @@ inline long searchArray::getDangerValue(type_point point) const
 // tables (0x63bce8) and combatManager::wallTargets (0x63be60), so the owning
 // TU is not settled, and the tenth dword reads 0 - it may or may not be
 // part of the array. Name is an address ordinal.
-extern const long g_townSiegeStrength63bd18[];
+extern const int g_moatDamage[];
 
 // Retail .bss 0x699284. The Mac AI view binds its zero-filled pointer
 // storage through the loader pointer at TOC 1+0x720.
@@ -302,9 +331,7 @@ DATA(0x00699284) extern searchArray* g_searchArray;
 // (dx, dy, 0x10, 0) for N, NE, E, SE, S, SW, W, NW in that order.
 // Dreamcast publishes the source name/type as `tilePoint* normalDirTable`;
 // retail names the same base and reads its x/y fields at +0/+1. The two
-// stride-four aliases remain temporarily for already-exact legacy callers,
-// while reconstructed source uses the aggregate and lets reloc normalization
-// canonicalize owner+field-addend against retail's interior symbols.
+// legacy stride-four aliases are now expressed as fields of this aggregate.
 struct tilePoint {
 public:
     signed char m_x;
@@ -325,9 +352,7 @@ enum EMapDirection {
     MAP_DIRECTION_COUNT = 8
 };
 
-DATA(0x00678150) extern tilePoint g_normalDirTable[8];
-extern const signed char g_stepDeltaX[];   // 0x678150, stride 4
-extern const signed char g_stepDeltaY[];   // 0x678151, stride 4
+extern tilePoint g_normalDirTable[8];
 
 // 0x56a360, search.obj's, still @stub there. Declared here because
 // TestPossibleDirections calls it as a free fastcall (hero* in ECX,

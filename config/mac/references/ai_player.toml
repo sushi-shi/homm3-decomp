@@ -284,7 +284,7 @@ evidence = "Unique static MaxBuyableCreatures definition in ai_player.cpp, Dream
 [[functions]]
 retail_va = 0x0042b9e0
 unit = "game"
-source = "include/game_is_human_team.inl"
+source = "include/game.h"
 mac_section = 0
 mac_offset = 0x2d3e4
 mac_size = 0x94

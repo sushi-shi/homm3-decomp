@@ -1,0 +1,294 @@
+# The Mac declaration views compile method bodies extracted from canonical owners.
+# Marker pairs in the owner enclose exactly the bytes staged as a generated header.
+
+[[bodies]]
+name = "advmgr_scroll_speed_inc"
+owner = "src/advmgr.cpp"
+
+[[bodies]]
+name = "ai_attack_chooser_get_attack_time"
+owner = "include/ai_tactical.h"
+
+[[bodies]]
+name = "ai_attack_chooser_get_best_hex"
+owner = "include/ai_tactical.h"
+
+[[bodies]]
+name = "ai_attack_chooser_get_hex_value"
+owner = "include/ai_tactical.h"
+
+[[bodies]]
+name = "ai_parameters_get_group"
+owner = "include/ai_tactical.h"
+
+[[bodies]]
+name = "ai_player_get_resource_value"
+owner = "include/ai_player.h"
+
+[[bodies]]
+name = "ai_player_set_attack_bonuses"
+owner = "include/ai_player.h"
+
+[[bodies]]
+name = "army_cannot_attack"
+owner = "include/army.h"
+
+[[bodies]]
+name = "army_clear_ai_values"
+owner = "include/army.h"
+
+[[bodies]]
+name = "army_get_ai_target"
+owner = "include/army.h"
+
+[[bodies]]
+name = "army_get_ai_target_time"
+owner = "include/army.h"
+
+[[bodies]]
+name = "army_get_spell_time"
+owner = "include/army.h"
+
+[[bodies]]
+name = "army_is"
+owner = "include/army.h"
+
+[[bodies]]
+name = "army_is_active"
+owner = "include/army.h"
+
+[[bodies]]
+name = "army_is_incapacitated"
+owner = "include/army.h"
+
+[[bodies]]
+name = "army_offset_to_front"
+owner = "include/army.h"
+
+[[bodies]]
+name = "combat_get_current_army"
+owner = "include/cmbtmgr.h"
+
+[[bodies]]
+name = "combat_grid_x"
+owner = "include/cmbtmgr.h"
+
+[[bodies]]
+name = "combat_grid_y"
+owner = "include/cmbtmgr.h"
+
+[[bodies]]
+name = "combat_in_invisible_column"
+owner = "include/cmbtmgr.h"
+
+[[bodies]]
+name = "combat_valid_hex"
+owner = "include/cmbtmgr.h"
+
+[[bodies]]
+name = "cpp_max"
+owner = "include/DC_precompiledheaders.h"
+
+[[bodies]]
+name = "creaturetype_get_army_name"
+owner = "include/creaturetype.h"
+
+[[bodies]]
+name = "game_artifact_wizards_well_id"
+owner = "src/game.cpp"
+
+[[bodies]]
+name = "game_get_cell"
+owner = "include/game.h"
+
+[[bodies]]
+name = "game_get_curr_hero"
+owner = "include/game.h"
+
+[[bodies]]
+name = "game_get_current_turn"
+owner = "include/game.h"
+
+[[bodies]]
+name = "game_get_hero"
+owner = "include/game.h"
+
+[[bodies]]
+name = "game_get_num_map_levels"
+owner = "include/game.h"
+
+[[bodies]]
+name = "game_get_team"
+owner = "include/game.h"
+
+[[bodies]]
+name = "game_get_town"
+owner = "include/game.h"
+
+[[bodies]]
+name = "game_is_human_ally"
+owner = "include/game.h"
+
+[[bodies]]
+name = "game_is_human_team"
+owner = "include/game.h"
+
+[[bodies]]
+name = "game_on_same_team"
+owner = "include/game.h"
+
+[[bodies]]
+name = "game_town_already_built"
+owner = "include/game.h"
+
+[[bodies]]
+name = "hero_adjust_primary_skill"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "hero_get_artifact"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "hero_get_backpack"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "hero_get_mana_cost"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "hero_get_max_mana"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "hero_get_primary_skill"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "hero_get_spell_level"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "hero_get_target"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "hero_get_value_of_knowledge"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "hero_get_value_of_power"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "hero_set_primary_skill"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "hero_spell_is_available"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "limit"
+owner = "include/includes.h"
+
+[[bodies]]
+name = "loss_condition_ctor"
+owner = "include/victorylossconditions.h"
+
+[[bodies]]
+name = "mapcell_cell_xyz"
+owner = "include/mapcell.h"
+
+[[bodies]]
+name = "mapcell_get_num_levels"
+owner = "include/mapcell.h"
+
+[[bodies]]
+name = "mapcell_monster_data_ctor"
+owner = "include/mapcell.h"
+
+[[bodies]]
+name = "mapcell_z_cell"
+owner = "include/mapcell.h"
+
+[[bodies]]
+name = "max_int"
+owner = "include/includes.h"
+
+[[bodies]]
+name = "mousemgr_is_vis"
+owner = "include/mousemgr.h"
+
+[[bodies]]
+name = "netmsg_cnetmsg_ctor"
+owner = "include/netmsg.h"
+
+[[bodies]]
+name = "netmsg_player_lost_ctor"
+owner = "include/netmsg.h"
+
+[[bodies]]
+name = "netmsg_player_won_ctor"
+owner = "include/netmsg.h"
+
+[[bodies]]
+name = "obscuring_object_get_location"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "search_get_cell"
+owner = "include/findpath.h"
+
+[[bodies]]
+name = "search_get_hex"
+owner = "include/findpath.h"
+
+[[bodies]]
+name = "search_set_danger_zones"
+owner = "include/findpath.h"
+
+[[bodies]]
+name = "t_limit"
+owner = "include/includes.h"
+
+[[bodies]]
+name = "textresource_get_text"
+owner = "include/textresource.h"
+
+[[bodies]]
+name = "textresource_index"
+owner = "include/textresource.h"
+
+[[bodies]]
+name = "town_get_building_mask"
+owner = "include/town.h"
+
+[[bodies]]
+name = "town_has_building"
+owner = "include/town.h"
+
+[[bodies]]
+name = "town_is_capitol"
+owner = "include/town.h"
+
+[[bodies]]
+name = "town_is_castle"
+owner = "include/town.h"
+
+[[bodies]]
+name = "type_artifact_constructors"
+owner = "include/hero.h"
+
+[[bodies]]
+name = "type_point_ctor"
+owner = "include/struct.h"
+
+[[bodies]]
+name = "widget_hide"
+owner = "include/widget.h"
+
+[[bodies]]
+name = "widget_show"
+owner = "include/widget.h"
