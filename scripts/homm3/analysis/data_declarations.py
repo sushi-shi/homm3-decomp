@@ -14,7 +14,7 @@ from homm3.core import compiler_profile
 from homm3.core.project import Project
 from homm3.retail_labels import source
 
-SCHEMA = 'homm3.data-declarations.v5'
+SCHEMA = 'homm3.data-declarations.v6'
 SUFFIXES = {'.c', '.cpp', '.cxx', '.h', '.hpp', '.hxx'}
 
 
@@ -95,10 +95,10 @@ def conflicting_shapes(left, right):
 
 def parse_unit(task):
     import clang.cindex as cx
-    root = Path(task['root'])
+    root = Path(task['root']).resolve()
     path = root / task['source']
     result = dict(unit=task['unit'], source=task['source'], facts=[], definitions=[],
-                  storage_declarations=[],
+                  storage_declarations=[], anonymous_namespace_files=[],
                   errors=[], full_errors=[], skipped_bodies=False, active_macros=[], function_claims=[])
     try:
         index = cx.Index.create()
@@ -120,16 +120,18 @@ def parse_unit(task):
 
     def location(cursor):
         loc = cursor.location
-        return dict(path=Path(loc.file.name).relative_to(root).as_posix(),
+        return dict(path=Path(loc.file.name).resolve().relative_to(root).as_posix(),
                     line=loc.line, offset=loc.offset)
 
     functions = []
     def visit(node):
         if node.location.file:
-            node_path = Path(node.location.file.name)
+            node_path = Path(node.location.file.name).resolve()
             if not any(node_path.is_relative_to(root / d) for d in ('src', 'include')):
                 return
         children = list(node.get_children())
+        if node.kind == cx.CursorKind.NAMESPACE and not node.spelling and node.location.file:
+            result['anonymous_namespace_files'].append(location(node)['path'])
         if node.kind in (cx.CursorKind.FUNCTION_DECL, cx.CursorKind.CXX_METHOD,
                          cx.CursorKind.CONSTRUCTOR, cx.CursorKind.DESTRUCTOR) and node.location.file:
             functions.append(dict(path=location(node)['path'], start=node.extent.start.offset,
@@ -156,9 +158,13 @@ def parse_unit(task):
             static_storage = not local or storage in ('STATIC', 'EXTERN')
             if attributes or static_storage:
                 size, alignment, reference = storage_extent(node.type)
+                referent = node.type.get_canonical().get_pointee() if reference else None
+                const_array_reference = bool(referent is not None and
+                    referent.kind == cx.TypeKind.CONSTANTARRAY and referent.is_const_qualified())
                 fact = dict(location(node), usr=node.get_usr(), name=node.spelling,
                             symbol=node.mangled_name, type=node.type.spelling,
                             size=size, alignment=alignment, reference_cell=reference,
+                            const_array_reference=const_array_reference,
                             shape=type_shape(node.type),
                             linkage=node.linkage.name, storage=storage,
                             static_storage=static_storage, definition=node.is_definition(),
@@ -177,6 +183,9 @@ def parse_unit(task):
         for child in children:
             visit(child)
     visit(tu.cursor)
+    result['anonymous_namespace_files'] = sorted(set(result['anonymous_namespace_files']))
+    for fact in result['facts']+result['definitions']+result['storage_declarations']:
+        fact['anonymous_namespace_files'] = result['anonymous_namespace_files']
     for macro in result['active_macros']:
         owners = [f for f in functions if f['path'] == macro['path'] and
                   f['start'] <= macro['offset'] < f['end']]
@@ -224,7 +233,7 @@ def summarize(units, sites):
                    units=sorted({f['unit'] for f in facts}),
                    definition_units=sorted({f['unit'] for f in entity_defs}),
                    definitions=sorted(entity_defs, key=lambda f: (f['unit'], f['path'], f['offset'])),
-                   local=fact['local'],
+                   local=fact['local'], parent_symbol=fact['parent_symbol'],
                    sizes=sorted(sizes), alignments=sorted({f['alignment'] for f in facts if f['alignment'] is not None}),
                    shapes=shape_rows,
                    shape_conflict=any(conflicting_shapes(a, b) for i, a in enumerate(shape_rows) for b in shape_rows[i+1:]),

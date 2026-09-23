@@ -211,6 +211,21 @@ The verified union gain is 33,004 enrolled bytes and 34,004 initialized matches;
 remaining unknown code-bound extents fall from 492 to 65. The next declaration
 pass must reconcile compiler ABI spellings without using names alone as proof.
 
+[Declaration ABI binding](data-declaration-abi.md), on
+`codex/data-declaration-abi` above the EH stage, reconciles checked anonymous
+namespace origins, local-static discriminators and const array-reference cells.
+It retains ambiguous source/emission identities and explicit spelling proofs.
+The union gains 23,497 enrolled bytes and 17,296 initialized matches, with no
+previous byte credit lost. Unknown code-bound source extents fall from 65 to 30.
+Linker selection, the remaining gaps and the refreshed PR #78 audit remain open.
+
+A read-only parse of all admitted zlib TUs succeeds and finds 29 exact
+source-to-COFF symbol joins. Twenty-six correspond to the remaining unknown
+code-bound source extents, covering 8,775 bytes already compared through vendor
+contributions. The next vendor declaration pass should retain their logical
+array bounds and reader/writer identities without counting those bytes again.
+Two C-local spellings need separate evidence; the vendor tree stays pristine.
+
 Apply the shared model to vendor candidates, unresolved external pointers,
 alternative archive members, pooled data and compiler-created storage. Resolve
 supported ambiguities with independent anchors; never lower proof thresholds

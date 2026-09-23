@@ -20,6 +20,7 @@ def definitions(declared, rows):
     by_unit, result, by_usr = defaultdict(list), defaultdict(list), defaultdict(list)
     for row in rows:
         by_unit[row['unit']].append(row)
+    names = {unit: candidate_data.named_index(values) for unit, values in by_unit.items()}
     for unit in declared['units']:
         if not unit.get('errors'):
             for fact in unit.get('storage_declarations', []):
@@ -31,9 +32,12 @@ def definitions(declared, rows):
         for fact in unit.get('definitions', []):
             declaration = dict(fact, symbols=[fact['symbol']], definition_units=[unit['unit']],
                                units=[unit['unit']])
-            choices = candidate_data.named_candidates(declaration, by_unit[unit['unit']])
+            matches = candidate_data.named_matches(declaration, by_unit[unit['unit']],
+                index=names.get(unit['unit'], {}))
+            choices = [row for row in by_unit[unit['unit']] if row['id'] in matches]
             for row in choices:
                 result[row['id']].append(dict(fact, emitted_choices=len(choices),
+                    symbol_matches=matches[row['id']],
                     declarations=by_usr[fact['usr']]))
     return result
 

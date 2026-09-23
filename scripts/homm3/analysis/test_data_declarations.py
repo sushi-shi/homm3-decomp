@@ -42,6 +42,34 @@ void f() { DATA(0x401400) static int local[3]; DATA(0x401500) int automatic; }
             self.assertFalse(any(i['kind'] == 'annotation-unbound' for i in result['issues']))
             self.assertEqual({i['kind'] for i in result['issues']}, {'unknown-size', 'automatic-storage'})
 
+    def test_abi_evidence_retains_namespace_origins_and_array_reference_kind(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/'include').mkdir()
+            (root/'include/shared.h').write_text('namespace { int headerTable[3]; }\n')
+            unit = self.parse(root, '''
+#include "../include/shared.h"
+namespace { int table[3]; }
+const int (&reference)[3] = table;
+const int& scalar = table[0];
+int (&mutableReference)[3] = table;
+int* f(bool choose) {
+    if (choose) { static int duplicate[2]; return duplicate; }
+    else { static int duplicate[2]; return duplicate; }
+}
+''')
+            self.assertFalse(unit['errors'])
+            self.assertFalse(unit['skipped_bodies'])
+            self.assertEqual(unit['anonymous_namespace_files'], ['include/shared.h', 'src/a.cpp'])
+            facts = {f['name']: f for f in unit['definitions']}
+            self.assertTrue(facts['reference']['const_array_reference'])
+            self.assertFalse(facts['scalar']['const_array_reference'])
+            self.assertFalse(facts['mutableReference']['const_array_reference'])
+            self.assertEqual(facts['table']['anonymous_namespace_files'], unit['anonymous_namespace_files'])
+            duplicates = [f for f in unit['definitions'] if f['name'] == 'duplicate']
+            self.assertEqual(len({f['usr'] for f in duplicates}), 2)
+            self.assertEqual(len({f['symbol'] for f in duplicates}), 1)
+
     def test_utf8_before_annotation_uses_byte_offsets(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

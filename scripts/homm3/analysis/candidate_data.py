@@ -13,6 +13,7 @@ from pathlib import Path
 import re
 
 from homm3.build import compiled_freshness
+from homm3.analysis import data_symbols
 from homm3.build.canonicalize_data_symbols import CoffObject, RELOCATION_WIDTHS
 from homm3.core import tsv
 from homm3.core.project import Project
@@ -137,19 +138,59 @@ def byte_literal(expression):
     return bytes(result) + b'\0'
 
 
-def named_candidates(declaration, rows):
-    definitions = declaration.get('definitions', [])
-    symbols = set(declaration['symbols']) | {d['symbol'] for d in definitions}
-    if declaration.get('local'):
-        symbols.update('_' + s for s in list(symbols) if s.startswith('?'))
+def symbol_key(symbol):
+    # All admitted bridges preserve this leading name. This is only a search
+    # index; spelling() still checks the entire mangled symbol and provenance.
+    if symbol.startswith('_?'):
+        symbol = symbol[1:]
+    return symbol.split('@', 1)[0] if symbol.startswith('?') else symbol
+
+
+def named_index(rows):
+    index = defaultdict(dict)
+    for row in rows:
+        for symbol in row['symbols']:
+            index[symbol_key(symbol)][row['id']] = row
+    return index
+
+
+def named_matches(declaration, rows, *, index=None):
+    """Keep all compatible emissions, including alternatives to an exact name."""
     units = set(declaration['definition_units'])
-    # VC6 spells a TU-local namespace-scope variable _name. This ABI spelling
-    # is only admitted for a proven nonlocal INTERNAL declaration in its TU.
-    internal_name = '_' + declaration['name'] if (
-        declaration['linkage'] == 'INTERNAL' and not declaration.get('local', True)) else None
-    return [row for row in rows if (not units or row['unit'] in units) and
-            (symbols.intersection(row['symbols']) or
-             internal_name and internal_name in row['symbols'] and row['unit'] in declaration['units'])]
+    facts = [*declaration.get('definitions', [])]
+    # Summaries retain original observed spellings for exact matching. Bridges
+    # use per-TU typed definitions, not properties borrowed across header uses.
+    for symbol in declaration['symbols']:
+        facts.append(dict(symbol=symbol))
+        if 'unit' in declaration:
+            facts.append(dict(declaration, symbol=symbol))
+        else:
+            for unit in declaration['units']:
+                facts.append(dict(declaration, symbol=symbol, unit=unit))
+    index = named_index(rows) if index is None else index
+    keys = {symbol_key(f.get('symbol', '')) for f in facts}
+    keys.add('_'+declaration['name'])
+    candidates = {key: row for name in sorted(keys) for key, row in index.get(name, {}).items()}
+    matches = {}
+    for row in candidates.values():
+        if units and row['unit'] not in units:
+            continue
+        proofs = []
+        for fact in facts:
+            if fact.get('unit') and fact['unit'] != row['unit']:
+                continue
+            for symbol in row['symbols']:
+                proof = data_symbols.spelling(fact, symbol, row['unit'])
+                if proof and proof not in proofs:
+                    proofs.append(proof)
+        if proofs:
+            matches[row['id']] = proofs
+    return matches
+
+
+def named_candidates(declaration, rows):
+    matches = named_matches(declaration, rows)
+    return [row for row in rows if row['id'] in matches]
 
 
 def guard_candidates(site, function, rows, coff):
@@ -186,6 +227,17 @@ def guard_candidates(site, function, rows, coff):
 
 def bind(declared, rows, objects):
     bindings = []
+    names = named_index(rows)
+    source_names = defaultdict(list)
+    for unit in declared['units']:
+        if unit.get('errors'):
+            continue
+        for fact in unit.get('definitions', []):
+            keys = {symbol_key(fact['symbol'])}
+            if fact.get('linkage') == 'INTERNAL' and not fact.get('local', True):
+                keys.add('_'+fact['name'])
+            for key in keys:
+                source_names[unit['unit'], key].append(fact)
     by_unit = defaultdict(list)
     for row in rows:
         by_unit[row['unit']].append(row)
@@ -202,9 +254,11 @@ def bind(declared, rows, objects):
                              proof=proof, retail_extent='unproved', candidate_match='not-compared'))
         bindings[-1]['literal_sha256'] = literal_sha256
         bindings[-1]['source_identity'] = ''
+        bindings[-1]['symbol_matches'] = {}
 
     for declaration in declared['declarations']:
-        choices = named_candidates(declaration, rows)
+        matches = named_matches(declaration, rows, index=names)
+        choices = [row for row in rows if row['id'] in matches]
         size = declaration['size']
         status = declaration['status'] if declaration['status'] != 'sized' else 'bound'
         if status == 'bound':
@@ -214,14 +268,21 @@ def bind(declared, rows, objects):
                 status = 'missing-emission'
             elif len(choices) != 1:
                 status = 'multiple-emitted-owners'
+            elif any(
+                    f.get('usr') != declaration['usr'] and
+                    data_symbols.spelling(f, symbol, choices[0]['unit'])
+                    for symbol in choices[0]['symbols']
+                    for f in source_names[choices[0]['unit'], symbol_key(symbol)]):
+                status = 'ambiguous-source-definition'
             elif size > choices[0]['physical_size']:
                 status = 'truncated-storage'
             elif choices[0]['allocation'] == 'common-request' and size != choices[0]['physical_size']:
                 status = 'common-size-conflict'
         add(declaration['name'], 'DATA', declaration['source'], declaration['rva'], size,
-            choices, status, 'compiler-declaration and exact emitted symbol identity',
+            choices, status, 'compiler declaration and checked emitted ABI spelling',
             declaration['id'], declaration['units'])
         bindings[-1]['source_identity'] = declaration['usr']
+        bindings[-1]['symbol_matches'] = matches
 
     active = defaultdict(dict)
     for unit in declared['units']:
@@ -341,7 +402,7 @@ def extract(root, declared):
     for lo, hi in spans:
         bound_bytes += max(0, hi-max(lo, end))
         end = max(end, hi)
-    implementations = ['analysis/candidate_data.py', 'analysis/data_declarations.py',
+    implementations = ['analysis/candidate_data.py', 'analysis/data_declarations.py', 'analysis/data_symbols.py',
                        'build/compiled_freshness.py', 'build/canonicalize_data_symbols.py',
                        'core/project.py', 'core/cc_wrap.py', 'sema/retail_layout.py']
     inputs = ['scripts/homm3/'+p for p in implementations] + ['build/gen/data-declarations.json']
