@@ -1851,6 +1851,10 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
     return 1;
 }
 
+// DC lines 2187/2234 retain hideRoute(1, 0, 1)/(1, 0, 0), and lines
+// 2288..2294 retain overrideBottomView. Restoring these canonical calls,
+// plus game::getNumMapLevels, makes the Windows body exact. The reviewed
+// Mac address has instruction-shape evidence, but no exact byte verdict.
 VA(0x00409a70, 0x641)  // dc 0x9a94
 int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
 {
@@ -1883,21 +1887,8 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
         if (sleeper) {
             sleeper->m_isSleeping = !sleeper->m_isSleeping;
             if (sleeper->m_isSleeping) {
-                if (!waitingPlayer) {
-                    if (g_currentPlayer->isLocalHuman()
-                        || (g_debugLevel && g_aiHeroMoveActive)) {
-                        g_windowManager->broadcastMessage(
-                            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                            TAdventureMapWindow::MOVE_ID,
-                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                        if (m_showRoute) {
-                            m_showRoute = 0;
-                            completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y,
-                                         m_radarOrigin.m_z, 0, 1);
-                            this->updateScreen(0, 0);
-                        }
-                    }
-                }
+                if (!waitingPlayer)
+                    hideRoute(1, 0, 1);
                 setHeroContext(localPlayer->nextHero(), 0, waitingPlayer, 1);
                 sleeper = g_game->getHero(localPlayer->m_currHeroId);
             }
@@ -1950,17 +1941,8 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
         break;
 
     case TAdventureMapWindow::NEXT_HERO_ID:
-        if (!waitingPlayer) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
-                                 0, 1);
-                    this->updateScreen(0, 0);
-                }
-            }
-        }
+        if (!waitingPlayer)
+            hideRoute(1, 0, 0);
         setHeroContext(g_currentPlayer->nextHero(), 0, waitingPlayer, 1);
         break;
 
@@ -2000,7 +1982,7 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
         break;
 
     case TAdventureMapWindow::ELEVATION_TOGGLE_ID:
-        if (g_game->m_worldMap.getNumLevels() > 1) {
+        if (g_game->getNumMapLevels() > 1) {
             demobilizeCurrHero(0, 1);
             m_radarOrigin.m_z = 1 - m_radarOrigin.m_z;
             m_advWindow->setElevationToggleImage(m_radarOrigin.m_z);
@@ -2014,16 +1996,13 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
 
     if (msg->m_codeY >= ADV_HELP_ID_FIRST && msg->m_codeY <= ADV_HELP_ID_LAST) {
         if (m_bottomViewOverride == BOTTOM_VIEW_2) {
-            m_bottomViewOverride = BOTTOM_VIEW_1;
-            m_bottomViewDeadline = GameTime::get() + 3000;
+            overrideBottomView(BOTTOM_VIEW_1, -1);
         } else if (m_bottomViewOverride != BOTTOM_VIEW_DEFAULT) {
-            m_bottomViewOverride = BOTTOM_VIEW_DEFAULT;
+            overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
         } else if (m_bottomViewType == BOTTOM_VIEW_2) {
-            m_bottomViewOverride = BOTTOM_VIEW_1;
-            m_bottomViewDeadline = GameTime::get() + 3000;
+            overrideBottomView(BOTTOM_VIEW_1, -1);
         } else {
-            m_bottomViewOverride = BOTTOM_VIEW_2;
-            m_bottomViewDeadline = GameTime::get() + 3000;
+            overrideBottomView(BOTTOM_VIEW_2, -1);
         }
         updBottomView(1, 1, 1);
     }
@@ -7541,13 +7520,15 @@ void advManager::townQuickView(int townId, int x, int y,
 }
 
 // E:\gamedcs\advmgr.cpp:9243
+// DC garrison_quick_view calls game::GetGarrison. Its inline accessor
+// reproduces the same Windows bytes as direct array indexing here.
 VA(0x00416f80, 0x1CD)  // anchor-callee, dc 0x19cdc
 void advManager::garrisonQuickView(int id, int x, int y)
 {
     if (id == -1)
         return;
 
-    garrison* const thisGarrison = &g_game->m_garrisons[id];
+    garrison* const thisGarrison = g_game->getGarrison(id);
     type_point point(thisGarrison->m_mapX, thisGarrison->m_mapY,
                      thisGarrison->m_mapZ);
 
