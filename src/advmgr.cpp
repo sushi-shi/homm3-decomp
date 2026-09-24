@@ -3372,6 +3372,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
 // and the associated cleanup-tail scheduling.
 // DC 2767/2773 and Mac 0xb348/0xb390 use TTextResource::operator[] for the
 // unvisited/visited labels. Restoring those calls is byte-flat in VC6.
+// DC 2771/2778 and Mac 0xb370/0xb3b0/0xb3f4 call the retained
+// ExtraInfoUnion::getCreatureBank helper. VC6 expands all three calls here.
 
 VA(0x0040d3f0, 0x27C)  // anchor-callee, dc 0xb3bc
 void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_type type, long playerId, const char* separator, unsigned char showFullList)
@@ -3385,21 +3387,18 @@ void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_
     } else {
         unsigned long testFlag = cell->m_extraInfo;
         if ((testFlag & 0x02000000)
-            || !g_game->m_creatureBanks[
-                    (testFlag >> 13) & 0xfff].m_guards.hasCreatures()) {
+            || !cell->getCreatureBank().m_guards.hasCreatures()) {
             armyName = (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT];
         } else {
             if (showFullList) {
                 std::string result = getArmyHelpText(
-                    &g_game->m_creatureBanks[
-                        (cell->m_extraInfo >> 13) & 0xfff].m_guards, 1);
+                    &cell->getCreatureBank().m_guards, 1);
                 strcat(buffer, result.c_str());
                 return;
             } else {
                 strcat(buffer, "(");
                 std::string result = getArmyHelpText(
-                    &g_game->m_creatureBanks[
-                        (cell->m_extraInfo >> 13) & 0xfff].m_guards, 0);
+                    &cell->getCreatureBank().m_guards, 0);
                 strcat(buffer, result.c_str());
                 armyName = ")";
             }

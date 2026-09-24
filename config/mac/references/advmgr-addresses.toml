@@ -229,6 +229,7 @@ mac_section = 0x0
 mac_offset = 0xb2a8
 mac_size = 0x19c
 unit = "advmgr"
+mac_symbol = ".getCreatureBankHelpText__FPcP10NewmapCell23type_creature_bank_typelPCcUc"
 target_sha256 = "2a3abe9987f9fd255c30e4b58a92621bf3742fe7eaf5f8865423019653603a57"
 evidence = "Contiguous advmgr TU order corroborated by body: getCreatureBank0x5fc0 hasCreatures0x56454 and getArmyHelpText0xb018. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
 retail_va = 0x40d3f0
@@ -1078,4 +1079,3 @@ unit = "advmgr"
 target_sha256 = "74d17f14406d50e4d0f254fa2317930c6e5067744c4fc9a4008c53f600a29a7b"
 evidence = "Source helper without standalone Windows VA. TU order plus window clearBottomView0x3b98 and default bottom-view field store"
 source_helper = "advManager::clearBottomView"
-
