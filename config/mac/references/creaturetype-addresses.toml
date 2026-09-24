@@ -1,4 +1,13 @@
 # Reviewed address identities; compiler linkage names remain unbound.
+[[helpers]]
+mac_section = 0
+mac_offset = 0x888d0
+mac_size = 0x70
+unit = "creaturetype"
+source_helper = "getCreatureDwellingIndex"
+target_sha256 = "5949b1d40c58dc13b3477d098d411eafd28fef612e944f620099e2612c1788b7"
+evidence = "TU-local source helper before isBaseCreature. It reads the creature town/level fields and returns the base or upgraded dwelling slot, or -1 when neither row matches. Mac isBaseCreature 0x88940, upgradedCreatureType 0x889a0 and downgradedCreatureType 0x88a0c each call it directly. Its final BLR is at 0x8893c, immediately before isBaseCreature. The Windows callers expand the same lookup."
+
 [[functions]]
 mac_section = 0x0
 mac_offset = 0x88940
