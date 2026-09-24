@@ -7,6 +7,7 @@ unit = "seerhut"
 target_sha256 = "4edb530b4d9acd039398aa24f80aecad1397cc57c977e555fc55fe310a7620cb"
 evidence = "Sole seerhut.txt TOC xref2545f8, spreadsheet153c6c,60-row minimum,3 columns from1/4 via2543f0 and nonempty names fromrow50; virtual dispose. Full return boundary and adjacent independent entry reviewed; source/TU order alone is not identity evidence."
 retail_va = 0x56c3e0
+mac_symbol = ".initializeSeerHutText__Fv"
 
 [[functions]]
 mac_section = 0x0

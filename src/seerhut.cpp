@@ -114,8 +114,11 @@ void extendedDialog(const char* text,
 // Complete loads quest text from a spreadsheet; Dreamcast initializes a fixed table.
 // The name-row append is inferred from retail. Canonical push_back gives
 // 79.8841%; direct insert formerly hid the remaining inline-context mismatch.
-// Explicit/named string construction, positive validation and the cell
-// accessor do not recover retail's retained string::assign during conversion.
+// Mac's lightly optimized build confirms the source-shaped temporary string:
+// its constructor, vector push_back, and destructor are retained in order
+// (8/8 direct calls in the full function). Explicit/named string construction,
+// positive validation and the cell accessor do not recover VC6 retail's
+// retained string::assign during that conversion.
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 VA(0x0056c3e0, 0x183)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
 unsigned char initializeSeerHutText()
