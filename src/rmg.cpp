@@ -8275,7 +8275,8 @@ TRmgMapItem* type_random_map::getMapItem(int x, int y)
 }
 
 VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
-VA_COMPGEN(0x00422F50, 0x1B1, VECTOR_INSERT, Int)
+// The second overload returns an iterator (int*) rather than void.
+VA_COMPGEN(0x00422F50, 0x1B1, VECTOR_INSERT_SINGLE, Int)
 VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
 VA_COMPGEN(0x0054C3F0, 0x21C, VECTOR_INSERT_SINGLE, TRmgMapPosition)
 
