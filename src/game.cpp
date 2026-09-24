@@ -7834,6 +7834,11 @@ void game::perMonth()
 // std::fill with temporary/named iterator bounds gives 85.2781/85.2840% and
 // does not recover the retail expansion. This Complete-only range has no
 // direct statement counterpart in DC's older GetRandomMonster body.
+// Mac 0:0xdfed4 retains bitset_iterator<145>::operator* at 0xe026c in the
+// same call position as Windows retail's 0x4d4ca0 helper. The isolated O3
+// shape has the same 24 ordered direct calls as Mac retail, including all
+// 18 bitset::set calls, count, random, and test. The Windows difference is
+// VC6's call/expansion choice at this evidenced source helper boundary.
 VA(0x004c92c0, 0x202)  // anchor-global, dc 0xb4b58
 TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
 {
