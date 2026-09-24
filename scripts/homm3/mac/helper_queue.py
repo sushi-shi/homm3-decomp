@@ -64,8 +64,10 @@ def generate(root: Path, action_queue: dict, index: Index,
     for va, row in sorted(unfinished.items()):
         caller = by_va.get(va)
         owner = _owner(row.get("unit") or "", assignments)
+        deferred = row.get("state") == "deferred"
         entry = {"owner": owner, "unit": row.get("unit"), "retail_va": f"0x{va:08x}",
                  "function": row["function"], "windows_max": row.get("windows_max"),
+                 "deferred": deferred,
                  "reviewed_mac_span": caller is not None,
                  "reviewed_calls": 0, "missing_named_calls": 0,
                  "unreviewed_targets": 0,
@@ -94,6 +96,7 @@ def generate(root: Path, action_queue: dict, index: Index,
                      "review_missing_helper_call" if getattr(target, "source_helper", None) else
                      "review_other_named_call")
             calls.append({"owner": owner, "unit": entry["unit"], "retail_va": entry["retail_va"],
+                          "deferred": deferred,
                           "function": entry["function"], "mac_call_site": _address(caller.mac_section, at),
                           "mac_target": _address(section, offset),
                           "target_name": name or runtime_name,
@@ -119,10 +122,10 @@ def write(root: Path, report: dict) -> None:
     out.mkdir(parents=True, exist_ok=True)
     reports.atomic_text(out / "helper-queue.json", json.dumps(report, indent=2) + "\n")
     for name, fields in (
-        ("functions", ("owner", "unit", "retail_va", "function", "windows_max",
+        ("functions", ("owner", "unit", "retail_va", "function", "windows_max", "deferred",
                        "reviewed_mac_span", "reviewed_calls", "missing_named_calls",
                        "unreviewed_targets", "state")),
-        ("calls", ("owner", "unit", "retail_va", "mac_call_site", "mac_target",
+        ("calls", ("owner", "unit", "retail_va", "deferred", "mac_call_site", "mac_target",
                    "target_name", "target_unit", "source_call_present", "state")),
     ):
         stream = io.StringIO()
@@ -130,3 +133,34 @@ def write(root: Path, report: dict) -> None:
         writer.writeheader()
         writer.writerows(report[name])
         reports.atomic_text(out / f"helper-queue-{name}.tsv", stream.getvalue())
+
+
+def leads(report: dict, unit: str | None = None,
+          include_deferred: bool = False) -> list[dict]:
+    """Group actionable call leads by destination instead of repeating sites."""
+    groups = {}
+    for row in report["calls"]:
+        if row["state"] not in ("review_missing_helper_call", "identify_target"):
+            continue
+        if unit and row["unit"] != unit:
+            continue
+        if row.get("deferred") and not include_deferred:
+            continue
+        key = (row["state"], row["mac_target"])
+        group = groups.setdefault(key, {"state": row["state"],
+                                        "mac_target": row["mac_target"],
+                                        "target_name": row["target_name"],
+                                        "sites": 0, "callers": set(), "units": set(),
+                                        "example": row})
+        group["sites"] += 1
+        group["callers"].add(row["retail_va"])
+        group["units"].add(row["unit"])
+    result = []
+    for group in groups.values():
+        group["caller_count"] = len(group.pop("callers"))
+        group["unit_count"] = len(group.pop("units"))
+        result.append(group)
+    return sorted(result, key=lambda group: (
+        group["state"] != "review_missing_helper_call",
+        -group["caller_count"], -group["sites"], -group["unit_count"],
+        group["mac_target"]))

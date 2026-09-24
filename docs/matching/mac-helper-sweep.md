@@ -18,6 +18,11 @@ also needs inspection when overloads or macros are involved. Reviewed Mac
 runtime destinations are marked `runtime_call` and remain in the full report
 without crowding the displayed helper leads.
 
+The command display groups repeated call sites by destination and orders them
+by distinct unfinished Windows callers. `--limit` counts destinations; the TSV
+keeps every individual call site. The display skips user-deferred modules unless
+`--include-deferred` is supplied; the JSON and TSV retain them.
+
 Current work is split by caller TU:
 
 | Owner | Units |

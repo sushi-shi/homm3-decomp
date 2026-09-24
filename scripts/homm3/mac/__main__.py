@@ -93,7 +93,8 @@ def main(argv=None) -> int:
     p.add_argument("--owner", action="append", default=[], metavar="WORKER=UNIT[,UNIT...]",
                    help="assign units to a worker; repeat for other workers")
     p.add_argument("--unit", help="display only this unit; output files still cover all units")
-    p.add_argument("--limit", type=int, default=30, help="maximum displayed call leads")
+    p.add_argument("--limit", type=int, default=30, help="maximum displayed target leads")
+    p.add_argument("--include-deferred", action="store_true", help="display user-deferred modules too")
     p.add_argument("--json", action="store_true", help="print the full structured helper queue")
     p = sub.add_parser("campaign", help="prepare disjoint worker packets from the current action queue")
     p.add_argument("--workers", type=int, default=6)
@@ -222,12 +223,12 @@ def main(argv=None) -> int:
                       f"{coverage['reviewed_mac_callers']} reviewed Mac caller spans")
                 print(f"[mac] {coverage['missing_named_source_calls']} reviewed helper calls absent from source; "
                       f"{coverage['unreviewed_direct_targets']} distinct direct targets need identity review")
-                selected = [row for row in report["calls"]
-                            if row["state"] in ("review_missing_helper_call", "identify_target")
-                            and (not args.unit or row["unit"] == args.unit)]
-                for row in selected[:args.limit]:
-                    print(f"  {row['retail_va']} [{row['unit']}] {row['mac_call_site']} -> "
-                          f"{row['mac_target']} {row['target_name']} [{row['state']}]")
+                for lead in helper_queue.leads(report, args.unit, args.include_deferred)[:args.limit]:
+                    example = lead["example"]
+                    print(f"  {lead['mac_target']} {lead['target_name']} [{lead['state']}] "
+                          f"{lead['sites']} sites in {lead['caller_count']} callers / "
+                          f"{lead['unit_count']} units; e.g. {example['retail_va']} "
+                          f"[{example['unit']}] at {example['mac_call_site']}")
                 print("[mac] complete queue: build/mac/helper-queue.json and helper-queue-*.tsv")
             return 0
         if args.command in ("find", "xrefs", "census"):
