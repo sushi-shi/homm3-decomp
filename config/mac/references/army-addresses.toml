@@ -918,3 +918,21 @@ mac_offset = 0x5469c
 mac_size = 0x64
 target_sha256 = "97c136ac36e6d48a86697c38f291f0b7c4711447cfa82b000496099a6ea6fed5"
 evidence = "Mac castSpell retains this method after castCaliphSpell and before the Enchanter. It bounds-checks hex against 187 and passes m_faerieDragonSpell and m_numTroops times five to combatManager::castSpell at 0x190540. Windows source previously had its body inline in the switch; name inferred. Final BLR at 0x546fc, next entry 0x54700."
+
+[[helpers]]
+source_helper = "army::cancelAllSpells"
+unit = "army"
+mac_section = 0
+mac_offset = 0x50c24
+mac_size = 0x68
+target_sha256 = "c13ffbead54ec6a2c97845c6af025bf59d6dd9e551d48359e061c983788e962d"
+evidence = "Mac processDeath retains this ordinary source helper. It scans 81 spell-duration entries at +0x198 and calls cancelIndividualSpell at 0x50580 for positive durations. Windows source already calls cancelAllSpells; final BLR at 0x50c88, next entry 0x50c8c."
+
+[[helpers]]
+source_helper = "army::decrementSpellRounds"
+unit = "army"
+mac_section = 0
+mac_offset = 0x51434
+mac_size = 0x98
+target_sha256 = "abd799961682d1a02bc51fdeaf7b3b2deb7f00154849f118872c549175b1edae"
+evidence = "Mac resetRound retains this ordinary source helper. It decrements positive spell-duration entries except Frenzy at index 56, cancels one-round spells through 0x50580 and decrements roundsLeftBeforeVanish at +0x2c. Windows expands the existing source helper; final BLR at 0x514c8, next entry 0x514cc."
