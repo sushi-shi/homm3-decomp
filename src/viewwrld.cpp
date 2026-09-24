@@ -206,8 +206,11 @@ inline void vwClipScaleToScreenBuffer(int destX, int destY)
                 ++screenBuffer;
             }
         }
+        // Keep the row offset before the buffer lookup, as in the expanded
+        // river, road and object-shadow callers.
+        int sourceLine = mwidth * g_scaleLine[y];
         sourceBufferLineStart =
-            g_memoryBuffer->getMap(0, 0) + mwidth * g_scaleLine[y];
+            g_memoryBuffer->getMap(0, 0) + sourceLine;
         screenBufferLineStart += swidth;
     }
 }
