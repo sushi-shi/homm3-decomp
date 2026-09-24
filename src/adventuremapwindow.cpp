@@ -900,9 +900,9 @@ hero_rollover: {
                     break;
 
                 hero* mapHero = g_game->getHero(heroID);
+                // Dreamcast adventuremapwindow.cpp:733 names operator[].
                 sprintf(g_text,
-                    g_generalText->getText(
-                        GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
                     mapHero->m_name, mapHero->heroFn004D8F70());
                 rolloverText = g_text;
                 break;
