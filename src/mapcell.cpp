@@ -287,11 +287,12 @@ int TTownEvent::load(TAbstractFile* infile, int saveVersion)
 }
 
 // E:\gamedcs\mapcell.cpp:354
-// Dreamcast retains an out-of-line copy. Retail's corresponding source-order
-// slot is twelve bytes of NOP padding, while is_diggable contains this exact
-// vector lookup expanded in place, so the Windows helper is inline-only.
-// Removing `inline` leaves both callers exact but emits an extra VC6 body;
-// this keyword controls emission, without proving the original spelling.
+// Dreamcast retains an out-of-line copy. Mac places the retained body between
+// TTownEvent::load and getTriggerCell; both Mac callers are in mapcell.
+// Retail's corresponding source-order slot is twelve bytes of NOP padding,
+// while isDiggable and getSpecialTerrain expand this lookup. Removing inline
+// leaves both callers exact but emits an unused VC6 COMDAT; the original
+// keyword remains unproven.
 inline CObject* NewmapCell::TObjectCell::getObject() const
 {
     return &g_game->m_worldMap.m_objects[m_objectIndex];
@@ -1200,7 +1201,10 @@ CObjectType* CObject::getObjectTypePtr() const
 }
 
 // E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
-// out-of-line SH4 body; Complete expands it into every admitted retail use.
+// out-of-line SH4 body; Mac places it between getObjectTypePtr and findTrigger.
+// Its two Mac callers are in mapcell. Complete expands the admitted uses;
+// removing inline keeps getTriggerCell exact but emits an unused VC6 COMDAT,
+// so the original keyword remains unproven.
 inline type_point CObject::getTrigger() const
 {
     int resultX;
