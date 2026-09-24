@@ -63,6 +63,9 @@ static const int g_combatActionFirstAid = 11;
 // count/skill declaration order are byte-flat; moving the wall lifetime
 // earlier costs 36 rows, while naming `skill == 0` costs 37. Keep the direct
 // DC-shaped access rather than forcing a register with synthetic state.
+// Mac code0+0x81d04 retains validWallTarget(WALL_TARGET_3) at the keep check.
+// Using that source call here makes VC6 emit a six-instruction boolean test
+// where retail has four instructions and lowers this match to 98.64%.
 // A chosen-target result guards the fallback wall/tower selection and
 // removes the shared-order goto at 99.8804%. Bool, unsigned-char and int
 // forms are neutral, as are two single-pass selection scopes. Copying the
