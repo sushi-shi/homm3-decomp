@@ -943,3 +943,22 @@ mac_offset = 0x9959c
 mac_size = 0x70
 target_sha256 = "a119a9e1e868be1b25fc67403712d9453ed247950072528ba4de5db84de7090a"
 evidence = "Legacy hero base f2214, army58050 and two artifact arrays(18 and64 elements of8 bytes); passed as array constructor by campaign load98ec8. Full return boundary reviewed."
+[[functions]]
+retail_va = 0x4885d0
+unit = "customcampaign"
+source = "src/customcampaign.cpp"
+mac_section = 0x0
+mac_offset = 0x96934
+mac_size = 0xb0
+target_sha256 = "f644da68e0d73c774d41ddf9c45c05b6b0c5290b7b9f64f6aadbe3ff96ce6e8e"
+evidence = "CampaignHeaderStruct constructor receives filename in r4, initializes string members at +4/+0x10/+0x14 and scenario vector at +0x18, assigns filename and zeroes data/stream/status. Called from global getCampaignName 0x6824c. Full Mac body code0+0x96934..0x969e4; terminal BLR at 0x969e0, next entry 0x969e4."
+
+[[functions]]
+retail_va = 0x4886a0
+unit = "customcampaign"
+source = "src/customcampaign.cpp"
+mac_section = 0x0
+mac_offset = 0x96a68
+mac_size = 0x94
+target_sha256 = "7c38404e129ddddad71f6d69c2a5a76fcb3662b4b5484d2037993728a05b54b5"
+evidence = "CampaignHeaderStruct destructor is ABI-combined with delete flag in r4; calls clearScenarios helper 0x96afc and vector teardown then destroys description/name/filename strings at +0x14/+0x10/+4. Full Mac body code0+0x96a68..0x96afc; terminal BLR at 0x96af8, next entry 0x96afc."

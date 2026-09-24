@@ -1236,33 +1236,6 @@ VA_COMPGEN(0x0045dea0, 0x1D, TREE_BUYNODE, type_map_hero_info)
 // pointer arguments, `ret 0xc`).
 VA_COMPGEN(0x0045d230, 0x38, VECTOR_UCOPY, type_map_hero_identity)
 
-// Original constructor family: campaignbrief.cpp:192, dc 0x5ae10.
-// Complete adds the filename argument and changes the record's members;
-// keep its retained body in the same owning module as the destructor.
-// Retail reads filename at 0x488636, copies it into the string at +4,
-// clears data/stream/status at 0x488681..0x488687, and returns with ret 4.
-// The four members default-construct (the empty
-VA(0x004885d0, 0xCB)  // anchor-caller(TCampaignBrief ctor), retail-only
-TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
-    const char* filename)
-{
-    m_fileName = filename;
-    m_data = 0;
-    m_stream = 0;
-    m_fileError = CAMPAIGN_FILE_OK;
-}
-
-// campaignbrief.cpp:192, dc 0x5ade8. Complete expands the same scenario
-// delete/clear/freeData sequence here and in CampaignHeaderStruct::load.
-// Sharing the in-class clearScenarios body makes this destructor exact while
-// retaining vector::clear and freeData at the retail call boundaries.
-// E:\gamedcs\campaignbrief.cpp:192, dc 0x5ade8
-VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
-TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
-{
-    clearScenarios();
-}
-
 // This delete loop naturally retains ScenarioStruct's compiler-generated
 // deleting wrapper. Retail CampaignHeaderStruct::load and selectCampaign
 // call the shared 0x488eb0 copy. All 33 bytes and both calls agree: the
