@@ -5593,6 +5593,8 @@ TCreatureType hero::getNecromancyCreature()
     return CREATURE_SKELETON;
 }
 
+// Dreamcast hero.cpp:5364 calls town::HasBuilding for the Necropolis
+// bonus; retail and Mac expand the Town.h active-mask accessor.
 VA(0x004e3cd0, 0x268)  // dc 0xd4390
 float hero::getNecromancyFactor(unsigned char applyLimit) const
 {
@@ -5615,9 +5617,9 @@ float hero::getNecromancyFactor(unsigned char applyLimit) const
             for (int i = 0; i < player.m_numTowns; i++) {
                 town* ownedTown = g_game->getTown(player.m_townIds[i]);
                 if (ownedTown->m_type == TOWN_NECROPOLIS) {
-                    if ((ownedTown->m_active & g_bitNumber[EXTRA_0_ID]) != 0)
+                    if (ownedTown->hasBuilding(EXTRA_0_ID, true))
                         factor += 0.1f;
-                    if ((ownedTown->m_active & g_bitNumber[HOLY_GRAIL_ID]) != 0)
+                    if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true))
                         factor += 0.2f;
                 }
             }
@@ -6132,25 +6134,13 @@ void hero::setVisitedArena(const NewmapCell* cell)
     m_arenaFlags |= 1 << cell->m_extraInfo;
 }
 
+// Dreamcast hero.cpp:6173 calls GetPrimarySkill for attack and defense;
+// retail expands the same Hero.h clamp twice.
 VA(0x004e5400, 0x93)  // dc 0xd50a0
 float hero::getCombatValueModifier() const
 {
-    signed char attack = m_stats[0];
-    int attackValue;
-    if (attack > 99)
-        attackValue = 99;
-    else if (attack > 0)
-        attackValue = attack;
-    else
-        attackValue = 0;
-    signed char defense = m_stats[1];
-    int defenseValue;
-    if (defense > 99)
-        defenseValue = 99;
-    else if (defense > 0)
-        defenseValue = defense;
-    else
-        defenseValue = 0;
+    int attackValue = getPrimarySkill(0);
+    int defenseValue = getPrimarySkill(1);
     return static_cast<float>(sqrt((attackValue * 0.05 + 1.0)
                                    * (defenseValue * 0.05 + 1.0)));
 }
