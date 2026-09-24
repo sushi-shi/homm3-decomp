@@ -2981,9 +2981,11 @@ long army::getEstimatedDamage(const army* target, long amount,
     // bytes) and a named `long bonus` local, which is strictly worse
     // (it sinks the add past the ComputeAttackerDamageReduction call
     // and spills the bonus to a stack slot first).
+    // Mac retains this defender-bonus call; VC6 expands its zero return.
     amount = computeAttackerBonus(amount, ranged, const_cast<army*>(target),
                                     0, distance)
-             + amount;
+             + amount
+             + target->computeDefenderDamageBonuses(amount);
     amount = static_cast<long>(
         computeAttackerDamageReduction(target, ranged) * amount);
     amount = static_cast<long>(
