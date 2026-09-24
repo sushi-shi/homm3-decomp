@@ -1,0 +1,19 @@
+[[helpers]]
+unit = "customcampaign"
+source_helper = "TCampaignBrief::ScenarioStruct::playText"
+mac_section = 0
+mac_offset = 0x976c4
+mac_size = 0x3c
+mac_symbol = ".playText__Q214TCampaignBrief14ScenarioStructFb"
+target_sha256 = "0cc7e54aa179a6d81fef11ed37a3391f30eb65a4ccfe5844079a7aecf232bfb9"
+evidence = "The retained body selects scenario prologue at +0x20 or epilogue at +0x24 from a bool argument and calls MapTextStruct::play when present. It starts immediately after getAvailableScenarios at 0x9761c+0xa8, ends in BLR at 0x976fc, and precedes MapTextStruct::play at 0x97700. Its sole direct Mac caller is the campaign-header playback helper at 0x97e00. Both Windows expansions are in customcampaign."
+
+[[helpers]]
+unit = "customcampaign"
+source_helper = "TCampaignBrief::CampaignHeaderStruct::playScenarioText"
+mac_section = 0
+mac_offset = 0x97dbc
+mac_size = 0x64
+mac_symbol = ".playScenarioText__Q214TCampaignBrief20CampaignHeaderStructFib"
+target_sha256 = "98ff51071cd18b1f00cba12c87bfd1b1d0cb95ae5c78133d320bcc61d021cce6"
+evidence = "The retained body calls stopAllSamples(1), indexes the header scenario vector at +0x20 with the map index, then calls playText with the bool flag. It starts immediately after MapTextStruct::play at 0x97700+0x6bc, ends in BLR at 0x97e1c, and precedes startScenario at 0x97e20. The only direct Mac callers are prologue at 0x98c10 and epilogue at 0x98c50/0x98c94; Windows expands all three calls in the same TU."

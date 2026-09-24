@@ -2225,6 +2225,15 @@ void TCampaignBrief::CampaignHeaderStruct::getAvailableScenarios(
     }
 }
 
+// Mac code+0x976c4 follows getAvailableScenarios and retains the selection
+// as a call from the campaign-header playback helper. Complete expands it.
+void TCampaignBrief::ScenarioStruct::playText(bool epilogue)
+{
+    MapTextStruct* text = epilogue ? m_epilogue : m_prologue;
+    if (text)
+        text->play();
+}
+
 VA(0x00488fb0, 0x528)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::play()
 {
@@ -2432,6 +2441,14 @@ void TCampaignBrief::MapTextStruct::play()
     delete strip;
     g_config.m_musicVolume = savedVolume;
     videoClose();
+}
+
+// Mac code+0x97dbc follows MapTextStruct::play and calls playText. The two
+// campaign wrappers are its only direct Mac callers, with three call sites.
+void TCampaignBrief::CampaignHeaderStruct::playScenarioText(int which, bool epilogue)
+{
+    g_soundManager->stopAllSamples(1);
+    m_scenarios[which]->playText(epilogue);
 }
 
 VA(0x004894e0, 0x1D)
@@ -2710,27 +2727,21 @@ VA(0x0048a270, 0x2F)
 void SCampaign::playScenarioPrologue(void* campaignHeader)
 {
     int map = m_currentMap;
-    g_soundManager->stopAllSamples(1);
     TCampaignBrief::CampaignHeaderStruct* header =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
-    if (header->m_scenarios[map]->m_prologue)
-        header->m_scenarios[map]->m_prologue->play();
+    header->playScenarioText(map, false);
 }
 
 VA(0x0048a2a0, 0x70)
 void SCampaign::playScenarioEpilogue(void* campaignHeader)
 {
     int map = m_currentMap;
-    g_soundManager->stopAllSamples(1);
     TCampaignBrief::CampaignHeaderStruct* header =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
-    if (header->m_scenarios[map]->m_epilogue)
-        header->m_scenarios[map]->m_epilogue->play();
+    header->playScenarioText(map, true);
     if (m_currentCampaign == g_campaignOrdinal02 && m_mapScores[0].m_completed
         && m_mapScores[1].m_completed && !m_mapScores[2].m_completed) {
-        g_soundManager->stopAllSamples(1);
-        if (header->m_scenarios[g_campaignOrdinal02]->m_prologue)
-            header->m_scenarios[g_campaignOrdinal02]->m_prologue->play();
+        header->playScenarioText(g_campaignOrdinal02, false);
     }
 }
 
