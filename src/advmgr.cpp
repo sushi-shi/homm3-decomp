@@ -8540,13 +8540,16 @@ int advManager::mouseInScrollZone()
     return 1;
 }
 
+// Dreamcast advmgr.cpp:10782/10785/10830/10836 calls GetCurrTownId,
+// GetCurrTown, get_map_center and Reseed. Retail expands these header
+// and short member helpers in the initial-origin path.
 VA(0x00419990, 0x2E3)  // dc 0x1cd68
 void advManager::setInitialMapOrigin()
 {
     m_lastHoverX = m_lastHoverY = 0;
 
-    if (g_currentPlayer->isLocalHuman() && g_currentPlayer->m_currTownId != -1) {
-        town* startTown = &g_game->m_towns[g_currentPlayer->m_currTownId];
+    if (g_currentPlayer->isLocalHuman() && g_game->getCurrTownId() != -1) {
+        town* startTown = g_game->getCurrTown();
         m_radarOrigin.m_x = startTown->m_mapX - 9;
         m_radarOrigin.m_y = startTown->m_mapY - 8;
         m_radarOrigin.m_z = startTown->m_mapZ;
@@ -8575,12 +8578,12 @@ void advManager::setInitialMapOrigin()
 
     m_advWindow->setElevationToggleImage(m_radarOrigin.m_z);
 
-    type_point center(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8, m_radarOrigin.m_z);
+    type_point center = getMapCenter();
 
     m_lastTerrain = getCell(center)->m_groundSet;
     g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
     setEnvironmentOrigin(center, 1);
-    m_seedingValid = 0;
+    reseed(0, 0);
 
     if (g_currentPlayer->isLocalHuman() && g_currentPlayer->hasMobileHero())
         m_advWindow->widgetClearStatus(11, 0x4008);
