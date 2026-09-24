@@ -522,10 +522,12 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 
 // E:\gamedcs\recruit.cpp:511
 // Windows Update matches all 55 CFG blocks and 29 calls. The remaining
-// arithmetic pair at +0x390 loads numberToBuy before goldPerTroop, whereas
-// retail loads goldPerTroop first; reversing the source multiplication is
-// byte-flat under VC6. Reviewed retail ABI aliases for gpCurrentPlayer and
-// gSystemPalette make the named relocations agree but do not change the
+// arithmetic pair at +0x390 loads goldPerTroop before numberToBuy, whereas
+// retail loads numberToBuy first; reversing the source multiplication or
+// splitting it into assignment and multiplication is byte-flat under VC6.
+// Mac code0+0x14f85c loads goldPerTroop before numberToBuy too; this does
+// not decide VC6's load order. Reviewed retail ABI aliases for gpCurrentPlayer
+// and gSystemPalette make the named relocations agree but do not change the
 // 99.989845% score, so this source keeps the canonical global names.
 // The reviewed Mac Update body is 1484 B and retains 33 calls. The current
 // native-header candidate cannot complete byte comparison until its
