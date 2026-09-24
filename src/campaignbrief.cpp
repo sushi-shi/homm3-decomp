@@ -198,9 +198,10 @@ void TCampaignBrief::setupCurrentTerritory()
 }
 
 // The local player's slot in the selected scenario, DC ?playerSlot@@3HA;
-// retail .bss 0x694dcc, written by UpdateAllyEnemyFlags below.
+// retail .bss 0x694dcc. External linkage gives the retained Mac indirect TOC
+// access while VC6 still writes the same retail storage.
 DATA(0x00694dcc)
-static int g_campaignBriefPlayerSlot;
+int g_campaignBriefPlayerSlot;
 
 // E:\gamedcs\campaignbrief.cpp:481. Complete retains the same source helper
 // immediately after Select; CampaignBriefHandler calls it at retail +0x4f9.
@@ -218,6 +219,8 @@ static int g_campaignBriefPlayerSlot;
 // SIB spelling in the second teamInfo lookup inside Dreamcast-proven OnSameTeam:
 // candidate [ecx+eax+0x1f879], retail [eax+ecx+0x1f879]. Naming either the player
 // slot or the game receiver is byte-flat, so keep the canonical helper boundary.
+// Mac resolves the same externally linked player slot but retains one
+// std::__vector_pod::data call before getPlayer (14 calls against our 13).
 VA(0x00458010, 0x10F)  // handler caller + DC source identity, dc 0x58a9c
 void TCampaignBrief::updateAllyEnemyFlags()
 {

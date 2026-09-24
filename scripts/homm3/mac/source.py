@@ -60,6 +60,7 @@ class DataPair:
     same_tu_definition: bool = False
     owner_unit: str | None = None
     same_tu_array: bool = False
+    same_tu_external: bool = False
 
 
 def data_rows(root: Path, kind: str) -> list[dict]:
@@ -151,6 +152,10 @@ def load_data(root: Path) -> list[DataPair]:
         same_tu_array = row.get("same_tu_array", False)
         if not isinstance(same_tu_array, bool) or (same_tu_array and not same_tu_definition):
             raise SourceError(f"{source}: DATA({va:#x}) same_tu_array requires same-TU storage")
+        same_tu_external = row.get("same_tu_external", False)
+        if (not isinstance(same_tu_external, bool)
+                or (same_tu_external and (not same_tu_definition or same_tu_array))):
+            raise SourceError(f"{source}: DATA({va:#x}) same_tu_external requires scalar same-TU storage")
         local_owner = row.get("owner_va")
         local_signature = None
         if local_owner is not None:
@@ -201,6 +206,8 @@ def load_data(root: Path) -> list[DataPair]:
                     declaration, re.DOTALL)
                 if match and bool(match.group("array").strip()) != same_tu_array:
                     raise SourceError(f"{source}: DATA({va:#x}) same_tu_array differs from its declaration")
+                if match and same_tu_external and re.match(r'\s*static\b', declaration):
+                    raise SourceError(f"{source}: DATA({va:#x}) same_tu_external requires external linkage")
             else:
                 match = re.fullmatch(r'\s*(?:(?:static|const|unsigned|signed|long|short)\s+)*'
                                      r'\w+\s+(\w+)\s*(?:\[[^\]]*\]\s*)*=.*;',
@@ -237,7 +244,8 @@ def load_data(root: Path) -> list[DataPair]:
         result.append(DataPair(va, name, definition,
                                row["mac_section"], row["mac_offset"], row["mac_size"], row["sha256"],
                                declaration_only, symbol, local_owner, read_only,
-                               same_tu_definition, owner_by_source.get(source), same_tu_array))
+                               same_tu_definition, owner_by_source.get(source),
+                               same_tu_array, same_tu_external))
     return result
 
 

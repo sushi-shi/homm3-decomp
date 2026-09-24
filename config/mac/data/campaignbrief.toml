@@ -1,12 +1,13 @@
 [[data]]
 retail_va = 0x00694dcc
 source = "src/campaignbrief.cpp"
-declaration_only = true
+same_tu_definition = true
+same_tu_external = true
 mac_section = 1
 mac_offset = 0x659f0
 mac_size = 4
 sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
-evidence = "Canonical src/campaignbrief.cpp owns the file-static zero-initialized player slot at retail DATA(0x00694dcc). This selected-body Mac compilation omits the TU-level definition and addresses that storage as an external through an indirect TOC load. The retained body stores the selected player through TOC 1+0x95c -> zero-filled 1+0x659f0 and reloads it for each occupied player. This row binds its address only, not an initializer or source linkage change."
+evidence = "Dreamcast names ?playerSlot@@3HA with external linkage; canonical src/campaignbrief.cpp owns its uninitialized four-byte definition at retail DATA(0x00694dcc). CodeWarrior emits HUNK_GLOBAL_UDATA RW plus an indirect TOC reference for that ordinary global. The Mac body stores through TOC 1+0x95c -> zero-filled 1+0x659f0 and reloads it for each occupied player. The pinned zero payload and loader pointer bind this source-owned storage without inventing an initializer."
 
 [[data]]
 retail_va = 0x00694de8

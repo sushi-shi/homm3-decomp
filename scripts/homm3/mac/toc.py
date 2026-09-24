@@ -108,7 +108,8 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
             if name in named:
                 raise ObjectError(f"ambiguous source-owned Mac data symbol {name}")
             named[name] = (target, payload, pair.declaration_only,
-                           pair.same_tu_definition, pair.owner_unit, pair.same_tu_array)
+                           pair.same_tu_definition, pair.owner_unit,
+                           pair.same_tu_array or pair.same_tu_external)
     # MSL header data can be referenced by a source call without a game-owned
     # DATA annotation. Keep that inventory separate from authored globals and
     # require a pinned payload plus the loader-proven TOC destination.
@@ -235,14 +236,14 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
         else:
             value = values[0]
         if name in named and named[name][5]:
-            # CodeWarrior gives source-owned uninitialized arrays RW storage
-            # and an indirect TOC load. Keep the reviewed array marker, exact
-            # zero payload, and owning-TU requirement separate from externs.
+            # CodeWarrior gives source-owned uninitialized arrays and globals
+            # with external linkage RW storage and an indirect TOC load.
+            # Require exact zero payload and the original owning TU.
             expected = named[name][1]
             if (unit != named[name][4] or value is None or value.initialized
                     or value.storage_class != "RW" or not indirect
                     or len(value.data) != len(expected) or value.data != expected):
-                raise ObjectError(f"same-TU UDATA array {name!r} lacks its reviewed indirect zero storage")
+                raise ObjectError(f"same-TU indirect UDATA {name!r} lacks its reviewed zero storage")
         elif name in named and named[name][3]:
             # The authored source owns uninitialized same-TU storage. A
             # CodeWarrior UDATA hunk and a direct TOC reference are required;
@@ -251,7 +252,14 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
                     or indirect or value.data != bytes(len(value.data))):
                 raise ObjectError(f"same-TU UDATA symbol {name!r} lacks direct zero-filled storage")
         elif value is not None and not value.initialized:
-            raise ObjectError(f"unreviewed UDATA symbol {name!r}")
+            # A site-bounded anonymous zero template can be emitted as RW
+            # UDATA. Its one owner, use site, indirect loader pointer, size,
+            # and exact zero payload were checked above. No other UDATA is
+            # admitted through the literal path.
+            if (name not in site_literals or name not in site_indirect
+                    or value.storage_class != "RW"
+                    or value.data != bytes(len(value.data))):
+                raise ObjectError(f"unreviewed UDATA symbol {name!r}")
         if name in descriptors:
             pass  # The emitted relocations and both retail loader pointers were checked above.
         elif name in named:
