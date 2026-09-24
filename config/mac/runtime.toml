@@ -592,3 +592,43 @@ mac_offset = 0x948
 mac_size = 0x10
 sha256 = "680dea8ae86a092b429256ac5e937163c668865b1794dcb179c9529761499f3f"
 evidence = "HERO getMoraleDescription at 0xf88fc and getLuckDescription at 0xf8efc both call code 0:0x948 after adding 0x1c to TTextResource, passing text index 438 in r4. The complete 16-byte body loads vector data at receiver+8, scales the index by four, adds it to the data pointer and returns the element address; BLR is at 0x954 and the next prologue starts 0x958. The pinned MSL vector<T>::operator[](size_type) forwards through its POD indexer, and CodeWarrior emits the named `.__vc__Q23std10vector<Pc>CFUl` call in the shared HERO candidate. Runtime template identity only, with no Windows VA claim."
+
+[[functions]]
+symbol = ".mac_vector_storage_8100"
+mac_section = 0
+mac_offset = 0x8100
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "The full body is addi r3,r3,8; blr, ending before the next function at 0x8108. Mac has 100 direct calls, including combatWindow::showMessages on its vector<string*> and AI_PLAYER vector scans; callers then load the vector data pointer from the returned slot. This is a separately retained MSL vector storage accessor with the same bytes as 0x5eec. The neutral label does not assert a particular template instantiation or emitted symbol."
+
+[[functions]]
+symbol = ".mac_pointer_vector_push_back_20e0"
+mac_section = 0
+mac_offset = 0x20e0
+mac_size = 0x7c
+sha256 = "decc742866e65de134a9c80af61d5e6112d0e6dbd493c9ab34cb8221ad5b7ee2"
+evidence = "The 125 direct callers include TAdventureMapWindow construction of its vector<widget*>. The callee compares size with capacity, doubles capacity through reviewed POD-vector reserve 0x47b0 when full, copies one four-byte pointer from r4 to data[size], increments size, and returns at 0x2158; the next function starts at 0x215c. The neutral label covers the pointer-vector operation without claiming one template spelling for all callers."
+
+[[functions]]
+symbol = ".__copy"
+mac_section = 0
+mac_offset = 0x27e888
+mac_size = 0x30
+sha256 = "6fe466f5875277e2d1ddc956839991a8fb6c971050c69ea64fb7aa67d3c0ca62"
+evidence = "All 48 bytes exactly equal the CodeWarrior Pro 6 MSL RuntimePPC.Lib .__copy code body, whose archive names the symbol. It copies r5 bytes from r4 to r3, returns the destination, and ends at BLR 0x27e8b4 before the next prologue at 0x27e8b8. The 124 direct calls include generated hero-copy and event-message copies; this is compiler runtime code, not a source-owned helper."
+
+[[functions]]
+symbol = ".mac_vector_string_push_back_be4d4"
+mac_section = 0
+mac_offset = 0xbe4d4
+mac_size = 0xac
+sha256 = "8c50af787a6f989d43aada5167a3430b9b28119cdd4fbe86bc0e661ed0d27eab"
+evidence = "Nineteen direct calls include event, font, Seer Hut and text-scroller string-vector appends. The callee doubles four-byte-element capacity through 0xbead8, invokes the reviewed std::string copy constructor at 0x1c628 for the new element, increments size and returns at 0xbe57c; the next function starts at 0xbe580. The neutral label records an MSL vector<string>::push_back operation without guessing its mangled instantiation."
+
+[[functions]]
+symbol = ".__ct__Q23std10bitset<48>Fv"
+mac_section = 0
+mac_offset = 0x99f38
+mac_size = 0x10
+sha256 = "765d467aef28897a16c69e550974242c7e115dedbd156d3e0451e5ebd9b2e0b8"
+evidence = "The installed MSL bitset default constructor zeros each storage word. CObjectType construction calls this body on four consecutive eight-byte bitset<48> members at 0x128c14/1c/24/2c; the complete body zeros both words and returns at 0x99f44 before the next prologue at 0x99f48. A CodeWarrior source-view probe emits the corresponding default-constructor mangling for bitset<70>, and this 16-byte body is byte-identical to the separately retained bitset<48>::reset. Runtime template identity only."
