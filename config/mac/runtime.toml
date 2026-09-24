@@ -997,3 +997,42 @@ mac_offset = 0x277f10
 mac_size = 0x68
 sha256 = "551d20de66f698e8a9ef90b0b12f50259028a2fac77ab872b0dbf35693f38962"
 evidence = "Mac-only file adapter read takes a buffer at r4 and requested length at r5, passes file reference +2, buffer and in/out length to Mac glue 0x2a1778, translates the result through 0x2781ec and reports short reads with error 0x14. High-score open calls it at 0x10a848 for its 0x898-byte score table; game, LOD, sound and preferences also read through it. BLR 0x277f74 precedes the next write-like entry 0x277f78. Platform identity only."
+[[functions]]
+symbol = ".mac_vector_4byte_trivial_push_back_89ae8"
+mac_section = 0
+mac_offset = 0x89ae8
+mac_size = 0x98
+sha256 = "08a5eea7d6d3c840030b7f75f9cf3b52b51fc36e8ab9be1a65b609592592a03a"
+evidence = "Sixteen direct calls from creature_bank, seerhut and victorylossconditions append four-byte artifacts or IDs to authored vectors. The body grows through 0x89b80 when size equals capacity, copies one word to data + 4*size and increments size; BLR 0x89b7c. This common runtime operation does not identify one template instantiation."
+
+[[functions]]
+symbol = ".mac_vector_4byte_trivial_grow_89b80"
+mac_section = 0
+mac_offset = 0x89b80
+mac_size = 0xf0
+sha256 = "dff5e05296154baf457dbffc29bad5e3b6aad5d52b16e8743a05918e3bd988b1"
+evidence = "The 0x89ae8 append calls this body when requested capacity exceeds current capacity; victorylossconditions also calls it for reserve. It allocates four bytes per element, copies old values, swaps storage and destroys the temporary vector; BLR 0x89c6c. Runtime growth only."
+
+[[functions]]
+symbol = ".mac_vector_capacity_swap_89c70"
+mac_section = 0
+mac_offset = 0x89c70
+mac_size = 0x14
+sha256 = "8f40617fcb4aa8a2033a807bec6b0c31e6f68135759f5a3169c02176969ad0bf"
+evidence = "The 0x89b80 growth body calls this five-instruction helper to exchange the first capacity word of two vector records; BLR 0x89c80. Runtime field swap only."
+
+[[functions]]
+symbol = ".mac_vector_4byte_trivial_delete_flag_dtor_89c84"
+mac_section = 0
+mac_offset = 0x89c84
+mac_size = 0x64
+sha256 = "cd63a931b5036c1098c0603a292194b698bb327953ae61bf2183d586b5c8d6a4"
+evidence = "Seventeen generated/container cleanup calls across game, mapcell, seerhut and victorylossconditions. The body clears through 0x89ce8, frees data at +8 and optionally deletes the vector receiver for a positive flag; BLR 0x89ce4. Runtime destructor only."
+
+[[functions]]
+symbol = ".mac_vector_4byte_trivial_clear_89ce8"
+mac_section = 0
+mac_offset = 0x89ce8
+mac_size = 0x38
+sha256 = "71fd8d5e7c39a167a5e408094504616055dadfbd71eb5b81238761e48087dab7"
+evidence = "The 0x89c84 destructor calls this four-byte-element clear body; mapcell also calls it directly. It walks trivial elements and resets size to zero; BLR 0x89d1c. Runtime clear only."
