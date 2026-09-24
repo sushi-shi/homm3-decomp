@@ -721,3 +721,12 @@ mac_offset = 0x3f278
 mac_size = 0x9c
 target_sha256 = "c9c6abfca2a8fe2c7eaaa2b16fe06c0e241a5b50715a480aea37a744eb6ff306"
 evidence = "Computes canShoot and average damage, then calls the five-argument boost overload at 0x3f130; getFrenzyValue retains a call to this ordinary source overload while Windows expands it."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::getDuration"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x42038
+mac_size = 0x94
+target_sha256 = "9ac99761427289278f6326181b3c61e6f02d7070de997fa8358ac99093ddbe11"
+evidence = "This const duration helper clamps turns against roundsLeft at +0x3c, divides if shorter, then subtracts one round for an army that already moved and clamps at zero. The final BLR at 0x420c8 precedes the next method at 0x420cc. Eight Mac tactical AI callers retain direct calls, including getDefenseBoostValue with movedThisTurn=0; Windows expands the same shared source helper."

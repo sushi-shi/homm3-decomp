@@ -1074,17 +1074,7 @@ long type_AI_spellcaster::getMirthValue(const army* ourArmy, type_enchant_data c
     double effect = aiValueOfMorale(ourArmy->getMorale(1), change);
     if (effect == 0.0)
         return 0;
-    double portion;
-    if (caster.m_duration >= m_estimate.m_roundsLeft)
-        portion = 1.0;
-    else
-        portion = static_cast<double>(caster.m_duration) / static_cast<double>(m_estimate.m_roundsLeft);
-    double scale;
-    if (ourArmy->is(creatureDone)
-            && (portion = portion - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-        scale = 0.0;
-    else
-        scale = portion;
+    double scale = getDuration(caster.m_duration, ourArmy->is(creatureDone));
     double total = static_cast<double>(ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
                                                                         m_estimate.m_lowestDefense));
     return static_cast<long>(total * scale * effect);
@@ -1110,17 +1100,7 @@ long type_AI_spellcaster::getSorrowValue(const army* enemy, type_enchant_data ca
         effect = effect * g_combatManager->spellCastWorkChance(SPELL_SORROW, m_side, enemy,
                                                                0, 1, creatureCast);
     }
-    double portion;
-    if (caster.m_duration >= m_estimate.m_roundsLeft)
-        portion = 1.0;
-    else
-        portion = static_cast<double>(caster.m_duration) / static_cast<double>(m_estimate.m_roundsLeft);
-    double scale;
-    if (enemy->is(creatureDone)
-            && (portion = portion - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-        scale = 0.0;
-    else
-        scale = portion;
+    double scale = getDuration(caster.m_duration, enemy->is(creatureDone));
     double total = static_cast<double>(enemy->getTotalCombatValue(m_estimate.m_lowestAttack,
                                                                      m_estimate.m_lowestDefense));
     return static_cast<long>(total * scale * effect);
@@ -1193,11 +1173,7 @@ long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* 
                 + m_meleeEnemies[ourArmy->m_bitIndex].m_totalDamage) * m_estimate.m_roundsLeft
             + ourArmy->m_topCreatureDamage < ourArmy->m_monInfo.m_hitPoints)
         return 0;
-    double scale;
-    if (duration >= m_estimate.m_roundsLeft)
-        scale = 1.0;
-    else
-        scale = static_cast<double>(duration) / static_cast<double>(m_estimate.m_roundsLeft);
+    double scale = getDuration(duration, 0);
     double total = static_cast<double>(ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
                                                                         m_estimate.m_lowestDefense));
     return static_cast<long>((sqrt(increase) - 1.0) * total * scale);
@@ -1389,17 +1365,7 @@ long type_AI_spellcaster::getMisfortuneValue(const army* enemy, type_enchant_dat
         effect = effect * g_combatManager->spellCastWorkChance(SPELL_MISFORTUNE, m_side, enemy,
                                                                0, 1, creatureCast);
     }
-    double portion;
-    if (caster.m_duration >= m_estimate.m_roundsLeft)
-        portion = 1.0;
-    else
-        portion = static_cast<double>(caster.m_duration) / static_cast<double>(m_estimate.m_roundsLeft);
-    double scale;
-    if (enemy->is(creatureDone)
-            && (portion = portion - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-        scale = 0.0;
-    else
-        scale = portion;
+    double scale = getDuration(caster.m_duration, enemy->is(creatureDone));
     double total = static_cast<double>(enemy->getTotalCombatValue(m_estimate.m_lowestAttack,
                                                                      m_estimate.m_lowestDefense));
     return static_cast<long>(total * scale * effect);
@@ -1419,17 +1385,7 @@ long type_AI_spellcaster::getBlindValue(const army* enemy, type_enchant_data cas
         value = static_cast<long>((0.5 - sqrt(static_cast<double>(bonus) / 400.0))
                                   * static_cast<double>(value));
     } else {
-        double portion;
-        if (caster.m_duration >= m_estimate.m_roundsLeft)
-            portion = 1.0;
-        else
-            portion = static_cast<double>(caster.m_duration) / static_cast<double>(m_estimate.m_roundsLeft);
-        double scale;
-        if (enemy->is(creatureDone)
-                && (portion = portion - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-            scale = 0.0;
-        else
-            scale = portion;
+        double scale = getDuration(caster.m_duration, enemy->is(creatureDone));
         value = static_cast<long>(static_cast<double>(value) * scale);
     }
     if (caster.m_checkResistance) {
@@ -2289,17 +2245,7 @@ long type_AI_spellcaster::getCurseValue(const army* enemy, type_enchant_data cas
             newAverage = 1.0;
         double decrease = newAverage / oldAverage;
         value = static_cast<long>(value - sqrt(decrease) * value);
-        double portion;
-        if (caster.m_duration >= m_estimate.m_roundsLeft)
-            portion = 1.0;
-        else
-            portion = static_cast<double>(caster.m_duration) / static_cast<double>(m_estimate.m_roundsLeft);
-        double scale;
-        if (enemy->is(creatureDone)
-                && (portion = portion - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-            scale = 0.0;
-        else
-            scale = portion;
+        double scale = getDuration(caster.m_duration, enemy->is(creatureDone));
         value = static_cast<long>(value * scale);
         if (caster.m_checkResistance) {
             long creatureCast = m_isCreatureSpell != 0;
@@ -2323,17 +2269,7 @@ long type_AI_spellcaster::getForgetfulnessValue(const army* enemy, type_enchant_
                                                    m_estimate.m_lowestDefense, 0, 0);
             double hits = enemy->getTotalHitPoints(0);
             long value = static_cast<long>(hits * damage / enemy->m_monInfo.m_hitPoints);
-            double portion;
-            if (caster.m_duration >= m_estimate.m_roundsLeft)
-                portion = 1.0;
-            else
-                portion = static_cast<double>(caster.m_duration) / static_cast<double>(m_estimate.m_roundsLeft);
-            double scale;
-            if (enemy->is(creatureDone)
-                    && (portion = portion - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-                scale = 0.0;
-            else
-                scale = portion;
+            double scale = getDuration(caster.m_duration, enemy->is(creatureDone));
             value = static_cast<long>(value * scale);
             if (caster.m_checkResistance) {
                 long creatureCast = m_isCreatureSpell != 0;
