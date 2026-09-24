@@ -575,7 +575,7 @@ mac_section = 0
 mac_offset = 0xe6d54
 mac_size = 0xe0
 target_sha256 = "cd4430f64062a7f8db18e908aeeeae362c15769fb1032b09ddbd5ff068bc8c1f"
-evidence = "Packed ultimate-artifact coordinates minus9/minus8; seed coefficients81901/67843/79451, two random(-2,2) calls0x1314b4. Reviewed extent code0+0xe6d54..0xe6e34; terminal return and following entry separate the span."
+evidence = "Packed ultimate-artifact coordinates minus9/minus8; seed coefficients81901/67843/79451 and two sRandom(-2,2) calls to 0x1314b4. Dreamcast game.cpp lines 11822/11823 name SRandom; Windows uses the body folded with random at 0x50b230. Reviewed extent code0+0xe6d54..0xe6e34; terminal return and following entry separate the span."
 
 [[functions]]
 retail_va = 0x004cec20

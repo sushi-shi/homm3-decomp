@@ -10164,8 +10164,10 @@ type_point game::getPuzzleOrigin() const
 
     sRand(m_ultimateArtifactY * 81901
           + m_ultimateArtifactX * 67843 + 79451);
-    result.m_x += random(-2, 2);
-    result.m_y += random(-2, 2);
+    // DC lines 11822/11823 and Mac call sRandom; Complete folds its retail
+    // body with random at 0x50b230.
+    result.m_x += sRandom(-2, 2);
+    result.m_y += sRandom(-2, 2);
     return result;
 }
 
