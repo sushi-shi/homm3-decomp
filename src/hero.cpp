@@ -1716,6 +1716,10 @@ int hero::heroFn004D9CC0(int artifact)
     return g_windowManager->m_dialogReturn;
 }
 
+// Dreamcast hero.cpp:1737 constructs CMCDeadHero with get_location;
+// retail VC6 expands the Hero.h point helper at that call site.
+// Complete releases the visited town slot before broadcasting death;
+// the older Dreamcast source does those operations in reverse order.
 VA(0x004d9ec0, 0x4D3)  // dc 0xcc800
 void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
 {
@@ -1730,11 +1734,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
     }
 
     if (gameLoaded && !remoteMove) {
-        type_point location;
-        location.m_x = m_x;
-        location.m_y = m_y;
-        location.m_z = m_z;
-        CMCDeadHero change(m_id, location);
+        CMCDeadHero change(m_id, getLocation());
         sendMapChange(&change);
         g_game->recordHideHero(this, -1, freedTownVisitor);
     }
