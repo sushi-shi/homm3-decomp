@@ -406,13 +406,14 @@ def source_helper(text: str, selector: str, source: Path) -> tuple[int, str, str
     and unsupported declaration forms fail explicitly. A declaration/call
     cannot substitute for the canonical body.
     """
-    selection = re.fullmatch(r'(?P<name>\w+(?:::\w+)*)(?P<parameters>\s*\([^;{}]*\)\s*(?:const)?)?', selector)
+    selection = re.fullmatch(r'(?P<name>\w+(?:::(?:~?\w+))*)(?P<parameters>\s*\([^;{}]*\)\s*(?:const)?)?', selector)
     if not selection:
         raise SourceError(f"{source}: invalid source helper selector {selector!r}")
     name = selection['name']
     parameters = selection['parameters']
     parts = name.split("::")
     is_constructor = len(parts) >= 2 and parts[-1] == parts[-2]
+    is_destructor = len(parts) >= 2 and parts[-1] == "~" + parts[-2]
     masked = _masked_source(text)
     pattern = re.compile(
         r'^[ \t]*(?P<prefix>(?:[\w:*&<>,]+\s+)+)' + re.escape(name)
@@ -432,6 +433,23 @@ def source_helper(text: str, selector: str, source: Path) -> tuple[int, str, str
         start = match.start() + len(match[0]) - len(match[0].lstrip())
         signature = " ".join(masked[start:brace].split())
         matches.append((start, signature, text[start:end] + "\n"))
+    # Out-of-class destructors, like constructors, have no return type.
+    # The repeated class name keeps a free expression or unqualified call
+    # from being mistaken for a source-owned definition.
+    if is_destructor:
+        destructor = re.compile(
+            r'^[ \t]*(?:inline\s+)?' + re.escape(name)
+            + r'(?P<parameters>\s*\([^;{}]*\)\s*)\{', re.MULTILINE)
+        for match in destructor.finditer(masked):
+            if _data_scope(masked, match.start()):
+                raise SourceError(f"{source}: nested source helper needs explicit extraction support")
+            if parameters is not None and re.sub(r'\s+', '', parameters) != re.sub(r'\s+', '', match['parameters']):
+                continue
+            brace = match.end() - 1
+            end = _function_end(text, brace)
+            start = match.start() + len(match[0]) - len(match[0].lstrip())
+            signature = " ".join(masked[start:brace].split())
+            matches.append((start, signature, text[start:end] + "\n"))
     # Out-of-class constructors have no return-type prefix. Require the
     # qualified name to repeat its owning class, then read only parenthesized
     # initializer entries before the actual body brace. This rejects calls,

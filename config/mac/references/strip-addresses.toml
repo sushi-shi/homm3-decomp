@@ -9,6 +9,15 @@ mac_size = 0x6c
 target_sha256 = "9b0fef132f9d66a5dc112584de266d675a2ee715810ff30f2282261782b43319"
 evidence = "stores x/y/owner/hero/group/window and -2 current selection; calls drawIcons0x19b040; complete adjacent PowerPC span."
 
+[[helpers]]
+source_helper = "strip::~strip"
+unit = "strip"
+mac_section = 0x0
+mac_offset = 0x19afb0
+mac_size = 0x40
+target_sha256 = "097c0332d3c69db8a7fe3f90567676c7f4b755b9f7ad2416f0136052e8beb277"
+evidence = "The empty source destructor at strip.cpp:70 is an out-of-line retail call before operator delete, while Mac folds the optional deletion into this method. All eleven direct Mac callers pass strip pointers (townManager's m_heroStrip or m_garrisonStrip) and delete flag 1; the body returns the receiver and calls operator delete at 0x268b2c only when receiver and positive flag are present. Constructor ends at 0x19afac; this body ends at BLR 0x19afec before strip::draw at 0x19aff0."
+
 [[functions]]
 retail_va = 0x5a9d80
 unit = "strip"

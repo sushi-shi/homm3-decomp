@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 
 from homm3.mac import references, symbols
-from homm3.mac.source import SourceError, load_pairs
+from homm3.mac.source import SourceError, load_pairs, source_helper
 from homm3.mac import test_profiles
 from homm3.mac.test_loader import container
 
@@ -45,6 +45,15 @@ class TestMacReferences(unittest.TestCase):
             path.write_text(row + helper.replace('in_class=true\n', ''))
             with self.assertRaises(SourceError):
                 references.load(root)
+
+    def test_out_of_class_destructor_helper(self):
+        source = Path("strip.cpp")
+        text = "strip::~strip()\n{\n}\n\nstrip::~other();\n"
+        _, signature, body = source_helper(text, "strip::~strip", source)
+        self.assertEqual(signature, "strip::~strip()")
+        self.assertEqual(body, "strip::~strip()\n{\n}\n")
+        with self.assertRaises(SourceError):
+            source_helper(text, "strip::~other", source)
 
     def fixture(self, root):
         test_profiles.TestMacProfiles().fixture(root)
