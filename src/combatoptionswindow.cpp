@@ -227,10 +227,13 @@ int TCombatOptionsWindow::convertID2HelpID(int id) const
     return -1;
 }
 
+static void updateCombatOptions(int firstUpdate);
+
 VA(0x0046f780, 0x28)  // dc 0x67a40
 void TCombatOptionsWindow::doModal()
 {
     m_prefsChanged = 0;
+    updateCombatOptions(1);
     g_windowManager->doDialog(this, combatOptionsWindowHandler, 0);
     if (m_prefsChanged)
         writePrefs();
@@ -280,8 +283,6 @@ void TCombatOptionsWindow::highlightMouseShadow()
 // combatoptionswindow.cpp:651..654. The helper only redraws when firstUpdate
 // is zero; preference-member writes belong to the individual handler cases.
 // Its original source position is after the handler.
-static void updateCombatOptions(int firstUpdate);
-
 // E:\gamedcs\combatoptionswindow.cpp:278
 // NOT A MEMBER-OFFSET BUG (checked 2026-09-06): the `[ecx+0x6ac]` against
 // retail's `[ecx+0x704]` that a census flagged here is the SWITCH INDEX
