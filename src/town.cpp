@@ -797,13 +797,9 @@ void town::swapHeroes()
         }
     }
 
+    // Dreamcast town.cpp:1143 and Mac retain the ordinary town::PlaceInMap call.
     int player = currentTown->m_owner;
-    hero* placedHero = g_game->getHero(garrisonHero->m_id);
-    type_point point;
-    point.m_x = currentTown->m_mapX;
-    point.m_y = currentTown->m_mapY;
-    point.m_z = currentTown->m_mapZ;
-    placedHero->placeInMap(player, point, 0);
+    currentTown->placeInMap(garrisonHero->m_id, player, 0);
 }
 
 VA(0x005be600, 0x32A)  // dc 0x166950
