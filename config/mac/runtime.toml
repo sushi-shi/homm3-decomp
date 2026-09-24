@@ -822,3 +822,131 @@ mac_offset = 0x72244
 mac_size = 0x10
 sha256 = "de2c6be1829b6156740f6fe09ddd105cc0fac31c9f434790da4f6865d2946ce9"
 evidence = "The installed CodeWarrior MSL vector<bool>::num_words(size_type) computes (capacity - 1) / 32 + 1. This complete four-instruction body subtracts one, shifts right by five, adds one and returns at 0x72250; the next body begins at 0x72254. Called during TPickANumber cleanup in cmbtmgr and spells. Runtime template operation only, without a Windows helper claim."
+
+[[functions]]
+symbol = ".mac_vector_4byte_trivial_delete_flag_dtor_68da4"
+mac_section = 0
+mac_offset = 0x68da4
+mac_size = 0x64
+sha256 = "f21000100527465cd0945e8398264397ae207c021050942be4294f3ed78d1381"
+evidence = "Seven calls from compiler-generated destruction in CMapHeaderData, CampaignScenarioPreview, SCampaign, ScenarioStruct, SavedGameHeader and game. The body calls 0x68f40 to clear four-byte trivial elements and zero the vector size, frees data at +8, and optionally deletes the vector receiver when the delete flag is positive. BLR at 0x68e04 precedes another vector destructor. The common body does not identify a unique template instantiation."
+
+[[functions]]
+symbol = ".mac_vector_4byte_assign_range_682fc"
+mac_section = 0
+mac_offset = 0x682fc
+mac_size = 0x19c
+sha256 = "11f88a25f3d3de420d9d0ae4d9955a9bc2258403e720fd8f68e6cff134a84b27"
+evidence = "Five constructor/copy sites in campaignbrief, campaignwindow, game and singleselectionwindow pass a vector record plus begin/end pointers. The body computes a four-byte element count, copies or grows the vector and updates size; BLR 0x68494. Runtime range assignment, without a unique element type claim."
+
+[[functions]]
+symbol = ".mac_vector_8byte_stringlike_assign_range_68498"
+mac_section = 0
+mac_offset = 0x68498
+mac_size = 0x1f0
+sha256 = "ae6fecc83d7737ecb099124b42fad716feeaf3d157ca17d446f6ba06e8b6a881"
+evidence = "Campaignbrief copy construction calls this range assignment at 0x64234. It counts eight-byte elements, copies a scalar word and assigns a std::string at +4 through MSL 0x1c094, with string destruction on shrink; BLR 0x68684. Runtime container operation only."
+
+[[functions]]
+symbol = ".mac_tree_string_node_destroy_68688"
+mac_section = 0
+mac_offset = 0x68688
+mac_size = 0x80
+sha256 = "1bf3a53c3142d3fba66dc43e7d8abdab34f356f1dc3637719e17db53cc97c4af"
+evidence = "Campaignbrief generated destructors call this tree-node cleanup at 0x67324 and 0x670fc. It recursively destroys both child links, destroys a string member at +0x14 and deletes the node; BLR 0x68704. Runtime tree cleanup only."
+
+[[functions]]
+symbol = ".mac_tree_copy_assign_68708"
+mac_section = 0
+mac_offset = 0x68708
+mac_size = 0xcc
+sha256 = "3370d8a6a22073293bf10fb8d1aedc61eebe67566a82d5aac76598a4f054f8ee"
+evidence = "Campaignbrief CMapHeaderData copy construction calls this tree assignment at 0x64250. It clears the destination tree, copies the source root and count, then repairs the sentinel/leftmost link; BLR 0x687d0. Runtime tree operation only."
+
+[[functions]]
+symbol = ".mac_vector_mapheader_append_687fc"
+mac_section = 0
+mac_offset = 0x687fc
+mac_size = 0x118
+sha256 = "cfcac5dec27977319428c8975b6ee357571bf169de2d896d159777d3d602f670"
+evidence = "Campaignbrief appends a CMapHeaderData value at 0x658b0 and 0x65b04. The body grows a vector if full, copy-constructs a 0x498-byte element, advances size and returns; BLR 0x68910. Runtime vector append, not a new game helper."
+
+[[functions]]
+symbol = ".mac_vector_delete_flag_dtor_68e6c"
+mac_section = 0
+mac_offset = 0x68e6c
+mac_size = 0x64
+sha256 = "af27b0fa4fe4670dc85a1fdbe9c8cb509d09de77cdc6c12e10408eda89bce0bb"
+evidence = "Campaignbrief generated destruction calls this vector destructor at 0x678f4. It clears through 0x69504, frees data at +8 and optionally deletes the receiver when the flag is positive; BLR 0x68ecc. The element instantiation is not established."
+
+[[functions]]
+symbol = ".mac_vector_8byte_stringlike_clear_68ed0"
+mac_section = 0
+mac_offset = 0x68ed0
+mac_size = 0x70
+sha256 = "35a0ac1400856ff8f7038787977700545ca75ae608890580b64ef654008cc579"
+evidence = "Game container cleanup calls this body at 0xdaa34. It walks eight-byte elements backward, destroys the std::string member at +4 and sets vector size to zero; BLR 0x68f3c. Runtime vector clear only."
+
+[[functions]]
+symbol = ".mac_vector_4byte_trivial_clear_68f40"
+mac_section = 0
+mac_offset = 0x68f40
+mac_size = 0x38
+sha256 = "71fd8d5e7c39a167a5e408094504616055dadfbd71eb5b81238761e48087dab7"
+evidence = "The 0x68da4 deleting destructor calls this body; customcampaign and game also call it directly at 0x99aa4 and 0xdb33c. It advances over four-byte trivial elements and zeros vector size; BLR 0x68f74. Runtime vector clear only."
+
+[[functions]]
+symbol = ".mac_tree_clear_68f78"
+mac_section = 0
+mac_offset = 0x68f78
+mac_size = 0x50
+sha256 = "b9726d75337b96ad00c7455a8fc4d79832506295034d8542758bbc9d6d052a67"
+evidence = "Game clears a tree at 0xdb3b4 and 0xdc590. This body destroys nodes through 0x68688, zeroes the root and count, and resets its sentinel link; BLR 0x68fc4. Runtime tree clear only."
+
+[[functions]]
+symbol = ".mac_vector_data_accessor_6426c"
+mac_section = 0
+mac_offset = 0x6426c
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Two calls during CMapHeaderData copy construction return the data field of a 12-byte vector record at this+8; BLR 0x64270. The specific instantiation is not established."
+
+[[functions]]
+symbol = ".mac_vector_4byte_index_670bc"
+mac_section = 0
+mac_offset = 0x670bc
+mac_size = 0x10
+sha256 = "680dea8ae86a092b429256ac5e937163c668865b1794dcb179c9529761499f3f"
+evidence = "Two CMapHeaderData copy sites pass a vector and index; the body returns data at +8 plus index times four, BLR 0x670c8. Runtime vector element access only."
+
+[[functions]]
+symbol = ".mac_vector_data_accessor_6aad4"
+mac_section = 0
+mac_offset = 0x6aad4
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Campaignwindow, game and singleselectionwindow call this two-instruction vector data accessor repeatedly during CMapHeaderData copies; it returns this+8 and ends at BLR 0x6aad8. Neutral instantiation label."
+
+[[functions]]
+symbol = ".mac_vector_data_accessor_6aadc"
+mac_section = 0
+mac_offset = 0x6aadc
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Campaignwindow, game and singleselectionwindow call this two-instruction vector data accessor repeatedly during CMapHeaderData copies; it returns this+8 and ends at BLR 0x6aae0. Neutral instantiation label."
+
+[[functions]]
+symbol = ".mac_vector_data_accessor_6aae4"
+mac_section = 0
+mac_offset = 0x6aae4
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Campaignwindow, customcampaign, game and singleselectionwindow call this two-instruction vector data accessor during CMapHeaderData copies; it returns this+8 and ends at BLR 0x6aae8. Neutral instantiation label."
+
+[[functions]]
+symbol = ".mac_vector_data_accessor_6aaec"
+mac_section = 0
+mac_offset = 0x6aaec
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Campaignwindow, game and singleselectionwindow call this two-instruction vector data accessor repeatedly during CMapHeaderData copies; it returns this+8 and ends at BLR 0x6aaf0. Neutral instantiation label."
