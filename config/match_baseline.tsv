@@ -4676,7 +4676,7 @@ viewwrld	??0TViewWorldWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1fa600	tokens1
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	tokens1:8fe5854cf6e0
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
 viewwrld	?_Ufill@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@IAEXPAPAVwidget@@IABQAV3@@Z	100.0000	100.0000	100.0000	0x1fdf20	-
-viewwrld	?init@TViewWorldWindow@@QAEXUtype_point@@E@Z	98.8939	98.8939	98.8939	0x1fc240	tokens1:dc5432c19cfd
+viewwrld	?init@TViewWorldWindow@@QAEXUtype_point@@E@Z	100.0000	100.0000	100.0000	0x1fc240	tokens1:dc5432c19cfd
 viewwrld	?updateRadar@TViewWorldWindow@@AAEXHHM@Z	100.0000	100.0000	100.0000	0x1fc8f0	tokens1:a810daddc7d0
 viewwrld	?updateViewWorld@TViewWorldWindow@@AAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fc7a0	tokens1:5809502df8f9
 viewwrld	?viewWorld@advManager@@QAEXHW4TSkillMastery@@@Z	100.0000	100.0000	100.0000	0x1fbf90	tokens1:8e1af7e3b9e5

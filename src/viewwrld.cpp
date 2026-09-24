@@ -76,29 +76,17 @@ static unsigned char g_viewHeroes;
 // the Dreamcast row is `static`, TViewWorldWindow::init's scale-table loop
 // is its only call site, and VC6 expands a single-call-site static without
 // retaining it (the surrounding carve rows leave no ~98 B slot for one).
-// Two facts are retail's rather than the Dreamcast's, both read off init's
-// expansion. The addend is 2^52 + 2^51 written as a FLOAT: retail
-// materialises it with `mov dword ptr [slot], 0x59c00000` followed by
-// `fld dword ptr [slot]`, which is a float local, not the qword pool entry
-// a `double` literal folds to. And the operand ORDER is magic + d - the
-// float is what reaches the x87 stack first, with `fadd qword ptr` taking
-// the double argument as the memory operand.
+// Dreamcast names the local `const unsigned long magic`; its 0x59c00000 bits
+// are read as a float. Retail materialises those bits on the stack and loads
+// the float before adding the double argument. A named double temporary gives
+// init's inlined copy the retail stack layout and exact VC6 bytes.
 
 static long ftol(double d)
 {
-    union {
-        double m_whole;
-        long m_low;
-    } bits;
-    union {
-        float m_value;
-        long m_raw;
-    } magic;
-
-    magic.m_raw = 0x59c00000;
-    bits.m_whole = d;
-    bits.m_whole = magic.m_value + bits.m_whole;
-    return bits.m_low;
+    const unsigned long magic = 0x59c00000;
+    double adjusted = d;
+    adjusted = *reinterpret_cast<const float*>(&magic) + adjusted;
+    return *reinterpret_cast<long*>(&adjusted);
 }
 
 // E:\gamedcs\viewwrld.cpp:110
@@ -1453,21 +1441,9 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 // iSkipLevel's DECLARATION SITE is worth 13.5 points (83.37 -> 96.87):
 // retail issues the `fdiv` after both integer divisions, so the float
 // local is declared BELOW the two extent assignments, not above them.
-// Residual (98.89%): one instruction, the loop counter's `mov [i], eax`,
-// which retail schedules after the table store and we schedule before it.
-// Byte-flat and rejected: a `while` loop with the increment as the last
-// body statement, `++i` in the header, and landing the ftol result in a
-// named `long` before the table store.
-// Residual (98.8939%): the frame, 0x14 against retail's 0x10, and it is
-// purely the order the ftol expansion's two locals are allocated in. Retail
-// puts the 8-byte `bits` union at the TOP of the frame ([ebp-8], naturally
-// aligned) with iSkipLevel at [ebp-0xc] and the magic float at [ebp-0x10];
-// ours allocates the caller's named local first ([ebp-8]), the magic at
-// [ebp-0xc] and the qword at [ebp-0x14], leaving [ebp-4] dead. MEASURED AND
-// REJECTED 2026-09-06: folding the divisor into the loop expression so it is
-// a CSE rather than a named local (92.54); hoisting the iSkipLevel
-// declaration into the top block and assigning later (98.89, byte-flat);
-// naming the ftol argument as a `double scaled` inside the loop (98.90).
+// The inlined ftol helper's double temporary occupies retail [ebp-8], with
+// skipLevel at [ebp-0xc] and its magic constant at [ebp-0x10]. The earlier
+// union spelling allocated four extra bytes and held this body at 98.8939%.
 VA(0x005fc240, 0x274)  // anchor-caller ViewWorld, anchor-callee UpdateRadar, dc 0x195d30
 void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
 {
