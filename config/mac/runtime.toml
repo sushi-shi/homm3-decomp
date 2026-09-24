@@ -705,6 +705,14 @@ sha256 = "3be0e2ae9c7955fc3fd4f91fe6fab50ed7038c520aca38a3831d9a298a549acd"
 evidence = "Seven direct calls from campaign, game, events and hero bodies pass a bitset receiver, index in r4 and bool in r5. The complete MSL setter bounds-checks against eight, sets or clears the indexed word bit and returns the receiver at BLR 0x9d6f0 before the next bitset helper at 0x9d6f4. Its instruction shape and CodeWarrior mangling follow the reviewed bitset<12>/48/70 set instantiations. Runtime template identity only."
 
 [[functions]]
+symbol = ".rand"
+mac_section = 0
+mac_offset = 0x28e00c
+mac_size = 0x24
+sha256 = "96b94d0e79b318734d2fe3906c68bbed6781424c460845fd93ca4fe581ebfb85"
+evidence = "The installed CodeWarrior Pro 6 MSL C.PPC.Lib contains this unique 36-byte .rand hunk at file offset 0x1669c. Every word equals the pinned PEF body except three TOC displacements to the shared seed. It multiplies by 0x41c64e6d, adds 0x3039 and returns the upper 15 bits. Direct callers include game, seer hut and selection code; many RMG callers are deferred from the current sweep. Final BLR at 0x28e02c. Runtime library identity only."
+
+[[functions]]
 symbol = ".atoi"
 mac_section = 0
 mac_offset = 0x28fb1c
