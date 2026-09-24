@@ -40,8 +40,9 @@ mac_section = 0x0
 mac_offset = 0x223aa4
 mac_size = 0x2b8
 unit = "objecttype"
+mac_symbol = ".setImageName__11TObjectTypeFRCQ23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>"
 target_sha256 = "d106bae5544746d4aae76d1a8760667f1aaf706f64d8d0097db25f139921eae0"
-evidence = "Contiguous objecttype TU order corroborated by body: registry223798-and-getIndex2268d0,string-dot-rfind226240,archive154660,and-four-mask-reads154728. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+evidence = "Contiguous objecttype TU order corroborated by body: registry223798-and-getIndex2268d0,string-dot-rfind226240,archive154660,and-four-mask-reads154728. Reviewed terminal BLR and next entry; excludes interleaved template bodies. CodeWarrior emits the named 948-byte body; relocation-masked shape aligns 77/174 retail instructions with 27 candidate versus 22 retail direct calls, so no exact Mac verdict is claimed."
 retail_va = 0x514610
 
 [[functions]]
@@ -76,8 +77,9 @@ mac_section = 0x0
 mac_offset = 0x224224
 mac_size = 0x244
 unit = "objecttype"
+mac_symbol = ".load__16TObjectTypeTableFPc"
 target_sha256 = "42797b0618438d586cb33145c6cc60069a763a3e4bbb15f0106204e88569c679"
-evidence = "Contiguous objecttype TU order corroborated by body: objects.txt-caller234440,getText153ad8,atoi-count,resize2264fc,istrstream22453c,and-row-parser224078. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+evidence = "Contiguous objecttype TU order corroborated by body: objects.txt-caller234440,getText153ad8,atoi-count,resize2264fc,istrstream22453c,and-row-parser224078. Reviewed terminal BLR and next entry; excludes interleaved template bodies. CodeWarrior emits the named 640-byte body; relocation-masked shape aligns 119/145 retail instructions and all 21 ordered direct calls."
 retail_va = 0x514d80
 
 [[helpers]]
@@ -124,4 +126,3 @@ unit = "objecttype"
 target_sha256 = "b96cc327f27bd4bf8183619578c70f2cea72f72c8efdc18512917ec570f749b2"
 evidence = "Source helper without standalone Windows VA. TU order plus combines-input-mask-with-complement-of-image-drawMask3c-and-writes-passable4/8"
 source_helper = "TObjectType::setPassableMask"
-
