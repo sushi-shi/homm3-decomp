@@ -973,3 +973,27 @@ mac_offset = 0x277bc4
 mac_size = 0x148
 sha256 = "8d0877974edeb11c831d26a09ce1958101393d115e0bd081cda3fb256746f726"
 evidence = "Mac-only file adapter open takes an adapter at r3 and pathname at r5, initializes file state, converts the path and opens through Mac glue 0x2a1a60; success sets state byte +0, failures close at 0x277dd0, and BLR 0x277d08 precedes a separate entry at 0x277d0c. High-score open passes its formatted score pathname at 0x10a820; sound, preferences, LOD, game and selection callers use the same adapter. Windows uses CRT or registry operations, so this is not a shared game helper."
+
+[[functions]]
+symbol = ".mac_file_adapter_close_277dd0"
+mac_section = 0
+mac_offset = 0x277dd0
+mac_size = 0x58
+sha256 = "180c37b62fdc6304d6bac4161901dff4f315bfa1103a1baaee04f82a97cc2dcb"
+evidence = "Mac-only file adapter close checks the state byte at +0, calls adjacent handle-close routine 0x277e8c when handle at +4 is nonzero, then zeros both fields and returns zero. High-score open calls it at 0x10a850 before the stack adapter destructor; the deleting destructor 0x277b70 calls it too. BLR 0x277e24 precedes the separate open-handle entry 0x277e28. Platform identity only."
+
+[[functions]]
+symbol = ".mac_file_adapter_open_handle_277e28"
+mac_section = 0
+mac_offset = 0x277e28
+mac_size = 0x64
+sha256 = "16e1d9304f8c00a7eba5ac15dddba238baabea8d1e2bd89d32764ca55e935938"
+evidence = "Mac-only file adapter operation checks handle +4, otherwise passes its file spec at +8 and output reference at +2 to Mac glue 0x2a1ac0, translates the result through 0x2781ec and sets handle +4 to one on success. High-score open calls it at 0x10a830 and reads only on a zero result. BLR 0x277e88 precedes the adjacent handle-close entry 0x277e8c. This is platform file access, not a shared gameplay helper."
+
+[[functions]]
+symbol = ".mac_file_adapter_read_277f10"
+mac_section = 0
+mac_offset = 0x277f10
+mac_size = 0x68
+sha256 = "551d20de66f698e8a9ef90b0b12f50259028a2fac77ab872b0dbf35693f38962"
+evidence = "Mac-only file adapter read takes a buffer at r4 and requested length at r5, passes file reference +2, buffer and in/out length to Mac glue 0x2a1778, translates the result through 0x2781ec and reports short reads with error 0x14. High-score open calls it at 0x10a848 for its 0x898-byte score table; game, LOD, sound and preferences also read through it. BLR 0x277f74 precedes the next write-like entry 0x277f78. Platform identity only."
