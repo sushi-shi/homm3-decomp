@@ -123,6 +123,15 @@ target_sha256 = "68b0de91ac94c7ce08fc412facadebc964aec1d3f6dd73b7dc31f8e697c49c2
 evidence = "CTurnDuration::isOn first rejects a zero duration at receiver+8, then returns whether g_inCampaign is false. The Mac body has two returns and ends at 0x215708 before isExpired begins at 0x21570c. Mac isClose calls this retained helper at 0x215a5c; Windows isClose expands the same two checks, and the ordinary source already calls isOn."
 
 [[functions]]
+retail_va = 0x554200
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2121e0
+mac_size = 0x68
+target_sha256 = "0b73cee8397774d832f1e8a299e2abd7c4d47e711d4b73969c87abbe46850f2a"
+evidence = "CChatEdit::updateScreen draws through the widget virtual slot, then adds its position to its parent window position and passes the bounds to heroWindowManager::updateScreen 0x20df2c. The Windows source has the same virtual helper and four-coordinate manager call. Terminal BLR 0x212244 precedes onKeyPress at 0x212248."
+
+[[functions]]
 retail_va = 0x557aa0
 unit = "remote"
 mac_section = 0x0
@@ -193,6 +202,15 @@ mac_offset = 0x212bf0
 mac_size = 0x68
 target_sha256 = "0ab0cf18ca9f95473010ee5334dacfa412b5526667bb24949ccdb6322335e02c"
 evidence = "Free transmitRemoteData wrapper: same four-input remote/dPlay guard as its adjacent DPID variant, forwarding to member recipient sender 0x210cd0 and normalizing byte result. Direct calls include swapmgr; complete BLR at 0x212c54, next function starts 0x212c58."
+
+[[functions]]
+retail_va = 0x5547c0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x212d70
+mac_size = 0x220
+target_sha256 = "51cdba0d7aecff23df7a7b4f46c9626e88dfe98e47a6e329c2cb60498a58eece"
+evidence = "Global sendChat is called by the adventure chat edit at 0x3f54, with additional combat and swap chat callers. Its Mac body compares the input to general-text chat ping command 0x49, sends a ping or builds a bounded 0x7f-byte network message, then calls transmitRemoteData 0x212bf0. Windows source retains the same global helper at 0x5547c0 and each caller's source call. Terminal BLR 0x212f8c precedes the next entry at 0x212f90."
 
 [[functions]]
 retail_va = 0x5565e0
