@@ -98,3 +98,29 @@ mac_offset = 0x10d2e0
 mac_size = 0x190
 target_sha256 = "cf89774f19a08f4831b0768001df10e258b14571063c422b657960b86d704161"
 evidence = "Checks next frame then builds four-entry weighted siege sequence table 94/2/2/2 at TOC 1+0x2740, calls random(1,100), retries empty sequences and changes sequence. BLR 0x10d46c; next prologue 0x10d470."
+[[helpers]]
+source_helper = "iconWidget::setIconSequence"
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10cfb0
+mac_size = 0x10
+target_sha256 = "c00f5e26eab164b37d5793096537a0f3de8dab940aa5aaec852ce7d9b405f749"
+evidence = "Mac Main calls this tiny retained method in the set-sequence command arm. It writes the new sequence at +0x38 and clears the frame at +0x34, matching DC lines 447-448 and the authored helper. Complete body ends in BLR at 0x10cfbc."
+
+[[helpers]]
+source_helper = "iconWidget::setPalette"
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10cfc0
+mac_size = 0x60
+target_sha256 = "93b2d48de9d143ee3556ed23d874bbb977b205b54390e8d944a860f6b361cf3c"
+evidence = "Mac Main calls this retained method for WIDGET_SET_PALETTE. The body gets a palette, applies it to sprite +0x30 and disposes the temporary; Dreamcast names the ordinary helper and Windows expands it in Main. Complete body ends in BLR at 0x10d01c."
+
+[[helpers]]
+source_helper = "iconWidget::setPlayerPaletteColors"
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10d020
+mac_size = 0x54
+target_sha256 = "421a67f718d3912bcc4ff806d0524ebd4526e0743828faca27f537541d88cfd6"
+evidence = "Mac Main calls this retained method for WIDGET_SET_PLAYER_PALETTE_COLORS. It obtains both sprite palette views and passes each to the color helper; the authored method has the same two calls. Complete body ends in BLR at 0x10d070."

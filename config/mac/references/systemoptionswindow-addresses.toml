@@ -44,3 +44,11 @@ mac_offset = 0x1ac8cc
 mac_size = 0x98
 target_sha256 = "cda36a7251a5aefbc93ac603cb59df183d741a8ca30a95522859427bb6c93647"
 evidence = "Ordinary unannotated source helper called directly by windowHandler at 0x1acab4; checks negative ID, 201..242 range, then six command IDs with multiple early BLRs. Begins after destructor BLR and ends before doModal prologue."
+[[helpers]]
+source_helper = "TSystemOptionsWindow::updateSystemOptions"
+unit = "systemoptionswindow"
+mac_section = 0x0
+mac_offset = 0x1ad0d4
+mac_size = 0x12c
+target_sha256 = "763506445651caac93bcf2c9b4ff89d41694695daac794f47a3c39c6ed7a178d"
+evidence = "Mac constructor calls this retained method once. Its firstUpdate argument gates a g_remoteOn block that disables the restart widget and broadcasts three widget messages; the noninitial path draws the window. These operations identify the authored updateSystemOptions helper. Complete body ends with BLR at 0x1ad1fc."
