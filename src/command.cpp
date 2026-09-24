@@ -851,7 +851,7 @@ int combatManager::processCombatMsg(message& msg)
 
             case TCombatWindow::COMBAT_RIGHT_COMMAND_0_ID:
                 if (!m_heroes[m_currentSide]) {
-                    normalDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_NO_HERO_FOR_SPELL),
+                    normalDialog((*g_generalText)[GENERAL_TEXT_COMBAT_NO_HERO_FOR_SPELL],
                                  1, -1, -1, -1, 0,
                                  -1, 0, -1, 0, -1, 0);
                 } else {
@@ -861,7 +861,7 @@ int combatManager::processCombatMsg(message& msg)
                 break;
 
             case TCombatWindow::COMBAT_LEFT_COMMAND_1_ID:
-                normalDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_RETREAT_PROMPT),
+                normalDialog((*g_generalText)[GENERAL_TEXT_COMBAT_RETREAT_PROMPT],
                              2, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
@@ -873,7 +873,7 @@ int combatManager::processCombatMsg(message& msg)
                 if (doSurrender()) {
                     if (g_game->m_players[m_playerIds[m_currentSide]].m_resources[6]
                             < g_surrenderCost) {
-                        normalDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_NOT_ENOUGH_GOLD),
+                        normalDialog((*g_generalText)[GENERAL_TEXT_COMBAT_NOT_ENOUGH_GOLD],
                                      1, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     } else {
@@ -1207,7 +1207,7 @@ void combatManager::resetRound()
     if (!m_creaturePlacement
             && !static_cast<const combatManager*>(this)->isQuickCombat()) {
         m_combatWindow->combatMessage(
-            g_generalText->getText(GENERAL_TEXT_COMBAT_ROUND), 1, 0);
+            (*g_generalText)[GENERAL_TEXT_COMBAT_ROUND], 1, 0);
     }
     m_lastMovedArmy = 0;
 }
@@ -2083,7 +2083,7 @@ void combatManager::checkGetAIMove()
         if (isHuman) {
             if (m_autoRetreatOn) {
                 std::string result = formatString(
-                    g_generalText->getText(GENERAL_TEXT_COMBAT_RETREAT_OVERWHELMED_FORMAT), m_heroes[m_currentSide]->m_name);
+                    (*g_generalText)[GENERAL_TEXT_COMBAT_RETREAT_OVERWHELMED_FORMAT], m_heroes[m_currentSide]->m_name);
                 normalDialog(result.c_str(), 2, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn
@@ -2116,7 +2116,7 @@ void combatManager::checkGetAIMove()
                         && combatValue > g_surrenderCost + 2500) {
                     std::string msg;
                     if (isHuman) {
-                        msg = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_SAVE_ARMY_PROMPT_FORMAT),
+                        msg = formatString((*g_generalText)[GENERAL_TEXT_COMBAT_SAVE_ARMY_PROMPT_FORMAT],
                                             m_heroes[m_currentSide]->m_name,
                                             g_surrenderCost);
                         normalDialog(msg.c_str(), 2, -1, -1, 6,
