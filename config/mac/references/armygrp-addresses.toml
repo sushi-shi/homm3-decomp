@@ -272,3 +272,12 @@ mac_offset = 0x5a1f0
 mac_size = 0x90
 target_sha256 = "d39d8a51a0c7a81015e09a79e6409b4c8dd581ce6f7fdd9341142a5096174337"
 evidence = "NEW: Scans seven slots, skips NONE, game-version elemental exception, creature town terrain mapping and mixed-terrain rejection. End0x5a280; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[helpers]]
+source_helper = "armyGroup::hasSomeUndead"
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x58194
+mac_size = 0x48
+target_sha256 = "838f6991bca68345faaae3e54d38521eb1a2df5e5b58bd353ab76f8174e3f1ba"
+evidence = "This const helper scans seven creature slots, skips -1, tests the undead attribute at trait offset +0x10, and returns one on the first undead creature or zero after all slots. Both terminal BLRs precede dismiss at 0x581dc. Mac getMorale and getMoraleDescription retain calls at 0x58a1c and 0x59abc; the ordinary source calls were already authored, while retail Windows expands them."
