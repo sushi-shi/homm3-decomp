@@ -2157,19 +2157,11 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
 // is_last_action once more, here with `field_1c` standing in for the
 // disabled triple.
 
-// Residual (97.0996%, audited 2026-08-22): the helper spelling is already
-// the winning one (94.46 -> 97.10), and the remaining CFG is closed: both
-// objects have 29 conditional branches and one return, with every mnemonic
-// and symbolic target agreeing. The explicit delta is confined to the
-// expanded is_last_action tail. Retail keeps the acting stack and live-stack
-// count in EAX/ESI and merges the false/true result in EAX; this compile
-// rotates the same values through ESI/ECX and merges the byte in EBX, leaving
-// one extra instruction (232 against 231). `why-reg` measures distance 45;
-// all 12 catalog mutations are flat or worse (naming origNumTroops and
-// un-naming creature_cast are flat, while every volatile, store-order and
-// choice->spell probe regresses). The remaining non-tail rows are only
-// gpCombatManager relocation-name differences. This is C1 register-handle
-// state, with no source-addressable lever found.
+// DC lines 2674-2675 call get_current_army and is_last_action. Restoring
+// their short-circuit expression raises VC6 from 97.10% to 99.96%: all 44
+// blocks, 29 branches and nine calls agree. The remaining byte difference
+// is a loop-counter stack home at -0x8 rather than retail's -0xc. Earlier
+// named-local and volatile probes on the expanded tail were flat or worse.
 VA(0x0043aca0, 0x2AE)  // anchor-callee, dc 0x4101c
 void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
 {
@@ -2217,12 +2209,10 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
             continue;
         choice->m_value = value;
         choice->m_target = hex;
-        unsigned char last = 1;
-        const army* current = &g_combatManager->m_armies[g_combatManager->m_actingSide]
-                                                      [g_combatManager->m_actingSlot];
-        if (ourArmy != current && !m_winLikely)
-            last = isLastAction();
-        choice->m_castNow = last;
+        choice->m_castNow =
+            ourArmy == g_combatManager->getCurrentArmy()
+            || m_winLikely
+            || isLastAction();
     }
 }
 
