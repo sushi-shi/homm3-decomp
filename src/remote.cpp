@@ -704,7 +704,7 @@ void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
         sprintf(
             finalText,
             DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-            g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
+            (*g_generalText)[GENERAL_TEXT_TURN_DURATION_PREFIX],
             chatText);
         m_isSysMsg = 1;
         addChat(finalText);
@@ -1994,7 +1994,7 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
 
     g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
     CTextDialog dlg(0x12);
-    dlg.setup(g_generalText->getText(GENERAL_TEXT_PLAYER_DROP_RELOAD),
+    dlg.setup((*g_generalText)[GENERAL_TEXT_PLAYER_DROP_RELOAD],
               g_mediumFont);
     dlg.open(0, 1);
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
@@ -2569,14 +2569,9 @@ unsigned char CTurnDuration::isExpired()
 }
 
 // E:\gamedcs\remote.cpp:2950
-// Residual (97.09%): flow-distance 0, register-distance 38 - one
-// caller-saved permutation at the head of the re-arm block. Retail parks
-// m_currDuration in ECX and the half in EAX; this compile parks them the
-// other way round, and that single swap is what makes our two `timeLeft`
-// arms reassociate to `m_currDuration - currTime + m_turnStartTime` where
-// retail keeps `m_turnStartTime - currTime + m_currDuration`. `why-reg
-// --model` reports the creation-order lever copy-propagated (C1 handle
-// state, capped); naming the half as a local does not move it.
+// DC lines 2951 and 2964 call IsOn and GameTime::ElapsedSince. Restoring
+// both canonical calls closes the former 97.09% register-order residual:
+// VC6 inlines them and all 30 retail CFG blocks and seven calls agree.
 
 // Three spellings ARE byte-load-bearing and were found the hard way:
 //   * `((m_currDuration >> 1) << 1) > 120000` and NOT the semantically
@@ -2600,9 +2595,7 @@ unsigned char CTurnDuration::isExpired()
 VA(0x00557af0, 0x208)  // anchor-global, dc 0x11f108
 void CTurnDuration::checkForWarning()
 {
-    if (m_currDuration == 0)
-        return;
-    if (g_inCampaign)
+    if (!isOn())
         return;
     if (m_nextWarning == 0)
         return;
@@ -2619,7 +2612,7 @@ void CTurnDuration::checkForWarning()
 
     unsigned long currTime = GameTime::get();
     unsigned long lastWarned = m_lastWarned;
-    if (GameTime::get() - lastWarned < m_nextWarning)
+    if (GameTime::elapsedSince(lastWarned) < m_nextWarning)
         return;
 
     long timeLeft = m_turnStartTime - currTime + m_currDuration;
@@ -2631,9 +2624,9 @@ void CTurnDuration::checkForWarning()
     if (timeLeft > 60000) {
         float minutes = timeLeft / 60000.0f;
         if (minutes >= 0.8 && minutes <= 1.2)
-            g_chatMan.turnDurationMsg(g_generalText->getText(GENERAL_TEXT_TURN_ONE_MINUTE_REMAINING));
+            g_chatMan.turnDurationMsg((*g_generalText)[GENERAL_TEXT_TURN_ONE_MINUTE_REMAINING]);
         else
-            g_chatMan.turnDurationMsg(g_generalText->getText(GENERAL_TEXT_TURN_MINUTES_REMAINING_FORMAT), minutes);
+            g_chatMan.turnDurationMsg((*g_generalText)[GENERAL_TEXT_TURN_MINUTES_REMAINING_FORMAT], minutes);
     } else {
         // A 29-second remainder is announced as the 30-second mark. The
         // bound is spelled as a named local rather than an enumerator on
@@ -2645,9 +2638,9 @@ void CTurnDuration::checkForWarning()
         if (seconds == roundUpSeconds)
             seconds = 30;
         if (seconds == 1)
-            g_chatMan.turnDurationMsg(g_generalText->getText(GENERAL_TEXT_TURN_ONE_SECOND_REMAINING));
+            g_chatMan.turnDurationMsg((*g_generalText)[GENERAL_TEXT_TURN_ONE_SECOND_REMAINING]);
         else
-            g_chatMan.turnDurationMsg(g_generalText->getText(GENERAL_TEXT_TURN_SECONDS_REMAINING_FORMAT), seconds);
+            g_chatMan.turnDurationMsg((*g_generalText)[GENERAL_TEXT_TURN_SECONDS_REMAINING_FORMAT], seconds);
     }
 
     m_lastWarned = currTime;
