@@ -175,6 +175,10 @@ the final implementation still requires retail verification.
 
 ## Helper boundaries and inlining
 
+Use the [helper-placement skill](.agents/skills/helper-placement/SKILL.md) when
+Mac function order, xrefs, or VC6 cross-TU expansion must decide whether a
+recovered helper body belongs in an ordinary header or its owning source file.
+
 Preserve one canonical helper, its proven declaration, and source calls. Match
 its retained retail body and each caller's call/expansion decision separately:
 
