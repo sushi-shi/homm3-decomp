@@ -197,7 +197,8 @@ void searchArray::enterGate(const pathCell* cell, const NewmapCell* mapCell,
     const int noGateExit = 0xff;
     if (exitPoint.m_x != noGateExit) {
         pathCell exitCell = *cell;
-        NewmapCell* exitMapCell = g_game->m_worldMap.cell(exitPoint);
+        // DC search.cpp:251 names game::get_cell; Mac and VC6 expand it.
+        NewmapCell* exitMapCell = g_game->getCell(exitPoint);
         exitCell.m_point.m_x = exitPoint.m_x;
         exitCell.m_point.m_y = exitPoint.m_y;
         exitCell.m_point.m_z = exitPoint.m_z;
