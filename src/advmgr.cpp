@@ -4819,15 +4819,9 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                         tilew, tileh, g_windowManager->m_screenBitmap,
                         baseX, baseY + 8, false);
                 } else {
-                    switch (objType->m_objectType) {
-                    case CREATURE_GENERATOR_1:
-                    case CREATURE_GENERATOR_4:
-                    case GARRISON:
-                    case LIGHTHOUSE:
-                    case MINE:
-                    case RANDOM_TOWN:
-                    case SHIPYARD:
-                    case TOWN: {
+                    // DC line 6067 and Mac's call to 0+0x103cc retain
+                    // hasFlag here; VC6 expands it without changing bytes.
+                    if (hasFlag(objType->m_objectType)) {
                         int triggerX;
                         int triggerY;
                         mapObjects->m_objects[objCell->m_objectIndex].findTrigger(
@@ -4850,9 +4844,7 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                             tilew, tileh, g_windowManager->m_screenBitmap,
                             baseX, baseY + 8,
                             g_systemPalette->m_data[64 + owner], false);
-                        break;
-                    }
-                    default:
+                    } else {
                         if (objCell->m_objectIndex == m_movingObjectIndex) {
                             signed char offsets = objCell->m_offsets;
                             signed char yOffset = offsets >> 4;
@@ -4881,7 +4873,6 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                                 tilew, tileh, g_windowManager->m_screenBitmap,
                                 baseX, baseY + 8, false);
                         }
-                        break;
                     }
                 }
             }
