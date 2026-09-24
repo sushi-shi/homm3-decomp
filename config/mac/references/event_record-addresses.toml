@@ -764,3 +764,30 @@ mac_offset = 0xc0148
 mac_size = 0x94
 target_sha256 = "0f30c0be03ed0164eda982f49d911fcc3f1eddbc4909ffde5de42c81c5dd59a8"
 evidence = "game::recordShowBoat calls this retained constructor at 0xc0148. It calls the canonical hide-boat constructor at 0xbfce0, then stores the boat's packed location and requested replacement point in its record fields. The source helper is explicit inline; Mac retains its body and Windows expands it. Final BLR at 0xc01d8; next entry 0xc01dc."
+
+[[helpers]]
+source_helper = "type_record_move_hero::type_record_move_hero"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbf100
+mac_size = 0xa8
+target_sha256 = "fbfa442974e1f78703e1b00f8f041e0862fee02d336b861a5ffa1529fedc1881"
+evidence = "game::recordMove calls this retained constructor at 0xbf100. It snapshots the hero facing byte at +0x47 and packed source location before storing requested direction and destination. The Mac teleport constructor also delegates to it; Windows expands the ordinary source helper at both callers. Final BLR at 0xbf1a4; next entry 0xbf1a8."
+
+[[helpers]]
+source_helper = "type_record_teleport::type_record_teleport"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbf61c
+mac_size = 0x44
+target_sha256 = "b1fac8f8a3d5b515f9391f0a918e88e8e8381109b1ed0fc515197f3cfadd508b"
+evidence = "game::recordTeleport calls this retained constructor at 0xbf61c. It forwards the hero's current facing and requested destination to the move-hero constructor at 0xbf100, then installs its derived vtable. Windows expands this ordinary delegating source helper. Final BLR at 0xbf65c; next entry 0xbf660."
+
+[[helpers]]
+source_helper = "type_record_show_hero::type_record_show_hero"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xc0e4c
+mac_size = 0xb8
+target_sha256 = "e57171cad52f306d7df7148bb8b64eaf02912327aaa288ae3f79872919acacd9"
+evidence = "game::recordShowHero calls this retained constructor at 0xc0e4c. It delegates to hide-hero at 0xc09ec, snapshots the hero's on-boat flag and packed location, then stores requested boat flag and destination. The source helper is explicit inline; Mac retains the call while Windows expands it. Final BLR at 0xc0f00; next entry 0xc0f04."
