@@ -142,7 +142,16 @@ mac_section = 0x0
 mac_offset = 0x219150
 mac_size = 0x118
 target_sha256 = "e21ee97ffb951377e6035f8890fb88a6d8361b19787ff15db2abaaa0003a56ed"
-evidence = "launchSample checks audio/config/name, loads sample via 0x153f78, calls memorySample 0x218d54 and audio cleanup helper 0x219268; complete BLR."
+evidence = "launchSample checks audio/config/name, loads sample via 0x153f78, calls memorySample 0x218d54 and the reviewed serviceSounds wrapper 0x219268; complete BLR."
+
+[[functions]]
+retail_va = 0x0059a7d0
+unit = "soundmgr"
+mac_section = 0
+mac_offset = 0x219268
+mac_size = 0x20
+target_sha256 = "bd0e3cf7941c5049289306f5d6783446a38573fbf4ed893a75889048201d862f"
+evidence = "soundManager::serviceSounds is source-owned at Windows 0x59a7d0. Mac launchSample calls this retained wrapper immediately after memorySample, matching src/soundmgr.cpp, and townManager::main calls the same wrapper at 0x1d0124, matching its source serviceSounds call. The Mac body at 0x219268 forwards to platform audio service 0x2181a0, then returns; Windows instead uses Miles/critical-section stream service, an evidenced platform implementation difference. Preceding launchSample BLR is 0x219264, this wrapper ends at 0x219284, and the next prologue starts at 0x219288. Address-only until a soundmgr Mac compiler profile is available."
 
 [[functions]]
 retail_va = 0x59b010

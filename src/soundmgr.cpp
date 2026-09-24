@@ -635,6 +635,8 @@ void __cdecl waitEndSampleThread(void* arglist)
 // operations. A source-local ordinary body recovers that visibility boundary
 // and retained emission. Its Windows ownership is a platform inference; the
 // CE header attribution remains recorded separately in dc_only.tsv.
+// Mac retains a platform wrapper at 0:0x219268, called by launchSample and
+// townManager::main; its body forwards to the Mac audio service at 0:0x2181a0.
 VA(0x0059a7d0, 0x51)
 void soundManager::serviceSounds()
 {
