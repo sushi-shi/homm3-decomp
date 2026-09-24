@@ -1,5 +1,14 @@
 # Reviewed Mac address identities; unbound compiler names are intentionally omitted.
 
+[[helpers]]
+source_helper = "getCreatureSpellMessage"
+unit = "drawing"
+mac_section = 0x0
+mac_offset = 0xa3678
+mac_size = 0x624
+target_sha256 = "44b1e3576bfce8b1196db3259faf42306f321cf056f1bf96455ee112e1920cd8"
+evidence = "combatManager::combatMessage calls this source helper at Mac 0xa4d68 with buffer, army and hex arguments. The body validates hex 0..186, switches on creature type and formats spell-target messages; it returns at 0xa3c98 before formatRounded begins at 0xa3c9c. No standalone Windows VA is established."
+
 [[functions]]
 retail_va = 0x493650
 unit = "drawing"
