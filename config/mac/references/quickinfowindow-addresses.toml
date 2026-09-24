@@ -15,4 +15,3 @@ mac_offset = 0x14bbd0
 mac_size = 0x60
 target_sha256 = "9514db50cbbdd29d7f0a18ae674d0311b9698bde7911bc46573dcfcf31f8717f"
 evidence = "NEW: TQuickCreatureWindow vtable TOC1+0x4c79c then TDialogBox destructor0xa15c0 and optional deallocation; Mac combines deleting ABI in this body, last blr0x14bc2c before quickWindowWait prologue. Full span SHA verified."
-

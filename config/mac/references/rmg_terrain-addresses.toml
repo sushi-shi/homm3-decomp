@@ -421,4 +421,3 @@ unit = "rmg_terrain"
 target_sha256 = "65881be37f78b57d124383988b8ce40a3e1ee54e11ba7ce3d2d4af11dbfd43c5"
 evidence = "Source helper without standalone Windows VA. TU order plus strength259500-then-terrain-rule-virtual-base-frame-with-old-frame-argument"
 source_helper = "rmgTerrainPainter::selectBaseFrame"
-

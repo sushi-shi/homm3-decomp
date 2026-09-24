@@ -11,6 +11,9 @@
 
 class TownExtra;  // canonical definition in Game.h
 
+// The retail town-event building tables contain 41 entries per faction.
+enum { TOWN_EVENT_BUILDING_SLOTS = 41 };
+
 // Town/faction ids - the domain of town::type and of the creature
 // traits' townType column (armygrp's alignment switches case on it:
 // good 0-2 / evil 3-5 / neutral 6-8). NH3API terrain.hpp TTownType

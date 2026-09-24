@@ -313,4 +313,3 @@ unit = "rmg_support"
 target_sha256 = "55d7145c2c6bc4ef69c70b65e243e4355d8ef7f7cf63a099c8b598bda4846a30"
 evidence = "Source helper without standalone Windows VA. TU order plus four-orientation25c2b4-calls-and-signed-wide-circle-determinant"
 source_helper = "isRmgPointInsideCircle"
-

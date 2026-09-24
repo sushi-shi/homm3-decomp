@@ -97,4 +97,3 @@ unit = "search"
 target_sha256 = "46bc38d30cd61647bf3149bec5ff6db0d5d8904ef6fec00ea4efd419c894d9df"
 evidence = "Source helper without standalone Windows VA. TU order plus canSummonBoat106614,current-hero-location,eight-neighbours,and-map-boat-check"
 source_helper = "checkSummonBoat"
-

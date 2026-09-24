@@ -1548,4 +1548,3 @@ mac_offset = 0xd6a2c
 mac_size = 0x118
 target_sha256 = "56f9f227fbbba8aca97aff7821ff97788c679a819640299317b86a446fc7c8e1"
 evidence = "Temporary spell vector;70spell loop level5 and disabled/school checks, push_back0xbe580, random selection and vector destruction0xbe748. Reviewed extent code0+0xd6a2c..0xd6b44; terminal return and following entry separate the span."
-

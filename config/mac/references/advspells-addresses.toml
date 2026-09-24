@@ -88,4 +88,3 @@ unit = "advspells"
 target_sha256 = "e71636207f42e7961ca2187b00d9ad2f02f2a3197cf15a32b7b63f877bf17213"
 evidence = "Source helper without standalone Windows VA. TU order plus artifact72 gate boat text193 fly0x1069d0 and reseed0xf07c"
 source_helper = "advManager::flight"
-

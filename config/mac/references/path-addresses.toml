@@ -61,4 +61,3 @@ unit = "path"
 target_sha256 = "5cac42142c47967a5011a6dca563c42cf6a132d7365a111092c7316651406022"
 evidence = "Contiguous path TU order corroborated by body: direction less6 plus3 modulo6 else exchange6/7. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
 retail_va = 0x523ec0
-

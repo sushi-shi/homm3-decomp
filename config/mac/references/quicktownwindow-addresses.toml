@@ -51,4 +51,3 @@ mac_offset = 0x14cfb0
 mac_size = 0x2c
 target_sha256 = "676d28d5befc315dfebac117843be2218342fe936a9938e801d3049a5b51d20d"
 evidence = "NEW: Quick-view wrapper: g_windowManager call doQuickView0x20dd08; final blr0x14cfd8 before static initializer. Full span SHA verified."
-

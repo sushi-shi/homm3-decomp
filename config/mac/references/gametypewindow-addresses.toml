@@ -33,4 +33,3 @@ mac_offset = 0xf1640
 mac_size = 0x2c0
 target_sha256 = "d937a82f0a67514f2a8a6ab1c73b129f44013fc67af3191762c98c2e951a1369"
 evidence = "NEW: Handler reads message modifier+0xc and widget codes; dispatches help, hover widget IDs 0x64..0x68, sendMessage and redraw; prologue0xf1640 last blr0xf18fc next prologue0xf1900."
-

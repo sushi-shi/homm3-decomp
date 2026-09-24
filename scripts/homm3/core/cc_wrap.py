@@ -101,7 +101,7 @@ def _compile_staged(out, command, *, run=_run_cl):
     staged.unlink(missing_ok=True)
     try:
         output, rc = run(command(staged), staged)
-        if not staged.is_file():
+        if rc != 0 or not staged.is_file():
             return output, rc, False
         staged.replace(out)
         return output, rc, True

@@ -23,7 +23,6 @@
 #include "townmgr.h"
 
 // Retail initial data; dimensions follow the typed table consumers.
-enum { TOWN_EVENT_BUILDING_SLOTS = 41 };
 DATA(0x00688e84) const int g_townInitArmyChance[4] = { 33, 33, 20, 13 };
 DATA(0x00688e94) const int g_townInitArmyLow[4] = { 8, 5, 3, 1 };
 DATA(0x00688ea4) const int g_townInitArmyHigh[4] = { 15, 7, 5, 3 };

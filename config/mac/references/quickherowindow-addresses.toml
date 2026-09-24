@@ -15,4 +15,3 @@ mac_offset = 0x14b424
 mac_size = 0xac
 target_sha256 = "21deb9dc4c2e36dfa929c33451738d394935491fa04de597a53344cfe14a0c3b"
 evidence = "NEW: TQuickHeroWindow vtable data1+0x4c6dc, widget vector virtual-delete walk and heroWindow destructor0x20aebc; optional Mac ABI deallocation in same body; final blr0x14b4cc before quickWindowWait prologue. Full span SHA verified."
-

@@ -223,4 +223,3 @@ unit = "adventuremapwindow"
 target_sha256 = "13c2b8da26e99ce3a5bd495924b073a86082a5cdc8ab6d39f89961511b16848f"
 evidence = "Contiguous adventuremapwindow TU order corroborated by body: ten calls setAdvWinButtonPalette0x3c94 and optional windowdraw. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
 retail_va = 0x403f60
-

@@ -151,4 +151,3 @@ unit = "findpath"
 target_sha256 = "ae129c41c691e258d794676f16c6f3ca96f8b416b7830a8e4bd9199bf8143ad3"
 evidence = "Source helper without standalone Windows VA. TU order plus validHex187,getArmy1081f8,markEnemy-twice,and-secondGrid52874"
 source_helper = "searchArray::checkEnemyArmies"
-

@@ -133,4 +133,3 @@ unit = "victorylossconditions"
 target_sha256 = "9ea3dbb6fae855e63f5272cdc67d8bb1fa1025030bc8e839781eec632c44a165"
 evidence = "Contiguous victorylossconditions TU order corroborated by body: loss type2 day formula compared numDays+0x20. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
 retail_va = 0x5f2f20
-

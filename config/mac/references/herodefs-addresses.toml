@@ -52,4 +52,3 @@ unit = "herodefs"
 target_sha256 = "ea3227a2ef1cbbcb272981a2f9ad8647e909ab3626829ebe8f57adfd587462c8"
 evidence = "Source helper without standalone Windows VA. TU order plus static string ownership and three description strings"
 source_helper = "initializeSSkillTraits"
-

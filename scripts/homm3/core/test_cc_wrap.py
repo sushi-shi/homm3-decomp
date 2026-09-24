@@ -88,6 +88,22 @@ class StagedObjectTests(unittest.TestCase):
             self.assertEqual(out.read_bytes(), b"new object")
             self.assertEqual(list(Path(tmp).glob(".*.tmp.obj")), [])
 
+    def test_failed_compile_with_partial_object_preserves_previous_object(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "hero.obj"
+            out.write_bytes(b"previous")
+
+            def fail_after_writing(command, staged):
+                self.assertEqual(command, [str(staged)])
+                staged.write_bytes(b"partial object")
+                return "compiler error", 1
+
+            self.assertEqual(_compile_staged(
+                out, lambda path: [str(path)], run=fail_after_writing),
+                ("compiler error", 1, False))
+            self.assertEqual(out.read_bytes(), b"previous")
+            self.assertEqual(list(Path(tmp).glob(".*.tmp.obj")), [])
+
 
 if __name__ == "__main__":
     unittest.main()

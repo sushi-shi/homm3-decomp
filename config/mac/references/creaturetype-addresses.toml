@@ -52,4 +52,3 @@ unit = "creaturetype"
 target_sha256 = "e695575703e803d4e0bf4d0a7abb37e8718e0177fdcf201d622fe89bcd1dcc9f"
 evidence = "Contiguous creaturetype TU order corroborated by body: name/plural/static-string ownership and numeric field atoi sequence. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
 retail_va = 0x47b480
-

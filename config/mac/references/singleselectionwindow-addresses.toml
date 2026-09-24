@@ -1060,4 +1060,3 @@ unit = "singleselectionwindow"
 target_sha256 = "b5c5a35d04a669bf9400ec9884c5dd504d015ab93b764c5ecd3bde95b79d37af"
 evidence = "Save edit key handler callsbase1afb44, comparesm_text withNEWGAME.gm1 via20efc4 andclearsselectionthroughsetCurrentMap17d418(-1,1). Reviewed complete return boundary; linked/loader entry corroborates source role."
 retail_va = 0x57d0b0
-

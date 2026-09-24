@@ -183,7 +183,9 @@ def _regex_sites(pattern):
 # --- the other ratcheted shapes (gruntz spellings) --------------------------------
 _REINTERPRET = re.compile(r"\breinterpret_cast\s*<")
 _VOLATILE = re.compile(r"\bvolatile\b")
-_CPP_EXTERN = re.compile(r"^[ \t]*extern\b", re.MULTILINE)
+_CPP_EXTERN = re.compile(
+    r'^[ \t]*extern\b(?![ \t]*"(?:C|C\+\+)"[ \t]*\{)',
+    re.MULTILINE)
 # struct/class DEFINITION (name then body brace, optional base clause) -
 # not forward decls, not elaborated uses (`class TBar* p;`).
 _CPP_LOCAL_DEF = re.compile(
@@ -685,7 +687,8 @@ _SAMPLES = {
          '  extern "C" void mm_init();'),
         ("int externalize();",
          "// extern lives in the owner header",
-         "internal_extern_helper();")),
+         "internal_extern_helper();",
+         'extern "C" {\nint errno;\n}')),
     ".cpp-local views": (
         ("struct TFoo { int a; };",
          "class advPopup : public TWindow {"),

@@ -250,4 +250,3 @@ unit = "resourcemanager"
 target_sha256 = "9fbf438c73a1e638887db1398fea394f7de30ed3e3edb8ef99b27c11f4153be9"
 evidence = "Source helper without standalone Windows VA. TU order plus walks0x4000 cache slots deletes nonnull resource and zeros slot; different Mac cache container"
 source_helper = "ResourceManager::expunge"
-

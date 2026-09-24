@@ -43,4 +43,3 @@ unit = "creature_bank"
 target_sha256 = "68e977fa23b6ab462146709b82acb9608aed6f504ab5c6e935689405f44182ca"
 evidence = "Source helper without standalone Windows VA. TU order plus seven-slot empty search and army stack splitting using0x585a4"
 source_helper = "splitSlot"
-

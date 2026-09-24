@@ -736,4 +736,3 @@ unit = "event_record"
 target_sha256 = "e98ccf50907fc5998d183f2a282b97b84314e7c76f4f32c78df86c5afbb101b4"
 evidence = "Builds eight-byte shroud-change record then vector push0xc34e8. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
 source_helper = "type_record_shroud::addChange"
-
