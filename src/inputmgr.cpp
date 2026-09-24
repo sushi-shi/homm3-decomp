@@ -251,6 +251,8 @@ void inputManager::setKeyCodeType(int newType)
     flush();
 }
 
+// Mac 0:0x10e55c copies the pretranslated message codeY field to codeX.
+// Complete's Windows body decodes scan codes and shift state instead.
 VA(0x004ec6f0, 0x1C6)  // dc 0xddd60
 void inputManager::asciiConvert(message* msg)
 {

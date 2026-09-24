@@ -71,3 +71,12 @@ mac_offset = 0x10e568
 mac_size = 0xe8
 target_sha256 = "cc9490733d39713b2ef6343aff8422ad7fe54e3b81a560dbc493a12b6268f3e5"
 evidence = "buffer-busy guard at +0x840, creates mouse-move message, gets mouse coordinates and qualifiers, advances ring modulo64; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4ec6f0
+unit = "inputmgr"
+mac_section = 0x0
+mac_offset = 0x10e55c
+mac_size = 0xc
+target_sha256 = "69d0c0afc20064c5050b1af6de3936e47f7cd8ba1facb6b6b0c32f20f29fa225"
+evidence = "textEntryWidget::onKeyPress calls this retained body at 0x1afd48 with g_inputManager and message; it copies message codeY (+8) to codeX (+4) and returns. Windows inputManager::asciiConvert at 0x4ec6f0 translates scan codes and shift state, a platform input difference. Dreamcast names the method at dc 0xddd60. Final BLR at 0x10e564; next input-manager body starts at 0x10e568."
