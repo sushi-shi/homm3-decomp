@@ -23,6 +23,7 @@
 #include "townmgr.h"
 
 // Retail initial data; dimensions follow the typed table consumers.
+enum { TOWN_EVENT_BUILDING_SLOTS = 41 };
 DATA(0x00688e84) const int g_townInitArmyChance[4] = { 33, 33, 20, 13 };
 DATA(0x00688e94) const int g_townInitArmyLow[4] = { 8, 5, 3, 1 };
 DATA(0x00688ea4) const int g_townInitArmyHigh[4] = { 15, 7, 5, 3 };
@@ -37,7 +38,7 @@ DATA(0x00688eb4) int g_siloIncome[9][7] = {
     { 1, 0, 1, 0, 0, 0, 0 },
     { 0, 1, 0, 0, 0, 0, 0 }
 };
-DATA(0x006888c0) const int g_eventBuildingIds[9][41] = {
+DATA(0x006888c0) const int g_eventBuildingIds[9][TOWN_EVENT_BUILDING_SLOTS] = {
     {
     11, 12, 13, 7, 8, 9, 5, 16,
     14, 15, 44, 0, 1, 2, 3, 4,
@@ -1362,7 +1363,7 @@ void town::giveEventReward(const TTownEvent* thisEvent)
     __int64 grantable = 0;
     __int64 eventBuildings = thisEvent->m_buildBuildings;
     int i;
-    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+    for (i = 0; i < TOWN_EVENT_BUILDING_SLOTS; i++) {
         if (eventBuildings & g_bitNumber[i])
             grantable |= g_bitNumber[g_eventBuildingIds[m_type][i]];
     }
@@ -1570,7 +1571,8 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
         disabledBuildings |= g_bitNumber[DOCK_ID];
 
     if (townSetup->m_customBuildings) {
-        for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        // Editor masks have 41 columns; canonical building masks have 44.
+        for (i = 0; i < TOWN_EVENT_BUILDING_SLOTS; i++) {
             if (townSetup->m_buildingDisabledMask & g_bitNumber[i])
                 disabledBuildings |= g_bitNumber[
                     g_eventBuildingIds[currentTown->m_type][i]];
@@ -1582,7 +1584,7 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
         currentTown->setLegalBuildings(disabledBuildings);
 
         __int64 builtMask = 0;
-        for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        for (i = 0; i < TOWN_EVENT_BUILDING_SLOTS; i++) {
             if (townSetup->m_buildingBuiltMask & g_bitNumber[i])
                 builtMask |= town::s_includedBuildings[currentTown->m_type][
                         g_eventBuildingIds[currentTown->m_type][i]]

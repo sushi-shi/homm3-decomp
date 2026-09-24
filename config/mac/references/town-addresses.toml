@@ -241,8 +241,9 @@ unit = "town"
 mac_section = 0
 mac_offset = 0x1b604c
 mac_size = 0x440
+mac_symbol = ".initializeBuildings__FP4townPC9TownExtra"
 target_sha256 = "441247a187ce2083841df3a384b320d8e3c913ce197a367dbec061f65c316c44"
-evidence = "NEW: Zeros population, creates village hall, checks grail-target and two dock positions via0x1b5f84, remaps44 custom buildings, otherwise creates fort/tavern/dwellings with random<=30. Span ends at0x1b648c; last word0x4e800020; adjacent entries and call-flow boundary inspected."
+evidence = "NEW: Zeros population, creates village hall, checks grail-target and two dock positions via0x1b5f84, remaps 41 editor building columns, otherwise creates fort/tavern/dwellings with random<=30. Span ends at0x1b648c; last word0x4e800020; adjacent entries and call-flow boundary inspected."
 
 [[functions]]
 retail_va = 0x005c0c90
