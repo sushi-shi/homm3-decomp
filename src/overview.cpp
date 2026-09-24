@@ -88,7 +88,7 @@ static const int g_overviewHelpIds[8] = {
     19, 20, 21, 22, 23, 24, 18, 25
 };
 
-static long getLastBackpackIndex(long heroNumber);
+long getLastBackpackIndex(long heroNumber);
 void updateBackpack(int slot);
 
 // 90.9107 -> 91.7418 (2026-09-05): the town row's TWO `iLookup` chains
@@ -2713,8 +2713,10 @@ void updateBackpack(int slot)
     g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
 }
 
+// Complete retains this body even though its same-TU callers expand it.
+// External linkage reproduces that emission; Dreamcast labels the older body static.
 VA(0x005225d0, 0x55)  // dc 0x1078e8
-static long getLastBackpackIndex(long heroNumber)
+long getLastBackpackIndex(long heroNumber)
 {
     if (heroNumber >= g_game->getLocalPlayer()->m_numHeroes)
         return 0;
