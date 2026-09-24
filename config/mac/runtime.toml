@@ -783,3 +783,42 @@ mac_offset = 0xe9f60
 mac_size = 0xe8
 sha256 = "41b4270f068462904cfaa1cc1e41cd5c6770d64c086545bcf695bf5dad6e69b0"
 evidence = "NewSMapHeader::read calls this setter three times for its five-word m_availableHeroes bitset<156>; the bound check compares r4 with 0x9c, then sets or clears the indexed bit according to r5. The complete body returns at BLR 0xea044 and the next bitset helper begins at 0xea048. It shares the reviewed MSL bitset-set instruction shape and mangling. Runtime template identity only."
+[[functions]]
+symbol = ".mac_vector_hero_delete_flag_dtor_6c6e4"
+mac_section = 0
+mac_offset = 0x6c6e4
+mac_size = 0x64
+sha256 = "1ce909dd352c6e420de33a7a0e5e730a244878e6238d5c7eb4076f4d8fd2bc87"
+evidence = "Five customcampaign calls destroy local vector<hero> objects. The callee checks the receiver, clears elements through 0x6c748, deletes vector data at +8, and optionally deletes the receiver when the CodeWarrior delete flag is positive. BLR at 0x6c744 precedes the clear body. This neutral label identifies the vector operation, not a proven mangled instantiation."
+
+[[functions]]
+symbol = ".mac_vector_hero_erase_one_9cb7c"
+mac_section = 0
+mac_offset = 0x9cb7c
+mac_size = 0xb8
+sha256 = "aaa548b3d823204b9d61a1f85f0aa382690323b1c4d7e6bd3dbc8acec7133649"
+evidence = "Five customcampaign calls erase one vector<hero> element. The callee computes the following range at 0x486-byte hero stride, shifts later heroes with assignment 0x9ab44, decrements vector size at +4, destroys the former last element at +0x3da and returns the erased position. BLR at 0x9cc30 precedes the distinct insertion body. Neutral operation label only."
+
+[[functions]]
+symbol = ".mac_vector_hero_field0_init_95a70"
+mac_section = 0
+mac_offset = 0x95a70
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "Three customcampaign vector<hero> constructions pass zero in r4 and a new 12-byte vector record in r3. This retained two-instruction body initializes only the record's first word; callers separately zero words at +4 and +8. BLR at 0x95a74 precedes the artifact collector at 0x95a78. Neutral field-initializer label, not a claim that this is the full vector constructor."
+
+[[functions]]
+symbol = ".mac_vector_hero_push_back_9cfb4"
+mac_section = 0
+mac_offset = 0x9cfb4
+mac_size = 0xac
+sha256 = "c44be25dcb4d09f630380fc606b63355bd5cee2e9d58b48d54e2cadb2d87e65b"
+evidence = "Nine customcampaign calls append a hero to vector<hero>. The callee checks size against capacity, grows through 0x9d8c0 when full, copy-constructs a 0x486-byte hero at data + size * 0x486 using 0x6bd4c, increments size at +4 and returns. BLR at 0x9d05c precedes the next generated body. Neutral operation label only."
+
+[[functions]]
+symbol = ".mac_vector_bool_num_words_72244"
+mac_section = 0
+mac_offset = 0x72244
+mac_size = 0x10
+sha256 = "de2c6be1829b6156740f6fe09ddd105cc0fac31c9f434790da4f6865d2946ce9"
+evidence = "The installed CodeWarrior MSL vector<bool>::num_words(size_type) computes (capacity - 1) / 32 + 1. This complete four-instruction body subtracts one, shifts right by five, adds one and returns at 0x72250; the next body begins at 0x72254. Called during TPickANumber cleanup in cmbtmgr and spells. Runtime template operation only, without a Windows helper claim."
