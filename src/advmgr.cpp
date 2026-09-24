@@ -4000,6 +4000,8 @@ void advManager::reseed(int targetX, int targetY)
 // The CheckDimNextHeroBut tail already uses its canonical source call. DC
 // line 4965 also calls Reseed(0, 0); restoring it is Windows byte-flat at
 // the current 96.5199%.
+// DC 4853/4863/4893/4899/4920/4934/4947 uses TTextResource::operator[]
+// for all seven messages. Restoring those calls is Windows byte-flat.
 VA(0x0040ec90, 0x5AD)  // anchor-callee, dc 0xfd84
 int advManager::processSearch(int x, int y, int z)
 {
@@ -4016,8 +4018,7 @@ int advManager::processSearch(int x, int y, int z)
             g_currentPlayer->m_puzzleGuess = invalidPoint;
             return 1;
         }
-        normalDialog(g_generalText->getText(
-                         GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE),
+        normalDialog((*g_generalText)[GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;
     }
@@ -4029,8 +4030,7 @@ int advManager::processSearch(int x, int y, int z)
             g_currentPlayer->m_puzzleGuess = invalidPoint;
             return 1;
         }
-        normalDialog(g_generalText->getText(
-                         GENERAL_TEXT_SEARCH_BACKPACK_FULL),
+        normalDialog((*g_generalText)[GENERAL_TEXT_SEARCH_BACKPACK_FULL],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;
     }
@@ -4052,14 +4052,13 @@ int advManager::processSearch(int x, int y, int z)
     }
 
     if (currCell->m_groundSet == eTerrainWater) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_SEARCH_WATER),
+        normalDialog((*g_generalText)[GENERAL_TEXT_SEARCH_WATER],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;
     }
 
     if (!currCell->isDiggable()) {
-        normalDialog(g_generalText->getText(
-                         GENERAL_TEXT_SEARCH_NOT_DIGGABLE),
+        normalDialog((*g_generalText)[GENERAL_TEXT_SEARCH_NOT_DIGGABLE],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;
     }
@@ -4078,8 +4077,7 @@ int advManager::processSearch(int x, int y, int z)
                 >= HERO_BACKPACK_CAPACITY) {
             if (g_currentPlayer->isHuman())
                 normalDialog(
-                    g_generalText->getText(
-                        GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND),
+                    (*g_generalText)[GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND],
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             type_artifact grail(ARTIFACT_HOLY_GRAIL);
@@ -4093,7 +4091,7 @@ int advManager::processSearch(int x, int y, int z)
                 sprintf(g_text,
                         DATA_COMPGEN(0x00660358,
                                      processSearchFoundFormat, "%s%s"),
-                        g_generalText->getText(GENERAL_TEXT_SEARCH_FOUND_PREFIX),
+                        (*g_generalText)[GENERAL_TEXT_SEARCH_FOUND_PREFIX],
                         g_artifactTraits[ARTIFACT_HOLY_GRAIL].m_name);
                 normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
@@ -4109,8 +4107,7 @@ int advManager::processSearch(int x, int y, int z)
             g_game->m_ultimateArtifactPresent = 0;
         }
     } else if (g_currentPlayer->isHuman()) {
-        normalDialog(g_generalText->getText(
-                         GENERAL_TEXT_SEARCH_NOTHING_FOUND),
+        normalDialog((*g_generalText)[GENERAL_TEXT_SEARCH_NOTHING_FOUND],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 
