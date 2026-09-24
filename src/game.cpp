@@ -2338,7 +2338,8 @@ void game::setupShipyards()
     }
 }
 
-// E:\gamedcs\game.cpp:2654.
+// E:\gamedcs\game.cpp:2654. Mac retains this helper at 0xcf178;
+// Windows expands the call from game::save.
 int game::saveBlackMarkets(TAbstractFile* outfile)
 {
     char blackMarketListSize = m_blackMarkets.size();
@@ -2351,7 +2352,8 @@ int game::saveBlackMarkets(TAbstractFile* outfile)
     return 0;
 }
 
-// E:\gamedcs\game.cpp:2672
+// E:\gamedcs\game.cpp:2672. Mac retains this helper at 0xcf228;
+// Windows expands the call from game::load.
 // Original LoadBlackMarkets; black_market_list_size -> blackMarketListSize.
 // DC calls clear, resize and operator[]. The ordinary helper restores one
 // caller cleanup boundary; its natural expansion needs no inline-depth pin.

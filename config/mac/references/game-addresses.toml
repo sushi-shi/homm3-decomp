@@ -425,6 +425,24 @@ target_sha256 = "52a078405ebdc7c8503fe2fb311e3b8ed0f64f309128892e0aca006e6a3adfd
 evidence = "Constructs empty string, calls loadString then strcpy to current rumour, reads state/count, resizes rumour vector and loops strings plus availability flag. Reviewed extent code0+0xcefc0..0xcf178; terminal return and following entry separate the span."
 
 [[helpers]]
+source_helper = "game::saveBlackMarkets"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcf178
+mac_size = 0xb0
+target_sha256 = "13799e03474eaa4b17b3e37af2f845c6d28b371eafd150a98930e6de69735bad"
+evidence = "Dreamcast game.cpp:2654 names SaveBlackMarkets. Mac game::save calls this body at 0xd2b50. It writes the signed-byte size of the black-market vector at game+0x1ef10, then its data at +0x1ef18 with stride 0x1c, matching the canonical source. Complete return at 0xcf224 and next load helper prologue 0xcf228 bound 0xb0 bytes. Windows retains the authored source call but expands the helper."
+
+[[helpers]]
+source_helper = "game::loadBlackMarkets"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcf228
+mac_size = 0xc8
+target_sha256 = "5ec271e4ecd95524a2830249a77c32ab19a24177a80d973233f123c62a8b770a"
+evidence = "Dreamcast game.cpp:2672 names LoadBlackMarkets. Mac game::load calls this body at 0xd0810. It clears the vector at game+0x1ef10, reads its signed-byte size, resizes it, then reads size times 0x1c bytes into data at +0x1ef18. Complete return at 0xcf2ec and following creature-bank load prologue 0xcf2f0 bound 0xc8 bytes. Windows retains the canonical source call but expands the helper."
+
+[[helpers]]
 source_helper = "type_creature_bank::load"
 unit = "game"
 mac_section = 0
