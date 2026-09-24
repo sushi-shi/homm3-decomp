@@ -584,6 +584,7 @@ unit = "seerhut"
 target_sha256 = "8d5fb5cad820ab97c1fc50f51c3127126d6f5c0a5e9c78ca994a8624d3db9deb"
 evidence = "Full creature list and picture0x15, proposal deadline16450c or base progress1646f4, extended dialog1194d8. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
 retail_va = 0x570b80
+mac_symbol = ".doProgressDialog__19type_creature_questFv"
 
 [[functions]]
 mac_section = 0x0
