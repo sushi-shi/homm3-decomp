@@ -17,3 +17,12 @@ mac_offset = 0x20c6c8
 mac_size = 0x44
 target_sha256 = "92d4531e6afe41e8baa86e59e82741cc6f721de7c308110fe9696f92d9b41d99"
 evidence = "BitmapBorder::setPlayerPaletteColors 0x5eabc calls this second helper; source index is player*0x60+0x1c, destination +0x2bc, memcpy 0x60 bytes for 32 RGB triples."
+
+[[functions]]
+retail_va = 0x6001d0
+unit = "wingraph"
+mac_section = 0
+mac_offset = 0x217e10
+mac_size = 0x1d0
+target_sha256 = "bb3c350c1f55d3848469d0f144438bf43764dd006b268541b7410fe4b8b9aef5"
+evidence = "Mouse update calls this Mac blit helper three times; saveAndDraw calls it twice and restoreUnderlying once, exactly the six canonical ddBlit source calls in mousemgr.cpp. It takes destination surface and rectangle, source surface and rectangle, then flags in r3..r7, copies both rectangles and invokes the Mac surface blit path. Windows ddBlit in wingraph.cpp uses DirectDraw for the same source interface, a platform difference. Prior showSystemCursor BLR at 0x217e0c and own BLR at 0x217fdc before static initialization at 0x217fe0 bound all 0x1d0 bytes."
