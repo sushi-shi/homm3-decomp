@@ -349,10 +349,9 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
             continue;
         if (enemy == m_attackArmy)
             continue;
-        long mask = 1 << enemy->m_bitIndex;
-        if (mask & checked)
+        if (checked & (1 << enemy->m_bitIndex))
             continue;
-        checked |= mask;
+        checked |= 1 << enemy->m_bitIndex;
         if (!enemy->canShoot(m_attackArmy))
             continue;
         long hits = enemy->getTotalHitPoints(m_data->m_simulated);
@@ -363,7 +362,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
                            m_attackArmy);
         combatValue -= enemy->getUnitCombatValue(
                            m_data->m_lowestAttack, m_data->m_lowestDefense, 0, 0);
-        long share = static_cast<long>(static_cast<double>(hits) * combatValue
+        long share = static_cast<long>(combatValue * static_cast<double>(hits)
                                        / static_cast<double>(enemy->m_monInfo.m_hitPoints));
         if (share < 1)
             share = 1;
