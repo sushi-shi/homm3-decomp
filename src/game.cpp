@@ -1693,7 +1693,7 @@ bool playerData::hasGivenArtifact(int artifact)
 VA(0x004bad80, 0x1A)  // dc 0xa6114
 bool playerData::isLocalHuman() const
 {
-    if (m_isHuman && m_isLocal)
+    if (isHuman() && m_isLocal)
         return true;
     return false;
 }
@@ -1707,9 +1707,9 @@ bool playerData::isHuman() const
 VA(0x004badb0, 0x9C)  // dc 0xa6180
 char* playerData::getName()
 {
-    if ((!m_isHuman && _strcmpi(m_name, g_generalText->getText(
+    if ((!isHuman() && _strcmpi(m_name, g_generalText->getText(
             GENERAL_TEXT_DEFAULT_PLAYER_NAME)) == 0) ||
-        (m_isHuman && _strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")) == 0)) {
+        (isHuman() && _strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")) == 0)) {
         strcpy(m_name, g_colors[m_color]);
     }
     m_name[0] = toupper(m_name[0]);
@@ -2301,7 +2301,7 @@ void game::setupShipyards()
     }
 
     for (location.m_z = 0;
-         location.m_z < g_game->m_worldMap.getNumLevels();
+         location.m_z < g_game->getNumMapLevels();
          ++location.m_z) {
         for (location.m_y = 0; location.m_y < g_mapWidth; ++location.m_y) {
             for (location.m_x = 0; location.m_x < g_mapHeight; ++location.m_x) {
@@ -3181,7 +3181,7 @@ int game::save(TAbstractFile* outfile)
     // `lea edi,[eax+eax]` follows both imuls. The count is computed once
     // into one local because a virtual call sits between its two uses.
     unsigned int mapExtraBytes =
-        (g_game->m_worldMap.getNumLevels()) * g_mapWidth * g_mapHeight *
+        g_game->getNumMapLevels() * g_mapWidth * g_mapHeight *
         sizeof(unsigned short);
     if (outfile->write(g_mapExtra, mapExtraBytes) < mapExtraBytes)
         return -1;
@@ -4317,7 +4317,7 @@ void game::randomizeHolyGrail()
             return;
         m_ultimateArtifactX = g_mapWidth / 2;
         m_ultimateArtifactY = g_mapHeight / 2;
-        m_ultimateArtifactZ = random(1, m_worldMap.getNumLevels()) - 1;
+        m_ultimateArtifactZ = random(1, getNumMapLevels()) - 1;
         m_ultimateRadius = 0x7f;
     }
 
@@ -4336,7 +4336,7 @@ void game::randomizeHolyGrail()
     if (ultimateYHigh > g_mapWidth - 9)
         ultimateYHigh = g_mapWidth - 9;
 
-    for (int z = 0; z < m_worldMap.getNumLevels(); ++z) {
+    for (int z = 0; z < getNumMapLevels(); ++z) {
         for (int x = ultimateXLow; x <= ultimateXHigh; ++x) {
             for (int y = ultimateYLow; y <= ultimateYHigh; ++y) {
                 NewmapCell* tempCell =
@@ -6757,9 +6757,7 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
             playerData* oldPlayer = &m_players[shipyardInfo->m_owner];
             long index = 0;
             while (index < oldPlayer->m_shipyards.size()) {
-                if (oldPlayer->m_shipyards[index].m_x == location.m_x &&
-                    oldPlayer->m_shipyards[index].m_y == location.m_y &&
-                    oldPlayer->m_shipyards[index].m_z == location.m_z)
+                if (oldPlayer->m_shipyards[index] == location)
                     break;
                 ++index;
             }
@@ -7174,10 +7172,7 @@ int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
     for (i = 0; i < p.m_numHeroes; ++i)
         gold += getHero(p.m_heroes[i])->getEstatesBonus();
 
-    int humanId = whichPlayer;
-    if (humanId >= 8 || humanId < 0)
-        humanId = 0;
-    if (!m_players[humanId].m_isHuman) {
+    if (!isHuman(whichPlayer)) {
         if (m_setup.m_difficulty == g_gameDifficultyEasy)
             gold = static_cast<int>(gold * 0.75);
         if (m_setup.m_difficulty == g_gameDifficultyExpert)
@@ -7240,7 +7235,7 @@ void game::resetAllPlayerVisibility()
                 && m_towns[i].hasBuilding(HOLY_GRAIL_ID, false)) {
                 setVisibility(g_mapWidth / 2, g_mapHeight / 2, 0,
                               m_towns[i].m_owner, g_mapWidth, 0);
-                if (m_worldMap.getNumLevels() > 1) {
+                if (getNumMapLevels() > 1) {
                     setVisibility(g_mapWidth / 2, g_mapHeight / 2, 1,
                                   m_towns[i].m_owner, g_mapWidth, 0);
                 }
@@ -7271,7 +7266,7 @@ void game::resetAllPlayerVisibility()
         }
     }
 
-    for (int z = 0; z < g_game->m_worldMap.getNumLevels(); ++z) {
+    for (int z = 0; z < g_game->getNumMapLevels(); ++z) {
         for (int y = 0; y < g_mapHeight; ++y) {
             for (int x = 0; x < g_mapWidth; ++x) {
                 NewmapCell* tempCell = g_game->m_worldMap.cell(x, y, z);
@@ -7780,7 +7775,7 @@ void game::perMonth()
     }
 
     if (g_monthTypeExtra == g_monthEffectCreature) {
-        for (z = 0; z < m_worldMap.getNumLevels(); ++z) {
+        for (z = 0; z < getNumMapLevels(); ++z) {
             for (y = 0; y < g_mapWidth; ++y) {
                 for (x = 0; x < g_mapHeight; ++x) {
                     tempCell = m_worldMap.cell(x, y, z);
@@ -8219,7 +8214,7 @@ void game::processRandomObjects()
     int y, z, x;
     NewmapCell* tempCell;
 
-    for (z = 0; z < m_worldMap.getNumLevels(); ++z) {
+    for (z = 0; z < getNumMapLevels(); ++z) {
         for (y = 0; y < g_mapHeight; ++y) {
             for (x = 0; x < g_mapWidth; ++x) {
                 tempCell = m_worldMap.cell(x, y, z);
@@ -8389,7 +8384,7 @@ void game::makeTerrainVisible(int whichPlayer, unsigned short visMask)
     }
 
     unsigned short playerMask = players;
-    for (int z = 0; z < m_worldMap.getNumLevels(); ++z) {
+    for (int z = 0; z < getNumMapLevels(); ++z) {
         for (int x = 0; x < g_mapWidth; ++x) {
             for (int y = 0; y < g_mapHeight; ++y) {
                 unsigned int mask = visMask;
@@ -8448,7 +8443,7 @@ void game::setupAdjacentMons()
     int z;
     unsigned short mask = ~MAP_EXTRA_MONSTER;
 
-    for (z = 0; z < m_worldMap.getNumLevels(); ++z) {
+    for (z = 0; z < getNumMapLevels(); ++z) {
         for (x = 0; x < g_mapWidth; ++x) {
             for (y = 0; y < g_mapHeight; ++y) {
                 if (g_advManager->findAdjacentMonster(
@@ -9534,9 +9529,9 @@ int game::getNumThievesGuilds(int whichPlayer)
     for (int i = 0; i < m_players[whichPlayer].m_numTowns; i++) {
         town* currentTown =
             &g_game->m_towns[m_players[whichPlayer].m_townIds[i]];
-        if ((currentTown->m_built & g_bitNumber[TAVERN_ID]) ||
+        if (currentTown->hasBuilding(TAVERN_ID, false) ||
             (currentTown->m_type == TOWN_CASTLE &&
-             (currentTown->m_built & g_bitNumber[EXTRA_1_ID]))) {
+             currentTown->hasBuilding(EXTRA_1_ID, false))) {
             count++;
         }
     }
@@ -9856,8 +9851,7 @@ void game::giveTownEventReward(const TTownEvent& thisEvent)
 VA(0x004cd910, 0xF5)  // unique body/order + 0x34-byte TTimedEvent stride
 void game::checkForTimeEvent()
 {
-    int day = static_cast<short>(
-        (m_month * 4 + m_week - 5) * 7 + m_day);
+    int day = getCurrentTurn();
 
     for (unsigned int i = 0; i < m_worldMap.m_timedEventList.size(); ++i) {
         TTimedEvent* thisEvent = &m_worldMap.m_timedEventList[i];
@@ -9890,10 +9884,7 @@ void game::checkForTownEvent()
 
     for (unsigned int i = 0; i < m_worldMap.m_townEventList.size(); ++i) {
         const TTownEvent& thisEvent = m_worldMap.m_townEventList[i];
-        int playerIndex = g_netLocalGamePos;
-        if (playerIndex >= 8 || playerIndex < 0)
-            playerIndex = 0;
-        if (!(m_players[playerIndex].m_isHuman
+        if (!(isHuman(g_netLocalGamePos)
                   ? thisEvent.m_applyToHuman
                   : thisEvent.m_applyToComputer)) {
             continue;
