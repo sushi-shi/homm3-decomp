@@ -141,6 +141,15 @@ target_sha256 = "ca1502d01229bd572f53f28b5e2f514cbcdda13ad3299adb737c2cd58da54ea
 evidence = "CChatManager::turnDurationMsg calls this with 59000 milliseconds. Mac CTurnDuration::isClose calls isOn at 0x2156e4, checks start and pause fields, then compares GameTime::get + threshold against start + duration. BLR at 0x215ad4 precedes the next function. Windows source and retail isClose at 0x557d00 perform the same checks; VC6 expands the isOn call."
 
 [[functions]]
+retail_va = 0x553840
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211584
+mac_size = 0x148
+target_sha256 = "07dd202c9e4d269717ebff69f13c33bbd5d4b81a6a9aed245ffeef7e8d74006b"
+evidence = "CChatManager::turnDurationMsg calls this retained addChat helper at 0x2117bc with its formatted line. The callee formats the varargs, updates the chat ring and its widget, then returns at 0x2116c8 immediately before turnDurationMsg at 0x2116cc. The ordinary Windows CChatManager::addChat body is VA 0x553840; its call remains a source call."
+
+[[functions]]
 retail_va = 0x553960
 unit = "remote"
 mac_section = 0x0
