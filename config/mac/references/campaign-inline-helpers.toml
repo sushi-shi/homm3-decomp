@@ -1,6 +1,51 @@
 # Complete-era campaign reader retained by Mac and expanded by Windows VC6.
 
 [[helpers]]
+source_helper = "SCampaign::findCrossoverHero"
+unit = "customcampaign"
+mac_section = 0
+mac_offset = 0x9514c
+mac_size = 0x64
+target_sha256 = "0637558c98a8d906d2d4204f15b986ceae3aeb0cb819204f2097dcc38892442f"
+evidence = "ScenarioStruct::placeCrossoverHeroes calls this with the campaign and hero ID. The retained body walks m_carryOverHeroes backward through 0xc-byte vector records at campaign+0x34 and each pool backward at hero stride0x486, comparing the hero ID at+0x1a and returning the matching hero pointer or null. This matches the existing canonical findCrossoverHero source helper; BLR0x951ac precedes the next function."
+
+[[helpers]]
+source_helper = "collectCrossoverArtifacts"
+unit = "customcampaign"
+mac_section = 0
+mac_offset = 0x95a78
+mac_size = 0xd8
+target_sha256 = "36661b7455dc2f782dbc1e77162b7a10ffd86a63d99dd5d5fd6153e159cec7ca"
+evidence = "SCampaign::pruneCrossoverHeroes calls this with a hero and artifact vector. The retained body walks the equipped and backpack slots, gets each artifact, skips ARTIFACT_NONE and appends the rest to the vector. The same canonical source helper is also used in giveCrossoverArtifacts. BLR0x95b4c precedes the next body."
+
+[[helpers]]
+source_helper = "getMaxCrossoverHeroes"
+unit = "customcampaign"
+mac_section = 0
+mac_offset = 0x95ea8
+mac_size = 0x108
+target_sha256 = "bbfc4e4f31edb9cbd80e206de35be725a1fd9f3ddda9061e40f56027fc99031a"
+evidence = "SCampaign::pruneCrossoverHeroes calls this on a scenario to obtain the maximum permitted carried heroes. The retained body checks inflatedSize, dispatches option count and player selection through the scenario option vtable, and scans m_heroesStatus for the maximum as the existing source helper does. BLR0x95fac precedes the next function."
+
+[[helpers]]
+source_helper = "usesCrossoverPool"
+unit = "customcampaign"
+mac_section = 0
+mac_offset = 0x96060
+mac_size = 0x50
+target_sha256 = "0b9f868b7d4d4a75485c52ee5fdf9a724cb6b9fc2842b4c70a6b2f2de1c65109"
+evidence = "SCampaign::pruneCrossoverHeroes calls this with a scenario and pool index. It returns false when inflatedSize at+8 is nonpositive, otherwise dispatches the option slot12 check through the option vtable at+0x84. This matches the existing usesCrossoverPool source helper. BLR0x960ac precedes the next body."
+
+[[helpers]]
+source_helper = "markRequiredCampaignHeroes"
+unit = "customcampaign"
+mac_section = 0
+mac_offset = 0x96cd8
+mac_size = 0x8c
+target_sha256 = "621ec60eac4289ed751ddc8777b987019d25b2456127a2606001fdcb1cab77a8"
+evidence = "SCampaign::pruneCrossoverHeroes calls this with CampaignHeaderStruct and the wanted array. It clears 156 bytes, scans each scenario, skips completed maps using the campaign map scores, and calls ScenarioStruct::markCrossoverHeroes for unfinished maps. This is the canonical source helper. BLR0x96d60 precedes the next function."
+
+[[helpers]]
 source_helper = "TCampaignBrief::setupCurrentTerritory"
 unit = "campaignbrief"
 mac_section = 0
