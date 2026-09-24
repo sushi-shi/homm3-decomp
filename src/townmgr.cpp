@@ -2375,6 +2375,11 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 // and case -1 on default), field_138/field_128 stored before their
 // strip partners in the crest arm, hero* locals for the two name
 // sprintfs, and the shared `field_19c = 0` after both (+1.68).
+// Restoring DC's three GetArmyName calls raises this row from 92.05097%
+// to 96.53%; the Complete-only second horde arm uses the same helper
+// without changing bytes. DC's GetTownName and text-resource index calls
+// are also restored and VC6 byte-flat. The remaining 103/105 block split
+// is in the dispatcher shape, with 42 versus 44 conditional branches.
 // E:\gamedcs\townmgr.cpp:3383
 VA(0x005c77a0, 0x8DD)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message*), dc 0x16c940
 void townManager::setCommandAndText(message* msg)
@@ -2429,12 +2434,7 @@ void townManager::setCommandAndText(message* msg)
         TCreatureType creature = g_townDwellingCreatures[
             m_townToView->m_type * TOWN_DWELLING_SLOTS
             + g_hordeDwellingSlot[m_townToView->m_type][code - HORDE_ID]];
-        const char* name;
-        if (creature >= 0 && creature <= 0x96)
-            name = g_creatureTypeTraits[creature].m_pluralName;
-        else
-            name = "";
-        sprintf(m_statusText, g_townCommand[21], name);
+        sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
     case HORDE_2_ID:
@@ -2442,12 +2442,7 @@ void townManager::setCommandAndText(message* msg)
         TCreatureType creature = g_townDwellingCreatures[
             m_townToView->m_type * TOWN_DWELLING_SLOTS
             + g_horde2DwellingSlot[m_townToView->m_type][code - HORDE_2_ID]];
-        const char* name;
-        if (creature >= 0 && creature <= 0x96)
-            name = g_creatureTypeTraits[creature].m_pluralName;
-        else
-            name = "";
-        sprintf(m_statusText, g_townCommand[21], name);
+        sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
     case SPECIAL_BUILDING_ID:
@@ -2552,12 +2547,7 @@ void townManager::setCommandAndText(message* msg)
             strcpy(m_statusText, g_townCommand[3]);
         } else {
             int id = m_srcStrip->m_group->m_armies[m_srcIndex];
-            const char* name;
-            if (id >= 0 && id <= 0x96)
-                name = g_creatureTypeTraits[id].m_pluralName;
-            else
-                name = "";
-            sprintf(m_statusText, g_townCommand[0], name);
+            sprintf(m_statusText, g_townCommand[0], getArmyName(id, 2));
         }
         break;
     case DWELLING_0_ID:
@@ -2576,12 +2566,7 @@ void townManager::setCommandAndText(message* msg)
     case DWELLING_6_UPG_ID: {
         TCreatureType creature = g_townDwellingCreatures[
             m_townToView->m_type * TOWN_DWELLING_SLOTS + code - DWELLING_0_ID];
-        const char* name;
-        if (creature >= 0 && creature <= 0x96)
-            name = g_creatureTypeTraits[creature].m_pluralName;
-        else
-            name = "";
-        sprintf(m_statusText, g_townCommand[21], name);
+        sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
     case TTownScreenWindow::TOWN_0_ID:
@@ -2589,9 +2574,9 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::TOWN_2_ID: {
         playerData* player = g_game->getLocalPlayer();
         sprintf(m_statusText, g_townCommand[4],
-                g_game->m_towns[player->m_townIds[
+                g_game->getTownName(player->m_townIds[
                     static_cast<TTownScreenWindow*>(m_townWindow)->m_topTown
-                    + code - TTownScreenWindow::TOWN_0_ID]].m_name.c_str());
+                    + code - TTownScreenWindow::TOWN_0_ID]));
         break;
     }
     case TTownScreenWindow::BONUS_0_ID:
@@ -2633,7 +2618,7 @@ void townManager::setCommandAndText(message* msg)
         }
         break;
     case TTownScreenWindow::INCOME_TEXT_ID:
-        strcpy(m_statusText, g_generalText->getText(GENERAL_TEXT_DAILY_INCOME));
+        strcpy(m_statusText, (*g_generalText)[GENERAL_TEXT_DAILY_INCOME]);
         break;
     case TTownScreenWindow::BONUS_0_TEXT_ID:
     case TTownScreenWindow::BONUS_1_TEXT_ID:
