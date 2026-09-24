@@ -276,6 +276,15 @@ target_sha256 = "87f95a7182a98ea01ec6f0a748f4051a3a0cc7924a334c4cfcd4d1b928c46b4
 evidence = "Five Mac chat formatters directly call this ordinary method. It checks the current sample, falls back from preferred to m_chatSample, temporarily enables sound, calls soundManager::memorySample, then restores the prior flag. Those bodies were copied at five Windows source sites and are now canonical calls. Complete BLR at 0x211a74."
 
 [[functions]]
+retail_va = 0x553d00
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x211a78
+mac_size = 0xbc
+target_sha256 = "a6aad35ee573fe0ca1e4f52569123fa07837f870b60ea180b7f87a51ed64606b"
+evidence = "CChatManager::updateWidget checks pauseTime at +0x10, calls updateNewChat 0x211cf4 and conditional killOldChat 0x211bd8, then tests changed/lastWidget, calls updateWidgetText 0x211d84, sets widget text virtually and clears changed. Dreamcast remote.cpp:1033 names the same method and callees. Combat window drawChatText calls this retained body at 0x8123c. Final BLR at 0x211b30 precedes the next accessor at 0x211b34."
+
+[[functions]]
 retail_va = 0x5537a0
 unit = "remote"
 mac_section = 0
