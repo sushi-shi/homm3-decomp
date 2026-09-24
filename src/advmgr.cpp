@@ -3370,6 +3370,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
 // retail control flow. Sibling full/compact scopes now share retail's -0x14
 // result-string home and 0x14-byte frame; the residual is register allocation
 // and the associated cleanup-tail scheduling.
+// DC 2767/2773 and Mac 0xb348/0xb390 use TTextResource::operator[] for the
+// unvisited/visited labels. Restoring those calls is byte-flat in VC6.
 
 VA(0x0040d3f0, 0x27C)  // anchor-callee, dc 0xb3bc
 void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_type type, long playerId, const char* separator, unsigned char showFullList)
@@ -3379,13 +3381,13 @@ void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_
 
     const char* armyName;
     if (!cell->playerKnowsCell(playerId)) {
-        armyName = g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT);
+        armyName = (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT];
     } else {
         unsigned long testFlag = cell->m_extraInfo;
         if ((testFlag & 0x02000000)
             || !g_game->m_creatureBanks[
                     (testFlag >> 13) & 0xfff].m_guards.hasCreatures()) {
-            armyName = g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT);
+            armyName = (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT];
         } else {
             if (showFullList) {
                 std::string result = getArmyHelpText(
