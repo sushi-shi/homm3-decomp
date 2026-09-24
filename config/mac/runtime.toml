@@ -449,6 +449,14 @@ sha256 = "276c01564404ae8be91ad5875545a4be8029176d4ef77ee22cd43979ae2d787e"
 evidence = "The installed MSL string header implements replace(pos, removed_length, inserted_count, char) with position and length checks, copy-on-write storage, tail move, character fill and terminator update. Retail calls this body with string receiver r3, position r4, removed length r5, inserted count r6 and character r7. The seven sites include erase() with r4=0/r5=npos/r6=r7=0, erase(pos) in ResourceManager, and one comma insertion with r6=1/r7=','. The body checks string size at +0, allocates a new 16-byte representation if needed, calls the fill operation at 0x28b040, and returns at 0x1cc5c; the next prologue starts at 0x1cc60. This neutral label records an MSL string operation, not a game helper."
 
 [[functions]]
+symbol = ".mac_msl_string_char_array_data_10c220"
+mac_section = 0
+mac_offset = 0x10c220
+mac_size = 0x8
+sha256 = "5d9a1b452d6935a19a897fdbed86c41fbed9fe502cda3ec46eb9648aa3405b9a"
+evidence = "Six calls in hiscore, multiplayerwindow and singleselectionwindow pass the std::string representation pointer loaded from textWidget::m_text at widget+0x30. The installed MSL basic_string::c_str/data inline path calls CharArray::data(), which returns its data_ field at representation+0xc. Retail's entire callee is `lwz r3,0xc(r3); blr` at 0x10c220..0x10c224; the next CHSInputDlg accessor begins at 0x10c228. The authored Windows callers already use getText() or m_text.c_str(); this is a library accessor, not an omitted game helper."
+
+[[functions]]
 symbol = ".clear__Q23std30vector<20type_dialog_resource>Fv"
 mac_section = 0
 mac_offset = 0x1c790
