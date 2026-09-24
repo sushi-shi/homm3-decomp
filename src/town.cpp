@@ -806,6 +806,9 @@ void town::swapHeroes()
 VA(0x005be600, 0x32A)  // dc 0x166950
 void town::initializeSpells(const TownExtra* townSetup)
 {
+    // CodeWarrior emits this default ctor with the exact 20 bytes of Mac's
+    // bitset<70>::reset target at 0:e7378; an explicit reset adds a call.
+    // VC6's ctor calls _Tidy, which retail expands at this site.
     std::bitset<70> prohibited;
     for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         // Complete builds this mask one bit at a time; retail 0x5be668
