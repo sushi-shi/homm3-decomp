@@ -9460,7 +9460,7 @@ void game::doNewTurn()
 
     if (m_day != 1
         || (m_month == 1 && m_week == 1)) {
-        g_soundManager->m_playSounds = 1;
+        turnOffAIMusic();
         return;
     }
     if (g_weekType == -1)
@@ -9506,7 +9506,9 @@ void game::doNewTurn()
         }
     }
 
-    g_soundManager->m_playSounds = 1;
+    // Mac doNewTurn retains turnOffAIMusic at 0:0xe420c and 0:0xe4294;
+    // the earlier conditional sound enable remains a direct store.
+    turnOffAIMusic();
     launchSample(sample, 30000, 3);
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
     g_advManager->m_advWindow->setBackgroundAnimation(1);
