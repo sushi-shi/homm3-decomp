@@ -1047,8 +1047,12 @@ void hero::initialize(short index)
 // move the Windows match from 97.5836% to 99.4036%, preserving its 65 blocks
 // and 13 named calls. An indexed MEMSET probe instead counted upward on Mac.
 // An explicit backpack cursor/countdown then moves `lea eax,[esi+0x1d4]`
-// between the two sentinel setups, closing the last two Windows instruction
-// rows at 100%. A named empty-artifact temporary lost a CFG block (92.81%).
+// between the two sentinel setups. In the current TU, spelling the empty
+// record through the existing TArtifact constructor assigns its two -1 fields
+// in retail register order and closes the last four Windows rows at 100%.
+// A named empty-artifact temporary lost a CFG block (92.81%). The Mac shape
+// remains 117/330 aligned instructions with either constructor spelling;
+// its wider HeroExtra layout and other code differences preclude a verdict.
 // The equipped-slot probe reads m_equipped directly in Mac and compiles to
 // the same VC6 bytes as the canonical getArtifact accessor call. Using the
 // direct field removes one extra CodeWarrior call in this body.
@@ -1132,7 +1136,7 @@ void hero::initialize(const HeroExtra* setup)
         }
         type_artifact* backpack = m_backpack;
         for (int remaining = 64; remaining != 0; --remaining)
-            *backpack++ = type_artifact();
+            *backpack++ = type_artifact(ARTIFACT_NONE);
         for (i = 0; i < 64; i++) {
             if (setup->m_backpack[i].m_artifactId != ARTIFACT_NONE)
                 addToBackpack(&setup->m_backpack[i], -1);
