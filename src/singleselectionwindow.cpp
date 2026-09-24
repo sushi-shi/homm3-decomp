@@ -4458,9 +4458,10 @@ int TSingleSelectionWindow::update()
             for (int i = 0; i < 8; ++i) {
                 if (g_game->m_setup.m_playerPos[i] >= 0
                         && (m_loadMode == 0
-                            || g_game->m_playerDisabled[i] == 0))
+                            || g_game->m_playerDisabled[i] == 0)) {
                     drawHeroAdvancedOption(i, 0, pos);
-                ++pos;
+                    ++pos;
+                }
             }
         }
         if (m_inFilterOptions) {
