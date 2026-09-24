@@ -649,21 +649,16 @@ type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
 // find_move_order / simulate_combat / find_AI_targets all sit between
 // the store and the use and none of them lets VC6 assume `this` is
 // unaliased.
-// Residual (93.1850%, register homing): flow-distance is zero.  Retail
-// homes combat in EBX before the base-member constructor and later reuses
-// the dead parameter slot for enemy; this compile reloads combat and binds
-// EBX to enemy instead.  why-reg classifies the equal definition slots as
-// the C1 front-end processing-order family.  A named combat-manager alias
-// regresses slightly, while swapping the adjacent side/creature stores is
-// byte-flat; the model's automated adjacent-store mutation has no further
-// legal source move.
+// Mac 0+0x3e330 stores the creature byte immediately after constructing
+// m_estimate. Putting that assignment before the enemy local makes retail
+// VC6 exact (95.77% -> 100%): 22 blocks, 12 branches and 12 calls agree.
 VA(0x004369c0, 0x22B)  // anchor-callee, dc 0x3d604
 type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side,
                                          unsigned char creatureSpell)
     : m_estimate(combat, side)
 {
-    long enemy = 1 - side;
     m_isCreatureSpell = creatureSpell;
+    long enemy = 1 - side;
     initialize(combat, side);
     combat->findMoveOrder(0);
     combat->simulateCombat(side, 0);
