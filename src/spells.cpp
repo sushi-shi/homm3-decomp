@@ -728,7 +728,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             && !otherHero->isInSpellbook(spellId)
             && otherHero->m_skillLevel[eSecSkillEagleEye] + 1
                 >= traits->m_level) {
-            if (random(1, 100)
+            if (sRandom(1, 100)
                 <= static_cast<int>(otherHero->getEagleEyeChance()
                                     * 100.0f))
                 m_eagleEyeData[otherSide].insert(spellId);

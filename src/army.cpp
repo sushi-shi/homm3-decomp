@@ -1821,7 +1821,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
     }
 
     case CREATURE_THUNDERBIRD:
-        if (target->m_numTroops > 0 && random(1, 100) <= 20) {
+        if (target->m_numTroops > 0 && sRandom(1, 100) <= 20) {
             if (g_combatManager->spellCastWorks(SPELL_LIGHTNING_BOLT,
                                                 getControllingSide(),
                                                 target, 1, 1)) {
@@ -1882,8 +1882,8 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
         break;
 
     case CREATURE_RUST_DRAGON:
-        if (target->m_numTroops > 0 && random(1, 100) <= 20) {
-            long damage = random(m_monInfo.m_damageLowBound, m_monInfo.m_damageHighBound) * m_numTroops / 2;
+        if (target->m_numTroops > 0 && sRandom(1, 100) <= 20) {
+            long damage = sRandom(m_monInfo.m_damageLowBound, m_monInfo.m_damageHighBound) * m_numTroops / 2;
             if (damage > 0) {
                 std::string text;
                 SAMPLE2 sample;

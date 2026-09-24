@@ -571,6 +571,7 @@ mac_section = 0x0
 mac_offset = 0xc1e98
 mac_size = 0xdc
 unit = "event_record"
+mac_symbol = ".recordHideHero__4gameFP4herocUc"
 target_sha256 = "8047b3b3a95df6f094ff6151e37ff76c3310e1cd4013cb9cdcceaabfa4cbcfcd"
 evidence = "Allocates0x10 and calls hide-hero constructor0xc09ec then push. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
 retail_va = 0x49c720

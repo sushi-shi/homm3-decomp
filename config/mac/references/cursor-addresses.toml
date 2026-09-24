@@ -150,5 +150,6 @@ unit = "cursor"
 mac_section = 0x0
 mac_offset = 0x919f0
 mac_size = 0x4c
+mac_symbol = ".sendMapChange__FP10CMapChange"
 target_sha256 = "03b788f560aee568119e95ac8937ef35f5f5e548157803a4db43575a5c78b157"
 evidence = "sendMapChange checks network-control and remote-on globals, then transmits mapChange with recipient 0x7f and bool args false/true through 0x212bf0. Mac body code0+0x919f0..0x91a3c; terminal BLR 0x91a38, next entry 0x91a3c."

@@ -172,10 +172,11 @@ This verifies header compilation, not Windows byte matching or successful compil
 all admitted hero bodies with their complete include prefix.
 
 Further layout, packing and OS dependencies must be examined through the real
-headers. Reuse existing declarations/helpers where possible; show game-class
-changes before applying them. Keep the approved ballista multiply/divide
-conditional. Byte-order work must preserve the observed file format and source
-helper boundaries, rather than inventing a generic new serialization layer.
+headers. Reuse existing declarations/helpers where possible; make evidenced
+game-class changes and check affected callers in both builds. Keep the approved
+ballista multiply/divide conditional. Byte-order work must preserve the observed
+file format and source helper boundaries, rather than inventing a generic new
+serialization layer.
 
 ## Windows verification of enum decoding
 

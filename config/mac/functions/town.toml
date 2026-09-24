@@ -1,6 +1,17 @@
 # Reviewed source-owned Mac pairs.
 
 [[functions]]
+retail_va = 0x5be450
+unit = "town"
+source = "src/town.cpp"
+mac_section = 0
+mac_offset = 0x1b3910
+mac_size = 0x1ac
+mac_symbol = ".swapHeroes__4townFv"
+target_sha256 = "779cd22349a008996a37404ab2b9e8af5fe22c27c3acaba3585bafa569f71fb0"
+evidence = "The bounded Mac body resolves both town heroes, swaps their IDs, hides and restores the visitor, shifts the player roster, and places the garrison hero. It ends at 0x1b3ab8 before initializeSpells. The shared source compiles to the verified CodeWarrior symbol."
+
+[[functions]]
 retail_va = 0x5c0400
 unit = "town"
 source = "src/town.cpp"

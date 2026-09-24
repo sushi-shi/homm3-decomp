@@ -5587,7 +5587,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
             && numGroups > 1
             && monType2 == CREATURE_NONE
             && monType3 == CREATURE_NONE
-            && random(1, 100) <= 50) {
+            && sRandom(1, 100) <= 50) {
             TCreatureType upgraded;
             if (!g_game->m_gameVersion
                 && isBaseElemental(monType))

@@ -1903,7 +1903,7 @@ void combatManager::keepAttack(int towerPos)
     // up-counted `for (i = 0; i < n; i++)` does not produce.
     int damage = 0;
     for (int shot = tower->m_numTroops; shot > 0; shot--)
-        damage += random(2, 4);
+        damage += sRandom(2, 4);
     damage = static_cast<int>(
         damage * target->computeDefenderDamageReduction(1));
     if (damage <= 0)

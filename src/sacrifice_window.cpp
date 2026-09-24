@@ -1814,12 +1814,12 @@ void type_skeleton_window::unselect()
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2157
-// All Complete callers inline this source helper. The DC call edges and the
+// All Complete callers expand this ordinary source helper. The DC call edges and the
 // repeated retail expansion prove the transformed-army scan and the two
 // terminal button states. Mac retains the body at code0+0x15c3f8 before
 // update(), with calls from creatureClick(), allCreatures(), and sacrifice().
-// Those Mac calls alone do not establish the original inline qualifier.
-inline void type_skeleton_window::updateButtons()
+// Retained Dreamcast and Mac call boundaries support an ordinary helper.
+void type_skeleton_window::updateButtons()
 {
     long i;
     for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -2026,9 +2026,9 @@ void type_skeleton_window::createCreatureIcons(
 // E:\gamedcs\sacrifice_window.cpp:2385
 // DC records move_all_armies as file-static and both transformer callbacks
 // as callers. Mac retains its body immediately before those callbacks.
-// Complete expands both calls: occupied source slots move into the same
+// Complete expands both ordinary source calls: occupied source slots move into the same
 // destination slot when free, otherwise armyGroup::Add chooses a slot.
-static inline void moveAllArmies(armyGroup* source, armyGroup* dest)
+static void moveAllArmies(armyGroup* source, armyGroup* dest)
 {
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (source->m_armyTypes[i] == CREATURE_NONE)

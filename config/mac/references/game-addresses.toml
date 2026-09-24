@@ -222,6 +222,7 @@ unit = "game"
 mac_section = 0
 mac_offset = 0xcd5c0
 mac_size = 0x44
+mac_symbol = ".findHero__10playerDataCFi"
 target_sha256 = "46f55e6d55f4be544c8ec9a952289bcaf0c0f015652aaaa6aabaa65074490301"
 evidence = "Rejects id-1, scans signed numHeroes at+1 and int hero IDs at+4, returns matching index or-1. Reviewed extent code0+0xcd5c0..0xcd604; terminal return and following entry separate the span."
 

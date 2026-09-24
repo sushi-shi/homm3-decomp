@@ -135,9 +135,9 @@ unsigned char combatManager::automateCatapult()
                 }
             }
 
-            // Complete binds this call to random; Dreamcast and Mac use
-            // sRandom, whose retained body is byte-identical in this build.
-            long choice = random(1, count);
+            // Dreamcast and Mac retain sRandom here. Complete binds its
+            // identical body to the shared random implementation.
+            long choice = sRandom(1, count);
             long index = 0;
             for (; index < 4; index++) {
                 long strength = getWallStrength(walls[index]);

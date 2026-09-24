@@ -219,21 +219,9 @@ struct type_artifact {
 public:
     TArtifact m_artifactId;
     int m_extra;
-// Shared constructor bodies included inside the canonical type_artifact
-// declaration and the reviewed Mac declaration view. DC attribution: Hero.h.
-    // DC Hero.h:211 stores the artifact argument at +0, then line 212 stores
-    // the -1 sentinel at +4. Retail value_of_town preserves that order in
-    // its register allocation even though the eventual by-value pushes are
-    // ordered by record layout.
-    // Complete's offering constructor stores m_extra before m_artifactId;
-    // this distinct default constructor reproduces its retained source shape.
-    // Dreamcast instead calls the TArtifact overload with -1 here.
-    type_artifact()
-    {
-        m_extra = -1;
-        m_artifactId = ARTIFACT_NONE;
-    }
-    explicit type_artifact(TArtifact id)
+    // DC Hero.h:211-212 and the Windows/Mac sacrifice-window constructors store
+    // the artifact ID before the -1 payload, including default construction.
+    explicit type_artifact(TArtifact id = ARTIFACT_NONE)
     {
         m_artifactId = id;
         m_extra = -1;

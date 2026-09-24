@@ -89,6 +89,12 @@ def main(argv=None) -> int:
     p.add_argument("--limit", type=int, default=20, help="maximum displayed tasks; full files always include all")
     p.add_argument("--include-deferred", action="store_true", help="display user-deferred modules too")
     p.add_argument("--json", action="store_true", help="print the full structured queue")
+    p = sub.add_parser("helper-queue", help="queue Mac-retained calls in unfinished Windows functions")
+    p.add_argument("--owner", action="append", default=[], metavar="WORKER=UNIT[,UNIT...]",
+                   help="assign units to a worker; repeat for other workers")
+    p.add_argument("--unit", help="display only this unit; output files still cover all units")
+    p.add_argument("--limit", type=int, default=30, help="maximum displayed call leads")
+    p.add_argument("--json", action="store_true", help="print the full structured helper queue")
     p = sub.add_parser("campaign", help="prepare disjoint worker packets from the current action queue")
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--unit", action="append", help="select an initial unit; repeat for distinct workers")
@@ -191,6 +197,38 @@ def main(argv=None) -> int:
                     if row["command"]:
                         print(f"  {row['command']}")
                 print("[mac] complete queue: build/mac/queue.tsv and build/mac/queue.json")
+            return 0
+        if args.command == "helper-queue":
+            from homm3.mac import helper_queue, queue
+            if args.limit < 0:
+                parser.error("--limit must be nonnegative")
+            assignments = {}
+            for spec in args.owner:
+                worker, sep, units = spec.partition("=")
+                if not sep or not worker or not units or any(not unit for unit in units.split(",")):
+                    parser.error("--owner requires WORKER=UNIT[,UNIT...]")
+                for unit in units.split(","):
+                    if unit in assignments:
+                        parser.error(f"unit {unit!r} assigned more than once")
+                    assignments[unit] = worker
+            report = helper_queue.generate(common.HOMM3_DIR, queue.generate(common.HOMM3_DIR),
+                                           discovery.Index(_image()), assignments)
+            helper_queue.write(common.HOMM3_DIR, report)
+            if args.json:
+                print(json.dumps(report, indent=2))
+            else:
+                coverage = report["coverage"]
+                print(f"[mac] helper queue: {coverage['unfinished_windows_functions']} unfinished Windows functions; "
+                      f"{coverage['reviewed_mac_callers']} reviewed Mac caller spans")
+                print(f"[mac] {coverage['missing_named_source_calls']} reviewed helper calls absent from source; "
+                      f"{coverage['unreviewed_direct_targets']} distinct direct targets need identity review")
+                selected = [row for row in report["calls"]
+                            if row["state"] in ("review_missing_helper_call", "identify_target")
+                            and (not args.unit or row["unit"] == args.unit)]
+                for row in selected[:args.limit]:
+                    print(f"  {row['retail_va']} [{row['unit']}] {row['mac_call_site']} -> "
+                          f"{row['mac_target']} {row['target_name']} [{row['state']}]")
+                print("[mac] complete queue: build/mac/helper-queue.json and helper-queue-*.tsv")
             return 0
         if args.command in ("find", "xrefs", "census"):
             index = discovery.Index(_image())

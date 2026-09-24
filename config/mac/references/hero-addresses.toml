@@ -66,6 +66,7 @@ mac_section = 0x0
 mac_offset = 0xf25e4
 mac_size = 0x104
 unit = "hero"
+mac_symbol = ".restoreCell__21type_obscuring_objectFv"
 target_sha256 = "b6662be8e121f6fa5e22ab4cc5840d6777cc4a56981ebea06d5cee7a9ea9bc99"
 evidence = "Contiguous hero TU order corroborated by body: inverse obscuring; restores type/extra/trigger and visitingtownhero=-1. Boundaries reviewed against return/next entry."
 retail_va = 0x4d76e0
