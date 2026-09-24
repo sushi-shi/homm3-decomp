@@ -223,3 +223,12 @@ unit = "adventuremapwindow"
 target_sha256 = "13c2b8da26e99ce3a5bd495924b073a86082a5cdc8ab6d39f89961511b16848f"
 evidence = "Contiguous adventuremapwindow TU order corroborated by body: ten calls setAdvWinButtonPalette0x3c94 and optional windowdraw. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
 retail_va = 0x403f60
+
+[[helpers]]
+source_helper = "TAdventureMapWindow::setAdvWinButtonPalette"
+unit = "adventuremapwindow"
+mac_section = 0
+mac_offset = 0x3c94
+mac_size = 0x4c
+target_sha256 = "a3562d5e6652c8096a07bb6a6e36640956e7140f5011a89f68d12e9c7587736d"
+evidence = "updateButtons calls this retained helper ten times at 0x3ce0..0x3dcc. It loads the adventure window, calls heroWindow::getWidget at 0x20b564 with the button ID, then calls button::setPlayerPaletteColors at 0x637e8 when present. The canonical ordinary source helper expands in the Windows updateButtons body. Prior drawChatText ends at 0x3c90; helper BLR at 0x3cdc precedes updateButtons at 0x3ce0."
