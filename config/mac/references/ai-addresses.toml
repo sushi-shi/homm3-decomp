@@ -1,6 +1,42 @@
 # Address-only references discovered from PHILAI TU order, then independently verified.
 # Names remain owned by src/ai.cpp VA claims; no compiled Mac target admission.
 
+[[helpers]]
+source_helper = "getMoveOrder"
+unit = "ai"
+mac_section = 0
+mac_offset = 0x20ab4
+mac_size = 0xe0
+target_sha256 = "33896ee8dccc5673a4b2e6c6d4da47477eb75cdfef2cfa31576ac5a6ea24f162"
+evidence = "Mac findMoveOrder retains this file-local source helper. It handles Aid Tent/Ammo Cart, spell-disabled and incapacitated stacks, waiting/second-phase speed inversion and normal speed; Dreamcast names get_move_order. Final BLR at 0x20b90, next entry 0x20b94."
+
+[[helpers]]
+source_helper = "getAttackValue"
+unit = "ai"
+mac_section = 0
+mac_offset = 0x20e48
+mac_size = 0x14c
+target_sha256 = "fc53e7df0e31d7ec9092f7b26b4aa02d094c1ec30ff2066d770605025579c309"
+evidence = "Mac getAttackChange retains this ordinary file-local helper. It computes current hit points and attack damage, caps damage at enemy hit points, then values kills or total damage against the enemy's unit combat value. Dreamcast names get_attack_value; final BLR at 0x20f90, next entry 0x20f94."
+
+[[helpers]]
+source_helper = "getEnemyAttackLimit"
+unit = "ai"
+mac_section = 0
+mac_offset = 0x217e8
+mac_size = 0x78
+target_sha256 = "02f6e70427e53a7c630258486e5bd8e13abff7eae7de4f223ae795aed92c8f1d"
+evidence = "Mac markFriendlyArmies and markEnemyAttacks retain this file-local helper. It reads total hit points, canShoot and getLossCombatValue from the army then negates the result. Dreamcast names get_enemy_attack_limit; final BLR at 0x2185c, next entry 0x21860."
+
+[[helpers]]
+source_helper = "simulateSimpleAttack"
+unit = "ai"
+mac_section = 0
+mac_offset = 0x24a04
+mac_size = 0xc4
+target_sha256 = "86afadb5b4fe66102323750b7b1852301934adb915c50cea94fcc1ffd7a96240"
+evidence = "Mac simulateMeleeAttack overload and simulateActions retain this file-local source helper. The shooting arm of simulateActions calls it with distance 0, ranged 1, breath 0 rather than spelling out its body. It computes attack damage, conditionally adds Fire Shield retaliation and updates AI expected damage on both stacks. Dreamcast names the single-exchange helper; final BLR at 0x24ac4, next entry 0x24ac8."
+
 [[functions]]
 retail_va = 0x0041eac0
 unit = "ai"

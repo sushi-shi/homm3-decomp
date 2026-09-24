@@ -2258,12 +2258,7 @@ long combatManager::simulateActions(std::vector<army*>& list, long i,
         if (!target)
             continue;
         if (shooting) {
-            long hits = currentArmy->getTotalHitPoints(1);
-            if (hits <= 0)
-                continue;
-            long damage = aiGetAttackDamage(*(currentArmy), hits, *(target), 1, 0);
-            target->setAIExpectedDamage(target->m_aiExpectedDamage
-                                           + damage);
+            simulateSimpleAttack(currentArmy, target, 0, 1, 0);
         } else {
             simulateMeleeAttack(currentArmy, target, ourGroup);
         }
