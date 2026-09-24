@@ -676,6 +676,15 @@ evidence = "Count writer4; loop virtual getType, byte write and virtual save, ea
 retail_va = 0x49dc60
 
 [[helpers]]
+source_helper = "type_event_record::type_event_record"
+unit = "event_record"
+mac_section = 0x0
+mac_offset = 0xbef5c
+mac_size = 0x1c
+target_sha256 = "98436891090c135cd1d0d0ba721a64c97fe990c72076c1165ce29c0f10e81135"
+evidence = "Retained base constructor sets its vtable and copies signed g_netLocalGamePos to playerId at +4; BLR 0xbef74 precedes the scalar deleting destructor 0xbef78. Seventeen derived constructors call it, including ten record factory paths, while Windows expands the authored base constructor."
+
+[[helpers]]
 mac_section = 0x0
 mac_offset = 0xbf050
 mac_size = 0xa8

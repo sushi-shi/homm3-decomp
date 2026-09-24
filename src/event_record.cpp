@@ -30,7 +30,9 @@ const int g_saveVersionBoatFieldsAbsent = 0x1c;
 // construction site expands it - but the expansions prove the whole body:
 // the vptr store followed by `mov dl,byte ptr [gNetLocalGamePos] /
 // mov [this+4],dl`, i.e. the acting seat truncated into the signed byte.
-// type_record_shroud::create (0x49bc30) is the clearest witness.
+// type_record_shroud::create (0x49bc30) is the clearest Windows witness.
+// Mac retains this source constructor at 0:0xbef5c and 17 derived
+// construction sites call it, including ten event factory methods.
 type_event_record::type_event_record()
 {
     m_playerId = g_netLocalGamePos;
