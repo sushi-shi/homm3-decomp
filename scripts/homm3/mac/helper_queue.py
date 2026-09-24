@@ -16,7 +16,7 @@ import tomllib
 
 from homm3.mac import glue, references, reports
 from homm3.mac.discovery import Index
-from homm3.mac.source import _masked_source, extract_body, load_pairs
+from homm3.mac.source import _masked_source, extract_body, load_pairs, source_helper
 
 
 def _address(section: int, offset: int) -> str:
@@ -26,8 +26,8 @@ def _address(section: int, offset: int) -> str:
 def _leaf(item) -> str:
     helper = getattr(item, "source_helper", None)
     if helper:
-        return helper.split("::")[-1].split("(")[0]
-    return item.signature.rsplit(" ", 1)[-1].split("::")[-1].split("(", 1)[0]
+        return helper.split("(", 1)[0].rsplit("::", 1)[-1]
+    return item.signature.split("(", 1)[0].rsplit(" ", 1)[-1].rsplit("::", 1)[-1]
 
 
 def _owner(unit: str, assignments: dict[str, str]) -> str:
@@ -80,7 +80,14 @@ def generate(root: Path, action_queue: dict, index: Index,
         if caller is None:
             continue
         try:
-            body = _masked_source(extract_body(caller))
+            authored = extract_body(caller)
+            if authored.rstrip().endswith(";"):
+                # Some VA claims preserve retail order on a forward declaration.
+                # Inspect the unique canonical definition before reporting a
+                # missing source call; an ambiguous overload stays an error.
+                name = caller.signature.rsplit(" ", 1)[-1]
+                _, _, authored = source_helper(caller.source.read_text(), name, caller.source)
+            body = _masked_source(authored)
             source_error = ""
         except (OSError, ValueError) as exc:
             body = ""
