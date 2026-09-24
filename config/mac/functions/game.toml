@@ -55,3 +55,14 @@ mac_size = 0x448
 mac_symbol = ".convertObject__4gameFP10NewmapCell"
 target_sha256 = "324ad74b149106d4c88f10483bc66283017595fc158300c8329916a5772cace7"
 evidence = "TOWN buildBuilding calls code0+0xe0be8 with game and NewmapCell; pinned body 0xe0be8..0xe1030 returns at BLR 0xe102c, next prologue 0xe1030. Mac body reads object index at cell+0x20, pushes 0x38-byte CObjectType, switches on map object type 5/54/71/77/79/98, loads named object graphics tables, calls ResourceManager getSprite at 0x153fcc, updates 0x22-byte cells, and calls calculateCellExtra. Dreamcast game.cpp:9195..9316 and Windows VA 0x004c9990 own the same operation."
+
+[[functions]]
+retail_va = 0x4ba670
+unit = "game"
+source = "src/game.cpp"
+mac_section = 0
+mac_offset = 0xccd7c
+mac_size = 0x4fc
+mac_symbol = ".save__10playerDataFP13TAbstractFile"
+target_sha256 = "af9ec14f2fd0dbdd44654666f8d9846fd7f7ce11d55e91a75042f1f8726b63b6"
+evidence = "Pinned body starts with mflr/stmw at code0+0xccd7c after playerData::load terminal return at 0xccd78; it writes player fields through TAbstractFile slot 0x10 in the same 8-hero, 72-town, 7-resource order as Windows and Dreamcast, calls bitset<12>::test, writes two final bytes, and returns at 0xcd274 before the next body at 0xcd278."

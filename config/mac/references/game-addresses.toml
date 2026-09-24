@@ -158,6 +158,7 @@ unit = "game"
 mac_section = 0
 mac_offset = 0xccd7c
 mac_size = 0x4fc
+mac_symbol = ".save__10playerDataFP13TAbstractFile"
 target_sha256 = "af9ec14f2fd0dbdd44654666f8d9846fd7f7ce11d55e91a75042f1f8726b63b6"
 evidence = "Inverse slot0x10 writer of player fields with8/72/7 loops; bitset12 test at0xe9bcc and trailing2bytes. Reviewed extent code0+0xccd7c..0xcd278; terminal return and following entry separate the span."
 
