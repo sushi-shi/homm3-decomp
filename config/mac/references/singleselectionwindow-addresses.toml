@@ -1060,3 +1060,11 @@ unit = "singleselectionwindow"
 target_sha256 = "b5c5a35d04a669bf9400ec9884c5dd504d015ab93b764c5ecd3bde95b79d37af"
 evidence = "Save edit key handler callsbase1afb44, comparesm_text withNEWGAME.gm1 via20efc4 andclearsselectionthroughsetCurrentMap17d418(-1,1). Reviewed complete return boundary; linked/loader entry corroborates source role."
 retail_va = 0x57d0b0
+[[helpers]]
+source_helper = "TSingleSelectionWindow::refreshFilterWidgets"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17e308
+mac_size = 0x5c
+target_sha256 = "489b55c611214303df77cf5ac9025bd6883c564f1fd12990214a18ab6b987a33"
+evidence = "Mac retained method sits immediately before OnWidgetDeselect and receives 16 direct calls from its filter arms. Its body calls updateFilterWidgets, the virtual drawWindow with full-window arguments, and update. Windows expands the same three-call sequence at those source sites; VC6 emits no call relocation for the helper. Complete Mac body ends with BLR at 0x17e360."

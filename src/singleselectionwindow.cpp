@@ -5189,6 +5189,16 @@ bool TSingleSelectionWindow::onClickMsg(CNetMsg* netMsg)
     return true;
 }
 
+// Mac +0x17e308 retains this three-call helper immediately before
+// OnWidgetDeselect and calls it in the filter arms. Windows expands the
+// same sequence at those sites.
+void TSingleSelectionWindow::refreshFilterWidgets()
+{
+    updateFilterWidgets();
+    drawWindow(0, 0xffff0001, 0xffff);
+    this->update();
+}
+
 // The retail jump-table arm layout and Dreamcast's line table independently
 // prove the shared arm order below.  It is source order, not numeric selector
 // order; keep msg->codeY direct because Dreamcast has no cached-id local.
@@ -5477,33 +5487,23 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
 
     case SSW_FILTER_MAP_SMALL:
         m_randomMapOptions[0] = MAP_DIMENSION_SMALL;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         break;
     case SSW_FILTER_MAP_MEDIUM:
         m_randomMapOptions[0] = MAP_DIMENSION_MEDIUM;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         break;
     case SSW_FILTER_MAP_LARGE:
         m_randomMapOptions[0] = MAP_DIMENSION_LARGE;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         break;
     case SSW_FILTER_MAP_XLARGE:
         m_randomMapOptions[0] = MAP_DIMENSION_EXTRA_LARGE;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         break;
     case SSW_FILTER_MAP_ALL:
         m_randomMapOptions[1] = SCENARIO_FILTER_CATEGORY_ANY - m_randomMapOptions[1];
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         break;
 
     case SSW_FILTER_PLAYERS_FIRST:
@@ -5515,16 +5515,12 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_PLAYERS_FIRST + 6:
     case SSW_FILTER_PLAYERS_LAST:
         m_randomMapOptions[2] = msg->m_codeY - SSW_FILTER_PLAYERS_FIRST + 1;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         rebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_PLAYERS_ANY:
         m_randomMapOptions[2] = -1;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         rebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_HUMANS_FIRST:
@@ -5536,16 +5532,12 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_HUMANS_FIRST + 6:
     case SSW_FILTER_HUMANS_LAST:
         m_randomMapOptions[3] = msg->m_codeY - SSW_FILTER_HUMANS_FIRST;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         rebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_HUMANS_ANY:
         m_randomMapOptions[3] = -1;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         break;
     case SSW_FILTER_TEAMS_FIRST:
     case SSW_FILTER_TEAMS_FIRST + 1:
@@ -5556,16 +5548,12 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_TEAMS_FIRST + 6:
     case SSW_FILTER_TEAMS_LAST:
         m_randomMapOptions[4] = msg->m_codeY - SSW_FILTER_TEAMS_FIRST;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         rebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_TEAMS_ANY:
         m_randomMapOptions[4] = -1;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         rebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_VERSION_FIRST:
@@ -5576,38 +5564,28 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_VERSION_FIRST + 5:
     case SSW_FILTER_VERSION_LAST:
         m_randomMapOptions[5] = msg->m_codeY - SSW_FILTER_VERSION_FIRST;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         break;
     case SSW_FILTER_VERSION_ANY:
         m_randomMapOptions[5] = -1;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         break;
     case SSW_FILTER_CATEGORY_FIRST:
     case SSW_FILTER_CATEGORY_FIRST + 1:
     case SSW_FILTER_CATEGORY_FIRST + 2:
     case SSW_FILTER_CATEGORY_LAST:
         m_randomMapOptions[6] = msg->m_codeY - SSW_FILTER_CATEGORY_FIRST;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         break;
     case SSW_FILTER_DURATION_FIRST:
     case SSW_FILTER_DURATION_FIRST + 1:
     case SSW_FILTER_DURATION_LAST:
         m_randomMapOptions[7] = msg->m_codeY - SSW_FILTER_DURATION_FIRST;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         break;
     case SSW_FILTER_DURATION_ANY:
         m_randomMapOptions[7] = -1;
-        updateFilterWidgets();
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        refreshFilterWidgets();
         break;
     case SSW_RANDOM_MAPS:
         setupScenarioOptions(1);

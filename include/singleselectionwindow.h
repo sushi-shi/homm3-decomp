@@ -679,6 +679,7 @@ public:
     void drawBasicMapInfo();
     unsigned char onGameTransmitInitMsg(CNetMsg* netMsg);
     void updateFilterWidgets();
+    void refreshFilterWidgets();
     // Retail 0x584c40 (no DC row proven): the post-join roster
     // re-seat OnNewPlayerMsg's non-advanced arm runs. Ordinal name.
     // DC SetHumanSlot (dc 0x13b22c, 0.84x): re-seat the human players
