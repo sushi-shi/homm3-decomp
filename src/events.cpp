@@ -990,11 +990,12 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
     giveArtifact(currentHero, point, humanPlayer);
 }
 
-// Dreamcast events.cpp:629-641: DoArtifactSkillRequirement calls
-// DoEventFreeArtifact on success; its refusal branch names a short artifact.
-// Retail's skill-success dialogs likewise read g_artifactEventText, not the
-// refusal text. Preserve the helper call through its two inline expansions.
-inline void advManager::doArtifactSkillRequirement(
+// Dreamcast events.cpp:629-641 emits DoArtifactSkillRequirement as a
+// separate helper; Mac doEventArtifact calls the same body at 0:0xaa2bc
+// twice. VC6 auto-inlines the ordinary helper at both retail call sites.
+// Its success arm calls DoEventFreeArtifact and its refusal names a short
+// artifact; retail's skill-success dialogs read g_artifactEventText.
+void advManager::doArtifactSkillRequirement(
     hero* currentHero, NewmapCell* cell, type_point point,
     int skill, const char* dialogText, bool humanPlayer)
 {
