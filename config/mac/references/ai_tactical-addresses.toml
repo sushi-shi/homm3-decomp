@@ -730,3 +730,12 @@ mac_offset = 0x42038
 mac_size = 0x94
 target_sha256 = "9ac99761427289278f6326181b3c61e6f02d7070de997fa8358ac99093ddbe11"
 evidence = "This const duration helper clamps turns against roundsLeft at +0x3c, divides if shorter, then subtracts one round for an army that already moved and clamps at zero. The final BLR at 0x420c8 precedes the next method at 0x420cc. Eight Mac tactical AI callers retain direct calls, including getDefenseBoostValue with movedThisTurn=0; Windows expands the same shared source helper."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::getMoveOrderChangeValue"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x415c0
+mac_size = 0x8c
+target_sha256 = "4c8bab4f121e60cf7df9dcd711ae099563cc8d7e304d919749cc22fff3cfef2b"
+evidence = "This const helper checks the army's AI target at +0x514, returns zero when absent, then calls getExchangeEffect twice with reversed armies and subtracts the negated enemy value. Its final BLR at 0x41648 precedes getMuckAndMireValue at 0x4164c. Mac getMuckAndMireValue and getSpeedValue retain calls at 0x4183c and 0x41af4; both authored source callers already use this ordinary helper."
