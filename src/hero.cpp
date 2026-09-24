@@ -1703,7 +1703,8 @@ int hero::heroFn004D9CC0(int artifact)
     type_artifact record(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
     std::string text = record.getDescription();
     text += "\n\n";
-    text += formatString(g_generalText->getText(GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT),
+    // Mac retail retains the text vector's indexer call here.
+    text += formatString((*g_generalText)[GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT],
                           g_artifactTraits[assembled].m_name);
     normalDialog(text.c_str(), 2, -1, PRIMARY_STAT_DIALOG_Y, 8, assembled,
                  -1, 0, -1, 0, -1, 0);
@@ -3034,7 +3035,7 @@ void hero::heroFn004DC100(long slot)
     player.m_assembledCombinations[targetCombo] = true;
 
     int assembled = g_combinationArtifacts[targetCombo].m_artifactId;
-    std::string prompt = formatString(g_generalText->getText(GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT),
+    std::string prompt = formatString((*g_generalText)[GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT],
                                        g_artifactTraits[assembled].m_name);
     normalDialog(prompt.c_str(), 2, -1, -1, 8, assembled, -1, 0, -1, 0,
                  -1, 0);
