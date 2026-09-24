@@ -1,6 +1,15 @@
 # Mac-retained game helpers whose source calls already exist in the Windows TU.
 
 [[helpers]]
+source_helper = "TSingleSelectionWindow::getFileSpecNbr"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x17a8a0
+mac_size = 0x74
+target_sha256 = "d1e7f542f486a0b7b5967070d4e33f2f8e3608f99100c3efe4b9fa2473d2f5e0"
+evidence = "GetHeaders calls this retained helper before indexing g_fileSpec. It checks g_game tutorial mode, returning 4 for load/save and 3 otherwise; outside tutorial it returns the load/save boolean plus g_selectionCampaignMode. This matches the existing getFileSpecNbr source body. Three BLRs end at0x17a910 before GetHeaders."
+
+[[helpers]]
 source_helper = "TSingleSelectionWindow::getHeaderDirectory"
 unit = "singleselectionwindow"
 mac_section = 0
@@ -80,6 +89,15 @@ mac_offset = 0x184ae4
 mac_size = 0xb0
 target_sha256 = "3d918d568e44ae0b696e24d2bcd48b545b3e5dbe7e728fe0e668b61ca5fad4be"
 evidence = "ProcessRightSelect and advanced-row drawing call this with the window and seat index. It resolves human/computer player, reads the map slot random-alignment flag, calls hasMultipleTowns0x1845e4, then returns the player's town index or pickAlignment0x13221c from legalAlignments. This is the source helper; BLR0x184b90 precedes getHeroName."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::getHeroInPos"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x184a1c
+mac_size = 0xc8
+target_sha256 = "4d920c6568ee3d2d0cbeaf393629f636093d07aa92054c2fae0b86e2afdd4e5e"
+evidence = "ProcessRightSelect calls this source helper with the selected game seat. It finds a human or computer player via0x16ef34/0x16ef6c, returns the indexed available hero when the slot generates or randomizes a hero, otherwise returns the fixed nonRandomHeroId when present and falls back to the available hero. This matches the existing getHeroInPos source and Dreamcast boundary. BLR0x184ae0 precedes getDisplayTown."
 
 [[helpers]]
 source_helper = "TSingleSelectionWindow::sendPlayerPositions"
