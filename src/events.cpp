@@ -3018,7 +3018,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
                                const char* prompt, GlobalInfoFlags type,
                                bool humanPlayer)
 {
-    int spell = static_cast<long>(cell->m_extraInfo << 9) >> 22;
+    SpellID spell = cell->getShrineSpell();
     std::string result;
 
     if (humanPlayer)
@@ -3031,7 +3031,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
     if (currentHero->isInSpellbook(spell)) {
         if (!humanPlayer)
             return;
-        result += g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE_SPELL_KNOWN_SUFFIX);
+        result += (*g_adventureEventText)[ADV_EVENT_TEXT_SHRINE_SPELL_KNOWN_SUFFIX];
         normalDialog(result.c_str(), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
@@ -3039,7 +3039,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
 
     if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         if (humanPlayer) {
-            result += g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE_NO_SPELLBOOK_SUFFIX);
+            result += (*g_adventureEventText)[ADV_EVENT_TEXT_SHRINE_NO_SPELLBOOK_SUFFIX];
             normalDialog(result.c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -3048,7 +3048,7 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
 
     if (g_spellTraits[spell].m_level > currentHero->m_skillLevel[eSecSkillWisdom] + 2) {
         if (humanPlayer) {
-            result += g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE_NO_WISDOM_SUFFIX);
+            result += (*g_adventureEventText)[ADV_EVENT_TEXT_SHRINE_NO_WISDOM_SUFFIX];
             normalDialog(result.c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         }
