@@ -49,6 +49,15 @@ target_sha256 = "0c01ddd71c813030b6dfd1eaba119977385400d55799f5fce92c18817f82b3f
 evidence = "CChatManager::turnDurationMsg: variadic vsprintf into a 1024-byte buffer, suspended advManager and popup guards, g_turnDuration.isClose(59000), general-text prefix 0x36, addChat and retained chat-sound helper. Complete BLR at 0x2117e8; next formatter begins 0x2117ec."
 
 [[functions]]
+retail_va = 0x5544b0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x212a50
+mac_size = 0x138
+target_sha256 = "8c174bbe33972d235d62329852434de5a0d675e236a1d3a93ec4a7286b3251cb"
+evidence = "The retained remoteCleanup body clears multiplayer state, calls the shared chat manager clear at 0x211f98, tests g_remoteOn, destroys the active DirectPlay player/session and wrapper, then clears g_remoteOn and resets the net player info from g_videoGameState. Its nine calls from KB oldmain, multiplayer window dismissal, and single-selection back path correspond to authored remoteCleanup calls. Final BLR at 0x212b84 precedes the already paired transmitRemoteDataDPID at 0x212b88."
+
+[[functions]]
 retail_va = 0x554560
 unit = "remote"
 mac_section = 0x0
