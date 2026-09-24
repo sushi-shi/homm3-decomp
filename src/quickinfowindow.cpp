@@ -79,6 +79,7 @@ TQuickCreatureWindow::~TQuickCreatureWindow()
 
 // Original: TQuickCreatureWindow::QuickWindowWait; quickinfowindow.cpp:88, dc 0x117b8c.
 // Identical quick-window wrappers fold onto the retail 0x530d30 body.
+// Mac retains this ordinary wrapper at 0:0x14bc30.
 void TQuickCreatureWindow::quickWindowWait()
 {
     g_windowManager->doQuickView(this);

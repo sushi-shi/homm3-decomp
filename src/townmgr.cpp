@@ -4600,6 +4600,16 @@ char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includ
     return g_infoText;
 }
 
+// Mac retains this ordinary town-manager helper at 0:0x1cfaf8. The source
+// calls in doUniversity and the two EXTRA_0 arms expand in Windows retail.
+void townManager::showBuildingInfo(int buildingId, unsigned char rightClick)
+{
+    std::string info(getBuildingInfo(m_townToView, buildingId, 1, 1));
+    normalDialog(info.c_str(), rightClick ? 4 : 1, -1, -1,
+                 m_townToView->m_type + 0x16, buildingId,
+                 -1, 0, -1, 0, -1, 0);
+}
+
 VA(0x005d2d80, 0x1E)
 type_university* type_university::initializeMagicSkills()
 {
@@ -4623,9 +4633,7 @@ void townManager::doUniversity()
         townHero = g_game->getHero(m_townToView->m_garrisonHeroId);
 
     if (!townHero) {
-        std::string info(getBuildingInfo(m_townToView, EXTRA_0_ID, 1, 1));
-        normalDialog(info.c_str(), 1, -1, -1, m_townToView->m_type + 0x16,
-                     EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
+        showBuildingInfo(EXTRA_0_ID, 0);
     } else {
         type_university townUniversity;
         townUniversity.initializeMagicSkills();
@@ -4758,6 +4766,7 @@ void townManager::handleHallClick()
 // free function called by both Main head checks. Retail merges its two
 // expansions into the return-2 block at 0x5d32c7; absence of a retained
 // body does not change the proven external declaration into a static.
+// Mac retains the body at 0:0x1d008c and calls it at both head checks.
 // E:\gamedcs\townmgr.cpp:5778
 int exitTownManager(message& msg)
 {
@@ -5066,11 +5075,7 @@ int townManager::main(message& msg)
                 break;
             case EXTRA_0_ID:
                 if (rclick) {
-                    std::string info(
-                        getBuildingInfo(m_townToView, EXTRA_0_ID, 1, 1));
-                    normalDialog(info.c_str(), 4, -1, -1,
-                                 m_townToView->m_type + 0x16, EXTRA_0_ID,
-                                 -1, 0, -1, 0, -1, 0);
+                    showBuildingInfo(code, 1);
                 } else switch (m_townToView->m_type) {
                 case TOWN_STRONGHOLD:
                     doFreelancersGuild(m_townToView);
@@ -5082,11 +5087,7 @@ int townManager::main(message& msg)
                     m_resourceDisplay->update(1, 1);
                     break;
                 default: {
-                    std::string info(
-                        getBuildingInfo(m_townToView, EXTRA_0_ID, 1, 1));
-                    normalDialog(info.c_str(), 1, -1, -1,
-                                 m_townToView->m_type + 0x16, EXTRA_0_ID,
-                                 -1, 0, -1, 0, -1, 0);
+                    showBuildingInfo(code, 0);
                     break;
                 }
                 }
