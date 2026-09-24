@@ -5184,14 +5184,18 @@ unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
 // artifact or any component affects it.
 
 // Windows retail is exact with the DC-named adjustPrimarySkill call and the
-// whole-record type_artifact() reset. The earlier direct byte subtraction and
-// per-field reset left a 90.1966% register-homing residual. Mac's compiler
+// whole-record reset through type_artifact(ARTIFACT_NONE). The earlier direct
+// byte subtraction and per-field reset left a 90.1966% register-homing
+// residual. The default constructor formerly gave 98.8462% in the current
+// TU, swapping the two equal -1 sentinel stores between EAX and ECX. Mac's compiler
 // had kept the copy constructor and both skill helper calls out of line
 // because it accepted VC6's inline_depth(0) but rejected its empty restore
 // in initialize above. Guarding those pragmas restores the retail two-call
 // sequence; Mac currently compares at 71.7308% with first shifted branch at
 // +0x4b. A named empty temporary and an explicit ARTIFACT_NONE argument were
-// byte-flat; a local equipped-slot reference shortened only one index.
+// previously byte-flat under a different TU context; the latter now closes
+// the Windows register order. A local equipped-slot reference shortened only
+// one index.
 VA(0x004e2bd0, 0x174)  // anchor-bracket, dc 0xd3ad0
 void hero::removeArtifact(long slot)
 {
@@ -5225,7 +5229,7 @@ void hero::removeArtifact(long slot)
         }
     }
 
-    m_equipped[slot] = type_artifact();
+    m_equipped[slot] = type_artifact(ARTIFACT_NONE);
     for (int skill = 0; skill < 4; skill++)
         adjustPrimarySkill(skill,
             -g_artifactPrimarySkillBonuses[artifact.m_artifactId][skill]);
