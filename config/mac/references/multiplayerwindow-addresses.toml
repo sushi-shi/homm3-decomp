@@ -1,5 +1,23 @@
 # Reviewed address identities; source owns names and compiler symbols remain unbound.
 
+[[helpers]]
+source_helper = "CHotSeatDlg::getPlayerCount"
+unit = "multiplayerwindow"
+mac_section = 0
+mac_offset = 0x219cb8
+mac_size = 0x70
+target_sha256 = "cc5a8839dace0dafd4eeab8d624a1f0482282575a3607ce881afb4b341097490"
+evidence = "Mac CHotSeatEdit focus and key handlers retain this helper. It checks the text of eight hot-seat player edits with strlen at 0x28e1dc and counts nonempty names. Dreamcast names GetPlayerCount; Windows expands the existing inline source helper. Final BLR at 0x219d24, next entry 0x219d28."
+
+[[helpers]]
+source_helper = "deleteTempSaveGame"
+unit = "multiplayerwindow"
+mac_section = 0
+mac_offset = 0x219e54
+mac_size = 0x94
+target_sha256 = "6c59e467226b77411f6eaaf3e765d81be3c7f3599583bc4bc99eec935e7cc907"
+evidence = "Mac TMultiPlayerWindow constructor retains this file-local helper. It tests the RMT prefix and constructs a Mac path/spec before deleting the temporary save; Windows source calls the same helper with its DeleteFileA body. Dreamcast names DeleteTempSaveGame; final BLR at 0x219ee4, next entry 0x219ee8."
+
 [[functions]]
 retail_va = 0x50de50
 unit = "multiplayerwindow"
