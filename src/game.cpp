@@ -7056,8 +7056,9 @@ void game::nextPlayer()
     if (!g_currentPlayer->isLocalHuman()) {
         g_mouseManager->setPointer(2, mouseManager::DEFAULT_SET);
         g_advManager->hideRoute(1, 0, 1);
-        startAITheme();
-        g_soundManager->m_playSounds = 0;
+        // Mac nextPlayer calls the retained turnOnAIMusic body at 0:0xdd798;
+        // VC6 expands this same ordinary member into the Windows caller.
+        turnOnAIMusic();
         setNoDialogMenus(0);
         g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_8, -1);
         showComputerScreen();
