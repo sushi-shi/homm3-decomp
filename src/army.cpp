@@ -806,11 +806,12 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         if (m_facing == 0)
             step = -step;
         // DC army.cpp:808 calls hexcell::HasArmy here; VC6 expands it.
-        if ((g_combatManager->m_cells[m_gridIndex + step].hasArmy()
-             && !g_combatManager->m_cells[m_gridIndex + step]
-                     .getArmy()
-                     ->m_isMoving)
-            || (g_combatManager->m_cells[m_gridIndex + step].m_attributes & hexcell::blocked)) {
+        // Mac and retail both retain one computed neighbor index for the
+        // army and blocked-cell checks.
+        long neighborIndex = m_gridIndex + step;
+        if ((g_combatManager->m_cells[neighborIndex].hasArmy()
+             && !g_combatManager->m_cells[neighborIndex].getArmy()->m_isMoving)
+            || (g_combatManager->m_cells[neighborIndex].m_attributes & hexcell::blocked)) {
             xoff -= 0x25;
             yoff = -0xf;
         } else {
