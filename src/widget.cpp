@@ -231,32 +231,15 @@ void widget::processHover()
     m_parentWindow->handleWidgetHover(this);
 }
 
+// Dreamcast calls sendMessage in both enable branches; Mac retains both
+// calls at 0:0x20ac34/0x20ac44. Windows expands the canonical helper body.
 VA(0x005fe940, 0x83)  // dc 0x1970c0
 void widget::enable(unsigned char arg)
 {
-    if (arg) {
-        message msg;
-        msg.m_qualifier = 0;
-        msg.m_mouseX = 0;
-        msg.m_mouseY = 0;
-        msg.m_codeY = m_id;
-        msg.m_window = m_parentWindow;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = WIDGET_CLEAR_STATUS;
-        msg.m_extra = WIDGET_DISABLED;
-        main(msg);
-    } else {
-        message msg;
-        msg.m_qualifier = 0;
-        msg.m_mouseX = 0;
-        msg.m_mouseY = 0;
-        msg.m_codeY = m_id;
-        msg.m_window = m_parentWindow;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = WIDGET_SET_STATUS;
-        msg.m_extra = WIDGET_DISABLED;
-        main(msg);
-    }
+    if (arg)
+        sendMessage(WIDGET_CLEAR_STATUS, WIDGET_DISABLED);
+    else
+        sendMessage(WIDGET_SET_STATUS, WIDGET_DISABLED);
 }
 
 // widget::`scalar deleting destructor' (dc 0x197104) is claimed in
