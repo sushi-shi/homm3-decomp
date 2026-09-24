@@ -828,3 +828,12 @@ mac_offset = 0x504ac
 mac_size = 0xd4
 target_sha256 = "f3bca54a3dd01f1ecc6f1b95145e0781f28bb5dd91dca20ba7926a048cbced03"
 evidence = "Mac cancelIndividualSpell and resetRound call this retained helper at 0x504ac. It scales original hit points by poison factor, halves for Age, adds 0.95 before integer conversion, then clamps top-creature damage to hitPoints-1 using the two-value min. Dreamcast names army::adjust_hitpoints; Windows expands the ordinary source helper. Final BLR at 0x5057c; next entry 0x50580."
+
+[[helpers]]
+source_helper = "army::setRetaliationCount"
+unit = "army"
+mac_section = 0
+mac_offset = 0x48e5c
+mac_size = 0x68
+target_sha256 = "798f5c6e8f183983fd281e3512b4677d61b69a8b4321717432d7784534c772b2"
+evidence = "Mac army setup and round reset retain this helper at 0x48e5c. It starts retaliation count at one, applies Griffin/Royal Griffin cases, Counterstrike bonus and siege-weapon zeroing, matching the ordinary source definition and its two Windows callers. Final BLR at 0x48ec0; next entry 0x48ec4."
