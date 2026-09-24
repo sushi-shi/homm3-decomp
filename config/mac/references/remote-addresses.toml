@@ -1,6 +1,15 @@
 # Reviewed shared remote identities in the Mac PEF.
 
 [[functions]]
+retail_va = 0x557aa0
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x21570c
+mac_size = 0xac
+target_sha256 = "3f026e3832b908a578cf52ea86c4b50098415002528caaff06a8818eed6a9a34"
+evidence = "CTurnDuration::isExpired checks g_currentPlayer/isLocalHuman, its duration and pause fields, then compares GameTime::get against start+duration. Hero::checkLevel, recruitUnit::main, swapManager::main and townManager::main call this retained body directly. The complete return is at 0x2157b4; the next function begins at 0x2157b8."
+
+[[functions]]
 retail_va = 0x553960
 unit = "remote"
 mac_section = 0x0
