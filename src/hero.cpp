@@ -5369,7 +5369,7 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
                             int assembled =
                                 g_combinationArtifacts[targetCombo].m_artifactId;
                             std::string prompt = formatString(
-                                g_generalText->getText(GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT),
+                                (*g_generalText)[GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT],
                                 g_artifactTraits[assembled].m_name);
                             normalDialog(prompt.c_str(), 2, -1, -1, 8,
                                          assembled, -1, 0, -1, 0, -1, 0);
