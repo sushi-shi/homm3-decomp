@@ -3048,6 +3048,11 @@ void combatManager::armageddon(int level, int power)
 }
 
 // E:\gamedcs\spells.cpp:3572
+// Mac retains the same five direct calls as this source (abs twice, sqrt,
+// atan2, random). Windows differs first in the FPU spill order for the
+// progress fraction; naming its numerator and denominator, or naming only
+// the numerator, is byte-flat at 97.3158%. The register catalog has no
+// source mutation that improves the remaining 22 instruction rows.
 VA(0x005a5260, 0x1DC)  // order-map+arity, dc 0x1542b4
 void combatManager::resetBoltAngle(SBolt* bolt)
 {
@@ -4517,6 +4522,10 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 // rectangle operations in its lightly optimized body, while Windows
 // expands the calls. The remaining mismatch is register homing; 45 of 46
 // CFG blocks now have exact shape, with all 25 branches and calls aligned.
+// Mac's older Earthquake body ends after the animated-wall branch and omits
+// this source's second damageWall and showPointer tail calls. Windows retail
+// retains both (all 25 call sites agree), so Mac shape cannot be an exact
+// source verdict for this function.
 VA(0x005a7c80, 0x408)  // order-map+arity, dc 0x156ec4
 void combatManager::earthquake(int level)
 {
