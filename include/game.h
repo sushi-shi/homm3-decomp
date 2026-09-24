@@ -604,10 +604,9 @@ public:
     inline long getOwner() const { return m_playerOwner; }
     // Raw DC publics for load/save return bool (QAA_N); Complete ports the file argument.
     bool load(TAbstractFile* infile);
-    // update_bonus's negative twin. Retail has no out-of-line row for it
-    // (nothing fits between generator::save's end at 0x4b8791 and
-    // update_bonus at 0x4b87a0), so it is inline-only - the same shape
-    // set_owner below carries.
+    // update_bonus's negative twin. Retail has no retained row between
+    // generator::save and update_bonus; its known callers expand the body.
+    // That does not establish the original inline spelling.
     inline void removeBonus();
     bool save(TAbstractFile* outfile);
     inline void setOwner(long owner);

@@ -449,6 +449,12 @@ bool generator::save(TAbstractFile* outfile)
 // header declaration returns that same enum. Complete retains the helper call
 // here while update_bonus expands its elemental gate and traits lookup.
 // Dreamcast procedure: dc 0xa30c4.
+// Mac retains removeBonus, updateBonus and setOwner consecutively at code0
+// +0xca52c, +0xca624 and +0xca71c between save and initialize, as in the
+// Dreamcast game.cpp line order. Its calls do not establish inline spelling or
+// header placement. VC6 also expands removeBonus and setOwner from ordinary
+// game.cpp definitions at their known call sites; those definitions merely
+// emit discardable COMDAT bodies. Keep the present spelling provisional.
 inline void generator::removeBonus()
 {
     if (m_playerOwner < 0)
@@ -467,6 +473,8 @@ inline void generator::removeBonus()
 }
 
 VA(0x004b87a0, 0xB8)  // dc 0xa3178
+// VC6 control: without inline here, initialize retains an updateBonus call
+// and has 26 blocks instead of the retail 38-block expansion.
 inline void generator::updateBonus()
 {
     if (m_playerOwner < 0)
