@@ -2062,6 +2062,8 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 //   * both obstacle-budget arms tail-merge into ONE Random call site,
 //     which is what says a single local is assigned in an if/else
 //     rather than two calls written out;
+//   * the landmine placement passes size()-1 directly. Dreamcast records
+//     no slot local, and retail pushes the final argument before the decrement;
 //   * the large-obstacle guard is the De Morgan form
 //     `(fort < 2 || type != STRONGHOLD) && Random(1, 100) <= 40` -
 //     retail falls THROUGH to Random on `jl` and skips on `je`, and the
@@ -2148,9 +2150,8 @@ void combatManager::setupAndLoadObstacles()
                 newLandmine.m_duration = 0;
                 newLandmine.m_dispelEffect = 0x3b;
                 m_obstacles.push_back(newLandmine);
-                int landmineSlot = m_obstacles.size();
-                landmineSlot--;
-                placeObstacle(newLandmine, landmineSlot, hex, hexcell::landMine);
+                placeObstacle(newLandmine, m_obstacles.size() - 1, hex,
+                              hexcell::landMine);
             }
         }
 
