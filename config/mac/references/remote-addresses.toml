@@ -62,3 +62,12 @@ mac_offset = 0x2119d8
 mac_size = 0xa0
 target_sha256 = "87f95a7182a98ea01ec6f0a748f4051a3a0cc7924a334c4cfcd4d1b928c46b4e"
 evidence = "Five Mac chat formatters directly call this ordinary method. It checks the current sample, falls back from preferred to m_chatSample, temporarily enables sound, calls soundManager::memorySample, then restores the prior flag. Those bodies were copied at five Windows source sites and are now canonical calls. Complete BLR at 0x211a74."
+
+[[functions]]
+retail_va = 0x5537a0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21114c
+mac_size = 0x8
+target_sha256 = "1b3c4c86e574c65c73fdaddb03441f754b3420a1fa75181033f9e3faede802f1"
+evidence = "CDPlayHeroes::getNetMsgHandler returns the handler pointer at Mac +0x7c (Windows +0xf0 after a larger deque). Calls from advManager::doAdvCommand 0x8b18, recruitUnit::main 0x14fbbc and CChatManager::turnDurationMsg 0x211744 all pass g_dPlay as receiver and use the returned handler; the canonical Windows method is VA 0x5537a0. Its BLR at 0x211150 and adjacent next entry 0x211154 bound the eight-byte body."

@@ -1077,3 +1077,11 @@ mac_offset = 0x17e3c4
 mac_size = 0x60
 target_sha256 = "637c15bbac02edd7527d17c120c6e5d018a737e5516e9bdc3bd086abdc463aeb"
 evidence = "Mac retains this method immediately before OnWidgetDeselect and calls it from the random-maps arm. Its body calls setupScenarioOptions(1), the virtual drawWindow with full-window arguments, then update. Windows source had that exact sequence expanded in the same arm. Complete Mac body ends with BLR at 0x17e420."
+[[helpers]]
+source_helper = "TSingleSelectionWindow::isMultiPlayer"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x184098
+mac_size = 0x34
+target_sha256 = "bff2ef20a33f3a7b728169126f3dc4b65d0e2c091200a2e642d9a1a0c606b754"
+evidence = "Dreamcast singleselectionwindow.cpp:7889 names TSingleSelectionWindow::IsMultiPlayer and its source body already exists beside updateNameLists. The Mac entry checks g_remoteOn then protocol value 3 (hotseat) and returns a byte boolean; final BLR 0x1840c8 precedes the next prologue 0x1840cc. Its 29 direct callers are selection-window methods, including reviewed controls at 0x17130c and 0x17c898. No Windows standalone VA is claimed; caller expansions need separate VC6 proof."
