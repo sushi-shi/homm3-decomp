@@ -2360,7 +2360,8 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 // (SetHeroCommand / SetArmyCommand / select_army). SetCommandAndText2
 // (dc 0x16ceb4) has no distinct retail carve row here. The tail is
 // the ordinary ShowText helper, which Complete expands at this call site.
-// Residual (92.05%): register-role transpositions with the structure
+// Residual (96.53% after restoring source helpers): register-role transpositions
+// with the structure
 // exact - the CFG, the cluster tree (dword table -1-biased, two byte
 // maps, the range-tested resource/exit chain) and every arm's content
 // agree. Retail's dispatch keeps `code` in EDI and takes EAX for the
