@@ -123,6 +123,7 @@ unit = "overview"
 mac_section = 0x0
 mac_offset = 0x1370fc
 mac_size = 0xd90
+mac_symbol = ".processIconSelect__4gameFiUc"
 target_sha256 = "3730dec4c2f7d5116a779fd54a31feec25439ca3ccf683a412697a14b0303f39"
 evidence = "game::processIconSelect receives game, codeY r4 and rightMouse r5, starts with codeY>=200 && <=999 and /200 slot bands, uses overview top/type and player hero/town data, dispatches icon IDs and right-click help. BLR 0x137e88; next slider callback 0x137e8c."
 
