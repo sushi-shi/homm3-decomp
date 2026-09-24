@@ -972,6 +972,9 @@ DATA(0x0063bcf4) const unsigned char g_innerMoatHexes[11] = {
     10, 27, 43, 60, 76, 94, 110, 128, 145, 163, 180
 };
 
+// Dreamcast findpath.cpp:1098/1117 calls get_controlling_side,
+// get_owning_side and TObstacle::IsVisible. Retail expands their
+// shared header bodies in the drawbridge and quicksand checks.
 VA(0x004b3290, 0x16F)  // dc 0xa0804
 void searchArray::setMoat(const army* currentArmy)
 {
@@ -989,8 +992,7 @@ void searchArray::setMoat(const army* currentArmy)
                 m_isMoatSlowed[g_innerMoatHexes[hex]] = 1;
         } }
         if (g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP
-                || (currentArmy->m_spellInfluence[60] ? 1 - currentArmy->m_combatSide
-                                                : currentArmy->m_combatSide) == 1) {
+                || currentArmy->getControllingSide() == 1) {
             m_isMoatSlowed[g_moatHexes[5]] = 0;
             if (g_combatManager->m_moatIsWide)
                 m_isMoatSlowed[g_innerMoatHexes[5]] = 0;
@@ -1000,7 +1002,7 @@ void searchArray::setMoat(const army* currentArmy)
         if (g_combatManager->m_cells[cell].m_attributes & hexcell::quicksand) {
             const combatManager::TObstacle* obstacle =
                 &g_combatManager->m_obstacles[g_combatManager->m_cells[cell].m_obstacleIndex];
-            if (currentArmy->m_combatSide == obstacle->m_owner || obstacle->m_isVisible)
+            if (obstacle->isVisible(currentArmy->getOwningSide()))
                 m_isMoatSlowed[cell] = 1;
         }
     } }
