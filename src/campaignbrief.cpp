@@ -895,6 +895,8 @@ TCampaignBrief::~TCampaignBrief()
 // decision from the real body and source order.
 int TCampaignBrief::convertID2HelpID(int id) const
 {
+    if (id <= BACKGROUND_ID || id >= 243)
+        return -1;
     if (id >= MAP_CONQUERED_1_ID && id <= MAP_CONQUERED_32_ID)
         return id - MAP_CONQUERED_1_ID;
     if (id >= MAP_ENABLED_1_ID && id <= MAP_ENABLED_32_ID)

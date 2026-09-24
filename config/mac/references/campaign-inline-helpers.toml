@@ -1,6 +1,24 @@
 # Complete-era campaign reader retained by Mac and expanded by Windows VC6.
 
 [[helpers]]
+source_helper = "TCampaignBrief::setupCurrentTerritory"
+unit = "campaignbrief"
+mac_section = 0
+mac_offset = 0x644d4
+mac_size = 0xb0
+target_sha256 = "240843d74a8faf922156057e7e80ca75eb6396fd074bafb821fc49d171cc97a4"
+evidence = "TCampaignBrief's constructor calls this on the window. When view-from-game is set, it copies g_game campaign currentMap to window selectedScenario+0x64. Otherwise it scans available scenario previews at stride0x498, stores the first selected index and copies that scenario's 0x1cc-byte setup into g_game. This is the existing setupCurrentTerritory helper that Windows expands; BLR0x64580 precedes the next function."
+
+[[helpers]]
+source_helper = "TCampaignBrief::convertID2HelpID"
+unit = "campaignbrief"
+mac_section = 0
+mac_offset = 0x67938
+mac_size = 0x68
+target_sha256 = "0b821a8332fee8707a1062e3824cd09958add4ac32389840b097e33c4e03dbcc"
+evidence = "CampaignBriefHandler calls this with a clicked widget ID. The retained body excludes IDs outside 101..242, then subtracts the group bases 130, 162 or 194 for conquered/enabled/selected maps, or 100 for the background group. Dreamcast 0x5a2b4 independently retains the invalid-ID guard and helper boundary; Windows expands the source call. BLR0x6799c precedes the next function."
+
+[[helpers]]
 source_helper = "TCampaignBrief::MapTextStruct::read"
 unit = "customcampaign"
 mac_section = 0
