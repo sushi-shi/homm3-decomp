@@ -7001,6 +7001,8 @@ void advManager::overrideBottomView(advManager::EBottomViewType view, int time)
     }
 }
 
+// Dreamcast advmgr.cpp:8875/8919/8921 calls GameTime::IsPast and
+// Game.h GetCurrHeroId/GetCurrTownId. Retail expands all three.
 VA(0x00415de0, 0x140)  // dc 0x18d38
 void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWindow, unsigned char update)
 {
@@ -7008,7 +7010,7 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
         return;
 
     unsigned long deadline = m_bottomViewDeadline;
-    if (static_cast<long>(GameTime::get() - deadline) >= 0)
+    if (GameTime::isPast(deadline))
         m_bottomViewOverride = BOTTOM_VIEW_DEFAULT;
 
     int changed = 0;
@@ -7034,9 +7036,9 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
             break;
         }
     } else if (g_currentPlayer->isLocalHuman() && !g_completeDrawAllCells) {
-        if (g_currentPlayer->m_currHeroId != -1)
+        if (g_game->getCurrHeroId() != -1)
             changed = updBottomViewHero(forceUpdate);
-        else if (g_currentPlayer->m_currTownId != -1)
+        else if (g_game->getCurrTownId() != -1)
             changed = updBottomViewTown(forceUpdate);
         else
             changed = updBottomViewNewTurn(forceUpdate);
@@ -7197,12 +7199,14 @@ static TSkillMastery getIdentifyLevel(type_point point)
     return (TSkillMastery)identifyLevel;
 }
 
+// Dreamcast advmgr.cpp:9088 calls Hero.h get_location before
+// get_identify_level; retail expands the point construction.
 VA(0x00416590, 0x210)  // dc 0x194bc
 void advManager::heroQuickView(int heroId, int x, int y,
                                unsigned char displayDropShadow)
 {
     hero* theHero = g_game->getHero(heroId);
-    type_point heroPoint(theHero->m_x, theHero->m_y, theHero->m_z);
+    type_point heroPoint = theHero->getLocation();
 
     TSkillMastery identifyLevel = getIdentifyLevel(heroPoint);
 
@@ -8342,6 +8346,8 @@ void advManager::checkDimNextHeroBut()
         m_advWindow->widgetSetStatus(11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
 }
 
+// Dreamcast advmgr.cpp:10586 calls game::GetCurrHero; retail expands
+// its null guard and hero array lookup before seedPosition.
 VA(0x004194a0, 0xC7)  // dc 0x1c64c
 void advManager::seedTo(type_point target)
 {
@@ -8352,7 +8358,7 @@ void advManager::seedTo(type_point target)
     if (heroId == -1)
         return;
 
-    hero* currentHero = &g_game->m_heroes[heroId];
+    hero* currentHero = g_game->getCurrHero();
     type_point start(currentHero->m_x, currentHero->m_y, currentHero->m_z);
 
     if (!m_seedingValid) {
@@ -8463,6 +8469,8 @@ void advManager::screenScroll(int dir, int changeMouse)
 
 // The DC also emits MouseInScrollZone (dc 0x1ccf8); its canonical member
 // definition follows this routine. Retail expands the hover callers' tests.
+// Dreamcast advmgr.cpp:10747 calls mouseManager::GetFrame twice;
+// retail expands the byte-backed frame accessor at both comparisons.
 VA(0x00419820, 0x169)  // dc 0x1cb08
 void advManager::checkScreenScroll()
 {
@@ -8509,8 +8517,8 @@ void advManager::checkScreenScroll()
     int origX = m_radarOrigin.m_x;
     int origY = m_radarOrigin.m_y;
     screenScroll(dir, 1);
-    if (g_mouseManager->m_frame >= ADV_SCROLL_POINTER
-        && g_mouseManager->m_frame <= ADV_SCROLL_NORTHWEST
+    if (g_mouseManager->getFrame() >= ADV_SCROLL_POINTER
+        && g_mouseManager->getFrame() <= ADV_SCROLL_NORTHWEST
         && origX == m_radarOrigin.m_x && origY == m_radarOrigin.m_y)
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 }
