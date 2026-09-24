@@ -218,6 +218,9 @@ private:
                           long destination);
     void checkTownPortal(const hero* currentHero,
                            const pathCell* startCell, long maxMobility);
+    void enterStartTrigger(const hero* currentHero,
+                           const pathCell* startCell, long maxMobility,
+                           type_search_type searchType);
     // 0x4b1530. Empties the three vectors, then zeroes the cellData rows
     // inside the valid rectangle for every (z, fly-plane) combination.
     void clear(long flyLevel, long startZ, long stopZ);

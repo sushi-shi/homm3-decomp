@@ -1983,9 +1983,9 @@ TSecondarySkill getSkillAward(const hero* currentHero,
 // `lea [eax+4*edx]` 214013x). `static_cast<unsigned>(level)` is worth
 // 85.17 -> 87.13; the sibling `iLevelSeed * 156823` stays signed and
 // retail keeps its `imul` there, which corroborates the split.
-// (3) `int roll = Random(1,100);` is declared BEFORE `int stat = 0;` -
+// (3) `int roll = SRandom(1,100);` is declared BEFORE `int stat = 0;` -
 // retail schedules `xor esi,esi / mov [ebp-0x14],esi` between the
-// `cmp cx,9` operand loads, after the Random call (84.18 -> 85.17); and
+// `cmp cx,9` operand loads, after the SRandom call (84.18 -> 85.17); and
 // both `chances` selections are written `if (level <= LOW_LEVEL_LAST)
 // <plain>; else <10P>`, which is the fall-through polarity retail has
 // (`jg` to the 10P arm), worth 83.44 -> 84.18.
@@ -2001,7 +2001,7 @@ TSecondarySkill getSkillAward(const hero* currentHero,
 // gate's third operand bound to an `unsigned char` local to chase
 // retail's `sete dl` (81.23, WORSE - the branch-kind report names the
 // symptom, not the lever, exactly as it did on UpdateStats); and
-// `Random(1, chances[1] + chances[0])` for the load order (byte-flat).
+// `SRandom(1, chances[1] + chances[0])` for the load order (byte-flat).
 // hero::GetLevel is deliberately left as a pointer walk - it already
 // emits retail's signed `jle`, so the pointer-compare rule does not
 // apply and respelling would risk the now-exact GiveExperience.
@@ -2059,7 +2059,9 @@ void hero::checkLevel()
             sRand(static_cast<unsigned>(m_level) * 214013
                   + m_levelSeed * 156823 + 154079);
 
-            int roll = random(1, 100);
+            // DC names SRandom and Mac calls its retained body twice here.
+            // Windows aliases the same body through random at 0x50b230.
+            int roll = sRandom(1, 100);
             int stat = 0;
             const signed char* chances;
             if (m_level <= LEVEL_UP_LOW_LEVEL_LAST)
@@ -2073,7 +2075,7 @@ void hero::checkLevel()
                 else
                     chances = g_heroClasses[classBarbarian]
                                   .m_gainPrimarySkillChance10P;
-                roll = random(1, chances[0] + chances[1]);
+                roll = sRandom(1, chances[0] + chances[1]);
             }
             while (roll > chances[stat]) {
                 roll -= chances[stat];

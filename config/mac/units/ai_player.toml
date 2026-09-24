@@ -3,7 +3,8 @@ flags = ["-O3", "-proc", "750", "-nolink"]
 helpers = []
 source_helpers = [
     "maxBuyableCreatures",
-    "type_AI_creature_purchaser::set(TCreatureType newType, short* newAmount)",
+    "type_AI_creature_swapper::normalizeAlignment",
     "calculateImprovement",
+    "type_AI_creature_purchaser::set(TCreatureType newType, short* newAmount)",
     "attemptTeleport",
 ]

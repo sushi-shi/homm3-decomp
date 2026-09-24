@@ -1,4 +1,9 @@
 mode = "paired_bodies"
 flags = ["-O3", "-proc", "750", "-nolink"]
 helpers = []
-source_helpers = ["NewfullMap::saveSeerList", "NewfullMap::saveQuestGuardList"]
+source_helpers = [
+    "NewfullMap::saveSeerList",
+    "NewfullMap::saveQuestGuardList",
+    "readMapCreatureId",
+    "readSavedCreatureId",
+]

@@ -1559,6 +1559,36 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 // costs 27 points (93.0057 -> 66.1138) - the gradient wants DEEPER nesting,
 // and `clear()` is already the deepest spelling available.
 
+// Mac retains these adjacent source helpers at 0:0x1217a0 and 0:0x12180c.
+// The first is called by readBlackBox, readTownData and readHeroData; the
+// second is called by loadBlackBox. Each reads a signed creature ID using the
+// byte width of its older file format and the short width of later formats.
+// Complete VC6 expands the calls in all four readers. The original names are
+// unavailable in the older Dreamcast build.
+static int readMapCreatureId(TAbstractFile* infile, int mapVersion)
+{
+    if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        signed char narrow;
+        infile->read(&narrow, sizeof(narrow));
+        return narrow;
+    }
+    short wide;
+    infile->read(&wide, sizeof(wide));
+    return wide;
+}
+
+static int readSavedCreatureId(TAbstractFile* infile, int saveVersion)
+{
+    if (saveVersion < 25) {
+        signed char narrow;
+        infile->read(&narrow, sizeof(narrow));
+        return narrow;
+    }
+    short wide;
+    infile->read(&wide, sizeof(wide));
+    return wide;
+}
+
 VA(0x004ff6b0, 0x535)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic), dc 0xee56c
 int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                              int mapVersion)
@@ -1664,17 +1694,8 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     count = value;
     thisBox->m_creatures.initialize();
     for (i = 0; i < count; ++i) {
-        int creature;
-        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            signed char narrow;
-            infile->read(&narrow, sizeof(narrow));
-            creature = narrow;
-        } else {
-            short wide;
-            infile->read(&wide, sizeof(wide));
-            creature = wide;
-        }
-        thisBox->m_creatures.m_armies[i] = creature;
+        thisBox->m_creatures.m_armies[i] =
+            readMapCreatureId(infile, mapVersion);
 
         short troops;
         if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
@@ -1946,15 +1967,8 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     count = value;
     thisBox->m_creatures.initialize();
     for (i = 0; i < count; ++i) {
-        if (saveVersion < 25) {
-            signed char narrow;
-            infile->read(&narrow, sizeof(narrow));
-            thisBox->m_creatures.m_armies[i] = narrow;
-        } else {
-            short wide;
-            infile->read(&wide, sizeof(wide));
-            thisBox->m_creatures.m_armies[i] = wide;
-        }
+        thisBox->m_creatures.m_armies[i] =
+            readSavedCreatureId(infile, saveVersion);
         short troops;
         if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
             return -1;
@@ -2612,17 +2626,8 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     tempTown.m_customArmies = charBuffer;
     if (tempTown.m_customArmies) {
         for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
-            int creature;
-            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                signed char narrow;
-                infile->read(&narrow, sizeof(narrow));
-                creature = narrow;
-            } else {
-                short wide;
-                infile->read(&wide, sizeof(wide));
-                creature = wide;
-            }
-            tempTown.m_townArmy.m_armies[x] = creature;
+            tempTown.m_townArmy.m_armies[x] =
+                readMapCreatureId(infile, mapVersion);
 
             if (infile->read(&shortBuffer, sizeof(shortBuffer))
                 < sizeof(shortBuffer))
@@ -2919,14 +2924,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     if (charBuffer) {
         heroData->m_customArmies = 1;
         for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
-            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                infile->read(&charBuffer, sizeof(charBuffer));
-                intBuffer = charBuffer;
-            } else {
-                infile->read(&shortBuffer, sizeof(shortBuffer));
-                intBuffer = shortBuffer;
-            }
-            heroData->m_armies[x] = intBuffer;
+            heroData->m_armies[x] =
+                readMapCreatureId(infile, mapVersion);
 
             infile->read(&shortBuffer, sizeof(shortBuffer));
             heroData->m_numTroops[x] = shortBuffer;

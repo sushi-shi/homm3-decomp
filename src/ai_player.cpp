@@ -1937,6 +1937,23 @@ type_AI_creature_swapper::type_AI_creature_swapper()
     m_armyValueIncrease = 0;
 }
 
+// Mac 0:0x2f990..0x2fa08 retains this Complete-era helper immediately before
+// getAlignments. chooseWeakestArmy and valueOfAddingArmy call it at 0:0x30220
+// and 0:0x3032c; VC6 expands its body at both sites. The older DC build has
+// no corresponding named helper, so the original spelling is unknown.
+int type_AI_creature_swapper::normalizeAlignment(int alignment) const
+{
+    if (m_hasAngelicAlliance) {
+        const std::bitset<9>& alliedAlignments = armyGrpFn0044A460();
+        if (alliedAlignments.test(alignment)) {
+            alignment = 0;
+            while (!alliedAlignments.test(alignment))
+                ++alignment;
+        }
+    }
+    return alignment;
+}
+
 VA(0x0042c060, 0xC3)
 void type_AI_creature_swapper::getAlignments()
 {
@@ -2208,16 +2225,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(
                 alignment = g_creatureTypeTraits[type].m_townType;
             }
 
-            groupedAlignment = alignment;
-            if (m_hasAngelicAlliance) {
-                const std::bitset<9>& alliedAlignments =
-                    armyGrpFn0044A460();
-                if (alliedAlignments.test(alignment)) {
-                    groupedAlignment = 0;
-                    while (!alliedAlignments.test(groupedAlignment))
-                        ++groupedAlignment;
-                }
-            }
+            groupedAlignment = normalizeAlignment(alignment);
             if (m_alignments[groupedAlignment + 1] != 1)
                 continue;
         }
@@ -2270,14 +2278,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     } else {
         alignment = traits->m_townType;
     }
-    if (m_hasAngelicAlliance) {
-        const std::bitset<9>& alliedAlignments = armyGrpFn0044A460();
-        if (alliedAlignments.test(alignment)) {
-            alignment = 0;
-            while (!alliedAlignments.test(alignment))
-                ++alignment;
-        }
-    }
+    alignment = normalizeAlignment(alignment);
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
         int minimumMorale;

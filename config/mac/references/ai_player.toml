@@ -281,6 +281,16 @@ mac_symbol = ".maxBuyableCreatures__FPCl13TCreatureTypei"
 target_sha256 = "0ab67542bf206e7aa859d889fb639d1bb89b929e27bf01b493732ae899b5eef4"
 evidence = "Unique static MaxBuyableCreatures definition in ai_player.cpp, Dreamcast ai_player.obj dc:0x31030..0x31092 with const long*, creature type, and limit. Mac 0:0x2f178..0x2f20c calls getMonsterCost, loops seven costs, divides positive funds by positive costs, and lowers the limit. Mac doBestPurchase calls it at 0:0x30ac0 and 0:0x30bcc. No Windows VA is claimed."
 
+[[helpers]]
+unit = "ai_player"
+source_helper = "type_AI_creature_swapper::normalizeAlignment"
+mac_section = 0
+mac_offset = 0x2f990
+mac_size = 0x78
+mac_symbol = ".normalizeAlignment__24type_AI_creature_swapperCFi"
+target_sha256 = "a8d1fd95c72c253c0834a766f057478d80f4f3f84d50eab581fb0d526163be17"
+evidence = "Mac 0:0x2f990..0x2fa08 takes this and an alignment, checks the Angelic Alliance byte at this+8, tests the alliance bitset and returns either the original alignment or its first set alignment. Its BLR at 0x2fa04 precedes getAlignments at 0x2fa08. chooseWeakestArmy calls it at 0:0x30220 and valueOfAddingArmy at 0:0x3032c; the same body was duplicated in both Windows source callers and VC6 expands the restored ordinary helper at both sites. The older Dreamcast build does not identify this Complete-era helper."
+
 [[functions]]
 retail_va = 0x0042b9e0
 unit = "game"

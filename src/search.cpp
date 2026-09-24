@@ -511,6 +511,27 @@ void searchArray::checkTownPortal(const hero* currentHero,
     }
 }
 
+// Mac 0:0x163074..0x1631a0 retains this helper between checkTownPortal and
+// seedPosition. seedPosition calls it at 0:0x16383c; VC6 expands the same
+// trigger-cell copy and enterTrigger call in the start-town-negative arm.
+// The older Dreamcast build does not give this Complete helper a name.
+void searchArray::enterStartTrigger(const hero* currentHero,
+                                    const pathCell* startCell,
+                                    long maxMobility,
+                                    type_search_type searchType)
+{
+    NewmapCell* mapCell = g_game->m_worldMap.cell(startCell->m_point);
+    if (mapCell->m_isTrigger
+        && (mapCell->m_type == LITH_ONEWAY_ENTRANCE
+            || mapCell->m_type == LITH_TWOWAY
+            || mapCell->m_type == UNDERGROUND_GATE)) {
+        pathCell triggerCell = *startCell;
+        triggerCell.m_startAtTrigger = 1;
+        triggerCell.m_adjustedCost += 50;
+        enterTrigger(currentHero, &triggerCell, maxMobility, searchType);
+    }
+}
+
 // E:\gamedcs\search.cpp:621
 VA(0x0056b440, 0x8EC)  // exhaustive search.obj order-map, dc 0x12c36c
 void searchArray::seedPosition(hero* currentHero, type_point start,
@@ -652,17 +673,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
                 enterTown(currentHero, startTown, &cell, maxMobility,
                            searchType);
             } else {
-                NewmapCell* mapCell = g_game->m_worldMap.cell(cell.m_point);
-                if (mapCell->m_isTrigger
-                    && (mapCell->m_type == LITH_ONEWAY_ENTRANCE
-                        || mapCell->m_type == LITH_TWOWAY
-                        || mapCell->m_type == UNDERGROUND_GATE)) {
-                    pathCell triggerCell = cell;
-                    triggerCell.m_startAtTrigger = 1;
-                    triggerCell.m_adjustedCost += 50;
-                    enterTrigger(currentHero, &triggerCell, maxMobility,
-                                  searchType);
-                }
+                enterStartTrigger(currentHero, &cell, maxMobility, searchType);
             }
         }
         if (searchType == const_AI_search)
