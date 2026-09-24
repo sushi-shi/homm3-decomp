@@ -9,7 +9,9 @@
 #include "bitset_iterator.h"
 
 #include <algorithm>
+#ifdef _WIN32
 #include <direct.h>
+#endif
 #include <fstream>
 #include <string.h>
 #include <strstream>
