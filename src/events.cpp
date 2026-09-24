@@ -2140,7 +2140,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
     std::vector<type_dialog_resource> spellsExchanged;
     type_dialog_resource spellInfo;
 
-    msg = formatString(g_generalText->getText(GENERAL_TEXT_SCHOLAR_MAGIC_INTRO_FORMAT), firstHero->m_name);
+    msg = formatString((*g_generalText)[GENERAL_TEXT_SCHOLAR_MAGIC_INTRO_FORMAT], firstHero->m_name);
     spellInfo.m_resource = RES_SECONDARY_SKILL;
     spellInfo.m_qualifier = eSecSkillMagicScholar * 3
                            + firstHero->m_skillLevel[eSecSkillMagicScholar] + 2;
@@ -2157,7 +2157,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
         3, 7 - static_cast<int>(spellsLearned.size()));
 
     if (spellsLearned.size()) {
-        msg += g_generalText->getText(GENERAL_TEXT_LEARNS_FRAGMENT);
+        msg += (*g_generalText)[GENERAL_TEXT_LEARNS_FRAGMENT];
         for (int i = 0; i < spellsLearned.size(); i++) {
             if (i < learnedIconCount) {
                 spellInfo.m_resource = RES_SPELL;
@@ -2166,21 +2166,21 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             }
             if (i > 0) {
                 if (i == spellsLearned.size() - 1)
-                    msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
+                    msg += (*g_generalText)[GENERAL_TEXT_LIST_AND];
                 else
                     msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
             }
             msg += g_spellTraits[spellsLearned[i]].m_name;
         }
-        msg += formatString(g_generalText->getText(GENERAL_TEXT_FROM_HERO_FORMAT), secondHero->m_name);
+        msg += formatString((*g_generalText)[GENERAL_TEXT_FROM_HERO_FORMAT], secondHero->m_name);
     }
 
     if (spellsTaught.size()) {
         if (spellsLearned.size()) {
             msg += DATA_COMPGEN(0x00660db4, commaText, ",");
-            msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
+            msg += (*g_generalText)[GENERAL_TEXT_LIST_AND];
         }
-        msg += g_generalText->getText(GENERAL_TEXT_TEACHES_FRAGMENT);
+        msg += (*g_generalText)[GENERAL_TEXT_TEACHES_FRAGMENT];
         for (int i = 0; i < spellsTaught.size(); i++) {
             if (i < taughtIconCount) {
                 spellInfo.m_resource = RES_SPELL;
@@ -2189,13 +2189,13 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             }
             if (i > 0) {
                 if (i == spellsTaught.size() - 1)
-                    msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
+                    msg += (*g_generalText)[GENERAL_TEXT_LIST_AND];
                 else
                     msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
             }
             msg += g_spellTraits[spellsTaught[i]].m_name;
         }
-        msg += formatString(g_generalText->getText(GENERAL_TEXT_TO_HERO_FORMAT), secondHero->m_name);
+        msg += formatString((*g_generalText)[GENERAL_TEXT_TO_HERO_FORMAT], secondHero->m_name);
     }
 
     msg += DATA_COMPGEN(0x006603ec, saveExtensionDot, ".");
