@@ -86,12 +86,6 @@ public:
 };
 SIZE(TRecruitWindow, 0x6c);
 
-// The recruit dialog's window, .bss 0x69d5e8. Name provisional (the
-// gp<Type> house convention); recruitUnit::Open builds it,
-// recruitUnit::Close RemoveWindow()s and deletes it, and Update
-// broadcasts every widget refresh through it.
-DATA(0x0069d5e8) extern TRecruitWindow* g_recruitWindow;
-
 // recruit.obj's own .bss 0x69d5f4 - the menu recruitUnit::Open parks
 // before switching to the default one, and the menu ::Close puts back.
 // Spelled through the HMENU handle tag rather than HMENU so this header

@@ -522,6 +522,14 @@ sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
 evidence = "Campaign-brief ally/enemy flag body calls 0x5eec at 0x645b8 on its vector<ScenarioStruct*> at campaign header +0x18. This exact MSL leaf returns the receiver+8 iterator slot and BLR; the emitted specialization has the same pointer-vector ABI as the already reviewed vector<char*> alias. Runtime call identity only."
 
 [[functions]]
+symbol = ".data__Q23std38__vector_pod<Ul,Q23std13allocator<Ul>>CFv"
+mac_section = 0
+mac_offset = 0x5eec
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Recruit update calls 0x5eec at code 0x14f4dc for TTextResource storage. Its CodeWarrior vector_pod<Ul>::data instantiation emits the identical eight-byte addi r3,r3,8; blr body. Runtime call identity only."
+
+[[functions]]
 symbol = ".reset__Q23std10bitset<70>Fv"
 mac_section = 0
 mac_offset = 0xe7378

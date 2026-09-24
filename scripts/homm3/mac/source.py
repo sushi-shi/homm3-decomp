@@ -192,7 +192,7 @@ def load_data(root: Path) -> list[DataPair]:
                 # qualified member declarator is inferred from the row.
                 match = re.fullmatch(
                     r'\s*(?:static\s+)?(?:(?:unsigned|signed)\s+)?'
-                    r'\w+(?:::\w+)*\s+(\w+)\s*;', declaration, re.DOTALL)
+                    r'\w+(?:::\w+)*(?:\s*\*\s*|\s+)(\w+)\s*;', declaration, re.DOTALL)
             else:
                 match = re.fullmatch(r'\s*(?:(?:static|const|unsigned|signed|long|short)\s+)*'
                                      r'\w+\s+(\w+)\s*(?:\[[^\]]*\]\s*)*=.*;',

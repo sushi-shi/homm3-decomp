@@ -32,3 +32,14 @@ mac_size = 0xc4
 mac_symbol = ".__ct__11recruitUnitFP9armyGroupUc13TCreatureTypePs13TCreatureTypePs13TCreatureTypePs13TCreatureTypePs"
 target_sha256 = "1632da437e052b838bd394071d2b1379d8eb3ed21d12d7a08642a3d548223295"
 evidence = "Dreamcast dc0x11ad04 armyGroup constructor and Mac code0:0x1507b8 share baseManager ctor, field-store sequence, GameTime::get and updateCost. Mac body ends at blr0:0x150878, adjacent hero constructor begins with mflr0:0x15087c. TOC1+0xe24 loads the reviewed recruitUnit vtable; real MWOB ctor symbol from compile-only probe."
+
+[[functions]]
+retail_va = 0x550940
+unit = "recruit"
+source = "src/recruit.cpp"
+mac_section = 0
+mac_offset = 0x14fb54
+mac_size = 0xb8c
+mac_symbol = ".main__11recruitUnitFR7message"
+target_sha256 = "3286a66eb790cd6de471112bdec62ea37c3e971132f1b117e80a90b7781e697a"
+evidence = "Dreamcast recruitUnit::Main and Windows VA 0x00550940 share message dispatch, four creature view arms, update calls, and exit helper behavior with Mac code0+0x14fb54; reviewed terminal BLR and next entry bound 0xb8c bytes. CodeWarrior compile-only probe emits .main__11recruitUnitFR7message from the authored body."

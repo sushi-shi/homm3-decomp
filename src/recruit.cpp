@@ -35,7 +35,12 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x0069d5e8) TRecruitWindow* g_recruitWindow;
+// The recruit dialog's window, .bss 0x69d5e8. Name provisional (the
+// gp<Type> house convention); recruitUnit::Open builds it,
+// recruitUnit::Close RemoveWindow()s and deletes it, and Update
+// broadcasts every widget refresh through it. Mac's direct TOC storage
+// confirms this pointer belongs to the TU rather than a public interface.
+DATA(0x0069d5e8) static TRecruitWindow* g_recruitWindow;
 DATA(0x0069d5f4) HMENU__* g_recruitSavedMenu;
 
 
@@ -529,10 +534,11 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 // not decide VC6's load order. Reviewed retail ABI aliases for gpCurrentPlayer
 // and gSystemPalette make the named relocations agree but do not change the
 // 99.989845% score, so this source keeps the canonical global names.
-// The reviewed Mac Update body is 1484 B and retains 33 calls. The current
-// native-header candidate cannot complete byte comparison until its
-// g_recruitWindow TOC reference is resolved; that gap does not identify a
-// different source expression at the Windows multiplication sites.
+// The reviewed Mac Update and native-header candidate are both 1484 B;
+// 1367/1484 bytes and all 33 ordered calls agree. Mac's 20 uses of the
+// recruit-window pointer resolve directly to the TU's zero-filled TOC cell.
+// Remaining Mac differences are register and stack-home choices; this does
+// not decide VC6's load order at the Windows multiplication sites.
 // DC line 521 calls TTextResource::operator[] for the recruit title. Restoring
 // that canonical source call is VC6 byte-flat and clears its audit finding.
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
@@ -677,9 +683,12 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     g_recruitWindow->broadcastMessage(msg);
 }
 
-// E:\gamedcs\recruit.cpp:666 / :693. Both Dreamcast helpers are header-sized
-// single-purpose bodies. Retail /Ob2 expands them into Main and /OPT:REF leaves
-// no standalone row in the recruit band.
+// E:\gamedcs\recruit.cpp:666 / :693. Dreamcast and Mac retain both helpers
+// as functions. VC6 expands them into Main and /OPT:REF leaves no standalone
+// recruit-band row. Keeping setRolloverText inline is a working hypothesis:
+// with its body ordinary and visible here, VC6 retains the call and Main drops
+// from 99.95448% to 87.196785%. The small exit helper needs no inline keyword:
+// VC6 auto-inlines it while Mac retains its call.
 inline void recruitUnit::setRolloverText(int codeY)
 {
     switch (codeY) {
@@ -706,7 +715,7 @@ inline void recruitUnit::setRolloverText(int codeY)
         g_recruitWindow->m_y + 0x172, 0x1d4, 0x12);
 }
 
-inline int exitRecruitUnit(message& msg)
+int exitRecruitUnit(message& msg)
 {
     msg.m_id = MESSAGE_EXECUTIVE;
     msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
@@ -747,6 +756,10 @@ inline int exitRecruitUnit(message& msg)
 // second slot; VC6 currently reuses one for all four. DC and the bounded Mac
 // counterpart each retain four distinct shadowed locals, so this does not
 // justify a synthetic Windows-only object or scope.
+// The admitted Mac Main pair is currently unavailable: CodeWarrior emits an
+// anonymous 16-byte zero template for DC's const monType[4] array that Mac
+// retail never loads; Main also expands setRolloverText in the candidate while
+// Mac retail calls its retained helper.
 VA(0x00550940, 0xA08)  // anchor-callee + switch-table bracket, dc 0x11a30c
 int recruitUnit::main(message& msg)
 {
