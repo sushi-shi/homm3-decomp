@@ -571,6 +571,8 @@ static void markShipyards(playerData* player)
 // set_danger_zones statement.
 // DC 0x10e894: the 920/921 absent-boat continue closes before the 925/926
 // cell update. Its size/getCell/cell calls need no inline-depth overrides.
+// Keeping the returned boat cell in a local separates DC's call and store;
+// retail's expansion then has all 79 CFG blocks exact (99.29 -> 99.96%).
 static void clearShipyards(playerData* player)
 {
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
@@ -593,9 +595,10 @@ static void clearShipyards(playerData* player)
         if (info->m_boatX == ShipyardInfo::NO_BOAT)
             continue;
 
-        g_game->m_worldMap.cell(
+        NewmapCell* boatCell = g_game->m_worldMap.cell(
             info->m_boatX, info->m_boatY,
-            player->m_shipyards[shipyardIndex].m_z)->m_canBuildShip = 0;
+            player->m_shipyards[shipyardIndex].m_z);
+        boatCell->m_canBuildShip = 0;
     }
 }
 
