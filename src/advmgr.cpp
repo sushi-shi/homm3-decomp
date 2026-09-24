@@ -8617,6 +8617,8 @@ void popupPlayerTurnInfo()
     }
 }
 
+// DC advmgr.cpp:10965 calls ForceNewHover; Mac retains the call at
+// 0:0x1a728. Complete expands its mouse-coordinate and hover update body.
 VA(0x00419e00, 0x300)  // dc 0x1d30c
 void advManager::startLocalPlayerTurn()
 {
@@ -8664,14 +8666,7 @@ void advManager::startLocalPlayerTurn()
     m_advWindow->updateTownLocators(-1, 1, 1);
     m_advWindow->updateResourceDisplay(1, 1);
 
-    advManager* adv = g_advManager;
-    if (g_currentPlayer->isLocalHuman()) {
-        int mouseX;
-        int mouseY;
-        g_mouseManager->mouseCoords(mouseX, mouseY);
-        adv->m_lastHoverX = -1;
-        adv->processHover(mouseX, mouseY);
-    }
+    g_advManager->forceNewHover();
 
     g_soundManager->m_playSounds = 1;
     if (g_game->m_isCheater && !g_lastCheaterState) {
