@@ -11,6 +11,15 @@ target_sha256 = "260a28e55ae6c44541cbe261c30036229065f94e566755cf3d6a56b7ee04556
 evidence = "Dreamcast names the cdecl variadic CLogFile::Log in remote.h:249. Mac's 28-byte release body spills variadic registers r5-r10 to their caller homes and returns; the command main call at 0x8260c passes the `Received action [%d]--> [%d,%d,%d]` format and four message fields, and game/remote/selection callers pass their authored g_logFile.log formats. Windows retains those source calls to the folded empty representative at 0x404df0. The preceding main ends at 0x82794 and the next body begins at 0x827b4."
 
 [[functions]]
+retail_va = 0x553770
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2110ec
+mac_size = 0x60
+target_sha256 = "e1d6c539db9c3cdbbbcc96fe2292770f12f19f12c837f1fd2664e757524c5740"
+evidence = "At swapManager::open +0x1a6634 the call immediately follows construction of its 16-byte CSwapMgrNetMsgHandler and passes g_dPlay and that new handler. This is the authored CDPlayHeroes::setNetMsgHandler call. The Mac body writes the handler at receiver+0x7c and transfers old handler state; final BLR at 0x211148 precedes getNetMsgHandler."
+
+[[functions]]
 retail_va = 0x557aa0
 unit = "remote"
 mac_section = 0x0

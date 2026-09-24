@@ -1,5 +1,14 @@
 # Reviewed address identities; source owns names and compiler symbols remain unbound.
 
+[[helpers]]
+source_helper = "type_bottom_view_window::type_bottom_view_window"
+unit = "bottomviewsubwindow"
+mac_section = 0
+mac_offset = 0x5f188
+mac_size = 0x68
+target_sha256 = "a8ecb23c3a4199c2a78e14a888fdcc016be2bfb433b661c1414c92cc52ddbaa2"
+evidence = "Seven derived bottom-view constructors call this retained Mac base constructor. It calls TSubWindow's default constructor, stores its own vptr, and initializes the 614,400,176,166 rectangle with the parent pointer. The same canonical source helper already exists in bottomviewsubwindow.cpp and expands inside Windows constructors. Final BLR at 0x5f1ec precedes the base destructor."
+
 [[functions]]
 retail_va = 0x450d50
 unit = "bottomviewsubwindow"

@@ -1,6 +1,15 @@
 # Reviewed Mac address identities; unbound compiler names are intentionally omitted.
 
 [[functions]]
+retail_va = 0x4f81e0
+unit = "kbwin"
+mac_section = 0
+mac_offset = 0x20ff48
+mac_size = 0x38
+target_sha256 = "bf58c422acb0c7a6123789f54d5badc2e7afa46cfab4e44be1761a0be49472de"
+evidence = "advManager::open calls this body at 0x7ac4 and 0x7ad0 with false and true immediately after the AI-music branch, matching its existing setNoDialogMenus source calls. Mac's platform menu implementation only toggles its global byte; Windows additionally updates the native HMENU. The complete Mac body ends at BLR 0x20ff7c, before the mouse update wrapper."
+
+[[functions]]
 retail_va = 0x4f82f0
 unit = "kbwin"
 mac_section = 0x0
