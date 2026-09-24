@@ -3,6 +3,8 @@
 // expansion.  Omitting that header-inline body loses 16 retail CFG blocks.
 #include "va.h"
 
+#include <stdio.h>
+
 #include "command.h"
 
 #include "cmbtmgr.h"
@@ -130,7 +132,9 @@ unsigned char combatManager::automateCatapult()
                 }
             }
 
-            long choice = sRandom(1, count);
+            // Complete binds this call to random; Dreamcast and Mac use
+            // sRandom, whose retained body is byte-identical in this build.
+            long choice = random(1, count);
             long index = 0;
             for (; index < 4; index++) {
                 long strength = getWallStrength(walls[index]);
@@ -404,8 +408,9 @@ process_action:
 // retail fixes the Complete grid layout, validation order and tie-breaking.
 // Residual: 90.8771%, with all 39 branches and the return agreeing; VC6 keeps
 // `this` in EDI instead of EBX, adding one reload block (60 vs 59). 64 D1 and
-// 256 D2 ordinary-source trees were exhausted. Exposing OffsetToFront's real
-// header inline was byte-flat, so its folded expression avoids another view.
+// 256 D2 ordinary-source trees were exhausted. Dreamcast lines 519 and 532
+// retain OffsetToFront calls. Restoring those canonical header-inline calls
+// is byte-flat under VC6; the third facing adjustment has no such attribution.
 VA(0x00474690, 0x36B)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map, dc 0x6b66c
 void combatManager::setCombatDirections(int hex)
 {
@@ -450,7 +455,7 @@ void combatManager::setCombatDirections(int hex)
             && !g_searchArray->isMoat(firstHex);
         if (firstIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
-                    firstHex + (currentArmy->m_facing ? 1 : -1)))
+                    firstHex + currentArmy->offsetToFront(-1)))
             firstIsValid = 0;
 
         targetGroup = (targetIndex + 3) % 6;
@@ -462,7 +467,7 @@ void combatManager::setCombatDirections(int hex)
         if (!currentArmy->is(creatureDoubleWide))
             continue;
 
-        secondHex = firstHex - (currentArmy->m_facing ? 1 : -1);
+        secondHex = firstHex - currentArmy->offsetToFront(-1);
         secondIsValid =
             m_cells[secondHex].m_validMove
             && currentArmy->canFit(secondHex, 0, 0)
@@ -1332,6 +1337,10 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 // of the embedded traits record; its `in_placement_phase` is pushed as
 // a whole register whose low byte only is loaded, the ordinary
 // unsigned char argument form.
+// Dreamcast line rows 1972/2077 retain hexcell::HasArmy, 2033 retains
+// ValidHex/InInvisibleColumn, and 2080/2181 retain army::get_owning_side.
+// Using those existing helpers moves current VC6 similarity 92.57143%
+// to 92.53571%; Mac's reviewed span still has all 13 direct calls aligned.
 
 VA(0x00476490, 0x52A)  // anchor-global, dc 0x6d58c
 int combatManager::getCommand(int newIndex)
@@ -1340,7 +1349,7 @@ int combatManager::getCommand(int newIndex)
         return COMBAT_COMMAND_NONE;
 
     if (g_remoteOn && m_thisNetHasControl == 0)
-        return m_cells[newIndex].m_armySide < 0 ? COMBAT_COMMAND_HOVER
+        return !m_cells[newIndex].hasArmy() ? COMBAT_COMMAND_HOVER
                                             : COMBAT_COMMAND_VIEW_ARMY;
 
     if (newIndex == COMBAT_HEX_DEFENDER_HERO) {
@@ -1383,22 +1392,16 @@ int combatManager::getCommand(int newIndex)
         return COMBAT_COMMAND_VIEW_TOWERS;
     }
 
-    if (newIndex < 0 || newIndex >= COMBAT_GRID_CELLS)
-        return COMBAT_COMMAND_NONE;
-
-    long column = newIndex % COMBAT_GRID_ROW_STRIDE;
-    if (column == 0)
-        return COMBAT_COMMAND_NONE;
-    if (column == COMBAT_GRID_LAST_COLUMN)
+    if (!validHex(newIndex) || inInvisibleColumn(newIndex))
         return COMBAT_COMMAND_NONE;
 
     currentArmy->m_side = -1;
     currentArmy->m_slot = -1;
 
-    if (m_cells[newIndex].m_armySide >= 0
+    if (m_cells[newIndex].hasArmy()
             && currentArmy->m_creatureType != CREATURE_CATAPULT) {
         army* target = m_cells[newIndex].getArmy();
-        long targetSide = target->m_combatSide;
+        long targetSide = target->getOwningSide();
 
         if (m_creaturePlacement)
             return COMBAT_COMMAND_VIEW_ARMY;
@@ -1464,7 +1467,7 @@ int combatManager::getCommand(int newIndex)
         return COMBAT_COMMAND_CREATURE_SPELL;
 
     if (!m_creaturePlacement
-            || !isOutsidePlacementBoundry(currentArmy->m_combatSide,
+            || !isOutsidePlacementBoundry(currentArmy->getOwningSide(),
                                              newIndex)) {
         g_searchArray->seedCombatPosition(currentArmy, m_currentSide,
                                           currentArmy->m_monInfo.m_speed,
@@ -2238,7 +2241,7 @@ void combatManager::getControl()
                     m_combatWindow->widgetSetStatus(
                         0x7d8, 0x1000);
 
-                if (m_inSecondPhase || m_creaturePlacement)
+                if (isInSecondPhase() || m_creaturePlacement)
                     m_combatWindow->widgetSetStatus(
                         0x7d9, 0x1000);
                 else
