@@ -8527,8 +8527,9 @@ int advManager::mouseInScrollZone()
 }
 
 // Dreamcast advmgr.cpp:10782/10785/10830/10836 calls GetCurrTownId,
-// GetCurrTown, get_map_center and Reseed. Retail expands these header
-// and short member helpers in the initial-origin path.
+// GetCurrTown, get_map_center and Reseed. Mac additionally calls
+// CheckDimNextHeroBut at 0:0x1a324. Retail expands these helpers in
+// the initial-origin path.
 VA(0x00419990, 0x2E3)  // dc 0x1cd68
 void advManager::setInitialMapOrigin()
 {
@@ -8571,10 +8572,7 @@ void advManager::setInitialMapOrigin()
     setEnvironmentOrigin(center, 1);
     reseed(0, 0);
 
-    if (g_currentPlayer->isLocalHuman() && g_currentPlayer->hasMobileHero())
-        m_advWindow->widgetClearStatus(11, 0x4008);
-    else
-        m_advWindow->widgetSetStatus(11, 0x4008);
+    checkDimNextHeroBut();
 }
 
 VA(0x00419c80, 0x171)  // dc 0x1d0bc
