@@ -3415,18 +3415,12 @@ static void drop_aura_links(army* self)
 // 4054-4057 recover CancelIndividualSpell -> remove_aura -> add_aura;
 // 4067-4068 are two separate Disease mins; 4075 is max followed by the
 // adjust_hitpoints boundary; and 4091-4092 are adjust_hitpoints followed by
-// one further min. Restoring those statement groups changes the retail CFG
-// from 31/135 to 121/135 exact blocks and restores its exact 54-branch
-// sequence. The byte score is 96.98% with the older 99.5510% peak banked.
+// one further min. Those statement groups account for the retail 54-branch
+// sequence.
 
-// Complete retail lowers Poison's 0.5 floor through double temporaries, so
-// the direct max statement retains that x86-proved type conversion even
-// though the SH4/STLport build uses a float max. Binding the result to a
-// named value reproduces the local copy but perturbs VC6's whole-function
-// inliner state and drops the structure to 110 exact blocks; the direct
-// expression is therefore the coherent form. The remaining missing block is
-// inside deque::push_back's nested iterator update. A statement-scoped
-// inline_depth(1) is byte-flat and is not retained.
+// Complete retail materializes Poison's double max result before converting
+// it to float. A named double reproduces the stack copy and all 135 retail
+// blocks; naming the float result or either input does not.
 VA(0x004448f0, 0xB99)  // anchor-global, dc 0x499e8
 void army::setSpellInfluence(int spell, int power, int mastery,
                              const hero* castingHero)
@@ -3600,8 +3594,8 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         m_monInfo.m_defenseSkill = m_monInfo.m_defenseSkill - m_diseaseDefensePenalty;
         break;
     case SPELL_POISON: {
-        m_poisonPenalty = static_cast<float>(
-            cppMax(static_cast<double>(m_poisonPenalty - 0.1f), 0.5));
+        double poisonValue = cppMax(static_cast<double>(m_poisonPenalty - 0.1f), 0.5);
+        m_poisonPenalty = static_cast<float>(poisonValue);
         adjustHitpoints();
         break;
     }
