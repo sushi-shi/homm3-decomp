@@ -275,9 +275,9 @@ retail_va = 0x564c00
 unit = "sacrifice_window"
 mac_section = 0x0
 mac_offset = 0x15adbc
-mac_size = 0x224
-target_sha256 = "1c36ec041b0786cb170cbd6afb06087b3c57602d4ae1d860e9d8448cfceefa86"
-evidence = "sets creature offering count and experience delta via bonus factor then refreshes creature offering0x159614; complete bounded PowerPC span."
+mac_size = 0x110
+target_sha256 = "820695c798588150221dc86d1da389f5cf89cf65e408c219175740d37877e219"
+evidence = "Sets creature offering count and experience delta via bonus factor, then refreshes creature offering 0x159614; epilogue ends with BLR 0x15aec8. The separate getMaxAmount helper starts at 0x15aecc."
 
 [[functions]]
 retail_va = 0x564cf0
@@ -539,3 +539,12 @@ mac_offset = 0x1595e0
 mac_size = 0x34
 target_sha256 = "448ff8799ab3e8b3dafcd44063b6a9439c39aef3cbd01adbb0b6cbd574f923ee"
 evidence = "source trait aiValue field+0x40, signed divide by 40 reciprocal0x66666667, multiply by five; called by creature offering; complete adjacent PowerPC span."
+
+[[helpers]]
+source_helper = "type_sacrifice_window::getMaxAmount"
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15aecc
+mac_size = 0x114
+target_sha256 = "a630e69216b16551f02257331abc493b493cb93dc35fd862d84a5697eab1d343"
+evidence = "After checking selected troop count, the seven-slot scan compares offered counts with hero army counts and decrements the selected amount only when every other slot is exhausted; BLR at 0x15afdc, next prologue 0x15afe0. allCreatures calls it at 0x15b06c and creatureClick at 0x15b558, passing this and slot. Windows expands both canonical source calls."

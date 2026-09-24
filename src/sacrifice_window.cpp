@@ -1439,8 +1439,10 @@ void type_sacrifice_window::setCreatureSacrifice(long slot, long newAmount)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1599
-// Retail expands this helper at both callers. The scan preserves one troop
-// only when every other army slot has already been offered to its limit.
+// Retail expands this helper at both callers. Mac retains the body at
+// 0:0x15aecc; allCreatures and creatureClick call it at 0:0x15b06c and
+// 0:0x15b558. The scan preserves one troop only when every other army slot
+// has already been offered to its limit.
 long type_sacrifice_window::getMaxAmount(long slot) const
 {
     long amount = m_currentHero->m_army.m_numTroops[slot];
