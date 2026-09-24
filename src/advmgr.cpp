@@ -2378,14 +2378,16 @@ type_cell_adjuster::~type_cell_adjuster()
     restoreCell();
 }
 
+// DC advmgr.cpp:3075/3077/3100 names GetCurrHeroId, GetCurrHero and
+// GetBoat; Complete expands their header bodies at these uses.
 VA(0x0040afb0, 0x12F)  // dc 0xbf1c
 NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y)
 {
     restoreCell();
 
     if (x == MOBILE_HERO_CELL_X && y == MOBILE_HERO_CELL_Y
-            && g_currentPlayer->m_currHeroId != -1) {
-        m_mobileHero = &g_game->m_heroes[g_currentPlayer->m_currHeroId];
+            && g_game->getCurrHeroId() != -1) {
+        m_mobileHero = g_game->getCurrHero();
         if (m_mobileHero && !m_mobileHero->isOnMap()) {
             m_mobileHero->obscureCell();
             return mapCell;
@@ -2402,7 +2404,7 @@ NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y
             m_obscuringHero = g_game->getHero(triggerCell->m_extraInfo);
             m_obscuringHero->restoreCell();
         } else if (triggerCell->m_type == BOAT) {
-            m_obscuringBoat = &g_game->m_boats[triggerCell->m_extraInfo];
+            m_obscuringBoat = g_game->getBoat(triggerCell->m_extraInfo);
             m_obscuringBoat->restoreCell();
         }
     }
