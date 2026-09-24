@@ -5621,8 +5621,11 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
     if (monType2 != CREATURE_NONE || monType3 != CREATURE_NONE) {
         int tempNumTroops[7];
         TCreatureType tempArmies[7];
-        memcpy(tempNumTroops, currentArmyGroup.m_numTroops, sizeof(tempNumTroops));
-        memcpy(tempArmies, currentArmyGroup.m_armyTypes, sizeof(tempArmies));
+        // DC names both arrays; Mac copies their slots without memcpy calls.
+        for (int slot = 0; slot < 7; ++slot) {
+            tempNumTroops[slot] = currentArmyGroup.m_numTroops[slot];
+            tempArmies[slot] = currentArmyGroup.m_armyTypes[slot];
+        }
         for (int i = 0; i < 7; ++i) {
             currentArmyGroup.m_armyTypes[i] =
                 tempArmies[reorderMap[numGroups][numGroups3][i]];
