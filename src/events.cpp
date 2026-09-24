@@ -3310,14 +3310,14 @@ VA(0x004a6440, 0xD8)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
 void advManager::doTreasureDialog(hero* currentHero, int amount,
                                   bool humanPlayer)
 {
+    bool takeExperience = 0;
     int experience = static_cast<int>(currentHero->getExperienceBonusFactor()
                                       * (amount - 500));
 
-    bool takeExperience = 0;
     if (humanPlayer) {
         overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
         updBottomView(0, 1, 1);
-        normalDialog(g_adventureEventText->getText(ADV_EVENT_TEXT_TREASURE_GOLD_OR_EXPERIENCE), 7, -1, -1, GOLD,
+        normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_TREASURE_GOLD_OR_EXPERIENCE], 7, -1, -1, GOLD,
                      amount, 0x11, experience, 1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT) {
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CHOICE_1) {
