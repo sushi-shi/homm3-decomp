@@ -79,6 +79,7 @@ unit = "ai_tactical"
 mac_section = 0
 mac_offset = 0x3da90
 mac_size = 0x1f0
+mac_symbol = ".getHexAttackValue__26type_AI_attack_hex_chooserFlRl"
 target_sha256 = "7765a733b41a83d8b63bb1d06d040437bfec967c422c47687dcad28ddba67859"
 evidence = "NEW: Six adjacent hexes, check bitmap, cell0x1081f8, canShoot0x4e840 and unit value0x4e9ec ranged-minus-melee. End0x3dc80; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
 
