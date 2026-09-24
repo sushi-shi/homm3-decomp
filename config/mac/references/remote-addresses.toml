@@ -49,6 +49,15 @@ target_sha256 = "0c01ddd71c813030b6dfd1eaba119977385400d55799f5fce92c18817f82b3f
 evidence = "CChatManager::turnDurationMsg: variadic vsprintf into a 1024-byte buffer, suspended advManager and popup guards, g_turnDuration.isClose(59000), general-text prefix 0x36, addChat and retained chat-sound helper. Complete BLR at 0x2117e8; next formatter begins 0x2117ec."
 
 [[functions]]
+retail_va = 0x555910
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21393c
+mac_size = 0x20
+target_sha256 = "d12b46feae98e8b363662d544e6d323102bcce265dd806f4e432807e6914981f"
+evidence = "The retained destroyMsg(CNetMsg*) body forwards its pointer to CodeWarrior operator delete 0x268b2c and returns. The three combatManager::main calls and four game::transmitSaveGame calls arise from CMessageKill local cleanup; both source callers keep that owner and destroyMsg call. Its final BLR is at 0x213958 and the next body begins at 0x21395c. Windows owns the free destroyMsg body at 0x555910."
+
+[[functions]]
 retail_va = 0x5544b0
 unit = "remote"
 mac_section = 0
