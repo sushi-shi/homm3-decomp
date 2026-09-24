@@ -6342,24 +6342,21 @@ unsigned char hero::isInIdentifyRange(const type_point* location) const
     return 0;
 }
 
+// Dreamcast hero.cpp:6407/6414/6418 calls get_location and the typed
+// get_secondary_skill accessor. Both header helpers expand in retail.
 VA(0x004e5f30, 0xBF)  // dc 0xd5644
 unsigned char hero::isMobile() const
 {
-    type_point point;
-    point.m_x = m_x;
-    point.m_y = m_y;
-    point.m_z = m_z;
-
-    NewmapCell* cell = g_advManager->getCell(point);
-    int pathfinding = m_skillLevel[eSecSkillPathfinding];
+    NewmapCell* cell = g_advManager->getCell(getLocation());
     int cost;
     if (m_flags & 0x40000) {
         cost = minimumTerrainCost(
-            cell, m_movePoints, pathfinding, -1, -1,
+            cell, m_movePoints, getSecondarySkill(eSecSkillPathfinding), -1, -1,
             m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
     } else {
         cost = minimumTerrainCost(
-            cell, m_movePoints, pathfinding, m_flightLevel, m_waterWalkLevel,
+            cell, m_movePoints, getSecondarySkill(eSecSkillPathfinding),
+            m_flightLevel, m_waterWalkLevel,
             m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
     }
     return m_movePoints >= cost;
