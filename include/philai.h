@@ -60,12 +60,8 @@ void aiJoinDecision(hero* currentHero, TCreatureType creature,
 // are promoted independently.
 long valueOfBlackMarket(const hero* currentHero,
                            const NewmapCell* cell);
-int valueOfArena(const hero* currentHero, NewmapCell* cell);
-int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell);
-int valueOfBlackBox(const hero* currentHero, NewmapCell* cell);
 int valueOfCampfire(playerData* player, NewmapCell* cell);
 int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell);
-long valueOfBank(const hero* currentHero, NewmapCell* cell);
 int valueOfGenerator(const hero* currentHero, int x, int y, int z,
                      NewmapCell* cell, int moveCost);
 long valueOfGarrison(const hero* currentHero, NewmapCell* cell);

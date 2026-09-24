@@ -912,12 +912,16 @@ static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
     return value;
 }
 
+// DC records the Arena, MapArtifact, BlackBox and Bank appraisals as static
+// philai.cpp procedures. Mac retains their bodies in that order at code0+
+// 0x141f14, 0x142010, 0x1422c4 and 0x14259c, called by its event dispatcher.
 // E:\\gamedcs\\philai.cpp:1854. Dreamcast preserves this source-real helper
 // boundary and its two calls; Complete keeps the same four-block body but
 // expands it into AI_value_of_event's ARENA arm. The retail arm calls
 // VisitedArena, returns zero on the visited edge, then doubles the level
-// increment before applying turnExperienceToRVRatio.
-inline int valueOfArena(const hero* currentHero, NewmapCell* cell)
+// increment before applying turnExperienceToRVRatio. VC6 expands this ordinary
+// helper with the same event bytes and call sequence as the inline probe.
+static int valueOfArena(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->visitedArena(cell))
         return 0;
@@ -932,8 +936,9 @@ inline int valueOfArena(const hero* currentHero, NewmapCell* cell)
 // and defended early returns, then the six MapArtifactInfo price cases.
 // Complete expands this helper into AI_value_of_event's ARTIFACT arm and
 // retains the same statement/branch shape, using its later artifact-player
-// valuation entry point.
-inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
+// valuation entry point. With this TU, removing inline makes VC6 retain a
+// call here, contrary to retail; CodeWarrior retains the call either way.
+static inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
 {
     if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
             >= HERO_BACKPACK_CAPACITY)
@@ -1003,7 +1008,9 @@ inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
 // and the polarity flip comes back). The merge is therefore a FIXED POINT
 // this compiler reaches from any source shape; the cost is the register
 // transposition, not the spelling, so do not re-try the merge family.
-inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
+// With this TU, removing inline retains a VC6 call that retail expands;
+// CodeWarrior retains the call with either declaration.
+static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
 {
     BlackBoxData* blackBox = cell->getBlackBox();
     int value = 0;
@@ -1072,7 +1079,9 @@ inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
     return value;
 }
 
-inline long valueOfBank(const hero* currentHero, NewmapCell* cell)
+// The ordinary static body is still VC6 byte-exact at 0x529920; Mac retains
+// three calls to its body from the event dispatcher.
+static long valueOfBank(const hero* currentHero, NewmapCell* cell)
 {
     long value;
 
@@ -2806,7 +2815,7 @@ long valueOfLearning(const hero* currentHero, SpellID spell)
 }
 
 VA(0x00529920, 0x10d)  // dc 0x110808
-long valueOfBank(const hero* currentHero, NewmapCell* cell);
+static long valueOfBank(const hero* currentHero, NewmapCell* cell);
 
 VA(0x00529a30, 0x27f)  // dc 0x1109b8
 int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* cell, int moveCost)
