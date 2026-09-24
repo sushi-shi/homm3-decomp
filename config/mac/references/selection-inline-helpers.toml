@@ -1,6 +1,15 @@
 # Mac-retained game helpers whose source calls already exist in the Windows TU.
 
 [[helpers]]
+source_helper = "TSingleSelectionWindow::getHeaderDirectory"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x175674
+mac_size = 0x48
+target_sha256 = "8d29bb4a2e49ac51841c1c7a4dc9a272e5cf7b4f2c21f5b0ff7182a559174072"
+evidence = "GetHeaders and OnMapFileNameMsg call this four times. It selects the random_maps global when window random-map mode+0x62 is true, games when load+0x60 or save+0x61 is true, otherwise maps. These are the four repeated source ternaries. Three return BLRs end at0x1756b8 before the next body."
+
+[[helpers]]
 source_helper = "TSingleSelectionWindow::applyHeaderToGame"
 unit = "singleselectionwindow"
 mac_section = 0
@@ -80,3 +89,12 @@ mac_offset = 0x181bac
 mac_size = 0xc4
 target_sha256 = "0b73759d9e5b452be8cbbfbda0325f9496da418b88e8e3b0a3db92f56b49869f"
 evidence = "Five lobby and advanced-option callers pass this and a DPID. The retained body constructs CUpdatePlayerPosMsg with two arrays of eight 0x7c-byte player records copied from the window at+0xfb8 and+0x1398, calls transmitRemoteDataDPID with the DPID and two true flags, and returns 1. This matches the existing canonical sendPlayerPositions source helper. BLR0x181c6c precedes sendSetupInfo."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::sendSetupInfo"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x181c70
+mac_size = 0x110
+target_sha256 = "ce8a892140827d346ec0dc8b8fdab6b5f48c9e504c8b96c2b11b2b6bd823003a"
+evidence = "CNewPlayerUpdateProc::finish and OnWidgetDeselect call this with window and DPID. It constructs the setup-message form at stack+0x38 with size0x204, copies g_game setup, then writes window random-map flag+0x37b and eight option dwords+0x17f4..+0x1810 before transmitRemoteDataDPID with false/true and returning 1. This is the canonical sendSetupInfo source helper; BLR0x181d7c precedes the next method."

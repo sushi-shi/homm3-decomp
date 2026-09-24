@@ -3821,6 +3821,17 @@ int TSingleSelectionWindow::getFileSpecNbr()
     return (m_loadMode || m_saveMode) + g_selectionCampaignMode;
 }
 
+// Mac retains this source choice at code 0:0x175674; VC6 expands its four
+// calls in getHeaders and onMapFileNameMsg.
+char* TSingleSelectionWindow::getHeaderDirectory()
+{
+    return m_randomMapMode
+        ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
+        : (m_loadMode || m_saveMode
+               ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
+               : DATA_COMPGEN(0x006772d0, mapsDir, "maps"));
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:3475
 // Residual (87.0700%, polish-45 - first full evidence pass on this row):
 // pure OVER-inline, two sites, both one level deeper than retail.
@@ -3848,10 +3859,7 @@ void TSingleSelectionWindow::getHeaders(
     char* dir;
     int gameFileProblem;
     int x;
-    _chdir(m_randomMapMode ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
-                    : (m_loadMode || m_saveMode
-                           ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
-                           : DATA_COMPGEN(0x006772d0, mapsDir, "maps")));
+    _chdir(getHeaderDirectory());
     findHandle = _findfirst(g_fileSpec[getFileSpecNbr()], mapNames);
     if (findHandle != -1) {
         count = 1;
@@ -3863,11 +3871,7 @@ void TSingleSelectionWindow::getHeaders(
 
     headers->clear();
     GameSelectionHeadersStruct temp;
-    dir = m_randomMapMode
-        ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
-        : (m_loadMode || m_saveMode
-               ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
-               : DATA_COMPGEN(0x006772d0, mapsDir, "maps"));
+    dir = getHeaderDirectory();
     for (x = 0; x < count; ++x) {
         gameFileProblem = getHeader(dir, mapNames[x].name, &temp);
         if (!gameFileProblem) {
@@ -6440,19 +6444,12 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
         return 1;
     if (!m_receivingMaps)
         return 1;
-    _chdir(m_randomMapMode ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
-                    : (m_loadMode || m_saveMode
-                           ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
-                           : DATA_COMPGEN(0x006772d0, mapsDir, "maps")));
+    _chdir(getHeaderDirectory());
     CMapFileNameMsg* mapFileNameMsg = static_cast<CMapFileNameMsg*>(netMsg);
     if (_access(mapFileNameMsg->m_fileName, 0) == 0) {
         _chdir("..");
         GameSelectionHeadersStruct temp;
-        getHeader(m_randomMapMode
-                      ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
-                      : (m_loadMode || m_saveMode
-                             ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
-                             : DATA_COMPGEN(0x006772d0, mapsDir, "maps")),
+        getHeader(getHeaderDirectory(),
                   mapFileNameMsg->m_fileName, &temp);
         if (memcmp(&temp.m_fileTime, &mapFileNameMsg->m_fileTime, 8) == 0) {
             memcpy(temp.m_setup.m_alignment, mapFileNameMsg->m_townTypes,

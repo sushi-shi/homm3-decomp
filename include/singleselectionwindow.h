@@ -781,6 +781,7 @@ public:
     // retail widened DC's (cFilename, pHeader) with the dir argument
     // its chdir dance needs.
     int getFileSpecNbr();
+    char* getHeaderDirectory();
     void getHeaders(std::vector<GameSelectionHeadersStruct>* headers);
     void windowFn00582e90(
         std::vector<GameSelectionHeadersStruct>* headers);
