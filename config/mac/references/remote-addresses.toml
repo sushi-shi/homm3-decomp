@@ -193,3 +193,39 @@ mac_offset = 0x212fd8
 mac_size = 0x50
 target_sha256 = "c383eeb973262eb22d9821f16d6337b7bd46b38778058db9449ea49f1f19c4bb"
 evidence = "CAnimatedDlg constructor passes dialog kind 0x12 to CTextDialog, installs its vtable and clears sprite, frame, tick and palette fields. waitForReadyToPlayMsg constructs it on the stack. Final BLR at 0x213024; next entry 0x213028."
+
+[[functions]]
+retail_va = 0x005562e0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x213d7c
+mac_size = 0x168
+target_sha256 = "42f409140b112e6137a3de0e02c696c0766db510dec848572710b54b72f9102e"
+evidence = "updateCurrentPlayers constructs the 0x19-byte CDPlayPlayer array, calls CDPlayHeroes::enumPlayers at 0x2111c0, checks eight game players and clears absent ones. onPlayerDropUpdateMsg calls this no-argument body immediately after the hourglass stop. Final BLR at 0x213ee0; next entry 0x213ee4."
+
+[[functions]]
+retail_va = 0x00557f80
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215d0c
+mac_size = 0x34
+target_sha256 = "8605843f3a05e364281354ba81cb7d0221166aacc37eba79ede2fc2bef19e42b"
+evidence = "CHourGlass constructor stores the thread byte and calls the retained start helper at 0x215dd8. onPlayerDropUpdateMsg passes one for its local guard. Final BLR at 0x215d3c; next entry 0x215d40."
+
+[[helpers]]
+source_helper = "CHourGlass::stop"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215d94
+mac_size = 0x44
+target_sha256 = "2e7d2cb4e92e0e51ebd465cc9fc2459b55dca5bcbcfc644637dd760bf0082573"
+evidence = "Retained CHourGlass::stop branches on m_thread: stopMouseThread at 0x16e358 or mouseManager::setPointer(0, ADVENTURE_SET) at 0x216fc0. onPlayerDropUpdateMsg and the deleting destructor call it. Windows expands this source helper and has no standalone VA. Final BLR at 0x215dd4; next entry 0x215dd8."
+
+[[helpers]]
+source_helper = "CHourGlass::start"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215dd8
+mac_size = 0x44
+target_sha256 = "885e0a29080d99f8bee332d3c2c2517cdf2e3923a34842cf58751340fb1cc3a6"
+evidence = "Retained CHourGlass::start branches on m_thread: startMouseThread at 0x16e31c or mouseManager::setPointer(1, ADVENTURE_SET) at 0x216fc0. The Mac constructor calls it; Windows expands this source helper and has no standalone VA. Final BLR at 0x215e18; next entry 0x215e1c."
