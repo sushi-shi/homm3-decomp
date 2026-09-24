@@ -801,3 +801,21 @@ mac_offset = 0x48f98
 mac_size = 0x70
 target_sha256 = "5c45d10880b84f11d22fef735b4791f7f3b74acd9bae3cfc8fff755df2e77cfe"
 evidence = "Mac army::rangeAttack calls this retained helper at 0x48f98. It checks quick combat at 0x76bc8, indexes m_armySample at +0x170, and passes the sample handle at +0x28 to soundManager::waitSample at 0x2189b8. Dreamcast names the member boundary; Windows expands its explicit-inline source body. Final BLR at 0x49004; next entry 0x49008."
+
+[[helpers]]
+source_helper = "army::getClockwise"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4beb0
+mac_size = 0x60
+target_sha256 = "ae1c72ada10da7b95cc0a0670da9b19e6d29ab98867a6dc437f2317d5ccb8020"
+evidence = "Mac melee/multihead callers retain this source helper. A wide army maps direction through the ring-index/order tables with +1 mod 8; a narrow army returns (direction+1) mod 6. The explicit-inline Windows source calls it in the same multihead logic. Final BLR at 0x4bf0c; next entry 0x4bf10."
+
+[[helpers]]
+source_helper = "army::getCounterClockwise"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4bf10
+mac_size = 0x60
+target_sha256 = "50a22dee7588c3ed927b9ef1a53a277fa33a0b523df93dbcf3abc92c892b4c39"
+evidence = "Mac melee/multihead callers retain this adjacent source helper. A wide army maps direction through the ring-index/order tables with +7 mod 8; a narrow army returns (direction+5) mod 6. The explicit-inline Windows source calls it. Final BLR at 0x4bf6c; next entry 0x4bf70."
