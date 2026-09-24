@@ -222,6 +222,8 @@ void appExit()
     cleanUpMenus();
 }
 
+// Mac retains the shared event pump at code 0+0x20f90c. Its event polling
+// uses Mac OS services; this Windows body pumps native window messages.
 VA(0x004f7fb0, 0xAA)  // dc 0xe7fd0
 void process1WindowsMessage()
 {
