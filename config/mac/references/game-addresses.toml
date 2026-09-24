@@ -505,6 +505,15 @@ mac_size = 0x138
 target_sha256 = "ca7b8e7e5ba204fd62a0cd5cd78b72c61df55c821a954a199af4d7c99680f326"
 evidence = "Packed excluded point255/255/255, nested map loops, findAdjacentMonster0x1aed0 and getMapExtraPtr0x119764; sets or clears0x100 halfword flag. Reviewed extent code0+0xe17d8..0xe1910; terminal return and following entry separate the span."
 
+[[helpers]]
+source_helper = "setComputerScreenWidgetsEnabled"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe1910
+mac_size = 0xc4
+target_sha256 = "b0e3e6ddd40577deb70934049970eb96354231827eba261ac2ad4fcaa1ad38a3"
+evidence = "The Mac body sits in game.cpp source order between setupAdjacentMons and cancelComputerScreen. It receives one enable byte, then calls heroWindow::getWidget for IDs 8, 7, 6 and 12, invoking each widget's virtual enable with the same value. Mac cancelComputerScreen at 0xe19d4 passes 1; showComputerScreen at 0xe1a24 passes 0. The four operations were duplicated in both Windows source callers and are now canonical source calls. Final BLR 0xe19d0 and next caller prologue 0xe19d4 bound 0xc4 bytes. Dreamcast's older CancelComputerScreen omits widget operations."
+
 [[functions]]
 retail_va = 0x004ca530
 unit = "game"

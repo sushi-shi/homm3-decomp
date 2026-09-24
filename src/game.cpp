@@ -8461,24 +8461,30 @@ void game::setupAdjacentMons()
     }
 }
 
+// Mac 0xe1910 retains this helper between setupAdjacentMons and
+// cancelComputerScreen. Both Mac callers pass 1 or 0; VC6 expands the four
+// widget operations in those callers. The older Dreamcast build lacks these
+// calls in CancelComputerScreen, so its absence is a snapshot difference.
+static void setComputerScreenWidgetsEnabled(unsigned char enabled)
+{
+    g_advManager->m_advWindow->getWidget(8)->enable(enabled);
+    g_advManager->m_advWindow->getWidget(7)->enable(enabled);
+    g_advManager->m_advWindow->getWidget(6)->enable(enabled);
+    g_advManager->m_advWindow->getWidget(12)->enable(enabled);
+}
+
 VA(0x004ca530, 0x80)  // dc 0xb62f8
 void game::cancelComputerScreen()
 {
     g_completeDrawEnabled = 1;
     g_advManager->updateRadar(1, 1, 0, 0, 0);
-    g_advManager->m_advWindow->getWidget(8)->enable(1);
-    g_advManager->m_advWindow->getWidget(7)->enable(1);
-    g_advManager->m_advWindow->getWidget(6)->enable(1);
-    g_advManager->m_advWindow->getWidget(12)->enable(1);
+    setComputerScreenWidgetsEnabled(1);
 }
 
 VA(0x004ca5b0, 0x1C9)
 void game::showComputerScreen()
 {
-    g_advManager->m_advWindow->getWidget(8)->enable(0);
-    g_advManager->m_advWindow->getWidget(7)->enable(0);
-    g_advManager->m_advWindow->getWidget(6)->enable(0);
-    g_advManager->m_advWindow->getWidget(12)->enable(0);
+    setComputerScreenWidgetsEnabled(0);
 
     if (g_config.m_blackoutComputer && !g_currentPlayer->isHuman()) {
         g_currentPlayer->m_isLocal = 1;
