@@ -1324,9 +1324,7 @@ int viewWorldSurfaceHandler(message& msg)
     window->m_surfaceButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
     window->m_undergroundButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
     window->m_undergroundButton->draw();
-    g_advManager->vwCompleteDraw(window->m_origin.m_x, window->m_origin.m_y,
-                                 window->m_origin.m_z, window->m_viewableWidth,
-                                 window->m_viewableHeight);
+    window->drawWindow();
     g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
                               g_viewTowns);
     g_windowManager->updateScreen(0, 0, 800, 600);
@@ -1346,9 +1344,7 @@ int viewWorldUndergroundHandler(message& msg)
     window->m_surfaceButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
     window->m_undergroundButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
     window->m_surfaceButton->draw();
-    g_advManager->vwCompleteDraw(window->m_origin.m_x, window->m_origin.m_y,
-                                 window->m_origin.m_z, window->m_viewableWidth,
-                                 window->m_viewableHeight);
+    window->drawWindow();
     g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
                               g_viewTowns);
     g_windowManager->updateScreen(0, 0, 800, 600);
@@ -1414,11 +1410,7 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
                               m_radarOrigin.m_z);
 
         viewWorldWindow.init(mapCenter, 0);
-        g_advManager->vwCompleteDraw(viewWorldWindow.m_origin.m_x,
-                                     viewWorldWindow.m_origin.m_y,
-                                     viewWorldWindow.m_origin.m_z,
-                                     viewWorldWindow.m_viewableWidth,
-                                     viewWorldWindow.m_viewableHeight);
+        viewWorldWindow.drawWindow();
         g_windowManager->m_colorCyclingOn = 1;
         viewWorldWindow.doModal(0);
     }
@@ -1498,7 +1490,9 @@ void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
 
 // E:\gamedcs\viewwrld.cpp:1549, dc 0x195ffc. This ordinary method's
 // only source operation is the five-argument adventure repaint. Complete
-// expands the method into updateRadar while retaining vwCompleteDraw.
+// expands this method at some call sites; the Mac build retains six calls
+// across the level callbacks, viewWorld, updateViewWorld, updateRadar and
+// the puzzle path in the window handler.
 void TViewWorldWindow::drawWindow()
 {
     g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z,
@@ -1573,8 +1567,7 @@ void TViewWorldWindow::updateViewWorld(message* msg)
                       m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
 
     init(center, 1);
-    g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z, m_viewableWidth,
-                                 m_viewableHeight);
+    drawWindow();
     drawWindow(1, 0xffff0001, 0xffff);
     g_windowManager->updateScreen(0, 0, 800, 600);
 }
@@ -1710,9 +1703,7 @@ int TViewWorldWindow::windowHandler(message& msg)
                 center = type_point(m_origin.m_x + g_viewHalfWidth,
                                     m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
                 init(center, 0);
-                g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z,
-                                             m_viewableWidth,
-                                             m_viewableHeight);
+                drawWindow();
                 g_windowManager->updateScreen(0, 0, 800, 600);
                 return MESSAGE_DISPATCH_CONSUME;
             case ACCEPT_ID:

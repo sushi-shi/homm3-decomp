@@ -461,9 +461,9 @@ int highScoreManager::getMonType(int score, int scoreType)
 }
 
 // Mac code 0x10b024 retains this source-local wrapper between getMonType
-// and THighScoreWindow's constructor; the constructor calls it for both icon
-// families. It loads the score, resolves the monster type, and returns the
-// selected object's image name.
+// and THighScoreWindow's constructor. The constructor and the score-reset
+// handler call it for both icon families. It loads the score, resolves the
+// monster type, and returns the selected object's image name.
 static const char* highScoreCreatureImageName(int index, int scoreType)
 {
     int score = g_highScoreManager->m_highScores[scoreType][index].m_score;
