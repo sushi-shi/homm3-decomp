@@ -750,8 +750,7 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                         od++;
                     }
                     // Canonical DC GetPitch boundaries (lines 1407/1409).
-                    if (row + 1 < height)
-                        screen.m_bytes += m_screenBitmap->getPitch();
+                    screen.m_bytes += m_screenBitmap->getPitch();
                     target.m_bytes += destination.getPitch();
                     source.m_bytes += m_bmpFizzleSource->getPitch();
                 }
