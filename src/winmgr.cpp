@@ -218,7 +218,6 @@ VA(0x00602520, 0x280)  // anchor-global, dc 0x19ad18
 int heroWindowManager::doDialog(heroWindow* dialogWindow,
                                 TDialogHandler dialogFunction, int fadeIn)
 {
-    heroWindow* w;
     int endFlag;
 
     if (g_dialogNestCount++ == 0)
@@ -226,8 +225,7 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
     try {
         g_inDialog = 1;
         try {
-            for (w = m_tailWindow; w; w = w->m_prevWindow)
-                w->sleepAllWidgets(1);
+            sleepAllWindows(1);
             try {
                 m_lastHover = -1;
                 if (dialogWindow)
@@ -280,12 +278,10 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
                 if (dialogWindow)
                     removeWindow(dialogWindow);
             } catch (...) {
-                for (w = m_headWindow; w; w = w->m_nextWindow)
-                    w->sleepAllWidgets(0);
+                sleepAllWindows(0);
                 throw;
             }
-            for (w = m_headWindow; w; w = w->m_nextWindow)
-                w->sleepAllWidgets(0);
+            sleepAllWindows(0);
         } catch (...) {
             g_inDialog = 0;
             throw;
@@ -317,7 +313,6 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
                                     TDialogHandler dialogDrawFunction,
                                     int fadeIn)
 {
-    heroWindow* w;
     int endFlag;
 
     if (g_dialogNestCount++ == 0)
@@ -325,8 +320,7 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
     try {
         g_inDialog = 1;
         try {
-            for (w = m_tailWindow; w; w = w->m_prevWindow)
-                w->sleepAllWidgets(1);
+            sleepAllWindows(1);
             try {
                 m_lastHover = -1;
                 if (dialogWindow)
@@ -386,12 +380,10 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
                     removeWindow(dialogWindow);
                 g_inputManager->flush();
             } catch (...) {
-                for (w = m_headWindow; w; w = w->m_nextWindow)
-                    w->sleepAllWidgets(0);
+                sleepAllWindows(0);
                 throw;
             }
-            for (w = m_headWindow; w; w = w->m_nextWindow)
-                w->sleepAllWidgets(0);
+            sleepAllWindows(0);
         } catch (...) {
             g_inDialog = 0;
             throw;
@@ -410,12 +402,9 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
 VA(0x00602a40, 0x188)  // dc 0x19b0fc
 void heroWindowManager::doQuickView(heroWindow* window)
 {
-    heroWindow* w;
-
     g_mouseManager->hidePointer();
     try {
-        for (w = m_tailWindow; w; w = w->m_prevWindow)
-            w->sleepAllWidgets(1);
+        sleepAllWindows(1);
         try {
             if (window)
                 addWindow(window, -1, 1);
@@ -449,12 +438,10 @@ void heroWindowManager::doQuickView(heroWindow* window)
             if (window)
                 removeWindow(window);
         } catch (...) {
-            for (w = m_headWindow; w; w = w->m_nextWindow)
-                w->sleepAllWidgets(0);
+            sleepAllWindows(0);
             throw;
         }
-        for (w = m_headWindow; w; w = w->m_nextWindow)
-            w->sleepAllWidgets(0);
+        sleepAllWindows(0);
     } catch (...) {
         g_mouseManager->showPointer(false);
         throw;
@@ -1043,4 +1030,20 @@ void heroWindowManager::fadeFromBlack(int speed)
         m_screenBitmap->getPitch(), 0);
     blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
                             WINDOW_SCREEN_HEIGHT);
+}
+
+// Mac retains this shared window-state helper at code 0+0x20ece4. DoDialog,
+// DoDialogDraw and DoQuickView each call it for the initial sleep and both
+// normal and exception cleanup paths. The Windows loops were expanded in
+// those callers. Dreamcast records the caller layouts but no helper name.
+void heroWindowManager::sleepAllWindows(unsigned char sleep)
+{
+    heroWindow* window;
+    if (sleep) {
+        for (window = m_tailWindow; window; window = window->m_prevWindow)
+            window->sleepAllWidgets(1);
+    } else {
+        for (window = m_headWindow; window; window = window->m_nextWindow)
+            window->sleepAllWidgets(0);
+    }
 }
