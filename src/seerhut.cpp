@@ -2534,6 +2534,19 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // the Dreamcast-proven helper. The remaining legacy artifact-quest arm expands
 // its nested type_quest construction where retail retains that call; the extra
 // inline budget also leaves the name vector's element construction as a call.
+// Mac keeps this map-quest loader as a separate body at code0+0x16aa6c,
+// immediately before TSeerHut::read. Complete expands its sole source call.
+static type_quest* readQuestFromMap(TAbstractFile* infile,
+                                    unsigned char flags)
+{
+    unsigned char questType;
+    infile->read(&questType, sizeof(questType));
+    type_quest* quest = createQuest(questType, flags);
+    if (quest)
+        quest->loadFromMap(infile);
+    return quest;
+}
+
 VA(0x00574610, 0x480)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
 void TSeerHut::read(TAbstractFile* infile)
 {
@@ -2548,13 +2561,7 @@ void TSeerHut::read(TAbstractFile* infile)
                 1, static_cast<TArtifact>(charBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
     } else {
-        int intBuffer;
-        infile->read(&intBuffer, 1);
-        type_quest* newQuest =
-            createQuest(intBuffer & 0xff, 1);
-        if (newQuest)
-            newQuest->loadFromMap(infile);
-        m_quest = newQuest;
+        m_quest = readQuestFromMap(infile, 1);
     }
 
     m_completedByPlayer = 0;

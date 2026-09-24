@@ -1,5 +1,32 @@
 # Reviewed source-owned callees retained by the selected skill-dialog pair.
 
+[[helpers]]
+unit = "seerhut"
+source_helper = "type_artifact_quest::type_artifact_quest(unsigned char flags, TArtifact artifact, int textRow)"
+mac_section = 0
+mac_offset = 0x1665b8
+mac_size = 0xb8
+target_sha256 = "cc95a2ce10758b8524cf87443a12f094629ac2356e51de131c4da63cad9e49a4"
+evidence = "Mac TSeerHut::read calls this body at 0x16ab8c with the legacy artifact and text row; a second caller is at 0x16b194. The body calls type_quest(flags), constructs and appends the artifact vector, stores textRow and calls setDefaultText. BLR 0x16666c precedes getRequirementText."
+
+[[helpers]]
+unit = "seerhut"
+source_helper = "type_artifact_quest::showArtifactProgress"
+mac_section = 0
+mac_offset = 0x166b38
+mac_size = 0xa4
+target_sha256 = "5c850e910ad3ca418c23d41749b3f994c5078fbf3d1e2cba3a47772640f9a5ce"
+evidence = "Both artifact proposal branches call 0x166b38 at 0x166a88/0x166ab4 and progress calls at 0x166b14. The body loops over artifact IDs, appends picture 8 records, then calls extendedDialog at 0x1194d8. BLR 0x166bd8 precedes artifact load."
+
+[[helpers]]
+unit = "seerhut"
+source_helper = "readQuestFromMap"
+mac_section = 0
+mac_offset = 0x16aa6c
+mac_size = 0x7c
+target_sha256 = "4f96c0ee97dca081072ebe7a32af6a8f2f69335414c293cdc8d41b681840f34f"
+evidence = "The sole direct caller is TSeerHut::read at 0x16aba0, passing file and flags=1. The body reads one quest-type byte, calls createQuest at 0x169724, conditionally invokes loadFromMap through the quest vtable and returns the quest. BLR 0x16aae4 precedes the read body. Complete expands this sequence in its read arm."
+
 [[functions]]
 retail_va = 0x56d310
 unit = "seerhut"
