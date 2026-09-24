@@ -880,23 +880,25 @@ void town::setSpellsAvailable()
 VA(0x005be930, 0x330)  // body (built-mask OR) + order-map, dc 0x166c08
 type_building_id town::createBuilding(type_building_id building)
 {
+    // Dreamcast CodeView names this short local `dwelling`.
+    short dwelling;
     m_built |= g_bitNumber[building];
     m_built &= ~s_includedBuildings[m_type][building];
 
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
-        short dw = s_constHordeEffects[m_type][slot].m_dwelling;
+        dwelling = s_constHordeEffects[m_type][slot].m_dwelling;
         if (building == g_hordeBuildings[slot]) {
-            m_built &= ~g_bitNumber[DWELLING_0_ID + dw];
-            if (dw < TOWN_DWELLING_COUNT
-                && hasBuilding(DWELLING_0_UPG_ID + dw, false)) {
+            m_built &= ~g_bitNumber[DWELLING_0_ID + dwelling];
+            if (dwelling < TOWN_DWELLING_COUNT
+                && hasBuilding(DWELLING_0_UPG_ID + dwelling, false)) {
                 m_built &= ~g_bitNumber[building];
-                m_built &= ~g_bitNumber[DWELLING_0_UPG_ID + dw];
+                m_built &= ~g_bitNumber[DWELLING_0_UPG_ID + dwelling];
                 building = g_hordeBuildings[slot + 1];
                 m_built |= g_bitNumber[building];
             }
         }
         if (hasBuilding(g_hordeBuildings[slot], false)) {
-            if (building == DWELLING_0_UPG_ID + dw) {
+            if (building == DWELLING_0_UPG_ID + dwelling) {
                 m_built &= ~g_bitNumber[building];
                 m_built &= ~g_bitNumber[g_hordeBuildings[slot]];
                 building = g_hordeBuildings[slot + 1];
