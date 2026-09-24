@@ -62,7 +62,7 @@ SIZE(CampaignScenarioInfo, 0x14);
 // wrote three fixed progress arrays. Complete's SCampaign::completeCurrentMap
 // (0x489820) owns the dynamic scenario record, completion order and crossover
 // pools, and is called directly by oldmain. These retired interfaces are
-// recorded individually in config/source/dc_only.tsv.
+// recorded individually in the retired DC exclusion inventory (Git history).
 
 class SCampaign {
 public:

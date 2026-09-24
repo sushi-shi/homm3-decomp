@@ -11,8 +11,7 @@ from unittest.mock import patch
 from homm3.build import build, configure, delink, normalize_objs
 from homm3.cleanliness import board
 from homm3.core import inputs
-from homm3.core.nb11 import NB11Error
-from homm3.match import banked_rows, single_view, source_ownership, source_inventory, status, verify_va_claims
+from homm3.match import banked_rows, single_view, source_ownership, status, verify_va_claims
 
 
 class BuildModeTest(unittest.TestCase):
@@ -41,12 +40,10 @@ class BuildModeTest(unittest.TestCase):
             ("history", status, "baseline_history", ''),
             ("check", status, "cmd_check", None),
             ("checkpoint", status, "cmd_update", None),
-            ("origins", source_ownership, "read_dc", []),
             ("banked", banked_rows, "run_gate", []),
             ("claims", verify_va_claims, "run_gate", []),
             ("single_view", single_view, "run_gate", []),
             ("ownership", source_ownership, "run_gate", []),
-            ("inventory", source_inventory, "run_gate", []),
             ("cleanliness", board, "check_and_roll", []),
             ("readme", status, "write_readme", None),
         ]:
@@ -59,37 +56,34 @@ class BuildModeTest(unittest.TestCase):
         self.assertEqual(build.main([]), 0)
         self.assertEqual(self.events, ["configure", "compile", "delink", "report",
                                       "fingerprints", "history", "check", "checkpoint", "banked", "claims",
-                                      "single_view", "origins", "ownership", "inventory", "cleanliness", "readme"])
+                                      "single_view", "ownership", "cleanliness", "readme"])
         self.mocks["compile"].assert_called_once_with("ninja")
         self.mocks["normalize"].assert_not_called()  # delink already normalizes
-        self.assertEqual(self.preflight.call_count, 2)
-        self.mocks["origins"].assert_called_once_with(include_declarations=True)
-        self.mocks["ownership"].assert_called_once_with(origins=[])
-        self.mocks["cleanliness"].assert_called_once_with(write=True, dc_origins=[])
+        self.preflight.assert_called_once_with(inputs.RETAIL)
+        self.mocks["ownership"].assert_called_once_with()
+        self.mocks["cleanliness"].assert_called_once_with(write=True)
 
-    def test_missing_dc_evidence_preserves_independent_diagnostics_and_fails(self):
-        for error in (inputs.InputError, NB11Error, FileNotFoundError):
+    def test_unavailable_ownership_evidence_preserves_later_gates_and_fails(self):
+        for error in (inputs.InputError, FileNotFoundError):
             with self.subTest(error=error):
-                self.mocks['origins'].side_effect = error('missing DC evidence')
+                self.mocks['ownership'].side_effect = error('unreadable source evidence')
                 before = len(self.events)
                 self.assertEqual(build.main([]), 1)
                 events = self.events[before:]
                 for gate in ('banked', 'claims', 'single_view', 'readme'):
                     self.assertIn(gate, events)
-                self.mocks['ownership'].assert_not_called()
-                self.mocks['cleanliness'].assert_not_called()
-                self.assertIn('missing DC evidence', self.stderr.getvalue())
-                self.assertIn('floors unchanged', self.stderr.getvalue())
+                self.mocks['cleanliness'].assert_called_with(write=False)
+                self.assertIn('unreadable source evidence', self.stderr.getvalue())
 
     def test_unreadable_independent_gate_does_not_skip_later_gates(self):
         self.mocks['banked'].side_effect = OSError('unreadable banked evidence')
         self.assertEqual(build.main([]), 1)
         for gate in ('claims', 'single_view', 'ownership', 'readme'):
             self.mocks[gate].assert_called_once()
-        self.mocks['cleanliness'].assert_called_once_with(write=False, dc_origins=[])
+        self.mocks['cleanliness'].assert_called_once_with(write=False)
 
     def test_missing_pinned_input_fails_before_compile_or_ledger_changes(self):
-        self.preflight.side_effect = inputs.InputError("Dreamcast executable missing")
+        self.preflight.side_effect = inputs.InputError("retail executable missing")
         self.assertEqual(build.main([]), 1)
         self.assertEqual(self.events, [])
 
@@ -101,16 +95,9 @@ class BuildModeTest(unittest.TestCase):
     def test_failed_source_gate_still_refreshes_readme_and_remains_fatal(self):
         self.mocks["claims"].side_effect = lambda: ["invalid source claim"]
         self.assertEqual(build.main([]), 1)
-        self.mocks["cleanliness"].assert_called_once_with(write=False, dc_origins=[])
+        self.mocks["cleanliness"].assert_called_once_with(write=False)
         self.mocks["checkpoint"].assert_called_once()
         self.mocks["readme"].assert_called_once()
-
-    def test_unexplained_dc_body_fails_the_full_checkpoint(self):
-        self.mocks['inventory'].side_effect = lambda **kwargs: ['SOURCE-INVENTORY missing DC body']
-        self.assertEqual(build.main([]), 1)
-        self.mocks['inventory'].assert_called_once_with(origins=[])
-        self.mocks['cleanliness'].assert_called_once_with(write=False, dc_origins=[])
-        self.assertIn('SOURCE-INVENTORY', self.stderr.getvalue())
 
     def test_fast_build_preserves_targets_and_skips_checkpoint(self):
         self.assertEqual(build.main(["--fast", "cursor"]), 0)

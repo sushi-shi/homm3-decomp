@@ -1,4 +1,4 @@
-"""Check canonical C++ definitions against Dreamcast CodeView source ownership.
+"""Scan canonical C++ definitions and check their retail claim ownership.
 
 Clang supplies declaration identities and physical definition locations only;
 VC6 and the pinned retail image remain the code-generation authorities. In
@@ -10,7 +10,6 @@ import argparse
 from bisect import bisect_left
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
-import csv
 from dataclasses import asdict, dataclass, replace
 import hashlib
 import json
@@ -24,7 +23,6 @@ from homm3.core import common, clang
 from homm3 import manifest
 
 ROOT = common.HOMM3_DIR
-InlineOrigin = tuple[int, int] | tuple[()]
 
 
 @dataclass(frozen=True)
@@ -40,9 +38,6 @@ class Definition:
     inline: bool
     va: int | None
     mangled: str
-    origin_file: str = ""
-    origin_line: int = 0
-    dc_offset: str = ""
     argument_types: tuple[str, ...] = ()
     const: bool = False
     class_offset: int | None = None
@@ -51,161 +46,8 @@ class Definition:
     # Extra retained specializations share this one physical source body.
     additional_instances: tuple[tuple[int, str, str], ...] = ()
     return_type: str = ""
-    inline_origin: InlineOrigin = ()
-    declaration_only_type: int = 0
-    original_name: str = ""
     template: bool = False
     internal: bool = False
-
-
-@dataclass(frozen=True)
-class Origin:
-    file: str
-    name: str
-    line: int
-    parameters: int
-    module: str
-    offset: str
-    argument_types: tuple[str, ...] | None = None
-    const: bool = False
-    generated: bool = False
-    declaration_only: bool = False
-    type_index: int = 0
-    return_type: str = ""
-
-
-def source_file(path: str) -> str:
-    """Keep relative source subdirectories; ignore DOS drive/case differences."""
-    name = re.sub('/+', '/', path.replace('\\', '/')).lower()
-    if '/gamedcs/' in name:
-        return name.split('/gamedcs/', 1)[1]
-    return name
-
-
-def read_dc(root: Path = ROOT, *, include_declarations: bool = False, project=None) -> list[Origin]:
-    """Read procedure locations, optionally adding unlocated field-list identities.
-
-    Location-only consumers such as the local-class cleanliness metric must
-    not turn an un-emitted declaration into evidence for a source file.
-    """
-    from homm3.core import inputs
-    from homm3.core.nb11_types import Types
-    from homm3.core.project import Project
-    project = project or Project(root)
-    root = project.root
-    symbols = inputs.dreamcast_symbols(project)
-    types = Types.from_symbols(symbols)
-    generated = generated_members(types)
-    origins = []
-    from homm3.analysis.dc_extract import corpus_rows
-    rows, _variables = corpus_rows(symbols)
-    for r in rows:
-        proc = symbols.procedures.get(int(r['offset'], 16))
-        function = types.get(proc.type_index) if proc else {}
-        arguments = None
-        const = False
-        if function.get('kind') == 'function':
-            arguments = tuple('...' if t == 0 else types.declaration(t) for t in
-                              types.get(function['arguments']).get('types', []))
-            this = types.get(function.get('this', 0))
-            if this['kind'] == 'pointer':
-                const = 'const' in types.get(this['target']).get('qualifiers', [])
-        origins.append(Origin(source_file(r['file']), r['name'], int(r['line'] or 0),
-                              int(r['params'] or 0), r['module'], r['offset'],
-                              arguments, const, bool(proc and
-                                  (family_name(proc.name), proc.type_index) in generated),
-                              return_type=(types.declaration(function['returns'])
-                                           if 'returns' in function else '')))
-    if include_declarations:
-        origins.extend(declaration_origins(types, origins))
-    return origins
-
-
-def member_records(types):
-    """Enumerate named field-list methods, including LF_METHODLIST overloads."""
-    for index in types.records:
-        cls = types.get(index)
-        if cls.get('kind') not in {'class', 'struct', 'union'} or cls.get('forward'):
-            continue
-        for field in types.fields(cls['fields']):
-            methods = ([field] if field['kind'] == 'method' else
-                       types.get(field['type']).get('entries', [])
-                       if field['kind'] == 'overloads' else [])
-            for method in methods:
-                yield cls['name'] + '::' + field['name'], method
-
-
-def declaration_origins(types, procedures: list[Origin]) -> list[Origin]:
-    """Keep un-emitted member identities without inventing a body location.
-
-    Field lists prove declarations and compgenx, but their member sequence is
-    not a definition line table. In particular, the smart-pointer copy and
-    pointer constructors are distinct even though only the latter have a
-    procedure record. An absent body cannot inherit another overload's line.
-    """
-    seen = {(family_name(o.name), o.argument_types, o.const, o.generated)
-            for o in procedures}
-    result = []
-    for name, method in member_records(types):
-        function = types.get(method['type'])
-        if function.get('kind') != 'function':
-            continue
-        arguments = tuple('...' if t == 0 else types.declaration(t) for t in
-                          types.get(function['arguments']).get('types', []))
-        this = types.get(function.get('this', 0))
-        const = (this.get('kind') == 'pointer' and
-                 'const' in types.get(this['target']).get('qualifiers', []))
-        generated = bool(method.get('attributes', 0) & 0x100)
-        key = (family_name(name), arguments, const, generated)
-        if key in seen:
-            continue
-        seen.add(key)
-        result.append(Origin('', name, 0, len(arguments), '', '', arguments,
-                             const, generated, True, method['type'],
-                             types.declaration(function['returns']) if 'returns' in function else ''))
-    return result
-
-
-def generated_members(types) -> set[tuple[str, int]]:
-    """Read CV_fldattr_t.compgenx, never infer generation from line placement.
-
-    Microsoft cvinfo.h defines bit 8 as a compiler-generated function that
-    exists. Such a procedure's line can identify its emission/use site, not
-    a written body. Keep both member name and function type: distinct methods
-    with identical signatures can share an LF_MFUNCTION record.
-    """
-    result = set()
-    for name, method in member_records(types):
-        if method.get('attributes', 0) & 0x100:
-            result.add((family_name(name), method['type']))
-    return result
-
-
-def family_name(name: str) -> str:
-    """Template instances share one source definition, not one body count."""
-    previous = None
-    while previous != name:
-        previous = name
-        name = re.sub(r"(?<!operator)<[^<>]*>", "", name)
-    return name
-
-
-def procedure_name(name: str) -> str:
-    """Compare ordinary operation spellings across the documented naming pass.
-
-    Containing types and operators keep their identity. Case/underscore changes
-    on an ordinary function do not waive signatures, source owners or order.
-    """
-    family = family_name(name)
-    scope, separator, operation = family.rpartition('::')
-    if operation.startswith(('operator', '~')) or (separator and operation == scope.rsplit('::', 1)[-1]):
-        return family
-    return scope + separator + operation.replace('_', '').lower()
-
-
-def type_identity(name: str) -> str:
-    """Ignore elaborated-type syntax, preserving typedefs and qualifiers."""
-    return re.sub(r'\s+', '', re.sub(r'\b(?:class|struct|enum|union)\s+', '', name))
 
 
 class LineIndex:
@@ -224,128 +66,6 @@ class LineIndex:
         beginning = self.raw.rfind('\n', 0, start) + 1
         for index in range(bisect_left(self.starts, beginning) - 1, -1, -1):
             yield self.lines[index]
-
-
-def attached_prefix(raw: str | LineIndex, start: int) -> list[str]:
-    # Only the attached comment/declarator prefix is eligible. Never carry an
-    # origin across another definition (the old link-order parser did that).
-    index = raw if isinstance(raw, LineIndex) else LineIndex(raw)
-    line_start = index.raw.rfind('\n', 0, start) + 1
-    if line_start in index.prefixes:
-        return index.prefixes[line_start]
-    prefix = []
-    for line in index.preceding(start):
-        line = line.rstrip('\r\n')
-        text = line.strip()
-        if text and not text.startswith(('//', '#', 'VA(')):
-            break
-        prefix.append(line)
-    prefix.reverse()
-    index.prefixes[line_start] = prefix
-    return prefix
-
-
-def origin_hint(raw: str | LineIndex, start: int) -> tuple[str, int, str]:
-    prefix = attached_prefix(raw, start)
-    origin_file, origin_line, dc_offset = '', 0, ''
-    for line in prefix:
-        renamed = re.fullmatch(
-            r"//\s+Original:\s+[^;]+;\s+([^;,]+\.(?:cpp|h)):(\d+),\s+dc\s+(0x[0-9a-fA-F]+)\.?(?:\s.*)?",
-            line.strip())
-        if renamed:
-            origin_file = source_file(renamed.group(1))
-            origin_line = int(renamed.group(2))
-            dc_offset = hex(int(renamed.group(3), 16))
-        m = re.match(r"//\s+([A-Za-z]:\\.+?\.(?:cpp|h)):(\d+)(?:[.,\s]|$)", line.strip())
-        if m:
-            origin_file, origin_line = source_file(m.group(1)), int(m.group(2))
-        offsets = re.findall(r"\bdc\s+(0x[0-9a-fA-F]+)\b", line)
-        if offsets and (m or line.lstrip().startswith('VA(')):
-            dc_offset = hex(int(offsets[-1], 16))
-    return origin_file, origin_line, dc_offset
-
-
-def original_name_hint(raw: str | LineIndex, start: int) -> str:
-    """Only an explicit Original: comment authorizes a semantic rename."""
-    names = [match.group(1).strip() for line in attached_prefix(raw, start)
-             if (match := re.fullmatch(
-                 r"//\s+Original:\s+([^;]+);\s+[^;,]+\.(?:cpp|h):\d+,\s+dc\s+0x[0-9a-fA-F]+\.?(?:\s.*)?",
-                 line.strip()))]
-    return names[-1] if names else ''
-
-
-def inline_origin_hint(raw: str | LineIndex, start: int) -> tuple[InlineOrigin, bool]:
-    """An explicit review binds a field-list type to a positive inline row."""
-    rows = [line.strip() for line in attached_prefix(raw, start)
-            if '@dc-inline-origin:' in line]
-    if not rows:
-        return (), False
-    match = re.fullmatch(r'//\s*@dc-inline-origin:\s*(0x[0-9a-fA-F]+)\s+'
-                         r'(0x[0-9a-fA-F]+)', rows[0])
-    if len(rows) != 1 or not match:
-        return (), True
-    return (int(match.group(1), 16), int(match.group(2), 16)), False
-
-
-def declaration_only_hint(raw: str | LineIndex, start: int) -> tuple[int, bool]:
-    rows = [line.strip() for line in attached_prefix(raw, start)
-            if '@dc-declaration-only:' in line]
-    if not rows:
-        return 0, False
-    match = re.fullmatch(r'//\s*@dc-declaration-only:\s*(0x[0-9a-fA-F]+)', rows[0])
-    if len(rows) != 1 or not match:
-        return 0, True
-    return int(match.group(1), 16), False
-
-
-def inline_origins(definitions: list[Definition], origins: list[Origin], symbols):
-    """Validate reviewed inline source rows without borrowing procedure lines.
-
-    CodeView's foreign-header rows prove location, while the exact field-list
-    type pins the reviewed overload. The attached evidence comment must explain
-    the instructions establishing that semantic binding, just as for a VA.
-    """
-    result, errors, bound = [], [], set()
-    for d in definitions:
-        if not d.inline_origin:
-            continue
-        where = f'{d.file}:{d.line} {d.name}'
-        if len(d.inline_origin) != 2:
-            errors.append(f'INLINE_ORIGIN {where}: expected a type and an inline address')
-            continue
-        type_index, address = d.inline_origin
-        candidates = [o for o in origins if o.declaration_only and not o.generated
-                      and o.type_index == type_index
-                      and procedure_name(o.name) == procedure_name(d.name)]
-        if len(candidates) != 1 or not d.inline or not d.member:
-            errors.append(f'INLINE_ORIGIN {where}: type must identify this unlocated inline member')
-            continue
-        declaration = candidates[0]
-        key = (procedure_name(declaration.name), type_index)
-        if key in bound:
-            errors.append(f'INLINE_ORIGIN {where}: duplicate body for one CodeView declaration')
-            continue
-        bound.add(key)
-        rows = {(module, source_file(file), line)
-                for module, lines in symbols.source_lines.items()
-                for file, line, offset in lines if offset == address}
-        callers = [(start, proc) for start, proc in symbols.procedures.items()
-                   if start < address < start + proc.size]
-        if len(rows) != 1 or len(callers) != 1:
-            errors.append(f'INLINE_ORIGIN {where}: address needs one source row inside a caller')
-            continue
-        module, file, line = next(iter(rows))
-        start, caller = callers[0]
-        caller_origins = [o for o in origins if o.offset == hex(start)
-                          and o.module == module and not o.declaration_only]
-        if (caller.module != module or not caller_origins
-                or any(o.file == file for o in caller_origins)
-                or Path(file).suffix not in {'.h', '.hpp', '.inl'}):
-            errors.append(f'INLINE_ORIGIN {where}: row must attribute a foreign header in that caller')
-            continue
-        result.append(replace(declaration, file=file, line=line, module=module,
-                              offset=hex(address), declaration_only=False))
-    return result, errors
 
 
 def _qualified(cursor, kinds) -> str:
@@ -679,14 +399,6 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
                 instances = []
             elif len(vas) > 1 and not instances:
                 errors.append(f'INSTANCE {relative}:{loc.line}: multiple VA annotations require concrete selectors')
-            inline_origin, invalid = inline_origin_hint(
-                line_indexes[relative], char_offset(cursor.extent.start.offset))
-            if invalid:
-                errors.append(f'INLINE_ORIGIN {relative}:{loc.line}: malformed or repeated annotation')
-            declaration_type, invalid = declaration_only_hint(
-                line_indexes[relative], char_offset(cursor.extent.start.offset))
-            if invalid:
-                errors.append(f'DECLARATION_ONLY {relative}:{loc.line}: malformed or repeated annotation')
             first = len(definitions)
             definitions.append(Definition(
                 relative, loc.line, char_offset(cursor.extent.start.offset),
@@ -696,16 +408,13 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
                 member, bool(is_inlined(cursor)),
                 instances[0][0] if instances else (vas[0] if len(vas) == 1 else None),
                 declaration_name(cursor),
-                *origin_hint(line_indexes[relative], char_offset(cursor.location.offset)),
-                tuple(c.type.spelling for c in cursor.get_children() if c.kind == k.PARM_DECL),
-                cursor.is_const_method() if cursor.kind in {k.CXX_METHOD, k.CONVERSION_FUNCTION} else False,
-                class_offset, cursor.type.is_function_variadic(),
-                instances[0][1] if instances else "",
+                argument_types=tuple(c.type.spelling for c in cursor.get_children() if c.kind == k.PARM_DECL),
+                const=(cursor.is_const_method()
+                       if cursor.kind in {k.CXX_METHOD, k.CONVERSION_FUNCTION} else False),
+                class_offset=class_offset, variadic=cursor.type.is_function_variadic(),
+                instance=instances[0][1] if instances else "",
                 return_type=('void' if cursor.kind in {k.CONSTRUCTOR, k.DESTRUCTOR}
                              else cursor.result_type.spelling),
-                inline_origin=inline_origin, declaration_only_type=declaration_type,
-                original_name=original_name_hint(
-                    line_indexes[relative], char_offset(cursor.location.offset)),
                 template=template,
                 internal=(cursor.kind == k.FUNCTION_DECL
                           and cursor.storage_class == cindex.StorageClass.STATIC)))
@@ -842,303 +551,6 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
     return definitions, errors, sorted(reached)
 
 
-def read_filter(path: Path, fields: tuple[str, ...]):
-    if not path.is_file():
-        return {}, [f'FILTER missing {path.name}']
-    entries = {}
-    errors = []
-    with path.open(newline='') as stream:
-        rows = csv.DictReader((line for line in stream if not line.startswith('#')), delimiter='\t')
-        if rows.fieldnames != [*fields, 'reason']:
-            return {}, [f'FILTER {path.name}: expected columns {(*fields, "reason")}']
-        for row in rows:
-            key = tuple(row.get(f, '') for f in fields)
-            if key in entries or not all(key) or not row.get('reason', '').strip():
-                errors.append(f'FILTER {path.name}: duplicate/incomplete entry {key}')
-            entries[key] = row.get('reason', '')
-    return entries, errors
-
-
-
-def read_split_filters(root: Path, names: tuple[str, ...], fields: tuple[str, ...]):
-    """Read exclusion lists without allowing identities to overlap."""
-    entries = {}
-    errors = []
-    owners = {}
-    for name in names:
-        rows, failures = read_filter(root / 'config/source' / name, fields)
-        errors.extend(failures)
-        for key, reason in rows.items():
-            if key in entries:
-                errors.append(f'FILTER duplicate exclusion {key} in {owners[key]} and {name}')
-            else:
-                entries[key] = reason
-                owners[key] = name
-    return entries, errors
-
-
-def read_dc_filters(root: Path):
-    return read_split_filters(root, ('dc_only.tsv', 'dc_only_generated.tsv'),
-                              ('file', 'function', 'line'))
-
-
-def read_win_filters(root: Path):
-    return read_split_filters(root, ('win_only.tsv', 'win_only_modules.tsv'),
-                              ('file', 'function', 'signature'))
-
-
-def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
-            win_only: dict, *, symbols=None, matched_out=None,
-            strict_names: bool = False) -> tuple[list[str], dict]:
-    inline_errors = []
-    if any(d.inline_origin for d in definitions):
-        if symbols is None:
-            raise ValueError("inline ownership comparison requires explicit reference symbols")
-        recovered, inline_errors = inline_origins(definitions, origins, symbols)
-        origins = [*origins, *recovered]
-    by_name = defaultdict(list)
-    dc_keys = set()
-    for o in origins:
-        key = (o.file, o.name, str(o.line))
-        if not o.declaration_only:
-            dc_keys.add(key)
-        if key not in dc_only:
-            by_name[procedure_name(o.name)].append(o)
-    errors = inline_errors + [f'FILTER stale dc_only.tsv/dc_only_generated.tsv entry {key}'
-                              for key in dc_only if key not in dc_keys]
-    used_win = set()
-    matches = []
-    bindings = {}
-    counts = Counter()
-    for d in definitions:
-        errors_before = len(errors)
-        where = f'{d.file}:{d.line} {d.name}'
-        key = (d.file, d.name, d.signature)
-        expected_name = procedure_name(d.original_name or d.name)
-        candidates = by_name.get(expected_name, [])
-        if d.dc_offset:
-            bridged = [o for o in origins if o.offset == d.dc_offset
-                       and (o.file, o.name, str(o.line)) not in dc_only]
-            if bridged:
-                # Clang's physical source inventory omits the spelling of an
-                # unnamed namespace; its mangling still proves that scope.
-                # Preserve named containing types and all ordinary operations.
-                def same_name(o):
-                    name = o.name
-                    if (name.startswith("`anonymous namespace'::")
-                            and re.search(r'\?A0x[0-9a-fA-F]+@', d.mangled)):
-                        name = name.removeprefix("`anonymous namespace'::")
-                    return procedure_name(name) == expected_name
-                if strict_names and key not in win_only and not any(same_name(o) for o in bridged):
-                    errors.append(f'IDENTITY {where}: dc {d.dc_offset} names '
-                                  + ', '.join(sorted({o.name for o in bridged}))
-                                  + '; correct the mapping or document a proven rename with Original:')
-                    counts['identity'] += 1
-                    continue
-                if strict_names and key not in win_only and not d.template:
-                    arguments = tuple(map(type_identity, d.argument_types))
-                    exact_siblings = [o for o in candidates if o.argument_types is not None
-                        and tuple(map(type_identity, o.argument_types)) == arguments
-                        and o.const == d.const]
-                    if exact_siblings and not any(o in exact_siblings for o in bridged):
-                        errors.append(f'IDENTITY {where}: dc {d.dc_offset} selects a different '
-                                      'formal overload from the authored definition')
-                        counts['identity'] += 1
-                        continue
-                candidates = bridged
-            elif key in win_only and any(o.offset == d.dc_offset
-                    and (o.file, o.name, str(o.line)) in dc_only for o in origins):
-                candidates = []  # The reviewed old interface cannot borrow a sibling overload.
-            elif strict_names and key not in win_only:
-                errors.append(f'IDENTITY {where}: dc {d.dc_offset} has no eligible procedure')
-                counts['identity'] += 1
-                continue
-        if d.origin_file and d.origin_line:
-            narrowed = [o for o in candidates if o.file == d.origin_file
-                        and o.line == d.origin_line]
-            if narrowed:
-                candidates = narrowed
-        # Formal CodeView types exclude hidden ABI arguments and survive when
-        # optimized debug variable records omit unused source parameters.
-        # An origin hint selects a counterpart; it cannot waive the formal
-        # signature check. A reviewed platform overload belongs in the exact
-        # Windows-only filter, including when its source comment names DC.
-        # CodeView terminates variadic LF_ARGLIST records with T_NOTYPE (0),
-        # rendered as an ellipsis. Clang's PARM_DECLs count only fixed arguments;
-        # retain the ellipsis separately so removing it cannot pass this gate.
-        narrowed = [o for o in candidates if o.argument_types is not None
-                    and len(o.argument_types) - (o.argument_types[-1:] == ('...',)) == d.parameters
-                    and (o.argument_types[-1:] == ('...',)) == d.variadic
-                    and o.const == d.const]
-        signature_mismatch = []
-        if narrowed:
-            candidates = narrowed
-        else:
-            signature_mismatch = [(o, o.argument_types) for o in candidates
-                                  if o.argument_types is not None]
-            candidates = [o for o in candidates if o.argument_types is None]
-        definition_arguments = tuple(d.argument_types) + (('...',) if d.variadic else ())
-        narrowed = [o for o in candidates if o.argument_types is not None
-                    and tuple(type_identity(t) for t in o.argument_types)
-                    == tuple(type_identity(t) for t in definition_arguments)]
-        if not narrowed:
-            # Template definitions have T where CV records a concrete class
-            # instantiation. Keep the containing type and its qualifiers:
-            # const SmartPtr<T>& can identify the copy constructor, whereas
-            # T* cannot borrow that declaration's identity.
-            narrowed = [o for o in candidates if o.argument_types is not None
-                        and tuple(type_identity(family_name(t)) for t in o.argument_types)
-                        == tuple(type_identity(family_name(t)) for t in definition_arguments)]
-        if narrowed:
-            candidates = narrowed
-        elif any(not o.declaration_only for o in candidates):
-            # Unlocated declarations participate in overload selection when
-            # their formal types match. Mere name/arity agreement must not
-            # give them precedence over the existing procedure candidates.
-            candidates = [o for o in candidates if not o.declaration_only]
-        written = [o for o in candidates if not o.generated]
-        if d.declaration_only_type:
-            # An explicitly reviewed coverage gap carries no invented source
-            # line. Require the exact declared interface and one in-class
-            # header body; it cannot waive a located body or an overload.
-            exact = [o for o in written if o.declaration_only
-                     and o.type_index == d.declaration_only_type
-                     and o.argument_types is not None
-                     and tuple(type_identity(t) for t in o.argument_types)
-                     == tuple(type_identity(t) for t in definition_arguments)
-                     and o.const == d.const and o.return_type and d.return_type
-                     and type_identity(o.return_type) == type_identity(d.return_type)]
-            if (len(exact) != 1 or len(written) != 1 or not d.inline or not d.member
-                    or d.class_offset is None or not d.file.startswith('include/')
-                    or d.inline_origin or d.va is not None):
-                errors.append(f'DECLARATION_ONLY {where}: review must identify one '
-                              'unlocated declaration with the exact interface and an in-class header body')
-                continue
-            identity = ('declaration', procedure_name(exact[0].name), exact[0].type_index)
-            prior = bindings.get(identity)
-            if prior and (prior.file, prior.offset) != (d.file, d.offset):
-                errors.append(f'DUPLICATE {where}: reviewed declaration already binds '
-                              f'{prior.file}:{prior.line}')
-                counts['duplicate'] += 1
-            else:
-                bindings[identity] = d
-                counts['reviewed_unlocated'] += 1
-                if key in win_only:
-                    used_win.add(key)
-                if matched_out is not None:
-                    matched_out.append((d, tuple(exact)))
-            continue
-        if key in win_only:
-            used_win.add(key)
-            # A declaration without a source body is not a Windows-only
-            # exemption. A reviewed, different return interface is distinct:
-            # e.g. Complete's pointer-changed result vs DC's void declaration.
-            # Require both parsed return types; old/partial inventories cannot
-            # authorize this distinction. An emitted DC body still needs its
-            # proper owner rather than this declaration-only exception.
-            changed_return = (written and d.return_type
-                              and all(o.declaration_only and o.return_type
-                                      and type_identity(o.return_type) != type_identity(d.return_type)
-                                      for o in written))
-            if written and not changed_return:
-                errors.append(f'FILTER {where}: Windows-only exemption hides a CodeView counterpart')
-            else:
-                counts['win_only'] += 1
-            continue
-        if signature_mismatch and not candidates:
-            expected = sorted({(f'type {o.type_index:#x} (declaration only)'
-                                if o.declaration_only else f'{o.file}:{o.line}')
-                               + f' ({", ".join(arguments)})'
-                               + (' const' if o.const else '')
-                               for o, arguments in signature_mismatch})
-            errors.append(f'SIGNATURE {where} [{d.signature}]: no matching CodeView '
-                          'formal arity/constness/ellipsis; review overload identity or the '
-                          'platform signature change against ' + '; '.join(expected))
-            counts['signature'] += 1
-            continue
-        if not written:
-            if candidates:
-                errors.append(f'GENERATED {where} [{d.signature}]: CodeView counterpart '
-                              'is compiler-generated; restore the implicit member or '
-                              'review the Windows-specific definition')
-                counts['generated'] += 1
-            else:
-                errors.append(f'WIN_ONLY {where} [{d.signature}]: no CodeView counterpart or reviewed exemption')
-                counts['unknown'] += 1
-            continue
-        candidates = written
-        if all(o.declaration_only for o in candidates):
-            expected = sorted({f'{o.name} ({", ".join(o.argument_types or ())})'
-                               + (' const' if o.const else '')
-                               + f' [type {o.type_index:#x}]' for o in candidates})
-            errors.append(f'UNLOCATED {where} [{d.signature}]: CodeView declares '
-                          + '; '.join(expected) + '; no procedure source location; '
-                          'recover body ownership/order without borrowing another overload\'s line')
-            counts['unlocated'] += 1
-            continue
-        candidates = [o for o in candidates if not o.declaration_only]
-        # Equal names and signatures in different source files are distinct
-        # written functions (e.g. bitmap24.cpp and palette.cpp's RGB helpers).
-        # Bind only the owning file before duplicate detection and before
-        # exposing matches to the bidirectional inventory. Otherwise one local
-        # helper can consume another TU's row or manufacture an ambiguity.
-        actual = d.file.split('/', 1)[1].lower()
-        owned = [o for o in candidates if o.file == actual]
-        if owned:
-            candidates = owned
-        # One written DC function cannot authorize multiple physical Windows
-        # definitions. In particular, a same-arity adapter overload must not
-        # borrow the canonical helper's owner merely because type narrowing
-        # fell back to its name. Ignore repeated emissions of the same DC
-        # source definition, but preserve real overloads and instantiations.
-        identities = {(o.file, o.name, o.line, o.argument_types, o.const)
-                      for o in candidates if o.line}
-        if len(identities) == 1:
-            identity = next(iter(identities))
-            prior = bindings.get(identity)
-            if prior and (prior.file, prior.offset) != (d.file, d.offset):
-                errors.append(f'DUPLICATE {where} [{d.signature}]: CodeView '
-                              f'{identity[0]}:{identity[2]} {identity[1]} already '
-                              f'binds {prior.file}:{prior.line} {prior.name} '
-                              f'[{prior.signature}]; restore one canonical body '
-                              'or prove a distinct platform overload')
-                counts['duplicate'] += 1
-            else:
-                bindings[identity] = d
-        locations = {(o.file, o.line) for o in candidates}
-        files = {f for f, _ in locations}
-        if actual not in files:
-            errors.append(f'OWNER {where}: CodeView defines in {", ".join(sorted(files))}')
-            counts['owner'] += 1
-        else:
-            lines = {line for f, line in locations if f == actual and line}
-            if len(lines) == 1:
-                matches.append((d, actual, next(iter(lines))))
-            elif len(lines) > 1:
-                errors.append(f'AMBIGUOUS {where}: CodeView source lines {sorted(lines)} need overload identity')
-            counts['same_file'] += 1
-        if matched_out is not None and len(errors) == errors_before:
-            matched_out.append((d, tuple(candidates)))
-    for key in win_only.keys() - used_win:
-        errors.append(f'FILTER stale win_only.tsv/win_only_modules.tsv entry {key}')
-    previous = {}
-    for d, file, dc_line in matches:
-        # Ordinary retained .cpp bodies follow retail RVA order, checked by
-        # verify_va_claims. The older DC build can order those bodies
-        # differently (townObject's constructor / HandleGiftMsg, for example).
-        # Header bodies, explicit inlines and unclaimed helpers instead use
-        # the source-line stream; an ordinary retail claim cannot advance it.
-        if d.file.startswith('src/') and d.va is not None and not d.inline:
-            continue
-        key = (d.file, file)
-        prior = previous.get(key)
-        if prior and dc_line < prior[1]:
-            errors.append(f'ORDER {d.file}:{d.line} {d.name} (DC {dc_line}) follows {prior[0].name} (DC {prior[1]})')
-            counts['order'] += 1
-        previous[key] = (d, dc_line)
-    return errors, dict(counts)
-
-
 def active_stub_definitions(definitions: list[Definition], root: Path) -> list[str]:
     """Reject explicit placeholder comments inside AST-proven active bodies."""
     texts = {}
@@ -1163,37 +575,25 @@ def active_stub_definitions(definitions: list[Definition], root: Path) -> list[s
 
 class AuditResult(TypedDict):
     definitions: int
-    counts: dict[str, int]
     violations: list[str]
     unpaired_generated_claims: list[str]
     reached: list[str]
 
 
-def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None) -> AuditResult:
+def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False) -> AuditResult:
     from homm3.retail_labels.fragments import all_claims
     from homm3.core.project import Project
-    from homm3.core import inputs
     project = Project(root)
     root = project.root
     image_base = project.specification["inputs"]["retail"]["image_base"]
     definitions, errors, reached = collect(root, jobs, fresh)
     errors.extend(active_stub_definitions(definitions, root))
-    dc_only, failures = read_dc_filters(root)
-    errors.extend(failures)
-    win_only, failures = read_win_filters(root)
-    errors.extend(failures)
-    violations, counts = compare(definitions,
-                                 read_dc(root, include_declarations=True, project=project) if origins is None else origins,
-                                 dc_only, win_only,
-                                 symbols=inputs.dreamcast_symbols(project)
-                                 if any(d.inline_origin for d in definitions) else None)
-    errors.extend(violations)
     claims = all_claims(project.fragments)
     from homm3.match.status import load_baseline
     errors.extend(header_claim_ownership(
         definitions, claims, load_baseline(root / 'config/match_baseline.tsv'), image_base=image_base))
     errors.extend(claim_identity(definitions, claims, image_base=image_base))
-    return {'definitions': len(definitions), 'counts': counts, 'violations': errors,
+    return {'definitions': len(definitions), 'violations': errors,
             'unpaired_generated_claims': unpaired_generated_claims(claims, image_base=image_base), 'reached': reached}
 
 
@@ -1254,11 +654,8 @@ def unpaired_generated_claims(claims, *, image_base=common.IMAGE_BASE) -> list[s
             and c.name.startswith('__h3cg$')]
 
 
-def run_gate(*, origins=None) -> list[str]:
-    result = audit(origins=origins)
-    if result['counts'].get('reviewed_unlocated'):
-        print(f"[build] source-ownership: {result['counts']['reviewed_unlocated']} "
-              "reviewed declaration-only bodies; source location/order remain unknown")
+def run_gate() -> list[str]:
+    result = audit()
     print(f"[build] source-ownership: {result['definitions']} canonical definitions; "
           f"{len(result['violations'])} violations")
     if result['unpaired_generated_claims']:
@@ -1277,7 +674,7 @@ def main(argv=None):
     if args.json:
         print(json.dumps(result, indent=2))
     else:
-        print(f"{result['definitions']} definitions: {result['counts']}")
+        print(f"{result['definitions']} definitions")
         print('\n'.join(result['violations']))
     return bool(result['violations'])
 

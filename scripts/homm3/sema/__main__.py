@@ -199,7 +199,7 @@ def _build_parser() -> argparse.ArgumentParser:
 COMMANDS = ("xref", "diff", "disasm", "rva", "strings", "data", "candidates", "compare")
 
 # What agents typed under `homm3 sema` that lives elsewhere (usage-log
-# audit): the vc6 solvers, dreamcast lookups, and flag spellings guessed
+# audit): the vc6 solvers and flag spellings guessed
 # as subcommands. A wrong guess names its home instead of "invalid choice".
 ELSEWHERE = {
     "why-reg": "homm3 vc6 why-reg", "why-branch": "homm3 vc6 why-branch",
@@ -212,10 +212,8 @@ ELSEWHERE = {
     "branches": "homm3 sema diff TARGET --branches",
     "calls": "homm3 sema diff TARGET --calls",
     "summary": "homm3 sema diff TARGET --summary",
-    "asm": "homm3 sema disasm", "show": "homm3 dreamcast show",
-    "find": "homm3 dreamcast find",
-    "locate": "homm3 dreamcast find NAME (the Dreamcast roster) or "
-              "homm3 sema rva 0xADDR (the address dossier)",
+    "asm": "homm3 sema disasm",
+    "locate": "homm3 sema rva 0xADDR (the address dossier)",
     "status": "homm3 status", "build": "homm3 build",
 }
 

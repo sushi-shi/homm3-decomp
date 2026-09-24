@@ -42,7 +42,7 @@ for the top candidates. Source, ledger, headers, compiler and scoring inputs mus
 a batch. Exit 0 means at least one target scores exactly 100%; 1 means no exact
 candidate. Malformed manifests and invalidated observations are errors.
 
-Run the required retail/Dreamcast evidence pass before designing hypotheses.
+Read recorded source evidence and run the retail evidence pass before designing hypotheses.
 Scores do not authorize changing proven source facts. The runner never applies
 or banks a winner; inspect the source and assembly, apply supported changes,
 then run the normal focused build and full checkpoint gates. Vendored sources

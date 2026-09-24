@@ -1,6 +1,6 @@
 ---
 name: match
-description: Reconstruct and byte-match HoMM3 functions or translation units against retail using Dreamcast evidence, VC6, and JSON source-family searches. Use for locating, claiming, matching, or closing a TU.
+description: Reconstruct and byte-match HoMM3 functions or translation units against retail using recorded source evidence, VC6, and JSON source-family searches. Use for locating, claiming, matching, or closing a TU.
 ---
 
 # HoMM3 matching
@@ -24,20 +24,20 @@ scores. Inspect a failing command's actual exit status and cause before continui
 
 ## Evidence and reconstruction
 
-1. **Locate and claim when needed.** Use the DC roster and source order to form
+1. **Locate and claim when needed.** Use recorded source evidence and source order to form
    hypotheses, then corroborate identity with retail bodies, strings, imports,
    named callees, address-takes or vtables. NH3API addresses are not location
-   evidence. Read sizes from `config/retail/functions.tsv`, never from DC.
-   `DC_ONLY` means a retail counterpart is unproven, not necessarily absent.
+   evidence. Read sizes from the selected executable's reviewed inventory.
+   A shared game identity does not establish an editor address or size.
    Follow the annotation contracts in `include/va.h`; keep unreconstructed
    bodies inside the carcass of compiled TUs. Reconcile declarations and ABI
    before activating a body. Use source annotations rather than a second ledger.
-2. **Read the evidence pass in AGENTS.md.** For a DC counterpart, inspect its
-   signatures, locals, scopes, source lines, file switches and helper calls
-   alongside retail assembly. DC is an optimized build on another architecture:
-   missing calls or line gaps do not prove missing source. Do not force SH4/x86
-   counts or candidate line layout to agree. For retail-only code, state that
-   limitation and use retail and sibling evidence.
+2. **Read the evidence pass in AGENTS.md.** Inspect recorded signatures,
+   locals, scopes, helper calls and historical source-line observations alongside
+   retail assembly. Do not require unavailable Dreamcast commands or inputs.
+   Missing calls or line gaps do not prove missing source. Do not force
+   cross-architecture counts or candidate line layout to agree. State evidence
+   limits and verify each shared-source identity against the selected executable.
 3. **Explain the mismatch.** Start with `homm3 sema diff <selector> --summary`,
    then inspect `--structure`, `--calls` and `--source` as relevant. Candidate
    `/Z7` labels identify the statement producing a difference, not retail source.
@@ -115,6 +115,6 @@ unchanged exact counts and unrelated CUR dips while MAX holds. Keep concise
 residuals beside the owning function and reusable findings in `docs/vc6/`.
 
 A TU is closed only when the fresh retail span is accounted for and all its
-function targets match, flanking gaps are attributed, and each DC roster entry
-is located or evidenced as inlined, retail-dropped or port-only. A claims-only
+function targets match, flanking gaps are attributed, and known source identities
+are accounted for with evidence for shared, inlined or target-specific code. A claims-only
 scoreboard or an exhausted search batch does not establish closure.

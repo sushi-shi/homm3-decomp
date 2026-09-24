@@ -572,7 +572,7 @@ public:
     // +0x17 and therefore gives the C++ object a 0x1b extent.
     // DC MoveHero's 0x7b526..0x7b572 line run constructs CMapChange and
     // stores heroId, dir, standEnd and point in this declared overload.
-    // @dc-inline-origin: 0x2d2e 0x7b526
+    // Historical DC inline origin (type, source-row address): 0x2d2e 0x7b526
     CMCMoveHero(unsigned char heroId, signed char direction,
                 unsigned char standEnd, type_point point)
         : CMapChange(RS_MOVE_HERO, 0x1c),

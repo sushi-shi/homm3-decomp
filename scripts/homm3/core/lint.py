@@ -15,7 +15,6 @@ import tempfile
 from homm3.core import common
 
 MODULES = (
-    'analysis/source_facts.py',
     'build/build.py',
     'build/delink.py',
     'build/normalize_objs.py',
@@ -30,7 +29,7 @@ MODULES = (
     'match/banked_rows.py',
     'match/source_ownership.py',
 )
-TESTS = ('analysis/test_source_facts.py', 'build/test_build.py', 'core/test_lint.py')
+TESTS = ('build/test_build.py', 'core/test_lint.py')
 
 
 def main() -> int:

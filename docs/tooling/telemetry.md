@@ -3,7 +3,7 @@
 Every `homm3` CLI invocation appends a copyable command to
 `build/homm3_usage.log` and a structured completion record to
 `build/homm3_usage.jsonl`. This includes build/init failures and CLI parsing
-errors. The existing sema, vc6 and Dreamcast logs remain available, including
+errors. The existing sema and vc6 logs remain available, including
 when those modules are invoked directly with `python -m`.
 
 The JSONL schema is `homm3.usage.v2`. Each record contains:
@@ -34,7 +34,7 @@ The marker is inherited by child processes. Ordinary failed matching attempts
 are not automatically marked as tests. Existing unmarked historical records
 cannot be reliably separated after the fact.
 
-For sema/vc6/Dreamcast, rc=1 is an answered difference, not a tooling error.
+For sema/vc6, rc=1 is an answered difference, not a tooling error.
 Build/init and other pipeline failures may use rc=1. `outcome` records that
 command-family distinction. Exceptions and process signals are errors.
 

@@ -634,7 +634,7 @@ void __cdecl waitEndSampleThread(void* arglist)
 // retail AIL_serve references are in this TU, including ten different sound
 // operations. A source-local ordinary body recovers that visibility boundary
 // and retained emission. Its Windows ownership is a platform inference; the
-// CE header attribution remains recorded separately in dc_only.tsv.
+// CE header attribution remains recorded separately in the retired DC exclusion inventory (Git history).
 VA(0x0059a7d0, 0x51)
 void soundManager::serviceSounds()
 {

@@ -43,9 +43,6 @@ class Project:
         return Executable(row['name'], self.root / row['path'], row['size'],
                           row['sha256'], row['env'], row['option'])
 
-    def aliases(self, scope: str) -> dict[str, str]:
-        return dict(self.specification.get('type_aliases', {}).get(scope, {}))
-
     @cached_property
     def image(self):
         from homm3.core.inputs import stage_executable

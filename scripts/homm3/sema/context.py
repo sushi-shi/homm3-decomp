@@ -155,8 +155,6 @@ class SymbolDb:
         prefix = re.match(r"^([^:]+):(?!:)(.+)$", arg)
         if prefix:
             unit, selector = prefix.groups()
-            if unit == "dc" or unit.endswith(".obj"):
-                die("Dreamcast offsets are not retail selectors")
             if not any(row[1] == unit for row in self.funcs.values()):
                 die(f"unknown retail unit {unit!r}")
             return SymbolDb(extent_of=self._extent_of, unit=unit).resolve_fn(selector)

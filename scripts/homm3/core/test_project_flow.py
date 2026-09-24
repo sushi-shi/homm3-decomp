@@ -9,10 +9,24 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from homm3.core import clang, inputs, nb11
+from homm3.core import clang
 from homm3.core.compiler_profile import Profiles, arguments
 from homm3.core.project import Project
-from homm3.core.test_nb11 import fixture
+
+
+def fixture(image_base: int = 0x10000) -> bytes:
+    """A minimal one-section PE image; no game bytes are required."""
+    image = bytearray(0x400)
+    image[:2] = b"MZ"
+    struct.pack_into("<I", image, 0x3c, 0x80)
+    image[0x80:0x84] = b"PE\0\0"
+    struct.pack_into("<HH", image, 0x84, 0x1a6, 1)
+    struct.pack_into("<H", image, 0x94, 0xe0)
+    optional = 0x98
+    struct.pack_into("<H", image, optional, 0x10b)
+    struct.pack_into("<I", image, optional + 28, image_base)
+    struct.pack_into("<8s4I", image, optional + 0xe0, b".text", 0x200, 0x1000, 0x200, 0x200)
+    return bytes(image)
 
 
 class ProjectFlowTest(unittest.TestCase):
@@ -29,20 +43,14 @@ class ProjectFlowTest(unittest.TestCase):
                  f'sha256="{hashlib.sha256(data).hexdigest()}"\n'
                  'env="TEST_EXE"\noption="--exe"\n')
         (root / 'config/project.toml').write_text(
-            '[inputs.retail]\n' + entry + f'image_base={base}\n'
-            '[inputs.dreamcast]\n' + entry)
+            '[inputs.retail]\n' + entry + f'image_base={base}\n')
         return Project(root)
 
     def test_context_selects_its_executable_and_layout_without_global_input(self):
         first = self.executable(self.root, fixture(), 0x10000)
         second_root = self.root / 'second'
         second_root.mkdir()
-        data = bytearray(fixture())
-        struct.pack_into('<I', data, 0x98 + 28, 0x80000)
-        second = self.executable(second_root, bytes(data), 0x80000)
-        with patch.object(inputs, 'DREAMCAST', None):
-            self.assertEqual(inputs.dreamcast_symbols(first).layout.base(1), 0x11000)
-            self.assertEqual(inputs.dreamcast_symbols(second).layout.base(1), 0x81000)
+        second = self.executable(second_root, fixture(0x80000), 0x80000)
         self.assertEqual(first.image.image_base, 0x10000)
         self.assertEqual(second.image.image_base, 0x80000)
 
@@ -64,20 +72,11 @@ class ProjectFlowTest(unittest.TestCase):
             '\t'.join(fragments.HEADER) + '\n'
             '0x1000\t0x10\tprobe\tfunc\tsrc-VA\tprobe\t0\t\t\n')
         with patch.object(ownership, 'collect', return_value=([], [], [])), \
-                patch.object(ownership, 'read_filter', return_value=({}, [])), \
                 patch.object(ownership, 'claim_identity', return_value=[]) as identity, \
                 patch.object(fragments, 'FRAGMENTS', self.root / 'wrong'):
-            ownership.audit(self.root, origins=[])
+            ownership.audit(self.root)
         self.assertEqual(identity.call_args.args[1][0].unit, 'probe')
         self.assertEqual(identity.call_args.kwargs['image_base'], 0x10000)
-
-    def test_nb11_preserves_section_layout(self):
-        data = bytearray(fixture())
-        struct.pack_into('<I', data, 0x98 + 28, 0x60000)
-        symbols = nb11.parse(bytes(data))
-        self.assertEqual(symbols.layout.base(1), 0x61000)
-        self.assertEqual(symbols.layout.sections[0].raw_offset, 0x200)
-        self.assertIn(0x61100, symbols.names)
 
     @unittest.skipUnless(clang.clang_bin(), 'requires Clang')
     def test_profiles_change_mangling_and_preprocessor_branches_together(self):

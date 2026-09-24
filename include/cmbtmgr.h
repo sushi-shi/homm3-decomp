@@ -2099,7 +2099,7 @@ extern const long g_castleWallGateTargets[5];   // 0x63abe0
 // retail Fly has neither its scrolling work nor a scrolled-result branch.
 // One shared Windows definition accounts for those cross-TU expansions.
 // Header placement is a platform visibility inference, not recovered lexical
-// source. dc_only.tsv retains the CE origins separately. The by-value helper
+// source. the retired DC exclusion inventory (Git history) retains the CE origins separately. The by-value helper
 // chain reproduces all 1102 Fly bytes; an inlined copy does not prove a
 // const-reference parameter. The coordinate ScrollTo facade stays in drawing.cpp.
 inline void combatManager::updateCombatArea(int x, int y, int width, int height)

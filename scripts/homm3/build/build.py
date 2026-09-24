@@ -41,8 +41,7 @@ def main(argv=None) -> int:
 
     if not fast:
         try:
-            for executable in (inputs.RETAIL, inputs.DREAMCAST):
-                inputs.stage_executable(executable)
+            inputs.stage_executable(inputs.RETAIL)
         except inputs.InputError as exc:
             print(f"[build] {exc}", file=sys.stderr)
             return 1
@@ -69,7 +68,7 @@ def main(argv=None) -> int:
         return 0
 
     # A byte score is a checkpoint, not an admissibility invariant. Coherent
-    # restoration of a Dreamcast-proven source shape may lower several local
+    # restoration of an evidenced source shape may lower several local
     # scores before the surrounding class/TU reaches the retail lowering.
     # Preserve each implementation's MAX and the all-time HIST, but never make
     # a score regression fatal. Only a function whose own source hash changed
@@ -91,16 +90,10 @@ def main(argv=None) -> int:
     # compares the rows that ARE in the baseline, this one asks whether a
     # row that used to be there still is. Clean ratchet + lost row is
     # exactly how army::can_shoot left the ledger green (2026-08-15).
-    from homm3.match import banked_rows, single_view, verify_va_claims, source_ownership, source_inventory
-    origins = None
-    for gate in (banked_rows, verify_va_claims, single_view, source_ownership, source_inventory):
+    from homm3.match import banked_rows, single_view, verify_va_claims, source_ownership
+    for gate in (banked_rows, verify_va_claims, single_view, source_ownership):
         try:
-            if gate is source_ownership:
-                origins = source_ownership.read_dc(include_declarations=True)
-                fatal = source_ownership.run_gate(origins=origins)
-            elif gate is source_inventory:
-                fatal = source_inventory.run_gate(origins=origins)
-            elif gate is banked_rows:
+            if gate is banked_rows:
                 fatal = banked_rows.run_gate(history_patch=history_patch)
             else:
                 fatal = gate.run_gate()
@@ -115,11 +108,7 @@ def main(argv=None) -> int:
     # a down-only bless recorded off a failing tree would bake in state
     # nobody reviewed. Check always, write only when clean.
     from homm3.cleanliness import board
-    if origins is None:
-        # Missing evidence must not look like an empty, clean DC inventory.
-        violations = ['cleanliness: cannot check without Dreamcast origins; floors unchanged']
-    else:
-        violations = board.check_and_roll(write=not failed, dc_origins=origins)
+    violations = board.check_and_roll(write=not failed)
     if violations:
         failed = True
         for line in violations:

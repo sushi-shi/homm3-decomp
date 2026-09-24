@@ -4622,7 +4622,7 @@ long type_creature_growth_artifact::getValue(const hero* owner,
 // Each table has the shared deleting destructor 0x433080 at slot 0 and
 // the matching three-argument, ret 0xc getValue at slot 1. The exact
 // Complete-only constructor and virtual definitions are reviewed in
-// config/source/win_only.tsv; class names remain provisional semantic names.
+// the retired Windows source inventory (Git history); class names remain provisional semantic names.
 VA(0x00432f90, 0xe4)  // vtable-slot 0x63b750 + get_raw_spell_value, retail-only
 long type_spell_artifact::getValue(const hero* owner, unsigned char equipped,
                                     unsigned char exact) const

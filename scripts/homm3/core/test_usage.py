@@ -7,7 +7,6 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from homm3.analysis import dreamcast
 from homm3.sema import __main__ as sema, _common as sema_common
 from homm3.vc6 import __main__ as vc6, _common as vc6_common
 
@@ -22,7 +21,7 @@ class LoggedTest(unittest.TestCase):
 
 class UsageTest(LoggedTest):
     def test_dispatchers_log_all_exit_paths(self):
-        for module, owner in ((sema, sema_common), (vc6, vc6_common), (dreamcast, dreamcast)):
+        for module, owner in ((sema, sema_common), (vc6, vc6_common)):
             for outcome in (0, 1, 2, SystemExit(2), RuntimeError("injected failure")):
                 with self.subTest(module=module.__name__, outcome=outcome), tempfile.TemporaryDirectory() as tmp:
                     path = Path(tmp) / "usage.log"

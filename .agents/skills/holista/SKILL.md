@@ -65,9 +65,10 @@ RAII cleanup or a loop body.
 Use debug signatures, locals, scopes, line layout, declaration order and source-
 file switches with their assembly. Optimized debug information is incomplete:
 blank gaps do not prove assertions, and missing emitted calls do not prove absent
-source helpers. For HoMM3 use the DC evidence pass in AGENTS.md alongside retail
-`sema diff --summary`, `--structure` and `--source`. Candidate `/Z7` labels describe
-the candidate; do not demand matching SH4/x86 counts or manufacture source layout.
+source helpers. For HoMM3 read the recorded source evidence and the retail evidence pass in
+AGENTS.md, including `sema diff --summary`, `--structure` and `--source`.
+This worktree has no Dreamcast analysis commands. Candidate `/Z7` labels describe
+the candidate; do not demand matching cross-architecture counts or manufacture source layout.
 State where counterparts or evidence are missing.
 
 ## Propose, measure, refine

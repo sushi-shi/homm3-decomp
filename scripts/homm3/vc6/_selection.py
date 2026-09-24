@@ -31,9 +31,6 @@ def split(selector: str) -> tuple[str | None, str]:
     match = re.match(r"^([^:]+):(?!:)(.+)$", selector)
     if match:
         unit, name = match.groups()
-        if unit == "dc" or unit.endswith(".obj"):
-            _common.die("Dreamcast offsets are not retail selectors; use the "
-                        "retail VA/RVA or function name")
         return unit, name
     return None, selector
 

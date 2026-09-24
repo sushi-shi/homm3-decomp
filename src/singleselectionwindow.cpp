@@ -100,7 +100,7 @@ public:
 // predicates carry direction and, for name/version, a network-name flag.
 // DC numberComp (source890) is the old three-way integer adapter;
 // Complete predicates compare directly and return bool. The six old free
-// comparator identities have exact reviewed rows in config/source/dc_only.tsv.
+// comparator identities have exact reviewed rows in the retired DC exclusion inventory (Git history).
 // Their semantic class names remain provisional. The five retained written
 // operator() definitions below own their VA annotations directly; they are
 // not compiler-generated functions. The size predicate expands in retail's

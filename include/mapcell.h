@@ -1272,7 +1272,7 @@ public:
     // Retail callers read the size used by the map stride calculations.
     // The DC declaration survives, but no body source location does.
     // Header ownership is provisional; no source order is claimed.
-    // @dc-declaration-only: 0x345c
+    // Historical DC declaration-only type: 0x345c
     int getMapSize() const { return m_size; }
     const NewmapCell* cell(int x, int y, int z) const;
     NewmapCell* cell(int x, int y, int z);

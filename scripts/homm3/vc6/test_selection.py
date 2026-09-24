@@ -127,8 +127,7 @@ class SelectionTest(unittest.TestCase):
 
     def test_invalid_selectors_do_not_choose_an_unrelated_body(self):
         for selector in ("0xzz", "0x900000", "0x2000", "0x1190", "NoSuchName",
-                         "unknown:GetTeam", "widget:0x401000", "dc:0x1000",
-                         "game.obj:0x1000"):
+                         "unknown:GetTeam", "widget:0x401000"):
             with self.subTest(selector=selector), self.assertRaises(SystemExit) as stop:
                 _selection.prepare(self.parser.parse_args(["predict-inline", selector]))
             self.assertEqual(stop.exception.code, 2)

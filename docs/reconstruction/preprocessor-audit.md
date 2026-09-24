@@ -142,12 +142,11 @@ candidate trees, unchanged-source controls and reproduced elites are in this
 worktree's `build/preprocessor-audit/` and `build/source-families/`. None of
 these attempts uses new inline-control pins or synthetic release diagnostics.
 
-The new [`homm3 dreamcast audit`](../matching/source-facts.md) command checks positive
-Dreamcast type, qualifier, reference, named-local, helper and source-order
-facts against the authored C++ AST. It reports coverage gaps explicitly and
-has independent tests, including a real Clang fixture for the missing Hall
-qualifiers and level-up helper calls. The required evidence loop in
-`AGENTS.md` now includes this check.
+The historical Dreamcast source audit checked positive type, qualifier,
+reference, named-local, helper and source-order facts against the authored C++
+AST. Its findings remain in the recovered source. The editor worktree has
+retired that command and its debug-port input; it is not part of the current
+build or evidence loop.
 
 ## Header census for the common-code search
 

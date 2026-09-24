@@ -47,7 +47,7 @@ class PublicSymbolResolution(unittest.TestCase):
     def test_context_ordinal_is_preserved(self):
         name = "?duplicate@@YAXXZ"
         self.assertEqual(
-            report._pick_public_symbol("dc:0x10", name, 2, {name}, {name}),
+            report._pick_public_symbol("widget:0x10", name, 2, {name}, {name}),
             (name, 2))
 
     def test_unique_bare_name_can_select_decorated_symbol(self):

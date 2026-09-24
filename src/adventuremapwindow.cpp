@@ -1404,7 +1404,7 @@ void TAdventureMapWindow::updateButtons(unsigned char draw, unsigned char update
 // TAdvMenu, a modal CAdvPopup (ctor0x1284, handler0x1ab8, dtor0x1a40).
 // Complete constructs the buttons directly in TAdventureMapWindow0x401510
 // and updates them through0x403220..0x403f60; advManager owns dispatch.
-// These additional modal methods are accounted individually in dc_only.tsv.
+// These additional modal methods are accounted individually in the retired DC exclusion inventory (Git history).
 // Their operations survive in the persistent window; they are not missing
 // standalone retail claims. SetAdvWinButtonPalette above has its own proven
 // source-identity bridge and is deliberately retained as a canonical helper.

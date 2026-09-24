@@ -6,10 +6,9 @@ Compiling and linking need the toolchain shell: `nix develop .#build`.
 
 Subcommands
 -----------
-  init [--exe PATH] [--dreamcast-exe PATH] [--force] [--no-smoke]
+  init [--exe PATH] [--force] [--no-smoke]
         One-time local setup so a fresh checkout goes straight to `homm3 build`:
-        verify and stage HOMM3_EXE and HOMM3_DREAMCAST_EXE (CLI paths override
-        the environment); read Dreamcast debug symbols from its executable;
+        verify and stage HOMM3_EXE (a CLI path overrides the environment);
         the git-ignored build dirs; build.ninja + objdiff.json (configure); the
         VC6 SP3 toolchain (unpacked from build/homm3-toolchain-vc6-sp3.tar.xz if
         absent); the Wine prefix; and a smoke compile through the real cc_wrap
@@ -67,12 +66,6 @@ Subcommands
         retail function, address dossiers, literal evidence. Every
         invocation logs one line to build/homm3_sema.log.
 
-  dreamcast <show|lines|asm|find|gaps|inline-clues|stats|structure|audit> ...
-        Source-shape navigation over the older WinCE/SH4 pressing:
-        joined CodeView names/signatures/locals/scopes, breakpoint-labelled SH4
-        assembly and CFG blocks, explicitly qualified retail correlations,
-        and generated C++/JSON reference trees (structure).
-
   link [<homm3.build.link args>] [-- <extra link flags>]
         Link the base objects with genuine VC6, the game runtime and vendor
         imports into build/exe/HEROES3.candidate.EXE (also `ninja candidate`).
@@ -115,15 +108,13 @@ def run_module(module: str, *args: str) -> int:
 
 
 def cmd_init(args) -> int:
-    from homm3.core import inputs, nb11
+    from homm3.core import inputs
     try:
         retail = inputs.stage_executable(inputs.RETAIL, args.exe)
-        dreamcast = inputs.stage_executable(inputs.DREAMCAST, args.dreamcast_exe)
-        nb11.parse(inputs.read_verified(inputs.DREAMCAST, dreamcast))
     except inputs.InputError as exc:
         log(f"ERROR: {exc}")
         return 1
-    log(f"inputs verified: {retail}, {dreamcast} (with embedded debug symbols)")
+    log(f"input verified: {retail}")
     for d in ("build/gen", "build/objdiff/base", "build/exe", "build/smoke"):
         (ROOT / d).mkdir(parents=True, exist_ok=True)
     if run_module("homm3.build.configure"):
@@ -178,10 +169,6 @@ def cmd_sema(args) -> int:
     return run_module("homm3.sema", *args.sema_args)
 
 
-def cmd_dreamcast(args) -> int:
-    return run_module("homm3.analysis.dreamcast", *args.dreamcast_args)
-
-
 def cmd_vc6(args) -> int:
     return run_module("homm3.vc6", *args.vc6_args)
 
@@ -229,15 +216,11 @@ def cmd_clean(args) -> int:
 
 def _dispatch(argv: list[str]) -> int:
     # argparse does not reliably pass option-looking tokens through a
-    # REMAINDER positional (notably ``homm3 dreamcast --help``).  Dreamcast is
-    # a complete nested CLI, so hand it its argv before the umbrella parser
-    # gets a chance to consume or reject any of those options.
+    # REMAINDER positional (notably ``homm3 warnings --help``). Complete
+    # nested CLIs receive their argv before the umbrella parser can consume
+    # or reject any of those options.
     if argv and argv[0] == "source-ownership":
         return run_module("homm3.match.source_ownership", *argv[1:])
-    if argv and argv[0] == "source-inventory":
-        return run_module("homm3.match.source_inventory", *argv[1:])
-    if argv and argv[0] == "dreamcast":
-        return run_module("homm3.analysis.dreamcast", *argv[1:])
     if argv and argv[0] == "warnings":
         return run_module("homm3.analysis.compiler_warnings", *argv[1:])
     if argv and argv[0] == "victor":
@@ -257,11 +240,9 @@ def _dispatch(argv: list[str]) -> int:
     sub.add_parser("rmg", add_help=False,
                    help="execute retail/candidate whole-map comparisons (homm3 rmg --help)")
 
-    p = sub.add_parser("init", help="one-time local setup (executables, symbols, toolchain)")
+    p = sub.add_parser("init", help="one-time local setup (executable, toolchain)")
     p.add_argument("--exe", metavar="PATH",
                    help="retail HEROES3.EXE (otherwise HOMM3_EXE or staged copy)")
-    p.add_argument("--dreamcast-exe", metavar="PATH",
-                   help="Dreamcast H3.EXE (otherwise HOMM3_DREAMCAST_EXE or staged copy)")
     p.add_argument("--force", action="store_true", help="re-init the wine prefix")
     p.add_argument("--no-smoke", action="store_true", help="skip the smoke compile")
     p.set_defaults(fn=cmd_init)
@@ -300,14 +281,9 @@ def _dispatch(argv: list[str]) -> int:
     p.set_defaults(fn=cmd_delink)
 
     p = sub.add_parser("source-ownership", add_help=False,
-                       help="validate CodeView definition ownership and order")
+                       help="validate canonical definitions and retail claim ownership")
     p.add_argument("ownership_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=lambda args: run_module("homm3.match.source_ownership", *args.ownership_args))
-
-    p = sub.add_parser("source-inventory", add_help=False,
-                       help="reconcile DC and authored functions in both directions")
-    p.add_argument("inventory_args", nargs=argparse.REMAINDER)
-    p.set_defaults(fn=lambda args: run_module("homm3.match.source_inventory", *args.inventory_args))
 
     p = sub.add_parser("status", help="objdiff scoreboard + checkpoint ledger")
     p.add_argument("status_args", nargs=argparse.REMAINDER)
@@ -317,12 +293,6 @@ def _dispatch(argv: list[str]) -> int:
                        "disasm / rva / strings (homm3.sema, logged)")
     p.add_argument("sema_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_sema)
-
-    p = sub.add_parser("dreamcast", add_help=False,
-                       help="Dreamcast CodeView source-shape tools: "
-                       "show / lines / asm / find / gaps / inline-clues / stats / structure / audit")
-    p.add_argument("dreamcast_args", nargs=argparse.REMAINDER)
-    p.set_defaults(fn=cmd_dreamcast)
 
     p = sub.add_parser("vc6", help="compiler model + solvers: argv / il-diff / "
                        "predict-inline / why-reg / oracle / check (homm3.vc6)")
@@ -353,7 +323,7 @@ def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     # Analysis rc=1 means an answered difference. Build/init and the other
     # pipeline commands use rc=1 for failure.
-    failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast", "rmg", "victor"} else 1
+    failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "rmg", "victor"} else 1
     return usage.run_logged(
         _dispatch, argv,
         lambda rc, **meta: usage.append(ROOT / "build/homm3_usage.log",

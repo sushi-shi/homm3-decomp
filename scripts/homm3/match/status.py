@@ -19,7 +19,7 @@ source hashes distinguish an edited implementation from an old banked dip or
 collateral codegen movement. The stored invariant is CUR <= MAX <= HIST: MAX
 preserves the best score reached by the current implementation, while HIST
 preserves peaks reached by older implementations. A lower score is not evidence
-that the source change is wrong: the Dreamcast/source/retail gates decide
+that the source change is wrong: the source/retail evidence and gates decide
 admissibility. The report is regenerated fresh each call.
 """
 from __future__ import annotations
@@ -197,7 +197,7 @@ def _canonical_definition_text(raw: str, masked: str, after: int,
                                fn: str) -> str | None:
     """Resolve an annotated definition or its RVA-ordered redeclaration.
 
-    Inline bodies sometimes must remain in Dreamcast source order while an
+    Inline bodies sometimes must remain in recorded source order while an
     annotated redeclaration records the retained COMDAT's later retail order.
     Hash the unique active body in both arrangements so moving only the VA
     annotation cannot masquerade as an edit to the function itself.

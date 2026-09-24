@@ -1,16 +1,15 @@
 # Tooling data flow and project boundary
 
-The package and CLI retain their HoMM3 names. MSVC/COFF, objdiff, PE32 and
-SH4/NB11 knowledge is intentional. Project facts enter through these inputs:
+The package and CLI retain their HoMM3 names. MSVC/COFF, objdiff and PE32 knowledge is intentional. Project facts enter through these inputs:
 
 - `config/project.toml`: executable identities and staged paths, expected retail
-  image base, toolchain search locations, and reviewed Dreamcast type aliases.
+  image base and toolchain search locations.
 - `config/units.toml`: compilation units, profiles and include search order.
   `build.analysis_profile` explicitly selects the profile for standalone headers
   and reference-only sources with no admitted TU.
 - Existing admitted inventories and source annotations: addresses, ownership,
-  names and reviewed exceptions. Dreamcast correlation remains a specialist
-  analysis; it is not a requirement imposed by the generic type comparator.
+  names and reviewed exceptions. Historical evidence stays with the source;
+  the pipeline does not require a debug-port executable.
 
 `core.project.Project` is an operation-scoped snapshot. Create a new one after a
 merge or input edit. An explicit root selects its manifest, staged executables,
@@ -19,7 +18,7 @@ checkout. CLI defaults still use `HOMM3_DIR`; executable and toolchain environme
 overrides remain supported. This is not a backend registry or plugin framework.
 
 `core.compiler_profile` translates the unit's MSVC profile for all Clang
-consumers: the compilation database, source-fact ASTs, ownership and label IR.
+consumers: the compilation database, ownership ASTs and label IR.
 Consumers add only their actions and necessary parsing options. The translator
 preserves ABI, language and preprocessor settings, maps `/GX` to `/EHsc`, and
 undefines Clang's default `_MT`/`_DLL` for VC6 `/ML`. It discards code generation
@@ -29,13 +28,7 @@ IAT decoration recovery accepts a resolved import-library directory. The model
 supplies the same toolchain selection used by compilation. The reader has no
 global memo that could survive a toolchain change or file replacement.
 
-Project aliases are opt-in inputs to `type_differences`/`compare_facts`. Ordinary
-calls apply only language/MSVC/standard-library normalization. The Dreamcast
-source audit supplies that project's reviewed alias scope.
-
-PE layout travels with parsed inputs. NB11 symbols retain image base and section
-mapping; SH4 disassembly derives its code/file and literal-pool addresses from
-that mapping. Paired relocation normalization, executable diff summaries, link
+PE layout travels with parsed inputs. Paired relocation normalization, executable diff summaries, link
 base defaults and executable queues use the parsed retail base. Source-only
 annotation operations can use the expected base admitted in project config,
 without requiring game bytes. The image reader checks that assertion when bytes

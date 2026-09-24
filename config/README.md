@@ -7,13 +7,13 @@
 | Directory | Contents |
 | --- | --- |
 | [`retail/`](retail/) | Reviewed function boundaries, vtables, funclets, initialization thunks, relocations, runtime and zlib identities, and anonymous-namespace paths. |
-| [`source/`](source/) | Exact Dreamcast/Windows source exclusions, Dreamcast audit suppressions and accepted address-claim exceptions. |
-| [`cleanliness/`](cleanliness/) | Source-cleanliness baseline. |
+| [`source/`](source/) | Accepted address-claim exceptions. |
+| [`cleanliness/`](cleanliness/) | Source-cleanliness baseline and reviewed source-local classes. |
 | [`matching/`](matching/) | Reviewed banked-match withdrawals and parked matching candidates. |
 
-For source review, start with [`source/dc_only.tsv`](source/dc_only.tsv) and
-[`source/win_only.tsv`](source/win_only.tsv). Compiler/library entries and whole
-Windows-only modules remain in their separate companion tables.
+Source annotations own function identities. The [ownership gate](../docs/matching/source-ownership.md)
+checks active definitions and extracted retail claims. Source-local class
+exceptions are reviewed in [`cleanliness/local_classes.tsv`](cleanliness/local_classes.tsv).
 
 Table headers describe ownership and update rules. Retail inventories are
 reviewed inputs; generated analysis and scratch output belong in `build/`.

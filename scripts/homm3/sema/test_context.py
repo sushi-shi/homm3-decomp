@@ -47,7 +47,7 @@ class DemangledResolveTest(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             for selector in ("widget:Open", "widget:Widget::Open", "widget:0x401200"):
                 self.assertEqual(self.db.resolve_fn(selector)[2], 0x1200)
-        for selector in ("widget:Other::Open", "unknown:Open", "dc:0x1200"):
+        for selector in ("widget:Other::Open", "unknown:Open"):
             with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
                 self.db.resolve_fn(selector)
 

@@ -214,12 +214,12 @@ public:
     // Width loads in retail CSprite::drawPointer identify this field.
     // The DC declaration survives, but no body source location does.
     // Header ownership is provisional; no source order is claimed.
-    // @dc-declaration-only: 0x1799
+    // Historical DC declaration-only type: 0x1799
     int getWidth() const { return m_width; }
     // Height loads in retail CSprite::drawPointer identify this field.
     // The DC declaration survives, but no body source location does.
     // Header ownership is provisional; no source order is claimed.
-    // @dc-declaration-only: 0x1799
+    // Historical DC declaration-only type: 0x1799
     int getHeight() const { return m_height; }
 
     // DC CSpriteFrame.h:198..200 (0x74484): canonical zero-flag wrapper.

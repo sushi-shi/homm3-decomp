@@ -28,9 +28,8 @@ The rows (all ratcheted; floors start at the tree's current counts):
                       allocator, retain a dead store, or spend an inline
                       budget. Recover the real helper/type/lifetime first;
                       an inline-depth probe may diagnose an over-expansion,
-                      but it must not be retained. A Dreamcast line gap plus
-                      a meaningful release-elided invariant may use
-                      HOMM3_RELEASE_VERIFY; a gap by itself is not proof.
+                      but it must not be retained. A meaningful, evidenced
+                      release-elided invariant may use HOMM3_RELEASE_VERIFY.
   inline-gate         BANNED at floor 0. `INLINE_GATE(...)` is a no-op marker
   artifacts           invented by the decompilation, not original source.
   inline-depth pins   source-false compiler-steering debt. Local experiments
@@ -46,8 +45,8 @@ The rows (all ratcheted; floors start at the tree's current counts):
                       of living in its OWNER's header. Fix: declare once
                       in the owner header and #include it.
   .cpp-local views    an unproven/duplicate class definition in a .cpp.
-                      A unique class whose CodeView methods originate only
-                      in that .cpp is a legitimate source-local class.
+                      A unique class reviewed in local_classes.tsv is a
+                      legitimate source-local class.
   .cpp-local enums    the enum twin: a cross-TU domain stranded in a .cpp
                       gets re-declared by the next TU that needs it. Member
                       enums stay with their proven source-local class.
@@ -57,7 +56,7 @@ The rows (all ratcheted; floors start at the tree's current counts):
                       means two mis-modeled domains. A single cast on a line
                       may carry the narrow
                       `HOMM3_ENUM_CAST_REVISION_BOUNDARY` admission when a
-                      retail-only ordinal must cross a DC-proven enum ABI;
+                      retail-only ordinal must cross a proven enum ABI;
                       every ordinary cast remains ratcheted at zero.
   magic case labels   a `case <number>:` is an un-named member of some
                       domain. Fix: declare the enum, case on enumerators.
@@ -189,7 +188,7 @@ _CPP_LOCAL_ENUM = re.compile(
 
 def _cpp_local_view_sites(code: str, ctx) -> list:
     """A source-proven local class is not a per-TU reconstruction view."""
-    allowed = ctx.get("dc_local_classes", frozenset()) if isinstance(ctx, dict) else frozenset()
+    allowed = ctx.get("local_classes", frozenset()) if isinstance(ctx, dict) else frozenset()
     out = []
     for match in _CPP_LOCAL_DEF.finditer(code):
         name = match.group('name').rsplit('::', 1)[-1]
@@ -199,12 +198,12 @@ def _cpp_local_view_sites(code: str, ctx) -> list:
 
 
 def _cpp_local_enum_sites(code: str, ctx) -> list:
-    """Keep member domains with a unique, CodeView-proven local class.
+    """Keep member domains with a unique, reviewed local class.
 
     Only direct class members qualify: an enum in a method body, another
     nested class, or after the closing class brace is still checked.
     """
-    allowed = ctx.get("dc_local_classes", frozenset())
+    allowed = ctx.get("local_classes", frozenset())
     classes = {}
     for match in _CPP_LOCAL_DEF.finditer(code):
         name = match.group('name').rsplit('::', 1)[-1]
@@ -223,78 +222,45 @@ def _cpp_local_enum_sites(code: str, ctx) -> list:
     return out
 
 
-def _dc_local_classes(sources, dc_origins=None):
+def _reviewed_local_classes(sources):
+    """Admit reviewed (file, class) pairs whose every definition is reviewed.
+
+    The rows are a frozen, reviewed inventory. Each admitted class has one
+    physical definition in its file, and no other file (a header view, say)
+    may define that name unless it is reviewed too, as for a class private
+    to several modules' anonymous namespaces. A missing inventory admits
+    nothing, so every local class counts as debt.
+    """
     from collections import Counter, defaultdict
-    from homm3.match.source_ownership import read_dc, read_win_filters, family_name
-    origins = defaultdict(set)
-    private_origins = defaultdict(set)
-    for row in (read_dc(REPO) if dc_origins is None else dc_origins):
-        if row.declaration_only:
-            continue  # This metric needs proven procedure locations only.
-        name = family_name(row.name)
-        if name.startswith("`anonymous namespace'::"):
-            member = name[len("`anonymous namespace'::"):]
-            if "::" not in member:
-                continue
-            owner = member.rsplit("::", 1)[0]
-            # Anonymous-namespace classes are distinct in each source module.
-            # Only the direct class is admitted here; nested/other generated
-            # spellings still need their own evidence.
-            if "::" not in owner and "`" not in owner:
-                private_origins[owner].add(row.file)
+    reviewed = set()
+    inventory = REPO / "config/cleanliness/local_classes.tsv"
+    rows = inventory.read_text().splitlines() if inventory.is_file() else []
+    for line in rows:
+        if not line or line.startswith("#") or line == "file\tclass":
             continue
-        if "::" in name and "`" not in name:
-            owner = name.rsplit("::", 1)[0]
-            # The lexical class metric names nested definitions by their
-            # local identifier. Merge source evidence for that identifier;
-            # uniqueness below still rejects another physical definition or
-            # a competing namespace/header owner with the same local name.
-            origins[owner.rsplit("::", 1)[-1]].add(row.file)
-    # The exact Windows function inventory also records reviewed ownership
-    # for Complete-only local classes. Do not invent a second class ledger.
-    # The source-ownership gate independently rejects unused filters and
-    # filters attempting to waive a known Dreamcast counterpart.
-    windows, errors = read_win_filters(REPO)
-    windows_origins = defaultdict(set)
-    if not errors:
-        for file, function, _signature in windows:
-            if file.startswith('src/') and '::' in function:
-                owner = family_name(function).rsplit('::', 1)[0].rsplit('::', 1)[-1]
-                windows_origins[owner].add(file)
-    counts = Counter()
+        file, name = line.split("\t")
+        reviewed.add((file, name))
+
+    def relative(path):
+        return path.relative_to(REPO).as_posix() if path.is_relative_to(REPO) else None
     file_counts = Counter()
-    private_sites = defaultdict(set)
+    definers = defaultdict(set)
     for path, code in sources:
-        classes = {}
         for match in _CPP_LOCAL_DEF.finditer(code):
             name = match.group('name').rsplit('::', 1)[-1]
-            counts[name] += 1
             file_counts[path, name] += 1
-            classes[match.end() - 1] = name
-        anonymous = {m.end() - 1 for m in re.finditer(r"\bnamespace\s*\{", code)}
-        scopes = []
-        for brace in re.finditer(r"[{}]", code):
-            if brace.group() == "{":
-                if brace.start() in classes and scopes == [True]:
-                    private_sites[path].add(classes[brace.start()])
-                scopes.append(brace.start() in anonymous)
-            elif scopes:
-                scopes.pop()
-    # Require a single physical definition and positive .cpp source evidence,
-    # with no competing header origin. A duplicate view remains debt even if
-    # it happens to use an authentic class name.
-    return {path: frozenset(name for name, files in origins.items()
-                           if counts[name] == 1 and files == {path.name.lower()})
-                  | frozenset(name for name, files in windows_origins.items()
-                              if counts[name] == 1
-                              and path.is_relative_to(REPO)
-                              and files == {path.relative_to(REPO).as_posix()}
-                              and not origins[name] and not private_origins[name])
-                  | frozenset(name for name in private_sites[path]
-                              if file_counts[path, name] == 1
-                              and path.name.lower() in private_origins[name]
-                              and all(f.endswith('.cpp') for f in private_origins[name]))
-            for path, _code in sources if path.suffix in _CPP}
+            definers[name].add(relative(path))
+    local = {}
+    for path, _code in sources:
+        file = relative(path)
+        if path.suffix not in _CPP or file is None:
+            continue
+        local[path] = frozenset(
+            name for owner, name in reviewed
+            if owner == file and file_counts[path, name] == 1
+            and all((other, name) in reviewed for other in definers[name]))
+    return local
+
 
 _MAGIC_CASE = re.compile(
     r"^[ \t]*case[ \t]+(?:0[xX][0-9a-fA-F]+|-?[0-9]+)[ \t]*:", re.MULTILINE)
@@ -446,18 +412,18 @@ METRICS = (
     ("reinterpret_casts", _regex_sites(_REINTERPRET), False,
      "model the real type instead; reinterpret_cast debt only drains"),
     ("volatile qualifiers", _regex_sites(_VOLATILE), False,
-     "`volatile` is not a codegen lever. Diagnose with `homm3 dreamcast "
-     "show <selector>`, `homm3 vc6 predict-inline <selector>`, and `homm3 "
-     "sema diff <selector> --structure` plus `--source`. Then: (1) restore "
-     "the Dreamcast-proven helper, type, local lifetime, or statement order; "
-     "(2) use statement-scoped `#pragma inline_depth(0)` only as an "
-     "uncommitted diagnostic, then recover the natural compiler state; or "
-     "(3) when a Dreamcast line gap and a real "
-     "release-elided invariant agree, spell that invariant as "
-     "`HOMM3_RELEASE_VERIFY(expression)`. Retained verifies need an evidence "
-     "comment, retail checkpoint, and flattening negative "
-     "control. Never replace volatile with self-assignment, dead code, or "
-     "synthetic caller mass; accept a non-MAX current dip while recovering "
+     "`volatile` is not a codegen lever. Diagnose with `homm3 vc6 "
+     "predict-inline <selector>` and `homm3 sema diff <selector> "
+     "--structure` plus `--source`. Then: (1) restore the evidenced "
+     "helper, type, local lifetime, or statement order; (2) use "
+     "statement-scoped `#pragma inline_depth(0)` only as an uncommitted "
+     "diagnostic, then recover the natural compiler state; or (3) when "
+     "source evidence and a real release-elided invariant agree, spell "
+     "that invariant as `HOMM3_RELEASE_VERIFY(expression)`. Retained "
+     "verifies need an evidence comment, retail checkpoint, and flattening "
+     "negative control. Never replace volatile with self-assignment, dead "
+     "code, or synthetic caller mass; accept a non-MAX current dip while "
+     "recovering "
      "the true source"),
     ("inline-gate artifacts", _regex_sites(_INLINE_GATE), False,
      "remove INLINE_GATE: it is a source-false no-op wrapper"),
@@ -474,7 +440,8 @@ METRICS = (
      "declare it ONCE in the owner's header and #include that - a "
      "consumer .cpp never re-declares"),
     (".cpp-local views", _cpp_local_view_sites, True,
-     "restore the unique CodeView source owner; unproven or duplicate .cpp views remain forbidden"),
+     "move the class to its owner header, or review it into "
+     "config/cleanliness/local_classes.tsv; unproven or duplicate .cpp views remain forbidden"),
     (".cpp-local enums", _cpp_local_enum_sites, True,
      "a cross-TU domain stranded in a .cpp gets re-declared by the next "
      "TU that needs it - move the enum to include/"),
@@ -500,7 +467,7 @@ RATCHET = {label for label, _, _, _ in METRICS}
 _FIX = {label: fix for label, _, _, fix in METRICS}
 
 
-def count(per_file: bool = False, *, dc_origins=None):
+def count(per_file: bool = False):
     sources = []
     for root in ROOTS:
         base = REPO / root
@@ -520,12 +487,12 @@ def count(per_file: bool = False, *, dc_origins=None):
     ctx = {"enums": names, "enum_cast_re": _enum_cast_pattern(names),
            "pp_legit": _legit_pp_names(sources)}
 
-    local_classes = _dc_local_classes(sources, dc_origins)
+    local_classes = _reviewed_local_classes(sources)
     totals = {label: 0 for label, _, _, _ in METRICS}
     offenders = []
     for path, code in sources:
         ctx["path"] = path
-        ctx["dc_local_classes"] = local_classes.get(path, frozenset())
+        ctx["local_classes"] = local_classes.get(path, frozenset())
         for label, sites, cpp_only, _fix in METRICS:
             if cpp_only and path.suffix not in _CPP:
                 continue
@@ -851,7 +818,7 @@ def selftest() -> list[str]:
     missing = set(counters) - set(_SAMPLES)
     failures.extend(f"{label}: NO SELFTEST SAMPLES" for label in sorted(missing))
     volatile_fix = _FIX["volatile qualifiers"]
-    for required in ("dreamcast show", "predict-inline", "uncommitted",
+    for required in ("sema diff", "predict-inline", "uncommitted",
                      "HOMM3_RELEASE_VERIFY", "synthetic caller mass"):
         if required not in volatile_fix:
             failures.append(
@@ -861,14 +828,14 @@ def selftest() -> list[str]:
 
 # --- entry points -----------------------------------------------------------------
 
-def check_and_roll(write: bool, *, dc_origins=None) -> list[str]:
+def check_and_roll(write: bool) -> list[str]:
     """The build-tail gate: selftest, count, compare ratcheted rows to
     their floors; on `write` roll the baseline down-only. Returns fatal
     violation lines (empty = pass); prints the scoreboard line."""
     broken = selftest()
     if broken:
         return [f"cleanliness SELFTEST BROKEN: {b}" for b in broken]
-    rows, offenders = count(per_file=True, dc_origins=dc_origins)
+    rows, offenders = count(per_file=True)
     base = load_baseline()
     violations = []
     for label, n in rows:

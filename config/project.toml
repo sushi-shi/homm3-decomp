@@ -8,20 +8,5 @@ env = "HOMM3_EXE"
 option = "--exe"
 image_base = 0x400000
 
-[inputs.dreamcast]
-name = "Dreamcast executable"
-path = "build/orig/dreamcast/H3.EXE"
-size = 8425752
-sha256 = "cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736"
-env = "HOMM3_DREAMCAST_EXE"
-option = "--dreamcast-exe"
-
-# Positive CodeView/source spelling equivalences reviewed for this project.
-# Used only by the Dreamcast source-fact audit, never by the generic comparator.
-[type_aliases.dreamcast]
-TSpellBookEntry = "TSpellBookWindow::TSpellBookEntry"
-TRumour = "Game::TRumour"
-TWallTraits = "combatManager::TWallTraits"
-
 [toolchain]
 locations = ["build/homm3-toolchain-vc6-sp3/msvc", "build/toolchain/msvc"]

@@ -12,7 +12,7 @@
 // --- the resource holders and destination tables the loaders below
 // write.  Every address is read off the retail loader that stores
 // through it; every name is the Dreamcast text.obj global the same
-// loader names (`homm3 dreamcast asm Initialize*`).  Element counts come
+// loader names (historical Initialize* disassembly).  Element counts come
 // from the RETAIL loop bounds, never from the Dreamcast build.
 
 // A datum whose rva already carries a src DATA() claim in another TU is

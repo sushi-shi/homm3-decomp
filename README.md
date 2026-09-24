@@ -1,11 +1,15 @@
-# homm3-decomp
+# homm3-editor
 
-Binary-matching decompilation of **Heroes of Might and Magic III Complete**
-(`HEROES3.EXE`, New World Computing, 2000). The goal is to recover the C++ structure and
-behavior.
+Binary-matching decompilation of the **Heroes of Might and Magic III Complete**
+map and campaign editors, reusing the game's recovered C++ structure and behavior.
+The existing game build provides the shared-source checkpoint while editor
+matching is established.
 
-This repository does **not** contain either game's executable or resources. To match
-the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H3.EXE`.
+This repository does **not** contain executables or resources. Supply your own
+legally obtained copies of the pinned Windows executables. Dreamcast and Mac
+inputs are not part of this worktree; historical evidence remains in source comments.
+
+The following scores describe the inherited game target, not editor coverage.
 
 <!-- match-score:start -->
 
@@ -56,30 +60,21 @@ sha256      057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274
 timestamp   8 September 2000, built by MSVC 6.0
 ```
 
-The Dreamcast debug-symbol reference is pinned separately:
-
-```
-file        H3.EXE
-size        8,425,752 bytes
-sha256      cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736
-```
-
 ## Quickstart
 
-You need Nix with flakes enabled and your own copies of the two executables
-listed above. From the repository root:
+You need Nix with flakes enabled and your own copy of the game executable
+listed above for the shared-source checkpoint. From the repository root:
 
 ```sh
 nix develop .#build
+export HOMM3_DIR="$PWD"
 gh auth login        # needed for the toolchain download
-HOMM3_EXE=/absolute/path/to/HEROES3.EXE \
-HOMM3_DREAMCAST_EXE=/absolute/path/to/H3.EXE \
-  homm3 init
+HOMM3_EXE=/absolute/path/to/HEROES3.EXE homm3 init
 
 homm3 build          # build all modules, compare with retail, and run checks
 ```
 
-`homm3 init` verifies the executables and sets up the VC6 toolchain and Wine.
+`homm3 init` verifies the executable and sets up the VC6 toolchain and Wine.
 The build compiles and compares reconstructed code; it does not yet produce
 a playable game.
 
@@ -94,13 +89,13 @@ to set up the compiler headers needed for code navigation.
 ### Improve a function
 
 1. Run `homm3 status functions` and choose a function whose MAX is below 100%.
-2. Inspect its retail assembly and Dreamcast source evidence before editing.
+2. Inspect its retail assembly and the evidence recorded beside its source before editing.
    For example, `0x00524dd0` belongs to `src/philai.cpp`:
 
    ```sh
    homm3 sema disasm 0x00524dd0
-   homm3 dreamcast show 0x00524dd0
-   homm3 dreamcast asm 0x00524dd0 --blocks
+   homm3 sema diff 0x00524dd0 --structure
+   homm3 sema diff 0x00524dd0 --source
    ```
 
 3. Edit the C++, rebuild its module, and inspect the remaining differences:
@@ -127,4 +122,4 @@ repository.
 
 Thanks to [NH3API](https://github.com/void2012/NH3API) for documenting game
 structures and their layouts, and for naming references that supplement
-the Dreamcast debug symbols.
+historical source evidence.

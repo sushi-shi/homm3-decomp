@@ -2,7 +2,7 @@
 // are corroborated with bodies, calls and vtables. Several DC helpers have
 // no standalone retail body because VC6 expands their calls. Their canonical
 // definitions remain in this TU and are included in the source inventory.
-// Platform/interface retirements are recorded by exact identity in dc_only.tsv.
+// Platform/interface retirements are recorded by exact identity in the retired DC exclusion inventory (Git history).
 #include "text.h"
 #include "va.h"
 #include "objnames.h"
@@ -9404,7 +9404,7 @@ VA_COMPGEN(0x0041b110, 0x5, IMPLICIT_DTOR, CHeroWindowEx)
 
 // CodeView marks dc 0x34c8 compiler-generated (compgenx): only the
 // CHeroWindowEx base teardown runs there. The exact Windows-only source
-// exception is reviewed in config/source/win_only.tsv.
+// exception is reviewed in the retired Windows source inventory (Git history).
 VA(0x0041b120, 0x67)  // dc 0x34c8
 CAdvPopup::~CAdvPopup()
 {

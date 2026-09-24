@@ -32,7 +32,6 @@ class Executable:
 
 _project = Project(common.HOMM3_DIR)
 RETAIL = _project.executable('retail')
-DREAMCAST = _project.executable('dreamcast')
 
 
 def _verify(data: bytes, path: Path, *, size: int, sha256: str) -> None:
@@ -88,14 +87,3 @@ def stage_executable(executable: Executable, source: str | Path | None = None) -
     print(f"[homm3] {executable.name} verified and copied: {path} -> {destination}",
           file=sys.stderr)
     return destination
-
-
-def read_dreamcast_exe(project: Project | None = None) -> bytes:
-    executable = project.executable("dreamcast") if project else DREAMCAST
-    return read_verified(executable, stage_executable(executable))
-
-
-def dreamcast_symbols(project: Project | None = None):
-    """Read NB11 records embedded in the verified Dreamcast executable."""
-    from homm3.core import nb11
-    return nb11.parse(read_dreamcast_exe(project))

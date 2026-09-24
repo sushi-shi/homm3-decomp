@@ -31,9 +31,9 @@ original spellings. Names printed by delinked disassembly come from those
 annotations, not from symbols shipped in the retail executable.
 
 No Dreamcast counterpart was found for the selected Voronoi procedures:
-`dreamcast find Voronoi`, `find Delaunay`, `find TRmgBoundaryVertex`, and
-`show 0x005fd790` / `show 0x005fd6b0` provide no original declaration or
-source-line layout. This is a limit of the available bridge/search, not proof
+the historical searches for Voronoi, Delaunay, TRmgBoundaryVertex and
+`0x005fd790` / `0x005fd6b0` recovered no original declaration or source-line
+layout. Those debug-port commands are retired from the editor worktree. This is a limit of the available bridge/search, not proof
 that every older source file lacked related code. No speculative C++ rewrite
 or declaration promotion is part of this investigation.
 

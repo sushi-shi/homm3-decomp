@@ -379,7 +379,7 @@ always counts `call` + tail `jmp`.
     hands `traits->townType` straight to the portrait builder), spelled as a
     call to a free predicate. Every other statement of retail's body has a DC
     line of its own carrying the same call, so the post-DC edit was the only
-    place left for a candidate site to hide — `docs/matching/dc-line-tables.md` is the
+    place left for a candidate site to hide — the historical Dreamcast line-table survey (retired from this worktree) is the
     instrument. Worth 97.1049 → 99.9352 alone; a second finding off the same
     table (the three `Influence[i] = -1` stores are a counted `for` loop,
     which VC6 unrolls back into retail's three stores and which recovers

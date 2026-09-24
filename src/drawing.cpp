@@ -536,7 +536,7 @@ bool combatManager::scrollTo(int x, int y, int width, int height, bool draw,
 // DrawFrame0x494440 submit the fixed client rectangle via UpdateScreen0x602bd0;
 // the two scroll-origin members are absent before the retained archer records.
 // Preserve the ordinary ScrollTo facades used by source calls, while these
-// exact translated-viewport interfaces are reviewed in dc_only.tsv.
+// exact translated-viewport interfaces are reviewed in the retired DC exclusion inventory (Git history).
 
 // E:\gamedcs\drawing.cpp:689
 // RETAIL_LOCATED(0x004937d0, 0x155): not reconstructed; dc-callgraph unique, dc 0x842a8

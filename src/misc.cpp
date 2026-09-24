@@ -722,7 +722,7 @@ void writePrefs()
 // DC IsCDDrive (misc.cpp:603, 0xfe060) accepts every drive; its
 // caller SetupCDDrive returns a fixed 7 as well. Complete 0x50c1c0
 // retains that fixed result, so no drive-enumeration/classification
-// expression survives in this pinned executable. See config/source/dc_only.tsv.
+// expression survives in this pinned executable. See the retired DC exclusion inventory (Git history).
 VA(0x0050c1c0, 0x6)  // dc 0xfe064
 int setupCDDrive()
 {

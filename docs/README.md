@@ -5,8 +5,7 @@ iterate on a function.
 
 ## Matching
 
-- [Source ownership](matching/source-ownership.md) and [source facts](matching/source-facts.md)
-- [Dreamcast line tables](matching/dc-line-tables.md)
+- [Source ownership](matching/source-ownership.md)
 - [Naming conventions](matching/naming.md)
 - [Source hypothesis runner](matching/source-hypotheses.md)
 - [VC6 compiler reference](vc6/README.md)

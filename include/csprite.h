@@ -373,7 +373,7 @@ public:
     // DC 0x7a1e8 in DrawCursorAlpha expands the bitmap overload declared
     // by function type 0x17e5, loading its map/width/height/pitch and calling
     // the raw DrawHeroAlpha member. The same row recurs at three more sites.
-    // @dc-inline-origin: 0x17e5 0x7a1e8
+    // Historical DC inline origin (type, source-row address): 0x17e5 0x7a1e8
     void drawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
                        int sh, Bitmap16Bit* dst, int dx, int dy,
                        unsigned char hflip) const

@@ -589,8 +589,8 @@ def run_predict(args) -> int:
               "helper:")
         for outer, inner, sites in nested:
             print(f"    {outer[:56]} -> {inner[:56]}  site(s) x{sites}")
-        print("[fix] inspect the Dreamcast line/scope rows immediately before "
-              "that source or compiler-generated cleanup. Restore a missing "
+        print("[fix] inspect the source immediately before that source or "
+              "compiler-generated cleanup. Restore a missing "
               "real guard, helper, RAII boundary, or release-elided operation "
               "first; such a zero-byte source fact can move C1 to the exact "
               "outer-inline/inner-call midpoint.")
@@ -598,8 +598,8 @@ def run_predict(args) -> int:
               "the nesting diagnosis, but an overshoot is a negative control, "
               "not permission for a global pragma, an exposed library "
               "internal, or synthetic caller mass.")
-    print("[fix] first run `homm3 dreamcast show/asm --blocks` and `homm3 "
-          "sema diff --structure/--source`; restore the evidenced helper, "
+    print("[fix] first run `homm3 sema diff --structure/--source`; "
+          "restore the evidenced helper, "
           "type, lifetime, and statement order before steering C1.")
     if over or unknown_over:
         print("[probe] over-inline at a DIRECT source call -> temporarily put "
@@ -616,7 +616,7 @@ def run_predict(args) -> int:
               "and depth 0 suppresses the required outer inline, keep the "
               "natural source and classify the compiler-state wall.")
     if under:
-        print("[fix] under-inline -> restore the smallest Dreamcast-proven "
+        print("[fix] under-inline -> restore the smallest evidenced "
               "callee body/declaration and remeasure its callers; do not "
               "erase the helper boundary merely to improve one percentage. "
               "why-reg cannot reach these inliner decisions.")

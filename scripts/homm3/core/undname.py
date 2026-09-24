@@ -3,11 +3,9 @@
 `llvm-undname` (LLVM, in the dev shell) does the decoding; this module
 batches names through it and reduces each result to the QUALIFIED NAME
 (`game::GetTeam`, `CHeroWindowEx::~CHeroWindowEx`, `AI_value_of_event`),
-which is the spelling the Dreamcast CodeView corpus and humans use. The
-retail inventory is mangled-only, so this is the bridge that lets a
-`Class::method` reach `homm3 sema` and a `?method@Class@@...` reach
-`homm3 dreamcast`. Without the binary every function degrades to "no
-match" - never a wrong match.
+which is the spelling humans use. The retail inventory is mangled-only, so
+this is the bridge that lets a `Class::method` reach `homm3 sema`. Without
+the binary every function degrades to "no match" - never a wrong match.
 """
 from __future__ import annotations
 

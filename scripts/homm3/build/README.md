@@ -59,13 +59,9 @@ shared-header edits do not compile every including TU on each iteration. Run
 full `homm3 build` to rebuild affected units, refresh retail targets, and run
 the final checkpoint.
 
-Dreamcast NB11 records are parsed into the compiler-neutral
-`homm3.debug-shape.v1` model in `homm3.analysis.debug_shape`. The model carries
-function extents, locals, scopes, source/breakpoint rows, emitted sizes, calls,
-and branch counts for reconstruction tools. It contains no candidate/retail
-comparison policy. In particular, Dreamcast SH4 structure is never compared
-to candidate VC6 `/Z7` structure: `/Z7` labels only the candidate side of a
-candidate-vs-retail x86 byte/relocation/CFG diff.
+Candidate VC6 `/Z7` labels describe only the candidate side of a
+candidate-vs-retail x86 byte/relocation/CFG diff. Historical source evidence
+remains in owning comments; this pipeline does not consume debug-port inputs.
 
 `INLINE_GATE(...)` is banned as source-false scaffolding. Statement-scoped
 `inline_depth(0)` remains useful as a local compiler experiment, but committed

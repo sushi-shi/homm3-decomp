@@ -86,7 +86,7 @@ public:
     // Retail dispose paths test this reference-count field.
     // The DC declaration survives, but no body source location does.
     // Header ownership is provisional; no source order is claimed.
-    // @dc-declaration-only: 0x185c
+    // Historical DC declaration-only type: 0x185c
     int getReferenceCount() const { return m_referenceCount; }
 
 private:
