@@ -786,11 +786,12 @@ public:
 };
 SIZE(garrison, 0x40);
 
-#pragma pack(push, 8)
 // Dreamcast NB11 type 0x3591, AI: six members, 0x78 bytes. Complete
 // playerData::operator= (0x58f750) copies this entire subobject with
 // rep movsd (30 dwords) from +0xf0, after the separate +0xe8 bitset.
 // playerData::Init independently clears the same +0xf0..+0x168 range.
+// Natural compiler packing gives 0x78 on VC6 and 0x74 on CodeWarrior;
+// Mac reads the resource values at player+0x11c and the final float at +0x158.
 struct AI {
 public:
     float m_gameAttentionValue[3];
@@ -801,8 +802,6 @@ public:
     float m_turnValueOfAvgArtifact;
 };
 SIZE(AI, 0x78);
-
-#pragma pack(pop)
 
 // playerData head: NextHero returns -1 when the player has no mobile
 // hero (HasMobileHero is its bool wrapper). sizeof is 360, byte-proven
