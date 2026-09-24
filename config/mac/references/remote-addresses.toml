@@ -285,6 +285,15 @@ target_sha256 = "a6aad35ee573fe0ca1e4f52569123fa07837f870b60ea180b7f87a51ed64606
 evidence = "CChatManager::updateWidget checks pauseTime at +0x10, calls updateNewChat 0x211cf4 and conditional killOldChat 0x211bd8, then tests changed/lastWidget, calls updateWidgetText 0x211d84, sets widget text virtually and clears changed. Dreamcast remote.cpp:1033 names the same method and callees. Combat window drawChatText calls this retained body at 0x8123c. Final BLR at 0x211b30 precedes the next accessor at 0x211b34."
 
 [[functions]]
+retail_va = 0x553db0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211b6c
+mac_size = 0x6c
+target_sha256 = "e9e0149a553263b638eb63ee8deb57b4ade66ba2c5d8327a91ffa2f2015d7dba"
+evidence = "CChatManager::hasOldChat returns false for zero messages, otherwise reads the current message killTime at 0x80 within 0x88-byte records and compares GameTime::get 0x20fc5c against 20000 ms. Dreamcast remote.cpp:1070 names the method; swapManager::main calls it at 0x1a86b4 before updateWidget. Final BLR at 0x211bd4 precedes killOldChat."
+
+[[functions]]
 retail_va = 0x5537a0
 unit = "remote"
 mac_section = 0

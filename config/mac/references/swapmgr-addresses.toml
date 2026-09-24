@@ -260,3 +260,30 @@ mac_offset = 0x1a9db4
 mac_size = 0x90
 target_sha256 = "69e6e29a81e673f817d3de6c1e3465ebaeef1a93547aef4f403d079a9390d1e0"
 evidence = "Clears m_givingToAlly, updates arrows and swap window, constructs CGiveMeStuffMsg, then sends it to getOtherHero()->m_owner; onWidgetDeselect calls this ordinary helper."
+
+[[helpers]]
+source_helper = "swapManager::updateArtifactWidget"
+unit = "swapmgr"
+mac_section = 0
+mac_offset = 0x1a69dc
+mac_size = 0xc4
+target_sha256 = "480972bfcf7b5190222cec98ff8d978cc4a8387c18ffc817a93e7b92be164a93"
+evidence = "Dreamcast swapmgr.cpp:914 names the inline helper and updateSlot calls it four times. Mac constructs MESSAGE_WIDGET with the artifact widget id, broadcasts an icon frame for occupied slots, then sets or clears drawn status via heroWindow::broadcastMessage 0x20b3e8. Four retained calls from updateSlot target this body; final BLR at 0x1a6a9c precedes updateSlot at 0x1a6aa0."
+
+[[helpers]]
+source_helper = "swapManager::updateAllSlots"
+unit = "swapmgr"
+mac_section = 0
+mac_offset = 0x1a6c1c
+mac_size = 0x70
+target_sha256 = "482bd05683735f3b57ecc339982de859ad85eec72984a3f9a5561363f22ca7e6"
+evidence = "Mac walks two heroes and 19 artifact slots and calls updateSlot 0x1a6aa0 for each. handleBackpackClick calls this retained body twice, and update calls it once; Windows expands the authored loop. Final BLR at 0x1a6c88 precedes updateBackpackItem."
+
+[[helpers]]
+source_helper = "swapManager::updateBackpackItem"
+unit = "swapmgr"
+mac_section = 0
+mac_offset = 0x1a6c8c
+mac_size = 0x108
+target_sha256 = "73e062e86709ba31436dea834cfc2e75773cba686a37eddc5e8839c811d4ea79"
+evidence = "Dreamcast swapmgr.cpp:977 names UpdateBackpackItem and updateBackpack calls it in the five-item loop. Mac reads hero backpack entry, computes hero*5+i+0x59 widget id, and broadcasts occupied/empty widget messages. Retained call from updateBackpack at 0x1a6e10; final BLR at 0x1a6d90 precedes updateBackpack."
