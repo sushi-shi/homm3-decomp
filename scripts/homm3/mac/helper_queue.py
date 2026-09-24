@@ -14,7 +14,7 @@ from pathlib import Path
 import re
 import tomllib
 
-from homm3.mac import references, reports
+from homm3.mac import glue, references, reports
 from homm3.mac.discovery import Index
 from homm3.mac.source import _masked_source, extract_body, load_pairs
 
@@ -49,6 +49,8 @@ def generate(root: Path, action_queue: dict, index: Index,
     runtime = tomllib.loads((root / "config/mac/runtime.toml").read_text()).get("functions", [])
     runtime_by_target = {(item["mac_section"], item["mac_offset"]): item["symbol"]
                          for item in runtime}
+    for name, target in glue.imports(index.pef).items():
+        runtime_by_target.setdefault((target.address.section, target.address.offset), name)
 
     branches = defaultdict(list)
     for at, target, kind in index.branches:
