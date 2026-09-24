@@ -1,0 +1,10 @@
+# Complete-era campaign reader retained by Mac and expanded by Windows VC6.
+
+[[helpers]]
+source_helper = "TCampaignBrief::MapTextStruct::read"
+unit = "customcampaign"
+mac_section = 0
+mac_offset = 0x93ea0
+mac_size = 0xa8
+target_sha256 = "8f03a141b4b1661f6d7b324a69373b3c12a7a1b22c7c5c11140fb5a43aaf4cc0"
+evidence = "ScenarioStruct::read calls this retained reader for both prologue and epilogue records. It makes two one-byte virtual TAbstractFile reads, stores video and audio at+0/+4, calls the reviewed readLengthPrefixedString0x93f48 and assigns the returned MSL string at+8. Windows source has this canonical method and expands both calls. BLR0x93f44 bounds the body before the string reader."

@@ -1,0 +1,64 @@
+# Mac-retained game helpers whose source calls already exist in the Windows TU.
+
+[[helpers]]
+source_helper = "hasNonRandomHero"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x16e3ac
+mac_size = 0x34
+target_sha256 = "ebc6414cdf472d7de14e4f4f7767f01e1c9f09ca12571b6509ce18bf85c1f01c"
+evidence = "ProcessRightSelect calls this predicate with a game seat index. It multiplies by the 0x40 player-slot stride, reads nonRandomHeroId at slot+0x1c and returns whether it differs from -1, matching the canonical free helper in singleselectionwindow.cpp. Terminal BLR0x16e3dc precedes the random predicate."
+
+[[helpers]]
+source_helper = "hasRandomHero"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x16e3e0
+mac_size = 0x40
+target_sha256 = "d034d086414563c8095003907cf5238feab3a7ade5dcfa587786c8fe9a60d6e8"
+evidence = "ProcessRightSelect calls this beside hasNonRandomHero. It reads player-slot hasRandomHero at+0x18 and generateHero at+0x0b, returning their logical OR as the source free helper does. Two return paths end at0x16e41c; next prologue starts0x16e420."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getCompPlayerInPos"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x16ef6c
+mac_size = 0x14
+target_sha256 = "4a42cb322478960ec594a01da8c9e3da622cec401f1610f0ee19fd9592d60cdf"
+evidence = "Nine selection-window calls use this computer-seat fallback after getPlayerInPos. The complete body computes this+0x3e0+pos*0x7c, exactly the CNetPlayerHandler::m_computerPlayers member and source helper. BLR0x16ef7c precedes the next method."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getUnassignedPlayerPos"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x16f240
+mac_size = 0x58
+target_sha256 = "d141cff194ea482d3bb3cd3bf67397f124fc2e22a099011315cfcfa45260defd"
+evidence = "SetHumanSlot calls this during assignment. It scans eight human records at stride0x7c, checks nonzero dpid at+0 and playerPos==-1 at+0x70, returns the index or -1; those are the exact source predicate and return values. The last BLR0x16f294 is followed by getPlayerCount."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onSortMaps"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x17cd34
+mac_size = 0xb4
+target_sha256 = "053a6ab46ba4850087e6e3282e678e34c20644ffdca55d63abe69b34de644ed4"
+evidence = "OnWidgetDeselect calls this in six sort-button arms. It checks the header sender at+0x384, toggles direction+0x368 for the same column+0x17b0 or resets both, then calls sortMaps0x17cea0 and setCurrentMap0x17d418. This matches the canonical inline source helper; BLR0x17cde4 precedes a separate sort implementation."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::getThisPlayer"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x182c14
+mac_size = 0x44
+target_sha256 = "2f952b03640a7d93a830dd6402c091bf385addc2921116eb5bf1f984500b3bf8"
+evidence = "SetHumanSlot and lobby handlers call this with the window receiver. It returns the first human record at window+0xfb8 for protocol3, otherwise calls CNetPlayerHandler::getPlayer0x16f130 with the local DPID. This is the source's hotseat/remote split; BLR0x182c54 precedes the next body."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::getDisplayTown"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x184ae4
+mac_size = 0xb0
+target_sha256 = "3d918d568e44ae0b696e24d2bcd48b545b3e5dbe7e728fe0e668b61ca5fad4be"
+evidence = "ProcessRightSelect and advanced-row drawing call this with the window and seat index. It resolves human/computer player, reads the map slot random-alignment flag, calls hasMultipleTowns0x1845e4, then returns the player's town index or pickAlignment0x13221c from legalAlignments. This is the source helper; BLR0x184b90 precedes getHeroName."
