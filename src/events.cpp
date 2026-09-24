@@ -4309,31 +4309,31 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         if (humanPlayer) {
             if (g_game->m_cartographerFlags[cell->m_objectIndex]
                 & g_curPlayerBit) {
-                normalDialog(g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_CARTOGRAPHER_VISITED),
+                normalDialog((*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_CARTOGRAPHER_VISITED],
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }
             if (g_currentPlayer->m_resources[GOLD] < 1000) {
-                normalDialog(g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_CARTOGRAPHER_NO_GOLD),
+                normalDialog((*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_CARTOGRAPHER_NO_GOLD],
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }
             switch (cell->m_objectIndex) {
             case CARTOGRAPHER_WATER:
-                normalDialog(g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_CARTOGRAPHER_WATER),
+                normalDialog((*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_CARTOGRAPHER_WATER],
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             case CARTOGRAPHER_LAND:
-                normalDialog(g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_CARTOGRAPHER_LAND),
+                normalDialog((*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_CARTOGRAPHER_LAND],
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             case CARTOGRAPHER_UNDERGROUND:
-                normalDialog(g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_CARTOGRAPHER_UNDERGROUND),
+                normalDialog((*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_CARTOGRAPHER_UNDERGROUND],
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }
@@ -4372,12 +4372,12 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case DERELICT_SHIP:
         doEventUndeadLair(currentHero, cell,
-                             g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_DERELICT_SHIP_PROMPT),
-                             g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_DERELICT_SHIP_EMPTY),
-                             g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_DERELICT_SHIP_TREASURE),
+                             (*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_DERELICT_SHIP_PROMPT],
+                             (*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_DERELICT_SHIP_EMPTY],
+                             (*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_DERELICT_SHIP_TREASURE],
                              0x800, point);
         break;
     case DRAGON_CITY:
@@ -4387,8 +4387,8 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         if (!(g_game->m_borderTentVisitFlags[cell->m_objectIndex]
               & g_curPlayerBit)) {
             if (humanPlayer)
-                normalDialog(g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_BORDER_GUARD_DENIED),
+                normalDialog((*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_BORDER_GUARD_DENIED],
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         break;
@@ -4402,8 +4402,8 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case EYE_OF_MAGI:
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_EYE_OF_MAGI),
+            normalDialog((*g_adventureEventText)[
+                             ADV_EVENT_TEXT_EYE_OF_MAGI],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     case FAERIE_RING:
@@ -4461,8 +4461,8 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case HUT_OF_MAGI: {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_HUT_OF_MAGI),
+            normalDialog((*g_adventureEventText)[
+                             ADV_EVENT_TEXT_HUT_OF_MAGI],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_remoteOn && g_dPlay
             && g_netLocalGamePos == g_game->getLocalPlayerGamePos()) {
@@ -4518,8 +4518,8 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case LITH_ONEWAY_EXIT:
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_LITH_ONEWAY_EXIT_BLOCKED),
+            normalDialog((*g_adventureEventText)[
+                             ADV_EVENT_TEXT_LITH_ONEWAY_EXIT_BLOCKED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     case LITH_TWOWAY:
@@ -4563,23 +4563,23 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             g_game->m_obeliskFlags[cell->m_extraInfo]
                 |= g_game->getTeamMask(g_netLocalGamePos);
             if (humanPlayer) {
-                normalDialog(g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_OBELISK),
+                normalDialog((*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_OBELISK],
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 viewPuzzle();
             } else {
                 computeUALoc(currentHero->m_owner);
             }
         } else if (humanPlayer) {
-            normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_OBELISK_VISITED),
+            normalDialog((*g_adventureEventText)[
+                             ADV_EVENT_TEXT_OBELISK_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         break;
     case OBSERVATORY:
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_OBSERVATORY),
+            normalDialog((*g_adventureEventText)[
+                             ADV_EVENT_TEXT_OBSERVATORY],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 20);
@@ -4594,8 +4594,8 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case PILLAR_OF_FIRE:
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_PILLAR_OF_FIRE),
+            normalDialog((*g_adventureEventText)[
+                             ADV_EVENT_TEXT_PILLAR_OF_FIRE],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 20);
@@ -4646,8 +4646,8 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case SANCTUARY:
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_SANCTUARY),
+            normalDialog((*g_adventureEventText)[
+                             ADV_EVENT_TEXT_SANCTUARY],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     case SCHOLAR:
@@ -4662,22 +4662,22 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case SEPULCHER:
         doEventUndeadLair(currentHero, cell,
-                             g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_SEPULCHER_PROMPT),
-                             g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_SEPULCHER_EMPTY),
-                             g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_SEPULCHER_TREASURE),
+                             (*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_SEPULCHER_PROMPT],
+                             (*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_SEPULCHER_EMPTY],
+                             (*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_SEPULCHER_TREASURE],
                              0x400, point);
         break;
     case SHIPWRECK:
         doEventUndeadLair(currentHero, cell,
-                             g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_SHIPWRECK_PROMPT),
-                             g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_SHIPWRECK_EMPTY),
-                             g_adventureEventText->getText(
-                                 ADV_EVENT_TEXT_SHIPWRECK_TREASURE),
+                             (*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_SHIPWRECK_PROMPT],
+                             (*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_SHIPWRECK_EMPTY],
+                             (*g_adventureEventText)[
+                                 ADV_EVENT_TEXT_SHIPWRECK_TREASURE],
                              0x200, point);
         break;
     case SHIPWRECK_SURVIVOR:
@@ -4690,17 +4690,17 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     case SHRINE1:
         doEventShrine(currentHero, cell,
-                      g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE1_PREFIX),
+                      (*g_adventureEventText)[ADV_EVENT_TEXT_SHRINE1_PREFIX],
                       Shrine1Info, humanPlayer);
         break;
     case SHRINE2:
         doEventShrine(currentHero, cell,
-                      g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE2_PREFIX),
+                      (*g_adventureEventText)[ADV_EVENT_TEXT_SHRINE2_PREFIX],
                       Shrine2Info, humanPlayer);
         break;
     case SHRINE3:
         doEventShrine(currentHero, cell,
-                      g_adventureEventText->getText(ADV_EVENT_TEXT_SHRINE3_PREFIX),
+                      (*g_adventureEventText)[ADV_EVENT_TEXT_SHRINE3_PREFIX],
                       Shrine3Info, humanPlayer);
         break;
     case SIGN: {
@@ -4749,8 +4749,8 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
             break;
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         g_mouseManager->showPointer(1);
-        normalDialog(g_adventureEventText->getText(
-                         ADV_EVENT_TEXT_THIEVES_DEN),
+        normalDialog((*g_adventureEventText)[
+                         ADV_EVENT_TEXT_THIEVES_DEN],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         TThievesGuildWindow* guildWindow =
             new TThievesGuildWindow(99);
@@ -4785,8 +4785,8 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         type_point exitPoint = g_game->getUndergroundGateExit(cell);
         const int noGateExit = 0xff;
         if (exitPoint.m_x == noGateExit) {
-            normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_SUBTERRANEAN_BLOCKED),
+            normalDialog((*g_adventureEventText)[
+                             ADV_EVENT_TEXT_SUBTERRANEAN_BLOCKED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         }
@@ -4829,8 +4829,8 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         if (!humanPlayer) {
             aiVisitWarFactory(currentHero);
         } else {
-            normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_WAR_MACHINE_FACTORY_PROMPT),
+            normalDialog((*g_adventureEventText)[
+                             ADV_EVENT_TEXT_WAR_MACHINE_FACTORY_PROMPT],
                          2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
                 break;

@@ -728,6 +728,7 @@ unit = "events"
 target_sha256 = "9053dfc110759fad72441796464d20ccfd13a480911e7eab01410935c6485300"
 evidence = "Adventure text resource indices [24, 28, 25, 26, 27, 41, 42, 43, 18, 48, 61, 70, 96, 97, 98, 99, 114, 119, 120, 121, 122, 123, 124, 127, 128, 129, 142, 153, 157] corroborate event identity; reviewed associated gameplay fields and named calls in b5b24..b7a90 texts=[24, 28, 25, 26, 27, 43, 42, 41, 48, 61, 70, 96, 97, 98, 99, 114, 121, 120, 119, 124, 123, 122, 127, 128, 129, 142, 153, 157] calls=0x17d78,0x216fc0,0x217a34,0xe6cc4,0x1556b8,0x20b870,0x15b680,0xf07c,0x158d5c,0xa9980,0xa9ab0,0xaa91c,0xab74c,0x13de98,0x1f4f44,0xabba4,0xabcec,0xabec0,0xabff0,0xac3dc. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
 retail_va = 0x4a84f0
+mac_symbol = ".dispatchEvent__10advManagerFP4heroP10NewmapCell10type_pointb"
 
 [[functions]]
 mac_section = 0x0
