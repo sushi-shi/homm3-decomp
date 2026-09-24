@@ -6,6 +6,7 @@ unit = "overview"
 mac_section = 0x0
 mac_offset = 0x133448
 mac_size = 0x290c
+mac_symbol = ".setupDynamicStuff__4gameFii"
 target_sha256 = "a4406ccb5958d6aadcfe49309d7dedbd045e70557affd95b71b136065695f19f"
 evidence = "overviewSliderCallback 0x137e8c calls 0x133448 after changing overview top. Callee uses overview global tables/top/type via TOC 1+0xdd0/+0xdcc/+0xde0, expands game hero/town and flaggable rows, updates overview widgets; own prologue, BLR 0x135d50 and next setupNewOverviewType 0x135d54 bound large body."
 

@@ -123,6 +123,11 @@ void updateBackpack(int slot);
 // (`iOffsetToSS = 433` / `+= 36`) 91.5844.  The DC's other two absent names
 // are renames of locals this body already has - `iHero` is `heroNumber`, and
 // its `msg` is the block-scoped `message msg` in the artifact page.
+// DC lines 577, 591, 1007, 1101, 1104 and 1120 call the general-text
+// indexer. Restoring those six calls clears the helper audit and raises
+// Windows from 91.74% to 91.85% without changing the 204-call sequence.
+// Mac candidate and retail each retain 214 calls; these six align at call
+// ordinals 66, 70, 172, 195, 200 and 205, all targeting the retail indexer.
 VA(0x0051bd50, 0x25DC)  // exhaustive body/caller identity, dc 0x104458
 void game::setupDynamicStuff(int update, int forceUpdate)
 {
@@ -132,7 +137,6 @@ void game::setupDynamicStuff(int update, int forceUpdate)
     int item;
     int monsterX[7] = { 0, 36, 72, 108, 18, 54, 90 };
     int monsterY[7] = { 0, 0, 0, 0, 37, 37, 37 };
-    // DC names two-dimensional X/width tables; Mac copies each as 12 bytes.
     unsigned short titleXOffs[2][3] = {
         { 28, 435, 459 }, { 28, 385, 385 }
     };
@@ -369,14 +373,14 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             }
 
             g_textWidgetDynamic[slot + curText] = new textWidget(
-                26, row * 116 + 102, 54, 32, g_generalText->getText(GENERAL_TEXT_CREATURE_BONUSES),
+                26, row * 116 + 102, 54, 32, (*g_generalText)[GENERAL_TEXT_CREATURE_BONUSES],
                 "smalfont.fnt", static_cast<font::TColor>(7),
                 rowWidgetId + 97, font::LEFT_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
             curText++;
 
             g_textWidgetDynamic[slot + curText] = new textWidget(
-                373, row * 116 + 102, 56, 32, g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE),
+                373, row * 116 + 102, 56, 32, (*g_generalText)[GENERAL_TEXT_CREATURES_AVAILABLE],
                 "smalfont.fnt", static_cast<font::TColor>(7),
                 rowWidgetId + 47, font::LEFT_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
@@ -652,7 +656,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             }
 
             g_textWidgetDynamic[slot + curText] = new textWidget(
-                294, row * 116 + 71, 93, 20, g_generalText->getText(GENERAL_TEXT_ARTIFACTS),
+                294, row * 116 + 71, 93, 20, (*g_generalText)[GENERAL_TEXT_ARTIFACTS],
                 "smalfont.fnt", font::PRIMARY, rowWidgetId + 139,
                 font::CENTER_JUSTIFIED, 0, 8);
             g_overWin->addWidget(g_textWidgetDynamic[slot + curText], -1);
@@ -740,7 +744,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             g_textButtonDynamic[row * 3] = new textButton(
                 386, row * 116 + 70, 108, 16,
-                rowWidgetId + 128, "OvButn3.def", g_generalText->getText(GENERAL_TEXT_EQUIPPED),
+                rowWidgetId + 128, "OvButn3.def", (*g_generalText)[GENERAL_TEXT_EQUIPPED],
                 "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
             if (!g_textButtonDynamic[row * 3])
                 memError();
@@ -748,7 +752,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             g_textButtonDynamic[row * 3 + 1] = new textButton(
                 498, row * 116 + 70, 108, 16,
-                rowWidgetId + 129, "OvButn3.def", g_generalText->getText(GENERAL_TEXT_MISCELLANEOUS),
+                rowWidgetId + 129, "OvButn3.def", (*g_generalText)[GENERAL_TEXT_MISCELLANEOUS],
                 "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
             if (!g_textButtonDynamic[row * 3 + 1])
                 memError();
@@ -756,7 +760,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
             g_textButtonDynamic[row * 3 + 2] = new textButton(
                 610, row * 116 + 70, 108, 16,
-                rowWidgetId + 138, "OvButn3.def", g_generalText->getText(GENERAL_TEXT_BACKPACK),
+                rowWidgetId + 138, "OvButn3.def", (*g_generalText)[GENERAL_TEXT_BACKPACK],
                 "smalfont.fnt", 0, 1, 0, 0, 2, font::HEADING);
             if (!g_textButtonDynamic[row * 3 + 2])
                 memError();
@@ -831,6 +835,7 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     g_overWin->broadcastMessage(msg);
 
+    // DC names two-dimensional X/width tables; Mac copies each as 12 bytes.
     unsigned short titleXOffs[2][3] = {
         {28, 435, 459}, {28, 266, 499}
     };
