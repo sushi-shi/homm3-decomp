@@ -1036,3 +1036,11 @@ mac_offset = 0x89ce8
 mac_size = 0x38
 sha256 = "71fd8d5e7c39a167a5e408094504616055dadfbd71eb5b81238761e48087dab7"
 evidence = "The 0x89c84 destructor calls this four-byte-element clear body; mapcell also calls it directly. It walks trivial elements and resets size to zero; BLR 0x89d1c. Runtime clear only."
+
+[[functions]]
+symbol = ".mac_platform_message_dialog_20f0b0"
+mac_section = 0
+mac_offset = 0x20f0b0
+mac_size = 0x5c
+sha256 = "adaac66f347d0cefa8845b880f605b814a4b754f20b4c402b12bdc73fdd83ae5"
+evidence = "Nine callers in game, kb, mapcell and smackmgr correspond to authored Windows MessageBox error paths: invalid generator, shutdown, map-object read errors and video archive failures. This Mac wrapper accepts the message and title pointers, constructs a resource-backed dialog argument using ID 1001 through 0x26adc0, then passes both strings to common display routine 0x269014; BLR 0x20f108. Platform UI helper, not a game-source inlining boundary or an MSL bounds/exception path."
