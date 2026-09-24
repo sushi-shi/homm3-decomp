@@ -290,6 +290,8 @@ int TTownEvent::load(TAbstractFile* infile, int saveVersion)
 // Dreamcast retains an out-of-line copy. Retail's corresponding source-order
 // slot is twelve bytes of NOP padding, while is_diggable contains this exact
 // vector lookup expanded in place, so the Windows helper is inline-only.
+// Removing `inline` leaves both callers exact but emits an extra VC6 body;
+// this keyword controls emission, without proving the original spelling.
 inline CObject* NewmapCell::TObjectCell::getObject() const
 {
     return &g_game->m_worldMap.m_objects[m_objectIndex];
