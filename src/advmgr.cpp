@@ -7048,6 +7048,8 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
         m_advWindow->drawBottomView(update != 0);
 }
 
+// Dreamcast bottom-view update family calls advManager::ClearBottomView;
+// retail expands its window clear and default-state assignment.
 VA(0x00415f20, 0x87)  // dc 0x18f48
 unsigned char advManager::updBottomViewEnemyTurn(unsigned char forceUpdate)
 {
@@ -7055,7 +7057,7 @@ unsigned char advManager::updBottomViewEnemyTurn(unsigned char forceUpdate)
 
     if (m_bottomViewType != BOTTOM_VIEW_5) {
         changed = 1;
-        m_advWindow->clearBottomView();
+        clearBottomView();
         m_bottomViewType = BOTTOM_VIEW_5;
         m_advWindow->setBottomView(new TBottomViewEnemyTurn(m_advWindow));
     }
@@ -7071,7 +7073,7 @@ unsigned char advManager::updBottomViewNewTurn(unsigned char forceUpdate)
         return 0;
     }
 
-    m_advWindow->clearBottomView();
+    clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_1;
     m_advWindow->setBottomView(new TBottomViewNewTurn(m_advWindow));
     m_advWindow->updateResourceDisplay(1, 1);
@@ -7102,7 +7104,7 @@ unsigned char advManager::updBottomViewResMsg(unsigned char forceUpdate)
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_6)
         return 0;
 
-    m_advWindow->clearBottomView();
+    clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_6;
     m_advWindow->setBottomView(new TBottomViewResourceMessage(
         m_advWindow, m_bottomViewResourceType, m_bottomViewResourceQuantity,
@@ -7133,7 +7135,7 @@ unsigned char advManager::updBottomViewMessage(unsigned char forceUpdate)
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_7)
         return 0;
 
-    m_advWindow->clearBottomView();
+    clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_7;
     m_advWindow->setBottomView(
         new TBottomViewMessage(m_advWindow, &m_bottomViewMessage));
@@ -7146,7 +7148,7 @@ unsigned char advManager::updBottomViewKingdom(unsigned char forceUpdate)
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_2)
         return 0;
 
-    m_advWindow->clearBottomView();
+    clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_2;
     m_advWindow->setBottomView(new TBottomViewKingdom(m_advWindow));
     m_advWindow->updateResourceDisplay(1, 1);
@@ -7159,7 +7161,7 @@ unsigned char advManager::updBottomViewHero(unsigned char forceUpdate)
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_3)
         return 0;
 
-    m_advWindow->clearBottomView();
+    clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_3;
     m_advWindow->setBottomView(new TBottomViewHero(m_advWindow));
     return 1;
@@ -7171,7 +7173,7 @@ unsigned char advManager::updBottomViewTown(unsigned char forceUpdate)
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_4)
         return 0;
 
-    m_advWindow->clearBottomView();
+    clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_4;
     m_advWindow->setBottomView(new TBottomViewTown(m_advWindow));
     return 1;
