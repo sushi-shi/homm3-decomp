@@ -38,7 +38,7 @@ _Excluded from the % above — generated/library code, not independent reconstru
 
 <!-- mac-match-score:start -->
 
-**Lightly optimized Classic Mac PowerPC reference (latest full build):** 4 / 33 available comparisons exact; 57.04% of 26,356 compared bytes match. Another 36 / 69 admitted pairs are unavailable, so a complete Mac checkpoint is pending. The admitted-pair count is coverage, not the whole Mac game.
+**Lightly optimized Classic Mac PowerPC reference (latest full build):** 6 / 35 available comparisons exact; 57.90% of 26,876 compared bytes match. Another 38 / 73 admitted pairs are unavailable, so a complete Mac checkpoint is pending. The admitted-pair count is coverage, not the whole Mac game.
 
 <!-- mac-match-score:end -->
 
