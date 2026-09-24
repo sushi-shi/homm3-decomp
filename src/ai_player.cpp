@@ -1938,8 +1938,8 @@ type_AI_creature_swapper::type_AI_creature_swapper()
 }
 
 // Mac 0:0x2f990..0x2fa08 retains this Complete-era helper immediately before
-// getAlignments. chooseWeakestArmy and valueOfAddingArmy call it at 0:0x30220
-// and 0:0x3032c; VC6 expands its body at both sites. The older DC build has
+// getAlignments. Its Mac callers are at 0:0x2fa64, 0:0x30220 and 0:0x3032c;
+// VC6 expands its body at those sites. The older DC build has
 // no corresponding named helper, so the original spelling is unknown.
 int type_AI_creature_swapper::normalizeAlignment(int alignment) const
 {
@@ -1962,15 +1962,8 @@ void type_AI_creature_swapper::getAlignments()
         return;
     }
     for (int alignment = 0; alignment < 9; ++alignment) {
-        if (m_alignments[alignment + 1] != 0 && m_hasAngelicAlliance) {
-            const std::bitset<9>& alliedAlignments = armyGrpFn0044A460();
-            if (!alliedAlignments.test(alignment)) {
-                continue;
-            }
-            int other = 0;
-            while (!alliedAlignments.test(other)) {
-                ++other;
-            }
+        if (m_alignments[alignment + 1] != 0) {
+            int other = normalizeAlignment(alignment);
             if (other != alignment) {
                 if (m_alignments[other + 1] > 0) {
                     --m_alignmentCount;

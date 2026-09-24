@@ -73,7 +73,7 @@ void soundManager::setMusicVolume()
 
             sprintf(name, DATA_COMPGEN(0x0066fedc, combatMusicFormat,
                                         "combat%02d"),
-                    random(1, 4));
+                    sRandom(1, 4));
             g_soundManager->startMP3(name, 0, 1);
         } else {
             int musicFileId = g_terrainMusicIds[g_advManager->m_lastTerrain];

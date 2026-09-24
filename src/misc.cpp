@@ -795,13 +795,7 @@ int TPickANumber::pick()
     if (m_numbersLeft <= 0)
         return m_low - 1;
     int m = m_numbersLeft - 1;
-    int skip;
-    if (m == 0)
-        skip = 0;
-    else if (m < 0)
-        skip = 0;
-    else
-        skip = rand() % (m + 1);
+    int skip = sRandom(0, m);
     int idx = 0;
     for (;;) {
         if (m_available[idx]) {
