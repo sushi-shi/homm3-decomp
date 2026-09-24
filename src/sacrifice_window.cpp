@@ -743,13 +743,7 @@ void type_sacrifice_window::setArtifactMode()
     for (i = 0; i < m_artifactOfferingWidgets.size(); ++i)
         updateArtifactOffering(i);
 
-    for (i = 0; i < m_backpackWidgets.size(); ++i)
-        updateArtifactWidget(m_backpackWidgets[i], m_currentHero->getBackpack(i));
-
-    unsigned char scrollBackpack =
-        m_currentHero->getLastBackpackIndex() + 1 > m_backpackWidgets.size();
-    m_leftBackpackButton->enable(scrollBackpack);
-    m_rightBackpackButton->enable(scrollBackpack);
+    updateBackpack();
 
     updateOffering(m_currentArtifactWidget, m_currentArtifactValue,
                     &m_holdingArtifact);
@@ -1018,8 +1012,9 @@ void type_sacrifice_window::artifactClick(
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1127
-// Complete expands this helper into both halves of backpack_click. Its widget
-// vector walk and shared scrolling-state byte are directly visible there.
+// Complete expands this helper in setArtifactMode and both halves of
+// backpackClick. Mac retains the call in setArtifactMode at 0:0x1594dc;
+// Dreamcast names update_backpack on source line 895.
 void type_sacrifice_window::updateBackpack()
 {
     for (unsigned long i = 0; i < m_backpackWidgets.size(); ++i)
