@@ -336,7 +336,9 @@ void type_record_claim_town::undo()
 // Dreamcast's older record stores only the boat pointer here. Complete adds
 // the replay state at +0xc/+0x10; record_hide_boat's retail `ret 0xc` and the
 // two independent snapshot loads corroborate the revised constructor inputs.
-inline type_record_hide_boat::type_record_hide_boat(boat* currentBoat,
+// DC retains this constructor at 0x8ce74 and Mac recordHideBoat calls 0xbfce0;
+// VC6 expands the ordinary same-TU helper in both Windows boat callers.
+type_record_hide_boat::type_record_hide_boat(boat* currentBoat,
                                                     unsigned char occupied,
                                                     int occupyingHero)
 {
