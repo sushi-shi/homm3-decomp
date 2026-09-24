@@ -2267,9 +2267,8 @@ long army::getAdjustedAttack(const army* enemy,
             || (enemy->is(creatureKing2) && m_slayerLevel >= 2)
             || (enemy->is(creatureKing3) && m_slayerLevel >= 3)) {
             attack += 8;
-            if (g_combatManager->m_heroes[getControllingSide()]) {
-                hero* castingHero =
-                    g_combatManager->m_heroes[getControllingSide()];
+            if (getController()) {
+                hero* castingHero = getController();
                 attack += castingHero->getHeroSpellBonus(55, m_monInfo.m_level, 8);
             }
         }
@@ -2775,8 +2774,7 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
     }
 
     long total = bonus;
-    hero* controller =
-        g_combatManager->m_heroes[getControllingSide()];
+    hero* controller = getController();
     if (controller != 0) {
         if (isShooting)
             total = static_cast<long>(
@@ -2814,8 +2812,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
                                         simulateOnly == 0, distance);
     switch (m_creatureType) {
     case ARMY_CREATURE_BALLISTA: {
-        hero* controlling =
-            g_combatManager->m_heroes[getControllingSide()];
+        hero* controlling = getController();
         long mastery =
             controlling->m_skillLevel[eSecSkillBattlefieldBallistics];
         if (!simulateOnly
@@ -2925,7 +2922,7 @@ double army::computeDefenderDamageReduction(unsigned char isShooting) const
     }
     if (m_spellInfluence[70])
         reduction *= 0.5;
-    hero* castingHero = g_combatManager->m_heroes[getControllingSide()];
+    hero* castingHero = getController();
     if (castingHero)
         reduction *= castingHero->getDefenseFactor();
     return reduction;
