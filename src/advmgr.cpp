@@ -8911,6 +8911,8 @@ int mapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
 // rejected: grailY-before-grailX declaration order (+0.01, copy-prop
 // eats it). why-reg finds first defs aligned - past-first-defs
 // schedule, the bounded class.
+// DC advmgr.cpp:11281 calls get_map_center at the closing recenter step;
+// Complete expands its fixed viewport offset.
 VA(0x0041a7f0, 0x307)  // anchor-callee, dc 0x1e068
 void advManager::viewPuzzle()
 {
@@ -8946,9 +8948,7 @@ void advManager::viewPuzzle()
     if (!g_inViewWorld) {
         redrawAdvScreen(1, 0);
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
-        type_point centre(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
-                          m_radarOrigin.m_z);
-        setEnvironmentOrigin(centre, 1);
+        setEnvironmentOrigin(getMapCenter(), 1);
     }
 }
 
