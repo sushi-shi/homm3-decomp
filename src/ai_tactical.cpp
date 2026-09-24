@@ -1946,8 +1946,10 @@ void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice* choice, l
 // exactly as in get_caliph_value: the family's second parameter is a
 // type_enchant_data, and a type_spell_choice derives from it.
 
-// The +0x198 row is read HERE by spell id, which is what the split of
-// army.h's spell-row view out of the round view exists for.
+// DC ai_tactical.cpp:2532/2533 calls CannotAttack and GetSpellTime;
+// Complete expands their Army.h bodies in this loop. The +0x198 row is
+// read HERE by spell id, which is what the split of army.h's spell-row
+// view out of the round view exists for.
 VA(0x0043a910, 0x150)  // dc 0x40dc8
 void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long group) const
 {
@@ -1959,19 +1961,9 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long gr
     long value = 0;
     for (long i = 0; i < g_combatManager->m_numArmies[group]; i++) {
         const army* target = &g_combatManager->m_armies[group][i];
-        if (target->m_spellInfluence[62])
+        if (target->cannotAttack())
             continue;
-        if (target->m_spellInfluence[70])
-            continue;
-        if (target->m_spellInfluence[74])
-            continue;
-        if (target->is(creatureImmobilized))
-            continue;
-        if (target->m_creatureType == CREATURE_FIRST_AID_TENT)
-            continue;
-        if (target->m_creatureType == CREATURE_AMMO_CART)
-            continue;
-        if (target->m_spellInfluence[choice->m_spell])
+        if (target->getSpellTime(choice->m_spell))
             continue;
         long creatureCast = m_isCreatureSpell != 0;
         if (g_combatManager->validSpellTargetArmy(choice->m_spell, m_side, target, 1,
