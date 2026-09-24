@@ -114,6 +114,15 @@ target_sha256 = "e1d6c539db9c3cdbbbcc96fe2292770f12f19f12c837f1fd2664e757524c574
 evidence = "At swapManager::open +0x1a6634 the call immediately follows construction of its 16-byte CSwapMgrNetMsgHandler and passes g_dPlay and that new handler. This is the authored CDPlayHeroes::setNetMsgHandler call. The Mac body writes the handler at receiver+0x7c and transfers old handler state; final BLR at 0x211148 precedes getNetMsgHandler."
 
 [[functions]]
+retail_va = 0x557a80
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2156e4
+mac_size = 0x28
+target_sha256 = "68b0de91ac94c7ce08fc412facadebc964aec1d3f6dd73b7dc31f8e697c49c2c"
+evidence = "CTurnDuration::isOn first rejects a zero duration at receiver+8, then returns whether g_inCampaign is false. The Mac body has two returns and ends at 0x215708 before isExpired begins at 0x21570c. Mac isClose calls this retained helper at 0x215a5c; Windows isClose expands the same two checks, and the ordinary source already calls isOn."
+
+[[functions]]
 retail_va = 0x557aa0
 unit = "remote"
 mac_section = 0x0
@@ -121,6 +130,15 @@ mac_offset = 0x21570c
 mac_size = 0xac
 target_sha256 = "3f026e3832b908a578cf52ea86c4b50098415002528caaff06a8818eed6a9a34"
 evidence = "CTurnDuration::isExpired checks g_currentPlayer/isLocalHuman, its duration and pause fields, then compares GameTime::get against start+duration. Hero::checkLevel, recruitUnit::main, swapManager::main and townManager::main call this retained body directly. The complete return is at 0x2157b4; the next function begins at 0x2157b8."
+
+[[functions]]
+retail_va = 0x557d00
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215a3c
+mac_size = 0x9c
+target_sha256 = "ca1502d01229bd572f53f28b5e2f514cbcdda13ad3299adb737c2cd58da54ea1"
+evidence = "CChatManager::turnDurationMsg calls this with 59000 milliseconds. Mac CTurnDuration::isClose calls isOn at 0x2156e4, checks start and pause fields, then compares GameTime::get + threshold against start + duration. BLR at 0x215ad4 precedes the next function. Windows source and retail isClose at 0x557d00 perform the same checks; VC6 expands the isOn call."
 
 [[functions]]
 retail_va = 0x553960
