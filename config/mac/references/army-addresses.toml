@@ -819,3 +819,12 @@ mac_offset = 0x4bf10
 mac_size = 0x60
 target_sha256 = "50a22dee7588c3ed927b9ef1a53a277fa33a0b523df93dbcf3abc92c892b4c39"
 evidence = "Mac melee/multihead callers retain this adjacent source helper. A wide army maps direction through the ring-index/order tables with +7 mod 8; a narrow army returns (direction+5) mod 6. The explicit-inline Windows source calls it. Final BLR at 0x4bf6c; next entry 0x4bf70."
+
+[[helpers]]
+source_helper = "army::adjustHitpoints"
+unit = "army"
+mac_section = 0
+mac_offset = 0x504ac
+mac_size = 0xd4
+target_sha256 = "f3bca54a3dd01f1ecc6f1b95145e0781f28bb5dd91dca20ba7926a048cbced03"
+evidence = "Mac cancelIndividualSpell and resetRound call this retained helper at 0x504ac. It scales original hit points by poison factor, halves for Age, adds 0.95 before integer conversion, then clamps top-creature damage to hitPoints-1 using the two-value min. Dreamcast names army::adjust_hitpoints; Windows expands the ordinary source helper. Final BLR at 0x5057c; next entry 0x50580."
