@@ -888,8 +888,10 @@ hero::hero()
 // A shared function-scope int index with per-element artifact loops was
 // independently measured at 89.67%; a fresh int index gives 82.5336%.
 // Controls: short skill-only index 85.6409%;
-// literal empty-name assignment and explicit ARTIFACT_NONE construction are
-// byte-flat against the 85.6745% loop candidate. fill_n emits an overlapping
+// literal empty-name assignment and explicit ARTIFACT_NONE construction were
+// byte-flat against the old 85.6745% loop candidate. With the current shared
+// constructors, explicit ARTIFACT_NONE in both loops restores the previous
+// 95.8658% MAX from 95.2819% CUR. fill_n emits an overlapping
 // rep-movsd fill instead of retail's two-store loops (79.5302%). Older string
 // assign/operator= wrappers and inline_depth 2/3/4 were byte-flat; a zero-depth
 // assign pin lost to 62.31%. Synthetic invariant carriers were also byte-flat
@@ -915,14 +917,14 @@ void hero::initialize(short index)
     type_artifact* equipped = m_equipped;
     int equippedRemaining = 19;
     do {
-        *equipped++ = type_artifact();
+        *equipped++ = type_artifact(ARTIFACT_NONE);
     } while (--equippedRemaining);
 
     std::fill_n(m_artifactSlotCounts, sizeof(m_artifactSlotCounts), static_cast<unsigned char>(0));
     type_artifact* backpack = m_backpack;
     int backpackRemaining = 64;
     do {
-        *backpack++ = type_artifact();
+        *backpack++ = type_artifact(ARTIFACT_NONE);
     } while (--backpackRemaining);
     m_backpackCount = 0;
     std::fill_n(m_skillLevel, sizeof(m_skillLevel), static_cast<signed char>(0));
