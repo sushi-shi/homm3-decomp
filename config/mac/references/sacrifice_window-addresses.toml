@@ -487,6 +487,15 @@ target_sha256 = "c706dae90a3e9cb8ca5f44032e1d2ff01a80ba555068567e5d5e76c9cbf7026
 evidence = "finds first empty offering, calls offering.set0x1552ec and updateArtifactOffering0x15a0e0; complete bounded PowerPC span."
 
 [[helpers]]
+source_helper = "type_sacrifice_window::emptyBackpack()"
+unit = "sacrifice_window"
+mac_section = 0x0
+mac_offset = 0x15a4b4
+mac_size = 0x158
+target_sha256 = "cac130706040423033a246924bea130ee1d6adf058985e62dbbd3887f6017818"
+evidence = "Immediately after addArtifact and before the callback at 0x15a60c; loops over the 64 backpack slots, calls addArtifact at 0x15a3e0, removeBackpackArtifact at 0x103a54, and updateBackpack at 0x159eec. allArtifacts calls it at 0x15a7d8; Dreamcast names the same helper in sacrifice_window.cpp."
+
+[[helpers]]
 source_helper = "type_sacrifice_window::returnArtifact"
 unit = "sacrifice_window"
 mac_section = 0x0

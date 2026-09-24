@@ -1175,8 +1175,9 @@ unsigned char type_sacrifice_window::addArtifact(
     return 1;
 }
 
-// E:\gamedcs\sacrifice_window.cpp:1310
-// The helper is expanded at each callback. Retail scans the fixed 64-record
+// E:\gamedcs\sacrifice_window.cpp:1310. Mac retains this ordinary helper at
+// 0:0x15a4b4 and calls it from allArtifacts; VC6 expands it at each callback.
+// Retail scans the fixed 64-record
 // backpack for its next occupied slot and stops if the offering pane fills.
 void type_sacrifice_window::emptyBackpack()
 {
