@@ -2483,18 +2483,7 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::TOWN_GARRISON_6_SELECTOR_ID: {
         int shift = msg->m_qualifier & 3;
         int slot = code - TTownScreenWindow::TOWN_GARRISON_0_SELECTOR_ID;
-        if (m_garrisonStrip->m_group) {
-            if (m_srcIndex < 0 || m_srcStrip->m_owner != g_netLocalGamePos) {
-                selectArmy(m_garrisonStrip, slot, 0);
-            } else {
-                m_destStrip = m_garrisonStrip;
-                m_destIndex = slot;
-                if (m_divideStatus == 0 && shift == 0)
-                    setArmyCommand(0, 0);
-                else
-                    setArmyCommand(1, 0);
-            }
-        }
+        armyCommand(m_garrisonStrip, slot, shift, 0);
         break;
     }
     case TTownScreenWindow::PORTRAIT_ID:
@@ -2526,18 +2515,7 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::HERO_ARMY_6_SELECTOR_ID: {
         int shift = msg->m_qualifier & 3;
         int slot = code - TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID;
-        if (m_heroStrip->m_group) {
-            if (m_srcIndex < 0 || m_srcStrip->m_owner != g_netLocalGamePos) {
-                selectArmy(m_heroStrip, slot, 0);
-            } else {
-                m_destStrip = m_heroStrip;
-                m_destIndex = slot;
-                if (m_divideStatus == 0 && shift == 0)
-                    setArmyCommand(0, 0);
-                else
-                    setArmyCommand(1, 0);
-            }
-        }
+        armyCommand(m_heroStrip, slot, shift, 0);
         break;
     }
     case TTownScreenWindow::TOWN_WIDGET_50_ID:
@@ -2720,7 +2698,8 @@ void townManager::selectArmy(strip* fromStrip, long slot,
 
 // DC townmgr.cpp:3825..3838 (0x16d1e0) proves this ordinary member and
 // its SetArmyCommand/select_army calls. SetCommandAndText's two slot arms
-// call ArmyCommand at DC line 4951; Complete expands it in both arms.
+// call ArmyCommand at DC line 4951; Mac calls it at 0:0x1bfed4 and
+// 0:0x1bffac. Complete expands it in both arms.
 void townManager::armyCommand(strip* whichStrip, int i, int shift,
                               unsigned char joinDialog)
 {

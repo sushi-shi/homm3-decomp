@@ -1134,10 +1134,10 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     updateCost();
 }
 
-// E:\gamedcs\recruit.cpp:1219 - no retail body: the only caller is
-// QuickViewRecruit(char, short*) (0x551780), so /Ob2 inlined it and
-// the single-call-site STATIC rule dropped the out-of-line copy.
-inline TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
+// E:\gamedcs\recruit.cpp:1219. Dreamcast and Mac retain this constructor;
+// Mac quickViewRecruit calls it at 0:0x150cc8. VC6 expands this ordinary
+// definition into the sole Windows caller at 0x551780 (45/45 calls agree).
+TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
     : heroWindow(x2, y2, 160, 320, 0x12)
 {
     m_widgets.reserve(49);

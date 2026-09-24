@@ -453,9 +453,8 @@ bool generator::save(TAbstractFile* outfile)
 // +0xca52c, +0xca624 and +0xca71c between save and initialize, as in the
 // Dreamcast game.cpp line order. Its calls do not establish inline spelling or
 // header placement. VC6 also expands removeBonus and setOwner from ordinary
-// game.cpp definitions at their known call sites; those definitions merely
-// emit discardable COMDAT bodies. Keep the present spelling provisional.
-inline void generator::removeBonus()
+// game.cpp definitions at their known call sites.
+void generator::removeBonus()
 {
     if (m_playerOwner < 0)
         return;
@@ -498,7 +497,7 @@ inline void generator::updateBonus()
 }
 
 // E:\gamedcs\game.cpp:557
-inline void generator::setOwner(long owner)
+void generator::setOwner(long owner)
 {
     if (owner == m_playerOwner)
         return;
@@ -1815,12 +1814,14 @@ int game::setupPuzzlePieces(int whichPlayer, int countOnly)
 
     sRand(whichPlayer * 424909 + 423869);
 
+    // Dreamcast names SRandom at game.cpp:2051/2052; Mac calls it at
+    // 0:0xcdf30/0:0xcdf50. Its VC6 body aliases retail Random at 0x50b230.
     for (i = 0; i < piecesRemoved; i++) {
         piece = 0;
         while (piece < g_puzzlePlaceablePieces && g_puzzlePiecesRemoved[piece])
-            piece += random(1, 5);
+            piece += sRandom(1, 5);
         if (piece >= g_puzzlePlaceablePieces) {
-            j = random(1, g_puzzlePlaceablePieces - i);
+            j = sRandom(1, g_puzzlePlaceablePieces - i);
             for (piece = 0; piece < g_puzzlePlaceablePieces; piece++) {
                 if (!g_puzzlePiecesRemoved[piece]) {
                     if (--j == 0)
@@ -8582,7 +8583,7 @@ void game::setupTowns()
 {
 }
 
-// The nine-faction no-repeat town-name samplers are file-static in game.cpp.
+// The nine-faction no-repeat town-name samplers are defined in game.cpp.
 // Retail's vector-constructor iterator at 0x4ca9e0 proves nine 24-byte
 // TPickRandomTownName objects and its element wrapper proves [0, 15].
 DATA(0x006971a0)
@@ -8595,7 +8596,9 @@ DATA(0x006a6048)
 const char* g_townNames[9][16];
 
 // E:\gamedcs\game.cpp:9803, dc 0xb6944.
-inline const char* getRandomTownName(int townType)
+// Mac retains this helper at 0:0xe1f18; VC6 expands its call in
+// processOnMapTowns.
+const char* getRandomTownName(int townType)
 {
     int name = g_randomTownNames[townType].pick();
     while (name == -1) {
@@ -8606,7 +8609,8 @@ inline const char* getRandomTownName(int townType)
 }
 
 // E:\gamedcs\game.cpp:9821, dc 0xb69b8
-inline void resetRandomTownNames()
+// Mac retains this helper at 0:0xe1f98; VC6 expands its source call.
+void resetRandomTownNames()
 {
     for (int i = 0; i < 9; ++i)
         g_randomTownNames[i].reset();
