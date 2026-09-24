@@ -1168,7 +1168,8 @@ CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayerInPos(int pos)
 }
 
 // DC GetCompPlayerInPos; DrawHeroAdvancedOption expands the null
-// fallback through it (lea into the computer bank).
+// fallback through it (lea into the computer bank). OnUpdatePlayerPosMsg
+// calls it at DC source line 7644; Mac retains that call at 0:0x183494.
 // E:\gamedcs\singleselectionwindow.cpp:1089, dc 0x130654
 CNetPlayerHandlerPlayer* CNetPlayerHandler::getCompPlayerInPos(int pos)
 {
@@ -7250,7 +7251,7 @@ void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
     for (i = 0; i < 8; ++i) {
         CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(i);
         if (!p)
-            p = &m_players.m_computerPlayers[i];
+            p = m_players.getCompPlayerInPos(i);
         if (p) {
             getWidget(p->m_playerPos + 207)->sendMessage(
                 widget::WIDGET_SET_TEXT, int(g_handiText[p->m_handicap]));
