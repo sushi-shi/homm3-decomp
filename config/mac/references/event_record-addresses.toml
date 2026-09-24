@@ -746,3 +746,21 @@ mac_offset = 0xbfce0
 mac_size = 0x80
 target_sha256 = "0e5c5956376213d8517226f6d13ef123aa0b07bc2daf16c17c8336d30386f7c8"
 evidence = "game::recordHideBoat calls this retained constructor at 0xbfce0. It stores the boat pointer, occupied byte and occupying hero, and snapshots the boat's occupied byte at +0x24 and hero at +0x20 into the record. Dreamcast names the constructor at dc:0x8ce74; Windows expands the authored same-TU helper. Final BLR at 0xbfd5c; next entry 0xbfd60."
+
+[[helpers]]
+source_helper = "type_record_hide_hero::type_record_hide_hero"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xc09ec
+mac_size = 0x70
+target_sha256 = "efad98f5160e7806493958acaab3be95fb26e52175a9944369f9208fc23a30e4"
+evidence = "game::recordHideHero calls this constructor at 0xc09ec. It stores the hero pointer, snapshots owner from hero+0x22 before writing the requested owner and garrison bytes. The canonical source helper is explicit inline, so Windows may expand it while Mac retains this call. Final BLR at 0xc0a58; next entry 0xc0a5c."
+
+[[helpers]]
+source_helper = "type_record_show_boat::type_record_show_boat"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xc0148
+mac_size = 0x94
+target_sha256 = "0f30c0be03ed0164eda982f49d911fcc3f1eddbc4909ffde5de42c81c5dd59a8"
+evidence = "game::recordShowBoat calls this retained constructor at 0xc0148. It calls the canonical hide-boat constructor at 0xbfce0, then stores the boat's packed location and requested replacement point in its record fields. The source helper is explicit inline; Mac retains its body and Windows expands it. Final BLR at 0xc01d8; next entry 0xc01dc."
