@@ -442,11 +442,13 @@ int town::save(TAbstractFile* outfile)
     return 0;
 }
 
+// Dreamcast town.cpp:764 calls the Town.h HasBuilding accessor;
+// retail expands the active-mask test.
 VA(0x005bd700, 0x47)  // dc 0x165d5c
 int town::getPortraitFrame(bool isSmall) const
 {
     int frame;
-    if (m_active & g_bitNumber[CASTLE_FORT_ID])
+    if (hasBuilding(CASTLE_FORT_ID, true))
         frame = m_type * 2;
     else
         frame = m_type * 2 + 18;
@@ -1094,13 +1096,16 @@ unsigned char town::canBuildDock() const
     return m_dockSite != TOWN_DOCK_SITE_NONE;
 }
 
+// Dreamcast town.cpp:1491 calls is_legal_building and HasBuilding;
+// Complete expands both helper bodies into the two mask tests.
 VA(0x005bf4f0, 0x7A)  // dc 0x167388
 void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
 {
     *archerLevel = 10;
     int level = 4;
     for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
-        if ((m_available & g_bitNumber[building]) && (m_built & g_bitNumber[building]))
+        if (isLegalBuilding(type_building_id(building))
+                && hasBuilding(building, false))
             level++;
     }
     *numArchers = level;
@@ -1116,30 +1121,34 @@ long town::getCastleGrowthBonus(TCreatureType creature) const
     return 0;
 }
 
+// Dreamcast town.cpp:1517 names HasBuilding for the first hall check;
+// all five source checks use the same built/active Town.h accessor.
 VA(0x005bf600, 0xC6)  // dc 0x167458
 short town::getGoldIncome(unsigned char includeSilo) const
 {
     short income = 500;
-    if (m_built & g_bitNumber[HALL_TOWN_ID])
+    if (hasBuilding(HALL_TOWN_ID, false))
         income = 1000;
-    if (m_built & g_bitNumber[HALL_CITY_ID])
+    if (hasBuilding(HALL_CITY_ID, false))
         income = 2000;
-    if (m_built & g_bitNumber[HALL_CAPITOL_ID])
+    if (hasBuilding(HALL_CAPITOL_ID, false))
         income = 4000;
-    if (includeSilo && (m_built & g_bitNumber[MARKETPLACE_SILO_ID]))
+    if (includeSilo && hasBuilding(MARKETPLACE_SILO_ID, false))
         income += getSiloIncome()[GOLD];
-    if (m_active & g_bitNumber[HOLY_GRAIL_ID])
+    if (hasBuilding(HOLY_GRAIL_ID, true))
         income += 5000;
     return income;
 }
 
+// Dreamcast town.cpp:1539 calls HasBuilding; retail expands the
+// active-mask checks for the dwelling and matching horde building.
 VA(0x005bf6d0, 0x97)  // dc 0x1674d4
 int town::getHorde(long dwelling) const
 {
-    if (!(m_active & g_bitNumber[DWELLING_0_ID + dwelling]))
+    if (!hasBuilding(DWELLING_0_ID + dwelling, true))
         return MAX_BUILDING_TYPE;
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
-        if (m_active & g_bitNumber[g_hordeBuildings[slot]]) {
+        if (hasBuilding(g_hordeBuildings[slot], true)) {
             if (s_constHordeEffects[m_type][slot].m_dwelling == dwelling)
                 return g_hordeBuildings[slot];
         }
@@ -1147,14 +1156,16 @@ int town::getHorde(long dwelling) const
     return MAX_BUILDING_TYPE;
 }
 
+// Dreamcast town.cpp:1560 calls HasBuilding for the horde-bonus gate;
+// both active-mask checks use that same header boundary.
 VA(0x005bf770, 0x9E)  // dc 0x167544
 long town::getHordeBonus(long dwelling) const
 {
-    if (!(m_active & g_bitNumber[DWELLING_0_ID + dwelling]))
+    if (!hasBuilding(DWELLING_0_ID + dwelling, true))
         return 0;
     long bonus = 0;
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
-        if (m_active & g_bitNumber[g_hordeBuildings[slot]]) {
+        if (hasBuilding(g_hordeBuildings[slot], true)) {
             if (s_constHordeEffects[m_type][slot].m_dwelling == dwelling)
                 bonus = s_constHordeEffects[m_type][slot].m_bonus;
         }
