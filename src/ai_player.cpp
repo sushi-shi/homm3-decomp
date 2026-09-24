@@ -308,7 +308,8 @@ unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown)
     type_AI_combat_data defender(0, &defendingArmy, 0.75, attackingHero, 0,
                                  cell);
     attacker.simulateCombat(defender);
-    return attacker.m_totalCombatValue > 0;
+    // Dreamcast ai_player.cpp:82 calls the canonical combat-value accessor.
+    return attacker.getTotal() > 0;
 }
 
 // Original: type_town_threat_checker::is_marked; ai_player.cpp:179, dc 0x2dfa0.
