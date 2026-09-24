@@ -166,3 +166,30 @@ mac_offset = 0x21114c
 mac_size = 0x8
 target_sha256 = "1b3c4c86e574c65c73fdaddb03441f754b3420a1fa75181033f9e3faede802f1"
 evidence = "CDPlayHeroes::getNetMsgHandler returns the handler pointer at Mac +0x7c (Windows +0xf0 after a larger deque). Calls from advManager::doAdvCommand 0x8b18, recruitUnit::main 0x14fbbc and CChatManager::turnDurationMsg 0x211744 all pass g_dPlay as receiver and use the returned handler; the canonical Windows method is VA 0x5537a0. Its BLR at 0x211150 and adjacent next entry 0x211154 bound the eight-byte body."
+
+[[functions]]
+retail_va = 0x00554400
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21294c
+mac_size = 0x30
+target_sha256 = "0210c0063a476900abb054f4c2da049bb854a03424f018030ff5b527ab7281a1"
+evidence = "Free getRemoteData wrapper: forwards removeFromQueue to g_dPlay->getRemoteData at 0x210b84 with null compression output. Called by command and remote dispatchers. Final BLR at 0x212978; next entry 0x21297c."
+
+[[functions]]
+retail_va = 0x00554a20
+unit = "remote"
+mac_section = 0
+mac_offset = 0x212f90
+mac_size = 0x48
+target_sha256 = "7ed2f82e4ff7ee9fea9312c9012a9ea38718843c7311841b7160f9df5b0c9743"
+evidence = "Free receiveChat: passes sender to game::getPlayerName at 0xe6e34, then formats player and chat text through CChatManager::addChat at 0x211584. Command's RS_CHAT_MSG arm calls it. Final BLR at 0x212fd4; next entry 0x212fd8."
+
+[[functions]]
+retail_va = 0x00554a50
+unit = "remote"
+mac_section = 0
+mac_offset = 0x212fd8
+mac_size = 0x50
+target_sha256 = "c383eeb973262eb22d9821f16d6337b7bd46b38778058db9449ea49f1f19c4bb"
+evidence = "CAnimatedDlg constructor passes dialog kind 0x12 to CTextDialog, installs its vtable and clears sprite, frame, tick and palette fields. waitForReadyToPlayMsg constructs it on the stack. Final BLR at 0x213024; next entry 0x213028."

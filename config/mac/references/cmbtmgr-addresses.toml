@@ -652,3 +652,12 @@ mac_offset = 0x6df98
 mac_size = 0x94
 target_sha256 = "0a72e1cb7dc5c5dc4ac43d37d426e970ebcdd0df1dcdf4f3a14282c6eab78187"
 evidence = "NEW: TArcher destructor disposes handles+8 then+4, optional delete; manager array-constructor0x6df34 destructor descriptor data1+0x6d20 resolves code0x6df98."
+
+[[helpers]]
+source_helper = "combatManager::testRaiseDoor"
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x7357c
+mac_size = 0x94
+target_sha256 = "541795ed3fc8846a6110a5db17d665054e096de32d76eac79d79b4032faae2e3"
+evidence = "Retained TestRaiseDoor checks town, drawbridge state and gate/moat occupancy, then calls RaiseDoor at 0x734ac. Dreamcast TestRaiseDoor dc:0x610e0 records the same guard and a separate RaiseDoor call; command::processNextAction calls this Mac helper. Windows retail instead has the guard in raiseDoor at 0x4672e0, so this is a source boundary lead, not a Windows VA pair. Final BLR at 0x7360c; next entry 0x73610."
