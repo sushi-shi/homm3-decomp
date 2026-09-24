@@ -313,7 +313,7 @@ def write_readme(results: list[Result]) -> None:
     exact = sum(row.exact for row in results)
     scored = sum(row.matching_bytes for row in results)
     total = sum(row.compared_bytes or max(row.size, row.candidate_size) for row in results)
-    replacement = (f"{begin}\n\n**Classic Mac PowerPC second target (last full checkpoint):** "
+    replacement = (f"{begin}\n\n**Lightly optimized Classic Mac PowerPC reference (last full checkpoint):** "
                    f"{exact} / {len(results)} admitted functions exact; "
                    f"{100 * scored / total if total else 0:.2f}% of {total:,} compared bytes match. "
                    "The admitted-pair count is coverage, not the whole Mac game.\n\n"

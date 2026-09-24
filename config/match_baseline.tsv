@@ -2043,7 +2043,7 @@ game	?makeTerrainVisible@game@@QAEXHG@Z	100.0000	100.0000	100.0000	0xca240	token
 game	?matchUndergroundGates@game@@AAEXXZ	94.6726	94.6726	98.3451	0xc0b60	tokens1:aec27a27c00d
 game	?mineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70	tokens1:0c895f50ab49
 game	?newMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520	tokens1:c9ed53d1c02f
-game	?newMap@game@@QAEXPAVTAbstractFile@@PAHPAUScenarioStruct@TCampaignBrief@@H@Z	93.2769	93.2769	100.0000	0xbfe70	tokens1:83eb3150c314
+game	?newMap@game@@QAEXPAVTAbstractFile@@PAHPAUScenarioStruct@TCampaignBrief@@H@Z	100.0000	100.0000	100.0000	0xbfe70	tokens1:83eb3150c314
 game	?nextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40	tokens1:1467134bdb30
 game	?nextPlayer@game@@QAEXXZ	84.8614	84.8614	84.8614	0xc6fe0	tokens1:7e0a427260d5
 game	?nextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40	tokens1:a12560d43ae3
