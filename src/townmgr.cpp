@@ -5948,7 +5948,8 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
     if (g_game->m_isTutorial && building == DWELLING_2_ID && currentTown->m_type == 0)
         mask &= ~g_bitNumber[BLACKSMITH_ID];
 
-    mask &= ~currentTown->m_active;
+    // DC line 7281 retains this header helper; VC6 expands its m_active read.
+    mask &= ~currentTown->getBuildingMask();
 
     for (int i = 0; i < MAX_BUILDING_TYPE; ++i) {
         if ((g_bitNumber[i] & mask) != 0 && i != HORDE_ID && i != HORDE_2_ID)
