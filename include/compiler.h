@@ -12,6 +12,13 @@
 #include <extras.h>
 // Native MSL provides the equivalent CRT entry under this spelling.
 #define _strcmpi _stricmp
+// The file API keeps Microsoft's names in shared source; MSL supplies the
+// corresponding open flags and owner-write permission under POSIX spellings.
+#define _O_BINARY O_BINARY
+#define _O_CREAT O_CREAT
+#define _O_TRUNC O_TRUNC
+#define _O_WRONLY O_WRONLY
+#define _S_IWRITE S_IWUSR
 #endif
 
 #endif
