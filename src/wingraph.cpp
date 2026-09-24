@@ -138,6 +138,8 @@ static void ddSetupClipper()
 // the body; the empty spin on the mouse manager's busy word is retail's, and
 // VC6 hoists its load out so the wait is one self-jump.
 // E:\gamedcs\wingraph.cpp:260
+// Mac retains this rectangle/pointer composite at code 0+0x20c80c, using
+// Mac screen surfaces where this Windows body calls DirectDraw.
 VA(0x005ffe70, 0x35C)  // anchor-caller(AppPaint, winmgr's five UpdateScreen/fade sites) + wingraph statics, dc 0x198d5c
 void robAppBlit(tagRECT* combRect)
 {
@@ -259,6 +261,8 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect);
 // (udst_rect/usrc_rect), not nullable pointers. All callers pass real RECTs.
 //
 // E:\gamedcs\wingraph.cpp:931
+// Mac retains the five-argument blit interface at code 0+0x217e10 and
+// uses Mac surfaces for the six pointer-update calls from mousemgr.
 VA(0x006001d0, 0x1E1)  // anchor-caller(mousemgr, six sites) + header identification, dc 0x199170
 void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
             IDirectDrawSurface* srcSurface, const tagRECT& srcRect,
