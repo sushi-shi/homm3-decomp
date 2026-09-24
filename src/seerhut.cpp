@@ -983,37 +983,14 @@ void type_artifact_quest::takePayment(hero* currentHero)
         currentHero->removeArtifact(m_artifacts[i]);
 }
 
-// Slot 4 filters the payload to the artifacts the visiting hero still lacks.
-// Retail keeps both that id vector and its parallel name vector alive across
-// the text choice.  Each arm then owns its own picture vector: the generated
-// arm formats the missing-name list into the progress template, while a
-// custom progress string is passed through directly.
-
-// Historical pinned residual (88.7407%): all 31 CFG blocks and every branch target agree, as do
-// retail's 0x68 frame and every persistent vector/string/record slot. Keeping
-// each dialog record outside its loop is what recovers that layout. Retail
-// outlines only the generated arm's repeated vector::size test; restricting
-// inline_depth(0) to that statement restores the complete CFG without also
-// outlining operator[] and push_back.
-
-// Residual (89.1000%): computing the five-column group once fixes the retail
-// quest-text copy schedule. The remaining Dinkumware inline-budget class
-// inlines both dialog-vector destructors and the final trivial artifact-vector
-// destroy where retail calls them, and selects the count-taking insert in the
-// custom arm where retail selects the position/value overload. Extending the
-// depth limit through either dialog scope regresses; retain the source-shaped
-// lifetime instead of manufacturing storage or cleanup flow.
-// Current unpinned source: counted loops and canonical push_back, with the
-// invariant resource type initialized once per dialog record (82.6111%).
-// Assigning that field inside each loop gives 80.4889%; empty() is flat.
-// One function-scope unsigned counter shared by the loops gives 84.5037%;
-// the shared signed-counter control stays at 82.6111%.
-// Using questText(QUEST_TEXT_PROGRESS) instead of the row helper preserves
-// row-before-questType evaluation but falls to 81.4815%; keep questTexts().
-// Per-iteration resource declaration, either assigned or aggregate-initialized,
-// gives the same 83.7074% code; neither restores the retained size/cleanup calls.
-// Old pinned loop + insert(end(), resource) gave 92.0556%, but neither
-// compiler-control scaffolding nor that artificial append is retained.
+// Slot 4 filters the payload to missing artifacts and keeps both the id and
+// name vectors alive across the text choice. Mac retains calls from both
+// branches to the same artifact-picture helper at code offset 0x166b38;
+// CodeWarrior emits both source calls, while VC6 expands the helper here.
+// With the canonical helper, VC6 rises from 75.9889% to 90.2222%; its 31 CFG
+// blocks agree. Earlier attempts to force vector inlining with inline_depth,
+// counted insert, and per-iteration resource construction did not establish
+// a source-backed match, so the ordinary helper and push_back remain.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056f8a0, 0x313)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
 void type_artifact_quest::doProposalDialog(hero* currentHero)
@@ -1036,56 +1013,37 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
             textFormat.c_str(),
             joinTextList(requirements).c_str());
         textPointer = text.c_str();
-        std::vector<type_dialog_resource> dialogResources;
-        type_dialog_resource resource;
-        resource.m_resource = 8;
-        for (i = 0; i < missingArtifacts.size(); ++i) {
-            resource.m_qualifier = missingArtifacts[i];
-            dialogResources.push_back(resource);
-        }
-        extendedDialog(textPointer, dialogResources, -1, -1, 0);
+        showArtifactProgress(textPointer, missingArtifacts);
     } else {
         textPointer = m_progressText.c_str();
-        std::vector<type_dialog_resource> dialogResources;
-        type_dialog_resource resource;
-        resource.m_resource = 8;
-        for (i = 0; i < missingArtifacts.size(); ++i) {
-            resource.m_qualifier = missingArtifacts[i];
-            dialogResources.push_back(resource);
-        }
-        extendedDialog(textPointer, dialogResources, -1, -1, 0);
+        showArtifactProgress(textPointer, missingArtifacts);
     }
 }
 
-// Slot 5 uses extended-dialog artifact pictures: class 8 and the artifact id
-// as qualifier, one row per element in the quest payload.
-// Residual (89.8471%): an inner resource-vector scope removes its three
-// post-delete zero stores and restores retail's ESI/EDI saves and ECX zero,
-// raising 75.2353% without changing destruction order. All twelve CFG blocks
-// still agree. Flattening the scope restores the old bytes. Named mutable
-// or const strings, aggregate resource initialization, and single-element
-// insert(end(), resource) are byte-identical with the scope. Moving the
-// resource outside the loop is byte-identical without it; counted insert
-// instead expands to 25 blocks and is rejected. Keep canonical push_back.
-// Remaining: c_str reloads the return slot rather than dereferencing EAX;
-// insert argument scheduling and string cleanup registers differ. This
-// Complete quest has no Dreamcast counterpart to settle its source scopes.
+// Slot 5 calls that same helper with the full artifact payload. The direct
+// expression below matches all 21 Mac instructions in order after relocation
+// masking, including all three calls; no Dreamcast counterpart exists. VC6
+// expands the helper and currently scores 81.0118% (12/12 CFG blocks align).
+// The earlier copied loop reached 89.8471%, but Mac's retained helper and the
+// two proposal call sites establish a stronger source boundary.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056fbc0, 0xE6)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
 void type_artifact_quest::doProgressDialog()
 {
-    const std::string& text = getProgressDialogText();
-    const char* textPointer = text.c_str();
-    {
-        std::vector<type_dialog_resource> dialogResources;
-        for (unsigned i = 0; i < m_artifacts.size(); ++i) {
-            type_dialog_resource resource;
-            resource.m_resource = 8;
-            resource.m_qualifier = m_artifacts[i];
-            dialogResources.push_back(resource);
-        }
-        extendedDialog(textPointer, dialogResources, -1, -1, 0);
+    showArtifactProgress(getProgressDialogText().c_str(), m_artifacts);
+}
+
+void type_artifact_quest::showArtifactProgress(
+    const char* text, const std::vector<TArtifact>& artifacts)
+{
+    std::vector<type_dialog_resource> dialogResources;
+    type_dialog_resource resource;
+    resource.m_resource = 8;
+    for (unsigned i = 0; i < artifacts.size(); ++i) {
+        resource.m_qualifier = artifacts[i];
+        dialogResources.push_back(resource);
     }
+    extendedDialog(text, dialogResources, -1, -1, 0);
 }
 VA(0x0056fcb0, 0x1EE)
 void type_artifact_quest::load(TAbstractFile* file, int version)

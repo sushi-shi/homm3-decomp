@@ -373,6 +373,8 @@ public:
     virtual void setDefaultText();
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
+    void showArtifactProgress(const char* text,
+                              const std::vector<TArtifact>& artifacts);
 };
 
 // Quest type 6: parallel creature-type and creature-count vectors.

@@ -484,6 +484,7 @@ unit = "seerhut"
 target_sha256 = "6f59504db90935e208a8763cecf1dae0712df7dad5d3299b022d2f6860b60801"
 evidence = "Base progress1646f4 then artifact picture helper166b38; vtable slot0x1c. Complete span reviewed; class vtables, receiver/argument positions and named payload/call facts support address identity."
 retail_va = 0x56fbc0
+mac_symbol = ".doProgressDialog__19type_artifact_questFv"
 
 [[functions]]
 mac_section = 0x0
@@ -1114,4 +1115,3 @@ unit = "seerhut"
 target_sha256 = "0b47efe7687f0718b1f82b6fc1e190a5d488dfe613e8f0511b1708cb814f16a3"
 evidence = "Factory case9, flags r4 to base, requiredOwner0 and vptr TOC-70d8."
 source_helper = "type_belong_to_player_quest::type_belong_to_player_quest"
-
