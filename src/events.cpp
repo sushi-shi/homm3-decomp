@@ -1913,10 +1913,10 @@ void advManager::doEventGarden(hero* currentHero, NewmapCell* cell,
     currentHero->m_gardenOfRevelationFlags |= 1 << cell->m_extraInfo;
 }
 
-// Dreamcast keeps each of these small object visitors as a named source
-// boundary. Retail /Ob2 folds every one into DispatchEvent, so their bodies
-// must be visible here: the calls below are authoritative source shape while
-// the resulting x86 remains the same in-place expansion.
+// Dreamcast keeps these object visitors as named source boundaries. Mac also
+// retains their bodies as direct calls; retail VC6 expands them in dispatchEvent.
+// The Mac calls do not settle their inline qualifiers, so the existing VC6
+// source declarations stay in place while the newly found gate is separate.
 inline void advManager::doEventBorderGuard(type_point point, NewmapCell* cell,
                                            unsigned char humanPlayer)
 {
@@ -1935,6 +1935,20 @@ inline void advManager::doEventBorderGuard(type_point point, NewmapCell* cell,
         normalDialog(g_adventureEventText->getText(
                          ADV_EVENT_TEXT_BORDER_GUARD_DENIED),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+}
+
+// Mac 0:0xabe24..0xabec0 is the separate border-gate visitor called by
+// dispatchEvent at 0:0xb61d0. The earlier Dreamcast build has no named body.
+void advManager::doEventBorderGate(NewmapCell* cell,
+                                   unsigned char humanPlayer)
+{
+    if (!(g_game->m_borderTentVisitFlags[cell->m_objectIndex]
+          & g_curPlayerBit)) {
+        if (humanPlayer)
+            normalDialog((*g_adventureEventText)[
+                             ADV_EVENT_TEXT_BORDER_GUARD_DENIED],
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 }
 
@@ -4384,13 +4398,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventDragonCity(currentHero, cell, point, humanPlayer);
         break;
     case BORDER_GATE:
-        if (!(g_game->m_borderTentVisitFlags[cell->m_objectIndex]
-              & g_curPlayerBit)) {
-            if (humanPlayer)
-                normalDialog((*g_adventureEventText)[
-                                 ADV_EVENT_TEXT_BORDER_GUARD_DENIED],
-                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        }
+        doEventBorderGate(cell, humanPlayer);
         break;
     case FREELANCERS_GUILD:
         if (humanPlayer)

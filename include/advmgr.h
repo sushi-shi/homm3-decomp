@@ -1070,6 +1070,7 @@ private:
     void doEventBoat(class hero* currentHero, NewmapCell* cell);
     void doEventBorderGuard(type_point point, NewmapCell* cell,
                             unsigned char humanPlayer);
+    void doEventBorderGate(NewmapCell* cell, unsigned char humanPlayer);
     void doEventBorderTent(NewmapCell* cell, unsigned char humanPlayer);
     void doEventBouy(class hero* currentHero, NewmapCell* cell,
                      unsigned char humanPlayer);

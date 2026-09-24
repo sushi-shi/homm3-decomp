@@ -98,6 +98,116 @@ target_sha256 = "a872a3daf670466a7ba735df4db0c265f455f964a5a03108a85634525977ac7
 evidence = "Treasure-pool index from packed extra info and pool-member pointer arithmetic. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
 retail_va = 0x49f040
 
+[[helpers]]
+unit = "events"
+source_helper = "advManager::doEventFreeArtifact"
+mac_section = 0
+mac_offset = 0xa9d28
+mac_size = 0xa4
+mac_symbol = ".doEventFreeArtifact__10advManagerFP4heroP10NewmapCell10type_pointb"
+target_sha256 = "924abf5f14fe7cea4ec2caf365f996d8261a26567b9177e53679be12671c0131"
+evidence = "Dreamcast events.cpp identifies the ordinary DoEventFreeArtifact helper. Mac 0:a9d28..a9dcc optionally shows the artifact dialog, then calls giveArtifact at 0:a9dac; doEventArtifact calls this body at 0:aaa54 and doArtifactSkillRequirement calls it at 0:aa2ec. The final BLR at 0:a9dc8 precedes the next independent helper at 0:a9dcc. Windows VC6 expands the free-arm call."
+
+[[helpers]]
+unit = "events"
+source_helper = "advManager::doArtifactSkillRequirement"
+mac_section = 0
+mac_offset = 0xaa2bc
+mac_size = 0xb0
+mac_symbol = ".doArtifactSkillRequirement__10advManagerFP4heroP10NewmapCell10type_pointiPCcb"
+target_sha256 = "fbb1775f0ea9cce57ffe3eaf77ed3aa932f060251b05b75081f0b9b9fd1caba0"
+evidence = "Dreamcast events.cpp identifies the ordinary DoArtifactSkillRequirement helper. Mac 0:aa2bc..aa36c checks the hero skill byte and calls doEventFreeArtifact on success or the refusal dialog for a human player. doEventArtifact calls it twice at 0:aaa88 and 0:aaabc. The final BLR at 0:aa368 precedes getTreasureData at 0:aa36c. Windows VC6 expands both calls."
+
+[[helpers]]
+unit = "events"
+source_helper = "advManager::doEventBorderGuard"
+mac_section = 0
+mac_offset = 0xabcec
+mac_size = 0x138
+mac_symbol = ".doEventBorderGuard__10advManagerF10type_pointP10NewmapCellUc"
+target_sha256 = "1206f6862306e57318bcc17df36011021ad5dbad0f10832f453112a07a09d8ae"
+evidence = "Mac dispatchEvent calls this retained border-guard visitor at 0:b5df4. The body checks the visited border-tent bit, offers the prompt and calls eraseAndFizzle on acceptance, or shows the denied text. BLR at 0:abe20 precedes the distinct border-gate helper at 0:abe24; Windows expands the source call."
+
+[[helpers]]
+unit = "events"
+source_helper = "advManager::doEventBorderGate"
+mac_section = 0
+mac_offset = 0xabe24
+mac_size = 0x9c
+mac_symbol = ".doEventBorderGate__10advManagerFP10NewmapCellUc"
+target_sha256 = "ff6177c59f745e2d87065820d0d5b826a7879daf361c8d68021543de84d08b77"
+evidence = "Mac dispatchEvent calls 0:abe24 at 0:b61d0 for BORDER_GATE. The helper checks the border-tent visit bit and, only if unvisited and human, shows adventure text 18 (the denied dialog). It ends at BLR 0:abebc, immediately before the border-tent visitor. Windows source previously embedded this same arm in dispatchEvent."
+
+[[helpers]]
+unit = "events"
+source_helper = "advManager::doEventBorderTent"
+mac_section = 0
+mac_offset = 0xabec0
+mac_size = 0x130
+mac_symbol = ".doEventBorderTent__10advManagerFP10NewmapCellUc"
+target_sha256 = "0f631b5f2b80f7a0c92ca3547315d46c49ce5768f91520f96a1c7fa1f67732c4"
+evidence = "Mac dispatchEvent calls the retained border-tent visitor at 0:b5e08. It selects visited/unvisited text using the player visit bit and sets the bit on first visit. BLR 0:abfec precedes the buoy visitor at 0:abff0; Windows expands the source call."
+
+[[helpers]]
+unit = "events"
+source_helper = "advManager::doEventBouy"
+mac_section = 0
+mac_offset = 0xabff0
+mac_size = 0x1f0
+mac_symbol = ".doEventBouy__10advManagerFP4heroP10NewmapCellUc"
+target_sha256 = "f324eaeabefe38076956a8929f03c6433dfe58cfc230122581d68b1aa3dcebe7"
+evidence = "Mac dispatchEvent calls the retained buoy visitor at 0:b5e20. Its hero flag test uses bit 4; the first-visit arm sets the bit, increments morale, records the buoy info flag and shows the human dialog. BLR 0:ac1dc precedes the clover visitor; Windows expands the source call."
+
+[[helpers]]
+unit = "events"
+source_helper = "advManager::doEventCloverField"
+mac_section = 0
+mac_offset = 0xac1e0
+mac_size = 0x1fc
+mac_symbol = ".doEventCloverField__10advManagerFP4heroP10NewmapCellUc"
+target_sha256 = "910450c148236fda227389df8e54756520a9e8eab691987dca6fcb04b4bfa12e"
+evidence = "Mac dispatchEvent calls the retained clover-field visitor at 0:b60bc. Its hero flag test uses bit 8; the first-visit arm records the info flag, raises luck by two and clears movement. BLR 0:ac3d8 precedes doEventCampfire; Windows expands the source call."
+
+[[helpers]]
+unit = "events"
+source_helper = "advManager::doEventFaerieRing"
+mac_section = 0
+mac_offset = 0xad764
+mac_size = 0x200
+mac_symbol = ".doEventFaerieRing__10advManagerFP4heroP10NewmapCellUc"
+target_sha256 = "91221cc3201561cfc92e8676c0535ccaf27b9dd9566f4fbb1bfce6b3f44e8774"
+evidence = "Mac dispatchEvent calls the retained faerie-ring visitor at 0:b6280. Its hero flag test uses bit 0x2000; the first-visit arm sets the bit, records the info flag and raises luck. BLR 0:ad960 precedes doEventFlotsam; Windows expands the source call."
+
+[[helpers]]
+unit = "events"
+source_helper = "advManager::doEventMermaid"
+mac_section = 0
+mac_offset = 0xafd30
+mac_size = 0x200
+mac_symbol = ".doEventMermaid__10advManagerFP4heroP10NewmapCellUc"
+target_sha256 = "edec5a9470234cd35cbc4e26581b233bc516cc041da0ce579281bc368ea847f3"
+evidence = "Mac dispatchEvent calls the retained mermaid visitor at 0:b6928. Its hero flag test uses bit 0x8000; the first-visit arm sets the bit, records the info flag and raises luck. BLR 0:aff2c precedes the next event visitor; Windows expands the source call."
+
+[[helpers]]
+unit = "events"
+source_helper = "advManager::doEventLighthouse"
+mac_section = 0
+mac_offset = 0xaf094
+mac_size = 0x114
+mac_symbol = ".doEventLighthouse__10advManagerFP10NewmapCellUc"
+target_sha256 = "45a491616503d0ddb06959956357db35561b3f1930e73e544ad4baedb0a1fd21"
+evidence = "Mac dispatchEvent calls the retained lighthouse visitor at 0:b6800. It compares the lighthouse mine's owner team with the local player, shows the optional human dialog and claims the mine. BLR 0:af1a4 precedes doEventMagicSchool at 0:af1a8; Windows expands the source call."
+
+[[helpers]]
+unit = "events"
+source_helper = "advManager::doEventWhirlpool"
+mac_section = 0
+mac_offset = 0xb5aa4
+mac_size = 0x80
+mac_symbol = ".doEventWhirlpool__10advManagerFP4heroP10NewmapCellUc"
+target_sha256 = "3d02dcef5e83be99513ffb6108bf9e42e63bcc62b9778d601257e955e790cf57"
+evidence = "Mac dispatchEvent calls the retained whirlpool visitor at 0:b68ac. It asks game for a random exit, then calls stopCursor and teleportTo when one exists. BLR 0:b5b20 precedes dispatchEvent at 0:b5b24; Windows expands the source call."
+
 [[functions]]
 mac_section = 0x0
 mac_offset = 0xaa38c
