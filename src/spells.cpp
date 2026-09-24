@@ -2451,8 +2451,8 @@ army* combatManager::findResurrectionTarget(int side, int hex,
             return 0;
         if (target->m_numTroops >= target->m_origNumTroops)
             return 0;
-        if (spellCastWorkChance(SPELL_RESURRECTION, side, target, 0, 1,
-                                creatureSpell) > 0.0)
+        if (validSpellTargetArmy(SPELL_RESURRECTION, side, target, 1,
+                                 creatureSpell))
             return target;
         return 0;
     }
@@ -2480,8 +2480,8 @@ army* combatManager::findResurrectionTarget(int side, int hex,
             if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
         }
-        if (spellCastWorkChance(SPELL_RESURRECTION, side, corpse, 0, 1,
-                                creatureSpell) > 0.0)
+        if (validSpellTargetArmy(SPELL_RESURRECTION, side, corpse, 1,
+                                 creatureSpell))
             return corpse;
     } while (--i >= 0);
     return 0;
@@ -2539,8 +2539,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
             return 0;
         if (target->m_numTroops >= target->m_origNumTroops)
             return 0;
-        if (spellCastWorkChance(SPELL_ANIMATE_DEAD, side, target, 0, 1, 0)
-                > 0.0)
+        if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, side, target, 1, 0))
             return target;
         return 0;
     }
@@ -2568,8 +2567,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
             if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
         }
-        if (spellCastWorkChance(SPELL_ANIMATE_DEAD, side, corpse, 0, 1, 0)
-                > 0.0)
+        if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, side, corpse, 1, 0))
             return corpse;
     } while (--i >= 0);
     return 0;
@@ -2717,7 +2715,7 @@ void combatManager::markAreaEffect(long hex, long radius,
 {
     std::vector<long> hexes;
     markAreaEffect(hex, radius, includeCenter, hexes);
-    memset(m_effected, 0, sizeof(m_effected));
+    clearEffects();
     int i = hexes.size();
     while (i-- > 0) {
         if (!validHex(hexes[i]))
@@ -2740,7 +2738,7 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
 {
     std::vector<long> hexes;
     markBerserkAreaEffect(hex, mastery, hexes);
-    memset(m_effected, 0, sizeof(m_effected));
+    clearEffects();
     int i = hexes.size();
     while (i-- > 0) {
         if (!validHex(hexes[i]))
@@ -3794,7 +3792,7 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
                                           long castingSide,
                                           long creatureSpell)
 {
-    memset(m_effected, 0, sizeof(m_effected));
+    clearEffects();
     for (int side = 0; side < 2; side++) {
         for (int i = 0; i < m_numArmies[side]; i++) {
             if (m_armies[side][i].m_spellInfluence[60])
@@ -4794,7 +4792,7 @@ unsigned char combatManager::spellCastWorks(SpellID spell, long side,
                                             unsigned char redirected,
                                             long creatureSpell) const
 {
-    return random(1, 100)
+    return sRandom(1, 100)
         <= static_cast<long>(spellCastWorkChance(
                spell, side, target, redirected, 1, creatureSpell)
                              * 100.0f);
