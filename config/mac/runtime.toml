@@ -1,6 +1,14 @@
 # Reviewed library call destinations; these are not game reconstruction scores.
 
 [[functions]]
+symbol = ".test__Q23std9bitset<4>CFUl"
+mac_section = 0
+mac_offset = 0xe97d4
+mac_size = 0xe4
+sha256 = "1f627b696ae2f4a0bfb3d3a89781dbb0ce8d9cea616314e5841688d1f86dd387"
+evidence = "The MSL bitset<4>::test body compares the index against four, uses the `index out of range of bitset::test` exception text at data 1+0x42f17, then extracts the selected bit. Game and single-selection callers use four-bit player masks. Final BLR at 0xe98b4 precedes bitset<48>::set."
+
+[[functions]]
 symbol = ".test__Q23std10bitset<48>CFUl"
 mac_section = 0
 mac_offset = 0x1c82c
