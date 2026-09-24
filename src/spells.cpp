@@ -1002,11 +1002,10 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         break;
 
     case SPELL_MAGIC_ARROW: {
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
-            shootAnimatedMissile(castX, castY, target->midX(), target->midY(),
-                                 5, g_magicArrowAngles,
-                                 g_magicArrowSprites);
-        }
+        // Mac retains the helper at 0:0x1904c8 and calls it from castSpell
+        // at 0:0x1912a0. VC6 expands this ordinary same-TU call; the older
+        // Dreamcast source spells out its quick-combat/missile body here.
+        unnamed59FDE0(castX, castY, target);
         int damage = computeSpellDamage(SPELL_MAGIC_ARROW, monsterPower,
                                         mastery, castingHero, otherHero,
                                         target, 1);
