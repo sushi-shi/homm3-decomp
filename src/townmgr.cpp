@@ -1525,6 +1525,10 @@ void TTownScreenWindow::updateTownLocators()
 // preassignment without a default arm, and the two split bonus locals
 // were each structural wins (83.53 -> 87.93 combined). No local
 // spelling reached the EBX/EDI tie-break.
+// DC names GetArmyName twice and TTextResource::operator[] six times;
+// restoring those shared calls lifts Windows from 87.70778% to 88.50%.
+// DC places get_horde before get_legion_bonus, but Complete calls them
+// in the opposite order, so the Windows source follows retail.
 // E:\gamedcs\townmgr.cpp:2562
 VA(0x005c5b40, 0x878)  // order-map(UpdateTownLocators 0x5c5aa0 .. HandleGiftMsg 0x5c66b0) + body(get_growth_rate/get_castle_growth_bonus/GetBuildingName/format_string) + arity(ret 4, town*), dc 0x16b0e8
 void TTownScreenWindow::setBonusDisplay(town* currTown)
@@ -1537,7 +1541,8 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
     int j;
     MEMSET(m_bonusCreatures, CREATURE_NONE, sizeof(m_bonusCreatures), j);
 
-    for (int i = 0; i < TOWN_DWELLING_COUNT; i++) {
+    int i;
+    for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         if (currTown->hasBuilding(DWELLING_0_ID + i, true)) {
             int slot = i;
             if (currTown->hasBuilding(DWELLING_0_UPG_ID + i, true))
@@ -1547,17 +1552,13 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                 currTown->m_type * (2 * TOWN_DWELLING_COUNT) + slot];
             long growth = g_creatureTypeTraits[creature].m_growthRate;
             int offsetToMon = currTown->getGrowthRate(slot) - growth;
-            const char* name;
-            if (creature >= 0 && creature <= 0x96)
-                name = g_creatureTypeTraits[creature].m_name;
-            else
-                name = "";
+            const char* name = getArmyName(creature, 1);
 
-            helpText = formatString(g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT), name);
-            rightText = formatString(g_generalText->getText(GENERAL_TEXT_WEEKLY_GROWTH_IS_FORMAT), name,
+            helpText = formatString((*g_generalText)[GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT], name);
+            rightText = formatString((*g_generalText)[GENERAL_TEXT_WEEKLY_GROWTH_IS_FORMAT], name,
                                        offsetToMon + growth);
             if (offsetToMon > 0)
-                rightText += formatString(g_generalText->getText(GENERAL_TEXT_BASIC_GROWTH_FORMAT),
+                rightText += formatString((*g_generalText)[GENERAL_TEXT_BASIC_GROWTH_FORMAT],
                                             growth);
 
             if (currTown->getCastleGrowthBonus(creature) > 0) {
@@ -1631,7 +1632,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             }
 
             if (currTown->getGeneratorBonus(slot) > 0) {
-                rightText += formatString(g_generalText->getText(GENERAL_TEXT_EXTERNAL_DWELLINGS_FORMAT),
+                rightText += formatString((*g_generalText)[GENERAL_TEXT_EXTERNAL_DWELLINGS_FORMAT],
                                             currTown->getGeneratorBonus(slot));
                 offsetToMon -= currTown->getGeneratorBonus(slot);
             }
@@ -1662,15 +1663,10 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
         if (currTown->m_summoningType == CREATURE_NONE)
             currTown->setSummoningGenerator();
         if (currTown->m_summoningType != CREATURE_NONE) {
-            const char* name;
-            if (currTown->m_summoningType >= 0
-                && currTown->m_summoningType <= 0x96)
-                name = g_creatureTypeTraits[currTown->m_summoningType].m_name;
-            else
-                name = "";
+            const char* name = getArmyName(currTown->m_summoningType, 1);
 
-            helpText = formatString(g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT), name);
-            rightText = formatString(g_generalText->getText(GENERAL_TEXT_WEEKLY_GROWTH_IS_FORMAT), name, 0);
+            helpText = formatString((*g_generalText)[GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT], name);
+            rightText = formatString((*g_generalText)[GENERAL_TEXT_WEEKLY_GROWTH_IS_FORMAT], name, 0);
 
             m_growthBonusIcon[count]->setIconFrame(
                 currTown->m_summoningType + 2);
@@ -6728,6 +6724,8 @@ void doMapTavern(type_point point)
 // prologue `push <scopetable>` addend (a reloc addend, not a state count),
 // a deferred `push ebx`, and the singular-artifact `.`-append indexing
 // gText[len-2] off the end pointer rather than off gText's base.
+// DC records TTextResource::operator[] for both text formats; those
+// shared calls are VC6 byte-flat here and clear the source audit.
 // E:\gamedcs\townmgr.cpp:8055
 VA(0x005d7ec0, 0x3EA)  // anchor-caller(DoMapTavern 0x5d7e90) + anchor-callee(TTavernWindow ctor 0x5d70b0 + BroadcastMessage) + arity(bare ret), dc 0x17ad8c
 unsigned char doTavern()
@@ -6752,7 +6750,7 @@ unsigned char doTavern()
 
     msg.m_extraText = g_text;
     if (g_currentPlayer->isLocalHuman()) {
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TAVERN_RUMOR_FORMAT), g_game->m_currentRumour);
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TAVERN_RUMOR_FORMAT], g_game->m_currentRumour);
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = 2;
         g_tavernWindow->broadcastMessage(msg);
@@ -6792,7 +6790,7 @@ unsigned char doTavern()
     if (g_tavernHero) {
         int total = g_tavernHero->getNumberInBackpack(0)
                   + g_tavernHero->getEquippedArtifacts(0);
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT), g_tavernHero->m_name,
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT], g_tavernHero->m_name,
                 g_tavernHero->m_level, g_tavernHero->heroFn004D8F70(), total);
         if (total == 1) {
             int len = strlen(g_text);
@@ -8069,7 +8067,8 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
             (thievesGuilds == TTownScreenWindow::GUILD_COUNT_2) ? 4 : 2;
 
     int numDisabled = 0;
-    for (int k = 0; k < 8; k++) {
+    int k;
+    for (k = 0; k < 8; k++) {
         if (g_game->m_playerDisabled[k])
             numDisabled++;
     }
