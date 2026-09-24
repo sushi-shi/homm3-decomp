@@ -1791,11 +1791,15 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     // then IsHumanTeam. The retained scan at Windows 0x42b9e0 / Mac 0x2d3e4
     // is IsHumanTeam, not that wrapper. Restoring both canonical boundaries
     // keeps Mac bytes/calls unchanged; VC6 currently retains a later _Destroy
-    // and scores 91.04% (prior misnamed/flattened implementation 95.29%).
+    // and scores 91.04% with the former function-scope union index.
     // Replacing the single-candidate push_back with direct insert(end(),x)
     // changes the call overload but leaves the Windows body byte-flat. An
-    // ordinary int index plus enum bestBuilding lowers Mac to 19.37% and
-    // delays the bitNumber load, so the original spelling stays here.
+    // ordinary function-scope int index plus enum bestBuilding lowered Mac
+    // to 19.37% and delayed the bitNumber load. Giving the int index its
+    // natural for-loop scope restores VC6's final vector _Destroy expansion:
+    // 29/29 Windows call sites and 42/42 CFG blocks now agree with retail.
+    // Mac still has 22/22 ordered calls; its MSL vector destructor is a
+    // separately unresolved library relocation in the current matcher.
     if (g_game->townAlreadyBuiltOn(currentTown->m_id))
         return;
     if (!g_game->m_setup.m_difficulty
@@ -1806,20 +1810,18 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     TCreatureType creature;
     long funds[7];
     long bestValue = 0;
-    union {
-        int m_index;
-        type_building_id m_id;
-    } building, bestBuilding;
+    type_building_id bestBuilding;
     __int64 buildMask = currentTown->getBuildableMask();
     short morale = currentHero->getMorale(0, 0, 1);
-    for (building.m_index = DWELLING_0_ID;
-         building.m_index <= DWELLING_6_ID; building.m_index++) {
-        if (buildMask & g_bitNumber[building.m_index]) {
+    for (int building = DWELLING_0_ID;
+         building <= DWELLING_6_ID; building++) {
+        if (buildMask & g_bitNumber[building]) {
             creature = g_townDwellingCreatures[
                 currentTown->m_type * TOWN_DWELLING_SLOTS
-                + building.m_index - DWELLING_0_ID];
+                + building - DWELLING_0_ID];
             traits = &g_creatureTypeTraits[creature];
-            int* cost = currentTown->getBuildCostArray(building.m_id);
+            int* cost = currentTown->getBuildCostArray(
+                static_cast<type_building_id>(building));
             unsigned char affordable = 1;
             // Mac 0:0x2f4ec increments and sign-extends this index before
             // comparing it with seven; the short spelling gives that loop.
@@ -1838,15 +1840,15 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
                     funds, alliance);
                 if (value > bestValue) {
                     bestValue = value;
-                    bestBuilding.m_index = building.m_index;
+                    bestBuilding = static_cast<type_building_id>(building);
                 }
             }
         }
     }
     if (bestValue > 0) {
         int* cost =
-            currentTown->getBuildCostArray(bestBuilding.m_id);
-        currentTown->buildBuilding(bestBuilding.m_index, 1, 1);
+            currentTown->getBuildCostArray(bestBuilding);
+        currentTown->buildBuilding(bestBuilding, 1, 1);
         for (int resource = 0; resource < 7; ++resource)
             player->m_resources[resource] -= cost[resource];
         purchaser.set(currentTown);
