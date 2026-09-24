@@ -1332,6 +1332,8 @@ public:
                      int saveVersion);
     int loadMonsterList(TAbstractFile* infile);
     int loadSeerList(TAbstractFile* infile, int saveVersion);
+    int saveSeerList(TAbstractFile* outfile);
+    void saveQuestGuardList(TAbstractFile* outfile);
     // `ret 8`: the save version rides along to TTimedEvent::Read.
     int readTimedEventList(TAbstractFile* infile, int saveVersion);
     int loadTimedEventList(TAbstractFile* infile, int saveVersion);

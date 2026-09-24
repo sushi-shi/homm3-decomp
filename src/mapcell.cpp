@@ -663,6 +663,27 @@ int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
+// The Classic Mac save driver retains this map-owned helper at 0x11f5cc.
+// Complete VC6 expands its call inside NewfullMap::save.
+int NewfullMap::saveSeerList(TAbstractFile* outfile)
+{
+    short count = static_cast<short>(m_seerHutList.size());
+    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
+        return -1;
+    for (unsigned int i = 0; i < m_seerHutList.size(); ++i)
+        m_seerHutList[i].save(outfile);
+    return 0;
+}
+
+// Mac retains this sibling at 0x11f798; Complete VC6 expands it in save.
+void NewfullMap::saveQuestGuardList(TAbstractFile* outfile)
+{
+    short count = static_cast<short>(m_questGuardList.size());
+    outfile->write(&count, 2);
+    for (unsigned int i = 0; i < m_questGuardList.size(); ++i)
+        m_questGuardList[i].save(outfile);
+}
+
 // E:\gamedcs\mapcell.cpp:679, dc 0xecb94
 // Dreamcast's int count is the reusable result of the layer/list loaders:
 // dc 0xecbbc..0xecbbe and 0xecd3e..0xecd42 store their returns before
@@ -774,19 +795,10 @@ int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
     if (count < 0)
         return -1;
 
-    {
-        int count = m_seerHutList.size();
-        if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
-            return -1;
-        for (unsigned int i = 0; i < m_seerHutList.size(); ++i)
-            m_seerHutList[i].save(outfile);
-    }
-    {
-        int count = m_questGuardList.size();
-        outfile->write(&count, 2);
-        for (unsigned int i = 0; i < m_questGuardList.size(); ++i)
-            m_questGuardList[i].save(outfile);
-    }
+    count = saveSeerList(outfile);
+    if (count < 0)
+        return -1;
+    saveQuestGuardList(outfile);
 
     count = saveTimedEventList(outfile);
     if (count < 0)

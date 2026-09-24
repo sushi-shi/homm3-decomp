@@ -790,3 +790,20 @@ target_sha256 = "1b03a83557611db2d0566dd8efa409148d1b1f654d0a4b9458fa8479bbe8cda
 evidence = "Source helper without standalone Windows VA. TU order plus loopsallmapobjects callingplaceObject12850c"
 source_helper = "NewfullMap::placeObjects"
 
+[[helpers]]
+source_helper = "NewfullMap::saveSeerList"
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x11f5cc
+mac_size = 0xb0
+target_sha256 = "b4c2f8d56d7ee7537fd723d3d218c33e78b9f23772699e842d0c322c0a31fe9f"
+evidence = "Map-owned seer-list saver called by Mac NewfullMap::save at 0x11fca4. Writes a two-byte count with a failure return, then walks 0x13-byte TSeerHut rows and calls save at 0x16a588. Prologue follows the prior BLR at 0x11f5c8; own BLR at 0x11f678 precedes the next prologue at 0x11f67c. Complete VC6 expands the same ordinary helper inside NewfullMap::save."
+
+[[helpers]]
+source_helper = "NewfullMap::saveQuestGuardList"
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x11f798
+mac_size = 0x9c
+target_sha256 = "ff8c21cace0fb1860da5a8f9e5842e483b628826357f3e6c9b2bb051b16ee6ed"
+evidence = "Map-owned quest-guard saver called by Mac NewfullMap::save at 0x11fcc0. Writes the two-byte count and walks five-byte TQuestGuard rows, calling save at 0x1699ec; it does not test the count write or row results. Prologue follows the prior BLR at 0x11f794; own BLR at 0x11f830 precedes the next prologue at 0x11f834. Complete VC6 expands the ordinary helper inside NewfullMap::save."
