@@ -624,7 +624,7 @@ void TMultiPlayerWindow::update()
     int shown = 0;
     unsigned char haveName = 0;
 
-    const char* pn = m_playerName->m_text.c_str();
+    const char* pn = m_playerName->getText();
     unsigned char anySelected = 0;
     if (pn && strlen(pn))
         haveName = 1;
@@ -1550,7 +1550,7 @@ CHotSeatDlg::CHotSeatDlg()
     m_widgets.push_back(m_rollover);
 
     addWidgetsToMessageStream();
-    m_edit[0]->setText(g_multiPlayerWindow->m_playerName->m_text.c_str());
+    m_edit[0]->setText(g_multiPlayerWindow->m_playerName->getText());
     setFocus(m_edit[0]->m_id);
     for (j = 0; j < 8; j++)
         m_edit[j]->setAutoDraw(1);
