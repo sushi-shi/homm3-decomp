@@ -1,6 +1,15 @@
 # Mac-retained game helpers whose source calls already exist in the Windows TU.
 
 [[helpers]]
+source_helper = "TSingleSelectionWindow::getSourceHeaders"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x17db20
+mac_size = 0x1c
+target_sha256 = "1ceffa916b2aeb889511a450340a486038ae150dedaa3a0e4ca67feca5f70d4d"
+evidence = "sortMaps calls this with the window receiver before choosing its active source list. It reads random-map mode at+0x62 and returns the transfer-header vector at+0xf9c or ordinary header vector at+0xf90. The body is placed immediately before setFilter in the Mac code; Windows source previously repeated this choice in both callers. BLR0x17db38 precedes setFilter."
+
+[[helpers]]
 source_helper = "TSingleSelectionWindow::getFileSpecNbr"
 unit = "singleselectionwindow"
 mac_section = 0

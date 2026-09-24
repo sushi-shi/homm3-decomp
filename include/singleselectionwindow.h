@@ -782,6 +782,7 @@ public:
     // its chdir dance needs.
     int getFileSpecNbr();
     char* getHeaderDirectory();
+    std::vector<GameSelectionHeadersStruct>* getSourceHeaders();
     void getHeaders(std::vector<GameSelectionHeadersStruct>* headers);
     void windowFn00582e90(
         std::vector<GameSelectionHeadersStruct>* headers);

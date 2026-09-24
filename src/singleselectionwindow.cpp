@@ -4648,11 +4648,7 @@ VA(0x00585050, 0x2A8)  // anchor-callee HandleNetMsg's RS_SORT_MAPS arm calls it
 void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
                                       unsigned char update)
 {
-    std::vector<GameSelectionHeadersStruct>* src;
-    if (m_randomMapMode != 0)
-        src = &m_transferHeaders;
-    else
-        src = &m_headersA;
+    std::vector<GameSelectionHeadersStruct>* src = getSourceHeaders();
     m_currentIndex = 0;
     m_currentMap = 0;
     switch (how) {
@@ -4956,14 +4952,16 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
     }
 }
 
+// Mac retains this choice at code 0:0x17db20 before the setFilter body.
+std::vector<GameSelectionHeadersStruct>* TSingleSelectionWindow::getSourceHeaders()
+{
+    return m_randomMapMode ? &m_transferHeaders : &m_headersA;
+}
+
 VA(0x00585d90, 0x2C5)  // dc 0x13c434
 void TSingleSelectionWindow::setFilter(int size)
 {
-    std::vector<GameSelectionHeadersStruct>* src;
-    if (m_randomMapMode != 0)
-        src = &m_transferHeaders;
-    else
-        src = &m_headersA;
+    std::vector<GameSelectionHeadersStruct>* src = getSourceHeaders();
     m_mapSizeFilter = size;
     m_currentIndex = 0;
     m_currentMap = 0;

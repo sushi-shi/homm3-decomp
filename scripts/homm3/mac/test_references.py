@@ -12,6 +12,19 @@ from homm3.mac.test_loader import container
 
 
 class TestMacReferences(unittest.TestCase):
+    def test_template_pointer_return_source_helper(self):
+        from homm3.mac.source import source_helper
+        source = Path("selection.cpp")
+        body = ("std::vector<Row>* Selection::getSourceHeaders()\n"
+                "{\n"
+                "    return m_random ? &m_transfer : &m_headers;\n"
+                "}\n")
+        _, signature, extracted = source_helper(
+            body, "Selection::getSourceHeaders", source)
+        self.assertEqual(signature,
+                         "std::vector<Row>* Selection::getSourceHeaders()")
+        self.assertIn("return m_random", extracted)
+
     def fixture(self, root):
         test_profiles.TestMacProfiles().fixture(root)
         source = root / "src/test.cpp"
