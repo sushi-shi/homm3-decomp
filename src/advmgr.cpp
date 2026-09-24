@@ -5478,15 +5478,9 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
             if (!objType->m_suppressDraw)
                 continue;
 
-            switch (objType->m_objectType) {
-            case CREATURE_GENERATOR_1:
-            case CREATURE_GENERATOR_4:
-            case GARRISON:
-            case LIGHTHOUSE:
-            case MINE:
-            case RANDOM_TOWN:
-            case SHIPYARD:
-            case TOWN: {
+            // DC line 6862 and the Mac PEF call to 0+0x103cc retain
+            // the canonical hasFlag boundary; VC6 expands it here.
+            if (hasFlag(objType->m_objectType)) {
                 NewmapCell* triggerCell;
                 int triggerY;
                 int triggerX;
@@ -5526,9 +5520,7 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                     tilew, tileh, g_windowManager->m_screenBitmap,
                     baseX, baseY + 8,
                     g_systemPalette->m_data[64 + owner], false);
-                break;
-            }
-            default: {
+            } else {
                 int frame = (m_animCtr
                              + m_fullMap->m_objects[objCell->m_objectIndex]
                                    .m_animationOffset)
@@ -5543,8 +5535,6 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                     tiley + (objType->m_height - yOffset - 1) * 32,
                     tilew, tileh, g_windowManager->m_screenBitmap,
                     baseX, baseY + 8, false);
-                break;
-            }
             }
         }
     }
