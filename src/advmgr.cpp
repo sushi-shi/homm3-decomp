@@ -7577,20 +7577,18 @@ void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
 // also reproduces retail's GetTown register sequence. It also
 // reaches RedrawAdvScreen through the gpAdvManager global, not `this`.
 
-// DC lines 9513/9528/9530 retain HideRoute(0, 0, 1), get_map_center and
-// town::get_location. With the direct first assignment above, Windows is
+// DC lines 9477/9513/9528/9530 retain DeactivateCurrHero,
+// HideRoute(0, 0, 1), get_map_center and town::get_location.
+// Mac also calls DeactivateCurrHero at 0:0x17fd0. Windows expands it
+// to DemobilizeCurrHero plus the acting-player id clear. With that
+// first assignment, Windows is
 // exact with all 26 CFG blocks and 16 direct calls agreeing. Mac's reviewed
 // address has 14 direct calls against this source's 15 in the structural
 // view, with no admitted exact byte verdict here.
 VA(0x00417830, 0x2EB)  // anchor-global, dc 0x1a65c
 void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigned char update)
 {
-    demobilizeCurrHero(waitingPlayer, 0);
-
-    if (waitingPlayer)
-        g_game->getLocalPlayer()->m_currHeroId = -1;
-    else
-        g_currentPlayer->m_currHeroId = -1;
+    deactivateCurrHero(waitingPlayer);
 
     playerData* player = g_currentPlayer;
     if (waitingPlayer)
