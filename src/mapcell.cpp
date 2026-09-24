@@ -4627,7 +4627,8 @@ int NewfullMap::placeObjects()
 
 VA_COMPGEN(0x00508cf0, 0x3B9, VECTOR_INSERT, TownExtra)
 
-VA_COMPGEN(0x00507ad0, 0x2F9, VECTOR_INSERT, TQuestGuard)
+// Retail insert(position, count, value) is a separate overload from 0x5078b0.
+VA_COMPGEN(0x00507ad0, 0x2F9, VECTOR_INSERT_COUNT, TQuestGuard)
 
 // COMDAT pairing: bitset10::set, mnemonic agreement 1.000.
 VA_COMPGEN(0x00506820, 0x60, BITSET_SET, bitset10)
