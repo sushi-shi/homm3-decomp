@@ -564,7 +564,7 @@ int combatManager::open(int newPriority)
         char music[100];
         sprintf(music,
                 DATA_COMPGEN(0x0066fedc, combatMusicFormat, "combat%02d"),
-                random(1, 4));
+                sRandom(1, 4));
         g_soundManager->startMP3(music, 0, 1);
     }
 
@@ -1372,7 +1372,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
         return;
     if (!stack->m_numTroops)
         return;
-    if (random(1, 24) > stack->getMorale(1))
+    if (sRandom(1, 24) > stack->getMorale(1))
         return;
     stack->m_monInfo.m_attributes = (stack->m_monInfo.m_attributes & ~creatureDone) | creatureMorale;
     if (!isQuickCombat()) {
@@ -1393,8 +1393,8 @@ int combatManager::checkApplyBadMorale(int group, int index)
 {
     if (group >= 0 && index >= 0) {
         army* stack = &m_armies[group][index];
-        if (random(1, 12) <= -stack->getMorale(1)) {
-            if (m_sideIsAi[group] || random(1, 4) != 1) {
+        if (sRandom(1, 12) <= -stack->getMorale(1)) {
+            if (m_sideIsAi[group] || sRandom(1, 4) != 1) {
                 stack->m_monInfo.m_attributes |= creatureDone;
                 if (!isQuickCombat()) {
                     SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
@@ -2177,9 +2177,9 @@ void combatManager::setupAndLoadObstacles()
     int budget;
     if (m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL
             && m_defendingTown->m_type == TOWN_STRONGHOLD)
-        budget = random(10, 16);
+        budget = sRandom(10, 16);
     else
-        budget = random(5, 12);
+        budget = sRandom(5, 12);
 
     unsigned int terrainMask = 0;
     unsigned int specialTerrainMask = 0;
@@ -2190,7 +2190,7 @@ void combatManager::setupAndLoadObstacles()
 
     if ((m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL
                 || m_defendingTown->m_type != TOWN_STRONGHOLD)
-            && random(1, 100) <= 40)
+            && sRandom(1, 100) <= 40)
         budget -= placeLargeObstacle(terrainMask, specialTerrainMask) / 2;
 
     int placed = 0;

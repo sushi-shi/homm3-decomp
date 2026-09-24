@@ -1666,7 +1666,7 @@ void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
             launchSample(
                 formatString(DATA_COMPGEN(0x00670268, pickupSampleFormat,
                                            "pickup%02d.82M"),
-                              random(1, 7))
+                              sRandom(1, 7))
                     .c_str(),
                 -1, 3);
             extendedDialog(msg.c_str(), rewards, -1, -1, dialogTimeout);
@@ -1696,7 +1696,7 @@ void combatManager::showLootedArtifacts(
             launchSample(
                 formatString(DATA_COMPGEN(0x00670268, pickupSampleFormat,
                                            "pickup%02d.82M"),
-                              random(1, 7))
+                              sRandom(1, 7))
                     .c_str(),
                 -1, 3);
             extendedDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_CAPTURED_ARTIFACT), rewards, -1, -1,
@@ -2344,7 +2344,7 @@ void combatManager::processFirstAid(army* currentArmy)
 {
     if (validHex(m_nextActionGridIndex)) {
         army* targetArmy = m_cells[m_nextActionGridIndex].getArmy();
-        int maximum = random(
+        int maximum = sRandom(
             1, static_cast<int>(
                    currentArmy->getController()->getFirstAidFactor()
                    * 100.0f));
