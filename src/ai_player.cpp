@@ -1892,8 +1892,9 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
     int cost[7];
     currentTown->getBuildCost(type_building_id(building), cost);
     tradeResources(cost, 1);
+    // Dreamcast ai_player.cpp:2011 calls game::TownAlreadyBuiltOn here.
     if (canBuy(currentTown, building)
-        && !g_game->m_towns[currentTown->m_id].m_builtThisTurn)
+        && !g_game->townAlreadyBuiltOn(currentTown->m_id))
         currentTown->buyBuilding(type_building_id(building));
 }
 
