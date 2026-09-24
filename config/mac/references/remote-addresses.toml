@@ -373,3 +373,30 @@ mac_offset = 0x2128dc
 mac_size = 0x4c
 target_sha256 = "f311c8d873d30eeb47f30e397800f490bbc1cf78f9a45b7c7dab4549a3acf480"
 evidence = "CChatEdit::onEscape clears the displayed text via textEntryWidget::setupDisplayString and invokes virtual updateScreen, returning 1. CGameChatEdit::onEscape at 0x40bc calls this base method with a copied message; the CChatEdit vtable also points here. BLR at 0x212924; next method starts at 0x212928."
+
+[[functions]]
+retail_va = 0x554200
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x2121e0
+mac_size = 0x68
+target_sha256 = "0b73cee8397774d832f1e8a299e2abd7c4d47e711d4b73969c87abbe46850f2a"
+evidence = "CChatEdit::updateScreen follows the independently paired base constructor. It invokes virtual draw at slot 6, adds the widget and parent-window positions, then passes the widget width and height to windowManager::updateScreen at 0x20df2c. Complete BLR at 0x212244 precedes the onKeyPress entry at 0x212248."
+
+[[functions]]
+retail_va = 0x5543e0
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x212928
+mac_size = 0x1c
+target_sha256 = "92b0dd49e086a79cc38bca21536baa1d75c2fa7c40c167c8c926b714504748d9"
+evidence = "CChatEdit::isOpen reads the size of the chat text at receiver+0x30 and normalizes nonzero to a byte boolean. It follows onEscape in source order, ends with BLR at 0x212940, and precedes the eight-byte ignoreKey body."
+
+[[functions]]
+retail_va = 0x5543f0
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x212944
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "CChatEdit::ignoreKey is the source's constant-zero override: Mac loads zero into r3 and returns. It follows isOpen directly, and the next getRemoteData wrapper starts at 0x21294c."
