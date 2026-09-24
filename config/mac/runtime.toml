@@ -696,11 +696,3 @@ mac_offset = 0x27fd40
 mac_size = 0x1c
 sha256 = "486289f4a54bb8464ff4bc2e90222559d831faf86d24b4e17f9f954f78ee44eb"
 evidence = "The installed CodeWarrior Pro 6 MSL RuntimePPC.Lib names .__register_global_object; its complete 28-byte code hunk agrees with retail after resolving the first word's TOC displacement to the global destructor-chain head. The callee links the three-word registration record in r5, with object and destructor from r3/r4, then returns at 0x27fd58 before the chain-destruction routine at 0x27fd5c. Mac has 221 direct calls, mostly compiler-generated global initializers."
-
-[[functions]]
-symbol = ".test__Q23std9bitset<4>CFUl"
-mac_section = 0
-mac_offset = 0xe97d4
-mac_size = 0xe4
-sha256 = "1f627b696ae2f4a0bfb3d3a89781dbb0ce8d9cea616314e5841688d1f86dd387"
-evidence = "Seven direct calls from game and single-selection code test the shared four-bit game-context feature sets. This MSL bitset test bounds-checks r4 against four, uses the bitset::test out-of-range text on failure, masks the indexed bit of receiver r3 and returns bool. Final BLR at 0xe98b4 and next prologue at 0xe98b8 bound all 228 bytes. Its mangling follows the separately reviewed bitset<8>/12/48 test instantiations; runtime template identity only."
