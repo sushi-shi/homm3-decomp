@@ -7,6 +7,7 @@ unit = "town"
 mac_section = 0
 mac_offset = 0x1b1c9c
 mac_size = 0x5f4
+mac_symbol = ".load__4townFP13TAbstractFilei"
 target_sha256 = "727a1760f5da838e1e0edab1d0188565adbce347d9440f20fe5e5589c400e4a9"
 evidence = "NEW: Ten byte reads through virtual infile+0xc; army load0x57fc0; loadHeroId0xcc800 twice; version25 town-name gate; population28, guild5, building masks8 and spell-buffer70 reads. Span ends at0x1b2290; last word0x4e800020; adjacent entries and call-flow boundary inspected."
 
@@ -214,6 +215,7 @@ unit = "town"
 mac_section = 0
 mac_offset = 0x1b5b90
 mac_size = 0x3f4
+mac_symbol = ".giveEventReward__4townFPC10TTownEvent"
 target_sha256 = "a61d6b67934e87b8baab0669840fefff91139b3c9763982559e5a58f0492462b"
 evidence = "NEW: Processes event building and creature rewards; calls buildBuilding0x1b43ac, appends dialog resources and calls showBuildingRewards0x1b57d8/showCreatureRewards0x1b5970 twice each. Span ends at0x1b5f84; last word0x4e800020; adjacent entries and call-flow boundary inspected."
 

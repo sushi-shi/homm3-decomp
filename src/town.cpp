@@ -215,13 +215,14 @@ const int g_townNameFixedLength = 13;
 // posBuffer first, and an undeclared assignment; worse are an unsigned short
 // nameLength read (98.10), reading into `saveVersion` itself (97.60) and
 // hoisting `m_name = g_text` out of the two arms (88.68).
+// DC locals: char_buffer, uchar_buffer, and inBuf[70].
 
 VA(0x005bcd60, 0x586)  // carcass promotion, dc 0x165628; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
 int town::load(TAbstractFile* infile, int saveVersion)
 {
     char charBuffer;
-    char posBuffer;
-    unsigned char spellBuf[70];
+    unsigned char ucharBuffer;
+    unsigned char inBuf[70];
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
@@ -238,21 +239,21 @@ int town::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     m_type = charBuffer;
-    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
+    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
         return -1;
-    m_mapX = posBuffer;
-    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
+    m_mapX = ucharBuffer;
+    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
         return -1;
-    m_mapY = posBuffer;
-    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
+    m_mapY = ucharBuffer;
+    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
         return -1;
-    m_mapZ = posBuffer;
-    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
+    m_mapZ = ucharBuffer;
+    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
         return -1;
-    m_dockSite = posBuffer;
-    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
+    m_dockSite = ucharBuffer;
+    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
         return -1;
-    m_dockSiteY = posBuffer;
+    m_dockSiteY = ucharBuffer;
 
     if (m_garrison.load(infile) < 0)
         return -1;
@@ -294,11 +295,11 @@ int town::load(TAbstractFile* infile, int saveVersion)
         < sizeof(m_mageGuildSpells))
         return -1;
 
-    if (infile->read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
+    if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
         return -1;
     for (int spell = 0; spell < 70; ++spell) {
         m_spells.set(spell,
-                   (spellBuf[spell / 8] & (1 << (spell % 8))) != 0);
+                   (inBuf[spell / 8] & (1 << (spell % 8))) != 0);
     }
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
