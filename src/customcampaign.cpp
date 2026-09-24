@@ -1310,6 +1310,8 @@ void hero::clearSpells()
 // receiver (+0x44..+0xa4), HeroPlaceholderData argument, and source hero. Its
 // code also proves the pointer-end artifact fill, custom-name flag order,
 // guarded west-adjacent TOWN test, and the final hero-id value lifetime.
+// The custom-name assignment still lacks retail's out-of-line _Eos;
+// spelling it as string::assign is byte-flat at 94.5908%.
 VA(0x00486590, 0xA84)  // two calls from ScenarioStruct's 0x487290 map setup
 void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     HeroPlaceholderData* placeholder, hero* sourceHero)
@@ -1520,6 +1522,9 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 // the rest is the shared tail: the hero lands on the object's trigger cell,
 // steps one west off a town entrance, and is registered with its player,
 // the availability table, the hero pool map and the fog.
+// Mac stores the packed point's x/y/z fields in order. Expanding the point
+// constructor into three field assignments drops Windows from 93.5215% to
+// 88.94%; preserve the canonical constructor call.
 VA(0x00487020, 0x263)  // anchor-caller(0x487290's two placeholder loops), retail-only
 void TCampaignBrief::ScenarioStruct::placeStartingHero(
     HeroPlaceholderData* placeholder)
