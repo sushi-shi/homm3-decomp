@@ -2389,7 +2389,13 @@ unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
         }
         return 0;
     } else if (spellId == SPELL_FIRE_WALL) {
-        long wallCells = (mastery >= eMasteryAdvanced) + 2;
+        // Mac retail branches between these lengths; the arithmetic
+        // shorthand compiled to a different PowerPC instruction shape.
+        long wallCells;
+        if (mastery < eMasteryAdvanced)
+            wallCells = 2;
+        else
+            wallCells = 3;
         for (long i = 0; i < wallCells; i++) {
             long hex = getSpellWallHex(targetIndex, i, m_currentSide);
             const hexcell* cell = &m_cells[hex];
