@@ -2495,7 +2495,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     case g_combatActionRetreat:
         if ((m_heroes[0] && m_heroes[0]->isWieldingArtifact(125))
                 || (m_heroes[1] && m_heroes[1]->isWieldingArtifact(125))) {
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SHACKLES_PREVENT_RETREAT_FORMAT),
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_SHACKLES_PREVENT_RETREAT_FORMAT],
                     m_heroes[m_currentSide]->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
@@ -2509,7 +2509,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     case g_combatActionSurrender:
         if ((m_heroes[0] && m_heroes[0]->isWieldingArtifact(125))
                 || (m_heroes[1] && m_heroes[1]->isWieldingArtifact(125))) {
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SHACKLES_PREVENT_SURRENDER_FORMAT),
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_SHACKLES_PREVENT_SURRENDER_FORMAT],
                     m_heroes[m_currentSide]->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
@@ -2532,11 +2532,11 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
                     currentArmy->m_monInfo.m_defenseSkill * 20 / 100, 1);
 
                 if (currentArmy->m_numTroops == 1)
-                    message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_DEFEND_ONE_FORMAT),
+                    message = formatString((*g_generalText)[GENERAL_TEXT_COMBAT_DEFEND_ONE_FORMAT],
                                             currentArmy->getName(),
                                             currentArmy->m_defendBonus);
                 else
-                    message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_DEFEND_MANY_FORMAT),
+                    message = formatString((*g_generalText)[GENERAL_TEXT_COMBAT_DEFEND_MANY_FORMAT],
                                             currentArmy->getName(),
                                             currentArmy->m_defendBonus);
                 m_combatWindow->combatMessage(message.c_str(), 1, 0);
@@ -2555,10 +2555,10 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
         if (!m_creaturePlacement) {
             std::string message;
             if (currentArmy->m_numTroops == 1)
-                message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_WAIT_ONE_FORMAT),
+                message = formatString((*g_generalText)[GENERAL_TEXT_COMBAT_WAIT_ONE_FORMAT],
                                         currentArmy->getName());
             else
-                message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_WAIT_MANY_FORMAT),
+                message = formatString((*g_generalText)[GENERAL_TEXT_COMBAT_WAIT_MANY_FORMAT],
                                         currentArmy->getName());
             m_combatWindow->combatMessage(message.c_str(), 1, 0);
         }
