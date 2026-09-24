@@ -696,3 +696,18 @@ mac_offset = 0x27fd40
 mac_size = 0x1c
 sha256 = "486289f4a54bb8464ff4bc2e90222559d831faf86d24b4e17f9f954f78ee44eb"
 evidence = "The installed CodeWarrior Pro 6 MSL RuntimePPC.Lib names .__register_global_object; its complete 28-byte code hunk agrees with retail after resolving the first word's TOC displacement to the global destructor-chain head. The callee links the three-word registration record in r5, with object and destructor from r3/r4, then returns at 0x27fd58 before the chain-destruction routine at 0x27fd5c. Mac has 221 direct calls, mostly compiler-generated global initializers."
+[[functions]]
+symbol = ".set__Q23std9bitset<8>FUlb"
+mac_section = 0
+mac_offset = 0x9d60c
+mac_size = 0xe8
+sha256 = "3be0e2ae9c7955fc3fd4f91fe6fab50ed7038c520aca38a3831d9a298a549acd"
+evidence = "Seven direct calls from campaign, game, events and hero bodies pass a bitset receiver, index in r4 and bool in r5. The complete MSL setter bounds-checks against eight, sets or clears the indexed word bit and returns the receiver at BLR 0x9d6f0 before the next bitset helper at 0x9d6f4. Its instruction shape and CodeWarrior mangling follow the reviewed bitset<12>/48/70 set instantiations. Runtime template identity only."
+
+[[functions]]
+symbol = ".atoi"
+mac_section = 0
+mac_offset = 0x28fb1c
+mac_size = 0x28
+sha256 = "2f3b8cd1fbb716384a278dafba9cc4222b50ec09e9d33aeb50708298a2b2c654"
+evidence = "The installed CodeWarrior Pro 6 MSL C.PPC.Lib names this 40-byte .atoi hunk. Every instruction equals the pinned Mac body except its call at +0x14, whose object relocation links to strtol at 0x28fa14; the final BLR is at 0x28fb40. It calls strtol(text, NULL, 10). Mac has 122 direct calls, including creature trait and combat wall table parsing. Library identity only."
