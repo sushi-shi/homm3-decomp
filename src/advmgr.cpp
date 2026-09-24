@@ -1198,6 +1198,9 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     return eventCell;
 }
 
+// DC advmgr.cpp:1568/1575/1625/1629 names ElapsedSince,
+// get_map_center, IsPast and UpdateScreen in this order. Mac retains
+// UpdateScreen at 0:0x90e0; Complete expands the other helper bodies.
 VA(0x004087b0, 0x487)  // dc 0x8644
 int advManager::main(message& msg)
 {
@@ -1248,19 +1251,11 @@ int advManager::main(message& msg)
 
     if (!g_noSound && g_config.m_musicVolume) {
         unsigned long ambientStamp = g_forceSwitchMusic;
-        if (ambientStamp
-            && static_cast<long>(GameTime::get() - ambientStamp) > 6000) {
+        if (ambientStamp && GameTime::elapsedSince(ambientStamp) > 6000) {
             g_forceSwitchMusic = 0;
             g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
 
-            type_point ambientCentre;
-            int centreX = m_radarOrigin.m_x + 9;
-            int centreY = m_radarOrigin.m_y + 8;
-            int centreZ = m_radarOrigin.m_z;
-            ambientCentre.m_x = centreX;
-            ambientCentre.m_y = centreY;
-            ambientCentre.m_z = centreZ;
-            setEnvironmentOrigin(ambientCentre, 1);
+            setEnvironmentOrigin(getMapCenter(), 1);
         }
     }
 
@@ -1314,29 +1309,10 @@ int advManager::main(message& msg)
     } else {
         unsigned long lastFrame =
             g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-        if (static_cast<long>(GameTime::get() - lastFrame) >= 0) {
+        if (GameTime::isPast(lastFrame)) {
             m_cursorFrameCount = 0;
             completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
-            g_windowManager->updateScreen(ADVENTURE_SCREEN_X,
-                                          ADVENTURE_SCREEN_Y,
-                                          ADVENTURE_SCREEN_WIDTH,
-                                          ADVENTURE_SCREEN_HEIGHT);
-
-            unsigned long curTime = GameTime::get();
-            if (static_cast<long>(
-                    curTime
-                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
-                    >= 0
-                && !m_animCtrPaused) {
-                ++m_animCtr;
-                long elapsedTime =
-                    curTime
-                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-                g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                    cppMax(static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED),
-                           elapsedTime);
-            }
-            process1WindowsMessage();
+            updateScreen(0, 0);
         }
     }
 
