@@ -132,6 +132,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
     int item;
     int monsterX[7] = { 0, 36, 72, 108, 18, 54, 90 };
     int monsterY[7] = { 0, 0, 0, 0, 37, 37, 37 };
+    // DC names two-dimensional X/width tables; Mac copies each as 12 bytes.
     unsigned short titleXOffs[2][3] = {
         { 28, 435, 459 }, { 28, 385, 385 }
     };
@@ -830,11 +831,11 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
     msg.m_codeX = widget::WIDGET_SET_STATUS;
     g_overWin->broadcastMessage(msg);
 
-    unsigned short titleXOffs[6] = {
-        28, 435, 459, 28, 266, 499
+    unsigned short titleXOffs[2][3] = {
+        {28, 435, 459}, {28, 266, 499}
     };
-    unsigned short titleWidths[6] = {
-        250, 287, 241, 230, 213, 213
+    unsigned short titleWidths[2][3] = {
+        {250, 287, 241}, {230, 213, 213}
     };
 
     for (int title = 0; title < 3; title++) {
@@ -849,8 +850,8 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
         for (int title = 0; title < 2; title++) {
             strcpy(g_text, g_overviewText[title]);
             g_textWidgetTitle[title] = new textWidget(
-                titleXOffs[g_overviewType * 3 + title], 3,
-                titleWidths[g_overviewType * 3 + title], 20, g_text,
+                titleXOffs[g_overviewType][title], 3,
+                titleWidths[g_overviewType][title], 20, g_text,
                 "medfont.fnt",
                 font::PRIMARY, title + 110,
                 font::CENTER_JUSTIFIED, 0, 8);
@@ -860,8 +861,8 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
         for (int title = 0; title < 3; title++) {
             strcpy(g_text, g_overviewText[title + 3]);
             g_textWidgetTitle[title] = new textWidget(
-                titleXOffs[g_overviewType * 3 + title], 3,
-                titleWidths[g_overviewType * 3 + title], 20, g_text,
+                titleXOffs[g_overviewType][title], 3,
+                titleWidths[g_overviewType][title], 20, g_text,
                 DATA_COMPGEN(0x0065f2ec, overviewMedfontFnt, "medfont.fnt"),
                 font::PRIMARY, title + 110,
                 font::CENTER_JUSTIFIED, 0, 8);

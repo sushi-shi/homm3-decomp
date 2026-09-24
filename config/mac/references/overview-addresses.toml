@@ -15,6 +15,7 @@ unit = "overview"
 mac_section = 0x0
 mac_offset = 0x135d54
 mac_size = 0x3d4
+mac_symbol = ".setupNewOverviewType__4gameFiUc"
 target_sha256 = "5820659e9c6aeda0a29aefb90630ef1a18e6a7d5aee5a44fc73c018807901043"
 evidence = "setupNewOverviewType takes game receiver,type,update; writes overview type global at TOC 1+0xde0, reads local player signed owner +1 or +0x3e for hero/town type, adjusts top/count and updates row widgets. BLR 0x136124; next updateFlaggableIcon 0x136128."
 
