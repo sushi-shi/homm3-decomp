@@ -7609,26 +7609,26 @@ void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
 // Makes a town the adventure view's subject: drop any mobile hero, clear
 // the current-hero slot, centre the radar on the town and repoint the
 // locator strip, the spell/sleep buttons and the ambient music at it.
-// Retail resolves the acting player TWICE and caches neither, but spells
-// the two differently, which the bytes insist on: the first is a ternary,
-// the second an if-assignment over a gpCurrentPlayer default, re-reading
-// the parameter off the stack (85.39 -> 88.13 for that one line). It also
+// Retail resolves the acting player TWICE and caches neither: the first
+// selection assigns m_currHeroId directly in each if/else branch, and the
+// second is an if-assignment over a gpCurrentPlayer default. This spelling
+// also reproduces retail's GetTown register sequence. It also
 // reaches RedrawAdvScreen through the gpAdvManager global, not `this`.
 
 // DC lines 9513/9528/9530 retain HideRoute(0, 0, 1), get_map_center and
-// town::get_location. Restoring these helper calls raises Windows to 99.0045%.
-// The remaining eight masked instruction rows are register choices in the
-// GetTown index chain; CFG and all 16 direct calls agree. The reviewed Mac
-// address aligns 134/159 instructions with 15/14 direct calls in the source
-// shape view; it has no exact byte verdict.
+// town::get_location. With the direct first assignment above, Windows is
+// exact with all 26 CFG blocks and 16 direct calls agreeing. Mac's reviewed
+// address has 14 direct calls against this source's 15 in the structural
+// view, with no admitted exact byte verdict here.
 VA(0x00417830, 0x2EB)  // anchor-global, dc 0x1a65c
 void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigned char update)
 {
     demobilizeCurrHero(waitingPlayer, 0);
 
-    playerData* heroOwner = waitingPlayer ? g_game->getLocalPlayer()
-                                          : g_currentPlayer;
-    heroOwner->m_currHeroId = -1;
+    if (waitingPlayer)
+        g_game->getLocalPlayer()->m_currHeroId = -1;
+    else
+        g_currentPlayer->m_currHeroId = -1;
 
     playerData* player = g_currentPlayer;
     if (waitingPlayer)
