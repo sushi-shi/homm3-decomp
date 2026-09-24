@@ -226,14 +226,17 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
                            cell->m_groundSet, hasNomad);
 }
 
+// Dreamcast findpath.cpp:237/239 calls game::get_cell twice, then
+// Hero.h get_secondary_skill at 259. Retail and Mac expand those
+// header accessors while retaining the terrain-cost callees.
 VA(0x004b18c0, 0x1A2)  // dc 0x9f184
 int getTerrainCost(hero* currentHero, type_point start, int direction, int moveLeft)
 {
     const int destX = start.m_x + g_normalDirTable[direction].m_x;
     const int destY = start.m_y + g_normalDirTable[direction].m_y;
-    NewmapCell* from = g_game->m_worldMap.cell(start.m_x, start.m_y, start.m_z);
+    NewmapCell* from = g_game->getCell(start);
     type_point to(destX, destY, start.m_z);
-    NewmapCell* dest = g_game->m_worldMap.cell(to.m_x, to.m_y, to.m_z);
+    NewmapCell* dest = g_game->getCell(to);
     long flying = currentHero->m_flightLevel;
     long waterWalking = currentHero->m_waterWalkLevel;
     if (currentHero->isWieldingArtifact(0x48))
@@ -242,7 +245,7 @@ int getTerrainCost(hero* currentHero, type_point start, int direction, int moveL
         waterWalking = 3;
     if (currentHero->m_flags & 0x40000)
         waterWalking = flying = -1;
-    long mastery = currentHero->m_skillLevel[0];
+    long mastery = currentHero->getSecondarySkill(eSecSkillPathfinding);
     return calcTerrainCost(from, direction, moveLeft, mastery,
                            dest->m_roadSet, flying, waterWalking,
                            currentHero->m_army.getNativeTerrain(),
