@@ -1459,25 +1459,25 @@ VA(0x005c0400, 0x26F)  // anchor-caller (give_event_reward), dc 0x167a8c
 void showCreatureRewards(const town* thisTown,
                            std::vector<type_dialog_resource>* rewards)
 {
-    std::string text;
+    std::string msg;
     for (int i = 0; i < rewards->size(); i++) {
         long count = (*rewards)[i].m_qualifier >> 16;
         int creature = static_cast<unsigned short>((*rewards)[i].m_qualifier);
         if (i > 0) {
             if (i == rewards->size() - 1)
-                text += g_generalText->getText(GENERAL_TEXT_LIST_AND);
+                msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
             else
-                text += ", ";
+                msg += ", ";
         }
-        text += formatString("%d ", count);
-        text += getArmyName(creature, count);
+        msg += formatString("%d ", count);
+        msg += getArmyName(creature, count);
     }
     long firstCount = (*rewards)[0].m_qualifier >> 16;
-    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES_FORMAT),
-                         firstCount, text.c_str(), thisTown->m_name.c_str());
+    msg = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES_FORMAT),
+                         firstCount, msg.c_str(), thisTown->m_name.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)
-        extendedDialog(text.c_str(), *rewards, -1, -1, 0);
+        extendedDialog(msg.c_str(), *rewards, -1, -1, 0);
     rewards->clear();
 }
 
@@ -1546,6 +1546,7 @@ void town::initialize(const TownExtra* townSetup)
 }
 
 VA(0x005c08c0, 0x3CE)  // dc 0x167ff4
+// DC locals: disabled_buildings and built_mask.
 void initializeBuildings(town* currentTown, const TownExtra* townSetup)
 {
     int i;
@@ -1553,11 +1554,11 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
     currentTown->setMask(0);
     currentTown->createBuilding(HALL_VILLAGE_ID);
 
-    __int64 unavailable = 0;
+    __int64 disabledBuildings = 0;
     if (g_game->m_mapHeader.m_victoryCondition.m_type
             == VICTORY_CONDITION_BUILD_GRAIL
         && !g_game->m_mapHeader.m_victoryCondition.isGrailTarget(currentTown))
-        unavailable = g_bitNumber[HOLY_GRAIL_ID];
+        disabledBuildings = g_bitNumber[HOLY_GRAIL_ID];
 
     currentTown->m_dockSite = -1;
     currentTown->m_dockSiteY = -1;
@@ -1566,40 +1567,40 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
                                    currentTown->m_mapY + 2)
             && !checkShipyardSquare(currentTown, currentTown->m_mapX + 1,
                                       currentTown->m_mapY + 2)))
-        unavailable |= g_bitNumber[DOCK_ID];
+        disabledBuildings |= g_bitNumber[DOCK_ID];
 
     if (townSetup->m_customBuildings) {
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
             if (townSetup->m_buildingDisabledMask & g_bitNumber[i])
-                unavailable |= g_bitNumber[
+                disabledBuildings |= g_bitNumber[
                     g_eventBuildingIds[currentTown->m_type][i]];
         }
-        if (unavailable & g_bitNumber[HORDE_ID])
-            unavailable |= g_bitNumber[HORDE_UPG_ID];
-        if (unavailable & g_bitNumber[HORDE_2_ID])
-            unavailable |= g_bitNumber[HORDE_2_UPG_ID];
-        currentTown->setLegalBuildings(unavailable);
+        if (disabledBuildings & g_bitNumber[HORDE_ID])
+            disabledBuildings |= g_bitNumber[HORDE_UPG_ID];
+        if (disabledBuildings & g_bitNumber[HORDE_2_ID])
+            disabledBuildings |= g_bitNumber[HORDE_2_UPG_ID];
+        currentTown->setLegalBuildings(disabledBuildings);
 
-        __int64 toBuild = 0;
+        __int64 builtMask = 0;
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
             if (townSetup->m_buildingBuiltMask & g_bitNumber[i])
-                toBuild |= town::s_includedBuildings[currentTown->m_type][
+                builtMask |= town::s_includedBuildings[currentTown->m_type][
                         g_eventBuildingIds[currentTown->m_type][i]]
                     | g_bitNumber[g_eventBuildingIds[currentTown->m_type][i]];
         }
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-            if ((toBuild & g_bitNumber[i])
+            if ((builtMask & g_bitNumber[i])
                 && !currentTown->isLegalBuilding(type_building_id(i)))
-                toBuild &= ~g_bitNumber[i];
+                builtMask &= ~g_bitNumber[i];
         }
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-            if (toBuild & g_bitNumber[i])
+            if (builtMask & g_bitNumber[i])
                 currentTown->createBuilding(type_building_id(i));
         }
         return;
     }
 
-    currentTown->setLegalBuildings(unavailable);
+    currentTown->setLegalBuildings(disabledBuildings);
     if (townSetup->m_hasFort)
         currentTown->createBuilding(CASTLE_FORT_ID);
     if (currentTown->m_owner >= 0) {
