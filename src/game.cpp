@@ -7995,9 +7995,16 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
 // Original: game::RandomizeHeroPool; game.cpp:8896, dc 0xb4fa0
 // NewMap expands this loop in retail, including Complete's enlarged roster
 // and separate last-Wisdom/last-magic-school tracking bytes.
+// Mac newMap calls the retained body at code0+0xe085c. Its four ordered calls
+// and indexed loop follow DC's ten source rows. CodeWarrior emits the same
+// 45-instruction shape from the function-scope index after call-stub collapse;
+// the current Mac declaration places the hero fields 0x20 bytes later.
+// Keeping the index at function scope also makes VC6 expand this ordinary
+// helper in newMap while retaining its nested calls, matching Windows retail.
 void game::randomizeHeroPool()
 {
-    for (int heroIndex = 0; heroIndex < HERO_COUNT; ++heroIndex) {
+    int heroIndex;
+    for (heroIndex = 0; heroIndex < HERO_COUNT; ++heroIndex) {
         m_heroes[heroIndex].m_experience = random(0, 50) + 40;
         setRandomHeroArmies(heroIndex, 0, 0);
         int mobility = m_heroes[heroIndex].getMobility();

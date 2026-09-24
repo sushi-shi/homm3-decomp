@@ -10,4 +10,6 @@ mode = "paired_bodies"
 # calibrated profile while its source/local layout is investigated.
 flags = ["-O3", "-proc", "750", "-nolink"]
 helpers = []
-source_helpers = []
+# Mac newMap retains this ordinary helper; compile its source once with the
+# owning game unit so isolated shape probes expose the retained body and calls.
+source_helpers = ["game::randomizeHeroPool"]
