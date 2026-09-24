@@ -1140,6 +1140,7 @@ unit = "game"
 mac_section = 0
 mac_offset = 0xd9d74
 mac_size = 0x500
+mac_symbol = ".loadVictoryCondition__13NewSMapHeaderFcP13TAbstractFilei"
 target_sha256 = "90802c889d3ceab3355e670364fae0fef02fa83abbf5dd58d2d5778f7753567f"
 evidence = "Versioned save-condition reader; loadHeroId0xcc800 and matching header load caller. Reviewed extent code0+0xd9d74..0xda274; terminal return and following entry separate the span."
 

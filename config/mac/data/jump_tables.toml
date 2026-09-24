@@ -12,6 +12,16 @@ sha256 = "a27ff37adae0da9d72c23a2a9f9dde47e0d25f00fea320a45b3a2e5464ed38df"
 evidence = "getSkillValue dispatches 28 secondary skills. Retail load at code 0x13e20c selects TOC 1+0x2a3c, whose loader pointer selects this 28-word table. Every word is loader-relocated to an aligned instruction inside the admitted 0x13e158..0x13e904 owner. Candidate's sole 112-byte local switch table has one HUNK_XREF_32BIT to the emitted owning function per word. Candidate labels are rebased through reload collapse and compared, never replaced with retail labels."
 
 [[jump_tables]]
+owner_va = 0x004c3890
+unit = "game"
+mac_section = 1
+mac_offset = 0x42a34
+mac_size = 52
+reference_offset = 0x98
+sha256 = "6b17540dc868126942553b73748e78463cdf8fd5ccf7ccf0de30cfaf4861779c"
+evidence = "Mac loadVictoryCondition bounds 13 victory types and loads TOC 1+0x24d0 at code 0xd9e0c, which points to this 13-word table. The loader relocates every entry to an aligned instruction inside the reviewed 0xd9d74..0xda274 owner. The candidate emits one 52-byte local table with one owner-function relocation per entry; linked entries are byte-scored."
+
+[[jump_tables]]
 owner_va = 0x004f4eb0
 unit = "kb"
 mac_section = 1

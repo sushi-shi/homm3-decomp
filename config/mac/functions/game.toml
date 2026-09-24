@@ -66,3 +66,14 @@ mac_size = 0x4fc
 mac_symbol = ".save__10playerDataFP13TAbstractFile"
 target_sha256 = "af9ec14f2fd0dbdd44654666f8d9846fd7f7ce11d55e91a75042f1f8726b63b6"
 evidence = "Pinned body starts with mflr/stmw at code0+0xccd7c after playerData::load terminal return at 0xccd78; it writes player fields through TAbstractFile slot 0x10 in the same 8-hero, 72-town, 7-resource order as Windows and Dreamcast, calls bitset<12>::test, writes two final bytes, and returns at 0xcd274 before the next body at 0xcd278."
+
+[[functions]]
+retail_va = 0x4c3890
+unit = "game"
+source = "src/game.cpp"
+mac_section = 0
+mac_offset = 0xd9d74
+mac_size = 0x500
+mac_symbol = ".loadVictoryCondition__13NewSMapHeaderFcP13TAbstractFilei"
+target_sha256 = "90802c889d3ceab3355e670364fae0fef02fa83abbf5dd58d2d5778f7753567f"
+evidence = "Pinned body follows saveVictoryCondition terminal BLR at 0xd9d70 and ends BLR at 0xda270 before the next prologue at 0xda274; two leading virtual one-byte reads set victory flags, switch dispatches 13 condition IDs, and read widths/short-read returns match Windows loadVictoryCondition and Dreamcast game.cpp:6110..6320."
