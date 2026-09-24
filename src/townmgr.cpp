@@ -6239,11 +6239,14 @@ void townManager::cycleOutline(const int objectIndex, const int x, const int y,
 // the reference-returning min/max pair below and fizzles with no time
 // cap. Everything else fizzles just its own object's box over 0x42 ms.
 
-// The town-redraw block is transcribed in place three times for the
-// reason recorded at CycleOutline: retail has no out-of-line
-// townManager::DrawTown, so /Ob2 expanded it at every site. The first
-// expansion differs from the other two - no zBuffer clear, and the
-// objects draw with hotspots OFF.
+// The three DrawTown calls survive in Mac (0x1d3e58, 0x1d4144,
+// 0x1d4250), while VC6 expands the same ordinary helper at each site.
+// The first call draws without hotspots and updates the screen; the
+// later calls draw with hotspots before their respective fizzle runs.
+// Mac 0x1d3fac..0x1d3fe8 initializes the search index to -1 but assigns
+// the extra building ID only in the three hall cases. Removing the
+// unsupported ID initializer reproduces Windows retail exactly (62 blocks,
+// 25 calls); the hall-upgrade path selects one of those three cases.
 
 // E:\gamedcs\townmgr.cpp:7564
 VA(0x005d6a80, 0x46F)  // linkorder(dc row after CycleOutline) + arity(ret 4) + BuildBuilding/CycleOutline edges, dc 0x179b28
@@ -6252,13 +6255,7 @@ void townManager::buildObj(int buildingId)
     if (m_townToView->m_active & g_bitNumber[buildingId])
         return;
 
-    static_cast<bitmapBorder16*>(m_panorama)->draw2();
-    pollSound();
-    for (int i = 0; i < m_townObjectCount; i++) {
-        m_townObjects[i]->draw(1, 0);
-        pollSound();
-    }
-    g_windowManager->updateScreen(0, 0, 800, 374);
+    drawTown(1, 1, 0);
 
     type_building_id newBuilding = m_townToView->buildBuilding(buildingId, 1, 1);
 
@@ -6283,7 +6280,7 @@ void townManager::buildObj(int buildingId)
          || m_townToView->m_type == TOWN_NECROPOLIS)
         && buildingId > HALL_VILLAGE_ID && buildingId <= HALL_CAPITOL_ID) {
         int extraIndex = -1;
-        int extraId = -1;
+        int extraId;
         switch (newBuilding) {
         case HALL_TOWN_ID:
             extraId = EXTRA_3_ID;
@@ -6308,14 +6305,7 @@ void townManager::buildObj(int buildingId)
         int boxH = max(hall->m_y + hall->m_h, extra->m_y + extra->m_h) - boxY;
         g_windowManager->saveFizzleSourceX(boxX, boxY, boxW, boxH);
 
-        memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
-               800 * 600 * 2);
-        static_cast<bitmapBorder16*>(m_panorama)->draw2();
-        pollSound();
-        for (int n = 0; n < m_townObjectCount; n++) {
-            m_townObjects[n]->draw(1, 1);
-            pollSound();
-        }
+        drawTown(0, 1, 1);
 
         sample = loadPlaySample("buildtwn.82M");
         g_windowManager->fizzleForwardX(boxX, boxY, boxW, boxH, -1);
@@ -6333,14 +6323,7 @@ void townManager::buildObj(int buildingId)
                                            m_townObjects[builtIndex]->m_w,
                                            m_townObjects[builtIndex]->m_h);
 
-        memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
-               800 * 600 * 2);
-        static_cast<bitmapBorder16*>(m_panorama)->draw2();
-        pollSound();
-        for (int p = 0; p < m_townObjectCount; p++) {
-            m_townObjects[p]->draw(1, 1);
-            pollSound();
-        }
+        drawTown(0, 1, 1);
 
         sample = loadPlaySample("buildtwn.82M");
         g_windowManager->fizzleForwardX(m_townObjects[builtIndex]->m_x,
