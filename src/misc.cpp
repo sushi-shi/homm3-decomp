@@ -61,41 +61,29 @@ void generateUniqueSystemID()
 }
 
 // E:\gamedcs\misc.cpp:170
-// BOUNDED 2026-09-06: the instruction counts are EQUAL (169 = 169; the four
-// rows that look surplus on our side are the object's trailing NOP pad), the
-// memory-reference multiset is equal, and the whole residual is the internal
-// SCHEDULE of block 0.  Retail batches four `and reg,ecx` together and then
-// four store/load pairs; this compile interleaves them.  Retail's first-load
-// order is 0x1c 0x30 0x28 0x24 0x20 0x64 0x68 0x2c 0x40 0x44 0x3c 0x6c 0x18
-// 0x38 0x48 0x4c FTT 0x8f 0x54 0x60 - which agrees with the source order
-// below as far as combatAutoCreatures and then differs - but load order is
-// NOT source order for VC6 here (ours starts 0x28 0x30 0x64 while the source
-// starts 0x1c 0x30 0x28), and reordering the run to retail's load sequence
-// (combatShadeLevel/autosave/blackoutComputer ahead of the two combat
-// toggles) costs 99.1018 -> 92.9256 and is rejected.
-// All 24 CFG blocks agree and 23 are instruction-exact. Retail's B0 has
-// one redundant second `and eax, 1` on an already-masked value; repeating
-// the source assignment is eliminated by VC6, so the canonical validation
-// code deliberately carries this one-instruction optimizer residual.
+// DC misc.cpp:170..206 and Mac PEF 0+0x130e60 preserve the same flag order
+// through blackoutComputer, including the second animateSpellBook mask.
+// VC6 schedules the independent loads and stores differently. Restoring
+// that shared source order lowers the Windows score from 99.1018% to
+// 93.7126%, while all 24 CFG blocks and six calls still agree. The old
+// score remains a compiler-scheduling lead, not a source-order verdict.
 VA(0x0050b260, 0x26C)  // body + sole retail caller, dc 0xfd958
 void checkConfigFile()
 {
+    g_config.m_animateSpellBook &= 1;
     g_config.m_showRoute &= 1;
-    g_config.m_animateSpellBook &= 1;
-    g_config.m_videoSubtitles &= 1;
-    g_config.m_quickCombat &= 1;
     g_config.m_moveReminder &= 1;
-    g_config.m_showCombatGrid &= 1;
-    // Retail masks animateSpellBook TWICE: it loads 0x298788 once, ANDs the
-    // register at +0x8f and again at +0xa5, and stores once. VC6 folds the
-    // repeat only when the two statements are adjacent - written here, seven
-    // statements apart, both masks survive (98.5030 -> 99.1000).
-    g_config.m_animateSpellBook &= 1;
-    g_config.m_showCombatMouseHex &= 1;
+    g_config.m_quickCombat &= 1;
+    g_config.m_videoSubtitles &= 1;
     g_config.m_townOutlines &= 1;
+    // DC and Mac both retain this second mask. VC6 folds adjacent repeats.
+    g_config.m_animateSpellBook &= 1;
+    g_config.m_showCombatGrid &= 1;
+    g_config.m_showCombatMouseHex &= 1;
+    g_config.m_combatShadeLevel &= 1;
+    g_config.m_combatAutoCreatures &= 1;
     g_config.m_combatAutoSpells &= 1;
     g_config.m_combatCatapult &= 1;
-    g_config.m_combatAutoCreatures &= 1;
     g_config.m_combatBallista &= 1;
     g_config.m_combatFirstAidTent &= 1;
     g_config.m_autosave &= 1;
@@ -104,7 +92,6 @@ void checkConfigFile()
     g_config.m_firstInstall &= 1;
     g_config.m_mainGameShowMenu &= 1;
     g_config.m_mainGameFullScreen &= 1;
-    g_config.m_combatShadeLevel &= 1;
 
     if (g_config.m_combatArmyInfoLevel < 0 ||
             g_config.m_combatArmyInfoLevel > 2)
