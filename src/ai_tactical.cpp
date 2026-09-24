@@ -2627,10 +2627,12 @@ void type_AI_spellcaster::findEnemyAttacks()
     setWorstEnemies();
 }
 
+// DC ai_tactical.cpp:3312 names GetSpellTime for the Bloodlust guard;
+// Complete expands its spell-influence accessor.
 VA(0x0043c330, 0x16C)  // dc 0x423f4
 long type_AI_spellcaster::getOgreMageValue(const army* target) const
 {
-    if (target->m_spellInfluence[43])
+    if (target->getSpellTime(SPELL_BLOODLUST))
         return 0;
     TSkillMastery mastery = eMasteryAdvanced;
     unsigned char expert = 0;
