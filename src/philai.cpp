@@ -304,9 +304,11 @@ static long getArtifactPurchaseValue(
 // VC6 still reproduces all 15 retail CFG blocks at 98.13%.
 // DC line 361 tests the selected artifact again at the loop tail, then line
 // 362 equips on exit. The do/while spelling restores that Mac branch and
-// exact 264-byte span (95.4545%, five calls), while Windows stays 98.13%.
-// Swapping the zeroed locals' declaration order changes only their setup
-// schedule; changing the seven-slot index from long to int is byte-flat.
+// exact 264-byte span and five calls, while Windows stays 98.13%.
+// Declaring the seven-slot index before bestValue, then initializing it in
+// the for header, preserves Windows' 98.13% and matches Mac's GPR ownership
+// and initialization order (Mac 98.1061%). Its remaining five rows differ
+// only in the stack slots for the price output and local type_artifact.
 VA(0x00524400, 0x149)  // anchor-global, dc 0x10da30
 void buyArtifacts(hero* currentHero, TArtifact* artifactList,
                    long marketCount)
@@ -317,9 +319,10 @@ void buyArtifacts(hero* currentHero, TArtifact* artifactList,
                 == HERO_BACKPACK_CAPACITY)
             return;
         bestArtifact = -1;
+        long i;
         long bestValue = 0;
 
-        for (long i = 0; i < 7; i++) {
+        for (i = 0; i < 7; i++) {
             if (artifactList[i] != ARTIFACT_NONE) {
                 long value = getArtifactPurchaseValue(
                     artifactList[i], marketCount,
