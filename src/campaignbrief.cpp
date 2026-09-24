@@ -257,6 +257,8 @@ void TCampaignBrief::updateAllyEnemyFlags()
 // table with fixed PC controls: three frames, three bitmap choices, three
 // sprite highlights, five difficulty buttons, and two optional arrows.
 // Retail independently fixes every constructor argument and array extent.
+// DC line 585 calls TTextResource::operator[] for the bonus label. Restoring
+// that ordinary helper is byte-flat in VC6 and clears the source audit finding.
 // Residual (98.84%): 130/132 CFG blocks and all 68 branches agree. The sole
 // call difference is the final pointer-vector insertion: this compile retains
 // the empty `_Destroy` helper while retail expands it away, shifting 29 tail
@@ -270,7 +272,7 @@ void TCampaignBrief::addBonusIcons()
     int i;
 
     m_widgets.push_back(new textWidget(
-        476, 425, 194, 30, g_generalText->getText(GENERAL_TEXT_CAMPAIGN_CHOOSE_BONUS),
+        476, 425, 194, 30, (*g_generalText)[GENERAL_TEXT_CAMPAIGN_CHOOSE_BONUS],
         DATA_COMPGEN(0x0065f2ec, campaignBonusMediumFont, "medfont.fnt"),
         static_cast<font::TColor>(4), 242, 5, 0, 8));
 
