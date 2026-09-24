@@ -1,5 +1,15 @@
 [[helpers]]
 unit = "town"
+source_helper = "initializeArmy"
+mac_section = 0
+mac_offset = 0x1b648c
+mac_size = 0x1ac
+mac_symbol = ".initializeArmy__FP4townPC9TownExtra"
+target_sha256 = "420fdb65f523c9b07a1a8a186f893fa9d435758e77b71958c3c2ee50f5fc5c21"
+evidence = "The ordinary initializeArmy definition in src/town.cpp precedes town::initialize and Dreamcast names initialize_army at dc 0x168330. Mac 0x1b648c branches on custom armies at TownExtra+0x19, copies seven slots through town::getArmy, converts negative random-tier creature IDs through g_townDwellingCreatures, and otherwise clears seven slots before up to four random town recruits. town::initialize calls it at 0x1b66a0; the Windows town::initialize body expands the same helper. The prior initializeBuildings body ends at 0x1b6488, this body ends with BLR at 0x1b6634, and town::initialize begins at 0x1b6638. Focused CodeWarrior compile emits the canonical .initializeArmy__FP4townPC9TownExtra symbol."
+
+[[helpers]]
+unit = "town"
 source_helper = "town::setSpellsAvailable"
 mac_section = 0
 mac_offset = 0x1b3d54

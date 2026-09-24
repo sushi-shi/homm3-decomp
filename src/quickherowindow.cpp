@@ -201,6 +201,7 @@ VA_COMPGEN(0x0052f440, 0x47, BASIC_IOS_INIT, char)
 
 // Original: TQuickHeroWindow::QuickWindowWait; quickherowindow.cpp:221, dc 0x117818.
 // Identical quick-window wrappers fold onto the retail 0x530d30 body.
+// Mac retains this ordinary wrapper at 0:0x14b4d0; hero and townmgr call it.
 void TQuickHeroWindow::quickWindowWait()
 {
     g_windowManager->doQuickView(this);

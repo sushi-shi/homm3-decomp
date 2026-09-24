@@ -1,5 +1,15 @@
 # Source-owned game callees required by paired HERO bodies. These bindings
 # resolve calls without admitting the callee bodies for Mac scoring.
+[[helpers]]
+unit = "hero"
+source_helper = "markSpells"
+mac_section = 0
+mac_offset = 0xf5008
+mac_size = 0xb4
+mac_symbol = ".markSpells__F12TSpellSchool"
+target_sha256 = "8e58b07ad84ff136ef60bc4949a8c2c59a46517624a53bac4ce5eb4dcb09cd72"
+evidence = "The ordinary global markSpells body precedes markArtifactSpells in src/hero.cpp and Dreamcast names mark_spells at dc 0xcc360. Mac 0xf5008 resets a 70-bit result, iterates 70 spell traits of stride 0x88, tests schoolBits at +0x1c against the passed school mask, sets matching bits, then copies the three result words. Four Tome arms of markArtifactSpells at 0xf514c, 0xf515c, 0xf516c and 0xf517c call it with school masks 1, 2, 4 and 8; Windows 0x4d9350 contains the corresponding four expanded loops. The preceding addSpell BLR is at 0xf5004, this body ends at 0xf50b8 and the next prologue begins 0xf50bc. Focused CodeWarrior compile emits the canonical .markSpells__F12TSpellSchool symbol."
+
 [[functions]]
 retail_va = 0x004e36c0
 unit = "hero"

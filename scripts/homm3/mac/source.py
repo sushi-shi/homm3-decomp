@@ -415,7 +415,7 @@ def source_helper(text: str, selector: str, source: Path) -> tuple[int, str, str
     is_constructor = len(parts) >= 2 and parts[-1] == parts[-2]
     masked = _masked_source(text)
     pattern = re.compile(
-        r'^[ \t]*(?P<prefix>(?:[\w:*&]+\s+)+)' + re.escape(name)
+        r'^[ \t]*(?P<prefix>(?:[\w:*&<>,]+\s+)+)' + re.escape(name)
         + r'(?P<parameters>\s*\([^;{}]*\)\s*(?:const\s*)?)\{', re.MULTILINE)
     matches = []
     for match in pattern.finditer(masked):

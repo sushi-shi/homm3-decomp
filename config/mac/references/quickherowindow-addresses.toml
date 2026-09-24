@@ -15,3 +15,12 @@ mac_offset = 0x14b424
 mac_size = 0xac
 target_sha256 = "21deb9dc4c2e36dfa929c33451738d394935491fa04de597a53344cfe14a0c3b"
 evidence = "NEW: TQuickHeroWindow vtable data1+0x4c6dc, widget vector virtual-delete walk and heroWindow destructor0x20aebc; optional Mac ABI deallocation in same body; final blr0x14b4cc before quickWindowWait prologue. Full span SHA verified."
+
+[[helpers]]
+unit = "quickherowindow"
+source_helper = "TQuickHeroWindow::quickWindowWait"
+mac_section = 0
+mac_offset = 0x14b4d0
+mac_size = 0x2c
+target_sha256 = "ef371bc217f3d983d610ea889e51678dbc7494104890e0ece9a8f53c1f2b67e5"
+evidence = "The ordinary TQuickHeroWindow::quickWindowWait body in src/quickherowindow.cpp follows its destructor and calls g_windowManager->doQuickView(this). Mac 0x14b4d0 loads g_windowManager and calls the reviewed doQuickView at 0x20dd08, ending with BLR at 0x14b4f8 before the next prologue at 0x14b4fc. Mac THeroScreenWindow::windowHandler calls it at 0xfa1f4, and townmgr calls it twice at 0x1d165c and 0x1d16d8. Windows hero and townmgr source call it; retail folds identical quick-view wrappers onto TQuickTownWindow::quickWindowWait at 0x530d30. Address-only until the quickherowindow Mac compiler profile exposes this source helper."
