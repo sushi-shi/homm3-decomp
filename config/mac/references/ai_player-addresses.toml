@@ -1,6 +1,46 @@
 # Address-only references discovered from PHILAI TU order, then independently verified.
 # Names remain owned by src/ai_player.cpp VA claims; no compiled Mac target admission.
 
+[[helpers]]
+source_helper = "valueOfBuilding"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2dacc
+mac_size = 0x290
+mac_symbol = ".valueOfBuilding__FP4town16type_building_idPUcPi"
+target_sha256 = "935670057ab8909ba90e21f47d2ee584521d5d2f2ac10f0ef2bd140502d2f724"
+evidence = "The Mac purchaseBuilding body at 0x2ed58 calls this dispatcher before getRequirements. Its town, building, prohibited-creature and extra-cost arguments match the ordinary source helper; the body selects hall, dwelling, horde and faction-specific valuations. The final BLR at 0x2dd58 precedes getRequirements. Windows retail expands the same source call."
+
+[[helpers]]
+source_helper = "getRequirements"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2dd5c
+mac_size = 0x10c
+mac_symbol = ".getRequirements__FPC4town16type_building_id"
+target_sha256 = "455949e8c8dedb7930bb82684a967d3f32b88b6a8319010545cf1e4803f16b43"
+evidence = "The Mac purchaseBuilding body calls this immediately after valueOfBuilding. Its loop uses g_bitNumber and g_hierarchyMask to expand the requested building's prerequisites, testing town legality and active buildings. The final BLR at 0x2de64 precedes getFullCost; Windows retail expands the ordinary source helper."
+
+[[helpers]]
+source_helper = "getFullCost"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2de68
+mac_size = 0xf4
+mac_symbol = ".getFullCost__FPC4townPix"
+target_sha256 = "6f8ef194531ed8aae2233b83bacd2f1a97afd1748292589a1b3b99bb8e88cd40"
+evidence = "The Mac purchaseBuilding body calls this with town, resource-result array and requirement mask after getRequirements. It iterates the 44 building bits and accumulates seven resource costs for each selected building. The final BLR at 0x2df58 precedes the already paired getTotalValue at 0x2df5c; Windows retail expands the source helper."
+
+[[helpers]]
+source_helper = "markValues"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2e098
+mac_size = 0x11c
+mac_symbol = ".markValues__FPllx"
+target_sha256 = "d2ba668e8723ac34fb2eaa2e679f732d654cd4848af4a4e78e9981bc35dadd4a"
+evidence = "After getTotalValue, Mac purchaseBuilding calls this with the full-value array, computed total and requirement mask. The body tests each g_bitNumber entry and adds the total to selected building values. Final BLR at 0x2e1b0 precedes checkTradeSupply at 0x2e1b4; Windows retail expands the ordinary source helper."
+
 [[functions]]
 retail_va = 0x004280e0
 unit = "ai_player"
