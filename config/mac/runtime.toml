@@ -1060,3 +1060,19 @@ mac_offset = 0x20f0b0
 mac_size = 0x5c
 sha256 = "adaac66f347d0cefa8845b880f605b814a4b754f20b4c402b12bdc73fdd83ae5"
 evidence = "Nine callers in game, kb, mapcell and smackmgr correspond to authored Windows MessageBox error paths: invalid generator, shutdown, map-object read errors and video archive failures. This Mac wrapper accepts the message and title pointers, constructs a resource-backed dialog argument using ID 1001 through 0x26adc0, then passes both strings to common display routine 0x269014; BLR 0x20f108. Platform UI helper, not a game-source inlining boundary or an MSL bounds/exception path."
+
+[[functions]]
+symbol = ".mac_ai_creature_vector_delete_flag_dtor_29ba4"
+mac_section = 0
+mac_offset = 0x29ba4
+mac_size = 0x64
+sha256 = "9f062984f64024b83513f11d82401e50af949facd22159d762052a9e9ea7105d"
+evidence = "Fourteen calls in five ai_combat/ai_player functions destroy stack type_AI_combat_data objects, whose first member is m_creatures. The generated type_AI_combat_data destructor at 0x28a7c calls this body on that first member; this callee is the MSL vector<type_monster_data> deleting-flag destructor, not an authored game helper. It clears through 0x2a9e8, frees vector data at +8 if present, optionally deletes the vector receiver for a positive flag, and returns at 0x29c04; the next body starts at 0x29c08. All observed stack callers pass flag zero."
+
+[[functions]]
+symbol = ".mac_ai_creature_vector_clear_2a9e8"
+mac_section = 0
+mac_offset = 0x2a9e8
+mac_size = 0x38
+sha256 = "1091d49071992676332417731545304aa3855d2ca814f834b1a1da883419780e"
+evidence = "The reviewed 0x29ba4 vector destructor calls this clear body. It computes data + size * 0x40, walks the 64-byte Mac type_monster_data elements, then zeros vector size at +4. BLR at 0x2aa1c and the next entry begins at 0x2aa20. Generated MSL container cleanup only."
