@@ -936,3 +936,12 @@ mac_offset = 0x51434
 mac_size = 0x98
 target_sha256 = "abd799961682d1a02bc51fdeaf7b3b2deb7f00154849f118872c549175b1edae"
 evidence = "Mac resetRound retains this ordinary source helper. It decrements positive spell-duration entries except Frenzy at index 56, cancels one-round spells through 0x50580 and decrements roundsLeftBeforeVanish at +0x2c. Windows expands the existing source helper; final BLR at 0x514c8, next entry 0x514cc."
+
+[[helpers]]
+source_helper = "army::computeKarma"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4a6e4
+mac_size = 0xcc
+target_sha256 = "74d11aaa3e662d3e65e06dd76911685b00eebea0c4d353c6c1f4d7c8af1c0ff3"
+evidence = "Mac drawToBuffer retains this ordinary source helper. It checks m_numSpellInfluences at +0x194, sums spell karma and absolute karma across 81 entries, then divides the sums as double. Dreamcast names army::ComputeKarma; Windows expands the existing source call. Final BLR at 0x4a7ac, next entry 0x4a7b0."
