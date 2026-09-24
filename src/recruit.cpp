@@ -1005,11 +1005,12 @@ int recruitUnit::main(message& msg)
 }
 
 // E:\gamedcs\recruit.cpp:1082
-// Dreamcast keeps this source-visible helper out of line; Complete's VC6
-// build expands it at every recruitUnit call site and emits no standalone
-// body.  Raw NB11 names the sole surviving local `resCost`, while the body
-// calls the exact GetMonsterCost helper above before deriving the two costs.
-inline void recruitUnit::updateCost()
+// Dreamcast and Mac keep this source-visible helper out of line. Without an
+// explicit inline specifier, VC6 still expands it in all three constructors;
+// both admitted Mac constructors then match exactly with their updateCost
+// calls intact. Raw NB11 names the sole surviving local `resCost`, while the
+// body calls the exact GetMonsterCost helper before deriving the two costs.
+void recruitUnit::updateCost()
 {
     int resCost[7];
     getMonsterCost(m_monsterType, resCost);
