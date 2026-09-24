@@ -1809,6 +1809,7 @@ long type_AI_spellcaster::getBacklashValue(const army* ourArmy, type_enchant_dat
 // The second creatureId test is bit 15 (attacks twice) crossed with
 // bit 2 (shoots) clear: a melee double-attacker gets one more swing out
 // of the deal than a shooter does.
+// Dreamcast and Mac retain getAttackBoostValue; retail VC6 expands it.
 
 VA(0x00439e80, 0x290)  // dc 0x40628
 long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchant_data caster) const
@@ -1842,35 +1843,12 @@ long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchan
         totalDamage += newDamage;
     long combined = newDamage * extra + totalDamage;
     double increase = static_cast<double>(combined) / static_cast<double>(totalDamage);
-    long damage = ourArmy->getAverageDamage(target, ourArmy->canShoot(0),
-                                               ourArmy->m_numTroops, 1, 0);
-    double factor = increase;
-    long boosted = static_cast<long>(damage * increase);
-    long targetHits = target->getTotalHitPoints(0);
-    if (boosted > targetHits) {
-        factor = static_cast<double>(targetHits) / static_cast<double>(damage);
-        boosted = targetHits;
-    }
-    if (boosted <= damage)
-        return 0;
-    double portion;
-    if (caster.m_duration >= m_estimate.m_roundsLeft)
-        portion = 1.0;
-    else
-        portion = static_cast<double>(caster.m_duration) / static_cast<double>(m_estimate.m_roundsLeft);
-    double scale;
-    if (ourArmy->is(creatureDone)
-            && (portion = portion - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-        scale = 0.0;
-    else
-        scale = portion;
-    double total = static_cast<double>(ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
-                                                                        m_estimate.m_lowestDefense));
-    return static_cast<long>((sqrt(factor) - 1.0) * total * scale);
+    return getAttackBoostValue(ourArmy, target, caster.m_duration, increase);
 }
 
 // The Efreet Sultan already carries a fire shield, so its own casting
 // is docked a flat 20 off the mastery row before the `<= 0` bail.
+// Dreamcast and Mac retain getAttackBoostValue; retail VC6 expands it.
 
 VA(0x0043a110, 0x222)  // dc 0x407e8
 long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_data caster) const
@@ -1895,32 +1873,7 @@ long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_d
     long oldDamage = ourArmy->getAverageDamage(target, 0, ourArmy->m_numTroops, 1, 0);
     long combined = capped * count + oldDamage;
     double increase = static_cast<double>(combined) / static_cast<double>(oldDamage);
-    long damage = ourArmy->getAverageDamage(target, ourArmy->canShoot(0),
-                                               ourArmy->m_numTroops, 1, 0);
-    double factor = increase;
-    long boosted = static_cast<long>(damage * increase);
-    long enemyHits = target->getTotalHitPoints(0);
-    if (boosted > enemyHits) {
-        factor = static_cast<double>(enemyHits) / static_cast<double>(damage);
-        boosted = enemyHits;
-    }
-    if (boosted > damage) {
-        double portion;
-        if (caster.m_duration >= m_estimate.m_roundsLeft)
-            portion = 1.0;
-        else
-            portion = static_cast<double>(caster.m_duration) / static_cast<double>(m_estimate.m_roundsLeft);
-        double scale;
-        if (ourArmy->is(creatureDone)
-                && (portion = portion - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-            scale = 0.0;
-        else
-            scale = portion;
-        double total = static_cast<double>(ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
-                                                                            m_estimate.m_lowestDefense));
-        return static_cast<long>((sqrt(factor) - 1.0) * total * scale);
-    }
-    return 0;
+    return getAttackBoostValue(ourArmy, target, caster.m_duration, increase);
 }
 
 VA(0x0043a340, 0xBE)  // dc 0x40928
