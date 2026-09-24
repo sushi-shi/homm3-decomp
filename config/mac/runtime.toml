@@ -1100,3 +1100,26 @@ mac_offset = 0x2a9e8
 mac_size = 0x38
 sha256 = "1091d49071992676332417731545304aa3855d2ca814f834b1a1da883419780e"
 evidence = "The reviewed 0x29ba4 vector destructor calls this clear body. It computes data + size * 0x40, walks the 64-byte Mac type_monster_data elements, then zeros vector size at +4. BLR at 0x2aa1c and the next entry begins at 0x2aa20. Generated MSL container cleanup only."
+[[functions]]
+symbol = ".mac_vector_pathcell_clear_3b10c"
+mac_section = 0
+mac_offset = 0x3b10c
+mac_size = 0x3c
+sha256 = "22f31a0f4089998b18a0a9311dae9032438eb312089d0de882b34857dddcb35f"
+evidence = "A vector<pathCell> clear routine: this+4 is the size, this+8 is data, and the loop stride is 0x1e, the verified pathCell size. It resets size to zero and returns at 0x3b144; next function begins 0x3b148. Runtime template identity only."
+
+[[functions]]
+symbol = ".mac_vector_pathcell_delete_flag_dtor_3b148"
+mac_section = 0
+mac_offset = 0x3b148
+mac_size = 0x64
+sha256 = "3db6059398151f260cd046fbd5132292eedb7f968347d2955ab2fa06800f0cf3"
+evidence = "Eleven ai_player/findpath callers reach this scalar-deleting vector<pathCell> destructor. It calls the 0x3b10c clear routine, frees this+8, conditionally frees this when the signed-short deleting flag is positive, and returns this. Final BLR 0x3b1a8; next prologue 0x3b1ac. Runtime template identity only."
+
+[[functions]]
+symbol = ".mac_pathcell_empty_dtor_c5528"
+mac_section = 0
+mac_offset = 0xc5528
+mac_size = 0x4
+sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "One-instruction BLR called by the vector<pathCell>::pop_back path in searchArray::seedPosition. The adjacent next prologue begins at 0xc552c. Element destruction is trivial; this is a generated/runtime identity, not a recovered game helper body."
