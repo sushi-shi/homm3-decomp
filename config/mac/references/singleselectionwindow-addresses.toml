@@ -1,5 +1,16 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 [[functions]]
+retail_va = 0x5792c0
+unit = "singleselectionwindow"
+compgen_kind = "IMPLICIT_COPY_ASSIGN"
+compgen_type = "SavedGameHeader"
+mac_section = 0
+mac_offset = 0x17064c
+mac_size = 0x2c8
+target_sha256 = "e06bdf74d2949d106c2ce9175076bc1fa6b7ee9c0133587a79d8b3dd471c3a72"
+evidence = "CNewPlayerUpdateProc::tick and OnMapFileNameMsg call this on the SavedGameHeader member at Mac row+0x6c8 after copying the surrounding GameSelectionHeadersStruct fields. The body copies the SavedGameHeader prefix, assigns its CMapHeaderData at+0x10, strings at+0x2bc/+0x2c0 and the remaining fields through+0x53c. BLR0x170910 precedes the next short setter. The Windows TU claims the corresponding synthesized copy assignment at0x5792c0."
+
+[[functions]]
 mac_section = 0x0
 mac_offset = 0x16dc84
 mac_size = 0x18c
