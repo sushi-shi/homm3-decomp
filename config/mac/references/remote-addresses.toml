@@ -1,6 +1,15 @@
 # Reviewed shared remote identities in the Mac PEF.
 
 [[functions]]
+retail_va = 0x5541a0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21215c
+mac_size = 0x84
+target_sha256 = "704bb836b54f047d6a804cc2bcf549c553c9a8eed86d439e202e027dfe7dcbab"
+evidence = "The retained CChatEdit constructor forwards its sixteen arguments directly to textEntryWidget::textEntryWidget at 0x1af7b0 and installs the CChatEdit vtable. Adventure and combat chat editor constructors call it. It does not clear CGameChatEdit's separate activated byte, so this is the CChatEdit source body at Windows VA 0x5541a0. Final BLR at 0x2121dc precedes the next body at 0x2121e0."
+
+[[functions]]
 retail_va = 0x554a80
 unit = "remote"
 compgen_kind = "SCALAR_DELETING_DTOR"
