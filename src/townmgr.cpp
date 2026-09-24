@@ -4483,10 +4483,9 @@ int TShipWindow::windowHandler(message& msg)
     return 1;
 }
 
-// The shipyard dialog, opened from the adventure map's own shipyard
-// handler (0x49e2e0, the only caller in the image) rather than from the
-// town page. `type` is the town faction whose dock art the window loads,
-// and it is the one argument the constructor takes.
+// The shipyard dialog, opened from the adventure map handler (0x49e2e0)
+// and the town dock command. `type` is the town faction whose dock art
+// the window loads, and it is the one argument the constructor takes.
 
 VA(0x005d2720, 0x84)  // dc 0x1747fc
 void doShipyard(int type)
@@ -4676,21 +4675,7 @@ void townManager::doSkeletonTransformer()
         skeletonWin.doModal(0);
     }
 
-    if (m_srcStrip)
-        m_srcStrip->m_current = -2;
-    if (m_destStrip)
-        m_destStrip->m_current = -2;
-    m_divideStatus = 0;
-    m_heroStrip->draw(CREATURE_NONE);
-    m_garrisonStrip->draw(CREATURE_NONE);
-    m_destStrip = 0;
-    m_srcStrip = 0;
-    m_destIndex = -2;
-    m_srcIndex = -2;
-    g_windowManager->broadcastMessage(MESSAGE_WIDGET,
-                                      widget::WIDGET_SET_STATUS, 0x9a,
-                                      widget::WIDGET_UPDATE
-                                          | widget::WIDGET_DIMMED);
+    resetStrips();
     redrawTownScreen();
 }
 
@@ -5013,11 +4998,7 @@ int townManager::main(message& msg)
                         MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
                         TTownScreenWindow::EXIT_BUTTON_ID, 0x4008);
                     if (g_game->getBoatsBuilt() < 0x40) {
-                        g_shipWindow = new TShipWindow(m_townToView->m_type);
-                        if (!g_shipWindow)
-                            memError();
-                        g_shipWindow->doModal(0);
-                        delete g_shipWindow;
+                        doShipyard(m_townToView->m_type);
                         m_resourceDisplay->update(1, 1);
                         if (g_windowManager->m_dialogReturn
                             == TShipWindow::BUY_BUTTON_ID) {
