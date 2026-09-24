@@ -739,3 +739,12 @@ mac_offset = 0x415c0
 mac_size = 0x8c
 target_sha256 = "4c8bab4f121e60cf7df9dcd711ae099563cc8d7e304d919749cc22fff3cfef2b"
 evidence = "This const helper checks the army's AI target at +0x514, returns zero when absent, then calls getExchangeEffect twice with reversed armies and subtracts the negated enemy value. Its final BLR at 0x41648 precedes getMuckAndMireValue at 0x4164c. Mac getMuckAndMireValue and getSpeedValue retain calls at 0x4183c and 0x41af4; both authored source callers already use this ordinary helper."
+
+[[helpers]]
+source_helper = "type_enchant_data::type_enchant_data"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3e210
+mac_size = 0x1c
+target_sha256 = "282a0085431bd739cd9653db1c5a4d29c5206999d98e493da84d2791a23ddfd5"
+evidence = "The four-argument base constructor stores spell, mastery, power, duration and checkResistance=1 at offsets 0, 4, 8, 12 and 16. Its BLR at 0x3e228 precedes getMasteryValue at 0x3e22c. Mac's two type_spell_choice constructors retain calls at 0x3e278 and 0x3e2c0; their ordinary C++ base-constructor calls are already authored, while VC6 expands the stores."
