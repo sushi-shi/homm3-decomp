@@ -1,5 +1,15 @@
 # Reviewed shared remote identities in the Mac PEF.
 
+[[helpers]]
+source_helper = "CLogFile::log"
+unit = "remote"
+source = "include/remote.h"
+mac_section = 0x0
+mac_offset = 0x82798
+mac_size = 0x1c
+target_sha256 = "260a28e55ae6c44541cbe261c30036229065f94e566755cf3d6a56b7ee045567"
+evidence = "Dreamcast names the cdecl variadic CLogFile::Log in remote.h:249. Mac's 28-byte release body spills variadic registers r5-r10 to their caller homes and returns; the command main call at 0x8260c passes the `Received action [%d]--> [%d,%d,%d]` format and four message fields, and game/remote/selection callers pass their authored g_logFile.log formats. Windows retains those source calls to the folded empty representative at 0x404df0. The preceding main ends at 0x82794 and the next body begins at 0x827b4."
+
 [[functions]]
 retail_va = 0x557aa0
 unit = "remote"

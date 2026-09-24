@@ -12,7 +12,7 @@ import re
 import tomllib
 
 from homm3 import manifest
-from homm3.mac.source import SourceError, _claim, load_pairs, source_helper
+from homm3.mac.source import SourceError, _claim, class_header_helper, load_pairs, source_helper
 
 
 @dataclass(frozen=True)
@@ -58,13 +58,10 @@ def load(root: Path) -> list[Reference]:
             unit_source = root / units[unit]["source"]
             source = root / row.get("source", units[unit]["source"])
             if source != unit_source:
-                # A retained header inline may have either a source VA or a
-                # unique canonical definition in a registered fragment.
-                # Keep no-VA helpers fragment-owned so a same-named header
-                # declaration cannot stand in for the original body.
+                # A retained header helper may have a source VA or one
+                # canonical in-class body in an ordinary project header.
                 if (not source.resolve().is_relative_to((root / "include").resolve())
-                        or source.suffix not in (".h", ".inl")
-                        or (helper and source.suffix != ".inl")):
+                        or source.suffix not in (".h", ".inl")):
                     raise SourceError(f"{path}: callee source must be its owning TU or a canonical project header")
                 if source.suffix == ".inl":
                     from homm3.match.source_ownership import fragment_owners
@@ -74,7 +71,8 @@ def load(root: Path) -> list[Reference]:
             if helper:
                 if "retail_va" in row or not isinstance(selector, str):
                     raise SourceError(f"{path}: source helper must have a definition selector and no Windows VA")
-                _, signature, _ = source_helper(source.read_text(), selector, source)
+                finder = class_header_helper if source.suffix == ".h" else source_helper
+                _, signature, _ = finder(source.read_text(), selector, source)
             elif row.get("compgen_kind"):
                 kind, type_name = row["compgen_kind"], row.get("compgen_type")
                 if (kind not in ("CLASS_CTOR", "IMPLICIT_COPY_CTOR", "IMPLICIT_DTOR", "VECTOR_DTOR")

@@ -490,6 +490,38 @@ def source_helper(text: str, selector: str, source: Path) -> tuple[int, str, str
     return matches[0]
 
 
+def class_header_helper(text: str, selector: str, source: Path) -> tuple[int, str, str]:
+    """Find one in-class body in an ordinary header by its scoped name."""
+    selection = re.fullmatch(
+        r'(?P<scope>\w+(?:::\w+)*)::(?P<name>\w+)'
+        r'(?P<parameters>\s*\([^;{}]*\)\s*(?:const)?)?', selector)
+    if not selection:
+        raise SourceError(f"{source}: use a scoped class method selector")
+    expected_scope = tuple(selection['scope'].split('::'))
+    expected_parameters = selection['parameters']
+    masked = _masked_source(text)
+    pattern = re.compile(
+        r'^[ \t]*(?P<prefix>(?:[\w:*&]+\s+)+)'
+        + re.escape(selection['name'])
+        + r'(?P<parameters>\s*\([^;{}]*\)\s*(?:const\s*)?)\{',
+        re.MULTILINE)
+    matches = []
+    for match in pattern.finditer(masked):
+        if _data_scope(masked, match.start()) != expected_scope:
+            continue
+        if expected_parameters is not None and (re.sub(r'\s+', '', expected_parameters)
+                != re.sub(r'\s+', '', match['parameters'])):
+            continue
+        brace = match.end() - 1
+        end = _function_end(text, brace)
+        start = match.start() + len(match[0]) - len(match[0].lstrip())
+        signature = " ".join(masked[start:brace].split())
+        matches.append((start, signature, text[start:end] + "\n"))
+    if len(matches) != 1:
+        raise SourceError(f"{source}: expected one in-class body for {selector!r}; found {len(matches)}")
+    return matches[0]
+
+
 def individual_source(pair: Pair) -> str:
     definitions = []
     if pair.data:
