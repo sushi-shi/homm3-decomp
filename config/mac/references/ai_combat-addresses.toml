@@ -18,6 +18,104 @@ mac_offset = 0x25f6c
 mac_size = 0x10c
 target_sha256 = "d3a0c9698b34054b1158b272268df3eb43b63760f792cd73a6f9f665f4d587a3"
 evidence = "The retained body computes the previous combat value, divides value times spellValue by totalValue using the signed 64-bit division helper, adds or subtracts the value and total, then updates combatValuePerHit. Its final BLR at 0x26074 precedes getResurrectionValue at 0x26078. Mac's two calls in the choice overload remain ordinary source calls; Windows expands this TU helper at both sites."
+[[helpers]]
+source_helper = "type_AI_combat_data::getCatagory"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x26bf0
+mac_size = 0x64
+target_sha256 = "c4b2ee4d17c31f02c7e96613dc60f786968c7ce9c45346543edb6c2eb3ff0fbb"
+evidence = "Mac initializeCreatures calls this retained ordinary helper. It checks shooter/flying creature attributes, computes tactics-adjusted speed category, clamps at four and applies wall speed limit. Dreamcast names get_catagory; final BLR at 0x26c50, next entry 0x26c54."
+
+[[helpers]]
+source_helper = "type_AI_combat_data::getChainLightningValue"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x26ef8
+mac_size = 0xb4
+target_sha256 = "3d5d03542c1777c552bfc0b884bd3efc785700dada95601c0e1ee34cb5bc1f26"
+evidence = "Mac getDamageSpellValue calls this retained helper. It starts with the target bit, halves damage on three jumps, selects the next target at 0x26de8 and adds per-monster spell damage at 0x26228. Windows expands its existing source call; final BLR at 0x26fa8, next entry 0x26fac."
+
+[[helpers]]
+source_helper = "type_AI_combat_data::hasCreature"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x2744c
+mac_size = 0x4c
+target_sha256 = "f89e1fba7924c0c006fe18b81a55c9a07f927fef339ce43381812a8876b92230"
+evidence = "Mac castSpell calls this retained helper before familiar mana transfer. It scans the creature vector backward and returns true when type matches and count is positive. Dreamcast names has_creature; final BLR at 0x27494, next entry 0x27498."
+
+[[helpers]]
+source_helper = "type_AI_combat_data::getMassDamageValue(type_spell_choice& choice, type_AI_combat_data& defender) const"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x27538
+mac_size = 0x84
+target_sha256 = "350f7e87b69120a0b25d94eda86decbed8fc3b7587e86e2be6b9d50973548dd4"
+evidence = "Mac castSpell retains this overload. It calls the single-army value body at 0x27498 on both sides, compares own damage against total and defender damage, then updates choice value. Windows expands the source call; final BLR at 0x275b8, next entry 0x275bc."
+
+[[helpers]]
+source_helper = "type_AI_combat_data::castMassDamageSpell"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x275bc
+mac_size = 0xbc
+target_sha256 = "e326177ac601997d1d5fc62a9642d5b7a3ef0d1c71b8585972fc1ea8c8b17f46"
+evidence = "Mac castSpell retains this mass-damage helper for each side. It computes mastery/power damage, iterates creatures backward, gets spell damage at 0x26228 and applies takeDamage at 0x26368 while updating total. Windows expands both source calls; final BLR at 0x27674, next entry 0x27678."
+
+[[helpers]]
+source_helper = "type_AI_combat_data::getSummoningValue"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x27a6c
+mac_size = 0xb8
+target_sha256 = "23c36214a0dc65beb90835ddfefa284561c2b7f89aae3394319b0fac67730fb3"
+evidence = "Mac castSpell retains this helper. Resurrection/Animate Dead scan creatures and call getResurrectionValue at 0x26078; summon and hypnotize cases do nothing. Dreamcast names the ordinary source boundary; final BLR at 0x27b20, next entry 0x27b24."
+
+[[helpers]]
+source_helper = "type_AI_combat_data::castSummoning"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x27b24
+mac_size = 0x64
+target_sha256 = "efea18a4ae52ad0900fe36f5d7dcf8346e8f35c365c1b75b3b17201a03aa73c0"
+evidence = "Mac castSpell retains this adjacent helper. Resurrection/Animate Dead select the creature and call castResurrection at 0x261d4; summon and hypnotize cases do nothing. Windows expands the existing source call; final BLR at 0x27b84, next entry 0x27b88."
+
+[[helpers]]
+source_helper = "type_AI_combat_data::castSpells"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x27f48
+mac_size = 0xa8
+target_sha256 = "3496988a4f1a147e52eb438ba226d099124ddba3e8a5bc67be4af6f62b15f44c"
+evidence = "Mac chooseMelee and simulateCombat retain this helper. It compares both fastest speeds at 0x26d84 and calls castSpell at 0x27b88 on both sides in that order. Windows expands its ordinary source calls; final BLR at 0x27fec, next entry 0x27ff0."
+
+[[helpers]]
+source_helper = "type_AI_combat_data::doRangedCombat"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x284f4
+mac_size = 0x84
+target_sha256 = "e26c17f7b523ddd8dedac433ff0f8d20e91ef65529bc7b7400e5cc664597ae09"
+evidence = "Mac chooseMelee and simulateCombat retain this helper. It gets ranged attack for each side at 0x282c4 and applies opposing inflictDamage at 0x28250. Dreamcast names the ordinary boundary; final BLR at 0x28574, next entry 0x28578."
+
+[[helpers]]
+source_helper = "type_AI_combat_data::doMeleeCombat(type_speed_catagory attackerSpeed, type_AI_combat_data& defender)"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x28578
+mac_size = 0x8c
+target_sha256 = "40d4525205a78620d82ad9a6f5bf6f8583b918482eda56022410d46e06207f61"
+evidence = "Mac chooseMelee and simulateCombat retain this overload. It gets speed-limited attack and defender blocked-shooter attack at 0x282c4, then applies opposing inflictDamage at 0x28250. Windows expands the source calls; final BLR at 0x28600, next entry 0x28604."
+
+[[helpers]]
+source_helper = "type_AI_combat_data::doMeleeCombat(type_AI_combat_data& defender)"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x28604
+mac_size = 0x84
+target_sha256 = "f0a87ca2af9d6881b953547b38ab7adfbe5ea446c1eb4dcb55f196b264154bba"
+evidence = "Mac simulateCombat retains this adjacent overload. Both sides get blocked-shooter melee attack at 0x282c4 and then apply opposing inflictDamage at 0x28250. Windows expands the source call; final BLR at 0x28684, next entry 0x28688."
 
 [[functions]]
 retail_va = 0x00423c80
