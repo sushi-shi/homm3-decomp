@@ -1,5 +1,14 @@
 # Reviewed Mac address identities; unbound compiler names are intentionally omitted.
 
+[[helpers]]
+source_helper = "border::border()"
+unit = "border"
+mac_section = 0
+mac_offset = 0x5e244
+mac_size = 0x38
+target_sha256 = "1451a7733c7ea46aa7fae5b3f9741f28d2e7efe9dce9577dc486ff0df0dd940e"
+evidence = "The default constructor calls widget::widget at 0x20a558 and installs the border vtable, ending in BLR at 0x5e278 before the parameterized constructor at 0x5e27c. Three Mac derived constructors retain calls at 0x5e5c0, 0x5e7d4 and 0x5ec18; the ordinary C++ derived constructors already invoke this default base constructor, while VC6 expands it."
+
 [[functions]]
 retail_va = 0x44ff10
 unit = "border"
