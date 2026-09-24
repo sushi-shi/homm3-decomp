@@ -714,20 +714,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
                      result, 0, 0);
         return result;
     } else {
-        TResourceArchiveList& archives =
-            g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
-        int remaining = archives.m_count;
-        int* archive = archives.m_indices;
-        LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
-
-        while (!lodFile->pointAt(name)) {
-            ++archive;
-            if (!--remaining) {
-                lodFile = 0;
-                break;
-            }
-            lodFile = &g_resourceLodSlots[*archive].m_file;
-        }
+        LODFile* lodFile = pointToBitmapResource(name);
 
         if (!lodFile) {
             reportMissingTypedResource(
@@ -737,20 +724,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 
             const char* fallbackName = DATA_COMPGEN(
                 0x006410a8, defaultBitmap24Name, "dfault24.pcx");
-            TResourceArchiveList& fallbackArchives =
-                g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
-            int fallbackRemaining = fallbackArchives.m_count;
-            int* fallbackArchive = fallbackArchives.m_indices;
-            lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
-
-            while (!lodFile->pointAt(fallbackName)) {
-                ++fallbackArchive;
-                if (!--fallbackRemaining) {
-                    lodFile = 0;
-                    break;
-                }
-                lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
-            }
+            lodFile = pointToBitmapResource(fallbackName);
 
             if (!lodFile) {
                 reportMissingTypedResource(
@@ -844,20 +818,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
         }
     }
 
-    TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
-    int remaining = archives.m_count;
-    int* archive = archives.m_indices;
-    LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
-
-    while (!lodFile->pointAt(name)) {
-        ++archive;
-        if (!--remaining) {
-            lodFile = 0;
-            break;
-        }
-        lodFile = &g_resourceLodSlots[*archive].m_file;
-    }
+    LODFile* lodFile = pointToBitmapResource(name);
 
     if (!lodFile) {
         reportMissingTypedResource(
@@ -867,20 +828,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
 
         const char* fallbackName = DATA_COMPGEN(
             0x006410b8, defaultPalette16Name, "default.pal");
-        TResourceArchiveList& fallbackArchives =
-            g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
-        int fallbackRemaining = fallbackArchives.m_count;
-        int* fallbackArchive = fallbackArchives.m_indices;
-        lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
-
-        while (!lodFile->pointAt(fallbackName)) {
-            ++fallbackArchive;
-            if (!--fallbackRemaining) {
-                lodFile = 0;
-                break;
-            }
-            lodFile = &g_resourceLodSlots[*fallbackArchive].m_file;
-        }
+        lodFile = pointToBitmapResource(fallbackName);
 
         if (!lodFile) {
             reportMissingTypedResource(
@@ -1125,20 +1073,7 @@ TTextResource* ResourceManager::loadText(const char* name)
         }
     }
 
-    TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
-    int remaining = archives.m_count;
-    int* archive = archives.m_indices;
-    LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
-
-    while (!lodFile->pointAt(name)) {
-        ++archive;
-        if (!--remaining) {
-            lodFile = 0;
-            break;
-        }
-        lodFile = &g_resourceLodSlots[*archive].m_file;
-    }
+    LODFile* lodFile = pointToBitmapResource(name);
 
     if (!lodFile) {
         reportMissingTypedResource(
@@ -1198,20 +1133,7 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
         }
     }
 
-    TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
-    int remaining = archives.m_count;
-    int* archive = archives.m_indices;
-    LODFile* lodFile = &g_resourceLodSlots[*archive].m_file;
-
-    while (!lodFile->pointAt(name)) {
-        ++archive;
-        if (!--remaining) {
-            lodFile = 0;
-            break;
-        }
-        lodFile = &g_resourceLodSlots[*archive].m_file;
-    }
+    LODFile* lodFile = pointToBitmapResource(name);
 
     if (!lodFile) {
         reportMissingTypedResource(
