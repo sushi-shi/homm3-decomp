@@ -548,3 +548,48 @@ mac_offset = 0x15aecc
 mac_size = 0x114
 target_sha256 = "a630e69216b16551f02257331abc493b493cb93dc35fd862d84a5697eab1d343"
 evidence = "After checking selected troop count, the seven-slot scan compares offered counts with hero army counts and decrements the selected amount only when every other slot is exhausted; BLR at 0x15afdc, next prologue 0x15afe0. allCreatures calls it at 0x15b06c and creatureClick at 0x15b558, passing this and slot. Windows expands both canonical source calls."
+
+[[helpers]]
+source_helper = "type_doll_slot_widget::type_doll_slot_widget"
+unit = "sacrifice_window"
+mac_section = 0
+mac_offset = 0x1553cc
+mac_size = 0x80
+target_sha256 = "44d81f5f22d5e4254461d0446e25d6aad340c88360ab8cafc44cff1b00bb1bd3"
+evidence = "createArtifactWidgets calls this at 0x1562e0. It calls iconWidget 0x10c3f0 from the slot definition, installs the doll vtable and copies definition slot +0x14 to widget +0x48. Dreamcast names this constructor at sacrifice_window.cpp:170. BLR 0x155448; handleClick begins 0x15544c. Windows expands the canonical inline source calls."
+
+[[helpers]]
+source_helper = "type_backpack_slot_widget::type_backpack_slot_widget"
+unit = "sacrifice_window"
+mac_section = 0
+mac_offset = 0x15548c
+mac_size = 0x80
+target_sha256 = "c996f29fd6212d383daf9ee9723694a8f2ac2c2e456ba6b78cae9f05f206c2ea"
+evidence = "createArtifactWidgets calls this at 0x15646c. It calls iconWidget 0x10c3f0, installs the backpack vtable and stores newSlot at +0x48, matching sacrifice_window.cpp:204. BLR 0x155508; handleClick begins 0x15550c. Windows expands the canonical inline source calls."
+
+[[helpers]]
+source_helper = "type_artifact_offering_widget::type_artifact_offering_widget"
+unit = "sacrifice_window"
+mac_section = 0
+mac_offset = 0x15554c
+mac_size = 0x6c
+target_sha256 = "a9d651a9c3ffaf1df55227c7cc6639df043c788165ac249f039b5c76e300cbe9"
+evidence = "createArtifactWidgets calls this at 0x156a18. It calls iconWidget 0x10c3f0, installs the offering vtable and stores newItemNumber at +0x48, matching sacrifice_window.cpp:235. BLR 0x1555b4; handleClick begins 0x1555b8. Windows expands the canonical inline source calls."
+
+[[helpers]]
+source_helper = "type_army_slot_widget::type_army_slot_widget"
+unit = "sacrifice_window"
+mac_section = 0
+mac_offset = 0x1555f8
+mac_size = 0x7c
+target_sha256 = "cb935e6b1bcfb948c5a5ed47197d6b9a0e99e6b383c5ffc2e7c00dd905644194"
+evidence = "createCreatureWidgets and createCreatureIcons call this at four Mac sites. It calls iconWidget 0x10c3f0, installs the army-slot vtable, writes newSlot at +0x48 and newLeftPane at +0x4c, matching sacrifice_window.cpp:263. BLR 0x155670; handleClick begins 0x155674. Windows expands the canonical source calls."
+
+[[helpers]]
+source_helper = "type_transformer_slot::type_transformer_slot"
+unit = "sacrifice_window"
+mac_section = 0
+mac_offset = 0x15b838
+mac_size = 0x80
+target_sha256 = "a8a3fb0a32a758d50dca98ef4514916a9a3a81ef6bec660cb0b16804e4312911"
+evidence = "type_skeleton_window::createCreatureIcons calls this twice at 0x15ce74 and 0x15cf24. It calls iconWidget 0x10c3f0, installs the transformer vtable and writes group at +0x4c and slot at +0x48, matching sacrifice_window.cpp:1891. BLR 0x15b8b4; handleClick begins 0x15b8b8. Windows expands both canonical source calls."
