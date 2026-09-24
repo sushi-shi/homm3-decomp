@@ -935,3 +935,21 @@ mac_offset = 0x1c078c
 mac_size = 0xd0
 target_sha256 = "5502c1754faf9bf46d60746c75256ee0a7d5af3041588c99bf3c3d1e2ed71207"
 evidence = "Town page status text helper broadcasts +0x97, draws status and updates the 0x2de by 0x13 screen strip."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1bd774
+mac_size = 0x90
+unit = "townmgr"
+target_sha256 = "8dd7d5abda7748a8fd11e585434dee7ac459aa941b77373ed29dd1c63a4f8b90"
+source_helper = "TTownScreenWindow::doTownKnob"
+evidence = "Four direct Mac calls from townManager::main to this member; the body changes the top town and calls updateTownLocators. Distinct mflr entry and terminal BLR agree with adjacent townmgr source order."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1bd804
+mac_size = 0xcc
+unit = "townmgr"
+target_sha256 = "825de99ed7f54c4f6f70d00ef1fc3710867344dca172dddf1281748c68996f6d"
+source_helper = "TTownScreenWindow::bonusRightClick"
+evidence = "Two direct Mac calls from townManager::main to this member; the body reads a bonus creature and opens its popup. Distinct mflr entry and terminal BLR agree with adjacent townmgr source order."
