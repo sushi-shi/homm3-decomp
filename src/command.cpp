@@ -247,6 +247,22 @@ void combatManager::doAnimations()
     }
 }
 
+// Mac 0:0x82384 retains this helper immediately before main and calls it
+// from main, processCombatMsg, and resetRound. Dreamcast's older source has
+// the equivalent statements at those call sites.
+void combatManager::finishCreaturePlacement()
+{
+    if (!m_creaturePlacement)
+        return;
+    m_creaturePlacement = 0;
+    m_actingSide = 1;
+    m_actingSlot = 0;
+    m_turnNumber = 0;
+    if (!static_cast<const combatManager*>(this)->isQuickCombat())
+        m_combatWindow->endPlacementPhase();
+    resetRound();
+}
+
 // E:\gamedcs\command.cpp:291
 VA(0x004740d0, 0x5AB)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound, dc 0x6b318
 int combatManager::main(message& msg)
@@ -354,15 +370,7 @@ int combatManager::main(message& msg)
                 break;
 
             case RS_COMBAT_END_PLACEMENT:
-                if (m_creaturePlacement) {
-                    m_actingSlot = 0;
-                    m_turnNumber = 0;
-                    m_creaturePlacement = 0;
-                    m_actingSide = 1;
-                    if (!static_cast<const combatManager*>(this)->isQuickCombat())
-                        m_combatWindow->endPlacementPhase();
-                    resetRound();
-                }
+                finishCreaturePlacement();
                 nextArmy(1);
                 break;
 
@@ -905,15 +913,7 @@ int combatManager::processCombatMsg(message& msg)
                             false, true);
                     }
                 }
-                if (m_creaturePlacement) {
-                    m_creaturePlacement = 0;
-                    m_actingSide = 1;
-                    m_actingSlot = 0;
-                    m_turnNumber = 0;
-                    if (!static_cast<const combatManager*>(this)->isQuickCombat())
-                        m_combatWindow->endPlacementPhase();
-                    resetRound();
-                }
+                finishCreaturePlacement();
                 nextArmy(1);
                 m_backgroundDrawn = 0;
                 drawFrame(1, 0, 0, 0, 1, 0);
@@ -1151,15 +1151,7 @@ void combatManager::resetRound()
             && (static_cast<const combatManager*>(this)->isQuickCombat()
                 || isComputerAction(getCurrentArmy()))
             && (!m_anyActionTaken || m_turnNumber >= 3)) {
-        if (m_creaturePlacement) {
-            m_creaturePlacement = 0;
-            m_actingSide = 1;
-            m_actingSlot = 0;
-            m_turnNumber = 0;
-            if (!static_cast<const combatManager*>(this)->isQuickCombat())
-                m_combatWindow->endPlacementPhase();
-            resetRound();
-        }
+        finishCreaturePlacement();
 
         if (g_remoteOn) {
             CEndPlacementPhaseMsg msg;

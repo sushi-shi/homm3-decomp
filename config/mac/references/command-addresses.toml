@@ -324,3 +324,12 @@ mac_offset = 0x885a4
 mac_size = 0x16c
 target_sha256 = "090cb79b86b3f1e651e39d3514e61b8a1a847d2f01b802340a42547be1829507"
 evidence = "NEW: Network player drop maps player0xe6e7c, network0x213ee4, localized notifications0x117eb8, timers0x87e70 and checkWin0x842bc. End0x88710; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[helpers]]
+source_helper = "combatManager::finishCreaturePlacement"
+unit = "command"
+mac_section = 0
+mac_offset = 0x82384
+mac_size = 0x78
+target_sha256 = "ccb27f6b44f3ed7a57e02ef51d6f2af979fa3d7cba4065e669da2f5b481d4fe1"
+evidence = "Bounded between doAnimations and main. Checks m_creaturePlacement, resets acting side/slot/turn and placement state, calls TCombatWindow::endPlacementPhase unless quick combat, then resetRound. Direct Mac calls from main 0x82640, processCombatMsg 0x8363c, and resetRound 0x83e6c; all three Windows bodies held the same block."

@@ -1871,6 +1871,7 @@ public:
     // retaining the helper's source-level surrender-dialog boundary.
     int doSurrender();
     int checkWin(message* msg);
+    void finishCreaturePlacement();
     void resetRound();
     // The named command rearm helper. 0x4782d0 (1461 B, command.obj) is
     // Dreamcast's named GetControl method; SetNextArmy calls it immediately
