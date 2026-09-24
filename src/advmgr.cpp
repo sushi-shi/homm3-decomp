@@ -5405,23 +5405,13 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 }
 
 // E:\gamedcs\advmgr.cpp:6805
-// Residual (92.7034%): register homing/scheduling only. The two streams have
-// exactly 22 branches and one return with identical symbolic targets; why-reg
-// measures flow distance 0 and 223 register-visible slots, while its allocator
-// model finds the initial ESI/EDI/EBX definitions identical and the divergence
-// entirely past those first definitions. Dreamcast's lexical scopes were
-// restored and retained: the top roster `tilew, tileh, tilex, tiley, baseX,
-// baseY, thisCell`; signed `numObj` plus `SprPtr, ObjCell, ObjType`; and the
-// flag arm's `triggerCell, triggerY, triggerX, Obj, owner`. All three changes
-// are byte-flat at 92.7034%, including the attested Obj temporary used only by
-// FindTrigger. With exact flow and no extra evaluated expression in retail,
-// there is no byte evidence for manufacturing a release VERIFY carrier here.
-// The type_point constructor lever (a PER-SITE fact elsewhere in the tree) is
-// bounded here too, 2026-09-06: at the DrawHeroCell site, three field stores
-// score 91.6110 and `type_point point(srcX, srcY, z)` is byte-flat at
-// 92.7034; at the FindTrigger site `type_point triggerPoint(triggerX,
-// triggerY, z)` scores 91.2827.  The written default-then-assign form is the
-// maximum at both.
+// DC lines 6862/6871 retain hasFlag and GetCell; Mac retains hasFlag and
+// both GetCell calls. Replacing the repeated type switch is byte-flat
+// in Windows, while restoring GetCell at the trigger raises 90.1618% to
+// 95.2382%. Retail and candidate now agree on 41 CFG blocks, 22 branches,
+// and all nine direct calls. Mac's direct-call count also agrees at 7/7.
+// Earlier default-then-assign point controls beat direct constructors at
+// both call sites; the residual is register scheduling.
 VA(0x00412470, 0x482)  // linkorder, dc 0x142e0
 void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -5490,20 +5480,9 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                 obj->findTrigger(triggerX, triggerY);
                 type_point triggerPoint;
                 triggerPoint = type_point(triggerX, triggerY, z);
-                // The `valid` and `map` locals are the file's own
-                // trigger-cell idiom (DrawHeroCell, DrawAdvObjShadow), and
-                // both halves are measured here: 92.2180 bare, 92.5775 with
-                // `valid` alone, 92.7034 with both. Retail's two arms each
-                // re-read fullMap where `map` reads it once, so the byte
-                // reading argues against the local and the score argues for
-                // it - the score is the verdict.
-                unsigned char valid = triggerPoint.isValid();
-                NewfullMap* map = m_fullMap;
-                if (!valid)
-                    triggerCell = map->cell(0, 0, 0);
-                else
-                    triggerCell = map->cell(
-                        triggerPoint.m_x, triggerPoint.m_y, triggerPoint.m_z);
+                // DC line 6871 retains the ordinary GetCell helper. Retail
+                // expands its point check and map access at this call site.
+                triggerCell = getCell(triggerPoint);
                 owner = getFlaggedObjectOwner(triggerCell);
                 int frame = (m_animCtr
                              + m_fullMap->m_objects[objCell->m_objectIndex]
