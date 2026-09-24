@@ -117,6 +117,15 @@ mac_size = 0x84
 target_sha256 = "f0a87ca2af9d6881b953547b38ab7adfbe5ea446c1eb4dcb55f196b264154bba"
 evidence = "Mac simulateCombat retains this adjacent overload. Both sides get blocked-shooter melee attack at 0x282c4 and then apply opposing inflictDamage at 0x28250. Windows expands the source call; final BLR at 0x28684, next entry 0x28688."
 
+[[helpers]]
+source_helper = "doEagleEye"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x28bf0
+mac_size = 0xdc
+target_sha256 = "44a9c97700927f7a217bb126ab8858558b13d2b7196c57b85beecdfbd6839ea8"
+evidence = "Mac doAftermath retains this file-local game helper. It checks the winner's Eagle Eye skill and spellbook, scans spells 0..69, filters availability/level/flags/Wisdom and adds one spell at 0xf4fec. The existing Windows source calls doEagleEye; final BLR at 0x28cc8, next entry 0x28ccc."
+
 [[functions]]
 retail_va = 0x00423c80
 unit = "ai_combat"
