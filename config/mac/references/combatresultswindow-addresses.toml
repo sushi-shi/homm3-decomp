@@ -3,6 +3,7 @@
 [[functions]]
 retail_va = 0x4702d0
 unit = "combatresultswindow"
+mac_symbol = ".__ct__20TCombatResultsWindowFPC4heroPC4heroiibi"
 mac_section = 0x0
 mac_offset = 0x7df80
 mac_size = 0x1aec
