@@ -1381,8 +1381,10 @@ void CWaitForReadyPlayersDlg::wait()
 
     int creature;
     do {
-        // Complete calls Random (retail 0x554f10+0x13b); DC1723 calls SRandom.
-        creature = random(0, 111);
+        // DC 1723 and the Mac wait-dialog body both retain SRandom. Windows
+        // retail branches to random at 0x50b230; its body is byte-identical
+        // to sRandom's VC6 body, so the symbol identity remains a link lead.
+        creature = sRandom(0, 111);
     } while (creature == CREATURE_ARCH_DEVIL
              || creature == CREATURE_DEVIL);
 
