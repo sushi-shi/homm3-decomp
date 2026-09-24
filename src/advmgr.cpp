@@ -5321,6 +5321,8 @@ void advManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
                            0, 0);
 }
 
+// Dreamcast advmgr.cpp:6708 calls GetCell for the temporary map point.
+// Retail keeps its inlined validity call after discarding the cell result.
 VA(0x00412220, 0x248)  // dc 0x13fc8
 void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -5332,7 +5334,7 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
     {
         type_point point;
         point = type_point(srcX, srcY, z);
-        point.isValid();
+        getCell(point);
     }
 
     int baseX = m_scrollX + destX * 32;
