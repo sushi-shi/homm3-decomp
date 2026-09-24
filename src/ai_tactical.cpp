@@ -539,6 +539,8 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopC
     return value;
 }
 
+// DC ai_tactical.cpp:717/729/735 names OffsetToFront and two ValidHex
+// calls; Complete expands these header helpers in the attack search.
 VA(0x00436840, 0xEA)  // dc 0x3d440
 unsigned char type_AI_attack_hex_chooser::findAttackHex()
 {
@@ -549,17 +551,17 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
         checkAdjacentHexes(m_enemyArmy->getSecondGridIndex(), 0, 6);
     if (m_attackArmy->is(creatureDoubleWide)) {
         long hex = m_enemyArmy->m_gridIndex;
-        long offset = -(m_attackArmy->m_facing ? 1 : -1);
+        long offset = -m_attackArmy->offsetToFront(-1);
         if (m_enemyArmy->is(creatureDoubleWide)
                 && offset == (m_enemyArmy->m_facing ? 1 : -1))
             hex = m_enemyArmy->getSecondGridIndex();
         if (offset < 0) {
             long second = g_combatManager->m_adjacentCells[hex][4];
-            if (second >= 0 && second < 187)
+            if (g_combatManager->validHex(second))
                 checkAdjacentHexes(second, 3, 6);
         } else {
             long second = g_combatManager->m_adjacentCells[hex][1];
-            if (second >= 0 && second < 187)
+            if (g_combatManager->validHex(second))
                 checkAdjacentHexes(second, 0, 3);
         }
     }
@@ -860,7 +862,8 @@ void type_AI_spellcaster::considerAreaEffect(type_spell_choice& choice) const
 
 // The hop itself is combatManager's: mark the stack in the
 // `effected` block, ask GetNextChainLightningTarget for the
-// next hex, and stop the moment it answers off-field. ClearEffects
+// next hex, and stop the moment it answers off-field. DC
+// ai_tactical.cpp:1081 calls ValidHex for that boundary. ClearEffects
 // wipes the marks before the walk starts.
 VA(0x00437190, 0x17D)  // dc 0x3dcc4
 long type_AI_spellcaster::getChainLightningValue(long power, TSkillMastery mastery, army* target) const
@@ -880,9 +883,7 @@ long type_AI_spellcaster::getChainLightningValue(long power, TSkillMastery maste
                                              m_enemyHero, target);
         g_combatManager->m_effected[target->m_combatSide][target->m_bitIndex] = 1;
         long hex = g_combatManager->getNextChainLightningTarget(target, 0);
-        if (hex < 0)
-            break;
-        if (hex >= COMBAT_GRID_CELLS)
+        if (!g_combatManager->validHex(hex))
             break;
         target = g_combatManager->m_cells[hex].getArmy();
         damage = damage / 2;
