@@ -1,6 +1,15 @@
 # Address-only references discovered from AI_COMBAT TU order, then independently verified.
 # Names remain owned by src/ai_combat.cpp VA claims; no compiled Mac target admission.
 
+[[helpers]]
+source_helper = "type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero) const"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x27678
+mac_size = 0xa8
+target_sha256 = "0f3223c1c485921d598154245adc4de4fa021a8dea41bc0b64f17f0ff845f7f4"
+evidence = "This const helper tests spellTargetsASingleArmy, loops over the 0x40-byte simulated-creature records, calls type_monster_data::getEnchantmentValue, and accumulates a mass value or selects the best target. The final BLR at 0x2771c precedes the two-side overload at 0x27720. That overload retains four Mac calls to this helper; Windows expands all four, and the ordinary source calls were already authored."
+
 [[functions]]
 retail_va = 0x00423c80
 unit = "ai_combat"
