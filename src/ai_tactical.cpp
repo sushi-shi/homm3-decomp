@@ -1651,7 +1651,9 @@ long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_ench
 }
 
 // DC ai_tactical.cpp:2116-2129, dc 0x40130. Ordinary const helper;
-// protection value expands it in retail.
+// Complete expands it in the spell valuations. Mac retains direct calls
+// from mirth, sorrow, defense boost, misfortune, blind, curse and
+// forgetfulness, with defense boost passing zero for movedThisTurn.
 double type_AI_spellcaster::getDuration(long turns, unsigned char movedThisTurn) const
 {
     double result;
