@@ -337,3 +337,39 @@ mac_offset = 0x215dd8
 mac_size = 0x44
 target_sha256 = "885e0a29080d99f8bee332d3c2c2517cdf2e3923a34842cf58751340fb1cc3a6"
 evidence = "Retained CHourGlass::start branches on m_thread: startMouseThread at 0x16e31c or mouseManager::setPointer(1, ADVENTURE_SET) at 0x216fc0. The Mac constructor calls it; Windows expands this source helper and has no standalone VA. Final BLR at 0x215e18; next entry 0x215e1c."
+
+[[functions]]
+retail_va = 0x554240
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x212248
+mac_size = 0x59c
+target_sha256 = "7d4feef8f2bd2dc649baba55fd81c5dff5086edfe716c2bf7f88c88379f736c9"
+evidence = "CChatEdit::onKeyPress starts with getCharPressed and dispatches Mac Enter, Escape and function-key codes through virtual slots 20-22; the default path invokes the text-entry base keypress and virtual updateScreen. CGameChatEdit::onKeyPress at 0x3fb0 and the combat editor call it directly, and the CChatEdit vtable also points here. Terminal BLR at 0x2127e0; the next authored method starts at 0x2127e4."
+
+[[functions]]
+retail_va = 0x554330
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x2127e4
+mac_size = 0x7c
+target_sha256 = "a92331db7d303faa9c3904eada8373af4fe9d695d5f8ebb041ff6588f163ee87"
+evidence = "CChatEdit::onFunctionKey checks the chat text at receiver+0x30, sends it through virtual slot 24 with its toWho argument, clears the displayed text and invokes virtual updateScreen. Its BLR at 0x21285c precedes the onEnter body at 0x212860."
+
+[[functions]]
+retail_va = 0x554380
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x212860
+mac_size = 0x7c
+target_sha256 = "e22abc1c537b994661c9039466fb7c7ef3b8178b58ecdfdf57f6d01f5666a6bd"
+evidence = "CChatEdit::onEnter checks chat text, invokes virtual sendChat with recipient 0x7f, clears the displayed text and invokes virtual updateScreen. The body is adjacent to function-key and Escape handlers in source order, ending with BLR at 0x2128d8."
+
+[[functions]]
+retail_va = 0x5543c0
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x2128dc
+mac_size = 0x4c
+target_sha256 = "f311c8d873d30eeb47f30e397800f490bbc1cf78f9a45b7c7dab4549a3acf480"
+evidence = "CChatEdit::onEscape clears the displayed text via textEntryWidget::setupDisplayString and invokes virtual updateScreen, returning 1. CGameChatEdit::onEscape at 0x40bc calls this base method with a copied message; the CChatEdit vtable also points here. BLR at 0x212924; next method starts at 0x212928."
