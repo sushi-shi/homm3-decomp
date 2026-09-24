@@ -49,6 +49,9 @@ DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 
 // 0x4d5fd0: refill next_in from the source streambuf when it is empty and
 // hand back the next byte, or -1 at end of source.
+// GOG map editor: 0x0044960f, 84 bytes. The editor_o1_mt_gr_windows
+// profile reproduces the complete body without relocations. The source and
+// field accesses identify the shared helper; the game VA below is unchanged.
 VA(0x004d5fd0, 0x74)
 int TGzInflateBuf::getByte()
 {

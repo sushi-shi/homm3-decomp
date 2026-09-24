@@ -1,0 +1,8 @@
+# Reviewed seed spans in the pinned GOG map editor, not a complete census.
+# getByte: shared field accesses and source; 84 unrelocated VC6 /O1 bytes.
+# CRT spans: exact full bytes from the named game runtime, plus Ghidra boundaries.
+rva	size
+0x4960f	0x54
+0xe62c0	0x7b
+0xe71c0	0x58
+0xe7e60	0x81

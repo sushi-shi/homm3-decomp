@@ -6,7 +6,8 @@ Compiling and linking need the toolchain shell: `nix develop .#build`.
 
 Subcommands
 -----------
-  init [--exe PATH] [--force] [--no-smoke]
+  init [--exe PATH] [--map-editor-exe PATH] [--campaign-editor-exe PATH]
+       [--force] [--no-smoke]
         One-time local setup so a fresh checkout goes straight to `homm3 build`:
         verify and stage HOMM3_EXE (a CLI path overrides the environment);
         the git-ignored build dirs; build.ninja + objdiff.json (configure); the
@@ -18,6 +19,11 @@ Subcommands
         Regenerate build.ninja + build/objdiff/objdiff.json from
         config/units.toml (homm3.build.configure; ninja also re-runs it as a
         generator rule).
+
+  editor <h3maped|h3ccmped> <TU> [--profile PROFILE] [--json]
+        Compile shared source into build/editor/ and locate whole, unrelocated
+        function bytes in the selected pinned editor. Exploratory results stay
+        separate from game objects, claims and scores.
 
   build [--fast] [TU ...] [-- <ninja args>]
         The final checkpoint (homm3.build.build): configure -> ninja (base objs via
@@ -111,6 +117,16 @@ def cmd_init(args) -> int:
     from homm3.core import inputs
     try:
         retail = inputs.stage_executable(inputs.RETAIL, args.exe)
+        from homm3.core.project import Project
+        project = Project(ROOT)
+        for key, option in (('h3maped', 'map_editor_exe'),
+                            ('h3ccmped', 'campaign_editor_exe')):
+            if key not in project.specification['inputs']:
+                continue
+            executable = project.executable(key)
+            supplied = getattr(args, option, None)
+            if supplied is not None or os.environ.get(executable.env_var):
+                inputs.stage_executable(executable, supplied)
     except inputs.InputError as exc:
         log(f"ERROR: {exc}")
         return 1
@@ -221,6 +237,8 @@ def _dispatch(argv: list[str]) -> int:
     # or reject any of those options.
     if argv and argv[0] == "source-ownership":
         return run_module("homm3.match.source_ownership", *argv[1:])
+    if argv and argv[0] == "editor":
+        return run_module("homm3.editor", *argv[1:])
     if argv and argv[0] == "warnings":
         return run_module("homm3.analysis.compiler_warnings", *argv[1:])
     if argv and argv[0] == "victor":
@@ -239,10 +257,16 @@ def _dispatch(argv: list[str]) -> int:
                    help="execute Victor resource comparisons (homm3 victor --help)")
     sub.add_parser("rmg", add_help=False,
                    help="execute retail/candidate whole-map comparisons (homm3 rmg --help)")
+    sub.add_parser("editor", add_help=False,
+                   help="compile and locate shared-source editor candidates")
 
     p = sub.add_parser("init", help="one-time local setup (executable, toolchain)")
     p.add_argument("--exe", metavar="PATH",
                    help="retail HEROES3.EXE (otherwise HOMM3_EXE or staged copy)")
+    p.add_argument("--map-editor-exe", metavar="PATH",
+                   help="optionally stage GOG h3maped.exe (or HOMM3_MAP_EDITOR_EXE)")
+    p.add_argument("--campaign-editor-exe", metavar="PATH",
+                   help="optionally stage GOG h3ccmped.exe (or HOMM3_CAMPAIGN_EDITOR_EXE)")
     p.add_argument("--force", action="store_true", help="re-init the wine prefix")
     p.add_argument("--no-smoke", action="store_true", help="skip the smoke compile")
     p.set_defaults(fn=cmd_init)

@@ -19,6 +19,9 @@ class InputsTest(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
+        (self.root / 'config').mkdir()
+        (self.root / 'config/project.toml').write_bytes(
+            (Path(__file__).resolve().parents[3] / 'config/project.toml').read_bytes())
         self.retail_bytes = b"synthetic retail input"
         self.retail = replace(inputs.RETAIL, destination=self.root / "build/orig/HEROES3.EXE",
                               size=len(self.retail_bytes),
@@ -87,6 +90,26 @@ class InputsTest(unittest.TestCase):
         with patch.object(cli, "run_module") as run:
             self.assertEqual(cli.main(["init"]), 1)
             run.assert_not_called()
+
+    def test_optional_editor_input_is_verified_before_toolchain(self):
+        from homm3.core.project import Project
+        editor = replace(self.retail, name='map editor',
+                         destination=self.root / 'build/orig/h3maped.exe',
+                         env_var='HOMM3_MAP_EDITOR_EXE', option='--map-editor-exe')
+        other = replace(editor, env_var='HOMM3_CAMPAIGN_EDITOR_EXE')
+        with patch.object(cli, 'ROOT', self.root), \
+                patch.object(Project, 'executable', side_effect=[editor, other]), \
+                patch.object(cli, 'run_module', return_value=0):
+            self.assertEqual(cli.main(['init', '--exe', str(self.retail_source),
+                                      '--map-editor-exe', str(self.retail_source)]), 0)
+        self.assertEqual(editor.destination.read_bytes(), self.retail_bytes)
+        self.retail_source.write_bytes(b'bad editor')
+        with patch.object(cli, 'ROOT', self.root), \
+                patch.object(Project, 'executable', return_value=editor), \
+                patch.object(cli, 'run_module') as run:
+            self.assertEqual(cli.main(['init', '--map-editor-exe', str(self.retail_source)]), 1)
+            run.assert_not_called()
+        self.assertEqual(editor.destination.read_bytes(), self.retail_bytes)
 
 
 if __name__ == "__main__":

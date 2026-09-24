@@ -51,7 +51,11 @@ See the [documentation](docs/README.md) and [reconstruction debt checklist](docs
 
 ## Pinned target
 
-The canonical image is the **English GOG Heroes III Complete 4.0 (engine 3.2)** executable:
+The editors are pinned to GOG's `setup_homm3_complete_2.0.0.16.exe` release.
+See [editor inputs and matching](docs/matching/editors.md) for hashes, Steam
+equivalence, the `/O1` pilot and current coverage limits.
+
+The inherited game checkpoint uses the **English GOG Heroes III Complete 4.0 (engine 3.2)** executable:
 
 ```
 file        HEROES3.EXE
@@ -77,6 +81,18 @@ homm3 build          # build all modules, compare with retail, and run checks
 `homm3 init` verifies the executable and sets up the VC6 toolchain and Wine.
 The build compiles and compares reconstructed code; it does not yet produce
 a playable game.
+
+To stage the editors and run the first shared-source comparison:
+
+```sh
+homm3 init --map-editor-exe /path/to/h3maped.exe \
+  --campaign-editor-exe /path/to/h3ccmped.exe
+homm3 editor h3maped gzinflatebuf
+```
+
+Editor discovery writes isolated objects and reports under `build/editor/`.
+The reviewed function and runtime inventories are initial seeds; game scores
+do not measure editor progress.
 
 ### IDE setup
 

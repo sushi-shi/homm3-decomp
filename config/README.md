@@ -7,6 +7,7 @@
 | Directory | Contents |
 | --- | --- |
 | [`retail/`](retail/) | Reviewed function boundaries, vtables, funclets, initialization thunks, relocations, runtime and zlib identities, and anonymous-namespace paths. |
+| [`retail/h3maped/`](retail/h3maped/) / [`retail/h3ccmped/`](retail/h3ccmped/) | Editor seed function spans and reviewed CRT identities; partial inventories separate from game data. |
 | [`source/`](source/) | Accepted address-claim exceptions. |
 | [`cleanliness/`](cleanliness/) | Source-cleanliness baseline and reviewed source-local classes. |
 | [`matching/`](matching/) | Reviewed banked-match withdrawals and parked matching candidates. |

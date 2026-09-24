@@ -1,0 +1,6 @@
+# Reviewed seed spans in the pinned GOG campaign editor, not a complete census.
+# Exact full bytes from the named game runtime, plus Ghidra boundaries.
+rva	size
+0x50b70	0x58
+0x51350	0x7b
+0x54730	0x81

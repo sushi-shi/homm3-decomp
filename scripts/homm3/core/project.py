@@ -45,10 +45,14 @@ class Project:
 
     @cached_property
     def image(self):
+        return self.input_image('retail')
+
+    def input_image(self, key):
+        """Load a named, verified input without replacing the game context."""
         from homm3.core.inputs import stage_executable
         from homm3.core.image import Image
-        image = Image(stage_executable(self.executable('retail')))
-        expected = self.specification['inputs']['retail'].get('image_base')
+        image = Image(stage_executable(self.executable(key)))
+        expected = self.specification['inputs'][key].get('image_base')
         if expected is not None and image.image_base != expected:
             raise ValueError(f'image base {image.image_base:#x} != admitted {expected:#x}')
         return image

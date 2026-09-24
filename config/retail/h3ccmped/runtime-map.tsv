@@ -1,0 +1,6 @@
+# Reviewed CRT identities; MFC and other runtime bodies remain unclassified.
+# Each complete body equals the named game's bytes; this is not a band exemption.
+rva	name	game_rva
+0x50b70	_memset	0x21b210
+0x51350	_strlen	0x21a700
+0x54730	_strcmp	0x21c9b0

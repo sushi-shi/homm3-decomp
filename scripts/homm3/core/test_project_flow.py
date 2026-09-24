@@ -63,6 +63,20 @@ class ProjectFlowTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'image base'):
             _ = Project(self.root).image
 
+    def test_named_editor_image_does_not_replace_game_input(self):
+        project = self.executable(self.root, fixture(), 0x10000)
+        editor = fixture(0x80000)
+        (self.root / 'editor.exe').write_bytes(editor)
+        with (self.root / 'config/project.toml').open('a') as stream:
+            stream.write('[inputs.h3maped]\nname="editor"\npath="editor.exe"\n'
+                         f'size={len(editor)}\nsha256="{hashlib.sha256(editor).hexdigest()}"\n'
+                         'env="EDITOR_EXE"\noption="--map-editor-exe"\nimage_base=524288\n')
+        self.assertEqual(project.input_image('h3maped').image_base, 0x80000)
+        self.assertEqual(project.image.image_base, 0x10000)
+        (self.root / 'editor.exe').write_bytes(b'bad')
+        with self.assertRaisesRegex(ValueError, 'size'):
+            project.input_image('h3maped')
+
     def test_ownership_claims_come_from_requested_root(self):
         from homm3.match import source_ownership as ownership
         from homm3.retail_labels import fragments

@@ -8,5 +8,25 @@ env = "HOMM3_EXE"
 option = "--exe"
 image_base = 0x400000
 
+# GOG setup_homm3_complete_2.0.0.16.exe. Steam editor PE sections are identical,
+# but whole-file hashes differ; admission pins the GOG files, not their overlays.
+[inputs.h3maped]
+name = "map editor executable"
+path = "build/orig/h3maped.exe"
+size = 2134016
+sha256 = "4480fba145c9f885942cc668d4bce430fe39c0fa482d1a6e58f96318ab857a37"
+env = "HOMM3_MAP_EDITOR_EXE"
+option = "--map-editor-exe"
+image_base = 0x400000
+
+[inputs.h3ccmped]
+name = "campaign editor executable"
+path = "build/orig/h3ccmped.exe"
+size = 1212416
+sha256 = "93e98214c1d21d320281f3ef6b8db5bb2ab5a1056b84bf0cf34815d01f7533c1"
+env = "HOMM3_CAMPAIGN_EDITOR_EXE"
+option = "--campaign-editor-exe"
+image_base = 0x400000
+
 [toolchain]
 locations = ["build/homm3-toolchain-vc6-sp3/msvc", "build/toolchain/msvc"]

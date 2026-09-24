@@ -5,6 +5,7 @@ iterate on a function.
 
 ## Matching
 
+- [Windows editor inputs and pilot](matching/editors.md)
 - [Source ownership](matching/source-ownership.md)
 - [Naming conventions](matching/naming.md)
 - [Source hypothesis runner](matching/source-hypotheses.md)

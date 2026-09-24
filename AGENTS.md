@@ -35,11 +35,14 @@ homm3 sema diff 0x00524dd0 --structure
 homm3 sema diff 0x00524dd0 --source
 ```
 
-These commands currently use the inherited game target. Do not interpret a game
+These sema commands use the inherited game target. Do not interpret a game
 VA or score as an editor claim. Keep editor inventories, outputs and compiler
 profiles separate; verify shared-source identities from each executable's code,
-strings, imports, vtables and callers. The initial editor compiler hypothesis is
-`/O1`, supported by shared inflate-buffer code; VC6 output must test it.
+strings, imports, vtables and callers. `homm3 editor h3maped gzinflatebuf`
+compiles isolated shared-source candidates and scans complete unrelocated bytes.
+Its `/O1` profile reproduces one 84-byte helper; remaining flags and wider TU
+coverage are provisional. See [editor matching](docs/matching/editors.md) for
+pinned inputs, seed inventories and the limits of this initial discovery path.
 
 Form hypotheses from recovered signatures, locals/lifetimes, scopes, statement
 order, helper/accessor calls, and constructor/destructor/RAII boundaries. Then
