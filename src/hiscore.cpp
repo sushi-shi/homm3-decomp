@@ -742,20 +742,13 @@ int highScoreWindowHandler(message& msg)
 
             writeHighScores();
 
+            // Mac retains both image-name calls; retail VC6 expands them.
             for (int reset = 0; reset < 11; ++reset) {
-                int monsterType = highScoreManager::getMonType(
-                    g_highScoreManager->m_highScores[1][reset].m_score,
-                    1);
                 g_highScoreWindow->m_creatures[1][reset]->setSprite(
-                    g_game->m_worldMap.findObjectType(
-                        MONSTER, monsterType)->m_imageName.c_str());
+                    highScoreCreatureImageName(reset, 1));
                 g_highScoreWindow->m_creatures[1][reset]->setIconFrame(0);
-                monsterType = highScoreManager::getMonType(
-                    g_highScoreManager->m_highScores[0][reset].m_score,
-                    0);
                 g_highScoreWindow->m_creatures[0][reset]->setSprite(
-                    g_game->m_worldMap.findObjectType(
-                        MONSTER, monsterType)->m_imageName.c_str());
+                    highScoreCreatureImageName(reset, 0));
                 g_highScoreWindow->m_creatures[0][reset]->setIconFrame(0);
             }
             }
