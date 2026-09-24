@@ -229,6 +229,7 @@ message inputManager::peekEvent()
 // GetKeyState queries in control/alt/shift order. Complete expands this
 // ordinary helper in keyboardMessageHandler, mouseMessageHandler and
 // forceMouseMove; the member does not read its receiver.
+// Mac retains it at 0:0x10e498 using GetKeys and the adjacent key-bit helper.
 int inputManager::getCurrQuals()
 {
     int quals = 0;

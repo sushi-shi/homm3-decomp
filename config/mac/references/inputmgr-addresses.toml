@@ -80,3 +80,12 @@ mac_offset = 0x10e55c
 mac_size = 0xc
 target_sha256 = "69d0c0afc20064c5050b1af6de3936e47f7cd8ba1facb6b6b0c32f20f29fa225"
 evidence = "textEntryWidget::onKeyPress calls this retained body at 0x1afd48 with g_inputManager and message; it copies message codeY (+8) to codeX (+4) and returns. Windows inputManager::asciiConvert at 0x4ec6f0 translates scan codes and shift state, a platform input difference. Dreamcast names the method at dc 0xddd60. Final BLR at 0x10e564; next input-manager body starts at 0x10e568."
+
+[[helpers]]
+source_helper = "inputManager::getCurrQuals"
+unit = "inputmgr"
+mac_section = 0
+mac_offset = 0x10e498
+mac_size = 0x80
+target_sha256 = "9eece356a2145675fa8d09f61f21d38964d8f9bb9e449ff62e10a709426bf040"
+evidence = "forceMouseMove calls this at 0x10e5d4. The Mac body calls GetKeys, tests Control, Alt and Shift through the adjacent key-bit helper 0x10e518, and ORs qualifier bits 4, 0x20 and 1 respectively. Dreamcast names inputManager::GetCurrQuals at inputmgr.cpp:970; Windows expands the canonical calls using GetKeyState. BLR 0x10e514; key-bit helper begins 0x10e518."
