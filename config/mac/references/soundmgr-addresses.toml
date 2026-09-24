@@ -7,16 +7,16 @@ mac_section = 0x0
 mac_offset = 0x218578
 mac_size = 0x160
 target_sha256 = "331e56c5ef4688974a8490ab4cc923a8eae2b80b642674fdb9ac6113fb2c29e1"
-evidence = "Mac soundManager open initializes audio service and driver, calls close 0x2186d8 for prior state and sets manager fields; complete BLR after anchored ctor."
+evidence = "Mac soundManager open initializes audio service and driver, calls an audio-handle setup routine at 0x2186d8 and sets manager fields; complete BLR after anchored ctor. The separately identified virtual close entry is at 0x2187f4."
 
 [[functions]]
 retail_va = 0x599a90
 unit = "soundmgr"
 mac_section = 0x0
-mac_offset = 0x2186d8
-mac_size = 0x11c
-target_sha256 = "dcccb88a8cdb449a8d4315c4e9206363e1e796b4061e4591576cc6d151bfe9b3"
-evidence = "Mac soundManager close releases repeated sound handles through 0x277688 and closes driver; called by open 0x2185c4; platform audio APIs differ."
+mac_offset = 0x2187f4
+mac_size = 0xf4
+target_sha256 = "596393e2de4bfe7049e5380dc3e4a0895de0d9922fce590388148dc898567aba"
+evidence = "The soundManager vtable at data 1+0x5b0a0 has open, close, main slots through transition vectors 1+0x89a8, 1+0x89a0 and 1+0x8998. Its close slot resolves to code 0x2187f4, which checks the manager open state at +0x30, shuts down audio and clears that state. Prior 0x2186d8 reference pointed to a distinct audio-handle routine called by open; it does not occupy the close slot. Own BLR at 0x2188e4 precedes the eight-byte main leaf. Platform audio APIs differ."
 
 [[functions]]
 retail_va = 0x599d90
@@ -179,3 +179,12 @@ mac_offset = 0x218510
 mac_size = 0x68
 target_sha256 = "3d46019696d9380d0cafdd0f01ce103cdc1751fe7a8e48bf7eae1829e466751f"
 evidence = "baseManager constructor at 0x218528, soundManager vtable store, bzero 14 short driver states, clear members and return this. BLR 0x218574; next prologue 0x218578."
+
+[[helpers]]
+source_helper = "soundManager::main"
+unit = "soundmgr"
+mac_section = 0
+mac_offset = 0x2188e8
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "The soundManager vtable at data 1+0x5b0a8 points through transition vector 1+0x8998 to this eight-byte leaf. It returns zero, matching the canonical ordinary soundManager::main(message&) source helper and the third virtual slot after open and close. Prior close BLR at 0x2188e4; own BLR at 0x2188ec precedes stopAllSamples at 0x2188f0."
