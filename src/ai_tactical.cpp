@@ -2582,8 +2582,10 @@ void type_AI_spellcaster::addEnemy(type_AI_enemy_data& sum, const army* ourArmy,
 // then the per-stack maximum of the two.
 
 // Complete expands addEnemy at both census sites and setWorstEnemies at
-// the tail. Their ordinary definitions above preserve the DC source calls
-// and the reference parameter used for each enemy-data accumulator.
+// the tail. DC ai_tactical.cpp:3284 also names CannotAttack and
+// GetSpellTime; Complete expands their Army.h checks here. Their ordinary
+// definitions preserve the source calls and the reference parameter used
+// for each enemy-data accumulator.
 
 VA(0x0043c040, 0x2E6)  // anchor-global, dc 0x4227c
 void type_AI_spellcaster::findEnemyAttacks()
@@ -2602,14 +2604,9 @@ void type_AI_spellcaster::findEnemyAttacks()
         army* enemy = &g_combatManager->m_armies[m_enemySide][0];
         const army* meleeEnemy = m_meleeEnemies[i].m_enemy;
         for (long j = 0; j < g_combatManager->m_numArmies[m_enemySide]; j++, enemy++) {
-            if (enemy->m_spellInfluence[62] || enemy->m_spellInfluence[70] || enemy->m_spellInfluence[74])
+            if (enemy->cannotAttack())
                 continue;
-            if (enemy->is(creatureImmobilized))
-                continue;
-            if (enemy->m_creatureType == CREATURE_FIRST_AID_TENT
-                    || enemy->m_creatureType == CREATURE_AMMO_CART)
-                continue;
-            if (enemy->m_spellInfluence[60])
+            if (enemy->getSpellTime(60))
                 continue;
             if (enemy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
