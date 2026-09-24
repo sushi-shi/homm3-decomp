@@ -202,7 +202,7 @@ ai	?aiCheckRetreat@combatManager@@QAEEXZ	94.5088	94.5088	95.7719	0x1e570	tokens1
 ai	?attemptShooterDefense@combatManager@@AAEEPBVarmy@@PAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20760	tokens1:4d246a3a2b7f
 ai	?berserkAttack@combatManager@@QAEXPAVarmy@@PBV2@@Z	100.0000	100.0000	100.0000	0x222c0	tokens1:2b285411daaf
 ai	?canCastSpells@combatManager@@QBEEJE@Z	100.0000	100.0000	100.0000	0x1f890	tokens1:0e44a4ebf80a
-ai	?chooseBallistaTarget@combatManager@@QAEHHHH@Z	99.8919	99.8919	99.8919	0x1e190	tokens1:e4fdbffbc102
+ai	?chooseBallistaTarget@combatManager@@QAEHHHH@Z	100.0000	100.0000	100.0000	0x1e190	tokens1:faad412b5038
 ai	?chooseCreatureSpell@combatManager@@AAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20d20	tokens1:c853b4b7700f
 ai	?chooseCyclopsAction@combatManager@@QAEEJJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1eea0	tokens1:0deb4b4aad11
 ai	?chooseDefenseHex@combatManager@@AAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	100.0000	100.0000	100.0000	0x205d0	tokens1:608eb227aeb6
@@ -478,7 +478,7 @@ ai_tactical	?getForgetfulnessValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_encha
 ai_tactical	?getFortuneValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38490	tokens1:32088004c66d
 ai_tactical	?getFrenzyValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	98.9849	98.9849	98.9849	0x375d0	tokens1:d786601e9e5d
 ai_tactical	?getHasteValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x396b0	tokens1:2baf22d4b5fe
-ai_tactical	?getHexAttackValue@type_AI_attack_hex_chooser@@IAEJJAAJ@Z	92.6167	92.6167	92.6167	0x36180	tokens1:580502aa4e79
+ai_tactical	?getHexAttackValue@type_AI_attack_hex_chooser@@IAEJJAAJ@Z	100.0000	100.0000	100.0000	0x36180	tokens1:6d2f74677216
 ai_tactical	?getHypnotizeValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a500	tokens1:1985df79daf6
 ai_tactical	?getMassDamageEffect@type_AI_spellcaster@@IBEJJJ@Z	100.0000	100.0000	100.0000	0x36fb0	tokens1:57a4842be3fd
 ai_tactical	?getMasteryValue@type_enchant_data@@QBEJXZ	100.0000	100.0000	100.0000	0x36930	tokens1:1f75e1712aef
@@ -2040,7 +2040,7 @@ game	?loadSignPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb
 game	?loadString@game@@SIHPAVTAbstractFile@@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbb990	tokens1:655699e23819
 game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	99.8359	99.8359	99.8359	0xc3890	tokens1:a801508e1325
 game	?makeTerrainVisible@game@@QAEXHG@Z	100.0000	100.0000	100.0000	0xca240	tokens1:64b4ea4ba990
-game	?matchUndergroundGates@game@@AAEXXZ	94.6726	94.6726	98.3451	0xc0b60	tokens1:aec27a27c00d
+game	?matchUndergroundGates@game@@AAEXXZ	100.0000	100.0000	100.0000	0xc0b60	tokens1:3d42c24674c3
 game	?mineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70	tokens1:0c895f50ab49
 game	?newMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520	tokens1:c9ed53d1c02f
 game	?newMap@game@@QAEXPAVTAbstractFile@@PAHPAUScenarioStruct@TCampaignBrief@@H@Z	100.0000	100.0000	100.0000	0xbfe70	tokens1:83eb3150c314
@@ -2907,7 +2907,7 @@ philai	?aiVisitSirens@@YIHPBVhero@@AAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0
 philai	?aiVisitUniversity@@YIXPAVhero@@PAUtype_university@@@Z	100.0000	100.0000	100.0000	0x124ed0	tokens1:c6a30da634ae
 philai	?aiVisitWarFactory@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x124fc0	tokens1:4615f9933f44
 philai	?buyArtifacts@@YIXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x1259e0	tokens1:7356389b5c96
-philai	?buyArtifacts@@YIXPAVhero@@PAW4TArtifact@@J@Z	98.1308	98.1308	98.1308	0x124400	tokens1:481049b65558
+philai	?buyArtifacts@@YIXPAVhero@@PAW4TArtifact@@J@Z	98.1308	98.1308	98.1308	0x124400	tokens1:aa7d3166293b
 philai	?buySiegeEngine@@YIXPAVhero@@PAVtown@@W4type_building_id@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x125ca0	tokens1:e33b8f037276
 philai	?checkDoMain@@YIXHH@Z	100.0000	100.0000	100.0000	0x1242d0	tokens1:dbc524f02b43
 philai	?considerGarrisoning@@YIXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x125200	tokens1:d8920f8f7f7a
@@ -2928,7 +2928,7 @@ philai	?getValueOfWell@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510	toke
 philai	?luckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80	tokens1:ef10e07752b8
 philai	?moraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0	tokens1:c2e4b27b2528
 philai	?moveHero@@YIXPAVhero@@EAAE@Z	100.0000	100.0000	100.0000	0x1267b0	tokens1:83347cbe9269
-philai	?moveHero@@YIXPAVhero@@PAJEAAE@Z	99.9554	99.9554	99.9554	0x1261f0	tokens1:9c969a483dd3
+philai	?moveHero@@YIXPAVhero@@PAJEAAE@Z	100.0000	100.0000	100.0000	0x1261f0	tokens1:9c969a483dd3
 philai	?netValueOfArtifact@@YIHPBVhero@@HHHW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x129810	tokens1:f91a2fa2febd
 philai	?onSameTeam@game@@QBE_NHH@Z	100.0000	100.0000	100.0000	0x1296d0	tokens1:664c00af8f44
 philai	?playerKnowsCell@ExtraInfoUnion@@QBE_NF@Z	100.0000	100.0000	100.0000	0x129690	tokens1:64d02b955fd1
