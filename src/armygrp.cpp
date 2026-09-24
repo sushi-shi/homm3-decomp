@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <bitset>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -39,7 +40,20 @@ static TSplitWindow* g_splitWindow;
 // Runtime-loaded combat-stat description lines. Their storage addresses and
 // uses are retail-proven here; the text-resource loader owns the definitions.
 
-inline void TSplitWindow::updateSplitArmy(unsigned char update)
+VA(0x004496a0, 0x16)  // dc 0x4dae4
+unsigned char armyGroup::hasCreatures() const
+{
+    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (m_armies[i] != CREATURE_NONE)
+            return 1;
+    }
+    return 0;
+}
+
+// Dreamcast armygrp.cpp:62 and Mac code0+0x564e8 place this standalone
+// helper between hasCreatures and splitSliderCallback. The Mac callback,
+// splitArmy and windowHandler retain calls; VC6 expands the same-TU calls.
+void TSplitWindow::updateSplitArmy(unsigned char update)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -57,16 +71,6 @@ inline void TSplitWindow::updateSplitArmy(unsigned char update)
 
     if (update)
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-}
-
-VA(0x004496a0, 0x16)  // dc 0x4dae4
-unsigned char armyGroup::hasCreatures() const
-{
-    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-        if (m_armies[i] != CREATURE_NONE)
-            return 1;
-    }
-    return 0;
 }
 
 VA(0x004496c0, 0xC3)  // dc 0x4db88
@@ -226,8 +230,8 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
 }
 
 // E:\gamedcs\armygrp.cpp:208. Retail /Ob2 expands the sole call below and
-// /OPT:REF removes the out-of-line copy.
-inline void TSplitWindow::setRolloverText(int codeY)
+// /OPT:REF removes the out-of-line copy. Mac retains it at code0+0x5751c.
+void TSplitWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case DIALOG_RETURN_SPLIT_CANCEL:

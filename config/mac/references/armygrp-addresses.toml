@@ -10,6 +10,16 @@ mac_size = 0x94
 target_sha256 = "1dcd4ccaaaaa1687c86d2be1ddc0f6196dbfc8fb4e98a7b1a83c39874199edf8"
 evidence = "NEW: Unrolled seven-slot creature array scan against NONE(-1); returns whether any army exists. End0x564e8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
 
+[[helpers]]
+unit = "armygrp"
+source_helper = "TSplitWindow::updateSplitArmy"
+mac_section = 0
+mac_offset = 0x564e8
+mac_size = 0xf4
+mac_symbol = ".updateSplitArmy__12TSplitWindowFUc"
+target_sha256 = "4288ccbc0cab3d24d2a5726ba03a489d75e8c83d063759a5cee7463178d5c418"
+evidence = "Dreamcast armygrp.cpp:62 places the standalone body after hasCreatures and before splitSliderCallback. Mac code0+0x564e8 follows the same order; its two sprintf and two broadcastMessage calls, troop fields +0x6c/+0x70 and conditional virtual draw establish identity. Calls at 0x56618, 0x573f8 and 0x57898 reach it. CodeWarrior emits this named body from the ordinary source definition; VC6 expands all three same-TU calls."
+
 [[functions]]
 retail_va = 0x004496c0
 unit = "armygrp"
@@ -45,6 +55,16 @@ mac_offset = 0x57204
 mac_size = 0x318
 target_sha256 = "1a202d2e505324715cf0e0ea0d6069f5d22eaad6c40dbb684a5ef64098228f63"
 evidence = "NEW: Allocates split window ctor0x5662c, configures source/destination restrictions with getNumArmies0x58528, updates split and shows modal dialog. End0x5751c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[helpers]]
+unit = "armygrp"
+source_helper = "TSplitWindow::setRolloverText"
+mac_section = 0
+mac_offset = 0x5751c
+mac_size = 0x118
+mac_symbol = ".setRolloverText__12TSplitWindowFi"
+target_sha256 = "f6bd0295ea23c53b5bf1fcae2a80f6c8f3ca5283d86356ffbaf457c327c8dc21"
+evidence = "Dreamcast armygrp.cpp:208 and Mac order place this source helper after splitArmy and before windowHandler. Mac code0+0x5751c dispatches rollover codes 0x7801/0x7802, formats text, broadcasts, draws and updates the screen; windowHandler calls it at 0x57860. CodeWarrior emits the named helper from the ordinary source definition; VC6 expands its same-TU call."
 
 [[functions]]
 retail_va = 0x0044a180
