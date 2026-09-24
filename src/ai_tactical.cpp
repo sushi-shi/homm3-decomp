@@ -1766,7 +1766,10 @@ long type_AI_spellcaster::getBacklashValue(const army* ourArmy, type_enchant_dat
 // as `[akSpellTraits + 4*mastery + 0x1f04]` - not the run-time
 // `caster.spell` form get_fire_shield_value carries.
 
-// The second creatureId test is bit 15 (attacks twice) crossed with
+// DC ai_tactical.cpp:2292/2306 and Mac 0:0x4392c/0:0x439b0 call
+// AI_get_attack_damage and get_attack_boost_value. Complete expands
+// both ordinary helpers at this site. The second creatureId test is bit 15
+// (attacks twice) crossed with
 // bit 2 (shoots) clear: a melee double-attacker gets one more swing out
 // of the deal than a shooter does.
 // Dreamcast and Mac retain getAttackBoostValue; retail VC6 expands it.
@@ -1794,8 +1797,7 @@ long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchan
         return 0;
     long enemyHits = target->getTotalHitPoints(0);
     long totalDamage = ourArmy->getAverageDamage(target, 0, ourArmy->m_numTroops, 1, 0);
-    long newDamage = ourArmy->getAverageDamage(
-        target, 0, (ourArmy->m_monInfo.m_hitPoints + ourHits - 1) / ourArmy->m_monInfo.m_hitPoints, 1, 0);
+    long newDamage = aiGetAttackDamage(*ourArmy, ourHits, *target, 0, 0);
     if (newDamage > enemyHits)
         newDamage = enemyHits;
     totalDamage += newDamage * mult;
