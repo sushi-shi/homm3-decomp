@@ -846,3 +846,21 @@ mac_offset = 0x4e014
 mac_size = 0x160
 target_sha256 = "d6d9c965f68c0caf10b6bc2ffe64dfe0ab0a85e21ffb5efaa473dccf59feea57"
 evidence = "Mac attack callers retain this helper at 0x4e014. It clears luck status, obtains controller at 0x4e4e8, rolls luck through Mac sRandom at 0x1314b4 and emits sound/text/spell effect outside quick combat. Windows expands the explicit-inline source helper and calls random instead; the existing source comment records that port difference. Final BLR at 0x4e170; next entry 0x4e174."
+
+[[helpers]]
+source_helper = "army::endWalk"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4ad08
+mac_size = 0x8c
+target_sha256 = "b92bb3cede72cf36d4ad740a5a641599e652a6ff9ca6fc5865f97630aeceaf63"
+evidence = "Mac walk callers retain this ordinary source helper. It checks quick combat at 0x76bc8, plays the post-walk sample at 0x48ec4, stops the walk sample and plays postwalk/wait animations at 0x52c08. The existing Windows callers use endWalk; final BLR at 0x4ad90, next entry 0x4ad94."
+
+[[helpers]]
+source_helper = "isNaturalEnemy"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e538
+mac_size = 0xe4
+target_sha256 = "c2183ce95bcdb1406d3cb789ceb5747bcfce934963fc348316520b848efb8160"
+evidence = "Mac computeAttackerBonus retains this source call. Its switch checks Angel 0xc/0xd against Devil 0x36/0x37, Efreet 0x34/0x35 against Genie 0x24/0x25, and Black Dragon 0x53 against Titan 0x29 in both directions, matching the Dreamcast-named ordinary army.cpp helper. Final BLR at 0x4e618; next entry 0x4e61c."
