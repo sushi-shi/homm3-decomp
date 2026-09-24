@@ -2441,6 +2441,15 @@ unsigned char army::isEnemy(const army* arg) const
 //   `inline` on the army.h declarator    (none)      100.0000    92.5170
 //   `inline` + ONE rejected site         92.0000      100.0000    92.5170
 
+// Mac keeps this body at code0+0x4e840, between isEnemy and
+// enemyIsAdjacent in the army function sequence. Its 55 direct callers
+// include other units, but retained Mac calls do not locate a definition.
+// Windows has 53 direct calls to 0x4428f0; surveyed cross-TU callers in
+// ai_tactical and combatcontrolsubwindow retain the call and match their
+// retail instruction shape. No cross-TU expansion presently proves header
+// body visibility. The current explicit `inline` spelling is a VC6 emission
+// control in the current reconstruction, not a recovered source keyword.
+
 // UNTIL 0x447a80 IS RECONSTRUCTED the rejected site is supplied by a
 // SCAFFOLD: `#pragma inline_depth(0)` around get_total_combat_value
 // below, which is un-carcassed for exactly this purpose and stays
