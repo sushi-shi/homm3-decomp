@@ -842,8 +842,9 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy,
 // base_speed falls back to the stack's own speed when the caller
 // passed a negative and the limit collapses to zero for a bound stack.
 
-// Dreamcast findpath.cpp:952 calls FindPath.h get_hex; retail expands
-// the null check and 30-byte cell index.
+// Dreamcast findpath.cpp:943/952/960/963 calls army::get_spell_time,
+// FindPath.h get_hex, army::OffsetToFront and
+// combatManager::InInvisibleColumn. Retail expands these accessors.
 VA(0x004b2da0, 0x24B)  // anchor-global, dc 0xa03fc
 void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, long limit, unsigned char inPlacementPhase, long baseSpeed)
 {
@@ -855,7 +856,7 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
     } else {
         if (baseSpeed < 0)
             baseSpeed = thisArmy->getSpeed();
-        if (thisArmy->m_spellInfluence[72])
+        if (thisArmy->getSpellTime(72))
             limit = 0;
     }
     findCombatPath(thisArmy, currentGroup, -1, inPlacementPhase, limit,
@@ -870,11 +871,8 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
                             currentGroup, i))) {
             g_combatManager->m_cells[i].m_validMove = 1;
             if (thisArmy->is(creatureDoubleWide) && !thisArmy->is(creatureSiegeWeapon)) {
-                long second = i + (thisArmy->m_facing != 0 ? 1 : -1);
-                if (second < 0 || second >= COMBAT_GRID_CELLS
-                        || (second % COMBAT_GRID_ROW_STRIDE != 0
-                            && second % COMBAT_GRID_ROW_STRIDE
-                                != COMBAT_GRID_LAST_COLUMN)) {
+                long second = i + thisArmy->offsetToFront(-1);
+                if (!g_combatManager->inInvisibleColumn(second)) {
                     if (inPlacementPhase
                             && g_combatManager->isOutsidePlacementBoundry(
                                     currentGroup, second))
