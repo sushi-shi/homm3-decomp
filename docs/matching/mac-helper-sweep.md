@@ -1,14 +1,17 @@
 # Mac retained-helper sweep
 
-The current pass restores source helper boundaries and calls across unfinished
-Windows game functions. A lower byte score does not reject a call supported by
-Mac, Dreamcast, and VC6 evidence. Byte polishing follows the broad pass.
+The current pass restores source helper boundaries and calls across all Windows
+game functions, including byte-exact callers. A lower byte score does not reject
+a call supported by Mac, Dreamcast, and VC6 evidence. Byte polishing follows
+the broad pass.
 
-Run `homm3 mac helper-queue` after a Windows checkpoint. It writes
-`build/mac/helper-queue.json`, `helper-queue-functions.tsv`, and
-`helper-queue-calls.tsv`. The function file includes every unfinished Windows
-target and marks whether it has a reviewed Mac span. The call file lists every
-direct Mac branch in those spans. `review_missing_helper_call` means a reviewed
+Run `homm3 mac helper-queue --all-functions` for the broad sweep. It writes
+`build/mac/helper-queue-all.json`, `helper-queue-all-functions.tsv`, and
+`helper-queue-all-calls.tsv`. The function file includes exact and unfinished
+Windows targets and marks whether each has a reviewed Mac span. The call file
+lists every direct Mac branch in those spans. Without `--all-functions`, the
+command retains its smaller unfinished-function matching queue.
+`review_missing_helper_call` means a reviewed
 source helper is absent from the caller's authored body; `identify_target`
 means the destination has no reviewed identity. Other named targets get
 `review_other_named_call`, since constructors and destructors can be implicit.
@@ -19,22 +22,12 @@ runtime destinations are marked `runtime_call` and remain in the full report
 without crowding the displayed helper leads.
 
 The command display groups repeated call sites by destination and orders them
-by distinct unfinished Windows callers. `--limit` counts destinations; the TSV
+by distinct Windows callers. `--limit` counts destinations; the TSV
 keeps every individual call site. The display skips user-deferred modules unless
 `--include-deferred` is supplied; the JSON and TSV retain them.
 
-Current work is split by caller TU:
-
-| Owner | Units |
-| --- | --- |
-| recruit | game, townmgr, recruit, tradpost, creature_bank; then objecttype, puzzlewindow, font, drawing, overview, resourcemanager, questlogwindow; then army, cmbtmgr, command, spells |
-| customcampaign | advmgr, kb, event_record, customcampaign, campaignbrief, mousemgr, advspells, window, button, strip; then singleselectionwindow, viewwrld, viewarmywindow, multiplayerwindow, adventuremapwindow, bottomviewsubwindow; then cspriteframe, soundmgr, smackmgr, winmgr, remote, systemoptionswindow, campaignwindow, quickherowindow, newgame, castle, iconwdgt, artifact |
-| ai_player | hero, mapcell, seerhut, philai, ai_player, search, findpath, armygrp, ai; then town, misc, herodefs, hillfortwindow, hiscore, initialize, lodfile, bitmap16, bitmap24, border, adventureoptionswindow, gzinflatebuf; then events |
-| primary | swapmgr, sacrifice_window, and remaining non-deferred game units |
-
-Use `--owner recruit=game,townmgr,recruit,tradpost,creature_bank` and repeat
-`--owner` for the other workers when owner labels are useful in the generated
-files. Unassigned rows remain visible. The `rmg`, `zlib-1.1.3`, `codec`, and
+Use `--owner worker=game,townmgr` when owner labels help coordinate parallel
+work. Unassigned rows remain visible. The `rmg`, `zlib-1.1.3`, `codec`, and
 `victor` modules are deferred by user direction.
 
 For each caller, inspect Mac disassembly and direct targets, Dreamcast source

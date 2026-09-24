@@ -89,12 +89,14 @@ def main(argv=None) -> int:
     p.add_argument("--limit", type=int, default=20, help="maximum displayed tasks; full files always include all")
     p.add_argument("--include-deferred", action="store_true", help="display user-deferred modules too")
     p.add_argument("--json", action="store_true", help="print the full structured queue")
-    p = sub.add_parser("helper-queue", help="queue Mac-retained calls in unfinished Windows functions")
+    p = sub.add_parser("helper-queue", help="queue Mac-retained game helper calls")
     p.add_argument("--owner", action="append", default=[], metavar="WORKER=UNIT[,UNIT...]",
                    help="assign units to a worker; repeat for other workers")
     p.add_argument("--unit", help="display only this unit; output files still cover all units")
     p.add_argument("--limit", type=int, default=30, help="maximum displayed target leads")
     p.add_argument("--include-deferred", action="store_true", help="display user-deferred modules too")
+    p.add_argument("--all-functions", action="store_true",
+                   help="include exact Windows callers in a separate whole-corpus helper inventory")
     p.add_argument("--json", action="store_true", help="print the full structured helper queue")
     p = sub.add_parser("campaign", help="prepare disjoint worker packets from the current action queue")
     p.add_argument("--workers", type=int, default=6)
@@ -212,14 +214,18 @@ def main(argv=None) -> int:
                     if unit in assignments:
                         parser.error(f"unit {unit!r} assigned more than once")
                     assignments[unit] = worker
-            report = helper_queue.generate(common.HOMM3_DIR, queue.generate(common.HOMM3_DIR),
-                                           discovery.Index(_image()), assignments)
-            helper_queue.write(common.HOMM3_DIR, report)
+            action_queue = queue.generate(common.HOMM3_DIR,
+                                          include_banked_exact=args.all_functions)
+            report = helper_queue.generate(common.HOMM3_DIR, action_queue,
+                                           discovery.Index(_image()), assignments,
+                                           all_functions=args.all_functions)
+            stem = "helper-queue-all" if args.all_functions else "helper-queue"
+            helper_queue.write(common.HOMM3_DIR, report, stem=stem)
             if args.json:
                 print(json.dumps(report, indent=2))
             else:
                 coverage = report["coverage"]
-                print(f"[mac] helper queue: {coverage['unfinished_windows_functions']} unfinished Windows functions; "
+                print(f"[mac] helper queue: {coverage['functions_in_scope']} Windows functions in scope; "
                       f"{coverage['reviewed_mac_callers']} reviewed Mac caller spans")
                 print(f"[mac] {coverage['missing_named_source_calls']} reviewed helper calls absent from source; "
                       f"{coverage['unreviewed_direct_targets']} distinct direct targets need identity review")
@@ -229,7 +235,7 @@ def main(argv=None) -> int:
                           f"{lead['sites']} sites in {lead['caller_count']} callers / "
                           f"{lead['unit_count']} units; e.g. {example['retail_va']} "
                           f"[{example['unit']}] at {example['mac_call_site']}")
-                print("[mac] complete queue: build/mac/helper-queue.json and helper-queue-*.tsv")
+                print(f"[mac] complete queue: build/mac/{stem}.json and {stem}-*.tsv")
             return 0
         if args.command in ("find", "xrefs", "census"):
             index = discovery.Index(_image())

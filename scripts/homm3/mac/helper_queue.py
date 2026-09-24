@@ -1,4 +1,4 @@
-"""Queue Mac-retained call boundaries for unfinished Windows functions.
+"""Queue Mac-retained call boundaries for Windows functions.
 
 Direct PowerPC branches are leads. A reviewed target establishes identity, but
 neither a branch nor a textual call search proves the original inline qualifier.
@@ -35,11 +35,13 @@ def _owner(unit: str, assignments: dict[str, str]) -> str:
 
 
 def generate(root: Path, action_queue: dict, index: Index,
-             assignments: dict[str, str] | None = None) -> dict:
+             assignments: dict[str, str] | None = None,
+             *, all_functions: bool = False) -> dict:
     """Build a source-call review queue from reviewed spans and Mac branches."""
     assignments = assignments or {}
-    unfinished = {int(row["retail_va"], 0): row for row in action_queue["rows"]
-                  if row.get("windows_max") is None or row["windows_max"] < 100 - 1e-6}
+    selected = {int(row["retail_va"], 0): row for row in action_queue["rows"]
+                if all_functions or row.get("windows_max") is None
+                or row["windows_max"] < 100 - 1e-6}
     refs = references.load(root)
     pairs = load_pairs(root)
     by_va = {ref.retail_va: ref for ref in refs if ref.retail_va is not None}
@@ -63,7 +65,7 @@ def generate(root: Path, action_queue: dict, index: Index,
 
     calls = []
     functions = []
-    for va, row in sorted(unfinished.items()):
+    for va, row in sorted(selected.items()):
         caller = by_va.get(va)
         owner = _owner(row.get("unit") or "", assignments)
         deferred = row.get("state") == "deferred"
@@ -108,21 +110,26 @@ def generate(root: Path, action_queue: dict, index: Index,
             entry["reviewed_calls"] += target is not None
             entry["missing_named_calls"] += state == "review_missing_helper_call"
             entry["unreviewed_targets"] += state == "identify_target"
-    coverage = {"unfinished_windows_functions": len(functions),
+    coverage = {"functions_in_scope": len(functions),
+                "unfinished_windows_functions": sum(
+                    row.get("windows_max") is None or row["windows_max"] < 100 - 1e-6
+                    for row in selected.values()),
                 "reviewed_mac_callers": sum(row["reviewed_mac_span"] for row in functions),
                 "direct_mac_calls": len(calls),
                 "missing_named_source_calls": sum(row["state"] == "review_missing_helper_call" for row in calls),
                 "unreviewed_direct_targets": len({row["mac_target"] for row in calls
                                                   if row["state"] == "identify_target"})}
-    return {"schema": 1, "scope": "mac_retained_helper_recovery",
+    return {"schema": 1,
+            "scope": ("all_mac_retained_game_helper_recovery" if all_functions
+                      else "mac_retained_helper_recovery"),
             "target_sha256": action_queue.get("target_sha256"),
             "coverage": coverage, "functions": functions, "calls": calls}
 
 
-def write(root: Path, report: dict) -> None:
+def write(root: Path, report: dict, *, stem: str = "helper-queue") -> None:
     out = root / "build/mac"
     out.mkdir(parents=True, exist_ok=True)
-    reports.atomic_text(out / "helper-queue.json", json.dumps(report, indent=2) + "\n")
+    reports.atomic_text(out / f"{stem}.json", json.dumps(report, indent=2) + "\n")
     for name, fields in (
         ("functions", ("owner", "unit", "retail_va", "function", "windows_max", "deferred",
                        "reviewed_mac_span", "reviewed_calls", "missing_named_calls",
@@ -134,7 +141,7 @@ def write(root: Path, report: dict) -> None:
         writer = csv.DictWriter(stream, fieldnames=fields, delimiter="\t", extrasaction="ignore")
         writer.writeheader()
         writer.writerows(report[name])
-        reports.atomic_text(out / f"helper-queue-{name}.tsv", stream.getvalue())
+        reports.atomic_text(out / f"{stem}-{name}.tsv", stream.getvalue())
 
 
 def leads(report: dict, unit: str | None = None,
