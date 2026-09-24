@@ -891,3 +891,30 @@ mac_offset = 0x5455c
 mac_size = 0x68
 target_sha256 = "0213ab909d5c1f4e6f7b44aaee7469933d2c1f1659621e216e78dbd1d3150bab"
 evidence = "Mac canCastSpell and castCaliphSpell call this retained source helper. It counts spells 10 through 69 for which isValidCaliphSpell at 0x54518 succeeds. Windows expands the existing helper in both callers; final BLR at 0x545c0, next entry 0x545c4."
+
+[[helpers]]
+source_helper = "army::castResurrect"
+unit = "army"
+mac_section = 0
+mac_offset = 0x53f00
+mac_size = 0xc4
+target_sha256 = "f69047a88a442575b95f1dc30f2e9cdb0d19b3476311f9493b91ce5d6f185f38"
+evidence = "Mac castSpell retains this ordinary method. It selects a resurrection target by controlling side and hex at 0x1945d8, then plays its sample and calls combatManager::resurrect at 0x1986ec for m_numTroops times 100. The existing Windows source calls castResurrect; final BLR at 0x53fc0, next entry 0x53fc4."
+
+[[helpers]]
+source_helper = "army::castDemonicResurrect"
+unit = "army"
+mac_section = 0
+mac_offset = 0x53fc4
+mac_size = 0x70
+target_sha256 = "6306672c39c472beac41c2184f6f81cfa03d2fa6de7779032c206bbead8b353e"
+evidence = "Mac castSpell retains this adjacent ordinary method. It finds the demonic resurrection target by controlling side and hex at 0x194788, then calls combatManager::demonicResurrection at 0x1984ec. The Windows source already calls it; final BLR at 0x54030, next entry 0x54034."
+
+[[helpers]]
+source_helper = "army::castFaerieDragonSpell"
+unit = "army"
+mac_section = 0
+mac_offset = 0x5469c
+mac_size = 0x64
+target_sha256 = "97c136ac36e6d48a86697c38f291f0b7c4711447cfa82b000496099a6ea6fed5"
+evidence = "Mac castSpell retains this method after castCaliphSpell and before the Enchanter. It bounds-checks hex against 187 and passes m_faerieDragonSpell and m_numTroops times five to combatManager::castSpell at 0x190540. Windows source previously had its body inline in the switch; name inferred. Final BLR at 0x546fc, next entry 0x54700."

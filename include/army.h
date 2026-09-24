@@ -779,6 +779,7 @@ public:
     void castCaliphSpell(long hex);
     void castResurrect(long hex);
     void castDemonicResurrect(long hex);
+    void castFaerieDragonSpell(long hex);
     unsigned char checkSpecialAttack(army* target);
     void castSpell(long hex);
     // Complete retains this ordinary destructor in Army code at 0x43d400,

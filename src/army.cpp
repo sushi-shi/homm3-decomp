@@ -4958,6 +4958,15 @@ void army::castCaliphSpell(long hex)
     }
 }
 
+// Mac retains this ordinary method at 0x5469c, immediately after
+// castCaliphSpell; Windows expands it in castSpell. The name is inferred.
+void army::castFaerieDragonSpell(long hex)
+{
+    if (hex >= 0 && hex < COMBAT_GRID_CELLS)
+        g_combatManager->castSpell(m_faerieDragonSpell, hex, 1, -1, 2,
+                                   m_numTroops * 5);
+}
+
 // The Enchanter's per-turn mass-cast roster: (spell, weight) pairs,
 // -1-terminated, read from the hash-verified image at 0x6608b8 (.data,
 // so the source array was NOT const). Every id lands on an enumerator
@@ -5098,9 +5107,7 @@ void army::castSpell(long hex)
         castCaliphSpell(hex);
         break;
     case CREATURE_FAERIE_DRAGON:
-        if (hex >= 0 && hex < COMBAT_GRID_CELLS)
-            g_combatManager->castSpell(m_faerieDragonSpell, hex, 1, -1, 2,
-                                       m_numTroops * 5);
+        castFaerieDragonSpell(hex);
         break;
     case CREATURE_STORM_ELEMENTAL:
         g_combatManager->castSpell(SPELL_PROTECTION_FROM_AIR, hex, 1, -1,
