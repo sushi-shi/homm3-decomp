@@ -495,6 +495,9 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 // the zero-cast cleanliness floor; reversing the two diagonal corner
 // declarations regresses to 99.19779%; and DC's const srcCell cannot be
 // expressed without changing the still-non-const NewmapCell accessors.
+// Dreamcast findpath.cpp:482/635/697 calls point inequality, game::get_cell
+// twice, and type_obscuring_object::get_obscured_type. Retail expands these
+// header helpers inside the path direction loop.
 VA(0x004b2300, 0xA94)  // anchor-callee, dc 0x9f718
 void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                                          long turnMobility, long maxMobility,
@@ -516,11 +519,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         if (!candidate.m_point.isValid())
             continue;
         if (adjacentMonster) {
-            if (candidate.m_point.m_x != monsterLocation.m_x)
-                continue;
-            if (candidate.m_point.m_y != monsterLocation.m_y)
-                continue;
-            if (candidate.m_point.m_z != monsterLocation.m_z)
+            if (candidate.m_point != monsterLocation)
                 continue;
         }
 
@@ -616,11 +615,9 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                     type_point acrossY = source->m_point;
                     acrossX.m_x = acrossX.m_x + g_normalDirTable[direction].m_x;
                     acrossY.m_y = acrossY.m_y + g_normalDirTable[direction].m_y;
-                    if (g_game->m_worldMap.cell(acrossX.m_x, acrossX.m_y,
-                                              acrossX.m_z)->m_groundSet
+                    if (g_game->getCell(acrossX)->m_groundSet
                                 != eTerrainWater
-                            || g_game->m_worldMap.cell(acrossY.m_x, acrossY.m_y,
-                                                     acrossY.m_z)->m_groundSet
+                            || g_game->getCell(acrossY)->m_groundSet
                                 != eTerrainWater)
                         impassable = 1;
                 }
@@ -664,7 +661,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
 
         if (destCell->m_type == HERO && destCell->m_isTrigger) {
             hero* other = g_game->getHero(destCell->m_extraInfo);
-            if (other->obscuredIsTrigger() && other->m_obscuredType == SANCTUARY
+            if (other->obscuredIsTrigger() && other->getObscuredType() == SANCTUARY
                     && other->m_owner != currentHero->m_owner) {
                 blocked = 1;
                 candidate.m_canStop = 0;
