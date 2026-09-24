@@ -114,15 +114,6 @@ target_sha256 = "e1d6c539db9c3cdbbbcc96fe2292770f12f19f12c837f1fd2664e757524c574
 evidence = "At swapManager::open +0x1a6634 the call immediately follows construction of its 16-byte CSwapMgrNetMsgHandler and passes g_dPlay and that new handler. This is the authored CDPlayHeroes::setNetMsgHandler call. The Mac body writes the handler at receiver+0x7c and transfers old handler state; final BLR at 0x211148 precedes getNetMsgHandler."
 
 [[functions]]
-retail_va = 0x557a80
-unit = "remote"
-mac_section = 0
-mac_offset = 0x2156e4
-mac_size = 0x28
-target_sha256 = "68b0de91ac94c7ce08fc412facadebc964aec1d3f6dd73b7dc31f8e697c49c2c"
-evidence = "CTurnDuration::isOn first rejects a zero duration at receiver+8, then returns whether g_inCampaign is false. The Mac body has two returns and ends at 0x215708 before isExpired begins at 0x21570c. Mac isClose calls this retained helper at 0x215a5c; Windows isClose expands the same two checks, and the ordinary source already calls isOn."
-
-[[functions]]
 retail_va = 0x554200
 unit = "remote"
 mac_section = 0
@@ -193,42 +184,6 @@ mac_offset = 0x215aec
 mac_size = 0x10
 target_sha256 = "3e45e9cb204be77348f6524246bb77d782f782bd0128577c518b5b504995d652"
 evidence = "CTurnDuration::setDuration clears turnStartTime +4 and stores its argument at currDuration +8. Mac caller 0x1812c8 and Windows source at 0x557d70 agree; BLR 0x215af8 precedes start."
-
-[[functions]]
-retail_va = 0x557d90
-unit = "remote"
-mac_section = 0
-mac_offset = 0x215afc
-mac_size = 0x6c
-target_sha256 = "f1f3a4be52292971a24a5c62abbe56944d878fd234d5a0807ab592eae2189aeb"
-evidence = "CTurnDuration::start is called by game::nextPlayer at 0xde040 and two other game/remote sites. It checks isOn 0x2156e4, gets GameTime, stores both start and lastWarned, then sets nextWarning to duration/4 above 60000 or duration/2 otherwise. Windows source retains the call and helper at 0x557d90. BLR 0x215b64 precedes addTime."
-
-[[helpers]]
-source_helper = "CTurnDuration::addTime"
-unit = "remote"
-mac_section = 0
-mac_offset = 0x215b68
-mac_size = 0x1c
-target_sha256 = "c731abb52d0edd1fba74cdc3f4e238d34deb7a273e7943b880275645d4c47b2a"
-evidence = "Ordinary CTurnDuration::addTime increments turnStartTime +4 and lastWarned +0 by its unsigned-long argument. Mac resume calls it directly at 0x215c04; Windows resume retains the authored addTime source call but expands this short body. BLR 0x215b80 precedes pause."
-
-[[functions]]
-retail_va = 0x557dd0
-unit = "remote"
-mac_section = 0
-mac_offset = 0x215b84
-mac_size = 0x3c
-target_sha256 = "d450ead600ff8a2232337c6dcbb8cd9a07a8436eab3a75d7fa1e9d2eadbe9476"
-evidence = "CTurnDuration::pause tests turnStartTime +4 and, when active, stores GameTime::get into pauseTime +0x10. Mac calls include 0xbadd8 and 0x1be910; Windows helper is at 0x557dd0. Terminal BLR 0x215bbc precedes resume."
-
-[[functions]]
-retail_va = 0x557df0
-unit = "remote"
-mac_section = 0
-mac_offset = 0x215bc0
-mac_size = 0x68
-target_sha256 = "e25c3cf329049ae5adce03962fc4948e45c788edb7ece572052e7e0cbe6f257d"
-evidence = "CTurnDuration::resume checks pauseTime and turnStartTime, subtracts the paused timestamp from GameTime::get, calls ordinary addTime 0x215b68, then clears pauseTime. Four Mac callers include game/remote paths; Windows source calls addTime and retains resume at 0x557df0. BLR 0x215c24 precedes the next constructor."
 
 [[functions]]
 retail_va = 0x553960
