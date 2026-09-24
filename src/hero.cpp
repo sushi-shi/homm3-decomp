@@ -466,6 +466,8 @@ void hero::hire(int playerId, type_point point)
     g_game->replaceRecruit(playerId, recruitSlot);
 }
 
+// Dreamcast hero.cpp:569 calls Hero.h's obscure_cell wrapper; retail
+// expands that wrapper to the base obscuring-object call.
 VA(0x004d7900, 0x11B)  // dc 0xcaedc
 void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
 {
@@ -486,7 +488,7 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
     if (resetFlags)
         m_flags &= 0xfff9ffff;
 
-    type_obscuring_object::obscureCell(HERO, m_id);
+    obscureCell();
 
     CMCRecruitHero change(m_id, point, g_netLocalGamePos);
     sendMapChange(&change);
