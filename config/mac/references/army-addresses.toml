@@ -792,3 +792,12 @@ mac_offset = 0x4fab8
 mac_size = 0x8
 target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
 evidence = "getEstimatedDamage and adjustDamage call this retained leaf at 0x4fab8; it returns zero for every baseDamage, matching the canonical explicit-inline source definition. Windows expands the constant return into callers. Final BLR at 0x4fabc; next entry 0x4fac0."
+
+[[helpers]]
+source_helper = "army::waitSample"
+unit = "army"
+mac_section = 0
+mac_offset = 0x48f98
+mac_size = 0x70
+target_sha256 = "5c45d10880b84f11d22fef735b4791f7f3b74acd9bae3cfc8fff755df2e77cfe"
+evidence = "Mac army::rangeAttack calls this retained helper at 0x48f98. It checks quick combat at 0x76bc8, indexes m_armySample at +0x170, and passes the sample handle at +0x28 to soundManager::waitSample at 0x2189b8. Dreamcast names the member boundary; Windows expands its explicit-inline source body. Final BLR at 0x49004; next entry 0x49008."
