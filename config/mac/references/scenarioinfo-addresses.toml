@@ -44,3 +44,12 @@ mac_offset = 0x1606a0
 mac_size = 0x390
 target_sha256 = "81e91196b050e2ac02dae4eb8ca99c7059827e523c82a87ab3668421a6f2e77a"
 evidence = "NEW: processRightSelect: switch id0x16a..0x184, team/town/hero/bonus popup cases and helper calls; ends0x160a30. Full span SHA verified."
+
+[[helpers]]
+source_helper = "CScenarioInfoDlg::setDifficultyHiLite"
+unit = "scenarioinfo"
+mac_section = 0x0
+mac_offset = 0x160be0
+mac_size = 0xc4
+target_sha256 = "198cfef71a2e3831e4c929b942a2ab1e539e53d4a89d411eda70473ca01e7f9f"
+evidence = "The constructor calls this retained helper; it disables widgets 107 through 111 and broadcasts the selected difficulty status. Dreamcast names the same ordinary method, which Windows expands."

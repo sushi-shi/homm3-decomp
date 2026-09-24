@@ -22,10 +22,10 @@ Current work is split by caller TU:
 
 | Owner | Units |
 | --- | --- |
-| recruit | game, townmgr, recruit, tradpost, creature_bank; then objecttype, puzzlewindow, font, drawing, overview, resourcemanager, questlogwindow |
-| customcampaign | advmgr, kb, event_record, customcampaign, campaignbrief, mousemgr, advspells, window, button, strip; then singleselectionwindow, viewwrld, viewarmywindow, multiplayerwindow, adventuremapwindow, bottomviewsubwindow |
-| ai_player | hero, mapcell, seerhut, philai, ai_player, search, findpath, armygrp, ai |
-| primary | all other non-deferred game units |
+| recruit | game, townmgr, recruit, tradpost, creature_bank; then objecttype, puzzlewindow, font, drawing, overview, resourcemanager, questlogwindow; then army, cmbtmgr, command, spells |
+| customcampaign | advmgr, kb, event_record, customcampaign, campaignbrief, mousemgr, advspells, window, button, strip; then singleselectionwindow, viewwrld, viewarmywindow, multiplayerwindow, adventuremapwindow, bottomviewsubwindow; then cspriteframe, soundmgr, smackmgr, winmgr, remote, systemoptionswindow, campaignwindow, quickherowindow, newgame, castle, iconwdgt, artifact |
+| ai_player | hero, mapcell, seerhut, philai, ai_player, search, findpath, armygrp, ai; then town, misc, herodefs, hillfortwindow, hiscore, initialize, lodfile, bitmap16, bitmap24, border, adventureoptionswindow, gzinflatebuf; then events |
+| primary | swapmgr, sacrifice_window, and remaining non-deferred game units |
 
 Use `--owner recruit=game,townmgr,recruit,tradpost,creature_bank` and repeat
 `--owner` for the other workers when owner labels are useful in the generated
