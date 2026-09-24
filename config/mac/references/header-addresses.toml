@@ -123,7 +123,7 @@ evidence = "Called by game load/save and save-selection code; preceding BLR0xcf4
 [[functions]]
 retail_va = 0x4bc350
 unit = "game"
-source = "include/game.h"
+source = "src/game.cpp"
 mac_section = 0x0
 mac_offset = 0xcf6f0
 mac_size = 0x330
@@ -133,7 +133,7 @@ evidence = "Immediately after SavedGameHeader ctor; selects loader-proven H3SVC/
 [[functions]]
 retail_va = 0x4bc5d0
 unit = "game"
-source = "include/game.h"
+source = "src/game.cpp"
 mac_section = 0x0
 mac_offset = 0xcfa20
 mac_size = 0x214

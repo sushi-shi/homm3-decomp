@@ -3204,6 +3204,96 @@ int game::save(TAbstractFile* outfile)
     return 0;
 }
 
+// Complete retains calls to these ordinary members in game::save.
+// Dreamcast attributes their older definitions to Game.h; the Mac
+// build also retains both calls.
+// E:\gamedcs\Game.h:1312, dc 0xbcf00
+VA(0x004bc350, 0x271)  // anchor-caller (game::Save) + layout, dc 0xbcf00
+void SavedGameHeader::reset()
+{
+    if (g_inCampaign)
+        strcpy(m_id, "H3SVC");
+    else
+        strcpy(m_id, "H3SVG");
+
+    m_version = 42;
+    m_gameVersion = g_game->m_gameVersion;
+
+    m_campaign = g_game->m_campaign;
+
+    m_mapHeader = g_game->m_mapHeader;
+
+    m_currentPlayer = g_netLocalGamePos;
+    m_mapSetup = g_game->m_setup;
+    m_campaignGame = g_inCampaign;
+    m_fileName = g_game->m_saveFileName;
+    m_difficultyRating = g_game->m_difficultyRating;
+    m_numDeadPlayers = g_game->m_numDeadPlayers;
+    memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
+
+    int* human = m_humanPlayer;
+    for (int i = 0; i < 8; ++i)
+        *human++ = g_game->m_players[i].isHuman();
+}
+
+// Complete serializes the expanded snapshot through its abstract stream.
+// Preserve the disjoint scalar staging scopes used by retail stack slots.
+// E:\gamedcs\Game.h:1325, dc 0xbcf6c
+VA(0x004bc5d0, 0x17A)  // anchor-layout + game::Save caller
+int SavedGameHeader::save(TAbstractFile* outfile)
+{
+    char fileNameBuffer[0x15f];
+    char compatibilityBuffer[32];
+
+    outfile->write(m_id, sizeof(m_id));
+
+    {
+        int buffer = m_version;
+        outfile->write(&buffer, sizeof(buffer));
+    }
+    {
+        int buffer = m_gameVersion;
+        outfile->write(&buffer, sizeof(buffer));
+    }
+
+    if (outfile->write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
+        sizeof(compatibilityBuffer))
+        return -1;
+
+    if (m_mapHeader.save(outfile) < 0)
+        return -1;
+    if (m_mapSetup.save(outfile) < 0)
+        return -1;
+
+    {
+        short buffer = m_campaignGame;
+        outfile->write(&buffer, sizeof(buffer));
+    }
+    if (m_campaignGame)
+        m_campaign.save(outfile);
+
+    strcpy(fileNameBuffer, m_fileName.c_str());
+    outfile->write(fileNameBuffer, sizeof(fileNameBuffer));
+
+    {
+        short buffer = m_difficultyRating;
+        outfile->write(&buffer, sizeof(buffer));
+    }
+    {
+        char buffer = m_numDeadPlayers;
+        outfile->write(&buffer, sizeof(buffer));
+    }
+    outfile->write(m_deadPlayer, sizeof(m_deadPlayer));
+    outfile->write(m_humanPlayer, sizeof(m_humanPlayer));
+    {
+        int buffer = m_currentPlayer;
+        outfile->write(&buffer, sizeof(buffer));
+    }
+
+    return 0;
+}
+
+
 VA(0x004beea0, 0x2F6)  // dc 0xa99d0
 unsigned char game::saveGame(const char* filename, unsigned char determineSuffix, unsigned char campaignWinMode, unsigned char compressIt, unsigned char xferFile)
 {
