@@ -7429,7 +7429,8 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         return 0;
     }
 
-    if (g_remoteOn || g_mpNetProtocol == MP_HOTSEAT) {
+    // Mac retains the shared IsMultiPlayer call at 0x183adc.
+    if (isMultiPlayer()) {
         int seated = 0;
         for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
             if (m_players.m_humanPlayers[i].m_dpid != 0
