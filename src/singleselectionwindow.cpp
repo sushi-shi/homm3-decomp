@@ -1727,7 +1727,8 @@ public:
 // Original: CEnterNameEdit::OnEnter; singleselectionwindow.cpp:1820, dc 0x149238.
 int CEnterNameEdit::onEnter()
 {
-    int pos = m_id - 353;
+    int pos;
+    pos = m_id - 353;
     hide();
     g_singleSelectionWindow->onNameChange(pos, getText());
     return 1;
