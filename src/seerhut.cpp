@@ -332,10 +332,13 @@ std::string type_experience_quest::getRequirementText()
     return formatString(DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                          m_requiredLevel);
 }
+// All nine description getters use the fourth string in the selected quest
+// text group directly. VC6 reproduces their retail address calculation when
+// the source names m_text3; the generic column selector adds an extra step.
 VA(0x0056d410, 0x72)
 std::string type_experience_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          m_requiredLevel);
 }
 
@@ -425,7 +428,7 @@ std::string type_skill_quest::getRequirementText()
 VA(0x0056d990, 0xD3)
 std::string type_skill_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          skillRequirementText(m_requiredSkills).c_str());
 }
 
@@ -612,7 +615,7 @@ std::string type_defeat_hero_quest::getRequirementText()
 VA(0x0056e340, 0x8B)
 std::string type_defeat_hero_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          g_game->getHero(m_defeatedHero)->m_name);
 }
 
@@ -743,7 +746,7 @@ VA(0x0056eb30, 0x90)
 std::string type_monster_quest::getQuestDescription()
 {
     return formatString(
-        questText(QUEST_TEXT_DESCRIPTION).c_str(),
+        questTexts().m_text3.c_str(),
         m_monsterId >= 0 && m_monsterId <= 0x96
             ? g_creatureTypeTraits[m_monsterId].m_pluralName
             : "");
@@ -958,7 +961,7 @@ std::string type_artifact_quest::getRequirementText()
 VA(0x0056f730, 0xCF)
 std::string type_artifact_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          getRequirementText().c_str());
 }
 
@@ -1212,7 +1215,7 @@ std::string type_creature_quest::getRequirementText()
 VA(0x00570690, 0xCF)
 std::string type_creature_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          getRequirementText().c_str());
 }
 
@@ -1461,7 +1464,7 @@ std::string type_resource_quest::getRequirementText()
 VA(0x005716e0, 0xCF)
 std::string type_resource_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          getRequirementText().c_str());
 }
 
@@ -1645,7 +1648,7 @@ std::string type_be_hero_quest::getRequirementText()
 VA(0x00572160, 0x8B)
 std::string type_be_hero_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          g_game->getHero(m_requiredHero)->m_name);
 }
 
@@ -1721,7 +1724,7 @@ std::string type_belong_to_player_quest::getQuestDescription()
     std::string requirement = g_colors[m_requiredOwner];
     std::transform(requirement.begin(), requirement.end(),
                    requirement.begin(), ::tolower);
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          requirement.c_str());
 }
 
@@ -1857,7 +1860,7 @@ VA(0x00572d60, 0xE0)
 std::string TQuestGuard::questGuardFn00572D60()
 {
     return formatString(
-        m_quest->questText(type_quest::QUEST_TEXT_LOG).c_str(),
+        m_quest->questTexts().m_text4.c_str(),
         m_quest->getRequirementText().c_str());
 }
 
