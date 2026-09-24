@@ -1126,7 +1126,7 @@ int combatManager::processCombatMsg(message& msg)
 // placement-phase handoff in front and widens the stack rows to the retail
 // 0x548-byte army layout. The identity and extent are independently fixed by
 // the unique whole-body retail map and the exhaustive command order-map.
-// RESIDUAL (97.48035%): all 21 branches and both returns are exact. The 26
+// RESIDUAL (97.48472%): all 21 branches and both returns are exact. The 24
 // register-visible differences are confined to the placement message and the
 // inlined TurnOffHighlighter path; why-reg v2 classifies them as C1 front-end
 // scratch-pseudo ordering with the same callee-saved bindings. Named/value/
