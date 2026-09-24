@@ -1179,7 +1179,7 @@ static void decrementBackpackStart(long slot)
 // Complete emits no standalone body: VC6 expands both calls below, preserving
 // the helper while producing the two retail constructor/dialog/destructor
 // sequences. Open-coding either site is the negative source-shape control.
-static inline void showArtifact(hero* currHero,
+static void showArtifact(hero* currHero,
                                  const type_artifact& artifact,
                                  unsigned char rightMouse)
 {
@@ -1767,29 +1767,9 @@ TOverviewWindow::TOverviewWindow()
             continue;
 
         if (current.m_isAbandoned) {
-            int item = m_flaggableItems.size();
-            while (item--) {
-                if (m_flaggableItems[item].m_itemType == 'U')
-                    break;
-            }
-            if (item < 0) {
-                item = m_flaggableItems.size();
-                overview_item_record record = { 'U', 0 };
-                m_flaggableItems.push_back(record);
-            }
-            ++m_flaggableItems[item].m_count;
+            addFlaggableItem('U');
         } else if (current.m_type == mine::MINE_TYPE_LIGHTHOUSE) {
-            int item = m_flaggableItems.size();
-            while (item--) {
-                if (m_flaggableItems[item].m_itemType == 'R')
-                    break;
-            }
-            if (item < 0) {
-                item = m_flaggableItems.size();
-                overview_item_record record = { 'R', 0 };
-                m_flaggableItems.push_back(record);
-            }
-            ++m_flaggableItems[item].m_count;
+            addFlaggableItem('R');
         }
     }
 
@@ -1798,19 +1778,13 @@ TOverviewWindow::TOverviewWindow()
         if (current.getOwner() != localPlayer)
             continue;
 
-        current.m_genClass = 17;
-        int itemType = current.m_genType;
-        int item = m_flaggableItems.size();
-        while (item--) {
-            if (m_flaggableItems[item].m_itemType == itemType)
-                break;
+        if (current.m_genClass == CREATURE_GENERATOR_1) {
+            addFlaggableItem(current.m_genType);
+        } else if (current.m_genType == 0) {
+            addFlaggableItem('P');
+        } else if (current.m_genType == 1) {
+            addFlaggableItem('Q');
         }
-        if (item < 0) {
-            item = m_flaggableItems.size();
-            overview_item_record record = { itemType, 0 };
-            m_flaggableItems.push_back(record);
-        }
-        ++m_flaggableItems[item].m_count;
     }
 
     for (i = 0; i < g_game->m_garrisons.size(); ++i) {
@@ -1820,46 +1794,16 @@ TOverviewWindow::TOverviewWindow()
 
         NewmapCell* cell = g_game->m_worldMap.cell(
             current.m_mapX, current.m_mapY, current.m_mapZ);
-        int item;
         if (cell->m_objectIndex == 0) {
-            item = m_flaggableItems.size();
-            while (item--) {
-                if (m_flaggableItems[item].m_itemType == 'S')
-                    break;
-            }
-            if (item < 0) {
-                item = m_flaggableItems.size();
-                overview_item_record record = { 'S', 0 };
-                m_flaggableItems.push_back(record);
-            }
+            addFlaggableItem('S');
         } else {
-            item = m_flaggableItems.size();
-            while (item--) {
-                if (m_flaggableItems[item].m_itemType == 'T')
-                    break;
-            }
-            if (item < 0) {
-                item = m_flaggableItems.size();
-                overview_item_record record = { 'T', 0 };
-                m_flaggableItems.push_back(record);
-            }
+            addFlaggableItem('T');
         }
-        ++m_flaggableItems[item].m_count;
     }
 
     playerData& player = g_game->m_players[localPlayer];
     for (i = 0; i < player.m_shipyards.size(); ++i) {
-        int item = m_flaggableItems.size();
-        while (item--) {
-            if (m_flaggableItems[item].m_itemType == 'W')
-                break;
-        }
-        if (item < 0) {
-            item = m_flaggableItems.size();
-            overview_item_record record = { 'W', 0 };
-            m_flaggableItems.push_back(record);
-        }
-        ++m_flaggableItems[item].m_count;
+        addFlaggableItem('W');
     }
 }
 
@@ -1872,6 +1816,24 @@ TOverviewWindow::~TOverviewWindow()
         if (*it)
             delete *it;
     }
+}
+
+// Mac retains this method at code 0:139ee4 and the constructor calls it
+// eight times for mine, generator, garrison and shipyard records. Windows
+// expands the lookup and insertion in the constructor.
+void TOverviewWindow::addFlaggableItem(int itemType)
+{
+    int item = m_flaggableItems.size();
+    while (item--) {
+        if (m_flaggableItems[item].m_itemType == itemType)
+            break;
+    }
+    if (item < 0) {
+        item = m_flaggableItems.size();
+        overview_item_record record = { itemType, 0 };
+        m_flaggableItems.push_back(record);
+    }
+    ++m_flaggableItems[item].m_count;
 }
 
 // Dreamcast proves three independent source statements and the exact

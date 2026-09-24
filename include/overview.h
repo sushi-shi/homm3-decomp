@@ -110,6 +110,7 @@ public:
     void updateFlaggableIcons();
 
 private:
+    void addFlaggableItem(int itemType);
     void updateFlaggableIcon(int i);
     void doFlaggableButtons(int which);
     void clearButtons(int slot);
