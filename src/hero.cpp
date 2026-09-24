@@ -6334,9 +6334,9 @@ unsigned char hero::isInIdentifyRange(const type_point* location) const
         // bitfield unit into one clear-then-or (98.6813 -> 100.0000).
         type_point heroLocation(m_x, m_y, m_z);
 
-        int xDistance = location->m_x - heroLocation.m_x;
-        int yDistance = location->m_y - heroLocation.m_y;
-        if (xDistance * xDistance + yDistance * yDistance < range * range)
+        // Dreamcast hero.cpp:6395 calls Struct.h:120 DistanceSquared;
+        // retail expands the same x/y-only squared-distance helper.
+        if (heroLocation.distanceSquared(*location) < range * range)
             return 1;
     }
     return 0;
