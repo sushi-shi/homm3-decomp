@@ -286,6 +286,7 @@ unit = "events"
 target_sha256 = "12ec910f9ee155657df9149fce44f5a96b91b7b4ffc45303cf8738a2aa5ad7b5"
 evidence = "Two70-spell candidate vectors, spellbook/learn flags, Scholar transfer text140..149, sort0xbdef8 and vector destructors. Following0xae9fc is cleanup destructor. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
 retail_va = 0x4a2940
+mac_symbol = ".exchangeSpells__FP4heroP4hero"
 
 [[functions]]
 mac_section = 0x0
@@ -907,4 +908,3 @@ unit = "events"
 target_sha256 = "7612c72294ef0e17701598fe272e2023ae6ff12b3f431659b02a016c571b2f45"
 evidence = "Initializes output pointers, allocates/copies two army groups and optional town/hero objects, extracts owners/gold/seed/winner flags. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
 retail_va = 0x4aeee0
-
