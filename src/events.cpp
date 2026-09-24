@@ -1117,7 +1117,7 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
     std::string message(text);
     std::string alternate;
     std::vector<type_dialog_resource> rewards;
-    alternate = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_REWARD_FORMAT),
+    alternate = formatString((*g_adventureEventText)[ADV_EVENT_TEXT_BLACK_BOX_REWARD_FORMAT],
                               currentHero->m_name);
 
     if (blackBox->m_experienceBonus > 0) {
@@ -1287,7 +1287,8 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
 
     unsigned char joinFailed = 0;
     armyGroup creatures = blackBox->m_creatures;
-    for (unsigned int p = 0; p < 7; p++) {
+    // The retail loop-back uses signed jl; an unsigned index emits jb.
+    for (int p = 0; p < 7; p++) {
         int type = creatures.m_armies[p];
         int count = creatures.m_numTroops[p];
         if (type == CREATURE_NONE)
