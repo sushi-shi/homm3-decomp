@@ -5649,6 +5649,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
         return;
     m_heroLogoShowing = 0;
 
+    // DC advmgr.cpp:7085 names game::GetHero for this lookup. Complete
+    // expands the accessor within the existing current-hero branch.
     // The acting player's live hero, and its map square, so the cell loop
     // below can paint that one square in the owner's colour.
     // The two knobs the 2026-08-21 note banked as REJECTED (-0.69 for the
@@ -5673,7 +5675,7 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
     if (localPlayer->m_currHeroId == -1) {
         currentHero = 0;
     } else {
-        currentHero = &g_game->m_heroes[localPlayer->m_currHeroId];
+        currentHero = g_game->getHero(localPlayer->m_currHeroId);
         if (currentHero && currentHero->m_z == origin.m_z) {
             heroX = currentHero->m_x;
             heroY = currentHero->m_y;
