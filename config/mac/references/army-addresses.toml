@@ -774,3 +774,21 @@ mac_offset = 0x52808
 mac_size = 0x6c
 target_sha256 = "1095d1b605054a7f41bda3cfebe78b88e3305c044fc5c4189a04f72cc9c739cf"
 evidence = "drawToBuffer calls this retained front-edge helper at 0x4a63c. It computes cropped x plus width minus 196 from m_stdIcon, then subtracts or adds that offset to cell refX according to facing; BLR 0x52870. Next getSecondGridIndex 0x52874."
+
+[[helpers]]
+source_helper = "army::damageEnemy"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4ffb4
+mac_size = 0x98
+target_sha256 = "95430868268328a107672de23b4f0382041869d56c67d8ca8341dbf7e9f15bc7"
+evidence = "Ranged and melee attack callers retain this helper at 0x4ffb4. It checks the enemy, computes base damage, calls adjustDamage at 0x4fe80 and enemy::damage at 0x5004c, writes both output pointers, clears luck status and returns fire damage. The canonical army.cpp definition is explicit inline; Windows expands it in callers. Final BLR at 0x50048; next entry 0x5004c."
+
+[[helpers]]
+source_helper = "army::computeDefenderDamageBonuses"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4fab8
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "getEstimatedDamage and adjustDamage call this retained leaf at 0x4fab8; it returns zero for every baseDamage, matching the canonical explicit-inline source definition. Windows expands the constant return into callers. Final BLR at 0x4fabc; next entry 0x4fac0."
