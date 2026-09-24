@@ -11,4 +11,5 @@ source_helpers = [
     "calculateImprovement",
     "type_AI_creature_purchaser::set(TCreatureType newType, short* newAmount)",
     "attemptTeleport",
+    "checkGatePurchase",
 ]

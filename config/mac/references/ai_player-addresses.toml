@@ -2,6 +2,15 @@
 # Names remain owned by src/ai_player.cpp VA claims; no compiled Mac target admission.
 
 [[helpers]]
+source_helper = "checkGatePurchase"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x34618
+mac_size = 0xbc
+target_sha256 = "1fc180486adc0abcb4128ae9a08650631947c33ea8197084cf3dc63fe599ae2e"
+evidence = "Dreamcast names checkGatePurchase in aiAttemptMove. The Mac caller invokes this retained body twice at 0x34b4c and 0x34b58 for the two gate points. The body decodes a type_point, calls game::getTownId, checks town building 0x16 and calls town::buyBuilding; the authored inline helper performs those same operations. Its final BLR at 0x346d0 precedes the paired aiAttemptMove entry at 0x346d4. Windows expands the helper in the caller."
+
+[[helpers]]
 source_helper = "valueOfBuilding"
 unit = "ai_player"
 mac_section = 0
