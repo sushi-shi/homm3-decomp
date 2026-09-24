@@ -95,6 +95,8 @@ void searchArray::close()
     m_isMoatSlowed = 0;
 }
 
+// Dreamcast findpath.cpp:116 calls FindPath.h get_cell. Retail expands
+// its null guard and plane/row offset before clearing the path cells.
 VA(0x004b1530, 0x20F)  // dc 0x9ef20
 void searchArray::clear(long flyLevel, long startZ, long stopZ)
 {
@@ -112,12 +114,7 @@ void searchArray::clear(long flyLevel, long startZ, long stopZ)
         for (long fly = 0; fly <= flyLevel; fly++) {
             for (point.m_y = static_cast<short>(m_validRectangle.top); point.m_y < m_validRectangle.bottom;
                     point.m_y++) {
-                pathCell* row = m_cellData;
-                if (row != 0) {
-                    unsigned char plane = fly != 0;
-                    row += ((point.m_z * 2 + plane) * g_mapHeight
-                            + point.m_y) * g_mapWidth + point.m_x;
-                }
+                pathCell* row = getCell(point, fly != 0);
                 memset(row, 0, width * sizeof(pathCell));
             }
         }
@@ -854,6 +851,8 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy,
 // base_speed falls back to the stack's own speed when the caller
 // passed a negative and the limit collapses to zero for a bound stack.
 
+// Dreamcast findpath.cpp:952 calls FindPath.h get_hex; retail expands
+// the null check and 30-byte cell index.
 VA(0x004b2da0, 0x24B)  // anchor-global, dc 0xa03fc
 void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, long limit, unsigned char inPlacementPhase, long baseSpeed)
 {
@@ -872,7 +871,7 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
                    baseSpeed);
 
     for (long i = 0; i < COMBAT_GRID_CELLS; i++) {
-        const pathCell* cell = m_cellData == 0 ? 0 : &m_cellData[i];
+        const pathCell* cell = getHex(i);
         if (cell->m_visited && static_cast<long>(cell->m_cost) <= baseSpeed
                 && cell->m_flightCost == 0
                 && (!inPlacementPhase
@@ -912,6 +911,8 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
     }
 }
 
+// Dreamcast findpath.cpp:1013/1060 calls get_hex in both passes;
+// retail expands both header helper calls.
 VA(0x004b2ff0, 0x298)  // dc 0xa0630
 void searchArray::markTeleport(const army* currentArmy, long currentGroup)
 {
@@ -919,7 +920,7 @@ void searchArray::markTeleport(const army* currentArmy, long currentGroup)
         init();
 
     for (long hex = 0; hex < COMBAT_GRID_CELLS; ++hex) {
-        pathCell* cell = m_cellData == 0 ? 0 : &m_cellData[hex];
+        pathCell* cell = getHex(hex);
         cell->m_point.m_x = static_cast<short>(hex);
         if (!g_combatManager->inInvisibleColumn(hex)
                 && currentArmy->canFit(hex, 0, 0)
@@ -952,8 +953,7 @@ void searchArray::markTeleport(const army* currentArmy, long currentGroup)
                 long adjacent = enemy->getAdjacentHex(enemy->m_gridIndex,
                                                         direction);
                 if (g_combatManager->validHex(adjacent)) {
-                    pathCell* adjacentCell =
-                        m_cellData == 0 ? 0 : &m_cellData[adjacent];
+                    pathCell* adjacentCell = getHex(adjacent);
                     if (adjacentCell->m_visited)
                         break;
                 }
@@ -1336,10 +1336,11 @@ void searchArray::lowerDoor()
     m_isMoatSlowed[0x5e] = 0;
 }
 
+// Dreamcast findpath.cpp:1436 calls get_hex before computing the time.
 VA(0x004b3f20, 0x41)  // dc 0xa10c4
 long searchArray::getTravelTime(const army* currentArmy, long hex) const
 {
-    pathCell* cell = m_cellData == 0 ? 0 : &m_cellData[hex];
+    pathCell* cell = getHex(hex);
     long speed = currentArmy->getSpeed();
     long turns = (cell->m_cost + speed - 1) / speed;
 
