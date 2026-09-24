@@ -4455,6 +4455,11 @@ int TShipWindow::windowHandler(message& msg)
         return result;
 
     switch (msg.m_id) {
+    case MESSAGE_WIDGET:
+        if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT)
+            setRightClickText(msg.m_codeY);
+        break;
+
     case MESSAGE_MOUSE_MOVE:
         g_windowManager->convertToHover(msg);
         if (msg.m_codeY != g_windowManager->m_lastHover) {
@@ -6168,14 +6173,7 @@ void townManager::cycleOutline(const int objectIndex, const int x, const int y,
         unsigned long nextFrame = GameTime::get() + 100;
         pal.m_data[96] = g_systemPalette->m_data[i];
 
-        memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
-               800 * 600 * 2);
-        static_cast<bitmapBorder16*>(m_panorama)->draw2();
-        pollSound();
-        for (int j = 0; j < m_townObjectCount; j++) {
-            m_townObjects[j]->draw(1, 1);
-            pollSound();
-        }
+        drawTown(0, 1, 1);
 
         g_windowManager->updateScreen(x, y, w, h);
         pollSound();
@@ -6184,14 +6182,7 @@ void townManager::cycleOutline(const int objectIndex, const int x, const int y,
 
     pal.m_data[96] = saved;
 
-    memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
-           800 * 600 * 2);
-    static_cast<bitmapBorder16*>(m_panorama)->draw2();
-    pollSound();
-    for (int k = 0; k < m_townObjectCount; k++) {
-        m_townObjects[k]->draw(1, 1);
-        pollSound();
-    }
+    drawTown(0, 1, 1);
 
     g_windowManager->updateScreen(x, y, w, h);
 }
