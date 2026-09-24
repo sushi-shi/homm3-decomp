@@ -682,14 +682,15 @@ type_AI_spellcaster::~type_AI_spellcaster()
 // E:\gamedcs\ai_tactical.cpp:837
 // DC's ordinary const helper precedes should_attack_now in this TU. Its
 // GetCurrentArmy, Is and IsIncapacitated calls remain canonical; VC6 expands
-// the helper naturally at its three callers. Absence of a retained retail
+// the helper naturally at its callers. Absence of a retained retail
 // body does not justify an explicit inline keyword.
+// DC 0x3d7b0 reloads m_numArmies at the loop test. Keeping that bound in
+// the condition also reproduces retail VC6's Teleport stack homes exactly.
 
 unsigned char type_AI_spellcaster::isLastAction() const
 {
     const army* current = g_combatManager->getCurrentArmy();
-    long total = g_combatManager->m_numArmies[m_side];
-    for (long j = 0; j < total; j++) {
+    for (long j = 0; j < g_combatManager->m_numArmies[m_side]; j++) {
         const army* other = &g_combatManager->m_armies[m_side][j];
         if (other->is(creatureSiegeWeapon | creatureImmobilized) || other->isIncapacitated())
             continue;
@@ -2089,8 +2090,8 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long gr
 
 // DC line 2593 calls get_current_army, IsIncapacitated and is_last_action.
 // The shared short-circuit expression lets VC6 expand the ordinary helper:
-// all 32 retail blocks, 23 branches and five calls now agree. The remaining
-// byte difference is the count/current/total stack-slot assignment.
+// all 32 retail blocks, 23 branches and five calls now agree. Restoring the
+// direct loop bound in isLastAction closes the remaining stack-slot difference.
 
 VA(0x0043aa60, 0x235)  // anchor-callee, dc 0x40ec0
 void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
