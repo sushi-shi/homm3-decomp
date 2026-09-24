@@ -1895,6 +1895,7 @@ private:
                                  long skill) const;
     void autoResolveCombat();
     unsigned char automateFirstAidTent();
+    unsigned char automateTower();
     void processFirstAid(army* currentArmy);
     unsigned char processMoveThenAttack(message* msg);
 };

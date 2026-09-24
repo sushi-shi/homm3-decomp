@@ -720,3 +720,57 @@ mac_offset = 0x54de4
 mac_size = 0x5c
 target_sha256 = "23685ff3634b64a5034418c8d6a4aa8f64e98267d5a697a2e332a681104216db"
 evidence = "NEW: Magic Mirror spell row or creature134 gate, returns mirror effect strength. End0x54e40; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[helpers]]
+source_helper = "groupHasMelee"
+unit = "army"
+mac_section = 0
+mac_offset = 0x54034
+mac_size = 0x134
+target_sha256 = "cdfff1e292862e4d46582f76386cad8e049892c1604bf2fae726d02ad4a93693"
+evidence = "spellIsValidOnTarget calls this source helper at 0x54408. It scans the selected army group in reverse, rejects cannotAttack, calls army::canShoot at 0x54120 and returns true for a non-shooter; BLR 0x54164 and next shooter helper 0x54168. Dreamcast names group_has_melee."
+
+[[helpers]]
+source_helper = "groupHasShooters"
+unit = "army"
+mac_section = 0
+mac_offset = 0x54168
+mac_size = 0x134
+target_sha256 = "5a730a3d9411e7bde063e0c34c3abe934ab55dfdcf33f3ff6705a0776765ab56"
+evidence = "spellIsValidOnTarget calls this source helper at 0x54414. It scans the selected army group in reverse, rejects cannotAttack, calls army::canShoot at 0x54254 and returns true for a shooter; BLR 0x54298 and next dragon helper 0x5429c. Dreamcast names group_has_shooters."
+
+[[helpers]]
+source_helper = "groupHasDragons"
+unit = "army"
+mac_section = 0
+mac_offset = 0x5429c
+mac_size = 0x54
+target_sha256 = "fa46fb2f9b74143bdcfdc2cd78d2d54fef35a44858ebb6c5f4c643a75cfb9fef"
+evidence = "spellIsValidOnTarget calls this source helper at 0x543fc. It scans the selected army group backward, tests the creatureKing1 attribute bit at +0x84 and returns one for a dragon; BLR 0x542ec and next spell-validity worker 0x542f0. Dreamcast names group_has_dragons."
+
+[[helpers]]
+source_helper = "army::topY"
+unit = "army"
+mac_section = 0
+mac_offset = 0x52780
+mac_size = 0x24
+target_sha256 = "5e05fb55b318709189927d8f04d55ac361b2420bb3f804c2e8b5bbf57495d836"
+evidence = "drawToBuffer calls this retained top-edge helper at 0x4a62c. It reads the cell refY by m_gridIndex and subtracts m_imageHeight; BLR 0x527a0. Adjacent midY and bottomY bodies fix source order."
+
+[[helpers]]
+source_helper = "army::bottomY"
+unit = "army"
+mac_section = 0
+mac_offset = 0x527a4
+mac_size = 0x1c
+target_sha256 = "bfabd8ab760c3b158f8d1ffc366f44263c4543f8e69623fbc79cf966437e33cd"
+evidence = "drawToBuffer calls this retained bottom-edge helper at 0x4a5b4. It returns the cell refY indexed by m_gridIndex without height adjustment; BLR 0x527bc. Adjacent topY and midX bodies fix source order."
+
+[[helpers]]
+source_helper = "army::frontX"
+unit = "army"
+mac_section = 0
+mac_offset = 0x52808
+mac_size = 0x6c
+target_sha256 = "1095d1b605054a7f41bda3cfebe78b88e3305c044fc5c4189a04f72cc9c739cf"
+evidence = "drawToBuffer calls this retained front-edge helper at 0x4a63c. It computes cropped x plus width minus 196 from m_stdIcon, then subtracts or adds that offset to cell refX according to facing; BLR 0x52870. Next getSecondGridIndex 0x52874."

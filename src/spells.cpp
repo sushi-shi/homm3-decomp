@@ -236,6 +236,17 @@ int combatManager::viewSpells() const
 // QUICKSAND ARM (fn+0x8f) and threads LAND_MINE's and EARTHQUAKE's `je` back
 // into it, while our C2 sinks the same join to the end of the body - the D7
 // join-placement class, not a statement shape.
+// Mac retains this no-argument helper at code 0:18f764, directly before
+// initiateSpell, and calls it in the single-army and area-spell paths.
+// Windows expands the same mouse-coordinate and target-update sequence.
+static int updateSpellTargetFromMouse()
+{
+    int x;
+    int y;
+    g_mouseManager->mouseCoords(x, y);
+    return updateSpellTarget(g_combatManager->getGridIndex(x, y));
+}
+
 VA(0x0059ec50, 0xAA8)  // retail+dc-shape, dc 0x14ecbc
 void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
 {
@@ -329,10 +340,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                                       : AI_ORDER_CAST_SPELL;
         m_nextActionExtra = spellToCast;
         if (spellTargetsASingleArmy(spellToCast, mastery)) {
-            int x;
-            int y;
-            g_mouseManager->mouseCoords(x, y);
-            updateSpellTarget(g_combatManager->getGridIndex(x, y));
+            updateSpellTargetFromMouse();
             g_windowManager->doDialog(0, handleCastSpell, 0);
             if (!m_nextAction)
                 break;
@@ -368,10 +376,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
         m_nextActionExtra = spellToCast;
         if (shadeLevel && g_config.m_showCombatMouseHex)
             setCombatGrid(g_config.m_showCombatGrid, 1, 0, 1);
-        int x;
-        int y;
-        g_mouseManager->mouseCoords(x, y);
-        updateSpellTarget(g_combatManager->getGridIndex(x, y));
+        updateSpellTargetFromMouse();
         g_windowManager->doDialog(0, handleCastSpell, 0);
         if (shadeLevel && g_config.m_showCombatMouseHex)
             setCombatGrid(g_config.m_showCombatGrid, 1, 1,

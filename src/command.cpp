@@ -294,43 +294,7 @@ int combatManager::main(message& msg)
     if (!m_creaturePlacement && m_nextAction == 0 && m_thisNetHasControl) {
         automaticTurn = automateFirstAidTent();
 
-        unsigned char towerTurn;
-        if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL) {
-            towerTurn = 0;
-        } else {
-            army* currentArmy = getCurrentArmy();
-            if (currentArmy->m_creatureType != CREATURE_ARROW_TOWER) {
-                towerTurn = 0;
-            } else {
-                int wall;
-                switch (currentArmy->m_gridIndex) {
-                case COMBAT_HEX_LOWER_TOWER:
-                    wall = 13;
-                    break;
-                case COMBAT_HEX_KEEP:
-                    wall = 14;
-                    break;
-                case COMBAT_HEX_UPPER_TOWER:
-                    wall = 5;
-                    break;
-                }
-
-                if (m_wallStrength[wall] == 0) {
-                    currentArmy->m_monInfo.m_attributes |= creatureImmobilized;
-                    m_nextAction = 12;
-                    towerTurn = 1;
-                } else if (static_cast<const combatManager*>(this)->isQuickCombat()
-                        || isComputerAction(getCurrentArmy())) {
-                    unnamed465f20();
-                    resetMouse();
-                    towerTurn = 1;
-                } else {
-                    towerTurn = 0;
-                }
-            }
-        }
-
-        automaticTurn |= towerTurn | automateCatapult();
+        automaticTurn |= automateTower() | automateCatapult();
     }
 
     if (checkWin(&msg))
@@ -569,11 +533,10 @@ int combatManager::validAttackHex(int hex)
 }
 
 // E:\gamedcs\command.cpp:907. The DC line table proves this helper boundary
-// and its two-comparison body. Complete expands the helper into
-// ProcessCombatMsg and carries no out-of-line copy, so keep the source fact
-// as an inline definition rather than replacing it with caller longhand.
+// and its two-comparison body. Mac retains the ordinary helper; Complete
+// expands its call into ProcessCombatMsg.
 
-inline int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
+int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 {
     if (inCombatCommand == COMBAT_COMMAND_VIEW_OTHER_HERO
             || inCombatCommand == COMBAT_COMMAND_VIEW_TOWERS)
@@ -1939,6 +1902,46 @@ inline int combatManager::doSurrender()
             m_heroes[1 - m_currentSide]->m_name, g_surrenderCost);
     normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     return g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT;
+}
+
+// Complete Mac retains this tower-turn helper at code 0:8627c. Its sole
+// caller is main, where Windows expands the decision between first aid and
+// catapult automation. An ordinary definition leaves an extra VC6 call;
+// this inline definition restores main's 42-call sequence and 77-block CFG.
+inline unsigned char combatManager::automateTower()
+{
+    if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
+        return 0;
+
+    army* currentArmy = getCurrentArmy();
+    if (currentArmy->m_creatureType != CREATURE_ARROW_TOWER)
+        return 0;
+
+    int wall;
+    switch (currentArmy->m_gridIndex) {
+    case COMBAT_HEX_LOWER_TOWER:
+        wall = 13;
+        break;
+    case COMBAT_HEX_KEEP:
+        wall = 14;
+        break;
+    case COMBAT_HEX_UPPER_TOWER:
+        wall = 5;
+        break;
+    }
+
+    if (m_wallStrength[wall] == 0) {
+        currentArmy->m_monInfo.m_attributes |= creatureImmobilized;
+        m_nextAction = 12;
+        return 1;
+    }
+    if (static_cast<const combatManager*>(this)->isQuickCombat()
+            || isComputerAction(getCurrentArmy())) {
+        unnamed465f20();
+        resetMouse();
+        return 1;
+    }
+    return 0;
 }
 
 VA(0x00477ac0, 0x95)  // dc 0x6ea10
