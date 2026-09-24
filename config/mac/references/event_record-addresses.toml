@@ -791,3 +791,30 @@ mac_offset = 0xc0e4c
 mac_size = 0xb8
 target_sha256 = "e57171cad52f306d7df7148bb8b64eaf02912327aaa288ae3f79872919acacd9"
 evidence = "game::recordShowHero calls this retained constructor at 0xc0e4c. It delegates to hide-hero at 0xc09ec, snapshots the hero's on-boat flag and packed location, then stores requested boat flag and destination. The source helper is explicit inline; Mac retains the call while Windows expands it. Final BLR at 0xc0f00; next entry 0xc0f04."
+
+[[helpers]]
+source_helper = "type_record_claim_mine::type_record_claim_mine"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbf778
+mac_size = 0x78
+target_sha256 = "8b7f0e610be4a7afbc90e1601fff20206da422ec7a00c0999e24c1a20fdbee1c"
+evidence = "game::recordClaimMine calls this retained constructor at 0xbf778. It stores mine ID and requested owner, then reads the old owner from game mine pool entry id*0x40. Windows expands this ordinary same-TU constructor; Dreamcast records its source definition. Final BLR at 0xbf7ec; next entry 0xbf7f0."
+
+[[helpers]]
+source_helper = "type_record_claim_town::type_record_claim_town"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbfad0
+mac_size = 0x84
+target_sha256 = "5d1d35cdd61c635a2fcd7dc61504ef713a8dad09a9eb01351894203f92164db5"
+evidence = "game::recordClaimTown calls this retained constructor at 0xbfad0. It installs base then derived vtables, stores town ID and requested owner, and snapshots old owner from game town pool with 0x15c stride. Windows expands the ordinary source constructor. Final BLR at 0xbfb50; next entry 0xbfb54."
+
+[[helpers]]
+source_helper = "type_record_erase::type_record_erase"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xc0534
+mac_size = 0x74
+target_sha256 = "8520265773862e8dfe48fbb02e5d47a5e3d03699b879cd925540f8d8b1ee3b4f"
+evidence = "game::recordEraseObject calls this retained constructor at 0xc0534. It stores packed location, object ID, extra info and object index to record offsets +8..+0x14 after the base constructor. Windows expands the ordinary source helper. Final BLR at 0xc05a4; next entry 0xc05a8."
