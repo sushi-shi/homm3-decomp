@@ -1,5 +1,14 @@
 # Reviewed address identities; source owns names and compiler symbols remain unbound.
 
+[[helpers]]
+source_helper = "highScoreCreatureImageName"
+unit = "hiscore"
+mac_section = 0
+mac_offset = 0x10b024
+mac_size = 0x60
+target_sha256 = "7ec6cfc3bc30207ce4229460b1f7f62fa32fb349c0f4de6b0d6ef633290c361f"
+evidence = "Retained source-local wrapper between highScoreManager::getMonType (BLR at 0x10b020) and THighScoreWindow constructor (next prologue at 0x10b084). It indexes the selected high-score record by scoreType and row, calls getMonType at 0x10afd0, finds MONSTER object type at 0x1289dc and returns its image-name string pointer. The constructor calls it for both score families; Windows expands the same canonical source calls."
+
 [[functions]]
 retail_va = 0x4e8fb0
 unit = "hiscore"
