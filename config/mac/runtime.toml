@@ -1,6 +1,30 @@
 # Reviewed library call destinations; these are not game reconstruction scores.
 
 [[functions]]
+symbol = ".test__Q23std10bitset<48>CFUl"
+mac_section = 0
+mac_offset = 0x1c82c
+mac_size = 0xe4
+sha256 = "7627479991d5a9261bb4b9518c729f720ebae664999724346461020e941dc97d"
+evidence = "MSL bitset<48>::test takes receiver and bit index, bounds-checks against 48, and returns the selected bit. Repeated calls from mapcell, game, advmgr and viewwrld are library operations, not game helper boundaries. Final BLR at 0x1c90c precedes the next body."
+
+[[functions]]
+symbol = ".set__Q23std10bitset<48>FUlb"
+mac_section = 0
+mac_offset = 0xe98b8
+mac_size = 0xe8
+sha256 = "ac6403f4f887fb81e2dba836e333e60d136caec0950f12f41745b8246e79ff03"
+evidence = "MSL bitset<48>::set takes receiver, bit index and boolean value, bounds-checks against 48, then sets or clears the selected bit. Repeated calls from mapcell, game, hero and objecttype are library operations. Final BLR at 0xe999c precedes bitset<70>::test."
+
+[[functions]]
+symbol = ".strcat"
+mac_section = 0
+mac_offset = 0x28e2b0
+mac_size = 0x2c
+sha256 = "689b5cc2bf5373779578fb2d6aa300c65acc73633a2a806d7b74c69d291931c4"
+evidence = "Scans the destination for NUL, then copies the source including its terminator; 140 calls in six unfinished caller units are C library concatenation. Final BLR at 0x28e2d8 ends the body."
+
+[[functions]]
 symbol = ".__nw__FUl"
 mac_section = 0
 mac_offset = 0x26897c
