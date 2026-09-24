@@ -6115,6 +6115,10 @@ void game::applyMapHeaderAvailability()
 // saved name length, rather than calling length() again, is likewise
 // codegen-significant: the second inline candidate moves the throw phase and
 // falls to 79.19%.
+// DC game.cpp:6920 records construction of the local string from the saved
+// hero name; Mac 0xdb804+0x40c retains that constructor call. Direct
+// construction raises VC6 from 89.9519% to 90.3579% and gives the Mac
+// candidate the same 1776-byte extent as retail, with one direct-call gap.
 VA(0x004c4f10, 0x71D)  // game::Save caller + DC identity + stream-write order
 int NewSMapHeader::save(TAbstractFile* outfile)
 {
@@ -6212,8 +6216,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
                 < sizeof(enumBuffer))
                 return -1;
 
-            std::string s;
-            s = player->m_nonRandomHeroCustomName;
+            std::string s(player->m_nonRandomHeroCustomName);
             if (game::saveString(outfile, s) < 0)
                 return -1;
         }
