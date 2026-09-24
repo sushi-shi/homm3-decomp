@@ -197,3 +197,12 @@ mac_offset = 0x1a9bcc
 mac_size = 0x4c
 target_sha256 = "25df9243cff8eb6b3ac90aeb223342fef5055590d41e62ff5e2f4ea6c095eeb9"
 evidence = "IsLeftHero compares first hero owner with game local-player position via0xe6cc4; paired isRightHero0x1a9c18 follows."
+
+[[helpers]]
+source_helper = "swapManager::drawSwapWin"
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a6174
+mac_size = 0x64
+target_sha256 = "3ce1eeae025bb57e8908407a793bdcd2feb7874bb505a9d96948c9d3ef6e0f9a"
+evidence = "Bounded PowerPC body loads m_parent at +0x38, virtually draws the window, then calls heroWindowManager::updateScreen(0,0,800,600); direct calls from handleArtifactClick and other swap-manager handlers. Dreamcast swapmgr.cpp:655 names the same ordinary draw helper."

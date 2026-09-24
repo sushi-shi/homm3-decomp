@@ -125,6 +125,15 @@ target_sha256 = "0f67ee302578f6adc9cfa8da33fdbcf9c292ebe77d1dbe88a60a708e3bd1538
 evidence = "Adventure text resource indices [175, 176, 177, 178, 179, 180, 181, 183, 182, 183, 188, 184, 185, 186] corroborate event identity; reviewed associated gameplay fields and named calls in aac80..ab730 texts=[175, 176, 177, 178, 179, 180, 181, 183, 182, 183, 188, 184, -1] calls=0x4568,0x66a4,0x1c094,0x105514,0xaabf8,0xaabf8,0x102ec4,0x102ec4,0xaabf8,0x1c094,0x1c094,0xaabf8,0xaabf8,0xaabf8,0xaabf8,0xaabf8,0xaab7c,0xaabf8,0xaabf8,0x104224. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
 retail_va = 0x49fa90
 
+[[helpers]]
+source_helper = "addReward"
+unit = "events"
+mac_section = 0x0
+mac_offset = 0xaabf8
+mac_size = 0x88
+target_sha256 = "9def3dfb8e4ee0b46a47180d2f451fd09ad9983434c79bfb00a9cc608b2271eb"
+evidence = "Bounded between showRewards ending at 0xaabf8 and giveBlackBoxReward starting at 0xaac80. Adds one type_dialog_resource, fills empty text, and calls showRewards; giveBlackBoxReward has thirteen direct calls. Dreamcast events.cpp:838-846 names the same file-static add_reward helper."
+
 [[functions]]
 mac_section = 0x0
 mac_offset = 0xaab7c
