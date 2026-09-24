@@ -258,7 +258,7 @@ void type_town_threat_checker::checkTowns()
                  ++heroIndex) {
                 hero* enemyHero = g_game->getHero(player.m_heroes[heroIndex]);
                 long mobility = enemyHero->getMobility() + 800;
-                type_point start(enemyHero->m_x, enemyHero->m_y, enemyHero->m_z);
+                type_point start = enemyHero->getLocation();
                 type_point target(-1, -1, -1);
                 enemyHero->m_bounty = 0;
                 g_searchArray->seedPosition(
@@ -287,8 +287,7 @@ void type_town_threat_checker::markTowns(hero* enemyHero,
     for (int townIndex = 0; townIndex < player.m_numTowns; ++townIndex) {
         town* ourTown = g_game->getTown(player.m_townIds[townIndex]);
         if (!isMarked(ourTown)) {
-            type_point location(ourTown->m_mapX, ourTown->m_mapY,
-                                ourTown->m_mapZ);
+            type_point location = ourTown->getLocation();
             if (currentSearchArray->getCell(location, 0)->m_visited
                 && canTakeTown(enemyHero, ourTown)) {
                 enemyHero->m_bounty = 5000000 / player.m_numTowns;
@@ -918,10 +917,7 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
     long localGrowth = 0;
     humanStrength = 0;
     if (g_game->m_setup.m_difficulty == 0) {
-        int localTeam = g_netLocalGamePos < 0
-            ? g_netLocalGamePos
-            : g_game->m_mapHeader.m_teamInfo[g_netLocalGamePos];
-        if (localTeam < 0 || !g_game->isHumanTeam(localTeam)) {
+        if (!g_game->isHumanAlly(g_netLocalGamePos)) {
             for (i = 0; i < 8; ++i) {
                 if (!g_game->m_playerDisabled[i]
                     && g_game->isHuman(i)) {
