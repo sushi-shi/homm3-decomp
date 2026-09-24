@@ -1944,7 +1944,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_VIEW_ICON_ID:
             case OVERVIEW_HERO_VIEW_NAME_ID:
                 sprintf(g_text,
-                        g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+                        (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
                         currHero->m_name, currHero->heroFn004D8F70());
                 break;
 
@@ -2104,8 +2104,7 @@ void TOverviewWindow::doRollover(int codeY)
                     hero* currHero =
                         g_game->getHero(currTown->m_visitingHeroId);
                     sprintf(g_text,
-                            g_generalText->getText(
-                                GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+                            (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
                             currHero->m_name,
                             currHero->heroFn004D8F70());
                 }
@@ -2118,8 +2117,7 @@ void TOverviewWindow::doRollover(int codeY)
                     hero* currHero =
                         g_game->getHero(currTown->m_garrisonHeroId);
                     sprintf(g_text,
-                            g_generalText->getText(
-                                GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+                            (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
                             currHero->m_name,
                             currHero->heroFn004D8F70());
                 }
