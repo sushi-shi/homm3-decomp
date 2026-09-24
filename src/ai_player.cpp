@@ -4244,12 +4244,11 @@ bool considerHiring(long playerId, hero* candidate)
 // staged on copies, the candidate is teleported onto the town square, and
 // find_all_destinations prices what the new hero could reach - shared
 // against every own hero whose cell the search touched.
-// Raw NB11 places all thirteen named DC locals in the procedure scope.  It
-// also names the non-const town::get_army overload. The normalized retail
-// target labels the one surviving ICF-folded body with the const public, but
-// that synthesized name cannot prove which identical source overload called
-// it. Keep the DC-proven mutable receiver; VC6 folds both overload bodies
-// into the same target and this source correction is byte-flat.
+// Raw NB11 places all thirteen named DC locals in the procedure scope and
+// names the mutable town::get_army overload in the older Dreamcast build.
+// Mac 0:0x35070 calls the retained const overload at 0:0x1b6fdc. Complete's
+// normalized Windows target labels the shared ICF-folded body as const, and
+// selecting that overload is byte-flat in VC6 while resolving the Mac call.
 // Residual (99.95219%): all 56 blocks and 481 instructions agree; only two
 // stack-color classes differ. Retail uses {player_id,-0x14; i,-0x1c} where
 // our CL swaps them (their later best-value/touched partners follow), and
@@ -4266,7 +4265,8 @@ long valueOfHiring(town* currentTown, hero* candidate,
     short playerId = currentTown->m_owner;
     playerData* player = &g_game->m_players[currentTown->m_owner];
     armyGroup heroArmy = candidate->m_army;
-    armyGroup townArmy = currentTown->getArmy();
+    armyGroup townArmy =
+        static_cast<const town*>(currentTown)->getArmy();
     type_AI_creature_purchaser purchaser(playerId, currentTown);
 
     candidate->m_turnExperienceToRvRatio = 0;
