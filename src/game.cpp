@@ -1752,6 +1752,8 @@ void computeUALoc(int whichPlayer)
 // why VC6 carries it as a second down-counter. The fild/fstp/fld
 // round-trips on each int->float conversion are /Op rounding, not extra
 // source variables.
+// Mac's fmadds and Dreamcast's multiply/add show the original fraction as
+// (percentObelisksFound * percentObelisksFound + percentObelisksFound) / 2.
 // Residual (98.9637%): two instructions, and it is /Op scheduling. Retail
 // interleaves the numerator's `fld` BETWEEN the two int->float
 // round-trips of the division; we emit both round-trips and then the
@@ -1783,7 +1785,7 @@ int game::setupPuzzlePieces(int whichPlayer, int countOnly)
     percentObelisksFound =
         static_cast<float>(getNumObelisks(whichPlayer)) / m_numObelisks;
     percentExtraPieces =
-        (percentObelisksFound + 1.0f) * percentObelisksFound / 2.0f;
+        (percentObelisksFound * percentObelisksFound + percentObelisksFound) / 2.0f;
     piecesRemoved = static_cast<int>(
         piecesRemoved + extraPieces * percentExtraPieces);
     if (getNumObelisks(whichPlayer) == m_numObelisks)
