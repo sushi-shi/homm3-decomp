@@ -2906,6 +2906,9 @@ DATA(0x006aa820) char g_infoText[400];
 // choice. The two jump-table dispatch instructions also differ only in whether
 // the table offset rides the displacement (retail) or the self-reloc (ours) -
 // the delinker folds the table into the function symbol, VC6 emits a $L label.
+// DC's GetHero and text-resource index calls are restored and VC6 byte-flat.
+// Its GetArmyName call in the creature arm changes the Windows CFG and drops
+// this row to 89.80%; Complete's explicit range/trait path is retained.
 // E:\gamedcs\townmgr.cpp:4070
 VA(0x005c9710, 0x21F)  // anchor-caller(WindowHandler 0x5c9930 hover arm) + body(sprintf rollover text + adventureRolloverEmptyText) + arity(ret 4), dc 0x16e2f4
 void TThievesGuildWindow::setRolloverText(int codeY)
@@ -2936,7 +2939,7 @@ void TThievesGuildWindow::setRolloverText(int codeY)
         if (codeY < 0x352) {
             if (codeY >= 0x2ee && codeY <= 0x2f5) {
                 int heroId = g_heroWidgetMap[codeY - HERO_P0];
-                hero* h = (heroId == -1) ? 0 : &g_game->m_heroes[heroId];
+                hero* h = g_game->getHero(heroId);
                 strcpy(g_text, h->m_name);
             } else {
                 strcpy(g_text, "");
@@ -2951,7 +2954,7 @@ void TThievesGuildWindow::setRolloverText(int codeY)
     } else if (codeY != EXIT_BUTTON_ID) {
         strcpy(g_text, "");
     } else {
-        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_EXIT));
+        strcpy(g_text, (*g_generalText)[GENERAL_TEXT_EXIT]);
     }
 
     message textMessage;
@@ -3804,6 +3807,8 @@ type_garrison_base_window::~type_garrison_base_window()
 // different, beginning with the register used for the manager load.
 // Earlier flattened-arm control: moving thisStrip/mgr before qualifier
 // worsened 95.6856% to 95.4367%; that did not recover ArmyCommand.
+// DC's GetArmyName is restored in the divide status arm; VC6 still emits
+// the same 34 blocks and 10 retained calls at 98.838425%.
 VA(0x005d05f0, 0x31B)  // anchor-caller(the page's WindowHandler 0x5d0910, its only caller) + anchor-callee(SetArmyCommand/select_army) + arity(ret 4), dc 0x172af0
 void type_garrison_base_window::setCommandAndText(message* msg)
 {
@@ -3853,9 +3858,7 @@ void type_garrison_base_window::setCommandAndText(message* msg)
             // is a member of `army`, which this compiland's include
             // closure does not define and must not grow to.
             sprintf(mgr->m_statusText, g_townCommand[0],
-                    creature >= 0 && creature <= 0x96
-                        ? g_creatureTypeTraits[creature].m_name
-                        : "");
+                    getArmyName(creature, 1));
         }
         break;
     }
@@ -5933,6 +5936,10 @@ TBuyBuildWindow::~TBuyBuildWindow()
 // own refusal lines; a building the town can never build gets the generic
 // refusal; otherwise the assembled list (or GetText(220) when nothing is
 // missing) becomes the rollover text.
+// DC calls TTextResource::operator[] for both text lines; restored here
+// without changing VC6 bytes. Its is_legal_building check is older game
+// logic: Complete retains a call to canEverBuild, which also checks dock,
+// capitol and hierarchy conditions.
 
 // E:\gamedcs\townmgr.cpp:7272
 VA(0x005d5be0, 0x34C)  // order-map(~TBuyBuildWindow 0x5d5b70 .. BuyBuild 0x5d5f30) + anchor-callee(get_string_width/GetBuildingName) + arity(ret 8, 2 args), dc 0x179090
@@ -5958,7 +5965,7 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
     for (int j = 0; j < MAX_BUILDING_TYPE; ++j) {
         if ((g_bitNumber[j] & mask) != 0) {
             if (count == 0) {
-                strcpy(g_text, g_generalText->getText(GENERAL_TEXT_REQUIRES));
+                strcpy(g_text, (*g_generalText)[GENERAL_TEXT_REQUIRES]);
                 strcat(g_text, DATA_COMPGEN(0x006603bc, quickInfoNewLine, "\n"));
             } else {
                 strcat(g_text, DATA_COMPGEN(0x00660db4, commaText, ","));
@@ -5998,7 +6005,7 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
     if (count != 0)
         m_rolloverText->setText(g_text);
     else
-        m_rolloverText->setText(g_generalText->getText(GENERAL_TEXT_BUILDING_PREREQUISITES_MET));
+        m_rolloverText->setText((*g_generalText)[GENERAL_TEXT_BUILDING_PREREQUISITES_MET]);
 }
 
 // E:\gamedcs\townmgr.cpp:7354
