@@ -6811,23 +6811,12 @@ void game::turnOffAIMusic()
 // ESI. Explicit backward goto, a structured retry loop and recursive-inlining
 // pragma all reproduced the same allocation family. Forcing the week-transition
 // value to a volatile byte worsened the score to 80.1988% and grew the frame.
-// 2026-09-05, the eight missing branches LOCATED and the cause named.
-// Retail emits fourteen instructions at fn+0xd9..+0xf9 that our compile
-// deletes outright - the `iHumans` scan inside the LocalHuman/698770 arm:
-//   d9: xor eax,eax / db: mov cl,[ebx+eax+0x1f636] / e2: test cl,cl
-//   e4: jne <inc> / e6: cmp eax,8 / e9: mov [ebp-0xc],eax / ec: jge <z>
-//   ee: cmp eax,esi / f0: jge <inc> / f2(z): mov [ebp-0xc],esi
-//   f5: inc eax / f6: cmp eax,8 / f9: jl <head>
-// which is the loop this source already carries, statement for statement
-// and test for test, including the `i >= 8 || i < 0` clamp order.  The
-// source is NOT wrong.  `[ebp-0xc]` is written at exactly those two sites
-// and READ NOWHERE in retail's whole 0x947 bytes, so the stores are dead
-// on BOTH sides and retail's C2 simply did not eliminate them where ours
-// does; there is no aliasing, no address-take and no later reader to
-// restore.  Four of the eight branch deficit and the four blocks are this
-// one loop.  Do not "fix" it with a `volatile` (the cleanliness floor is
-// 0) or with a carrier statement; if a reader for iHumans ever turns up
-// in the retail bytes, this loop comes back for free.
+// DC game.cpp:7638 calls game::IsHuman(i), conditionally increments iHumans,
+// and Mac 0xdd92c retains the same helper call. The counted scan restores
+// retail's fourteen-instruction expansion of the clamp in game::isHuman.
+// This raises Windows 82.56% -> 84.86%, restores the 0x150 frame and reduces
+// the branch deficit from eight to four; Mac direct calls become 63/63.
+// The remaining register allocation and four branches need separate proof.
 VA(0x004c6fe0, 0x947)  // dc-name/order + retail caller/callee/body, dc 0xb1fd0
 void game::nextPlayer()
 {
@@ -6862,12 +6851,10 @@ void game::nextPlayer()
     g_curHourGlassPhase = 0;
 
     if (g_currentPlayer->isLocalHuman() && g_config.m_autosave) {
+        humans = 0;
         for (i = 0; i < 8; ++i) {
-            if (!m_playerDisabled[i]) {
-                humans = i;
-                if (i >= 8 || i < 0)
-                    humans = 0;
-            }
+            if (!m_playerDisabled[i] && isHuman(i))
+                ++humans;
         }
         g_advManager->drawRolloverText(
             const_cast<char*>(g_generalText->getText(GENERAL_TEXT_AUTOSAVING)));
