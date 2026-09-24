@@ -55,3 +55,11 @@ mac_offset = 0x6ada0
 mac_size = 0x318
 target_sha256 = "4d9744bdf6fc9850087d2369c42db9a32dc7522f75d858cff2bcd2596d68ae6d"
 evidence = "NEW: Handler: message/video-widget dispatch, BinkPause0x2a1910 and restartBink0x25d930, virtual widget calls; final blr0x6b0b4. Full span SHA verified."
+[[helpers]]
+source_helper = "TCampaignWindow::hideText"
+unit = "campaignwindow"
+mac_section = 0x0
+mac_offset = 0x69d8c
+mac_size = 0x60
+target_sha256 = "69cc458e7e07cc961ffaf2b7940c47b739229b2d073309dabcf189dec5ce1501"
+evidence = "Mac retained body iterates widget IDs 0x65 through 0x6b, checks each getWidget result and sends the hide command. Called once by the constructor and twice by the hover handler. Dreamcast names the helper and Windows expands it at those three sites. Body ends with BLR at 0x69de8."
