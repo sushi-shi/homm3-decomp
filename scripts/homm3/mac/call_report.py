@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import dataclass
 from pathlib import Path
 
 from homm3.core import inputs
 from homm3.mac import calls, references, reports, symbols
 from homm3.mac.pef import PEF
-from homm3.mac.relocations import Address
+from homm3.mac.relocations import Address, CallTarget
 from homm3.mac.source import Pair, load_pairs
 from homm3.mac.source import candidate_source, compile_scope, source_identity
 
@@ -27,14 +28,24 @@ def labels(root: Path) -> dict[str, str]:
             if pair.mac_symbol is not None}
 
 
-def inspect(root: Path, pair: Pair, pef: PEF, tools_dir: Path) -> dict:
+@dataclass(frozen=True)
+class InspectionContext:
+    analysis: str
+    addresses: dict[str, CallTarget]
+    names: dict[str, str]
+
+
+def inspection_context(root: Path, pef: PEF) -> InspectionContext:
+    return InspectionContext(analysis_hash(root), symbols.targets(root, pef), labels(root))
+
+
+def inspect(root: Path, pair: Pair, pef: PEF, tools_dir: Path, *,
+            context: InspectionContext | None = None) -> dict:
     from homm3.mac import build
-    analysis = analysis_hash(root)
-    addresses = symbols.targets(root, pef)
-    names = labels(root)
+    context = context or inspection_context(root, pef)
     origin = Address(pair.mac_section, pair.mac_offset)
     target = pef.code(pair.mac_section, pair.mac_offset, pair.mac_size)
-    retail = calls.analyze(target, origin, addresses, labels=names)
+    retail = calls.analyze(target, origin, context.addresses, labels=context.names)
     source_hash = build_hash = object_hash = None
     error = None
     candidate = None
@@ -44,12 +55,12 @@ def inspect(root: Path, pair: Pair, pef: PEF, tools_dir: Path) -> dict:
         build_hash = build._profile_hash(source, pair)
         compiled = build.compile_pair(pair, tools_dir)
         source_hash, build_hash, object_hash = compiled.source_hash, compiled.build_hash, compiled.object_hash
-        candidate = calls.analyze(compiled.hunk.data, origin, addresses,
-                                  xrefs=compiled.hunk.xrefs, labels=names)
+        candidate = calls.analyze(compiled.hunk.data, origin, context.addresses,
+                                  xrefs=compiled.hunk.xrefs, labels=context.names)
     except (OSError, ValueError) as exc:
         error = str(exc)
     return {"retail_va": f"0x{pair.retail_va:08x}", "unit": pair.unit,
-            "analysis_sha256": analysis, "executable_sha256": inputs.MAC.sha256,
+            "analysis_sha256": context.analysis, "executable_sha256": inputs.MAC.sha256,
             "signature": pair.signature, "mac_section": pair.mac_section,
             "compile_scope": compile_scope(pair),
             "mac_offset": f"0x{pair.mac_offset:x}", "size": pair.mac_size,

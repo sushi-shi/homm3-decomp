@@ -286,7 +286,9 @@ def main(argv=None) -> int:
                 selected = [pair for pair in pairs if pair.unit == args.selector]
                 pairs = selected or [_select(args.selector)]
             pef, tools_dir = _image(), toolchain.stage()
-            rows = [call_report.inspect(common.HOMM3_DIR, pair, pef, tools_dir) for pair in pairs]
+            context = call_report.inspection_context(common.HOMM3_DIR, pef)
+            rows = [call_report.inspect(common.HOMM3_DIR, pair, pef, tools_dir,
+                                        context=context) for pair in pairs]
             report = call_report.write(common.HOMM3_DIR, rows,
                                        units=sorted({p.unit for p in pairs}) if args.selector else None)
             if args.selector:
