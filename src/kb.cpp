@@ -840,6 +840,13 @@ static int doMultiPlayerWindow();
 static int doLoadGame();
 static int pickLoadGame();
 
+// The Mac campaign paths retain this no-argument helper at 0x10e810.
+// Complete expands its fixed VideoOpen call at each source site.
+static void openCampaignVideo()
+{
+    videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+}
+
 // E:\gamedcs\kb.cpp:814. Dreamcast exposes this source boundary and its
 // five statement rows; Complete expands it into oldmain's credits arm.  The
 // first Draw lowers inline while the later identical Draw reaches the
@@ -1011,7 +1018,7 @@ int oldmain()
             g_gameSelectBack = ResourceManager::getBitmap16(
                 DATA_COMPGEN(0x0067f6f8, oldGameSelectBackground,
                              "GamSelBk.pcx"));
-            videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+            openCampaignVideo();
         }
         videoNextFrame();
         videoDrawCurrentFrame();
@@ -1485,7 +1492,7 @@ static int doCampaignWindow(bool newGame, int campaignSet)
             TCampaignWindow campaignWindow(newGame, campaignSet);
             campaignWindow.doModal();
         }
-        videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+        openCampaignVideo();
         videoPause();
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
             break;
@@ -1538,11 +1545,11 @@ static unsigned char doCampaignWindow()
                     campaignWindow.doModal();
                 }
 
-                videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                openCampaignVideo();
                 videoPause();
                 if (g_windowManager->m_dialogReturn
                     == DIALOG_RETURN_CANCEL) {
-                    videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                    openCampaignVideo();
                     break;
                 }
 
@@ -1567,11 +1574,11 @@ static unsigned char doCampaignWindow()
                     campaignWindow.doModal();
                 }
 
-                videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                openCampaignVideo();
                 videoPause();
                 if (g_windowManager->m_dialogReturn
                     == DIALOG_RETURN_CANCEL) {
-                    videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                    openCampaignVideo();
                     break;
                 }
 
@@ -1596,11 +1603,11 @@ static unsigned char doCampaignWindow()
                     campaignWindow.doModal();
                 }
 
-                videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                openCampaignVideo();
                 videoPause();
                 if (g_windowManager->m_dialogReturn
                     == DIALOG_RETURN_CANCEL) {
-                    videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                    openCampaignVideo();
                     break;
                 }
 
