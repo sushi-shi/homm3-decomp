@@ -55,31 +55,25 @@ searchArray::searchArray()
     m_limitReached = 0;
 }
 
+// Dreamcast findpath.cpp:66 calls Close; Mac retains its callable body.
+// Retail VC6 expands the ordinary helper in this destructor.
 VA(0x004b13e0, 0x78)  // dc 0x9ee08
 searchArray::~searchArray()
 {
-    if (m_cellData)
-        delete m_cellData;
-    if (m_isMoatSlowed)
-        delete m_isMoatSlowed;
-    m_cellData = 0;
-    m_isMoatSlowed = 0;
+    close();
 }
 
+// Dreamcast findpath.cpp:72/77 calls Close then game::GetNumMapLevels;
+// Mac retains Close, while retail VC6 expands both source calls.
 VA(0x004b1460, 0x9F)  // dc 0x9ee34
 void searchArray::init()
 {
-    if (m_cellData)
-        delete m_cellData;
-    if (m_isMoatSlowed)
-        delete m_isMoatSlowed;
-    m_cellData = 0;
-    m_isMoatSlowed = 0;
+    close();
     m_validRectangle.left = 0;
     m_validRectangle.right = g_mapWidth;
     m_validRectangle.top = 0;
     m_validRectangle.bottom = g_mapHeight;
-    m_cellData = new pathCell[(g_game->m_worldMap.getNumLevels()) * g_mapHeight
+    m_cellData = new pathCell[g_game->getNumMapLevels() * g_mapHeight
             * g_mapWidth * 2];
     m_isMoatSlowed = new unsigned char[187];
 }
