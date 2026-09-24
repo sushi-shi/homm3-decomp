@@ -181,6 +181,15 @@ target_sha256 = "c8b126c62cf6b0479f761c9780bb7d7df96a77bae6f0c82897ccf4f3c06c377
 evidence = "NEW: Dismiss border19,236/48x34 and button20,237/46x32, hotkey32; separate resource and widget ID from upgrade. End0x202cf8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
 
 [[helpers]]
+source_helper = "TViewArmyWindow::quickView"
+unit = "viewarmywindow"
+mac_section = 0
+mac_offset = 0x200790
+mac_size = 0x2c
+target_sha256 = "5333fab92cd1e8edcbb65638e1229e1ca99028aeaa78290f19811b4060b1851e"
+evidence = "The retained wrapper forwards its TViewArmyWindow receiver to heroWindowManager::doQuickView at 0x20dd08. Direct callers from combat, game, hill fort, recruit and sacrifice windows match their canonical quickView source calls. Prior help-ID body ends with BLR at 0x20078c; this wrapper's BLR at 0x2007b8 precedes doModal's prologue at 0x2007bc. Windows expands the wrapper at callers and has no standalone VA claim."
+
+[[helpers]]
 source_helper = "TViewArmyWindow::createBackgroundWidget"
 unit = "viewarmywindow"
 mac_section = 0
