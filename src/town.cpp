@@ -1025,7 +1025,8 @@ type_building_id town::buildBuilding(int buildingId,
         if (buildingId == HOLY_GRAIL_ID) {
             g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 0, m_owner,
                                   g_mapWidth, 0);
-            if (g_game->m_worldMap.getNumLevels() > 1)
+            // DC town.cpp:1390 calls the game helper; both retail loops inline it.
+            if (g_game->getNumMapLevels() > 1)
                 g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 1,
                                       m_owner, g_mapWidth, 0);
         }
