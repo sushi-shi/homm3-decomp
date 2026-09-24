@@ -140,6 +140,7 @@ public:
     // customcampaign.obj roster stops before them.
     void completeCurrentMap(void* campaignHeader);
     void pruneCrossoverHeroes(void* campaignHeader);
+    int findLatestCrossoverScenario(int slot) const;
     void playScenarioEpilogue(void* campaignHeader);
     void applyBriefingChoice(int option);
     void doPreLoadCustomization();

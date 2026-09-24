@@ -7079,23 +7079,19 @@ unsigned char advManager::updBottomViewNewTurn(unsigned char forceUpdate)
 }
 
 // E:\gamedcs\advmgr.cpp:8968
-// Residual (93.33%): identical to BVMessage's one string-library choice -
-// retail calls basic_string::_Tidy(0) for an empty shared string while this
-// invocation clears the representation inline. All resource stores, override
-// timing, forced refresh and resource-display update instructions agree.
+// DC source row 8972 calls OverrideBottomView(this, 6, -1), and Mac
+// bvResMsg retains that call at +0x169d8. Restoring it also makes the
+// Windows string cleanup and whole body byte-exact; the former 93.33%
+// residue was caller codegen collateral.
 VA(0x00416060, 0xF7)  // anchor-global, dc 0x19098
 void advManager::bvResMsg(const char* msg, int resType, int resQty)
 {
     m_bottomViewResourceType = resType;
     m_bottomViewResourceQuantity = resQty;
-    // MEASURED NEGATIVE, do not retry: `#pragma inline_depth(0)` on this
-    // assignment, to chase retail's out-of-line basic_string::_Tidy(0)
-    // (base x2 vs retail x3), costs 93.33 -> 26.42. Retail INLINES the
-    // assign here and only its _Tidy tail is out of line, and a statement
-    // pin cannot express "inline the parent, call the child".
     m_bottomViewMessage = msg;
-    m_bottomViewOverride = BOTTOM_VIEW_6;
-    m_bottomViewDeadline = GameTime::get() + 5000;
+    // Mac bvResMsg +0x48 calls overrideBottomView(6, -1). Its ordinary
+    // body supplies the 5000-tick default and VC6 expands it here.
+    overrideBottomView(BOTTOM_VIEW_6, -1);
     g_advManager->updBottomView(1, 1, 1);
     m_advWindow->updateResourceDisplay(1, 1);
 }

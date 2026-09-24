@@ -997,16 +997,13 @@ const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
 // own scenario but the last completed scenario sharing its crossover slot;
 // the map name itself is only available after re-opening the campaign file
 // and inflating that scenario's header.
-// Residual (85.98%): 19/19 blocks with 18 exact and the branch census
-// clean 11/11; the whole gap is ONE /Ob2 decision, and the call stream
-// names it outright. Retail CALLS `ScenarioStruct::LoadMapHeader`
-// (0x487d30) where our CL expands it - the pubseekoff through vtable slot
-// 8, the TGzInflateBuf constructor, `NewSMapHeader::Read` and the
-// inflate-buffer destructor all arrive inline as four base-only calls.
-// The source already WRITES the call, so this is not a missing statement;
-// it is the over-inline family, and both documented levers are closed
-// here (this lane adds no statement pins, and the Dreamcast roster names
-// no helper to split out of a Complete-only body).
+// Mac +0x93974 calls the retained campaign score scan at +0x98b7c, and
+// +0x93a58 calls CampaignHeaderStruct::loadScenario (+0x96c64), ignoring
+// its result. Complete expands both; the retained Windows loadScenario
+// body (0x488810) is exact and its expansion calls loadMapHeader.
+// With both canonical calls, VC6 currently gives 64.62% and 14 blocks
+// against retail's 19: constructor and nested inflater calls diverge.
+// The old flattened source gave 86.04%, but omitted both Mac helpers.
 VA(0x00485530, 0x260)  // anchor-callee(CampaignHeaderStruct::Load 0x488880), retail-only
 std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
                                                    int which) const
@@ -1014,20 +1011,10 @@ std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
     TCampaignBrief::CampaignHeaderStruct* campaign =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignRecord);
     int slot = g_game->m_campaign.m_mapScores[m_choices[which].m_scenario].m_index;
-    int source = -1;
-    for (unsigned int score = 0;
-         score < g_game->m_campaign.m_mapScores.size(); ++score)
-        if (g_game->m_campaign.m_mapScores[score].m_completed
-            && g_game->m_campaign.m_mapScores[score].m_index == slot
-            && (source < 0
-                || g_game->m_campaign.m_mapScores[score].m_completeOrder
-                       >= g_game->m_campaign.m_mapScores[source].m_completeOrder))
-            source = score;
+    int source = g_game->m_campaign.findLatestCrossoverScenario(slot);
 
     NewSMapHeader mapHeader;
-    if (campaign->load())
-        campaign->m_scenarios[source]->loadMapHeader(campaign->m_stream,
-                                                   &mapHeader, source);
+    campaign->loadScenario(source, &mapHeader);
     return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_MAP_HEROES_FORMAT), mapHeader.m_mapName.c_str());
 }
 
@@ -2606,16 +2593,9 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
         m_campaignCompleted[m_currentCampaign] = 1;
         if (m_currentCampaign >= g_campaignOrdinal07
             && m_currentCampaign < g_campaignOrdinal13 && !m_isCheater) {
-            int total = 0;
-            int scored = 0;
-            for (i = 0; i < m_mapScores.size(); ++i) {
-                if (m_mapScores[i].m_completed && m_mapScores[i].m_score >= 0) {
-                    total += m_mapScores[i].m_score;
-                    ++scored;
-                }
-            }
-            if (scored
-                && ((total + scored / 2) / scored) * 5 >= 350)
+            // Mac completeCurrentMap +0x480 calls the retained getScore
+            // body, then compares its result with 350.
+            if (getScore() >= 350)
                 m_secretActive = 1;
         }
     }
@@ -2721,6 +2701,24 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
         std::sort(kept.begin(), kept.end(), CrossoverHeroStronger());
         pooled = kept;
     }
+}
+
+// Mac +0x98b7c retains this scan between pruneCrossoverHeroes and the
+// epilogue wrapper. Its sole direct caller is getText at +0x93974; the
+// Windows caller expands the same loop. The provisional name describes
+// the returned score-table index.
+int SCampaign::findLatestCrossoverScenario(int slot) const
+{
+    unsigned int score;
+    int source = -1;
+    for (score = 0; score < m_mapScores.size(); ++score)
+        if (m_mapScores[score].m_completed
+            && m_mapScores[score].m_index == slot
+            && (source < 0
+                || m_mapScores[score].m_completeOrder
+                       >= m_mapScores[source].m_completeOrder))
+            source = score;
+    return source;
 }
 
 VA(0x0048a270, 0x2F)

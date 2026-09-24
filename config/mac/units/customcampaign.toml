@@ -7,6 +7,7 @@ source_helpers = [
     "markRequiredCampaignHeroes",
     "usesCrossoverPool",
     "getMaxCrossoverHeroes",
+    "SCampaign::findLatestCrossoverScenario",
     "TCampaignBrief::ScenarioStruct::playText",
     "TCampaignBrief::CampaignHeaderStruct::playScenarioText",
 ]
