@@ -296,9 +296,7 @@ const int g_retailCreatureGenerator3 = 19;
 // SetWagon overloads out of line where we expand the two-argument one.
 // Measured and rejected: reordering the black-box arms so RELIC comes second
 // (-0.20); pinning the two-argument SetWagon (-1.51, a knock-on re-price);
-// routing REFUGEE_CAMP's GetRandomMonster through gpGame as retail does at
-// 0x4c1652 (-0.14, so the reload is right and something downstream pays for
-// it); narrowing RandomizeShrine's bitset pin to the subscript alone so the
+// narrowing RandomizeShrine's bitset pin to the subscript alone so the
 // ctor expands onto retail's `_Tidy` call (-0.50).
 // Random-map placeholder domains recovered from RandomizeEvents' retail
 // switch. They are source-local because no cross-TU enum identity survives.
@@ -4051,6 +4049,16 @@ static void randomizeArtifact(NewmapCell* cell)
     }
 }
 
+// Mac code 0:0xd65d0 retains this helper between randomizeArtifact and
+// randomizeSeaChest. Calls at 0:0xd7dfc and 0:0xdf9a4 come from
+// randomizeEvents and perWeek; the shared body stores creature and growth.
+static void randomizeRefugeeCamp(NewmapCell* cell)
+{
+    TCreatureType creature = g_game->getRandomMonster(0, 6);
+    cell->m_objectIndex = creature;
+    cell->m_extraInfo = g_creatureTypeTraits[creature].m_growthRate;
+}
+
 // E:\gamedcs\game.cpp:4613.
 static void randomizeSeaChest(NewmapCell* cell)
 {
@@ -4846,12 +4854,7 @@ void game::randomizeEvents()
                     break;
 
                 case REFUGEE_CAMP:
-                    {
-                        TCreatureType creature = getRandomMonster(0, 6);
-                        tempCell->m_objectIndex = creature;
-                        tempCell->m_extraInfo =
-                            g_creatureTypeTraits[creature].m_growthRate;
-                    }
+                    randomizeRefugeeCamp(tempCell);
                     break;
 
                 case RESOURCE:
@@ -7665,10 +7668,7 @@ void game::perWeek()
                 }
 
                 case REFUGEE_CAMP: {
-                    TCreatureType creature = g_game->getRandomMonster(0, 6);
-                    mapCell->m_objectIndex = creature;
-                    mapCell->m_extraInfo =
-                        g_creatureTypeTraits[creature].m_growthRate;
+                    randomizeRefugeeCamp(mapCell);
                     break;
                 }
 
