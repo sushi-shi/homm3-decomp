@@ -1184,7 +1184,9 @@ void combatManager::resetRound()
         m_turnSinceLastEnchanter[side]++;
         for (int slot = 0; slot < 20; slot++) {
             army* stack = &m_armies[side][slot];
-            if (stack->m_gridIndex != -1)
+            // DC 1788 and retail +0x237 test creatureType at +0x34;
+            // gridIndex is the distinct field at +0x38.
+            if (stack->m_creatureType != CREATURE_NONE)
                 stack->resetRound();
         }
     }
