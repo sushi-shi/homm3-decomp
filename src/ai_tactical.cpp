@@ -307,6 +307,8 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
     }
 }
 
+// DC ai_tactical.cpp:497 and Mac 0:0x3da40 retain AI_get_attack_damage;
+// Complete expands its troop-count calculation at this constructor site.
 VA(0x004360c0, 0xBC)  // dc 0x3ceb8
 type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, const army* defender, const long* attackArray, searchArray* search, const type_AI_combat_parameters* combatData)
 {
@@ -321,8 +323,7 @@ type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, con
     m_bestHex = -1;
     long enemyHits = defender->getTotalHitPoints(combatData->m_simulated);
     long ourHits = attacker->getTotalHitPoints(combatData->m_simulated);
-    long troops = (attacker->m_monInfo.m_hitPoints + ourHits - 1) / attacker->m_monInfo.m_hitPoints;
-    enemyHits -= attacker->getAverageDamage(defender, 0, troops, 1, 0);
+    enemyHits -= aiGetAttackDamage(*attacker, ourHits, *defender, 0, 0);
     if (enemyHits < 0)
         enemyHits = 0;
     m_enemyTroopsLeft = (defender->m_monInfo.m_hitPoints + enemyHits - 1) / defender->m_monInfo.m_hitPoints;
