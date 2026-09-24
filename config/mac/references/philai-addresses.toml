@@ -1,4 +1,45 @@
 # Reviewed address identities; compiler linkage names remain unbound.
+
+[[helpers]]
+source_helper = "valueOfBlackMarket"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13ddec
+mac_size = 0xac
+mac_symbol = ".valueOfBlackMarket__FPC4heroPC10NewmapCell"
+target_sha256 = "9f4dd2be41cf300b5e57972cbdb3cb7b782131038a957a48ea5a0371ae824e99"
+evidence = "Mac aiValueOfEvent calls this retained helper from its BLACK_MARKET arm at 0x1461e0. It rejects a full backpack, selects the cell's seven-artifact market and sums five-market purchase values. Final BLR at 0x13de94 precedes the adjacent helper. Dreamcast names this source helper; Windows expands it in the event dispatcher."
+
+[[helpers]]
+source_helper = "valueOfArena"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x141f14
+mac_size = 0x7c
+mac_symbol = ".valueOfArena__FPC4heroP10NewmapCell"
+target_sha256 = "d97de8fdf0ed4326f73cbcbb2d54c168c435fdf6a83819572902228661911fa3"
+evidence = "Mac aiValueOfEvent calls this retained helper from its ARENA arm at 0x1461b0. It tests visitedArena, obtains the hero level's experience increment, doubles it and applies the turn experience ratio. Final BLR at 0x141f8c precedes valueOfCustomItem; Dreamcast names the same helper and Windows expands its source call."
+
+[[helpers]]
+source_helper = "valueOfMapArtifact"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142010
+mac_size = 0x244
+mac_symbol = ".valueOfMapArtifact__FPC4heroP10NewmapCell"
+target_sha256 = "d913e4c9b386bd47ee0de59a5737cdabb2971c3f750ad0f5ba9d12b9446d5210"
+evidence = "Mac aiValueOfEvent calls this retained helper from its ARTIFACT arm at 0x1461c0. Its backpack gate, artifact valuation and custom/defended/price cases match the source body and Dreamcast helper. Final BLR at 0x142250 precedes valueOfLearning; Windows expands the source call."
+
+[[helpers]]
+source_helper = "valueOfBlackBox"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1422c4
+mac_size = 0x2d8
+mac_symbol = ".valueOfBlackBox__FPC4heroP10NewmapCell"
+target_sha256 = "dfd2cedb782b82297317d3c68591aba9948e077389d0c488c57e4d78341d480d"
+evidence = "Mac aiValueOfEvent calls this retained helper from its BLACK_BOX arm at 0x1461d0. It reads the cell's black box and values guardians, experience, resources, skill bonuses, artifacts, spells and creatures. Final BLR at 0x142598 precedes valueOfBank; Dreamcast names the same helper and Windows expands its source call."
+
 [[functions]]
 retail_va = 0x5242d0
 unit = "philai"

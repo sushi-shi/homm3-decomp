@@ -1,4 +1,13 @@
 mode = "paired_bodies"
 flags = ["-O3", "-proc", "750", "-nolink"]
 helpers = []
-source_helpers = ["checkForTown", "upgradeCreatures", "buySpecialBuilding"]
+source_helpers = [
+    "checkForTown",
+    "upgradeCreatures",
+    "valueOfBlackMarket",
+    "buySpecialBuilding",
+    "valueOfArena",
+    "valueOfMapArtifact",
+    "valueOfBlackBox",
+    "aiValueOfEvent(const hero* currentHero, type_point point, long& moveCost)",
+]
