@@ -36,6 +36,15 @@ mac_size = 0x1d4
 target_sha256 = "89a8737eafb63b88d85f79d99dabd4f51757176b626ff43f466c4269387f0fa7"
 evidence = "Unique OnPlayerDropUpdateMsg log string at data 1+0x59402 anchors the entry. Body shows pointer/dialog/hourglass, primary then recovery loadGame, player net-info clear, local-seat and visibility updates, and nextPlayer versus startLocalPlayerTurn. Mac compares old/new net local position where Windows uses g_weMoved, a reviewed port difference. Complete BLR at 0x21430c; next function starts 0x214310."
 
+[[functions]]
+retail_va = 0x554f10
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x213594
+mac_size = 0x1ec
+target_sha256 = "884b724ab92de9f081e903a30074e42dab152239cb7bfe2476c90769fb115bc4"
+evidence = "waitForReadyToPlayMsg: stack dialog construction, eight ready-byte scan and fast destructor path; otherwise GameTime/sRand, random(0,111) rejecting creatures 0x36/0x37, setup/modal and host broadcast via transmitRemoteData +0x212bf0. Complete BLR at 0x21377c; adjacent derived destructor begins +0x213780."
+
 [[helpers]]
 source_helper = "CChatManager::playChatSample"
 unit = "remote"
