@@ -1044,25 +1044,22 @@ type_building_id town::buildBuilding(int buildingId,
 VA(0x005bf210, 0x1A5)  // dc 0x1671cc
 void town::updateShipyard()
 {
-    if (m_active & g_bitNumber[DOCK_ID]) {
+    if (hasBuilding(DOCK_ID, true)) {
         type_point point;
         point.m_x = m_dockSite;
         point.m_y = m_dockSiteY;
         point.m_z = m_mapZ;
 
-        NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
-        if (cell->m_isTrigger && (cell->m_type == BOAT || cell->m_type == HERO)) {
-            if (!(m_active & g_bitNumber[DOCK_WITH_BOAT_ID])) {
-                createBuilding(DOCK_WITH_BOAT_ID);
-                return;
+        NewmapCell* cell = g_game->getCell(point);
+        if (!cell->m_isTrigger
+            || (cell->m_type != BOAT && cell->m_type != HERO)) {
+            if (m_built & g_bitNumber[DOCK_WITH_BOAT_ID]) {
+                m_built &= ~g_bitNumber[DOCK_WITH_BOAT_ID];
+                updateFullBuildingMask();
             }
-        } else if (m_built & g_bitNumber[DOCK_WITH_BOAT_ID]) {
-            m_built &= ~g_bitNumber[DOCK_WITH_BOAT_ID];
-            m_active = m_built;
-            for (int building = 0; building < TOWN_BUILDING_SLOTS; building++) {
-                if (m_built & g_bitNumber[building])
-                    m_active |= s_includedBuildings[m_type][building];
-            }
+        } else if (!(m_active & g_bitNumber[DOCK_WITH_BOAT_ID])) {
+            createBuilding(DOCK_WITH_BOAT_ID);
+            return;
         }
     }
 }

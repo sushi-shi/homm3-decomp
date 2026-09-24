@@ -66,7 +66,7 @@ mac_offset = 0x1b66f4
 mac_size = 0x104
 mac_symbol = ".updateFullBuildingMask__4townFv"
 target_sha256 = "6dee960bda63f4edb394c2c7f0170e4e9561813b4698048d9b6c9acb29e24a8f"
-evidence = "Canonical ordinary town::updateFullBuildingMask copies m_built into m_active and scans 44 included-building masks. Mac buildBuilding calls 0:0x1b66f4 at 0x1b4510 after setting the built-this-turn byte; the leaf reads town+0x144 and +0x148, writes +0x14c/+0x150, and ends at BLR 0x1b67f4 immediately before canBuild at 0x1b67f8. No Windows VA is invented for the source-owned helper."
+evidence = "Canonical ordinary town::updateFullBuildingMask copies m_built into m_active and scans 44 included-building masks. Mac buildBuilding calls 0:0x1b66f4 at 0x1b4510; updateShipyard calls it at 0x1b4904 after clearing the dock-with-boat bit. The leaf reads town+0x144 and +0x148, writes +0x14c/+0x150, and ends at BLR 0x1b67f4 immediately before canBuild at 0x1b67f8. Dreamcast update_shipyard line 1428 names this call; Windows expands it. No Windows VA is invented for the source-owned helper."
 
 [[functions]]
 retail_va = 0x005f1d40

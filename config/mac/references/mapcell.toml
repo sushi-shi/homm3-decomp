@@ -28,7 +28,7 @@ mac_offset = 0x1217a0
 mac_size = 0x6c
 mac_symbol = ".readMapCreatureId__FP13TAbstractFilei"
 target_sha256 = "1bcba2c77b36de108d522c1856840c72f00e49e9e29c75e3b18e6818fdc4a63a"
-evidence = "The Mac body checks map format 14, reads one signed byte or two little-endian bytes through the abstract file virtual read, and returns the sign-extended creature ID. It ends in BLR at 0x121808 before the adjacent save-version helper starts at 0x12180c. Direct calls at 0x121d50, 0x124428 and 0x124ef4 come from readBlackBox, readTownData and readHeroData; the corresponding Windows source repeats the same width branch in each caller and VC6 expands the restored ordinary helper."
+evidence = "The Mac body checks map format 14, reads one signed byte or two little-endian bytes through the abstract file virtual read, and returns the sign-extended creature ID. It ends in BLR at 0x121808 before the adjacent save-version helper starts at 0x12180c. Direct calls at 0x121d50, 0x124428, 0x124ef4 and 0x1254b8 come from readBlackBox, readTownData, readHeroData and readGarrisonData; Windows expands the ordinary helper in these callers."
 
 [[helpers]]
 unit = "mapcell"

@@ -3065,17 +3065,8 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
         return -1;
 
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        int creature;
-        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            signed char narrow;
-            infile->read(&narrow, sizeof(narrow));
-            creature = narrow;
-        } else {
-            short wide;
-            infile->read(&wide, sizeof(wide));
-            creature = wide;
-        }
-        newGarrison.m_garrisonArmy.m_armies[slot] = creature;
+        newGarrison.m_garrisonArmy.m_armies[slot] =
+            readMapCreatureId(infile, mapVersion);
 
         short count;
         if (infile->read(&count, sizeof(count)) < sizeof(count))
