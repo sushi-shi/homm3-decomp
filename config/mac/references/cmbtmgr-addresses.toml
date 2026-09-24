@@ -661,3 +661,21 @@ mac_offset = 0x7357c
 mac_size = 0x94
 target_sha256 = "541795ed3fc8846a6110a5db17d665054e096de32d76eac79d79b4032faae2e3"
 evidence = "Retained TestRaiseDoor checks town, drawbridge state and gate/moat occupancy, then calls RaiseDoor at 0x734ac. Dreamcast TestRaiseDoor dc:0x610e0 records the same guard and a separate RaiseDoor call; command::processNextAction calls this Mac helper. Windows retail instead has the guard in raiseDoor at 0x4672e0, so this is a source boundary lead, not a Windows VA pair. Final BLR at 0x7360c; next entry 0x73610."
+
+[[helpers]]
+source_helper = "combatManager::experienceValueOfStack"
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x71e50
+mac_size = 0xd8
+target_sha256 = "7dea79aa1a952f53221de8635aa387834f357cf1ce4f845eaecbe0d44c3ad6b2"
+evidence = "Mac calculateGainedExperience calls this retained source helper at 0x76ac0. It walks the twenty stacks of one side, adds original-minus-current troop count times creature hit points for eligible stacks and a 500-point hero bonus; BLR 0x71f24. Windows expands it in the caller."
+
+[[helpers]]
+source_helper = "combatManager::doorCanBeLowered"
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x7612c
+mac_size = 0x60
+target_sha256 = "88e8c504f712275538f5e0f44b40872fb90923e1e092b7462ff5489593c31ea8"
+evidence = "Mac hexIsBlocked calls this retained source helper at 0x761c0 before allowing the drawbridge gate hexes. It requires defender side and checks both moat cells for armies or bodies; BLR 0x76188. Windows expands it in the caller."

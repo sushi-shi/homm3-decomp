@@ -557,3 +557,39 @@ mac_offset = 0x194fcc
 mac_size = 0xdc
 target_sha256 = "be58c1e84311022c94cfd9fbbb18e90c30e916f06338e1b5073aa90333ef96a8"
 evidence = "handleCastWallSpell calls this retained three-row wall collector at 0x193aa0. It chooses two rows for basic mastery and three otherwise, calls getSpellWallHex 0x19ab30 for each row and appends the result to the vector; BLR 0x1950a4. Windows expands this ordinary helper in its one caller."
+
+[[helpers]]
+source_helper = "combatManager::hexToPoint"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x194b48
+mac_size = 0x64
+target_sha256 = "f3d9d4e4c449c55b1af383af31da7315e4620de9174ecf7aa5c120b04d6d4ed4"
+evidence = "Mac markAreaEffect and markBerserkAreaEffect call this retained grid-to-point conversion at 0x194cfc and 0x194e6c. The 17-column quotient/remainder and staggered row arithmetic agree with the shared source helper. The body ends at BLR 0x194ba8; Windows expands the helper in both callers."
+
+[[helpers]]
+source_helper = "clearAreaHighlights"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x193750
+mac_size = 0x90
+target_sha256 = "ce838837f659e8d1db09e2fc425c746993ae3005bc3993883731ba6ac4dcff33"
+evidence = "Mac handleCastSpell calls this retained source helper on both accept and cancel paths at 0x1938bc and 0x193900. It loops over both combat sides and clears area highlighting for eligible stacks; BLR 0x1937dc. Windows expands the same helper in both paths."
+
+[[helpers]]
+source_helper = "combatManager::pointToHex"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x194bac
+mac_size = 0x5c
+target_sha256 = "dfcddebd2672cc74832d7e1a932e82dc706ca68d184e3f5b7552fd2e3d573b74"
+evidence = "Mac markAreaEffect and markBerserkAreaEffect call this retained point-to-grid conversion at 0x194d60 and 0x194ed8. It checks the 17-column grid bounds and returns -1 outside them, matching the shared source helper. The body ends at BLR 0x194c04; Windows expands the helper in both callers."
+
+[[helpers]]
+source_helper = "combatManager::getDistance"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x194c08
+mac_size = 0xd0
+target_sha256 = "04aa5b814391f75ccb44330a35df2d5548d640624650aae8b34c297177dcc86f"
+evidence = "Mac markAreaEffect and markBerserkAreaEffect call this retained point-distance helper at 0x194d4c and 0x194ec0. Its same-sign branch chooses max(abs(dx), abs(dy)); the opposite-sign branch sums them, as in shared source. The body ends at BLR 0x194cd4; Windows expands the helper in both callers."

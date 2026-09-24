@@ -2,4 +2,8 @@ mode = "paired_bodies"
 # Retain the ordinary terrain helper for source-order and call-shape probes.
 flags = ["-O3", "-proc", "750", "-nolink"]
 helpers = []
-source_helpers = ["combatManager::checkNativeTerrain"]
+source_helpers = [
+  "combatManager::checkNativeTerrain",
+  "combatManager::experienceValueOfStack",
+  "combatManager::doorCanBeLowered",
+]
