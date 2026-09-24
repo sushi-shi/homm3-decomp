@@ -2092,13 +2092,10 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long gr
 // flag is set before the first choose_melee_action, not after the
 // choice is taken - the damage is done by asking, not by accepting.
 
-// The trailing choice->field_20 block is the same inlined
-// is_last_action test consider_sacrifice carries, with the acting-stack
-// comparison widened by this stack's own disabled triple. Note the two
-// are NOT the same helper: this one gates on the stack's disabled
-// triple, consider_sacrifice's on `field_1c` and the HEALED stack -
-// which is why neither can be factored into a shared function without
-// putting a body in the image retail does not carry.
+// DC line 2593 calls get_current_army, IsIncapacitated and is_last_action.
+// The shared short-circuit expression lets VC6 expand the ordinary helper:
+// all 32 retail blocks, 23 branches and five calls now agree. The remaining
+// byte difference is the count/current/total stack-slot assignment.
 
 VA(0x0043aa60, 0x235)  // anchor-callee, dc 0x40ec0
 void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
@@ -2130,31 +2127,10 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
         choice->m_value = gain;
         choice->m_target = ourArmy->m_gridIndex;
         choice->m_secondTargetHex = g_combatManager->m_nextActionExtra;
-        long last = 1;
-        const army* current = &g_combatManager->m_armies[g_combatManager->m_actingSide]
-                                                      [g_combatManager->m_actingSlot];
-        if (ourArmy != current && !ourArmy->m_spellInfluence[62]
-                && !ourArmy->m_spellInfluence[70] && !ourArmy->m_spellInfluence[74]) {
-            long total = g_combatManager->m_numArmies[m_side];
-            for (long j = 0; j < total; j++) {
-                const army* other = &g_combatManager->m_armies[m_side][j];
-                if (other->is(creatureSiegeWeapon | creatureImmobilized))
-                    continue;
-                if (other->m_spellInfluence[62])
-                    continue;
-                if (other->m_spellInfluence[70])
-                    continue;
-                if (other->m_spellInfluence[74])
-                    continue;
-                if (other->is(creatureDone))
-                    continue;
-                if (other != current) {
-                    last = 0;
-                    break;
-                }
-            }
-        }
-        choice->m_castNow = static_cast<unsigned char>(last);
+        choice->m_castNow =
+            ourArmy == g_combatManager->getCurrentArmy()
+            || ourArmy->isIncapacitated()
+            || isLastAction();
     }
     if (moved) {
         for (long group = 0; group < 2; group++)
