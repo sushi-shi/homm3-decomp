@@ -5199,6 +5199,15 @@ void TSingleSelectionWindow::refreshFilterWidgets()
     this->update();
 }
 
+// Mac +0x17e3c4 retains this helper immediately before OnWidgetDeselect.
+// Its random-maps arm calls it; VC6 expands the three calls in that arm.
+void TSingleSelectionWindow::openRandomMapOptions()
+{
+    setupScenarioOptions(1);
+    drawWindow(0, 0xffff0001, 0xffff);
+    this->update();
+}
+
 // The retail jump-table arm layout and Dreamcast's line table independently
 // prove the shared arm order below.  It is source order, not numeric selector
 // order; keep msg->codeY direct because Dreamcast has no cached-id local.
@@ -5588,9 +5597,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         refreshFilterWidgets();
         break;
     case SSW_RANDOM_MAPS:
-        setupScenarioOptions(1);
-        drawWindow(0, 0xffff0001, 0xffff);
-        this->update();
+        openRandomMapOptions();
         break;
 
     case SSW_CHAT_TOGGLE:

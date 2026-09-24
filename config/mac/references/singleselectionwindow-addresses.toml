@@ -1068,3 +1068,12 @@ mac_offset = 0x17e308
 mac_size = 0x5c
 target_sha256 = "489b55c611214303df77cf5ac9025bd6883c564f1fd12990214a18ab6b987a33"
 evidence = "Mac retained method sits immediately before OnWidgetDeselect and receives 16 direct calls from its filter arms. Its body calls updateFilterWidgets, the virtual drawWindow with full-window arguments, and update. Windows expands the same three-call sequence at those source sites; VC6 emits no call relocation for the helper. Complete Mac body ends with BLR at 0x17e360."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::openRandomMapOptions"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17e3c4
+mac_size = 0x60
+target_sha256 = "637c15bbac02edd7527d17c120c6e5d018a737e5516e9bdc3bd086abdc463aeb"
+evidence = "Mac retains this method immediately before OnWidgetDeselect and calls it from the random-maps arm. Its body calls setupScenarioOptions(1), the virtual drawWindow with full-window arguments, then update. Windows source had that exact sequence expanded in the same arm. Complete Mac body ends with BLR at 0x17e420."
