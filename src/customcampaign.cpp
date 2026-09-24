@@ -306,7 +306,9 @@ void TCampaignSpellBonus::apply(int whichPlayer) const
 
 // The shared hero picker. `best` and the player record are both live
 // before the selector is tested, which is what puts them in the
-// prologue; numHeroes is re-read from the record on every pass.
+// prologue; numHeroes is re-read from the record on every pass. Mac calls
+// heroPower for candidate and then best at 0:0x91ecc/0:0x91ed8;
+// Complete expands both copies of this ordinary helper.
 VA(0x004840d0, 0x155)
 hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
 {
@@ -318,16 +320,9 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
             int heroId = player->m_heroes[heroIndex];
             hero* candidate = heroId == -1 ? 0 : &g_game->m_heroes[heroId];
             if (best != 0) {
-                int bestTotal = best->getPrimarySkillTotal();
-                int bestSkills = 0;
-                int skill;
-                for (skill = 0; skill < 28; ++skill)
-                    bestSkills += best->m_skillLevel[skill];
-                int candidateTotal = candidate->getPrimarySkillTotal();
-                int candidateSkills = 0;
-                for (skill = 0; skill < 28; ++skill)
-                    candidateSkills += candidate->m_skillLevel[skill];
-                if (bestSkills + bestTotal >= candidateSkills + candidateTotal)
+                int candidatePower = heroPower(candidate);
+                int bestPower = heroPower(best);
+                if (bestPower >= candidatePower)
                     continue;
             }
             best = candidate;
