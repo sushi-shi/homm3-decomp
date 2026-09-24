@@ -78,16 +78,28 @@ int TSpellbookWindow::getPositionFromSchool(unsigned schoolMask)
     return 0;
 }
 
-// E:\gamedcs\spellbookwindow.cpp:103, dc 0x14d3cc.
-inline TSpellSchool TSpellbookWindow::getSchoolFromPosition(int position)
+// E:\gamedcs\spellbookwindow.cpp:103, dc 0x14d3cc. Dreamcast retains
+// both calls from DisplayNewSchool; Mac expands both uses. VC6 expands the
+// ordinary source helper in its caller and still emits a separate body.
+TSpellSchool TSpellbookWindow::getSchoolFromPosition(int position)
 {
     return position < 4 ? (TSpellSchool)(1 << position)
                         : eSchoolAll;
 }
 
+VA(0x0059ba80, 0x1D)  // dc 0x14bc58
+void TSpellbookWindow::reset()
+{
+    s_lastSchool = const_invalid_school;
+    s_lastPage = -1;
+    s_lastContext = eContextInvalid;
+    g_lastSpellbookHeroId = -1;
+}
+
 // Dreamcast retains this source-private helper out of line at dc 0x14bc80;
-// Complete /Ob2 folds it into get_spell_description.  The five adjacent
-// TextResource rows and the guarded pointer array are byte-proven by retail.
+// Mac retains it immediately after reset at code0+0x18ada4. Complete /Ob2
+// folds it into getSpellDescription. The five adjacent TextResource rows and
+// the guarded pointer array are byte-proven by retail.
 static const char* getLevelString(SpellID spell)
 {
     static const char* levelStrings[] = {
@@ -106,15 +118,6 @@ static const char* getLevelString(SpellID spell)
     // trait pointer or trait reference also reproduces the exact caller.
     int index = g_spellTraits[spell].m_level - 1;
     return levelStrings[index];
-}
-
-VA(0x0059ba80, 0x1D)  // dc 0x14bc58
-void TSpellbookWindow::reset()
-{
-    s_lastSchool = const_invalid_school;
-    s_lastPage = -1;
-    s_lastContext = eContextInvalid;
-    g_lastSpellbookHeroId = -1;
 }
 
 // E:\gamedcs\spellbookwindow.cpp:128
