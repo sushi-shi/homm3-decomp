@@ -100,6 +100,24 @@ retail_va = 0x49f040
 
 [[helpers]]
 unit = "events"
+source_helper = "advManager::eventSound(NewmapCell* cell)"
+mac_section = 0
+mac_offset = 0xa9a84
+mac_size = 0x2c
+target_sha256 = "1fd5a1e5e1136d2d95cbe50e2daafc9e7e2ea4237e1144cc3c5c9bc7e5e88dab"
+evidence = "Dreamcast events.cpp:412 names the NewmapCell overload and its call to the integer overload. Mac loads cell type at +0 and extraInfo at +0x1a, then calls eventSound(int,int) at 0xb85a8; doEvent calls this retained body at 0xb7b9c. Complete BLR at 0xa9aac precedes the next entry. Windows expands the forwarding call."
+
+[[helpers]]
+unit = "events"
+source_helper = "advManager::recruitEvent"
+mac_section = 0
+mac_offset = 0xb8914
+mac_size = 0xa8
+target_sha256 = "3427e16aa36459ff2af0245c168849deaa4f509655e10d559a4d6f2d2bd1e3a6"
+evidence = "Dreamcast events.cpp:5568 names recruitEvent and its human-dialog/AI branches. Mac tests hero human status via 0xf4bc0, constructs recruitUnit at 0x1507b8 or calls AI recruit at 0x144744, then returns the available short; refugee camp calls it at 0xb1314. Complete BLR at 0xb89b8 precedes generatorEvent. Windows expands the authored call."
+
+[[helpers]]
+unit = "events"
 source_helper = "advManager::doEventFreeArtifact"
 mac_section = 0
 mac_offset = 0xa9d28
