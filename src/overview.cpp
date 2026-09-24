@@ -1349,7 +1349,8 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
 
             case OVERVIEW_HERO_LEVEL_ID: {
                 int level = currHero->m_level;
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT), level,
+                // DC overview.cpp:1801 calls the text resource indexer here.
+                sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT], level,
                         hero::getExperience(level + 1),
                         currHero->m_experience);
                 normalDialog(
