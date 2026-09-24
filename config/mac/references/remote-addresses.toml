@@ -33,6 +33,33 @@ target_sha256 = "260a28e55ae6c44541cbe261c30036229065f94e566755cf3d6a56b7ee04556
 evidence = "Dreamcast names the cdecl variadic CLogFile::Log in remote.h:249. Mac's 28-byte release body spills variadic registers r5-r10 to their caller homes and returns; the command main call at 0x8260c passes the `Received action [%d]--> [%d,%d,%d]` format and four message fields, and game/remote/selection callers pass their authored g_logFile.log formats. Windows retains those source calls to the folded empty representative at 0x404df0. The preceding main ends at 0x82794 and the next body begins at 0x827b4."
 
 [[functions]]
+retail_va = 0x557a80
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2156e4
+mac_size = 0x28
+target_sha256 = "68b0de91ac94c7ce08fc412facadebc964aec1d3f6dd73b7dc31f8e697c49c2c"
+evidence = "CTurnDuration::start at 0x215afc calls this retained on-state check; it returns false for zero duration or g_inCampaign. The final BLR at 0x215708 precedes the paired isExpired at 0x21570c. Source and Windows claim 0x557a80 implement the same check."
+
+[[functions]]
+retail_va = 0x557d90
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215afc
+mac_size = 0x6c
+target_sha256 = "f1f3a4be52292971a24a5c62abbe56944d878fd234d5a0807ab592eae2189aeb"
+evidence = "game::nextPlayer and oldmain call this turn-timer starter. It calls isOn at 0x2156e4, saves GameTime::get at receiver+4 and +0, clears nextWarning at +0xc and sets one-quarter or one-half of duration depending on the 60000 threshold. The final BLR at 0x215b64 precedes addTime. Windows source and VA 0x557d90 have the same control flow."
+
+[[helpers]]
+source_helper = "CTurnDuration::addTime"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215b68
+mac_size = 0x1c
+target_sha256 = "c731abb52d0edd1fba74cdc3f4e238d34deb7a273e7943b880275645d4c47b2a"
+evidence = "CTurnDuration::resume at 0x215bc0 calls this retained helper with elapsed pause time. It adds the argument to turnStartTime at +4 and lastWarned at +0, matching the canonical source body. Final BLR at 0x215b80 precedes pause at 0x215b84; Windows retail expands the source call."
+
+[[functions]]
 retail_va = 0x556ab0
 unit = "remote"
 mac_section = 0
