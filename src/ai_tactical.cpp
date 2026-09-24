@@ -484,49 +484,54 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
 // The kills_only argument here is a LITERAL 0, not estimate's own byte
 // (`push 0` where get_breath_bonus pushes estimate->kills_only), and
 // the ranged argument is 0 in both.
+// DC locals: already_checked and valid_directions. DC also calls the
+// ordinary ValidHex and min(int,int) helpers; VC6 expands both here.
 VA(0x00436620, 0x13A)  // dc 0x3c608
 long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
 {
-    long counted = 1 << enemy->m_bitIndex;
-    long directions = ourArmy->getMultiHeadDirections(ourHex, enemy, enemyHex);
+    long alreadyChecked = 1 << enemy->m_bitIndex;
+    long validDirections = ourArmy->getMultiHeadDirections(ourHex, enemy, enemyHex);
     long value = 0;
     for (long i = 0; i < 8; i++) {
-        if ((directions & (1 << i)) == 0)
+        if ((validDirections & (1 << i)) == 0)
             continue;
         long hex = ourArmy->getAdjacentHex(ourHex, i);
-        if (hex < 0 || hex >= 187)
+        if (!g_combatManager->validHex(hex))
             continue;
         army* target = g_combatManager->m_cells[hex].getArmy();
         if (target == 0)
             continue;
         if (target->m_combatSide == ourGroup)
             continue;
-        if (counted & (1 << target->m_bitIndex))
+        if (alreadyChecked & (1 << target->m_bitIndex))
             continue;
         long damage = ourArmy->getAverageDamage(target, 0, troopCount, 1, 0);
         if (estimate->m_simulated)
-            damage = cppMin(damage, target->getTotalHitPoints(1));
+            damage = ::min(static_cast<int>(damage),
+                           static_cast<int>(target->getTotalHitPoints(1)));
         value += target->getLossCombatValue(estimate->m_lowestAttack,
                                                estimate->m_lowestDefense, 0, damage, 0);
-        counted |= 1 << target->m_bitIndex;
+        alreadyChecked |= 1 << target->m_bitIndex;
     }
     return value;
 }
 
+// DC calls the same ValidHex and min(int,int) helpers as the multihead twin.
 VA(0x00436760, 0xDF)  // dc 0x3c708
 long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
 {
     long direction = ourArmy->getAttackDirection(ourHex, enemy, enemyHex);
     long breathHex = ourArmy->getAdjacentHex(ourHex, direction);
     long hex = ourArmy->getAdjacentCellIndex(breathHex, direction);
-    if (hex < 0 || hex >= 187)
+    if (!g_combatManager->validHex(hex))
         return 0;
     army* target = g_combatManager->m_cells[hex].getArmy();
     if (target == 0 || target == enemy)
         return 0;
     long damage = ourArmy->getAverageDamage(target, 0, troopCount, 1, 0);
     if (estimate->m_simulated)
-        damage = cppMin(damage, target->getTotalHitPoints(1));
+        damage = ::min(static_cast<int>(damage),
+                       static_cast<int>(target->getTotalHitPoints(1)));
     long value = target->getLossCombatValue(estimate->m_lowestAttack,
                                                estimate->m_lowestDefense, 0, damage,
                                                estimate->m_killsOnly);
