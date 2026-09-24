@@ -75,7 +75,8 @@ def load(root: Path) -> list[Reference]:
                 _, signature, _ = finder(source.read_text(), selector, source)
             elif row.get("compgen_kind"):
                 kind, type_name = row["compgen_kind"], row.get("compgen_type")
-                if (kind not in ("CLASS_CTOR", "IMPLICIT_COPY_CTOR", "IMPLICIT_DTOR", "VECTOR_DTOR")
+                if (kind not in ("CLASS_CTOR", "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
+                                 "IMPLICIT_DTOR", "VECTOR_DTOR")
                         or not isinstance(type_name, str)
                         or not re.fullmatch(r"[A-Za-z_]\w*", type_name)):
                     raise SourceError(f"{path}: invalid compiler-generated callee claim {va:#x}")

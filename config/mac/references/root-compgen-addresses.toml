@@ -1,6 +1,39 @@
 # Reviewed compiler-generated class addresses. Source annotations own identities.
 
 [[functions]]
+retail_va = 0x457cb0
+unit = "campaignbrief"
+compgen_kind = "IMPLICIT_COPY_ASSIGN"
+compgen_type = "CMapHeaderData"
+mac_section = 0x0
+mac_offset = 0x64044
+mac_size = 0x228
+target_sha256 = "dcbbe56d91f90e793f95912f2985997c604560dee5ff1db55f2e9b214a5aa5cb"
+evidence = "Campaign select and save-header reset both call this base assignment. It copies CMapHeaderData's scalar head, vector<int> at+0x20 via0x682fc, eight player slots at+0x9c with stride0x40, and map at+0x29c via0x68708. It returns the destination at0x64268; next body starts0x6426c. Windows source has the matching compiler-generated copy-assignment claim."
+
+[[functions]]
+retail_va = 0x45b140
+unit = "campaignbrief"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "map"
+mac_section = 0x0
+mac_offset = 0x670cc
+mac_size = 0x60
+target_sha256 = "ecf1b446c11a18bb97daa370b8ec3668d41541d8b5f796ddf6f897f3cca5f307"
+evidence = "The CMapHeaderData and NewSMapHeader destructor paths call this body on their map member at+0x29c. It checks map size at+4, destroys the tree through0x68688 and supports CodeWarrior's deleting flag. Complete body ends BLR0x67128; next destructor starts0x6712c. Windows source claims the corresponding map destructor COMDAT."
+
+[[functions]]
+retail_va = 0x45ae70
+unit = "campaignbrief"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "CampaignScenarioPreview"
+mac_section = 0x0
+mac_offset = 0x67598
+mac_size = 0xb0
+target_sha256 = "517dcbf3bb0f5e72f96a3ee768d9576becde509bc7f35b31d6d0cda0f884f5bb"
+evidence = "CampaignScenarioPreview's setup suffix has no destructor; this generated body destroys the two NewSMapHeader strings at+0x2b0/+0x2ac and base map at+0x29c, eight slots at+0x9c and vector at+0x20. It follows SGameSetupOptions constructor and ends BLR0x67644 before the separate NewSMapHeader constructor0x67648. This is distinct from the pinned NewSMapHeader destructor0x67384."
+
+[[functions]]
 retail_va = 0x45aab0
 unit = "campaignbrief"
 compgen_kind = "IMPLICIT_DTOR"

@@ -1,6 +1,30 @@
 # Reviewed library call destinations; these are not game reconstruction scores.
 
 [[functions]]
+symbol = ".__ct__Q23std38__vector_pod<Ul,Q23std13allocator<Ul>>Fv"
+mac_section = 0
+mac_offset = 0x672d0
+mac_size = 0x14
+sha256 = "1f57a9e7fd6ea30160ea07cfe7ac4e4a42647e04ba9018c22c46348019cde391"
+evidence = "The pinned SavedGameHeader and campaign-brief constructors call this on CMapHeaderData::m_placeholders at+0x20. A CodeWarrior -O3 probe with the same MSL vector<int> emits the named 20-byte __vector_pod<unsigned long> default constructor, exactly the five target instructions zeroing capacity, size and data. Library template identity only."
+
+[[functions]]
+symbol = ".__ct__Q23std11bitset<156>Fv"
+mac_section = 0
+mac_offset = 0x682e0
+mac_size = 0x1c
+sha256 = "e12f2d6efa51301180c25e54c1d8db558804318916e35ff87770c7d1c05f78b8"
+evidence = "The same constructors call this on NewSMapHeader::m_availableHeroes at+0x2b4. A CodeWarrior -O3 probe using the pinned MSL bitset<156> emits this exact 28-byte constructor: zero five words and return. Library template identity only."
+
+[[functions]]
+symbol = ".__ct__Q23std225__tree<Q23std29pair<Ci,18type_map_hero_info>,Q33std99map<i,18type_map_hero_info,Q23std7less<i>,Q23std48allocator<Q23std29pair<Ci,18type_map_hero_info>>>13value_compare,Q23std48allocator<Q23std29pair<Ci,18type_map_hero_info>>>FRCQ33std99map<i,18type_map_hero_info,Q23std7less<i>,Q23std48allocator<Q23std29pair<Ci,18type_map_hero_info>>>13value_compareRCQ23std48allocator<Q23std29pair<Ci,18type_map_hero_info>>"
+mac_section = 0
+mac_offset = 0x687d4
+mac_size = 0x28
+sha256 = "596ad37c10a507a14295d258929e251d94c4827ae1c48be3f4f82f61fbab5530"
+evidence = "CMapHeaderData constructors call this on m_heroPlayerSetups at+0x29c with the comparator byte by reference. CodeWarrior -O3 with the pinned MSL map<int,type_map_hero_info> emits the same 40-byte __tree constructor shape and full mangled symbol; it initializes the tree sentinel, zero count and comparator. The target's TOC load is link-specific. Library template identity only."
+
+[[functions]]
 symbol = ".test__Q23std9bitset<4>CFUl"
 mac_section = 0
 mac_offset = 0xe97d4
