@@ -3005,7 +3005,6 @@ int game::save(TAbstractFile* outfile)
 {
     char byteValue;
     unsigned char extraByteValue;
-    char charBuffer;
     short shortValue;
     unsigned short extraShortValue;
     int zero;
@@ -3015,7 +3014,7 @@ int game::save(TAbstractFile* outfile)
         return -1;
 
     {
-        charBuffer = g_grailOwner;
+        char charBuffer = g_grailOwner;
         outfile->write(&charBuffer, sizeof(charBuffer));
     }
     outfile->write(m_artifactDisabled, sizeof(m_artifactDisabled));
