@@ -22,6 +22,42 @@ target_sha256 = "260a28e55ae6c44541cbe261c30036229065f94e566755cf3d6a56b7ee04556
 evidence = "Dreamcast names the cdecl variadic CLogFile::Log in remote.h:249. Mac's 28-byte release body spills variadic registers r5-r10 to their caller homes and returns; the command main call at 0x8260c passes the `Received action [%d]--> [%d,%d,%d]` format and four message fields, and game/remote/selection callers pass their authored g_logFile.log formats. Windows retains those source calls to the folded empty representative at 0x404df0. The preceding main ends at 0x82794 and the next body begins at 0x827b4."
 
 [[functions]]
+retail_va = 0x556ab0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214748
+mac_size = 0x58
+target_sha256 = "cd91a50114edad54a31d28d8ea12ac3f492ef52e8f0dd54d99f69699c8fd2733"
+evidence = "advManager::doCombat constructs this level-pick wait dialog before calling waitForLevels at 0x2147a0. The body calls the CAnimatedDlg base constructor, installs CLevelPickWaitDlg's vtable at data 1+0x5965c, constructs its embedded CNetMsgHandlerPause at +0x78, sets fromWho=-1 and playerDropped=0, then returns at 0x21479c. This matches the Windows constructor claim 0x556ab0."
+
+[[functions]]
+retail_va = 0x556f20
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214b00
+mac_size = 0x104
+target_sha256 = "4d7645bd0e0eed5feded6385f899309cc03ea2ef84056d3783ce718324788f92"
+evidence = "advManager::doCombat constructs this remote-battle wait dialog. The body calls the CAnimatedDlg base constructor, installs CWaitForRemoteBattleDlg's vtable at data 1+0x595dc, constructs its embedded CCombatInitMsg and pause handler, and initializes received state. Its final BLR at 0x214c00 immediately precedes the wait method; Windows constructor claim is 0x556f20."
+
+[[functions]]
+retail_va = 0x557dd0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215b84
+mac_size = 0x3c
+target_sha256 = "d450ead600ff8a2232337c6dcbb8cd9a07a8436eab3a75d7fa1e9d2eadbe9476"
+evidence = "advManager::doCombat pauses its turn timer through this body. It checks turnStartTime at receiver+4 and stores GameTime::get into pauseTime at +0x10 when active. This is the existing CTurnDuration::pause source call and Windows body 0x557dd0. BLR at 0x215bbc precedes resume at 0x215bc0."
+
+[[functions]]
+retail_va = 0x557df0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215bc0
+mac_size = 0x68
+target_sha256 = "e25c3cf329049ae5adce03962fc4948e45c788edb7ece572052e7e0cbe6f257d"
+evidence = "advManager::doCombat calls this body twice while unwinding its paused turn timer. The body checks CTurnDuration pauseTime at +0x10 and turnStartTime at +4, computes GameTime::get minus pauseTime, calls the adjacent addTime helper at 0x215b68, then clears pauseTime. This is the existing CTurnDuration::resume source call and the Windows exact body at 0x557df0. Final BLR at 0x215c24 precedes the next entry at 0x215c28."
+
+[[functions]]
 retail_va = 0x553770
 unit = "remote"
 mac_section = 0

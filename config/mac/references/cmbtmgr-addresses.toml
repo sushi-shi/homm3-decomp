@@ -1,6 +1,15 @@
 # Address-only references discovered from CMBTMGR TU order, then independently verified.
 # Names remain owned by src/cmbtmgr.cpp VA claims; no compiled Mac target admission.
 
+[[helpers]]
+source_helper = "combatManager::checkNativeTerrain"
+unit = "cmbtmgr"
+mac_section = 0
+mac_offset = 0x6f86c
+mac_size = 0x6c
+target_sha256 = "a5b32d0f7be7f5bcd08b74ed0545d12ddd6bbcb8d5802ad86e83a4b32f3b3eaf"
+evidence = "initNonVisualVars calls this separate body at 0x6f84c after setupAdjacencyArray, generateMap and loadArmies. It scans each side's army slots at 0x524 stride, sets the side's native-terrain summary byte after the first native army, and returns at 0x6f8d4. Dreamcast names CheckNativeTerrain and Windows retail expands its ordinary source helper in the same caller; source definition and call already exist. Next function begins at 0x6f8d8."
+
 [[functions]]
 retail_va = 0x00462760
 unit = "cmbtmgr"
