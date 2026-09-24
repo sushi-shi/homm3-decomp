@@ -571,8 +571,9 @@ static void markShipyards(playerData* player)
 // set_danger_zones statement.
 // DC 0x10e894: the 920/921 absent-boat continue closes before the 925/926
 // cell update. Its size/getCell/cell calls need no inline-depth overrides.
-// Keeping the returned boat cell in a local separates DC's call and store;
-// retail's expansion then has all 79 CFG blocks exact (99.29 -> 99.96%).
+// Keeping the returned boat cell in a local separates DC's call and store.
+// Passing the indexed shipyard point directly to getCell preserves DC's
+// operator[] source call and makes MoveHero's retail expansion byte-exact.
 static void clearShipyards(playerData* player)
 {
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
@@ -588,8 +589,8 @@ static void clearShipyards(playerData* player)
 
     for (unsigned int shipyardIndex = 0;
          shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
-        type_point shipyardPoint = player->m_shipyards[shipyardIndex];
-        NewmapCell* shipyard = g_game->getCell(shipyardPoint);
+        NewmapCell* shipyard = g_game->getCell(
+            player->m_shipyards[shipyardIndex]);
         const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
             static_cast<const void*>(&shipyard->m_extraInfo));
         if (info->m_boatX == ShipyardInfo::NO_BOAT)
