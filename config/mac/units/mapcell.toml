@@ -6,7 +6,10 @@ source_helpers = [
     "NewfullMap::saveQuestGuardList",
     "readMapCreatureId",
     "readSavedCreatureId",
+    "NewfullMap::readQuestGuardData",
+    "readWitchHutData",
     "NewfullMap::readRandomDwellingData",
     "NewfullMap::readRandomDwellingLevelData",
     "NewfullMap::readRandomDwellingFactionData",
+    "NewfullMap::readHeroPlaceholderData",
 ]

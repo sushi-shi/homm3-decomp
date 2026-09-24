@@ -3172,6 +3172,34 @@ void NewfullMap::soDTransformRandomDwellings()
     }
 }
 
+// Mac retains these six map-object readers in readObject's call sequence.
+// Complete's Windows dispatcher expands their corresponding bodies.
+void NewfullMap::readQuestGuardData(TAbstractFile* infile, CObject* tempObject)
+{
+    TQuestGuard tempGuard;
+    tempGuard.read(infile);
+    {
+        m_questGuardList.push_back(tempGuard);
+        tempObject->m_extraInfo = m_questGuardList.size() - 1;
+    }
+    if (tempGuard.m_quest) {
+        CMapObjectData* questData = static_cast<CMapObjectData*>(
+            static_cast<void*>(tempGuard.m_quest));
+        m_mapObjectData.push_back(questData);
+    }
+}
+
+static void readWitchHutData(TAbstractFile* infile, CObject* tempObject)
+{
+    if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        tempObject->m_extraInfo = 0xefbf;
+    } else {
+        int allowedSkills;
+        infile->read(&allowedSkills, sizeof(allowedSkills));
+        tempObject->m_extraInfo = allowedSkills;
+    }
+}
+
 void NewfullMap::readRandomDwellingData(TAbstractFile* infile,
                                          CObject* object)
 {
@@ -3257,6 +3285,27 @@ void NewfullMap::readRandomDwellingFactionData(TAbstractFile* infile,
     m_randomDwellings.push_back(dwelling);
 }
 
+void NewfullMap::readHeroPlaceholderData(TAbstractFile* infile, CObject* tempObject)
+{
+    char value;
+    HeroPlaceholderData placeholder;
+    placeholder.m_object = tempObject;
+
+    infile->read(&value, sizeof(value));
+    placeholder.m_owner = value;
+
+    infile->read(&value, sizeof(value));
+    placeholder.m_heroId = value;
+    if (placeholder.m_heroId
+            == HeroPlaceholderData::HERO_ID_BY_POWER_RATING) {
+        placeholder.m_heroId = -1;
+        infile->read(&value, sizeof(value));
+        placeholder.m_powerRating = value;
+    }
+
+    m_heroPlaceholders.push_back(placeholder);
+}
+
 // E:\gamedcs\mapcell.cpp:3290
 // The h3m object dispatcher.  Five stream fields land in the object itself -
 // x, y, z, a FOUR-byte type index of which only the low word is kept, and
@@ -3272,8 +3321,8 @@ void NewfullMap::readRandomDwellingFactionData(TAbstractFile* infile,
 // readHolyGrailData/readShrineData members. Their definitions stay at their
 // original mapcell.cpp positions, and Complete expands those calls here.
 // No standalone retail slot is needed to preserve those source boundaries.
-// The Complete-only placeholder and quest records stay in their caller arms.
-// Mac retains three separate random-dwelling readers; Complete expands them.
+// Mac retains the placeholder, quest, witch-hut, and random-dwelling
+// readers; Complete expands their calls in this dispatcher.
 // Restoring all four helpers raises 56.6382 -> 60.0594 in the 76-TU control.
 // The native-vector frontier in QUEST_GUARD remains the large residual;
 // no invented arm wrapper or additional inline-depth pin is introduced.
@@ -3395,25 +3444,9 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         readEventData(infile, tempObject, mapVersion);
         break;
 
-    case HERO_PLACEHOLDER: {
-        HeroPlaceholderData placeholder;
-        placeholder.m_object = tempObject;
-
-        infile->read(&value, sizeof(value));
-        placeholder.m_owner = value;
-
-        infile->read(&value, sizeof(value));
-        placeholder.m_heroId = value;
-        if (placeholder.m_heroId
-                == HeroPlaceholderData::HERO_ID_BY_POWER_RATING) {
-            placeholder.m_heroId = -1;
-            infile->read(&value, sizeof(value));
-            placeholder.m_powerRating = value;
-        }
-
-        m_heroPlaceholders.push_back(placeholder);
+    case HERO_PLACEHOLDER:
+        readHeroPlaceholderData(infile, tempObject);
         break;
-    }
 
     case SPELL_SCROLL:
         readSpellScrollData(infile, tempObject);
@@ -3490,29 +3523,12 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
     }
 
-    case QUEST_GUARD: {
-        TQuestGuard tempGuard;
-        tempGuard.read(infile);
-        {
-            m_questGuardList.push_back(tempGuard);
-            tempObject->m_extraInfo = m_questGuardList.size() - 1;
-        }
-        if (tempGuard.m_quest) {
-            CMapObjectData* questData = static_cast<CMapObjectData*>(
-                static_cast<void*>(tempGuard.m_quest));
-            m_mapObjectData.push_back(questData);
-        }
+    case QUEST_GUARD:
+        readQuestGuardData(infile, tempObject);
         break;
-    }
 
     case WITCH_HUT:
-        if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            tempObject->m_extraInfo = 0xefbf;
-        } else {
-            int allowedSkills;
-            infile->read(&allowedSkills, sizeof(allowedSkills));
-            tempObject->m_extraInfo = allowedSkills;
-        }
+        readWitchHutData(infile, tempObject);
         break;
 
     default:

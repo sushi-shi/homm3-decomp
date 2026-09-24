@@ -812,6 +812,33 @@ evidence = "Source helper without standalone Windows VA. TU order plus TSeercons
 source_helper = "NewfullMap::readSeerData"
 
 [[helpers]]
+mac_section = 0
+mac_offset = 0x1256d8
+mac_size = 0xe4
+unit = "mapcell"
+target_sha256 = "0453197f50d9855443a13d2b149c35dfcf18f1a9745b10b398f9d58d481ae295"
+source_helper = "NewfullMap::readQuestGuardData"
+evidence = "Mac readObject calls this at 0x126230 after the random dwellings. It constructs and reads a TQuestGuard, appends the guard, writes its index to the object, then conditionally registers its quest pointer. Windows readObject expands the same source block in its QUEST_GUARD arm. Entry 0x1256d8 follows readSeerData; terminal BLR 0x1257b8 precedes the next entry. Name inferred from role."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1257bc
+mac_size = 0x74
+unit = "mapcell"
+target_sha256 = "bc95c817dc4a186ae2014706a596c17a8d05875923fa71157acb765d628eb1fd"
+source_helper = "readWitchHutData"
+evidence = "Mac readObject calls this two-argument helper at 0x126240 for WITCH_HUT. It tests map format 14, writes the 0xefbf sentinel or reads a four-byte skill mask into object extra info. Windows readObject expands the same arm. Terminal BLR 0x12582c precedes next entry; name inferred from role."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x125df8
+mac_size = 0xc4
+unit = "mapcell"
+target_sha256 = "cf81a53c81634e481d1b6f8b80e1e643b071800a9d33cd4faf1768772ac44d28"
+source_helper = "NewfullMap::readHeroPlaceholderData"
+evidence = "Mac readObject calls this at 0x1260b4 for HERO_PLACEHOLDER. It reads owner and hero ID, conditionally reads rating for 0xff, and appends a placeholder record. Windows readObject expands the corresponding arm. Terminal BLR 0x125eb8 precedes readObject; name inferred from role."
+
+[[helpers]]
 mac_section = 0x0
 mac_offset = 0x128708
 mac_size = 0x5c
