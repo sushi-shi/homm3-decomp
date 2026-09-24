@@ -777,6 +777,14 @@ sha256 = "2f3b8cd1fbb716384a278dafba9cc4222b50ec09e9d33aeb50708298a2b2c654"
 evidence = "The installed CodeWarrior Pro 6 MSL C.PPC.Lib names this 40-byte .atoi hunk. Every instruction equals the pinned Mac body except its call at +0x14, whose object relocation links to strtol at 0x28fa14; the final BLR is at 0x28fb40. It calls strtol(text, NULL, 10). Mac has 122 direct calls, including creature trait and combat wall table parsing. Library identity only."
 
 [[functions]]
+symbol = ".atof"
+mac_section = 0
+mac_offset = 0x28f66c
+mac_size = 0x24
+sha256 = "d63ef61d47be9ed4612184801ef7ab866e3ef8f2b15b1d5ce1ca9dd09b2af970"
+evidence = "The complete 36-byte MSL wrapper sets end-pointer argument r4 to null, calls strtod at 0x28f598, and returns the floating-point result; BLR at 0x28f68c bounds the body. Five direct calls in initializeCreatureAnimationTraits correspond to its five source atof conversions. Library identity only."
+
+[[functions]]
 symbol = ".set__Q23std11bitset<145>FUlb"
 mac_section = 0
 mac_offset = 0x9d524
