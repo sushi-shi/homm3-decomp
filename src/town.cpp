@@ -626,16 +626,13 @@ void town::initializeHordes()
     }
 }
 
+// Dreamcast town.cpp:968 calls get_army before HasCreatures; Mac retains
+// getArmy and retail expands the ordinary town helper here.
 VA(0x005bdfe0, 0x4E)  // dc 0x16654c
 int town::hasGarrison()
 {
     if (m_visitingHeroId < 0) {
-        armyGroup* group;
-        if (m_garrisonHeroId < 0)
-            group = &m_garrison;
-        else
-            group = &g_game->getHero(m_garrisonHeroId)->m_army;
-        if (!group->hasCreatures())
+        if (!getArmy().hasCreatures())
             return 0;
     }
     return 1;
@@ -1170,19 +1167,17 @@ long town::getHordeBonus(long dwelling) const
     return bonus;
 }
 
+// Mac getAssembledLegionBonus calls the ordinary getCastleGrowthBonus
+// body at 0:0x1b4c20; retail VC6 expands that same source call.
 VA(0x005bf810, 0xE2)
 long town::getAssembledLegionBonus(long dwelling)
 {
     long bonus = 0;
     if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
-        long growth = g_creatureTypeTraits[g_townDwellingCreatures[
-            m_type * (2 * TOWN_DWELLING_COUNT) + dwelling]].m_growthRate;
-        if (m_built & g_bitNumber[CASTLE_CASTLE_ID])
-            bonus = growth;
-        else if (m_built & g_bitNumber[CASTLE_CITADEL_ID])
-            bonus = growth / 2;
-        else
-            bonus = 0;
+        TCreatureType creature = g_townDwellingCreatures[
+            m_type * (2 * TOWN_DWELLING_COUNT) + dwelling];
+        long growth = g_creatureTypeTraits[creature].m_growthRate;
+        bonus = getCastleGrowthBonus(creature);
         bonus += growth;
         bonus /= 2;
     }
@@ -1703,14 +1698,16 @@ unsigned char town::canBuild(short buildingId) const
     return 0;
 }
 
+// Dreamcast town.cpp:2141/2147 calls is_legal_building and CanBuildDock.
+// Mac retains both; retail expands the first and can inline the second.
 VA(0x005c0e60, 0xC0)  // dc 0x16865c
 // Complete reads the full dword parameter and its exact symbol encodes int;
 // Dreamcast's older interface records short building_id.
 unsigned char town::canEverBuild(int buildingId) const
 {
-    if (g_bitNumber[buildingId] & m_available) {
+    if (isLegalBuilding(type_building_id(buildingId))) {
         if (buildingId == DOCK_ID)
-            return m_dockSite != TOWN_DOCK_SITE_NONE;
+            return canBuildDock();
         if (!(buildingId == HALL_CAPITOL_ID
               && g_game->m_players[m_owner].hasCapitol())) {
             __int64 requirements = g_hierarchyMask[m_type][buildingId];
@@ -1721,6 +1718,8 @@ unsigned char town::canEverBuild(int buildingId) const
     return 0;
 }
 
+// Dreamcast town.cpp:2188 calls CanBuildDock; the source helper also
+// survives as a direct Mac call at 0:0x1b6b8c.
 VA(0x005c0f20, 0x156)  // dc 0x168714
 __int64 town::getBuildableMask() const
 {
@@ -1738,7 +1737,7 @@ __int64 town::getBuildableMask() const
             mask |= g_bitNumber[building];
     }
     mask &= m_available;
-    if (m_dockSite == TOWN_DOCK_SITE_NONE)
+    if (!canBuildDock())
         mask &= ~g_bitNumber[DOCK_ID];
     if (g_game->m_players[m_owner].hasCapitol())
         mask &= ~g_bitNumber[HALL_CAPITOL_ID];
