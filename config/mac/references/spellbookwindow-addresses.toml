@@ -1,6 +1,15 @@
 # Reviewed Mac address identities; unbound compiler names are intentionally omitted.
 
 [[functions]]
+retail_va = 0x59bdf0
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18b0ac
+mac_size = 0x1424
+target_sha256 = "920a23dce0b3181e22125d37465e732b28b85c380cdd3568f1da333a9ae8c35a"
+evidence = "combatManager::viewSpells calls this with the hero, army group, combat context and terrain arguments used by the ordinary TSpellbookWindow constructor at Windows VA 0x59bdf0. The Mac body starts with the CAdvPopup base constructor at 0x1bd60, stores these four constructor arguments at offsets 0x60/0x64/0x5c/0x68, and ends at BLR 0x18c4cc immediately before the reviewed destructor at 0x18c4d0. This records a retained game constructor; the Windows caller already has its canonical source call."
+
+[[functions]]
 retail_va = 0x59c8f0
 unit = "spellbookwindow"
 mac_section = 0x0
