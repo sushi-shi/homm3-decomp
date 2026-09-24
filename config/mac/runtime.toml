@@ -743,3 +743,27 @@ mac_offset = 0x4f5c
 mac_size = 0xf8
 sha256 = "d0ca3d234c0b15f13f06a66643dbcce54689099bf63bc5fc852a38bdb787982f"
 evidence = "The puzzle-window initializer calls this body after constructing each bitset<10>(1), passing shifts 0..9. It shifts the receiver's word left by r4, clears higher words if any, masks the low word to ten bits and returns at BLR 0x5050 before the next prologue at 0x5054. The neutral label records the MSL bitset<10> shift operation without guessing the emitted operator mangling."
+
+[[functions]]
+symbol = ".__ct__Q23std9bitset<8>Fv"
+mac_section = 0
+mac_offset = 0xe728c
+mac_size = 0xc
+sha256 = "1d07a0cbd27fe409ee017931a201fc6bef604d6d87e290224325623dc3c60def"
+evidence = "NewSMapHeader::read/load and game construction call this complete three-instruction zero-word constructor for stack bitset<8> temporaries. The callers then copy its word or call the adjacent bitset<8>::flip to form an all-players mask. BLR at 0xe7294 precedes flip at 0xe7298. The installed MSL default bitset constructor zeros its one storage word; runtime template identity only."
+
+[[functions]]
+symbol = ".flip__Q23std9bitset<8>Fv"
+mac_section = 0
+mac_offset = 0xe7298
+mac_size = 0x1c
+sha256 = "14f394c4ce9c24ee9dbd4fcb739763cc7ddf976644a234c98d13784bd69da19f"
+evidence = "NewSMapHeader::load and game construction call this on a copied zero-initialized bitset<8> temporary; its seven instructions complement the sole word, mask it to eight bits and return the receiver. BLR at 0xe72b0 precedes the next helper at 0xe72b4. The exact eight-bit mask and callers identify the MSL bitset<8>::flip instantiation."
+
+[[functions]]
+symbol = ".set__Q23std11bitset<156>FUlb"
+mac_section = 0
+mac_offset = 0xe9f60
+mac_size = 0xe8
+sha256 = "41b4270f068462904cfaa1cc1e41cd5c6770d64c086545bcf695bf5dad6e69b0"
+evidence = "NewSMapHeader::read calls this setter three times for its five-word m_availableHeroes bitset<156>; the bound check compares r4 with 0x9c, then sets or clears the indexed bit according to r5. The complete body returns at BLR 0xea044 and the next bitset helper begins at 0xea048. It shares the reviewed MSL bitset-set instruction shape and mangling. Runtime template identity only."
