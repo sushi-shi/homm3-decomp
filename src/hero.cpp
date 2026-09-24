@@ -389,16 +389,14 @@ bool type_obscuring_object::load(void* inputHandle)
     return success;
 }
 
+// Dreamcast hero.cpp:445/449 calls get_location and game::get_cell.
+// Retail VC6 expands both header helpers at this site.
 VA(0x004d75d0, 0x10A)  // dc 0xcac58
 void type_obscuring_object::obscureCell(TAdventureObjectType newType, long id)
 {
     if (!m_valid) {
-        type_point location;
-        location.m_x = m_x;
-        location.m_y = m_y;
-        location.m_z = m_z;
-        m_obscuredLocation = location;
-        NewmapCell* cell = g_game->m_worldMap.cell(m_obscuredLocation);
+        m_obscuredLocation = getLocation();
+        NewmapCell* cell = g_game->getCell(m_obscuredLocation);
         m_valid = 1;
         m_obscuredType = cell->m_type;
         m_wasTrigger = cell->m_isTrigger;
@@ -412,11 +410,12 @@ void type_obscuring_object::obscureCell(TAdventureObjectType newType, long id)
     }
 }
 
+// Dreamcast hero.cpp:475 calls game::get_cell; retail expands it.
 VA(0x004d76e0, 0xD0)  // dc 0xcacfc
 void type_obscuring_object::restoreCell()
 {
     if (m_valid) {
-        NewmapCell* cell = g_game->m_worldMap.cell(m_obscuredLocation);
+        NewmapCell* cell = g_game->getCell(m_obscuredLocation);
         m_valid = 0;
         cell->m_type = m_obscuredType;
         cell->m_isTrigger = m_wasTrigger;
@@ -2252,9 +2251,11 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
         levelsBetweenSchools = 4;
     }
 
+    // Dreamcast hero.cpp:2051 calls the typed Hero.h get_secondary_skill
+    // accessor here; retail VC6 expands its packed-byte load.
     if (currentHero->m_lastWisdom + wisdomGap <= currentHero->m_level &&
-        currentHero->m_skillLevel[eSecSkillWisdom] < maxLevel &&
-        currentHero->m_skillLevel[eSecSkillWisdom] >= minLevel &&
+        currentHero->getSecondarySkill(eSecSkillWisdom) < maxLevel &&
+        currentHero->getSecondarySkill(eSecSkillWisdom) >= minLevel &&
         excluded != eSecSkillWisdom &&
         !skillDisabled[eSecSkillWisdom])
         return eSecSkillWisdom;
