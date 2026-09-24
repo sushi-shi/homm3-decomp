@@ -78,6 +78,24 @@ mac_symbol = ".checkForUpgradedTown__22VictoryConditionStructFv"
 target_sha256 = "b77a8e3b60a6c53348f83a309403707eb3957f0c70e804c30beef572047a3f88"
 evidence = "Canonical VictoryConditionStruct::checkForUpgradedTown is called on game map-header victory condition at game+0x1f124. Mac buildBuilding passes that address at 0x1b4668 and calls the retained body 0:0x1fdb2c; its result gates checkEndGame. The body ends at BLR 0x1fddc0. The distinct reviewed checkForGrailBuildingWin begins at 0x1fddc4, fixing the end-exclusive boundary."
 
+[[helpers]]
+unit = "town"
+source_helper = "town::setLegalBuildings"
+mac_section = 0
+mac_offset = 0x1b6e20
+mac_size = 0x38
+target_sha256 = "baeab8b48df0a420f9f63065cf131d872fbc6175ee73c45cdf8fae95fc3562b4"
+evidence = "The two initializeBuildings calls at 0x1b6268 and 0x1b63d0 reach this ordinary town method. It complements the 64-bit disabled mask, intersects the eligible mask indexed by town type, and writes m_available at +0x154/+0x158. BLR 0x1b6e54; next function begins 0x1b6e58. Windows expands the source helper."
+
+[[helpers]]
+unit = "town"
+source_helper = "initializeBuildingCosts"
+mac_section = 0
+mac_offset = 0x1b71e4
+mac_size = 0xa4
+target_sha256 = "450c20bd849564801d5499e70f898eaa5cdd68c3322efe76db57cf44ef3f19b0"
+evidence = "initializeBuildingCostsTables calls this source-private helper at 0x1b70e8, 0x1b713c and 0x1b718c for special, neutral and dwelling tables. Its seven ordered atoi calls fill seven four-byte costs. BLR 0x1b7284; next prologue starts 0x1b7288. Windows expands the same three source calls."
+
 [[functions]]
 retail_va = 0x0049d160
 unit = "event_record"
