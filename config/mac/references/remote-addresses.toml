@@ -159,6 +159,24 @@ target_sha256 = "07dd202c9e4d269717ebff69f13c33bbd5d4b81a6a9aed245ffeef7e8d74006
 evidence = "CChatManager::turnDurationMsg calls this retained addChat helper at 0x2117bc with its formatted line. The callee formats the varargs, updates the chat ring and its widget, then returns at 0x2116c8 immediately before turnDurationMsg at 0x2116cc. The ordinary Windows CChatManager::addChat body is VA 0x553840; its call remains a source call."
 
 [[functions]]
+retail_va = 0x5577f0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215484
+mac_size = 0x18
+target_sha256 = "05c13babdcf32558d71c6e3f92e3df27cccb1a8be508d961269bf4a62be13913"
+evidence = "CNetMsgHandler constructor is reached from both advManager::open and swapManager::open through their derived network handlers. The six-instruction Mac body installs the base vtable at +0 and clears m_inPopup at +4 and m_abortPopupMsg at +8, matching the Windows constructor at 0x5577f0. Terminal BLR 0x215498 precedes checkHandleNet at 0x21549c."
+
+[[functions]]
+retail_va = 0x557860
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21549c
+mac_size = 0xcc
+target_sha256 = "94935ec6fd79b42945468376657a8a5957dc507b2f3e6a78cf1bbfbdd94832fd"
+evidence = "CNetMsgHandler::checkHandleNet follows the base constructor in Mac TU order. It clears msgReceived when supplied, sets m_inPopup, handles an outstanding abort message through virtual handleNetMsg, otherwise asks g_dPlay for remote data at 0x21294c and dispatches it through the same virtual slot. The authored Windows helper at 0x557860 has this branch and call order. Terminal BLR 0x215564 precedes the Mac deleting destructor at 0x215568."
+
+[[functions]]
 retail_va = 0x553960
 unit = "remote"
 mac_section = 0x0
