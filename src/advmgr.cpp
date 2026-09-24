@@ -1753,9 +1753,10 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
 }
 
 // DC lines 2187/2234 retain hideRoute(1, 0, 1)/(1, 0, 0), and lines
-// 2288..2294 retain overrideBottomView. Restoring these canonical calls,
-// plus game::getNumMapLevels, makes the Windows body exact. The reviewed
-// Mac address has instruction-shape evidence, but no exact byte verdict.
+// 2288..2294 retain overrideBottomView. DC also names CheckDimNextHeroBut
+// and get_map_center; Mac calls CheckDimNextHeroBut at 0:0x9e08. Complete
+// expands their bodies here. The reviewed Mac address has instruction-shape
+// evidence, but no admitted exact byte verdict.
 VA(0x00409a70, 0x641)  // dc 0x9a94
 int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
 {
@@ -1794,15 +1795,7 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
                 sleeper = g_game->getHero(localPlayer->m_currHeroId);
             }
             m_advWindow->setSleepImage(sleeper->m_isSleeping);
-            if (g_currentPlayer->isLocalHuman()
-                && g_currentPlayer->hasMobileHero())
-                m_advWindow->widgetClearStatus(
-                    TAdventureMapWindow::NEXT_HERO_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-            else
-                m_advWindow->widgetSetStatus(
-                    TAdventureMapWindow::NEXT_HERO_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+            checkDimNextHeroBut();
         }
         break;
     }
@@ -1863,14 +1856,7 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
             g_game->getTown(g_overviewReturnActionExtra)->view(1);
             fadeOut = 0;
         } else if (g_lowMemory) {
-            type_point viewCentre;
-            int centreX = m_radarOrigin.m_x + 9;
-            int centreY = m_radarOrigin.m_y + 8;
-            int centreZ = m_radarOrigin.m_z;
-            viewCentre.m_x = centreX;
-            viewCentre.m_y = centreY;
-            viewCentre.m_z = centreZ;
-            setEnvironmentOrigin(viewCentre, 1);
+            setEnvironmentOrigin(getMapCenter(), 1);
         }
         redrawAdvScreen(1, 0);
         if (fadeOut)
