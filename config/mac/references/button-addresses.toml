@@ -118,6 +118,15 @@ target_sha256 = "27005a5d9266800816c2bc557475e27e70841810b50cb5b831c66674c187a9d
 evidence = "calls button::main0x62f68 then handler through function pointer on eligible widget event; complete adjacent PowerPC span."
 
 [[helpers]]
+source_helper = "button::button()"
+unit = "button"
+mac_section = 0x0
+mac_offset = 0x62ab8
+mac_size = 0xb0
+target_sha256 = "863ab2baebadd69d329eeb64514ca8154c8e5b77b469e4e12932ffff8ca6d852"
+evidence = "Default button ctor calls the zero-argument widget base ctor at 0x20a504, initializes the hotkey vector and string, then stores the default sprite and frame fields seen in the canonical source body. textButton's default ctor at 0x6385c calls this exact entry. BLR at 0x62b64 and next prologue at 0x62b68 bound the retained body; Windows expands it at the head of textButton's ctor without a separate VA."
+
+[[helpers]]
 source_helper = "button::setPalette"
 unit = "button"
 mac_section = 0x0
