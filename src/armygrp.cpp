@@ -558,15 +558,13 @@ int armyGroup::load(TAbstractFile* infile)
 VA(0x0044aa80, 0x1F)  // dc 0x4eab8
 armyGroup::armyGroup()
 {
-    memset(m_armies, 0xFF, sizeof(m_armies));
-    memset(m_numTroops, 0, sizeof(m_numTroops));
+    initialize();
 }
 
 VA(0x0044aaa0, 0x5A)  // dc 0x4ead0
 armyGroup::armyGroup(TCreatureType type, int amount)
 {
-    memset(m_armies, 0xFF, sizeof(m_armies));
-    memset(m_numTroops, 0, sizeof(m_numTroops));
+    initialize();
     for (short i = 0;
             i < ARMY_GROUP_SLOT_COUNT && amount > 0; ++i) {
         m_armies[i] = type;
