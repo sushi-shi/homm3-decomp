@@ -12,5 +12,6 @@ source_helpers = [
     "valueOfArena",
     "valueOfMapArtifact",
     "valueOfBlackBox",
+    "valueOfUniversity(const hero* currentHero, NewmapCell* cell)",
     "aiValueOfEvent(const hero* currentHero, type_point point, long& moveCost)",
 ]

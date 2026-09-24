@@ -1,5 +1,152 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 
+# The event dispatcher at 0x146134 retains these source helpers as calls.
+# Their order and terminal returns delimit the spans; the field operations
+# and called functions identify each body independently of that order.
+[[helpers]]
+source_helper = "valueOfUniversity(const hero* currentHero, NewmapCell* cell)"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13ebfc
+mac_size = 0x40
+target_sha256 = "2bd1413846d79c81082c296624728fd0e88c66e3ecf6e152e4ae518ccda9a9cf"
+evidence = "Dispatcher call 0x14696c reaches a two-call adapter: getUniversity at 0x5fe4, then the already paired three-argument valueOfUniversity at 0x13eb18 with mustPay=1. BLR 0x13ec38 precedes aiVisitUniversity."
+
+[[helpers]]
+source_helper = "valueOfCampfire"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1426c8
+mac_size = 0x6c
+target_sha256 = "4569c303e082fe9b8d89cbc18fc441e49dab274d17daaa8c93bc90ce4246ff2b"
+evidence = "Dispatcher call 0x146260 reaches the leaf body that extracts campfire size/resource from cell bits and multiplies both player resource values. BLR 0x142730 precedes the named generator body."
+
+[[helpers]]
+source_helper = "valueOfDefenseTower"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142b14
+mac_size = 0x84
+target_sha256 = "1630bdc392bf9e1b17e963f602f150675d2e68050f4ebe5b8a88ca669a9e1520"
+evidence = "Dispatcher call 0x146344 reaches the visited-defense-tower bit test, hero experience increment and turn-ratio valuation. BLR 0x142b94 precedes the next helper."
+
+[[helpers]]
+source_helper = "valueOfGarrison"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142c74
+mac_size = 0x164
+target_sha256 = "0cf030b678b4e83b30c4086c80e03e43ea07470eb8aa829530f10abd2b964489"
+evidence = "Dispatcher call 0x1464d8 reaches the garrison owner/team tests, creature swapper and combat fallback of the source helper. BLR 0x142dd4 precedes valueOfIdol."
+
+[[helpers]]
+source_helper = "valueOfIdol"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142dd8
+mac_size = 0x184
+target_sha256 = "321b170bee37346274a6ddb1bd1533eada6eb859ff8be3d6c97bf572a0aeb585"
+evidence = "Dispatcher call 0x1464e8 reaches the hero visited/movement gates and Sunday morale-plus-luck valuation. BLR 0x142f58 precedes valueOfFlotsam."
+
+[[helpers]]
+source_helper = "valueOfFlotsam"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142f5c
+mac_size = 0x28
+target_sha256 = "4e216da47dbc72b89a957a2c393d68043ae02977392fe632d6441e5a40752a41"
+evidence = "Dispatcher call 0x14639c reaches a leaf double expression with player gold and wood values and two pool constants. BLR 0x142f80 precedes the Garden helper."
+
+[[helpers]]
+source_helper = "valueOfGarden"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142f84
+mac_size = 0x28
+target_sha256 = "1e7dfa0767a99a49b407e0f4003d0ddd661979468c531faca6d622a466ceaaa5"
+evidence = "Dispatcher call 0x1464c8 reaches the garden visit-bit gate and cached knowledge value at hero+0x47a. BLR 0x142fa8 precedes Lean-To."
+
+[[helpers]]
+source_helper = "valueOfLeanTo"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142fac
+mac_size = 0x34
+target_sha256 = "cfb9132afb9547b19994a955eea667fe7aa4e1a5c1b5390e1d952bbea17359b3"
+evidence = "Dispatcher call 0x146554 reaches the packed item-ID visit-bit test and triple average resource valuation. BLR 0x142fdc precedes valueOfEnemyTown."
+
+[[helpers]]
+source_helper = "valueOfHeroEvent"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1432e8
+mac_size = 0x2e8
+target_sha256 = "f596a6adae7ef6ce29ad288a6f89b9e3553a8b5170828737bec636da494f5b96"
+evidence = "Dispatcher call 0x146524 reaches the hero-event appraisal with second-hero lookup, enemy combat/town branch and friendly creature-swap branch. BLR 0x1435cc precedes Hill Fort."
+
+[[helpers]]
+source_helper = "valueOfHillFort"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1435d0
+mac_size = 0x298
+target_sha256 = "1874d31a5c47f39e7cf2923e3a8861842c5c930ebc507dfab18c3b19fcaeee54"
+evidence = "Dispatcher call 0x146534 reaches the seven-army-slot upgrade and seven-resource affordability loops. BLR 0x143864 precedes aiVisitHillFort."
+
+[[helpers]]
+source_helper = "valueOfLibrary"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x143aa4
+mac_size = 0xb0
+target_sha256 = "a9f548be1eafcf75f896122c47d6b0fbbd2212c72e6453f531a05e64cb884210"
+evidence = "Dispatcher call 0x146564 reaches the library visit-bit and level gates, power/knowledge values and army value. BLR 0x143b50 precedes Lighthouse."
+
+[[helpers]]
+source_helper = "valueOfLighthouse"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x143b54
+mac_size = 0x80
+target_sha256 = "f5af2a41414f2952f23f74f86c80d00374e5c86cf55fc3e7f50c494636099f20"
+evidence = "Dispatcher call 0x146570 reaches the mine-owner lookup, same-team test and 1000-value leaf. BLR 0x143bd0 precedes the skill-choice leaf."
+
+[[helpers]]
+source_helper = "valueOfMercenaryCamp"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x143cb8
+mac_size = 0x84
+target_sha256 = "f0a9852284cdb19b75ace8819a05d405acfa92a0840c3076b86a409d7d306dbe"
+evidence = "Dispatcher call 0x1465bc reaches the mercenary-camp visit-bit gate, experience increment and turn-ratio multiplication. BLR 0x143d38 precedes valueOfMine."
+
+[[helpers]]
+source_helper = "valueOfMagusHut"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1442e4
+mac_size = 0x14
+target_sha256 = "7a2b23ad7840cbc6121a423f71bf504b234827ef2c1fc2ea6f6f67f3e74838fa"
+evidence = "Dispatcher call 0x146544 reaches a five-instruction leaf indexing the AI player by 0x94 and returning its +4 hut value. BLR 0x1442f4 precedes valueOfPowerSchool."
+
+[[helpers]]
+source_helper = "valueOfSkeleton"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1449a0
+mac_size = 0xb4
+target_sha256 = "71b344b2f407a272800c65c8af47df5ad16a29564ff4c5f5f76a23a80dd01d0a"
+evidence = "Dispatcher call 0x146334 reaches the skeleton visit-bit gate, owner-player lookup and backpack-capacity choice between artifact and gold value. BLR 0x144a50 precedes valueOfScroll."
+
+[[helpers]]
+source_helper = "valueOfShrine"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x144b3c
+mac_size = 0x2c
+target_sha256 = "7b27723f86869f1ceab2b42e8ffcbd765d99580a6afbef078ba32ba64e1ad653"
+evidence = "Dispatcher call 0x14684c reaches a packed shrine-spell extraction and the named valueOfLearning call at 0x142254. BLR 0x144b64 precedes valueOfSirens."
+
 [[helpers]]
 source_helper = "valueOfBlackMarket"
 unit = "philai"

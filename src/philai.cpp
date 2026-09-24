@@ -2086,6 +2086,16 @@ static long valueOfUniversity(const hero* currentHero,
     return total;
 }
 
+// Mac retains this event adapter immediately after valueOfUniversity at
+// code0+0x13ebfc. It calls ExtraInfoUnion::getUniversity and then the
+// three-argument appraisal with mustPay=1; VC6 expands it in the event arm.
+static long valueOfUniversity(const hero* currentHero, NewmapCell* cell)
+{
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(cell));
+    return valueOfUniversity(currentHero, info->getUniversity(), 1);
+}
+
 VA(0x00525ca0, 0x11e)  // dc 0x10e118
 void buySiegeEngine(hero* currentHero, town* currentTown,
                       type_building_id building, TArtifact engine)
@@ -3889,12 +3899,8 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         return valueOfTreasure(currentHero);
     case TREE_OF_KNOWLEDGE:
         return valueOfTree(currentHero, cell);
-    case UNIVERSITY: {
-        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-            static_cast<void*>(cell));
-        return valueOfUniversity(
-            currentHero, info->getUniversity(), 1);
-    }
+    case UNIVERSITY:
+        return valueOfUniversity(currentHero, cell);
     case WAGON:
 #pragma inline_depth(0)
         return valueOfWagon(cell, currentHero->m_owner);
