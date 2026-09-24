@@ -805,7 +805,8 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         }
         if (m_facing == 0)
             step = -step;
-        if ((g_combatManager->m_cells[m_gridIndex + step].m_armySide >= 0
+        // DC army.cpp:808 calls hexcell::HasArmy here; VC6 expands it.
+        if ((g_combatManager->m_cells[m_gridIndex + step].hasArmy()
              && !g_combatManager->m_cells[m_gridIndex + step]
                      .getArmy()
                      ->m_isMoving)
@@ -1272,22 +1273,10 @@ void army::animateMissile(army* armyToAttack)
                               g_windowManager->m_screenBitmap->getHeight(),
                               g_windowManager->m_screenBitmap->getPitch(),
                               flipped, 1);
-            if (updateArea.m_minX > x)
-                updateArea.m_minX = x;
-            if (updateArea.m_minY > y)
-                updateArea.m_minY = y;
-            if (updateArea.m_maxX < right)
-                updateArea.m_maxX = right;
-            if (updateArea.m_maxY < bottom)
-                updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
-                updateArea.m_minX = g_combatDrawLimits.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
-                updateArea.m_minY = g_combatDrawLimits.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
+            // DC army.cpp:1326-1327 constructs this rectangle, then calls
+            // SLimitData::Include and Clip; VC6 expands both methods.
+            updateArea.include(SLimitData(x, y, right, bottom));
+            updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.m_maxX - updateArea.m_minX + 1,
