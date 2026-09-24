@@ -20,6 +20,11 @@
 
 __declspec(nothrow) void __cdecl operator delete(void* p);
 
+// Dreamcast bottomviewsubwindow.cpp:123/662 names GameTime::ElapsedSince;
+// :676-681 names widget::set_visible; the NewTurn, Kingdom, and EnemyTurn
+// constructors name TTextResource::operator[]. Retail expands these header
+// helpers into the timer subtraction, status messages, and text-table loads.
+
 // THE LOCAL NAMES BELOW ARE DREAMCAST CODEVIEW, NOT INVENTION. The DC
 // build's S_REGREL32 records for this compiland name four of them and
 // give their types: TBottomViewKingdom's `town_count` (LF_ARRAY of
@@ -185,11 +190,11 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
         && !(g_game->m_week == 1 && g_game->m_month == 1)) {
         iconName = g_newWeekIcons[
             static_cast<unsigned short>(g_game->m_week)];
-        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_CALENDAR_WEEK),
+        text = formatString("%s %d", (*g_generalText)[GENERAL_TEXT_CALENDAR_WEEK],
             static_cast<unsigned short>(g_game->m_week));
     } else {
         iconName = "NewDay.def";
-        text = formatString("%s %d", g_generalText->getText(GENERAL_TEXT_CALENDAR_DAY),
+        text = formatString("%s %d", (*g_generalText)[GENERAL_TEXT_CALENDAR_DAY],
             static_cast<unsigned short>(g_game->m_day));
         launchSample("newday.wav", 30000, 3);
     }
@@ -225,7 +230,7 @@ void TBottomViewNewTurn::animate()
         return;
 
     unsigned long lastStep = m_lastStepTime;
-    if (static_cast<long>(GameTime::get() - lastStep) < m_frameDelay)
+    if (GameTime::elapsedSince(lastStep) < m_frameDelay)
         return;
 
     ++m_frame;
@@ -886,10 +891,10 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
                 font::WHITE, -1, 1, 0, 8));
     }
 
-    text = formatString("%s:", g_generalText->getText(GENERAL_TEXT_ALLIES));
+    text = formatString("%s:", (*g_generalText)[GENERAL_TEXT_ALLIES]);
     m_widgets.push_back(new textWidget(10, 103, 57, 20, text.c_str(),
         "smalfont.fnt", font::WHITE, -1, 0, 0, 8));
-    text = formatString("%s:", g_generalText->getText(GENERAL_TEXT_ENEMIES));
+    text = formatString("%s:", (*g_generalText)[GENERAL_TEXT_ENEMIES]);
     m_widgets.push_back(new textWidget(10, 134, 57, 20, text.c_str(),
         "smalfont.fnt", font::WHITE, -1, 0, 0, 8));
 
@@ -971,7 +976,7 @@ TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
 
     if (g_currentPlayer->isHuman()) {
         m_widgets.push_back(new textWidget(0, 20, 176, 31,
-            g_generalText->getText(GENERAL_TEXT_CURRENT_PLAYER_IS), "medfont.fnt", font::PRIMARY,
+            (*g_generalText)[GENERAL_TEXT_CURRENT_PLAYER_IS], "medfont.fnt", font::PRIMARY,
             -1, 1, 0, 8));
         m_widgets.push_back(new textWidget(0, 123, 176, 31,
             g_currentPlayer->m_name, "medfont.fnt", font::PRIMARY,
@@ -1019,7 +1024,7 @@ VA(0x004536f0, 0x271)  // dc 0x56c14
 void TBottomViewEnemyTurn::animate()
 {
     unsigned long lastStep = m_lastStepTime;
-    if (static_cast<long>(GameTime::get() - lastStep) < m_frameDelay)
+    if (GameTime::elapsedSince(lastStep) < m_frameDelay)
         return;
 
     int numFrames = m_hourGlass->m_sprite->getNumFrames(0);
@@ -1032,15 +1037,12 @@ void TBottomViewEnemyTurn::animate()
         m_crest->draw();
         m_crest->forceUpdate();
         if (g_currentPlayer->isHuman()) {
-            m_hourGlass->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                    widget::WIDGET_DRAWN);
-            m_sand->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                               widget::WIDGET_DRAWN);
+            m_hourGlass->setVisible(0);
+            m_sand->setVisible(0);
             return;
         }
-        m_hourGlass->sendMessage(widget::WIDGET_SET_STATUS,
-                                widget::WIDGET_DRAWN);
-        m_sand->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+        m_hourGlass->setVisible(1);
+        m_sand->setVisible(1);
         m_mobility[g_netLocalGamePos] = sumMobility(g_netLocalGamePos);
         m_step = 0;
     }
