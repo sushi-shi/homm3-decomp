@@ -661,3 +661,66 @@ mac_offset = 0x147048
 mac_size = 0x34
 target_sha256 = "5941a9cc1774ccd0426f3a10c95e55b714da67d7dc7442634837b917c308c1d1"
 evidence = "NEW: Small overload stores zero moveCost on stack and passes its address with hero and copied point to0x146134; last game body before next TU initializer. Span ends at0x14707c; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[helpers]]
+source_helper = "valueOfBlackMarket"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13ddec
+mac_size = 0xac
+target_sha256 = "9f4dd2be41cf300b5e57972cbdb3cb7b782131038a957a48ea5a0371ae824e99"
+evidence = "The Mac aiValueOfEvent dispatcher calls this retained black-market appraisal at 0x1461e0. It checks backpack capacity and values seven market artifacts; BLR 0x13de94. Dreamcast names the helper, and the later authored Windows dispatcher definition already calls it despite its VA annotation residing on an earlier declaration."
+
+[[helpers]]
+source_helper = "valueOfArena"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x141f14
+mac_size = 0x7c
+target_sha256 = "d97de8fdf0ed4326f73cbcbb2d54c168c435fdf6a83819572902228661911fa3"
+evidence = "The Mac aiValueOfEvent dispatcher calls this retained arena appraisal at 0x1461b0. It checks the hero's visited-arena state and doubles the level experience increment before scaling; BLR 0x141f8c. The Windows dispatcher definition already calls it and VC6 expands it."
+
+[[helpers]]
+source_helper = "valueOfMapArtifact"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142010
+mac_size = 0x1d8
+target_sha256 = "8b57a325e012ab85ffcc11c49bc7eca624dd13ac32a6e3d37dbc14b71caa582b"
+evidence = "The Mac aiValueOfEvent dispatcher calls this retained map-artifact appraisal at 0x1461c0. Its capacity check, artifact-value floor and purchase-rule arms match the ordinary authored helper; BLR 0x1421e4. Windows already calls it in source and VC6 expands it."
+
+[[helpers]]
+source_helper = "valueOfBlackBox"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1422c4
+mac_size = 0x2d8
+target_sha256 = "dfd2cedb782b82297317d3c68591aba9948e077389d0c488c57e4d78341d480d"
+evidence = "The Mac aiValueOfEvent dispatcher calls this retained black-box appraisal at 0x1461d0. It accumulates guardian, resource, skill, artifact, spell and creature rewards; BLR 0x142598. Dreamcast records the helper and the authored Windows dispatcher already calls it, with VC6 expansion."
+
+[[helpers]]
+source_helper = "visitWarFactory"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13f254
+mac_size = 0x118
+target_sha256 = "a0cba4e4035d8b1f534e48fc3be15a01713af0cebc90e65d02fe462d64dca58a"
+evidence = "Mac aiVisitWarFactory calls this retained helper for ballista, first-aid tent and ammo cart at 0x13f384/390/39c. It checks the war-factory value, debits the seven creature-resource costs and gives the artifact; BLR 0x13f368. The Windows caller already has the three canonical source calls."
+
+[[helpers]]
+source_helper = "getBestHero"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13f628
+mac_size = 0xb0
+target_sha256 = "83cb66adca2c5e1f468f7694d8362724f6cd60a5ca526be378bf74fec54898e6"
+evidence = "Mac shouldGarrisonTown calls this retained player-hero selector at 0x13f754. It walks the player's hero IDs and retains the largest primary-skill total; BLR 0x13f6d4. Windows expands this ordinary helper through shouldGarrisonTown in considerGarrisoning."
+
+[[helpers]]
+source_helper = "shouldGarrisonTown(const hero* currentHero, const town* currentTown)"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13f6d8
+mac_size = 0xac
+target_sha256 = "cd7bbc7573e88cab59f27fe85ec8b5a7742c5782819a4422991faafd127fc893"
+evidence = "Mac considerGarrisoning calls this retained helper at 0x13f838 after the second-hero skill guard. It checks capture-town victory, finds the required town and compares the current hero with getBestHero; BLR 0x13f780. Dreamcast names should_garrison_town at philai.cpp:707. The authored Windows caller now restores this canonical call, whose body VC6 expands."

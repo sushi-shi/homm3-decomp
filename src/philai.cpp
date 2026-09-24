@@ -1892,26 +1892,7 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
                >= currentHero->getPrimarySkillTotal())
         return;
 
-    VictoryConditionStruct& victory = g_game->m_mapHeader.m_victoryCondition;
-    if (victory.m_type != VICTORY_CONDITION_CAPTURE_TOWN)
-        return;
-    int townId = g_game->getTownId(victory.m_townX, victory.m_townY,
-                                    victory.m_townZ);
-    if (townId < 0 || townId != currentTown->m_id)
-        return;
-
-    playerData* player = &g_game->m_players[g_netLocalGamePos];
-    hero* bestHero = 0;
-    int bestSkill = 0;
-    for (int i = 0; i < player->m_numHeroes; ++i) {
-        hero* candidate = g_game->getHero(player->m_heroes[i]);
-        int skill = candidate->getPrimarySkillTotal();
-        if (skill >= bestSkill) {
-            bestSkill = skill;
-            bestHero = candidate;
-        }
-    }
-    if (currentHero == bestHero)
+    if (!shouldGarrisonTown(currentHero, currentTown))
         return;
 
     currentHero->m_movePoints = 0;
