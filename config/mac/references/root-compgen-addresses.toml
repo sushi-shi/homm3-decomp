@@ -1,6 +1,28 @@
 # Reviewed compiler-generated class addresses. Source annotations own identities.
 
 [[functions]]
+retail_va = 0x45aab0
+unit = "campaignbrief"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "CMapHeaderData"
+mac_section = 0x0
+mac_offset = 0x672e4
+mac_size = 0xa0
+target_sha256 = "95e920197f483cb52e8543a96294e2fbded175856dff219bc00451e9e728ec65"
+evidence = "Mac body destroys the map at receiver+0x29c, eight player slots at+0x9c with stride0x40, and the vector at+0x20, matching CMapHeaderData's member order. BLR 0x67380 and next derived destructor 0x67384 bound the compiler-generated body; Windows source claims IMPLICIT_DTOR."
+
+[[functions]]
+retail_va = 0x45ad00
+unit = "campaignbrief"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "NewSMapHeader"
+mac_section = 0x0
+mac_offset = 0x67384
+mac_size = 0xac
+target_sha256 = "a5db96b3d71abdb00e9eb34adc7814ab6d6e3d518513aafd0dac4896f341aa0b"
+evidence = "Mac body destroys description and name strings at+0x2b0/+0x2ac, then base CMapHeaderData fields including map+0x29c, eight player slots and vector+0x20. BLR 0x6742c and next SGameSetupOptions constructor 0x67430 bound the generated destructor; Windows source claims IMPLICIT_DTOR."
+
+[[functions]]
 retail_va = 0x4ce4b0
 unit = "game"
 compgen_kind = "CLASS_CTOR"

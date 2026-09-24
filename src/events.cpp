@@ -374,12 +374,6 @@ void advManager::doEventLithTwoWay(hero* current_hero, NewmapCell* cell, unsigne
 // window whose destructor is 0x4aaa40, the row the note below covers,
 // and reaches ~CAdvPopup at 0x41b120 through it - and 0x6a the creature
 // dwelling (recruitUnit constructed and run through executive::DoDialog).
-// RETAIL_LOCATED(0x004a84f0, 0x2542)  // body: cell->type jump table + 4 args, dc 0x9824c
-void advManager::doEventWhirlpool(hero* current_hero, NewmapCell* cell, unsigned char human_player)
-{
-    // @stub
-}
-
 // E:\gamedcs\events.cpp:4302
 // MISATTRIBUTION 2026-08-14, RESOLVED - DO NOT RECONSTRUCT DispatchEvent
 // AGAINST THIS ROW; see 0x4a84f0 above for where DispatchEvent really is.
