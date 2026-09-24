@@ -353,12 +353,12 @@ public:
 static int update(message& msg);
 
 // E:\gamedcs\singleselectionwindow.cpp:164
-// Dreamcast preserves these two helpers as standalone functions. Complete
-// expands both calls in ProcessRightSelect, but keeps the same town-specific
-// text selection: Rampart/Tower/Inferno/Dungeon have dedicated resource
-// strings, Conflux shares Inferno's mercury strings, and every other town
-// uses the generic pair.
-inline const char* getResourceBonusCaption(int townType)
+// DC keeps GetResourceBonusCaption and GetResourceBonusDescription in this
+// TU at lines 164/187. Mac retains them at +0x16d4f4/+0x16d5a4 and
+// ProcessRightSelect calls both; VC6 expands their shared bodies there.
+// ScenarioInfo calls the emitted Windows bodies across TUs.
+VA(0x00576e00, 0x80)
+const char* getResourceBonusCaption(int townType)
 {
     switch (townType) {
     case TOWN_RAMPART:
@@ -376,7 +376,8 @@ inline const char* getResourceBonusCaption(int townType)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:187
-inline const char* getResourceBonusDescription(int townType)
+VA(0x00576e80, 0x80)
+const char* getResourceBonusDescription(int townType)
 {
     switch (townType) {
     case TOWN_RAMPART:

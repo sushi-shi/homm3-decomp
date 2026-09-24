@@ -620,14 +620,14 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
             break;
         case NEW_MAP_BONUS_RESOURCE:
             // Conflux shares Inferno's icon frame exactly as it shares
-            // Inferno's text row in GetStartingResourceName (0x576e00).
+            // Inferno's text row in GetResourceBonusCaption (0x576e00).
             frame = TOWN_INFERNO;
             if (g_game->m_setup.m_alignment[playerPosition] != TOWN_CONFLUX)
                 frame = g_game->m_setup.m_alignment[playerPosition];
             title = g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS);
-            botTitle = getStartingResourceName(
+            botTitle = getResourceBonusCaption(
                 g_game->m_setup.m_alignment[playerPosition]);
-            description = getStartingResourceDescription(
+            description = getResourceBonusDescription(
                 g_game->m_setup.m_alignment[playerPosition]);
             break;
         case NEW_MAP_BONUS_RANDOM:

@@ -12,6 +12,9 @@
 #include "rmg_request.h"
 #include "town.h"
 
+const char* getResourceBonusCaption(int townType);
+const char* getResourceBonusDescription(int townType);
+
 // Devil / Arch Devil, ids fixed by army.h's Inferno-run arithmetic
 // (Demon 0x30 opens it, 0x35..0x37 close it); the wait dialog rerolls
 // its random flavor creature past both. TU-private for the same
