@@ -1168,7 +1168,7 @@ bool type_AI_player::buildMarkets(int* supply)
         return false;
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
         town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
-        if (!(currentTown->m_active & g_bitNumber[MARKETPLACE_ID])
+        if (!currentTown->hasBuilding(MARKETPLACE_ID, true)
             && currentTown->canBuild(MARKETPLACE_ID)) {
             if (!canBuy(currentTown, MARKETPLACE_ID))
                 return built;
@@ -1186,7 +1186,7 @@ void type_AI_player::doResourceTrade(int* supply)
     playerData* player = &g_game->m_players[m_team];
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
         town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
-        if (currentTown->m_active & g_bitNumber[MARKETPLACE_ID])
+        if (currentTown->hasBuilding(MARKETPLACE_ID, true))
             ++marketCount;
     }
 
@@ -1618,9 +1618,9 @@ int valueOfCastleUpgrade(town* currentTown, int* extraCost)
         && g_game->m_mapHeader.m_victoryCondition.m_townX == currentTown->m_mapX
         && g_game->m_mapHeader.m_victoryCondition.m_townY == currentTown->m_mapY
         && g_game->m_mapHeader.m_victoryCondition.m_townZ == currentTown->m_mapZ
-        && !(g_bitNumber[CASTLE_FORT_ID
-                       + g_game->m_mapHeader.m_victoryCondition.m_castleLevel]
-             & currentTown->m_active))
+        && !currentTown->hasBuilding(
+            CASTLE_FORT_ID + g_game->m_mapHeader.m_victoryCondition.m_castleLevel,
+            true))
         value = 5000000;
     if (g_game->m_day >= 5) {
         for (short dwelling = 0; dwelling < 14; ++dwelling) {
@@ -1657,7 +1657,7 @@ long valueOfHordeUpgrade(town* currentTown, type_building_id building, unsigned 
     type_horde_effect* horde = currentTown->getHordeEffect(building);
     if (!horde)
         return -1;
-    if (g_bitNumber[building - 1] & currentTown->m_built)
+    if (currentTown->hasBuilding(building - 1, false))
         return -1;
     TCreatureType creature = horde->m_creature;
     if (prohibited[creature])
