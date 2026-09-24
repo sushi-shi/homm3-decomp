@@ -705,6 +705,14 @@ sha256 = "3be0e2ae9c7955fc3fd4f91fe6fab50ed7038c520aca38a3831d9a298a549acd"
 evidence = "Seven direct calls from campaign, game, events and hero bodies pass a bitset receiver, index in r4 and bool in r5. The complete MSL setter bounds-checks against eight, sets or clears the indexed word bit and returns the receiver at BLR 0x9d6f0 before the next bitset helper at 0x9d6f4. Its instruction shape and CodeWarrior mangling follow the reviewed bitset<12>/48/70 set instantiations. Runtime template identity only."
 
 [[functions]]
+symbol = ".mac_pod_vector_deleting_dtor_67278"
+mac_section = 0
+mac_offset = 0x67278
+mac_size = 0x58
+sha256 = "f998b04d691f0798696c874beffbfe24311ca80c94e04d5a073b29c6b4b0c475"
+evidence = "This retained deleting wrapper tests the vector receiver, calls the shared vector destructor at 0x68da4 with a zero flag, and calls scalar delete at 0x268b2c only when its own deleting flag is positive. The BLR at 0x672cc precedes an independent zero-initializing vector constructor at 0x672d0. It has 43 direct calls in unfinished campaign and game bodies. Several POD-vector instantiations can fold to this code, so the neutral label intentionally makes no element-type or Windows-VA claim."
+
+[[functions]]
 symbol = ".mac_stream_integer_formatter_26ae5c"
 mac_section = 0
 mac_offset = 0x26ae5c
