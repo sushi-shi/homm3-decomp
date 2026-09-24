@@ -441,6 +441,14 @@ sha256 = "2392ce5a9bcb3eeb17259fdd82ae2d6621bbfa3f54a6f05b4e13f694297f9bbc"
 evidence = "The TOWN creature reward helper passes destination string r3, temporary source r4, position zero r5 and npos r6 at 0x1b5a2c..0x1b5a3c, matching the canonical operator+=(const string&) source-view expansion. This callee copies source length/data, grows destination via 0x4ad4 and copies through .memcpy; preceding char-append BLR at 0x1c4fc, final BLR at 0x1c624 and next prologue at 0x1c628 bound all 296 bytes. Runtime identity only."
 
 [[functions]]
+symbol = ".mac_msl_string_replace_fill_1c910"
+mac_section = 0
+mac_offset = 0x1c910
+mac_size = 0x350
+sha256 = "276c01564404ae8be91ad5875545a4be8029176d4ef77ee22cd43979ae2d787e"
+evidence = "The installed MSL string header implements replace(pos, removed_length, inserted_count, char) with position and length checks, copy-on-write storage, tail move, character fill and terminator update. Retail calls this body with string receiver r3, position r4, removed length r5, inserted count r6 and character r7. The seven sites include erase() with r4=0/r5=npos/r6=r7=0, erase(pos) in ResourceManager, and one comma insertion with r6=1/r7=','. The body checks string size at +0, allocates a new 16-byte representation if needed, calls the fill operation at 0x28b040, and returns at 0x1cc5c; the next prologue starts at 0x1cc60. This neutral label records an MSL string operation, not a game helper."
+
+[[functions]]
 symbol = ".clear__Q23std30vector<20type_dialog_resource>Fv"
 mac_section = 0
 mac_offset = 0x1c790
