@@ -1,6 +1,17 @@
 # Reviewed shared remote identities in the Mac PEF.
 
 [[functions]]
+retail_va = 0x554a80
+unit = "remote"
+compgen_kind = "SCALAR_DELETING_DTOR"
+compgen_type = "CAnimatedDlg"
+mac_section = 0
+mac_offset = 0x213028
+mac_size = 0x8c
+target_sha256 = "466a34105f47cf657c4711a478384dffd0cddcc9ba222c5fbb2825442f347b19"
+evidence = "The Mac body is the scalar deleting CAnimatedDlg destructor: it destroys the dialog subobjects and conditionally calls operator delete based on the deleting flag. Windows owns the generated scalar deleting destructor at 0x554a80. The reviewed Mac span begins at 0x213028, ends at its BLR, and is reached by retained dialog cleanup calls."
+
+[[functions]]
 retail_va = 0x557eb0
 unit = "remote"
 compgen_kind = "SCALAR_DELETING_DTOR"

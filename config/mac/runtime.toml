@@ -705,6 +705,14 @@ sha256 = "3be0e2ae9c7955fc3fd4f91fe6fab50ed7038c520aca38a3831d9a298a549acd"
 evidence = "Seven direct calls from campaign, game, events and hero bodies pass a bitset receiver, index in r4 and bool in r5. The complete MSL setter bounds-checks against eight, sets or clears the indexed word bit and returns the receiver at BLR 0x9d6f0 before the next bitset helper at 0x9d6f4. Its instruction shape and CodeWarrior mangling follow the reviewed bitset<12>/48/70 set instantiations. Runtime template identity only."
 
 [[functions]]
+symbol = ".mac_stream_integer_formatter_26ae5c"
+mac_section = 0
+mac_offset = 0x26ae5c
+mac_size = 0x148
+sha256 = "1e3d8c217697d804fccb64699d6556ffaad999bef066c7bb4b45f41c7b963ff1"
+evidence = "Seven direct calls in bottom-view and quick-hero constructors take a character buffer in r3, a signed integer in r4 and a width in r5. The front path writes an optional minus sign and decimal digits; a later branch also emits hexadecimal digits, so this is a general integer formatter. Its final BLR at 0x26afa0 precedes the adjacent string-append primitive at 0x26afa4. Windows retail at the bottom-view resource site retains std::ostrstream integer insertion, as does the authored Windows source; Dreamcast's older build records char[20] and sprintf there. The neutral label identifies the Mac formatting call without claiming a matching Windows source helper or a proven CodeWarrior symbol."
+
+[[functions]]
 symbol = ".rand"
 mac_section = 0
 mac_offset = 0x28e00c
