@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "platform.h"
 
 #include "spells.h"
@@ -4071,11 +4072,11 @@ void combatManager::mirrorImage(int targetIndex, int level)
 // search with a found test inside the picker's lifetime. Both loops can be
 // ordinary while(1) loops: after inner exhaustion, the outer loop advances
 // the column; after success, the second hex test exits the picker scope.
-// This removes all four gotos and improves 93.4375% to 99.0144%. Either a
-// negative exhausted-pick guard or positive pick scope has the same score.
-// The outer-loop-only edit is neutral; the inner loop is what removes
-// VC6's duplicated picker header. The old goto-only/peeling-limit claim
-// was disproved by these scopes, including both destructor exit paths.
+// Mac 0x1981dc..0x198210 checks the pick before CanFit and again after a
+// possible hex store. Expressing those checks as a guarded CanFit followed
+// by one exit condition reproduces all 30 Windows blocks and 16 calls
+// exactly (100%, up from 99.0144%). The old goto-only/peeling-limit claim
+// was disproved by the picker scopes and both destructor exit paths.
 
 // The message is built on the TEMPORARY, not through a named local
 // (93.38 -> 93.44): retail reads `[eax + 4]` straight off
@@ -4104,11 +4105,9 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
             while (1) {
                 int pick = picker.pick();
                 const int candidate = getHexIndex(column, pick);
-                if (pick < 0)
-                    break;
-                if (summoned.canFit(candidate, 0, 0))
+                if (pick >= 0 && summoned.canFit(candidate, 0, 0))
                     hex = candidate;
-                if (hex != -1)
+                if (pick < 0 || hex != -1)
                     break;
             }
             if (hex != -1)
