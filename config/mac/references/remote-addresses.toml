@@ -266,6 +266,42 @@ mac_size = 0x1ec
 target_sha256 = "884b724ab92de9f081e903a30074e42dab152239cb7bfe2476c90769fb115bc4"
 evidence = "waitForReadyToPlayMsg: stack dialog construction, eight ready-byte scan and fast destructor path; otherwise GameTime/sRand, random(0,111) rejecting creatures 0x36/0x37, setup/modal and host broadcast via transmitRemoteData +0x212bf0. Complete BLR at 0x21377c; adjacent derived destructor begins +0x213780."
 
+[[functions]]
+retail_va = 0x553840
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211584
+mac_size = 0x148
+target_sha256 = "07dd202c9e4d269717ebff69f13c33bbd5d4b81a6a9aed245ffeef7e8d74006b"
+evidence = "CChatManager::addChat: direct callers include the adjacent chat formatters, receiveChat and the selection window. Its variadic vsprintf, newest-position test at +0x20, twenty-message cap, 0x88-byte chat records and conditional sample path match the source and Windows VA. Complete BLR at 0x2116c8; turnDurationMsg begins at 0x2116cc."
+
+[[functions]]
+retail_va = 0x553aa0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2117ec
+mac_size = 0xa4
+target_sha256 = "09a0fffc15d7b173858dadc5fb7cdb275b514fcd8e873f5a179c194ca86f3572"
+evidence = "CChatManager::systemMsg: sendChat calls this formatter twice, and the body prefixes general text 0x36, sets the system flag, calls addChat, clears the flag, then calls playChatSample with sample at +0x38. Complete BLR at 0x21188c; adjacent player-drop formatter starts at 0x211890."
+
+[[functions]]
+retail_va = 0x553b60
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211890
+mac_size = 0xa4
+target_sha256 = "6771505f975f4e236cabb44aac51747b2e75a4b262a8eb3a57bc5c56afaa4464"
+evidence = "CChatManager::playerDropMsg: same general-text prefix and addChat as adjacent chat formatters, followed by playChatSample with player-drop sample at +0x34 before clearing the system flag. The source method and Windows VA have that order. Complete BLR at 0x211930; next formatter starts at 0x211934."
+
+[[functions]]
+retail_va = 0x553c30
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211934
+mac_size = 0xa4
+target_sha256 = "81d95d8fa5befe8bb3a5d6bf081028d54df9588e21e947fea120b94c05474f50"
+evidence = "CChatManager::playerEnterMsg: source order follows playerDropMsg; Mac formats the same prefix, calls addChat, then playChatSample with player-enter sample at +0x40 before clearing the system flag. Complete BLR at 0x2119d4; the reviewed sample helper starts at 0x2119d8."
+
 [[helpers]]
 source_helper = "CChatManager::playChatSample"
 unit = "remote"
