@@ -197,3 +197,12 @@ mac_offset = 0x2188e8
 mac_size = 0x8
 target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
 evidence = "The soundManager vtable at data 1+0x5b0a8 points through transition vector 1+0x8998 to this eight-byte leaf. It returns zero, matching the canonical ordinary soundManager::main(message&) source helper and the third virtual slot after open and close. Prior close BLR at 0x2188e4; own BLR at 0x2188ec precedes stopAllSamples at 0x2188f0."
+
+[[functions]]
+retail_va = 0x59ac00
+unit = "soundmgr"
+mac_section = 0
+mac_offset = 0x219288
+mac_size = 0x104
+target_sha256 = "bbb7cc5939b63df92c8cd84ff67103ce30d1693a2f967c120b809e66dff974f1"
+evidence = "setMusicVolume calls this body at 0x2183a4 when a stream exists but is not playing, matching its canonical resumeStream source call. The Mac body checks pending/current streams, uses platform stream virtual calls, and calls convertVolume 0x218434. Final BLR at 0x219388; startMP3 begins 0x21938c. Windows uses Miles and thread state instead; Dreamcast names ResumeStream at dc 0x14b8e8."

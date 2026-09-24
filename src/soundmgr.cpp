@@ -746,6 +746,8 @@ void __cdecl processStopAndPlayMP3(void* arglist)
     _endthread();
 }
 
+// Mac retains this source call with its platform stream interface at
+// 0:0x219288; Windows resumes through Miles and the playback thread.
 VA(0x0059ac00, 0xA9)  // dc 0x14b8e8
 void soundManager::resumeStream()
 {
