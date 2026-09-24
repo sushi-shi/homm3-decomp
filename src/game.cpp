@@ -4377,16 +4377,11 @@ void game::initRandomArtifacts()
 // packed z coordinates, squares x/y differences, calls MathLib sqrt once,
 // then stores both partner indices. Its sole caller at 0xd5ce4 sits between
 // randomizeEvents and randomizeHolyGrail in newMap's call sequence. The
-// preceding/following BLR/prologue bound the admitted Mac target. The current
-// shared-source O3 candidate resolves the MathLib sqrt call and conversion
-// constant but remains 408 versus 384 bytes (24.02%); the game declaration
-// view and compiler profile still need calibration on another body.
-// Isolated Mac declaration probes: a word-copy point view makes 392 bytes
-// (29.08%), but retains different vector access and register allocation;
-// the short-bitfield view alone emits two halfword stores where retail emits
-// one word store. Layering the installed MSL vector accessors was byte-flat.
-// Neither unverified view replaced the admitted declaration. VC6 why-reg's
-// eight declaration/store-order controls were flat or worse at 94.67%.
+// preceding/following BLR/prologue bound the admitted Mac target. The shared
+// O3 candidate retains the MathLib sqrt call, but its ordinary type_point copy
+// uses two halfword stores where Mac retail uses one word store; Mac remains
+// non-exact (23.28%). Windows VC6 matches all 0x160 retail bytes when the z
+// equality names exitPoint first and the squared y term precedes squared x.
 // E:\\gamedcs\\game.cpp:4950
 VA(0x004c0b60, 0x160)  // dc-order + NewMap caller, dc 0xac63c
 void game::matchUndergroundGates()
@@ -4410,13 +4405,13 @@ void game::matchUndergroundGates()
                 continue;
 
             exitPoint = m_undergroundGateExits[j];
-            if (currentGate.m_z == exitPoint.m_z)
+            if (exitPoint.m_z == currentGate.m_z)
                 continue;
             distance = static_cast<long>(sqrt(static_cast<double>(
-                (currentGate.m_x - exitPoint.m_x)
-                    * (currentGate.m_x - exitPoint.m_x)
-                + (currentGate.m_y - exitPoint.m_y)
-                    * (currentGate.m_y - exitPoint.m_y))));
+                (currentGate.m_y - exitPoint.m_y)
+                    * (currentGate.m_y - exitPoint.m_y)
+                + (currentGate.m_x - exitPoint.m_x)
+                    * (currentGate.m_x - exitPoint.m_x))));
             if (closest >= 0 && distance >= bestDistance)
                 continue;
             closest = j;
