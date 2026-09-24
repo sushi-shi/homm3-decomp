@@ -741,6 +741,8 @@ void town::deallocate()
     m_owner = -1;
 }
 
+// Dreamcast town.cpp:1106 calls town::PlaceInMap after moving the
+// garrison hero to the visiting slot. Retail expands the wrapper.
 VA(0x005be390, 0xB7)  // dc 0x16682c
 void town::removeGarrisonHero()
 {
@@ -750,12 +752,7 @@ void town::removeGarrisonHero()
     int player = m_owner;
     m_visitingHeroId = m_garrisonHeroId;
     m_garrisonHeroId = -1;
-    hero* placedHero = g_game->getHero(garrisonHero->m_id);
-    type_point point;
-    point.m_x = m_mapX;
-    point.m_y = m_mapY;
-    point.m_z = m_mapZ;
-    placedHero->placeInMap(player, point, 0);
+    placeInMap(garrisonHero->m_id, player, 0);
 }
 
 // E:\gamedcs\town.cpp:1111
@@ -1192,6 +1189,9 @@ long town::getAssembledLegionBonus(long dwelling)
     return bonus;
 }
 
+// Dreamcast town.cpp:1593 calls Town.h get_location and game::get_cell;
+// retail expands both. Complete checks wielded Legion artifacts in the
+// tier cases, while the older Dreamcast calls hero::HasArtifact.
 VA(0x005bf900, 0x258)  // dc 0x1675d4
 long town::getLegionBonus(long dwelling) const
 {
@@ -1207,11 +1207,7 @@ long town::getLegionBonus(long dwelling) const
     if (m_visitingHeroId >= 0) {
         visitingHero = currentGame->getHero(m_visitingHeroId);
     } else {
-        // Constructor form, not default-then-assign: it merges the y|z
-        // bitfield unit into one clear-then-or (99.8469 -> 100.0000).
-        type_point point(m_mapX, m_mapY, m_mapZ);
-
-        NewmapCell* cell = currentGame->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
+        NewmapCell* cell = currentGame->getCell(getLocation());
         if (cell->m_type == HERO)
             visitingHero = currentGame->getHero(cell->m_extraInfo);
     }
@@ -1821,6 +1817,9 @@ unsigned char town::isDisabled(type_building_id building) const
     return (g_townEligibleBuildMask[m_type] & g_bitNumber[building]) != 0;
 }
 
+// Dreamcast town.cpp:2328 calls town::PlaceInMap; retail expands the
+// wrapper before the hero placement call. Complete's recruit alignment
+// differs from the older Dreamcast get_alignment call at line 2338.
 VA(0x005c12e0, 0xC9)  // dc 0x168a98
 void town::hire(hero* newHero, long playerId)
 {
@@ -1833,25 +1832,18 @@ void town::hire(hero* newHero, long playerId)
     }
 
     player->m_resources[GOLD] -= g_heroGoldCost;
-    hero* hiredHero = g_game->getHero(heroId);
-    type_point point;
-    point.m_x = m_mapX;
-    point.m_y = m_mapY;
-    point.m_z = m_mapZ;
-    hiredHero->placeInMap(playerId, point, 1);
+    placeInMap(heroId, playerId, 1);
     giveSpells(0);
     g_game->replaceRecruit(playerId, recruitSlot);
 }
 
+// Dreamcast town.cpp:2346 calls Town.h get_location while placing the
+// hero; retail expands the point construction.
 VA(0x005c13b0, 0x83)  // dc 0x168b54
 void town::placeInMap(int heroId, long playerId, unsigned char resetFlags)
 {
     hero* newHero = g_game->getHero(heroId);
-    type_point point;
-    point.m_x = m_mapX;
-    point.m_y = m_mapY;
-    point.m_z = m_mapZ;
-    newHero->placeInMap(playerId, point, resetFlags);
+    newHero->placeInMap(playerId, getLocation(), resetFlags);
 }
 
 VA(0x005c1440, 0xC)  // dc 0x168ba0
