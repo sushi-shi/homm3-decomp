@@ -17,7 +17,7 @@ Run `homm3 mac xrefs mac:0:0xOFFSET` to identify the helper's callers and pair t
 
 ## Decide and verify
 
-Check positive Dreamcast declarations, source-file attribution, and source-call order. Distinguish an explicitly `inline` helper from an ordinary helper that a compiler auto-inlined. A retained Mac call does not rule out an `inline` declaration; an absent Mac call does not prove one. Preserve a Dreamcast-proven `inline` declaration. Do not add `inline` solely to remove a Mac call or improve a score.
+Check positive Dreamcast declarations, source-file attribution, and source-call order. Distinguish an explicitly `inline` helper from an ordinary helper that a compiler auto-inlined. A retained Mac call does not rule out an `inline` declaration; an absent Mac call does not prove one. The absence of a retained Windows body also does not prove `inline`: VC6 can emit an ordinary helper as a COMDAT that the linker discards after expanding its callers. Preserve a Dreamcast-proven `inline` declaration. Do not add `inline` solely to remove a Mac call or improve a score.
 
 Keep a member declaration in its ordinary game header; give a free or file-static helper only the declaration its callers need. Put the **single body** in a header only when cross-TU visibility or direct source evidence supports it; otherwise use the owning source file and original source order. Compile the same body for Mac and Windows, then inspect both ordered call streams and the VC6 retail result. Keep source-supported structure through an incidental score dip while testing its callers.
 
