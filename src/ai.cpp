@@ -1710,10 +1710,12 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 // Keep chooser.getAttackTime() at its query and acceptance sites (1976,
 // 2027/2028, 2052) and the by-value max at 2059. A prematurely cached attack
 // time is unnecessary; VC6 can hoist the repeated accessor itself.
-// Windows 0x421680: 97.08%; 28 named calls agree, but retail retains a third
-// final moveToward call and ten returns where VC6 merges that tail into an
-// earlier call and emits nine returns. Mac 0+0x23724: 601/3000 bytes (20.03%)
-// with all 30 direct calls resolved; register/stack layout differs from entry.
+// Windows 0x421680: naming the final movement condition after its early guard
+// keeps the final moveToward as a third distinct call (97.0793 -> 98.5943%):
+// 29 named calls and ten returns now agree. Mac shape retains all 30 direct
+// calls in order. Naming the earlier call's condition drops Windows to 97.87%,
+// and moving the final declaration before the guard drops it to 97.38%; both
+// forms were rejected. Register/stack layout still differs after the tail.
 // Moving enemyAttacks below the scalar declarations is byte-flat on Mac.
 // A branch-model unsigned-char ourGroup proposal contradicts the Dreamcast
 // CodeView long local, so retain the proven type pending new source evidence.
@@ -1927,9 +1929,10 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     }
     if (bestHex == currentArmy->m_gridIndex)
         return 0;
+    bool shouldMoveToward =
+        !estimate->m_simulated && bestTime > 1;
     moveToward(currentArmy, bestHex, enemyAttacks,
-                static_cast<unsigned char>(!estimate->m_simulated
-                                           && bestTime > 1));
+               shouldMoveToward);
     return 1;
 }
 
