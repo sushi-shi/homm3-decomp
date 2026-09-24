@@ -950,3 +950,26 @@ mac_offset = 0x6aaec
 mac_size = 0x8
 sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
 evidence = "Campaignwindow, game and singleselectionwindow call this two-instruction vector data accessor repeatedly during CMapHeaderData copies; it returns this+8 and ends at BLR 0x6aaf0. Neutral instantiation label."
+[[functions]]
+symbol = ".mac_file_adapter_ctor_277b60"
+mac_section = 0
+mac_offset = 0x277b60
+mac_size = 0x10
+sha256 = "68d01920fe203031e2c4c21ef03c5efd3201b5992053eccfbd90e5856460bca9"
+evidence = "Mac-only file adapter construction zeros the state byte at +0 and handle at +4, then returns at 0x277b6c before the deleting destructor starts at 0x277b70. High-score open constructs its stack adapter at 0x10a7ec, then opens a pathname through 0x277bc4. Windows uses CRT _open directly; this neutral label does not assert a shared source helper or original class spelling."
+
+[[functions]]
+symbol = ".mac_file_adapter_deleting_dtor_277b70"
+mac_section = 0
+mac_offset = 0x277b70
+mac_size = 0x54
+sha256 = "e41dbc90adeae0724916616d9229a242f7065f4d21d0a8e5d7d6334f09d1e4ea"
+evidence = "Mac-only file adapter deleting destructor checks this, calls close at 0x277dd0, conditionally calls operator delete 0x268b2c using its short delete flag, and returns this at BLR 0x277bc0 before open starts. High-score open invokes it on a stack adapter at 0x10a85c; game, sound, preference and selection callers repeat it. Runtime/platform identity only."
+
+[[functions]]
+symbol = ".mac_file_adapter_open_path_277bc4"
+mac_section = 0
+mac_offset = 0x277bc4
+mac_size = 0x148
+sha256 = "8d0877974edeb11c831d26a09ce1958101393d115e0bd081cda3fb256746f726"
+evidence = "Mac-only file adapter open takes an adapter at r3 and pathname at r5, initializes file state, converts the path and opens through Mac glue 0x2a1a60; success sets state byte +0, failures close at 0x277dd0, and BLR 0x277d08 precedes a separate entry at 0x277d0c. High-score open passes its formatted score pathname at 0x10a820; sound, preferences, LOD, game and selection callers use the same adapter. Windows uses CRT or registry operations, so this is not a shared game helper."
