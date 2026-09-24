@@ -443,6 +443,15 @@ target_sha256 = "5ec271e4ecd95524a2830249a77c32ab19a24177a80d973233f123c62a8b770
 evidence = "Dreamcast game.cpp:2672 names LoadBlackMarkets. Mac game::load calls this body at 0xd0810. It clears the vector at game+0x1ef10, reads its signed-byte size, resizes it, then reads size times 0x1c bytes into data at +0x1ef18. Complete return at 0xcf2ec and following creature-bank load prologue 0xcf2f0 bound 0xc8 bytes. Windows retains the canonical source call but expands the helper."
 
 [[helpers]]
+source_helper = "applySavedGameHeader"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcffd8
+mac_size = 0x2d0
+target_sha256 = "df0c498dc26b6e9f9c814088d02d2b4582277c18949e60b37e6488805d3b9404"
+evidence = "Mac game::load calls this separate routine at 0xd05f0 immediately after SavedGameHeader::load succeeds. Its receiver is the stack SavedGameHeader; it copies gameVersion and CMapHeaderData into g_game, then map name/description, setup/campaign and player state, matching the inferred canonical applySavedGameHeader phase in game.cpp. The final BLR at 0xd02a4 and next setupShipyards prologue 0xd02a8 bound 0x2d0 bytes. Source call was already present; no independent Windows VA or Dreamcast name is claimed."
+
+[[helpers]]
 source_helper = "type_creature_bank::load"
 unit = "game"
 mac_section = 0

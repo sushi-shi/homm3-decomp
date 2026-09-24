@@ -2491,8 +2491,9 @@ bool type_creature_bank::save(void* output)
 // Complete reading belongs to SavedGameHeader::load. The caller tests
 // its result before restoring any game state and retains the snapshot for
 // later version tests. This ordinary application phase owns the demonstrated
-// g_game/global field transfers. Its name and free-function binding are
-// inferred; no Dreamcast identity or retained address is asserted.
+// g_game/global field transfers. Mac retains the source boundary at 0xcffd8;
+// its name and free-function binding remain inferred. No Dreamcast identity
+// or standalone Windows address is asserted.
 void applySavedGameHeader(const SavedGameHeader& saved)
 {
     // Every store in this block goes through gpGame, RELOADED from the
