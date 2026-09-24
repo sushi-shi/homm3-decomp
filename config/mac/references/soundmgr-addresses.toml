@@ -95,18 +95,18 @@ retail_va = 0x59a210
 unit = "soundmgr"
 mac_section = 0x0
 mac_offset = 0x218d54
-mac_size = 0x1b4
-target_sha256 = "84008afa0592240c7280397d411e042688b15261636735791a29da460a5af3e5"
-evidence = "memorySample checks sound/config/sample state, selects channel and calls convertVolume 0x218434 and audio play routine; complete BLR."
+mac_size = 0x194
+target_sha256 = "629502b243d0c94234dd52b4a13ec1c2e289d19800ef02673410e1b53c041894"
+evidence = "memorySample checks sound/config/sample state, selects channel and calls convertVolume 0x218434 and audio play routine. Its final BLR at 0x218ee4 precedes the separate musicPlaying leaf at 0x218ee8; the former 0x1b4 span included that helper."
 
 [[functions]]
 retail_va = 0x59a3f0
 unit = "soundmgr"
 mac_section = 0x0
-mac_offset = 0x219378
-mac_size = 0x14
-target_sha256 = "7c2fddb547a5cab714eecc28f39ebe53283a48beb154ced1d338ea58cea9a136"
-evidence = "musicPlaying is a 0x14-byte leaf that reduces m_mp3Playing field at +0x30 to boolean return, immediately before reviewed startMP3."
+mac_offset = 0x218ee8
+mac_size = 0x20
+target_sha256 = "472eb0ce3be00c96583b107cf554f274d842f19d748f8e848de93a54fbdf2474"
+evidence = "View-world windowHandler calls this at 0x209f2c after base dispatch and branches to switchAmbientMusic only when false, matching its source musicPlaying call. The Mac leaf checks the no-sound global, then returns the manager byte at +0x48; this corresponds to the Windows source's no-sound guard and m_mp3Playing return. Prior memorySample BLR at 0x218ee4 and own BLR at 0x218f04 before clearMemSample bound the complete span. Former 0x219378 binding tested an unrelated word at +0x30."
 
 [[functions]]
 retail_va = 0x59a410
