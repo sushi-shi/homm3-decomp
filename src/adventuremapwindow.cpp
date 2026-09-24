@@ -638,7 +638,10 @@ void checkAdvCheatCode(std::string& chatString)
     }
 
     if (cheatUsed) {
-        chatString = g_generalText->getText(GENERAL_TEXT_CHEATER);
+        // DC line 211 calls TTextResource::operator[] here. This canonical
+        // access is VC6 byte-flat while the string assignment remains the
+        // retail inliner difference.
+        chatString = (*g_generalText)[GENERAL_TEXT_CHEATER];
         g_game->m_isCheater = 1;
         if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
