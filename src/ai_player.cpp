@@ -806,10 +806,12 @@ void type_AI_player::resetMagusHutValue()
 // DC ai_player.cpp:752..813 and Mac 0:0x2c9d8..0x2cc84 preserve the
 // two nested loops and direct type/amount/value writes in the creature record.
 // DC function-scope locals give Windows 93.01% (29/31 exact blocks). Indexed
-// town population access reproduces Mac's town-base cursor and scores Mac
-// 84.50%, while Windows is 92.72% with the same 31-block CFG. Retail Windows
-// spills the town pointer and advances population in EDI; VC6 keeps town in
-// EDI. Three retained vector template target aliases are still unresolved.
+// town population access originally kept the town base in Mac and scored
+// Windows 92.72%. A separate population cursor improves Windows to 93.01%
+// with the same 31-block CFG and Mac shape alignment from 97 to 99
+// instructions; both retain the same eight Mac calls. Retail Windows spills
+// the town pointer and advances population in EDI. Three retained vector
+// template target aliases are still unresolved.
 // DC records creature_info, total_cost[7] and cost[7] in function scope;
 // the long total_cost type is distinct from int cost. Mac's final resource
 // index sign-extends each iteration: short restores its counted loop and
@@ -834,11 +836,12 @@ void type_AI_player::calculateReserve()
         creatures.clear();
 
         dwelling = 0;
-        for (; dwelling < 14; dwelling++) {
-            if (currentTown->m_population[dwelling] > 0) {
+        short* population = currentTown->m_population;
+        for (; dwelling < 14; dwelling++, population++) {
+            if (*population > 0) {
                 creatureInfo.m_type = g_townDwellingCreatures[
                     currentTown->m_type * 14 + dwelling];
-                creatureInfo.m_amount = currentTown->m_population[dwelling];
+                creatureInfo.m_amount = *population;
                 creatureInfo.m_value = static_cast<short>(creatureInfo.m_amount
                     * g_creatureTypeTraits[creatureInfo.m_type].m_aiValue);
                 creatures.push_back(creatureInfo);
