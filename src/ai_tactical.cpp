@@ -2238,13 +2238,9 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
 // caster's power, all scaled by how many of the victim there are and
 // divided by the healed stack's own hit points.
 
-// The trailing `choice.field_20` block is the is_last_action test
-// (dc 0x3d6xx; it has no retail body because it is inlined at
-// every site): the choice is flagged when the healed stack IS the
-// acting stack, or when no OTHER stack on our side can still act. Its
-// scan is the same creatureId 0x200040 / disabled-triple / bit-26 walk
-// should_attack_now opens with, and retail memory-homes its index the
-// same way.
+// DC lines 2742-2743 call get_current_army and is_last_action. VC6 expands
+// the ordinary helper here: all 35 retail blocks, 24 branches and five calls
+// match exactly.
 
 VA(0x0043af50, 0x284)  // anchor-callee, dc 0x41278
 void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const army* healedArmy, long targetHex) const
@@ -2287,30 +2283,10 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const arm
         choice.m_value = value;
         choice.m_target = targetHex;
         choice.m_secondTargetHex = victim->m_gridIndex;
-        unsigned char last = 1;
-        const army* current = &g_combatManager->m_armies[g_combatManager->m_actingSide]
-                                                      [g_combatManager->m_actingSlot];
-        if (healedArmy != current && !m_winLikely) {
-            long total = g_combatManager->m_numArmies[m_side];
-            for (long j = 0; j < total; j++) {
-                const army* ourArmy = &g_combatManager->m_armies[m_side][j];
-                if (ourArmy->is(creatureSiegeWeapon | creatureImmobilized))
-                    continue;
-                if (ourArmy->m_spellInfluence[62])
-                    continue;
-                if (ourArmy->m_spellInfluence[70])
-                    continue;
-                if (ourArmy->m_spellInfluence[74])
-                    continue;
-                if (ourArmy->is(creatureDone))
-                    continue;
-                if (ourArmy != current) {
-                    last = 0;
-                    break;
-                }
-            }
-        }
-        choice.m_castNow = last;
+        choice.m_castNow =
+            healedArmy == g_combatManager->getCurrentArmy()
+            || m_winLikely
+            || isLastAction();
     }
 }
 
