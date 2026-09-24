@@ -719,3 +719,27 @@ mac_offset = 0x28fb1c
 mac_size = 0x28
 sha256 = "2f3b8cd1fbb716384a278dafba9cc4222b50ec09e9d33aeb50708298a2b2c654"
 evidence = "The installed CodeWarrior Pro 6 MSL C.PPC.Lib names this 40-byte .atoi hunk. Every instruction equals the pinned Mac body except its call at +0x14, whose object relocation links to strtol at 0x28fa14; the final BLR is at 0x28fb40. It calls strtol(text, NULL, 10). Mac has 122 direct calls, including creature trait and combat wall table parsing. Library identity only."
+
+[[functions]]
+symbol = ".set__Q23std11bitset<145>FUlb"
+mac_section = 0
+mac_offset = 0x9d524
+mac_size = 0xe8
+sha256 = "b65037753f66e1693a3d5cd2c6f266c585c9a83e36cae5e0808d338116e712e5"
+evidence = "Nineteen calls in two unfinished game/campaign callers pass receiver, bit index and bool to this setter. It bounds-checks r4 against 0x91 (145), sets or clears one of five storage words, and returns the receiver at BLR 0x9d608 before the reviewed bitset<8>::set entry at 0x9d60c. The shared CampaignHeaderStruct::ScenarioStruct member m_crossoverCreatures is bitset<145>, and the method shape matches the reviewed MSL bitset setters. Runtime template identity only."
+
+[[functions]]
+symbol = ".__ct__Q23std10bitset<10>FUl"
+mac_section = 0
+mac_offset = 0x4f50
+mac_size = 0xc
+sha256 = "7ec2db04100e6605dac8621215382100d5ab55d000156fb32ce68d85dd7d6788"
+evidence = "Ten calls in the puzzle-window global initializer construct one-word masks from value 1 before shifting each by offsets 0..9. This complete three-instruction body masks r4 to ten bits, stores the word at receiver+0 and returns at 0x4f58 before the shift operator at 0x4f5c. The installed MSL bitset(unsigned long) definition performs this mask for N<32, and a CodeWarrior game source view emits the exact bitset<10> constructor symbol. Runtime template identity only."
+
+[[functions]]
+symbol = ".mac_bitset10_shift_left_4f5c"
+mac_section = 0
+mac_offset = 0x4f5c
+mac_size = 0xf8
+sha256 = "d0ca3d234c0b15f13f06a66643dbcce54689099bf63bc5fc852a38bdb787982f"
+evidence = "The puzzle-window initializer calls this body after constructing each bitset<10>(1), passing shifts 0..9. It shifts the receiver's word left by r4, clears higher words if any, masks the low word to ten bits and returns at BLR 0x5050 before the next prologue at 0x5054. The neutral label records the MSL bitset<10> shift operation without guessing the emitted operator mangling."
