@@ -233,6 +233,7 @@ protected:
     sample* m_sysMsgSample;  // +0x38
     sample* m_turnDurSample;  // +0x3c
     sample* m_playerEnterSample;  // +0x40
+    void playChatSample(sample* preferred);
     // remote.cpp:1060/1065, DC 0x11c71c/0x11c738; the publics prove
     // protected access. AddChat calls the first canonical helper, while
     // KillOldChat calls the second. Retail expands these source calls.

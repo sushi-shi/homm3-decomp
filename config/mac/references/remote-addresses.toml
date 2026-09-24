@@ -1,0 +1,46 @@
+# Reviewed shared remote identities in the Mac PEF.
+
+[[functions]]
+retail_va = 0x553960
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x2116cc
+mac_size = 0x120
+target_sha256 = "0c01ddd71c813030b6dfd1eaba119977385400d55799f5fce92c18817f82b3f0"
+evidence = "CChatManager::turnDurationMsg: variadic vsprintf into a 1024-byte buffer, suspended advManager and popup guards, g_turnDuration.isClose(59000), general-text prefix 0x36, addChat and retained chat-sound helper. Complete BLR at 0x2117e8; next formatter begins 0x2117ec."
+
+[[functions]]
+retail_va = 0x554560
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x212b88
+mac_size = 0x68
+target_sha256 = "761a8232c406da060923baa0a37bbe7ce028cf08ca2780b482becb4eca87fc76"
+evidence = "Free transmitRemoteDataDPID wrapper: four inputs, guard g_remoteOn/g_dPlay, call the Mac DPID member sender 0x210ee4, normalize byte result; zero otherwise. Direct callers include the net message sender. Complete BLR at 0x212bec; parallel recipient wrapper begins 0x212bf0."
+
+[[functions]]
+retail_va = 0x5545f0
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x212bf0
+mac_size = 0x68
+target_sha256 = "0ab0cf18ca9f95473010ee5334dacfa412b5526667bb24949ccdb6322335e02c"
+evidence = "Free transmitRemoteData wrapper: same four-input remote/dPlay guard as its adjacent DPID variant, forwarding to member recipient sender 0x210cd0 and normalizing byte result. Direct calls include swapmgr; complete BLR at 0x212c54, next function starts 0x212c58."
+
+[[functions]]
+retail_va = 0x5565e0
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x21413c
+mac_size = 0x1d4
+target_sha256 = "89a8737eafb63b88d85f79d99dabd4f51757176b626ff43f466c4269387f0fa7"
+evidence = "Unique OnPlayerDropUpdateMsg log string at data 1+0x59402 anchors the entry. Body shows pointer/dialog/hourglass, primary then recovery loadGame, player net-info clear, local-seat and visibility updates, and nextPlayer versus startLocalPlayerTurn. Mac compares old/new net local position where Windows uses g_weMoved, a reviewed port difference. Complete BLR at 0x21430c; next function starts 0x214310."
+
+[[helpers]]
+source_helper = "CChatManager::playChatSample"
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x2119d8
+mac_size = 0xa0
+target_sha256 = "87f95a7182a98ea01ec6f0a748f4051a3a0cc7924a334c4cfcd4d1b928c46b4e"
+evidence = "Five Mac chat formatters directly call this ordinary method. It checks the current sample, falls back from preferred to m_chatSample, temporarily enables sound, calls soundManager::memorySample, then restores the prior flag. Those bodies were copied at five Windows source sites and are now canonical calls. Complete BLR at 0x211a74."

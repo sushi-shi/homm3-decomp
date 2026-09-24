@@ -655,18 +655,8 @@ void CChatManager::addChat(const char* format, ...)
     m_changed = 1;
 
     if (!m_isSysMsg) {
-        if (m_chatMemSample
-            && g_soundManager->getSampleInfo(
-                m_chatMemSample, AIL_SAMPLE_PLAYING))
-            return;
         sample* chatSample = m_chatSample;
-        if (chatSample) {
-            int soundWasEnabled = g_soundManager->m_playSounds;
-            g_soundManager->m_playSounds = 1;
-            m_chatMemSample =
-                g_soundManager->memorySample(chatSample);
-            g_soundManager->m_playSounds = soundWasEnabled;
-        }
+        playChatSample(chatSample);
     }
 }
 
@@ -711,19 +701,7 @@ void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
         m_isSysMsg = 0;
     }
 
-    sample* sampleToPlay = m_turnDurSample;
-    if (m_chatMemSample
-        && g_soundManager->getSampleInfo(
-            m_chatMemSample, AIL_SAMPLE_PLAYING))
-        return;
-    if (!sampleToPlay)
-        sampleToPlay = m_chatSample;
-    if (sampleToPlay) {
-        int soundWasEnabled = g_soundManager->m_playSounds;
-        g_soundManager->m_playSounds = 1;
-        m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
-        g_soundManager->m_playSounds = soundWasEnabled;
-    }
+    playChatSample(m_turnDurSample);
 }
 
 VA(0x00553aa0, 0xC0)  // dc 0x11c558
@@ -742,21 +720,8 @@ void __cdecl CChatManager::systemMsg(const char* format, ...)
 
     m_isSysMsg = 1;
     addChat(finalText);
-    sample* sampleToPlay = m_sysMsgSample;
     m_isSysMsg = 0;
-
-    if (m_chatMemSample
-        && g_soundManager->getSampleInfo(
-            m_chatMemSample, AIL_SAMPLE_PLAYING))
-        return;
-    if (!sampleToPlay)
-        sampleToPlay = m_chatSample;
-    if (sampleToPlay) {
-        int soundWasEnabled = g_soundManager->m_playSounds;
-        g_soundManager->m_playSounds = 1;
-        m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
-        g_soundManager->m_playSounds = soundWasEnabled;
-    }
+    playChatSample(m_sysMsgSample);
 }
 
 VA(0x00553b60, 0xCA)  // dc 0x11c5bc
@@ -775,21 +740,7 @@ void CChatManager::playerDropMsg(const char* format, ...)
 
     m_isSysMsg = 1;
     addChat(finalText);
-    sample* sampleToPlay = m_playerDropSample;
-
-    if (!(m_chatMemSample
-          && g_soundManager->getSampleInfo(
-              m_chatMemSample, AIL_SAMPLE_PLAYING))) {
-        if (!sampleToPlay)
-            sampleToPlay = m_chatSample;
-        if (sampleToPlay) {
-            int soundWasEnabled = g_soundManager->m_playSounds;
-            g_soundManager->m_playSounds = 1;
-            m_chatMemSample =
-                g_soundManager->memorySample(sampleToPlay);
-            g_soundManager->m_playSounds = soundWasEnabled;
-        }
-    }
+    playChatSample(m_playerDropSample);
     m_isSysMsg = 0;
 }
 
@@ -809,22 +760,26 @@ void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
 
     m_isSysMsg = 1;
     addChat(finalText);
-    sample* sampleToPlay = m_playerEnterSample;
-
-    if (!(m_chatMemSample
-          && g_soundManager->getSampleInfo(
-              m_chatMemSample, AIL_SAMPLE_PLAYING))) {
-        if (!sampleToPlay)
-            sampleToPlay = m_chatSample;
-        if (sampleToPlay) {
-            int soundWasEnabled = g_soundManager->m_playSounds;
-            g_soundManager->m_playSounds = 1;
-            m_chatMemSample =
-                g_soundManager->memorySample(sampleToPlay);
-            g_soundManager->m_playSounds = soundWasEnabled;
-        }
-    }
+    playChatSample(m_playerEnterSample);
     m_isSysMsg = 0;
+}
+
+// Mac +0x2119d8 retains one method called by all five chat formatters.
+// VC6 expands its sound-state and fallback sequence at those call sites.
+void CChatManager::playChatSample(sample* preferred)
+{
+    if (m_chatMemSample
+        && g_soundManager->getSampleInfo(
+            m_chatMemSample, AIL_SAMPLE_PLAYING))
+        return;
+    if (!preferred)
+        preferred = m_chatSample;
+    if (preferred) {
+        int soundWasEnabled = g_soundManager->m_playSounds;
+        g_soundManager->m_playSounds = 1;
+        m_chatMemSample = g_soundManager->memorySample(preferred);
+        g_soundManager->m_playSounds = soundWasEnabled;
+    }
 }
 
 // DC's UpdateWidget public encodes native bool for killOld; the retained
