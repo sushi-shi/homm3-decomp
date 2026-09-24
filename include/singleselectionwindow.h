@@ -770,6 +770,7 @@ public:
     // UpdateGameVars role (dc 0x139090, void()). Called after the
     // header transfer completes.
     void updateGameVars();
+    void applyHeaderToGame(GameSelectionHeadersStruct* header);
     unsigned char beginSavedGame();
     bool beginNewGame();
     void updateMainWindow();

@@ -3164,14 +3164,7 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
     localHeader.m_setup = g_game->m_setup;
     m_currentHeader = &localHeader;
 
-    g_game->m_setup = localHeader.m_setup;
-    memcpy(g_game->m_heroAvailability, localHeader.m_heroAvailability,
-           sizeof(localHeader.m_heroAvailability));
-    g_game->m_mapHeader.assignData(&localHeader.m_header, localHeader.m_title,
-                                 localHeader.m_description);
-    g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
-    g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
-    m_descriptionWidget->setText(localHeader.m_description);
+    applyHeaderToGame(&localHeader);
 
     for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
         m_players.m_humanPlayers[j].m_heroIndex = -1;
@@ -4010,6 +4003,21 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // is not retained (55.0450% with the old pins; 49.0856% without them).
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
+// Mac retains this shared transfer at code 0:0x17b0b0. VC6 expands it in
+// rebuildFilteredPlayerSetup, both updateGameVars arms and onBeginGame.
+void TSingleSelectionWindow::applyHeaderToGame(
+    GameSelectionHeadersStruct* header)
+{
+    g_game->m_setup = header->m_setup;
+    memcpy(g_game->m_heroAvailability, header->m_heroAvailability,
+           sizeof(header->m_heroAvailability));
+    g_game->m_mapHeader.assignData(&header->m_header, header->m_title,
+                                 header->m_description);
+    g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
+    g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
+    m_descriptionWidget->setText(header->m_description);
+}
+
 VA(0x00583580, 0x30C)  // anchor-global copies the selected header's planes into gpGame (+0x1f6a0 header band, +0x4df18 setup band) off the SelectionHeaders row - the DC UpdateGameVars body shape; size 0.76x dc 0x408, dc 0x139090
 void TSingleSelectionWindow::updateGameVars()
 {
@@ -4021,15 +4029,7 @@ void TSingleSelectionWindow::updateGameVars()
     // currentMap path rather than sharing a lowered tail.
     if (m_randomMapSelected) {
         GameSelectionHeadersStruct* localHeader = &m_localHeader;
-        g_game->m_setup = localHeader->m_setup;
-        memcpy(g_game->m_heroAvailability, localHeader->m_heroAvailability,
-               sizeof(localHeader->m_heroAvailability));
-        g_game->m_mapHeader.assignData(&localHeader->m_header,
-                                     localHeader->m_title,
-                                     localHeader->m_description);
-        g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
-        g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
-        m_descriptionWidget->setText(localHeader->m_description);
+        applyHeaderToGame(localHeader);
         return;
     }
 
@@ -4048,14 +4048,7 @@ void TSingleSelectionWindow::updateGameVars()
         return;
 
     GameSelectionHeadersStruct& selected = m_selectionHeaders[m_currentMap];
-    g_game->m_setup = selected.m_setup;
-    memcpy(g_game->m_heroAvailability, selected.m_heroAvailability,
-           sizeof(selected.m_heroAvailability));
-    g_game->m_mapHeader.assignData(&selected.m_header, selected.m_title,
-                                 selected.m_description);
-    g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
-    g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
-    m_descriptionWidget->setText(selected.m_description);
+    applyHeaderToGame(&selected);
 
     if (g_selectionCampaignMode)
         g_game->m_setup.m_turnDuration = 10;
@@ -7344,14 +7337,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         if (getHeader(DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps"),
                       const_cast<char*>(name.c_str()), header))
             return 0;
-        g_game->m_setup = header->m_setup;
-        memcpy(g_game->m_heroAvailability, header->m_heroAvailability,
-               sizeof(header->m_heroAvailability));
-        g_game->m_mapHeader.assignData(&header->m_header, header->m_title,
-                                     header->m_description);
-        g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
-        g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
-        m_descriptionWidget->setText(header->m_description);
+        applyHeaderToGame(header);
     }
 
     if (!m_loadMode && g_game->m_mapHeader.m_version != MAP_FORMAT_SHADOW_OF_DEATH

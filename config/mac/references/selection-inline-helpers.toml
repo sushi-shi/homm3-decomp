@@ -1,6 +1,15 @@
 # Mac-retained game helpers whose source calls already exist in the Windows TU.
 
 [[helpers]]
+source_helper = "TSingleSelectionWindow::applyHeaderToGame"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x17b0b0
+mac_size = 0x114
+target_sha256 = "bfd3e344a22635098db50d52ec97bcc39c2893ad6d9db2dc6ebe0ba7b7f95fd5"
+evidence = "The retained body copies one GameSelectionHeadersStruct setup at+0x2c0 and hero-availability bytes at+0x4b4 into g_game, calls CMapHeaderData::assignData with the header/title/description at+0/+0x550/+0x58d, writes duration and difficulty, then sets the description widget text. RebuildFilteredPlayerSetup, two updateGameVars branches and onBeginGame call this same target. Windows previously repeated precisely these statements at all four sites. BLR0x17b1c0 precedes updateGameVars."
+
+[[helpers]]
 source_helper = "hasNonRandomHero"
 unit = "singleselectionwindow"
 mac_section = 0
@@ -62,3 +71,12 @@ mac_offset = 0x184ae4
 mac_size = 0xb0
 target_sha256 = "3d918d568e44ae0b696e24d2bcd48b545b3e5dbe7e728fe0e668b61ca5fad4be"
 evidence = "ProcessRightSelect and advanced-row drawing call this with the window and seat index. It resolves human/computer player, reads the map slot random-alignment flag, calls hasMultipleTowns0x1845e4, then returns the player's town index or pickAlignment0x13221c from legalAlignments. This is the source helper; BLR0x184b90 precedes getHeroName."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::sendPlayerPositions"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x181bac
+mac_size = 0xc4
+target_sha256 = "0b73759d9e5b452be8cbbfbda0325f9496da418b88e8e3b0a3db92f56b49869f"
+evidence = "Five lobby and advanced-option callers pass this and a DPID. The retained body constructs CUpdatePlayerPosMsg with two arrays of eight 0x7c-byte player records copied from the window at+0xfb8 and+0x1398, calls transmitRemoteDataDPID with the DPID and two true flags, and returns 1. This matches the existing canonical sendPlayerPositions source helper. BLR0x181c6c precedes sendSetupInfo."
