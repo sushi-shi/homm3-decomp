@@ -80,3 +80,30 @@ mac_offset = 0x18ae90
 mac_size = 0x21c
 target_sha256 = "9f12072e0e83138d9f255a4203f98b9653f5777c84c13ecfb4f41f1ee27fe10f"
 evidence = "Spell description builds string from trait level, checks hero mastery, invokes level-string helper 0x18ada4 for rollover and damage calculations for attack spells; windowHandler calls it at 0x18ce5c. Complete BLR/next prologue."
+
+[[helpers]]
+source_helper = "getLevelString"
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18ada4
+mac_size = 0xec
+target_sha256 = "371dad1bc957e78ff167095215c9a6e1f1eeacac43cc9590c2f74422df2ec072"
+evidence = "Dreamcast spellbookwindow.cpp:115 names the source-private level-string helper. Mac initializes the five general-text labels once from indices 0xad..0xb1, then indexes by the spell's trait level minus one. getSpellDescription calls it at 0x18afa4 and gotoPage calls it twice at 0x18c980/0x18c9f0. Final BLR at 0x18ae8c precedes getSpellDescription at 0x18ae90."
+
+[[helpers]]
+source_helper = "TSpellbookWindow::displayNewSchool"
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18cc00
+mac_size = 0xec
+target_sha256 = "ee7c51b2ffacc05ad24b460b5cbd482f5a9306d4841cf3cc48820ff5c2364cf9"
+evidence = "Dreamcast records DisplayNewSchool as an ordinary member. Mac converts tab position to a school bit, returns if already selected, optionally plays video 0x25, updates school, calls gotoPage(0), sets the school-tab icon and draws the window. windowHandler retains three direct calls at 0x18d100/0x18d1a4/0x18d480. BLR at 0x18cce8 precedes convertID2HelpID."
+
+[[helpers]]
+source_helper = "TSpellbookWindow::convertID2HelpID"
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18ccec
+mac_size = 0xcc
+target_sha256 = "f12b5c51e6b67a1fb97836e2ea66bc4cc1523691b1f1d3920105ea651705bd82"
+evidence = "Dreamcast spellbookwindow.cpp:702 names ConvertID2HelpID. Mac's bounded switch maps the page, context, school, mana and cancel widget IDs to help-text indices and returns -1 for others. windowHandler calls it at 0x18ceb4 and 0x18d728; the final return precedes windowHandler entry at 0x18cdb8."
