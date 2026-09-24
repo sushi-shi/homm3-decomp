@@ -10,6 +10,15 @@ mac_size = 0xa8
 target_sha256 = "0f3223c1c485921d598154245adc4de4fa021a8dea41bc0b64f17f0ff845f7f4"
 evidence = "This const helper tests spellTargetsASingleArmy, loops over the 0x40-byte simulated-creature records, calls type_monster_data::getEnchantmentValue, and accumulates a mass value or selects the best target. The final BLR at 0x2771c precedes the two-side overload at 0x27720. That overload retains four Mac calls to this helper; Windows expands all four, and the ordinary source calls were already authored."
 
+[[helpers]]
+source_helper = "type_monster_data::castEnchantment"
+unit = "ai_combat"
+mac_section = 0
+mac_offset = 0x25f6c
+mac_size = 0x10c
+target_sha256 = "d3a0c9698b34054b1158b272268df3eb43b63760f792cd73a6f9f665f4d587a3"
+evidence = "The retained body computes the previous combat value, divides value times spellValue by totalValue using the signed 64-bit division helper, adds or subtracts the value and total, then updates combatValuePerHit. Its final BLR at 0x26074 precedes getResurrectionValue at 0x26078. Mac's two calls in the choice overload remain ordinary source calls; Windows expands this TU helper at both sites."
+
 [[functions]]
 retail_va = 0x00423c80
 unit = "ai_combat"
