@@ -3501,12 +3501,12 @@ void TSingleSelectionWindow::turnOffScenarioOptions()
 VA(0x00581b20, 0x253)  // dc 0x136e94
 void TSingleSelectionWindow::turnOffAdvancedOptions()
 {
-    if (m_loadMode && !g_remoteOn
-            && g_mpNetProtocol != MP_HOTSEAT)
+    // Mac retains all three isMultiPlayer calls; VC6 expands the predicate.
+    if (m_loadMode && !isMultiPlayer())
         return;
     if (m_saveMode)
         return;
-    if (!g_remoteOn && g_mpNetProtocol != MP_HOTSEAT)
+    if (!isMultiPlayer())
         setFocus(-1);
     getWidget(102)->hide();
     m_durationSlider->hide();
@@ -3515,7 +3515,7 @@ void TSingleSelectionWindow::turnOffAdvancedOptions()
         getWidget(i + 207)->hide();
         getWidget(i + 345)->hide();
         getWidget(i + 263)->hide();
-        if (!g_remoteOn && g_mpNetProtocol != MP_HOTSEAT)
+        if (!isMultiPlayer())
             getWidget(i + 353)->hide();
         getWidget(i + 215)->hide();
         getWidget(i + 223)->hide();
@@ -3547,8 +3547,7 @@ void TSingleSelectionWindow::turnOffAdvancedOptions()
 VA(0x00581D80, 0x550)  // anchor-callee SetupAdvancedOptions + ctor; Complete-only random-map pane
 void TSingleSelectionWindow::turnOffFilterOptions()
 {
-    if (m_saveMode || (m_loadMode && !g_remoteOn
-                     && g_mpNetProtocol != MP_HOTSEAT))
+    if (m_saveMode || (m_loadMode && !isMultiPlayer()))
         return;
 
     getWidget(103)->hide();
@@ -4706,9 +4705,7 @@ void TSingleSelectionWindow::updateAllyEnemyFlags(bool update)
     int playerPos;
     CNetPlayerHandlerPlayer* player;
 
-    if (m_saveMode
-        || (m_loadMode && !g_remoteOn
-            && g_mpNetProtocol != MP_HOTSEAT))
+    if (m_saveMode || (m_loadMode && !isMultiPlayer()))
         return;
 
     if (!m_flagBack->isSaved())
