@@ -1241,10 +1241,10 @@ VA(0x005bfb60, 0x266)  // dc 0x167748
 short town::getGrowthRate(short dwelling) const
 {
     long dwellingIndex = dwelling;
-    if (!(m_active & g_bitNumber[DWELLING_0_ID + dwellingIndex]))
+    if (!hasBuilding(DWELLING_0_ID + dwellingIndex, true))
         return 0;
     if (dwelling < TOWN_DWELLING_COUNT
-        && (m_active & g_bitNumber[DWELLING_0_UPG_ID + dwellingIndex]))
+        && hasBuilding(DWELLING_0_UPG_ID + dwellingIndex, true))
         return 0;
 
     TCreatureType creature = g_townDwellingCreatures[
@@ -1267,7 +1267,8 @@ short town::getGrowthRate(short dwelling) const
     }
 
     for (short slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
-        if ((m_active & g_bitNumber[g_hordeBuildings[slot]])
+        // Retail retains this hasBuilding call; DC also names the helper.
+        if (hasBuilding(g_hordeBuildings[slot], true)
             && s_constHordeEffects[m_type][slot].m_dwelling == dwelling) {
             growth += s_constHordeEffects[m_type][slot].m_bonus;
             break;
@@ -1275,7 +1276,7 @@ short town::getGrowthRate(short dwelling) const
     }
 
     growth += m_generatorBonus[dwellingIndex];
-    if (m_active & g_bitNumber[HOLY_GRAIL_ID])
+    if (hasBuilding(HOLY_GRAIL_ID, true))
         growth += growth / 2;
     return growth;
 }
