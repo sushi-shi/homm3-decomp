@@ -3172,6 +3172,91 @@ void NewfullMap::soDTransformRandomDwellings()
     }
 }
 
+void NewfullMap::readRandomDwellingData(TAbstractFile* infile,
+                                         CObject* object)
+{
+    RandomDwellingData dwelling;
+
+    char value;
+    infile->read(&value, sizeof(value));
+    dwelling.m_owner = value;
+
+    char padding[3];
+    infile->read(padding, 3);
+
+    int castleId;
+    infile->read(&castleId, sizeof(castleId));
+    dwelling.m_castleId = castleId;
+    if (castleId == 0) {
+        short factionMask;
+        infile->read(&factionMask, sizeof(factionMask));
+        dwelling.m_factionMask = factionMask;
+    }
+
+    infile->read(&value, sizeof(value));
+    dwelling.m_minLevel = value;
+    infile->read(&value, sizeof(value));
+    dwelling.m_maxLevel = value;
+
+    dwelling.m_object = object;
+    m_randomDwellings.push_back(dwelling);
+}
+
+void NewfullMap::readRandomDwellingLevelData(TAbstractFile* infile,
+                                              CObject* object)
+{
+    RandomDwellingData dwelling;
+
+    char value;
+    infile->read(&value, sizeof(value));
+    dwelling.m_owner = value;
+
+    char padding[3];
+    infile->read(padding, 3);
+
+    int castleId;
+    infile->read(&castleId, sizeof(castleId));
+    dwelling.m_castleId = castleId;
+    if (castleId == 0) {
+        short factionMask;
+        infile->read(&factionMask, sizeof(factionMask));
+        dwelling.m_factionMask = factionMask;
+    }
+
+    dwelling.m_minLevel = static_cast<unsigned char>(
+        m_objectTypes[object->m_typeIndex].m_extra);
+    dwelling.m_maxLevel = static_cast<unsigned char>(
+        m_objectTypes[object->m_typeIndex].m_extra);
+
+    dwelling.m_object = object;
+    m_randomDwellings.push_back(dwelling);
+}
+
+void NewfullMap::readRandomDwellingFactionData(TAbstractFile* infile,
+                                                CObject* object)
+{
+    RandomDwellingData dwelling;
+
+    char value;
+    infile->read(&value, sizeof(value));
+    dwelling.m_owner = value;
+
+    char padding[3];
+    infile->read(padding, 3);
+
+    dwelling.m_castleId = 0;
+    dwelling.m_factionMask = static_cast<unsigned short>(
+        1 << m_objectTypes[object->m_typeIndex].m_extra);
+
+    infile->read(&value, sizeof(value));
+    dwelling.m_minLevel = value;
+    infile->read(&value, sizeof(value));
+    dwelling.m_maxLevel = value;
+
+    dwelling.m_object = object;
+    m_randomDwellings.push_back(dwelling);
+}
+
 // E:\gamedcs\mapcell.cpp:3290
 // The h3m object dispatcher.  Five stream fields land in the object itself -
 // x, y, z, a FOUR-byte type index of which only the low word is kept, and
@@ -3187,8 +3272,8 @@ void NewfullMap::soDTransformRandomDwellings()
 // readHolyGrailData/readShrineData members. Their definitions stay at their
 // original mapcell.cpp positions, and Complete expands those calls here.
 // No standalone retail slot is needed to preserve those source boundaries.
-// The Complete-only placeholder, quest and dwelling records stay in their
-// caller arms.
+// The Complete-only placeholder and quest records stay in their caller arms.
+// Mac retains three separate random-dwelling readers; Complete expands them.
 // Restoring all four helpers raises 56.6382 -> 60.0594 in the 76-TU control.
 // The native-vector frontier in QUEST_GUARD remains the large residual;
 // no invented arm wrapper or additional inline-depth pin is introduced.
@@ -3391,78 +3476,17 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
 
     case RANDOM_DWELLING: {
-        RandomDwellingData dwelling;
-
-        infile->read(&value, sizeof(value));
-        dwelling.m_owner = value;
-
-        infile->read(padding, 3);
-
-        int castleId;
-        infile->read(&castleId, sizeof(castleId));
-        dwelling.m_castleId = castleId;
-        if (castleId == 0) {
-            short factionMask;
-            infile->read(&factionMask, sizeof(factionMask));
-            dwelling.m_factionMask = factionMask;
-        }
-
-        infile->read(&value, sizeof(value));
-        dwelling.m_minLevel = value;
-        infile->read(&value, sizeof(value));
-        dwelling.m_maxLevel = value;
-
-        dwelling.m_object = tempObject;
-        m_randomDwellings.push_back(dwelling);
+        readRandomDwellingData(infile, tempObject);
         break;
     }
 
     case RANDOM_DWELLING_LVL: {
-        RandomDwellingData dwelling;
-
-        infile->read(&value, sizeof(value));
-        dwelling.m_owner = value;
-
-        infile->read(padding, 3);
-
-        int castleId;
-        infile->read(&castleId, sizeof(castleId));
-        dwelling.m_castleId = castleId;
-        if (castleId == 0) {
-            short factionMask;
-            infile->read(&factionMask, sizeof(factionMask));
-            dwelling.m_factionMask = factionMask;
-        }
-
-        dwelling.m_minLevel = static_cast<unsigned char>(
-            m_objectTypes[tempObject->m_typeIndex].m_extra);
-        dwelling.m_maxLevel = static_cast<unsigned char>(
-            m_objectTypes[tempObject->m_typeIndex].m_extra);
-
-        dwelling.m_object = tempObject;
-        m_randomDwellings.push_back(dwelling);
+        readRandomDwellingLevelData(infile, tempObject);
         break;
     }
 
     case RANDOM_DWELLING_FACTION: {
-        RandomDwellingData dwelling;
-
-        infile->read(&value, sizeof(value));
-        dwelling.m_owner = value;
-
-        infile->read(padding, 3);
-
-        dwelling.m_castleId = 0;
-        dwelling.m_factionMask = static_cast<unsigned short>(
-            1 << m_objectTypes[tempObject->m_typeIndex].m_extra);
-
-        infile->read(&value, sizeof(value));
-        dwelling.m_minLevel = value;
-        infile->read(&value, sizeof(value));
-        dwelling.m_maxLevel = value;
-
-        dwelling.m_object = tempObject;
-        m_randomDwellings.push_back(dwelling);
+        readRandomDwellingFactionData(infile, tempObject);
         break;
     }
 

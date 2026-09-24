@@ -1369,6 +1369,9 @@ public:
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
     int readSeerData(TAbstractFile* infile, CObject* seerObject);
     int readScholarData(TAbstractFile* infile, CObject* scholarObject);
+    void readRandomDwellingData(TAbstractFile* infile, CObject* object);
+    void readRandomDwellingLevelData(TAbstractFile* infile, CObject* object);
+    void readRandomDwellingFactionData(TAbstractFile* infile, CObject* object);
     // The map-object dispatcher. `ret 0xc`: three arguments, and the third
     // is the map version every version-sensitive reader below takes - it is
     // forwarded verbatim to readTownData, readHeroData, readEventData,

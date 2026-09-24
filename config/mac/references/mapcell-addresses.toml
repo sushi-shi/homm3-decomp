@@ -1,3 +1,33 @@
+[[helpers]]
+source_helper = "NewfullMap::readRandomDwellingData"
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x125830
+mac_size = 0x134
+mac_symbol = ".readRandomDwellingData__10NewfullMapFP13TAbstractFileP7CObject"
+target_sha256 = "41df7cc591ecf2202232b180ca492362f9893fde51a61bc651ad035271b9b5fe"
+evidence = "The RANDOM_DWELLING arm of Mac readObject calls this member at 0x1261f4. It reads owner, padding, castle ID and optional faction mask, then both level bytes, and appends the record to the map's random-dwelling vector. Final BLR at 0x125960 precedes the level variant. Windows retail expands this source body in the switch arm."
+
+[[helpers]]
+source_helper = "NewfullMap::readRandomDwellingLevelData"
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x125964
+mac_size = 0x110
+mac_symbol = ".readRandomDwellingLevelData__10NewfullMapFP13TAbstractFileP7CObject"
+target_sha256 = "be9d02768070afcf9f7a3f90c6ccfe70aa34e0bd39c39ee1cb4e864941e1a06b"
+evidence = "The RANDOM_DWELLING_LVL arm of Mac readObject calls this member at 0x126208. It reads owner, padding, castle ID and optional faction mask, takes the level from object-type extra at +0x30 for both bounds, and appends the record. Final BLR at 0x125a70 precedes the faction variant; Windows retail expands the corresponding arm."
+
+[[helpers]]
+source_helper = "NewfullMap::readRandomDwellingFactionData"
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x125a74
+mac_size = 0x104
+mac_symbol = ".readRandomDwellingFactionData__10NewfullMapFP13TAbstractFileP7CObject"
+target_sha256 = "c9c0010a6b0ae0cd6d727e19518dab0414980025fe16264519fbbc2a8344dc4b"
+evidence = "The RANDOM_DWELLING_FACTION arm of Mac readObject calls this member at 0x12621c. It reads owner and padding, sets castle ID zero, forms the faction bit from object-type extra, reads both level bytes and appends the record. Final BLR at 0x125b74 precedes the next helper; Windows retail expands this source body."
+
 [[functions]]
 mac_section = 0x0
 mac_offset = 0x11d404
