@@ -254,6 +254,15 @@ retail_va = 0x4f6530
 
 [[functions]]
 unit = "kb"
+mac_section = 0
+mac_offset = 0x117f10
+mac_size = 0x224
+target_sha256 = "e9dfb4f58cedd597003566700fc560cb4c5378b453586bdde97970e417423354"
+evidence = "The 12-argument normalDialog front door stores text, type, coordinates, 256x128 default size and 20x30 text inset in TNormalDialogInfo; calls icon::set at 0x1167a0 for three arguments and five empty slots, then calculateNormalDialogSize at 0x117220. The shorter overload at 0x117eb8 forwards here, and many UI handlers call it directly. Final BLR at 0x118130 and next prologue at 0x118134 bound the body."
+retail_va = 0x4f6570
+
+[[functions]]
+unit = "kb"
 mac_section = 0x0
 mac_offset = 0x111ba0
 mac_size = 0xc4
