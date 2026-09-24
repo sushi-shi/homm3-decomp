@@ -776,10 +776,9 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
 }
 
 // E:\gamedcs\events.cpp:498. Dreamcast proves this private helper, its
-// short `artifact` local and its statement order. Retail has no separate
-// body, but DoEventArtifact's free arm contains this entire sequence, so
-// the definition remains inline and the retail caller is the x86 verdict.
-inline void advManager::doEventFreeArtifact(hero* currentHero,
+// short `artifact` local and statement order. Mac doEventArtifact retains
+// a call to it at 0:0xa9d28; VC6 auto-inlines it into the free arm.
+void advManager::doEventFreeArtifact(hero* currentHero,
                                             NewmapCell* cell,
                                             type_point point,
                                             bool humanPlayer)
