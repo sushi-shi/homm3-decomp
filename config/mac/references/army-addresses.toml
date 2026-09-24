@@ -864,3 +864,30 @@ mac_offset = 0x4e538
 mac_size = 0xe4
 target_sha256 = "c2183ce95bcdb1406d3cb789ceb5747bcfce934963fc348316520b848efb8160"
 evidence = "Mac computeAttackerBonus retains this source call. Its switch checks Angel 0xc/0xd against Devil 0x36/0x37, Efreet 0x34/0x35 against Genie 0x24/0x25, and Black Dragon 0x53 against Titan 0x29 in both directions, matching the Dreamcast-named ordinary army.cpp helper. Final BLR at 0x4e618; next entry 0x4e61c."
+
+[[helpers]]
+source_helper = "chooseWallTarget"
+unit = "army"
+mac_section = 0
+mac_offset = 0x51ca8
+mac_size = 0xac
+target_sha256 = "6f89ed171df37de09039cde4e5157f4dd66c0e3bb66171471348711622cae2f6"
+evidence = "Mac attackWall overloads call this retained helper with candidate array and count. It starts at distance 50, skips the current wall and invalid targets, chooses nearest valid wall, and breaks equal distances with sRandom. The existing Windows source calls chooseWallTarget; final BLR at 0x51d50, next entry 0x51d54."
+
+[[helpers]]
+source_helper = "enchanterSpellHasTarget"
+unit = "army"
+mac_section = 0
+mac_offset = 0x5446c
+mac_size = 0xac
+target_sha256 = "d5f327d8d65ba00cc0d27845ff50fb324fe34f2c32c2e8040b03512bbeeea12f"
+evidence = "Mac Enchanter calls this retained helper twice. It selects side from spell karma, reads that side's army count, tests spellIsValidOnTarget at 0x542f0 and returns whether any test succeeds. The Windows source had duplicated this scan in both caller loops; the helper name is inferred. Final BLR at 0x54514, next entry 0x54518."
+
+[[helpers]]
+source_helper = "army::getValidCaliphSpells"
+unit = "army"
+mac_section = 0
+mac_offset = 0x5455c
+mac_size = 0x68
+target_sha256 = "0213ab909d5c1f4e6f7b44aaee7469933d2c1f1659621e216e78dbd1d3150bab"
+evidence = "Mac canCastSpell and castCaliphSpell call this retained source helper. It counts spells 10 through 69 for which isValidCaliphSpell at 0x54518 succeeds. Windows expands the existing helper in both callers; final BLR at 0x545c0, next entry 0x545c4."

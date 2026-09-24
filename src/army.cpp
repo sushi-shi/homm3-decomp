@@ -4894,6 +4894,22 @@ unsigned char spellIsValidOnTarget(int spell, const army* target)
     return 1;
 }
 
+// Mac retains this helper at 0x5446c, between spellIsValidOnTarget and
+// isValidCaliphSpell, and the Enchanter calls it twice. Its name is inferred.
+static unsigned char enchanterSpellHasTarget(int spell)
+{
+    long side = g_combatManager->m_currentSide;
+    if (g_spellTraits[spell].m_karma < 0)
+        side = 1 - side;
+    army* targets = g_combatManager->m_armies[side];
+    long n = g_combatManager->m_numArmies[side];
+    while (n-- != 0) {
+        if (spellIsValidOnTarget(spell, targets))
+            return 1;
+    }
+    return 0;
+}
+
 VA(0x00447eb0, 0x21)  // dc 0x4c210
 unsigned char isValidCaliphSpell(SpellID spell, const army* target)
 {
@@ -4977,17 +4993,8 @@ unsigned char army::unnamed447fe0()
     long spell;
     while (*p >= 0) {
         spell = *p++;
-        long side = g_combatManager->m_currentSide;
-        if (g_spellTraits[spell].m_karma < 0)
-            side = 1 - side;
-        army* targets = g_combatManager->m_armies[side];
-        long n = g_combatManager->m_numArmies[side];
-        while (n-- != 0) {
-            if (spellIsValidOnTarget(spell, targets)) {
-                total += *p;
-                break;
-            }
-        }
+        if (enchanterSpellHasTarget(spell))
+            total += *p;
         p++;
     }
     if (total == 0)
@@ -4996,17 +5003,8 @@ unsigned char army::unnamed447fe0()
     long roll = rand() % total;
     for (p = g_enchanterSpells; *p >= 0; p += 2) {
         spell = *p;
-        long side = g_combatManager->m_currentSide;
-        if (g_spellTraits[spell].m_karma < 0)
-            side = 1 - side;
-        army* targets = g_combatManager->m_armies[side];
-        long n = g_combatManager->m_numArmies[side];
-        while (n-- != 0) {
-            if (spellIsValidOnTarget(spell, targets)) {
-                roll -= p[1];
-                break;
-            }
-        }
+        if (enchanterSpellHasTarget(spell))
+            roll -= p[1];
         if (roll < 0)
             break;
     }
