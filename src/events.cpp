@@ -632,10 +632,10 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
     const int noBoatPosition = 0xff;
     if (boatPoint.m_x == noBoatPosition) {
         if (!g_game->getCurrHero()) {
-            normalDialog(g_adventureEventText->getText(ADV_EVENT_TEXT_ABANDONED_SHIPYARD),
+            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_ABANDONED_SHIPYARD],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
-            normalDialog(formatString(g_generalText->getText(GENERAL_TEXT_SHIPYARD_BLOCKED_FORMAT),
+            normalDialog(formatString((*g_generalText)[GENERAL_TEXT_SHIPYARD_BLOCKED_FORMAT],
                          g_game->getCurrHero()->m_name).c_str(),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -647,14 +647,14 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
     if (boatCell->m_isTrigger
         && (boatCell->m_type == BOAT || boatCell->m_type == HERO
             || g_game->getBoatsBuilt() >= 64)) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_BOAT_BUILD_BLOCKED),
+        normalDialog((*g_generalText)[GENERAL_TEXT_BOAT_BUILD_BLOCKED],
                      1, 208, 40, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
 
     if (g_game->m_players[g_netLocalGamePos].m_resources[GOLD] < 1000
         || g_game->m_players[g_netLocalGamePos].m_resources[WOOD] < 10) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_BOAT_PURCHASE_CANNOT_AFFORD),
+        normalDialog((*g_generalText)[GENERAL_TEXT_BOAT_PURCHASE_CANNOT_AFFORD],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -940,10 +940,10 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
                 guards = getArmyName(guardList.m_armies[0], 2);
                 firstGuard = guards;
                 if (numArmies > 1) {
-                    firstGuard = g_generalText->getText(GENERAL_TEXT_GENERIC_CREATURE_PLURAL);
+                    firstGuard = (*g_generalText)[GENERAL_TEXT_GENERIC_CREATURE_PLURAL];
                     for (int i = 1; i < numArmies; i++) {
                         if (i == numArmies - 1)
-                            guards += g_generalText->getText(GENERAL_TEXT_LIST_AND);
+                            guards += (*g_generalText)[GENERAL_TEXT_LIST_AND];
                         else
                             guards += ", ";
                         guards += armyGroup::getArmySizeName(
@@ -952,7 +952,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
                         guards += getArmyName(guardList.m_armies[i], 2);
                     }
                 }
-                msg = formatString(g_generalText->getText(GENERAL_TEXT_GUARDED_ARTIFACT_PROMPT_FORMAT),
+                msg = formatString((*g_generalText)[GENERAL_TEXT_GUARDED_ARTIFACT_PROMPT_FORMAT],
                                     firstGuardAmount.c_str(),
                                     guards.c_str(), firstGuard.c_str());
                 normalDialog(msg.c_str(),
@@ -970,8 +970,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
         currentHero->checkLevel();
         if (humanPlayer) {
             sprintf(g_text,
-                    g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_CUSTOM_GUARDED_REWARD_FORMAT),
+                    (*g_adventureEventText)[ADV_EVENT_TEXT_CUSTOM_GUARDED_REWARD_FORMAT],
                     g_artifactTraits[artifactId].m_name);
             normalDialog(g_text, 1, -1, -1, 8, artifactId,
                          -1, 0, -1, 0, -1, 0);
@@ -1029,8 +1028,7 @@ void advManager::doEventArtifact(hero* currentHero, NewmapCell* cell,
 {
     if (currentHero->getNumberInBackpack(1) >= 64) {
         if (humanPlayer)
-            normalDialog(g_adventureEventText->getText(
-                             ADV_EVENT_TEXT_BACKPACK_FULL),
+            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_BACKPACK_FULL],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
@@ -1051,32 +1049,28 @@ void advManager::doEventArtifact(hero* currentHero, NewmapCell* cell,
     case const_artifact_requires_wisdom:
         doArtifactSkillRequirement(
             currentHero, cell, point, eSecSkillWisdom,
-            g_adventureEventText->getText(ADV_EVENT_TEXT_ARTIFACT_WISDOM_FORMAT),
+            (*g_adventureEventText)[ADV_EVENT_TEXT_ARTIFACT_WISDOM_FORMAT],
             humanPlayer);
         break;
     case const_artifact_requires_leadership:
         doArtifactSkillRequirement(
             currentHero, cell, point, eSecSkillLeadership,
-            g_adventureEventText->getText(
-                ADV_EVENT_TEXT_ARTIFACT_LEADERSHIP_FORMAT),
+            (*g_adventureEventText)[ADV_EVENT_TEXT_ARTIFACT_LEADERSHIP_FORMAT],
             humanPlayer);
         break;
     case const_artifact_costs_2000:
         payForArtifact(currentHero, cell, point,
-                       g_adventureEventText->getText(
-                           ADV_EVENT_TEXT_ARTIFACT_COST_2000_FORMAT),
+                       (*g_adventureEventText)[ADV_EVENT_TEXT_ARTIFACT_COST_2000_FORMAT],
                        2000, 0, humanPlayer);
         break;
     case const_artifact_costs_2500:
         payForArtifact(currentHero, cell, point,
-                       g_adventureEventText->getText(
-                           ADV_EVENT_TEXT_ARTIFACT_COST_2500_FORMAT),
+                       (*g_adventureEventText)[ADV_EVENT_TEXT_ARTIFACT_COST_2500_FORMAT],
                        2500, 3, humanPlayer);
         break;
     case const_artifact_costs_3000:
         payForArtifact(currentHero, cell, point,
-                       g_adventureEventText->getText(
-                           ADV_EVENT_TEXT_ARTIFACT_COST_3000_FORMAT),
+                       (*g_adventureEventText)[ADV_EVENT_TEXT_ARTIFACT_COST_3000_FORMAT],
                        3000, 5, humanPlayer);
         break;
     }
@@ -1624,10 +1618,10 @@ VA(0x004a18b0, 0x79A)  // dc-bracket forced, ret 0x10=p5, dc 0x92814
 void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                                           type_point point, bool humanPlayer)
 {
-    int generatorType = cell->m_type;
+    TAdventureObjectType generatorCount = cell->m_type;
     int index = cell->m_objectIndex;
     const char* generatorName;
-    if (generatorType == CREATURE_GENERATOR_1)
+    if (generatorCount == CREATURE_GENERATOR_1)
         generatorName = g_creatureGenerator1RolloverNames[index];
     else
         generatorName = g_creatureGenerator4RolloverNames[index];
@@ -1650,7 +1644,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                 overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
                 updBottomView(0, 1, 1);
                 prompt = formatString(
-                    g_generalText->getText(GENERAL_TEXT_GUARDED_OBJECT_PROMPT_FORMAT), generatorName,
+                    (*g_generalText)[GENERAL_TEXT_GUARDED_OBJECT_PROMPT_FORMAT], generatorName,
                     armyGroup::getArmySizeName(guardQty, 2),
                     getArmyName(guardType, 2));
                 normalDialog(prompt.c_str(),
@@ -1670,9 +1664,9 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
     }
 
     if (humanPlayer) {
-        if (generatorType != CREATURE_GENERATOR_1) {
-            if (generatorType == CREATURE_GENERATOR_4) {
-                sprintf(g_text, g_adventureEventText->getText(ADV_EVENT_TEXT_DWELLING_RECRUIT_MULTIPLE_FORMAT),
+        if (generatorCount != CREATURE_GENERATOR_1) {
+            if (generatorCount == CREATURE_GENERATOR_4) {
+                sprintf(g_text, (*g_adventureEventText)[ADV_EVENT_TEXT_DWELLING_RECRUIT_MULTIPLE_FORMAT],
                         generatorName,
                         getArmyName(currentGenerator.m_type[0], 2),
                         getArmyName(currentGenerator.m_type[1], 2),
@@ -1680,7 +1674,7 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                         getArmyName(currentGenerator.m_type[3], 2));
             }
         } else {
-            sprintf(g_text, g_adventureEventText->getText(ADV_EVENT_TEXT_DWELLING_RECRUIT_ONE_FORMAT),
+            sprintf(g_text, (*g_adventureEventText)[ADV_EVENT_TEXT_DWELLING_RECRUIT_ONE_FORMAT],
                     generatorName,
                     getArmyName(currentGenerator.m_type[0], 2));
         }
@@ -1702,16 +1696,16 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                 }
 
                 if (currentGenerator.m_population[i] == 0) {
-                    result += formatString(g_generalText->getText(GENERAL_TEXT_NO_CREATURES_TO_RECRUIT_FORMAT),
+                    result += formatString((*g_generalText)[GENERAL_TEXT_NO_CREATURES_TO_RECRUIT_FORMAT],
                         g_creatureTypeTraits[creature].m_pluralName);
                 } else if (!currentHero->m_army.add(
                                creature, currentGenerator.m_population[i],
                                -1)) {
-                    result += formatString(g_generalText->getText(GENERAL_TEXT_RECRUIT_INSUFFICIENT_PROVISIONS_FORMAT),
+                    result += formatString((*g_generalText)[GENERAL_TEXT_RECRUIT_INSUFFICIENT_PROVISIONS_FORMAT],
                         getArmyName(creature,
                                     currentGenerator.m_population[i]));
                 } else {
-                    result += formatString(g_generalText->getText(GENERAL_TEXT_CREATURES_JOIN_FORMAT),
+                    result += formatString((*g_generalText)[GENERAL_TEXT_CREATURES_JOIN_FORMAT],
                         currentGenerator.m_population[i],
                         getArmyName(creature,
                                     currentGenerator.m_population[i]));
@@ -3105,9 +3099,8 @@ void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
 {
     TreasureData* treasure = getTreasureData(cell);
     int spell = cell->m_extraInfo & 0xff;
-    type_artifact artifact;
-    artifact.m_artifactId = ARTIFACT_SPELL_SCROLL;
-    artifact.m_extra = spell;
+    // DC events.cpp:3136-3137 calls type_artifact(SpellID) for this scroll.
+    type_artifact artifact(spell);
 
     if (treasure->m_hasCustomGuardians && treasure->m_guardians.getNumArmies()) {
         if (humanPlayer) {
@@ -3127,8 +3120,7 @@ void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
         currentHero->checkLevel();
         if (humanPlayer) {
             sprintf(g_text,
-                    g_adventureEventText->getText(
-                        ADV_EVENT_TEXT_CUSTOM_GUARDED_REWARD_FORMAT),
+                    (*g_adventureEventText)[ADV_EVENT_TEXT_CUSTOM_GUARDED_REWARD_FORMAT],
                     g_spellTraits[spell].m_name);
             normalDialog(g_text, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
         }
@@ -3145,8 +3137,7 @@ void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
                          1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
         } else {
             std::string text;
-            text = formatString(g_adventureEventText->getText(
-                                     ADV_EVENT_TEXT_SPELL_SCROLL_FORMAT),
+            text = formatString((*g_adventureEventText)[ADV_EVENT_TEXT_SPELL_SCROLL_FORMAT],
                                  g_spellTraits[spell].m_name);
             normalDialog(text.c_str(),
                          1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
@@ -3176,9 +3167,8 @@ void advManager::doEventSpellScroll(hero* currentHero, NewmapCell* cell,
     }
 
     SpellID spell = cell->m_extraInfo;
-    type_artifact scroll;
-    scroll.m_artifactId = ARTIFACT_SPELL_SCROLL;
-    scroll.m_extra = spell;
+    // DC events.cpp calls the same scroll constructor in the ordinary arm.
+    type_artifact scroll(spell);
     if (humanPlayer) {
         sprintf(g_text,
                 g_adventureEventText->getText(ADV_EVENT_TEXT_SPELL_SCROLL_FORMAT),
@@ -5357,7 +5347,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
             resource.m_qualifier = bank.m_artifacts[i];
             resources.push_back(resource);
             result = formatString(
-                g_adventureEventText->getText(ADV_EVENT_TEXT_ARTIFACT_NAME_WITH_ARTICLE_FORMAT),
+                (*g_adventureEventText)[ADV_EVENT_TEXT_ARTIFACT_NAME_WITH_ARTICLE_FORMAT],
                 g_artifactTraits[bank.m_artifacts[i]].m_name);
             rewardStrings.push_back(result);
         }
@@ -5380,7 +5370,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
         result = rewardStrings[0];
         for (i = 1; i < rewardStrings.size(); i++) {
             if (i == rewardStrings.size() - 1)
-                result += g_generalText->getText(GENERAL_TEXT_LIST_AND);
+                result += (*g_generalText)[GENERAL_TEXT_LIST_AND];
             else
                 result += ", ";
             result += rewardStrings[i];
@@ -5390,7 +5380,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
         // builds the reward line directly into its destination (inlined
         // `_Tidy`, called `assign`), which is worth 89.3406 -> 91.5867.
         std::string rewardText = formatString(
-            g_adventureEventText->getText(ADV_EVENT_TEXT_CREATURE_BANK_REWARD_FORMAT),
+            (*g_adventureEventText)[ADV_EVENT_TEXT_CREATURE_BANK_REWARD_FORMAT],
             getArmyName(leaderMonster, creatureCount), result.c_str());
         extendedDialog(rewardText.c_str(), resources, -1, -1, 0);
     }
