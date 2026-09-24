@@ -89,6 +89,9 @@ int aiResourceCost(const playerData* player, const int* resources);
 // A monster guarding the cell being entered: the pathCell's `monster`
 // slot remembers the one already charged for, so a second sighting of the
 // same stack costs nothing. The enemy-only search never prices it.
+// Mac stores the found monster before loading the barrier value, as retail
+// does. Reversing the addition operands and hoisting `value` to function scope
+// are byte-flat in VC6 (93.2615%); retain the direct source order.
 VA(0x0056a360, 0x9E)  // exhaustive search.obj order-map, dc 0x12b3f0
 unsigned char checkAdjacentMonster(const hero* currentHero,
                                      pathCell* entryPoint,

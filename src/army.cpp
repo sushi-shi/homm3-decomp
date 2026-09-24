@@ -189,6 +189,7 @@ void army::stopSample(army::TSampleID id)
 // 92.6261 exactly). The GameTime store schedules one slot later than
 // retail's and the dispose vtable call uses EDX where retail uses EAX
 // - all downstream of the same homing choice, no spelling reaches it.
+// Naming the GameTime result before its store is byte-flat at 99.7217%.
 VA(0x0043d5c0, 0x166)  // anchor-bracket + arity, dc 0x438e8
 void army::initClean()
 {
