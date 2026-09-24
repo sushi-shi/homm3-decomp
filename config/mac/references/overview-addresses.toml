@@ -1,5 +1,14 @@
 # Reviewed Mac address identities; unbound compiler names are intentionally omitted.
 
+[[helpers]]
+source_helper = "TOverviewWindow::setHeroArtifactPage"
+unit = "overview"
+mac_section = 0
+mac_offset = 0x13ac30
+mac_size = 0x74
+target_sha256 = "c724011b33dafdaea7f72e3080367020e46600778d2418e1d4d8baf37471fc1e"
+evidence = "The retained Mac body lies between doRollover and windowHandler and has eight direct calls at 0x13af00..0x13afa8 from the page-1/page-2 arms of four overview rows. It checks overviewType==0, assigns page 0 or 1 to overviewHeroArtifactPage[overviewTop[0]+row], then calls setupNewOverviewType(0,1). Windows retail expands those operations in the same eight arms; restoring this ordinary source helper raised windowHandler from 83.20 to 93.48 percent under VC6. The Mac callers pass row, row widget id and page id; the retained body does not read the widget id. Final BLR at 0x13aca0 bounds the helper before windowHandler at 0x13aca4."
+
 [[functions]]
 retail_va = 0x51bd50
 unit = "overview"

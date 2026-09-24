@@ -2366,6 +2366,25 @@ void TOverviewWindow::doRollover(int codeY)
     updateRollover(g_text);
 }
 
+// Mac keeps this helper at 0x13ac30 between doRollover and windowHandler;
+// windowHandler calls it for the first two artifact pages in each of four rows.
+// Windows expands those calls into the eight case arms. The Mac callers pass
+// each row's first widget id, but the retained body does not use that argument.
+// CodeWarrior emits the 116-byte helper and all eight calls; its current body
+// still differs in global-load order, so this is a source lead, not a Mac match.
+void TOverviewWindow::setHeroArtifactPage(int row, int, int pageId)
+{
+    if (g_overviewType == 0) {
+        if (pageId == OVERVIEW_HERO_ARTIFACT_PAGE_1_ID)
+            g_overviewHeroArtifactPage[g_overviewTop[0] + row] =
+                OVERVIEW_HERO_EQUIPPED_PAGE_1;
+        else
+            g_overviewHeroArtifactPage[g_overviewTop[0] + row] =
+                OVERVIEW_HERO_EQUIPPED_PAGE_2;
+        g_game->setupNewOverviewType(0, 1);
+    }
+}
+
 // Dreamcast fixes the base-handler protocol, ProcessIconSelect boundary,
 // rollover path, static-helper calls and high-level switch nesting. Complete
 // independently fixes the four 200-id hero rows, three artifact-page buttons
@@ -2420,18 +2439,12 @@ int TOverviewWindow::windowHandler(message& msg)
                 break;
 
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[g_overviewTop[0]] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_1;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(0, OVERVIEW_ROW_FIRST_ID,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
                 break;
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[g_overviewTop[0]] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_2;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(0, OVERVIEW_ROW_FIRST_ID,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
                 break;
 
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
@@ -2446,21 +2459,13 @@ int TOverviewWindow::windowHandler(message& msg)
                 break;
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[
-                        g_overviewTop[0] + 1] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_1;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(1, OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
                 break;
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[
-                        g_overviewTop[0] + 1] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_2;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(1, OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
                 break;
 
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
@@ -2477,21 +2482,13 @@ int TOverviewWindow::windowHandler(message& msg)
                 break;
             case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[
-                        g_overviewTop[0] + 2] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_1;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(2, OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
                 break;
             case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[
-                        g_overviewTop[0] + 2] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_2;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(2, OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
                 break;
 
             case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
@@ -2508,21 +2505,13 @@ int TOverviewWindow::windowHandler(message& msg)
                 break;
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[
-                        g_overviewTop[0] + 3] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_1;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(3, OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
                 break;
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[
-                        g_overviewTop[0] + 3] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_2;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(3, OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
                 break;
 
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
