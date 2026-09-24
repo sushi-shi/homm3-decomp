@@ -108,7 +108,7 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
             if name in named:
                 raise ObjectError(f"ambiguous source-owned Mac data symbol {name}")
             named[name] = (target, payload, pair.declaration_only,
-                           pair.same_tu_definition, pair.owner_unit)
+                           pair.same_tu_definition, pair.owner_unit, pair.same_tu_array)
     # MSL header data can be referenced by a source call without a game-owned
     # DATA annotation. Keep that inventory separate from authored globals and
     # require a pinned payload plus the loader-proven TOC destination.
@@ -124,7 +124,7 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
         target = Address(row["mac_section"], row["mac_offset"])
         payload = verified(row["mac_section"], row["mac_offset"], row["mac_size"],
                            row["sha256"], declaration_only=True)
-        named[name] = (target, payload, True, False, None)
+        named[name] = (target, payload, True, False, None, False)
     constants = data_rows(root, "constants")
     literals = {}
     site_literals = {}
@@ -234,7 +234,16 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
             raise ObjectError(f"TOC symbol {name!r} needs one nonrelocatable emitted data payload")
         else:
             value = values[0]
-        if name in named and named[name][3]:
+        if name in named and named[name][5]:
+            # CodeWarrior gives source-owned uninitialized arrays RW storage
+            # and an indirect TOC load. Keep the reviewed array marker, exact
+            # zero payload, and owning-TU requirement separate from externs.
+            expected = named[name][1]
+            if (unit != named[name][4] or value is None or value.initialized
+                    or value.storage_class != "RW" or not indirect
+                    or len(value.data) != len(expected) or value.data != expected):
+                raise ObjectError(f"same-TU UDATA array {name!r} lacks its reviewed indirect zero storage")
+        elif name in named and named[name][3]:
             # The authored source owns uninitialized same-TU storage. A
             # CodeWarrior UDATA hunk and a direct TOC reference are required;
             # accepting IDATA here would invent an initializer.
@@ -246,7 +255,7 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
         if name in descriptors:
             pass  # The emitted relocations and both retail loader pointers were checked above.
         elif name in named:
-            target, expected, _, _, _ = named[name]
+            target, expected, _, _, _, _ = named[name]
             if value is not None and value.data != expected:
                 raise ObjectError(f"TOC data {name!r} differs from its reviewed target; data scoring is not yet supported")
         elif name in external_vtables:

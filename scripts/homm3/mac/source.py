@@ -59,6 +59,7 @@ class DataPair:
     read_only: bool = False
     same_tu_definition: bool = False
     owner_unit: str | None = None
+    same_tu_array: bool = False
 
 
 def data_rows(root: Path, kind: str) -> list[dict]:
@@ -147,6 +148,9 @@ def load_data(root: Path) -> list[DataPair]:
             raise SourceError(f"{source}: DATA({va:#x}) same_tu_definition must be boolean")
         if same_tu_definition and declaration_only:
             raise SourceError(f"{source}: DATA({va:#x}) cannot be both external and same-TU storage")
+        same_tu_array = row.get("same_tu_array", False)
+        if not isinstance(same_tu_array, bool) or (same_tu_array and not same_tu_definition):
+            raise SourceError(f"{source}: DATA({va:#x}) same_tu_array requires same-TU storage")
         local_owner = row.get("owner_va")
         local_signature = None
         if local_owner is not None:
@@ -186,13 +190,17 @@ def load_data(root: Path) -> list[DataPair]:
         else:
             if same_tu_definition:
                 # A source-owned uninitialized global still has a real
-                # definition in its original TU. CodeWarrior can address that
-                # storage directly from the TOC; an extern-only declaration cannot.
-                # Keep this narrow: no initializer, pointer, reference, or
-                # qualified member declarator is inferred from the row.
+                # definition in its original TU. CodeWarrior emits UDATA for
+                # it; an extern-only declaration cannot establish ownership.
+                # Keep this narrow: plain pointers and explicitly reviewed
+                # arrays only; no initializer, reference, or qualified member.
                 match = re.fullmatch(
                     r'\s*(?:static\s+)?(?:(?:unsigned|signed)\s+)?'
-                    r'\w+(?:::\w+)*(?:\s*\*\s*|\s+)(\w+)\s*;', declaration, re.DOTALL)
+                    r'\w+(?:::\w+)*(?:\s*\*\s*|\s+)(\w+)\s*'
+                    r'(?P<array>(?:\[[^\[\];]*\]\s*)*);',
+                    declaration, re.DOTALL)
+                if match and bool(match.group("array").strip()) != same_tu_array:
+                    raise SourceError(f"{source}: DATA({va:#x}) same_tu_array differs from its declaration")
             else:
                 match = re.fullmatch(r'\s*(?:(?:static|const|unsigned|signed|long|short)\s+)*'
                                      r'\w+\s+(\w+)\s*(?:\[[^\]]*\]\s*)*=.*;',
@@ -229,7 +237,7 @@ def load_data(root: Path) -> list[DataPair]:
         result.append(DataPair(va, name, definition,
                                row["mac_section"], row["mac_offset"], row["mac_size"], row["sha256"],
                                declaration_only, symbol, local_owner, read_only,
-                               same_tu_definition, owner_by_source.get(source)))
+                               same_tu_definition, owner_by_source.get(source), same_tu_array))
     return result
 
 

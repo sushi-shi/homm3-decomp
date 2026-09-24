@@ -20,13 +20,15 @@ evidence = "Mac initializeSpells loads TOC 1+0x111c -> 1+0x43218 and uses the fi
 
 [[data]]
 retail_va = 0x00697798
-source = "include/town.h"
-declaration_only = true
+source = "src/town.cpp"
+declaration_only = false
+same_tu_definition = true
+same_tu_array = true
 mac_section = 1
 mac_offset = 0x5270c0
 mac_size = 0xc60
 sha256 = "98c87f2e8ed0d35a1677aedef5b954012bb0da4c61c421a370fb97fe99a04df0"
-evidence = "Mac canBuild loads TOC 1+0x844 -> zero-filled storage 1+0x5270c0 and indexes a 9-town by 44-building table of eight-byte masks with 0x160-byte town rows. The source-owned g_hierarchyMask declaration claims retail BSS 0x00697798; this address-only row covers its 0xc60-byte extent and no initializer."
+evidence = "Mac canBuild loads TOC 1+0x844 -> zero-filled storage 1+0x5270c0 and indexes a 9-town by 44-building table of eight-byte masks with 0x160-byte town rows. src/town.cpp defines g_hierarchyMask without an initializer at retail BSS 0x00697798; require an indirect IL TOC reference and exact zero-filled 0xc60-byte UDATA hunk."
 
 [[constants]]
 units = ["town"]
