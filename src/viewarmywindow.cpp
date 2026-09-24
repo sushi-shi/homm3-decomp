@@ -483,9 +483,11 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 //
 // DC lines 412/511-583 prove the shared exit flag, and 420-475 prove one
 // help-text string with seven operator= stores followed by the dialog.
-// DC text subscripts at 510/517/555-561 forward to the getText accessor
-// used here. The selected spell value survives those lookups in DC.
-// Keeping that value snapshot gives 92.5744%. The former
+// DC text subscripts at 510/517/555-561 prove the canonical operator[]
+// calls restored here. This spelling changes the current VC6 score from
+// 92.5744% to 92.55%; preserve the source fact through the inliner dip.
+// The selected spell value survives those lookups in DC.
+// Keeping that value snapshot previously gave 92.5744%. The former
 // assign/const-reference spellings reached 100% through different nested
 // append decisions. The luck += still retains append where retail expands
 // it. Exit-flag declaration and upgrade-input lifetime controls are flat;
@@ -568,7 +570,7 @@ int TViewArmyWindow::windowHandler(message& msg)
                 }
                 if (resource >= 0)
                     amount = cost[resource];
-                normalDialog(g_generalText->getText(GENERAL_TEXT_UPGRADE_ARMY_PROMPT),
+                normalDialog((*g_generalText)[GENERAL_TEXT_UPGRADE_ARMY_PROMPT],
                              2, -1, -1, 6, cost[6], resource, amount,
                              -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
@@ -576,7 +578,7 @@ int TViewArmyWindow::windowHandler(message& msg)
                 break;
             }
             case DISMISS_ID:
-                normalDialog(g_generalText->getText(GENERAL_TEXT_DISMISS_ARMY_PROMPT),
+                normalDialog((*g_generalText)[GENERAL_TEXT_DISMISS_ARMY_PROMPT],
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
                     exitFlag = 1;
@@ -602,22 +604,22 @@ int TViewArmyWindow::windowHandler(message& msg)
                             m_influence[hoverID - AFFECTING_SPELLS_0_ID];
                         if (spell == SPELL_BIND)
                             sprintf(g_text,
-                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
+                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT],
                                     g_spellTraits[spell].m_name,
-                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_BIND));
+                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_BIND]);
                         else if (spell == SPELL_BERSERK)
                             sprintf(g_text,
-                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
+                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT],
                                     g_spellTraits[spell].m_name,
-                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_BERSERK));
+                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_BERSERK]);
                         else if (spell == SPELL_DISRUPTING_RAY)
                             sprintf(g_text,
-                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
+                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT],
                                     g_spellTraits[spell].m_name,
-                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY));
+                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY]);
                         else
                             sprintf(g_text,
-                                    g_generalText->getText(GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT),
+                                    (*g_generalText)[GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT],
                                     g_spellTraits[spell].m_name,
                                     m_duration[hoverID - AFFECTING_SPELLS_0_ID]);
                         rollover = g_text;
