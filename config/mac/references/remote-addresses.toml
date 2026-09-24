@@ -123,6 +123,15 @@ target_sha256 = "0b73cee8397774d832f1e8a299e2abd7c4d47e711d4b73969c87abbe46850f2
 evidence = "CChatEdit::updateScreen draws through the widget virtual slot, then adds its position to its parent window position and passes the bounds to heroWindowManager::updateScreen 0x20df2c. The Windows source has the same virtual helper and four-coordinate manager call. Terminal BLR 0x212244 precedes onKeyPress at 0x212248."
 
 [[functions]]
+retail_va = 0x557e30
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215c28
+mac_size = 0x6c
+target_sha256 = "cd1a3963f1e85171927702ca48839bb9095c3304d6cfd7f8b696ade35dacebb6"
+evidence = "CNetMsgHandlerPause constructor: six calls in cmbtmgr, game and remote construct the existing authored pause-handler object. The Mac body calls CNetMsgHandler base construction at 0x215484, installs the RTTI-proven CNetMsgHandlerPause vtable, then if g_dPlay exists calls getNetMsgHandler at 0x21114c, stores the result at this+0xc, and calls setNetMsgHandler at 0x2110ec with this. Windows remote.cpp owns the same constructor at 0x557e30. BLR at 0x215c90 and next destructor prologue at 0x215c94 bound the full body. Source calls are already present."
+
+[[functions]]
 retail_va = 0x557aa0
 unit = "remote"
 mac_section = 0x0
