@@ -49,6 +49,30 @@ sha256 = "ac6403f4f887fb81e2dba836e333e60d136caec0950f12f41745b8246e79ff03"
 evidence = "MSL bitset<48>::set takes receiver, bit index and boolean value, bounds-checks against 48, then sets or clears the selected bit. Repeated calls from mapcell, game, hero and objecttype are library operations. Final BLR at 0xe999c precedes bitset<70>::test."
 
 [[functions]]
+symbol = ".mac_msl_bitset_19_test_5b014"
+mac_section = 0
+mac_offset = 0x5b014
+mac_size = 0xe4
+sha256 = "a7c5f69442a866cc0f22a5196d4e19cbe7400a4e9272f6f4bfb15d4d80c91419"
+evidence = "Artifact, hero and swap-manager callers pass a four-byte artifact-slot mask and slot index to this MSL bitset<19>::test body. It checks index against 19, uses the installed MSL bitset::test bounds-error path, extracts the requested bit and returns bool; BLR at 0x5b0f4 precedes bitset<19>::set. The authored Windows source already uses the bitset and its indexing/test operations. Library template identity only."
+
+[[functions]]
+symbol = ".mac_msl_bitset_19_set_5b0f8"
+mac_section = 0
+mac_offset = 0x5b0f8
+mac_size = 0xe8
+sha256 = "0d5bd2e594a178b7c03a9da060c4e26dfc8c661eefdc0a6c34803a3702ae9985"
+evidence = "Artifact mask construction and initializeArtifactTraits call this MSL bitset<19>::set body. It bounds-checks index against 19, then sets or clears the selected word bit according to r5 and returns its receiver. The installed CodeWarrior bitset header has the same operation; BLR at 0x5b1dc precedes bitset<144>::set. Both authored Windows callers already use set. Library template identity only."
+
+[[functions]]
+symbol = ".mac_msl_bitset_144_set_5b1e0"
+mac_section = 0
+mac_offset = 0x5b1e0
+mac_size = 0xe8
+sha256 = "7d114e0995c2052e821a501ce002c7488ba175844eedf91423642c263cdcb850"
+evidence = "Artifact, campaign, game, hero and RMG callers pass a five-word artifact-component mask, index and bool to this MSL bitset<144>::set body. It checks the index against 144, selects word index/bit, then sets or clears the bit and returns the receiver. The installed CodeWarrior bitset header confirms this operation; BLR at 0x5b2c4 precedes artifact initialization at 0x5b2c8. Existing Windows callers express bitset access in source. Library template identity only."
+
+[[functions]]
 symbol = ".strcat"
 mac_section = 0
 mac_offset = 0x28e2b0
