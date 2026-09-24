@@ -1639,14 +1639,14 @@ long type_AI_spellcaster::getFireProtectionValue(const army* ourArmy, type_encha
 VA(0x00439a00, 0x32)  // dc 0x400b8
 long type_AI_spellcaster::getEarthProtectionValue(const army* ourArmy, type_enchant_data caster) const
 {
-    long amount = g_spellTraits[caster.m_spell].m_masteryBonus[caster.m_mastery];
+    long amount = caster.getMasteryValue();
     return getProtectionValue(ourArmy, eSchoolEarth, 5, caster.m_duration, amount);
 }
 
 VA(0x00439a40, 0x32)  // dc 0x400f4
 long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_enchant_data caster) const
 {
-    long amount = g_spellTraits[caster.m_spell].m_masteryBonus[caster.m_mastery];
+    long amount = caster.getMasteryValue();
     return getProtectionValue(ourArmy, eSchoolWater, 5, caster.m_duration, amount);
 }
 
@@ -1672,7 +1672,7 @@ long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpe
 {
     long value = 0;
     for (long spell = 10; spell < 81; spell++) {
-        long duration = currentArmy->m_spellInfluence[spell];
+        long duration = currentArmy->getSpellTime(spell);
         if (duration == 0)
             continue;
         if (badSpellsOnly) {
@@ -2151,7 +2151,7 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const arm
         if (!g_combatManager->validSpellTargetArmy(choice.m_spell, m_side, victim, 0,
                                              creatureCast))
             continue;
-        int resurrected = (g_spellTraits[choice.m_spell].m_masteryBonus[choice.m_mastery]
+        int resurrected = (choice.getMasteryValue()
                             + g_creatureTypeTraits[victim->m_creatureType].m_hitPoints
                             + choice.m_power)
                            * victim->m_numTroops / healedArmy->m_monInfo.m_hitPoints;
