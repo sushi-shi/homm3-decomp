@@ -35,3 +35,12 @@ mac_offset = 0x20fca8
 mac_size = 0x34
 target_sha256 = "a14a5ae4eecb338fb800440e99b519312649bb81a016041e62da84b7c56b6f2b"
 evidence = "Delay obtains GameTime::get 0x20fc5c, adds interval and calls DelayTil 0x20fc68; complete BLR."
+
+[[helpers]]
+source_helper = "initVideo"
+unit = "kbwin"
+mac_section = 0
+mac_offset = 0x20fcdc
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "heroWindowManager::open calls this retained empty hook at 0x20d1c8 before constructing its screen bitmap, matching the first canonical source call. GameTime::delay ends with BLR at 0x20fcd8; this single BLR is followed by the next prologue at 0x20fce0. Windows folds the empty body into a shared ret representative, so it has no distinct VA claim."
