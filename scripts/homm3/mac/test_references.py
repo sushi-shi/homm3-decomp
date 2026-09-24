@@ -25,6 +25,27 @@ class TestMacReferences(unittest.TestCase):
                          "std::vector<Row>* Selection::getSourceHeaders()")
         self.assertIn("return m_random", extracted)
 
+    def test_in_class_source_helper_in_cpp_requires_explicit_view(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            path, row = self.fixture(root)
+            source = root / "src/test.cpp"
+            source.write_text(source.read_text() +
+                              "class Registry {\npublic:\n"
+                              "    int getIndex(int key) { return key + 1; }\n"
+                              "};\n")
+            helper = ('\n[[helpers]]\nsource_helper="Registry::getIndex"\n'
+                      'unit="test"\nin_class=true\nmac_section=0\n'
+                      'mac_offset=0x44\nmac_size=4\n'
+                      f'target_sha256="{sha256(bytes(4)).hexdigest()}"\n'
+                      'evidence="retained class helper"\n')
+            path.write_text(row + helper)
+            refs = references.load(root)
+            self.assertEqual(refs[1].signature, "int getIndex(int key)")
+            path.write_text(row + helper.replace('in_class=true\n', ''))
+            with self.assertRaises(SourceError):
+                references.load(root)
+
     def fixture(self, root):
         test_profiles.TestMacProfiles().fixture(root)
         source = root / "src/test.cpp"

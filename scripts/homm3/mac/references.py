@@ -71,7 +71,11 @@ def load(root: Path) -> list[Reference]:
             if helper:
                 if "retail_va" in row or not isinstance(selector, str):
                     raise SourceError(f"{path}: source helper must have a definition selector and no Windows VA")
-                finder = class_header_helper if source.suffix == ".h" else source_helper
+                in_class = row.get("in_class", False)
+                if not isinstance(in_class, bool) or (in_class and source.suffix != ".cpp"):
+                    raise SourceError(f"{path}: in_class requires a C++ source helper")
+                finder = (class_header_helper if source.suffix == ".h" or in_class
+                          else source_helper)
                 _, signature, _ = finder(source.read_text(), selector, source)
             elif row.get("compgen_kind"):
                 kind, type_name = row["compgen_kind"], row.get("compgen_type")
