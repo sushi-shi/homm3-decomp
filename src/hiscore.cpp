@@ -321,6 +321,7 @@ void highScoreManager::viewHiScore()
 // Dreamcast hiscore.cpp:738 names WriteHighScores and preserves its
 // 351-byte cBuf local even in the VMU port. Retail's two caller expansions
 // prove the PC file path, flags, error handler and full score-table write.
+// Mac retains this helper at 0:0x10a8bc using its file adapter.
 void writeHighScores()
 {
     char path[351];
