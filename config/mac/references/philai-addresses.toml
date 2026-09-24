@@ -527,8 +527,9 @@ unit = "philai"
 mac_section = 0x0
 mac_offset = 0x145000
 mac_size = 0x390
+mac_symbol = ".valueOfTownBuildings__FPC4heroP4town"
 target_sha256 = "a7abb4f16d0c31deed1f7ab035ce1e8e750c051feb84e512df3251613a743888"
-evidence = "NEW: Conflux8 university ctor0x1cfbcc and appraisal0x13eb18, spellbook/500gold gate, guild spells via0x141800 and faction bonus arms; called twice from valueOfTown. Span ends at0x145390; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+evidence = "NEW: Conflux8 university ctor0x1cfbcc and appraisal0x13eb18, spellbook/500gold gate, guild spells via0x141800 and faction bonus arms; called twice from valueOfTown. Span ends at0x145390; last word0x4e800020; direct-call entry and adjacent boundary inspected. CodeWarrior compile emits the named symbol at 944 bytes; relocation-masked shape aligns 190/228 instructions and all seven ordered direct calls."
 
 [[functions]]
 retail_va = 0x52b4e0
@@ -619,4 +620,3 @@ mac_offset = 0x147048
 mac_size = 0x34
 target_sha256 = "5941a9cc1774ccd0426f3a10c95e55b714da67d7dc7442634837b917c308c1d1"
 evidence = "NEW: Small overload stores zero moveCost on stack and passes its address with hero and copied point to0x146134; last game body before next TU initializer. Span ends at0x14707c; last word0x4e800020; direct-call entry and adjacent boundary inspected."
-
