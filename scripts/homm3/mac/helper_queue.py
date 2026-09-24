@@ -83,10 +83,16 @@ def generate(root: Path, action_queue: dict, index: Index,
             authored = extract_body(caller)
             if authored.rstrip().endswith(";"):
                 # Some VA claims preserve retail order on a forward declaration.
-                # Inspect the unique canonical definition before reporting a
-                # missing source call; an ambiguous overload stays an error.
+                # Inspect the canonical definition before reporting a missing
+                # source call. Match full parameters first; unresolved overloads
+                # stay explicit parse errors.
                 name = caller.signature.rsplit(" ", 1)[-1]
-                _, _, authored = source_helper(caller.source.read_text(), name, caller.source)
+                source_text = caller.source.read_text()
+                parameters = authored[authored.index("("):].rstrip("; \n\t")
+                try:
+                    _, _, authored = source_helper(source_text, name + parameters, caller.source)
+                except ValueError:
+                    _, _, authored = source_helper(source_text, name, caller.source)
             body = _masked_source(authored)
             source_error = ""
         except (OSError, ValueError) as exc:
