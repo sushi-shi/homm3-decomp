@@ -818,6 +818,8 @@ int swapManager::drawSwapWin()
 // common &msg push across the two skill arms (three size-only blocks) plus
 // downstream scratch-register choices. The bounded why-reg model found no
 // movable creation-order carrier.
+// DC line 703 uses TTextResource::operator[] for the hero-name format;
+// restoring that source call is VC6 byte-flat.
 VA(0x005ae750, 0x3A2)  // full retail body + dc 0x15c66c dossier
 int swapManager::open(int newPriority)
 {
@@ -852,7 +854,7 @@ int swapManager::open(int newPriority)
             MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, hero + 1,
             msg.m_extra);
 
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_NAME_LEVEL_CLASS_FORMAT),
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_NAME_LEVEL_CLASS_FORMAT],
                 m_heroes[hero]->m_name, m_heroes[hero]->m_level,
                 m_heroes[hero]->heroFn004D8F70());
         msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -1265,6 +1267,8 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
 // why-branch finds no applicable source mutation and why-reg's model finds no
 // binding divergence; restoring CanModHero's older direct returns is the
 // negative control and lowers this caller to 87.81%.
+// DC lines 1118/1124 use TTextResource::operator[] for the two trade
+// warnings; those calls are restored and VC6 byte-flat.
 VA(0x005af590, 0x3F7)  // Main roster/callees + full retail body, dc 0x15d150
 void swapManager::handleArtifactClick(long side, long id, unsigned char rightClick)
 {
@@ -1279,7 +1283,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 
         if (rightClick) {
             if (oldArtifact.m_artifactId == ARTIFACT_SPELLBOOK) {
-                normalDialog(g_generalText->getText(GENERAL_TEXT_ITEM_CANNOT_BE_TRADED), 4, -1, 28,
+                normalDialog((*g_generalText)[GENERAL_TEXT_ITEM_CANNOT_BE_TRADED], 4, -1, 28,
                              -1, 0, -1, 0, -1, 0, -1, 0);
                 return;
             }
@@ -1321,7 +1325,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 
         if (slot == eArtifactSlotSpellbook
             || slot == eArtifactSlotWarMachine4) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_ITEM_CANNOT_BE_TRADED), 1, -1, -1,
+            normalDialog((*g_generalText)[GENERAL_TEXT_ITEM_CANNOT_BE_TRADED], 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
