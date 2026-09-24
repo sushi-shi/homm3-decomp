@@ -400,11 +400,12 @@ def extract_body(pair: Pair) -> str:
 def source_helper(text: str, selector: str, source: Path) -> tuple[int, str, str]:
     """Locate one ordinary source definition without inventing a Windows VA.
 
-    Selectors are names already present in the owning TU. An overload may use
-    its exact authored parameter declaration, including parameter names and
+    Selectors are names already present in the owning TU or an ordinary header.
+    An overload may use its exact authored parameter declaration, including parameter names and
     trailing const. Whitespace is insignificant. Local definitions, templates
-    and unsupported declaration forms fail explicitly. A declaration/call
-    cannot substitute for the canonical body.
+    and unsupported declaration forms fail explicitly. An in-class header
+    helper must have one direct member body; a declaration or call cannot
+    substitute for the canonical body.
     """
     selection = re.fullmatch(r'(?P<name>\w+(?:::(?:~?\w+))*)(?P<parameters>\s*\([^;{}]*\)\s*(?:const)?)?', selector)
     if not selection:
@@ -450,6 +451,35 @@ def source_helper(text: str, selector: str, source: Path) -> tuple[int, str, str
             start = match.start() + len(match[0]) - len(match[0].lstrip())
             signature = " ".join(masked[start:brace].split())
             matches.append((start, signature, text[start:end] + "\n"))
+    if source.suffix == ".h" and not matches and len(parts) >= 2 and not is_constructor:
+        class_name, method_name = parts[-2:]
+        class_pattern = re.compile(
+            r'^[ \t]*(?:class|struct)\s+' + re.escape(class_name)
+            + r'\b[^;{}]*\{', re.MULTILINE)
+        method_pattern = re.compile(
+            r'^[ \t]*(?P<prefix>(?:[\w:*&]+\s+)+)' + re.escape(method_name)
+            + r'(?P<parameters>\s*\([^;{}]*\)\s*(?:const\s*)?)\{',
+            re.MULTILINE)
+        for class_match in class_pattern.finditer(masked):
+            opening = class_match.end() - 1
+            closing = _function_end(text, opening)
+            body = masked[opening:closing]
+            for method in method_pattern.finditer(body):
+                # Only a direct class member can own this selector. A method
+                # nested in another scope must not masquerade as its body.
+                preceding = body[:method.start()]
+                if preceding.count("{") - preceding.count("}") != 1:
+                    continue
+                if parameters is not None and (re.sub(r'\s+', '', parameters)
+                                               != re.sub(r'\s+', '', method['parameters'])):
+                    continue
+                brace = opening + method.end() - 1
+                end = _function_end(text, brace)
+                start = opening + method.start() + len(method[0]) - len(method[0].lstrip())
+                signature = " ".join(masked[start:brace].split())
+                signature = re.sub(r'\b' + re.escape(method_name) + r'(?=\s*\()',
+                                   name, signature, count=1)
+                matches.append((start, signature, text[start:end] + "\n"))
     # Out-of-class constructors have no return-type prefix. Require the
     # qualified name to repeat its owning class, then read only parenthesized
     # initializer entries before the actual body brace. This rejects calls,

@@ -95,6 +95,28 @@ class TestMacReferences(unittest.TestCase):
             with self.assertRaises(SourceError):
                 _claim(source.read_text(), 0x400300, source)
 
+    def test_no_va_helper_uses_unique_ordinary_header_body(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            path, row = self.fixture(root)
+            header = root / "include/test.h"
+            header.write_text(header.read_text() +
+                              "class Cell {\npublic:\n"
+                              "    static unsigned getBitPos(unsigned x, unsigned y)\n"
+                              "    { return 47 - y * 8 - x; }\n};\n")
+            helper = ('\n[[helpers]]\nunit="test"\nsource="include/test.h"\n'
+                      'source_helper="Cell::getBitPos"\nmac_section=0\nmac_offset=0x44\n'
+                      f'mac_size=4\ntarget_sha256="{sha256(bytes(4)).hexdigest()}"\n'
+                      'evidence="retained source helper"\n')
+            path.write_text(row + helper)
+            refs = references.load(root)
+            self.assertEqual(len(refs), 2)
+            self.assertIn("getBitPos", refs[1].signature)
+            header.write_text(header.read_text().replace(
+                "{ return 47 - y * 8 - x; }", ";"))
+            with self.assertRaises(SourceError):
+                references.load(root)
+
     def test_cached_source_scan_does_not_reuse_same_size_changed_claim(self):
         from homm3.mac.source import _claim
         source = Path("same.cpp")

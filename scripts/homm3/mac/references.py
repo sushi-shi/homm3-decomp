@@ -59,7 +59,8 @@ def load(root: Path) -> list[Reference]:
             source = root / row.get("source", units[unit]["source"])
             if source != unit_source:
                 # A retained header helper may have a source VA or one
-                # canonical in-class body in an ordinary project header.
+                # canonical body in an ordinary project header. The
+                # source_helper scan rejects declarations without bodies.
                 if (not source.resolve().is_relative_to((root / "include").resolve())
                         or source.suffix not in (".h", ".inl")):
                     raise SourceError(f"{path}: callee source must be its owning TU or a canonical project header")

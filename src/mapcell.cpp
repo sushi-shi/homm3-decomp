@@ -4155,6 +4155,8 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
 // loop bounds are re-read from the type record on every iteration, so neither
 // is hoisted.
 
+// DC names four CObjectType::_getBitPos calls; Mac retains the same helper at
+// 0:0x127c38. Complete expands them without changing this exact retail body.
 VA(0x00505060, 0x1CD)  // dc 0xf33fc
 void NewfullMap::generateHeightMap(const CObject* object,
                                    signed char heightMap[8][6])
@@ -4170,13 +4172,13 @@ void NewfullMap::generateHeightMap(const CObject* object,
         int depth = 1;
         for (int row = 0; row < m_objectTypes[typeIndex].m_height; ++row) {
             if (row > 0) {
-                if (!m_objectTypes[typeIndex].m_passableCells[47 - row * 8 - col]
-                    && m_objectTypes[typeIndex].m_passableCells[55 - row * 8 - col])
+                if (!m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col, row)]
+                    && m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col, row - 1)])
                     depth = 1;
             }
             if (col > 0) {
-                if (m_objectTypes[typeIndex].m_passableCells[47 - row * 8 - col]
-                    && !m_objectTypes[typeIndex].m_passableCells[48 - row * 8 - col])
+                if (m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col, row)]
+                    && !m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col - 1, row)])
                     depth = heightMap[col - 1][row];
             }
             heightMap[col][row] = static_cast<signed char>(depth);

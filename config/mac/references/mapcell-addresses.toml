@@ -9,6 +9,16 @@ target_sha256 = "41df7cc591ecf2202232b180ca492362f9893fde51a61bc651ad035271b9b5f
 evidence = "The RANDOM_DWELLING arm of Mac readObject calls this member at 0x1261f4. It reads owner, padding, castle ID and optional faction mask, then both level bytes, and appends the record to the map's random-dwelling vector. Final BLR at 0x125960 precedes the level variant. Windows retail expands this source body in the switch arm."
 
 [[helpers]]
+source_helper = "CObjectType::getBitPos"
+unit = "mapcell"
+source = "include/mapcell.h"
+mac_section = 0
+mac_offset = 0x127c38
+mac_size = 0x14
+target_sha256 = "b2e688f8a0989601410cdf6b4171eddbbcd63295a07ee1123eba52e2b5bcc03c"
+evidence = "The five-instruction static helper computes (6 - y) * 8 - x - 1, matching the Dreamcast-named CObjectType::_getBitPos and the shared header's 47 - y*8 - x. The final BLR at 0x127c48 precedes stampObject at 0x127c4c. Mac generateHeightMap retains four calls at 0x127b0c, 0x127b3c, 0x127b78 and 0x127ba8; Dreamcast's same caller names four calls. Windows retail expands the four authored source calls."
+
+[[helpers]]
 source_helper = "NewfullMap::readRandomDwellingLevelData"
 unit = "mapcell"
 mac_section = 0
