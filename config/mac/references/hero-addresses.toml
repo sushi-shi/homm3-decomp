@@ -123,6 +123,7 @@ unit = "hero"
 target_sha256 = "d381d665b604c72acd31996a6f046a6b8be41ef187fd5a87d0b05cb523556fd2"
 evidence = "Contiguous hero TU order corroborated by body: base constructorf2214; army58050;19equipped64backpack; strings; initializer. Boundaries reviewed against return/next entry."
 retail_va = 0x4d85f0
+mac_symbol = ".__ct__4heroFv"
 
 [[functions]]
 mac_section = 0x0
@@ -897,4 +898,3 @@ unit = "hero"
 target_sha256 = "87d453242353faec26fe036ac8750e7728bdae0c58a08f91a185f1e1e09afc72"
 evidence = "Source helper without standalone Windows VA. TU order plus skill+e2;specialty25;returns factor+1;called from modifySpellDamage1067ec"
 source_helper = "hero::getSorceryFactor"
-
