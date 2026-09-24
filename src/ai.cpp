@@ -46,24 +46,21 @@
 // forced to 0. Both passes keep the running best - the retry does not
 // reset best_value or result - and both re-read numArmies[target_group]
 // through the back edge.
-// Residual (99.8919%): all 40 blocks, 27 branches, 16 calls and masked
-// opcodes agree; only the five local stack homes cycle. Dreamcast does not
-// list `damage`, but folding it into the value expression falls to 96.29%;
-// moving its declaration after estimate keeps Windows 99.8919% and moves the
-// Mac estimate to its exact stack home. One `why-reg --model` probe named the
-// side's army count; its distance worsened from 48 to 87. The model capped
-// the source-local creation-order lever, so further register-only spellings
-// need new source or TU context evidence.
+// Windows is exact with one value local shared by the two scans: each
+// loop-local declaration gave the same instructions but cycled the five
+// stack homes. Dreamcast records no value local, which is a coverage limit.
+// The Mac comparison remains 97.9873%, with only second-scan register homes
+// different; the shared value local leaves that comparison byte-flat.
 // Mac Complete's 0+0x1f2b4 body calls the same defender-factor helper at
 // 0+0x4fd04 (Air Shield, Petrify, hero defense factor) but divides by its
 // returned factor in both scans. Windows retail uses FMUL and DC ai.cpp:61/89
 // calls __muld. Keep that port difference at the expression itself. The
 // shared retry condition, default-five arm, and result/best assignment order
-// preserve Windows 99.8919%. Placing damage after estimate raises Mac to
+// preserve the Windows byte match. Placing damage after estimate raises Mac to
 // 97.5636% (921/944 bytes, all 14 calls in order). Reusing one scan index,
 // consistent with DC's r11 across both loops, raises Mac to 97.9873%
 // (925/944); the first scan is exact and the second only differs in its army
-// pointer register. Windows stays 99.8919%. Naming a divided `damage` local
+// pointer register. Naming a divided `damage` local
 // lowered Mac to 95.3390% and was removed.
 
 VA(0x0041e190, 0x2A8)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets, dc 0x23450
@@ -73,6 +70,7 @@ int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int av
     long result = -1;
     type_AI_combat_parameters estimate(this, 1 - targetGroup);
     double damage;
+    long value;
 
     findAITargets(targetGroup, 0, 0, &estimate, 0);
 
@@ -82,11 +80,11 @@ int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int av
             if (currentArmy->is(creatureImmobilized))
                 continue;
 #ifdef HOMM3_TARGET_MAC
-            long value = static_cast<long>(
+            value = static_cast<long>(
                 averageDamage / currentArmy->computeDefenderDamageReduction(1));
 #else
             damage = averageDamage;
-            long value = static_cast<long>(
+            value = static_cast<long>(
                 damage * currentArmy->computeDefenderDamageReduction(1));
 #endif
             value = currentArmy->getLossCombatValue(
@@ -112,11 +110,11 @@ int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int av
                 if (currentArmy->is(creatureImmobilized))
                     continue;
 #ifdef HOMM3_TARGET_MAC
-                long value = static_cast<long>(
+                value = static_cast<long>(
                     averageDamage / currentArmy->computeDefenderDamageReduction(1));
 #else
                 damage = averageDamage;
-                long value = static_cast<long>(
+                value = static_cast<long>(
                     damage * currentArmy->computeDefenderDamageReduction(1));
 #endif
                 value = currentArmy->getLossCombatValue(
