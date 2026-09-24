@@ -4364,6 +4364,8 @@ bool hasFlag(int objType)
     }
 }
 
+// DC advmgr.cpp:5641 calls game::GetHero; Complete expands its null guard
+// and hero-array lookup before querying the obscured object.
 VA(0x0040fd20, 0x10E)  // dc 0x1129c
 int getFlaggedObjectOwner(NewmapCell* thisCell)
 {
@@ -4372,11 +4374,7 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
     int owner = -1;
 
     if (type == HERO) {
-        hero* thisHero;
-        if (extraInfo == -1)
-            thisHero = 0;
-        else
-            thisHero = &g_game->m_heroes[extraInfo];
+        hero* thisHero = g_game->getHero(extraInfo);
         type = thisHero->getObscuredType();
         extraInfo = thisHero->getObscuredExtraInfo();
     }
