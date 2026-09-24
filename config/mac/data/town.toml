@@ -1,22 +1,22 @@
 [[data]]
 retail_va = 0x0066cd98
-source = "include/town.h"
-declaration_only = true
+source = "src/town.cpp"
+declaration_only = false
 mac_section = 1
 mac_offset = 0x354c8
 mac_size = 0x200
 sha256 = "03cb29647bde2f8a5530d9c9259a195be44f7521693895639fc77e979155044e"
-evidence = "Mac initializeSpells loads TOC 1+0x690 -> 1+0x354c8 and indexes eight-byte masks for its five guild levels. The 64 complete big-endian 64-bit powers of two at 1+0x354c8..0x356c8 are the canonical g_bitNumber array; the next bytes begin a distinct table. Declaration-only address binding to retail DATA(0x0066cd98)."
+evidence = "Mac initializeSpells and ai_player::buyCreatures load TOC 1+0x690 -> 1+0x354c8 and index eight-byte masks. The 64 complete big-endian 64-bit powers of two at 1+0x354c8..0x356c8 match the 64 little-endian Windows entries at retail DATA(0x0066cd98); the next bytes begin a distinct table. src/town.cpp owns the initializer; require the emitted CodeWarrior payload to match this reviewed table."
 
 [[data]]
 retail_va = 0x006782a4
 source = "src/town.cpp"
-declaration_only = true
+declaration_only = false
 mac_section = 1
 mac_offset = 0x43218
 mac_size = 5
 sha256 = "6ca634de76e9d886a6e5f19e5daa54ccd9c0af3338ec96bbcf1cefc0691663df"
-evidence = "Mac initializeSpells loads TOC 1+0x111c -> 1+0x43218 and uses the five signed bytes 05 04 03 02 01 as its level-one through level-five candidate counts, matching the source-owned g_mageGuildBaseSpellCounts and retail DATA(0x006782a4)."
+evidence = "Mac initializeSpells loads TOC 1+0x111c -> 1+0x43218 and uses the five signed bytes 05 04 03 02 01 as its level-one through level-five candidate counts. src/town.cpp owns the initialized retail DATA(0x006782a4); require the emitted CodeWarrior payload to match."
 
 [[data]]
 retail_va = 0x00697798

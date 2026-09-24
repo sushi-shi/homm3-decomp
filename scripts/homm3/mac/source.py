@@ -58,6 +58,7 @@ class DataPair:
     local_owner_va: int | None = None
     read_only: bool = False
     same_tu_definition: bool = False
+    owner_unit: str | None = None
 
 
 def data_rows(root: Path, kind: str) -> list[dict]:
@@ -100,6 +101,8 @@ def load_data(root: Path) -> list[DataPair]:
     from homm3.retail_labels.source import macro_invocations, DATA_HEAD_RE
     from homm3.match.source_ownership import fragment_owners
     rows = data_rows(root, "data")
+    owner_by_source = {root / row["source"]: unit
+                       for unit, row in units_manifest.by_unit(root / "config/units.toml").items()}
     fragments_by_owner: dict[str, list[tuple[Path, int]]] = {}
     for fragment, (owner, include_at) in fragment_owners(root).items():
         fragments_by_owner.setdefault(owner, []).append((root / fragment, include_at))
@@ -226,7 +229,7 @@ def load_data(root: Path) -> list[DataPair]:
         result.append(DataPair(va, name, definition,
                                row["mac_section"], row["mac_offset"], row["mac_size"], row["sha256"],
                                declaration_only, symbol, local_owner, read_only,
-                               same_tu_definition))
+                               same_tu_definition, owner_by_source.get(source)))
     return result
 
 

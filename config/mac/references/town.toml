@@ -74,6 +74,6 @@ unit = "event_record"
 mac_section = 0
 mac_offset = 0xc2314
 mac_size = 0x3bc
-mac_symbol = ".setVisibility__4gameFiiiiii"
+mac_symbol = ".setVisibility__4gameFiiiiiUc"
 target_sha256 = "50797f066730c120d97d9ea1affbc03821d3713f462a13cffb53b70033796ab4"
-evidence = "Canonical game::setVisibility takes six integer arguments. Mac buildBuilding calls 0:0xc2314 at 0x1b46b4, 0x1b46ec and 0x1b4730 for Tower Lookout and Grail map reveals, passing game, coordinates, owner and radius. The retained callee prologue is 0xc2314, final BLR 0xc26cc, next prologue 0xc26d0."
+evidence = "Signature alias for the shared Windows/Dreamcast unsigned-char final parameter: Mac retail's callee is .setVisibility__4gameFiiiiii at 0:0xc2314, while the authored shared declaration emits .setVisibility__4gameFiiiiiUc. The Mac body performs the same game visibility operation and copies sixth-argument r9 to r30 without using it afterward; all three town buildBuilding calls at 0x1b46b4, 0x1b46ec and 0x1b4730 pass r9=0. The target has a prologue at 0xc2314, final BLR at 0xc26cc and next prologue at 0xc26d0. This maps a call target across a proven snapshot type difference, not equal signatures."

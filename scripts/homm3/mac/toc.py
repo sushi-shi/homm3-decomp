@@ -108,7 +108,7 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
             if name in named:
                 raise ObjectError(f"ambiguous source-owned Mac data symbol {name}")
             named[name] = (target, payload, pair.declaration_only,
-                           pair.same_tu_definition)
+                           pair.same_tu_definition, pair.owner_unit)
     # MSL header data can be referenced by a source call without a game-owned
     # DATA annotation. Keep that inventory separate from authored globals and
     # require a pinned payload plus the loader-proven TOC destination.
@@ -124,7 +124,7 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
         target = Address(row["mac_section"], row["mac_offset"])
         payload = verified(row["mac_section"], row["mac_offset"], row["mac_size"],
                            row["sha256"], declaration_only=True)
-        named[name] = (target, payload, True, False)
+        named[name] = (target, payload, True, False, None)
     constants = data_rows(root, "constants")
     literals = {}
     site_literals = {}
@@ -210,6 +210,13 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
         if any(value.data is None for value in values):
             raise ObjectError(f"TOC symbol {name!r} has a truncated MWLink data listing; payload unavailable")
         external = (name in named and named[name][2]) or name in external_vtables
+        if (name in named and not named[name][2] and not named[name][3]
+                and named[name][4] is not None and unit != named[name][4]
+                and not values and indirect):
+            # A reviewed initializer can live in its original owning TU while
+            # another candidate TU refers to it through the indirect TOC.
+            # If this object emits the datum, its payload is checked below.
+            external = True
         if name in descriptors:
             target, code_name = descriptors[name]
             descriptor_values = [hunk for hunk in hunks if hunk.name == name and hunk.storage_class == "DS"]
@@ -239,7 +246,7 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
         if name in descriptors:
             pass  # The emitted relocations and both retail loader pointers were checked above.
         elif name in named:
-            target, expected, _, _ = named[name]
+            target, expected, _, _, _ = named[name]
             if value is not None and value.data != expected:
                 raise ObjectError(f"TOC data {name!r} differs from its reviewed target; data scoring is not yet supported")
         elif name in external_vtables:

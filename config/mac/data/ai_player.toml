@@ -49,16 +49,6 @@ sha256 = "0be8a8deb63bc1e8b85fd0540b789cbc1e5c5d3523db52701f79735edfce730f"
 evidence = "Windows buyCreatures and 56 other users relocate the flat dwelling table at 0x6747b4; the upgraded-half alias is 0x6747d0. Mac buyCreatures code 0:0x2f284 loads loader-backed TOC 1+0x850 -> data 1:0x3ee88. All 126 big-endian Mac creature indices equal the 126 little-endian Windows values, including each town's base and upgrade rows. No Mac loader relocation falls within the table. Source owner and initializer are unlocated; address binding only."
 
 [[data]]
-retail_va = 0x0066cd98
-source = "include/town.h"
-declaration_only = true
-mac_section = 1
-mac_offset = 0x354c8
-mac_size = 0x200
-sha256 = "03cb29647bde2f8a5530d9c9259a195be44f7521693895639fc77e979155044e"
-evidence = "Windows buyCreatures relocates bitNumber at base 0x66cd98 plus 0xf0 and 0x120; the base has 75 retail data sites. Mac buyCreatures code 0:0x2f288 loads loader-backed TOC 1+0x690 -> data 1:0x354c8. All 64 big-endian Mac 64-bit powers of two equal the 64 little-endian Windows entries. No Mac loader relocation falls within the table. External address binding only."
-
-[[data]]
 retail_va = 0x0069cca8
 source = "include/game.h"
 declaration_only = true
