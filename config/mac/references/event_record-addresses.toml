@@ -737,3 +737,12 @@ unit = "event_record"
 target_sha256 = "e98ccf50907fc5998d183f2a282b97b84314e7c76f4f32c78df86c5afbb101b4"
 evidence = "Builds eight-byte shroud-change record then vector push0xc34e8. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
 source_helper = "type_record_shroud::addChange"
+
+[[helpers]]
+source_helper = "type_record_hide_boat::type_record_hide_boat"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbfce0
+mac_size = 0x80
+target_sha256 = "0e5c5956376213d8517226f6d13ef123aa0b07bc2daf16c17c8336d30386f7c8"
+evidence = "game::recordHideBoat calls this retained constructor at 0xbfce0. It stores the boat pointer, occupied byte and occupying hero, and snapshots the boat's occupied byte at +0x24 and hero at +0x20 into the record. Dreamcast names the constructor at dc:0x8ce74; Windows expands the authored same-TU helper. Final BLR at 0xbfd5c; next entry 0xbfd60."
