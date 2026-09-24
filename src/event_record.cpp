@@ -78,13 +78,15 @@ void type_event_record::undo()
 }
 
 // E:\gamedcs\event_record.cpp:96
-// NO RETAIL BODY: VC6 expands this constructor at record_move and
-// record_teleport. Dreamcast gives seven ordered source rows and proves that
-// line 100 obtains source through type_obscuring_object::get_location; retail
-// corroborates the same packed x/y/z loads at both inline sites.
-inline type_record_move_hero::type_record_move_hero(hero* currentHero,
-                                                    char direction,
-                                                    type_point destination)
+// NO RETAIL BODY: VC6 auto-expands this ordinary constructor at record_move and
+// record_teleport and leaves an unreferenced COMDAT body. Mac retains it at
+// code0+0xbf100, between base undo and move-hero create. Dreamcast gives seven
+// ordered source rows and proves that line 100 obtains source through
+// type_obscuring_object::get_location; retail corroborates the packed x/y/z
+// loads at both expansion sites.
+type_record_move_hero::type_record_move_hero(hero* currentHero,
+                                             char direction,
+                                             type_point destination)
 {
     m_currentHero = currentHero;
     m_restoreFlag = currentHero->m_facing;
@@ -182,11 +184,12 @@ void type_record_move_hero::undo()
 }
 
 // E:\gamedcs\event_record.cpp:204
-// NO RETAIL BODY: the complete construction is expanded into record_teleport.
+// NO RETAIL BODY: VC6 auto-expands this ordinary constructor into record_teleport;
+// Mac retains it at code0+0xbf61c after move-hero undo.
 // Dreamcast line 204 proves this remains a derived-to-base delegation rather
 // than a flattened duplicate of type_record_move_hero's assignments.
-inline type_record_teleport::type_record_teleport(hero* currentHero,
-                                                  type_point destination)
+type_record_teleport::type_record_teleport(hero* currentHero,
+                                           type_point destination)
     : type_record_move_hero(currentHero, currentHero->m_facing, destination)
 {
 }
@@ -211,11 +214,12 @@ void type_record_teleport::replay(unsigned char draw)
     g_advManager->teleportTo(m_currentHero, m_destination, 0, 0, draw, 1);
 }
 // E:\gamedcs\event_record.cpp:237
-// NO RETAIL BODY: expanded into record_claim_mine. record_claim_town instead
-// invokes the distinct default constructor at dc:0x8eda0. Dreamcast preserves
-// this definition site and the id/new-owner/mine-owner statement order.
-inline type_record_claim_mine::type_record_claim_mine(long id,
-                                                      char newOwner)
+// NO RETAIL BODY: VC6 auto-expands this ordinary constructor into
+// record_claim_mine. Mac retains it at code0+0xbf778 after teleport replay.
+// record_claim_town instead invokes the distinct default constructor at
+// dc:0x8eda0. Dreamcast preserves this definition site and the field order.
+type_record_claim_mine::type_record_claim_mine(long id,
+                                               char newOwner)
 {
     m_id = id;
     m_newOwner = newOwner;
@@ -286,10 +290,11 @@ type_event_record::~type_event_record()
 // Dreamcast resolves the base boundary specifically to the default header
 // constructor at dc:0x8eda0, not the parameterized constructor at dc:0x8cb2c.
 // The derived body then assigns the three claim fields, with old_owner coming
-// from gpGame->towns. Retail corroborates that final assignment sequence and
-// elides the intermediate claim_mine vptr store.
-inline type_record_claim_town::type_record_claim_town(long id,
-                                                      char newOwner)
+// from gpGame->towns. Mac retains it at code0+0xbfad0 after claim-mine undo.
+// Retail corroborates that final assignment sequence and elides the
+// intermediate claim_mine vptr store.
+type_record_claim_town::type_record_claim_town(long id,
+                                               char newOwner)
     : type_record_claim_mine()
 {
     m_id = id;

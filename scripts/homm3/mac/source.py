@@ -411,12 +411,16 @@ def source_helper(text: str, selector: str, source: Path) -> tuple[int, str, str
         raise SourceError(f"{source}: invalid source helper selector {selector!r}")
     name = selection['name']
     parameters = selection['parameters']
+    parts = name.split("::")
+    is_constructor = len(parts) >= 2 and parts[-1] == parts[-2]
     masked = _masked_source(text)
     pattern = re.compile(
         r'^[ \t]*(?P<prefix>(?:[\w:*&]+\s+)+)' + re.escape(name)
         + r'(?P<parameters>\s*\([^;{}]*\)\s*(?:const\s*)?)\{', re.MULTILINE)
     matches = []
     for match in pattern.finditer(masked):
+        if is_constructor:
+            continue
         if re.search(r'\b(?:return|if|while|switch|for|typedef|template)\b', match['prefix']):
             continue
         if parameters is not None and re.sub(r'\s+', '', parameters) != re.sub(r'\s+', '', match['parameters']):
@@ -428,6 +432,59 @@ def source_helper(text: str, selector: str, source: Path) -> tuple[int, str, str
         start = match.start() + len(match[0]) - len(match[0].lstrip())
         signature = " ".join(masked[start:brace].split())
         matches.append((start, signature, text[start:end] + "\n"))
+    # Out-of-class constructors have no return-type prefix. Require the
+    # qualified name to repeat its owning class, then read only parenthesized
+    # initializer entries before the actual body brace. This rejects calls,
+    # declarations and braced initializer expressions instead of mistaking
+    # one of their braces for the function body.
+    if is_constructor:
+        constructor = re.compile(r'^[ \t]*(?:inline\s+)?' + re.escape(name) + r'\s*\(', re.MULTILINE)
+
+        def after_parentheses(opening: int) -> int:
+            depth = 0
+            for index in range(opening, len(masked)):
+                if masked[index] == '(':
+                    depth += 1
+                elif masked[index] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        return index + 1
+                elif masked[index] in '{};' and depth == 0:
+                    break
+            raise SourceError(f"{source}: unbalanced constructor parentheses for {selector!r}")
+
+        for match in constructor.finditer(masked):
+            if _data_scope(masked, match.start()):
+                raise SourceError(f"{source}: nested source helper needs explicit extraction support")
+            opening = match.end() - 1
+            after_parameters = after_parentheses(opening)
+            actual_parameters = masked[opening:after_parameters]
+            if parameters is not None and re.sub(r'\s+', '', parameters) != re.sub(r'\s+', '', actual_parameters):
+                continue
+            cursor = after_parameters
+            while cursor < len(masked) and masked[cursor].isspace():
+                cursor += 1
+            if cursor < len(masked) and masked[cursor] == ':':
+                cursor += 1
+                while True:
+                    while cursor < len(masked) and masked[cursor].isspace():
+                        cursor += 1
+                    initializer = re.match(r'[A-Za-z_]\w*(?:::\w+)*\s*\(', masked[cursor:])
+                    if not initializer:
+                        raise SourceError(f"{source}: unsupported constructor initializer for {selector!r}")
+                    cursor = after_parentheses(cursor + initializer.end() - 1)
+                    while cursor < len(masked) and masked[cursor].isspace():
+                        cursor += 1
+                    if cursor < len(masked) and masked[cursor] == ',':
+                        cursor += 1
+                        continue
+                    break
+            if cursor >= len(masked) or masked[cursor] != '{':
+                continue
+            end = _function_end(text, cursor)
+            start = match.start() + len(match[0]) - len(match[0].lstrip())
+            signature = " ".join(masked[start:cursor].split())
+            matches.append((start, signature, text[start:end] + "\n"))
     if len(matches) != 1:
         raise SourceError(f"{source}: expected one source helper definition for {selector!r}; found {len(matches)}")
     return matches[0]
