@@ -664,3 +664,43 @@ mac_offset = 0x99f38
 mac_size = 0x10
 sha256 = "765d467aef28897a16c69e550974242c7e115dedbd156d3e0451e5ebd9b2e0b8"
 evidence = "The installed MSL bitset default constructor zeros each storage word. CObjectType construction calls this body on four consecutive eight-byte bitset<48> members at 0x128c14/1c/24/2c; the complete body zeros both words and returns at 0x99f44 before the next prologue at 0x99f48. A CodeWarrior source-view probe emits the corresponding default-constructor mangling for bitset<70>, and this 16-byte body is byte-identical to the separately retained bitset<48>::reset. Runtime template identity only."
+
+[[functions]]
+symbol = ".mac_ascii_stricmp_20efc4"
+mac_section = 0
+mac_offset = 0x20efc4
+mac_size = 0x58
+sha256 = "eeef8fc3dbf15928a5c7bb8ef55a573e4c1e87245595426ea5ecb060528d9cc0"
+evidence = "Forty-four direct callers include cheat-code checks, LOD filename search and spellbook trait ordering; their authored source calls _strcmpi or _stricmp. This complete leaf lowercases only ASCII A-Z in both NUL-terminated inputs, returns their unsigned-byte difference at 0x20f008 or zero at 0x20f018, and ends before the bounded compare variant at 0x20f01c. The neutral name records the C-library comparison operation without asserting which port-specific symbol supplied this body."
+
+[[functions]]
+symbol = ".mac_ascii_strnicmp_20f01c"
+mac_section = 0
+mac_offset = 0x20f01c
+mac_size = 0x68
+sha256 = "3be10fa15817a614fa37173d8b70d4831d1ae0b46e20e9786f6766471ce6c8a6"
+evidence = "Nine direct calls include advManager::open, game save/load filename checks and single-selection file highlighting. The callee compares at most the r5 byte count, lowercases only ASCII A-Z, returns the first unsigned-byte difference or zero, and ends at BLR 0x20f080 before the next prologue at 0x20f084. Callers use the _strnicmp source operation. The neutral label records the bounded C-library comparison without claiming a particular port symbol."
+
+[[functions]]
+symbol = ".mac_terminating_string_copy_26ae40"
+mac_section = 0
+mac_offset = 0x26ae40
+mac_size = 0x1c
+sha256 = "05452e5994bfb340d1251287fb40bbef43eb5b5c2e019daded5dc21ef2deafbd"
+evidence = "Forty-five direct callers include chained path construction in game::newMap and campaign loading. This seven-instruction leaf copies each byte through the terminating NUL from r4 to r3 and returns r3 pointing at the written terminator, allowing the next copy to append without rescanning. Its BLR at 0x26ae58 precedes the next helper at 0x26ae5c. The neutral name distinguishes this retained copy primitive from the separate reviewed standard .strcpy at 0x28e218."
+
+[[functions]]
+symbol = ".__register_global_object"
+mac_section = 0
+mac_offset = 0x27fd40
+mac_size = 0x1c
+sha256 = "486289f4a54bb8464ff4bc2e90222559d831faf86d24b4e17f9f954f78ee44eb"
+evidence = "The installed CodeWarrior Pro 6 MSL RuntimePPC.Lib names .__register_global_object; its complete 28-byte code hunk agrees with retail after resolving the first word's TOC displacement to the global destructor-chain head. The callee links the three-word registration record in r5, with object and destructor from r3/r4, then returns at 0x27fd58 before the chain-destruction routine at 0x27fd5c. Mac has 221 direct calls, mostly compiler-generated global initializers."
+
+[[functions]]
+symbol = ".test__Q23std9bitset<4>CFUl"
+mac_section = 0
+mac_offset = 0xe97d4
+mac_size = 0xe4
+sha256 = "1f627b696ae2f4a0bfb3d3a89781dbb0ce8d9cea616314e5841688d1f86dd387"
+evidence = "Seven direct calls from game and single-selection code test the shared four-bit game-context feature sets. This MSL bitset test bounds-checks r4 against four, uses the bitset::test out-of-range text on failure, masks the indexed bit of receiver r3 and returns bool. Final BLR at 0xe98b4 and next prologue at 0xe98b8 bound all 228 bytes. Its mangling follows the separately reviewed bitset<8>/12/48 test instantiations; runtime template identity only."
