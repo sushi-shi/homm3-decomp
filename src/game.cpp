@@ -9063,8 +9063,9 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             case RS_GAME_TRANSMIT_MAIN: {
                 CGameTransmitMainMsg* receivedMsg =
                     static_cast<CGameTransmitMainMsg*>(netMsg);
-                memcpy(data + receivedMsg->m_blockNbr
-                                * GAME_TRANSMIT_PAYLOAD_SIZE,
+                unsigned char* blockData = data + receivedMsg->m_blockNbr
+                                                 * GAME_TRANSMIT_PAYLOAD_SIZE;
+                memcpy(blockData,
                        receivedMsg->getData(), receivedMsg->m_blockSize);
 
                 if (!waitingForRetransmit) {
