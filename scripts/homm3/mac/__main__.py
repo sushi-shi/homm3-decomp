@@ -7,7 +7,7 @@ import sys
 from types import SimpleNamespace
 
 from homm3.core import common, inputs
-from homm3.mac import build, call_report, calls, discovery, pairing, references, symbols, toolchain
+from homm3.mac import build, call_report, calls, discovery, pairing, references, sdk, symbols, toolchain
 from homm3.mac.loader import ImportedAddress, Loader
 from homm3.mac.pef import PEF
 from homm3.mac.relocations import Address
@@ -111,7 +111,6 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "sdk":
-            from homm3.mac import sdk
             destination = sdk.stage(args.path)
             print(f"[mac] verified native library headers: {destination}")
             return 0
@@ -286,9 +285,11 @@ def main(argv=None) -> int:
                 selected = [pair for pair in pairs if pair.unit == args.selector]
                 pairs = selected or [_select(args.selector)]
             pef, tools_dir = _image(), toolchain.stage()
+            if any(pair.compile_group for pair in pairs):
+                sdk.stage(root=common.HOMM3_DIR)
             context = call_report.inspection_context(common.HOMM3_DIR, pef)
             rows = [call_report.inspect(common.HOMM3_DIR, pair, pef, tools_dir,
-                                        context=context) for pair in pairs]
+                                        context=context, sdk_staged=True) for pair in pairs]
             report = call_report.write(common.HOMM3_DIR, rows,
                                        units=sorted({p.unit for p in pairs}) if args.selector else None)
             if args.selector:

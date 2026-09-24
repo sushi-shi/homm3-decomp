@@ -114,9 +114,9 @@ def _run(command: list[str], cwd: Path, env: dict[str, str]) -> str:
     return completed.stdout + completed.stderr
 
 
-def compile_pair(pair: Pair, tools_dir: Path) -> CompiledCode:
+def compile_pair(pair: Pair, tools_dir: Path, *, sdk_staged: bool = False) -> CompiledCode:
     profile = profiles.load(ROOT, pair.compile_group) if pair.compile_group else None
-    if profile:
+    if profile and not sdk_staged:
         from homm3.mac import sdk
         sdk.stage(root=ROOT)
     work = object_directory(ROOT, pair)
@@ -226,8 +226,9 @@ def _compile_locked(pair: Pair, tools_dir: Path, work: Path) -> CompiledCode:
                         data_hunks)
 
 
-def linked_pair(pair: Pair, pef: PEF, tools_dir: Path) -> tuple[LinkedCode, CompiledCode]:
-    compiled = compile_pair(pair, tools_dir)
+def linked_pair(pair: Pair, pef: PEF, tools_dir: Path, *,
+                sdk_staged: bool = False) -> tuple[LinkedCode, CompiledCode]:
+    compiled = compile_pair(pair, tools_dir, sdk_staged=sdk_staged)
     if compiled.hunk is None:
         raise MacBuildError("compile-only probe has no admitted Mac target or selected code hunk")
     linked = link_code(compiled.hunk, Address(pair.mac_section, pair.mac_offset),
@@ -240,10 +241,10 @@ def linked_pair(pair: Pair, pef: PEF, tools_dir: Path) -> tuple[LinkedCode, Comp
     return linked, compiled
 
 
-def compare_pair(pair: Pair, pef: PEF, tools_dir: Path) -> Result:
+def compare_pair(pair: Pair, pef: PEF, tools_dir: Path, *, sdk_staged: bool = False) -> Result:
     analysis = call_report.analysis_hash(ROOT)
     target = pef.code(pair.mac_section, pair.mac_offset, pair.mac_size)
-    linked, compiled = linked_pair(pair, pef, tools_dir)
+    linked, compiled = linked_pair(pair, pef, tools_dir, sdk_staged=sdk_staged)
     base = linked.data
     common_bytes = min(len(base), len(target))
     equal = sum(a == b for a, b in zip(base[:common_bytes], target[:common_bytes]))
@@ -333,15 +334,20 @@ def run(units: set[str] | None = None, *, checkpoint: bool = False) -> list[Resu
     executable = inputs.stage_executable(inputs.MAC)
     tools_dir = toolchain.stage()
     pef = PEF(inputs.read_verified(inputs.MAC, executable))
+    if any(pair.compile_group for pair in pairs):
+        from homm3.mac import sdk
+        sdk.stage(root=ROOT)
+    context = call_report.inspection_context(ROOT, pef)
     results = []
     call_rows, errors = [], []
     for pair in pairs:
-        observation = call_report.inspect(ROOT, pair, pef, tools_dir)
+        observation = call_report.inspect(ROOT, pair, pef, tools_dir,
+                                          context=context, sdk_staged=True)
         call_rows.append(observation)
         try:
             if observation["calls"]["candidate"] is None:
                 raise MacBuildError(observation["calls"]["error"])
-            result = compare_pair(pair, pef, tools_dir)
+            result = compare_pair(pair, pef, tools_dir, sdk_staged=True)
         except (ValueError, OSError) as exc:
             message = f"{pair.unit} 0x{pair.retail_va:08x}: {exc}"
             errors.append(message)
