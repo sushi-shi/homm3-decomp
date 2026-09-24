@@ -1066,6 +1066,24 @@ retail_va = 0x574a90
 
 [[helpers]]
 mac_section = 0x0
+mac_offset = 0x16476c
+mac_size = 0x40
+unit = "seerhut"
+target_sha256 = "2b1b6bbce7d7bdd69b04adde2dfa87a68494f2f8a9a80221967eba84b54b8a6a"
+evidence = "Factory case1 at169770 calls this body; base quest construction, experience vptr and required level0 identify it. Previous body returns at164768; this body returns at1647a8, immediately before getRequirementText1647ac."
+source_helper = "type_experience_quest::type_experience_quest"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x164c38
+mac_size = 0x4c
+unit = "seerhut"
+target_sha256 = "9effb8b65e0b3e361bc343d3f2fc391542d85f270a14508b6edca6e58c696cf7"
+evidence = "Factory case2 at169794 calls this body; base quest construction, skill vptr and four required skill bytes cleared identify it. Previous body returns at164c34; this body returns at164c80, immediately before getRequirementText164c84."
+source_helper = "type_skill_quest::type_skill_quest"
+
+[[helpers]]
+mac_section = 0x0
 mac_offset = 0x1654d4
 mac_size = 0x4c
 unit = "seerhut"

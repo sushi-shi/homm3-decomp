@@ -329,6 +329,12 @@ std::string type_quest::getProgressDialogText()
     return m_proposalText + getTimeLimitText();
 }
 
+type_experience_quest::type_experience_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    m_requiredLevel = 0;
+}
+
 VA(0x0056d3e0, 0x2A)
 std::string type_experience_quest::getRequirementText()
 {
@@ -421,6 +427,12 @@ void type_experience_quest::setDefaultText()
     if (m_completionText.length() == 0)
         m_completionText = formatString(texts.m_text2.c_str(),
                               m_requiredLevel);
+}
+
+type_skill_quest::type_skill_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    memset(m_requiredSkills, 0, sizeof(m_requiredSkills));
 }
 
 VA(0x0056d960, 0x22)
@@ -609,6 +621,14 @@ void type_skill_quest::setDefaultText()
                                        requirement.c_str());
 }
 
+type_defeat_hero_quest::type_defeat_hero_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    m_mapHero = 0;
+    m_defeatedHero = -1;
+    m_satisfiedMask = 0;
+}
+
 VA(0x0056e240, 0xF2)
 std::string type_defeat_hero_quest::getRequirementText()
 {
@@ -734,6 +754,12 @@ void type_defeat_hero_quest::setDefaultText()
     if (m_defeatedHero != -1 && m_completionText.length() == 0)
         m_completionText = formatString(texts.m_text2.c_str(),
                               defeatedHero->m_name);
+}
+
+type_monster_quest::type_monster_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    m_position.m_x = (m_monsterId = m_defeatedBy = -1);
 }
 
 VA(0x0056ea30, 0xF9)
@@ -1151,6 +1177,11 @@ void type_artifact_quest::setDefaultText()
 VA_COMPGEN(0x00570370, 0x21, SCALAR_DELETING_DTOR, type_creature_quest)
 VA_COMPGEN(0x005703a0, 0xD7, IMPLICIT_DTOR, type_creature_quest)
 
+type_creature_quest::type_creature_quest(unsigned char flags)
+    : type_quest(flags)
+{
+}
+
 VA(0x00570480, 0x55)
 int type_creature_quest::getAIValue(int player)
 {
@@ -1402,6 +1433,12 @@ void type_creature_quest::setDefaultText()
 
 VA_COMPGEN(0x00571530, 0x21, SCALAR_DELETING_DTOR, type_experience_quest)
 
+type_resource_quest::type_resource_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    memset(m_resources, 0, sizeof(m_resources));
+}
+
 VA(0x00571560, 0x12)
 int type_resource_quest::getAIValue(int player)
 {
@@ -1582,6 +1619,11 @@ void type_resource_quest::setDefaultText()
                               requirement.c_str());
 }
 
+type_be_hero_quest::type_be_hero_quest(unsigned char flags)
+    : type_quest(flags), m_requiredHero(-1)
+{
+}
+
 VA(0x00571f00, 0x19)
 unsigned char type_be_hero_quest::isSatisfied(hero* currentHero)
 {
@@ -1652,6 +1694,11 @@ void type_be_hero_quest::setDefaultText()
     if (m_completionText.length() == 0)
         m_completionText = formatString(texts.m_text2.c_str(),
                               requiredHero->m_name);
+}
+
+type_belong_to_player_quest::type_belong_to_player_quest(unsigned char flags)
+    : type_quest(flags), m_requiredOwner(0)
+{
 }
 
 VA(0x005724f0, 0x1A)
@@ -1853,34 +1900,6 @@ std::string TQuestGuard::questGuardFn00573040(int player)
     return text;
 }
 
-inline type_experience_quest::type_experience_quest(
-    unsigned char flags)
-    : type_quest(flags)
-{
-    m_requiredLevel = 0;
-}
-
-inline type_skill_quest::type_skill_quest(unsigned char flags)
-    : type_quest(flags)
-{
-    memset(m_requiredSkills, 0, sizeof(m_requiredSkills));
-}
-
-inline type_defeat_hero_quest::type_defeat_hero_quest(
-    unsigned char flags)
-    : type_quest(flags)
-{
-    m_mapHero = 0;
-    m_defeatedHero = -1;
-    m_satisfiedMask = 0;
-}
-
-inline type_monster_quest::type_monster_quest(unsigned char flags)
-    : type_quest(flags)
-{
-    m_position.m_x = (m_monsterId = m_defeatedBy = -1);
-}
-
 type_artifact_quest::type_artifact_quest(unsigned char flags)
     : type_quest(flags)
 {
@@ -1898,28 +1917,6 @@ type_artifact_quest::type_artifact_quest(
     m_textVariant = textRow;
     g_game->m_artifactDisabled[artifact] = 1;
     setDefaultText();
-}
-
-inline type_creature_quest::type_creature_quest(unsigned char flags)
-    : type_quest(flags)
-{
-}
-
-inline type_resource_quest::type_resource_quest(unsigned char flags)
-    : type_quest(flags)
-{
-    memset(m_resources, 0, sizeof(m_resources));
-}
-
-inline type_be_hero_quest::type_be_hero_quest(unsigned char flags)
-    : type_quest(flags), m_requiredHero(-1)
-{
-}
-
-inline type_belong_to_player_quest::type_belong_to_player_quest(
-    unsigned char flags)
-    : type_quest(flags), m_requiredOwner(0)
-{
 }
 
 VA(0x00573240, 0x23C)  // hd-crossbuild + nine vtables + four callers
