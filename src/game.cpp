@@ -8236,6 +8236,8 @@ void game::processRandomObjects()
 // DC line 9464 passes GetTownId directly to GetTown and records thisTown.
 // Restoring that canonical accessor and local name is byte-flat at 98.6076%;
 // the remaining difference is inside GetTownId's coordinate comparison.
+// Mac 0xe1490 retains playerData::isHuman here; VC6 expands the restored
+// source call and leaves the Windows score unchanged.
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
 void game::createTownHeroes(int* startingHeroIds)
 {
@@ -8252,7 +8254,7 @@ void game::createTownHeroes(int* startingHeroIds)
                       m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_z));
 
         int heroId;
-        if (startingHeroIds != NULL && m_players[i].m_isHuman
+        if (startingHeroIds != NULL && m_players[i].isHuman()
             && startingHeroIds[i] != -1)
             heroId = startingHeroIds[i];
         else if (g_inCampaign)
