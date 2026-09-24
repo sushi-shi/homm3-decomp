@@ -1,6 +1,6 @@
 ---
 name: helper-placement
-description: Decide whether a recovered HoMM3 helper body belongs in an ordinary header or source file, and whether it was explicitly inline, using Mac function order and xrefs plus Windows cross-TU expansion evidence. Use when restoring or moving shared helper definitions.
+description: Decide whether a recovered HoMM3 helper body belongs in an ordinary header or source file, and whether it was explicitly inline, using Mac body order and Windows cross-TU expansion; use Mac xrefs to identify callers. Use when restoring or moving shared helper definitions.
 ---
 
 # Place a recovered helper
