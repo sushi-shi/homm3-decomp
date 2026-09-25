@@ -1525,6 +1525,14 @@ sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
 evidence = "Eagle Eye call sites construct one-word iterator temporaries from a set position. The complete body copies r4 to the receiver and returns at 0x768e4; adjacent 0x768e8 returns an object's field at +0xc. This is a container iterator constructor, not a combat game helper."
 
 [[functions]]
+symbol = ".strtok"
+mac_section = 0
+mac_offset = 0x28e3f8
+mac_size = 0x130
+sha256 = "72dea29796fc2ff44b45525424cdf001546030fd170ed888e7e165f5e3d455a4"
+evidence = "Save-game and selection callers pass a mutable pathname and delimiter string as their authored strtok call. The callee builds a delimiter bitset, retains its current input through the TOC for null-first-argument calls, and ends at BLR 0x28e524. C library tokenization, not an authored game helper."
+
+[[functions]]
 symbol = ".mac_network_host_flag_211154"
 mac_section = 0
 mac_offset = 0x211154
