@@ -1478,7 +1478,7 @@ int combatManager::rightClick(int newIndex)
     }
 
     if (validHex(newIndex)
-            && m_cells[newIndex].m_armySide >= 0) {
+            && m_cells[newIndex].hasArmy()) {
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
         viewArmy(m_cells[newIndex].getArmy(), 1);
         resetMouse();
@@ -2676,7 +2676,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
             break;
         }
     } }
-    if (slot == -1 || m_cells[gridIndex].m_armySide >= 0)
+    if (slot == -1 || m_cells[gridIndex].hasArmy())
         return 0;
 
     army* newArmy = &m_armies[side][slot];

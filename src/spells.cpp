@@ -2441,7 +2441,7 @@ army* combatManager::findResurrectionTarget(int side, int hex,
     if (!validHex(hex))
         return 0;
     hexcell* cell = &m_cells[hex];
-    if (cell->m_armySide >= 0) {
+    if (cell->hasArmy()) {
         army* target = cell->getArmy();
         if (target->getOwningSide() != side)
             return 0;
@@ -2467,13 +2467,13 @@ army* combatManager::findResurrectionTarget(int side, int hex,
         if (!corpse->is(creatureAlive))
             continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
-            if (m_cells[hex + 1].m_armySide >= 0)
+            if (m_cells[hex + 1].hasArmy())
                 continue;
             if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
-            if (m_cells[hex - 1].m_armySide >= 0)
+            if (m_cells[hex - 1].hasArmy())
                 continue;
             if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
@@ -2497,7 +2497,7 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
     hexcell* cell = &m_cells[hex];
     if (cell->m_attributes & hexcell::blocked)
         return 0;
-    if (cell->m_armySide >= 0)
+    if (cell->hasArmy())
         return 0;
     for (int i = cell->m_bodiesInHex - 1; i >= 0; i--) {
         int deadSide = cell->m_deadArmySide[i];
@@ -2507,13 +2507,13 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
         if (!(m_armies[deadSide][deadSlot].is(creatureAlive)))
             continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
-            if (m_cells[hex + 1].m_armySide >= 0)
+            if (m_cells[hex + 1].hasArmy())
                 continue;
             if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
-            if (m_cells[hex - 1].m_armySide >= 0)
+            if (m_cells[hex - 1].hasArmy())
                 continue;
             if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
@@ -2529,7 +2529,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
     if (!validHex(hex))
         return 0;
     hexcell* cell = &m_cells[hex];
-    if (cell->m_armySide >= 0) {
+    if (cell->hasArmy()) {
         army* target = cell->getArmy();
         if (target->getOwningSide() != side)
             return 0;
@@ -2554,13 +2554,13 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
         if (!corpse->is(creatureUndead))
             continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
-            if (m_cells[hex + 1].m_armySide >= 0)
+            if (m_cells[hex + 1].hasArmy())
                 continue;
             if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
-            if (m_cells[hex - 1].m_armySide >= 0)
+            if (m_cells[hex - 1].hasArmy())
                 continue;
             if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
@@ -2583,7 +2583,7 @@ unsigned char combatManager::hasValidSpellTarget(SpellID spellId, long mastery,
     for (int hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
         if (inInvisibleColumn(hex))
             continue;
-        if (spellId == SPELL_CHAIN_LIGHTNING && m_cells[hex].m_armySide >= 0
+        if (spellId == SPELL_CHAIN_LIGHTNING && m_cells[hex].hasArmy()
             && m_cells[hex].getArmy()->getOwningSide() == castingSide)
             continue;
         if (validSpellTarget(spellId, mastery, hex, castingSide, firstTarget,

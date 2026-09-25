@@ -4440,7 +4440,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     const hexcell* cell = &g_combatManager->m_cells[destIndex];
     if (g_combatManager->hexIsBlocked(destIndex))
         return 0;
-    if (cell->m_armySide >= 0) {
+    if (cell->hasArmy()) {
         if (cell->m_armySide != m_combatSide)
             return 0;
         if (cell->m_armySlot != m_bitIndex)
@@ -4457,7 +4457,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
         return 0;
     hexcell* otherCell = &g_combatManager->m_cells[otherIndex];
     if (!g_combatManager->hexIsBlocked(otherIndex)) {
-        if (otherCell->m_armySide < 0
+        if (!otherCell->hasArmy()
                 || (otherCell->m_armySide == m_combatSide
                     && otherCell->m_armySlot == m_bitIndex))
             return 1;
@@ -4472,7 +4472,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
         hexcell* shiftedCell = &g_combatManager->m_cells[shiftedIndex];
         if (g_combatManager->hexIsBlocked(shiftedIndex))
             return 0;
-        if (shiftedCell->m_armySide >= 0) {
+        if (shiftedCell->hasArmy()) {
             if (shiftedCell->m_armySide != g_combatManager->m_actingSide)
                 return 0;
             if (shiftedCell->m_armySlot != g_combatManager->m_actingSlot)

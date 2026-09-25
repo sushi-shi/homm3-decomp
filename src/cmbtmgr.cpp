@@ -2471,14 +2471,14 @@ void combatManager::raiseDoor()
 {
     if (!m_defendingTown || m_drawbridgeState != DRAWBRIDGE_DOWN)
         return;
-    if (m_cells[COMBAT_HEX_GATE].m_armySide >= 0
+    if (m_cells[COMBAT_HEX_GATE].hasArmy()
             || m_cells[COMBAT_HEX_GATE].m_bodiesInHex)
         return;
-    if (m_cells[COMBAT_HEX_GATE_MOAT].m_armySide >= 0
+    if (m_cells[COMBAT_HEX_GATE_MOAT].hasArmy()
             || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
         return;
     if (m_defendingTown->m_type == TOWN_FORTRESS
-            && (m_cells[COMBAT_HEX_OUTER_MOAT].m_armySide >= 0
+            && (m_cells[COMBAT_HEX_OUTER_MOAT].hasArmy()
                 || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex))
         return;
 
