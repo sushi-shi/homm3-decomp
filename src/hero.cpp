@@ -4526,10 +4526,7 @@ int heroView(int heroID, int noDismiss, int alreadyFaded, unsigned char quickVie
 
     if (g_currentPlayer->isLocalHuman()
         && g_currentPlayer->m_currHeroId == g_currentHero->m_id) {
-        type_point position;
-        position.m_x = g_currentHero->m_x;
-        position.m_y = g_currentHero->m_y;
-        position.m_z = g_currentHero->m_z;
+        type_point position = g_currentHero->getLocation();
         NewmapCell* cell = g_advManager->getCell(position);
         if (cell->m_type != HERO || !cell->m_isTrigger)
             g_advManager->demobilizeCurrHero(0, 0);

@@ -3416,9 +3416,7 @@ long markDestinations(hero* currentHero, long maxDistance,
         type_point target = friendly->getTarget();
         unsigned short extraCost;
         if (!target.isValid()) {
-            target.m_x = friendly->m_x;
-            target.m_y = friendly->m_y;
-            target.m_z = friendly->m_z;
+            target = friendly->getLocation();
             extraCost = 0;
         } else {
             extraCost = friendly->m_targetDistance;
