@@ -4633,9 +4633,7 @@ long army::getResurrectionSize(const army* target) const
 VA(0x004473d0, 0x13D)  // dc 0x4be64
 bool army::canCastResurrect(long hex) const
 {
-    if ((m_creatureType != CREATURE_ARCHANGEL
-         && m_creatureType != ARMY_CREATURE_PIT_LORD)
-        || m_monInfo.m_hasSpell <= 0)
+    if (!canCastResurrect())
         return 0;
     long side = getControllingSide();
     if (!g_combatManager->canCastSpells(side, 0))
