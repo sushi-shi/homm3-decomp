@@ -3,7 +3,11 @@
 # Castle and strip each duplicate one broadcast call across Mac branch arms;
 # initializeGameData's VA annotates its forward declaration, whose definition
 # contains the three retained setup calls.
+# Cursor's turnTo now calls stopCursor(0); remaining artifact/canLand calls
+# are nested in the authored hero helpers. UI sendMessage calls also survive
+# through authored hide/status helpers in adventuremapwindow, hiscore, viewwrld.
 units = [
+  "adventuremapwindow",
   "adventureoptionswindow",
   "ai_combat",
   "ai_tactical",
@@ -24,6 +28,7 @@ units = [
   "creaturetype",
   "csequence",
   "cspriteframe",
+  "cursor",
   "customcampaign",
   "dialogbox",
   "dimensiondoorwindow",
@@ -33,6 +38,7 @@ units = [
   "herodefs",
   "hexcell",
   "hillfortwindow",
+  "hiscore",
   "initialize",
   "inputmgr",
   "levelupwindow",
@@ -57,5 +63,6 @@ units = [
   "textwdgt",
   "tiles",
   "university_window",
+  "viewwrld",
   "widget",
 ]

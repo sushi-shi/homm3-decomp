@@ -224,8 +224,8 @@ void advManager::drawCursorAlpha()
 VA(0x0047ffe0, 0x1A)  // dc 0x7a428
 void advManager::turnTo(int newDirection)
 {
-    m_cursorTurning = 0;
     m_cursorDirection = newDirection;
+    stopCursor(0);
 }
 
 VA(0x00480000, 0x84)  // dc 0x7a45c
