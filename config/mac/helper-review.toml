@@ -41,9 +41,13 @@
 # search, scroller and object-name targets are string/vector/auto_ptr methods.
 # Combat-manager unknown targets are abs and container lifecycle operations;
 # markTowerArmy is nested in the authored markCreatureEffect wrapper.
+# Adventure-manager's unpaired net-message targets are the authored handler
+# methods/base dispatch; its Mac string reverse and hourglass lifecycle follow
+# existing calls and RAII. The remaining geometry/artifact calls are nested.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
+  "advmgr",
   "advspells",
   "ai",
   "ai_combat",
