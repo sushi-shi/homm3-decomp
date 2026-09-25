@@ -1539,14 +1539,14 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             m_saveBiggestExtent = 0;
             g_windowManager->saveFizzleSourceX(
                 m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1,
-                m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1);
+                m_drawbridgeBounds.width(),
+                m_drawbridgeBounds.height());
             removeObstacle(obstacleIndex);
             drawFrame(0, 0, 0, 0, 1, 0);
             g_windowManager->fizzleForwardX(
                 m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1,
-                m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1,
+                m_drawbridgeBounds.width(),
+                m_drawbridgeBounds.height(),
                 replacementEffect);
         } else {
             removeObstacle(obstacleIndex);

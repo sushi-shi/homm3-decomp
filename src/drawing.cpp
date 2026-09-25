@@ -499,10 +499,8 @@ void combatManager::updateCombatArea()
         g_windowManager->updateScreen(
             g_combatDrawLimits.m_minX,
             g_combatDrawLimits.m_minY,
-            g_combatDrawLimits.m_maxX
-                - g_combatDrawLimits.m_minX + 1,
-            g_combatDrawLimits.m_maxY
-                - g_combatDrawLimits.m_minY + 1);
+            g_combatDrawLimits.width(),
+            g_combatDrawLimits.height());
     }
 }
 

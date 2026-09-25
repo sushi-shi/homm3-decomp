@@ -2694,13 +2694,13 @@ army* combatManager::addArmy(int side, int monType, int monQty,
         computeMaxExtent();
         g_windowManager->saveFizzleSourceX(
             m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-            m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1,
-            m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1);
+            m_drawbridgeBounds.width(),
+            m_drawbridgeBounds.height());
         drawFrame(0, 0, 0, 0, 1, 0);
         g_windowManager->fizzleForwardX(
             m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-            m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1,
-            m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1, 75);
+            m_drawbridgeBounds.width(),
+            m_drawbridgeBounds.height(), 75);
     }
     return newArmy;
 }

@@ -2408,9 +2408,9 @@ void combatManager::makeCreaturesVanish()
         }
         computeMaxExtent();
         x = m_drawbridgeBounds.m_minX;
-        width = m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1;
+        width = m_drawbridgeBounds.width();
         y = m_drawbridgeBounds.m_minY;
-        height = m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1;
+        height = m_drawbridgeBounds.height();
     }
 
     for (side = 0; side < 2; side++) {
@@ -2780,8 +2780,8 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 updateArea.m_maxY = g_combatDrawLimits.m_maxY;
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
-                updateArea.m_maxX - updateArea.m_minX + 1,
-                updateArea.m_maxY - updateArea.m_minY + 1);
+                updateArea.width(),
+                updateArea.height());
             saved.draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
                        g_windowManager->m_screenBitmap->getWidth(),
@@ -2902,8 +2902,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                 updateArea.m_maxY = g_combatDrawLimits.m_maxY;
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
-                updateArea.m_maxX - updateArea.m_minX + 1,
-                updateArea.m_maxY - updateArea.m_minY + 1);
+                updateArea.width(),
+                updateArea.height());
             ++frame;
             if (frame >= missile->getNumFrames(0))
                 frame = 0;
@@ -3051,8 +3051,8 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
             updateArea.m_maxY = g_combatDrawLimits.m_maxY;
         g_windowManager->updateScreen(updateArea.m_minX, updateArea.m_minY,
-                                      updateArea.m_maxX - updateArea.m_minX + 1,
-                                      updateArea.m_maxY - updateArea.m_minY + 1);
+                                      updateArea.width(),
+                                      updateArea.height());
         GameTime::delayTil(nextFrameTime);
     }
 
@@ -3351,8 +3351,8 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
             drawFrame(0, 1, 0, 100, 1, 1);
             g_windowManager->updateScreen(
                 m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1,
-                m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1);
+                m_drawbridgeBounds.width(),
+                m_drawbridgeBounds.height());
         }
     }
 

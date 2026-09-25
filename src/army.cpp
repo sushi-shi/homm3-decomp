@@ -1276,8 +1276,8 @@ void army::animateMissile(army* armyToAttack)
             updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
-                updateArea.m_maxX - updateArea.m_minX + 1,
-                updateArea.m_maxY - updateArea.m_minY + 1);
+                updateArea.width(),
+                updateArea.height());
             GameTime::delayTil(nextFrameTime);
         }
     }
@@ -4397,8 +4397,8 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
         TDrawbridgeBounds frame = bounds;
         g_combatManager->m_saveScreenPostGrid->draw(
             frame.m_minX, frame.m_minY,
-            frame.m_maxX - frame.m_minX + 1,
-            frame.m_maxY - frame.m_minY + 1,
+            frame.width(),
+            frame.height(),
             g_windowManager->m_screenBitmap->getMap(0, 0),
             frame.m_minX, frame.m_minY,
             g_windowManager->m_screenBitmap->getWidth(),
@@ -4435,8 +4435,8 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
                 g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT], frameDelay);
         g_windowManager->updateScreen(
             frame.m_minX, frame.m_minY,
-            frame.m_maxX - frame.m_minX + 1,
-            frame.m_maxY - frame.m_minY + 1);
+            frame.width(),
+            frame.height());
     }
 
     if (nframes > 0)
