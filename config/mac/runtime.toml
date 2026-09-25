@@ -1,4 +1,4 @@
-# Reviewed library call destinations; these are not game reconstruction scores.
+# Reviewed generated and library call destinations; these are not game reconstruction scores.
 
 [[functions]]
 symbol = ".__cvt_fp2unsigned"
@@ -1147,3 +1147,35 @@ mac_offset = 0xc5528
 mac_size = 0x4
 sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
 evidence = "One-instruction BLR called by the vector<pathCell>::pop_back path in searchArray::seedPosition. The adjacent next prologue begins at 0xc552c. Element destruction is trivial; this is a generated/runtime identity, not a recovered game helper body."
+
+[[functions]]
+symbol = ".mac_msl_player_vector_index_1e788"
+mac_section = 0
+mac_offset = 0x1e788
+mac_size = 0x10
+sha256 = "096589c39705f67f4fb8c92e01c22b10fcf6a5118faf144c1217fb8c7f7a340d"
+evidence = "advManager::townGate calls this with the game player vector and an index. It multiplies the index by the verified Mac playerData stride 0x15c, adds the vector data pointer at +8, and returns. BLR 0x1e794; next body starts 0x1e798. MSL vector element access, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_msl_vector_data_slot_1b43a4"
+mac_section = 0
+mac_offset = 0x1b43a4
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "town::destroyExtraCapitol calls this vector accessor at 0x1b4290 while traversing g_game's towns. It returns this+8, the address of the vector data pointer; BLR 0x1b43a8, next body 0x1b43ac. MSL container access only."
+
+[[functions]]
+symbol = ".mac_msl_vector_data_slot_1b88b4"
+mac_section = 0
+mac_offset = 0x1b88b4
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "TTownGateWindow::updateTownLocator and townManager::setupTown/setCommandAndText call this two-instruction accessor. It returns this+8, the vector data-pointer slot; BLR 0x1b88b8, next body 0x1b88bc. This is an MSL container accessor rather than a game helper."
+
+[[functions]]
+symbol = ".mac_implicit_hero_copy_assign_9ab44"
+mac_section = 0
+mac_offset = 0x9ab44
+mac_size = 0x3b0
+sha256 = "31f4136f39a7bff221c44ce665c998aba27394f7b9091156acde95c5f4756130"
+evidence = "CTradeRequestMsg and CHeroUpdateMsg constructors each call this body twice to copy their left/right hero snapshots; vector<hero>::erase also shifts elements through it. It copies the Mac hero's fields through the final word at +0x482, including nontrivial members, then returns at 0x9aef0. The next body begins at 0x9aef4. Compiler-generated hero copy assignment, not a separately authored helper."

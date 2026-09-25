@@ -184,6 +184,17 @@ mac_size = 0x78
 target_sha256 = "ad816c48103d6368f973c7acd7f928a87a551c608c6e7584a948f69015d88d79"
 evidence = "This deleting CNetMsgHandlerPause destructor installs its vtable, restores the saved handler through CDPlayHeroes::setNetMsgHandler at 0x2110ec, destroys the base at 0x215568, then conditionally calls scalar delete. Events doCombat, game transmitSaveGame and remote wait wrappers reach the retained body. The final BLR at 0x215d08 precedes the next function at 0x215d0c; Windows owns the generated scalar deleting destructor claim at 0x557eb0."
 
+[[functions]]
+retail_va = 0x557810
+unit = "remote"
+compgen_kind = "SCALAR_DELETING_DTOR"
+compgen_type = "CNetMsgHandler"
+mac_section = 0x0
+mac_offset = 0x215568
+mac_size = 0x84
+target_sha256 = "42bc249f9238e9ae2c67123a0b3f455f5264edb7eaca1c4bdabb2462a3015547"
+evidence = "This generated CNetMsgHandler deleting destructor installs the base vtable, clears g_dPlay's handler when it points to this object, and conditionally frees the receiver. CNetMsgHandlerPause destruction, TSingleSelectionWindow cleanup and CSwapMgrNetMsgHandler cleanup call it. BLR at 0x2155e8 precedes the next body at 0x2155ec; Windows owns the corresponding generated claim at 0x557810."
+
 [[helpers]]
 source_helper = "CLogFile::log"
 unit = "remote"
