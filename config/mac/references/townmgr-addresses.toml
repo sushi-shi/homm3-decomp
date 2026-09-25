@@ -474,19 +474,19 @@ evidence = "Town doCommand dispatches troop moves/merge and calls reset 0x1d2518
 retail_va = 0x5d5150
 unit = "townmgr"
 mac_section = 0x0
-mac_offset = 0x1d207c
-mac_size = 0x74
-target_sha256 = "72590ed37bb40643c667ced40ff8336a03a8310549a18f72236aaec0846a408c"
-evidence = "swapHeroes checks local-human status 0xcdba4, invokes addGarrisonHero 0x1b3910, deletes/rebuilds strips; complete BLR."
+mac_offset = 0x1d20f0
+mac_size = 0x108
+target_sha256 = "b0bfa01cb34ed385270d49e562556628c8993600808834131b149c2467829842"
+evidence = "doCommand swap-heroes arm calls 0x1d20f0 at 0x1d2000. This body checks isLocalHuman 0xcdba4, invokes playerData::addGarrisonHero 0xcc4fc, handles refusal with normalDialog, then destroys both strips and calls newStrips 0x1befc0. BLR 0x1d21f4 precedes moveHeroFromGarrison."
 
 [[functions]]
 retail_va = 0x5d5220
 unit = "townmgr"
 mac_section = 0x0
-mac_offset = 0x1d20f0
-mac_size = 0x108
-target_sha256 = "b0bfa01cb34ed385270d49e562556628c8993600808834131b149c2467829842"
-evidence = "moveHeroFromGarrison checks hero cap and army, calls removeGarrisonHero 0xcc4fc, then rebuilds troop strips; complete BLR."
+mac_offset = 0x1d21f8
+mac_size = 0x1d4
+target_sha256 = "dc9258c412c6938532e318a68ef3eb7e41d65971325b833418220cc10cdde0af"
+evidence = "doCommand move-from-garrison arm calls 0x1d21f8 at 0x1d2024. This body checks isLocalHuman, the hero cap and town army, calls town::removeGarrisonHero 0x1b389c, then destroys both strips and calls newStrips 0x1befc0. BLR 0x1d23c8 precedes redrawTownScreen."
 
 [[functions]]
 retail_va = 0x5d5410
@@ -973,3 +973,21 @@ unit = "townmgr"
 target_sha256 = "825de99ed7f54c4f6f70d00ef1fc3710867344dca172dddf1281748c68996f6d"
 source_helper = "TTownScreenWindow::bonusRightClick"
 evidence = "Two direct Mac calls from townManager::main to this member; the body reads a bonus creature and opens its popup. Distinct mflr entry and terminal BLR agree with adjacent townmgr source order."
+
+[[helpers]]
+source_helper = "townObject::~townObject"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1b8f54
+mac_size = 0xcc
+target_sha256 = "13b68aaa7a1827f44ff225dff66f1ffb5f537d1d12257d09804d8b5dd4db827d"
+evidence = "Dreamcast names townObject::~townObject at dc:0x16a1a4. Mac unloadTown calls 0x1b8f54 to delete each town object; the retained body deletes its border at +0x2c, disposes icon/outline/hotspot at +0x20/+0x24/+0x28, and has Mac's optional object deallocation tail. BLR 0x1b901c precedes the next function. Windows expands the authored destructor."
+
+[[helpers]]
+source_helper = "townManager::moveHeroToGarrison"
+unit = "townmgr"
+mac_section = 0x0
+mac_offset = 0x1d207c
+mac_size = 0x74
+target_sha256 = "72590ed37bb40643c667ced40ff8336a03a8310549a18f72236aaec0846a408c"
+evidence = "Dreamcast names MoveHeroToGarrison at dc:0x176bf0. Mac doCommand's move-to-garrison arm calls 0x1d207c at 0x1d2048; the body checks isLocalHuman, invokes town::swapHeroes 0x1b3910, destroys both strips and calls newStrips 0x1befc0. BLR 0x1d20ec precedes swapHeroes. Windows expands this ordinary source helper in doCommand."
