@@ -2215,7 +2215,7 @@ void combatManager::simulateMeleeAttack(army* currentArmy, army* target,
         simulateMeleeAttack(target, target->m_gridIndex, currentArmy, hex,
                               1 - ourGroup);
 
-    if (currentArmy->is(creatureTwoAttacks) && target->m_aiExpectedDamage < hitPoints)
+    if (currentArmy->is(creatureTwoAttacks) && target->getAIExpectedDamage() < hitPoints)
         simulateMeleeAttack(currentArmy, hex, target, target->m_gridIndex,
                               ourGroup);
 }
