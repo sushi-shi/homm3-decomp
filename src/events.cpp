@@ -5466,7 +5466,8 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
             && monType2 == CREATURE_NONE
             && monType3 == CREATURE_NONE
             && sRandom(1, 100) <= 50) {
-            TCreatureType upgraded = g_game->upgradedCreatureType(monType);
+            TCreatureType upgraded = g_game->upgradedCreatureType(
+                H3_ENUM_DECODE(TCreatureType, monType));
             currentArmyGroup.m_armyTypes[numGroups / 2] = upgraded;
         }
     }
