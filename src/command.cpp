@@ -1477,7 +1477,7 @@ int combatManager::rightClick(int newIndex)
         return 0;
     }
 
-    if (newIndex >= 0 && newIndex < COMBAT_GRID_CELLS
+    if (validHex(newIndex)
             && m_cells[newIndex].m_armySide >= 0) {
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
         viewArmy(m_cells[newIndex].getArmy(), 1);
@@ -1565,7 +1565,7 @@ void combatManager::doCommand(int command)
 
     case COMBAT_COMMAND_VIEW_ARMY:
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
-        if (m_lastCellIndex < 0 || m_lastCellIndex >= COMBAT_GRID_CELLS)
+        if (!validHex(m_lastCellIndex))
             break;
         viewArmy(m_cells[m_lastCellIndex].getArmy(), 0);
         resetMouse();

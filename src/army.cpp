@@ -3712,7 +3712,7 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
     for (;;) {
         if (direction < COMBAT_DIRECTION_COUNT || is(creatureDoubleWide)) {
             long hex = getAdjacentHex(ourHex, direction);
-            if (hex >= 0 && hex < COMBAT_GRID_CELLS
+            if (combatManager::validHex(hex)
                 && enemy == g_combatManager->m_cells[hex].getArmy()) {
                 // Mac 0x518e8..0x51930 expands needToTurn, including its
                 // direction < 6 guard.
@@ -4432,7 +4432,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     if (newDestIndex)
         *newDestIndex = destIndex;
 
-    if (destIndex < 0 || destIndex >= COMBAT_GRID_CELLS)
+    if (!combatManager::validHex(destIndex))
         return 0;
     if (combatManager::inInvisibleColumn(destIndex))
         return 0;
@@ -4451,7 +4451,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
         return 1;
 
     int otherIndex = getAdjacentCellIndex(destIndex, m_facing ? 1 : 4);
-    if (otherIndex < 0 || otherIndex >= COMBAT_GRID_CELLS)
+    if (!combatManager::validHex(otherIndex))
         return 0;
     if (combatManager::inInvisibleColumn(otherIndex))
         return 0;
@@ -4465,7 +4465,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 
     if (allowShifting) {
         int shiftedIndex = getAdjacentCellIndex(destIndex, m_facing ? 4 : 1);
-        if (shiftedIndex < 0 || shiftedIndex >= COMBAT_GRID_CELLS)
+        if (!combatManager::validHex(shiftedIndex))
             return 0;
         if (combatManager::inInvisibleColumn(shiftedIndex))
             return 0;
@@ -4679,7 +4679,7 @@ unsigned char army::canCastSpell(long hex) const
         return 0;
     if (!g_combatManager->canCastSpells(getControllingSide(), 0))
         return 0;
-    if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+    if (!combatManager::validHex(hex))
         return 0;
     army* target = g_combatManager->m_cells[hex].getArmy();
     switch (m_creatureType) {
@@ -4873,7 +4873,7 @@ long army::getValidCaliphSpells(const army* target) const
 VA(0x00447ee0, 0xF8)  // dc 0x4c3ac
 void army::castCaliphSpell(long hex)
 {
-    if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+    if (!combatManager::validHex(hex))
         return;
     army* target = g_combatManager->m_cells[hex].getArmy();
     if (!target)
@@ -4900,7 +4900,7 @@ void army::castCaliphSpell(long hex)
 // castCaliphSpell; Windows expands it in castSpell. The name is inferred.
 void army::castFaerieDragonSpell(long hex)
 {
-    if (hex >= 0 && hex < COMBAT_GRID_CELLS)
+    if (combatManager::validHex(hex))
         g_combatManager->castSpell(m_faerieDragonSpell, hex, 1, -1, 2,
                                    m_numTroops * 5);
 }

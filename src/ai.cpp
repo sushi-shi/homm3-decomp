@@ -869,7 +869,7 @@ void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, 
         long count = (friendly->is(creatureDoubleWide)) ? 8 : 6;
         for (long direction = count; direction-- > 0; ) {
             long hex = friendly->getAdjacentHex(direction);
-            if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+            if (!combatManager::validHex(hex))
                 continue;
             if (areaEffect != 0) {
                 if (checked[hex]) {
@@ -883,7 +883,7 @@ void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, 
             }
             if (friendly->is(creatureHasExtendedAttack)) {
                 long farHex = friendly->getAdjacentCellIndex(hex, direction);
-                if (farHex < 0 || farHex >= COMBAT_GRID_CELLS)
+                if (!combatManager::validHex(farHex))
                     continue;
                 enemyAttacks[farHex] -= meleeValue;
                 if (enemyAttacks[farHex] < floorValue)
@@ -1023,7 +1023,7 @@ void findAttackHexes(const army* ourArmy, long targetHex, long start, long stop,
 {
     for (long direction = start; direction < stop; direction++) {
         long hex = ourArmy->getAdjacentHex(targetHex, direction);
-        if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+        if (!combatManager::validHex(hex))
             continue;
         const pathCell* cell = currentSearchArray->getHex(hex);
         if (!cell->m_visited)
@@ -1093,7 +1093,7 @@ void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, lo
                 if (g_searchArray->isMoat(static_cast<short>(hex)))
                     continue;
                 long adjacent = m_adjacentCells[hex][direction];
-                if (adjacent < 0 || adjacent >= COMBAT_GRID_CELLS)
+                if (!validHex(adjacent))
                     continue;
                 const pathCell* other = g_searchArray->getHex(adjacent);
                 if (other->m_visited)
@@ -2199,7 +2199,7 @@ void combatManager::simulateMeleeAttack(army* currentArmy, army* target,
                                           long ourGroup)
 {
     long hex = m_nextActionExtra;
-    if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+    if (!validHex(hex))
         return;
 
     long hitPoints = target->getTotalHitPoints(0);
@@ -2244,7 +2244,7 @@ long combatManager::simulateActions(std::vector<army*>& list, long i,
         }
 
         long hex = m_nextActionGridIndex;
-        if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+        if (!validHex(hex))
             continue;
         army* target = m_cells[hex].getArmy();
         if (!target)
