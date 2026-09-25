@@ -3966,7 +3966,7 @@ void __cdecl aiExamineMap()
     for (; point.m_z < g_game->getNumMapLevels(); point.m_z++) {
         for (point.m_x = 0; point.m_x < g_mapWidth; point.m_x++) {
             for (point.m_y = 0; point.m_y < g_mapHeight; point.m_y++) {
-                NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
+                NewmapCell* cell = g_game->getCell(point);
                 if ((cell->m_flags0011 & 0x40)
                         && cell->m_groundSet != eTerrainRock) {
                     passableCells++;

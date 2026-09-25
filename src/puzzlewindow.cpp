@@ -535,8 +535,7 @@ static long checkMatch(long player, long firstX, long firstY,
                 continue;
             if (!(getMapExtra(point.m_x, point.m_y, point.m_z) & playerMask))
                 continue;
-            type_AI_puzzle_tile tile(
-                g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z), point);
+            type_AI_puzzle_tile tile(g_game->getCell(point), point);
             if (puzzleMap[firstX][firstY] == &tile)
                 ++matches;
             else

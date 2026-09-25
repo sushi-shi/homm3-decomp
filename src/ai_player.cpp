@@ -3874,8 +3874,7 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
     if (path[0].m_startAtTrigger) {
         g_advManager->mobilizeCurrHero(0, 0, 1);
         type_point point = currentHero->getLocation();
-        NewmapCell* cell =
-            g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
+        NewmapCell* cell = g_game->getCell(point);
         g_advManager->doAIEvent(cell, currentHero,
                                 currentHero->getLocation());
         return;

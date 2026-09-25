@@ -8701,7 +8701,7 @@ void game::processOnMapHeroes()
         if (heroExtra->m_location.m_x >= 0) {
             townLoc = heroExtra->m_location;
             --townLoc.m_x;
-            townCell = m_worldMap.cell(townLoc.m_x, townLoc.m_y, townLoc.m_z);
+            townCell = getCell(townLoc);
             if (townCell->m_type == TOWN && townCell->m_isTrigger
                 && m_heroAvailability[heroExtra->m_id]
                     != hero::HERO_AVAILABILITY_PRISON) {

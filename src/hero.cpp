@@ -5969,7 +5969,7 @@ TAdventureObjectType hero::heroFn004E4EC0()
         && invalid.m_z == point.m_z)
         return NOTHING;
 
-    const NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
+    const NewmapCell* cell = g_game->getCell(point);
     return cell->getSpecialTerrain();
 }
 

@@ -326,8 +326,7 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
         for (pos.m_z = 0; pos.m_z < g_game->getNumMapLevels(); ++pos.m_z) {
             for (pos.m_y = 0; pos.m_y < g_mapHeight; ++pos.m_y) {
                 for (pos.m_x = 0; pos.m_x < g_mapWidth; ++pos.m_x) {
-                    NewmapCell* cell =
-                        g_game->m_worldMap.cell(pos.m_x, pos.m_y, pos.m_z);
+                    NewmapCell* cell = g_game->getCell(pos);
                     if (cell->m_isTrigger && cell->m_type == MONSTER) {
                         if (!pos.operator==(monsterLoc))
                             return 0;
