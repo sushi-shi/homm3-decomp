@@ -31,6 +31,10 @@
 # Town-manager's unnamed targets are an empty destructor and vector begin;
 # strip/townObject destructor calls follow the authored deletes. Mac's
 # tavern modal path calls videoRestart where Windows source uses videoResume.
+# Its windowHandler calls setCommandAndText three times on Mac, including a
+# slot deselect arm; Windows retail has two calls, matching the authored source.
+# Combat chat similarly calls getCharPressed twice on Mac but once in Windows
+# retail. These count gaps are port differences, not missing Windows calls.
 # Victory/loss-condition unknown targets are bitset count and vector
 # push/erase operations already present at the owning call sites.
 # Command now calls resetMouse at all four Mac-retained sites and uses the
