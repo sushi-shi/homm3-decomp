@@ -54,6 +54,15 @@ mac_size = 0xec
 target_sha256 = "4f8165ddd3b6492f06b796ea3ca485be3cb9e11d00114032ce56ca19383dfafa"
 evidence = "handlePlayerDrop calls this retained eight-seat DPID lookup at 0x213f08. It compares each game player record's DPID using the 0x15c stride, returns the matching index or -1, and ends at 0x213c8c before getPriorPlayer. Windows expands the same source helper."
 
+[[functions]]
+retail_va = 0x556430
+unit = "remote"
+mac_section = 0
+mac_offset = 0x213ee4
+mac_size = 0x178
+target_sha256 = "ad4f5340a798acbb1e0b00f0d96f70f545b748ddb79c80871e752c8e4a0b8f40"
+evidence = "handlePlayerDrop calls retained getPlayerPos at 0x213f08, updates player and chat state, then calls getPriorPlayer at 0x213f88 before host recovery or transmitting a drop message. BLR at 0x214058 precedes handleNewHost."
+
 [[helpers]]
 source_helper = "getPriorPlayer"
 unit = "remote"
