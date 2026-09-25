@@ -1250,10 +1250,8 @@ void army::animateMissile(army* armyToAttack)
                            g_windowManager->m_screenBitmap->getWidth(),
                            g_windowManager->m_screenBitmap->getHeight(),
                            g_windowManager->m_screenBitmap->getPitch(), false);
-                updateArea.m_minX = x;
-                updateArea.m_minY = y;
-                updateArea.m_maxX = right;
-                updateArea.m_maxY = bottom;
+                // Mac 0x4b3f4 constructs and copies the rectangle value.
+                updateArea = TDrawbridgeBounds(x, y, right, bottom);
                 x += stepX;
                 y += stepY;
                 right += stepX;
@@ -4122,10 +4120,9 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     long right = explosion->getWidth() - halfWidth + targetX - 1;
     {
         TDrawbridgeBounds& bounds = g_combatManager->m_drawbridgeBounds;
-        bounds.m_minX = x;
-        bounds.m_minY = y;
-        bounds.m_maxX = right;
-        bounds.m_maxY = bottom;
+        // Mac 0x52374 builds the four-word rectangle on the stack and
+        // copies it into the manager bounds before clipping.
+        bounds = TDrawbridgeBounds(x, y, right, bottom);
     }
     g_combatManager->m_drawbridgeBounds.clip(g_combatDrawLimits);
 

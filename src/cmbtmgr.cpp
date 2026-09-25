@@ -2733,10 +2733,9 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
         for (; step < nframes; step++) {
             unsigned long nextFrameTime = GameTime::get() + missileperiod;
             if (step != 0) {
-                updateArea.m_minX = x;
-                updateArea.m_minY = y;
-                updateArea.m_maxX = x + width - 1;
-                updateArea.m_maxY = y + height - 1;
+                // Mac 0x73e24 copies a four-word rectangle temporary here.
+                updateArea = TDrawbridgeBounds(
+                    x, y, x + width - 1, y + height - 1);
                 x = startX + travelX / nframes;
                 y = static_cast<int>(
                     (deltaY - remaining * flatness) * step
@@ -2850,10 +2849,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             if (step != 0) {
                 saved.draw(0, 0, width, height,
                            g_windowManager->m_screenBitmap, x, y, false);
-                updateArea.m_minX = x;
-                updateArea.m_minY = y;
-                updateArea.m_maxX = right;
-                updateArea.m_maxY = bottom;
+                // Mac 0x743e0 constructs and copies the four-word bounds.
+                updateArea = TDrawbridgeBounds(x, y, right, bottom);
                 x += addX;
                 right += addX;
                 y += addY;
@@ -2976,10 +2973,8 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                        g_windowManager->m_screenBitmap->getWidth(),
                        g_windowManager->m_screenBitmap->getHeight(),
                        g_windowManager->m_screenBitmap->getPitch(), false);
-            updateArea.m_minX = x;
-            updateArea.m_minY = y;
-            updateArea.m_maxX = right;
-            updateArea.m_maxY = bottom;
+            // Mac 0x749f8 constructs and copies the four-word bounds.
+            updateArea = TDrawbridgeBounds(x, y, right, bottom);
             x += addX;
             right += addX;
             y += addY;
