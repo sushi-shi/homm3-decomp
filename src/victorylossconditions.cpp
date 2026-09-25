@@ -399,8 +399,7 @@ VA(0x005f2810, 0x45)  // hd-crossbuild
 unsigned char VictoryConditionStruct::checkForTimeSurvival()
 {
     if (m_type == VICTORY_CONDITION_SURVIVE_TIME) {
-        short days = (g_game->m_month * 4
-            + g_game->m_week - 5) * 7 + g_game->m_day;
+        short days = g_game->getCurrentTurn();
         if (days > m_numDays) {
             m_gameWon = 1;
             return 1;

@@ -2220,7 +2220,7 @@ int TSeerReward::getValue(const hero* currentHero)
         switch (m_value.m_primarySkill.m_skillType) {
         case ePriSkillAttack:
         case ePriSkillDefense: {
-            int experience = hero::getExperienceIncrement(currentHero->m_level);
+            int experience = currentHero->getExperienceIncrement();
             return static_cast<int>(m_value.m_primarySkill.m_bonus
                 * currentHero->m_turnExperienceToRvRatio * experience);
         }

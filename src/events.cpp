@@ -3334,7 +3334,7 @@ void advManager::doEventTreeOfKnowledge(hero* currentHero,
     cell->setCellVisited(currentHero->m_owner);
     game* g = g_game;
     g->setInfoFlag(TreeOfKnowledgeInfo, g_netLocalGamePos);
-    int experience = hero::getExperienceIncrement(currentHero->m_level);
+    int experience = currentHero->getExperienceIncrement();
 
     switch (cell->getTreePrice()) {
     case const_tree_wants_nothing:
@@ -3850,7 +3850,7 @@ void advManager::doEventWarSchool(hero* currentHero, ExtraInfoUnion* cell,
         }
     } else {
         if (aiChooseResourceOrExperience(currentHero, GOLD, 1000,
-                              hero::getExperienceIncrement(currentHero->m_level)))
+                              currentHero->getExperienceIncrement()))
             return;
         if (currentHero->getPrimarySkill(0) > currentHero->getPrimarySkill(1))
             whichStat = 1;

@@ -413,8 +413,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             if (!currentTown->canBuild(EXTRA_2_ID))
                 break;
             int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            long experience = hero::getExperienceIncrement(
-                currentHero->m_level);
+            long experience = currentHero->getExperienceIncrement();
             int resourceCost = aiResourceCost(
                 &g_game->m_players[currentHero->m_owner], cost);
             if (static_cast<float>(experience)
@@ -427,8 +426,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             if (!currentTown->canBuild(SPECIAL_BUILDING_ID))
                 break;
             int* cost = currentTown->getBuildCostArray(SPECIAL_BUILDING_ID);
-            long experience = hero::getExperienceIncrement(
-                currentHero->m_level);
+            long experience = currentHero->getExperienceIncrement();
             int resourceCost = aiResourceCost(
                 &g_game->m_players[currentHero->m_owner], cost);
             if (static_cast<float>(experience)
@@ -927,7 +925,7 @@ static int valueOfArena(const hero* currentHero, NewmapCell* cell)
     if (currentHero->visitedArena(cell))
         return 0;
     int experienceValue =
-        2 * hero::getExperienceIncrement(currentHero->m_level);
+        2 * currentHero->getExperienceIncrement();
     return static_cast<int>(
         experienceValue * currentHero->m_turnExperienceToRvRatio);
 }
@@ -1031,7 +1029,7 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
         &g_game->m_players[currentHero->m_owner], blackBox->m_resQty);
 
     int primarySkillValue = static_cast<int>(
-        static_cast<float>(hero::getExperienceIncrement(currentHero->m_level))
+        static_cast<float>(currentHero->getExperienceIncrement())
         * currentHero->m_turnExperienceToRvRatio);
     for (int skill = 0; skill < 4; ++skill) {
         if (blackBox->m_primarySkillBonus[skill] > 0)
@@ -1382,7 +1380,7 @@ inline int valueOfMercenaryCamp(const hero* currentHero,
     if (currentHero->m_mercCampFlags & (1UL << cell->m_extraInfo))
         return 0;
     return static_cast<int>(
-        hero::getExperienceIncrement(currentHero->m_level)
+        currentHero->getExperienceIncrement()
         * currentHero->m_turnExperienceToRvRatio);
 }
 
@@ -3444,16 +3442,14 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
     case TOWN_STRONGHOLD:
         if (currentTown->hasBuilding(EXTRA_2_ID, true))
             value = static_cast<long>(
-                static_cast<float>(hero::getExperienceIncrement(
-                    currentHero->m_level))
+                static_cast<float>(currentHero->getExperienceIncrement())
                 * currentHero->m_turnExperienceToRvRatio
                 + static_cast<float>(value));
         break;
     case TOWN_FORTRESS:
         if (currentTown->hasBuilding(SPECIAL_BUILDING_ID, true))
             value = static_cast<long>(
-                static_cast<float>(hero::getExperienceIncrement(
-                    currentHero->m_level))
+                static_cast<float>(currentHero->getExperienceIncrement())
                 * currentHero->m_turnExperienceToRvRatio
                 + static_cast<float>(value));
         break;
@@ -3514,7 +3510,7 @@ int valueOfTree(const hero* currentHero, NewmapCell* cell)
             & (1 << (static_cast<unsigned char>(cell->m_extraInfo) & 0x1f)))
         return 0;
 
-    int increment = hero::getExperienceIncrement(currentHero->m_level);
+    int increment = currentHero->getExperienceIncrement();
     playerData* player = currentHero->getPlayer();
     int levelValue = static_cast<int>(static_cast<float>(increment)
         * currentHero->m_turnExperienceToRvRatio);
@@ -3567,7 +3563,7 @@ int valueOfWarSchool(const hero* currentHero, NewmapCell* cell)
         return 0;
     return static_cast<int>(
         static_cast<float>(
-            hero::getExperienceIncrement(currentHero->m_level))
+            currentHero->getExperienceIncrement())
         * currentHero->m_turnExperienceToRvRatio
         - player->m_ai.m_resourceValue[GOLD] * 1000.0);
 }
@@ -3614,7 +3610,7 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
     }
     return static_cast<int>(
         static_cast<float>(
-            hero::getExperienceIncrement(currentHero->m_level))
+            currentHero->getExperienceIncrement())
         * currentHero->m_turnExperienceToRvRatio);
 }
 
@@ -3830,7 +3826,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
 #pragma inline_depth()
     case SCHOLAR:
         return static_cast<int>(
-            hero::getExperienceIncrement(currentHero->m_level)
+            currentHero->getExperienceIncrement()
             * currentHero->m_turnExperienceToRvRatio);
     case SEA_CHEST:
 #pragma inline_depth(0)

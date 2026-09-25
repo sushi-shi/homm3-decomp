@@ -545,7 +545,7 @@ void checkAdvCheatCode(std::string& chatString)
                    0x0063a4a8, advCheatNeo, "ajparb"))
                && currentHero) {
         cheatUsed = true;
-        int increment = hero::getExperienceIncrement(currentHero->m_level);
+        int increment = currentHero->getExperienceIncrement();
         currentHero->giveExperience(increment, 1, 1);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a4b0, advCheatFollowTheWhiteRabbit,
