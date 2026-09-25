@@ -1254,7 +1254,7 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
     if (wall == WALL_TARGET_7
         && m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
         return 0;
-    return m_wallStrength[s_wallTargets[wall].m_wall] > 0;
+    return getWallStrength(wall) > 0;
 }
 
 // E:\gamedcs\command.cpp:1964

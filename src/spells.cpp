@@ -4565,7 +4565,7 @@ void combatManager::earthquake(int level)
     while (remaining-- > 0) {
         int candidates = 0;
         for (int i = 0; i < WALL_TARGET_COUNT; i++) {
-            if (m_wallStrength[s_wallTargets[i].m_wall] > counts[i])
+            if (getWallStrength(static_cast<TWallTargetId>(i)) > counts[i])
                 candidates++;
         }
         if (candidates == 0)
@@ -4573,7 +4573,7 @@ void combatManager::earthquake(int level)
         int roll = random(1, candidates);
         int chosen;
         for (chosen = 0; chosen < WALL_TARGET_COUNT; chosen++) {
-            if (m_wallStrength[s_wallTargets[chosen].m_wall] != 0) {
+            if (getWallStrength(static_cast<TWallTargetId>(chosen)) != 0) {
                 roll--;
                 if (roll == 0)
                     break;

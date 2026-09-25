@@ -2419,8 +2419,8 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
     long lowest = 0x7fff;
     long total = 0;
     for (long i = 0; i < WALL_TARGET_COUNT; i++) {
-        long strength = g_combatManager->m_wallStrength[
-            combatManager::s_wallTargets[i].m_wall];
+        long strength = g_combatManager->getWallStrength(
+            static_cast<TWallTargetId>(i));
         total += strength;
         lowest = min(lowest, strength);
     }
