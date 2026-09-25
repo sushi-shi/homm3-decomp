@@ -10,9 +10,13 @@
 # sprite wrapper calls, implicit UI construction and text-vector teardown
 # are already expressed by the ordinary source. Town's assembled-Legion
 # call is an evidenced Mac-only helper boundary.
+# The remaining AI sort, deque subscript, town-vector subscript and strcat
+# targets in the small combat/UI units below are canonical library calls.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
+  "advspells",
+  "ai",
   "ai_combat",
   "ai_tactical",
   "artifact",
@@ -20,12 +24,14 @@ units = [
   "bitmap16",
   "bitmap24",
   "bitmap816",
+  "bottomviewsubwindow",
   "button",
   "campaign",
   "campaignbrief",
   "campaignmap",
   "campaignmusic",
   "castle",
+  "combatcontrolsubwindow",
   "combatoptionswindow",
   "combatresultswindow",
   "creature_bank",
@@ -57,7 +63,9 @@ units = [
   "path",
   "philai",
   "questlogwindow",
+  "quickherowindow",
   "quickinfowindow",
+  "quicktownwindow",
   "recruit",
   "remote",
   "resource",
@@ -74,6 +82,7 @@ units = [
   "tiles",
   "town",
   "university_window",
+  "viewarmywindow",
   "viewwrld",
   "widget",
 ]
