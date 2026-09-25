@@ -662,7 +662,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
             if (curr->getTarget() != triggerPoint
                 && g_currentPlayer->isHuman()
                 && g_game->onSameTeam(
-                    g_game->m_garrisons[eventCell->m_extraInfo].m_playerOwner,
+                    g_game->getGarrison(eventCell->m_extraInfo)->m_playerOwner,
                     g_netLocalGamePos))
                 returnCell = 0;
             break;

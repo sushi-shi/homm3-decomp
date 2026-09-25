@@ -4063,7 +4063,7 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
 inline void advManager::doEventLighthouse(NewmapCell* cell,
                                           unsigned char humanPlayer)
 {
-    if (!g_game->onSameTeam(g_game->m_mines[cell->m_extraInfo].m_playerOwner,
+    if (!g_game->onSameTeam(g_game->getMine(cell->m_extraInfo)->m_playerOwner,
                             g_netLocalGamePos)) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(

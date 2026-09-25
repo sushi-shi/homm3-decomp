@@ -2903,11 +2903,11 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case LIGHTHOUSE:
         strcpy(g_text, g_quickViewText[LIGHTHOUSE]);
         if (cell->m_isTrigger) {
-            if (g_game->m_mines[cell->m_extraInfo].m_playerOwner != -1) {
+            if (g_game->getMine(cell->m_extraInfo)->m_playerOwner != -1) {
                 sprintf(tempText, DATA_COMPGEN(
                     0x00660334, rolloverOwnerSuffixFormat, " - %s"),
                     g_ownedByColor[
-                        g_game->m_mines[cell->m_extraInfo].m_playerOwner]);
+                        g_game->getMine(cell->m_extraInfo)->m_playerOwner]);
                 strcat(g_text, tempText);
             }
         }
@@ -4392,10 +4392,10 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
         break;
     case LIGHTHOUSE:
     case MINE:
-        owner = g_game->m_mines[extraInfo].m_playerOwner;
+        owner = g_game->getMine(extraInfo)->m_playerOwner;
         break;
     case GARRISON:
-        owner = g_game->m_garrisons[extraInfo].m_playerOwner;
+        owner = g_game->getGarrison(extraInfo)->m_playerOwner;
         break;
     case CREATURE_GENERATOR_1:
     case CREATURE_GENERATOR_4:
@@ -5770,8 +5770,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger)
                                 colour = g_systemPalette->m_data[64 +
-                                    g_game->m_mines[trigger
-                                        ->getMapExtraInfo()].m_playerOwner];
+                                    g_game->getMine(trigger
+                                        ->getMapExtraInfo())->m_playerOwner];
                         }
                         break;
                     case CREATURE_GENERATOR_1:
@@ -5791,8 +5791,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger)
                                 colour = g_systemPalette->m_data[64 +
-                                    g_game->m_garrisons[trigger
-                                        ->getMapExtraInfo()].m_playerOwner];
+                                    g_game->getGarrison(trigger
+                                        ->getMapExtraInfo())->m_playerOwner];
                         }
                         break;
                     case SHIPYARD:
@@ -6484,7 +6484,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     char owner =
-                        g_game->m_mines[testCell->m_extraInfo].m_playerOwner;
+                        g_game->getMine(testCell->m_extraInfo)->m_playerOwner;
                     if (owner != -1) {
                         sprintf(tempText, visitFormat,
                                 g_ownedByColor[owner]);
@@ -7949,9 +7949,9 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             default: return LOOPING_SOUND_INVALID;
             }
         case MINE: {
-            int type = g_game->m_mines[thisCell->m_extraInfo].m_type;
+            int type = g_game->getMine(thisCell->m_extraInfo)->m_type;
             unsigned char abandoned =
-                g_game->m_mines[thisCell->m_extraInfo].m_isAbandoned;
+                g_game->getMine(thisCell->m_extraInfo)->m_isAbandoned;
             if (abandoned)
                 return LOOPING_SOUND_7;
             switch (type) {
