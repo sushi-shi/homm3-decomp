@@ -816,11 +816,8 @@ void type_monster_quest::notifyMonsterDefeated(TQuestPosition where,
 {
     if (m_defeatedBy >= 0)
         return;
-    if (m_position.m_x != where.m_x)
-        return;
-    if (m_position.m_y != where.m_y)
-        return;
-    if (m_position.m_z != where.m_z)
+    // Mac 0:0x165dc8 combines the three point comparisons before this guard.
+    if (m_position != where)
         return;
     m_defeatedBy = player;
 }
