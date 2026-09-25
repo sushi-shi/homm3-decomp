@@ -181,7 +181,7 @@ void robAppBlit(tagRECT* combRect)
             ddBlit(g_ddsMouseSaveSurface, sourceRect, g_ddsBack,
                    pointerRect, DDBLT_WAIT);
             if (g_mouseManager->isVis() && g_mouseManager->m_sprite
-                && g_mouseManager->m_frame >= 0) {
+                && g_mouseManager->getFrame() >= 0) {
                 DDSURFACEDESC surfaceDesc;
                 memset(&surfaceDesc, 0, sizeof(surfaceDesc));
                 surfaceDesc.dwSize = sizeof(surfaceDesc);
@@ -189,7 +189,7 @@ void robAppBlit(tagRECT* combRect)
                 if (result != DD_OK)
                     ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x119);
-                g_mouseManager->m_sprite->draw(0, g_mouseManager->m_frame,
+                g_mouseManager->m_sprite->draw(0, g_mouseManager->getFrame(),
                     pointerRect.left - g_mouseManager->m_imageX,
                     pointerRect.top - g_mouseManager->m_imageY,
                     pointerRect.right - pointerRect.left,
@@ -208,7 +208,7 @@ void robAppBlit(tagRECT* combRect)
         ddBlit(g_ddsPrimary, screenRect, g_ddsBack, *combRect, DDBLT_WAIT);
 
         if (g_mouseManager && g_mouseManager->isVis()
-            && g_mouseManager->m_sprite && g_mouseManager->m_frame >= 0) {
+            && g_mouseManager->m_sprite && g_mouseManager->getFrame() >= 0) {
             ddBlit(g_ddsBack, pointerRect, g_ddsMouseSaveSurface,
                    sourceRect, DDBLT_WAIT);
         }
