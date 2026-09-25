@@ -49,6 +49,16 @@
 # Resource-manager's cache targets are the authored map insert/find; the
 # multiplayer dialog's nested calls come from inline constructors and the
 # ordinary modal/host helpers.
+# Smacker's frame wrapper now calls the retained Mac helper; its screen update
+# is inside the Mac playback body. Gzip's eight getByte calls are inside the
+# authored readByte wrapper; LODHeader is an implicit member constructor.
+# Mac preference resources, event polling, file enumeration and audio/video
+# backends use different platform routines from their Windows counterparts.
+# Mac window fades call GameTime::delay where Windows keeps deadline-based
+# delayTil; their bitmap construction is already expressed as local objects.
+# Mouse and graphics targets are Mac cursor/QuickDraw services. Mac sound
+# volume conversion and stream control use its native audio backend.
+# Remaining spellbook/campaign UI targets are STL and implicit teardown.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
@@ -72,6 +82,7 @@ units = [
   "campaignbrief",
   "campaignmap",
   "campaignmusic",
+  "campaignwindow",
   "castle",
   "cmbtmgr",
   "combatcontrolsubwindow",
@@ -86,6 +97,7 @@ units = [
   "cspriteframe",
   "cursor",
   "customcampaign",
+  "customcampaignwindow",
   "dialogbox",
   "dimensiondoorwindow",
   "drawing",
@@ -96,6 +108,8 @@ units = [
   "fly",
   "font",
   "gametypewindow",
+  "gzfile",
+  "gzinflatebuf",
   "hero",
   "herodefs",
   "hexcell",
@@ -104,9 +118,13 @@ units = [
   "iconwdgt",
   "initialize",
   "inputmgr",
+  "kbwin",
   "levelupwindow",
+  "lodfile",
   "mainmenu",
+  "misc",
   "monframeinfo",
+  "mousemgr",
   "multiplayerwindow",
   "netmsg",
   "newgame",
@@ -127,12 +145,16 @@ units = [
   "resourcedisplay",
   "resourcemanager",
   "sacrifice_window",
+  "sample",
   "scenarioinfo",
   "search",
   "seerhut",
   "seerhuttext",
   "singleselectionpopups",
   "slider",
+  "smackmgr",
+  "soundmgr",
+  "spellbookwindow",
   "spelldefs",
   "spells",
   "strip",
@@ -155,4 +177,6 @@ units = [
   "viewwrld",
   "widget",
   "window",
+  "wingraph",
+  "winmgr",
 ]
