@@ -1,5 +1,50 @@
 # Reviewed shared remote identities in the Mac PEF.
 
+[[helpers]]
+source_helper = "CChatManager::getNextFreeMsgNbr"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211b34
+mac_size = 0x20
+target_sha256 = "43257ce7ad291645dccf9e66e520db10dc09ef16c95ac62953bf730ba388b610"
+evidence = "CChatManager::addChat calls this retained leaf at 0x211634. It returns (currMsg+msgCount)%maxLines using member words at +4/+8/+0x1c. BLR at 0x211b50 precedes getNextMsgNbr."
+
+[[helpers]]
+source_helper = "CChatManager::getNextMsgNbr"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211b54
+mac_size = 0x18
+target_sha256 = "3b7dfca7a2b29a13bfaf18948d3e94440dec5c8649af8665d1cef92ee7d2f398"
+evidence = "The chat expiry and new-chat loops call this retained leaf. It returns (msgNbr+1)%maxLines, and BLR at 0x211b68 precedes hasOldChat."
+
+[[helpers]]
+source_helper = "CChatManager::updateNewChat"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211cf4
+mac_size = 0x90
+target_sha256 = "6586709816e9b13383926e7dd3e50adb145e920e86e27068421ab48b97ea56a2"
+evidence = "CChatManager::updateWidget calls this retained message timestamp loop at 0x211ab4. It starts at currMsg, fills zero killTime entries from GameTime and advances through getNextMsgNbr. BLR at 0x211d80 precedes updateWidgetText."
+
+[[functions]]
+retail_va = 0x553df0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211bd8
+mac_size = 0x11c
+target_sha256 = "e2f75c3acfa857b9247309bc7f28e56d2d0a4b960808d7ee33f1303ce95e7068"
+evidence = "CChatManager::updateWidget calls this retained expiry pass at 0x211ac4. It tests the current message age, removes old entries, adjusts following kill times and position, calling getNextMsgNbr for the ring walk. BLR at 0x211cf0 precedes updateNewChat."
+
+[[functions]]
+retail_va = 0x553ee0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211d84
+mac_size = 0x16c
+target_sha256 = "5d5b73b1c4b13bee66a858f90dae8926e67aa17cdaf3cc231fdf56402dbf0fae"
+evidence = "CChatManager::updateWidget calls this retained text formatter at 0x211af0 with line count and widget. It computes line lengths, trims to visible lines and concatenates the selected chat messages into widgetText. BLR at 0x211eec precedes pauseTimeOuts."
+
 [[functions]]
 retail_va = 0x5541a0
 unit = "remote"
