@@ -4441,10 +4441,8 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
             if (object->m_y - row < 0 || object->m_y - row >= g_mapHeight)
                 continue;
 
-            NewmapCell* cell = &g_game->m_worldMap.m_cellData[
-                (object->m_z * g_game->m_worldMap.m_size + (object->m_y - row))
-                    * g_game->m_worldMap.m_size
-                + (object->m_x - col)];
+            NewmapCell* cell = g_game->m_worldMap.cell(
+                object->m_x - col, object->m_y - row, object->m_z);
 
             if (objectClass == HOLY_GRAIL || objectClass == HERO
                 || objectClass == RANDOM_HERO
@@ -4452,7 +4450,8 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
                 continue;
 
             if (objectClass == EVENT) {
-                if (objectType->m_triggerCells.test(47 - row * 8 - col)) {
+                if (objectType->m_triggerCells.test(
+                        CObjectType::getBitPos(col, row))) {
                     cell->m_isBlocked = 0;
                     cell->m_isTrigger = 0;
                     cell->m_typeValue = EVENT;
