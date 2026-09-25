@@ -1,5 +1,10 @@
 # Mac second-target tooling rollout
 
+The [full-TU build and executable inventory plan](mac-full-tu-build-and-inventory-plan.md)
+replaces selected-body Mac compilation with Ninja-built CodeWarrior objects
+from the canonical source TUs, then expands source and PEF coverage to the
+whole shared game.
+
 The byte-comparison and call-report tooling is implemented. The initial
 checkpoint below predates the removal of duplicate headers; its scores and
 worker authorization are historical. Reviewed Mac addresses now cover most
