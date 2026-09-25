@@ -12,6 +12,9 @@
 # call is an evidenced Mac-only helper boundary.
 # The remaining AI sort, deque subscript, town-vector subscript and strcat
 # targets in the small combat/UI units below are canonical library calls.
+# Spells' unpaired targets are set/tree insertion and vector append; its
+# markTowerArmy calls live inside markCreatureEffect. Sacrifice-window targets
+# are container/string operations and its widget messages follow setVisible.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
@@ -70,9 +73,11 @@ units = [
   "remote",
   "resource",
   "resourcedisplay",
+  "sacrifice_window",
   "seerhuttext",
   "slider",
   "spelldefs",
+  "spells",
   "strip",
   "subwindow",
   "systemoptionswindow",
