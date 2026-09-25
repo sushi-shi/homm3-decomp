@@ -618,10 +618,10 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
     if (!humanPlayer)
         return;
 
-    type_point boatPoint;
-    boatPoint.m_x = static_cast<short>((cell->m_extraInfo >> 8) & 0xff);
-    boatPoint.m_y = static_cast<short>((cell->m_extraInfo >> 16) & 0xff);
-    boatPoint.m_z = static_cast<short>(point.m_z);
+    type_point boatPoint(
+        static_cast<short>((cell->m_extraInfo >> 8) & 0xff),
+        static_cast<short>((cell->m_extraInfo >> 16) & 0xff),
+        static_cast<short>(point.m_z));
 
     const int noBoatPosition = 0xff;
     if (boatPoint.m_x == noBoatPosition) {

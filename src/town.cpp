@@ -1041,10 +1041,7 @@ VA(0x005bf210, 0x1A5)  // dc 0x1671cc
 void town::updateShipyard()
 {
     if (hasBuilding(DOCK_ID, true)) {
-        type_point point;
-        point.m_x = m_dockSite;
-        point.m_y = m_dockSiteY;
-        point.m_z = m_mapZ;
+        type_point point(m_dockSite, m_dockSiteY, m_mapZ);
 
         NewmapCell* cell = g_game->getCell(point);
         if (!cell->m_isTrigger

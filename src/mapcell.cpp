@@ -2466,10 +2466,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
 
-    type_point point;
-    point.m_x = monsterObject->m_x;
-    point.m_y = monsterObject->m_y;
-    point.m_z = monsterObject->m_z;
+    type_point point(monsterObject->m_x, monsterObject->m_y,
+                     monsterObject->m_z);
     g_game->recordMonsterIdentifier(identifier, point);
     return 0;
 }

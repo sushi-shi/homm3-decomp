@@ -10242,11 +10242,7 @@ type_point game::gameFn004CEF10(int identifier)
             return m_monsterIdentifiers[i].m_point;
     }
 
-    type_point point;
-    point.m_x = -1;
-    point.m_y = -1;
-    point.m_z = -1;
-    return point;
+    return type_point(-1, -1, -1);
 }
 
 VA_COMPGEN(0x004bdf80, 0x1B1, IMPLICIT_DTOR, SavedGameHeader)

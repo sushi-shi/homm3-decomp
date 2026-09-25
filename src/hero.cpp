@@ -5957,10 +5957,7 @@ TAdventureObjectType hero::heroFn004E4EC0()
 {
     type_point point = getLocation();
 
-    type_point invalid;
-    invalid.m_x = -1;
-    invalid.m_y = -1;
-    invalid.m_z = -1;
+    type_point invalid(-1, -1, -1);
 
     if (invalid.m_x == point.m_x && invalid.m_y == point.m_y
         && invalid.m_z == point.m_z)
