@@ -1,19 +1,43 @@
 # Units whose Mac-retained game calls were reviewed across all Windows functions.
 # A function counts as handled only when it also has a paired Mac caller span.
+# Castle and strip each duplicate one broadcast call across Mac branch arms;
+# initializeGameData's VA annotates its forward declaration, whose definition
+# contains the three retained setup calls.
 units = [
   "ai_combat",
   "ai_tactical",
   "artifact",
+  "basemgr",
+  "bitmap816",
+  "button",
   "campaignbrief",
   "campaignmusic",
+  "castle",
   "combatoptionswindow",
+  "creature_bank",
+  "creaturetype",
+  "csequence",
+  "cspriteframe",
   "customcampaign",
+  "dialogbox",
   "drawing",
   "findpath",
+  "herodefs",
+  "hexcell",
+  "initialize",
+  "monframeinfo",
+  "newgame",
   "objecttype",
   "overview",
+  "path",
   "philai",
   "remote",
   "resource",
+  "slider",
+  "strip",
   "systemoptionswindow",
+  "text",
+  "textwdgt",
+  "tiles",
+  "widget",
 ]
