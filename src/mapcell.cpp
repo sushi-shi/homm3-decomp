@@ -342,7 +342,7 @@ unsigned long NewmapCell::getMapExtraInfo() const
     if (m_type == HERO)
         return g_game->getHero(m_extraInfo)->getObscuredExtraInfo();
     if (m_type == BOAT)
-        return g_game->m_boats[m_extraInfo].getObscuredExtraInfo();
+        return g_game->getBoat(m_extraInfo)->getObscuredExtraInfo();
     return m_extraInfo;
 }
 
@@ -354,7 +354,7 @@ unsigned char NewmapCell::cellIsTrigger() const
         return obscurer->getObscuredTrigger();
     }
     if (m_type == BOAT) {
-        boat* obscurer = &g_game->m_boats[m_extraInfo];
+        boat* obscurer = g_game->getBoat(m_extraInfo);
         return obscurer->getObscuredTrigger();
     }
     return m_isTrigger;
@@ -1228,7 +1228,8 @@ void CObject::findTrigger(int& resultX, int& resultY) const
             if (m_x - horiz < 0 || m_x - horiz >= g_mapWidth)
                 continue;
 
-            if (objType->m_triggerCells[47 - vert * 8 - horiz]) {
+            if (objType->m_triggerCells[
+                    CObjectType::getBitPos(horiz, vert)]) {
                 resultX = m_x - horiz;
                 resultY = m_y - vert;
                 return;
@@ -2067,7 +2068,8 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
     scholarInfo->m_secondary = -1;
     scholarInfo->m_spell = -1;
 
-    switch (scholarInfo->m_award) {
+    // Dreamcast mapcell.cpp:2333 calls ExtraInfoUnion::GetScholarAward.
+    switch (scholarObject->getScholarAward()) {
     case const_scholar_primary_skill:
         if (isRandom)
             scholarInfo->m_primary = random(0, 3);
@@ -4306,7 +4308,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         signed char packed = it->m_offsets;
         int row = packed >> 4;
         int col = static_cast<signed char>(packed << 4) >> 4;
-        if (objectType->m_triggerCells.test(47 - row * 8 - col)) {
+        if (objectType->m_triggerCells.test(
+                CObjectType::getBitPos(col, row))) {
             thisCell->m_objectTypeIndex = it->m_objectIndex;
             thisCell->m_typeValue = objectType->m_objectType;
             thisCell->m_isTrigger = 1;
@@ -4325,7 +4328,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
             signed char packed = it->m_offsets;
             int row = packed >> 4;
             int col = static_cast<signed char>(packed << 4) >> 4;
-            if (!objectType->m_passableCells.test(47 - row * 8 - col)) {
+            if (!objectType->m_passableCells.test(
+                    CObjectType::getBitPos(col, row))) {
                 thisCell->m_objectTypeIndex = it->m_objectIndex;
                 thisCell->m_typeValue = objectType->m_objectType;
                 thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
@@ -4345,7 +4349,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         signed char packed = it->m_offsets;
         int row = packed >> 4;
         int col = static_cast<signed char>(packed << 4) >> 4;
-        if (!objectType->m_passableCells.test(47 - row * 8 - col)) {
+        if (!objectType->m_passableCells.test(
+                CObjectType::getBitPos(col, row))) {
             thisCell->m_objectTypeIndex = it->m_objectIndex;
             thisCell->m_typeValue = objectType->m_objectType;
             thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
