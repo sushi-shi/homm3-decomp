@@ -662,7 +662,7 @@ void town::giveSpells(hero* forceHero) const
             if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
                 if (hasBuilding(MAGE_GUILD_ID, true)) {
                     if (m_type == TOWN_CONFLUX
-                        && (m_active & g_bitNumber[HOLY_GRAIL_ID])) {
+                        && (hasBuilding(HOLY_GRAIL_ID, true))) {
                         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
                             if (!m_spells.test(spell)
                                 && g_spellTraits[spell].m_level
@@ -1049,11 +1049,11 @@ void town::updateShipyard()
         NewmapCell* cell = g_game->getCell(point);
         if (!cell->m_isTrigger
             || (cell->m_type != BOAT && cell->m_type != HERO)) {
-            if (m_built & g_bitNumber[DOCK_WITH_BOAT_ID]) {
+            if (hasBuilding(DOCK_WITH_BOAT_ID, false)) {
                 m_built &= ~g_bitNumber[DOCK_WITH_BOAT_ID];
                 updateFullBuildingMask();
             }
-        } else if (!(m_active & g_bitNumber[DOCK_WITH_BOAT_ID])) {
+        } else if (!(hasBuilding(DOCK_WITH_BOAT_ID, true))) {
             createBuilding(DOCK_WITH_BOAT_ID);
             return;
         }
@@ -1415,7 +1415,7 @@ void town::giveEventReward(const TTownEvent* thisEvent)
                               m_type * (2 * TOWN_DWELLING_COUNT)
                               + i + TOWN_DWELLING_COUNT]);
                 rewards.push_back(reward);
-            } else if (m_active & g_bitNumber[DWELLING_0_ID + i]) {
+            } else if (hasBuilding(DWELLING_0_ID + i, true)) {
                 reward.m_resource = 0x15;
                 m_population[i] += thisEvent->m_generatorBonuses[i];
                 reward.m_qualifier = (thisEvent->m_generatorBonuses[i] << 16)

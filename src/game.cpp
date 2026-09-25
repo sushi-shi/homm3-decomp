@@ -3492,8 +3492,7 @@ VA(0x004bf570, 0x203)
 void game::giveTroopsToNeutralTown(int townId)
 {
     town* currentTown = &m_towns[townId];
-    long weekNumber = static_cast<short>(
-        (m_month * 4 + m_week - 5) * 7 + m_day) / 7;
+    long weekNumber = getCurrentTurn() / 7;
     int maxRoll = min(weekNumber, 8) + 1;
     int roll = random(0, maxRoll) + random(0, maxRoll)
               + random(0, maxRoll);
@@ -6644,7 +6643,7 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
 
     if (thisTown->m_owner != -1) {
         if (isComputerTeam(getTeam(thisTown->m_owner))
-            && isHumanTeam(getTeam(newPlayerOwner)))
+            && isHumanAlly(newPlayerOwner))
             thisTown->m_builtThisTurn = 0;
         g_game->getTown(townId)->deallocate();
     }
@@ -9887,8 +9886,7 @@ void game::checkForTimeEvent()
 VA(0x004cda10, 0x164)  // dc 0xbafec
 void game::checkForTownEvent()
 {
-    int day = static_cast<short>(
-        (m_month * 4 + m_week - 5) * 7 + m_day);
+    int day = getCurrentTurn();
 
     for (unsigned int i = 0; i < m_worldMap.m_townEventList.size(); ++i) {
         const TTownEvent& thisEvent = m_worldMap.m_townEventList[i];

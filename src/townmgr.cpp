@@ -1151,7 +1151,7 @@ void townManager::setupExtraStuff()
 {
     if (g_buildAllBuildings) {
         for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-            if (!(m_townToView->m_active & g_bitNumber[i])
+            if (!(m_townToView->hasBuilding(i, true))
                 && (g_townEligibleBuildMask[m_townToView->m_type] & g_bitNumber[i]))
                 m_townToView->buildBuilding(i, 0, 1);
         }
@@ -1802,11 +1802,11 @@ void townManager::updateTownInfo()
     msg.m_id = MESSAGE_WIDGET;
 
     int frame = 0;
-    if (m_townToView->m_built & g_bitNumber[HALL_TOWN_ID])
+    if (m_townToView->hasBuilding(HALL_TOWN_ID, false))
         frame = 1;
-    else if (m_townToView->m_built & g_bitNumber[HALL_CITY_ID])
+    else if (m_townToView->hasBuilding(HALL_CITY_ID, false))
         frame = 2;
-    else if (m_townToView->m_built & g_bitNumber[HALL_CAPITOL_ID])
+    else if (m_townToView->hasBuilding(HALL_CAPITOL_ID, false))
         frame = 3;
     msg.m_extra = frame;
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
@@ -1814,11 +1814,11 @@ void townManager::updateTownInfo()
     m_townWindow->broadcastMessage(msg);
 
     frame = 3;
-    if (m_townToView->m_built & g_bitNumber[CASTLE_FORT_ID])
+    if (m_townToView->hasBuilding(CASTLE_FORT_ID, false))
         frame = 0;
-    else if (m_townToView->m_built & g_bitNumber[CASTLE_CITADEL_ID])
+    else if (m_townToView->hasBuilding(CASTLE_CITADEL_ID, false))
         frame = 1;
-    else if (m_townToView->m_built & g_bitNumber[CASTLE_CASTLE_ID])
+    else if (m_townToView->hasBuilding(CASTLE_CASTLE_ID, false))
         frame = 2;
     msg.m_extra = frame;
     msg.m_codeY = 0x9f;
@@ -1991,7 +1991,7 @@ void townManager::setupTown(unsigned char fade)
                 if (!m_townObjects[m_townObjectCount])
                     memError();
                 if (m_townObjects[m_townObjectCount]->m_objBorder) {
-                    if (!(m_townToView->m_built & g_bitNumber[objToLoad])) {
+                    if (!(m_townToView->hasBuilding(objToLoad, false))) {
                         m_townObjects[m_townObjectCount]->m_objBorder->m_status
                             &= ~widget::WIDGET_ACTIVE;
                         m_townObjects[m_townObjectCount]->m_visible = 0;
@@ -2011,7 +2011,7 @@ void townManager::setupTown(unsigned char fade)
             objToLoad = g_townBuildOrder[m_townToView->m_type][i];
             if (objToLoad != -1) {
                 if (m_townObjects[m_townObjectCount]->m_objBorder) {
-                    if (!(m_townToView->m_built & g_bitNumber[objToLoad])) {
+                    if (!(m_townToView->hasBuilding(objToLoad, false))) {
                         m_townObjects[m_townObjectCount]->m_objBorder->m_status
                             &= ~widget::WIDGET_ACTIVE;
                         m_townObjects[m_townObjectCount]->m_visible = 0;
@@ -2046,7 +2046,7 @@ void townManager::setupTown(unsigned char fade)
     m_currIndex = -2;
 
     for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
-        if (m_townToView->m_active & g_bitNumber[DWELLING_0_UPG_ID + slot])
+        if (m_townToView->hasBuilding(DWELLING_0_UPG_ID + slot, true))
             m_currentDwellingIdOff[slot] = slot + TOWN_DWELLING_COUNT;
         else
             m_currentDwellingIdOff[slot] = slot;
@@ -2104,7 +2104,7 @@ void townManager::newStrips()
             0x7c, 0, m_townWindow);
         if (!m_heroStrip)
             memError();
-        if (m_townToView->m_active & g_bitNumber[MAGE_GUILD_ID])
+        if (m_townToView->hasBuilding(MAGE_GUILD_ID, true))
             m_townToView->giveSpells(0);
     } else {
         m_heroStrip = new strip(
@@ -3398,7 +3398,7 @@ void TMageGuildWindow::setRolloverText(int codeY)
         int level = cell / 6;
         int slot = cell % 6;
         if (thisTown->m_type == TOWN_CONFLUX
-            && (thisTown->m_active & g_bitNumber[HOLY_GRAIL_ID])) {
+            && (thisTown->hasBuilding(HOLY_GRAIL_ID, true))) {
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
                     getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID));
         } else if (slot >= thisTown->m_mageGuildSpellCounts[level]) {
@@ -3476,7 +3476,7 @@ int TMageGuildWindow::windowHandler(message& msg)
                 int level = slot / 6;
                 int column = slot % 6;
                 if (thisTown->m_type == TOWN_CONFLUX
-                    && (thisTown->m_active & g_bitNumber[HOLY_GRAIL_ID])) {
+                    && (thisTown->hasBuilding(HOLY_GRAIL_ID, true))) {
                     normalDialog(
                         formatString(
                             // Row 715, byte-proven: the inlined lookup
@@ -4704,7 +4704,7 @@ void townManager::handleHallClick()
         townHero = g_game->getHero(m_townToView->m_garrisonHeroId);
 
     if (townHero && townHero->hasArtifact(ARTIFACT_HOLY_GRAIL)
-        && !(m_townToView->m_built & g_bitNumber[HOLY_GRAIL_ID])
+        && !(m_townToView->hasBuilding(HOLY_GRAIL_ID, false))
         && g_currentPlayer->isLocalHuman()) {
         if (m_townToView->isLegalBuilding(HOLY_GRAIL_ID)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_GRAIL_HOME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
@@ -6194,7 +6194,7 @@ void townManager::cycleOutline(const int objectIndex, const int x, const int y,
 VA(0x005d6a80, 0x46F)  // linkorder(dc row after CycleOutline) + arity(ret 4) + BuildBuilding/CycleOutline edges, dc 0x179b28
 void townManager::buildObj(int buildingId)
 {
-    if (m_townToView->m_active & g_bitNumber[buildingId])
+    if (m_townToView->hasBuilding(buildingId, true))
         return;
 
     drawTown(1, 1, 0);
@@ -6202,7 +6202,7 @@ void townManager::buildObj(int buildingId)
     type_building_id newBuilding = m_townToView->buildBuilding(buildingId, 1, 1);
 
     for (int j = 0; j < m_townObjectCount; j++) {
-        if (m_townToView->m_built & g_bitNumber[m_townObjects[j]->m_objId]) {
+        if (m_townToView->hasBuilding(m_townObjects[j]->m_objId, false)) {
             m_townObjects[j]->m_visible = 1;
             m_townObjects[j]->m_objBorder->m_status |= widget::WIDGET_ACTIVE;
         } else {
@@ -6257,7 +6257,7 @@ void townManager::buildObj(int buildingId)
         // object by ten frames once that extra is standing.
         if (m_townToView->m_type == TOWN_DUNGEON
             && newBuilding == MAGE_GUILD5_ID
-            && (m_townToView->m_built & g_bitNumber[EXTRA_0_ID]))
+            && (m_townToView->hasBuilding(EXTRA_0_ID, false)))
             m_townObjects[19]->m_currFrame += 10;
 
         g_windowManager->saveFizzleSourceX(m_townObjects[builtIndex]->m_x,
@@ -6288,8 +6288,7 @@ void townManager::buildObj(int buildingId)
                                           | widget::WIDGET_DIMMED);
 
     for (int q = 0; q < TOWN_DWELLING_COUNT; q++) {
-        if (m_townToView->m_active
-            & g_bitNumber[DWELLING_0_ID + TOWN_DWELLING_COUNT + q])
+        if (m_townToView->hasBuilding(DWELLING_0_ID + TOWN_DWELLING_COUNT + q, true))
             m_currentDwellingIdOff[q] = q + TOWN_DWELLING_COUNT;
         else
             m_currentDwellingIdOff[q] = q;
@@ -6326,7 +6325,7 @@ void townManager::setupMage(heroWindow* mageWin)
         for (int slot = 0; slot < 6; slot++) {
             int state = g_mageGuildBaseSpellCounts[level];
             if (m_townToView->m_type == TOWN_TOWER
-                && (m_townToView->m_active & g_bitNumber[EXTRA_1_ID]))
+                && (m_townToView->hasBuilding(EXTRA_1_ID, true)))
                 state++;
             // Retail passes the loop counter to IsLegalBuilding
             // (`mov edx,[ebp-4]; push edx`) in the same representation.
@@ -6364,7 +6363,7 @@ void townManager::setupMage(heroWindow* mageWin)
                 msg.m_codeY = 40 + level * 6 + slot;
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 if (m_townToView->m_type == TOWN_CONFLUX
-                    && (m_townToView->m_active & g_bitNumber[HOLY_GRAIL_ID]))
+                    && (m_townToView->hasBuilding(HOLY_GRAIL_ID, true)))
                     msg.m_extra = 70;
                 else
                     msg.m_extra = m_townToView->m_mageGuildSpells[level][slot];
@@ -6830,7 +6829,7 @@ void townManager::doTownGate()
         int townId = player->m_townIds[i];
         town* otherTown = g_game->getTown(townId);
         if (otherTown != m_townToView && otherTown->m_type == TOWN_INFERNO
-            && (otherTown->m_active & g_bitNumber[EXTRA_1_ID])
+            && (otherTown->hasBuilding(EXTRA_1_ID, true))
             && otherTown->m_visitingHeroId < 0)
             gateWindow->addTown(townId);
     }
@@ -6880,12 +6879,12 @@ TCastleWindow::TCastleWindow()
     m_widgets.reserve(156);
 
     if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
-        && (g_townManager->m_townToView->m_built & g_bitNumber[EXTRA_1_ID])
+        && (g_townManager->m_townToView->hasBuilding(EXTRA_1_ID, false))
         && g_townManager->m_townToView->m_summoningType == -1)
         g_townManager->m_townToView->setSummoningGenerator();
 
     if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
-        && (g_townManager->m_townToView->m_built & g_bitNumber[EXTRA_1_ID])
+        && (g_townManager->m_townToView->hasBuilding(EXTRA_1_ID, false))
         && g_townManager->m_townToView->m_summoningType != -1) {
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0, "TPCastl8.pcx", 0x800));
         m_use8 = 1;
@@ -7523,7 +7522,7 @@ void TCastleWindow::setRolloverText(message* msg)
         strcpy(g_text, g_castleInfo[(code - 0x39) / 8]);
     } else if (code >= 0x11 && code <= 0x17) {
         int dwelling = g_townManager->m_currentDwellingIdOff[code - 0x11];
-        if (g_townManager->m_townToView->m_active & g_bitNumber[DWELLING_0_ID + dwelling]) {
+        if (g_townManager->m_townToView->hasBuilding(DWELLING_0_ID + dwelling, true)) {
             TCreatureType rowCreature =
                 g_townDwellingCreatures[g_townManager->m_townToView->m_type
                                        * TOWN_DWELLING_SLOTS + dwelling];
@@ -7592,7 +7591,7 @@ void TCastleWindow::recruit(int i)
     // exactly as this body does. DC records no locals for this function,
     // so it offers no lead on the remaining allocator state.
     int dwelling = g_townManager->m_currentDwellingIdOff[i];
-    if (g_townManager->m_townToView->m_active & g_bitNumber[DWELLING_0_ID + dwelling]) {
+    if (g_townManager->m_townToView->hasBuilding(DWELLING_0_ID + dwelling, true)) {
         g_recruitUnit = new recruitUnit(g_townManager->m_townToView, dwelling, 1);
         if (!g_recruitUnit)
             memError();
@@ -7829,8 +7828,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
 
     int i;
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
-        if (m_townToView->m_active
-            & g_bitNumber[DWELLING_0_ID + TOWN_DWELLING_COUNT + i])
+        if (m_townToView->hasBuilding(DWELLING_0_ID + TOWN_DWELLING_COUNT + i, true))
             m_currentDwellingIdOff[i] = i + TOWN_DWELLING_COUNT;
         else
             m_currentDwellingIdOff[i] = i;
