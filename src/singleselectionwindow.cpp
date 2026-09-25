@@ -7421,13 +7421,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
 
     // Mac retains the shared IsMultiPlayer call at 0x183adc.
     if (isMultiPlayer()) {
-        int seated = 0;
-        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-            if (m_players.m_humanPlayers[i].m_dpid != 0
-                    && m_players.m_humanPlayers[i].m_playerPos != -1)
-                ++seated;
-        }
-        if (seated < 2) {
+        if (m_players.getPlayerCount(1) < 2) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_MULTIPLAYER_REQUIRES_TWO_PLAYERS), 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
             return 0;
