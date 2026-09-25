@@ -1,4 +1,13 @@
 # Reviewed address identities; compiler linkage names remain unbound.
+[[helpers]]
+source_helper = "TCampaignBrief::ScenarioStruct::prerequisitesMet"
+unit = "customcampaign"
+mac_section = 0x0
+mac_offset = 0x9758c
+mac_size = 0x90
+target_sha256 = "91a2dcde24d2ea9e3003aab596ca71c2287a154df245c5c59b91fb2b8ab276a5"
+evidence = "Start-option slot12 calls this retained method at 0x9324c; getAvailableScenarios calls it at 0x97684. It walks the scenario prerequisite byte vector and rejects any required map whose campaign score is not completed, returning true after the full scan. BLR at 0x97618 precedes getAvailableScenarios. Original spelling unproved."
+
 [[functions]]
 mac_section = 0x0
 mac_offset = 0x91bfc

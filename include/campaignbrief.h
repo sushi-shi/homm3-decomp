@@ -154,6 +154,7 @@ public:
         // wrapper below is its sole direct caller.
         void startScenario(std::streambuf* stream, int option);
         void playText(bool epilogue);
+        bool prerequisitesMet() const;
         std::string getRegionDescription() const;
         std::string getBonusText(CampaignHeaderStruct* campaign, int option);
         ~ScenarioStruct();

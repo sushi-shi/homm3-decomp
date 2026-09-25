@@ -819,11 +819,8 @@ bool TCampaignStartOption::slot12(void* scenarioRecord, int value) const
 {
     TCampaignBrief::ScenarioStruct* scenario =
         static_cast<TCampaignBrief::ScenarioStruct*>(scenarioRecord);
-    for (unsigned int prereq = 0;
-         prereq < scenario->m_prerequisites.size(); ++prereq)
-        if (scenario->m_prerequisites[prereq]
-            && !g_game->m_campaign.m_mapScores[prereq].m_completed)
-            return false;
+    if (!scenario->prerequisitesMet())
+        return false;
 
     int count = getCount();
     if (count == 0) {
@@ -2182,6 +2179,18 @@ void TCampaignBrief::CampaignHeaderStruct::startMusic()
     g_soundManager->startMP3(g_campaignMusicTraits[m_campaignMusic].m_name, 0, 1);
 }
 
+// Mac retains this shared prerequisite check at code 0:0x9758c. Both the
+// start-option predicate and getAvailableScenarios call it; VC6 expands the
+// same loop in their retail bodies. Original method spelling is unproved.
+bool TCampaignBrief::ScenarioStruct::prerequisitesMet() const
+{
+    for (unsigned int i = 0; i < m_prerequisites.size(); ++i)
+        if (m_prerequisites[i]
+            && !g_game->m_campaign.m_mapScores[i].m_completed)
+            return false;
+    return true;
+}
+
 // Complete-only. A scenario without map data is marked unavailable and
 // already completed; otherwise every prerequisite scenario must be
 // completed in the running campaign's score table.
@@ -2195,15 +2204,8 @@ void TCampaignBrief::CampaignHeaderStruct::getAvailableScenarios(
         if (scenario->m_inflatedSize <= 0) {
             available[i] = 0;
             g_game->m_campaign.m_mapScores[i].m_completed = true;
-        } else {
-            for (unsigned int j = 0; j < scenario->m_prerequisites.size(); ++j) {
-                if (scenario->m_prerequisites[j]
-                    && !g_game->m_campaign.m_mapScores[j].m_completed) {
-                    available[i] = 0;
-                    break;
-                }
-            }
-        }
+        } else if (!scenario->prerequisitesMet())
+            available[i] = 0;
     }
 }
 
