@@ -217,6 +217,15 @@ target_sha256 = "e0c91d1a16919bd85b7e86ee7ae83e8befa90cd1dbcf6cade27b67ea860074b
 evidence = "Follows paired isLeftHero, compares m_heroes[1]->m_owner with game::getLocalPlayerGamePos, and is called from main and onWidgetDeselect; Dreamcast names the same inline helper."
 
 [[helpers]]
+source_helper = "swapManager::viewMon"
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a8cd4
+mac_size = 0xa0
+target_sha256 = "0577803f5ef9cf6cda6cc7aad183513191a6b9c2b80da1342cfabb730c8a3fc9"
+evidence = "handleMonster calls this retained helper; it selects the source hero, asks its army for the count, then calls game::viewArmy with the source and destination slot. BLR at 0x1a8d70; swapMons begins at 0x1a8d74. Windows expands the canonical viewMon call in handleMonster."
+
+[[helpers]]
 source_helper = "swapManager::getOtherHero"
 unit = "swapmgr"
 mac_section = 0x0

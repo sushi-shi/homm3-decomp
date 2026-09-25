@@ -2189,6 +2189,7 @@ void swapManager::setRolloverText(int codeY)
 // Dreamcast proves this as one source statement with no locals. Complete's
 // HandleMonster expands the helper while retaining the GetNumArmies and
 // ViewArmy call order; retail fixes the first-selected hero/second slot pair.
+// Mac retains this helper at code 0:0x1a8cd4 and handleMonster calls it.
 
 void swapManager::viewMon()
 {
