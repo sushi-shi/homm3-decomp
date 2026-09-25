@@ -39,6 +39,8 @@
 # accessors, member constructors, bitset methods or their enclosing wrappers.
 # Swap's unpaired viewMon target is the already authored member; combat text,
 # search, scroller and object-name targets are string/vector/auto_ptr methods.
+# Combat-manager unknown targets are abs and container lifecycle operations;
+# markTowerArmy is nested in the authored markCreatureEffect wrapper.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
@@ -62,6 +64,7 @@ units = [
   "campaignmap",
   "campaignmusic",
   "castle",
+  "cmbtmgr",
   "combatcontrolsubwindow",
   "combatoptionswindow",
   "combatresultswindow",
