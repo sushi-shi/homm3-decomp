@@ -1219,6 +1219,22 @@ int __fastcall loadHeroId(TAbstractFile* infile, int saveVersion)
     return heroId;
 }
 
+// Mac 0:0xcc878 retains this short-ID reader immediately after loadHeroId.
+// Windows expands its call in NewSMapHeader::loadLossCondition.
+static int loadHeroIdShort(TAbstractFile* infile, int saveVersion)
+{
+    short savedHeroId;
+    infile->read(&savedHeroId, sizeof(savedHeroId));
+    int heroId = savedHeroId;
+    if (saveVersion < g_saveVersionCompleteHeroRoster) {
+        if (heroId == g_savedHeroPre25First)
+            heroId = g_heroPre25FirstRemap;
+        else if (heroId == g_savedHeroPre25Second)
+            heroId = g_heroPre25SecondRemap;
+    }
+    return heroId;
+}
+
 VA(0x004ba260, 0x401)  // dc 0xa51b0
 int playerData::load(TAbstractFile* infile, int saveVersion)
 {
@@ -5785,16 +5801,7 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
             m_lossCondition.m_heroZ = value & 0xff;
             return 0;
         } else {
-            short savedHeroId;
-            infile->read(&savedHeroId, sizeof(savedHeroId));
-            int heroId = savedHeroId;
-            if (saveVersion < g_saveVersionCompleteHeroRoster) {
-                if (heroId == g_savedHeroPre25First)
-                    heroId = g_heroPre25FirstRemap;
-                else if (heroId == g_savedHeroPre25Second)
-                    heroId = g_heroPre25SecondRemap;
-            }
-            m_lossCondition.m_heroId = heroId;
+            m_lossCondition.m_heroId = loadHeroIdShort(infile, saveVersion);
             return 0;
         }
 

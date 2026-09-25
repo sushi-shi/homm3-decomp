@@ -143,6 +143,15 @@ mac_size = 0x78
 target_sha256 = "bce7a8ebd1c9176a95612c9c3ccfb0fcba382a52e0d9a683f3eeb74061fe4ad6"
 evidence = "One-byte read; sentinel255->-1; saveVersion<25 remaps hero128/129; distinct from preceding equality-to14 reader. Reviewed extent code0+0xcc800..0xcc878; terminal return and following entry separate the span."
 
+[[helpers]]
+source_helper = "loadHeroIdShort"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc878
+mac_size = 0x74
+target_sha256 = "68452259aad2c8412b1dc270ec05b46535ac7a70892edf027f1fe6e5c13d1f90"
+evidence = "Signed 16-bit hero-ID read through the stream virtual, followed by saveVersion<25 remapping of ids 128 and 129. NewSMapHeader::loadLossCondition calls this body at 0xda64c; its BLR ends at 0xcc8e8 before playerData::load begins at 0xcc8ec."
+
 [[functions]]
 retail_va = 0x004ba260
 unit = "game"
