@@ -68,7 +68,9 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
         23, 22, 339, 23, g_text, "medfont.fnt", font::PRIMARY,
         TEXT1_ID, 5, 0, 8));
 
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LEVEL_UP_HERO_FORMAT),
+    // Dreamcast lines 71, 86 and 117 retain TTextResource::operator[] for
+    // these three formatted labels.
+    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_HERO_FORMAT],
             thisHero->m_name, thisHero->m_level, thisHero->heroFn004D8F70());
     m_widgets.push_back(new textWidget(
         23, 151, 339, 23, g_text, "medfont.fnt", font::PRIMARY,
@@ -83,7 +85,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
         0, 0, 0, 0x10));
 
     if (secondChoice != -1) {
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT),
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT],
                 g_secondarySkillLevels[firstChoice % 3],
                 g_sSkillTraits[firstChoice / 3 - 1].m_name,
                 g_secondarySkillLevels[secondChoice % 3],
@@ -126,7 +128,7 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
             200, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT7_ID, 5, 0, 8));
     } else if (firstChoice != -1) {
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE_FORMAT),
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE_FORMAT],
                 g_secondarySkillLevels[firstChoice % 3],
                 g_sSkillTraits[firstChoice / 3 - 1].m_name);
         m_widgets.push_back(new textWidget(
