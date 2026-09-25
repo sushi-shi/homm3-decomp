@@ -1077,9 +1077,6 @@ unsigned char initRemote(eNetGameType mpType, const char* userName)
     g_followPlayerMode = 0;
     g_weMoved = 0;
 
-    playerInfo.m_dpid = 0;
-    playerInfo.m_name[0] = 0;
-    playerInfo.m_version = *g_videoGameState;
     g_thisNetPlayerInfo = playerInfo;
 
     strcpy(g_config.m_networkDefaultName, userName);
@@ -1108,10 +1105,8 @@ void remoteCleanup()
 
         g_remoteOn = 0;
         {
+            // Mac 0x212b14 constructs this record once, then copies it.
             CNetPlayerInfo playerInfo;
-            playerInfo.m_dpid = 0;
-            playerInfo.m_name[0] = 0;
-            playerInfo.m_version = *g_videoGameState;
             g_thisNetPlayerInfo = playerInfo;
         }
     }
