@@ -2055,7 +2055,7 @@ void hero::checkLevel()
         while (m_level < newLevel) {
             m_level = m_level + 1;
             sprintf(g_text,
-                    g_generalText->getText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT],
                     m_name);
             sRand(static_cast<unsigned>(m_level) * 214013
                   + m_levelSeed * 156823 + 154079);
@@ -2139,8 +2139,7 @@ void hero::checkLevel()
                     giveSS(skills[0], 1);
                 } else {
                     sprintf(text,
-                            g_generalText->getText(
-                                GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT),
+                            (*g_generalText)[GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT],
                             g_secondarySkillLevels[m_skillLevel[skills[0]]],
                             g_sSkillTraits[skills[0]].m_name,
                             g_secondarySkillLevels[m_skillLevel[skills[1]]],
@@ -3665,7 +3664,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             break;
         switch (msg.m_codeY) {
         case HERO_NAME_ID:
-            normalDialog(g_generalText->getText(GENERAL_TEXT_DISMISS_HERO_PROMPT), 2, -1, -1, -1, 0,
+            normalDialog((*g_generalText)[GENERAL_TEXT_DISMISS_HERO_PROMPT], 2, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 exitFlag = 1;
@@ -3763,7 +3762,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             {
                 if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                     break;
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
+                sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT],
                         g_currentHero->m_name, g_currentHero->m_mana,
                         g_currentHero->getMaxMana());
                 normalDialog(g_text,
@@ -3778,7 +3777,7 @@ int THeroScreenWindow::windowHandler(message& msg)
         case WIDGET_77_ID:
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT],
                     g_currentHero->m_level,
                     hero::getExperience(g_currentHero->m_level + 1),
                     g_currentHero->m_experience);
@@ -4593,7 +4592,7 @@ void THeroScreenWindow::setupHeroView()
     broadcastMessage(msg);
 
     sprintf(g_text,
-            g_generalText->getText(GENERAL_TEXT_HERO_LEVEL_CLASS_FORMAT),
+            (*g_generalText)[GENERAL_TEXT_HERO_LEVEL_CLASS_FORMAT],
             g_currentHero->m_level, g_currentHero->heroFn004D8F70());
     msg.m_codeY = 0x8c;
     msg.m_extraText = g_text;
@@ -5285,9 +5284,9 @@ VA(0x004e2ed0, 0xB2)  // dc 0xd3c64
 std::string hero::getBackpackError(TArtifact artifact) const
 {
     if (m_backpackCount >= 64) {
-        return std::string(g_generalText->getText(GENERAL_TEXT_BACKPACK_FULL));
+        return std::string((*g_generalText)[GENERAL_TEXT_BACKPACK_FULL]);
     }
-    return formatString(g_generalText->getText(GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT),
+    return formatString((*g_generalText)[GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT],
                          g_artifactTraits[artifact].m_name);
 }
 
@@ -6278,15 +6277,11 @@ long hero::getHitPointBonus(int creatureType) const
     return bonus;
 }
 
+// DC hero.cpp:6356 names get_location and game::get_cell; VC6 expands both.
 VA(0x004e5ce0, 0xE7)  // dc 0xd5548
 unsigned char hero::canLand() const
 {
-    type_point point;
-    point.m_x = m_x;
-    point.m_y = m_y;
-    point.m_z = m_z;
-
-    NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
+    NewmapCell* cell = g_game->getCell(getLocation());
     if ((cell->m_groundSet == eTerrainWater)
         == ((m_flags & 0x40000) == 0)) {
         return 0;
