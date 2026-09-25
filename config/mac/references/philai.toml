@@ -2,6 +2,86 @@
 # call targets but do not claim a compiled match for the callee.
 
 [[helpers]]
+source_helper = "onMySide"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13d554
+mac_size = 0x64
+mac_symbol = ".onMySide__Fi"
+target_sha256 = "997a0896f5fe9d9f35b8f0be978734f5f46abba82be44b8e3671197e7a8c8dd0"
+evidence = "The file-static source helper rejects negative player IDs, then compares that player's team with g_netLocalGamePos. Mac 0:0x13d554 performs those same checks and is called by valueOfMine at 0:0x143d84 and the town evaluator at 0:0x14549c; its final blr at 0x13d5b4 precedes the next prologue at 0x13d5b8. CodeWarrior emits the canonical symbol; identity only."
+
+[[helpers]]
+source_helper = "incrementHourGlass"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13d688
+mac_size = 0x9c
+mac_symbol = ".incrementHourGlass__Fv"
+target_sha256 = "1595783b447f096f6bd982398fbec6ced0ff8a1ef9cb9bf8cad62d9b974acba3"
+evidence = "Mac doAI calls this helper at 0:0x13d680. It increments g_curHourGlassPhase, applies the one/two/three-hero phase skips and caps the phase at nine. The final blr is 0x13d720 before restoreMouse at 0x13d724. Dreamcast also names the file-static helper and Complete expands its source call; CodeWarrior emits the canonical symbol. Identity only."
+
+[[helpers]]
+source_helper = "moveAllHeroes"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x140b60
+mac_size = 0xcc
+mac_symbol = ".moveAllHeroes__FlPl"
+target_sha256 = "3528b5970b7b4586e0db642fd12fd045b67f3f4900f00cb7106a3d96df9b9a9e"
+evidence = "Mac doAI at 0:0x140c2c calls this helper twice. The body initializes separate last-hero and explore-mode bytes, reads difficulty and town count, loops hero selection/movement, and demobilizes the current hero; the final blr is 0x140c28 before doAI begins. Dreamcast names the file-static move_all_heroes and Complete expands both calls. CodeWarrior emits the source-owned symbol; identity only."
+
+[[helpers]]
+source_helper = "type_spellvalue::getSummoningValue"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1413ac
+mac_size = 0xb0
+mac_symbol = ".getSummoningValue__15type_spellvalueCFll"
+target_sha256 = "6ae4eaf5c5403a27ae20bee630906559f302426e37f57493052552ee8fbce59c"
+evidence = "Mac getRawSpellValue retains the source-owned summoning evaluator at 0:0x1413ac. It scales damage by ten against m_stackValue, caps the ratio and cast count, indexes the cast curve, caps the knowledge contribution and converts the final double to long. Its blr at 0x141458 precedes getRawSpellValue at 0x14145c. CodeWarrior emits the canonical symbol; identity only."
+
+[[helpers]]
+source_helper = "type_spellvalue::fillCreatureValueList"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x141658
+mac_size = 0xd0
+mac_symbol = ".fillCreatureValueList__15type_spellvalueFv"
+target_sha256 = "8284eb891c772e7212bbf09a55692c505b367b733bcba369ca658b811310e919"
+evidence = "The type_spellvalue constructor calls this helper. Mac 0:0x141658 scans seven hero army slots, skips empty creature IDs, forms type/amount/value records using g_creatureTypeTraits and appends them to the value list before sorting. Its blr at 0x141724 precedes getBestSpellValue at 0x141728. Dreamcast independently retains this named member; CodeWarrior emits the source-owned symbol. Identity only."
+
+[[helpers]]
+source_helper = "type_spellvalue::getValueOfIncrease"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x141900
+mac_size = 0x90
+mac_symbol = ".getValueOfIncrease__15type_spellvalueFllll"
+target_sha256 = "a655d61a0820168b6bfb129267c629f627b9ed2aa52df89dd3e52c95184df955"
+evidence = "Mac aiSetHeroBonuses calls this retained member five times. The body adds the requested power/duration/mana deltas, calls getBestSpellValue, restores all three fields and subtracts the supplied baseline. Its final blr is 0x14198c, before valueOfExperience at 0x141990. Dreamcast preserves the same member boundary; CodeWarrior emits the source-owned symbol. Identity only."
+
+[[helpers]]
+source_helper = "valueOfSpell(const hero* currentHero, SpellID spell)"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1421e8
+mac_size = 0x6c
+mac_symbol = ".valueOfSpell__FPC4heroi"
+target_sha256 = "d72f9cc14323ce3229fe5f085fbf575e406666f8fd0d22fa9c65fd13f0179539"
+evidence = "Dreamcast names the file-static ValueOfSpell at philai.cpp:1945, separate from value_of_learning at 1959. Mac valueOfLearning at 0:0x142254 calls this preceding helper, which checks the hero's in-spellbook byte, calls isWieldingArtifact for the spellbook and then aiGetSpellValue when eligible. Its final blr is 0x142250. Complete expands the same source call; CodeWarrior emits the canonical symbol. Identity only."
+
+[[helpers]]
+source_helper = "computeUpgradeValue"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x141e50
+mac_size = 0xc4
+mac_symbol = ".computeUpgradeValue__FP4heroii"
+target_sha256 = "f4636d8cf76206d5013365dae2bc662da82be38edbe75d920c9611d7c7488da2"
+evidence = "Mac valueOfStables calls this helper at 0:0x144e44, while the helper itself calls hero::creatureTypeCount, computes the source-to-upgrade AI-value gain and halves the reward when the destination stack exists. It ends at blr 0x141f10 before valueOfArena at 0x141f14. Dreamcast names ComputeUpgradeValue and Complete expands its source call; CodeWarrior emits the canonical symbol. Identity only."
+
+[[helpers]]
 source_helper = "checkForTown"
 unit = "philai"
 mac_section = 0

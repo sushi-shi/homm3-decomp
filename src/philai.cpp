@@ -2794,15 +2794,25 @@ long valueOfCustomItem(const hero* currentHero, NewmapCell* cell, long itemValue
     return itemValue;
 }
 
+// DC ValueOfSpell is file-static at philai.cpp:1945 and Mac retains the
+// separate body at 0:0x1421e8 before valueOfLearning. Complete expands its
+// only PHILAI call into the learning gate; the hero member above is a distinct
+// Complete entry point with the wisdom check included.
+static int valueOfSpell(const hero* currentHero, SpellID spell)
+{
+    if (!currentHero->isInSpellbook(spell)
+        && currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK))
+        return aiGetSpellValue(currentHero, spell);
+    return 0;
+}
+
 VA(0x005298d0, 0x4b)  // dc 0x1105ac
 long valueOfLearning(const hero* currentHero, SpellID spell)
 {
-    if (g_spellTraits[spell].m_level > currentHero->m_skillLevel[eSecSkillWisdom] + 2
-        || currentHero->isInSpellbook(SpellID(spell))
-        || !currentHero->isWieldingArtifact(
-               ARTIFACT_SPELLBOOK))
+    if (g_spellTraits[spell].m_level
+        > currentHero->m_skillLevel[eSecSkillWisdom] + 2)
         return 0;
-    return aiGetSpellValue(currentHero, spell);
+    return valueOfSpell(currentHero, spell);
 }
 
 VA(0x00529920, 0x10d)  // dc 0x110808

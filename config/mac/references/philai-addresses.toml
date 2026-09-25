@@ -175,7 +175,7 @@ mac_offset = 0x142010
 mac_size = 0x1d8
 mac_symbol = ".valueOfMapArtifact__FPC4heroP10NewmapCell"
 target_sha256 = "8b57a325e012ab85ffcc11c49bc7eca624dd13ac32a6e3d37dbc14b71caa582b"
-evidence = "Mac aiValueOfEvent calls this retained helper from its ARTIFACT arm at 0x1461c0. Its backpack gate, artifact valuation and purchase cases match the source body and Dreamcast helper. Final BLR at 0x1421e4; the next function begins at 0x1421e8. Windows expands the source call."
+evidence = "Mac aiValueOfEvent calls this retained helper from its ARTIFACT arm at 0x1461c0. Its backpack gate, artifact valuation and purchase cases match the source body and Dreamcast helper. Final BLR at 0x1421e4 precedes the separately retained file-static ValueOfSpell at 0x1421e8; Windows expands the source call."
 
 [[helpers]]
 source_helper = "valueOfBlackBox"
