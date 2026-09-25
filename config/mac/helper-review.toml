@@ -17,6 +17,11 @@
 # are container/string operations and its widget messages follow setVisible.
 # Puzzle-window's corrected span excludes a neighboring global initializer;
 # the remaining object-type call follows the authored cell accessor.
+# Scenario-info's conditional hero portrait chooses one of two call sites;
+# both are the single authored getBitmap816 expression.
+# Tradpost's four creature-slot controls use setWidgetOff in Mac but
+# setWidgetDisabled in Windows source; the latter emits message code 5 in
+# retail, so this is a port difference in the owning update method.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
@@ -81,6 +86,7 @@ units = [
   "resource",
   "resourcedisplay",
   "sacrifice_window",
+  "scenarioinfo",
   "seerhuttext",
   "singleselectionpopups",
   "slider",
@@ -94,6 +100,7 @@ units = [
   "textwdgt",
   "tiles",
   "town",
+  "tradpost",
   "university_window",
   "viewarmywindow",
   "viewwrld",
