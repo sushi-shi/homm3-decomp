@@ -1246,8 +1246,9 @@ long town::getLegionBonus(long dwelling) const
 // CodeWarrior preserves that boundary. Windows expands the same helper
 // before its retained getLegionBonus call. The retained standalone Windows
 // helper is non-const, so this const caller uses it through const_cast.
-// Windows also retains the later hasBuilding call, which the current VC6
-// compile expands; that is the remaining named-call mismatch.
+// The restored call shifts VC6's hasBuilding inlining: one additional call
+// remains in this candidate. Keep the source helper boundary while that
+// compiler decision is investigated.
 VA(0x005bfb60, 0x266)  // dc 0x167748
 short town::getGrowthRate(short dwelling) const
 {
