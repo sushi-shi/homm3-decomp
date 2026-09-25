@@ -1864,7 +1864,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                                            target->m_gridIndex, 1, -1, 0,
                                            3);
             if (m_creatureType == CREATURE_DRAGON_FLY
-                && target->m_spellInfluence[SPELL_WEAKNESS] == 0) {
+                && target->getSpellTime(SPELL_WEAKNESS) == 0) {
                 if (g_combatManager->spellCastWorks(
                         SPELL_WEAKNESS, getControllingSide(), target,
                         1, 1))
@@ -2068,9 +2068,9 @@ void army::doAttack(int direction)
         g_combatManager->m_actingSide = savedSide;
         g_combatManager->m_actingSlot = savedSlot;
     }
-    if (armyToAttack->m_spellInfluence[62])
+    if (armyToAttack->getSpellTime(62))
         armyToAttack->m_residualBlindness = 1;
-    if (armyToAttack->m_spellInfluence[74])
+    if (armyToAttack->getSpellTime(74))
         armyToAttack->m_residualParalyze = 1;
     unsigned char killed = doAttack(armyToAttack, direction);
     m_joustBonus = 0;
@@ -2407,7 +2407,7 @@ unsigned char army::isEnemy(const army* arg) const
         return 0;
     if (this == arg)
         return 0;
-    if (!m_spellInfluence[59] && !arg->m_spellInfluence[59])
+    if (!m_spellInfluence[59] && !arg->getSpellTime(59))
         return getControllingSide() != arg->getOwningSide();
     return 1;
 }
@@ -4797,7 +4797,7 @@ VA(0x00447a80, 0x429)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
 unsigned char spellIsValidOnTarget(int spell, const army* target)
 {
-    if (target->m_spellInfluence[spell])
+    if (target->getSpellTime(spell))
         return 0;
     long side = g_combatManager->m_currentSide;
     if (!g_combatManager->validSpellTargetArmy(spell, side, target, 1, 1))
