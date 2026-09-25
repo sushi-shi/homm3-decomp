@@ -4132,12 +4132,8 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
             g_combatManager->damageWall(wall, levelsDestroyed);
         g_combatManager->drawFrame(0, 0, 1, 100, 0, 1);
         explosion->draw(0, frame, 0, 0,
-                        g_combatManager->m_drawbridgeBounds.m_maxX
-                            - g_combatManager->m_drawbridgeBounds.m_minX
-                            + 1,
-                        g_combatManager->m_drawbridgeBounds.m_maxY
-                            - g_combatManager->m_drawbridgeBounds.m_minY
-                            + 1,
+                        g_combatManager->m_drawbridgeBounds.width(),
+                        g_combatManager->m_drawbridgeBounds.height(),
                         g_windowManager->m_screenBitmap->getMap(0, 0),
                         targetX - explosion->getWidth() / 2,
                         targetY - explosion->getHeight() / 2,
@@ -4147,10 +4143,8 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         g_windowManager->updateScreen(
             g_combatManager->m_drawbridgeBounds.m_minX,
             g_combatManager->m_drawbridgeBounds.m_minY,
-            g_combatManager->m_drawbridgeBounds.m_maxX
-                - g_combatManager->m_drawbridgeBounds.m_minX + 1,
-            g_combatManager->m_drawbridgeBounds.m_maxY
-                - g_combatManager->m_drawbridgeBounds.m_minY + 1);
+            g_combatManager->m_drawbridgeBounds.width(),
+            g_combatManager->m_drawbridgeBounds.height());
     }
     explosion->dispose();
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
