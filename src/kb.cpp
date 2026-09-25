@@ -2343,9 +2343,9 @@ unsigned char getTeamNames(int player, char* names)
 
 // E:\gamedcs\kb.cpp:2867. Dreamcast preserves this source helper and its
 // two calls. Complete expands it at every DisplayVCWinLoss site, including
-// the nested CPlayerWonMsg constructor; retaining the helper is therefore
-// part of the source shape rather than duplicated network scaffolding.
-inline void sendPlayerWon()
+// the nested CPlayerWonMsg constructor. Mac retains the call, matching the
+// ordinary sendPlayerLost helper immediately below.
+void sendPlayerWon()
 {
     if (g_remoteOn) {
         CPlayerWonMsg msg(
