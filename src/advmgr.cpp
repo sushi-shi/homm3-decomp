@@ -281,7 +281,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             g_advManager->updBottomView(1, 1, 1);
         }
         if (g_currentPlayer->isHuman()) {
-            g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_TURN_ITS_FORMAT),
+            g_chatMan.systemMsg((*g_generalText)[GENERAL_TEXT_PLAYER_TURN_ITS_FORMAT],
                       g_currentPlayer->m_name);
             g_playerTurn = g_netLocalGamePos;
         }
@@ -360,7 +360,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         break;
     }
     case RS_PLAYER_ACTIVE:
-        g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_ACTIVE_PLAYER_FORMAT),
+        g_chatMan.systemMsg((*g_generalText)[GENERAL_TEXT_ACTIVE_PLAYER_FORMAT],
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()));
         break;
     case RS_GIFT:
@@ -409,12 +409,12 @@ void CAdvMgrNetMsgHandler::handleGiftRequestMsg(CNetMsg* netMsg)
     std::string text;
     if (g_game->m_players[gift->m_greedyGuy].isHuman()) {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT),
+            (*g_generalText)[GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT],
             g_game->m_players[gift->m_greedyGuy].m_name,
             g_resourceNames[gift->m_resource]);
     } else {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT),
+            (*g_generalText)[GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT],
             g_colors[gift->m_greedyGuy],
             g_resourceNames[gift->m_resource]);
     }
@@ -443,11 +443,11 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
     std::string text;
     if (g_game->m_players[gift->m_niceGuy].isHuman()) {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT),
+            (*g_generalText)[GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT],
             g_game->m_players[gift->m_niceGuy].m_name);
     } else {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT),
+            (*g_generalText)[GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT],
             g_colors[gift->m_niceGuy]);
     }
 
@@ -763,7 +763,7 @@ int advManager::open(int newPriority)
         g_blackoutPlayer = 1;
         g_completeDrawEnabled = g_currentPlayer->isLocalHuman();
         char text[256];
-        sprintf(text, g_generalText->getText(GENERAL_TEXT_PLAYER_TURN_FORMAT), g_currentPlayer->getName());
+        sprintf(text, (*g_generalText)[GENERAL_TEXT_PLAYER_TURN_FORMAT], g_currentPlayer->getName());
         g_windowManager->m_isWaitingForFadeIn = 0;
         g_game->waitForPlayer(text, g_netLocalGamePos);
         redrawAdvScreen(1, 0);
@@ -1216,7 +1216,7 @@ int advManager::main(message& msg)
     if (g_turnDuration.isExpired()) {
         // Row 202 of the general text, the turn-timer expiry notice. No
         // surviving symbol names the row.
-        normalDialogTimeOut(g_generalText->getText(GENERAL_TEXT_TURN_TIME_EXPIRED), 1, 15000, -1, -1,
+        normalDialogTimeOut((*g_generalText)[GENERAL_TEXT_TURN_TIME_EXPIRED], 1, 15000, -1, -1,
                             -1, 0, -1, 0, -1, -1, 0);
         g_turnDuration.clear();
         g_game->nextPlayer();
@@ -1527,7 +1527,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             break;
         // Rows 68/69/70 are the new-game, load-game and exit confirms;
         // their enum names describe those roles because no source symbol survives.
-        normalDialog(g_generalText->getText(GENERAL_TEXT_RESTART_GAME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
+        normalDialog((*g_generalText)[GENERAL_TEXT_RESTART_GAME_PROMPT], 2, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
@@ -1538,7 +1538,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
     case KEYCODE_L:
         if (g_game->isMultiplayer())
             break;
-        normalDialog(g_generalText->getText(GENERAL_TEXT_LOAD_GAME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
+        normalDialog((*g_generalText)[GENERAL_TEXT_LOAD_GAME_PROMPT], 2, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
@@ -1548,7 +1548,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
 
     case KEYCODE_ESCAPE:
         videoPause();
-        normalDialog(g_generalText->getText(GENERAL_TEXT_QUIT), 2, -1, -1, -1, 0, -1, 0,
+        normalDialog((*g_generalText)[GENERAL_TEXT_QUIT], 2, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         videoResume();
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
@@ -1566,7 +1566,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         g_game->showScenInfo();
         if (g_windowManager->m_dialogReturn != SYSOPT_COMMAND_111)
             break;
-        normalDialog(g_generalText->getText(GENERAL_TEXT_RESTART_GAME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
+        normalDialog((*g_generalText)[GENERAL_TEXT_RESTART_GAME_PROMPT], 2, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;

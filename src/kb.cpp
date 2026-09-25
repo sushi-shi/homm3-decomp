@@ -652,7 +652,7 @@ static void setupCDRom()
         g_mouseManager->showPointer(false);
         g_noSound = 1;
         if (g_tcpHostStatus)
-            normalDialog(g_generalText->getText(GENERAL_TEXT_CDROM_UNAVAILABLE), 1, -1, -1, -1, 0,
+            normalDialog((*g_generalText)[GENERAL_TEXT_CDROM_UNAVAILABLE], 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
         g_noCdRom = 1;
         break;
@@ -668,13 +668,13 @@ static void setupCDRom()
     case CD_DRIVE_NUMBER_3:
         earlyShutdown(
             DATA_COMPGEN(0x0067f728, oldMainStartupError, "Startup error"),
-            g_generalText->getText(GENERAL_TEXT_GAME_DIRECTORY_CHANGE_ERROR));
+            (*g_generalText)[GENERAL_TEXT_GAME_DIRECTORY_CHANGE_ERROR]);
         exit(0);
 
     case CD_DRIVE_NUMBER_4:
         earlyShutdown(
             DATA_COMPGEN(0x0067f728, oldMainStartupError, "Startup error"),
-            g_generalText->getText(GENERAL_TEXT_GAME_DATA_NOT_FOUND));
+            (*g_generalText)[GENERAL_TEXT_GAME_DATA_NOT_FOUND]);
         exit(0);
     }
 
@@ -934,7 +934,7 @@ int oldmain()
     setupCDRom();
 
     if (g_soundManager->open(-1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_SOUND_INITIALIZATION_ERROR));
+        shutDown((*g_generalText)[GENERAL_TEXT_SOUND_INITIALIZATION_ERROR]);
 
     if (g_debugLevel < 9)
         checkMem();
@@ -1035,7 +1035,7 @@ int oldmain()
             videoPause();
             if (!lobbyLaunchConnect()) {
                 remoteCleanup();
-                normalDialog(g_generalText->getText(GENERAL_TEXT_SESSION_CONNECTION_ERROR),
+                normalDialog((*g_generalText)[GENERAL_TEXT_SESSION_CONNECTION_ERROR],
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 unused = 1;
             } else if (g_dPlay && g_dPlay->isHost()) {
@@ -1212,7 +1212,7 @@ int oldmain()
             } else {
 
                 if (g_executive->addManager(g_advManager, -1))
-                    shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+                    shutDown((*g_generalText)[GENERAL_TEXT_ADD_MANAGER_ERROR]);
                 unloadProgressBar();
 
                 if (g_remoteOn) {
@@ -1253,7 +1253,7 @@ int oldmain()
             remoteCleanup();
             g_completeDrawEnabled = 1;
             g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
-            sprintf(g_winText, g_generalText->getText(GENERAL_TEXT_CAMPAIGN_COMPLETE_FORMAT),
+            sprintf(g_winText, (*g_generalText)[GENERAL_TEXT_CAMPAIGN_COMPLETE_FORMAT],
                     g_game->getCurrentTurn());
 
             if (!g_defeatedAllPlayers) {
@@ -1835,7 +1835,7 @@ int interpretCommandLine()
     g_debugLevel = 0;
     g_noSound = 0;
     g_limitPlayer = 0;
-    strcpy(g_mapName, g_generalText->getText(GENERAL_TEXT_DEFAULT_MAP_FILENAME));
+    strcpy(g_mapName, (*g_generalText)[GENERAL_TEXT_DEFAULT_MAP_FILENAME]);
     length = strlen(g_commandLine);
     _strupr(g_commandLine);
     for (i = 0; i < length; i++) {
@@ -2015,11 +2015,11 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_EXPERIENCE:
-            normalDialog(g_generalText->getText(GENERAL_TEXT_EXPERIENCE_HELP), NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog((*g_generalText)[GENERAL_TEXT_EXPERIENCE_HELP], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_MANA:
-            normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_HELP), NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog((*g_generalText)[GENERAL_TEXT_SPELL_POINTS_HELP], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_ARTIFACT: {
@@ -2067,7 +2067,7 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
         case GEMS:
         case GOLD:
         case RES_SMALL_GOLD:
-            normalDialog(g_generalText->getText(GENERAL_TEXT_RESOURCES_HELP), NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog((*g_generalText)[GENERAL_TEXT_RESOURCES_HELP], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         }
@@ -2257,10 +2257,10 @@ static void checkPlayerLoss()
             playerDead(i);
             if (i == g_game->getLocalPlayerGamePos()) {
                 g_goSolo = 0;
-                normalDialog(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_DEFEATED), NORMAL_DIALOG_DEFAULT,
+                normalDialog((*g_generalText)[GENERAL_TEXT_LOCAL_PLAYER_DEFEATED], NORMAL_DIALOG_DEFAULT,
                              -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             } else {
-                const char* deadFormat = g_generalText->getText(GENERAL_TEXT_PLAYER_DEFEATED_FORMAT);
+                const char* deadFormat = (*g_generalText)[GENERAL_TEXT_PLAYER_DEFEATED_FORMAT];
                 sprintf(g_text, deadFormat, g_game->getPlayerName(i));
                 normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
                              -1, -1, -1, 5000, -1, 0);
@@ -2268,7 +2268,7 @@ static void checkPlayerLoss()
         } else if (player.m_numTowns == 0) {
             if (player.m_deathCountDown == -1) {
                 if (g_game->isLocalHuman(i) && i == g_netLocalGamePos) {
-                    const char* warnFormat = g_generalText->getText(GENERAL_TEXT_PLAYER_LAST_TOWN_WARNING_FORMAT);
+                    const char* warnFormat = (*g_generalText)[GENERAL_TEXT_PLAYER_LAST_TOWN_WARNING_FORMAT];
                     sprintf(g_text, warnFormat, g_game->getPlayerName(i));
                     normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
                                  -1, 0, -1, 0, -1, 0);
@@ -2277,11 +2277,11 @@ static void checkPlayerLoss()
             } else if (player.m_deathCountDown == 0) {
                 playerDead(i);
                 if (g_game->isLocalHuman(i) && i == g_netLocalGamePos) {
-                    const char* localFormat = g_generalText->getText(GENERAL_TEXT_PLAYER_BANISHED_FORMAT);
+                    const char* localFormat = (*g_generalText)[GENERAL_TEXT_PLAYER_BANISHED_FORMAT];
                     sprintf(g_text, localFormat, g_game->getPlayerName(i));
                     g_goSolo = 0;
                 } else {
-                    const char* otherFormat = g_generalText->getText(GENERAL_TEXT_PLAYER_BANISHED_THIRD_PERSON_FORMAT);
+                    const char* otherFormat = (*g_generalText)[GENERAL_TEXT_PLAYER_BANISHED_THIRD_PERSON_FORMAT];
                     sprintf(g_text, otherFormat, g_game->getPlayerName(i));
                 }
                 normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
