@@ -22,14 +22,23 @@ exact pairs. Keep its reports as migration references until then.
 
 ## 1. Source address contract and parity index
 
-Add `MAC_ADDRESS(section, offset, size)` to `include/va.h`. It expands to
-nothing in VC6 and CodeWarrior; the analysis arm may annotate it. The values
-are a PEF section index and section-relative start and extent, never a Windows
-VA or file offset. Put it on the canonical definition beside `VA(...)` where
-both targets retain a body. A source helper with no Windows VA can still carry
-`MAC_ADDRESS`; a function that exists only as Mac inline expansions cannot.
+Add `MAC_ADDRESS(offset, size)` to `include/va.h`. It expands to nothing in
+VC6 and CodeWarrior; the analysis arm may annotate it. The values are the start
+and extent relative to the pinned PEF's single code section (section 0), never
+a Windows VA, a file offset, or a loaded address. Every function body lives in
+that section, so the annotation carries no section index; tables that also
+hold data spans keep an explicit section column. Put it on the canonical
+definition beside `VA(...)` where both targets retain a body. A source helper
+with no Windows VA can still carry `MAC_ADDRESS`; a function that exists only
+as Mac inline expansions cannot.
 Use a distinct `MAC_COMPGEN_ADDRESS` claim for a proved compiler-generated
 body rather than attaching an address to a fictional C++ definition.
+
+`MAC_ADDRESS` claims functions only. Globals, constants, string literals and
+other data do not receive Mac source annotations in this phase; the reviewed
+Mac data inventories (`config/mac/data*.toml`) keep owning those bindings, and
+the source scanner rejects a `MAC_ADDRESS` that does not precede a function
+definition or declaration.
 
 Extend the existing source-claim extraction so one canonical definition owns
 both address annotations and its source name. Generate a parity index keyed
@@ -85,7 +94,7 @@ Mac controls still compare exactly when read from the full-TU objects.
 
 Join the parity index to full-TU emitted symbols and to verified PEF spans.
 For each `MAC_ADDRESS`, require an emitted body or an evidenced folding/
-inlining exception; verify the target section, extent, hash, call destinations,
+inlining exception; verify the code-section extent, hash, call destinations,
 and data references. Reuse the current linker/relocation comparison where it
 is sound, but take the candidate body from the full-TU object. Never mask an
 unresolved reference into an exact verdict.
@@ -105,9 +114,10 @@ over verified spans, alongside source/TU coverage denominators.
 
 Add `config/mac/runtime-map.tsv` and separate maps where provenance matters
 (for example, CodeWarrior MSL versus a vendored library), analogous to the
-Windows runtime and zlib maps. Each row records section, offset, size, symbol
-or stable working label, library/archive owner if known, target hash, and
-evidence. Imports and transition-vector/glue stubs have explicit categories;
+Windows runtime and zlib maps. Each row records code-section offset, size,
+symbol or stable working label, library/archive owner if known, target hash,
+and evidence. Library data such as MSL tables stays in the reviewed data
+inventory with its section index. Imports and transition-vector/glue stubs have explicit categories;
 they are not scored as authored game functions. Do not put library addresses
 in source `MAC_ADDRESS` annotations or alter `vendor/`.
 
@@ -123,7 +133,7 @@ provenance; no library row is counted in the game exact-match denominator.
 
 Create `config/mac/functions.tsv` as the hand-admitted, executable-wide Mac
 counterpart to `config/retail/functions.tsv`. One row describes each verified
-function span by section, offset, size, category, owner/source identity or
+function span by code-section offset, size, category, owner/source identity or
 library label, and evidence reference. Include Mac-only and compiler-generated
 bodies. The target digest and PEF section bounds are fixed inputs. Generate
 readable consolidated views from the source annotations, library TSVs, and
@@ -147,7 +157,7 @@ the intermediate reports show their counts without inventing mappings.
 ## Rollout and retirement
 
 1. Implement the macro and parity reader with tests for duplicate claims,
-   wrong section/extent, missing source owner, and inline-only dispositions.
+   wrong code-section extent, missing source owner, and inline-only dispositions.
    Reconcile all existing reviewed Mac pairs/references with that index.
 2. Add the Ninja rule and compile a full representative TU, including its
    globals and helpers. Use the current exact hero controls as a byte-level
