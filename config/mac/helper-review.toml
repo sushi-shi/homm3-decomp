@@ -44,6 +44,8 @@
 # Adventure-manager's unpaired net-message targets are the authored handler
 # methods/base dispatch; its Mac string reverse and hourglass lifecycle follow
 # existing calls and RAII. The remaining geometry/artifact calls are nested.
+# Quest and event-record targets resolve to authored constructors, virtual
+# methods, string/bitset accessors and vector lifecycle calls.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
@@ -84,6 +86,7 @@ units = [
   "dialogbox",
   "dimensiondoorwindow",
   "drawing",
+  "event_record",
   "events",
   "exec",
   "findpath",
@@ -121,6 +124,7 @@ units = [
   "sacrifice_window",
   "scenarioinfo",
   "search",
+  "seerhut",
   "seerhuttext",
   "singleselectionpopups",
   "slider",
