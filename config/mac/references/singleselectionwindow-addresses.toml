@@ -1,4 +1,76 @@
 # Reviewed address identities; compiler linkage names remain unbound.
+[[helpers]]
+source_helper = "savedGameExists"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16dc00
+mac_size = 0x84
+target_sha256 = "919c7459967b8bab1c60b2e2aecc6351a9e4f3e56b52ef44a451e94fd6ee548c"
+evidence = "saveValid calls this source helper with the filename. Mac formats the save suffix and checks existence through its file API, returning at 0x16dc80 before saveValid starts; the authored Windows body uses desktop file APIs. No standalone Windows VA is established."
+
+[[helpers]]
+source_helper = "getGameVersion"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16e388
+mac_size = 0x24
+target_sha256 = "b659e502726d302e47aa6ec6578f81a65a2cedf2c99560de5926a81d76d33e63"
+evidence = "Between stopMouseThread and the two hero-availability helpers, the retained Mac body copies its fixed version string to the caller buffer via the string-copy routine at 0x26ae40. Windows obtains ProductVersion through its file-version API; the shared source helper identity follows the same TU order and call role, with platform-specific bodies."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getCompPlayerInPos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16ef6c
+mac_size = 0x14
+target_sha256 = "4a42cb322478960ec594a01da8c9e3da622cec401f1610f0ee19fd9592d60cdf"
+evidence = "Immediately after getPlayerInPos, this leaf returns the computer-player record at the supplied index using the 0x7c player stride; BLR at 0x16ef7c precedes addNewPlayer."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getGamePos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f0b4
+mac_size = 0x48
+target_sha256 = "a2c7305fd0b50d6b20400e2f2a4f716c6e8218680dd4d5a04afea1b8e928a213"
+evidence = "Calls getNetPos at 0x16f20c, returns -1 for an absent DPID, otherwise reads playerPos at record+0x70 with 0x7c stride. BLR at 0x16f0f8 precedes playerExists."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::playerExists"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f0fc
+mac_size = 0x34
+target_sha256 = "29f6ddce4e37dfa384601f7a119e76134e02cd39c82b641b5c90e1f980ce42d5"
+evidence = "addNewPlayer calls this retained wrapper, which calls getNetPos at 0x16f20c and returns whether the result differs from -1. BLR at 0x16f12c precedes getPlayer."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getNetPos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f20c
+mac_size = 0x34
+target_sha256 = "281329a267d54ffb09f9778d96a70c0f3a8800dacdbc47c82b3effe113e3e91d"
+evidence = "Three retained callers query this leaf. It scans eight 0x7c-byte human-player records for the DPID and returns the index or -1; terminal BLR at 0x16f23c precedes the unassigned-position helper."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getUnassignedPlayerPos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f240
+mac_size = 0x58
+target_sha256 = "d141cff194ea482d3bb3cd3bf67397f124fc2e22a099011315cfcfa45260defd"
+evidence = "setNextPlayer calls this retained eight-record scan: nonzero DPID with playerPos -1 returns its index, otherwise -1. BLR at 0x16f294 precedes getPlayerCount."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getPlayerCount"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f298
+mac_size = 0x68
+target_sha256 = "9321bc9495283d237d7c36b834bbde58e69f58d64876e94a70ddf3635cc4e7fa"
+evidence = "Eight-player scan counts human records and optionally requires assigned playerPos, matching the authored helper and its following t_map_list_update::go boundary at 0x16f300."
+
 [[functions]]
 retail_va = 0x5792c0
 unit = "singleselectionwindow"
