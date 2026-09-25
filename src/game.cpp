@@ -3797,7 +3797,8 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 
     if (playerHeroFaces != NULL) {
         for (int facePlayer = 0; facePlayer < 8; ++facePlayer) {
-            if (m_players[facePlayer].m_isHuman
+            // Mac retains playerData::isHuman here and in the setup loop.
+            if (m_players[facePlayer].isHuman()
                 && m_mapHeader.m_playerSlotAttributes[facePlayer].m_generateHero) {
                 int heroId = playerHeroFaces[facePlayer];
                 if (heroId != -1) {
@@ -3865,7 +3866,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
         if (m_playerDisabled[setupPlayer])
             continue;
 
-        if (m_players[setupPlayer].m_isHuman) {
+        if (m_players[setupPlayer].isHuman()) {
             m_players[setupPlayer].m_personality = 3;
             memcpy(m_players[setupPlayer].m_resources,
                    g_initResourcesHuman[m_setup.m_difficulty],
@@ -9412,12 +9413,13 @@ void game::doNewTurn()
     char sample[13];
     char temp[50];
 
-    if (!g_currentPlayer->m_isHuman) {
+    // Mac retains isHuman at 0xe3df4 and isLocalHuman at three later checks.
+    if (!g_currentPlayer->isHuman()) {
         checkForTimeEvent();
         checkForTownEvent();
         return;
     }
-    if (!g_currentPlayer->m_isLocal)
+    if (!g_currentPlayer->isLocalHuman())
         return;
 
     m_mapHeader.m_lossCondition.checkForTimeLimitExpired();
@@ -9427,7 +9429,7 @@ void game::doNewTurn()
     checkForTimeEvent();
     checkForTownEvent();
 
-    if (g_currentPlayer->m_isHuman && g_currentPlayer->m_isLocal)
+    if (g_currentPlayer->isLocalHuman())
         g_soundManager->m_playSounds = 1;
     g_advManager->m_advWindow->updateResourceDisplay(1, 1);
     g_advManager->setInitialMapOrigin();
@@ -9446,7 +9448,7 @@ void game::doNewTurn()
                     g_currentPlayer->m_deathCountDown);
         }
 
-        if (g_currentPlayer->m_isHuman && g_currentPlayer->m_isLocal) {
+        if (g_currentPlayer->isLocalHuman()) {
             normalDialog(g_text, 1, -1, -1, 10, g_netLocalGamePos,
                          -1, 0, -1, 0, -1, 0);
         }
