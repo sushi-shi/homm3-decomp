@@ -1,6 +1,33 @@
 # Reviewed shared remote identities in the Mac PEF.
 
 [[helpers]]
+source_helper = "CChatManager::CChatManager"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2113a0
+mac_size = 0x7c
+target_sha256 = "b49535380561a8d0818f09b9d06cbdd03ec3c481e4b74cfe2088db35bd2e35b7"
+evidence = "The retained constructor initializes chat ring fields and five sample pointers, then calls setMaxLines at 0x212058. The global g_chatMan initializer expands it in Windows. BLR at 0x211418 precedes the deleting destructor wrapper."
+
+[[functions]]
+retail_va = 0x5537b0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211484
+mac_size = 0x64
+target_sha256 = "ad389364e26effa48fb08da2f7c43f6819a08a38287842a4c609e9cd782088f4"
+evidence = "CChatManager::init calls the same ResourceManager::getSample body at 0x153f78 for five sound names, storing results at +0x30 through +0x40. BLR at 0x2114e4 precedes shutDown."
+
+[[functions]]
+retail_va = 0x553800
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2114e8
+mac_size = 0x9c
+target_sha256 = "b81816c30db7bb1648a94eb946ac6bb2d5d84d0b844486b9d77d3e0a1fdaec24"
+evidence = "CChatManager::shutDown tests the first sample pointer, then invokes the virtual dispose slot for all five samples. BLR at 0x211580 precedes addChat."
+
+[[helpers]]
 source_helper = "getPlayerPos"
 unit = "remote"
 mac_section = 0
