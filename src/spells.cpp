@@ -4740,7 +4740,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
     case SPELL_ANIMATE_DEAD: {
         int value;
         if (creatureSpell == 1) {
-            const army* caster = &m_armies[m_actingSide][m_actingSlot];
+            const army* caster = getCurrentArmy();
             if (caster->m_creatureType == CREATURE_ARCHANGEL)
                 value = caster->m_numTroops * 100;
             else

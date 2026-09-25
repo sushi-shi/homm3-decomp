@@ -1744,7 +1744,7 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
         return;
 
     int strength;
-    strength = m_wallStrength[s_wallTargets[targetWall].m_wall] - damage;
+    strength = getWallStrength(targetWall) - damage;
     if (strength < 0)
         strength = 0;
 
@@ -1826,7 +1826,7 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 VA(0x00465ad0, 0x443)  // anchor-callee, dc 0x5feac
 void combatManager::keepAttack(int towerPos)
 {
-    army* tower = &m_armies[m_actingSide][m_actingSlot];
+    army* tower = getCurrentArmy();
     int archerIndex;
     switch (tower->m_gridIndex) {
     case COMBAT_HEX_KEEP:
