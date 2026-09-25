@@ -8486,6 +8486,9 @@ void game::showComputerScreen()
     setComputerScreenWidgetsEnabled(0);
 
     if (g_config.m_blackoutComputer && !g_currentPlayer->isHuman()) {
+        // Mac saves isLocalHuman at 0:0xe1a70 before the temporary override
+        // and restores that byte at 0:0xe1b18 after drawing.
+        unsigned char wasLocalHuman = g_currentPlayer->isLocalHuman();
         g_currentPlayer->m_isLocal = 1;
         g_completeDrawAllCells = 1;
         g_advManager->completeDraw(1);
@@ -8496,7 +8499,7 @@ void game::showComputerScreen()
         g_advManager->m_advWindow->updateResourceDisplay(1, 1);
         g_advManager->updateScreen(0, 1);
         g_completeDrawAllCells = 0;
-        g_currentPlayer->m_isLocal = 0;
+        g_currentPlayer->m_isLocal = wasLocalHuman;
     } else {
         g_advManager->m_advWindow->updateHeroLocators(-1, 1, 0);
         g_advManager->m_advWindow->updateTownLocators(-1, 1, 0);
