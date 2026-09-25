@@ -229,7 +229,7 @@ void combatManager::doAnimations()
     if (static_cast<const combatManager*>(this)->isQuickCombat())
         return;
 
-    if (GameTime::elapsedSince(g_timers[0]) >= 0) {
+    if (GameTime::isPast(g_timers[0])) {
         pollSound();
         long interval = static_cast<long>(
             g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
@@ -237,7 +237,7 @@ void combatManager::doAnimations()
             GameTime::nextFrameTime(g_timers[0], interval);
     }
 
-    if (GameTime::elapsedSince(g_timers[8]) >= 0
+    if (GameTime::isPast(g_timers[8])
             && !g_processingCombatAction) {
         g_processingCombatAction = 1;
         cycleCombatScreen();
