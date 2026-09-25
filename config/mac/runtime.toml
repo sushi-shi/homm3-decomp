@@ -1,6 +1,22 @@
 # Reviewed generated and library call destinations; these are not game reconstruction scores.
 
 [[functions]]
+symbol = ".msl_vector_pointer_erase_3a7bc"
+mac_section = 0
+mac_offset = 0x3a7bc
+mac_size = 0xcc
+sha256 = "fa27034a4ca3f07faa9b6341e2a7613290f24850fef85dc3e5b30b58f8b888c5"
+evidence = "Computes the distance from a four-byte element pointer to a three-word vector's end, shifts following words down, decrements the size word at +4, and returns the erased iterator. army::eraseItem and TRmgVoronoi::removeEdge call it for their authored vector.erase operations; other callers use the same four-byte vector operation. BLR at 3a884; next independent insertion entry at 3a888. MSL vector instantiation, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_word_fill_insert_3a888"
+mac_section = 0
+mac_offset = 0x3a888
+mac_size = 0x394
+sha256 = "3e8ccc2d66509ee7790c4db3006d15c34d1361e305997946d7bc087dc602c6b9"
+evidence = "Three-word vector insertion checks capacity, grows storage when needed, and copies/fills four-byte elements. type_AI_player::canTradeResources calls it twice for the authored baseCost.insert(begin,count,0) and unitCost.insert(begin,count,0); RMG uses the same template family. BLR at 3ac18, followed by a distinct prologue at 3ac1c. MSL vector instantiation, not a game helper."
+
+[[functions]]
 symbol = ".mac_handle_buffer_init_26aab0"
 mac_section = 0
 mac_offset = 0x26aab0
