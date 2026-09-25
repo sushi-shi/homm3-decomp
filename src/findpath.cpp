@@ -808,13 +808,13 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy, int hex)
         int adjacent = g_combatManager->m_adjacentCells[hex][i];
         if (combatManager::validHex(adjacent)
             && g_combatManager->m_cells[adjacent].m_validMove
-            && !m_isMoatSlowed[adjacent])
+            && !isMoat(adjacent))
             return 1;
         if (currentArmy->is(creatureDoubleWide)) {
             adjacent -= currentArmy->offsetToFront(-1);
             if (combatManager::validHex(adjacent)
                 && g_combatManager->m_cells[adjacent].m_validMove
-                && !m_isMoatSlowed[adjacent])
+                && !isMoat(adjacent))
                 return 1;
         }
     }
@@ -1015,7 +1015,7 @@ bool searchArray::buildCombatPath(const army* currentArmy,
     if (currentArmy->m_side == -1) {
         if (endHex != destination)
             return 0;
-    } else if (m_result.size() == 0) {
+    } else if (getPathSteps() == 0) {
         return 0;
     }
 
@@ -1025,7 +1025,7 @@ bool searchArray::buildCombatPath(const army* currentArmy,
         endHex = currentArmy->getAdjacentCellIndex(
             endHex, oppositeDirection(stepCell->m_direction));
     }
-    return m_result.size() > 0;
+    return getPathSteps() > 0;
 }
 
 // E:\gamedcs\findpath.cpp:1172
@@ -1262,8 +1262,8 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
             m_result.push_back(reached);
         }
 
-        if (m_result.size() > 0) {
-            bestHex = m_result[0]->m_lastPoint.m_x;
+        if (getPathSteps() > 0) {
+            bestHex = getStepCell(0)->m_lastPoint.m_x;
             break;
         }
     }
