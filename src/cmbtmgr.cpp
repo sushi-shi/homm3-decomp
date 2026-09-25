@@ -1063,8 +1063,8 @@ void combatManager::setupAdjacencyArray()
 {
     int adjacent;
     for (int hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
-        int row = hex / COMBAT_GRID_ROW_STRIDE;
-        int column = hex % COMBAT_GRID_ROW_STRIDE;
+        int row = gridY(hex);
+        int column = gridX(hex);
 
         for (int direction = 0; direction < COMBAT_DIRECTION_COUNT;
                 direction++) {
@@ -1102,7 +1102,7 @@ void combatManager::setupAdjacencyArray()
             }
 
             if (validHex(adjacent)) {
-                int adjacentColumn = adjacent % COMBAT_GRID_ROW_STRIDE;
+                int adjacentColumn = gridX(adjacent);
                 if (adjacentColumn != 0
                         && adjacentColumn != COMBAT_GRID_LAST_COLUMN) {
                     m_adjacentCells[hex][direction] =
@@ -2579,10 +2579,10 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
     if (!m_fortificationLevel)
         return 1;
 
-    int sourceX = sourceIndex % COMBAT_GRID_ROW_STRIDE;
-    int sourceY = sourceIndex / COMBAT_GRID_ROW_STRIDE;
-    int deltaX = destIndex % COMBAT_GRID_ROW_STRIDE - sourceX;
-    int deltaY = destIndex / COMBAT_GRID_ROW_STRIDE - sourceY;
+    int sourceX = gridX(sourceIndex);
+    int sourceY = gridY(sourceIndex);
+    int deltaX = gridX(destIndex) - sourceX;
+    int deltaY = gridY(destIndex) - sourceY;
     if (deltaY == 0 && deltaX == 0)
         return 1;
     int sample;
@@ -2609,8 +2609,7 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
     for (sample = 0; sample < samples; sample++) {
         x += stepX;
         y += stepY;
-        int hex = static_cast<int>(y) * COMBAT_GRID_ROW_STRIDE
-            + static_cast<int>(x);
+        int hex = getHexIndex(static_cast<int>(x), static_cast<int>(y));
         if (hex == COMBAT_HEX_GATE) {
             if (m_drawbridgeState == DRAWBRIDGE_UP)
                 return 0;

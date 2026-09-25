@@ -1239,9 +1239,9 @@ VA(0x004763f0, 0x4D)  // dc 0x6d508
 unsigned char combatManager::isOutsidePlacementBoundry(int group, int index)
 {
     if (group == 0)
-        return index % COMBAT_GRID_ROW_STRIDE
+        return gridX(index)
             > m_placementBoundaryDepth * 2 + 1;
-    return index % COMBAT_GRID_ROW_STRIDE
+    return gridX(index)
         < m_placementBoundaryDepth * 2 + 15;
 }
 
