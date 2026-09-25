@@ -49,6 +49,22 @@ sha256 = "1f627b696ae2f4a0bfb3d3a89781dbb0ce8d9cea616314e5841688d1f86dd387"
 evidence = "The MSL bitset<4>::test body compares the index against four, uses the `index out of range of bitset::test` exception text at data 1+0x42f17, then extracts the selected bit. Game and single-selection callers use four-bit player masks. Final BLR at 0xe98b4 precedes bitset<48>::set."
 
 [[functions]]
+symbol = ".test__Q23std9bitset<9>CFUl"
+mac_section = 0
+mac_offset = 0x3b210
+mac_size = 0xe4
+sha256 = "0af27269f75934437f3f10ad7fcd6e45531babd77f5eea6c83ff775e324fc3a3"
+evidence = "The MSL bitset<9>::test body bounds-checks the index against nine and extracts the bit. AI-player and army-group callers use the authored grouped-alignment bitset and its test operation. Final BLR at 0x3b2f0 precedes bitset<144>::test at 0x3b2f4. Library template identity only."
+
+[[functions]]
+symbol = ".test__Q23std10bitset<10>CFUl"
+mac_section = 0
+mac_offset = 0x12b128
+mac_size = 0xe4
+sha256 = "a243e9e94049e01c2b386f32b50576242b0f312474ac82c2d0a02994a5aabbc8"
+evidence = "The MSL bitset<10>::test body bounds-checks the index against ten and extracts the selected bit. Mapcell and object-type callers use the authored terrain masks; random-map callers use the same library instantiation. Final BLR at 0x12b208 precedes bitset<10>::set at 0x12b20c. Library template identity only."
+
+[[functions]]
 symbol = ".test__Q23std10bitset<48>CFUl"
 mac_section = 0
 mac_offset = 0x1c82c
