@@ -30,6 +30,11 @@
 # Command now calls resetMouse at all four Mac-retained sites and uses the
 # canonical markCreatureEffect in addArmy; other call leads are nested
 # RAII/container calls or ordinary helper bodies.
+# Army's remaining unnamed calls are member construction/destruction,
+# vector/iterator operations and formatting; named cancel/damage calls
+# follow the authored enclosing helpers.
+# Events' direct targets include the authored wait/waitForLevels calls;
+# the other unmapped targets are object and vector construction/teardown.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
@@ -37,6 +42,7 @@ units = [
   "ai",
   "ai_combat",
   "ai_tactical",
+  "army",
   "artifact",
   "basemgr",
   "bitmap16",
@@ -64,6 +70,7 @@ units = [
   "dialogbox",
   "dimensiondoorwindow",
   "drawing",
+  "events",
   "exec",
   "findpath",
   "font",
