@@ -75,6 +75,25 @@ DATA(0x0063b798) const double g_aiOddsLadder[6] = {
     2.6, 1.9, 1.5, 1.31, 1.2, 1.13
 };
 
+// Mac retains this terrain/school test once and calls it from all three
+// creature-spell valuers; Complete expands those calls.
+static unsigned char spellIsExpertOnMagicTerrain(SpellID spell, int terrain)
+{
+    switch (terrain) {
+    case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
+        return 1;
+    case COMBAT_SPELL_RESTRICTION_WATER_EXPERT:
+        return (g_spellTraits[spell].m_schoolBits & (1 << 2)) != 0;
+    case COMBAT_SPELL_RESTRICTION_FIRE_EXPERT:
+        return (g_spellTraits[spell].m_schoolBits & (1 << 1)) != 0;
+    case COMBAT_SPELL_RESTRICTION_EARTH_EXPERT:
+        return (g_spellTraits[spell].m_schoolBits & (1 << 3)) != 0;
+    case COMBAT_SPELL_RESTRICTION_AIR_EXPERT:
+        return (g_spellTraits[spell].m_schoolBits & 1) != 0;
+    }
+    return 0;
+}
+
 VA(0x00435830, 0x1E)  // dc 0x3c55c
 double aiValueOfMorale(long morale, long change)
 {
@@ -2639,29 +2658,8 @@ long type_AI_spellcaster::getOgreMageValue(const army* target) const
     if (target->getSpellTime(SPELL_BLOODLUST))
         return 0;
     TSkillMastery mastery = eMasteryAdvanced;
-    unsigned char expert = 0;
-    switch (g_combatManager->m_magicTerrain) {
-    case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
-        expert = 1;
-        break;
-    case COMBAT_SPELL_RESTRICTION_WATER_EXPERT:
-        expert = static_cast<unsigned char>(
-            g_spellTraits[SPELL_BLOODLUST].m_schoolBits >> 2) & 1;
-        break;
-    case COMBAT_SPELL_RESTRICTION_FIRE_EXPERT:
-        expert = static_cast<unsigned char>(
-            g_spellTraits[SPELL_BLOODLUST].m_schoolBits >> 1) & 1;
-        break;
-    case COMBAT_SPELL_RESTRICTION_EARTH_EXPERT:
-        expert = static_cast<unsigned char>(
-            g_spellTraits[SPELL_BLOODLUST].m_schoolBits >> 3) & 1;
-        break;
-    case COMBAT_SPELL_RESTRICTION_AIR_EXPERT:
-        expert = static_cast<unsigned char>(
-            g_spellTraits[SPELL_BLOODLUST].m_schoolBits) & 1;
-        break;
-    }
-    if (expert)
+    if (spellIsExpertOnMagicTerrain(SPELL_BLOODLUST,
+                                   g_combatManager->m_magicTerrain))
         mastery = eMasteryExpert;
     type_spell_choice choice(SPELL_BLOODLUST, mastery, 6, 6);
     if (spellTargetsASingleArmy(SPELL_BLOODLUST, mastery))
@@ -2679,29 +2677,8 @@ long type_AI_spellcaster::getCaliphValue(const army* target) const
         if (!isValidCaliphSpell(spell, target))
             continue;
         TSkillMastery mastery = eMasteryAdvanced;
-        unsigned char expert = 0;
-        switch (g_combatManager->m_magicTerrain) {
-        case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
-            expert = 1;
-            break;
-        case COMBAT_SPELL_RESTRICTION_WATER_EXPERT:
-            expert = static_cast<unsigned char>(
-                g_spellTraits[spell].m_schoolBits >> 2) & 1;
-            break;
-        case COMBAT_SPELL_RESTRICTION_FIRE_EXPERT:
-            expert = static_cast<unsigned char>(
-                g_spellTraits[spell].m_schoolBits >> 1) & 1;
-            break;
-        case COMBAT_SPELL_RESTRICTION_EARTH_EXPERT:
-            expert = static_cast<unsigned char>(
-                g_spellTraits[spell].m_schoolBits >> 3) & 1;
-            break;
-        case COMBAT_SPELL_RESTRICTION_AIR_EXPERT:
-            expert = static_cast<unsigned char>(
-                g_spellTraits[spell].m_schoolBits) & 1;
-            break;
-        }
-        if (expert)
+        if (spellIsExpertOnMagicTerrain(spell,
+                                       g_combatManager->m_magicTerrain))
             mastery = eMasteryExpert;
         count++;
         TEnchantValue valueOf = getEnchantmentFunction(spell);
@@ -2725,29 +2702,8 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
         long hex, long power, SpellID spell)
 {
     TSkillMastery mastery = eMasteryAdvanced;
-    unsigned char expert = 0;
-    switch (g_combatManager->m_magicTerrain) {
-    case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
-        expert = 1;
-        break;
-    case COMBAT_SPELL_RESTRICTION_WATER_EXPERT:
-        expert = static_cast<unsigned char>(
-            g_spellTraits[spell].m_schoolBits >> 2) & 1;
-        break;
-    case COMBAT_SPELL_RESTRICTION_FIRE_EXPERT:
-        expert = static_cast<unsigned char>(
-            g_spellTraits[spell].m_schoolBits >> 1) & 1;
-        break;
-    case COMBAT_SPELL_RESTRICTION_EARTH_EXPERT:
-        expert = static_cast<unsigned char>(
-            g_spellTraits[spell].m_schoolBits >> 3) & 1;
-        break;
-    case COMBAT_SPELL_RESTRICTION_AIR_EXPERT:
-        expert = static_cast<unsigned char>(
-            g_spellTraits[spell].m_schoolBits) & 1;
-        break;
-    }
-    if (expert)
+    if (spellIsExpertOnMagicTerrain(spell,
+                                   g_combatManager->m_magicTerrain))
         mastery = eMasteryExpert;
 
     army* target = g_combatManager->m_cells[hex].getArmy();
