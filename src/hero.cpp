@@ -5955,10 +5955,7 @@ int hero::getSpellDurationBonus() const
 VA(0x004e4ec0, 0xD6)
 TAdventureObjectType hero::heroFn004E4EC0()
 {
-    type_point point;
-    point.m_x = m_x;
-    point.m_y = m_y;
-    point.m_z = m_z;
+    type_point point = getLocation();
 
     type_point invalid;
     invalid.m_x = -1;
