@@ -1243,10 +1243,9 @@ long town::getLegionBonus(long dwelling) const
 }
 
 // The Mac PEF calls its assembled-Legion helper at 0:0x1b5060 here;
-// CodeWarrior preserves that boundary. Windows retail instead retains
-// hasGivenArtifact and getLegionBonus, with the assembled bonus expanded
-// in this const member. Its separate getAssembledLegionBonus is non-const
-// and has a distinct VC6 ABI, so the Mac call is port-specific evidence.
+// CodeWarrior preserves that boundary. Windows expands the same helper
+// before its retained getLegionBonus call. The retained standalone Windows
+// helper is non-const, so this const caller uses it through const_cast.
 // Windows also retains the later hasBuilding call, which the current VC6
 // compile expands; that is the remaining named-call mismatch.
 VA(0x005bfb60, 0x266)  // dc 0x167748
@@ -1265,16 +1264,7 @@ short town::getGrowthRate(short dwelling) const
     growth += getCastleGrowthBonus(creature);
 
     if (m_owner >= 0) {
-        long legionBonus = 0;
-        if (g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
-            TCreatureType legionCreature = g_townDwellingCreatures[
-                m_type * TOWN_DWELLING_SLOTS + dwellingIndex];
-            long legionGrowth =
-                g_creatureTypeTraits[legionCreature].m_growthRate;
-            long castleBonus = getCastleGrowthBonus(legionCreature);
-            legionBonus = (legionGrowth + castleBonus) / 2;
-        }
-        growth += legionBonus;
+        growth += const_cast<town*>(this)->getAssembledLegionBonus(dwellingIndex);
         growth += getLegionBonus(dwellingIndex);
     }
 
