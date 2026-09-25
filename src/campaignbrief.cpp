@@ -404,10 +404,10 @@ void TCampaignBrief::updateBonusIcons()
         m_startBonusBorders[i]->show();
         if (i == g_game->m_campaign.m_briefingChoice) {
             coloredBorderFrame* border = m_startBonusBorders[i];
-            border->sendMessage(widget::WIDGET_SET_STATUS, 4);
+            border->setVisible(1);
         } else {
             coloredBorderFrame* border = m_startBonusBorders[i];
-            border->sendMessage(widget::WIDGET_CLEAR_STATUS, 4);
+            border->setVisible(0);
         }
         SCampaign* activeCampaign = &g_game->m_campaign;
         const char* name = scenario->m_options->getIconDefName(activeCampaign, i);

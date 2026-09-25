@@ -1319,8 +1319,8 @@ int viewWorldSurfaceHandler(message& msg)
         return 0;
     TViewWorldWindow* window = static_cast<TViewWorldWindow*>(msg.m_window);
     window->m_origin.m_z = 0;
-    window->m_surfaceButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-    window->m_undergroundButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
+    window->m_surfaceButton->hide();
+    window->m_undergroundButton->show();
     window->m_undergroundButton->draw();
     window->drawWindow();
     g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
@@ -1339,8 +1339,8 @@ int viewWorldUndergroundHandler(message& msg)
         return 0;
     TViewWorldWindow* window = static_cast<TViewWorldWindow*>(msg.m_window);
     window->m_origin.m_z = 1;
-    window->m_surfaceButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
-    window->m_undergroundButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+    window->m_surfaceButton->show();
+    window->m_undergroundButton->hide();
     window->m_surfaceButton->draw();
     window->drawWindow();
     g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
@@ -1477,11 +1477,11 @@ void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
                               g_viewTowns);
     if (g_game->getNumMapLevels() > 1) {
         if (m_origin.m_z == 1) {
-            m_undergroundButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-            m_surfaceButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            m_undergroundButton->hide();
+            m_surfaceButton->show();
         } else {
-            m_surfaceButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-            m_undergroundButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            m_surfaceButton->hide();
+            m_undergroundButton->show();
         }
     }
 }

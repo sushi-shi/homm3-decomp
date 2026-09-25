@@ -894,9 +894,7 @@ void TOverviewWindow::updateFlaggableIcon(int i)
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
         broadcastMessage(msg);
-        m_flaggableCountWidgets[i]->sendMessage(
-            widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_flaggableCountWidgets[i]->hide();
     } else {
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
@@ -910,9 +908,7 @@ void TOverviewWindow::updateFlaggableIcon(int i)
             formatString(
                 DATA_COMPGEN(0x006755b4, overviewFlaggableCountFormat, "%i"),
                 m_flaggableItems[g_overviewFlaggableTop + i].m_count).c_str());
-        m_flaggableCountWidgets[i]->sendMessage(
-            widget::WIDGET_SET_STATUS,
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_flaggableCountWidgets[i]->show();
     }
 }
 
