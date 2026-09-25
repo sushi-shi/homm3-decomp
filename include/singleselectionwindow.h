@@ -719,6 +719,7 @@ public:
                                 int position);
     void onDeleteFile();
     unsigned char onNewSetupInfoMsg(CNetMsg* netMsg);
+    bool assignPlayerToOpenHumanSlot(unsigned long dpid);
     unsigned char onNewPlayerMsg(CNetMsg* netMsg);
     // DC ordinary OnPlayerDroppedMsg, line 6937; QAA_N return.
     bool onPlayerDroppedMsg(CNetMsg* netMsg);

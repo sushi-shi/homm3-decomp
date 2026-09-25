@@ -6738,6 +6738,27 @@ unsigned char TSingleSelectionWindow::isVersionCompatible(const char* otherVersi
     return 0;
 }
 
+// Mac retains this seat assignment at 0:0x17c8f0. The newer helper name is
+// unknown; the single onNewPlayerMsg caller passes the joining DPID, while
+// VC6 expands the same search and assignment in the advanced-options arm.
+bool TSingleSelectionWindow::assignPlayerToOpenHumanSlot(unsigned long dpid)
+{
+    CNetPlayerHandlerPlayer* player = m_players.getPlayer(dpid);
+    if (!player)
+        return false;
+    for (int pos = 0; pos < CNetPlayerHandler::MAX_PLAYERS; ++pos) {
+        if (m_players.getPlayerInPos(pos))
+            continue;
+        if (!g_game->m_mapHeader.m_playerSlotAttributes[pos].m_canBeHuman)
+            continue;
+        if (m_loadMode && g_game->m_playerDisabled[pos])
+            continue;
+        player->m_playerPos = pos;
+        return true;
+    }
+    return false;
+}
+
 // A player joins the lobby: log the dpid, version-gate them (host
 // side only - a non-host client under video pause skips straight to
 // the roster merge) with a CBadVersionMsg reply on failure, seat the
@@ -6777,22 +6798,9 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
     if (!g_remoteOn || g_dPlay->isHost()) {
         m_newPlayerUpdateMan->newPlayer(netMsg->m_dpidFrom);
         if (m_inAdvancedOptions) {
-            CNetPlayerHandlerPlayer* p =
-                m_players.getPlayer(netMsg->m_dpidFrom);
-            if (p) {
-                for (int pos = 0; pos < 8; ++pos) {
-                    if (m_players.getPlayerInPos(pos))
-                        continue;
-                    if (!g_game->m_mapHeader.m_playerSlotAttributes[pos]
-                             .m_canBeHuman)
-                        continue;
-                    if (m_loadMode && g_game->m_playerDisabled[pos])
-                        continue;
-                    p->m_playerPos = pos;
-                    drawWindow(0, 0xffff0001, 0xffff);
-                    this->update();
-                    break;
-                }
+            if (assignPlayerToOpenHumanSlot(netMsg->m_dpidFrom)) {
+                drawWindow(0, 0xffff0001, 0xffff);
+                this->update();
             }
         } else {
             setHumanSlot();

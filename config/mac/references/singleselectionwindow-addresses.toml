@@ -1,5 +1,14 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 [[helpers]]
+source_helper = "TSingleSelectionWindow::assignPlayerToOpenHumanSlot"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17c8f0
+mac_size = 0xc0
+target_sha256 = "78d8faa7c44b9df14d952259fea4381582b62ec8920252748516d01b5b317757"
+evidence = "onNewPlayerMsg calls this retained method once at 0x18185c with the joining DPID. It resolves the player, scans eight seats for an unoccupied human-legal row, skips disabled rows in load mode, assigns playerPos and returns success. Windows expands the same loop in its advanced-options arm; original method spelling is unproved. BLR at 0x17c9ac precedes setHumanSlot."
+
+[[helpers]]
 source_helper = "GameSelectionHeadersStruct::read"
 unit = "singleselectionwindow"
 mac_section = 0x0
