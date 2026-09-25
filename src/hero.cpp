@@ -2272,10 +2272,10 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
         int schoolTotal = 0;
         for (i = 0; i < 4; i++) {
             TSecondarySkill school = g_magicSchools[i];
-            if (currentHero->m_skillLevel[school] < maxLevel &&
-                currentHero->m_skillLevel[school] >= minLevel &&
+            if (currentHero->getSecondarySkill(school) < maxLevel &&
+                currentHero->getSecondarySkill(school) >= minLevel &&
                 !skillDisabled[school]) {
-                if (currentHero->m_skillLevel[school] > 0)
+                if (currentHero->getSecondarySkill(school) > 0)
                     schoolTotal++;
                 else
                     schoolTotal += classTraits.m_gainSecondarySkillChance[school];
@@ -2285,10 +2285,10 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
             int schoolRoll = random(1, schoolTotal);
             for (i = 0; i < 4; i++) {
                 TSecondarySkill school = g_magicSchools[i];
-                if (currentHero->m_skillLevel[school] < maxLevel &&
-                    currentHero->m_skillLevel[school] >= minLevel &&
+                if (currentHero->getSecondarySkill(school) < maxLevel &&
+                    currentHero->getSecondarySkill(school) >= minLevel &&
                     !skillDisabled[school]) {
-                    if (currentHero->m_skillLevel[school] > 0)
+                    if (currentHero->getSecondarySkill(school) > 0)
                         schoolRoll--;
                     else
                         schoolRoll -=
