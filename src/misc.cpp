@@ -133,7 +133,8 @@ void checkConfigFile()
 // evidence: retail's SetDefaultSystemOptions has internal linkage and its one
 // call site inlined it away. Left non-static and without a retail claim because the linkage
 // change would buy no compared bytes - objdiff never scores this symbol - and
-// would touch misc.h for nothing.
+// would touch misc.h for nothing. Mac retains this helper at code 0:0x131144;
+// setGameDefaults calls it there, and its eight g_config stores follow this order.
 
 void setDefaultSystemOptions()
 {

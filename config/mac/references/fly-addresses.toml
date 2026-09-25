@@ -1,5 +1,23 @@
 # Reviewed Mac address identities; unbound compiler names are intentionally omitted.
 
+[[helpers]]
+source_helper = "army::findFlyerAttackCell(int start, int target) const"
+unit = "fly"
+mac_section = 0
+mac_offset = 0xc7f1c
+mac_size = 0xcc
+target_sha256 = "d6fc9cae9cf3c5f111efa833d8bc5eae6c59e92ef4b4355c07261e2ba1030395"
+evidence = "The first of two adjacent flyer helpers scans six neighboring hexes. It calls getSpeed 0x55028, getDistance 0x75cd8 and canFit 0x53028 in the source order, then returns at 0xc7fe4. validFlight calls the following one-argument wrapper."
+
+[[helpers]]
+source_helper = "army::findFlyerAttackCell(int target) const"
+unit = "fly"
+mac_section = 0
+mac_offset = 0xc7fe8
+mac_size = 0x88
+target_sha256 = "25440e99f29ffa2a32b6e936a9b7855bcfd1d07bce3a0ea405fcf102daf9efb2"
+evidence = "validFlight calls this wrapper twice at 0xc815c/0xc8184. It calls the two-argument helper with the primary hex, tests creatureDoubleWide and calls it with the second hex when needed. BLR at 0xc806c; validFlight begins at 0xc8070. Both ordinary source helpers already precede their caller."
+
 [[functions]]
 retail_va = 0x4b46c0
 unit = "fly"

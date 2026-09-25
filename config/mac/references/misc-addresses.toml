@@ -100,6 +100,15 @@ target_sha256 = "b407b9ad5648581cd9a1e37107459481ccbed8524606333297fb1af57bc2201
 evidence = "getAvailableDiskSpace invokes Mac volume info on chosen volume ref from TOC global, zeros result on failure and returns free bytes; BLR 0x131704; next vector helper 0x131708."
 
 [[helpers]]
+source_helper = "setDefaultSystemOptions"
+unit = "misc"
+mac_section = 0x0
+mac_offset = 0x131144
+mac_size = 0x3c
+target_sha256 = "6a7aabe15da9955340b910b3fc40210b1a35a6ce82b87cafe9635e595db49305"
+evidence = "setGameDefaults calls this helper at 0x131098; it writes the eight system option defaults to g_config and returns at 0x13117c. The next body, setDefaultCombatOptions, starts at 0x131180."
+
+[[helpers]]
 source_helper = "generateUniqueSystemID"
 unit = "misc"
 mac_section = 0x0
