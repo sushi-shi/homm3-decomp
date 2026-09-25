@@ -713,7 +713,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         hallLevel = 1;
     else if (which->hasBuilding(HALL_CITY_ID, false))
         hallLevel = 2;
-    else if (which->hasBuilding(HALL_CAPITOL_ID, false))
+    else if (which->isCapitol())
         hallLevel = 3;
 
     std::string townSizeName = g_townSizeNames[hallLevel];

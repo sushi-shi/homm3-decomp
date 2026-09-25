@@ -689,9 +689,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             // for the same reason GetTerrainCost spells artifacts 0x48 and
             // 0x5a as literals: naming it means a new enumerator in
             // armygrp.h, whose include closure is measured and live.
-            cost = currentHero->getSpellLevel(
-                       8, currentHero->getSpecialTerrain())
-                       == eMasteryExpert ? 200 : 300;
+            cost = currentHero->getSpellLevel(8) == eMasteryExpert
+                ? 200 : 300;
         }
 
         if (blocked && !candidate.m_flying && !candidate.m_dimensionDoor) {
@@ -704,9 +703,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             candidate.m_adjustedCost += 500;
             if (m_canCastTeleport) {
                 candidate.m_dimensionDoor = 1;
-                cost = currentHero->getSpellLevel(
-                           8, currentHero->getSpecialTerrain()) == eMasteryExpert ? 200
-                                                                       : 300;
+                cost = currentHero->getSpellLevel(8) == eMasteryExpert
+                    ? 200 : 300;
             } else {
                 if (source->m_inBoat)
                     continue;
@@ -760,9 +758,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             if (m_canCastTeleport) {
                 candidate.m_adjustedCost += 500;
                 candidate.m_dimensionDoor = 1;
-                cost = currentHero->getSpellLevel(
-                           8, currentHero->getSpecialTerrain()) == eMasteryExpert ? 200
-                                                                       : 300;
+                cost = currentHero->getSpellLevel(8) == eMasteryExpert
+                    ? 200 : 300;
             } else if (m_flightLevel <= m_waterWalkLevel) {
                 if (!currentHero->isWieldingArtifact(0x5a))
                     candidate.m_adjustedCost += 500;

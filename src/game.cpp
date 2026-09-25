@@ -1103,7 +1103,7 @@ bool playerData::hasCapitol()
     if (towns <= 0)
         return false;
     do {
-        if (g_game->getTown(m_townIds[i])->hasBuilding(HALL_CAPITOL_ID, false))
+        if (g_game->getTown(m_townIds[i])->isCapitol())
             return true;
     } while (++i < towns);
     return false;

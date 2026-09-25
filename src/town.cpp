@@ -1125,7 +1125,7 @@ short town::getGoldIncome(unsigned char includeSilo) const
         income = 1000;
     if (hasBuilding(HALL_CITY_ID, false))
         income = 2000;
-    if (hasBuilding(HALL_CAPITOL_ID, false))
+    if (isCapitol())
         income = 4000;
     if (includeSilo && hasBuilding(MARKETPLACE_SILO_ID, false))
         income += getSiloIncome()[GOLD];

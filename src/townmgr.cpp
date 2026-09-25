@@ -1806,7 +1806,7 @@ void townManager::updateTownInfo()
         frame = 1;
     else if (m_townToView->hasBuilding(HALL_CITY_ID, false))
         frame = 2;
-    else if (m_townToView->hasBuilding(HALL_CAPITOL_ID, false))
+    else if (m_townToView->isCapitol())
         frame = 3;
     msg.m_extra = frame;
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;

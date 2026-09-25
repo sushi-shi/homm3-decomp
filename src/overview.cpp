@@ -238,7 +238,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             g_overWin->addWidget(g_iconWidgetDynamic[slot + curBitmap], -1);
             curBitmap++;
 
-            if (currTown->hasBuilding(HALL_CAPITOL_ID, false))
+            if (currTown->isCapitol())
                 lookup = 1;
             else if (currTown->hasBuilding(HALL_CITY_ID, false))
                 lookup = 2;
