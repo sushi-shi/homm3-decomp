@@ -1472,8 +1472,8 @@ unsigned char combatManager::unnamed464f50(
             return incumbent->getSpeed() < candidate->getSpeed();
         return incumbent->getSpeed() > candidate->getSpeed();
     }
-    if (incumbent->m_combatSide != candidate->m_combatSide)
-        return incumbent->m_combatSide != m_actingSide;
+    if (incumbent->getOwningSide() != candidate->getOwningSide())
+        return incumbent->getOwningSide() != m_actingSide;
     return incumbent->m_bitIndex < candidate->m_bitIndex;
 }
 
@@ -1529,12 +1529,12 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
                     continue;
                 if (checkingForBadMorale && !m_creaturePlacement
                     && !m_inSecondPhase) {
-                    if (checkApplyBadMorale(best->m_combatSide, best->m_bitIndex))
+                    if (checkApplyBadMorale(best->getOwningSide(), best->m_bitIndex))
                         continue;
                     if (unnamed464d40(best))
                         continue;
                 }
-                setNextArmy(best->m_combatSide, best->m_bitIndex);
+                setNextArmy(best->getOwningSide(), best->m_bitIndex);
                 return 1;
             }
             break;
@@ -3093,13 +3093,13 @@ void combatManager::removeArmyFromGrid(const army& a)
 VA(0x004687c0, 0x99)  // dc 0x623cc
 void combatManager::placeArmyInGrid(const army& a, int hex)
 {
-    m_cells[hex].m_armySide = static_cast<signed char>(a.m_combatSide);
+    m_cells[hex].m_armySide = static_cast<signed char>(a.getOwningSide());
     m_cells[hex].m_armySlot = static_cast<signed char>(a.m_bitIndex);
     m_cells[hex].m_partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
         m_cells[hex].m_partOfDouble = a.m_facing == 0;
         int second = hex + (a.m_facing != 0 ? 1 : -1);
-        m_cells[second].m_armySide = static_cast<signed char>(a.m_combatSide);
+        m_cells[second].m_armySide = static_cast<signed char>(a.getOwningSide());
         m_cells[second].m_armySlot = static_cast<signed char>(a.m_bitIndex);
         m_cells[second].m_partOfDouble = a.m_facing != 0;
     }

@@ -951,11 +951,11 @@ int combatManager::processCombatMsg(message& msg)
                     if (g_config.m_combatArmyInfoLevel
                             == TCombatOptionsWindow::
                                 CREATURE_INFO_LEVEL_VERBOSE) {
-                        if (stack->m_combatSide == 0) {
+                        if (stack->getOwningSide() == 0) {
                             m_combatWindow->m_creatureSubWindows[0]->update(*stack,
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[0]->show();
-                        } else if (stack->m_combatSide == 1) {
+                        } else if (stack->getOwningSide() == 1) {
                             m_combatWindow->m_creatureSubWindows[1]->update(*stack,
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[1]->show();
@@ -963,11 +963,11 @@ int combatManager::processCombatMsg(message& msg)
                     } else if (g_config.m_combatArmyInfoLevel
                                == TCombatOptionsWindow::
                                    CREATURE_INFO_LEVEL_COMPACT) {
-                        if (stack->m_combatSide == 0) {
+                        if (stack->getOwningSide() == 0) {
                             m_combatWindow->m_creatureSubWindows[2]->update(*stack,
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[2]->show();
-                        } else if (stack->m_combatSide == 1) {
+                        } else if (stack->getOwningSide() == 1) {
                             m_combatWindow->m_creatureSubWindows[3]->update(*stack,
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[3]->show();
@@ -1933,7 +1933,7 @@ void combatManager::turnOffSelector(unsigned char drawIt)
     if (drawIt) {
         resetLimitCreature();
         if (!m_lastMovedArmy->is(creatureImmobilized))
-            markCreatureEffect(m_lastMovedArmy->m_combatSide,
+            markCreatureEffect(m_lastMovedArmy->getOwningSide(),
                                m_lastMovedArmy->m_bitIndex);
     }
 
@@ -1979,7 +1979,7 @@ void combatManager::checkChangeHighlighter(int currentIndex)
             currentArmy->m_currFrameType = cs_wait;
             currentArmy->m_currFrameIndex = 0;
         }
-        markCreatureEffect(currentArmy->m_combatSide, currentArmy->m_bitIndex);
+        markCreatureEffect(currentArmy->getOwningSide(), currentArmy->m_bitIndex);
     }
 
     drawFrame(1, 1, 0, 0, 1, 0);

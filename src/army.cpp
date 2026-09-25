@@ -1558,7 +1558,7 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
         }
         *damageAmount += tempDamage;
         *killed += tempKilled;
-        g_combatManager->markCreatureEffect(target->m_combatSide,
+        g_combatManager->markCreatureEffect(target->getOwningSide(),
                                             target->m_bitIndex);
         target->m_hitByCreature = 1;
         if (!firstTarget || firstTarget->m_creatureType == target->m_creatureType)
@@ -1982,10 +1982,10 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
         doMultiHeadAttack(attackMask, &damage, &killed,
                              &fireDamage);
     } else {
-        g_combatManager->markCreatureEffect(armyToAttack->m_combatSide,
+        g_combatManager->markCreatureEffect(armyToAttack->getOwningSide(),
                                             armyToAttack->m_bitIndex);
         if (behind)
-            g_combatManager->markCreatureEffect(behind->m_combatSide,
+            g_combatManager->markCreatureEffect(behind->getOwningSide(),
                                                 behind->m_bitIndex);
         totalLife = armyToAttack->getTotalHitPoints(0);
         fireDamage = damageEnemy(armyToAttack, &damage, &killed, 0);
@@ -2067,7 +2067,7 @@ void army::doAttack(int direction)
     if (armyToAttack->needToTurn(counterDirection)) {
         int savedSide = g_combatManager->m_actingSide;
         int savedSlot = g_combatManager->m_actingSlot;
-        g_combatManager->m_actingSide = armyToAttack->m_combatSide;
+        g_combatManager->m_actingSide = armyToAttack->getOwningSide();
         g_combatManager->m_actingSlot = armyToAttack->m_bitIndex;
         armyToAttack->setupAnimation();
         armyToAttack->turn(1);
@@ -2101,7 +2101,7 @@ void army::doAttack(int direction)
         if (savedArmyToAttackFacing != armyToAttack->m_facing) {
             int savedSide = g_combatManager->m_actingSide;
             int savedSlot = g_combatManager->m_actingSlot;
-            g_combatManager->m_actingSide = armyToAttack->m_combatSide;
+            g_combatManager->m_actingSide = armyToAttack->getOwningSide();
             g_combatManager->m_actingSlot = armyToAttack->m_bitIndex;
             armyToAttack->setupAnimation();
             armyToAttack->turn(1);
@@ -5008,9 +5008,7 @@ unsigned char army::unnamed447fe0()
         army* stack = g_combatManager->m_armies[side];
         for (long i = 0; i < g_combatManager->m_numArmies[side]; i++, stack++) {
             if (stack->m_creatureType == ARMY_CREATURE_ENCHANTER
-                && stack->m_spellInfluence[SPELL_BLIND] == 0
-                && stack->m_spellInfluence[SPELL_STONE] == 0
-                && stack->m_spellInfluence[SPELL_PARALYZE] == 0
+                && !stack->isIncapacitated()
                 && !stack->is(creatureImmobilized)) {
                 stack->m_showAttackFrames = 1;
                 stack->m_showAttackFrameType = cs_range_r;

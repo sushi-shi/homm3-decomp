@@ -440,7 +440,7 @@ long getAreaAttackValue(const army* currentArmy, long hex, long ourGroup, type_A
                 && target->m_gridIndex != hex
                 && target->getSecondGridIndex() != hex)
             continue;
-        if (target->m_combatSide == ourGroup)
+        if (target->getOwningSide() == ourGroup)
             total -= data->getSimpleAttackEffect(*(currentArmy), *(target), 1, 0);
         else
             total += data->getRangedAttackValue(*(currentArmy), *(target));
@@ -592,18 +592,18 @@ void combatManager::findMoveOrder(std::vector<army*>* result)
     std::sort(order.begin(), order.end(), func_moves_before());
     long wantSide = m_actingSide;
     for (unsigned i = 0; i < order.size(); i++) {
-        if (order[i]->m_combatSide != wantSide) {
+        if (order[i]->getOwningSide() != wantSide) {
             long key = order[i]->m_expectedMoveOrder;
             for (unsigned j = i + 1; j < order.size(); j++) {
                 if (order[j]->m_expectedMoveOrder != key)
                     break;
-                if (order[j]->m_combatSide == wantSide) {
+                if (order[j]->getOwningSide() == wantSide) {
                     std::swap(order[i], order[j]);
                     break;
                 }
             }
         }
-        wantSide = 1 - order[i]->m_combatSide;
+        wantSide = 1 - order[i]->getOwningSide();
     }
     for (unsigned k = 0; k < order.size(); k++) {
         order[k]->m_expectedMoveOrder = order.size() - k;
@@ -690,7 +690,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                 moveLeft = pathIndex + 1;
             if (m_creaturePlacement || isInSecondPhase())
                 considerWaiting = 0;
-            if (g_game->m_setup.m_difficulty < 2 && !m_sideIsAi[currentArmy->m_combatSide])
+            if (g_game->m_setup.m_difficulty < 2 && !m_sideIsAi[currentArmy->getOwningSide()])
                 considerWaiting = 0;
             if (enemyAttacks == 0) {
                 considerWaiting = 0;
@@ -724,7 +724,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                                     && enemyAttacks[secondHex] >= bestDanger)) {
                             if (!m_creaturePlacement
                                     || !isOutsidePlacementBoundry(
-                                            currentArmy->m_combatSide, hex)) {
+                                            currentArmy->getOwningSide(), hex)) {
                                 m_nextActionGridIndex = hex;
                                 committed = 1;
                                 if (enemyAttacks != 0) {
@@ -1232,7 +1232,7 @@ VA(0x004208f0, 0x184)  // dc 0x25c80
 unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyAttacks, const searchArray* currentSearchArray)
 {
     if (g_game->m_setup.m_difficulty < 2
-        && !m_sideIsAi[ourArmy->m_combatSide])
+        && !m_sideIsAi[ourArmy->getOwningSide()])
         return 0;
 
     long worstDanger = enemyAttacks[ourArmy->m_gridIndex];
@@ -1241,10 +1241,7 @@ unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyA
         worstDanger = min(worstDanger, enemyAttacks[secondHex]);
     }
 
-    if (worstDanger >= 0
-        || ourArmy->m_spellInfluence[62]
-        || ourArmy->m_spellInfluence[70]
-        || ourArmy->m_spellInfluence[74]
+    if (worstDanger >= 0 || ourArmy->isIncapacitated()
         || ourArmy->m_spellInfluence[72])
         return 0;
 
@@ -1299,8 +1296,7 @@ unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters* data)
         const army* stack = m_armies[side];
         for (long i = 0; i < m_numArmies[side]; i++, stack++) {
             if (!stack->is(creatureImmobilized)
-                    && !stack->m_spellInfluence[62] && !stack->m_spellInfluence[70]
-                    && !stack->m_spellInfluence[74]
+                    && !stack->isIncapacitated()
                     && stack->m_creatureType != CREATURE_ARROW_TOWER) {
                 long value = stack->getTotalCombatValue(
                     data->m_lowestAttack, data->m_lowestDefense);
@@ -2074,7 +2070,7 @@ void combatManager::doCompAI(int whichGroup)
 VA(0x004222c0, 0x175)  // dc 0x27200
 void combatManager::berserkAttack(army* currentArmy, const army* target)
 {
-    currentArmy->m_side = target->m_combatSide;
+    currentArmy->m_side = target->getOwningSide();
     currentArmy->m_slot = target->m_bitIndex;
     long hex = target->m_gridIndex;
     if (hex >= 0 && hex < COMBAT_GRID_CELLS
@@ -2092,8 +2088,8 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
         m_nextAction = 6;
         m_nextActionExtra = currentArmy->m_gridIndex;
         m_nextActionGridIndex = target->m_gridIndex;
-        if (target->m_combatSide == currentArmy->m_combatSide)
-            m_playDoh[target->m_combatSide] = 1;
+        if (target->getOwningSide() == currentArmy->getOwningSide())
+            m_playDoh[target->getOwningSide()] = 1;
         return;
     }
     long step = g_searchArray->getStepCell(1)->m_point.m_x;
@@ -2107,8 +2103,8 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
     m_nextAction = 6;
     m_nextActionExtra = step;
     m_nextActionGridIndex = target->m_gridIndex;
-    if (target->m_combatSide == currentArmy->m_combatSide)
-        m_playDoh[target->m_combatSide] = 1;
+    if (target->getOwningSide() == currentArmy->getOwningSide())
+        m_playDoh[target->getOwningSide()] = 1;
 }
 
 // DC ai.cpp:2378 calls includes.h's value-returning min wrapper before
@@ -2177,7 +2173,7 @@ void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
             long bit = 1 << victim->m_bitIndex;
             if (hit & bit)
                 continue;
-            if (victim->m_combatSide == ourGroup)
+            if (victim->getOwningSide() == ourGroup)
                 continue;
             hit |= bit;
             simulateSimpleAttack(currentArmy, victim, 0, 0, 0);

@@ -348,7 +348,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
             army* target = findSpellTarget(spellToCast, m_currentSide,
                                              m_nextActionGridIndex, 1, 0);
             if (target && spellToCast != SPELL_DISPEL
-                    && target->m_combatSide != m_currentSide
+                    && target->getOwningSide() != m_currentSide
                     && !target->is(creatureImmobilized)
                     && target->getMirrorEffect() >= random(1, 100)) {
                 TPickANumber picker(0, m_numArmies[m_currentSide] - 1);
@@ -522,7 +522,7 @@ static int updateSpellTarget(long hex)
                 creatureSpell)
             && (spell != SPELL_CHAIN_LIGHTNING
                 || !g_combatManager->m_cells[hex].hasArmy()
-                || g_combatManager->m_cells[hex].getArmy()->m_combatSide
+                || g_combatManager->m_cells[hex].getArmy()->getOwningSide()
                     != g_combatManager->m_currentSide)) {
         result = hex;
         g_mouseManager->setPointer(spell + 1, mouseManager::SPELL_SET);
@@ -561,7 +561,7 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
 
     TObstacle* obstacle = &getObstacle(m_cells[hex].m_obstacleIndex);
 
-    if (obstacle->isVisible(currentArmy->m_combatSide))
+    if (obstacle->isVisible(currentArmy->getOwningSide()))
         return 0;
 
     if (spellCastWorkChance(SPELL_LAND_MINE, obstacle->m_owner, currentArmy,
@@ -1245,7 +1245,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
             target->m_monInfo.m_attributes |= creatureGreyColoring;
             resetLimitCreature();
-            markCreatureEffect(target->m_combatSide, target->m_bitIndex);
+            markCreatureEffect(target->getOwningSide(), target->m_bitIndex);
             computeMaxExtent();
             for (int frame = 10; frame > 0; --frame) {
                 target->m_paletteEffect = frame * 0.1;
@@ -1264,7 +1264,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
                 target->m_monInfo.m_attributes |= creatureRedColoring;
                 resetLimitCreature();
-                markCreatureEffect(target->m_combatSide, target->m_bitIndex);
+                markCreatureEffect(target->getOwningSide(), target->m_bitIndex);
                 computeMaxExtent();
                 {
                     for (int frame = 0; frame < 10; ++frame) {
@@ -1593,7 +1593,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             army* thisArmy = *it;
             if (!spellCastWorks(spellId, m_currentSide, thisArmy, 0,
                                 isMonsterSpell)) {
-                m_effected[thisArmy->m_combatSide][thisArmy->m_bitIndex] = 0;
+                m_effected[thisArmy->getOwningSide()][thisArmy->m_bitIndex] = 0;
             } else {
                 thisArmy->setSpellInfluence(spellId, monsterPower,
                                              mastery, castingHero);
@@ -2445,7 +2445,7 @@ army* combatManager::findResurrectionTarget(int side, int hex,
     hexcell* cell = &m_cells[hex];
     if (cell->m_armySide >= 0) {
         army* target = cell->getArmy();
-        if (target->m_combatSide != side)
+        if (target->getOwningSide() != side)
             return 0;
         if (!target->is(creatureAlive))
             return 0;
@@ -2533,7 +2533,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
     hexcell* cell = &m_cells[hex];
     if (cell->m_armySide >= 0) {
         army* target = cell->getArmy();
-        if (target->m_combatSide != side)
+        if (target->getOwningSide() != side)
             return 0;
         if (!target->is(creatureUndead))
             return 0;
@@ -2586,7 +2586,7 @@ unsigned char combatManager::hasValidSpellTarget(SpellID spellId, long mastery,
         if (inInvisibleColumn(hex))
             continue;
         if (spellId == SPELL_CHAIN_LIGHTNING && m_cells[hex].m_armySide >= 0
-            && m_cells[hex].getArmy()->m_combatSide == castingSide)
+            && m_cells[hex].getArmy()->getOwningSide() == castingSide)
             continue;
         if (validSpellTarget(spellId, mastery, hex, castingSide, firstTarget,
                              creatureSpell))
@@ -2725,9 +2725,9 @@ void combatManager::markAreaEffect(long hex, long radius,
             continue;
         if (target->is(creatureImmobilized))
             continue;
-        if (m_effected[target->m_combatSide][target->m_bitIndex])
+        if (m_effected[target->getOwningSide()][target->m_bitIndex])
             continue;
-        m_effected[target->m_combatSide][target->m_bitIndex] = 1;
+        m_effected[target->getOwningSide()][target->m_bitIndex] = 1;
         targets.push_back(target);
     }
 }
@@ -2748,9 +2748,9 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
             continue;
         if (target->is(creatureImmobilized))
             continue;
-        if (m_effected[target->m_combatSide][target->m_bitIndex])
+        if (m_effected[target->getOwningSide()][target->m_bitIndex])
             continue;
-        m_effected[target->m_combatSide][target->m_bitIndex] = 1;
+        m_effected[target->getOwningSide()][target->m_bitIndex] = 1;
         targets.push_back(target);
     }
 }
@@ -2838,7 +2838,7 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
     while (i--) {
         army* target = targets[i];
         if (!spellCastWorks(spellType, m_currentSide, target, 0, 0)) {
-            m_effected[target->m_combatSide][target->m_bitIndex] = 0;
+            m_effected[target->getOwningSide()][target->m_bitIndex] = 0;
             continue;
         }
         damage = computeSpellDamage(spellType, power, mastery, castingHero,
@@ -3752,7 +3752,7 @@ void combatManager::chainLightning(int index, int level, int power)
             totalKilled += target->damage(modifySpellDamage(
                 currentDamage, SPELL_CHAIN_LIGHTNING, m_heroes[m_currentSide],
                 target->getController(), target, 0));
-            m_effected[target->m_combatSide][target->m_bitIndex] = 1;
+            m_effected[target->getOwningSide()][target->m_bitIndex] = 1;
             index = getNextChainLightningTarget(target, 1);
             if (index == -1)
                 break;
@@ -4170,11 +4170,11 @@ void combatManager::removeCorpse(hexcell* hex, long side, long slot)
 // Complete expands this ordinary overload in both resurrection paths.
 void combatManager::removeCorpse(army* corpse)
 {
-    removeCorpse(&m_cells[corpse->m_gridIndex], corpse->m_combatSide,
+    removeCorpse(&m_cells[corpse->m_gridIndex], corpse->getOwningSide(),
                 corpse->m_bitIndex);
     if (corpse->is(creatureDoubleWide))
         removeCorpse(&m_cells[corpse->getSecondGridIndex()],
-                    corpse->m_combatSide, corpse->m_bitIndex);
+                    corpse->getOwningSide(), corpse->m_bitIndex);
 }
 
 // The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
@@ -4277,7 +4277,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
         placeArmyInGrid(*targetArmy, hex);
         removeCorpse(targetArmy);
     }
-    if (targetArmy->m_facing != 1 - targetArmy->m_combatSide)
+    if (targetArmy->m_facing != 1 - targetArmy->getOwningSide())
         targetArmy->turn(0);
 
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
@@ -4666,7 +4666,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
             && targetHero->isWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
             return 0.0f;
         int mastery = castingHero->getSpellLevel(SPELL_DISPEL, m_magicTerrain);
-        if (mastery < eMasteryAdvanced && target->m_combatSide != side)
+        if (mastery < eMasteryAdvanced && target->getOwningSide() != side)
             return 0.0f;
         if (mastery < eMasteryExpert) {
             for (int i = 10; i < 81; i++) {
@@ -4701,10 +4701,10 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         return 0.0f;
     int benefit = traits->m_karma;
     if (!redirected) {
-        if (benefit < 0 && target->m_combatSide == side
+        if (benefit < 0 && target->getOwningSide() == side
             && spell != SPELL_BERSERK)
             return 0.0f;
-        if (benefit > 0 && target->m_combatSide != side)
+        if (benefit > 0 && target->getOwningSide() != side)
             return 0.0f;
     }
 

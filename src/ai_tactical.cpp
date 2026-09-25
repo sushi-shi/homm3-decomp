@@ -365,7 +365,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
         army* enemy = g_combatManager->m_cells[index].getArmy();
         if (!enemy)
             continue;
-        if (enemy->m_combatSide == g_combatManager->m_currentSide)
+        if (enemy->getOwningSide() == g_combatManager->m_currentSide)
             continue;
         if (enemy == m_attackArmy)
             continue;
@@ -456,13 +456,13 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
                                           m_data);
             if (m_enemyArmy->canRetaliate(*m_attackArmy)) {
                 if (m_enemyArmy->is(creatureMultiHeaded))
-                    value -= getMultiHeadBonus(m_enemyArmy->m_combatSide,
+                    value -= getMultiHeadBonus(m_enemyArmy->getOwningSide(),
                                                   m_enemyArmy,
                                                   m_enemyArmy->m_gridIndex,
                                                   m_enemyTroopsLeft,
                                                   m_attackArmy, hex, m_data);
                 if (m_enemyArmy->is(creatureHasExtendedAttack))
-                    value -= getBreathBonus(m_enemyArmy->m_combatSide,
+                    value -= getBreathBonus(m_enemyArmy->getOwningSide(),
                                               m_enemyArmy,
                                               m_enemyArmy->m_gridIndex,
                                               m_enemyTroopsLeft,
@@ -520,7 +520,7 @@ long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long tro
         army* target = g_combatManager->m_cells[hex].getArmy();
         if (target == 0)
             continue;
-        if (target->m_combatSide == ourGroup)
+        if (target->getOwningSide() == ourGroup)
             continue;
         if (alreadyChecked & (1 << target->m_bitIndex))
             continue;
@@ -554,7 +554,7 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopC
     long value = target->getLossCombatValue(estimate->m_lowestAttack,
                                                estimate->m_lowestDefense, 0, damage,
                                                estimate->m_killsOnly);
-    if (target->m_combatSide == ourGroup)
+    if (target->getOwningSide() == ourGroup)
         return -value;
     return value;
 }
@@ -732,7 +732,7 @@ unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
     if (isLastAction())
         return 1;
     const army* current = g_combatManager->getCurrentArmy();
-    if (current->m_combatSide == m_side && current->getAITarget() == &enemy
+    if (current->getOwningSide() == m_side && current->getAITarget() == &enemy
         && current->getAITargetTime() == 1
         && !current->canShoot(0)
         && !current->is(creatureFreeAttack))
@@ -846,7 +846,7 @@ long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, TSk
     g_combatManager->markAreaEffect(spell, hex, mastery, targets);
     for (long i = targets.size(); i-- > 0; ) {
         army* target = targets[i];
-        if (target->m_combatSide == m_side)
+        if (target->getOwningSide() == m_side)
             friendlyDamage += getDamageValue(spell, baseDamage, m_ourHero, target);
         else
             enemyDamage += getDamageValue(spell, baseDamage, m_enemyHero, target);
@@ -895,13 +895,13 @@ long type_AI_spellcaster::getChainLightningValue(long power, TSkillMastery maste
     long damage = g_spellTraits[SPELL_CHAIN_LIGHTNING].m_masteryBonus[mastery]
                   + g_spellTraits[SPELL_CHAIN_LIGHTNING].m_powerFactor * power;
     while (count--) {
-        if (target->m_combatSide == m_side)
+        if (target->getOwningSide() == m_side)
             friendlyDamage += getDamageValue(SPELL_CHAIN_LIGHTNING, damage,
                                                 m_ourHero, target);
         else
             enemyDamage += getDamageValue(SPELL_CHAIN_LIGHTNING, damage,
                                              m_enemyHero, target);
-        g_combatManager->m_effected[target->m_combatSide][target->m_bitIndex] = 1;
+        g_combatManager->m_effected[target->getOwningSide()][target->m_bitIndex] = 1;
         long hex = g_combatManager->getNextChainLightningTarget(target, 0);
         if (!g_combatManager->validHex(hex))
             break;
@@ -1712,7 +1712,7 @@ long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpe
                                  duration, duration);
         caster.m_checkResistance = 0;
         currentArmy->cancelIndividualSpell(spell);
-        long ours = currentArmy->m_combatSide == m_side;
+        long ours = currentArmy->getOwningSide() == m_side;
         long bad = g_spellTraits[spell].m_karma < 0;
         if (bad == ours)
             value += (m_enemyCaster->*valueOf)(currentArmy, caster);
@@ -1861,7 +1861,7 @@ VA(0x0043a340, 0xBE)  // dc 0x40928
 long type_AI_spellcaster::getTraitorValue(const army* enemy, const army* target) const
 {
     unsigned char ranged = enemy->canShoot(0);
-    if (target->m_combatSide == m_side)
+    if (target->getOwningSide() == m_side)
         return 0;
     long enemyHits = enemy->getTotalHitPoints(0);
     long enemyDamage = enemyHits;
