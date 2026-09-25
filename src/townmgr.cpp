@@ -4849,7 +4849,7 @@ int townManager::main(message& msg)
     }
 
     {
-        int delta = GameTime::get() - g_timers[0];
+        int delta = GameTime::elapsedSince(g_timers[0]);
         if (delta >= 0) {
             g_timers[0] += cppMin(delta, 150);
             drawTown(1, 1, 0);

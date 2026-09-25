@@ -166,8 +166,7 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
     m_status &= ~WIDGET_SELECTED;
     draw();
     unsigned long repeatTime = g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
-    while (static_cast<int>(
-               GameTime::get() - repeatTime) <= 0) {
+    while (GameTime::elapsedSince(repeatTime) <= 0) {
         pollSound();
         process1WindowsMessage();
         repeatTime = g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
