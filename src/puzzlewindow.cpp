@@ -138,7 +138,7 @@ TPuzzleWindow::TPuzzleWindow(int puzzlenum)
 
     m_widgets.push_back(new textWidget(
         607, 73, 190, 40,
-        g_generalText->getText(GENERAL_TEXT_PUZZLE_WINDOW),
+        (*g_generalText)[GENERAL_TEXT_PUZZLE_WINDOW],
         "Bigfont.fnt", font::HEADING, -1,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
