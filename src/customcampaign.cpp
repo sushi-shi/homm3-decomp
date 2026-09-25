@@ -2347,18 +2347,27 @@ void TCampaignBrief::MapTextStruct::play()
                                 g_windowManager->m_screenBitmap->getHeight(),
                                 g_windowManager->m_screenBitmap->getPitch(), false);
                 } else {
-                    if (scrollY >= textHeight - g_campaignSubtitleHeight) {
+                    // Mac retains separate draws at 0:0x97b20 and 0:0x97b84.
+                    if (scrollY < textHeight - g_campaignSubtitleHeight) {
+                        strip->draw(0, scrollY, g_campaignSubtitleWidth,
+                                    g_campaignSubtitleHeight,
+                                    g_windowManager->m_screenBitmap->getMap(0, 0),
+                                    g_campaignSubtitleX, g_campaignSubtitleY,
+                                    g_windowManager->m_screenBitmap->getWidth(),
+                                    g_windowManager->m_screenBitmap->getHeight(),
+                                    g_windowManager->m_screenBitmap->getPitch(), false);
+                    } else {
                         if (!textDone)
                             textEnd = GameTime::get();
                         textDone = 1;
+                        strip->draw(0, scrollY, g_campaignSubtitleWidth,
+                                    g_campaignSubtitleHeight,
+                                    g_windowManager->m_screenBitmap->getMap(0, 0),
+                                    g_campaignSubtitleX, g_campaignSubtitleY,
+                                    g_windowManager->m_screenBitmap->getWidth(),
+                                    g_windowManager->m_screenBitmap->getHeight(),
+                                    g_windowManager->m_screenBitmap->getPitch(), false);
                     }
-                    strip->draw(0, scrollY, g_campaignSubtitleWidth,
-                                g_campaignSubtitleHeight,
-                                g_windowManager->m_screenBitmap->getMap(0, 0),
-                                g_campaignSubtitleX, g_campaignSubtitleY,
-                                g_windowManager->m_screenBitmap->getWidth(),
-                                g_windowManager->m_screenBitmap->getHeight(),
-                                g_windowManager->m_screenBitmap->getPitch(), false);
                 }
                 if (redraw) {
                     g_windowManager->updateScreen(g_campaignSubtitleX,

@@ -278,10 +278,12 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         row->m_startingBonus = g_game->m_setup.m_startingBonus[i];
         row->m_bonusSprite = m_bonusSprite;
         row->m_startingHero = startingHero;
-        row->m_heroPortrait = ResourceManager::getBitmap816(
-            startingHero
-                ? g_heroTraits[startingHero->m_portrait].m_smallPortraitName
-                : "hpsrand6.pcx");
+        // Mac retains both bitmap calls and their stores at 0:0x15faa8/0x15fab8.
+        if (startingHero)
+            row->m_heroPortrait = ResourceManager::getBitmap816(
+                g_heroTraits[startingHero->m_portrait].m_smallPortraitName);
+        else
+            row->m_heroPortrait = ResourceManager::getBitmap816("hpsrand6.pcx");
         widgets.push_back(row);
 
         int y = 124 + rowPosition * 50;

@@ -1441,10 +1441,8 @@ int combatManager::getCommand(int newIndex)
     return COMBAT_COMMAND_NONE;
 }
 
-// The wall arm is one `goto`: wallTargets[7] short-circuits the whole
-// hex test, while wallTargets[0] and [6] are only reachable once the
-// hex test has failed AND the town is a full castle. All three land on
-// ViewCastleBallista(1).
+// Mac retains separate ViewCastleBallista calls for wall target 7 and the
+// full-castle targets 0/6 at 0:0x84bf8 and 0:0x84ca8.
 VA(0x004769c0, 0x207)  // dc 0x6d988
 int combatManager::rightClick(int newIndex)
 {
@@ -1474,21 +1472,22 @@ int combatManager::rightClick(int newIndex)
         return 0;
     }
 
-    if (newIndex != s_wallTargets[7].m_targetHex) {
-        if (newIndex >= 0 && newIndex < COMBAT_GRID_CELLS
-                && m_cells[newIndex].m_armySide >= 0) {
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
-            viewArmy(m_cells[newIndex].getArmy(), 1);
-            resetMouse();
-            return 0;
-        }
-        if (m_fortificationLevel != COMBAT_FORTIFICATION_CASTLE)
-            return 0;
-        if (newIndex != s_wallTargets[0].m_targetHex
-                && newIndex != s_wallTargets[6].m_targetHex)
-            return 0;
+    if (newIndex == s_wallTargets[7].m_targetHex) {
+        viewCastleBallista(1);
+        return 0;
     }
-    viewCastleBallista(1);
+
+    if (newIndex >= 0 && newIndex < COMBAT_GRID_CELLS
+            && m_cells[newIndex].m_armySide >= 0) {
+        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        viewArmy(m_cells[newIndex].getArmy(), 1);
+        resetMouse();
+        return 0;
+    }
+    if (m_fortificationLevel == COMBAT_FORTIFICATION_CASTLE
+        && (newIndex == s_wallTargets[0].m_targetHex
+            || newIndex == s_wallTargets[6].m_targetHex))
+        viewCastleBallista(1);
     return 0;
 }
 

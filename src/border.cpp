@@ -192,8 +192,10 @@ int coloredBorderFrame::main(message& msg)
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg.m_id != MESSAGE_WIDGET)
-            return 0;
+        // Mac retains this base call separately at 0:0x5e6fc.
+        if (msg.m_id == MESSAGE_WIDGET)
+            return border::main(msg);
+        return 0;
     } else if (msg.m_id == MESSAGE_WIDGET) {
         switch (msg.m_codeX) {
         case WIDGET_SET_COLOR:
@@ -302,8 +304,10 @@ int bitmapBorder::main(message& msg)
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg.m_id != MESSAGE_WIDGET)
-            return 0;
+        // Mac retains this base call separately at 0:0x5eb44.
+        if (msg.m_id == MESSAGE_WIDGET)
+            return border::main(msg);
+        return 0;
     } else if (msg.m_id == MESSAGE_WIDGET && msg.m_codeY == m_id) {
         switch (msg.m_codeX) {
         case WIDGET_SET_PALETTE:
@@ -415,8 +419,10 @@ int bitmapBorder16::main(message& msg)
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg.m_id != MESSAGE_WIDGET)
-            return 0;
+        // Mac retains this base call separately at 0:0x5eee8.
+        if (msg.m_id == MESSAGE_WIDGET)
+            return border::main(msg);
+        return 0;
     } else if (msg.m_id == MESSAGE_WIDGET && msg.m_codeY == m_id) {
         switch (msg.m_codeX) {
         case WIDGET_SET_PALETTE:
