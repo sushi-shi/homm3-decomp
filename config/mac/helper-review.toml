@@ -129,6 +129,7 @@ units = [
   "customcampaign",
   "customcampaignwindow",
   "dialogbox",
+  "diff",
   "dimensiondoorwindow",
   "drawing",
   "event_record",

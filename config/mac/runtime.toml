@@ -823,7 +823,15 @@ mac_section = 0
 mac_offset = 0x41c4
 mac_size = 0x154
 sha256 = "a6dbd751832b5e9823eb9e0a2b2ed88612cde06289360a0aa3077b9f9278755d"
-evidence = "NewfullMap::newfullMapFn005042C0 calls the retained MSL string compare at code 0x127218. The candidate's named call takes string receiver, position, count, byte pointer and length in r3-r7; the retail body bounds-checks the position, calls strncmp at 0x28b11c and returns at 0x4314. The next prologue at 0x4318 bounds the full helper. Runtime call identity only."
+evidence = "NewfullMap::newfullMapFn005042C0 calls the retained MSL string compare at code 0x127218. The candidate's named call takes string receiver, position, count, byte pointer and length in r3-r7; the retail body bounds-checks the position, calls the bounded byte comparison at 0x28b11c and returns at 0x4314. The next prologue at 0x4318 bounds the full helper. Runtime call identity only."
+
+[[functions]]
+symbol = ".mac_memcmp_28b11c"
+mac_section = 0
+mac_offset = 0x28b11c
+mac_size = 0x44
+sha256 = "3b0860fe866d178d85ece2f1e78b3352f9c7e29564805202258d74b5114e0a05"
+evidence = "CDiffMaker::findNextSame calls this at 0xa2798 for a 16-byte binary comparison. The three-argument leaf compares every byte up to the count without stopping at NUL, returns -1, 0 or 1, and ends at 0x28b160. MSL string::compare also calls it; its behavior is memcmp, not strncmp. Runtime identity only."
 
 [[functions]]
 symbol = ".begin__Q23std10vector<Pc>CFv"
