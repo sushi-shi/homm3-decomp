@@ -339,9 +339,7 @@ void TCampaignBrief::addBonusIcons()
         m_difficultyButtons[i]->setHelpText(
             g_campaignDifficultyHelp[i].m_text,
             g_campaignDifficultyHelp[i].m_rclick, 0);
-        m_difficultyButtons[i]->sendMessage(
-            widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_difficultyButtons[i]->hide();
         m_widgets.push_back(m_difficultyButtons[i]);
     }
 
@@ -700,8 +698,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             DATA_COMPGEN(0x00660d18, campaignBriefFlagSprites,
                          "itgflags.def"),
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
-        w->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->hide();
         // Dreamcast proves the canonical widget-vector append here.
         widgets.push_back(w);
 
@@ -711,8 +708,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             DATA_COMPGEN(0x00660d18, campaignBriefFlagSprites,
                          "itgflags.def"),
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
-        w->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->hide();
         // The second DC append has the same source operation.
         widgets.push_back(w);
     }
@@ -764,9 +760,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                 w->m_width = mx;
                 my = w->getRealHeight();
                 w->m_height = my;
-                w->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                widget::WIDGET_ACTIVE |
-                                    widget::WIDGET_DRAWN);
+                w->hide();
 
                 w = getWidget(MAP_ENABLED_1_ID + drawIndex);
                 mx = w->getRealWidth();

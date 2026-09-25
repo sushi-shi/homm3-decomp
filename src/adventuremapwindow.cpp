@@ -1015,8 +1015,7 @@ void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
             int heroId = player->m_heroes[m_topHero + i];
             if (heroId != -1 && !g_completeDrawAllCells
                 && heroId == player->m_currHeroId) {
-                m_heroLocators[i]->sendMessage(widget::WIDGET_SET_STATUS,
-                                              widget::WIDGET_DRAWN);
+                m_heroLocators[i]->setVisible(1);
                 m_heroLocators[i]->setImage("hpsyyy.pcx");
                 m_heroLocators[i]->draw();
                 break;
@@ -1130,8 +1129,7 @@ void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect
         if (heroId != -1 && !g_completeDrawAllCells
             && heroId == player->m_currHeroId) {
             m_heroLocators[which]->setImage("hpsyyy.pcx");
-            m_heroLocators[which]->sendMessage(widget::WIDGET_SET_STATUS,
-                                              widget::WIDGET_DRAWN);
+            m_heroLocators[which]->setVisible(1);
             m_heroLocators[which]->draw();
         }
         if (update)
@@ -1187,15 +1185,13 @@ void TAdventureMapWindow::highlightLocators(unsigned char update)
     }
 
     for (i = 0; i < NUM_HERO_BUTTONS; i++)
-        m_heroLocators[i]->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                      widget::WIDGET_DRAWN);
+        m_heroLocators[i]->setVisible(0);
 
     for (i = 0; i < NUM_HERO_BUTTONS; i++) {
         int heroId = player->m_heroes[m_topHero + i];
         if (heroId != -1 && !g_completeDrawAllCells
             && heroId == player->m_currHeroId) {
-            m_heroLocators[i]->sendMessage(widget::WIDGET_SET_STATUS,
-                                          widget::WIDGET_DRAWN);
+            m_heroLocators[i]->setVisible(1);
             m_heroLocators[i]->setImage("hpsyyy.pcx");
             m_heroLocators[i]->draw();
             break;

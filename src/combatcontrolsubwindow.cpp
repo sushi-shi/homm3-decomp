@@ -237,8 +237,7 @@ void TCombatControlSubWindow::setRollover(const char* newText)
 {
     m_rolloverWidget->setText(newText);
     m_rolloverWidget->sendMessage(widget::WIDGET_DRAW, 0);
-    m_rolloverWidget->sendMessage(widget::WIDGET_SET_STATUS,
-                                 widget::WIDGET_UPDATE);
+    m_rolloverWidget->forceUpdate();
 }
 
 VA(0x0046bf90, 0xB2)  // dc 0x64f68

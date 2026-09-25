@@ -1891,8 +1891,7 @@ void type_skeleton_window::creatureClick(
     } else if (m_selectedGroup < 0) {
         m_selectedIndex = slot;
         m_selectedGroup = side;
-        m_selectBorder[side][slot]->sendMessage(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+        m_selectBorder[side][slot]->setVisible(1);
         m_selectBorder[side][slot]->draw();
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     } else {
@@ -1911,8 +1910,7 @@ void type_skeleton_window::creatureClick(
             m_armies[m_selectedGroup]->m_armyTypes[m_selectedIndex] = creatureType;
             m_armies[m_selectedGroup]->m_numTroops[m_selectedIndex] = troops;
         }
-        m_selectBorder[m_selectedGroup][m_selectedIndex]->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+        m_selectBorder[m_selectedGroup][m_selectedIndex]->setVisible(0);
         update(side, slot);
         update(m_selectedGroup, m_selectedIndex);
 

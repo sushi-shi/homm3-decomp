@@ -243,19 +243,15 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     }
 
     for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
-        getWidget(music)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_DRAWN);
-    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+        getWidget(music)->setVisible(0);
+    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->setVisible(1);
     getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
 
     for (int effects = EFFECTS_VOLUME_0_ID; effects <= EFFECTS_VOLUME_9_ID;
          ++effects)
-        getWidget(effects)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_DRAWN);
-    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+        getWidget(effects)->setVisible(0);
+    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->setVisible(1);
     getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
 
@@ -578,11 +574,9 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         }
                         g_config.m_musicVolume = id - MUSIC_VOLUME_0_ID;
                         for (int i = MUSIC_VOLUME_0_ID; i <= MUSIC_VOLUME_9_ID; ++i)
-                            getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                                      widget::WIDGET_DRAWN);
+                            getWidget(i)->setVisible(0);
                         getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)
-                            ->sendMessage(widget::WIDGET_SET_STATUS,
-                                          widget::WIDGET_DRAWN);
+                            ->setVisible(1);
                         getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
                         int save = g_soundManager->m_playSounds;
@@ -616,11 +610,9 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         g_config.m_soundVolume = id - EFFECTS_VOLUME_0_ID;
                         g_config.m_lastSoundVolume = g_config.m_soundVolume;
                         for (int i = EFFECTS_VOLUME_0_ID; i <= EFFECTS_VOLUME_9_ID; ++i)
-                            getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                                      widget::WIDGET_DRAWN);
+                            getWidget(i)->setVisible(0);
                         getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)
-                            ->sendMessage(widget::WIDGET_SET_STATUS,
-                                          widget::WIDGET_DRAWN);
+                            ->setVisible(1);
                         getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
                         int save = g_soundManager->m_playSounds;

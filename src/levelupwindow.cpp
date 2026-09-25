@@ -207,11 +207,9 @@ int TLevelUpWindow::windowHandler(message& msg)
             if (g_levelUpWindow->m_rightSkill == -1)
                 break;
             widget* leftBorder = g_levelUpWindow->getWidget(SKILLBORDER_1_ID);
-            leftBorder->sendMessage(
-                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+            leftBorder->setVisible(0);
             widget* rightBorder = g_levelUpWindow->getWidget(SKILLBORDER_2_ID);
-            rightBorder->sendMessage(
-                widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+            rightBorder->setVisible(1);
             g_levelUpWindow->m_selected = SKILLICON_2_ID;
             widget* accept = g_levelUpWindow->getWidget(LEVELUP_ACCEPT_ID);
             accept->enable(1);
@@ -223,13 +221,11 @@ int TLevelUpWindow::windowHandler(message& msg)
             if (g_levelUpWindow->m_leftSkill == -1)
                 break;
             widget* leftBorder = g_levelUpWindow->getWidget(SKILLBORDER_1_ID);
-            leftBorder->sendMessage(
-                widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+            leftBorder->setVisible(1);
             if (g_levelUpWindow->m_rightSkill != -1) {
                 widget* rightBorder =
                     g_levelUpWindow->getWidget(SKILLBORDER_2_ID);
-                rightBorder->sendMessage(
-                    widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+                rightBorder->setVisible(0);
             }
             g_levelUpWindow->m_selected = SKILLICON_1_ID;
             widget* accept = g_levelUpWindow->getWidget(LEVELUP_ACCEPT_ID);
@@ -276,11 +272,9 @@ int TLevelUpWindow::windowHandler(message& msg)
                     g_levelUpWindow->getWidget(SKILLBORDER_2_ID);
                 widget* leftBorder =
                     g_levelUpWindow->getWidget(SKILLBORDER_1_ID);
-                leftBorder->sendMessage(
-                    widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+                leftBorder->setVisible(1);
                 if (rightBorder)
-                    rightBorder->sendMessage(
-                        widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+                    rightBorder->setVisible(0);
                 g_levelUpWindow->m_selected = SKILLICON_1_ID;
                 widget* accept =
                     g_levelUpWindow->getWidget(LEVELUP_ACCEPT_ID);
@@ -293,12 +287,10 @@ int TLevelUpWindow::windowHandler(message& msg)
             case SKILLBORDER_2_ID: {
                 widget* leftBorder =
                     g_levelUpWindow->getWidget(SKILLBORDER_1_ID);
-                leftBorder->sendMessage(
-                    widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+                leftBorder->setVisible(0);
                 widget* rightBorder =
                     g_levelUpWindow->getWidget(SKILLBORDER_2_ID);
-                rightBorder->sendMessage(
-                    widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+                rightBorder->setVisible(1);
                 g_levelUpWindow->m_selected = SKILLICON_2_ID;
                 widget* accept =
                     g_levelUpWindow->getWidget(LEVELUP_ACCEPT_ID);

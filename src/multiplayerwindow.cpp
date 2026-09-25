@@ -567,20 +567,20 @@ void TMultiPlayerWindow::goSessionList()
 {
     m_inSessionList = 1;
     m_showSplash = 0;
-    m_splash->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->hide();
     if (m_hotSeat)
-        m_hotSeat->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_ipx->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_tcp->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_modem->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_direct->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_hotSeat->hide();
+    m_ipx->hide();
+    m_tcp->hide();
+    m_modem->hide();
+    m_direct->hide();
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_search->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_online->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_userNameHeader->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_sessNameHeader->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->show();
+    m_join->show();
+    m_search->hide();
+    m_online->hide();
+    m_userNameHeader->show();
+    m_sessNameHeader->show();
 }
 
 VA(0x0050efc0, 0x12B)  // dc 0x10051c
@@ -590,23 +590,23 @@ void TMultiPlayerWindow::goMainMenu()
     m_showSplash = 1;
     m_sessTimer = 0;
     m_hostJoinScreen = 0;
-    m_splash->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->show();
     if (m_hotSeat)
-        m_hotSeat->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_ipx->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_tcp->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_modem->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_direct->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_hotSeat->show();
+    m_ipx->show();
+    m_tcp->show();
+    m_modem->show();
+    m_direct->show();
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_search->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_online->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_userNameHeader->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_sessNameHeader->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->hide();
+    m_join->hide();
+    m_search->hide();
+    m_online->show();
+    m_userNameHeader->hide();
+    m_sessNameHeader->hide();
     widget* w = getWidget(126);
     if (w)
-        w->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->hide();
     m_sessions->destroy();
 }
 
@@ -773,11 +773,8 @@ inline unsigned char TMultiPlayerWindow::onIPX()
             m_sessionRefreshTimeout = 1000;
 
         if (m_host)
-            m_host->sendMessage(
-                widget::WIDGET_SET_STATUS,
-                widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            m_host->show();
+        m_join->show();
         m_join->enable(0);
         refreshSessions();
         return 1;
@@ -792,13 +789,10 @@ inline unsigned char TMultiPlayerWindow::onModem()
 {
     g_mpNetProtocol = MP_MODEM;
     m_hostJoinScreen = 1;
-    m_splash->sendMessage(widget::WIDGET_SET_STATUS,
-                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->show();
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->show();
+    m_join->show();
     m_join->enable(1);
     update();
     return 1;
@@ -1026,13 +1020,10 @@ inline unsigned char TMultiPlayerWindow::onDirect()
 {
     g_mpNetProtocol = MP_SERIAL;
     m_hostJoinScreen = 1;
-    m_splash->sendMessage(widget::WIDGET_SET_STATUS,
-                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->show();
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->show();
+    m_join->show();
     m_join->enable(1);
     update();
     return 1;

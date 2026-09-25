@@ -7125,9 +7125,7 @@ void TSingleSelectionWindow::onNewHostMsg(CNetMsg* netMsg)
     m_receivingMaps = 1;
     if (m_chatShowing) {
         widget* chatWidget = getWidget(179);
-        chatWidget->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                 widget::WIDGET_ACTIVE
-                                     | widget::WIDGET_DRAWN);
+        chatWidget->hide();
     }
     m_currentIndex = 0;
     m_currentMap = 0;
@@ -7167,12 +7165,10 @@ void TSingleSelectionWindow::onNameClick(int pos)
                           g_windowManager->m_screenBitmap, 57,
                           128 + colorPos * 50, true);
         w->setText(player->m_name);
-        w->sendMessage(widget::WIDGET_SET_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->show();
         w = static_cast<textWidget*>(getWidget(pos + 345));
         if (w)
-            w->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            w->hide();
         w->setText(player->m_name);
         setFocus(pos + 353);
     }
