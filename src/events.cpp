@@ -2303,9 +2303,8 @@ void advManager::doEventMagicSpring(hero* currentHero, ExtraInfoUnion* cell,
 {
     game* g = g_game;
     g->setInfoFlag(MagicSpringInfo, g_netLocalGamePos);
-    // Retail records the visit before checking whether the spring is empty;
-    // Dreamcast calls getItemId only after that branch and the mana award.
-    short id = cell->m_magicSpringInfo.m_id;
+    // Mac extracts the five-bit item id before checking whether the spring is empty.
+    short id = cell->getItemId();
     g_currentPlayer->m_magicSpringFlags |= 1 << id;
 
     if (!cell->magicSpringIsFull()) {
