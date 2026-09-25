@@ -9,6 +9,14 @@ sha256 = "d12451bad639791f6e9fee395ece0f2cf38a9fffcc97171b1d89183b85e80413"
 evidence = "CodeWarrior RuntimePPC.Lib contains the named double-to-unsigned conversion helper: its final 76 bytes equal the pinned PEF at 0x28054c..0x280598, while the first TOC load is relocated from 0x80820000 to 0x8082bb00. drawing::cycleCombatScreen calls it for the unsigned lastFidgetTime assignment at 0xa8b00. The prior body ends with BLR at 0x280544; this helper ends with BLR at 0x280594 and the next body starts at 0x280598. Runtime identity only."
 
 [[functions]]
+symbol = ".__ct__Q310Metrowerks7details64compressed_pair_imp<Q23std30allocator<17type_monster_data>,Ul,1>FUl"
+mac_section = 0
+mac_offset = 0x26624
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "The Mac type_AI_combat_data constructor calls this vector<type_monster_data> allocator-capacity constructor with receiver in r3 and zero in r4, then zeros vector size and data at +4/+8. A CodeWarrior -O3 probe emits the exact named compressed_pair_imp hunk and the same eight bytes, stw r4,0(r3); blr. The preceding vector destructor ends at 0x26620 and initializeCreatures begins at 0x2662c. MSL template identity only."
+
+[[functions]]
 symbol = ".__ct__Q23std38__vector_pod<Ul,Q23std13allocator<Ul>>Fv"
 mac_section = 0
 mac_offset = 0x672d0
