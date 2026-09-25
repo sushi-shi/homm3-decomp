@@ -22,6 +22,15 @@ target_sha256 = "8ed639e0a9ad653d3b0c38a95507802aa0d29b6f4da1b53daa89a4faae5b923
 evidence = "Mac endTurn and startTurn construct the derived purchaser through this body, which calls the reviewed threat-checker base constructor at 0x2ae18 and then replaces the vtable at +4. This matches the canonical in-class derived constructor. Final BLR at 0x2b234 precedes the empty clearMarks body at 0x2b238."
 
 [[helpers]]
+source_helper = "type_artifact_effect::type_artifact_effect"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x36bfc
+mac_size = 0xc
+target_sha256 = "0bb0a311e73704963a4f7549b72be58b8a6a6e674b19672724aca0af7fa3b847"
+evidence = "The 36c08 type_combat_artifact constructor calls this retained base constructor; its three instructions load the base vtable from the TOC, store it at +0, and return. The authored inline base constructor precedes the derived constructors in ai_player.cpp. The terminal BLR at 36c04 is followed by the distinct derived constructor prologue at 36c08."
+
+[[helpers]]
 source_helper = "sumPlayerDwellings"
 unit = "ai_player"
 mac_section = 0
