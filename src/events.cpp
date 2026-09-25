@@ -758,8 +758,7 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
 {
     NewmapCell* cell = getCell(point);
 
-    type_artifact artifact(ARTIFACT_NONE);
-    artifact.m_artifactId = cell->getArtifactIndex();
+    type_artifact artifact(cell->getArtifactIndex());
     currentHero->giveArtifact(&artifact, 1, 1);
     if (!humanPlayer)
         aiEquipArtifacts(currentHero);
@@ -2837,10 +2836,6 @@ VA(0x004a5030, 0x26E)  // dc 0x953cc
 void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
-    type_artifact artifact;
-    artifact.m_artifactId = ARTIFACT_NONE;
-    artifact.m_extra = -1;
-
     int reward = cell->getSeaChestReward();
     if (reward == const_sea_chest_artifact
         && currentHero->getNumberInBackpack(1) >= 64)
@@ -2858,10 +2853,8 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
                          1, -1, -1, GOLD, 1500, -1, 0, -1, 0, -1, 0);
         currentHero->giveResource(GOLD, 1500);
         break;
-    case const_sea_chest_artifact:
-        int artifactId = cell->getSeaChestArtifact();
-        memcpy(&artifact.m_artifactId, &artifactId,
-               sizeof artifact.m_artifactId);
+    case const_sea_chest_artifact: {
+        type_artifact artifact(TArtifact(cell->getSeaChestArtifact()));
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT_FORMAT],
@@ -2874,6 +2867,7 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
         if (!humanPlayer)
             aiEquipArtifacts(currentHero);
         break;
+    }
     }
 
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
@@ -2891,10 +2885,7 @@ void advManager::doEventSurvivor(hero* currentHero, NewmapCell* cell,
             normalDialog(g_text, 1, -1, -1, 8, cell->m_extraInfo,
                          -1, 0, -1, 0, -1, 0);
         }
-        type_artifact artifact;
-        memcpy(&artifact.m_artifactId, &cell->m_extraInfo,
-               sizeof artifact.m_artifactId);
-        artifact.m_extra = -1;
+        type_artifact artifact(TArtifact(cell->m_extraInfo));
         currentHero->giveArtifact(&artifact, 1, 1);
         if (!humanPlayer)
             aiEquipArtifacts(currentHero);
@@ -2917,11 +2908,7 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
 {
     if (cell->skeletonHasTreasure()) {
         if (currentHero->getNumberInBackpack(1) < 64) {
-            type_artifact artifact;
-            int artifactId = cell->getSkeletonArtifact();
-            memcpy(&artifact.m_artifactId, &artifactId,
-                   sizeof artifact.m_artifactId);
-            artifact.m_extra = -1;
+            type_artifact artifact(TArtifact(cell->getSkeletonArtifact()));
             if (humanPlayer) {
                 sprintf(g_text,
                         DATA_COMPGEN(0x00660344, twoWordFormat, "%s %s"),
@@ -3288,11 +3275,7 @@ void advManager::doEventTreasure(hero* currentHero, NewmapCell* cell,
 {
     if (cell->treasureIsArtifact()) {
         if (currentHero->getNumberInBackpack(1) < 64) {
-            type_artifact artifact;
-            int artifactId = cell->getTreasureArtifact();
-            memcpy(&artifact.m_artifactId, &artifactId,
-                   sizeof artifact.m_artifactId);
-            artifact.m_extra = -1;
+            type_artifact artifact(TArtifact(cell->getTreasureArtifact()));
             if (humanPlayer) {
                 sprintf(g_text,
                         (*g_adventureEventText)[ADV_EVENT_TEXT_TREASURE_ARTIFACT_FORMAT],
@@ -3399,11 +3382,7 @@ void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
 
     if (cell->wagonHasArtifact()
         && currentHero->getNumberInBackpack(1) < 64) {
-        type_artifact artifact;
-        int artifactId = cell->getWagonArtifact();
-        memcpy(&artifact.m_artifactId, &artifactId,
-               sizeof artifact.m_artifactId);
-        artifact.m_extra = -1;
+        type_artifact artifact(TArtifact(cell->getWagonArtifact()));
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_WAGON_ARTIFACT_FORMAT],
@@ -3880,11 +3859,7 @@ void advManager::doEventWarriorTomb(hero* currentHero, ExtraInfoUnion* cell,
     }
 
     if (cell->tombIsFull() && currentHero->getNumberInBackpack(1) < 64) {
-        type_artifact artifact;
-        int artifactId = cell->getTombArtifact();
-        memcpy(&artifact.m_artifactId, &artifactId,
-               sizeof artifact.m_artifactId);
-        artifact.m_extra = -1;
+        type_artifact artifact(TArtifact(cell->getTombArtifact()));
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_WARRIOR_TOMB_ARTIFACT_FORMAT],
@@ -5306,9 +5281,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
 
     unsigned int k;
     for (k = 0; k < bank.m_artifacts.size(); k++) {
-        type_artifact art;
-        art.m_artifactId = bank.m_artifacts[k];
-        art.m_extra = -1;
+        type_artifact art(bank.m_artifacts[k]);
         who->giveArtifact(&art, 1, 1);
     }
 

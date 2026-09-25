@@ -8049,12 +8049,10 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     i = 1;
     if (random(1, 100) <= 88 && traits->m_secondStack != -1) {
         if (traits->m_secondStack == CREATURE_BALLISTA) {
-            type_artifact artifact;
-            artifact.m_artifactId = ARTIFACT_BALLISTA;
+            type_artifact artifact(ARTIFACT_BALLISTA);
             m_heroes[hero].giveArtifact(&artifact, 0, 0);
         } else if (traits->m_secondStack == CREATURE_FIRST_AID_TENT) {
-            type_artifact artifact;
-            artifact.m_artifactId = ARTIFACT_FIRST_AID_TENT;
+            type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
             m_heroes[hero].giveArtifact(&artifact, 0, 0);
         } else {
             currentArmy->m_armies[i] = traits->m_secondStack;

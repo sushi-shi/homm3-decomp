@@ -2319,10 +2319,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
 
     case eRewardArtifact:
         if (currentHero->getNumberInBackpack(1) < 64) {
-            type_artifact artifact(ARTIFACT_NONE);
-            {
-                artifact.m_artifactId = TArtifact(m_value.m_dwords[0]);
-            }
+            type_artifact artifact(TArtifact(m_value.m_dwords[0]));
             currentHero->giveArtifact(&artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);

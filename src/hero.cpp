@@ -5415,8 +5415,7 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
 // Original: hero::GiveRandomArtifact; hero.cpp:5064, dc 0xd3e40
 int hero::giveRandomArtifact()
 {
-    type_artifact artifact;
-    artifact.m_artifactId = g_game->getRandomArtifactId(14);
+    type_artifact artifact(g_game->getRandomArtifactId(14));
     if (artifact.m_artifactId == ARTIFACT_NONE)
         giveResource(GOLD, 1000);
     else
