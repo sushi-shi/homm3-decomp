@@ -332,7 +332,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
             upgradeAllValid = 1;
             allUpgraded = 0;
             if (s.m_level == 0) {
-                strcpy(s.m_goldCost, g_generalText->getText(GENERAL_TEXT_FREE));
+                strcpy(s.m_goldCost, (*g_generalText)[GENERAL_TEXT_FREE]);
                 strcpy(s.m_resourceCost, "");
             } else {
                 TCreatureType upgraded;
@@ -361,7 +361,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
                             s.m_cost[s.m_resourceIndex]);
             }
         } else {
-            strcpy(s.m_goldCost, g_generalText->getText(GENERAL_TEXT_UPGRADE_NOT_AVAILABLE));
+            strcpy(s.m_goldCost, (*g_generalText)[GENERAL_TEXT_UPGRADE_NOT_AVAILABLE]);
         }
 
         int portraitId = CREATURE_PORTRAIT_1_ID + i;
@@ -509,7 +509,7 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
     switch (m_slot[which].m_state) {
     case UPGRADE_STATE_NONE:
         if (showMessage)
-            normalDialog(g_generalText->getText(GENERAL_TEXT_HILL_FORT_ALREADY_UPGRADED), 1, -1, -1,
+            normalDialog((*g_generalText)[GENERAL_TEXT_HILL_FORT_ALREADY_UPGRADED], 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         break;
 
@@ -537,7 +537,7 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 
     case UPGRADE_STATE_TOO_EXPENSIVE:
         if (showMessage)
-            normalDialog(g_generalText->getText(GENERAL_TEXT_HILL_FORT_CANNOT_AFFORD_ONE), 1, -1, -1,
+            normalDialog((*g_generalText)[GENERAL_TEXT_HILL_FORT_CANNOT_AFFORD_ONE], 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     }
@@ -551,11 +551,11 @@ void THillFortWindow::upgradeAll()
 {
     switch (m_upgradeAllButtonState) {
     case UPGRADE_STATE_NONE:
-        normalDialog(g_generalText->getText(GENERAL_TEXT_HILL_FORT_ALL_UPGRADED), 1, -1, -1,
+        normalDialog((*g_generalText)[GENERAL_TEXT_HILL_FORT_ALL_UPGRADED], 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     case UPGRADE_STATE_TOO_EXPENSIVE:
-        normalDialog(g_generalText->getText(GENERAL_TEXT_HILL_FORT_CANNOT_AFFORD_ALL), 1, -1, -1,
+        normalDialog((*g_generalText)[GENERAL_TEXT_HILL_FORT_CANNOT_AFFORD_ALL], 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     case UPGRADE_STATE_AFFORDABLE:
@@ -670,13 +670,13 @@ int hillFortWindowHandler(message& msg)
         switch (hoverID) {
         case THillFortWindow::HERO_PORTRAIT_ID:
             sprintf(g_text,
-                    g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
                     g_game->getCurrHero()->m_name, g_game->getCurrHero()->heroFn004D8F70());
             msg.m_extraText = g_text;
             break;
 
         case THillFortWindow::UPGRADE_ALL_BUTTON_ID:
-            msg.m_extraText = g_generalText->getText(GENERAL_TEXT_UPGRADE_ALL_CREATURES);
+            msg.m_extraText = (*g_generalText)[GENERAL_TEXT_UPGRADE_ALL_CREATURES];
             break;
 
         case THillFortWindow::CREATURE_PORTRAIT_1_ID:
@@ -698,7 +698,7 @@ int hillFortWindowHandler(message& msg)
         case THillFortWindow::UPGRADE_BUTTON_5_ID:
         case THillFortWindow::UPGRADE_BUTTON_6_ID:
         case THillFortWindow::UPGRADE_BUTTON_7_ID:
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UPGRADE_FORMAT),
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_UPGRADE_FORMAT],
                     g_creatureTypeTraits[
                         g_hillFortWindow->getCreatureType(
                             hoverID - THillFortWindow::UPGRADE_BUTTON_1_ID)].m_pluralName);

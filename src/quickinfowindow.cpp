@@ -45,20 +45,19 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
         switch (disposition) {
         case Flee:
             strcpy(g_text,
-                   g_generalText->getText(GENERAL_TEXT_QUICK_CREATURE_FLEE));
+                   (*g_generalText)[GENERAL_TEXT_QUICK_CREATURE_FLEE]);
             break;
         case Attack:
             strcpy(g_text,
-                   g_generalText->getText(GENERAL_TEXT_QUICK_CREATURE_ATTACK));
+                   (*g_generalText)[GENERAL_TEXT_QUICK_CREATURE_ATTACK]);
             break;
         case Join:
             strcpy(g_text,
-                   g_generalText->getText(GENERAL_TEXT_QUICK_CREATURE_JOIN));
+                   (*g_generalText)[GENERAL_TEXT_QUICK_CREATURE_JOIN]);
             break;
         case JoinPrice:
             sprintf(g_text,
-                    g_generalText->getText(
-                        GENERAL_TEXT_QUICK_CREATURE_JOIN_COST_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_QUICK_CREATURE_JOIN_COST_FORMAT],
                     cost);
             break;
         }
