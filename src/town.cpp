@@ -666,15 +666,15 @@ void town::giveSpells(hero* forceHero) const
                         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
                             if (!m_spells.test(spell)
                                 && g_spellTraits[spell].m_level
-                                    < currentHero->m_skillLevel[
-                                        eSecSkillWisdom] + 3
+                                    < currentHero->getSecondarySkill(
+                                        eSecSkillWisdom) + 3
                                 && spell != SPELL_TITANS_LIGHTNING_BOLT)
                                 currentHero->addSpell(spell);
                         }
                     } else {
                         for (int level = 0;
-                             level < currentHero->m_skillLevel[
-                                         eSecSkillWisdom] + 2
+                             level < currentHero->getSecondarySkill(
+                                         eSecSkillWisdom) + 2
                                  && level <= m_mageLevel;
                              ++level) {
                             for (int slot = 0;

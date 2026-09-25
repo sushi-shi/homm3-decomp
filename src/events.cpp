@@ -2229,7 +2229,8 @@ void advManager::doEventLibrary(hero* currentHero, NewmapCell* cell,
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
-    if (currentHero->m_level + currentHero->m_skillLevel[4] * 2 >= 10) {
+    if (currentHero->m_level
+        + currentHero->getSecondarySkill(eSecSkillDiplomacy) * 2 >= 10) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_LIBRARY],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);

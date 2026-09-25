@@ -4433,7 +4433,7 @@ long type_base_necromancy_artifact::getValue(
 VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
 long type_necromancy_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char exact) const
 {
-    if (owner->m_skillLevel[12] == 0)
+    if (owner->getSecondarySkill(eSecSkillNecromancy) == 0)
         return 0;
     return type_base_necromancy_artifact::getValue(owner, equipped, exact);
 }
@@ -4759,12 +4759,12 @@ long type_undead_king_cloak_artifact::getValue(const hero* owner,
                                                 unsigned char equipped,
                                                 unsigned char exact) const
 {
-    if (owner->m_skillLevel[12] == 0)
+    if (owner->getSecondarySkill(eSecSkillNecromancy) == 0)
         return type_base_necromancy_artifact::getValue(
             owner, equipped, exact);
 
     TCreatureType creature;
-    switch (owner->m_skillLevel[12]) {
+    switch (owner->getSecondarySkill(eSecSkillNecromancy)) {
     case eMasteryBasic:
         creature = CREATURE_WALKING_DEAD;
         break;

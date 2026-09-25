@@ -508,8 +508,10 @@ int combatManager::open(int newPriority)
     m_powSprite = 0;
     m_powSpellEffect = -1;
 
-    int leftTactics = m_heroes[0] ? m_heroes[0]->m_skillLevel[19] : 0;
-    int rightTactics = m_heroes[1] ? m_heroes[1]->m_skillLevel[19] : 0;
+    int leftTactics = m_heroes[0]
+        ? m_heroes[0]->getSecondarySkill(eSecSkillBattleTactics) : 0;
+    int rightTactics = m_heroes[1]
+        ? m_heroes[1]->getSecondarySkill(eSecSkillBattleTactics) : 0;
     int tacticsSide = rightTactics > leftTactics;
     m_placementBoundaryDepth = leftTactics - rightTactics;
     m_creaturePlacement = m_placementBoundaryDepth != 0 && !m_isSurrounded;

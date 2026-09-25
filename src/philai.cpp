@@ -1038,8 +1038,8 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
     for (unsigned int secondaryIndex = 0;
          secondaryIndex < blackBox->m_secondarySkills.size();
          ++secondaryIndex) {
-        signed char currentLevel = currentHero->m_skillLevel[
-            blackBox->m_secondarySkills[secondaryIndex].m_type];
+        signed char currentLevel = currentHero->getSecondarySkill(
+            blackBox->m_secondarySkills[secondaryIndex].m_type);
         int level = blackBox->m_secondarySkills[secondaryIndex].m_level;
         if (currentLevel == 0 && currentHero->m_skillCount < 8)
             value += level * primarySkillValue;
@@ -1591,7 +1591,7 @@ VA(0x00524690, 0x684)  // anchor-callee, dc 0x1135ac
 long getSkillValue(const hero* ourHero, TSecondarySkill skill,
                      unsigned char complexChoice)
 {
-    signed char level = ourHero->m_skillLevel[skill];
+    signed char level = ourHero->getSecondarySkill(skill);
     if (level == eMasteryExpert)
         return 0;
     if (level == eMasteryNone
@@ -1741,7 +1741,7 @@ long getSchoolValue(const hero* ourHero, TSecondarySkill skill)
     type_spellvalue value(ourHero);
     long baseValue = value.getBestSpellValue(SPELL_VALUE_CLASS_MASK);
 
-    signed char level = ourHero->m_skillLevel[skill];
+    signed char level = ourHero->getSecondarySkill(skill);
     int oldLevel = level;
     if (oldLevel == 0)
         const_cast<hero*>(ourHero)->m_skillLevel[skill] = 3;
