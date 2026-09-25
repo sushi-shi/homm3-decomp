@@ -640,6 +640,15 @@ mac_size = 0x30
 target_sha256 = "ff202992974b25b7708d10479df9fd91687b4dfa6df3b391e58176d76b830ac2"
 evidence = "Returns bool of remote flag or network protocol3 (hotseat). Reviewed extent code0+0xe6fc4..0xe6ff4; terminal return and following entry separate the span."
 
+[[helpers]]
+source_helper = "game::getLastHuman"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe6ff4
+mac_size = 0x60
+target_sha256 = "3f28d21ad1ab373a231156d96e78ad4ff3dbfa80e3b73997e8e647ad6a04dde1"
+evidence = "Reverse scan of eight 0x15c-byte player records calls playerData::isHuman 0xcdbf0 and returns the first index, otherwise zero. getLocalPlayerGamePos calls this body at 0xe6cc4. Reviewed extent code0+0xe6ff4..0xe7054; terminal return and following prologue separate the span."
+
 [[functions]]
 retail_va = 0x004cecb0
 unit = "game"
