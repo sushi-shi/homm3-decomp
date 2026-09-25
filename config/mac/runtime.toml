@@ -1307,3 +1307,83 @@ mac_offset = 0x768e0
 mac_size = 0x8
 sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
 evidence = "Eagle Eye call sites construct one-word iterator temporaries from a set position. The complete body copies r4 to the receiver and returns at 0x768e4; adjacent 0x768e8 returns an object's field at +0xc. This is a container iterator constructor, not a combat game helper."
+
+[[functions]]
+symbol = ".mac_network_host_flag_211154"
+mac_section = 0
+mac_offset = 0x211154
+mac_size = 0x10
+sha256 = "3e8a4f2dfa6574eb2fbb026e4a464c4e4bbc91e428e919ea664793c6835bd464"
+evidence = "Six network callers load g_dPlay before calling this entry. TSingleSelectionWindow::isHost at 0x182650 uses its result after the g_remoteOn guard, matching the source's platform host query. The Mac callee ignores the receiver and reads byte +1 through a separate TOC global at 1+0x553560; remoteCleanup also calls it during Mac-only host cleanup. BLR at 0x211160 and the next entry at 0x211164 bound the four-instruction body. This is Mac network state, not a missing shared game helper."
+
+[[functions]]
+symbol = ".mac_selection_preview_vector_dtor_187ccc"
+mac_section = 0
+mac_offset = 0x187ccc
+mac_size = 0x7c
+sha256 = "f16553317c21b649f9ceb7b1470e06124c0dd35d2c781b00ab6698d8e0468e61"
+evidence = "Eight calls in five selection-window bodies destroy a vector of 0xc08-byte records. The loop calls SavedGameHeader and CampaignScenarioPreview destructors within each record, walks backward from the vector's size and backing pointer, then clears its size at +4. BLR at 0x187d44 precedes the deleting wrapper at 0x187d48. This is generated container cleanup for authored vector lifetimes."
+
+[[functions]]
+symbol = ".mac_bitset_144_default_ctor_5afcc"
+mac_section = 0
+mac_offset = 0x5afcc
+mac_size = 0x1c
+sha256 = "e12f2d6efa51301180c25e54c1d8db558804318916e35ff87770c7d1c05f78b8"
+evidence = "makeArtifactComponentMask constructs its source std::bitset<144> through this body; campaign scenario and map loading callers also construct five-word bitsets. It zeros receiver words +0,+4,+8,+12,+16 and returns at 0x5afe4 before the next entry. MSL template construction, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_bitset_145_default_ctor_99f00"
+mac_section = 0
+mac_offset = 0x99f00
+mac_size = 0x1c
+sha256 = "e12f2d6efa51301180c25e54c1d8db558804318916e35ff87770c7d1c05f78b8"
+evidence = "The Mac getRandomMonster call constructs the source std::bitset<CREATURE_CATAPULT>, whose bound is 145; campaign scenario callers construct a five-word crossover creature bitset. The callee zeros receiver words +0,+4,+8,+12,+16 and returns at 0x99f18. MSL template construction, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_bitset_144_count_99f48"
+mac_section = 0
+mac_offset = 0x99f48
+mac_size = 0x70
+sha256 = "dd0b67d26ddb78927c05c4069d7cd67c1fe86c0695b9c6532bd2c4fbbd862b81"
+evidence = "Campaign-start and two artifact-victory callers use std::bitset<144>::count on the source crossover or combination-artifact mask. This body iterates five 32-bit words, calls the word popcount helper at 0x9d3e0, sums the counts, and returns at 0x99fb4 before the next body. MSL bitset operation, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_varargs_format_wrapper_28df60"
+mac_section = 0
+mac_offset = 0x28df60
+mac_size = 0x2c
+sha256 = "a336b8ca2bd39e4876ab101705c0be7fd0eee797954aba20c2f4cde0e852092c"
+evidence = "formatString and five CChatManager varargs callers pass destination, format and arguments here. The wrapper shifts the format/argument registers, sets the length argument to -1, and calls the bounded formatter at 0x28decc. BLR at 0x28df88 bounds the body. C-library formatting, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_timer_refresh_20f084"
+mac_section = 0
+mac_offset = 0x20f084
+mac_size = 0x2c
+sha256 = "5d277b818d19d32222750656008f4108ba37f6d65c27f1f8fb3d663a632f6f41"
+evidence = "Save-game transfer, pollSound, window processing and selection tick callers refresh Mac time here. It passes a TOC global to 0x2778f0, whose body calls Mac time glue at 0x2a1430 and scales to milliseconds, then stores the returned value through a second TOC global. BLR at 0x20f0ac bounds the wrapper. Platform timing, not a shared game helper."
+
+[[functions]]
+symbol = ".mac_event_vector_deleting_dtor_be748"
+mac_section = 0
+mac_offset = 0xbe748
+mac_size = 0x64
+sha256 = "59d4586ccd935fd5ebed5476f66eaf86993472202d3b5dd8049832f6e7d7f87e"
+evidence = "Exchange-spells and map-cell event readers call this deleting vector destructor for local containers. It calls element cleanup at 0xbed64, frees backing storage at +8 when present, and frees the receiver only for a positive deleting flag. BLR at 0xbe7a8 precedes the next body. Generated container lifetime, not a source helper omission."
+
+[[functions]]
+symbol = ".mac_vector_word_clear_e9214"
+mac_section = 0
+mac_offset = 0xe9214
+mac_size = 0x38
+sha256 = "71fd8d5e7c39a167a5e408094504616055dadfbd71eb5b81238761e48087dab7"
+evidence = "Ten game calls clear four-byte-element vectors, including player shipyards and map-loading containers. The callee derives end from size+backing pointer, performs the trivial element walk, then stores zero to size at +4. BLR at 0xe9248 bounds the body. MSL vector::clear, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_vector_word_append_e8010"
+mac_section = 0
+mac_offset = 0xe8010
+mac_size = 0xa0
+sha256 = "3034a3d0f37c5914a490726acdc4ca483a0dd23f3733ea5ca8c42bb5221b813f"
+evidence = "Eight calls from game setup, event randomization, shipyard claims and path search append four-byte values to vectors. The callee checks size against capacity, grows through 0xeb0ac when full, then copies an element into the backing pointer and advances size. BLR at 0xe80ac bounds the body. MSL vector append, not an authored game helper."
