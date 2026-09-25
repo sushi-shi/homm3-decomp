@@ -97,8 +97,7 @@ unsigned char checkAdjacentMonster(const hero* currentHero,
                                      type_search_type searchType)
 {
     type_point monster;
-    if (getMapExtra(entryPoint->m_point.m_x, entryPoint->m_point.m_y,
-                    entryPoint->m_point.m_z)
+    if (getMapExtra(entryPoint->m_point)
         & MAP_EXTRA_MONSTER) {
         if (g_advManager->findAdjacentMonster(entryPoint->m_point, &monster,
                                               entryPoint->m_monster)) {
@@ -712,7 +711,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
 
         if (!cell.m_flying && !cell.m_dimensionDoor
             && searchType < const_AI_search
-            && (getMapExtra(cell.m_point.m_x, cell.m_point.m_y, cell.m_point.m_z)
+            && (getMapExtra(cell.m_point)
                 & MAP_EXTRA_MONSTER)
             && cell.m_point != start
             && g_advManager->findAdjacentMonster(

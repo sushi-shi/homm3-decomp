@@ -567,8 +567,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             candidate.m_canStop = 0;
         }
 
-        if (!(getMapExtra(candidate.m_point.m_x, candidate.m_point.m_y,
-                          candidate.m_point.m_z) & g_mapVisibilityBit)
+        if (!(getMapExtra(candidate.m_point) & g_mapVisibilityBit)
                 && searchType != const_AI_enemy_search
                 && (g_currentPlayer->isHuman()
                     || (!(getMapExtra(source->m_point) & g_mapVisibilityBit)

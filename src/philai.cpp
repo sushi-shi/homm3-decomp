@@ -677,8 +677,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 
     originalDestination = destination.m_point;
     unsigned char destinationWasUnvisited =
-        !(getMapExtra(originalDestination.m_x, originalDestination.m_y,
-                      originalDestination.m_z)
+        !(getMapExtra(originalDestination)
           & g_curPlayerBit);
     int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
                                     currentHero->m_z);
@@ -695,8 +694,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     aiAttemptMove(currentHero, destination, rawValue, exploreMode);
 
     if (destinationWasUnvisited && exploreMode
-        && (getMapExtra(originalDestination.m_x, originalDestination.m_y,
-                        originalDestination.m_z)
+        && (getMapExtra(originalDestination)
             & g_curPlayerBit)) {
         g_aiPlayers[g_netLocalGamePos].resetMagusHutValue();
         exploreMode = 0;

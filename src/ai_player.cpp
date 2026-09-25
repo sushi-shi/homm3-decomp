@@ -2899,7 +2899,7 @@ static void markStrategicMap(
         point = destinations[i];
         NewmapCell* cell = g_advManager->getCell(point.m_point);
         int type = cell->m_type;
-        if (!(getMapExtra(point.m_point.m_x, point.m_point.m_y, point.m_point.m_z)
+        if (!(getMapExtra(point.m_point)
               & g_curPlayerBit)) {
             strategicMap[point.m_point.m_z * levelSize
                           + point.m_point.m_y * g_mapWidth + point.m_point.m_x]
@@ -3001,10 +3001,9 @@ static void unblockLith(hero* currentHero,
         point.m_y = currentHero->m_y + g_normalDirTable[direction].m_y;
         if (!point.isValid())
             continue;
-        if (g_game->m_worldMap.cell(
-                point.m_x, point.m_y, point.m_z)->m_isTrigger)
+        if (g_game->m_worldMap.cell(point)->m_isTrigger)
             continue;
-        if (getMapExtra(point.m_x, point.m_y, point.m_z) & MAP_EXTRA_MONSTER)
+        if (getMapExtra(point) & MAP_EXTRA_MONSTER)
             continue;
         pathCell* currentPathCell =
             g_searchArray->getCell(point, false);
@@ -3458,7 +3457,7 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
     NewmapCell* cell = g_advManager->getCell(point);
     int type = cell->m_type;
     if (cell->m_isTrigger && g_adventureObjectTraits[type].m_blocksLanding) {
-        if (getMapExtra(point.m_x, point.m_y, point.m_z) & g_curPlayerBit) {
+        if (getMapExtra(point) & g_curPlayerBit) {
             destination->m_moveCost -= currentPathCell->m_cost;
             point = currentPathCell->m_lastPoint;
             pathCell* lastCell = currentSearchArray->getCell(point, 0);
@@ -4344,7 +4343,7 @@ long aiValueOfObservatory(type_point origin, long playerId, long range)
                                         + (point.m_y - origin.m_y)
                                           * (point.m_y - origin.m_y))) > distance)
                 continue;
-            if (getMapExtra(point.m_x, point.m_y, point.m_z) & playerBit)
+            if (getMapExtra(point) & playerBit)
                 continue;
 
             ++value;

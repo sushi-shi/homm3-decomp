@@ -2018,7 +2018,7 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
     m_lastHoverY = m_lastMapHover.m_y - m_radarOrigin.m_y;
 
     unsigned char visible =
-        (getMapExtra(point.m_x, point.m_y, point.m_z)
+        (getMapExtra(point)
          & visibilityBit) != 0;
 
     NewmapCell* cell = getCell(point);
