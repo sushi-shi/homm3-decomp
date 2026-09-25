@@ -2706,6 +2706,7 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
                                    g_combatManager->m_magicTerrain))
         mastery = eMasteryExpert;
 
+    type_spell_choice choice(spell, mastery, power, power);
     army* target = g_combatManager->m_cells[hex].getArmy();
     long baseDamage;
     switch (spell) {
@@ -2715,9 +2716,7 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
     case SPELL_IMPLOSION:
         if (!target)
             return 0;
-        baseDamage = g_spellTraits[spell].m_masteryBonus[mastery]
-                      + g_spellTraits[spell].m_powerFactor * power;
-        return getDamageValue(spell, baseDamage, m_enemyHero, target);
+        return getDamageSpellValue(target, choice);
 
     case SPELL_CHAIN_LIGHTNING:
         if (target) {

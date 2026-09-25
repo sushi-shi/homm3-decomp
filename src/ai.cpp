@@ -2389,15 +2389,7 @@ unsigned char combatManager::doSpellAI()
         && !static_cast<const combatManager*>(this)->isQuickCombat())
         return 0;
     long side = m_currentSide;
-    if (m_onAntiMagicGarrison)
-        return 0;
-    if (!m_heroes[side])
-        return 0;
-    if (!m_heroes[side]->isWieldingArtifact(0))
-        return 0;
-    if (m_heroes[0] && m_heroes[0]->isWieldingArtifact(0x7e))
-        return 0;
-    if (m_heroes[1] && m_heroes[1]->isWieldingArtifact(0x7e))
+    if (!canCastSpells(side, 1))
         return 0;
 
     type_AI_spellcaster caster(this, m_currentSide, 0);
