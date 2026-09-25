@@ -34,11 +34,19 @@ def _owner(unit: str, assignments: dict[str, str]) -> str:
     return assignments.get(unit, "unassigned")
 
 
+def _reviewed_units(root: Path) -> set[str]:
+    path = root / "config/mac/helper-review.toml"
+    if not path.exists():
+        return set()
+    return set(tomllib.loads(path.read_text()).get("units", []))
+
+
 def generate(root: Path, action_queue: dict, index: Index,
              assignments: dict[str, str] | None = None,
              *, all_functions: bool = False) -> dict:
     """Build a source-call review queue from reviewed spans and Mac branches."""
     assignments = assignments or {}
+    reviewed_units = _reviewed_units(root)
     selected = {int(row["retail_va"], 0): row for row in action_queue["rows"]
                 if all_functions or row.get("windows_max") is None
                 or row["windows_max"] < 100 - 1e-6}
@@ -68,14 +76,16 @@ def generate(root: Path, action_queue: dict, index: Index,
     for va, row in sorted(selected.items()):
         caller = by_va.get(va)
         owner = _owner(row.get("unit") or "", assignments)
+        helper_reviewed = caller is not None and row.get("unit") in reviewed_units
         deferred = row.get("state") == "deferred"
         entry = {"owner": owner, "unit": row.get("unit"), "retail_va": f"0x{va:08x}",
                  "function": row["function"], "windows_max": row.get("windows_max"),
-                 "deferred": deferred,
+                 "deferred": deferred, "helper_reviewed": helper_reviewed,
                  "reviewed_mac_span": caller is not None,
                  "reviewed_calls": 0, "missing_named_calls": 0,
                  "unreviewed_targets": 0,
-                 "state": "review_calls" if caller else "pair_mac_address"}
+                 "state": ("helper_reviewed" if helper_reviewed else
+                           "review_calls" if caller else "pair_mac_address")}
         functions.append(entry)
         if caller is None:
             continue
@@ -124,6 +134,7 @@ def generate(root: Path, action_queue: dict, index: Index,
             entry["missing_named_calls"] += state == "review_missing_helper_call"
             entry["unreviewed_targets"] += state == "identify_target"
     coverage = {"functions_in_scope": len(functions),
+                "helper_reviewed_functions": sum(row["helper_reviewed"] for row in functions),
                 "unfinished_windows_functions": sum(
                     row.get("windows_max") is None or row["windows_max"] < 100 - 1e-6
                     for row in selected.values()),
@@ -145,7 +156,7 @@ def write(root: Path, report: dict, *, stem: str = "helper-queue") -> None:
     reports.atomic_text(out / f"{stem}.json", json.dumps(report, indent=2) + "\n")
     for name, fields in (
         ("functions", ("owner", "unit", "retail_va", "function", "windows_max", "deferred",
-                       "reviewed_mac_span", "reviewed_calls", "missing_named_calls",
+                       "helper_reviewed", "reviewed_mac_span", "reviewed_calls", "missing_named_calls",
                        "unreviewed_targets", "state")),
         ("calls", ("owner", "unit", "retail_va", "deferred", "mac_call_site", "mac_target",
                    "target_name", "target_unit", "source_call_present", "state")),

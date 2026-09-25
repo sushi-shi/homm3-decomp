@@ -1,0 +1,19 @@
+# Units whose Mac-retained game calls were reviewed across all Windows functions.
+# A function counts as handled only when it also has a paired Mac caller span.
+units = [
+  "ai_combat",
+  "ai_tactical",
+  "artifact",
+  "campaignbrief",
+  "campaignmusic",
+  "combatoptionswindow",
+  "customcampaign",
+  "drawing",
+  "findpath",
+  "objecttype",
+  "overview",
+  "philai",
+  "remote",
+  "resource",
+  "systemoptionswindow",
+]

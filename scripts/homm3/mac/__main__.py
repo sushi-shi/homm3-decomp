@@ -226,7 +226,8 @@ def main(argv=None) -> int:
             else:
                 coverage = report["coverage"]
                 print(f"[mac] helper queue: {coverage['functions_in_scope']} Windows functions in scope; "
-                      f"{coverage['reviewed_mac_callers']} reviewed Mac caller spans")
+                      f"{coverage['helper_reviewed_functions']} helper-reviewed from Mac calls; "
+                      f"{coverage['reviewed_mac_callers']} paired Mac caller spans")
                 print(f"[mac] {coverage['missing_named_source_calls']} reviewed helper calls absent from source; "
                       f"{coverage['unreviewed_direct_targets']} distinct direct targets need identity review")
                 for lead in helper_queue.leads(report, args.unit, args.include_deferred)[:args.limit]:
