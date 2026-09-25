@@ -25,18 +25,19 @@ do not add duplicate game declarations or extracted header-body fragments.
 
 For the broad helper sweep, cover byte-exact Windows functions too. Use Mac's
 retained calls and simpler body shapes to restore helper calls and canonical
-bodies throughout the source. Many original names are unavailable: choose clear
-project names and keep moving when the operation is identified. A recovered
-helper with a provisional name stays in the source; uncertainty about its
-original spelling is not a reason to remove its calls or return to expanded
-caller code. Inspect the Mac callee body and its callers to distinguish a game
-helper from library, runtime, glue, or generated code. When its operation and
-receiver are clear, add one canonical body and replace the corresponding
-expanded expressions in Windows source, including already byte-exact callers.
-Do not wait for a byte-score improvement or an exact Mac comparison. Revisit
-uncertain names and placement when stronger evidence appears. Track each lead
-through implemented, already represented by a nested helper, or a concrete
-non-game/insufficient-evidence reason so the sweep reaches every function.
+bodies throughout the source. Inspect the Mac callee and its callers to
+distinguish game helpers from library, runtime, glue, or generated code. A
+retained Mac call to an identified game helper, or a recognizable helper body
+expanded in a Mac caller, is enough to restore that source-level operation in
+the corresponding Windows callers. The Mac function name, original C++
+spelling, exact Mac byte match, and immediate Windows score improvement are
+not prerequisites. Choose a clear project name when the original is unknown;
+keep that helper and its calls rather than reverting to expanded caller code.
+Keep one canonical body and use the best-supported ordinary header or source
+file. Review naming and placement when stronger evidence appears. Track each
+lead through implemented, already represented by a nested helper, or a
+concrete non-game/insufficient-evidence reason so the sweep reaches every
+function.
 
 The verdict is VC6 SP3 under Wine; clang/clangd is editor tooling only. Use the
 per-TU compiler profiles in `config/units.toml`.
@@ -88,9 +89,12 @@ homm3 sema diff 0x00524dd0 --structure
 homm3 sema diff 0x00524dd0 --source
 ```
 
-For an admitted Mac counterpart, also run `homm3 mac show <Windows-VA>`,
-`homm3 mac disasm <Windows-VA>` and `homm3 mac diff <Windows-VA>` before
-speculative rewrites. The Mac byte comparison is a separate exact verdict;
+For byte matching an admitted Mac counterpart, also run
+`homm3 mac show <Windows-VA>`, `homm3 mac disasm <Windows-VA>` and
+`homm3 mac diff <Windows-VA>` before speculative rewrites. A helper-sweep edit
+only needs enough Mac body/call evidence to identify the operation and its
+Windows callers; batch compilation and byte comparisons can follow the sweep.
+The Mac byte comparison is a separate exact verdict;
 its stripped PEF does not supply Dreamcast's names or line tables. Match the
 same authored C++ body against both targets, and document evidenced platform
 differences at the owning source.
