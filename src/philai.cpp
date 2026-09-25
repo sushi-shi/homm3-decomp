@@ -1364,7 +1364,7 @@ inline int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
 inline int valueOfLighthouse(NewmapCell* cell)
 {
     if (g_game->onSameTeam(
-            g_game->m_mines[cell->m_extraInfo].m_playerOwner,
+            g_game->getMine(cell->m_extraInfo)->m_playerOwner,
             g_netLocalGamePos))
         return 0;
     return 1000;

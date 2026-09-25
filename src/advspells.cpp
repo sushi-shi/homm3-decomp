@@ -277,9 +277,9 @@ void advManager::skuttleBoat(TSkillMastery level)
         // The CONST get_map_center overload is the one retail calls here
         // (?get_map_center@advManager@@QBE...); /OPT:ICF folded the pair onto
         // one row, so the receiver cast costs no bytes and buys the name.
-        boat& theBoat = g_game->m_boats[
+        boat& theBoat = *g_game->getBoat(
             getCell(get_mouse_map_point())
-                ->m_extraInfo];
+                ->m_extraInfo);
         theBoat.restoreCell();
 
         // The fizzle covers the boat's sprite footprint: one cell of slack

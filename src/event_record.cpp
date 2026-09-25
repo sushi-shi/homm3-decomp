@@ -225,7 +225,7 @@ type_record_claim_mine::type_record_claim_mine(long id,
 {
     m_id = id;
     m_newOwner = newOwner;
-    m_oldOwner = g_game->m_mines[id].m_playerOwner;
+    m_oldOwner = g_game->getMine(id)->m_playerOwner;
 }
 
 // E:\gamedcs\event_record.cpp:255
@@ -269,7 +269,7 @@ void type_record_claim_mine::replay(unsigned char draw)
 {
     g_game->claimMine(m_id, m_newOwner, const_recorded_action);
     if (draw) {
-        mine& claimed = g_game->m_mines[m_id];
+        mine& claimed = *g_game->getMine(m_id);
         if (getMapExtra(claimed.m_mapX, claimed.m_mapY, claimed.m_mapZ)
             & g_mapVisibilityBit) {
             g_advManager->completeDraw(0);
@@ -281,7 +281,7 @@ void type_record_claim_mine::replay(unsigned char draw)
 VA(0x0049abc0, 0x19)  // dc 0x8ccd8
 void type_record_claim_mine::undo()
 {
-    g_game->m_mines[m_id].m_playerOwner = m_oldOwner;
+    g_game->getMine(m_id)->m_playerOwner = m_oldOwner;
 }
 
 VA(0x0049abe0, 0x7)  // dc 0x8c658

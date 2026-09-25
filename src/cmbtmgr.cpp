@@ -1198,11 +1198,11 @@ void combatManager::determineCombatTerrain()
         terrain = COMBAT_TERRAIN_SUBTERRANEAN;
     } else if (m_combatCell->getMapObject() == MINE
             && m_combatCell->m_isTrigger
-            && (g_game->m_mines[m_combatCell->getMapExtraInfo()].m_type
+            && (g_game->getMine(m_combatCell->getMapExtraInfo())->m_type
                     == COMBAT_MINE_TYPE_6
-                || g_game->m_mines[m_combatCell->getMapExtraInfo()].m_type
+                || g_game->getMine(m_combatCell->getMapExtraInfo())->m_type
                     == COMBAT_MINE_TYPE_4
-                || g_game->m_mines[m_combatCell->getMapExtraInfo()].m_isAbandoned)) {
+                || g_game->getMine(m_combatCell->getMapExtraInfo())->m_isAbandoned)) {
         terrain = COMBAT_TERRAIN_SUBTERRANEAN;
     } else if (m_combatCell->m_flags0011 & 0x200) {
         m_magicTerrain = 0;
