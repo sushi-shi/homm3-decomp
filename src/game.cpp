@@ -2315,7 +2315,7 @@ void game::setupShipyards()
          ++location.m_z) {
         for (location.m_y = 0; location.m_y < g_mapWidth; ++location.m_y) {
             for (location.m_x = 0; location.m_x < g_mapHeight; ++location.m_x) {
-                NewmapCell* mapCell = g_game->m_worldMap.cell(location);
+                NewmapCell* mapCell = g_game->getCell(location);
 
                 if (mapCell->m_type == HERO) {
                     obscuringHero = g_game->getHero(mapCell->m_extraInfo);
@@ -6749,7 +6749,7 @@ VA(0x004c6a30, 0x21F)  // dc 0xb1a50
 void game::claimShipyard(type_point location, int newPlayerOwner)
 {
     hero* obscuringHero = 0;
-    NewmapCell* mapCell = m_worldMap.cell(location);
+    NewmapCell* mapCell = getCell(location);
     if (mapCell->m_type == HERO) {
         obscuringHero = g_game->getHero(mapCell->m_extraInfo);
         obscuringHero->restoreCell();

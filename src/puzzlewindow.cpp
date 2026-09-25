@@ -471,7 +471,7 @@ type_point aiAttemptPuzzleGuess(long player)
                      ++current.m_y) {
                     if (!current.isValid())
                         continue;
-                    if (!g_game->m_worldMap.cell(current)->isDiggable())
+                    if (!g_game->getCell(current)->isDiggable())
                         continue;
 
                     type_point index;

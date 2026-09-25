@@ -140,7 +140,7 @@ void searchArray::enterLith(const hero* currentHero,
         && count > 0) {
         for (int i = 0; i < count; i++) {
             type_point exitPoint = (*list)[i];
-            NewmapCell* cell = g_game->m_worldMap.cell(exitPoint);
+            NewmapCell* cell = g_game->getCell(exitPoint);
             if (cell->m_type == cellType && cell->m_extraInfo != excluded
                 && cell->m_isTrigger) {
                 if (g_advManager->findAdjacentMonster(
@@ -157,7 +157,7 @@ void searchArray::enterLith(const hero* currentHero,
     pathCell exitCell = *entryPoint;
     for (int i = 0; i < count; i++) {
         type_point exitPoint = (*list)[i];
-        NewmapCell* cell = g_game->m_worldMap.cell(exitPoint);
+        NewmapCell* cell = g_game->getCell(exitPoint);
         if (cell->m_type == HERO) {
             if (g_game->onSameTeam(g_game->getHero(cell->m_extraInfo)->m_owner,
                                    currentHero->m_owner))
@@ -439,7 +439,7 @@ static unsigned char checkSummonBoat(const hero* currentHero)
         newPoint.m_y = point.m_y + g_normalDirTable[i].m_y;
         newPoint.m_z = point.m_z;
         if (newPoint.isValid()
-            && g_game->m_worldMap.cell(newPoint)->m_type == BOAT
+            && g_game->getCell(newPoint)->m_type == BOAT
             && g_game->getCell(newPoint)->m_isTrigger)
             return 0;
     }
@@ -517,7 +517,7 @@ void searchArray::enterStartTrigger(const hero* currentHero,
                                     long maxMobility,
                                     type_search_type searchType)
 {
-    NewmapCell* mapCell = g_game->m_worldMap.cell(startCell->m_point);
+    NewmapCell* mapCell = g_game->getCell(startCell->m_point);
     if (mapCell->m_isTrigger
         && (mapCell->m_type == LITH_ONEWAY_ENTRANCE
             || mapCell->m_type == LITH_TWOWAY

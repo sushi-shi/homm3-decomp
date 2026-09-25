@@ -1475,7 +1475,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     type_point heroLocation = currentHero->getLocation();
     --heroLocation.m_x;
     if (heroLocation.m_x >= 0) {
-        NewmapCell* cell = g_game->m_worldMap.cell(heroLocation);
+        NewmapCell* cell = g_game->getCell(heroLocation);
         if (cell->m_type == TOWN && cell->m_isTrigger)
             --currentHero->m_x;
     }
@@ -1551,7 +1551,7 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
     type_point heroLocation = currentHero->getLocation();
     --heroLocation.m_x;
     if (heroLocation.m_x >= 0) {
-        NewmapCell* cell = g_game->m_worldMap.cell(heroLocation);
+        NewmapCell* cell = g_game->getCell(heroLocation);
         if (cell->m_type == TOWN && cell->m_isTrigger)
             --currentHero->m_x;
     }
@@ -1682,7 +1682,7 @@ void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
         type_point lossHero(g_game->m_mapHeader.m_lossCondition.m_heroX,
                             g_game->m_mapHeader.m_lossCondition.m_heroY,
                             g_game->m_mapHeader.m_lossCondition.m_heroZ);
-        NewmapCell* cell = g_game->m_worldMap.cell(lossHero);
+        NewmapCell* cell = g_game->getCell(lossHero);
         if (!cell->m_isTrigger || cell->m_type != HERO) {
             for (placeholderIndex = 0; placeholderIndex < placeholders.size();
                  ++placeholderIndex) {

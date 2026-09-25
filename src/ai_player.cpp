@@ -3001,7 +3001,7 @@ static void unblockLith(hero* currentHero,
         point.m_y = currentHero->m_y + g_normalDirTable[direction].m_y;
         if (!point.isValid())
             continue;
-        if (g_game->m_worldMap.cell(point)->m_isTrigger)
+        if (g_game->getCell(point)->m_isTrigger)
             continue;
         if (getMapExtra(point) & MAP_EXTRA_MONSTER)
             continue;
