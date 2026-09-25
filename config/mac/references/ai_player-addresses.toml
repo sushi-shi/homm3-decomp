@@ -2,6 +2,26 @@
 # Names remain owned by src/ai_player.cpp VA claims; no compiled Mac target admission.
 
 [[helpers]]
+source_helper = "type_town_threat_checker::type_town_threat_checker"
+in_class = true
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2ae18
+mac_size = 0x10
+target_sha256 = "f82750a319b6308c66256830e65afeabb4a119375cf4fdeefb78f916c149ac85"
+evidence = "Mac endTurn and startTurn construct the threat checker through this retained four-instruction body. It stores the class vtable at +4 and newPlayer at +0, matching the canonical in-class constructor and CodeWarrior's tail vptr layout. Final BLR at 0x2ae24 precedes checkTowns at 0x2ae28."
+
+[[helpers]]
+source_helper = "type_garrison_purchaser::type_garrison_purchaser"
+in_class = true
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2b200
+mac_size = 0x38
+target_sha256 = "8ed639e0a9ad653d3b0c38a95507802aa0d29b6f4da1b53daa89a4faae5b9230"
+evidence = "Mac endTurn and startTurn construct the derived purchaser through this body, which calls the reviewed threat-checker base constructor at 0x2ae18 and then replaces the vtable at +4. This matches the canonical in-class derived constructor. Final BLR at 0x2b234 precedes the empty clearMarks body at 0x2b238."
+
+[[helpers]]
 source_helper = "sumPlayerDwellings"
 unit = "ai_player"
 mac_section = 0
@@ -10,6 +30,33 @@ mac_size = 0xf0
 mac_symbol = ".sumPlayerDwellings__Fl"
 target_sha256 = "69d7230f42cdbb614ffd467c31e575a0652a2dea440021177660f27034137e04"
 evidence = "Immediately after valueOfDwellingUpgrade, scans one player's town IDs and 14 dwellings, calls town::getGrowthRate 0x1b5414 and accumulates creature AI value times growth. fillProhibitedArray calls it twice. BLR 0x2d038 precedes the next body at 0x2d03c."
+
+[[helpers]]
+source_helper = "type_AI_player::getResourceValue"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2b36c
+mac_size = 0x78
+target_sha256 = "8f8abe93ff6771dab0c0423023aaecec3f51764e76a1f0e62ec3be0cbc78ecef"
+evidence = "Mac getTotalValue calls this retained helper on the cost array. The body iterates seven int resources, multiplies each by the corresponding eight-byte resourceValue entry at player+0x5c, converts the running sum to long and returns it. It follows the creature-purchaser destructor at 0x2b304..0x2b36c and ends with BLR at 0x2b3e0 before getAttackBonus at 0x2b3e4. Windows expands the existing source call."
+
+[[helpers]]
+source_helper = "type_base_necromancy_artifact::getValue"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x36f38
+mac_size = 0xfc
+target_sha256 = "3fa94b2d5925fd1786792152506e4e821eb2a0649c5e85117ba2c4eea58b645c"
+evidence = "Both Mac necromancy artifact evaluators call this retained base method at 0x370f8, 0x38504 and 0x3859c. The body calls hero::getNecromancyFactor 0x104988, applies equipped/minimum bonus logic and multiplies by army AI value 0x584d4. Final BLR at 0x37030 precedes the next constructor at 0x37034. Windows expands the canonical source call."
+
+[[helpers]]
+source_helper = "splitArmies"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x31248
+mac_size = 0x258
+target_sha256 = "ad45be090d08976cc8fa54bb3214ecb658046fa7e13f26342951618a70f1cf4f"
+evidence = "The Mac aiArrangeArmyForCombat wrapper calls this retained helper at 0x314d8, between aiConsolidateArmy and aiArrangeArmy. The body reads the hero army at +0x91, computes combat modifiers through hero calls at 0x10641c, and invokes splitArmy twice at 0x31380 and 0x3146c. Final BLR at 0x3149c precedes the wrapper at 0x314a0."
 
 [[helpers]]
 source_helper = "valueOfSilo"
@@ -226,6 +273,15 @@ mac_offset = 0x2c9a0
 mac_size = 0x38
 target_sha256 = "57fb7a7d4d4e488fe54cc07c0c3a8779a66708cc9e1bfa0a166f35be07bb6a40"
 evidence = "NEW: Resets cached magus-hut valuation by calling0x2c62c with explore-mode flag; adjacent startTurn/reserve anchors. End0x2c9d8; last word0x4e800020; boundary reviewed with adjacent entries, direct callers or loader pointer references."
+
+[[functions]]
+retail_va = 0x00429ad0
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2c9d8
+mac_size = 0x2ac
+target_sha256 = "5ffcaa19538fbf26c136f2a56e8a3486a9d4a1a7a3f65872d631b61c8acf305c"
+evidence = "startTurn calls this reserve calculator at 0x2c96c. It forms the local player from m_team, clears seven reserved funds, walks player towns and their 14 dwelling populations, pushes positive creature records, sorts them, then accumulates costs for the strongest entries. This matches the authored calculateReserve body and its existing Mac evidence comment. The body ends with BLR at 0x2cc80; next independent function begins at 0x2cc84."
 
 [[functions]]
 retail_va = 0x00429d50
@@ -469,6 +525,15 @@ mac_offset = 0x33fa0
 mac_size = 0x104
 target_sha256 = "bf647f2d2c8fd98480f8930443fc7a65d37e3012734b402e44568f629fdc7337"
 evidence = "NEW: Reads indexed30byte pathCell and hero movement flags, invokes movement spell/UI0x8e574/0x1d1a8, returns whether step is allowed. End0x340a4; last word0x4e800020; boundary reviewed with adjacent entries, direct callers or loader pointer references."
+
+[[functions]]
+retail_va = 0x00430ab0
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x340a4
+mac_size = 0x574
+target_sha256 = "5654619dce10b305d9e506f24084f0bf640b6980db967758ee8e2ba6ec291dbd"
+evidence = "Mac aiAttemptMove calls attemptTeleport at 0x34c88. The retained body checks a hero's teleport options and path destination, matching the source helper and Windows VA claim. Final BLR at 0x34614 precedes checkGatePurchase at 0x34618."
 
 [[functions]]
 retail_va = 0x00430f80

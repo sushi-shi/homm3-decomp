@@ -549,7 +549,7 @@ def class_header_helper(text: str, selector: str, source: Path) -> tuple[int, st
     expected_parameters = selection['parameters']
     masked = _masked_source(text)
     pattern = re.compile(
-        r'^[ \t]*(?P<prefix>(?:[\w:*&]+\s+)+)'
+        r'^[ \t]*(?P<prefix>(?:[\w:*&]+\s+)*)'
         + re.escape(selection['name'])
         + r'(?P<parameters>\s*\([^;{}]*\)\s*(?:const\s*)?)\{',
         re.MULTILINE)
