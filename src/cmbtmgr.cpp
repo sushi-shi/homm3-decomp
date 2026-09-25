@@ -1923,7 +1923,7 @@ void combatManager::unnamed465f20()
     int numArchers;
     int archerLevel;
     m_defendingTown->calcNumLevelArchers(&numArchers, &archerLevel);
-    if (m_armies[m_actingSide][m_actingSlot].m_gridIndex != COMBAT_HEX_KEEP)
+    if (getCurrentArmy()->m_gridIndex != COMBAT_HEX_KEEP)
         numArchers = (numArchers + 1) / 2;
 
     int target = chooseBallistaTarget(0, archerLevel, numArchers * 6 / 2);

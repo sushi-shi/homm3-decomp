@@ -1529,7 +1529,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // index and the obstacle's optional replacement effect.
     case SPELL_REMOVE_OBSTACLE: {
         int obstacleIndex = m_cells[targetIndex].m_obstacleIndex;
-        int replacementEffect = m_obstacles[obstacleIndex].m_dispelEffect;
+        int replacementEffect = getObstacle(obstacleIndex).m_dispelEffect;
         spellEffect(traits->m_effect, targetIndex, 100, 0);
         if (replacementEffect == -1) {
             m_saveBiggestExtent = 1;

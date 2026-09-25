@@ -1037,7 +1037,7 @@ void combatManager::drawFrame(bool update,
         for (column = 1; column < COMBAT_GRID_LAST_COLUMN; column++) {
             hexcell& cell = m_cells[getHexIndex(column, row)];
             if (cell.m_attributes & hexcell::obstacleOrigin) {
-                TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
+                TObstacle& obstacle = getObstacle(cell.m_obstacleIndex);
                 if (obstacle.m_shape->m_underlay) {
                     if (obstacle.m_isVisible
                             || (obstacle.m_owner == m_currentSide
@@ -1177,7 +1177,7 @@ void combatManager::drawObstacleAt(int hexIndex)
 {
     hexcell& cell = m_cells[hexIndex];
     if (cell.m_attributes & hexcell::obstacleOrigin) {
-        TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
+        TObstacle& obstacle = getObstacle(cell.m_obstacleIndex);
         if (!obstacle.m_shape->m_underlay) {
             if (obstacle.m_isVisible
                     || (obstacle.m_owner == m_currentSide
@@ -1559,7 +1559,7 @@ int combatManager::drawCreatureAndHeroSubwindows()
 VA(0x00495730, 0x73)  // dc 0x85f70
 int combatManager::drawObstacle(const hexcell& cell)
 {
-    TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
+    TObstacle& obstacle = getObstacle(cell.m_obstacleIndex);
     int yOffset = 42 * (obstacle.m_shape->m_minRow - 1);
     return drawSpriteObject(
         obstacle.m_sprite,

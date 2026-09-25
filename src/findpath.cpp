@@ -996,7 +996,7 @@ void searchArray::setMoat(const army* currentArmy)
     { for (int cell = 0; cell < 187; ++cell) {
         if (g_combatManager->m_cells[cell].m_attributes & hexcell::quicksand) {
             const combatManager::TObstacle* obstacle =
-                &g_combatManager->m_obstacles[g_combatManager->m_cells[cell].m_obstacleIndex];
+                &g_combatManager->getObstacle(g_combatManager->m_cells[cell].m_obstacleIndex);
             if (obstacle->isVisible(currentArmy->getOwningSide()))
                 m_isMoatSlowed[cell] = 1;
         }

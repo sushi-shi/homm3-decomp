@@ -2375,7 +2375,7 @@ unsigned char combatManager::doSpellAI()
         return 0;
     if (m_creaturePlacement)
         return 0;
-    if (m_armies[m_actingSide][m_actingSlot].is(creatureSiegeWeapon))
+    if (getCurrentArmy()->is(creatureSiegeWeapon))
         return 0;
     if (m_playerIds[m_currentSide] >= 0
         && g_game->isHuman(m_playerIds[m_currentSide])

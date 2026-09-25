@@ -975,7 +975,7 @@ int combatManager::processCombatMsg(message& msg)
                            && (m_cells[gridIndex].m_attributes & hexcell::blocked)
                            && m_cells[gridIndex].m_obstacleIndex != -1) {
                     TObstacle& obstacle =
-                        m_obstacles[m_cells[gridIndex].m_obstacleIndex];
+                        getObstacle(m_cells[gridIndex].m_obstacleIndex);
                     sprintf(g_text,
                             "Obstacle name: %s, owner: %d, visible:%s",
                             obstacle.m_shape->m_spriteName, obstacle.m_owner,
