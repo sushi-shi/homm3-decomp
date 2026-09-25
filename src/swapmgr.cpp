@@ -885,12 +885,15 @@ int swapManager::open(int newPriority)
                 msg.m_codeY = hero * 8 + skillIndex + 200;
                 msg.m_extra = m_heroes[hero]->m_skillLevel[skill]
                             + 3 * skill + 2;
+                // Mac retains this call at 0:0x1a6504.
+                m_parent->broadcastMessage(msg);
             } else {
                 msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = hero * 8 + skillIndex + 200;
                 msg.m_extra = widget::WIDGET_DRAWN;
+                // Mac retains this call at 0:0x1a6534.
+                m_parent->broadcastMessage(msg);
             }
-            m_parent->broadcastMessage(msg);
         }
     }
 
