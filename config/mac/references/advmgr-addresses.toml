@@ -1079,3 +1079,12 @@ unit = "advmgr"
 target_sha256 = "74d17f14406d50e4d0f254fa2317930c6e5067744c4fc9a4008c53f600a29a7b"
 evidence = "Source helper without standalone Windows VA. TU order plus window clearBottomView0x3b98 and default bottom-view field store"
 source_helper = "advManager::clearBottomView"
+
+[[helpers]]
+source_helper = "advManager::getCell(int x, int y, int z)"
+unit = "advmgr"
+mac_section = 0x0
+mac_offset = 0x136f8
+mac_size = 0x78
+target_sha256 = "e7a7fa76b8fdf93451998594427c817a69f3b9d5220a867d4f5508901bcbb868"
+evidence = "Dreamcast names advManager::GetCell(int,int,int) at dc:0x14b08. Mac drawAdvObj calls 0x136f8 at 0x1160c with this and x/y/z; the body checks map bounds and returns either the first map cell or the indexed 0x22-byte cell. Windows expands this ordinary helper. BLR 0x1376c precedes the next function at 0x13770."
