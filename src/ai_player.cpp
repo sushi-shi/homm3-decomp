@@ -3413,10 +3413,7 @@ long markDestinations(hero* currentHero, long maxDistance,
         if (!friendCell->m_visited)
             continue;
 
-        type_point target;
-        target.m_x = friendly->m_pathTargetX;
-        target.m_y = friendly->m_pathTargetY;
-        target.m_z = friendly->m_pathTargetZ;
+        type_point target = friendly->getTarget();
         unsigned short extraCost;
         if (!target.isValid()) {
             target.m_x = friendly->m_x;

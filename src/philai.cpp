@@ -3083,10 +3083,7 @@ long getValueOfWell(const hero* currentHero, unsigned short moveCost)
     if (currentHero->m_flags & 1)
         return 0;
 
-    type_point path;
-    path.m_x = currentHero->m_pathTargetX;
-    path.m_y = currentHero->m_pathTargetY;
-    path.m_z = currentHero->m_pathTargetZ;
+    type_point path = currentHero->getTarget();
     type_point target = path;
     if (target.isValid() && moveCost > 300) {
         NewmapCell* cell = g_game->m_worldMap.cell(target);
@@ -3577,10 +3574,7 @@ long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
     if (!info->magicSpringIsFull())
         return 0;
 
-    type_point path;
-    path.m_x = currentHero->m_pathTargetX;
-    path.m_y = currentHero->m_pathTargetY;
-    path.m_z = currentHero->m_pathTargetZ;
+    type_point path = currentHero->getTarget();
     type_point target = path;
     if (target.isValid() && moveCost > 300) {
         NewmapCell* destination = g_game->m_worldMap.cell(target);
