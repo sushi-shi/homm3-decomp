@@ -3500,7 +3500,8 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
                 g_generalText->getText(GENERAL_TEXT_WITCH_SKILL_FORMAT),
                 g_sSkillTraits[skill].m_name);
         strcat(buffer, tempText);
-        if (currentHero && currentHero->m_skillLevel[skill]) {
+        if (currentHero
+            && currentHero->getSecondarySkill(TSecondarySkill(skill))) {
             strcat(buffer, separator2);
             strcat(buffer, g_generalText->getText(
                 GENERAL_TEXT_HERO_KNOWS_WITCH_SKILL));

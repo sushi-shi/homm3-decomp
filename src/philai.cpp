@@ -1764,7 +1764,7 @@ unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
     int openSlots;
     int i;
     for (i = 0; i < 28; i++) {
-        if (ourHero->m_skillLevel[i] <= 0
+        if (ourHero->getSecondarySkill(TSecondarySkill(i)) <= 0
             && (g_heroClasses[ourHero->m_heroClass]
                     .m_gainSecondarySkillChance[i]
                 || first == i))
@@ -1784,7 +1784,7 @@ unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
     openSlots = 8 - ourHero->m_skillCount;
     for (i = 28; i-- > 0;) {
         int skill = skillIndex[i];
-        if (ourHero->m_skillLevel[skill] == 0) {
+        if (ourHero->getSecondarySkill(TSecondarySkill(skill)) == 0) {
             if (skill == first)
                 return 1;
             if (--openSlots <= 0)
@@ -1810,7 +1810,7 @@ void aiVisitUniversity(hero* currentHero, type_university* university)
         for (int i = 0; i < 4; i++) {
             int skill = university->m_skills[i];
             if (traits.m_gainSecondarySkillChance[skill]
-                && currentHero->m_skillLevel[skill] <= 0
+                && currentHero->getSecondarySkill(TSecondarySkill(skill)) <= 0
                 && wantsSkill(currentHero, TSecondarySkill(skill), 1)) {
                 long value = getSkillValue(currentHero, TSecondarySkill(skill), 1);
                 if (value >= bestValue) {
@@ -2076,7 +2076,7 @@ static long valueOfUniversity(const hero* currentHero,
     for (int i = 0; i < 4; i++) {
         int skill = university->m_skills[i];
         if (traits->m_gainSecondarySkillChance[skill]
-            && currentHero->m_skillLevel[skill] <= 0
+            && currentHero->getSecondarySkill(TSecondarySkill(skill)) <= 0
             && wantsSkill(currentHero, TSecondarySkill(skill), 1))
             total += getSkillValue(currentHero, TSecondarySkill(skill), 1);
     }
@@ -3590,7 +3590,7 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
         int skill = info->getWitchSkill();
         if (skill == -1)
             return 0;
-        if (currentHero->m_skillLevel[skill])
+        if (currentHero->getSecondarySkill(TSecondarySkill(skill)))
             return 0;
         if (!wantsSkill(currentHero, TSecondarySkill(skill), 1))
             return 0;

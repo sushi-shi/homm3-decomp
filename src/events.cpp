@@ -988,7 +988,7 @@ void advManager::doArtifactSkillRequirement(
     hero* currentHero, NewmapCell* cell, type_point point,
     int skill, const char* dialogText, bool humanPlayer)
 {
-    if (currentHero->m_skillLevel[skill]) {
+    if (currentHero->getSecondarySkill(TSecondarySkill(skill))) {
         doEventFreeArtifact(currentHero, cell, point, humanPlayer);
     } else if (humanPlayer) {
         short artifact = cell->getArtifactIndex();
@@ -2820,7 +2820,8 @@ void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
             if (humanPlayer)
                 normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_SCHOLAR],
                              1, -1, -1, 0x14,
-                             currentHero->m_skillLevel[skill] + skill * 3 + 2,
+                             currentHero->getSecondarySkill(TSecondarySkill(skill))
+                                 + skill * 3 + 2,
                              -1, 0, -1, 0, -1, 0);
         }
     }
@@ -3970,7 +3971,7 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
                              ADV_EVENT_TEXT_WITCH_HUT_NO_SKILL),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     } else {
-        if (currentHero->m_skillLevel[skill]) {
+        if (currentHero->getSecondarySkill(TSecondarySkill(skill))) {
             if (humanPlayer) {
                 sprintf(g_text,
                         g_adventureEventText->getText(

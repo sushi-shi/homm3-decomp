@@ -246,7 +246,7 @@ int heroPower(hero* candidate)
     int primary = candidate->getPrimarySkillTotal();
     int skills = 0;
     for (int skill = 0; skill < g_crossoverSecondarySkills; ++skill)
-        skills += candidate->m_skillLevel[skill];
+        skills += candidate->getSecondarySkill(TSecondarySkill(skill));
     return skills + primary;
 }
 
@@ -653,8 +653,9 @@ VA(0x00484ca0, 0x4F)
 void TCampaignSecondarySkillBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
-    if (target != 0 && target->m_skillLevel[m_skill] <= m_level) {
-        if (target->m_skillLevel[m_skill] == 0)
+    if (target != 0
+        && target->getSecondarySkill(TSecondarySkill(m_skill)) <= m_level) {
+        if (target->getSecondarySkill(TSecondarySkill(m_skill)) == 0)
             target->giveSS(m_skill, m_level);
         else
             target->m_skillLevel[m_skill] = m_level;

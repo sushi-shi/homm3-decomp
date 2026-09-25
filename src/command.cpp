@@ -682,7 +682,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 1;
         if (owner == 0)
             return 1;
-        if (owner->m_skillLevel[20] == 0)
+        if (owner->getSecondarySkill(eSecSkillBattlefieldBallistics) == 0)
             return 1;
         if (g_goSolo && m_thisNetHasControl)
             return 1;
@@ -702,7 +702,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 0;
         if (m_autoCombatOn && g_config.m_combatFirstAidTent)
             return 1;
-        if (owner->m_skillLevel[27] == 0)
+        if (owner->getSecondarySkill(eSecSkillFirstAid) == 0)
             return 1;
         if (g_goSolo && m_thisNetHasControl)
             return 1;

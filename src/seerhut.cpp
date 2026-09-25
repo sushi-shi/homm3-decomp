@@ -2301,16 +2301,16 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     {
         int skill = m_value.m_secondarySkill.m_skillType;
         int bonus = m_value.m_secondarySkill.m_bonus;
-        if (currentHero->m_skillLevel[skill] == 0) {
+        if (currentHero->getSecondarySkill(TSecondarySkill(skill)) == 0) {
             if (currentHero->m_skillCount < 8) {
                 currentHero->giveSS(skill, bonus);
                 break;
             }
         }
-        if (currentHero->m_skillLevel[skill] > 0
-            && currentHero->m_skillLevel[skill] < bonus)
+        if (currentHero->getSecondarySkill(TSecondarySkill(skill)) > 0
+            && currentHero->getSecondarySkill(TSecondarySkill(skill)) < bonus)
             currentHero->giveSS(skill,
-                bonus - currentHero->m_skillLevel[skill]);
+                bonus - currentHero->getSecondarySkill(TSecondarySkill(skill)));
         break;
     }
 
