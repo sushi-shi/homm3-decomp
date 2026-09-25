@@ -2,6 +2,66 @@
 # Names remain owned by src/ai_player.cpp VA claims; no compiled Mac target admission.
 
 [[helpers]]
+source_helper = "sumPlayerDwellings"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2cf4c
+mac_size = 0xf0
+mac_symbol = ".sumPlayerDwellings__Fl"
+target_sha256 = "69d7230f42cdbb614ffd467c31e575a0652a2dea440021177660f27034137e04"
+evidence = "Immediately after valueOfDwellingUpgrade, scans one player's town IDs and 14 dwellings, calls town::getGrowthRate 0x1b5414 and accumulates creature AI value times growth. fillProhibitedArray calls it twice. BLR 0x2d038 precedes the next body at 0x2d03c."
+
+[[helpers]]
+source_helper = "valueOfSilo"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2d634
+mac_size = 0x40
+mac_symbol = ".valueOfSilo__FP4townP10playerData"
+target_sha256 = "7bf7566795e964d060646fa1025e6d06033528e59a2dd78418e6882db8290d33"
+evidence = "Between valueOfCastleUpgrade and valueOfHorde; calls town::getSiloIncome 0x1b6dc8, then aiResourceCost 0x140d40 with the player and multiplies by seven. valueOfBuilding calls this retained helper; Windows expands it. BLR 0x2d670 precedes next body 0x2d674."
+
+[[helpers]]
+source_helper = "type_AI_player::purchaseBuildings"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2f20c
+mac_size = 0x60
+mac_symbol = ".purchaseBuildings__14type_AI_playerFv"
+target_sha256 = "faa25016b199ad80feea2453befe956acf1d7c020b6d9c8b5b72dfdc79c15441"
+evidence = "Calls fillProhibitedArray 0x2d03c on the owning player, then repeatedly calls purchaseBuilding 0x2ed58 until false. endTurn calls this helper at 0x2bba4. BLR 0x2f268 precedes buyCreatures 0x2f26c."
+
+[[helpers]]
+source_helper = "totalArtifactValue"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x35864
+mac_size = 0xa8
+mac_symbol = ".totalArtifactValue__FP4herol"
+target_sha256 = "c6b1fb31697926e5b63c610d6f14797bf89cf79d991a2d1dad9b4edaf85a401e"
+evidence = "Scans 64 backpack entries and 19 equipped slots with eight-byte temporary artifacts, calls aiGetValueOfArtifact 0x38cf4 for each and sums returns. hireHeroes and considerHiring call it. BLR 0x35908 precedes considerHiring 0x3590c."
+
+[[helpers]]
+source_helper = "getShipyardTown"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x35e34
+mac_size = 0x84
+mac_symbol = ".getShipyardTown__FPC10playerDatalll"
+target_sha256 = "d84507536fb7b4d2d2392ad072f639351725ba05fa99bb47eeb5afd2ecd1ae14"
+evidence = "Scans the player's town IDs, resolves each town and compares dock x/y/z fields; aiBuildShip and aiGetShipCost call it. BLR 0x35eb4 precedes adjacent getMapShipyard 0x35eb8."
+
+[[helpers]]
+source_helper = "getMapShipyard"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x35eb8
+mac_size = 0xc4
+mac_symbol = ".getMapShipyard__FPC10playerDatalll"
+target_sha256 = "758c68d64e3c5bf83e3f59d9242c4495a67ee74138e70ae70808cfb7170b4aa3"
+evidence = "Walks the player's map shipyard vector at +0x90 and checks map level, then the referenced map cell's boat coordinates. aiBuildShip and aiGetShipCost call it. BLR 0x35f78 precedes aiBuildShip 0x35f7c."
+
+[[helpers]]
 source_helper = "checkGatePurchase"
 unit = "ai_player"
 mac_section = 0
