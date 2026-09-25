@@ -1626,3 +1626,11 @@ mac_offset = 0x107520
 mac_size = 0x60
 sha256 = "456d2a4dee15284505603ae001aeb0d1105e9b57fc4d8749a9b5847bcaf3407a"
 evidence = "The bitset count routine at 0x1074b8 calls this word popcount at 0x1074ec. It counts set bits four at a time through a nibble switch until the word is zero. BLR at 0x10757c; the next independent prologue starts at 0x107580. MSL library identity only."
+
+[[functions]]
+symbol = ".mac_msl_string_substr_81724"
+mac_section = 0
+mac_offset = 0x81724
+mac_size = 0xf8
+sha256 = "bb42606b02b9def85d29f0ab9e34d05cefc5b7c1df7dbc4793f082037e3aef37"
+evidence = "Seven direct calls from TCombatWindow::combatMessage, TSpellbookWindow::getSpellDescription and textEntryWidget::draw/setupDisplayString correspond to authored std::string::substr calls. The callee bounds the requested start/count by the source length and forwards the selected range to the MSL string constructor at 0x819c4. BLR at 0x81818 precedes an independent string find body at 0x8181c. MSL library identity only."
