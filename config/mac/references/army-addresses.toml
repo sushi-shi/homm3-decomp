@@ -845,7 +845,7 @@ mac_section = 0
 mac_offset = 0x4e014
 mac_size = 0x160
 target_sha256 = "d6d9c965f68c0caf10b6bc2ffe64dfe0ab0a85e21ffb5efaa473dccf59feea57"
-evidence = "Mac attack callers retain this helper at 0x4e014. It clears luck status, obtains controller at 0x4e4e8, rolls luck through Mac sRandom at 0x1314b4 and emits sound/text/spell effect outside quick combat. Windows expands the explicit-inline source helper and calls random instead; the existing source comment records that port difference. Final BLR at 0x4e170; next entry 0x4e174."
+evidence = "Mac attack callers retain this helper at 0x4e014. It clears luck status, obtains controller at 0x4e4e8, rolls luck through Mac sRandom at 0x1314b4 and emits sound/text/spell effect outside quick combat. Windows expands the explicit-inline source helper and uses the same authored sRandom call; the sRandom and random bodies share retail code at 0x50b230. Final BLR at 0x4e170; next entry at 0x4e174."
 
 [[helpers]]
 source_helper = "army::endWalk"

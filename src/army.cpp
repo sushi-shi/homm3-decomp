@@ -1590,7 +1590,7 @@ unsigned char army::checkSpecialAttack(army* target)
 {
     switch (m_creatureType) {
     case CREATURE_GHOST_DRAGON:
-        if (target->is(creatureAlive) && random(1, 100) <= 20
+        if (target->is(creatureAlive) && sRandom(1, 100) <= 20
             && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_AGE,
                                                getControllingSide(),
@@ -1598,7 +1598,7 @@ unsigned char army::checkSpecialAttack(army* target)
             target->m_postPowSpellToCast = SPELL_AGE;
         return 0;
     case CREATURE_ZOMBIE:
-        if (target->is(creatureAlive) && random(1, 100) <= 20
+        if (target->is(creatureAlive) && sRandom(1, 100) <= 20
             && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_DISEASE,
                                                getControllingSide(),
@@ -1607,7 +1607,7 @@ unsigned char army::checkSpecialAttack(army* target)
         return 0;
     case ARMY_CREATURE_UNICORN:
     case ARMY_CREATURE_WAR_UNICORN:
-        if (random(1, 100) <= 20 && target->m_numTroops > 0
+        if (sRandom(1, 100) <= 20 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_BLIND,
                                                getControllingSide(),
                                                target, 1, 1)) {
@@ -1625,7 +1625,7 @@ unsigned char army::checkSpecialAttack(army* target)
     case CREATURE_BLACK_KNIGHT:
     case CREATURE_DREAD_KNIGHT:
     case CREATURE_MUMMY:
-        if (random(1, 100) <= 25 && target->m_numTroops > 0
+        if (sRandom(1, 100) <= 25 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_CURSE,
                                                getControllingSide(),
                                                target, 1, 1))
@@ -1635,7 +1635,7 @@ unsigned char army::checkSpecialAttack(army* target)
     case CREATURE_MEDUSA_QUEEN:
     case CREATURE_BASILISK:
     case CREATURE_GREATER_BASILISK:
-        if (random(1, 100) <= 20 && target->m_numTroops > 0
+        if (sRandom(1, 100) <= 20 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_STONE,
                                                getControllingSide(),
                                                target, 1, 1)) {
@@ -1648,7 +1648,7 @@ unsigned char army::checkSpecialAttack(army* target)
             target->m_postPowSpellToCast = SPELL_ACID_BREATH_DEFENSE;
         return 0;
     case CREATURE_WYVERN_MONARCH:
-        if (target->is(creatureAlive) && random(1, 100) <= 30
+        if (target->is(creatureAlive) && sRandom(1, 100) <= 30
             && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_POISON,
                                                getControllingSide(),
@@ -1656,7 +1656,7 @@ unsigned char army::checkSpecialAttack(army* target)
             target->m_postPowSpellToCast = SPELL_POISON;
         return 0;
     case CREATURE_SCORPICORE:
-        if (random(1, 100) <= 20 && target->m_numTroops > 0
+        if (sRandom(1, 100) <= 20 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_PARALYZE,
                                                getControllingSide(),
                                                target, 1, 1)) {
@@ -2231,9 +2231,7 @@ inline void army::checkLuck()
 {
     m_luckStatus = 0;
     if (getController() && m_luck > 0) {
-        // Dreamcast named SRandom here; Complete retail calls random in both
-        // rangeAttack and doAttack.
-        if (random(1, 24) <= min(m_luck, 3)) {
+        if (sRandom(1, 24) <= min(m_luck, 3)) {
             m_luckStatus = 1;
             if (!static_cast<const combatManager*>(g_combatManager)
                      ->isQuickCombat()) {
@@ -2679,11 +2677,11 @@ int army::computeBaseDamage(unsigned char simulateOnly) const
         int total = 0;
         if (num > 10) {
             for (int i = 0; i < 10; i++)
-                total += random(low, high);
+                total += sRandom(low, high);
             damage = total * num / 10;
         } else {
             for (int i = 0; i < num; i++)
-                total += random(low, high);
+                total += sRandom(low, high);
             damage = total;
         }
     }
@@ -2815,7 +2813,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
         long mastery =
             controlling->m_skillLevel[eSecSkillBattlefieldBallistics];
         if (!simulateOnly
-            && random(1, 100) <= g_artilleryDoubleChances[mastery]) {
+            && sRandom(1, 100) <= g_artilleryDoubleChances[mastery]) {
             result += baseDamage;
             if (!static_cast<const combatManager*>(g_combatManager)
                      ->isQuickCombat()) {
@@ -2832,7 +2830,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
     }
 
     case CREATURE_DREAD_KNIGHT:
-        if (!simulateOnly && random(1, 100) <= 20) {
+        if (!simulateOnly && sRandom(1, 100) <= 20) {
             result += baseDamage;
             if (!static_cast<const combatManager*>(g_combatManager)
                      ->isQuickCombat()) {
@@ -3972,7 +3970,7 @@ void army::attackWall(TWallTargetId wall,
                        const type_ballistics_traits& ballistics)
 {
     long levels;
-    int roll = random(1, 100);
+    int roll = sRandom(1, 100);
     for (levels = 0; levels < 2; levels++) {
         roll -= ballistics.m_levelChance[levels];
         if (roll <= 0)
@@ -3997,7 +3995,7 @@ void army::attackWall(TWallTargetId wall,
         chance = ballistics.m_chanceToHitWall;
         break;
     }
-    if (random(1, 100) > chance) {
+    if (sRandom(1, 100) > chance) {
         wall = chooseWallTarget(wall, g_walls, 4);
     }
     attackWall(wall, levels);
