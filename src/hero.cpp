@@ -657,8 +657,9 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 
     if (saveVersion <= 30) {
         infile->read(m_equipped, 18 * sizeof(type_artifact));
-        m_equipped[EQUIPPED_SLOT_SOD_MISC].m_artifactId = ARTIFACT_NONE;
-        m_equipped[EQUIPPED_SLOT_SOD_MISC].m_extra = -1;
+        // Mac 0xf3340 constructs the default artifact in a temporary,
+        // then copies both words into the unsaved slot.
+        m_equipped[EQUIPPED_SLOT_SOD_MISC] = type_artifact();
     } else {
         infile->read(m_equipped, sizeof(m_equipped));
     }

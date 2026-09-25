@@ -2971,10 +2971,10 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         }
 
         // The fourth war-machine position is never serialized: every hero
-        // starts with the catapult in it.
-        heroData->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].m_artifactId
-            = ARTIFACT_CATAPULT;
-        heroData->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].m_extra = -1;
+        // starts with the catapult in it. Mac 0x1250fc constructs the
+        // artifact pair in a temporary before copying it into this slot.
+        heroData->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4] =
+            type_artifact(ARTIFACT_CATAPULT);
     }
 
     infile->read(&charBuffer, sizeof(charBuffer));
