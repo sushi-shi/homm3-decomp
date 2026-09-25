@@ -2786,10 +2786,9 @@ void SCampaign::playScenarioEpilogue(void* campaignHeader)
 // Artifact fields sign-extend two-byte reads into the shared TArtifact type.
 // The legacy secret flag is reset after assigning the campaign filename.
 
-// Inferred pre-v28 per-hero conversion boundary. VC6 expands this helper at
-// its sole call and changes the surrounding vector inlining in SCampaign::load.
-// No standalone DC or retail procedure proves the original boundary; the
-// coherent conversion operation and measured caller output support the model.
+// Mac retains this pre-v28 per-hero conversion at code 0:0x98cb0 and calls it
+// from SCampaign::load. VC6 expands the helper at that same source call and
+// changes the surrounding vector inlining. Its original spelling is unproved.
 static void convertLegacyCampaignHero(hero& newHero,
                                       const LegacyCampaignHero& oldHero)
 {

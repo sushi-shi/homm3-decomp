@@ -1,5 +1,14 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 [[helpers]]
+source_helper = "convertLegacyCampaignHero"
+unit = "customcampaign"
+mac_section = 0x0
+mac_offset = 0x98cb0
+mac_size = 0x218
+target_sha256 = "6d69b4a32c406513af64cca0030eb2139524a18a2876f26b721c5e5d96d11c96"
+evidence = "The pre-v28 branch of SCampaign::load calls this retained conversion at 0x990c8 with the destination hero and legacy hero record. Its field-copy sequence includes the packed legacy ID/name/army bands and ends at 0x98ec4 before SCampaign::load begins. Windows already expands this one canonical source helper; original spelling is unproved."
+
+[[helpers]]
 source_helper = "CampaignScenarioInfo::write"
 unit = "customcampaign"
 mac_section = 0x0
