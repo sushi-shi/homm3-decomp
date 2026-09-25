@@ -1538,19 +1538,18 @@ int combatManager::drawCreatureAndHeroSubwindows()
         m_combatWindow->m_heroSubWindows[1]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     // Complete adds four creature-panel tests at 0x49569b..0x495710.
-    // DC 0x85f1c calls only the two hero-panel IsShown accessors; neither
-    // its procedure roster nor its (forward-only) creature-panel type
-    // proves the reconstruction's additional creature accessor.
-    if (m_combatWindow->m_creatureSubWindows[0]->m_shown)
+    // Mac checks the shown byte for all six panels in the same shape;
+    // the creature accessor is our name for the additional boundary.
+    if (m_combatWindow->m_creatureSubWindows[0]->isShown())
         m_combatWindow->m_creatureSubWindows[0]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[1]->m_shown)
+    if (m_combatWindow->m_creatureSubWindows[1]->isShown())
         m_combatWindow->m_creatureSubWindows[1]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[2]->m_shown)
+    if (m_combatWindow->m_creatureSubWindows[2]->isShown())
         m_combatWindow->m_creatureSubWindows[2]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[3]->m_shown)
+    if (m_combatWindow->m_creatureSubWindows[3]->isShown())
         m_combatWindow->m_creatureSubWindows[3]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     return 1;
