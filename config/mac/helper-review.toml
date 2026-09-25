@@ -22,6 +22,9 @@
 # Tradpost's four creature-slot controls use setWidgetOff in Mac but
 # setWidgetDisabled in Windows source; the latter emits message code 5 in
 # retail, so this is a port difference in the owning update method.
+# Town-manager's unnamed targets are an empty destructor and vector begin;
+# strip/townObject destructor calls follow the authored deletes. Mac's
+# tavern modal path calls videoRestart where Windows source uses videoResume.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
@@ -100,6 +103,7 @@ units = [
   "textwdgt",
   "tiles",
   "town",
+  "townmgr",
   "tradpost",
   "university_window",
   "viewarmywindow",
