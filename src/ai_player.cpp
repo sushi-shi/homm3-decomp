@@ -4343,7 +4343,7 @@ long aiValueOfObservatory(type_point origin, long playerId, long range)
                                         + (point.m_y - origin.m_y)
                                           * (point.m_y - origin.m_y))) > distance)
                 continue;
-            if (getMapExtra(point) & playerBit)
+            if (getMapExtra(point.m_x, point.m_y, point.m_z) & playerBit)
                 continue;
 
             ++value;

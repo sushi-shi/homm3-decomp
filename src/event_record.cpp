@@ -502,7 +502,7 @@ void type_record_show_boat::replay(unsigned char draw)
     m_currentBoat->m_y = m_location.m_y;
     m_currentBoat->m_z = m_location.m_z;
     m_currentBoat->obscureCell();
-    if (draw && (getMapExtra(m_location)
+    if (draw && (getMapExtra(m_location.m_x, m_location.m_y, m_location.m_z)
                  & g_mapVisibilityBit)) {
         g_advManager->completeDraw(0);
         g_advManager->updateScreen(0, 0);
@@ -579,7 +579,7 @@ void type_record_erase::replay(unsigned char draw)
     NewmapCell* cell = g_game->getCell(m_location);
     g_advManager->mobilizeCurrHero(1, 0, draw);
     g_advManager->eraseObj(cell, m_location, 0);
-    if (draw && (getMapExtra(m_location)
+    if (draw && (getMapExtra(m_location.m_x, m_location.m_y, m_location.m_z)
                  & g_mapVisibilityBit)) {
         g_advManager->completeDraw(0);
         g_advManager->updateScreen(0, 0);
@@ -756,7 +756,7 @@ void type_record_show_hero::replay(unsigned char draw)
     else
         m_currentHero->m_flags &= ~0x40000;
 
-    if (draw && (getMapExtra(m_location)
+    if (draw && (getMapExtra(m_location.m_x, m_location.m_y, m_location.m_z)
                  & g_mapVisibilityBit)) {
         if (g_currentPlayer->m_currHeroId != m_currentHero->m_id
             || !g_advManager->m_curHeroMobile) {
