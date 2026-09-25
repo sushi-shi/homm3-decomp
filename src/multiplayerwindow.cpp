@@ -320,18 +320,19 @@ inline void CMPInputDlg::disableOK()
 }
 
 // The CHotSeatDlg helpers DC keeps out of line (GetPlayerCount dc 0x102cf8,
-// UpdateOK dc 0x102d4c, OnKillFocus dc 0x102cc8). Retail emits none: they
-// expand into CHotSeatEdit's two overrides below. DC proves that UpdateOK only
-// updates widget 519; OnKillFocus performs the following full-window redraw.
-// Marked `inline` so the TU emits no COMDAT for bodies the image does not have.
+// UpdateOK dc 0x102d4c, OnKillFocus dc 0x102cc8). Retail emits none: VC6
+// expands them into CHotSeatEdit's two overrides below. DC proves that UpdateOK
+// only updates widget 519; OnKillFocus performs the full-window redraw.
+// Mac retains GetPlayerCount at 0x219cb8 but expands the other two helpers.
+// Ordinary same-TU definitions reproduce the exact Windows callers.
 // E:\gamedcs\multiplayerwindow.cpp:729, dc 0x102cc8
-inline void CHotSeatDlg::onKillFocus(int id)
+void CHotSeatDlg::onKillFocus(int id)
 {
     updateOK();
     drawWindow(1, 0xffff0001, 0xffff);
 }
 
-inline int CHotSeatDlg::getPlayerCount()
+int CHotSeatDlg::getPlayerCount()
 {
     int players = 0;
     for (int i = 0; i < 8; ++i) {
@@ -341,7 +342,7 @@ inline int CHotSeatDlg::getPlayerCount()
     return players;
 }
 
-inline void CHotSeatDlg::updateOK()
+void CHotSeatDlg::updateOK()
 {
     getWidget(OKAY_ID)->enable(getPlayerCount() > 1);
 }

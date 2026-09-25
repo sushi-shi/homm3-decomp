@@ -1507,13 +1507,13 @@ void army::rangeAttack()
 }
 
 // E:\gamedcs\army.cpp:1629 / 1643. DC has both out-of-line (0x45fc0,
-// 0x46008, 70 B each); retail has NEITHER, so they are `inline` here
-// and every use is an expansion. One hex step around the combat ring:
+// 0x46008, 70 B each); Mac retains calls to both, while VC6 expands
+// every Windows use. One hex step around the combat ring:
 // a one-hex stack walks its six neighbours with +-1 modulo 6, a
 // two-hex stack has eight and they are not in ring order, so it goes
 // through the index/order table pair. Only get_multi_head_directions
 // expands them so far, and it expands each exactly once.
-inline long army::getClockwise(long direction) const
+long army::getClockwise(long direction) const
 {
     if (is(creatureDoubleWide))
         return g_wideDirectionRingOrder[
@@ -1521,7 +1521,7 @@ inline long army::getClockwise(long direction) const
     return (direction + 1) % COMBAT_DIRECTION_COUNT;
 }
 
-inline long army::getCounterClockwise(long direction) const
+long army::getCounterClockwise(long direction) const
 {
     if (is(creatureDoubleWide))
         return g_wideDirectionRingOrder[
