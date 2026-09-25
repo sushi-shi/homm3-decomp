@@ -32,9 +32,9 @@ retail_va = 0x5fec60
 unit = "window"
 mac_section = 0x0
 mac_offset = 0x20b158
-mac_size = 0x84
-target_sha256 = "2f628410820bad18d83a8a618cd94beae523568172250725d55c914fd293e387"
-evidence = "Close calls restoreBackground 0x20b790 and removeWidget 0x20b300; complete body includes short return tail before addWidget."
+mac_size = 0x78
+target_sha256 = "049a35e8f14107bf63302611c6f663144c48f880372ed390708044202abb534a"
+evidence = "Close calls restoreBackground 0x20b790 and removeWidget 0x20b300; complete body includes short return tail before addWidget. Boundary correction: the final BLR ends the body at 0x20b1d0; call target,tvector entry 0x20b1d0 begins there, so the earlier 0x84-byte extent included a following function."
 
 [[functions]]
 retail_va = 0x5fecb0

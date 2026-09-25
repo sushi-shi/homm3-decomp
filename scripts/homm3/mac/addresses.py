@@ -560,6 +560,7 @@ def check(root: Path, pef, claims: list[Claim], windows: list[WindowsClaim]) -> 
     limit = pef.section(CODE_SECTION).packed_size
     library = {row.offset: row.name for row in runtime}
     library.update({stub.offset: stub.name for stub in glue})
+    library.update({row.offset: row.name for row in tables.read_zlib(root)})
     for claim in claims:
         if claim.offset + claim.size > limit:
             problems.append(f"{claim.where}: Mac span {claim.offset:#x}+{claim.size:#x} "
@@ -726,10 +727,12 @@ def coverage(root: Path, pef, claims: list[Claim]) -> dict:
     source = {claim.offset for claim in claims}
     runtime = {label.offset for label in read_runtime(root)}
     glue = {stub.offset for stub in read_glue(root)}
+    from homm3.mac import tables
+    vendor = {row.offset for row in tables.read_zlib(root)}
     counts, sizes = Counter(), Counter()
     for offset, size in spans.items():
         owner = ("source" if offset in source else "runtime" if offset in runtime
-                 else "glue" if offset in glue else "unowned")
+                 else "glue" if offset in glue else "vendor" if offset in vendor else "unowned")
         counts[owner] += 1
         sizes[owner] += size
     code = pef.section(CODE_SECTION).packed_size

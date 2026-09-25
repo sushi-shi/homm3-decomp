@@ -103,7 +103,7 @@ int heroWindow::open(int newPriority, unsigned char update)
     return 0;
 }
 
-VA(0x005fec60, 0x49) MAC_ADDRESS(0x20b158, 0x84)  // dc 0x1972e0
+VA(0x005fec60, 0x49) MAC_ADDRESS(0x20b158, 0x78)  // dc 0x1972e0
 void heroWindow::close(unsigned char update)
 {
     if ((m_type & WINDOW_FLAG_SAVE_BACKGROUND) && (m_status & WINDOW_STATE_OPEN))

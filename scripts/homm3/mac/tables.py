@@ -11,6 +11,8 @@
         Additional linkage names of one folded runtime body.
   config/mac/glue-map.tsv         offset, name, library
         Loader-proven CFM import glue (homm3.mac.glue); 24-byte stubs.
+  config/mac/zlib-map.tsv         offset, name, unit
+        Vendored zlib bodies, named by the vendor unit that emits them.
   config/mac/dispositions.tsv     identity, disposition, evidence
         Evidenced reasons a source function has no Mac address.
 
@@ -32,6 +34,7 @@ FUNCTIONS_TSV = "config/mac/functions.tsv"
 RUNTIME_MAP_TSV = "config/mac/runtime-map.tsv"
 RUNTIME_ALIASES_TSV = "config/mac/runtime-aliases.tsv"
 GLUE_MAP_TSV = "config/mac/glue-map.tsv"
+ZLIB_MAP_TSV = "config/mac/zlib-map.tsv"
 DISPOSITIONS_TSV = "config/mac/dispositions.tsv"
 
 DISPOSITIONS = ("inlined_only", "mac_only", "windows_only", "folded", "platform_rewritten")
@@ -64,6 +67,13 @@ class Alias:
     offset: int
     name: str
     evidence: str = ""
+
+
+@dataclass(frozen=True)
+class VendorLabel:
+    offset: int
+    name: str
+    unit: str
 
 
 @dataclass(frozen=True)
@@ -114,6 +124,11 @@ def read_aliases(root: Path) -> list[Alias]:
 def read_glue(root: Path) -> list[GlueStub]:
     return [GlueStub(_hex(row["offset"], GLUE_MAP_TSV), row["name"], row["library"])
             for row in _rows(root, GLUE_MAP_TSV, ["offset", "name", "library"])]
+
+
+def read_zlib(root: Path) -> list[VendorLabel]:
+    return [VendorLabel(_hex(row["offset"], ZLIB_MAP_TSV), row["name"], row["unit"])
+            for row in _rows(root, ZLIB_MAP_TSV, ["offset", "name", "unit"])]
 
 
 def read_dispositions(root: Path) -> dict[str, tuple[str, str]]:
@@ -188,7 +203,7 @@ def banner(lines: tuple[str, ...], pef_sha256: str, pef_size: int) -> list[str]:
 
 
 def write(root: Path, spans: dict[int, int], runtime: list[RuntimeLabel],
-          aliases: list[Alias], glue: list[GlueStub]) -> None:
+          aliases: list[Alias], glue: list[GlueStub], zlib: list[VendorLabel] | None = None) -> None:
     from homm3.core import inputs
     digest, length = inputs.MAC.sha256, inputs.MAC.size
     write_tsv(root / FUNCTIONS_TSV,
@@ -219,6 +234,14 @@ def write(root: Path, spans: dict[int, int], runtime: list[RuntimeLabel],
               ["offset", "name", "library"],
               [[f"0x{row.offset:x}", row.name, row.library]
                for row in sorted(glue, key=lambda row: row.offset)])
+    zlib = read_zlib(root) if zlib is None else zlib
+    write_tsv(root / ZLIB_MAP_TSV,
+              banner(("Vendored zlib 1.1.3 bodies, identified by the relocation-masked bytes",
+                      "of the vendor unit's CodeWarrior object filling a verified span.",
+                      "Label only; not game functions."),
+                     digest, length),
+              ["offset", "name", "unit"],
+              [[f"0x{row.offset:x}", row.name, row.unit] for row in sorted(zlib, key=lambda row: row.offset)])
     if not (root / DISPOSITIONS_TSV).is_file():
         write_tsv(root / DISPOSITIONS_TSV,
                   ["# MANUALLY MANAGED - evidenced Mac dispositions for source functions",
@@ -238,6 +261,7 @@ def validate(root: Path, pef) -> list[str]:
         runtime = read_runtime(root)
         aliases = read_aliases(root)
         glue = read_glue(root)
+        zlib = read_zlib(root)
         read_dispositions(root)
     except (TableError, ValueError) as exc:
         return [str(exc)]
@@ -278,8 +302,14 @@ def validate(root: Path, pef) -> list[str]:
                             f"{glue_module.GLUE_SIZE:#x}-byte {FUNCTIONS_TSV} row")
         if stub.offset in runtime_offsets:
             problems.append(f"{GLUE_MAP_TSV}: {stub.name} at {stub.offset:#x} is also a runtime label")
+    labelled = runtime_offsets | {stub.offset for stub in glue}
+    for row in zlib:
+        if row.offset not in spans:
+            problems.append(f"{ZLIB_MAP_TSV}: {row.name} at {row.offset:#x} has no {FUNCTIONS_TSV} row")
+        if row.offset in labelled:
+            problems.append(f"{ZLIB_MAP_TSV}: {row.name} at {row.offset:#x} is also a runtime or glue label")
     names = Counter([*(row.name for row in runtime), *(alias.name for alias in aliases),
-                     *(stub.name for stub in glue)])
+                     *(stub.name for stub in glue), *(row.name for row in zlib)])
     for name, count in names.items():
         if count > 1:
             problems.append(f"runtime/glue maps: duplicate name {name}")

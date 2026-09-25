@@ -42,7 +42,7 @@ void border::initialize(int x, int y, int w, int h, int id, int style,
     widget::initialize(x, y, w, h, id, style);
 }
 
-VA(0x0044ff60, 0x1CD) MAC_ADDRESS(0x05e34c, 0x240)  // dc 0x54440
+VA(0x0044ff60, 0x1CD) MAC_ADDRESS(0x05e34c, 0x230)  // dc 0x54440
 int border::main(message& msg)
 {
     if (m_sleepCount > 0)
@@ -157,7 +157,7 @@ void coloredBorder::draw() const
 // in the ctor BODY (not a base initializer), which is why VC6 wraps the
 // whole thing in an fs:[0] frame - the base subobject has to be
 // unwindable across that call.
-VA(0x00450130, 0x6D) MAC_ADDRESS(0x05e58c, 0x8c)  // anchor-bracket + arity (`ret 0x1c`), dc 0x54650
+VA(0x00450130, 0x6D) MAC_ADDRESS(0x05e58c, 0x88)  // anchor-bracket + arity (`ret 0x1c`), dc 0x54650
 coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
                                        int color, int style)
 {
@@ -340,7 +340,7 @@ bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
 
 VA_COMPGEN(0x00450720, 0x21, SCALAR_DELETING_DTOR, bitmapBorder16)
 
-VA(0x00450750, 0x5B) MAC_ADDRESS(0x05ec80, 0x80)  // dc 0x54b68
+VA(0x00450750, 0x5B) MAC_ADDRESS(0x05ec80, 0x7c)  // dc 0x54b68
 bitmapBorder16::~bitmapBorder16()
 {
     if (m_image)
@@ -362,7 +362,7 @@ void bitmapBorder16::draw() const
     }
 }
 
-VA(0x00450810, 0x44) MAC_ADDRESS(0x05ed8c, 0xb0)  // dc 0x54bf0
+VA(0x00450810, 0x44) MAC_ADDRESS(0x05ed8c, 0x78)  // dc 0x54bf0
 void bitmapBorder16::draw2() const
 {
     if (m_image) {

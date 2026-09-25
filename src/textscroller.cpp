@@ -124,7 +124,7 @@ int type_text_scroller::open(int newPriority, heroWindow* parent)
     return 0;
 }
 
-VA(0x005BA3B0, 0x101) MAC_ADDRESS(0x25b540, 0x130)
+VA(0x005BA3B0, 0x101) MAC_ADDRESS(0x25b540, 0x12c)
 type_text_scroller::~type_text_scroller()
 {
     for (unsigned int i = 0; i < m_lineImages.size(); i++)
@@ -136,7 +136,7 @@ type_text_scroller::~type_text_scroller()
 // Slot 2. Only MESSAGE_WIDGET reaches the body: WIDGET_DRAW grabs the
 // backdrop once, WIDGET_SET_STATUS / WIDGET_CLEAR_STATUS are relayed to
 // every line and, when the text overflows, to the slider.
-VA(0x005BA4C0, 0x13D) MAC_ADDRESS(0x25b670, 0x148)
+VA(0x005BA4C0, 0x13D) MAC_ADDRESS(0x25b670, 0x144)
 int type_text_scroller::main(message& msg)
 {
     if (msg.m_id == MESSAGE_WIDGET) {

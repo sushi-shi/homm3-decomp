@@ -36,12 +36,18 @@ Mac function addresses live in source, beside the Windows claim:
 a definition with no Windows VA. Offsets are relative to the PEF code section;
 the macro claims functions only. Mirroring `retail/`, [`mac/functions.tsv`](mac/functions.tsv)
 holds every verified code span, [`mac/runtime-map.tsv`](mac/runtime-map.tsv)
-and [`mac/runtime-aliases.tsv`](mac/runtime-aliases.tsv) label library code,
+and [`mac/runtime-aliases.tsv`](mac/runtime-aliases.tsv) label library code
+with provenance, [`mac/glue-map.tsv`](mac/glue-map.tsv) and
+[`mac/zlib-map.tsv`](mac/zlib-map.tsv) label import glue and vendored zlib,
+[`mac/code-regions.tsv`](mac/code-regions.tsv) holds reviewed non-function
+code-section regions,
 and [`mac/dispositions.tsv`](mac/dispositions.tsv) records evidenced reasons a
 source function has no Mac body. Every source claim and runtime label must be
 one `functions.tsv` row. `homm3 mac migrate` copies reviewed TOML spans into
 these forms; `homm3 mac parity` validates them and reports every source
 function as located, unlocated or disposed (`build/gen/mac/parity.tsv`).
+`homm3 mac inventory` accounts for every code-section byte and admits proven
+function spans; `homm3 mac emitted` joins full-TU objects to source.
 
 Mac candidates reuse the owning source file's include prefix and read ordinary
 project headers with the native CodeWarrior library. Duplicate declaration

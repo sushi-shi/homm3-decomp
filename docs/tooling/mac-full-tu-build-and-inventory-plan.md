@@ -121,6 +121,17 @@ admitted pairs exactly from the full-TU object; its data-binding model still
 assumes the selected-body extern shims, and full-TU std instantiations need
 runtime identities.
 
+`homm3 mac emitted` joins every full-TU hunk to authored definitions by
+CodeWarrior qualified name: of 6968 emitted code hunks, 2017 belong to the
+unit's own source, 354 to project headers, 4249 are MSL library templates,
+195 compiler-generated members or static initializers, 95 vendored zlib,
+9 another source file and 49 have no source owner. 33 non-template
+definitions authored in a compiled unit have no emitted body. Reports are in
+`build/gen/mac/{emitted-symbols,not-emitted}.tsv`.
+`config/mac/tu-dispositions.tsv` exists but is empty: a unit's missing string
+literals do not discriminate (shared units such as font and palette have none
+in the PEF either), so no unit is yet evidenced as platform-only.
+
 ## 3. Pair the source and emitted object with the PEF
 
 Join the parity index to full-TU emitted symbols and to verified PEF spans.
@@ -160,6 +171,14 @@ map may retain unresolved names, but not unbounded or guessed spans.
 **Gate:** every known library and glue span is represented once, with its
 provenance; no library row is counted in the game exact-match denominator.
 
+**Status (2026-09-25):** implemented. `homm3.mac.tables` owns the maps.
+`runtime-map.tsv` carries owner (`msl_c`, `msl_cxx`, `cw_runtime`,
+`compiler_generated`, or empty when unknown), call kind and evidence; all 209
+`runtime.toml` function rows moved with identical spans and call resolution,
+and `runtime.toml` keeps only library data. `glue-map.tsv` admits the 362
+loader-proven CFM import stubs and `zlib-map.tsv` the vendored zlib bodies.
+Owners come from positive evidence only; 96 working labels stay unknown.
+
 ## 5. Complete pinned-PEF function and byte inventory
 
 Create `config/mac/functions.tsv` as the hand-admitted, executable-wide Mac
@@ -184,6 +203,31 @@ has one reviewed category; every function row has a source, library, generated,
 Mac-only, or unresolved owner; every source address claim resolves to one
 function row. Completion requires zero unresolved function/owner rows, while
 the intermediate reports show their counts without inventing mappings.
+
+**Status (2026-09-25):** accounting implemented; completion open.
+`homm3 mac inventory` places every code-section byte in one region
+(`build/gen/mac/code-regions.tsv`): 74.46% source-owned functions, 0.98%
+runtime, 0.30% import glue, 0.37% vendored zlib, 15.51% verified functions
+without identity (2285 rows), 2.99% the reviewed read-only pool
+(`config/mac/code-regions.tsv`) and 5.40% unresolved in 118 gaps.
+
+Entries are transition-vector targets and direct call targets; other loader
+pointers into code are jump-table labels. A span is admitted
+(`--admit-proven`) only when it starts at an entry, ends in blr or an
+unconditional branch at the next entry or verified row, and every word is
+reachable from its entry and in-span jump-table labels. Against the 4211
+reviewed spans the splitter reproduces 4146 exactly and none wrongly; merged
+adjacent reviewed pairs never pass. It admitted 2335 spans. The gate also
+rejects rows containing another function's entry: it found 15 over-extended
+reviewed spans, 13 of which were corrected with the proof; two runtime rows
+whose rethrow landing pads the proof cannot reach remain reported defects.
+
+Full-TU hunks whose relocation-masked bytes occur exactly once in all code,
+filling an identity-less row, are identity leads (`object-leads.tsv`,
+`identity-leads.tsv`). `homm3 mac emitted --admit-library` labelled 19 MSL
+template bodies (plus one folded alias) and 31 zlib bodies this way; game
+bodies stay leads for reviewed MAC_ADDRESS claims. The gate is incomplete
+until the unresolved gaps, the unowned rows and the two defects are resolved.
 
 ## Rollout and retirement
 

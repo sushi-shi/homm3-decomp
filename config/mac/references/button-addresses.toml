@@ -41,9 +41,9 @@ retail_va = 0x456940
 unit = "button"
 mac_section = 0x0
 mac_offset = 0x636d4
-mac_size = 0x114
-target_sha256 = "371484366edafb0056bf4886591fac0e5a26d10f7e0758b6569289d74cc40441"
-evidence = "chooses normal/selected/dimmed frame and calls CSprite::drawInterface0x8ab04; button vtable slot4; complete adjacent PowerPC span."
+mac_size = 0x110
+target_sha256 = "0059746527a6bcf0c0dbe37027334e084450d7da643bd931fa308518183c3d98"
+evidence = "chooses normal/selected/dimmed frame and calls CSprite::drawInterface0x8ab04; button vtable slot4; complete adjacent PowerPC span. Boundary correction: the final BLR ends the body at 0x637e4; tvector entry 0x637e4 begins there, so the earlier 0x114-byte extent included a following function."
 
 [[functions]]
 retail_va = 0x4569e0
@@ -149,6 +149,6 @@ source_helper = "button::deselect"
 unit = "button"
 mac_section = 0x0
 mac_offset = 0x635e0
-mac_size = 0xf4
-target_sha256 = "9cf58d18e17225bcc152fd7bfb8fb9fe3c30d3955f0286a9e7f8b9f5fca9fa90"
-evidence = "draw and winmgr updateScreen0x20df2c, stamps deselect/end-dialog event; called by button::main; complete adjacent PowerPC span."
+mac_size = 0xd8
+target_sha256 = "8fdb591230c00836fc25f654622e95ccd193478a391cf351e8345945e6f94e9e"
+evidence = "draw and winmgr updateScreen0x20df2c, stamps deselect/end-dialog event; called by button::main; complete adjacent PowerPC span. Boundary correction: the final BLR ends the body at 0x636b8; tvector entry 0x636b8 begins there, so the earlier 0xf4-byte extent included a following function."

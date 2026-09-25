@@ -313,7 +313,7 @@ int button::select(message& msg)
 
 // Complete omits the combat-screen offset adjustment used in Dreamcast.
 // E:\gamedcs\button.cpp:401, dc 0x57854
-MAC_ADDRESS(0x0635e0, 0xf4)
+MAC_ADDRESS(0x0635e0, 0xd8)
 int button::deselect(message& msg)
 {
     if (!(m_status & WIDGET_SELECTED))
@@ -361,7 +361,7 @@ void button::zBufferDraw(unsigned short* zBuffer, int id) const
 // disabled fall to disabled_frame; selected to selectedFrame; any
 // frame past the sequence-0 count clamps to 0.
 // E:\gamedcs\button.cpp:446
-VA(0x00456940, 0x99) MAC_ADDRESS(0x0636d4, 0x114)  // vtable-slot 4 of button (0x63bb54), dc 0x5793c
+VA(0x00456940, 0x99) MAC_ADDRESS(0x0636d4, 0x110)  // vtable-slot 4 of button (0x63bb54), dc 0x5793c
 void button::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))

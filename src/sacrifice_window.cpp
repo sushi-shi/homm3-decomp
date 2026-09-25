@@ -1941,7 +1941,7 @@ void type_skeleton_window::creatureClick(
 // E:\gamedcs\sacrifice_window.cpp:2281
 // Slot 9, sitting two rows past creature_click 0x566490 - the call target the
 // transformer slot above pins - in the Dreamcast roster's order.
-VA(0x005666f0, 0x2e) MAC_ADDRESS(0x15cbe8, 0x88)  // anchor-callee (CAdvPopup slot 9) + linkorder, dc 0x128048
+VA(0x005666f0, 0x2e) MAC_ADDRESS(0x15cbe8, 0x5c)  // anchor-callee (CAdvPopup slot 9) + linkorder, dc 0x128048
 int type_skeleton_window::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);

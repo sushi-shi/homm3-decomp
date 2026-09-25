@@ -32,18 +32,18 @@ retail_va = 0x44ff60
 unit = "border"
 mac_section = 0x0
 mac_offset = 0x5e34c
-mac_size = 0x240
-target_sha256 = "23727814853d791311f66c2b907acff667793df5cea2a6ed970f959bb70381e1"
-evidence = "message dispatch with sleep/status checks and widget::main0x20a684; inherited by derived border mains; complete adjacent PowerPC span."
+mac_size = 0x230
+target_sha256 = "eca23d851de944a298412383e5fe9877420f80b18d28208253dbcb1312ba8c64"
+evidence = "message dispatch with sleep/status checks and widget::main0x20a684; inherited by derived border mains; complete adjacent PowerPC span. Boundary correction: the final BLR ends the body at 0x5e57c; tvector entry 0x5e57c begins there, so the earlier 0x240-byte extent included a following function."
 
 [[functions]]
 retail_va = 0x450130
 unit = "border"
 mac_section = 0x0
 mac_offset = 0x5e58c
-mac_size = 0x8c
-target_sha256 = "cdcf77ed7675c93c9eb22163e495935b66ab82d045be2d129354515a4bc7cea5"
-evidence = "calls border default ctor0x5e244 and initialize0x5e32c then stores color/colorize; complete adjacent PowerPC span."
+mac_size = 0x88
+target_sha256 = "a1f145c83683c2c5b37c3a2b492eaeb3d30d57eedfc117264352461e8f33251a"
+evidence = "calls border default ctor0x5e244 and initialize0x5e32c then stores color/colorize; complete adjacent PowerPC span. Boundary correction: the final BLR ends the body at 0x5e614; tvector entry 0x5e614 begins there, so the earlier 0x8c-byte extent included a following function."
 
 [[functions]]
 retail_va = 0x4501e0
@@ -158,9 +158,9 @@ retail_va = 0x450750
 unit = "border"
 mac_section = 0x0
 mac_offset = 0x5ec80
-mac_size = 0x80
-target_sha256 = "4a6cb939412ea3c757e379c37b5de7052713f9439242a699fea2b55f3484d9e9"
-evidence = "disposes Bitmap16 image, delegates border dtor0x5e2cc, optional Mac deletion flag; complete adjacent PowerPC span."
+mac_size = 0x7c
+target_sha256 = "28efcc646d67e1142a4e60d1c9f9ede4c35156b6c6ef8214190b978470305a4a"
+evidence = "disposes Bitmap16 image, delegates border dtor0x5e2cc, optional Mac deletion flag; complete adjacent PowerPC span. Boundary correction: the final BLR ends the body at 0x5ecfc; tvector entry 0x5ecfc begins there, so the earlier 0x80-byte extent included a following function."
 
 [[functions]]
 retail_va = 0x4507b0
@@ -176,9 +176,9 @@ retail_va = 0x450810
 unit = "border"
 mac_section = 0x0
 mac_offset = 0x5ed8c
-mac_size = 0xb0
-target_sha256 = "1b4558bbcad12c09ec409175c3596caa94ab5521d43581cce77497f22e4f05e2"
-evidence = "guarded Bitmap16 raw draw into screen with local position and zero fallback; next two BLRs are return arms; complete adjacent PowerPC span."
+mac_size = 0x78
+target_sha256 = "cae46fbc8f6f15e4071a6b00eef96b708376345b7aa271904653d4003814000e"
+evidence = "guarded Bitmap16 raw draw into screen with local position and zero fallback; next two BLRs are return arms; complete adjacent PowerPC span. Boundary correction: the final BLR ends the body at 0x5ee04; tvector entry 0x5ee04 begins there, so the earlier 0xb0-byte extent included a following function."
 
 [[functions]]
 retail_va = 0x450860

@@ -1,0 +1,5 @@
+# MANUALLY MANAGED - reviewed non-function regions of PEF code section 0.
+# Every other byte is a config/mac/functions.tsv row or unresolved.
+# `homm3 mac inventory` rechecks that no branch from outside enters a region.
+start	end	category	evidence
+0x2a3328	0x2b7fb8	readonly_data	CodeWarrior read-only pool after the last code: the preceding word 0x2a3324 is a blr; 248 loader-relocated data-section TOC cells point into it with the lowest target exactly 0x2a3328; no branch outside it targets it; it holds NUL-terminated strings and all eight reviewed code-section DATA/constant tables (for example g_resources at 0x2a4d4c and constArcheryValue at 0x2a63d4). It extends to the section end.

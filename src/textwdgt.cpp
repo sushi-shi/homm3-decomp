@@ -249,7 +249,7 @@ VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 // as implicit. Its retained retail body performs only base/member teardown.
 VA_COMPGEN(0x005bc6d0, 0x8A, IMPLICIT_DTOR, bitmapBackedTextWidget) MAC_COMPGEN_ADDRESS(0x1b1a7c, 0x60, IMPLICIT_DTOR, bitmapBackedTextWidget)
 
-VA(0x005bc760, 0x7B) MAC_ADDRESS(0x1b1934, 0x78)  // dc 0x1651d8
+VA(0x005bc760, 0x7B) MAC_ADDRESS(0x1b1934, 0x74)  // dc 0x1651d8
 bitmapBackedTextWidget::bitmapBackedTextWidget(
     int x, int y, int w, int h, const char* text, const char* fontName,
     const char* backName, font::TColor color, int id, unsigned justify,
