@@ -27,17 +27,20 @@ For the broad helper sweep, cover byte-exact Windows functions too. Use Mac's
 retained calls and simpler body shapes to restore helper calls and canonical
 bodies throughout the source. Inspect the Mac callee and its callers to
 distinguish game helpers from library, runtime, glue, or generated code. A
-retained Mac call to an identified game helper, or a recognizable helper body
-expanded in a Mac caller, is enough to restore that source-level operation in
-the corresponding Windows callers. The Mac function name, original C++
-spelling, exact Mac byte match, and immediate Windows score improvement are
-not prerequisites. Choose a clear project name when the original is unknown;
-keep that helper and its calls rather than reverting to expanded caller code.
-Keep one canonical body and use the best-supported ordinary header or source
-file. Review naming and placement when stronger evidence appears. Track each
-lead through implemented, already represented by a nested helper, or a
-concrete non-game/insufficient-evidence reason so the sweep reaches every
-function.
+retained Mac call to an identifiable game helper, or a recognizable helper
+body expanded in a Mac caller, is enough to restore that operation as a helper
+call in corresponding Windows source callers. If the helper already exists,
+replace equivalent direct field access or pasted logic with its call; if it
+does not, add one canonical body and its calls. Mac's stripped executable need
+not supply the helper's name: infer its operation from its body and callers,
+then choose a clear project name. Do not remove or defer a supported helper
+because its original spelling, exact Mac byte match, placement, or immediate
+Windows score gain is unknown. Keep the best-supported ordinary header or
+source placement and revise it when stronger evidence appears. A Windows
+function that is already byte-exact still needs its supported helper calls.
+Track each lead through implemented, already represented by a nested helper,
+or a specific reason why the Mac target or corresponding Windows operation
+cannot yet be identified. An uncertain name or placement is not such a reason.
 
 The verdict is VC6 SP3 under Wine; clang/clangd is editor tooling only. Use the
 per-TU compiler profiles in `config/units.toml`.
