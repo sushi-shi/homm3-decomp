@@ -1253,7 +1253,7 @@ sha256 = "7d4d2cb7e9d5ce93ba967dad9ee28603deb6941a88e2c40f923d415c5556afdc"
 evidence = "The third repeated Mac game::load cleanup wrapper calls subobject destructor 0x6b7fc with flag zero and conditionally frees this through scalar delete. BLR 0x98374; next body 0x98378. Compiler-generated destructor path only."
 
 [[functions]]
-symbol = ".strcat"
+symbol = ".mac_crt_strcat_26afa4"
 mac_section = 0
 mac_offset = 0x26afa4
 mac_size = 0x2c
@@ -1261,7 +1261,7 @@ sha256 = "2d84d5856e995e0cd8e4110a9b4e312721c575ec5120eb8874310b87215246dc"
 evidence = "Mac bottom-view, multiplayer and quick-window callers append C strings through this routine. It advances r3 to the destination NUL, then copies r4 through its terminator and returns at 0x26afcc; strlen begins at 0x26afd0. C runtime strcat, not an authored game helper."
 
 [[functions]]
-symbol = ".abs"
+symbol = ".mac_crt_abs_2887a0"
 mac_section = 0
 mac_offset = 0x2887a0
 mac_size = 0x10
