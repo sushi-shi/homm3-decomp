@@ -377,12 +377,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
         (g_game->m_campaign.m_currentCampaign == g_creatureBonusTownCampaignB &&
          g_game->m_campaign.m_currentMap == g_creatureBonusTownScenarioB)) {
         int creature = m_creature;
-        int faction;
-        if (g_game->m_gameVersion == 0 &&
-            isBaseElemental(creature))
-            faction = -1;
-        else
-            faction = g_creatureTypeTraits[creature].m_townType;
+        int faction = g_game->getAlignment(creature);
         for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
             town* garrison = g_game->getTown(player->m_townIds[townIndex]);
             if (garrison->m_type == faction) {
