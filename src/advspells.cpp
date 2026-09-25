@@ -165,7 +165,7 @@ void advManager::summonBoat(TSkillMastery level)
     if (getCell(point)->m_groundSet == eTerrainWater) {
         if (g_game->isLocalHuman(who->m_owner)) {
             sprintf(g_text,
-                    g_generalText->getText(GENERAL_TEXT_SUMMON_BOAT_ALREADY_AT_SEA_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_ALREADY_AT_SEA_FORMAT],
                     who->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -191,7 +191,7 @@ void advManager::summonBoat(TSkillMastery level)
     if (!foundWater) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_SUMMON_BOAT_NO_WATER),
+                (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_NO_WATER],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
@@ -225,7 +225,7 @@ void advManager::summonBoat(TSkillMastery level)
                        < 0) {
                 if (g_game->isLocalHuman(who->m_owner)) {
                     normalDialog(
-                        g_generalText->getText(GENERAL_TEXT_SUMMON_BOAT_NONE_AVAILABLE),
+                        (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_NONE_AVAILABLE],
                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 }
                 return;
@@ -245,7 +245,7 @@ void advManager::summonBoat(TSkillMastery level)
         waitEndSample(sample, -1);
     } else if (g_game->isLocalHuman(who->m_owner)) {
         sprintf(g_text,
-                g_generalText->getText(GENERAL_TEXT_SUMMON_BOAT_FAILED_FORMAT),
+                (*g_generalText)[GENERAL_TEXT_SUMMON_BOAT_FAILED_FORMAT],
                 who->m_name);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
@@ -303,7 +303,7 @@ void advManager::skuttleBoat(TSkillMastery level)
     } else {
         if (g_game->isLocalHuman(who->m_owner)) {
             sprintf(g_text,
-                    g_generalText->getText(GENERAL_TEXT_SCUTTLE_BOAT_FAILED_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_SCUTTLE_BOAT_FAILED_FORMAT],
                     who->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -335,7 +335,7 @@ void advManager::dimensionDoor(TSkillMastery level)
     if (who->m_movePoints <= 0) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_SPELL_NEEDS_MOVEMENT),
+                (*g_generalText)[GENERAL_TEXT_SPELL_NEEDS_MOVEMENT],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
@@ -345,7 +345,7 @@ void advManager::dimensionDoor(TSkillMastery level)
     if (who->m_dWalkSpellsCast >= traits.m_masteryBonus[mastery]) {
         if (g_game->isLocalHuman(who->m_owner)) {
             sprintf(g_text,
-                    g_generalText->getText(GENERAL_TEXT_DIMENSION_DOOR_LIMIT_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_DIMENSION_DOOR_LIMIT_FORMAT],
                     who->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -366,7 +366,7 @@ void advManager::dimensionDoor(TSkillMastery level)
                 && cell->m_groundSet == eTerrainWater)) {
             if (g_game->isLocalHuman(who->m_owner)) {
                 normalDialog(
-                    g_generalText->getText(GENERAL_TEXT_DIMENSION_DOOR_BLOCKED),
+                    (*g_generalText)[GENERAL_TEXT_DIMENSION_DOOR_BLOCKED],
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             }
             updateRadar(1, 1, 0, 0, 0);
@@ -436,7 +436,7 @@ void advManager::townGate(TSkillMastery level)
     if (who->m_movePoints < cost) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_SPELL_NEEDS_MOVEMENT),
+                (*g_generalText)[GENERAL_TEXT_SPELL_NEEDS_MOVEMENT],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
@@ -450,7 +450,7 @@ void advManager::townGate(TSkillMastery level)
     if (numTowns == 0) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_TOWN_PORTAL_NO_TOWN),
+                (*g_generalText)[GENERAL_TEXT_TOWN_PORTAL_NO_TOWN],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
@@ -459,7 +459,7 @@ void advManager::townGate(TSkillMastery level)
     if ((who->m_flags & 0x40000) != 0) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_SPELL_NOT_FROM_BOAT),
+                (*g_generalText)[GENERAL_TEXT_SPELL_NOT_FROM_BOAT],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
@@ -502,7 +502,7 @@ void advManager::townGate(TSkillMastery level)
     if (destination->m_visitingHeroId != -1) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_TOWN_PORTAL_TOWN_OCCUPIED),
+                (*g_generalText)[GENERAL_TEXT_TOWN_PORTAL_TOWN_OCCUPIED],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         return;
