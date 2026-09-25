@@ -125,8 +125,9 @@ void checkDoMain(int forceMouseCheck, int mouseOnly)
 }
 
 // Original: ShowStatus; philai.cpp:102, dc 0x10d510.
-// The released DC hook is an empty return; it has no standalone retail claim.
-void showStatus()
+// The Mac body at 0:0x13d680 is also a single return, called by philAI::doAI.
+// Complete expands the empty internal helper at its sole call site.
+static void showStatus()
 {
 }
 

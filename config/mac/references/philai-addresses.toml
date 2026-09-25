@@ -1,5 +1,14 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 
+[[helpers]]
+source_helper = "showStatus"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13d680
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "philAI::doAI calls this at 0x140ce0 between getTurnAIVars and incrementHourGlass, the exact authored call order. The body is one BLR; the adjacent empty constructor begins at 0x13d684 and incrementHourGlass starts at 0x13d688. Complete has no retained standalone body for this internal helper."
+
 # The event dispatcher at 0x146134 retains these source helpers as calls.
 # Their order and terminal returns delimit the spans; the field operations
 # and called functions identify each body independently of that order.
