@@ -2319,25 +2319,15 @@ long army::getDefenseModifier() const
 
 // E:\gamedcs\army.cpp:2680
 // Dreamcast's eight-byte body returns 1.0, but the shared helper boundary is
-// still visible in get_unit_combat_value. Complete expands the later body
-// below at that call site; no retail out-of-line copy survives.
+// still visible in get_unit_combat_value. Mac expands this inline wrapper and
+// calls computeDefenderDamageReduction at 0:0x4ea40; keep the canonical
+// reduction body instead of spelling it a second time here. In a focused VC6
+// build, the caller falls from 96.5871% to 84.0903% because this compile
+// retains the reduction call where retail expands it through getDefenseFactor.
 inline double army::getDefenseDamageModifier(
     unsigned char rangedAttack) const
 {
-    double factor = 1.0;
-    if (rangedAttack) {
-        if (m_spellInfluence[28])
-            factor = m_airShieldFactor;
-    } else {
-        if (m_spellInfluence[27])
-            factor = m_shieldFactor;
-    }
-    if (m_spellInfluence[70])
-        factor = factor * 0.5;
-    hero* controller = getController();
-    if (controller)
-        factor = controller->getDefenseFactor() * factor;
-    return factor;
+    return computeDefenderDamageReduction(rangedAttack);
 }
 
 // The controller/owner pair, and the resolution of a naming inversion
