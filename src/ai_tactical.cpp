@@ -2443,17 +2443,8 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
     long damage = min(choice->getMasteryValue(), total);
     long remaining = g_combatManager->m_numArmies[m_side];
     for (; remaining-- > 0; ++ourArmy) {
-        if (ourArmy->is(creatureImmobilized))
-            continue;
-        if (ourArmy->m_spellInfluence[62])
-            continue;
-        if (ourArmy->m_spellInfluence[70])
-            continue;
-        if (ourArmy->m_spellInfluence[74])
-            continue;
-        if (ourArmy->m_creatureType == CREATURE_FIRST_AID_TENT)
-            continue;
-        if (ourArmy->m_creatureType == CREATURE_AMMO_CART)
+        // Mac 0x4584c..0x458e8 expands cannotAttack's ordered tests.
+        if (ourArmy->cannotAttack())
             continue;
         const army* target = ourArmy->getAITarget();
         if (target == 0) {

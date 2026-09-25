@@ -1521,11 +1521,8 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
             if (best) {
                 if (!m_inSecondPhase)
                     best->newTurn();
-                if (best->m_spellInfluence[62])
-                    continue;
-                if (best->m_spellInfluence[70])
-                    continue;
-                if (best->m_spellInfluence[74])
+                // Mac 0x70d50..0x70d90 expands this inline predicate.
+                if (best->isIncapacitated())
                     continue;
                 if (checkingForBadMorale && !m_creaturePlacement
                     && !m_inSecondPhase) {

@@ -2267,14 +2267,13 @@ unsigned char combatManager::processMoveThenAttack(message* msg)
 
     currentArmy->m_monInfo.m_attributes |= creatureDone;
     currentArmy->m_joustBonus = 0;
+    // Mac 0x86ec0..0x86f00 expands isIncapacitated in this return step.
     if (m_nextActionExtra != -1 && oldGridIndex != m_nextActionExtra
             && (currentArmy->m_creatureType == army::ARMY_CREATURE_HARPY
                 || currentArmy->m_creatureType
                        == army::ARMY_CREATURE_HARPY_HAG)
             && !currentArmy->is(creatureImmobilized)
-            && currentArmy->m_spellInfluence[62] == 0
-            && currentArmy->m_spellInfluence[70] == 0
-            && currentArmy->m_spellInfluence[74] == 0) {
+            && !currentArmy->isIncapacitated()) {
         currentArmy->moveTo(oldGridIndex, 0);
     }
 
