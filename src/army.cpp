@@ -2229,7 +2229,8 @@ inline void army::checkLuck()
 {
     m_luckStatus = 0;
     if (getController() && m_luck > 0) {
-        if (sRandom(1, 24) <= min(m_luck, 3)) {
+        // Dreamcast names SRandom here; Complete's expanded callers call random.
+        if (random(1, 24) <= min(m_luck, 3)) {
             m_luckStatus = 1;
             if (!static_cast<const combatManager*>(g_combatManager)
                      ->isQuickCombat()) {

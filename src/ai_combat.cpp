@@ -1206,7 +1206,9 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
     if (m_currentHero)
         m_currentHero->m_mana = static_cast<short>(m_mana);
     if (defeatedHero)
-        defeatedHero->m_mana = static_cast<short>(defender.getMana());
+        // Retail reads the low word directly here; the long-returning getter
+        // makes VC6 issue a dword load. Keep getMana for its other callers.
+        defeatedHero->m_mana = static_cast<short>(defender.m_mana);
 
     if (m_totalCombatValue > 0) {
         if (m_currentHero) {

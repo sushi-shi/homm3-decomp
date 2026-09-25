@@ -3487,7 +3487,7 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
 VA(0x004bf570, 0x203)
 void game::giveTroopsToNeutralTown(int townId)
 {
-    town* currentTown = getTown(townId);
+    town* currentTown = &m_towns[townId];
     long weekNumber = getCurrentTurn() / 7;
     int maxRoll = min(weekNumber, 8) + 1;
     int roll = random(0, maxRoll) + random(0, maxRoll)
@@ -8022,7 +8022,7 @@ void game::randomizeHeroPool()
 VA(0x004c9730, 0x159)  // dc 0xb5094
 void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
 {
-    armyGroup* currentArmy = &getHero(hero)->m_army;
+    armyGroup* currentArmy = &m_heroes[hero].m_army;
     const THeroTraits* traits = &g_heroTraits[hero];
 
     if (g_inCampaign

@@ -427,8 +427,10 @@ void SmackManager::drawSmackerFrame()
 VA(0x00597740, 0x53)  // dc 0x14ac48
 void videoDrawCurrentFrame()
 {
-    if (g_smackVideo || g_smackVideo2)
-        SmackManager::drawSmackerFrame();
+    if (g_smackVideo || g_smackVideo2) {
+        if (!g_smackPaused)
+            SmackManager::drawSmackerFrame();
+    }
     if (BinkManager::g_playingBink.m_bink || BinkManager::g_playingBink.m_bink2) {
         if (!BinkManager::g_playingBink.m_paused)
             BinkManager::drawCurrentBinkFrame();
