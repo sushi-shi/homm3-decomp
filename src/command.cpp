@@ -1835,8 +1835,7 @@ long combatManager::getSurrenderCost()
 
     for (int slot = 0; slot < 20; ++slot) {
         army* currentArmy = &m_armies[side][slot];
-        if (currentArmy->m_creatureType >= 0
-            && currentArmy->m_numTroops > 0
+        if (currentArmy->isActive()
             && !currentArmy->is(creatureSummoned)
             && currentArmy->m_numTroops
                 > currentArmy->m_numTroopsBattleResurrected) {
