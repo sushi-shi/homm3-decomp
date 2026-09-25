@@ -1287,7 +1287,7 @@ short town::getGrowthRate(short dwelling) const
         }
     }
 
-    growth += m_generatorBonus[dwellingIndex];
+    growth += getGeneratorBonus(dwellingIndex);
     if (hasBuilding(HOLY_GRAIL_ID, true))
         growth += growth / 2;
     return growth;

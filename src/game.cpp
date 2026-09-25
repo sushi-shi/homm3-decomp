@@ -7317,7 +7317,7 @@ void game::perDay()
     for (i = 0; i < m_towns.size(); ++i) {
         if (g_game->m_setup.m_difficulty >= 2
             || isHumanAlly(m_towns[i].m_owner)
-            || !m_towns[i].m_builtThisTurn) {
+            || !townAlreadyBuiltOn(i)) {
             m_towns[i].m_builtThisTurn = 0;
         } else {
             --m_towns[i].m_builtThisTurn;
@@ -9963,19 +9963,19 @@ unsigned char game::getRandomLith(const std::vector<type_point>& points,
 VA(0x004cddc0, 0x22)  // dc 0xbb3e0
 unsigned char game::getRandomLithExit(long color, type_point& result) const
 {
-    return getRandomLith(m_lithExitPools[color], result, 0x2c, -1);
+    return getRandomLith(getLithExits(color), result, 0x2c, -1);
 }
 
 VA(0x004cddf0, 0x24)  // dc 0xbb41c
 unsigned char game::getRandomLith(long color, long excluded, type_point& result) const
 {
-    return getRandomLith(m_lithPools[color], result, 0x2d, excluded);
+    return getRandomLith(getLiths(color), result, 0x2d, excluded);
 }
 
 VA(0x004cde20, 0x1D)  // dc 0xbb45c
 unsigned char game::getRandomWhirlpool(long excluded, type_point& result) const
 {
-    return getRandomLith(m_whirlpools, result, 0x6f, excluded);
+    return getRandomLith(getWhirlpools(), result, 0x6f, excluded);
 }
 
 VA(0x004cde40, 0xE0)  // dc 0xbb490
