@@ -1,5 +1,23 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 [[helpers]]
+source_helper = "GameSelectionHeadersStruct::read"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16e420
+mac_size = 0x100
+target_sha256 = "e7aff6cf07b0dd7038d359e90e8b56126bc2568f4af862b9caee2ada9a84c2e5"
+evidence = "CGameHeaderInfoMsg::read calls this retained row reader at 0x16e6a4. It loads the map header, reads setup, wasHuman, hero availability, title, description and file time in order, then returns the inverted saved-header load result. BLR at 0x16e51c precedes write."
+
+[[helpers]]
+source_helper = "GameSelectionHeadersStruct::write"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16e520
+mac_size = 0xfc
+target_sha256 = "8f26f03b8a3c7c8c1eecb2a2caabb1d99bfe6b2591dfedccd9070561ad1371b2"
+evidence = "CGameHeaderInfoMsg::write calls this retained row writer at 0x16e72c. It saves the map header, writes the same six member bands in order, then returns the inverted saved-header save result. BLR at 0x16e618 precedes the message reader."
+
+[[helpers]]
 source_helper = "TSingleSelectionWindow::onRequestHeroFaceMsg"
 unit = "singleselectionwindow"
 mac_section = 0x0

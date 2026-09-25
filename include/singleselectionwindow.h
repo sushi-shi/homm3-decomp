@@ -278,6 +278,9 @@ public:
         m_setup.m_difficulty = 1;
     }
 
+    unsigned char read(TAbstractFile* infile);
+    unsigned char write(TAbstractFile* outfile);
+
     // Both the copy ctor and operator= are IMPLICIT: the synthesized
     // memberwise bodies are retail's 0x5904f0 and 0x578440 COMDATs, and
     // /Ob2 reproduces retail's per-site split on each - operator= called

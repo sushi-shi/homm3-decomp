@@ -591,6 +591,32 @@ inline unsigned char hasRandomHero(int gamePos)
     return slot.m_hasRandomHero || slot.m_generateHero;
 }
 
+// Mac retains these row serializers at 0:0x16e420 and 0:0x16e520. Both
+// CGameHeaderInfoMsg wrappers call them; VC6 expands the same field order.
+unsigned char GameSelectionHeadersStruct::read(TAbstractFile* infile)
+{
+    m_header.load(infile, 42);
+    infile->read(&m_setup, sizeof(m_setup));
+    infile->read(&m_wasHuman, sizeof(m_wasHuman));
+    infile->read(&m_heroAvailability, sizeof(m_heroAvailability));
+    infile->read(&m_title, sizeof(m_title));
+    infile->read(&m_description, sizeof(m_description));
+    infile->read(&m_fileTime, sizeof(m_fileTime));
+    return !m_saved.load(infile);
+}
+
+unsigned char GameSelectionHeadersStruct::write(TAbstractFile* outfile)
+{
+    m_header.save(outfile);
+    outfile->write(&m_setup, sizeof(m_setup));
+    outfile->write(&m_wasHuman, sizeof(m_wasHuman));
+    outfile->write(&m_heroAvailability, sizeof(m_heroAvailability));
+    outfile->write(&m_title, sizeof(m_title));
+    outfile->write(&m_description, sizeof(m_description));
+    outfile->write(&m_fileTime, sizeof(m_fileTime));
+    return !m_saved.save(outfile);
+}
+
 VA(0x00577880, 0xC2)
 unsigned char CGameHeaderInfoMsg::read(TAbstractFile* infile)
 {
@@ -604,15 +630,7 @@ unsigned char CGameHeaderInfoMsg::read(TAbstractFile* infile)
         infile->read(&number, 4);
         m_number = number;
     }
-    GameSelectionHeadersStruct& header = m_header;
-    header.m_header.load(infile, 42);
-    infile->read(&header.m_setup, sizeof(header.m_setup));
-    infile->read(&header.m_wasHuman, sizeof(header.m_wasHuman));
-    infile->read(&header.m_heroAvailability, sizeof(header.m_heroAvailability));
-    infile->read(&header.m_title, sizeof(header.m_title));
-    infile->read(&header.m_description, sizeof(header.m_description));
-    infile->read(&header.m_fileTime, sizeof(header.m_fileTime));
-    return !header.m_saved.load(infile);
+    return m_header.read(infile);
 }
 
 VA(0x00577950, 0xBE)
@@ -626,16 +644,7 @@ unsigned char CGameHeaderInfoMsg::write(TAbstractFile* outfile) const
         int number = m_number;
         outfile->write(&number, 4);
     }
-    GameSelectionHeadersStruct& header =
-        const_cast<GameSelectionHeadersStruct&>(m_header);
-    header.m_header.save(outfile);
-    outfile->write(&header.m_setup, sizeof(header.m_setup));
-    outfile->write(&header.m_wasHuman, sizeof(header.m_wasHuman));
-    outfile->write(&header.m_heroAvailability, sizeof(header.m_heroAvailability));
-    outfile->write(&header.m_title, sizeof(header.m_title));
-    outfile->write(&header.m_description, sizeof(header.m_description));
-    outfile->write(&header.m_fileTime, sizeof(header.m_fileTime));
-    return !header.m_saved.save(outfile);
+    return const_cast<GameSelectionHeadersStruct&>(m_header).write(outfile);
 }
 
 VA(0x00577A10, 0x1A)
