@@ -3722,9 +3722,9 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
             long hex = getAdjacentHex(ourHex, direction);
             if (hex >= 0 && hex < COMBAT_GRID_CELLS
                 && enemy == g_combatManager->m_cells[hex].getArmy()) {
-                if (direction >= COMBAT_DIRECTION_COUNT)
-                    return direction;
-                if ((m_facing == 0) == (direction >= 3))
+                // Mac 0x518e8..0x51930 expands needToTurn, including its
+                // direction < 6 guard.
+                if (!needToTurn(direction))
                     return direction;
                 if (best == -1)
                     best = direction;
