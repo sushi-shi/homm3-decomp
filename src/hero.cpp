@@ -4874,7 +4874,7 @@ void hero::transferArtifacts(hero* src)
         return;
     type_artifact artifact;
     for (int slot = 0; slot < 19; slot++) {
-        artifact = src->m_equipped[slot];
+        artifact = src->getArtifact(TArtifactSlot(slot));
         if (artifact.m_artifactId == ARTIFACT_NONE ||
             artifact.m_artifactId == ARTIFACT_HOLY_GRAIL ||
             artifact.m_artifactId == ARTIFACT_SPELLBOOK ||
@@ -4888,7 +4888,7 @@ void hero::transferArtifacts(hero* src)
         src->removeArtifact(slot);
     }
     for (int index = 63; index >= 0; index--) {
-        artifact = src->m_backpack[index];
+        artifact = src->getBackpack(index);
         if (artifact.m_artifactId == ARTIFACT_NONE ||
             artifact.m_artifactId == ARTIFACT_HOLY_GRAIL ||
             artifact.m_artifactId == ARTIFACT_SPELLBOOK ||
