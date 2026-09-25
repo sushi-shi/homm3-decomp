@@ -1,6 +1,30 @@
 # Reviewed generated and library call destinations; these are not game reconstruction scores.
 
 [[functions]]
+symbol = ".msl_vector_obstacle_push_back_76f7c"
+mac_section = 0
+mac_offset = 0x76f7c
+mac_size = 0xc0
+sha256 = "1c7139823589feb938394759e5f3314fcaafd66b9d9a92dfc97777a0cf6cf030"
+evidence = "The body grows three-word vector storage when full and appends one 0x18-byte element. combatManager::placeObstacle, setupAndLoadObstacles and castSpell call it where the authored code pushes combat obstacles into m_obstacles. Final BLR at 0x77038 precedes a distinct prologue at 0x7703c. MSL vector insertion, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_word_resize_a11f0"
+mac_section = 0
+mac_offset = 0xa11f0
+mac_size = 0x64
+sha256 = "bc111aaccc7074f57788f906134dbfb71a781e5a34da99961cd563c664f6ef08"
+evidence = "Compares requested size with the current vector size, then grows or shrinks four-byte elements. NewfullMap map-object readers and text-resource callers use authored vector resize operations; random-map callers share the instantiation. Final BLR at 0xa1250 precedes a separate two-instruction function. MSL vector resizing, not a game helper."
+
+[[functions]]
+symbol = ".msl_sort_int_entries_17cde8"
+mac_section = 0
+mac_offset = 0x17cde8
+mac_size = 0xb8
+sha256 = "5fd3896da3f384f8bc45b7610eac5876c27fce550193d732ca440e8ece5042c9"
+evidence = "The comparator-driven element exchange/scan is called for the six sort choices in TSingleSelectionWindow::sortMaps, whose source uses std::sort with six predicates. Final BLR at 0x17ce9c precedes a separate prologue at 0x17cea0. MSL sorting machinery, not a game helper."
+
+[[functions]]
 symbol = ".msl_vector_storage_init_17566c"
 mac_section = 0
 mac_offset = 0x17566c
