@@ -2378,6 +2378,8 @@ void TCampaignBrief::MapTextStruct::play()
                 }
             }
 
+            // Mac retains musicPlaying at 0x97c40; Complete uses the Miles
+            // stream-status import at retail 0x4893a1 for this playback path.
             if (!speechStarted && (mp3Started || m_audio == -1)
                 && speech) {
                 g_soundManager->memorySample(speech);

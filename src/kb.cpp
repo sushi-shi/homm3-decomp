@@ -769,6 +769,8 @@ void lostGame()
     do {
         g_soundManager->serviceSounds();
         Sleep(100);
+        // Mac calls musicPlaying at 0x10fc78; Complete calls the Miles
+        // stream-status import at retail 0x4ee3aa.
         status = AIL_stream_status(g_mp3Stream);
     } while (g_mp3Stream && !done && status == AIL_STREAM_PLAYING);
 }
