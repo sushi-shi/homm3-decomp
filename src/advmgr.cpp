@@ -1804,10 +1804,12 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
             // its enum name describes that role.
             normalDialog(g_generalText->getText(GENERAL_TEXT_END_TURN_HEROES_CAN_MOVE_PROMPT), 2, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
-            if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
-                break;
+            if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
+                g_game->nextPlayer();
+        } else {
+            // Mac retains this second call at 0:0x9f68.
+            g_game->nextPlayer();
         }
-        g_game->nextPlayer();
         break;
 
     case TAdventureMapWindow::NEXT_HERO_ID:

@@ -251,13 +251,14 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
             g_castleWindow->broadcastMessage(msg);
             msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             msg.m_extra = state;
+            g_castleWindow->broadcastMessage(msg);
         } else {
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = CASTLE_BUILD_BUTTON_FIRST_ID + i;
             msg.m_extra = widget::WIDGET_DRAWN;
+            // Mac retains this clear-status call at 0:0x6d498.
+            g_castleWindow->broadcastMessage(msg);
         }
-        g_castleWindow->broadcastMessage(msg);
-
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = CASTLE_BUILD_FRAME_FIRST_ID + i;
         if (!state)
