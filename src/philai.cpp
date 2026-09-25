@@ -3072,15 +3072,7 @@ long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
             if (g_spellTraits[spell].m_level == g_pyramidSpellLevel) {
                 if (!currentHero->spellIsAvailable(spell)) {
-                    long spellValue;
-                    if (currentHero->isInSpellbook(SpellID(spell)))
-                        spellValue = 0;
-                    else if (currentHero->isWieldingArtifact(
-                                 ARTIFACT_SPELLBOOK))
-                        spellValue = aiGetSpellValue(currentHero, spell);
-                    else
-                        spellValue = 0;
-                    value += spellValue;
+                    value += valueOfSpell(currentHero, SpellID(spell));
                 }
                 count++;
             }
