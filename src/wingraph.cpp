@@ -180,7 +180,7 @@ void robAppBlit(tagRECT* combRect)
                        -g_mouseManager->m_savedRect.top);
             ddBlit(g_ddsMouseSaveSurface, sourceRect, g_ddsBack,
                    pointerRect, DDBLT_WAIT);
-            if (g_mouseManager->m_hideCount == 0 && g_mouseManager->m_sprite
+            if (g_mouseManager->isVis() && g_mouseManager->m_sprite
                 && g_mouseManager->m_frame >= 0) {
                 DDSURFACEDESC surfaceDesc;
                 memset(&surfaceDesc, 0, sizeof(surfaceDesc));
@@ -207,7 +207,7 @@ void robAppBlit(tagRECT* combRect)
 
         ddBlit(g_ddsPrimary, screenRect, g_ddsBack, *combRect, DDBLT_WAIT);
 
-        if (g_mouseManager && g_mouseManager->m_hideCount == 0
+        if (g_mouseManager && g_mouseManager->isVis()
             && g_mouseManager->m_sprite && g_mouseManager->m_frame >= 0) {
             ddBlit(g_ddsBack, pointerRect, g_ddsMouseSaveSurface,
                    sourceRect, DDBLT_WAIT);
