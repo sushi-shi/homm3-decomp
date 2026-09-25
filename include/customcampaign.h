@@ -119,7 +119,7 @@ public:
     // is a std::vector over a 4-byte element whose identity is unproven.
     std::vector<int> m_assignedCarryover;
     // E:\gamedcs\CustomCampaign.h:199, dc 0xbcd90
-    VA(0x00489500, 0x88)  // dc 0xbcd90
+    VA(0x00489500, 0x88) MAC_ADDRESS(0x098064, 0xe8)  // dc 0xbcd90
     SCampaign()
     {
         m_isCheater = 0;
@@ -151,7 +151,7 @@ public:
     // Original CampaignComplete@SCampaign@@QAA_NXZ (native bool, mutable).
     // DC's older fixed-array body also marks campaignCompleted. Retail's
     // 67-byte vector scan has no such store; preserve the Complete behavior.
-    VA(0x004897d0, 0x43)  // dc 0xe6ef8
+    VA(0x004897d0, 0x43) MAC_ADDRESS(0x098448, 0x3c)  // dc 0xe6ef8
     bool campaignComplete()
     {
         for (unsigned int i = 0; i < m_mapScores.size(); ++i) {

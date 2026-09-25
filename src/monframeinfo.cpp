@@ -27,7 +27,7 @@ static SMonFrameInfo g_monFrameInfoTable[150];
 DATA(0x0067ff24)
 const SMonFrameInfo (&g_monFrameInfo)[150] = g_monFrameInfoTable;
 
-VA(0x0050c810, 0x1E9)  // dc 0xfe598
+VA(0x0050c810, 0x1E9) MAC_ADDRESS(0x131a88, 0x37c)  // dc 0xfe598
 unsigned char initializeCreatureAnimationTraitsTable()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
@@ -115,7 +115,7 @@ unsigned char initializeCreatureAnimationTraitsTable()
     return 1;
 }
 
-VA(0x0050ca00, 0x126)  // dc 0xfe764
+VA(0x0050ca00, 0x126) MAC_ADDRESS(0x131e04, 0x194)  // dc 0xfe764
 static void initializeCreatureAnimationTraits(int id,
     const std::vector<char*, std::allocator<char*> >& row)
 {

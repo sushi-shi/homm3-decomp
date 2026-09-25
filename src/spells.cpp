@@ -139,7 +139,7 @@ DATA(0x00642260) const float g_disruptingRayAngles[1] = { 0.0f };
 // shifts. Nothing in the guards' spelling reaches that decision - they are
 // already two separate `return -1;` statements, which is the form the
 // house rule prescribes.
-VA(0x0059e900, 0x34F)  // anchor-callee DoCommand's spell-book case and ProcessCombatMsg call it with `this` only and forward the result to InitiateSpell; anchor-callee TSpellbookWindow's ctor/DoModal/dtor triple; the row ends exactly where the claimed InitiateSpell begins, dc-order spells.cpp:97
+VA(0x0059e900, 0x34F) MAC_ADDRESS(0x18ef48, 0x368)  // anchor-callee DoCommand's spell-book case and ProcessCombatMsg call it with `this` only and forward the result to InitiateSpell; anchor-callee TSpellbookWindow's ctor/DoModal/dtor triple; the row ends exactly where the claimed InitiateSpell begins, dc-order spells.cpp:97
 int combatManager::viewSpells() const
 {
     int i;
@@ -239,6 +239,7 @@ int combatManager::viewSpells() const
 // Mac retains this no-argument helper at code 0:18f764, directly before
 // initiateSpell, and calls it in the single-army and area-spell paths.
 // Windows expands the same mouse-coordinate and target-update sequence.
+MAC_ADDRESS(0x18f764, 0x48)
 static int updateSpellTargetFromMouse()
 {
     int x;
@@ -247,7 +248,7 @@ static int updateSpellTargetFromMouse()
     return updateSpellTarget(g_combatManager->getGridIndex(x, y));
 }
 
-VA(0x0059ec50, 0xAA8)  // retail+dc-shape, dc 0x14ecbc
+VA(0x0059ec50, 0xAA8) MAC_ADDRESS(0x18f7ac, 0x9b8)  // retail+dc-shape, dc 0x14ecbc
 void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
 {
     if (m_spellsCast[m_currentSide] && !m_debugNoSpellLimit)
@@ -496,7 +497,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
 // inInvisibleColumn helper rejects invalid indices without blocking that call.
 // Keeping the spell and casting hero locals ahead of creatureSpell gives VC6
 // retail's prologue register assignment; Windows bytes are exact.
-VA(0x0059f700, 0x192)  // retail-only factored helper
+VA(0x0059f700, 0x192) MAC_ADDRESS(0x18f538, 0x22c)  // retail-only factored helper
 static int updateSpellTarget(long hex)
 {
     combatManager* manager = g_combatManager;
@@ -547,10 +548,10 @@ static int updateSpellTarget(long hex)
 // The Complete compiler emits this later source helper before CastSpell.
 // Keep the function at its Dreamcast-proven source location below while the
 // annotation records retail's actual emitted placement.
-VA(0x0059f8a0, 0x293)  // retail caller+CFG role, dc 0x152240
+VA(0x0059f8a0, 0x293) MAC_ADDRESS(0x18f2b0, 0x288)  // retail caller+CFG role, dc 0x152240
 void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex);
 
-VA(0x0059fb40, 0x182)  // dc 0x14f51c
+VA(0x0059fb40, 0x182) MAC_ADDRESS(0x190164, 0x1f4)  // dc 0x14f51c
 unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
                                             unsigned char isWalking)
 {
@@ -599,7 +600,7 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
     return 1;
 }
 
-VA(0x0059fcd0, 0x10E)  // dc 0x14f6ac
+VA(0x0059fcd0, 0x10E) MAC_ADDRESS(0x190358, 0x170)  // dc 0x14f6ac
 unsigned char combatManager::checkFireWall(long hex, army* currentArmy,
                                              unsigned char isWalking)
 {
@@ -634,7 +635,7 @@ unsigned char combatManager::checkFireWall(long hex, army* currentArmy,
     return 1;
 }
 
-VA(0x0059fde0, 0x44)
+VA(0x0059fde0, 0x44) MAC_ADDRESS(0x1904c8, 0x78)
 void combatManager::unnamed59FDE0(int x, int y, army* target)
 {
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
@@ -699,7 +700,7 @@ void combatManager::unnamed59FDE0(int x, int y, army* target)
 // body's TWENTY-SEVEN zero-initialised counters are `unsigned int` (the
 // affected-hex walk and the wall-segment walk).  92.7816 -> 93.3658.  Six
 // beat MAX on their own; only these two survive together.
-VA(0x0059fe30, 0x2A4F)  // retail largest-unadmitted row, dc 0x14f7dc
+VA(0x0059fe30, 0x2A4F) MAC_ADDRESS(0x190540, 0x29f4)  // retail largest-unadmitted row, dc 0x14f7dc
 void combatManager::castSpell(SpellID spellId, int targetIndex,
                               int isMonsterSpell,
                               int secondaryIndex, int monsterSkill,
@@ -1723,7 +1724,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
 // basic_string(const char*) construction, expanded four times at four
 // different inline depths (_Tidy called twice and expanded twice, _Eos
 // called three times and expanded once) - one source line each.
-VA(0x005a2880, 0x3D5)  // dc 0x151b44
+VA(0x005a2880, 0x3D5) MAC_ADDRESS(0x192f34, 0x304)  // dc 0x151b44
 std::string combatManager::getFailureReason(SpellID spell, const char* msg,
                                               long hex)
 {
@@ -1766,7 +1767,7 @@ std::string combatManager::getFailureReason(SpellID spell, const char* msg,
     }
 }
 
-VA(0x005a2c60, 0x9B)  // dc 0x151e54
+VA(0x005a2c60, 0x9B) MAC_ADDRESS(0x193238, 0x70)  // dc 0x151e54
 void combatManager::displayFailureReason(SpellID spell, const char* msg,
                                            long hex)
 {
@@ -1788,7 +1789,7 @@ static long g_sacrificeBeneficiaryLastIndex = -1;
 DATA(0x006a3cd4)
 static unsigned char g_sacrificeBeneficiaryValidTarget;
 
-VA(0x005a2d00, 0x184)  // dc 0x151e94
+VA(0x005a2d00, 0x184) MAC_ADDRESS(0x1932a8, 0x238)  // dc 0x151e94
 int handleSacrificeBeneficiary(message& msg)
 {
     hero* castingHero =
@@ -1846,7 +1847,7 @@ static long g_sacrificeLastIndex = -1;
 DATA(0x006a3cd8)
 static int g_sacrificeIndexIsValid;
 
-VA(0x005a2e90, 0x1D4)  // dc 0x15205c
+VA(0x005a2e90, 0x1D4) MAC_ADDRESS(0x1934e0, 0x270)  // dc 0x15205c
 int handleCastSacrifice(message& msg)
 {
     hero* castingHero =
@@ -1971,6 +1972,7 @@ void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
 // HandleCastSpell), so it has no retail body of its own - the double
 // loop with the `Is(1u << 21)` skip is recognisable in each.
 
+MAC_ADDRESS(0x193750, 0x90)
 static void clearAreaHighlights()
 {
     for (int side = 0; side < 2; side++) {
@@ -1986,7 +1988,7 @@ static void clearAreaHighlights()
 DATA(0x00688324)
 static long g_castSpellIndexToCastOn = -1;
 
-VA(0x005a3070, 0x1D8)  // dc 0x152558
+VA(0x005a3070, 0x1D8) MAC_ADDRESS(0x1937e0, 0x148)  // dc 0x152558
 int handleCastSpell(message& msg)
 {
     g_combatManager->doAnimations();
@@ -2041,7 +2043,7 @@ static long g_castWallIndexToCastOn = -1;
 // byte-identical vector<int>::insert COMDAT emitted by rmg. Dreamcast names
 // vector<long> in both scoped `hexes` objects, so retain the source-proven
 // type rather than rewriting an interface to chase the folded owner label.
-VA(0x005a3250, 0x31C)  // retail order+handler call, dc 0x1527bc
+VA(0x005a3250, 0x31C) MAC_ADDRESS(0x193928, 0x2a8)  // retail order+handler call, dc 0x1527bc
 int handleCastWallSpell(message& msg)
 {
     hero* castingHero =
@@ -2106,7 +2108,7 @@ static long g_castTeleportArmyHex = -1;
 DATA(0x00688330)
 static long g_castTeleportPreviousHex = -1;
 
-VA(0x005a3570, 0x184)  // dc 0x152a14
+VA(0x005a3570, 0x184) MAC_ADDRESS(0x193bd0, 0x228)  // dc 0x152a14
 int handleCastTeleport(message& msg)
 {
     switch (msg.m_id) {
@@ -2159,7 +2161,7 @@ int handleCastTeleport(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-VA(0x005a3700, 0xC3)  // dc 0x152b7c
+VA(0x005a3700, 0xC3) MAC_ADDRESS(0x193df8, 0x114)  // dc 0x152b7c
 unsigned char combatManager::isValidTeleport(const army* thisArmy, long newHex)
 {
     int oldHex = thisArmy->m_gridIndex;
@@ -2189,7 +2191,7 @@ unsigned char combatManager::isValidTeleport(const army* thisArmy, long newHex)
 // so the cell pointer here is the SOURCE stack; `hex` is the candidate
 // landing under the cursor.
 
-VA(0x005a37d0, 0x17C)  // dc 0x152c80
+VA(0x005a37d0, 0x17C) MAC_ADDRESS(0x193f0c, 0x214)  // dc 0x152c80
 static int handleGetTeleportDestination(message& msg)
 {
     switch (msg.m_id) {
@@ -2246,7 +2248,7 @@ static int handleGetTeleportDestination(message& msg)
 // both GetArmy source calls rather than merging them into a shared tail.
 // This and a named-result/final-return interpretation both retain 100%
 // for the standalone body; neither alone prevents its caller expansion.
-VA(0x005a3950, 0x68)  // dc 0x152dec
+VA(0x005a3950, 0x68) MAC_ADDRESS(0x194120, 0xd8)  // dc 0x152dec
 army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
                                        unsigned char firstTarget,
                                        long creatureSpell)
@@ -2356,7 +2358,7 @@ army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
 // slots) and the 6-instruction surplus follow from that one promotion.
 // A parameter's caching is C2's promotion choice, not a spelling; no
 // catalog mutation moves the branch shape (guided search exhausted).
-VA(0x005a39c0, 0x2B4)  // order-map+arity, dc 0x152edc
+VA(0x005a39c0, 0x2B4) MAC_ADDRESS(0x1941f8, 0x3a4)  // order-map+arity, dc 0x152edc
 unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
                                               long targetIndex,
                                               long castingSide,
@@ -2423,7 +2425,7 @@ unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
     return 1;
 }
 
-VA(0x005a3c80, 0x3A)  // dc 0x153104
+VA(0x005a3c80, 0x3A) MAC_ADDRESS(0x19459c, 0x3c)  // dc 0x153104
 unsigned char combatManager::validSpellTargetArmy(SpellID spellId,
                                                   int castingSide,
                                                   const army* targetArmy,
@@ -2434,7 +2436,7 @@ unsigned char combatManager::validSpellTargetArmy(SpellID spellId,
                                firstTarget, creatureSpell) > 0.0;
 }
 
-VA(0x005a3cc0, 0x175)  // dc 0x153158
+VA(0x005a3cc0, 0x175) MAC_ADDRESS(0x1945d8, 0x1b0)  // dc 0x153158
 army* combatManager::findResurrectionTarget(int side, int hex,
                                               long creatureSpell)
 {
@@ -2489,7 +2491,7 @@ army* combatManager::findResurrectionTarget(int side, int hex,
 // chance: it has no SpellCastWorkChance call at all, and it refuses a
 // cell that holds a live stack outright rather than offering it as a
 // target.
-VA(0x005a3e40, 0x10D)  // dc 0x1532f8
+VA(0x005a3e40, 0x10D) MAC_ADDRESS(0x194788, 0x100)  // dc 0x1532f8
 army* combatManager::findDemonicResurrectionTarget(int side, int hex)
 {
     if (!validHex(hex))
@@ -2523,7 +2525,7 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
     return 0;
 }
 
-VA(0x005a3f50, 0x171)  // dc 0x153400
+VA(0x005a3f50, 0x171) MAC_ADDRESS(0x194888, 0x1ac)  // dc 0x153400
 army* combatManager::findAnimateDeadTarget(int side, int hex)
 {
     if (!validHex(hex))
@@ -2574,7 +2576,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
 // The Chain Lightning arm skips a cell already holding one of the
 // CASTER'S OWN stacks: the spell is the one that walks from target to
 // target, so a friendly occupant is not an aim point.
-VA(0x005a40d0, 0x9B)  // dc 0x153580
+VA(0x005a40d0, 0x9B) MAC_ADDRESS(0x194a34, 0x114)  // dc 0x153580
 unsigned char combatManager::hasValidSpellTarget(SpellID spellId, long mastery,
                                                  long castingSide,
                                                  unsigned char firstTarget,
@@ -2597,6 +2599,7 @@ unsigned char combatManager::hasValidSpellTarget(SpellID spellId, long mastery,
 // const-member spelling scored higher in mark_berserk_area_effect, but
 // an inlining score alone does not override the recovered declaration.
 // E:\gamedcs\spells.cpp:3103, dc 0x153638.
+MAC_ADDRESS(0x194b48, 0x64)
 tagPOINT combatManager::hexToPoint(long hex)
 {
     long col = gridX(hex);
@@ -2608,6 +2611,7 @@ tagPOINT combatManager::hexToPoint(long hex)
 }
 
 // E:\gamedcs\spells.cpp:3121, dc 0x15368c.
+MAC_ADDRESS(0x194bac, 0x5c)
 long combatManager::pointToHex(tagPOINT point)
 {
     long col = (point.x + point.y + 1) / 2;
@@ -2619,6 +2623,7 @@ long combatManager::pointToHex(tagPOINT point)
 }
 
 // E:\gamedcs\spells.cpp:3138, dc 0x1536d4.
+MAC_ADDRESS(0x194c08, 0xd0)
 long combatManager::getDistance(tagPOINT start, tagPOINT stop)
 {
     long dx = start.x - stop.x;
@@ -2632,7 +2637,7 @@ long combatManager::getDistance(tagPOINT start, tagPOINT stop)
 // army-vector shells two rows down get an out-of-line call: the /Ob2
 // budget is 2 * caller size, and this caller is 692 bytes against their
 // 275.
-VA(0x005a4170, 0x2B4)  // dc 0x153734
+VA(0x005a4170, 0x2B4) MAC_ADDRESS(0x194cd8, 0x170)  // dc 0x153734
 void combatManager::markAreaEffect(long hex, long radius,
                                      unsigned char includeCenter,
                                      std::vector<long>& hexes)
@@ -2663,7 +2668,7 @@ void combatManager::markAreaEffect(long hex, long radius,
 // only the target hex, Advanced one ring, Expert two.
 DATA(0x00642264) static const long g_berserkRadius[4] = { 0, 0, 1, 2 };
 
-VA(0x005a4430, 0x2B8)  // dc 0x1537d8
+VA(0x005a4430, 0x2B8) MAC_ADDRESS(0x194e48, 0x184)  // dc 0x1537d8
 void combatManager::markBerserkAreaEffect(long hex, long mastery,
                                              std::vector<long>& hexes)
 {
@@ -2690,6 +2695,7 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
 // retail caller - so it has no retail body of its own; GetSpellWallHex
 // expands inside it in turn.
 
+MAC_ADDRESS(0x194fcc, 0xdc)
 void combatManager::markWallAreaEffect(long targetHex,
                                           TSkillMastery mastery,
                                           std::vector<long>& result)
@@ -2706,7 +2712,7 @@ void combatManager::markWallAreaEffect(long targetHex,
 // inner call fill it with cell indices, then map each cell to the stack
 // standing on it and hand the distinct ones to the caller.
 
-VA(0x005a46f0, 0x113)  // dc 0x153904
+VA(0x005a46f0, 0x113) MAC_ADDRESS(0x1950a8, 0x190)  // dc 0x153904
 void combatManager::markAreaEffect(long hex, long radius,
                                          unsigned char includeCenter,
                                          std::vector<army*>& targets)
@@ -2730,7 +2736,7 @@ void combatManager::markAreaEffect(long hex, long radius,
     }
 }
 
-VA(0x005a4810, 0x10F)  // dc 0x1539fc
+VA(0x005a4810, 0x10F) MAC_ADDRESS(0x195238, 0x188)  // dc 0x1539fc
 void combatManager::markBerserkAreaEffect(long hex, long mastery,
                                              std::vector<army*>& targets)
 {
@@ -2753,7 +2759,7 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
     }
 }
 
-VA(0x005a4920, 0x42)  // dc 0x153aec
+VA(0x005a4920, 0x42) MAC_ADDRESS(0x1953c0, 0x64)  // dc 0x153aec
 void combatManager::markAreaEffect(SpellID spell, long hex, long mastery,
                                      std::vector<army*>& targets)
 {
@@ -2818,7 +2824,7 @@ void combatManager::markAreaEffect(SpellID spell, long hex, long mastery,
 // roll's `effected[side][slot]` clear. Naming side or slot, moving the
 // optimized-out locals, making the target pointer const, and replacing
 // `continue` with `else` were byte-flat; restoring SpellCastWorks resolved it.
-VA(0x005a4970, 0x249)  // order-map+arity, dc 0x153b60
+VA(0x005a4970, 0x249) MAC_ADDRESS(0x195424, 0x21c)  // order-map+arity, dc 0x153b60
 void combatManager::areaEffect(long targetCell, SpellID spellType,
                                long mastery, long power)
 {
@@ -2911,7 +2917,7 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
 
 // CodeView type 0x1F67 proves `spell_traits` is an lvalue reference to const
 // TSpellTraits, not a pointer. The normalized source name is spellTraits.
-VA(0x005a4bc0, 0x699)  // order-map+arity, dc 0x153d2c
+VA(0x005a4bc0, 0x699) MAC_ADDRESS(0x195640, 0x6e0)  // order-map+arity, dc 0x153d2c
 void combatManager::armageddon(int level, int power)
 {
     const SSpellTraits& spellTraits = g_spellTraits[SPELL_ARMAGEDDON];
@@ -3059,7 +3065,7 @@ void combatManager::armageddon(int level, int power)
 // progress fraction; naming its numerator and denominator, or naming only
 // the numerator, is byte-flat at 97.3158%. The register catalog has no
 // source mutation that improves the remaining 22 instruction rows.
-VA(0x005a5260, 0x1DC)  // order-map+arity, dc 0x1542b4
+VA(0x005a5260, 0x1DC) MAC_ADDRESS(0x195d20, 0x348)  // order-map+arity, dc 0x1542b4
 void combatManager::resetBoltAngle(SBolt* bolt)
 {
     if (bolt->m_done)
@@ -3141,7 +3147,7 @@ void combatManager::resetBoltAngle(SBolt* bolt)
 // either within 2 pixels or has started moving AWAY again (further than
 // field_48 + 1), bAtDestination goes up and DoBolt stops re-aiming it.
 
-VA(0x005a5440, 0x64C)  // dc 0x154680
+VA(0x005a5440, 0x64C) MAC_ADDRESS(0x196068, 0x51c)  // dc 0x154680
 void combatManager::drawBolt(SBolt* bolt, int drawLength)
 {
     int useThicknessStopOffset;
@@ -3315,7 +3321,7 @@ unsigned char g_boltSpectrumColors[15][3] = {
 // (`abs(dx) > abs(dy)`); BOLT_COLOR_0 and BOLT_COLOR_3 instead ask
 // whether the source x is strictly inside the screen, i.e. they are the
 // two that are drawn as screen-edge flashes.
-VA(0x005a5a90, 0x183)  // dc 0x154ac0
+VA(0x005a5a90, 0x183) MAC_ADDRESS(0x196584, 0x210)  // dc 0x154ac0
 void combatManager::addBolt(SBolt* bolt, int sourceX, int sourceY,
                             int destX, int destY, int splitFrequency,
                             int startThickness, int endThickness,
@@ -3393,7 +3399,7 @@ void combatManager::addBolt(SBolt* bolt, int sourceX, int sourceY,
 // the split's x offset comes from COS and its y offset from SIN, read
 // straight off which product is added to iX and which to iY.
 
-VA(0x005a5c20, 0x5C2)  // dc 0x154c50
+VA(0x005a5c20, 0x5C2) MAC_ADDRESS(0x196794, 0x80c)  // dc 0x154c50
 void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
                            int destX, int destY, int splitFrequency,
                            int maxSplitLength, int startThickness,
@@ -3597,7 +3603,7 @@ done:
     }
 }
 
-VA(0x005a61f0, 0x163)  // dc 0x15547c
+VA(0x005a61f0, 0x163) MAC_ADDRESS(0x196fa0, 0x198)  // dc 0x15547c
 int combatManager::getNextChainLightningTarget(army* lastTargetArmy,
                                                 int useSRandom)
 {
@@ -3699,7 +3705,7 @@ const int g_earthquakeImpactFrame = 5;
 // 0x197278..0x19727c); matching that source order through dx and dy closes
 // the remaining register and stack-slot difference. Exact Windows match:
 // 0x34a bytes, 22 blocks, 14 branches, 24 calls.
-VA(0x005a6360, 0x34A)  // order-map+arity, dc 0x155664
+VA(0x005a6360, 0x34A) MAC_ADDRESS(0x197138, 0x46c)  // order-map+arity, dc 0x155664
 void combatManager::chainLightning(int index, int level, int power)
 {
     clearEffects();
@@ -3773,7 +3779,7 @@ void combatManager::chainLightning(int index, int level, int power)
     g_mouseManager->showPointer(false);
 }
 
-VA(0x005a66b0, 0x14)  // dc 0x155a08
+VA(0x005a66b0, 0x14) MAC_ADDRESS(0x1975a4, 0x28)  // dc 0x155a08
 void combatManager::clearEffects()
 {
     memset(m_effected, 0, sizeof(m_effected));
@@ -3784,7 +3790,7 @@ void combatManager::clearEffects()
 // through SpellCastWorks and records the ones that took it. Dreamcast and
 // Mac retain the ordinary helper call; VC6 expands it in retail.
 
-VA(0x005a66d0, 0xE5)  // dc 0x155a20
+VA(0x005a66d0, 0xE5) MAC_ADDRESS(0x1975cc, 0xec)  // dc 0x155a20
 void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell,
                                           long level, long power,
                                           long castingSide,
@@ -3868,7 +3874,7 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
 // putting the constant in a register are byte-flat at 96.3708: writing the
 // guard `0 >= stack.numTroops`, and naming one `int resetFrame = 0` shared by
 // the compare and the store (VC6 folds it back to an immediate either way).
-VA(0x005a67c0, 0x4AC)  // order-map+arity, dc 0x155b28
+VA(0x005a67c0, 0x4AC) MAC_ADDRESS(0x1976b8, 0x588)  // order-map+arity, dc 0x155b28
 void combatManager::showMassSpell(const unsigned char (*effected)[20],
                                   int spellEffect, unsigned char showWince)
 {
@@ -3965,7 +3971,7 @@ void combatManager::showMassSpell(const unsigned char (*effected)[20],
     checkRebirth();
 }
 
-VA(0x005a6c70, 0x405)  // dc 0x155f0c
+VA(0x005a6c70, 0x405) MAC_ADDRESS(0x197c40, 0x4c4)  // dc 0x155f0c
 void combatManager::mirrorImage(int targetIndex, int level)
 {
     if (!validHex(targetIndex))
@@ -4094,7 +4100,7 @@ void combatManager::mirrorImage(int targetIndex, int level)
 // format_string's returned object, where `std::string message = ...;
 // message.c_str()` reads the local's own _Ptr slot instead.
 
-VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
+VA(0x005a7080, 0x29A) MAC_ADDRESS(0x198104, 0x2d8)  // order-map+arity, dc 0x15627c
 void combatManager::summonElemental(SpellID spell, TCreatureType monType,
                                     int spellPower, int level)
 {
@@ -4146,7 +4152,7 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
     addArmy(m_currentSide, monType, count, hex, 0x400000, 1);
 }
 
-VA(0x005a7320, 0x68)  // dc 0x1565e4
+VA(0x005a7320, 0x68) MAC_ADDRESS(0x1983dc, 0x90)  // dc 0x1565e4
 void combatManager::removeCorpse(hexcell* hex, long side, long slot)
 {
     int i;
@@ -4166,6 +4172,7 @@ void combatManager::removeCorpse(hexcell* hex, long side, long slot)
 
 // Original: combatManager::remove_corpse; spells.cpp:4838, dc 0x15668c.
 // Complete expands this ordinary overload in both resurrection paths.
+MAC_ADDRESS(0x19846c, 0x80)
 void combatManager::removeCorpse(army* corpse)
 {
     removeCorpse(&m_cells[corpse->m_gridIndex], corpse->getOwningSide(),
@@ -4177,7 +4184,7 @@ void combatManager::removeCorpse(army* corpse)
 
 // The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
 // stack takes its cell.
-VA(0x005a7390, 0x1CB)  // dc 0x1566f8
+VA(0x005a7390, 0x1CB) MAC_ADDRESS(0x1984ec, 0x200)  // dc 0x1566f8
 void combatManager::demonicResurrection(const army* caster, army* target)
 {
     SAMPLE2 sample;
@@ -4238,7 +4245,7 @@ void combatManager::demonicResurrection(const army* caster, army* target)
 // name lookup where our CL loads the type first, and the arithmetic
 // block's three scratch registers are rotated (ecx/edi/eax against
 // edi/ecx/eax). Every instruction, immediate and call pairs.
-VA(0x005a7560, 0x32F)  // order-map+arity, dc 0x156840
+VA(0x005a7560, 0x32F) MAC_ADDRESS(0x1986ec, 0x3b4)  // order-map+arity, dc 0x156840
 void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
                               unsigned char temporary)
 {
@@ -4323,6 +4330,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
 // independently corroborates the selector, formula, hero bonus and
 // temporary-resurrection predicate.
 
+MAC_ADDRESS(0x198aa0, 0xd8)
 inline void combatManager::resurrect(SpellID spell, int targetHex,
                                      int power, int mastery,
                                      const hero* castingHero)
@@ -4346,6 +4354,7 @@ inline void combatManager::resurrect(SpellID spell, int targetHex,
 // calls the source boundary at line 1713. Complete has no standalone body:
 // VC6 expands it into CastSpell+0x2159. The unused spellId parameter is kept
 // because CodeView and the decorated Dreamcast signature both prove it.
+MAC_ADDRESS(0x198b78, 0x144)
 inline void combatManager::showSpellCastFailure(army* targetArmy, int spellId)
 {
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
@@ -4362,7 +4371,7 @@ inline void combatManager::showSpellCastFailure(army* targetArmy, int spellId)
     }
 }
 
-VA(0x005a7890, 0x4D)  // dc 0x156b94
+VA(0x005a7890, 0x4D) MAC_ADDRESS(0x198cbc, 0x5c)  // dc 0x156b94
 long combatManager::computeSpellDamage(SpellID spell, long spellPower, long mastery,
                                        hero* castingHero, hero* targetHero,
                                        const army* target, unsigned char simulated) const
@@ -4401,7 +4410,7 @@ long combatManager::computeSpellDamage(SpellID spell, long spellPower, long mast
 // `if (targetArmy)` makes VC6 duplicate the string cleanup epilogue exactly
 // as retail does. The equivalent early-return spelling merged those exits
 // and measured 88.49%; the recovered positive branch is exact.
-VA(0x005a78e0, 0x2CD)  // anchor-callee+arity, dc 0x156c30
+VA(0x005a78e0, 0x2CD) MAC_ADDRESS(0x198d18, 0x35c)  // anchor-callee+arity, dc 0x156c30
 long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
                                       const hero* castingHero,
                                       const hero* affectedHero,
@@ -4449,7 +4458,7 @@ long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
     return damage;
 }
 
-VA(0x005a7bb0, 0xC5)  // dc 0x156dc4
+VA(0x005a7bb0, 0xC5) MAC_ADDRESS(0x199074, 0x15c)  // dc 0x156dc4
 long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
                                                const army* target) const
 {
@@ -4527,7 +4536,7 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 // this source's second damageWall and showPointer tail calls. Windows retail
 // retains both (all 25 call sites agree), so Mac shape cannot be an exact
 // source verdict for this function.
-VA(0x005a7c80, 0x408)  // order-map+arity, dc 0x156ec4
+VA(0x005a7c80, 0x408) MAC_ADDRESS(0x1991d0, 0x688)  // order-map+arity, dc 0x156ec4
 void combatManager::earthquake(int level)
 {
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
@@ -4637,7 +4646,7 @@ void combatManager::earthquake(int level)
     g_mouseManager->showPointer(0);
 }
 
-VA(0x005a8090, 0x5A4)  // dc 0x157354
+VA(0x005a8090, 0x5A4) MAC_ADDRESS(0x199858, 0x5a0)  // dc 0x157354
 float combatManager::spellCastWorkChance(SpellID spell, long side,
                                          const army* target,
                                          unsigned char redirected,
@@ -4779,7 +4788,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
     return getSpellWorkChance(spell, creature, castingHero, targetHero);
 }
 
-VA(0x005a8640, 0x49)  // dc 0x157828
+VA(0x005a8640, 0x49) MAC_ADDRESS(0x199df8, 0x60)  // dc 0x157828
 unsigned char combatManager::spellCastWorks(SpellID spell, long side,
                                             const army* target,
                                             unsigned char redirected,
@@ -4797,7 +4806,7 @@ unsigned char combatManager::spellCastWorks(SpellID spell, long side,
 // hex; the byte/jump table pair at +0x288/+0x26c is what enumerates them,
 // and its TOP entry is what proves SPELL_REMOVE_OBSTACLE 0x40.
 
-VA(0x005a8690, 0x2BD)  // dc 0x1578b4
+VA(0x005a8690, 0x2BD) MAC_ADDRESS(0x199e58, 0x384)  // dc 0x1578b4
 void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
                                        unsigned char firstTarget)
 {
@@ -4903,7 +4912,7 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
 // of their temporaries it calls _Tidy at seventeen and expands the
 // destructor at two. Neither needed a pragma - writing the arms
 // longhand in source order reproduces both.
-VA(0x005a8950, 0x999)  // order-map+arity, dc 0x157ae4
+VA(0x005a8950, 0x999) MAC_ADDRESS(0x19a1dc, 0x7f0)  // order-map+arity, dc 0x157ae4
 void combatManager::showSpellMessage(int isMonsterSpell, SpellID spellId,
                                      army* targetArmy)
 {
@@ -5033,7 +5042,7 @@ void combatManager::showSpellMessage(int isMonsterSpell, SpellID spellId,
 // (CSprite::Dispose) and reloads from akSpellEffectTraits' 12-byte rows.
 // -1 is the sentinel Close() uses to drop the cache without reloading.
 
-VA(0x005a92f0, 0x63)  // dc 0x15802c
+VA(0x005a92f0, 0x63) MAC_ADDRESS(0x19a9cc, 0xa0)  // dc 0x15802c
 CSprite* combatManager::loadSpellEffect(int effect)
 {
     if (m_powSpellEffect != effect) {
@@ -5049,7 +5058,7 @@ CSprite* combatManager::loadSpellEffect(int effect)
     return m_powSprite;
 }
 
-VA(0x005a9360, 0x3C)  // dc 0x158090
+VA(0x005a9360, 0x3C) MAC_ADDRESS(0x19aa6c, 0x50)  // dc 0x158090
 TCreatureType getElementalType(SpellID spell)
 {
     switch (spell) {
@@ -5066,7 +5075,7 @@ TCreatureType getElementalType(SpellID spell)
     }
 }
 
-VA(0x005A93A0, 0xA4)
+VA(0x005A93A0, 0xA4) MAC_ADDRESS(0x19aabc, 0x74)
 unsigned char combatManager::ableToSummonElemental(SpellID spell, long side)
 {
     if (m_numArmies[side] >= 20)
@@ -5083,6 +5092,7 @@ unsigned char combatManager::ableToSummonElemental(SpellID spell, long side)
 // stores it once at the join, which three separate returns cannot
 // give (they store per arm, measured 94.08 -> 100 on that body).
 // E:\gamedcs\spells.cpp:5928, dc 0x158108
+MAC_ADDRESS(0x19ab30, 0x60)
 int combatManager::getSpellWallHex(int baseIndex, int rowOffset, int side)
 {
     int hex = baseIndex;

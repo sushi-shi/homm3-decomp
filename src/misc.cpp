@@ -17,7 +17,7 @@
 // Use the timer during video playback so the game RNG sequence stays unchanged.
 // Mac calls GameTime::get at 0:0x130cc0; Windows retail calls timeGetTime
 // directly here, so this platform-specific timing path remains separate.
-VA(0x0050b1d0, 0x54)  // dc 0xfd81c
+VA(0x0050b1d0, 0x54) MAC_ADDRESS(0x130c68, 0x8c)  // dc 0xfd81c
 int safeRandom(int min, int max)
 {
     // Mac retains this call at 0:0x130c9c.
@@ -31,7 +31,7 @@ int safeRandom(int min, int max)
                                   % static_cast<unsigned>(max - min + 1));
 }
 
-VA(0x0050b230, 0x28)  // dc 0xfd868
+VA(0x0050b230, 0x28) MAC_ADDRESS(0x130cf4, 0x6c)  // dc 0xfd868
 int random(int min, int max)
 {
     if (min == max)
@@ -42,6 +42,7 @@ int random(int min, int max)
 }
 
 // E:\gamedcs\misc.cpp:151
+MAC_ADDRESS(0x130d60, 0x100)
 void generateUniqueSystemID()
 {
     long value;
@@ -65,7 +66,7 @@ void generateUniqueSystemID()
 // that shared source order lowers the Windows score from 99.1018% to
 // 93.7126%, while all 24 CFG blocks and six calls still agree. The old
 // score remains a compiler-scheduling lead, not a source-order verdict.
-VA(0x0050b260, 0x26C)  // body + sole retail caller, dc 0xfd958
+VA(0x0050b260, 0x26C) MAC_ADDRESS(0x130e60, 0x21c)  // body + sole retail caller, dc 0xfd958
 void checkConfigFile()
 {
     g_config.m_animateSpellBook &= 1;
@@ -132,6 +133,7 @@ void checkConfigFile()
 // call site inlined it away. Mac retains this helper at code 0:0x131144;
 // setGameDefaults calls it there, and its eight g_config stores follow this order.
 
+MAC_ADDRESS(0x131144, 0x3c)
 static void setDefaultSystemOptions()
 {
     g_config.m_showRoute = 1;
@@ -311,7 +313,7 @@ DATA(0x00640010)
 static const char* const g_prefShowIntro =
     DATA_COMPGEN(0x0067fb98, prefsNameShowIntro, "Show Intro");
 
-VA(0x0050b4d0, 0x222)  // dc 0xfda8c
+VA(0x0050b4d0, 0x222) MAC_ADDRESS(0x13107c, 0xc8)  // dc 0xfda8c
 void setGameDefaults()
 {
     g_config.m_musicVolume = 5;
@@ -345,7 +347,7 @@ void setGameDefaults()
     }
 }
 
-VA(0x0050b700, 0x44)  // dc 0xfdb98
+VA(0x0050b700, 0x44) MAC_ADDRESS(0x131180, 0x3c)  // dc 0xfdb98
 void setDefaultCombatOptions()
 {
     g_config.m_animateSpellBook = 1;
@@ -361,7 +363,7 @@ void setDefaultCombatOptions()
     g_config.m_combatFirstAidTent = 1;
 }
 
-VA(0x0050b750, 0x59)  // dc 0xfdbd0
+VA(0x0050b750, 0x59) MAC_ADDRESS(0x1311bc, 0x10c)  // dc 0xfdbd0
 void readPrefs()
 {
     memset(&g_config, 0, sizeof(g_config));
@@ -579,7 +581,7 @@ void readPrefsFromRegistry()
     checkConfigFile();
 }
 
-VA(0x0050be10, 0x399)  // dc 0xfdc4c
+VA(0x0050be10, 0x399) MAC_ADDRESS(0x1312c8, 0xb4)  // dc 0xfdc4c
 void writePrefsToRegistry()
 {
     HKEY key = 0;
@@ -707,7 +709,7 @@ void writePrefs()
 // caller SetupCDDrive returns a fixed 7 as well. Complete 0x50c1c0
 // retains that fixed result, so no drive-enumeration/classification
 // expression survives in this pinned executable. See config/source/dc_only.tsv.
-VA(0x0050c1c0, 0x6)  // dc 0xfe064
+VA(0x0050c1c0, 0x6) MAC_ADDRESS(0x13137c, 0x114)  // dc 0xfe064
 int setupCDDrive()
 {
     return 7;
@@ -740,7 +742,7 @@ static char g_formatStringBuffer[512];
 DATA(0x0067fb94)
 static int g_randomSeed;
 
-VA(0x0050c5f0, 0xE)  // dc 0xfe0b8
+VA(0x0050c5f0, 0xE) MAC_ADDRESS(0x131490, 0x24)  // dc 0xfe0b8
 void sRand(int seed)
 {
     g_randomSeed = seed;
@@ -757,6 +759,7 @@ void sRand(int seed)
 // the rand relocation. The two source bodies can therefore share retail's
 // retained code without replacing SRandom's implementation with an adapter.
 // E:\gamedcs\misc.cpp:796, dc 0xfe0d0
+MAC_ADDRESS(0x1314b4, 0x6c)
 int sRandom(int lower, int upper)
 {
     if (lower == upper)
@@ -767,7 +770,7 @@ int sRandom(int lower, int upper)
     return lower + value % (upper - lower + 1);
 }
 
-VA(0x0050c600, 0xDD)  // dc 0xfe10c
+VA(0x0050c600, 0xDD) MAC_ADDRESS(0x131520, 0x70)  // dc 0xfe10c
 std::string formatString(const char* format, ...)
 {
     va_list arguments;
@@ -777,7 +780,7 @@ std::string formatString(const char* format, ...)
     return std::string(g_formatStringBuffer);
 }
 
-VA(0x0050c6e0, 0x55)  // dc 0xfe150
+VA(0x0050c6e0, 0x55) MAC_ADDRESS(0x131590, 0x60)  // dc 0xfe150
 TPickANumber::TPickANumber(int lowBound, int high)
     : m_low(lowBound),
       m_numbersLeft(high - lowBound + 1),
@@ -786,7 +789,7 @@ TPickANumber::TPickANumber(int lowBound, int high)
 }
 
 // E:\gamedcs\misc.cpp:849.
-VA(0x0050c740, 0x52)  // dc 0xfe190
+VA(0x0050c740, 0x52) MAC_ADDRESS(0x1315f0, 0xcc)  // dc 0xfe190
 int TPickANumber::pick()
 {
     if (m_numbersLeft <= 0)
@@ -816,7 +819,7 @@ void TPickANumber::markOut(int number)
     }
 }
 
-VA(0x0050c7a0, 0x42)  // dc 0xfe248
+VA(0x0050c7a0, 0x42) MAC_ADDRESS(0x1316bc, 0x4c)  // dc 0xfe248
 unsigned long getAvailableDiskSpace()
 {
     unsigned long sectorsPerCluster = 0;

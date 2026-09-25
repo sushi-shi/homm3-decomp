@@ -201,7 +201,7 @@ static TArtifactSlotTraits g_artifactSlotTraitsStorage[19];
 
 } // namespace
 
-VA(0x0044c720, 0x10B)
+VA(0x0044c720, 0x10B) MAC_ADDRESS(0x05a534, 0xdc)
 static std::bitset<19> makeArtifactSlotMask(unsigned count, ...)
 {
     std::bitset<19> mask;
@@ -220,7 +220,7 @@ static std::bitset<19> makeArtifactSlotMask(unsigned count, ...)
     return mask;
 }
 
-VA(0x0044c830, 0x122)
+VA(0x0044c830, 0x122) MAC_ADDRESS(0x05a610, 0xfc)
 static std::bitset<144> makeArtifactComponentMask(unsigned count, ...)
 {
     std::bitset<144> mask;
@@ -373,7 +373,7 @@ static void initializeArtifactTraits(int id,
 // DC public ?InitializeArtifactTraitsTable@@YA_NXZ proves bool; the SH4
 // dossier renders its byte-sized procedure result as unsigned char. Complete
 // returns only AL 0/1, and the sole kb caller tests that Boolean result.
-VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
+VA(0x0044cd50, 0x5E8) MAC_ADDRESS(0x05a70c, 0x7ec)  // anchor-strings/caller, dc 0x4fec0
 bool initializeArtifactTraitsTable()
 {
     {

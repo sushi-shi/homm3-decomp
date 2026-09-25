@@ -16,17 +16,18 @@
 // constructor call and a single derived vtable store. No explicit inline
 // declaration is needed to expose this body to those same-TU callers.
 // E:\gamedcs\border.cpp:34, dc 0x5433c
+MAC_ADDRESS(0x05e244, 0x38)
 border::border() {}
 
 VA_COMPGEN(0x0044fee0, 0x21, SCALAR_DELETING_DTOR, border)
 
-VA(0x0044ff10, 0x32)  // dc 0x54378
+VA(0x0044ff10, 0x32) MAC_ADDRESS(0x05e27c, 0x50)  // dc 0x54378
 border::border(int x, int y, int w, int h, int id, int style)
     : widget(x, y, w, h, id, style)
 {
 }
 
-VA(0x0044ff50, 0xB)  // dc 0x543d8
+VA(0x0044ff50, 0xB) MAC_ADDRESS(0x05e2cc, 0x60)  // dc 0x543d8
 border::~border()
 {
 }
@@ -34,13 +35,14 @@ border::~border()
 // Original: border::initialize; border.cpp:67, dc 0x54408.
 // Complete removes widget's focusable storage (see widget.h). The retained
 // derived constructors expand this forwarding call to widget::initialize.
+MAC_ADDRESS(0x05e32c, 0x20)
 void border::initialize(int x, int y, int w, int h, int id, int style,
                         unsigned char focusable)
 {
     widget::initialize(x, y, w, h, id, style);
 }
 
-VA(0x0044ff60, 0x1CD)  // dc 0x54440
+VA(0x0044ff60, 0x1CD) MAC_ADDRESS(0x05e34c, 0x240)  // dc 0x54440
 int border::main(message& msg)
 {
     if (m_sleepCount > 0)
@@ -155,7 +157,7 @@ void coloredBorder::draw() const
 // in the ctor BODY (not a base initializer), which is why VC6 wraps the
 // whole thing in an fs:[0] frame - the base subobject has to be
 // unwindable across that call.
-VA(0x00450130, 0x6D)  // anchor-bracket + arity (`ret 0x1c`), dc 0x54650
+VA(0x00450130, 0x6D) MAC_ADDRESS(0x05e58c, 0x8c)  // anchor-bracket + arity (`ret 0x1c`), dc 0x54650
 coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
                                        int color, int style)
 {
@@ -175,7 +177,7 @@ VA_COMPGEN(0x004501d0, 0xB, IMPLICIT_DTOR, coloredBorderFrame)
 // Retail slot 3 at 0x63ba68 shares 0x5bc7e0 with border and textWidget.
 void coloredBorderFrame::zBufferDraw(unsigned short* zBuffer, int id) const {}
 
-VA(0x004501e0, 0x5B)  // dc 0x546d4
+VA(0x004501e0, 0x5B) MAC_ADDRESS(0x05e618, 0xa4)  // dc 0x546d4
 void coloredBorderFrame::draw() const
 {
     if (m_colorize)
@@ -186,7 +188,7 @@ void coloredBorderFrame::draw() const
             m_y + m_parentWindow->m_y, m_width, m_height, m_color);
 }
 
-VA(0x00450240, 0x82)  // dc 0x54744
+VA(0x00450240, 0x82) MAC_ADDRESS(0x05e6bc, 0xe4)  // dc 0x54744
 int coloredBorderFrame::main(message& msg)
 {
     if (m_sleepCount > 0)
@@ -215,7 +217,7 @@ int coloredBorderFrame::main(message& msg)
     return border::main(msg);
 }
 
-VA(0x004502d0, 0x8C)  // dc 0x547c0
+VA(0x004502d0, 0x8C) MAC_ADDRESS(0x05e7a0, 0x9c)  // dc 0x547c0
 bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
                            const char* image, int style)
 {
@@ -228,14 +230,14 @@ bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
 
 VA_COMPGEN(0x00450360, 0x21, SCALAR_DELETING_DTOR, bitmapBorder)
 
-VA(0x00450390, 0x5B)  // dc 0x54860
+VA(0x00450390, 0x5B) MAC_ADDRESS(0x05e83c, 0x7c)  // dc 0x54860
 bitmapBorder::~bitmapBorder()
 {
     if (m_image)
         m_image->dispose();
 }
 
-VA(0x004503f0, 0x55)  // dc 0x5489c
+VA(0x004503f0, 0x55) MAC_ADDRESS(0x05e8b8, 0x7c)  // dc 0x5489c
 void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const
 {
     if (m_image)
@@ -243,7 +245,7 @@ void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 800, 600, 1600, id);
 }
 
-VA(0x00450450, 0x44)  // dc 0x548fc
+VA(0x00450450, 0x44) MAC_ADDRESS(0x05e934, 0x70)  // dc 0x548fc
 void bitmapBorder::draw() const
 {
     if (m_image)
@@ -253,6 +255,7 @@ void bitmapBorder::draw() const
 
 // Original: bitmapBorder::SetPalette; border.cpp:323, dc 0x54988.
 // Retail Main's SET_PALETTE arm expands the same load/copy/dispose sequence.
+MAC_ADDRESS(0x05e9dc, 0x6c)
 void bitmapBorder::setPalette(const char* paletteName)
 {
     if (m_image) {
@@ -264,7 +267,7 @@ void bitmapBorder::setPalette(const char* paletteName)
     }
 }
 
-VA(0x004504a0, 0xE)  // dc 0x54948
+VA(0x004504a0, 0xE) MAC_ADDRESS(0x05e9a4, 0x1c)  // dc 0x54948
 int bitmapBorder::getRealWidth() const
 {
     if (m_image)
@@ -272,7 +275,7 @@ int bitmapBorder::getRealWidth() const
     return 0;
 }
 
-VA(0x004504b0, 0xE)  // dc 0x54968
+VA(0x004504b0, 0xE) MAC_ADDRESS(0x05e9c0, 0x1c)  // dc 0x54968
 int bitmapBorder::getRealHeight() const
 {
     if (m_image)
@@ -280,7 +283,7 @@ int bitmapBorder::getRealHeight() const
     return 0;
 }
 
-VA(0x004504c0, 0x5B)  // dc 0x549c0
+VA(0x004504c0, 0x5B) MAC_ADDRESS(0x05ea48, 0x74)  // dc 0x549c0
 void bitmapBorder::setImage(const char* bitmapName)
 {
     if (m_image != 0) {
@@ -291,14 +294,14 @@ void bitmapBorder::setImage(const char* bitmapName)
     m_image = ResourceManager::getBitmap816(bitmapName);
 }
 
-VA(0x00450520, 0x2D)  // dc 0x549ec
+VA(0x00450520, 0x2D) MAC_ADDRESS(0x05eabc, 0x50)  // dc 0x549ec
 void bitmapBorder::setPlayerPaletteColors(int whichPlayer)
 {
     ::setPlayerPaletteColors(m_image->getPalette().m_colors.m_data, whichPlayer);
     ::setPlayerPaletteColors(m_image->getPalette24(), whichPlayer);
 }
 
-VA(0x00450550, 0x132)  // dc 0x54a20
+VA(0x00450550, 0x132) MAC_ADDRESS(0x05eb0c, 0xd8)  // dc 0x54a20
 int bitmapBorder::main(message& msg)
 {
     if (m_sleepCount > 0)
@@ -324,7 +327,7 @@ int bitmapBorder::main(message& msg)
     return border::main(msg);
 }
 
-VA(0x00450690, 0x8C)  // dc 0x54a98
+VA(0x00450690, 0x8C) MAC_ADDRESS(0x05ebe4, 0x9c)  // dc 0x54a98
 bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
                                const char* image, int style)
 {
@@ -337,7 +340,7 @@ bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
 
 VA_COMPGEN(0x00450720, 0x21, SCALAR_DELETING_DTOR, bitmapBorder16)
 
-VA(0x00450750, 0x5B)  // dc 0x54b68
+VA(0x00450750, 0x5B) MAC_ADDRESS(0x05ec80, 0x80)  // dc 0x54b68
 bitmapBorder16::~bitmapBorder16()
 {
     if (m_image)
@@ -348,7 +351,7 @@ bitmapBorder16::~bitmapBorder16()
 // The 0x63bacc vtable's slot 3 folds to the shared empty ret-8 body.
 void bitmapBorder16::zBufferDraw(unsigned short* zBuffer, int id) const {}
 
-VA(0x004507b0, 0x55)  // dc 0x54ba8
+VA(0x004507b0, 0x55) MAC_ADDRESS(0x05ed00, 0x8c)  // dc 0x54ba8
 void bitmapBorder16::draw() const
 {
     if (m_image) {
@@ -359,7 +362,7 @@ void bitmapBorder16::draw() const
     }
 }
 
-VA(0x00450810, 0x44)  // dc 0x54bf0
+VA(0x00450810, 0x44) MAC_ADDRESS(0x05ed8c, 0xb0)  // dc 0x54bf0
 void bitmapBorder16::draw2() const
 {
     if (m_image) {
@@ -403,6 +406,7 @@ int bitmapBorder16::getRealHeight() const
 // epilogue and inverts the strcmp branch.
 // E:\gamedcs\border.cpp:441 - bitmapBorder::SetImage one class up with the
 // hi-colour loader. No VA: retail keeps no row for it (see the note below).
+MAC_ADDRESS(0x05ee3c, 0x74)
 void bitmapBorder16::setImage(const char* bitmapName)
 {
     if (m_image != 0) {
@@ -413,7 +417,7 @@ void bitmapBorder16::setImage(const char* bitmapName)
     m_image = ResourceManager::getBitmap16(bitmapName);
 }
 
-VA(0x00450860, 0xC6)  // dc 0x54c98
+VA(0x00450860, 0xC6) MAC_ADDRESS(0x05eeb0, 0xb0)  // dc 0x54c98
 int bitmapBorder16::main(message& msg)
 {
     if (m_sleepCount > 0)

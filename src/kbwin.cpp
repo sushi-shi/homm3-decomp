@@ -224,7 +224,7 @@ void appExit()
 
 // Mac retains the shared event pump at code 0+0x20f90c. Its event polling
 // uses Mac OS services; this Windows body pumps native window messages.
-VA(0x004f7fb0, 0xAA)  // dc 0xe7fd0
+VA(0x004f7fb0, 0xAA) MAC_ADDRESS(0x20f90c, 0x350)  // dc 0xe7fd0
 void process1WindowsMessage()
 {
     MSG message;
@@ -337,7 +337,7 @@ void kbChangeMenu(HMENU newMenu)
     }
 }
 
-VA(0x004f81e0, 0x31)  // dc 0xe8020
+VA(0x004f81e0, 0x31) MAC_ADDRESS(0x20ff48, 0x38)  // dc 0xe8020
 void setNoDialogMenus(int noMenus)
 {
     if (g_menusSuppressed && !noMenus)
@@ -390,13 +390,13 @@ void setMenus(HMENU menu, int enabled)
     }
 }
 
-VA(0x004f82e0, 0x6)  // dc 0xe8058
+VA(0x004f82e0, 0x6) MAC_ADDRESS(0x20fc5c, 0xc)  // dc 0xe8058
 unsigned long GameTime::get()
 {
     return timeGetTime();
 }
 
-VA(0x004f82f0, 0xCD)  // dc 0xe806c
+VA(0x004f82f0, 0xCD) MAC_ADDRESS(0x20fc68, 0x40)  // dc 0xe806c
 void GameTime::delayTil(unsigned long time)
 {
     while (!GameTime::isPast(time)) {
@@ -405,7 +405,7 @@ void GameTime::delayTil(unsigned long time)
     }
 }
 
-VA(0x004f83c0, 0xD0)  // dc 0xe8098
+VA(0x004f83c0, 0xD0) MAC_ADDRESS(0x20fca8, 0x34)  // dc 0xe8098
 void GameTime::delay(int interval)
 {
     GameTime::delayTil(GameTime::get() + interval);
@@ -414,6 +414,7 @@ void GameTime::delay(int interval)
 // Original: InitVideo; kbwin.cpp:851, dc 0xe80b4
 // Empty hook; heroWindowManager::open retains the call to retail's
 // shared ICF ret at 0x5bc690.
+MAC_ADDRESS(0x20fcdc, 0x4)
 void initVideo()
 {
 }

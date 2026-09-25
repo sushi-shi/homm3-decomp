@@ -248,6 +248,7 @@ public:
     std::string getProgressDialogText();
     // The exact HD structural twin maps this accessor to retail 0x45bad0;
     // its body copies the base's +0x28 completionText member.
+    MAC_ADDRESS(0x169418, 0x24)
     std::string getCompletionText() { return m_completionText; }
     // The exact HD structural twin maps this deadline suffix builder to
     // retail 0x56d040. The two dated dialog getters and the complex skill /

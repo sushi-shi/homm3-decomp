@@ -77,7 +77,7 @@ DATA(0x0066c090) SCampaignMusicCue g_campaignMusicCues[49] = {
     { "CampainMusic11", 0 }
 };
 
-VA(0x0045e250, 0x160)
+VA(0x0045e250, 0x160) MAC_ADDRESS(0x21dd80, 0x1c4)
 unsigned char initializeCampaignMusicTable()
 {
     TResourcePtr<TTextResource> textResource(

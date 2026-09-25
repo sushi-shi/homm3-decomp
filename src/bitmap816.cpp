@@ -29,7 +29,7 @@ Bitmap816::Bitmap816(int w, int h)
         m_map = 0;
 }
 
-VA(0x0044f800, 0xCA)  // dc 0x53960
+VA(0x0044f800, 0xCA) MAC_ADDRESS(0x05daf0, 0xc4)  // dc 0x53960
 Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data,
                      TPalette16* palette16, int dataSize)
     : resource(name, RESOURCE_TYPE_BITMAP),
@@ -64,7 +64,7 @@ Bitmap816::Bitmap816(const char* name, const char* path,
     importPCXFile(filename, rbits, rshift, gbits, gshift, bbits, bshift);
 }
 
-VA(0x0044f9d0, 0x70)  // dc 0x53ba4
+VA(0x0044f9d0, 0x70) MAC_ADDRESS(0x05dbb4, 0x88)  // dc 0x53ba4
 Bitmap816::~Bitmap816()
 {
     if (m_map)
@@ -159,7 +159,7 @@ int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift,
     return 0;
 }
 
-VA(0x0044fba0, 0xCB)  // dc 0x53fe4
+VA(0x0044fba0, 0xCB) MAC_ADDRESS(0x05dc3c, 0xf8)  // dc 0x53fe4
 void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
                             unsigned short* dst, int dx, int dy,
                             int dw, int dh, int dpitch, int id) const
@@ -201,7 +201,7 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
     }
 }
 
-VA(0x0044fc70, 0x136)  // dc 0x540a8
+VA(0x0044fc70, 0x136) MAC_ADDRESS(0x05dd34, 0x21c)  // dc 0x540a8
 void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                      int dx, int dy, int dw, int dh, int dpitch,
                      bool tblit) const
@@ -257,7 +257,7 @@ void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
     }
 }
 
-VA(0x0044fdb0, 0x3B)  // dc 0x541b0
+VA(0x0044fdb0, 0x3B) MAC_ADDRESS(0x05df50, 0x44)  // dc 0x541b0
 void Bitmap816::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
                      int dx, int dy, bool tblit) const
 {
@@ -265,7 +265,7 @@ void Bitmap816::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
          dst->getWidth(), dst->getHeight(), dst->getPitch(), tblit);
 }
 
-VA(0x0044fdf0, 0x3B)  // dc 0x5422c
+VA(0x0044fdf0, 0x3B) MAC_ADDRESS(0x05df94, 0x40)  // dc 0x5422c
 void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
                             unsigned short* zBuffer, int dx, int dy,
                             int id) const
@@ -275,25 +275,25 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
 
 // Retail vtable 0x63ba14 slot 2. Complete adds this resource virtual;
 // DC Bitmap816 type 0x105e / fields 0x244e has no GetSize member.
-VA(0x0044fe30, 0x09)
+VA(0x0044fe30, 0x09) MAC_ADDRESS(0x05dfd4, 0xc)
 unsigned int Bitmap816::getSize() const
 {
     return m_dataSize + sizeof(*this);
 }
 
-VA(0x0044fe40, 0x18)
+VA(0x0044fe40, 0x18) MAC_ADDRESS(0x05dfe0, 0x34)
 void Bitmap816::setPalette(const unsigned short* pal)
 {
     memcpy(m_p16.m_data, pal, sizeof(m_p16.m_data));
 }
 
-VA(0x0044fe60, 0x16)  // dc 0x54294
+VA(0x0044fe60, 0x16) MAC_ADDRESS(0x05e014, 0x24)  // dc 0x54294
 void Bitmap816::setPalette(TPalette24* pal24)
 {
     m_p24 = *pal24;
 }
 
-VA(0x0044fe80, 0x40)  // dc 0x5429c
+VA(0x0044fe80, 0x40) MAC_ADDRESS(0x05e038, 0x4c)  // dc 0x5429c
 void Bitmap816::resetPalette()
 {
     TPalette16 converted(m_p24);

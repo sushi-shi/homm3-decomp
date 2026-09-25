@@ -31,6 +31,18 @@ source-owned external storage bindings and compiler literal pools independently.
 Identical shared references coalesce; conflicting identities or spans fail.
 Literal `units` scopes distinguish equal payloads in different linked pools.
 
+Mac function addresses live in source, beside the Windows claim:
+`VA(0x004d8720, 0x568) MAC_ADDRESS(0x0f3fe4, 0x568)`, or on its own line above
+a definition with no Windows VA. Offsets are relative to the PEF code section;
+the macro claims functions only. Mirroring `retail/`, [`mac/functions.tsv`](mac/functions.tsv)
+holds every verified code span, [`mac/runtime-map.tsv`](mac/runtime-map.tsv)
+and [`mac/runtime-aliases.tsv`](mac/runtime-aliases.tsv) label library code,
+and [`mac/dispositions.tsv`](mac/dispositions.tsv) records evidenced reasons a
+source function has no Mac body. Every source claim and runtime label must be
+one `functions.tsv` row. `homm3 mac migrate` copies reviewed TOML spans into
+these forms; `homm3 mac parity` validates them and reports every source
+function as located, unlocated or disposed (`build/gen/mac/parity.tsv`).
+
 Mac candidates reuse the owning source file's include prefix and read ordinary
 project headers with the native CodeWarrior library. Duplicate declaration
 headers and the body-extraction manifest have been removed. The remaining

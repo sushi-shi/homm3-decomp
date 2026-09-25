@@ -56,7 +56,7 @@ DATA(0x006823b8) static int g_quickTownArmyPositions[7][2] = {
 // systemoptionswindow registration guard is a real +2 here (97.6509) and nests
 // to +4 (98.2053) but never reaches the ceiling, and guard + two inserts is
 // 98.3983.
-VA(0x00530120, 0x67D)  // townqvbk/itpt literals + town helpers, dc 0x117e48
+VA(0x00530120, 0x67D) MAC_ADDRESS(0x14be1c, 0xa90)  // townqvbk/itpt literals + town helpers, dc 0x117e48
 TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TViewLevel viewLevel)
     : heroWindow(200, 200, 194, 186, 0x12)
 {
@@ -171,7 +171,7 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
     }
 }
 
-VA(0x005307d0, 0x145)  // dc 0x1183b8
+VA(0x005307d0, 0x145) MAC_ADDRESS(0x14c8ac, 0x234)  // dc 0x1183b8
 TQuickTownWindow::TQuickTownWindow(const garrison* thisGarrison,
                                    TQuickTownWindow::TViewLevel viewLevel)
     : heroWindow(200, 200, 188, 182, 0x12)
@@ -191,7 +191,7 @@ TQuickTownWindow::TQuickTownWindow(const garrison* thisGarrison,
 
 VA_COMPGEN(0x005307a0, 0x21, SCALAR_DELETING_DTOR, TQuickTownWindow)
 
-VA(0x00530920, 0x6B)  // dc 0x1184c4
+VA(0x00530920, 0x6B) MAC_ADDRESS(0x14cae0, 0xac)  // dc 0x1184c4
 TQuickTownWindow::~TQuickTownWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -200,7 +200,7 @@ TQuickTownWindow::~TQuickTownWindow()
     }
 }
 
-VA(0x00530990, 0x303)  // dc 0x118564
+VA(0x00530990, 0x303) MAC_ADDRESS(0x14cb8c, 0x340)  // dc 0x118564
 void TQuickTownWindow::initializeArmyDisplay(
     const armyGroup& currentArmyGroup, TQuickTownWindow::TViewLevel viewLevel)
 {
@@ -249,7 +249,7 @@ void TQuickTownWindow::initializeArmyDisplay(
     }
 }
 
-VA(0x00530ca0, 0x84)  // dc 0x118794
+VA(0x00530ca0, 0x84) MAC_ADDRESS(0x14cecc, 0xe4)  // dc 0x118794
 void TQuickTownWindow::center(long newX, long newY)
 {
     m_x = limit(m_width / 2, newX,
@@ -258,7 +258,7 @@ void TQuickTownWindow::center(long newX, long newY)
               WINDOW_SCREEN_HEIGHT - m_height / 2 - 1) - m_height / 2;
 }
 
-VA(0x00530d30, 0xD)
+VA(0x00530d30, 0xD) MAC_ADDRESS(0x14cfb0, 0x2c)
 void TQuickTownWindow::quickWindowWait()
 {
     g_windowManager->doQuickView(this);

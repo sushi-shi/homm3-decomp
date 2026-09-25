@@ -33,6 +33,7 @@ const int g_saveVersionBoatFieldsAbsent = 0x1c;
 // type_record_shroud::create (0x49bc30) is the clearest Windows witness.
 // Mac retains this source constructor at 0:0xbef5c and 17 derived
 // construction sites call it, including ten event factory methods.
+MAC_ADDRESS(0x0bef5c, 0x1c)
 type_event_record::type_event_record()
 {
     m_playerId = g_netLocalGamePos;
@@ -40,13 +41,13 @@ type_event_record::type_event_record()
 
 VA_COMPGEN(0x0049a5b0, 0x23, SCALAR_DELETING_DTOR, type_event_record)
 
-VA(0x0049a5e0, 0x1D)  // dc 0x8c678
+VA(0x0049a5e0, 0x1D) MAC_ADDRESS(0x0befc0, 0x48)  // dc 0x8c678
 unsigned char type_event_record::load(TAbstractFile* infile, int version)
 {
     return infile->read(&m_playerId, 1) == 1;
 }
 
-VA(0x0049a600, 0x1D)  // dc 0x8c698
+VA(0x0049a600, 0x1D) MAC_ADDRESS(0x0bf008, 0x48)  // dc 0x8c698
 unsigned char type_event_record::save(TAbstractFile* outfile)
 {
     return outfile->write(&m_playerId, 1) == 1;
@@ -56,6 +57,7 @@ unsigned char type_event_record::save(TAbstractFile* outfile)
 // into the four replay bodies and playRecordedEvents. The char parameter
 // narrows the saved seat at the latter call; each replay passes m_playerId.
 // Preserve these DC-proven source calls instead of copying the helper body.
+MAC_ADDRESS(0x0bf050, 0xa8)
 static void setPlayer(char newPlayer)
 {
     if (g_netLocalGamePos != newPlayer) {
@@ -69,12 +71,14 @@ static void setPlayer(char newPlayer)
 
 // E:\gamedcs\event_record.cpp:81
 // Retail base vtable slot4 folds to the empty ret4 body at0x485d80.
+MAC_ADDRESS(0x0bf0f8, 0x4)
 void type_event_record::replay(unsigned char draw)
 {
 }
 
 // E:\gamedcs\event_record.cpp:88
 // Retail base vtable slot5 folds to the empty ret body at0x5bc690.
+MAC_ADDRESS(0x0bf0fc, 0x4)
 void type_event_record::undo()
 {
 }
@@ -86,6 +90,7 @@ void type_event_record::undo()
 // ordered source rows and proves that line 100 obtains source through
 // type_obscuring_object::get_location; retail corroborates the packed x/y/z
 // loads at both expansion sites.
+MAC_ADDRESS(0x0bf100, 0xa8)
 type_record_move_hero::type_record_move_hero(hero* currentHero,
                                              char direction,
                                              type_point destination)
@@ -105,19 +110,19 @@ type_record_move_hero::type_record_move_hero(hero* currentHero,
 // first of the ten in link order.
 VA_COMPGEN(0x0049a620, 0x21, SCALAR_DELETING_DTOR, type_record_move_hero)
 
-VA(0x0049a650, 0x27)  // dc 0x8c7c0
+VA(0x0049a650, 0x27) MAC_ADDRESS(0x0bf1a8, 0x48)  // dc 0x8c7c0
 type_event_record* type_record_move_hero::create()
 {
     return new type_record_move_hero();
 }
 
-VA(0x0049a680, 0x6)  // dc 0x8c7e8
+VA(0x0049a680, 0x6) MAC_ADDRESS(0x0bf1f0, 0x8)  // dc 0x8c7e8
 type_event_record_type type_record_move_hero::getType() const
 {
     return RECORD_MOVE_HERO;
 }
 
-VA(0x0049a690, 0xB1)  // dc 0x8c7ec
+VA(0x0049a690, 0xB1) MAC_ADDRESS(0x0bf1f8, 0x148)  // dc 0x8c7ec
 unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
@@ -134,7 +139,7 @@ unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
     return ok;
 }
 
-VA(0x0049a750, 0x63)  // dc 0x8c8bc
+VA(0x0049a750, 0x63) MAC_ADDRESS(0x0bf340, 0xe4)  // dc 0x8c8bc
 unsigned char type_record_move_hero::save(TAbstractFile* outfile)
 {
     int heroId = m_currentHero->m_id;
@@ -146,7 +151,7 @@ unsigned char type_record_move_hero::save(TAbstractFile* outfile)
     return ok;
 }
 
-VA(0x0049a7c0, 0x144)  // dc 0x8c91c
+VA(0x0049a7c0, 0x144) MAC_ADDRESS(0x0bf424, 0x15c)  // dc 0x8c91c
 void type_record_move_hero::replay(unsigned char draw)
 {
     setPlayer(m_playerId);
@@ -172,7 +177,7 @@ void type_record_move_hero::replay(unsigned char draw)
 // Slot 5 of type_record_move_hero's retail vtable (0x63de8c), shared with
 // type_record_teleport. The hero's `valid` byte is sampled BEFORE
 // restore_cell clears it, which is what the leading `mov bl,[hero+6]` proves.
-VA(0x0049a910, 0x65)  // anchor-vtable, dc 0x8c9ec
+VA(0x0049a910, 0x65) MAC_ADDRESS(0x0bf580, 0x9c)  // anchor-vtable, dc 0x8c9ec
 void type_record_move_hero::undo()
 {
     unsigned char wasOnMap = m_currentHero->isOnMap();
@@ -190,25 +195,26 @@ void type_record_move_hero::undo()
 // Mac retains it at code0+0xbf61c after move-hero undo.
 // Dreamcast line 204 proves this remains a derived-to-base delegation rather
 // than a flattened duplicate of type_record_move_hero's assignments.
+MAC_ADDRESS(0x0bf61c, 0x44)
 type_record_teleport::type_record_teleport(hero* currentHero,
                                            type_point destination)
     : type_record_move_hero(currentHero, currentHero->m_facing, destination)
 {
 }
 
-VA(0x0049a980, 0x27)  // dc 0x8cac4
+VA(0x0049a980, 0x27) MAC_ADDRESS(0x0bf6c0, 0x50)  // dc 0x8cac4
 type_event_record* type_record_teleport::create()
 {
     return new type_record_teleport();
 }
 
-VA(0x0049a9b0, 0x6)  // dc 0x8caec
+VA(0x0049a9b0, 0x6) MAC_ADDRESS(0x0bf710, 0x8)  // dc 0x8caec
 type_event_record_type type_record_teleport::getType() const
 {
     return RECORD_TELEPORT;
 }
 
-VA(0x0049a9c0, 0x7B)  // dc 0x8caf0
+VA(0x0049a9c0, 0x7B) MAC_ADDRESS(0x0bf718, 0x60)  // dc 0x8caf0
 void type_record_teleport::replay(unsigned char draw)
 {
     setPlayer(m_playerId);
@@ -220,6 +226,7 @@ void type_record_teleport::replay(unsigned char draw)
 // record_claim_mine. Mac retains it at code0+0xbf778 after teleport replay.
 // record_claim_town instead invokes the distinct default constructor at
 // dc:0x8eda0. Dreamcast preserves this definition site and the field order.
+MAC_ADDRESS(0x0bf778, 0x78)
 type_record_claim_mine::type_record_claim_mine(long id,
                                                char newOwner)
 {
@@ -230,18 +237,19 @@ type_record_claim_mine::type_record_claim_mine(long id,
 
 // E:\gamedcs\event_record.cpp:255
 // Retail derived vtable slot1 folds to 0x56e3d0: mov eax,3; ret.
+MAC_ADDRESS(0x0bf838, 0x8)
 type_event_record_type type_record_claim_mine::getType() const
 {
     return RECORD_CLAIM_MINE;
 }
 
-VA(0x0049aa40, 0x27)  // dc 0x8cb88
+VA(0x0049aa40, 0x27) MAC_ADDRESS(0x0bf7f0, 0x48)  // dc 0x8cb88
 type_event_record* type_record_claim_mine::create()
 {
     return new type_record_claim_mine();
 }
 
-VA(0x0049aa70, 0x71)  // dc 0x8cbb4
+VA(0x0049aa70, 0x71) MAC_ADDRESS(0x0bf840, 0xec)  // dc 0x8cbb4
 unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
@@ -254,7 +262,7 @@ unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
     return ok;
 }
 
-VA(0x0049aaf0, 0x4A)  // dc 0x8cc1c
+VA(0x0049aaf0, 0x4A) MAC_ADDRESS(0x0bf92c, 0xbc)  // dc 0x8cc1c
 unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
 {
     outfile->write(&m_playerId, 1);
@@ -264,7 +272,7 @@ unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
     return ok;
 }
 
-VA(0x0049ab40, 0x74)  // dc 0x8cc6c
+VA(0x0049ab40, 0x74) MAC_ADDRESS(0x0bf9e8, 0xc4)  // dc 0x8cc6c
 void type_record_claim_mine::replay(unsigned char draw)
 {
     g_game->claimMine(m_id, m_newOwner, const_recorded_action);
@@ -278,13 +286,13 @@ void type_record_claim_mine::replay(unsigned char draw)
     }
 }
 
-VA(0x0049abc0, 0x19)  // dc 0x8ccd8
+VA(0x0049abc0, 0x19) MAC_ADDRESS(0x0bfaac, 0x24)  // dc 0x8ccd8
 void type_record_claim_mine::undo()
 {
     g_game->getMine(m_id)->m_playerOwner = m_oldOwner;
 }
 
-VA(0x0049abe0, 0x7)  // dc 0x8c658
+VA(0x0049abe0, 0x7) MAC_ADDRESS(0x0bef78, 0x48)  // dc 0x8c658
 type_event_record::~type_event_record()
 {
 }
@@ -295,6 +303,7 @@ type_event_record::~type_event_record()
 // from gpGame->towns. Mac retains it at code0+0xbfad0 after claim-mine undo.
 // Retail corroborates that final assignment sequence and elides the
 // intermediate claim_mine vptr store.
+MAC_ADDRESS(0x0bfad0, 0x84)
 type_record_claim_town::type_record_claim_town(long id,
                                                char newOwner)
     : type_record_claim_mine()
@@ -309,18 +318,19 @@ type_record_claim_town::type_record_claim_town(long id,
 // its vtable (0x63ded4) is 0x16ebc0, outside this compiland's span, where
 // /OPT:ICF folded the `mov eax,4 / ret` onto an identical body elsewhere.
 // Retail derived vtable slot1 folds to 0x56ebc0: mov eax,4; ret.
+MAC_ADDRESS(0x0bfc04, 0x8)
 type_event_record_type type_record_claim_town::getType() const
 {
     return RECORD_CLAIM_TOWN;
 }
 
-VA(0x0049abf0, 0x27)  // dc 0x8cd5c
+VA(0x0049abf0, 0x27) MAC_ADDRESS(0x0bfbb4, 0x50)  // dc 0x8cd5c
 type_event_record* type_record_claim_town::create()
 {
     return new type_record_claim_town();
 }
 
-VA(0x0049ac20, 0x7E)  // dc 0x8cdd8
+VA(0x0049ac20, 0x7E) MAC_ADDRESS(0x0bfc0c, 0xac)  // dc 0x8cdd8
 void type_record_claim_town::replay(unsigned char draw)
 {
     g_game->m_towns[m_id].m_owner = m_newOwner;
@@ -334,7 +344,7 @@ void type_record_claim_town::replay(unsigned char draw)
     }
 }
 
-VA(0x0049aca0, 0x1D)  // dc 0x8ce48
+VA(0x0049aca0, 0x1D) MAC_ADDRESS(0x0bfcb8, 0x28)  // dc 0x8ce48
 void type_record_claim_town::undo()
 {
     g_game->m_towns[m_id].m_owner = m_oldOwner;
@@ -345,6 +355,7 @@ void type_record_claim_town::undo()
 // two independent snapshot loads corroborate the revised constructor inputs.
 // DC retains this constructor at 0x8ce74 and Mac recordHideBoat calls 0xbfce0;
 // VC6 expands the ordinary same-TU helper in both Windows boat callers.
+MAC_ADDRESS(0x0bfce0, 0x80)
 type_record_hide_boat::type_record_hide_boat(boat* currentBoat,
                                                     unsigned char occupied,
                                                     int occupyingHero)
@@ -356,19 +367,19 @@ type_record_hide_boat::type_record_hide_boat(boat* currentBoat,
     m_previousOccupyingHero = currentBoat->m_occupyingHero;
 }
 
-VA(0x0049acc0, 0x27)  // dc 0x8ceb0
+VA(0x0049acc0, 0x27) MAC_ADDRESS(0x0bfd60, 0x48)  // dc 0x8ceb0
 type_event_record* type_record_hide_boat::create()
 {
     return new type_record_hide_boat();
 }
 
-VA(0x0049acf0, 0x6)  // dc 0x8ced8
+VA(0x0049acf0, 0x6) MAC_ADDRESS(0x0bfda8, 0x8)  // dc 0x8ced8
 type_event_record_type type_record_hide_boat::getType() const
 {
     return RECORD_HIDE_BOAT;
 }
 
-VA(0x0049ad00, 0xE7)  // dc 0x8cedc
+VA(0x0049ad00, 0xE7) MAC_ADDRESS(0x0bfdb0, 0x1c0)  // dc 0x8cedc
 unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
@@ -403,7 +414,7 @@ unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
     return 1;
 }
 
-VA(0x0049adf0, 0x8A)  // dc 0x8cf2c
+VA(0x0049adf0, 0x8A) MAC_ADDRESS(0x0bff70, 0x11c)  // dc 0x8cf2c
 unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
 {
     outfile->write(&m_playerId, 1);
@@ -428,7 +439,7 @@ unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
     return 1;
 }
 
-VA(0x0049ae80, 0x44)  // dc 0x8cf64
+VA(0x0049ae80, 0x44) MAC_ADDRESS(0x0c008c, 0x78)  // dc 0x8cf64
 void type_record_hide_boat::replay(unsigned char draw)
 {
     m_currentBoat->m_occupied = m_occupied;
@@ -440,7 +451,7 @@ void type_record_hide_boat::replay(unsigned char draw)
     }
 }
 
-VA(0x0049aed0, 0x23)  // dc 0x8cf94
+VA(0x0049aed0, 0x23) MAC_ADDRESS(0x0c0104, 0x44)  // dc 0x8cf94
 void type_record_hide_boat::undo()
 {
     m_currentBoat->m_occupied = m_previousOccupied;
@@ -451,6 +462,7 @@ void type_record_hide_boat::undo()
 // DC line 450 calls type_obscuring_object::get_location. Retail inlines that
 // helper into the packed x/y/z loads, so keep the source boundary even though
 // spelling the three fields directly produces the same candidate bytes.
+MAC_ADDRESS(0x0c0148, 0x94)
 inline type_record_show_boat::type_record_show_boat(boat* currentBoat,
                                                     type_point location)
     : type_record_hide_boat(currentBoat, 0,
@@ -460,19 +472,19 @@ inline type_record_show_boat::type_record_show_boat(boat* currentBoat,
     m_location = location;
 }
 
-VA(0x0049af00, 0x27)  // dc 0x8d044
+VA(0x0049af00, 0x27) MAC_ADDRESS(0x0c023c, 0x50)  // dc 0x8d044
 type_event_record* type_record_show_boat::create()
 {
     return new type_record_show_boat();
 }
 
-VA(0x0049af30, 0x6)  // dc 0x8d06c
+VA(0x0049af30, 0x6) MAC_ADDRESS(0x0c028c, 0x8)  // dc 0x8d06c
 type_event_record_type type_record_show_boat::getType() const
 {
     return RECORD_SHOW_BOAT;
 }
 
-VA(0x0049af40, 0x51)  // dc 0x8d070
+VA(0x0049af40, 0x51) MAC_ADDRESS(0x0c0294, 0xa8)  // dc 0x8d070
 unsigned char type_record_show_boat::load(TAbstractFile* infile, int version)
 {
     if (!type_record_hide_boat::load(infile, version))
@@ -484,7 +496,7 @@ unsigned char type_record_show_boat::load(TAbstractFile* infile, int version)
     return ok;
 }
 
-VA(0x0049afa0, 0x9F)  // dc 0x8d110
+VA(0x0049afa0, 0x9F) MAC_ADDRESS(0x0c033c, 0x88)  // dc 0x8d110
 unsigned char type_record_show_boat::save(TAbstractFile* outfile)
 {
     type_record_hide_boat::save(outfile);
@@ -494,7 +506,7 @@ unsigned char type_record_show_boat::save(TAbstractFile* outfile)
     return ok;
 }
 
-VA(0x0049b040, 0xB5)  // dc 0x8d14c
+VA(0x0049b040, 0xB5) MAC_ADDRESS(0x0c03c4, 0xf8)  // dc 0x8d14c
 void type_record_show_boat::replay(unsigned char draw)
 {
     m_currentBoat->m_occupied = m_occupied;
@@ -509,7 +521,7 @@ void type_record_show_boat::replay(unsigned char draw)
     }
 }
 
-VA(0x0049b100, 0x4E)  // dc 0x8d1d8
+VA(0x0049b100, 0x4E) MAC_ADDRESS(0x0c04bc, 0x78)  // dc 0x8d1d8
 void type_record_show_boat::undo()
 {
     m_currentBoat->m_occupied = m_previousOccupied;
@@ -523,6 +535,7 @@ void type_record_show_boat::undo()
 // that default as `: m_location()` or spelling the base initializer explicitly
 // is byte-flat at recordEraseObject (88.7023%). The ordinary definition is
 // also byte-flat; nested vector _Ufill still gets budget 55 against cost 56.
+MAC_ADDRESS(0x0c0534, 0x74)
 type_record_erase::type_record_erase(type_point location,
                                             long objectId,
                                             unsigned long extraInfo,
@@ -535,19 +548,19 @@ type_record_erase::type_record_erase(type_point location,
 }
 
 // E:\gamedcs\event_record.cpp:544
-VA(0x0049b150, 0x27)  // dc 0x8d290
+VA(0x0049b150, 0x27) MAC_ADDRESS(0x0c05a8, 0x48)  // dc 0x8d290
 type_event_record* type_record_erase::create()
 {
     return new type_record_erase();
 }
 
-VA(0x0049b180, 0x6)  // dc 0x8d2b8
+VA(0x0049b180, 0x6) MAC_ADDRESS(0x0c05f0, 0x8)  // dc 0x8d2b8
 type_event_record_type type_record_erase::getType() const
 {
     return RECORD_ERASE;
 }
 
-VA(0x0049b190, 0x8B)  // dc 0x8d2bc
+VA(0x0049b190, 0x8B) MAC_ADDRESS(0x0c05f8, 0x118)  // dc 0x8d2bc
 unsigned char type_record_erase::load(TAbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
@@ -562,7 +575,7 @@ unsigned char type_record_erase::load(TAbstractFile* infile, int version)
     return ok;
 }
 
-VA(0x0049b220, 0x57)  // dc 0x8d338
+VA(0x0049b220, 0x57) MAC_ADDRESS(0x0c0710, 0xd8)  // dc 0x8d338
 unsigned char type_record_erase::save(TAbstractFile* outfile)
 {
     outfile->write(&m_playerId, 1);
@@ -573,7 +586,7 @@ unsigned char type_record_erase::save(TAbstractFile* outfile)
     return ok;
 }
 
-VA(0x0049b280, 0xEA)  // dc 0x8d3c8
+VA(0x0049b280, 0xEA) MAC_ADDRESS(0x0c07e8, 0x144)  // dc 0x8d3c8
 void type_record_erase::replay(unsigned char draw)
 {
     NewmapCell* cell = g_game->getCell(m_location);
@@ -587,7 +600,7 @@ void type_record_erase::replay(unsigned char draw)
     g_advManager->demobilizeCurrHero(0, draw);
 }
 
-VA(0x0049b370, 0x83)  // dc 0x8d46c
+VA(0x0049b370, 0x83) MAC_ADDRESS(0x0c092c, 0xc0)  // dc 0x8d46c
 void type_record_erase::undo()
 {
     g_game->m_worldMap.placeObject(m_objectId, 0);
@@ -603,6 +616,7 @@ type_event_record_type type_record_hide_hero::getType() const
     return RECORD_HIDE_HERO;
 }
 
+MAC_ADDRESS(0x0c09ec, 0x70)
 inline type_record_hide_hero::type_record_hide_hero(hero* who, char newOwner,
                                                     unsigned char townGarrison)
 {
@@ -615,13 +629,13 @@ inline type_record_hide_hero::type_record_hide_hero(hero* who, char newOwner,
 }
 
 // E:\gamedcs\event_record.cpp:638
-VA(0x0049b400, 0x27)  // dc 0x8d500
+VA(0x0049b400, 0x27) MAC_ADDRESS(0x0c0a5c, 0x48)  // dc 0x8d500
 type_event_record* type_record_hide_hero::create()
 {
     return new type_record_hide_hero();
 }
 
-VA(0x0049b430, 0xC8)  // dc 0x8d52c
+VA(0x0049b430, 0xC8) MAC_ADDRESS(0x0c0aac, 0x150)  // dc 0x8d52c
 unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
@@ -643,7 +657,7 @@ unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
     return 1;
 }
 
-VA(0x0049b500, 0x61)  // dc 0x8d5a0
+VA(0x0049b500, 0x61) MAC_ADDRESS(0x0c0bfc, 0xdc)  // dc 0x8d5a0
 unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
 {
     outfile->write(&m_playerId, 1);
@@ -656,7 +670,7 @@ unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
     return ok;
 }
 
-VA(0x0049b570, 0x102)  // dc 0x8d5f0
+VA(0x0049b570, 0x102) MAC_ADDRESS(0x0c0cd8, 0x130)  // dc 0x8d5f0
 void type_record_hide_hero::replay(unsigned char draw)
 {
     setPlayer(m_playerId);
@@ -683,7 +697,7 @@ void type_record_hide_hero::replay(unsigned char draw)
     }
 }
 
-VA(0x0049b680, 0x1F)  // dc 0x8d688
+VA(0x0049b680, 0x1F) MAC_ADDRESS(0x0c0e08, 0x44)  // dc 0x8d688
 void type_record_hide_hero::undo()
 {
     m_currentHero->m_owner = m_prevOwner;
@@ -691,6 +705,7 @@ void type_record_hide_hero::undo()
         m_currentHero->obscureCell();
 }
 
+MAC_ADDRESS(0x0c0e4c, 0xb8)
 inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
                                                     type_point location,
                                                     unsigned char onBoat)
@@ -703,7 +718,7 @@ inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
 }
 
 // E:\gamedcs\event_record.cpp:736
-VA(0x0049b6a0, 0x27)  // dc 0x8d7c0
+VA(0x0049b6a0, 0x27) MAC_ADDRESS(0x0c0f64, 0x50)  // dc 0x8d7c0
 type_event_record* type_record_show_hero::create()
 {
     return new type_record_show_hero();
@@ -716,7 +731,7 @@ type_event_record_type type_record_show_hero::getType() const
     return RECORD_SHOW_HERO;
 }
 
-VA(0x0049b6d0, 0x85)  // dc 0x8d7ec
+VA(0x0049b6d0, 0x85) MAC_ADDRESS(0x0c0fbc, 0x100)  // dc 0x8d7ec
 unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
 {
     if (!type_record_hide_hero::load(infile, version))
@@ -731,7 +746,7 @@ unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
     return ok;
 }
 
-VA(0x0049b760, 0x95)  // dc 0x8d860
+VA(0x0049b760, 0x95) MAC_ADDRESS(0x0c10bc, 0xc0)  // dc 0x8d860
 unsigned char type_record_show_hero::save(TAbstractFile* outfile)
 {
     type_record_hide_hero::save(outfile);
@@ -741,7 +756,7 @@ unsigned char type_record_show_hero::save(TAbstractFile* outfile)
     unsigned char ok = outfile->write(&m_previousBoat, 1) == 1;
     return ok;
 }
-VA(0x0049b800, 0x15E)  // dc 0x8d8b4
+VA(0x0049b800, 0x15E) MAC_ADDRESS(0x0c117c, 0x178)  // dc 0x8d8b4
 void type_record_show_hero::replay(unsigned char draw)
 {
     setPlayer(m_playerId);
@@ -767,7 +782,7 @@ void type_record_show_hero::replay(unsigned char draw)
     }
 }
 
-VA(0x0049b960, 0x9E)  // dc 0x8d9f4
+VA(0x0049b960, 0x9E) MAC_ADDRESS(0x0c12f4, 0xe0)  // dc 0x8d9f4
 void type_record_show_hero::undo()
 {
     m_currentHero->restoreCell();
@@ -792,19 +807,19 @@ type_record_player_death::type_record_player_death(char playerId)
     m_extra = playerId;
 }
 
-VA(0x0049ba00, 0x27)  // dc 0x8dac0
+VA(0x0049ba00, 0x27) MAC_ADDRESS(0x0c13d4, 0x48)  // dc 0x8dac0
 type_event_record* type_record_player_death::create()
 {
     return new type_record_player_death();
 }
 
-VA(0x0049ba30, 0x6)  // dc 0x8dae8
+VA(0x0049ba30, 0x6) MAC_ADDRESS(0x0c141c, 0x8)  // dc 0x8dae8
 type_event_record_type type_record_player_death::getType() const
 {
     return RECORD_PLAYER_DEATH;
 }
 
-VA(0x0049ba40, 0x3D)  // dc 0x8daec
+VA(0x0049ba40, 0x3D) MAC_ADDRESS(0x0c1424, 0x94)  // dc 0x8daec
 unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
@@ -813,7 +828,7 @@ unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
     return ok;
 }
 
-VA(0x0049ba80, 0x30)  // dc 0x8db2c
+VA(0x0049ba80, 0x30) MAC_ADDRESS(0x0c14b8, 0x84)  // dc 0x8db2c
 unsigned char type_record_player_death::save(TAbstractFile* outfile)
 {
     outfile->write(&m_playerId, 1);
@@ -821,7 +836,7 @@ unsigned char type_record_player_death::save(TAbstractFile* outfile)
     return ok;
 }
 
-VA(0x0049bab0, 0x11A)  // dc 0x8db94
+VA(0x0049bab0, 0x11A) MAC_ADDRESS(0x0c153c, 0xf4)  // dc 0x8db94
 void type_record_player_death::replay(unsigned char draw)
 {
     if (draw) {
@@ -835,6 +850,7 @@ void type_record_player_death::replay(unsigned char draw)
 
 // E:\gamedcs\event_record.cpp:905
 // The player-death undo slot shares the empty base undo body in retail.
+MAC_ADDRESS(0x0c1630, 0x4)
 void type_record_player_death::undo()
 {
 }
@@ -846,20 +862,20 @@ VA_COMPGEN(0x0049bbd0, 0x21, SCALAR_DELETING_DTOR, type_record_shroud)
 // The implicit destructor the wrapper above calls: the change vector's
 // _Tidy inlined (`operator delete(_First)` then the three-pointer clear)
 // followed by the base's vptr store.
-VA_COMPGEN(0x0049bc00, 0x2C, IMPLICIT_DTOR, type_record_shroud)
+VA_COMPGEN(0x0049bc00, 0x2C, IMPLICIT_DTOR, type_record_shroud) MAC_COMPGEN_ADDRESS(0x0c26d0, 0x7c, IMPLICIT_DTOR, type_record_shroud)
 
-VA(0x0049bc30, 0x42)  // dc 0x8dcb0
+VA(0x0049bc30, 0x42) MAC_ADDRESS(0x0c1698, 0x40)  // dc 0x8dcb0
 type_event_record* type_record_shroud::create()
 {
     return new type_record_shroud();
 }
 
-VA(0x0049bc80, 0x6)  // dc 0x8dcd4
+VA(0x0049bc80, 0x6) MAC_ADDRESS(0x0c16d8, 0x8)  // dc 0x8dcd4
 type_event_record_type type_record_shroud::getType() const
 {
     return RECORD_SHROUD;
 }
-VA(0x0049bc90, 0x151)  // dc 0x8dcd8
+VA(0x0049bc90, 0x151) MAC_ADDRESS(0x0c16e0, 0xf4)  // dc 0x8dcd8
 unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
 {
     if (infile->read(&m_playerId, 1) != 1)
@@ -881,7 +897,7 @@ unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
     return 1;
 }
 
-VA(0x0049bdf0, 0x66)  // dc 0x8dd88
+VA(0x0049bdf0, 0x66) MAC_ADDRESS(0x0c17d4, 0xcc)  // dc 0x8dd88
 unsigned char type_record_shroud::save(TAbstractFile* outfile)
 {
     outfile->write(&m_playerId, 1);
@@ -898,6 +914,7 @@ unsigned char type_record_shroud::save(TAbstractFile* outfile)
 // emitting it.  It is defined here at its DC source position so /Ob2 can
 // make that same decision - a defined-but-unclaimed symbol adds no
 // objdiff row of its own.
+MAC_ADDRESS(0x0c18a0, 0x60)
 void type_record_shroud::addChange(int x, int y, int z,
                                     short oldValue, short newValue)
 {
@@ -910,7 +927,7 @@ void type_record_shroud::addChange(int x, int y, int z,
     m_changes.push_back(change);
 }
 
-VA(0x0049be60, 0xBA)  // dc 0x8de70
+VA(0x0049be60, 0xBA) MAC_ADDRESS(0x0c1900, 0xe4)  // dc 0x8de70
 void type_record_shroud::replay(unsigned char draw)
 {
     unsigned char changed = 0;
@@ -929,7 +946,7 @@ void type_record_shroud::replay(unsigned char draw)
     }
 }
 
-VA(0x0049bf20, 0x6E)  // dc 0x8df60
+VA(0x0049bf20, 0x6E) MAC_ADDRESS(0x0c19e4, 0xa4)  // dc 0x8df60
 void type_record_shroud::undo()
 {
     int i = m_changes.size();
@@ -939,7 +956,7 @@ void type_record_shroud::undo()
     }
 }
 
-VA(0x0049bf90, 0x1F1)  // dc 0x8dfe0
+VA(0x0049bf90, 0x1F1) MAC_ADDRESS(0x0c1a88, 0x124)  // dc 0x8dfe0
 void game::recordClaimMine(long id, long newOwner)
 {
     mine& currentMine = m_mines[id];
@@ -950,7 +967,7 @@ void game::recordClaimMine(long id, long newOwner)
     m_eventRecords.push_back(new type_record_claim_mine(id, newOwner));
 }
 
-VA(0x0049c190, 0x1FE)  // dc 0x8e058
+VA(0x0049c190, 0x1FE) MAC_ADDRESS(0x0c1bac, 0x124)  // dc 0x8e058
 void game::recordClaimTown(long id, long newOwner)
 {
     getTown(id);
@@ -959,7 +976,7 @@ void game::recordClaimTown(long id, long newOwner)
     m_eventRecords.push_back(new type_record_claim_town(id, newOwner));
 }
 // E:\gamedcs\event_record.cpp:1061
-VA(0x0049c390, 0x1C2)  // anchor-vtable (constructs 0x63df1c), dc 0x8e0b8
+VA(0x0049c390, 0x1C2) MAC_ADDRESS(0x0c1cd0, 0xec)  // anchor-vtable (constructs 0x63df1c), dc 0x8e0b8
 void game::recordEraseObject(NewmapCell* cell, type_point point)
 {
     m_eventRecords.push_back(new type_record_erase(point,
@@ -972,7 +989,7 @@ void game::recordEraseObject(NewmapCell* cell, type_point point)
 // Retail takes THREE arguments (`ret 0xc`), not the Dreamcast's one: the
 // replay state goes in the record's +0xc/+0x10 pair while the constructor
 // snapshots the boat's current state into +0xd/+0x14 for undo.
-VA(0x0049c560, 0x1B8)  // anchor-vtable (constructs 0x63deec), dc 0x8e108
+VA(0x0049c560, 0x1B8) MAC_ADDRESS(0x0c1dbc, 0xdc)  // anchor-vtable (constructs 0x63deec), dc 0x8e108
 void game::recordHideBoat(boat* currentBoat, unsigned char occupied,
                             int occupyingHero)
 {
@@ -980,7 +997,7 @@ void game::recordHideBoat(boat* currentBoat, unsigned char occupied,
                                                      occupyingHero));
 }
 
-VA(0x0049c720, 0x1DD)  // dc 0x8e148
+VA(0x0049c720, 0x1DD) MAC_ADDRESS(0x0c1e98, 0xdc)  // dc 0x8e148
 void game::recordHideHero(hero* who, char newOwner,
                             unsigned char townGarrison)
 {
@@ -988,13 +1005,13 @@ void game::recordHideHero(hero* who, char newOwner,
                                                      townGarrison));
 }
 
-VA(0x0049c900, 0x217)  // dc 0x8e18c
+VA(0x0049c900, 0x217) MAC_ADDRESS(0x0c1f74, 0xe4)  // dc 0x8e18c
 void game::recordShowBoat(boat* currentBoat, type_point point)
 {
     m_eventRecords.push_back(new type_record_show_boat(currentBoat, point));
 }
 
-VA(0x0049cb20, 0x226)  // dc 0x8e1d0
+VA(0x0049cb20, 0x226) MAC_ADDRESS(0x0c2058, 0xe4)  // dc 0x8e1d0
 void game::recordShowHero(hero* who, signed char player, type_point point,
                             unsigned char reset)
 {
@@ -1002,7 +1019,7 @@ void game::recordShowHero(hero* who, signed char player, type_point point,
                                                      reset));
 }
 
-VA(0x0049cd50, 0x1FA)  // dc 0x8e270
+VA(0x0049cd50, 0x1FA) MAC_ADDRESS(0x0c213c, 0xf4)  // dc 0x8e270
 void game::recordMove(hero* who, int direction, type_point destination)
 {
     m_eventRecords.push_back(new type_record_move_hero(who, direction,
@@ -1022,7 +1039,7 @@ void game::recordPlayerDeath(char playerId)
     m_eventRecords.push_back(new type_record_player_death(playerId));
 }
 
-VA(0x0049cf50, 0x20B)  // dc 0x8e2f8
+VA(0x0049cf50, 0x20B) MAC_ADDRESS(0x0c2230, 0xe4)  // dc 0x8e2f8
 void game::recordTeleport(hero* who, type_point destination)
 {
     m_eventRecords.push_back(new type_record_teleport(who, destination));
@@ -1034,7 +1051,7 @@ void game::recordTeleport(hero* who, type_point destination)
 // store, so unchanged cells are not rewritten. The header getChangeCount
 // helper and vector push_back remain canonical source calls and expand to
 // the retail sequences without inline steering.
-VA(0x0049d160, 0x268)  // anchor-global (0x63df7c + GetMapExtraPtr), dc 0x8e33c
+VA(0x0049d160, 0x268) MAC_ADDRESS(0x0c2314, 0x3bc)  // anchor-global (0x63df7c + GetMapExtraPtr), dc 0x8e33c
 void game::setVisibility(const int startX, const int startY, const int z,
                          const int whichPlayer,
                          int range, unsigned char remoteMove)
@@ -1088,7 +1105,7 @@ void game::setVisibility(const int startX, const int startY, const int z,
 // Recovering that store reaches 97.8326%; canonical push_back (line 1232)
 // removes the inline-depth pin and reaches 99.9070%; RECT ownership closes
 // the frame and reaches 100%. Direct and named per-cell deltas reproduce it.
-VA(0x0049d3d0, 0x260)  // anchor-global (0x63df7c + GetMapExtraPtr), dc 0x8e54c
+VA(0x0049d3d0, 0x260) MAC_ADDRESS(0x0c274c, 0x39c)  // anchor-global (0x63df7c + GetMapExtraPtr), dc 0x8e54c
 void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
                            int range)
 {
@@ -1129,7 +1146,7 @@ void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
     }
 }
 
-VA(0x0049d630, 0x8C)  // dc 0x8e730
+VA(0x0049d630, 0x8C) MAC_ADDRESS(0x0c2ae8, 0x90)  // dc 0x8e730
 void game::clearEventRecords()
 {
     int i = m_eventRecords.size();
@@ -1138,7 +1155,7 @@ void game::clearEventRecords()
     m_eventRecords.clear();
 }
 
-VA(0x0049d6c0, 0xD3)  // dc 0x8e77c
+VA(0x0049d6c0, 0xD3) MAC_ADDRESS(0x0c2b78, 0x12c)  // dc 0x8e77c
 void game::clearEventRecords(char playerId)
 {
     int i = 0;
@@ -1153,7 +1170,7 @@ void game::clearEventRecords(char playerId)
     m_eventRecords.erase(m_eventRecords.begin(), m_eventRecords.begin() + i);
 }
 
-VA(0x0049d7a0, 0x2C1)  // dc 0x8e830
+VA(0x0049d7a0, 0x2C1) MAC_ADDRESS(0x0c2ca4, 0x2f4)  // dc 0x8e830
 void game::playRecordedEvents()
 {
     int savedPlayer = g_netLocalGamePos;
@@ -1225,7 +1242,7 @@ void game::playRecordedEvents()
     g_advManager->updateScreen(0, 0);
 }
 
-VA(0x0049da70, 0x41)
+VA(0x0049da70, 0x41) MAC_ADDRESS(0x0c2f98, 0x50)
 unsigned char game::replayAvailable() const
 {
     for (unsigned i = 0; i < m_eventRecords.size(); ++i) {
@@ -1255,7 +1272,7 @@ type_event_record* (*g_recordCreators[12])() = {
     type_record_shroud::create
 };
 
-VA(0x0049dac0, 0x19C)  // dc 0x8ead0
+VA(0x0049dac0, 0x19C) MAC_ADDRESS(0x0c2fe8, 0x19c)  // dc 0x8ead0
 unsigned char game::loadRecordedEvents(TAbstractFile* infile, int version)
 {
     long count;
@@ -1280,7 +1297,7 @@ unsigned char game::loadRecordedEvents(TAbstractFile* infile, int version)
     return 1;
 }
 
-VA(0x0049dc60, 0x8C)  // dc 0x8ebc4
+VA(0x0049dc60, 0x8C) MAC_ADDRESS(0x0c3184, 0xf4)  // dc 0x8ebc4
 unsigned char game::saveRecordedEvents(TAbstractFile* outfile)
 {
     long count = m_eventRecords.size();

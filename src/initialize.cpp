@@ -6,7 +6,7 @@
 #include "town.h"
 // #include "initialize.h"
 
-VA(0x004eb730, 0x3D5)  // dc 0xdc614
+VA(0x004eb730, 0x3D5) MAC_ADDRESS(0x10d9b0, 0x28)  // dc 0xdc614
 void initializeGameData();
 
 // The nine town_buildings walks create_building_masks feeds to
@@ -180,7 +180,7 @@ static const int g_town8IncludeList[] = {
     -100,
 };
 
-VA(0x004ebb10, 0x5A)  // dc 0xdc368
+VA(0x004ebb10, 0x5A) MAC_ADDRESS(0x10d630, 0x88)  // dc 0xdc368
 static void addToIncludedMask(const int* includeList, __int64* includedBuildings)
 {
     do {
@@ -194,7 +194,7 @@ static void addToIncludedMask(const int* includeList, __int64* includedBuildings
     } while (*++includeList >= 0);
 }
 
-VA(0x004ebb70, 0xD8)  // dc 0xdc3cc
+VA(0x004ebb70, 0xD8) MAC_ADDRESS(0x10d6b8, 0xdc)  // dc 0xdc3cc
 static void createIncludedMask(const int* includeList, __int64* includedBuildings)
 {
     const int* const commonList = g_commonIncludeList;
@@ -212,6 +212,7 @@ static void createIncludedMask(const int* includeList, __int64* includedBuilding
 // call order is retail's own (the row-3 copy precedes the row-2 copy
 // at 0x4eba42/0x4eba7d).
 
+MAC_ADDRESS(0x10d794, 0x94)
 static void createIncludedMasks()
 {
     createIncludedMask(g_town0IncludeList, town::s_includedBuildings[0]);
@@ -225,7 +226,7 @@ static void createIncludedMasks()
     createIncludedMask(g_town8IncludeList, town::s_includedBuildings[8]);
 }
 
-VA(0x004ebc50, 0x99)  // dc 0xdc4a4
+VA(0x004ebc50, 0x99) MAC_ADDRESS(0x10d828, 0xc4)  // dc 0xdc4a4
 static void createRequirementMasks(const int* townBuildings, __int64* requirements, __int64& legalBuildings)
 {
     legalBuildings = 0;
@@ -247,6 +248,7 @@ static void createRequirementMasks(const int* townBuildings, __int64* requiremen
 // (rows 0..2 as inline copies of create_requirement_masks, 3..8 as
 // calls to 0x4ebc50), then dropped as an unreferenced static.
 
+MAC_ADDRESS(0x10d8ec, 0xc4)
 static void createBuildingMasks()
 {
     createRequirementMasks(g_town0Buildings, g_hierarchyMask[0],

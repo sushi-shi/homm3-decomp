@@ -62,6 +62,7 @@ public:
     // share the no-argument ret representative at 0x5bc690.
     void initLogFile() {}
     // Original: CLogFile::Log; remote.h:249, dc 0x70ac4.
+    MAC_ADDRESS(0x082798, 0x1c)
     void log(char* format, ...) {}
 
 protected:
@@ -307,7 +308,7 @@ inline CGameChatEdit::CGameChatEdit(
 }
 
 // E:\gamedcs\remote.h:446
-VA(0x004021f0, 0x42)  // dc 0x30c8
+VA(0x004021f0, 0x42) MAC_ADDRESS(0x003f8c, 0x74)  // dc 0x30c8
 inline int CGameChatEdit::onKeyPress(message* msg)
 {
     if (m_activated)
@@ -321,7 +322,7 @@ inline int CGameChatEdit::onKeyPress(message* msg)
 }
 
 // E:\gamedcs\remote.h:460
-VA(0x00402240, 0x3C)  // dc 0x3110
+VA(0x00402240, 0x3C) MAC_ADDRESS(0x004000, 0xd4)  // dc 0x3110
 inline int CGameChatEdit::onEscape(message msg)
 {
     m_activated = 0;
@@ -331,7 +332,7 @@ inline int CGameChatEdit::onEscape(message msg)
 }
 
 // E:\gamedcs\remote.h:471
-VA(0x00402280, 0x23)  // dc 0x3178
+VA(0x00402280, 0x23) MAC_ADDRESS(0x0040d4, 0x68)  // dc 0x3178
 inline void CGameChatEdit::sendChatCleanup()
 {
     m_parentWindow->setFocus(-1);
@@ -341,7 +342,7 @@ inline void CGameChatEdit::sendChatCleanup()
 }
 
 // E:\gamedcs\remote.h:479
-VA(0x004022b0, 0x2B)  // dc 0x31ac
+VA(0x004022b0, 0x2B) MAC_ADDRESS(0x00413c, 0x78)  // dc 0x31ac
 inline void CGameChatEdit::activate()
 {
     m_activated = 1;
@@ -434,7 +435,7 @@ public:
                                     unsigned char* msgReceived);  // slot 1
     unsigned char isInPopup() { return m_inPopup; }
     // E:\gamedcs\remote.h:629
-    VA(0x00557900, 0x4)  // dc 0x201f8
+    VA(0x00557900, 0x4) MAC_ADDRESS(0x2155ec, 0x8)  // dc 0x201f8
     virtual CNetMsg* getAbortPopupMsg()
     {
         return m_abortPopupMsg;
@@ -490,14 +491,14 @@ public:
     // at all. Retail retains their header COMDATs beside Copy, separately
     // from the class's ordinary remote.cpp definitions.
     // E:\gamedcs\remote.h:658
-    VA(0x00555170, 0x5)  // dc 0x11f80c
+    VA(0x00555170, 0x5) MAC_ADDRESS(0x215e1c, 0x8)  // dc 0x11f80c
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
                                                  unsigned char* msgReceived)
     {
         return 0;
     }
     // E:\gamedcs\remote.h:659
-    VA(0x00555180, 0x5)  // dc 0x11f810
+    VA(0x00555180, 0x5) MAC_ADDRESS(0x215e24, 0x8)  // dc 0x11f810
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg)
     {
         return 0;

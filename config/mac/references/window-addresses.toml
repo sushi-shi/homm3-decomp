@@ -113,9 +113,9 @@ retail_va = 0x5ff3e0
 unit = "window"
 mac_section = 0x0
 mac_offset = 0x20ba54
-mac_size = 0xf4
-target_sha256 = "ddb649694497142ddf594ebec415671fbba1da6d889b4113bad9486cda055a5d"
-evidence = "FindWidgetPtr subtracts window origin, reverse-walks widgets and tests coordinates/status bits before returning found pointer or null; doModal follows."
+mac_size = 0xd8
+target_sha256 = "946481b0003b583b20b3aac98b2c71129d99eca47bb907c8629f931eddc1f8c2"
+evidence = "FindWidgetPtr subtracts window origin, reverse-walks widgets and tests coordinates/status bits before returning found pointer or null; doModal follows. Boundary correction: the final BLR ends the body at 0x20bb2c; the reviewed runtime accessor at 0x20bb2c begins there, so the earlier 0xf4-byte extent included trailing accessor stubs."
 
 [[functions]]
 retail_va = 0x5ff460

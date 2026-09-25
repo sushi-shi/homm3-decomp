@@ -248,7 +248,7 @@ bool CHSInputDlg::onOK()
 
 void memError();
 
-VA(0x004e8fb0, 0xBD)  // dc 0xd7a08
+VA(0x004e8fb0, 0xBD) MAC_ADDRESS(0x10a668, 0xe4)  // dc 0xd7a08
 void highScoreManager::resetHighScores()
 {
     memset(m_highScores, 0, sizeof(m_highScores));
@@ -265,18 +265,18 @@ void highScoreManager::resetHighScores()
     }
 }
 
-VA(0x004e9070, 0x1C)  // dc 0xd7acc
+VA(0x004e9070, 0x1C) MAC_ADDRESS(0x10a74c, 0x40)  // dc 0xd7acc
 highScoreManager::highScoreManager()
 {
     m_highScoreType = 1;
 }
 
-VA(0x004e9090, 0x07)  // dc 0xd7b08
+VA(0x004e9090, 0x07) MAC_ADDRESS(0x10a78c, 0x48)  // dc 0xd7b08
 highScoreManager::~highScoreManager()
 {
 }
 
-VA(0x004e90a0, 0x66)  // dc 0xd7b28
+VA(0x004e90a0, 0x66) MAC_ADDRESS(0x10a7d4, 0xa4)  // dc 0xd7b28
 int highScoreManager::open(int newPriority)
 {
     char path[351];
@@ -305,7 +305,7 @@ int highScoreManager::main(message& msg)
     return 0;
 }
 
-VA(0x004e9110, 0xC0)  // dc 0xd7bd0
+VA(0x004e9110, 0xC0) MAC_ADDRESS(0x10a884, 0x38)  // dc 0xd7bd0
 void highScoreManager::viewHiScore()
 {
     // Original local: high_score_window. DC733/734 retains this modal call.
@@ -322,6 +322,7 @@ void highScoreManager::viewHiScore()
 // 351-byte cBuf local even in the VMU port. Retail's two caller expansions
 // prove the PC file path, flags, error handler and full score-table write.
 // Mac retains this helper at 0:0x10a8bc using its file adapter.
+MAC_ADDRESS(0x10a8bc, 0xc4)
 void writeHighScores()
 {
     char path[351];
@@ -341,7 +342,7 @@ void writeHighScores()
 }
 
 // E:\gamedcs\hiscore.cpp:772
-VA(0x004e91d0, 0x4CC)  // dc 0xd7c3c
+VA(0x004e91d0, 0x4CC) MAC_ADDRESS(0x10a980, 0x5b8)  // dc 0xd7c3c
 int highScoreManager::addScoreToHighScore(int score, int days,
     int difficulty, int scoreType, const char* land)
 {
@@ -407,7 +408,7 @@ CHighScoreEdit::CHighScoreEdit(int x, int y, int w, int h, int textSize,
     m_prevEdit = 0;
 }
 
-VA(0x004e9710, 0x2C)  // dc 0xd8dcc
+VA(0x004e9710, 0x2C) MAC_ADDRESS(0x10c0dc, 0x34)  // dc 0xd8dcc
 int CHighScoreEdit::onKeyPress(message* msg)
 {
     if (!m_hasFocus)
@@ -421,13 +422,13 @@ int CHighScoreEdit::onKeyPress(message* msg)
 // Complete uses native text entry: vtable 0x63ebbc slot 9 is the inherited
 // CHeroWindowEx::windowHandler (0x5ff820). There is no console override.
 
-VA(0x004e9740, 0x4E)  // dc 0xd914c
+VA(0x004e9740, 0x4E) MAC_ADDRESS(0x10af38, 0x78)  // dc 0xd914c
 CHSInputDlg::~CHSInputDlg()
 {
     deleteWidgets();
 }
 
-VA(0x004e9790, 0x53)  // dc 0xd9190
+VA(0x004e9790, 0x53) MAC_ADDRESS(0x10c190, 0x90)  // dc 0xd9190
 int CHSInputDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     if (id == OKAY_ID) {
@@ -440,7 +441,7 @@ int CHSInputDlg::onWidgetDeselect(int id, bool& exitFlag)
     return 0;
 }
 
-VA(0x004e97f0, 0x04)  // dc 0xd9204
+VA(0x004e97f0, 0x04) MAC_ADDRESS(0x10c228, 0x8)  // dc 0xd9204
 textWidget* CHSInputDlg::getRolloverWidget()
 {
     return m_rollover;
@@ -448,7 +449,7 @@ textWidget* CHSInputDlg::getRolloverWidget()
 
 VA_COMPGEN(0x004e9800, 0x21, SCALAR_DELETING_DTOR, CHSInputDlg)
 
-VA(0x004e9830, 0x48)  // dc 0xd7e0c
+VA(0x004e9830, 0x48) MAC_ADDRESS(0x10afd0, 0x54)  // dc 0xd7e0c
 int highScoreManager::getMonType(int score, int scoreType)
 {
     if (!scoreType)
@@ -465,6 +466,7 @@ int highScoreManager::getMonType(int score, int scoreType)
 // and THighScoreWindow's constructor. The constructor and the score-reset
 // handler call it for both icon families. It loads the score, resolves the
 // monster type, and returns the selected object's image name.
+MAC_ADDRESS(0x10b024, 0x60)
 static const char* highScoreCreatureImageName(int index, int scoreType)
 {
     int score = g_highScoreManager->m_highScores[scoreType][index].m_score;
@@ -479,7 +481,7 @@ static const char* highScoreCreatureImageName(int index, int scoreType)
 // monster-type locals restores the retail second-loop register order. The
 // Windows constructor then reaches MAX 100% with 46 matching CFG blocks.
 // E:\gamedcs\hiscore.cpp:858
-VA(0x004e9880, 0x506)  // vtable/global/widget/resource xrefs, dc 0xd7e3c
+VA(0x004e9880, 0x506) MAC_ADDRESS(0x10b084, 0x684)  // vtable/global/widget/resource xrefs, dc 0xd7e3c
 THighScoreWindow::THighScoreWindow()
     : heroWindow(0, 0, 800, 600, 0)
 {
@@ -553,6 +555,7 @@ THighScoreWindow::THighScoreWindow()
 // DC941/943 owns this update/dialog pair. ViewHiScore calls the ordinary
 // helper at DC734; its retail body contains the corresponding expansion.
 
+MAC_ADDRESS(0x10b708, 0x44)
 void THighScoreWindow::doModal()
 {
     update();
@@ -564,7 +567,7 @@ void THighScoreWindow::doModal()
 // output carries no classic source-line records.
 VA_COMPGEN(0x004e9d90, 0x21, SCALAR_DELETING_DTOR, THighScoreWindow)
 
-VA(0x004e9dc0, 0x81)  // dc 0xd8424
+VA(0x004e9dc0, 0x81) MAC_ADDRESS(0x10b74c, 0xd4)  // dc 0xd8424
 THighScoreWindow::~THighScoreWindow()
 {
     m_hiScoreBack[1]->dispose();
@@ -581,7 +584,7 @@ THighScoreWindow::~THighScoreWindow()
 // sheet shows the score alone at 0x213 in a 0x7a-wide box. Text indices are
 // raw here, as highScoreManager::AddScoreToHighScore's own GetText(261) is.
 
-VA(0x004e9e50, 0x372)  // dc 0xd849c
+VA(0x004e9e50, 0x372) MAC_ADDRESS(0x10b820, 0x474)  // dc 0xd849c
 void THighScoreWindow::update()
 {
     getWidget(STANDARD_ID)->sendMessage(widget::WIDGET_CLEAR_STATUS,
@@ -684,6 +687,7 @@ void THighScoreWindow::update()
 // Dreamcast hiscore.cpp:1014-1031 names UpdateCreatures and owns its
 // update/draw tail. Complete interleaves hide/hide/show for each of eleven
 // rows, replacing the Dreamcast port's separate hide and five-row show loops.
+MAC_ADDRESS(0x10bc94, 0xe8)
 static void updateCreatures()
 {
     for (int row = 0; row < 11; ++row) {
@@ -699,7 +703,7 @@ static void updateCreatures()
                                  WINDOW_ALL_WIDGETS_HIGH);
 }
 
-VA(0x004ea1d0, 0x458)  // dc 0xd8970
+VA(0x004ea1d0, 0x458) MAC_ADDRESS(0x10bd7c, 0x300)  // dc 0xd8970
 int highScoreWindowHandler(message& msg)
 {
     bool endDialog = false;

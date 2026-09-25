@@ -52,7 +52,7 @@ DATA(0x00684ae0) int g_soundMaxSamples = 14;
 DATA(0x0069fe80) PCMWAVEFORMAT g_soundWaveFormat;
 DATA(0x00698a28) int g_skipDigitalDriverOpen;
 
-VA(0x005994b0, 0x210)  // dc 0x14b07c
+VA(0x005994b0, 0x210) MAC_ADDRESS(0x21832c, 0x108)  // dc 0x14b07c
 void soundManager::setMusicVolume()
 {
     if (g_noSound)
@@ -86,7 +86,7 @@ void soundManager::setMusicVolume()
     LeaveCriticalSection(&m_sectionMp3Change);
 }
 
-VA(0x005996c0, 0x97)  // dc 0x14b170
+VA(0x005996c0, 0x97) MAC_ADDRESS(0x218434, 0xdc)  // dc 0x14b170
 int soundManager::convertVolume(int volumeValue, int volumeType)
 {
     int result = 0;
@@ -111,7 +111,7 @@ int soundManager::convertVolume(int volumeValue, int volumeType)
         result = 127;
     return result;
 }
-VA(0x00599760, 0x67)  // dc 0x14b1ec
+VA(0x00599760, 0x67) MAC_ADDRESS(0x218510, 0x68)  // dc 0x14b1ec
 soundManager::soundManager()
     : m_mp3Playing(0)
 {
@@ -146,7 +146,7 @@ soundManager::soundManager()
 // preserve 84.5280% and clear the audit's five unresolved indirect-call gaps.
 // Retail's cached import pointer is an optimizer result, not source proof of
 // a local function pointer. Further source hypotheses remain possible.
-VA(0x005997d0, 0x2BF)  // vtable slot + Device: string, dc 0x14b240
+VA(0x005997d0, 0x2BF) MAC_ADDRESS(0x218578, 0x160)  // vtable slot + Device: string, dc 0x14b240
 int soundManager::open(int newPriority)
 {
     m_currentTerrainMusic = 0xff;
@@ -252,7 +252,7 @@ int soundManager::open(int newPriority)
     return 0;
 }
 
-VA(0x00599a90, 0xF1)  // dc 0x14b270
+VA(0x00599a90, 0xF1) MAC_ADDRESS(0x2187f4, 0xf4)  // dc 0x14b270
 void soundManager::close()
 {
     if (m_status == STATUS_ACTIVE) {
@@ -329,12 +329,13 @@ void soundManager::pauseSamples()
 
 // Original: soundManager::Main; soundmgr.cpp:464, dc 0x14b2a4.
 // The slot at retail vftable 0x63fe54 likewise uses the shared zero return.
+MAC_ADDRESS(0x2188e8, 0x8)
 int soundManager::main(message& msg)
 {
     return 0;
 }
 
-VA(0x00599d90, 0xEA)  // dc 0x14b2a8
+VA(0x00599d90, 0xEA) MAC_ADDRESS(0x2188f0, 0x78)  // dc 0x14b2a8
 void soundManager::stopAllSamples(int stopMusicToo)
 {
     if (g_noSound)
@@ -352,7 +353,7 @@ void soundManager::stopAllSamples(int stopMusicToo)
         stopMP3();
 }
 
-VA(0x00599e80, 0x3D)  // dc 0x14b2c0
+VA(0x00599e80, 0x3D) MAC_ADDRESS(0x218968, 0x50)  // dc 0x14b2c0
 void soundManager::stopSample(ds_memsample* inSample)
 {
     if (g_noSound)
@@ -366,7 +367,7 @@ void soundManager::stopSample(ds_memsample* inSample)
     LeaveCriticalSection(&m_sectionSoundCall);
 }
 
-VA(0x00599ec0, 0x7F)  // dc 0x14b2d8
+VA(0x00599ec0, 0x7F) MAC_ADDRESS(0x2189b8, 0x90)  // dc 0x14b2d8
 void soundManager::waitSample(ds_memsample* sample, int time)
 {
     if (time < 0)
@@ -380,7 +381,7 @@ void soundManager::waitSample(ds_memsample* sample, int time)
     }
 }
 
-VA(0x00599f40, 0xE1)  // dc 0x14b37c
+VA(0x00599f40, 0xE1) MAC_ADDRESS(0x218a48, 0x100)  // dc 0x14b37c
 void soundManager::modifySample(ds_memsample* inSample, short functionId, long value)
 {
     if (g_noSound)
@@ -414,7 +415,7 @@ void soundManager::modifySample(ds_memsample* inSample, short functionId, long v
 // PC-only query used by the remote chat sample path.  Operation 1 returns
 // the Miles volume and operation 4 reduces the status to the playing bit;
 // every other operation retains the initialized zero result.
-VA(0x0059a030, 0x87)
+VA(0x0059a030, 0x87) MAC_ADDRESS(0x218b48, 0xac)
 int soundManager::getSampleInfo(ds_memsample* inSample, short operation)
 {
     if (g_noSound)
@@ -438,7 +439,7 @@ int soundManager::getSampleInfo(ds_memsample* inSample, short operation)
     return result;
 }
 
-VA(0x0059a0c0, 0xEB)  // dc 0x14b42c
+VA(0x0059a0c0, 0xEB) MAC_ADDRESS(0x218bf4, 0xcc)  // dc 0x14b42c
 void soundManager::adjustSoundVolumes()
 {
     if (g_noSound)
@@ -459,7 +460,7 @@ void soundManager::adjustSoundVolumes()
     }
 }
 
-VA(0x0059a1b0, 0x22)  // dc 0x14b4d4
+VA(0x0059a1b0, 0x22) MAC_ADDRESS(0x218cc0, 0x4c)  // dc 0x14b4d4
 void soundManager::adjustMusicVolumes()
 {
     if (g_noSound)
@@ -469,14 +470,14 @@ void soundManager::adjustMusicVolumes()
     setMusicVolume();
 }
 
-VA(0x0059a1e0, 0x25)  // dc 0x14b500
+VA(0x0059a1e0, 0x25) MAC_ADDRESS(0x218d0c, 0x48)  // dc 0x14b500
 void soundManager::switchAmbientMusic(int newMusicFileId)
 {
     if (newMusicFileId >= 2 && newMusicFileId <= 10)
         startMP3(g_terrainMusic[newMusicFileId - 2], 0, 0);
 }
 
-VA(0x0059a210, 0x1DB)  // dc 0x14b528
+VA(0x0059a210, 0x1DB) MAC_ADDRESS(0x218d54, 0x194)  // dc 0x14b528
 ds_memsample* soundManager::memorySample(sample* samplePointer)
 {
     if (!g_noSound && m_ds && (m_playSounds || g_goSolo) && g_config.m_soundVolume && samplePointer
@@ -520,7 +521,7 @@ ds_memsample* soundManager::memorySample(sample* samplePointer)
     return 0;
 }
 
-VA(0x0059a3f0, 0x15)  // dc 0x14b644
+VA(0x0059a3f0, 0x15) MAC_ADDRESS(0x218ee8, 0x20)  // dc 0x14b644
 int soundManager::musicPlaying()
 {
     if (g_noSound)
@@ -528,7 +529,7 @@ int soundManager::musicPlaying()
     return m_mp3Playing;
 }
 
-VA(0x0059a410, 0x5C)  // dc 0x14b65c
+VA(0x0059a410, 0x5C) MAC_ADDRESS(0x218f08, 0x50)  // dc 0x14b65c
 void clearMemSample(SAMPLE2 sample2)
 {
     if (!sample2.m_resSample)
@@ -541,7 +542,7 @@ void clearMemSample(SAMPLE2 sample2)
     sample2.m_resSample->dispose();
 }
 
-VA(0x0059a470, 0x43)  // dc 0x14b698
+VA(0x0059a470, 0x43) MAC_ADDRESS(0x218f58, 0xa8)  // dc 0x14b698
 SAMPLE2 loadPlaySample(const char* sampleName)
 {
     if (!sampleName)
@@ -556,7 +557,7 @@ SAMPLE2 loadPlaySample(const char* sampleName)
     return played;
 }
 
-VA(0x0059a4c0, 0xCE)  // dc 0x14b6ec
+VA(0x0059a4c0, 0xCE) MAC_ADDRESS(0x219000, 0xa0)  // dc 0x14b6ec
 void waitEndSample(SAMPLE2 sample2, int milliWait)
 {
     if (milliWait < 0)
@@ -572,7 +573,7 @@ void waitEndSample(SAMPLE2 sample2, int milliWait)
     clearMemSample(sample2);
 }
 
-VA(0x0059a590, 0x112)  // dc 0x14b780
+VA(0x0059a590, 0x112) MAC_ADDRESS(0x219150, 0x118)  // dc 0x14b780
 void launchSample(const char* sampleName, int maxTime, int channel)
 {
     if (g_noSound)
@@ -636,7 +637,7 @@ void __cdecl waitEndSampleThread(void* arglist)
 // CE header attribution remains recorded separately in dc_only.tsv.
 // Mac retains a platform wrapper at 0:0x219268, called by launchSample and
 // townManager::main; its body forwards to the Mac audio service at 0:0x2181a0.
-VA(0x0059a7d0, 0x51)
+VA(0x0059a7d0, 0x51) MAC_ADDRESS(0x219268, 0x20)
 void soundManager::serviceSounds()
 {
     EnterCriticalSection(&m_sectionSoundCall);
@@ -747,7 +748,7 @@ void __cdecl processStopAndPlayMP3(void* arglist)
 
 // Mac retains this source call with its platform stream interface at
 // 0:0x219288; Windows resumes through Miles and the playback thread.
-VA(0x0059ac00, 0xA9)  // dc 0x14b8e8
+VA(0x0059ac00, 0xA9) MAC_ADDRESS(0x219288, 0x104)  // dc 0x14b8e8
 void soundManager::resumeStream()
 {
     EnterCriticalSection(&m_sectionMp3NameChange);
@@ -766,7 +767,7 @@ void soundManager::resumeStream()
     _beginthread(processStopAndPlayMP3, 0, 0);
 }
 
-VA(0x0059acb0, 0x355)  // dc 0x14b924
+VA(0x0059acb0, 0x355) MAC_ADDRESS(0x21938c, 0x344)  // dc 0x14b924
 void soundManager::startMP3(const char* filename, int loopCount, unsigned char stopSamples)
 {
     if (g_noSound)
@@ -809,7 +810,7 @@ void soundManager::startMP3(const char* filename, int loopCount, unsigned char s
     LeaveCriticalSection(&m_sectionMp3NameChange);
 }
 
-VA(0x0059b010, 0x6A)  // dc 0x14b974
+VA(0x0059b010, 0x6A) MAC_ADDRESS(0x2196d0, 0x30)  // dc 0x14b974
 void soundManager::stopMP3()
 {
     EnterCriticalSection(&m_sectionMp3Change);

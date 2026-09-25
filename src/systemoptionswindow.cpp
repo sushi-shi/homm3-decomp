@@ -37,7 +37,7 @@
 //            animation; 578 is shared with the combat options dialog)
 
 // E:\gamedcs\systemoptionswindow.cpp:43, dc 0x15f588
-VA(0x005b1790, 0x187C)  // sole sysopbck.pcx reference + vtable block, dc 0x15f588
+VA(0x005b1790, 0x187C) MAC_ADDRESS(0x1aa2ec, 0x2534)  // sole sysopbck.pcx reference + vtable block, dc 0x15f588
 TSystemOptionsWindow::TSystemOptionsWindow()
     : CAdvPopup(159, 56, 481, 487, 0x12), m_prefsChanged(0)
 {
@@ -317,7 +317,7 @@ TSystemOptionsWindow::TSystemOptionsWindow()
 
 VA_COMPGEN(0x005b3010, 0x21, SCALAR_DELETING_DTOR, TSystemOptionsWindow)
 
-VA(0x005b3040, 0x6B)  // dc 0x160634
+VA(0x005b3040, 0x6B) MAC_ADDRESS(0x1ac820, 0xac)  // dc 0x160634
 TSystemOptionsWindow::~TSystemOptionsWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -329,6 +329,7 @@ TSystemOptionsWindow::~TSystemOptionsWindow()
 // E:\gamedcs\systemoptionswindow.cpp:205
 // Retail inlines this switch into WindowHandler; no separate entry exists
 // between the destructor and DoModal.
+MAC_ADDRESS(0x1ac8cc, 0x98)
 int TSystemOptionsWindow::convertID2HelpID(int id) const
 {
     if (id < 0)
@@ -349,7 +350,7 @@ int TSystemOptionsWindow::convertID2HelpID(int id) const
     return helpID;
 }
 
-VA(0x005b30b0, 0x8E)  // dc 0x160700
+VA(0x005b30b0, 0x8E) MAC_ADDRESS(0x1ac964, 0xcc)  // dc 0x160700
 void TSystemOptionsWindow::doModal()
 {
     m_prefsChanged = 0;
@@ -421,7 +422,7 @@ void TSystemOptionsWindow::doModal()
 // and unconfirmed commands' break to reach common translation. Confirmation
 // stays before translation; both joins are removed with all 1526 compiled
 // bytes and 96 references/addends unchanged at 94.3957%.
-VA(0x005b3140, 0x61E)  // vtable slot 9 + inlined help switch, dc 0x160770
+VA(0x005b3140, 0x61E) MAC_ADDRESS(0x1aca30, 0x6a4)  // vtable slot 9 + inlined help switch, dc 0x160770
 int TSystemOptionsWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -700,6 +701,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:667
+MAC_ADDRESS(0x1ad0d4, 0x12c)
 void TSystemOptionsWindow::updateSystemOptions(unsigned char firstUpdate)
 {
     message msg;

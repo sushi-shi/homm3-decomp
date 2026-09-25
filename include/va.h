@@ -1,15 +1,16 @@
 /* va.h - the annotation contract, v2 (port plan P0.2; homm2-decomp
  * vocabulary adopted per the delink lessons, decision log 2026-08-04).
  *
- * Two arms. Under clang (analysis/clangd only) VA and DATA become real
- * annotate attributes so libclang can read them off the AST; under VC6
- * (the matching compiler) every macro expands to nothing - EXCEPT
- * DATA_COMPGEN, which expands to its value argument in BOTH arms so it
- * can wrap an expression in place. Nothing here may perturb codegen.
+ * Two arms. Under clang (analysis/clangd only) VA, MAC_ADDRESS and DATA
+ * become real annotate attributes so libclang can read them off the AST;
+ * under VC6 and CodeWarrior (the matching compilers) every macro expands to
+ * nothing - EXCEPT DATA_COMPGEN, which expands to its value argument in BOTH
+ * arms so it can wrap an expression in place. Nothing here may perturb
+ * codegen.
  *
- * Addresses are ABSOLUTE VAs (image base 0x400000) in source; every
+ * Windows addresses are ABSOLUTE VAs (image base 0x400000) in source; every
  * generated artifact uses rvas (the scanners subtract the base and fail
- * on addresses below it).
+ * on addresses below it). Mac addresses are code-section offsets in both.
  *
  *   VA(addr, size)                 function definition matched to the
  *                                  pinned retail image at addr/size
@@ -33,6 +34,18 @@
  *                                  specialization token that causes it;
  *                                  direct-symbol kinds only claim a named
  *                                  COFF symbol VC6 already emitted
+ *   MAC_ADDRESS(offset, size)      the same function's body in the pinned
+ *                                  Classic Mac PEF: start and extent relative
+ *                                  to its single code section (section 0),
+ *                                  never a file offset or loaded address.
+ *                                  Functions only - data keeps its reviewed
+ *                                  Mac inventories. Written on the VA line
+ *                                  it pairs with (`VA(...) MAC_ADDRESS(...)`),
+ *                                  or on its own line directly above a
+ *                                  definition that has no Windows VA
+ *   MAC_COMPGEN_ADDRESS(offset, size, kind, owner)
+ *                                  compiler-generated Mac body; beside the
+ *                                  VA_COMPGEN it pairs with, same kind/owner
  *   DATA(addr)                     owning global datum definition, or the
  *                                  canonical extern when its defining TU
  *                                  is not authored; externs identify storage
@@ -66,6 +79,9 @@
 
 #define VA(addr, size) __attribute__((annotate("va:" #addr " size:" #size)))
 #define VA_COMPGEN(addr, size, kind, owner)
+#define MAC_ADDRESS(offset, size) \
+    __attribute__((annotate("mac:" #offset " size:" #size)))
+#define MAC_COMPGEN_ADDRESS(offset, size, kind, owner)
 #define DATA(addr) __attribute__((annotate("data:" #addr)))
 #define DATA_COMPGEN(addr, name, value) value
 #define DATA_COMPGEN_GUARD(addr, name, owner)
@@ -78,6 +94,8 @@
 
 #define VA(addr, size)
 #define VA_COMPGEN(addr, size, kind, owner)
+#define MAC_ADDRESS(offset, size)
+#define MAC_COMPGEN_ADDRESS(offset, size, kind, owner)
 #define DATA(addr)
 #define DATA_COMPGEN(addr, name, value) value
 #define DATA_COMPGEN_GUARD(addr, name, owner)

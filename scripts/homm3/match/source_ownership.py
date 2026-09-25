@@ -277,6 +277,10 @@ class LineIndex:
             yield self.lines[index]
 
 
+# Standalone Mac address lines sit between a definition and its comments.
+MAC_ANNOTATION_PREFIXES = ('MAC_ADDRESS(', 'MAC_COMPGEN_ADDRESS(')
+
+
 def attached_prefix(raw: str | LineIndex, start: int) -> list[str]:
     # Only the attached comment/declarator prefix is eligible. Never carry an
     # origin across another definition (the old link-order parser did that).
@@ -288,7 +292,7 @@ def attached_prefix(raw: str | LineIndex, start: int) -> list[str]:
     for line in index.preceding(start):
         line = line.rstrip('\r\n')
         text = line.strip()
-        if text and not text.startswith(('//', '#', 'VA(')):
+        if text and not text.startswith(('//', '#', 'VA(', *MAC_ANNOTATION_PREFIXES)):
             break
         prefix.append(line)
     prefix.reverse()
@@ -446,7 +450,7 @@ def instance_annotations(raw: str, start: int, declaration: int, index: LineInde
     index = index or LineIndex(raw)
     for line in index.preceding(start):
         stripped = line.strip()
-        if stripped and not stripped.startswith(('//', 'VA(')):
+        if stripped and not stripped.startswith(('//', 'VA(', *MAC_ANNOTATION_PREFIXES)):
             break
         if stripped.startswith('VA(') and '{' in source.mask_lexical_noise(line):
             break  # a preceding one-line definition is not this claim's prefix

@@ -45,7 +45,7 @@ static SWinSetup g_winSetup[37] = {
     { 0x19, 0x0002, 0 }
 };
 
-VA(0x005fe9f0, 0x5E)  // dc 0x197138
+VA(0x005fe9f0, 0x5E) MAC_ADDRESS(0x20ae1c, 0xa0)  // dc 0x197138
 heroWindow::heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType)
     : m_sleepCount(0)
 {
@@ -64,14 +64,14 @@ heroWindow::heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned
 
 VA_COMPGEN(0x005fea50, 0x21, SCALAR_DELETING_DTOR, heroWindow)
 
-VA(0x005fea80, 0x60)  // dc 0x1971d0
+VA(0x005fea80, 0x60) MAC_ADDRESS(0x20aebc, 0x94)  // dc 0x1971d0
 heroWindow::~heroWindow()
 {
     if (m_background)
         delete m_background;
 }
 
-VA(0x005feae0, 0x17A)  // dc 0x19721c
+VA(0x005feae0, 0x17A) MAC_ADDRESS(0x20af50, 0x208)  // dc 0x19721c
 int heroWindow::open(int newPriority, unsigned char update)
 {
     if (m_status & WINDOW_STATE_OPEN)
@@ -103,7 +103,7 @@ int heroWindow::open(int newPriority, unsigned char update)
     return 0;
 }
 
-VA(0x005fec60, 0x49)  // dc 0x1972e0
+VA(0x005fec60, 0x49) MAC_ADDRESS(0x20b158, 0x84)  // dc 0x1972e0
 void heroWindow::close(unsigned char update)
 {
     if ((m_type & WINDOW_FLAG_SAVE_BACKGROUND) && (m_status & WINDOW_STATE_OPEN))
@@ -130,7 +130,7 @@ void heroWindow::handleWidgetHover(widget* current)
 {
 }
 
-VA(0x005fecb0, 0xA5)  // dc 0x197324
+VA(0x005fecb0, 0xA5) MAC_ADDRESS(0x20b1dc, 0x124)  // dc 0x197324
 void heroWindow::addWidget(widget* newWidget, int newPriority)
 {
     widget* current = m_tailWidget;
@@ -163,7 +163,7 @@ void heroWindow::addWidget(widget* newWidget, int newPriority)
     }
 }
 
-VA(0x005fed60, 0x7A)  // dc 0x1973b4
+VA(0x005fed60, 0x7A) MAC_ADDRESS(0x20b300, 0xe8)  // dc 0x1973b4
 void heroWindow::removeWidget(widget* killWidget)
 {
     if (!killWidget)
@@ -219,7 +219,7 @@ void heroWindow::removeAndDeleteWidget(int id)
 // overload and both WidgetSet/ClearStatus while the out-of-line copy
 // still serves the external callers - auto-inlining with
 // unconditional emission (see the profile note in units.toml).
-VA(0x005fede0, 0x5E)  // linkorder bracket; widget Main-slot calls byte-proven, dc 0x197480
+VA(0x005fede0, 0x5E) MAC_ADDRESS(0x20b3e8, 0xc4)  // linkorder bracket; widget Main-slot calls byte-proven, dc 0x197480
 int heroWindow::broadcastMessage(message& msg)
 {
     int result = 0;
@@ -241,7 +241,7 @@ int heroWindow::broadcastMessage(message& msg)
     return result;
 }
 
-VA(0x005fee40, 0x8C)  // dc 0x197530
+VA(0x005fee40, 0x8C) MAC_ADDRESS(0x20b4ac, 0x58)  // dc 0x197530
 int heroWindow::broadcastMessage(int id, int codeX, int codeY, int extra)
 {
     message msg;
@@ -256,7 +256,7 @@ int heroWindow::broadcastMessage(int id, int codeX, int codeY, int extra)
     return broadcastMessage(msg);
 }
 
-VA(0x005feed0, 0x8E)  // dc 0x197570
+VA(0x005feed0, 0x8E) MAC_ADDRESS(0x20b504, 0x30)  // dc 0x197570
 int heroWindow::widgetSetStatus(int id, int status)
 {
     message msg;
@@ -271,7 +271,7 @@ int heroWindow::widgetSetStatus(int id, int status)
     return broadcastMessage(msg);
 }
 
-VA(0x005fef60, 0x8E)  // dc 0x19758c
+VA(0x005fef60, 0x8E) MAC_ADDRESS(0x20b534, 0x30)  // dc 0x19758c
 int heroWindow::widgetClearStatus(int id, int status)
 {
     message msg;
@@ -286,7 +286,7 @@ int heroWindow::widgetClearStatus(int id, int status)
     return broadcastMessage(msg);
 }
 
-VA(0x005feff0, 0x22)  // dc 0x1975a8
+VA(0x005feff0, 0x22) MAC_ADDRESS(0x20b564, 0x28)  // dc 0x1975a8
 widget* heroWindow::getWidget(int id)
 {
     widget* current = m_tailWidget;
@@ -298,7 +298,7 @@ widget* heroWindow::getWidget(int id)
     return 0;
 }
 
-VA(0x005ff020, 0xDE)  // dc 0x1975d8
+VA(0x005ff020, 0xDE) MAC_ADDRESS(0x20b58c, 0x144)  // dc 0x1975d8
 void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
 {
     message msg;
@@ -328,7 +328,7 @@ void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
     }
 }
 
-VA(0x005ff100, 0xBD)  // dc 0x19776c
+VA(0x005ff100, 0xBD) MAC_ADDRESS(0x20b6d0, 0xc0)  // dc 0x19776c
 int heroWindow::saveBackground()
 {
     if (m_type & WINDOW_FLAG_SHADOWED)
@@ -342,7 +342,7 @@ int heroWindow::saveBackground()
     return 0;
 }
 
-VA(0x005ff1c0, 0x7E)  // dc 0x1977dc
+VA(0x005ff1c0, 0x7E) MAC_ADDRESS(0x20b790, 0xe0)  // dc 0x1977dc
 void heroWindow::restoreBackground(unsigned char update)
 {
     if (!m_background)
@@ -409,7 +409,7 @@ void heroWindow::moveWindow(int deltaX, int deltaY)
 // Thirty-two conditional-compound/declaration-shape controls also emit one
 // reproduced object: braces around the default, clamp and damage-bound pairs,
 // crossed with separate saved-local declarations, leave 92.8767% unchanged.
-VA(0x005ff240, 0x162)  // anchor-global, dc 0x19797c
+VA(0x005ff240, 0x162) MAC_ADDRESS(0x20b870, 0x1b0)  // anchor-global, dc 0x19797c
 void heroWindow::centerWindow(int centerX, int centerY)
 {
     int startX = m_x;
@@ -448,7 +448,7 @@ void heroWindow::centerWindow(int centerX, int centerY)
     }
 }
 
-VA(0x005ff3b0, 0x23)  // dc 0x197ad0
+VA(0x005ff3b0, 0x23) MAC_ADDRESS(0x20ba20, 0x34)  // dc 0x197ad0
 int heroWindow::findWidget(int mx, int my) const
 {
     widget* found = findWidgetPtr(mx, my);
@@ -457,7 +457,7 @@ int heroWindow::findWidget(int mx, int my) const
     return -1;
 }
 
-VA(0x005ff3e0, 0x7D)  // dc 0x197aec
+VA(0x005ff3e0, 0x7D) MAC_ADDRESS(0x20ba54, 0xd8)  // dc 0x197aec
 widget* heroWindow::findWidgetPtr(int mx, int my) const
 {
     mx -= m_x;
@@ -485,13 +485,13 @@ void heroWindow::enableAllWidgets(unsigned char enable)
     }
 }
 
-VA(0x005ff460, 0x21)  // dc 0x197c08
+VA(0x005ff460, 0x21) MAC_ADDRESS(0x20bb48, 0x3c)  // dc 0x197c08
 void heroWindow::doModal(bool fadeIn)
 {
     g_windowManager->doDialog(this, heroWindowHandler, fadeIn);
 }
 
-VA(0x005ff490, 0x6C)  // dc 0x197c24
+VA(0x005ff490, 0x6C) MAC_ADDRESS(0x20bb84, 0x98)  // dc 0x197c24
 void heroWindow::setFocus(int id)
 {
     if (m_focusId != -1) {
@@ -521,12 +521,13 @@ void heroWindow::setFocus(int id)
 // vtable slot 3, which independently corroborates handle_message's
 // slot in the roster in window.h. Defined here so that DoModal's
 // address-take resolves; that claim is what scores the pair.
+MAC_ADDRESS(0x20bc1c, 0x34)
 int heroWindow::heroWindowHandler(message& msg)
 {
     return msg.m_window->handleMessage(msg);
 }
 
-VA(0x005ff510, 0x60)  // dc 0x197c8c
+VA(0x005ff510, 0x60) MAC_ADDRESS(0x20bc50, 0x7c)  // dc 0x197c8c
 void heroWindow::deleteWidgets()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -536,7 +537,7 @@ void heroWindow::deleteWidgets()
     m_widgets.clear();
 }
 
-VA(0x005ff570, 0x32)  // dc 0x197cd4
+VA(0x005ff570, 0x32) MAC_ADDRESS(0x20bccc, 0x74)  // dc 0x197cd4
 void heroWindow::addWidgetsToMessageStream()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -548,7 +549,7 @@ void heroWindow::addWidgetsToMessageStream()
 }
 
 // Nested sleeps notify widgets only on the first sleep and final wake.
-VA(0x005ff5b0, 0x33)  // anchor-callee, callers byte-proven
+VA(0x005ff5b0, 0x33) MAC_ADDRESS(0x20bd40, 0x74)  // anchor-callee, callers byte-proven
 void heroWindow::sleepAllWidgets(unsigned char sleep)
 {
     if (sleep) {
@@ -560,14 +561,14 @@ void heroWindow::sleepAllWidgets(unsigned char sleep)
     }
 }
 
-VA(0x005ff5f0, 0x4F)
+VA(0x005ff5f0, 0x4F) MAC_ADDRESS(0x20bdb4, 0xbc)
 void heroWindow::vslot8(unsigned char on)
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it)
         (*it)->sleep(on);
 }
 
-VA(0x005ff640, 0x61)  // dc 0x197d48
+VA(0x005ff640, 0x61) MAC_ADDRESS(0x20be70, 0x40)  // dc 0x197d48
 CHeroWindowEx::CHeroWindowEx(int winX, int winY, int winWidth, int winHeight,
                              unsigned winType)
     : heroWindow(winX, winY, winWidth, winHeight, winType)
@@ -577,7 +578,7 @@ CHeroWindowEx::CHeroWindowEx(int winX, int winY, int winWidth, int winHeight,
 
 VA_COMPGEN(0x005ff6b0, 0x21, SCALAR_DELETING_DTOR, CHeroWindowEx)
 
-VA(0x005ff6e0, 0xAE)  // dc 0x197d9c
+VA(0x005ff6e0, 0xAE) MAC_ADDRESS(0x20beb0, 0x130)  // dc 0x197d9c
 unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
 {
     textWidget* rollover = getRolloverWidget();
@@ -606,7 +607,7 @@ unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
     return 1;
 }
 
-VA(0x005ff790, 0x82)  // dc 0x197e58
+VA(0x005ff790, 0x82) MAC_ADDRESS(0x20bfe0, 0xb4)  // dc 0x197e58
 unsigned char CHeroWindowEx::processRightSelect(int id)
 {
     widget* current = getWidget(id);
@@ -626,7 +627,7 @@ unsigned char CHeroWindowEx::processRightSelect(int id)
 // [vptr+0x28] and [vptr+0x30] call sites are what pin the roster
 // order), and the no-match arm returns 0 WITHOUT re-testing the exit
 // flag - retail jumps straight to the shared `xor eax,eax` tail.
-VA(0x005ff820, 0xA5)  // anchor-vtable (slot 9 of 0x243ce8), dc 0x197eb4
+VA(0x005ff820, 0xA5) MAC_ADDRESS(0x20c094, 0x104)  // anchor-vtable (slot 9 of 0x243ce8), dc 0x197eb4
 int CHeroWindowEx::windowHandler(message& msg)
 {
     bool exitFlag = 0;
@@ -659,18 +660,19 @@ int CHeroWindowEx::windowHandler(message& msg)
 // qualified call resolve to 0x559140 (xor eax,eax; ret 8), ICF-folded with
 // t_stdio_file_adapter::write; that existing claim remains the sole owner.
 
+MAC_ADDRESS(0x20c198, 0x8)
 int CHeroWindowEx::onWidgetDeselect(int id, bool& exitFlag)
 {
     return 0;
 }
 
-VA(0x005ff8d0, 0x3)  // dc 0x197f4c
+VA(0x005ff8d0, 0x3) MAC_ADDRESS(0x20c1a0, 0x8)  // dc 0x197f4c
 textWidget* CHeroWindowEx::getRolloverWidget()
 {
     return 0;
 }
 
-VA(0x005ff8e0, 0x75)  // dc 0x197f50
+VA(0x005ff8e0, 0x75) MAC_ADDRESS(0x20c1a8, 0x7c)  // dc 0x197f50
 void CHeroWindowEx::setHelpText(THelpText* helpText, int start, int stop,
                                 unsigned char copyText)
 {
@@ -682,7 +684,7 @@ void CHeroWindowEx::setHelpText(THelpText* helpText, int start, int stop,
     }
 }
 
-VA(0x005ff960, 0xC3)  // dc 0x197fd8
+VA(0x005ff960, 0xC3) MAC_ADDRESS(0x20c224, 0x200)  // dc 0x197fd8
 unsigned char initializeWinSetupText()
 {
     TTextResource* textResource = ResourceManager::getText(
@@ -732,7 +734,7 @@ unsigned char initializeWinSetupText()
     return 1;
 }
 
-VA(0x005ffa30, 0xC1)  // dc 0x198130
+VA(0x005ffa30, 0xC1) MAC_ADDRESS(0x20c424, 0xa0)  // dc 0x198130
 void setWinText(heroWindow* win, int winId)
 {
     message msg;

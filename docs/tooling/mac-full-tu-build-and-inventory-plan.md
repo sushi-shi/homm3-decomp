@@ -61,6 +61,20 @@ output; existing reviewed addresses survive without changed target bytes;
 unknown counterparts remain visible. This gate measures accounting, not a
 claim that every Mac address has already been found.
 
+**Status (2026-09-25):** implemented. `include/va.h` defines `MAC_ADDRESS`
+and `MAC_COMPGEN_ADDRESS`; `scripts/homm3/mac/addresses.py` scans them,
+`homm3 mac migrate` copied all reviewed pairs, references, helpers and
+compiler-generated rows into source (4011 claims) and wrote
+`config/mac/functions.tsv` (4211 spans), `runtime-map.tsv` (200 labels),
+`runtime-aliases.tsv` (9 folded names) and an empty `dispositions.tsv`.
+`homm3 mac parity` reports 6563 source functions: 4011 located and 2552
+unlocated, with no ownership, bounds, overlap, hash or agreement defects.
+The reviewed TOML inventories stay as the legacy build input while workers
+still add rows; rerun `homm3 mac migrate` after merging them, and retire the
+TOML readers with the extracted-body path in step 3 of the rollout. Same-line
+annotations are excluded from the Windows ratchet fingerprint, so existing
+MAX rows keep their source hashes.
+
 ## 2. Full CodeWarrior objects in Ninja
 
 Add a CodeWarrior compile rule to `homm3.build.configure`, keyed by the same
@@ -89,6 +103,23 @@ including ordinary and inline helpers that CodeWarrior chose to retain.
 platform-only disposition. The report lists authored definitions not emitted,
 emitted symbols without source owners, and all compile errors. Existing exact
 Mac controls still compare exactly when read from the full-TU objects.
+
+**Status (2026-09-25):** started. `build.ninja` has an `mwcc` rule
+(`homm3.mac.cc_wrap`) producing `build/mac/obj/<unit>.o` from every
+`config/units.toml` source, with `ninja mac-objects` / `ninja mac:<unit>`
+outside `all`. The rule adds only CodeWarrior flags, `-prefix
+include/compiler.h` and the project/MSL include roots; it writes the full
+diagnostics, the `MWLinkPPC -dis` listing, an index of every emitted code and
+data hunk, and a header-closure depfile. `homm3 mac objects` reports per-TU
+state: 99 of 152 TUs compile (6968 code hunks) and 53 fail with their first
+real error in `build/mac/objects.tsv` (DirectDraw/Windows SDK types,
+`__declspec` operator declarations, CRT functions without a declaration in
+scope, overload ambiguities). No TU has a platform-only disposition yet
+(`config/mac/tu-dispositions.tsv` is read when present). `homm3 mac tu-compare
+<unit>` is the migration control: hero currently reproduces 2 of its 16
+admitted pairs exactly from the full-TU object; its data-binding model still
+assumes the selected-body extern shims, and full-TU std instantiations need
+runtime identities.
 
 ## 3. Pair the source and emitted object with the PEF
 

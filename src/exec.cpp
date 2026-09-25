@@ -13,7 +13,7 @@
 #include "window.h"
 #include "winmgr.h"
 
-VA(0x004b0900, 0x10)  // dc 0x9e510
+VA(0x004b0900, 0x10) MAC_ADDRESS(0x0c3910, 0x18)  // dc 0x9e510
 executive::executive()
 {
     m_headManager = 0;
@@ -24,7 +24,7 @@ executive::executive()
 
 // gpGeneralText is the canonical TTextResource loaded from genrltxt.txt.
 
-VA(0x004b0910, 0x79)  // dc 0x9e520
+VA(0x004b0910, 0x79) MAC_ADDRESS(0x0c3928, 0xdc)  // dc 0x9e520
 int executive::initSystem()
 {
     if (g_inputManager->open(-1))
@@ -36,7 +36,7 @@ int executive::initSystem()
     return 0;
 }
 
-VA(0x004b0990, 0x78)  // dc 0x9e594
+VA(0x004b0990, 0x78) MAC_ADDRESS(0x0c3a04, 0xf0)  // dc 0x9e594
 void executive::shutDownSystem()
 {
     g_shutDownDone = 1;
@@ -57,7 +57,7 @@ void executive::shutDownSystem()
     g_inputManager->close();
 }
 
-VA(0x004b0a10, 0x10B)  // dc 0x9e66c
+VA(0x004b0a10, 0x10B) MAC_ADDRESS(0x0c3af4, 0x2c0)  // dc 0x9e66c
 int executive::doDialog(baseManager* newDialog)
 {
     executive dialogExec;
@@ -91,7 +91,7 @@ int executive::doDialog(baseManager* newDialog)
     return dialogExec.m_dialogReturn;
 }
 
-VA(0x004b0b20, 0xCB)  // dc 0x9e778
+VA(0x004b0b20, 0xCB) MAC_ADDRESS(0x0c3db4, 0x14c)  // dc 0x9e778
 int executive::addManager(baseManager* newManager, int newPriority)
 {
     if (!newManager)
@@ -129,7 +129,7 @@ int executive::addManager(baseManager* newManager, int newPriority)
     return 0;
 }
 
-VA(0x004b0bf0, 0x79)  // dc 0x9e838
+VA(0x004b0bf0, 0x79) MAC_ADDRESS(0x0c3f00, 0xc8)  // dc 0x9e838
 void executive::removeManager(baseManager* killManager)
 {
     if (!killManager)
@@ -157,7 +157,7 @@ void executive::removeManager(baseManager* killManager)
     killManager->m_nextManager = 0;
 }
 
-VA(0x004b0c70, 0x1D0)  // dc 0x9e898
+VA(0x004b0c70, 0x1D0) MAC_ADDRESS(0x0c3fc8, 0x258)  // dc 0x9e898
 void executive::callManager(baseManager* newManager)
 {
     baseManager* saved = m_currentManager;
@@ -211,7 +211,7 @@ void executive::callManager(baseManager* newManager)
     m_currentManager = saved;
 }
 
-VA(0x004b0e40, 0xF5)  // dc 0x9e9b0
+VA(0x004b0e40, 0xF5) MAC_ADDRESS(0x0c4220, 0x198)  // dc 0x9e9b0
 void executive::mainLoop()
 {
     message msg;

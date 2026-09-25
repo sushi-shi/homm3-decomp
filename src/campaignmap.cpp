@@ -24,7 +24,7 @@ const TCampaignMapTraits (&g_campaignMapTraits)[21] = g_campaignMapTraitsImp;
 DATA(0x0063bc50)
 TCampaignMapTraits::TRegionTraits* const g_campaignRegionTraits[21] = { 0 };
 
-VA(0x0045dee0, 0x310)  // dc 0x5af64
+VA(0x0045dee0, 0x310) MAC_ADDRESS(0x069734, 0x424)  // dc 0x5af64
 unsigned char initializeCampaignMapTraitsTable()
 {
     DATA_COMPGEN_GUARD(0x00694df8, campaignNamesGuard, campaignNames)
