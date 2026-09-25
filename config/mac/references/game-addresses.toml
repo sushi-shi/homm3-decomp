@@ -1,4 +1,13 @@
 # Reviewed TU-order address discoveries. No compiler symbol or byte-match verdict is claimed.
+[[helpers]]
+source_helper = "game::checkHeroConsistency"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe2410
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "Mac townManager::open calls this on g_game between startMouseThread and pollSound, matching the authored source sequence. philAI::doAI calls the same entry before showing the pointer. The body is one BLR at 0xe2410, consistent with the empty shared helper; setupDynamicStuff begins at 0xe2414."
+
 [[functions]]
 retail_va = 0x004b9070
 unit = "game"

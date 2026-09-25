@@ -1179,3 +1179,19 @@ mac_offset = 0x9ab44
 mac_size = 0x3b0
 sha256 = "31f4136f39a7bff221c44ce665c998aba27394f7b9091156acde95c5f4756130"
 evidence = "CTradeRequestMsg and CHeroUpdateMsg constructors each call this body twice to copy their left/right hero snapshots; vector<hero>::erase also shifts elements through it. It copies the Mac hero's fields through the final word at +0x482, including nontrivial members, then returns at 0x9aef0. The next body begins at 0x9aef4. Compiler-generated hero copy assignment, not a separately authored helper."
+
+[[functions]]
+symbol = ".mac_msl_vector_bool_test_99fb8"
+mac_section = 0
+mac_offset = 0x99fb8
+mac_size = 0x30
+sha256 = "ed2ec29f580125dca3985607ee80e2012ed747eb6bb776b9217157a69fa63547"
+evidence = "TPickANumber::pick, seer-hut loading and RMG bit-vector consumers call this body with a container and bit index. It reads a word from the data pointer at +8, extracts index modulo 32 and returns a normalized bool. BLR 0x99fe4; next body 0x99fe8. MSL vector<bool> access, not a game-source helper."
+
+[[functions]]
+symbol = ".mac_msl_vector_bool_set_e73b8"
+mac_section = 0
+mac_offset = 0xe73b8
+mac_size = 0x48
+sha256 = "ce3aa435bdb095c75a00c07734df1c7721bb9a4cfab79be05fa1567fe378a331"
+evidence = "TPickANumber::pick and the same seer-hut/RMG bit-vector consumers pass a container, index and boolean to this body. It selects the word at the data pointer +8 and sets or clears the indexed bit. The two return arms end at 0xe73e4/0xe73fc; next body begins at 0xe7400. MSL vector<bool> mutation only."

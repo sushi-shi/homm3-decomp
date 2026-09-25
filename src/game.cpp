@@ -8622,8 +8622,8 @@ void resetRandomTownNames()
 }
 
 // Original: game::CheckHeroConsistency; game.cpp:10132, dc 0xb7554
-// The DC release body only homes this and returns; no gameplay operation
-// is present to duplicate at its callers.
+// The DC release body only homes this and returns; Mac retains a single BLR
+// at code 0:0xe2410, called by townManager::open and philAI::doAI.
 void game::checkHeroConsistency()
 {
 }
