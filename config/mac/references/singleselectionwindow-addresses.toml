@@ -1,5 +1,41 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 [[helpers]]
+source_helper = "TSingleSelectionWindow::onRequestHeroFaceMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x182b38
+mac_size = 0xdc
+target_sha256 = "fcab1f07e33da66e73efed65dd73d49126a1d357335baf0b1acef06d0385b7e2"
+evidence = "Both normal and popup network dispatchers call this retained method. It checks isHost, resolves the sender, requires a seated player, calls getHeroFace, constructs a hero-face reply (message 0x40c), transmits it and passes it to onRequestHeroFaceReplyMsg. BLR at 0x182c10 precedes the next method."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onSetAGRMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x182cec
+mac_size = 0x8c
+target_sha256 = "222215f2750d70a1500b35684e4eccbfe6d52ea214dc59d742fe780325d7b2ca"
+evidence = "Both network dispatchers call this retained AGR setter. It resolves a human then computer player by message game position, writes the bonus index at player+0x6c, and redraws the advanced option outside popup mode. BLR at 0x182d74 precedes onSetAsHostMsg."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onTownUpdateMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x184508
+mac_size = 0x30
+target_sha256 = "74bd8d8555af0f65617667ec31a5e52d0dbf542d35d50b91a825180d3e4a16ec"
+evidence = "Both network dispatchers call this retained wrapper. It passes message game position and town at +0x14/+0x18, plus popup flag, to the already paired updateTown at 0x184538. BLR at 0x184534 precedes updateTown."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::calcPosition"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x185cbc
+mac_size = 0x58
+target_sha256 = "12df63f03a0823e100e3fbe56dfbefa2bb6287abbfc8119a96d97c933f25e87d"
+evidence = "onNameClick and drawHeroAdvancedOption call this retained row counter. It counts prior seats with playerPos >= 0 and, in load mode, excludes disabled seats. BLR at 0x185d10 precedes the next method."
+
+[[helpers]]
 source_helper = "TSingleSelectionWindow::onNameChange"
 unit = "singleselectionwindow"
 mac_section = 0x0
