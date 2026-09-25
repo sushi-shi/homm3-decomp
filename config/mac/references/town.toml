@@ -1,5 +1,15 @@
 [[helpers]]
 unit = "town"
+source_helper = "town::getArmy()"
+mac_section = 0
+mac_offset = 0x1b7020
+mac_size = 0x44
+mac_symbol = ".getArmy__4townFv"
+target_sha256 = "1fe1b65ee20c24578b8104e5c9996f0840d39d260d273bcea12755e549f45cef"
+evidence = "Mac quick-town constructor calls 0:0x1b7020 for the non-const town::getArmy source call. Its 0x44-byte body is identical to the adjacent const overload at 0:0x1b6fdc, selecting garrison at +0xd4 or the visiting hero's army using the 0x486 hero stride. The preceding const overload ends at 0x1b7020, this body ends in BLR at 0x1b7060, and upgradedDwellingID begins at 0x1b7064. Windows emits the shared body at 0x5c1460 and expands other callers; no second Windows VA is claimed."
+
+[[helpers]]
+unit = "town"
 source_helper = "initializeArmy"
 mac_section = 0
 mac_offset = 0x1b648c
