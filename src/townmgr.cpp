@@ -6148,7 +6148,7 @@ void townManager::cycleOutline(const int objectIndex, const int x, const int y,
                                const int w, const int h)
 {
     g_outlinedTownObjectId = m_townObjects[objectIndex]->m_objId;
-    TPalette16& pal = m_townObjects[objectIndex]->m_objOutline->m_p16;
+    TPalette16& pal = m_townObjects[objectIndex]->m_objOutline->getPalette();
     unsigned short saved = pal.m_data[96];
 
     for (int i = 128; i < 135; i++) {

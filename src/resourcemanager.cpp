@@ -399,14 +399,14 @@ void ResourceManager::saturateGraphics()
         case RESOURCE_TYPE_INTERFACE:
         case RESOURCE_TYPE_COMBAT_HERO: {
             CSprite* sprite = static_cast<CSprite*>(value);
-            sprite->m_p24->adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+            sprite->getPalette24().adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
             sprite->resetPalette();
             break;
         }
 
         case RESOURCE_TYPE_BITMAP: {
             Bitmap816* bitmap = static_cast<Bitmap816*>(value);
-            bitmap->m_p24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
+            bitmap->getPalette24().adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
             bitmap->resetPalette();
             break;
         }

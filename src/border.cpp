@@ -294,8 +294,8 @@ void bitmapBorder::setImage(const char* bitmapName)
 VA(0x00450520, 0x2D)  // dc 0x549ec
 void bitmapBorder::setPlayerPaletteColors(int whichPlayer)
 {
-    ::setPlayerPaletteColors(m_image->m_p16.m_colors.m_data, whichPlayer);
-    ::setPlayerPaletteColors(m_image->m_p24, whichPlayer);
+    ::setPlayerPaletteColors(m_image->getPalette().m_colors.m_data, whichPlayer);
+    ::setPlayerPaletteColors(m_image->getPalette24(), whichPlayer);
 }
 
 VA(0x00450550, 0x132)  // dc 0x54a20
