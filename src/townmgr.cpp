@@ -1074,17 +1074,15 @@ void townObject::draw(int incFrame, unsigned char drawHotspots)
                         m_currFrame = 0;
                 }
             } else {
-                // Residual (95.55%): retail defers this select to the push
-                // site - `test eax,eax` right after `push 1`, then `jne`
-                // between the last two pushes - while our CL materialises
-                // it into edx ahead of the whole argument run and spends
-                // edi on the scratch chain in consequence. ARM ORDER IS
-                // SOURCE (94.88 written `numFrames ? currFrame : 0`, 95.55
-                // this way round); the sinking is not reachable from the
-                // arm order, and `!numFrames` is byte-identical to `== 0`.
-                m_objIcon->draw(0, m_numFrames == 0 ? 0 : m_currFrame, 0, 0,
-                              m_objIcon->getWidth(), m_objIcon->getHeight(),
-                              g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
+                // Mac retains separate calls at 0:0x1b95d4 and 0:0x1b9644.
+                if (m_numFrames == 0)
+                    m_objIcon->draw(0, 0, 0, 0,
+                                  m_objIcon->getWidth(), m_objIcon->getHeight(),
+                                  g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
+                else
+                    m_objIcon->draw(0, m_currFrame, 0, 0,
+                                  m_objIcon->getWidth(), m_objIcon->getHeight(),
+                                  g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
             }
         }
         if (g_outlinedTownObjectId == m_objId)
