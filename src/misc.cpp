@@ -18,13 +18,9 @@
 VA(0x0050b1d0, 0x54)  // dc 0xfd81c
 int safeRandom(int min, int max)
 {
-    if (!g_remoteOn) {
-        if (max == min)
-            return max;
-        if (max < min)
-            return min;
-        return min + rand() % (max - min + 1);
-    }
+    // Mac retains this call at 0:0x130c9c.
+    if (!g_remoteOn)
+        return random(min, max);
     if (max == min)
         return max;
     if (max < min)
