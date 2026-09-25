@@ -2586,17 +2586,12 @@ void philAI::getTurnAIVars(int whichPlayer)
     type_AI_player::setAttackBonuses(computerBonus, humanBonus);
 }
 
-// DC ValueOfSpell(const hero*, SpellID), philai.cpp:1945 (dc 0x110574),
-// becomes this const hero member in Complete. Retail 0x527aa0 takes the hero
-// in ECX, SpellID at [ebp+8], and returns with ret 4 on both exits.
+// Mac retains this member wrapper's call to valueOfLearning at 0:0x1422b0.
+// Retail 0x527aa0 takes the hero in ECX and SpellID at [ebp+8].
 VA(0x00527aa0, 0x56)  // dc 0x110574
 int hero::valueOfSpell(SpellID spell) const
 {
-    if (g_spellTraits[spell].m_level <= m_skillLevel[eSecSkillWisdom] + 2
-        && !m_inSpellbook[spell]
-        && this->isWieldingArtifact(ARTIFACT_SPELLBOOK))
-        return aiGetSpellValue(this, spell);
-    return 0;
+    return valueOfLearning(this, spell);
 }
 
 VA(0x00527b00, 0xa4)  // dc 0x110c04

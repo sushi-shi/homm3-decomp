@@ -4902,21 +4902,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
         }
     }
     if (m_loadMode || m_saveMode) {
-        message deselect;
-        deselect.m_id = 0x200;
-        deselect.m_qualifier = 0;
-        deselect.m_mouseX = 0;
-        deselect.m_mouseY = 0;
-        deselect.m_window = 0;
-        deselect.m_codeX = 6;
-        deselect.m_extra = 0x10;
-        for (i = 107; i <= 111; ++i) {
-            deselect.m_codeY = i;
-            getWidget(i)->main(deselect);
-        }
-        deselect.m_codeX = 5;
-        deselect.m_codeY = 107 + g_game->m_setup.m_difficulty;
-        broadcastMessage(deselect);
+        setDifficultyHiLite();
     }
     if (update) {
         if (m_mapChanged) {
@@ -6807,6 +6793,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         }
         sendPlayerPositions(0);
     }
+    makeHeroFilter();
     g_chatMan.playerEnterMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_ENTERS_GAME_FORMAT),
                    msg->m_playerInfo.m_name);
     displayChat();

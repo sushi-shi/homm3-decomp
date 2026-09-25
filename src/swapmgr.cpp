@@ -756,7 +756,7 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
         && g_game->isHuman(rightHero->m_owner))
     {
         m_humanPlayerTrade = 1;
-        m_givingToAlly = (m_heroes[0]->m_owner == g_game->getLocalPlayerGamePos());
+        m_givingToAlly = isLeftHero();
     }
     g_swapManager = this;
     m_netMsgHandler = 0;

@@ -766,17 +766,7 @@ void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
                      const type_artifact_offering* offering)
 {
     type_artifact artifact = *offering;
-    if (artifact.m_artifactId == -1) {
-        artifactWidget->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                      widget::WIDGET_DRAWN);
-        artifactWidget->setHelpText(0, 0, 1);
-    } else {
-        artifactWidget->setIconFrame(artifact.m_artifactId);
-        artifactWidget->sendMessage(widget::WIDGET_SET_STATUS,
-                                      widget::WIDGET_DRAWN);
-        artifactWidget->setHelpText(
-            g_artifactTraits[artifact.m_artifactId].m_name, 0, 1);
-    }
+    updateArtifactWidget(artifactWidget, artifact);
 
     if (offering->m_artifactId == -1) {
         artifactWidget->setHelpText(

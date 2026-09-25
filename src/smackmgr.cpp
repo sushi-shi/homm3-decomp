@@ -1051,15 +1051,7 @@ void nextSmackerFrame()
             SmackNextFrame(smk);
         }
     } else {
-        if (g_smackVideo)
-            SmackClose(g_smackVideo);
-        if (g_smackVideo2)
-            SmackClose(g_smackVideo2);
-        g_smackVideo2 = 0;
-        g_smackVideo = 0;
-        g_smackPaused = 0;
-        SmackManager::g_playingSmacker = 0;
-        SmackManager::g_needsUpdate = 0;
+        closeSmacker();
         if (g_videoDescriptors[g_smackVideoId].m_fadeOnAbort)
             g_windowManager->fadeScreen(1, 4, 0);
         else

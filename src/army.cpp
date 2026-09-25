@@ -2404,12 +2404,7 @@ long army::getAverageDamage(const army* enemy, unsigned char rangedAttack, long 
     long damage = adjustDamage(const_cast<army*>(enemy),
                                 static_cast<long>(amount * average),
                                 rangedAttack, 1, distance, 0);
-    long totalLife;
-    if (enemy->is(creatureClone))
-        totalLife = 1;
-    else
-        totalLife = enemy->m_monInfo.m_hitPoints * enemy->m_numTroops
-                     - enemy->m_topCreatureDamage;
+    long totalLife = enemy->getTotalHitPoints(0);
     if (damage < 1)
         damage = 1;
     if (rangedAttack && is(creatureTwoAttacks))
@@ -2596,7 +2591,7 @@ long army::getTotalCombatValue(long lowestAttack, long lowestDefense) const
                                          ranged, 0);
     if (is(creatureClone))
         return static_cast<long>(m_numTroops * value / 5.0);
-    return static_cast<long>((m_monInfo.m_hitPoints * m_numTroops - m_topCreatureDamage)
+    return static_cast<long>(getTotalHitPoints(0)
                              * value / m_monInfo.m_hitPoints);
 }
 
@@ -2886,7 +2881,7 @@ double army::computeAttackerDamageReduction(const army* defender,
     if (isShooting) {
         int hex = m_gridIndex;
         if (is(creatureDoubleWide))
-            hex += m_facing ? 1 : -1;
+            hex = getSecondGridIndex();
         if (g_combatManager->shotIsThroughWall(this, hex, defender->m_gridIndex))
             reduction *= 0.5;
         if (g_combatManager->shotIsNotOptimal(this, defender))
@@ -3048,9 +3043,7 @@ int army::damage(int damage)
     m_numTroops -= killed;
     if (m_numTroops <= 0)
         m_allUnitsKilled = 1;
-    cancelIndividualSpell(62);
-    cancelIndividualSpell(70);
-    cancelIndividualSpell(74);
+    cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_DAMAGE);
     return killed;
 }
 
@@ -4301,7 +4294,7 @@ unsigned char army::isAdjacent(int hex) const
     if (g_combatManager->isAdjacent(m_gridIndex, hex))
         return 1;
     if (is(creatureDoubleWide)) {
-        int secondHex = m_gridIndex + (m_facing ? 1 : -1);
+        int secondHex = getSecondGridIndex();
         return g_combatManager->isAdjacent(secondHex, hex);
     }
     return 0;
