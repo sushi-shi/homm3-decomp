@@ -416,7 +416,7 @@ long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_
         if (excluded & (1 << i))
             continue;
         if (defender.m_creatures[i].getSpellDamage(SPELL_CHAIN_LIGHTNING, m_currentHero,
-                                                  defender.m_currentHero, damage) > 0)
+                                                  defender.getHero(), damage) > 0)
             break;
     }
     if (i >= 0)
@@ -425,7 +425,7 @@ long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_
         if (excluded & (1 << i))
             continue;
         if (defender.m_creatures[i].getSpellDamage(SPELL_CHAIN_LIGHTNING, m_currentHero,
-                                                  defender.m_currentHero, damage) > 0)
+                                                  defender.getHero(), damage) > 0)
             break;
     }
     if ((unsigned)i < defender.m_creatures.size())
@@ -447,7 +447,7 @@ void type_AI_combat_data::getChainLightningValue(type_spell_choice& choice, cons
         if (target < 0)
             break;
         choice.m_value += defender.m_creatures[target].getSpellDamage(
-            choice.m_spell, m_currentHero, defender.m_currentHero, damage);
+            choice.m_spell, m_currentHero, defender.getHero(), damage);
         excluded |= 1 << target;
     }
 }
@@ -460,7 +460,7 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
         if (abs(targetIndex - defender.m_creatures[i].m_index) != 1)
             continue;
         long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
-                                                           defender.m_currentHero, damage);
+                                                           defender.getHero(), damage);
         if (value <= 0)
             continue;
         choice.m_value += value;
@@ -476,7 +476,7 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     for (long i = defender.m_creatures.size(); i-- > 0; ) {
         long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
-                                                           defender.m_currentHero, damage);
+                                                           defender.getHero(), damage);
         if (value > choice.m_value) {
             choice.m_value = value;
             choice.m_target = i;
@@ -527,7 +527,7 @@ void type_AI_combat_data::castAreaEffect(type_spell_choice& choice, type_AI_comb
         if (abs(targetIndex - defender.m_creatures[i].m_index) != 1)
             continue;
         long value = defender.m_creatures[i].getSpellDamage(
-            choice.m_spell, m_currentHero, defender.m_currentHero, damage);
+            choice.m_spell, m_currentHero, defender.getHero(), damage);
         if (value <= 0)
             continue;
         defender.m_totalCombatValue -= defender.m_creatures[i].takeDamage(value);
@@ -542,7 +542,7 @@ void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_com
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     long value = defender.m_creatures[choice.m_target].getSpellDamage(
-        choice.m_spell, m_currentHero, defender.m_currentHero, damage);
+        choice.m_spell, m_currentHero, defender.getHero(), damage);
     defender.m_totalCombatValue -= defender.m_creatures[choice.m_target].takeDamage(value);
     // The five-arm jump table at 0x4253cc: 0x13 chains, 0x14/0x15/0x17
     // hit one extra target, 0x16 hits two.
@@ -804,7 +804,7 @@ void type_AI_combat_data::castSpell(
             continue;
 
         mastery = m_currentHero->getSpellLevel(spell, m_terrain);
-        long manaCost = m_currentHero->getManaCost(spell, defender.m_currentArmy, m_terrain);
+        long manaCost = m_currentHero->getManaCost(spell, defender.getArmy(), m_terrain);
         if (manaCost > m_mana)
             continue;
 
@@ -838,7 +838,7 @@ void type_AI_combat_data::castSpell(
         return;
 
     m_mana -= bestManaCost;
-    if (defender.m_currentHero && defender.hasCreature(CREATURE_FAMILIAR))
+    if (defender.getHero() && defender.hasCreature(CREATURE_FAMILIAR))
         defender.m_mana += bestManaCost / 5;
 
     switch (g_spellTraits[bestChoice.m_spell].m_flags

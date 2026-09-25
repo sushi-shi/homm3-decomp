@@ -23,6 +23,14 @@ the reconstruction without proving a unique C++ spelling. A runnable Mac port
 is not a project requirement. Use native library headers for Mac comparisons;
 do not add duplicate game declarations or extracted header-body fragments.
 
+For the broad helper sweep, cover byte-exact Windows functions too. Use Mac's
+retained calls and simpler body shapes to restore helper calls and canonical
+bodies throughout the source. Many original names are unavailable: choose clear
+project names and keep moving when the operation is identified. Do not wait for
+an original spelling, a byte-score improvement, or an exact Mac comparison
+before using a plausible shared helper. Revisit uncertain names and placement
+when stronger evidence appears; preserve one body and ordinary source calls.
+
 The verdict is VC6 SP3 under Wine; clang/clangd is editor tooling only. Use the
 per-TU compiler profiles in `config/units.toml`.
 
@@ -33,9 +41,11 @@ with CodeWarrior and compared in the same loop. Run `homm3 build` for the final
 checkpoint: it rebuilds affected TUs, refreshes retail targets through delinking,
 checks every admitted Mac pair, and runs the gates.
 
-## Required DC evidence: source layout as well as statements
+## Byte-matching evidence: DC source layout as well as statements
 
-**Inspect the function's source-line layout before speculative rewrites.**
+When byte matching a non-exact function, **inspect its source-line layout before
+speculative rewrites.** The broad Mac helper sweep above uses Mac calls and body
+shape first; it does not require a Dreamcast dossier for each restored helper.
 Recorded line positions, observed span lengths, internal gaps and their lengths,
 repeated attributions, and source-file switches all help reveal its approximate
 source shape. Read these alongside signatures, locals/lifetimes, scopes, helper
@@ -56,8 +66,9 @@ equal line counts. Test each meaningful hypothesis against retail VC6 output.
 
 ## Matching loop
 
-For every non-exact game function with a Dreamcast counterpart, run this evidence
-pass **before speculative C++ rewrites**:
+When byte matching a non-exact game function with a Dreamcast counterpart, run
+this evidence pass **before speculative C++ rewrites**. It is not a prerequisite
+for the broad Mac helper sweep:
 
 ```sh
 homm3 dreamcast show 0x00524dd0
@@ -179,7 +190,8 @@ Use the [helper-placement skill](.agents/skills/helper-placement/SKILL.md) when
 Mac body order or VC6 cross-TU expansion may locate a recovered helper body.
 Mac xrefs identify callers but do not decide header versus source placement.
 
-Preserve one canonical helper, its proven declaration, and source calls. Match
+Preserve one canonical helper and its source calls. Preserve proven types and
+inline qualifiers; choose a clear name where the original is unknown. Match
 its retained retail body and each caller's call/expansion decision separately:
 
 - A Dreamcast-proven `inline` stays `inline` even where retail calls it out of line.
@@ -219,9 +231,10 @@ parameters, and ordinary functions use lowerCamelCase without these prefixes.
 For instance fields, `bShowTroopCount` becomes `m_showTroopCount`,
 `disabled_frame` becomes `m_disabledFrame`, and `Text` becomes `m_text`.
 Apply the convention throughout the code, updating declarations, definitions,
-and uses together. Retain the
-original spelling in the owning source's evidence comment so reference lookup
-remains possible. Preserve required external ABI spellings at their boundaries.
+and uses together. When an original spelling is known, retain it in the owning
+source's evidence comment so reference lookup remains possible. Do not invent
+one or delay helper recovery when no spelling survives. Preserve required
+external ABI spellings at their boundaries.
 
 Source annotations own names; build regenerates labels. Do not maintain a second
 symbol ledger. `config/` contains hand-admitted retail inventories and manifests.

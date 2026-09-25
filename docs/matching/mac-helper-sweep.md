@@ -2,8 +2,14 @@
 
 The current pass restores source helper boundaries and calls across all Windows
 game functions, including byte-exact callers. A lower byte score does not reject
-a call supported by Mac, Dreamcast, and VC6 evidence. Byte polishing follows
-the broad pass.
+a helper supported by the available source and compiler evidence. Byte polishing
+follows the broad pass.
+
+Use clear project names when Mac shows an operation but not its original C++
+spelling. Restore the helper and its call sites promptly, including when Mac
+inlines the operation too; an original symbol or immediate score gain is not
+a prerequisite. Keep one canonical body and refine names or placement later if
+new evidence warrants it.
 
 Run `homm3 mac helper-queue --all-functions` for the broad sweep. It writes
 `build/mac/helper-queue-all.json`, `helper-queue-all-functions.tsv`, and
@@ -15,9 +21,10 @@ command retains its smaller unfinished-function matching queue.
 source helper is absent from the caller's authored body; `identify_target`
 means the destination has no reviewed identity. Other named targets get
 `review_other_named_call`, since constructors and destructors can be implicit.
-These are leads for human review, not proof of an
-inline qualifier or even a game helper. A textual `source_call_present` check
-also needs inspection when overloads or macros are involved. Reviewed Mac
+These are leads for human review, not proof of an inline qualifier or even a
+game helper. A Mac inlined operation may have no retained call and therefore
+needs a body-shape review too. A textual `source_call_present` check also needs
+inspection when overloads or macros are involved. Reviewed Mac
 runtime destinations are marked `runtime_call` and remain in the full report
 without crowding the displayed helper leads.
 
@@ -30,10 +37,12 @@ Use `--owner worker=game,townmgr` when owner labels help coordinate parallel
 work. Unassigned rows remain visible. The `rmg`, `zlib-1.1.3`, `codec`, and
 `victor` modules are deferred by user direction.
 
-For each caller, inspect Mac disassembly and direct targets, Dreamcast source
-calls and lines where available, and the Windows expansion. Restore one
-canonical helper body and source call in its plausible owning TU/header. Check
+For each caller, inspect Mac disassembly and direct targets; use Dreamcast
+source facts when they are already available. Restore one canonical helper body
+and source call in its plausible owning TU/header. The name may be ours when
+Mac shows the operation but does not preserve a source symbol. Check
 Mac body order separately from cross-TU VC6 expansion when deciding header
 placement. Record unresolved destinations in the queue instead of silently
-counting them as absent helpers. Run a focused build to ensure the recovered
-source compiles; the full build and tests wait for integration.
+counting them as absent helpers. Batch the helper edits without per-function
+score tuning or per-helper builds; compilation and byte comparisons follow the
+broad restoration pass.

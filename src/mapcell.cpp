@@ -4581,7 +4581,7 @@ CObjectType::CObjectType(TObjectType* source)
     }
 
     for (int terrain = 0; terrain < 10; terrain++)
-        m_mask34[terrain] = source->m_recommendedTerrainMask[terrain];
+        m_mask34[terrain] = source->isRecommendedTerrain(terrain);
 
     m_objectType = source->m_objectType;
     m_extra = source->m_subtype;
