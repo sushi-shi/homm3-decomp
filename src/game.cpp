@@ -3681,7 +3681,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         victory.m_heroId = -1;
         for (int i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
-            if (vcheroLoc.operator==(poolheroLoc)) {
+            if (vcheroLoc == poolheroLoc) {
                 int team = getTeam(m_heroes[i].m_owner);
                 if (team >= 0 && isHumanTeam(team)) {
                     victory.m_type = -1;
@@ -3723,7 +3723,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         loss.m_heroId = -1;
         for (int i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
-            if (lcheroLoc.operator==(poolheroLoc)) {
+            if (lcheroLoc == poolheroLoc) {
                 int numHumanTeams = 0;
                 for (int team = 0; team < 8; ++team) {
                     if (isHumanTeam(team))
