@@ -2737,15 +2737,13 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
                     if (m_numTroops == 1)
                         text = formatString(
                             g_generalText->getText(GENERAL_TEXT_HATRED_DAMAGE_ONE_FORMAT),
-                            ::getArmyName(m_creatureType, m_numTroops),
-                            ::getArmyName(defender->m_creatureType,
-                                    defender->m_numTroops));
+                            getName(),
+                            defender->getName());
                     else
                         text = formatString(
                             g_generalText->getText(GENERAL_TEXT_HATRED_DAMAGE_MANY_FORMAT),
-                            ::getArmyName(m_creatureType, m_numTroops),
-                            ::getArmyName(defender->m_creatureType,
-                                    defender->m_numTroops));
+                            getName(),
+                            defender->getName());
                     g_combatManager->m_combatWindow->combatMessage(
                         text.c_str(), 1, 0);
                 }
@@ -4699,7 +4697,7 @@ void army::faerieDragonSpell()
                 : DATA_COMPGEN(0x00660aac, faerieReadyFormat,
                                "The %s ready %s (press F to cast)");
         g_combatManager->m_combatWindow->combatMessage(
-            formatString(fmt, ::getArmyName(m_creatureType, m_numTroops),
+            formatString(fmt, getName(),
                           g_spellTraits[m_faerieDragonSpell].m_name)
                 .c_str(),
             1, 0);

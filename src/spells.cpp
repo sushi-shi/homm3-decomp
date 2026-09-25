@@ -1620,8 +1620,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 formatString(DATA_COMPGEN(
                                   0x00688450, acidBreathDefenseFormat,
                                   "Acid breath reduces the defense of the %s by %i"),
-                              getArmyName(target->m_creatureType,
-                                           target->m_numTroops),
+                              target->getName(),
                               reduction)
                     .c_str(),
                 1, 0);
@@ -1739,8 +1738,7 @@ std::string combatManager::getFailureReason(SpellID spell, const char* msg,
             && spellTraits->m_level < target->m_antiMagicSpellLevel)
             return formatString((*g_generalText)[GENERAL_TEXT_SPELL_PROTECTS_TARGET_FORMAT],
                                  g_spellTraits[SPELL_ANTI_MAGIC].m_name,
-                                 getArmyName(target->m_creatureType,
-                                             target->m_numTroops));
+                                 target->getName());
         if (spellTraits->m_karma < 0
             && target->getOwningSide() == m_currentSide)
             return formatString((*g_generalText)[GENERAL_TEXT_SPELL_HOSTILE_TARGET_ONLY_FORMAT],
@@ -4354,8 +4352,7 @@ inline void combatManager::showSpellCastFailure(army* targetArmy, int spellId)
         SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
             0x00688440, magicResistanceSampleName, "MagicRes.wav"));
         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_MAGIC_RESISTANCE_FORMAT),
-                getArmyName(targetArmy->m_creatureType,
-                             targetArmy->m_numTroops),
+                targetArmy->getName(),
                 g_generalText->getText(targetArmy->m_numTroops == 1
                                            ? 145
                                            : 144));
@@ -4814,11 +4811,11 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
         if (firstTarget) {
             target = findResurrectionTarget(m_currentSide, targetIndex, 0);
             sprintf(g_text, (*g_generalText)[GENERAL_TEXT_COMBAT_RESURRECT_TARGET_FORMAT],
-                    getArmyName(target->m_creatureType, target->m_numTroops));
+                    target->getName());
         } else {
             target = cell->getArmy();
             sprintf(g_text, (*g_generalText)[GENERAL_TEXT_COMBAT_SACRIFICE_TARGET_FORMAT],
-                    getArmyName(target->m_creatureType, target->m_numTroops));
+                    target->getName());
         }
         m_combatWindow->combatMessage(g_text, 0, 0);
         return;
@@ -4857,7 +4854,7 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
 
     if (target)
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT], g_spellTraits[spellId].m_name,
-                getArmyName(target->m_creatureType, target->m_numTroops));
+                target->getName());
     else
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_CAST_SPELL_FORMAT], g_spellTraits[spellId].m_name);
     m_combatWindow->combatMessage(g_text, 0, 0);

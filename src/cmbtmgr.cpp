@@ -1380,7 +1380,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
             DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
         spellEffect(20, stack, 100, 0);
         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_MORALE_FORMAT),
-            getArmyName(stack->m_creatureType, stack->m_numTroops));
+            stack->getName());
         m_combatWindow->combatMessage(g_text, 1, 0);
         waitEndSample(sample, -1);
     }
@@ -1401,7 +1401,7 @@ int combatManager::checkApplyBadMorale(int group, int index)
                         0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
                     sprintf(g_text,
                         g_generalText->getText(GENERAL_TEXT_BAD_MORALE_FORMAT),
-                        getArmyName(stack->m_creatureType, stack->m_numTroops));
+                        stack->getName());
                     m_combatWindow->combatMessage(g_text, 1, 0);
                     spellEffect(30, stack, 100, 1);
                     waitEndSample(sample, -1);
@@ -1442,7 +1442,7 @@ unsigned char combatManager::unnamed464d40(army* selected)
         sprintf(g_text,
                 g_generalText->getText(GENERAL_TEXT_COMBAT_FEAR_FORMAT),
                 getArmyName(CREATURE_AZURE_DRAGON, azureDragons),
-                getArmyName(selected->m_creatureType, selected->m_numTroops));
+                selected->getName());
         m_combatWindow->combatMessage(g_text, 1, 0);
         spellEffect(15, selected, 100, 1);
         waitEndSample(sample, -1);
