@@ -4404,7 +4404,7 @@ void game::initRandomArtifacts()
             for (y = 0; y < g_mapHeight; ++y) {
                 NewmapCell* tempCell = m_worldMap.cell(x, y, z);
                 if (tempCell->m_type == ARTIFACT && tempCell->m_isTrigger)
-                    m_artifactUsed[tempCell->m_objectIndex] = 1;
+                    m_artifactUsed[tempCell->getArtifactIndex()] = 1;
             }
         }
     }
@@ -8148,7 +8148,7 @@ void game::convertObject(NewmapCell* tempCell)
             strcpy(tempText, g_resourceObjectDefs[tempCell->m_objectIndex]);
             break;
         case ARTIFACT:
-            sprintf(tempText, g_artifactObjectDefFormat, tempCell->m_objectIndex);
+            sprintf(tempText, g_artifactObjectDefFormat, tempCell->getArtifactIndex());
             break;
         case MONSTER:
         case RANDOM_MONSTER:
