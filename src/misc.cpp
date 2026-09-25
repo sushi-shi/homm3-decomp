@@ -131,12 +131,10 @@ void checkConfigFile()
 // 221/32/489 B at its end). An EXTERN function is emitted out of line
 // unconditionally under /Ob2, so the absence of a body is itself the
 // evidence: retail's SetDefaultSystemOptions has internal linkage and its one
-// call site inlined it away. Left non-static and without a retail claim because the linkage
-// change would buy no compared bytes - objdiff never scores this symbol - and
-// would touch misc.h for nothing. Mac retains this helper at code 0:0x131144;
+// call site inlined it away. Mac retains this helper at code 0:0x131144;
 // setGameDefaults calls it there, and its eight g_config stores follow this order.
 
-void setDefaultSystemOptions()
+static void setDefaultSystemOptions()
 {
     g_config.m_showRoute = 1;
     g_config.m_moveReminder = 1;
