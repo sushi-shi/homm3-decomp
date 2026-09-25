@@ -4902,7 +4902,8 @@ unsigned short* getMapExtraPtr(int x, int y, int z)
 
 // EarlySetup at 0x4ed66a passes ".\\" in ECX to the shared release ret
 // at 0x5bc690. DC kb.cpp:648 calls the older CLogFile::InitLogFile() instead;
-// Complete's directory-taking hook has no work in this release build.
+// Complete's directory-taking hook has no work in this release build. Mac
+// earlySetup retains its call to the same empty hook at code 0:0x221ee0.
 void initLogFile(const char* path)
 {
 }

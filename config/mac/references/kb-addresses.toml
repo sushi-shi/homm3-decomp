@@ -9,6 +9,15 @@ mac_size = 0x4
 target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
 evidence = "executive::shutDownSystem calls this at 0xc3a50 immediately after closing sound and before removing managers, matching its cross-TU source call. The Mac body is one BLR at 0x115f68; the next function begins at 0x115f6c. The Windows call is retained through a linker-folded empty-body alias."
 
+[[helpers]]
+source_helper = "initLogFile(const char* path)"
+unit = "kb"
+mac_section = 0
+mac_offset = 0x221ee0
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "Mac earlySetup passes its initial log-path pointer in r3 and calls this at 0x10f294 before initMainClasses at 0x10f298, matching the authored source order. The hook is one BLR at 0x221ee0; the next body starts at 0x221ee4. Windows also retains a call to its empty release hook."
+
 [[functions]]
 unit = "kb"
 mac_section = 0x0
