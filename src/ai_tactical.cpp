@@ -601,6 +601,8 @@ type_enchant_data::type_enchant_data(SpellID newSpell, TSkillMastery newMastery,
 }
 
 VA(0x00436930, 0x1A)  // dc 0x3d56c
+// Mac retains calls from fire shield, earthquake and faerie dragon pricing
+// at 0:0x43a1c, 0:0x45808 and 0:0x464d4.
 long type_enchant_data::getMasteryValue() const
 {
     return g_spellTraits[m_spell].m_masteryBonus[m_mastery];
@@ -1837,7 +1839,7 @@ long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_d
     if (m_winLikely)
         return 0;
     long count = m_meleeEnemies[ourArmy->m_bitIndex].m_count;
-    long amount = g_spellTraits[caster.m_spell].m_masteryBonus[caster.m_mastery];
+    long amount = caster.getMasteryValue();
     if (ourArmy->m_creatureType == CREATURE_EFREET_SULTAN)
         amount -= 20;
     if (amount <= 0)
@@ -2438,8 +2440,7 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
         return;
     long value = 0;
     const army* ourArmy = g_combatManager->m_armies[m_side];
-    long damage = min(
-        g_spellTraits[choice->m_spell].m_masteryBonus[choice->m_mastery], total);
+    long damage = min(choice->getMasteryValue(), total);
     long remaining = g_combatManager->m_numArmies[m_side];
     for (; remaining-- > 0; ++ourArmy) {
         if (ourArmy->is(creatureImmobilized))
@@ -2734,7 +2735,7 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
     case SPELL_FIREBALL:
     case SPELL_INFERNO:
     case SPELL_METEOR_SHOWER:
-        baseDamage = g_spellTraits[spell].m_masteryBonus[mastery]
+        baseDamage = choice.getMasteryValue()
                       + g_spellTraits[spell].m_powerFactor * power;
         return getAreaEffectValue(spell, baseDamage, mastery, hex);
     }
