@@ -15,6 +15,8 @@
 # Spells' unpaired targets are set/tree insertion and vector append; its
 # markTowerArmy calls live inside markCreatureEffect. Sacrifice-window targets
 # are container/string operations and its widget messages follow setVisible.
+# Puzzle-window's corrected span excludes a neighboring global initializer;
+# the remaining object-type call follows the authored cell accessor.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
@@ -27,6 +29,7 @@ units = [
   "bitmap16",
   "bitmap24",
   "bitmap816",
+  "border",
   "bottomviewsubwindow",
   "button",
   "campaign",
@@ -47,6 +50,7 @@ units = [
   "dialogbox",
   "dimensiondoorwindow",
   "drawing",
+  "exec",
   "findpath",
   "font",
   "gametypewindow",
@@ -59,12 +63,15 @@ units = [
   "initialize",
   "inputmgr",
   "levelupwindow",
+  "mainmenu",
   "monframeinfo",
   "newgame",
   "objecttype",
   "overview",
+  "palette",
   "path",
   "philai",
+  "puzzlewindow",
   "questlogwindow",
   "quickherowindow",
   "quickinfowindow",
@@ -75,6 +82,7 @@ units = [
   "resourcedisplay",
   "sacrifice_window",
   "seerhuttext",
+  "singleselectionpopups",
   "slider",
   "spelldefs",
   "spells",
@@ -90,4 +98,5 @@ units = [
   "viewarmywindow",
   "viewwrld",
   "widget",
+  "window",
 ]
