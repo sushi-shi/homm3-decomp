@@ -1421,11 +1421,7 @@ unsigned char combatManager::unnamed464d40(army* selected)
     if (selected->m_creatureType == CREATURE_AZURE_DRAGON)
         return 0;
 
-    int actualSide;
-    if (selected->m_spellInfluence[60])
-        actualSide = 1 - selected->m_combatSide;
-    else
-        actualSide = selected->m_combatSide;
+    int actualSide = selected->getControllingSide();
     int opposingSide = 1 - actualSide;
 
     int azureDragons = 0;
@@ -2447,8 +2443,7 @@ void combatManager::makeCreaturesVanish()
 VA(0x00467130, 0x82)  // dc 0x60ee0
 unsigned char combatManager::shouldLowerDoor(army* thisArmy, long hex) const
 {
-    int side = thisArmy->m_spellInfluence[60] ? 1 - thisArmy->m_combatSide
-                                        : thisArmy->m_combatSide;
+    int side = thisArmy->getControllingSide();
     if (side != 1 || m_fortificationLevel == 0 || m_drawbridgeState != DRAWBRIDGE_UP)
         return 0;
     if (hex == COMBAT_HEX_GATE || hex == COMBAT_HEX_GATE_MOAT
@@ -2548,8 +2543,7 @@ VA(0x00467510, 0xEA)  // dc 0x61224
 unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIndex,
                                                int destIndex) const
 {
-    int side = shooter->m_spellInfluence[60] ? 1 - shooter->m_combatSide
-                                      : shooter->m_combatSide;
+    int side = shooter->getControllingSide();
     if (shooter->m_creatureType == CREATURE_MAGE
             || shooter->m_creatureType == CREATURE_ARCH_MAGE
             || shooter->m_creatureType == CREATURE_ENCHANTER
@@ -2568,8 +2562,7 @@ unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIn
 VA(0x00467600, 0x23A)  // dc 0x61284
 unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
 {
-    int side = attacker->m_spellInfluence[60] ? 1 - attacker->m_combatSide
-                                       : attacker->m_combatSide;
+    int side = attacker->getControllingSide();
     if (m_heroes[side]
             && (m_heroes[side]->isWieldingArtifact(ARTIFACT_GOLDEN_BOW)
                 || m_heroes[side]->isWieldingArtifact(
@@ -3522,8 +3515,7 @@ void combatManager::updateArmyLuckAndMorale()
     for (int side = 0; side < 2; side++) {
         for (int slot = 0; slot < m_numArmies[side]; slot++) {
             army& stack = m_armies[side][slot];
-            int ownerSide = stack.m_spellInfluence[60]
-                ? 1 - stack.m_combatSide : stack.m_combatSide;
+            int ownerSide = stack.getControllingSide();
             town* ownerTown;
             if (!ownerSide)
                 ownerTown = 0;

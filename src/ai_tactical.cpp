@@ -236,8 +236,8 @@ long type_AI_combat_parameters::getRangedAttackValue(const army& currentArmy, co
         return value / 10;
     return (!enemy.cannotAttack()
                     && enemy.getAITarget() != 0
-                    && enemy.getAITargetTime(enemy.getSpeed()) <= 5)
-            ? value / enemy.getAITargetTime(enemy.getSpeed())
+                    && enemy.getAITargetTime() <= 5)
+            ? value / enemy.getAITargetTime()
             : value / 5;
 }
 
@@ -733,7 +733,7 @@ unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
         return 1;
     const army* current = g_combatManager->getCurrentArmy();
     if (current->m_combatSide == m_side && current->getAITarget() == &enemy
-        && current->getAITargetTime(current->getSpeed()) == 1
+        && current->getAITargetTime() == 1
         && !current->canShoot(0)
         && !current->is(creatureFreeAttack))
         return 1;
@@ -1078,7 +1078,7 @@ long type_AI_spellcaster::getBloodLustValue(const army* ourArmy, type_enchant_da
     if (!ourArmy->canShoot(0)) {
         const army* target = ourArmy->getAITarget();
         if (target != 0
-                && ourArmy->getAITargetTime(ourArmy->getSpeed()) <= 1) {
+                && ourArmy->getAITargetTime() <= 1) {
             long bonus = g_spellTraits[SPELL_BLOODLUST].m_masteryBonus[caster.m_mastery];
             return getAttackSkillValue(ourArmy, target, caster.m_duration, bonus);
         }
@@ -1250,7 +1250,7 @@ long type_AI_spellcaster::getPrayerValue(const army* ourArmy, type_enchant_data 
     long value = getDefenseSkillValue(ourArmy, caster.m_duration, bonus);
     value += getSpeedValue(ourArmy, bonus, caster.m_duration);
     if (target != 0
-            && ourArmy->getAITargetTime(ourArmy->getSpeed()) == 1)
+            && ourArmy->getAITargetTime() == 1)
         value += getAttackSkillValue(ourArmy, target, caster.m_duration, bonus);
     return value;
 }
@@ -1261,7 +1261,7 @@ long type_AI_spellcaster::getPrecisionValue(const army* ourArmy, type_enchant_da
     if (ourArmy->canShoot(0)) {
         const army* target = ourArmy->getAITarget();
         if (target != 0
-                && ourArmy->getAITargetTime(ourArmy->getSpeed()) <= 1) {
+                && ourArmy->getAITargetTime() <= 1) {
             long bonus = g_spellTraits[SPELL_PRECISION].m_masteryBonus[caster.m_mastery];
             return getAttackSkillValue(ourArmy, target, caster.m_duration, bonus);
         }
@@ -1301,7 +1301,7 @@ VA(0x00438d00, 0x81)  // dc 0x3f158
 long type_AI_spellcaster::getSlayerValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* target = ourArmy->getAITarget();
-    if (target != 0 && ourArmy->getAITargetTime(ourArmy->getSpeed()) <= 1) {
+    if (target != 0 && ourArmy->getAITargetTime() <= 1) {
         if (target->is(creatureKing1)
                 || (target->is(creatureKing2)
                     && caster.m_mastery >= eMasteryAdvanced)
@@ -1356,7 +1356,7 @@ long type_AI_spellcaster::getWeaknessValue(const army* enemy, type_enchant_data 
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) != 0 && !m_estimate.m_killsOnly) {
         const army* target = enemy->getAITarget();
         if (target != 0
-                && enemy->getAITargetTime(enemy->getSpeed()) <= 1) {
+                && enemy->getAITargetTime() <= 1) {
             // Complete homes both operands before selecting their address.
             // That is includes.h's by-value int wrapper around the
             // reference-returning selector, rather than cppMin directly.
@@ -1472,7 +1472,7 @@ long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_da
         return 0;
     if (m_winLikely)
         return 0;
-    long time = enemy->getAITargetTime(enemy->getSpeed());
+    long time = enemy->getAITargetTime();
     if (time > m_estimate.m_roundsLeft)
         return 0;
     long turns = caster.m_duration;
@@ -1550,7 +1550,7 @@ long type_AI_spellcaster::getSpeedValue(const army* ourArmy, long increase, long
     long value = 0;
     long oldSpeed = ourArmy->getSpeed();
     long newSpeed = ourArmy->m_baseSpeed + increase;
-    long oldTime = ourArmy->getAITargetTime(ourArmy->getSpeed());
+    long oldTime = ourArmy->getAITargetTime();
     long newTime = ourArmy->getAITargetTime(newSpeed);
     if (newTime > m_estimate.m_roundsLeft)
         return 0;
@@ -2237,7 +2237,7 @@ long type_AI_spellcaster::getCloneValue(const army* ourArmy, type_enchant_data c
         if (!ourArmy->is(creatureDone)) {
             const army* target = ourArmy->getAITarget();
             if (target != 0
-                    && ourArmy->getAITargetTime(ourArmy->getSpeed()) <= 1) {
+                    && ourArmy->getAITargetTime() <= 1) {
                 long damage = ourArmy->getAverageDamage(target, ourArmy->canShoot(0),
                                                            ourArmy->m_numTroops, 1, 0);
                 return target->getLossCombatValue(m_estimate.m_lowestAttack,

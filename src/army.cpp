@@ -5155,7 +5155,7 @@ void army::considerAttack(const army* enemy, long value, long attackDistance)
     if (turns == 1)
         m_aiPossibleTargets |= 1 << enemy->m_bitIndex;
     if (m_aiTarget) {
-        long current = getAITargetTime(getSpeed());
+        long current = getAITargetTime();
         if (turns > current)
             return;
         if (turns == current && value <= m_aiTargetValue)

@@ -2409,7 +2409,7 @@ long type_spellvalue::getRawSpellValue(SpellID spell) const
 {
     const SSpellTraits* traits = &g_spellTraits[spell];
     hero* caster = const_cast<hero*>(m_ourHero);
-    int mastery = caster->getSpellLevel(spell, caster->getSpecialTerrain());
+    int mastery = caster->getSpellLevel(spell);
     int cost = const_cast<hero*>(m_ourHero)->getManaCost(spell, 0, -1);
     if (cost > m_mana)
         return 0;

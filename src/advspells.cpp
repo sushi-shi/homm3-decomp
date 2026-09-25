@@ -77,8 +77,7 @@ void advManager::castSpell(SpellID whichSpell)
     if (who == 0)
         return;
 
-    TSkillMastery level
-        = who->getSpellLevel(whichSpell, who->getSpecialTerrain());
+    TSkillMastery level = who->getSpellLevel(whichSpell);
 
     switch (whichSpell) {
     case SPELL_SUMMON_BOAT:
