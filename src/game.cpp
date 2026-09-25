@@ -479,11 +479,7 @@ inline void generator::updateBonus()
 
     playerData& player = g_game->m_players[m_playerOwner];
     int creature = m_type[0];
-    if (!g_game->m_gameVersion &&
-        isBaseElemental(creature))
-        return;
-
-    int townType = g_creatureTypeTraits[creature].m_townType;
+    int townType = g_game->getAlignment(creature);
     if (townType == -1)
         return;
 

@@ -2176,8 +2176,8 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // params < `this` < locals as parse-FIXED. Retail binds shooterCount to ESI and
 // `this` to EDI, which needs shooterCount created first - no declaration order
 // reaches it. Same verdict and same root as get_simple_attack_effect.
-// Byte-flat: `traits.m_townType` for the repeated subscript, and
-// `!g_game->m_gameVersion` for the `== 0` test.
+// The former direct alignment gate was byte-flat; Mac expands the same
+// game::getAlignment body here before normalizeAlignment.
 VA(0x0042c690, 0x192)  // DC method + retail body/caller; dc 0x31a00
 long type_AI_creature_swapper::chooseWeakestArmy(
     unsigned char isShooter, unsigned char checkAlignments)
@@ -2208,14 +2208,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(
         int groupedAlignment;
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
         if (checkAlignments) {
-            int alignment;
-            if (g_game->m_gameVersion == 0
-                && isBaseElemental(type)) {
-                alignment = -1;
-            } else {
-                alignment = g_creatureTypeTraits[type].m_townType;
-            }
-
+            int alignment = g_game->getAlignment(type);
             groupedAlignment = normalizeAlignment(alignment);
             if (m_alignments[groupedAlignment + 1] != 1)
                 continue;

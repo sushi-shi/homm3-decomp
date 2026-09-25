@@ -638,11 +638,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[m_armies[i]];
         if (traits.m_attributes & g_ctaSiegeWeapon)
             continue;
-        int alignment;
-        if (g_game->m_gameVersion == 0 && isBaseElemental(m_armies[i]))
-            alignment = -1;
-        else
-            alignment = traits.m_townType;
+        int alignment = g_game->getAlignment(m_armies[i]);
         alignments[alignment + 1]++;
     }
     int count = 0;
@@ -1471,11 +1467,7 @@ TTerrainType armyGroup::getNativeTerrain() const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        int alignment;
-        if (g_game->m_gameVersion == 0 && isBaseElemental(m_armies[i]))
-            alignment = -1;
-        else
-            alignment = g_creatureTypeTraits[m_armies[i]].m_townType;
+        int alignment = g_game->getAlignment(m_armies[i]);
         TTerrainType terrain = townManager::getNativeTerrain(alignment);
         if (native != TERRAIN_NONE) {
             if (terrain != native)

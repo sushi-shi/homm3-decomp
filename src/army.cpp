@@ -243,11 +243,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     m_drawPriority = 4;
     TCreatureTypeTraits* traits = &m_monInfo;
     *traits = g_creatureTypeTraits[type];
-    traits->m_townType =
-        (g_game->m_gameVersion == 0
-         && isBaseElemental(type))
-            ? -1
-            : g_creatureTypeTraits[type].m_townType;
+    traits->m_townType = g_game->getAlignment(type);
     if (owner != 0)
         owner->heroFn004E6120(type, traits);
     if (g_combatManager->m_magicTerrain
