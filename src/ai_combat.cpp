@@ -1206,7 +1206,7 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
     if (m_currentHero)
         m_currentHero->m_mana = static_cast<short>(m_mana);
     if (defeatedHero)
-        defeatedHero->m_mana = static_cast<short>(defender.m_mana);
+        defeatedHero->m_mana = static_cast<short>(defender.getMana());
 
     if (m_totalCombatValue > 0) {
         if (m_currentHero) {
