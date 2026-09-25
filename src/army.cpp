@@ -962,7 +962,7 @@ void army::addAura()
         count = 6;
 
     while (count-- > 0) {
-        long hex = getAdjacentHex(m_gridIndex, count);
+        long hex = getAdjacentHex(count);
         if (!g_combatManager->validHex(hex))
             continue;
         army* other = g_combatManager->m_cells[hex].getArmy();
@@ -1541,7 +1541,7 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
     for (int i = 0; i < 8; i++) {
         if (attackMask & (1 << i))
             continue;
-        long hex = getAdjacentHex(m_gridIndex, i);
+        long hex = getAdjacentHex(i);
         if (!g_combatManager->validHex(hex))
             continue;
         army* target = g_combatManager->m_cells[hex].getArmy();
@@ -1952,7 +1952,7 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
     } else {
         armyToAttack->m_hitByCreature = 1;
         if (is(creatureHasExtendedAttack)) {
-            int adjacentHex = getAdjacentHex(m_gridIndex, direction);
+            int adjacentHex = getAdjacentHex(direction);
             long behindHex = getAdjacentCellIndex(adjacentHex, direction);
             if (g_combatManager->validHex(behindHex)) {
                 behind = g_combatManager->m_cells[behindHex].getArmy();
@@ -2052,7 +2052,7 @@ VA(0x00441cb0, 0x2BE)  // dc 0x46fb0
 void army::doAttack(int direction)
 {
     m_drawPriority = 6;
-    int hex = getAdjacentHex(m_gridIndex, direction);
+    int hex = getAdjacentHex(direction);
     if (!g_combatManager->validHex(hex))
         return;
     army* armyToAttack = g_combatManager->m_cells[hex].getArmy();
