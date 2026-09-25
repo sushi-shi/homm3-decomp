@@ -3969,7 +3969,7 @@ void __cdecl aiExamineMap()
     long waterCells = 0;
     long extraMovement[3] = {0, 0, 0};
 
-    for (; point.m_z < g_game->m_worldMap.getNumLevels(); point.m_z++) {
+    for (; point.m_z < g_game->getNumMapLevels(); point.m_z++) {
         for (point.m_x = 0; point.m_x < g_mapWidth; point.m_x++) {
             for (point.m_y = 0; point.m_y < g_mapHeight; point.m_y++) {
                 NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);

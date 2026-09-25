@@ -323,7 +323,7 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
 {
     if (m_type == VICTORY_CONDITION_DEFEAT_ALL_MONSTERS) {
         type_point pos;
-        for (pos.m_z = 0; pos.m_z < g_game->m_worldMap.getNumLevels(); ++pos.m_z) {
+        for (pos.m_z = 0; pos.m_z < g_game->getNumMapLevels(); ++pos.m_z) {
             for (pos.m_y = 0; pos.m_y < g_mapHeight; ++pos.m_y) {
                 for (pos.m_x = 0; pos.m_x < g_mapWidth; ++pos.m_x) {
                     NewmapCell* cell =

@@ -1477,7 +1477,7 @@ void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
     g_advManager->updateRadar(m_origin, updateFlag, 1, g_viewMines, g_viewHeroes,
                               g_viewTowns);
-    if (g_game->m_worldMap.getNumLevels() > 1) {
+    if (g_game->getNumMapLevels() > 1) {
         if (m_origin.m_z == 1) {
             m_undergroundButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
             m_surfaceButton->sendMessage(widget::WIDGET_SET_STATUS, 6);

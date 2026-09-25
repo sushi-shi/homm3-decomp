@@ -783,7 +783,7 @@ long findMagusHutValue(long playerId, unsigned char exploreMode)
 {
     long value = 0;
     type_point point;
-    for (point.m_z = 0; point.m_z < g_game->m_worldMap.getNumLevels(); point.m_z++) {
+    for (point.m_z = 0; point.m_z < g_game->getNumMapLevels(); point.m_z++) {
         for (point.m_x = 0; point.m_x < g_mapWidth; point.m_x++) {
             for (point.m_y = 0; point.m_y < g_mapHeight; point.m_y++) {
                 NewmapCell* cell = g_game->getCell(point);
