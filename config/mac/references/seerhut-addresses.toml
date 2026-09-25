@@ -1072,6 +1072,7 @@ unit = "seerhut"
 target_sha256 = "5067e7d8777ffa07fd9d6e33dcafe413c2cc942d1430eae72aa06c18c4fa4738"
 evidence = "Quest guard doEvent at 169354 and seer doSeerEvent at 169dec call this string-returning accessor. It copies the base quest member at +0x10, corresponding to the authored completionText member at Windows +0x28 after three 4-byte Mac strings. The complete body ends at 169438, followed by an independent prologue at 16943c."
 source_helper = "type_quest::getCompletionText"
+source = "include/quest.h"
 
 [[helpers]]
 mac_section = 0x0
