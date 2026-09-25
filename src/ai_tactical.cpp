@@ -573,7 +573,7 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
         long hex = m_enemyArmy->m_gridIndex;
         long offset = -m_attackArmy->offsetToFront(-1);
         if (m_enemyArmy->is(creatureDoubleWide)
-                && offset == (m_enemyArmy->m_facing ? 1 : -1))
+                && offset == m_enemyArmy->offsetToFront(-1))
             hex = m_enemyArmy->getSecondGridIndex();
         if (offset < 0) {
             long second = g_combatManager->m_adjacentCells[hex][4];

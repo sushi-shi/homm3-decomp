@@ -699,7 +699,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                 if (currentArmy->is(creatureDoubleWide))
                     bestDanger = min(bestDanger,
                             enemyAttacks[hex
-                                    + (currentArmy->m_facing != 0 ? 1 : -1)]);
+                                    + currentArmy->offsetToFront(-1)]);
                 startDanger = bestDanger;
             }
 
@@ -717,7 +717,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                     const pathCell* cell = g_searchArray->getHex(hex);
                     if (cell->m_flightCost == 0) {
                         long secondHex = (currentArmy->is(creatureDoubleWide))
-                                ? hex + (currentArmy->m_facing != 0 ? 1 : -1) : hex;
+                                ? hex + currentArmy->offsetToFront(-1) : hex;
                         if (!(((step <= limit && committed) || considerWaiting)
                                     && enemyAttacks != 0)
                                 || (enemyAttacks[hex] >= bestDanger
@@ -928,7 +928,7 @@ static void findAttackHexes(const army* ourArmy, const army* enemy, const search
     findAttackHexes(ourArmy, ourArmy->m_gridIndex, 0, sides,
                       enemy->getSpeed(), currentSearchArray, &result);
     if (enemy->is(creatureDoubleWide)) {
-        long secondHex = ourArmy->m_gridIndex - (enemy->m_facing ? 1 : -1);
+        long secondHex = ourArmy->m_gridIndex - enemy->offsetToFront(-1);
         if (enemy->m_facing == 0)
             findAttackHexes(ourArmy, secondHex, 0, 3, enemy->getSpeed(),
                               currentSearchArray, &result);
@@ -1257,7 +1257,7 @@ unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyA
 
         long danger = enemyAttacks[hex];
         if (ourArmy->is(creatureDoubleWide)) {
-            long secondHex = hex + (ourArmy->m_facing ? 1 : -1);
+            long secondHex = hex + ourArmy->offsetToFront(-1);
             danger = min(danger, enemyAttacks[secondHex]);
         }
         if (danger < worstDanger)
@@ -1879,7 +1879,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
                     if (!isInMoat(hex, 0)) {
                         if (!currentArmy->is(creatureDoubleWide))
                             break;
-                        if (!isInMoat(hex + (currentArmy->m_facing ? 1 : -1), 0))
+                        if (!isInMoat(hex + currentArmy->offsetToFront(-1), 0))
                             break;
                     }
                 }

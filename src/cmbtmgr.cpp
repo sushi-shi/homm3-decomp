@@ -2413,8 +2413,8 @@ void combatManager::makeCreaturesVanish()
             m_cells[stack.m_gridIndex].m_armySide = -1;
             m_cells[stack.m_gridIndex].m_armySlot = -1;
             if (stack.is(creatureDoubleWide)) {
-                m_cells[stack.m_gridIndex + (stack.m_facing ? 1 : -1)].m_armySide = -1;
-                m_cells[stack.m_gridIndex + (stack.m_facing ? 1 : -1)].m_armySlot = -1;
+                m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySide = -1;
+                m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySlot = -1;
             }
         }
     }
@@ -2440,7 +2440,7 @@ unsigned char combatManager::shouldLowerDoor(army* thisArmy, long hex) const
         return 1;
     if (!thisArmy->is(creatureDoubleWide))
         return 0;
-    long second = hex + (thisArmy->m_facing != 0 ? 1 : -1);
+    long second = hex + thisArmy->offsetToFront(-1);
     if (second == COMBAT_HEX_GATE || second == COMBAT_HEX_GATE_MOAT
             || second == COMBAT_HEX_OUTER_MOAT)
         return 1;
@@ -3025,7 +3025,7 @@ void combatManager::removeArmyFromGrid(const army& a)
     m_cells[a.m_gridIndex].m_armySide = -1;
     m_cells[a.m_gridIndex].m_partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
-        int hex = a.m_gridIndex + (a.m_facing != 0 ? 1 : -1);
+        int hex = a.m_gridIndex + a.offsetToFront(-1);
         m_cells[hex].m_armySlot = -1;
         m_cells[hex].m_armySide = -1;
         m_cells[hex].m_partOfDouble = -1;
@@ -3040,7 +3040,7 @@ void combatManager::placeArmyInGrid(const army& a, int hex)
     m_cells[hex].m_partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
         m_cells[hex].m_partOfDouble = a.m_facing == 0;
-        int second = hex + (a.m_facing != 0 ? 1 : -1);
+        int second = hex + a.offsetToFront(-1);
         m_cells[second].m_armySide = static_cast<signed char>(a.getOwningSide());
         m_cells[second].m_armySlot = static_cast<signed char>(a.m_bitIndex);
         m_cells[second].m_partOfDouble = a.m_facing != 0;

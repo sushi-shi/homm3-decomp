@@ -447,7 +447,7 @@ void combatManager::setCombatDirections(int hex)
             && !g_searchArray->isMoat(secondHex);
         if (secondIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
-                    secondHex + (currentArmy->m_facing ? 1 : -1)))
+                    secondHex + currentArmy->offsetToFront(-1)))
             secondIsValid = 0;
 
         if (!firstIsValid && !secondIsValid)
@@ -1509,7 +1509,7 @@ void combatManager::doCommand(int command)
         m_nextAction = 2;
         m_nextActionGridIndex = m_lastCellIndex;
         if (currentArmy->is(creatureDoubleWide) && m_cells[m_lastCellIndex].m_frontMove)
-            m_nextActionGridIndex = m_lastCellIndex - (currentArmy->m_facing ? 1 : -1);
+            m_nextActionGridIndex = m_lastCellIndex - currentArmy->offsetToFront(-1);
         m_nextActionExtra = -1;
         break;
 

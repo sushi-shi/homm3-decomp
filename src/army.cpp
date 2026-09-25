@@ -2296,7 +2296,7 @@ long army::getAdjustedDefense(const army* enemy,
     if (g_combatManager->m_moatOn) {
         int secondHex;
         if (is(creatureDoubleWide))
-            secondHex = m_gridIndex + (m_facing ? 1 : -1);
+            secondHex = m_gridIndex + offsetToFront(-1);
         else
             secondHex = -1;
         if (g_combatManager->isInMoat(m_gridIndex, 0)
@@ -3693,7 +3693,7 @@ long army::getAttackDirection(long ourHex, const army* enemy,
 {
     long secondHex = enemyHex;
     if (enemy->is(creatureDoubleWide))
-        secondHex = enemyHex + (enemy->m_facing ? 1 : -1);
+        secondHex = enemyHex + enemy->offsetToFront(-1);
     for (long direction = 0; direction < 8; direction++) {
         if (direction < COMBAT_DIRECTION_COUNT || is(creatureDoubleWide)) {
             long hex = getAdjacentHex(ourHex, direction);
