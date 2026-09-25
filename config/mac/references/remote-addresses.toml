@@ -27,6 +27,24 @@ mac_size = 0x9c
 target_sha256 = "b81816c30db7bb1648a94eb946ac6bb2d5d84d0b844486b9d77d3e0a1fdaec24"
 evidence = "CChatManager::shutDown tests the first sample pointer, then invokes the virtual dispose slot for all five samples. BLR at 0x211580 precedes addChat."
 
+[[functions]]
+retail_va = 0x554050
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211ef0
+mac_size = 0x30
+target_sha256 = "d3c4e0fefc769cc7e9d19ce85de7795c32f89165330250ec7edbad497c396ebd"
+evidence = "CChatManager::pauseTimeOuts calls GameTime::get at 0x20fc5c and stores the result at +0x10. BLR at 0x211f1c precedes resumeTimeOuts."
+
+[[functions]]
+retail_va = 0x554060
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211f20
+mac_size = 0x78
+target_sha256 = "842b64031e924117b02a10a6ad96ce8ac07a0d45bae9e57aa76ed87fed19d666"
+evidence = "CChatManager::resumeTimeOuts walks twenty 0x88-byte records, extends nonzero kill times by GameTime elapsed since pause and clears pauseTime at +0x10. BLR at 0x211f94 precedes clearChat."
+
 [[helpers]]
 source_helper = "getPlayerPos"
 unit = "remote"
