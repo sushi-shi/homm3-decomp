@@ -1642,3 +1642,27 @@ mac_offset = 0x81724
 mac_size = 0xf8
 sha256 = "bb42606b02b9def85d29f0ab9e34d05cefc5b7c1df7dbc4793f082037e3aef37"
 evidence = "Seven direct calls from TCombatWindow::combatMessage, TSpellbookWindow::getSpellDescription and textEntryWidget::draw/setupDisplayString correspond to authored std::string::substr calls. The callee bounds the requested start/count by the source length and forwards the selected range to the MSL string constructor at 0x819c4. BLR at 0x81818 precedes an independent string find body at 0x8181c. MSL library identity only."
+
+[[functions]]
+symbol = ".mac_vector_campaign_hero_pool_assign_range_6b0b8"
+mac_section = 0
+mac_offset = 0x6b0b8
+mac_size = 0x29c
+sha256 = "fffea6bee07a19342a6a83817da4253c884f675ad7d8900d9e831ca483cafa5d"
+evidence = "SCampaign memberwise copies in campaignwindow, game and singleselectionwindow pass the +0x30 vector and begin/end pointers. This body counts 12-byte outer elements, assigns or grows the vector and ends at BLR 0x6b350 before the next assignment entry. Generated vector range assignment, not an authored helper."
+
+[[functions]]
+symbol = ".mac_vector_campaign_artifact_pool_assign_range_6b354"
+mac_section = 0
+mac_offset = 0x6b354
+mac_size = 0x29c
+sha256 = "5fec5e2ccacd68538941949acb4ce97612ef38b587b1f9033f2f067fc7f058a6"
+evidence = "The same four SCampaign copy sites pass the +0x3c vector and begin/end pointers. This body counts 12-byte outer elements, assigns or grows the vector and ends at BLR 0x6b5ec before the next assignment entry. Generated vector range assignment, not an authored helper."
+
+[[functions]]
+symbol = ".mac_vector_campaign_map_score_assign_range_6b5f0"
+mac_section = 0
+mac_offset = 0x6b5f0
+mac_size = 0x20c
+sha256 = "a81fb0f00e47b73ace78bc0c5a5c2588fba73e98808cdf70b07717181248aee1"
+evidence = "The same four SCampaign copy sites pass the +0x48 vector and begin/end pointers. This body counts 20-byte MapScore elements, assigns or grows the vector and ends at BLR 0x6b7f8 before the next function. Generated vector range assignment, not an authored helper."
