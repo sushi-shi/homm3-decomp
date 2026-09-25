@@ -1,5 +1,14 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 [[helpers]]
+source_helper = "offerArtifactToPlayerHeroes"
+unit = "customcampaign"
+mac_section = 0x0
+mac_offset = 0x951b0
+mac_size = 0xa4
+target_sha256 = "22df7b02a29c00bf6e48026db5cfa33f5fdd87db60ebbfe62dc1cdf2a9ab2630"
+evidence = "giveCrossoverArtifacts calls this retained helper once at 0x95cd0 with a local type_artifact and selected player. It walks that player's hero IDs, resolves each hero and offers the artifact until giveArtifact succeeds. Windows expands the identical loop at the authored call site; original spelling is unproved. BLR at 0x95250 precedes placeStartingHero."
+
+[[helpers]]
 source_helper = "TCampaignBrief::ScenarioStruct::prerequisitesMet"
 unit = "customcampaign"
 mac_section = 0x0

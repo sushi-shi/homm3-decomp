@@ -1496,6 +1496,20 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     g_game->m_campaign.m_assignedCarryover.push_back(heroId);
 }
 
+// Mac retains this artifact offer at code 0:0x951b0. Its only caller passes
+// one collected artifact and the selected player; VC6 expands the hero walk.
+// Original helper spelling and linkage are unproved.
+static void offerArtifactToPlayerHeroes(const type_artifact& artifact,
+                                       int player)
+{
+    playerData& recipient = g_game->m_players[player];
+    for (int playerHero = 0; playerHero < recipient.m_numHeroes; ++playerHero) {
+        hero* target = g_game->getHero(recipient.m_heroes[playerHero]);
+        if (target->giveArtifact(&artifact, 0, 0))
+            break;
+    }
+}
+
 // Complete-only, and the sibling of InitializeCrossoverHero above: the map
 // hero placeholders that carry no crossover hero. The record's own hero id
 // picks the path - -1 asks the game for a starting hero of the player's
@@ -1759,15 +1773,7 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
                 continue;
             if (!m_crossoverArtifacts.at(artifact.m_artifactId))
                 continue;
-            playerData& recipient = g_game->m_players[player];
-            for (int playerHero = 0;
-                 playerHero < recipient.m_numHeroes;
-                 ++playerHero) {
-                hero* target = g_game->getHero(
-                    recipient.m_heroes[playerHero]);
-                if (target->giveArtifact(&artifact, 0, 0))
-                    break;
-            }
+            offerArtifactToPlayerHeroes(artifact, player);
         }
     }
 
