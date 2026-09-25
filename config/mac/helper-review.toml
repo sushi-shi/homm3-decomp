@@ -37,6 +37,8 @@
 # the other unmapped targets are object and vector construction/teardown.
 # Small UI, flight, network and army-group targets below resolve to authored
 # accessors, member constructors, bitset methods or their enclosing wrappers.
+# Swap's unpaired viewMon target is the already authored member; combat text,
+# search, scroller and object-name targets are string/vector/auto_ptr methods.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
@@ -63,6 +65,7 @@ units = [
   "combatcontrolsubwindow",
   "combatoptionswindow",
   "combatresultswindow",
+  "combatwindow",
   "command",
   "creature_bank",
   "creaturetype",
@@ -94,6 +97,7 @@ units = [
   "netmsg",
   "newgame",
   "objecttype",
+  "objnames",
   "overview",
   "palette",
   "path",
@@ -109,6 +113,7 @@ units = [
   "resourcedisplay",
   "sacrifice_window",
   "scenarioinfo",
+  "search",
   "seerhuttext",
   "singleselectionpopups",
   "slider",
@@ -116,10 +121,12 @@ units = [
   "spells",
   "strip",
   "subwindow",
+  "swapmgr",
   "systemoptionswindow",
   "text",
   "textntry",
   "textresource",
+  "textscroller",
   "textwdgt",
   "tiles",
   "town",
