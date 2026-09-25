@@ -6939,11 +6939,7 @@ TCastleWindow::TCastleWindow()
         m_widgets.push_back(new bitmapBorder(169, 425, 100, 120, -1, g_text, 0x800));
         int summoned = g_townManager->m_townToView->m_summoningType;
         strcpy(g_text, g_townCastleDefNames[
-                   ((!g_game->m_gameVersion
-                     && isBaseElemental(summoned))
-                        ? -1
-                        : g_creatureTypeTraits[summoned].m_townType)
-                   + 1]);
+                   g_game->getAlignment(summoned) + 1]);
         m_widgets.push_back(new bitmapBorder(563, 425, 100, 120, -1, g_text, 0x800));
     } else {
         m_widgets.push_back(new bitmapBorder(365, 425, 100, 120, -1, g_text, 0x800));

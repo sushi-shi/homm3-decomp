@@ -4733,11 +4733,7 @@ long type_angelic_alliance_artifact::getValue(
             int creature = currentHero->m_army.m_armies[heroSlot];
             if (creature == CREATURE_NONE)
                 continue;
-            if (g_game->m_gameVersion == 0
-                && isBaseElemental(creature)) {
-                continue;
-            }
-            int alignment = g_creatureTypeTraits[creature].m_townType;
+            int alignment = g_game->getAlignment(creature);
             if (alignment != -1 && alliedAlignments.test(alignment)) {
                 total += g_creatureTypeTraits[creature].m_aiValue
                          * currentHero->m_army.m_numTroops[heroSlot];
@@ -4755,11 +4751,7 @@ long type_angelic_alliance_artifact::getValue(
             int creature = townArmy.m_armies[townSlot];
             if (creature == CREATURE_NONE)
                 continue;
-            if (g_game->m_gameVersion == 0
-                && isBaseElemental(creature)) {
-                continue;
-            }
-            int alignment = g_creatureTypeTraits[creature].m_townType;
+            int alignment = g_game->getAlignment(creature);
             if (alignment != -1 && alliedAlignments.test(alignment)) {
                 total += g_creatureTypeTraits[creature].m_aiValue
                          * townArmy.m_numTroops[townSlot];

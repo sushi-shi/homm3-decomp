@@ -269,11 +269,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     // DC line 159 passes the literal 2 to GetArmyName for a plural name.
     createNameWidget(getArmyName(m_armyType, 2));
 
-    int townType;
-    if (!g_game->m_gameVersion && isBaseElemental(m_armyType))
-        townType = -1;
-    else
-        townType = g_creatureTypeTraits[m_armyType].m_townType;
+    int townType = g_game->getAlignment(m_armyType);
     createPortraitWidget(traits.m_spriteName, townType,
                            group->m_numTroops[iarmy]);
 
@@ -362,11 +358,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     createBackgroundWidget(0);
     createNameWidget(traits->m_pluralName);
 
-    int townType;
-    if (!g_game->m_gameVersion && isBaseElemental(armyType))
-        townType = -1;
-    else
-        townType = g_creatureTypeTraits[armyType].m_townType;
+    int townType = g_game->getAlignment(armyType);
     createPortraitWidget(traits->m_spriteName, townType, 0);
 
     createAttackWidget(traits->m_attackSkill, traits->m_attackSkill);

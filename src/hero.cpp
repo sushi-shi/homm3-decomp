@@ -2083,7 +2083,7 @@ void hero::checkLevel()
                 stat++;
             }
 
-            m_stats[stat]++;
+            adjustPrimarySkill(stat, 1);
             char text[200];
             sprintf(text, "\n%s +1", g_statNames[stat]);
             strcat(g_text, text);
@@ -5152,8 +5152,8 @@ unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
         for (int component = 0; component < 144; component++) {
             if (components.test(component)) {
                 for (int skill = 0; skill < 4; skill++)
-                    m_stats[skill] +=
-                        g_artifactPrimarySkillBonuses[component][skill];
+                    adjustPrimarySkill(skill,
+                        g_artifactPrimarySkillBonuses[component][skill]);
                 updateSpells = updateSpells
                     || g_artifactTraits[component].m_givesSpells;
                 int componentSlot =
@@ -5170,8 +5170,8 @@ unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
     }
 
     for (int skill = 0; skill < 4; skill++)
-        m_stats[skill] +=
-            g_artifactPrimarySkillBonuses[artifact->m_artifactId][skill];
+        adjustPrimarySkill(skill,
+            g_artifactPrimarySkillBonuses[artifact->m_artifactId][skill]);
 
     if (updateSpells
         || g_artifactTraits[artifact->m_artifactId].m_givesSpells)
