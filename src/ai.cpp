@@ -868,8 +868,7 @@ void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, 
             continue;
         long count = (friendly->is(creatureDoubleWide)) ? 8 : 6;
         for (long direction = count; direction-- > 0; ) {
-            long hex = friendly->getAdjacentHex(friendly->m_gridIndex,
-                                                  direction);
+            long hex = friendly->getAdjacentHex(direction);
             if (hex < 0 || hex >= COMBAT_GRID_CELLS)
                 continue;
             if (areaEffect != 0) {
@@ -1132,7 +1131,7 @@ unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const arm
     for (long direction = 0; direction < 8; direction++) {
         if (direction >= 6 && !client->is(creatureDoubleWide))
             continue;
-        long hex = client->getAdjacentHex(client->m_gridIndex, direction);
+        long hex = client->getAdjacentHex(direction);
         if (!combatManager::validHex(hex))
             continue;
         hexcell* cell = &m_cells[hex];

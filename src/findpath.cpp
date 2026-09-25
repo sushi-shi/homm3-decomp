@@ -936,8 +936,7 @@ void searchArray::markTeleport(const army* currentArmy, long currentGroup)
 
             long direction = enemy->is(creatureDoubleWide) ? 8 : 6;
             while (direction-- > 0) {
-                long adjacent = enemy->getAdjacentHex(enemy->m_gridIndex,
-                                                        direction);
+                long adjacent = enemy->getAdjacentHex(direction);
                 if (g_combatManager->validHex(adjacent)) {
                     pathCell* adjacentCell = getHex(adjacent);
                     if (adjacentCell->m_visited)
