@@ -2820,7 +2820,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
                 std::string text;
                 const char* creatureName;
                 creatureName = getName();
-                text = formatString(g_generalText->getText(GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT),
+                text = formatString((*g_generalText)[GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT],
                                      creatureName);
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);
@@ -2836,10 +2836,10 @@ int army::computeAttackerDamageBonuses(int baseDamage,
                      ->isQuickCombat()) {
                 std::string text;
                 if (m_numTroops == 1)
-                    text = formatString(g_generalText->getText(GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT),
+                    text = formatString((*g_generalText)[GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT],
                                          getName());
                 else
-                    text = formatString(g_generalText->getText(GENERAL_TEXT_DOUBLE_DAMAGE_MANY_FORMAT),
+                    text = formatString((*g_generalText)[GENERAL_TEXT_DOUBLE_DAMAGE_MANY_FORMAT],
                                          getName());
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);
@@ -4568,11 +4568,11 @@ void army::newTurn()
                 std::string text;
                 if (m_numTroops == 1)
                     text = formatString(
-                        g_generalText->getText(GENERAL_TEXT_REGENERATION_ONE_FORMAT),
+                        (*g_generalText)[GENERAL_TEXT_REGENERATION_ONE_FORMAT],
                         getName());
                 else
                     text = formatString(
-                        g_generalText->getText(GENERAL_TEXT_REGENERATION_MANY_FORMAT),
+                        (*g_generalText)[GENERAL_TEXT_REGENERATION_MANY_FORMAT],
                         getName());
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);

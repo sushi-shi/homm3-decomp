@@ -363,7 +363,7 @@ int recruitUnit::open(int newPriority)
     else
         creatureName = "";
     sprintf(g_text, "%s %s",
-        g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE), creatureName);
+        (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE], creatureName);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x226;
@@ -1225,13 +1225,13 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
 
     sprintf(g_text,
         DATA_COMPGEN(0x00660c98, quickRecruitAvailabilityFormat, "%s %d"),
-        g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL), *numMon);
+        (*g_generalText)[GENERAL_TEXT_CREATURES_AVAILABLE_LABEL], *numMon);
     recruitWindow->addWidget(new textWidget(30, 182, 100, 17, g_text,
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x209,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
     recruitWindow->addWidget(new textWidget(32, 218, 96, 19,
-        g_generalText->getText(GENERAL_TEXT_COST_PER_TROOP),
+        (*g_generalText)[GENERAL_TEXT_COST_PER_TROOP],
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x1f4,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
