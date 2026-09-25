@@ -5909,6 +5909,9 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     if (heroCount > 0) {
         int heroIndex = 0;
         do {
+            // Mac calls readHeroId here at 0:0xdaac0. Windows retail tests
+            // only 0xff at 0x4c42c3; its two earlier readHeroId expansions
+            // each also test map version 14 and remap 0x80/0x81.
             unsigned long heroValue;
             infile->read(&heroValue, sizeof(unsigned char));
             int heroId = heroValue & 0xff;
