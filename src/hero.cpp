@@ -2302,15 +2302,16 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
 
     int total = 0;
     for (i = 0; i < kNumSecSkills; i++) {
-        if (currentHero->m_skillLevel[i] < maxLevel &&
-            currentHero->m_skillLevel[i] >= minLevel &&
+        if (currentHero->getSecondarySkill(TSecondarySkill(i)) < maxLevel &&
+            currentHero->getSecondarySkill(TSecondarySkill(i)) >= minLevel &&
             i != excluded) {
             int chance;
             if (!skillDisabled[i])
                 chance = classTraits.m_gainSecondarySkillChance[i];
             else
                 chance = 0;
-            if (chance == 0 && currentHero->m_skillLevel[i] > 0)
+            if (chance == 0
+                && currentHero->getSecondarySkill(TSecondarySkill(i)) > 0)
                 chance = 1;
             total += chance;
         }
@@ -2320,15 +2321,16 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
 
     int roll = random(1, total);
     for (i = 0; i < kNumSecSkills; i++) {
-        if (currentHero->m_skillLevel[i] < maxLevel &&
-            currentHero->m_skillLevel[i] >= minLevel &&
+        if (currentHero->getSecondarySkill(TSecondarySkill(i)) < maxLevel &&
+            currentHero->getSecondarySkill(TSecondarySkill(i)) >= minLevel &&
             i != excluded) {
             int chance;
             if (!skillDisabled[i])
                 chance = classTraits.m_gainSecondarySkillChance[i];
             else
                 chance = 0;
-            if (chance == 0 && currentHero->m_skillLevel[i] > 0)
+            if (chance == 0
+                && currentHero->getSecondarySkill(TSecondarySkill(i)) > 0)
                 chance = 1;
             roll -= chance;
             if (roll <= 0) {
@@ -2734,7 +2736,8 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
         if (nth < g_currentHero->m_skillCount) {
             int skill = g_currentHero->getNthSS(nth);
             sprintf(g_text, g_heroScreen[21],
-                    g_secondarySkillLevels[g_currentHero->m_skillLevel[skill] - 1],
+                    g_secondarySkillLevels[
+                        g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1],
                     g_sSkillTraits[skill].m_name);
         } else {
             g_text[0] = 0;
@@ -3959,12 +3962,14 @@ int THeroScreenWindow::windowHandler(message& msg)
             int skill = g_currentHero->getNthSS(nth);
             strcpy(g_text,
                    g_sSkillTraits[skill]
-                       .m_levelNames[g_currentHero->m_skillLevel[skill] - 1]);
+                       .m_levelNames[
+                           g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1]);
             normalDialog(g_text,
                          rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                      : hero::PRIMARY_STAT_DIALOG_TYPE,
                          -1, -1, 0x14,
-                         3 * skill + g_currentHero->m_skillLevel[skill] + 2,
+                         3 * skill
+                             + g_currentHero->getSecondarySkill(TSecondarySkill(skill)) + 2,
                          -1, 0, -1, 0, -1, 0);
             break;
         }
@@ -4705,7 +4710,8 @@ void THeroScreenWindow::setupHeroView()
 
             msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             msg.m_codeY = i + 0x4f;
-            msg.m_extra = skill * 3 + g_currentHero->m_skillLevel[skill] + 2;
+            msg.m_extra = skill * 3
+                + g_currentHero->getSecondarySkill(TSecondarySkill(skill)) + 2;
             broadcastMessage(msg);
 
             strcpy(g_text, g_sSkillTraits[skill].m_name);
@@ -4715,7 +4721,8 @@ void THeroScreenWindow::setupHeroView()
             broadcastMessage(msg);
 
             strcpy(g_text,
-                   g_secondarySkillLevels[g_currentHero->m_skillLevel[skill] - 1]);
+                   g_secondarySkillLevels[
+                       g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1]);
             msg.m_codeY = i + 0x5f;
             broadcastMessage(msg);
 
