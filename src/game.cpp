@@ -4124,7 +4124,7 @@ static void randomizeShrine(NewmapCell* cell, const int level)
 {
     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
         static_cast<void*>(&cell->m_extraInfo));
-    SpellID spell = info->m_shrineInfo.m_spell;
+    SpellID spell = info->getShrineSpell();
     if (spell == -1) {
         std::bitset<5> spellLevels;
         spellLevels[level] = true;

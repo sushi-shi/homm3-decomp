@@ -3438,7 +3438,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
     if (!cell->isCustomized())
         return;
 
-    MonsterData* reward = &m_fullMap->m_customMonsterList[cell->m_monsterInfo.m_index];
+    MonsterData* reward = &m_fullMap->m_customMonsterList[cell->getCustomIndex()];
     if (reward->m_artifact != ARTIFACT_NONE) {
         if (currentHero->getNumberInBackpack(1) >= 64) {
             if (humanPlayer)
@@ -3742,7 +3742,7 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
 
     if (cell->isCustomized()) {
         MonsterData* customMonster =
-            &m_fullMap->m_customMonsterList[cell->m_monsterInfo.m_index];
+            &m_fullMap->m_customMonsterList[cell->getCustomIndex()];
         if (humanPlayer && customMonster->m_message.size() > 0)
             normalDialog(customMonster->m_message.c_str(), 1, -1, -1, -1, 0, -1,
                          0, -1, 0, -1, 0);

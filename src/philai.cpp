@@ -3513,7 +3513,7 @@ int valueOfTree(const hero* currentHero, NewmapCell* cell)
         * currentHero->m_turnExperienceToRvRatio);
 
     if (cell->playerKnowsCell(currentHero->m_owner)) {
-        switch (info->m_treeInfo.m_price) {
+        switch (info->getTreePrice()) {
         case g_treePriceGold:
             if (g_currentPlayer->m_resources[GOLD] < 2000)
                 return 0;
@@ -3593,7 +3593,7 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
     if (cell->playerKnowsCell(currentHero->m_owner)) {
         if (currentHero->m_skillCount >= 8)
             return 0;
-        int skill = info->m_witchHutInfo.m_skill;
+        int skill = info->getWitchSkill();
         if (skill == -1)
             return 0;
         if (currentHero->m_skillLevel[skill])
