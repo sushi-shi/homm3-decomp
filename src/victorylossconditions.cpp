@@ -683,9 +683,7 @@ VA(0x005f2f20, 0x50)  // dc 0x1907bc
 unsigned char LossConditionStruct::checkForTimeLimitExpired()
 {
     if (m_type == LOSS_CONDITION_TIME_LIMIT) {
-        int days = (static_cast<unsigned short>(g_game->m_month) * 4
-            + static_cast<unsigned short>(g_game->m_week) - 5) * 7
-          + g_game->m_day;
+        int days = g_game->getCurrentTurn();
         if (days > m_numDays) {
             m_playerLoser = static_cast<signed char>(g_netLocalGamePos);
             m_gameLost = 1;
