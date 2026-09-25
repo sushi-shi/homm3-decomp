@@ -2072,10 +2072,7 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
     currentArmy->m_side = target->getOwningSide();
     currentArmy->m_slot = target->m_bitIndex;
     long hex = target->m_gridIndex;
-    if (hex >= 0 && hex < COMBAT_GRID_CELLS
-            && (hex % COMBAT_GRID_ROW_STRIDE == 0
-                || hex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_LAST_COLUMN)
-            && target->is(creatureDoubleWide))
+    if (inInvisibleColumn(hex) && target->is(creatureDoubleWide))
         hex = target->getSecondGridIndex();
     g_searchArray->findCombatPath(currentArmy, -1, hex, m_creaturePlacement,
                                   127, -1);

@@ -4434,8 +4434,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 
     if (destIndex < 0 || destIndex >= COMBAT_GRID_CELLS)
         return 0;
-    if (destIndex % COMBAT_GRID_ROW_STRIDE == 0
-            || destIndex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_LAST_COLUMN)
+    if (combatManager::inInvisibleColumn(destIndex))
         return 0;
 
     const hexcell* cell = &g_combatManager->m_cells[destIndex];
@@ -4454,8 +4453,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     int otherIndex = getAdjacentCellIndex(destIndex, m_facing ? 1 : 4);
     if (otherIndex < 0 || otherIndex >= COMBAT_GRID_CELLS)
         return 0;
-    if (otherIndex % COMBAT_GRID_ROW_STRIDE == 0
-            || otherIndex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_LAST_COLUMN)
+    if (combatManager::inInvisibleColumn(otherIndex))
         return 0;
     hexcell* otherCell = &g_combatManager->m_cells[otherIndex];
     if (!g_combatManager->hexIsBlocked(otherIndex)) {
@@ -4469,9 +4467,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
         int shiftedIndex = getAdjacentCellIndex(destIndex, m_facing ? 4 : 1);
         if (shiftedIndex < 0 || shiftedIndex >= COMBAT_GRID_CELLS)
             return 0;
-        if (shiftedIndex % COMBAT_GRID_ROW_STRIDE == 0
-                || shiftedIndex % COMBAT_GRID_ROW_STRIDE
-                       == COMBAT_GRID_LAST_COLUMN)
+        if (combatManager::inInvisibleColumn(shiftedIndex))
             return 0;
         hexcell* shiftedCell = &g_combatManager->m_cells[shiftedIndex];
         if (g_combatManager->hexIsBlocked(shiftedIndex))
