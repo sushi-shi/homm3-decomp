@@ -160,7 +160,7 @@ void advManager::summonBoat(TSkillMastery level)
     if (who == 0)
         return;
 
-    type_point point(who->m_x, who->m_y, who->m_z);
+    type_point point = who->getLocation();
     if (getCell(point)->m_groundSet == eTerrainWater) {
         if (g_game->isLocalHuman(who->m_owner)) {
             sprintf(g_text,

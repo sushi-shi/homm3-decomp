@@ -698,7 +698,7 @@ inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
 {
     m_previousBoat = (who->m_flags >> 18) & 1;
     m_onBoat = onBoat;
-    m_previousLocation = type_point(who->m_x, who->m_y, who->m_z);
+    m_previousLocation = who->getLocation();
     m_location = location;
 }
 

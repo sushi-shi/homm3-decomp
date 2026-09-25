@@ -3408,7 +3408,7 @@ long markDestinations(hero* currentHero, long maxDistance,
         hero* friendly = g_game->getHero(g_currentPlayer->m_heroes[i]);
         if (friendly == currentHero)
             continue;
-        type_point friendPoint(friendly->m_x, friendly->m_y, friendly->m_z);
+        type_point friendPoint = friendly->getLocation();
         pathCell* friendCell = currentSearchArray->getCell(friendPoint, 0);
         if (!friendCell->m_visited)
             continue;
@@ -4319,7 +4319,7 @@ long valueOfHiring(town* currentTown, hero* candidate,
         hero* other = g_game->getHero(player->m_heroes[heroIndex]);
         if (other->m_z == candidate->m_z) {
             pathCell* cell = currentSearchArray->getCell(
-                type_point(other->m_x, other->m_y, other->m_z), 0);
+                other->getLocation(), 0);
 
             if (cell->m_visited) {
                 ++heroesTouched;

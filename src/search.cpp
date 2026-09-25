@@ -33,7 +33,7 @@
 VA(0x0056a0d0, 0x282)  // anchor-global, dc 0x12b2e0
 int searchArray::buildPath(const hero* currentHero, long limit)
 {
-    type_point source(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    type_point source = currentHero->getLocation();
     type_point dest(currentHero->m_pathTargetX, currentHero->m_pathTargetY,
                     currentHero->m_pathTargetZ);
     pathCell* currentPathCell;

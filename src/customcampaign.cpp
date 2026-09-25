@@ -1476,7 +1476,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     currentHero->m_maxMovePoints = currentHero->m_movePoints
         = currentHero->getMobility();
 
-    type_point heroLocation(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    type_point heroLocation = currentHero->getLocation();
     --heroLocation.m_x;
     if (heroLocation.m_x >= 0) {
         NewmapCell* cell = g_game->m_worldMap.cell(heroLocation);
@@ -1552,7 +1552,7 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
     currentHero->m_maxMovePoints = currentHero->m_movePoints
         = currentHero->getMobility();
 
-    type_point heroLocation(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    type_point heroLocation = currentHero->getLocation();
     --heroLocation.m_x;
     if (heroLocation.m_x >= 0) {
         NewmapCell* cell = g_game->m_worldMap.cell(heroLocation);

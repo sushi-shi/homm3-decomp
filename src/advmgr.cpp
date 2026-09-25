@@ -1429,7 +1429,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             setHeroContext(localPlayer->m_currHeroId, 0, 0, 1);
         }
 
-        type_point heroPoint(currHero->m_x, currHero->m_y, currHero->m_z);
+        type_point heroPoint = currHero->getLocation();
 
         NewmapCell* standingOn = getCell(heroPoint);
         if (!standingOn->m_isTrigger)
@@ -1437,7 +1437,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         if (standingOn->m_type == ANCHOR_POINT)
             break;
 
-        type_point eventPoint(currHero->m_x, currHero->m_y, currHero->m_z);
+        type_point eventPoint = currHero->getLocation();
         doEvent(standingOn, eventPoint);
         return 1;
     }
@@ -8323,7 +8323,7 @@ void advManager::seedTo(type_point target)
         return;
 
     hero* currentHero = g_game->getCurrHero();
-    type_point start(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    type_point start = currentHero->getLocation();
 
     if (!m_seedingValid) {
         g_searchArray->seedPosition(currentHero, start, target, 59999,
