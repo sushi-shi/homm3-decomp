@@ -1,6 +1,38 @@
 # Reviewed generated and library call destinations; these are not game reconstruction scores.
 
 [[functions]]
+symbol = ".mac_handle_buffer_init_26aab0"
+mac_section = 0
+mac_offset = 0x26aab0
+mac_size = 0x10
+sha256 = "9e26ca7688e0fe8f9479abdbda2fff42cbb94be7bad7cbe8499fe0add7067c42"
+evidence = "Initializes the Mac buffer's handle pointer at +4 and ownership-kind byte at +0 to zero. LODFile::read and three ResourceManager loaders call it before Mac OS Handle allocation; this is platform storage, not a shared game helper. BLR at 26aabc; next independent destructor entry at 26aac0."
+
+[[functions]]
+symbol = ".mac_handle_buffer_deleting_dtor_26aac0"
+mac_section = 0
+mac_offset = 0x26aac0
+mac_size = 0x54
+sha256 = "fd0895223773a352378a445f2ca24fa0ca420cc4bc2903569d257715668b77b4"
+evidence = "Null-guarded deleting destructor calls the Mac buffer release body at 26ac00, then optionally frees the wrapper itself. LODFile::read and ResourceManager sprite/bitmap loaders use it on exits; this is generated Mac platform cleanup. BLR at 26ab10; next allocation entry at 26ab14."
+
+[[functions]]
+symbol = ".mac_handle_buffer_allocate_26ab14"
+mac_section = 0
+mac_offset = 0x26ab14
+mac_size = 0xec
+sha256 = "a27fcda008df2129020d0ba9e8b9e59fe8834eafba5e9875beea1458a9bfa243"
+evidence = "Takes a size, releases the prior Mac buffer, tries imported TempNewHandle/TempHLock, falls back to NewHandle, records the handle kind at +0, and returns the locked data pointer. LODFile::read uses it for compressed bytes; ResourceManager uses it for sprite and bitmap buffers. Windows retail LODFile::read is exact with its separate raw allocation path. BLR at 26abfc; release entry starts 26ac00."
+
+[[functions]]
+symbol = ".mac_handle_buffer_release_26ac00"
+mac_section = 0
+mac_offset = 0x26ac00
+mac_size = 0x7c
+sha256 = "47741be3ca6982c65e40cb29a8da5df090a46b93e0a2da1f13850322b87221d5"
+evidence = "Reads the Mac buffer's ownership-kind byte, dispatches to imported TempHUnlock/TempDisposeHandle or DisposeHandle, and clears the handle pointer at +4. Called by the allocation and deleting-destructor bodies. Classic Mac OS Handle management, not a shared game helper. BLR at 26ac78."
+
+[[functions]]
 symbol = ".generated_CAutoArray_CDPlayPlayer_destroy_177ad0"
 mac_section = 0
 mac_offset = 0x177ad0
