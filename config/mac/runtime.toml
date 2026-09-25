@@ -1,6 +1,70 @@
 # Reviewed generated and library call destinations; these are not game reconstruction scores.
 
 [[functions]]
+symbol = ".generated_CAutoArray_CDPlayPlayer_destroy_177ad0"
+mac_section = 0
+mac_offset = 0x177ad0
+mac_size = 0x98
+sha256 = "472e31874d53e43a3fe6417c5febfb03bf131d54f9c657585dde9ff2763b3fee"
+evidence = "CDPlayPlayer CAutoArray::destroy loops over virtual get(i), conditionally deletes each element, deletes the backing array, then clears pointer, size and capacity. Remote::updateCurrentPlayers and both single-selection setup modes use the authored CAutoArray<CDPlayPlayer> in include/array.h; the selection calls are from its implicit destructor. BLR at 0x177b64 bounds this template instantiation, not a missing helper body."
+
+[[functions]]
+symbol = ".msl_string_concat_16468c"
+mac_section = 0
+mac_offset = 0x16468c
+mac_size = 0x68
+sha256 = "29fbabb63fd3c6e07f3956376598f91c5bf432d275c9c2b93b7de3f1499e0007"
+evidence = "The two base quest dialog getters call this with their stored string and getTimeLimitText() result for the authored string concatenation. The body copies a string into a temporary, appends the other string, constructs the result, and destroys the temporary. BLR at 0x1646f0 bounds the body. MSL string operator+, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_default_init_d82b8"
+mac_section = 0
+mac_offset = 0xd82b8
+mac_size = 0x14
+sha256 = "1f57a9e7fd6ea30160ea07cfe7ac4e4a42647e04ba9018c22c46348019cde391"
+evidence = "Zeroes the three words of a vector object. game::randomizeEvents uses it for local containers; NewfullMap's black-box and event readers use it for the three vector members of BlackBoxData. BLR at 0xd82c8 bounds the body. MSL vector construction, not a missing game helper."
+
+[[functions]]
+symbol = ".msl_vector_storage_init_166538"
+mac_section = 0
+mac_offset = 0x166538
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "Stores the supplied null storage pointer into the first vector word. The artifact quest and artifact-victory callers then clear the other two words of their local vectors. BLR at 0x16653c bounds the body. MSL vector construction, not a missing game helper."
+
+[[functions]]
+symbol = ".msl_bitset_reference_init_967ec"
+mac_section = 0
+mac_offset = 0x967ec
+mac_size = 0xc
+sha256 = "ee949594dbe1655bf6315dba758d4af3901f1073b0cc325f83d7c8407d6b5740"
+evidence = "Stores the bitset pointer and index into the two-word proxy. Campaign scenario and game map readers call it in their bit loops immediately before the proxy assignment at 0x9d7d8. BLR at 0x967f4 bounds the body. MSL bitset reference construction, not a game helper."
+
+[[functions]]
+symbol = ".msl_bitset_test_10e518"
+mac_section = 0
+mac_offset = 0x10e518
+mac_size = 0x44
+sha256 = "589713ad4e390fbb9500b5da0f7c98bfdab50909638814de4aef68b39aac1590"
+evidence = "Computes a byte and bit mask from the supplied index, reads that byte from the bitset storage, and returns whether the bit is set. Keyboard processing and save-game edit key filtering call it. BLR at 0x10e558 bounds the body. MSL bitset test, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_member_address_28adc"
+mac_section = 0
+mac_offset = 0x28adc
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Returns receiver+8. Four chooseMelee call sites use it while walking type_AI_combat_data::m_creatures, already authored as std::vector indexing. BLR at 0x28ae0 bounds the body. MSL vector storage accessor, not a game helper."
+
+[[functions]]
+symbol = ".msl_map_member_address_d8ea0"
+mac_section = 0
+mac_offset = 0xd8ea0
+mac_size = 0x8
+sha256 = "628252647637b09398402afe55ab55ea98bc50a5b0146e4b8636c17f941a2a32"
+evidence = "Returns receiver+12 for the map header member. game::loadMap, game::applyMapHeaderAvailability and NewSMapHeader::save call it while iterating m_heroPlayerSetups, already represented as std::map in the authored source. BLR at 0xd8ea4 bounds the body. MSL map accessor, not a game helper."
+
+[[functions]]
 symbol = ".msl_vector_obstacle_push_back_76f7c"
 mac_section = 0
 mac_offset = 0x76f7c
