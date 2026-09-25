@@ -1,6 +1,38 @@
 # Reviewed generated and library call destinations; these are not game reconstruction scores.
 
 [[functions]]
+symbol = ".msl_vector_storage_init_17566c"
+mac_section = 0
+mac_offset = 0x17566c
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "The two-instruction body stores its pointer argument at offset zero and returns. TSingleSelectionWindow construction calls it for three adjacent 12-byte vector members, then initializes their remaining words; sortMaps calls it for a local vector. The authored code constructs those std::vector objects. BLR at 0x175670 precedes the next function. MSL storage initialization, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_member_address_16fe1c"
+mac_section = 0
+mac_offset = 0x16fe1c
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Returns receiver+8. The two map-list tick callers use it around vector size/index operations on their header lists, already authored as std::vector access. BLR at 0x16fe20 precedes the next function. MSL vector member accessor, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_backing_pointer_1283f8"
+mac_section = 0
+mac_offset = 0x1283f8
+mac_size = 0x8
+sha256 = "59fdcae5f48fe0f3f53325d0a334381138490d2632049b646d44c2cb75668e68"
+evidence = "Returns the pointer at receiver+8. NewfullMap::calcCellExtra calls it in its repeated reverse walks of NewmapCell::m_objects, authored as std::vector reverse iteration. BLR at 0x1283fc precedes the adjacent address accessor. MSL vector storage accessor, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_member_address_128400"
+mac_section = 0
+mac_offset = 0x128400
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Returns receiver+8. NewfullMap::calcCellExtra calls it with the adjacent pointer accessor at 0x1283f8 in its repeated reverse walks of NewmapCell::m_objects. BLR at 0x128404 precedes the next function. MSL vector member accessor, not a game helper."
+
+[[functions]]
 symbol = "._strrev"
 mac_section = 0
 mac_offset = 0x20ef58
