@@ -15,6 +15,8 @@
 // Initial contents recovered from the pinned Complete image.
 
 // Use the timer during video playback so the game RNG sequence stays unchanged.
+// Mac calls GameTime::get at 0:0x130cc0; Windows retail calls timeGetTime
+// directly here, so this platform-specific timing path remains separate.
 VA(0x0050b1d0, 0x54)  // dc 0xfd81c
 int safeRandom(int min, int max)
 {
