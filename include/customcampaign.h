@@ -11,6 +11,7 @@
 #include "hero.h"
 
 class CMapHeaderData;
+class TAbstractFile;
 
 // The two 0x10-byte sub-objects SCampaign carries at +0x3c and +0x4c.
 // TCampaignWindow's constructor is the proof: `gpGame->campaign =
@@ -45,6 +46,7 @@ public:
         : m_completed(false), m_days(0), m_score(0), m_index(-1), m_completeOrder(0)
     {
     }
+    void write(TAbstractFile* outfile) const;
 };
 SIZE(CampaignScenarioInfo, 0x14);
 

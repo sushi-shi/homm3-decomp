@@ -1,5 +1,14 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 [[helpers]]
+source_helper = "CampaignScenarioInfo::write"
+unit = "customcampaign"
+mac_section = 0x0
+mac_offset = 0x97f74
+mac_size = 0xf0
+target_sha256 = "5fa86d3df31d2fbb0af5dc0ae23bdb2dab4f5de15d9e8bd3ecff0176c710706b"
+evidence = "SCampaign::save calls this retained score writer at 0x997c8 for every 0x14-byte CampaignScenarioInfo row. It writes completed (byte), days and score (little-endian words), completeOrder and index (bytes), matching the expanded Windows loop. BLR at 0x98060 precedes the next function."
+
+[[helpers]]
 source_helper = "offerArtifactToPlayerHeroes"
 unit = "customcampaign"
 mac_section = 0x0

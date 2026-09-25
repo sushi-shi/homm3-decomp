@@ -2448,6 +2448,32 @@ void TCampaignBrief::CampaignHeaderStruct::startScenario(
     m_scenarios[which]->startScenario(m_stream, option);
 }
 
+// Mac retains this per-scenario score writer at code 0:0x97f74. SCampaign's
+// save loop calls it once per row; VC6 expands its five ordered writes.
+void CampaignScenarioInfo::write(TAbstractFile* outfile) const
+{
+    {
+        char flag = m_completed;
+        outfile->write(&flag, sizeof(flag));
+    }
+    {
+        int intBuffer = m_days;
+        outfile->write(&intBuffer, sizeof(intBuffer));
+    }
+    {
+        int intBuffer = m_score;
+        outfile->write(&intBuffer, sizeof(intBuffer));
+    }
+    {
+        char flag = m_completeOrder;
+        outfile->write(&flag, sizeof(flag));
+    }
+    {
+        char flag = m_index;
+        outfile->write(&flag, sizeof(flag));
+    }
+}
+
 VA(0x00489590, 0x233)
 void SCampaign::selectCampaign(int campaignIndex, const char* filename)
 {
@@ -3033,27 +3059,7 @@ void SCampaign::save(TAbstractFile* outfile)
     {
         for (index = 0; index < m_mapScores.size();
              ++index) {
-            CampaignScenarioInfo& score = m_mapScores[index];
-            {
-                char flag = score.m_completed;
-                outfile->write(&flag, sizeof(flag));
-            }
-            {
-                int intBuffer = score.m_days;
-                outfile->write(&intBuffer, sizeof(intBuffer));
-            }
-            {
-                int intBuffer = score.m_score;
-                outfile->write(&intBuffer, sizeof(intBuffer));
-            }
-            {
-                char flag = score.m_completeOrder;
-                outfile->write(&flag, sizeof(flag));
-            }
-            {
-                char flag = score.m_index;
-                outfile->write(&flag, sizeof(flag));
-            }
+            m_mapScores[index].write(outfile);
         }
     }
 
