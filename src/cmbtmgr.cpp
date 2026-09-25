@@ -1082,22 +1082,22 @@ void combatManager::setupAdjacencyArray()
 
             switch (direction) {
             case COMBAT_DIRECTION_0:
-                adjacent = (row & 1) ? hex - 17 : hex - 16;
+                adjacent = rowIsOdd(row) ? hex - 17 : hex - 16;
                 break;
             case COMBAT_DIRECTION_1:
                 adjacent = hex + 1;
                 break;
             case COMBAT_DIRECTION_2:
-                adjacent = (row & 1) ? hex + 17 : hex + 18;
+                adjacent = rowIsOdd(row) ? hex + 17 : hex + 18;
                 break;
             case COMBAT_DIRECTION_3:
-                adjacent = (row & 1) ? hex + 16 : hex + 17;
+                adjacent = rowIsOdd(row) ? hex + 16 : hex + 17;
                 break;
             case COMBAT_DIRECTION_4:
                 adjacent = hex - 1;
                 break;
             case COMBAT_DIRECTION_5:
-                adjacent = (row & 1) ? hex - 18 : hex - 17;
+                adjacent = rowIsOdd(row) ? hex - 18 : hex - 17;
                 break;
             }
 
@@ -1296,7 +1296,7 @@ int combatManager::getGridIndex(int x, int y) const
     int px = x - 14;
     int py = y - 86;
     int row = py / 42;
-    if ((row & 1) == 0)
+    if (!rowIsOdd(row))
         px -= 22;
     int col = px / 44;
     if (px < 0 || px >= 748 || py < 0 || py >= 472)
@@ -1307,16 +1307,16 @@ int combatManager::getGridIndex(int x, int y) const
         if (depth < abs(across - 22) / 2) {
             row--;
             if (across < 22) {
-                if ((row & 1) == 0)
+                if (!rowIsOdd(row))
                     col--;
-            } else if ((row & 1) != 0) {
+            } else if (rowIsOdd(row)) {
                 col++;
             }
         }
     }
     if (row < 0 || row >= 11 || col < 0 || col >= 17)
         return -1;
-    return row * 17 + col;
+    return getHexIndex(col, row);
 }
 
 // Original: combatManager::CombineGroups; cmbtmgr.cpp:1971, dc 0x5f1d0.

@@ -570,9 +570,9 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
             break;
         if (isComputerAction(getCurrentArmy()))
             break;
-        int xDifference = x - (hex % 17) * 44 - 14;
-        int row = hex / 17;
-        if (!(row & 1))
+        int xDifference = x - gridX(hex) * 44 - 14;
+        int row = gridY(hex);
+        if (!rowIsOdd(row))
             xDifference -= 22;
         xDifference -= 22;
         int yDifference = y - row * 42 - 112;
