@@ -1711,7 +1711,7 @@ unsigned char town::canEverBuild(int buildingId) const
         if (!(buildingId == HALL_CAPITOL_ID
               && g_game->m_players[m_owner].hasCapitol())) {
             __int64 requirements = g_hierarchyMask[m_type][buildingId];
-            if (((m_active | m_available) & requirements) == requirements)
+            if (((getBuildingMask() | m_available) & requirements) == requirements)
                 return 1;
         }
     }

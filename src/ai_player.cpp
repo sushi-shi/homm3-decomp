@@ -1394,7 +1394,7 @@ static __int64 getRequirements(const town* currentTown,
             }
             seen |= g_bitNumber[k];
             requirements |= g_hierarchyMask[currentTown->m_type][k];
-            requirements &= ~currentTown->m_active;
+            requirements &= ~currentTown->getBuildingMask();
             requirements &= ~seen;
             k = 0;
         } else {
@@ -4837,13 +4837,13 @@ long type_statue_of_legion_artifact::getValue(
         const town* currentTown =
             g_game->getTown(player->m_townIds[townIndex]);
         for (int dwelling = 0; dwelling < TOWN_DWELLING_COUNT; ++dwelling) {
-            if (!(currentTown->m_active
+            if (!(currentTown->getBuildingMask()
                   & g_bitNumber[DWELLING_0_ID + dwelling])) {
                 continue;
             }
 
             int dwellingSlot = dwelling;
-            if (currentTown->m_active
+            if (currentTown->getBuildingMask()
                 & g_bitNumber[DWELLING_0_UPG_ID + dwelling]) {
                 dwellingSlot += TOWN_DWELLING_COUNT;
             }
