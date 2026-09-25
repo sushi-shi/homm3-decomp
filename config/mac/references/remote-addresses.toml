@@ -1,5 +1,32 @@
 # Reviewed shared remote identities in the Mac PEF.
 
+[[functions]]
+retail_va = 0x5540b0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211f98
+mac_size = 0xc0
+target_sha256 = "cc7aa3d1ae1857ef2ac37e625b6cd456a510c1bf03b4531c83ee5ac47b8b2f33"
+evidence = "remoteCleanup calls this retained CChatManager::clearChat at 0x212a94. It resets message count and changed flag, then zeros the killTime at +0x80 in each of twenty 0x88-byte records. BLR at 0x212054 precedes setMaxLines."
+
+[[functions]]
+retail_va = 0x5540d0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x212058
+mac_size = 0xc0
+target_sha256 = "97c4e0a3e01c111f9ac5fba3bf24c7acb4fe910aa7464599abdd545b2b9d3380"
+evidence = "The retained CChatManager::setMaxLines deletes its widget-text and message arrays, allocates replacement arrays with the maxLines count and calls clearChat. BLR at 0x212114 precedes the generated CChatStr constructor."
+
+[[functions]]
+retail_va = 0x554170
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21212c
+mac_size = 0x30
+target_sha256 = "4f947302911284be90b14c9b1d7e08e68bc19c60dea5b25e556a59baebb1c34f"
+evidence = "The retained CChatManager::setPosition clamps a negative or out-of-range row to msgCount-1, stores position at +0x20 and sets changed at +0x14. BLR at 0x212158 precedes the CChatEdit constructor."
+
 [[helpers]]
 source_helper = "CChatManager::getNextFreeMsgNbr"
 unit = "remote"
