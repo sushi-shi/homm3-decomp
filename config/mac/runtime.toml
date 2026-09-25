@@ -1291,3 +1291,19 @@ mac_offset = 0xbe6e4
 mac_size = 0x64
 sha256 = "867430bb909447398822ff361810df0bdfe9bb5bcde4ca9e60f6c0eb13c62734"
 evidence = "Events and seer-hut callers destroy the same local vector built through 0xb931c. The body calls its element cleanup at 0xbecf8, frees the backing pointer at +8, and frees the receiver only for a positive deleting flag. BLR at 0xbe744; the next destructor starts at 0xbe748. Compiler library lifetime, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_vector_word_copy_ctor_469b4"
+mac_section = 0
+mac_offset = 0x469b4
+mac_size = 0x54
+sha256 = "c2c749726edad478b0a84e8c2e0d661385cb1c8771af4df9b0fa9b2cf7c8b6ba"
+evidence = "Twenty-four Mac AI tactical call sites construct four copies at a time. The body zeros the receiver's three vector words, takes the source vector's size and backing pointer from r4, then delegates the element copy to 0x46f54. BLR at 0x46a04; the next body starts at 0x46a08. Library vector copy construction, not an authored combat helper."
+
+[[functions]]
+symbol = ".mac_set_iterator_ctor_768e0"
+mac_section = 0
+mac_offset = 0x768e0
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "Eagle Eye call sites construct one-word iterator temporaries from a set position. The complete body copies r4 to the receiver and returns at 0x768e4; adjacent 0x768e8 returns an object's field at +0xc. This is a container iterator constructor, not a combat game helper."
