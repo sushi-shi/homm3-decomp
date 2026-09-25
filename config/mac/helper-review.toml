@@ -10,6 +10,12 @@
 # sprite wrapper calls, implicit UI construction and text-vector teardown
 # are already expressed by the ordinary source. Town's assembled-Legion
 # call is an evidenced Mac-only helper boundary.
+# Town's remaining unnamed target at 0x1b43a4 returns the vector<town>
+# backing pointer; destroyExtraCapitol then indexes it by townId*0x15c.
+# Mac and Windows drawing::drawCombatHero both reach CSprite::drawCreature;
+# csprite.h's authored bitmap facade forwards to that canonical body.
+# General-text operator[] is also a canonical wrapper: Mac shipyard-event
+# callers reach MSL vector<char*>::operator[] at 0x2a0c through it.
 # The remaining AI sort, deque subscript, town-vector subscript and strcat
 # targets in the small combat/UI units below are canonical library calls.
 # Spells' unpaired targets are set/tree insertion and vector append; its
