@@ -3991,15 +3991,15 @@ TSecondarySkill aiChooseSecondarySkill(const hero* ourHero,
     TSecondarySkill first, TSecondarySkill second,
     unsigned char complexChoice)
 {
-    if ((ourHero->m_skillLevel[first] > 0)
-            == (ourHero->m_skillLevel[second] > 0)) {
+    if ((ourHero->getSecondarySkill(first) > 0)
+            == (ourHero->getSecondarySkill(second) > 0)) {
         if (getSkillValue(ourHero, first, complexChoice)
                 >= getSkillValue(ourHero, second, complexChoice))
             return first;
         return second;
     }
 
-    if (ourHero->m_skillLevel[second] == 0) {
+    if (ourHero->getSecondarySkill(second) == 0) {
         TSecondarySkill known = first;
         first = second;
         second = known;

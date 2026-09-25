@@ -1137,12 +1137,14 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
         TSecondarySkill skill = blackBox->m_secondarySkills[j].m_type;
         TSkillMastery level = blackBox->m_secondarySkills[j].m_level;
         unsigned char skillGiven = 0;
-        if (currentHero->m_skillLevel[skill] == 0 && currentHero->m_skillCount < 8) {
+        if (currentHero->getSecondarySkill(skill) == 0
+            && currentHero->m_skillCount < 8) {
             currentHero->giveSS(skill, level);
             skillGiven = 1;
-        } else if (currentHero->m_skillLevel[skill] > 0
-                   && currentHero->m_skillLevel[skill] < level) {
-            currentHero->giveSS(skill, level - currentHero->m_skillLevel[skill]);
+        } else if (currentHero->getSecondarySkill(skill) > 0
+                   && currentHero->getSecondarySkill(skill) < level) {
+            currentHero->giveSS(skill,
+                level - currentHero->getSecondarySkill(skill));
             skillGiven = 1;
         }
         if (!skillGiven)

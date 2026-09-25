@@ -319,7 +319,7 @@ void type_university_window::updateSkillButton(type_university_skill& skill)
 {
     std::string text;
 
-    if (m_currentHero->m_skillLevel[skill.m_skill] > 0) {
+    if (m_currentHero->getSecondarySkill(skill.m_skill) > 0) {
         text = g_generalText->getText(GENERAL_TEXT_HERO_ALREADY_KNOWS_THIS_SKILL);
         skill.m_topBar->setIconFrame(0);
         skill.m_bottomBar->setIconFrame(0);
@@ -358,7 +358,7 @@ void type_university_window::skillClick(TSecondarySkill skill)
     std::string helpText;
     unsigned int i;
 
-    if (m_currentHero->m_skillLevel[skill] > 0) {
+    if (m_currentHero->getSecondarySkill(skill) > 0) {
         normalDialog(g_generalText->getText(GENERAL_TEXT_HERO_ALREADY_KNOWS_THIS_SKILL), NORMAL_DIALOG_DEFAULT, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
