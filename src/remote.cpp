@@ -2090,7 +2090,7 @@ void CLevelPickWaitDlg::waitForLevels(int fromWho)
 
     int creature;
     do {
-        creature = random(0, 111);
+        creature = sRandom(0, 111);
     } while (creature == CREATURE_ARCH_DEVIL
              || creature == CREATURE_DEVIL);
 
@@ -2194,7 +2194,7 @@ VA(0x00557090, 0x5C)  // dc 0x11e948
 void CWaitForRemoteBattleDlg::wait(int playerPos)
 {
     m_playerPos = playerPos;
-    int creature = random(0, 111);
+    int creature = sRandom(0, 111);
     setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_REMOTE_BATTLE), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 12);
     doModal(0);

@@ -672,7 +672,7 @@ public:
     // DC Wait (0x1476dc, source line 437) takes only the dpid and reads
     // general text 534 after randomizing the creature. Complete's two
     // expansions fetch their text BEFORE storing forWho and calling
-    // GameTime/SRand: 731 at 0x588ea1, 534 at 0x588f67. The launch message
+    // GameTime/SRand/SRandom: 731 at 0x588ea1, 534 at 0x588f67. The launch message
     // therefore widens this shared member with a caller-evaluated text
     // argument; a fixed DC 534 body would show the wrong launch text.
     // Setup and DoModal remain virtual through this canonical body.
@@ -682,7 +682,7 @@ public:
         sRand(GameTime::get());
         int creature;
         do {
-            creature = random(0, 111);
+            creature = sRandom(0, 111);
         } while (creature == WAIT_CREATURE_ARCH_DEVIL
                  || creature == WAIT_CREATURE_DEVIL);
         setup(text, g_mediumFont,

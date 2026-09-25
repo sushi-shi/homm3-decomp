@@ -251,6 +251,15 @@ target_sha256 = "cd91a50114edad54a31d28d8ea12ac3f492ef52e8f0dd54d99f69699c8fd273
 evidence = "advManager::doCombat constructs this level-pick wait dialog before calling waitForLevels at 0x2147a0. The body calls the CAnimatedDlg base constructor, installs CLevelPickWaitDlg's vtable at data 1+0x5965c, constructs its embedded CNetMsgHandlerPause at +0x78, sets fromWho=-1 and playerDropped=0, then returns at 0x21479c. This matches the Windows constructor claim 0x556ab0."
 
 [[functions]]
+retail_va = 0x00556ba0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2147a0
+mac_size = 0xd4
+target_sha256 = "d8a5c118dc5850d389ccaac0399ff196eeafe6c8b65e00bd60f20ff7c05da9f8"
+evidence = "The reviewed CLevelPickWaitDlg constructor ends at 0x21479c. This following body stores fromWho, calls GameTime::get and sRand, repeats sRandom(0,111) while the creature is Devil or Arch Devil, then sets up general-text entry 472 and opens the modal dialog. Dreamcast WaitForLevels line 2490 also names SRandom. Its BLR at 0x214870 precedes the next prologue at 0x214874."
+
+[[functions]]
 retail_va = 0x556f20
 unit = "remote"
 mac_section = 0
@@ -258,6 +267,15 @@ mac_offset = 0x214b00
 mac_size = 0x104
 target_sha256 = "4d7645bd0e0eed5feded6385f899309cc03ea2ef84056d3783ce718324788f92"
 evidence = "advManager::doCombat constructs this remote-battle wait dialog. The body calls the CAnimatedDlg base constructor, installs CWaitForRemoteBattleDlg's vtable at data 1+0x595dc, constructs its embedded CCombatInitMsg and pause handler, and initializes received state. Its final BLR at 0x214c00 immediately precedes the wait method; Windows constructor claim is 0x556f20."
+
+[[functions]]
+retail_va = 0x00557090
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214c04
+mac_size = 0xac
+target_sha256 = "f523206d5b22054c16b25717693b40e529dec12c098af56a905f695d02f13327"
+evidence = "The reviewed CWaitForRemoteBattleDlg constructor ends at 0x214c00. This following body stores playerPos, calls sRandom(0,111), sets up general-text entry 473 with sprite and sequence 12, then opens the modal dialog. Dreamcast Wait line 2603 also names SRandom. Its BLR at 0x214cac precedes the next prologue at 0x214cb0."
 
 [[functions]]
 retail_va = 0x557dd0
