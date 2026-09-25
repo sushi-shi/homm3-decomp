@@ -235,7 +235,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 
     m_widgets.push_back(new textWidget(
         24, 414, 104, 50,
-        g_generalText->getText(SACRIFICE_GENERAL_TEXT_NEXT_LEVEL),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_NEXT_LEVEL],
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceWidget = new textWidget(
@@ -245,7 +245,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 
     m_widgets.push_back(new textWidget(
         24, 492, 104, 42,
-        g_generalText->getText(SACRIFICE_GENERAL_TEXT_TOTAL_EXPERIENCE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TOTAL_EXPERIENCE],
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceTotalWidget = new textWidget(
@@ -866,7 +866,7 @@ void type_sacrifice_window::updateCreatureOffering(
         creature->m_selectionWidget->setVisible(creature->m_amount > 0);
         result = convertWithCommas(totalHits);
         result = formatString(
-            g_generalText->getText(SACRIFICE_GENERAL_TEXT_EXPERIENCE),
+            (*g_generalText)[SACRIFICE_GENERAL_TEXT_EXPERIENCE],
             result.c_str());
         creature->m_experienceText->setText(result.c_str());
         creature->m_experienceText->setVisible(creature->m_amount > 0);
@@ -879,7 +879,7 @@ void type_sacrifice_window::updateCreatureOffering(
         } else {
             std::string helpText;
             helpText = formatString(
-                g_generalText->getText(SACRIFICE_GENERAL_TEXT_CREATURE),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_CREATURE],
                 getArmyName(creatureType, 0));
             creature->m_sourceSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
             creature->m_offeringSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
@@ -984,8 +984,7 @@ void type_sacrifice_window::artifactClick(
 
         if (oldArtifact.m_artifactId == ARTIFACT_CATAPULT) {
             normalDialog(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_CANNOT_SACRIFICE_ARTIFACT),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_CANNOT_SACRIFICE_ARTIFACT],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
@@ -1541,8 +1540,7 @@ void type_sacrifice_window::creatureClick(
         if (slot < 0) {
             if (rightClick) {
                 normalDialog(
-                    g_generalText->getText(
-                        SACRIFICE_GENERAL_TEXT_EMPTY_CREATURE),
+                    (*g_generalText)[SACRIFICE_GENERAL_TEXT_EMPTY_CREATURE],
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             }
             return;
@@ -1578,8 +1576,7 @@ void type_sacrifice_window::creatureClick(
         } else {
             std::string buffer;
             buffer = formatString(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_CREATURE_NAME),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_CREATURE_NAME],
                 getArmyName(m_currentHero->m_army.m_armyTypes[slot], 0));
             m_creatureNameWidget->setText(buffer.c_str());
             m_creatureNameWidget->setVisible(1);
@@ -1723,13 +1720,11 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
 
     m_widgets.push_back(new textWidget(
         25, 21, 257, 18,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE],
         "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         320, 21, 257, 18,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_TITLE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_TITLE],
         "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         25, 55, 257, 42,
@@ -1858,24 +1853,21 @@ void type_skeleton_window::update(long group, long index)
 
     if (group == 0) {
         result = formatString(
-            g_generalText->getText(SACRIFICE_GENERAL_TEXT_CREATURE), name);
+            (*g_generalText)[SACRIFICE_GENERAL_TEXT_CREATURE], name);
     } else {
         int transformed = g_deathCreature[type];
         if (transformed != type) {
             result = formatString(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_TRANSFORM_CREATURE),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORM_CREATURE],
                 name, getArmyName(
                     transformed, m_armies[group]->m_numTroops[index]));
         } else if (m_armies[group]->m_numTroops[index] == 1) {
             result = formatString(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_ONE),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_ONE],
                 name);
         } else {
             result = formatString(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_MANY),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_MANY],
                 name);
         }
     }
