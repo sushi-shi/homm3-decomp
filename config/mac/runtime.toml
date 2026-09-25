@@ -1,6 +1,30 @@
 # Reviewed generated and library call destinations; these are not game reconstruction scores.
 
 [[functions]]
+symbol = "._strrev"
+mac_section = 0
+mac_offset = 0x20ef58
+mac_size = 0x6c
+sha256 = "1ceae4080017b4fc280bd4c59f9f15e4f2b4d3b26a9c15d80d6640c829b39004"
+evidence = "This string reverse helper calls strlen, swaps bytes inward, and returns its input pointer. advManager::open calls it on the cached-graphic name and NewfullMap::readObjectType calls it twice around the mask-extension edit; all three authored sites already call _strrev. Final BLR at 0x20efc0 precedes another function at 0x20efc4. Library/port helper only."
+
+[[functions]]
+symbol = ".mac_sprite_resource_forwarder_154660"
+mac_section = 0
+mac_offset = 0x154660
+mac_size = 0x20
+sha256 = "f5ee5d738626b9aab47dcaa677ddfc60f812d7cf13c9e6c87de2ca2e3a9b1718"
+evidence = "Mac forwarding wrapper calls the already paired ResourceManager::pointToSpriteResource body at 0x1522ec with the argument unchanged. The map object-type reader and TObjectType::setImageName call the wrapper twice each; their authored source already calls that helper. BLR at 0x15467c precedes the adjacent bitmap wrapper. No separate C++ helper."
+
+[[functions]]
+symbol = ".mac_bitmap_resource_forwarder_154680"
+mac_section = 0
+mac_offset = 0x154680
+mac_size = 0x20
+sha256 = "06909f413ba5476d074359907d8c2f679e72ad242e4b413de9a9651fb6912758"
+evidence = "Mac forwarding wrapper calls the already paired ResourceManager::pointToBitmapResource body at 0x152374 with the argument unchanged. CampaignHeaderStruct::load calls this wrapper for its resource fallback, and the shared source already calls the helper. BLR at 0x15469c precedes the next function. No separate C++ helper."
+
+[[functions]]
 symbol = ".__cvt_fp2unsigned"
 mac_section = 0
 mac_offset = 0x280548
