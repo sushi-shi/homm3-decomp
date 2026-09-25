@@ -2469,7 +2469,7 @@ void townManager::setCommandAndText(message* msg)
                 strcpy(m_statusText, g_townCommand[11]);
                 m_command = -2;
             } else {
-                hero* garrison = &g_game->m_heroes[m_townToView->m_garrisonHeroId];
+                hero* garrison = g_game->getHero(m_townToView->m_garrisonHeroId);
                 sprintf(m_statusText, g_townCommand[12], garrison->m_name);
                 m_command = 0;
             }
@@ -2502,7 +2502,7 @@ void townManager::setCommandAndText(message* msg)
             m_currStrip = m_heroStrip;
             visiting = (m_townToView->m_visitingHeroId == -1)
                            ? 0
-                           : &g_game->m_heroes[m_townToView->m_visitingHeroId];
+                           : g_game->getHero(m_townToView->m_visitingHeroId);
             sprintf(m_statusText, g_townCommand[32], visiting->m_name);
             m_command = 0;
         }
@@ -6571,7 +6571,7 @@ int TTavernWindow::windowHandler(message& msg)
                     msg.m_codeY = 9 - m_selectedRecruit;
                     broadcastMessage(msg);
 
-                    g_tavernHero = &g_game->m_heroes[player->m_recruits[m_selectedRecruit]];
+                    g_tavernHero = g_game->getHero(player->m_recruits[m_selectedRecruit]);
                     long artifacts = g_tavernHero->getNumberInBackpack(0)
                                      + g_tavernHero->getEquippedArtifacts(0);
                     sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT),
@@ -6710,7 +6710,7 @@ unsigned char doTavern()
         g_tavernHero = 0;
         g_tavernWindow->widgetClearStatus(8, widget::WIDGET_DRAWN);
     } else {
-        g_tavernHero = &g_game->m_heroes[player->m_recruits[0]];
+        g_tavernHero = g_game->getHero(player->m_recruits[0]);
         g_tavernWindow->widgetClearStatus(9, widget::WIDGET_DRAWN);
         msg.m_codeX = widget::WIDGET_SET_IMAGE;
         msg.m_codeY = 5;
@@ -6729,7 +6729,7 @@ unsigned char doTavern()
                 .m_largePortraitName;
         g_tavernWindow->broadcastMessage(msg);
         if (g_tavernHero == 0)
-            g_tavernHero = &g_game->m_heroes[player->m_recruits[1]];
+            g_tavernHero = g_game->getHero(player->m_recruits[1]);
     }
 
     if (g_tavernHero) {

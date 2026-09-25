@@ -478,8 +478,8 @@ void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
     CTradeRequestMsg* msg = static_cast<CTradeRequestMsg*>(netMsg);
     g_game->m_heroes[msg->m_left.m_id] = msg->m_left;
     g_game->m_heroes[msg->m_right.m_id] = msg->m_right;
-    g_advManager->heroSwap(&g_game->m_heroes[msg->m_left.m_id],
-                           &g_game->m_heroes[msg->m_right.m_id]);
+    g_advManager->heroSwap(g_game->getHero(msg->m_left.m_id),
+                           g_game->getHero(msg->m_right.m_id));
 }
 
 // E:\gamedcs\advmgr.cpp:734
@@ -8531,7 +8531,7 @@ void advManager::setInitialMapOrigin()
                                  ? g_currentPlayer
                                  : g_game->getLocalPlayer();
         if (player->m_numHeroes > 0) {
-            hero* startHero = &g_game->m_heroes[player->m_heroes[0]];
+            hero* startHero = g_game->getHero(player->m_heroes[0]);
             m_radarOrigin.m_x = startHero->m_x - 9;
             m_radarOrigin.m_y = startHero->m_y - 8;
             m_radarOrigin.m_z = startHero->m_z;

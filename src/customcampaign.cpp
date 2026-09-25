@@ -318,7 +318,7 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
     case CAMPAIGN_BONUS_HERO_STRONGEST: {
         for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
             int heroId = player->m_heroes[heroIndex];
-            hero* candidate = heroId == -1 ? 0 : &g_game->m_heroes[heroId];
+            hero* candidate = g_game->getHero(heroId);
             if (best != 0) {
                 int candidatePower = heroPower(candidate);
                 int bestPower = heroPower(best);
@@ -334,11 +334,11 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
             return 0;
         if (player->m_heroes[0] == -1)
             return 0;
-        return &g_game->m_heroes[player->m_heroes[0]];
+        return g_game->getHero(player->m_heroes[0]);
     case CAMPAIGN_BONUS_HERO_NONE:
         return 0;
     }
-    hero* chosen = &g_game->m_heroes[heroSelector];
+    hero* chosen = g_game->getHero(heroSelector);
     return chosen->m_owner == whichPlayer ? chosen : 0;
 }
 

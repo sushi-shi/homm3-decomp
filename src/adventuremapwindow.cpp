@@ -1097,7 +1097,7 @@ void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect
 
     int heroId = player->m_heroes[m_topHero + which];
     if (heroId != -1 && !g_completeDrawAllCells) {
-        hero* thisHero = &g_game->m_heroes[heroId];
+        hero* thisHero = g_game->getHero(heroId);
         widgetSetStatus(HERO_0_ID + which, widget::WIDGET_ACTIVE);
         m_heroPortraits[which]->setImage(
             g_heroTraits[thisHero->m_portrait].m_smallPortraitName);

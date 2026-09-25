@@ -3855,7 +3855,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
     validateVictoryLossConditions(1);
 
     if (g_inCampaign && m_campaign.m_currentCampaign == GAME_CAMPAIGN_14) {
-        hero* campaignHero = &m_heroes[45];
+        hero* campaignHero = getHero(45);
         if (campaignHero->getArtifact(TArtifactSlot(hero::EQUIPPED_SLOT_SPELLBOOK)).m_artifactId
             != -1)
             campaignHero->removeArtifact(hero::EQUIPPED_SLOT_SPELLBOOK);
@@ -7032,7 +7032,7 @@ void game::nextPlayer()
     clearEventRecords(static_cast<char>(g_netLocalGamePos));
 
     for (i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
-        hero* currentHero = &m_heroes[g_currentPlayer->m_heroes[i]];
+        hero* currentHero = getHero(g_currentPlayer->m_heroes[i]);
         int mobility = currentHero->getMobility();
         currentHero->m_maxMovePoints = mobility;
         currentHero->m_movePoints = mobility;
@@ -7040,7 +7040,7 @@ void game::nextPlayer()
     for (i = 0; i < 2; ++i) {
         int recruitId = g_currentPlayer->m_recruits[i];
         if (recruitId != -1) {
-            hero* currentHero = &m_heroes[recruitId];
+            hero* currentHero = getHero(recruitId);
             int mobility = currentHero->getMobility();
             currentHero->m_maxMovePoints = mobility;
             currentHero->m_movePoints = mobility;
@@ -7452,7 +7452,7 @@ void game::setWeeklyRecruits(int playerPos)
             continue;
 
         m_heroAvailability[heroId] = 64;
-        hero* newHero = &m_heroes[heroId];
+        hero* newHero = getHero(heroId);
         int backpackSlot = HERO_BACKPACK_CAPACITY - 1;
         do {
             artifact = newHero->getBackpack(backpackSlot);
@@ -7711,7 +7711,7 @@ void game::perWeek()
     }
 
     for (i = 0; i < HERO_COUNT; ++i) {
-        currHero = &m_heroes[i];
+        currHero = getHero(i);
         if (currHero->m_flags & g_heroWeeklyVisitFlag)
             currHero->m_flags -= g_heroWeeklyVisitFlag;
     }
@@ -8022,7 +8022,7 @@ void game::randomizeHeroPool()
 VA(0x004c9730, 0x159)  // dc 0xb5094
 void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
 {
-    armyGroup* currentArmy = &m_heroes[hero].m_army;
+    armyGroup* currentArmy = &getHero(hero)->m_army;
     const THeroTraits* traits = &g_heroTraits[hero];
 
     if (g_inCampaign

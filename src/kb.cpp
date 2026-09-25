@@ -3746,7 +3746,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 g_game->m_campaign.m_isCheater = 1;
             if (g_game->getCurrHeroId() != -1) {
                 g_game->giveArmy(
-                                 &g_game->m_heroes[g_game->getCurrHeroId()].m_army,
+                                 &g_game->getCurrHero()->m_army,
                                  idItem - APP_MENU_ARMY_FIRST,
                                  APP_MENU_ARMY_QUANTITY, -1);
                 g_advManager->updBottomView(1, 1, 1);

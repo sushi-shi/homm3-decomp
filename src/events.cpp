@@ -2544,7 +2544,7 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
     updateScreen(0, 0);
     eraseObj(cell, point, 1);
 
-    hero* prisoner = &g_game->m_heroes[heroID];
+    hero* prisoner = g_game->getHero(heroID);
     g_game->recordShowHero(prisoner, currentHero->m_owner, point, 0);
     prisoner->m_owner = currentHero->m_owner;
     g_game->m_heroAvailability[heroID] = currentHero->m_owner;
@@ -4909,7 +4909,7 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
                && (thisTown->m_visitingHeroId < 0
                    || thisTown->m_visitingHeroId == currentHero->m_id)) {
         if (thisTown->m_garrisonHeroId > -1) {
-            heroLoses(&g_game->m_heroes[thisTown->m_garrisonHeroId], -1);
+            heroLoses(g_game->getHero(thisTown->m_garrisonHeroId), -1);
             thisTown->m_garrisonHeroId = -1;
         }
         g_game->claimTown(thisTown->m_id, g_netLocalGamePos, 0, 1);
