@@ -358,7 +358,7 @@ void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX
 VA(0x005f7d00, 0x1E1)  // dc 0x193724
 void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    boat* currBoat = &g_game->m_boats[boatParts.m_id];
+    boat* currBoat = g_game->getBoat(boatParts.m_id);
     int boatCellY = part % 3;
     int boatCellX = part / 3;
     NewmapCell* boatCell = getCell(currBoat->getLocation());
@@ -386,7 +386,7 @@ void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int 
 VA(0x005f7ef0, 0x1E1)  // dc 0x1938cc
 void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    boat* currBoat = &g_game->m_boats[boatParts.m_id];
+    boat* currBoat = g_game->getBoat(boatParts.m_id);
     int boatCellY = part % 3;
     int boatCellX = part / 3;
     NewmapCell* boatCell = getCell(currBoat->getLocation());

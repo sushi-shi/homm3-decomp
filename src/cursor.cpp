@@ -500,7 +500,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
                                      origX, origY, standEnd,
                                      foughtBattle);
             else {
-                boat* newBoat = &g_game->m_boats[destCell->m_extraInfo];
+                boat* newBoat = g_game->getBoat(destCell->m_extraInfo);
                 g_game->recordHideHero(curr, curr->m_owner, 0);
                 g_game->recordHideBoat(newBoat, 1, curr->m_id);
                 g_game->recordShowHero(curr, curr->m_owner,

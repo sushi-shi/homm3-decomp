@@ -3388,7 +3388,7 @@ VA(0x0040d670, 0x253)
 void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
                        const char* separator, unsigned char showFullList)
 {
-    mine* currentMine = &g_game->m_mines[cell->m_extraInfo];
+    mine* currentMine = g_game->getMine(cell->m_extraInfo);
     int owner = currentMine->m_playerOwner;
     int mineType = currentMine->m_type;
     const char* description = g_mineDescriptions[7];

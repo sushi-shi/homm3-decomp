@@ -2956,7 +2956,7 @@ int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
 VA(0x0052a010, 0x12a)  // dc 0x111970
 int valueOfMine(const hero* currentHero, NewmapCell* cell)
 {
-    mine* currentMine = &g_game->m_mines[cell->m_extraInfo];
+    mine* currentMine = g_game->getMine(cell->m_extraInfo);
     long value = 0;
     int mineType = currentMine->m_type;
     int sameTeam = onMySide(currentMine->m_playerOwner);

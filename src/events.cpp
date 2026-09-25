@@ -1434,7 +1434,7 @@ void advManager::handleMapEvent(hero* currentHero, NewmapCell* cell,
 VA(0x004a1010, 0x10D)  // dc 0x91f44
 void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
 {
-    boat* heroBoat = &g_game->m_boats[cell->m_extraInfo];
+    boat* heroBoat = g_game->getBoat(cell->m_extraInfo);
 
     heroBoat->restoreCell();
     currentHero->m_flags |= 0x40000;
@@ -2388,7 +2388,7 @@ VA(0x004a39a0, 0x21D)  // dc 0x94314
 void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
                              type_point point, bool human)
 {
-    mine* currentMine = &g_game->m_mines[cell->m_extraInfo];
+    mine* currentMine = g_game->getMine(cell->m_extraInfo);
     if (g_game->onSameTeam(currentMine->m_playerOwner, g_netLocalGamePos)) {
         if (currentMine->m_playerOwner == g_netLocalGamePos && human)
             doMonsterJoinDialog(currentHero, &currentMine->m_guards, 1);

@@ -339,7 +339,7 @@ type_obscuring_object::type_obscuring_object()
 mine* type_obscuring_object::getObscuredMine() const
 {
     if (m_valid && m_obscuredType == MINE && m_wasTrigger)
-        return &g_game->m_mines[m_extraInfo];
+        return g_game->getMine(m_extraInfo);
     return 0;
 }
 
