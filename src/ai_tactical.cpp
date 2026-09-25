@@ -155,10 +155,9 @@ long aiGetAttackDamage(const army& currentArmy, long ourHits, const army& enemy,
 // /OPT:REF dropped the out-of-line copy.
 void type_AI_combat_parameters::simulateSingleAttack(const army& currentArmy, long& ourHits, const army& enemy, long& enemyHits, unsigned char ranged, long distance) const
 {
-    long troops = (currentArmy.m_monInfo.m_hitPoints + ourHits - 1)
-                  / currentArmy.m_monInfo.m_hitPoints;
-    long damage = currentArmy.getAverageDamage(&enemy, ranged, troops, 1,
-                                                   distance);
+    // Mac 0x3d054 retains this call; VC6 expands the same source helper.
+    long damage = aiGetAttackDamage(currentArmy, ourHits, enemy, ranged,
+                                   distance);
     if (!ranged) {
         long fire = g_combatManager->computeFireShieldDamage(
             damage, &currentArmy, &enemy, enemyHits);

@@ -2789,38 +2789,9 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                         return;
                     }
                     if (targetCombo != -1) {
-                        std::bitset<144> missing =
-                            g_combinationArtifacts[targetCombo].m_components;
-                        for (int k = 0; k < 19; k++) {
-                            int worn =
-                                g_currentHero->getArtifact(TArtifactSlot(k)).m_artifactId;
-                            if (worn != ARTIFACT_NONE)
-                                missing[worn] = false;
-                        }
-                        // MEASURED NEGATIVE THREE WAYS, do not retry. Retail
-                        // CALLS three bitset members in this block that our CL
-                        // expands: `bitset<144>::operator[]` (0x4cef80, the
-                        // 18-byte reference ctor), `reference::operator=`
-                        // (0x48e9f0, which carries set()'s body inlined) and
-                        // `any()` (0x4e64c0) - our compile instead calls
-                        // `set(size_t,bool)` once and expands any().
-                        // `#pragma inline_depth(0)` reproduces each of those
-                        // calls and every variant LOSES:
-                        //   pin on the whole `if (!missing.any())` statement
-                        //       74.4733 -> 70.80 (recorded 2026-08-20)
-                        //   pin on a HOISTED `bool = !missing.any();` alone,
-                        //       so the guarded body is out of the pin's reach
-                        //       74.4733 -> 70.2438 (2026-08-20)
-                        //   pin on `missing[worn] = false;` alone
-                        //       74.4733 -> 69.5800
-                        //   both site pins together
-                        //       74.4733 -> 70.3412
-                        // So the hoist DOES isolate the pin - the earlier
-                        // "the pin also de-inlines the guarded body" reading is
-                        // wrong - and imposing retail's calls still costs four
-                        // points. The cross-jumping defect below is upstream of
-                        // all of them.
-                        if (!missing.any()) {
+                        // Mac 0xf7f80 retains this call to the canonical
+                        // combination predicate; VC6 expands it here.
+                        if (g_currentHero->heroFn004DBE80(targetCombo)) {
                             if (g_currentHero->heroFn004D9CC0(
                                     oldArtifact.m_artifactId)
                                 == DIALOG_RETURN_ACCEPT) {
