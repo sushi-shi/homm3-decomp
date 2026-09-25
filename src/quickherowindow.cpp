@@ -55,10 +55,11 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "heroqvbk.pcx", 0x800);
-    background->setPlayerPaletteColors(
-        thisHero->m_owner >= 0
-            ? thisHero->m_owner
-            : g_game->getLocalPlayerGamePos());
+    // Mac retains a call in each branch at 0:0x14a8d4 and 0:0x14a8ec.
+    if (thisHero->m_owner >= 0)
+        background->setPlayerPaletteColors(thisHero->m_owner);
+    else
+        background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
     widgets.push_back(background);
 
     widgets.push_back(new bitmapBorder(

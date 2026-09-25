@@ -56,9 +56,11 @@ type_combat_sub_window::type_combat_sub_window(
     bitmapBorder* background = new bitmapBorder(0, 0, 800, 44, 0x7d0,
         backgroundSpriteName, 0x800);
     int gamePos = g_combatManager->m_playerIds[g_combatManager->m_currentSide];
-    if (gamePos < 0)
-        gamePos = g_game->getLocalPlayerGamePos();
-    background->setPlayerPaletteColors(gamePos);
+    // Mac calls the palette helper in each arm at 0:0x77718 and 0:0x77734.
+    if (gamePos >= 0)
+        background->setPlayerPaletteColors(gamePos);
+    else
+        background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
     m_widgets.push_back(background);
 
     // The hotkeys are scancodes: S, R, O, A, C, W, then D and SPACE.

@@ -3533,46 +3533,50 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
         int thisPlayerBit = 1 << g_game->getLocalPlayerGamePos();
         playerData* thisPlayer = g_game->getLocalPlayer();
         if (m_lastMapHover.isValid()
-            && (getMapExtra(m_lastMapHover) & thisPlayerBit)) {
-            if (thisPlayer->m_currHeroId == -1
+            && (getMapExtra(m_lastMapHover) & thisPlayerBit)
+            && (thisPlayer->m_currHeroId == -1
                 || g_game->getHero(thisPlayer->m_currHeroId)->m_z
-                    == m_radarOrigin.m_z) {
-                NewmapCell* currCell = getCell(get_mouse_map_point());
+                    == m_radarOrigin.m_z)) {
+            NewmapCell* currCell = getCell(get_mouse_map_point());
 
-                // rx/ry, NOT mouseX/mouseY - retail passes the /32 CELL
-                // coordinates here, exactly as ProcessHover does. At
-                // fn+0x246 it pushes ebx and edi, and edi is built at
-                // fn+0x28 as `mov eax,edi / cdq / and edx,0x1f / add
-                // eax,edx / sar edi,5` from [ebp+8] - the same value it
-                // then stores into lastHoverX at [esi+0xec]. Passing the
-                // raw pixel coordinates kept both parameters live to this
-                // point and cost VC6 the two dead parameter homes retail
-                // spills into (`mov [ebp+8],eax` right at this call).
-                setRolloverText(currCell, rx, ry);
-                switch (currCell->m_type) {
-                case TOWN: {
-                    class town* town = g_game->getTown(currCell->m_extraInfo);
-                    if (g_game->isLocalHuman(town->m_owner)) {
-                        m_advCommand = thisPlayer->m_currTownId == -1 ? 5 : 3;
-                        g_mouseManager->setPointer(
-                            3, mouseManager::ADVENTURE_SET);
-                        return 1;
-                    }
-                    break;
+            // rx/ry, NOT mouseX/mouseY - retail passes the /32 CELL
+            // coordinates here, exactly as ProcessHover does. At
+            // fn+0x246 it pushes ebx and edi, and edi is built at
+            // fn+0x28 as `mov eax,edi / cdq / and edx,0x1f / add
+            // eax,edx / sar edi,5` from [ebp+8] - the same value it
+            // then stores into lastHoverX at [esi+0xec]. Passing the
+            // raw pixel coordinates kept both parameters live to this
+            // point and cost VC6 the two dead parameter homes retail
+            // spills into (`mov [ebp+8],eax` right at this call).
+            setRolloverText(currCell, rx, ry);
+            switch (currCell->m_type) {
+            case TOWN: {
+                class town* town = g_game->getTown(currCell->m_extraInfo);
+                if (g_game->isLocalHuman(town->m_owner)) {
+                    m_advCommand = thisPlayer->m_currTownId == -1 ? 5 : 3;
+                    g_mouseManager->setPointer(
+                        3, mouseManager::ADVENTURE_SET);
+                    return 1;
                 }
-                case HERO: {
-                    class hero* hero = g_game->getHero(currCell->m_extraInfo);
-                    if (g_game->isLocalHuman(hero->m_owner)
-                        && hero->m_owner == g_netLocalGamePos) {
-                        g_mouseManager->setPointer(
-                            2, mouseManager::ADVENTURE_SET);
-                        m_advCommand = thisPlayer->m_currHeroId == -1 ? 4 : 2;
-                        return 1;
-                    }
-                    break;
-                }
-                }
+                break;
             }
+            case HERO: {
+                class hero* hero = g_game->getHero(currCell->m_extraInfo);
+                if (g_game->isLocalHuman(hero->m_owner)
+                    && hero->m_owner == g_netLocalGamePos) {
+                    g_mouseManager->setPointer(
+                        2, mouseManager::ADVENTURE_SET);
+                    m_advCommand = thisPlayer->m_currHeroId == -1 ? 4 : 2;
+                    return 1;
+                }
+                break;
+            }
+            }
+        } else {
+            // Mac resets the pointer and returns at 0:0xe22c when the
+            // visibility or selected-hero check fails.
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            return 1;
         }
 
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);

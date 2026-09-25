@@ -3986,6 +3986,8 @@ VA(0x004a8080, 0x1A5)  // dc 0x97dc8
 void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
                                     bool humanPlayer)
 {
+    // Mac retains separate dialogs for no skill, known skill, full skills,
+    // and learned skill at 0:0xb55b4, 0:0xb5634, 0:0xb56b0, 0:0xb5724.
     int skill = cell->getWitchSkill();
 
     cell->setCellVisited(currentHero->m_owner);
@@ -4002,6 +4004,8 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
                         g_adventureEventText->getText(
                             ADV_EVENT_TEXT_WITCH_HUT_KNOWN_FORMAT),
                         g_sSkillTraits[skill].m_name);
+                normalDialog(g_text, 1, -1, -1, -1, 0,
+                             -1, 0, -1, 0, -1, 0);
             }
         } else if (currentHero->m_skillCount >= 8) {
             if (humanPlayer) {
@@ -4009,6 +4013,8 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
                         g_adventureEventText->getText(
                             ADV_EVENT_TEXT_WITCH_HUT_FULL_FORMAT),
                         g_sSkillTraits[skill].m_name);
+                normalDialog(g_text, 1, -1, -1, -1, 0,
+                             -1, 0, -1, 0, -1, 0);
             }
         } else {
             if (humanPlayer) {
@@ -4025,8 +4031,6 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
             currentHero->giveSS(skill, 1);
             return;
         }
-        if (humanPlayer)
-            normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 }
 
