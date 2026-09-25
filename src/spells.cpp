@@ -4199,10 +4199,10 @@ void combatManager::demonicResurrection(const army* caster, army* target)
         drawFrame(1, 0, 0, 0, 1, 0);
         if (raised != 1)
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
-                    getArmyName(demons->m_creatureType, raised));
+                    demons->getName(raised));
         else
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
-                    getArmyName(demons->m_creatureType, raised));
+                    demons->getName(raised));
         m_combatWindow->combatMessage(g_text, 1, 0);
         waitEndSample(sample, -1);
     }
