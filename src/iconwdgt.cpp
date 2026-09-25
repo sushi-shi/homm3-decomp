@@ -71,14 +71,9 @@ iconWidget::~iconWidget()
 // than its copied load/dispose body. Both helpers expand naturally here.
 
 // DC 190..217 and 229..245 retain nested mouse-hit and selected scopes.
-// The positive selected scope lets VC6 merge the zero epilogues. Together
-// with positive hit testing, all five old goto returns become direct exits
-// and Main improves 95.7040% to 99.9639%. The whole 756-byte body and all
-// relocation references agree except two scratch-register operands:
-// +0x113 movsx and +0x117 mov use EDX where retail uses ECX for widget id.
-// All-direct returns with the old negative selected guard lose score;
-// moving default/base delegation into separate switch arms gives at most
-// 91.8050%. Neither failed form establishes an unavoidable source goto.
+// Mac retains three widget::main calls: inactive, unhandled disabled widget
+// message, and the shared active tail. Restoring the middle source call also
+// makes the Windows retail comparison exact.
 VA(0x004ea810, 0x2F4)  // vtable 0x63ec48 slot 2, dc 0xd94a4
 int iconWidget::main(message& msg)
 {
@@ -121,6 +116,9 @@ int iconWidget::main(message& msg)
                 return 1;
             }
         }
+        // Mac retains this disabled-message base call at 0:0x10c688.
+        if (isDisabled)
+            return widget::main(msg);
         break;
 
     case MESSAGE_LEFT_BUTTON_DOWN:
