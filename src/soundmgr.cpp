@@ -77,8 +77,7 @@ void soundManager::setMusicVolume()
             g_soundManager->startMP3(name, 0, 1);
         } else {
             int musicFileId = g_terrainMusicIds[g_advManager->m_lastTerrain];
-            if (musicFileId >= 2 && musicFileId <= 10)
-                startMP3(g_terrainMusic[musicFileId - 2], 0, 0);
+            switchAmbientMusic(musicFileId);
         }
     } else {
         stopMP3();
@@ -374,7 +373,7 @@ void soundManager::waitSample(ds_memsample* sample, int time)
         time = 4000;
     unsigned long deadline = GameTime::get() + time;
     while (g_soundManager->getSampleInfo(sample, SAMPLE_INFO_PLAYING)) {
-        if (static_cast<long>(GameTime::get() - deadline) >= 0)
+        if (GameTime::isPast(deadline))
             return;
         process1WindowsMessage();
         pollSound();
@@ -565,7 +564,7 @@ void waitEndSample(SAMPLE2 sample2, int milliWait)
     unsigned long deadline = GameTime::get() + milliWait;
     while (sample2.m_playSample && g_soundManager->getSampleInfo(
                sample2.m_playSample, soundManager::SAMPLE_INFO_PLAYING)) {
-        if (static_cast<long>(GameTime::get() - deadline) >= 0)
+        if (GameTime::isPast(deadline))
             break;
         process1WindowsMessage();
         pollSound();

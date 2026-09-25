@@ -164,7 +164,7 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
         case WM_CLOSE:
             if (window == g_hwndApp && gameUnsaved()) {
                 videoPause();
-                normalDialog(g_generalText->getText(GENERAL_TEXT_QUIT), 2,
+                normalDialog((*g_generalText)[GENERAL_TEXT_QUIT], 2,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 videoResume();
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
