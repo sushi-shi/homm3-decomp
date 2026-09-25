@@ -100,7 +100,8 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     widgets.push_back(new bitmapBorder(
         0, 0, 557, 585, 102, "AdvOptBk.pcx", 0x800));
 
-    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_SCENARIO_PLAYER_DIFFICULTY));
+    // Dreamcast scenarioinfo.cpp:275 calls TTextResource::operator[].
+    sprintf(g_text, "%s:", (*g_generalText)[GENERAL_TEXT_SCENARIO_PLAYER_DIFFICULTY]);
     widgets.push_back(new textWidget(
         411, 429, 334, 19, g_text, "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 132,

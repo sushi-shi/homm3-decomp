@@ -177,6 +177,8 @@ void game::showScenInfo()
 VA(0x00513800, 0x1D5)  // dc 0x103888
 void game::getLossConditionText(char* text)
 {
+    // Dreamcast lines 646, 655 and 662 retain TTextResource::operator[]
+    // for the hero, time-limit and standard-loss text lookups.
     LossConditionStruct& loss = m_mapHeader.m_lossCondition;
     if (loss.m_type != -1) {
         switch (loss.m_type) {
@@ -194,19 +196,19 @@ void game::getLossConditionText(char* text)
         }
         case LOSS_CONDITION_LOSE_HERO: {
             hero* targetHero = getHero(loss.m_heroId);
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_LOSS_CONDITION_LOSE_HERO_FORMAT), targetHero->m_name);
+            sprintf(text, (*g_generalText)[GENERAL_TEXT_LOSS_CONDITION_LOSE_HERO_FORMAT], targetHero->m_name);
             break;
         }
         case LOSS_CONDITION_TIME_LIMIT: {
             int month = (loss.m_numDays - 1) / 28 + 1;
             int week = (loss.m_numDays - (month - 1) * 28 - 1) / 7 + 1;
             int dayOfWeek = (loss.m_numDays - 1) % 7 + 1;
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_LOSS_CONDITION_TIME_LIMIT_FORMAT), month, week, dayOfWeek);
+            sprintf(text, (*g_generalText)[GENERAL_TEXT_LOSS_CONDITION_TIME_LIMIT_FORMAT], month, week, dayOfWeek);
             break;
         }
         }
     } else {
-        strcpy(text, g_generalText->getText(GENERAL_TEXT_LOSS_CONDITION_STANDARD));
+        strcpy(text, (*g_generalText)[GENERAL_TEXT_LOSS_CONDITION_STANDARD]);
     }
 }
 
