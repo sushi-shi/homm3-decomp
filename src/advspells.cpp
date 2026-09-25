@@ -497,7 +497,7 @@ void advManager::townGate(TSkillMastery level)
     if (selectedTown == -1)
         return;
 
-    town* destination = &g_game->m_towns[selectedTown];
+    town* destination = g_game->getTown(selectedTown);
     if (destination->m_visitingHeroId != -1) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(

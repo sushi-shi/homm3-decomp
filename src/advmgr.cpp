@@ -8536,7 +8536,7 @@ void advManager::setInitialMapOrigin()
             m_radarOrigin.m_y = startHero->m_y - 8;
             m_radarOrigin.m_z = startHero->m_z;
         } else if (player->m_numTowns > 0) {
-            town* startTown = &g_game->m_towns[player->m_townIds[0]];
+            town* startTown = g_game->getTown(player->m_townIds[0]);
             m_radarOrigin.m_x = startTown->m_mapX - 9;
             m_radarOrigin.m_y = startTown->m_mapY - 8;
             m_radarOrigin.m_z = startTown->m_mapZ;

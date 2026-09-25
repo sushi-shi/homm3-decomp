@@ -1638,7 +1638,7 @@ int playerData::buildingsOwned(int townType, int buildingId, int mageLevel)
 {
     int count = 0;
     for (int i = 0; i < m_numTowns; ++i) {
-        town* currentTown = &g_game->m_towns[m_townIds[i]];
+        town* currentTown = g_game->getTown(m_townIds[i]);
         if (buildingId < DWELLING_0_ID || currentTown->m_type == townType) {
             if (buildingId == MAGE_GUILD_ID) {
                 if (currentTown->hasBuilding(MAGE_GUILD_ID, false)
@@ -3487,7 +3487,7 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
 VA(0x004bf570, 0x203)
 void game::giveTroopsToNeutralTown(int townId)
 {
-    town* currentTown = &m_towns[townId];
+    town* currentTown = getTown(townId);
     long weekNumber = getCurrentTurn() / 7;
     int maxRoll = min(weekNumber, 8) + 1;
     int roll = random(0, maxRoll) + random(0, maxRoll)
@@ -6627,7 +6627,7 @@ int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 VA(0x004c61e0, 0x4A8)  // dc 0xb1230
 void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove, unsigned char checkEndGame)
 {
-    town* thisTown = &m_towns[townId];
+    town* thisTown = getTown(townId);
     long oldOwner = thisTown->m_owner;
     long i;
     if (oldOwner == newPlayerOwner)
@@ -8660,7 +8660,7 @@ void game::processOnMapTowns()
                     && tempCell->m_isTrigger) {
                     townnum = tempCell->m_extraInfo;
                     townExtra = &m_scenarioTowns[townnum];
-                    currTown = &m_towns[townnum];
+                    currTown = getTown(townnum);
 
                     currTown->m_mapX = x;
                     currTown->m_mapY = y;
@@ -9534,7 +9534,7 @@ int game::getNumThievesGuilds(int whichPlayer)
     int count = 0;
     for (int i = 0; i < m_players[whichPlayer].m_numTowns; i++) {
         town* currentTown =
-            &g_game->m_towns[m_players[whichPlayer].m_townIds[i]];
+            getTown(m_players[whichPlayer].m_townIds[i]);
         if (currentTown->hasBuilding(TAVERN_ID, false) ||
             (currentTown->m_type == TOWN_CASTLE &&
              currentTown->hasBuilding(EXTRA_1_ID, false))) {
