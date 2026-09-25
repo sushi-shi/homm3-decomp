@@ -1251,3 +1251,43 @@ mac_offset = 0x98320
 mac_size = 0x58
 sha256 = "7d4d2cb7e9d5ce93ba967dad9ee28603deb6941a88e2c40f923d415c5556afdc"
 evidence = "The third repeated Mac game::load cleanup wrapper calls subobject destructor 0x6b7fc with flag zero and conditionally frees this through scalar delete. BLR 0x98374; next body 0x98378. Compiler-generated destructor path only."
+
+[[functions]]
+symbol = ".strcat"
+mac_section = 0
+mac_offset = 0x26afa4
+mac_size = 0x2c
+sha256 = "2d84d5856e995e0cd8e4110a9b4e312721c575ec5120eb8874310b87215246dc"
+evidence = "Mac bottom-view, multiplayer and quick-window callers append C strings through this routine. It advances r3 to the destination NUL, then copies r4 through its terminator and returns at 0x26afcc; strlen begins at 0x26afd0. C runtime strcat, not an authored game helper."
+
+[[functions]]
+symbol = ".abs"
+mac_section = 0
+mac_offset = 0x2887a0
+mac_size = 0x10
+sha256 = "224cb73d9c41a3021c6b869de415325429a4b38f620242ae322b7dd389971b2d"
+evidence = "AI combat, combat-manager and command callers pass a signed integer in r3. This body returns nonnegative inputs directly and negates negative inputs before BLR at 0x2887ac. C runtime abs, not an authored combat helper."
+
+[[functions]]
+symbol = ".mac_vector_word_deleting_dtor_e924c"
+mac_section = 0
+mac_offset = 0xe924c
+mac_size = 0x64
+sha256 = "b3eb69471945de777b292342c82a1ce49e01beb827bca93375554097affb86d5"
+evidence = "Game/playerData destruction, Mac oldmain and town-portal search call this generated vector destructor. It clears the vector through 0xe9214, frees its backing store when present, and frees the vector object only for a positive deleting flag. BLR at 0xe92ac; the next generated destructor starts at 0xe92b0. Container lifetime, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_vector_ctor_b931c"
+mac_section = 0
+mac_offset = 0xb931c
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "Events and seer-hut callers construct a local twelve-byte vector, passing its initial backing pointer in r4. The complete body stores r4 into its receiver's first word and returns at 0xb9320; the following body begins at 0xb9324. Compiler library construction, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_vector_deleting_dtor_be6e4"
+mac_section = 0
+mac_offset = 0xbe6e4
+mac_size = 0x64
+sha256 = "867430bb909447398822ff361810df0bdfe9bb5bcde4ca9e60f6c0eb13c62734"
+evidence = "Events and seer-hut callers destroy the same local vector built through 0xb931c. The body calls its element cleanup at 0xbecf8, frees the backing pointer at +8, and frees the receiver only for a positive deleting flag. BLR at 0xbe744; the next destructor starts at 0xbe748. Compiler library lifetime, not an authored game helper."
