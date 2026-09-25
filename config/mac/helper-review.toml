@@ -58,6 +58,21 @@
 # delayTil; their bitmap construction is already expressed as local objects.
 # Mouse and graphics targets are Mac cursor/QuickDraw services. Mac sound
 # volume conversion and stream control use its native audio backend.
+# The oldmain and dialog-loop targets in kb are authored menu calls, implicit
+# dialog/member construction and teardown, plus Mac event services; its eight
+# repeated 0xe924c calls are a scalar deleting destructor.
+# Single-selection's sort arms call authored std::sort predicates; repeated
+# unnamed targets are STL, accessors and message object lifecycle. Its log
+# calls are g_logFile.log, onNameChange follows onEnter, and Mac host-wait
+# dialogs use sRandom for presentation absent from the Windows dialog path.
+# AI-player unnamed targets are retained object construction, artifact-effect
+# subclasses and vector operations around the authored purchase, path and
+# destination calls. Its named type constructors and hero accessors are in the
+# existing object expressions and helper methods.
+# Mapcell's repeated unnamed targets in NewfullMap construction, read/load and
+# destruction are vector/member lifecycle methods; the two common scalar
+# deleting destructors and +8 accessor were checked in the PEF. Named army,
+# generator and object-type calls follow existing member expressions.
 # Remaining spellbook/campaign UI targets are STL and implicit teardown.
 units = [
   "adventuremapwindow",
@@ -66,6 +81,7 @@ units = [
   "advspells",
   "ai",
   "ai_combat",
+  "ai_player",
   "ai_tactical",
   "army",
   "armygrp",
@@ -118,10 +134,12 @@ units = [
   "iconwdgt",
   "initialize",
   "inputmgr",
+  "kb",
   "kbwin",
   "levelupwindow",
   "lodfile",
   "mainmenu",
+  "mapcell",
   "misc",
   "monframeinfo",
   "mousemgr",
@@ -151,6 +169,7 @@ units = [
   "seerhut",
   "seerhuttext",
   "singleselectionpopups",
+  "singleselectionwindow",
   "slider",
   "smackmgr",
   "soundmgr",

@@ -5639,18 +5639,8 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     }
 
     case VICTORY_CONDITION_DEFEAT_HERO: {
-        int heroId;
-        infile->read(&heroId, sizeof(char));
-        heroId &= 0xff;
-        if (heroId == g_savedHeroNone) {
-            heroId = -1;
-        } else if (saveVersion < g_saveVersionCompleteHeroRoster) {
-            if (heroId == g_savedHeroPre25First)
-                heroId = g_heroPre25FirstRemap;
-            else if (heroId == g_savedHeroPre25Second)
-                heroId = g_heroPre25SecondRemap;
-        }
-        m_victoryCondition.m_heroId = heroId;
+        // Mac retains loadHeroId at 0:0xda0a8; VC6 expands its body here.
+        m_victoryCondition.m_heroId = loadHeroId(infile, saveVersion);
         return 0;
     }
 
