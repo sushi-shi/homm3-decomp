@@ -25,6 +25,11 @@
 # Town-manager's unnamed targets are an empty destructor and vector begin;
 # strip/townObject destructor calls follow the authored deletes. Mac's
 # tavern modal path calls videoRestart where Windows source uses videoResume.
+# Victory/loss-condition unknown targets are bitset count and vector
+# push/erase operations already present at the owning call sites.
+# Command now calls resetMouse at all four Mac-retained sites and uses the
+# canonical markCreatureEffect in addArmy; other call leads are nested
+# RAII/container calls or ordinary helper bodies.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
@@ -48,6 +53,7 @@ units = [
   "combatcontrolsubwindow",
   "combatoptionswindow",
   "combatresultswindow",
+  "command",
   "creature_bank",
   "creaturetype",
   "csequence",
@@ -106,6 +112,7 @@ units = [
   "townmgr",
   "tradpost",
   "university_window",
+  "victorylossconditions",
   "viewarmywindow",
   "viewwrld",
   "widget",

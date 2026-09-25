@@ -1481,17 +1481,7 @@ int combatManager::rightClick(int newIndex)
                 && m_cells[newIndex].m_armySide >= 0) {
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
             viewArmy(m_cells[newIndex].getArmy(), 1);
-            if (static_cast<const combatManager*>(this)->isQuickCombat())
-                return 0;
-            if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
-                    && g_game->isHuman(m_playerIds[m_currentSide])) {
-                m_lastCellIndex = -1;
-                if (m_combatWindow)
-                    m_combatWindow->clearCombatMessages();
-                g_inputManager->forceMouseMove();
-                return 0;
-            }
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            resetMouse();
             return 0;
         }
         if (m_fortificationLevel != COMBAT_FORTIFICATION_CASTLE)
@@ -1566,34 +1556,14 @@ void combatManager::doCommand(int command)
             m_combatWindow->m_creatureSubWindows[3]->unShow();
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
             initiateSpell(spell, 0);
-            if (static_cast<const combatManager*>(this)->isQuickCombat())
-                break;
-            if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
-                    && g_game->isHuman(m_playerIds[m_currentSide])) {
-                m_lastCellIndex = -1;
-                if (m_combatWindow)
-                    m_combatWindow->clearCombatMessages();
-                g_inputManager->forceMouseMove();
-                break;
-            }
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            resetMouse();
         }
         break;
 
     case COMBAT_COMMAND_VIEW_TOWERS:
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
         viewCastleBallista(0);
-        if (static_cast<const combatManager*>(this)->isQuickCombat())
-            break;
-        if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
-                && g_game->isHuman(m_playerIds[m_currentSide])) {
-            m_lastCellIndex = -1;
-            if (m_combatWindow)
-                m_combatWindow->clearCombatMessages();
-            g_inputManager->forceMouseMove();
-            break;
-        }
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        resetMouse();
         break;
 
     case COMBAT_COMMAND_VIEW_ARMY:
@@ -1601,17 +1571,7 @@ void combatManager::doCommand(int command)
         if (m_lastCellIndex < 0 || m_lastCellIndex >= COMBAT_GRID_CELLS)
             break;
         viewArmy(m_cells[m_lastCellIndex].getArmy(), 0);
-        if (static_cast<const combatManager*>(this)->isQuickCombat())
-            break;
-        if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
-                && g_game->isHuman(m_playerIds[m_currentSide])) {
-            m_lastCellIndex = -1;
-            if (m_combatWindow)
-                m_combatWindow->clearCombatMessages();
-            g_inputManager->forceMouseMove();
-            break;
-        }
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        resetMouse();
         break;
 
     case COMBAT_COMMAND_BOMBARD_WALL:
@@ -2735,10 +2695,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
     if (fizzleItIn
             && !static_cast<const combatManager*>(this)->isQuickCombat()) {
         resetLimitCreature();
-        if (m_armies[side][slot].m_creatureType == CREATURE_ARROW_TOWER)
-            markTowerArmy(newArmy);
-        else
-            m_creatureEffect[side][slot] = 1;
+        markCreatureEffect(side, slot);
         computeMaxExtent();
         g_windowManager->saveFizzleSourceX(
             m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
