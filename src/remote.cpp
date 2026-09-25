@@ -891,7 +891,7 @@ void CChatManager::updateWidgetText(int numLines, textWidget* widget)
     for (i = firstMsg; i <= lastMsg; i++) {
         lineCounts[lineNbr] =
             widget->m_font->lineLength(m_msgArray[msgNbr].m_text, widget->m_width);
-        msgNbr = (msgNbr + 1) % m_maxLines;
+        msgNbr = getNextMsgNbr(msgNbr);
         totalLines += lineCounts[lineNbr];
         lineNbr++;
     }
@@ -909,7 +909,7 @@ void CChatManager::updateWidgetText(int numLines, textWidget* widget)
         if (i < lastMsg)
             strcat(m_widgetText, DATA_COMPGEN(0x006603bc, chatLineBreak, "\n"));
         i++;
-        msgNbr = (msgNbr + 1) % m_maxLines;
+        msgNbr = getNextMsgNbr(msgNbr);
         if (msgNbr == m_currMsg)
             break;
     }
@@ -2514,8 +2514,7 @@ VA(0x00557aa0, 0x4D)  // dc 0x11f090
 unsigned char CTurnDuration::isExpired()
 {
     if ((!g_currentPlayer || g_currentPlayer->isLocalHuman())
-            && m_currDuration != 0
-            && !g_inCampaign
+            && isOn()
             && m_pauseTime <= 0) {
         unsigned long startTime = m_turnStartTime;
         if (startTime > 0
@@ -2643,7 +2642,7 @@ void CTurnDuration::setDuration(unsigned long ms)
 VA(0x00557d90, 0x3D)  // dc 0x11f3b0
 void CTurnDuration::start()
 {
-    if (m_currDuration != 0 && !g_inCampaign) {
+    if (isOn()) {
         m_lastWarned = m_turnStartTime = GameTime::get();
         m_nextWarning = 0;
         if (m_currDuration > 60000)
