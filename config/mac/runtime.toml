@@ -1211,3 +1211,43 @@ mac_offset = 0x20bb34
 mac_size = 0x14
 sha256 = "fa30d5391deb4aa99a4fede5e1ba93a48ef5abd80eb5ea57c9d63714d520a5a1"
 evidence = "heroWindow::findWidgetPtr first calls this for m_widgets.end(). It adds vector size at +4 times four to the data pointer at +8 and returns; BLR 0x20bb44, next body starts 0x20bb48. The ordinary source already names end()."
+
+[[functions]]
+symbol = ".strcmp"
+mac_section = 0
+mac_offset = 0x28e2f8
+mac_size = 0x34
+sha256 = "a7b170e6778aa58df0c87ff80e92e9b5ba6ad4a9647bb00ff5778455d6a2fcaa"
+evidence = "Border, hero and single-selection callers compare two C strings here. The routine advances both pointers one byte at a time, returns zero on equal NUL terminators and otherwise returns the byte difference; BLR at 0x28e328. C runtime strcmp, not an authored helper."
+
+[[functions]]
+symbol = ".srand"
+mac_section = 0
+mac_offset = 0x28e048
+mac_size = 0x8
+sha256 = "bf0bdc176797df13095f3ec65f646acb0e052eba61ecc1aeb980beeffccd4814"
+evidence = "Mac sRand calls this routine with its integer seed. The two-instruction body stores that seed to its TOC global at r2-0x1b90 and returns at 0x28e04c; next code begins at 0x28e050. C runtime srand, not a game helper."
+
+[[functions]]
+symbol = ".mac_generated_deleting_dtor_981a8"
+mac_section = 0
+mac_offset = 0x981a8
+mac_size = 0x58
+sha256 = "7b8ca06d3eb7d8f7fd434c3637987996659005c6ee15d7d6acaf73fe87a12be0"
+evidence = "Mac game::load reaches this generated cleanup wrapper repeatedly. It calls subobject destructor 0x6b8c4 with deleting flag zero, then conditionally calls scalar delete 0x268b2c for a positive flag. BLR 0x981fc; next body starts 0x98200. Generated lifetime cleanup, not an authored helper."
+
+[[functions]]
+symbol = ".mac_generated_deleting_dtor_98264"
+mac_section = 0
+mac_offset = 0x98264
+mac_size = 0x58
+sha256 = "341c8ca7a164c1442a8ad5bbc403a338da5dce9e0c2c95483f538079c6cdbf8f"
+evidence = "The second repeated Mac game::load cleanup wrapper calls subobject destructor 0x6b860 with flag zero, then conditionally frees this when the signed-short deleting flag is positive. BLR 0x982b8; next body 0x982bc. Compiler-generated destructor path only."
+
+[[functions]]
+symbol = ".mac_generated_deleting_dtor_98320"
+mac_section = 0
+mac_offset = 0x98320
+mac_size = 0x58
+sha256 = "7d4d2cb7e9d5ce93ba967dad9ee28603deb6941a88e2c40f923d415c5556afdc"
+evidence = "The third repeated Mac game::load cleanup wrapper calls subobject destructor 0x6b7fc with flag zero and conditionally frees this through scalar delete. BLR 0x98374; next body 0x98378. Compiler-generated destructor path only."
