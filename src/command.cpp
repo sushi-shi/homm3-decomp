@@ -64,13 +64,12 @@ static const int g_combatActionFirstAid = 11;
 // earlier costs 36 rows, while naming `skill == 0` costs 37. Keep the direct
 // DC-shaped access rather than forcing a register with synthetic state.
 // Mac code0+0x81d04 retains validWallTarget(WALL_TARGET_3) at the keep check.
-// Using that source call here makes VC6 emit a six-instruction boolean test
-// where retail has four instructions and lowers this match to 98.64%.
+// Keep that source call even though VC6 emits a longer boolean test here.
 // A chosen-target result guards the fallback wall/tower selection and
 // removes the shared-order goto at 99.8804%. Bool, unsigned-char and int
 // forms are neutral, as are two single-pass selection scopes. Copying the
 // final order stores and return into the keep arm scores 95.9569%. Preserve
-// the four named calls and their conditional random draw.
+// the named calls and their conditional random draw.
 VA(0x00473c00, 0x29F)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
 unsigned char combatManager::automateCatapult()
 {
@@ -104,8 +103,7 @@ unsigned char combatManager::automateCatapult()
     bool targetChosen = 0;
     if (static_cast<const combatManager*>(this)->isQuickCombat()
             || isComputerAction(getCurrentArmy())) {
-        if (skill > 0
-                && m_wallStrength[s_wallTargets[WALL_TARGET_3].m_wall] > 0) {
+        if (skill > 0 && validWallTarget(WALL_TARGET_3)) {
             target = WALL_TARGET_3;
             targetChosen = 1;
         }

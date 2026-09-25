@@ -1561,16 +1561,19 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                 rightText += formatString((*g_generalText)[GENERAL_TEXT_BASIC_GROWTH_FORMAT],
                                             growth);
 
+            // Mac keeps one getBuildingName call in each arm at 0:0x1bdb68,
+            // 0:0x1bdbbc and 0:0x1bdbd4.
             if (currTown->getCastleGrowthBonus(creature) > 0) {
-                int building;
+                const char* buildingName;
                 if (currTown->hasBuilding(CASTLE_CASTLE_ID, false))
-                    building = CASTLE_CASTLE_ID;
+                    buildingName = getBuildingName(currTown->m_type,
+                                                   CASTLE_CASTLE_ID);
                 else if (currTown->hasBuilding(CASTLE_CITADEL_ID, false))
-                    building = CASTLE_CITADEL_ID;
+                    buildingName = getBuildingName(currTown->m_type,
+                                                   CASTLE_CITADEL_ID);
                 else
-                    building = CASTLE_FORT_ID;
-                const char* buildingName =
-                    getBuildingName(currTown->m_type, building);
+                    buildingName = getBuildingName(currTown->m_type,
+                                                   CASTLE_FORT_ID);
                 rightText += formatString(
                     DATA_COMPGEN(0x0068c1f0, signedBonusFormat, "\n%s %+d"),
                     buildingName,
