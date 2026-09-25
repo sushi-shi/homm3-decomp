@@ -1490,7 +1490,9 @@ void army::rangeAttack()
     if (is(creatureTwoAttacks) && target->m_numTroops > 0)
         rangeAttack(target);
     if (m_creatureType == ARMY_CREATURE_BALLISTA && target->m_numTroops > 0
-        && getController() && getController()->m_skillLevel[eSecSkillBattlefieldBallistics] > 1) {
+        && getController()
+        && getController()->getSecondarySkill(eSecSkillBattlefieldBallistics)
+               > 1) {
         rangeAttack(target);
     }
     if (m_facing != oldFacing) {
@@ -2508,7 +2510,7 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     if (m_creatureType == ARMY_CREATURE_BALLISTA) {
         if (getController()) {
             if (getController()
-                    ->m_skillLevel[eSecSkillBattlefieldBallistics] > 1)
+                    ->getSecondarySkill(eSecSkillBattlefieldBallistics) > 1)
                 attack = attack + attack;
             attack =
                 attack
@@ -2790,7 +2792,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
     case ARMY_CREATURE_BALLISTA: {
         hero* controlling = getController();
         long mastery =
-            controlling->m_skillLevel[eSecSkillBattlefieldBallistics];
+            controlling->getSecondarySkill(eSecSkillBattlefieldBallistics);
         if (!simulateOnly
             && sRandom(1, 100) <= g_artilleryDoubleChances[mastery]) {
             result += baseDamage;
@@ -3912,7 +3914,7 @@ void army::attackWall(int targetGridIndex)
     long level;
     switch (m_creatureType) {
     case CREATURE_CATAPULT:
-        level = controller->m_skillLevel[eSecSkillSiegeBallistics];
+        level = controller->getSecondarySkill(eSecSkillSiegeBallistics);
         break;
 
     case ARMY_CREATURE_CYCLOPS:

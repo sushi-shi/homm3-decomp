@@ -962,11 +962,11 @@ static inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
     case const_free_artifact:
         return value;
     case const_artifact_requires_wisdom:
-        if (currentHero->m_skillLevel[eSecSkillWisdom] > 0)
+        if (currentHero->getSecondarySkill(eSecSkillWisdom) > 0)
             return value;
         return 0;
     case const_artifact_requires_leadership:
-        if (currentHero->m_skillLevel[eSecSkillLeadership] > 0)
+        if (currentHero->getSecondarySkill(eSecSkillLeadership) > 0)
             return value;
         return 0;
     case const_artifact_costs_2000:
@@ -1347,7 +1347,7 @@ inline int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
     if (currentHero->m_libraryFlags & (1UL << cell->m_extraInfo))
         return 0;
     if (currentHero->m_level
-            + 2 * currentHero->m_skillLevel[eSecSkillDiplomacy]
+            + 2 * currentHero->getSecondarySkill(eSecSkillDiplomacy)
         < 10)
         return 0;
     return 2 * currentHero->getValueOfPower()
@@ -1649,7 +1649,7 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     case eSecSkillSiegeBallistics:
         return armyValue / 8;
     case eSecSkillEagleEye:
-        if (!ourHero->m_skillLevel[eSecSkillWisdom])
+        if (!ourHero->getSecondarySkill(eSecSkillWisdom))
             return 0;
         if (complexChoice)
             return ourHero->getValueOfPower() / 5;
@@ -1669,29 +1669,29 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     case eSecSkillSchoolOfFireMagic:
         if (complexChoice)
             return getSchoolValue(ourHero, skill);
-        if (!ourHero->m_skillLevel[eSecSkillWisdom])
+        if (!ourHero->getSecondarySkill(eSecSkillWisdom))
             return 0;
         return ourHero->getPrimarySkill(2) * 10;
     case eSecSkillSchoolOfAirMagic:
         if (complexChoice)
             return getSchoolValue(ourHero, skill);
-        if (!ourHero->m_skillLevel[eSecSkillWisdom])
+        if (!ourHero->getSecondarySkill(eSecSkillWisdom))
             return 25;
         return ourHero->getPrimarySkill(2) * 10;
     case eSecSkillSchoolOfWaterMagic:
         if (complexChoice)
             return getSchoolValue(ourHero, skill);
-        if (!ourHero->m_skillLevel[eSecSkillWisdom])
+        if (!ourHero->getSecondarySkill(eSecSkillWisdom))
             return 3;
         return ourHero->getPrimarySkill(2) * 10;
     case eSecSkillSchoolOfEarthMagic:
         if (complexChoice)
             return getSchoolValue(ourHero, skill);
-        if (!ourHero->m_skillLevel[eSecSkillWisdom])
+        if (!ourHero->getSecondarySkill(eSecSkillWisdom))
             return 30;
         return ourHero->getPrimarySkill(2) * 10;
     case eSecSkillMagicScholar:
-        if (!ourHero->m_skillLevel[eSecSkillWisdom])
+        if (!ourHero->getSecondarySkill(eSecSkillWisdom))
             return 0;
         if (complexChoice)
             return ourHero->getValueOfPower()
@@ -2798,7 +2798,7 @@ VA(0x005298d0, 0x4b)  // dc 0x1105ac
 long valueOfLearning(const hero* currentHero, SpellID spell)
 {
     if (g_spellTraits[spell].m_level
-        > currentHero->m_skillLevel[eSecSkillWisdom] + 2)
+        > currentHero->getSecondarySkill(eSecSkillWisdom) + 2)
         return 0;
     return valueOfSpell(currentHero, spell);
 }
@@ -3056,7 +3056,7 @@ long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
     guardians.add(0x74, 0x28, -1);
     guardians.add(0x75, 0x14, -1);
 
-    if (currentHero->m_skillLevel[eSecSkillWisdom] >= 3) {
+    if (currentHero->getSecondarySkill(eSecSkillWisdom) >= 3) {
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
             if (g_spellTraits[spell].m_level == g_pyramidSpellLevel) {
                 if (!currentHero->spellIsAvailable(spell)) {
@@ -3397,7 +3397,7 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
                 value += 1000;
         } else {
             for (int level = 0;
-                 level < currentHero->m_skillLevel[eSecSkillWisdom] + 2; level++) {
+                 level < currentHero->getSecondarySkill(eSecSkillWisdom) + 2; level++) {
                 if (level > currentTown->m_mageLevel)
                     break;
                 for (int slot = 0;

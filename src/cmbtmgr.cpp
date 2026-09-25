@@ -3694,7 +3694,7 @@ void combatManager::learnSpellFromEagleEye(int side)
         SpellID spell = *it;
         if (m_heroes[side]->isWieldingArtifact(ARTIFACT_SPELLBOOK)
             && g_spellTraits[spell].m_level
-                <= m_heroes[side]->m_skillLevel[eSecSkillWisdom] + 2)
+                <= m_heroes[side]->getSecondarySkill(eSecSkillWisdom) + 2)
             m_heroes[side]->addSpell(spell);
     }
 }

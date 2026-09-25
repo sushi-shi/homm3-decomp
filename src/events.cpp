@@ -1254,7 +1254,7 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
     if (currentHero->isWieldingArtifact(0)) {
         for (unsigned int n = 0; n < blackBox->m_spells.size(); n++) {
             if (g_spellTraits[blackBox->m_spells[n]].m_level
-                    <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
+                    <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
                 && !currentHero->isInSpellbook(blackBox->m_spells[n])) {
                 if (humanPlayer) {
                     if (rewards.size() != 0) {
@@ -2080,13 +2080,13 @@ VA(0x004a2940, 0x85C)  // anchor-callee from do_event_hero + full retail semanti
 static void exchangeSpells(hero* firstHero, hero* secondHero)
 {
     const int magicScholarLevel = max(
-        firstHero->m_skillLevel[eSecSkillMagicScholar],
-        secondHero->m_skillLevel[eSecSkillMagicScholar]);
+        firstHero->getSecondarySkill(eSecSkillMagicScholar),
+        secondHero->getSecondarySkill(eSecSkillMagicScholar));
     std::vector<SpellID> spellsLearned;
     std::vector<SpellID> spellsTaught;
 
-    if (firstHero->m_skillLevel[eSecSkillMagicScholar]
-        < secondHero->m_skillLevel[eSecSkillMagicScholar])
+    if (firstHero->getSecondarySkill(eSecSkillMagicScholar)
+        < secondHero->getSecondarySkill(eSecSkillMagicScholar))
         std::swap(firstHero, secondHero);
 
     if (magicScholarLevel > 0
@@ -2094,10 +2094,10 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
         && secondHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         const int firstSpellLevel = min(
             magicScholarLevel + 1,
-            firstHero->m_skillLevel[eSecSkillWisdom] + 2);
+            firstHero->getSecondarySkill(eSecSkillWisdom) + 2);
         const int secondSpellLevel = min(
             magicScholarLevel + 1,
-            secondHero->m_skillLevel[eSecSkillWisdom] + 2);
+            secondHero->getSecondarySkill(eSecSkillWisdom) + 2);
 
         SpellID spell;
         for (spell = 0; spell < hero::NUM_SPELLS; spell++) {
@@ -2129,7 +2129,7 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
     msg = formatString((*g_generalText)[GENERAL_TEXT_SCHOLAR_MAGIC_INTRO_FORMAT], firstHero->m_name);
     spellInfo.m_resource = RES_SECONDARY_SKILL;
     spellInfo.m_qualifier = eSecSkillMagicScholar * 3
-                           + firstHero->m_skillLevel[eSecSkillMagicScholar] + 2;
+                           + firstHero->getSecondarySkill(eSecSkillMagicScholar) + 2;
     spellsExchanged.push_back(spellInfo);
 
     std::sort(spellsLearned.begin(), spellsLearned.end(),
@@ -2621,7 +2621,8 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
                               ADV_EVENT_TEXT_PYRAMID_NO_SPELLBOOK_SUFFIX));
             normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-    } else if (g_spellTraits[spell].m_level > currentHero->m_skillLevel[eSecSkillWisdom] + 2) {
+    } else if (g_spellTraits[spell].m_level
+               > currentHero->getSecondarySkill(eSecSkillWisdom) + 2) {
         if (humanPlayer) {
             strcat(text, g_adventureEventText->getText(
                               ADV_EVENT_TEXT_PYRAMID_NO_WISDOM_SUFFIX));
@@ -2797,7 +2798,8 @@ void advManager::doEventScholar(hero* currentHero, NewmapCell* cell,
     if (award == const_scholar_spell) {
         SpellID spell = info->getScholarSpell();
         if (currentHero->isInSpellbook(spell)
-            || g_spellTraits[spell].m_level > currentHero->m_skillLevel[eSecSkillWisdom] + 2
+            || g_spellTraits[spell].m_level
+                   > currentHero->getSecondarySkill(eSecSkillWisdom) + 2
             || !currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
             award = const_scholar_primary_skill;
         } else {
@@ -2984,7 +2986,8 @@ void advManager::doEventShrine(hero* currentHero, NewmapCell* cell,
         return;
     }
 
-    if (g_spellTraits[spell].m_level > currentHero->m_skillLevel[eSecSkillWisdom] + 2) {
+    if (g_spellTraits[spell].m_level
+        > currentHero->getSecondarySkill(eSecSkillWisdom) + 2) {
         if (humanPlayer) {
             result += (*g_adventureEventText)[ADV_EVENT_TEXT_SHRINE_NO_WISDOM_SUFFIX];
             normalDialog(result.c_str(), 1, -1, -1,
@@ -3723,7 +3726,7 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
         / static_cast<float>(g_creatureTypeTraits[monType].m_aiValue
                              * numTroops);
     short likeModifier = getLikeModifier(currentHero, monType);
-    short diplomacy = currentHero->m_skillLevel[eSecSkillDiplomacy];
+    short diplomacy = currentHero->getSecondarySkill(eSecSkillDiplomacy);
     short forceModifier = getForceModifier(strengthRatio);
 
     if (!g_game->m_setup.m_difficulty && humanPlayer) {
@@ -6008,8 +6011,8 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     if (!leftHuman)
         aiArrangeArmyForCombat(leftHero, rightHero, *rightArmyGroup);
     if (!rightHuman && rightHero
-        && rightHero->m_skillLevel[eSecSkillBattleTactics]
-               > leftHero->m_skillLevel[eSecSkillBattleTactics])
+        && rightHero->getSecondarySkill(eSecSkillBattleTactics)
+               > leftHero->getSecondarySkill(eSecSkillBattleTactics))
         aiArrangeArmyForCombat(rightHero, leftHero, *leftArmyGroup);
     if (g_highMemBuffer > 2900)
         g_adventureGraphicsPreserveMode = 2;

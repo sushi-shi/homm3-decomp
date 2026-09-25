@@ -692,7 +692,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 0;
         if (m_autoCombatOn && g_config.m_combatCatapult)
             return 1;
-        if (owner->m_skillLevel[eSecSkillSiegeBallistics] == 0)
+        if (owner->getSecondarySkill(eSecSkillSiegeBallistics) == 0)
             return 1;
         if (g_goSolo && m_thisNetHasControl)
             return 1;

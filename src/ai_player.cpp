@@ -1862,7 +1862,7 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
     building = currentTown->m_mageLevel;
 
     if (building >= 5
-        || building >= currentHero->m_skillLevel[eSecSkillWisdom] + 2
+        || building >= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
         || !currentTown->canBuild(building))
         return;
 
@@ -1882,7 +1882,7 @@ void type_AI_player::buyMageGuild(hero* currentHero, town* currentTown)
             town* otherTown = g_game->getTown(player->m_townIds[townIndex]);
             int otherLevel = otherTown->m_mageLevel;
             if (otherLevel > building
-                && otherLevel < currentHero->m_skillLevel[eSecSkillWisdom] + 2
+                && otherLevel < currentHero->getSecondarySkill(eSecSkillWisdom) + 2
                 && otherTown->canBuild(otherTown->m_mageLevel))
                 return;
         }
@@ -4449,7 +4449,7 @@ long type_spellcaster_artifact::getValue(const hero* owner, unsigned char, unsig
 {
     if (owner->getValueOfPower() == 0)
         return 0;
-    if (owner->m_skillLevel[eSecSkillWisdom] == 0)
+    if (owner->getSecondarySkill(eSecSkillWisdom) == 0)
         return 0;
     return owner->m_army.getAIValue() * m_bonus / 100;
 }

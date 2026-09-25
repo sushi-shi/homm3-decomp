@@ -729,9 +729,9 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         }
 
         if (otherHero
-            && otherHero->m_skillLevel[eSecSkillEagleEye] > eMasteryNone
+            && otherHero->getSecondarySkill(eSecSkillEagleEye) > eMasteryNone
             && !otherHero->isInSpellbook(spellId)
-            && otherHero->m_skillLevel[eSecSkillEagleEye] + 1
+            && otherHero->getSecondarySkill(eSecSkillEagleEye) + 1
                 >= traits->m_level) {
             if (sRandom(1, 100)
                 <= static_cast<int>(otherHero->getEagleEyeChance()

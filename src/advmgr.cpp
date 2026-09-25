@@ -7393,7 +7393,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
              && currHero->heroFn004E5DE0() != eMasteryInvalid)
             || m_debugViewAll) {
             int like = getLikeModifier(currHero, type);
-            const int diplomacy = currHero->m_skillLevel[eSecSkillDiplomacy];
+            const int diplomacy = currHero->getSecondarySkill(eSecSkillDiplomacy);
             const float strengthRatio =
                 static_cast<float>(aiApproximateStrength(currHero))
                 / static_cast<float>(g_creatureTypeTraits[type].m_aiValue

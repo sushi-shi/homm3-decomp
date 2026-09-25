@@ -2326,7 +2326,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     case eRewardSpell:
         if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)
             && g_spellTraits[m_value.m_dwords[0]].m_level
-                <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
+                <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
             && !currentHero->isInSpellbook(m_value.m_dwords[0]))
             currentHero->addSpell(m_value.m_dwords[0]);
         break;
