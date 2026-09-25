@@ -36,10 +36,6 @@ const unsigned int g_aiSpellClassMask = 0x1f8000;
 // side (Recanter's Cloak). Familiar's 0x2b identity is now shared through
 // TCreatureType: CastSpell and this AI projection independently prove it.
 const int g_artifactRecantersCloak = 0x53;
-const int g_secondarySkillWisdom = 7;
-const int g_secondarySkillSiegeBallistics = 10;
-const int g_secondarySkillEagleEye = 11;
-const int g_secondarySkillTactics = 19;
 
 // Attribute roles byte-proven by initialize_creatures. Kept TU-local for
 // the same shared-header codegen reason as the cast_spell constants above.
@@ -233,9 +229,9 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
 
     m_tacticsAdvantage = 0;
     if (m_currentHero)
-        m_tacticsAdvantage = m_currentHero->m_skillLevel[g_secondarySkillTactics];
+        m_tacticsAdvantage = m_currentHero->getSecondarySkill(eSecSkillBattleTactics);
     if (enemyHero) {
-        m_tacticsAdvantage -= enemyHero->m_skillLevel[g_secondarySkillTactics];
+        m_tacticsAdvantage -= enemyHero->getSecondarySkill(eSecSkillBattleTactics);
         if (m_tacticsAdvantage < 0)
             m_tacticsAdvantage = 0;
     }
@@ -344,7 +340,9 @@ void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
             m_wallSpeedLimit = 0;
         }
         if (m_wallSpeedLimit > 0) {
-            m_wallSpeedLimit = static_cast<short>(m_wallSpeedLimit - m_currentHero->m_skillLevel[g_secondarySkillSiegeBallistics]);
+            m_wallSpeedLimit = static_cast<short>(
+                m_wallSpeedLimit
+                - m_currentHero->getSecondarySkill(eSecSkillSiegeBallistics));
             if (m_wallSpeedLimit < 2)
                 m_wallSpeedLimit = 2;
         }
@@ -1142,18 +1140,20 @@ void type_AI_combat_data::simulateCombat(type_AI_combat_data& defender)
 // E:\gamedcs\ai_combat.cpp:1398
 static void doEagleEye(hero* winner, hero* loser)
 {
-    if (winner->m_skillLevel[g_secondarySkillEagleEye] > 0
+    if (winner->getSecondarySkill(eSecSkillEagleEye) > 0
         && winner->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (!loser->spellIsAvailable(spell)
                 || winner->spellIsAvailable(spell))
                 continue;
             const SSpellTraits& traits = g_spellTraits[spell];
-            if (winner->m_skillLevel[g_secondarySkillEagleEye] + 1 < traits.m_level)
+            if (winner->getSecondarySkill(eSecSkillEagleEye) + 1
+                < traits.m_level)
                 continue;
             if (!(traits.m_flags & 1))
                 continue;
-            if (traits.m_level <= winner->m_skillLevel[g_secondarySkillWisdom] + 2) {
+            if (traits.m_level
+                <= winner->getSecondarySkill(eSecSkillWisdom) + 2) {
                 winner->addSpell(spell);
                 return;
             }
