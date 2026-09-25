@@ -1,6 +1,14 @@
 # Reviewed library call destinations; these are not game reconstruction scores.
 
 [[functions]]
+symbol = ".__cvt_fp2unsigned"
+mac_section = 0
+mac_offset = 0x280548
+mac_size = 0x50
+sha256 = "d12451bad639791f6e9fee395ece0f2cf38a9fffcc97171b1d89183b85e80413"
+evidence = "CodeWarrior RuntimePPC.Lib contains the named double-to-unsigned conversion helper: its final 76 bytes equal the pinned PEF at 0x28054c..0x280598, while the first TOC load is relocated from 0x80820000 to 0x8082bb00. drawing::cycleCombatScreen calls it for the unsigned lastFidgetTime assignment at 0xa8b00. The prior body ends with BLR at 0x280544; this helper ends with BLR at 0x280594 and the next body starts at 0x280598. Runtime identity only."
+
+[[functions]]
 symbol = ".__ct__Q23std38__vector_pod<Ul,Q23std13allocator<Ul>>Fv"
 mac_section = 0
 mac_offset = 0x672d0
