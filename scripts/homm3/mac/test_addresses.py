@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from homm3.mac import addresses
+from homm3.mac import addresses, tables
 from homm3.mac.pef import Section
 
 
@@ -25,15 +25,19 @@ class FakePEF:
         return bytes(size)
 
 
-def tables(root: Path, functions=(), runtime=(), aliases=(), dispositions=()):
+def write_tables(root: Path, functions=(), runtime=(), aliases=(), dispositions=(), glue=(),
+                 owner="msl_c", call_kind="direct"):
     config = root / "config/mac"
     config.mkdir(parents=True, exist_ok=True)
     (config / "functions.tsv").write_text(
         "offset\tsize\n" + "".join(f"0x{o:x}\t0x{s:x}\n" for o, s in functions))
     (config / "runtime-map.tsv").write_text(
-        "offset\tname\n" + "".join(f"0x{o:x}\t{n}\n" for o, n in runtime))
+        "offset\tname\towner\tcall_kind\tevidence\n"
+        + "".join(f"0x{o:x}\t{n}\t{owner}\t{call_kind}\treviewed\n" for o, n in runtime))
     (config / "runtime-aliases.tsv").write_text(
-        "offset\tname\n" + "".join(f"0x{o:x}\t{n}\n" for o, n in aliases))
+        "offset\tname\tevidence\n" + "".join(f"0x{o:x}\t{n}\tfolded\n" for o, n in aliases))
+    (config / "glue-map.tsv").write_text(
+        "offset\tname\tlibrary\n" + "".join(f"0x{o:x}\t{n}\t{lib}\n" for o, n, lib in glue))
     (config / "dispositions.tsv").write_text(
         "identity\tdisposition\tevidence\n"
         + "".join(f"{i}\t{d}\t{e}\n" for i, d, e in dispositions))
@@ -123,11 +127,12 @@ class TestMacAddressScan(unittest.TestCase):
 
 
 class TestMacAddressTables(unittest.TestCase):
-    def check(self, root, text, **kwargs):
-        tables(root, **kwargs)
+    def check(self, root, text, stubs=(), **kwargs):
+        write_tables(root, **kwargs)
         claims, windows, problems = scan(text)
         self.assertEqual(problems, [])
-        with patch.object(addresses, "reviewed", return_value=[]):
+        with patch.object(addresses, "reviewed", return_value=[]), \
+                patch("homm3.mac.glue.stubs", return_value=list(stubs)):
             return addresses.check(root, FakePEF(), claims, windows)
 
     def test_claim_must_resolve_to_one_function_row(self):
@@ -150,7 +155,7 @@ class TestMacAddressTables(unittest.TestCase):
             found = self.check(Path(folder), text, functions=[(0x100, 0x20), (0x200, 0x8)],
                                runtime=[(0x100, ".f"), (0x200, ".g"), (0x300, ".h")],
                                aliases=[(0x200, ".g")])
-            self.assertTrue(any("also source claim" in item for item in found))
+            self.assertTrue(any("also library label .f" in item for item in found))
             self.assertTrue(any(".h at 0x300 has no" in item for item in found))
             self.assertTrue(any("duplicate name .g" in item for item in found))
 
@@ -168,12 +173,48 @@ class TestMacAddressTables(unittest.TestCase):
     def test_dispositions_need_known_kind_and_evidence(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            tables(root, dispositions=[("va:0x00401000", "gone", "reason")])
-            with self.assertRaises(addresses.AddressError):
-                addresses.read_dispositions(root)
-            tables(root, dispositions=[("va:0x00401000", "inlined_only", " ")])
-            with self.assertRaises(addresses.AddressError):
-                addresses.read_dispositions(root)
+            write_tables(root, dispositions=[("va:0x00401000", "gone", "reason")])
+            with self.assertRaises(tables.TableError):
+                tables.read_dispositions(root)
+            write_tables(root, dispositions=[("va:0x00401000", "inlined_only", " ")])
+            with self.assertRaises(tables.TableError):
+                tables.read_dispositions(root)
+
+    def test_runtime_owner_and_call_kind_must_be_known(self):
+        with tempfile.TemporaryDirectory() as folder:
+            found = self.check(Path(folder), "", functions=[(0x200, 0x8)],
+                               runtime=[(0x200, ".g")], owner="guess", call_kind="far")
+            self.assertTrue(any("unknown owner" in item for item in found))
+            self.assertTrue(any("unknown call kind" in item for item in found))
+
+    def test_glue_rows_must_be_loader_proven_24_byte_stubs(self):
+        from homm3.mac.relocations import Address
+        proven = [(Address(0, 0x300), "InterfaceLib", ".NewPtr")]
+        with tempfile.TemporaryDirectory() as folder:
+            self.assertEqual(self.check(Path(folder), "", stubs=proven, functions=[(0x300, 0x18)],
+                                        glue=[(0x300, ".NewPtr", "InterfaceLib")]), [])
+        with tempfile.TemporaryDirectory() as folder:
+            found = self.check(Path(folder), "", stubs=proven, functions=[(0x300, 0x18), (0x400, 0x10)],
+                               glue=[(0x400, ".Other", "InterfaceLib")])
+            self.assertTrue(any("not a loader-proven import stub" in item for item in found))
+            self.assertTrue(any("needs a 0x18-byte" in item for item in found))
+
+    def test_runtime_provenance_needs_positive_evidence(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            header = root / "build/mac/sdk/c/cstring"
+            header.parent.mkdir(parents=True)
+            header.write_bytes(b"_MSL_IMP_EXP_C char * strcat (char * , const char * );\r\n")
+            tables._msl_c_declarations.cache_clear()
+            owner = lambda name: tables.runtime_owner(root, name)  # noqa: E731
+            self.assertEqual(owner(".strcat"), "msl_c")
+            self.assertEqual(owner(".bzero"), "")
+            self.assertEqual(owner(".__ct__Q23std6stringFv"), "msl_cxx")
+            self.assertEqual(owner(".sort<19type_creature_value>__3stdFPv"), "msl_cxx")
+            self.assertEqual(owner(".__nw__FUl"), "msl_cxx")
+            self.assertEqual(owner(".__ptr_glue"), "cw_runtime")
+            self.assertEqual(owner(".mac_pointer_vector_push_back_20e0"), "")
+            tables._msl_c_declarations.cache_clear()
 
 
 class TestCoverage(unittest.TestCase):
@@ -181,7 +222,7 @@ class TestCoverage(unittest.TestCase):
         claims, _, _ = scan("VA(0x00401000, 0x10) MAC_ADDRESS(0x100, 0x20)\nvoid f()\n{\n}\n")
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            tables(root, functions=[(0x100, 0x20), (0x200, 0x8), (0x300, 0x10)],
+            write_tables(root, functions=[(0x100, 0x20), (0x200, 0x8), (0x300, 0x10)],
                    runtime=[(0x200, ".g")])
             report = addresses.coverage(root, FakePEF(0x1000), claims)
         self.assertEqual(report["rows_by_owner"], {"source": 1, "runtime": 1, "unowned": 1})
@@ -197,7 +238,7 @@ class TestParityIndex(unittest.TestCase):
         claims, windows, _ = scan(text)
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            tables(root, dispositions=[("va:0x00401020", "inlined_only",
+            write_tables(root, dispositions=[("va:0x00401020", "inlined_only",
                                         "every Mac caller expands the body")])
             with patch.object(addresses, "unit_of", return_value="unit"):
                 rows, problems = addresses.index(root, claims, windows)
@@ -215,7 +256,7 @@ class TestParityIndex(unittest.TestCase):
                               False, False, None, "?other@@YAXXZ")
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            tables(root)
+            write_tables(root)
             with patch.object(addresses, "unit_of", return_value="unit"):
                 rows, problems = addresses.index(root, claims, windows, [definition, stranger])
                 self.assertEqual(problems, [])
