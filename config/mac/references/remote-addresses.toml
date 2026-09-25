@@ -260,6 +260,60 @@ target_sha256 = "d8a5c118dc5850d389ccaac0399ff196eeafe6c8b65e00bd60f20ff7c05da9f
 evidence = "The reviewed CLevelPickWaitDlg constructor ends at 0x21479c. This following body stores fromWho, calls GameTime::get and sRand, repeats sRandom(0,111) while the creature is Devil or Arch Devil, then sets up general-text entry 472 and opens the modal dialog. Dreamcast WaitForLevels line 2490 also names SRandom. Its BLR at 0x214870 precedes the next prologue at 0x214874."
 
 [[functions]]
+retail_va = 0x00554d90
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2133bc
+mac_size = 0x24
+target_sha256 = "f4a2c162e07d928832fec58dfbf1e0329ac36819d0e2c17a43a4e389445f7a4e"
+evidence = "Both reviewed wait-dialog message handlers call this CAnimatedDlg base method at 0x214890 and 0x214cd4. It calls the following tickAnimation body at 0x2133e0 and returns zero, matching the ordinary source method and Windows 0x554d90. BLR at 0x2133dc bounds its 0x24-byte body."
+
+[[functions]]
+retail_va = 0x00554e10
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2133e0
+mac_size = 0xf0
+target_sha256 = "4da5771a34fca727b9852ea7390700ccc49725f04cb85671c82b8504bc21688b"
+evidence = "The immediately preceding CAnimatedDlg::handleMessage calls this body. It reads GameTime::get twice, compares elapsed time against 200, advances the sprite frame, draws the window and calls updateScreen at 0x20df2c, matching the source-owned tickAnimation method and Windows 0x554e10. BLR at 0x2134cc precedes the next prologue at 0x2134d0."
+
+[[functions]]
+retail_va = 0x00556c20
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214874
+mac_size = 0x178
+target_sha256 = "6e5a57d82ff740ecc33eae60cbe63445a650b0dd692a7157da0afc0780a5aaf5"
+evidence = "Immediately after CLevelPickWaitDlg::waitForLevels, this message handler calls CAnimatedDlg::handleMessage at 0x2133bc, pollSound at 0x10eaf0, and getRemoteData at 0x21294c before dispatching the received message. The source-owned player-drop and ready branches account for its calls at 0x2148f4 and 0x21492c. Its BLR at 0x2149e8 precedes the separate player-drop helper at 0x2149ec."
+
+[[helpers]]
+source_helper = "handleNewHost"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21405c
+mac_size = 0xe0
+target_sha256 = "7e213dc3234201427b92b6feac9361a12514eb8be9193336962454eead7ab0e1"
+evidence = "CLevelPickWaitDlg::handleMessage calls this retained helper at 0x214950 on RS_SET_AS_HOST. It logs HandleNewHost, tests the current player's human status, updates the local game position or transmits a player-drop update, then posts the host system message, matching the ordinary source helper. BLR at 0x214138 precedes the distinct onPlayerDropUpdateMsg prologue at 0x21413c; Windows expands the source calls."
+
+[[helpers]]
+source_helper = "CLevelPickWaitDlg::onPlayerDrop"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2149ec
+mac_size = 0x88
+target_sha256 = "3127a2f4ebc13eccfec05c037661340831a921ee7f178514703ca9076731290a"
+evidence = "The level-pick message handler calls this helper at 0x21492c on RS_PLAYER_DROPPED. It resolves the sender's game position, marks a matching dropped player, calls handlePlayerDrop and conditionally exits the modal, matching the ordinary source helper. BLR at 0x214a70 precedes the next prologue at 0x214a74; Windows expands the source call."
+
+[[helpers]]
+source_helper = "CLevelPickWaitDlg::onHeroLevelUpdate"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214a74
+mac_size = 0x8c
+target_sha256 = "de62338e54eb44bb71e9f57c84ec717cd8b92bdef180a081336f21ae2400b3f1"
+evidence = "The level-pick message handler calls this helper at 0x2148f4 on RS_HERO_LEVEL_UPDATE. It finds the selected hero and copies the secondary-skill and primary-stat bands before storing the skill count, matching the ordinary source helper. BLR at 0x214afc precedes the reviewed remote-battle constructor at 0x214b00; Windows expands the source call."
+
+[[functions]]
 retail_va = 0x556f20
 unit = "remote"
 mac_section = 0
@@ -276,6 +330,24 @@ mac_offset = 0x214c04
 mac_size = 0xac
 target_sha256 = "f523206d5b22054c16b25717693b40e529dec12c098af56a905f695d02f13327"
 evidence = "The reviewed CWaitForRemoteBattleDlg constructor ends at 0x214c00. This following body stores playerPos, calls sRandom(0,111), sets up general-text entry 473 with sprite and sequence 12, then opens the modal dialog. Dreamcast Wait line 2603 also names SRandom. Its BLR at 0x214cac precedes the next prologue at 0x214cb0."
+
+[[functions]]
+retail_va = 0x005570f0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214cb0
+mac_size = 0x1b8
+target_sha256 = "f60cff226a8a419dd2041a68487ff94b03a48b09aa13c56821773cb709a219ea"
+evidence = "Immediately after CWaitForRemoteBattleDlg::wait, this message handler calls CAnimatedDlg::handleMessage at 0x2133bc, pollSound at 0x10eaf0, and getRemoteData at 0x21294c before processing the remote-battle message. The call at 0x214d50 enters its source-owned player-drop helper. Its BLR at 0x214e64 precedes that helper's prologue at 0x214e68."
+
+[[helpers]]
+source_helper = "CWaitForRemoteBattleDlg::onPlayerDrop"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214e68
+mac_size = 0x84
+target_sha256 = "5949dfd3d50ba15fb871c9f22388202d66788fa2f6ed290dd542fea2fd3a1d95"
+evidence = "The remote-battle message handler calls this helper at 0x214d50 on RS_PLAYER_DROPPED. It resolves the sender, runs handlePlayerDrop and closes the modal only for the awaited combat peer, matching the ordinary source helper. BLR at 0x214ee8 precedes the next prologue at 0x214eec; Windows expands the source call."
 
 [[functions]]
 retail_va = 0x557dd0
