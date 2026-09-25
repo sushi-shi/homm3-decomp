@@ -1,5 +1,23 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 [[helpers]]
+source_helper = "TSingleSelectionWindow::onNameChange"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x184d94
+mac_size = 0xbc
+target_sha256 = "868562e2b05a37f01f38bec971b68b4295ccd6e6550c3e92fe0b839c62c5f1c6"
+evidence = "Both CEnterNameEdit overrides call this retained member. It resolves the seated player, clears focus, copies the name into the player and preferences, writes preferences, updates widget gamePos+345, then calls drawHeroAdvancedOption(gamePos,1,-1). BLR at 0x184e4c precedes updateNames."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::updateNames"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x184e50
+mac_size = 0xb0
+target_sha256 = "1f0a3af90645b8d7ba253ff2ca5d98c5c39c0adcc8a0cf38fde03b4093dd21e1"
+evidence = "The selection window update calls this retained eight-row loop. Each row gets its seated player and name widget (id row+345), then sets the default-player label or player name. BLR at 0x184efc precedes highlightFile."
+
+[[helpers]]
 source_helper = "savedGameExists"
 unit = "singleselectionwindow"
 mac_section = 0x0
