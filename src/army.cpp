@@ -4127,17 +4127,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         bounds.m_maxX = right;
         bounds.m_maxY = bottom;
     }
-    {
-        TDrawbridgeBounds& bounds = g_combatManager->m_drawbridgeBounds;
-        if (bounds.m_minX < g_combatDrawLimits.m_minX)
-            bounds.m_minX = g_combatDrawLimits.m_minX;
-        if (bounds.m_minY < g_combatDrawLimits.m_minY)
-            bounds.m_minY = g_combatDrawLimits.m_minY;
-        if (bounds.m_maxX > g_combatDrawLimits.m_maxX)
-            bounds.m_maxX = g_combatDrawLimits.m_maxX;
-        if (bounds.m_maxY > g_combatDrawLimits.m_maxY)
-            bounds.m_maxY = g_combatDrawLimits.m_maxY;
-    }
+    g_combatManager->m_drawbridgeBounds.clip(g_combatDrawLimits);
 
     for (long frame = 0; frame < explosion->getNumFrames(0); frame++) {
         if (frame == combatManager::WALL_EXPLOSION_HIT_FRAME
@@ -4416,14 +4406,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
         g_combatManager->m_drawbridgeBounds.m_minX -= 17;
         g_combatManager->m_drawbridgeBounds.m_maxX += 17;
         bounds = g_combatManager->m_drawbridgeBounds;
-        if (frame.m_minX > bounds.m_minX)
-            frame.m_minX = bounds.m_minX;
-        if (frame.m_minY > bounds.m_minY)
-            frame.m_minY = bounds.m_minY;
-        if (frame.m_maxX < bounds.m_maxX)
-            frame.m_maxX = bounds.m_maxX;
-        if (frame.m_maxY < bounds.m_maxY)
-            frame.m_maxY = bounds.m_maxY;
+        frame.include(bounds);
         g_combatManager->m_drawbridgeBounds = frame;
 
         g_combatManager->m_limitToExtent = 1;

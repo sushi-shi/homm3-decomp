@@ -1284,21 +1284,13 @@ const char* combatManager::getBackgroundName()
 VA(0x004647a0, 0x17A)  // dc 0x5f058
 int combatManager::getGridIndex(int x, int y) const
 {
-    if (combatManager::s_leftHeroLimits.m_minX <= x && x <= combatManager::s_leftHeroLimits.m_maxX
-            && combatManager::s_leftHeroLimits.m_minY <= y
-            && y <= combatManager::s_leftHeroLimits.m_maxY)
+    if (combatManager::s_leftHeroLimits.contains(x, y))
         return 252;
-    if (combatManager::s_rightHeroLimits.m_minX <= x && x <= combatManager::s_rightHeroLimits.m_maxX
-            && combatManager::s_rightHeroLimits.m_minY <= y
-            && y <= combatManager::s_rightHeroLimits.m_maxY)
+    if (combatManager::s_rightHeroLimits.contains(x, y))
         return 253;
-    if (combatManager::s_mainBuildingLimits.m_minX <= x && x <= combatManager::s_mainBuildingLimits.m_maxX
-            && combatManager::s_mainBuildingLimits.m_minY <= y
-            && y <= combatManager::s_mainBuildingLimits.m_maxY)
+    if (combatManager::s_mainBuildingLimits.contains(x, y))
         return 254;
-    if (combatManager::s_upperTowerLimits.m_minX <= x && x <= combatManager::s_upperTowerLimits.m_maxX
-            && combatManager::s_upperTowerLimits.m_minY <= y
-            && y <= combatManager::s_upperTowerLimits.m_maxY)
+    if (combatManager::s_upperTowerLimits.contains(x, y))
         return 255;
 
     int px = x - 14;
@@ -2762,22 +2754,8 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 g_windowManager->m_screenBitmap->getPitch(), 0, 1);
             int right = x + width - 1;
             int bottom = y + height - 1;
-            if (updateArea.m_minX > x)
-                updateArea.m_minX = x;
-            if (updateArea.m_minY > y)
-                updateArea.m_minY = y;
-            if (updateArea.m_maxX < right)
-                updateArea.m_maxX = right;
-            if (updateArea.m_maxY < bottom)
-                updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
-                updateArea.m_minX = g_combatDrawLimits.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
-                updateArea.m_minY = g_combatDrawLimits.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
+            updateArea.include(SLimitData(x, y, right, bottom));
+            updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.width(),
@@ -2884,22 +2862,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             saved.grab(g_windowManager->m_screenBitmap, x, y);
             missile->draw(0, frame, 0, 0, width, height,
                           g_windowManager->m_screenBitmap, x, y, flipped, 1);
-            if (updateArea.m_minX > x)
-                updateArea.m_minX = x;
-            if (updateArea.m_minY > y)
-                updateArea.m_minY = y;
-            if (updateArea.m_maxX < right)
-                updateArea.m_maxX = right;
-            if (updateArea.m_maxY < bottom)
-                updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
-                updateArea.m_minX = g_combatDrawLimits.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
-                updateArea.m_minY = g_combatDrawLimits.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
+            updateArea.include(SLimitData(x, y, right, bottom));
+            updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.width(),
@@ -3034,22 +2998,8 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             g_windowManager->m_screenBitmap->getWidth(),
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getPitch(), flipped, 1);
-        if (updateArea.m_minX > x)
-            updateArea.m_minX = x;
-        if (updateArea.m_minY > y)
-            updateArea.m_minY = y;
-        if (updateArea.m_maxX < right)
-            updateArea.m_maxX = right;
-        if (updateArea.m_maxY < bottom)
-            updateArea.m_maxY = bottom;
-        if (updateArea.m_minX < g_combatDrawLimits.m_minX)
-            updateArea.m_minX = g_combatDrawLimits.m_minX;
-        if (updateArea.m_minY < g_combatDrawLimits.m_minY)
-            updateArea.m_minY = g_combatDrawLimits.m_minY;
-        if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
-            updateArea.m_maxX = g_combatDrawLimits.m_maxX;
-        if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
-            updateArea.m_maxY = g_combatDrawLimits.m_maxY;
+        updateArea.include(SLimitData(x, y, right, bottom));
+        updateArea.clip(g_combatDrawLimits);
         g_windowManager->updateScreen(updateArea.m_minX, updateArea.m_minY,
                                       updateArea.width(),
                                       updateArea.height());
