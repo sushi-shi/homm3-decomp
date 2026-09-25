@@ -371,7 +371,7 @@ long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_
 {
     long bestTarget = -1;
     long hex;
-    long ourGroup = data->m_ourGroup;
+    long ourGroup = data->getGroup();
     long enemyGroup = data->getEnemyGroup();
     unsigned char isAreaEffect = 0;
     const army* bestArmy = 0;
@@ -845,8 +845,8 @@ void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, 
     unsigned char checked[COMBAT_GRID_CELLS];
     memset(checked, 0, COMBAT_GRID_CELLS);
     long floorValue = getEnemyAttackLimit(ourArmy, *estimate);
-    const army* friendly = m_armies[estimate->m_ourGroup];
-    for (long i = 0; i < m_numArmies[estimate->m_ourGroup]; i++, friendly++) {
+    const army* friendly = m_armies[estimate->getGroup()];
+    for (long i = 0; i < m_numArmies[estimate->getGroup()]; i++, friendly++) {
         if (friendly->is(creatureImmobilized))
             continue;
         if (friendly->m_creatureType == CREATURE_ARROW_TOWER)
@@ -1037,7 +1037,7 @@ void findAttackHexes(const army* ourArmy, long targetHex, long start, long stop,
 VA(0x00420260, 0x368)  // dc 0x256a0
 void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, long* dangerousEnemies, type_AI_combat_parameters* estimate) const
 {
-    long side = estimate->m_ourGroup;
+    long side = estimate->getGroup();
     long enemySide = estimate->getEnemyGroup();
     long floorValue = getEnemyAttackLimit(ourArmy, *estimate);
     const army* enemy = m_armies[enemySide];
@@ -1330,7 +1330,7 @@ unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters* data)
         }
     }
 
-    return shooterValue[data->m_ourGroup] > shooterValue[data->getEnemyGroup()];
+    return shooterValue[data->getGroup()] > shooterValue[data->getEnemyGroup()];
 }
 
 // CodeView's type_spellvalue destructor is compiler-generated (LF_ONEMETHOD
@@ -1443,7 +1443,7 @@ bool combatManager::sodChooseFaerieDragonSpell(
         type_AI_combat_parameters& estimate)
 {
     long bestHex = -1;
-    type_AI_spellcaster caster(this, estimate.m_ourGroup, 1);
+    type_AI_spellcaster caster(this, estimate.getGroup(), 1);
     for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
         if (inInvisibleColumn(hex))
             continue;
@@ -1560,7 +1560,7 @@ unsigned char combatManager::chooseSpellAction(const army* currentArmy, long* be
 {
     if (m_creaturePlacement)
         return 0;
-    if (!canCastSpells(estimate->m_ourGroup, 0))
+    if (!canCastSpells(estimate->getGroup(), 0))
         return 0;
     if (currentArmy->m_monInfo.m_hasSpell == 0)
         return 0;
@@ -1595,7 +1595,7 @@ unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estim
 {
     if (!m_fortificationLevel)
         return 0;
-    if (estimate->m_ourGroup != 1)
+    if (estimate->getGroup() != 1)
         return 0;
     { for (const long* target = g_castleWallGateTargets;
            target < (g_castleWallGateTargets + 5); target++) {
@@ -1606,8 +1606,8 @@ unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estim
     } }
     if (!hasRangedAdvantage(estimate))
         return 0;
-    const army* ourArmy = &m_armies[estimate->m_ourGroup][0];
-    for (long i = 0; i < m_numArmies[estimate->m_ourGroup]; i++, ourArmy++) {
+    const army* ourArmy = &m_armies[estimate->getGroup()][0];
+    for (long i = 0; i < m_numArmies[estimate->getGroup()]; i++, ourArmy++) {
         if (!ourArmy->is(creatureImmobilized)
                 && ourArmy->m_creatureType != CREATURE_ARROW_TOWER
                 && !combatManager::inCastle(ourArmy->m_gridIndex))
@@ -1626,7 +1626,7 @@ void combatManager::markFirewalls(const army* currentArmy, long* enemyAttacks, t
         long base = obstacle->m_spellDamage;
         long damage = modifySpellDamage(base, SPELL_FIRE_WALL,
                                         m_heroes[obstacle->m_owner],
-                                        m_heroes[estimate->m_ourGroup],
+                                        m_heroes[estimate->getGroup()],
                                         currentArmy, 0);
         enemyAttacks[i] -= currentArmy->getLossCombatValue(
                 estimate->m_lowestAttack, estimate->m_lowestAttack, 0, damage,
