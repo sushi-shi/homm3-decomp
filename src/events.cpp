@@ -3651,11 +3651,7 @@ int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
     if (g_game->getAlignment(creature) == -1) {
         like = CREATURE_NONE;
     } else {
-        if (!g_game->m_gameVersion
-            && isBaseElemental(creature))
-            like = CREATURE_NONE;
-        else
-            like = upgradedCreatureType(creature);
+        like = g_game->upgradedCreatureType(creature);
         if (like == CREATURE_NONE) {
             if (!g_game->m_gameVersion
                 && (creature == CREATURE_ICE_ELEMENTAL
@@ -5463,15 +5459,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
             && monType2 == CREATURE_NONE
             && monType3 == CREATURE_NONE
             && sRandom(1, 100) <= 50) {
-            TCreatureType upgraded;
-            if (!g_game->m_gameVersion
-                && isBaseElemental(monType))
-                upgraded = CREATURE_NONE;
-            else {
-                int upgradeType;
-                upgradeType = monType;
-                upgraded = upgradedCreatureType(TCreatureType(upgradeType));
-            }
+            TCreatureType upgraded = g_game->upgradedCreatureType(monType);
             currentArmyGroup.m_armyTypes[numGroups / 2] = upgraded;
         }
     }

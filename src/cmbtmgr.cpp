@@ -3672,13 +3672,8 @@ void combatManager::raiseSkeletons(int side)
         added = m_armyGroups[side]->add(
             m_raisedCreatureType, m_raisedCreatureCount, -1);
         if (!added) {
-            TCreatureType upgradedType = m_raisedCreatureType;
-            if (!g_game->m_gameVersion
-                && isBaseElemental(upgradedType)) {
-                upgradedType = CREATURE_NONE;
-            } else {
-                upgradedType = upgradedCreatureType(upgradedType);
-            }
+            TCreatureType upgradedType =
+                g_game->upgradedCreatureType(m_raisedCreatureType);
 
             m_raisedCreatureType = upgradedType;
             m_raisedCreatureCount = (m_raisedCreatureCount * 2 + 2) / 3;

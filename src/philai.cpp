@@ -2615,11 +2615,7 @@ void aiVisitHillFort(hero* currentHero)
         TCreatureType creature = currentHero->m_army.m_armyTypes[i];
         if (creature == CREATURE_NONE)
             continue;
-        if (g_game->m_gameVersion == 0
-            && isBaseElemental(creature))
-            continue;
-
-        TCreatureType upgrade = upgradedCreatureType(creature);
+        TCreatureType upgrade = g_game->upgradedCreatureType(creature);
         if (upgrade == CREATURE_NONE)
             continue;
 
