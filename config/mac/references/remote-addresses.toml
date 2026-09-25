@@ -1,5 +1,32 @@
 # Reviewed shared remote identities in the Mac PEF.
 
+[[helpers]]
+source_helper = "getPlayerPos"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x213ba4
+mac_size = 0xec
+target_sha256 = "4f8165ddd3b6492f06b796ea3ca485be3cb9e11d00114032ce56ca19383dfafa"
+evidence = "handlePlayerDrop calls this retained eight-seat DPID lookup at 0x213f08. It compares each game player record's DPID using the 0x15c stride, returns the matching index or -1, and ends at 0x213c8c before getPriorPlayer. Windows expands the same source helper."
+
+[[helpers]]
+source_helper = "getPriorPlayer"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x213c90
+mac_size = 0x58
+target_sha256 = "4ee7d50f7245c163d7a71dabc90c826f7aa9fb0d8efeffdd66a64afe25b1dda5"
+evidence = "handlePlayerDrop calls this retained prior-human-seat search at 0x213f88. It decrements the row with wrap to seven and repeats until game::isHuman succeeds. BLR at 0x213ce4 precedes isValidHuman. Windows expands the same source helper."
+
+[[helpers]]
+source_helper = "isValidHuman"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x213ce8
+mac_size = 0x94
+target_sha256 = "7c56af6b4013f880a99c4a8ae379b27dde586fbedfc6d0edd61c673acdaefab4"
+evidence = "updateCurrentPlayers calls this retained auto-array DPID search at 0x213de4. It uses the array's virtual Get/GetCount slots, reads each CDPlayPlayer ID at +0x100 and returns true on a match. BLR at 0x213d78 precedes updateCurrentPlayers. Windows expands the same source helper."
+
 [[functions]]
 retail_va = 0x5540b0
 unit = "remote"
