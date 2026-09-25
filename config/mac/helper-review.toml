@@ -35,6 +35,8 @@
 # follow the authored enclosing helpers.
 # Events' direct targets include the authored wait/waitForLevels calls;
 # the other unmapped targets are object and vector construction/teardown.
+# Small UI, flight, network and army-group targets below resolve to authored
+# accessors, member constructors, bitset methods or their enclosing wrappers.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
@@ -43,8 +45,10 @@ units = [
   "ai_combat",
   "ai_tactical",
   "army",
+  "armygrp",
   "artifact",
   "basemgr",
+  "binkmanager",
   "bitmap16",
   "bitmap24",
   "bitmap816",
@@ -73,6 +77,7 @@ units = [
   "events",
   "exec",
   "findpath",
+  "fly",
   "font",
   "gametypewindow",
   "hero",
@@ -86,6 +91,7 @@ units = [
   "levelupwindow",
   "mainmenu",
   "monframeinfo",
+  "netmsg",
   "newgame",
   "objecttype",
   "overview",
@@ -112,10 +118,12 @@ units = [
   "subwindow",
   "systemoptionswindow",
   "text",
+  "textntry",
   "textresource",
   "textwdgt",
   "tiles",
   "town",
+  "towngatewindow",
   "townmgr",
   "tradpost",
   "university_window",
