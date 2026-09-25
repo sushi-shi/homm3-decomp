@@ -73,6 +73,11 @@
 # destruction are vector/member lifecycle methods; the two common scalar
 # deleting destructors and +8 accessor were checked in the PEF. Named army,
 # generator and object-type calls follow existing member expressions.
+# Game's loadVictoryCondition and loadLossCondition now call the two retained
+# hero-ID readers. Its load/save unknowns are repeated cleanup and vector
+# instantiations, map/player readers use member construction and resize, and
+# the network paths use Mac platform and dialog helpers. Other named calls
+# follow authored member wrappers; load/save carcasses are not active bodies.
 # Remaining spellbook/campaign UI targets are STL and implicit teardown.
 units = [
   "adventuremapwindow",
@@ -123,6 +128,7 @@ units = [
   "findpath",
   "fly",
   "font",
+  "game",
   "gametypewindow",
   "gzfile",
   "gzinflatebuf",
