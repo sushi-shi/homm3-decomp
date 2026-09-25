@@ -46,6 +46,7 @@ public:
         : m_completed(false), m_days(0), m_score(0), m_index(-1), m_completeOrder(0)
     {
     }
+    void read(TAbstractFile* infile);
     void write(TAbstractFile* outfile) const;
 };
 SIZE(CampaignScenarioInfo, 0x14);

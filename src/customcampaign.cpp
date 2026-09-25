@@ -2448,6 +2448,19 @@ void TCampaignBrief::CampaignHeaderStruct::startScenario(
     m_scenarios[which]->startScenario(m_stream, option);
 }
 
+// Mac retains the per-scenario score reader at code 0:0x97e70. SCampaign's
+// load loop calls it once per row; VC6 expands the same five ordered reads.
+void CampaignScenarioInfo::read(TAbstractFile* infile)
+{
+    m_completed = readValue<unsigned char>(infile) != 0;
+    m_days = readValue<int>(infile);
+    m_score = readValue<int>(infile);
+    m_completeOrder =
+        static_cast<signed char>(readValue<unsigned char>(infile));
+    m_index =
+        static_cast<signed char>(readValue<unsigned char>(infile));
+}
+
 // Mac retains this per-scenario score writer at code 0:0x97f74. SCampaign's
 // save loop calls it once per row; VC6 expands its five ordered writes.
 void CampaignScenarioInfo::write(TAbstractFile* outfile) const
@@ -2842,18 +2855,6 @@ static void readAssignedCampaignHeroes(TAbstractFile* infile,
     }
 }
 
-static void readCampaignScore(TAbstractFile* infile, CampaignScenarioInfo& scenario)
-{
-    scenario.m_completed = readValue<unsigned char>(infile) != 0;
-    scenario.m_days = readValue<int>(infile);
-    scenario.m_score = readValue<int>(infile);
-
-    scenario.m_completeOrder =
-        static_cast<signed char>(readValue<unsigned char>(infile));
-    scenario.m_index =
-        static_cast<signed char>(readValue<unsigned char>(infile));
-}
-
 // 99.0228%: the record readers, direct score-vector ownership and shared
 // inner counter recover every retail call decision, stack home and the
 // legacy arm. Of 89 blocks, 88 have exact sizes; the modern hero-load loop
@@ -2947,7 +2948,7 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
     m_mapScores.resize(count);
     for (i = 0; i < count; ++i) {
         CampaignScenarioInfo& scenario = m_mapScores[i];
-        readCampaignScore(infile, scenario);
+        scenario.read(infile);
     }
 
     count = readValue<unsigned char>(infile);
