@@ -5690,7 +5690,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
             setCurrentMap(map, 1);
         } else if (map < m_selectionHeaders.size()) {
             unsigned long lastClick = m_clickTime;
-            if (static_cast<int>(GameTime::get() - lastClick) < 400) {
+            if (GameTime::elapsedSince(lastClick) < 400) {
                 *exitFlag = onBeginGame();
             } else {
                 m_clickTime = GameTime::get();

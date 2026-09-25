@@ -2325,7 +2325,7 @@ void TCampaignBrief::MapTextStruct::play()
         if (videoNeedsUpdate())
             videoDrawRects();
 
-        if (static_cast<long>(GameTime::get() - nextScroll) >= 0) {
+        if (GameTime::isPast(nextScroll)) {
             if (strip) {
                 if (redraw) {
                     if (scrollDelay)
@@ -2407,13 +2407,13 @@ void TCampaignBrief::MapTextStruct::play()
             nextScroll = GameTime::get() + g_campaignScrollInterval;
 
             if (speechDone
-                && static_cast<long>(GameTime::get() - speechEnd)
+                && GameTime::elapsedSince(speechEnd)
                        >= g_campaignLingerMs
                 && textDone
-                && static_cast<long>(GameTime::get() - textEnd)
+                && GameTime::elapsedSince(textEnd)
                        >= g_campaignLingerMs
                 && videoDone
-                && static_cast<long>(GameTime::get() - videoEnd)
+                && GameTime::elapsedSince(videoEnd)
                        >= g_campaignVideoLingerMs)
                 finished = 1;
         }

@@ -188,7 +188,7 @@ int slider::main(message& msg)
 {
     if (m_style == WIDGET_STYLE_AUTO_REPEAT && (m_status & WIDGET_SELECTED)) {
         unsigned long repeatTime = g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
-        if (static_cast<int>(GameTime::get() - repeatTime) > 0)
+        if (GameTime::elapsedSince(repeatTime) > 0)
             return deselect(&msg);
     }
 

@@ -822,7 +822,7 @@ unsigned char CChatManager::hasOldChat()
     if (m_msgCount == 0)
         return 0;
     unsigned long killTime = m_msgArray[m_currMsg].m_killTime;
-    return static_cast<long>(GameTime::get() - killTime) > 20000;
+    return GameTime::elapsedSince(killTime) > 20000;
 }
 
 VA(0x00553df0, 0xE4)  // dc 0x11c7b0
@@ -1333,7 +1333,7 @@ void CAnimatedDlg::tickAnimation()
 {
     unsigned long currentTime = GameTime::get();
     unsigned long lastTick = m_lastTick;
-    if (static_cast<long>(GameTime::get() - lastTick) >= 200) {
+    if (GameTime::elapsedSince(lastTick) >= 200) {
         m_spriteFrame = (m_spriteFrame + 1)
                       % m_sprite->getNumFrames(m_seq);
         m_lastTick = currentTime;
