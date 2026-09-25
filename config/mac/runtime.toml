@@ -1595,3 +1595,34 @@ mac_offset = 0xe8010
 mac_size = 0xa0
 sha256 = "3034a3d0f37c5914a490726acdc4ca483a0dd23f3733ea5ca8c42bb5221b813f"
 evidence = "Eight calls from game setup, event randomization, shipyard claims and path search append four-byte values to vectors. The callee checks size against capacity, grows through 0xeb0ac when full, then copies an element into the backing pointer and advances size. BLR at 0xe80ac bounds the body. MSL vector append, not an authored game helper."
+[[functions]]
+symbol = ".mac_bitset_144_any_107450"
+mac_section = 0
+mac_offset = 0x107450
+mac_size = 0x34
+sha256 = "9774f42faf3208d784cbd166e934be208ed49c6b8a64f5fee012bf5ec5bdc581"
+evidence = "hero::heroFn004DBF30 calls this five-word bitset predicate at 0xf85e4. It scans the five 32-bit words, returns true on the first nonzero word, otherwise false. BLR at 0x107480; the inverse predicate starts at 0x107484. The authored source calls std::bitset<144>::any; this is an MSL library identity only."
+
+[[functions]]
+symbol = ".mac_bitset_144_none_107484"
+mac_section = 0
+mac_offset = 0x107484
+mac_size = 0x34
+sha256 = "a6b14268bd45f401ddb6644fbf936d9677ac4eedfc71096c816c6121fc147859"
+evidence = "hero::heroFn004DBE80 calls this five-word bitset predicate at 0xf8498. It scans the five 32-bit words, returns false on the first nonzero word, otherwise true. BLR at 0x1074b4; count starts at 0x1074b8. The authored source calls std::bitset<144>::none; this is an MSL library identity only."
+
+[[functions]]
+symbol = ".mac_bitset_19_count_1074b8"
+mac_section = 0
+mac_offset = 0x1074b8
+mac_size = 0x68
+sha256 = "5cd2c538396d49080e0c84d54ee4d56af3b20a38d2139b93a398288f5d1c7501"
+evidence = "hero::heroFn004E2550 calls this one-word count at 0x1032a4 and 0x1033e4. It invokes the following bit-count routine once and returns the sum. BLR at 0x10751c; its callee starts at 0x107520. The authored source calls std::bitset<19>::count; this is an MSL library identity only."
+
+[[functions]]
+symbol = ".mac_bitset_word_count_107520"
+mac_section = 0
+mac_offset = 0x107520
+mac_size = 0x60
+sha256 = "456d2a4dee15284505603ae001aeb0d1105e9b57fc4d8749a9b5847bcaf3407a"
+evidence = "The bitset count routine at 0x1074b8 calls this word popcount at 0x1074ec. It counts set bits four at a time through a nibble switch until the word is zero. BLR at 0x10757c; the next independent prologue starts at 0x107580. MSL library identity only."
