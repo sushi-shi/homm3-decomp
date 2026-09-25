@@ -2255,13 +2255,7 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     bool badMorale = false;
     long moraleArmyValue = 0;
 
-    int alignment;
-    if (g_game->m_gameVersion == 0
-        && isBaseElemental(type)) {
-        alignment = -1;
-    } else {
-        alignment = traits->m_townType;
-    }
+    int alignment = g_game->getAlignment(type);
     alignment = normalizeAlignment(alignment);
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {

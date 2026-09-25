@@ -7568,9 +7568,7 @@ void game::perWeek()
 
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
-            if ((m_gameVersion
-                 || !isBaseElemental(align))
-                && g_creatureTypeTraits[align].m_townType != -1
+            if (getAlignment(align) != -1
                 && g_creatureTypeTraits[align].m_level >= 0)
                 ++i;
         }
@@ -7578,9 +7576,7 @@ void game::perWeek()
         i = rand() % i;
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
-            if ((m_gameVersion
-                 || !isBaseElemental(align))
-                && g_creatureTypeTraits[align].m_townType != -1
+            if (getAlignment(align) != -1
                 && g_creatureTypeTraits[align].m_level >= 0) {
                 if ((m_gameVersion
                      || align == CREATURE_AIR_ELEMENTAL

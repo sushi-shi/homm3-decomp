@@ -857,47 +857,43 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
         int type = m_armies[index];
-        if (g_game->m_gameVersion != 0 || !isBaseElemental(type)) {
-            do {
-                switch (g_creatureTypeTraits[type].m_townType) {
-                case TOWN_CASTLE:
-                case TOWN_RAMPART:
-                case TOWN_TOWER:
-                    morale++;
-                    break;
-                case TOWN_INFERNO:
-                case TOWN_NECROPOLIS:
-                case TOWN_DUNGEON:
-                    morale--;
-                    break;
-                case TOWN_STRONGHOLD:
-                case TOWN_FORTRESS:
-                case TOWN_CONFLUX:
-                    continue;
-                }
-            } while (0);
-        }
+        do {
+            switch (g_game->getAlignment(type)) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+                morale++;
+                break;
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                morale--;
+                break;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                continue;
+            }
+        } while (0);
     }
     do {
         if (mode == MAGIC_TERRAIN_EVIL_FOG) {
             int type = m_armies[index];
-            if (g_game->m_gameVersion != 0 || !isBaseElemental(type)) {
-                switch (g_creatureTypeTraits[type].m_townType) {
-                case TOWN_CASTLE:
-                case TOWN_RAMPART:
-                case TOWN_TOWER:
-                    morale--;
-                    break;
-                case TOWN_INFERNO:
-                case TOWN_NECROPOLIS:
-                case TOWN_DUNGEON:
-                    morale++;
-                    break;
-                case TOWN_STRONGHOLD:
-                case TOWN_FORTRESS:
-                case TOWN_CONFLUX:
-                    continue;
-                }
+            switch (g_game->getAlignment(type)) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+                morale--;
+                break;
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                morale++;
+                break;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                continue;
             }
         }
     } while (0);
@@ -946,26 +942,24 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
         int creature = m_armies[index];
-        if (g_game->m_gameVersion != 0 || !isBaseElemental(creature)) {
-            do {
-                switch (g_creatureTypeTraits[creature].m_townType) {
-                case TOWN_CASTLE:
-                case TOWN_RAMPART:
-                case TOWN_TOWER:
-                case TOWN_INFERNO:
-                case TOWN_NECROPOLIS:
-                case TOWN_DUNGEON:
-                    continue;
-                case TOWN_STRONGHOLD:
-                case TOWN_FORTRESS:
-                case TOWN_CONFLUX:
-                    luck += 2;
-                    break;
-                default:
-                    break;
-                }
-            } while (0);
-        }
+        do {
+            switch (g_game->getAlignment(creature)) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                continue;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                luck += 2;
+                break;
+            default:
+                break;
+            }
+        } while (0);
     }
     if (m_armies[index] == CREATURE_HALFLING && luck < 1)
         luck = 1;
@@ -1170,10 +1164,10 @@ std::string armyGroup::getMoraleDescription(
 
     // Complete terrain arms: mutate the incoming morale home, then subtract
     // currentMorale at the tail, as proved by retail 0x44b960.
+    int alignment = g_game->getAlignment(creature);
     {
-        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
-            && (g_game->m_gameVersion != 0 || !isBaseElemental(creature))) {
-            switch (g_creatureTypeTraits[creature].m_townType) {
+        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND && alignment != -1) {
+            switch (alignment) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -1199,9 +1193,8 @@ std::string armyGroup::getMoraleDescription(
             result += g_moraleInfo[38];
             goto moraleTerrainDone;
         }
-        if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
-            && (g_game->m_gameVersion != 0 || !isBaseElemental(creature))) {
-            switch (g_creatureTypeTraits[creature].m_townType) {
+        if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG && alignment != -1) {
+            switch (alignment) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:

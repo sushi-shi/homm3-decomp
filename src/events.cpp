@@ -3660,11 +3660,9 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
     return true;
 }
 
-// The elemental guards are the Armageddon's Blade content switch. Without
-// it the four base elementals have no upgrade and the four upgraded ones
-// have no base, so each dwelling walk is skipped rather than called; the
-// guard is spelled at both call sites, which is why `gpGame->f_1f698` is
-// read three times and reloaded only after the intervening call.
+// The Armageddon's Blade content switch is shared with getAlignment. The
+// upgrade path below still tests base elementals separately because the four
+// base elementals have no upgrade in the older game version.
 VA(0x004a75c0, 0xFD)  // dc 0x97144
 int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
 {
@@ -3672,9 +3670,7 @@ int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
     int armyCount = 0;
     TCreatureType like;
 
-    if ((!g_game->m_gameVersion
-         && isBaseElemental(creature))
-        || g_creatureTypeTraits[creature].m_townType == -1) {
+    if (g_game->getAlignment(creature) == -1) {
         like = CREATURE_NONE;
     } else {
         if (!g_game->m_gameVersion
