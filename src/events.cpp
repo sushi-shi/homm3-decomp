@@ -758,7 +758,8 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
 {
     NewmapCell* cell = getCell(point);
 
-    type_artifact artifact(cell->getArtifactIndex());
+    type_artifact artifact;
+    artifact.m_artifactId = cell->getArtifactIndex();
     currentHero->giveArtifact(&artifact, 1, 1);
     if (!humanPlayer)
         aiEquipArtifacts(currentHero);
@@ -2841,6 +2842,8 @@ VA(0x004a5030, 0x26E)  // dc 0x953cc
 void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
+    // Mac 0xb19b8 initializes both artifact fields before decoding the reward.
+    type_artifact artifact;
     int reward = cell->getSeaChestReward();
     if (reward == const_sea_chest_artifact
         && currentHero->getNumberInBackpack(1) >= 64)
@@ -2858,8 +2861,8 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
                          1, -1, -1, GOLD, 1500, -1, 0, -1, 0, -1, 0);
         currentHero->giveResource(GOLD, 1500);
         break;
-    case const_sea_chest_artifact: {
-        type_artifact artifact(TArtifact(cell->getSeaChestArtifact()));
+    case const_sea_chest_artifact:
+        artifact.m_artifactId = TArtifact(cell->getSeaChestArtifact());
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT_FORMAT],
@@ -2872,7 +2875,6 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
         if (!humanPlayer)
             aiEquipArtifacts(currentHero);
         break;
-    }
     }
 
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
@@ -2890,7 +2892,8 @@ void advManager::doEventSurvivor(hero* currentHero, NewmapCell* cell,
             normalDialog(g_text, 1, -1, -1, 8, cell->m_extraInfo,
                          -1, 0, -1, 0, -1, 0);
         }
-        type_artifact artifact(TArtifact(cell->m_extraInfo));
+        type_artifact artifact;
+        artifact.m_artifactId = TArtifact(cell->m_extraInfo);
         currentHero->giveArtifact(&artifact, 1, 1);
         if (!humanPlayer)
             aiEquipArtifacts(currentHero);

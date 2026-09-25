@@ -279,7 +279,7 @@ unsigned char VictoryConditionStruct::isGrailTarget(town* thisTown)
     type_point thisTownLoc = thisTown->getLocation();
 
     if (thisTownLoc == grailTownLoc
-        || grailTownLoc == anyTownLoc)
+        || anyTownLoc == grailTownLoc)
         return 1;
     return 0;
 }
@@ -670,7 +670,7 @@ unsigned char LossConditionStruct::checkForDefeatedTownLoss(
         type_point target(m_townX, m_townY, m_townZ);
         type_point lost = lostTown->getLocation();
 
-        if (lost == target) {
+        if (target == lost) {
             m_playerLoser = static_cast<signed char>(oldOwner);
             m_gameLost = 1;
             return 1;
@@ -683,7 +683,11 @@ VA(0x005f2f20, 0x50)  // dc 0x1907bc
 unsigned char LossConditionStruct::checkForTimeLimitExpired()
 {
     if (m_type == LOSS_CONDITION_TIME_LIMIT) {
-        int days = g_game->getCurrentTurn();
+        // The time-limit check keeps the full unsigned calendar expression;
+        // getCurrentTurn() returns a short and would narrow it first.
+        int days = (static_cast<unsigned short>(g_game->m_month) * 4
+            + static_cast<unsigned short>(g_game->m_week) - 5) * 7
+          + g_game->m_day;
         if (days > m_numDays) {
             m_playerLoser = static_cast<signed char>(g_netLocalGamePos);
             m_gameLost = 1;

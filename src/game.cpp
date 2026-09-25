@@ -6749,7 +6749,7 @@ VA(0x004c6a30, 0x21F)  // dc 0xb1a50
 void game::claimShipyard(type_point location, int newPlayerOwner)
 {
     hero* obscuringHero = 0;
-    NewmapCell* mapCell = getCell(location);
+    NewmapCell* mapCell = m_worldMap.cell(location);
     if (mapCell->m_type == HERO) {
         obscuringHero = g_game->getHero(mapCell->m_extraInfo);
         obscuringHero->restoreCell();
@@ -8658,7 +8658,7 @@ void game::processOnMapTowns()
                     && tempCell->m_isTrigger) {
                     townnum = tempCell->m_extraInfo;
                     townExtra = &m_scenarioTowns[townnum];
-                    currTown = getTown(townnum);
+                    currTown = &m_towns[townnum];
 
                     currTown->m_mapX = x;
                     currTown->m_mapY = y;
@@ -8674,8 +8674,8 @@ void game::processOnMapTowns()
                     if (townExtra->m_customName)
                         currTown->m_name = townExtra->m_name;
                     else
-                        currTown->m_name =
-                            getRandomTownName(townExtra->m_townType);
+                        currTown->m_name.assign(
+                            getRandomTownName(townExtra->m_townType));
 
                     currTown->initialize(townExtra);
                     convertObject(tempCell);
@@ -9531,8 +9531,9 @@ int game::getNumThievesGuilds(int whichPlayer)
 {
     int count = 0;
     for (int i = 0; i < m_players[whichPlayer].m_numTowns; i++) {
+        // DC names vector<town>::operator[]; Mac loads g_game for this array.
         town* currentTown =
-            getTown(m_players[whichPlayer].m_townIds[i]);
+            &g_game->m_towns[m_players[whichPlayer].m_townIds[i]];
         if (currentTown->hasBuilding(TAVERN_ID, false) ||
             (currentTown->m_type == TOWN_CASTLE &&
              currentTown->hasBuilding(EXTRA_1_ID, false))) {
