@@ -3929,9 +3929,26 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
             case NEW_MAP_BONUS_RESOURCE: {
                 int amount = random(3, 6);
                 switch (m_setup.m_alignment[setupPlayer]) {
-                case TOWN_CASTLE:
-                case TOWN_NECROPOLIS:
-                case TOWN_STRONGHOLD:
+                // Mac retains a separate random call in each of these four
+                // town arms at 0:0xd6188/0xd61f0/0xd6230/0xd625c.
+                case TOWN_CASTLE: {
+                    amount = random(5, 10);
+                    m_players[setupPlayer].m_resources[WOOD] += amount;
+                    m_players[setupPlayer].m_resources[ORE] += amount;
+                    break;
+                }
+                case TOWN_NECROPOLIS: {
+                    amount = random(5, 10);
+                    m_players[setupPlayer].m_resources[WOOD] += amount;
+                    m_players[setupPlayer].m_resources[ORE] += amount;
+                    break;
+                }
+                case TOWN_STRONGHOLD: {
+                    amount = random(5, 10);
+                    m_players[setupPlayer].m_resources[WOOD] += amount;
+                    m_players[setupPlayer].m_resources[ORE] += amount;
+                    break;
+                }
                 case TOWN_FORTRESS: {
                     amount = random(5, 10);
                     m_players[setupPlayer].m_resources[WOOD] += amount;
