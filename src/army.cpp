@@ -2142,8 +2142,10 @@ unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 // 2481/2483) closes the two store-order differences: 100% without pins.
 // Merely swapping stop/succeeded after the visibility store cross-jumps
 // the trap arms and gives 95.78%; the full statement order matters.
-// Complete has no emitted CancelSpellType(AFTER_MOVE) operation here;
-// its cancelSpellType handles only AFTER_ATTACK and AFTER_DAMAGE.
+// Mac walkTo calls cancelSpellType(AFTER_MOVE) at 0:0x4dfd0 with r4=0.
+// Windows Complete has no such call or expanded operation here; its
+// cancelSpellType handles only AFTER_ATTACK and AFTER_DAMAGE. This Mac
+// snapshot difference is not a missing Windows helper call.
 VA(0x00441fa0, 0x461)  // anchor-global, dc 0x472f4
 unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
 {
