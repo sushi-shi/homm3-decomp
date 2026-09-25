@@ -1,5 +1,14 @@
 # Reviewed shared remote identities in the Mac PEF.
 
+[[functions]]
+retail_va = 0x557400
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215040
+mac_size = 0x8
+target_sha256 = "eda68d0df624b748a9875bc045e46daa54bfed64affe3d868ddea8dfaebc6262"
+evidence = "CSaveScreen::isSaved reads its saved byte at +0x38 and returns. The selection-window ally/enemy update calls it at 0x17d22c; that caller already uses isSaved in the shared source. BLR at 0x215044 precedes another function at 0x215048."
+
 [[helpers]]
 source_helper = "CChatManager::CChatManager"
 unit = "remote"
