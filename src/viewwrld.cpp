@@ -361,8 +361,7 @@ void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int 
     boat* currBoat = &g_game->m_boats[boatParts.m_id];
     int boatCellY = part % 3;
     int boatCellX = part / 3;
-    NewmapCell* boatCell = getCell(
-        type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+    NewmapCell* boatCell = getCell(currBoat->getLocation());
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHero(
@@ -390,8 +389,7 @@ void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
     boat* currBoat = &g_game->m_boats[boatParts.m_id];
     int boatCellY = part % 3;
     int boatCellX = part / 3;
-    NewmapCell* boatCell = getCell(
-        type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+    NewmapCell* boatCell = getCell(currBoat->getLocation());
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
