@@ -1,6 +1,16 @@
 # Complete-era campaign reader retained by Mac and expanded by Windows VC6.
 
 [[helpers]]
+source_helper = "TCampaignBrief::CampaignHeaderStruct::clearScenarios"
+unit = "customcampaign"
+source = "include/campaignbrief.h"
+mac_section = 0
+mac_offset = 0x96afc
+mac_size = 0x78
+target_sha256 = "8f827bd5fdc3e1a00ad6c46eb01d49bff8b86b06915e1457bc4c564f506a1db2"
+evidence = "The CampaignHeaderStruct destructor calls this at 0x96a8c and load calls it at 0x96e28. It deletes each scenario in the pointer vector, clears the count and calls freeData at 0x96b54. The shared header already expresses this canonical helper; final BLR at 0x96b70 precedes freeData."
+
+[[helpers]]
 source_helper = "SCampaign::findCrossoverHero"
 unit = "customcampaign"
 mac_section = 0
