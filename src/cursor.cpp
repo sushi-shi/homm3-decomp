@@ -943,7 +943,7 @@ void advManager::onRecruitHero(CMapChange* mapChange)
 void advManager::onDeadPlayer(CMapChange* mapChange)
 {
     CMCDeadPlayer* change = static_cast<CMCDeadPlayer*>(mapChange);
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_PLAYER_DEFEATED_FORMAT),
+    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_PLAYER_DEFEATED_FORMAT],
             g_game->getPlayerName(change->m_playerPos));
     normalDialog(g_text, 1, -1, -1, 10, change->m_playerPos,
                  -1, -1, -1, 5000, -1, 0);
