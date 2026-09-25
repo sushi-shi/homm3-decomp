@@ -2222,8 +2222,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
     }
     m_isMoving = 0;
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
-    // Complete folded DC TestRaiseDoor's occupancy checks into RaiseDoor.
-    g_combatManager->raiseDoor();
+    g_combatManager->testRaiseDoor();
     return succeeded;
 }
 
@@ -4202,13 +4201,7 @@ VA(0x00446500, 0x126)
 void army::cure(int level, int spellPower, const hero* castingHero)
 {
     m_poisonPenalty = 1.0f;
-    if (m_spellInfluence[SPELL_AGE])
-        m_monInfo.m_hitPoints = static_cast<int>(
-            static_cast<float>(m_origHitPoints) * 0.5f + 0.95f);
-    else
-        m_monInfo.m_hitPoints = static_cast<int>(
-            static_cast<float>(m_origHitPoints) + 0.95f);
-    m_topCreatureDamage = cppMin(m_topCreatureDamage, m_monInfo.m_hitPoints - 1);
+    adjustHitpoints();
     cancelIndividualSpell(SPELL_CURSE);
     cancelIndividualSpell(SPELL_WEAKNESS);
     cancelIndividualSpell(SPELL_SORROW);
