@@ -1090,10 +1090,8 @@ void playerData::init()
     m_quickCombat = 0;
     m_placementHelpEnabled = 1;
     m_assembledCombinations.reset();
-    strcpy(m_name, g_generalText->getText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
-    m_dpid = 0;
-    m_isHuman = 0;
-    m_isLocal = 0;
+    // Mac init retains this call at code0+0xcc44c; VC6 expands it here.
+    clearNetInfo();
 }
 
 VA(0x004b9f40, 0x71)  // dc 0xa4e80
@@ -8554,7 +8552,8 @@ void game::waitForPlayer(char* text, int playerId)
 
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
     g_completeDrawAllCells = 1;
-    if (g_currentPlayer->m_isHuman && g_currentPlayer->m_isLocal)
+    // Mac waitForPlayer retains playerData::isLocalHuman at code0+0xe1d78.
+    if (g_currentPlayer->isLocalHuman())
         g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_1, 9999999);
     else
         g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, 9999999);
@@ -9864,10 +9863,8 @@ void game::checkForTimeEvent()
 
     for (unsigned int i = 0; i < m_worldMap.m_timedEventList.size(); ++i) {
         TTimedEvent* thisEvent = &m_worldMap.m_timedEventList[i];
-        int playerIndex = g_netLocalGamePos;
-        if (playerIndex >= 8 || playerIndex < 0)
-            playerIndex = 0;
-        if (!(m_players[playerIndex].m_isHuman
+        // Mac retains game::isHuman here at code0+0xe512c.
+        if (!(isHuman(g_netLocalGamePos)
                   ? thisEvent->m_applyToHuman
                   : thisEvent->m_applyToComputer)) {
             continue;
