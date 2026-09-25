@@ -4428,8 +4428,8 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
     signed char heightMap[8][6];
     generateHeightMap(object, heightMap);
 
-    // Mac retains getObjectTypePtr here at 0:0x128560; VC6 expands it.
-    TAdventureObjectType objectClass = object->getObjectTypePtr()->m_objectType;
+    // Mac retains getObjectTypePtr here at 0:0x128560 inside getType().
+    TAdventureObjectType objectClass = object->getType();
 
     for (int col = 0; col < objectType->m_width; ++col) {
         if (object->m_x - col < 0 || object->m_x - col >= g_mapWidth)
