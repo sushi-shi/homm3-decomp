@@ -564,7 +564,7 @@ static long getMoveOrder(const army* currentArmy)
     if (currentArmy->m_creatureType == CREATURE_FIRST_AID_TENT
             || currentArmy->m_creatureType == CREATURE_AMMO_CART)
         return -100000;
-    if (currentArmy->m_spellInfluence[62] > 1 || currentArmy->m_spellInfluence[70] > 1)
+    if (currentArmy->getSpellTime(62) > 1 || currentArmy->getSpellTime(70) > 1)
         return -10000;
     if (currentArmy->is(creatureDone)
             || const_cast<army*>(currentArmy)->isIncapacitated())
@@ -669,7 +669,7 @@ long combatManager::getAttackChange(const army* currentArmy, const army* enemy, 
 VA(0x0041f580, 0x304)  // dc 0x24b64
 unsigned char combatManager::moveToward(const army* currentArmy, long targetHex, const long* enemyAttacks, unsigned char considerWaiting)
 {
-    if (!currentArmy->m_spellInfluence[72] && currentArmy->getSpeed()) {
+    if (!currentArmy->getSpellTime(72) && currentArmy->getSpeed()) {
         g_searchArray->findCombatPath(currentArmy, m_currentSide, targetHex,
                                       m_creaturePlacement, 0x7f, -1);
         if (static_cast<long>(g_searchArray->getPathSteps()) > 0) {
@@ -1241,7 +1241,7 @@ unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyA
     }
 
     if (worstDanger >= 0 || ourArmy->isIncapacitated()
-        || ourArmy->m_spellInfluence[72])
+        || ourArmy->getSpellTime(72))
         return 0;
 
     long bestDistance = 0;
@@ -1757,7 +1757,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
             continue;
         if (estimate->m_simulated && enemy->getTotalHitPoints(1) == 0)
             continue;
-        if (currentArmy->getSpeed() == 0 || currentArmy->m_spellInfluence[72]) {
+        if (currentArmy->getSpeed() == 0 || currentArmy->getSpellTime(72)) {
             const pathCell* stand = g_searchArray->getHex(enemy->m_gridIndex);
             if (stand->m_cost > 0)
                 continue;
@@ -2228,7 +2228,7 @@ long combatManager::simulateActions(std::vector<army*>& list, long i,
     for (; i < list.size(); i++) {
         army* currentArmy = list[i];
         if (currentArmy->cannotAttack()
-            || currentArmy->m_spellInfluence[59]
+            || currentArmy->getSpellTime(59)
             || currentArmy->m_creatureType == CREATURE_CATAPULT
             || currentArmy->getTotalHitPoints(1) == 0)
             continue;

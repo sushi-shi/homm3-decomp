@@ -187,7 +187,7 @@ static std::string getEstimatedDamage(const army* currentArmy,
     long high = currentArmy->m_monInfo.m_damageHighBound * currentArmy->m_numTroops;
     std::string result;
 
-    if (currentArmy->m_spellInfluence[41] || currentArmy->m_spellInfluence[42]) {
+    if (currentArmy->getSpellTime(41) || currentArmy->getSpellTime(42)) {
         low = high = currentArmy->computeBaseDamage(1);
     } else if (currentArmy->m_creatureType == CREATURE_BALLISTA) {
         hero* controller = currentArmy->getController();

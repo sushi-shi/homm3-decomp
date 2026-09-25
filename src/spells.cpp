@@ -1404,7 +1404,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     case SPELL_DISPEL_HELPFUL: {
         for (int dispelledSpell = 10; dispelledSpell < 70;
              ++dispelledSpell) {
-            if (target->m_spellInfluence[dispelledSpell]
+            if (target->getSpellTime(dispelledSpell)
                 && g_spellTraits[dispelledSpell].m_karma > 0) {
                 target->cancelIndividualSpell(dispelledSpell);
             }
@@ -1427,7 +1427,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             clearEffects();
             for (int index = 0; index < m_numArmies[m_currentSide]; ++index) {
                 army* cureTarget = &m_armies[m_currentSide][index];
-                if (!cureTarget->m_spellInfluence[60]
+                if (!cureTarget->getSpellTime(60)
                     && validSpellTargetArmy(SPELL_CURE, m_currentSide,
                                              cureTarget, 1,
                                              isMonsterSpell)) {
@@ -3793,7 +3793,7 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
     clearEffects();
     for (int side = 0; side < 2; side++) {
         for (int i = 0; i < m_numArmies[side]; i++) {
-            if (m_armies[side][i].m_spellInfluence[60])
+            if (m_armies[side][i].getSpellTime(60))
                 continue;
             if (spellCastWorks(spell, castingSide, &m_armies[side][i], 0,
                                creatureSpell)) {
@@ -4456,19 +4456,19 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
     if (!target)
         return damage;
     if ((g_spellTraits[spell].m_schoolBits & eSchoolEarth)
-        && target->m_spellInfluence[33])
+        && target->getSpellTime(33))
         return static_cast<long>(static_cast<float>(damage)
                                  * target->m_protectionFromEarthFactor);
     if ((g_spellTraits[spell].m_schoolBits & eSchoolAir)
-        && target->m_spellInfluence[30])
+        && target->getSpellTime(30))
         return static_cast<long>(static_cast<float>(damage)
                                  * target->m_protectionFromAirFactor);
     if ((g_spellTraits[spell].m_schoolBits & eSchoolFire)
-        && target->m_spellInfluence[31])
+        && target->getSpellTime(31))
         return static_cast<long>(static_cast<float>(damage)
                                  * target->m_protectionFromFireFactor);
     if ((g_spellTraits[spell].m_schoolBits & eSchoolWater)
-        && target->m_spellInfluence[32])
+        && target->getSpellTime(32))
         return static_cast<long>(static_cast<float>(damage)
                                  * target->m_protectionFromWaterFactor);
     return damage;
@@ -4667,7 +4667,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
             return 0.0f;
         if (mastery < eMasteryExpert) {
             for (int i = 10; i < 81; i++) {
-                if (target->m_spellInfluence[i])
+                if (target->getSpellTime(i))
                     return 1.0f;
             }
             return 0.0f;
@@ -4679,12 +4679,12 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
             && targetHero->isWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
             return 0.0f;
         for (int i = 10; i < 81; i++) {
-            if (target->m_spellInfluence[i] && g_spellTraits[i].m_karma > 0)
+            if (target->getSpellTime(i) && g_spellTraits[i].m_karma > 0)
                 return 1.0f;
         }
         return 0.0f;
     }
-    if (target->m_spellInfluence[SPELL_ANTI_MAGIC]
+    if (target->getSpellTime(SPELL_ANTI_MAGIC)
         && traits->m_level < target->m_antiMagicSpellLevel
         && !(traits->m_flags & 0x8))
         return 0.0f;
@@ -4714,7 +4714,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
             + g_spellTraits[SPELL_HYPNOTIZE].m_masteryBonus[mastery];
         value += castingHero->getHeroSpellBonus(SPELL_HYPNOTIZE,
                                                  target->m_monInfo.m_level, value);
-        if (target->m_spellInfluence[36]
+        if (target->getSpellTime(36)
             || target->m_monInfo.m_hitPoints * target->m_numTroops > value)
             return 0.0f;
         break;

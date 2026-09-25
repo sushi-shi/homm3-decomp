@@ -353,7 +353,7 @@ int combatManager::main(message& msg)
 
     if (m_thisNetHasControl) {
         army* currentArmy = getCurrentArmy();
-        if (currentArmy->m_spellInfluence[59]) {
+        if (currentArmy->getSpellTime(59)) {
             currentArmy->goBerserk();
             if (checkWin(&msg))
                 return MESSAGE_DISPATCH_FORWARD;
