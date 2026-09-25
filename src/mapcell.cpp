@@ -2153,7 +2153,7 @@ void NewfullMap::loadShipyards()
 {
     type_point newPoint;
 
-    for (int z = 0; z < m_hasTwoLevels + 1; ++z) {
+    for (int z = 0; z < getNumLevels(); ++z) {
         for (int y = 0; y < g_mapHeight; ++y) {
             for (int x = 0; x < g_mapWidth; ++x) {
                 NewmapCell* cell = &m_cellData[(z * m_size + y) * m_size + x];

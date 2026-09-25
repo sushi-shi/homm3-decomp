@@ -125,9 +125,9 @@ int Bitmap24Bit::importPCXFile(const char* filename)
     flipimage(&pcxfile, &pcxfile);
 
     for (int y = 0; y < m_height; ++y) {
-        memcpy(m_data + y * m_width * 3,
+        memcpy(m_data + y * getPitch(),
                pcxfile.m_ibuff + y * pcxfile.m_buffwidth,
-               m_width * 3);
+               getPitch());
     }
 
     freeimage(&pcxfile);
