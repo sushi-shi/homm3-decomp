@@ -788,9 +788,9 @@ VA(0x0049ea40, 0x304)  // dc 0x908dc
 void advManager::fightForArtifact(hero* currentHero, NewmapCell* cell,
                                   type_point point, bool humanPlayer)
 {
-    int monsterType = static_cast<long>(cell->m_extraInfo << 19) >> 23;
+    int monsterType = cell->getArtifactDefender();
     int amount = (cell->m_extraInfo >> 17) & 0x3fff;
-    short artifact = cell->m_objectIndex;
+    short artifact = cell->getArtifactIndex();
 
     if (humanPlayer) {
         overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
@@ -832,10 +832,10 @@ void advManager::payForArtifact(hero* currentHero, NewmapCell* cell,
                                 short goldCost, short resourceCost,
                                 bool humanPlayer)
 {
-    int resourceType = static_cast<long>(cell->m_extraInfo << 15) >> 28;
+    int resourceType = cell->getArtifactResourceCost();
 
     if (humanPlayer) {
-        short artifact = cell->m_objectIndex;
+        short artifact = cell->getArtifactIndex();
         if (resourceCost > 0) {
             char resourceName[50];
             strcpy(resourceName, g_resourceNames[resourceType]);
@@ -2218,7 +2218,7 @@ VA(0x004a31a0, 0xDF)  // dc 0x93b18
 void advManager::doEventLeanTo(hero* currentHero, ExtraInfoUnion* cell,
                                bool humanPlayer)
 {
-    short id = cell->m_leanToInfo.m_id;
+    short id = cell->getItemId();
     short amount = cell->getLeanToAmount();
 
     if (amount == 0) {
@@ -2331,7 +2331,7 @@ void advManager::doEventMagicSpring(hero* currentHero, ExtraInfoUnion* cell,
 {
     game* g = g_game;
     g->setInfoFlag(MagicSpringInfo, g_netLocalGamePos);
-    short id = cell->m_magicSpringInfo.m_id;
+    short id = cell->getItemId();
     g_currentPlayer->m_magicSpringFlags |= 1 << id;
 
     if (!cell->magicSpringIsFull()) {
@@ -2342,9 +2342,7 @@ void advManager::doEventMagicSpring(hero* currentHero, ExtraInfoUnion* cell,
         return;
     }
 
-    int knowledge = currentHero->getPrimarySkill(3);
-    int cap = static_cast<int>(currentHero->getIntelligenceFactor()
-                               * (knowledge * 10)) * 2;
+    int cap = currentHero->getMaxMana() * 2;
     if (currentHero->m_mana >= cap) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
@@ -2376,9 +2374,7 @@ void advManager::doEventMagicWell(hero* currentHero, ExtraInfoUnion* cell,
     }
 
     cell->m_value = 0;
-    int knowledge = currentHero->getPrimarySkill(3);
-    int cap = static_cast<int>(currentHero->getIntelligenceFactor()
-                               * (knowledge * 10));
+    int cap = currentHero->getMaxMana();
     if (currentHero->m_mana >= cap) {
         if (humanPlayer)
             normalDialog(g_adventureEventText->getText(
@@ -2484,7 +2480,7 @@ VA(0x004a3bc0, 0xDC)  // dc 0x944d4
 void advManager::doEventMysticalGarden(hero* currentHero, ExtraInfoUnion* cell,
                                        bool humanPlayer)
 {
-    short id = cell->m_gardenInfo.m_id;
+    short id = cell->getItemId();
     EGameResource resource = cell->getGardenResource();
     g_currentPlayer->m_mysticalGardenFlags |= 1 << id;
 
@@ -4131,7 +4127,7 @@ void advManager::doEventLithOneWay(hero* currentHero, NewmapCell* cell,
     if (!g_game->getRandomLithExit(cell->m_objectIndex, point))
         return;
 
-    NewmapCell* exitCell = g_game->m_worldMap.cell(point);
+    NewmapCell* exitCell = g_game->getCell(point);
     if (exitCell->m_type == HERO) {
         if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 1);
@@ -4159,7 +4155,7 @@ void advManager::doEventLithTwoWay(hero* currentHero, NewmapCell* cell,
     if (!g_game->getRandomLith(cell->m_objectIndex, cell->m_extraInfo, point))
         return;
 
-    NewmapCell* exitCell = g_game->m_worldMap.cell(point);
+    NewmapCell* exitCell = g_game->getCell(point);
     if (exitCell->m_type == HERO) {
         if (g_remoteOn) {
             CSetVisibilityMsg message(point, g_netLocalGamePos, 1);
@@ -4952,11 +4948,7 @@ void advManager::eraseObj(NewmapCell* thisCell, type_point point,
     CMCEraseObject message(point);
     sendMapChange(&message);
 
-    setEnvironmentOrigin(
-        type_point(m_radarOrigin.m_x + type_cell_adjuster::MOBILE_HERO_CELL_X,
-                   m_radarOrigin.m_y + type_cell_adjuster::MOBILE_HERO_CELL_Y,
-                   m_radarOrigin.m_z),
-        1);
+    setEnvironmentOrigin(getMapCenter(), 1);
 }
 
 VA(0x004aadf0, 0x1DC)  // dc 0x99d98
@@ -5086,7 +5078,7 @@ void advManager::eventSound(int eventID, int extraInfo)
 
     switch (eventID) {
     case MINE:
-        if (g_game->m_mines[extraInfo].m_guards.hasCreatures())
+        if (g_game->getMine(extraInfo)->m_guards.hasCreatures())
             sampleName = DATA_COMPGEN(0x00677898, mineGuardSampleName,
                                       "mystery.wav");
         else

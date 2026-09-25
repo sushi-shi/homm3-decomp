@@ -125,7 +125,7 @@ unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
     int heroId;
     if (infile->read(&heroId, sizeof(heroId)) != sizeof(heroId))
         return 0;
-    m_currentHero = (heroId == -1) ? NULL : &g_game->m_heroes[heroId];
+    m_currentHero = g_game->getHero(heroId);
     if (infile->read(&m_direction, 1) != 1)
         return 0;
     if (infile->read(&m_source, sizeof(m_source)) != sizeof(m_source))
@@ -399,7 +399,7 @@ unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
         m_previousOccupyingHero = -1;
         m_occupyingHero = -1;
     }
-    m_currentBoat = &g_game->m_boats[boatId];
+    m_currentBoat = g_game->getBoat(boatId);
     return 1;
 }
 
@@ -576,7 +576,7 @@ unsigned char type_record_erase::save(TAbstractFile* outfile)
 VA(0x0049b280, 0xEA)  // dc 0x8d3c8
 void type_record_erase::replay(unsigned char draw)
 {
-    NewmapCell* cell = g_game->m_worldMap.cell(m_location);
+    NewmapCell* cell = g_game->getCell(m_location);
     g_advManager->mobilizeCurrHero(1, 0, draw);
     g_advManager->eraseObj(cell, m_location, 0);
     if (draw && (getMapExtra(m_location.m_x, m_location.m_y, m_location.m_z)
@@ -591,7 +591,7 @@ VA(0x0049b370, 0x83)  // dc 0x8d46c
 void type_record_erase::undo()
 {
     g_game->m_worldMap.placeObject(m_objectId, 0);
-    NewmapCell* cell = g_game->m_worldMap.cell(m_location);
+    NewmapCell* cell = g_game->getCell(m_location);
     cell->m_extraInfo = m_extraInfo;
     cell->m_objectIndex = m_objectIndex;
 }
@@ -629,7 +629,7 @@ unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
     int heroId;
     if (infile->read(&heroId, sizeof(heroId)) != sizeof(heroId))
         return 0;
-    m_currentHero = (heroId == -1) ? NULL : &g_game->m_heroes[heroId];
+    m_currentHero = g_game->getHero(heroId);
     if (infile->read(&m_newOwner, 1) != 1)
         return 0;
     if (infile->read(&m_prevOwner, 1) != 1)
@@ -826,7 +826,7 @@ void type_record_player_death::replay(unsigned char draw)
 {
     if (draw) {
         std::string text;
-        text = formatString(g_generalText->getText(GENERAL_TEXT_PLAYER_DEFEATED_FORMAT),
+        text = formatString((*g_generalText)[GENERAL_TEXT_PLAYER_DEFEATED_FORMAT],
                              g_game->getPlayerName(m_extra));
         normalDialog(text.c_str(), 1, -1, -1, 10, m_extra, -1, -1, -1, 5000,
                      -1, 0);
