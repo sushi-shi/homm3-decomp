@@ -939,9 +939,7 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
         }
 
         if (g_game->m_setup.m_difficulty == 0) {
-            int localTeam = g_netLocalGamePos < 0
-                ? g_netLocalGamePos
-                : g_game->m_mapHeader.m_teamInfo[g_netLocalGamePos];
+            int localTeam = g_game->getTeam(g_netLocalGamePos);
             if (localTeam < 0 || !g_game->isHumanTeam(localTeam)) {
                     if (g_creatureTypeTraits[creature].m_level
                         == TOWN_DWELLING_COUNT - 1)

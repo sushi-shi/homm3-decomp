@@ -3682,9 +3682,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         for (int i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc(m_heroes[i].m_x, m_heroes[i].m_y, m_heroes[i].m_z);
             if (vcheroLoc.operator==(poolheroLoc)) {
-                int team = m_heroes[i].m_owner;
-                if (team >= 0)
-                    team = m_mapHeader.m_teamInfo[team];
+                int team = getTeam(m_heroes[i].m_owner);
                 if (team >= 0 && isHumanTeam(team)) {
                     victory.m_type = -1;
                     break;
@@ -3714,9 +3712,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
     if (victory.m_type == VICTORY_CONDITION_CAPTURE_TOWN) {
         town* thisTown = getTown(getTownId(
             victory.m_townX, victory.m_townY, victory.m_townZ));
-        int team = thisTown->m_owner;
-        if (team >= 0)
-            team = m_mapHeader.m_teamInfo[team];
+        int team = getTeam(thisTown->m_owner);
         if (team >= 0 && isHumanTeam(team))
             victory.m_type = -1;
     }
@@ -3734,9 +3730,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
                         ++numHumanTeams;
                 }
                 if (numHumanTeams <= 1) {
-                    int team = m_heroes[i].m_owner;
-                    if (team >= 0)
-                        team = m_mapHeader.m_teamInfo[team];
+                    int team = getTeam(m_heroes[i].m_owner);
                     unsigned char humanTeam = 0;
                     if (team >= 0)
                         humanTeam = isHumanTeam(team);
@@ -3767,9 +3761,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
             if (numHumanTeams > 1)
                 continue;
             owner = thisTown->m_owner;
-            townTeam = owner;
-            if (townTeam >= 0)
-                townTeam = m_mapHeader.m_teamInfo[townTeam];
+            townTeam = getTeam(owner);
             if (townTeam >= 0) {
                 unsigned char humanTeam =
                     isHumanTeam(townTeam);
@@ -8381,18 +8373,11 @@ void game::createTownHeroes(int* startingHeroIds)
     }
 }
 
+// Mac 0xe15cc..0xe1670 expands getTeamMask before the terrain sweep.
 VA(0x004ca240, 0xF6)  // dc 0xb5f80
 void game::makeTerrainVisible(int whichPlayer, unsigned short visMask)
 {
-    unsigned char players = 0;
-    if (whichPlayer >= 0 && whichPlayer < 8) {
-        int team = m_mapHeader.m_teamInfo[whichPlayer];
-        for (int player = 0; player < 8; ++player) {
-            if (m_mapHeader.m_teamInfo[player] == team)
-                players |= 1 << player;
-        }
-    }
-
+    unsigned char players = getTeamMask(whichPlayer);
     unsigned short playerMask = players;
     for (int z = 0; z < getNumMapLevels(); ++z) {
         for (int x = 0; x < g_mapWidth; ++x) {
