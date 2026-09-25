@@ -26,10 +26,17 @@ do not add duplicate game declarations or extracted header-body fragments.
 For the broad helper sweep, cover byte-exact Windows functions too. Use Mac's
 retained calls and simpler body shapes to restore helper calls and canonical
 bodies throughout the source. Many original names are unavailable: choose clear
-project names and keep moving when the operation is identified. Do not wait for
-an original spelling, a byte-score improvement, or an exact Mac comparison
-before using a plausible shared helper. Revisit uncertain names and placement
-when stronger evidence appears; preserve one body and ordinary source calls.
+project names and keep moving when the operation is identified. A recovered
+helper with a provisional name stays in the source; uncertainty about its
+original spelling is not a reason to remove its calls or return to expanded
+caller code. Inspect the Mac callee body and its callers to distinguish a game
+helper from library, runtime, glue, or generated code. When its operation and
+receiver are clear, add one canonical body and replace the corresponding
+expanded expressions in Windows source, including already byte-exact callers.
+Do not wait for a byte-score improvement or an exact Mac comparison. Revisit
+uncertain names and placement when stronger evidence appears. Track each lead
+through implemented, already represented by a nested helper, or a concrete
+non-game/insufficient-evidence reason so the sweep reaches every function.
 
 The verdict is VC6 SP3 under Wine; clang/clangd is editor tooling only. Use the
 per-TU compiler profiles in `config/units.toml`.
@@ -189,6 +196,10 @@ the final implementation still requires retail verification.
 Use the [helper-placement skill](.agents/skills/helper-placement/SKILL.md) when
 Mac body order or VC6 cross-TU expansion may locate a recovered helper body.
 Mac xrefs identify callers but do not decide header versus source placement.
+During the broad sweep, an unidentified original name or uncertain placement
+does not veto a clear helper body and call. Put it in the best-supported
+ordinary header or source file, then revise placement if later cross-TU or
+source-order evidence warrants it.
 
 Preserve one canonical helper and its source calls. Preserve proven types and
 inline qualifiers; choose a clear name where the original is unknown. Match
