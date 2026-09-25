@@ -1,5 +1,41 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 [[helpers]]
+source_helper = "TSingleSelectionWindow::onMapHeaderRequestMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x18092c
+mac_size = 0x84
+target_sha256 = "a54c499a7d169e29935fa10f8baab6d0b77b9e458a9ac0082a956cc5c65bc209"
+evidence = "The main network dispatcher calls this retained map-header request handler. It looks up the sender in the update manager, forwards the request flag and number to the found procedure, logs all three values, and returns true. BLR at 0x1809ac precedes getProc."
+
+[[helpers]]
+source_helper = "CNewPlayerUpdateMan::getProc"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x1809b0
+mac_size = 0x40
+target_sha256 = "2981b6f93be9546fccde8e5adf831d29460ae7ec3d51ca0f9c257a716bcb8a95"
+evidence = "The header-request and confirmation handlers call this retained eight-entry lookup with sender DPID. It returns the first non-null procedure whose first word equals DPID, otherwise null. BLR at 0x1809ec precedes the confirmation handler."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onHeaderConfirmMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x1809f0
+mac_size = 0x68
+target_sha256 = "f94cf4ada45641c55f24537d21158952fbf4ec6036f5df8d5ca65b5b9de7b551"
+evidence = "The network dispatcher calls this retained confirmation handler. It finds the sender's update procedure via getProc, marks it confirmed when present, logs the sender DPID and returns true. BLR at 0x180a54 precedes checkMissingHeaders."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onReqHeaderConfirmMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x180ba4
+mac_size = 0x80
+target_sha256 = "3a8bd4426a9dd5826fdf801596c7d402a9050e5d61e79c37db50384786943ede"
+evidence = "The network dispatcher calls this retained request-confirmation handler. It checks missing headers for the sender, logs the no-missing case and transmits message 0x412 to that DPID, then returns true. BLR at 0x180c20 precedes onMapFileNameMsg."
+
+[[helpers]]
 source_helper = "TSingleSelectionWindow::assignPlayerToOpenHumanSlot"
 unit = "singleselectionwindow"
 mac_section = 0x0
