@@ -46,6 +46,9 @@
 # existing calls and RAII. The remaining geometry/artifact calls are nested.
 # Quest and event-record targets resolve to authored constructors, virtual
 # methods, string/bitset accessors and vector lifecycle calls.
+# Resource-manager's cache targets are the authored map insert/find; the
+# multiplayer dialog's nested calls come from inline constructors and the
+# ordinary modal/host helpers.
 units = [
   "adventuremapwindow",
   "adventureoptionswindow",
@@ -104,6 +107,7 @@ units = [
   "levelupwindow",
   "mainmenu",
   "monframeinfo",
+  "multiplayerwindow",
   "netmsg",
   "newgame",
   "objecttype",
@@ -121,6 +125,7 @@ units = [
   "remote",
   "resource",
   "resourcedisplay",
+  "resourcemanager",
   "sacrifice_window",
   "scenarioinfo",
   "search",
