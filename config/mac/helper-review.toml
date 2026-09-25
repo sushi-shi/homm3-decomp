@@ -52,8 +52,11 @@
 # existing calls and RAII. The remaining geometry/artifact calls are nested.
 # Quest and event-record targets resolve to authored constructors, virtual
 # methods, string/bitset accessors and vector lifecycle calls.
-# Resource-manager's cache targets are the authored map insert/find; the
-# multiplayer dialog's nested calls come from inline constructors and the
+# Resource-manager's Mac cache uses fixed 0x4000-entry insert/remove scans
+# at 0x151ff4/0x15208c, while Windows source uses TCacheMap insert/find; the
+# two target bodies are a port-specific cache implementation, not missing
+# shared helper calls. The multiplayer dialog's nested calls come from
+# inline constructors and the
 # ordinary modal/host helpers.
 # Smacker's frame wrapper now calls the retained Mac helper; its screen update
 # is inside the Mac playback body. Gzip's eight getByte calls are inside the

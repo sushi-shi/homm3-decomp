@@ -1,5 +1,14 @@
 # Reviewed Mac addresses; compiler linkage names remain unbound.
 
+[[helpers]]
+source_helper = "earlyShutDownSystem"
+unit = "kb"
+mac_section = 0
+mac_offset = 0x115f68
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "executive::shutDownSystem calls this at 0xc3a50 immediately after closing sound and before removing managers, matching its cross-TU source call. The Mac body is one BLR at 0x115f68; the next function begins at 0x115f6c. The Windows call is retained through a linker-folded empty-body alias."
+
 [[functions]]
 unit = "kb"
 mac_section = 0x0

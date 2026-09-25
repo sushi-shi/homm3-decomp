@@ -3180,7 +3180,8 @@ void shutDown(const char* inExitMessage)
 VA_COMPGEN(0x004f3940, 0xA9, IMPLICIT_DTOR, combatManager)
 VA_COMPGEN(0x004f39f0, 0x6D, IMPLICIT_DTOR, advManager)
 
-// E:\gamedcs\kb.cpp:4187; Complete's body is empty (see kb.h).
+// E:\gamedcs\kb.cpp:4187; Complete's body is empty (see kb.h). Mac retains
+// a one-instruction body at 0:0x115f68, called from executive::shutDownSystem.
 void earlyShutDownSystem()
 {
 }
