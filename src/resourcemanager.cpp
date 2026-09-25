@@ -80,12 +80,18 @@ SIZE(TCacheMap, 16);
 
 Bitmap16Bit* loadBitmap16(const char* name);
 TPalette16* loadPalette(const char* name);
+TPalette16* loadPaletteData(const char* name, TAbstractFile* stream);
 TPalette24* getPalette24(const char* name);
 TPalette24* loadPalette24Data(const char* name, TAbstractFile* stream);
 font* loadFont(const char* name);
 font* loadFontData(const char* name, TAbstractFile* stream, int fileSize);
 TTextResource* loadText(const char* name);
+TTextResource* loadTextData(const char* name, TAbstractFile* stream,
+                            int fileSize);
 TSpreadsheetResource* loadSpreadsheet(const char* name);
+TSpreadsheetResource* loadSpreadsheetData(const char* name,
+                                          TAbstractFile* stream,
+                                          int fileSize);
 
 }
 
@@ -773,17 +779,17 @@ Bitmap16Bit* ResourceManager::getBitmap16(const char* name)
     return loaded;
 }
 
-// Both retail paths read char[24] and TRGBA[256], construct TPalette24,
-// optionally adjust saturation, and convert using the six pixel-mask globals.
-// DC GetPalette independently records those arrays and the palette temporary.
-// This shared conversion operation is an inferred Complete-side helper; no
-// standalone procedure proves its original name, interface or linkage.
-// Factoring it restores the leading pathname's retained _Tidy call and all
-// 24 retail blocks (99.9810%). Keeping the archive path after the file arm's
-// early return restores both adapter stack slots and reaches 100%; an explicit
-// else instead swaps their slots. No compiler pin or library-internal call.
-static TPalette16* makeResourcePalette(const char* name, const TRGBA* paletteData)
+// Mac 0:0x153258 retains the reader immediately before loadPalette. It owns
+// the two stream reads, palette temporary, saturation and conversion; Complete
+// expands the same work in both its loose-file and archive paths. The helper
+// name is inferred from the neighboring retained loadPalette24Data operation.
+TPalette16* ResourceManager::loadPaletteData(const char* name,
+                                             TAbstractFile* stream)
 {
+    char header[24];
+    TRGBA paletteData[256];
+    stream->read(header, sizeof(header));
+    stream->read(paletteData, sizeof(paletteData));
     TPalette24 palette24(paletteData);
     if (g_graphicsSaturated)
         palette24.adjustHSV(-1.0f, -1.0f, 1.5f, 1.2f);
@@ -796,18 +802,13 @@ static TPalette16* makeResourcePalette(const char* name, const TRGBA* paletteDat
 VA(0x0055b060, 0x377)  // public GetPalette callee + retail conversion tuple
 TPalette16* ResourceManager::loadPalette(const char* name)
 {
-    char header[24];
-    TRGBA paletteData[256];
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
 
     if (file) {
         try {
             t_stdio_file_adapter stream(file);
             TAbstractFile* streamInterface = &stream;
-            streamInterface->read(header, sizeof(header));
-            streamInterface->read(paletteData, sizeof(paletteData));
-
-            TPalette16* result = makeResourcePalette(name, paletteData);
+            TPalette16* result = loadPaletteData(name, streamInterface);
 
             fclose(file);
             return result;
@@ -841,10 +842,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
 
     t_lod_file_adapter stream(lodFile);
     TAbstractFile* streamInterface = &stream;
-    streamInterface->read(header, sizeof(header));
-    streamInterface->read(paletteData, sizeof(paletteData));
-
-    return makeResourcePalette(name, paletteData);
+    return loadPaletteData(name, streamInterface);
 }
 
 // Like GetBitmap16, Complete always consults the cache and removes the
@@ -1042,6 +1040,18 @@ font* ResourceManager::getFont(const char* name)
     return loaded;
 }
 
+// Mac 0:0x153998 retains this reader directly before loadText. The size,
+// stream and name arguments feed one allocation, virtual read and constructor.
+// Complete expands the same body in its file and archive branches.
+TTextResource* ResourceManager::loadTextData(const char* name,
+                                             TAbstractFile* stream,
+                                             int fileSize)
+{
+    std::auto_ptr<char> data(new char[fileSize]);
+    stream->read(data.get(), fileSize);
+    return new TTextResource(name, fileSize, data.get());
+}
+
 VA(0x0055bb90, 0x240)
 TTextResource* ResourceManager::loadText(const char* name)
 {
@@ -1058,10 +1068,8 @@ TTextResource* ResourceManager::loadText(const char* name)
             TTextResource* result;
             {
                 t_stdio_file_adapter stream(file);
-                std::auto_ptr<char> data(new char[fileSize]);
                 TAbstractFile* streamInterface = &stream;
-                streamInterface->read(data.get(), fileSize);
-                result = new TTextResource(name, fileSize, data.get());
+                result = loadTextData(name, streamInterface, fileSize);
             }
 
             fclose(file);
@@ -1084,10 +1092,8 @@ TTextResource* ResourceManager::loadText(const char* name)
 
     int fileSize = lodFile->getItemIndex(name)->m_size;
     t_lod_file_adapter stream(lodFile);
-    std::auto_ptr<char> data(new char[fileSize]);
     TAbstractFile* streamInterface = &stream;
-    streamInterface->read(data.get(), fileSize);
-    return new TTextResource(name, fileSize, data.get());
+    return loadTextData(name, streamInterface, fileSize);
 }
 
 VA(0x0055bdd0, 0x8A)
@@ -1101,6 +1107,16 @@ TTextResource* ResourceManager::getText(const char* name)
     if (loaded)
         addToCache(loaded);
     return loaded;
+}
+
+// Mac 0:0x153b2c is the corresponding retained spreadsheet reader. Its
+// neighboring caller is loadSpreadsheet at 0:0x153be0.
+TSpreadsheetResource* ResourceManager::loadSpreadsheetData(
+    const char* name, TAbstractFile* stream, int fileSize)
+{
+    std::auto_ptr<char> data(new char[fileSize]);
+    stream->read(data.get(), fileSize);
+    return new TSpreadsheetResource(name, fileSize, data.get());
 }
 
 VA(0x0055be60, 0x240)
@@ -1117,11 +1133,8 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
             TSpreadsheetResource* result;
             {
                 t_stdio_file_adapter stream(file);
-                std::auto_ptr<char> data(new char[fileSize]);
                 TAbstractFile* streamInterface = &stream;
-                streamInterface->read(data.get(), fileSize);
-                result =
-                    new TSpreadsheetResource(name, fileSize, data.get());
+                result = loadSpreadsheetData(name, streamInterface, fileSize);
             }
 
             fclose(file);
@@ -1145,10 +1158,8 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
 
     int fileSize = lodFile->getItemIndex(name)->m_size;
     t_lod_file_adapter stream(lodFile);
-    std::auto_ptr<char> data(new char[fileSize]);
     TAbstractFile* streamInterface = &stream;
-    streamInterface->read(data.get(), fileSize);
-    return new TSpreadsheetResource(name, fileSize, data.get());
+    return loadSpreadsheetData(name, streamInterface, fileSize);
 }
 
 VA(0x0055c0a0, 0x8A)  // dc 0x122164

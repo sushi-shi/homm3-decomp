@@ -202,6 +202,36 @@ evidence = "This complete body begins with mflr at 0:0x153434 after the precedin
 
 [[helpers]]
 unit = "resourcemanager"
+source_helper = "ResourceManager::loadPaletteData"
+mac_section = 0
+mac_offset = 0x153258
+mac_size = 0x104
+mac_symbol = ".loadPaletteData__15ResourceManagerFPCcP13TAbstractFile"
+target_sha256 = "9b096455472cda88182bd2fe7d8374779131e0aaa14e07134a45d7ff0ce4b40f"
+evidence = "The retained Mac body precedes loadPalette at 0:0x15335c, which calls it with name and stream. It reads 0x18 header bytes and 0x400 RGBA bytes through the stream vtable, constructs a TPalette24 temporary, optionally adjusts saturation, and constructs TPalette16 with the six mask globals. Its final blr is 0x153358. Complete expands this same reader in both file and archive branches. CodeWarrior emits the source-owned symbol; this pairing asserts identity, not an exact byte verdict."
+
+[[helpers]]
+unit = "resourcemanager"
+source_helper = "ResourceManager::loadTextData"
+mac_section = 0
+mac_offset = 0x153998
+mac_size = 0xb4
+mac_symbol = ".loadTextData__15ResourceManagerFPCcP13TAbstractFilei"
+target_sha256 = "f20d19d698a3b525d40f9e34454fe9578cdf0c26052e9d2cf0b6f819651214df"
+evidence = "Mac loadText at 0:0x153a4c calls this immediately preceding body with name, stream and file size. It allocates a byte buffer, reads through TAbstractFile virtual slot +0xc, constructs TTextResource at 0:0x1b0b70, deletes the temporary buffer and returns the resource. The final blr is 0x153a48. Complete repeats the same work in both file and archive branches. CodeWarrior emits the source-owned symbol; identity only."
+
+[[helpers]]
+unit = "resourcemanager"
+source_helper = "ResourceManager::loadSpreadsheetData"
+mac_section = 0
+mac_offset = 0x153b2c
+mac_size = 0xb4
+mac_symbol = ".loadSpreadsheetData__15ResourceManagerFPCcP13TAbstractFilei"
+target_sha256 = "46a4e43dd9baa6dea929ab13f07a3dcec184b5aa37f2513253258d2afd280b9e"
+evidence = "Mac loadSpreadsheet at 0:0x153be0 calls this immediately preceding body with name, stream and file size. It allocates a byte buffer, reads through TAbstractFile virtual slot +0xc, constructs TSpreadsheetResource at 0:0x1b0ea8, deletes the temporary buffer and returns the resource. The final blr is 0x153bdc. Complete repeats the same work in both file and archive branches. CodeWarrior emits the source-owned symbol; identity only."
+
+[[helpers]]
+unit = "resourcemanager"
 source_helper = "openArchiveResource"
 mac_section = 0
 mac_offset = 0x152210
