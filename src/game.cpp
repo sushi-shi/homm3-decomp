@@ -10151,10 +10151,9 @@ int game::getLocalPlayerGamePos() const
 VA(0x004cea70, 0xE7)  // dc 0xbc0c0
 type_point game::getPuzzleOrigin() const
 {
-    type_point result;
-    result.m_x = m_ultimateArtifactX - 9;
-    result.m_y = m_ultimateArtifactY - 8;
-    result.m_z = m_ultimateArtifactZ;
+    type_point result(m_ultimateArtifactX - 9,
+                      m_ultimateArtifactY - 8,
+                      m_ultimateArtifactZ);
 
     sRand(m_ultimateArtifactY * 81901
           + m_ultimateArtifactX * 67843 + 79451);

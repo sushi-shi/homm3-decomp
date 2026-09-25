@@ -460,9 +460,7 @@ type_point aiAttemptPuzzleGuess(long player)
             if (guess.m_x < 0)
                 return guess;
 
-            result.m_x = -1;
-            result.m_y = -1;
-            result.m_z = -1;
+            result = type_point(-1, -1, -1);
 
             int best = 0x7fff;
             type_point current;
@@ -498,10 +496,7 @@ type_point aiAttemptPuzzleGuess(long player)
         }
     }
 
-    result.m_x = -1;
-    result.m_y = -1;
-    result.m_z = -1;
-    return result;
+    return type_point(-1, -1, -1);
 }
 
 // E:\gamedcs\puzzlewindow.cpp:472. Retail expands this file static into
