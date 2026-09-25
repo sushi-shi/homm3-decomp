@@ -636,3 +636,47 @@ mac_offset = 0x212944
 mac_size = 0x8
 target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
 evidence = "CChatEdit::ignoreKey is the source's constant-zero override: Mac loads zero into r3 and returns. It follows isOpen directly, and the next getRemoteData wrapper starts at 0x21294c."
+[[functions]]
+retail_va = 0x00556780
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214310
+mac_size = 0x1ac
+target_sha256 = "9a6c323810d69dd9a115cfb3058938433611410ff30323be46dcbee011ec4d8c"
+evidence = "CAdvMgrNetMsgHandler::handleNetMsg calls this at 0x622c in the RS_PLAYER_DEAD arm with player position and show-message flag. It marks the player disabled, handles local versus remote defeat and selects the next human turn, matching the retained Windows handlePlayerDead body. BLR at 0x2144b8 precedes handlePlayerWon at 0x2144bc."
+
+[[functions]]
+retail_va = 0x00556940
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2144bc
+mac_size = 0xb8
+target_sha256 = "5edfb71840f2496d6c6e7ade9e290bfc53d826a51caf71c4627902a9cf55137c"
+evidence = "CAdvMgrNetMsgHandler::handleNetMsg calls this at 0x6250 in the RS_PLAYER_WON arm. It copies the message victory condition, sets game over, calls the victory display and updates the all-players-defeated flag, matching the retained Windows handlePlayerWon body. BLR at 0x214570 precedes handlePlayerLost at 0x214574."
+
+[[functions]]
+retail_va = 0x005569a0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214574
+mac_size = 0x74
+target_sha256 = "22aa18b7a329e032960c7a89eeca0df481fe118e11124c7b09308bca78d13611"
+evidence = "CAdvMgrNetMsgHandler::handleNetMsg calls this at 0x6274 in the RS_PLAYER_LOST arm. It passes the message loss condition to the loss display and updates the all-players-defeated flag, matching the retained Windows handlePlayerLost body. BLR at 0x2145e4 precedes handleNormalWinMsg at 0x2145e8."
+
+[[functions]]
+retail_va = 0x005569f0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2145e8
+mac_size = 0x160
+target_sha256 = "ab9feb397a3a4e5d4c4485764521bc6b07eb06a1325459e8aab1ee5829b2bc5c"
+evidence = "CAdvMgrNetMsgHandler::handleNetMsg calls this at 0x645c in the RS_NORMAL_WIN arm. The body sets game over, compares the winning player with the local team and displays the team victory or defeat dialog, matching the retained Windows handleNormalWinMsg body. BLR at 0x214744 precedes the next function at 0x214748."
+
+[[functions]]
+retail_va = 0x00557920
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2155fc
+mac_size = 0xd0
+target_sha256 = "d8c815315d7350675b41e78c46333c87f60d41d261f5e6c611d7bbdfe27bc8ac"
+evidence = "CAdvMgrNetMsgHandler::handleNetMsg delegates its session-lost and default arms to this base handler at 0x6434 and 0x646c. The retained body dispatches RS_SET_AS_HOST and RS_SESSION_LOST, then destroys the message, matching the retained Windows CNetMsgHandler::handleNetMsg body. BLR at 0x2156c8 precedes a distinct tiny function at 0x2156cc."

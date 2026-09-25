@@ -1330,3 +1330,74 @@ mac_offset = 0x184098
 mac_size = 0x34
 target_sha256 = "bff2ef20a33f3a7b728169126f3dc4b65d0e2c091200a2e642d9a1a0c606b754"
 evidence = "Dreamcast singleselectionwindow.cpp:7889 names TSingleSelectionWindow::IsMultiPlayer and its source body already exists beside updateNameLists. The Mac entry checks g_remoteOn then protocol value 3 (hotseat) and returns a byte boolean; final BLR 0x1840c8 precedes the next prologue 0x1840cc. Its 29 direct callers are selection-window methods, including reviewed controls at 0x17130c and 0x17c898. No Windows standalone VA is claimed; caller expansions need separate VC6 proof."
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onGameHeaderInfoEndMsg"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x1824f4
+mac_size = 0xd0
+target_sha256 = "7b1dc9d1b9f2b123d39edb03a982cf09d0189ee37acd44ab6288655f631b50ef"
+evidence = "handleNetMsg calls this at 0x180400 in the RS_GAME_HEADER_INFO_END dispatch arm, between the onGameHeaderInfoMsg and onScrollMsg calls. The body sets received-map state, clears current map and receiving flags, restores chat widget 179 when shown, updates slider resolution and redraws, matching the existing source method. Mac retains the call; Windows expands it into handleNetMsg. BLR at 0x1825c0 precedes the next method at 0x1825c4."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onNewMapHeaderInfo"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x181a3c
+mac_size = 0xac
+target_sha256 = "1035dd2a9f1283b2c7b95e33b636f9e223ac3de4c6ab220604048d9d51d41596"
+evidence = "handleNetMsg calls this at 0x1803e0 in the RS_NEW_MAP_HEADER_INFO arm. The retained body constructs CNewMapHeaderInfoMsg at 0x181a68, reads the incoming message and calls game::setupOrigData, matching the existing source method that Windows expands in the dispatcher. BLR at 0x181ae4 precedes the next method at 0x181ae8."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onScrollMsg"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x1825c4
+mac_size = 0x68
+target_sha256 = "1cf3154a38da2bf402c4377b0d044338da291276a56c9e35bce39566aa01233f"
+evidence = "handleNetMsg calls this at 0x180410 in the RS_SCROLL arm. The retained body copies the scroll index from message+0x18 to window+0x36c, updates the slider and calls setCurrentMap with message map index, matching the existing source method that Windows expands in the dispatcher. BLR at 0x182628 precedes the next method at 0x18262c."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onPlayerDroppedMsg"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x181910
+mac_size = 0x12c
+target_sha256 = "d09c4a63cdd6fbb1ac659f1f38218658973d32280f81adbaf7b9647419ff265f"
+evidence = "handleNetMsg calls this at 0x180350 in the RS_PLAYER_DROPPED arm. The retained body looks up and removes the sender from the player list, updates common game version, notifies the update manager and redraws the lobby, matching the existing source method that Windows expands into the dispatcher. BLR at 0x181a38 precedes onNewMapHeaderInfo at 0x181a3c."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onChatWindowSlider"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x18266c
+mac_size = 0x38
+target_sha256 = "7532d68b2678392d7bd1cc064413d6be48ecc3745d76fbaa837495dc13bb3498"
+evidence = "The sliderChatWindow callback calls this at 0x16ec64. It sets chat position through the chat manager at 0x182684, then calls displayChat at 0x18268c, matching the existing inline source method that Windows expands into its callback. BLR at 0x1826a0 precedes the file-slider method at 0x1826a4."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onFileMenuSlider"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x1826a4
+mac_size = 0x2c
+target_sha256 = "af1764e92a3b13bc6e7461cff610800b1b20045181ced1d048e7a6a6a2429fb5"
+evidence = "The sliderFileMenu callback calls this at 0x16ecb4. It stores the new index at window+0x36c, loads the current map at+0x370 and calls setCurrentMap with update flag one, matching the existing inline source method that Windows expands into its callback. BLR at 0x1826cc precedes the duration-slider method at 0x1826d0."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onDurationSlider"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x1826d0
+mac_size = 0xa0
+target_sha256 = "1407e01cf6fcce6f4d7e182fe8c769fd3beef20724c364d765f2753eb19d77bf"
+evidence = "The sliderDuration callback calls this at 0x16ec8c. It stores the duration index at window+0x374 and into the game setup, broadcasts setup to a remote host where needed, then redraws and updates, matching the existing inline source method that Windows expands into its callback. BLR at 0x18276c precedes sendChat at 0x182770."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::sendChat"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x182770
+mac_size = 0x138
+target_sha256 = "819cd85ef4865bc43e74892a1e1fe8c614d52f0f27fb37372e0820309b5f67e2"
+evidence = "CSingleSelectionChatEdit::sendChat calls this at 0x18663c. The retained method handles the ping command first, otherwise formats the local player's chat line, displays chat and broadcasts CChatMsg, matching the existing inline source method that Windows expands into the editor override. BLR at 0x1828a4 precedes the next method at 0x1828a8."
