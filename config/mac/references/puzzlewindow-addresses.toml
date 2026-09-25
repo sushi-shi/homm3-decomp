@@ -68,9 +68,9 @@ retail_va = 0x52c9b0
 unit = "puzzlewindow"
 mac_section = 0x0
 mac_offset = 0x1489fc
-mac_size = 0x5e8
-target_sha256 = "f149b19a9cb722ac143ac407ef73e2b0f914305568e6711bb37ec977c250c5bd"
-evidence = "aiAttemptPuzzleGuess calls game::setupPuzzlePieces then compares discovered fraction against difficulty threshold, calls markAIPuzzle 0x147f70, createAIPuzzleMap 0x1480b8 and matchPuzzle 0x148488, examines five-by-five diggable neighborhood. BLR 0x148fe0; next quest callback 0x148fe4."
+mac_size = 0x428
+target_sha256 = "fdded1c1207c52e893990532b7bd43383f7741bb5e317202bcc6814f2e4ef507"
+evidence = "aiAttemptPuzzleGuess calls game::setupPuzzlePieces then compares discovered fraction against difficulty threshold, calls markAIPuzzle 0x147f70, createAIPuzzleMap 0x1480b8 and matchPuzzle 0x148488, examines five-by-five diggable neighborhood. BLR 0x148e20; next entry at 0x148e24 initializes globals. No branch from this body reaches the former overclaimed tail."
 
 [[helpers]]
 source_helper = "getPuzzleBitmap"
