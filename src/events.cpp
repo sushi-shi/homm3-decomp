@@ -4615,8 +4615,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         if (!humanPlayer)
             break;
         type_point heroPos = currentHero->getLocation();
-        if (heroPos.m_x != point.m_x || heroPos.m_y != point.m_y
-            || heroPos.m_z != point.m_z) {
+        if (heroPos != point) {
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             g_mouseManager->showPointer(1);
             doMapTavern(point);

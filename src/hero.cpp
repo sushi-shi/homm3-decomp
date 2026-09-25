@@ -5959,8 +5959,7 @@ TAdventureObjectType hero::heroFn004E4EC0()
 
     type_point invalid(-1, -1, -1);
 
-    if (invalid.m_x == point.m_x && invalid.m_y == point.m_y
-        && invalid.m_z == point.m_z)
+    if (invalid == point)
         return NOTHING;
 
     const NewmapCell* cell = g_game->getCell(point);
