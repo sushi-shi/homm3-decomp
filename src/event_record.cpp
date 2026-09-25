@@ -1195,7 +1195,7 @@ void game::playRecordedEvents()
 
     for (int j = 0; j < size; ++j) {
         unsigned char draw = !interrupted
-            && m_eventRecords[j]->m_playerId != savedPlayer;
+            && m_eventRecords[j]->getPlayerId() != savedPlayer;
         m_eventRecords[j]->replay(draw);
 
         msg = g_inputManager->getEvent();
