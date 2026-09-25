@@ -883,8 +883,9 @@ int swapManager::open(int newPriority)
                 int skill = m_heroes[hero]->getNthSS(skillIndex);
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = hero * 8 + skillIndex + 200;
-                msg.m_extra = m_heroes[hero]->m_skillLevel[skill]
-                            + 3 * skill + 2;
+                msg.m_extra = m_heroes[hero]->getSecondarySkill(
+                                  TSecondarySkill(skill))
+                    + 3 * skill + 2;
                 // Mac retains this call at 0:0x1a6504.
                 m_parent->broadcastMessage(msg);
             } else {
@@ -1591,14 +1592,16 @@ int swapManager::main(message& msg)
                         int skill = m_heroes[skillHero]->getNthSS(skillIndex);
                         strcpy(g_text,
                                g_sSkillTraits[skill].m_levelNames[
-                                   m_heroes[skillHero]->m_skillLevel[skill] - 1]);
+                                   m_heroes[skillHero]->getSecondarySkill(
+                                       TSecondarySkill(skill)) - 1]);
                         normalDialog(
                             g_text,
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, 20,
-                            m_heroes[skillHero]->m_skillLevel[skill]
+                            m_heroes[skillHero]->getSecondarySkill(
+                                TSecondarySkill(skill))
                                 + 3 * skill + 2,
                             -1, 0, -1, 0, -1, 0);
                     }
@@ -2108,7 +2111,8 @@ void swapManager::setRolloverText(int codeY)
             int skill = m_heroes[0]->getNthSS(
                 codeY - kSwapRolloverLeftSkill0);
             sprintf(g_text, g_heroScreen[21],
-                    g_secondarySkillLevels[m_heroes[0]->m_skillLevel[skill] - 1],
+                    g_secondarySkillLevels[
+                        m_heroes[0]->getSecondarySkill(TSecondarySkill(skill)) - 1],
                     g_sSkillTraits[skill].m_name);
         }
         break;
@@ -2121,7 +2125,8 @@ void swapManager::setRolloverText(int codeY)
             int skill = m_heroes[1]->getNthSS(
                 codeY - kSwapRolloverRightSkill0);
             sprintf(g_text, g_heroScreen[21],
-                    g_secondarySkillLevels[m_heroes[1]->m_skillLevel[skill] - 1],
+                    g_secondarySkillLevels[
+                        m_heroes[1]->getSecondarySkill(TSecondarySkill(skill)) - 1],
                     g_sSkillTraits[skill].m_name);
         }
         break;

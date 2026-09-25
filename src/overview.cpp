@@ -645,7 +645,8 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                         item * 36 + 433, row * 116 + 29,
                         32, 32, rowWidgetId + item + 158,
                         "secsk32.def",
-                        lookup * 3 + currHero->m_skillLevel[lookup] + 2,
+                        lookup * 3
+                            + currHero->getSecondarySkill(TSecondarySkill(lookup)) + 2,
                         0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
@@ -1277,11 +1278,12 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                 int skill = currHero->getNthSS(codeY - 158);
                 normalDialog(
                     g_sSkillTraits[skill].m_levelNames[
-                        currHero->m_skillLevel[skill] - 1],
+                        currHero->getSecondarySkill(TSecondarySkill(skill)) - 1],
                     rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
                     -1, -1, 20,
-                    skill * 3 + currHero->m_skillLevel[skill] + 2,
+                    skill * 3
+                        + currHero->getSecondarySkill(TSecondarySkill(skill)) + 2,
                     -1, 0, -1, 0, -1, 0);
                 break;
             }
@@ -2005,7 +2007,7 @@ void TOverviewWindow::doRollover(int codeY)
                     int skill = currHero->getNthSS(nth);
                     sprintf(g_text, g_heroScreen[21],
                             g_secondarySkillLevels[
-                                currHero->m_skillLevel[skill] - 1],
+                                currHero->getSecondarySkill(TSecondarySkill(skill)) - 1],
                             g_sSkillTraits[skill].m_name);
                 }
                 break;
