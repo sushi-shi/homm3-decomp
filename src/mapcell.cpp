@@ -40,7 +40,7 @@ VA(0x004fc000, 0x19A) MAC_ADDRESS(0x11d534, 0xbc)  // dc 0xeb73c
 int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 {
     int count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return -1;
 
     m_timedEventList.resize(count);
@@ -95,9 +95,7 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
     }
 
     if (saveVersion >= 28) {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        m_applyToHuman = value != 0;
+        m_applyToHuman = readValue<signed char>(infile) != 0;
     } else {
         m_applyToHuman = 1;
     }
@@ -128,7 +126,7 @@ VA(0x004fc390, 0xA5) MAC_ADDRESS(0x11d874, 0xc4)  // dc 0xeb9a0
 int NewfullMap::saveTimedEventList(TAbstractFile* outfile)
 {
     int count = m_timedEventList.size();
-    if (static_cast<unsigned>(outfile->write(&count, sizeof(count)))
+    if (static_cast<unsigned>(writeValue(outfile, count))
         < sizeof(count))
         return -1;
 
@@ -150,8 +148,7 @@ int TTimedEvent::save(TAbstractFile* outfile)
     if (static_cast<unsigned>(outfile->write(&m_playerFlags, 1)) < 1)
         return -1;
 
-    unsigned char count = m_applyToHuman;
-    outfile->write(&count, 1);
+    writeValue<unsigned char>(outfile, m_applyToHuman);
 
     if (static_cast<unsigned>(outfile->write(&m_applyToComputer, 1)) < 1)
         return -1;
@@ -164,7 +161,7 @@ VA(0x004fc500, 0x19A) MAC_ADDRESS(0x11db1c, 0xbc)  // dc 0xebb0c
 int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 {
     int count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return -1;
 
     m_timedEventList.resize(count);
@@ -187,9 +184,7 @@ int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
         return -1;
 
     if (saveVersion >= 42) {
-        unsigned char count;
-        infile->read(&count, 1);
-        m_applyToHuman = count != 0;
+        m_applyToHuman = readValue<signed char>(infile) != 0;
     } else {
         m_applyToHuman = 1;
     }
@@ -228,7 +223,7 @@ VA(0x004fc770, 0xFA) MAC_ADDRESS(0x11df10, 0xbc)  // dc 0xebd24
 int NewfullMap::saveTownEventList(TAbstractFile* outfile)
 {
     int count = m_townEventList.size();
-    if (static_cast<unsigned>(outfile->write(&count, sizeof(count)))
+    if (static_cast<unsigned>(writeValue(outfile, count))
         < sizeof(count))
         return -1;
 
@@ -260,7 +255,7 @@ VA(0x004fc870, 0x1E4) MAC_ADDRESS(0x11e08c, 0xb0)  // dc 0xebe3c
 int NewfullMap::loadTownEventList(TAbstractFile* infile, int saveVersion)
 {
     int count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return -1;
 
     m_townEventList.resize(count);
@@ -657,7 +652,7 @@ MAC_ADDRESS(0x11f67c, 0x11c)
 int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
 {
     short seerCount;
-    if (infile->read(&seerCount, sizeof(seerCount)) < sizeof(seerCount))
+    if (readValue(infile, seerCount) < sizeof(seerCount))
         return -1;
 
     m_seerHutList.resize(seerCount);
