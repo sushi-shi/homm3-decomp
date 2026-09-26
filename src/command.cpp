@@ -549,14 +549,11 @@ int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // convert the mouse/hex tuple into one of the twelve SetCombatDirections
 // slots, cache that slot's destination hex, and select its combat cursor frame
 // only when the frame changes.
-// Preserve the separate quick-combat and computer-action checks in one
-// failure scope. Both do/while(0) and for(;;) remove the early join at
-// unchanged 97.6434%; the full cursor body remains after those checks.
-// Positive/negative nested-body guards instead score 85.8951%, and the
-// earlier direct zero return loses 3.9161 points. The canonical nullary
-// isComputerAction wrapper does not recover the required separate checks.
-// Remaining differences are the ESI/EDI register binding, with the same
-// retail CFG and calls; this is not a claim of complete byte equality.
+// Mac retains the policy wrapper and abs(x), abs(y), in that order.
+// CodeWarrior -O3 preserves three calls in the old abs(y)-guard followed
+// by abs(x)/abs(y) spelling; it does not merge the repeated library call.
+// Windows is 98.5874%; its residual is x87 ratio temporary scheduling.
+// Initializing the vertical default before the guard scores 96.07%.
 VA(0x00474a00, 0x198) MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
 unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 {
