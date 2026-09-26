@@ -20,8 +20,9 @@
 #include <string.h>
 // VC6 keeps a for-init declaration in the enclosing scope (pre-ISO rule).
 #pragma ARM_scoping on
-// Native MSL provides the equivalent CRT entry under this spelling.
+// Native MSL provides the equivalent CRT entries under these spellings.
 #define _strcmpi _stricmp
+#define stricmp _stricmp
 // The file API keeps Microsoft's names in shared source; MSL supplies the
 // corresponding open flags and owner-write permission under POSIX spellings.
 #define _O_BINARY O_BINARY
