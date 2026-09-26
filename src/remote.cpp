@@ -187,7 +187,9 @@ unsigned char CDPlayHeroes::sysMsgCreatePlayerOrGroup(
     return CDPlay::sysMsgCreatePlayerOrGroup(message, toId);
 }
 
-VA(0x00552b60, 0x24B)  // dc 0x11bb9c
+// Mac polls its native receive buffer here and calls the same low-level
+// dispatcher and queue helper; Windows uses DirectPlay receive/error state.
+VA(0x00552b60, 0x24B) MAC_ADDRESS(0x210944, 0xa0)  // dc 0x11bb9c
 bool CDPlayHeroes::pollRemote()
 {
     unsigned long fromId;
@@ -260,7 +262,9 @@ static const long g_playerActiveUpdateInterval = 600000;
 // Unimplemented carcass rows remain available to the claim/label scanners but
 // stay outside compilation as this large TU is admitted incrementally.
 
-VA(0x00552db0, 0x28F)  // dc 0x11bc88
+// Mac 0x2109e4 handles the same ping, ping reply and player-drop subtypes;
+// its native transport supplies the incoming message.
+VA(0x00552db0, 0x28F) MAC_ADDRESS(0x2109e4, 0x1a0)  // dc 0x11bc88
 unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
 {
     switch (netMsg->m_subType) {
@@ -475,7 +479,9 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
 // CONSEQUENCE of the rotation, not an independent merge to spell.
 // Polish 49 adds the third loop form to that list: `int retries = 0;
 // while (retries <= 5) { ...; ++retries; }` is byte-identical at 88.8550.
-VA(0x005533d0, 0x1AB)  // anchor-strings + virtual-slots + dc-order-map
+// Mac 0x210f98 sends through its native transport once; Windows retains the
+// DirectPlay retry and error-dialog flow around the corresponding send.
+VA(0x005533d0, 0x1AB) MAC_ADDRESS(0x210f98, 0x74)  // anchor-strings + virtual-slots + dc-order-map
 bool CDPlayHeroes::sendIt(CNetMsg* msg, unsigned long dpidTo,
                           bool guaranteed)
 {
@@ -538,7 +544,9 @@ void CDPlayHeroes::handleNewPlayer(unsigned long, char*, void*, unsigned long)
 {
 }
 
-VA(0x00553580, 0x1F0)
+// Both builds construct a player-drop message and queue it; Mac uses the
+// native network identity passed from its transport layer.
+VA(0x00553580, 0x1F0) MAC_ADDRESS(0x21100c, 0x7c)
 void CDPlayHeroes::handlePlayerDrop(unsigned long dpid)
 {
     g_logFile.log(DATA_COMPGEN(0x00682a78, playerDroppedLog,
