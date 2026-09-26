@@ -400,6 +400,8 @@ unsigned char VictoryConditionStruct::checkForTimeSurvival()
     return 0;
 }
 
+// DC lines448..458 retain the positive point-match scope. Complete retail
+// needs the same scope to place the common failure epilogue after success.
 VA(0x005f2860, 0x1DE) MAC_ADDRESS(0x1feba0, 0x2bc)  // dc 0x190620
 unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
     const hero* thisHero, const type_point townLoc)
@@ -411,29 +413,28 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
 
     if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
         type_point target(m_townX, m_townY, m_townZ);
-        if (!(target == townLoc))
-            return 0;
+        if (target == townLoc) {
+            if (thisHero->hasArtifact(m_artifactNum)) {
+                m_playerWinner = thisHero->m_owner;
+                m_gameWon = 1;
+                return 1;
+            }
+            int comboIdx = g_artifactTraits[m_artifactNum].m_comboType;
+            if (comboIdx == -1)
+                return 0;
 
-        if (thisHero->hasArtifact(m_artifactNum)) {
-            m_playerWinner = thisHero->m_owner;
-            m_gameWon = 1;
-            return 1;
-        }
-        int comboIdx = g_artifactTraits[m_artifactNum].m_comboType;
-        if (comboIdx == -1)
-            return 0;
-
-        const std::bitset<144>& components =
-            g_combinationArtifacts[comboIdx].m_components;
-        int remaining = components.count();
-        for (int i = 0;; ++i) {
-            if (components.test(i)) {
-                if (!thisHero->hasArtifact(i))
-                    return 0;
-                if (--remaining == 0) {
-                    m_playerWinner = static_cast<signed char>(g_netLocalGamePos);
-                    m_gameWon = 1;
-                    return 1;
+            const std::bitset<144>& components =
+                g_combinationArtifacts[comboIdx].m_components;
+            int remaining = components.count();
+            for (int i = 0;; ++i) {
+                if (components.test(i)) {
+                    if (!thisHero->hasArtifact(i))
+                        return 0;
+                    if (--remaining == 0) {
+                        m_playerWinner = static_cast<signed char>(g_netLocalGamePos);
+                        m_gameWon = 1;
+                        return 1;
+                    }
                 }
             }
         }
