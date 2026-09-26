@@ -520,19 +520,26 @@ int font::longestWrappedLineWidth(const char* str, int boxWidth) const
 // Mac 0xc9d04..0xc9d08 adds line width before subtracting word width;
 // 0xc9d74..0xc9d7c counts pending spaces down. Both source forms restore
 // the Windows retail body while retaining every string/vector helper.
+// Mac's local register order also fixes the entry declarations below: p,
+// wordEnd, wordWidth, lineWidth, spaceCount, spaceWidth. Windows stays exact.
 
 VA(0x004b5b90, 0x3A5) MAC_ADDRESS(0x0c9b78, 0x270)  // anchor-member (fs.abc[' '] at this+0x1bc), retail-only
 void font::fillLinesVector(const char* str, int boxWidth,
                            std::vector<std::string>& result)
 {
-    int lineWidth = 0;
+    const char* p;
+    const char* wordEnd;
+    int wordWidth;
     std::string line;
+    int lineWidth = 0;
+    int spaceCount;
+    int spaceWidth;
     line = "";
-    const char* p = str;
+    p = str;
     result.clear();
     while (*p != 0) {
-        int spaceWidth = 0;
-        int spaceCount = 0;
+        spaceWidth = 0;
+        spaceCount = 0;
         int blankWidth = getCharacterWidth(' ');
         while (*p == ' ' || *p == '\n') {
             if (*p == '\n') {
@@ -547,8 +554,8 @@ void font::fillLinesVector(const char* str, int boxWidth,
             }
             p++;
         }
-        int wordWidth = 0;
-        const char* wordEnd = p;
+        wordWidth = 0;
+        wordEnd = p;
         while (*wordEnd != 0 && *wordEnd != ' ' && *wordEnd != '\n') {
             wordWidth += getCharacterWidth(*wordEnd);
             wordEnd++;
