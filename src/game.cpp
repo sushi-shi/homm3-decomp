@@ -5816,14 +5816,14 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     }
 
     char boolBuffer;
-    if (infile->read(&boolBuffer, sizeof(boolBuffer)) < sizeof(boolBuffer))
+    if (readValue(infile, boolBuffer) < sizeof(boolBuffer))
         return -1;
     m_isPlayable = boolBuffer != 0;
 
     if (infile->read(&m_size, sizeof(m_size)) < sizeof(m_size))
         return -1;
 
-    if (infile->read(&boolBuffer, sizeof(boolBuffer)) < sizeof(boolBuffer))
+    if (readValue(infile, boolBuffer) < sizeof(boolBuffer))
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
@@ -5837,15 +5837,13 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         return -1;
 
     unsigned char ucharBuffer;
-    if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
+    if (readValue(infile, ucharBuffer)
         < sizeof(ucharBuffer))
         return -1;
     m_difficulty = ucharBuffer;
 
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_maxHeroLevel = charBuffer;
+        m_maxHeroLevel = readValue<char>(infile);
     } else {
         m_maxHeroLevel = 0;
     }
@@ -5873,8 +5871,9 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         m_minNumHumanPlayers = 1;
 
     int x;
-    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+    if (readValue(infile, ucharBuffer) < sizeof(ucharBuffer))
         return -1;
+    x = ucharBuffer;
     m_victoryCondition.m_type = x;
     m_victoryCondition.m_gameWon = 0;
     m_victoryCondition.m_playerWinner = -1;
@@ -5906,16 +5905,18 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         }
     }
 
-    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+    if (readValue(infile, ucharBuffer) < sizeof(ucharBuffer))
         return -1;
+    x = ucharBuffer;
     m_lossCondition.m_type = x;
     m_lossCondition.m_gameLost = 0;
     m_lossCondition.m_playerLoser = -1;
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         readLossCondition(x, infile);
 
-    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+    if (readValue(infile, ucharBuffer) < sizeof(ucharBuffer))
         return -1;
+    x = ucharBuffer;
     m_numTeams = x;
     if (m_numTeams) {
         if (infile->read(m_teamInfo, sizeof(m_teamInfo)) < sizeof(m_teamInfo))
@@ -5951,12 +5952,10 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     m_placeholders.clear();
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         // Complete retail tests this dword for zero, not signed positivity.
-        unsigned int count;
-        infile->read(&count, sizeof(count));
+        unsigned int count = readValue<unsigned int>(infile);
         if (count > 0) {
             do {
-                infile->read(&x, sizeof(unsigned char));
-                x &= 0xff;
+                x = readValue<unsigned char>(infile);
                 m_placeholders.push_back(x);
             } while (--count != 0);
         }
@@ -5965,16 +5964,13 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     m_heroPlayerSetups.clear();
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        infile->read(&x, sizeof(unsigned char));
-        x &= 0xff;
+        x = readValue<unsigned char>(infile);
         if (static_cast<unsigned int>(x) > 0) {
             int count = x;
             do {
-                infile->read(&x, sizeof(unsigned char));
-                int heroKey = x & 0xff;
+                int heroKey = readValue<unsigned char>(infile);
 
-                unsigned char savedHeroId;
-                infile->read(&savedHeroId, sizeof(savedHeroId));
+                unsigned char savedHeroId = readValue<unsigned char>(infile);
                 int heroId = savedHeroId;
                 if (savedHeroId == g_savedHeroNone)
                     heroId = -1;
