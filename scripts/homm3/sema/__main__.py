@@ -36,6 +36,10 @@ spelling that names exactly one retail symbol)
         (delinked-unit object when one exists, image bytes via capstone
         otherwise). --source labels candidate statements and implies
         --base; --verbose is the raw objdump view (bytes, reloc lines).
+  switchmap TARGET [--no-build] [--verbose] [--depth N]
+  switchmap --all | --tsv FILE
+        Compare switch case-to-arm mappings in normalized candidate and
+        retail objects. Hits are leads requiring an arm-level review.
   rva ADDR
         The address dossier: symbol, universe class, src claim,
         vtable membership, match %.
@@ -163,6 +167,17 @@ def _build_parser() -> argparse.ArgumentParser:
                     help="raw objdump rows: byte columns + reloc lines (the "
                          "default already folds every symbol into its operand)")
 
+    sm = ss.add_parser("switchmap", help="switch case-to-arm mapping screen")
+    selector = sm.add_mutually_exclusive_group(required=True)
+    selector.add_argument("target", nargs="?", help="retail selector")
+    selector.add_argument("--all", action="store_true",
+                          help="all scored functions below MAX 100")
+    selector.add_argument("--tsv", metavar="FILE",
+                          help="TSV worklist with retail RVA in first column")
+    sm.add_argument("--no-build", action="store_true")
+    sm.add_argument("--verbose", action="store_true")
+    sm.add_argument("--depth", type=int, default=64)
+
     sr = ss.add_parser("rva", help="address dossier (the first command on "
                                    "any address)")
     sr.add_argument("addr", help="0x<rva> or 0x<va>")
@@ -205,7 +220,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return ap
 
 
-COMMANDS = ("xref", "diff", "disasm", "rva", "strings", "data", "coverage", "candidates", "compare")
+COMMANDS = ("xref", "diff", "disasm", "switchmap", "rva", "strings", "data", "coverage", "candidates", "compare")
 
 # What agents typed under `homm3 sema` that lives elsewhere (usage-log
 # audit): the vc6 solvers, dreamcast lookups, and flag spellings guessed
@@ -242,8 +257,8 @@ def _redirect(argv: list[str]) -> None:
 def _dispatch(argv):
     _redirect(argv)
     args = _build_parser().parse_args(argv)
-    from homm3.sema import diff, disasm, rva, strings, xref, data, candidates, compare, coverage
-    tool = {"xref": xref, "diff": diff, "disasm": disasm,
+    from homm3.sema import diff, disasm, switchmap, rva, strings, xref, data, candidates, compare, coverage
+    tool = {"xref": xref, "diff": diff, "disasm": disasm, "switchmap": switchmap,
             "rva": rva, "strings": strings, "data": data, "coverage": coverage,
             "candidates": candidates, "compare": compare}[args.sema]
     return tool.run(args) or 0

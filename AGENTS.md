@@ -151,10 +151,15 @@ Reject Dreamcast shape only when retail semantics, ABI, layout, or CFG contradic
 it. A lower similarity score is insufficient. Preserve proven classes, interfaces,
 helpers, and scopes through temporary score dips, including header/TU collateral;
 measure that collateral and keep prior peaks in max/history. Score dips are
-observational, not build failures. `homm3 status check` attributes a regression
-only when a function's own source hash changed and its new MAX fell below the
-preceding MAX. The invariant is CUR <= MAX <= HIST: MAX is monotone for an
-unchanged function hash, a proven edit resets MAX to CUR, and HIST retains the
+observational, not build failures. `homm3 status check` reports source-edit
+MAX drops as RESET when CUR held against the banked snapshot, CHANGED-CUR
+when it moved, or MISSING when the body vanished. Compare a rebased lane with
+main using `homm3 status check --baseline-ref REF`; the full build banks its
+local ledger automatically, so the explicit ref remains useful afterward.
+`homm3 status merge-baseline` merges a conflicted ledger three ways during
+rebase; review its result before staging. The invariant is CUR <= MAX <= HIST:
+MAX is monotone for an unchanged function hash, a proven edit resets MAX to
+CUR, and HIST retains the
 all-time peak. Tooling prioritizes MAX; HIST is a lead for recovering lost peaks.
 
 ## Experiment lifetime

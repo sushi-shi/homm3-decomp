@@ -53,13 +53,14 @@ Subcommands
         labels -> model -> synth PDB -> data manifests -> vostok ->
         per-unit target objs -> normalize -> objdiff.json.
 
-  status [functions [FILTER...]|update|check]
+  status [functions [FILTER...]|update|check [--baseline-ref REF]|merge-baseline]
         Scoreboard (homm3.match.status): per-unit table; `functions` shows
         cur/max/hist; `update` regenerates config/match_baseline.tsv; `check`
-        reports source edits whose new MAX falls below the prior MAX without
-        gating. Unrelated CUR dips are silent; HIST preserves older peaks.
+        classifies source-edit MAX resets against the local or a committed
+        baseline without gating. `merge-baseline` merges concurrent score rows
+        three ways. Unrelated CUR dips are silent; HIST preserves older peaks.
 
-  sema <xref|diff|disasm|rva|strings|data|coverage|candidates|compare> ...
+  sema <xref|diff|disasm|switchmap|rva|strings|data|coverage|candidates|compare> ...
         Read-only navigation over the retail image (homm3.sema): caller
         trees + exact data refs (xref --to = every referencing site),
         base-vs-target diffs (skeleton by default; --summary = every
