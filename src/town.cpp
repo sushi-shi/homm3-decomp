@@ -421,7 +421,7 @@ int town::save(TAbstractFile* outfile)
 
     memset(spellBuf, 0, sizeof(spellBuf));
     for (int spell = 0; spell < 70; ++spell) {
-        if (m_spells.test(spell))
+        if (m_spells[spell])
             spellBuf[spell / 8] |= 1 << (spell % 8);
     }
     if (outfile->write(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
