@@ -1508,19 +1508,9 @@ static int doCampaignWindow(bool newGame, int campaignSet)
     return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
-// Complete's separate campaign-set/custom-campaign front end. Retail
-// oldmain+0x91c proves this zero-argument entry, not removal of the older
-// parameterized operation above. Its three new-game retry loops include an
-// additional cancel reopen. Sharing the older operation at these inferred
-// sites changes the retained call/expansion pattern; their ownership remains
-// unresolved, unlike oldmain's two positively identified calls.
-// Residual (99.8872%): all 30 blocks, 15 branches, 44 calls and opcodes are
-// exact. Retail leaves one four-byte allocator hole between exitCampaigns
-// (the exact byte at [ebp-0xd]) and the first 0x4c-byte TCampaignSetWindow,
-// shifting every later RAII object and the frame by four bytes. Restoring a
-// Complete-local `unsigned char newGame = 1` is byte-neutral; widening
-// exitCampaigns to int is worse (99.78%) and contradicts retail's byte
-// store/test. The proven class size and object scopes therefore stay intact.
+// Mac retains doCampaignWindow(true, set) in all three campaign-set arms
+// (0x111108, 0x111130, 0x111158). Each cancellation reopens the campaign
+// video after the helper returns; keep that caller operation separate.
 VA(0x004f00a0, 0x3EE)
 static unsigned char doCampaignWindow()
 {
@@ -1539,88 +1529,25 @@ static unsigned char doCampaignWindow()
         switch (g_windowManager->m_dialogReturn) {
         case TCampaignSetWindow::CAMPAIGN_SET_SOD_ID: {
             videoPause();
-            g_inCampaign = 1;
-
-            while (1) {
-                {
-                    TCampaignWindow campaignWindow(1, 2);
-                    campaignWindow.doModal();
-                }
-
-                openCampaignVideo();
-                videoPause();
-                if (g_windowManager->m_dialogReturn
-                    == DIALOG_RETURN_CANCEL) {
-                    openCampaignVideo();
-                    break;
-                }
-
-                {
-                    TCampaignBrief campaignBrief(1, 0);
-                    campaignBrief.doModal();
-                }
-                if (g_windowManager->m_dialogReturn
-                    != DIALOG_RETURN_CANCEL)
-                    return 1;
-            }
+            if (doCampaignWindow(true, 2))
+                return 1;
+            openCampaignVideo();
             break;
         }
 
         case TCampaignSetWindow::CAMPAIGN_SET_AB_ID: {
             videoPause();
-            g_inCampaign = 1;
-
-            while (1) {
-                {
-                    TCampaignWindow campaignWindow(1, 1);
-                    campaignWindow.doModal();
-                }
-
-                openCampaignVideo();
-                videoPause();
-                if (g_windowManager->m_dialogReturn
-                    == DIALOG_RETURN_CANCEL) {
-                    openCampaignVideo();
-                    break;
-                }
-
-                {
-                    TCampaignBrief campaignBrief(1, 0);
-                    campaignBrief.doModal();
-                }
-                if (g_windowManager->m_dialogReturn
-                    != DIALOG_RETURN_CANCEL)
-                    return 1;
-            }
+            if (doCampaignWindow(true, 1))
+                return 1;
+            openCampaignVideo();
             break;
         }
 
         case TCampaignSetWindow::CAMPAIGN_SET_ROE_ID: {
             videoPause();
-            g_inCampaign = 1;
-
-            while (1) {
-                {
-                    TCampaignWindow campaignWindow(1, 0);
-                    campaignWindow.doModal();
-                }
-
-                openCampaignVideo();
-                videoPause();
-                if (g_windowManager->m_dialogReturn
-                    == DIALOG_RETURN_CANCEL) {
-                    openCampaignVideo();
-                    break;
-                }
-
-                {
-                    TCampaignBrief campaignBrief(1, 0);
-                    campaignBrief.doModal();
-                }
-                if (g_windowManager->m_dialogReturn
-                    != DIALOG_RETURN_CANCEL)
-                    return 1;
-            }
+            if (doCampaignWindow(true, 0))
+                return 1;
+            openCampaignVideo();
             break;
         }
 
