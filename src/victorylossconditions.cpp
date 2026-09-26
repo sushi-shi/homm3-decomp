@@ -90,8 +90,7 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    int team = g_game->getTeam(g_netLocalGamePos);
-    if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
+    if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
         int j;
         for (j = 0; j < g_currentPlayer->m_numHeroes; ++j) {
             if (g_game->getHero(g_currentPlayer->m_heroes[j])
@@ -136,8 +135,7 @@ unsigned char VictoryConditionStruct::checkForTotalCreatures()
         long total = 0;
         if (g_currentPlayer
             && !g_game->m_playerDisabled[g_netLocalGamePos]) {
-            int team = g_game->getTeam(g_netLocalGamePos);
-            if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
+            if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
                 int i;
                 for (i = 0; i < g_currentPlayer->m_numHeroes; ++i)
                     total += g_game->getHero(g_currentPlayer->m_heroes[i])
@@ -162,8 +160,7 @@ unsigned char VictoryConditionStruct::checkForTotalResources()
     if (m_type == VICTORY_CONDITION_TOTAL_RESOURCES
         && g_currentPlayer
         && !g_game->m_playerDisabled[g_netLocalGamePos]) {
-        int team = g_game->getTeam(g_netLocalGamePos);
-        if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
+        if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
             if (g_currentPlayer->m_resources[m_resourceType] >= m_resourceAmount) {
                 m_playerWinner = static_cast<signed char>(g_netLocalGamePos);
                 m_gameWon = 1;
@@ -303,8 +300,7 @@ unsigned char VictoryConditionStruct::checkForTownCaptureWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    int team = g_game->getTeam(g_netLocalGamePos);
-    if (!((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer))
+    if (!(g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer))
         return 0;
 
     int townId = g_game->getTownId(m_townX, m_townY, m_townZ);
@@ -358,8 +354,7 @@ unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    int team = g_game->getTeam(g_netLocalGamePos);
-    if (!((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer))
+    if (!(g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer))
         return 0;
 
     for (unsigned int i = 0; i < g_game->m_generators.size(); ++i) {
@@ -380,8 +375,7 @@ unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    int team = g_game->getTeam(g_netLocalGamePos);
-    if (!((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer))
+    if (!(g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer))
         return 0;
 
     for (unsigned int i = 0; i < g_game->m_mines.size(); ++i) {
@@ -416,8 +410,7 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    int team = g_game->getTeam(g_netLocalGamePos);
-    if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
+    if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
         type_point target(m_townX, m_townY, m_townZ);
         if (!(target == townLoc))
             return 0;

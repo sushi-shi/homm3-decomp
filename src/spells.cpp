@@ -52,11 +52,6 @@
 // enumerator in artifact.h and reaches here through hero.h.
 const int g_artifactRecantersCloak = 0x53;
 
-// Mirror Image's random target search excludes the one battlefield cell
-// retail singles out in addition to war-machine stacks. The semantic reason
-// for that particular cell is not yet proven, so keep the name conservative.
-const int g_mirrorImageExcludedHex = 149;
-
 int handleSacrificeBeneficiary(message& msg);
 int handleCastSacrifice(message& msg);
 int handleCastSpell(message& msg);
@@ -206,13 +201,14 @@ int combatManager::viewSpells() const
         for (i = 0; i < 2; ++i) {
             if (m_heroes[i]
                 && m_heroes[i]->isWieldingArtifact(g_artifactRecantersCloak)) {
-                normalDialog(
-                    formatString(
-                        g_generalText->getText(GENERAL_TEXT_ARTIFACT_BLOCKS_HIGH_LEVEL_SPELLS_FORMAT),
-                        g_artifactTraits[g_artifactRecantersCloak].m_name,
-                        m_heroes[m_currentSide]->m_name)
-                        .c_str(),
-                    1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                // Mac copies the formatted result into this owner, then
+                // destroys the formatting temporary before opening the dialog.
+                std::string message = formatString(
+                    g_generalText->getText(GENERAL_TEXT_ARTIFACT_BLOCKS_HIGH_LEVEL_SPELLS_FORMAT),
+                    g_artifactTraits[g_artifactRecantersCloak].m_name,
+                    m_heroes[m_currentSide]->m_name);
+                normalDialog(message.c_str(),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 return -1;
             }
         }
@@ -354,12 +350,13 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                     && target->getMirrorEffect() >= random(1, 100)) {
                 TPickANumber picker(0, m_numArmies[m_currentSide] - 1);
                 int picked;
+                // Both retail builds test creature type (+0x34), not hex (+0x38).
                 do {
                     picked = picker.pick();
                 } while (picked >= 0
                          && (m_armies[m_currentSide][picked].is(creatureImmobilized)
-                             || m_armies[m_currentSide][picked].m_gridIndex
-                                    == g_mirrorImageExcludedHex));
+                             || m_armies[m_currentSide][picked].m_creatureType
+                                    == army::ARMY_CREATURE_ARROW_TOWER));
                 m_nextActionGridIndex2 = m_armies[m_currentSide][picked].m_gridIndex;
             }
         }
@@ -798,7 +795,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                  g_heroClasses[castingHero->m_heroClass].m_townType * 2
                  + g_heroTraits[castingHero->m_id].m_sex].m_castFrame; frame++) {
             m_cmbtHeroFrameIndex[m_currentSide] = frame;
-            drawFrame(1, 1, 0, 100, 1, 1);
+            drawFrame(1, 0, 0, 100, 1, 1);
         }
     } else {
         army* caster = getCurrentArmy();
@@ -1101,6 +1098,8 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         areaEffect(targetIndex, SPELL_METEOR_SHOWER, mastery, monsterPower);
         break;
 
+    // Mac 0x191620 and 0x191814 retain spellCastWorks in both mass-damage
+    // arms; preserve the shared roll/chance helper instead of its expansion.
     case SPELL_DEATH_RIPPLE: {
         showSpellMessage(0, SPELL_DEATH_RIPPLE, 0);
         clearEffects();
@@ -1110,10 +1109,8 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         for (int group = 0; group < 2; ++group) {
             for (int index = 0; index < m_numArmies[group]; ++index) {
                 army* targetArmy = &m_armies[group][index];
-                if (random(1, 100)
-                    <= static_cast<long>(spellCastWorkChance(
-                        SPELL_DEATH_RIPPLE, m_currentSide, targetArmy, 0, 1,
-                        isMonsterSpell) * 100.0f)) {
+                if (spellCastWorks(SPELL_DEATH_RIPPLE, m_currentSide,
+                                   targetArmy, 0, isMonsterSpell)) {
                     m_effected[group][index] = 1;
                     damage = computeSpellDamage(
                         SPELL_DEATH_RIPPLE, monsterPower, mastery,
@@ -1153,10 +1150,8 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         for (int group = 0; group < 2; ++group) {
             for (int index = 0; index < m_numArmies[group]; ++index) {
                 army* targetArmy = &m_armies[group][index];
-                if (random(1, 100)
-                    <= static_cast<long>(spellCastWorkChance(
-                        SPELL_DESTROY_UNDEAD, m_currentSide, targetArmy, 0, 1,
-                        isMonsterSpell) * 100.0f)) {
+                if (spellCastWorks(SPELL_DESTROY_UNDEAD, m_currentSide,
+                                   targetArmy, 0, isMonsterSpell)) {
                     m_effected[group][index] = 1;
                     damage = computeSpellDamage(
                         SPELL_DESTROY_UNDEAD, monsterPower, mastery,
@@ -2647,7 +2642,7 @@ void combatManager::markAreaEffect(long hex, long radius,
     for (point.x = center.x - radius; point.x <= center.x + radius; point.x++) {
         for (point.y = center.y - radius; point.y <= center.y + radius;
              point.y++) {
-            if (getDistance(center, point) > radius)
+            if (getDistance(point, center) > radius)
                 continue;
             long marked = pointToHex(point);
             if (!validHex(marked))
@@ -2678,7 +2673,7 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
          point.x <= center.x + g_berserkRadius[mastery]; point.x++) {
         for (point.y = center.y - g_berserkRadius[mastery];
              point.y <= center.y + g_berserkRadius[mastery]; point.y++) {
-            if (getDistance(center, point) > g_berserkRadius[mastery])
+            if (getDistance(point, center) > g_berserkRadius[mastery])
                 continue;
             long marked = pointToHex(point);
             if (!validHex(marked))
@@ -3378,10 +3373,10 @@ void combatManager::addBolt(SBolt* bolt, int sourceX, int sourceY,
         bolt->m_shallow = abs(destX - sourceX) > abs(destY - sourceY);
     }
 
+    long dx = abs(destX - sourceX);
+    long dy = abs(destY - sourceY);
     bolt->m_totalLength = static_cast<long>(
-        sqrt(static_cast<double>(
-            abs(destY - sourceY) * abs(destY - sourceY)
-            + abs(destX - sourceX) * abs(destX - sourceX))));
+        sqrt(static_cast<double>(dx * dx + dy * dy)));
     resetBoltAngle(bolt);
 }
 
@@ -3395,9 +3390,8 @@ void combatManager::addBolt(SBolt* bolt, int sourceX, int sourceY,
 // independent proof of the 0x78 stride (the first is the five separate
 // `add r32,0x78` walks below).
 
-// atan2's (dx, dy) convention next door does NOT carry into the fork:
-// the split's x offset comes from COS and its y offset from SIN, read
-// straight off which product is added to iX and which to iY.
+// Both retail builds use sin(angle) for the fork's X offset and
+// cos(angle) for Y, matching drawBolt's coordinate convention.
 
 VA(0x005a5c20, 0x5C2) MAC_ADDRESS(0x196794, 0x80c)  // dc 0x154c50
 void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
@@ -3536,11 +3530,11 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
                                 if (drawLength > (absDist >> 1))
                                     drawLength = absDist >> 1;
                                 long splitX = static_cast<long>(
-                                    cos(static_cast<double>(angle))
+                                    sin(static_cast<double>(angle))
                                         * drawLength
                                     + bolts[i].m_pixelX);
                                 long splitY = static_cast<long>(
-                                    sin(static_cast<double>(angle))
+                                    cos(static_cast<double>(angle))
                                         * drawLength
                                     + bolts[i].m_pixelY);
                                 long splitThickness = bolts[i].m_thickness;
@@ -4532,10 +4526,6 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 // rectangle operations in its lightly optimized body, while Windows
 // expands the calls. The remaining mismatch is register homing; 45 of 46
 // CFG blocks now have exact shape, with all 25 branches and calls aligned.
-// Mac's older Earthquake body ends after the animated-wall branch and omits
-// this source's second damageWall and showPointer tail calls. Windows retail
-// retains both (all 25 call sites agree), so Mac shape cannot be an exact
-// source verdict for this function.
 VA(0x005a7c80, 0x408) MAC_ADDRESS(0x1991d0, 0x688)  // order-map+arity, dc 0x156ec4
 void combatManager::earthquake(int level)
 {

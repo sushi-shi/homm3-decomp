@@ -483,10 +483,9 @@ void advManager::townGate(TSkillMastery level)
         for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
             if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner)) {
                 type_point townLoc = g_game->getTown(i)->getLocation();
-                if (heroLoc.distanceSquared(townLoc)
-                    < closestDistance2) {
-                    closestDistance2
-                        = heroLoc.distanceSquared(townLoc);
+                int distance2 = heroLoc.distanceSquared(townLoc);
+                if (distance2 < closestDistance2) {
+                    closestDistance2 = distance2;
                     closestTown = i;
                 }
             }
@@ -510,7 +509,7 @@ void advManager::townGate(TSkillMastery level)
     teleportTo(who, destination->getLocation(), traits.m_sample, 0, 1, 0);
     destination->giveSpells(0);
     who->m_movePoints -= cost;
-    who->m_movePoints = max(who->m_movePoints, 0);
+    who->m_movePoints = ::max(who->m_movePoints, 0);
     who->useSpell(who->getManaCost(SPELL_TOWN_PORTAL));
     m_advWindow->updateHeroLocator(-1, 1, 1);
     if (g_game->m_mapHeader.m_victoryCondition.checkForArtifactTransportWin(

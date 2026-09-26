@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <bitset>
+#include <functional>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -344,8 +345,10 @@ static void initializeArtifactTraits(int id,
 // The four-state cell/row-accessor control gives 86.8713% for traits only,
 // 85.5960% for both sizing passes and 83.8990% for slots only or neither.
 // The original spelling is inferred; the canonical interfaces stay intact.
-// Complete's retained bitset<19>::set call supports a direct set rather than
-// DC's old proxy assignment. Retail also obtains resource[21] once and keeps
+// Mac 0x5a9a0 stages the bitset pointer and index before calling set,
+// preserving operator[]'s reference proxy. A retained set call in Windows
+// does not distinguish that expansion from a direct call. Retail obtains
+// resource[21] once and keeps
 // its first byte in AL through the class chain; a named class-cell pointer
 // preserves the four tests while reproducing that single vector subscript.
 // Keeping the bitset declaration before the cost statement improves the
@@ -356,8 +359,10 @@ static void initializeArtifactTraits(int id,
 // line where retail expands them. Late range-error construction reaches the
 // retail _Grow call, but retains a string copy constructor where retail calls
 // assign. Candidate/retail have 78/81 blocks and 16/13 retained calls.
-// The combination loop now has retail's owner/offset end checks, set-bit
+// The combination loop has retail's owner/offset end checks, set-bit
 // search, returned-iterator copy and retained bitset<144>::test call.
+// Mac 0x5abcc..0x5ac70 copies a comparator and a bound false byte, then
+// searches for a bit unequal to that value through the ordinary binder.
 
 // Controls: removing the old unsupported dead printf carrier alone gives
 // 76.87327%. Restoring the helper with pooled copies and a char*& gives
@@ -446,7 +451,8 @@ bool initializeArtifactTraitsTable()
         assembled.m_cost = 0;
         TConstBitsetIterator<144> current(combination.m_components, 0);
         TConstBitsetIterator<144> end(combination.m_components, 144);
-        for (; (current = std::find_if(current, end, TBitIsSet())) != end;
+        for (; (current = std::find_if(current, end,
+                    std::bind2nd(std::not_equal_to<bool>(), false))) != end;
              ++current) {
             int component = current.position();
             TArtifactTraits& componentTraits = g_artifactTraitsStorage[component];
@@ -496,9 +502,8 @@ bool initializeArtifactTraitsTable()
 // individual name/description allocations with the caller's pooled copies.
 // DC132..149 calls operator[], reference::operator=(bool), and its empty
 // destructor for each of 18 slots. Complete replaces those statements with
-// a 19-slot counted loop. Its retained call at 0x44cf32 is bitset::set; using
-// that direct interface removes the unmatched proxy assignment and raises the
-// current reconstruction from 86.8713% to 88.2178% before the later changes.
+// a 19-slot counted loop. Its retained call at 0x44cf32 is bitset::set;
+// Mac preserves the reference-proxy construction that reaches this operation.
 // Direct field subscripts instead of the traits reference give 79.619804%;
 // copy-initializing the mask gives 81.19604%; spelling !(mask == other) is
 // byte-neutral. Keep the default mask constructor and ordinary inequality.
@@ -525,8 +530,8 @@ static void initializeArtifactTraits(int id,
     traits.m_cost = atoi(resource[1]);
     for (column = 2; column < 21; ++column) {
         int bit = g_artifactSlotColumnBits[column - 2];
-        allowableSlots.set(bit, resource[column][0] != 0
-            && resource[column][0] != ' ');
+        allowableSlots[bit] = resource[column][0] != 0
+            && resource[column][0] != ' ';
     }
     mask = 0;
     while (allowableSlots != g_artifactSlotMasks[mask])

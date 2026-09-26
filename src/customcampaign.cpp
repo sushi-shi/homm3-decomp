@@ -5,7 +5,7 @@
 // carcass is not force-claimed merely from roster order.
 #include "text.h"
 #include "va.h"
-#include "includes.h"
+#include "homm3_minmax.h"
 #include "bitset_iterator.h"
 
 #include <algorithm>
@@ -290,6 +290,14 @@ void TCampaignSpellBonus::read(TAbstractFile* file)
     }
 }
 
+// Mac keeps one predicate per concrete bonus; Windows folds the false bodies
+// to 0x484d50. The abstract base's retail vtable slot is __purecall.
+MAC_ADDRESS(0x09201c, 0x8)
+bool TCampaignSpellBonus::isBuildingBonus() const
+{
+    return false;
+}
+
 VA(0x00484090, 0x6) MAC_ADDRESS(0x092024, 0x8)
 const char* TCampaignSpellBonus::getIconDefName() const
 {
@@ -378,9 +386,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
         for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
             town* garrison = g_game->getTown(player->m_townIds[townIndex]);
             if (garrison->m_type == faction) {
-                const_cast<armyGroup&>(
-                    static_cast<const town*>(garrison)->getArmy())
-                    .add(creature, m_count, -1);
+                garrison->getArmy().add(creature, m_count, -1);
                 return;
             }
         }
@@ -398,9 +404,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
     }
     for (i = 0; i < player->m_numTowns; ++i) {
         town* garrison = g_game->getTown(player->m_townIds[i]);
-        if (const_cast<armyGroup&>(
-                static_cast<const town*>(garrison)->getArmy())
-                .add(m_creature, m_count, -1) != 0)
+        if (garrison->getArmy().add(m_creature, m_count, -1) != 0)
             return;
     }
 }
@@ -420,6 +424,12 @@ void TCampaignCreatureBonus::read(TAbstractFile* file)
         file->read(&count, sizeof(unsigned short));
         m_count = count;
     }
+}
+
+MAC_ADDRESS(0x09247c, 0x8)
+bool TCampaignCreatureBonus::isBuildingBonus() const
+{
+    return false;
 }
 
 VA(0x00484550, 0x6) MAC_ADDRESS(0x092484, 0x8)
@@ -516,6 +526,12 @@ void TCampaignBuildingBonus::setTown(int town)
     m_building = g_eventBuildingIds[town][m_building];
 }
 
+MAC_ADDRESS(0x092828, 0x8)
+bool TCampaignArtifactBonus::isBuildingBonus() const
+{
+    return false;
+}
+
 VA(0x00484810, 0x6) MAC_ADDRESS(0x092830, 0x8)
 const char* TCampaignArtifactBonus::getIconDefName() const
 {
@@ -548,6 +564,12 @@ void TCampaignArtifactBonus::read(TAbstractFile* file)
     m_hero = value;
     file->read(&value, sizeof(short));
     m_artifact = value;
+}
+
+MAC_ADDRESS(0x092990, 0x8)
+bool TCampaignPrimarySkillBonus::isBuildingBonus() const
+{
+    return false;
 }
 
 VA(0x004848e0, 0x6) MAC_ADDRESS(0x092998, 0x8)
@@ -623,6 +645,12 @@ void TCampaignPrimarySkillBonus::read(TAbstractFile* file)
     file->read(m_skills, sizeof(m_skills));
 }
 
+MAC_ADDRESS(0x092d14, 0x8)
+bool TCampaignSecondarySkillBonus::isBuildingBonus() const
+{
+    return false;
+}
+
 VA(0x00484c30, 0x6) MAC_ADDRESS(0x092d1c, 0x8)
 const char* TCampaignSecondarySkillBonus::getIconDefName() const
 {
@@ -676,8 +704,8 @@ void TCampaignSecondarySkillBonus::read(TAbstractFile* file)
     }
 }
 
-VA(0x00484d50, 0x3)
-bool TCampaignBonus::isBuildingBonus() const
+VA(0x00484d50, 0x3) MAC_ADDRESS(0x092ed0, 0x8)
+bool TCampaignResourceBonus::isBuildingBonus() const
 {
     return false;
 }
@@ -965,14 +993,22 @@ int TCampaignStartCrossoverOption::getCount() const
     return m_choices.size();
 }
 
+// Mac code+0x93878 precedes the crossover option's virtual methods and
+// is called by getIconDefName at +0x938e0. Windows expands this pool lookup.
+MAC_ADDRESS(0x093878, 0x4c)
+hero* TCampaignStartCrossoverOption::getFirstCrossoverHero(
+    SCampaign* campaign, int which) const
+{
+    std::vector<hero>& pool = campaign->m_carryOverHeroes
+        [campaign->m_mapScores[m_choices[which].m_scenario].m_index];
+    return pool.size() != 0 ? &pool[0] : 0;
+}
+
 VA(0x004854c0, 0x6E) MAC_ADDRESS(0x0938d4, 0x48)
 const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
                                                           int which) const
 {
-    SCampaign* campaign = static_cast<SCampaign*>(campaignRecord);
-    std::vector<hero>& pool = campaign->m_carryOverHeroes
-        [campaign->m_mapScores[m_choices[which].m_scenario].m_index];
-    hero* first = pool.size() != 0 ? &pool[0] : 0;
+    hero* first = getFirstCrossoverHero(static_cast<SCampaign*>(campaignRecord), which);
     if (first == 0)
         return "hpl000kn.pcx";
     return g_heroTraits[first->m_portrait].m_largePortraitName;
@@ -1396,7 +1432,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     currentHero->m_army.initialize();
     for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         if (sourceHero->m_army.m_armies[slot] != -1
-            && m_crossoverCreatures.test(sourceHero->m_army.m_armies[slot])) {
+            && m_crossoverCreatures[sourceHero->m_army.m_armies[slot]]) {
             currentHero->m_army.add(sourceHero->m_army.m_armies[slot],
                                   sourceHero->m_army.m_numTroops[slot], -1);
         }
@@ -1443,7 +1479,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
             type_artifact artifact = sourceHero->getArtifact(TArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE
-                && m_crossoverArtifacts.test(artifact.m_artifactId)) {
+                && m_crossoverArtifacts[artifact.m_artifactId]) {
                 type_artifact displaced = currentHero->getArtifact(TArtifactSlot(slot));
                 if (displaced.m_artifactId != ARTIFACT_NONE)
                     currentHero->removeArtifact(slot);
@@ -1453,7 +1489,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
             type_artifact artifact = sourceHero->getBackpack(slot);
             if (artifact.m_artifactId != ARTIFACT_NONE
-                && m_crossoverArtifacts.test(artifact.m_artifactId)) {
+                && m_crossoverArtifacts[artifact.m_artifactId]) {
                 currentHero->addToBackpack(&artifact, -1);
             }
         }
@@ -1482,7 +1518,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     ++g_game->m_players[currentHero->m_owner].m_numHeroes;
     currentHero->obscureCell();
     g_game->m_heroAvailability[currentHero->m_id] = currentHero->m_owner;
-    g_game->m_heroPoolMap[currentHero->m_id].set(currentHero->m_owner);
+    g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
     g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
                           currentHero->m_owner, currentHero->getVisibility(), 1);
     int heroId = currentHero->m_id;
@@ -1559,7 +1595,7 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
     ++g_game->m_players[currentHero->m_owner].m_numHeroes;
     currentHero->obscureCell();
     g_game->m_heroAvailability[currentHero->m_id] = currentHero->m_owner;
-    g_game->m_heroPoolMap[currentHero->m_id].set(currentHero->m_owner);
+    g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
     g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
                           currentHero->m_owner, currentHero->getVisibility(), 1);
 }
@@ -1767,7 +1803,6 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
             artifact = artifacts[itemIndex];
             if (artifact.m_artifactId == ARTIFACT_NONE)
                 continue;
-            // Mac 0x095cbc: MSL's reference proxy calls test().
             if (!m_crossoverArtifacts[artifact.m_artifactId])
                 continue;
             offerArtifactToPlayerHeroes(artifact, player);
@@ -2085,6 +2120,7 @@ static void addCampaignScenario(
     campaign.m_scenarios.push_back(scenario);
 }
 
+MAC_ADDRESS(0x095fb0, 0xb0)
 static void applyCampaignMapHeader(
     TCampaignBrief::ScenarioStruct& scenario, NewSMapHeader& mapHeader)
 {

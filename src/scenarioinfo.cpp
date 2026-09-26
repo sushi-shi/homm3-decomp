@@ -346,7 +346,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     m_heroSpecificAbility = ResourceManager::getSprite("un44.def");
 }
 
-VA(0x005693a0, 0x394)
+VA(0x005693a0, 0x394) MAC_ADDRESS(0x160de8, 0x4cc)
 void CScenarioPlayerInfoWidget::draw() const
 {
     int windowX = m_parentWindow->m_x;
@@ -448,7 +448,7 @@ void CScenarioPlayerInfoWidget::draw() const
 VA_COMPGEN(0x00569740, 0x21, SCALAR_DELETING_DTOR,
            CScenarioPlayerInfoWidget)
 
-VA(0x00569770, 0x55)
+VA(0x00569770, 0x55) MAC_ADDRESS(0x160d6c, 0x7c)
 CScenarioPlayerInfoWidget::~CScenarioPlayerInfoWidget()
 {
     if (m_heroPortrait)
