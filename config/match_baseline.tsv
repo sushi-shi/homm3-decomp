@@ -463,7 +463,7 @@ ai_tactical	?getCureValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@
 ai_tactical	?getCurseValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b370	tokens1:8f496f422019
 ai_tactical	?getDamageSpellValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x36f60	tokens1:3d38258edaaf
 ai_tactical	?getDamageValue@type_AI_spellcaster@@IBEJHJPBVhero@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x36e30	tokens1:8acf25749253
-ai_tactical	?getDefenseBoostValue@type_AI_spellcaster@@IBEJPBVarmy@@0JN@Z	99.9840	99.9840	100.0000	0x387c0	tokens1:f6d9f5694ea6
+ai_tactical	?getDefenseBoostValue@type_AI_spellcaster@@IBEJPBVarmy@@0JN@Z	100.0000	100.0000	100.0000	0x387c0	tokens1:e5a0cb3763bd
 ai_tactical	?getDefenseSkillValue@type_AI_spellcaster@@IBEJPBVarmy@@JJ@Z	100.0000	100.0000	100.0000	0x38910	tokens1:b3e83bcca1a4
 ai_tactical	?getDiseaseValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38a10	tokens1:b3834daa2263
 ai_tactical	?getDispelValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39bc0	tokens1:db96bf4212fb
@@ -4719,7 +4719,7 @@ window	??_GheroWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fea50	-
 window	?addWidget@heroWindow@@QAEXPAVwidget@@H@Z	100.0000	100.0000	100.0000	0x1fecb0	tokens1:7fe39dea80eb
 window	?addWidgetsToMessageStream@heroWindow@@MAEXXZ	100.0000	100.0000	100.0000	0x1ff570	tokens1:aaf50a35a5b1
 window	?broadcastMessage@heroWindow@@QAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fede0	tokens1:494635e5c285
-window	?broadcastMessage@heroWindow@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x1fee40	tokens1:b282ef837202
+window	?broadcastMessage@heroWindow@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x1fee40	tokens1:dbe86863bd0d
 window	?centerWindow@heroWindow@@QAEXHH@Z	92.8767	92.8767	92.8767	0x1ff240	tokens1:a428000a59b5
 window	?close@heroWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1fec60	tokens1:75832717ae48
 window	?deleteWidgets@heroWindow@@IAEXXZ	100.0000	100.0000	100.0000	0x1ff510	tokens1:b98e90541752
@@ -4741,8 +4741,8 @@ window	?setHelpText@CHeroWindowEx@@QAEXPAUTHelpText@@HHE@Z	100.0000	100.0000	100
 window	?setWinText@@YIXPAVheroWindow@@H@Z	100.0000	100.0000	100.0000	0x1ffa30	tokens1:7de7729d9fb3
 window	?sleepAllWidgets@heroWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x1ff5b0	tokens1:e20674bbd6e8
 window	?vslot8@heroWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1ff5f0	tokens1:dc22300b42d3
-window	?widgetClearStatus@heroWindow@@QAEHHH@Z	95.9667	95.9667	100.0000	0x1fef60	tokens1:22289f9ca891
-window	?widgetSetStatus@heroWindow@@QAEHHH@Z	95.9667	95.9667	100.0000	0x1feed0	tokens1:ba9483f7792a
+window	?widgetClearStatus@heroWindow@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1fef60	tokens1:22289f9ca891
+window	?widgetSetStatus@heroWindow@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1feed0	tokens1:ba9483f7792a
 window	?windowHandler@CHeroWindowEx@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ff820	tokens1:000f838740b8
 winfile	??0File@@QAE@XZ	100.0000	100.0000	100.0000	0x1ffb20	tokens1:1cec0d6d311d
 winfile	??1File@@QAE@XZ	100.0000	100.0000	100.0000	0x1ffb40	tokens1:368225ccb095
