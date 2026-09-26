@@ -6564,8 +6564,7 @@ MAC_ADDRESS(0x181910, 0x12c)
 bool TSingleSelectionWindow::onPlayerDroppedMsg(CNetMsg* netMsg)
 {
     CNetPlayerInfo* player = m_players.getPlayer(netMsg->m_dpidFrom);
-    m_players.deletePlayer(netMsg->m_dpidFrom);
-    m_commonGameVersion = getCommonGameVersion();
+    removePlayer(netMsg->m_dpidFrom);
     m_newPlayerUpdateMan->playerDropped(netMsg->m_dpidFrom);
     if (player)
         g_chatMan.playerDropMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_LEFT_GAME_FORMAT), player->m_name);
@@ -8466,6 +8465,14 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
             }
         }
     }
+}
+
+// Mac 0x18640c retains this helper between setNewPlayerSlot and
+// getCommonGameVersion; onPlayerDroppedMsg calls it at 0x181944.
+void TSingleSelectionWindow::removePlayer(unsigned long dpid)
+{
+    m_players.deletePlayer(dpid);
+    m_commonGameVersion = getCommonGameVersion();
 }
 
 VA(0x0058ea00, 0x6E) MAC_ADDRESS(0x186448, 0xe0)
