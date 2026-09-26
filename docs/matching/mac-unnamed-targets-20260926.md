@@ -4,7 +4,8 @@ All 111 distinct unnamed targets from the active helper-sweep snapshot now have
 an assembly-supported operation description. These are working descriptions,
 not recovered original names or newly established Windows source identities.
 The review used the pinned PEF bodies, imported OS names, callers, and current
-Windows sources; no workers, compiler runs or matching searches were used.
+Windows sources. The last nine were also checked against pinned Windows retail
+assembly. No workers, compiler runs or matching searches were used.
 
 | Operation group | Targets |
 |---|---:|
@@ -14,38 +15,35 @@ Windows sources; no workers, compiler runs or matching searches were used.
 | Shared string-helper candidates | 2 |
 | Total | 111 |
 
-The 102 library/platform identities and their evidence live in the existing
+All 111 operation labels and their evidence now live in the existing
 [runtime-map.tsv](../../config/mac/runtime-map.tsv). Extents live in
-[functions.tsv](../../config/mac/functions.tsv), as for every other mapped
-Mac function. Platform support uses the explicit `mac_platform` owner; working
-labels do not pretend to recover original linkage spellings.
+[functions.tsv](../../config/mac/functions.tsv). The temporary observations TSV
+has been removed. Names are descriptive where original linkage is unknown.
 
-The remaining nine source-recovery leads live in
-[target-observations.tsv](../../config/mac/target-observations.tsv). They describe
-operations without claiming a source declaration or compiler symbol. Ordinary
-source declarations and address annotations will own their names when recovered.
+The last nine are identified as follows:
 
-`homm3 mac helper-audit` reads both tables, includes map names and evidence in
-function records, and exports `callee_name`, `callee_operation` and
-`callee_category` in its calls TSV. A map label alone never establishes a
-Windows source correspondence or closes a caller. This document is a summary;
-the tracked config tables are the machine-readable findings.
+| Mac offset | Operation | Windows finding |
+|---|---|---|
+| `0x151ff4` | Cache insert | Retail `addToCache` calls tree insert; Mac scans a fixed array. |
+| `0x15208c` | Cache remove | Retail `dispose` erases a tree iterator; Mac scans resource pointers. |
+| `0x1520e8` | Cache find | Retail uses case-insensitive tree lookup; Mac uses a case-sensitive hash and equality. |
+| `0x17cde8` | Pointer bubble sort | Retail `sortMaps` calls six Dinkumware record-sort specializations. |
+| `0x2181a0` | Service music fades | Mac updates three stream records; Windows services Miles and fades a single stream separately. |
+| `0x21b7dc` | AppleTalk join dialog | Windows has DirectPlay, modem and serial paths. |
+| `0x21bca8` | TCP join dialog | Windows search has similar fields but a different transport lifecycle; no one-to-one pairing established. |
+| `0x26afe8` | Copy and lowercase ASCII | Windows quests use scalar CRT `tolower`; Windows MP3 checks do not lowercase the name. |
+| `0x26b018` | Boolean string equality | Windows MP3 checks expand `strcmp`; a shared equality wrapper remains unproven. |
 
-## Leads for the next pass
+The first seven use owner `mac_port`: an identified port implementation without
+an established shared source identity. The two string utilities keep unknown
+ownership. Their operations are clear; their library or project provenance is
+not established. The map records concrete Mac call sites and Windows addresses.
 
-- `0x26afe8`: copies an ASCII string while lowercasing A..Z. Quest descriptions
-  and MP3 paths use it. Check whether their Windows lowercase operations should
-  share a canonical helper.
-- `0x26b018`: bytewise string equality returning boolean, not strcmp ordering.
-  Cache lookup and MP3 paths call it. Inspect Windows callers before recovering
-  the shared interface.
-- `0x151ff4`, `0x15208c`, `0x1520e8`: insert, remove and find in a fixed
-  0x4000-entry resource cache. Current Windows source uses `TCacheMap` operations.
-- `0x17cde8`: bubble sort of pointers with a predicate and two context arguments.
-  Current Windows `sortMaps` uses `std::sort` over records. This is not an MSL
-  sort implementation or sufficient reason to replace the Windows algorithm.
-- `0x2181a0`: services three Mac music streams and their volume fades.
-- `0x21b7dc`, `0x21bca8`: AppleTalk and TCP join dialogs, respectively.
+`homm3 mac helper-audit` reads the map, includes labels and evidence in function
+records, and exports `callee_name` in its calls TSV. Labels never create source
+identities or close caller discrepancies. The generated queue retains 17 source-owned call sites to these nine targets
+as `source_callee_unavailable`; no game C++ or caller completion state changed
+in this pass.
 
 The five library operations are selection-header vector append/destruction,
 network-message deque append, `SmackToBuffer`, and `SmackToBufferRect`. The
@@ -74,12 +72,13 @@ that erroneous interior entry.
 
 ## Validation and limits
 
-The observation hashes and all mapped extents validate against the pinned PEF;
-the Mac table validator reports no defects. Focused tooling tests cover the
-requirement that an observed operation cannot invent a source identity or close
+All mapped extents validate against the pinned PEF;
+the Mac table validator reports no defects. All 50 focused tooling tests pass,
+including checks covering the
+requirement that a mapped operation cannot invent a source identity or close
 an unavailable-source call. Game C++ and matching scores were not changed.
 
 The earlier 111 count meant unnamed binary destinations, not 111 missing game
 helpers. This pass identifies their operations. Source recovery and propagation
 through every caller remain the next task; no caller-completion state is banked
-by these observations.
+by these labels.

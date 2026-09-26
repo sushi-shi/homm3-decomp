@@ -54,20 +54,22 @@ class HelperGraphTests(unittest.TestCase):
             self.assertEqual(saved['state'], 'source_callee_unavailable')
 
     def test_runtime_map_identity_is_rendered_without_closing_source_gap(self):
-        label = helper_graph.tables.RuntimeLabel(0x300, '.mac_close_file', 'mac_platform',
-                                                'direct', 'Calls FSClose.')
-        report = self.report([], [(0x104, 0x300, 'linked_branch')], runtime=[label])
-        row = report['queue'][0]
-        self.assertEqual(row['callee']['name'], '.mac_close_file')
-        self.assertEqual(row['callee']['runtime_label']['evidence'], 'Calls FSClose.')
-        self.assertEqual(row['callee']['source_ids'], [])
-        self.assertEqual(row['state'], 'source_callee_unavailable')
-        with tempfile.TemporaryDirectory() as directory:
-            output = Path(directory) / 'helper-audit.json'
-            helper_graph.write_queues(report, output)
-            with output.with_name('helper-audit-calls.tsv').open() as stream:
-                saved = next(csv.DictReader(stream, delimiter='\t'))
-            self.assertEqual(saved['callee_name'], '.mac_close_file')
+        for owner in ('mac_platform', 'mac_port', ''):
+            with self.subTest(owner=owner):
+                label = helper_graph.tables.RuntimeLabel(0x300, '.mac_close_file', owner,
+                                                        'direct', 'Calls FSClose.')
+                report = self.report([], [(0x104, 0x300, 'linked_branch')], runtime=[label])
+                row = report['queue'][0]
+                self.assertEqual(row['callee']['name'], '.mac_close_file')
+                self.assertEqual(row['callee']['runtime_label']['evidence'], 'Calls FSClose.')
+                self.assertEqual(row['callee']['source_ids'], [])
+                self.assertEqual(row['state'], 'source_callee_unavailable')
+                with tempfile.TemporaryDirectory() as directory:
+                    output = Path(directory) / 'helper-audit.json'
+                    helper_graph.write_queues(report, output)
+                    with output.with_name('helper-audit-calls.tsv').open() as stream:
+                        saved = next(csv.DictReader(stream, delimiter='\t'))
+                    self.assertEqual(saved['callee_name'], '.mac_close_file')
 
     def test_nested_wrapper_is_review_lead_not_closure(self):
         report = self.report([edge('f', 'wrapper', 1), edge('wrapper', 'g', 2)], [(0x104, 0x200, 'linked_branch')])

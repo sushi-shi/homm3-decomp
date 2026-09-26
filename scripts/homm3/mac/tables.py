@@ -4,9 +4,10 @@
         Every verified function span in PEF code section 0: source-owned
         game functions, library/runtime bodies and import glue alike.
   config/mac/runtime-map.tsv      offset, name, owner, call_kind, evidence
-        Library, platform, runtime and compiler-support labels (label only; the extent
+        Library, platform, runtime, compiler-support and Mac-port labels (the extent
         is the functions.tsv row). owner is msl_c, msl_cxx, cw_runtime,
-        compiler_generated, mac_platform, or empty when unknown. Shared game
+        compiler_generated, mac_platform, mac_port, or empty when unknown. mac_port
+        identifies unpaired port implementations, not a source-call exemption. Shared game
         functions keep their identities in source declarations.
   config/mac/runtime-aliases.tsv  offset, name, evidence
         Additional linkage names of one folded runtime body.
@@ -39,7 +40,7 @@ ZLIB_MAP_TSV = "config/mac/zlib-map.tsv"
 DISPOSITIONS_TSV = "config/mac/dispositions.tsv"
 
 DISPOSITIONS = ("inlined_only", "mac_only", "windows_only", "folded", "platform_rewritten")
-OWNERS = ("msl_c", "msl_cxx", "cw_runtime", "compiler_generated", "mac_platform", "")
+OWNERS = ("msl_c", "msl_cxx", "cw_runtime", "compiler_generated", "mac_platform", "mac_port", "")
 CALL_KINDS = ("direct", "indirect_tvector")
 HEX_RE = re.compile(r"0x[0-9a-f]+$")
 #: CodeWarrior ABI entries that compiler-generated code calls directly:

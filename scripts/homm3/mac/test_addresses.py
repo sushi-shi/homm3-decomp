@@ -207,6 +207,12 @@ class TestMacAddressTables(unittest.TestCase):
             self.assertTrue(any("unknown owner" in item for item in found))
             self.assertTrue(any("unknown call kind" in item for item in found))
 
+    def test_mac_port_labels_are_valid_without_a_source_claim(self):
+        with tempfile.TemporaryDirectory() as folder:
+            self.assertEqual(self.check(Path(folder), "", functions=[(0x200, 0x8)],
+                                        runtime=[(0x200, ".mac_cache_insert")],
+                                        owner="mac_port"), [])
+
     def test_glue_rows_must_be_loader_proven_24_byte_stubs(self):
         from homm3.mac.relocations import Address
         proven = [(Address(0, 0x300), "InterfaceLib", ".NewPtr")]

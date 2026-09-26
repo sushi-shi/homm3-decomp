@@ -91,13 +91,14 @@ reference maps and freshness guards.
 Established library/platform identities belong in `config/mac/runtime-map.tsv`
 and their extents in `config/mac/functions.tsv`. The audit carries their label,
 owner and evidence; the calls TSV exports `callee_name`. `mac_platform` labels
-identify platform-support bodies without claiming a Windows source mapping.
+identify platform-support bodies. `mac_port` labels identify port implementations
+without an established shared source identity. Neither creates source identities
+or exempts callers from reconciliation. Unknown provenance keeps an empty owner.
 
-`config/mac/target-observations.tsv` records source-recovery leads while
-source identity is still unresolved. The audit verifies each extent and byte
-hash, attaches an `observation` to the function/callee record, and exports
-`callee_operation` / `callee_category` in the calls TSV. Address queries display
-the evidence. These descriptive operations are not linkage symbols or source
-names; they never create AST identities, suppress a discrepancy, or mark a call
-complete. Continue matching their source operation and following generated xrefs.
+All 111 reviewed operations now use this existing map. The temporary
+`target-observations.tsv` has been removed; the optional observation reader
+remains available for future unresolved leads. Address queries display map
+evidence. Source names continue to belong to ordinary declarations and address
+annotations. Continue following the generated caller and source queues; a named
+binary destination alone does not resolve a source-call discrepancy.
 See the [111-target review](../matching/mac-unnamed-targets-20260926.md).
