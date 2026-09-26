@@ -4319,6 +4319,8 @@ void TSingleSelectionWindow::drawBasicMapInfo()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4239, dc 0xd84
+// Mac 0x17c1dc..0x17c1ec derives each row coordinate from its index;
+// this source shape also restores the Windows retail body.
 VA(0x00584550, 0x698) MAC_ADDRESS(0x17c0ac, 0x7b4)  // anchor-callee OnGameTransmitInitMsg (0x589b20) calls it no-arg after DrawWindow; owns the '%d/%d' literal; also tailed by SliderDuration 0x57c7f0 + WindowHandler, size 0.49x dc 0xd84, dc 0x13a380
 int TSingleSelectionWindow::update()
 {
@@ -4341,8 +4343,8 @@ int TSingleSelectionWindow::update()
                 25, 52, 132, 32, font::PRIMARY_HIGHLIGHT, 5, -1);
             int i = 0;
             if (rows > 0) {
-                int y = 123;
                 do {
+                    int y = 123 + i * 25;
                     int color = m_currentMap == m_currentIndex + i ? 5 : 4;
                     if (m_selectionHeaders.size()
                             > static_cast<unsigned int>(m_currentIndex + i)) {
@@ -4446,7 +4448,6 @@ int TSingleSelectionWindow::update()
                                 g_windowManager->m_screenBitmap, 342, y, 0, 1);
                     }
                     ++i;
-                    y += 25;
                 } while (i < rows);
             }
         }
