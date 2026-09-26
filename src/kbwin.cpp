@@ -222,8 +222,11 @@ void appExit()
     cleanUpMenus();
 }
 
-// Mac retains the shared event pump at code 0+0x20f90c. Its event polling
-// uses Mac OS services; this Windows body pumps native window messages.
+// Mac's event pump at 0+0x20f90c calls videoPause/videoResume at
+// 0x20fbc8/0x20fc1c while handling activation events. Windows dispatches
+// those events to appWndProc, whose retail body calls both helpers at
+// 0x4f7e3c/0x4f7e96 (and around the quit dialog at 0x4f7d3e/0x4f7d6f).
+// This Windows pump only dispatches native messages and advances video.
 VA(0x004f7fb0, 0xAA) MAC_ADDRESS(0x20f90c, 0x350)  // dc 0xe7fd0
 void process1WindowsMessage()
 {

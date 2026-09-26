@@ -352,7 +352,9 @@ void videoNextFrame()
     g_insideNextFrame = 0;
 }
 
-// Mac retains this call from videoDrawCurrentFrame at 0:0x25e788.
+// Mac retains this call from videoDrawCurrentFrame at 0:0x25e788 and updates
+// the screen from this body at 0:0x25f9dc. Windows retail 0x598e80 only
+// calls SmackDoFrame; videoDrawRects owns the screen updates on this port.
 // Keep the helper visible before the caller so VC6 can expand it.
 VA(0x00598e80, 0x25) MAC_ADDRESS(0x25f948, 0xc8)
 void SmackManager::drawSmackerFrame()

@@ -746,8 +746,11 @@ void __cdecl processStopAndPlayMP3(void* arglist)
     _endthread();
 }
 
-// Mac retains this source call with its platform stream interface at
-// 0:0x219288; Windows resumes through Miles and the playback thread.
+// Mac resumeStream calls convertVolume at 0x219330 while starting its stream;
+// startMP3 calls it at 0x219504/0x21962c/0x219674 for immediate fades.
+// Windows queues playback here. Its playback thread converts the volume at
+// 0x59a865 in processStopAndPlayMP3; startMP3/resumeStream contain no retail
+// call or equivalent volume calculation.
 VA(0x0059ac00, 0xA9) MAC_ADDRESS(0x219288, 0xf0)  // dc 0x14b8e8
 void soundManager::resumeStream()
 {
