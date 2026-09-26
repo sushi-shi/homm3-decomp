@@ -125,10 +125,15 @@ def generate(root: Path, action_queue: dict, index: Index,
     by_va.update({pair.retail_va: pair for pair in pairs})
     by_target = {(ref.mac_section, ref.mac_offset): ref for ref in refs}
     by_target.update({(pair.mac_section, pair.mac_offset): pair for pair in pairs})
+    runtime_labels = tables.read_runtime(root)
     runtime_by_target = {(tables.CODE_SECTION, label.offset): label.name
-                         for label in tables.read_runtime(root)}
+                         for label in runtime_labels}
+    indirect_targets = {(tables.CODE_SECTION, label.offset) for label in runtime_labels
+                        if label.call_kind == "indirect_tvector"}
     for item in addresses.legacy_runtime(root):
         runtime_by_target.setdefault((item["mac_section"], item["mac_offset"]), item["symbol"])
+        if item.get("call_kind") == "indirect_tvector":
+            indirect_targets.add((item["mac_section"], item["mac_offset"]))
     for name, target in glue.imports(index.pef).items():
         runtime_by_target.setdefault((target.address.section, target.address.offset), name)
 
@@ -163,6 +168,7 @@ def generate(root: Path, action_queue: dict, index: Index,
                  "reviewed_mac_span": caller is not None,
                  "reviewed_calls": 0, "missing_named_calls": 0,
                  "direct_mac_calls": None, "source_parse_error": "",
+                 "indirect_dispatch_calls": 0,
                  "unreviewed_targets": 0,
                  "state": ("helper_reviewed" if helper_reviewed else
                            "review_calls" if caller else "pair_mac_address")}
@@ -205,7 +211,8 @@ def generate(root: Path, action_queue: dict, index: Index,
                             if name and not source_error else None)
             source_call = source_count is not None and source_count > 0
             mac_count = target_counts[(section, offset)]
-            state = ("runtime_call" if target is None and runtime_name else
+            state = ("review_indirect_call" if (section, offset) in indirect_targets else
+                     "runtime_call" if target is None and runtime_name else
                      "identify_target" if target is None else
                      "source_unavailable" if source_error else
                      "review_call_count" if source_call and source_count != mac_count else
@@ -224,6 +231,7 @@ def generate(root: Path, action_queue: dict, index: Index,
             entry["reviewed_calls"] += target is not None
             entry["missing_named_calls"] += state == "review_missing_helper_call"
             entry["unreviewed_targets"] += state == "identify_target"
+            entry["indirect_dispatch_calls"] += state == "review_indirect_call"
     coverage = {"functions_in_scope": len(functions),
                 "windows_functions_in_scope": len(selected),
                 "source_helper_callers": sum(row["retail_va"] is None for row in functions),
@@ -233,6 +241,7 @@ def generate(root: Path, action_queue: dict, index: Index,
                     for row in selected.values()),
                 "reviewed_mac_callers": sum(row["reviewed_mac_span"] for row in functions),
                 "direct_mac_calls": len(calls),
+                "indirect_dispatch_calls": sum(row["state"] == "review_indirect_call" for row in calls),
                 "call_count_review_groups": len({(row["caller_id"], row["mac_target"])
                                                  for row in calls if row["state"] == "review_call_count"}),
                 "source_unavailable_functions": sum(bool(row["source_parse_error"]) for row in functions),
@@ -253,7 +262,7 @@ def write(root: Path, report: dict, *, stem: str = "helper-queue") -> None:
     for name, fields in (
         ("functions", ("owner", "unit", "retail_va", "caller_id", "function", "windows_max", "deferred",
                        "helper_reviewed", "reviewed_mac_span", "reviewed_calls", "missing_named_calls",
-                       "unreviewed_targets", "direct_mac_calls", "source_parse_error", "state")),
+                       "unreviewed_targets", "direct_mac_calls", "indirect_dispatch_calls", "source_parse_error", "state")),
         ("calls", ("owner", "unit", "retail_va", "caller_id", "deferred", "mac_call_site", "mac_target",
                    "target_name", "target_unit", "source_call_present", "source_call_mentions",
                    "mac_target_calls", "source_parse_error", "state")),
@@ -270,7 +279,8 @@ def leads(report: dict, unit: str | None = None,
           include_other_named: bool = False) -> list[dict]:
     """Group actionable call leads by destination instead of repeating sites."""
     groups = {}
-    states = {"review_missing_helper_call", "review_call_count", "source_unavailable", "identify_target"}
+    states = {"review_missing_helper_call", "review_call_count", "source_unavailable",
+              "identify_target", "review_indirect_call"}
     if include_other_named:
         states.add("review_other_named_call")
     for row in report["calls"]:
@@ -296,7 +306,7 @@ def leads(report: dict, unit: str | None = None,
         result.append(group)
     rank = {"review_missing_helper_call": 0,
             "review_call_count": 1, "review_other_named_call": 2,
-            "source_unavailable": 3, "identify_target": 4}
+            "source_unavailable": 3, "identify_target": 4, "review_indirect_call": 5}
     return sorted(result, key=lambda group: (
         rank[group["state"]],
         -group["caller_count"], -group["sites"], -group["unit_count"],

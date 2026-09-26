@@ -46,7 +46,10 @@ game helper. A Mac inlined operation may have no retained call and therefore
 needs a body-shape review too. A textual `source_call_present` check also needs
 inspection when overloads or macros are involved. Reviewed Mac
 runtime destinations are marked `runtime_call` and remain in the full report
-without crowding the displayed helper leads.
+without crowding the displayed helper leads. Dynamic dispatch glue is an
+exception: `review_indirect_call` remains actionable until the receiver,
+method or callback, arguments and source path are identified. Naming the glue
+does not identify the operation it dispatches.
 
 The command display groups repeated call sites by destination and orders them
 by distinct Windows callers. `--limit` counts destinations; the TSV

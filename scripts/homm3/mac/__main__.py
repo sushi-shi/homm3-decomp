@@ -453,6 +453,7 @@ def main(argv=None) -> int:
                       f"{coverage['unreviewed_direct_targets']} distinct direct targets need identity review")
                 print(f"[mac] {coverage['call_count_review_groups']} caller/target count discrepancies; "
                       f"{coverage['source_unavailable_functions']} source bodies unavailable")
+                print(f"[mac] {coverage['indirect_dispatch_calls']} indirect dispatch sites need receiver/method review")
                 for lead in helper_queue.leads(report, args.unit, args.include_deferred,
                                                args.include_named)[:args.limit]:
                     example = lead["example"]

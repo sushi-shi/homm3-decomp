@@ -10,7 +10,7 @@ from homm3.mac.relocations import Address
 
 
 class TestHelperQueue(unittest.TestCase):
-    def report(self, authored, *, sites=1, error=None, helper_calls=False):
+    def report(self, authored, *, sites=1, error=None, helper_calls=False, runtime_calls=()):
         caller = SimpleNamespace(retail_va=0x400100, unit='caller', signature='int Derived::save',
                                  source=Path('caller.cpp'), mac_section=0, mac_offset=0x100,
                                  mac_size=0x40, source_helper=None)
@@ -22,6 +22,8 @@ class TestHelperQueue(unittest.TestCase):
             for i in range(sites)])
         if helper_calls:
             index.branches.append((Address(0, 0x200), Address(0, 0x200), 'linked_branch'))
+        for i, label in enumerate(runtime_calls):
+            index.branches.append((Address(0, 0x120 + 4 * i), Address(0, label.offset), 'linked_branch'))
         inventory = {'rows': [{'retail_va': '0x00400100', 'unit': 'caller',
                                'function': 'Derived::save', 'windows_max': 100}]}
         with tempfile.TemporaryDirectory() as directory, \
@@ -31,10 +33,24 @@ class TestHelperQueue(unittest.TestCase):
                 patch.object(helper_queue, '_helper_body', return_value=('int Base::save() { return save(); }' if helper_calls
                                                                else 'int Base::save() { return 0; }')), \
                 patch.object(helper_queue.glue, 'imports', return_value={}), \
-                patch.object(tables, 'read_runtime', return_value=[]), \
+                patch.object(tables, 'read_runtime', return_value=runtime_calls), \
                 patch.object(addresses, 'legacy_runtime', return_value=[]):
             (Path(directory) / "src").mkdir()
             return helper_queue.generate(Path(directory), inventory, index, all_functions=True)
+
+    def test_dispatch_glue_is_an_actionable_unknown_operation(self):
+        labels = [tables.RuntimeLabel(0x300, '.__ptr_glue', 'cw_runtime', 'indirect_tvector'),
+                  tables.RuntimeLabel(0x400, '.memcpy', 'msl_c', 'direct')]
+        report = self.report('int Derived::save() { return Base::save(); }', runtime_calls=labels)
+        indirect, direct = report['calls'][1:3]
+        self.assertEqual(indirect['state'], 'review_indirect_call')
+        self.assertIsNone(indirect['source_call_mentions'])
+        self.assertEqual(direct['state'], 'runtime_call')
+        self.assertEqual(report['coverage']['indirect_dispatch_calls'], 1)
+        self.assertEqual(report['functions'][0]['indirect_dispatch_calls'], 1)
+        leads = helper_queue.leads(report)
+        self.assertEqual([row['state'] for row in leads], ['review_indirect_call'])
+        self.assertEqual(leads[0]['mac_target'], '0:0x300')
 
     def test_source_helpers_are_callers_without_fabricated_windows_va(self):
         report = self.report('int Derived::save() { return Base::save(); }')
