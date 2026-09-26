@@ -18,7 +18,9 @@
 #include "widget.h"
 #include "window.h"
 
+#if defined(_MSC_VER) // MSL <new> already declares operator delete(void*) throw()
 __declspec(nothrow) void __cdecl operator delete(void* p);
+#endif
 
 // Dreamcast bottomviewsubwindow.cpp:123/662 names GameTime::ElapsedSince;
 // :676-681 names widget::set_visible; the NewTurn, Kingdom, and EnemyTurn

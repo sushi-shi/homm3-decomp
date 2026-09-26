@@ -14,7 +14,9 @@ DATA(0x006968aa) unsigned short CSpriteFrame::s_div4mask;
 
 // The retail destructor calls the common nothrow deallocator directly;
 // this declaration keeps /GX from manufacturing an unwind frame.
+#if defined(_MSC_VER) // MSL <new> already declares operator delete(void*) throw()
 __declspec(nothrow) void __cdecl operator delete(void* p);
+#endif
 
 // The TU initializer at 0x47c260 installs the general-RLE literal-run code.
 // Draw copies it into a function-local static on first use, accounting for

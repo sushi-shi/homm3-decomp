@@ -30,7 +30,9 @@
 // bodies - its operator delete was visible as nothrow, exactly as
 // ai_combat.h already records for AI_quick_combat/AI_auto_combat.  The
 // retail target is the 11-byte free thunk at 0x60ab30, which cannot throw.
+#if defined(_MSC_VER) // MSL <new> already declares operator delete(void*) throw()
 __declspec(nothrow) void __cdecl operator delete(void* p);
+#endif
 
 // File-scope DirectPlay enumeration trampolines (defined at the tail of this TU),
 // forward-declared so the Enum* wrappers above them can take their addresses.

@@ -14,7 +14,9 @@
 // base alone - which is the shape a nothrow-visible operator delete gives,
 // since the first throwing point then IS the palette destructor, by which
 // time the palette is already being destroyed.
+#if defined(_MSC_VER) // MSL <new> already declares operator delete(void*) throw()
 __declspec(nothrow) void __cdecl operator delete(void* p);
+#endif
 
 // Original: font::font; font.cpp:33, dc 0xa1ba8
 font::font() : resource("", RESOURCE_TYPE_FONT), m_data(0)
