@@ -13,7 +13,7 @@ class TestMacProfiles(unittest.TestCase):
         (root / "src").mkdir()
         (root / "config/mac").mkdir(parents=True)
         (root / "include").mkdir()
-        (root / "include/compiler.h").write_text("// Compiler compatibility\n")
+        (root / "include/codewarrior_prefix.h").write_text("// Compiler compatibility\n")
         (root / "config/mac/sdk.toml").write_text("trees=[]\n")
         (root / "include/value.h").write_text("#define VALUE 1\n")
         (root / "include/test.h").write_text(

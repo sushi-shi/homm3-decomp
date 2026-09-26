@@ -48,7 +48,7 @@ markers, location lists or copied bodies. `mac_symbol` in a pair is the expected
 **candidate** linkage name, not a claim that the stripped executable retains
 that name. Native MSL vector specializations include their allocator argument.
 
-`include/compiler.h` supplies compiler spelling compatibility. Native profiles
+`include/codewarrior_prefix.h` supplies compiler spelling compatibility. Native profiles
 also enable CodeWarrior's documented `-msext on` to parse Microsoft anonymous
 structs and define `HOMM3_TARGET_MAC=1` on the compiler command line. These
 settings do not turn an ordinary helper into an inline helper.
@@ -190,7 +190,7 @@ The existing Mac profiles compared all 66 admitted functions, with 13 exact.
 
 Banked rows, VA claims, single-view, source ownership and source inventory
 passed. The full command exited unsuccessfully on the cleanliness gate because
-`HOMM3_TARGET_MAC` had been defined in `include/compiler.h`. Moving that selector
+`HOMM3_TARGET_MAC` had been defined in `include/codewarrior_prefix.h`. Moving that selector
 to native compiler flags fixed the violation; the failed gate was rerun and
 passed. This correction changes no active Windows or legacy Mac compilation
 input. Native hero-header compilation was checked with the corrected flags.

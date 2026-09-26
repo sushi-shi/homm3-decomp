@@ -6,10 +6,10 @@
 // The vendored RAD headers own the Smacker and Bink import interfaces.
 #include "va.h"
 
+#include "platform.h"
 #include <ddraw.h>
 #include <string>
 #include <string.h>
-#include "platform.h"
 
 #include "smackmgr.h"
 

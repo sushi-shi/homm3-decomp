@@ -1,5 +1,6 @@
 #include "va.h"
 
+#include <new>
 #include <string.h>
 
 #include "cspriteframe.h"
@@ -11,10 +12,6 @@
 DATA(0x006968a4) TBlendMask CSpriteFrame::s_div2mask;
 DATA(0x006968aa) unsigned short CSpriteFrame::s_div4mask;
 
-
-// The retail destructor calls the common nothrow deallocator directly;
-// this declaration keeps /GX from manufacturing an unwind frame.
-__declspec(nothrow) void __cdecl operator delete(void* p);
 
 // The TU initializer at 0x47c260 installs the general-RLE literal-run code.
 // Draw copies it into a function-local static on first use, accounting for

@@ -797,7 +797,8 @@ static void moveAllHeroes(long playerId, long* dangerZones)
     unsigned char exploreMode = 1;
     if (!g_game->m_setup.m_difficulty || !g_currentPlayer->m_numTowns)
         exploreMode = 0;
-    while (hero* currentHero = determineHeroToMove(playerId, &isLastHero)) {
+    hero* currentHero;
+    while ((currentHero = determineHeroToMove(playerId, &isLastHero)) != 0) {
         moveHero(currentHero, dangerZones, isLastHero, exploreMode);
         if (g_gameOver)
             break;

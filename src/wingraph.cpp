@@ -1,6 +1,7 @@
 #include "prefs.h"
 #include "va.h"
 
+#include "platform.h"
 #include <ddraw.h>
 #include <string.h>
 

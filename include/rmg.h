@@ -1115,7 +1115,12 @@ public:
     // Slot 3 returns its explicit output reference. The adapters consume
     // that returned reference, which distinguishes this from a hidden value
     // result: together the map and both adapter bodies reproduce retail.
+#if defined(HOMM3_TARGET_MAC)
+    // Mac slot 3 (0x22eb84) returns by value.
+    virtual TRmgGridPoint getSize() = 0;
+#else
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output) = 0;
+#endif
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
     virtual int getLand(const TRmgGridPoint& point) = 0;
     virtual int getOverlay(const TRmgGridPoint& point) = 0;
@@ -1195,7 +1200,11 @@ public:
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
+#if defined(HOMM3_TARGET_MAC)
+    virtual TRmgGridPoint getSize();  // Mac 0x22eb84: hidden value result
+#else
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output);
+#endif
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
     virtual int getLand(const TRmgGridPoint& point);
     virtual int getOverlay(const TRmgGridPoint& point);

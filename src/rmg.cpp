@@ -874,11 +874,19 @@ void type_random_map::setOverlay(const TRmgGridPoint& point, int value)
 // also fits a hidden value result; retail adapter 0x532790 distinguishes the
 // contracts by copying from the returned reference, not the named temporary.
 VA(0x00532240, 0x15) MAC_ADDRESS(0x22eb84, 0x14)
+#if defined(HOMM3_TARGET_MAC)
+// Mac 0x22eb84 returns the size through a hidden result pointer.
+TRmgGridPoint type_random_map::getSize()
+{
+    return TRmgGridPoint(m_mapWidth, m_mapHeight);
+}
+#else
 TRmgGridPoint& type_random_map::getSize(TRmgGridPoint& output)
 {
     output = TRmgGridPoint(m_mapWidth, m_mapHeight);
     return output;
 }
+#endif
 
 // Slot 4 expands the packed terrain fields into the adapter's three-dword
 // value, including the two independent flip bytes.
@@ -973,7 +981,11 @@ int TRmgRoadMapAdapter::getOverlay(const TRmgGridPoint& point)
 // its returned reference before the full expression ends, as in the painter.
 TRmgGridPoint TRmgRoadMapAdapter::getSize()
 {
+#if defined(HOMM3_TARGET_MAC)
+    return m_map->getSize();  // Mac 0x22f2e4
+#else
     return m_map->getSize(TRmgGridPoint());
+#endif
 }
 
 // The real road-painting stack construction at 0x548120 retains the
@@ -1059,7 +1071,11 @@ void TRmgMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
 VA(0x00532790, 0x27) MAC_ADDRESS(0x22f2e4, 0x3c) // vtable 0x640a3c slot 3, ICF with road slot 3
 TRmgGridPoint TRmgMapAdapter::getSize()
 {
+#if defined(HOMM3_TARGET_MAC)
+    return m_map->getSize();  // Mac 0x22f2e4
+#else
     return m_map->getSize(TRmgGridPoint());
+#endif
 }
 
 VA(0x005327C0, 0x63) MAC_ADDRESS(0x22f320, 0xa4) // anchor-vtable + packed-field evidence; Complete-only
@@ -2876,8 +2892,21 @@ void TRmgGeneratorBase::readObjectPlacementRules()
     }
     sheet->dispose();
 
+#if defined(HOMM3_TARGET_MAC)
+    // CodeWarrior's 32K frame limit: Mac 0x23486c news both tables in one 0xd980 block.
+    struct TPlacementTables {
+        std::vector<TRmgObjectPlacementRule*> rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
+        std::vector<int> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
+    };
+    TPlacementTables* tables = new TPlacementTables;
+    std::vector<TRmgObjectPlacementRule*> (&rulesByType)[ADVENTURE_OBJECT_TRAIT_COUNT][10] =
+        tables->rulesByType;
+    std::vector<int> (&subtypesByType)[ADVENTURE_OBJECT_TRAIT_COUNT][10] =
+        tables->subtypesByType;
+#else
     std::vector<TRmgObjectPlacementRule*> rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
     std::vector<int> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
+#endif
     for (int index = 0; index < ruleCount; ++index) {
         TRmgObjectPlacementRule* rule = &m_placementRules[index];
         rulesByType[objectTypes[index]][terrains[index]].push_back(rule);
@@ -2910,6 +2939,9 @@ void TRmgGeneratorBase::readObjectPlacementRules()
             }
         }
     }
+#if defined(HOMM3_TARGET_MAC)
+    delete tables;
+#endif
 }
 
 // Rank a footprint against terrain and already placed objects. The caller

@@ -3,3 +3,7 @@
 # positive evidence that the Mac executable has no body from the unit; a
 # compile failure or missing string literals is not such evidence.
 unit	disposition	evidence
+forcefeedback	windows_only	Immersion layer over IFC20.dll: the PEF imports no IFC library and lacks its RTTI names (t_initialize_failure, t_create_failure, CImmMouse); no MAC_ADDRESS claims.
+victor_pcx_kernels	windows_only	x86 __asm PCX RLE/planar kernels: no 0xC0 run-marker test or 0x3F count mask in the Mac code section; no MAC_ADDRESS claims.
+winfile	platform_rewritten	Win32 CreateFile/ReadFile file layer. The Mac executable implements file I/O over the File Manager instead: its loader-proven import glue includes FSpOpenDF, FSRead, FSWrite, GetEOF, FSClose, FSpCreate and FSpDelete from InterfaceLib, called from its own implementation at 0:0x277e5c..0x2780c8. No MAC_ADDRESS claims; the Mac target is a VC6 steering aid, so this platform layer is not reproduced.
+dxplay	platform_rewritten	DirectPlay session layer. The Mac executable networks over OpenTransport: its import libraries are InterfaceLib, OTClientLib, OTClientUtilLib, OTInetClientLib, OTATalkSharedLib, OTUtilityLib and six non-network libraries, with no DirectPlay. Some CDPlay types survive (RTTI CAutoArray<CDPlayPlayer>) but no DirectPlay body has a MAC_ADDRESS claim; the Mac target is a VC6 steering aid, so this platform layer is not reproduced.

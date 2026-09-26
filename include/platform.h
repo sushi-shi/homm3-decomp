@@ -1,7 +1,7 @@
 #ifndef HOMM3_PLATFORM_H
 #define HOMM3_PLATFORM_H
 
-#include "compiler.h"
+#include "codewarrior_prefix.h"
 
 #if defined(HOMM3_TARGET_MAC)
 // The Windows reconstruction still mentions Windows SDK types. Import their
@@ -30,6 +30,8 @@
 #include <mmsystem.h>
 #include <dsound.h>
 #include <Mss.h>
+// ShellExecuteA; WIN32_LEAN_AND_MEAN drops it from windows.h.
+#include <shellapi.h>
 #undef __declspec
 #undef __unaligned
 #undef _cdecl

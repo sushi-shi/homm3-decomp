@@ -35,7 +35,7 @@ ROOT = common.HOMM3_DIR
 OBJECTS = ROOT / "build/mac/obj"
 # The compiler-spelling header is a prefix, as the selected-body path's
 # leading include was; the TU itself is compiled unchanged.
-MAC_DEFINES = ("-msext", "on", "-DHOMM3_TARGET_MAC=1", "-prefix", "include/compiler.h")
+MAC_DEFINES = ("-msext", "on", "-DHOMM3_TARGET_MAC=1", "-prefix", "include/codewarrior_prefix.h")
 
 
 def flags_for(unit: str) -> tuple[str, ...]:

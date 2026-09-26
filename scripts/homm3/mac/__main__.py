@@ -163,7 +163,9 @@ def main(argv=None) -> int:
                 print(f"[mac] {len(rows)} TUs: " + ", ".join(f"{state} {count}"
                                                              for state, count in sorted(counts.items()))
                       + f"; {sum(row['code_hunks'] for row in rows)} emitted code hunks; {path}")
-            return 0 if all(row["state"] == "compiled" for row in rows) else 1
+            # A reviewed tu-dispositions.tsv row accounts for a unit as well.
+            return 0 if all(row["state"] != "failed" and row["state"] != "not_built"
+                            for row in rows) else 1
         if args.command == "tu-compare":
             from homm3.mac import full_tu
             rows = full_tu.compare(args.unit, _image())

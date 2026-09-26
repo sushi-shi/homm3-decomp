@@ -18,8 +18,6 @@
 #include "widget.h"
 #include "window.h"
 
-__declspec(nothrow) void __cdecl operator delete(void* p);
-
 // Dreamcast bottomviewsubwindow.cpp:123/662 names GameTime::ElapsedSince;
 // :676-681 names widget::set_visible; the NewTurn, Kingdom, and EnemyTurn
 // constructors name TTextResource::operator[]. Retail expands these header

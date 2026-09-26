@@ -15,6 +15,8 @@
 
 #include "va.h"
 
+#include "rmg.h"
+
 // The eight neighbour directions, clockwise from north. The order is fixed by
 // the retail .bss table at 0x6a80a8, whose sixteen dwords read
 // (0,-1) (1,-1) (1,0) (1,1) (0,1) (-1,1) (-1,0) (-1,-1) - and by the mask
@@ -33,7 +35,6 @@ enum ETileDirection {
     TILE_DIR_COUNT = 8
 };
 
-struct TPoint;
 extern TPoint g_tileDirections[TILE_DIR_COUNT];
 
 void __fastcall buildTileNeighbourMask(int width, int height, int x, int y,

@@ -1,8 +1,8 @@
 #include "va.h"
 
+#include "platform.h"
 #include <ddraw.h>
 #include <string.h>
-#include "platform.h"
 
 #include "mousemgr.h"
 

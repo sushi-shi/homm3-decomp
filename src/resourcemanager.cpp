@@ -546,9 +546,14 @@ void ResourceManager::close()
 VA(0x0055a5c0, 0xE2) MAC_ADDRESS(0x152bfc, 0x3c)
 void ResourceManager::setPath(const char* path)
 {
+#if defined(HOMM3_TARGET_MAC)
+    // Mac 0x152bfc assigns the path unchanged; MSL has no _fullpath.
+    g_resourcePath = path;
+#else
     char fullpath[_MAX_PATH + 1];
     _fullpath(fullpath, path, _MAX_PATH);
     g_resourcePath = fullpath;
+#endif
 }
 
 VA(0x0055a6b0, 0xEF) MAC_ADDRESS(0x152c38, 0x16c)

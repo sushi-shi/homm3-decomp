@@ -706,7 +706,7 @@ def candidate_source(pair: Pair) -> str:
             edits.append((opening, definition.end, ';'))
     for start, end, replacement in sorted(edits, reverse=True):
         text = text[:start] + replacement + text[end:]
-    return '#include "include/compiler.h"\n' + text
+    return '#include "include/codewarrior_prefix.h"\n' + text
 
 
 @lru_cache(maxsize=24)
