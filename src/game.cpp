@@ -3136,7 +3136,7 @@ void SavedGameHeader::reset()
 }
 
 // Complete serializes the expanded snapshot through its abstract stream.
-// Preserve the disjoint scalar staging scopes used by retail stack slots.
+// Mac stages each scalar separately before its stream write.
 // E:\gamedcs\Game.h:1325, dc 0xbcf6c
 VA(0x004bc5d0, 0x17A) MAC_ADDRESS(0x0cfa20, 0x214)  // anchor-layout + game::Save caller
 int SavedGameHeader::save(TAbstractFile* outfile)
@@ -3146,14 +3146,8 @@ int SavedGameHeader::save(TAbstractFile* outfile)
 
     outfile->write(m_id, sizeof(m_id));
 
-    {
-        int buffer = m_version;
-        outfile->write(&buffer, sizeof(buffer));
-    }
-    {
-        int buffer = m_gameVersion;
-        outfile->write(&buffer, sizeof(buffer));
-    }
+    writeValue<int>(outfile, m_version);
+    writeValue<int>(outfile, m_gameVersion);
 
     if (outfile->write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
         sizeof(compatibilityBuffer))
@@ -3164,30 +3158,18 @@ int SavedGameHeader::save(TAbstractFile* outfile)
     if (m_mapSetup.save(outfile) < 0)
         return -1;
 
-    {
-        short buffer = m_campaignGame;
-        outfile->write(&buffer, sizeof(buffer));
-    }
+    writeValue<short>(outfile, m_campaignGame);
     if (m_campaignGame)
         m_campaign.save(outfile);
 
     strcpy(fileNameBuffer, m_fileName.c_str());
     outfile->write(fileNameBuffer, sizeof(fileNameBuffer));
 
-    {
-        short buffer = m_difficultyRating;
-        outfile->write(&buffer, sizeof(buffer));
-    }
-    {
-        char buffer = m_numDeadPlayers;
-        outfile->write(&buffer, sizeof(buffer));
-    }
+    writeValue<short>(outfile, m_difficultyRating);
+    writeValue<char>(outfile, m_numDeadPlayers);
     outfile->write(m_deadPlayer, sizeof(m_deadPlayer));
     outfile->write(m_humanPlayer, sizeof(m_humanPlayer));
-    {
-        int buffer = m_currentPlayer;
-        outfile->write(&buffer, sizeof(buffer));
-    }
+    writeValue<int>(outfile, m_currentPlayer);
 
     return 0;
 }
@@ -6263,7 +6245,7 @@ int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
     int count;
     int length;
 
-    count = infile->read(&length, sizeof(length));
+    count = readValue(infile, length);
     if (count < sizeof(length))
         return -1;
 
