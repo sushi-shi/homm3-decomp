@@ -34,6 +34,9 @@ DATA(0x006a3394) char g_waitingStream[260];
 DATA(0x0069fe90) int g_currentLoop;
 // Original DC name: waitingLoop; StartMP3 publishes the requested loop count.
 DATA(0x0069fe9c) int g_waitingLoop;
+// Mac 21873c..2187dc builds groups {0}, {1..4}, {5..12}; this Windows
+// table has an extra singleton group. The four/eight-channel groups are
+// therefore categories 1/2 on Mac and 2/3 here (e.g. spell launchSample).
 DATA(0x00684ab8) SoundChannelRange g_soundChannels[4] = {
     { 0, 1, 0 }, { 1, 2, 1 }, { 2, 6, 2 }, { 6, 14, 6 }
 };

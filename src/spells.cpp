@@ -3142,6 +3142,9 @@ void combatManager::resetBoltAngle(SBolt* bolt)
 // either within 2 pixels or has started moving AWAY again (further than
 // field_48 + 1), bAtDestination goes up and DoBolt stops re-aiming it.
 
+// Windows 5a5994..5a59ad computes (800*y+x)*2 for the pixel store;
+// Mac 1960e4 instead reads the bitmap pitch and divides it by two. Keep
+// the Windows fixed stride: this is an evidenced target difference.
 VA(0x005a5440, 0x64C) MAC_ADDRESS(0x196068, 0x51c)  // dc 0x154680
 void combatManager::drawBolt(SBolt* bolt, int drawLength)
 {
