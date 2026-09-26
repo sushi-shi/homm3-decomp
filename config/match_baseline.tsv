@@ -980,7 +980,7 @@ cmbtmgr	?placeArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	99.7727	99.7727	100.000
 cmbtmgr	?placeLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0x668a0	tokens1:270d600e050d
 cmbtmgr	?placeObstacle@combatManager@@QAEEH@Z	94.7644	94.7644	100.0000	0x66010	tokens1:4e2af5e6204b
 cmbtmgr	?placeObstacle@combatManager@@QAEXABUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0	tokens1:08bb8ffb86af
-cmbtmgr	?powEffect@combatManager@@QAEXHH@Z	95.5183	95.5183	96.2963	0x68990	tokens1:6fcbb2202dbe
+cmbtmgr	?powEffect@combatManager@@QAEXHH@Z	96.1622	96.1622	96.2963	0x68990	tokens1:cfc26a50e3a0
 cmbtmgr	?raiseDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x672e0	tokens1:25d817e30ea3
 cmbtmgr	?raiseSkeletons@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69f20	tokens1:7c42b2a81edb
 cmbtmgr	?removeArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730	tokens1:57afa9bc8dca
@@ -2975,7 +2975,7 @@ puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x12c1e0	token
 puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12c770	tokens1:0aa9bcd9785d
 puzzlewindow	??1TPuzzleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12c5a0	tokens1:600a3f8480ef
 puzzlewindow	??_GTPuzzleWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12c570	-
-puzzlewindow	?aiAttemptPuzzleGuess@@YI?AUtype_point@@J@Z	97.5799	97.5799	97.5799	0x12c9b0	tokens1:a4a5d0543dab
+puzzlewindow	?aiAttemptPuzzleGuess@@YI?AUtype_point@@J@Z	99.2192	99.2192	99.2192	0x12c9b0	tokens1:92dd20d28330
 puzzlewindow	?markPuzzle@Bitmap816@@QAEXPAEJJ@Z	100.0000	100.0000	100.0000	0x12c8b0	tokens1:93a8c63346c0
 puzzlewindow	?matchPuzzle@@YI?AUtype_point@@JPAY0BB@Utype_AI_puzzle_tile@@@Z	95.1081	95.1081	95.3093	0x12cf10	tokens1:10143376e025
 puzzlewindow	?test@?$bitset@$0DA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x1067e0	-
