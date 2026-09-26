@@ -20,11 +20,11 @@ matcher's inner loop):
                bodies are compiler-generated and reconstructed
                implicitly. No uses exist yet; the allowance is wired for
                their arrival.)
-  IN ORDER     within each source module the VA() claims strictly increase;
-               headers and inline bodies follow CodeView source order:
-               the carcass preserves retail link order, and a function
-               pasted into the wrong place breaks the order before it
-               breaks anything else. Only retail VA() claims are order-checked.
+  IN ORDER     within each source module the VA() claims strictly increase.
+               An exact reviewed exception in va-order-placements.tsv can
+               retain a helper body before its caller when its separately
+               emitted retail body links later. Stale exceptions fail.
+               Only ordinary .cpp VA() claims are order-checked.
 
 Known-backlog ratchet (the gruntz single_view shape): the violations
 that existed when the gate landed are frozen in
@@ -84,12 +84,14 @@ def load_functions() -> dict[int, int]:
 
 
 def check(claims_by_file: dict, functions: dict, classes: dict,
-          inline_claims: set[tuple[str, int]] = frozenset()) -> list[tuple]:
+          inline_claims: set[tuple[str, int]] = frozenset(),
+          order_placements: set[tuple[str, int, int]] = frozenset()) -> list[tuple]:
     """All (kind, va, message) violations across the four checks; [] =
     the contract holds. `claims_by_file` maps a display path to that
     file's parsed claims; `functions` is rva->size; `classes` is
     rva->universe category."""
     violations = []
+    used_order_placements = set()
     owners: dict[int, str] = {}
     for path, claims in sorted(claims_by_file.items()):
         previous_va = None
@@ -128,12 +130,20 @@ def check(claims_by_file: dict, functions: dict, classes: dict,
             if (macro == "VA" and (path, va) not in inline_claims
                     and Path(path).suffix.lower() not in {".h", ".hpp", ".inl"}):
                 if previous_va is not None and va <= previous_va:
-                    violations.append((
-                        "ORDER", va,
-                        f"ORDER violation: {where} claims 0x{va:08x} "
-                        f"after 0x{previous_va:08x} - VA() claims must "
-                        "be strictly increasing (retail link order)"))
+                    placement = (path, va, previous_va)
+                    if placement in order_placements:
+                        used_order_placements.add(placement)
+                    else:
+                        violations.append((
+                            "ORDER", va,
+                            f"ORDER violation: {where} claims 0x{va:08x} "
+                            f"after 0x{previous_va:08x} - VA() claims must "
+                            "be strictly increasing (retail link order)"))
                 previous_va = va
+    for path, va, previous_va in order_placements - used_order_placements:
+        violations.append(("ORDER_FILTER", va,
+                           f"stale VA source-order placement {path} "
+                           f"0x{va:08x} after 0x{previous_va:08x}"))
     return violations
 
 
@@ -220,11 +230,20 @@ def _scan():
                 claims_by_file[str(path.relative_to(common.HOMM3_DIR))] = claims
                 total += len(claims)
     from homm3.match import universe
-    from homm3.match.source_ownership import collect, claim_definitions
+    from homm3.match.source_ownership import collect, claim_definitions, read_filter
     classes, _sizes = universe.classify()
     definitions, errors, _reached = collect()
     inline_claims = {(d.file, d.va) for d in claim_definitions(definitions) if d.inline and d.va is not None}
-    violations = check(claims_by_file, load_functions(), classes, inline_claims)
+    rows, placement_errors = read_filter(common.HOMM3_DIR / 'config/source/va-order-placements.tsv',
+                                         ('file', 'va', 'previous_va'))
+    placements = set()
+    for path, va_text, previous_text in rows:
+        try:
+            placements.add((path, int(va_text, 0), int(previous_text, 0)))
+        except ValueError:
+            placement_errors.append(f'invalid VA source-order placement {path} {va_text} {previous_text}')
+    violations = check(claims_by_file, load_functions(), classes, inline_claims, placements)
+    violations.extend(('PARSE', 0, error) for error in placement_errors)
     violations.extend(('PARSE', 0, error) for error in errors)
     return claims_by_file, total, violations
 

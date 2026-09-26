@@ -1165,6 +1165,17 @@ class InlineCppOrderTest(unittest.TestCase):
         functions[0x800] = 8
         self.assertTrue(check(rows, functions, {}, {('src/lobby.cpp', 0x409000)}))
 
+    def test_reviewed_source_before_caller_va_inversion_is_exact(self):
+        from homm3.match.verify_va_claims import check
+        rows = {'src/media.cpp': [(1, 'VA', 0x402000, 8),
+                                  (2, 'VA', 0x401000, 8)]}
+        functions = {0x1000: 8, 0x2000: 8}
+        placement = ('src/media.cpp', 0x401000, 0x402000)
+        self.assertEqual(check(rows, functions, {}, order_placements={placement}), [])
+        wrong = ('src/media.cpp', 0x401000, 0x403000)
+        failures = check(rows, functions, {}, order_placements={wrong})
+        self.assertEqual({kind for kind, _, _ in failures}, {'ORDER', 'ORDER_FILTER'})
+
 
 class CompilerIdentityTest(unittest.TestCase):
     def test_audit_separates_unemitted_generated_body_from_written_identity(self):

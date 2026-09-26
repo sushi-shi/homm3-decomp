@@ -801,15 +801,6 @@ std::string TCampaignBrief::CampaignHeaderStruct::getCampaignDescription() const
     return m_campaignDesc;
 }
 
-// CodeView and the delinked Windows retail object place this ordinary body in
-// campaignbrief.cpp. The Mac linker places its counterpart at 0:0x96a68 near
-// customcampaign code; its offset does not determine source TU ownership.
-VA(0x004886a0, 0x132) MAC_ADDRESS(0x096a68, 0x94)
-TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
-{
-    clearScenarios();
-}
-
 // Canonical body and VA: include/game.h.
 // Canonical body and VA: include/game.h.
 VA_COMPGEN(0x0045a990, 0x119, CLASS_CTOR, CMapHeaderData)
@@ -1249,6 +1240,15 @@ VA_COMPGEN(0x0045dea0, 0x1D, TREE_BUYNODE, type_map_hero_info)
 // COMDAT pairing: vector<type_map_hero_identity>::_Ucopy (thiscall, three
 // pointer arguments, `ret 0xc`).
 VA_COMPGEN(0x0045d230, 0x38, VECTOR_UCOPY, type_map_hero_identity)
+
+// CodeView and the delinked Windows retail object place this ordinary body in
+// campaignbrief.cpp. The Mac linker places its counterpart at 0:0x96a68 near
+// customcampaign code; its offset does not determine source TU ownership.
+VA(0x004886a0, 0x132) MAC_ADDRESS(0x096a68, 0x94)
+TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
+{
+    clearScenarios();
+}
 
 // This delete loop naturally retains ScenarioStruct's compiler-generated
 // deleting wrapper. Retail CampaignHeaderStruct::load and selectCampaign

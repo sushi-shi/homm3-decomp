@@ -1,0 +1,3 @@
+# Reviewed source-before-caller placement where retail linker emission differs.
+file	va	previous_va	reason
+src/smackmgr.cpp	0x00597740	0x00598e80	Mac calls drawSmackerFrame at code0+0x25e788 from videoDrawCurrentFrame and retains its body at code0+0x25f948. Windows expands the canonical source call, requiring body visibility before the caller. Its out-of-line Windows body links later at 0x598e80, so this exact VA inversion reflects retained helper emission rather than a misplaced definition.
