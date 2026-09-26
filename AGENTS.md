@@ -23,7 +23,10 @@ the reconstruction without proving a unique C++ spelling. A runnable Mac port
 is not a project requirement. Use native library headers for Mac comparisons;
 do not add duplicate game declarations or extracted header-body fragments.
 
-For the broad helper sweep, cover byte-exact Windows functions too. Use Mac's
+For the broad helper sweep, use the temporary
+[mac-helper-sweep skill](.agents/skills/mac-helper-sweep/SKILL.md) for caller
+count reconciliation and propagation through every recovered helper's xrefs.
+Cover byte-exact Windows functions too. Use Mac's
 retained calls and simpler body shapes to restore helper calls and canonical
 bodies throughout the source. Inspect the Mac callee and its callers to
 distinguish game helpers from library, runtime, glue, or generated code. A
