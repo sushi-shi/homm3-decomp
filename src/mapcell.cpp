@@ -3488,23 +3488,33 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     return 1;
 }
 
+// DC records char_buffer, ushort_buffer and count at function scope.
+// Mac stages the three coordinates through one byte slot and the type index
+// through a separate short slot; preserve those lifetimes around the helper.
 VA(0x00503640, 0x8D) MAC_ADDRESS(0x126268, 0x108)  // dc 0xf1b1c
 int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
 {
+    unsigned short ushortBuffer;
     int count;
-    count = writeValue<char>(outfile, tempObject.m_x);
+    char charBuffer;
+
+    charBuffer = tempObject.m_x;
+    count = writeValue(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
-    count = writeValue<char>(outfile, tempObject.m_y);
+    charBuffer = tempObject.m_y;
+    count = writeValue(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
-    count = writeValue<char>(outfile, tempObject.m_z);
+    charBuffer = tempObject.m_z;
+    count = writeValue(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
-    count = writeValue<unsigned short>(outfile, tempObject.m_typeIndex);
+    ushortBuffer = tempObject.m_typeIndex;
+    count = writeValue(outfile, ushortBuffer);
     if (count < sizeof(unsigned short))
         return -1;
     return 0;
@@ -4022,25 +4032,34 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     return 1;
 }
 
+// DC separates int_buffer from write/helper status count and records int x.
+// The retained SaveObject boundary remains an inliner residual in Complete.
 VA(0x00504a40, 0x127) MAC_ADDRESS(0x1276b8, 0x138)  // dc 0xf3018
 int NewfullMap::saveMapObjects(TAbstractFile* outfile)
 {
-    int count = m_objectTypes.size();
-    if (writeValue(outfile, count) < sizeof(count))
+    int intBuffer;
+    int count;
+    int x;
+
+    intBuffer = m_objectTypes.size();
+    count = writeValue(outfile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
 
-    unsigned int i;
-    for (i = 0; i < m_objectTypes.size(); ++i) {
-        if (saveObjectType(outfile, &m_objectTypes[i]) < 0)
+    for (x = 0; x < m_objectTypes.size(); ++x) {
+        count = saveObjectType(outfile, &m_objectTypes[x]);
+        if (count < 0)
             return -1;
     }
 
-    count = m_objects.size();
-    if (writeValue(outfile, count) < sizeof(count))
+    intBuffer = m_objects.size();
+    count = writeValue(outfile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
 
-    for (i = 0; i < m_objects.size(); ++i) {
-        if (saveObject(outfile, m_objects[i]) < 0)
+    for (x = 0; x < m_objects.size(); ++x) {
+        count = saveObject(outfile, m_objects[x]);
+        if (count < 0)
             return -1;
     }
     return 1;
