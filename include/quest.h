@@ -20,6 +20,7 @@
 #define HOMM3_QUEST_H
 
 #include "va.h"
+#include "abstractfile.h"
 #include "seerhuttext.h"
 
 #include <string>
@@ -182,6 +183,14 @@ public:
     // not. `Load` / `LoadFromMap` are provisional names for that split.
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
+    // Each quest text writes its length, then its current payload.
+    // This repeated operation is expanded three times in Mac base save.
+    static int writeText(TAbstractFile* file, const std::string& text)
+    {
+        int length = text.length();
+        writeValue<int&>(file, length);
+        return file->write(text.c_str(), text.length());
+    }
     virtual void save(TAbstractFile* file);
     // Slot 14, IDENTIFIED 2026-08-21: every leaf back-fills the three
     // strings above from columns 0/1/2 of its own text group, and only
