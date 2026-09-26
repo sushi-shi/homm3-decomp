@@ -201,13 +201,14 @@ int combatManager::viewSpells() const
         for (i = 0; i < 2; ++i) {
             if (m_heroes[i]
                 && m_heroes[i]->isWieldingArtifact(g_artifactRecantersCloak)) {
-                normalDialog(
-                    formatString(
-                        g_generalText->getText(GENERAL_TEXT_ARTIFACT_BLOCKS_HIGH_LEVEL_SPELLS_FORMAT),
-                        g_artifactTraits[g_artifactRecantersCloak].m_name,
-                        m_heroes[m_currentSide]->m_name)
-                        .c_str(),
-                    1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                // Mac copies the formatted result into this owner, then
+                // destroys the formatting temporary before opening the dialog.
+                std::string message = formatString(
+                    g_generalText->getText(GENERAL_TEXT_ARTIFACT_BLOCKS_HIGH_LEVEL_SPELLS_FORMAT),
+                    g_artifactTraits[g_artifactRecantersCloak].m_name,
+                    m_heroes[m_currentSide]->m_name);
+                normalDialog(message.c_str(),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 return -1;
             }
         }
