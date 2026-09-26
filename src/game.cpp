@@ -2393,7 +2393,7 @@ template <class T>
 bool saveObjectVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 {
     short count = srcVector.size();
-    if (outfile->write(&count, sizeof(count)) < sizeof(count))
+    if (writeValue<short>(outfile, count) < sizeof(count))
         return 0;
     for (long i = 0; i < count; ++i) {
         if (!srcVector[i].save(outfile))
