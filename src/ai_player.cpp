@@ -5230,62 +5230,74 @@ inline type_artifact_effect::type_artifact_effect()
 {
 }
 
+MAC_ADDRESS(0x036c50, 0x48)
 inline type_scouting_artifact::type_scouting_artifact(long newBonus)
 {
     m_bonus = newBonus;
 }
 
+MAC_ADDRESS(0x036d58, 0x38)
 inline type_might_artifact::type_might_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x036e50, 0x38)
 inline type_power_artifact::type_power_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x036ea8, 0x38)
 inline type_knowledge_artifact::type_knowledge_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x036f00, 0x38)
 inline type_base_necromancy_artifact::type_base_necromancy_artifact(
     long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x037034, 0x38)
 inline type_necromancy_artifact::type_necromancy_artifact(long newBonus)
     : type_base_necromancy_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x03710c, 0x38)
 inline type_movement_artifact::type_movement_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x037198, 0x38)
 inline type_spellcaster_artifact::type_spellcaster_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x037248, 0x38)
 inline type_morale_artifact::type_morale_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x037344, 0x38)
 inline type_luck_artifact::type_luck_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x037440, 0x38)
 inline type_duration_artifact::type_duration_artifact(long newBonus)
     : type_power_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x037504, 0x4c)
 inline type_school_artifact::type_school_artifact(TSpellSchool newSchool,
                                                    long newBonus)
     : type_power_artifact(newBonus)
@@ -5293,25 +5305,30 @@ inline type_school_artifact::type_school_artifact(TSpellSchool newSchool,
     m_school = newSchool;
 }
 
+MAC_ADDRESS(0x037734, 0x48)
 inline type_antimagic_artifact::type_antimagic_artifact(long maxLevel)
 {
     m_bonus = maxLevel;
 }
 
+MAC_ADDRESS(0x03788c, 0x38)
 inline type_antimorale_artifact::type_antimorale_artifact()
 {
 }
 
+MAC_ADDRESS(0x0379a8, 0x38)
 inline type_antiluck_artifact::type_antiluck_artifact()
 {
 }
 
+MAC_ADDRESS(0x037ac4, 0x4c)
 inline type_tome_artifact::type_tome_artifact(TSpellSchool newSchool)
     : type_combat_artifact(0)
 {
     m_school = newSchool;
 }
 
+MAC_ADDRESS(0x037c40, 0x58)
 inline type_income_artifact::type_income_artifact(
     long newAmount, EGameResource newResource)
 {
@@ -5319,6 +5336,7 @@ inline type_income_artifact::type_income_artifact(
     m_resource = newResource;
 }
 
+MAC_ADDRESS(0x037cfc, 0x58)
 inline type_creature_growth_artifact::type_creature_growth_artifact(
     long newLevel, long newBonus)
 {
@@ -5326,21 +5344,25 @@ inline type_creature_growth_artifact::type_creature_growth_artifact(
     m_growthBonus = newBonus;
 }
 
+MAC_ADDRESS(0x0384a4, 0x3c)
 inline type_undead_king_cloak_artifact::type_undead_king_cloak_artifact()
     : type_base_necromancy_artifact(30)
 {
 }
 
+MAC_ADDRESS(0x037fcc, 0x48)
 inline type_spell_artifact::type_spell_artifact(SpellID newSpell)
     : m_spell(newSpell)
 {
 }
 
+MAC_ADDRESS(0x0380e8, 0x38)
 inline type_shooter_bonus_artifact::type_shooter_bonus_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x038190, 0x3c)
 inline type_angelic_alliance_artifact::type_angelic_alliance_artifact()
     : type_might_artifact(8)
 {

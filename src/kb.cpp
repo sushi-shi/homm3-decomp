@@ -1892,6 +1892,7 @@ int normalDialogHandler(message& msg)
 }
 
 // E:\gamedcs\kb.cpp:2442, dc 0xe1de4.
+MAC_ADDRESS(0x111ebc, 0x6c)
 type_normal_dialog_frame::type_normal_dialog_frame(
     long x, long y, long w, long h, long id,
     EGameResource newResource, long newQualifier)

@@ -1510,6 +1510,7 @@ void type_be_hero_quest::loadFromMap(TAbstractFile* file)
 // Mac 0:0x168b04 writes the hero id then calls type_quest::save at 0x168b50.
 // Windows vtable 0x64192c slot 13 folds onto the experience writer 0x56d630:
 // both save a short from the derived field at +0x40 before the base payload.
+MAC_ADDRESS(0x168b04, 0x68)
 void type_be_hero_quest::save(TAbstractFile* file)
 {
     short id = m_requiredHero;
@@ -1715,6 +1716,7 @@ std::string TQuestGuard::questGuardFn00573040(int player)
     return text;
 }
 
+MAC_ADDRESS(0x1664dc, 0x5c)
 type_artifact_quest::type_artifact_quest(unsigned char flags)
     : type_quest(flags)
 {

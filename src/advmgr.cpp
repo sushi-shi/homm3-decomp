@@ -2296,6 +2296,7 @@ static void setWindmillHelpText(
 // those stores before getTriggerCell; retain the constructor boundary
 // instead of aggregate-initializing its implementation in both callers.
 
+MAC_ADDRESS(0x00bf14, 0x14)
 type_cell_adjuster::type_cell_adjuster()
 {
     m_obscuringHero = 0;

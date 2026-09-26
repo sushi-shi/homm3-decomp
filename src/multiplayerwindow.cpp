@@ -787,6 +787,7 @@ inline unsigned char TMultiPlayerWindow::onIPX()
     return 0;
 }
 
+MAC_ADDRESS(0x21c67c, 0x94)
 inline unsigned char TMultiPlayerWindow::onModem()
 {
     g_mpNetProtocol = MP_MODEM;

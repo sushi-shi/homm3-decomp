@@ -967,6 +967,7 @@ int TCampaignStartCrossoverOption::getCount() const
 
 // Mac code+0x93878 precedes the crossover option's virtual methods and
 // is called by getIconDefName at +0x938e0. Windows expands this pool lookup.
+MAC_ADDRESS(0x093878, 0x4c)
 hero* TCampaignStartCrossoverOption::getFirstCrossoverHero(
     SCampaign* campaign, int which) const
 {
@@ -2091,6 +2092,7 @@ static void addCampaignScenario(
     campaign.m_scenarios.push_back(scenario);
 }
 
+MAC_ADDRESS(0x095fb0, 0xb0)
 static void applyCampaignMapHeader(
     TCampaignBrief::ScenarioStruct& scenario, NewSMapHeader& mapHeader)
 {
