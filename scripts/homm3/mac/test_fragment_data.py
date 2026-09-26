@@ -12,6 +12,7 @@ class TestFragmentData(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
             (root / "config/source").mkdir(parents=True)
             (root / "src").mkdir()
             (root / "include/inline").mkdir(parents=True)

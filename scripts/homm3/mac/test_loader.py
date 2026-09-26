@@ -151,6 +151,7 @@ Hunk: Kind=HUNK_LOCAL_IDATA Align=4 Class=TI Name="@13"(3) Size=4
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
             (root / "globals.h").write_text("DATA(0x00400100) extern int* pointer;\n")
             (root / "config/mac/data.toml").write_text(f'''[[data]]
 retail_va=0x00400100
@@ -193,6 +194,7 @@ declaration_only=true
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
             (root / "source.cpp").write_text("DATA(0x00400100) static unsigned char viewFlag;\n")
             manifest = root / "config/mac/data.toml"
             zero_digest = sha256(bytes(1)).hexdigest()
@@ -236,6 +238,7 @@ evidence="same-TU direct zero byte"
             root = Path(directory)
             folder = root / "config/mac/data"
             folder.mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
             path = folder / "worker.toml"
             row = ('[[data]]\nretail_va=0x00400100\nsource="source.cpp"\n'
                    'declaration_only=true\nmac_section=1\nmac_offset=16\nmac_size=4\n'
@@ -283,6 +286,7 @@ evidence="same-TU direct zero byte"
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
             manifest = root / "config/mac/data.toml"
             manifest.write_text(f'''[[constants]]
 mac_section = 1
@@ -343,6 +347,7 @@ evidence = "fixture"
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
             manifest = root / "config/mac/data.toml"
             zero_digest = sha256(bytes(1)).hexdigest()
 
@@ -398,6 +403,7 @@ evidence = "fixture"
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
             (root / "config/mac/data.toml").write_text(
                 "[[constants]]\nunits = [\"hero\"]\nowner_va = 0x4d8720\n"
                 "candidate_offset = 0\ntarget_offset = 0\n"
