@@ -357,7 +357,7 @@ public:
     std::vector<TArtifact> m_artifacts;  // +0x40
 
     type_artifact_quest(unsigned char flags);
-    type_artifact_quest(unsigned char flags, TArtifact artifact, int textRow);
+    type_artifact_quest(TArtifact artifact, int textRow);
 
     virtual int getAIValue(int player);
     virtual unsigned char isSatisfied(hero* currentHero);

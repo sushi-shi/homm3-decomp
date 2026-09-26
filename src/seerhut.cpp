@@ -1760,10 +1760,11 @@ type_artifact_quest::type_artifact_quest(unsigned char flags)
 // construction. Retail 0x574610 and 0x574a90 keep the append, text-row
 // override, disabled-artifact store, and direct SetDefaultText call inside the
 // allocation-success arm. These support a shared single-artifact constructor.
+// Mac 0x1665b8 takes artifact/textRow in r4/r5 and supplies literal 1
+// to the base constructor; both legacy reader call sites use this overload.
 MAC_ADDRESS(0x1665b8, 0xb8)
-type_artifact_quest::type_artifact_quest(
-    unsigned char flags, TArtifact artifact, int textRow)
-    : type_quest(flags)
+type_artifact_quest::type_artifact_quest(TArtifact artifact, int textRow)
+    : type_quest(1)
 {
     m_artifacts.push_back(artifact);
     m_textVariant = textRow;
@@ -2411,7 +2412,7 @@ void TSeerHut::read(TAbstractFile* infile)
             m_quest = 0;
         } else {
             m_quest = new type_artifact_quest(
-                1, static_cast<TArtifact>(charBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                static_cast<TArtifact>(charBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
     } else {
         m_quest = readQuestFromMap(infile, 1);
@@ -2552,7 +2553,7 @@ void TSeerHut::load(TAbstractFile* infile, int saveVersion)
             m_quest = 0;
         else
             m_quest = new type_artifact_quest(
-                1, static_cast<TArtifact>(intBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                static_cast<TArtifact>(intBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
     } else {
         type_quest* newQuest = createQuest(readValue<unsigned char>(infile), 1);
         m_quest = newQuest;
