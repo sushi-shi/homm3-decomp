@@ -24,12 +24,32 @@ def cache_valid(saved, key):
         return False
 
 
+def _vendor_asm_overlays(root: Path):
+    """Give Clang explicit sizes for two RAD Win32 asm instructions."""
+    header = root / 'vendor/bink-0.5a/include/Rad.h'
+    if not header.is_file():
+        return []
+    original = header.read_text()
+    increment = 'lock inc [eax]'
+    decrement = 'lock dec [eax]'
+    if original.count(increment) != 1 or original.count(decrement) != 1:
+        return []
+    adjusted = original.replace(increment, 'lock inc dword ptr [eax]')
+    adjusted = adjusted.replace(decrement, 'lock dec dword ptr [eax]')
+    return [(str(header), adjusted)]
+
+
 def scan(ci, source: Path, args: list[str], root: Path) -> dict:
     """Keep exact declaration USRs, including overload and const distinctions."""
     k = ci.CursorKind
     functions = {k.FUNCTION_DECL, k.CXX_METHOD, k.CONSTRUCTOR, k.DESTRUCTOR,
                  k.CONVERSION_FUNCTION, k.FUNCTION_TEMPLATE}
-    tu = ci.Index.create().parse(str(source), args=args)
+    # The vendor Win32 header leaves these operands implicit for MSVC. Clang
+    # rejects that asm during AST parsing even though the functions are outside
+    # the authored game. The unsaved overlay preserves every declaration and
+    # keeps the checked-in header and its cache fingerprint untouched.
+    tu = ci.Index.create().parse(str(source), args=args,
+                                 unsaved_files=_vendor_asm_overlays(root))
     nodes, edges, gaps = {}, [], []
     texts = {}
 

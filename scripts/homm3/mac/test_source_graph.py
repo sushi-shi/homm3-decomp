@@ -113,6 +113,38 @@ class SourceGraphTests(unittest.TestCase):
             header.unlink()
             self.assertFalse(source_graph.cache_valid(saved, 'flags'))
 
+    def test_rad_asm_overlay_preserves_game_calls_and_vendor_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            header = root / 'vendor/bink-0.5a/include/Rad.h'
+            header.parent.mkdir(parents=True)
+            vendor_text = '''
+                void increment(void* var) { __asm {
+                    mov eax,[var]
+                    lock inc [eax]
+                } }
+                void decrement(void* var) { __asm {
+                    mov eax,[var]
+                    lock dec [eax]
+                } }
+            '''
+            header.write_text(vendor_text)
+            source = root / 'src/test.cpp'
+            source.parent.mkdir()
+            source.write_text('''
+                #include "vendor/bink-0.5a/include/Rad.h"
+                void helper() {}
+                void caller() { helper(); }
+            ''')
+            args = ['-xc++', '-std=c++98', '-fasm-blocks', '-fms-extensions',
+                    '-target', 'i686-pc-windows-msvc', '-I' + str(root)]
+            result = source_graph.scan(self.ci, source, args, root)
+            self.assertEqual(result['diagnostics'], [])
+            self.assertEqual([edge['expression'] for edge in result['edges']],
+                             ['helper()'])
+            self.assertEqual(header.read_text(), vendor_text)
+            self.assertEqual(result['inputs'][str(header)], source_graph.digest(header))
+
 
 if __name__ == '__main__':
     unittest.main()
