@@ -1208,9 +1208,8 @@ long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* 
             + ourArmy->m_topCreatureDamage < ourArmy->m_monInfo.m_hitPoints)
         return 0;
     double scale = getDuration(duration, 0);
-    double total = static_cast<double>(ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
-                                                                        m_estimate.m_lowestDefense));
-    return static_cast<long>((sqrt(increase) - 1.0) * total * scale);
+    return static_cast<long>(scale * ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
+        m_estimate.m_lowestDefense) * (sqrt(increase) - 1.0));
 }
 
 VA(0x00438910, 0xFB) MAC_ADDRESS(0x0403c0, 0x5a0)  // dc 0x3ec10
