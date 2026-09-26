@@ -2,6 +2,15 @@
 
 [[helpers]]
 unit = "seerhut"
+source_helper = "type_be_hero_quest::save"
+mac_section = 0
+mac_offset = 0x168b04
+mac_size = 0x68
+target_sha256 = "f1e5c509c3e43b75b8753b3a0382eff2121c7b90b42467271ffed083b76a77d3"
+evidence = "The be-hero quest writer follows loadFromMap and precedes setDefaultText. It loads requiredHero at +0x1c, writes two little-endian bytes through the file virtual, and calls base type_quest::save at 0x168b50. BLR 0x168b68 immediately precedes setDefaultText 0x168b6c. Windows vtable 0x64192c slot 13 points to experience-save representative 0x56d630: both derived fields occupy +0x40 and serialize a short then the base payload. The ordinary override preserves that behavior without a duplicate VA claim."
+
+[[helpers]]
+unit = "seerhut"
 source_helper = "type_artifact_quest::type_artifact_quest(unsigned char flags)"
 mac_section = 0
 mac_offset = 0x1664dc

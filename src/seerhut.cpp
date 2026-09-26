@@ -262,6 +262,8 @@ void type_quest::loadFromMap(TAbstractFile* file)
     m_completionText = readLengthPrefixedString(file);
 }
 
+// Mac retains this base writer at 0:0x16438c. All nine derived quest
+// writers call it after their own payload, including the folded be-hero save.
 VA(0x0056cf70, 0xCD) MAC_ADDRESS(0x16438c, 0x180)
 void type_quest::save(TAbstractFile* file)
 {
@@ -387,33 +389,7 @@ void type_experience_quest::save(TAbstractFile* file)
     short level = m_requiredLevel;
     file->write(&level, sizeof(level));
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 VA(0x0056d720, 0x23E) MAC_ADDRESS(0x164aec, 0x14c)
 void type_experience_quest::setDefaultText()
@@ -562,33 +538,7 @@ void type_skill_quest::save(TAbstractFile* file)
 {
     file->write(m_requiredSkills, sizeof(m_requiredSkills));
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 VA(0x0056dfa0, 0x124) MAC_ADDRESS(0x1652cc, 0xc4)
 std::string type_skill_quest::skillRequirementText(
@@ -710,33 +660,7 @@ void type_defeat_hero_quest::save(TAbstractFile* file)
         file->write(&mask, sizeof(mask));
     }
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 VA(0x0056e6f0, 0x29E) MAC_ADDRESS(0x165948, 0x1e4)
 void type_defeat_hero_quest::setDefaultText()
@@ -869,33 +793,7 @@ void type_monster_quest::save(TAbstractFile* file)
         file->write(&killer, sizeof(killer));
     }
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 
 // Slot 14 does more than the other default-text initializers because a map
@@ -1132,33 +1030,7 @@ void type_artifact_quest::save(TAbstractFile* file)
         file->write(&id, sizeof(id));
     }
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 VA(0x005701d0, 0x199) MAC_ADDRESS(0x166df4, 0x160)
 void type_artifact_quest::setDefaultText()
@@ -1395,33 +1267,7 @@ void type_creature_quest::save(TAbstractFile* file)
         writeValue<int>(file, m_counts[i]);
     }
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 VA(0x005713c0, 0x16A) MAC_ADDRESS(0x167ccc, 0x118)
 void type_creature_quest::setDefaultText()
@@ -1570,33 +1416,7 @@ void type_resource_quest::save(TAbstractFile* file)
 {
     file->write(m_resources, sizeof(m_resources));
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 // The canonical questTexts -> questTextRow chain is exact. Branch returns
 // in the shared row selector preserve the retained child call here; its old
@@ -1686,6 +1506,17 @@ void type_be_hero_quest::loadFromMap(TAbstractFile* file)
     m_requiredHero = id;
     type_quest::loadFromMap(file);
 }
+
+// Mac 0:0x168b04 writes the hero id then calls type_quest::save at 0x168b50.
+// Windows vtable 0x64192c slot 13 folds onto the experience writer 0x56d630:
+// both save a short from the derived field at +0x40 before the base payload.
+void type_be_hero_quest::save(TAbstractFile* file)
+{
+    short id = m_requiredHero;
+    file->write(&id, sizeof(id));
+    type_quest::save(file);
+}
+
 VA(0x00572270, 0x276) MAC_ADDRESS(0x168b6c, 0x184)
 void type_be_hero_quest::setDefaultText()
 {
@@ -1768,33 +1599,7 @@ void type_belong_to_player_quest::save(TAbstractFile* file)
     unsigned char owner = static_cast<unsigned char>(m_requiredOwner);
     file->write(&owner, sizeof(owner));
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 // The canonical questTexts -> questTextRow chain is exact. Branch returns
 // in the shared row selector preserve the retained child call here; its old
