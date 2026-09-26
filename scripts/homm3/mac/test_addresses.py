@@ -44,6 +44,22 @@ def write_tables(root: Path, functions=(), runtime=(), aliases=(), dispositions=
 
 
 class TestMacAddressScan(unittest.TestCase):
+    def test_operator_claim_can_supply_source_helper_selector(self):
+        from homm3.mac.source import source_helper
+        for operator in ("==", "=", "!=", "<="):
+            text = ("MAC_ADDRESS(0x100, 0x10)\n"
+                    f"bool Tile::operator{operator}(const Tile* other) const\n"
+                    "{\n    return m_value == other->m_value;\n}\n")
+            claims, _, problems = scan(text)
+            self.assertEqual(problems, [])
+            claim = claims[0]
+            self.assertEqual(claim.label, f"Tile::operator{operator}")
+            _, _, body = source_helper(text, claim.label + claim.parameters + " const",
+                                       Path("src/unit.cpp"))
+            self.assertIn("return m_value == other->m_value;", body)
+        _, _, problems = scan("MAC_ADDRESS(0x100, 0x10)\nint value = calculate();\n")
+        self.assertTrue(any("functions only" in item for item in problems))
+
     def test_same_line_claim_pairs_with_its_va(self):
         claims, windows, problems = scan(
             "VA(0x004d8720, 0x568) MAC_ADDRESS(0x0f3fe4, 0x568)  // dc 0x1\n"

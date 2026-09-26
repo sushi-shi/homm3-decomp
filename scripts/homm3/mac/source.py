@@ -407,10 +407,12 @@ def source_helper(text: str, selector: str, source: Path) -> tuple[int, str, str
     helper must have one direct member body; a declaration or call cannot
     substitute for the canonical body.
     """
-    selection = re.fullmatch(r'(?P<name>\w+(?:::(?:~?\w+))*)(?P<parameters>\s*\([^;{}]*\)\s*(?:const)?)?', selector)
+    selection = re.fullmatch(r'(?P<name>\w+(?:::(?:~?\w+))*(?:[=!<>+*/%&|^~\[\]-]+)?)(?P<parameters>\s*\([^;{}]*\)\s*(?:const)?)?', selector)
     if not selection:
         raise SourceError(f"{source}: invalid source helper selector {selector!r}")
     name = selection['name']
+    if re.search(r'[^\w:~]', name) and not re.search(r'\boperator[=!<>+*/%&|^~\[\]-]+$', name):
+        raise SourceError(f"{source}: invalid source helper selector {selector!r}")
     parameters = selection['parameters']
     parts = name.split("::")
     is_constructor = len(parts) >= 2 and parts[-1] == parts[-2]
