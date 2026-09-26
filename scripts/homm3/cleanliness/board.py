@@ -184,7 +184,8 @@ def _regex_sites(pattern):
 _REINTERPRET = re.compile(r"\breinterpret_cast\s*<")
 _VOLATILE = re.compile(r"\bvolatile\b")
 _CPP_EXTERN = re.compile(
-    r'^[ \t]*extern\b(?![ \t]*"(?:C|C\+\+)"[ \t]*\{)',
+    # _strip removes the linkage string before this expression runs.
+    r'^[ \t]*extern\b(?![ \t]*\{)',
     re.MULTILINE)
 # struct/class DEFINITION (name then body brace, optional base clause) -
 # not forward decls, not elaborated uses (`class TBar* p;`).
