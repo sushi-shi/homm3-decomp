@@ -1181,10 +1181,9 @@ inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
         currentHero, 0, currentGarrison->m_garrisonArmy, 0, cell);
 }
 
-// Mac 0x142dd8 retains this helper. Its non-Sunday choice tests the day
-// low bit; this Windows reconstruction tests hero flags. Mac also retains
-// an unreachable third morale/luck path at 0x142ef4. Both differences remain
-// unresolved; do not add dead calls merely to equalize the call inventory.
+// Windows 0x528b3c/0x528b93 and Mac 0x142e38/0x142e94 select the
+// non-Sunday benefit from the day low bit. Mac also retains an unreachable
+// third morale/luck path at 0x142ef4; do not invent dead source calls for it.
 MAC_ADDRESS(0x142dd8, 0x184)
 inline long valueOfIdol(const hero* currentHero, long moveCost)
 {
@@ -1202,7 +1201,7 @@ inline long valueOfIdol(const hero* currentHero, long moveCost)
             + aiValueOfLuck(
                 currentHero->getLuck(0, 0, 1), 1));
     }
-    if (currentHero->m_flags & 1) {
+    if (g_game->m_day & 1) {
         return static_cast<long>(aiValueOfLuck(
             currentHero->getLuck(0, 0, 1), 1));
     }
