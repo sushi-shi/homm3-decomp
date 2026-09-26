@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 import sys
 
-SCHEMA = 2
+SCHEMA = 3
 
 
 def digest(path):
@@ -39,17 +39,43 @@ def _vendor_asm_overlays(root: Path):
     return [(str(header), adjusted)]
 
 
+def _min_overlays(root: Path):
+    """Resolve VC6's 32-bit long min calls in Clang's analysis view."""
+    header = root / 'include/includes.h'
+    if not header.is_file():
+        return []
+    original = header.read_text()
+    closing = '\n#endif\n'
+    if not original.endswith(closing) or 'inline int min(int left, int right)' not in original:
+        return []
+    aliases = '''
+// Analysis aliases for 32-bit long calls; the checked-in header is unchanged.
+inline int min(long left, long right) __attribute__((annotate("homm3_analysis_min_alias")))
+{
+    return min(static_cast<int>(left), static_cast<int>(right));
+}
+inline int min(long left, int right) __attribute__((annotate("homm3_analysis_min_alias")))
+{
+    return min(static_cast<int>(left), right);
+}
+inline int min(int left, long right) __attribute__((annotate("homm3_analysis_min_alias")))
+{
+    return min(left, static_cast<int>(right));
+}
+'''
+    return [(str(header), original[:-len(closing)] + aliases + closing)]
+
+
 def scan(ci, source: Path, args: list[str], root: Path) -> dict:
     """Keep exact declaration USRs, including overload and const distinctions."""
     k = ci.CursorKind
     functions = {k.FUNCTION_DECL, k.CXX_METHOD, k.CONSTRUCTOR, k.DESTRUCTOR,
                  k.CONVERSION_FUNCTION, k.FUNCTION_TEMPLATE}
-    # The vendor Win32 header leaves these operands implicit for MSVC. Clang
-    # rejects that asm during AST parsing even though the functions are outside
-    # the authored game. The unsaved overlay preserves every declaration and
-    # keeps the checked-in header and its cache fingerprint untouched.
+    # Adapt compiler-specific syntax in an unsaved Clang view. Checked-in
+    # headers and their cache fingerprints remain the actual compiler inputs.
     tu = ci.Index.create().parse(str(source), args=args,
-                                 unsaved_files=_vendor_asm_overlays(root))
+                                 unsaved_files=[*_vendor_asm_overlays(root),
+                                                *_min_overlays(root)])
     nodes, edges, gaps = {}, [], []
     texts = {}
 
@@ -87,6 +113,8 @@ def scan(ci, source: Path, args: list[str], root: Path) -> dict:
             'mangled': cursor.mangled_name, 'location': loc, 'definition': False,
             'mac': [], 'windows': [], 'project': project(cursor),
             'declaration_prefixes': []})
+        if 'homm3_analysis_min_alias' in annotations:
+            item['analysis_alias'] = True
         # Clang drops annotate attributes on some redeclarations after a
         # definition. Keep the source span before the declarator so reviewed
         # VA/MAC_ADDRESS claims can still join to this exact overload.
@@ -158,9 +186,35 @@ def scan(ci, source: Path, args: list[str], root: Path) -> dict:
             visit(child)
 
     visit(tu.cursor)
+    # The extra Clang overloads model VC6's accepted 32-bit long calls. Join
+    # each alias to the real int wrapper it calls, and expose that normalization
+    # on authored call edges. The aliases are not recovered source functions.
+    alias_ids = {identity for identity, item in nodes.items()
+                 if item.get('analysis_alias')}
+    redirects = {}
+    for alias in alias_ids:
+        targets = {edge['callee'] for edge in edges
+                   if edge['caller'] == alias and edge['dispatch'] == 'direct'}
+        if len(targets) == 1:
+            target = targets.pop()
+            if (target in nodes and nodes[target]['name'] == 'min'
+                    and nodes[target]['type'].startswith('int (int, int)')
+                    and target not in alias_ids):
+                redirects[alias] = target
+    if redirects:
+        edges = [{**edge, 'callee': redirects[edge['callee']],
+                  'analysis_compat': 'clang_long_min_as_int'}
+                 if edge['callee'] in redirects else edge
+                 for edge in edges if edge['caller'] not in redirects]
+        gaps = [gap for gap in gaps if gap['caller'] not in redirects]
+        for alias in redirects:
+            del nodes[alias]
     files = {str(source.resolve()), *(str(Path(x.include.name).resolve()) for x in tu.get_includes())}
+    diagnostics = [str(d) for d in tu.diagnostics if d.severity >= ci.Diagnostic.Error]
+    if alias_ids - redirects.keys():
+        diagnostics.append('Clang min analysis alias did not resolve to min(int, int)')
     return {'nodes': list(nodes.values()), 'edges': edges, 'gaps': gaps,
-            'diagnostics': [str(d) for d in tu.diagnostics if d.severity >= ci.Diagnostic.Error],
+            'diagnostics': diagnostics,
             'inputs': {path: digest(path) for path in sorted(files)}}
 
 

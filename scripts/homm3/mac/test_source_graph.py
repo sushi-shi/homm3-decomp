@@ -145,6 +145,38 @@ class SourceGraphTests(unittest.TestCase):
             self.assertEqual(header.read_text(), vendor_text)
             self.assertEqual(result['inputs'][str(header)], source_graph.digest(header))
 
+    def test_min_overlay_records_real_wrapper_without_changing_header(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            header = root / 'include/includes.h'
+            header.parent.mkdir()
+            original = '''#ifndef TEST_INCLUDES_H
+#define TEST_INCLUDES_H
+inline int min(int left, int right) { return left < right ? left : right; }
+inline double min(double left, double right) { return left < right ? left : right; }
+#endif
+'''
+            header.write_text(original)
+            source = root / 'src/test.cpp'
+            source.parent.mkdir()
+            source.write_text('''
+                #include "includes.h"
+                int f(long a, long b) { return min(a, b); }
+                int g(long a, int b) { return min(a, b); }
+                int h(int a, long b) { return min(a, b); }
+''')
+            result = source_graph.scan(self.ci, source,
+                                       ['-xc++', '-std=c++98', '-I' + str(header.parent)], root)
+            self.assertEqual(result['diagnostics'], [])
+            self.assertEqual(header.read_text(), original)
+            calls = [edge for edge in result['edges'] if edge['caller'] in
+                     {node['id'] for node in result['nodes'] if node['name'] in ('f', 'g', 'h')}]
+            self.assertEqual(len(calls), 3)
+            self.assertEqual(len({edge['callee'] for edge in calls}), 1)
+            self.assertEqual({edge.get('analysis_compat') for edge in calls},
+                             {'clang_long_min_as_int'})
+            self.assertFalse(any(node.get('analysis_alias') for node in result['nodes']))
+
 
 if __name__ == '__main__':
     unittest.main()
