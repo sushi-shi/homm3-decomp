@@ -235,7 +235,7 @@ public:
         m_data = 0;
         m_dataSize = 0;
     }
-    VA(0x00497790, 0x21)  // annotation-only anchor for the active header-inline COMDAT
+    VA(0x00497790, 0x21) MAC_ADDRESS(0x046ef8, 0x5c)  // annotation-only anchor for the active header-inline COMDAT
     ~CDPlayMsg()
     {
         destroy();
