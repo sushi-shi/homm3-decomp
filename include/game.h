@@ -1219,6 +1219,7 @@ public:
     int getLastHuman() const;
     int getLocalPlayerGamePos() const;  // 0x4cea20
     SpellID getRandomSpell(std::bitset<5> spellLevels);  // 0x4c95a0
+    SpellID getRandomSpell(int level);
     boat* getHeroBoat(int id, unsigned char occupied);  // 0x4ce900
     int getHeroId(type_point heroLocation);
     int getMineId(int x, int y, int z);

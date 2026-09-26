@@ -306,9 +306,9 @@ const int g_blackBoxRandomMinor = 3;
 const int g_blackBoxRandomMajor = 4;
 const int g_blackBoxRandomRelic = 5;
 const int g_pyramidSpellLevel = 5;
-const int g_shrineLevelOne = 0;
-const int g_shrineLevelTwo = 1;
-const int g_shrineLevelThree = 2;
+const int g_shrineLevelOne = 1;
+const int g_shrineLevelTwo = 2;
+const int g_shrineLevelThree = 3;
 const unsigned char g_whirlpoolTriggerXOffset = 2;
 const unsigned char g_whirlpoolTriggerYOffset = 0x10;
 
@@ -4114,16 +4114,8 @@ static void randomizeSeaChest(NewmapCell* cell)
     }
 }
 
-// E:\gamedcs\game.cpp:4639. Retail inlines all three constant-level calls
-// into RandomizeEvents, but keeps the Dinkumware bitset operations out of
-// line. The subscript/reference spelling is visible in the retail call pair:
-// bitset::operator[] followed by _Bit_reference::operator=.
-// Complete takes a bitset instead of DC's integer level. Default construction
-// corresponds to retail's _Tidy(0) call. Unpinned constructor controls measured
-// 87.25% (default) / 87.71% (explicit zero) for RandomizeEvents, versus 88.86%
-// pinned; the default also emits the exact retained resource SetWagon body.
-// An integer compatibility-overload probe reached only 84.12% and did not
-// establish that Complete retained DC's old interface; it is not adopted.
+// Mac 0:d66f8 calls the retained level overload at 0:e07f4. Its three
+// randomizeEvents callers pass levels 1, 2 and 3 at d7f60/d7f70/d7f80.
 MAC_ADDRESS(0x0d66c8, 0x64)
 static void randomizeShrine(NewmapCell* cell, const int level)
 {
@@ -4131,9 +4123,7 @@ static void randomizeShrine(NewmapCell* cell, const int level)
         static_cast<void*>(&cell->m_extraInfo));
     SpellID spell = info->getShrineSpell();
     if (spell == -1) {
-        std::bitset<5> spellLevels;
-        spellLevels[level] = true;
-        spell = g_game->getRandomSpell(spellLevels);
+        spell = g_game->getRandomSpell(level);
         info->m_shrineInfo.m_spell = spell;
     }
     info->clearVisitedBits();
@@ -8020,6 +8010,15 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
     if (ordinal > 0)
         return getRandomSpell(spellLevels);
     return -1;
+}
+
+// Mac 0:e07f4 constructs the level mask, sets level-1, and calls the
+// bitset overload at 0:e0610. It follows that overload in the same TU.
+SpellID game::getRandomSpell(int level)
+{
+    std::bitset<5> spellLevels;
+    spellLevels[level - 1] = true;
+    return getRandomSpell(spellLevels);
 }
 
 // Original: game::RandomizeHeroPool; game.cpp:8896, dc 0xb4fa0

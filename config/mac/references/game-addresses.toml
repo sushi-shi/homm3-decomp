@@ -1566,7 +1566,7 @@ mac_section = 0
 mac_offset = 0xd66c8
 mac_size = 0x64
 target_sha256 = "76d01fb3038f96e0400d75b2f5622dae3f52c2f3d07a852893cfb9f8fca2e4e7"
-evidence = "Packed spell==-1 gate, level-taking spell wrapper0xe07f4 and visited-bit clear; shared source now expresses level mask directly. Reviewed extent code0+0xd66c8..0xd672c; terminal return and following entry separate the span."
+evidence = "Packed spell==-1 gate, level-taking spell wrapper0xe07f4 and visited-bit clear; source calls the canonical integer overload. Reviewed extent code0+0xd66c8..0xd672c; terminal return and following entry separate the span."
 
 [[helpers]]
 source_helper = "randomizeWagon"
@@ -1621,3 +1621,12 @@ unit = "game"
 target_sha256 = "269601f9858b26757c59cabee5899524eeb2b1694198f6b174383f87973e38ec"
 source_helper = "randomizeRefugeeCamp"
 evidence = "Retained 0:0xd65d0 body between randomizeArtifact and randomizeSeaChest calls getRandomMonster(0,6), stores objectIndex+0x1e and growthRate+0; direct calls from randomizeEvents 0:0xd7dfc and perWeek 0:0xdf9a4. Distinct prologue and terminal BLR."
+
+[[helpers]]
+source_helper = "game::getRandomSpell(int level)"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe07f4
+mac_size = 0x68
+target_sha256 = "3296b82223c7233a1e86dd4e4326aef5ffd06f04976d724500030527fd0debc0"
+evidence = "Immediately follows bitset overload0xe0610. Constructs bitset5 at stack+0x48, sets level-1 at0xe081c/0xe0834 and calls bitset overload at0xe0840; final BLR0xe0858. Sole direct caller randomizeShrine0xd66f8; its three callers pass levels1/2/3. Source restores this canonical integer overload instead of pasting its bitset body into randomizeShrine."
