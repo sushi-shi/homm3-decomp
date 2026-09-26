@@ -395,3 +395,12 @@ mac_offset = 0x117eb0
 mac_size = 0x8
 target_sha256 = "fa4a67deb21f59b05042ed96cda554b9809ed482360ef42f01b497b16592de96"
 evidence = "Loads shared current-dialog global through TOC and returns it; eventWindowHandler112404 calls eight times (four per choice branch) then uses result for widget selection/visibility. Same global is assigned/restored by doNormalDialog1181e0. Complete own body ends in reviewed BLR before independent next entry."
+
+[[helpers]]
+source_helper = "type_normal_dialog_frame::type_normal_dialog_frame"
+unit = "kb"
+mac_section = 0
+mac_offset = 0x111ebc
+mac_size = 0x6c
+target_sha256 = "cf93e06e6e06e7a86cb342dbc3cbf793eb3285ab39cad6e3c06da7389f63f8e3"
+evidence = "doNormalDialog calls this constructor. It calls coloredBorderFrame with system palette color at byte 0x76 in the Mac palette and style 0x400, installs its vtable, stores resource/qualifier at +0x38/+0x3c; matches the existing ordinary constructor and allocation call. Final BLR at 0x111f24."

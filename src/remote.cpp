@@ -120,11 +120,12 @@ CDPlayHeroes::CDPlayHeroes()
 // destructor is the decisive inline-budget input: with that complete base
 // contract, the original named helper call expands to the exact 0x205-byte
 // retail body (both deque walks included).
+// Mac 0x210868 retains destroyMsg for each packet drained from the queue.
 void CDPlayHeroes::destroyMsgQueue()
 {
     while (!m_msgQueue.empty()) {
         CNetMsg* netMsg = m_msgQueue.front();
-        delete netMsg;
+        destroyMsg(netMsg);
         m_msgQueue.pop_front();
     }
 }

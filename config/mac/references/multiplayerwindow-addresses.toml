@@ -260,3 +260,12 @@ mac_offset = 0x21c4a8
 mac_size = 0x1d4
 target_sha256 = "bdaff260a03ac425effd2802dcbdb738a9e997894f9987994b4f1f7104275af1"
 evidence = "Mac onTCP sets network protocol 2 and host/join state, shows relevant widgets, calls getIPAddress 0x21c3e8, adds IP_ADDRESS_ID 126 text widget, formats address text and calls update 0x21ace4. Called from onWidgetDeselect TCP_ID. BLR 0x21c678, next prologue 0x21c67c; network initialization differs."
+
+[[helpers]]
+source_helper = "TMultiPlayerWindow::onModem"
+unit = "multiplayerwindow"
+mac_section = 0
+mac_offset = 0x21c67c
+mac_size = 0x94
+target_sha256 = "ec44dd9f924cc5defa6faffc33f9ce69beabc5d42ec76725dea41490100cea0d"
+evidence = "onWidgetDeselect retains this helper: sets Mac modem protocol value 1, host/join flag, shows splash/host/join via setStatus(5,6), enables join and invokes update(0x21ace4). Shared source already calls onModem and its widget helpers; protocol numeric values differ by platform. Final BLR at 0x21c70c."

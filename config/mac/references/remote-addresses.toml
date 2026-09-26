@@ -878,3 +878,111 @@ mac_offset = 0x210e28
 mac_size = 0xbc
 target_sha256 = "b4547cb1078cc296298b472a06b3ea6268c21b5b86727d66b308bc9e9a6cf604"
 evidence = "Called by getRemoteData at 0x210c6c: allocate uncompressed size plus 20-byte header, copy header, uncompress payload, destroyMsg on failure and publish expanded packet size. Ordinary source helper already present. Final BLR at 0x210ee0; transmitRemoteDataDPID follows."
+
+[[functions]]
+retail_va = 0x00557350
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214f34
+mac_size = 0x54
+target_sha256 = "1ae2b6233d4c00990f5a79cd14d99428985cfd933becd1e0fb30dde29240ed47"
+evidence = "CSaveScreen::save stores x/y and sets the saved flag, then grabs the window-manager screen bitmap at those coordinates. Bitmap accessors are expanded; the source preserves the grab overload. Final BLR at 0x214f84; next body begins at 0x214f88."
+
+[[functions]]
+retail_va = 0x00557390
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214f88
+mac_size = 0xb8
+target_sha256 = "334db86a8dde0989ebe225044a1e90d73f9f64dccafc13ed550eee180c813aa4"
+evidence = "CSaveScreen::restore checks saved state, draws its full dimensions into the screen at saved x/y, then conditionally calls updateScreen when update is true. Source already preserves Bitmap16Bit draw and dimension helpers. Final BLR at 0x21503c; next body begins at 0x215040."
+
+[[functions]]
+retail_va = 0x00557410
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215048
+mac_size = 0x2c
+target_sha256 = "111caf1b18e6674ae56ae32cef9d19abe456a285b637278527f1d8c7d1f36640"
+evidence = "CGameTransferSmack constructor clears x/y, started, saved-screen pointer and sending; sets lastFrame=-1 and drawText=1. Called by CGameTransferDlg constructor at 0x2153ec. Final BLR at 0x215070; next body begins at 0x215074."
+
+[[functions]]
+retail_va = 0x00557430
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215074
+mac_size = 0x84
+target_sha256 = "8368e0c6f7c0445e97d7eae0e8d3d3f979eaeb27427733337385b5aa864b5df1"
+evidence = "CGameTransferSmack destructor checks started before calling stop at 0x2152dc, deletes its optional CSaveScreen through the virtual destructor and handles the Mac deleting flag. Ordinary source owns stop and delete operations. Final BLR at 0x2150f4; next body begins at 0x2150f8."
+
+[[functions]]
+retail_va = 0x00557460
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2150f8
+mac_size = 0x14
+target_sha256 = "46afa8a9c2d90cfdc780ddd80f64bbd7a409bcf957346effe8d2dbca28549e7e"
+evidence = "CGameTransferSmack::setup stores x/y dwords at +0/+4 and sending/drawText bytes at +0xd/+0xe. Final BLR at 0x215108; next body begins at 0x21510c."
+
+[[functions]]
+retail_va = 0x00557480
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21510c
+mac_size = 0x4c
+target_sha256 = "d359031874d076d4b2d5c9d0a5ba8443cd3e859588a5101b80e318149aae921f"
+evidence = "CGameTransferSmack::start sets started and calls showVideo(63,x,y,160,160,0,0,0). Final BLR at 0x215154; next body begins at 0x215158."
+
+[[functions]]
+retail_va = 0x005574b0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215158
+mac_size = 0x160
+target_sha256 = "7d81209c29edcb8ae0479eade0e21b3d516164fcd46b243b0a562a7e8cb02383"
+evidence = "CGameTransferSmack::setPercentage scales progress to a frame index, calls gotoSmackerFrame and retained drawCurrentFrame at 0x2152b8, formats sending/receiving text and percentage, conditionally draws it and updates the 160x160 screen region. Mac also queries an imported operation at 0x215184 before its frame calculation; that platform query is not yet identified. Final BLR at 0x2152b4; next body begins at 0x2152b8."
+
+[[functions]]
+retail_va = 0x005575e0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2152dc
+mac_size = 0x40
+target_sha256 = "d2fd0524f3bd45a2922ca732318ce4d410a7b8b1a134a96cd181ff1723eaeb70"
+evidence = "CGameTransferSmack::stop tests started, calls closeSmacker at 0x25fc78 and clears started. Final BLR at 0x215318; next body begins at 0x21531c."
+
+[[functions]]
+retail_va = 0x00557600
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21531c
+mac_size = 0x70
+target_sha256 = "0abbf8d20f91d5ef2656e72d4f46165c5b9305e2284cf901ae62b85819c43ae6"
+evidence = "CGameTransferSmack::saveScreen lazily allocates a 160x160 CSaveScreen and invokes save(x,y) at 0x214f34. Final BLR at 0x215388; next body begins at 0x21538c."
+
+[[functions]]
+retail_va = 0x005576b0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21538c
+mac_size = 0x30
+target_sha256 = "5dad6f2ed9c21433598400c3262f2613b9a24566650a367e362244f98c072802"
+evidence = "CGameTransferSmack::restoreScreen conditionally invokes its saved-screen restore(1) at 0x214f88. Final BLR at 0x2153b8; next body begins at 0x2153bc."
+
+[[functions]]
+retail_va = 0x00557720
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2153bc
+mac_size = 0x54
+target_sha256 = "291fcaeaee4925b7e97a0cb074df6ca2742d10e1f39e09417d96d0d99cda9d67"
+evidence = "CGameTransferDlg constructor calls CTextDialog(0x12), constructs its CGameTransferSmack at +0x54 and stores the sending flag at +0x68. Final BLR at 0x21540c; next body begins at 0x215410."
+
+[[helpers]]
+source_helper = "CDPlayHeroes::destroyMsgQueue"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x210814
+mac_size = 0x80
+target_sha256 = "ca0b4f02e9f2f7241890c15f6ee4ecb2d4045828e483644711f09f5877b0f3ff"
+evidence = "CDPlayHeroes destructor at 0x210794 calls this queue drain. It loops until count at +0x20 is zero, reads deque front, calls destroyMsg at 0x210868 then pops front through 0x210894. The source now preserves the packet cleanup helper. Final BLR at 0x210890."
