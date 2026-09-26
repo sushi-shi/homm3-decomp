@@ -1713,6 +1713,10 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 // calls in order. Naming the earlier call's condition drops Windows to 97.87%,
 // and moving the final declaration before the guard drops it to 97.38%; both
 // forms were rejected. Register/stack layout still differs after the tail.
+// An explicit byte flag (initial zero, then guarded one) at the final call
+// raises current Windows 97.3927 -> 97.6398 and Mac 47.4633 -> 47.4967.
+// VC6 still merges the blocking-action call with that tail; all three
+// authored moveToward calls remain, and retail retains three copies.
 // Moving enemyAttacks below the scalar declarations is byte-flat on Mac.
 // A branch-model unsigned-char ourGroup proposal contradicts the Dreamcast
 // CodeView long local, so retain the proven type pending new source evidence.
@@ -1926,8 +1930,9 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     }
     if (bestHex == currentArmy->m_gridIndex)
         return 0;
-    bool shouldMoveToward =
-        !estimate->m_simulated && bestTime > 1;
+    unsigned char shouldMoveToward = 0;
+    if (!estimate->m_simulated && bestTime > 1)
+        shouldMoveToward = 1;
     moveToward(currentArmy, bestHex, enemyAttacks,
                shouldMoveToward);
     return 1;
