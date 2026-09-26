@@ -445,11 +445,11 @@ static void createAIPuzzleMap(long player, unsigned char* visible,
 }
 
 // E:\gamedcs\puzzlewindow.cpp:614, dc 0x115838
+// Mac 0x148b4c..0x148b8c initializes the result at this first-use boundary;
+// direct construction keeps its canonical point constructor and avoids a copy.
 VA(0x0052c9b0, 0x55B) MAC_ADDRESS(0x1489fc, 0x428)  // anchor-caller, dc 0x115f64
 type_point aiAttemptPuzzleGuess(long player)
 {
-    type_point result;
-
     int found = g_game->setupPuzzlePieces(player, 1);
     double uncovered =
         found / static_cast<double>(TPuzzleWindow::PUZZLE_PIECE_COUNT);
@@ -465,7 +465,7 @@ type_point aiAttemptPuzzleGuess(long player)
             if (guess.m_x < 0)
                 return guess;
 
-            result = type_point(-1, -1, -1);
+            type_point result(-1, -1, -1);
 
             int best = 0x7fff;
             type_point current;
