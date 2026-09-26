@@ -306,9 +306,9 @@ const int g_blackBoxRandomMinor = 3;
 const int g_blackBoxRandomMajor = 4;
 const int g_blackBoxRandomRelic = 5;
 const int g_pyramidSpellLevel = 5;
-const int g_shrineLevelOne = 0;
-const int g_shrineLevelTwo = 1;
-const int g_shrineLevelThree = 2;
+const int g_shrineLevelOne = 1;
+const int g_shrineLevelTwo = 2;
+const int g_shrineLevelThree = 3;
 const unsigned char g_whirlpoolTriggerXOffset = 2;
 const unsigned char g_whirlpoolTriggerYOffset = 0x10;
 
@@ -387,13 +387,9 @@ bool generator::load(TAbstractFile* infile)
     if (infile->read(&m_genType, sizeof(m_genType)) != sizeof(m_genType))
         return 0;
 
-    int loaded;
     for (int slot = 0; slot < 4; slot++) {
-        infile->read(&loaded, 1);
-        int creature = loaded & 0xff;
-        {
-            m_type[slot] = TCreatureType(creature);
-        }
+        int creature = readValue<unsigned char>(infile);
+        m_type[slot] = TCreatureType(creature);
         if (creature == g_savedCreatureNone)
             m_type[slot] = CREATURE_NONE;
     }
@@ -422,8 +418,7 @@ bool generator::save(TAbstractFile* outfile)
     outfile->write(&m_genType, sizeof(m_genType));
 
     for (int slot = 0; slot < 4; slot++) {
-        char creatureType = m_type[slot];
-        outfile->write(&creatureType, sizeof(creatureType));
+        writeValue<char>(outfile, m_type[slot]);
     }
 
     outfile->write(m_population, sizeof(m_population));
@@ -618,13 +613,12 @@ void game::calculateProduction()
                 production[i] += siloIncome[i];
         }
 
-        // `currentTown` is `town&`; the static_cast selects retail's
-        // const get_army overload, and the Dreamcast-public QB query then
-        // consumes its const armyGroup directly.
+        // Mac calculateProduction calls the mutable getArmy at 0xcac1c.
+        // Windows folds both overload bodies at 0x5c1460.
         {
             int storage;
             storage = g_productionCreatureCrystalDragon;
-            if (static_cast<const town&>(currentTown).getArmy()
+            if (currentTown.getArmy()
                     .getCreatureTotal(TCreatureType(storage)) > 0)
                 crystalDragonIncome[currentTown.m_owner] = 1;
         }
@@ -719,7 +713,7 @@ VA(0x004b9070, 0x1B3) MAC_ADDRESS(0x0cb1f0, 0x118)  // dc 0xa3c68
 int game::loadSignPool(TAbstractFile* infile)
 {
     signed char count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return -1;
 
     m_signs.resize(count);
@@ -727,7 +721,7 @@ int game::loadSignPool(TAbstractFile* infile)
         if (loadString(infile, m_signs[i].m_signText) < 0)
             return -1;
 
-        if (infile->read(&count, sizeof(count)) < sizeof(count))
+        if (readValue(infile, count) < sizeof(count))
             return -1;
         m_signs[i].m_hasText = count != 0;
     }
@@ -742,10 +736,9 @@ int game::saveSignPool(TAbstractFile* outfile)
     // Complete uses the abstract-file write in place of DC's gzwrite.
     int count;
     int x;
-    char charBuffer;
-    charBuffer = static_cast<char>(m_signs.size());
-    count = outfile->write(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+
+    count = writeValue<char>(outfile, m_signs.size());
+    if (count < sizeof(char))
         return -1;
 
     for (x = 0; x < m_signs.size(); ++x) {
@@ -753,9 +746,8 @@ int game::saveSignPool(TAbstractFile* outfile)
         if (count < 0)
             return -1;
 
-        charBuffer = m_signs[x].m_hasText;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_signs[x].m_hasText);
+        if (count < sizeof(char))
             return -1;
     }
     return 0;
@@ -772,20 +764,20 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
     unsigned char count;
     int x;
     char charBuffer;
-    if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+    if (readValue(infile, count) < sizeof(unsigned char))
         return -1;
     m_mines.resize(static_cast<unsigned char>(count));
 
     for (x = 0; x < m_mines.size(); ++x) {
-        if (infile->read(&charBuffer, sizeof(charBuffer))
+        if (readValue(infile, charBuffer)
             < sizeof(charBuffer))
             return -1;
         m_mines[x].m_playerOwner = charBuffer;
-        if (infile->read(&charBuffer, sizeof(charBuffer))
+        if (readValue(infile, charBuffer)
             < sizeof(charBuffer))
             return -1;
         m_mines[x].m_type = charBuffer;
-        if (infile->read(&charBuffer, sizeof(charBuffer))
+        if (readValue(infile, charBuffer)
             < sizeof(charBuffer))
             return -1;
         m_mines[x].m_isAbandoned = charBuffer != 0;
@@ -801,13 +793,13 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
                 guards->add(typeValue, amountValue, -1);
         }
 
-        if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        if (readValue(infile, count) < sizeof(unsigned char))
             return -1;
         m_mines[x].m_mapX = static_cast<unsigned char>(count);
-        if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        if (readValue(infile, count) < sizeof(unsigned char))
             return -1;
         m_mines[x].m_mapY = static_cast<unsigned char>(count);
-        if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        if (readValue(infile, count) < sizeof(unsigned char))
             return -1;
         m_mines[x].m_mapZ = static_cast<unsigned char>(count);
     }
@@ -817,31 +809,31 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
 VA(0x004b9580, 0x165) MAC_ADDRESS(0x0cb6a8, 0x214)  // dc 0xa410c
 int game::saveMinePool(TAbstractFile* outfile)
 {
-    unsigned char count = static_cast<unsigned char>(m_mines.size());
-    if (outfile->write(&count, sizeof(count)) < sizeof(count))
+    if (writeValue<unsigned char>(outfile, m_mines.size())
+        < sizeof(unsigned char))
         return -1;
 
     for (unsigned int i = 0; i < m_mines.size(); ++i) {
-        unsigned char value = m_mines[i].m_playerOwner;
-        if (outfile->write(&value, sizeof(value)) < sizeof(value))
+        if (writeValue<unsigned char>(outfile, m_mines[i].m_playerOwner)
+            < sizeof(unsigned char))
             return -1;
-        value = m_mines[i].m_type;
-        if (outfile->write(&value, sizeof(value)) < sizeof(value))
+        if (writeValue<unsigned char>(outfile, m_mines[i].m_type)
+            < sizeof(unsigned char))
             return -1;
-        value = m_mines[i].m_isAbandoned;
-        if (outfile->write(&value, sizeof(value)) < sizeof(value))
+        if (writeValue<unsigned char>(outfile, m_mines[i].m_isAbandoned)
+            < sizeof(unsigned char))
             return -1;
 
         m_mines[i].m_guards.save(outfile);
 
-        count = m_mines[i].m_mapX;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        if (writeValue<unsigned char>(outfile, m_mines[i].m_mapX)
+            < sizeof(unsigned char))
             return -1;
-        count = m_mines[i].m_mapY;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        if (writeValue<unsigned char>(outfile, m_mines[i].m_mapY)
+            < sizeof(unsigned char))
             return -1;
-        count = m_mines[i].m_mapZ;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        if (writeValue<unsigned char>(outfile, m_mines[i].m_mapZ)
+            < sizeof(unsigned char))
             return -1;
     }
     return 0;
@@ -850,35 +842,34 @@ int game::saveMinePool(TAbstractFile* outfile)
 VA(0x004b96f0, 0x1CB) MAC_ADDRESS(0x0cb8bc, 0x1f8)  // dc 0xa438c
 int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
 {
-    int count;
-    if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+    unsigned char count;
+    if (readValue(infile, count) < sizeof(unsigned char))
         return -1;
 
-    m_garrisons.resize(count & 0xff);
+    m_garrisons.resize(count);
     for (unsigned int i = 0; i < m_garrisons.size(); ++i) {
         unsigned char owner;
-        if (infile->read(&owner, sizeof(owner)) < sizeof(owner))
+        if (readValue(infile, owner) < sizeof(owner))
             return -1;
         m_garrisons[i].m_playerOwner = owner;
 
         m_garrisons[i].m_garrisonArmy.load(infile);
 
-        if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        if (readValue(infile, count) < sizeof(unsigned char))
             return -1;
         m_garrisons[i].m_mapX = static_cast<unsigned char>(count);
-        if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        if (readValue(infile, count) < sizeof(unsigned char))
             return -1;
         m_garrisons[i].m_mapY = static_cast<unsigned char>(count);
-        if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        if (readValue(infile, count) < sizeof(unsigned char))
             return -1;
         m_garrisons[i].m_mapZ = static_cast<unsigned char>(count);
 
         if (saveVersion < 28) {
             m_garrisons[i].m_removableTroops = !g_inCampaign;
         } else {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            m_garrisons[i].m_removableTroops = value != 0;
+            m_garrisons[i].m_removableTroops =
+                readValue<unsigned char>(infile) != 0;
         }
     }
     return 0;
@@ -887,29 +878,28 @@ int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
 VA(0x004b98c0, 0x139) MAC_ADDRESS(0x0cbab4, 0x1c8)  // dc 0xa4548
 int game::saveGarrisonPool(TAbstractFile* outfile)
 {
-    unsigned char count = static_cast<unsigned char>(m_garrisons.size());
-    if (outfile->write(&count, sizeof(count)) < sizeof(count))
+    if (writeValue<unsigned char>(outfile, m_garrisons.size())
+        < sizeof(unsigned char))
         return -1;
 
     for (unsigned int i = 0; i < m_garrisons.size(); ++i) {
-        unsigned char owner = m_garrisons[i].m_playerOwner;
-        if (outfile->write(&owner, sizeof(owner)) < sizeof(owner))
+        if (writeValue<unsigned char>(outfile, m_garrisons[i].m_playerOwner)
+            < sizeof(unsigned char))
             return -1;
 
         m_garrisons[i].m_garrisonArmy.save(outfile);
 
-        count = m_garrisons[i].m_mapX;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        if (writeValue<unsigned char>(outfile, m_garrisons[i].m_mapX)
+            < sizeof(unsigned char))
             return -1;
-        count = m_garrisons[i].m_mapY;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        if (writeValue<unsigned char>(outfile, m_garrisons[i].m_mapY)
+            < sizeof(unsigned char))
             return -1;
-        count = m_garrisons[i].m_mapZ;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        if (writeValue<unsigned char>(outfile, m_garrisons[i].m_mapZ)
+            < sizeof(unsigned char))
             return -1;
 
-        unsigned char last = m_garrisons[i].m_removableTroops;
-        outfile->write(&last, sizeof(last));
+        writeValue<unsigned char>(outfile, m_garrisons[i].m_removableTroops);
     }
     return 0;
 }
@@ -923,41 +913,41 @@ int game::loadBoatPool(TAbstractFile* infile)
     unsigned char ucharBuffer;
     char charBuffer;
 
-    count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    count = readValue(infile, ucharBuffer);
     if (count < sizeof(ucharBuffer))
         return -1;
 
     m_boats.resize(ucharBuffer);
     for (x = 0; x < m_boats.size(); ++x) {
-        count = infile->read(&charBuffer, sizeof(charBuffer));
+        count = readValue(infile, charBuffer);
         if (count < sizeof(charBuffer))
             return -1;
         m_boats[x].m_allocated = charBuffer != 0;
 
-        count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+        count = readValue(infile, ucharBuffer);
         if (count < sizeof(ucharBuffer))
             return -1;
         m_boats[x].m_id = ucharBuffer;
 
-        count = infile->read(&charBuffer, sizeof(charBuffer));
+        count = readValue(infile, charBuffer);
         if (count < sizeof(charBuffer))
             return -1;
         m_boats[x].m_type = charBuffer;
-        count = infile->read(&charBuffer, sizeof(charBuffer));
+        count = readValue(infile, charBuffer);
         if (count < sizeof(charBuffer))
             return -1;
         m_boats[x].m_facing = charBuffer;
-        count = infile->read(&charBuffer, sizeof(charBuffer));
+        count = readValue(infile, charBuffer);
         if (count < sizeof(charBuffer))
             return -1;
         m_boats[x].m_playerOwner = charBuffer;
 
-        count = infile->read(&ushortBuffer, sizeof(ushortBuffer));
+        count = readValue(infile, ushortBuffer);
         if (count < sizeof(ushortBuffer))
             return -1;
         m_boats[x].m_occupyingHero = ushortBuffer;
 
-        count = infile->read(&charBuffer, sizeof(charBuffer));
+        count = readValue(infile, charBuffer);
         if (count < sizeof(charBuffer))
             return -1;
         m_boats[x].m_occupied = charBuffer != 0;
@@ -970,47 +960,36 @@ int game::loadBoatPool(TAbstractFile* infile)
 VA(0x004b9c40, 0x1AD) MAC_ADDRESS(0x0cbf08, 0x260)  // dc 0xa4980
 int game::saveBoatPool(TAbstractFile* outfile)
 {
-    unsigned short ushortBuffer;
     int count;
     int x;
-    unsigned char ucharBuffer;
-    char charBuffer;
 
-    ucharBuffer = static_cast<unsigned char>(m_boats.size());
-    count = outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    if (count < sizeof(ucharBuffer))
+    count = writeValue<unsigned char>(outfile, m_boats.size());
+    if (count < sizeof(unsigned char))
         return -1;
 
     for (x = 0; x < m_boats.size(); ++x) {
-        charBuffer = m_boats[x].m_allocated;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_boats[x].m_allocated);
+        if (count < sizeof(char))
             return -1;
-        ucharBuffer = m_boats[x].m_id;
-        count = outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-        if (count < sizeof(ucharBuffer))
+        count = writeValue<unsigned char>(outfile, m_boats[x].m_id);
+        if (count < sizeof(unsigned char))
             return -1;
-        charBuffer = m_boats[x].m_type;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_boats[x].m_type);
+        if (count < sizeof(char))
             return -1;
-        charBuffer = m_boats[x].m_facing;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_boats[x].m_facing);
+        if (count < sizeof(char))
             return -1;
-        charBuffer = m_boats[x].m_playerOwner;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_boats[x].m_playerOwner);
+        if (count < sizeof(char))
             return -1;
 
-        ushortBuffer = static_cast<unsigned short>(m_boats[x].m_occupyingHero);
-        count = outfile->write(&ushortBuffer, sizeof(ushortBuffer));
-        if (count < sizeof(ushortBuffer))
+        count = writeValue<unsigned short>(outfile, m_boats[x].m_occupyingHero);
+        if (count < sizeof(unsigned short))
             return -1;
 
-        charBuffer = m_boats[x].m_occupied;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_boats[x].m_occupied);
+        if (count < sizeof(char))
             return -1;
         if (!m_boats[x].save(outfile))
             return -1;
@@ -1044,9 +1023,8 @@ int game::loadObeliskPool(TAbstractFile* infile)
 MAC_ADDRESS(0x0cc204, 0x9c)
 int game::saveObeliskPool(TAbstractFile* outfile)
 {
-    char charBuffer = m_numObelisks;
-    int count = outfile->write(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    int count = writeValue<char>(outfile, m_numObelisks);
+    if (count < sizeof(char))
         return -1;
     count = outfile->write(m_obeliskFlags, sizeof(m_obeliskFlags));
     if (count < sizeof(m_obeliskFlags))
@@ -1123,8 +1101,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
         return 0;
 
     ourHero = g_game->getHero(ourTown->m_visitingHeroId);
-    if (!ourHero->m_army.merge(const_cast<armyGroup*>(
-            &static_cast<const town*>(ourTown)->getArmy())))
+    if (!ourHero->m_army.merge(&ourTown->getArmy()))
         return 0;
 
     g_game->recordHideHero(ourHero, ourHero->m_owner, 0);
@@ -1190,9 +1167,7 @@ void playerData::clearNetInfo()
 VA(0x004ba1c0, 0x50) MAC_ADDRESS(0x0cc788, 0x78)
 int __fastcall readHeroId(TAbstractFile* infile, int mapVersion)
 {
-    unsigned long value;
-    infile->read(&value, sizeof(unsigned char));
-    int heroId = value & 0xff;
+    int heroId = readValue<unsigned char>(infile);
     if (heroId == g_savedHeroNone)
         return -1;
     if (mapVersion == g_mapVersionOldCampaignHeroIds) {
@@ -1207,9 +1182,7 @@ int __fastcall readHeroId(TAbstractFile* infile, int mapVersion)
 VA(0x004ba210, 0x50) MAC_ADDRESS(0x0cc800, 0x78)
 int __fastcall loadHeroId(TAbstractFile* infile, int saveVersion)
 {
-    unsigned long value;
-    infile->read(&value, sizeof(unsigned char));
-    int heroId = value & 0xff;
+    int heroId = readValue<unsigned char>(infile);
     if (heroId == g_savedHeroNone)
         return -1;
     if (saveVersion < g_saveVersionCompleteHeroRoster) {
@@ -1226,9 +1199,7 @@ int __fastcall loadHeroId(TAbstractFile* infile, int saveVersion)
 MAC_ADDRESS(0x0cc878, 0x74)
 static int loadHeroIdShort(TAbstractFile* infile, int saveVersion)
 {
-    short savedHeroId;
-    infile->read(&savedHeroId, sizeof(savedHeroId));
-    int heroId = savedHeroId;
+    int heroId = readValue<short>(infile);
     if (saveVersion < g_saveVersionCompleteHeroRoster) {
         if (heroId == g_savedHeroPre25First)
             heroId = g_heroPre25FirstRemap;
@@ -1242,10 +1213,10 @@ VA(0x004ba260, 0x401) MAC_ADDRESS(0x0cc8ec, 0x490)  // dc 0xa51b0
 int playerData::load(TAbstractFile* infile, int saveVersion)
 {
     char value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     m_color = value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     m_numHeroes = value;
 
@@ -1261,59 +1232,59 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
     }
 
     unsigned char flag;
-    if (infile->read(&flag, sizeof(flag)) < sizeof(flag))
+    if (readValue(infile, flag) < sizeof(flag))
         return -1;
     m_startingNumHeroes = flag;
 
     int number;
-    if (infile->read(&number, sizeof(number)) < sizeof(number))
+    if (readValue(infile, number) < sizeof(number))
         return -1;
     m_personality = number;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     m_extraPuzzlePieces = value;
 
     if (infile->read(&m_puzzleGuess, sizeof(m_puzzleGuess)) < sizeof(m_puzzleGuess))
         return -1;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     m_deathCountDown = value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     m_numTowns = value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     m_currTownId = value;
 
     for (i = 0; i < 0x48; i++) {
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
+        if (readValue(infile, value) < sizeof(value))
             return -1;
         m_townIds[i] = value;
     }
 
     for (i = 0; i < 7; i++) {
-        if (infile->read(&number, sizeof(number)) < sizeof(number))
+        if (readValue(infile, number) < sizeof(number))
             return -1;
         m_resources[i] = number;
     }
 
     unsigned long flags;
-    if (infile->read(&flags, sizeof(flags)) < sizeof(flags))
+    if (readValue(infile, flags) < sizeof(flags))
         return -1;
     m_mysticalGardenFlags = flags;
-    if (infile->read(&flags, sizeof(flags)) < sizeof(flags))
+    if (readValue(infile, flags) < sizeof(flags))
         return -1;
     m_magicSpringFlags = flags;
-    if (infile->read(&flags, sizeof(flags)) < sizeof(flags))
+    if (readValue(infile, flags) < sizeof(flags))
         return -1;
     m_deadGuyFlags = flags;
-    if (infile->read(&flags, sizeof(flags)) < sizeof(flags))
+    if (readValue(infile, flags) < sizeof(flags))
         return -1;
     m_leanToFlags = flags;
 
-    if (infile->read(&flag, sizeof(flag)) < sizeof(flag))
+    if (readValue(infile, flag) < sizeof(flag))
         return -1;
     m_placementHelpEnabled = flag != 0;
 
@@ -1322,7 +1293,7 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
         std::bitset<12> combos;
         infile->read(bits, sizeof(bits));
         for (unsigned int bit = 0; bit < 12; bit++)
-            combos.set(bit, (bits[bit >> 3] & (1 << (bit & 7))) != 0);
+            combos[bit] = (bits[bit >> 3] & (1 << (bit & 7))) != 0;
         m_assembledCombinations = combos;
     }
     return 0;
@@ -1336,128 +1307,88 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 VA(0x004ba670, 0x36A) MAC_ADDRESS(0x0ccd7c, 0x4fc)  // anchor-global, dc 0xa55a8
 int playerData::save(TAbstractFile* outfile)
 {
-    unsigned long flags;
-    int number;
     int count;
     int x;
-    unsigned char flag;
-    char value;
 
-    value = m_color;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, m_color);
+    if (count < sizeof(char))
         return -1;
-    value = m_numHeroes;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, m_numHeroes);
+    if (count < sizeof(char))
         return -1;
-    value = static_cast<char>(m_currHeroId);
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, static_cast<char>(m_currHeroId));
+    if (count < sizeof(char))
         return -1;
 
     for (x = 0; x < 8; x++) {
-        value = static_cast<char>(m_heroes[x]);
-        count = outfile->write(&value, sizeof(value));
-        if (count < sizeof(value))
+        count = writeValue<char>(outfile, static_cast<char>(m_heroes[x]));
+        if (count < sizeof(char))
             return -1;
     }
 
-    value = static_cast<char>(m_recruits[0]);
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, static_cast<char>(m_recruits[0]));
+    if (count < sizeof(char))
         return -1;
-    value = static_cast<char>(m_recruits[1]);
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, static_cast<char>(m_recruits[1]));
+    if (count < sizeof(char))
         return -1;
 
-    flag = m_startingNumHeroes;
-    count = outfile->write(&flag, sizeof(flag));
-    if (count < sizeof(flag))
+    count = writeValue<unsigned char>(outfile, m_startingNumHeroes);
+    if (count < sizeof(unsigned char))
         return -1;
 
-    number = m_personality;
-    count = outfile->write(&number, sizeof(number));
-    if (count < sizeof(number))
+    count = writeValue<int>(outfile, m_personality);
+    if (count < sizeof(int))
         return -1;
 
-    value = m_extraPuzzlePieces;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, m_extraPuzzlePieces);
+    if (count < sizeof(char))
         return -1;
 
     count = outfile->write(&m_puzzleGuess, sizeof(m_puzzleGuess));
     if (count < sizeof(m_puzzleGuess))
         return -1;
 
-    value = m_deathCountDown;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, m_deathCountDown);
+    if (count < sizeof(char))
         return -1;
-    value = m_numTowns;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, m_numTowns);
+    if (count < sizeof(char))
         return -1;
-    value = m_currTownId;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, m_currTownId);
+    if (count < sizeof(char))
         return -1;
 
     for (x = 0; x < 0x48; x++) {
-        value = m_townIds[x];
-        count = outfile->write(&value, sizeof(value));
-        if (count < sizeof(value))
+        count = writeValue<char>(outfile, m_townIds[x]);
+        if (count < sizeof(char))
             return -1;
     }
 
     for (x = 0; x < 7; x++) {
-        number = m_resources[x];
-        count = outfile->write(&number, sizeof(number));
-        if (count < sizeof(number))
+        count = writeValue<int>(outfile, m_resources[x]);
+        if (count < sizeof(int))
             return -1;
     }
 
-    flags = m_mysticalGardenFlags;
-    count = outfile->write(&flags, sizeof(flags));
-    if (count < sizeof(flags))
+    count = writeValue<unsigned long>(outfile, m_mysticalGardenFlags);
+    if (count < sizeof(unsigned long))
         return -1;
-    flags = m_magicSpringFlags;
-    count = outfile->write(&flags, sizeof(flags));
-    if (count < sizeof(flags))
+    count = writeValue<unsigned long>(outfile, m_magicSpringFlags);
+    if (count < sizeof(unsigned long))
         return -1;
-    flags = m_deadGuyFlags;
-    count = outfile->write(&flags, sizeof(flags));
-    if (count < sizeof(flags))
+    count = writeValue<unsigned long>(outfile, m_deadGuyFlags);
+    if (count < sizeof(unsigned long))
         return -1;
-    flags = m_leanToFlags;
-    count = outfile->write(&flags, sizeof(flags));
-    if (count < sizeof(flags))
+    count = writeValue<unsigned long>(outfile, m_leanToFlags);
+    if (count < sizeof(unsigned long))
         return -1;
 
-    flag = m_placementHelpEnabled;
-    count = outfile->write(&flag, sizeof(flag));
-    if (count < sizeof(flag))
+    count = writeValue<unsigned char>(outfile, m_placementHelpEnabled);
+    if (count < sizeof(unsigned char))
         return -1;
 
-    // Residual (99.9557%): all 49 blocks, every branch and every opcode agree.
-    // Dreamcast proves the top-scope uint_buffer/int_buffer/count/x/
-    // uchar_buffer/char_buffer roster, all twenty named count = Write(...)
-    // statements, and reuse of x by the three original loops; those facts are
-    // restored above and ratcheted even though VC6 lowers them byte-flat. The
-    // remaining operands are one Complete-era stack-home cycle: this compile
-    // puts x/flags/bits at -0xc/-0x8/-0x4, retail at -0x8/-0xc/-0x6. The int
-    // buffer at -0x10 and both byte buffers are exact. Moving bits to function
-    // scope and a const-reference combinations alias are byte-flat; removing
-    // the alias for a direct member call falls to 98.2109%.
-    // DECLARATION ORDER IS NOT THE LEVER (measured 2026-09-06, both byte-flat
-    // at 99.9557): hoisting `int x;` above `unsigned long flags;` and sinking
-    // it below `char value;` each leave x at -0xc and flags at -0x8.  The
-    // slots follow the variables, not their declaration order - the same
-    // result the ai.cpp simulate_combat pair gave, where the lever turned out
-    // to be the ORDER OF THE ASSIGNMENT STATEMENTS instead. The flat relocation
-    // view also names the same bitset<12>::_Xran callee through a synthetic
-    // target label because its retail row is unclaimed.
+    // Mac passes the bitset and index directly to test; no mutable proxy.
     unsigned char bits[2];
     const std::bitset<12>* combinations = &m_assembledCombinations;
     unsigned int bit = 0;
@@ -1528,7 +1459,7 @@ MAC_ADDRESS(0x0cd41c, 0xb8)
 int game::saveTownPool(TAbstractFile* outfile)
 {
     unsigned char townCount = m_towns.size();
-    int count = outfile->write(&townCount, sizeof(townCount));
+    int count = writeValue<unsigned char>(outfile, townCount);
     if (count < sizeof(townCount))
         return -1;
     for (int x = 0; x < m_towns.size(); ++x) {
@@ -1719,12 +1650,6 @@ bool playerData::isLocalHuman() const
     if (isHuman() && m_isLocal)
         return true;
     return false;
-}
-
-VA(0x004bada0, 0xC) MAC_ADDRESS(0x0cdbf0, 0x18)  // dc 0xa6144
-bool playerData::isHuman() const
-{
-    return m_isHuman ? true : false;
 }
 
 VA(0x004badb0, 0x9C) MAC_ADDRESS(0x0cdc08, 0xd0)  // dc 0xa6180
@@ -1980,7 +1905,7 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
     int heroIndex;
     for (heroIndex = 0; heroIndex < HERO_COUNT; heroIndex++) {
         if (m_heroAvailability[heroIndex] == -1
-            && m_heroPoolMap[heroIndex].test(playerPos)
+            && m_heroPoolMap[heroIndex][playerPos]
             && (m_heroes[heroIndex].m_heroClass == heroClass1
                 || m_heroes[heroIndex].m_heroClass == heroClass2)) {
             heroArray[top++] = heroIndex;
@@ -1990,7 +1915,7 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
     if (top == 0) {
         for (heroIndex = 0; heroIndex < HERO_COUNT; heroIndex++) {
             if (m_heroAvailability[heroIndex] == -1
-                && m_heroPoolMap[heroIndex].test(playerPos)) {
+                && m_heroPoolMap[heroIndex][playerPos]) {
                 heroArray[top++] = heroIndex;
             }
         }
@@ -2167,7 +2092,7 @@ int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
     int count;
     short length;
 
-    count = infile->read(&length, sizeof(length));
+    count = readValue(infile, length);
     if (count < sizeof(length))
         return -1;
 
@@ -2234,7 +2159,7 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
     int count;
     short length = s.length();
 
-    count = outfile->write(&length, sizeof(length));
+    count = writeValue<short>(outfile, length);
     if (count < sizeof(length))
         return -1;
 
@@ -2254,7 +2179,6 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 VA(0x004bbc20, 0x21E) MAC_ADDRESS(0x0cee2c, 0x194)  // dc 0xa75d0
 int game::saveRumours(TAbstractFile* outfile)
 {
-    unsigned char boolBuffer;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         currentRumour(m_currentRumour);
     int saveResult = saveString(outfile, currentRumour);
@@ -2265,16 +2189,15 @@ int game::saveRumours(TAbstractFile* outfile)
         return -1;
 
     int rumourListSize = m_rumours.size();
-    if (outfile->write(&rumourListSize, sizeof(rumourListSize))
+    if (writeValue<int>(outfile, rumourListSize)
         < sizeof(rumourListSize))
         return -1;
 
     for (TRumour* rit = m_rumours.begin(); rit != m_rumours.end(); ++rit) {
         if (saveString(outfile, rit->m_text) < 0)
             return -1;
-        boolBuffer = rit->m_unavailable;
-        if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        if (writeValue<unsigned char>(outfile, rit->m_unavailable)
+            < sizeof(unsigned char))
             return -1;
     }
     return 1;
@@ -2294,14 +2217,14 @@ int game::loadRumours(TAbstractFile* infile)
         return -1;
 
     int count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return -1;
 
     m_rumours.resize(count);
     for (TRumour* it = m_rumours.begin(); it != m_rumours.end(); ++it) {
         if (loadString(infile, it->m_text) < 0)
             return -1;
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
+        if (readValue(infile, value) < sizeof(value))
             return -1;
         it->m_unavailable = value != 0;
     }
@@ -2368,7 +2291,7 @@ MAC_ADDRESS(0x0cf178, 0xb0)
 int game::saveBlackMarkets(TAbstractFile* outfile)
 {
     char blackMarketListSize = m_blackMarkets.size();
-    int count = outfile->write(&blackMarketListSize, sizeof(blackMarketListSize));
+    int count = writeValue<char>(outfile, blackMarketListSize);
     if (count < sizeof(blackMarketListSize))
         return -1;
     count = outfile->write(&m_blackMarkets[0], blackMarketListSize * sizeof(TBlackMarket));
@@ -2424,7 +2347,7 @@ bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 }
 
 // E:\gamedcs\game.cpp:2716; original save_vector / src_vector.
-// Complete writes two bytes of an int slot, then uses its signed-short value.
+// Mac stages a signed-short count before the contiguous element payload.
 // The guarded return reproduces both retained 96-byte writers exactly,
 // including SETAE. Direct boolean/byte-local returns instead use SBB/INC;
 // that spelling difference does not refute the DC bool/reference signature.
@@ -2433,11 +2356,11 @@ bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 template <class T>
 bool saveVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 {
-    int count = srcVector.size();
-    if (outfile->write(&count, sizeof(short)) < sizeof(short))
+    short count = srcVector.size();
+    if (writeValue<short>(outfile, count) < sizeof(short))
         return false;
-    if (outfile->write(&srcVector[0], static_cast<short>(count) * sizeof(T))
-        < static_cast<short>(count) * sizeof(T))
+    if (outfile->write(&srcVector[0], count * sizeof(T))
+        < count * sizeof(T))
         return false;
     return true;
 }
@@ -2468,7 +2391,7 @@ template <class T>
 bool saveObjectVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 {
     short count = srcVector.size();
-    if (outfile->write(&count, sizeof(count)) < sizeof(count))
+    if (writeValue<short>(outfile, count) < sizeof(count))
         return 0;
     for (long i = 0; i < count; ++i) {
         if (!srcVector[i].save(outfile))
@@ -2543,18 +2466,6 @@ void applySavedGameHeader(const SavedGameHeader& saved)
            sizeof(g_game->m_playerDisabled));
     g_netLocalGamePos = saved.m_currentPlayer;
     memcpy(g_wasHuman, saved.m_humanPlayer, sizeof(saved.m_humanPlayer));
-}
-
-// Complete's packed bit readers use unsigned byte indexing. This inferred
-// decoder owns assignment into an existing bitset; callers retain their stream
-// reads and any later copy into the live game arrays. Campaign's returned-value
-// reader and mapcell's signed division loops retain their distinct operations.
-template <size_t N>
-void decodePackedBits(const unsigned char* packed, std::bitset<N>& result)
-{
-    for (unsigned int index = 0; index < N; ++index) {
-        result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
-    }
 }
 
 // Original: game::Load; game.cpp:3026, dc 0xa83d0. Complete loads a
@@ -2674,46 +2585,41 @@ int game::load(TAbstractFile* infile)
 
     if (saved.m_version >= 31) {
         for (i = 0; i < HERO_COUNT; ++i) {
-            std::bitset<8> poolMap;
-            unsigned char poolBits[1];
-            readValue(infile, poolBits);
-            decodePackedBits(poolBits, poolMap);
+            std::bitset<8> poolMap = readPackedBits<8>(infile);
             m_heroPoolMap[i] = poolMap;
         }
     }
 
-    // The twelve guarded scalar reads, and they mirror game::Save's twelve
-    // writes temp for temp: retail carries FOUR of them, a char reused
-    // across reads 1-2 and 7-9, a second char for 5-6, a short for 3-4 and
-    // a second short for 10-12.
-    count = infile->read(&byteValue, sizeof(byteValue));
+    // These scalar fields mirror game::save, with each read checked before
+    // assigning the decoded value.
+    count = readValue(infile, byteValue);
     if (count < sizeof(byteValue))
         return -1;
     m_newCampaignStarted = byteValue;
-    count = infile->read(&byteValue, sizeof(byteValue));
+    count = readValue(infile, byteValue);
     if (count < sizeof(byteValue))
         return -1;
     m_numPlayers = byteValue;
 
-    count = infile->read(&shortValue, sizeof(shortValue));
+    count = readValue(infile, shortValue);
     if (count < sizeof(shortValue))
         return -1;
     m_ultimateArtifactX = shortValue;
-    count = infile->read(&shortValue, sizeof(shortValue));
+    count = readValue(infile, shortValue);
     if (count < sizeof(shortValue))
         return -1;
     m_ultimateArtifactY = shortValue;
 
-    count = infile->read(&extraByteValue, sizeof(extraByteValue));
+    count = readValue(infile, extraByteValue);
     if (count < sizeof(extraByteValue))
         return -1;
     m_ultimateArtifactZ = extraByteValue;
-    count = infile->read(&extraByteValue, sizeof(extraByteValue));
+    count = readValue(infile, extraByteValue);
     if (count < sizeof(extraByteValue))
         return -1;
     m_ultimateRadius = extraByteValue;
 
-    count = infile->read(&byteValue, sizeof(byteValue));
+    count = readValue(infile, byteValue);
     if (count < sizeof(byteValue))
         return -1;
     m_ultimateArtifactPresent = byteValue != 0;
@@ -2722,26 +2628,26 @@ int game::load(TAbstractFile* infile)
     // the store is `movsx ecx, byte ptr` into the int at +0x1f698 - which
     // is what makes the temp a signed char. game::Save's mirror writes
     // `static_cast<char>(f_1f698)` as its own eighth scalar.
-    count = infile->read(&byteValue, sizeof(byteValue));
+    count = readValue(infile, byteValue);
     if (count < sizeof(byteValue))
         return -1;
     if (saved.m_version < 40)
         m_gameVersion = byteValue;
 
-    count = infile->read(&byteValue, sizeof(byteValue));
+    count = readValue(infile, byteValue);
     if (count < sizeof(byteValue))
         return -1;
     m_isCheater = byteValue;
 
-    count = infile->read(&extraShortValue, sizeof(extraShortValue));
+    count = readValue(infile, extraShortValue);
     if (count < sizeof(extraShortValue))
         return -1;
     m_day = extraShortValue;
-    count = infile->read(&extraShortValue, sizeof(extraShortValue));
+    count = readValue(infile, extraShortValue);
     if (count < sizeof(extraShortValue))
         return -1;
     m_week = extraShortValue;
-    count = infile->read(&extraShortValue, sizeof(extraShortValue));
+    count = readValue(infile, extraShortValue);
     if (count < sizeof(extraShortValue))
         return -1;
     m_month = extraShortValue;
@@ -2769,7 +2675,7 @@ int game::load(TAbstractFile* infile)
     // The four-byte slot game::Save writes as a literal zero. Retail reads
     // it into a stack dword and never looks at it again - the guard is the
     // only thing it is for.
-    count = infile->read(&zero, sizeof(zero));
+    count = readValue(infile, zero);
     if (count < sizeof(zero))
         return -1;
 
@@ -2815,31 +2721,23 @@ VA_COMPGEN(0x004bdc70, 0x309, IMPLICIT_COPY_ASSIGN, SCampaign)
 VA(0x004be140, 0x11E) MAC_ADDRESS(0x0d2508, 0x228)
 int SGameSetupOptions::save(TAbstractFile* outfile)
 {
-    char charBuffer;
-
     outfile->write(m_color, sizeof(m_color));
     outfile->write(m_color, sizeof(m_handicap));
     outfile->write(m_alignment, sizeof(m_alignment));
     outfile->write(m_playerPos, sizeof(m_playerPos));
 
-    charBuffer = m_difficulty;
-    outfile->write(&charBuffer, sizeof(charBuffer));
+    writeValue<char>(outfile, m_difficulty);
     outfile->write(m_filename, sizeof(m_filename));
     outfile->write(m_path, sizeof(m_path));
     outfile->write(m_canFlipFromToComputer, sizeof(m_canFlipFromToComputer));
 
-    charBuffer = m_curSelectedPlayer;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = m_fileInitialized;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = m_initializationNumHumans;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = m_turnDuration;
-    outfile->write(&charBuffer, sizeof(charBuffer));
+    writeValue<char>(outfile, m_curSelectedPlayer);
+    writeValue<char>(outfile, m_fileInitialized);
+    writeValue<char>(outfile, m_initializationNumHumans);
+    writeValue<char>(outfile, m_turnDuration);
 
     for (int i = 0; i < 8; ++i) {
-        charBuffer = m_startingHero[i];
-        outfile->write(&charBuffer, sizeof(charBuffer));
+        writeValue<char>(outfile, m_startingHero[i]);
     }
 
     return outfile->write(m_startingBonus, sizeof(m_startingBonus)) <
@@ -2852,31 +2750,22 @@ VA(0x004be260, 0x188) MAC_ADDRESS(0x0d2730, 0x224)
 int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 {
     TAbstractFile* input = infile;
-    {
-        char charBuffer;
+    input->read(m_color, sizeof(m_color));
+    input->read(m_color, sizeof(m_handicap));
+    input->read(m_alignment, sizeof(m_alignment));
+    input->read(m_playerPos, sizeof(m_playerPos));
 
-        input->read(m_color, sizeof(m_color));
-        input->read(m_color, sizeof(m_handicap));
-        input->read(m_alignment, sizeof(m_alignment));
-        input->read(m_playerPos, sizeof(m_playerPos));
+    m_difficulty = readValue<char>(input);
+    input->read(m_filename, sizeof(m_filename));
+    input->read(m_path, sizeof(m_path));
+    if (saveVersion < 28)
+        strcpy(m_path, "maps");
+    input->read(m_canFlipFromToComputer, sizeof(m_canFlipFromToComputer));
 
-        input->read(&charBuffer, sizeof(charBuffer));
-        m_difficulty = charBuffer;
-        input->read(m_filename, sizeof(m_filename));
-        input->read(m_path, sizeof(m_path));
-        if (saveVersion < 28)
-            strcpy(m_path, "maps");
-        input->read(m_canFlipFromToComputer, sizeof(m_canFlipFromToComputer));
-
-        input->read(&charBuffer, sizeof(charBuffer));
-        m_curSelectedPlayer = charBuffer;
-        input->read(&charBuffer, sizeof(charBuffer));
-        m_fileInitialized = charBuffer != 0;
-        input->read(&charBuffer, sizeof(charBuffer));
-        m_initializationNumHumans = charBuffer;
-        input->read(&charBuffer, sizeof(charBuffer));
-        m_turnDuration = charBuffer;
-    }
+    m_curSelectedPlayer = readValue<char>(input);
+    m_fileInitialized = readValue<char>(input) != 0;
+    m_initializationNumHumans = readValue<char>(input);
+    m_turnDuration = readValue<char>(input);
 
     int* heroPos = m_startingHero;
     int heroesRemaining = 8;
@@ -3044,20 +2933,12 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 VA(0x004be3f0, 0xAA5) MAC_ADDRESS(0x0d2954, 0x1ba8)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::save(TAbstractFile* outfile)
 {
-    char byteValue;
-    unsigned char extraByteValue;
-    short shortValue;
-    unsigned short extraShortValue;
-    int zero;
     SavedGameHeader saved;
     saved.reset();
     if (saved.save(outfile) < 0)
         return -1;
 
-    {
-        char charBuffer = g_grailOwner;
-        outfile->write(&charBuffer, sizeof(charBuffer));
-    }
+    writeValue<char>(outfile, g_grailOwner);
     outfile->write(m_artifactDisabled, sizeof(m_artifactDisabled));
     outfile->write(m_artifactUsed, sizeof(m_artifactUsed));
     outfile->write(m_ssDisabled, sizeof(m_ssDisabled));
@@ -3122,63 +3003,40 @@ int game::save(TAbstractFile* outfile)
         outfile->write(poolBits, sizeof(poolBits));
     }
 
-    // The twelve guarded scalar writes. Retail carries FOUR temps for
-    // them, not one: a char reused across writes 1-2 and 7-9, an unsigned
-    // char for 5-6, a short for 3-4 and an unsigned short for 10-12. Those
-    // four plus the literal-zero dword below are exactly the five slots
-    // that take `sub esp` from our 0x5ac to retail's 0x5c0.
-    // The word buffers must stay narrow, not `int`: retail loads 16 bits
-    // (`mov dx, word ptr`) and stores 32 (`mov dword ptr [ebp-N], edx`),
-    // which is VC6's narrow-local/widened-store idiom - an int local
-    // would sign- or zero-extend on the load instead.
-    {
-        byteValue = m_newCampaignStarted;
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
-        byteValue = m_numPlayers;
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
+    if (writeValue<char>(outfile, m_newCampaignStarted) < sizeof(char))
+        return -1;
+    if (writeValue<char>(outfile, m_numPlayers) < sizeof(char))
+        return -1;
 
-        shortValue = m_ultimateArtifactX;
-        if (outfile->write(&shortValue, sizeof(shortValue)) < sizeof(shortValue))
-            return -1;
-        shortValue = m_ultimateArtifactY;
-        if (outfile->write(&shortValue, sizeof(shortValue)) < sizeof(shortValue))
-            return -1;
+    if (writeValue<short>(outfile, m_ultimateArtifactX) < sizeof(short))
+        return -1;
+    if (writeValue<short>(outfile, m_ultimateArtifactY) < sizeof(short))
+        return -1;
 
-        extraByteValue = m_ultimateArtifactZ;
-        if (outfile->write(&extraByteValue, sizeof(extraByteValue)) <
-            sizeof(extraByteValue))
-            return -1;
-        extraByteValue = m_ultimateRadius;
-        if (outfile->write(&extraByteValue, sizeof(extraByteValue)) <
-            sizeof(extraByteValue))
-            return -1;
+    if (writeValue<unsigned char>(outfile, m_ultimateArtifactZ) <
+        sizeof(unsigned char))
+        return -1;
+    if (writeValue<unsigned char>(outfile, m_ultimateRadius) <
+        sizeof(unsigned char))
+        return -1;
 
-        byteValue = m_ultimateArtifactPresent;
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
-        // f_1f698 is an int member and retail writes only its low byte.
-        byteValue = static_cast<char>(m_gameVersion);
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
-        byteValue = m_isCheater;
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
+    if (writeValue<char>(outfile, m_ultimateArtifactPresent) < sizeof(char))
+        return -1;
+    // f_1f698 is an int member and retail writes only its low byte.
+    if (writeValue<char>(outfile, static_cast<char>(m_gameVersion)) < sizeof(char))
+        return -1;
+    if (writeValue<char>(outfile, m_isCheater) < sizeof(char))
+        return -1;
 
-        extraShortValue = m_day;
-        if (outfile->write(&extraShortValue, sizeof(extraShortValue)) <
-            sizeof(extraShortValue))
-            return -1;
-        extraShortValue = m_week;
-        if (outfile->write(&extraShortValue, sizeof(extraShortValue)) <
-            sizeof(extraShortValue))
-            return -1;
-        extraShortValue = m_month;
-        if (outfile->write(&extraShortValue, sizeof(extraShortValue)) <
-            sizeof(extraShortValue))
-            return -1;
-    }
+    if (writeValue<unsigned short>(outfile, m_day) <
+        sizeof(unsigned short))
+        return -1;
+    if (writeValue<unsigned short>(outfile, m_week) <
+        sizeof(unsigned short))
+        return -1;
+    if (writeValue<unsigned short>(outfile, m_month) <
+        sizeof(unsigned short))
+        return -1;
 
     // Six array writes. The first is retail's own inconsistency: it ASKS
     // for sizeof(field_1f644) == 0x20 and accepts 8. The compare is
@@ -3204,8 +3062,7 @@ int game::save(TAbstractFile* outfile)
         sizeof(m_cartographerFlags))
         return -1;
 
-    zero = 0;
-    if (outfile->write(&zero, sizeof(zero)) < sizeof(zero))
+    if (writeValue<int>(outfile, 0) < sizeof(int))
         return -1;
 
     // The map-extra plane. HasTwoLevels is read through the GLOBAL gpGame,
@@ -3277,7 +3134,7 @@ void SavedGameHeader::reset()
 }
 
 // Complete serializes the expanded snapshot through its abstract stream.
-// Preserve the disjoint scalar staging scopes used by retail stack slots.
+// Mac stages each scalar separately before its stream write.
 // E:\gamedcs\Game.h:1325, dc 0xbcf6c
 VA(0x004bc5d0, 0x17A) MAC_ADDRESS(0x0cfa20, 0x214)  // anchor-layout + game::Save caller
 int SavedGameHeader::save(TAbstractFile* outfile)
@@ -3287,14 +3144,8 @@ int SavedGameHeader::save(TAbstractFile* outfile)
 
     outfile->write(m_id, sizeof(m_id));
 
-    {
-        int buffer = m_version;
-        outfile->write(&buffer, sizeof(buffer));
-    }
-    {
-        int buffer = m_gameVersion;
-        outfile->write(&buffer, sizeof(buffer));
-    }
+    writeValue<int>(outfile, m_version);
+    writeValue<int>(outfile, m_gameVersion);
 
     if (outfile->write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
         sizeof(compatibilityBuffer))
@@ -3305,30 +3156,18 @@ int SavedGameHeader::save(TAbstractFile* outfile)
     if (m_mapSetup.save(outfile) < 0)
         return -1;
 
-    {
-        short buffer = m_campaignGame;
-        outfile->write(&buffer, sizeof(buffer));
-    }
+    writeValue<short>(outfile, m_campaignGame);
     if (m_campaignGame)
         m_campaign.save(outfile);
 
     strcpy(fileNameBuffer, m_fileName.c_str());
     outfile->write(fileNameBuffer, sizeof(fileNameBuffer));
 
-    {
-        short buffer = m_difficultyRating;
-        outfile->write(&buffer, sizeof(buffer));
-    }
-    {
-        char buffer = m_numDeadPlayers;
-        outfile->write(&buffer, sizeof(buffer));
-    }
+    writeValue<short>(outfile, m_difficultyRating);
+    writeValue<char>(outfile, m_numDeadPlayers);
     outfile->write(m_deadPlayer, sizeof(m_deadPlayer));
     outfile->write(m_humanPlayer, sizeof(m_humanPlayer));
-    {
-        int buffer = m_currentPlayer;
-        outfile->write(&buffer, sizeof(buffer));
-    }
+    writeValue<int>(outfile, m_currentPlayer);
 
     return 0;
 }
@@ -3443,8 +3282,7 @@ void game::setupOrigData()
     manager->m_curHeroMobile = 0;
     MEMSET(m_heroAvailability, -1, sizeof(m_heroAvailability), i);
 
-    std::bitset<8> allPlayers;
-    allPlayers.set();
+    std::bitset<8> allPlayers = ~std::bitset<8>();
     for (i = 0; i < HERO_COUNT; ++i)
         m_heroPoolMap[i] = allPlayers;
 
@@ -3750,11 +3588,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
                         ++numHumanTeams;
                 }
                 if (numHumanTeams <= 1) {
-                    int team = getTeam(m_heroes[i].m_owner);
-                    unsigned char humanTeam = 0;
-                    if (team >= 0)
-                        humanTeam = isHumanTeam(team);
-                    if (team < 0 || humanTeam) {
+                    if (!isComputerTeam(getTeam(m_heroes[i].m_owner))) {
                         loss.m_heroId = i;
                         break;
                     }
@@ -3782,12 +3616,8 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
                 continue;
             owner = thisTown->m_owner;
             townTeam = getTeam(owner);
-            if (townTeam >= 0) {
-                unsigned char humanTeam =
-                    isHumanTeam(townTeam);
-                if (!humanTeam)
-                    continue;
-            }
+            if (isComputerTeam(townTeam))
+                continue;
             if (owner != -1)
                 return;
         } while (0);
@@ -4122,16 +3952,8 @@ static void randomizeSeaChest(NewmapCell* cell)
     }
 }
 
-// E:\gamedcs\game.cpp:4639. Retail inlines all three constant-level calls
-// into RandomizeEvents, but keeps the Dinkumware bitset operations out of
-// line. The subscript/reference spelling is visible in the retail call pair:
-// bitset::operator[] followed by _Bit_reference::operator=.
-// Complete takes a bitset instead of DC's integer level. Default construction
-// corresponds to retail's _Tidy(0) call. Unpinned constructor controls measured
-// 87.25% (default) / 87.71% (explicit zero) for RandomizeEvents, versus 88.86%
-// pinned; the default also emits the exact retained resource SetWagon body.
-// An integer compatibility-overload probe reached only 84.12% and did not
-// establish that Complete retained DC's old interface; it is not adopted.
+// Mac 0:d66f8 calls the retained level overload at 0:e07f4. Its three
+// randomizeEvents callers pass levels 1, 2 and 3 at d7f60/d7f70/d7f80.
 MAC_ADDRESS(0x0d66c8, 0x64)
 static void randomizeShrine(NewmapCell* cell, const int level)
 {
@@ -4139,9 +3961,7 @@ static void randomizeShrine(NewmapCell* cell, const int level)
         static_cast<void*>(&cell->m_extraInfo));
     SpellID spell = info->getShrineSpell();
     if (spell == -1) {
-        std::bitset<5> spellLevels;
-        spellLevels[level] = true;
-        spell = g_game->getRandomSpell(spellLevels);
+        spell = g_game->getRandomSpell(level);
         info->m_shrineInfo.m_spell = spell;
     }
     info->clearVisitedBits();
@@ -4172,7 +3992,7 @@ MAC_ADDRESS(0x0d6844, 0x60)
 static void randomizeWiseTree(short id, NewmapCell* cell)
 {
     cell->m_extraInfo = (cell->m_extraInfo & 0xffffffe0) | (id & 0x1f);
-    cell->m_extraInfo &= 0xffffe01f;
+    cell->clearVisitedBits();
     int price = random(0, 2);
     cell->m_extraInfo = (cell->m_extraInfo & 0xffff1fff) | ((price & 7) << 13);
 }
@@ -4232,7 +4052,7 @@ static void randomizePyramid(NewmapCell* cell)
     for (i = 0; i < 70; ++i) {
         if (g_spellTraits[i].m_school != const_invalid_school
             && g_spellTraits[i].m_level == g_pyramidSpellLevel
-            && !g_game->m_ssDisabled[i])
+            && !g_game->m_spellDisabledInfo[i])
             possibleSpells.push_back(i);
     }
 
@@ -4285,7 +4105,7 @@ void game::randomizeUniversity(NewmapCell* cell)
         choice = random(0, availableCount - 1);
         skill = eSecSkillPathfinding;
         for (;;) {
-            if (!availableSkills.test(skill)) {
+            if (!availableSkills[skill]) {
                 {
                     skill = TSecondarySkill(skill + 1);
                 }
@@ -4300,13 +4120,12 @@ void game::randomizeUniversity(NewmapCell* cell)
         }
 
         university.m_skills[i] = skill;
-        availableSkills.set(skill, false);
+        availableSkills[skill] = false;
         --availableCount;
     }
 
-    const unsigned long cellVisitedBits = 0x00001fe0;
     const unsigned long universityIndexBits = 0x01ffe000;
-    cell->m_extraInfo &= ~cellVisitedBits;
+    cell->clearVisitedBits();
     unsigned long universityIndex = m_universities.size() & 0xfff;
     cell->m_extraInfo = (cell->m_extraInfo & ~universityIndexBits)
         | (universityIndex << 13);
@@ -4317,18 +4136,14 @@ void game::randomizeUniversity(NewmapCell* cell)
 // /Ob2 expands it into RandomizeEvents while leaving bitset's non-trivial
 // operations as calls. DC proves the TSecondarySkill local but predates
 // Complete's mask filtering; retail's proxy-call sequence selects operator[].
-// A 16-state constructor/type/unpin control produced 10 reproduced objects.
-// Removing the loop pin gives about 82% for RandomizeEvents; removing the
-// setter pin also loses the exact retained SetWitchSkill body. Both remain
-// unresolved debt. Default construction of the inverted zero temporary
-// preserves retail's _Tidy(0) boundary instead of a value-constructor call.
+// Mac d6d98..d6dd4 expands setWitchSkill separately in the selected-skill
+// and no-available-skill branches. Keep both source calls at those boundaries.
 MAC_ADDRESS(0x0d6c80, 0x16c)
 static void randomizeWitchHut(NewmapCell* cell)
 {
-#pragma inline_depth(0)
     std::bitset<28> possibleSkills(cell->m_extraInfo);
     cell->m_extraInfo = 0;
-    if (!possibleSkills.any())
+    if (possibleSkills.none())
         possibleSkills = ~std::bitset<28>();
 
     int i;
@@ -4338,8 +4153,10 @@ static void randomizeWitchHut(NewmapCell* cell)
 
     TSecondarySkill skill;
     int count = possibleSkills.count();
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->m_extraInfo));
     if (count < 1) {
-        skill = eSecSkillNone;
+        info->setWitchSkill(eSecSkillNone);
     }
     else {
         int choice = random(1, count);
@@ -4348,13 +4165,8 @@ static void randomizeWitchHut(NewmapCell* cell)
             if (possibleSkills[skill] && --choice < 1)
                 break;
         }
+        info->setWitchSkill(skill);
     }
-#pragma inline_depth()
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->m_extraInfo));
-#pragma inline_depth(0)
-    info->setWitchSkill(skill);
-#pragma inline_depth()
 }
 
 VA(0x004c0870, 0x22A) MAC_ADDRESS(0x0d6dec, 0x270)  // dc 0xac1a4
@@ -4595,7 +4407,6 @@ void game::randomizeEvents()
     EGameResource resType;
     NewmapCell::TObjectCell* thisObj;
 
-    const unsigned long visitedBits = 0x00001fe0;
     const unsigned long poolIndexBits = 0x03ffe000;
 
     for (z = 0; z < getNumMapLevels(); ++z) {
@@ -4655,7 +4466,7 @@ void game::randomizeEvents()
 
                 case CREATURE_BANK:
                     {
-                        tempCell->m_extraInfo &= ~visitedBits;
+                        tempCell->clearVisitedBits();
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
@@ -4711,7 +4522,7 @@ void game::randomizeEvents()
 
                 case DERELICT_SHIP:
                     {
-                        tempCell->m_extraInfo &= ~visitedBits;
+                        tempCell->clearVisitedBits();
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
@@ -4724,7 +4535,7 @@ void game::randomizeEvents()
 
                 case SEPULCHER:
                     {
-                        tempCell->m_extraInfo &= ~visitedBits;
+                        tempCell->clearVisitedBits();
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
@@ -4737,7 +4548,7 @@ void game::randomizeEvents()
 
                 case SHIPWRECK:
                     {
-                        tempCell->m_extraInfo &= ~visitedBits;
+                        tempCell->clearVisitedBits();
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
@@ -4750,7 +4561,7 @@ void game::randomizeEvents()
 
                 case DRAGON_CITY:
                     {
-                        tempCell->m_extraInfo &= ~visitedBits;
+                        tempCell->clearVisitedBits();
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
@@ -5117,7 +4928,7 @@ bool game::loadMap(TAbstractFile* mapFile)
     }
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        std::bitset<144> disabledArtifacts(0);
+        std::bitset<144> disabledArtifacts;
         if (m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
             std::bitset<144> serializedArtifacts = readPackedBits<144>(mapFile);
             disabledArtifacts = serializedArtifacts;
@@ -5140,7 +4951,7 @@ bool game::loadMap(TAbstractFile* mapFile)
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        const std::bitset<70> serializedSpells = readPackedBits<70>(mapFile);
+        std::bitset<70> serializedSpells = readPackedBits<70>(mapFile);
 
         for (unsigned int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (serializedSpells[spell]) {
@@ -5148,7 +4959,7 @@ bool game::loadMap(TAbstractFile* mapFile)
                     if (g_artifactTraits[artifact].m_givesSpells) {
                         m_artifactDisabled[artifact] =
                             m_artifactDisabled[artifact]
-                            || markArtifactSpells(artifact).test(spell);
+                            || markArtifactSpells(artifact)[spell];
                     }
                 }
             }
@@ -5157,7 +4968,7 @@ bool game::loadMap(TAbstractFile* mapFile)
                 || (g_spellTraits[spell].m_flags & 0x2000) != 0;
         }
 
-        const std::bitset<28> serializedSkills = readPackedBits<28>(mapFile);
+        std::bitset<28> serializedSkills = readPackedBits<28>(mapFile);
         for (int skill = 0; skill < sizeof(m_ssDisabled); ++skill)
             m_ssDisabled[skill] = serializedSkills[skill];
     } else {
@@ -5296,9 +5107,8 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
             unsigned char spellMask[9];
             mapFile->read(spellMask, sizeof(spellMask));
             for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-                heroRecord->m_spells.set(
-                    spell,
-                    (spellMask[spell / 8] & (1 << (spell % 8))) != 0);
+                heroRecord->m_spells[spell] =
+                    (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
             }
         }
 
@@ -5314,160 +5124,90 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 VA(0x004c3200, 0x398) MAC_ADDRESS(0x0d9320, 0x588)
 int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
 {
-    char charBuffer;
-
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_victoryCondition.m_allowNormalVictory = charBuffer != 0;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_victoryCondition.m_appliesToComputer = charBuffer != 0;
+    m_victoryCondition.m_allowNormalVictory = readValue<char>(infile) != 0;
+    m_victoryCondition.m_appliesToComputer = readValue<char>(infile) != 0;
 
     switch (type) {
-    case VICTORY_CONDITION_ARTIFACT: {
+    case VICTORY_CONDITION_ARTIFACT:
         if (m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            int intBuffer;
-            infile->read(&intBuffer, sizeof(char));
             m_victoryCondition.m_artifactNum =
-                static_cast<TArtifact>(intBuffer & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                static_cast<TArtifact>(readValue<unsigned char>(infile)); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         } else {
-            short shortBuffer;
-            infile->read(&shortBuffer, sizeof(shortBuffer));
             m_victoryCondition.m_artifactNum =
-                static_cast<TArtifact>(shortBuffer); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                static_cast<TArtifact>(readValue<short>(infile)); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
         break;
-    }
 
-    case VICTORY_CONDITION_TOTAL_CREATURES: {
+    case VICTORY_CONDITION_TOTAL_CREATURES:
         if (m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            int intBuffer;
-            infile->read(&intBuffer, sizeof(char));
-            {
-                m_victoryCondition.m_creatureType = TCreatureType(intBuffer & 0xff);
-            }
+            m_victoryCondition.m_creatureType =
+                TCreatureType(readValue<unsigned char>(infile));
         } else {
-            short shortBuffer;
-            infile->read(&shortBuffer, sizeof(shortBuffer));
-            {
-                m_victoryCondition.m_creatureType = TCreatureType(shortBuffer);
-            }
+            m_victoryCondition.m_creatureType =
+                TCreatureType(readValue<short>(infile));
         }
-        {
-            int intBuffer;
-            infile->read(&intBuffer, sizeof(intBuffer));
-            m_victoryCondition.m_numCreatures = intBuffer;
-        }
+        m_victoryCondition.m_numCreatures = readValue<int>(infile);
         break;
-    }
 
-    case VICTORY_CONDITION_TOTAL_RESOURCES: {
-        {
-            char resource;
-            infile->read(&resource, sizeof(resource));
-            m_victoryCondition.m_resourceType = resource;
-        }
-        {
-            int intBuffer;
-            infile->read(&intBuffer, sizeof(intBuffer));
-            m_victoryCondition.m_resourceAmount = intBuffer;
-        }
+    case VICTORY_CONDITION_TOTAL_RESOURCES:
+        m_victoryCondition.m_resourceType = readValue<signed char>(infile);
+        m_victoryCondition.m_resourceAmount = readValue<int>(infile);
         break;
-    }
 
-    case VICTORY_CONDITION_UPGRADE_TOWN: {
-        {
-            int intBuffer;
-            infile->read(&intBuffer, sizeof(char));
-            m_victoryCondition.m_townX = intBuffer & 0xff;
-            infile->read(&intBuffer, sizeof(char));
-            m_victoryCondition.m_townY = intBuffer & 0xff;
-            infile->read(&intBuffer, sizeof(char));
-            m_victoryCondition.m_townZ = intBuffer & 0xff;
-        }
-        {
-            char level;
-            infile->read(&level, sizeof(level));
-            m_victoryCondition.m_hallLevel = level;
-            infile->read(&level, sizeof(level));
-            m_victoryCondition.m_castleLevel = level;
-        }
+    case VICTORY_CONDITION_UPGRADE_TOWN:
+        m_victoryCondition.m_townX = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = readValue<unsigned char>(infile);
+        m_victoryCondition.m_hallLevel = readValue<char>(infile);
+        m_victoryCondition.m_castleLevel = readValue<char>(infile);
         break;
-    }
 
-    case VICTORY_CONDITION_BUILD_GRAIL: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townX = intBuffer & 0xff;
+    case VICTORY_CONDITION_BUILD_GRAIL:
+        m_victoryCondition.m_townX = readValue<unsigned char>(infile);
         if (m_victoryCondition.m_townX == g_savedMapCoordinateNone)
             m_victoryCondition.m_townX = -1;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townY = intBuffer & 0xff;
+        m_victoryCondition.m_townY = readValue<unsigned char>(infile);
         if (m_victoryCondition.m_townY == g_savedMapCoordinateNone)
             m_victoryCondition.m_townY = -1;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townZ = intBuffer & 0xff;
+        m_victoryCondition.m_townZ = readValue<unsigned char>(infile);
         if (m_victoryCondition.m_townZ == g_savedMapCoordinateNone)
             m_victoryCondition.m_townZ = -1;
         break;
-    }
 
-    case VICTORY_CONDITION_DEFEAT_HERO: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_heroX = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_heroY = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_heroZ = intBuffer & 0xff;
+    case VICTORY_CONDITION_DEFEAT_HERO:
+        m_victoryCondition.m_heroX = readValue<unsigned char>(infile);
+        m_victoryCondition.m_heroY = readValue<unsigned char>(infile);
+        m_victoryCondition.m_heroZ = readValue<unsigned char>(infile);
         break;
-    }
 
-    case VICTORY_CONDITION_CAPTURE_TOWN: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townX = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townY = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townZ = intBuffer & 0xff;
+    case VICTORY_CONDITION_CAPTURE_TOWN:
+        m_victoryCondition.m_townX = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = readValue<unsigned char>(infile);
         break;
-    }
 
-    case VICTORY_CONDITION_DEFEAT_MONSTER: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_monsterX = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_monsterY = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_monsterZ = intBuffer & 0xff;
+    case VICTORY_CONDITION_DEFEAT_MONSTER:
+        m_victoryCondition.m_monsterX = readValue<unsigned char>(infile);
+        m_victoryCondition.m_monsterY = readValue<unsigned char>(infile);
+        m_victoryCondition.m_monsterZ = readValue<unsigned char>(infile);
         break;
-    }
 
     case VICTORY_CONDITION_FLAG_ALL_GENERATORS:
     case VICTORY_CONDITION_FLAG_ALL_MINES:
     case VICTORY_CONDITION_DEFEAT_ALL_MONSTERS:
         break;
 
-    case VICTORY_CONDITION_SURVIVE_TIME: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(intBuffer));
-        m_victoryCondition.m_numDays = intBuffer;
+    case VICTORY_CONDITION_SURVIVE_TIME:
+        m_victoryCondition.m_numDays = readValue<int>(infile);
         break;
-    }
 
-    case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(char));
+    case VICTORY_CONDITION_TRANSPORT_ARTIFACT:
         m_victoryCondition.m_artifactNum =
-            static_cast<TArtifact>(intBuffer & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townX = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townY = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townZ = intBuffer & 0xff;
+            static_cast<TArtifact>(readValue<unsigned char>(infile)); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+        m_victoryCondition.m_townX = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = readValue<unsigned char>(infile);
         break;
-    }
     }
 
     g_game->validateVictoryLossConditions(0);
@@ -5477,117 +5217,88 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
 VA(0x004c35a0, 0x2E8) MAC_ADDRESS(0x0d98a8, 0x4cc)
 int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
 {
-    int intBuffer;
     int count;
-    char charBuffer;
 
-    charBuffer = m_victoryCondition.m_allowNormalVictory;
-    count = outfile->write(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    count = writeValue<char>(outfile, m_victoryCondition.m_allowNormalVictory);
+    if (count < sizeof(char))
         return -1;
 
-    charBuffer = m_victoryCondition.m_appliesToComputer;
-    count = outfile->write(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    count = writeValue<char>(outfile, m_victoryCondition.m_appliesToComputer);
+    if (count < sizeof(char))
         return -1;
 
     switch (type) {
     case VICTORY_CONDITION_ARTIFACT: {
-        char artifact = m_victoryCondition.m_artifactNum;
-        outfile->write(&artifact, sizeof(artifact));
+        writeValue<char>(outfile, m_victoryCondition.m_artifactNum);
         return 0;
     }
 
     case VICTORY_CONDITION_TOTAL_CREATURES: {
-        char creature = m_victoryCondition.m_creatureType;
-        outfile->write(&creature, sizeof(creature));
-        intBuffer = m_victoryCondition.m_numCreatures;
-        count = outfile->write(&intBuffer, sizeof(intBuffer));
-        if (count < sizeof(intBuffer))
+        writeValue<char>(outfile, m_victoryCondition.m_creatureType);
+        count = writeValue<int>(outfile, m_victoryCondition.m_numCreatures);
+        if (count < sizeof(int))
             return -1;
         break;
     }
 
     case VICTORY_CONDITION_TOTAL_RESOURCES:
-        charBuffer = m_victoryCondition.m_resourceType;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_victoryCondition.m_resourceType);
+        if (count < sizeof(char))
             return -1;
-        intBuffer = m_victoryCondition.m_resourceAmount;
-        count = outfile->write(&intBuffer, sizeof(intBuffer));
-        if (count < sizeof(intBuffer))
+        count = writeValue<int>(outfile, m_victoryCondition.m_resourceAmount);
+        if (count < sizeof(int))
             return -1;
         break;
 
     case VICTORY_CONDITION_UPGRADE_TOWN: {
-        char townValue = m_victoryCondition.m_townX;
-        outfile->write(&townValue, sizeof(townValue));
-        townValue = m_victoryCondition.m_townY;
-        outfile->write(&townValue, sizeof(townValue));
-        townValue = m_victoryCondition.m_townZ;
-        outfile->write(&townValue, sizeof(townValue));
-        charBuffer = m_victoryCondition.m_hallLevel;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        writeValue<char>(outfile, m_victoryCondition.m_townX);
+        writeValue<char>(outfile, m_victoryCondition.m_townY);
+        writeValue<char>(outfile, m_victoryCondition.m_townZ);
+        count = writeValue<char>(outfile, m_victoryCondition.m_hallLevel);
+        if (count < sizeof(char))
             return -1;
-        charBuffer = m_victoryCondition.m_castleLevel;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_victoryCondition.m_castleLevel);
+        if (count < sizeof(char))
             return -1;
         break;
     }
 
     case VICTORY_CONDITION_BUILD_GRAIL: {
-        char grailTown = m_victoryCondition.m_townX;
-        outfile->write(&grailTown, sizeof(grailTown));
-        grailTown = m_victoryCondition.m_townY;
-        outfile->write(&grailTown, sizeof(grailTown));
-        grailTown = m_victoryCondition.m_townZ;
-        outfile->write(&grailTown, sizeof(grailTown));
+        writeValue<char>(outfile, m_victoryCondition.m_townX);
+        writeValue<char>(outfile, m_victoryCondition.m_townY);
+        writeValue<char>(outfile, m_victoryCondition.m_townZ);
         return 0;
     }
 
     case VICTORY_CONDITION_DEFEAT_HERO: {
-        char heroId = m_victoryCondition.m_heroId;
-        outfile->write(&heroId, sizeof(heroId));
+        writeValue<char>(outfile, m_victoryCondition.m_heroId);
         return 0;
     }
 
     case VICTORY_CONDITION_CAPTURE_TOWN: {
-        char capturedTown = m_victoryCondition.m_townX;
-        outfile->write(&capturedTown, sizeof(capturedTown));
-        capturedTown = m_victoryCondition.m_townY;
-        outfile->write(&capturedTown, sizeof(capturedTown));
-        capturedTown = m_victoryCondition.m_townZ;
-        outfile->write(&capturedTown, sizeof(capturedTown));
+        writeValue<char>(outfile, m_victoryCondition.m_townX);
+        writeValue<char>(outfile, m_victoryCondition.m_townY);
+        writeValue<char>(outfile, m_victoryCondition.m_townZ);
         return 0;
     }
 
     case VICTORY_CONDITION_DEFEAT_MONSTER: {
-        char monster = m_victoryCondition.m_monsterX;
-        outfile->write(&monster, sizeof(monster));
-        monster = m_victoryCondition.m_monsterY;
-        outfile->write(&monster, sizeof(monster));
-        monster = m_victoryCondition.m_monsterZ;
-        outfile->write(&monster, sizeof(monster));
+        writeValue<char>(outfile, m_victoryCondition.m_monsterX);
+        writeValue<char>(outfile, m_victoryCondition.m_monsterY);
+        writeValue<char>(outfile, m_victoryCondition.m_monsterZ);
         return 0;
     }
 
     case VICTORY_CONDITION_SURVIVE_TIME: {
-        int days = m_victoryCondition.m_numDays;
-        outfile->write(&days, sizeof(days));
+        writeValue<int>(outfile, m_victoryCondition.m_numDays);
         return 0;
     }
 
     case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
-        char transport = m_victoryCondition.m_artifactNum;
-        outfile->write(&transport, sizeof(transport));
-        transport = m_victoryCondition.m_townX;
-        outfile->write(&transport, sizeof(transport));
-        transport = m_victoryCondition.m_townY;
-        outfile->write(&transport, sizeof(transport));
-        transport = m_victoryCondition.m_townZ;
-        outfile->write(&transport, sizeof(transport));
+        writeValue<char>(outfile, m_victoryCondition.m_artifactNum);
+        writeValue<char>(outfile, m_victoryCondition.m_townX);
+        writeValue<char>(outfile, m_victoryCondition.m_townY);
+        writeValue<char>(outfile, m_victoryCondition.m_townZ);
         return 0;
     }
     }
@@ -5613,27 +5324,23 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     int count;
     char charBuffer;
 
-    count = infile->read(&charBuffer, sizeof(charBuffer));
+    count = readValue(infile, charBuffer);
     m_victoryCondition.m_allowNormalVictory = charBuffer != 0;
-    count = infile->read(&charBuffer, sizeof(charBuffer));
+    count = readValue(infile, charBuffer);
     m_victoryCondition.m_appliesToComputer = charBuffer != 0;
 
     switch (type) {
     case VICTORY_CONDITION_ARTIFACT: {
-        int artifact;
-        infile->read(&artifact, sizeof(char));
+        unsigned char artifact = readValue<unsigned char>(infile);
         m_victoryCondition.m_artifactNum =
-            static_cast<TArtifact>(artifact & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+            static_cast<TArtifact>(artifact); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         return 0;
     }
 
     case VICTORY_CONDITION_TOTAL_CREATURES: {
-        int creature;
-        infile->read(&creature, sizeof(char));
-        {
-            m_victoryCondition.m_creatureType = TCreatureType(creature & 0xff);
-        }
-        count = infile->read(&intBuffer, sizeof(intBuffer));
+        unsigned char creature = readValue<unsigned char>(infile);
+        m_victoryCondition.m_creatureType = TCreatureType(creature);
+        count = readValue(infile, intBuffer);
         if (count < sizeof(intBuffer))
             return -1;
         m_victoryCondition.m_numCreatures = intBuffer;
@@ -5642,11 +5349,11 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
 
     case VICTORY_CONDITION_TOTAL_RESOURCES: {
         char resourceType;
-        count = infile->read(&resourceType, sizeof(resourceType));
+        count = readValue(infile, resourceType);
         if (count < sizeof(resourceType))
             return -1;
         m_victoryCondition.m_resourceType = resourceType;
-        count = infile->read(&intBuffer, sizeof(intBuffer));
+        count = readValue(infile, intBuffer);
         if (count < sizeof(intBuffer))
             return -1;
         m_victoryCondition.m_resourceAmount = intBuffer;
@@ -5654,18 +5361,15 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     }
 
     case VICTORY_CONDITION_UPGRADE_TOWN: {
-        int townValue;
-        char hallLevel;
         char castleLevel;
-        infile->read(&townValue, sizeof(char));
-        m_victoryCondition.m_townX = townValue & 0xff;
-        infile->read(&townValue, sizeof(char));
-        m_victoryCondition.m_townY = townValue & 0xff;
-        infile->read(&townValue, sizeof(char));
-        m_victoryCondition.m_townZ = townValue & 0xff;
-        infile->read(&hallLevel, sizeof(hallLevel));
-        m_victoryCondition.m_hallLevel = hallLevel;
-        count = infile->read(&castleLevel, sizeof(castleLevel));
+        unsigned char townValue = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townX = townValue;
+        townValue = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = townValue;
+        townValue = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = townValue;
+        m_victoryCondition.m_hallLevel = readValue<char>(infile);
+        count = readValue(infile, castleLevel);
         if (count < sizeof(castleLevel))
             return -1;
         m_victoryCondition.m_castleLevel = castleLevel;
@@ -5673,17 +5377,16 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     }
 
     case VICTORY_CONDITION_BUILD_GRAIL: {
-        int grailTown;
-        infile->read(&grailTown, sizeof(char));
-        m_victoryCondition.m_townX = grailTown & 0xff;
+        unsigned char grailTown = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townX = grailTown;
         if (m_victoryCondition.m_townX == g_savedMapCoordinateNone)
             m_victoryCondition.m_townX = -1;
-        infile->read(&grailTown, sizeof(char));
-        m_victoryCondition.m_townY = grailTown & 0xff;
+        grailTown = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = grailTown;
         if (m_victoryCondition.m_townY == g_savedMapCoordinateNone)
             m_victoryCondition.m_townY = -1;
-        infile->read(&grailTown, sizeof(char));
-        m_victoryCondition.m_townZ = grailTown & 0xff;
+        grailTown = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = grailTown;
         if (m_victoryCondition.m_townZ == g_savedMapCoordinateNone)
             m_victoryCondition.m_townZ = -1;
         return 0;
@@ -5696,45 +5399,40 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     }
 
     case VICTORY_CONDITION_CAPTURE_TOWN: {
-        int capturedTown;
-        infile->read(&capturedTown, sizeof(char));
-        m_victoryCondition.m_townX = capturedTown & 0xff;
-        infile->read(&capturedTown, sizeof(char));
-        m_victoryCondition.m_townY = capturedTown & 0xff;
-        infile->read(&capturedTown, sizeof(char));
-        m_victoryCondition.m_townZ = capturedTown & 0xff;
+        unsigned char capturedTown = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townX = capturedTown;
+        capturedTown = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = capturedTown;
+        capturedTown = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = capturedTown;
         return 0;
     }
 
     case VICTORY_CONDITION_DEFEAT_MONSTER: {
-        int monster;
-        infile->read(&monster, sizeof(char));
-        m_victoryCondition.m_monsterX = monster & 0xff;
-        infile->read(&monster, sizeof(char));
-        m_victoryCondition.m_monsterY = monster & 0xff;
-        infile->read(&monster, sizeof(char));
-        m_victoryCondition.m_monsterZ = monster & 0xff;
+        unsigned char monster = readValue<unsigned char>(infile);
+        m_victoryCondition.m_monsterX = monster;
+        monster = readValue<unsigned char>(infile);
+        m_victoryCondition.m_monsterY = monster;
+        monster = readValue<unsigned char>(infile);
+        m_victoryCondition.m_monsterZ = monster;
         return 0;
     }
 
     case VICTORY_CONDITION_SURVIVE_TIME: {
-        int days;
-        infile->read(&days, sizeof(days));
-        m_victoryCondition.m_numDays = days;
+        m_victoryCondition.m_numDays = readValue<int>(infile);
         return 0;
     }
 
     case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
-        int transport;
-        infile->read(&transport, sizeof(char));
+        unsigned char transport = readValue<unsigned char>(infile);
         m_victoryCondition.m_artifactNum =
-            static_cast<TArtifact>(transport & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
-        infile->read(&transport, sizeof(char));
-        m_victoryCondition.m_townX = transport & 0xff;
-        infile->read(&transport, sizeof(char));
-        m_victoryCondition.m_townY = transport & 0xff;
-        infile->read(&transport, sizeof(char));
-        m_victoryCondition.m_townZ = transport & 0xff;
+            static_cast<TArtifact>(transport); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+        transport = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townX = transport;
+        transport = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = transport;
+        transport = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = transport;
         return 0;
     }
     }
@@ -5746,28 +5444,21 @@ VA(0x004c3c80, 0x10B) MAC_ADDRESS(0x0da274, 0x16c)
 int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
 {
     short shortValue;
-    int value;
     switch (type) {
     case LOSS_CONDITION_LOSE_TOWN:
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_townX = value & 0xff;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_townY = value & 0xff;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_townZ = value & 0xff;
+        m_lossCondition.m_townX = readValue<unsigned char>(infile);
+        m_lossCondition.m_townY = readValue<unsigned char>(infile);
+        m_lossCondition.m_townZ = readValue<unsigned char>(infile);
         return 0;
 
     case LOSS_CONDITION_LOSE_HERO:
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_heroX = value & 0xff;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_heroY = value & 0xff;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_heroZ = value & 0xff;
+        m_lossCondition.m_heroX = readValue<unsigned char>(infile);
+        m_lossCondition.m_heroY = readValue<unsigned char>(infile);
+        m_lossCondition.m_heroZ = readValue<unsigned char>(infile);
         return 0;
 
     case LOSS_CONDITION_TIME_LIMIT:
-        if (infile->read(&shortValue, sizeof(shortValue))
+        if (readValue(infile, shortValue)
             < sizeof(shortValue))
             return -1;
         m_lossCondition.m_numDays = shortValue;
@@ -5776,33 +5467,26 @@ int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
     return 0;
 }
 
-// Original: NewSMapHeader::saveLossCondition; game.cpp:6390, dc 0xaf2b4
-// Complete save 0x4c4f10 expands this helper after the loss-type byte.
-// It writes this header through TAbstractFile, uses the saved hero ID rather
-// than the old three hero coordinates, and does not test these payload writes.
+// Mac retains the time-limit short-write check; the caller ignores this
+// helper's result, so Windows can discard that check when expanding it.
 MAC_ADDRESS(0x0da3e0, 0x138)
 int NewSMapHeader::saveLossCondition(char type, TAbstractFile* outfile)
 {
-    char charBuffer;
-    short shortBuffer;
     switch (type) {
     case LOSS_CONDITION_LOSE_TOWN:
-        charBuffer = m_lossCondition.m_townX;
-        outfile->write(&charBuffer, sizeof(charBuffer));
-        charBuffer = m_lossCondition.m_townY;
-        outfile->write(&charBuffer, sizeof(charBuffer));
-        charBuffer = m_lossCondition.m_townZ;
-        outfile->write(&charBuffer, sizeof(charBuffer));
+        writeValue<char>(outfile, m_lossCondition.m_townX);
+        writeValue<char>(outfile, m_lossCondition.m_townY);
+        writeValue<char>(outfile, m_lossCondition.m_townZ);
         break;
 
     case LOSS_CONDITION_LOSE_HERO:
-        shortBuffer = m_lossCondition.m_heroId;
-        outfile->write(&shortBuffer, sizeof(shortBuffer));
+        writeValue<short>(outfile, m_lossCondition.m_heroId);
         break;
 
     case LOSS_CONDITION_TIME_LIMIT:
-        shortBuffer = m_lossCondition.m_numDays;
-        outfile->write(&shortBuffer, sizeof(shortBuffer));
+        if (static_cast<unsigned>(writeValue<short>(outfile,
+                m_lossCondition.m_numDays)) < sizeof(short))
+            return -1;
         break;
     }
     return 0;
@@ -5816,25 +5500,17 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
     short timeLimit;
     switch (type) {
     case LOSS_CONDITION_LOSE_TOWN: {
-        int value;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_townX = value & 0xff;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_townY = value & 0xff;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_townZ = value & 0xff;
+        m_lossCondition.m_townX = readValue<unsigned char>(infile);
+        m_lossCondition.m_townY = readValue<unsigned char>(infile);
+        m_lossCondition.m_townZ = readValue<unsigned char>(infile);
         return 0;
     }
 
     case LOSS_CONDITION_LOSE_HERO:
         if (saveVersion == g_saveVersionLossHeroCoordinates) {
-            int value;
-            infile->read(&value, sizeof(char));
-            m_lossCondition.m_heroX = value & 0xff;
-            infile->read(&value, sizeof(char));
-            m_lossCondition.m_heroY = value & 0xff;
-            infile->read(&value, sizeof(char));
-            m_lossCondition.m_heroZ = value & 0xff;
+            m_lossCondition.m_heroX = readValue<unsigned char>(infile);
+            m_lossCondition.m_heroY = readValue<unsigned char>(infile);
+            m_lossCondition.m_heroZ = readValue<unsigned char>(infile);
             return 0;
         } else {
             m_lossCondition.m_heroId = loadHeroIdShort(infile, saveVersion);
@@ -5842,7 +5518,7 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
         }
 
     case LOSS_CONDITION_TIME_LIMIT:
-        if (infile->read(&timeLimit, sizeof(timeLimit)) < sizeof(timeLimit))
+        if (readValue(infile, timeLimit) < sizeof(timeLimit))
             return -1;
         m_lossCondition.m_numDays = timeLimit;
         return 0;
@@ -5861,58 +5537,39 @@ VA(0x004c3ef0, 0x498) MAC_ADDRESS(0x0da6b4, 0x478)  // sole NewSMapHeader::Read 
 void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     TAbstractFile* infile, int mapVersion)
 {
-    {
-        signed char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_canBeHuman = charBuffer != 0;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_canBeComputer = charBuffer != 0;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_aiStrategy = charBuffer;
+    m_canBeHuman = readValue<signed char>(infile) != 0;
+    m_canBeComputer = readValue<signed char>(infile) != 0;
+    m_aiStrategy = readValue<signed char>(infile);
 
-        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            infile->read(&charBuffer, sizeof(charBuffer));
-            m_legalAlignments = static_cast<unsigned char>(charBuffer);
-        } else {
-            if (mapVersion != MAP_FORMAT_ARMAGEDDONS_BLADE)
-                infile->read(&charBuffer, sizeof(charBuffer));
-            unsigned short shortBuffer;
-            infile->read(&shortBuffer, sizeof(shortBuffer));
-            m_legalAlignments = shortBuffer;
-        }
+    if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        m_legalAlignments = readValue<unsigned char>(infile);
+    } else {
+        if (mapVersion != MAP_FORMAT_ARMAGEDDONS_BLADE)
+            readValue<signed char>(infile);
+        m_legalAlignments = readValue<unsigned short>(infile);
     }
 
-    {
-        signed char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_hasRandomAlignment = charBuffer != 0;
-        if (m_hasRandomAlignment)
-            m_legalAlignments |= 0x100;
-        if (!g_gameContextFeatures[*g_videoGameState].test(1))
-            m_legalAlignments &= 0xfeff;
+    m_hasRandomAlignment = readValue<signed char>(infile) != 0;
+    if (m_hasRandomAlignment)
+        m_legalAlignments |= 0x100;
+    if (!g_gameContextFeatures[*g_videoGameState].test(1))
+        m_legalAlignments &= 0xfeff;
 
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_hasMainTown = charBuffer != 0;
-        m_mainTownType = -1;
-        if (!m_hasMainTown) {
-            m_generateHero = 0;
+    m_hasMainTown = readValue<signed char>(infile) != 0;
+    m_mainTownType = -1;
+    if (!m_hasMainTown) {
+        m_generateHero = 0;
+    } else {
+        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            m_generateHero = 1;
         } else {
-            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                m_generateHero = 1;
-            } else {
-                infile->read(&charBuffer, sizeof(charBuffer));
-                m_generateHero = charBuffer != 0;
-                infile->read(&charBuffer, sizeof(charBuffer));
-                m_mainTownType = charBuffer;
-            }
-
-            infile->read(&charBuffer, sizeof(charBuffer));
-            m_castleLoc.m_x = static_cast<unsigned char>(charBuffer);
-            infile->read(&charBuffer, sizeof(charBuffer));
-            m_castleLoc.m_y = static_cast<unsigned char>(charBuffer);
-            infile->read(&charBuffer, sizeof(charBuffer));
-            m_castleLoc.m_z = static_cast<unsigned char>(charBuffer);
+            m_generateHero = readValue<signed char>(infile) != 0;
+            m_mainTownType = readValue<signed char>(infile);
         }
+
+        m_castleLoc.m_x = readValue<unsigned char>(infile);
+        m_castleLoc.m_y = readValue<unsigned char>(infile);
+        m_castleLoc.m_z = readValue<unsigned char>(infile);
     }
 
     infile->read(&m_hasRandomHero, sizeof(m_hasRandomHero));
@@ -5933,27 +5590,17 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA)
         return;
 
-    {
-        unsigned long byteValue;
-        infile->read(&byteValue, sizeof(unsigned char));
-        m_defaultPlaceholders = byteValue & 0xff;
-    }
+    m_defaultPlaceholders = readValue<unsigned char>(infile);
 
-    int heroCount;
-    infile->read(&heroCount, sizeof(heroCount));
+    int heroCount = readValue<int>(infile);
     m_heroes.resize(heroCount);
     if (heroCount > 0) {
         int heroIndex = 0;
         do {
-            // Mac calls readHeroId here at 0:0xdaac0. Windows retail tests
-            // only 0xff at 0x4c42c3; its two earlier readHeroId expansions
-            // each also test map version 14 and remap 0x80/0x81.
-            unsigned long heroValue;
-            infile->read(&heroValue, sizeof(unsigned char));
-            int heroId = heroValue & 0xff;
-            if (heroId == g_savedHeroNone)
-                heroId = -1;
-            m_heroes[heroIndex].m_heroId = heroId;
+            // The version-14 return above makes readHeroId's legacy
+            // remapping unreachable here; Windows expands only its sentinel
+            // check, while Mac retains the call at 0xdaac0.
+            m_heroes[heroIndex].m_heroId = readHeroId(infile, mapVersion);
             m_heroes[heroIndex].m_name = readLengthPrefixedString(infile);
             ++heroIndex;
             --heroCount;
@@ -6024,14 +5671,14 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     }
 
     char boolBuffer;
-    if (infile->read(&boolBuffer, sizeof(boolBuffer)) < sizeof(boolBuffer))
+    if (readValue(infile, boolBuffer) < sizeof(boolBuffer))
         return -1;
     m_isPlayable = boolBuffer != 0;
 
     if (infile->read(&m_size, sizeof(m_size)) < sizeof(m_size))
         return -1;
 
-    if (infile->read(&boolBuffer, sizeof(boolBuffer)) < sizeof(boolBuffer))
+    if (readValue(infile, boolBuffer) < sizeof(boolBuffer))
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
 
@@ -6045,15 +5692,13 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         return -1;
 
     unsigned char ucharBuffer;
-    if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
+    if (readValue(infile, ucharBuffer)
         < sizeof(ucharBuffer))
         return -1;
     m_difficulty = ucharBuffer;
 
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_maxHeroLevel = charBuffer;
+        m_maxHeroLevel = readValue<char>(infile);
     } else {
         m_maxHeroLevel = 0;
     }
@@ -6081,8 +5726,9 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         m_minNumHumanPlayers = 1;
 
     int x;
-    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+    if (readValue(infile, ucharBuffer) < sizeof(ucharBuffer))
         return -1;
+    x = ucharBuffer;
     m_victoryCondition.m_type = x;
     m_victoryCondition.m_gameWon = 0;
     m_victoryCondition.m_playerWinner = -1;
@@ -6114,16 +5760,18 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         }
     }
 
-    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+    if (readValue(infile, ucharBuffer) < sizeof(ucharBuffer))
         return -1;
+    x = ucharBuffer;
     m_lossCondition.m_type = x;
     m_lossCondition.m_gameLost = 0;
     m_lossCondition.m_playerLoser = -1;
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         readLossCondition(x, infile);
 
-    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+    if (readValue(infile, ucharBuffer) < sizeof(ucharBuffer))
         return -1;
+    x = ucharBuffer;
     m_numTeams = x;
     if (m_numTeams) {
         if (infile->read(m_teamInfo, sizeof(m_teamInfo)) < sizeof(m_teamInfo))
@@ -6159,12 +5807,10 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     m_placeholders.clear();
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         // Complete retail tests this dword for zero, not signed positivity.
-        unsigned int count;
-        infile->read(&count, sizeof(count));
+        unsigned int count = readValue<unsigned int>(infile);
         if (count > 0) {
             do {
-                infile->read(&x, sizeof(unsigned char));
-                x &= 0xff;
+                x = readValue<unsigned char>(infile);
                 m_placeholders.push_back(x);
             } while (--count != 0);
         }
@@ -6173,16 +5819,13 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     m_heroPlayerSetups.clear();
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        infile->read(&x, sizeof(unsigned char));
-        x &= 0xff;
+        x = readValue<unsigned char>(infile);
         if (static_cast<unsigned int>(x) > 0) {
             int count = x;
             do {
-                infile->read(&x, sizeof(unsigned char));
-                int heroKey = x & 0xff;
+                int heroKey = readValue<unsigned char>(infile);
 
-                unsigned char savedHeroId;
-                infile->read(&savedHeroId, sizeof(savedHeroId));
+                unsigned char savedHeroId = readValue<unsigned char>(infile);
                 int heroId = savedHeroId;
                 if (savedHeroId == g_savedHeroNone)
                     heroId = -1;
@@ -6210,7 +5853,7 @@ type_map_hero_info::type_map_hero_info(int portrait, std::string name,
 {
 }
 
-// PC-only post-header normalization. The available-hero bitset controls the
+// Post-header normalization. The available-hero bitset controls the
 // live availability bytes, explicit per-player hero masks override the
 // all-player default, and artifact victory conditions reserve their target
 // before random artifact placement starts.
@@ -6227,8 +5870,7 @@ void game::applyMapHeaderAvailability()
     for (std::map<int, type_map_hero_info>::iterator it =
              m_mapHeader.m_heroPlayerSetups.begin();
          it != m_mapHeader.m_heroPlayerSetups.end(); ++it) {
-        std::bitset<8> allPlayers;
-        allPlayers.set();
+        std::bitset<8> allPlayers = ~std::bitset<8>();
         if (it->second.m_players != allPlayers)
             m_heroPoolMap[it->first] = it->second.m_players;
     }
@@ -6262,24 +5904,19 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     int count;
     int i;
     unsigned char ucharBuffer;
-    char charBuffer;
-    char boolBuffer;
-    char sbyteBuffer;
 
     if (outfile->write(&m_version, sizeof(m_version)) < sizeof(m_version))
         return -1;
 
-    boolBuffer = m_isPlayable;
-    if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-        < sizeof(boolBuffer))
+    if (writeValue<char>(outfile, m_isPlayable)
+        < sizeof(char))
         return -1;
 
     if (outfile->write(&m_size, sizeof(m_size)) < sizeof(m_size))
         return -1;
 
-    boolBuffer = m_hasTwoLayers;
-    if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-        < sizeof(boolBuffer))
+    if (writeValue<char>(outfile, m_hasTwoLayers)
+        < sizeof(char))
         return -1;
 
     if (game::saveString(outfile, m_mapName) < 0)
@@ -6287,68 +5924,55 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     if (game::saveString(outfile, m_mapDescription) < 0)
         return -1;
 
-    ucharBuffer = m_difficulty;
-    if (outfile->write(&ucharBuffer, sizeof(ucharBuffer))
+    if (writeValue<unsigned char>(outfile, m_difficulty)
         < sizeof(ucharBuffer))
         return -1;
 
-    charBuffer = m_maxHeroLevel;
-    outfile->write(&charBuffer, sizeof(charBuffer));
+    writeValue<char>(outfile, m_maxHeroLevel);
 
     TPlayerSlotAttributes* player = m_playerSlotAttributes;
     for (i = 0; i < 8; ++i, ++player) {
 
-        boolBuffer = player->m_canBeHuman;
-        if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        if (writeValue<char>(outfile, player->m_canBeHuman)
+            < sizeof(char))
             return -1;
 
-        boolBuffer = player->m_canBeComputer;
-        if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        if (writeValue<char>(outfile, player->m_canBeComputer)
+            < sizeof(char))
             return -1;
 
-        enumBuffer = player->m_aiStrategy;
-        if (outfile->write(&enumBuffer, sizeof(enumBuffer))
+        if (writeValue<char>(outfile, player->m_aiStrategy)
             < sizeof(enumBuffer))
             return -1;
 
-        unsigned short alignmentBuffer = player->m_legalAlignments;
-        outfile->write(&alignmentBuffer, sizeof(alignmentBuffer));
+        writeValue<unsigned short>(outfile, player->m_legalAlignments);
 
-        boolBuffer = player->m_hasRandomAlignment;
-        if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        if (writeValue<char>(outfile, player->m_hasRandomAlignment)
+            < sizeof(char))
             return -1;
 
-        boolBuffer = player->m_generateHero;
-        if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        if (writeValue<char>(outfile, player->m_generateHero)
+            < sizeof(char))
             return -1;
 
         if (player->m_generateHero) {
-            sbyteBuffer = player->m_castleLoc.m_x;
-            if (outfile->write(&sbyteBuffer, sizeof(sbyteBuffer))
-                < sizeof(sbyteBuffer))
+            if (writeValue<char>(outfile, player->m_castleLoc.m_x)
+                < sizeof(char))
                 return -1;
-            sbyteBuffer = player->m_castleLoc.m_y;
-            if (outfile->write(&sbyteBuffer, sizeof(sbyteBuffer))
-                < sizeof(sbyteBuffer))
+            if (writeValue<char>(outfile, player->m_castleLoc.m_y)
+                < sizeof(char))
                 return -1;
-            sbyteBuffer = player->m_castleLoc.m_z;
-            if (outfile->write(&sbyteBuffer, sizeof(sbyteBuffer))
-                < sizeof(sbyteBuffer))
+            if (writeValue<char>(outfile, player->m_castleLoc.m_z)
+                < sizeof(char))
                 return -1;
         }
 
-        enumBuffer = player->m_nonRandomHeroId;
-        if (outfile->write(&enumBuffer, sizeof(enumBuffer))
+        if (writeValue<char>(outfile, player->m_nonRandomHeroId)
             < sizeof(enumBuffer))
             return -1;
 
         if (player->m_nonRandomHeroId != -1) {
-            enumBuffer = player->m_nonRandomHeroCustomPortrait;
-            if (outfile->write(&enumBuffer, sizeof(enumBuffer))
+            if (writeValue<char>(outfile, player->m_nonRandomHeroCustomPortrait)
                 < sizeof(enumBuffer))
                 return -1;
 
@@ -6359,22 +5983,21 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     }
 
     enumBuffer = m_victoryCondition.m_type;
-    if (outfile->write(&enumBuffer, sizeof(enumBuffer))
+    if (writeValue<char>(outfile, enumBuffer)
         < sizeof(enumBuffer))
         return -1;
     if (m_victoryCondition.m_type != -1)
         saveVictoryCondition(enumBuffer, outfile);
 
     enumBuffer = m_lossCondition.m_type;
-    if (outfile->write(&enumBuffer, sizeof(enumBuffer))
+    if (writeValue<char>(outfile, enumBuffer)
         < sizeof(enumBuffer))
         return -1;
 
     if (m_lossCondition.m_type != -1)
         saveLossCondition(enumBuffer, outfile);
 
-    enumBuffer = m_numTeams;
-    if (outfile->write(&enumBuffer, sizeof(enumBuffer))
+    if (writeValue<char>(outfile, m_numTeams)
         < sizeof(enumBuffer))
         return -1;
     if (m_numTeams) {
@@ -6382,18 +6005,15 @@ int NewSMapHeader::save(TAbstractFile* outfile)
             return -1;
     }
 
-    ucharBuffer = m_heroPlayerSetups.size();
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    writeValue<unsigned char>(outfile, m_heroPlayerSetups.size());
     for (std::map<int, type_map_hero_info>::iterator it =
              m_heroPlayerSetups.begin();
          it != m_heroPlayerSetups.end(); ++it) {
-        enumBuffer = it->first;
-        outfile->write(&enumBuffer, sizeof(enumBuffer));
-        enumBuffer = it->second.m_portrait;
-        outfile->write(&enumBuffer, sizeof(enumBuffer));
+        writeValue<char>(outfile, it->first);
+        writeValue<char>(outfile, it->second.m_portrait);
 
         count = it->second.m_name.length();
-        outfile->write(&count, sizeof(count));
+        writeValue<int>(outfile, count);
         outfile->write(it->second.m_name.c_str(), count);
 
         ucharBuffer = 0;
@@ -6422,16 +6042,14 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     char enumBuffer;
     int count;
     int i;
-    unsigned int availabilityIndex;
     unsigned char ucharBuffer;
-    char charBuffer;
     char boolBuffer;
     int x;
 
     if (infile->read(&m_version, sizeof(m_version)) < sizeof(m_version))
         return -1;
 
-    if (infile->read(&boolBuffer, sizeof(boolBuffer))
+    if (readValue(infile, boolBuffer)
         < sizeof(boolBuffer))
         return -1;
     m_isPlayable = boolBuffer != 0;
@@ -6439,7 +6057,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(&m_size, sizeof(m_size)) < sizeof(m_size))
         return -1;
 
-    if (infile->read(&boolBuffer, sizeof(boolBuffer))
+    if (readValue(infile, boolBuffer)
         < sizeof(boolBuffer))
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
@@ -6449,14 +6067,13 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (game::loadString(infile, m_mapDescription) < 0)
         return -1;
 
-    if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
+    if (readValue(infile, ucharBuffer)
         < sizeof(ucharBuffer))
         return -1;
     m_difficulty = ucharBuffer;
 
     if (saveVersion >= g_saveVersionMaxHeroLevel) {
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_maxHeroLevel = charBuffer;
+        m_maxHeroLevel = readValue<char>(infile);
     } else {
         m_maxHeroLevel = 0;
     }
@@ -6467,17 +6084,17 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
 
     TPlayerSlotAttributes* player = m_playerSlotAttributes;
     for (i = 0; i < 8; ++i, ++player) {
-        if (infile->read(&boolBuffer, sizeof(boolBuffer))
+        if (readValue(infile, boolBuffer)
             < sizeof(boolBuffer))
             return -1;
         player->m_canBeHuman = boolBuffer != 0;
 
-        if (infile->read(&boolBuffer, sizeof(boolBuffer))
+        if (readValue(infile, boolBuffer)
             < sizeof(boolBuffer))
             return -1;
         player->m_canBeComputer = boolBuffer != 0;
 
-        if (infile->read(&enumBuffer, sizeof(enumBuffer))
+        if (readValue(infile, enumBuffer)
             < sizeof(enumBuffer))
             return -1;
         player->m_aiStrategy = enumBuffer;
@@ -6490,34 +6107,32 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             ++m_numPlayers;
 
         if (saveVersion < g_saveVersionWideAlignments) {
-            infile->read(&ucharBuffer, sizeof(ucharBuffer));
+            readValue(infile, ucharBuffer);
             player->m_legalAlignments = ucharBuffer;
         } else {
-            unsigned short shortBuffer;
-            infile->read(&shortBuffer, sizeof(shortBuffer));
-            player->m_legalAlignments = shortBuffer;
+            player->m_legalAlignments = readValue<unsigned short>(infile);
         }
 
-        if (infile->read(&boolBuffer, sizeof(boolBuffer))
+        if (readValue(infile, boolBuffer)
             < sizeof(boolBuffer))
             return -1;
         player->m_hasRandomAlignment = boolBuffer != 0;
 
-        if (infile->read(&boolBuffer, sizeof(boolBuffer))
+        if (readValue(infile, boolBuffer)
             < sizeof(boolBuffer))
             return -1;
         player->m_generateHero = boolBuffer != 0;
 
         if (player->m_generateHero) {
-            if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
+            if (readValue(infile, ucharBuffer)
                 < sizeof(ucharBuffer))
                 return -1;
             player->m_castleLoc.m_x = ucharBuffer;
-            if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
+            if (readValue(infile, ucharBuffer)
                 < sizeof(ucharBuffer))
                 return -1;
             player->m_castleLoc.m_y = ucharBuffer;
-            if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
+            if (readValue(infile, ucharBuffer)
                 < sizeof(ucharBuffer))
                 return -1;
             player->m_castleLoc.m_z = ucharBuffer;
@@ -6540,24 +6155,27 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (!m_minNumHumanPlayers)
         m_minNumHumanPlayers = 1;
 
-    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+    if (readValue(infile, ucharBuffer) < sizeof(ucharBuffer))
         return -1;
+    x = ucharBuffer;
     m_victoryCondition.m_type = x;
     m_victoryCondition.m_gameWon = 0;
     m_victoryCondition.m_playerWinner = -1;
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         loadVictoryCondition(x, infile, saveVersion);
 
-    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+    if (readValue(infile, ucharBuffer) < sizeof(ucharBuffer))
         return -1;
+    x = ucharBuffer;
     m_lossCondition.m_type = x;
     m_lossCondition.m_gameLost = 0;
     m_lossCondition.m_playerLoser = -1;
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         loadLossCondition(x, infile, saveVersion);
 
-    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+    if (readValue(infile, ucharBuffer) < sizeof(ucharBuffer))
         return -1;
+    x = ucharBuffer;
     m_numTeams = x;
     if (m_numTeams) {
         if (infile->read(m_teamInfo, sizeof(m_teamInfo)) < sizeof(m_teamInfo))
@@ -6571,34 +6189,22 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (saveVersion < g_saveVersionCustomHeroSetups)
         return 0;
 
-    infile->read(&x, sizeof(unsigned char));
-    x &= 0xff;
+    x = readValue<unsigned char>(infile);
     if (static_cast<unsigned int>(x) <= 0)
         return 0;
     count = x;
 
     do {
-        infile->read(&x, sizeof(unsigned char));
-        int heroKey = x & 0xff;
+        int heroKey = readValue<unsigned char>(infile);
 
-        int heroId;
-        infile->read(&heroId, sizeof(unsigned char));
-        heroId &= 0xff;
+        int heroId = readValue<unsigned char>(infile);
         if (heroId == g_savedHeroNone)
             heroId = -1;
 
         std::string strTemp = readLengthPrefixedString(infile);
-        std::bitset<8> availability;
-        if (saveVersion >= g_saveVersionCustomHeroAvailability) {
-            infile->read(&ucharBuffer, sizeof(ucharBuffer));
-            for (availabilityIndex = 0;
-                 availabilityIndex < 8; ++availabilityIndex) {
-                availability[availabilityIndex] =
-                    (ucharBuffer & (1 << (availabilityIndex & 7))) != 0;
-            }
-        } else {
-            availability.set();
-        }
+        std::bitset<8> availability =
+            saveVersion >= g_saveVersionCustomHeroAvailability
+                ? readPackedBits<8>(infile) : ~std::bitset<8>();
 
         m_heroPlayerSetups.insert(
             std::pair<const int, type_map_hero_info>(
@@ -6637,7 +6243,7 @@ int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
     int count;
     int length;
 
-    count = infile->read(&length, sizeof(length));
+    count = readValue(infile, length);
     if (count < sizeof(length))
         return -1;
 
@@ -6689,8 +6295,7 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
     if (isRemoteMove)
         return;
 
-    const_cast<armyGroup&>(
-        static_cast<const town*>(thisTown)->getArmy()).initialize();
+    thisTown->getArmy().initialize();
     if (thisTown->m_owner != -1) {
         m_players[newPlayerOwner].m_townIds[m_players[newPlayerOwner].m_numTowns] =
             static_cast<char>(townId);
@@ -8030,6 +7635,16 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
     return -1;
 }
 
+// Mac 0:e07f4 constructs the level mask, sets level-1, and calls the
+// bitset overload at 0:e0610. It follows that overload in the same TU.
+MAC_ADDRESS(0x0e07f4, 0x68)
+SpellID game::getRandomSpell(int level)
+{
+    std::bitset<5> spellLevels;
+    spellLevels[level - 1] = true;
+    return getRandomSpell(spellLevels);
+}
+
 // Original: game::RandomizeHeroPool; game.cpp:8896, dc 0xb4fa0
 // NewMap expands this loop in retail, including Complete's enlarged roster
 // and separate last-Wisdom/last-magic-school tracking bytes.
@@ -9348,6 +8963,8 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
         const char* diffFilename = DATA_COMPGEN(
             0x00677fa0, xferDiffFilename, "data\\diff.dat");
         File::deleteFile(diffFilename);
+        // Mac checks path creation and data-fork opening separately, with a
+        // fileError call for each. Windows File::open has one error path.
         if (!file.open(diffFilename, modeWrite)) {
             fileError(diffFilename);
             shutDown(0);
@@ -9402,7 +9019,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             static_cast<unsigned char*>(diffFile->apply(orig, size));
         fileSize = diffFile->m_numBytes;
         delete[] orig;
-        delete diffFile;
+        delete[] newSave;
         data = temp;
     }
 
@@ -10094,8 +9711,7 @@ game::game()
     int heroSlot;
     MEMSET(m_heroAvailability, -1, sizeof(m_heroAvailability), heroSlot);
 
-    std::bitset<8> allPlayers;
-    allPlayers.set();
+    std::bitset<8> allPlayers = ~std::bitset<8>();
     for (int i = 0; i < HERO_COUNT; i++)
         m_heroPoolMap[i] = allPlayers;
     int usedArt;
