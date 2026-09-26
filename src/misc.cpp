@@ -364,6 +364,8 @@ void setDefaultCombatOptions()
     g_config.m_combatFirstAidTent = 1;
 }
 
+// Mac reads a native preferences file: its branches call checkConfigFile
+// twice and setGameDefaults once. Windows uses the registry helper below.
 VA(0x0050b750, 0x59) MAC_ADDRESS(0x1311bc, 0x10c)  // dc 0xfdbd0
 void readPrefs()
 {
