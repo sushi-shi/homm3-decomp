@@ -396,9 +396,11 @@ void type_sacrifice_window::createArtifactWidgets(
     m_widgets.push_back(m_currentArtifactWidget);
     m_artifactWidgets.push_back(m_currentArtifactWidget);
 
+    // CodeWarrior resolves the overloaded handler name only in an initializer.
+    type_func_button::handler_type emptyBackpackHandler = emptyBackpack;
     m_emptyBackpackButton = new type_func_button(
         146, 520, 64, 32, widgetId++, "AltEmBk.def",
-        emptyBackpack, 0, 1);
+        emptyBackpackHandler, 0, 1);
     m_emptyBackpackButton->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_EMPTY_BACKPACK].m_text, 0, 1);
     m_widgets.push_back(m_emptyBackpackButton);
