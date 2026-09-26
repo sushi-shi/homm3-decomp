@@ -131,7 +131,9 @@ void CDPlayHeroes::destroyMsgQueue()
     }
 }
 
-VA(0x00552320, 0x205)  // dc 0x11ba38
+// CodeWarrior combines the deleting wrapper and destructor body: r4 selects
+// whether operator delete runs after the shared destroyMsgQueue call.
+VA(0x00552320, 0x205) MAC_ADDRESS(0x210770, 0xa4)  // dc 0x11ba38
 CDPlayHeroes::~CDPlayHeroes()
 {
     destroyMsgQueue();
