@@ -14,6 +14,10 @@
 // overloads (ansi_prefix.mac.h) make mixed float/double calls ambiguous.
 #undef __ANSI_OVERLOAD__
 #undef _MSL_INTEGRAL_MATH
+// VC6's standard headers reach <cstdio>/<cstring> transitively (<string>
+// through <xlocale>); MSL's do not, so the prefix supplies them.
+#include <stdio.h>
+#include <string.h>
 // Native MSL provides the equivalent CRT entry under this spelling.
 #define _strcmpi _stricmp
 // The file API keeps Microsoft's names in shared source; MSL supplies the
