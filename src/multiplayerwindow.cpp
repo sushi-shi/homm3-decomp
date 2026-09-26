@@ -301,13 +301,15 @@ inline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     getWidget(BACK_ID)->setHelpText(g_dialogBackHelp, 0, 0);
 }
 
+// Mac dialog reads at 0x219b04, 0x219cdc and 0x21ce48 expand
+// textWidget::getText through the widget string and its character buffer.
 // DC keeps this source helper out of line and OnWidgetDeselect calls it.
 // Complete emits no standalone body, but the retail caller contains exactly
 // its active-field/empty-text guard, proving that VC6 inlined the boundary.
 inline unsigned char CMPInputDlg::onOK()
 {
     if (m_field1->m_status & widget::WIDGET_ACTIVE) {
-        if (!strlen(m_field1->m_text.c_str()))
+        if (!strlen(m_field1->getText()))
             return 0;
     }
     return 1;
@@ -337,7 +339,7 @@ int CHotSeatDlg::getPlayerCount()
 {
     int players = 0;
     for (int i = 0; i < 8; ++i) {
-        if (strlen(m_edit[i]->m_text.c_str()))
+        if (strlen(m_edit[i]->getText()))
             ++players;
     }
     return players;
@@ -766,7 +768,7 @@ unsigned char TMultiPlayerWindow::onModemHost()
 inline unsigned char TMultiPlayerWindow::onIPX()
 {
     g_mpNetProtocol = MP_IPX;
-    if (::initRemote(MP_IPX, m_playerName->m_text.c_str()) &&
+    if (::initRemote(MP_IPX, m_playerName->getText()) &&
         initConnection(0, 0)) {
         DPCAPS caps;
         g_dPlay->getCaps(&caps, 1);
@@ -1016,7 +1018,7 @@ unsigned char TMultiPlayerWindow::initRemote(eNetGameType netGameType, const cha
     DPCAPS dpCaps;
 
     g_mpNetProtocol = netGameType;
-    if (!::initRemote(netGameType, m_playerName->m_text.c_str()))
+    if (!::initRemote(netGameType, m_playerName->getText()))
         return 0;
     if (!initConnection(const_cast<char*>(extra), comportInfo))
         return 0;
@@ -1093,10 +1095,10 @@ unsigned char TMultiPlayerWindow::onHost()
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
         return 0;
 
-    const char* password = sessDlg.m_field2->m_text.c_str();
+    const char* password = sessDlg.m_field2->getText();
     if (!strlen(password))
         password = 0;
-    if (!hostSession(sessDlg.m_field1->m_text.c_str(), password))
+    if (!hostSession(sessDlg.m_field1->getText(), password))
         return 0;
     return 1;
 }
@@ -1193,7 +1195,7 @@ VA(0x00510980, 0x5D) MAC_ADDRESS(0x219ae0, 0xb8)  // dc 0x1027f4
 void CMPInputDlg::updateOK()
 {
     if (m_field1->m_status & widget::WIDGET_ACTIVE) {
-        if (!strlen(m_field1->m_text.c_str()))
+        if (!strlen(m_field1->getText()))
             getWidget(OKAY_ID)->enable(0);
         else
             getWidget(OKAY_ID)->enable(1);
@@ -1598,8 +1600,8 @@ unsigned char CHotSeatDlg::onOK()
     g_hotSeatMan = new CHotSeatMan;
 
     for (int i = 0; i < 8; ++i) {
-        if (strlen(m_edit[i]->m_text.c_str()))
-            g_hotSeatMan->addPlayer(m_edit[i]->m_text.c_str());
+        if (strlen(m_edit[i]->getText()))
+            g_hotSeatMan->addPlayer(m_edit[i]->getText());
     }
 
     return 1;
