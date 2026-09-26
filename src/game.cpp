@@ -1236,10 +1236,10 @@ VA(0x004ba260, 0x401) MAC_ADDRESS(0x0cc8ec, 0x490)  // dc 0xa51b0
 int playerData::load(TAbstractFile* infile, int saveVersion)
 {
     char value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     m_color = value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     m_numHeroes = value;
 
@@ -1255,59 +1255,59 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
     }
 
     unsigned char flag;
-    if (infile->read(&flag, sizeof(flag)) < sizeof(flag))
+    if (readValue(infile, flag) < sizeof(flag))
         return -1;
     m_startingNumHeroes = flag;
 
     int number;
-    if (infile->read(&number, sizeof(number)) < sizeof(number))
+    if (readValue(infile, number) < sizeof(number))
         return -1;
     m_personality = number;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     m_extraPuzzlePieces = value;
 
     if (infile->read(&m_puzzleGuess, sizeof(m_puzzleGuess)) < sizeof(m_puzzleGuess))
         return -1;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     m_deathCountDown = value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     m_numTowns = value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     m_currTownId = value;
 
     for (i = 0; i < 0x48; i++) {
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
+        if (readValue(infile, value) < sizeof(value))
             return -1;
         m_townIds[i] = value;
     }
 
     for (i = 0; i < 7; i++) {
-        if (infile->read(&number, sizeof(number)) < sizeof(number))
+        if (readValue(infile, number) < sizeof(number))
             return -1;
         m_resources[i] = number;
     }
 
     unsigned long flags;
-    if (infile->read(&flags, sizeof(flags)) < sizeof(flags))
+    if (readValue(infile, flags) < sizeof(flags))
         return -1;
     m_mysticalGardenFlags = flags;
-    if (infile->read(&flags, sizeof(flags)) < sizeof(flags))
+    if (readValue(infile, flags) < sizeof(flags))
         return -1;
     m_magicSpringFlags = flags;
-    if (infile->read(&flags, sizeof(flags)) < sizeof(flags))
+    if (readValue(infile, flags) < sizeof(flags))
         return -1;
     m_deadGuyFlags = flags;
-    if (infile->read(&flags, sizeof(flags)) < sizeof(flags))
+    if (readValue(infile, flags) < sizeof(flags))
         return -1;
     m_leanToFlags = flags;
 
-    if (infile->read(&flag, sizeof(flag)) < sizeof(flag))
+    if (readValue(infile, flag) < sizeof(flag))
         return -1;
     m_placementHelpEnabled = flag != 0;
 
@@ -1316,7 +1316,7 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
         std::bitset<12> combos;
         infile->read(bits, sizeof(bits));
         for (unsigned int bit = 0; bit < 12; bit++)
-            combos.set(bit, (bits[bit >> 3] & (1 << (bit & 7))) != 0);
+            combos[bit] = (bits[bit >> 3] & (1 << (bit & 7))) != 0;
         m_assembledCombinations = combos;
     }
     return 0;
@@ -1330,128 +1330,88 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 VA(0x004ba670, 0x36A) MAC_ADDRESS(0x0ccd7c, 0x4fc)  // anchor-global, dc 0xa55a8
 int playerData::save(TAbstractFile* outfile)
 {
-    unsigned long flags;
-    int number;
     int count;
     int x;
-    unsigned char flag;
-    char value;
 
-    value = m_color;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, m_color);
+    if (count < sizeof(char))
         return -1;
-    value = m_numHeroes;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, m_numHeroes);
+    if (count < sizeof(char))
         return -1;
-    value = static_cast<char>(m_currHeroId);
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, static_cast<char>(m_currHeroId));
+    if (count < sizeof(char))
         return -1;
 
     for (x = 0; x < 8; x++) {
-        value = static_cast<char>(m_heroes[x]);
-        count = outfile->write(&value, sizeof(value));
-        if (count < sizeof(value))
+        count = writeValue<char>(outfile, static_cast<char>(m_heroes[x]));
+        if (count < sizeof(char))
             return -1;
     }
 
-    value = static_cast<char>(m_recruits[0]);
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, static_cast<char>(m_recruits[0]));
+    if (count < sizeof(char))
         return -1;
-    value = static_cast<char>(m_recruits[1]);
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, static_cast<char>(m_recruits[1]));
+    if (count < sizeof(char))
         return -1;
 
-    flag = m_startingNumHeroes;
-    count = outfile->write(&flag, sizeof(flag));
-    if (count < sizeof(flag))
+    count = writeValue<unsigned char>(outfile, m_startingNumHeroes);
+    if (count < sizeof(unsigned char))
         return -1;
 
-    number = m_personality;
-    count = outfile->write(&number, sizeof(number));
-    if (count < sizeof(number))
+    count = writeValue<int>(outfile, m_personality);
+    if (count < sizeof(int))
         return -1;
 
-    value = m_extraPuzzlePieces;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, m_extraPuzzlePieces);
+    if (count < sizeof(char))
         return -1;
 
     count = outfile->write(&m_puzzleGuess, sizeof(m_puzzleGuess));
     if (count < sizeof(m_puzzleGuess))
         return -1;
 
-    value = m_deathCountDown;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, m_deathCountDown);
+    if (count < sizeof(char))
         return -1;
-    value = m_numTowns;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, m_numTowns);
+    if (count < sizeof(char))
         return -1;
-    value = m_currTownId;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, m_currTownId);
+    if (count < sizeof(char))
         return -1;
 
     for (x = 0; x < 0x48; x++) {
-        value = m_townIds[x];
-        count = outfile->write(&value, sizeof(value));
-        if (count < sizeof(value))
+        count = writeValue<char>(outfile, m_townIds[x]);
+        if (count < sizeof(char))
             return -1;
     }
 
     for (x = 0; x < 7; x++) {
-        number = m_resources[x];
-        count = outfile->write(&number, sizeof(number));
-        if (count < sizeof(number))
+        count = writeValue<int>(outfile, m_resources[x]);
+        if (count < sizeof(int))
             return -1;
     }
 
-    flags = m_mysticalGardenFlags;
-    count = outfile->write(&flags, sizeof(flags));
-    if (count < sizeof(flags))
+    count = writeValue<unsigned long>(outfile, m_mysticalGardenFlags);
+    if (count < sizeof(unsigned long))
         return -1;
-    flags = m_magicSpringFlags;
-    count = outfile->write(&flags, sizeof(flags));
-    if (count < sizeof(flags))
+    count = writeValue<unsigned long>(outfile, m_magicSpringFlags);
+    if (count < sizeof(unsigned long))
         return -1;
-    flags = m_deadGuyFlags;
-    count = outfile->write(&flags, sizeof(flags));
-    if (count < sizeof(flags))
+    count = writeValue<unsigned long>(outfile, m_deadGuyFlags);
+    if (count < sizeof(unsigned long))
         return -1;
-    flags = m_leanToFlags;
-    count = outfile->write(&flags, sizeof(flags));
-    if (count < sizeof(flags))
+    count = writeValue<unsigned long>(outfile, m_leanToFlags);
+    if (count < sizeof(unsigned long))
         return -1;
 
-    flag = m_placementHelpEnabled;
-    count = outfile->write(&flag, sizeof(flag));
-    if (count < sizeof(flag))
+    count = writeValue<unsigned char>(outfile, m_placementHelpEnabled);
+    if (count < sizeof(unsigned char))
         return -1;
 
-    // Residual (99.9557%): all 49 blocks, every branch and every opcode agree.
-    // Dreamcast proves the top-scope uint_buffer/int_buffer/count/x/
-    // uchar_buffer/char_buffer roster, all twenty named count = Write(...)
-    // statements, and reuse of x by the three original loops; those facts are
-    // restored above and ratcheted even though VC6 lowers them byte-flat. The
-    // remaining operands are one Complete-era stack-home cycle: this compile
-    // puts x/flags/bits at -0xc/-0x8/-0x4, retail at -0x8/-0xc/-0x6. The int
-    // buffer at -0x10 and both byte buffers are exact. Moving bits to function
-    // scope and a const-reference combinations alias are byte-flat; removing
-    // the alias for a direct member call falls to 98.2109%.
-    // DECLARATION ORDER IS NOT THE LEVER (measured 2026-09-06, both byte-flat
-    // at 99.9557): hoisting `int x;` above `unsigned long flags;` and sinking
-    // it below `char value;` each leave x at -0xc and flags at -0x8.  The
-    // slots follow the variables, not their declaration order - the same
-    // result the ai.cpp simulate_combat pair gave, where the lever turned out
-    // to be the ORDER OF THE ASSIGNMENT STATEMENTS instead. The flat relocation
-    // view also names the same bitset<12>::_Xran callee through a synthetic
-    // target label because its retail row is unclaimed.
+    // Mac passes the bitset and index directly to test; no mutable proxy.
     unsigned char bits[2];
     const std::bitset<12>* combinations = &m_assembledCombinations;
     unsigned int bit = 0;
