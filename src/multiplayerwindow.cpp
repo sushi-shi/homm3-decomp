@@ -369,16 +369,7 @@ CHeroSessions::CHeroSessions()
 {
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1005
-// The retail slider constructor passes 0x50ee10. Both builds use the global
-// window, store its index, redraw, then call update; the parent is unused.
-VA(0x0050ee10, 0x2a) MAC_ADDRESS(0x21ab24, 0x54)
-void sliderGames(int state, heroWindow* parentWindow)
-{
-    g_multiPlayerWindow->m_currentIndex = state;
-    g_multiPlayerWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    g_multiPlayerWindow->update();
-}
+void sliderGames(int state, heroWindow* parentWindow);
 
 // Mac 0x219a30..0x219ab0 expands the same focus/navigation/base-key
 // helper as CHotSeatEdit at 0x219d40..0x219dc4, before updating the dialog.
@@ -547,6 +538,17 @@ VA_COMPGEN(0x0050ede0, 0x21, SCALAR_DELETING_DTOR, CHeroSessions)
 VA_COMPGEN(0x00558350, 0x54, IMPLICIT_DTOR, CHeroSessions)
 
 VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
+
+// E:\gamedcs\multiplayerwindow.cpp:1005
+// The retail slider constructor passes 0x50ee10. Both builds use the global
+// window, store its index, redraw, then call update; the parent is unused.
+VA(0x0050ee10, 0x2a) MAC_ADDRESS(0x21ab24, 0x54)
+void sliderGames(int state, heroWindow* parentWindow)
+{
+    g_multiPlayerWindow->m_currentIndex = state;
+    g_multiPlayerWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    g_multiPlayerWindow->update();
+}
 
 VA(0x0050ee40, 0xAB) MAC_ADDRESS(0x21ab78, 0x94)  // dc 0x100430
 TMultiPlayerWindow::~TMultiPlayerWindow()

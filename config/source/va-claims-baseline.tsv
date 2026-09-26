@@ -1,4 +1,6 @@
 # KNOWN VA-claim backlog - standing debt reported by
 # homm3.match.verify_va_claims, drained by explicit review
 # claim-review sessions; NEW violations are fatal.
+ORDER	0x004bc350	SavedGameHeader::reset/save are currently defined after game::save; original Game.h ownership needs a separate source-order recovery.
 CLASS	0x004f82e0	src/kbwin.cpp claims 0x004f82e0 (GameTime::Get) - a real kbwin.cpp:823 function whose entire body is `jmp [__imp__timeGetTime]`, so the universe classifier reads it as an import thunk; DC roster proves the source function
+ORDER	0x00597740	SmackManager::drawSmackerFrame is visible before videoDrawCurrentFrame for VC6 expansion; the retail standalone body follows its caller.
