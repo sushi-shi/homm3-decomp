@@ -4526,10 +4526,6 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 // rectangle operations in its lightly optimized body, while Windows
 // expands the calls. The remaining mismatch is register homing; 45 of 46
 // CFG blocks now have exact shape, with all 25 branches and calls aligned.
-// Mac's older Earthquake body ends after the animated-wall branch and omits
-// this source's second damageWall and showPointer tail calls. Windows retail
-// retains both (all 25 call sites agree), so Mac shape cannot be an exact
-// source verdict for this function.
 VA(0x005a7c80, 0x408) MAC_ADDRESS(0x1991d0, 0x688)  // order-map+arity, dc 0x156ec4
 void combatManager::earthquake(int level)
 {
