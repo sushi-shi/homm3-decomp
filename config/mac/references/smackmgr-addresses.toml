@@ -197,3 +197,12 @@ mac_offset = 0x25fd40
 mac_size = 0x44
 target_sha256 = "8b402863692fc292a8b9aa25577e2c21042f50a37417b17e35ab08d626e98f7d"
 evidence = "NEW: gotoSmackerFrame forwards requested frame to SmackGoto0x297774 on active Smacker handle. Adjacent boundaries and full span SHA verified."
+
+[[helpers]]
+source_helper = "SmackManager::restartSmacker"
+unit = "smackmgr"
+mac_section = 0
+mac_offset = 0x25fa10
+mac_size = 0x44
+target_sha256 = "74bdd0aceacf12af583e52621d878ab31b74d55cbacb64e5da37b6eab16e161a"
+evidence = "Null-checks g_smackVideo, calls SmackGoto297774(handle,1), reloads handle then SmackDoFrame2970d0. videoRestart retains sole whole-PEF direct xref25e954; Windows597900 expands same guard/two SDK calls before BinkManager::restartBink. BLR25fa50,nextSmackerFrame begins25fa54."

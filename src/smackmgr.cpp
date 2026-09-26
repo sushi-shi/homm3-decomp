@@ -476,10 +476,7 @@ void videoResume()
 VA(0x00597900, 0x23) MAC_ADDRESS(0x25e948, 0x24)  // dc 0x14ac54
 void videoRestart()
 {
-    if (g_smackVideo) {
-        SmackGoto(g_smackVideo, 1);
-        SmackDoFrame(g_smackVideo);
-    }
+    SmackManager::restartSmacker();
     BinkManager::restartBink();
 }
 
@@ -1023,6 +1020,17 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
 // expand the draw/close helpers; those bytes prove their Windows guard
 // and store order. The CE CloseSmacker body itself is only rts/nop.
 namespace SmackManager {
+
+// Mac 0:0x25fa10 retains this helper immediately before nextSmackerFrame.
+// videoRestart calls it at 0:0x25e954; Windows expands the same guarded pair.
+MAC_ADDRESS(0x25fa10, 0x44)
+void restartSmacker()
+{
+    if (g_smackVideo) {
+        SmackGoto(g_smackVideo, 1);
+        SmackDoFrame(g_smackVideo);
+    }
+}
 
 VA(0x00598eb0, 0x193) MAC_ADDRESS(0x25fa54, 0x224)  // dc 0x14adfc
 void nextSmackerFrame()

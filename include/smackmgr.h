@@ -21,6 +21,7 @@ extern bool g_updateScreen;
 extern bool g_needsUpdate;
 extern bool g_playingSmacker;
 void drawSmackerFrame();  // 0x598e80
+void restartSmacker();
 void gotoSmackerFrame(unsigned long frame);  // 0x5990a0
 void closeSmacker();                                     // 0x599050
 void setPixelFormat(unsigned long redMask, unsigned long greenMask,
