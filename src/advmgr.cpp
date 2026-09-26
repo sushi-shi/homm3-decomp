@@ -8461,7 +8461,8 @@ void advManager::checkScreenScroll()
 
     // Mac initializes the no-scroll sentinel before testing the coordinates;
     // both outside-window and central-window paths reach the same clock call.
-    int dir = 100;
+    const int noScrollDirection = 100;
+    int dir = noScrollDirection;
     if (x >= 0 && x < WINDOW_SCREEN_WIDTH && y >= 0
         && y < WINDOW_SCREEN_HEIGHT) {
         if (x < 16) {
@@ -8484,7 +8485,7 @@ void advManager::checkScreenScroll()
             dir = ADV_SCROLL_SOUTH - ADV_SCROLL_POINTER;
         }
     }
-    if (dir == 100) {
+    if (dir == noScrollDirection) {
         g_lastMapScrollTime = GameTime::get();
         return;
     }

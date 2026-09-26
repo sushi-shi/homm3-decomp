@@ -243,6 +243,30 @@ void caller(deque<int>::iterator& it) { ++it; helper(); }
             self.assertEqual(result['inputs'][str(header)], source_graph.digest(header))
             self.assertTrue(any(edge['expression'] == 'helper()' for edge in result['edges']))
 
+    def test_csprite_overlay_preserves_source_offsets(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'src/csprite.cpp'
+            source.parent.mkdir()
+            original = '''struct Palette {};
+void consume(Palette&);
+void caller() {
+#ifdef __clang__
+    Palette palette;
+    consume(palette);
+#else
+    consume(Palette());
+#endif
+}
+'''
+            source.write_text(original)
+            result = source_graph.scan(self.ci, source,
+                                       ['-xc++', '-std=c++98', '-U__clang__'], root)
+            self.assertEqual(result['diagnostics'], [])
+            self.assertEqual(source.read_text(), original)
+            self.assertTrue(any(edge['expression'] == 'consume(palette)'
+                                for edge in result['edges']))
+
 
 if __name__ == '__main__':
     unittest.main()

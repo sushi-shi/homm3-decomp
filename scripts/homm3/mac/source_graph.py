@@ -93,6 +93,19 @@ def _deque_overlays(root: Path):
     return [(str(header), original.replace(marker, marker + declarations, 1))]
 
 
+def _csprite_overlays(source: Path):
+    """Parse VC6's temporary-to-nonconst-reference call through its Clang view."""
+    if source.name != 'csprite.cpp':
+        return []
+    original = source.read_text()
+    directive = '#ifdef __clang__'
+    if original.count(directive) != 1:
+        return []
+    # Preserve byte offsets of every authored expression after the directive.
+    replacement = '#if 1' + ' ' * (len(directive) - len('#if 1'))
+    return [(str(source), original.replace(directive, replacement, 1))]
+
+
 def scan(ci, source: Path, args: list[str], root: Path) -> dict:
     """Keep exact declaration USRs, including overload and const distinctions."""
     k = ci.CursorKind
@@ -104,7 +117,8 @@ def scan(ci, source: Path, args: list[str], root: Path) -> dict:
                                  unsaved_files=[*_vendor_asm_overlays(root),
                                                 *_min_overlays(root),
                                                 *_vc6_functional_overlays(root),
-                                                *_deque_overlays(root)])
+                                                *_deque_overlays(root),
+                                                *_csprite_overlays(source)])
     nodes, edges, gaps = {}, [], []
     texts = {}
 
