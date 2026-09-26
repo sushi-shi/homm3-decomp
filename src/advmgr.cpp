@@ -8459,14 +8459,14 @@ void advManager::screenScroll(int dir, int changeMouse)
 VA(0x00419820, 0x169) MAC_ADDRESS(0x019e50, 0x1a0)  // dc 0x1cb08
 void advManager::checkScreenScroll()
 {
+    const int noScrollDirection = 100;
+    int dir = noScrollDirection;
     int x;
     int y;
     g_mouseManager->mouseCoords(x, y);
 
     // Mac initializes the no-scroll sentinel before testing the coordinates;
     // both outside-window and central-window paths reach the same clock call.
-    const int noScrollDirection = 100;
-    int dir = noScrollDirection;
     if (x >= 0 && x < WINDOW_SCREEN_WIDTH && y >= 0
         && y < WINDOW_SCREEN_HEIGHT) {
         if (x < 16) {
@@ -8489,25 +8489,24 @@ void advManager::checkScreenScroll()
             dir = ADV_SCROLL_SOUTH - ADV_SCROLL_POINTER;
         }
     }
-    if (dir == noScrollDirection) {
+    if (dir != noScrollDirection) {
+        unsigned long now = GameTime::get();
+        if (now - g_lastMapScrollTime < 70)
+            return;
+        g_lastMapScrollTime += 70;
+        if (now - g_lastMapScrollTime >= 70)
+            g_lastMapScrollTime = now - 70;
+
+        int origX = m_radarOrigin.m_x;
+        int origY = m_radarOrigin.m_y;
+        screenScroll(dir, 1);
+        if (g_mouseManager->getFrame() >= ADV_SCROLL_POINTER
+            && g_mouseManager->getFrame() <= ADV_SCROLL_NORTHWEST
+            && origX == m_radarOrigin.m_x && origY == m_radarOrigin.m_y)
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    } else {
         g_lastMapScrollTime = GameTime::get();
-        return;
     }
-
-    unsigned long now = GameTime::get();
-    if (now - g_lastMapScrollTime < 70)
-        return;
-    g_lastMapScrollTime += 70;
-    if (now - g_lastMapScrollTime >= 70)
-        g_lastMapScrollTime = now - 70;
-
-    int origX = m_radarOrigin.m_x;
-    int origY = m_radarOrigin.m_y;
-    screenScroll(dir, 1);
-    if (g_mouseManager->getFrame() >= ADV_SCROLL_POINTER
-        && g_mouseManager->getFrame() <= ADV_SCROLL_NORTHWEST
-        && origX == m_radarOrigin.m_x && origY == m_radarOrigin.m_y)
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 }
 
 // DC advmgr.cpp:10756 records MouseInScrollZone as an ordinary public member.
