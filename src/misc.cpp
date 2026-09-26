@@ -124,17 +124,19 @@ void checkConfigFile()
 // its sibling: there is no retail body to promote. Source order would emit it
 // between SetGameDefaults (0x50b4d0, ends 0x50b6f2) and
 // SetDefaultCombatOptions (0x50b700), and that gap is fourteen bytes of
-// padding; no other carve row in misc.obj's band fits eight dword stores
+// padding; no other carve row in misc.obj's band fits these default-option stores
 // either (the unclaimed rows are 95/95 B before the band starts and
 // 221/32/489 B at its end). An EXTERN function is emitted out of line
 // unconditionally under /Ob2, so the absence of a body is itself the
 // evidence: retail's SetDefaultSystemOptions has internal linkage and its one
 // call site inlined it away. Mac retains this helper at code 0:0x131144;
-// setGameDefaults calls it there, and its eight g_config stores follow this order.
+// setGameDefaults calls it there. Its first store initializes animateSpellBook;
+// setDefaultCombatOptions repeats that initialization.
 
 MAC_ADDRESS(0x131144, 0x3c)
 static void setDefaultSystemOptions()
 {
+    g_config.m_animateSpellBook = 1;
     g_config.m_showRoute = 1;
     g_config.m_moveReminder = 1;
     g_config.m_quickCombat = 0;
