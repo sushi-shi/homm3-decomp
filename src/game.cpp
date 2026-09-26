@@ -10029,8 +10029,16 @@ bool loadObjectVector(TAbstractFile* infile,
 // The retained template instances are claimed in retail address order.
 // Their one active implementation appears at the DC source-order boundary.
 #if 0  // @carcass -- claim-only template instances
-VA(0x004d2ac0, 0x60) MAC_ADDRESS(0x0e7550, 0x9c)  // point/long ICF twin, dc 0xc1dd4 / 0xc1e58
+VA(0x004d2ac0, 0x60) MAC_ADDRESS(0x0e7550, 0x9c)  // point instance; retail folds long here
 bool saveVector(TAbstractFile* outfile, std::vector<type_point>& srcVector)
+{
+    // @stub
+}
+
+// Mac keeps the long-vector writer separate at game::save 0xd439c;
+// retail folds it into the point-vector body above.
+MAC_ADDRESS(0x0e78fc, 0x9c)
+bool saveVector(TAbstractFile* outfile, std::vector<long>& srcVector)
 {
     // @stub
 }
