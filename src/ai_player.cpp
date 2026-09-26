@@ -2265,8 +2265,14 @@ long type_AI_creature_swapper::valueOfAddingArmy(
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
         // Mac 0x30354 expands getAlignment again for this threshold.
-        int minimumMorale =
-            g_game->getAlignment(type) == TOWN_NECROPOLIS ? 2 : 1;
+        // Mac 0x30380..0x30390 assigns the two threshold values in separate
+        // branches. This spelling improves Windows 80.3322% -> 82.4178%
+        // while preserving the second getAlignment and morale helper calls.
+        int minimumMorale;
+        if (g_game->getAlignment(type) == TOWN_NECROPOLIS)
+            minimumMorale = 2;
+        else
+            minimumMorale = 1;
 
         if (m_army->getMorale(0, 0, 0, 0, 0,
                            m_hasAngelicAlliance, 0)
