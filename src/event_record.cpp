@@ -392,21 +392,12 @@ unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
         return 0;
     if (version >= 0x12 && version != g_saveVersionBoatFieldsAbsent
         && (version <= 0x1e || version >= 0x23)) {
-        {
-            unsigned char flag;
-            infile->read(&flag, 1);
-            m_previousOccupied = flag != 0;
-            infile->read(&flag, 1);
-            m_occupied = flag != 0;
-        }
-        {
-            // These serialized values are hero IDs.
-            short heroId;
-            infile->read(&heroId, sizeof(heroId));
-            m_previousOccupyingHero = heroId;
-            infile->read(&heroId, sizeof(heroId));
-            m_occupyingHero = heroId;
-        }
+        m_previousOccupied = readValue<char>(infile) != 0;
+        m_occupied = readValue<char>(infile) != 0;
+        // Mac stages each short separately, then uses lhbrx; the conversion
+        // remains unresolved in the shared native scalar helper.
+        m_previousOccupyingHero = readValue<short>(infile);
+        m_occupyingHero = readValue<short>(infile);
     } else {
         m_previousOccupied = 0;
         m_occupied = 1;
@@ -423,22 +414,12 @@ unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
     type_event_record::save(outfile);
     if (outfile->write(&m_currentBoat->m_id, 1) != 1)
         return 0;
-    {
-        unsigned char b = m_previousOccupied;
-        outfile->write(&b, 1);
-    }
-    {
-        unsigned char b = m_occupied;
-        outfile->write(&b, 1);
-    }
-    {
-        short s = m_previousOccupyingHero;
-        outfile->write(&s, sizeof(s));
-    }
-    {
-        short s = m_occupyingHero;
-        outfile->write(&s, sizeof(s));
-    }
+    writeValue<unsigned char>(outfile, m_previousOccupied);
+    writeValue<unsigned char>(outfile, m_occupied);
+    // Mac uses sthbrx in these scalar expansions; native helper byte order
+    // remains an unresolved comparison difference.
+    writeValue<short>(outfile, m_previousOccupyingHero);
+    writeValue<short>(outfile, m_occupyingHero);
     return 1;
 }
 
