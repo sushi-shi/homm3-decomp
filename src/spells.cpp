@@ -754,12 +754,12 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     if (validHex(targetIndex) && spellTargetsASingleArmy(spellId, mastery)) {
         // CastSpell -> find_spell_target: Dreamcast line 696
         // records the helper call and retail +0x276 retains its REL32.
-        // Negative control: with normal depth VC6 expands the helper into
-        // its three leaf callees (0 find_spell_target calls; 82.4456%).
-#pragma inline_depth(0)
+        // Without diagnostic depth pins, VC6 expands both calls while retail
+        // retains them (castSpell MAX 93.98 -> 92.47). CodeWarrior retains
+        // both calls, as does Mac retail; its empty depth reset was illegal.
+        // Recover the Windows inlining state without suppressing inlining.
         target = findSpellTarget(
             spellId, m_currentSide, targetIndex, 1, isMonsterSpell);
-#pragma inline_depth()
     } else {
         target = 0;
     }
@@ -812,11 +812,9 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                     0);
         // CastSpell -> find_spell_target: Dreamcast line 759
         // records this redirected-target call and retail +0x478 retains it.
-        // The same flattening negative control above removes both calls.
-#pragma inline_depth(0)
+        // Windows inlining state remains the same unfinished lead as above.
         target = findSpellTarget(
             spellId, otherSide, secondaryIndex, 0, isMonsterSpell);
-#pragma inline_depth()
         redirected = 1;
     } else {
         redirected = 0;
