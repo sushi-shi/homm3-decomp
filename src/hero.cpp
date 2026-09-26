@@ -1377,7 +1377,7 @@ void hero::addSpell(int whichSpell)
 MAC_ADDRESS(0x0f5008, 0xb4)
 std::bitset<70> markSpells(TSpellSchool school)
 {
-    std::bitset<70> granted(0);
+    std::bitset<70> granted;
     for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
         if (g_spellTraits[spell].m_schoolBits & school)
             granted[spell] = true;
@@ -1409,22 +1409,12 @@ std::bitset<70> markSpells(TSpellSchool school)
 // Armageddon's Blade site is deliberately LEFT expanded: retail calls set
 // three times out of four, not four, so pinning both would overshoot.
 
-// Residual (93.96%): Armageddon's Blade still folds to
-// `or dword ptr [result], imm` - which is what retail does at one of its
-// four sites too, so this may already be right and the remainder
-// elsewhere. Everything
-// else - both loops, the jump tables, the tail-merged set chain, the
-// `result[SPELL_TITANS_LIGHTNING_BOLT] = false` epilogue and its
-// registers - agrees. Tried and rejected: the DEFAULT bitset ctor, which
-// is what retail's `_Tidy` calls actually prove the source used, but
-// which frees enough budget to lose the operator[] pair (90.49%, and
-// 84.86% before the level helper); its call shape is identical to the
-// `(0)` ctor's at all five sites, so no byte is given up by spelling it
-// this way.
+// Mac f5034/f50e8 initializes each result through the no-argument
+// three-word zeroing body e7378, with no unsigned-long value argument.
 VA(0x004d9350, 0x272) MAC_ADDRESS(0x0f50bc, 0x214)  // retail artifact-id dispatch + bitset return, retail-only
 std::bitset<70> markArtifactSpells(int artifactId)
 {
-    std::bitset<70> result(0);
+    std::bitset<70> result;
     switch (artifactId) {
     case ARTIFACT_TOME_OF_AIR_MAGIC:
         result = markSpells(eSchoolAir);
