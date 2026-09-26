@@ -1741,9 +1741,11 @@ void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
 
 // Complete-only helper shared by the scenario handoff and campaign pool
 // pruning. One receiver and one artifact temporary span both artifact loops.
+// Mac 0x95a78 keeps the destination vector in r3 and the hero in r4;
+// both retained callers (0x95c60 and 0x98af4) preserve this argument order.
 MAC_ADDRESS(0x095a78, 0xd8)
-static void collectCrossoverArtifacts(const hero& sourceHero,
-                                      std::vector<type_artifact>& artifacts)
+static void collectCrossoverArtifacts(std::vector<type_artifact>& artifacts,
+                                      const hero& sourceHero)
 {
     type_artifact artifact;
     int slot;
@@ -1796,7 +1798,7 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
             if (g_game->m_heroAvailability[carried.m_id]
                 != hero::HERO_AVAILABILITY_TAVERN_POOL)
                 continue;
-            collectCrossoverArtifacts(carried, artifacts);
+            collectCrossoverArtifacts(artifacts, carried);
         }
 
         for (itemIndex = 0; itemIndex < artifacts.size(); ++itemIndex) {
@@ -2790,7 +2792,7 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
 
         for (unsigned int rest = pooled.size(); rest--;) {
             std::vector<type_artifact>& pooledArtifacts = m_carryoverArtifact[pool];
-            collectCrossoverArtifacts(pooled[rest], pooledArtifacts);
+            collectCrossoverArtifacts(pooledArtifacts, pooled[rest]);
         }
 
         std::sort(kept.begin(), kept.end(), CrossoverHeroStronger());
