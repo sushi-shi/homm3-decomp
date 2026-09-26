@@ -798,7 +798,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                  g_heroClasses[castingHero->m_heroClass].m_townType * 2
                  + g_heroTraits[castingHero->m_id].m_sex].m_castFrame; frame++) {
             m_cmbtHeroFrameIndex[m_currentSide] = frame;
-            drawFrame(1, 1, 0, 100, 1, 1);
+            drawFrame(1, 0, 0, 100, 1, 1);
         }
     } else {
         army* caster = getCurrentArmy();
