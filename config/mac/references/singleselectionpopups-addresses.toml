@@ -197,3 +197,13 @@ mac_offset = 0x16ce7c
 mac_size = 0xd4
 target_sha256 = "1dbbc23a3f66b48ddc0b89b413052d85b644d7ad3d66e65f0259773ac1925036"
 evidence = "Direct call from identified CTeamAlignmentDlg::createWin16cbcc. Reads team mask receiver+0x54 indexed by teamNbr*4, counts eight player bits with unrolled tests, returns count. Complete body ends BLR16cf4c. Incidental source helper identity; no Windows VA invented."
+
+[[functions]]
+retail_va = 0x00577320
+unit = "singleselectionpopups"
+source = "include/singleselectionpopups.h"
+mac_section = 0
+mac_offset = 0x16dba8
+mac_size = 0x58
+target_sha256 = "a0b465e21d0e2856c6eff2f4cfbb936e2a5395087efd37b100842e8869e96c98"
+evidence = "generateRandomMap calls this retained progress step. It adds amount to done at +8, clamps against total at +4, stores done, and calls updateProgressBar at 0x16d988. This is the existing header method TRandomMapProgress::advance; BLR at 0x16dbfc precedes the next body."

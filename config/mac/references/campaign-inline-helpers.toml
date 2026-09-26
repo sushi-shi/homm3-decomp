@@ -81,3 +81,21 @@ mac_offset = 0x93ea0
 mac_size = 0xa8
 target_sha256 = "8f03a141b4b1661f6d7b324a69373b3c12a7a1b22c7c5c11140fb5a43aaf4cc0"
 evidence = "ScenarioStruct::read calls this retained reader for both prologue and epilogue records. It makes two one-byte virtual TAbstractFile reads, stores video and audio at+0/+4, calls the reviewed readLengthPrefixedString0x93f48 and assigns the returned MSL string at+8. Windows source has this canonical method and expands both calls. BLR0x93f44 bounds the body before the string reader."
+
+[[helpers]]
+unit = "customcampaign"
+source_helper = "TCampaignStartCrossoverOption::getFirstCrossoverHero"
+mac_section = 0
+mac_offset = 0x93878
+mac_size = 0x4c
+target_sha256 = "eaca561d1ad37880b27dd4348288b5ad8c1ee0bac2b06d653145c55867df09cb"
+evidence = "getIconDefName calls this at 0x938e0. It indexes the chosen scenario score, then its carry-over hero pool, returning null for an empty pool and the first hero otherwise. The helper precedes the crossover virtual methods; BLR at 0x938c0 ends the complete two-return body."
+
+[[helpers]]
+unit = "customcampaign"
+source_helper = "applyCampaignMapHeader"
+mac_section = 0
+mac_offset = 0x95fb0
+mac_size = 0xb0
+target_sha256 = "f213795fcf1ef0f277b06807e4361b9ebcf26cc61c9d44d4720bddc0b698e809"
+evidence = "CampaignHeaderStruct::load calls this at 0x97324 after loadMapHeader. It dispatches setTown on scenario options, assigns map placeholders to the scenario vector, and copies the eight slot defaultPlaceholders values. The existing ordinary source helper preserves this operation; BLR at 0x9605c precedes usesCrossoverPool."
