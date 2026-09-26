@@ -5259,160 +5259,90 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 VA(0x004c3200, 0x398) MAC_ADDRESS(0x0d9320, 0x588)
 int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
 {
-    char charBuffer;
-
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_victoryCondition.m_allowNormalVictory = charBuffer != 0;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_victoryCondition.m_appliesToComputer = charBuffer != 0;
+    m_victoryCondition.m_allowNormalVictory = readValue<char>(infile) != 0;
+    m_victoryCondition.m_appliesToComputer = readValue<char>(infile) != 0;
 
     switch (type) {
-    case VICTORY_CONDITION_ARTIFACT: {
+    case VICTORY_CONDITION_ARTIFACT:
         if (m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            int intBuffer;
-            infile->read(&intBuffer, sizeof(char));
             m_victoryCondition.m_artifactNum =
-                static_cast<TArtifact>(intBuffer & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                static_cast<TArtifact>(readValue<unsigned char>(infile)); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         } else {
-            short shortBuffer;
-            infile->read(&shortBuffer, sizeof(shortBuffer));
             m_victoryCondition.m_artifactNum =
-                static_cast<TArtifact>(shortBuffer); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                static_cast<TArtifact>(readValue<short>(infile)); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
         break;
-    }
 
-    case VICTORY_CONDITION_TOTAL_CREATURES: {
+    case VICTORY_CONDITION_TOTAL_CREATURES:
         if (m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            int intBuffer;
-            infile->read(&intBuffer, sizeof(char));
-            {
-                m_victoryCondition.m_creatureType = TCreatureType(intBuffer & 0xff);
-            }
+            m_victoryCondition.m_creatureType =
+                TCreatureType(readValue<unsigned char>(infile));
         } else {
-            short shortBuffer;
-            infile->read(&shortBuffer, sizeof(shortBuffer));
-            {
-                m_victoryCondition.m_creatureType = TCreatureType(shortBuffer);
-            }
+            m_victoryCondition.m_creatureType =
+                TCreatureType(readValue<short>(infile));
         }
-        {
-            int intBuffer;
-            infile->read(&intBuffer, sizeof(intBuffer));
-            m_victoryCondition.m_numCreatures = intBuffer;
-        }
+        m_victoryCondition.m_numCreatures = readValue<int>(infile);
         break;
-    }
 
-    case VICTORY_CONDITION_TOTAL_RESOURCES: {
-        {
-            char resource;
-            infile->read(&resource, sizeof(resource));
-            m_victoryCondition.m_resourceType = resource;
-        }
-        {
-            int intBuffer;
-            infile->read(&intBuffer, sizeof(intBuffer));
-            m_victoryCondition.m_resourceAmount = intBuffer;
-        }
+    case VICTORY_CONDITION_TOTAL_RESOURCES:
+        m_victoryCondition.m_resourceType = readValue<signed char>(infile);
+        m_victoryCondition.m_resourceAmount = readValue<int>(infile);
         break;
-    }
 
-    case VICTORY_CONDITION_UPGRADE_TOWN: {
-        {
-            int intBuffer;
-            infile->read(&intBuffer, sizeof(char));
-            m_victoryCondition.m_townX = intBuffer & 0xff;
-            infile->read(&intBuffer, sizeof(char));
-            m_victoryCondition.m_townY = intBuffer & 0xff;
-            infile->read(&intBuffer, sizeof(char));
-            m_victoryCondition.m_townZ = intBuffer & 0xff;
-        }
-        {
-            char level;
-            infile->read(&level, sizeof(level));
-            m_victoryCondition.m_hallLevel = level;
-            infile->read(&level, sizeof(level));
-            m_victoryCondition.m_castleLevel = level;
-        }
+    case VICTORY_CONDITION_UPGRADE_TOWN:
+        m_victoryCondition.m_townX = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = readValue<unsigned char>(infile);
+        m_victoryCondition.m_hallLevel = readValue<char>(infile);
+        m_victoryCondition.m_castleLevel = readValue<char>(infile);
         break;
-    }
 
-    case VICTORY_CONDITION_BUILD_GRAIL: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townX = intBuffer & 0xff;
+    case VICTORY_CONDITION_BUILD_GRAIL:
+        m_victoryCondition.m_townX = readValue<unsigned char>(infile);
         if (m_victoryCondition.m_townX == g_savedMapCoordinateNone)
             m_victoryCondition.m_townX = -1;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townY = intBuffer & 0xff;
+        m_victoryCondition.m_townY = readValue<unsigned char>(infile);
         if (m_victoryCondition.m_townY == g_savedMapCoordinateNone)
             m_victoryCondition.m_townY = -1;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townZ = intBuffer & 0xff;
+        m_victoryCondition.m_townZ = readValue<unsigned char>(infile);
         if (m_victoryCondition.m_townZ == g_savedMapCoordinateNone)
             m_victoryCondition.m_townZ = -1;
         break;
-    }
 
-    case VICTORY_CONDITION_DEFEAT_HERO: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_heroX = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_heroY = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_heroZ = intBuffer & 0xff;
+    case VICTORY_CONDITION_DEFEAT_HERO:
+        m_victoryCondition.m_heroX = readValue<unsigned char>(infile);
+        m_victoryCondition.m_heroY = readValue<unsigned char>(infile);
+        m_victoryCondition.m_heroZ = readValue<unsigned char>(infile);
         break;
-    }
 
-    case VICTORY_CONDITION_CAPTURE_TOWN: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townX = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townY = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townZ = intBuffer & 0xff;
+    case VICTORY_CONDITION_CAPTURE_TOWN:
+        m_victoryCondition.m_townX = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = readValue<unsigned char>(infile);
         break;
-    }
 
-    case VICTORY_CONDITION_DEFEAT_MONSTER: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_monsterX = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_monsterY = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_monsterZ = intBuffer & 0xff;
+    case VICTORY_CONDITION_DEFEAT_MONSTER:
+        m_victoryCondition.m_monsterX = readValue<unsigned char>(infile);
+        m_victoryCondition.m_monsterY = readValue<unsigned char>(infile);
+        m_victoryCondition.m_monsterZ = readValue<unsigned char>(infile);
         break;
-    }
 
     case VICTORY_CONDITION_FLAG_ALL_GENERATORS:
     case VICTORY_CONDITION_FLAG_ALL_MINES:
     case VICTORY_CONDITION_DEFEAT_ALL_MONSTERS:
         break;
 
-    case VICTORY_CONDITION_SURVIVE_TIME: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(intBuffer));
-        m_victoryCondition.m_numDays = intBuffer;
+    case VICTORY_CONDITION_SURVIVE_TIME:
+        m_victoryCondition.m_numDays = readValue<int>(infile);
         break;
-    }
 
-    case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(char));
+    case VICTORY_CONDITION_TRANSPORT_ARTIFACT:
         m_victoryCondition.m_artifactNum =
-            static_cast<TArtifact>(intBuffer & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townX = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townY = intBuffer & 0xff;
-        infile->read(&intBuffer, sizeof(char));
-        m_victoryCondition.m_townZ = intBuffer & 0xff;
+            static_cast<TArtifact>(readValue<unsigned char>(infile)); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+        m_victoryCondition.m_townX = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = readValue<unsigned char>(infile);
         break;
-    }
     }
 
     g_game->validateVictoryLossConditions(0);
