@@ -1424,7 +1424,7 @@ TTownScreenWindow::~TTownScreenWindow()
             delete *it;
     }
     if (m_zBuffer) {
-        delete m_zBuffer;
+        delete[] m_zBuffer;
         m_zBuffer = 0;
     }
 }

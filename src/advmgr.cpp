@@ -911,7 +911,7 @@ void advManager::close()
     g_windowManager->removeWindow(m_advWindow);
     delete m_advWindow;
     m_advWindow = 0;
-    delete m_routeArray;
+    delete[] m_routeArray;
     m_routeArray = 0;
     m_status = 0;
     if (m_netMsgHandler) {

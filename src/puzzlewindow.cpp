@@ -237,7 +237,7 @@ int TPuzzleWindow::updatePuzzle(int full)
     int piecesNotFound = 0;
 
     for (int i = 0; i < 48; ++i) {
-        if (full || !g_puzzlePiecesRemoved.test(i)) {
+        if (full || !g_puzzlePiecesRemoved[i]) {
             int piece = g_puzzlePieceOrder[m_puzWhich * 48 + i];
             Bitmap816* bitmap = m_puzzlePieces[piece];
             const short* xCoordinate = g_puzzleCoordinates[m_puzWhich].m_x;
