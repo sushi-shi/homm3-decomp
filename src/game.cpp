@@ -2159,7 +2159,7 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
     int count;
     short length = s.length();
 
-    count = writeValue<short>(outfile, length);
+    count = writeScalar(outfile, length);
     if (count < sizeof(length))
         return -1;
 
@@ -9691,12 +9691,10 @@ type_point game::getUndergroundGateExit(const NewmapCell* cell) const
 // stosb tail for the odd bytes, and EAX = -1 for the -1 fill), and only that
 // setup order separates them (behavior-catalog D25). m_heroPoolMap keeps
 // ECX-first because its fill value is a variable, not a literal.
-// Adopting the eight loops moved this body 78.16 -> 80.60 and reset MAX from
-// the 88.86 banked before the canonical SCampaign header bodies were
-// restored; HIST holds that peak. The rest of the residual is that header
-// decision, not these fills: retail CALLS SCampaign::SCampaign (which itself
-// expands its string and four vector members) where our TU inlines its body
-// and keeps the member ctor calls, and retail opens one more EH state (11).
+// The eight loops moved this body 78.16 -> 80.60. Placing the unchanged
+// SCampaign constructor in customcampaign.cpp restores its retained call
+// here and raises the focused Windows comparison to 91.40, above HIST 88.86.
+// The remaining differences include EH state and initialization ordering.
 VA(0x004cdf20, 0x585) MAC_ADDRESS(0x0e5784, 0x97c)  // anchor-global, dc 0xbb62c
 game::game()
 {

@@ -53,6 +53,14 @@ int writeValue(TAbstractFile* outfile, T value)
     return outfile->write(&value, sizeof(value));
 }
 
+// Caller-owned scalar storage: saveString's retail writer passes its length
+// slot directly, so the later length tests reload that same local.
+template <class T>
+int writeScalar(TAbstractFile* outfile, T& value)
+{
+    return writeValue<T&>(outfile, value);
+}
+
 // A native range preserves the actual byte count and the caller's guards.
 // Deducing Count retains each serialized count's signed source type: char for
 // black markets and short for vectors. This interface is inferred; it adds no
