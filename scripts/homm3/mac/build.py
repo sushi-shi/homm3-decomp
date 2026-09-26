@@ -84,8 +84,10 @@ class Listings:
 def objects(units: set[str] | None = None, root: Path = ROOT) -> None:
     """Bring the full-TU objects up to date; a unit that fails to compile is reported, not fatal."""
     targets = sorted(f"mac:{unit}" for unit in units) if units else ["mac-objects"]
-    subprocess.run(["ninja", "-C", str(root), "-k", "0", *targets],
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    completed = subprocess.run(["ninja", "-C", str(root), "-k", "0", *targets],
+                               capture_output=True, text=True, errors="replace")
+    if "Traceback" in completed.stdout + completed.stderr:
+        raise MacBuildError("full-TU object wrapper crashed; see `ninja mac-objects`")
 
 
 def linked_pair(pair: pairs.Pair, pef: PEF, destinations, listings: Listings) -> tuple[LinkedCode, CodeHunk]:

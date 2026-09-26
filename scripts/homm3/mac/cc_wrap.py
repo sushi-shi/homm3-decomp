@@ -56,9 +56,9 @@ def include_roots() -> tuple[str, ...]:
 
 
 def _wine_env() -> dict[str, str]:
-    from homm3.mac.build import _wine_version
+    from homm3.mac.toolchain import wine_version
     env = dict(os.environ)
-    version = re.sub(r"[^A-Za-z0-9._-]", "_", _wine_version())
+    version = re.sub(r"[^A-Za-z0-9._-]", "_", wine_version())
     env["WINEPREFIX"] = os.environ.get("HOMM3_MAC_WINEPREFIX",
                                        str(ROOT / "build/mac/wineprefix" / version))
     env.setdefault("WINEDEBUG", "-all")
