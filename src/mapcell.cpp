@@ -1285,7 +1285,7 @@ int NewfullMap::readHolyGrailData(TAbstractFile* infile, CObject* grailObject)
 {
     char charBuffer;
     int count;
-    count = infile->read(&charBuffer, sizeof(charBuffer));
+    count = readValue(infile, charBuffer);
     if (count < sizeof(charBuffer))
         return -1;
     g_game->m_ultimateArtifactX = grailObject->m_x;
@@ -1305,9 +1305,9 @@ int NewfullMap::readHolyGrailData(TAbstractFile* infile, CObject* grailObject)
 MAC_ADDRESS(0x120e70, 0xa4)
 int NewfullMap::readShrineData(TAbstractFile* infile, CObject* shrineObject)
 {
-    char charBuffer;
+    signed char charBuffer;
     int count;
-    count = infile->read(&charBuffer, sizeof(charBuffer));
+    count = readValue(infile, charBuffer);
     if (count < sizeof(charBuffer))
         return -1;
     shrineObject->m_shrineInfo.m_spell = charBuffer;
@@ -2138,7 +2138,7 @@ int NewfullMap::readShipyardData(TAbstractFile* infile, CObject* shipyardObject)
 {
     char charBuffer;
     int count;
-    count = infile->read(&charBuffer, sizeof(charBuffer));
+    count = readValue(infile, charBuffer);
     if (count < sizeof(charBuffer))
         return -1;
     shipyardObject->m_shipyardInfo.m_owner = charBuffer;
@@ -3208,9 +3208,7 @@ static void readWitchHutData(TAbstractFile* infile, CObject* tempObject)
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         tempObject->m_extraInfo = 0xefbf;
     } else {
-        int allowedSkills;
-        infile->read(&allowedSkills, sizeof(allowedSkills));
-        tempObject->m_extraInfo = allowedSkills;
+        tempObject->m_extraInfo = readValue<int>(infile);
     }
 }
 
