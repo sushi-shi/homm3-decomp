@@ -52,49 +52,49 @@ unsigned char LODFile::exist(const char* itemName)
     return m_matchindex >= 0;
 }
 
+// Mac retains both recursive calls at 0x11b770 and 0x11b7d8. The Windows
+// retail body at 0x4fa660 carries equivalent loops at the same two branches.
 VA(0x004fa660, 0x113) MAC_ADDRESS(0x11b6f0, 0x148)  // dc 0xe91c0
 void LODFile::find(unsigned begin, unsigned end, const char* itemName)
 {
-    for (;;) {
-        if (begin == end) {
+    if (begin == end) {
+        m_matchindex = -1;
+        return;
+    }
+
+    unsigned half = (end - begin) / 2;
+    int order = _strcmpi(itemName, m_subindex[begin + half].m_name);
+    if (order == 0) {
+        m_matchindex = begin + half;
+        return;
+    }
+    if (order < 0) {
+        if (end - begin > 4) {
+            find(begin, begin + half, itemName);
+            return;
+        } else {
+            for (unsigned i = begin; i < end; i++) {
+                if (_strcmpi(itemName, m_subindex[i].m_name) == 0) {
+                    m_matchindex = i;
+                    return;
+                }
+            }
             m_matchindex = -1;
             return;
         }
-
-        unsigned half = (end - begin) / 2;
-        int order = _strcmpi(itemName, m_subindex[begin + half].m_name);
-        if (order == 0) {
-            m_matchindex = begin + half;
+    } else {
+        if (end - begin > 4) {
+            find(begin + half, end, itemName);
             return;
-        }
-        if (order < 0) {
-            if (end - begin > 4) {
-                end = begin + half;
-                continue;
-            } else {
-                for (unsigned i = begin; i < end; i++) {
-                    if (_strcmpi(itemName, m_subindex[i].m_name) == 0) {
-                        m_matchindex = i;
-                        return;
-                    }
-                }
-                m_matchindex = -1;
-                return;
-            }
         } else {
-            if (end - begin > 4) {
-                begin += half;
-                continue;
-            } else {
-                for (unsigned j = begin; j < end; j++) {
-                    if (_strcmpi(itemName, m_subindex[j].m_name) == 0) {
-                        m_matchindex = j;
-                        return;
-                    }
+            for (unsigned j = begin; j < end; j++) {
+                if (_strcmpi(itemName, m_subindex[j].m_name) == 0) {
+                    m_matchindex = j;
+                    return;
                 }
-                m_matchindex = -1;
-                return;
             }
+            m_matchindex = -1;
+            return;
         }
     }
 }
