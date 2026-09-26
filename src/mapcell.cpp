@@ -89,9 +89,7 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
     }
     count = infile->read(&m_playerFlags, sizeof(m_playerFlags));
     if (count < sizeof(m_playerFlags)) {
-#pragma inline_depth(0)
         return -1;
-#pragma inline_depth()
     }
 
     if (saveVersion >= 28) {
