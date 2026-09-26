@@ -45,10 +45,16 @@ public:
 // table rather than two literals.
 DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 
-// Mac uses two 4096-byte windows (8192-byte allocation); Windows uses two
-// 512-byte windows. Refill, output bounds and CRC spans follow that size.
+// Mac uses two 4096-byte windows; Windows uses two 512-byte windows.
+// Refill, output bounds, allocation and CRC spans all use the same capacity.
+#if defined(HOMM3_TARGET_MAC)
+#define GZ_WINDOW_SIZE 4096
+#else
+#define GZ_WINDOW_SIZE 512
+#endif
 // 0x4d5fd0: refill next_in from the source streambuf when it is empty and
-// hand back the next byte, or -1 at end of source.
+// hand back the next byte, or -1 at end of source. Mac's remaining three
+// differences are solely its 0x60 frame versus the candidate's 0x50 frame.
 VA(0x004d5fd0, 0x74) MAC_ADDRESS(0x220a18, 0xb0)
 int TGzInflateBuf::getByte()
 {
@@ -56,12 +62,13 @@ int TGzInflateBuf::getByte()
         if (m_sourceEof)
             return -1;
         int count = m_source->sgetn(
-            static_cast<char*>(static_cast<void*>(m_buffer)), 0x200);
-        if (count < 0x200)
+            static_cast<char*>(static_cast<void*>(m_buffer)), GZ_WINDOW_SIZE);
+        if (count < GZ_WINDOW_SIZE)
             m_sourceEof = 1;
         m_stream.next_in = m_buffer;
         m_stream.avail_in = count;
-        if (count == 0)
+        // Mac 0x220a80 reloads the unsigned stream member for this guard.
+        if (m_stream.avail_in == 0)
             return -1;
     }
     unsigned char c = *m_stream.next_in++;
@@ -113,11 +120,11 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
       m_sourceEof(0),
       m_inflating(0)
 {
-    m_buffer = new unsigned char[0x400];
+    m_buffer = new unsigned char[2 * GZ_WINDOW_SIZE];
     if (m_buffer == 0)
         throw TAllocationFailure();
     TAutoArrayPtr<unsigned char> ownedBuffer(m_buffer);
-    m_outBuffer = m_buffer + 0x200;
+    m_outBuffer = m_buffer + GZ_WINDOW_SIZE;
     setg(static_cast<char*>(static_cast<void*>(m_outBuffer)),
          static_cast<char*>(static_cast<void*>(m_outBuffer)),
          static_cast<char*>(static_cast<void*>(m_outBuffer)));
@@ -125,7 +132,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
     m_stream.next_out = m_outBuffer;
     m_stream.next_in = m_buffer;
     m_stream.avail_in = 0;
-    m_stream.avail_out = 0x200;
+    m_stream.avail_out = GZ_WINDOW_SIZE;
     m_stream.zalloc = 0;
     m_stream.zfree = 0;
     try {
@@ -228,7 +235,7 @@ TGzInflateBuf::~TGzInflateBuf()
     delete[] m_buffer;
 }
 
-// 0x4d6920: drain the source into the 0x200-byte output half, either
+// 0x4d6920: drain the source into the output half, either
 // through inflate or, for a non-gzip member, by straight copy.
 
 // The FIRST guard reads `avail_in <= 0`, not `== 0`: retail inverts it to
@@ -262,8 +269,8 @@ int TGzInflateBuf::underflow()
             break;
         if (m_stream.avail_in == 0) {
             int count = m_source->sgetn(
-                static_cast<char*>(static_cast<void*>(m_buffer)), 0x200);
-            if (count < 0x200)
+                static_cast<char*>(static_cast<void*>(m_buffer)), GZ_WINDOW_SIZE);
+            if (count < GZ_WINDOW_SIZE)
                 m_sourceEof = 1;
             m_stream.avail_in = count;
             m_stream.next_in = m_buffer;
@@ -282,8 +289,8 @@ int TGzInflateBuf::underflow()
                     // Preserve that stream-state dependency, not a guessed
                     // cancellation through the separately cached pointer.
                     m_crc = crc32(m_crc,
-                                m_stream.next_out + m_stream.avail_out - 0x200,
-                                0x200 - m_stream.avail_out);
+                                m_stream.next_out + m_stream.avail_out - GZ_WINDOW_SIZE,
+                                GZ_WINDOW_SIZE - m_stream.avail_out);
                     if (status == Z_STREAM_END) {
                         inflateEnd(&m_stream);
                         m_inflating = 0;
@@ -312,9 +319,9 @@ int TGzInflateBuf::underflow()
     setg(static_cast<char*>(static_cast<void*>(m_outBuffer)),
          static_cast<char*>(static_cast<void*>(m_outBuffer)),
          static_cast<char*>(static_cast<void*>(m_outBuffer))
-             + 0x200 - m_stream.avail_out);
+             + GZ_WINDOW_SIZE - m_stream.avail_out);
     m_stream.next_out = m_outBuffer;
-    m_stream.avail_out = 0x200;
+    m_stream.avail_out = GZ_WINDOW_SIZE;
     if (egptr() > eback())
         return static_cast<unsigned char>(*gptr());
     return -1;
