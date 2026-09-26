@@ -525,7 +525,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_TOWER && hasBuilding(EXTRA_2_ID, false)
-        && !townHero->m_townSpecialGrantedMask.test(m_id)) {
+        && !townHero->m_townSpecialGrantedMask[m_id]) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(3, 1);
         if (g_game->isLocalHuman(townHero->m_owner))

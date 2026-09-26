@@ -3769,7 +3769,7 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
 
     memset(packed, 0, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_drawCells.test(i))
+        if (tempObjectType->m_drawCells[i])
             packed[i / 8] |= 1 << (i % 8);
     }
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
@@ -3777,7 +3777,7 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
 
     memset(packed, 0, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_passableCells.test(i))
+        if (tempObjectType->m_passableCells[i])
             packed[i / 8] |= 1 << (i % 8);
     }
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
@@ -3785,7 +3785,7 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
 
     memset(packed, 0, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_shadowCells.test(i))
+        if (tempObjectType->m_shadowCells[i])
             packed[i / 8] |= 1 << (i % 8);
     }
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
@@ -3793,7 +3793,7 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
 
     memset(packed, 0, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->m_triggerCells.test(i))
+        if (tempObjectType->m_triggerCells[i])
             packed[i / 8] |= 1 << (i % 8);
     }
     if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)

@@ -474,7 +474,7 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
     if (m_hasTrigger) {
         for (int y = 0;; ++y) {
             for (unsigned x = 0; x < 8; ++x) {
-                if (m_triggerMask.test(CObjectType::getBitPos(x, y))) {
+                if (m_triggerMask[CObjectType::getBitPos(x, y)]) {
                     m_triggerCell.m_x = x;
                     m_triggerCell.m_y = y;
                     return *this;
