@@ -2328,7 +2328,8 @@ CGameTransferSmack::CGameTransferSmack()
 VA(0x00557430, 0x22) MAC_ADDRESS(0x215074, 0x84)  // dc 0x11ec88
 CGameTransferSmack::~CGameTransferSmack()
 {
-    stop();
+    if (m_started)
+        stop();
     delete m_saveScreen;
 }
 
