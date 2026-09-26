@@ -3729,10 +3729,10 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
     game::saveString(outfile, tempObjectType->m_imageName);
 
     char value = tempObjectType->m_width;
-    if (static_cast<unsigned>(writeValue(outfile, value)) < 1)
+    if (static_cast<unsigned>(writeScalar(outfile, value)) < 1)
         return -1;
     value = tempObjectType->m_height;
-    if (static_cast<unsigned>(writeValue(outfile, value)) < 1)
+    if (static_cast<unsigned>(writeScalar(outfile, value)) < 1)
         return -1;
 
     unsigned char packed[6];
@@ -3771,15 +3771,15 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
         return -1;
 
     short typeValue = tempObjectType->m_objectType;
-    if (static_cast<unsigned>(writeValue(outfile, typeValue)) < 2)
+    if (static_cast<unsigned>(writeScalar(outfile, typeValue)) < 2)
         return -1;
 
     int extra = tempObjectType->m_extra;
-    if (static_cast<unsigned>(writeValue(outfile, extra)) < 4)
+    if (static_cast<unsigned>(writeScalar(outfile, extra)) < 4)
         return -1;
 
     value = tempObjectType->m_suppressDraw;
-    return static_cast<unsigned>(writeValue(outfile, value)) < 1 ? -1 : 1;
+    return static_cast<unsigned>(writeScalar(outfile, value)) < 1 ? -1 : 1;
 }
 
 // The trailing byte is normalized (`test al,al / setne`), not copied, so it
@@ -4042,7 +4042,7 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
     int x;
 
     intBuffer = m_objectTypes.size();
-    count = writeValue(outfile, intBuffer);
+    count = writeScalar(outfile, intBuffer);
     if (count < sizeof(intBuffer))
         return -1;
 
@@ -4053,7 +4053,7 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
     }
 
     intBuffer = m_objects.size();
-    count = writeValue(outfile, intBuffer);
+    count = writeScalar(outfile, intBuffer);
     if (count < sizeof(intBuffer))
         return -1;
 
