@@ -628,6 +628,10 @@ unsigned char armyGroup::isMember(TCreatureType monType) const
     return 0;
 }
 
+// Naming the creature once preserves getAlignment and recovers Windows
+// 67.8644 -> 100. Mac likewise reuses one creature load through the census;
+// its remaining whole-body mismatch starts with zeroing (retained memset
+// here versus byte stores in the pinned leaf), not the alignment helper.
 VA(0x0044abb0, 0x97) MAC_ADDRESS(0x05828c, 0x17c)  // dc 0x4ebf0
 int armyGroup::getAlignments(unsigned char* alignments) const
 {
@@ -636,12 +640,13 @@ int armyGroup::getAlignments(unsigned char* alignments) const
         alignments = local;
     memset(alignments, 0, sizeof(local));
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-        if (m_armies[i] == CREATURE_NONE)
+        int creature = m_armies[i];
+        if (creature == CREATURE_NONE)
             continue;
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[m_armies[i]];
+        const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
         if (traits.m_attributes & g_ctaSiegeWeapon)
             continue;
-        int alignment = g_game->getAlignment(m_armies[i]);
+        int alignment = g_game->getAlignment(creature);
         alignments[alignment + 1]++;
     }
     int count = 0;
