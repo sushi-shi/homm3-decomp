@@ -189,7 +189,11 @@ def write_readme(results: list[Result]) -> None:
 
 def run(units: set[str] | None = None, *, checkpoint: bool = False) -> list[Result]:
     objects(units)
-    toc.reset()
+    with toc.caching():
+        return _run(units, checkpoint)
+
+
+def _run(units: set[str] | None, checkpoint: bool) -> list[Result]:
     inventory = pairs.load(ROOT)
     selected = [pair for pair in inventory.pairs if units is None or pair.unit in units]
     executable = inputs.stage_executable(inputs.MAC)

@@ -1,6 +1,8 @@
 """Resolve MWOB TOC references through reviewed data and PEF loader pointers."""
 from __future__ import annotations
 
+import bisect
+from contextlib import contextmanager
 import hashlib
 import re
 import tomllib
@@ -13,48 +15,60 @@ from homm3.mac.pef import PEF
 from homm3.mac.relocations import Address, TocBinding
 from homm3.mac import source
 
-# One build scores thousands of pairs against the same PEF and inventories.
+# One build scores thousands of pairs against the same PEF and inventories;
+# inside `caching()` the loader and data inventories are read once.
 _CACHE: dict = {}
+_CACHING = [False]
 
 
-def reset() -> None:
-    """Forget cached loader state and data inventories (call when they may change)."""
+@contextmanager
+def caching():
     _CACHE.clear()
+    _CACHING[0] = True
+    try:
+        yield
+    finally:
+        _CACHING[0] = False
+        _CACHE.clear()
+
+
+def _cached(key, compute):
+    if not _CACHING[0]:
+        return compute()
+    if key not in _CACHE:
+        _CACHE[key] = compute()
+    return _CACHE[key]
 
 
 def data_rows(root: Path, kind: str) -> list[dict]:
-    key = ("rows", root, kind)
-    if key not in _CACHE:
-        _CACHE[key] = source.data_rows(root, kind)
-    return _CACHE[key]
+    return _cached(("rows", root, kind), lambda: source.data_rows(root, kind))
 
 
 def load_data(root: Path):
-    key = ("data", root)
-    if key not in _CACHE:
-        _CACHE[key] = source.load_data(root)
-    return _CACHE[key]
+    return _cached(("data", root), lambda: source.load_data(root))
 
 
 def _loader(pef: PEF) -> Loader:
-    key = ("loader", id(pef))
-    if key not in _CACHE:
-        loader = Loader(pef)
-        by_section: dict[int, list[int]] = {}
-        for at in loader.pointers:
-            by_section.setdefault(at.section, []).append(at.offset)
-        inverse: dict = {}
-        for at, destination in loader.pointers.items():
-            inverse.setdefault(destination, []).append(at)
-        _CACHE[key] = (pef, loader, {section: sorted(offsets) for section, offsets in by_section.items()},
-                       inverse)
-    return _CACHE[key][1]
+    return _loader_entry(pef)[1]
+
+
+def _loader_entry(pef: PEF):
+    return _cached(("loader", id(pef)), lambda: _index(pef))
+
+
+def _index(pef: PEF):
+    loader = Loader(pef)
+    by_section: dict[int, list[int]] = {}
+    inverse: dict = {}
+    for at, destination in loader.pointers.items():
+        by_section.setdefault(at.section, []).append(at.offset)
+        inverse.setdefault(destination, []).append(at)
+    return (pef, loader, {section: sorted(offsets) for section, offsets in by_section.items()},
+            inverse)
 
 
 def _has_pointer(pef: PEF, section: int, offset: int, size: int) -> bool:
-    import bisect
-    _loader(pef)
-    offsets = _CACHE[("loader", id(pef))][2].get(section, [])
+    offsets = _loader_entry(pef)[2].get(section, [])
     at = bisect.bisect_left(offsets, offset - 3)
     return at < len(offsets) and offsets[at] < offset + size
 
@@ -99,6 +113,18 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
              hunks: tuple[DataHunk, ...], *, unit: str | None = None,
              retail_va: int | None = None, target_origin: Address | None = None,
              target_size: int | None = None) -> dict[str, TocBinding]:
+    if _CACHING[0]:
+        return _bindings(root, pef, code, hunks, unit=unit, retail_va=retail_va,
+                         target_origin=target_origin, target_size=target_size)
+    with caching():  # one call reads each inventory once
+        return _bindings(root, pef, code, hunks, unit=unit, retail_va=retail_va,
+                         target_origin=target_origin, target_size=target_size)
+
+
+def _bindings(root: Path, pef: PEF, code: CodeHunk,
+              hunks: tuple[DataHunk, ...], *, unit: str | None = None,
+              retail_va: int | None = None, target_origin: Address | None = None,
+              target_size: int | None = None) -> dict[str, TocBinding]:
     references = [(kind, name) for _, kind, name in code.xrefs
                   if kind in ("HUNK_XREF_16BIT_IL", "HUNK_XREF_16BIT")]
     if not references:
@@ -334,7 +360,7 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
                     or cells[0].xrefs != ((0, "HUNK_XREF_32BIT", name),)):
                 raise ObjectError(f"TOC symbol {name!r} lacks its MWOB pointer cell")
         if indirect and not address_load:
-            sites = [at for at in _CACHE[("loader", id(pef))][3].get(target, ())
+            sites = [at for at in _loader_entry(pef)[3].get(target, ())
                      if at.section == toc.section
                      and -0x8000 <= at.offset - toc.offset < 0x8000]
             if len(sites) != 1:
