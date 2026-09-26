@@ -1468,11 +1468,7 @@ public:
     VA(0x00529710, 0x34)
     TCreatureType upgradedCreatureType(TCreatureType creature) const
     {
-        if (m_gameVersion == 0
-            && (creature == CREATURE_AIR_ELEMENTAL
-                || creature == CREATURE_EARTH_ELEMENTAL
-                || creature == CREATURE_FIRE_ELEMENTAL
-                || creature == CREATURE_WATER_ELEMENTAL))
+        if (m_gameVersion == 0 && isBaseElemental(creature))
             return CREATURE_NONE;
         return ::upgradedCreatureType(creature);
     }
