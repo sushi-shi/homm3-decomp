@@ -8963,6 +8963,8 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
         const char* diffFilename = DATA_COMPGEN(
             0x00677fa0, xferDiffFilename, "data\\diff.dat");
         File::deleteFile(diffFilename);
+        // Mac checks path creation and data-fork opening separately, with a
+        // fileError call for each. Windows File::open has one error path.
         if (!file.open(diffFilename, modeWrite)) {
             fileError(diffFilename);
             shutDown(0);
