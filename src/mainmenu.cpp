@@ -8,6 +8,10 @@
 //   sit in this run -> DC-port-only class; recorded unlocated, not forced.
 #include "va.h"
 
+// DC S_LPROC32 identifies this ordinary callback as TU-local. Declare it
+// ahead of the header so TMainMenu's friend binds to the static function.
+class message;
+static int mainMenuHandler(message& msg);
 #include "mainmenu.h"
 
 #include "button.h"
@@ -25,9 +29,6 @@
 
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x0069957c) int g_cdDriveNumber;
-
-// DC S_LPROC32 identifies this ordinary callback as TU-local.
-static int mainMenuHandler(message& msg);
 
 // Set after the one-time missing-CD notice has been shown. The constructor
 // uses it only as the persistent suppression latch; the disk-space check has
