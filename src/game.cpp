@@ -3681,7 +3681,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         victory.m_heroId = -1;
         for (int i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
-            if (vcheroLoc.operator==(poolheroLoc)) {
+            if (vcheroLoc == poolheroLoc) {
                 int team = getTeam(m_heroes[i].m_owner);
                 if (team >= 0 && isHumanTeam(team)) {
                     victory.m_type = -1;
@@ -3723,7 +3723,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         loss.m_heroId = -1;
         for (int i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
-            if (lcheroLoc.operator==(poolheroLoc)) {
+            if (lcheroLoc == poolheroLoc) {
                 int numHumanTeams = 0;
                 for (int team = 0; team < 8; ++team) {
                     if (isHumanTeam(team))
@@ -8674,8 +8674,8 @@ void game::processOnMapTowns()
                     if (townExtra->m_customName)
                         currTown->m_name = townExtra->m_name;
                     else
-                        currTown->m_name =
-                            getRandomTownName(townExtra->m_townType);
+                        currTown->m_name.assign(
+                            getRandomTownName(townExtra->m_townType));
 
                     currTown->initialize(townExtra);
                     convertObject(tempCell);
@@ -9531,8 +9531,7 @@ int game::getNumThievesGuilds(int whichPlayer)
 {
     int count = 0;
     for (int i = 0; i < m_players[whichPlayer].m_numTowns; i++) {
-        town* currentTown =
-            getTown(m_players[whichPlayer].m_townIds[i]);
+        town* currentTown = g_game->getTown(m_players[whichPlayer].m_townIds[i]);
         if (currentTown->hasBuilding(TAVERN_ID, false) ||
             (currentTown->m_type == TOWN_CASTLE &&
              currentTown->hasBuilding(EXTRA_1_ID, false))) {

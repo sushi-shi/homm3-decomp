@@ -3646,7 +3646,8 @@ def main(argv=None) -> int:
 def extract(only_units=None, jobs=None) -> int:
     from homm3.model import carrier_policy
     from homm3.match.status import load_baseline
-    policy = carrier_policy(load_baseline())
+    from homm3.manifest import header_comparisons
+    policy = carrier_policy(load_baseline(), reviewed=header_comparisons())
     changed, pruned, problems = run(only_units, jobs, policy=policy)
     if only_units is None:
         # The gate proves it can fail before it judges the tree.

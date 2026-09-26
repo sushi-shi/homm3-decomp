@@ -758,7 +758,8 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
 {
     NewmapCell* cell = getCell(point);
 
-    type_artifact artifact(cell->getArtifactIndex());
+    type_artifact artifact;
+    artifact.m_artifactId = cell->getArtifactIndex();
     currentHero->giveArtifact(&artifact, 1, 1);
     if (!humanPlayer)
         aiEquipArtifacts(currentHero);
@@ -2841,6 +2842,8 @@ VA(0x004a5030, 0x26E)  // dc 0x953cc
 void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
 {
+    // Mac 0xb19b8 initializes both artifact fields before decoding the reward.
+    type_artifact artifact;
     int reward = cell->getSeaChestReward();
     if (reward == const_sea_chest_artifact
         && currentHero->getNumberInBackpack(1) >= 64)
@@ -2858,8 +2861,8 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
                          1, -1, -1, GOLD, 1500, -1, 0, -1, 0, -1, 0);
         currentHero->giveResource(GOLD, 1500);
         break;
-    case const_sea_chest_artifact: {
-        type_artifact artifact(TArtifact(cell->getSeaChestArtifact()));
+    case const_sea_chest_artifact:
+        artifact.m_artifactId = TArtifact(cell->getSeaChestArtifact());
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT_FORMAT],
@@ -2872,7 +2875,6 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
         if (!humanPlayer)
             aiEquipArtifacts(currentHero);
         break;
-    }
     }
 
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
@@ -2890,7 +2892,8 @@ void advManager::doEventSurvivor(hero* currentHero, NewmapCell* cell,
             normalDialog(g_text, 1, -1, -1, 8, cell->m_extraInfo,
                          -1, 0, -1, 0, -1, 0);
         }
-        type_artifact artifact(TArtifact(cell->m_extraInfo));
+        type_artifact artifact;
+        artifact.m_artifactId = TArtifact(cell->m_extraInfo);
         currentHero->giveArtifact(&artifact, 1, 1);
         if (!humanPlayer)
             aiEquipArtifacts(currentHero);
@@ -3959,6 +3962,8 @@ VA(0x004a8080, 0x1A5)  // dc 0x97dc8
 void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
                                     bool humanPlayer)
 {
+    // Guard clauses preserve all four dialogs while matching retail
+    // 0x4a8080 exactly with getSecondarySkill and getText retained.
     // Mac retains separate dialogs for no skill, known skill, full skills,
     // and learned skill at 0:0xb55b4, 0:0xb5634, 0:0xb56b0, 0:0xb5724.
     int skill = cell->getWitchSkill();
@@ -3970,41 +3975,43 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_WITCH_HUT_NO_SKILL),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-    } else {
-        if (currentHero->getSecondarySkill(TSecondarySkill(skill))) {
-            if (humanPlayer) {
-                sprintf(g_text,
-                        g_adventureEventText->getText(
-                            ADV_EVENT_TEXT_WITCH_HUT_KNOWN_FORMAT),
-                        g_sSkillTraits[skill].m_name);
-                normalDialog(g_text, 1, -1, -1, -1, 0,
-                             -1, 0, -1, 0, -1, 0);
-            }
-        } else if (currentHero->m_skillCount >= 8) {
-            if (humanPlayer) {
-                sprintf(g_text,
-                        g_adventureEventText->getText(
-                            ADV_EVENT_TEXT_WITCH_HUT_FULL_FORMAT),
-                        g_sSkillTraits[skill].m_name);
-                normalDialog(g_text, 1, -1, -1, -1, 0,
-                             -1, 0, -1, 0, -1, 0);
-            }
-        } else {
-            if (humanPlayer) {
-                sprintf(g_text,
-                        g_adventureEventText->getText(
-                            ADV_EVENT_TEXT_WITCH_HUT_LEARN_FORMAT),
-                        g_sSkillTraits[skill].m_name);
-                // iResType1 20 is the secondary-skill picture class and the
-                // extra is the icon slot: three mastery frames per skill, the
-                // basic one being 3*skill + 3.
-                normalDialog(g_text, 1, -1, -1, 20, skill * 3 + 3,
-                             -1, 0, -1, 0, -1, 0);
-            }
-            currentHero->giveSS(skill, 1);
-            return;
-        }
+        return;
     }
+    if (currentHero->getSecondarySkill(TSecondarySkill(skill))) {
+        if (humanPlayer) {
+            sprintf(g_text,
+                    g_adventureEventText->getText(
+                        ADV_EVENT_TEXT_WITCH_HUT_KNOWN_FORMAT),
+                    g_sSkillTraits[skill].m_name);
+            normalDialog(g_text, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+    if (currentHero->m_skillCount >= 8) {
+        if (humanPlayer) {
+            sprintf(g_text,
+                    g_adventureEventText->getText(
+                        ADV_EVENT_TEXT_WITCH_HUT_FULL_FORMAT),
+                    g_sSkillTraits[skill].m_name);
+            normalDialog(g_text, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+    if (humanPlayer) {
+        sprintf(g_text,
+                g_adventureEventText->getText(
+                    ADV_EVENT_TEXT_WITCH_HUT_LEARN_FORMAT),
+                g_sSkillTraits[skill].m_name);
+        // iResType1 20 is the secondary-skill picture class and the
+        // extra is the icon slot: three mastery frames per skill, the
+        // basic one being 3*skill + 3.
+        normalDialog(g_text, 1, -1, -1, 20, skill * 3 + 3,
+                     -1, 0, -1, 0, -1, 0);
+    }
+    currentHero->giveSS(skill, 1);
+    return;
 }
 
 VA(0x004a8230, 0x154)  // dc 0x97fa4

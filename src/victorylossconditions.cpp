@@ -279,7 +279,7 @@ unsigned char VictoryConditionStruct::isGrailTarget(town* thisTown)
     type_point thisTownLoc = thisTown->getLocation();
 
     if (thisTownLoc == grailTownLoc
-        || grailTownLoc == anyTownLoc)
+        || anyTownLoc == grailTownLoc)
         return 1;
     return 0;
 }
@@ -328,7 +328,7 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
                 for (pos.m_x = 0; pos.m_x < g_mapWidth; ++pos.m_x) {
                     NewmapCell* cell = g_game->getCell(pos);
                     if (cell->m_isTrigger && cell->m_type == MONSTER) {
-                        if (!pos.operator==(monsterLoc))
+                        if (!(pos == monsterLoc))
                             return 0;
                     }
                 }
@@ -341,7 +341,7 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
         && g_currentPlayer
         && !g_game->m_playerDisabled[g_netLocalGamePos]) {
         type_point pos(m_monsterX, m_monsterY, m_monsterZ);
-        if (monsterLoc.operator==(pos)) {
+        if (monsterLoc == pos) {
             m_playerWinner = thisHero->m_owner;
             m_gameWon = 1;
             return 1;
@@ -419,7 +419,7 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
     int team = g_game->getTeam(g_netLocalGamePos);
     if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
         type_point target(m_townX, m_townY, m_townZ);
-        if (!target.operator==(townLoc))
+        if (!(target == townLoc))
             return 0;
 
         if (thisHero->hasArtifact(m_artifactNum)) {
@@ -670,7 +670,7 @@ unsigned char LossConditionStruct::checkForDefeatedTownLoss(
         type_point target(m_townX, m_townY, m_townZ);
         type_point lost = lostTown->getLocation();
 
-        if (lost.operator==(target)) {
+        if (target == lost) {
             m_playerLoser = static_cast<signed char>(oldOwner);
             m_gameLost = 1;
             return 1;
@@ -683,7 +683,11 @@ VA(0x005f2f20, 0x50)  // dc 0x1907bc
 unsigned char LossConditionStruct::checkForTimeLimitExpired()
 {
     if (m_type == LOSS_CONDITION_TIME_LIMIT) {
-        int days = g_game->getCurrentTurn();
+        // The time-limit check keeps the full unsigned calendar expression;
+        // getCurrentTurn() returns a short and would narrow it first.
+        int days = (static_cast<unsigned short>(g_game->m_month) * 4
+            + static_cast<unsigned short>(g_game->m_week) - 5) * 7
+          + g_game->m_day;
         if (days > m_numDays) {
             m_playerLoser = static_cast<signed char>(g_netLocalGamePos);
             m_gameLost = 1;

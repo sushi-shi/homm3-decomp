@@ -91,13 +91,17 @@ int aiResourceCost(const playerData* player, const int* resources);
 // Mac stores the found monster before loading the barrier value, as retail
 // does. Reversing the addition operands and hoisting `value` to function scope
 // are byte-flat in VC6 (93.2615%); retain the direct source order.
+// DC calls the three-coordinate GetMapExtra here; using that overload
+// restores the full nine-block retail shape without a point-wrapper copy.
 VA(0x0056a360, 0x9E)  // exhaustive search.obj order-map, dc 0x12b3f0
 unsigned char checkAdjacentMonster(const hero* currentHero,
                                      pathCell* entryPoint,
                                      type_search_type searchType)
 {
     type_point monster;
-    if (getMapExtra(entryPoint->m_point)
+    if (getMapExtra(entryPoint->m_point.m_x,
+                    entryPoint->m_point.m_y,
+                    entryPoint->m_point.m_z)
         & MAP_EXTRA_MONSTER) {
         if (g_advManager->findAdjacentMonster(entryPoint->m_point, &monster,
                                               entryPoint->m_monster)) {
@@ -709,9 +713,12 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
                 continue;
         }
 
+        // DC also calls the three-coordinate GetMapExtra at this site.
         if (!cell.m_flying && !cell.m_dimensionDoor
             && searchType < const_AI_search
-            && (getMapExtra(cell.m_point)
+            && (getMapExtra(cell.m_point.m_x,
+                            cell.m_point.m_y,
+                            cell.m_point.m_z)
                 & MAP_EXTRA_MONSTER)
             && cell.m_point != start
             && g_advManager->findAdjacentMonster(

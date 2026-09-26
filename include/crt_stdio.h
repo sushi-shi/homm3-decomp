@@ -1,4 +1,4 @@
-// crt_stdio.h - the CRT stream/memory surface, declared WITHOUT pulling
+// crt_stdio.h - the Windows CRT stream/memory surface, declared WITHOUT pulling
 // <stdio.h> or <string.h>.
 
 // Why this header exists rather than the real CRT headers: the
@@ -22,6 +22,12 @@
 #ifndef HOMM3_CRT_STDIO_H
 #define HOMM3_CRT_STDIO_H
 
+#if defined(HOMM3_TARGET_MAC)
+// Use MSL declarations; redeclaring its string functions makes lookup ambiguous.
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#else
 extern "C" {
 struct _iobuf;
 typedef struct _iobuf FILE;
@@ -43,5 +49,7 @@ unsigned int __cdecl strlen(const char* text);
 
 #define SEEK_SET 0
 #define SEEK_END 2
+
+#endif  // native Mac CRT / Windows declarations
 
 #endif  /* HOMM3_CRT_STDIO_H */

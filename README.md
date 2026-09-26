@@ -10,17 +10,17 @@ and the Classic Mac PowerPC PEF, plus the pinned CodeWarrior tools.
 
 <!-- match-score:start -->
 
-**Executable MAX: 97.45%** — weighted by function size across 1,999,142 bytes of code included in matching.
+**Executable MAX: 97.36%** — weighted by function size across 1,999,142 bytes of code included in matching.
 
-**Function exact MAX** — 4,327 / 4,768 current implementations (90.8%) have reached 100%.
+**Function exact MAX** — 4,307 / 4,768 current implementations (90.3%) have reached 100%.
 
-**CUR diagnostics** — 4,285 / 4,768 functions exact (89.9%) in this build (4768 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
+**CUR diagnostics** — 4,268 / 4,768 functions exact (89.5%) in this build (4768 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
 
 | Module       | Units | Functions exact CUR |  Function exact MAX | Fuzzy CUR | Fuzzy MAX |
 | :----------- | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`       |   123 | 3618 / 3991 (90.7%) | 3649 / 3991 (91.4%) |    97.47% |    97.70% |
-| `rmg`        |     3 |   291 / 368 (79.1%) |   301 / 368 (81.8%) |    93.19% |    94.37% |
-| `network`    |     4 |   267 / 280 (95.4%) |   268 / 280 (95.7%) |    97.73% |    98.09% |
+| `game`       |   123 | 3601 / 3991 (90.2%) | 3628 / 3991 (90.9%) |    97.39% |    97.59% |
+| `rmg`        |     3 |   290 / 368 (78.8%) |   301 / 368 (81.8%) |    93.19% |    94.37% |
+| `network`    |     4 |   268 / 280 (95.7%) |   269 / 280 (96.1%) |    98.06% |    98.30% |
 | `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
 | `codec`      |     4 |     35 / 43 (81.4%) |     35 / 43 (81.4%) |    94.70% |    94.70% |
 | `victor`     |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |

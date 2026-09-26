@@ -1283,6 +1283,8 @@ const char* combatManager::getBackgroundName()
     m_combatFringe = -1;
     return background;
 }
+// Bound-first SLimitData comparisons reproduce retail's four expanded
+// rectangle checks; all 39 CFG blocks and the six return sites now agree.
 VA(0x004647a0, 0x17A)  // dc 0x5f058
 int combatManager::getGridIndex(int x, int y) const
 {

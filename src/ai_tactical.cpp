@@ -2442,8 +2442,9 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
     long damage = min(choice->getMasteryValue(), total);
     long remaining = g_combatManager->m_numArmies[m_side];
     for (; remaining-- > 0; ++ourArmy) {
-        // Mac 0x4584c..0x458e8 expands cannotAttack's ordered tests.
-        if (ourArmy->cannotAttack())
+        // Retail tests immobilization before the three spell influences;
+        // keep the broader cannotAttack helper for the remaining cases.
+        if (ourArmy->is(creatureImmobilized) || ourArmy->cannotAttack())
             continue;
         const army* target = ourArmy->getAITarget();
         if (target == 0) {

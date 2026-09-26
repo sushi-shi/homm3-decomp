@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "army.h"
@@ -2229,7 +2230,8 @@ inline void army::checkLuck()
 {
     m_luckStatus = 0;
     if (getController() && m_luck > 0) {
-        if (sRandom(1, 24) <= min(m_luck, 3)) {
+        // Dreamcast names SRandom here; Complete's expanded callers call random.
+        if (random(1, 24) <= min(m_luck, 3)) {
             m_luckStatus = 1;
             if (!static_cast<const combatManager*>(g_combatManager)
                      ->isQuickCombat()) {
@@ -2616,7 +2618,9 @@ long army::getTotalHitPoints(unsigned char simulated) const
 VA(0x004430d0, 0x56)  // dc 0x484a0
 void army::setAIExpectedDamage(long arg)
 {
-    m_aiExpectedDamage = cppMin(arg, getTotalHitPoints(0));
+    // Complete's by-value min helper retains the argument home at [ebp+8];
+    // DC names its reference-taking std::min counterpart at this source line.
+    m_aiExpectedDamage = min(arg, getTotalHitPoints(0));
 }
 
 VA(0x00443130, 0x25)
@@ -4589,17 +4593,21 @@ void army::resetRound()
 }
 
 VA(0x00447330, 0x9C)  // dc 0x4bd80
+// Complete expands the by-value min wrappers, each containing cppMin.
+// Direct reference selectors give 78.33%; these wrappers restore 100%.
+// The shared long power/maxHits lifetime suggested by DC and Mac gives
+// 64.27% in this TU; its remaining source-context difference is unresolved.
 long army::getResurrectionSize(const army* target) const
 {
     if (m_creatureType == CREATURE_ARCHANGEL) {
         int missing = target->m_origNumTroops - target->m_numTroops;
         int raised = m_numTroops * 100 / target->m_monInfo.m_hitPoints;
-        return cppMin(raised, missing);
+        return min(raised, missing);
     }
     int totalLife = target->m_monInfo.m_hitPoints * target->m_origNumTroops;
-    int raised = cppMin(totalLife, m_numTroops * 50)
+    int raised = min(totalLife, m_numTroops * 50)
         / g_creatureTypeTraits[ARMY_CREATURE_DEMON].m_hitPoints;
-    return cppMin(raised, target->m_origNumTroops);
+    return min(raised, target->m_origNumTroops);
 }
 
 VA(0x004473d0, 0x13D)  // dc 0x4be64

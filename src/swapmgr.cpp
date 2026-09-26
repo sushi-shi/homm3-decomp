@@ -756,7 +756,10 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
         && g_game->isHuman(rightHero->m_owner))
     {
         m_humanPlayerTrade = 1;
-        m_givingToAlly = isLeftHero();
+        if (isLeftHero())
+            m_givingToAlly = 1;
+        else
+            m_givingToAlly = 0;
     }
     g_swapManager = this;
     m_netMsgHandler = 0;

@@ -11,6 +11,12 @@ inlines the operation too; an original symbol or immediate score gain is not
 a prerequisite. Keep one canonical body and refine names or placement later if
 new evidence warrants it.
 
+During subsequent byte recovery, keep these helper calls. Do not replace them
+with direct fields, array indexing, or pasted statements to recover a score.
+An outer helper is permitted when it contains the recovered helper call; review
+that complete source path. Tune natural argument evaluation, local lifetimes,
+body visibility and source order around the preserved calls.
+
 Run `homm3 mac helper-queue --all-functions` for the broad sweep. It writes
 `build/mac/helper-queue-all.json`, `helper-queue-all-functions.tsv`, and
 `helper-queue-all-calls.tsv`. The function file includes exact and unfinished
@@ -31,7 +37,10 @@ without crowding the displayed helper leads.
 The command display groups repeated call sites by destination and orders them
 by distinct Windows callers. `--limit` counts destinations; the TSV
 keeps every individual call site. The display skips user-deferred modules unless
-`--include-deferred` is supplied; the JSON and TSV retain them.
+`--include-deferred` is supplied; the JSON and TSV retain them. Use
+`--include-named` to show named Mac callees absent textually from the immediate
+caller. These often come from an authored nested helper, default argument, or
+implicit constructor; inspect that path before editing the caller.
 
 Use `--owner worker=game,townmgr` when owner labels help coordinate parallel
 work. Unassigned rows remain visible. The `rmg`, `zlib-1.1.3`, `codec`, and
@@ -40,9 +49,12 @@ work. Unassigned rows remain visible. The `rmg`, `zlib-1.1.3`, `codec`, and
 For each caller, inspect Mac disassembly and direct targets; use Dreamcast
 source facts when they are already available. Restore one canonical helper body
 and source call in its plausible owning TU/header. The name may be ours when
-Mac shows the operation but does not preserve a source symbol. Check
-Mac body order separately from cross-TU VC6 expansion when deciding header
-placement. Record unresolved destinations in the queue instead of silently
-counting them as absent helpers. Batch the helper edits without per-function
-score tuning or per-helper builds; compilation and byte comparisons follow the
-broad restoration pass.
+Mac shows the operation but does not preserve a source symbol. A field load,
+array index, or sequence of stores in Mac can be an expanded helper. Do not
+remove an authored helper call solely because the PEF has no retained call,
+including in Windows functions already at 100%. Check Mac body order
+separately from cross-TU VC6 expansion when deciding header placement.
+Record unresolved destinations in the queue instead of silently counting them
+as absent helpers. Batch the helper edits without per-function score tuning or
+per-helper builds; compilation and byte comparisons follow the broad
+restoration pass.
