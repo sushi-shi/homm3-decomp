@@ -1,5 +1,14 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 [[functions]]
+retail_va = 0x4040b0
+unit = "adventuremapwindow"
+mac_section = 0
+mac_offset = 0x3ddc
+mac_size = 0x20
+target_sha256 = "996c86e9a5ba401f6a581e0f314102abb08fbe5e1ceb5dc300e1e06b13cb7cf7"
+evidence = "Adventure-window vtable installed by ctor 0xa80: slot at data 1+0x26eec -> descriptor 1+0x65b8 -> code 0x3ddc. This complete sleep-change override forwards unchanged arguments to heroWindow::vslot8 at 0x20bdb4, matching the first source call in Windows 0x4040b0. Windows additionally starts/stops its immersion mouse effect. BLR 0x3df8 precedes a distinct destructor at 0x3dfc."
+
+[[functions]]
 retail_va = 0x401400
 unit = "adventuremapwindow"
 mac_section = 0

@@ -1423,6 +1423,7 @@ void button::setHotkey(int code)
 VA(0x004040b0, 0x38)
 void TAdventureMapWindow::vslot8(unsigned char on)
 {
+    // Mac 0:0x3ddc forwards only; the mouse-effect edge is Windows-specific.
     heroWindow::vslot8(on);
 
     if (on) {
