@@ -28,7 +28,7 @@ Subcommands
         dip report + fatal evidence/source gates + README score block.
         Normally use `homm3 build --fast TU` for the inner matching loop:
         compile the selected manifest unit, keep existing retail targets,
-        and stop after the %% line.
+        and report per-function projected MAX changes without banking them.
         Run a full `homm3 build` for the final checkpoint.
 
   warnings [--compiler both|clang|msvc] [--unit TU] [--jobs N]

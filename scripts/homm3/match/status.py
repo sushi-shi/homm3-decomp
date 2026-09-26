@@ -503,6 +503,68 @@ def overall_line(report: dict, *, rows: dict | None = None,
             f"{fuzzy:.2f}% weighted MAX across {units} unit(s)")
 
 
+def fast_max_movements(report: dict, units: set[str] | None,
+                       fingerprint_pair: tuple[dict, dict]) -> None:
+    """Print per-function MAX changes for the fast loop without banking them.
+
+    A function's retail RVA carries its peak through a label rename. Its own
+    source hash decides whether a lower current score resets MAX; unrelated
+    TU/header codegen movement leaves MAX held and stays silent.
+    """
+    hashes, legacy = fingerprint_pair
+    previous = migrate_source_hashes(load_baseline(), hashes, legacy)
+    rvas = function_rvas()
+    current = fn_fuzzy(report)
+    projected, _stats = update_rows(current, previous, rvas, hashes)
+    by_rva = {}
+    for key, row in previous.items():
+        if row.rva is not None:
+            by_rva.setdefault(row.rva, []).append((key, row))
+
+    changed_units = 0
+    seen_units = set()
+    for unit in sorted(report.get("units", []), key=lambda row: row.get("name", "")):
+        name = unit.get("name", "?")
+        if units is not None and name not in units:
+            continue
+        seen_units.add(name)
+        keys = [(name, fn.get("name", "?"))
+                for fn in unit.get("functions", []) or []]
+        changes = []
+        for key in keys:
+            _old_key, old = _previous_row(key, rvas.get(key), previous, by_rva)
+            new = projected[key]
+            if old is None:
+                changes.append((key[1], "NEW", None, new.max, ""))
+                continue
+            if new.max > old.max + EPS:
+                changes.append((key[1], "UP", old.max, new.max, ""))
+            elif new.max < old.max - EPS:
+                held = old.cur is not None and abs(new.cur - old.cur) <= EPS
+                kind = "RESET" if held else "CHANGED-CUR"
+                note = (f"CUR held at {new.cur:.2f}%" if held else
+                        f"banked CUR {old.cur:.2f}% -> {new.cur:.2f}%"
+                        if old.cur is not None else "prior CUR unavailable")
+                changes.append((key[1], kind, old.max, new.max, note))
+        if not changes and units is None:
+            continue
+        exact = sum(projected[key].max >= 100.0 - 1e-6 for key in keys)
+        print(f"[build] {name}: {exact}/{len(keys)} at MAX 100")
+        if not changes:
+            print("[build]   no MAX change")
+            continue
+        changed_units += 1
+        for fn, kind, old_max, new_max, note in changes:
+            before = "new" if old_max is None else f"{old_max:.2f}%"
+            suffix = f"; {note}" if note else ""
+            print(f"[build]   {before} -> {new_max:.2f}% MAX  {fn} [{kind}{suffix}]")
+    for name in sorted((units or set()) - seen_units):
+        print(f"[build] {name}: no paired functions in report")
+    if units is None and not changed_units:
+        print("[build] no per-function MAX change across this fast build")
+    sys.stdout.flush()
+
+
 def cmd_summary(report: dict) -> int:
     rows = projected_rows(report)
     print("  Objective: MAX (projected; ledger unchanged)")

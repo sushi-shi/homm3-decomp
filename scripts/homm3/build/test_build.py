@@ -43,6 +43,7 @@ class BuildModeTest(unittest.TestCase):
             ("normalize", normalize_objs, "normalize_all", 0),
             ("report", status, "refresh_report", {}),
             ("fingerprints", status, "source_hash_pair", ({}, {})),
+            ("fast_max", status, "fast_max_movements", None),
             ("mac", mac_build, "run", []),
             ("history", status, "baseline_history", ''),
             ("check", status, "cmd_check", None),
@@ -122,13 +123,14 @@ class BuildModeTest(unittest.TestCase):
 
     def test_fast_build_preserves_targets_and_skips_checkpoint(self):
         self.assertEqual(build.main(["--fast", "cursor"]), 0)
-        self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report", "fingerprints", "mac", "queue"])
+        self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report", "fingerprints", "mac", "fast_max", "queue"])
         self.mocks["compile"].assert_called_once_with("ninja", "cursor")
         self.assertEqual(self.target.read_bytes(), b"existing retail target")
         self.mocks["delink"].assert_not_called()
         self.mocks["checkpoint"].assert_not_called()
         self.preflight.assert_not_called()
         self.mocks["mac"].assert_called_once_with({"cursor"}, checkpoint=False)
+        self.mocks["fast_max"].assert_called_once_with({}, {"cursor"}, ({}, {}))
 
     def test_mac_tool_error_preserves_windows_gates_and_fails(self):
         self.mocks["mac"].side_effect = ValueError("unresolved Mac relocation")
