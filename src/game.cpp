@@ -1970,7 +1970,7 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
     int heroIndex;
     for (heroIndex = 0; heroIndex < HERO_COUNT; heroIndex++) {
         if (m_heroAvailability[heroIndex] == -1
-            && m_heroPoolMap[heroIndex].test(playerPos)
+            && m_heroPoolMap[heroIndex][playerPos]
             && (m_heroes[heroIndex].m_heroClass == heroClass1
                 || m_heroes[heroIndex].m_heroClass == heroClass2)) {
             heroArray[top++] = heroIndex;
@@ -1980,7 +1980,7 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
     if (top == 0) {
         for (heroIndex = 0; heroIndex < HERO_COUNT; heroIndex++) {
             if (m_heroAvailability[heroIndex] == -1
-                && m_heroPoolMap[heroIndex].test(playerPos)) {
+                && m_heroPoolMap[heroIndex][playerPos]) {
                 heroArray[top++] = heroIndex;
             }
         }
@@ -5120,7 +5120,7 @@ bool game::loadMap(TAbstractFile* mapFile)
                 || (g_spellTraits[spell].m_flags & 0x2000) != 0;
         }
 
-        const std::bitset<28> serializedSkills = readPackedBits<28>(mapFile);
+        std::bitset<28> serializedSkills = readPackedBits<28>(mapFile);
         for (int skill = 0; skill < sizeof(m_ssDisabled); ++skill)
             m_ssDisabled[skill] = serializedSkills[skill];
     } else {
