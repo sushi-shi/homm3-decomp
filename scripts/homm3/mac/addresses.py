@@ -141,9 +141,9 @@ def _declarator(declaration: str) -> tuple[str, str]:
     if "(" not in head:
         return "", ""
     before = head.split("(", 1)[0]
-    if "=" in before:
-        return "", ""  # an initialized object, not a function declarator
     operator = re.search(r"((?:[~\w]+::)*operator\s*\S+?)\s*$", before)
+    if "=" in before and operator is None:
+        return "", ""  # an initialized object, not a function declarator
     if operator:
         name = re.sub(r"\s+", "", operator.group(1))
     else:
