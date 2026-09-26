@@ -2061,12 +2061,7 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 //     positive `!(a && b)` spelling emits those two swapped;
 //   * the placement loop is `while (placed < budget)` with `placed`
 //     pre-set to 0, which VC6 folds to a `test/jle` on budget alone.
-//     The inner re-draw is the ROTATED two-Pick shape PlaceLargeObstacle
-//     already carries - a leading `Pick()` and a second one at the foot
-//     of the reject loop, not a do/while with one site: retail emits two
-//     out-of-line Pick calls and a do/while can only ever emit one
-//     (89.8722 -> 91.5113 on that rewrite alone). The redundant
-//     `id < 0` re-test in front of place_obstacle survives it.
+//     Mac 0x72a34 keeps a single Pick call in the inner retry loop.
 
 VA(0x00466290, 0x607) MAC_ADDRESS(0x0722b8, 0x818)  // anchor-callee, dc 0x60538
 void combatManager::setupAndLoadObstacles()
@@ -2187,12 +2182,13 @@ void combatManager::setupAndLoadObstacles()
     int placed = 0;
     TPickANumber obstaclePicker(0, 90);
     while (placed < budget) {
-        int obstacleId = obstaclePicker.pick();
-        while (obstacleId >= 0
+        int obstacleId;
+        do {
+            obstacleId = obstaclePicker.pick();
+        } while (obstacleId >= 0
                && !(s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
                && !(s_obstacleInfo[obstacleId].m_specialTerrainMask
-                    & specialTerrainMask))
-            obstacleId = obstaclePicker.pick();
+                    & specialTerrainMask));
         if (obstacleId < 0)
             break;
         if (placeObstacle(obstacleId))
@@ -2205,8 +2201,11 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
                                       unsigned magicTerrainMask)
 {
     TPickANumber picker(0, 0x21);
-    int obstacleId = picker.pick();
-    while (obstacleId >= 0) {
+    // Mac 0x72b0c keeps the pick at the loop head.
+    for (;;) {
+        int obstacleId = picker.pick();
+        if (obstacleId < 0)
+            return 0;
         if ((terrainMask & s_elevationOverlay[obstacleId].m_terrainMask)
                 || (magicTerrainMask
                     & s_elevationOverlay[obstacleId].m_specialTerrainMask)) {
@@ -2220,9 +2219,7 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
             m_largeObstacleId = obstacleId;
             return count;
         }
-        obstacleId = picker.pick();
     }
-    return 0;
 }
 
 VA(0x004669b0, 0xBF) MAC_ADDRESS(0x072ca0, 0xb8)  // dc 0x609d0

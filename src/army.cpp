@@ -4325,10 +4325,8 @@ void army::turn(unsigned char animateTurn)
             g_combatManager->m_cells[m_gridIndex].m_partOfDouble = 0;
             g_combatManager->m_cells[m_gridIndex + 1].m_partOfDouble = 1;
         }
-        if (animateTurn) {
+        if (animateTurn)
             playAnimation(8, -1, 0);
-            playAnimation(2, 1, 0);
-        }
     } else {
         if (animateTurn)
             playAnimation(7, -1, 0);
@@ -4338,11 +4336,12 @@ void army::turn(unsigned char animateTurn)
             g_combatManager->m_cells[m_gridIndex].m_partOfDouble = 1;
             g_combatManager->m_cells[m_gridIndex - 1].m_partOfDouble = 0;
         }
-        if (animateTurn) {
+        if (animateTurn)
             playAnimation(10, -1, 0);
-            playAnimation(2, 1, 0);
-        }
     }
+    // Mac 0x52a74 keeps one final wait-animation call after either facing arm.
+    if (animateTurn)
+        playAnimation(2, 1, 0);
 }
 
 // Capture the battlefield without this stack on it, once, before an

@@ -3937,11 +3937,14 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         if (info->playerKnowsCell(g_netLocalGamePos))
             return 0;
 #pragma inline_depth()
+        // Mac 0x1469f8 retains this tomb-specific backpack check.
+        if (const_cast<hero*>(currentHero)
+                ->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
+            return 0;
+        return static_cast<int>(g_currentPlayer->m_ai.m_turnValueOfAvgArtifact);
     }
     case SHIPWRECK_SURVIVOR:
-        // Complete's retail jump table maps object type 86 directly to the
-        // backpack-test / average-artifact tail which WARRIOR_TOMB reaches
-        // by fallthrough. Dreamcast independently proves this named helper.
+        // Mac 0x1467b4 retains a separate survivor backpack check.
         if (const_cast<hero*>(currentHero)
                 ->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
             return 0;
