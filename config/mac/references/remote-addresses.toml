@@ -770,3 +770,111 @@ mac_offset = 0x2155fc
 mac_size = 0xd0
 target_sha256 = "d8c815315d7350675b41e78c46333c87f60d41d261f5e6c611d7bbdfe27bc8ac"
 evidence = "CAdvMgrNetMsgHandler::handleNetMsg delegates its session-lost and default arms to this base handler at 0x6434 and 0x646c. The retained body dispatches RS_SET_AS_HOST and RS_SESSION_LOST, then destroys the message, matching the retained Windows CNetMsgHandler::handleNetMsg body. BLR at 0x2156c8 precedes a distinct tiny function at 0x2156cc."
+
+[[functions]]
+retail_va = 0x00553040
+unit = "remote"
+mac_section = 0
+mac_offset = 0x210b84
+mac_size = 0x14c
+target_sha256 = "9b5f2280fd5e697521c245c0f75f4f93c3d1e37578feeec85dee3a5e081347c6"
+evidence = "CDPlayHeroes::getRemoteData reads the front queued packet, conditionally pops it, checks uncompressed-size versus size and calls uncompressMsg (0x210e28); failure and consumed-original cleanup call destroyMsg (0x21393c). The free wrapper calls this member at 0x212968. All source helper boundaries are already present. Final BLR at 0x210ccc; next body begins at 0x210cd0."
+
+[[functions]]
+retail_va = 0x00553220
+unit = "remote"
+mac_section = 0
+mac_offset = 0x210cd0
+mac_size = 0x58
+target_sha256 = "37bf5eee609b6e42f6638d024169bdc455c9c8474c79d70a11c97cf201127f3f"
+evidence = "CDPlayHeroes::transmitRemoteData compares recipient with 127, looks up the player DPID with the Mac player stride 0x15c, skips a missing DPID, then calls transmitRemoteDataDPID at 0x210ee4. Mac broadcast DPID is -1; Windows DirectPlay uses zero. Final BLR at 0x210d24; next body begins at 0x210d28."
+
+[[functions]]
+retail_va = 0x005532b0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x210d28
+mac_size = 0x100
+target_sha256 = "f139f63ed21c4ab4cdf2a64b06444a2f5dfd4026dc8198cca819e7f5d754dfe7"
+evidence = "CDPlayHeroes::compressMsg allocates size*1.2+12, copies the 20-byte header, compresses at level 6, updates size/uncompressedSize, and rejects output no smaller than the original. Both cleanup exits call destroyMsg at 0x21393c; these calls are restored in the source. Final BLR at 0x210e24; next body begins at 0x210e28."
+
+[[functions]]
+retail_va = 0x00553370
+unit = "remote"
+mac_section = 0
+mac_offset = 0x210ee4
+mac_size = 0xb4
+target_sha256 = "9b4970fe097dfd2032069f373ca4bd7c2b2bf5e76a4765029d2f3449a99f7a10"
+evidence = "CDPlayHeroes::transmitRemoteDataDPID sets sender fields, optionally calls compressMsg at 0x210d28, sends with sendIt at 0x210f98 and releases the temporary via destroyMsg at 0x21393c. The source now preserves that cleanup call. Final BLR at 0x210f94; next body begins at 0x210f98."
+
+[[functions]]
+retail_va = 0x00554410
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21297c
+mac_size = 0xd4
+target_sha256 = "e082c8250761170e4cc99bd33f222261b779f7a77f5868f83caefe9734169473"
+evidence = "initRemote stores game mode and clears follow/weMoved, constructs and copies player info, copies user name into preferences and the player name, writes preferences, then enables remote mode and returns one. Its multiplayer caller is reviewed at Windows 0x50fab0. Final BLR at 0x212a4c; next body begins at 0x212a50."
+
+[[functions]]
+retail_va = 0x005546b0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x212c58
+mac_size = 0x118
+target_sha256 = "74c030c128afc4f884b109c7b29b51aaf2df3118088ad6750a3518b948253665"
+evidence = "pollRemote guards game-over/remote/session state, calls playerData::isLocalHuman, tracks a 600000-tick player-active interval in this Mac snapshot, transmits message subtype 0x42f with size 0x14, then invokes the session poll helper at 0x210944. The Windows body preserves these operations with its own interval global. Final BLR at 0x212d6c; next body begins at 0x212d70."
+
+[[functions]]
+retail_va = 0x00554b10
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2130b4
+mac_size = 0x28
+target_sha256 = "2e26bcfc0a0f228adb6e4ff3b891db3a871a854ec08a67467d3d30d26ee5f48b"
+evidence = "CAnimatedDlg::setup stores sprite name at +0x68 and sequence at +0x64, then forwards text/font to CTextDialog::setup at 0xa20f4. Adjacent to its retained destructor and calcSpriteDimensions. Final BLR at 0x2130d8; next body begins at 0x2130dc."
+
+[[functions]]
+retail_va = 0x00554b30
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2130dc
+mac_size = 0x10c
+target_sha256 = "61a156b964e10f3cafa6d30f2e4d4313dd57259b414e067c24fcfb2fb0358c48"
+evidence = "CAnimatedDlg::calcSpriteDimensions initializes minima to 999, expands sprite sequence/frame getters, subtracts first-frame cropped origins and scans maximum frame extents. Writes width/height minus minima. Shared source already preserves the expanded accessor calls. Final BLR at 0x2131e4; next body begins at 0x2131e8."
+
+[[functions]]
+retail_va = 0x00554c30
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2131e8
+mac_size = 0xfc
+target_sha256 = "cfab4135e937106f670972b41ba707567418e20cfcc238d79e4d87e61f451268"
+evidence = "CAnimatedDlg::calcDimensions calls CTextDialog::calcDimensions, ResourceManager::getSprite and its calcSpriteDimensions helper at 0x2130dc, then calculates 40-pixel width padding, two 20-pixel height margins and 800x600 centering. Shared source already uses all three helpers. Final BLR at 0x2132e0; next body begins at 0x2132e4."
+
+[[functions]]
+retail_va = 0x00554cf0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2132e4
+mac_size = 0xd8
+target_sha256 = "5cb8927025898aa47b02cdcd54393a6244d71ee7550c86758b0a6008718a9b03"
+evidence = "CAnimatedDlg::drawSprite expands sequence/frame and cropped-dimension getters, offsets current frame against the first frame, and calls CSprite::drawCreature at 0x8a818. The ordinary source already preserves the sprite accessors. Final BLR at 0x2133b8; next body begins at 0x2133bc."
+
+[[functions]]
+retail_va = 0x00554e90
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2134d0
+mac_size = 0xc4
+target_sha256 = "10a4b7691453889d9af3bcb86771cad7d0dfa6af85baa11b9ed103e6959f5156"
+evidence = "CAnimatedDlg::drawWindow tests the palette flag, gets the local player and game position, broadcasts palette changes over the widget-ID range, draws heroWindow twice, then calls drawSprite at 0x2132e4. Shared source preserves those calls. Final BLR at 0x213590; next body begins at 0x213594."
+
+[[helpers]]
+source_helper = "CDPlayHeroes::uncompressMsg"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x210e28
+mac_size = 0xbc
+target_sha256 = "b4547cb1078cc296298b472a06b3ea6268c21b5b86727d66b308bc9e9a6cf604"
+evidence = "Called by getRemoteData at 0x210c6c: allocate uncompressed size plus 20-byte header, copy header, uncompress payload, destroyMsg on failure and publish expanded packet size. Ordinary source helper already present. Final BLR at 0x210ee0; transmitRemoteDataDPID follows."

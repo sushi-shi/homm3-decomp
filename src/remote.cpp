@@ -360,6 +360,8 @@ bool CDPlayHeroes::transmitRemoteData(CNetMsg* msg, int toWho,
         msg, dpidTo, compressMsg, guaranteed);
 }
 
+// Mac 0x210dcc and 0x210e00 retain destroyMsg for both failed-compression
+// exits; keep the same cleanup boundary when VC6 expands it.
 VA(0x005532b0, 0xB9)
 CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
 {
@@ -377,7 +379,7 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
             static_cast<const unsigned char*>(
                 static_cast<const void*>(netMsg)) + sizeof(CNetMsg),
             netMsg->m_size - sizeof(CNetMsg), 6)) {
-        ::operator delete(storage);
+        destroyMsg(compressedMsg);
         return 0;
     }
 
@@ -385,7 +387,7 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
     unsigned long originalSize = netMsg->m_size;
     compressedMsg->m_uncompressedSize = originalSize;
     if (compressedMsg->m_size >= originalSize) {
-        ::operator delete(storage);
+        destroyMsg(compressedMsg);
         return 0;
     }
     return compressedMsg;
@@ -410,6 +412,7 @@ CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
     return result;
 }
 
+// Mac 0x210f60 releases the temporary compressed packet through destroyMsg.
 VA(0x00553370, 0x5C)
 bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
                                           unsigned long dpidTo,
@@ -426,7 +429,7 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
 
     bool result = sendIt(msg, dpidTo, guaranteed);
     if (compressedMsg)
-        delete compressedMsg;
+        destroyMsg(compressedMsg);
     return result;
 }
 
