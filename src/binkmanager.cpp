@@ -274,8 +274,24 @@ void BinkManager::closeBink()
 // coordinates before saving the redraw position. Fragmented globals reached
 // 98.37%; scalar/POINT locals and byte-offset spellings did not recover the
 // final coordinate registers. The aggregate and getMap call do.
-VA(0x0044DD20, 0x227) MAC_ADDRESS(0x25dd0c, 0x240)  // dc-order-map + caller (smackmgr VideoPlay), dc 0x50a98
+namespace BinkManager {
+static unsigned char playBinkCore(int id, int x, int y, int w, int h);
+}
+
+VA(0x0044DD20, 0x227) MAC_ADDRESS(0x25dcbc, 0x50)  // dc-order-map + caller (smackmgr VideoPlay), dc 0x50a98
 int BinkManager::playBink(int id, int x, int y, int w, int h)
+{
+    g_soundManager->m_playSounds = 1;
+    unsigned char result = playBinkCore(id, x, y, w, h);
+    g_playingBink.m_paused = 0;
+    g_playingBinkActive = 0;
+    return result;
+}
+
+// Mac 0:0x25dd0c retains the modal loop separately from playBink's state wrapper.
+namespace BinkManager {
+MAC_ADDRESS(0x25dd0c, 0x240)
+static unsigned char playBinkCore(int id, int x, int y, int w, int h)
 {
     int vw, vh;
     int updateX;
@@ -283,7 +299,6 @@ int BinkManager::playBink(int id, int x, int y, int w, int h)
     unsigned char result;
     unsigned char aborted;
 
-    g_soundManager->m_playSounds = 1;
     vh = h;
     vw = w;
     BinkManager::openBink(id, x, y, vw, vh, 0, 0);
@@ -342,7 +357,6 @@ int BinkManager::playBink(int id, int x, int y, int w, int h)
         g_mouseManager->showPointer(0);
         result = !aborted;
     }
-    g_playingBink.m_paused = 0;
-    g_playingBinkActive = 0;
     return result;
+}
 }

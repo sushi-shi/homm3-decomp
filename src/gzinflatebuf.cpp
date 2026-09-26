@@ -68,6 +68,16 @@ int TGzInflateBuf::getByte()
     return c;
 }
 
+// CodeWarrior retains this helper immediately after getByte and calls it
+// twice from the constructor's gzip-magic fallback. Its byte argument is
+// passed at both call sites but the helper only rewinds the input cursor.
+MAC_ADDRESS(0x220ac8, 0x1c)
+void TGzInflateBuf::ungetByte(signed char)
+{
+    --m_stream.next_in;
+    ++m_stream.avail_in;
+}
+
 // 0x4d6050: build the window, then walk the gzip member header exactly as
 // zlib's gzio.c check_header does. A failed magic pair is caught here and
 // demotes the stream to raw pass-through (ok = 0) rather than propagating.
@@ -134,13 +144,11 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
             if (magic == -1)
                 throw false;
             if (magic != g_gzMagic[1]) {
-                --m_stream.next_in;
-                ++m_stream.avail_in;
+                ungetByte(static_cast<signed char>(magic));
                 throw false;
             }
         } catch (bool) {
-            --m_stream.next_in;
-            ++m_stream.avail_in;
+            ungetByte(static_cast<signed char>(magic));
             throw;
         }
     } catch (bool) {
