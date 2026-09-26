@@ -10,6 +10,10 @@
 #define __fastcall
 #define __forceinline inline
 #include <extras.h>
+// VC6's <math.h> declares only the C double forms; MSL's C++ float/integral
+// overloads (ansi_prefix.mac.h) make mixed float/double calls ambiguous.
+#undef __ANSI_OVERLOAD__
+#undef _MSL_INTEGRAL_MATH
 // Native MSL provides the equivalent CRT entry under this spelling.
 #define _strcmpi _stricmp
 // The file API keeps Microsoft's names in shared source; MSL supplies the
