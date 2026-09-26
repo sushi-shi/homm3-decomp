@@ -1020,8 +1020,7 @@ build build/mac/obj/misc.o: mwcc src/misc.cpp | $
 build mac$:misc: phony build/mac/obj/misc.o
 build build/mac/obj/armygrp.o: mwcc src/armygrp.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/armygrp.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = armygrp
 build mac$:armygrp: phony build/mac/obj/armygrp.o
 build build/mac/obj/basemgr.o: mwcc src/basemgr.cpp | $
@@ -1041,8 +1040,7 @@ build build/mac/obj/widget.o: mwcc src/widget.cpp | $
 build mac$:widget: phony build/mac/obj/widget.o
 build build/mac/obj/window.o: mwcc src/window.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/window.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = window
 build mac$:window: phony build/mac/obj/window.o
 build build/mac/obj/resource.o: mwcc src/resource.cpp | $
@@ -1082,8 +1080,7 @@ build build/mac/obj/textresource.o: mwcc src/textresource.cpp | $
 build mac$:textresource: phony build/mac/obj/textresource.o
 build build/mac/obj/hiscore.o: mwcc src/hiscore.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/hiscore.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = hiscore
 build mac$:hiscore: phony build/mac/obj/hiscore.o
 build build/mac/obj/sample.o: mwcc src/sample.cpp | $
@@ -1148,8 +1145,7 @@ build build/mac/obj/strip.o: mwcc src/strip.cpp | $
 build mac$:strip: phony build/mac/obj/strip.o
 build build/mac/obj/winmgr.o: mwcc src/winmgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/winmgr.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = winmgr
 build mac$:winmgr: phony build/mac/obj/winmgr.o
 build build/mac/obj/subwindow.o: mwcc src/subwindow.cpp | $
@@ -1164,14 +1160,12 @@ build build/mac/obj/resourcedisplay.o: mwcc src/resourcedisplay.cpp | $
 build mac$:resourcedisplay: phony build/mac/obj/resourcedisplay.o
 build build/mac/obj/resourcemanager.o: mwcc src/resourcemanager.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/resourcemanager.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = resourcemanager
 build mac$:resourcemanager: phony build/mac/obj/resourcemanager.o
 build build/mac/obj/spells.o: mwcc src/spells.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/spells.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = spells
 build mac$:spells: phony build/mac/obj/spells.o
 build build/mac/obj/creaturetype.o: mwcc src/creaturetype.cpp | $
@@ -1255,8 +1249,7 @@ build build/mac/obj/binkmanager.o: mwcc src/binkmanager.cpp | $
 build mac$:binkmanager: phony build/mac/obj/binkmanager.o
 build build/mac/obj/townmgr.o: mwcc src/townmgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/townmgr.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = townmgr
 build mac$:townmgr: phony build/mac/obj/townmgr.o
 build build/mac/obj/bitmap16.o: mwcc src/bitmap16.cpp | $
@@ -1276,14 +1269,12 @@ build build/mac/obj/mainmenu.o: mwcc src/mainmenu.cpp | $
 build mac$:mainmenu: phony build/mac/obj/mainmenu.o
 build build/mac/obj/campaignbrief.o: mwcc src/campaignbrief.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/campaignbrief.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = campaignbrief
 build mac$:campaignbrief: phony build/mac/obj/campaignbrief.o
 build build/mac/obj/customcampaign.o: mwcc src/customcampaign.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/customcampaign.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = customcampaign
 build mac$:customcampaign: phony build/mac/obj/customcampaign.o
 build build/mac/obj/customcampaignwindow.o: mwcc $
@@ -1339,8 +1330,7 @@ build build/mac/obj/palette.o: mwcc src/palette.cpp | $
 build mac$:palette: phony build/mac/obj/palette.o
 build build/mac/obj/army.o: mwcc src/army.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/army.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = army
 build mac$:army: phony build/mac/obj/army.o
 build build/mac/obj/adventuremapwindow.o: mwcc src/adventuremapwindow.cpp | $
@@ -1350,8 +1340,7 @@ build build/mac/obj/adventuremapwindow.o: mwcc src/adventuremapwindow.cpp | $
 build mac$:adventuremapwindow: phony build/mac/obj/adventuremapwindow.o
 build build/mac/obj/philai.o: mwcc src/philai.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/philai.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = philai
 build mac$:philai: phony build/mac/obj/philai.o
 build build/mac/obj/cspriteframe.o: mwcc src/cspriteframe.cpp | $
@@ -1361,13 +1350,12 @@ build build/mac/obj/cspriteframe.o: mwcc src/cspriteframe.cpp | $
 build mac$:cspriteframe: phony build/mac/obj/cspriteframe.o
 build build/mac/obj/events.o: mwcc src/events.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/events.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = events
 build mac$:events: phony build/mac/obj/events.o
 build build/mac/obj/kb.o: mwcc src/kb.cpp | scripts/homm3/mac/cc_wrap.py $
     config/units.toml config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/kb.toml config/mac/units.toml
+    config/mac/units.toml
   unit = kb
 build mac$:kb: phony build/mac/obj/kb.o
 build build/mac/obj/bottomviewsubwindow.o: mwcc src/bottomviewsubwindow.cpp $
@@ -1377,8 +1365,7 @@ build build/mac/obj/bottomviewsubwindow.o: mwcc src/bottomviewsubwindow.cpp $
 build mac$:bottomviewsubwindow: phony build/mac/obj/bottomviewsubwindow.o
 build build/mac/obj/recruit.o: mwcc src/recruit.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/recruit.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = recruit
 build mac$:recruit: phony build/mac/obj/recruit.o
 build build/mac/obj/hexcell.o: mwcc src/hexcell.cpp | $
@@ -1388,8 +1375,7 @@ build build/mac/obj/hexcell.o: mwcc src/hexcell.cpp | $
 build mac$:hexcell: phony build/mac/obj/hexcell.o
 build build/mac/obj/town.o: mwcc src/town.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/town.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = town
 build mac$:town: phony build/mac/obj/town.o
 build build/mac/obj/hero.o: mwcc src/hero.cpp | $
@@ -1399,37 +1385,32 @@ build build/mac/obj/hero.o: mwcc src/hero.cpp | $
 build mac$:hero: phony build/mac/obj/hero.o
 build build/mac/obj/game.o: mwcc src/game.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/game.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = game
 build mac$:game: phony build/mac/obj/game.o
 build build/mac/obj/mapcell.o: mwcc src/mapcell.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/mapcell.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = mapcell
 build mac$:mapcell: phony build/mac/obj/mapcell.o
 build build/mac/obj/cmbtmgr.o: mwcc src/cmbtmgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/cmbtmgr.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = cmbtmgr
 build mac$:cmbtmgr: phony build/mac/obj/cmbtmgr.o
 build build/mac/obj/command.o: mwcc src/command.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/command.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = command
 build mac$:command: phony build/mac/obj/command.o
 build build/mac/obj/advmgr.o: mwcc src/advmgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/advmgr.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = advmgr
 build mac$:advmgr: phony build/mac/obj/advmgr.o
 build build/mac/obj/ai.o: mwcc src/ai.cpp | scripts/homm3/mac/cc_wrap.py $
     config/units.toml config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/ai.toml config/mac/units.toml
+    config/mac/units.toml
   unit = ai
 build mac$:ai: phony build/mac/obj/ai.o
 build build/mac/obj/ai_combat.o: mwcc src/ai_combat.cpp | $
@@ -1439,14 +1420,12 @@ build build/mac/obj/ai_combat.o: mwcc src/ai_combat.cpp | $
 build mac$:ai_combat: phony build/mac/obj/ai_combat.o
 build build/mac/obj/ai_tactical.o: mwcc src/ai_tactical.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/ai_tactical.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = ai_tactical
 build mac$:ai_tactical: phony build/mac/obj/ai_tactical.o
 build build/mac/obj/ai_player.o: mwcc src/ai_player.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/ai_player.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = ai_player
 build mac$:ai_player: phony build/mac/obj/ai_player.o
 build build/mac/obj/fly.o: mwcc src/fly.cpp | scripts/homm3/mac/cc_wrap.py $
@@ -1471,14 +1450,12 @@ build build/mac/obj/viewarmywindow.o: mwcc src/viewarmywindow.cpp | $
 build mac$:viewarmywindow: phony build/mac/obj/viewarmywindow.o
 build build/mac/obj/viewwrld.o: mwcc src/viewwrld.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/viewwrld.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = viewwrld
 build mac$:viewwrld: phony build/mac/obj/viewwrld.o
 build build/mac/obj/newgame.o: mwcc src/newgame.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/newgame.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = newgame
 build mac$:newgame: phony build/mac/obj/newgame.o
 build build/mac/obj/advspells.o: mwcc src/advspells.cpp | $
@@ -1519,8 +1496,7 @@ build build/mac/obj/slider.o: mwcc src/slider.cpp | $
 build mac$:slider: phony build/mac/obj/slider.o
 build build/mac/obj/combatresultswindow.o: mwcc src/combatresultswindow.cpp $
     | scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/combatresultswindow.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = combatresultswindow
 build mac$:combatresultswindow: phony build/mac/obj/combatresultswindow.o
 build build/mac/obj/combatoptionswindow.o: mwcc src/combatoptionswindow.cpp $
@@ -1560,8 +1536,7 @@ build build/mac/obj/puzzlewindow.o: mwcc src/puzzlewindow.cpp | $
 build mac$:puzzlewindow: phony build/mac/obj/puzzlewindow.o
 build build/mac/obj/remote.o: mwcc src/remote.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/remote.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = remote
 build mac$:remote: phony build/mac/obj/remote.o
 build build/mac/obj/university_window.o: mwcc src/university_window.cpp | $
@@ -1581,8 +1556,7 @@ build build/mac/obj/cursor.o: mwcc src/cursor.cpp | $
 build mac$:cursor: phony build/mac/obj/cursor.o
 build build/mac/obj/event_record.o: mwcc src/event_record.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/event_record.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = event_record
 build mac$:event_record: phony build/mac/obj/event_record.o
 build build/mac/obj/singleselectionpopups.o: mwcc $
@@ -1604,8 +1578,7 @@ build build/mac/obj/bitmap816.o: mwcc src/bitmap816.cpp | $
 build mac$:bitmap816: phony build/mac/obj/bitmap816.o
 build build/mac/obj/search.o: mwcc src/search.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/search.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = search
 build mac$:search: phony build/mac/obj/search.o
 build build/mac/obj/herodefs.o: mwcc src/herodefs.cpp | $
@@ -1615,8 +1588,7 @@ build build/mac/obj/herodefs.o: mwcc src/herodefs.cpp | $
 build mac$:herodefs: phony build/mac/obj/herodefs.o
 build build/mac/obj/overview.o: mwcc src/overview.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/overview.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = overview
 build mac$:overview: phony build/mac/obj/overview.o
 build build/mac/obj/spellbookwindow.o: mwcc src/spellbookwindow.cpp | $
@@ -1641,14 +1613,12 @@ build build/mac/obj/swapmgr.o: mwcc src/swapmgr.cpp | $
 build mac$:swapmgr: phony build/mac/obj/swapmgr.o
 build build/mac/obj/tradpost.o: mwcc src/tradpost.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/tradpost.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = tradpost
 build mac$:tradpost: phony build/mac/obj/tradpost.o
 build build/mac/obj/seerhut.o: mwcc src/seerhut.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/seerhut.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = seerhut
 build mac$:seerhut: phony build/mac/obj/seerhut.o
 build build/mac/obj/sacrifice_window.o: mwcc src/sacrifice_window.cpp | $
@@ -1683,8 +1653,7 @@ build build/mac/obj/forcefeedback.o: mwcc src/forcefeedback.cpp | $
 build mac$:forcefeedback: phony build/mac/obj/forcefeedback.o
 build build/mac/obj/objecttype.o: mwcc src/objecttype.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/objecttype.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
   unit = objecttype
 build mac$:objecttype: phony build/mac/obj/objecttype.o
 build build/mac/obj/string_support.o: mwcc src/string_support.cpp | $

@@ -156,7 +156,8 @@ claim functions only. The executable-wide tables mirror `config/retail`:
 `config/mac/functions.tsv` (every verified span), `runtime-map.tsv`,
 `runtime-aliases.tsv`, `glue-map.tsv` and `zlib-map.tsv` (library labels with
 provenance), `code-regions.tsv` (reviewed non-function regions),
-`dispositions.tsv` and `tu-dispositions.tsv`.
+and `dispositions.tsv`. `config/mac/units.toml` holds the CodeWarrior flags
+and whole-unit dispositions.
 
 ```sh
 homm3 mac parity             # validate claims and tables; index every source function

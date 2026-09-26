@@ -20,6 +20,10 @@ Windows-only modules remain in their separate companion tables.
 Table headers describe ownership and update rules. Retail inventories are
 reviewed inputs; generated analysis and scratch output belong in `build/`.
 
+[`mac/units.toml`](mac/units.toml) holds the CodeWarrior flags for the full-TU
+Mac objects, any per-unit override and whole-unit dispositions with one-line
+evidence, keyed by `units.toml` unit names.
+
 `mac/data/<TU>.toml` lets workers extend source-owned external storage
 bindings and compiler literal pools independently. Identical shared
 references coalesce; conflicting identities or spans fail. Literal `units`

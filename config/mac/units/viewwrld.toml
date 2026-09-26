@@ -1,6 +1,0 @@
-mode = "paired_bodies"
-# Provisional source-shape lens for vwDrawSprite: O3 aligns 99/107 instructions
-# after restoring separate adjusted coordinates and frame mutation. This is
-# not an exact flag calibration; the source and Mac x-clipping code still differ.
-flags = ["-O3", "-proc", "750", "-nolink"]
-helpers = []

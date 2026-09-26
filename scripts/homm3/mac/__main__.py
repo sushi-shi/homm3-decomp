@@ -102,7 +102,7 @@ def main(argv=None) -> int:
                 print(f"[mac] {len(rows)} TUs: " + ", ".join(f"{state} {count}"
                                                              for state, count in sorted(counts.items()))
                       + f"; {sum(row['code_hunks'] for row in rows)} emitted code hunks; {path}")
-            # A reviewed tu-dispositions.tsv row accounts for a unit as well.
+            # A disposition in config/mac/units.toml accounts for a unit as well.
             return 0 if all(row["state"] != "failed" and row["state"] != "not_built"
                             for row in rows) else 1
         if args.command == "dashboard":

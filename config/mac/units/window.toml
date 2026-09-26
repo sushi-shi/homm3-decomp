@@ -1,6 +1,0 @@
-mode = "paired_bodies"
-# Address-only shape studies work, but Mac retail heroWindow fields are 4 bytes
-# later than this ordinary-header compile; inspect layout before exact admission.
-flags = ["-O3", "-proc", "750", "-nolink"]
-helpers = []
-source_helpers = []

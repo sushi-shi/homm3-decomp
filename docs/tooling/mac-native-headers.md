@@ -21,45 +21,32 @@ Both byte contents and relative names participate in each tree hash, preserving
 the original encodings and line endings. Sources are all verified before any
 staged tree is replaced. No sibling installation is discovered implicitly.
 
-## Unit profiles
+## Unit settings
 
-An ordinary-header profile uses the existing paired-body compiler mode:
+`config/mac/units.toml` holds the one shared CodeWarrior flag profile, any
+per-unit override and the dispositions of units with no Mac counterpart:
 
 ```toml
-mode = "paired_bodies"
-flags = ["-O1", "-proc", "750", "-nolink", "-char", "unsigned"]
-helpers = []
-source_helpers = []
+flags = ["-O3", "-proc", "750", "-nolink"]
+
+[units.winfile]
+disposition = "platform_rewritten"
+evidence = "Win32 file layer: Mac file I/O calls FSpOpenDF/FSRead/... from 0:0x277e5c..0x2780c8."
 ```
 
-Candidate input starts from the original source file. The existing Clang source
-inventory identifies definition spans using the project's Windows declaration
-profile. The generator preserves includes, globals, constants, namespaces,
-source-local classes, prototypes and source order. Selected function bodies,
-source helpers, templates and authored inline bodies remain present. Other
-free-function bodies become declarations using their own written declarators;
-out-of-line class methods already declared in headers are omitted. CodeWarrior
-then preprocesses the candidate and reads the ordinary game headers itself.
-A source-inventory error stops preparation; it cannot yield an empty candidate.
-
+`ninja mac:<unit>` compiles the complete source file with those flags.
 Project include paths come from `config/units.toml`. There is no separate Mac
-header roster or game-class definition. Header methods require no extraction
-markers, location lists or copied bodies. `mac_symbol` in a pair is the expected
-**candidate** linkage name, not a claim that the stripped executable retains
-that name. Native MSL vector specializations include their allocator argument.
+header roster or game-class definition, and no copied or extracted bodies.
+Native MSL vector specializations include their allocator argument.
 
-`include/codewarrior_prefix.h` supplies compiler spelling compatibility. Native profiles
-also enable CodeWarrior's documented `-msext on` to parse Microsoft anonymous
+`include/codewarrior_prefix.h` supplies compiler spelling compatibility. The wrapper
+also enables CodeWarrior's documented `-msext on` to parse Microsoft anonymous
 structs and define `HOMM3_TARGET_MAC=1` on the compiler command line. These
 settings do not turn an ordinary helper into an inline helper.
 The SDK include paths are added automatically after project include paths.
 
-The compiler performs preprocessing. Tooling snapshots and fingerprints the
-entire declared project-header trees and the verified SDK, so conditional and
-macro includes do not need a Python approximation of preprocessing. This is
-conservative: an unrelated header edit can invalidate a native comparison.
-Staged inputs are checked before cached output is reused and compilation inputs
-are checked again after compilation. Missing SDKs, compiler errors and unbound
+The compiler performs preprocessing; Ninja's header-closure depfile rebuilds
+an object when any header it reads changes. Compiler errors and unbound
 symbols remain unavailable comparisons, never exact results.
 
 ## Migration status

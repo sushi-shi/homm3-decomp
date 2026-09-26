@@ -7,9 +7,8 @@ unit in config/units.toml:
         --out build/mac/obj/hero.o
 
 It compiles the actual source file - never a generated selection of bodies -
-with the unit's Mac profile flags (config/mac/units*.toml) or the shared
-toolchain profile, the project include roots and the staged CodeWarrior
-library headers. Beside the object it writes:
+with the unit's flags from config/mac/units.toml, the project include roots
+and the staged CodeWarrior library headers. Beside the object it writes:
 
     <unit>.log         CodeWarrior's complete diagnostics (also on failure)
     <unit>.dis.txt     MWLinkPPC -dis listing of the object
@@ -39,9 +38,8 @@ MAC_DEFINES = ("-msext", "on", "-DHOMM3_TARGET_MAC=1", "-prefix", "include/codew
 
 
 def flags_for(unit: str) -> tuple[str, ...]:
-    from homm3.mac import profiles, toolchain
-    profile = profiles.load(ROOT, unit)
-    flags = tuple(profile.flags) if profile and profile.flags else tuple(toolchain.specification()["flags"])
+    from homm3.mac import profiles
+    flags = profiles.flags(ROOT, unit)
     if "-nolink" not in flags:
         raise ValueError(f"{unit}: Mac profile must emit an object with -nolink")
     return (*flags, *MAC_DEFINES)
@@ -153,13 +151,14 @@ def first_error(log: str) -> str:
 def status(root: Path = ROOT) -> list[dict]:
     """Per-unit full-TU Mac object state for every manifest unit."""
     from homm3 import manifest
-    from homm3.core.tsv import read as read_tsv
-    platform = {}
-    table = root / "config/mac/tu-dispositions.tsv"
-    if table.is_file():
-        platform = {row["unit"]: row["disposition"] for row in read_tsv(table)[2]}
+    from homm3.mac import profiles
+    platform = {unit: kind for unit, (kind, _evidence) in profiles.dispositions(root).items()}
+    units = manifest.units(root / "config/units.toml")
+    unknown = set(platform) - {unit["unit"] for unit in units}
+    if unknown:
+        raise ValueError(f"config/mac/units.toml: dispositions name unknown units {sorted(unknown)}")
     rows = []
-    for unit in manifest.units(root / "config/units.toml"):
+    for unit in units:
         name = unit["unit"]
         obj = root / "build/mac/obj" / f"{name}.o"
         log = obj.with_suffix(".log")

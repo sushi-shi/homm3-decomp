@@ -112,8 +112,8 @@ data hunk, and a header-closure depfile. `homm3 mac objects` reports per-TU
 state: 99 of 152 TUs compile (6968 code hunks) and 53 fail with their first
 real error in `build/mac/objects.tsv` (DirectDraw/Windows SDK types,
 `__declspec` operator declarations, CRT functions without a declaration in
-scope, overload ambiguities). No TU has a platform-only disposition yet
-(`config/mac/tu-dispositions.tsv` is read when present).
+scope, overload ambiguities). Platform-only dispositions live beside the
+flags in `config/mac/units.toml`.
 
 `homm3 mac emitted` joins every full-TU hunk to authored definitions by
 CodeWarrior qualified name: of 6968 emitted code hunks, 2017 belong to the
@@ -122,9 +122,9 @@ unit's own source, 354 to project headers, 4249 are MSL library templates,
 9 another source file and 49 have no source owner. 33 non-template
 definitions authored in a compiled unit have no emitted body. Reports are in
 `build/gen/mac/{emitted-symbols,not-emitted}.tsv`.
-`config/mac/tu-dispositions.tsv` exists but is empty: a unit's missing string
-literals do not discriminate (shared units such as font and palette have none
-in the PEF either), so no unit is yet evidenced as platform-only.
+A unit's missing string literals do not discriminate (shared units such as
+font and palette have none in the PEF either); a disposition needs other
+positive evidence.
 
 ## 3. Pair the source and emitted object with the PEF
 

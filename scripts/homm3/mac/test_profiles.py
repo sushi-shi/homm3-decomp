@@ -5,30 +5,29 @@ import unittest
 from homm3.mac import profiles
 
 
-class TestMacProfiles(unittest.TestCase):
-    def fixture(self, root):
+class TestMacUnitSettings(unittest.TestCase):
+    def write(self, text):
+        folder = self.enterContext(tempfile.TemporaryDirectory())
+        root = Path(folder)
         (root / "config/mac").mkdir(parents=True)
-        (root / "config/units.toml").write_text(
-            '[build]\nincludes=["include"]\n[flags]\nfixture=[]\n'
-            '[[unit]]\nunit="test"\nsource="src/test.cpp"\nflags="fixture"\n')
-        (root / "config/mac/units.toml").write_text(
-            '[units.test]\nmode="paired_bodies"\nflags=["-O1", "-nolink"]\n')
+        (root / "config/mac/units.toml").write_text(text)
+        return root
 
-    def test_unit_flags_load(self):
-        with tempfile.TemporaryDirectory() as folder:
-            root = Path(folder)
-            self.fixture(root)
-            self.assertEqual(profiles.load(root, "test").flags, ("-O1", "-nolink"))
-            self.assertIsNone(profiles.load(root, "other"))
+    def test_shared_flags_override_and_dispositions(self):
+        root = self.write('flags = ["-O3", "-nolink"]\n'
+                          '[units.hero]\nflags = ["-O1", "-nolink"]\n'
+                          '[units.winfile]\ndisposition = "platform_rewritten"\nevidence = "File Manager"\n')
+        self.assertEqual(profiles.flags(root, "hero"), ("-O1", "-nolink"))
+        self.assertEqual(profiles.flags(root, "town"), ("-O3", "-nolink"))
+        self.assertEqual(profiles.dispositions(root), {"winfile": ("platform_rewritten", "File Manager")})
 
-    def test_retired_header_settings_are_rejected(self):
-        with tempfile.TemporaryDirectory() as folder:
-            root = Path(folder)
-            self.fixture(root)
-            path = root / "config/mac/units.toml"
-            path.write_text(path.read_text() + 'preamble="alternate.h"\n')
-            with self.assertRaisesRegex(ValueError, "retired header settings"):
-                profiles.load(root, "test")
+    def test_invalid_settings_fail(self):
+        for text in ('flags = ["-O3"]\n',
+                     'flags = ["-nolink"]\n[units.x]\nmode = "paired_bodies"\n',
+                     'flags = ["-nolink"]\n[units.x]\ndisposition = "windows_only"\n',
+                     'flags = ["-nolink"]\n[units.x]\ndisposition = "gone"\nevidence = "e"\n'):
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                profiles.dispositions(self.write(text))
 
 
 if __name__ == "__main__":
