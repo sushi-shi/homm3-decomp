@@ -1721,12 +1721,6 @@ bool playerData::isLocalHuman() const
     return false;
 }
 
-VA(0x004bada0, 0xC) MAC_ADDRESS(0x0cdbf0, 0x18)  // dc 0xa6144
-bool playerData::isHuman() const
-{
-    return m_isHuman ? true : false;
-}
-
 VA(0x004badb0, 0x9C) MAC_ADDRESS(0x0cdc08, 0xd0)  // dc 0xa6180
 char* playerData::getName()
 {

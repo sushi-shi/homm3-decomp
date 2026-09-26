@@ -929,10 +929,13 @@ public:
     AI m_ai;  // +0xf0
     // Implicit destructor; CodeView dc 0xbd630 compgenx.
     int load(TAbstractFile* infile, int saveVersion);
-    // 0x4bada0 (claimed in src/game.cpp). town::buy_building calls it
+    // town::buy_building calls it
     // on gpGame->players[owner] to split the human and computer
     // resource paths.
-    bool isHuman() const;
+    // Windows hero::giveArtifact expands this query at 0x4e322d;
+    // Mac retains its body and expands the same test at 0x103f74.
+    VA(0x004bada0, 0xC) MAC_ADDRESS(0x0cdbf0, 0x18)  // dc 0xa6144
+    bool isHuman() const { return m_isHuman ? true : false; }
     int save(TAbstractFile* outfile);
     // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
     // townManager::SwapHeroes 0x5d5150 calls it on
