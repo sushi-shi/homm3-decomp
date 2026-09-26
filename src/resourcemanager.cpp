@@ -1236,12 +1236,6 @@ void ResourceManager::dispose(sample* value)
         value->dispose();
 }
 
-// E:\gamedcs\resourcemanager.cpp:2280, dc 0x1226d4.
-// Complete retains no work at the cache-sweep call sites.
-void ResourceManager::delSprFromCache()
-{
-}
-
 // Original: ResourceManager::Expunge; resourcemanager.cpp:2359, dc 0x1228ac
 MAC_ADDRESS(0x154748, 0x7c)
 void ResourceManager::expunge()
