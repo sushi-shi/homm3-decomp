@@ -677,8 +677,7 @@ int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
 MAC_ADDRESS(0x11f5cc, 0xb0)
 int NewfullMap::saveSeerList(TAbstractFile* outfile)
 {
-    short count = static_cast<short>(m_seerHutList.size());
-    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
+    if (static_cast<unsigned>(writeValue<short>(outfile, static_cast<short>(m_seerHutList.size()))) < 2)
         return -1;
     for (unsigned int i = 0; i < m_seerHutList.size(); ++i)
         m_seerHutList[i].save(outfile);
@@ -689,8 +688,7 @@ int NewfullMap::saveSeerList(TAbstractFile* outfile)
 MAC_ADDRESS(0x11f798, 0x9c)
 void NewfullMap::saveQuestGuardList(TAbstractFile* outfile)
 {
-    short count = static_cast<short>(m_questGuardList.size());
-    outfile->write(&count, 2);
+    writeValue<short>(outfile, static_cast<short>(m_questGuardList.size()));
     for (unsigned int i = 0; i < m_questGuardList.size(); ++i)
         m_questGuardList[i].save(outfile);
 }
@@ -1361,8 +1359,7 @@ int NewfullMap::readTreasureData(TAbstractFile* infile, TreasureData* treasure)
 MAC_ADDRESS(0x121094, 0xc4)
 int NewfullMap::saveTreasureList(TAbstractFile* outfile)
 {
-    int count = m_customTreasure.size();
-    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
+    if (static_cast<unsigned>(writeValue<short>(outfile, static_cast<short>(m_customTreasure.size()))) < 2)
         return -1;
     for (unsigned int i = 0; i < m_customTreasure.size(); ++i) {
         if (saveTreasureData(outfile, &m_customTreasure[i]) < 0)
@@ -1756,8 +1753,7 @@ int NewfullMap::readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
 MAC_ADDRESS(0x1220f8, 0xc4)
 int NewfullMap::saveBlackBoxList(TAbstractFile* outfile)
 {
-    int count = m_blackBoxes.size();
-    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
+    if (static_cast<unsigned>(writeValue<short>(outfile, static_cast<short>(m_blackBoxes.size()))) < 2)
         return -1;
     for (unsigned int i = 0; i < m_blackBoxes.size(); ++i) {
         if (saveBlackBox(outfile, &m_blackBoxes[i]) < 0)
@@ -2497,8 +2493,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 MAC_ADDRESS(0x123f44, 0xc4)
 int NewfullMap::saveMonsterList(TAbstractFile* outfile)
 {
-    int count = m_customMonsterList.size();
-    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
+    if (static_cast<unsigned>(writeValue<short>(outfile, static_cast<short>(m_customMonsterList.size()))) < 2)
         return -1;
     for (unsigned int i = 0; i < m_customMonsterList.size(); ++i) {
         if (saveMonsterData(outfile, &m_customMonsterList[i]) < 0)
