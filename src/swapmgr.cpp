@@ -929,7 +929,7 @@ int swapManager::open(int newPriority)
     return 0;
 }
 
-VA(0x005aeb00, 0x213) MAC_ADDRESS(0x1a6778, 0x60)  // dc 0x15f228
+VA(0x005aeb00, 0x213) MAC_ADDRESS(0x1a9e84, 0x144)  // dc 0x15f228
 CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 {
     switch (netMsg->m_subType)

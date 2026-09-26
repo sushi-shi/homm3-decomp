@@ -66,11 +66,11 @@ evidence = "SwapManager vtable1+0x5351c slot0 resolves open0x1a61d8; allocates T
 [[functions]]
 retail_va = 0x5aeb00
 unit = "swapmgr"
-mac_section = 0x0
-mac_offset = 0x1a6778
-mac_size = 0x60
-target_sha256 = "bf5c10ac43ed822dccef17d76b90c533950d1b5d66aa73d085d3de4b8e182008"
-evidence = "CSwapMgrNetMsgHandler RTTI/vtable1+0x53574 slot0 resolves handleNetMsg0x1a6778; forwards to swap manager message handler0x215568."
+mac_section = 0
+mac_offset = 0x1a9e84
+mac_size = 0x144
+target_sha256 = "6789da044fdf43cf26c5e4d1141017cdddf6f332eda704b58782b28ec626a0fb"
+evidence = "CSwapMgrNetMsgHandler::handleNetMsg dispatches subtype 0x3f6 dropped player, 0x42a hero update, 0x429 trade done, 0x3ec chat and 0x42e give stuff; popup branches save the abort message, then the common tail retains destroyMsg at 0x1a9fa4. This matches the Windows authored switch. Previous 0x1a6778 identity was the generated deleting destructor (base destructor 0x215568 then conditional delete), not this handler. Final BLR at 0x1a9fc4."
 
 [[functions]]
 retail_va = 0x5aed20

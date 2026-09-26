@@ -2344,6 +2344,8 @@ void CGameTransferSmack::start()
 
 // DrawCurrentFrame is defined in remote.cpp:2784 in DC; the Windows
 // helper below calls the current-handle video wrapper at 0x598e80.
+// Mac additionally clamps NaN progress to zero through MathLib::__fpclassifyf
+// at 0x215184; Windows proceeds directly to the frame calculation.
 VA(0x005574b0, 0x12D) MAC_ADDRESS(0x215158, 0x160)  // dc 0x11ece4
 void CGameTransferSmack::setPercentage(float pct)
 {
