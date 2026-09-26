@@ -4145,7 +4145,7 @@ static void randomizeWitchHut(NewmapCell* cell)
 {
     std::bitset<28> possibleSkills(cell->m_extraInfo);
     cell->m_extraInfo = 0;
-    if (!possibleSkills.any())
+    if (possibleSkills.none())
         possibleSkills = ~std::bitset<28>();
 
     int i;
