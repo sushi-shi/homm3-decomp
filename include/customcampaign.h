@@ -1,5 +1,5 @@
 // customcampaign.h - canonical campaign state and Complete campaign types.
-// CodeView places SCampaign's constructor and completion query in this header.
+// The older DC class owns header bodies; Complete placement follows its retail callers.
 #ifndef HOMM3_CUSTOMCAMPAIGN_H
 #define HOMM3_CUSTOMCAMPAIGN_H
 
@@ -119,19 +119,7 @@ public:
     // operator delete on _First, then all three words zeroed - so the slot
     // is a std::vector over a 4-byte element whose identity is unproven.
     std::vector<int> m_assignedCarryover;
-    // E:\gamedcs\CustomCampaign.h:199, dc 0xbcd90
-    VA(0x00489500, 0x88) MAC_ADDRESS(0x098064, 0xe8)  // dc 0xbcd90
-    SCampaign()
-    {
-        m_isCheater = 0;
-        m_secretActive = 0;
-        m_currentMap = -1;
-        m_numMapRegions = -1;
-        m_briefingChoice = -1;
-        m_crossoverArrayIndex = -1;
-        m_currentCampaign = CAMPAIGN_NONE;
-        memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
-    }
+    SCampaign();
     void selectCampaign(int campaignIndex, const char* filename);
     // nameable before the campaign-brief declarations; the receiver,
     void playScenarioPrologue(void* campaignHeader);

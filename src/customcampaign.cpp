@@ -2534,6 +2534,23 @@ void CampaignScenarioInfo::write(TAbstractFile* outfile) const
     }
 }
 
+// Complete retains this constructor in all three cross-TU callers:
+// TCampaignWindow, SavedGameHeader and game. Mac places it after
+// CampaignScenarioInfo::write and before the generated member teardown/
+// selectCampaign cluster. The older DC class used a header constructor.
+VA(0x00489500, 0x88) MAC_ADDRESS(0x098064, 0xe8)  // dc 0xbcd90
+SCampaign::SCampaign()
+{
+    m_isCheater = 0;
+    m_secretActive = 0;
+    m_currentMap = -1;
+    m_numMapRegions = -1;
+    m_briefingChoice = -1;
+    m_crossoverArrayIndex = -1;
+    m_currentCampaign = CAMPAIGN_NONE;
+    memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
+}
+
 VA(0x00489590, 0x233) MAC_ADDRESS(0x098380, 0xc8)
 void SCampaign::selectCampaign(int campaignIndex, const char* filename)
 {
