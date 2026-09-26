@@ -3390,9 +3390,8 @@ void combatManager::addBolt(SBolt* bolt, int sourceX, int sourceY,
 // independent proof of the 0x78 stride (the first is the five separate
 // `add r32,0x78` walks below).
 
-// atan2's (dx, dy) convention next door does NOT carry into the fork:
-// the split's x offset comes from COS and its y offset from SIN, read
-// straight off which product is added to iX and which to iY.
+// Both retail builds use sin(angle) for the fork's X offset and
+// cos(angle) for Y, matching drawBolt's coordinate convention.
 
 VA(0x005a5c20, 0x5C2) MAC_ADDRESS(0x196794, 0x80c)  // dc 0x154c50
 void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
@@ -3531,11 +3530,11 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
                                 if (drawLength > (absDist >> 1))
                                     drawLength = absDist >> 1;
                                 long splitX = static_cast<long>(
-                                    cos(static_cast<double>(angle))
+                                    sin(static_cast<double>(angle))
                                         * drawLength
                                     + bolts[i].m_pixelX);
                                 long splitY = static_cast<long>(
-                                    sin(static_cast<double>(angle))
+                                    cos(static_cast<double>(angle))
                                         * drawLength
                                     + bolts[i].m_pixelY);
                                 long splitThickness = bolts[i].m_thickness;
