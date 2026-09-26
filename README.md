@@ -40,7 +40,7 @@ _Excluded from the % above — generated/library code, not independent reconstru
 
 <!-- mac-match-score:start -->
 
-**Lightly optimized Classic Mac PowerPC reference (last full checkpoint):** 449 / 1146 scored functions exact; 59.19% of 263,052 compared bytes match. Scored functions are source claims whose full-TU body links; this is coverage, not the whole Mac game.
+**Lightly optimized Classic Mac PowerPC reference (last full checkpoint):** 469 / 1172 scored functions exact; 59.71% of 269,656 compared bytes match. Scored functions are source claims whose full-TU body links; this is coverage, not the whole Mac game.
 
 <!-- mac-match-score:end -->
 

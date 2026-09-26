@@ -408,7 +408,7 @@ ai_player	?size@?$vector@Utype_creature_source@@V?$allocator@Utype_creature_sour
 ai_player	?splitArmy@@YIJPAVarmyGroup@@FFF@Z	100.0000	100.0000	100.0000	0x2dd70	tokens1:9f6a5a91a7bb
 ai_player	?startTurn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0	tokens1:169e55014f63
 ai_player	?tradeResources@type_AI_player@@QAEXPBHJ@Z	100.0000	100.0000	100.0000	0x2a470	tokens1:fdcd9c11cf40
-ai_player	?valueOfAddingArmy@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAFE@Z	80.3322	80.3322	94.2397	0x2c830	tokens1:0278334b72ca
+ai_player	?valueOfAddingArmy@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAFE@Z	82.4178	82.4178	94.2397	0x2c830	tokens1:c42d12541a25
 ai_player	?valueOfCastleUpgrade@@YIHPAVtown@@PAH@Z	100.0000	100.0000	100.0000	0x2b670	tokens1:26385da3c159
 ai_player	?valueOfDwelling@@YIJPAVtown@@FPAEPAH@Z	100.0000	100.0000	100.0000	0x2b520	tokens1:b4226eb19a06
 ai_player	?valueOfDwellingUpgrade@@YIJPAVtown@@FPAH@Z	100.0000	100.0000	100.0000	0x2b5b0	tokens1:c3ddf9b25aa7
