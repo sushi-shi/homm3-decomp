@@ -415,7 +415,8 @@ CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
     return result;
 }
 
-// Mac 0x210f60 releases the temporary compressed packet through destroyMsg.
+// Mac 0x210f50/0x210f78 retain separate compressed/original sends;
+// 0x210f60 releases the temporary compressed packet through destroyMsg.
 VA(0x00553370, 0x5C) MAC_ADDRESS(0x210ee4, 0xb4)
 bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
                                           unsigned long dpidTo,
@@ -424,15 +425,16 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
     msg->m_from = g_localGamePos;
     CNetMsg* compressedMsg = 0;
     msg->m_dpidFrom = g_thisNetPlayerInfo.m_dpid;
-    if (compressMsg) {
+    if (compressMsg)
         compressedMsg = this->compressMsg(msg);
-        if (compressedMsg)
-            msg = compressedMsg;
-    }
 
-    bool result = sendIt(msg, dpidTo, guaranteed);
-    if (compressedMsg)
+    bool result;
+    if (compressedMsg) {
+        result = sendIt(compressedMsg, dpidTo, guaranteed);
         destroyMsg(compressedMsg);
+    } else {
+        result = sendIt(msg, dpidTo, guaranteed);
+    }
     return result;
 }
 
