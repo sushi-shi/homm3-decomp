@@ -301,6 +301,44 @@ byte verdict; use `homm3 mac diff` for that stricter comparison when needed.
    and gates. Unit builds preserve other units' observations; the queue checks
    each observation's original source, profile, artifact and analysis hashes.
 
+6. Run `homm3 mac migrate` to copy the new pair or reference into its source
+   `MAC_ADDRESS` claim and the function tables, then `homm3 mac parity`.
+
+## Source addresses and executable inventory
+
+Mac function addresses live in source beside their Windows claim, as
+`VA(0x004d8720, 0x568) MAC_ADDRESS(0x0f3fe4, 0x568)`, or on their own line
+directly above a definition with no Windows VA; `MAC_COMPGEN_ADDRESS` sits
+beside a `VA_COMPGEN`. Offsets are relative to PEF code section 0; the macros
+claim functions only. The executable-wide tables mirror `config/retail`:
+`config/mac/functions.tsv` (every verified span), `runtime-map.tsv`,
+`runtime-aliases.tsv`, `glue-map.tsv` and `zlib-map.tsv` (library labels with
+provenance), `code-regions.tsv` (reviewed non-function regions),
+`dispositions.tsv` and `tu-dispositions.tsv`.
+
+```sh
+homm3 mac migrate            # reviewed TOML spans -> MAC_ADDRESS claims and tables (idempotent)
+homm3 mac parity             # validate claims and tables; index every source function
+homm3 mac inventory          # every code-section byte in one region; boundary census
+homm3 mac inventory --admit-proven   # admit proven single-function spans as unowned rows
+ninja -k 0 mac-objects       # full-TU CodeWarrior objects; `ninja mac:<unit>` for one
+homm3 mac objects            # per-TU compile state and first real error
+homm3 mac emitted            # emitted symbols vs source; claim bodies; identity leads
+homm3 mac emitted --admit-library    # label rows filled exactly by MSL/zlib hunks
+homm3 mac tu-compare <unit>  # admitted pairs scored from the full-TU object
+homm3 mac dashboard          # the separate accounting numbers side by side
+```
+
+`parity` binds each claim through the analysis arm's annotations: a paired
+claim to its VA, a standalone claim to the definition carrying the same `mac:`
+attribute. `inventory` admits a span only when it starts at a transition-vector,
+direct-call or reviewed vtable-slot entry, ends in a return or unconditional
+branch, and every word is reachable from the entry and in-span jump-table
+labels; its gate rejects a row that contains another function's entry. Object
+leads are relocation-masked byte matches of full-TU hunks that occur once in
+all code; they are identity evidence for library labels and leads for game
+claims, never automatic `MAC_ADDRESS` edits.
+
 
 ## Initial tooling checkpoint
 

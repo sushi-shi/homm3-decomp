@@ -664,12 +664,19 @@ def index(root: Path, claims: list[Claim], windows: list[WindowsClaim],
     standalone = [claim for claim in claims if claim.windows_va is None]
     bound: set[str] = set()
     if definitions is not None:
-        by_line = defaultdict(list)
-        for claim in standalone:
-            if claim.compgen is None:
-                by_line[claim.path].append(claim)
+        # The analysis arm annotates each definition with its own MAC_ADDRESS;
+        # bind by that attribute, never by nearby lines or names.
+        by_span = {(claim.path, claim.offset, claim.size): claim
+                   for claim in standalone if claim.compgen is None}
+        paired = {claim.windows_va: claim for claim in claims if claim.windows_va is not None}
         seen = set()
         for definition in definitions:
+            if definition.va is not None and definition.mac_offset is not None:
+                claim = paired.get(definition.va)
+                if claim is None or (claim.offset, claim.size) != (definition.mac_offset, definition.mac_size):
+                    problems.append(f"{definition.file}:{definition.line}: {definition.name} carries "
+                                    f"MAC_ADDRESS({definition.mac_offset:#x}, {definition.mac_size:#x}) "
+                                    f"that its VA({definition.va:#010x}) claim does not")
             if definition.va is not None or definition.additional_instances:
                 continue
             key = (definition.file, definition.offset)
@@ -680,12 +687,15 @@ def index(root: Path, claims: list[Claim], windows: list[WindowsClaim],
             # still separates overloads.
             identity = (f"source:{definition.file}:"
                         f"{definition.mangled or definition.name + ' ' + definition.signature}")
-            owned = [claim for claim in by_line.get(definition.file, ())
-                     if claim.line < definition.line and claim.line >= definition.line - 3
-                     and claim.label.split("::")[-1] == definition.name.split("::")[-1]]
-            claim = owned[0] if len(owned) == 1 else None
-            if claim is not None:
-                bound.add(claim.identity)
+            claim = None
+            if definition.mac_offset is not None:
+                claim = by_span.get((definition.file, definition.mac_offset, definition.mac_size))
+                if claim is None:
+                    problems.append(f"{definition.file}:{definition.line}: {definition.name} carries "
+                                    f"MAC_ADDRESS({definition.mac_offset:#x}, {definition.mac_size:#x}) "
+                                    "with no matching source claim")
+                else:
+                    bound.add(claim.identity)
             rows.append(dict(identity=identity, unit=unit_of(root, definition.source_owner or definition.file),
                              file=definition.file, line=definition.line, name=definition.name,
                              windows_va="",

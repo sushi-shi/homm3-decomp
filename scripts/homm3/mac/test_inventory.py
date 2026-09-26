@@ -92,6 +92,22 @@ class TestRegions(unittest.TestCase):
         self.assertIn("call_target entry 0x20", problems[0])
 
 
+class TestVtableSlots(unittest.TestCase):
+    def test_reviewed_slots_must_be_verified_rows(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            TestRegions().write(root, functions=[(0x100, 0x20)])
+            (root / "config/mac/vtables").mkdir(parents=True)
+            (root / "config/mac/vtables/unit.toml").write_text(
+                '[[vtables]]\nsymbol = "__vt__4Unit"\n'
+                '[[vtables.slots]]\ncode_section = 0\ncode_offset = 0x100\ncode_size = 0x20\n'
+                '[[vtables.slots]]\ncode_section = 0\ncode_offset = 0x200\ncode_size = 0x10\n')
+            problems = inventory.vtable_problems(root)
+            self.assertEqual(len(problems), 1)
+            self.assertIn("slot 1 code 0x200+0x10", problems[0])
+            self.assertEqual([slot["offset"] for slot in inventory.vtable_slots(root)], [0x100, 0x200])
+
+
 class TestEmittedJoin(unittest.TestCase):
     def test_codewarrior_names_demangle_to_qualified_names(self):
         cases = {
@@ -120,6 +136,41 @@ class TestEmittedJoin(unittest.TestCase):
                          "compiler_generated")
         self.assertEqual(emitted.classify("adler32", [], "vendor/zlib-1.1.3/adler32.c"), "vendor")
         self.assertEqual(emitted.classify("helper", [], "src/hero.cpp", ".helper__Fv"), "no_source_owner")
+
+
+class TestClaimBodies(unittest.TestCase):
+    def test_claims_bind_to_definitions_and_emitted_hunks(self):
+        import json
+        from homm3.mac import addresses
+        from homm3.match.source_ownership import Definition
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "config").mkdir()
+            (root / "config/units.toml").write_text(
+                '[build]\n[flags]\nx = []\n'
+                '[[unit]]\nunit = "hero"\nsource = "src/hero.cpp"\nflags = "x"\n'
+                '[[unit]]\nunit = "town"\nsource = "src/town.cpp"\nflags = "x"\n')
+            (root / "build/mac/obj").mkdir(parents=True)
+            (root / "build/mac/obj/hero.hunks.json").write_text(json.dumps({"code": [
+                {"symbol": ".getLevel__4heroFi", "size": 0x40, "references": []}]}))
+            claims = addresses.scan_text(
+                "VA(0x004d0000, 0x10) MAC_ADDRESS(0x100, 0x40)\nint hero::getLevel(int x)\n{\n}\n"
+                "MAC_ADDRESS(0x200, 0x8)\nstatic int helper()\n{\n}\n", "src/hero.cpp")[0]
+            claims += addresses.scan_text(
+                "VA(0x005d0000, 0x10) MAC_ADDRESS(0x300, 0x20)\nvoid town::build()\n{\n}\n",
+                "src/town.cpp")[0]
+            level = Definition("src/hero.cpp", 2, 0, 1, "hero::getLevel", "int (int)", 1, True, False,
+                               0x004D0000, "?getLevel@hero@@QAEHH@Z")
+            helper = Definition("src/hero.cpp", 6, 50, 60, "helper", "int ()", 0, False, False,
+                                None, "?helper@@YAHXZ", mac_offset=0x200, mac_size=0x8)
+            build = Definition("src/town.cpp", 2, 0, 1, "town::build", "void ()", 0, True, False,
+                               0x005D0000, "?build@town@@QAEXXZ")
+            rows = {row["identity"]: row for row in
+                    emitted.claim_bodies(root, [level, helper, build], claims)}
+        self.assertEqual(rows["va:0x004d0000"]["state"], "emitted")
+        self.assertEqual(rows["va:0x004d0000"]["symbol_size"], "0x40")
+        self.assertEqual(rows["source:src/hero.cpp:helper()"]["state"], "not_emitted")
+        self.assertEqual(rows["va:0x005d0000"]["state"], "no_object")
 
 
 class TestZlibMap(unittest.TestCase):

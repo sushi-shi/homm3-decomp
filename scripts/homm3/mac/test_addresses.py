@@ -251,7 +251,8 @@ class TestParityIndex(unittest.TestCase):
         from homm3.match.source_ownership import Definition
         claims, windows, _ = scan("\n\nMAC_ADDRESS(0x100, 0x20)\nvoid helper()\n{\n}\n")
         definition = Definition("src/unit.cpp", 4, 0, 10, "helper", "void ()", 0,
-                                False, False, None, "?helper@@YAXXZ")
+                                False, False, None, "?helper@@YAXXZ",
+                                mac_offset=0x100, mac_size=0x20)
         stranger = Definition("src/unit.cpp", 9, 40, 50, "other", "void ()", 0,
                               False, False, None, "?other@@YAXXZ")
         with tempfile.TemporaryDirectory() as folder:
@@ -264,6 +265,14 @@ class TestParityIndex(unittest.TestCase):
                 self.assertEqual(states, {"helper": "located", "other": "unlocated"})
                 _, problems = addresses.index(root, claims, windows, [stranger])
                 self.assertTrue(any("binds to no unique authored definition" in item
+                                    for item in problems))
+                # The analysis arm's attribute must agree with the paired VA line.
+                paired, paired_windows, _ = scan("VA(0x00401000, 0x10) MAC_ADDRESS(0x100, 0x20)\n"
+                                                 "void f()\n{\n}\n")
+                wrong = Definition("src/unit.cpp", 2, 0, 10, "f", "void ()", 0, False, False,
+                                   0x00401000, "?f@@YAXXZ", mac_offset=0x104, mac_size=0x20)
+                _, problems = addresses.index(root, paired, paired_windows, [wrong])
+                self.assertTrue(any("that its VA(0x00401000) claim does not" in item
                                     for item in problems))
 
 

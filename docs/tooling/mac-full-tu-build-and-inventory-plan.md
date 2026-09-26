@@ -229,6 +229,31 @@ template bodies (plus one folded alias) and 31 zlib bodies this way; game
 bodies stay leads for reviewed MAC_ADDRESS claims. The gate is incomplete
 until the unresolved gaps, the unowned rows and the two defects are resolved.
 
+## Deviations and open items (2026-09-26)
+
+Deliberate differences from the text above:
+
+- `functions.tsv` holds only offset and size, like `config/retail/functions.tsv`.
+  Category and owner come from joining it with source claims and the maps;
+  evidence lives in the maps, source comments and the reviewed TOML.
+- Library rows carry no per-row target hash. The pinned PEF digest fixes every
+  span; the TOML hashes were verified when the rows moved.
+- The Mac claim scanner is its own module (`homm3.mac.addresses`) rather than a
+  channel of `homm3.retail_labels.source`; the clang ownership scan records
+  each definition's `mac:` annotation, and parity binds claims through it.
+- `homm3 mac parity` is a command, not a `homm3 build` gate.
+
+Implemented since the first checkpoint: AST binding of standalone claims,
+reviewed vtable slots in the census and its gate, `homm3 mac emitted`'s
+per-claim body report (`claim-bodies.tsv`: emitted, not emitted in its
+compiled unit, unit not yet compiling, no definition), and `homm3 mac
+dashboard`.
+
+Open: CodeWarrior porting of the TUs that still fail; step 3's switch to
+full-TU comparison and retirement of the selected-body path and TOML readers;
+identities for unowned rows; the unresolved bytes; the two runtime rows whose
+rethrow landing pads the boundary proof cannot reach.
+
 ## Rollout and retirement
 
 1. Implement the macro and parity reader with tests for duplicate claims,
