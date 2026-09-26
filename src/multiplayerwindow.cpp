@@ -971,6 +971,10 @@ unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char
     return 1;
 }
 
+// Mac 0x21b18c calls initRemote (0x21297c), then its Mac transport setup
+// (0x2137ec). Windows retail hosts through DirectPlay in this method. The
+// missing Mac call in the source audit reflects this different implementation;
+// the shared-call reconciliation for this pair remains open.
 VA(0x0050fab0, 0x106) MAC_ADDRESS(0x21b18c, 0x7c)  // dc 0x100d0c
 unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
 {
