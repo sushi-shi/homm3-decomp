@@ -5103,7 +5103,7 @@ bool game::loadMap(TAbstractFile* mapFile)
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        const std::bitset<70> serializedSpells = readPackedBits<70>(mapFile);
+        std::bitset<70> serializedSpells = readPackedBits<70>(mapFile);
 
         for (unsigned int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (serializedSpells[spell]) {
@@ -5111,7 +5111,7 @@ bool game::loadMap(TAbstractFile* mapFile)
                     if (g_artifactTraits[artifact].m_givesSpells) {
                         m_artifactDisabled[artifact] =
                             m_artifactDisabled[artifact]
-                            || markArtifactSpells(artifact).test(spell);
+                            || markArtifactSpells(artifact)[spell];
                     }
                 }
             }

@@ -3673,30 +3673,30 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
 
     ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_drawCells.set(i,
-            (packed[i / 8] & (1 << (i % 8))) != 0);
+        tempObjectType.m_drawCells[i] =
+            (packed[i / 8] & (1 << (i % 8))) != 0;
     }
 
     count = infile->read(packed, sizeof(packed));
     if (count < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_passableCells.set(i,
-            (packed[i / 8] & (1 << (i % 8))) != 0);
+        tempObjectType.m_passableCells[i] =
+            (packed[i / 8] & (1 << (i % 8))) != 0;
     }
 
     ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_shadowCells.set(i,
-            (packed[i / 8] & (1 << (i % 8))) != 0);
+        tempObjectType.m_shadowCells[i] =
+            (packed[i / 8] & (1 << (i % 8))) != 0;
     }
 
     count = infile->read(packed, sizeof(packed));
     if (count < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType.m_triggerCells.set(i,
-            (packed[i / 8] & (1 << (i % 8))) != 0);
+        tempObjectType.m_triggerCells[i] =
+            (packed[i / 8] & (1 << (i % 8))) != 0;
     }
 
     char dummy[2];
@@ -3834,29 +3834,29 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_drawCells.set(i,
-            (packed[i / 8] & (1 << (i % 8))) != 0);
+        tempObjectType->m_drawCells[i] =
+            (packed[i / 8] & (1 << (i % 8))) != 0;
     }
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_passableCells.set(i,
-            (packed[i / 8] & (1 << (i % 8))) != 0);
+        tempObjectType->m_passableCells[i] =
+            (packed[i / 8] & (1 << (i % 8))) != 0;
     }
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_shadowCells.set(i,
-            (packed[i / 8] & (1 << (i % 8))) != 0);
+        tempObjectType->m_shadowCells[i] =
+            (packed[i / 8] & (1 << (i % 8))) != 0;
     }
 
     if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->m_triggerCells.set(i,
-            (packed[i / 8] & (1 << (i % 8))) != 0);
+        tempObjectType->m_triggerCells[i] =
+            (packed[i / 8] & (1 << (i % 8))) != 0;
     }
 
     unsigned short typeValue;
