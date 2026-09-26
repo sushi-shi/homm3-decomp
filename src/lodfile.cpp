@@ -11,7 +11,7 @@ void LODFile::clear()
     if (m_opened) {
         m_subindex.clear();
         fclose(m_fileptr);
-        delete m_dataBuffer;
+        delete[] m_dataBuffer;
         m_opened = 0;
     }
 }
@@ -209,7 +209,7 @@ unsigned char LODFile::pointAt(const char* itemName)
     }
     m_dataItemIndex = m_matchindex;
     m_dataPos = 0;
-    delete m_dataBuffer;
+    delete[] m_dataBuffer;
     m_dataBuffer = 0;
     m_dataBufferSize = 0;
     return 1;
