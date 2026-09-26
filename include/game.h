@@ -1875,6 +1875,77 @@ inline SavedGameHeader::SavedGameHeader()
     m_version = 42;
 }
 
+// Complete retains calls to these ordinary members in game::save.
+// Dreamcast attributes their older definitions to Game.h; the Mac
+// build also retains both calls.
+// E:\gamedcs\Game.h:1312, dc 0xbcf00
+VA(0x004bc350, 0x271) MAC_ADDRESS(0x0cf6f0, 0x330)  // anchor-caller (game::Save) + layout, dc 0xbcf00
+inline void SavedGameHeader::reset()
+{
+    if (g_inCampaign)
+        strcpy(m_id, "H3SVC");
+    else
+        strcpy(m_id, "H3SVG");
+
+    m_version = 42;
+    m_gameVersion = g_game->m_gameVersion;
+
+    m_campaign = g_game->m_campaign;
+
+    m_mapHeader = g_game->m_mapHeader;
+
+    m_currentPlayer = g_netLocalGamePos;
+    m_mapSetup = g_game->m_setup;
+    m_campaignGame = g_inCampaign;
+    m_fileName = g_game->m_saveFileName;
+    m_difficultyRating = g_game->m_difficultyRating;
+    m_numDeadPlayers = g_game->m_numDeadPlayers;
+    memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
+
+    int* human = m_humanPlayer;
+    for (int i = 0; i < 8; ++i)
+        *human++ = g_game->m_players[i].isHuman();
+}
+
+// Complete serializes the expanded snapshot through its abstract stream.
+// Mac stages each scalar separately before its stream write.
+// E:\gamedcs\Game.h:1325, dc 0xbcf6c
+VA(0x004bc5d0, 0x17A) MAC_ADDRESS(0x0cfa20, 0x214)  // anchor-layout + game::Save caller
+inline int SavedGameHeader::save(TAbstractFile* outfile)
+{
+    char fileNameBuffer[0x15f];
+    char compatibilityBuffer[32];
+
+    outfile->write(m_id, sizeof(m_id));
+
+    writeValue<int>(outfile, m_version);
+    writeValue<int>(outfile, m_gameVersion);
+
+    if (outfile->write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
+        sizeof(compatibilityBuffer))
+        return -1;
+
+    if (m_mapHeader.save(outfile) < 0)
+        return -1;
+    if (m_mapSetup.save(outfile) < 0)
+        return -1;
+
+    writeValue<short>(outfile, m_campaignGame);
+    if (m_campaignGame)
+        m_campaign.save(outfile);
+
+    strcpy(fileNameBuffer, m_fileName.c_str());
+    outfile->write(fileNameBuffer, sizeof(fileNameBuffer));
+
+    writeValue<short>(outfile, m_difficultyRating);
+    writeValue<char>(outfile, m_numDeadPlayers);
+    outfile->write(m_deadPlayer, sizeof(m_deadPlayer));
+    outfile->write(m_humanPlayer, sizeof(m_humanPlayer));
+    writeValue<int>(outfile, m_currentPlayer);
+
+    return 0;
+}
+
 // Complete reads versioned nested records through the abstract stream;
 // Dreamcast uses gzread directly and records the checked ID-read count.
 // The six unchecked scalar reads use returned values rather than artificial
