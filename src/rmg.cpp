@@ -9,7 +9,7 @@
 // attested by Dreamcast. Calling internal selectors or expanding container
 // bodies had hidden some remaining nested-inline and lifetime differences.
 #include "va.h"
-#include "homm3_minmax.h"
+#include "includes.h"
 #include "bitset_iterator.h"
 
 #include <algorithm>
@@ -4181,7 +4181,7 @@ void type_random_map_generator::drawIrregularZoneBoundary(
             }
             int length = perpendicular.length();
             if (length > 1) {
-                int limit = std::min<long>(length, roughness);
+                int limit = cppMin<long>(length, roughness);
                 int displacement = rand() % limit - limit / 2;
                 perpendicular = perpendicular * displacement / length;
                 midpoint += perpendicular;
@@ -4189,10 +4189,10 @@ void type_random_map_generator::drawIrregularZoneBoundary(
             pending.push_back(to);
             pending.push_back(midpoint);
         } else {
-            long x = std::max<long>(from.m_x, 0);
-            x = std::min<long>(x, m_map.m_mapWidth - 1);
-            long y = std::max<long>(from.m_y, 0);
-            y = std::min<long>(y, m_map.m_mapHeight - 1);
+            long x = cppMax<long>(from.m_x, 0);
+            x = cppMin<long>(x, m_map.m_mapWidth - 1);
+            long y = cppMax<long>(from.m_y, 0);
+            y = cppMin<long>(y, m_map.m_mapHeight - 1);
             TRmgMapItem* item = m_map.getMapItem(x, y, level);
             item->m_zoneState.m_zone = zoneIndex;
             if (markBoundary)
@@ -4454,7 +4454,7 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
             }
             int length = perpendicular.length();
             if (length > 1) {
-                int limit = std::min<long>(length / 2, roughness);
+                int limit = cppMin<long>(length / 2, roughness);
                 int displacement = rand() % limit - limit / 2;
                 perpendicular = perpendicular * displacement / length;
                 midpoint += perpendicular;
@@ -4462,10 +4462,10 @@ void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
             pending.push_back(to);
             pending.push_back(midpoint);
         } else {
-            long x = std::max<long>(from.m_x, 0);
-            x = std::min<long>(x, m_map.m_mapWidth - 1);
-            long y = std::max<long>(from.m_y, 0);
-            y = std::min<long>(y, m_map.m_mapHeight - 1);
+            long x = cppMax<long>(from.m_x, 0);
+            x = cppMin<long>(x, m_map.m_mapWidth - 1);
+            long y = cppMax<long>(from.m_y, 0);
+            y = cppMin<long>(y, m_map.m_mapHeight - 1);
             TRmgMapItem* item = m_map.getMapItem(x, y, level);
             if (item->m_zoneState.m_zone == zoneIndex)
                 item->m_tileData.m_zoneBoundary = 1;
@@ -7288,7 +7288,7 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
             }
             int length = perpendicular.length();
             if (length > 1) {
-                int limit = std::min<long>(length, roughness);
+                int limit = cppMin<long>(length, roughness);
                 int displacement = rand() % limit - limit / 2;
                 perpendicular = perpendicular * displacement / length;
                 midpoint += perpendicular;
@@ -7296,10 +7296,10 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
             pending.push_back(to);
             pending.push_back(midpoint);
         } else {
-            long x = std::max<long>(from.m_x, 0);
-            x = std::min<long>(x, m_map.m_mapWidth - 1);
-            long y = std::max<long>(from.m_y, 0);
-            y = std::min<long>(y, m_map.m_mapHeight - 1);
+            long x = cppMax<long>(from.m_x, 0);
+            x = cppMin<long>(x, m_map.m_mapWidth - 1);
+            long y = cppMax<long>(from.m_y, 0);
+            y = cppMin<long>(y, m_map.m_mapHeight - 1);
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
             if (item->m_zoneState.m_zone == zoneIndex) {
                 if (!item->m_connection.m_present) {
@@ -7307,10 +7307,10 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
                     item->m_tileData.m_subterraneanGate = 1;
                 }
                 TRmgZoneBounds bounds;
-                bounds.m_minimumX = std::max<long>(x - 1, 0);
-                bounds.m_minimumY = std::max<long>(y - 1, 0);
-                bounds.m_maximumX = std::min<long>(x + 2, m_map.m_mapWidth);
-                bounds.m_maximumY = std::min<long>(y + 2, m_map.m_mapHeight);
+                bounds.m_minimumX = cppMax<long>(x - 1, 0);
+                bounds.m_minimumY = cppMax<long>(y - 1, 0);
+                bounds.m_maximumX = cppMin<long>(x + 2, m_map.m_mapWidth);
+                bounds.m_maximumY = cppMin<long>(y + 2, m_map.m_mapHeight);
                 for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
                     for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
                         TRmgMapItem* nearby = m_map.getMapItem(column, row, position.m_z);

@@ -1,6 +1,5 @@
 #include "text.h"
 #include "va.h"
-#include "homm3_minmax.h"
 
 #include "combatcontrolsubwindow.h"
 
@@ -676,7 +675,7 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
         long attack = info.getAdjustedAttack(0, canShoot);
         int defense = info.getAdjustedDefense(0, 1);
         if (canShoot)
-            attack = ::max(attack, info.getAdjustedAttack(0, 0));
+            attack = max(attack, info.getAdjustedAttack(0, 0));
 
         sprintf(buffer, "%d(%d)", normalTraits.m_attackSkill, attack);
         m_attackText->setText(buffer);
@@ -704,7 +703,7 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
         m_countText->setText(buffer);
     }
 
-    unsigned int spell = ::max(
+    unsigned int spell = max(
         0, static_cast<int>(info.m_spellInfluenceQueue.size()) - 3);
     for (int icon = 0; icon < 3; ++icon) {
         if (spell < info.m_spellInfluenceQueue.size()) {

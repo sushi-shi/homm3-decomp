@@ -43,4 +43,13 @@
 #include <windows.h>
 #endif
 
+// Game data files are little endian; PowerPC loads them byte-reversed.
+#if defined(__POWERPC__)
+#define LITTLE_ENDIAN_LONG(value) __lwbrx(&(value), 0)
+#define LITTLE_ENDIAN_SHORT(value) __lhbrx(&(value), 0)
+#else
+#define LITTLE_ENDIAN_LONG(value) (value)
+#define LITTLE_ENDIAN_SHORT(value) (value)
+#endif
+
 #endif

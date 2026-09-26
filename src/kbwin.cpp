@@ -108,10 +108,7 @@ static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
     return 1;
 }
 
-// AppWndProc retains its AppCommand call at +0x359. The inline policy on
-// AppCommand preserves that boundary; removing it expands five extra branches
-// in AppWndProc and drops its match to 74.8%. The original source reason for
-// this call boundary remains unresolved.
+// AppWndProc retains its AppCommand call at +0x359 without an inline fence.
 VA(0x004f7c00, 0x394)  // dc 0xe7e38
 LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
@@ -253,12 +250,6 @@ void process1WindowsMessage()
 // E:\gamedcs\kbwin.cpp:648
 // homm2 lineage kept the three non-size menu commands; the About
 // template is the ordinal 0x67 (homm2 passed the string "HEROES").
-// auto_inline(off) is load-bearing, not cosmetic: retail emits a real
-// `call` at AppWndProc+0x359 while our /Ob2 expands this body inline
-// (it is the TU's only call site). See AppWndProc's note - without the
-// pragma that function is 74.8%, with it 100%. The pragma is scoped to
-// this definition and changes no other kbwin function.
-#pragma auto_inline(off)
 VA(0x004f8060, 0xD4)  // dc 0xe8014
 LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
@@ -291,7 +282,6 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
     }
     return 0;
 }
-#pragma auto_inline(on)
 
 // Original: UpdateDfltMenu; kbwin.cpp:680, dc 0xe8018.
 // The released menu-update hook has an empty body. The adjacent 0x4f8140

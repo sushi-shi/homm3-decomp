@@ -89,28 +89,6 @@ enum EWindowMetrics {
 //      of SleepAllWidgets; reached only through SleepAllWidgets.
 class heroWindow {
 public:
-    int m_priority;
-    heroWindow* m_nextWindow;
-    heroWindow* m_prevWindow;
-    unsigned int m_type;
-    int m_status;
-    int m_x;
-    int m_y;
-    int m_width;
-    int m_height;
-    widget* m_headWidget;
-    widget* m_tailWidget;
-    std::vector<widget*> m_widgets;
-
-protected:
-    int m_focusId;
-
-private:
-    Bitmap16Bit* m_background;
-
-public:
-    int m_sleepCount;
-
     heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void centerWindow(int centerX, int centerY);
     void moveWindow(int deltaX, int deltaY);
@@ -161,6 +139,30 @@ public:
     // Widgets vector, i.e. it is the window-wide half of the same
     // nest-counter/edge-hook pair SleepAllWidgets runs on field_48.
     virtual void vslot8(unsigned char on);           // slot 8, retail 0x5ff5f0, unidentified
+
+    // DC field-list order: the data follows the methods, as in widget.
+public:
+    int m_priority;
+    heroWindow* m_nextWindow;
+    heroWindow* m_prevWindow;
+    unsigned int m_type;
+    int m_status;
+    int m_x;
+    int m_y;
+    int m_width;
+    int m_height;
+    widget* m_headWidget;
+    widget* m_tailWidget;
+    std::vector<widget*> m_widgets;
+
+protected:
+    int m_focusId;
+
+private:
+    Bitmap16Bit* m_background;
+
+public:
+    int m_sleepCount;
 };
 
 // CHeroWindowEx - heroWindow plus a rollover latch. Layout PROVEN by

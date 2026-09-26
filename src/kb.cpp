@@ -1,5 +1,4 @@
 #include "va.h"
-#include "homm3_minmax.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -4254,7 +4253,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // recovering 93.6558% from 87.1948% while preserving the seven local types.
 // DC 5240/5242/5245 calls std::max<long> by const reference. Retail instead
 // copies BOTH operands to fresh stack homes before selecting a reference:
-// the canonical by-value max wrapper in homm3_minmax.h supplies those homes.
+// the canonical by-value max wrapper in includes.h supplies those homes.
 // Direct std::_cpp_max is the negative control and does not reproduce that
 // boundary. Keep the long locals; the audit intentionally reports std::max.
 // DC 5317/5319 and 5321/5323 scopes support the else-if; retail jumps past
