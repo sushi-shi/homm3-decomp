@@ -136,3 +136,14 @@ unit = "objecttype"
 target_sha256 = "b96cc327f27bd4bf8183619578c70f2cea72f72c8efdc18512917ec570f749b2"
 evidence = "Source helper without standalone Windows VA. TU order plus combines-input-mask-with-complement-of-image-drawMask3c-and-writes-passable4/8"
 source_helper = "TObjectType::setPassableMask"
+
+[[functions]]
+retail_va = 0x00514130
+unit = "objecttype"
+compgen_kind = "IMPLICIT_DTOR"
+compgen_type = "TObjectImageNameTable"
+mac_section = 0
+mac_offset = 0x223810
+mac_size = 0x88
+target_sha256 = "512c8584bed9d02d45d10489eee839d9f81c5d1d2193a982e0914ed8b609b48c"
+evidence = "getObjectImageNames registers its local static destructor at0x2237e8 through TOC-0x6c2c -> descriptor1:0x8cc8 -> code0:0x223810. This body destroys vector rows at this+0x10 via0x226658, then map nodes via0x22645c, with standard Mac optional deleting-destructor tail0x268b2c. BLR0x223894 precedes vector constructor0x223898. Existing ordinary member lifetimes supply the calls; no source wrapper is missing."
