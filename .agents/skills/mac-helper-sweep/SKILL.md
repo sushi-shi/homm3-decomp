@@ -26,9 +26,26 @@ finished.
    Restore the canonical helper and replace the corresponding expansion with
    its call. Add a clear helper name and body if none exists.
 4. Follow existing nested helpers and ordinary constructor/destructor lifetimes
-   when they explain a call. Record that actual source path. For real platform
-   differences, record the Mac operation and corresponding Windows operation;
-   keep an unidentified counterpart explicitly unresolved.
+   when they explain a call. Record the actual source path and its Mac evidence.
+   An unexplained call-structure discrepancy remains open.
+
+## Allowed structural differences
+
+Every Mac helper operation must be represented in Windows source. A different
+boundary is accepted only with evidence that Mac inlined the source helper.
+This includes a source wrapper `f` whose body calls `g` and `h`: if Mac expanded
+`f` and retains calls to `g` and `h`, keep canonical `f -> g, h` in source.
+Likewise, a helper expanded entirely in Mac may remain a function in our source.
+Trace the complete expansion, arguments and operations; an invented wrapper or
+coincidentally equal total does not establish correspondence.
+
+Do not close a mismatch merely as optimization, a common tail, an unknown
+original name, a score-preserving spelling, or a platform difference. Investigate
+and restore the matching source call structure, allowing only the evidenced
+Mac-inline cases above. If retail semantics genuinely conflict, preserve the
+concrete evidence and leave that item unresolved for an explicit decision;
+do not force a semantic change or silently declare the discrepancy handled.
+Reopen older dispositions that relied solely on those excluded explanations.
 
 Counts locate work; compare the actual operations to resolve it. Equal totals
 can hide a wrong target, and one textual occurrence does not account for several
@@ -48,8 +65,8 @@ missing uses, extra uses and repeated sites. A helper reached through another
 canonical helper is represented through that source path.
 
 Repeat this pass for newly discovered nested helpers. Keep the caller worklist
-open until all applicable xrefs are implemented, already represented, or have a
-specific evidenced difference. Unknown names or uncertain header/source
+open until all applicable xrefs are implemented, already represented through an evidenced Mac-inline path. Keep conflicting
+or unidentified operations open with concrete evidence. Unknown names or uncertain header/source
 placement do not block recovery. Use the helper-placement skill when placement
 needs investigation; keep one ordinary definition and revise its location later
 if stronger evidence appears.
