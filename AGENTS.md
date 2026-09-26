@@ -208,6 +208,11 @@ does not veto a clear helper body and call. Put it in the best-supported
 ordinary header or source file, then revise placement if later cross-TU or
 source-order evidence warrants it.
 
+During byte recovery after the Mac helper sweep, keep the recovered helper
+calls. Do not replace them with direct fields, array indexing, or pasted
+statements for a higher score. An outer helper may replace a call when its
+implementation contains that recovered helper call; preserve the complete path.
+
 Preserve one canonical helper and its source calls. Preserve proven types and
 inline qualifiers; choose a clear name where the original is unknown. Match
 its retained retail body and each caller's call/expansion decision separately:

@@ -11,6 +11,12 @@ inlines the operation too; an original symbol or immediate score gain is not
 a prerequisite. Keep one canonical body and refine names or placement later if
 new evidence warrants it.
 
+During subsequent byte recovery, keep these helper calls. Do not replace them
+with direct fields, array indexing, or pasted statements to recover a score.
+An outer helper is permitted when it contains the recovered helper call; review
+that complete source path. Tune natural argument evaluation, local lifetimes,
+body visibility and source order around the preserved calls.
+
 Run `homm3 mac helper-queue --all-functions` for the broad sweep. It writes
 `build/mac/helper-queue-all.json`, `helper-queue-all-functions.tsv`, and
 `helper-queue-all-calls.tsv`. The function file includes exact and unfinished

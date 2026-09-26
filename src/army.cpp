@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "army.h"
@@ -4592,17 +4593,21 @@ void army::resetRound()
 }
 
 VA(0x00447330, 0x9C)  // dc 0x4bd80
+// Complete expands the by-value min wrappers, each containing cppMin.
+// Direct reference selectors give 78.33%; these wrappers restore 100%.
+// The shared long power/maxHits lifetime suggested by DC and Mac gives
+// 64.27% in this TU; its remaining source-context difference is unresolved.
 long army::getResurrectionSize(const army* target) const
 {
     if (m_creatureType == CREATURE_ARCHANGEL) {
         int missing = target->m_origNumTroops - target->m_numTroops;
         int raised = m_numTroops * 100 / target->m_monInfo.m_hitPoints;
-        return cppMin(raised, missing);
+        return min(raised, missing);
     }
     int totalLife = target->m_monInfo.m_hitPoints * target->m_origNumTroops;
-    int raised = cppMin(totalLife, m_numTroops * 50)
+    int raised = min(totalLife, m_numTroops * 50)
         / g_creatureTypeTraits[ARMY_CREATURE_DEMON].m_hitPoints;
-    return cppMin(raised, target->m_origNumTroops);
+    return min(raised, target->m_origNumTroops);
 }
 
 VA(0x004473d0, 0x13D)  // dc 0x4be64

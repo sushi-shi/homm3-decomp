@@ -282,9 +282,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
                 continue;
             newCell.m_barrierValue -= aiResourceCost(player, cost);
         }
-        newCell.m_point.m_x = otherTown->m_mapX;
-        newCell.m_point.m_y = otherTown->m_mapY;
-        newCell.m_point.m_z = otherTown->m_mapZ;
+        newCell.m_point = otherTown->getLocation();
         newCell.m_castleGate = 1;
         pushPoint(*currentPathCell, newCell, 0, 0, limit,
                   newCell.m_barrierValue + barrierValue, newCell.m_monster,

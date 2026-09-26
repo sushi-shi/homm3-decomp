@@ -1975,8 +1975,10 @@ void combatManager::checkChangeHighlighter(int currentIndex)
             currentArmy->m_currFrameType = cs_wait;
             currentArmy->m_currFrameIndex = 0;
         }
-        // Direct field access preserves retail's two argument load registers.
-        markCreatureEffect(currentArmy->m_combatSide, currentArmy->m_bitIndex);
+        // Loading the slot before the accessor preserves Complete's argument
+        // registers without replacing the owning-side helper with field access.
+        int slot = currentArmy->m_bitIndex;
+        markCreatureEffect(currentArmy->getOwningSide(), slot);
     }
 
     drawFrame(1, 1, 0, 0, 1, 0);
