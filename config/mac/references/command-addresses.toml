@@ -369,3 +369,13 @@ mac_offset = 0x87f14
 mac_size = 0x44
 target_sha256 = "2ffd9579bf845978ccdc74d663410802b71875c62ee8047d33d7b5e222d21abe"
 evidence = "processNextAction calls this retained preference setter at 0x87ca8. It writes g_config combat army info, calls drawFrame and writePrefs, then BLR 0x87f54. Windows source already has the ordinary method and caller."
+
+[[functions]]
+retail_va = 0x00474680
+unit = "command"
+source = "include/remote.h"
+mac_section = 0
+mac_offset = 0x827b4
+mac_size = 0x5c
+target_sha256 = "cd73c437377607056ad50fb80f7a23531bcf93a52638d97fdfac0f355b5fd569"
+evidence = "CMessageKill destructor: null-this guard, message pointer at +0, guarded destroyMsg call at 0x827e0, then CodeWarrior deleting-destructor flag and operator delete. Same message cleanup is expanded in combatManager::main at 0x82624, 0x8268c and 0x826a4. Ordinary include/remote.h destructor owns Windows 0x474680; BLR 0x8280c precedes setupDirection. No additional source cleanup call is missing."
