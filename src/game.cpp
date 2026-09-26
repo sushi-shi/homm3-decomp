@@ -1190,9 +1190,7 @@ void playerData::clearNetInfo()
 VA(0x004ba1c0, 0x50) MAC_ADDRESS(0x0cc788, 0x78)
 int __fastcall readHeroId(TAbstractFile* infile, int mapVersion)
 {
-    unsigned long value;
-    infile->read(&value, sizeof(unsigned char));
-    int heroId = value & 0xff;
+    int heroId = readValue<unsigned char>(infile);
     if (heroId == g_savedHeroNone)
         return -1;
     if (mapVersion == g_mapVersionOldCampaignHeroIds) {
@@ -1207,9 +1205,7 @@ int __fastcall readHeroId(TAbstractFile* infile, int mapVersion)
 VA(0x004ba210, 0x50) MAC_ADDRESS(0x0cc800, 0x78)
 int __fastcall loadHeroId(TAbstractFile* infile, int saveVersion)
 {
-    unsigned long value;
-    infile->read(&value, sizeof(unsigned char));
-    int heroId = value & 0xff;
+    int heroId = readValue<unsigned char>(infile);
     if (heroId == g_savedHeroNone)
         return -1;
     if (saveVersion < g_saveVersionCompleteHeroRoster) {
@@ -5911,15 +5907,10 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     if (heroCount > 0) {
         int heroIndex = 0;
         do {
-            // Mac calls readHeroId here at 0:0xdaac0. Windows retail tests
-            // only 0xff at 0x4c42c3; its two earlier readHeroId expansions
-            // each also test map version 14 and remap 0x80/0x81.
-            unsigned long heroValue;
-            infile->read(&heroValue, sizeof(unsigned char));
-            int heroId = heroValue & 0xff;
-            if (heroId == g_savedHeroNone)
-                heroId = -1;
-            m_heroes[heroIndex].m_heroId = heroId;
+            // The version-14 return above makes readHeroId's legacy
+            // remapping unreachable here; Windows expands only its sentinel
+            // check, while Mac retains the call at 0xdaac0.
+            m_heroes[heroIndex].m_heroId = readHeroId(infile, mapVersion);
             m_heroes[heroIndex].m_name = readLengthPrefixedString(infile);
             ++heroIndex;
             --heroCount;
