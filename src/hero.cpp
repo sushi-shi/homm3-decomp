@@ -652,7 +652,7 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     unsigned char inBuf[6];
     infile->read(inBuf, sizeof(inBuf));
     for (unsigned int i = 0; i < 48; i++)
-        granted.set(i, (inBuf[i >> 3] & (1 << (i & 7))) != 0);
+        granted[i] = (inBuf[i >> 3] & (1 << (i & 7))) != 0;
     m_townSpecialGrantedMask = granted;
     return 0;
 }
