@@ -8,7 +8,7 @@ import csv
 from pathlib import Path
 import tomllib
 
-from homm3.mac import addresses, source_graph, tables
+from homm3.mac import addresses, source_graph, tables, target_observations
 from homm3.mac.relocations import Address
 
 
@@ -20,6 +20,7 @@ def build(root, index, source, *, complete_source_scope):
     policy = root / 'config/mac/campaign.toml'
     deferred = set(tomllib.loads(policy.read_text()).get('deferred_modules', [])) if policy.exists() else set()
     spans = tables.read_functions(root)
+    observations = target_observations.read(root, index.pef, spans)
     starts = sorted(spans)
     claims, _, problems = addresses.scan(root)
     if problems:
@@ -48,6 +49,7 @@ def build(root, index, source, *, complete_source_scope):
     def function(offset):
         ids = sorted(by_mac.get(offset, []))
         return {'mac': address(offset), 'size': spans.get(offset),
+                'observation': observations.get(offset),
                 'source_ids': ids, 'claims': owners.get(offset, []),
                 'deferred': any(Path(c['file']).stem in deferred or
                     Path(c['file']).stem.startswith('rmg_') and 'rmg' in deferred
@@ -141,6 +143,7 @@ def build(root, index, source, *, complete_source_scope):
                          'mac_direct_link_sites': sum(r['kind'] == 'linked_branch' for r in calls),
                          'mac_tail_transfer_sites': sum(r['kind'] == 'branch' for r in calls),
                          'caller_queue': len(queue),
+                         'observed_targets': len(observations),
                          'deferred_call_sites': sum(r['caller']['deferred'] for r in queue), 'states': dict(Counter(r['state'] for r in queue)),
                          'units_with_errors': sum(bool(v) for v in source['diagnostics'].values()),
                          'source_states': dict(Counter(r['state'] for r in source_queue)),
@@ -196,10 +199,14 @@ def xrefs(report, index, selector):
 def write_queues(report, output):
     """Compact worker inputs alongside the full graph; regenerate after edits."""
     for suffix, fields, rows in (
-        ('calls', ['caller', 'callee', 'site', 'state', 'mac_count', 'source_count', 'deferred'],
+        ('calls', ['caller', 'callee', 'site', 'state', 'mac_count', 'source_count', 'deferred',
+                   'callee_operation', 'callee_category'],
          ({'caller': r['caller']['mac'], 'callee': r['callee']['mac'], 'site': r['site'],
            'state': r['state'], 'mac_count': r['mac_call_count'], 'source_count': r['source_call_count'],
-           'deferred': r['caller']['deferred']} for r in report['queue'])),
+           'deferred': r['caller']['deferred'],
+           'callee_operation': (r['callee'].get('observation') or {}).get('operation', ''),
+           'callee_category': (r['callee'].get('observation') or {}).get('category', '')}
+          for r in report['queue'])),
         ('source', ['caller', 'callee', 'file', 'line', 'state', 'expression'],
          ({'caller': r['caller_name'], 'callee': r['callee_name'], 'file': r['location']['file'],
            'line': r['location']['line'], 'state': r['state'], 'expression': r['expression']}

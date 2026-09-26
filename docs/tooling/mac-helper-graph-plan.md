@@ -85,3 +85,14 @@ The binary index now records indirect branches during the same instruction scan
 and serves reverse xrefs from address indexes. For the separate compile/compare
 path, [Mac build reuse](mac-build-performance.md) describes shared unit objects,
 reference maps and freshness guards.
+
+## Identified operations without a source mapping
+
+`config/mac/target-observations.tsv` records reviewed binary operations while
+source identity is still unresolved. The audit verifies each extent and byte
+hash, attaches an `observation` to the function/callee record, and exports
+`callee_operation` / `callee_category` in the calls TSV. Address queries display
+the evidence. These descriptive operations are not linkage symbols or source
+names; they never create AST identities, suppress a discrepancy, or mark a call
+complete. Continue matching their source operation and following generated xrefs.
+See the [111-target review](../matching/mac-unnamed-targets-20260926.md).

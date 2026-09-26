@@ -497,6 +497,10 @@ def main(argv=None) -> int:
                 print(json.dumps(result, indent=2))
             elif args.selector:
                 print(f"[mac] {result['target']['mac']} {result['target']['name'] or args.selector}")
+                observation = result['target'].get('observation')
+                if observation:
+                    print(f"[mac] observed operation: {observation['operation']} ({observation['category']})")
+                    print(f"[mac] evidence: {observation['evidence']}")
                 for row in result['caller_comparisons']:
                     print(f"  {row['site']} {row['caller']['name'] or row['caller']['mac']}: "
                           f"{row['state']} (Mac {row['mac_call_count']}, source {row['source_call_count']})")

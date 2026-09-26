@@ -21,7 +21,7 @@ def edge(caller, callee, offset):
 
 
 class HelperGraphTests(unittest.TestCase):
-    def report(self, edges, branches, code=b''):
+    def report(self, edges, branches, code=b'', observations=None):
         source = {'nodes': {'f': node('f', 0x100), 'g': node('g', 0x200), 'wrapper': node('wrapper')},
                   'edges': edges, 'units': ['test'], 'diagnostics': {'test': []}, 'gaps': []}
         claims = [SimpleNamespace(offset=o, path='src/test.cpp', line=1, windows_va=o + 0x400000,
@@ -30,9 +30,28 @@ class HelperGraphTests(unittest.TestCase):
                                 indirect_branches=[Address(0, 0)] if code else [],
                                 pef=SimpleNamespace(data=b'fixture', sections=[SimpleNamespace(index=0, kind=0)], instantiated=1, contents=lambda _: code))
         with patch.object(helper_graph.tables, 'read_functions', return_value={0x100: 0x20, 0x200: 0x20}), \
+             patch.object(helper_graph.target_observations, 'read', return_value=observations or {}), \
              patch.object(helper_graph.tables, 'read_runtime', return_value=[]), \
              patch.object(helper_graph.addresses, 'scan', return_value=(claims, [], [])):
             return helper_graph.build(Path('.'), index, source, complete_source_scope=False)
+
+    def test_observed_operation_does_not_invent_source_identity_or_close_call(self):
+        observation = {'category': 'platform', 'operation': 'closeFile',
+                       'evidence': 'Calls the imported file-close routine.'}
+        report = self.report([], [(0x104, 0x300, 'linked_branch')],
+                             observations={0x300: observation})
+        row = report['queue'][0]
+        self.assertEqual(row['callee']['observation'], observation)
+        self.assertEqual(row['callee']['source_ids'], [])
+        self.assertIsNone(row['callee']['name'])
+        self.assertEqual(row['state'], 'source_callee_unavailable')
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / 'helper-audit.json'
+            helper_graph.write_queues(report, output)
+            with output.with_name('helper-audit-calls.tsv').open() as stream:
+                saved = next(csv.DictReader(stream, delimiter='\t'))
+            self.assertEqual(saved['callee_operation'], 'closeFile')
+            self.assertEqual(saved['state'], 'source_callee_unavailable')
 
     def test_nested_wrapper_is_review_lead_not_closure(self):
         report = self.report([edge('f', 'wrapper', 1), edge('wrapper', 'g', 2)], [(0x104, 0x200, 'linked_branch')])
