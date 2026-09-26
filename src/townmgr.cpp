@@ -2095,8 +2095,7 @@ void townManager::newStrips()
         m_garrisonStrip = new strip(
             0xf1, 0x183, 0, 0xa1,
             m_townToView->m_owner, m_townToView->m_owner, 0,
-            const_cast<armyGroup*>(
-                &static_cast<const town*>(m_townToView)->getArmy()),
+            &m_townToView->getArmy(),
             0x64, 0, m_townWindow);
         if (!m_garrisonStrip)
             memError();
@@ -8190,7 +8189,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                         long bestValue = 0;
                         for (unsigned int n = 0; n < g_game->m_players[who].m_numTowns; n++) {
                             int id = g_game->m_players[who].m_townIds[n];
-                            const town* t = g_game->getTown(id);
+                            town* t = g_game->getTown(id);
                             for (unsigned int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
                                 if (t->getArmy().m_armies[slot] != -1
                                     && t->getArmy().m_numTroops[slot] > 0
