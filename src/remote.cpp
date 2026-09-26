@@ -370,7 +370,7 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
     HOMM3_RELEASE_VERIFY(netMsg != 0 && netMsg->m_size >= sizeof(CNetMsg));
     unsigned long compressedSize =
         static_cast<unsigned long>(netMsg->m_size * 1.2) + 12;
-    void* storage = ::operator new(compressedSize);
+    void* storage = new char[compressedSize];
     CNetMsg* compressedMsg = static_cast<CNetMsg*>(storage);
     memcpy(compressedMsg, netMsg, sizeof(CNetMsg));
 
@@ -401,7 +401,7 @@ MAC_ADDRESS(0x210e28, 0xbc)
 CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
 {
     unsigned long destSize = netMsg->m_uncompressedSize + sizeof(CNetMsg);
-    CNetMsg* result = static_cast<CNetMsg*>(::operator new(destSize));
+    CNetMsg* result = reinterpret_cast<CNetMsg*>(new char[destSize]);
     *result = *netMsg;
     destSize -= sizeof(CNetMsg);
     if (uncompress(static_cast<unsigned char*>(static_cast<void*>(result)) + sizeof(CNetMsg),
@@ -550,9 +550,10 @@ void CDPlayHeroes::handlePlayerDrop(unsigned long dpid)
 // allocation/copy into both member drop paths; the standalone handler also
 // expands Dinkumware's push_back internals, while SendIt's nested occurrence
 // stops at that template boundary.
+MAC_ADDRESS(0x211088, 0x64)
 void CDPlayHeroes::queueMsg(CNetMsg* netMsg)
 {
-    void* storage = ::operator new(netMsg->m_size);
+    void* storage = new char[netMsg->m_size];
     memcpy(storage, netMsg, netMsg->m_size);
     m_msgQueue.push_back(static_cast<CNetMsg*>(storage));
 }
