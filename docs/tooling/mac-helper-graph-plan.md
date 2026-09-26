@@ -60,6 +60,11 @@ different purpose.
 - `direct_count_agrees` means one exact declared callee has the same static site
   count. It does not check arguments, receivers, control flow or runtime frequency.
 - `call_count_difference` and `missing_source_call` identify investigation leads.
+  When Mac retains more calls than direct source expressions, `source_paths`
+  also lists calls reached through other source helpers. For example, a source
+  `show()` may reach `widget::sendMessage`. These paths include alternatives
+  through helpers retained in Mac, so inspect the caller assembly before
+  attributing any particular Mac site to a path.
 - `inlining_path_requires_review` supplies an actual nested source path. Verify
   the Mac expansion before accepting the different boundary.
 - `mac_inlining_requires_review` identifies a source call without a retained Mac
