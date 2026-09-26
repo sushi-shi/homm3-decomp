@@ -1111,7 +1111,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     m_monsterType = g_townDwellingCreatures[newTown->m_type * TOWN_DWELLING_SLOTS
                                          + newDwellingIndex];
     m_numAvail = &newTown->m_population[newDwellingIndex];
-    m_currArmyGroup = const_cast<armyGroup*>(&newTown->getArmy());
+    m_currArmyGroup = &newTown->getArmy();
     m_currArmyGroupIsTownGarrison = 1;
     m_viewOnly = newTown->m_owner != g_netLocalGamePos;
     m_monType2 = (TCreatureType)-1;
