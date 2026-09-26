@@ -371,13 +371,15 @@ int earlySetup()
     }
     ResourceManager::setPath(
         DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"));
-    if (!ResourceManager::open(1, 1, &openResult))
-        shutDown(openResult == 1
-                     ? DATA_COMPGEN(0x0067f64c, filesMissingMessage,
-                           "Files from Heroes III are missing.   "
-                           "Please reinstall Heroes III.")
-                     : DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
-                           "Unable to initialize resources - possible disk problem."));
+    if (!ResourceManager::open(1, 1, &openResult)) {
+        if (openResult == 1)
+            shutDown(DATA_COMPGEN(0x0067f64c, filesMissingMessage,
+                "Files from Heroes III are missing.   "
+                "Please reinstall Heroes III."));
+        else
+            shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
+                "Unable to initialize resources - possible disk problem."));
+    }
     if (!loadGameData())
         shutDown(DATA_COMPGEN(0x0067f5fc, remoteInitializationFailed,
             "Initialization failed!"));

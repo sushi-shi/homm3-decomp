@@ -1385,14 +1385,9 @@ void CWaitForReadyPlayersDlg::wait()
     m_startTime = GameTime::get();
     sRand(m_startTime);
 
-    int creature;
-    do {
-        // DC 1723 and the Mac wait-dialog body both retain SRandom. Windows
-        // retail branches to random at 0x50b230; its body is byte-identical
-        // to sRandom's VC6 body, so the symbol identity remains a link lead.
+    int creature = sRandom(0, 111);
+    while (creature == CREATURE_ARCH_DEVIL || creature == CREATURE_DEVIL)
         creature = sRandom(0, 111);
-    } while (creature == CREATURE_ARCH_DEVIL
-             || creature == CREATURE_DEVIL);
 
     setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_READY_PLAYERS), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 0);
@@ -2098,11 +2093,9 @@ void CLevelPickWaitDlg::waitForLevels(int fromWho)
     m_fromWho = fromWho;
     sRand(GameTime::get());
 
-    int creature;
-    do {
+    int creature = sRandom(0, 111);
+    while (creature == CREATURE_ARCH_DEVIL || creature == CREATURE_DEVIL)
         creature = sRandom(0, 111);
-    } while (creature == CREATURE_ARCH_DEVIL
-             || creature == CREATURE_DEVIL);
 
     setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_LEVEL_SELECTION), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 0);
