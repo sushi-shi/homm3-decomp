@@ -2475,7 +2475,13 @@ CChatWidget::~CChatWidget()
 VA(0x0057CC00, 0xF5) MAC_ADDRESS(0x186624, 0x2c)  // dc 0x149054
 void CSingleSelectionChatEdit::sendChat(const char* chat, int)
 {
+#ifdef HOMM3_TARGET_MAC
+    // The Mac caller passes -1 in r4; Windows retail expands this helper
+    // with a zero DPID. Keep the port-specific broadcast sentinel here.
+    g_singleSelectionWindow->sendChat(-1, chat);
+#else
     g_singleSelectionWindow->sendChat(0, chat);
+#endif
 }
 
 VA(0x0057CD00, 0x85) MAC_ADDRESS(0x186650, 0x4c)  // dc 0x149080
