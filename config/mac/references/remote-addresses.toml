@@ -1004,3 +1004,21 @@ mac_offset = 0x2157b8
 mac_size = 0x284
 target_sha256 = "6c1238204e45355f1932b8f65f16ece572b2e54c2e7879ee74f816bf044563a3"
 evidence = "CTurnDuration::checkForWarning has matching isOn/nextWarning/start/lastWarned/local-player/pause guards, GameTime get and elapsedSince operations, minute/second warning dispatch, timestamp store and next-warning thresholds. pollSound already calls this canonical method. Final BLR at 0x215a38."
+
+[[functions]]
+retail_va = 0x00557790
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215410
+mac_size = 0x74
+target_sha256 = "eb03312e84d58c08f2081fa695eafcbcfed4aea7b2e715bc70fdca2100e0b41f"
+evidence = "CGameTransferDlg::calcDimensions sets width/height160, centers against800x600, then calls its Smack member setup at receiver+0x54 with x+15,y+15,sending at+0x68,drawText1. Existing source owns setup helper call. Final BLR at 0x215480."
+
+[[functions]]
+retail_va = 0x00557910
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2155f4
+mac_size = 0x8
+target_sha256 = "d0b1b5454c51cd67f5347e9809d118896427a543f6db6b3bbb9892241110c038"
+evidence = "CNetMsgHandler::setAbortPopupMsg writes packet pointer at receiver+8. Sole direct xref0x8267c in command::main follows CMessageKill::setMessage(0), and the source already preserves the setter. Final BLR at 0x2155f8."
