@@ -1022,3 +1022,30 @@ mac_offset = 0x2155f4
 mac_size = 0x8
 target_sha256 = "d0b1b5454c51cd67f5347e9809d118896427a543f6db6b3bbb9892241110c038"
 evidence = "CNetMsgHandler::setAbortPopupMsg writes packet pointer at receiver+8. Sole direct xref0x8267c in command::main follows CMessageKill::setMessage(0), and the source already preserves the setter. Final BLR at 0x2155f8."
+
+[[functions]]
+retail_va = 0x005572e0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214eec
+mac_size = 0x48
+target_sha256 = "7923efffd0ffab2dd99d0e2e44e1155c137c89ef11b54c51cdb296325e3db81b"
+evidence = "CSaveScreen constructor calls Bitmap16Bit(w,h), installs its vtable and clears saved byte+0x38 and x/y+0x3c/+0x40. saveScreen passes160,160; ordinary source already owns this constructor. Next body begins at0x214f34."
+
+[[functions]]
+retail_va = 0x00557fc0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215d40
+mac_size = 0x54
+target_sha256 = "ca4d80e09cc53a2e7dc6868a97fe6e34cf23c0b88a5b188954e4b0611ec2654b"
+evidence = "CHourGlass destructor calls stop(0x215d94), then handles optional deleting flag. Ordinary destructor calls stop; final BLR at0x215d90. Next body begins at0x215d94."
+
+[[helpers]]
+source_helper = "CWaitForReadyPlayersDlg::allPlayersReady"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x216110
+mac_size = 0x7c
+target_sha256 = "83e3d8662a9ba46a1f1232b018c516e174ea6dc1bab33074d79efa30ca8e36a3"
+evidence = "Eight-player loop calls game::isHuman then checks playerReady byte at this+0x8c+index; returns false for human not ready and true after eighth player. Ordinary source has identical helper and handleMessage caller. Next body begins at0x21618c."

@@ -296,3 +296,21 @@ mac_offset = 0x1a6c8c
 mac_size = 0x108
 target_sha256 = "73e062e86709ba31436dea834cfc2e75773cba686a37eddc5e8839c811d4ea79"
 evidence = "Dreamcast swapmgr.cpp:977 names UpdateBackpackItem and updateBackpack calls it in the five-item loop. Mac reads hero backpack entry, computes hero*5+i+0x59 widget id, and broadcasts occupied/empty widget messages. Retained call from updateBackpack at 0x1a6e10; final BLR at 0x1a6d90 precedes updateBackpack."
+
+[[helpers]]
+source_helper = "swapManager::handleHeroUpdateMsg"
+unit = "swapmgr"
+mac_section = 0
+mac_offset = 0x1a91f8
+mac_size = 0x7a0
+target_sha256 = "2fd7155ec1228b903d45de354251e2515ba9e8138ba46a3cc8efaedf6cc166d0"
+evidence = "Copies both CHeroUpdateMsg hero snapshots into game heroes indexed by snapshot ID, tests net handler popup byte then calls updateBackpack(0),updateBackpack(1),update and drawSwapWin. CSwapMgrNetMsgHandler::handleNetMsg retains this helper at0x1a9f40. Next body begins at0x1a9998."
+
+[[helpers]]
+source_helper = "swapManager::onGiveMeStuffMsg"
+unit = "swapmgr"
+mac_section = 0
+mac_offset = 0x1a9e44
+mac_size = 0x40
+target_sha256 = "9b527445212cf5b507f98460e1c9a39fbd8dc46ab7413af99ff7d9215e5b5f02"
+evidence = "Sets givingToAlly byte+0x5d=1, invokes parent updateArrows then drawSwapWin. Ordinary source helper and network dispatcher call already match. Next body begins at0x1a9e84."
