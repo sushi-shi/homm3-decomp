@@ -66,6 +66,19 @@ inline int min(int left, long right) __attribute__((annotate("homm3_analysis_min
     return [(str(header), original[:-len(closing)] + aliases + closing)]
 
 
+def _vc6_functional_overlays(root: Path):
+    """Accept VC6's dependent-type cast without changing its SDK header."""
+    header = root / 'build/gen/msvc-include/functional'
+    if not header.is_file():
+        return []
+    original = header.read_text()
+    cast = '_Bfn::second_argument_type(_Y)'
+    if original.count(cast) != 1:
+        return []
+    return [(str(header), original.replace(cast,
+             'typename _Bfn::second_argument_type(_Y)'))]
+
+
 def scan(ci, source: Path, args: list[str], root: Path) -> dict:
     """Keep exact declaration USRs, including overload and const distinctions."""
     k = ci.CursorKind
@@ -75,7 +88,8 @@ def scan(ci, source: Path, args: list[str], root: Path) -> dict:
     # headers and their cache fingerprints remain the actual compiler inputs.
     tu = ci.Index.create().parse(str(source), args=args,
                                  unsaved_files=[*_vendor_asm_overlays(root),
-                                                *_min_overlays(root)])
+                                                *_min_overlays(root),
+                                                *_vc6_functional_overlays(root)])
     nodes, edges, gaps = {}, [], []
     texts = {}
 

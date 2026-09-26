@@ -145,6 +145,40 @@ class SourceGraphTests(unittest.TestCase):
             self.assertEqual(header.read_text(), vendor_text)
             self.assertEqual(result['inputs'][str(header)], source_graph.digest(header))
 
+    def test_vc6_functional_overlay_keeps_authored_call_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            header = root / 'build/gen/msvc-include/functional'
+            header.parent.mkdir(parents=True)
+            sdk_text = '''
+                template<class _Bfn> struct binder2nd {
+                    typedef typename _Bfn::second_argument_type argument_type;
+                    binder2nd(const _Bfn&, argument_type);
+                };
+                template<class _Bfn, class _Ty> binder2nd<_Bfn>
+                bind2nd(const _Bfn& _X, const _Ty& _Y) {
+                    return binder2nd<_Bfn>(_X,
+                        _Bfn::second_argument_type(_Y));
+                }
+                struct Predicate { typedef bool second_argument_type; };
+            '''
+            header.write_text(sdk_text)
+            source = root / 'src/test.cpp'
+            source.parent.mkdir()
+            source.write_text('''
+                #include "functional"
+                void helper() {}
+                void caller() { bind2nd(Predicate(), true); helper(); }
+            ''')
+            result = source_graph.scan(self.ci, source,
+                ['-xc++', '-std=c++98', '-I' + str(header.parent)], root)
+            self.assertEqual(result['diagnostics'], [])
+            self.assertEqual([edge['expression'] for edge in result['edges']],
+                             ['bind2nd(Predicate(), true)', 'Predicate()',
+                              'helper()'])
+            self.assertEqual(header.read_text(), sdk_text)
+            self.assertEqual(result['inputs'][str(header)], source_graph.digest(header))
+
     def test_min_overlay_records_real_wrapper_without_changing_header(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
