@@ -995,3 +995,12 @@ mac_offset = 0x215e2c
 mac_size = 0x2e4
 target_sha256 = "049c5088f4e6015fe5a7d94a2cc26f7a3cd164211deaf200afcf6f17f5d36562"
 evidence = "CWaitForReadyPlayersDlg::handleMessage calls CAnimatedDlg::handleMessage and pollSound, sends RS_READY_TO_PLAY after 1000ms, polls messages after 3000ms and handles dropped player, host change, lost session, readiness and chat. The four destroyMsg calls at 0x215f94/0x2160a4/0x2160d0/0x2160f4 are the existing CMessageKill lifetime at three early returns and normal scope exit. Final BLR at 0x21610c precedes onPlayerDrop."
+
+[[functions]]
+retail_va = 0x00557af0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2157b8
+mac_size = 0x284
+target_sha256 = "6c1238204e45355f1932b8f65f16ece572b2e54c2e7879ee74f816bf044563a3"
+evidence = "CTurnDuration::checkForWarning has matching isOn/nextWarning/start/lastWarned/local-player/pause guards, GameTime get and elapsedSince operations, minute/second warning dispatch, timestamp store and next-warning thresholds. pollSound already calls this canonical method. Final BLR at 0x215a38."

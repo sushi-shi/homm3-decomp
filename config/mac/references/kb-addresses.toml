@@ -404,3 +404,30 @@ mac_offset = 0x111ebc
 mac_size = 0x6c
 target_sha256 = "cf93e06e6e06e7a86cb342dbc3cbf793eb3285ab39cad6e3c06da7389f63f8e3"
 evidence = "doNormalDialog calls this constructor. It calls coloredBorderFrame with system palette color at byte 0x76 in the Mac palette and style 0x400, installs its vtable, stores resource/qualifier at +0x38/+0x3c; matches the existing ordinary constructor and allocation call. Final BLR at 0x111f24."
+
+[[helpers]]
+source_helper = "setupCDRom"
+unit = "kb"
+mac_section = 0
+mac_offset = 0x10f0f4
+mac_size = 0x158
+target_sha256 = "1b582b41bac3652a9b0a14731f3b60b31940cf8453402a3ab7d7a3f0a61498cf"
+evidence = "oldmain call 0x10fe5c targets the existing setupCDRom helper: save no-sound state, switch CD drive status1..6, hide pointer for unavailable drive, invoke startup-error dialogs for statuses3/4, restore old no-sound state. Both authored caller and helper already exist. Final BLR at 0x10f248."
+
+[[helpers]]
+source_helper = "earlyShutdown"
+unit = "kb"
+mac_section = 0
+mac_offset = 0x10f0c4
+mac_size = 0x30
+target_sha256 = "55acc193423091f39c8f38512f62cb1c36e4cccb7a26cfc611d8e93d9f79e331"
+evidence = "setupCDRom status3/4 paths call this existing earlyShutdown(title,body) helper. Mac swaps arguments to its platform alert wrapper0x20f0b0 and exits via0x20f10c; Windows uses MessageBoxA and exit. Final BLR at 0x10f0f0."
+
+[[helpers]]
+source_helper = "initVars"
+unit = "kb"
+mac_section = 0
+mac_offset = 0x11505c
+mac_size = 0xe0
+target_sha256 = "a92e08bd1d28699258b05ac5675520a11e7e62cf2b86b7c72b2416fe241210b9"
+evidence = "earlySetup retains the existing initVars reset helper: zero sample pair, game command=-1, palette/view frame zero, copy default scenario name, clear initialized flag and ten timers. Mac initializes its native menus through0x69734; Windows uses LoadMenu resource ids. Final BLR at 0x115138."
