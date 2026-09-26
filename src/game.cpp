@@ -5422,117 +5422,88 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
 VA(0x004c35a0, 0x2E8) MAC_ADDRESS(0x0d98a8, 0x4cc)
 int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
 {
-    int intBuffer;
     int count;
-    char charBuffer;
 
-    charBuffer = m_victoryCondition.m_allowNormalVictory;
-    count = outfile->write(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    count = writeValue<char>(outfile, m_victoryCondition.m_allowNormalVictory);
+    if (count < sizeof(char))
         return -1;
 
-    charBuffer = m_victoryCondition.m_appliesToComputer;
-    count = outfile->write(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    count = writeValue<char>(outfile, m_victoryCondition.m_appliesToComputer);
+    if (count < sizeof(char))
         return -1;
 
     switch (type) {
     case VICTORY_CONDITION_ARTIFACT: {
-        char artifact = m_victoryCondition.m_artifactNum;
-        outfile->write(&artifact, sizeof(artifact));
+        writeValue<char>(outfile, m_victoryCondition.m_artifactNum);
         return 0;
     }
 
     case VICTORY_CONDITION_TOTAL_CREATURES: {
-        char creature = m_victoryCondition.m_creatureType;
-        outfile->write(&creature, sizeof(creature));
-        intBuffer = m_victoryCondition.m_numCreatures;
-        count = outfile->write(&intBuffer, sizeof(intBuffer));
-        if (count < sizeof(intBuffer))
+        writeValue<char>(outfile, m_victoryCondition.m_creatureType);
+        count = writeValue<int>(outfile, m_victoryCondition.m_numCreatures);
+        if (count < sizeof(int))
             return -1;
         break;
     }
 
     case VICTORY_CONDITION_TOTAL_RESOURCES:
-        charBuffer = m_victoryCondition.m_resourceType;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_victoryCondition.m_resourceType);
+        if (count < sizeof(char))
             return -1;
-        intBuffer = m_victoryCondition.m_resourceAmount;
-        count = outfile->write(&intBuffer, sizeof(intBuffer));
-        if (count < sizeof(intBuffer))
+        count = writeValue<int>(outfile, m_victoryCondition.m_resourceAmount);
+        if (count < sizeof(int))
             return -1;
         break;
 
     case VICTORY_CONDITION_UPGRADE_TOWN: {
-        char townValue = m_victoryCondition.m_townX;
-        outfile->write(&townValue, sizeof(townValue));
-        townValue = m_victoryCondition.m_townY;
-        outfile->write(&townValue, sizeof(townValue));
-        townValue = m_victoryCondition.m_townZ;
-        outfile->write(&townValue, sizeof(townValue));
-        charBuffer = m_victoryCondition.m_hallLevel;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        writeValue<char>(outfile, m_victoryCondition.m_townX);
+        writeValue<char>(outfile, m_victoryCondition.m_townY);
+        writeValue<char>(outfile, m_victoryCondition.m_townZ);
+        count = writeValue<char>(outfile, m_victoryCondition.m_hallLevel);
+        if (count < sizeof(char))
             return -1;
-        charBuffer = m_victoryCondition.m_castleLevel;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_victoryCondition.m_castleLevel);
+        if (count < sizeof(char))
             return -1;
         break;
     }
 
     case VICTORY_CONDITION_BUILD_GRAIL: {
-        char grailTown = m_victoryCondition.m_townX;
-        outfile->write(&grailTown, sizeof(grailTown));
-        grailTown = m_victoryCondition.m_townY;
-        outfile->write(&grailTown, sizeof(grailTown));
-        grailTown = m_victoryCondition.m_townZ;
-        outfile->write(&grailTown, sizeof(grailTown));
+        writeValue<char>(outfile, m_victoryCondition.m_townX);
+        writeValue<char>(outfile, m_victoryCondition.m_townY);
+        writeValue<char>(outfile, m_victoryCondition.m_townZ);
         return 0;
     }
 
     case VICTORY_CONDITION_DEFEAT_HERO: {
-        char heroId = m_victoryCondition.m_heroId;
-        outfile->write(&heroId, sizeof(heroId));
+        writeValue<char>(outfile, m_victoryCondition.m_heroId);
         return 0;
     }
 
     case VICTORY_CONDITION_CAPTURE_TOWN: {
-        char capturedTown = m_victoryCondition.m_townX;
-        outfile->write(&capturedTown, sizeof(capturedTown));
-        capturedTown = m_victoryCondition.m_townY;
-        outfile->write(&capturedTown, sizeof(capturedTown));
-        capturedTown = m_victoryCondition.m_townZ;
-        outfile->write(&capturedTown, sizeof(capturedTown));
+        writeValue<char>(outfile, m_victoryCondition.m_townX);
+        writeValue<char>(outfile, m_victoryCondition.m_townY);
+        writeValue<char>(outfile, m_victoryCondition.m_townZ);
         return 0;
     }
 
     case VICTORY_CONDITION_DEFEAT_MONSTER: {
-        char monster = m_victoryCondition.m_monsterX;
-        outfile->write(&monster, sizeof(monster));
-        monster = m_victoryCondition.m_monsterY;
-        outfile->write(&monster, sizeof(monster));
-        monster = m_victoryCondition.m_monsterZ;
-        outfile->write(&monster, sizeof(monster));
+        writeValue<char>(outfile, m_victoryCondition.m_monsterX);
+        writeValue<char>(outfile, m_victoryCondition.m_monsterY);
+        writeValue<char>(outfile, m_victoryCondition.m_monsterZ);
         return 0;
     }
 
     case VICTORY_CONDITION_SURVIVE_TIME: {
-        int days = m_victoryCondition.m_numDays;
-        outfile->write(&days, sizeof(days));
+        writeValue<int>(outfile, m_victoryCondition.m_numDays);
         return 0;
     }
 
     case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
-        char transport = m_victoryCondition.m_artifactNum;
-        outfile->write(&transport, sizeof(transport));
-        transport = m_victoryCondition.m_townX;
-        outfile->write(&transport, sizeof(transport));
-        transport = m_victoryCondition.m_townY;
-        outfile->write(&transport, sizeof(transport));
-        transport = m_victoryCondition.m_townZ;
-        outfile->write(&transport, sizeof(transport));
+        writeValue<char>(outfile, m_victoryCondition.m_artifactNum);
+        writeValue<char>(outfile, m_victoryCondition.m_townX);
+        writeValue<char>(outfile, m_victoryCondition.m_townY);
+        writeValue<char>(outfile, m_victoryCondition.m_townZ);
         return 0;
     }
     }
