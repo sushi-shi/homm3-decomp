@@ -1517,8 +1517,6 @@ CSprite* ResourceManager::getSprite(const char* name)
             TCompactSpriteFrameHeader compactHeader;
             TCroppedSpriteFrameHeader croppedHeader;
             unsigned char* frameData;
-            unsigned char* frameSource;
-            int frameDataSize;
 
             if (sdef.m_type == RESOURCE_TYPE_SPRITE ||
                 sdef.m_type == RESOURCE_TYPE_CREATURE ||
@@ -1531,19 +1529,18 @@ CSprite* ResourceManager::getSprite(const char* name)
                 unsigned char* source =
                     fileData + sequence.m_frameOffsets[frameIndex];
                 memcpy(&croppedHeader, source, sizeof(croppedHeader));
-                frameDataSize = croppedHeader.m_dataSize;
-                frameData = new unsigned char[frameDataSize];
-                frameSource = source + sizeof(croppedHeader);
+                frameData = new unsigned char[croppedHeader.m_dataSize];
+                memcpy(frameData, source + sizeof(croppedHeader),
+                       croppedHeader.m_dataSize);
             } else {
                 memcpy(&compactHeader, definitionPosition,
                        sizeof(compactHeader));
                 definitionPosition += sizeof(compactHeader);
-                frameDataSize = compactHeader.m_dataSize;
-                frameData = new unsigned char[frameDataSize];
-                frameSource =
-                    fileData + sequence.m_frameOffsets[frameIndex];
+                frameData = new unsigned char[compactHeader.m_dataSize];
+                memcpy(frameData,
+                       fileData + sequence.m_frameOffsets[frameIndex],
+                       compactHeader.m_dataSize);
             }
-            memcpy(frameData, frameSource, frameDataSize);
 
             CSpriteFrame* frame = static_cast<CSpriteFrame*>(getFromCache(
                 sequence.m_frameNames + frameNameOffset));
