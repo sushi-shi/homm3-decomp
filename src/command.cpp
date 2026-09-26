@@ -1295,6 +1295,8 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 // ValidHex/InInvisibleColumn, and 2080/2181 retain army::get_owning_side.
 // Using those existing helpers moves current VC6 similarity 92.57143%
 // to 92.53571%; Mac's reviewed span still has all 13 direct calls aligned.
+// A hovered-cell reference local does not recover retail's EBX receiver:
+// VC6 retains the index there and spills the receiver (92.50% control).
 
 VA(0x00476490, 0x52A) MAC_ADDRESS(0x084534, 0x5a4)  // anchor-global, dc 0x6d58c
 int combatManager::getCommand(int newIndex)

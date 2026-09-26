@@ -55,7 +55,7 @@ DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 // 0x4d5fd0: refill next_in from the source streambuf when it is empty and
 // hand back the next byte, or -1 at end of source. Mac's remaining three
 // differences are solely its 0x60 frame versus the candidate's 0x50 frame.
-// Early byte/count declarations are neutral; -O4 is unchanged, while
+// Early or const byte/count declarations are neutral; -O4 is unchanged, while
 // -O1/-O2 emit a longer body and a smaller frame.
 VA(0x004d5fd0, 0x74) MAC_ADDRESS(0x220a18, 0xb0)
 int TGzInflateBuf::getByte()
