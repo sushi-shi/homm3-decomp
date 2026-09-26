@@ -10,6 +10,7 @@ Every byte of PEF code section 0 falls in exactly one region:
 
 The candidate census collects boundary leads without admitting them:
 loader pointers into code (transition-vector entries), direct call targets,
+reviewed vtable slots (config/mac/vtables),
 and full-TU CodeWarrior hunks whose relocation-masked bytes occur exactly once
 in the unresolved code. A branch target is a lead, not a function. Gaps
 report which leads they contain so a reviewer can admit boundaries through
@@ -259,10 +260,35 @@ def entry_leads(root: Path, index) -> dict[int, set[str]]:
         if (kind == "linked_branch" and target.section == tables.CODE_SECTION
                 and not in_data(at.offset) and not in_data(target.offset)):
             leads[target.offset].add("call_target")
+    for slot in vtable_slots(root):
+        leads[slot["offset"]].add("vtable_slot")
     return leads
 
 
-ENTRY_KINDS = ("tvector_entry", "call_target")
+ENTRY_KINDS = ("tvector_entry", "call_target", "vtable_slot")
+
+
+def vtable_slots(root: Path) -> list[dict]:
+    """Code spans named by reviewed vtables (config/mac/vtables/*.toml)."""
+    import tomllib
+    slots = []
+    for path in sorted((root / "config/mac/vtables").glob("*.toml")):
+        for table in tomllib.loads(path.read_text()).get("vtables", []):
+            for number, slot in enumerate(table.get("slots", [])):
+                if slot.get("code_section", tables.CODE_SECTION) != tables.CODE_SECTION:
+                    continue
+                slots.append(dict(offset=slot["code_offset"], size=slot["code_size"],
+                                  vtable=table["symbol"], slot=number,
+                                  source=path.relative_to(root).as_posix()))
+    return slots
+
+
+def vtable_problems(root: Path) -> list[str]:
+    """Every reviewed vtable slot's code span must be one verified row."""
+    spans = tables.read_functions(root)
+    return [f"{slot['source']}: {slot['vtable']} slot {slot['slot']} code "
+            f"{slot['offset']:#x}+{slot['size']:#x} is not a {tables.FUNCTIONS_TSV} row"
+            for slot in vtable_slots(root) if spans.get(slot["offset"]) != slot["size"]]
 
 
 def entry_conflicts(root: Path, leads: dict[int, set[str]]) -> list[str]:
@@ -414,7 +440,7 @@ def admit_proven(root: Path, report: dict) -> int:
 def gate(root: Path, pef, index, report: dict) -> dict:
     """The step-5 accounting gate: zero defects, with unresolved counts shown."""
     problems = (tables.validate(root, pef) + validate_regions(root, index)
-                + entry_conflicts(root, report["leads"]))
+                + entry_conflicts(root, report["leads"]) + vtable_problems(root))
     summary = report["summary"]
     return {"problems": problems,
             "unresolved_bytes": summary["bytes"].get("unresolved", 0),

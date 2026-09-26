@@ -245,3 +245,65 @@ def admit_library(root: Path, identities: list[dict]) -> dict[str, int]:
             added["zlib"] += 1
     tables.write(root, spans, [*runtime, *labels.values()], aliases, glue, zlib)
     return dict(added)
+
+
+def claim_bodies(root: Path, definitions, claims) -> list[dict]:
+    """Does each MAC_ADDRESS claim have an emitted body in a full-TU object?
+
+    A claim binds to its definition through the analysis arm's annotations
+    (the VA for paired claims, the `mac:` attribute otherwise). The body is
+    looked up by qualified name in the owning unit's object, or in any
+    compiled object for a header definition. States: emitted, not_emitted
+    (the owning unit compiled without it: inlined, folded or conditional),
+    no_object (the owning unit does not compile yet) and no_definition.
+    """
+    from homm3 import manifest
+    units = {unit["source"]: unit["unit"] for unit in manifest.units(root / "config/units.toml")}
+    objects: dict[str, dict[str, list[dict]]] = {}
+    for index in sorted((root / "build/mac/obj").glob("*.hunks.json")):
+        by_key = defaultdict(list)
+        for hunk in json.loads(index.read_text())["code"]:
+            by_key[key(demangle(hunk["symbol"]))].append(hunk)
+        objects[index.name.removesuffix(".hunks.json")] = by_key
+    by_va = {definition.va: definition for definition in definitions if definition.va is not None}
+    for definition in definitions:
+        for va, _selector, _mangled in definition.additional_instances:
+            by_va.setdefault(va, definition)
+    by_mac = {(definition.file, definition.mac_offset): definition
+              for definition in definitions if definition.mac_offset is not None}
+    by_file_name = defaultdict(list)
+    for definition in definitions:
+        by_file_name[(definition.file, key(definition.name).split("::")[-1])].append(definition)
+    rows = []
+    for claim in claims:
+        if claim.compgen is not None:
+            continue  # compiler-generated bodies have no written definition
+        definition = (by_va.get(claim.windows_va) if claim.windows_va is not None
+                      else by_mac.get((claim.path, claim.offset)))
+        if definition is None and claim.windows_va is not None and claim.label:
+            # A VA on a forward declaration: the one same-named body in its file.
+            named = [candidate for candidate in by_file_name.get(
+                         (claim.path, key(claim.label).split("::")[-1]), [])
+                     if key(candidate.name).endswith(key(claim.label))]
+            definition = named[0] if len(named) == 1 else None
+        row = dict(identity=claim.identity, file=claim.path, line=claim.line,
+                   mac_offset=f"0x{claim.offset:06x}", mac_size=f"0x{claim.size:x}",
+                   name="", unit="", state="no_definition", symbol="", symbol_size="")
+        if definition is not None:
+            owner = definition.source_owner or definition.file
+            unit = units.get(owner, "")
+            row.update(name=definition.name, unit=unit)
+            searched = [unit] if unit else sorted(objects)
+            if unit and unit not in objects:
+                row["state"] = "no_object"
+            else:
+                hunks = [hunk for name in searched if name in objects
+                         for hunk in objects[name].get(key(definition.name), [])]
+                sized = [hunk for hunk in hunks if hunk["size"] == claim.size]
+                chosen = sized[0] if sized else hunks[0] if hunks else None
+                row["state"] = "emitted" if chosen else "not_emitted"
+                if chosen:
+                    row.update(symbol=chosen["symbol"], symbol_size=f"0x{chosen['size']:x}")
+        rows.append(row)
+    return rows
+
