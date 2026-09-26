@@ -4669,6 +4669,10 @@ inline void TSingleSelectionWindow::onSortMaps(int how)
 // Complete's vector/functor details therefore require retail evidence.
 // DC's message junk belongs to the older Update(message&) interface;
 // Complete calls the no-argument Update, so no unused message is invented.
+// Mac 0x17cea0 instead sorts a temporary pointer array with the adjacent-swap
+// helper 0x17cde8. Windows 0x5850c5 calls 0x590070 on the record vector;
+// its 16-element threshold and median/partition path prove Dinkumware sort.
+// This source-call difference remains unresolved; the Mac helper is not MSL.
 VA(0x00585050, 0x2A8) MAC_ADDRESS(0x17cea0, 0x338)  // anchor-callee HandleNetMsg's RS_SORT_MAPS arm calls it (how, 1, 1) - the DC 3-arg signature; size 1.07x dc 0x27a, dc 0x13b780
 void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
                                       unsigned char update)
