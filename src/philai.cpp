@@ -797,14 +797,8 @@ static void moveAllHeroes(long playerId, long* dangerZones)
     unsigned char exploreMode = 1;
     if (!g_game->m_setup.m_difficulty || !g_currentPlayer->m_numTowns)
         exploreMode = 0;
-#if defined(__MWERKS__)
-    // CodeWarrior 2.4 accepts no declaration as a while condition.
     hero* currentHero;
-    while ((currentHero = determineHeroToMove(playerId, &isLastHero)) != 0)
-#else
-    while (hero* currentHero = determineHeroToMove(playerId, &isLastHero))
-#endif
-    {
+    while ((currentHero = determineHeroToMove(playerId, &isLastHero)) != 0) {
         moveHero(currentHero, dangerZones, isLastHero, exploreMode);
         if (g_gameOver)
             break;
