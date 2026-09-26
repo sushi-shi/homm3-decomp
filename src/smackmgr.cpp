@@ -440,6 +440,9 @@ bool videoPlaying()
 }
 
 // E:\gamedcs\smackmgr.cpp:328
+// Mac 0x25ea64 takes an update flag and presents individual dirty rectangles
+// from its indexed conversion buffer. Windows decodes directly into the
+// back surface and has the nullary, merged-rectangle path below.
 // Merges the pending dirty rects into one union rect and pushes it to
 // the screen; the id-0x1d bink instead Blts the whole 800x600 back
 // surface to the primary around an Unlock/Lock pair.
