@@ -386,9 +386,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
         for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
             town* garrison = g_game->getTown(player->m_townIds[townIndex]);
             if (garrison->m_type == faction) {
-                const_cast<armyGroup&>(
-                    static_cast<const town*>(garrison)->getArmy())
-                    .add(creature, m_count, -1);
+                garrison->getArmy().add(creature, m_count, -1);
                 return;
             }
         }
@@ -406,9 +404,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
     }
     for (i = 0; i < player->m_numTowns; ++i) {
         town* garrison = g_game->getTown(player->m_townIds[i]);
-        if (const_cast<armyGroup&>(
-                static_cast<const town*>(garrison)->getArmy())
-                .add(m_creature, m_count, -1) != 0)
+        if (garrison->getArmy().add(m_creature, m_count, -1) != 0)
             return;
     }
 }
