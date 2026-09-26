@@ -4923,15 +4923,14 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
                 checkEndGame(0);
                 return;
             }
-            defender->m_army.mergeArmies(
-                *const_cast<armyGroup*>(&thisTown->getArmy()));
+            defender->m_army.mergeArmies(thisTown->getArmy());
             defendingArmy = &defender->m_army;
         } else {
             if (thisTown->m_garrisonHeroId < 0)
                 defender = 0;
             else
                 defender = g_game->getHero(thisTown->m_garrisonHeroId);
-            defendingArmy = const_cast<armyGroup*>(&thisTown->getArmy());
+            defendingArmy = &thisTown->getArmy();
         }
 
         if (doCombat(point, currentHero, &currentHero->m_army,
