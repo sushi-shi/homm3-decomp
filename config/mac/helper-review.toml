@@ -25,9 +25,8 @@
 # the remaining object-type call follows the authored cell accessor.
 # Scenario-info's two hero-portrait bitmap calls are authored in their
 # respective branches, as retained at 0:0x15faa8 and 0:0x15fab8.
-# Tradpost's four creature-slot controls use setWidgetOff in Mac but
-# setWidgetDisabled in Windows source; the latter emits message code 5 in
-# retail, so this is a port difference in the owning update method.
+# Tradpost's four Freelancer tabs now call setWidgetOff: Mac retains that
+# helper and Windows retail clears status bits 0x1006 at the same four sites.
 # Town-manager's unnamed targets are an empty destructor and vector begin;
 # strip/townObject destructor calls follow the authored deletes. Mac's
 # tavern modal path calls videoRestart where Windows source uses videoResume.
