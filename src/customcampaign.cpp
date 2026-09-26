@@ -1483,7 +1483,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
             type_artifact artifact = sourceHero->getArtifact(TArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE
-                && m_crossoverArtifacts.test(artifact.m_artifactId)) {
+                && m_crossoverArtifacts[artifact.m_artifactId]) {
                 type_artifact displaced = currentHero->getArtifact(TArtifactSlot(slot));
                 if (displaced.m_artifactId != ARTIFACT_NONE)
                     currentHero->removeArtifact(slot);
@@ -1493,7 +1493,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
             type_artifact artifact = sourceHero->getBackpack(slot);
             if (artifact.m_artifactId != ARTIFACT_NONE
-                && m_crossoverArtifacts.test(artifact.m_artifactId)) {
+                && m_crossoverArtifacts[artifact.m_artifactId]) {
                 currentHero->addToBackpack(&artifact, -1);
             }
         }
@@ -1807,7 +1807,7 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
             artifact = artifacts[itemIndex];
             if (artifact.m_artifactId == ARTIFACT_NONE)
                 continue;
-            if (!m_crossoverArtifacts.at(artifact.m_artifactId))
+            if (!m_crossoverArtifacts[artifact.m_artifactId])
                 continue;
             offerArtifactToPlayerHeroes(artifact, player);
         }
