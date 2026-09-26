@@ -23,6 +23,7 @@
 // Native MSL provides the equivalent CRT entries under these spellings.
 #define _strcmpi _stricmp
 #define stricmp _stricmp
+#define strnicmp _strnicmp
 // The file API keeps Microsoft's names in shared source; MSL supplies the
 // corresponding open flags and owner-write permission under POSIX spellings.
 #define _O_BINARY O_BINARY

@@ -2,7 +2,11 @@
 #include "va.h"
 
 #include <fcntl.h>
+#if defined(HOMM3_TARGET_MAC) // MSL declares the _open/_chdir/_getcwd family here
+#include <unistd.h>
+#else
 #include <io.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
