@@ -473,7 +473,7 @@ ai_tactical	?getEnchantmentFunction@type_AI_spellcaster@@IBEP81@BEJPBVarmy@@Utyp
 ai_tactical	?getExchangeEffect@type_AI_combat_parameters@@QBEJABVarmy@@0J@Z	100.0000	100.0000	100.0000	0x35dc0	tokens1:fd0f100b7f35
 ai_tactical	?getFaerieDragonSpellValue@type_AI_spellcaster@@QAEJJJH@Z	100.0000	100.0000	100.0000	0x3c620	tokens1:79e4888ec885
 ai_tactical	?getFireProtectionValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x399d0	tokens1:e0cf6e05852b
-ai_tactical	?getFireShieldValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	76.6839	76.6839	100.0000	0x3a110	tokens1:a3f25e5dcfd3
+ai_tactical	?getFireShieldValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a110	tokens1:3bbe4bd2b588
 ai_tactical	?getForgetfulnessValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b500	tokens1:a08a230f0e09
 ai_tactical	?getFortuneValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38490	tokens1:32088004c66d
 ai_tactical	?getFrenzyValue@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	98.9849	98.9849	98.9849	0x375d0	tokens1:d786601e9e5d
@@ -2960,10 +2960,10 @@ philai	?valueOfSirens@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12a960	tokens
 philai	?valueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0	tokens1:28223bf4a5b6
 philai	?valueOfStables@@YIHPBVhero@@AAJ@Z	100.0000	100.0000	100.0000	0x12aac0	tokens1:f15b21475327
 philai	?valueOfTown@@YIJPBVhero@@HHHF@Z	100.0000	100.0000	100.0000	0x12ab80	tokens1:96e20f9931aa
-philai	?valueOfTownBuildings@@YIJPBVhero@@PAVtown@@@Z	74.3172	74.3172	100.0000	0x12b1e0	tokens1:1fd26cfd9d58
+philai	?valueOfTownBuildings@@YIJPBVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x12b1e0	tokens1:1fd26cfd9d58
 philai	?valueOfTreasure@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12b4e0	tokens1:4c2711662515
 philai	?valueOfTree@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b5a0	tokens1:6046863325e3
-philai	?valueOfUniversity@@YIJPBVhero@@PAUtype_university@@E@Z	100.0000	100.0000	100.0000	0x125bf0	tokens1:0bb7c6f96d18
+philai	?valueOfUniversity@@YIJPBVhero@@PAUtype_university@@E@Z	100.0000	100.0000	100.0000	0x125bf0	tokens1:bd0a8bc23968
 philai	?valueOfWagon@@YIHPAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x12b710	tokens1:e8c32ac7f31b
 philai	?valueOfWarFactory@@YIJPBVhero@@J@Z	100.0000	100.0000	100.0000	0x1297d0	tokens1:59125f808514
 philai	?valueOfWarFactory@@YIJPBVhero@@W4TArtifact@@J@Z	99.4198	99.4198	99.4198	0x125120	tokens1:4b7c33695995
