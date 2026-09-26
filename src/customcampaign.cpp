@@ -319,13 +319,10 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
         for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
             int heroId = player->m_heroes[heroIndex];
             hero* candidate = g_game->getHero(heroId);
-            if (best != 0) {
-                int candidatePower = heroPower(candidate);
-                int bestPower = heroPower(best);
-                if (bestPower >= candidatePower)
-                    continue;
-            }
-            best = candidate;
+            // A single expression lets VC6 evaluate best first and Mac
+            // evaluate candidate first, as their retail call sequences do.
+            if (!best || heroPower(best) < heroPower(candidate))
+                best = candidate;
         }
         return best;
     }

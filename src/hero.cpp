@@ -3043,16 +3043,10 @@ void hero::heroFn004DC100(long slot)
 // where GetLuck's own arm is a real call, and it credits TOWN_CASTLE.
 // The opening flag arm ASSIGNS (Dinkumware `assign(const char*,
 // size_type)`), it does not append.
-// DC hero.cpp:2989 names town::HasBuilding at the Grail guard. VC6 expands
-// the canonical call to the same active-word test as the former direct read,
-// but its inliner budget shifts later string cleanup: 97.95% -> 92.03%.
-// The negative-modifier append expands to _Xlen/_Grow/_Eos. Keep the
-// proven helper call while recovering the surrounding source context.
-// Mac 0:f88cc calls the MSL vector indexer directly. Unguarded VC6
-// inline_depth(0) persisted because CodeWarrior rejected the empty reset;
-// guarding the pair exposes the canonical wrappers and reaches that call.
-// An isolated -O3 compile retained the old wrapper and changed four of six
-// exact controls, so the admitted -O1 profile remains in force.
+// DC hero.cpp:2989 names town::HasBuilding at the Grail guard.
+// All leadership arms use operator+=. The explicit strlen/append Basic
+// spelling scored 90.55%; restoring this higher-level operation matches
+// Windows exactly while preserving HasBuilding and the other helpers.
 
 VA(0x004dc320, 0x793)  // anchor-caller (armyGroup::get_morale_description), dc 0xce260
 std::string hero::getMoraleDescription() const
@@ -3160,14 +3154,7 @@ std::string hero::getMoraleDescription() const
     }
 
     if (m_skillLevel[eSecSkillLeadership] == eMasteryBasic) {
-        // Retail CALLS append(const char*, size_type) at THIS rung only -
-        // its `repne scasb` strlen + `call` sit at fn+0x454 where our CL
-        // expanded the append (the extra _Xlen/_Grow/_Eos exposure) - and
-        // expands the Advanced and Expert rungs exactly as we do. The
-        // The surrounding natural caller state still controls this call boundary.
-        const char* basicText = g_moraleInfo[20];
-        size_t basicTextLen = strlen(basicText);
-        result.append(basicText, basicTextLen);
+        result += g_moraleInfo[20];
         morale++;
     }
     if (m_skillLevel[eSecSkillLeadership] == eMasteryAdvanced) {
@@ -3198,11 +3185,8 @@ std::string hero::getMoraleDescription() const
         }
     }
 
-    // Mac retail compares the difference, then computes it again for abs in
-    // each arm. This spelling matches all 1500 Mac bytes and leaves VC6's
-    // 92.03% function byte-flat against the prior source. A single
-    // otherModifier local, as in the luck twin, was also VC6 byte-flat but
-    // lowered the Mac match to 90.1333%; keep the exact Mac expression.
+    // Mac repeats the subtraction before abs in each arm. A named modifier
+    // lowered its agreement in the earlier Mac profile; preserve this shape.
     int effectiveMorale = this->getMorale(0, 0, 0);
     if (effectiveMorale - morale < 0)
         result += formatString(g_moraleInfo[24], abs(effectiveMorale - morale));
@@ -3224,13 +3208,9 @@ std::string hero::getMoraleDescription() const
 // expands town::HasBuilding INLINE against TOWN_RAMPART, unlike
 // hero::GetLuck's own arm, which calls it.
 
-// Dreamcast hero.cpp:3028 and :3149 name TTextResource::operator[] and
-// town::HasBuilding. Restoring both canonical calls closed the Windows
-// function from 83.81% to 100.00% (110/110 CFG blocks, 51/51 calls).
-// The existing [14] mist-rung inline-depth probe remains needed for VC6;
-// its pragmas are guarded so CodeWarrior sees the canonical body. Earlier
-// attempts to pin Basic-luck [15] alone lowered the 93.71% baseline to
-// 85.95%, and unpinned append(p,len) lowered it to 78.66%.
+// DC hero.cpp:3028 and :3149 name the text and town helpers. Preserve both.
+// The mist rung uses append(const char*); its explicit strlen/append expansion
+// scored 79.96%. The ordinary overload restores Windows exact bytes.
 VA(0x004dcac0, 0x7E0)  // anchor-caller (armyGroup::get_luck_description), dc 0xce648
 std::string hero::getLuckDescription() const
 {
@@ -3303,12 +3283,7 @@ std::string hero::getLuckDescription() const
         luck++;
     }
     if (m_flags & 0x10000) {
-        // Retail CALLS append(const char*, size_type) at THIS rung -
-        // four `repne scasb`+call rungs end at fn+0x486 and [14] is the
-        // last of them - then expands [15],[16],[17] as we do.
-        const char* mistText = g_luckInfo[14];
-        size_t mistTextLen = strlen(mistText);
-        result.append(mistText, mistTextLen);
+        result.append(g_luckInfo[14]);
         luck++;
     }
 

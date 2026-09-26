@@ -655,8 +655,8 @@ void CChatManager::addChat(const char* format, ...)
     m_changed = 1;
 
     if (!m_isSysMsg) {
-        sample* chatSample = m_chatSample;
-        playChatSample(chatSample);
+        // Mac 0:0x2116a8 passes null to the retained sound helper.
+        playChatSample(0);
     }
 }
 
@@ -2616,9 +2616,11 @@ unsigned char CTurnDuration::isClose(unsigned long howClose)
         return 0;
     if (m_pauseTime != 0)
         return 0;
-    unsigned char close = GameTime::get() + howClose
-                          > m_turnStartTime + m_currDuration;
-    return close;
+    // Guard returns keep the retained Windows body exact and let its chat
+    // caller branch directly; a byte comparison local leaves seta/test there.
+    if (GameTime::get() + howClose <= m_turnStartTime + m_currDuration)
+        return 0;
+    return 1;
 }
 
 VA(0x00557d60, 0xB)  // dc 0x11f39c
