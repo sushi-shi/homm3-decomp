@@ -101,7 +101,7 @@ DATA(0x00687f58) const SSpellTraits (&g_spellTraits)[81] = g_spellTraitsImp;
 static void initializeSpellTraits(
     int id, const std::vector<char*, std::allocator<char*> >& resource);
 
-VA(0x0059e060, 0x30)  // dc 0x14e278
+VA(0x0059e060, 0x30) MAC_ADDRESS(0x18e73c, 0x7c)  // dc 0x14e278
 unsigned char spellTargetsASingleArmy(int spell, int sslevel)
 {
     unsigned int flags = g_spellTraits[spell].m_flags;
@@ -115,7 +115,7 @@ unsigned char spellTargetsASingleArmy(int spell, int sslevel)
     return result;
 }
 
-VA(0x0059e090, 0xB7)  // dc 0x14e2c8
+VA(0x0059e090, 0xB7) MAC_ADDRESS(0x18e7b8, 0x13c)  // dc 0x14e2c8
 unsigned char initializeSpellTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
@@ -174,7 +174,7 @@ private:
 
 }
 
-VA(0x0059e150, 0x35F)  // dc 0x14e39c
+VA(0x0059e150, 0x35F) MAC_ADDRESS(0x18e8f4, 0x3a4)  // dc 0x14e39c
 static void initializeSpellTraits(
     int id, const std::vector<char*, std::allocator<char*> >& resource)
 {

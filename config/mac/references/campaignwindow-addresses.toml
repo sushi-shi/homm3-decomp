@@ -14,9 +14,9 @@ retail_va = 0x45ea40
 unit = "campaignwindow"
 mac_section = 0x0
 mac_offset = 0x69f7c
-mac_size = 0xb78
-target_sha256 = "aeb457e13aa013896d4bb6e721e163acbbb1a764f5085c11faed7ca28f9af03d"
-evidence = "NEW: Ctor: heroWindow800x600, g_game and campaign global stores, CampChk.pcx0x35324 and unique campbkx2/campback/cmpscan string xrefs at0x6a520..0x6a5cc, preview rows; final blr0x6aaf0. Full span SHA verified."
+mac_size = 0xb58
+target_sha256 = "d1fde5615957ca78a4ef8b253f9fdf9d2487219e5ac59478d753d3e5b71bcc5d"
+evidence = "NEW: Ctor: heroWindow800x600, g_game and campaign global stores, CampChk.pcx0x35324 and unique campbkx2/campback/cmpscan string xrefs at0x6a520..0x6a5cc, preview rows; final blr0x6aaf0. Full span SHA verified. Boundary correction: the final BLR ends the body at 0x6aad4; the reviewed runtime accessor at 0x6aad4 begins there, so the earlier 0xb78-byte extent included trailing accessor stubs."
 
 [[functions]]
 retail_va = 0x45f110

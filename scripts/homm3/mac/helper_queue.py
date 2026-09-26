@@ -56,9 +56,11 @@ def generate(root: Path, action_queue: dict, index: Index,
     by_va.update({pair.retail_va: pair for pair in pairs})
     by_target = {(ref.mac_section, ref.mac_offset): ref for ref in refs}
     by_target.update({(pair.mac_section, pair.mac_offset): pair for pair in pairs})
-    runtime = tomllib.loads((root / "config/mac/runtime.toml").read_text()).get("functions", [])
-    runtime_by_target = {(item["mac_section"], item["mac_offset"]): item["symbol"]
-                         for item in runtime}
+    from homm3.mac import addresses, tables
+    runtime_by_target = {(tables.CODE_SECTION, label.offset): label.name
+                         for label in tables.read_runtime(root)}
+    for item in addresses.legacy_runtime(root):
+        runtime_by_target.setdefault((item["mac_section"], item["mac_offset"]), item["symbol"])
     for name, target in glue.imports(index.pef).items():
         runtime_by_target.setdefault((target.address.section, target.address.offset), name)
 

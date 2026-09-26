@@ -237,7 +237,7 @@ void TAdventureMapWindow::close(unsigned char update)
     heroWindow::close(update);
 }
 
-VA(0x00401510, 0xCB5)  // dc 0x89c
+VA(0x00401510, 0xCB5) MAC_ADDRESS(0x000a34, 0x15e0)  // dc 0x89c
 TAdventureMapWindow::TAdventureMapWindow()
     : heroWindow(0, 0, 800, 600, 1),
       m_topHero(0),
@@ -472,7 +472,7 @@ void checkAdvCheatCode(std::string& chatString);
 // is byte-identical at 77.4872%, so source order does not explain this site.
 // DC 262 proves the retained const-char-pointer constructor; default-string
 // assignment controls do not recover that source boundary.
-VA(0x004022e0, 0x167)  // anchor-string("gosolo") + anchor-callee(CheckAdvCheatCode), dc 0x330c
+VA(0x004022e0, 0x167) MAC_ADDRESS(0x003e74, 0x118)  // anchor-string("gosolo") + anchor-callee(CheckAdvCheatCode), dc 0x330c
 void CAdventurMapChatEdit::sendChat(const char* chat, int toWho)
 {
     std::string chatString = chat;
@@ -500,7 +500,7 @@ void CAdventurMapChatEdit::sendChat(const char* chat, int toWho)
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:63
-VA(0x00402450, 0x5D3)  // anchor-global, dc 0x3b0
+VA(0x00402450, 0x5D3) MAC_ADDRESS(0x0002ac, 0x69c)  // anchor-global, dc 0x3b0
 void checkAdvCheatCode(std::string& chatString)
 {
     hero* currentHero = g_game->getCurrHero();
@@ -651,7 +651,7 @@ void checkAdvCheatCode(std::string& chatString)
 // slot 0 of ??_7TAdventureMapWindow@@6B@ (0x63a5e4) points at it.
 VA_COMPGEN(0x00402ae0, 0x21, SCALAR_DELETING_DTOR, TAdventureMapWindow)
 
-VA(0x00402b10, 0x77)  // dc 0xb9c
+VA(0x00402b10, 0x77) MAC_ADDRESS(0x002160, 0x94)  // dc 0xb9c
 TAdventureMapWindow::~TAdventureMapWindow()
 {
     if (m_resourceDisplay)
@@ -660,14 +660,14 @@ TAdventureMapWindow::~TAdventureMapWindow()
     deleteWidgets();
 }
 
-VA(0x00402b90, 0x24)
+VA(0x00402b90, 0x24) MAC_ADDRESS(0x0021f4, 0x4c)
 void TAdventureMapWindow::animateBottomView(unsigned char inBackground)
 {
     if ((!inBackground || m_animateInBackground) && m_bottomView)
         m_bottomView->animate();
 }
 
-VA(0x00402bc0, 0x4E)  // dc 0xc1c
+VA(0x00402bc0, 0x4E) MAC_ADDRESS(0x002240, 0x80)  // dc 0xc1c
 void TAdventureMapWindow::drawBottomView(unsigned char update)
 {
     if (m_bottomView) {
@@ -678,14 +678,14 @@ void TAdventureMapWindow::drawBottomView(unsigned char update)
     }
 }
 
-VA(0x00402c10, 0x3C)  // dc 0xc5c
+VA(0x00402c10, 0x3C) MAC_ADDRESS(0x0022c0, 0x3c)  // dc 0xc5c
 void TAdventureMapWindow::setBottomView(type_bottom_view_window* newView)
 {
     clearBottomView();
     m_bottomView = newView;
 }
 
-VA(0x00402c50, 0x218)  // dc 0xc7c
+VA(0x00402c50, 0x218) MAC_ADDRESS(0x0022fc, 0x220)  // dc 0xc7c
 int TAdventureMapWindow::convertID2HelpID(int id) const
 {
     if (id < 0)
@@ -774,7 +774,7 @@ static int g_lastAdventureHover = -1;
 
 // The two input handlers are identity/arity claims while their decoded
 // bodies remain on the dependency frontier documented in the carcass above.
-VA(0x00402e70, 0x195)  // dc 0xd88
+VA(0x00402e70, 0x195) MAC_ADDRESS(0x00251c, 0x204)  // dc 0xd88
 unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
 {
     playerData* player = g_game->getLocalPlayer();
@@ -837,7 +837,7 @@ unsigned char TAdventureMapWindow::processRightSelect(const message* msg)
     }
 }
 
-VA(0x00403010, 0x20A)  // dc 0xed8
+VA(0x00403010, 0x20A) MAC_ADDRESS(0x002720, 0x2ec)  // dc 0xed8
 unsigned char TAdventureMapWindow::processHover(int hx, int hy)
 {
     playerData* player = g_game->getLocalPlayer();
@@ -950,7 +950,7 @@ generic_help:
     return 1;
 }
 
-VA(0x00403220, 0x59)  // dc 0x10dc
+VA(0x00403220, 0x59) MAC_ADDRESS(0x002a1c, 0x94)  // dc 0x10dc
 void TAdventureMapWindow::doHeroKnob(unsigned char up)
 {
     playerData* player = g_game->getLocalPlayer();
@@ -964,7 +964,7 @@ void TAdventureMapWindow::doHeroKnob(unsigned char up)
     updateHeroLocators(-1, 1, 1);
 }
 
-VA(0x00403280, 0x59)  // dc 0x10e0
+VA(0x00403280, 0x59) MAC_ADDRESS(0x002ab0, 0x94)  // dc 0x10e0
 void TAdventureMapWindow::doTownKnob(unsigned char up)
 {
     playerData* player = g_game->getLocalPlayer();
@@ -978,7 +978,7 @@ void TAdventureMapWindow::doTownKnob(unsigned char up)
     updateTownLocators(-1, 1, 1);
 }
 
-VA(0x004032e0, 0x134)  // dc 0x10e4
+VA(0x004032e0, 0x134) MAC_ADDRESS(0x002b44, 0x204)  // dc 0x10e4
 void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
                                              unsigned char update)
 {
@@ -1027,7 +1027,7 @@ void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
         g_windowManager->updateScreen(0, 0, 800, 600);
 }
 
-VA(0x00403420, 0x131)  // dc 0x10e8
+VA(0x00403420, 0x131) MAC_ADDRESS(0x002d48, 0x208)  // dc 0x10e8
 void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
                                              unsigned char update)
 {
@@ -1076,7 +1076,7 @@ void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
         g_windowManager->updateScreen(0, 0, 800, 600);
 }
 
-VA(0x00403560, 0x23E)  // dc 0x10ec
+VA(0x00403560, 0x23E) MAC_ADDRESS(0x002f50, 0x3a4)  // dc 0x10ec
 void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect,
                                             unsigned char update)
 {
@@ -1137,7 +1137,7 @@ void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect
     }
 }
 
-VA(0x004037a0, 0x117)  // dc 0x10f0
+VA(0x004037a0, 0x117) MAC_ADDRESS(0x0032f4, 0x1ac)  // dc 0x10f0
 void TAdventureMapWindow::updateTownLocator(int which, unsigned char drawWinSect,
                                             unsigned char update)
 {
@@ -1167,7 +1167,7 @@ void TAdventureMapWindow::updateTownLocator(int which, unsigned char drawWinSect
     }
 }
 
-VA(0x004038c0, 0xEC)  // dc 0x10f4
+VA(0x004038c0, 0xEC) MAC_ADDRESS(0x0034a0, 0x174)  // dc 0x10f4
 void TAdventureMapWindow::highlightLocators(unsigned char update)
 {
     playerData* player = g_game->getLocalPlayer();
@@ -1199,7 +1199,7 @@ void TAdventureMapWindow::highlightLocators(unsigned char update)
     }
 }
 
-VA(0x004039b0, 0x1EA)  // dc 0x1134
+VA(0x004039b0, 0x1EA) MAC_ADDRESS(0x003614, 0x2b0)  // dc 0x1134
 void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
 {
     unsigned char enabled = 0;
@@ -1234,7 +1234,7 @@ void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
     }
 }
 
-VA(0x00403ba0, 0x47)  // dc 0x1138
+VA(0x00403ba0, 0x47) MAC_ADDRESS(0x0038c4, 0x80)  // dc 0x1138
 void TAdventureMapWindow::updateSleepButton(const hero* thisHero)
 {
     unsigned char enabled = 0;
@@ -1248,7 +1248,7 @@ void TAdventureMapWindow::updateSleepButton(const hero* thisHero)
         SLEEP_ID, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
 }
 
-VA(0x00403bf0, 0x4C)  // dc 0x113c
+VA(0x00403bf0, 0x4C) MAC_ADDRESS(0x003944, 0x94)  // dc 0x113c
 void TAdventureMapWindow::updateSpellButton(const hero* thisHero)
 {
     unsigned char enabled = 0;
@@ -1284,7 +1284,7 @@ static const char* g_aszSleepIcons[2] = { "iam005.def", "iam011.def" };
 DATA(0x0065f240)
 static int g_sleepImage = -1;
 
-VA(0x00403c40, 0x78)  // dc 0x1188
+VA(0x00403c40, 0x78) MAC_ADDRESS(0x0039d8, 0xcc)  // dc 0x1188
 unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
 {
     if (level != g_elevationToggleLevel) {
@@ -1311,7 +1311,7 @@ unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
 // 240-trial, 12-family target-local state campaign remained at 86.6667%; the
 // residual is a nested vector<int> inliner decision, not evidence to erase the
 // helper boundary again.
-VA(0x00403cc0, 0x215)  // anchor-global, dc 0x118c
+VA(0x00403cc0, 0x215) MAC_ADDRESS(0x003aa4, 0xf4)  // anchor-global, dc 0x118c
 void TAdventureMapWindow::setSleepImage(int image)
 {
     if (image != g_sleepImage) {
@@ -1333,7 +1333,7 @@ void TAdventureMapWindow::setSleepImage(int image)
     }
 }
 
-VA(0x00403ee0, 0x1F)  // dc 0x1190
+VA(0x00403ee0, 0x1F) MAC_ADDRESS(0x003b98, 0x54)  // dc 0x1190
 void TAdventureMapWindow::clearBottomView()
 {
     if (m_bottomView) {
@@ -1350,7 +1350,7 @@ void TAdventureMapWindow::clearBottomView()
 // Retail has the !draw reset and unconditional two-argument Update only.
 // DC1257's update guard and DC1261's UpdateScreen call are port-specific;
 // the 30-byte retail body has neither extra branch nor screen update.
-VA(0x00403f00, 0x1E)  // anchor-global, dc 0x11bc
+VA(0x00403f00, 0x1E) MAC_ADDRESS(0x003bec, 0x30)  // anchor-global, dc 0x11bc
 void TAdventureMapWindow::updateResourceDisplay(bool draw, bool update)
 {
     if (!draw)
@@ -1358,7 +1358,7 @@ void TAdventureMapWindow::updateResourceDisplay(bool draw, bool update)
     m_resourceDisplay->update(draw, update);
 }
 
-VA(0x00403f20, 0x3F)  // dc 0x11f4
+VA(0x00403f20, 0x3F) MAC_ADDRESS(0x003c1c, 0x78)  // dc 0x11f4
 void TAdventureMapWindow::drawChatText(unsigned char update)
 {
     drawWindow(0, CHAT_TEXT_ID, CHAT_TEXT_ID);
@@ -1370,6 +1370,7 @@ void TAdventureMapWindow::drawChatText(unsigned char update)
 // Original: TAdvMenu::SetAdvWinButtonPalette; adventuremapwindow.cpp:1273, dc 0x1238.
 // Complete owns these menu buttons directly in TAdventureMapWindow; its
 // updateButtons body at 0x403f60 expands GetWidget and the button palette call.
+MAC_ADDRESS(0x003c94, 0x4c)
 void TAdventureMapWindow::setAdvWinButtonPalette(int id, int player)
 {
     widget* w = getWidget(id);
@@ -1377,7 +1378,7 @@ void TAdventureMapWindow::setAdvWinButtonPalette(int id, int player)
         static_cast<button*>(w)->setPlayerPaletteColors(player);
 }
 
-VA(0x00403f60, 0x144)  // dc 0x125c
+VA(0x00403f60, 0x144) MAC_ADDRESS(0x003ce0, 0xfc)  // dc 0x125c
 void TAdventureMapWindow::updateButtons(unsigned char draw, unsigned char update)
 {
     int player = g_game->getLocalPlayerGamePos();

@@ -60,7 +60,7 @@ textEntryWidget::textEntryWidget() : textWidget()
     m_saveBack = 0;
 }
 
-VA(0x005ba920, 0x1B5)  // dc 0x1629e8
+VA(0x005ba920, 0x1B5) MAC_ADDRESS(0x1af7b0, 0x174)  // dc 0x1629e8
 textEntryWidget::textEntryWidget(int x, int y, int w, int h, int textSize,
     const char* text, const char* fontName, font::TColor color,
     unsigned justification, const char* backgroundIcon, int backgroundFrame,
@@ -98,7 +98,7 @@ textEntryWidget::textEntryWidget(int x, int y, int w, int h, int textSize,
 
 VA_COMPGEN(0x005ba8f0, 0x21, SCALAR_DELETING_DTOR, textEntryWidget)
 
-VA(0x005baae0, 0x62)  // dc 0x162af8
+VA(0x005baae0, 0x62) MAC_ADDRESS(0x1af924, 0xa0)  // dc 0x162af8
 textEntryWidget::~textEntryWidget()
 {
     if (m_textBack)
@@ -110,7 +110,7 @@ textEntryWidget::~textEntryWidget()
 // DC SetFocus publics independently encode bool for this base and both
 // CMPEdit/CHighScoreEdit overrides. Keep m_hasFocus's separate byte storage;
 // retail copies the argument byte directly and preserves virtual slot 14.
-VA(0x005bab50, 0x49)  // dc 0x162b50
+VA(0x005bab50, 0x49) MAC_ADDRESS(0x1afa24, 0x7c)  // dc 0x162b50
 void textEntryWidget::setFocus(bool state)
 {
     m_hasFocus = state;
@@ -121,7 +121,7 @@ void textEntryWidget::setFocus(bool state)
     }
 }
 
-VA(0x005baba0, 0xA4)  // dc 0x162bbc
+VA(0x005baba0, 0xA4) MAC_ADDRESS(0x1afaa0, 0xa4)  // dc 0x162bbc
 char textEntryWidget::getCharPressed(message* msg)
 {
     char pressed = 0;
@@ -207,7 +207,7 @@ char textEntryWidget::getCharPressed(message* msg)
 // Original DC name: gbTextEntryEscaped; OnKeyPress clears it after editing.
 DATA(0x00697780) int g_textEntryEscaped;
 
-VA(0x005bac50, 0x4FD)  // dc 0x162c2c
+VA(0x005bac50, 0x4FD) MAC_ADDRESS(0x1afb44, 0x38c)  // dc 0x162c2c
 int textEntryWidget::onKeyPress(message* msg)
 {
     if (!m_hasFocus)
@@ -299,7 +299,7 @@ int textEntryWidget::onKeyPress(message* msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-VA(0x005bb150, 0x2A6)  // dc 0x162f2c
+VA(0x005bb150, 0x2A6) MAC_ADDRESS(0x1afed0, 0x328)  // dc 0x162f2c
 int textEntryWidget::main(message& msg)
 {
     if (m_sleepCount > 0)
@@ -387,7 +387,7 @@ int textEntryWidget::main(message& msg)
     return widget::main(msg);
 }
 
-VA(0x005bb400, 0x254)  // dc 0x163150
+VA(0x005bb400, 0x254) MAC_ADDRESS(0x1b01f8, 0x318)  // dc 0x163150
 void textEntryWidget::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
@@ -438,7 +438,7 @@ void textEntryWidget::draw() const
     }
 }
 
-VA(0x005bb660, 0x2E7)  // dc 0x1633d8
+VA(0x005bb660, 0x2E7) MAC_ADDRESS(0x1b0510, 0x230)  // dc 0x1633d8
 void textEntryWidget::setupDisplayString(char* core, unsigned short inCursorIndex)
 {
     if (GameTime::isPast(g_timers[0])) {
@@ -473,14 +473,14 @@ void textEntryWidget::setupDisplayString(char* core, unsigned short inCursorInde
     }
 }
 
-VA(0x005bb950, 0xD0)  // dc 0x1635dc
+VA(0x005bb950, 0xD0) MAC_ADDRESS(0x1b0740, 0x58)  // dc 0x1635dc
 void textEntryWidget::setText(const char* newText)
 {
     m_text = newText;
     m_cursorIndex = static_cast<unsigned short>(m_text.size());
 }
 
-VA(0x005bba20, 0x22)  // dc 0x163600
+VA(0x005bba20, 0x22) MAC_ADDRESS(0x1b0798, 0x38)  // dc 0x163600
 unsigned char textEntryWidget::ignoreKey(message* msg)
 {
     switch (msg->m_codeX) {
@@ -492,26 +492,26 @@ unsigned char textEntryWidget::ignoreKey(message* msg)
     return 0;
 }
 
-VA(0x005bba50, 0x8)  // dc 0x163620
+VA(0x005bba50, 0x8) MAC_ADDRESS(0x1b07d0, 0x30)  // dc 0x163620
 void textEntryWidget::onSetFocus()
 {
     setFocus(1);
 }
 
-VA(0x005bba60, 0x8)  // dc 0x163638
+VA(0x005bba60, 0x8) MAC_ADDRESS(0x1b0800, 0x30)  // dc 0x163638
 void textEntryWidget::onKillFocus()
 {
     setFocus(0);
 }
 
-VA(0x005bba70, 0x44)  // dc 0x163650
+VA(0x005bba70, 0x44) MAC_ADDRESS(0x1b0830, 0x70)  // dc 0x163650
 void textEntryWidget::saveBackground() const
 {
     if (m_saveBack)
         m_saveBack->save(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y);
 }
 
-VA(0x005bbac0, 0x82)  // dc 0x16367c
+VA(0x005bbac0, 0x82) MAC_ADDRESS(0x1b08a0, 0x8c)  // dc 0x16367c
 void textEntryWidget::setAutoDraw(unsigned char b)
 {
     m_autoDraw = b;

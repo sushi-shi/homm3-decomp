@@ -128,7 +128,7 @@ DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
 // Native bool is_siege is proved by DC public
 // ??0TCombatResultsWindow@@QAA@PBVhero@@0HH_NH@Z. The formal T_UCHAR
 // record is a lowered storage type; retail also consumes the flag as a byte.
-VA(0x004702d0, 0x176D)  // CPResult.pcx + vtable/global stores, dc 0x68364
+VA(0x004702d0, 0x176D) MAC_ADDRESS(0x07df80, 0x1aec)  // CPResult.pcx + vtable/global stores, dc 0x68364
 TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     const hero* defender, int mySide, int winningSide,
     bool isSiege, int experience)
@@ -405,7 +405,7 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
 
 VA_COMPGEN(0x00471a40, 0x21, SCALAR_DELETING_DTOR, TCombatResultsWindow)
 
-VA(0x00471a70, 0x75)  // dc 0x69198
+VA(0x00471a70, 0x75) MAC_ADDRESS(0x07fa6c, 0xb4)  // dc 0x69198
 TCombatResultsWindow::~TCombatResultsWindow()
 {
     g_combatResultsWindow = 0;
@@ -415,7 +415,7 @@ TCombatResultsWindow::~TCombatResultsWindow()
     }
 }
 
-VA(0x00471af0, 0x54)  // dc 0x69200
+VA(0x00471af0, 0x54) MAC_ADDRESS(0x07fb20, 0x98)  // dc 0x69200
 int TCombatResultsWindow::open(int newPriority, unsigned char update)
 {
     int result = heroWindow::open(newPriority, 0);
@@ -427,20 +427,20 @@ int TCombatResultsWindow::open(int newPriority, unsigned char update)
     return result;
 }
 
-VA(0x00471b50, 0x1B)  // dc 0x69244
+VA(0x00471b50, 0x1B) MAC_ADDRESS(0x07fbb8, 0x44)  // dc 0x69244
 void TCombatResultsWindow::close(unsigned char update)
 {
     videoClose();
     heroWindow::close(update);
 }
 
-VA(0x00471b70, 0x14)  // dc 0x69268
+VA(0x00471b70, 0x14) MAC_ADDRESS(0x07fbfc, 0x34)  // dc 0x69268
 void TCombatResultsWindow::doModal()
 {
     g_windowManager->doDialog(this, combatResultsWindowHandler, 0);
 }
 
-VA(0x00471b90, 0x84)  // dc 0x692cc
+VA(0x00471b90, 0x84) MAC_ADDRESS(0x07fc30, 0x104)  // dc 0x692cc
 int combatResultsWindowHandler(message& msg)
 {
     unsigned char exitFlag = 0;

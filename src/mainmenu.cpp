@@ -56,7 +56,7 @@ static const TMainMenuButtonRect g_mainMenuButtonRects[5] = {
     {586, 469, 114, 102}
 };
 
-VA(0x004fb2a0, 0x385)  // dc 0xea2ec
+VA(0x004fb2a0, 0x385) MAC_ADDRESS(0x11c674, 0x550)  // dc 0xea2ec
 TMainMenu::TMainMenu()
     : heroWindow(0, 0, 800, 600, 0)
 {
@@ -104,7 +104,7 @@ TMainMenu::TMainMenu()
 
 VA_COMPGEN(0x004fb630, 0x21, SCALAR_DELETING_DTOR, TMainMenu)
 
-VA(0x004fb660, 0x75)
+VA(0x004fb660, 0x75) MAC_ADDRESS(0x11cbc4, 0xb4)
 TMainMenu::~TMainMenu()
 {
     g_mainMenu = 0;
@@ -114,7 +114,7 @@ TMainMenu::~TMainMenu()
     }
 }
 
-VA(0x004fb6e0, 0x2C)  // dc 0xea5ec
+VA(0x004fb6e0, 0x2C) MAC_ADDRESS(0x11cc78, 0x58)  // dc 0xea5ec
 void TMainMenu::doModal()
 {
     g_soundManager->startMP3("MainMenu", 0, 1);
@@ -128,7 +128,7 @@ void TMainMenu::doModal()
 // The hover call also really passes Y then X here - retail loads +0x10 first,
 // pushes it, then loads/pushes +0x14 as findWidget's first stack argument.
 
-VA(0x004fb710, 0x484)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
+VA(0x004fb710, 0x484) MAC_ADDRESS(0x11ccd0, 0x574)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
 static int mainMenuHandler(message& msg)
 {
     unsigned char updatePlease = 0;

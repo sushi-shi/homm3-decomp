@@ -414,7 +414,7 @@ public:
         // Hero IDs and names read from the map player slot.
         std::vector<type_map_hero_identity> m_heroes;
 
-        VA(0x0045a950, 0x3F)  // retained retail body; formerly enrolled by CLASS_CTOR
+        VA(0x0045a950, 0x3F) MAC_ADDRESS(0x067194, 0x80)  // retained retail body; formerly enrolled by CLASS_CTOR
         TPlayerSlotAttributes()
         {
             m_canBeHuman = 0;
@@ -482,7 +482,7 @@ public:
     std::string m_mapDescription;
     std::bitset<156> m_availableHeroes;
     int save(TAbstractFile* outfile);
-    VA(0x0045a7a0, 0x1A3)  // retained retail body; formerly enrolled by CLASS_CTOR
+    VA(0x0045a7a0, 0x1A3) MAC_ADDRESS(0x067648, 0x104)  // retained retail body; formerly enrolled by CLASS_CTOR
     NewSMapHeader()
     {
         m_version = 0;
@@ -668,7 +668,7 @@ public:
     int m_startingHero[8];
     signed char m_startingBonus[8];
     int save(TAbstractFile* outfile);
-    VA(0x0045ac20, 0xD2)  // retained retail body; formerly enrolled by CLASS_CTOR
+    VA(0x0045ac20, 0xD2) MAC_ADDRESS(0x067430, 0x168)  // retained retail body; formerly enrolled by CLASS_CTOR
     SGameSetupOptions()
     {
         for (int i = 0; i < 8; ++i) {
@@ -1483,7 +1483,7 @@ public:
 // callee. The reviewed town comparison uses the same canonical header body.
 // This is distinct from is_human_ally at dc 0x37fd8, which takes a player
 // number and calls IsHumanTeam(GetTeam(player_number)).
-VA(0x0042b9e0, 0x45)  // guarded team scan + named IsHuman callee, dc 0x37f64
+VA(0x0042b9e0, 0x45) MAC_ADDRESS(0x02d3e4, 0x94)  // guarded team scan + named IsHuman callee, dc 0x37f64
 bool isHumanTeam(int teamNum) const
 {
     if (teamNum >= 0) {
@@ -1533,6 +1533,7 @@ int getTeam(int playerNum) const
     // callback and records one nested GetTeam call. Complete expands the
     // same source boundary into TTownGateWindow's constructor: retail's
     // range guard, signed teamInfo load and eight-entry count are exact.
+    MAC_ADDRESS(0x1b840c, 0x138)
     unsigned char getNumAllies(int playerNum) const
     {
         unsigned char numAllies = 0;
@@ -1846,7 +1847,7 @@ void computeUALoc(int whichPlayer);                   // 0x4baed0
 
 // Complete save files use the H3SVG signature and version 42.
 // E:\gamedcs\Game.h:1301, dc 0xbceb4
-VA(0x004bc0e0, 0x251)
+VA(0x004bc0e0, 0x251) MAC_ADDRESS(0x0cf490, 0x260)
 inline SavedGameHeader::SavedGameHeader()
 {
     memset(m_id, 0, sizeof(m_id));
@@ -1860,7 +1861,7 @@ inline SavedGameHeader::SavedGameHeader()
 // caller scopes. VC6 then matches all 62 retail blocks and 26 named calls,
 // including the shared failure cleanup; flattening those reads loses it.
 // E:\gamedcs\Game.h:1344, dc 0xbcfe4
-VA(0x004bc750, 0x3D5)  // dc 0xbcfe4
+VA(0x004bc750, 0x3D5) MAC_ADDRESS(0x0cfc34, 0x3a4)  // dc 0xbcfe4
 inline int SavedGameHeader::load(TAbstractFile* infile)
 {
     std::string openedName;
@@ -2026,7 +2027,7 @@ private:
 SIZE(TCheatCode, 200);
 
 // E:\gamedcs\Game.h:1439
-VA(0x00402a30, 0xA1)
+VA(0x00402a30, 0xA1) MAC_ADDRESS(0x000958, 0xdc)
 inline void TCheatCode::encode(const char* value)
 {
     int i = 0;

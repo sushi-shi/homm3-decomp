@@ -25,7 +25,7 @@ VA_COMPGEN(0x004b5040, 0x21, SCALAR_DELETING_DTOR, font)
 
 // The resource type is 0x50; the neighbouring proven values are
 // text 2, bitmap24 0x11 and sfx 0x20.
-VA(0x004b5070, 0x9B)  // anchor-global, dc 0xa1c04
+VA(0x004b5070, 0x9B) MAC_ADDRESS(0x0c8cdc, 0xb8)  // anchor-global, dc 0xa1c04
 font::font(const char* name, const font::TFontSpec& fontspec, int dsize,
            unsigned char* d)
     : resource(name, RESOURCE_TYPE_FONT), m_fs(fontspec)
@@ -36,7 +36,7 @@ font::font(const char* name, const font::TFontSpec& fontspec, int dsize,
         memcpy(m_data, d, dsize);
 }
 
-VA(0x004b5110, 0x67)  // dc 0xa1c94
+VA(0x004b5110, 0x67) MAC_ADDRESS(0x0c8d94, 0x7c)  // dc 0xa1c94
 font::~font()
 {
     if (m_data)
@@ -47,6 +47,7 @@ font::~font()
 // The decorated DC member signature uses TColor and bool (_N). Both
 // string renderers call this ordinary member; retail expands the custom
 // color test and palette bias. Keep the shared return and nested highlight.
+MAC_ADDRESS(0x0c8e10, 0x3c)
 int font::getColor(font::TColor colorScheme, bool highlighted)
 {
     int color;
@@ -63,7 +64,7 @@ int font::getColor(font::TColor colorScheme, bool highlighted)
 }
 
 // E:\gamedcs\font.cpp:81
-VA(0x004b5180, 0x16)  // anchor-global, dc 0xa1d14
+VA(0x004b5180, 0x16) MAC_ADDRESS(0x0c8e4c, 0x24)  // anchor-global, dc 0xa1d14
 void font::setPalette(const TPalette16& newPalette)
 {
     // DC82 calls the reference copy assignment; Complete 0x4b5180 calls
@@ -72,7 +73,7 @@ void font::setPalette(const TPalette16& newPalette)
     m_palette = &newPalette;
 }
 
-VA(0x004b51a0, 0xA9)  // dc 0xa1d58
+VA(0x004b51a0, 0xA9) MAC_ADDRESS(0x0c8e70, 0xd0)  // dc 0xa1d58
 void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
 {
     if (c < 0)
@@ -101,7 +102,7 @@ void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
     }
 }
 
-VA(0x004b5250, 0xC)
+VA(0x004b5250, 0xC) MAC_ADDRESS(0x0c8f84, 0xc)
 unsigned int font::getSize() const
 {
     return m_dataSize + sizeof(font);
@@ -111,6 +112,7 @@ unsigned int font::getSize() const
 // DC proves the ordinary nine-argument member and the underscore draw;
 // clip arguments are unused. Retail expands it at the string-rendering
 // call sites. The decorated bool (_N) remains the highlight interface.
+MAC_ADDRESS(0x0c8f40, 0x44)
 void font::drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
                       int clipX, int clipY, int clipWidth, int clipHeight,
                       bool highlighted)
@@ -119,7 +121,7 @@ void font::drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
 }
 
 // E:\gamedcs\font.cpp:138, dc 0xa1e5c
-VA(0x004b5260, 0x22E)  // dc 0xa1e5c
+VA(0x004b5260, 0x22E) MAC_ADDRESS(0x0c8f90, 0x2a8)  // dc 0xa1e5c
 void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
                              int x, int y, font::TColor colorScheme, int clipX,
                              int clipY, int clipWidth, int clipHeight,
@@ -238,7 +240,7 @@ void font::drawString(const char* text, Bitmap16Bit* bitmap,
 // register/long/initializer/address-taken spellings (96.81), and removing
 // or bypassing the loop guard (95-96% allocation cascades).
 
-VA(0x004b5490, 0x308)  // anchor-global, dc 0xa2108
+VA(0x004b5490, 0x308) MAC_ADDRESS(0x0c9238, 0x3c8)  // anchor-global, dc 0xa2108
 void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              int y, int boxWidth, int boxHeight,
                              font::TColor colorScheme, unsigned justification,
@@ -360,14 +362,14 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
     }
 }
 
-VA(0x004b57a0, 0x25)  // dc 0xa2420
+VA(0x004b57a0, 0x25) MAC_ADDRESS(0x0c9600, 0x28)  // dc 0xa2420
 int font::getCharacterWidth(unsigned char currChar) const
 {
     const TFontSpec::myABC* record = &m_fs.m_abc[currChar];
     return record->m_abcB + record->m_abcC + record->m_abcA;
 }
 
-VA(0x004b57d0, 0x44)  // dc 0xa2438
+VA(0x004b57d0, 0x44) MAC_ADDRESS(0x0c9628, 0x68)  // dc 0xa2438
 long font::getStringWidth(const char* arg) const
 {
     long width = 0;
@@ -376,7 +378,7 @@ long font::getStringWidth(const char* arg) const
     return width;
 }
 
-VA(0x004b5820, 0xF2)  // dc 0xa246c
+VA(0x004b5820, 0xF2) MAC_ADDRESS(0x0c9690, 0x14c)  // dc 0xa246c
 int font::lineLength(const char* str, int boxWidth) const
 {
     int limit = strlen(str);
@@ -415,7 +417,7 @@ int font::lineLength(const char* str, int boxWidth) const
     return count;
 }
 
-VA(0x004b5920, 0x64)  // dc 0xa2554
+VA(0x004b5920, 0x64) MAC_ADDRESS(0x0c97dc, 0xac)  // dc 0xa2554
 int font::lineWidth(const char* text) const
 {
     int len = strlen(text);
@@ -431,7 +433,7 @@ int font::lineWidth(const char* text) const
     return width;
 }
 
-VA(0x004b5990, 0x76)  // dc 0xa25c8
+VA(0x004b5990, 0x76) MAC_ADDRESS(0x0c9888, 0xc4)  // dc 0xa25c8
 int font::longestLineWidth(const char* str) const
 {
     int len = strlen(str);
@@ -451,7 +453,7 @@ int font::longestLineWidth(const char* str) const
     return best;
 }
 
-VA(0x004b5a10, 0x6F)  // dc 0xa2650
+VA(0x004b5a10, 0x6F) MAC_ADDRESS(0x0c994c, 0xd4)  // dc 0xa2650
 int font::longestWordLength(const char* str) const
 {
     int best = 0;
@@ -473,7 +475,7 @@ int font::longestWordLength(const char* str) const
     return best;
 }
 
-VA(0x004b5a80, 0x110)  // dc 0xa26d4
+VA(0x004b5a80, 0x110) MAC_ADDRESS(0x0c9a20, 0x158)  // dc 0xa26d4
 int font::longestWrappedLineWidth(const char* str, int boxWidth) const
 {
     int limit = strlen(str);
@@ -524,7 +526,7 @@ int font::longestWrappedLineWidth(const char* str, int boxWidth) const
 // the space width is `fs.abc[' ']` read as this+0x1bc/0x1c0/0x1c4 - and
 // NH3API corroborates the name and the parameter shape only.
 
-VA(0x004b5b90, 0x3A5)  // anchor-member (fs.abc[' '] at this+0x1bc), retail-only
+VA(0x004b5b90, 0x3A5) MAC_ADDRESS(0x0c9b78, 0x270)  // anchor-member (fs.abc[' '] at this+0x1bc), retail-only
 void font::fillLinesVector(const char* str, int boxWidth,
                            std::vector<std::string>& result)
 {

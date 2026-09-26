@@ -41,18 +41,18 @@ retail_va = 0x5ba3b0
 unit = "textscroller"
 mac_section = 0x0
 mac_offset = 0x25b540
-mac_size = 0x130
-target_sha256 = "b7e7347c5485e4aad0db0f9aacefa87a23aa10fd83c1129052763cfe50f2e8c5"
-evidence = "destructor releases line widgets, slider/background and base widget; Mac adds optional deletion flag so Windows scalar deleting wrapper is not a separate identity; complete adjacent PowerPC span."
+mac_size = 0x12c
+target_sha256 = "81b0f5e070dd559ed9ebaf6e9f5b1b82270a7c7d9436d41ccf6290b66b706ba5"
+evidence = "destructor releases line widgets, slider/background and base widget; Mac adds optional deletion flag so Windows scalar deleting wrapper is not a separate identity; complete adjacent PowerPC span. Boundary correction: the final BLR ends the body at 0x25b66c; tvector entry 0x25b66c begins there, so the earlier 0x130-byte extent included a following function."
 
 [[functions]]
 retail_va = 0x5ba4c0
 unit = "textscroller"
 mac_section = 0x0
 mac_offset = 0x25b670
-mac_size = 0x148
-target_sha256 = "3e81c93a43184fd45e633b3242b9ccb255b2ae9b9e431726e459baa4f6c73f90"
-evidence = "MESSAGE_WIDGET switch draws background and relays status to line widgets/slider, then calls widget::main; complete adjacent PowerPC span."
+mac_size = 0x144
+target_sha256 = "4e7168beb2dd6c9d44b45e34024a3ead07d3114b2350b4037bc5dceace320a88"
+evidence = "MESSAGE_WIDGET switch draws background and relays status to line widgets/slider, then calls widget::main; complete adjacent PowerPC span. Boundary correction: the final BLR ends the body at 0x25b7b4; tvector entry 0x25b7b4 begins there, so the earlier 0x148-byte extent included a following function."
 
 [[functions]]
 retail_va = 0x5ba600

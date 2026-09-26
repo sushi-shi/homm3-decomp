@@ -190,6 +190,7 @@ TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr)
 // Provisional name: Mac retains this source helper at 0:0x888d0, immediately
 // before isBaseCreature. All three following queries call it there; VC6
 // expands its two-row lookup in their Windows bodies.
+MAC_ADDRESS(0x0888d0, 0x70)
 static int getCreatureDwellingIndex(TCreatureType type)
 {
     const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
@@ -206,14 +207,14 @@ static int getCreatureDwellingIndex(TCreatureType type)
     return -1;
 }
 
-VA(0x0047b120, 0x5D)  // dc 0x718fc
+VA(0x0047b120, 0x5D) MAC_ADDRESS(0x088940, 0x3c)  // dc 0x718fc
 int isBaseCreature(TCreatureType monType)
 {
     int creatureIndex = getCreatureDwellingIndex(monType);
     return creatureIndex >= 0 && creatureIndex < 7;
 }
 
-VA(0x0047b180, 0x16)  // dc 0x71934
+VA(0x0047b180, 0x16) MAC_ADDRESS(0x08897c, 0x24)  // dc 0x71934
 unsigned char isSiegeWeapon(TCreatureType creature)
 {
     if (creature >= CREATURE_CATAPULT && creature <= CREATURE_AMMO_CART)
@@ -221,7 +222,7 @@ unsigned char isSiegeWeapon(TCreatureType creature)
     return 0;
 }
 
-VA(0x0047b1a0, 0x71)  // dc 0x71948
+VA(0x0047b1a0, 0x71) MAC_ADDRESS(0x0889a0, 0x6c)  // dc 0x71948
 TCreatureType upgradedCreatureType(TCreatureType type)
 {
     int creatureIndex = getCreatureDwellingIndex(type);
@@ -231,7 +232,7 @@ TCreatureType upgradedCreatureType(TCreatureType type)
         g_creatureTypeTraits[type].m_townType * 14 + creatureIndex + 7];
 }
 
-VA(0x0047B220, 0x6D)
+VA(0x0047B220, 0x6D) MAC_ADDRESS(0x088a0c, 0x64)
 TCreatureType downgradedCreatureType(TCreatureType type)
 {
     int creatureIndex = getCreatureDwellingIndex(type);
@@ -241,7 +242,7 @@ TCreatureType downgradedCreatureType(TCreatureType type)
         g_creatureTypeTraits[type].m_townType * 14 + creatureIndex - 7];
 }
 
-VA(0x0047b290, 0x1E9)  // dc 0x71968
+VA(0x0047b290, 0x1E9) MAC_ADDRESS(0x088a70, 0x37c)  // dc 0x71968
 unsigned char initializeCreatureTypeTraitsTable()
 {
     TSpreadsheetResource* traitsSheet = ResourceManager::getSpreadsheet(
@@ -327,7 +328,7 @@ private:
 }
 
 // neighbouring column takes a dword.
-VA(0x0047b480, 0x322)  // dc 0x71b40
+VA(0x0047b480, 0x322) MAC_ADDRESS(0x088dec, 0x320)  // dc 0x71b40
 void initializeCreatureTypeTraits(int id,
     const std::vector<char*, std::allocator<char*> >& values)
 {

@@ -40,7 +40,7 @@ DATA(0x0067fa34) static int g_lastImHoverId = -1;
 // Text tables read directly by the retail constructor. The shared four-entry
 // primary-skill table is declared with the other game-wide data in game.h.
 
-VA(0x004f8880, 0xE7E)  // dc 0xe8344
+VA(0x004f8880, 0xE7E) MAC_ADDRESS(0x119b74, 0x1280)  // dc 0xe8344
 TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
                                int firstChoice, int secondChoice)
     : CAdvPopup(205, 65, 385, 470, 0x12),
@@ -170,14 +170,14 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
 
 VA_COMPGEN(0x004f9700, 0x21, SCALAR_DELETING_DTOR, TLevelUpWindow)
 
-VA(0x004f9730, 0x4E)  // dc 0xe8c2c
+VA(0x004f9730, 0x4E) MAC_ADDRESS(0x11adf4, 0x68)  // dc 0xe8c2c
 TLevelUpWindow::~TLevelUpWindow()
 {
     deleteWidgets();
 }
 
 // E:\gamedcs\levelupwindow.cpp:170, dc 0xe8c64
-VA(0x004f9780, 0x440)  // vtable slot 9+linkorder, dc 0xe8c64
+VA(0x004f9780, 0x440) MAC_ADDRESS(0x11ae5c, 0x57c)  // vtable slot 9+linkorder, dc 0xe8c64
 int TLevelUpWindow::windowHandler(message& msg)
 {
     if (!g_dialogDeadline) {

@@ -1,0 +1,5 @@
+# MANUALLY MANAGED - reviewed platform-only dispositions for config/units.toml
+# units with no Mac counterpart (read by `homm3 mac objects`). A row needs
+# positive evidence that the Mac executable has no body from the unit; a
+# compile failure or missing string literals is not such evidence.
+unit	disposition	evidence

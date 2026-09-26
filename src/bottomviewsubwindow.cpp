@@ -64,7 +64,7 @@ __declspec(nothrow) void __cdecl operator delete(void* p);
 
 VA_COMPGEN(0x00450d20, 0x21, SCALAR_DELETING_DTOR, type_bottom_view_window)
 
-VA(0x00450d50, 0x78)  // dc 0x55114
+VA(0x00450d50, 0x78) MAC_ADDRESS(0x05f1f0, 0xcc)  // dc 0x55114
 type_bottom_view_window::~type_bottom_view_window()
 {
     for (std::vector<widget*>::iterator it = m_widgets.begin();
@@ -126,6 +126,7 @@ type_bottom_view_window::~type_bottom_view_window()
 // carries no claim. Its shape is read straight off every derived
 // constructor's first eighteen instructions: TSubWindow's default
 // constructor, then this class's vptr, then the one body statement.
+MAC_ADDRESS(0x05f188, 0x68)
 type_bottom_view_window::type_bottom_view_window(heroWindow* parentWindow)
 {
     initialize(614, 400, 176, 166, parentWindow);
@@ -173,7 +174,7 @@ void type_bottom_view_window::animate()
 {
 }
 
-VA(0x00450dd0, 0x319)  // dc 0x5518c
+VA(0x00450dd0, 0x319) MAC_ADDRESS(0x05f2c0, 0x400)  // dc 0x5518c
 TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
@@ -218,12 +219,12 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
 
 VA_COMPGEN(0x004510f0, 0x21, SCALAR_DELETING_DTOR, TBottomViewNewTurn)
 
-VA(0x00451120, 0x78)  // dc 0x56ea4
+VA(0x00451120, 0x78) MAC_ADDRESS(0x062898, 0x60)  // dc 0x56ea4
 TBottomViewNewTurn::~TBottomViewNewTurn()
 {
 }
 
-VA(0x004511a0, 0x79)  // dc 0x55448
+VA(0x004511a0, 0x79) MAC_ADDRESS(0x05f6c0, 0xe4)  // dc 0x55448
 void TBottomViewNewTurn::animate()
 {
     if (m_frame == m_icon->m_sprite->getNumFrames(0) - 1)
@@ -302,7 +303,7 @@ void TBottomViewNewTurn::animate()
 // the default-ctor spelling. So the buffer is real evidence and the
 // buffered stream is not its explanation; what `str` is remains open,
 // and it is the first place to look for the five missing candidates.
-VA(0x00451220, 0x393)  // anchor-vtable 0x63bb1c + advManager::UpdBottomViewResMsg, dc 0x554ac
+VA(0x00451220, 0x393) MAC_ADDRESS(0x05f7a4, 0x41c)  // anchor-vtable 0x63bb1c + advManager::UpdBottomViewResMsg, dc 0x554ac
 TBottomViewResourceMessage::TBottomViewResourceMessage(
     heroWindow* parent, int res, int quantity,
     const std::string* message)
@@ -377,12 +378,12 @@ void ostrstream::`vbase destructor'();
 // image-wide reference to this class's table.
 VA_COMPGEN(0x00451770, 0x21, SCALAR_DELETING_DTOR, TBottomViewResourceMessage)
 
-VA(0x004517a0, 0x78)  // dc 0x56ef0
+VA(0x004517a0, 0x78) MAC_ADDRESS(0x062838, 0x60)  // dc 0x56ef0
 TBottomViewResourceMessage::~TBottomViewResourceMessage()
 {
 }
 
-VA(0x00451820, 0x1DC)  // dc 0x55768
+VA(0x00451820, 0x1DC) MAC_ADDRESS(0x05fbc0, 0x214)  // dc 0x55768
 TBottomViewMessage::TBottomViewMessage(heroWindow* parent,
                                        const std::string* message)
     : type_bottom_view_window(parent)
@@ -403,7 +404,7 @@ TBottomViewMessage::TBottomViewMessage(heroWindow* parent,
 
 VA_COMPGEN(0x00451a00, 0x21, SCALAR_DELETING_DTOR, TBottomViewMessage)
 
-VA(0x00451a30, 0x78)  // dc 0x56f3c
+VA(0x00451a30, 0x78) MAC_ADDRESS(0x0627d8, 0x60)  // dc 0x56f3c
 TBottomViewMessage::~TBottomViewMessage()
 {
 }
@@ -492,7 +493,7 @@ static const int g_heroArmyCoords[7][2] = {
 // index is dead), a spilled difference in `[ebp-0x10]`, and the
 // one-instruction loop header the preheader `jmp`s past. Two lockstep IVs,
 // and VC6 picks the survivor itself; not a guard or return shape.
-VA(0x00451ab0, 0x68A)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero, dc 0x558a8
+VA(0x00451ab0, 0x68A) MAC_ADDRESS(0x05fdd4, 0x9b4)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero, dc 0x558a8
 TBottomViewHero::TBottomViewHero(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
@@ -563,7 +564,7 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
 // image-wide reference to this class's table.
 VA_COMPGEN(0x00452140, 0x21, SCALAR_DELETING_DTOR, TBottomViewHero)
 
-VA(0x00452170, 0x78)  // dc 0x56f88
+VA(0x00452170, 0x78) MAC_ADDRESS(0x062778, 0x60)  // dc 0x56f88
 TBottomViewHero::~TBottomViewHero()
 {
 }
@@ -692,7 +693,7 @@ static const int g_townArmyCoords[7][2] = {
 // assignment operator.
 // Address-arithmetic review (2026-09-10): indexing army_pos by the packed
 // display slot replaces its flattened int* walk and raises 94.0054 to 94.80%.
-VA(0x004521f0, 0x8D4)  // anchor-vtable 0x63bb34 + advManager::UpdBottomViewTown, dc 0x55df4
+VA(0x004521f0, 0x8D4) MAC_ADDRESS(0x060788, 0xcac)  // anchor-vtable 0x63bb34 + advManager::UpdBottomViewTown, dc 0x55df4
 TBottomViewTown::TBottomViewTown(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
@@ -802,7 +803,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
 // image-wide reference to this class's table.
 VA_COMPGEN(0x00452ad0, 0x21, SCALAR_DELETING_DTOR, TBottomViewTown)
 
-VA(0x00452b00, 0x78)  // dc 0x56fd4
+VA(0x00452b00, 0x78) MAC_ADDRESS(0x062718, 0x60)  // dc 0x56fd4
 TBottomViewTown::~TBottomViewTown()
 {
 }
@@ -850,7 +851,7 @@ TBottomViewTown::~TBottomViewTown()
 // tried: four statements, a chained assignment, an aggregate
 // initializer and a hand-written 3/0/1/2 order all give the same bytes.
 
-VA(0x00452b80, 0x620)  // anchor-vtable 0x63bb3c + advManager::UpdBottomViewKingdom, dc 0x563b8
+VA(0x00452b80, 0x620) MAC_ADDRESS(0x061434, 0x8a4)  // anchor-vtable 0x63bb3c + advManager::UpdBottomViewKingdom, dc 0x563b8
 TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
@@ -924,7 +925,7 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 // image-wide reference to this class's table.
 VA_COMPGEN(0x004531a0, 0x21, SCALAR_DELETING_DTOR, TBottomViewKingdom)
 
-VA(0x004531d0, 0x78)  // dc 0x57020
+VA(0x004531d0, 0x78) MAC_ADDRESS(0x0626b8, 0x60)  // dc 0x57020
 TBottomViewKingdom::~TBottomViewKingdom()
 {
 }
@@ -939,7 +940,7 @@ TBottomViewKingdom::~TBottomViewKingdom()
 //     general text 631 at y=20 and the player's own name at y=123, both
 //     'medfont.fnt' in font::PRIMARY, centred, with id -1.
 
-VA(0x00453250, 0x3EE)  // dc 0x56880
+VA(0x00453250, 0x3EE) MAC_ADDRESS(0x061cd8, 0x5fc)  // dc 0x56880
 TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
@@ -996,7 +997,7 @@ VA_COMPGEN(0x00453640, 0x21, SCALAR_DELETING_DTOR, TBottomViewEnemyTurn)
 VA_COMPGEN(0x00453970, 0xAE, CLASS_CTOR, basic_ostream)
 VA_COMPGEN(0x00455820, 0x10B, CLASS_CTOR, numpunct)
 
-VA(0x00453670, 0x78)  // dc 0x5706c
+VA(0x00453670, 0x78) MAC_ADDRESS(0x062658, 0x60)  // dc 0x5706c
 TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
 {
 }
@@ -1008,6 +1009,7 @@ TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
 // `gpGame->players[player_id]` twice instead, our CL re-derives both
 // addresses from gpGame every iteration. Same lever as the mouseX/mouseY
 // and glTimers hoists - the value has to be a statement before the call.
+MAC_ADDRESS(0x0622d4, 0x98)
 long TBottomViewEnemyTurn::sumMobility(long playerId)
 {
     playerData* player = &g_game->m_players[playerId];
@@ -1020,7 +1022,7 @@ long TBottomViewEnemyTurn::sumMobility(long playerId)
 // lastStepTime IS READ INTO A LOCAL BEFORE THE FIRST CALL, exactly as
 // in TBottomViewNewTurn::animate.
 
-VA(0x004536f0, 0x271)  // dc 0x56c14
+VA(0x004536f0, 0x271) MAC_ADDRESS(0x06236c, 0x2ec)  // dc 0x56c14
 void TBottomViewEnemyTurn::animate()
 {
     unsigned long lastStep = m_lastStepTime;

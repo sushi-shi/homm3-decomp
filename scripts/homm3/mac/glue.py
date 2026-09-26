@@ -14,7 +14,24 @@ from homm3.mac.pef import PEF
 from homm3.mac.relocations import Address, CallTarget
 
 
+GLUE_SIZE = 24
+
+
+def stubs(pef: PEF) -> list[tuple[Address, str, str]]:
+    """Every loader-proven import glue stub: (address, library, linkage name).
+
+    Repeated symbol names stay in this inventory; only call resolution in
+    `imports` requires a unique stub per name.
+    """
+    return [(target.address, target.import_identity.split(":", 2)[1], name)
+            for name, targets in _candidates(pef).items() for target in targets]
+
+
 def imports(pef: PEF) -> dict[str, CallTarget]:
+    return {name: values[0] for name, values in _candidates(pef).items() if len(values) == 1}
+
+
+def _candidates(pef: PEF) -> dict[str, list[CallTarget]]:
     loader = Loader(pef)
     anchor = loader.toc()
     candidates = defaultdict(list)
@@ -45,4 +62,4 @@ def imports(pef: PEF) -> dict[str, CallTarget]:
             candidates["." + symbol.name].append(CallTarget(
                 Address(section.index, offset), "import",
                 f"import:{symbol.library}:{symbol.name}"))
-    return {name: values[0] for name, values in candidates.items() if len(values) == 1}
+    return candidates

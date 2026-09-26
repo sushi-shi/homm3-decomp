@@ -59,7 +59,7 @@ void BinkManager::setPixelFormat(unsigned long redMask, unsigned long greenMask,
 // HANDLE in place of a file name.
 // Retail retains four serviceSounds calls. The Windows body is source-local
 // to soundmgr.cpp; its platform evidence comment explains that visibility.
-VA(0x0044d5a0, 0x283)  // dc 0x50a7c
+VA(0x0044d5a0, 0x283) MAC_ADDRESS(0x25d430, 0x27c)  // dc 0x50a7c
 HBINK BinkManager::getBinkFilePtr(char* filename, int binkOptions)
 {
     char name[40];
@@ -115,7 +115,7 @@ HBINK BinkManager::getBinkFilePtr(char* filename, int binkOptions)
     return 0;
 }
 
-VA(0x0044D830, 0x1A3)  // dc 0x50a84
+VA(0x0044D830, 0x1A3) MAC_ADDRESS(0x25d6ac, 0x19c)  // dc 0x50a84
 void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
                    bool useDirtyRects)
 {
@@ -164,7 +164,7 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
 }
 
 // smackmgr.cpp's VideoDrawCurrentFrame uses this namespace-qualified call.
-VA(0x0044d9e0, 0x6E)  // dc 0x50a88
+VA(0x0044d9e0, 0x6E) MAC_ADDRESS(0x25d848, 0xe8)  // dc 0x50a88
 void BinkManager::drawCurrentBinkFrame()
 {
     HBINK video;
@@ -183,7 +183,7 @@ void BinkManager::drawCurrentBinkFrame()
                       g_surfaceType);
 }
 
-VA(0x0044da50, 0x4D)  // dc 0x50a8c
+VA(0x0044da50, 0x4D) MAC_ADDRESS(0x25d930, 0x78)  // dc 0x50a8c
 void BinkManager::restartBink()
 {
     if (g_playingBink.m_bink) {
@@ -199,7 +199,7 @@ void BinkManager::restartBink()
 // paused frames remain dirty. This recovers the retail shared exit layout;
 // separate true/false stores, readiness scopes and terminal guards did not.
 // E:\gamedcs\binkmanager.cpp:252, dc 0x50a90
-VA(0x0044DAA0, 0x21A)  // dc-order-map + caller (smackmgr VideoNextFrame), dc 0x50a90
+VA(0x0044DAA0, 0x21A) MAC_ADDRESS(0x25d9a8, 0x278)  // dc-order-map + caller (smackmgr VideoNextFrame), dc 0x50a90
 void BinkManager::nextBinkFrame()
 {
     HBINK video = g_playingBink.m_bink;
@@ -250,7 +250,7 @@ void BinkManager::nextBinkFrame()
 }
 
 // E:\gamedcs\binkmanager.cpp:345 (dc 0x50a94) - namespace-qualified entry
-VA(0x0044dcc0, 0x60)  // dc 0x50a94
+VA(0x0044dcc0, 0x60) MAC_ADDRESS(0x25dc20, 0x9c)  // dc 0x50a94
 void BinkManager::closeBink()
 {
     if (g_playingBink.m_bink) {
@@ -274,7 +274,7 @@ void BinkManager::closeBink()
 // coordinates before saving the redraw position. Fragmented globals reached
 // 98.37%; scalar/POINT locals and byte-offset spellings did not recover the
 // final coordinate registers. The aggregate and getMap call do.
-VA(0x0044DD20, 0x227)  // dc-order-map + caller (smackmgr VideoPlay), dc 0x50a98
+VA(0x0044DD20, 0x227) MAC_ADDRESS(0x25dd0c, 0x240)  // dc-order-map + caller (smackmgr VideoPlay), dc 0x50a98
 int BinkManager::playBink(int id, int x, int y, int w, int h)
 {
     int vw, vh;

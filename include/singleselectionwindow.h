@@ -318,7 +318,7 @@ public:
     // The 0x7c-byte player-record stride leaves three bytes of tail alignment.
     char m_tailPadding[3];
     // E:\gamedcs\SingleSelectionWindow.h:108
-    VA(0x0057C790, 0x40)
+    VA(0x0057C790, 0x40) MAC_ADDRESS(0x16ed9c, 0x78)
     CNetPlayerHandlerPlayer()
     {
         m_heroIndex = -1;

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-import tomllib
 
 from homm3.mac.pef import PEF
 from homm3.mac.relocations import Address, CallTarget
@@ -32,16 +31,29 @@ def targets(root: Path, pef: PEF) -> dict[str, CallTarget]:
             data = add(ref.mac_symbol, ref.mac_section, ref.mac_offset, ref.mac_size)
         if hashlib.sha256(data).hexdigest() != ref.target_sha256:
             raise SourceError(f"Mac callee reference {ref.identity} has changed bytes or extent")
-    with (root / "config/mac/runtime.toml").open("rb") as stream:
-        rows = tomllib.load(stream).get("functions", [])
-    for row in rows:
-        if not row["evidence"].strip():
-            raise SourceError(f"Mac runtime symbol {row['symbol']!r} lacks evidence")
+    # Runtime labels take their extent from the verified function inventory.
+    from homm3.mac import addresses, tables
+    spans = tables.read_functions(root)
+    kinds = {label.offset: label.call_kind for label in tables.read_runtime(root)}
+    labels = [(label.name, label.offset, label.call_kind) for label in tables.read_runtime(root)]
+    labels += [(alias.name, alias.offset, kinds.get(alias.offset, "direct"))
+               for alias in tables.read_aliases(root)]
+    for name, offset, kind in labels:
+        if offset not in spans:
+            raise SourceError(f"Mac runtime symbol {name!r} has no {tables.FUNCTIONS_TSV} row")
+        if kind not in tables.CALL_KINDS:
+            raise SourceError(f"unsupported runtime call kind {kind!r}")
+        add(name, tables.CODE_SECTION, offset, spans[offset])
+        result[name] = CallTarget(result[name].address, kind)
+    # A worker row not yet moved by `homm3 mac migrate` still resolves calls.
+    for row in addresses.legacy_runtime(root):
+        if row["symbol"] in result:
+            continue
         data = add(row["symbol"], row["mac_section"], row["mac_offset"], row["mac_size"])
         if hashlib.sha256(data).hexdigest() != row["sha256"]:
             raise SourceError(f"Mac runtime symbol {row['symbol']!r} has a different target body")
         kind = row.get("call_kind", "direct")
-        if kind not in ("direct", "indirect_tvector"):
+        if kind not in tables.CALL_KINDS:
             raise SourceError(f"unsupported runtime call kind {kind!r}")
         result[row["symbol"]] = CallTarget(result[row["symbol"]].address, kind)
     for name, target in glue.imports(pef).items():

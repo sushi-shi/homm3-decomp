@@ -27,7 +27,7 @@
 static TCombatWindow* g_combatWindow;
 
 // E:\gamedcs\combatwindow.cpp:42, dc 0x69638
-VA(0x00472010, 0x1C0)  // anchor-caller SendChat + three cheat arms, dc 0x69638
+VA(0x00472010, 0x1C0) MAC_ADDRESS(0x07fef4, 0x198)  // anchor-caller SendChat + three cheat arms, dc 0x69638
 void checkCombatCheatCode(std::string& chatString)
 {
     hero* currentHero =
@@ -86,7 +86,7 @@ CCombatChatEdit::CCombatChatEdit(
 {
 }
 
-VA(0x004721d0, 0x42A)  // dc 0x69850
+VA(0x004721d0, 0x42A) MAC_ADDRESS(0x08008c, 0x52c)  // dc 0x69850
 TCombatWindow::TCombatWindow(unsigned char doPlacement)
     : heroWindow(0, 0, 800, 600, 1)
 {
@@ -143,7 +143,7 @@ TCombatWindow::TCombatWindow(unsigned char doPlacement)
     m_combatMessageStart = 0;
 }
 
-VA(0x00472600, 0xA5)  // dc 0x6a484
+VA(0x00472600, 0xA5) MAC_ADDRESS(0x08146c, 0x118)  // dc 0x6a484
 int CCombatChatEdit::onKeyPress(message* msg)
 {
     if (m_activated)
@@ -163,7 +163,7 @@ int CCombatChatEdit::onKeyPress(message* msg)
 }
 
 // E:\gamedcs\combatwindow.cpp:171
-VA(0x004726b0, 0x131)  // vtable slot + SendChat/IsMultiplayer, dc 0x6a488
+VA(0x004726b0, 0x131) MAC_ADDRESS(0x081584, 0xb0)  // vtable slot + SendChat/IsMultiplayer, dc 0x6a488
 void CCombatChatEdit::sendChat(const char* chat, int toWho)
 {
     std::string chatString(chat);
@@ -179,7 +179,7 @@ void CCombatChatEdit::sendChat(const char* chat, int toWho)
     g_combatWindow->onChatActivate(0);
 }
 
-VA(0x004727f0, 0x5E)  // dc 0x6a540
+VA(0x004727f0, 0x5E) MAC_ADDRESS(0x081634, 0x78)  // dc 0x6a540
 int CCombatChatEdit::onEscape(message msg)
 {
     m_activated = 0;
@@ -191,7 +191,7 @@ int CCombatChatEdit::onEscape(message msg)
     return 1;
 }
 
-VA(0x00472850, 0x3D)  // dc 0x6a590
+VA(0x00472850, 0x3D) MAC_ADDRESS(0x0816ac, 0x78)  // dc 0x6a590
 void CCombatChatEdit::updateScreen()
 {
     if (m_activated) {
@@ -206,7 +206,7 @@ VA_COMPGEN(0x00472890, 0x05, IMPLICIT_DTOR, CCombatChatEdit)
 // Vtable 0x63d528 slot 0.
 VA_COMPGEN(0x004728a0, 0x21, SCALAR_DELETING_DTOR, TCombatWindow)
 
-VA(0x004728d0, 0x2A)  // dc 0x69b2c
+VA(0x004728d0, 0x2A) MAC_ADDRESS(0x08063c, 0x6c)  // dc 0x69b2c
 void TCombatWindow::close(unsigned char update)
 {
     if (m_controlSubWindow) {
@@ -216,7 +216,7 @@ void TCombatWindow::close(unsigned char update)
     heroWindow::close(update);
 }
 
-VA(0x00472900, 0x14E)
+VA(0x00472900, 0x14E) MAC_ADDRESS(0x0806a8, 0x1ec)
 TCombatWindow::~TCombatWindow()
 {
     if (m_controlSubWindow)
@@ -241,6 +241,7 @@ TCombatWindow::~TCombatWindow()
 
 // Retail folds the DC helper at combatwindow.cpp:322-346 into its only caller.
 // The two scroll arrows deliberately share help row 5.
+MAC_ADDRESS(0x080894, 0xe0)
 inline int TCombatWindow::convertID2HelpID(int id)
 {
     if (id < 0)
@@ -263,7 +264,7 @@ inline int TCombatWindow::convertID2HelpID(int id)
     }
 }
 
-VA(0x00472a50, 0x124)
+VA(0x00472a50, 0x124) MAC_ADDRESS(0x080974, 0xb4)
 unsigned char TCombatWindow::processRightSelect(const message* msg)
 {
     int helpID = convertID2HelpID(msg->m_codeY);
@@ -283,13 +284,14 @@ unsigned char TCombatWindow::processRightSelect(const message* msg)
 // Dreamcast keeps this source helper out of line; retail /Ob2 folds both call
 // sites in handle_widget_hover. The control-bar vtable and the chat editor's
 // +0x6d focus byte independently prove the two member types.
+MAC_ADDRESS(0x080a28, 0x4c)
 inline void TCombatWindow::setRollover(const char* newText)
 {
     if (m_controlSubWindow && !m_chatEdit->m_hasFocus)
         m_controlSubWindow->setRollover(newText);
 }
 
-VA(0x00472b80, 0x67)
+VA(0x00472b80, 0x67) MAC_ADDRESS(0x080a74, 0x68)
 void TCombatWindow::handleWidgetHover(widget* currentWidget)
 {
     const char* newText = currentWidget->getHelpText();
@@ -305,7 +307,7 @@ void TCombatWindow::handleWidgetHover(widget* currentWidget)
         setRollover(newText);
 }
 
-VA(0x00472bf0, 0x36)
+VA(0x00472bf0, 0x36) MAC_ADDRESS(0x080adc, 0x6c)
 void TCombatWindow::clearCombatMessages()
 {
     if (m_combatMessageCount
@@ -316,7 +318,7 @@ void TCombatWindow::clearCombatMessages()
     }
 }
 
-VA(0x00472c30, 0x173)
+VA(0x00472c30, 0x173) MAC_ADDRESS(0x080b48, 0x110)
 void TCombatWindow::showMessages(long start)
 {
     if (start < m_combatMessages.size()) {
@@ -335,7 +337,7 @@ void TCombatWindow::showMessages(long start)
     }
 }
 
-VA(0x00472db0, 0x40)
+VA(0x00472db0, 0x40) MAC_ADDRESS(0x080c58, 0x58)
 void TCombatWindow::scrollRollover(long delta)
 {
     if (m_controlSubWindow) {
@@ -350,7 +352,7 @@ void TCombatWindow::scrollRollover(long delta)
     }
 }
 
-VA(0x00472df0, 0x50)  // dc 0x69f6c
+VA(0x00472df0, 0x50) MAC_ADDRESS(0x080cb0, 0x4c)  // dc 0x69f6c
 int TCombatWindow::scrollUp(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_DESELECT
@@ -361,7 +363,7 @@ int TCombatWindow::scrollUp(message& msg)
     return 0;
 }
 
-VA(0x00472e40, 0x50)  // dc 0x69f94
+VA(0x00472e40, 0x50) MAC_ADDRESS(0x080cfc, 0x4c)  // dc 0x69f94
 int TCombatWindow::scrollDown(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_DESELECT
@@ -372,7 +374,7 @@ int TCombatWindow::scrollDown(message& msg)
     return 0;
 }
 
-VA(0x00472e90, 0x35E)
+VA(0x00472e90, 0x35E) MAC_ADDRESS(0x080d48, 0x400)
 void TCombatWindow::combatMessage(const char* newText,
                                    bool keep, bool priority)
 {
@@ -421,7 +423,7 @@ void TCombatWindow::combatMessage(const char* newText,
     showMessages(m_combatMessages.size() - m_combatMessageCount);
 }
 
-VA(0x004731f0, 0x99)
+VA(0x004731f0, 0x99) MAC_ADDRESS(0x081148, 0xc0)
 void TCombatWindow::endPlacementPhase()
 {
     if (m_controlSubWindow) {
@@ -434,7 +436,7 @@ void TCombatWindow::endPlacementPhase()
         0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
 }
 
-VA(0x00473290, 0x52)  // dc 0x6a264
+VA(0x00473290, 0x52) MAC_ADDRESS(0x081208, 0x8c)  // dc 0x6a264
 void TCombatWindow::drawChatText(unsigned char update)
 {
     if (m_chatWidget) {
@@ -449,6 +451,7 @@ void TCombatWindow::drawChatText(unsigned char update)
 }
 
 // Original: TCombatWindow::DrawChatEdit; combatwindow.cpp:615, dc 0x6a2c0
+MAC_ADDRESS(0x081294, 0x84)
 void TCombatWindow::drawChatEdit(unsigned char update)
 {
     if (m_chatEdit && m_chatEdit->m_hasFocus) {
@@ -461,7 +464,7 @@ void TCombatWindow::drawChatEdit(unsigned char update)
     }
 }
 
-VA(0x004732f0, 0x59)
+VA(0x004732f0, 0x59) MAC_ADDRESS(0x0813b0, 0x44)
 void TCombatWindow::drawWindow(unsigned char update, int low, int high)
 {
     heroWindow::drawWindow(update, low, high);
@@ -472,6 +475,7 @@ void TCombatWindow::drawWindow(unsigned char update, int low, int high)
 // DC calls this ordinary member from SendChat:189 and OnEscape:201.
 // Complete expands the same conditional show/hide and subwindow redraw.
 // Keep the shared helper and widget::show/hide source calls.
+MAC_ADDRESS(0x081318, 0x98)
 void TCombatWindow::onChatActivate(unsigned char active)
 {
     if (!active) {

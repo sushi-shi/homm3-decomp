@@ -59,6 +59,9 @@ class Definition:
     internal: bool = False
     source_owner: str = ""
     owner_include_offset: int | None = None
+    # MAC_ADDRESS(offset, size) on this definition: its pinned-PEF code span.
+    mac_offset: int | None = None
+    mac_size: int | None = None
 
 
 def definition_owner(definition: Definition) -> str:
@@ -277,6 +280,10 @@ class LineIndex:
             yield self.lines[index]
 
 
+# Standalone Mac address lines sit between a definition and its comments.
+MAC_ANNOTATION_PREFIXES = ('MAC_ADDRESS(', 'MAC_COMPGEN_ADDRESS(')
+
+
 def attached_prefix(raw: str | LineIndex, start: int) -> list[str]:
     # Only the attached comment/declarator prefix is eligible. Never carry an
     # origin across another definition (the old link-order parser did that).
@@ -288,7 +295,7 @@ def attached_prefix(raw: str | LineIndex, start: int) -> list[str]:
     for line in index.preceding(start):
         line = line.rstrip('\r\n')
         text = line.strip()
-        if text and not text.startswith(('//', '#', 'VA(')):
+        if text and not text.startswith(('//', '#', 'VA(', *MAC_ANNOTATION_PREFIXES)):
             break
         prefix.append(line)
     prefix.reverse()
@@ -446,7 +453,7 @@ def instance_annotations(raw: str, start: int, declaration: int, index: LineInde
     index = index or LineIndex(raw)
     for line in index.preceding(start):
         stripped = line.strip()
-        if stripped and not stripped.startswith(('//', 'VA(')):
+        if stripped and not stripped.startswith(('//', 'VA(', *MAC_ANNOTATION_PREFIXES)):
             break
         if stripped.startswith('VA(') and '{' in source.mask_lexical_noise(line):
             break  # a preceding one-line definition is not this claim's prefix
@@ -747,6 +754,8 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None
                      if c.kind == k.ANNOTATE_ATTR]
             vas = [int(m.group(1), 16) for a in attrs
                    if (m := re.fullmatch(r'va:(0[xX][0-9a-fA-F]+) size:.*', a))]
+            macs = [(int(m.group(1), 16), int(m.group(2), 0)) for a in attrs
+                    if (m := re.fullmatch(r'mac:(0[xX][0-9a-fA-F]+) size:(0[xX][0-9a-fA-F]+|\d+)', a))]
             member = cursor.kind in {k.CXX_METHOD, k.CONSTRUCTOR, k.DESTRUCTOR,
                                      k.CONVERSION_FUNCTION}
             if cursor.kind == k.CXX_METHOD and cursor.is_static_method():
@@ -797,7 +806,9 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None
                 source_owner=fragments.get(relative, ('', None))[0],
                 owner_include_offset=fragments.get(relative, ('', None))[1],
                 internal=(cursor.kind == k.FUNCTION_DECL
-                          and cursor.storage_class == cindex.StorageClass.STATIC)))
+                          and cursor.storage_class == cindex.StorageClass.STATIC),
+                mac_offset=macs[0][0] if len(macs) == 1 else None,
+                mac_size=macs[0][1] if len(macs) == 1 else None))
             if instances:
                 instance_requests.append((first, cursor.location.offset))
                 extras = []
