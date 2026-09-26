@@ -379,6 +379,7 @@ inline long valueOfBlackMarket(const hero* currentHero,
 // Original: buy_special_building; philai.cpp:445, dc 0x10dcc4.
 // Complete expands this ordinary helper into aiEnterTown. Dreamcast records
 // the helper call immediately before buy_artifacts at lines 778/779.
+// Mac retains the player-id aiResourceCost overload in all five cost arms.
 MAC_ADDRESS(0x13ed50, 0x324)
 static void buySpecialBuilding(const hero* currentHero, town* currentTown)
 {
@@ -391,7 +392,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
             int value = currentHero->getValueOfKnowledge();
             int owner = currentHero->m_owner;
-            if (value > aiResourceCost(&g_game->m_players[owner], cost))
+            if (value > aiResourceCost(owner, cost))
                 currentTown->buyBuilding(EXTRA_2_ID);
             break;
         }
@@ -401,7 +402,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
             int value = currentHero->getValueOfPower();
             int owner = currentHero->m_owner;
-            if (value > aiResourceCost(&g_game->m_players[owner], cost))
+            if (value > aiResourceCost(owner, cost))
                 currentTown->buyBuilding(EXTRA_2_ID);
             break;
         }
@@ -410,8 +411,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
                 break;
             int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
             int owner = currentHero->m_owner;
-            int resourceCost = aiResourceCost(
-                &g_game->m_players[owner], cost);
+            int resourceCost = aiResourceCost(owner, cost);
             if (currentHero->m_turnExperienceToRvRatio * 1000.0f
                 > resourceCost)
                 currentTown->buyBuilding(EXTRA_2_ID);
@@ -422,8 +422,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
                 break;
             int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
             long experience = currentHero->getExperienceIncrement();
-            int resourceCost = aiResourceCost(
-                &g_game->m_players[currentHero->m_owner], cost);
+            int resourceCost = aiResourceCost(currentHero->m_owner, cost);
             if (static_cast<float>(experience)
                 * currentHero->m_turnExperienceToRvRatio
                 > resourceCost)
@@ -435,8 +434,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
                 break;
             int* cost = currentTown->getBuildCostArray(SPECIAL_BUILDING_ID);
             long experience = currentHero->getExperienceIncrement();
-            int resourceCost = aiResourceCost(
-                &g_game->m_players[currentHero->m_owner], cost);
+            int resourceCost = aiResourceCost(currentHero->m_owner, cost);
             if (static_cast<float>(experience)
                 * currentHero->m_turnExperienceToRvRatio
                 > resourceCost)
@@ -1044,8 +1042,8 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
                 * currentHero->m_turnExperienceToRvRatio);
     }
 
-    value += aiResourceCost(
-        &g_game->m_players[currentHero->m_owner], blackBox->m_resQty);
+    // Mac 0:0x142378 retains the player-id wrapper.
+    value += aiResourceCost(currentHero->m_owner, blackBox->m_resQty);
 
     int primarySkillValue = static_cast<int>(
         static_cast<float>(currentHero->getExperienceIncrement())
