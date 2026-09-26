@@ -36,11 +36,12 @@ font::font(const char* name, const font::TFontSpec& fontspec, int dsize,
         memcpy(m_data, d, dsize);
 }
 
+// Mac 0:0xc8dc8 uses array delete for the new[] glyph buffer.
 VA(0x004b5110, 0x67) MAC_ADDRESS(0x0c8d94, 0x7c)  // dc 0xa1c94
 font::~font()
 {
     if (m_data)
-        delete m_data;
+        delete[] m_data;
 }
 
 // E:\gamedcs\font.cpp:56..76. Original name: GetColor.

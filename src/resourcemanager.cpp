@@ -992,12 +992,13 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
     stream->read(&spec, sizeof(spec));
 
     int dataSize = fileSize - sizeof(spec);
-    std::auto_ptr<unsigned char> data(new unsigned char[dataSize]);
+    // Mac retains TAutoArrayPtr array cleanup at 0:0x1536a0/1536e4/1537a4.
+    TAutoArrayPtr<unsigned char> data(new unsigned char[dataSize]);
     stream->read(data.get(), dataSize);
 
     std::auto_ptr<font> result(
         new font(name, spec, dataSize, data.get()));
-    data = std::auto_ptr<unsigned char>(0);
+    data = TAutoArrayPtr<unsigned char>(0);
 
     TPalette16* palette = getPalette("game.pal");
     if (palette) {
@@ -1092,7 +1093,7 @@ TTextResource* ResourceManager::loadTextData(const char* name,
                                              TAbstractFile* stream,
                                              int fileSize)
 {
-    std::auto_ptr<char> data(new char[fileSize]);
+    TAutoArrayPtr<char> data(new char[fileSize]);
     stream->read(data.get(), fileSize);
     return new TTextResource(name, fileSize, data.get());
 }
@@ -1160,7 +1161,7 @@ MAC_ADDRESS(0x153b2c, 0xb4)
 TSpreadsheetResource* ResourceManager::loadSpreadsheetData(
     const char* name, TAbstractFile* stream, int fileSize)
 {
-    std::auto_ptr<char> data(new char[fileSize]);
+    TAutoArrayPtr<char> data(new char[fileSize]);
     stream->read(data.get(), fileSize);
     return new TSpreadsheetResource(name, fileSize, data.get());
 }
