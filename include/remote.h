@@ -253,6 +253,13 @@ enum ENetMessageRecipient {
     NET_MESSAGE_RECIPIENT_ALL = 0x7f
 };
 
+// DirectPlay's DPID_ALLPLAYERS is zero; the Mac network build uses -1.
+#if defined(HOMM3_TARGET_MAC)
+static const unsigned long NET_BROADCAST_DPID = 0xffffffffUL;
+#else
+static const unsigned long NET_BROADCAST_DPID = 0;
+#endif
+
 // Retail vtable 0x640e30. Slots 0..18 are textEntryWidget's exact prefix;
 // Dreamcast supplies the seven introduced method names at slots 19..24 and
 // proves that this class adds no data (its 0x70-byte extent equals retail's

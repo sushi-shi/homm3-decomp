@@ -8604,7 +8604,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                             m_players[toWho].m_dpid);
                         m_players[toWho].clearNetInfo();
                         g_playerDrop = 1;
-                        transmitRemoteDataDPID(&destroyMsg, 0,
+                        transmitRemoteDataDPID(&destroyMsg, NET_BROADCAST_DPID,
                                                false, true);
                         return 0;
                     } else {
@@ -8617,7 +8617,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                                 handlePlayerDrop(killDPID);
                                 CDestroyPlayerMsg destroyMsg(killDPID);
                                 m_players[i].clearNetInfo();
-                                transmitRemoteDataDPID(&destroyMsg, 0,
+                                transmitRemoteDataDPID(&destroyMsg, NET_BROADCAST_DPID,
                                                        false, true);
                             }
                         }
@@ -8808,7 +8808,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                     g_dPlay->destroyPlayer(m_players[fromWho].m_dpid);
                     g_dPlay->handlePlayerDrop(m_players[fromWho].m_dpid);
                     CDestroyPlayerMsg msg(killDPID);
-                    transmitRemoteDataDPID(&msg, 0, false, true);
+                    transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
                 }
                 delete[] data;
                 delete[] blockReceived;

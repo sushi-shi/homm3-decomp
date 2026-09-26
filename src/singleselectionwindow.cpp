@@ -2912,7 +2912,7 @@ void TSingleSelectionWindow::setupLoadGameMode()
                 getWidget(179)->hide();
 
             CNewPlayerMsg msg(&g_thisNetPlayerInfo, m_gameVersion);
-            transmitRemoteDataDPID(&msg, 0, false, true);
+            transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
 
             CAutoArray<CDPlayPlayer> playerArray;
             g_dPlay->enumPlayers(&playerArray, 0, 0);
@@ -2974,7 +2974,7 @@ void TSingleSelectionWindow::setupNewGameMode()
                 getWidget(179)->hide();
 
             CNewPlayerMsg msg(&g_thisNetPlayerInfo, m_gameVersion);
-            transmitRemoteDataDPID(&msg, 0, false, true);
+            transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
 
             CAutoArray<CDPlayPlayer> playerArray;
             g_dPlay->enumPlayers(&playerArray, 0, 0);
@@ -3227,7 +3227,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
             if (m_transferHeaders.size() == 0) {
                 if (g_remoteOn && !isHost()) {
                     CNetMsg msg(RS_HEADERS_REQUEST, sizeof(CNetMsg));
-                    transmitRemoteDataDPID(&msg, 0, false, true);
+                    transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
                 } else {
                     getHeaders(&m_transferHeaders);
                 }
@@ -4714,7 +4714,7 @@ void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
     }
     if (g_remoteOn != 0 && isHost() && sendSortMsg != 0) {
         CSortMapsMsg msg(how, m_sortDirection);
-        transmitRemoteDataDPID(&msg, 0, false, true);
+        transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
     }
     if (m_selectionHeaders.size() != 0)
         updateGameVars();
@@ -4898,7 +4898,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
         if (g_remoteOn && !m_saveMode && isHost()
                 && !m_randomMapSelected) {
             CScrollMsg scrollMsg(m_currentMap, m_currentIndex);
-            transmitRemoteDataDPID(&scrollMsg, 0, false, true);
+            transmitRemoteDataDPID(&scrollMsg, NET_BROADCAST_DPID, false, true);
         }
     }
     if (isHost()) {
@@ -5020,7 +5020,7 @@ void TSingleSelectionWindow::setFilter(int size)
     update();
     if (g_remoteOn != 0 && isHost()) {
         CSetFilterMsg filterMsg(size);
-        transmitRemoteDataDPID(&filterMsg, 0, false, true);
+        transmitRemoteDataDPID(&filterMsg, NET_BROADCAST_DPID, false, true);
     }
 }
 
@@ -5301,7 +5301,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         case SSW_FILTER_DURATION_ANY:
         case SSW_RANDOM_MAPS: {
             CClickMsg netMsg(msg->m_codeY);
-            transmitRemoteDataDPID(&netMsg, 0, false, true);
+            transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
             break;
         }
         }
@@ -5354,7 +5354,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
             townType = pickPrevAlignment(legal, townType);
             thisPlayer->m_townIndex = townType;
             CTownUpdateMsg netMsg(i, townType);
-            transmitRemoteDataDPID(&netMsg, 0, false, true);
+            transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
             updateTown(i,
                        static_cast<TTownType>(thisPlayer->m_townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
                        0);
@@ -5383,7 +5383,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
             townType = pickNextAlignment(legal, townType);
             thisPlayer->m_townIndex = townType;
             CTownUpdateMsg netMsg(i, townType);
-            transmitRemoteDataDPID(&netMsg, 0, false, true);
+            transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
             updateTown(i,
                        static_cast<TTownType>(thisPlayer->m_townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
                        0);
@@ -5401,7 +5401,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_HERO_PREV_LAST: {
         if (!isHost()) {
             CRequestHeroFaceMsg netMsg(-1);
-            transmitRemoteDataDPID(&netMsg, 0, false, true);
+            transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
         } else {
             int clickPos = msg->m_codeY - SSW_HERO_PREV_FIRST;
             CNetPlayerHandlerPlayer* thisPlayer =
@@ -5410,7 +5410,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                 getHeroFace(-1, thisPlayer);
                 CRequestHeroFaceReplyMsg netMsg(
                     thisPlayer->m_playerPos, thisPlayer->m_heroIndex);
-                transmitRemoteDataDPID(&netMsg, 0, false, true);
+                transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
                 drawHeroAdvancedOption(clickPos, 1, -1);
             }
         }
@@ -5426,7 +5426,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_HERO_NEXT_LAST: {
         if (!isHost()) {
             CRequestHeroFaceMsg netMsg(1);
-            transmitRemoteDataDPID(&netMsg, 0, false, true);
+            transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
         } else {
             int clickPos = msg->m_codeY - SSW_HERO_NEXT_FIRST;
             CNetPlayerHandlerPlayer* thisPlayer =
@@ -5435,7 +5435,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                 getHeroFace(1, thisPlayer);
                 CRequestHeroFaceReplyMsg netMsg(
                     thisPlayer->m_playerPos, thisPlayer->m_heroIndex);
-                transmitRemoteDataDPID(&netMsg, 0, false, true);
+                transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
                 drawHeroAdvancedOption(clickPos, 1, -1);
             }
         }
@@ -5745,7 +5745,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                 thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_GOLD;
             if (g_remoteOn) {
                 CSetAGRMsg msg(i, thisPlayer->m_startBonusIndex);
-                transmitRemoteDataDPID(&msg, 0, false, true);
+                transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
             }
             drawHeroAdvancedOption(i, 1, -1);
         }
@@ -5777,7 +5777,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                 thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_RANDOM;
             if (g_remoteOn) {
                 CSetAGRMsg msg(i, thisPlayer->m_startBonusIndex);
-                transmitRemoteDataDPID(&msg, 0, false, true);
+                transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
             }
             drawHeroAdvancedOption(i, 1, -1);
         }
@@ -7070,7 +7070,7 @@ void TSingleSelectionWindow::onRequestHeroFaceMsg(
         return;
     getHeroFace(msg->m_which, player);
     CRequestHeroFaceReplyMsg reply(player->m_playerPos, player->m_heroIndex);
-    transmitRemoteDataDPID(&reply, 0, false, true);
+    transmitRemoteDataDPID(&reply, NET_BROADCAST_DPID, false, true);
     onRequestHeroFaceReplyMsg(&reply, inPopup);
 }
 
@@ -7131,7 +7131,7 @@ unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
     g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
     displayChat();
     CNewHostMsg msg(g_thisNetPlayerInfo.m_dpid);
-    transmitRemoteDataDPID(&msg, 0, false, true);
+    transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
     m_scenarioOptionsStarted = 0;
     m_inScenarioOptions = 0;
     g_notifyNoSaved = 0;
@@ -7323,7 +7323,7 @@ void TSingleSelectionWindow::sendPlayerFaces()
         if (player->isHuman() && player->m_playerPos != -1) {
             CRequestHeroFaceReplyMsg msg(player->m_playerPos,
                                          player->m_heroIndex);
-            transmitRemoteDataDPID(&msg, 0, false, true);
+            transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
         }
     }
 }
@@ -7360,7 +7360,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         std::string name = getRandomMapName();
         if (g_remoteOn) {
             CNetMsg msg(RS_GAME_TRANSMIT_PENDING, sizeof(CNetMsg));
-            transmitRemoteDataDPID(&msg, 0, false, true);
+            transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
         }
         if (!generateRandomMap(name.c_str()))
             return 0;
@@ -7479,7 +7479,7 @@ unsigned char TSingleSelectionWindow::beginSavedGame()
 
     if (g_remoteOn) {
         CLaunchingGameMsg msg;
-        transmitRemoteDataDPID(&msg, 0, false, true);
+        transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
     }
 
     int monthType = g_monthType;
@@ -7545,7 +7545,7 @@ bool TSingleSelectionWindow::beginNewGame()
 
     if (g_remoteOn) {
         CLaunchingGameMsg msg;
-        transmitRemoteDataDPID(&msg, 0, false, true);
+        transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
     }
 
     g_game->setupOrigData();
