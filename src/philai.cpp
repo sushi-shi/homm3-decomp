@@ -2101,10 +2101,12 @@ static long valueOfUniversity(const hero* currentHero,
     long total = 0;
     for (int i = 0; i < 4; i++) {
         int skill = university->m_skills[i];
-        if (traits->m_gainSecondarySkillChance[skill]
-            && currentHero->getSecondarySkill(TSecondarySkill(skill)) <= 0
-            && wantsSkill(currentHero, TSecondarySkill(skill), 1))
-            total += getSkillValue(currentHero, TSecondarySkill(skill), 1);
+        if (traits->m_gainSecondarySkillChance[skill]) {
+            if (currentHero->getSecondarySkill(TSecondarySkill(skill)) <= 0) {
+                if (wantsSkill(currentHero, TSecondarySkill(skill), 1))
+                    total += getSkillValue(currentHero, TSecondarySkill(skill), 1);
+            }
+        }
     }
     return total;
 }
