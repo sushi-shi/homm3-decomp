@@ -1975,7 +1975,8 @@ void combatManager::checkChangeHighlighter(int currentIndex)
             currentArmy->m_currFrameType = cs_wait;
             currentArmy->m_currFrameIndex = 0;
         }
-        markCreatureEffect(currentArmy->getOwningSide(), currentArmy->m_bitIndex);
+        // Direct field access preserves retail's two argument load registers.
+        markCreatureEffect(currentArmy->m_combatSide, currentArmy->m_bitIndex);
     }
 
     drawFrame(1, 1, 0, 0, 1, 0);

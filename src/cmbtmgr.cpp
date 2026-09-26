@@ -3036,13 +3036,15 @@ void combatManager::removeArmyFromGrid(const army& a)
 VA(0x004687c0, 0x99)  // dc 0x623cc
 void combatManager::placeArmyInGrid(const army& a, int hex)
 {
-    m_cells[hex].m_armySide = static_cast<signed char>(a.getOwningSide());
+    // Retail narrows the owning-side field at both stores; the inline
+    // getOwningSide accessor makes VC6 load its full integer result instead.
+    m_cells[hex].m_armySide = static_cast<signed char>(a.m_combatSide);
     m_cells[hex].m_armySlot = static_cast<signed char>(a.m_bitIndex);
     m_cells[hex].m_partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
         m_cells[hex].m_partOfDouble = a.m_facing == 0;
         int second = hex + a.offsetToFront(-1);
-        m_cells[second].m_armySide = static_cast<signed char>(a.getOwningSide());
+        m_cells[second].m_armySide = static_cast<signed char>(a.m_combatSide);
         m_cells[second].m_armySlot = static_cast<signed char>(a.m_bitIndex);
         m_cells[second].m_partOfDouble = a.m_facing != 0;
     }

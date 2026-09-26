@@ -276,7 +276,8 @@ unsigned char VictoryConditionStruct::isGrailTarget(town* thisTown)
 {
     type_point anyTownLoc(-1, -1, -1);
     type_point grailTownLoc(m_townX, m_townY, m_townZ);
-    type_point thisTownLoc = thisTown->getLocation();
+    type_point thisTownLoc(thisTown->m_mapX, thisTown->m_mapY,
+                          thisTown->m_mapZ);
 
     if (thisTownLoc == grailTownLoc
         || anyTownLoc == grailTownLoc)
@@ -668,7 +669,8 @@ unsigned char LossConditionStruct::checkForDefeatedTownLoss(
 {
     if (m_type == LOSS_CONDITION_LOSE_TOWN) {
         type_point target(m_townX, m_townY, m_townZ);
-        type_point lost = lostTown->getLocation();
+        type_point lost(lostTown->m_mapX, lostTown->m_mapY,
+                        lostTown->m_mapZ);
 
         if (target == lost) {
             m_playerLoser = static_cast<signed char>(oldOwner);
