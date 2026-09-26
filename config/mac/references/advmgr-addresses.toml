@@ -1088,3 +1088,12 @@ mac_offset = 0x136f8
 mac_size = 0x78
 target_sha256 = "e7a7fa76b8fdf93451998594427c817a69f3b9d5220a867d4f5508901bcbb868"
 evidence = "Dreamcast names advManager::GetCell(int,int,int) at dc:0x14b08. Mac drawAdvObj calls 0x136f8 at 0x1160c with this and x/y/z; the body checks map bounds and returns either the first map cell or the indexed 0x22-byte cell. Windows expands this ordinary helper. BLR 0x1376c precedes the next function at 0x13770."
+
+[[helpers]]
+source_helper = "type_cell_adjuster::type_cell_adjuster"
+unit = "advmgr"
+mac_section = 0
+mac_offset = 0xbf14
+mac_size = 0x14
+target_sha256 = "1f57a9e7fd6ea30160ea07cfe7ac4e4a42647e04ba9018c22c46348019cde391"
+evidence = "Three zero stores at this+0,+4,+8 followed by BLR; next entry is the reviewed destructor at 0xbf28. setRolloverText calls at 0xc2a4 and quickInfo at 0x147cc construct their ordinary type_cell_adjuster local. The existing canonical constructor already supplies this retained Mac boundary."
