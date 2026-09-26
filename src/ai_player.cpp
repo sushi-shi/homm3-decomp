@@ -1467,6 +1467,9 @@ static void markValues(long* fullValue, long totalValue,
 // Restoring these canonical calls moves the current Windows comparison from
 // 84.31% to 84.78% and raises exact CFG blocks from 8 to 30; the changed
 // inliner state additionally retains game::getHero in valueOfBuilding.
+// Mac passes building IDs directly: the prior memcpy conversions and their
+// temporary-only scopes were reconstruction scaffolding. Ordinary enum casts
+// retain all game helper calls and recover Windows 84.7770% -> 93.6425%.
 VA(0x0042ae00, 0x718) MAC_ADDRESS(0x02ed58, 0x420)  // retail callee set + arity, dc 0x30d6c
 unsigned char type_AI_player::purchaseBuilding(
     unsigned char* prohibitedCreatures)
@@ -1490,37 +1493,23 @@ unsigned char type_AI_player::purchaseBuilding(
         memset(extraCosts, 0, sizeof(extraCosts));
         int building;
         for (building = 0; building < MAX_BUILDING_TYPE; ++building) {
-            {
-                type_building_id buildingId;
-                int ordinal = building;
-                memcpy(&buildingId, &ordinal, sizeof buildingId);
-                if (!currentTown->isLegalBuilding(buildingId)
-                    || currentTown->hasBuilding(building, true)
-                    || building == HOLY_GRAIL_ID) {
-                    basicValue[building] = -1;
-                    continue;
-                }
+            if (!currentTown->isLegalBuilding(static_cast<type_building_id>(building))
+                || currentTown->hasBuilding(building, true)
+                || building == HOLY_GRAIL_ID) {
+                basicValue[building] = -1;
+                continue;
             }
-            {
-                type_building_id buildingId;
-                int ordinal = building;
-                memcpy(&buildingId, &ordinal, sizeof buildingId);
-                basicValue[building] = valueOfBuilding(
-                    currentTown, buildingId,
-                    prohibitedCreatures, extraCosts[building]);
-            }
+            basicValue[building] = valueOfBuilding(
+                currentTown, static_cast<type_building_id>(building),
+                prohibitedCreatures, extraCosts[building]);
         }
 
         memset(fullValue, 0, sizeof(fullValue));
         for (building = 0; building < MAX_BUILDING_TYPE; ++building) {
             if (basicValue[building] <= 0)
                 continue;
-            {
-                type_building_id buildingId;
-                int ordinal = building;
-                memcpy(&buildingId, &ordinal, sizeof buildingId);
-                requirements = getRequirements(currentTown, buildingId);
-            }
+            requirements = getRequirements(
+                currentTown, static_cast<type_building_id>(building));
             if (requirements == 0)
                 continue;
             getFullCost(currentTown, extraCosts[building],
@@ -1546,12 +1535,7 @@ unsigned char type_AI_player::purchaseBuilding(
         return 0;
 
     int cost[7];
-    {
-        type_building_id buildingId;
-        int ordinal = bestBuilding;
-        memcpy(&buildingId, &ordinal, sizeof buildingId);
-        bestTown->getBuildCost(buildingId, cost);
-    }
+    bestTown->getBuildCost(static_cast<type_building_id>(bestBuilding), cost);
     tradeResources(cost, 1);
     if (g_game->townAlreadyBuiltOn(bestTown->m_id))
         return 0;
@@ -1567,13 +1551,8 @@ unsigned char type_AI_player::purchaseBuilding(
                 return 0;
         }
     }
-    {
-        type_building_id buildingId;
-        int ordinal = bestBuilding;
-        memcpy(&buildingId, &ordinal, sizeof buildingId);
-        if (!bestTown->buyBuilding(buildingId))
-            return 0;
-    }
+    if (!bestTown->buyBuilding(static_cast<type_building_id>(bestBuilding)))
+        return 0;
     calculateDemand();
     return 1;
 }
