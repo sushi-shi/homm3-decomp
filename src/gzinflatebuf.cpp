@@ -45,6 +45,8 @@ public:
 // table rather than two literals.
 DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 
+// Mac uses two 4096-byte windows (8192-byte allocation); Windows uses two
+// 512-byte windows. Refill, output bounds and CRC spans follow that size.
 // 0x4d5fd0: refill next_in from the source streambuf when it is empty and
 // hand back the next byte, or -1 at end of source.
 VA(0x004d5fd0, 0x74) MAC_ADDRESS(0x220a18, 0xb0)
