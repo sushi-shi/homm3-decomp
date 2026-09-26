@@ -858,6 +858,9 @@ void type_record_player_death::undo()
 {
 }
 
+// Mac default construction calls the base, then initializes the change vector.
+MAC_COMPGEN_ADDRESS(0x0c1634, 0x5c, CLASS_CTOR, type_record_shroud)
+
 VA_COMPGEN(0x0049bbd0, 0x21, SCALAR_DELETING_DTOR, type_record_shroud)
 
 // DC0x8f398 has only vector/base cleanup, supplied by the implicit C++
