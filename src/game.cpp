@@ -2475,18 +2475,6 @@ void applySavedGameHeader(const SavedGameHeader& saved)
     memcpy(g_wasHuman, saved.m_humanPlayer, sizeof(saved.m_humanPlayer));
 }
 
-// Complete's packed bit readers use unsigned byte indexing. This inferred
-// decoder owns assignment into an existing bitset; callers retain their stream
-// reads and any later copy into the live game arrays. Campaign's returned-value
-// reader and mapcell's signed division loops retain their distinct operations.
-template <size_t N>
-void decodePackedBits(const unsigned char* packed, std::bitset<N>& result)
-{
-    for (unsigned int index = 0; index < N; ++index) {
-        result[index] = (packed[index >> 3] & (1 << (index & 7))) != 0;
-    }
-}
-
 // Original: game::Load; game.cpp:3026, dc 0xa83d0. Complete loads a
 // SavedGameHeader value and restores the acting-player and human-player state
 // before the map pools. DC's gzread interface became TAbstractFile::read.
@@ -2604,10 +2592,7 @@ int game::load(TAbstractFile* infile)
 
     if (saved.m_version >= 31) {
         for (i = 0; i < HERO_COUNT; ++i) {
-            std::bitset<8> poolMap;
-            unsigned char poolBits[1];
-            readValue(infile, poolBits);
-            decodePackedBits(poolBits, poolMap);
+            std::bitset<8> poolMap = readPackedBits<8>(infile);
             m_heroPoolMap[i] = poolMap;
         }
     }
