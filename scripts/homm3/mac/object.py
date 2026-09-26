@@ -192,7 +192,11 @@ def parse_code_hunks(output: str) -> list[CodeHunk]:
 
 
 def select_hunk(output: str, symbol: str) -> CodeHunk:
-    matches = [hunk for hunk in parse_code_hunks(output) if hunk.name == symbol]
+    return select_parsed_hunk(parse_code_hunks(output), symbol)
+
+
+def select_parsed_hunk(hunks, symbol: str) -> CodeHunk:
+    matches = [hunk for hunk in hunks if hunk.name == symbol]
     if len(matches) != 1:
         raise ObjectError(f"expected one code hunk for {symbol!r}, found {len(matches)}")
     return matches[0]

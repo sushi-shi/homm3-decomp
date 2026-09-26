@@ -29,6 +29,29 @@ class TestMacDiscovery(unittest.TestCase):
         self.assertEqual(data["toc_uses"][0]["offset"], 12)
         self.assertTrue(data["toc_uses"][0]["via_pointer"])
 
+    def test_xrefs_use_reverse_indexes_without_rescanning_collections(self):
+        class NoScan(list):
+            def __iter__(self):
+                raise AssertionError('xref query rescanned the corpus')
+
+        index = self.index()
+        expected_code = index.xrefs(Address(0, 0x20))
+        expected_data = index.xrefs(Address(1, 0x50))
+        index.branches = NoScan(index.branches)
+        index.toc_loads = NoScan(index.toc_loads)
+        index.loader.pointers = None
+        self.assertEqual(index.xrefs(Address(0, 0x20)), expected_code)
+        self.assertEqual(index.xrefs(Address(1, 0x50)), expected_data)
+
+    def test_indirect_links_are_indexed_in_the_instruction_pass(self):
+        pef = self.index().pef
+        image = bytearray(pef.data)
+        start = pef.section(0).file_offset
+        image[start + 20:start + 24] = bytes.fromhex('4e800021')  # blrl
+        index = Index(PEF(bytes(image)))
+        self.assertEqual(index.indirect_branches, [Address(0, 20)])
+        self.assertEqual(index.census['indirect_link_instructions'], 1)
+
     def test_literal_and_member_searches_keep_leads_unadmitted(self):
         index = self.index()
         self.assertEqual(index.find_bytes(b"table"), [Address(1, 0x50)])

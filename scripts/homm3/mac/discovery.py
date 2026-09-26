@@ -5,7 +5,7 @@ boundaries or an exact function census.
 """
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, defaultdict
 import re
 
 from homm3.mac.loader import Loader
@@ -26,6 +26,7 @@ class Index:
         self.loader = Loader(pef)
         self.toc = self.loader.toc()
         self.branches = []
+        self.indirect_branches = []
         self.toc_loads = []
         self.memory = []
         self.census = Counter()
@@ -59,6 +60,7 @@ class Index:
                     self.census[kind + "_sites"] += 1
                 elif op == 19 and link and ((word >> 1) & 0x3ff) in (16, 528):
                     self.census["indirect_link_instructions"] += 1
+                    self.indirect_branches.append(at)
                 if 32 <= op <= 55:
                     displacement = word & 0xffff
                     if displacement & 0x8000:
@@ -76,20 +78,32 @@ class Index:
         self.census["distinct_link_destinations"] = len({
             target for _, target, kind in self.branches if kind == "linked_branch"})
 
+        self.branches_by_target = defaultdict(list)
+        self.pointers_by_target = defaultdict(list)
+        self.toc_by_target = defaultdict(list)
+        for at, target, kind in self.branches:
+            self.branches_by_target[target].append((at, kind))
+        for at, target in self.loader.pointers.items():
+            self.pointers_by_target[target].append(at)
+        for at, target in self.toc_loads:
+            self.toc_by_target[target].append(at)
+
     def xrefs(self, target: Address) -> dict:
         self.pef.read(target.section, target.offset, 1)
-        pointers = [at for at, destination in self.loader.pointers.items() if destination == target]
+        pointers = self.pointers_by_target.get(target, [])
         pointer_set = set(pointers)
+        toc_uses = [(at, destination) for destination in {target, *pointer_set}
+                    for at in self.toc_by_target.get(destination, [])]
+        toc_uses.sort(key=lambda row: (row[0].section, row[0].offset))
         return {
             "target": {"section": target.section, "offset": target.offset},
             "code_branches": [{"section": at.section, "offset": at.offset, "kind": kind}
-                              for at, destination, kind in self.branches if destination == target],
+                              for at, kind in self.branches_by_target.get(target, [])],
             "loader_pointers": [{"section": at.section, "offset": at.offset} for at in pointers],
             "toc_uses": [{"section": at.section, "offset": at.offset,
                           "via_pointer": destination in pointer_set,
                           "toc_section": destination.section, "toc_offset": destination.offset}
-                         for at, destination in self.toc_loads
-                         if destination == target or destination in pointer_set]}
+                         for at, destination in toc_uses]}
 
     def find_bytes(self, pattern: bytes, section: int | None = None) -> list[Address]:
         if not pattern:

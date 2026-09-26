@@ -71,17 +71,11 @@ def build(root, index, source, *, complete_source_scope):
                                         and caller != target.offset):
             calls.append(row)
     indirect_sites = []
-    for section in index.pef.sections[:index.pef.instantiated]:
-        if section.kind != 0:
-            continue
-        code = index.pef.contents(section.index)
-        for offset in range(0, len(code) - 3, 4):
-            word = int.from_bytes(code[offset:offset + 4], 'big')
-            if word >> 26 == 19 and word & 1 and (word >> 1) & 0x3ff in (16, 528):
-                owner = containing(Address(section.index, offset))
-                indirect_sites.append({'site': f'mac:{section.index}:0x{offset:x}',
-                    'caller': function(owner) if owner is not None else None,
-                    'state': 'indirect_destination_unresolved'})
+    for at in index.indirect_branches:
+        owner = containing(at)
+        indirect_sites.append({'site': f'mac:{at.section}:0x{at.offset:x}',
+            'caller': function(owner) if owner is not None else None,
+            'state': 'indirect_destination_unresolved'})
     counts = Counter((r['caller']['mac'] if r['caller'] else None, r['callee']['mac']) for r in calls)
     outgoing = defaultdict(list)
     for edge in source['edges']:

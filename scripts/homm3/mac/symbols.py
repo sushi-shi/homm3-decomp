@@ -9,7 +9,7 @@ from homm3.mac.relocations import Address, CallTarget
 from homm3.mac.source import SourceError, load_pairs
 
 
-def targets(root: Path, pef: PEF) -> dict[str, CallTarget]:
+def targets(root: Path, pef: PEF, *, pairs=None, refs=None) -> dict[str, CallTarget]:
     from homm3.mac import glue, references
     result = {}
 
@@ -20,11 +20,11 @@ def targets(root: Path, pef: PEF) -> dict[str, CallTarget]:
         result[symbol] = CallTarget(Address(section, offset))
         return data
 
-    for pair in load_pairs(root):
+    for pair in (load_pairs(root) if pairs is None else pairs):
         data = add(pair.mac_symbol, pair.mac_section, pair.mac_offset, pair.mac_size)
         if pair.target_sha256 and hashlib.sha256(data).hexdigest() != pair.target_sha256:
             raise SourceError(f"Mac pair {pair.retail_va:#x} has changed target bytes or extent")
-    for ref in references.load(root):
+    for ref in (references.load(root, pairs=pairs) if refs is None else refs):
         if ref.mac_symbol is None or ref.mac_symbol in result:
             data = pef.code(ref.mac_section, ref.mac_offset, ref.mac_size)
         else:

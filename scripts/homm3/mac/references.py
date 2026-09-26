@@ -34,12 +34,12 @@ class Reference:
         return f"0x{self.retail_va:08x}" if self.retail_va is not None else f"source:{self.unit}:{self.source_helper}"
 
 
-def load(root: Path) -> list[Reference]:
+def load(root: Path, *, pairs=None) -> list[Reference]:
     paths = sorted((root / "config/mac/references").glob("*.toml"))
     if not paths:
         return []
     units = manifest.by_unit(root / "config/units.toml")
-    paired = {p.retail_va: p for p in load_pairs(root)}
+    paired = {p.retail_va: p for p in (load_pairs(root) if pairs is None else pairs)}
     seen = {}
     spans = list(paired.values())
     names = {p.mac_symbol: p.retail_va for p in spans}

@@ -10,7 +10,7 @@ from homm3.mac import calls, references, reports, symbols
 from homm3.mac.pef import PEF
 from homm3.mac.relocations import Address, CallTarget
 from homm3.mac.source import Pair, load_pairs
-from homm3.mac.source import candidate_source, compile_scope, source_identity
+from homm3.mac.source import compile_scope, candidate_source, source_identity
 
 
 def analysis_hash(root: Path) -> str:
@@ -35,12 +35,16 @@ class InspectionContext:
     names: dict[str, str]
 
 
-def inspection_context(root: Path, pef: PEF) -> InspectionContext:
-    return InspectionContext(analysis_hash(root), symbols.targets(root, pef), labels(root))
+def inspection_context(root: Path, pef: PEF, *, pairs=None) -> InspectionContext:
+    pairs = load_pairs(root) if pairs is None else pairs
+    refs = references.load(root, pairs=pairs)
+    names = {p.mac_symbol: p.signature for p in [*refs, *pairs] if p.mac_symbol is not None}
+    return InspectionContext(analysis_hash(root),
+                             symbols.targets(root, pef, pairs=pairs, refs=refs), names)
 
 
 def inspect(root: Path, pair: Pair, pef: PEF, tools_dir: Path, *,
-            context: InspectionContext | None = None, sdk_staged: bool = False) -> dict:
+            context: InspectionContext | None = None, sdk_staged: bool = False, session=None) -> dict:
     from homm3.mac import build
     context = context or inspection_context(root, pef)
     origin = Address(pair.mac_section, pair.mac_offset)
@@ -50,15 +54,24 @@ def inspect(root: Path, pair: Pair, pef: PEF, tools_dir: Path, *,
     error = None
     candidate = None
     try:
-        source = candidate_source(pair).encode()
-        source_hash = hashlib.sha256(source_identity(pair, source)).hexdigest()
-        build_hash = build._profile_hash(source, pair)
-        compiled = build.compile_pair(pair, tools_dir, sdk_staged=sdk_staged)
+        compiled = (session.compile(pair) if session else
+                    build.compile_pair(pair, tools_dir, sdk_staged=sdk_staged))
         source_hash, build_hash, object_hash = compiled.source_hash, compiled.build_hash, compiled.object_hash
         candidate = calls.analyze(compiled.hunk.data, origin, context.addresses,
                                   xrefs=compiled.hunk.xrefs, labels=context.names)
     except (OSError, ValueError) as exc:
         error = str(exc)
+        # A failed compile still needs current source/profile provenance so the
+        # queue routes it to compilation work, rather than asking for the same run.
+        try:
+            if session:
+                source_hash, build_hash = session.provenance(pair)
+            else:
+                source = candidate_source(pair).encode()
+                source_hash = hashlib.sha256(source_identity(pair, source)).hexdigest()
+                build_hash = build._profile_hash(source, pair)
+        except (OSError, ValueError, KeyError):
+            pass  # Source preparation itself can be unavailable.
     return {"retail_va": f"0x{pair.retail_va:08x}", "unit": pair.unit,
             "analysis_sha256": context.analysis, "executable_sha256": inputs.MAC.sha256,
             "signature": pair.signature, "mac_section": pair.mac_section,

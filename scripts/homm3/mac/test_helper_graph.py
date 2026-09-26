@@ -27,6 +27,7 @@ class HelperGraphTests(unittest.TestCase):
         claims = [SimpleNamespace(offset=o, path='src/test.cpp', line=1, windows_va=o + 0x400000,
                                   label=n, identity=n) for n, o in [('f', 0x100), ('g', 0x200)]]
         index = SimpleNamespace(branches=[(Address(0, at), Address(0, target), kind) for at, target, kind in branches],
+                                indirect_branches=[Address(0, 0)] if code else [],
                                 pef=SimpleNamespace(data=b'fixture', sections=[SimpleNamespace(index=0, kind=0)], instantiated=1, contents=lambda _: code))
         with patch.object(helper_graph.tables, 'read_functions', return_value={0x100: 0x20, 0x200: 0x20}), \
              patch.object(helper_graph.tables, 'read_runtime', return_value=[]), \

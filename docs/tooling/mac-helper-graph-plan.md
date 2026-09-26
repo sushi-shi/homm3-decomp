@@ -80,3 +80,8 @@ VC6 remains the game compiler. The graph is incomplete where Clang cannot parse
 legacy source or expose implicit lifetime calls. Inspect `source.diagnostics`
 and `source.gaps`; selecting every TU is a scope statement, not a claim that all
 operations were parsed. No count or path automatically closes a recovery item.
+
+The binary index now records indirect branches during the same instruction scan
+and serves reverse xrefs from address indexes. For the separate compile/compare
+path, [Mac build reuse](mac-build-performance.md) describes shared unit objects,
+reference maps and freshness guards.

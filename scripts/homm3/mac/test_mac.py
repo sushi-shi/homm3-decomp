@@ -8,6 +8,7 @@ import json
 import tempfile
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
 
 from homm3.mac import build, calls
 from homm3.mac.object import CodeHunk, ObjectError, select_hunk
@@ -41,8 +42,11 @@ class TestMacTarget(unittest.TestCase):
             stack.enter_context(patch.object(build.inputs, "read_verified", return_value=b"fixture"))
             stack.enter_context(patch.object(build.toolchain, "stage", return_value=root / "tools"))
             stack.enter_context(patch.object(build, "PEF", return_value=object()))
+            stack.enter_context(patch("homm3.mac.sdk.stage"))
+            stack.enter_context(patch("homm3.mac.build_session.BuildSession", return_value=SimpleNamespace(
+                pairs=pairs, context=None, units={}, failures={}, verify=lambda: None)))
             stack.enter_context(patch.object(build.call_report, "analysis_hash", return_value="analysis"))
-            stack.enter_context(patch.object(build.call_report, "inspect", side_effect=lambda _, pair, *_args: {
+            stack.enter_context(patch.object(build.call_report, "inspect", side_effect=lambda _, pair, *_args, **_kwargs: {
                 "retail_va": f"0x{pair.retail_va:08x}", "calls": comparison}))
             compare = stack.enter_context(patch.object(build, "compare_pair", side_effect=[
                 ValueError("unknown TOC reference"), successful]))

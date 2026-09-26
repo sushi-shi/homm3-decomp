@@ -625,13 +625,14 @@ def source_preamble(text: str) -> str:
     return text[:end].rstrip()
 
 
-def source_identity(pair: Pair, generated: bytes) -> bytes:
+def source_identity(pair: Pair, generated: bytes, *, header_inputs=None) -> bytes:
     """Own implementation identity excludes changes to neighboring bodies."""
     if not pair.compile_group:
         return generated
     root = pair.project_root or pair.source.parent.parent
     profile = profiles.load(root, pair.compile_group)
-    header_inputs = profiles.headers(root, profile)
+    if header_inputs is None:
+        header_inputs = profiles.headers(root, profile)
     authored = individual_source(pair)
     if extract_body(pair).rstrip().endswith(";"):
         # A VA-marked redeclaration is an emission anchor, not the body whose
@@ -648,12 +649,13 @@ def source_identity(pair: Pair, generated: bytes) -> bytes:
                        for name, data in sorted(header_inputs.items())))
 
 
-def candidate_source(pair: Pair) -> str:
+def candidate_source(pair: Pair, *, header_inputs=None, pairs=None) -> str:
     if not pair.compile_group:
         raise SourceError("Mac candidates require an ordinary-header unit profile")
     root = pair.project_root or pair.source.parent.parent
     profile = profiles.load(root, pair.compile_group)
-    peers = [p for p in load_pairs(root) if p.compile_group == pair.compile_group]
+    peers = [p for p in (load_pairs(root) if pairs is None else pairs)
+             if p.compile_group == pair.compile_group]
     if pair.retail_va not in {p.retail_va for p in peers}:
         peers.append(pair)  # A compile-only probe does not admit a target span.
     elif pair.data:
@@ -685,7 +687,9 @@ def candidate_source(pair: Pair) -> str:
     # The existing Clang inventory identifies function extents; no game/header
     # declarations are reconstructed from names or separate Mac manifests.
     header_hash = hashlib.sha256()
-    for name, data in sorted(profiles.headers(root, profile).items()):
+    if header_inputs is None:
+        header_inputs = profiles.headers(root, profile)
+    for name, data in sorted(header_inputs.items()):
         header_hash.update(name.encode() + b'\0' + hashlib.sha256(data).digest())
     header_hash.update((root / "config/units.toml").read_bytes())
     inventory = _source_definitions(root, pair.unit, text, header_hash.hexdigest())

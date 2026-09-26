@@ -613,9 +613,15 @@ def main(argv=None) -> int:
             pef, tools_dir = _image(), toolchain.stage()
             if any(pair.compile_group for pair in pairs):
                 sdk.stage(root=common.HOMM3_DIR)
-            context = call_report.inspection_context(common.HOMM3_DIR, pef)
+            from homm3.mac.build_session import BuildSession
+            session = BuildSession(common.HOMM3_DIR, pef, tools_dir)
+            selected_vas = {p.retail_va for p in pairs}
+            pairs = [p for p in session.pairs if p.retail_va in selected_vas]
+            if selected_vas != {p.retail_va for p in pairs}:
+                raise ValueError('Mac pair selection changed before call inspection')
             rows = [call_report.inspect(common.HOMM3_DIR, pair, pef, tools_dir,
-                                        context=context, sdk_staged=True) for pair in pairs]
+                                        context=session.context, sdk_staged=True, session=session) for pair in pairs]
+            session.verify()
             report = call_report.write(common.HOMM3_DIR, rows,
                                        units=sorted({p.unit for p in pairs}) if args.selector else None)
             if args.selector:

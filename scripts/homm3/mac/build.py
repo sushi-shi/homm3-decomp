@@ -12,7 +12,7 @@ import fcntl
 import shutil
 
 from homm3.core import common, inputs
-from homm3.mac.object import CodeHunk, DataHunk, parse_code_hunks, parse_data_hunks, parse_metadata_hunks, select_hunk
+from homm3.mac.object import CodeHunk, DataHunk, parse_code_hunks, parse_data_hunks, parse_metadata_hunks, select_parsed_hunk
 from homm3.mac.pef import PEF
 from homm3.mac.relocations import Address, LinkedCode, ResolvedCall, ResolvedData, ResolvedJumpTable, link_code
 from homm3.mac.source import Pair, candidate_source, compile_scope, load_pairs, source_identity
@@ -35,6 +35,21 @@ class CompiledCode:
     build_hash: str
     object_hash: str
     data_hunks: tuple[DataHunk, ...] = ()
+
+
+@dataclass(frozen=True)
+class CompiledUnit:
+    source: bytes
+    build_hash: str
+    object_hash: str
+    hunks: tuple[CodeHunk, ...]
+    data_hunks: tuple[DataHunk, ...]
+    headers: dict[str, bytes]
+
+    def select(self, pair: Pair) -> CompiledCode:
+        hunk = select_parsed_hunk(self.hunks, pair.mac_symbol) if pair.mac_symbol else None
+        own_source = source_identity(pair, self.source, header_inputs=self.headers)
+        return CompiledCode(hunk, _digest(own_source), self.build_hash, self.object_hash, self.data_hunks)
 
 
 @dataclass(frozen=True)
@@ -74,10 +89,11 @@ def _digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _profile_hash(source: bytes, pair: Pair) -> str:
+def _profile_hash(source: bytes, pair: Pair, *, header_inputs=None, wine_version=None) -> str:
     spec = toolchain.specification()
     profile = profiles.load(ROOT, pair.compile_group) if pair.compile_group else None
-    header_inputs = profiles.headers(ROOT, profile) if profile else {}
+    if header_inputs is None:
+        header_inputs = profiles.headers(ROOT, profile) if profile else {}
     flags = tuple(profile.flags or spec["flags"] if profile else spec["flags"])
     if profile:
         flags += ("-msext", "on", "-DHOMM3_TARGET_MAC=1")
@@ -85,7 +101,7 @@ def _profile_hash(source: bytes, pair: Pair) -> str:
                        "profile": asdict(profile) if profile else None,
                        "headers": {name: _digest(data) for name, data in header_inputs.items()},
                        "tools": spec["files"], "collapse_reloads": spec["collapse_reloads"],
-                       "wine": _wine_version(), "pair": pair.compile_group or {
+                       "wine": wine_version or _wine_version(), "pair": pair.compile_group or {
                            "retail_va": pair.retail_va,
                            "mac_section": pair.mac_section,
                            "mac_offset": pair.mac_offset,
@@ -114,7 +130,7 @@ def _run(command: list[str], cwd: Path, env: dict[str, str]) -> str:
     return completed.stdout + completed.stderr
 
 
-def compile_pair(pair: Pair, tools_dir: Path, *, sdk_staged: bool = False) -> CompiledCode:
+def compile_pair(pair: Pair, tools_dir: Path, *, sdk_staged: bool = False, session=None) -> CompiledCode:
     profile = profiles.load(ROOT, pair.compile_group) if pair.compile_group else None
     if profile and not sdk_staged:
         from homm3.mac import sdk
@@ -125,7 +141,20 @@ def compile_pair(pair: Pair, tools_dir: Path, *, sdk_staged: bool = False) -> Co
     # and inspection commands must never observe a half-written listing.
     with (work / "compile.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        return _compile_locked(pair, tools_dir, work)
+        if session and work in session.failures:
+            raise MacBuildError(session.failures[work])
+        unit = session.units.get(work) if session else None
+        if unit is None:
+            try:
+                unit = _compile_locked(pair, tools_dir, work, session=session)
+            except (ValueError, OSError) as exc:
+                if session:
+                    session.failures[work] = str(exc)
+                raise
+            if session:
+                session.units[work] = unit
+                session.remember_artifacts(work)
+        return unit.select(pair)
 
 
 def object_directory(root: Path, pair: Pair) -> Path:
@@ -141,12 +170,16 @@ def staged_headers_current(work: Path, inputs: dict[str, bytes]) -> bool:
     return actual == inputs
 
 
-def _compile_locked(pair: Pair, tools_dir: Path, work: Path) -> CompiledCode:
-    source = candidate_source(pair).encode()
-    own_source = source_identity(pair, source)
+def _compile_locked(pair: Pair, tools_dir: Path, work: Path, *, session=None) -> CompiledUnit:
     profile = profiles.load(ROOT, pair.compile_group) if pair.compile_group else None
-    header_inputs = profiles.headers(ROOT, profile) if profile else {}
-    fingerprint = _profile_hash(source, pair)
+    header_inputs = (session.headers(profile) if session else
+                     profiles.headers(ROOT, profile) if profile else {})
+    source = (candidate_source(pair, header_inputs=header_inputs, pairs=session.pairs)
+              if session else candidate_source(pair)).encode()
+    wine_version = session.wine_version if session else _wine_version()
+    fingerprint = _profile_hash(source, pair, header_inputs=header_inputs, wine_version=wine_version)
+    if session:
+        session.prepared[work] = (source, header_inputs, fingerprint)
     generated = work / "candidate.cpp"
     obj = work / "candidate.o"
     disassembly = work / "candidate.dis.txt"
@@ -176,7 +209,7 @@ def _compile_locked(pair: Pair, tools_dir: Path, work: Path) -> CompiledCode:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(data)
         env = dict(os.environ)
-        version = re.sub(r"[^A-Za-z0-9._-]", "_", _wine_version())
+        version = re.sub(r"[^A-Za-z0-9._-]", "_", wine_version)
         env["WINEPREFIX"] = os.environ.get(
             "HOMM3_MAC_WINEPREFIX", str(ROOT / "build/mac/wineprefix" / version))
         env["MWCIncludes"] = ";".join([".", "_inputs", *(
@@ -198,10 +231,10 @@ def _compile_locked(pair: Pair, tools_dir: Path, work: Path) -> CompiledCode:
                                     sort_keys=True) + "\n")
     object_bytes = obj.read_bytes()
     listing = disassembly.read_text()
-    hunk = select_hunk(listing, pair.mac_symbol) if pair.mac_symbol else None
-    if candidate_source(pair).encode() != source or _profile_hash(source, pair) != fingerprint:
+    if session is None and (candidate_source(pair).encode() != source or _profile_hash(source, pair) != fingerprint):
         raise MacBuildError(f"source/headers changed during Mac compilation of {pair.signature}")
-    peers = [p for p in load_pairs(ROOT) if p.compile_group == pair.compile_group] if profile else [pair]
+    peers = [p for p in (session.pairs if session else load_pairs(ROOT))
+             if p.compile_group == pair.compile_group] if profile else [pair]
     hunks = parse_code_hunks(listing)
     data_hunks = tuple(parse_data_hunks(listing))
     metadata = parse_metadata_hunks(listing)
@@ -219,20 +252,21 @@ def _compile_locked(pair: Pair, tools_dir: Path, work: Path) -> CompiledCode:
                                        "reason": "truncated MWLink listing"}
                                       for h in data_hunks if h.data is None],
         "comparison_scope": "function_code_only; exception metadata is not compared",
-        "unpaired_probe": f"0x{pair.retail_va:08x}" if hunk is None else None,
+        "unpaired_probe": f"0x{pair.retail_va:08x}" if not pair.mac_symbol else None,
         "missing_paired_symbols": [p.mac_symbol for p in peers if p.mac_symbol not in emitted],
         "headers": sorted(header_inputs)}, indent=2) + "\n")
-    return CompiledCode(hunk, _digest(own_source), fingerprint, _digest(object_bytes),
-                        data_hunks)
+    return CompiledUnit(source, fingerprint, _digest(object_bytes), tuple(hunks), data_hunks, header_inputs)
 
 
 def linked_pair(pair: Pair, pef: PEF, tools_dir: Path, *,
-                sdk_staged: bool = False) -> tuple[LinkedCode, CompiledCode]:
-    compiled = compile_pair(pair, tools_dir, sdk_staged=sdk_staged)
+                sdk_staged: bool = False, session=None,
+                context=None) -> tuple[LinkedCode, CompiledCode]:
+    compiled = (session.compile(pair) if session else
+                compile_pair(pair, tools_dir, sdk_staged=sdk_staged))
     if compiled.hunk is None:
         raise MacBuildError("compile-only probe has no admitted Mac target or selected code hunk")
     linked = link_code(compiled.hunk, Address(pair.mac_section, pair.mac_offset),
-                       symbols.targets(ROOT, pef),
+                       context.addresses if context else symbols.targets(ROOT, pef),
                        collapse_reloads=toolchain.specification()["collapse_reloads"],
                        toc=toc.bindings(ROOT, pef, compiled.hunk, compiled.data_hunks,
                                         unit=pair.unit, retail_va=pair.retail_va,
@@ -241,10 +275,11 @@ def linked_pair(pair: Pair, pef: PEF, tools_dir: Path, *,
     return linked, compiled
 
 
-def compare_pair(pair: Pair, pef: PEF, tools_dir: Path, *, sdk_staged: bool = False) -> Result:
-    analysis = call_report.analysis_hash(ROOT)
+def compare_pair(pair: Pair, pef: PEF, tools_dir: Path, *, sdk_staged: bool = False, session=None) -> Result:
+    context = session.context if session else call_report.inspection_context(ROOT, pef)
+    analysis = context.analysis
     target = pef.code(pair.mac_section, pair.mac_offset, pair.mac_size)
-    linked, compiled = linked_pair(pair, pef, tools_dir, sdk_staged=sdk_staged)
+    linked, compiled = linked_pair(pair, pef, tools_dir, sdk_staged=sdk_staged, session=session, context=context)
     base = linked.data
     common_bytes = min(len(base), len(target))
     equal = sum(a == b for a, b in zip(base[:common_bytes], target[:common_bytes]))
@@ -260,11 +295,10 @@ def compare_pair(pair: Pair, pef: PEF, tools_dir: Path, *, sdk_staged: bool = Fa
     compared_bytes = code_bytes + sum(table.size for table in linked.jump_tables)
     total_equal = equal + sum(table.matching_bytes for table in linked.jump_tables)
     origin = Address(pair.mac_section, pair.mac_offset)
-    destinations = symbols.targets(ROOT, pef)
-    labels = call_report.labels(ROOT)
+    destinations, labels = context.addresses, context.names
     call_comparison = calls.compare(calls.analyze(target, origin, destinations, labels=labels),
                                     calls.analyze(base, origin, destinations, labels=labels))
-    if call_report.analysis_hash(ROOT) != analysis:
+    if session is None and call_report.analysis_hash(ROOT) != analysis:
         raise MacBuildError("Mac pairing/tooling changed during comparison; rebuild this unit")
     return Result(f"0x{pair.retail_va:08x}", pair.unit, pair.signature, pair.mac_section,
                   f"0x{pair.mac_offset:x}", pair.mac_size, len(base), total_equal,
@@ -337,17 +371,20 @@ def run(units: set[str] | None = None, *, checkpoint: bool = False) -> list[Resu
     if any(pair.compile_group for pair in pairs):
         from homm3.mac import sdk
         sdk.stage(root=ROOT)
-    context = call_report.inspection_context(ROOT, pef)
+    from homm3.mac.build_session import BuildSession
+    session = BuildSession(ROOT, pef, tools_dir)
+    pairs = [pair for pair in session.pairs if units is None or pair.unit in units]
+    context = session.context
     results = []
     call_rows, errors = [], []
     for pair in pairs:
         observation = call_report.inspect(ROOT, pair, pef, tools_dir,
-                                          context=context, sdk_staged=True)
+                                          context=context, sdk_staged=True, session=session)
         call_rows.append(observation)
         try:
             if observation["calls"]["candidate"] is None:
                 raise MacBuildError(observation["calls"]["error"])
-            result = compare_pair(pair, pef, tools_dir, sdk_staged=True)
+            result = compare_pair(pair, pef, tools_dir, sdk_staged=True, session=session)
         except (ValueError, OSError) as exc:
             message = f"{pair.unit} 0x{pair.retail_va:08x}: {exc}"
             errors.append(message)
@@ -361,6 +398,9 @@ def run(units: set[str] | None = None, *, checkpoint: bool = False) -> list[Resu
               f"{result.score:.4f}% {'EXACT' if result.exact else 'first difference ' + str(result.first_difference)}",
               flush=True)
         print(f"[mac]   {calls.summary(result.calls)}", flush=True)
+    session.verify()
+    print(f"[mac] prepared {len(session.units)} compiled unit(s), "
+          f"{len(session.failures)} failed unit(s); reused one reference context", flush=True)
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     reports.publish(REPORT, {"target_sha256": inputs.MAC.sha256,
                              "analysis_sha256": call_report.analysis_hash(ROOT),
@@ -378,9 +418,10 @@ def run(units: set[str] | None = None, *, checkpoint: bool = False) -> list[Resu
         if set(current) != {int(row.retail_va, 0) for row in results}:
             raise MacBuildError("Mac pair inventory changed during full build; checkpoint withheld")
         for row in results:
-            problem = observation_problem(ROOT, current[int(row.retail_va, 0)], asdict(row), {})
+            problem = observation_problem(ROOT, current[int(row.retail_va, 0)], asdict(row), {}, session=session)
             if problem:
                 raise MacBuildError(f"{row.retail_va}: {problem}; checkpoint withheld")
+        session.verify()
         _checkpoint(results)
         write_readme(results)
     print(f"[mac] {sum(row.exact for row in results)}/{len(results)} admitted functions exact", flush=True)

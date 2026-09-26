@@ -21,16 +21,30 @@ def _digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def observation_problem(root: Path, pair, row: dict | None, report: dict) -> str | None:
+def observation_problem(root: Path, pair, row: dict | None, report: dict, *, session=None) -> str | None:
     if row is None:
         return "no call report for this pair"
+    analysis = session.context.analysis if session else call_report.analysis_hash(root)
     if (row.get("executable_sha256", report.get("target_sha256")) != inputs.MAC.sha256
-            or row.get("analysis_sha256", report.get("analysis_sha256")) != call_report.analysis_hash(root)):
+            or row.get("analysis_sha256", report.get("analysis_sha256")) != analysis):
         return "target, pair inventory or analysis tooling changed"
     if (row.get("mac_section") != pair.mac_section or row.get("mac_offset") != f"0x{pair.mac_offset:x}"
             or row.get("size") != pair.mac_size or row.get("signature") != pair.signature):
         return "pair identity or extent changed"
     try:
+        if session is not None:
+            # The build verifies the whole input/artifact snapshot before
+            # publication and again before banking; reuse that checked object.
+            source_hash, fingerprint = session.provenance(pair)
+            if row.get('source_hash') != source_hash:
+                return 'source, data definition or ordinary headers changed'
+            if row.get('build_hash') != fingerprint:
+                return 'compiler profile changed'
+            if row.get('calls', {}).get('state') == 'candidate_unavailable':
+                return None
+            if row.get('object_sha256') != session.compile(pair).object_hash:
+                return 'compiled object or disassembly changed'
+            return None
         source = candidate_source(pair).encode()
         if row.get("source_hash") != _digest(source_identity(pair, source)):
             return "source, data definition or ordinary headers changed"
