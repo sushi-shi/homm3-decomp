@@ -58,7 +58,16 @@ evidence = "Checks both Bink pointers, calls BinkPause/BinkClose at 0x25dc48/0x2
 retail_va = 0x44dd20
 unit = "binkmanager"
 mac_section = 0
+mac_offset = 0x25dcbc
+mac_size = 0x50
+target_sha256 = "e727ccbd8356adbd9f6a17ce6755772916fee1c95fd09ad8522a528725464c7a"
+evidence = "Public playBink wrapper sets playSounds1,calls modal core25dd0c at25dcd8,clears paused/active and returns byte. videoPlay retains sole xref25e5c8. Windows44dd20 expands core plus wrapper. BLR25dd08,nextcore25dd0c."
+
+[[helpers]]
+source_helper = "BinkManager::playBinkCore"
+unit = "binkmanager"
+mac_section = 0
 mac_offset = 0x25dd0c
 mac_size = 0x240
 target_sha256 = "70705c73cb6ace29b15ceaa2bb3217d9685ee367338501e45d3de9682dc61159"
-evidence = "Receives id,x,y,w,h in r3-r7, calls openBink at 0x25dd70, hides/shows mouse, centers dimensions, polls Windows-style messages, calls closeBink at 0x25decc and updates/fades screen. Its one inbound branch at 0x25dcd8 is a source-local wrapper. BLR 0x25df48; next prologue 0x25df4c."
+evidence = "Modal Bink core opens/centers video,updates screen pointer,input polls/aborts,closes and fades/redraws. Public wrapper25dcbc calls at25dcd8,sole wholePEF direct xref. Windows44dd20 expands this body. BLR25df48,next entry25df4c."

@@ -300,75 +300,12 @@ void videoRealignBuffers()
 VA(0x005972d0, 0x29D) MAC_ADDRESS(0x25e568, 0x7c)  // dc 0x14ac38
 int videoPlay(int id, int x, int y, int w, int h)
 {
-    POINT pos;
-    int vw, vh;
-    unsigned char result;
-    unsigned char aborted;
-
     if (id >= VIDEO_ID_FIRST_TABLED
         && (!g_videoDescriptors[id].m_useBink || !g_config.m_binkVideo
             || (id == VIDEO_ID_STATE_GATED
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
                 && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH))) {
-        vh = h;
-        vw = w;
-        g_soundManager->m_playSounds = 1;
-        showVideo(id, x, y, vw, vh, 0, 0, 1);
-        if (!g_smackVideo) {
-            result = 0;
-        } else {
-            g_mouseManager->hidePointer();
-            if (vw < 0)
-                vw = g_smackVideo->Width;
-            if (vh < 0)
-                vh = g_smackVideo->Height;
-            g_smackX = x + (vw - g_smackVideo->Width) / 2;
-            g_smackY = y + (vh - g_smackVideo->Height) / 2;
-            pos.x = g_smackX;
-            pos.y = g_smackY;
-            SmackToBuffer(g_smackVideo, g_smackX, g_smackY,
-                g_windowManager->m_screenBitmap->getPitch(),
-                g_windowManager->m_screenBitmap->getHeight(),
-                g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
-            aborted = 0;
-            g_inputManager->flush();
-            while (1) {
-                if (g_smackVideo == 0)
-                    break;
-                pollSound();
-                process1WindowsMessage();
-                {
-                    message msg = g_inputManager->getEvent();
-                    switch (msg.m_id) {
-                        case MESSAGE_KEY_DOWN:
-                            if (msg.m_codeX == KEYCODE_F4)
-                                break;
-                            // fall through
-                        case MESSAGE_LEFT_BUTTON_DOWN:
-                        case MESSAGE_RIGHT_BUTTON_DOWN:
-                            if (!g_firstTimeThrough) {
-                                aborted = 1;
-                                break;
-                            }
-                            break;
-                    }
-                    if (aborted)
-                        break;
-                }
-                if (videoNeedsUpdate())
-                    videoDrawRects();
-            }
-            SmackManager::closeSmacker();
-            if (aborted && g_videoDescriptors[id].m_fadeOnAbort)
-                g_windowManager->fadeScreen(1, 4, 0);
-            else
-                g_windowManager->updateScreen(pos.x, pos.y, vw, vh);
-            g_mouseManager->showPointer(0);
-            result = !aborted;
-        }
-        g_smackPaused = 0;
-        SmackManager::g_playingSmacker = 0;
-        return result;
+        return SmackManager::playSmacker(id, x, y, w, h);
     }
     return BinkManager::playBink(id, x, y, w, h);
 }
@@ -1086,11 +1023,90 @@ void closeSmacker()
     SmackManager::g_needsUpdate = 0;
 }
 
+// Mac separates playback setup/state cleanup from its modal loop.
+static unsigned char playSmackerCore(int id, int x, int y, int w, int h);
+
+MAC_ADDRESS(0x25fcec, 0x54)
+int playSmacker(int id, int x, int y, int w, int h)
+{
+    g_soundManager->m_playSounds = 1;
+    unsigned char result = playSmackerCore(id, x, y, w, h);
+    g_smackPaused = 0;
+    g_playingSmacker = 0;
+    return result;
+}
+
 VA(0x005990a0, 0x1C) MAC_ADDRESS(0x25fd40, 0x44)
 void gotoSmackerFrame(unsigned long frame)
 {
     if (g_smackVideo && SmackManager::g_playingSmacker)
         SmackGoto(g_smackVideo, frame);
+}
+
+// Mac 0:0x25fd84 retains this body; Windows expands it through playSmacker.
+MAC_ADDRESS(0x25fd84, 0x24c)
+static unsigned char playSmackerCore(int id, int x, int y, int w, int h)
+{
+    POINT pos;
+    int vw, vh;
+    unsigned char result;
+    unsigned char aborted;
+    vh = h;
+    vw = w;
+    showVideo(id, x, y, vw, vh, 0, 0, 1);
+    if (!g_smackVideo) {
+        result = 0;
+    } else {
+        g_mouseManager->hidePointer();
+        if (vw < 0)
+            vw = g_smackVideo->Width;
+        if (vh < 0)
+            vh = g_smackVideo->Height;
+        g_smackX = x + (vw - g_smackVideo->Width) / 2;
+        g_smackY = y + (vh - g_smackVideo->Height) / 2;
+        pos.x = g_smackX;
+        pos.y = g_smackY;
+        SmackToBuffer(g_smackVideo, g_smackX, g_smackY,
+            g_windowManager->m_screenBitmap->getPitch(),
+            g_windowManager->m_screenBitmap->getHeight(),
+            g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
+        aborted = 0;
+        g_inputManager->flush();
+        while (1) {
+            if (g_smackVideo == 0)
+                break;
+            pollSound();
+            process1WindowsMessage();
+            {
+                message msg = g_inputManager->getEvent();
+                switch (msg.m_id) {
+                    case MESSAGE_KEY_DOWN:
+                        if (msg.m_codeX == KEYCODE_F4)
+                            break;
+                        // fall through
+                    case MESSAGE_LEFT_BUTTON_DOWN:
+                    case MESSAGE_RIGHT_BUTTON_DOWN:
+                        if (!g_firstTimeThrough) {
+                            aborted = 1;
+                            break;
+                        }
+                        break;
+                }
+                if (aborted)
+                    break;
+            }
+            if (videoNeedsUpdate())
+                videoDrawRects();
+        }
+        SmackManager::closeSmacker();
+        if (aborted && g_videoDescriptors[id].m_fadeOnAbort)
+            g_windowManager->fadeScreen(1, 4, 0);
+        else
+            g_windowManager->updateScreen(pos.x, pos.y, vw, vh);
+        g_mouseManager->showPointer(0);
+        result = !aborted;
+    }
+    return result;
 }
 
 }  // namespace SmackManager
