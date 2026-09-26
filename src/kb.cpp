@@ -432,7 +432,6 @@ int earlySetup()
     button::s_clickSample = ResourceManager::getSample(
         DATA_COMPGEN(0x0067f5d4, buttonClickSampleName, "button.wav"));
     initVars();
-    initializeCampaignMapTraitsTable();
     g_earlySetupDone = 1;
     return 1;
 }
@@ -3061,6 +3060,8 @@ static void initVars()
         g_dfltMenu = LoadMenu(g_instance, MAKEINTRESOURCE(0x6e));
         g_gameMenu = LoadMenu(g_instance, MAKEINTRESOURCE(0x70));
     }
+    // Mac retains this call inside initVars at 0x11511c.
+    initializeCampaignMapTraitsTable();
 }
 
 VA(0x004f3690, 0x2A2) MAC_ADDRESS(0x115448, 0x1c4)  // dc 0xe3ce4
