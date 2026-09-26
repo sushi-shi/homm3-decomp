@@ -1222,9 +1222,7 @@ int __fastcall loadHeroId(TAbstractFile* infile, int saveVersion)
 MAC_ADDRESS(0x0cc878, 0x74)
 static int loadHeroIdShort(TAbstractFile* infile, int saveVersion)
 {
-    short savedHeroId;
-    infile->read(&savedHeroId, sizeof(savedHeroId));
-    int heroId = savedHeroId;
+    int heroId = readValue<short>(infile);
     if (saveVersion < g_saveVersionCompleteHeroRoster) {
         if (heroId == g_savedHeroPre25First)
             heroId = g_heroPre25FirstRemap;
@@ -5622,33 +5620,26 @@ int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
     return 0;
 }
 
-// Original: NewSMapHeader::saveLossCondition; game.cpp:6390, dc 0xaf2b4
-// Complete save 0x4c4f10 expands this helper after the loss-type byte.
-// It writes this header through TAbstractFile, uses the saved hero ID rather
-// than the old three hero coordinates, and does not test these payload writes.
+// Mac retains the time-limit short-write check; the caller ignores this
+// helper's result, so Windows can discard that check when expanding it.
 MAC_ADDRESS(0x0da3e0, 0x138)
 int NewSMapHeader::saveLossCondition(char type, TAbstractFile* outfile)
 {
-    char charBuffer;
-    short shortBuffer;
     switch (type) {
     case LOSS_CONDITION_LOSE_TOWN:
-        charBuffer = m_lossCondition.m_townX;
-        outfile->write(&charBuffer, sizeof(charBuffer));
-        charBuffer = m_lossCondition.m_townY;
-        outfile->write(&charBuffer, sizeof(charBuffer));
-        charBuffer = m_lossCondition.m_townZ;
-        outfile->write(&charBuffer, sizeof(charBuffer));
+        writeValue<char>(outfile, m_lossCondition.m_townX);
+        writeValue<char>(outfile, m_lossCondition.m_townY);
+        writeValue<char>(outfile, m_lossCondition.m_townZ);
         break;
 
     case LOSS_CONDITION_LOSE_HERO:
-        shortBuffer = m_lossCondition.m_heroId;
-        outfile->write(&shortBuffer, sizeof(shortBuffer));
+        writeValue<short>(outfile, m_lossCondition.m_heroId);
         break;
 
     case LOSS_CONDITION_TIME_LIMIT:
-        shortBuffer = m_lossCondition.m_numDays;
-        outfile->write(&shortBuffer, sizeof(shortBuffer));
+        if (static_cast<unsigned>(writeValue<short>(outfile,
+                m_lossCondition.m_numDays)) < sizeof(short))
+            return -1;
         break;
     }
     return 0;
