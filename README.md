@@ -135,21 +135,14 @@ to set up the compiler headers needed for code navigation.
    homm3 sema diff 0x00524dd0 --summary
    ```
 
-   Where a Mac counterpart has been admitted, the same build compiles it with
-   CodeWarrior. `homm3 mac labels` lists the Mac section offsets paired with
-   existing source names. Use `homm3 mac show <Windows-VA>` and
-   `homm3 mac diff <Windows-VA>` to inspect that exact target.
+   Where a function has a Mac claim, the same build scores its body from the
+   unit's full-TU CodeWarrior object. `homm3 mac labels` lists the scored
+   pairs. Use `homm3 mac show <Windows-VA>` and `homm3 mac diff <Windows-VA>`
+   to inspect that exact target.
 
    `homm3 mac calls <Windows-VA>` compares retail and candidate call counts
-   and ordered targets. Omit the selector for all admitted pairs. Every build
-   also writes `build/mac/calls.tsv` and `build/mac/calls.json`.
-   `homm3 mac queue` generates the full action list in
-   `build/mac/queue.tsv` and `build/mac/queue.json`, including missing pairings,
-   stale observations and deferred modules. Missing evidence is shown as
-   unavailable. See the [tooling rollout](docs/tooling/mac-matching-roadmap.md).
-   That guide also covers `homm3 mac compile` for emitted symbol discovery,
-   `homm3 mac pair` for reviewed admission, and `homm3 mac campaign` for
-   separate worker packets.
+   and ordered targets. Every build also writes `build/mac/calls.tsv` and
+   `build/mac/calls.json`. See the [tooling guide](docs/tooling/mac-matching-roadmap.md).
 
    The [implementation report](docs/tooling/mac-matching-report.md) explains
    the two-target pipeline, validation, current coverage and remaining tooling.

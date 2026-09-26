@@ -1,9 +1,0 @@
-# Retained source-private helper used by the combat options modal and handler.
-[[helpers]]
-source_helper = "updateCombatOptions"
-unit = "combatoptionswindow"
-mac_section = 0
-mac_offset = 0x7dd74
-mac_size = 0x4c
-target_sha256 = "ff6d700eb49ce66a55c466589e3d85008ecca576943942b778a3dbe38d1fee31"
-evidence = "Dreamcast names UpdateCombatOptions as a file-static helper after the handler at combatoptionswindow.cpp:651. Mac doModal and the handler call 0:0x7dd74; its body returns for nonzero firstUpdate and otherwise invokes the combat options window's virtual drawWindow with full bounds. Its blr at 0x7ddbc precedes an unrelated function at 0x7ddc0. The canonical source call already exists; reference identity only."

@@ -1,7 +1,6 @@
 # Reviewed library data read through loader-proven TOC cells; not game DATA.
 # Library and runtime FUNCTION labels live in runtime-map.tsv,
-# runtime-aliases.tsv and glue-map.tsv; `homm3 mac migrate` moves any
-# [[functions]] row added here into those maps.
+# runtime-aliases.tsv and glue-map.tsv.
 
 [[data]]
 symbol = "__upper_map"
