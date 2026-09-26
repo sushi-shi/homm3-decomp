@@ -2999,17 +2999,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         charBuffer = readValue<signed char>(infile);
         if (charBuffer) {
             heroData->m_customName = 1;
-            // BOUND BY const REFERENCE, not copied.  ReadLengthPrefixedString
-            // returns by value and VC6 does not elide the copy into a named
-            // `std::string` local, so that spelling puts TWO 16-byte string
-            // objects on the frame where retail has one - worth 1.67 and 16
-            // frame bytes (0xf4 -> 0xe4).  C++98 extends the temporary's
-            // lifetime to the reference's scope, which is exactly the block
-            // the assign sits in.
-            const std::string& heroName = readLengthPrefixedString(infile);
-#pragma inline_depth(0)
-            heroData->m_name.assign(heroName, 0, std::string::npos);
-#pragma inline_depth()
+            heroData->m_name = readLengthPrefixedString(infile);
         }
 
         charBuffer = readValue<signed char>(infile);
