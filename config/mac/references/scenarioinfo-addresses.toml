@@ -53,3 +53,21 @@ mac_offset = 0x160be0
 mac_size = 0xc4
 target_sha256 = "198cfef71a2e3831e4c929b942a2ab1e539e53d4a89d411eda70473ca01e7f9f"
 evidence = "The constructor calls this retained helper; it disables widgets 107 through 111 and broadcasts the selected difficulty status. Dreamcast names the same ordinary method, which Windows expands."
+
+[[functions]]
+retail_va = 0x5693a0
+unit = "scenarioinfo"
+mac_section = 0
+mac_offset = 0x160de8
+mac_size = 0x4cc
+target_sha256 = "de47315616e6e2407bdbc5a8e1ba9c8b35ed002e455cffcf62b0041bec97457e"
+evidence = "Constructor stores vtable data 1+0x4d690 at code 0x15f9c8 after allocating 0x60-byte row and initializing its fields. Vtable draw slot +0x18 resolves descriptor 1+0x7d38 to this body. It draws panel/flag, player and handicap text, town, hero portrait/name, and bonus at 50-pixel row stride with matching field offsets and coordinates. Final BLR at 0x1612b0 precedes main wrapper."
+
+[[functions]]
+retail_va = 0x569770
+unit = "scenarioinfo"
+mac_section = 0
+mac_offset = 0x160d6c
+mac_size = 0x7c
+target_sha256 = "541f7d2125f6d6976eb2f7b2eacebb73df44f001c84b9bbfc17737fd1303c033"
+evidence = "The same row vtable 1+0x4d690 destructor slot +8 resolves descriptor 1+0x7d30 to this body. It conditionally disposes owned portrait at +0x58, calls widget destructor, then conditional operator delete for CodeWarrior destructor flag. Final BLR 0x160de4 precedes row draw."

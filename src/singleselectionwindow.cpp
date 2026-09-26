@@ -6222,6 +6222,9 @@ bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
             return 1;
         }
     }
+        // Windows 0x588986..0x5889b9 shares normalDialog/shutDown with the
+        // lost-session arm. Mac 0x180284/0x18070c instead destroys the message,
+        // cleans up networking and sets cancel; those are port differences.
         // fall through - a failed transfer is a lost session
     case RS_SESSION_LOST:
         normalDialog(g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED), 1, -1, -1,
