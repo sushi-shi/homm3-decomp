@@ -54,9 +54,14 @@ class TestMacAddressScan(unittest.TestCase):
             self.assertEqual(problems, [])
             claim = claims[0]
             self.assertEqual(claim.label, f"Tile::operator{operator}")
-            _, _, body = source_helper(text, claim.label + claim.parameters + " const",
+            _, _, body = source_helper(text, claim.label + claim.parameters,
                                        Path("src/unit.cpp"))
             self.assertIn("return m_value == other->m_value;", body)
+            from homm3.mac.source import SourceError
+            both = text + text.split('\n', 1)[1].replace(') const', ')')
+            with self.assertRaises(SourceError):
+                source_helper(both, claim.label + claim.parameters, Path("src/unit.cpp"))
+            source_helper(both, claim.label + claim.parameters + " const", Path("src/unit.cpp"))
         _, _, problems = scan("MAC_ADDRESS(0x100, 0x10)\nint value = calculate();\n")
         self.assertTrue(any("functions only" in item for item in problems))
 
