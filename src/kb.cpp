@@ -3031,8 +3031,11 @@ void game::showLuckInfo(hero* thisHero, int mbType)
     }
 
     std::string modifiers = thisHero->getLuckDescription();
-    strcat(g_text,
-           modifiers.length() == 0 ? g_luckInfo[18] : modifiers.c_str());
+    // Mac keeps separate append calls at 0x1153d8 and 0x1153e8.
+    if (modifiers.length() == 0)
+        strcat(g_text, g_luckInfo[18]);
+    else
+        strcat(g_text, modifiers.c_str());
 
     normalDialog(g_text, mbType, -1, 28, icon, 0,
                  -1, 0, -1, 0, -1, 0);
