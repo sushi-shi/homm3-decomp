@@ -605,13 +605,15 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
     rect.left = max(rect.left, firstX - extents.left);
     rect.left = max(rect.left, 0);
     rect.right = g_mapWidth + firstX - 9;
-    rect.right = min(rect.right, g_mapWidth - extents.right + firstX);
+    rect.right = min(static_cast<int>(rect.right),
+                     g_mapWidth - extents.right + firstX);
     rect.right = min(rect.right, g_mapWidth);
     rect.top = firstY - 8;
     rect.top = max(rect.top, firstY - extents.top);
     rect.top = max(rect.top, 0);
     rect.bottom = g_mapHeight + firstY - 8;
-    rect.bottom = min(rect.bottom, g_mapWidth - extents.bottom + firstY);
+    rect.bottom = min(static_cast<int>(rect.bottom),
+                      g_mapWidth - extents.bottom + firstY);
     rect.bottom = min(rect.bottom, g_mapHeight);
 
     for (point.m_z = 0; point.m_z < g_game->getNumMapLevels(); ++point.m_z) {

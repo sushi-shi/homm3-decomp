@@ -485,7 +485,8 @@ void type_sacrifice_window::createCreatureWidgets(
     textWidget* newTextWidgets[7];
     long itemNumber = 0;
 
-    for (long defIndex = 0; defIndex < 2; ++defIndex) {
+    long defIndex;
+    for (defIndex = 0; defIndex < 2; ++defIndex) {
         count = createCreatureIcons(
             g_constCreatureSources[defIndex][0],
             g_constCreatureSources[defIndex][1],
