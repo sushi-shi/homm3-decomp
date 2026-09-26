@@ -126,7 +126,7 @@ VA(0x0047bc00, 0xb8) MAC_ADDRESS(0x08a684, 0xa8)  // dc 0x72538
 void CSprite::resetPalette()
 {
     TPalette24 palette24(m_p24->m_palette);
-#if defined(__clang__) || defined(HOMM3_SOURCE_OWNERSHIP)
+#ifdef __clang__
     TPalette16 palette16(palette24);
     setPalette(palette16);
 #else
