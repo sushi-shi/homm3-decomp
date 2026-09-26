@@ -2597,38 +2597,36 @@ int game::load(TAbstractFile* infile)
         }
     }
 
-    // The twelve guarded scalar reads, and they mirror game::Save's twelve
-    // writes temp for temp: retail carries FOUR of them, a char reused
-    // across reads 1-2 and 7-9, a second char for 5-6, a short for 3-4 and
-    // a second short for 10-12.
-    count = infile->read(&byteValue, sizeof(byteValue));
+    // These scalar fields mirror game::save, with each read checked before
+    // assigning the decoded value.
+    count = readValue(infile, byteValue);
     if (count < sizeof(byteValue))
         return -1;
     m_newCampaignStarted = byteValue;
-    count = infile->read(&byteValue, sizeof(byteValue));
+    count = readValue(infile, byteValue);
     if (count < sizeof(byteValue))
         return -1;
     m_numPlayers = byteValue;
 
-    count = infile->read(&shortValue, sizeof(shortValue));
+    count = readValue(infile, shortValue);
     if (count < sizeof(shortValue))
         return -1;
     m_ultimateArtifactX = shortValue;
-    count = infile->read(&shortValue, sizeof(shortValue));
+    count = readValue(infile, shortValue);
     if (count < sizeof(shortValue))
         return -1;
     m_ultimateArtifactY = shortValue;
 
-    count = infile->read(&extraByteValue, sizeof(extraByteValue));
+    count = readValue(infile, extraByteValue);
     if (count < sizeof(extraByteValue))
         return -1;
     m_ultimateArtifactZ = extraByteValue;
-    count = infile->read(&extraByteValue, sizeof(extraByteValue));
+    count = readValue(infile, extraByteValue);
     if (count < sizeof(extraByteValue))
         return -1;
     m_ultimateRadius = extraByteValue;
 
-    count = infile->read(&byteValue, sizeof(byteValue));
+    count = readValue(infile, byteValue);
     if (count < sizeof(byteValue))
         return -1;
     m_ultimateArtifactPresent = byteValue != 0;
@@ -2637,26 +2635,26 @@ int game::load(TAbstractFile* infile)
     // the store is `movsx ecx, byte ptr` into the int at +0x1f698 - which
     // is what makes the temp a signed char. game::Save's mirror writes
     // `static_cast<char>(f_1f698)` as its own eighth scalar.
-    count = infile->read(&byteValue, sizeof(byteValue));
+    count = readValue(infile, byteValue);
     if (count < sizeof(byteValue))
         return -1;
     if (saved.m_version < 40)
         m_gameVersion = byteValue;
 
-    count = infile->read(&byteValue, sizeof(byteValue));
+    count = readValue(infile, byteValue);
     if (count < sizeof(byteValue))
         return -1;
     m_isCheater = byteValue;
 
-    count = infile->read(&extraShortValue, sizeof(extraShortValue));
+    count = readValue(infile, extraShortValue);
     if (count < sizeof(extraShortValue))
         return -1;
     m_day = extraShortValue;
-    count = infile->read(&extraShortValue, sizeof(extraShortValue));
+    count = readValue(infile, extraShortValue);
     if (count < sizeof(extraShortValue))
         return -1;
     m_week = extraShortValue;
-    count = infile->read(&extraShortValue, sizeof(extraShortValue));
+    count = readValue(infile, extraShortValue);
     if (count < sizeof(extraShortValue))
         return -1;
     m_month = extraShortValue;
@@ -2684,7 +2682,7 @@ int game::load(TAbstractFile* infile)
     // The four-byte slot game::Save writes as a literal zero. Retail reads
     // it into a stack dword and never looks at it again - the guard is the
     // only thing it is for.
-    count = infile->read(&zero, sizeof(zero));
+    count = readValue(infile, zero);
     if (count < sizeof(zero))
         return -1;
 
@@ -2942,20 +2940,12 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 VA(0x004be3f0, 0xAA5) MAC_ADDRESS(0x0d2954, 0x1ba8)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::save(TAbstractFile* outfile)
 {
-    char byteValue;
-    unsigned char extraByteValue;
-    short shortValue;
-    unsigned short extraShortValue;
-    int zero;
     SavedGameHeader saved;
     saved.reset();
     if (saved.save(outfile) < 0)
         return -1;
 
-    {
-        char charBuffer = g_grailOwner;
-        outfile->write(&charBuffer, sizeof(charBuffer));
-    }
+    writeValue<char>(outfile, g_grailOwner);
     outfile->write(m_artifactDisabled, sizeof(m_artifactDisabled));
     outfile->write(m_artifactUsed, sizeof(m_artifactUsed));
     outfile->write(m_ssDisabled, sizeof(m_ssDisabled));
@@ -3020,63 +3010,40 @@ int game::save(TAbstractFile* outfile)
         outfile->write(poolBits, sizeof(poolBits));
     }
 
-    // The twelve guarded scalar writes. Retail carries FOUR temps for
-    // them, not one: a char reused across writes 1-2 and 7-9, an unsigned
-    // char for 5-6, a short for 3-4 and an unsigned short for 10-12. Those
-    // four plus the literal-zero dword below are exactly the five slots
-    // that take `sub esp` from our 0x5ac to retail's 0x5c0.
-    // The word buffers must stay narrow, not `int`: retail loads 16 bits
-    // (`mov dx, word ptr`) and stores 32 (`mov dword ptr [ebp-N], edx`),
-    // which is VC6's narrow-local/widened-store idiom - an int local
-    // would sign- or zero-extend on the load instead.
-    {
-        byteValue = m_newCampaignStarted;
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
-        byteValue = m_numPlayers;
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
+    if (writeValue<char>(outfile, m_newCampaignStarted) < sizeof(char))
+        return -1;
+    if (writeValue<char>(outfile, m_numPlayers) < sizeof(char))
+        return -1;
 
-        shortValue = m_ultimateArtifactX;
-        if (outfile->write(&shortValue, sizeof(shortValue)) < sizeof(shortValue))
-            return -1;
-        shortValue = m_ultimateArtifactY;
-        if (outfile->write(&shortValue, sizeof(shortValue)) < sizeof(shortValue))
-            return -1;
+    if (writeValue<short>(outfile, m_ultimateArtifactX) < sizeof(short))
+        return -1;
+    if (writeValue<short>(outfile, m_ultimateArtifactY) < sizeof(short))
+        return -1;
 
-        extraByteValue = m_ultimateArtifactZ;
-        if (outfile->write(&extraByteValue, sizeof(extraByteValue)) <
-            sizeof(extraByteValue))
-            return -1;
-        extraByteValue = m_ultimateRadius;
-        if (outfile->write(&extraByteValue, sizeof(extraByteValue)) <
-            sizeof(extraByteValue))
-            return -1;
+    if (writeValue<unsigned char>(outfile, m_ultimateArtifactZ) <
+        sizeof(unsigned char))
+        return -1;
+    if (writeValue<unsigned char>(outfile, m_ultimateRadius) <
+        sizeof(unsigned char))
+        return -1;
 
-        byteValue = m_ultimateArtifactPresent;
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
-        // f_1f698 is an int member and retail writes only its low byte.
-        byteValue = static_cast<char>(m_gameVersion);
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
-        byteValue = m_isCheater;
-        if (outfile->write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
-            return -1;
+    if (writeValue<char>(outfile, m_ultimateArtifactPresent) < sizeof(char))
+        return -1;
+    // f_1f698 is an int member and retail writes only its low byte.
+    if (writeValue<char>(outfile, static_cast<char>(m_gameVersion)) < sizeof(char))
+        return -1;
+    if (writeValue<char>(outfile, m_isCheater) < sizeof(char))
+        return -1;
 
-        extraShortValue = m_day;
-        if (outfile->write(&extraShortValue, sizeof(extraShortValue)) <
-            sizeof(extraShortValue))
-            return -1;
-        extraShortValue = m_week;
-        if (outfile->write(&extraShortValue, sizeof(extraShortValue)) <
-            sizeof(extraShortValue))
-            return -1;
-        extraShortValue = m_month;
-        if (outfile->write(&extraShortValue, sizeof(extraShortValue)) <
-            sizeof(extraShortValue))
-            return -1;
-    }
+    if (writeValue<unsigned short>(outfile, m_day) <
+        sizeof(unsigned short))
+        return -1;
+    if (writeValue<unsigned short>(outfile, m_week) <
+        sizeof(unsigned short))
+        return -1;
+    if (writeValue<unsigned short>(outfile, m_month) <
+        sizeof(unsigned short))
+        return -1;
 
     // Six array writes. The first is retail's own inconsistency: it ASKS
     // for sizeof(field_1f644) == 0x20 and accepts 8. The compare is
@@ -3102,8 +3069,7 @@ int game::save(TAbstractFile* outfile)
         sizeof(m_cartographerFlags))
         return -1;
 
-    zero = 0;
-    if (outfile->write(&zero, sizeof(zero)) < sizeof(zero))
+    if (writeValue<int>(outfile, 0) < sizeof(int))
         return -1;
 
     // The map-extra plane. HasTwoLevels is read through the GLOBAL gpGame,
