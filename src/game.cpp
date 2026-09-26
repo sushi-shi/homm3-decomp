@@ -5269,9 +5269,8 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
             unsigned char spellMask[9];
             mapFile->read(spellMask, sizeof(spellMask));
             for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-                heroRecord->m_spells.set(
-                    spell,
-                    (spellMask[spell / 8] & (1 << (spell % 8))) != 0);
+                heroRecord->m_spells[spell] =
+                    (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
             }
         }
 

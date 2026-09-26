@@ -297,8 +297,8 @@ int town::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
         return -1;
     for (int spell = 0; spell < 70; ++spell) {
-        m_spells.set(spell,
-                   (inBuf[spell / 8] & (1 << (spell % 8))) != 0);
+        m_spells[spell] =
+            (inBuf[spell / 8] & (1 << (spell % 8))) != 0;
     }
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))

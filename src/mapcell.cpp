@@ -2602,9 +2602,8 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // `char_buffer`/`short_buffer`/`int_buffer` instead of the scoped signed
 // byte/short/value temporaries - regresses to 94.9926%; the x86 block locals
 // below are retained.
-// DC's second spell-mask loop uses bitset::operator[] and reference assignment.
-// Spelling that source form here lowered current Complete x86 79.82% to 79.21%
-// and added an exception path absent from retail; keep the retail set call.
+// Mac 0x124674 and 0x12470c construct bitset reference proxies before the
+// retained assignments at 0x1246b4 and 0x12474c.
 VA(0x005019f0, 0x7CC) MAC_ADDRESS(0x124278, 0x700)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
 int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                              int mapVersion)
@@ -2617,7 +2616,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     int x;
     int numTownEvents;
     unsigned char inBuf[6];
-    char charBuffer;
+    signed char charBuffer;
     unsigned char spellBuf[9];
 
     townObject->m_extraInfo = g_game->m_scenarioTowns.size();
@@ -2626,21 +2625,21 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         tempTown.m_objRef = 0;
     } else {
-        infile->read(&intBuffer, sizeof(intBuffer));
+        readValue(infile, intBuffer);
         tempTown.m_objRef = intBuffer;
     }
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    if (readValue(infile, charBuffer) < sizeof(charBuffer))
         return -1;
     tempTown.m_playerOwner = charBuffer;
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    if (readValue(infile, charBuffer) < sizeof(charBuffer))
         return -1;
     tempTown.m_customName = charBuffer;
     if (tempTown.m_customName)
         NewSMapHeader::readString(infile, tempTown.m_name);
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    if (readValue(infile, charBuffer) < sizeof(charBuffer))
         return -1;
     tempTown.m_customArmies = charBuffer;
     if (tempTown.m_customArmies) {
@@ -2648,18 +2647,18 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             tempTown.m_townArmy.m_armies[x] =
                 readMapCreatureId(infile, mapVersion);
 
-            if (infile->read(&shortBuffer, sizeof(shortBuffer))
+            if (readValue(infile, shortBuffer)
                 < sizeof(shortBuffer))
                 return -1;
             tempTown.m_townArmy.m_numTroops[x] = shortBuffer;
         }
     }
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    if (readValue(infile, charBuffer) < sizeof(charBuffer))
         return -1;
     tempTown.m_isGrouped = charBuffer;
 
-    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
+    if (readValue(infile, charBuffer) < sizeof(charBuffer))
         return -1;
     tempTown.m_customBuildings = charBuffer;
 
@@ -2671,7 +2670,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             return -1;
         memcpy(&tempTown.m_buildingDisabledMask, inBuf, sizeof(inBuf));
     } else {
-        if (infile->read(&charBuffer, sizeof(charBuffer))
+        if (readValue(infile, charBuffer)
             < sizeof(charBuffer))
             return -1;
         tempTown.m_hasFort = charBuffer;
@@ -2682,17 +2681,17 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     } else {
         infile->read(spellBuf, sizeof(spellBuf));
         for (int spell = 0; spell < 70; ++spell)
-            tempTown.m_fixedSpells.set(
-                spell, (spellBuf[spell / 8] & (1 << (spell % 8))) != 0);
+            tempTown.m_fixedSpells[spell] =
+                (spellBuf[spell / 8] & (1 << (spell % 8))) != 0;
     }
 
     if (infile->read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
     for (int spell = 0; spell < 70; ++spell)
-        tempTown.m_spells.set(
-            spell, (spellBuf[spell / 8] & (1 << (spell % 8))) != 0);
+        tempTown.m_spells[spell] =
+            (spellBuf[spell / 8] & (1 << (spell % 8))) != 0;
 
-    if (infile->read(&numTownEvents, sizeof(numTownEvents))
+    if (readValue(infile, numTownEvents)
         < sizeof(numTownEvents))
         return -1;
 
@@ -2705,7 +2704,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 
     charBuffer = -1;
     if (mapVersion >= 28)
-        infile->read(&charBuffer, sizeof(charBuffer));
+        readValue(infile, charBuffer);
 
     if (m_objectTypes[townObject->m_typeIndex].m_objectType == RANDOM_TOWN) {
         if (charBuffer != -1
