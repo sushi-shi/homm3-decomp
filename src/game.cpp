@@ -1029,9 +1029,8 @@ int game::loadObeliskPool(TAbstractFile* infile)
 MAC_ADDRESS(0x0cc204, 0x9c)
 int game::saveObeliskPool(TAbstractFile* outfile)
 {
-    char charBuffer = m_numObelisks;
-    int count = outfile->write(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+    int count = writeValue<char>(outfile, m_numObelisks);
+    if (count < sizeof(char))
         return -1;
     count = outfile->write(m_obeliskFlags, sizeof(m_obeliskFlags));
     if (count < sizeof(m_obeliskFlags))
@@ -2100,7 +2099,7 @@ int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
     int count;
     short length;
 
-    count = infile->read(&length, sizeof(length));
+    count = readValue(infile, length);
     if (count < sizeof(length))
         return -1;
 
@@ -2167,7 +2166,7 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
     int count;
     short length = s.length();
 
-    count = outfile->write(&length, sizeof(length));
+    count = writeValue<short>(outfile, length);
     if (count < sizeof(length))
         return -1;
 
@@ -2187,7 +2186,6 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 VA(0x004bbc20, 0x21E) MAC_ADDRESS(0x0cee2c, 0x194)  // dc 0xa75d0
 int game::saveRumours(TAbstractFile* outfile)
 {
-    unsigned char boolBuffer;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         currentRumour(m_currentRumour);
     int saveResult = saveString(outfile, currentRumour);
@@ -2198,16 +2196,15 @@ int game::saveRumours(TAbstractFile* outfile)
         return -1;
 
     int rumourListSize = m_rumours.size();
-    if (outfile->write(&rumourListSize, sizeof(rumourListSize))
+    if (writeValue<int>(outfile, rumourListSize)
         < sizeof(rumourListSize))
         return -1;
 
     for (TRumour* rit = m_rumours.begin(); rit != m_rumours.end(); ++rit) {
         if (saveString(outfile, rit->m_text) < 0)
             return -1;
-        boolBuffer = rit->m_unavailable;
-        if (outfile->write(&boolBuffer, sizeof(boolBuffer))
-            < sizeof(boolBuffer))
+        if (writeValue<unsigned char>(outfile, rit->m_unavailable)
+            < sizeof(unsigned char))
             return -1;
     }
     return 1;
@@ -2227,14 +2224,14 @@ int game::loadRumours(TAbstractFile* infile)
         return -1;
 
     int count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return -1;
 
     m_rumours.resize(count);
     for (TRumour* it = m_rumours.begin(); it != m_rumours.end(); ++it) {
         if (loadString(infile, it->m_text) < 0)
             return -1;
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
+        if (readValue(infile, value) < sizeof(value))
             return -1;
         it->m_unavailable = value != 0;
     }
@@ -2301,7 +2298,7 @@ MAC_ADDRESS(0x0cf178, 0xb0)
 int game::saveBlackMarkets(TAbstractFile* outfile)
 {
     char blackMarketListSize = m_blackMarkets.size();
-    int count = outfile->write(&blackMarketListSize, sizeof(blackMarketListSize));
+    int count = writeValue<char>(outfile, blackMarketListSize);
     if (count < sizeof(blackMarketListSize))
         return -1;
     count = outfile->write(&m_blackMarkets[0], blackMarketListSize * sizeof(TBlackMarket));
