@@ -3760,7 +3760,7 @@ int advManager::processHover(int mouseX, int mouseY)
         setRolloverText(currCell, rx, ry);
 
         if (g_currentPlayer->m_currHeroId != -1
-            && g_game->getHero(g_currentPlayer->m_currHeroId)->m_z
+            && g_game->getCurrHero()->m_z
                != m_lastMapHover.m_z) {
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             return 1;
