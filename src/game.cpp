@@ -1343,44 +1343,59 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 // emits the current format. The tavern pair is written longhand here
 // where load loops over it, and the trailing combination-artifact word
 // is unconditional.
+// DC records four scalar staging buffers besides count/x; Mac separates
+// unsigned-long/int slots +0x40/+0x44 and unsigned/signed bytes +0x48/+0x49.
 VA(0x004ba670, 0x36A) MAC_ADDRESS(0x0ccd7c, 0x4fc)  // anchor-global, dc 0xa55a8
 int playerData::save(TAbstractFile* outfile)
 {
+    unsigned long uintBuffer;
+    int intBuffer;
     int count;
     int x;
+    unsigned char ucharBuffer;
+    char charBuffer;
 
-    count = writeValue<char>(outfile, m_color);
+    charBuffer = m_color;
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
-    count = writeValue<char>(outfile, m_numHeroes);
+    charBuffer = m_numHeroes;
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
-    count = writeValue<char>(outfile, static_cast<char>(m_currHeroId));
+    charBuffer = static_cast<char>(m_currHeroId);
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
     for (x = 0; x < 8; x++) {
-        count = writeValue<char>(outfile, static_cast<char>(m_heroes[x]));
+        charBuffer = static_cast<char>(m_heroes[x]);
+        count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
     }
 
-    count = writeValue<char>(outfile, static_cast<char>(m_recruits[0]));
+    charBuffer = static_cast<char>(m_recruits[0]);
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
-    count = writeValue<char>(outfile, static_cast<char>(m_recruits[1]));
+    charBuffer = static_cast<char>(m_recruits[1]);
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
-    count = writeValue<unsigned char>(outfile, m_startingNumHeroes);
+    ucharBuffer = m_startingNumHeroes;
+    count = writeScalar(outfile, ucharBuffer);
     if (count < sizeof(unsigned char))
         return -1;
 
-    count = writeValue<int>(outfile, m_personality);
+    intBuffer = m_personality;
+    count = writeScalar(outfile, intBuffer);
     if (count < sizeof(int))
         return -1;
 
-    count = writeValue<char>(outfile, m_extraPuzzlePieces);
+    charBuffer = m_extraPuzzlePieces;
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
@@ -1388,42 +1403,52 @@ int playerData::save(TAbstractFile* outfile)
     if (count < sizeof(m_puzzleGuess))
         return -1;
 
-    count = writeValue<char>(outfile, m_deathCountDown);
+    charBuffer = m_deathCountDown;
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
-    count = writeValue<char>(outfile, m_numTowns);
+    charBuffer = m_numTowns;
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
-    count = writeValue<char>(outfile, m_currTownId);
+    charBuffer = m_currTownId;
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
     for (x = 0; x < 0x48; x++) {
-        count = writeValue<char>(outfile, m_townIds[x]);
+        charBuffer = m_townIds[x];
+        count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
     }
 
     for (x = 0; x < 7; x++) {
-        count = writeValue<int>(outfile, m_resources[x]);
+        intBuffer = m_resources[x];
+        count = writeScalar(outfile, intBuffer);
         if (count < sizeof(int))
             return -1;
     }
 
-    count = writeValue<unsigned long>(outfile, m_mysticalGardenFlags);
+    uintBuffer = m_mysticalGardenFlags;
+    count = writeScalar(outfile, uintBuffer);
     if (count < sizeof(unsigned long))
         return -1;
-    count = writeValue<unsigned long>(outfile, m_magicSpringFlags);
+    uintBuffer = m_magicSpringFlags;
+    count = writeScalar(outfile, uintBuffer);
     if (count < sizeof(unsigned long))
         return -1;
-    count = writeValue<unsigned long>(outfile, m_deadGuyFlags);
+    uintBuffer = m_deadGuyFlags;
+    count = writeScalar(outfile, uintBuffer);
     if (count < sizeof(unsigned long))
         return -1;
-    count = writeValue<unsigned long>(outfile, m_leanToFlags);
+    uintBuffer = m_leanToFlags;
+    count = writeScalar(outfile, uintBuffer);
     if (count < sizeof(unsigned long))
         return -1;
 
-    count = writeValue<unsigned char>(outfile, m_placementHelpEnabled);
+    ucharBuffer = m_placementHelpEnabled;
+    count = writeScalar(outfile, ucharBuffer);
     if (count < sizeof(unsigned char))
         return -1;
 
