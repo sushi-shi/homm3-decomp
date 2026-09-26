@@ -2891,13 +2891,14 @@ unsigned char hero::heroFn004DBE80(int combination)
     return missingComponents.none();
 }
 
+// Mac f8548/f859c/f85d0 expands bitset reference assignment/conversion.
 VA(0x004dbf30, 0x133) MAC_ADDRESS(0x0f84b4, 0x184)
 unsigned char hero::heroFn004DBF30(int combination, long slot)
 {
     std::bitset<144> components =
         g_combinationArtifacts[combination].m_components;
     if (slot != -1) {
-        components.reset(m_equipped[slot].m_artifactId);
+        components[m_equipped[slot].m_artifactId] = false;
         removeArtifact(slot);
     }
 
@@ -2907,9 +2908,9 @@ unsigned char hero::heroFn004DBF30(int combination, long slot)
         int artifactId = m_equipped[i].m_artifactId;
         if (artifactId == ARTIFACT_NONE)
             continue;
-        if (!components.test(artifactId))
+        if (!components[artifactId])
             continue;
-        components.reset(m_equipped[i].m_artifactId);
+        components[m_equipped[i].m_artifactId] = false;
         removeArtifact(i);
     }
 
@@ -2936,28 +2937,6 @@ void hero::heroFn004DC070(long slot)
         }
     }
 }
-
-// The NOTIFIER half of the family. Two pieces are byte-proven beyond
-// the arithmetic: the player record's +0xe8 dword is walked as a
-// std::bitset<12> (the `cmp x,0xc` bounds check reaches bitset<12>'s own
-// _Xran, and the set is the `or` arm of `set(_P, true)` with the else
-// folded away), and the component sweep calls the TWO-ARGUMENT
-// `set(id, false)` OUT OF LINE where the sibling above inlines its
-// one-argument `reset` - a per-caller /Ob2 budget difference, not a
-// spelling one. `any()` is likewise a call here and inline there.
-// The owner index is taken WITHOUT the `owner < 0` guard get_player
-// carries; retail indexes gpGame->players directly.
-
-// Keep bitset<144>::set(size_t, bool) and bitset<144>::any() out of line at
-// their two call sites.
-
-// 65.9718 -> 87.2712 (2026-08-20), AND THE NOTE BELOW NAMED THE WALL AND
-// THEN DECLARED IT UNSPELLABLE. It was right that retail calls the
-// bitset<12> `_Xran` helper at all three sites (fn+0x61, +0xb7, +0x13a,
-// each `cmp <idx>,0xc / jb / call 0x4d4eb0`) with set/test themselves
-// INLINE, and right that our CL expanded the throw body at two of the
-// three. Its conclusion - "inline_depth cannot express 'inline the
-// parent, not the child'" - is true of the PRAGMA and false of the match.
 
 // The lever is DEPTH, spelled in the source. VC6's <bitset> defines
 //     bool operator[](size_t _P) const   { return (test(_P)); }
@@ -4907,7 +4886,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                 continue;
             int occupied = 0;
             for (int i = 0; i < 19; i++) {
-                if (classSlots.test(i) &&
+                if (classSlots[i] &&
                     m_equipped[i].m_artifactId != ARTIFACT_NONE)
                     occupied++;
             }
@@ -4951,7 +4930,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                         (g_artifactTraits[artifact].m_allowableSlotMask
                          == componentClass) ? 1 : 0;
                     for (int i = 0; i < 19; i++) {
-                        if (classSlots.test(i) &&
+                        if (classSlots[i] &&
                             m_equipped[i].m_artifactId != ARTIFACT_NONE)
                             occupied++;
                     }
