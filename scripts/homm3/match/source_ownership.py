@@ -994,11 +994,20 @@ def read_owner_placements(root: Path):
                        ('file', 'function', 'signature', 'dc_file'))
 
 
+def read_order_placements(root: Path):
+    """Review an exact source-order inversion against the older DC roster."""
+    return read_filter(root / 'config/source/order_placements.tsv',
+                       ('file', 'function', 'signature', 'preceding_function', 'dc_file'))
+
+
 def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
-            win_only: dict, *, owner_placements=None, symbols=None, matched_out=None,
+            win_only: dict, *, owner_placements=None, order_placements=None,
+            symbols=None, matched_out=None,
             strict_names: bool = False) -> tuple[list[str], dict]:
     owner_placements = owner_placements or {}
     used_placements = set()
+    order_placements = order_placements or {}
+    used_order_placements = set()
     inline_errors = []
     if any(d.inline_origin for d in definitions):
         if symbols is None:
@@ -1139,17 +1148,21 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             continue
         if key in win_only:
             used_win.add(key)
-            # A declaration without a source body is not a Windows-only
-            # exemption. A reviewed, different return interface is distinct:
-            # e.g. Complete's pointer-changed result vs DC's void declaration.
-            # Require both parsed return types; old/partial inventories cannot
-            # authorize this distinction. An emitted DC body still needs its
-            # proper owner rather than this declaration-only exception.
+            # A reviewed overload with different formal types is distinct
+            # even when its name and arity match an older DC procedure.
+            # Require parsed formals: missing type data cannot authorize it.
+            different_formals = bool(written) and all(
+                o.argument_types is not None
+                and tuple(type_identity(t) for t in o.argument_types)
+                != tuple(type_identity(t) for t in definition_arguments)
+                for o in written)
+            # A declaration with a different return interface is also
+            # distinct. Require both parsed returns for that exception.
             changed_return = (written and d.return_type
                               and all(o.declaration_only and o.return_type
                                       and type_identity(o.return_type) != type_identity(d.return_type)
                                       for o in written))
-            if written and not changed_return:
+            if written and not (changed_return or different_formals):
                 errors.append(f'FILTER {where}: Windows-only exemption hides a CodeView counterpart')
             else:
                 counts['win_only'] += 1
@@ -1250,9 +1263,16 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         key = (definition_owner(d), file)
         prior = previous.get(key)
         if prior and dc_line < prior[1]:
-            errors.append(f'ORDER {d.file}:{d.line} {d.name} (DC {dc_line}) follows {prior[0].name} (DC {prior[1]})')
-            counts['order'] += 1
+            order_key = (d.file, d.name, d.signature, prior[0].name, file)
+            if order_key in order_placements:
+                used_order_placements.add(order_key)
+                counts['reviewed_order_placement'] += 1
+            else:
+                errors.append(f'ORDER {d.file}:{d.line} {d.name} (DC {dc_line}) follows {prior[0].name} (DC {prior[1]})')
+                counts['order'] += 1
         previous[key] = (d, dc_line)
+    for key in order_placements.keys() - used_order_placements:
+        errors.append(f'FILTER stale order_placements.tsv entry {key}')
     return errors, dict(counts)
 
 
@@ -1301,10 +1321,13 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None
     errors.extend(failures)
     owner_placements, failures = read_owner_placements(root)
     errors.extend(failures)
+    order_placements, failures = read_order_placements(root)
+    errors.extend(failures)
     violations, counts = compare(definitions,
                                  read_dc(root, include_declarations=True, project=project) if origins is None else origins,
                                  dc_only, win_only,
                                  owner_placements=owner_placements,
+                                 order_placements=order_placements,
                                  symbols=inputs.dreamcast_symbols(project)
                                  if any(d.inline_origin for d in definitions) else None)
     errors.extend(violations)
