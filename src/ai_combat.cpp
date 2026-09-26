@@ -140,7 +140,9 @@ long type_monster_data::getSpellDamage(SpellID spell, const hero* castingHero, c
     damage = const_cast<hero*>(castingHero)->modifySpellDamage(spell, damage, 0);
     if (damage == 0)
         return 0;
-    return min(static_cast<long>(damage * m_combatValuePerHit), m_totalValue);
+    // Mac 0x026228 keeps damage in memory: min selects it by reference.
+    damage *= m_combatValuePerHit;
+    return min(damage, m_totalValue);
 }
 
 VA(0x00423ea0, 0x36) MAC_ADDRESS(0x026368, 0x48)  // dc 0x29dec
