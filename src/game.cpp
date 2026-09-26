@@ -4154,7 +4154,7 @@ MAC_ADDRESS(0x0d6844, 0x60)
 static void randomizeWiseTree(short id, NewmapCell* cell)
 {
     cell->m_extraInfo = (cell->m_extraInfo & 0xffffffe0) | (id & 0x1f);
-    cell->m_extraInfo &= 0xffffe01f;
+    cell->clearVisitedBits();
     int price = random(0, 2);
     cell->m_extraInfo = (cell->m_extraInfo & 0xffff1fff) | ((price & 7) << 13);
 }
@@ -4286,9 +4286,8 @@ void game::randomizeUniversity(NewmapCell* cell)
         --availableCount;
     }
 
-    const unsigned long cellVisitedBits = 0x00001fe0;
     const unsigned long universityIndexBits = 0x01ffe000;
-    cell->m_extraInfo &= ~cellVisitedBits;
+    cell->clearVisitedBits();
     unsigned long universityIndex = m_universities.size() & 0xfff;
     cell->m_extraInfo = (cell->m_extraInfo & ~universityIndexBits)
         | (universityIndex << 13);
@@ -4577,7 +4576,6 @@ void game::randomizeEvents()
     EGameResource resType;
     NewmapCell::TObjectCell* thisObj;
 
-    const unsigned long visitedBits = 0x00001fe0;
     const unsigned long poolIndexBits = 0x03ffe000;
 
     for (z = 0; z < getNumMapLevels(); ++z) {
@@ -4637,7 +4635,7 @@ void game::randomizeEvents()
 
                 case CREATURE_BANK:
                     {
-                        tempCell->m_extraInfo &= ~visitedBits;
+                        tempCell->clearVisitedBits();
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
@@ -4693,7 +4691,7 @@ void game::randomizeEvents()
 
                 case DERELICT_SHIP:
                     {
-                        tempCell->m_extraInfo &= ~visitedBits;
+                        tempCell->clearVisitedBits();
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
@@ -4706,7 +4704,7 @@ void game::randomizeEvents()
 
                 case SEPULCHER:
                     {
-                        tempCell->m_extraInfo &= ~visitedBits;
+                        tempCell->clearVisitedBits();
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
@@ -4719,7 +4717,7 @@ void game::randomizeEvents()
 
                 case SHIPWRECK:
                     {
-                        tempCell->m_extraInfo &= ~visitedBits;
+                        tempCell->clearVisitedBits();
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
@@ -4732,7 +4730,7 @@ void game::randomizeEvents()
 
                 case DRAGON_CITY:
                     {
-                        tempCell->m_extraInfo &= ~visitedBits;
+                        tempCell->clearVisitedBits();
                         tempCell->m_extraInfo =
                             ((m_creatureBanks.size() & 0xfff) << 13)
                             | (tempCell->m_extraInfo & ~poolIndexBits);
