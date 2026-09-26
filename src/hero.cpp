@@ -1794,7 +1794,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
     m_pathTargetX = -1;
     if (!(m_flags & 0x20000)) {
         m_mana = static_cast<short>(getMaxMana());
-        m_maxMovePoints = m_movePoints = getMobility((m_flags >> 18) & 1);
+        m_maxMovePoints = m_movePoints = getMobility();
     }
 
     if (!g_combatSurrendered)
@@ -4491,7 +4491,7 @@ int heroView(int heroID, int noDismiss, int alreadyFaded, unsigned char quickVie
         return 1;
     }
     g_currentHero->m_maxMovePoints =
-        g_currentHero->getMobility((g_currentHero->m_flags >> 18) & 1);
+        g_currentHero->getMobility();
     g_currentHero = 0;
     return 0;
 }
