@@ -2557,10 +2557,12 @@ void TSellCreatureWindow::update(bool update)
     }
 
     if (g_marketSource == MARKET_SOURCE_FREELANCER) {
-        setWidgetDisabled(16);
-        setWidgetDisabled(17);
-        setWidgetDisabled(18);
-        setWidgetDisabled(19);
+        // Mac 0:0x1f7cec..0x1f7d10 retains SetWidgetOff; Windows
+        // 0x5ec91e..0x5ec969 likewise clears 0x1006 for these four tabs.
+        setWidgetOff(16);
+        setWidgetOff(17);
+        setWidgetOff(18);
+        setWidgetOff(19);
     }
 
     for (int side = 0; side < 2; ++side) {

@@ -323,11 +323,11 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
         sprintf(s.m_countText, "%d", s.m_count);
         memset(s.m_cost, 0, sizeof s.m_cost);
 
+        // Mac expands the same base-elemental predicate here (0:0x109528),
+        // in the state check (0x10989c), and in upgradeSlot (0x109c70).
         TCreatureType type = s.m_type;
         if ((g_game->m_gameVersion != 0
-             || (type != CREATURE_AIR_ELEMENTAL && type != CREATURE_EARTH_ELEMENTAL
-                 && type != CREATURE_FIRE_ELEMENTAL
-                 && type != CREATURE_WATER_ELEMENTAL))
+             || !isBaseElemental(type))
             && static_cast<unsigned char>(isBaseCreature(type))) {
             upgradeAllValid = 1;
             allUpgraded = 0;
@@ -412,10 +412,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
 
             TCreatureType stateType = s.m_type;
             if ((g_game->m_gameVersion == 0
-                 && (stateType == CREATURE_AIR_ELEMENTAL
-                     || stateType == CREATURE_EARTH_ELEMENTAL
-                     || stateType == CREATURE_FIRE_ELEMENTAL
-                     || stateType == CREATURE_WATER_ELEMENTAL))
+                 && isBaseElemental(stateType))
                 || !static_cast<unsigned char>(isBaseCreature(stateType))) {
                 s.m_state = UPGRADE_STATE_NONE;
             } else if (canAfford(s.m_cost, g_currentPlayer->m_resources)) {
@@ -517,10 +514,7 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
         if (m_slot[which].m_type != CREATURE_NONE && m_slot[which].m_count > 0) {
             TCreatureType type = m_slot[which].m_type;
             if ((g_game->m_gameVersion != 0
-                 || (type != CREATURE_AIR_ELEMENTAL
-                     && type != CREATURE_EARTH_ELEMENTAL
-                     && type != CREATURE_FIRE_ELEMENTAL
-                     && type != CREATURE_WATER_ELEMENTAL))
+                 || !isBaseElemental(type))
                 && static_cast<unsigned char>(isBaseCreature(type))) {
                 TCreatureType upgraded;
                 {
