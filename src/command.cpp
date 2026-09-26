@@ -583,12 +583,14 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
             direction = 3;
         }
 
-        if (abs(yDifference) == 0)
+        // Mac retains abs(x) then abs(y), once each, before the zero guard.
+        // Its combat viewport origin differs; the shared arithmetic remains.
+        xDifference = abs(xDifference);
+        yDifference = abs(yDifference);
+        if (yDifference == 0)
             slope = 100.0f;
-        else {
-            slope = static_cast<float>(abs(xDifference));
-            slope = slope / abs(yDifference);
-        }
+        else
+            slope = static_cast<float>(xDifference) / static_cast<float>(yDifference);
 
         if (direction != COMBAT_ATTACK_ANGLE_0
                 && direction != COMBAT_ATTACK_ANGLE_6) {
