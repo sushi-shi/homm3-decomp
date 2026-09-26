@@ -225,7 +225,8 @@ void army::initClean()
 // E:\gamedcs\army.cpp:109
 // No retail out-of-line copy survives, but the Dreamcast call graph proves
 // this member boundary in range_attack. VC6 folds the inline definition into
-// that caller.
+// that caller. Mac 0x48f98 retains the body; rangeAttack and castSpell call it
+// at 0x4bcf8 and 0x54d78 with SHOOT_SAMPLE.
 MAC_ADDRESS(0x048f98, 0x70)
 inline void army::waitSample(army::TSampleID which)
 {
@@ -5101,10 +5102,7 @@ void army::castSpell(long hex)
         g_combatManager->castSpell(SPELL_BLOODLUST, hex, 1, -1, 2, 6);
         break;
     }
-    if (!static_cast<const combatManager*>(g_combatManager)
-             ->isQuickCombat()
-        && m_armySample[SHOOT_SAMPLE])
-        g_soundManager->waitSample(m_armySample[SHOOT_SAMPLE]->m_memSample.m_memSampleHandle, -1);
+    waitSample(SHOOT_SAMPLE);
     g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
     if (originalFacing != m_facing
         && !static_cast<const combatManager*>(g_combatManager)
