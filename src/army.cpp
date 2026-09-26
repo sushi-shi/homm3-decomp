@@ -75,12 +75,8 @@ DATA(0x00693858) int g_walkingYMod;
 // caller), and this body has no mass to give: writing the eight-sample
 // loop ahead of the icon disposals measured 64.60 and the literal 8 in
 // place of MAX_SAMPLES is byte-flat.
-// The array element destructor retail hands to `??_L` (0x43cb10) IS
-// observable and its body is `if (resource) resource->Dispose()`, but
-// TResourceHandle's destructor cannot carry it: `T` is incomplete in every
-// TU that sees army.h without csprite.h/sound.h, and giving it that body
-// fails the build with C2027 on CSprite and sample.  The relocation is a
-// name-only difference the ratchet already ignores.
+// The array element destructor at 0x43cb10 releases the resource through
+// TResourceHandle. Instantiating TUs include the complete resource types.
 VA(0x0043d250, 0x1A8) MAC_ADDRESS(0x048b38, 0x1ac)  // anchor-global + member-construction run, dc 0x436b8
 army::army()
 {
