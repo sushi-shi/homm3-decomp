@@ -225,19 +225,16 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    type_point anyTownLoc(-1, -1, -1);
-    type_point grailTownLoc(m_townX, m_townY, m_townZ);
-
     int player = 0;
     for (;;) {
         if (g_game->onSameTeam(player, g_netLocalGamePos)) {
             for (int j = 0; j < g_game->m_players[player].m_numTowns; ++j) {
                 town* thisTown = g_game->getTown(
                     g_game->m_players[player].m_townIds[j]);
-                type_point thisTownLoc = thisTown->getLocation();
                 bool hasGrail = false;
-                if (thisTownLoc == grailTownLoc
-                    || grailTownLoc == anyTownLoc)
+                // Mac 0x1fdf0c..0x1fe024 expands the same coordinate and
+                // wildcard comparison as isGrailTarget at 0x1fe124.
+                if (isGrailTarget(thisTown))
                     hasGrail = thisTown->hasBuilding(HOLY_GRAIL_ID, true);
                 if (hasGrail) {
                     m_playerWinner = thisTown->m_owner;

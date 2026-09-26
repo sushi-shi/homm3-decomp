@@ -1071,9 +1071,9 @@ void combatManager::setupAdjacencyArray()
 
         for (int direction = 0; direction < COMBAT_DIRECTION_COUNT;
                 direction++) {
-            if (validHex(hex)
-                    && (column == 0
-                        || column == COMBAT_GRID_LAST_COLUMN)) {
+            // DC cmbtmgr.cpp:1541 names InInvisibleColumn here; Mac expands
+            // its bounds and edge-column tests in the call-free loop.
+            if (inInvisibleColumn(hex)) {
                 m_adjacentCells[hex][direction] = -1;
                 if (column == 0) {
                     if (direction >= COMBAT_DIRECTION_3)
