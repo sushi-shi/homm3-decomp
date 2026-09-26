@@ -2894,8 +2894,22 @@ void TRmgGeneratorBase::readObjectPlacementRules()
     }
     sheet->dispose();
 
+#if defined(HOMM3_TARGET_MAC)
+    // CodeWarrior caps a frame at 32K: Mac 0x23486c news one 0xd980-byte
+    // block holding both tables and deletes it after the binding loop.
+    struct TPlacementTables {
+        std::vector<TRmgObjectPlacementRule*> rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
+        std::vector<int> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
+    };
+    TPlacementTables* tables = new TPlacementTables;
+    std::vector<TRmgObjectPlacementRule*> (&rulesByType)[ADVENTURE_OBJECT_TRAIT_COUNT][10] =
+        tables->rulesByType;
+    std::vector<int> (&subtypesByType)[ADVENTURE_OBJECT_TRAIT_COUNT][10] =
+        tables->subtypesByType;
+#else
     std::vector<TRmgObjectPlacementRule*> rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
     std::vector<int> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
+#endif
     for (int index = 0; index < ruleCount; ++index) {
         TRmgObjectPlacementRule* rule = &m_placementRules[index];
         rulesByType[objectTypes[index]][terrains[index]].push_back(rule);
@@ -2928,6 +2942,9 @@ void TRmgGeneratorBase::readObjectPlacementRules()
             }
         }
     }
+#if defined(HOMM3_TARGET_MAC)
+    delete tables;
+#endif
 }
 
 // Rank a footprint against terrain and already placed objects. The caller
