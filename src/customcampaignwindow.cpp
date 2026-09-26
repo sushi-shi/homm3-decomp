@@ -138,19 +138,28 @@ VA(0x00482fd0, 0x264) MAC_ADDRESS(0x21f6b0, 0x1d4)
 void TCustomCampaignWindow::loadCampaignList()
 {
     char currentDirectory[100];
+#if !defined(HOMM3_TARGET_MAC)
+    // Windows CRT file finding (_find*); the Mac build, a VC6 steering aid,
+    // does not model it and sees an empty scan.
     _finddata_t fileInfo;
+#endif
     TCampaignBrief::CampaignHeaderStruct* header;
 
     _getcwd(currentDirectory, sizeof(currentDirectory));
     _chdir(DATA_COMPGEN(0x006755ac, mapsDirectory, "Maps"));
     _getcwd(currentDirectory, sizeof(currentDirectory));
+#if defined(HOMM3_TARGET_MAC)
+    long findHandle = -1;
+#else
     long findHandle = _findfirst(
         DATA_COMPGEN(0x006755a4, campaignFilePattern, "*.h3c"), &fileInfo);
+#endif
     _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
     _getcwd(currentDirectory, sizeof(currentDirectory));
     if (findHandle == -1)
         return;
 
+#if !defined(HOMM3_TARGET_MAC)
     do {
         header = new TCampaignBrief::CampaignHeaderStruct(fileInfo.name);
         _getcwd(currentDirectory, sizeof(currentDirectory));
@@ -166,6 +175,7 @@ void TCustomCampaignWindow::loadCampaignList()
         _getcwd(currentDirectory, sizeof(currentDirectory));
     } while (_findnext(findHandle, &fileInfo) == 0);
     _findclose(findHandle);
+#endif
     _getcwd(currentDirectory, sizeof(currentDirectory));
 
     std::sort(m_campaignHeaders.begin(), m_campaignHeaders.end(),
