@@ -1101,6 +1101,8 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         areaEffect(targetIndex, SPELL_METEOR_SHOWER, mastery, monsterPower);
         break;
 
+    // Mac 0x191620 and 0x191814 retain spellCastWorks in both mass-damage
+    // arms; preserve the shared roll/chance helper instead of its expansion.
     case SPELL_DEATH_RIPPLE: {
         showSpellMessage(0, SPELL_DEATH_RIPPLE, 0);
         clearEffects();
@@ -1110,10 +1112,8 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         for (int group = 0; group < 2; ++group) {
             for (int index = 0; index < m_numArmies[group]; ++index) {
                 army* targetArmy = &m_armies[group][index];
-                if (random(1, 100)
-                    <= static_cast<long>(spellCastWorkChance(
-                        SPELL_DEATH_RIPPLE, m_currentSide, targetArmy, 0, 1,
-                        isMonsterSpell) * 100.0f)) {
+                if (spellCastWorks(SPELL_DEATH_RIPPLE, m_currentSide,
+                                   targetArmy, 0, isMonsterSpell)) {
                     m_effected[group][index] = 1;
                     damage = computeSpellDamage(
                         SPELL_DEATH_RIPPLE, monsterPower, mastery,
@@ -1153,10 +1153,8 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         for (int group = 0; group < 2; ++group) {
             for (int index = 0; index < m_numArmies[group]; ++index) {
                 army* targetArmy = &m_armies[group][index];
-                if (random(1, 100)
-                    <= static_cast<long>(spellCastWorkChance(
-                        SPELL_DESTROY_UNDEAD, m_currentSide, targetArmy, 0, 1,
-                        isMonsterSpell) * 100.0f)) {
+                if (spellCastWorks(SPELL_DESTROY_UNDEAD, m_currentSide,
+                                   targetArmy, 0, isMonsterSpell)) {
                     m_effected[group][index] = 1;
                     damage = computeSpellDamage(
                         SPELL_DESTROY_UNDEAD, monsterPower, mastery,
