@@ -7220,7 +7220,9 @@ const char* getBuildingName(int townType, int buildingId);
 // is_legal_building. The appends at 9174/9176 are ordinary operator+=.
 // DC locals include enemy_player (reference), this_hero, shared long i,
 // msg, iPlayer, infowin and view_level (normalized below). Keep retail's
-// const town access for its four const getArmy calls, unlike the older DC.
+// const town access for its four const getArmy calls, unlike the older DC
+// and Mac. Mac townQuickView calls the mutable twin at 0x1b6fdc four times;
+// the same authored cv spelling cannot select both retained overloads.
 // Restoring these together gives 99.5015%; DC 9192/9193 and retail place
 // first = 1 before calculateProduction, closing the remaining instruction
 // schedule difference at 100%. No alternate string spelling is required.
