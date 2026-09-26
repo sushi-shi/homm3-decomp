@@ -102,6 +102,9 @@ class TestMacQueue(unittest.TestCase):
                 self.assertTrue(all(row["retail_calls"] is None for row in report["rows"]))
                 queue.write(root, report)
                 self.assertEqual(len(json.loads((root / "build/mac/queue.json").read_text())["rows"]), 3)
+                all_callers = queue.generate(root, include_banked_exact=True)
+                self.assertEqual(all_callers["coverage"]["queued"], 4)
+                self.assertIn("0x00400100", {row["retail_va"] for row in all_callers["rows"]})
 
 
 if __name__ == "__main__":

@@ -655,18 +655,8 @@ void CChatManager::addChat(const char* format, ...)
     m_changed = 1;
 
     if (!m_isSysMsg) {
-        if (m_chatMemSample
-            && g_soundManager->getSampleInfo(
-                m_chatMemSample, AIL_SAMPLE_PLAYING))
-            return;
-        sample* chatSample = m_chatSample;
-        if (chatSample) {
-            int soundWasEnabled = g_soundManager->m_playSounds;
-            g_soundManager->m_playSounds = 1;
-            m_chatMemSample =
-                g_soundManager->memorySample(chatSample);
-            g_soundManager->m_playSounds = soundWasEnabled;
-        }
+        // Mac 0:0x2116a8 passes null to the retained sound helper.
+        playChatSample(0);
     }
 }
 
@@ -711,19 +701,7 @@ void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
         m_isSysMsg = 0;
     }
 
-    sample* sampleToPlay = m_turnDurSample;
-    if (m_chatMemSample
-        && g_soundManager->getSampleInfo(
-            m_chatMemSample, AIL_SAMPLE_PLAYING))
-        return;
-    if (!sampleToPlay)
-        sampleToPlay = m_chatSample;
-    if (sampleToPlay) {
-        int soundWasEnabled = g_soundManager->m_playSounds;
-        g_soundManager->m_playSounds = 1;
-        m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
-        g_soundManager->m_playSounds = soundWasEnabled;
-    }
+    playChatSample(m_turnDurSample);
 }
 
 VA(0x00553aa0, 0xC0)  // dc 0x11c558
@@ -742,21 +720,8 @@ void __cdecl CChatManager::systemMsg(const char* format, ...)
 
     m_isSysMsg = 1;
     addChat(finalText);
-    sample* sampleToPlay = m_sysMsgSample;
     m_isSysMsg = 0;
-
-    if (m_chatMemSample
-        && g_soundManager->getSampleInfo(
-            m_chatMemSample, AIL_SAMPLE_PLAYING))
-        return;
-    if (!sampleToPlay)
-        sampleToPlay = m_chatSample;
-    if (sampleToPlay) {
-        int soundWasEnabled = g_soundManager->m_playSounds;
-        g_soundManager->m_playSounds = 1;
-        m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
-        g_soundManager->m_playSounds = soundWasEnabled;
-    }
+    playChatSample(m_sysMsgSample);
 }
 
 VA(0x00553b60, 0xCA)  // dc 0x11c5bc
@@ -775,21 +740,7 @@ void CChatManager::playerDropMsg(const char* format, ...)
 
     m_isSysMsg = 1;
     addChat(finalText);
-    sample* sampleToPlay = m_playerDropSample;
-
-    if (!(m_chatMemSample
-          && g_soundManager->getSampleInfo(
-              m_chatMemSample, AIL_SAMPLE_PLAYING))) {
-        if (!sampleToPlay)
-            sampleToPlay = m_chatSample;
-        if (sampleToPlay) {
-            int soundWasEnabled = g_soundManager->m_playSounds;
-            g_soundManager->m_playSounds = 1;
-            m_chatMemSample =
-                g_soundManager->memorySample(sampleToPlay);
-            g_soundManager->m_playSounds = soundWasEnabled;
-        }
-    }
+    playChatSample(m_playerDropSample);
     m_isSysMsg = 0;
 }
 
@@ -809,22 +760,26 @@ void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
 
     m_isSysMsg = 1;
     addChat(finalText);
-    sample* sampleToPlay = m_playerEnterSample;
-
-    if (!(m_chatMemSample
-          && g_soundManager->getSampleInfo(
-              m_chatMemSample, AIL_SAMPLE_PLAYING))) {
-        if (!sampleToPlay)
-            sampleToPlay = m_chatSample;
-        if (sampleToPlay) {
-            int soundWasEnabled = g_soundManager->m_playSounds;
-            g_soundManager->m_playSounds = 1;
-            m_chatMemSample =
-                g_soundManager->memorySample(sampleToPlay);
-            g_soundManager->m_playSounds = soundWasEnabled;
-        }
-    }
+    playChatSample(m_playerEnterSample);
     m_isSysMsg = 0;
+}
+
+// Mac +0x2119d8 retains one method called by all five chat formatters.
+// VC6 expands its sound-state and fallback sequence at those call sites.
+void CChatManager::playChatSample(sample* preferred)
+{
+    if (m_chatMemSample
+        && g_soundManager->getSampleInfo(
+            m_chatMemSample, AIL_SAMPLE_PLAYING))
+        return;
+    if (!preferred)
+        preferred = m_chatSample;
+    if (preferred) {
+        int soundWasEnabled = g_soundManager->m_playSounds;
+        g_soundManager->m_playSounds = 1;
+        m_chatMemSample = g_soundManager->memorySample(preferred);
+        g_soundManager->m_playSounds = soundWasEnabled;
+    }
 }
 
 // DC's UpdateWidget public encodes native bool for killOld; the retained
@@ -867,7 +822,7 @@ unsigned char CChatManager::hasOldChat()
     if (m_msgCount == 0)
         return 0;
     unsigned long killTime = m_msgArray[m_currMsg].m_killTime;
-    return static_cast<long>(GameTime::get() - killTime) > 20000;
+    return GameTime::elapsedSince(killTime) > 20000;
 }
 
 VA(0x00553df0, 0xE4)  // dc 0x11c7b0
@@ -936,7 +891,7 @@ void CChatManager::updateWidgetText(int numLines, textWidget* widget)
     for (i = firstMsg; i <= lastMsg; i++) {
         lineCounts[lineNbr] =
             widget->m_font->lineLength(m_msgArray[msgNbr].m_text, widget->m_width);
-        msgNbr = (msgNbr + 1) % m_maxLines;
+        msgNbr = getNextMsgNbr(msgNbr);
         totalLines += lineCounts[lineNbr];
         lineNbr++;
     }
@@ -954,7 +909,7 @@ void CChatManager::updateWidgetText(int numLines, textWidget* widget)
         if (i < lastMsg)
             strcat(m_widgetText, DATA_COMPGEN(0x006603bc, chatLineBreak, "\n"));
         i++;
-        msgNbr = (msgNbr + 1) % m_maxLines;
+        msgNbr = getNextMsgNbr(msgNbr);
         if (msgNbr == m_currMsg)
             break;
     }
@@ -1122,9 +1077,6 @@ unsigned char initRemote(eNetGameType mpType, const char* userName)
     g_followPlayerMode = 0;
     g_weMoved = 0;
 
-    playerInfo.m_dpid = 0;
-    playerInfo.m_name[0] = 0;
-    playerInfo.m_version = *g_videoGameState;
     g_thisNetPlayerInfo = playerInfo;
 
     strcpy(g_config.m_networkDefaultName, userName);
@@ -1153,10 +1105,8 @@ void remoteCleanup()
 
         g_remoteOn = 0;
         {
+            // Mac 0x212b14 constructs this record once, then copies it.
             CNetPlayerInfo playerInfo;
-            playerInfo.m_dpid = 0;
-            playerInfo.m_name[0] = 0;
-            playerInfo.m_version = *g_videoGameState;
             g_thisNetPlayerInfo = playerInfo;
         }
     }
@@ -1378,7 +1328,7 @@ void CAnimatedDlg::tickAnimation()
 {
     unsigned long currentTime = GameTime::get();
     unsigned long lastTick = m_lastTick;
-    if (static_cast<long>(GameTime::get() - lastTick) >= 200) {
+    if (GameTime::elapsedSince(lastTick) >= 200) {
         m_spriteFrame = (m_spriteFrame + 1)
                       % m_sprite->getNumFrames(m_seq);
         m_lastTick = currentTime;
@@ -1426,8 +1376,10 @@ void CWaitForReadyPlayersDlg::wait()
 
     int creature;
     do {
-        // Complete calls Random (retail 0x554f10+0x13b); DC1723 calls SRandom.
-        creature = random(0, 111);
+        // DC 1723 and the Mac wait-dialog body both retain SRandom. Windows
+        // retail branches to random at 0x50b230; its body is byte-identical
+        // to sRandom's VC6 body, so the symbol identity remains a link lead.
+        creature = sRandom(0, 111);
     } while (creature == CREATURE_ARCH_DEVIL
              || creature == CREATURE_DEVIL);
 
@@ -2133,7 +2085,7 @@ void CLevelPickWaitDlg::waitForLevels(int fromWho)
 
     int creature;
     do {
-        creature = random(0, 111);
+        creature = sRandom(0, 111);
     } while (creature == CREATURE_ARCH_DEVIL
              || creature == CREATURE_DEVIL);
 
@@ -2237,7 +2189,7 @@ VA(0x00557090, 0x5C)  // dc 0x11e948
 void CWaitForRemoteBattleDlg::wait(int playerPos)
 {
     m_playerPos = playerPos;
-    int creature = random(0, 111);
+    int creature = sRandom(0, 111);
     setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_REMOTE_BATTLE), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 12);
     doModal(0);
@@ -2557,8 +2509,7 @@ VA(0x00557aa0, 0x4D)  // dc 0x11f090
 unsigned char CTurnDuration::isExpired()
 {
     if ((!g_currentPlayer || g_currentPlayer->isLocalHuman())
-            && m_currDuration != 0
-            && !g_inCampaign
+            && isOn()
             && m_pauseTime <= 0) {
         unsigned long startTime = m_turnStartTime;
         if (startTime > 0
@@ -2665,9 +2616,11 @@ unsigned char CTurnDuration::isClose(unsigned long howClose)
         return 0;
     if (m_pauseTime != 0)
         return 0;
-    unsigned char close = GameTime::get() + howClose
-                          > m_turnStartTime + m_currDuration;
-    return close;
+    // Guard returns keep the retained Windows body exact and let its chat
+    // caller branch directly; a byte comparison local leaves seta/test there.
+    if (GameTime::get() + howClose <= m_turnStartTime + m_currDuration)
+        return 0;
+    return 1;
 }
 
 VA(0x00557d60, 0xB)  // dc 0x11f39c
@@ -2686,7 +2639,7 @@ void CTurnDuration::setDuration(unsigned long ms)
 VA(0x00557d90, 0x3D)  // dc 0x11f3b0
 void CTurnDuration::start()
 {
-    if (m_currDuration != 0 && !g_inCampaign) {
+    if (isOn()) {
         m_lastWarned = m_turnStartTime = GameTime::get();
         m_nextWarning = 0;
         if (m_currDuration > 60000)

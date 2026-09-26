@@ -156,6 +156,7 @@ protected:
     unsigned char m_alignments[10];
     long m_armyValueIncrease;
     short m_improvement;
+    int normalizeAlignment(int alignment) const;
     void getAlignments();
 
 public:

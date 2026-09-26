@@ -652,7 +652,7 @@ static void setupCDRom()
         g_mouseManager->showPointer(false);
         g_noSound = 1;
         if (g_tcpHostStatus)
-            normalDialog(g_generalText->getText(GENERAL_TEXT_CDROM_UNAVAILABLE), 1, -1, -1, -1, 0,
+            normalDialog((*g_generalText)[GENERAL_TEXT_CDROM_UNAVAILABLE], 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
         g_noCdRom = 1;
         break;
@@ -668,13 +668,13 @@ static void setupCDRom()
     case CD_DRIVE_NUMBER_3:
         earlyShutdown(
             DATA_COMPGEN(0x0067f728, oldMainStartupError, "Startup error"),
-            g_generalText->getText(GENERAL_TEXT_GAME_DIRECTORY_CHANGE_ERROR));
+            (*g_generalText)[GENERAL_TEXT_GAME_DIRECTORY_CHANGE_ERROR]);
         exit(0);
 
     case CD_DRIVE_NUMBER_4:
         earlyShutdown(
             DATA_COMPGEN(0x0067f728, oldMainStartupError, "Startup error"),
-            g_generalText->getText(GENERAL_TEXT_GAME_DATA_NOT_FOUND));
+            (*g_generalText)[GENERAL_TEXT_GAME_DATA_NOT_FOUND]);
         exit(0);
     }
 
@@ -769,6 +769,8 @@ void lostGame()
     do {
         g_soundManager->serviceSounds();
         Sleep(100);
+        // Mac calls musicPlaying at 0x10fc78; Complete calls the Miles
+        // stream-status import at retail 0x4ee3aa.
         status = AIL_stream_status(g_mp3Stream);
     } while (g_mp3Stream && !done && status == AIL_STREAM_PLAYING);
 }
@@ -839,6 +841,13 @@ static int doSinglePlayerWindow();
 static int doMultiPlayerWindow();
 static int doLoadGame();
 static int pickLoadGame();
+
+// The Mac campaign paths retain this no-argument helper at 0x10e810.
+// Complete expands its fixed VideoOpen call at each source site.
+static void openCampaignVideo()
+{
+    videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+}
 
 // E:\gamedcs\kb.cpp:814. Dreamcast exposes this source boundary and its
 // five statement rows; Complete expands it into oldmain's credits arm.  The
@@ -927,7 +936,7 @@ int oldmain()
     setupCDRom();
 
     if (g_soundManager->open(-1))
-        shutDown(g_generalText->getText(GENERAL_TEXT_SOUND_INITIALIZATION_ERROR));
+        shutDown((*g_generalText)[GENERAL_TEXT_SOUND_INITIALIZATION_ERROR]);
 
     if (g_debugLevel < 9)
         checkMem();
@@ -1011,7 +1020,7 @@ int oldmain()
             g_gameSelectBack = ResourceManager::getBitmap16(
                 DATA_COMPGEN(0x0067f6f8, oldGameSelectBackground,
                              "GamSelBk.pcx"));
-            videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+            openCampaignVideo();
         }
         videoNextFrame();
         videoDrawCurrentFrame();
@@ -1028,7 +1037,7 @@ int oldmain()
             videoPause();
             if (!lobbyLaunchConnect()) {
                 remoteCleanup();
-                normalDialog(g_generalText->getText(GENERAL_TEXT_SESSION_CONNECTION_ERROR),
+                normalDialog((*g_generalText)[GENERAL_TEXT_SESSION_CONNECTION_ERROR],
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 unused = 1;
             } else if (g_dPlay && g_dPlay->isHost()) {
@@ -1205,7 +1214,7 @@ int oldmain()
             } else {
 
                 if (g_executive->addManager(g_advManager, -1))
-                    shutDown(g_generalText->getText(GENERAL_TEXT_ADD_MANAGER_ERROR));
+                    shutDown((*g_generalText)[GENERAL_TEXT_ADD_MANAGER_ERROR]);
                 unloadProgressBar();
 
                 if (g_remoteOn) {
@@ -1246,7 +1255,7 @@ int oldmain()
             remoteCleanup();
             g_completeDrawEnabled = 1;
             g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
-            sprintf(g_winText, g_generalText->getText(GENERAL_TEXT_CAMPAIGN_COMPLETE_FORMAT),
+            sprintf(g_winText, (*g_generalText)[GENERAL_TEXT_CAMPAIGN_COMPLETE_FORMAT],
                     g_game->getCurrentTurn());
 
             if (!g_defeatedAllPlayers) {
@@ -1485,7 +1494,7 @@ static int doCampaignWindow(bool newGame, int campaignSet)
             TCampaignWindow campaignWindow(newGame, campaignSet);
             campaignWindow.doModal();
         }
-        videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+        openCampaignVideo();
         videoPause();
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
             break;
@@ -1538,11 +1547,11 @@ static unsigned char doCampaignWindow()
                     campaignWindow.doModal();
                 }
 
-                videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                openCampaignVideo();
                 videoPause();
                 if (g_windowManager->m_dialogReturn
                     == DIALOG_RETURN_CANCEL) {
-                    videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                    openCampaignVideo();
                     break;
                 }
 
@@ -1567,11 +1576,11 @@ static unsigned char doCampaignWindow()
                     campaignWindow.doModal();
                 }
 
-                videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                openCampaignVideo();
                 videoPause();
                 if (g_windowManager->m_dialogReturn
                     == DIALOG_RETURN_CANCEL) {
-                    videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                    openCampaignVideo();
                     break;
                 }
 
@@ -1596,11 +1605,11 @@ static unsigned char doCampaignWindow()
                     campaignWindow.doModal();
                 }
 
-                videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                openCampaignVideo();
                 videoPause();
                 if (g_windowManager->m_dialogReturn
                     == DIALOG_RETURN_CANCEL) {
-                    videoOpen(33, 0, 0, 800, 600, 1, 0, 1);
+                    openCampaignVideo();
                     break;
                 }
 
@@ -1828,7 +1837,7 @@ int interpretCommandLine()
     g_debugLevel = 0;
     g_noSound = 0;
     g_limitPlayer = 0;
-    strcpy(g_mapName, g_generalText->getText(GENERAL_TEXT_DEFAULT_MAP_FILENAME));
+    strcpy(g_mapName, (*g_generalText)[GENERAL_TEXT_DEFAULT_MAP_FILENAME]);
     length = strlen(g_commandLine);
     _strupr(g_commandLine);
     for (i = 0; i < length; i++) {
@@ -2008,11 +2017,11 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_EXPERIENCE:
-            normalDialog(g_generalText->getText(GENERAL_TEXT_EXPERIENCE_HELP), NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog((*g_generalText)[GENERAL_TEXT_EXPERIENCE_HELP], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_MANA:
-            normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_HELP), NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog((*g_generalText)[GENERAL_TEXT_SPELL_POINTS_HELP], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case RES_ARTIFACT: {
@@ -2060,7 +2069,7 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
         case GEMS:
         case GOLD:
         case RES_SMALL_GOLD:
-            normalDialog(g_generalText->getText(GENERAL_TEXT_RESOURCES_HELP), NORMAL_DIALOG_POPUP, -1, -1,
+            normalDialog((*g_generalText)[GENERAL_TEXT_RESOURCES_HELP], NORMAL_DIALOG_POPUP, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         }
@@ -2250,10 +2259,10 @@ static void checkPlayerLoss()
             playerDead(i);
             if (i == g_game->getLocalPlayerGamePos()) {
                 g_goSolo = 0;
-                normalDialog(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_DEFEATED), NORMAL_DIALOG_DEFAULT,
+                normalDialog((*g_generalText)[GENERAL_TEXT_LOCAL_PLAYER_DEFEATED], NORMAL_DIALOG_DEFAULT,
                              -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             } else {
-                const char* deadFormat = g_generalText->getText(GENERAL_TEXT_PLAYER_DEFEATED_FORMAT);
+                const char* deadFormat = (*g_generalText)[GENERAL_TEXT_PLAYER_DEFEATED_FORMAT];
                 sprintf(g_text, deadFormat, g_game->getPlayerName(i));
                 normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
                              -1, -1, -1, 5000, -1, 0);
@@ -2261,7 +2270,7 @@ static void checkPlayerLoss()
         } else if (player.m_numTowns == 0) {
             if (player.m_deathCountDown == -1) {
                 if (g_game->isLocalHuman(i) && i == g_netLocalGamePos) {
-                    const char* warnFormat = g_generalText->getText(GENERAL_TEXT_PLAYER_LAST_TOWN_WARNING_FORMAT);
+                    const char* warnFormat = (*g_generalText)[GENERAL_TEXT_PLAYER_LAST_TOWN_WARNING_FORMAT];
                     sprintf(g_text, warnFormat, g_game->getPlayerName(i));
                     normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
                                  -1, 0, -1, 0, -1, 0);
@@ -2270,11 +2279,11 @@ static void checkPlayerLoss()
             } else if (player.m_deathCountDown == 0) {
                 playerDead(i);
                 if (g_game->isLocalHuman(i) && i == g_netLocalGamePos) {
-                    const char* localFormat = g_generalText->getText(GENERAL_TEXT_PLAYER_BANISHED_FORMAT);
+                    const char* localFormat = (*g_generalText)[GENERAL_TEXT_PLAYER_BANISHED_FORMAT];
                     sprintf(g_text, localFormat, g_game->getPlayerName(i));
                     g_goSolo = 0;
                 } else {
-                    const char* otherFormat = g_generalText->getText(GENERAL_TEXT_PLAYER_BANISHED_THIRD_PERSON_FORMAT);
+                    const char* otherFormat = (*g_generalText)[GENERAL_TEXT_PLAYER_BANISHED_THIRD_PERSON_FORMAT];
                     sprintf(g_text, otherFormat, g_game->getPlayerName(i));
                 }
                 normalDialog(g_text, NORMAL_DIALOG_DEFAULT, -1, -1, 10, i,
@@ -2336,9 +2345,9 @@ unsigned char getTeamNames(int player, char* names)
 
 // E:\gamedcs\kb.cpp:2867. Dreamcast preserves this source helper and its
 // two calls. Complete expands it at every DisplayVCWinLoss site, including
-// the nested CPlayerWonMsg constructor; retaining the helper is therefore
-// part of the source shape rather than duplicated network scaffolding.
-inline void sendPlayerWon()
+// the nested CPlayerWonMsg constructor. Mac retains the call, matching the
+// ordinary sendPlayerLost helper immediately below.
+void sendPlayerWon()
 {
     if (g_remoteOn) {
         CPlayerWonMsg msg(
@@ -3173,7 +3182,8 @@ void shutDown(const char* inExitMessage)
 VA_COMPGEN(0x004f3940, 0xA9, IMPLICIT_DTOR, combatManager)
 VA_COMPGEN(0x004f39f0, 0x6D, IMPLICIT_DTOR, advManager)
 
-// E:\gamedcs\kb.cpp:4187; Complete's body is empty (see kb.h).
+// E:\gamedcs\kb.cpp:4187; Complete's body is empty (see kb.h). Mac retains
+// a one-instruction body at 0:0x115f68, called from executive::shutDownSystem.
 void earlyShutDownSystem()
 {
 }
@@ -3736,7 +3746,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 g_game->m_campaign.m_isCheater = 1;
             if (g_game->getCurrHeroId() != -1) {
                 g_game->giveArmy(
-                                 &g_game->m_heroes[g_game->getCurrHeroId()].m_army,
+                                 &g_game->getCurrHero()->m_army,
                                  idItem - APP_MENU_ARMY_FIRST,
                                  APP_MENU_ARMY_QUANTITY, -1);
                 g_advManager->updBottomView(1, 1, 1);
@@ -4894,7 +4904,8 @@ unsigned short* getMapExtraPtr(int x, int y, int z)
 
 // EarlySetup at 0x4ed66a passes ".\\" in ECX to the shared release ret
 // at 0x5bc690. DC kb.cpp:648 calls the older CLogFile::InitLogFile() instead;
-// Complete's directory-taking hook has no work in this release build.
+// Complete's directory-taking hook has no work in this release build. Mac
+// earlySetup retains its call to the same empty hook at code 0:0x221ee0.
 void initLogFile(const char* path)
 {
 }

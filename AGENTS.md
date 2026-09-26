@@ -23,6 +23,25 @@ the reconstruction without proving a unique C++ spelling. A runnable Mac port
 is not a project requirement. Use native library headers for Mac comparisons;
 do not add duplicate game declarations or extracted header-body fragments.
 
+For the broad helper sweep, cover byte-exact Windows functions too. Use Mac's
+retained calls and simpler body shapes to restore helper calls and canonical
+bodies throughout the source. Inspect the Mac callee and its callers to
+distinguish game helpers from library, runtime, glue, or generated code. A
+retained Mac call to an identifiable game helper, or a recognizable helper
+body expanded in a Mac caller, is enough to restore that operation as a helper
+call in corresponding Windows source callers. If the helper already exists,
+replace equivalent direct field access or pasted logic with its call; if it
+does not, add one canonical body and its calls. Mac's stripped executable need
+not supply the helper's name: infer its operation from its body and callers,
+then choose a clear project name. Do not remove or defer a supported helper
+because its original spelling, exact Mac byte match, placement, or immediate
+Windows score gain is unknown. Keep the best-supported ordinary header or
+source placement and revise it when stronger evidence appears. A Windows
+function that is already byte-exact still needs its supported helper calls.
+Track each lead through implemented, already represented by a nested helper,
+or a specific reason why the Mac target or corresponding Windows operation
+cannot yet be identified. An uncertain name or placement is not such a reason.
+
 The verdict is VC6 SP3 under Wine; clang/clangd is editor tooling only. Use the
 per-TU compiler profiles in `config/units.toml`.
 
@@ -33,9 +52,11 @@ with CodeWarrior and compared in the same loop. Run `homm3 build` for the final
 checkpoint: it rebuilds affected TUs, refreshes retail targets through delinking,
 checks every admitted Mac pair, and runs the gates.
 
-## Required DC evidence: source layout as well as statements
+## Byte-matching evidence: DC source layout as well as statements
 
-**Inspect the function's source-line layout before speculative rewrites.**
+When byte matching a non-exact function, **inspect its source-line layout before
+speculative rewrites.** The broad Mac helper sweep above uses Mac calls and body
+shape first; it does not require a Dreamcast dossier for each restored helper.
 Recorded line positions, observed span lengths, internal gaps and their lengths,
 repeated attributions, and source-file switches all help reveal its approximate
 source shape. Read these alongside signatures, locals/lifetimes, scopes, helper
@@ -56,8 +77,9 @@ equal line counts. Test each meaningful hypothesis against retail VC6 output.
 
 ## Matching loop
 
-For every non-exact game function with a Dreamcast counterpart, run this evidence
-pass **before speculative C++ rewrites**:
+When byte matching a non-exact game function with a Dreamcast counterpart, run
+this evidence pass **before speculative C++ rewrites**. It is not a prerequisite
+for the broad Mac helper sweep:
 
 ```sh
 homm3 dreamcast show 0x00524dd0
@@ -70,9 +92,12 @@ homm3 sema diff 0x00524dd0 --structure
 homm3 sema diff 0x00524dd0 --source
 ```
 
-For an admitted Mac counterpart, also run `homm3 mac show <Windows-VA>`,
-`homm3 mac disasm <Windows-VA>` and `homm3 mac diff <Windows-VA>` before
-speculative rewrites. The Mac byte comparison is a separate exact verdict;
+For byte matching an admitted Mac counterpart, also run
+`homm3 mac show <Windows-VA>`, `homm3 mac disasm <Windows-VA>` and
+`homm3 mac diff <Windows-VA>` before speculative rewrites. A helper-sweep edit
+only needs enough Mac body/call evidence to identify the operation and its
+Windows callers; batch compilation and byte comparisons can follow the sweep.
+The Mac byte comparison is a separate exact verdict;
 its stripped PEF does not supply Dreamcast's names or line tables. Match the
 same authored C++ body against both targets, and document evidenced platform
 differences at the owning source.
@@ -175,7 +200,21 @@ the final implementation still requires retail verification.
 
 ## Helper boundaries and inlining
 
-Preserve one canonical helper, its proven declaration, and source calls. Match
+Use the [helper-placement skill](.agents/skills/helper-placement/SKILL.md) when
+Mac body order or VC6 cross-TU expansion may locate a recovered helper body.
+Mac xrefs identify callers but do not decide header versus source placement.
+During the broad sweep, an unidentified original name or uncertain placement
+does not veto a clear helper body and call. Put it in the best-supported
+ordinary header or source file, then revise placement if later cross-TU or
+source-order evidence warrants it.
+
+During byte recovery after the Mac helper sweep, keep the recovered helper
+calls. Do not replace them with direct fields, array indexing, or pasted
+statements for a higher score. An outer helper may replace a call when its
+implementation contains that recovered helper call; preserve the complete path.
+
+Preserve one canonical helper and its source calls. Preserve proven types and
+inline qualifiers; choose a clear name where the original is unknown. Match
 its retained retail body and each caller's call/expansion decision separately:
 
 - A Dreamcast-proven `inline` stays `inline` even where retail calls it out of line.
@@ -215,9 +254,10 @@ parameters, and ordinary functions use lowerCamelCase without these prefixes.
 For instance fields, `bShowTroopCount` becomes `m_showTroopCount`,
 `disabled_frame` becomes `m_disabledFrame`, and `Text` becomes `m_text`.
 Apply the convention throughout the code, updating declarations, definitions,
-and uses together. Retain the
-original spelling in the owning source's evidence comment so reference lookup
-remains possible. Preserve required external ABI spellings at their boundaries.
+and uses together. When an original spelling is known, retain it in the owning
+source's evidence comment so reference lookup remains possible. Do not invent
+one or delay helper recovery when no spelling survives. Preserve required
+external ABI spellings at their boundaries.
 
 Source annotations own names; build regenerates labels. Do not maintain a second
 symbol ledger. `config/` contains hand-admitted retail inventories and manifests.

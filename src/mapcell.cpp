@@ -287,9 +287,12 @@ int TTownEvent::load(TAbstractFile* infile, int saveVersion)
 }
 
 // E:\gamedcs\mapcell.cpp:354
-// Dreamcast retains an out-of-line copy. Retail's corresponding source-order
-// slot is twelve bytes of NOP padding, while is_diggable contains this exact
-// vector lookup expanded in place, so the Windows helper is inline-only.
+// Dreamcast retains an out-of-line copy. Mac places the retained body between
+// TTownEvent::load and getTriggerCell; both Mac callers are in mapcell.
+// Retail's corresponding source-order slot is twelve bytes of NOP padding,
+// while isDiggable and getSpecialTerrain expand this lookup. Removing inline
+// leaves both callers exact but emits an unused VC6 COMDAT; the original
+// keyword remains unproven.
 inline CObject* NewmapCell::TObjectCell::getObject() const
 {
     return &g_game->m_worldMap.m_objects[m_objectIndex];
@@ -339,7 +342,7 @@ unsigned long NewmapCell::getMapExtraInfo() const
     if (m_type == HERO)
         return g_game->getHero(m_extraInfo)->getObscuredExtraInfo();
     if (m_type == BOAT)
-        return g_game->m_boats[m_extraInfo].getObscuredExtraInfo();
+        return g_game->getBoat(m_extraInfo)->getObscuredExtraInfo();
     return m_extraInfo;
 }
 
@@ -351,7 +354,7 @@ unsigned char NewmapCell::cellIsTrigger() const
         return obscurer->getObscuredTrigger();
     }
     if (m_type == BOAT) {
-        boat* obscurer = &g_game->m_boats[m_extraInfo];
+        boat* obscurer = g_game->getBoat(m_extraInfo);
         return obscurer->getObscuredTrigger();
     }
     return m_isTrigger;
@@ -1198,7 +1201,10 @@ CObjectType* CObject::getObjectTypePtr() const
 }
 
 // E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
-// out-of-line SH4 body; Complete expands it into every admitted retail use.
+// out-of-line SH4 body; Mac places it between getObjectTypePtr and findTrigger.
+// Its two Mac callers are in mapcell. Complete expands the admitted uses;
+// removing inline keeps getTriggerCell exact but emits an unused VC6 COMDAT,
+// so the original keyword remains unproven.
 inline type_point CObject::getTrigger() const
 {
     int resultX;
@@ -1222,7 +1228,8 @@ void CObject::findTrigger(int& resultX, int& resultY) const
             if (m_x - horiz < 0 || m_x - horiz >= g_mapWidth)
                 continue;
 
-            if (objType->m_triggerCells[47 - vert * 8 - horiz]) {
+            if (objType->m_triggerCells[
+                    CObjectType::getBitPos(horiz, vert)]) {
                 resultX = m_x - horiz;
                 resultY = m_y - vert;
                 return;
@@ -1553,6 +1560,36 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 // costs 27 points (93.0057 -> 66.1138) - the gradient wants DEEPER nesting,
 // and `clear()` is already the deepest spelling available.
 
+// Mac retains these adjacent source helpers at 0:0x1217a0 and 0:0x12180c.
+// The first is called by readBlackBox, readTownData and readHeroData; the
+// second is called by loadBlackBox. Each reads a signed creature ID using the
+// byte width of its older file format and the short width of later formats.
+// Complete VC6 expands the calls in all four readers. The original names are
+// unavailable in the older Dreamcast build.
+static int readMapCreatureId(TAbstractFile* infile, int mapVersion)
+{
+    if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        signed char narrow;
+        infile->read(&narrow, sizeof(narrow));
+        return narrow;
+    }
+    short wide;
+    infile->read(&wide, sizeof(wide));
+    return wide;
+}
+
+static int readSavedCreatureId(TAbstractFile* infile, int saveVersion)
+{
+    if (saveVersion < 25) {
+        signed char narrow;
+        infile->read(&narrow, sizeof(narrow));
+        return narrow;
+    }
+    short wide;
+    infile->read(&wide, sizeof(wide));
+    return wide;
+}
+
 VA(0x004ff6b0, 0x535)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic), dc 0xee56c
 int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                              int mapVersion)
@@ -1658,17 +1695,8 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     count = value;
     thisBox->m_creatures.initialize();
     for (i = 0; i < count; ++i) {
-        int creature;
-        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            signed char narrow;
-            infile->read(&narrow, sizeof(narrow));
-            creature = narrow;
-        } else {
-            short wide;
-            infile->read(&wide, sizeof(wide));
-            creature = wide;
-        }
-        thisBox->m_creatures.m_armies[i] = creature;
+        thisBox->m_creatures.m_armies[i] =
+            readMapCreatureId(infile, mapVersion);
 
         short troops;
         if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
@@ -1940,15 +1968,8 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     count = value;
     thisBox->m_creatures.initialize();
     for (i = 0; i < count; ++i) {
-        if (saveVersion < 25) {
-            signed char narrow;
-            infile->read(&narrow, sizeof(narrow));
-            thisBox->m_creatures.m_armies[i] = narrow;
-        } else {
-            short wide;
-            infile->read(&wide, sizeof(wide));
-            thisBox->m_creatures.m_armies[i] = wide;
-        }
+        thisBox->m_creatures.m_armies[i] =
+            readSavedCreatureId(infile, saveVersion);
         short troops;
         if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
             return -1;
@@ -2047,7 +2068,8 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
     scholarInfo->m_secondary = -1;
     scholarInfo->m_spell = -1;
 
-    switch (scholarInfo->m_award) {
+    // Dreamcast mapcell.cpp:2333 calls ExtraInfoUnion::GetScholarAward.
+    switch (scholarObject->getScholarAward()) {
     case const_scholar_primary_skill:
         if (isRandom)
             scholarInfo->m_primary = random(0, 3);
@@ -2131,7 +2153,7 @@ void NewfullMap::loadShipyards()
 {
     type_point newPoint;
 
-    for (int z = 0; z < m_hasTwoLevels + 1; ++z) {
+    for (int z = 0; z < getNumLevels(); ++z) {
         for (int y = 0; y < g_mapHeight; ++y) {
             for (int x = 0; x < g_mapWidth; ++x) {
                 NewmapCell* cell = &m_cellData[(z * m_size + y) * m_size + x];
@@ -2444,10 +2466,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
 
-    type_point point;
-    point.m_x = monsterObject->m_x;
-    point.m_y = monsterObject->m_y;
-    point.m_z = monsterObject->m_z;
+    type_point point(monsterObject->m_x, monsterObject->m_y,
+                     monsterObject->m_z);
     g_game->recordMonsterIdentifier(identifier, point);
     return 0;
 }
@@ -2606,17 +2626,8 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     tempTown.m_customArmies = charBuffer;
     if (tempTown.m_customArmies) {
         for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
-            int creature;
-            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                signed char narrow;
-                infile->read(&narrow, sizeof(narrow));
-                creature = narrow;
-            } else {
-                short wide;
-                infile->read(&wide, sizeof(wide));
-                creature = wide;
-            }
-            tempTown.m_townArmy.m_armies[x] = creature;
+            tempTown.m_townArmy.m_armies[x] =
+                readMapCreatureId(infile, mapVersion);
 
             if (infile->read(&shortBuffer, sizeof(shortBuffer))
                 < sizeof(shortBuffer))
@@ -2913,14 +2924,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     if (charBuffer) {
         heroData->m_customArmies = 1;
         for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
-            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                infile->read(&charBuffer, sizeof(charBuffer));
-                intBuffer = charBuffer;
-            } else {
-                infile->read(&shortBuffer, sizeof(shortBuffer));
-                intBuffer = shortBuffer;
-            }
-            heroData->m_armies[x] = intBuffer;
+            heroData->m_armies[x] =
+                readMapCreatureId(infile, mapVersion);
 
             infile->read(&shortBuffer, sizeof(shortBuffer));
             heroData->m_numTroops[x] = shortBuffer;
@@ -2966,10 +2971,10 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         }
 
         // The fourth war-machine position is never serialized: every hero
-        // starts with the catapult in it.
-        heroData->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].m_artifactId
-            = ARTIFACT_CATAPULT;
-        heroData->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].m_extra = -1;
+        // starts with the catapult in it. Mac 0x1250fc constructs the
+        // artifact pair in a temporary before copying it into this slot.
+        heroData->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4] =
+            type_artifact(ARTIFACT_CATAPULT);
     }
 
     infile->read(&charBuffer, sizeof(charBuffer));
@@ -3060,17 +3065,8 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
         return -1;
 
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        int creature;
-        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            signed char narrow;
-            infile->read(&narrow, sizeof(narrow));
-            creature = narrow;
-        } else {
-            short wide;
-            infile->read(&wide, sizeof(wide));
-            creature = wide;
-        }
-        newGarrison.m_garrisonArmy.m_armies[slot] = creature;
+        newGarrison.m_garrisonArmy.m_armies[slot] =
+            readMapCreatureId(infile, mapVersion);
 
         short count;
         if (infile->read(&count, sizeof(count)) < sizeof(count))
@@ -3167,6 +3163,140 @@ void NewfullMap::soDTransformRandomDwellings()
     }
 }
 
+// Mac retains these six map-object readers in readObject's call sequence.
+// Complete's Windows dispatcher expands their corresponding bodies.
+void NewfullMap::readQuestGuardData(TAbstractFile* infile, CObject* tempObject)
+{
+    TQuestGuard tempGuard;
+    tempGuard.read(infile);
+    {
+        m_questGuardList.push_back(tempGuard);
+        tempObject->m_extraInfo = m_questGuardList.size() - 1;
+    }
+    if (tempGuard.m_quest) {
+        CMapObjectData* questData = static_cast<CMapObjectData*>(
+            static_cast<void*>(tempGuard.m_quest));
+        m_mapObjectData.push_back(questData);
+    }
+}
+
+static void readWitchHutData(TAbstractFile* infile, CObject* tempObject)
+{
+    if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        tempObject->m_extraInfo = 0xefbf;
+    } else {
+        int allowedSkills;
+        infile->read(&allowedSkills, sizeof(allowedSkills));
+        tempObject->m_extraInfo = allowedSkills;
+    }
+}
+
+void NewfullMap::readRandomDwellingData(TAbstractFile* infile,
+                                         CObject* object)
+{
+    RandomDwellingData dwelling;
+
+    char value;
+    infile->read(&value, sizeof(value));
+    dwelling.m_owner = value;
+
+    char padding[3];
+    infile->read(padding, 3);
+
+    int castleId;
+    infile->read(&castleId, sizeof(castleId));
+    dwelling.m_castleId = castleId;
+    if (castleId == 0) {
+        short factionMask;
+        infile->read(&factionMask, sizeof(factionMask));
+        dwelling.m_factionMask = factionMask;
+    }
+
+    infile->read(&value, sizeof(value));
+    dwelling.m_minLevel = value;
+    infile->read(&value, sizeof(value));
+    dwelling.m_maxLevel = value;
+
+    dwelling.m_object = object;
+    m_randomDwellings.push_back(dwelling);
+}
+
+void NewfullMap::readRandomDwellingLevelData(TAbstractFile* infile,
+                                              CObject* object)
+{
+    RandomDwellingData dwelling;
+
+    char value;
+    infile->read(&value, sizeof(value));
+    dwelling.m_owner = value;
+
+    char padding[3];
+    infile->read(padding, 3);
+
+    int castleId;
+    infile->read(&castleId, sizeof(castleId));
+    dwelling.m_castleId = castleId;
+    if (castleId == 0) {
+        short factionMask;
+        infile->read(&factionMask, sizeof(factionMask));
+        dwelling.m_factionMask = factionMask;
+    }
+
+    dwelling.m_minLevel = static_cast<unsigned char>(
+        m_objectTypes[object->m_typeIndex].m_extra);
+    dwelling.m_maxLevel = static_cast<unsigned char>(
+        m_objectTypes[object->m_typeIndex].m_extra);
+
+    dwelling.m_object = object;
+    m_randomDwellings.push_back(dwelling);
+}
+
+void NewfullMap::readRandomDwellingFactionData(TAbstractFile* infile,
+                                                CObject* object)
+{
+    RandomDwellingData dwelling;
+
+    char value;
+    infile->read(&value, sizeof(value));
+    dwelling.m_owner = value;
+
+    char padding[3];
+    infile->read(padding, 3);
+
+    dwelling.m_castleId = 0;
+    dwelling.m_factionMask = static_cast<unsigned short>(
+        1 << m_objectTypes[object->m_typeIndex].m_extra);
+
+    infile->read(&value, sizeof(value));
+    dwelling.m_minLevel = value;
+    infile->read(&value, sizeof(value));
+    dwelling.m_maxLevel = value;
+
+    dwelling.m_object = object;
+    m_randomDwellings.push_back(dwelling);
+}
+
+void NewfullMap::readHeroPlaceholderData(TAbstractFile* infile, CObject* tempObject)
+{
+    char value;
+    HeroPlaceholderData placeholder;
+    placeholder.m_object = tempObject;
+
+    infile->read(&value, sizeof(value));
+    placeholder.m_owner = value;
+
+    infile->read(&value, sizeof(value));
+    placeholder.m_heroId = value;
+    if (placeholder.m_heroId
+            == HeroPlaceholderData::HERO_ID_BY_POWER_RATING) {
+        placeholder.m_heroId = -1;
+        infile->read(&value, sizeof(value));
+        placeholder.m_powerRating = value;
+    }
+
+    m_heroPlaceholders.push_back(placeholder);
+}
+
 // E:\gamedcs\mapcell.cpp:3290
 // The h3m object dispatcher.  Five stream fields land in the object itself -
 // x, y, z, a FOUR-byte type index of which only the low word is kept, and
@@ -3182,8 +3312,8 @@ void NewfullMap::soDTransformRandomDwellings()
 // readHolyGrailData/readShrineData members. Their definitions stay at their
 // original mapcell.cpp positions, and Complete expands those calls here.
 // No standalone retail slot is needed to preserve those source boundaries.
-// The Complete-only placeholder, quest and dwelling records stay in their
-// caller arms.
+// Mac retains the placeholder, quest, witch-hut, and random-dwelling
+// readers; Complete expands their calls in this dispatcher.
 // Restoring all four helpers raises 56.6382 -> 60.0594 in the 76-TU control.
 // The native-vector frontier in QUEST_GUARD remains the large residual;
 // no invented arm wrapper or additional inline-depth pin is introduced.
@@ -3305,25 +3435,9 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         readEventData(infile, tempObject, mapVersion);
         break;
 
-    case HERO_PLACEHOLDER: {
-        HeroPlaceholderData placeholder;
-        placeholder.m_object = tempObject;
-
-        infile->read(&value, sizeof(value));
-        placeholder.m_owner = value;
-
-        infile->read(&value, sizeof(value));
-        placeholder.m_heroId = value;
-        if (placeholder.m_heroId
-                == HeroPlaceholderData::HERO_ID_BY_POWER_RATING) {
-            placeholder.m_heroId = -1;
-            infile->read(&value, sizeof(value));
-            placeholder.m_powerRating = value;
-        }
-
-        m_heroPlaceholders.push_back(placeholder);
+    case HERO_PLACEHOLDER:
+        readHeroPlaceholderData(infile, tempObject);
         break;
-    }
 
     case SPELL_SCROLL:
         readSpellScrollData(infile, tempObject);
@@ -3386,104 +3500,26 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
 
     case RANDOM_DWELLING: {
-        RandomDwellingData dwelling;
-
-        infile->read(&value, sizeof(value));
-        dwelling.m_owner = value;
-
-        infile->read(padding, 3);
-
-        int castleId;
-        infile->read(&castleId, sizeof(castleId));
-        dwelling.m_castleId = castleId;
-        if (castleId == 0) {
-            short factionMask;
-            infile->read(&factionMask, sizeof(factionMask));
-            dwelling.m_factionMask = factionMask;
-        }
-
-        infile->read(&value, sizeof(value));
-        dwelling.m_minLevel = value;
-        infile->read(&value, sizeof(value));
-        dwelling.m_maxLevel = value;
-
-        dwelling.m_object = tempObject;
-        m_randomDwellings.push_back(dwelling);
+        readRandomDwellingData(infile, tempObject);
         break;
     }
 
     case RANDOM_DWELLING_LVL: {
-        RandomDwellingData dwelling;
-
-        infile->read(&value, sizeof(value));
-        dwelling.m_owner = value;
-
-        infile->read(padding, 3);
-
-        int castleId;
-        infile->read(&castleId, sizeof(castleId));
-        dwelling.m_castleId = castleId;
-        if (castleId == 0) {
-            short factionMask;
-            infile->read(&factionMask, sizeof(factionMask));
-            dwelling.m_factionMask = factionMask;
-        }
-
-        dwelling.m_minLevel = static_cast<unsigned char>(
-            m_objectTypes[tempObject->m_typeIndex].m_extra);
-        dwelling.m_maxLevel = static_cast<unsigned char>(
-            m_objectTypes[tempObject->m_typeIndex].m_extra);
-
-        dwelling.m_object = tempObject;
-        m_randomDwellings.push_back(dwelling);
+        readRandomDwellingLevelData(infile, tempObject);
         break;
     }
 
     case RANDOM_DWELLING_FACTION: {
-        RandomDwellingData dwelling;
-
-        infile->read(&value, sizeof(value));
-        dwelling.m_owner = value;
-
-        infile->read(padding, 3);
-
-        dwelling.m_castleId = 0;
-        dwelling.m_factionMask = static_cast<unsigned short>(
-            1 << m_objectTypes[tempObject->m_typeIndex].m_extra);
-
-        infile->read(&value, sizeof(value));
-        dwelling.m_minLevel = value;
-        infile->read(&value, sizeof(value));
-        dwelling.m_maxLevel = value;
-
-        dwelling.m_object = tempObject;
-        m_randomDwellings.push_back(dwelling);
+        readRandomDwellingFactionData(infile, tempObject);
         break;
     }
 
-    case QUEST_GUARD: {
-        TQuestGuard tempGuard;
-        tempGuard.read(infile);
-        {
-            m_questGuardList.push_back(tempGuard);
-            tempObject->m_extraInfo = m_questGuardList.size() - 1;
-        }
-        if (tempGuard.m_quest) {
-            CMapObjectData* questData = static_cast<CMapObjectData*>(
-                static_cast<void*>(tempGuard.m_quest));
-            m_mapObjectData.push_back(questData);
-        }
+    case QUEST_GUARD:
+        readQuestGuardData(infile, tempObject);
         break;
-    }
 
     case WITCH_HUT:
-        if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            tempObject->m_extraInfo = 0xefbf;
-        } else {
-            int allowedSkills;
-            infile->read(&allowedSkills, sizeof(allowedSkills));
-            tempObject->m_extraInfo = allowedSkills;
-        }
+        readWitchHutData(infile, tempObject);
         break;
 
     default:
@@ -4119,6 +4155,8 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
 // loop bounds are re-read from the type record on every iteration, so neither
 // is hoisted.
 
+// DC names four CObjectType::_getBitPos calls; Mac retains the same helper at
+// 0:0x127c38. Complete expands them without changing this exact retail body.
 VA(0x00505060, 0x1CD)  // dc 0xf33fc
 void NewfullMap::generateHeightMap(const CObject* object,
                                    signed char heightMap[8][6])
@@ -4134,13 +4172,13 @@ void NewfullMap::generateHeightMap(const CObject* object,
         int depth = 1;
         for (int row = 0; row < m_objectTypes[typeIndex].m_height; ++row) {
             if (row > 0) {
-                if (!m_objectTypes[typeIndex].m_passableCells[47 - row * 8 - col]
-                    && m_objectTypes[typeIndex].m_passableCells[55 - row * 8 - col])
+                if (!m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col, row)]
+                    && m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col, row - 1)])
                     depth = 1;
             }
             if (col > 0) {
-                if (m_objectTypes[typeIndex].m_passableCells[47 - row * 8 - col]
-                    && !m_objectTypes[typeIndex].m_passableCells[48 - row * 8 - col])
+                if (m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col, row)]
+                    && !m_objectTypes[typeIndex].m_passableCells[CObjectType::getBitPos(col - 1, row)])
                     depth = heightMap[col - 1][row];
             }
             heightMap[col][row] = static_cast<signed char>(depth);
@@ -4268,7 +4306,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         signed char packed = it->m_offsets;
         int row = packed >> 4;
         int col = static_cast<signed char>(packed << 4) >> 4;
-        if (objectType->m_triggerCells.test(47 - row * 8 - col)) {
+        if (objectType->m_triggerCells.test(
+                CObjectType::getBitPos(col, row))) {
             thisCell->m_objectTypeIndex = it->m_objectIndex;
             thisCell->m_typeValue = objectType->m_objectType;
             thisCell->m_isTrigger = 1;
@@ -4287,7 +4326,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
             signed char packed = it->m_offsets;
             int row = packed >> 4;
             int col = static_cast<signed char>(packed << 4) >> 4;
-            if (!objectType->m_passableCells.test(47 - row * 8 - col)) {
+            if (!objectType->m_passableCells.test(
+                    CObjectType::getBitPos(col, row))) {
                 thisCell->m_objectTypeIndex = it->m_objectIndex;
                 thisCell->m_typeValue = objectType->m_objectType;
                 thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
@@ -4307,7 +4347,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         signed char packed = it->m_offsets;
         int row = packed >> 4;
         int col = static_cast<signed char>(packed << 4) >> 4;
-        if (!objectType->m_passableCells.test(47 - row * 8 - col)) {
+        if (!objectType->m_passableCells.test(
+                CObjectType::getBitPos(col, row))) {
             thisCell->m_objectTypeIndex = it->m_objectIndex;
             thisCell->m_typeValue = objectType->m_objectType;
             thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
@@ -4387,8 +4428,8 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
     signed char heightMap[8][6];
     generateHeightMap(object, heightMap);
 
-    TAdventureObjectType objectClass =
-        g_game->m_worldMap.m_objectTypes[object->m_typeIndex].m_objectType;
+    // Mac retains getObjectTypePtr here at 0:0x128560 inside getType().
+    TAdventureObjectType objectClass = object->getType();
 
     for (int col = 0; col < objectType->m_width; ++col) {
         if (object->m_x - col < 0 || object->m_x - col >= g_mapWidth)
@@ -4398,10 +4439,8 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
             if (object->m_y - row < 0 || object->m_y - row >= g_mapHeight)
                 continue;
 
-            NewmapCell* cell = &g_game->m_worldMap.m_cellData[
-                (object->m_z * g_game->m_worldMap.m_size + (object->m_y - row))
-                    * g_game->m_worldMap.m_size
-                + (object->m_x - col)];
+            NewmapCell* cell = g_game->m_worldMap.cell(
+                object->m_x - col, object->m_y - row, object->m_z);
 
             if (objectClass == HOLY_GRAIL || objectClass == HERO
                 || objectClass == RANDOM_HERO
@@ -4409,7 +4448,8 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
                 continue;
 
             if (objectClass == EVENT) {
-                if (objectType->m_triggerCells.test(47 - row * 8 - col)) {
+                if (objectType->m_triggerCells.test(
+                        CObjectType::getBitPos(col, row))) {
                     cell->m_isBlocked = 0;
                     cell->m_isTrigger = 0;
                     cell->m_typeValue = EVENT;
@@ -4541,7 +4581,7 @@ CObjectType::CObjectType(TObjectType* source)
     }
 
     for (int terrain = 0; terrain < 10; terrain++)
-        m_mask34[terrain] = source->m_recommendedTerrainMask[terrain];
+        m_mask34[terrain] = source->isRecommendedTerrain(terrain);
 
     m_objectType = source->m_objectType;
     m_extra = source->m_subtype;

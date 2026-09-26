@@ -339,7 +339,7 @@ type_obscuring_object::type_obscuring_object()
 mine* type_obscuring_object::getObscuredMine() const
 {
     if (m_valid && m_obscuredType == MINE && m_wasTrigger)
-        return &g_game->m_mines[m_extraInfo];
+        return g_game->getMine(m_extraInfo);
     return 0;
 }
 
@@ -389,16 +389,14 @@ bool type_obscuring_object::load(void* inputHandle)
     return success;
 }
 
+// Dreamcast hero.cpp:445/449 calls get_location and game::get_cell.
+// Retail VC6 expands both header helpers at this site.
 VA(0x004d75d0, 0x10A)  // dc 0xcac58
 void type_obscuring_object::obscureCell(TAdventureObjectType newType, long id)
 {
     if (!m_valid) {
-        type_point location;
-        location.m_x = m_x;
-        location.m_y = m_y;
-        location.m_z = m_z;
-        m_obscuredLocation = location;
-        NewmapCell* cell = g_game->m_worldMap.cell(m_obscuredLocation);
+        m_obscuredLocation = getLocation();
+        NewmapCell* cell = g_game->getCell(m_obscuredLocation);
         m_valid = 1;
         m_obscuredType = cell->m_type;
         m_wasTrigger = cell->m_isTrigger;
@@ -412,11 +410,12 @@ void type_obscuring_object::obscureCell(TAdventureObjectType newType, long id)
     }
 }
 
+// Dreamcast hero.cpp:475 calls game::get_cell; retail expands it.
 VA(0x004d76e0, 0xD0)  // dc 0xcacfc
 void type_obscuring_object::restoreCell()
 {
     if (m_valid) {
-        NewmapCell* cell = g_game->m_worldMap.cell(m_obscuredLocation);
+        NewmapCell* cell = g_game->getCell(m_obscuredLocation);
         m_valid = 0;
         cell->m_type = m_obscuredType;
         cell->m_isTrigger = m_wasTrigger;
@@ -467,6 +466,8 @@ void hero::hire(int playerId, type_point point)
     g_game->replaceRecruit(playerId, recruitSlot);
 }
 
+// Dreamcast hero.cpp:569 calls Hero.h's obscure_cell wrapper; retail
+// expands that wrapper to the base obscuring-object call.
 VA(0x004d7900, 0x11B)  // dc 0xcaedc
 void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
 {
@@ -487,7 +488,7 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
     if (resetFlags)
         m_flags &= 0xfff9ffff;
 
-    type_obscuring_object::obscureCell(HERO, m_id);
+    obscureCell();
 
     CMCRecruitHero change(m_id, point, g_netLocalGamePos);
     sendMapChange(&change);
@@ -656,8 +657,9 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 
     if (saveVersion <= 30) {
         infile->read(m_equipped, 18 * sizeof(type_artifact));
-        m_equipped[EQUIPPED_SLOT_SOD_MISC].m_artifactId = ARTIFACT_NONE;
-        m_equipped[EQUIPPED_SLOT_SOD_MISC].m_extra = -1;
+        // Mac 0xf3340 constructs the default artifact in a temporary,
+        // then copies both words into the unsaved slot.
+        m_equipped[EQUIPPED_SLOT_SOD_MISC] = type_artifact();
     } else {
         infile->read(m_equipped, sizeof(m_equipped));
     }
@@ -1717,6 +1719,10 @@ int hero::heroFn004D9CC0(int artifact)
     return g_windowManager->m_dialogReturn;
 }
 
+// Dreamcast hero.cpp:1737 constructs CMCDeadHero with get_location;
+// retail VC6 expands the Hero.h point helper at that call site.
+// Complete releases the visited town slot before broadcasting death;
+// the older Dreamcast source does those operations in reverse order.
 VA(0x004d9ec0, 0x4D3)  // dc 0xcc800
 void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
 {
@@ -1731,11 +1737,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
     }
 
     if (gameLoaded && !remoteMove) {
-        type_point location;
-        location.m_x = m_x;
-        location.m_y = m_y;
-        location.m_z = m_z;
-        CMCDeadHero change(m_id, location);
+        CMCDeadHero change(m_id, getLocation());
         sendMapChange(&change);
         g_game->recordHideHero(this, -1, freedTownVisitor);
     }
@@ -1983,9 +1985,9 @@ TSecondarySkill getSkillAward(const hero* currentHero,
 // `lea [eax+4*edx]` 214013x). `static_cast<unsigned>(level)` is worth
 // 85.17 -> 87.13; the sibling `iLevelSeed * 156823` stays signed and
 // retail keeps its `imul` there, which corroborates the split.
-// (3) `int roll = Random(1,100);` is declared BEFORE `int stat = 0;` -
+// (3) `int roll = SRandom(1,100);` is declared BEFORE `int stat = 0;` -
 // retail schedules `xor esi,esi / mov [ebp-0x14],esi` between the
-// `cmp cx,9` operand loads, after the Random call (84.18 -> 85.17); and
+// `cmp cx,9` operand loads, after the SRandom call (84.18 -> 85.17); and
 // both `chances` selections are written `if (level <= LOW_LEVEL_LAST)
 // <plain>; else <10P>`, which is the fall-through polarity retail has
 // (`jg` to the 10P arm), worth 83.44 -> 84.18.
@@ -2001,7 +2003,7 @@ TSecondarySkill getSkillAward(const hero* currentHero,
 // gate's third operand bound to an `unsigned char` local to chase
 // retail's `sete dl` (81.23, WORSE - the branch-kind report names the
 // symptom, not the lever, exactly as it did on UpdateStats); and
-// `Random(1, chances[1] + chances[0])` for the load order (byte-flat).
+// `SRandom(1, chances[1] + chances[0])` for the load order (byte-flat).
 // hero::GetLevel is deliberately left as a pointer walk - it already
 // emits retail's signed `jle`, so the pointer-compare rule does not
 // apply and respelling would risk the now-exact GiveExperience.
@@ -2054,12 +2056,14 @@ void hero::checkLevel()
         while (m_level < newLevel) {
             m_level = m_level + 1;
             sprintf(g_text,
-                    g_generalText->getText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT],
                     m_name);
             sRand(static_cast<unsigned>(m_level) * 214013
                   + m_levelSeed * 156823 + 154079);
 
-            int roll = random(1, 100);
+            // DC names SRandom and Mac calls its retained body twice here.
+            // Windows aliases the same body through random at 0x50b230.
+            int roll = sRandom(1, 100);
             int stat = 0;
             const signed char* chances;
             if (m_level <= LEVEL_UP_LOW_LEVEL_LAST)
@@ -2073,14 +2077,14 @@ void hero::checkLevel()
                 else
                     chances = g_heroClasses[classBarbarian]
                                   .m_gainPrimarySkillChance10P;
-                roll = random(1, chances[0] + chances[1]);
+                roll = sRandom(1, chances[0] + chances[1]);
             }
             while (roll > chances[stat]) {
                 roll -= chances[stat];
                 stat++;
             }
 
-            m_stats[stat]++;
+            adjustPrimarySkill(stat, 1);
             char text[200];
             sprintf(text, "\n%s +1", g_statNames[stat]);
             strcat(g_text, text);
@@ -2136,8 +2140,7 @@ void hero::checkLevel()
                     giveSS(skills[0], 1);
                 } else {
                     sprintf(text,
-                            g_generalText->getText(
-                                GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT),
+                            (*g_generalText)[GENERAL_TEXT_LEVEL_UP_CHOICE_FORMAT],
                             g_secondarySkillLevels[m_skillLevel[skills[0]]],
                             g_sSkillTraits[skills[0]].m_name,
                             g_secondarySkillLevels[m_skillLevel[skills[1]]],
@@ -2250,9 +2253,11 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
         levelsBetweenSchools = 4;
     }
 
+    // Dreamcast hero.cpp:2051 calls the typed Hero.h get_secondary_skill
+    // accessor here; retail VC6 expands its packed-byte load.
     if (currentHero->m_lastWisdom + wisdomGap <= currentHero->m_level &&
-        currentHero->m_skillLevel[eSecSkillWisdom] < maxLevel &&
-        currentHero->m_skillLevel[eSecSkillWisdom] >= minLevel &&
+        currentHero->getSecondarySkill(eSecSkillWisdom) < maxLevel &&
+        currentHero->getSecondarySkill(eSecSkillWisdom) >= minLevel &&
         excluded != eSecSkillWisdom &&
         !skillDisabled[eSecSkillWisdom])
         return eSecSkillWisdom;
@@ -2267,10 +2272,10 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
         int schoolTotal = 0;
         for (i = 0; i < 4; i++) {
             TSecondarySkill school = g_magicSchools[i];
-            if (currentHero->m_skillLevel[school] < maxLevel &&
-                currentHero->m_skillLevel[school] >= minLevel &&
+            if (currentHero->getSecondarySkill(school) < maxLevel &&
+                currentHero->getSecondarySkill(school) >= minLevel &&
                 !skillDisabled[school]) {
-                if (currentHero->m_skillLevel[school] > 0)
+                if (currentHero->getSecondarySkill(school) > 0)
                     schoolTotal++;
                 else
                     schoolTotal += classTraits.m_gainSecondarySkillChance[school];
@@ -2280,10 +2285,10 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
             int schoolRoll = random(1, schoolTotal);
             for (i = 0; i < 4; i++) {
                 TSecondarySkill school = g_magicSchools[i];
-                if (currentHero->m_skillLevel[school] < maxLevel &&
-                    currentHero->m_skillLevel[school] >= minLevel &&
+                if (currentHero->getSecondarySkill(school) < maxLevel &&
+                    currentHero->getSecondarySkill(school) >= minLevel &&
                     !skillDisabled[school]) {
-                    if (currentHero->m_skillLevel[school] > 0)
+                    if (currentHero->getSecondarySkill(school) > 0)
                         schoolRoll--;
                     else
                         schoolRoll -=
@@ -2297,15 +2302,16 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
 
     int total = 0;
     for (i = 0; i < kNumSecSkills; i++) {
-        if (currentHero->m_skillLevel[i] < maxLevel &&
-            currentHero->m_skillLevel[i] >= minLevel &&
+        if (currentHero->getSecondarySkill(TSecondarySkill(i)) < maxLevel &&
+            currentHero->getSecondarySkill(TSecondarySkill(i)) >= minLevel &&
             i != excluded) {
             int chance;
             if (!skillDisabled[i])
                 chance = classTraits.m_gainSecondarySkillChance[i];
             else
                 chance = 0;
-            if (chance == 0 && currentHero->m_skillLevel[i] > 0)
+            if (chance == 0
+                && currentHero->getSecondarySkill(TSecondarySkill(i)) > 0)
                 chance = 1;
             total += chance;
         }
@@ -2315,15 +2321,16 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
 
     int roll = random(1, total);
     for (i = 0; i < kNumSecSkills; i++) {
-        if (currentHero->m_skillLevel[i] < maxLevel &&
-            currentHero->m_skillLevel[i] >= minLevel &&
+        if (currentHero->getSecondarySkill(TSecondarySkill(i)) < maxLevel &&
+            currentHero->getSecondarySkill(TSecondarySkill(i)) >= minLevel &&
             i != excluded) {
             int chance;
             if (!skillDisabled[i])
                 chance = classTraits.m_gainSecondarySkillChance[i];
             else
                 chance = 0;
-            if (chance == 0 && currentHero->m_skillLevel[i] > 0)
+            if (chance == 0
+                && currentHero->getSecondarySkill(TSecondarySkill(i)) > 0)
                 chance = 1;
             roll -= chance;
             if (roll <= 0) {
@@ -2729,7 +2736,8 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
         if (nth < g_currentHero->m_skillCount) {
             int skill = g_currentHero->getNthSS(nth);
             sprintf(g_text, g_heroScreen[21],
-                    g_secondarySkillLevels[g_currentHero->m_skillLevel[skill] - 1],
+                    g_secondarySkillLevels[
+                        g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1],
                     g_sSkillTraits[skill].m_name);
         } else {
             g_text[0] = 0;
@@ -2781,38 +2789,9 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                         return;
                     }
                     if (targetCombo != -1) {
-                        std::bitset<144> missing =
-                            g_combinationArtifacts[targetCombo].m_components;
-                        for (int k = 0; k < 19; k++) {
-                            int worn =
-                                g_currentHero->getArtifact(TArtifactSlot(k)).m_artifactId;
-                            if (worn != ARTIFACT_NONE)
-                                missing[worn] = false;
-                        }
-                        // MEASURED NEGATIVE THREE WAYS, do not retry. Retail
-                        // CALLS three bitset members in this block that our CL
-                        // expands: `bitset<144>::operator[]` (0x4cef80, the
-                        // 18-byte reference ctor), `reference::operator=`
-                        // (0x48e9f0, which carries set()'s body inlined) and
-                        // `any()` (0x4e64c0) - our compile instead calls
-                        // `set(size_t,bool)` once and expands any().
-                        // `#pragma inline_depth(0)` reproduces each of those
-                        // calls and every variant LOSES:
-                        //   pin on the whole `if (!missing.any())` statement
-                        //       74.4733 -> 70.80 (recorded 2026-08-20)
-                        //   pin on a HOISTED `bool = !missing.any();` alone,
-                        //       so the guarded body is out of the pin's reach
-                        //       74.4733 -> 70.2438 (2026-08-20)
-                        //   pin on `missing[worn] = false;` alone
-                        //       74.4733 -> 69.5800
-                        //   both site pins together
-                        //       74.4733 -> 70.3412
-                        // So the hoist DOES isolate the pin - the earlier
-                        // "the pin also de-inlines the guarded body" reading is
-                        // wrong - and imposing retail's calls still costs four
-                        // points. The cross-jumping defect below is upstream of
-                        // all of them.
-                        if (!missing.any()) {
+                        // Mac 0xf7f80 retains this call to the canonical
+                        // combination predicate; VC6 expands it here.
+                        if (g_currentHero->heroFn004DBE80(targetCombo)) {
                             if (g_currentHero->heroFn004D9CC0(
                                     oldArtifact.m_artifactId)
                                 == DIALOG_RETURN_ACCEPT) {
@@ -3064,16 +3043,10 @@ void hero::heroFn004DC100(long slot)
 // where GetLuck's own arm is a real call, and it credits TOWN_CASTLE.
 // The opening flag arm ASSIGNS (Dinkumware `assign(const char*,
 // size_type)`), it does not append.
-// DC hero.cpp:2989 names town::HasBuilding at the Grail guard. VC6 expands
-// the canonical call to the same active-word test as the former direct read,
-// but its inliner budget shifts later string cleanup: 97.95% -> 92.03%.
-// The negative-modifier append expands to _Xlen/_Grow/_Eos. Keep the
-// proven helper call while recovering the surrounding source context.
-// Mac 0:f88cc calls the MSL vector indexer directly. Unguarded VC6
-// inline_depth(0) persisted because CodeWarrior rejected the empty reset;
-// guarding the pair exposes the canonical wrappers and reaches that call.
-// An isolated -O3 compile retained the old wrapper and changed four of six
-// exact controls, so the admitted -O1 profile remains in force.
+// DC hero.cpp:2989 names town::HasBuilding at the Grail guard.
+// All leadership arms use operator+=. The explicit strlen/append Basic
+// spelling scored 90.55%; restoring this higher-level operation matches
+// Windows exactly while preserving HasBuilding and the other helpers.
 
 VA(0x004dc320, 0x793)  // anchor-caller (armyGroup::get_morale_description), dc 0xce260
 std::string hero::getMoraleDescription() const
@@ -3181,14 +3154,7 @@ std::string hero::getMoraleDescription() const
     }
 
     if (m_skillLevel[eSecSkillLeadership] == eMasteryBasic) {
-        // Retail CALLS append(const char*, size_type) at THIS rung only -
-        // its `repne scasb` strlen + `call` sit at fn+0x454 where our CL
-        // expanded the append (the extra _Xlen/_Grow/_Eos exposure) - and
-        // expands the Advanced and Expert rungs exactly as we do. The
-        // The surrounding natural caller state still controls this call boundary.
-        const char* basicText = g_moraleInfo[20];
-        size_t basicTextLen = strlen(basicText);
-        result.append(basicText, basicTextLen);
+        result += g_moraleInfo[20];
         morale++;
     }
     if (m_skillLevel[eSecSkillLeadership] == eMasteryAdvanced) {
@@ -3219,11 +3185,8 @@ std::string hero::getMoraleDescription() const
         }
     }
 
-    // Mac retail compares the difference, then computes it again for abs in
-    // each arm. This spelling matches all 1500 Mac bytes and leaves VC6's
-    // 92.03% function byte-flat against the prior source. A single
-    // otherModifier local, as in the luck twin, was also VC6 byte-flat but
-    // lowered the Mac match to 90.1333%; keep the exact Mac expression.
+    // Mac repeats the subtraction before abs in each arm. A named modifier
+    // lowered its agreement in the earlier Mac profile; preserve this shape.
     int effectiveMorale = this->getMorale(0, 0, 0);
     if (effectiveMorale - morale < 0)
         result += formatString(g_moraleInfo[24], abs(effectiveMorale - morale));
@@ -3245,13 +3208,9 @@ std::string hero::getMoraleDescription() const
 // expands town::HasBuilding INLINE against TOWN_RAMPART, unlike
 // hero::GetLuck's own arm, which calls it.
 
-// Dreamcast hero.cpp:3028 and :3149 name TTextResource::operator[] and
-// town::HasBuilding. Restoring both canonical calls closed the Windows
-// function from 83.81% to 100.00% (110/110 CFG blocks, 51/51 calls).
-// The existing [14] mist-rung inline-depth probe remains needed for VC6;
-// its pragmas are guarded so CodeWarrior sees the canonical body. Earlier
-// attempts to pin Basic-luck [15] alone lowered the 93.71% baseline to
-// 85.95%, and unpinned append(p,len) lowered it to 78.66%.
+// DC hero.cpp:3028 and :3149 name the text and town helpers. Preserve both.
+// The mist rung uses append(const char*); its explicit strlen/append expansion
+// scored 79.96%. The ordinary overload restores Windows exact bytes.
 VA(0x004dcac0, 0x7E0)  // anchor-caller (armyGroup::get_luck_description), dc 0xce648
 std::string hero::getLuckDescription() const
 {
@@ -3324,12 +3283,7 @@ std::string hero::getLuckDescription() const
         luck++;
     }
     if (m_flags & 0x10000) {
-        // Retail CALLS append(const char*, size_type) at THIS rung -
-        // four `repne scasb`+call rungs end at fn+0x486 and [14] is the
-        // last of them - then expands [15],[16],[17] as we do.
-        const char* mistText = g_luckInfo[14];
-        size_t mistTextLen = strlen(mistText);
-        result.append(mistText, mistTextLen);
+        result.append(g_luckInfo[14]);
         luck++;
     }
 
@@ -3660,7 +3614,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             break;
         switch (msg.m_codeY) {
         case HERO_NAME_ID:
-            normalDialog(g_generalText->getText(GENERAL_TEXT_DISMISS_HERO_PROMPT), 2, -1, -1, -1, 0,
+            normalDialog((*g_generalText)[GENERAL_TEXT_DISMISS_HERO_PROMPT], 2, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 exitFlag = 1;
@@ -3758,7 +3712,7 @@ int THeroScreenWindow::windowHandler(message& msg)
             {
                 if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                     break;
-                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT),
+                sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_SPELL_POINTS_DETAILS_FORMAT],
                         g_currentHero->m_name, g_currentHero->m_mana,
                         g_currentHero->getMaxMana());
                 normalDialog(g_text,
@@ -3773,7 +3727,7 @@ int THeroScreenWindow::windowHandler(message& msg)
         case WIDGET_77_ID:
             if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
                 break;
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT),
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_EXPERIENCE_DETAILS_FORMAT],
                     g_currentHero->m_level,
                     hero::getExperience(g_currentHero->m_level + 1),
                     g_currentHero->m_experience);
@@ -3954,12 +3908,14 @@ int THeroScreenWindow::windowHandler(message& msg)
             int skill = g_currentHero->getNthSS(nth);
             strcpy(g_text,
                    g_sSkillTraits[skill]
-                       .m_levelNames[g_currentHero->m_skillLevel[skill] - 1]);
+                       .m_levelNames[
+                           g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1]);
             normalDialog(g_text,
                          rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                      : hero::PRIMARY_STAT_DIALOG_TYPE,
                          -1, -1, 0x14,
-                         3 * skill + g_currentHero->m_skillLevel[skill] + 2,
+                         3 * skill
+                             + g_currentHero->getSecondarySkill(TSecondarySkill(skill)) + 2,
                          -1, 0, -1, 0, -1, 0);
             break;
         }
@@ -4522,10 +4478,7 @@ int heroView(int heroID, int noDismiss, int alreadyFaded, unsigned char quickVie
 
     if (g_currentPlayer->isLocalHuman()
         && g_currentPlayer->m_currHeroId == g_currentHero->m_id) {
-        type_point position;
-        position.m_x = g_currentHero->m_x;
-        position.m_y = g_currentHero->m_y;
-        position.m_z = g_currentHero->m_z;
+        type_point position = g_currentHero->getLocation();
         NewmapCell* cell = g_advManager->getCell(position);
         if (cell->m_type != HERO || !cell->m_isTrigger)
             g_advManager->demobilizeCurrHero(0, 0);
@@ -4588,7 +4541,7 @@ void THeroScreenWindow::setupHeroView()
     broadcastMessage(msg);
 
     sprintf(g_text,
-            g_generalText->getText(GENERAL_TEXT_HERO_LEVEL_CLASS_FORMAT),
+            (*g_generalText)[GENERAL_TEXT_HERO_LEVEL_CLASS_FORMAT],
             g_currentHero->m_level, g_currentHero->heroFn004D8F70());
     msg.m_codeY = 0x8c;
     msg.m_extraText = g_text;
@@ -4703,7 +4656,8 @@ void THeroScreenWindow::setupHeroView()
 
             msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             msg.m_codeY = i + 0x4f;
-            msg.m_extra = skill * 3 + g_currentHero->m_skillLevel[skill] + 2;
+            msg.m_extra = skill * 3
+                + g_currentHero->getSecondarySkill(TSecondarySkill(skill)) + 2;
             broadcastMessage(msg);
 
             strcpy(g_text, g_sSkillTraits[skill].m_name);
@@ -4713,7 +4667,8 @@ void THeroScreenWindow::setupHeroView()
             broadcastMessage(msg);
 
             strcpy(g_text,
-                   g_secondarySkillLevels[g_currentHero->m_skillLevel[skill] - 1]);
+                   g_secondarySkillLevels[
+                       g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1]);
             msg.m_codeY = i + 0x5f;
             broadcastMessage(msg);
 
@@ -4865,7 +4820,7 @@ void hero::transferArtifacts(hero* src)
         return;
     type_artifact artifact;
     for (int slot = 0; slot < 19; slot++) {
-        artifact = src->m_equipped[slot];
+        artifact = src->getArtifact(TArtifactSlot(slot));
         if (artifact.m_artifactId == ARTIFACT_NONE ||
             artifact.m_artifactId == ARTIFACT_HOLY_GRAIL ||
             artifact.m_artifactId == ARTIFACT_SPELLBOOK ||
@@ -4879,7 +4834,7 @@ void hero::transferArtifacts(hero* src)
         src->removeArtifact(slot);
     }
     for (int index = 63; index >= 0; index--) {
-        artifact = src->m_backpack[index];
+        artifact = src->getBackpack(index);
         if (artifact.m_artifactId == ARTIFACT_NONE ||
             artifact.m_artifactId == ARTIFACT_HOLY_GRAIL ||
             artifact.m_artifactId == ARTIFACT_SPELLBOOK ||
@@ -5151,8 +5106,8 @@ unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
         for (int component = 0; component < 144; component++) {
             if (components.test(component)) {
                 for (int skill = 0; skill < 4; skill++)
-                    m_stats[skill] +=
-                        g_artifactPrimarySkillBonuses[component][skill];
+                    adjustPrimarySkill(skill,
+                        g_artifactPrimarySkillBonuses[component][skill]);
                 updateSpells = updateSpells
                     || g_artifactTraits[component].m_givesSpells;
                 int componentSlot =
@@ -5169,8 +5124,8 @@ unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
     }
 
     for (int skill = 0; skill < 4; skill++)
-        m_stats[skill] +=
-            g_artifactPrimarySkillBonuses[artifact->m_artifactId][skill];
+        adjustPrimarySkill(skill,
+            g_artifactPrimarySkillBonuses[artifact->m_artifactId][skill]);
 
     if (updateSpells
         || g_artifactTraits[artifact->m_artifactId].m_givesSpells)
@@ -5280,9 +5235,9 @@ VA(0x004e2ed0, 0xB2)  // dc 0xd3c64
 std::string hero::getBackpackError(TArtifact artifact) const
 {
     if (m_backpackCount >= 64) {
-        return std::string(g_generalText->getText(GENERAL_TEXT_BACKPACK_FULL));
+        return std::string((*g_generalText)[GENERAL_TEXT_BACKPACK_FULL]);
     }
-    return formatString(g_generalText->getText(GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT),
+    return formatString((*g_generalText)[GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT],
                          g_artifactTraits[artifact].m_name);
 }
 
@@ -5414,8 +5369,7 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
 // Original: hero::GiveRandomArtifact; hero.cpp:5064, dc 0xd3e40
 int hero::giveRandomArtifact()
 {
-    type_artifact artifact;
-    artifact.m_artifactId = g_game->getRandomArtifactId(14);
+    type_artifact artifact(g_game->getRandomArtifactId(14));
     if (artifact.m_artifactId == ARTIFACT_NONE)
         giveResource(GOLD, 1000);
     else
@@ -5590,6 +5544,8 @@ TCreatureType hero::getNecromancyCreature()
     return CREATURE_SKELETON;
 }
 
+// Dreamcast hero.cpp:5364 calls town::HasBuilding for the Necropolis
+// bonus; retail and Mac expand the Town.h active-mask accessor.
 VA(0x004e3cd0, 0x268)  // dc 0xd4390
 float hero::getNecromancyFactor(unsigned char applyLimit) const
 {
@@ -5612,9 +5568,9 @@ float hero::getNecromancyFactor(unsigned char applyLimit) const
             for (int i = 0; i < player.m_numTowns; i++) {
                 town* ownedTown = g_game->getTown(player.m_townIds[i]);
                 if (ownedTown->m_type == TOWN_NECROPOLIS) {
-                    if ((ownedTown->m_active & g_bitNumber[EXTRA_0_ID]) != 0)
+                    if (ownedTown->hasBuilding(EXTRA_0_ID, true))
                         factor += 0.1f;
-                    if ((ownedTown->m_active & g_bitNumber[HOLY_GRAIL_ID]) != 0)
+                    if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true))
                         factor += 0.2f;
                 }
             }
@@ -5952,21 +5908,14 @@ int hero::getSpellDurationBonus() const
 VA(0x004e4ec0, 0xD6)
 TAdventureObjectType hero::heroFn004E4EC0()
 {
-    type_point point;
-    point.m_x = m_x;
-    point.m_y = m_y;
-    point.m_z = m_z;
+    type_point point = getLocation();
 
-    type_point invalid;
-    invalid.m_x = -1;
-    invalid.m_y = -1;
-    invalid.m_z = -1;
+    type_point invalid(-1, -1, -1);
 
-    if (invalid.m_x == point.m_x && invalid.m_y == point.m_y
-        && invalid.m_z == point.m_z)
+    if (invalid == point)
         return NOTHING;
 
-    const NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
+    const NewmapCell* cell = g_game->getCell(point);
     return cell->getSpecialTerrain();
 }
 
@@ -6129,25 +6078,13 @@ void hero::setVisitedArena(const NewmapCell* cell)
     m_arenaFlags |= 1 << cell->m_extraInfo;
 }
 
+// Dreamcast hero.cpp:6173 calls GetPrimarySkill for attack and defense;
+// retail expands the same Hero.h clamp twice.
 VA(0x004e5400, 0x93)  // dc 0xd50a0
 float hero::getCombatValueModifier() const
 {
-    signed char attack = m_stats[0];
-    int attackValue;
-    if (attack > 99)
-        attackValue = 99;
-    else if (attack > 0)
-        attackValue = attack;
-    else
-        attackValue = 0;
-    signed char defense = m_stats[1];
-    int defenseValue;
-    if (defense > 99)
-        defenseValue = 99;
-    else if (defense > 0)
-        defenseValue = defense;
-    else
-        defenseValue = 0;
+    int attackValue = getPrimarySkill(0);
+    int defenseValue = getPrimarySkill(1);
     return static_cast<float>(sqrt((attackValue * 0.05 + 1.0)
                                    * (defenseValue * 0.05 + 1.0)));
 }
@@ -6283,15 +6220,11 @@ long hero::getHitPointBonus(int creatureType) const
     return bonus;
 }
 
+// DC hero.cpp:6356 names get_location and game::get_cell; VC6 expands both.
 VA(0x004e5ce0, 0xE7)  // dc 0xd5548
 unsigned char hero::canLand() const
 {
-    type_point point;
-    point.m_x = m_x;
-    point.m_y = m_y;
-    point.m_z = m_z;
-
-    NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
+    NewmapCell* cell = g_game->getCell(getLocation());
     if ((cell->m_groundSet == eTerrainWater)
         == ((m_flags & 0x40000) == 0)) {
         return 0;
@@ -6331,32 +6264,30 @@ unsigned char hero::isInIdentifyRange(const type_point* location) const
         // bitfield unit into one clear-then-or (98.6813 -> 100.0000).
         type_point heroLocation(m_x, m_y, m_z);
 
-        int xDistance = location->m_x - heroLocation.m_x;
-        int yDistance = location->m_y - heroLocation.m_y;
-        if (xDistance * xDistance + yDistance * yDistance < range * range)
+        // Dreamcast hero.cpp:6395 passes location as the DistanceSquared
+        // receiver and the constructed hero point as its argument. Retail
+        // expands that same x/y-only call.
+        if (location->distanceSquared(heroLocation) < range * range)
             return 1;
     }
     return 0;
 }
 
+// Dreamcast hero.cpp:6407/6414/6418 calls get_location and the typed
+// get_secondary_skill accessor. Both header helpers expand in retail.
 VA(0x004e5f30, 0xBF)  // dc 0xd5644
 unsigned char hero::isMobile() const
 {
-    type_point point;
-    point.m_x = m_x;
-    point.m_y = m_y;
-    point.m_z = m_z;
-
-    NewmapCell* cell = g_advManager->getCell(point);
-    int pathfinding = m_skillLevel[eSecSkillPathfinding];
+    NewmapCell* cell = g_advManager->getCell(getLocation());
     int cost;
     if (m_flags & 0x40000) {
         cost = minimumTerrainCost(
-            cell, m_movePoints, pathfinding, -1, -1,
+            cell, m_movePoints, getSecondarySkill(eSecSkillPathfinding), -1, -1,
             m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
     } else {
         cost = minimumTerrainCost(
-            cell, m_movePoints, pathfinding, m_flightLevel, m_waterWalkLevel,
+            cell, m_movePoints, getSecondarySkill(eSecSkillPathfinding),
+            m_flightLevel, m_waterWalkLevel,
             m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
     }
     return m_movePoints >= cost;

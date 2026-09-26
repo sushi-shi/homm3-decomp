@@ -107,3 +107,12 @@ mac_offset = 0x1fccf4
 mac_size = 0x5c
 target_sha256 = "3329330809a6feb2efee1eb3a92dece2a6d062f1ffa7bcae4ef67c2b5fc15cc0"
 evidence = "Unique source-owned handler calls CAdvPopup::windowHandler 0x1bf2c, returns early if nonzero, otherwise on MESSAGE_MOUSE_MOVE=4 calls g_windowManager::convertToHover 0x20d3d8. BLR 0x1fcd4c; next handleWidgetHover 0x1fcd50."
+
+[[helpers]]
+source_helper = "type_university_skill_button::type_university_skill_button"
+unit = "university_window"
+mac_section = 0
+mac_offset = 0x1fa678
+mac_size = 0x70
+target_sha256 = "eb7c836654cf1220d47f4c1a97c2c2a346b169f855247b15cfb989f0a4933e20"
+evidence = "University constructor calls this at 0x1fae24 and 0x1fb9a4. It multiplies the skill by three for iconWidget 0x10c3f0, installs the derived vtable, stores skill at +0x4c and clears click at +0x48, matching the canonical source and Dreamcast university_window.cpp:65. BLR 0x1fa6e4; handleClick begins 0x1fa6e8. Windows expands the source constructor calls."

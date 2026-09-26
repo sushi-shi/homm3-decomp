@@ -242,7 +242,7 @@ static int mainMenuHandler(message& msg)
     if (!updatePlease) {
         if (g_lobbyLaunched) {
             unsigned long lastCheck = g_lastDiskSpaceCheck;
-            if (static_cast<long>(GameTime::get() - lastCheck) > 10000)
+            if (GameTime::elapsedSince(lastCheck) > 10000)
                 g_windowManager->m_dialogReturn = TMainMenu::NEW_GAME_ID;
             else
                 return MESSAGE_DISPATCH_CONSUME;

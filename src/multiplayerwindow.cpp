@@ -320,18 +320,19 @@ inline void CMPInputDlg::disableOK()
 }
 
 // The CHotSeatDlg helpers DC keeps out of line (GetPlayerCount dc 0x102cf8,
-// UpdateOK dc 0x102d4c, OnKillFocus dc 0x102cc8). Retail emits none: they
-// expand into CHotSeatEdit's two overrides below. DC proves that UpdateOK only
-// updates widget 519; OnKillFocus performs the following full-window redraw.
-// Marked `inline` so the TU emits no COMDAT for bodies the image does not have.
+// UpdateOK dc 0x102d4c, OnKillFocus dc 0x102cc8). Retail emits none: VC6
+// expands them into CHotSeatEdit's two overrides below. DC proves that UpdateOK
+// only updates widget 519; OnKillFocus performs the full-window redraw.
+// Mac retains GetPlayerCount at 0x219cb8 but expands the other two helpers.
+// Ordinary same-TU definitions reproduce the exact Windows callers.
 // E:\gamedcs\multiplayerwindow.cpp:729, dc 0x102cc8
-inline void CHotSeatDlg::onKillFocus(int id)
+void CHotSeatDlg::onKillFocus(int id)
 {
     updateOK();
     drawWindow(1, 0xffff0001, 0xffff);
 }
 
-inline int CHotSeatDlg::getPlayerCount()
+int CHotSeatDlg::getPlayerCount()
 {
     int players = 0;
     for (int i = 0; i < 8; ++i) {
@@ -341,7 +342,7 @@ inline int CHotSeatDlg::getPlayerCount()
     return players;
 }
 
-inline void CHotSeatDlg::updateOK()
+void CHotSeatDlg::updateOK()
 {
     getWidget(OKAY_ID)->enable(getPlayerCount() > 1);
 }
@@ -566,20 +567,20 @@ void TMultiPlayerWindow::goSessionList()
 {
     m_inSessionList = 1;
     m_showSplash = 0;
-    m_splash->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->hide();
     if (m_hotSeat)
-        m_hotSeat->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_ipx->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_tcp->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_modem->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_direct->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_hotSeat->hide();
+    m_ipx->hide();
+    m_tcp->hide();
+    m_modem->hide();
+    m_direct->hide();
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_search->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_online->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_userNameHeader->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_sessNameHeader->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->show();
+    m_join->show();
+    m_search->hide();
+    m_online->hide();
+    m_userNameHeader->show();
+    m_sessNameHeader->show();
 }
 
 VA(0x0050efc0, 0x12B)  // dc 0x10051c
@@ -589,23 +590,23 @@ void TMultiPlayerWindow::goMainMenu()
     m_showSplash = 1;
     m_sessTimer = 0;
     m_hostJoinScreen = 0;
-    m_splash->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->show();
     if (m_hotSeat)
-        m_hotSeat->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_ipx->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_tcp->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_modem->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_direct->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_hotSeat->show();
+    m_ipx->show();
+    m_tcp->show();
+    m_modem->show();
+    m_direct->show();
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_search->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_online->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_userNameHeader->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_sessNameHeader->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->hide();
+    m_join->hide();
+    m_search->hide();
+    m_online->show();
+    m_userNameHeader->hide();
+    m_sessNameHeader->hide();
     widget* w = getWidget(126);
     if (w)
-        w->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->hide();
     m_sessions->destroy();
 }
 
@@ -772,11 +773,8 @@ inline unsigned char TMultiPlayerWindow::onIPX()
             m_sessionRefreshTimeout = 1000;
 
         if (m_host)
-            m_host->sendMessage(
-                widget::WIDGET_SET_STATUS,
-                widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            m_host->show();
+        m_join->show();
         m_join->enable(0);
         refreshSessions();
         return 1;
@@ -791,13 +789,10 @@ inline unsigned char TMultiPlayerWindow::onModem()
 {
     g_mpNetProtocol = MP_MODEM;
     m_hostJoinScreen = 1;
-    m_splash->sendMessage(widget::WIDGET_SET_STATUS,
-                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->show();
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->show();
+    m_join->show();
     m_join->enable(1);
     update();
     return 1;
@@ -1025,13 +1020,10 @@ inline unsigned char TMultiPlayerWindow::onDirect()
 {
     g_mpNetProtocol = MP_SERIAL;
     m_hostJoinScreen = 1;
-    m_splash->sendMessage(widget::WIDGET_SET_STATUS,
-                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->show();
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->show();
+    m_join->show();
     m_join->enable(1);
     update();
     return 1;

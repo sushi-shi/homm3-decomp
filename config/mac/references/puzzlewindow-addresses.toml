@@ -68,9 +68,9 @@ retail_va = 0x52c9b0
 unit = "puzzlewindow"
 mac_section = 0x0
 mac_offset = 0x1489fc
-mac_size = 0x5e8
-target_sha256 = "f149b19a9cb722ac143ac407ef73e2b0f914305568e6711bb37ec977c250c5bd"
-evidence = "aiAttemptPuzzleGuess calls game::setupPuzzlePieces then compares discovered fraction against difficulty threshold, calls markAIPuzzle 0x147f70, createAIPuzzleMap 0x1480b8 and matchPuzzle 0x148488, examines five-by-five diggable neighborhood. BLR 0x148fe0; next quest callback 0x148fe4."
+mac_size = 0x428
+target_sha256 = "fdded1c1207c52e893990532b7bd43383f7741bb5e317202bcc6814f2e4ef507"
+evidence = "aiAttemptPuzzleGuess calls game::setupPuzzlePieces then compares discovered fraction against difficulty threshold, calls markAIPuzzle 0x147f70, createAIPuzzleMap 0x1480b8 and matchPuzzle 0x148488, examines five-by-five diggable neighborhood. BLR 0x148e20; next entry at 0x148e24 initializes globals. No branch from this body reaches the former overclaimed tail."
 
 [[helpers]]
 source_helper = "getPuzzleBitmap"
@@ -80,6 +80,15 @@ mac_offset = 0x14723c
 mac_size = 0x40
 target_sha256 = "0edd5056577ad8d0063117a33fd2e332698db9e19561b2a10d4558d21d516566"
 evidence = "Unique static source helper formats puzzle piece filename through indexed prefix table and number then calls ResourceManager::getBitmap816 0x152df8. BLR 0x147278; next puzzle window ctor 0x14727c."
+
+[[helpers]]
+source_helper = "type_AI_puzzle_tile::type_AI_puzzle_tile"
+unit = "puzzlewindow"
+mac_section = 0x0
+mac_offset = 0x147ab8
+mac_size = 0x70
+target_sha256 = "dbd227880fc4e697f2dc1dbc38aa78229302e4b211fd8d9576081366b766b857"
+evidence = "The default tile constructor zeros object type/river/road/visibility, initializes the signed four-bit object offsets and terrain to -1, sets diggable, and ends at BLR 0x147b24. matchPuzzle calls it once at 0x1484ac; Windows expands its stores in the local first tile."
 
 [[helpers]]
 source_helper = "markAIPuzzle"

@@ -321,10 +321,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
 {
     m_widgets.push_back(new bitmapBorder(startX, startY, 100, 130,
         slot + 0x21e,
-        g_creatureBackgrounds[
-            g_game->m_gameVersion == 0
-                && isBaseElemental(creature)
-            ? -1 : g_creatureTypeTraits[creature].m_townType],
+        g_creatureBackgrounds[g_game->getAlignment(creature)],
         0x800));
 
     m_creatureWidgets[slot] = new iconWidget(startX, startY, 100, 130,
@@ -363,7 +360,7 @@ int recruitUnit::open(int newPriority)
     else
         creatureName = "";
     sprintf(g_text, "%s %s",
-        g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE), creatureName);
+        (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE], creatureName);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x226;
@@ -1005,11 +1002,12 @@ int recruitUnit::main(message& msg)
 }
 
 // E:\gamedcs\recruit.cpp:1082
-// Dreamcast keeps this source-visible helper out of line; Complete's VC6
-// build expands it at every recruitUnit call site and emits no standalone
-// body.  Raw NB11 names the sole surviving local `resCost`, while the body
-// calls the exact GetMonsterCost helper above before deriving the two costs.
-inline void recruitUnit::updateCost()
+// Dreamcast and Mac keep this source-visible helper out of line. Without an
+// explicit inline specifier, VC6 still expands it in all three constructors;
+// both admitted Mac constructors then match exactly with their updateCost
+// calls intact. Raw NB11 names the sole surviving local `resCost`, while the
+// body calls the exact GetMonsterCost helper before deriving the two costs.
+void recruitUnit::updateCost()
 {
     int resCost[7];
     getMonsterCost(m_monsterType, resCost);
@@ -1133,10 +1131,10 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     updateCost();
 }
 
-// E:\gamedcs\recruit.cpp:1219 - no retail body: the only caller is
-// QuickViewRecruit(char, short*) (0x551780), so /Ob2 inlined it and
-// the single-call-site STATIC rule dropped the out-of-line copy.
-inline TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
+// E:\gamedcs\recruit.cpp:1219. Dreamcast and Mac retain this constructor;
+// Mac quickViewRecruit calls it at 0:0x150cc8. VC6 expands this ordinary
+// definition into the sole Windows caller at 0x551780 (45/45 calls agree).
+TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
     : heroWindow(x2, y2, 160, 320, 0x12)
 {
     m_widgets.reserve(49);
@@ -1213,10 +1211,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
 
     recruitWindow->addWidget(new bitmapBorder(30, 44, 100, 130, 0x21e,
-        g_creatureBackgrounds[
-            g_game->m_gameVersion == 0
-                && isBaseElemental(monType)
-            ? -1 : g_creatureTypeTraits[monType].m_townType],
+        g_creatureBackgrounds[g_game->getAlignment(monType)],
         0x800), -1);
     recruitWindow->addWidget(new iconWidget(30, 44, 100, 130, 0x216,
         g_creatureTypeTraits[monType].m_spriteName,
@@ -1224,13 +1219,13 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
 
     sprintf(g_text,
         DATA_COMPGEN(0x00660c98, quickRecruitAvailabilityFormat, "%s %d"),
-        g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL), *numMon);
+        (*g_generalText)[GENERAL_TEXT_CREATURES_AVAILABLE_LABEL], *numMon);
     recruitWindow->addWidget(new textWidget(30, 182, 100, 17, g_text,
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x209,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
     recruitWindow->addWidget(new textWidget(32, 218, 96, 19,
-        g_generalText->getText(GENERAL_TEXT_COST_PER_TROOP),
+        (*g_generalText)[GENERAL_TEXT_COST_PER_TROOP],
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x1f4,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);

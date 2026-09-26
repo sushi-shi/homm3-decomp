@@ -138,7 +138,7 @@ TPuzzleWindow::TPuzzleWindow(int puzzlenum)
 
     m_widgets.push_back(new textWidget(
         607, 73, 190, 40,
-        g_generalText->getText(GENERAL_TEXT_PUZZLE_WINDOW),
+        (*g_generalText)[GENERAL_TEXT_PUZZLE_WINDOW],
         "Bigfont.fnt", font::HEADING, -1,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
@@ -460,9 +460,7 @@ type_point aiAttemptPuzzleGuess(long player)
             if (guess.m_x < 0)
                 return guess;
 
-            result.m_x = -1;
-            result.m_y = -1;
-            result.m_z = -1;
+            result = type_point(-1, -1, -1);
 
             int best = 0x7fff;
             type_point current;
@@ -473,7 +471,7 @@ type_point aiAttemptPuzzleGuess(long player)
                      ++current.m_y) {
                     if (!current.isValid())
                         continue;
-                    if (!g_game->m_worldMap.cell(current)->isDiggable())
+                    if (!g_game->getCell(current)->isDiggable())
                         continue;
 
                     type_point index;
@@ -498,10 +496,7 @@ type_point aiAttemptPuzzleGuess(long player)
         }
     }
 
-    result.m_x = -1;
-    result.m_y = -1;
-    result.m_z = -1;
-    return result;
+    return type_point(-1, -1, -1);
 }
 
 // E:\gamedcs\puzzlewindow.cpp:472. Retail expands this file static into
@@ -533,10 +528,9 @@ static long checkMatch(long player, long firstX, long firstY,
                 continue;
             if (!puzzleMap[firstX][firstY].m_visible)
                 continue;
-            if (!(getMapExtra(point.m_x, point.m_y, point.m_z) & playerMask))
+            if (!(getMapExtra(point) & playerMask))
                 continue;
-            type_AI_puzzle_tile tile(
-                g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z), point);
+            type_AI_puzzle_tile tile(g_game->getCell(point), point);
             if (puzzleMap[firstX][firstY] == &tile)
                 ++matches;
             else

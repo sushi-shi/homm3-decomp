@@ -150,5 +150,114 @@ unit = "cursor"
 mac_section = 0x0
 mac_offset = 0x919f0
 mac_size = 0x4c
+mac_symbol = ".sendMapChange__FP10CMapChange"
 target_sha256 = "03b788f560aee568119e95ac8937ef35f5f5e548157803a4db43575a5c78b157"
 evidence = "sendMapChange checks network-control and remote-on globals, then transmits mapChange with recipient 0x7f and bool args false/true through 0x212bf0. Mac body code0+0x919f0..0x91a3c; terminal BLR 0x91a38, next entry 0x91a3c."
+
+[[helpers]]
+source_helper = "advManager::startCursor"
+unit = "cursor"
+mac_section = 0
+mac_offset = 0x8e514
+mac_size = 0x60
+target_sha256 = "00545e22040cb37d7f41389cd6a94931eee714a3c65270575ba502b139c04d23"
+evidence = "animateMove calls this at 0x8f3ec. It stores direction at +0x1f0 and selects cursor sequence at +0x1f8 through five switch arms, matching the canonical source helper and Dreamcast cursor.cpp:52. Final BLR at 0x8e570; stopCursor begins 0x8e574."
+
+[[helpers]]
+source_helper = "advManager::onTeleportHero"
+unit = "cursor"
+mac_section = 0
+mac_offset = 0x913a0
+mac_size = 0x64
+target_sha256 = "1023772fd061c775ff663ec6364d279d85c7008d464c77d4fb044fe5880282c7"
+evidence = "processMapChangeNew calls this subtype arm at 0x91984. It reads hero ID +0x14 and point +0x18, resolves the hero and calls teleportTo 0x1ec20 with 0,1,1,0 flags, matching cursor.cpp:1158. Final BLR 0x91400; onClaimMine begins 0x91404."
+
+[[helpers]]
+source_helper = "advManager::onClaimMine"
+unit = "cursor"
+mac_section = 0
+mac_offset = 0x91404
+mac_size = 0x64
+target_sha256 = "561eed763386775ec2e5a2c080c57b279c418d9dfe21c16b937cb217b11582bb"
+evidence = "Dispatcher calls this at 0x9198c. Calls claimMine 0xdcd68, completeDraw 0xff28 and updateScreen 0xf6f0 in source order, matching cursor.cpp:1167. Final BLR 0x91464; onClaimTown begins 0x91468."
+
+[[helpers]]
+source_helper = "advManager::onClaimTown"
+unit = "cursor"
+mac_section = 0
+mac_offset = 0x91468
+mac_size = 0x68
+target_sha256 = "4bea8a7d538acadef1fb32dbaa40d51b4a9bfaaa60d3d29c5dd74ee79999ef3c"
+evidence = "Dispatcher calls this at 0x91994. Calls claimTown 0xdc98c, completeDraw 0xff28 and updateScreen 0xf6f0 in source order, matching cursor.cpp:1177. Final BLR 0x914cc; onBuildBoat begins 0x914d0."
+
+[[helpers]]
+source_helper = "advManager::onBuildBoat"
+unit = "cursor"
+mac_section = 0
+mac_offset = 0x914d0
+mac_size = 0x84
+target_sha256 = "2f60bc99847046c822794f9ab7d8b02f0859332cb4253ed9300dba905d71e8b3"
+evidence = "Dispatcher calls this at 0x9199c. Calls createBoat 0xce070, completeDraw 0xff28 and updateScreen 0xf6f0 in source order, matching cursor.cpp:1186. Final BLR 0x91550; onEraseObject begins 0x91554."
+
+[[helpers]]
+source_helper = "advManager::onEraseObject"
+unit = "cursor"
+mac_section = 0
+mac_offset = 0x91554
+mac_size = 0x6c
+target_sha256 = "700db2ed02ab0fe988f071f743bba7bfe4f1219bfd9772207cef7f1c7f58c066"
+evidence = "Dispatcher calls this at 0x919a4. Calls getCell 0x13770, eraseObj 0xb7cbc, completeDraw 0xff28 and updateScreen 0xf6f0, matching cursor.cpp:1196. Final BLR 0x915bc; onDeadHero begins 0x915c0."
+
+[[helpers]]
+source_helper = "advManager::onDeadHero"
+unit = "cursor"
+mac_section = 0
+mac_offset = 0x915c0
+mac_size = 0x148
+target_sha256 = "0e056b24abeaf5f9430bee4b13f75afaebfdace8197e1edba5b4fae8bf2824e5"
+evidence = "Dispatcher calls this at 0x919ac. After hero/location guard it calls deallocate 0xf5d3c, completeDraw 0xff28 and updateScreen 0xf6f0, matching cursor.cpp:1208. Final BLR 0x91704; onRecruitHero begins 0x91708."
+
+[[helpers]]
+source_helper = "advManager::onRecruitHero"
+unit = "cursor"
+mac_section = 0
+mac_offset = 0x91708
+mac_size = 0xa0
+target_sha256 = "42ed4781d4521ae44daaad648288510b9abcec0ec04e58b8953f67513c542c1b"
+evidence = "Dispatcher calls this at 0x919b4. It writes recruited hero location/owner/facing and calls obscureCell 0xf2474, matching cursor.cpp:1224. Final BLR 0x917a4; onDeadPlayer begins 0x917a8."
+
+[[helpers]]
+source_helper = "advManager::onDeadPlayer"
+unit = "cursor"
+mac_section = 0
+mac_offset = 0x917a8
+mac_size = 0xb4
+target_sha256 = "f3b6c3c71827dec168eb73fed2e626b7e4d3fe8d326cd0036f404590f46e4eea"
+evidence = "Dispatcher calls this at 0x919bc. It formats the defeated-player text via sprintf 0x28dfa8 and calls normalDialog 0x117f10, matching cursor.cpp:1245. Final BLR 0x91858; onClaimGenerator begins 0x9185c."
+
+[[helpers]]
+source_helper = "advManager::onClaimGenerator"
+unit = "cursor"
+mac_section = 0
+mac_offset = 0x9185c
+mac_size = 0x34
+target_sha256 = "cd991b4c5189de8c615668ca1796ad7f9159fe43ed79f872604d8aa3728302c5"
+evidence = "Dispatcher calls this at 0x919c4. It calls claimGenerator 0xdce74 with map-change IDs, matching cursor.cpp:1253. Final BLR 0x9188c; onClaimGarrison begins 0x91890."
+
+[[helpers]]
+source_helper = "advManager::onClaimGarrison"
+unit = "cursor"
+mac_section = 0
+mac_offset = 0x91890
+mac_size = 0x34
+target_sha256 = "576df887d431f7e4aaa050213d25937804566550010f06aea94f24815112eb18"
+evidence = "Dispatcher calls this at 0x919cc. It calls claimGarrison 0xdcf90 with map-change IDs, matching cursor.cpp:1260. Final BLR 0x918c0; onClaimShipYard begins 0x918c4."
+
+[[helpers]]
+source_helper = "advManager::onClaimShipYard"
+unit = "cursor"
+mac_section = 0
+mac_offset = 0x918c4
+mac_size = 0x34
+target_sha256 = "5e439532fd4efbc1a9d1004581364f79f8e2d1951c27629e1a85e95af5c153cb"
+evidence = "Dispatcher calls this at 0x919d4. It calls claimShipyard 0xdd08c with map-change point and player, matching cursor.cpp:1267. Final BLR 0x918f4; onHideHero begins 0x918f8."

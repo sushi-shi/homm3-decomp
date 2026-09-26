@@ -1,6 +1,15 @@
 # Reviewed Mac address identities; unbound compiler names are intentionally omitted.
 
 [[functions]]
+retail_va = 0x5c1ab0
+unit = "towngatewindow"
+mac_section = 0x0
+mac_offset = 0x1b7448
+mac_size = 0xfc4
+target_sha256 = "3ae4647629d83de7abd4cc49b42a82f466d2057f528907c87dcb6ae8ce765982"
+evidence = "advManager::townGate and townManager::doTownGate both call this retained constructor; it passes the distinctive 247,65,306,469,18 arguments to CAdvPopup, builds town-gate widgets, then returns at 0x1b8408. The following independent game::getNumAllies body begins at 0x1b840c."
+
+[[functions]]
 retail_va = 0x5c2370
 unit = "towngatewindow"
 mac_section = 0x0

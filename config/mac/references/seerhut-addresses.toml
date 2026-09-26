@@ -1066,6 +1066,34 @@ retail_va = 0x574a90
 
 [[helpers]]
 mac_section = 0x0
+mac_offset = 0x169418
+mac_size = 0x24
+unit = "seerhut"
+target_sha256 = "5067e7d8777ffa07fd9d6e33dcafe413c2cc942d1430eae72aa06c18c4fa4738"
+evidence = "Quest guard doEvent at 169354 and seer doSeerEvent at 169dec call this string-returning accessor. It copies the base quest member at +0x10, corresponding to the authored completionText member at Windows +0x28 after three 4-byte Mac strings. The complete body ends at 169438, followed by an independent prologue at 16943c."
+source_helper = "type_quest::getCompletionText"
+source = "include/quest.h"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x16476c
+mac_size = 0x40
+unit = "seerhut"
+target_sha256 = "2b1b6bbce7d7bdd69b04adde2dfa87a68494f2f8a9a80221967eba84b54b8a6a"
+evidence = "Factory case1 at169770 calls this body; base quest construction, experience vptr and required level0 identify it. Previous body returns at164768; this body returns at1647a8, immediately before getRequirementText1647ac."
+source_helper = "type_experience_quest::type_experience_quest"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x164c38
+mac_size = 0x4c
+unit = "seerhut"
+target_sha256 = "9effb8b65e0b3e361bc343d3f2fc391542d85f270a14508b6edca6e58c696cf7"
+evidence = "Factory case2 at169794 calls this body; base quest construction, skill vptr and four required skill bytes cleared identify it. Previous body returns at164c34; this body returns at164c80, immediately before getRequirementText164c84."
+source_helper = "type_skill_quest::type_skill_quest"
+
+[[helpers]]
+mac_section = 0x0
 mac_offset = 0x1654d4
 mac_size = 0x4c
 unit = "seerhut"

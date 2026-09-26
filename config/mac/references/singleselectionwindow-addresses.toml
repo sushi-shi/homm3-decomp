@@ -1,4 +1,249 @@
 # Reviewed address identities; compiler linkage names remain unbound.
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onMapHeaderRequestMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x18092c
+mac_size = 0x84
+target_sha256 = "a54c499a7d169e29935fa10f8baab6d0b77b9e458a9ac0082a956cc5c65bc209"
+evidence = "The main network dispatcher calls this retained map-header request handler. It looks up the sender in the update manager, forwards the request flag and number to the found procedure, logs all three values, and returns true. BLR at 0x1809ac precedes getProc."
+
+[[helpers]]
+source_helper = "CNewPlayerUpdateMan::getProc"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x1809b0
+mac_size = 0x40
+target_sha256 = "2981b6f93be9546fccde8e5adf831d29460ae7ec3d51ca0f9c257a716bcb8a95"
+evidence = "The header-request and confirmation handlers call this retained eight-entry lookup with sender DPID. It returns the first non-null procedure whose first word equals DPID, otherwise null. BLR at 0x1809ec precedes the confirmation handler."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onHeaderConfirmMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x1809f0
+mac_size = 0x68
+target_sha256 = "f94cf4ada45641c55f24537d21158952fbf4ec6036f5df8d5ca65b5b9de7b551"
+evidence = "The network dispatcher calls this retained confirmation handler. It finds the sender's update procedure via getProc, marks it confirmed when present, logs the sender DPID and returns true. BLR at 0x180a54 precedes checkMissingHeaders."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onReqHeaderConfirmMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x180ba4
+mac_size = 0x80
+target_sha256 = "3a8bd4426a9dd5826fdf801596c7d402a9050e5d61e79c37db50384786943ede"
+evidence = "The network dispatcher calls this retained request-confirmation handler. It checks missing headers for the sender, logs the no-missing case and transmits message 0x412 to that DPID, then returns true. BLR at 0x180c20 precedes onMapFileNameMsg."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::assignPlayerToOpenHumanSlot"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17c8f0
+mac_size = 0xc0
+target_sha256 = "78d8faa7c44b9df14d952259fea4381582b62ec8920252748516d01b5b317757"
+evidence = "onNewPlayerMsg calls this retained method once at 0x18185c with the joining DPID. It resolves the player, scans eight seats for an unoccupied human-legal row, skips disabled rows in load mode, assigns playerPos and returns success. Windows expands the same loop in its advanced-options arm; original method spelling is unproved. BLR at 0x17c9ac precedes setHumanSlot."
+
+[[helpers]]
+source_helper = "GameSelectionHeadersStruct::read"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16e420
+mac_size = 0x100
+target_sha256 = "e7aff6cf07b0dd7038d359e90e8b56126bc2568f4af862b9caee2ada9a84c2e5"
+evidence = "CGameHeaderInfoMsg::read calls this retained row reader at 0x16e6a4. It loads the map header, reads setup, wasHuman, hero availability, title, description and file time in order, then returns the inverted saved-header load result. BLR at 0x16e51c precedes write."
+
+[[helpers]]
+source_helper = "GameSelectionHeadersStruct::write"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16e520
+mac_size = 0xfc
+target_sha256 = "8f26f03b8a3c7c8c1eecb2a2caabb1d99bfe6b2591dfedccd9070561ad1371b2"
+evidence = "CGameHeaderInfoMsg::write calls this retained row writer at 0x16e72c. It saves the map header, writes the same six member bands in order, then returns the inverted saved-header save result. BLR at 0x16e618 precedes the message reader."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onRequestHeroFaceMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x182b38
+mac_size = 0xdc
+target_sha256 = "fcab1f07e33da66e73efed65dd73d49126a1d357335baf0b1acef06d0385b7e2"
+evidence = "Both normal and popup network dispatchers call this retained method. It checks isHost, resolves the sender, requires a seated player, calls getHeroFace, constructs a hero-face reply (message 0x40c), transmits it and passes it to onRequestHeroFaceReplyMsg. BLR at 0x182c10 precedes the next method."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onSetAGRMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x182cec
+mac_size = 0x8c
+target_sha256 = "222215f2750d70a1500b35684e4eccbfe6d52ea214dc59d742fe780325d7b2ca"
+evidence = "Both network dispatchers call this retained AGR setter. It resolves a human then computer player by message game position, writes the bonus index at player+0x6c, and redraws the advanced option outside popup mode. BLR at 0x182d74 precedes onSetAsHostMsg."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onTownUpdateMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x184508
+mac_size = 0x30
+target_sha256 = "74bd8d8555af0f65617667ec31a5e52d0dbf542d35d50b91a825180d3e4a16ec"
+evidence = "Both network dispatchers call this retained wrapper. It passes message game position and town at +0x14/+0x18, plus popup flag, to the already paired updateTown at 0x184538. BLR at 0x184534 precedes updateTown."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::calcPosition"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x185cbc
+mac_size = 0x58
+target_sha256 = "12df63f03a0823e100e3fbe56dfbefa2bb6287abbfc8119a96d97c933f25e87d"
+evidence = "onNameClick and drawHeroAdvancedOption call this retained row counter. It counts prior seats with playerPos >= 0 and, in load mode, excludes disabled seats. BLR at 0x185d10 precedes the next method."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onNameChange"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x184d94
+mac_size = 0xbc
+target_sha256 = "868562e2b05a37f01f38bec971b68b4295ccd6e6550c3e92fe0b839c62c5f1c6"
+evidence = "Both CEnterNameEdit overrides call this retained member. It resolves the seated player, clears focus, copies the name into the player and preferences, writes preferences, updates widget gamePos+345, then calls drawHeroAdvancedOption(gamePos,1,-1). BLR at 0x184e4c precedes updateNames."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::updateNames"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x184e50
+mac_size = 0xb0
+target_sha256 = "1f0a3af90645b8d7ba253ff2ca5d98c5c39c0adcc8a0cf38fde03b4093dd21e1"
+evidence = "The selection window update calls this retained eight-row loop. Each row gets its seated player and name widget (id row+345), then sets the default-player label or player name. BLR at 0x184efc precedes highlightFile."
+
+[[helpers]]
+source_helper = "savedGameExists"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16dc00
+mac_size = 0x84
+target_sha256 = "919c7459967b8bab1c60b2e2aecc6351a9e4f3e56b52ef44a451e94fd6ee548c"
+evidence = "saveValid calls this source helper with the filename. Mac formats the save suffix and checks existence through its file API, returning at 0x16dc80 before saveValid starts; the authored Windows body uses desktop file APIs. No standalone Windows VA is established."
+
+[[helpers]]
+source_helper = "getGameVersion"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16e388
+mac_size = 0x24
+target_sha256 = "b659e502726d302e47aa6ec6578f81a65a2cedf2c99560de5926a81d76d33e63"
+evidence = "Between stopMouseThread and the two hero-availability helpers, the retained Mac body copies its fixed version string to the caller buffer via the string-copy routine at 0x26ae40. Windows obtains ProductVersion through its file-version API; the shared source helper identity follows the same TU order and call role, with platform-specific bodies."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getCompPlayerInPos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16ef6c
+mac_size = 0x14
+target_sha256 = "4a42cb322478960ec594a01da8c9e3da622cec401f1610f0ee19fd9592d60cdf"
+evidence = "Immediately after getPlayerInPos, this leaf returns the computer-player record at the supplied index using the 0x7c player stride; BLR at 0x16ef7c precedes addNewPlayer."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getGamePos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f0b4
+mac_size = 0x48
+target_sha256 = "a2c7305fd0b50d6b20400e2f2a4f716c6e8218680dd4d5a04afea1b8e928a213"
+evidence = "Calls getNetPos at 0x16f20c, returns -1 for an absent DPID, otherwise reads playerPos at record+0x70 with 0x7c stride. BLR at 0x16f0f8 precedes playerExists."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::playerExists"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f0fc
+mac_size = 0x34
+target_sha256 = "29f6ddce4e37dfa384601f7a119e76134e02cd39c82b641b5c90e1f980ce42d5"
+evidence = "addNewPlayer calls this retained wrapper, which calls getNetPos at 0x16f20c and returns whether the result differs from -1. BLR at 0x16f12c precedes getPlayer."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getNetPos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f20c
+mac_size = 0x34
+target_sha256 = "281329a267d54ffb09f9778d96a70c0f3a8800dacdbc47c82b3effe113e3e91d"
+evidence = "Three retained callers query this leaf. It scans eight 0x7c-byte human-player records for the DPID and returns the index or -1; terminal BLR at 0x16f23c precedes the unassigned-position helper."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getUnassignedPlayerPos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f240
+mac_size = 0x58
+target_sha256 = "d141cff194ea482d3bb3cd3bf67397f124fc2e22a099011315cfcfa45260defd"
+evidence = "setNextPlayer calls this retained eight-record scan: nonzero DPID with playerPos -1 returns its index, otherwise -1. BLR at 0x16f294 precedes getPlayerCount."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getPlayerCount"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f298
+mac_size = 0x68
+target_sha256 = "9321bc9495283d237d7c36b834bbde58e69f58d64876e94a70ddf3635cc4e7fa"
+evidence = "Eight-player scan counts human records and optionally requires assigned playerPos, matching the authored helper and its following t_map_list_update::go boundary at 0x16f300."
+
+[[helpers]]
+source_helper = "updateTurnDuration"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x18128c
+mac_size = 0x50
+target_sha256 = "18cfd15c8c3e5501b1687179bf4b47379684d7daa73cfba3fb7ccd3c1235fa2a"
+evidence = "onGameTransmitInitMsg calls this retained helper at 0x181428, and later selection handlers reuse it. The body indexes turn-duration minutes by game setup, multiplies by 60000 and calls the duration setter at 0x215aec; BLR at 0x1812d8 precedes the next handler."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::getThisPlayerGamePos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17fb78
+mac_size = 0x2c
+target_sha256 = "330463b1e2c10e7d34981a223f11825ade596e5d0783530a3122fad43f3abc09"
+evidence = "This retained wrapper immediately precedes updatePlayerPositions and passes the local network player's DPID to CNetPlayerHandler::getGamePos at 0x16f0b4 using this+0xfb8. It returns at 0x17fba0 before updatePlayerPositions begins."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onClickMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17de80
+mac_size = 0x60
+target_sha256 = "08009bad9a479c123c3ba69627d662f6aaf70b875a78bac6a1061bb02bc40c9e"
+evidence = "The selection window handler calls this retained click-message wrapper at 0x180540. It creates a local message, copies the incoming widget ID from netMsg+0x14 and calls onWidgetDeselect at 0x17e644 with message, exit flag and remote-click=true, then returns true at 0x17dedc."
+
+[[helpers]]
+source_helper = "getVCText"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17bb54
+mac_size = 0xd0
+target_sha256 = "462734fb6dea52f1edee48c9f7947524eb8e93870277b23783c45f3fcc0486ef"
+evidence = "drawBasicMapInfo calls this retained victory-description helper. It indexes the description table by condition type, copies text, and optionally formats the normal-victory OR clause; BLR at 0x17bc20 precedes getLCText."
+
+[[helpers]]
+source_helper = "getLCText"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17bc24
+mac_size = 0x3c
+target_sha256 = "658221ba4f931bfe9d5ba5e90b8492e860a9e01b2c006295ae5e869eae107f35"
+evidence = "drawBasicMapInfo calls this retained loss-description helper after getVCText. It indexes the loss-description table by type and copies that string to the caller buffer; BLR at 0x17bc5c precedes drawBasicMapInfo."
+
+[[functions]]
+retail_va = 0x5792c0
+unit = "singleselectionwindow"
+compgen_kind = "IMPLICIT_COPY_ASSIGN"
+compgen_type = "SavedGameHeader"
+mac_section = 0
+mac_offset = 0x17064c
+mac_size = 0x2c8
+target_sha256 = "e06bdf74d2949d106c2ce9175076bc1fa6b7ee9c0133587a79d8b3dd471c3a72"
+evidence = "CNewPlayerUpdateProc::tick and OnMapFileNameMsg call this on the SavedGameHeader member at Mac row+0x6c8 after copying the surrounding GameSelectionHeadersStruct fields. The body copies the SavedGameHeader prefix, assigns its CMapHeaderData at+0x10, strings at+0x2bc/+0x2c0 and the remaining fields through+0x53c. BLR0x170910 precedes the next short setter. The Windows TU claims the corresponding synthesized copy assignment at0x5792c0."
+
 [[functions]]
 mac_section = 0x0
 mac_offset = 0x16dc84
@@ -1060,3 +1305,99 @@ unit = "singleselectionwindow"
 target_sha256 = "b5c5a35d04a669bf9400ec9884c5dd504d015ab93b764c5ecd3bde95b79d37af"
 evidence = "Save edit key handler callsbase1afb44, comparesm_text withNEWGAME.gm1 via20efc4 andclearsselectionthroughsetCurrentMap17d418(-1,1). Reviewed complete return boundary; linked/loader entry corroborates source role."
 retail_va = 0x57d0b0
+[[helpers]]
+source_helper = "TSingleSelectionWindow::refreshFilterWidgets"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17e308
+mac_size = 0x5c
+target_sha256 = "489b55c611214303df77cf5ac9025bd6883c564f1fd12990214a18ab6b987a33"
+evidence = "Mac retained method sits immediately before OnWidgetDeselect and receives 16 direct calls from its filter arms. Its body calls updateFilterWidgets, the virtual drawWindow with full-window arguments, and update. Windows expands the same three-call sequence at those source sites; VC6 emits no call relocation for the helper. Complete Mac body ends with BLR at 0x17e360."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::openRandomMapOptions"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17e3c4
+mac_size = 0x60
+target_sha256 = "637c15bbac02edd7527d17c120c6e5d018a737e5516e9bdc3bd086abdc463aeb"
+evidence = "Mac retains this method immediately before OnWidgetDeselect and calls it from the random-maps arm. Its body calls setupScenarioOptions(1), the virtual drawWindow with full-window arguments, then update. Windows source had that exact sequence expanded in the same arm. Complete Mac body ends with BLR at 0x17e420."
+[[helpers]]
+source_helper = "TSingleSelectionWindow::isMultiPlayer"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x184098
+mac_size = 0x34
+target_sha256 = "bff2ef20a33f3a7b728169126f3dc4b65d0e2c091200a2e642d9a1a0c606b754"
+evidence = "Dreamcast singleselectionwindow.cpp:7889 names TSingleSelectionWindow::IsMultiPlayer and its source body already exists beside updateNameLists. The Mac entry checks g_remoteOn then protocol value 3 (hotseat) and returns a byte boolean; final BLR 0x1840c8 precedes the next prologue 0x1840cc. Its 29 direct callers are selection-window methods, including reviewed controls at 0x17130c and 0x17c898. No Windows standalone VA is claimed; caller expansions need separate VC6 proof."
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onGameHeaderInfoEndMsg"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x1824f4
+mac_size = 0xd0
+target_sha256 = "7b1dc9d1b9f2b123d39edb03a982cf09d0189ee37acd44ab6288655f631b50ef"
+evidence = "handleNetMsg calls this at 0x180400 in the RS_GAME_HEADER_INFO_END dispatch arm, between the onGameHeaderInfoMsg and onScrollMsg calls. The body sets received-map state, clears current map and receiving flags, restores chat widget 179 when shown, updates slider resolution and redraws, matching the existing source method. Mac retains the call; Windows expands it into handleNetMsg. BLR at 0x1825c0 precedes the next method at 0x1825c4."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onNewMapHeaderInfo"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x181a3c
+mac_size = 0xac
+target_sha256 = "1035dd2a9f1283b2c7b95e33b636f9e223ac3de4c6ab220604048d9d51d41596"
+evidence = "handleNetMsg calls this at 0x1803e0 in the RS_NEW_MAP_HEADER_INFO arm. The retained body constructs CNewMapHeaderInfoMsg at 0x181a68, reads the incoming message and calls game::setupOrigData, matching the existing source method that Windows expands in the dispatcher. BLR at 0x181ae4 precedes the next method at 0x181ae8."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onScrollMsg"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x1825c4
+mac_size = 0x68
+target_sha256 = "1cf3154a38da2bf402c4377b0d044338da291276a56c9e35bce39566aa01233f"
+evidence = "handleNetMsg calls this at 0x180410 in the RS_SCROLL arm. The retained body copies the scroll index from message+0x18 to window+0x36c, updates the slider and calls setCurrentMap with message map index, matching the existing source method that Windows expands in the dispatcher. BLR at 0x182628 precedes the next method at 0x18262c."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onPlayerDroppedMsg"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x181910
+mac_size = 0x12c
+target_sha256 = "d09c4a63cdd6fbb1ac659f1f38218658973d32280f81adbaf7b9647419ff265f"
+evidence = "handleNetMsg calls this at 0x180350 in the RS_PLAYER_DROPPED arm. The retained body looks up and removes the sender from the player list, updates common game version, notifies the update manager and redraws the lobby, matching the existing source method that Windows expands into the dispatcher. BLR at 0x181a38 precedes onNewMapHeaderInfo at 0x181a3c."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onChatWindowSlider"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x18266c
+mac_size = 0x38
+target_sha256 = "7532d68b2678392d7bd1cc064413d6be48ecc3745d76fbaa837495dc13bb3498"
+evidence = "The sliderChatWindow callback calls this at 0x16ec64. It sets chat position through the chat manager at 0x182684, then calls displayChat at 0x18268c, matching the existing inline source method that Windows expands into its callback. BLR at 0x1826a0 precedes the file-slider method at 0x1826a4."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onFileMenuSlider"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x1826a4
+mac_size = 0x2c
+target_sha256 = "af1764e92a3b13bc6e7461cff610800b1b20045181ced1d048e7a6a6a2429fb5"
+evidence = "The sliderFileMenu callback calls this at 0x16ecb4. It stores the new index at window+0x36c, loads the current map at+0x370 and calls setCurrentMap with update flag one, matching the existing inline source method that Windows expands into its callback. BLR at 0x1826cc precedes the duration-slider method at 0x1826d0."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onDurationSlider"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x1826d0
+mac_size = 0xa0
+target_sha256 = "1407e01cf6fcce6f4d7e182fe8c769fd3beef20724c364d765f2753eb19d77bf"
+evidence = "The sliderDuration callback calls this at 0x16ec8c. It stores the duration index at window+0x374 and into the game setup, broadcasts setup to a remote host where needed, then redraws and updates, matching the existing inline source method that Windows expands into its callback. BLR at 0x18276c precedes sendChat at 0x182770."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::sendChat"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x182770
+mac_size = 0x138
+target_sha256 = "819cd85ef4865bc43e74892a1e1fe8c614d52f0f27fb37372e0820309b5f67e2"
+evidence = "CSingleSelectionChatEdit::sendChat calls this at 0x18663c. The retained method handles the ping command first, otherwise formats the local player's chat line, displays chat and broadcasts CChatMsg, matching the existing inline source method that Windows expands into the editor override. BLR at 0x1828a4 precedes the next method at 0x1828a8."

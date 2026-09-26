@@ -78,24 +78,36 @@ int TSpellbookWindow::getPositionFromSchool(unsigned schoolMask)
     return 0;
 }
 
-// E:\gamedcs\spellbookwindow.cpp:103, dc 0x14d3cc.
-inline TSpellSchool TSpellbookWindow::getSchoolFromPosition(int position)
+// E:\gamedcs\spellbookwindow.cpp:103, dc 0x14d3cc. Dreamcast retains
+// both calls from DisplayNewSchool; Mac expands both uses. VC6 expands the
+// ordinary source helper in its caller and still emits a separate body.
+TSpellSchool TSpellbookWindow::getSchoolFromPosition(int position)
 {
     return position < 4 ? (TSpellSchool)(1 << position)
                         : eSchoolAll;
 }
 
+VA(0x0059ba80, 0x1D)  // dc 0x14bc58
+void TSpellbookWindow::reset()
+{
+    s_lastSchool = const_invalid_school;
+    s_lastPage = -1;
+    s_lastContext = eContextInvalid;
+    g_lastSpellbookHeroId = -1;
+}
+
 // Dreamcast retains this source-private helper out of line at dc 0x14bc80;
-// Complete /Ob2 folds it into get_spell_description.  The five adjacent
-// TextResource rows and the guarded pointer array are byte-proven by retail.
+// Mac retains it immediately after reset at code0+0x18ada4. Complete /Ob2
+// folds it into getSpellDescription. The five adjacent TextResource rows and
+// the guarded pointer array are byte-proven by retail.
 static const char* getLevelString(SpellID spell)
 {
     static const char* levelStrings[] = {
-        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_ONE_LABEL),
-        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_TWO_LABEL),
-        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_THREE_LABEL),
-        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_FOUR_LABEL),
-        g_generalText->getText(GENERAL_TEXT_SPELL_LEVEL_FIVE_LABEL)
+        (*g_generalText)[GENERAL_TEXT_SPELL_LEVEL_ONE_LABEL],
+        (*g_generalText)[GENERAL_TEXT_SPELL_LEVEL_TWO_LABEL],
+        (*g_generalText)[GENERAL_TEXT_SPELL_LEVEL_THREE_LABEL],
+        (*g_generalText)[GENERAL_TEXT_SPELL_LEVEL_FOUR_LABEL],
+        (*g_generalText)[GENERAL_TEXT_SPELL_LEVEL_FIVE_LABEL]
     };
     // DC117 initializes the five labels; DC119 reads the level, subtracts
     // one and indexes this table. Capture that actual index before lookup.
@@ -106,15 +118,6 @@ static const char* getLevelString(SpellID spell)
     // trait pointer or trait reference also reproduces the exact caller.
     int index = g_spellTraits[spell].m_level - 1;
     return levelStrings[index];
-}
-
-VA(0x0059ba80, 0x1D)  // dc 0x14bc58
-void TSpellbookWindow::reset()
-{
-    s_lastSchool = const_invalid_school;
-    s_lastPage = -1;
-    s_lastContext = eContextInvalid;
-    g_lastSpellbookHeroId = -1;
 }
 
 // E:\gamedcs\spellbookwindow.cpp:128
@@ -153,7 +156,7 @@ std::string TSpellbookWindow::getSpellDescription(
             spell,
             traits->m_powerFactor * power + traits->m_masteryBonus[mastery],
             0);
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SPELL_DAMAGE_DESCRIPTION_FORMAT), damage);
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_SPELL_DAMAGE_DESCRIPTION_FORMAT], damage);
         result += g_text;
     }
     return result;
@@ -190,8 +193,11 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
             0, 0, 620, 595, BACKGROUND_ID,
             DATA_COMPGEN(0x00684bcc, spellbookBackground, "Spelback.pcx"),
             0x800);
-        background->setPlayerPaletteColors(
-            h.m_owner >= 0 ? h.m_owner : g_game->getLocalPlayerGamePos());
+        // Mac retains a call in each branch at 0:0x18b1bc and 0:0x18b1d8.
+        if (h.m_owner >= 0)
+            background->setPlayerPaletteColors(h.m_owner);
+        else
+            background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
         m_widgets.push_back(background);
     }
 
@@ -473,7 +479,7 @@ void TSpellbookWindow::gotoPage(int page)
                     g_spellTraits[displaySpell].m_name,
                     getLevelString(displaySpell),
                     g_abbSecondarySkillLevels[entry.m_mastery - 1],
-                    g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_LABEL),
+                    (*g_generalText)[GENERAL_TEXT_SPELL_POINTS_LABEL],
                     const_cast<hero*>(m_hero)->getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
         } else {
@@ -481,7 +487,7 @@ void TSpellbookWindow::gotoPage(int page)
                     DATA_COMPGEN(0x00684bdc, spellInfoWithoutMastery,
                                  "{%s}\n%s\n%s: %d"),
                     g_spellTraits[displaySpell].m_name,
-                    getLevelString(displaySpell), g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_LABEL),
+                    getLevelString(displaySpell), (*g_generalText)[GENERAL_TEXT_SPELL_POINTS_LABEL],
                     const_cast<hero*>(m_hero)->getManaCost(
                         displaySpell, m_enemyGroup, m_onMagicPlains));
         }
@@ -688,7 +694,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                         exitFlag = 1;
                         msg.m_codeY = m_spellMap[msg.m_codeY - SPELL_0_ID];
                     } else {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SPELL_POINTS_INSUFFICIENT_FORMAT),
+                        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_SPELL_POINTS_INSUFFICIENT_FORMAT],
                                 manaCost, m_hero->m_mana);
                         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                                      -1, 0, -1, 0);

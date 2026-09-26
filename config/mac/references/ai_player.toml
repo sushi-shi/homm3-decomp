@@ -1,6 +1,60 @@
 # Source-owned Mac callees used by the admitted AI purchaser packet. These
 # identities resolve calls; their bodies are outside this packet's score.
 
+[[helpers]]
+source_helper = "markDangerZones"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x31500
+mac_size = 0x1f4
+target_sha256 = "100fba7fe5835bfb4d8622edc4083d9fb19dc1f92ab5bceddb6e082e097b57b4"
+evidence = "aiMarkDangerZones calls this retained helper at 0x317cc with our hero, enemy hero and danger array. It computes aiValueOfCombat, then for negative values gets enemy mobility at 0x31540, seeds the search array and updates visited danger cells. The existing static markDangerZones body in ai_player.cpp has that boundary and Windows expands it into the wrapper. BLR at 0x316f0 precedes the wrapper prologue at 0x316f4."
+
+[[helpers]]
+source_helper = "markStrategicMap"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x324d4
+mac_size = 0x5bc
+target_sha256 = "21d2dee1b89e86f95cd9f85c072d0a7af8e11767ac6ddac5f43a2c4ee3af24c3"
+evidence = "aiChooseDestination calls this with the hero, strategic-map array and destination vector at 0x333c8, immediately after allocating and clearing the map. The retained body constructs a searchArray at 0x32508 and walks destination records at their 16-byte stride, matching the existing static markStrategicMap helper that Windows expands into the caller. BLR at 0x32a8c precedes the next prologue at 0x32a90."
+
+[[helpers]]
+source_helper = "considerHidingMouse"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x33a78
+mac_size = 0x80
+target_sha256 = "4e2992d65bc3c6380b1f43fc45ad45aff4544defe77f896e5d768961cd32d745"
+evidence = "attemptStep calls this with the moving hero and direction at 0x33b24. The retained body checks the current view, tests whether the hero is near the mouse at 0x33ab8, temporarily enables complete drawing, and calls hidePointer at 0x33ad4; that is the existing static considerHidingMouse source helper. Windows expands it in attemptStep. BLR at 0x33af4 precedes the caller prologue at 0x33af8."
+
+[[helpers]]
+source_helper = "moveCreatures"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2f874
+mac_size = 0x100
+target_sha256 = "1ebd359e75f1cf1cf991356a0614083a31bca2cab0c19c8cc0a877469270dbac"
+evidence = "type_AI_creature_swapper::addCreatures calls this with adjacent army, old creature type and old count at 0x2fb78. The body first tries armyGroup::add at 0x2f8b0, then chooses a replacement slot and calls armyGroup::add again at 0x2f950, matching the existing static moveCreatures body that Windows expands into the caller. BLR at 0x2f970 precedes a different tiny function at 0x2f974."
+
+[[helpers]]
+source_helper = "unblockLith"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x32ee4
+mac_size = 0x414
+target_sha256 = "164e40b1701505da899ab53085bf254f2dc95fa8d875a2a684cf5dc29ae59456"
+evidence = "aiChooseDestination calls this at 0x334b8 with hero, destination and best-distance reference. The retained body snapshots the hero's on-map flag, calls restoreCell at 0x32f14, checks the current cell and updates the destination through the same branches as the existing static unblockLith source helper. Windows expands this boundary into aiChooseDestination. BLR at 0x332f4 precedes the caller prologue at 0x332f8."
+
+[[helpers]]
+source_helper = "checkHolyGrail"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x31cc0
+mac_size = 0x2bc
+target_sha256 = "896131c793d889350e99b8c02fa4b5ae1a3cc35a244a91d57b951214ea049488"
+evidence = "findAllDestinations calls this at 0x324b0 with hero, search array, destination vector and friendly-distance array. The body reads the owner's puzzle guess at the Mac player stride 0x15c and tests its visited cell, matching the existing static checkHolyGrail source helper that Windows expands into findAllDestinations. The separate retained markDestinations body is already mapped at 0x3180c. BLR at 0x31f78 precedes the findAllDestinations prologue at 0x31f7c."
+
 [[functions]]
 retail_va = 0x42edd0
 unit = "ai_player"
@@ -280,6 +334,16 @@ mac_size = 0x94
 mac_symbol = ".maxBuyableCreatures__FPCl13TCreatureTypei"
 target_sha256 = "0ab67542bf206e7aa859d889fb639d1bb89b929e27bf01b493732ae899b5eef4"
 evidence = "Unique static MaxBuyableCreatures definition in ai_player.cpp, Dreamcast ai_player.obj dc:0x31030..0x31092 with const long*, creature type, and limit. Mac 0:0x2f178..0x2f20c calls getMonsterCost, loops seven costs, divides positive funds by positive costs, and lowers the limit. Mac doBestPurchase calls it at 0:0x30ac0 and 0:0x30bcc. No Windows VA is claimed."
+
+[[helpers]]
+unit = "ai_player"
+source_helper = "type_AI_creature_swapper::normalizeAlignment"
+mac_section = 0
+mac_offset = 0x2f990
+mac_size = 0x78
+mac_symbol = ".normalizeAlignment__24type_AI_creature_swapperCFi"
+target_sha256 = "a8d1fd95c72c253c0834a766f057478d80f4f3f84d50eab581fb0d526163be17"
+evidence = "Mac 0:0x2f990..0x2fa08 takes this and an alignment, checks the Angelic Alliance byte at this+8, tests the alliance bitset and returns either the original alignment or its first set alignment. Its BLR at 0x2fa04 precedes getAlignments at 0x2fa08. chooseWeakestArmy calls it at 0:0x30220 and valueOfAddingArmy at 0:0x3032c; the same body was duplicated in both Windows source callers and VC6 expands the restored ordinary helper at both sites. The older Dreamcast build does not identify this Complete-era helper."
 
 [[functions]]
 retail_va = 0x0042b9e0

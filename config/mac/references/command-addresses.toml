@@ -324,3 +324,48 @@ mac_offset = 0x885a4
 mac_size = 0x16c
 target_sha256 = "090cb79b86b3f1e651e39d3514e61b8a1a847d2f01b802340a42547be1829507"
 evidence = "NEW: Network player drop maps player0xe6e7c, network0x213ee4, localized notifications0x117eb8, timers0x87e70 and checkWin0x842bc. End0x88710; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[helpers]]
+source_helper = "combatManager::finishCreaturePlacement"
+unit = "command"
+mac_section = 0
+mac_offset = 0x82384
+mac_size = 0x78
+target_sha256 = "ccb27f6b44f3ed7a57e02ef51d6f2af979fa3d7cba4065e669da2f5b481d4fe1"
+evidence = "Bounded between doAnimations and main. Checks m_creaturePlacement, resets acting side/slot/turn and placement state, calls TCombatWindow::endPlacementPhase unless quick combat, then resetRound. Direct Mac calls from main 0x82640, processCombatMsg 0x8363c, and resetRound 0x83e6c; all three Windows bodies held the same block."
+
+[[helpers]]
+source_helper = "combatManager::getPointer"
+unit = "command"
+mac_section = 0
+mac_offset = 0x82e98
+mac_size = 0x24
+target_sha256 = "c33bdd6276c0769c385eabc76a4b1cce2c2215a0d466d0835f01feb9d23e2141"
+evidence = "processCombatMsg calls this retained member at 0x83b2c. It maps inCombatCommand 21 or 22 to pointer 5 and otherwise returns the input unchanged; unused iHexIndex is named in Dreamcast's matching two-int signature. BLR 0x82eb8; next independent function 0x82ebc."
+
+[[helpers]]
+source_helper = "combatManager::doSurrender"
+unit = "command"
+mac_section = 0
+mac_offset = 0x85c98
+mac_size = 0xd4
+target_sha256 = "af2cdf26baf0ab87a25415c419b433eab471d340627fb12aa87a4de046733d8d"
+evidence = "processCombatMsg calls this retained surrender dialog helper at 0x83538. It gets surrender cost 0x85b14, formats a text-resource offer, opens normalDialog and returns whether the player accepted; BLR 0x85d68. Windows expands its one source call."
+
+[[helpers]]
+source_helper = "combatManager::automateTower"
+unit = "command"
+mac_section = 0
+mac_offset = 0x8627c
+mac_size = 0x10c
+target_sha256 = "45f90fa41bbd3159b578f627650470652af39715669c25ebfbd2019eec9e13a3"
+evidence = "main calls this retained arrow-tower turn helper at 0x82550 between automateFirstAidTent and automateCatapult. It requires citadel level and the current arrow tower, maps lower/keep/upper hex to wall 13/14/5, immobilizes a destroyed tower or runs computer action/resetMouse, then returns a byte turn flag; BLR 0x86384. Windows main had this body flattened."
+
+[[helpers]]
+source_helper = "combatManager::setCombatViewArmy"
+unit = "command"
+mac_section = 0
+mac_offset = 0x87f14
+mac_size = 0x44
+target_sha256 = "2ffd9579bf845978ccdc74d663410802b71875c62ee8047d33d7b5e222d21abe"
+evidence = "processNextAction calls this retained preference setter at 0x87ca8. It writes g_config combat army info, calls drawFrame and writePrefs, then BLR 0x87f54. Windows source already has the ordinary method and caller."

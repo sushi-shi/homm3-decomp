@@ -236,6 +236,17 @@ int combatManager::viewSpells() const
 // QUICKSAND ARM (fn+0x8f) and threads LAND_MINE's and EARTHQUAKE's `je` back
 // into it, while our C2 sinks the same join to the end of the body - the D7
 // join-placement class, not a statement shape.
+// Mac retains this no-argument helper at code 0:18f764, directly before
+// initiateSpell, and calls it in the single-army and area-spell paths.
+// Windows expands the same mouse-coordinate and target-update sequence.
+static int updateSpellTargetFromMouse()
+{
+    int x;
+    int y;
+    g_mouseManager->mouseCoords(x, y);
+    return updateSpellTarget(g_combatManager->getGridIndex(x, y));
+}
+
 VA(0x0059ec50, 0xAA8)  // retail+dc-shape, dc 0x14ecbc
 void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
 {
@@ -329,10 +340,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                                       : AI_ORDER_CAST_SPELL;
         m_nextActionExtra = spellToCast;
         if (spellTargetsASingleArmy(spellToCast, mastery)) {
-            int x;
-            int y;
-            g_mouseManager->mouseCoords(x, y);
-            updateSpellTarget(g_combatManager->getGridIndex(x, y));
+            updateSpellTargetFromMouse();
             g_windowManager->doDialog(0, handleCastSpell, 0);
             if (!m_nextAction)
                 break;
@@ -340,7 +348,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
             army* target = findSpellTarget(spellToCast, m_currentSide,
                                              m_nextActionGridIndex, 1, 0);
             if (target && spellToCast != SPELL_DISPEL
-                    && target->m_combatSide != m_currentSide
+                    && target->getOwningSide() != m_currentSide
                     && !target->is(creatureImmobilized)
                     && target->getMirrorEffect() >= random(1, 100)) {
                 TPickANumber picker(0, m_numArmies[m_currentSide] - 1);
@@ -368,10 +376,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
         m_nextActionExtra = spellToCast;
         if (shadeLevel && g_config.m_showCombatMouseHex)
             setCombatGrid(g_config.m_showCombatGrid, 1, 0, 1);
-        int x;
-        int y;
-        g_mouseManager->mouseCoords(x, y);
-        updateSpellTarget(g_combatManager->getGridIndex(x, y));
+        updateSpellTargetFromMouse();
         g_windowManager->doDialog(0, handleCastSpell, 0);
         if (shadeLevel && g_config.m_showCombatMouseHex)
             setCombatGrid(g_config.m_showCombatGrid, 1, 1,
@@ -517,7 +522,7 @@ static int updateSpellTarget(long hex)
                 creatureSpell)
             && (spell != SPELL_CHAIN_LIGHTNING
                 || !g_combatManager->m_cells[hex].hasArmy()
-                || g_combatManager->m_cells[hex].getArmy()->m_combatSide
+                || g_combatManager->m_cells[hex].getArmy()->getOwningSide()
                     != g_combatManager->m_currentSide)) {
         result = hex;
         g_mouseManager->setPointer(spell + 1, mouseManager::SPELL_SET);
@@ -556,7 +561,7 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
 
     TObstacle* obstacle = &getObstacle(m_cells[hex].m_obstacleIndex);
 
-    if (obstacle->isVisible(currentArmy->m_combatSide))
+    if (obstacle->isVisible(currentArmy->getOwningSide()))
         return 0;
 
     if (spellCastWorkChance(SPELL_LAND_MINE, obstacle->m_owner, currentArmy,
@@ -724,11 +729,11 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         }
 
         if (otherHero
-            && otherHero->m_skillLevel[eSecSkillEagleEye] > eMasteryNone
+            && otherHero->getSecondarySkill(eSecSkillEagleEye) > eMasteryNone
             && !otherHero->isInSpellbook(spellId)
-            && otherHero->m_skillLevel[eSecSkillEagleEye] + 1
+            && otherHero->getSecondarySkill(eSecSkillEagleEye) + 1
                 >= traits->m_level) {
-            if (random(1, 100)
+            if (sRandom(1, 100)
                 <= static_cast<int>(otherHero->getEagleEyeChance()
                                     * 100.0f))
                 m_eagleEyeData[otherSide].insert(spellId);
@@ -1002,11 +1007,10 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         break;
 
     case SPELL_MAGIC_ARROW: {
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
-            shootAnimatedMissile(castX, castY, target->midX(), target->midY(),
-                                 5, g_magicArrowAngles,
-                                 g_magicArrowSprites);
-        }
+        // Mac retains the helper at 0:0x1904c8 and calls it from castSpell
+        // at 0:0x1912a0. VC6 expands this ordinary same-TU call; the older
+        // Dreamcast source spells out its quick-combat/missile body here.
+        unnamed59FDE0(castX, castY, target);
         int damage = computeSpellDamage(SPELL_MAGIC_ARROW, monsterPower,
                                         mastery, castingHero, otherHero,
                                         target, 1);
@@ -1241,7 +1245,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
             target->m_monInfo.m_attributes |= creatureGreyColoring;
             resetLimitCreature();
-            markCreatureEffect(target->m_combatSide, target->m_bitIndex);
+            markCreatureEffect(target->getOwningSide(), target->m_bitIndex);
             computeMaxExtent();
             for (int frame = 10; frame > 0; --frame) {
                 target->m_paletteEffect = frame * 0.1;
@@ -1260,7 +1264,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
                 target->m_monInfo.m_attributes |= creatureRedColoring;
                 resetLimitCreature();
-                markCreatureEffect(target->m_combatSide, target->m_bitIndex);
+                markCreatureEffect(target->getOwningSide(), target->m_bitIndex);
                 computeMaxExtent();
                 {
                     for (int frame = 0; frame < 10; ++frame) {
@@ -1400,7 +1404,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     case SPELL_DISPEL_HELPFUL: {
         for (int dispelledSpell = 10; dispelledSpell < 70;
              ++dispelledSpell) {
-            if (target->m_spellInfluence[dispelledSpell]
+            if (target->getSpellTime(dispelledSpell)
                 && g_spellTraits[dispelledSpell].m_karma > 0) {
                 target->cancelIndividualSpell(dispelledSpell);
             }
@@ -1423,7 +1427,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             clearEffects();
             for (int index = 0; index < m_numArmies[m_currentSide]; ++index) {
                 army* cureTarget = &m_armies[m_currentSide][index];
-                if (!cureTarget->m_spellInfluence[60]
+                if (!cureTarget->getSpellTime(60)
                     && validSpellTargetArmy(SPELL_CURE, m_currentSide,
                                              cureTarget, 1,
                                              isMonsterSpell)) {
@@ -1525,7 +1529,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // index and the obstacle's optional replacement effect.
     case SPELL_REMOVE_OBSTACLE: {
         int obstacleIndex = m_cells[targetIndex].m_obstacleIndex;
-        int replacementEffect = m_obstacles[obstacleIndex].m_dispelEffect;
+        int replacementEffect = getObstacle(obstacleIndex).m_dispelEffect;
         spellEffect(traits->m_effect, targetIndex, 100, 0);
         if (replacementEffect == -1) {
             m_saveBiggestExtent = 1;
@@ -1535,14 +1539,14 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             m_saveBiggestExtent = 0;
             g_windowManager->saveFizzleSourceX(
                 m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1,
-                m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1);
+                m_drawbridgeBounds.width(),
+                m_drawbridgeBounds.height());
             removeObstacle(obstacleIndex);
             drawFrame(0, 0, 0, 0, 1, 0);
             g_windowManager->fizzleForwardX(
                 m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1,
-                m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1,
+                m_drawbridgeBounds.width(),
+                m_drawbridgeBounds.height(),
                 replacementEffect);
         } else {
             removeObstacle(obstacleIndex);
@@ -1589,7 +1593,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             army* thisArmy = *it;
             if (!spellCastWorks(spellId, m_currentSide, thisArmy, 0,
                                 isMonsterSpell)) {
-                m_effected[thisArmy->m_combatSide][thisArmy->m_bitIndex] = 0;
+                m_effected[thisArmy->getOwningSide()][thisArmy->m_bitIndex] = 0;
             } else {
                 thisArmy->setSpellInfluence(spellId, monsterPower,
                                              mastery, castingHero);
@@ -1616,8 +1620,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 formatString(DATA_COMPGEN(
                                   0x00688450, acidBreathDefenseFormat,
                                   "Acid breath reduces the defense of the %s by %i"),
-                              getArmyName(target->m_creatureType,
-                                           target->m_numTroops),
+                              target->getName(),
                               reduction)
                     .c_str(),
                 1, 0);
@@ -1733,32 +1736,31 @@ std::string combatManager::getFailureReason(SpellID spell, const char* msg,
             return msg;
         if (target->getSpellTime(SPELL_ANTI_MAGIC)
             && spellTraits->m_level < target->m_antiMagicSpellLevel)
-            return formatString(g_generalText->getText(GENERAL_TEXT_SPELL_PROTECTS_TARGET_FORMAT),
+            return formatString((*g_generalText)[GENERAL_TEXT_SPELL_PROTECTS_TARGET_FORMAT],
                                  g_spellTraits[SPELL_ANTI_MAGIC].m_name,
-                                 getArmyName(target->m_creatureType,
-                                             target->m_numTroops));
+                                 target->getName());
         if (spellTraits->m_karma < 0
             && target->getOwningSide() == m_currentSide)
-            return formatString(g_generalText->getText(GENERAL_TEXT_SPELL_HOSTILE_TARGET_ONLY_FORMAT),
+            return formatString((*g_generalText)[GENERAL_TEXT_SPELL_HOSTILE_TARGET_ONLY_FORMAT],
                                  spellTraits->m_name);
         if (spellTraits->m_karma > 0
             && target->getOwningSide() != m_currentSide)
-            return formatString(g_generalText->getText(GENERAL_TEXT_SPELL_FRIENDLY_TARGET_ONLY_FORMAT),
+            return formatString((*g_generalText)[GENERAL_TEXT_SPELL_FRIENDLY_TARGET_ONLY_FORMAT],
                                  spellTraits->m_name);
         if (getSpellWorkChance(spell, target->m_creatureType,
                                   m_heroes[m_currentSide], 0) <= 0.0) {
             if (spell == SPELL_RESURRECTION || spell == SPELL_ANIMATE_DEAD
                 || spell == SPELL_SACRIFICE)
-                return formatString(g_generalText->getText(GENERAL_TEXT_SPELL_NO_EFFECT_ON_TARGET_FORMAT),
+                return formatString((*g_generalText)[GENERAL_TEXT_SPELL_NO_EFFECT_ON_TARGET_FORMAT],
                                      spellTraits->m_name, target->getName(2));
             else
-                return formatString(g_generalText->getText(GENERAL_TEXT_SPELL_IMMUNITY_FORMAT),
+                return formatString((*g_generalText)[GENERAL_TEXT_SPELL_IMMUNITY_FORMAT],
                                      target->getName(2), spellTraits->m_name);
         }
         return msg;
     } else {
         if (spell == SPELL_FIRE_WALL || spell == SPELL_FORCE_FIELD)
-            return formatString(g_generalText->getText(GENERAL_TEXT_SUMMON_NO_ROOM_FORMAT),
+            return formatString((*g_generalText)[GENERAL_TEXT_SUMMON_NO_ROOM_FORMAT],
                                  spellTraits->m_name);
         return msg;
     }
@@ -1811,7 +1813,7 @@ int handleSacrificeBeneficiary(message& msg)
             g_sacrificeBeneficiaryValidTarget = 0;
             g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
             g_combatManager->displayFailureReason(
-                SPELL_SACRIFICE, g_generalText->getText(GENERAL_TEXT_CHOOSE_RESURRECTION_TARGET), hex);
+                SPELL_SACRIFICE, (*g_generalText)[GENERAL_TEXT_CHOOSE_RESURRECTION_TARGET], hex);
             g_combatManager->turnOffHighlighter(1);
         }
         break;
@@ -1871,7 +1873,7 @@ int handleCastSacrifice(message& msg)
             g_sacrificeIndexIsValid = 0;
             g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
             g_combatManager->displayFailureReason(
-                SPELL_SACRIFICE, g_generalText->getText(GENERAL_TEXT_CHOOSE_SACRIFICE_TARGET), hex);
+                SPELL_SACRIFICE, (*g_generalText)[GENERAL_TEXT_CHOOSE_SACRIFICE_TARGET], hex);
             g_combatManager->turnOffHighlighter(1);
         }
         break;
@@ -2071,7 +2073,7 @@ int handleCastWallSpell(message& msg)
             g_castWallIndexToCastOn = -1;
             g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
             g_combatManager->displayFailureReason(
-                spell, g_generalText->getText(GENERAL_TEXT_SELECT_SPELL_TARGET), hex);
+                spell, (*g_generalText)[GENERAL_TEXT_SELECT_SPELL_TARGET], hex);
             if (g_config.m_showCombatMouseHex
                 && spell != SPELL_FORCE_FIELD) {
                 std::vector<long> hexes;
@@ -2128,7 +2130,7 @@ int handleCastTeleport(message& msg)
             g_castTeleportArmyHex = -1;
             g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
             g_combatManager->displayFailureReason(
-                SPELL_TELEPORT, g_generalText->getText(GENERAL_TEXT_SELECT_SPELL_TARGET), hex);
+                SPELL_TELEPORT, (*g_generalText)[GENERAL_TEXT_SELECT_SPELL_TARGET], hex);
             g_combatManager->turnOffHighlighter(1);
         }
         g_castTeleportPreviousHex = hex;
@@ -2208,7 +2210,7 @@ static int handleGetTeleportDestination(message& msg)
             g_teleportDestinationHex = -1;
             g_mouseManager->setPointer(0, mouseManager::COMBAT_SET);
             g_combatManager->m_combatWindow->combatMessage(
-                g_generalText->getText(GENERAL_TEXT_INVALID_TELEPORT_DESTINATION), 0, 0);
+                (*g_generalText)[GENERAL_TEXT_INVALID_TELEPORT_DESTINATION], 0, 0);
         }
         g_teleportHoverHex = hex;
         break;
@@ -2439,16 +2441,16 @@ army* combatManager::findResurrectionTarget(int side, int hex,
     if (!validHex(hex))
         return 0;
     hexcell* cell = &m_cells[hex];
-    if (cell->m_armySide >= 0) {
+    if (cell->hasArmy()) {
         army* target = cell->getArmy();
-        if (target->m_combatSide != side)
+        if (target->getOwningSide() != side)
             return 0;
         if (!target->is(creatureAlive))
             return 0;
         if (target->m_numTroops >= target->m_origNumTroops)
             return 0;
-        if (spellCastWorkChance(SPELL_RESURRECTION, side, target, 0, 1,
-                                creatureSpell) > 0.0)
+        if (validSpellTargetArmy(SPELL_RESURRECTION, side, target, 1,
+                                 creatureSpell))
             return target;
         return 0;
     }
@@ -2465,19 +2467,19 @@ army* combatManager::findResurrectionTarget(int side, int hex,
         if (!corpse->is(creatureAlive))
             continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
-            if (m_cells[hex + 1].m_armySide >= 0)
+            if (m_cells[hex + 1].hasArmy())
                 continue;
             if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
-            if (m_cells[hex - 1].m_armySide >= 0)
+            if (m_cells[hex - 1].hasArmy())
                 continue;
             if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
         }
-        if (spellCastWorkChance(SPELL_RESURRECTION, side, corpse, 0, 1,
-                                creatureSpell) > 0.0)
+        if (validSpellTargetArmy(SPELL_RESURRECTION, side, corpse, 1,
+                                 creatureSpell))
             return corpse;
     } while (--i >= 0);
     return 0;
@@ -2495,7 +2497,7 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
     hexcell* cell = &m_cells[hex];
     if (cell->m_attributes & hexcell::blocked)
         return 0;
-    if (cell->m_armySide >= 0)
+    if (cell->hasArmy())
         return 0;
     for (int i = cell->m_bodiesInHex - 1; i >= 0; i--) {
         int deadSide = cell->m_deadArmySide[i];
@@ -2505,13 +2507,13 @@ army* combatManager::findDemonicResurrectionTarget(int side, int hex)
         if (!(m_armies[deadSide][deadSlot].is(creatureAlive)))
             continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
-            if (m_cells[hex + 1].m_armySide >= 0)
+            if (m_cells[hex + 1].hasArmy())
                 continue;
             if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
-            if (m_cells[hex - 1].m_armySide >= 0)
+            if (m_cells[hex - 1].hasArmy())
                 continue;
             if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
@@ -2527,16 +2529,15 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
     if (!validHex(hex))
         return 0;
     hexcell* cell = &m_cells[hex];
-    if (cell->m_armySide >= 0) {
+    if (cell->hasArmy()) {
         army* target = cell->getArmy();
-        if (target->m_combatSide != side)
+        if (target->getOwningSide() != side)
             return 0;
         if (!target->is(creatureUndead))
             return 0;
         if (target->m_numTroops >= target->m_origNumTroops)
             return 0;
-        if (spellCastWorkChance(SPELL_ANIMATE_DEAD, side, target, 0, 1, 0)
-                > 0.0)
+        if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, side, target, 1, 0))
             return target;
         return 0;
     }
@@ -2553,19 +2554,18 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
         if (!corpse->is(creatureUndead))
             continue;
         if (cell->m_deadPartOfDouble[i] == 0) {
-            if (m_cells[hex + 1].m_armySide >= 0)
+            if (m_cells[hex + 1].hasArmy())
                 continue;
             if (m_cells[hex + 1].m_attributes & hexcell::blocked)
                 continue;
         }
         if (cell->m_deadPartOfDouble[i] == 1) {
-            if (m_cells[hex - 1].m_armySide >= 0)
+            if (m_cells[hex - 1].hasArmy())
                 continue;
             if (m_cells[hex - 1].m_attributes & hexcell::blocked)
                 continue;
         }
-        if (spellCastWorkChance(SPELL_ANIMATE_DEAD, side, corpse, 0, 1, 0)
-                > 0.0)
+        if (validSpellTargetArmy(SPELL_ANIMATE_DEAD, side, corpse, 1, 0))
             return corpse;
     } while (--i >= 0);
     return 0;
@@ -2583,8 +2583,8 @@ unsigned char combatManager::hasValidSpellTarget(SpellID spellId, long mastery,
     for (int hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
         if (inInvisibleColumn(hex))
             continue;
-        if (spellId == SPELL_CHAIN_LIGHTNING && m_cells[hex].m_armySide >= 0
-            && m_cells[hex].getArmy()->m_combatSide == castingSide)
+        if (spellId == SPELL_CHAIN_LIGHTNING && m_cells[hex].hasArmy()
+            && m_cells[hex].getArmy()->getOwningSide() == castingSide)
             continue;
         if (validSpellTarget(spellId, mastery, hex, castingSide, firstTarget,
                              creatureSpell))
@@ -2713,7 +2713,7 @@ void combatManager::markAreaEffect(long hex, long radius,
 {
     std::vector<long> hexes;
     markAreaEffect(hex, radius, includeCenter, hexes);
-    memset(m_effected, 0, sizeof(m_effected));
+    clearEffects();
     int i = hexes.size();
     while (i-- > 0) {
         if (!validHex(hexes[i]))
@@ -2723,9 +2723,9 @@ void combatManager::markAreaEffect(long hex, long radius,
             continue;
         if (target->is(creatureImmobilized))
             continue;
-        if (m_effected[target->m_combatSide][target->m_bitIndex])
+        if (m_effected[target->getOwningSide()][target->m_bitIndex])
             continue;
-        m_effected[target->m_combatSide][target->m_bitIndex] = 1;
+        m_effected[target->getOwningSide()][target->m_bitIndex] = 1;
         targets.push_back(target);
     }
 }
@@ -2736,7 +2736,7 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
 {
     std::vector<long> hexes;
     markBerserkAreaEffect(hex, mastery, hexes);
-    memset(m_effected, 0, sizeof(m_effected));
+    clearEffects();
     int i = hexes.size();
     while (i-- > 0) {
         if (!validHex(hexes[i]))
@@ -2746,9 +2746,9 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
             continue;
         if (target->is(creatureImmobilized))
             continue;
-        if (m_effected[target->m_combatSide][target->m_bitIndex])
+        if (m_effected[target->getOwningSide()][target->m_bitIndex])
             continue;
-        m_effected[target->m_combatSide][target->m_bitIndex] = 1;
+        m_effected[target->getOwningSide()][target->m_bitIndex] = 1;
         targets.push_back(target);
     }
 }
@@ -2836,7 +2836,7 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
     while (i--) {
         army* target = targets[i];
         if (!spellCastWorks(spellType, m_currentSide, target, 0, 0)) {
-            m_effected[target->m_combatSide][target->m_bitIndex] = 0;
+            m_effected[target->getOwningSide()][target->m_bitIndex] = 0;
             continue;
         }
         damage = computeSpellDamage(spellType, power, mastery, castingHero,
@@ -3047,7 +3047,7 @@ void combatManager::armageddon(int level, int power)
         && !static_cast<const combatManager*>(this)->isQuickCombat()) {
         long totalDamage = computeSpellDamage(
             SPELL_ARMAGEDDON, power, level, 0, 0, 0, 0);
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_ARMAGEDDON_DAMAGE_FORMAT), totalDamage);
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_COMBAT_ARMAGEDDON_DAMAGE_FORMAT], totalDamage);
         m_combatWindow->combatMessage(g_text, 1, 0);
     }
     checkRebirth();
@@ -3750,7 +3750,7 @@ void combatManager::chainLightning(int index, int level, int power)
             totalKilled += target->damage(modifySpellDamage(
                 currentDamage, SPELL_CHAIN_LIGHTNING, m_heroes[m_currentSide],
                 target->getController(), target, 0));
-            m_effected[target->m_combatSide][target->m_bitIndex] = 1;
+            m_effected[target->getOwningSide()][target->m_bitIndex] = 1;
             index = getNextChainLightningTarget(target, 1);
             if (index == -1)
                 break;
@@ -3790,10 +3790,10 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
                                           long castingSide,
                                           long creatureSpell)
 {
-    memset(m_effected, 0, sizeof(m_effected));
+    clearEffects();
     for (int side = 0; side < 2; side++) {
         for (int i = 0; i < m_numArmies[side]; i++) {
-            if (m_armies[side][i].m_spellInfluence[60])
+            if (m_armies[side][i].getSpellTime(60))
                 continue;
             if (spellCastWorks(spell, castingSide, &m_armies[side][i], 0,
                                creatureSpell)) {
@@ -4058,7 +4058,7 @@ void combatManager::mirrorImage(int targetIndex, int level)
             }
         }
     }
-    normalDialog(g_generalText->getText(GENERAL_TEXT_MIRROR_IMAGE_FAILED), 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    normalDialog((*g_generalText)[GENERAL_TEXT_MIRROR_IMAGE_FAILED], 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     return;
 }
 
@@ -4137,7 +4137,7 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
     int count = g_spellTraits[spell].m_masteryBonus[level] * spellPower;
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
         m_combatWindow->combatMessage(
-            formatString(g_generalText->getText(GENERAL_TEXT_SUMMON_CREATURES_FORMAT),
+            formatString((*g_generalText)[GENERAL_TEXT_SUMMON_CREATURES_FORMAT],
                           m_heroes[m_currentSide]->m_name, count,
                           getArmyName(monType, count))
                 .c_str(),
@@ -4168,11 +4168,11 @@ void combatManager::removeCorpse(hexcell* hex, long side, long slot)
 // Complete expands this ordinary overload in both resurrection paths.
 void combatManager::removeCorpse(army* corpse)
 {
-    removeCorpse(&m_cells[corpse->m_gridIndex], corpse->m_combatSide,
+    removeCorpse(&m_cells[corpse->m_gridIndex], corpse->getOwningSide(),
                 corpse->m_bitIndex);
     if (corpse->is(creatureDoubleWide))
         removeCorpse(&m_cells[corpse->getSecondGridIndex()],
-                    corpse->m_combatSide, corpse->m_bitIndex);
+                    corpse->getOwningSide(), corpse->m_bitIndex);
 }
 
 // The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
@@ -4199,10 +4199,10 @@ void combatManager::demonicResurrection(const army* caster, army* target)
         drawFrame(1, 0, 0, 0, 1, 0);
         if (raised != 1)
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_MANY_FORMAT), raised,
-                    getArmyName(demons->m_creatureType, raised));
+                    demons->getName(raised));
         else
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
-                    getArmyName(demons->m_creatureType, raised));
+                    demons->getName(raised));
         m_combatWindow->combatMessage(g_text, 1, 0);
         waitEndSample(sample, -1);
     }
@@ -4275,7 +4275,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
         placeArmyInGrid(*targetArmy, hex);
         removeCorpse(targetArmy);
     }
-    if (targetArmy->m_facing != 1 - targetArmy->m_combatSide)
+    if (targetArmy->m_facing != 1 - targetArmy->getOwningSide())
         targetArmy->turn(0);
 
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
@@ -4352,8 +4352,7 @@ inline void combatManager::showSpellCastFailure(army* targetArmy, int spellId)
         SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
             0x00688440, magicResistanceSampleName, "MagicRes.wav"));
         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_MAGIC_RESISTANCE_FORMAT),
-                getArmyName(targetArmy->m_creatureType,
-                             targetArmy->m_numTroops),
+                targetArmy->getName(),
                 g_generalText->getText(targetArmy->m_numTroops == 1
                                            ? 145
                                            : 144));
@@ -4424,27 +4423,23 @@ long combatManager::modifySpellDamage(long baseDamage, SpellID spellType,
             if (delta < 0) {
                 if (targetArmy->m_numTroops == 1)
                     message = formatString(
-                        g_generalText->getText(
-                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE_FORMAT),
+                        (*g_generalText)[GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE_FORMAT],
                         targetArmy->getName(),
                         -delta);
                 else
                     message = formatString(
-                        g_generalText->getText(
-                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY_FORMAT),
+                        (*g_generalText)[GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY_FORMAT],
                         targetArmy->getName(),
                         -delta);
             } else {
                 if (targetArmy->m_numTroops == 1)
                     message = formatString(
-                        g_generalText->getText(
-                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE_FORMAT),
+                        (*g_generalText)[GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE_FORMAT],
                         targetArmy->getName(),
                         delta);
                 else
                     message = formatString(
-                        g_generalText->getText(
-                            GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY_FORMAT),
+                        (*g_generalText)[GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY_FORMAT],
                         targetArmy->getName(),
                         delta);
             }
@@ -4461,19 +4456,19 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
     if (!target)
         return damage;
     if ((g_spellTraits[spell].m_schoolBits & eSchoolEarth)
-        && target->m_spellInfluence[33])
+        && target->getSpellTime(33))
         return static_cast<long>(static_cast<float>(damage)
                                  * target->m_protectionFromEarthFactor);
     if ((g_spellTraits[spell].m_schoolBits & eSchoolAir)
-        && target->m_spellInfluence[30])
+        && target->getSpellTime(30))
         return static_cast<long>(static_cast<float>(damage)
                                  * target->m_protectionFromAirFactor);
     if ((g_spellTraits[spell].m_schoolBits & eSchoolFire)
-        && target->m_spellInfluence[31])
+        && target->getSpellTime(31))
         return static_cast<long>(static_cast<float>(damage)
                                  * target->m_protectionFromFireFactor);
     if ((g_spellTraits[spell].m_schoolBits & eSchoolWater)
-        && target->m_spellInfluence[32])
+        && target->getSpellTime(32))
         return static_cast<long>(static_cast<float>(damage)
                                  * target->m_protectionFromWaterFactor);
     return damage;
@@ -4570,7 +4565,7 @@ void combatManager::earthquake(int level)
     while (remaining-- > 0) {
         int candidates = 0;
         for (int i = 0; i < WALL_TARGET_COUNT; i++) {
-            if (m_wallStrength[s_wallTargets[i].m_wall] > counts[i])
+            if (getWallStrength(static_cast<TWallTargetId>(i)) > counts[i])
                 candidates++;
         }
         if (candidates == 0)
@@ -4578,7 +4573,7 @@ void combatManager::earthquake(int level)
         int roll = random(1, candidates);
         int chosen;
         for (chosen = 0; chosen < WALL_TARGET_COUNT; chosen++) {
-            if (m_wallStrength[s_wallTargets[chosen].m_wall] != 0) {
+            if (getWallStrength(static_cast<TWallTargetId>(chosen)) != 0) {
                 roll--;
                 if (roll == 0)
                     break;
@@ -4668,11 +4663,11 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
             && targetHero->isWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
             return 0.0f;
         int mastery = castingHero->getSpellLevel(SPELL_DISPEL, m_magicTerrain);
-        if (mastery < eMasteryAdvanced && target->m_combatSide != side)
+        if (mastery < eMasteryAdvanced && target->getOwningSide() != side)
             return 0.0f;
         if (mastery < eMasteryExpert) {
             for (int i = 10; i < 81; i++) {
-                if (target->m_spellInfluence[i])
+                if (target->getSpellTime(i))
                     return 1.0f;
             }
             return 0.0f;
@@ -4684,12 +4679,12 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
             && targetHero->isWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
             return 0.0f;
         for (int i = 10; i < 81; i++) {
-            if (target->m_spellInfluence[i] && g_spellTraits[i].m_karma > 0)
+            if (target->getSpellTime(i) && g_spellTraits[i].m_karma > 0)
                 return 1.0f;
         }
         return 0.0f;
     }
-    if (target->m_spellInfluence[SPELL_ANTI_MAGIC]
+    if (target->getSpellTime(SPELL_ANTI_MAGIC)
         && traits->m_level < target->m_antiMagicSpellLevel
         && !(traits->m_flags & 0x8))
         return 0.0f;
@@ -4703,10 +4698,10 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
         return 0.0f;
     int benefit = traits->m_karma;
     if (!redirected) {
-        if (benefit < 0 && target->m_combatSide == side
+        if (benefit < 0 && target->getOwningSide() == side
             && spell != SPELL_BERSERK)
             return 0.0f;
-        if (benefit > 0 && target->m_combatSide != side)
+        if (benefit > 0 && target->getOwningSide() != side)
             return 0.0f;
     }
 
@@ -4719,7 +4714,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
             + g_spellTraits[SPELL_HYPNOTIZE].m_masteryBonus[mastery];
         value += castingHero->getHeroSpellBonus(SPELL_HYPNOTIZE,
                                                  target->m_monInfo.m_level, value);
-        if (target->m_spellInfluence[36]
+        if (target->getSpellTime(36)
             || target->m_monInfo.m_hitPoints * target->m_numTroops > value)
             return 0.0f;
         break;
@@ -4745,7 +4740,7 @@ float combatManager::spellCastWorkChance(SpellID spell, long side,
     case SPELL_ANIMATE_DEAD: {
         int value;
         if (creatureSpell == 1) {
-            const army* caster = &m_armies[m_actingSide][m_actingSlot];
+            const army* caster = getCurrentArmy();
             if (caster->m_creatureType == CREATURE_ARCHANGEL)
                 value = caster->m_numTroops * 100;
             else
@@ -4790,7 +4785,7 @@ unsigned char combatManager::spellCastWorks(SpellID spell, long side,
                                             unsigned char redirected,
                                             long creatureSpell) const
 {
-    return random(1, 100)
+    return sRandom(1, 100)
         <= static_cast<long>(spellCastWorkChance(
                spell, side, target, redirected, 1, creatureSpell)
                              * 100.0f);
@@ -4815,12 +4810,12 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
     case SPELL_SACRIFICE:
         if (firstTarget) {
             target = findResurrectionTarget(m_currentSide, targetIndex, 0);
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_RESURRECT_TARGET_FORMAT),
-                    getArmyName(target->m_creatureType, target->m_numTroops));
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_COMBAT_RESURRECT_TARGET_FORMAT],
+                    target->getName());
         } else {
             target = cell->getArmy();
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_SACRIFICE_TARGET_FORMAT),
-                    getArmyName(target->m_creatureType, target->m_numTroops));
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_COMBAT_SACRIFICE_TARGET_FORMAT],
+                    target->getName());
         }
         m_combatWindow->combatMessage(g_text, 0, 0);
         return;
@@ -4829,13 +4824,13 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
         // stack is latched the rollover stops naming stacks and prints
         // the fixed "pick a destination" row instead.
         if (g_teleportSourcePicked) {
-            m_combatWindow->combatMessage(g_generalText->getText(GENERAL_TEXT_TELEPORT_HERE), 0, 0);
+            m_combatWindow->combatMessage((*g_generalText)[GENERAL_TEXT_TELEPORT_HERE], 0, 0);
             return;
         }
         target = cell->getArmy();
         break;
     case SPELL_REMOVE_OBSTACLE:
-        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_COMBAT_REMOVE_OBSTACLE_TARGET));
+        strcpy(g_text, (*g_generalText)[GENERAL_TEXT_COMBAT_REMOVE_OBSTACLE_TARGET]);
         m_combatWindow->combatMessage(g_text, 0, 0);
         return;
     case SPELL_RESURRECTION:
@@ -4858,10 +4853,10 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
     }
 
     if (target)
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT), g_spellTraits[spellId].m_name,
-                getArmyName(target->m_creatureType, target->m_numTroops));
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_CAST_SPELL_ON_TARGET_FORMAT], g_spellTraits[spellId].m_name,
+                target->getName());
     else
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_CAST_SPELL_FORMAT), g_spellTraits[spellId].m_name);
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_CAST_SPELL_FORMAT], g_spellTraits[spellId].m_name);
     m_combatWindow->combatMessage(g_text, 0, 0);
 }
 

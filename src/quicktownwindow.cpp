@@ -84,7 +84,7 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
         hallLevel = 1;
     else if (thisTown->hasBuilding(HALL_CITY_ID, false))
         hallLevel = 2;
-    else if (thisTown->hasBuilding(HALL_CAPITOL_ID, false))
+    else if (thisTown->isCapitol())
         hallLevel = 3;
     else
         hallLevel = 0;

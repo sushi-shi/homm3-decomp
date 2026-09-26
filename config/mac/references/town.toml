@@ -1,5 +1,25 @@
 [[helpers]]
 unit = "town"
+source_helper = "town::getArmy()"
+mac_section = 0
+mac_offset = 0x1b7020
+mac_size = 0x44
+mac_symbol = ".getArmy__4townFv"
+target_sha256 = "1fe1b65ee20c24578b8104e5c9996f0840d39d260d273bcea12755e549f45cef"
+evidence = "Mac quick-town constructor calls 0:0x1b7020 for the non-const town::getArmy source call. Its 0x44-byte body is identical to the adjacent const overload at 0:0x1b6fdc, selecting garrison at +0xd4 or the visiting hero's army using the 0x486 hero stride. The preceding const overload ends at 0x1b7020, this body ends in BLR at 0x1b7060, and upgradedDwellingID begins at 0x1b7064. Windows emits the shared body at 0x5c1460 and expands other callers; no second Windows VA is claimed."
+
+[[helpers]]
+unit = "town"
+source_helper = "initializeArmy"
+mac_section = 0
+mac_offset = 0x1b648c
+mac_size = 0x1ac
+mac_symbol = ".initializeArmy__FP4townPC9TownExtra"
+target_sha256 = "420fdb65f523c9b07a1a8a186f893fa9d435758e77b71958c3c2ee50f5fc5c21"
+evidence = "The ordinary initializeArmy definition in src/town.cpp precedes town::initialize and Dreamcast names initialize_army at dc 0x168330. Mac 0x1b648c branches on custom armies at TownExtra+0x19, copies seven slots through town::getArmy, converts negative random-tier creature IDs through g_townDwellingCreatures, and otherwise clears seven slots before up to four random town recruits. town::initialize calls it at 0x1b66a0; the Windows town::initialize body expands the same helper. The prior initializeBuildings body ends at 0x1b6488, this body ends with BLR at 0x1b6634, and town::initialize begins at 0x1b6638. Focused CodeWarrior compile emits the canonical .initializeArmy__FP4townPC9TownExtra symbol."
+
+[[helpers]]
+unit = "town"
 source_helper = "town::setSpellsAvailable"
 mac_section = 0
 mac_offset = 0x1b3d54
@@ -56,7 +76,7 @@ mac_offset = 0x1b66f4
 mac_size = 0x104
 mac_symbol = ".updateFullBuildingMask__4townFv"
 target_sha256 = "6dee960bda63f4edb394c2c7f0170e4e9561813b4698048d9b6c9acb29e24a8f"
-evidence = "Canonical ordinary town::updateFullBuildingMask copies m_built into m_active and scans 44 included-building masks. Mac buildBuilding calls 0:0x1b66f4 at 0x1b4510 after setting the built-this-turn byte; the leaf reads town+0x144 and +0x148, writes +0x14c/+0x150, and ends at BLR 0x1b67f4 immediately before canBuild at 0x1b67f8. No Windows VA is invented for the source-owned helper."
+evidence = "Canonical ordinary town::updateFullBuildingMask copies m_built into m_active and scans 44 included-building masks. Mac buildBuilding calls 0:0x1b66f4 at 0x1b4510; updateShipyard calls it at 0x1b4904 after clearing the dock-with-boat bit. The leaf reads town+0x144 and +0x148, writes +0x14c/+0x150, and ends at BLR 0x1b67f4 immediately before canBuild at 0x1b67f8. Dreamcast update_shipyard line 1428 names this call; Windows expands it. No Windows VA is invented for the source-owned helper."
 
 [[functions]]
 retail_va = 0x005f1d40
@@ -67,6 +87,24 @@ mac_size = 0x298
 mac_symbol = ".checkForUpgradedTown__22VictoryConditionStructFv"
 target_sha256 = "b77a8e3b60a6c53348f83a309403707eb3957f0c70e804c30beef572047a3f88"
 evidence = "Canonical VictoryConditionStruct::checkForUpgradedTown is called on game map-header victory condition at game+0x1f124. Mac buildBuilding passes that address at 0x1b4668 and calls the retained body 0:0x1fdb2c; its result gates checkEndGame. The body ends at BLR 0x1fddc0. The distinct reviewed checkForGrailBuildingWin begins at 0x1fddc4, fixing the end-exclusive boundary."
+
+[[helpers]]
+unit = "town"
+source_helper = "town::setLegalBuildings"
+mac_section = 0
+mac_offset = 0x1b6e20
+mac_size = 0x38
+target_sha256 = "baeab8b48df0a420f9f63065cf131d872fbc6175ee73c45cdf8fae95fc3562b4"
+evidence = "The two initializeBuildings calls at 0x1b6268 and 0x1b63d0 reach this ordinary town method. It complements the 64-bit disabled mask, intersects the eligible mask indexed by town type, and writes m_available at +0x154/+0x158. BLR 0x1b6e54; next function begins 0x1b6e58. Windows expands the source helper."
+
+[[helpers]]
+unit = "town"
+source_helper = "initializeBuildingCosts"
+mac_section = 0
+mac_offset = 0x1b71e4
+mac_size = 0xa4
+target_sha256 = "450c20bd849564801d5499e70f898eaa5cdd68c3322efe76db57cf44ef3f19b0"
+evidence = "initializeBuildingCostsTables calls this source-private helper at 0x1b70e8, 0x1b713c and 0x1b718c for special, neutral and dwelling tables. Its seven ordered atoi calls fill seven four-byte costs. BLR 0x1b7284; next prologue starts 0x1b7288. Windows expands the same three source calls."
 
 [[functions]]
 retail_va = 0x0049d160

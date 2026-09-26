@@ -152,3 +152,20 @@ mac_offset = 0x20ea78
 mac_size = 0x26c
 target_sha256 = "710ba9ed453ed66f1b8707c8bb80e47907bc352ca0408eac5d49c99e64d3a913"
 evidence = "one-argument fade routine with 800x600 screen blits, timer loop and temporary Bitmap16Bit; bounded by adjacent PowerPC function entry and return."
+[[helpers]]
+source_helper = "heroWindowManager::blitToScreenWithPointer"
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20dfc8
+mac_size = 0x74
+target_sha256 = "09408d19503458a85053f13e6cc0a037d552cd5115f05f10b7c9e00458529207"
+evidence = "Mac retained helper checks positive width and height, builds a rectangle from x/y/width/height, then calls the platform blit. Nine direct Mac calls occur across fizzleForwardX, fadeToBlack and fadeFromBlack. Dreamcast names BlitToScreenWithPointer in the fade bodies; Windows expands its rectangle setup into those callers. Complete body ends with BLR at 0x20e038."
+
+[[helpers]]
+source_helper = "heroWindowManager::sleepAllWindows"
+unit = "winmgr"
+mac_section = 0
+mac_offset = 0x20ece4
+mac_size = 0x70
+target_sha256 = "39def40533ca5d43f00e6a7d097451bd285d08633ffabc261fcc691262c841f7"
+evidence = "DoDialog, DoDialogDraw and DoQuickView make nine calls to this retained helper, once with sleep=1 and twice with sleep=0 including exception cleanup. It walks m_tailWindow through m_prevWindow for sleep=1 or m_headWindow through m_nextWindow for sleep=0, calling heroWindow::sleepAllWidgets with the corresponding byte. The Windows callers had the same loops expanded; one ordinary canonical helper now owns them. Prior fadeFromBlack BLR at 0x20ece0, helper BLR at 0x20ed50, and next static initializer prologue at 0x20ed54 bound all 0x70 bytes."

@@ -6,12 +6,55 @@ import unittest
 from unittest.mock import patch
 
 from homm3.mac import references, symbols
-from homm3.mac.source import SourceError, load_pairs
+from homm3.mac.source import SourceError, load_pairs, source_helper
 from homm3.mac import test_profiles
 from homm3.mac.test_loader import container
 
 
 class TestMacReferences(unittest.TestCase):
+    def test_template_pointer_return_source_helper(self):
+        from homm3.mac.source import source_helper
+        source = Path("selection.cpp")
+        body = ("std::vector<Row>* Selection::getSourceHeaders()\n"
+                "{\n"
+                "    return m_random ? &m_transfer : &m_headers;\n"
+                "}\n")
+        _, signature, extracted = source_helper(
+            body, "Selection::getSourceHeaders", source)
+        self.assertEqual(signature,
+                         "std::vector<Row>* Selection::getSourceHeaders()")
+        self.assertIn("return m_random", extracted)
+
+    def test_in_class_source_helper_in_cpp_requires_explicit_view(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            path, row = self.fixture(root)
+            source = root / "src/test.cpp"
+            source.write_text(source.read_text() +
+                              "class Registry {\npublic:\n"
+                              "    int getIndex(int key) { return key + 1; }\n"
+                              "};\n")
+            helper = ('\n[[helpers]]\nsource_helper="Registry::getIndex"\n'
+                      'unit="test"\nin_class=true\nmac_section=0\n'
+                      'mac_offset=0x44\nmac_size=4\n'
+                      f'target_sha256="{sha256(bytes(4)).hexdigest()}"\n'
+                      'evidence="retained class helper"\n')
+            path.write_text(row + helper)
+            refs = references.load(root)
+            self.assertEqual(refs[1].signature, "int getIndex(int key)")
+            path.write_text(row + helper.replace('in_class=true\n', ''))
+            with self.assertRaises(SourceError):
+                references.load(root)
+
+    def test_out_of_class_destructor_helper(self):
+        source = Path("strip.cpp")
+        text = "strip::~strip()\n{\n}\n\nstrip::~other();\n"
+        _, signature, body = source_helper(text, "strip::~strip", source)
+        self.assertEqual(signature, "strip::~strip()")
+        self.assertEqual(body, "strip::~strip()\n{\n}\n")
+        with self.assertRaises(SourceError):
+            source_helper(text, "strip::~other", source)
+
     def fixture(self, root):
         test_profiles.TestMacProfiles().fixture(root)
         source = root / "src/test.cpp"
@@ -51,6 +94,28 @@ class TestMacReferences(unittest.TestCase):
             self.assertEqual(ref.signature, "int third")
             with self.assertRaises(SourceError):
                 _claim(source.read_text(), 0x400300, source)
+
+    def test_no_va_helper_uses_unique_ordinary_header_body(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            path, row = self.fixture(root)
+            header = root / "include/test.h"
+            header.write_text(header.read_text() +
+                              "class Cell {\npublic:\n"
+                              "    static unsigned getBitPos(unsigned x, unsigned y)\n"
+                              "    { return 47 - y * 8 - x; }\n};\n")
+            helper = ('\n[[helpers]]\nunit="test"\nsource="include/test.h"\n'
+                      'source_helper="Cell::getBitPos"\nmac_section=0\nmac_offset=0x44\n'
+                      f'mac_size=4\ntarget_sha256="{sha256(bytes(4)).hexdigest()}"\n'
+                      'evidence="retained source helper"\n')
+            path.write_text(row + helper)
+            refs = references.load(root)
+            self.assertEqual(len(refs), 2)
+            self.assertIn("getBitPos", refs[1].signature)
+            header.write_text(header.read_text().replace(
+                "{ return 47 - y * 8 - x; }", ";"))
+            with self.assertRaises(SourceError):
+                references.load(root)
 
     def test_cached_source_scan_does_not_reuse_same_size_changed_claim(self):
         from homm3.mac.source import _claim

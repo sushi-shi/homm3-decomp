@@ -104,7 +104,8 @@ def route(*, va: str, unit: str, paired: bool, deferred: bool, windows_stale: bo
     return {"state": state, "action": action, "command": command, "dispatchable": ready}
 
 
-def generate(root: Path, *, source_hashes: dict | None = None) -> dict:
+def generate(root: Path, *, source_hashes: dict | None = None,
+             include_banked_exact: bool = False) -> dict:
     categories, sizes = universe.classify()
     baseline = status.load_baseline(root / "config/match_baseline.tsv")
     hashes = status.source_hashes(source_root=root) if source_hashes is None else source_hashes
@@ -188,7 +189,8 @@ def generate(root: Path, *, source_hashes: dict | None = None) -> dict:
             mac_cur = byte_row["score"]
             mac_max = max(mac_max or 0, mac_cur)
             mac_hist = max(mac_hist or 0, mac_max)
-        if is_win_exact and (pair is None or mac_max is not None and mac_max >= 100 - 1e-6):
+        if (not include_banked_exact and is_win_exact
+                and (pair is None or mac_max is not None and mac_max >= 100 - 1e-6)):
             disposition["windows_exact_unpaired" if pair is None else "both_banked_exact"] += 1
             continue
         comparison = observation.get("calls") if observation else None
@@ -231,7 +233,9 @@ def generate(root: Path, *, source_hashes: dict | None = None) -> dict:
                 "windows_checkpoint_needed": 9, "pairing_needed": 10, "deferred": 11}
     rows.sort(key=lambda row: (priority[row["state"]], row["size"], row["retail_va"]))
     total = sum(category in ("target", "zlib") for category in categories.values())
-    return {"schema": 1, "scope": "unfinished_windows_game_and_admitted_mac_targets",
+    return {"schema": 1,
+            "scope": ("all_windows_game_targets" if include_banked_exact
+                      else "unfinished_windows_game_and_admitted_mac_targets"),
             "target_sha256": inputs.MAC.sha256, "analysis_sha256": call_report.analysis_hash(root),
             "workers_after_tooling": campaign["workers_after_tooling"],
             "coverage": {"windows_targets": total, "windows_banked_exact": windows_exact,

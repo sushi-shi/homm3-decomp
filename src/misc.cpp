@@ -15,16 +15,14 @@
 // Initial contents recovered from the pinned Complete image.
 
 // Use the timer during video playback so the game RNG sequence stays unchanged.
+// Mac calls GameTime::get at 0:0x130cc0; Windows retail calls timeGetTime
+// directly here, so this platform-specific timing path remains separate.
 VA(0x0050b1d0, 0x54)  // dc 0xfd81c
 int safeRandom(int min, int max)
 {
-    if (!g_remoteOn) {
-        if (max == min)
-            return max;
-        if (max < min)
-            return min;
-        return min + rand() % (max - min + 1);
-    }
+    // Mac retains this call at 0:0x130c9c.
+    if (!g_remoteOn)
+        return random(min, max);
     if (max == min)
         return max;
     if (max < min)
@@ -131,11 +129,10 @@ void checkConfigFile()
 // 221/32/489 B at its end). An EXTERN function is emitted out of line
 // unconditionally under /Ob2, so the absence of a body is itself the
 // evidence: retail's SetDefaultSystemOptions has internal linkage and its one
-// call site inlined it away. Left non-static and without a retail claim because the linkage
-// change would buy no compared bytes - objdiff never scores this symbol - and
-// would touch misc.h for nothing.
+// call site inlined it away. Mac retains this helper at code 0:0x131144;
+// setGameDefaults calls it there, and its eight g_config stores follow this order.
 
-void setDefaultSystemOptions()
+static void setDefaultSystemOptions()
 {
     g_config.m_showRoute = 1;
     g_config.m_moveReminder = 1;
@@ -795,13 +792,7 @@ int TPickANumber::pick()
     if (m_numbersLeft <= 0)
         return m_low - 1;
     int m = m_numbersLeft - 1;
-    int skip;
-    if (m == 0)
-        skip = 0;
-    else if (m < 0)
-        skip = 0;
-    else
-        skip = rand() % (m + 1);
+    int skip = sRandom(0, m);
     int idx = 0;
     for (;;) {
         if (m_available[idx]) {

@@ -571,6 +571,7 @@ mac_section = 0x0
 mac_offset = 0xc1e98
 mac_size = 0xdc
 unit = "event_record"
+mac_symbol = ".recordHideHero__4gameFP4herocUc"
 target_sha256 = "8047b3b3a95df6f094ff6151e37ff76c3310e1cd4013cb9cdcceaabfa4cbcfcd"
 evidence = "Allocates0x10 and calls hide-hero constructor0xc09ec then push. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
 retail_va = 0x49c720
@@ -675,6 +676,15 @@ evidence = "Count writer4; loop virtual getType, byte write and virtual save, ea
 retail_va = 0x49dc60
 
 [[helpers]]
+source_helper = "type_event_record::type_event_record"
+unit = "event_record"
+mac_section = 0x0
+mac_offset = 0xbef5c
+mac_size = 0x1c
+target_sha256 = "98436891090c135cd1d0d0ba721a64c97fe990c72076c1165ce29c0f10e81135"
+evidence = "Retained base constructor sets its vtable and copies signed g_netLocalGamePos to playerId at +4; BLR 0xbef74 precedes the scalar deleting destructor 0xbef78. Seventeen derived constructors call it, including ten record factory paths, while Windows expands the authored base constructor."
+
+[[helpers]]
 mac_section = 0x0
 mac_offset = 0xbf050
 mac_size = 0xa8
@@ -736,3 +746,84 @@ unit = "event_record"
 target_sha256 = "e98ccf50907fc5998d183f2a282b97b84314e7c76f4f32c78df86c5afbb101b4"
 evidence = "Builds eight-byte shroud-change record then vector push0xc34e8. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
 source_helper = "type_record_shroud::addChange"
+
+[[helpers]]
+source_helper = "type_record_hide_boat::type_record_hide_boat"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbfce0
+mac_size = 0x80
+target_sha256 = "0e5c5956376213d8517226f6d13ef123aa0b07bc2daf16c17c8336d30386f7c8"
+evidence = "game::recordHideBoat calls this retained constructor at 0xbfce0. It stores the boat pointer, occupied byte and occupying hero, and snapshots the boat's occupied byte at +0x24 and hero at +0x20 into the record. Dreamcast names the constructor at dc:0x8ce74; Windows expands the authored same-TU helper. Final BLR at 0xbfd5c; next entry 0xbfd60."
+
+[[helpers]]
+source_helper = "type_record_hide_hero::type_record_hide_hero"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xc09ec
+mac_size = 0x70
+target_sha256 = "efad98f5160e7806493958acaab3be95fb26e52175a9944369f9208fc23a30e4"
+evidence = "game::recordHideHero calls this constructor at 0xc09ec. It stores the hero pointer, snapshots owner from hero+0x22 before writing the requested owner and garrison bytes. The canonical source helper is explicit inline, so Windows may expand it while Mac retains this call. Final BLR at 0xc0a58; next entry 0xc0a5c."
+
+[[helpers]]
+source_helper = "type_record_show_boat::type_record_show_boat"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xc0148
+mac_size = 0x94
+target_sha256 = "0f30c0be03ed0164eda982f49d911fcc3f1eddbc4909ffde5de42c81c5dd59a8"
+evidence = "game::recordShowBoat calls this retained constructor at 0xc0148. It calls the canonical hide-boat constructor at 0xbfce0, then stores the boat's packed location and requested replacement point in its record fields. The source helper is explicit inline; Mac retains its body and Windows expands it. Final BLR at 0xc01d8; next entry 0xc01dc."
+
+[[helpers]]
+source_helper = "type_record_move_hero::type_record_move_hero"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbf100
+mac_size = 0xa8
+target_sha256 = "fbfa442974e1f78703e1b00f8f041e0862fee02d336b861a5ffa1529fedc1881"
+evidence = "game::recordMove calls this retained constructor at 0xbf100. It snapshots the hero facing byte at +0x47 and packed source location before storing requested direction and destination. The Mac teleport constructor also delegates to it; Windows expands the ordinary source helper at both callers. Final BLR at 0xbf1a4; next entry 0xbf1a8."
+
+[[helpers]]
+source_helper = "type_record_teleport::type_record_teleport"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbf61c
+mac_size = 0x44
+target_sha256 = "b1fac8f8a3d5b515f9391f0a918e88e8e8381109b1ed0fc515197f3cfadd508b"
+evidence = "game::recordTeleport calls this retained constructor at 0xbf61c. It forwards the hero's current facing and requested destination to the move-hero constructor at 0xbf100, then installs its derived vtable. Windows expands this ordinary delegating source helper. Final BLR at 0xbf65c; next entry 0xbf660."
+
+[[helpers]]
+source_helper = "type_record_show_hero::type_record_show_hero"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xc0e4c
+mac_size = 0xb8
+target_sha256 = "e57171cad52f306d7df7148bb8b64eaf02912327aaa288ae3f79872919acacd9"
+evidence = "game::recordShowHero calls this retained constructor at 0xc0e4c. It delegates to hide-hero at 0xc09ec, snapshots the hero's on-boat flag and packed location, then stores requested boat flag and destination. The source helper is explicit inline; Mac retains the call while Windows expands it. Final BLR at 0xc0f00; next entry 0xc0f04."
+
+[[helpers]]
+source_helper = "type_record_claim_mine::type_record_claim_mine"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbf778
+mac_size = 0x78
+target_sha256 = "8b7f0e610be4a7afbc90e1601fff20206da422ec7a00c0999e24c1a20fdbee1c"
+evidence = "game::recordClaimMine calls this retained constructor at 0xbf778. It stores mine ID and requested owner, then reads the old owner from game mine pool entry id*0x40. Windows expands this ordinary same-TU constructor; Dreamcast records its source definition. Final BLR at 0xbf7ec; next entry 0xbf7f0."
+
+[[helpers]]
+source_helper = "type_record_claim_town::type_record_claim_town"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbfad0
+mac_size = 0x84
+target_sha256 = "5d1d35cdd61c635a2fcd7dc61504ef713a8dad09a9eb01351894203f92164db5"
+evidence = "game::recordClaimTown calls this retained constructor at 0xbfad0. It installs base then derived vtables, stores town ID and requested owner, and snapshots old owner from game town pool with 0x15c stride. Windows expands the ordinary source constructor. Final BLR at 0xbfb50; next entry 0xbfb54."
+
+[[helpers]]
+source_helper = "type_record_erase::type_record_erase"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xc0534
+mac_size = 0x74
+target_sha256 = "8520265773862e8dfe48fbb02e5d47a5e3d03699b879cd925540f8d8b1ee3b4f"
+evidence = "game::recordEraseObject calls this retained constructor at 0xc0534. It stores packed location, object ID, extra info and object index to record offsets +8..+0x14 after the base constructor. Windows expands the ordinary source helper. Final BLR at 0xc05a4; next entry 0xc05a8."

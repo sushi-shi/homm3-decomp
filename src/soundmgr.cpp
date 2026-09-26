@@ -73,12 +73,11 @@ void soundManager::setMusicVolume()
 
             sprintf(name, DATA_COMPGEN(0x0066fedc, combatMusicFormat,
                                         "combat%02d"),
-                    random(1, 4));
+                    sRandom(1, 4));
             g_soundManager->startMP3(name, 0, 1);
         } else {
             int musicFileId = g_terrainMusicIds[g_advManager->m_lastTerrain];
-            if (musicFileId >= 2 && musicFileId <= 10)
-                startMP3(g_terrainMusic[musicFileId - 2], 0, 0);
+            switchAmbientMusic(musicFileId);
         }
     } else {
         stopMP3();
@@ -374,7 +373,7 @@ void soundManager::waitSample(ds_memsample* sample, int time)
         time = 4000;
     unsigned long deadline = GameTime::get() + time;
     while (g_soundManager->getSampleInfo(sample, SAMPLE_INFO_PLAYING)) {
-        if (static_cast<long>(GameTime::get() - deadline) >= 0)
+        if (GameTime::isPast(deadline))
             return;
         process1WindowsMessage();
         pollSound();
@@ -565,7 +564,7 @@ void waitEndSample(SAMPLE2 sample2, int milliWait)
     unsigned long deadline = GameTime::get() + milliWait;
     while (sample2.m_playSample && g_soundManager->getSampleInfo(
                sample2.m_playSample, soundManager::SAMPLE_INFO_PLAYING)) {
-        if (static_cast<long>(GameTime::get() - deadline) >= 0)
+        if (GameTime::isPast(deadline))
             break;
         process1WindowsMessage();
         pollSound();
@@ -635,6 +634,8 @@ void __cdecl waitEndSampleThread(void* arglist)
 // operations. A source-local ordinary body recovers that visibility boundary
 // and retained emission. Its Windows ownership is a platform inference; the
 // CE header attribution remains recorded separately in dc_only.tsv.
+// Mac retains a platform wrapper at 0:0x219268, called by launchSample and
+// townManager::main; its body forwards to the Mac audio service at 0:0x2181a0.
 VA(0x0059a7d0, 0x51)
 void soundManager::serviceSounds()
 {
@@ -744,6 +745,8 @@ void __cdecl processStopAndPlayMP3(void* arglist)
     _endthread();
 }
 
+// Mac retains this source call with its platform stream interface at
+// 0:0x219288; Windows resumes through Miles and the playback thread.
 VA(0x0059ac00, 0xA9)  // dc 0x14b8e8
 void soundManager::resumeStream()
 {

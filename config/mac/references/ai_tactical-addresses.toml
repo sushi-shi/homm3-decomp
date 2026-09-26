@@ -1,6 +1,147 @@
 # Address-only references discovered from AI_TACTICAL TU order, then independently verified.
 # Names remain owned by src/ai_tactical.cpp VA claims; no compiled Mac target admission.
 
+[[helpers]]
+source_helper = "spellIsExpertOnMagicTerrain"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3ca2c
+mac_size = 0xd8
+mac_symbol = ".spellIsExpertOnMagicTerrain__Fii"
+target_sha256 = "b42d0f819d07e70f9fdb80cbc079c22613e93d41a53978e8a762ba87c7065227"
+evidence = "Takes spell in r3 and combat magic terrain in r4; cases 1/6/7/8/9 return all-expert or the corresponding spell school bit at trait +0x1c. getOgreMageValue, getCaliphValue and getFaerieDragonSpellValue call it at their three retained sites. CodeWarrior O3 emitted all 216 bytes identically except the g_spellTraits TOC relocation at +4. BLR 0x3cb00 precedes valueOfLuckAndMorale at 0x3cb04; the same ordinary source calls expand in Windows."
+
+[[functions]]
+retail_va = 0x00437a00
+unit = "ai_tactical"
+compgen_kind = "IMPLICIT_COPY_CTOR"
+compgen_type = "army"
+mac_section = 0
+mac_offset = 0x46c1c
+mac_size = 0x240
+target_sha256 = "2d4e4ff909fe66c9db2829596cc71804479581e3d04f167a63341282bfa8e55b"
+evidence = "Compiler-generated army copy constructor initializes copied resource/container members and returns the new object. Its calls in tactical spell valuation copy testArmy; adjacent vector copy helper 0x469b4 handles one member. BLR 0x46e58 precedes a separate vector helper at 0x46e5c. Windows owns the IMPLICIT_COPY_CTOR claim in this TU."
+
+[[helpers]]
+source_helper = "type_AI_combat_parameters::simulateSingleAttack"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3d01c
+mac_size = 0xc0
+mac_symbol = ".simulateSingleAttack__25type_AI_combat_parametersCFRC4armyRlRC4armyRlUcl"
+target_sha256 = "abfa7ff6e79215fd19309df5305ea6c7d7e82ca5fdd6f87fb907b46fafeea175"
+evidence = "Single attack computes average damage for hitpoint-derived troop count, applies fire shield on melee attacks, then clamps both surviving hitpoint totals. simulateAttack calls this body up to three times. BLR 0x3d0d8 precedes simulateAttack at 0x3d0dc."
+
+[[helpers]]
+source_helper = "type_AI_attack_hex_chooser::getAttackTime"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3dc80
+mac_size = 0x6c
+mac_symbol = ".getAttackTime__26type_AI_attack_hex_chooserCFPC8pathCell"
+target_sha256 = "c73330f2c5be35f31b858bc622c18e60041adf05abfe2c5289095c41b4b418d2"
+evidence = "Computes turns from path cost and chooser speed, adds moat delay and clamps to one; checkAdjacentHexes calls it at 0x3dd90. BLR 0x3dce8 precedes checkAdjacentHexes 0x3dcec."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::initialize"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3e2f4
+mac_size = 0x3c
+mac_symbol = ".initialize__19type_AI_spellcasterFP13combatManagerl"
+target_sha256 = "fe243593a8bc397a913ebb8a6259cf8093d5b80a6c961c51b758d9ac635cd1a4"
+evidence = "Stores caster side, opposite side, both hero pointers and clears win-likely. Both caster constructors call it; BLR 0x3e32c precedes the public constructor at 0x3e330. Dreamcast also names this ordinary helper."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent, combatManager* combat, long side, unsigned char creatureSpell)"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3e41c
+mac_size = 0x84
+mac_symbol = ".__ct__19type_AI_spellcasterFP19type_AI_spellcasterP13combatManagerlUc"
+target_sha256 = "350ceb10000b75c22d7912d3370ff30c14fc2cae34626e0453261ee4b484d2e0"
+evidence = "Private deputy caster constructor builds the embedded combat estimate, calls initialize 0x3e2f4, stores parent/ownership and calls checkSimulation and findEnemyAttacks. Public caster constructor creates this deputy; BLR 0x3e49c precedes its destructor."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::considerAreaEffect"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3ece8
+mac_size = 0x100
+mac_symbol = ".considerAreaEffect__19type_AI_spellcasterCFR17type_spell_choice"
+target_sha256 = "c209ffe12eea9900030ba728fea398abfd6df91726551c8173f9e56797576818"
+evidence = "Computes spell base damage via getMasteryValue, scans 187 combat hexes, rejects invisible columns and keeps the best getAreaEffectValue result. considerSpell calls it; BLR 0x3ede4 precedes getChainLightningValue at 0x3ede8."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::considerMassDamage"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3f018
+mac_size = 0xc0
+mac_symbol = ".considerMassDamage__19type_AI_spellcasterCFR17type_spell_choice"
+target_sha256 = "16d9afb9449807bdaa1a5385a995b77e57f1353910853fb5f1650931aaad3742"
+evidence = "Computes base damage and both side totals through getGroupDamageValue, calls getMassDamageEffect and marks cast-now. considerSpell calls it; BLR 0x3f0d4 precedes getAgeValue at 0x3f0d8."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::getAttackBoostValue(const army* ourArmy, const army* enemy, long oldDamage, long duration, double increase) const"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3f130
+mac_size = 0x148
+mac_symbol = ".getAttackBoostValue__19type_AI_spellcasterCFPC4armyPC4armylld"
+target_sha256 = "791b83cd2a78761ce61cc4b05e5d717d879688731c8145548fb0522c0c226b39"
+evidence = "Five-input boost overload caps damage by target hitpoints, checks improvement and scales combat value by duration and square-root gain. The shorter overload calls it at 0x3f278, and Fortune calls it twice. BLR 0x3f274 precedes the four-input overload."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::considerSummon"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x459a4
+mac_size = 0xb0
+mac_symbol = ".considerSummon__19type_AI_spellcasterCFR17type_spell_choice"
+target_sha256 = "8f00305520fe4662ce2c1689dc4dcbcf543db63a19c2f8f8c1d0e7dfd6f9eb36"
+evidence = "Checks won-fight and summon legality, calls getMasteryValue, prices summoned elemental and sets cast-now. considerSpell calls it at 0x45bf4; BLR 0x45a50 precedes considerSpell at 0x45a54."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::setWorstEnemies"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x45e10
+mac_size = 0x84
+mac_symbol = ".setWorstEnemies__19type_AI_spellcasterFv"
+target_sha256 = "16793cdda03da9e3f123f17fd53398bfb4ec2ff4f9d116b0b240311e3bde2081"
+evidence = "Copies each melee enemy record to worst-enemy storage, replacing it with the ranged record when its damage is larger. findEnemyAttacks calls it after the enemy scan. BLR 0x45e90 precedes addEnemy at 0x45e94."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::addEnemy"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x45e94
+mac_size = 0xa0
+mac_symbol = ".addEnemy__19type_AI_spellcasterFR18type_AI_enemy_dataPC4armyPC4armyUc"
+target_sha256 = "895c2aaf2bcccf68657cd454284091925fc299864b5863261ff99e81c82e143e"
+evidence = "Gets enemy average damage, updates count/total and strongest enemy, then marks its bit in enemyCanAttack. findEnemyAttacks calls it for ranged and melee entries. BLR 0x45f30 precedes findEnemyAttacks at 0x45f34."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::checkSimulation"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x46528
+mac_size = 0xb0
+mac_symbol = ".checkSimulation__19type_AI_spellcasterFv"
+target_sha256 = "cb60fa084862668b4e8c489eceb8cbd45b5698dc7227daf812458d057546d177"
+evidence = "Scans opposing armies, skipping immobilized, dead and siege stacks, then updates win-likely. Both caster constructors call it. BLR 0x465d4 precedes spellsNotRequired at 0x465d8."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::spellsNotRequired"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x465d8
+mac_size = 0x8c
+mac_symbol = ".spellsNotRequired__19type_AI_spellcasterCFv"
+target_sha256 = "8dcb8441e4b52ac2072f6df974bdfe77f6a3b2641abeabad0f53585a1589c919"
+evidence = "After win-likely check, scans friendly armies for any ordinary surviving action before allowing healing-only spell selection. castSpell calls it. BLR 0x46660 precedes castSpell at 0x46664."
+
 [[functions]]
 retail_va = 0x00435830
 unit = "ai_tactical"
@@ -703,3 +844,48 @@ mac_offset = 0x46664
 mac_size = 0x350
 target_sha256 = "170da01db0131af70ad56c4075c6b2e2331fe335d5a8f6d230de6bd994a28849"
 evidence = "NEW: Hero spell casting builds choice0x3e254, checks artifacts/spell legality/mastery/power, loops to70, considerSpell0x45a54, value sqrt0x2a1b68 and random0x130cf4. End0x469b4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::isLastAction"
+unit = "ai_tactical"
+mac_section = 0x0
+mac_offset = 0x3e528
+mac_size = 0xd8
+target_sha256 = "3e0ff00e17c1e90897c613700baaf8ed83824c8d0fb0c4bbbbb27f19bd9a96ec"
+evidence = "Scans the current side's armies for a remaining eligible action; Mac retains the helper call in considerResurrect, and Dreamcast names the ordinary const method."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::getAttackBoostValue(const army* ourArmy, const army* enemy, long duration, double increase) const"
+unit = "ai_tactical"
+mac_section = 0x0
+mac_offset = 0x3f278
+mac_size = 0x9c
+target_sha256 = "c9c6abfca2a8fe2c7eaaa2b16fe06c0e241a5b50715a480aea37a744eb6ff306"
+evidence = "Computes canShoot and average damage, then calls the five-argument boost overload at 0x3f130; getFrenzyValue retains a call to this ordinary source overload while Windows expands it."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::getDuration"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x42038
+mac_size = 0x94
+target_sha256 = "9ac99761427289278f6326181b3c61e6f02d7070de997fa8358ac99093ddbe11"
+evidence = "This const duration helper clamps turns against roundsLeft at +0x3c, divides if shorter, then subtracts one round for an army that already moved and clamps at zero. The final BLR at 0x420c8 precedes the next method at 0x420cc. Eight Mac tactical AI callers retain direct calls, including getDefenseBoostValue with movedThisTurn=0; Windows expands the same shared source helper."
+
+[[helpers]]
+source_helper = "type_AI_spellcaster::getMoveOrderChangeValue"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x415c0
+mac_size = 0x8c
+target_sha256 = "4c8bab4f121e60cf7df9dcd711ae099563cc8d7e304d919749cc22fff3cfef2b"
+evidence = "This const helper checks the army's AI target at +0x514, returns zero when absent, then calls getExchangeEffect twice with reversed armies and subtracts the negated enemy value. Its final BLR at 0x41648 precedes getMuckAndMireValue at 0x4164c. Mac getMuckAndMireValue and getSpeedValue retain calls at 0x4183c and 0x41af4; both authored source callers already use this ordinary helper."
+
+[[helpers]]
+source_helper = "type_enchant_data::type_enchant_data"
+unit = "ai_tactical"
+mac_section = 0
+mac_offset = 0x3e210
+mac_size = 0x1c
+target_sha256 = "282a0085431bd739cd9653db1c5a4d29c5206999d98e493da84d2791a23ddfd5"
+evidence = "The four-argument base constructor stores spell, mastery, power, duration and checkResistance=1 at offsets 0, 4, 8, 12 and 16. Its BLR at 0x3e228 precedes getMasteryValue at 0x3e22c. Mac's two type_spell_choice constructors retain calls at 0x3e278 and 0x3e2c0; their ordinary C++ base-constructor calls are already authored, while VC6 expands the stores."

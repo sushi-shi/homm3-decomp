@@ -1,0 +1,13 @@
+mode = "paired_bodies"
+flags = ["-O3", "-proc", "750", "-nolink"]
+helpers = []
+source_helpers = [
+    "collectCrossoverArtifacts",
+    "getCampaignScenarioCount",
+    "markRequiredCampaignHeroes",
+    "usesCrossoverPool",
+    "getMaxCrossoverHeroes",
+    "SCampaign::findLatestCrossoverScenario",
+    "TCampaignBrief::ScenarioStruct::playText",
+    "TCampaignBrief::CampaignHeaderStruct::playScenarioText",
+]

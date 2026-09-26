@@ -71,3 +71,21 @@ mac_offset = 0x109d9c
 mac_size = 0x11c
 target_sha256 = "e77adf5ea30e8dcc3912903b9c4932e61c20ad42aa12fd808cc6cff1ba9ede29"
 evidence = "Unique source-owned upgradeAll helper switches on aggregate upgrade state at this+0x294 for values 0,1,2, forms general-text dialogs, and in affordable case upgrades all seven slots. BLR 0x109eb4; next handleClick 0x109eb8."
+
+[[helpers]]
+source_helper = "canAfford"
+unit = "hillfortwindow"
+mac_section = 0
+mac_offset = 0x109358
+mac_size = 0xb0
+target_sha256 = "0f784d7b94d669e589810b5ba851fb641ca264aaf99cae512407ab86e7030abc"
+evidence = "THillFortWindow::recalculate calls this at 0x1098d4 and 0x109aac. The body compares seven successive 32-bit costs against player resources, returning false at the first excess and true after all seven, matching the canonical inline helper and Dreamcast CanAfford at hillfortwindow.cpp:192. Final BLR 0x109404; recalculate begins 0x109408."
+
+[[helpers]]
+source_helper = "updateHillFort"
+unit = "hillfortwindow"
+mac_section = 0
+mac_offset = 0x10a3f4
+mac_size = 0xb4
+target_sha256 = "ff833bc2c94a9bfd0d72b82d65f7c63618873437b8a76d57b466d02acfc9a9c7"
+evidence = "Window constructor and free message handler call this at 0x109240 and 0x10a1bc. The firstUpdate branch broadcasts a palette-colors widget message with local player position; the other calls recalculate 0x109408 and virtual drawWindow, matching Dreamcast UpdateHillFort and the canonical source. BLR 0x10a4a4; distinct prologue 0x10a4a8."

@@ -1,5 +1,14 @@
 # Reviewed Mac address identities; unbound compiler names are intentionally omitted.
 
+[[helpers]]
+source_helper = "TPalette16::convert24to16"
+unit = "palette"
+mac_section = 0x0
+mac_offset = 0x13bb20
+mac_size = 0xa0
+target_sha256 = "b2f03f752a571b6f022e7cce133be8d802ca80a09104fe467fd43eadfda74849"
+evidence = "Both named TPalette16 constructors call this retained converter at 0x13bb20. It packs 256 RGB triples into 16-bit palette entries using the six supplied widths/shifts, returns at 0x13bbbc and precedes cycle at 0x13bbc0. Windows expands the authored helper into its callers, with no standalone VA established."
+
 [[functions]]
 retail_va = 0x522650
 unit = "palette"

@@ -150,19 +150,19 @@ void strip::drawOwner(int frame)
     msg.m_codeY = 124;
     if (m_iconFrame == -1) {
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = widget::WIDGET_DRAWN;
+        m_win->broadcastMessage(msg);
     } else {
-        // The portrait name is read into a local AHEAD of the codeX
-        // store. It is what stops the cross-jump that merged this arm's
-        // closing broadcast with the pos==0 arm's (see the residual note
-        // above the claim).
+        // Mac retains the image and status broadcasts in this branch at
+        // 0:0x19b434 and 0:0x19b450; the clear-status arm calls at 0:0x19b408.
         const char* name = g_heroTraits[frame].m_largePortraitName;
         msg.m_codeX = widget::WIDGET_SET_IMAGE;
         msg.m_extraText = name;
         m_win->broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_SET_STATUS;
+        msg.m_extra = widget::WIDGET_DRAWN;
+        m_win->broadcastMessage(msg);
     }
-    msg.m_extra = widget::WIDGET_DRAWN;
-    m_win->broadcastMessage(msg);
     msg.m_codeY = 125;
     msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     msg.m_extra = widget::WIDGET_DRAWN;

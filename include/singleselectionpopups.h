@@ -16,9 +16,6 @@ class CSprite;
 class Bitmap816;
 enum TTownType;
 
-const char* getStartingResourceName(int town);
-const char* getStartingResourceDescription(int town);
-
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
 // immediately after widget's proven 0x30-byte base. Its vtable at 0x641a00
 // independently fixes the four overrides below.

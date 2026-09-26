@@ -329,3 +329,21 @@ mac_size = 0xdc
 mac_symbol = ".sendPlayerLost__Fv"
 target_sha256 = "417c8f8fb6d58256cfcfeb7a0cc6e2e38028bd75a51a8d8249c3bfd74463e461"
 evidence = "Dreamcast kb.cpp:2878 emits a separate global SendPlayerLost body. Mac body follows sendPlayerWon BLR 0x113128, begins at 0x11312c, reads the network flag through TOC 1+0x5d4, constructs the 0x3c-byte player-lost message with subtype 1020, copies the map loss condition, calls transmitRemoteData at 0x1131e8, sets gameOver and ends BLR 0x113204 before displayVCWinLoss prologue 0x113208. displayLCWinLoss branches here from 0x114a68, 0x114be8, and 0x114c4c."
+
+[[helpers]]
+unit = "kb"
+source_helper = "openCampaignVideo"
+mac_section = 0
+mac_offset = 0x10e810
+mac_size = 0x40
+target_sha256 = "8458396ed2df68a4c6c790419ae910a0e5b15a7e3b9f1809a341c36b7d39508b"
+evidence = "Mac retains a no-argument KB helper that calls videoOpen 0x25e5e4 with fixed arguments (33,0,0,800,600,1,0,1). It is called from the oldmain campaign arm at 0x110134, the parameterized campaign dialog at 0x10fcf4, and each of the three Complete campaign selection cancel arms at 0x11111c/0x111144/0x11116c. Windows expands the same call at the authored sites; the semantic name is assigned from its unique action because Dreamcast's older campaign paths have no counterpart. BLR at 0x10e84c precedes the next entry at 0x10e850."
+
+[[helpers]]
+unit = "kb"
+source_helper = "getEnemyCount"
+mac_section = 0
+mac_offset = 0x114754
+mac_size = 0x1d0
+target_sha256 = "b427a0cdc265e44e3e81d548dc27735f5b878d36c817f9714a9f18e994682457"
+evidence = "Dreamcast kb.cpp:3419 names GetEnemyCount and the canonical source keeps its scan. Mac checkEndGame calls this body at 0x114d70 immediately after checkPlayerLoss; it obtains the local player position, builds the two-bit team mask from player team bytes and counts enabled opponents among eight seats. Complete expands the source call. Final BLR at 0x114920 precedes displayLCWinLoss at 0x114924."

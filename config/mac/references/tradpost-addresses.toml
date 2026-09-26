@@ -395,3 +395,216 @@ mac_offset = 0x1f8368
 mac_size = 0xf4
 target_sha256 = "ed9006e88478e08486bd55f35364ee59679db44d53b66cfd20db35aa3aa27394"
 evidence = "artifact trait cost and purchase efficiency ratio; called by setupNewTrade0x1f8820; complete bounded PowerPC span."
+
+# Five consecutive trade-window families retain the three ordinary widget
+# state helpers. Each body has a terminal BLR before the next mflr entry.
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f56f0
+mac_size = 0x60
+unit = "tradpost"
+target_sha256 = "28824351c3538ff265081d6562deb510ad83105cf4e3d40d528275149dcd59df"
+source_helper = "TTradeResourceWindow::setWidgetOn"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f5750
+mac_size = 0x34
+unit = "tradpost"
+target_sha256 = "95aca85d9d5639ffe5d7a250fa6917d6e080a108501c6a873bdc6c92b999f053"
+source_helper = "TTradeResourceWindow::setWidgetOff"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f5784
+mac_size = 0x34
+unit = "tradpost"
+target_sha256 = "f46c07331d973d6f88e97a90834c3b6754b997eaa4b317588c5c592ddcc4cb01"
+source_helper = "TTradeResourceWindow::setWidgetDisabled"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f57b8
+mac_size = 0x60
+unit = "tradpost"
+target_sha256 = "bc1a2ce166e1d82287ebf1c8904000fc3b0ba7bd2b84140f342764091eb5f896"
+source_helper = "TGiveResourceWindow::setWidgetOn"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f5818
+mac_size = 0x34
+unit = "tradpost"
+target_sha256 = "829c9eb3726c15044d15a44afa15355d70866ed63a0937cf5cd74e8ebf457f91"
+source_helper = "TGiveResourceWindow::setWidgetOff"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f584c
+mac_size = 0x34
+unit = "tradpost"
+target_sha256 = "6cfddd500cb6a4f4c37a46c8153660e3f14ff0e849c5fb9003a7dc13b970b07f"
+source_helper = "TGiveResourceWindow::setWidgetDisabled"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f5880
+mac_size = 0x60
+unit = "tradpost"
+target_sha256 = "139b6e6477f740fd8c9253ca5601369141feed2db5e369d55e52cfe498dea303"
+source_helper = "TBuyArtifactWindow::setWidgetOn"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f58e0
+mac_size = 0x34
+unit = "tradpost"
+target_sha256 = "bc516c30908b3d46a685a5e01a700ecbc664016b7c53f43ff85e11ac823d64d6"
+source_helper = "TBuyArtifactWindow::setWidgetOff"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f5914
+mac_size = 0x34
+unit = "tradpost"
+target_sha256 = "95c463af6261d4d005f83fe283919dec76dd112319369fb0282e268eb6a04790"
+source_helper = "TBuyArtifactWindow::setWidgetDisabled"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f5948
+mac_size = 0x60
+unit = "tradpost"
+target_sha256 = "c600f0c2424ede3fa1a4e0a4a920d8b5a68f9a5b4cbb1b9aa7aa04e6dec7e421"
+source_helper = "TSellArtifactWindow::setWidgetOn"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f59a8
+mac_size = 0x34
+unit = "tradpost"
+target_sha256 = "a16f64b00e515e8356562ad52bba3e6b3b4a929262021ac7197d370260ac3e0b"
+source_helper = "TSellArtifactWindow::setWidgetOff"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f59dc
+mac_size = 0x34
+unit = "tradpost"
+target_sha256 = "0610e2543d8f4efacdc29fbaec76c19601afdceadb9a8708c3dba1f788430de0"
+source_helper = "TSellArtifactWindow::setWidgetDisabled"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f5a10
+mac_size = 0x60
+unit = "tradpost"
+target_sha256 = "6ce81d87cf063b1f07de01fc076a6f421d1028734045be8448aeaa51f6ca93d4"
+source_helper = "TSellCreatureWindow::setWidgetOn"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f5a70
+mac_size = 0x34
+unit = "tradpost"
+target_sha256 = "caf4fc4768e61222ec666ccd7814358327842d610e91efa41b40637e696abaad"
+source_helper = "TSellCreatureWindow::setWidgetOff"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f5aa4
+mac_size = 0x34
+unit = "tradpost"
+target_sha256 = "e914d904e395cfca32dd31a9824f01235a8964a3134c33ea270b09f0f308ae8d"
+source_helper = "TSellCreatureWindow::setWidgetDisabled"
+evidence = "Consecutive tradpost source and Mac body order; broadcastMessage status codes, terminal BLR, and direct calls from the owning trade-window update."
+
+# The five trade setup helpers and three backpack helpers follow the ratio
+# bodies in source order and remain callable in Mac window handlers.
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f8758
+mac_size = 0x64
+unit = "tradpost"
+target_sha256 = "3cde265079b01cc032773678a7092458cd9dfa34eac5a8bee582bc7ac16f8bc6"
+source_helper = "TTradeResourceWindow::setupNewTrade"
+evidence = "Consecutive tradpost source and Mac body order; direct Mac handler call, distinct prologue, terminal BLR, and owned source helper body."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f87bc
+mac_size = 0x64
+unit = "tradpost"
+target_sha256 = "7e05dfcb40596a647f953caf291d85263907dac7d49642ccf9ca60c10c6f4ace"
+source_helper = "TGiveResourceWindow::setupNewTrade"
+evidence = "Consecutive tradpost source and Mac body order; direct Mac handler call, distinct prologue, terminal BLR, and owned source helper body."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f8820
+mac_size = 0x6c
+unit = "tradpost"
+target_sha256 = "bf5ae414caf20273c773664278a1ad0348cc096ee5bac7ca411dcbef2f1664ee"
+source_helper = "TBuyArtifactWindow::setupNewTrade"
+evidence = "Consecutive tradpost source and Mac body order; direct Mac handler call, distinct prologue, terminal BLR, and owned source helper body."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f888c
+mac_size = 0x3c
+unit = "tradpost"
+target_sha256 = "36672504750d175aca84bd03fe123b7602ff987efec156a08e328612d846b6a1"
+source_helper = "TSellArtifactWindow::setupNewTrade"
+evidence = "Consecutive tradpost source and Mac body order; direct Mac handler call, distinct prologue, terminal BLR, and owned source helper body."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f88c8
+mac_size = 0x64
+unit = "tradpost"
+target_sha256 = "1a48ee3e4a847756d63daa160f12f4c837e1a1dcc264179f0808d93e0fa62ace"
+source_helper = "TSellCreatureWindow::setupNewTrade"
+evidence = "Consecutive tradpost source and Mac body order; direct Mac handler call, distinct prologue, terminal BLR, and owned source helper body."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f892c
+mac_size = 0xf4
+unit = "tradpost"
+target_sha256 = "f5558b44df31a66c1e33e8092b5edf128fce7b4b64141760dfae1cfe004e4f48"
+source_helper = "TSellArtifactWindow::updateMarketBackpack"
+evidence = "Consecutive tradpost source and Mac body order; direct Mac handler call, distinct prologue, terminal BLR, and owned source helper body."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f8a20
+mac_size = 0x60
+unit = "tradpost"
+target_sha256 = "e194d6e0e179705ab3f820e57a39fe78403e4af8c867f3057e108c2f114e4b31"
+source_helper = "TSellArtifactWindow::incrementBackpackStart"
+evidence = "Consecutive tradpost source and Mac body order; direct Mac handler call, distinct prologue, terminal BLR, and owned source helper body."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0x1f8a80
+mac_size = 0x64
+unit = "tradpost"
+target_sha256 = "a18dc67c01354143b35de0184634009b0902e69a80d039d00dea8804af916bea"
+source_helper = "TSellArtifactWindow::decrementBackpackStart"
+evidence = "Consecutive tradpost source and Mac body order; direct Mac handler call, distinct prologue, terminal BLR, and owned source helper body."

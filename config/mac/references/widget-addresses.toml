@@ -86,9 +86,9 @@ retail_va = 0x5fe940
 unit = "widget"
 mac_section = 0x0
 mac_offset = 0x20ac18
-mac_size = 0x44
-target_sha256 = "d5f39245767ab71afbe6f40eb2f915d69f75b4dbc92e56bf0f62f96dd0deb053"
-evidence = "enable branches on requested state and calls reviewed sendMessage 0x20aa0c twice with status commands; complete BLR."
+mac_size = 0x40
+target_sha256 = "b368b64c1b0210557042443dcb941a11a36d86772a33cef8df80111509796447"
+evidence = "enable branches on requested state and calls reviewed sendMessage 0x20aa0c twice with status commands. Its final BLR is at 0x20ac54; the former 0x44 span also included the adjacent empty onSleepChange hook at 0x20ac58."
 
 [[helpers]]
 source_helper = "widget::close"
@@ -98,3 +98,12 @@ mac_offset = 0x20a680
 mac_size = 0x4
 target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
 evidence = "Canonical empty close body is the single BLR immediately after widget::open; source has no Windows VA because retail folds identical empty body."
+
+[[helpers]]
+source_helper = "widget::onSleepChange"
+unit = "widget"
+mac_section = 0
+mac_offset = 0x20ac58
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "The button-family sleep-change override at 0x6383c calls this retained empty base hook at 0x63848; the widget-family virtual slots inherit it. Its source definition is the canonical empty widget::onSleepChange body, while Windows folds it into the shared ret-4 representative without a separate VA claim. Prior widget::enable BLR at 0x20ac54, this sole BLR at 0x20ac58, and next static initializer prologue at 0x20ac5c bound all four bytes."

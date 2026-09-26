@@ -43,3 +43,25 @@ mac_size = 0xb8c
 mac_symbol = ".main__11recruitUnitFR7message"
 target_sha256 = "3286a66eb790cd6de471112bdec62ea37c3e971132f1b117e80a90b7781e697a"
 evidence = "Dreamcast recruitUnit::Main and Windows VA 0x00550940 share message dispatch, four creature view arms, update calls, and exit helper behavior with Mac code0+0x14fb54; reviewed terminal BLR and next entry bound 0xb8c bytes. CodeWarrior compile-only probe emits .main__11recruitUnitFR7message from the authored body."
+
+[[functions]]
+retail_va = 0x54e850
+unit = "recruit"
+source = "src/recruit.cpp"
+mac_section = 0
+mac_offset = 0x14d310
+mac_size = 0x186c
+mac_symbol = ".__ct__14TRecruitWindowFiiiP11recruitUnit"
+target_sha256 = "645f393385c38d42405e65df0b613eafcd3017e8d60c0ce185077490b6b5b55c"
+evidence = "Unique TPrcrt.pcx data at 1:0x4c980 has sole TOC use at code 0:0x14d394 inside this heroWindow-derived constructor; code 0:0x14e9fc through 0:0x14eb1c makes ten calls to addCreatureWidgets, matching its four/three/two/one source arms. The terminal BLR is 0:0x14eb78; adjacent 0:0x14eb7c begins the TRecruitWindow destructor. Direct caller 0:0x14ef34 passes recruitUnit and constructor arguments."
+
+[[functions]]
+retail_va = 0x54fb90
+unit = "recruit"
+source = "src/recruit.cpp"
+mac_section = 0
+mac_offset = 0x14ec28
+mac_size = 0x2a0
+mac_symbol = ".addCreatureWidgets__14TRecruitWindowFlll13TCreatureTypel"
+target_sha256 = "9a59a6d5b4a6adf99e8192e65fcc311b6e7184e8ace64386383857aa70da0422"
+evidence = "The preceding TRecruitWindow constructor has ten direct calls to code 0:0x14ec28 in four/three/two/one arms. This body uses the supplied creature and slot to allocate the bitmap border, icon and text widgets, including the elemental background rule, then returns at BLR 0:0x14eec4. The adjacent 0:0x14eec8 is a distinct mflr entry. CodeWarrior emits the named source method."

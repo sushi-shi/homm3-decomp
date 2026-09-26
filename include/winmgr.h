@@ -88,6 +88,7 @@ public:
     int doDialogDraw(heroWindow* dialogWindow, TDialogHandler dialogFunction,
                      TDialogHandler dialogDrawFunction, int fadeIn);
     void doQuickView(heroWindow* window);
+    void sleepAllWindows(unsigned char sleep);
     void updateScreen();
     void updateScreen(int x, int y, int w, int h);
     void screenShot();

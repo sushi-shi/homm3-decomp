@@ -38,3 +38,26 @@ def flag_profiles(path: Path | None = None) -> dict[str, list[str]]:
 
 def by_unit(path: Path | None = None) -> dict[str, dict]:
     return {u["unit"]: u for u in units(path)}
+
+
+def header_comparisons(path: Path | None = None) -> dict[int, str]:
+    """Reviewed VA-to-object bindings; names still come from header annotations."""
+    data = load(path)
+    units = {unit["unit"] for unit in data.get("unit", [])}
+    rows = data.get("header_comparisons", {})
+    if not isinstance(rows, dict):
+        raise ValueError("header_comparisons must be a table")
+    result = {}
+    for value, unit in rows.items():
+        try:
+            address = int(value, 0)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"invalid header comparison VA: {value!r}") from exc
+        if (not common.IMAGE_BASE <= address <= 0xffffffff
+                or not isinstance(unit, str) or unit not in units):
+            raise ValueError(f"invalid header comparison: {value!r} = {unit!r}")
+        rva = address - common.IMAGE_BASE
+        if rva in result:
+            raise ValueError(f"duplicate header comparison VA: {value!r}")
+        result[rva] = unit
+    return result

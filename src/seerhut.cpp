@@ -329,6 +329,12 @@ std::string type_quest::getProgressDialogText()
     return m_proposalText + getTimeLimitText();
 }
 
+type_experience_quest::type_experience_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    m_requiredLevel = 0;
+}
+
 VA(0x0056d3e0, 0x2A)
 std::string type_experience_quest::getRequirementText()
 {
@@ -421,6 +427,12 @@ void type_experience_quest::setDefaultText()
     if (m_completionText.length() == 0)
         m_completionText = formatString(texts.m_text2.c_str(),
                               m_requiredLevel);
+}
+
+type_skill_quest::type_skill_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    memset(m_requiredSkills, 0, sizeof(m_requiredSkills));
 }
 
 VA(0x0056d960, 0x22)
@@ -609,6 +621,14 @@ void type_skill_quest::setDefaultText()
                                        requirement.c_str());
 }
 
+type_defeat_hero_quest::type_defeat_hero_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    m_mapHero = 0;
+    m_defeatedHero = -1;
+    m_satisfiedMask = 0;
+}
+
 VA(0x0056e240, 0xF2)
 std::string type_defeat_hero_quest::getRequirementText()
 {
@@ -736,6 +756,12 @@ void type_defeat_hero_quest::setDefaultText()
                               defeatedHero->m_name);
 }
 
+type_monster_quest::type_monster_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    m_position.m_x = (m_monsterId = m_defeatedBy = -1);
+}
+
 VA(0x0056ea30, 0xF9)
 std::string type_monster_quest::getRequirementText()
 {
@@ -790,11 +816,8 @@ void type_monster_quest::notifyMonsterDefeated(TQuestPosition where,
 {
     if (m_defeatedBy >= 0)
         return;
-    if (m_position.m_x != where.m_x)
-        return;
-    if (m_position.m_y != where.m_y)
-        return;
-    if (m_position.m_z != where.m_z)
+    // Mac 0:0x165dc8 combines the three point comparisons before this guard.
+    if (m_position != where)
         return;
     m_defeatedBy = player;
 }
@@ -1151,6 +1174,11 @@ void type_artifact_quest::setDefaultText()
 VA_COMPGEN(0x00570370, 0x21, SCALAR_DELETING_DTOR, type_creature_quest)
 VA_COMPGEN(0x005703a0, 0xD7, IMPLICIT_DTOR, type_creature_quest)
 
+type_creature_quest::type_creature_quest(unsigned char flags)
+    : type_quest(flags)
+{
+}
+
 VA(0x00570480, 0x55)
 int type_creature_quest::getAIValue(int player)
 {
@@ -1402,6 +1430,12 @@ void type_creature_quest::setDefaultText()
 
 VA_COMPGEN(0x00571530, 0x21, SCALAR_DELETING_DTOR, type_experience_quest)
 
+type_resource_quest::type_resource_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    memset(m_resources, 0, sizeof(m_resources));
+}
+
 VA(0x00571560, 0x12)
 int type_resource_quest::getAIValue(int player)
 {
@@ -1582,6 +1616,11 @@ void type_resource_quest::setDefaultText()
                               requirement.c_str());
 }
 
+type_be_hero_quest::type_be_hero_quest(unsigned char flags)
+    : type_quest(flags), m_requiredHero(-1)
+{
+}
+
 VA(0x00571f00, 0x19)
 unsigned char type_be_hero_quest::isSatisfied(hero* currentHero)
 {
@@ -1652,6 +1691,11 @@ void type_be_hero_quest::setDefaultText()
     if (m_completionText.length() == 0)
         m_completionText = formatString(texts.m_text2.c_str(),
                               requiredHero->m_name);
+}
+
+type_belong_to_player_quest::type_belong_to_player_quest(unsigned char flags)
+    : type_quest(flags), m_requiredOwner(0)
+{
 }
 
 VA(0x005724f0, 0x1A)
@@ -1853,34 +1897,6 @@ std::string TQuestGuard::questGuardFn00573040(int player)
     return text;
 }
 
-inline type_experience_quest::type_experience_quest(
-    unsigned char flags)
-    : type_quest(flags)
-{
-    m_requiredLevel = 0;
-}
-
-inline type_skill_quest::type_skill_quest(unsigned char flags)
-    : type_quest(flags)
-{
-    memset(m_requiredSkills, 0, sizeof(m_requiredSkills));
-}
-
-inline type_defeat_hero_quest::type_defeat_hero_quest(
-    unsigned char flags)
-    : type_quest(flags)
-{
-    m_mapHero = 0;
-    m_defeatedHero = -1;
-    m_satisfiedMask = 0;
-}
-
-inline type_monster_quest::type_monster_quest(unsigned char flags)
-    : type_quest(flags)
-{
-    m_position.m_x = (m_monsterId = m_defeatedBy = -1);
-}
-
 type_artifact_quest::type_artifact_quest(unsigned char flags)
     : type_quest(flags)
 {
@@ -1898,28 +1914,6 @@ type_artifact_quest::type_artifact_quest(
     m_textVariant = textRow;
     g_game->m_artifactDisabled[artifact] = 1;
     setDefaultText();
-}
-
-inline type_creature_quest::type_creature_quest(unsigned char flags)
-    : type_quest(flags)
-{
-}
-
-inline type_resource_quest::type_resource_quest(unsigned char flags)
-    : type_quest(flags)
-{
-    memset(m_resources, 0, sizeof(m_resources));
-}
-
-inline type_be_hero_quest::type_be_hero_quest(unsigned char flags)
-    : type_quest(flags), m_requiredHero(-1)
-{
-}
-
-inline type_belong_to_player_quest::type_belong_to_player_quest(
-    unsigned char flags)
-    : type_quest(flags), m_requiredOwner(0)
-{
 }
 
 VA(0x00573240, 0x23C)  // hd-crossbuild + nine vtables + four callers
@@ -2223,7 +2217,7 @@ int TSeerReward::getValue(const hero* currentHero)
         switch (m_value.m_primarySkill.m_skillType) {
         case ePriSkillAttack:
         case ePriSkillDefense: {
-            int experience = hero::getExperienceIncrement(currentHero->m_level);
+            int experience = currentHero->getExperienceIncrement();
             return static_cast<int>(m_value.m_primarySkill.m_bonus
                 * currentHero->m_turnExperienceToRvRatio * experience);
         }
@@ -2307,25 +2301,24 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     {
         int skill = m_value.m_secondarySkill.m_skillType;
         int bonus = m_value.m_secondarySkill.m_bonus;
-        if (currentHero->m_skillLevel[skill] == 0) {
+        if (currentHero->getSecondarySkill(TSecondarySkill(skill)) == 0) {
             if (currentHero->m_skillCount < 8) {
                 currentHero->giveSS(skill, bonus);
                 break;
             }
         }
-        if (currentHero->m_skillLevel[skill] > 0
-            && currentHero->m_skillLevel[skill] < bonus)
+        if (currentHero->getSecondarySkill(TSecondarySkill(skill)) > 0
+            && currentHero->getSecondarySkill(TSecondarySkill(skill)) < bonus)
             currentHero->giveSS(skill,
-                bonus - currentHero->m_skillLevel[skill]);
+                bonus - currentHero->getSecondarySkill(TSecondarySkill(skill)));
         break;
     }
 
     case eRewardArtifact:
         if (currentHero->getNumberInBackpack(1) < 64) {
-            type_artifact artifact(ARTIFACT_NONE);
-            {
-                artifact.m_artifactId = TArtifact(m_value.m_dwords[0]);
-            }
+            // Mac 0x16a2cc initializes both fields to -1, then replaces the ID.
+            type_artifact artifact;
+            artifact.m_artifactId = TArtifact(m_value.m_dwords[0]);
             currentHero->giveArtifact(&artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
@@ -2335,7 +2328,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     case eRewardSpell:
         if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)
             && g_spellTraits[m_value.m_dwords[0]].m_level
-                <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
+                <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
             && !currentHero->isInSpellbook(m_value.m_dwords[0]))
             currentHero->addSpell(m_value.m_dwords[0]);
         break;
@@ -2537,6 +2530,19 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // the Dreamcast-proven helper. The remaining legacy artifact-quest arm expands
 // its nested type_quest construction where retail retains that call; the extra
 // inline budget also leaves the name vector's element construction as a call.
+// Mac keeps this map-quest loader as a separate body at code0+0x16aa6c,
+// immediately before TSeerHut::read. Complete expands its sole source call.
+static type_quest* readQuestFromMap(TAbstractFile* infile,
+                                    unsigned char flags)
+{
+    unsigned char questType;
+    infile->read(&questType, sizeof(questType));
+    type_quest* quest = createQuest(questType, flags);
+    if (quest)
+        quest->loadFromMap(infile);
+    return quest;
+}
+
 VA(0x00574610, 0x480)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
 void TSeerHut::read(TAbstractFile* infile)
 {
@@ -2551,13 +2557,7 @@ void TSeerHut::read(TAbstractFile* infile)
                 1, static_cast<TArtifact>(charBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
     } else {
-        int intBuffer;
-        infile->read(&intBuffer, 1);
-        type_quest* newQuest =
-            createQuest(intBuffer & 0xff, 1);
-        if (newQuest)
-            newQuest->loadFromMap(infile);
-        m_quest = newQuest;
+        m_quest = readQuestFromMap(infile, 1);
     }
 
     m_completedByPlayer = 0;

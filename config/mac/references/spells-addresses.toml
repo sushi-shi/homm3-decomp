@@ -503,3 +503,93 @@ mac_offset = 0x19aabc
 mac_size = 0x74
 target_sha256 = "c59641a0f5083a8afacfc79c177a06ce5112b7272bdf94ca8ef3ba7118329383"
 evidence = "NEW: Calls elementalType0x19aa6c, scans20 side-army slots for incompatible summoned elemental, allows NONE/free slots. End0x19ab30; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[helpers]]
+source_helper = "updateSpellTargetFromMouse"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x18f764
+mac_size = 0x48
+target_sha256 = "c735e5ead545da69a54072a878bc13b581f6cc1cf11bb1626b88229bd5173320"
+evidence = "initiateSpell calls this ordinary static helper twice, at 0x18fa54 and 0x18fbd8. The body obtains mouse x/y through mouseManager::mouseCoords, resolves the combat grid index, and calls updateSpellTarget 0x18f538; BLR 0x18f7a8, followed by initiateSpell 0x18f7ac. Windows expands the same sequence at both sites."
+
+[[helpers]]
+source_helper = "combatManager::getSpellWallHex"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x19ab30
+mac_size = 0x60
+target_sha256 = "c361e602be6e88e29c8439e587da8b9507af1515a97fe09fed3a0e34f67d5125"
+evidence = "The retained four-register member takes baseIndex r4, rowOffset r5 and side r6. It subtracts one or two 17-cell rows and adjusts the odd-row side as the authored getSpellWallHex; BLR 0x19ab8c. Mac direct callers at 0x1911f4, 0x194380 and 0x195018; Dreamcast names this helper and Windows expands its wall-handler use."
+
+[[helpers]]
+source_helper = "combatManager::removeCorpse(army* corpse)"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x19846c
+mac_size = 0x80
+target_sha256 = "e493fc87dcf2bb3c0e9d3a74f103afccfc8f38b199d17319f09c9d44dd9e9225"
+evidence = "The army-pointer overload calls the retained hex/side/slot overload 0x1983dc, then checks the double-wide bit and removes the second grid cell when present. Mac demonicResurrection and resurrect call it at 0x198534 and 0x1987fc; Windows expands the ordinary overload in both paths. BLR 0x1984e8."
+
+[[helpers]]
+source_helper = "combatManager::resurrect(SpellID spell, int targetHex, int power, int mastery, const hero* castingHero)"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x198aa0
+mac_size = 0xd8
+target_sha256 = "0e98dd543c6bda4b37fae9ae410f32f3015c6acdcbbd3428bf21e8c8820834bb"
+evidence = "The SpellID overload branches to findAnimateDeadTarget for spell 39, otherwise findResurrectionTarget, computes mastery/power bonus and hero spell bonus, then calls the army-pointer resurrect overload 0x1986ec. CastSpell calls it at 0x192474; Windows expands that helper. BLR 0x198b74."
+
+[[helpers]]
+source_helper = "combatManager::showSpellCastFailure"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x198b78
+mac_size = 0x144
+target_sha256 = "dc3e5735ebe8e949bb1071f3a56cd04e4b14d34401fca16ef960dffc9591af22"
+evidence = "CastSpell calls this helper at 0x192af0. It skips quick combat, loads MagicRes.wav, selects the creature's singular/plural name, formats and posts the resistance message, invokes spellEffect and waits for the sample; BLR 0x198cb8. Dreamcast names the same helper and Windows expands it."
+
+[[helpers]]
+source_helper = "combatManager::markWallAreaEffect"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x194fcc
+mac_size = 0xdc
+target_sha256 = "be58c1e84311022c94cfd9fbbb18e90c30e916f06338e1b5073aa90333ef96a8"
+evidence = "handleCastWallSpell calls this retained three-row wall collector at 0x193aa0. It chooses two rows for basic mastery and three otherwise, calls getSpellWallHex 0x19ab30 for each row and appends the result to the vector; BLR 0x1950a4. Windows expands this ordinary helper in its one caller."
+
+[[helpers]]
+source_helper = "combatManager::hexToPoint"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x194b48
+mac_size = 0x64
+target_sha256 = "f3d9d4e4c449c55b1af383af31da7315e4620de9174ecf7aa5c120b04d6d4ed4"
+evidence = "Mac markAreaEffect and markBerserkAreaEffect call this retained grid-to-point conversion at 0x194cfc and 0x194e6c. The 17-column quotient/remainder and staggered row arithmetic agree with the shared source helper. The body ends at BLR 0x194ba8; Windows expands the helper in both callers."
+
+[[helpers]]
+source_helper = "clearAreaHighlights"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x193750
+mac_size = 0x90
+target_sha256 = "ce838837f659e8d1db09e2fc425c746993ae3005bc3993883731ba6ac4dcff33"
+evidence = "Mac handleCastSpell calls this retained source helper on both accept and cancel paths at 0x1938bc and 0x193900. It loops over both combat sides and clears area highlighting for eligible stacks; BLR 0x1937dc. Windows expands the same helper in both paths."
+
+[[helpers]]
+source_helper = "combatManager::pointToHex"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x194bac
+mac_size = 0x5c
+target_sha256 = "dfcddebd2672cc74832d7e1a932e82dc706ca68d184e3f5b7552fd2e3d573b74"
+evidence = "Mac markAreaEffect and markBerserkAreaEffect call this retained point-to-grid conversion at 0x194d60 and 0x194ed8. It checks the 17-column grid bounds and returns -1 outside them, matching the shared source helper. The body ends at BLR 0x194c04; Windows expands the helper in both callers."
+
+[[helpers]]
+source_helper = "combatManager::getDistance"
+unit = "spells"
+mac_section = 0
+mac_offset = 0x194c08
+mac_size = 0xd0
+target_sha256 = "04aa5b814391f75ccb44330a35df2d5548d640624650aae8b34c297177dcc86f"
+evidence = "Mac markAreaEffect and markBerserkAreaEffect call this retained point-distance helper at 0x194d4c and 0x194ec0. Its same-sign branch chooses max(abs(dx), abs(dy)); the opposite-sign branch sums them, as in shared source. The body ends at BLR 0x194cd4; Windows expands the helper in both callers."

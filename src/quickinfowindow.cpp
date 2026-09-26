@@ -45,20 +45,19 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
         switch (disposition) {
         case Flee:
             strcpy(g_text,
-                   g_generalText->getText(GENERAL_TEXT_QUICK_CREATURE_FLEE));
+                   (*g_generalText)[GENERAL_TEXT_QUICK_CREATURE_FLEE]);
             break;
         case Attack:
             strcpy(g_text,
-                   g_generalText->getText(GENERAL_TEXT_QUICK_CREATURE_ATTACK));
+                   (*g_generalText)[GENERAL_TEXT_QUICK_CREATURE_ATTACK]);
             break;
         case Join:
             strcpy(g_text,
-                   g_generalText->getText(GENERAL_TEXT_QUICK_CREATURE_JOIN));
+                   (*g_generalText)[GENERAL_TEXT_QUICK_CREATURE_JOIN]);
             break;
         case JoinPrice:
             sprintf(g_text,
-                    g_generalText->getText(
-                        GENERAL_TEXT_QUICK_CREATURE_JOIN_COST_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_QUICK_CREATURE_JOIN_COST_FORMAT],
                     cost);
             break;
         }
@@ -79,6 +78,7 @@ TQuickCreatureWindow::~TQuickCreatureWindow()
 
 // Original: TQuickCreatureWindow::QuickWindowWait; quickinfowindow.cpp:88, dc 0x117b8c.
 // Identical quick-window wrappers fold onto the retail 0x530d30 body.
+// Mac retains this ordinary wrapper at 0:0x14bc30.
 void TQuickCreatureWindow::quickWindowWait()
 {
     g_windowManager->doQuickView(this);

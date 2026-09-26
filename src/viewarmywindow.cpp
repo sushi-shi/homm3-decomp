@@ -269,11 +269,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     // DC line 159 passes the literal 2 to GetArmyName for a plural name.
     createNameWidget(getArmyName(m_armyType, 2));
 
-    int townType;
-    if (!g_game->m_gameVersion && isBaseElemental(m_armyType))
-        townType = -1;
-    else
-        townType = g_creatureTypeTraits[m_armyType].m_townType;
+    int townType = g_game->getAlignment(m_armyType);
     createPortraitWidget(traits.m_spriteName, townType,
                            group->m_numTroops[iarmy]);
 
@@ -362,11 +358,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     createBackgroundWidget(0);
     createNameWidget(traits->m_pluralName);
 
-    int townType;
-    if (!g_game->m_gameVersion && isBaseElemental(armyType))
-        townType = -1;
-    else
-        townType = g_creatureTypeTraits[armyType].m_townType;
+    int townType = g_game->getAlignment(armyType);
     createPortraitWidget(traits->m_spriteName, townType, 0);
 
     createAttackWidget(traits->m_attackSkill, traits->m_attackSkill);
@@ -679,15 +671,14 @@ int viewArmyCastSpellHandler(message& msg)
     return 0;
 }
 
-// The five inline helpers keep one definition and their source calls. Their
-// relative positions follow DC rows 617/635, 809/823 and 917. Retail expands
-// them in the constructors and retains no standalone bodies. Their real
-// branches and member accesses affect the callers' nested string cleanup and
-// selector inlining. A 32-state explicit/ordinary inline diagnostic leaves
-// the battle constructor byte-neutral under /Ob2; ordinary forms additionally
-// emit unpaired helper bodies. That does not establish new retail claims.
+// DC records five separate helpers here at rows 617/635, 809/823 and 917.
+// Mac retains calls to them and places their bodies among the other widget
+// builders in this order. VC6 expands all five in the constructors with these
+// ordinary definitions: removing explicit inline leaves every claimed
+// viewarmywindow score unchanged. VC6 also emits standalone bodies in its
+// object; their absence from retail does not establish an inline declaration.
 
-inline void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
+void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
 {
     bitmapBorder* plate = new bitmapBorder(
         0, 0, 298, 311, BACKGROUND_ID,
@@ -705,7 +696,7 @@ inline void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
     m_widgets.push_back(plate);
 }
 
-inline void TViewArmyWindow::createNameWidget(const char* name)
+void TViewArmyWindow::createNameWidget(const char* name)
 {
     m_widgets.push_back(new textWidget(
         20, 21, 258, 19, name, "smalfont.fnt",
@@ -906,7 +897,7 @@ void TViewArmyWindow::createSpeedWidget(int normalSpeed,
 // limit. Retail's battle constructor likewise reloads +0x68 after allocation.
 // The helper owns this store; caching the getter result in each caller loses
 // that reload. The group constructor uses the same canonical helper.
-inline void TViewArmyWindow::createMoraleWidget(int newMorale)
+void TViewArmyWindow::createMoraleWidget(int newMorale)
 {
     m_morale = newMorale;
     m_widgets.push_back(new iconWidget(
@@ -917,7 +908,7 @@ inline void TViewArmyWindow::createMoraleWidget(int newMorale)
 
 // DC 0x1928a2/0x1928ae and retail's battle +0x7c access prove the same
 // store-then-reload ownership as createMoraleWidget.
-inline void TViewArmyWindow::createLuckWidget(int newLuck)
+void TViewArmyWindow::createLuckWidget(int newLuck)
 {
     m_luck = newLuck;
     m_widgets.push_back(new iconWidget(
@@ -1004,7 +995,7 @@ void TViewArmyWindow::createDismissWidget()
     m_widgets.push_back(dismiss);
 }
 
-inline void TViewArmyWindow::createRolloverWidget()
+void TViewArmyWindow::createRolloverWidget()
 {
     m_rolloverWidget = new bitmapBackedTextWidget(
         7, 285, 284, 19, 0, "smalfont.fnt",

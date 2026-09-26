@@ -604,10 +604,9 @@ public:
     inline long getOwner() const { return m_playerOwner; }
     // Raw DC publics for load/save return bool (QAA_N); Complete ports the file argument.
     bool load(TAbstractFile* infile);
-    // update_bonus's negative twin. Retail has no out-of-line row for it
-    // (nothing fits between generator::save's end at 0x4b8791 and
-    // update_bonus at 0x4b87a0), so it is inline-only - the same shape
-    // set_owner below carries.
+    // update_bonus's negative twin. Retail has no retained row between
+    // generator::save and update_bonus; its known callers expand the body.
+    // That does not establish the original inline spelling.
     inline void removeBonus();
     bool save(TAbstractFile* outfile);
     inline void setOwner(long owner);
@@ -1480,6 +1479,8 @@ public:
 // Dreamcast Game.h:839-850, IsHumanTeam (dc 0x37f64): reject a negative
 // team, scan its eight player slots, and call gpGame->IsHuman on a member.
 // Windows 0x42b9e0 and Mac 0:0x2d3e4 retain this same guarded scan.
+// Town and philai emit the retail call to IsHuman; game.obj expands that
+// callee. The reviewed town comparison uses the same canonical header body.
 // This is distinct from is_human_ally at dc 0x37fd8, which takes a player
 // number and calls IsHumanTeam(GetTeam(player_number)).
 VA(0x0042b9e0, 0x45)  // guarded team scan + named IsHuman callee, dc 0x37f64

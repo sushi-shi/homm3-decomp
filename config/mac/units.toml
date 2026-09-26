@@ -6,4 +6,4 @@ flags = ["-O3", "-proc", "750", "-nolink", "-char", "unsigned"]
 # Additional source-owned VA definitions can be made visible as ordinary
 # helpers without admitting them as scored Mac pairs.
 helpers = []
-source_helpers = ["hero::getLevel", "hero::isLevelUpCampaignOverride"]
+source_helpers = ["markSpells", "hero::getLevel", "hero::isLevelUpCampaignOverride"]

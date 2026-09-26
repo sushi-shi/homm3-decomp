@@ -40,7 +40,7 @@ def inspection_context(root: Path, pef: PEF) -> InspectionContext:
 
 
 def inspect(root: Path, pair: Pair, pef: PEF, tools_dir: Path, *,
-            context: InspectionContext | None = None) -> dict:
+            context: InspectionContext | None = None, sdk_staged: bool = False) -> dict:
     from homm3.mac import build
     context = context or inspection_context(root, pef)
     origin = Address(pair.mac_section, pair.mac_offset)
@@ -53,7 +53,7 @@ def inspect(root: Path, pair: Pair, pef: PEF, tools_dir: Path, *,
         source = candidate_source(pair).encode()
         source_hash = hashlib.sha256(source_identity(pair, source)).hexdigest()
         build_hash = build._profile_hash(source, pair)
-        compiled = build.compile_pair(pair, tools_dir)
+        compiled = build.compile_pair(pair, tools_dir, sdk_staged=sdk_staged)
         source_hash, build_hash, object_hash = compiled.source_hash, compiled.build_hash, compiled.object_hash
         candidate = calls.analyze(compiled.hunk.data, origin, context.addresses,
                                   xrefs=compiled.hunk.xrefs, labels=context.names)

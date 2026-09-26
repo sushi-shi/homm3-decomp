@@ -177,6 +177,8 @@ void game::showScenInfo()
 VA(0x00513800, 0x1D5)  // dc 0x103888
 void game::getLossConditionText(char* text)
 {
+    // Dreamcast lines 646, 655 and 662 retain TTextResource::operator[]
+    // for the hero, time-limit and standard-loss text lookups.
     LossConditionStruct& loss = m_mapHeader.m_lossCondition;
     if (loss.m_type != -1) {
         switch (loss.m_type) {
@@ -194,36 +196,33 @@ void game::getLossConditionText(char* text)
         }
         case LOSS_CONDITION_LOSE_HERO: {
             hero* targetHero = getHero(loss.m_heroId);
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_LOSS_CONDITION_LOSE_HERO_FORMAT), targetHero->m_name);
+            sprintf(text, (*g_generalText)[GENERAL_TEXT_LOSS_CONDITION_LOSE_HERO_FORMAT], targetHero->m_name);
             break;
         }
         case LOSS_CONDITION_TIME_LIMIT: {
             int month = (loss.m_numDays - 1) / 28 + 1;
             int week = (loss.m_numDays - (month - 1) * 28 - 1) / 7 + 1;
             int dayOfWeek = (loss.m_numDays - 1) % 7 + 1;
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_LOSS_CONDITION_TIME_LIMIT_FORMAT), month, week, dayOfWeek);
+            sprintf(text, (*g_generalText)[GENERAL_TEXT_LOSS_CONDITION_TIME_LIMIT_FORMAT], month, week, dayOfWeek);
             break;
         }
         }
     } else {
-        strcpy(text, g_generalText->getText(GENERAL_TEXT_LOSS_CONDITION_STANDARD));
+        strcpy(text, (*g_generalText)[GENERAL_TEXT_LOSS_CONDITION_STANDARD]);
     }
 }
 
-// Residual: Windows MAX 99.98% has the same 83 CFG blocks, 34 branches and
-// 12 calls. The first byte difference is the two type_point stack slots in
-// BUILD_GRAIL: candidate townPos is [ebp-0x14], retail uses [ebp-0xc]. DC
-// records named anytown_loc and town_loc; Mac 0x132d28 constructs the point
-// and compares its coordinates to -1. A named anyTown before townPos moves
-// the slots into retail order but adds an ESI copy and falls to 99.46%; const
-// and reversed-comparison variants do not recover the original codegen.
+// Residual: Windows MAX 98.58% has the same 83 CFG blocks and 12 calls.
+// DC records named anytown_loc and town_loc; Mac 0x132d28 constructs the
+// point and compares its coordinates to -1. Declaring townLoc before
+// anyTownLoc improves the Windows stack slots without changing the helper
+// calls. CodeWarrior's aligned shape and call sequence remain unchanged,
+// although the candidate stack offsets move; Mac is not exact.
 // DC newgame.cpp:721-725 records the separate anytown_loc/town_loc points;
 // lines 764/766 call GetArmyName with count 2, and its text lookups name
 // TTextResource::operator[]. The shared source calls are retained despite
-// VC6 falling from 99.46% to 97.84%: an additional early hasBuilding call
-// remains out of line when the larger helper source enters the inline budget.
-// Mac O3 shape improves from 244 to 277 aligned instructions, with 38 direct
-// calls on each side; this is a source lead, not an exact Mac verdict.
+// VC6 falling from an earlier peak when the larger helper source entered
+// the inline budget. Mac O3 retains 38 direct calls on each side.
 VA(0x005139e0, 0x64C)  // dc 0x103a08
 void game::getVictoryConditionText(char* text)
 {
@@ -266,8 +265,8 @@ void game::getVictoryConditionText(char* text)
             break;
         }
         case VICTORY_CONDITION_BUILD_GRAIL: {
-            type_point anyTownLoc(-1, -1, -1);
             type_point townLoc(victory.m_townX, victory.m_townY, victory.m_townZ);
+            type_point anyTownLoc(-1, -1, -1);
             if (townLoc != anyTownLoc) {
                 town* targetTown = getTown(getTownId(
                     victory.m_townX, victory.m_townY, victory.m_townZ));

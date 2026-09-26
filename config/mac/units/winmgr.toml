@@ -3,4 +3,4 @@ mode = "paired_bodies"
 # Shape comparisons are evidence only until symbol and TOC references are bound.
 flags = ["-O3", "-proc", "750", "-nolink"]
 helpers = []
-source_helpers = []
+source_helpers = ["heroWindowManager::sleepAllWindows"]

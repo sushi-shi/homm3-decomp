@@ -1,5 +1,23 @@
 # Reviewed address identities; source owns names and compiler symbols remain unbound.
 
+[[helpers]]
+source_helper = "CHotSeatDlg::getPlayerCount"
+unit = "multiplayerwindow"
+mac_section = 0
+mac_offset = 0x219cb8
+mac_size = 0x70
+target_sha256 = "cc5a8839dace0dafd4eeab8d624a1f0482282575a3607ce881afb4b341097490"
+evidence = "Mac CHotSeatEdit focus and key handlers retain this helper. It checks the text of eight hot-seat player edits with strlen at 0x28e1dc and counts nonempty names. Dreamcast names GetPlayerCount; Windows expands the existing inline source helper. Final BLR at 0x219d24, next entry 0x219d28."
+
+[[helpers]]
+source_helper = "deleteTempSaveGame"
+unit = "multiplayerwindow"
+mac_section = 0
+mac_offset = 0x219e54
+mac_size = 0x94
+target_sha256 = "6c59e467226b77411f6eaaf3e765d81be3c7f3599583bc4bc99eec935e7cc907"
+evidence = "Mac TMultiPlayerWindow constructor retains this file-local helper. It tests the RMT prefix and constructs a Mac path/spec before deleting the temporary save; Windows source calls the same helper with its DeleteFileA body. Dreamcast names DeleteTempSaveGame; final BLR at 0x219ee4, next entry 0x219ee8."
+
 [[functions]]
 retail_va = 0x50de50
 unit = "multiplayerwindow"
@@ -26,6 +44,15 @@ mac_offset = 0x219d28
 mac_size = 0x12c
 target_sha256 = "98c3515046cf25f94289e1b68e5dcb8d68e2a5aaae2fd563d27e82a3845d7541"
 evidence = "CHotSeatEdit key handler duplicates CMPEdit navigation, calls textEntryWidget::onKeyPress0x1afb44, hot-seat update helper0x219cb8 and redraws OK widget."
+
+[[helpers]]
+source_helper = "CHotSeatDlg::getPlayerCount"
+unit = "multiplayerwindow"
+mac_section = 0x0
+mac_offset = 0x219cb8
+mac_size = 0x70
+target_sha256 = "cc5a8839dace0dafd4eeab8d624a1f0482282575a3607ce881afb4b341097490"
+evidence = "Dreamcast names CHotSeatDlg::GetPlayerCount at dc:0x102cf8. Mac calls this retained body from CHotSeatEdit::onKillFocus at 0x219c3c and onKeyPress at 0x219dcc; it counts nonempty text in eight edits and ends at BLR 0x219d24. The callers expand updateOK around that call. Windows expands both helpers."
 
 [[functions]]
 retail_va = 0x50e050
@@ -188,6 +215,15 @@ mac_offset = 0x21d044
 mac_size = 0x74
 target_sha256 = "73ee08f73a367b1616a30212588ed90a1781df9cd0c308af3272ba52de72ead2"
 evidence = "CMultiPlayerWindowEdit RTTI1+0x5b4e4 and vtable1+0x5b518 slot15 resolve0x21d044; body calls getCharPressed0x1afaa0, base onKeyPress0x1afb44 and TMultiPlayerWindow::update0x21ace4."
+
+[[functions]]
+retail_va = 0x50fab0
+unit = "multiplayerwindow"
+mac_section = 0x0
+mac_offset = 0x21b18c
+mac_size = 0x7c
+target_sha256 = "670df5f04004a5cbb0218784153842e6b8b6f50c864dd95de71eba68f283dd64"
+evidence = "Dreamcast names TMultiPlayerWindow::HostSession at dc:0x100d0c. Mac onHost 0x21b208 passes the entered session name and password to 0x21b18c at 0x21b5e4; the callee reads the current player's name and invokes network setup routines 0x21297c and 0x2137ec. Mac's network implementation differs from Windows. BLR 0x21b204 precedes onHost prologue 0x21b208."
 
 [[functions]]
 retail_va = 0x50fda0

@@ -137,21 +137,21 @@ evidence = "Called by RTTI-proven CTeamAlignmentDlg ctor16cb68; zeroes32-byte ma
 
 [[functions]]
 retail_va = 0x576e00
-unit = "singleselectionpopups"
+unit = "singleselectionwindow"
 mac_section = 0x0
 mac_offset = 0x16d4f4
 mac_size = 0xb0
 target_sha256 = "18ed4dd318da8a8d4d5d3dff0738b0fc8ad7d31910bc9993eb2f6d2ae58ca8d3"
-evidence = "Switch on town<=8 dispatches general text693/694/695/696 or default90. Full jump-table arms and common return included; these constants uniquely identify starting resource caption selector. Complete span ends in terminal BLR; following independent entry excluded."
+evidence = "DC singleselectionwindow.cpp:164 names GetResourceBonusCaption; Mac ProcessRightSelect calls this town switch for general text693/694/695/696 or default90. The complete span ends in terminal BLR; the next selector starts at 0x16d5a4. Windows emits its body at 0x576e00 and expands it into ProcessRightSelect."
 
 [[functions]]
 retail_va = 0x576e80
-unit = "singleselectionpopups"
+unit = "singleselectionwindow"
 mac_section = 0x0
 mac_offset = 0x16d5a4
 mac_size = 0xb0
 target_sha256 = "0a6362d0ef4becc0ec8f4d322d8157f50b2cc7bd9d7b9509a7a9d641f95d15c0"
-evidence = "Parallel town switch dispatches text689/690/691/692 or default94, uniquely identifying starting resource description selector. Full jump-table arms and common return included. Complete span ends in terminal BLR; following independent entry excluded."
+evidence = "DC singleselectionwindow.cpp:187 names GetResourceBonusDescription; Mac ProcessRightSelect calls this parallel town switch for text689/690/691/692 or default94. The complete span ends in terminal BLR; the next entry starts at 0x16d654. Windows emits its body at 0x576e80 and expands it into ProcessRightSelect."
 
 [[functions]]
 retail_va = 0x576f00

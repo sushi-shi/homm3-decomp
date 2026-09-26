@@ -400,23 +400,29 @@ def extract_body(pair: Pair) -> str:
 def source_helper(text: str, selector: str, source: Path) -> tuple[int, str, str]:
     """Locate one ordinary source definition without inventing a Windows VA.
 
-    Selectors are names already present in the owning TU. An overload may use
-    its exact authored parameter declaration, including parameter names and
+    Selectors are names already present in the owning TU or an ordinary header.
+    An overload may use its exact authored parameter declaration, including parameter names and
     trailing const. Whitespace is insignificant. Local definitions, templates
-    and unsupported declaration forms fail explicitly. A declaration/call
-    cannot substitute for the canonical body.
+    and unsupported declaration forms fail explicitly. An in-class header
+    helper must have one direct member body; a declaration or call cannot
+    substitute for the canonical body.
     """
-    selection = re.fullmatch(r'(?P<name>\w+(?:::\w+)*)(?P<parameters>\s*\([^;{}]*\)\s*(?:const)?)?', selector)
+    selection = re.fullmatch(r'(?P<name>\w+(?:::(?:~?\w+))*)(?P<parameters>\s*\([^;{}]*\)\s*(?:const)?)?', selector)
     if not selection:
         raise SourceError(f"{source}: invalid source helper selector {selector!r}")
     name = selection['name']
     parameters = selection['parameters']
+    parts = name.split("::")
+    is_constructor = len(parts) >= 2 and parts[-1] == parts[-2]
+    is_destructor = len(parts) >= 2 and parts[-1] == "~" + parts[-2]
     masked = _masked_source(text)
     pattern = re.compile(
-        r'^[ \t]*(?P<prefix>(?:[\w:*&]+\s+)+)' + re.escape(name)
+        r'^[ \t]*(?P<prefix>(?:[\w:*&<>,]+\s+)+)' + re.escape(name)
         + r'(?P<parameters>\s*\([^;{}]*\)\s*(?:const\s*)?)\{', re.MULTILINE)
     matches = []
     for match in pattern.finditer(masked):
+        if is_constructor:
+            continue
         if re.search(r'\b(?:return|if|while|switch|for|typedef|template)\b', match['prefix']):
             continue
         if parameters is not None and re.sub(r'\s+', '', parameters) != re.sub(r'\s+', '', match['parameters']):
@@ -428,8 +434,139 @@ def source_helper(text: str, selector: str, source: Path) -> tuple[int, str, str
         start = match.start() + len(match[0]) - len(match[0].lstrip())
         signature = " ".join(masked[start:brace].split())
         matches.append((start, signature, text[start:end] + "\n"))
+    # Out-of-class destructors, like constructors, have no return type.
+    # The repeated class name keeps a free expression or unqualified call
+    # from being mistaken for a source-owned definition.
+    if is_destructor:
+        destructor = re.compile(
+            r'^[ \t]*(?:inline\s+)?' + re.escape(name)
+            + r'(?P<parameters>\s*\([^;{}]*\)\s*)\{', re.MULTILINE)
+        for match in destructor.finditer(masked):
+            if _data_scope(masked, match.start()):
+                raise SourceError(f"{source}: nested source helper needs explicit extraction support")
+            if parameters is not None and re.sub(r'\s+', '', parameters) != re.sub(r'\s+', '', match['parameters']):
+                continue
+            brace = match.end() - 1
+            end = _function_end(text, brace)
+            start = match.start() + len(match[0]) - len(match[0].lstrip())
+            signature = " ".join(masked[start:brace].split())
+            matches.append((start, signature, text[start:end] + "\n"))
+    if source.suffix == ".h" and not matches and len(parts) >= 2 and not is_constructor:
+        class_name, method_name = parts[-2:]
+        class_pattern = re.compile(
+            r'^[ \t]*(?:class|struct)\s+' + re.escape(class_name)
+            + r'\b[^;{}]*\{', re.MULTILINE)
+        method_pattern = re.compile(
+            r'^[ \t]*(?P<prefix>(?:[\w:*&]+\s+)+)' + re.escape(method_name)
+            + r'(?P<parameters>\s*\([^;{}]*\)\s*(?:const\s*)?)\{',
+            re.MULTILINE)
+        for class_match in class_pattern.finditer(masked):
+            opening = class_match.end() - 1
+            closing = _function_end(text, opening)
+            body = masked[opening:closing]
+            for method in method_pattern.finditer(body):
+                # Only a direct class member can own this selector. A method
+                # nested in another scope must not masquerade as its body.
+                preceding = body[:method.start()]
+                if preceding.count("{") - preceding.count("}") != 1:
+                    continue
+                if parameters is not None and (re.sub(r'\s+', '', parameters)
+                                               != re.sub(r'\s+', '', method['parameters'])):
+                    continue
+                brace = opening + method.end() - 1
+                end = _function_end(text, brace)
+                start = opening + method.start() + len(method[0]) - len(method[0].lstrip())
+                signature = " ".join(masked[start:brace].split())
+                signature = re.sub(r'\b' + re.escape(method_name) + r'(?=\s*\()',
+                                   name, signature, count=1)
+                matches.append((start, signature, text[start:end] + "\n"))
+    # Out-of-class constructors have no return-type prefix. Require the
+    # qualified name to repeat its owning class, then read only parenthesized
+    # initializer entries before the actual body brace. This rejects calls,
+    # declarations and braced initializer expressions instead of mistaking
+    # one of their braces for the function body.
+    if is_constructor:
+        constructor = re.compile(r'^[ \t]*(?:inline\s+)?' + re.escape(name) + r'\s*\(', re.MULTILINE)
+
+        def after_parentheses(opening: int) -> int:
+            depth = 0
+            for index in range(opening, len(masked)):
+                if masked[index] == '(':
+                    depth += 1
+                elif masked[index] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        return index + 1
+                elif masked[index] in '{};' and depth == 0:
+                    break
+            raise SourceError(f"{source}: unbalanced constructor parentheses for {selector!r}")
+
+        for match in constructor.finditer(masked):
+            if _data_scope(masked, match.start()):
+                raise SourceError(f"{source}: nested source helper needs explicit extraction support")
+            opening = match.end() - 1
+            after_parameters = after_parentheses(opening)
+            actual_parameters = masked[opening:after_parameters]
+            if parameters is not None and re.sub(r'\s+', '', parameters) != re.sub(r'\s+', '', actual_parameters):
+                continue
+            cursor = after_parameters
+            while cursor < len(masked) and masked[cursor].isspace():
+                cursor += 1
+            if cursor < len(masked) and masked[cursor] == ':':
+                cursor += 1
+                while True:
+                    while cursor < len(masked) and masked[cursor].isspace():
+                        cursor += 1
+                    initializer = re.match(r'[A-Za-z_]\w*(?:::\w+)*\s*\(', masked[cursor:])
+                    if not initializer:
+                        raise SourceError(f"{source}: unsupported constructor initializer for {selector!r}")
+                    cursor = after_parentheses(cursor + initializer.end() - 1)
+                    while cursor < len(masked) and masked[cursor].isspace():
+                        cursor += 1
+                    if cursor < len(masked) and masked[cursor] == ',':
+                        cursor += 1
+                        continue
+                    break
+            if cursor >= len(masked) or masked[cursor] != '{':
+                continue
+            end = _function_end(text, cursor)
+            start = match.start() + len(match[0]) - len(match[0].lstrip())
+            signature = " ".join(masked[start:cursor].split())
+            matches.append((start, signature, text[start:end] + "\n"))
     if len(matches) != 1:
         raise SourceError(f"{source}: expected one source helper definition for {selector!r}; found {len(matches)}")
+    return matches[0]
+
+
+def class_header_helper(text: str, selector: str, source: Path) -> tuple[int, str, str]:
+    """Find one in-class body in an ordinary header by its scoped name."""
+    selection = re.fullmatch(
+        r'(?P<scope>\w+(?:::\w+)*)::(?P<name>\w+)'
+        r'(?P<parameters>\s*\([^;{}]*\)\s*(?:const)?)?', selector)
+    if not selection:
+        raise SourceError(f"{source}: use a scoped class method selector")
+    expected_scope = tuple(selection['scope'].split('::'))
+    expected_parameters = selection['parameters']
+    masked = _masked_source(text)
+    pattern = re.compile(
+        r'^[ \t]*(?P<prefix>(?:[\w:*&]+\s+)*)'
+        + re.escape(selection['name'])
+        + r'(?P<parameters>\s*\([^;{}]*\)\s*(?:const\s*)?)\{',
+        re.MULTILINE)
+    matches = []
+    for match in pattern.finditer(masked):
+        if _data_scope(masked, match.start()) != expected_scope:
+            continue
+        if expected_parameters is not None and (re.sub(r'\s+', '', expected_parameters)
+                != re.sub(r'\s+', '', match['parameters'])):
+            continue
+        brace = match.end() - 1
+        end = _function_end(text, brace)
+        start = match.start() + len(match[0]) - len(match[0].lstrip())
+        signature = " ".join(masked[start:brace].split())
+        matches.append((start, signature, text[start:end] + "\n"))
+    if len(matches) != 1:
+        raise SourceError(f"{source}: expected one in-class body for {selector!r}; found {len(matches)}")
     return matches[0]
 
 

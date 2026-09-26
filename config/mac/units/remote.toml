@@ -1,0 +1,4 @@
+mode = "paired_bodies"
+flags = ["-O3", "-proc", "750", "-nolink", "-char", "unsigned"]
+helpers = [0x553840, 0x557a80, 0x557d00]
+source_helpers = ["CChatManager::playChatSample"]

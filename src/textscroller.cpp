@@ -37,15 +37,20 @@ public:
 
     type_text_slider(int x, int y, int w, int h, int id, int num,
                      TSliderFunction func, EGraphics graphics, int page,
-                     unsigned char hotKey, type_text_scroller* scroller)
-        : slider(x, y, w, h, id, num, func, graphics, page, hotKey)
-    {
-        m_owner = scroller;
-    }
+                     unsigned char hotKey, type_text_scroller* scroller);
 
     virtual void close();  // slot 16, retail 0x5b9fa0
 };
 SIZE(type_text_slider, 0x6c);
+
+type_text_slider::type_text_slider(int x, int y, int w, int h, int id, int num,
+                                   TSliderFunction func, EGraphics graphics,
+                                   int page, unsigned char hotKey,
+                                   type_text_scroller* scroller)
+    : slider(x, y, w, h, id, num, func, graphics, page, hotKey)
+{
+    m_owner = scroller;
+}
 
 // Slot 16 of the scroller's private slider vtable 0x642cc8 - the only
 // slot it overrides. Thirteen bytes, no frame: it reads the slider's own

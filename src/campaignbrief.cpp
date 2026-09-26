@@ -339,9 +339,7 @@ void TCampaignBrief::addBonusIcons()
         m_difficultyButtons[i]->setHelpText(
             g_campaignDifficultyHelp[i].m_text,
             g_campaignDifficultyHelp[i].m_rclick, 0);
-        m_difficultyButtons[i]->sendMessage(
-            widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_difficultyButtons[i]->hide();
         m_widgets.push_back(m_difficultyButtons[i]);
     }
 
@@ -406,10 +404,10 @@ void TCampaignBrief::updateBonusIcons()
         m_startBonusBorders[i]->show();
         if (i == g_game->m_campaign.m_briefingChoice) {
             coloredBorderFrame* border = m_startBonusBorders[i];
-            border->sendMessage(widget::WIDGET_SET_STATUS, 4);
+            border->setVisible(1);
         } else {
             coloredBorderFrame* border = m_startBonusBorders[i];
-            border->sendMessage(widget::WIDGET_CLEAR_STATUS, 4);
+            border->setVisible(0);
         }
         SCampaign* activeCampaign = &g_game->m_campaign;
         const char* name = scenario->m_options->getIconDefName(activeCampaign, i);
@@ -700,8 +698,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             DATA_COMPGEN(0x00660d18, campaignBriefFlagSprites,
                          "itgflags.def"),
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
-        w->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->hide();
         // Dreamcast proves the canonical widget-vector append here.
         widgets.push_back(w);
 
@@ -711,8 +708,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
             DATA_COMPGEN(0x00660d18, campaignBriefFlagSprites,
                          "itgflags.def"),
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
-        w->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->hide();
         // The second DC append has the same source operation.
         widgets.push_back(w);
     }
@@ -764,9 +760,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                 w->m_width = mx;
                 my = w->getRealHeight();
                 w->m_height = my;
-                w->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                widget::WIDGET_ACTIVE |
-                                    widget::WIDGET_DRAWN);
+                w->hide();
 
                 w = getWidget(MAP_ENABLED_1_ID + drawIndex);
                 mx = w->getRealWidth();
@@ -895,6 +889,8 @@ TCampaignBrief::~TCampaignBrief()
 // decision from the real body and source order.
 int TCampaignBrief::convertID2HelpID(int id) const
 {
+    if (id <= BACKGROUND_ID || id >= 243)
+        return -1;
     if (id >= MAP_CONQUERED_1_ID && id <= MAP_CONQUERED_32_ID)
         return id - MAP_CONQUERED_1_ID;
     if (id >= MAP_ENABLED_1_ID && id <= MAP_ENABLED_32_ID)

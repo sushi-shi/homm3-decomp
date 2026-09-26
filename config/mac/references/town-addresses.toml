@@ -316,6 +316,7 @@ unit = "town"
 mac_section = 0
 mac_offset = 0x1b6f1c
 mac_size = 0x88
+mac_symbol = ".placeInMap__4townFilUc"
 target_sha256 = "dff40ba713028f7798447249c783ecd4c1437e89f3b93748dffbe087fc34174e"
 evidence = "NEW: Resolves heroID with0x486 stride, constructs point from town x/y/z bytes and delegates hero placeInMap0xf2928 with player/reset flags. Span ends at0x1b6fa4; last word0x4e800020; adjacent entries and call-flow boundary inspected."
 

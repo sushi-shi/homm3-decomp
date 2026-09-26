@@ -15,3 +15,12 @@ mac_offset = 0x14bbd0
 mac_size = 0x60
 target_sha256 = "9514db50cbbdd29d7f0a18ae674d0311b9698bde7911bc46573dcfcf31f8717f"
 evidence = "NEW: TQuickCreatureWindow vtable TOC1+0x4c79c then TDialogBox destructor0xa15c0 and optional deallocation; Mac combines deleting ABI in this body, last blr0x14bc2c before quickWindowWait prologue. Full span SHA verified."
+
+[[helpers]]
+unit = "quickinfowindow"
+source_helper = "TQuickCreatureWindow::quickWindowWait"
+mac_section = 0
+mac_offset = 0x14bc30
+mac_size = 0x2c
+target_sha256 = "d882c3af95f516901dd5a6ee4f9fd0fa2137cddfadb27e25d5c841a92b9952b0"
+evidence = "The ordinary TQuickCreatureWindow::quickWindowWait body in src/quickinfowindow.cpp follows its destructor and calls g_windowManager->doQuickView(this). Mac 0x14bc30 loads g_windowManager and calls the reviewed doQuickView at 0x20dd08, ending with BLR at 0x14bc58 before the next prologue at 0x14bc5c. Its sibling quick-hero and quick-town wrappers have the same Mac call shape; Windows folds the identical authored wrappers onto TQuickTownWindow::quickWindowWait at 0x530d30. Address-only until the quickinfowindow Mac compiler profile exposes this source helper."

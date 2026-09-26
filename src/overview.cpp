@@ -238,7 +238,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             g_overWin->addWidget(g_iconWidgetDynamic[slot + curBitmap], -1);
             curBitmap++;
 
-            if (currTown->hasBuilding(HALL_CAPITOL_ID, false))
+            if (currTown->isCapitol())
                 lookup = 1;
             else if (currTown->hasBuilding(HALL_CITY_ID, false))
                 lookup = 2;
@@ -645,7 +645,8 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                         item * 36 + 433, row * 116 + 29,
                         32, 32, rowWidgetId + item + 158,
                         "secsk32.def",
-                        lookup * 3 + currHero->m_skillLevel[lookup] + 2,
+                        lookup * 3
+                            + currHero->getSecondarySkill(TSecondarySkill(lookup)) + 2,
                         0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
                         memError();
@@ -894,9 +895,7 @@ void TOverviewWindow::updateFlaggableIcon(int i)
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
         broadcastMessage(msg);
-        m_flaggableCountWidgets[i]->sendMessage(
-            widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_flaggableCountWidgets[i]->hide();
     } else {
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
@@ -910,9 +909,7 @@ void TOverviewWindow::updateFlaggableIcon(int i)
             formatString(
                 DATA_COMPGEN(0x006755b4, overviewFlaggableCountFormat, "%i"),
                 m_flaggableItems[g_overviewFlaggableTop + i].m_count).c_str());
-        m_flaggableCountWidgets[i]->sendMessage(
-            widget::WIDGET_SET_STATUS,
-            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_flaggableCountWidgets[i]->show();
     }
 }
 
@@ -1179,7 +1176,7 @@ static void decrementBackpackStart(long slot)
 // Complete emits no standalone body: VC6 expands both calls below, preserving
 // the helper while producing the two retail constructor/dialog/destructor
 // sequences. Open-coding either site is the negative source-shape control.
-static inline void showArtifact(hero* currHero,
+static void showArtifact(hero* currHero,
                                  const type_artifact& artifact,
                                  unsigned char rightMouse)
 {
@@ -1281,11 +1278,12 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                 int skill = currHero->getNthSS(codeY - 158);
                 normalDialog(
                     g_sSkillTraits[skill].m_levelNames[
-                        currHero->m_skillLevel[skill] - 1],
+                        currHero->getSecondarySkill(TSecondarySkill(skill)) - 1],
                     rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
                     -1, -1, 20,
-                    skill * 3 + currHero->m_skillLevel[skill] + 2,
+                    skill * 3
+                        + currHero->getSecondarySkill(TSecondarySkill(skill)) + 2,
                     -1, 0, -1, 0, -1, 0);
                 break;
             }
@@ -1767,29 +1765,9 @@ TOverviewWindow::TOverviewWindow()
             continue;
 
         if (current.m_isAbandoned) {
-            int item = m_flaggableItems.size();
-            while (item--) {
-                if (m_flaggableItems[item].m_itemType == 'U')
-                    break;
-            }
-            if (item < 0) {
-                item = m_flaggableItems.size();
-                overview_item_record record = { 'U', 0 };
-                m_flaggableItems.push_back(record);
-            }
-            ++m_flaggableItems[item].m_count;
+            addFlaggableItem('U');
         } else if (current.m_type == mine::MINE_TYPE_LIGHTHOUSE) {
-            int item = m_flaggableItems.size();
-            while (item--) {
-                if (m_flaggableItems[item].m_itemType == 'R')
-                    break;
-            }
-            if (item < 0) {
-                item = m_flaggableItems.size();
-                overview_item_record record = { 'R', 0 };
-                m_flaggableItems.push_back(record);
-            }
-            ++m_flaggableItems[item].m_count;
+            addFlaggableItem('R');
         }
     }
 
@@ -1798,19 +1776,13 @@ TOverviewWindow::TOverviewWindow()
         if (current.getOwner() != localPlayer)
             continue;
 
-        current.m_genClass = 17;
-        int itemType = current.m_genType;
-        int item = m_flaggableItems.size();
-        while (item--) {
-            if (m_flaggableItems[item].m_itemType == itemType)
-                break;
+        if (current.m_genClass == CREATURE_GENERATOR_1) {
+            addFlaggableItem(current.m_genType);
+        } else if (current.m_genType == 0) {
+            addFlaggableItem('P');
+        } else if (current.m_genType == 1) {
+            addFlaggableItem('Q');
         }
-        if (item < 0) {
-            item = m_flaggableItems.size();
-            overview_item_record record = { itemType, 0 };
-            m_flaggableItems.push_back(record);
-        }
-        ++m_flaggableItems[item].m_count;
     }
 
     for (i = 0; i < g_game->m_garrisons.size(); ++i) {
@@ -1820,46 +1792,16 @@ TOverviewWindow::TOverviewWindow()
 
         NewmapCell* cell = g_game->m_worldMap.cell(
             current.m_mapX, current.m_mapY, current.m_mapZ);
-        int item;
         if (cell->m_objectIndex == 0) {
-            item = m_flaggableItems.size();
-            while (item--) {
-                if (m_flaggableItems[item].m_itemType == 'S')
-                    break;
-            }
-            if (item < 0) {
-                item = m_flaggableItems.size();
-                overview_item_record record = { 'S', 0 };
-                m_flaggableItems.push_back(record);
-            }
+            addFlaggableItem('S');
         } else {
-            item = m_flaggableItems.size();
-            while (item--) {
-                if (m_flaggableItems[item].m_itemType == 'T')
-                    break;
-            }
-            if (item < 0) {
-                item = m_flaggableItems.size();
-                overview_item_record record = { 'T', 0 };
-                m_flaggableItems.push_back(record);
-            }
+            addFlaggableItem('T');
         }
-        ++m_flaggableItems[item].m_count;
     }
 
     playerData& player = g_game->m_players[localPlayer];
     for (i = 0; i < player.m_shipyards.size(); ++i) {
-        int item = m_flaggableItems.size();
-        while (item--) {
-            if (m_flaggableItems[item].m_itemType == 'W')
-                break;
-        }
-        if (item < 0) {
-            item = m_flaggableItems.size();
-            overview_item_record record = { 'W', 0 };
-            m_flaggableItems.push_back(record);
-        }
-        ++m_flaggableItems[item].m_count;
+        addFlaggableItem('W');
     }
 }
 
@@ -1872,6 +1814,24 @@ TOverviewWindow::~TOverviewWindow()
         if (*it)
             delete *it;
     }
+}
+
+// Mac retains this method at code 0:139ee4 and the constructor calls it
+// eight times for mine, generator, garrison and shipyard records. Windows
+// expands the lookup and insertion in the constructor.
+void TOverviewWindow::addFlaggableItem(int itemType)
+{
+    int item = m_flaggableItems.size();
+    while (item--) {
+        if (m_flaggableItems[item].m_itemType == itemType)
+            break;
+    }
+    if (item < 0) {
+        item = m_flaggableItems.size();
+        overview_item_record record = { itemType, 0 };
+        m_flaggableItems.push_back(record);
+    }
+    ++m_flaggableItems[item].m_count;
 }
 
 // Dreamcast proves three independent source statements and the exact
@@ -2047,7 +2007,7 @@ void TOverviewWindow::doRollover(int codeY)
                     int skill = currHero->getNthSS(nth);
                     sprintf(g_text, g_heroScreen[21],
                             g_secondarySkillLevels[
-                                currHero->m_skillLevel[skill] - 1],
+                                currHero->getSecondarySkill(TSecondarySkill(skill)) - 1],
                             g_sSkillTraits[skill].m_name);
                 }
                 break;
@@ -2404,6 +2364,25 @@ void TOverviewWindow::doRollover(int codeY)
     updateRollover(g_text);
 }
 
+// Mac keeps this helper at 0x13ac30 between doRollover and windowHandler;
+// windowHandler calls it for the first two artifact pages in each of four rows.
+// Windows expands those calls into the eight case arms. The Mac callers pass
+// each row's first widget id, but the retained body does not use that argument.
+// CodeWarrior emits the 116-byte helper and all eight calls; its current body
+// still differs in global-load order, so this is a source lead, not a Mac match.
+void TOverviewWindow::setHeroArtifactPage(int row, int, int pageId)
+{
+    if (g_overviewType == 0) {
+        if (pageId == OVERVIEW_HERO_ARTIFACT_PAGE_1_ID)
+            g_overviewHeroArtifactPage[g_overviewTop[0] + row] =
+                OVERVIEW_HERO_EQUIPPED_PAGE_1;
+        else
+            g_overviewHeroArtifactPage[g_overviewTop[0] + row] =
+                OVERVIEW_HERO_EQUIPPED_PAGE_2;
+        g_game->setupNewOverviewType(0, 1);
+    }
+}
+
 // Dreamcast fixes the base-handler protocol, ProcessIconSelect boundary,
 // rollover path, static-helper calls and high-level switch nesting. Complete
 // independently fixes the four 200-id hero rows, three artifact-page buttons
@@ -2458,18 +2437,12 @@ int TOverviewWindow::windowHandler(message& msg)
                 break;
 
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[g_overviewTop[0]] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_1;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(0, OVERVIEW_ROW_FIRST_ID,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
                 break;
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[g_overviewTop[0]] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_2;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(0, OVERVIEW_ROW_FIRST_ID,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
                 break;
 
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
@@ -2484,21 +2457,13 @@ int TOverviewWindow::windowHandler(message& msg)
                 break;
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[
-                        g_overviewTop[0] + 1] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_1;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(1, OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
                 break;
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[
-                        g_overviewTop[0] + 1] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_2;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(1, OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
                 break;
 
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
@@ -2515,21 +2480,13 @@ int TOverviewWindow::windowHandler(message& msg)
                 break;
             case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[
-                        g_overviewTop[0] + 2] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_1;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(2, OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
                 break;
             case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[
-                        g_overviewTop[0] + 2] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_2;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(2, OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
                 break;
 
             case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
@@ -2546,21 +2503,13 @@ int TOverviewWindow::windowHandler(message& msg)
                 break;
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[
-                        g_overviewTop[0] + 3] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_1;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(3, OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
                 break;
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                if (g_overviewType == 0) {
-                    g_overviewHeroArtifactPage[
-                        g_overviewTop[0] + 3] =
-                        OVERVIEW_HERO_EQUIPPED_PAGE_2;
-                    g_game->setupNewOverviewType(0, 1);
-                }
+                setHeroArtifactPage(3, OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
                 break;
 
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE

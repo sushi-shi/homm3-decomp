@@ -1,5 +1,14 @@
 # Reviewed Mac address identities; unbound compiler names are intentionally omitted.
 
+[[helpers]]
+source_helper = "type_text_slider::type_text_slider"
+unit = "textscroller"
+mac_section = 0x0
+mac_offset = 0x25b0c4
+mac_size = 0x80
+target_sha256 = "e49695e43959d16ccae1502ea32b1f2aa334413a79577784850a526d23e5fb17"
+evidence = "The scroller constructor calls this private slider constructor once; it forwards ten arguments to slider::slider at 0x189360, stores the private vtable, and sets m_owner at +0x68. The full body returns at 0x25b140 before the close override at 0x25b144. No standalone Windows VA is established."
+
 [[functions]]
 retail_va = 0x5b9fa0
 unit = "textscroller"

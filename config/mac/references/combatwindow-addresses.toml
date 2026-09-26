@@ -166,7 +166,43 @@ evidence = "NEW: Draw chat text calls chat draw0x211a78 then parent virtual draw
 retail_va = 0x4732f0
 unit = "combatwindow"
 mac_section = 0x0
+mac_offset = 0x813b0
+mac_size = 0x44
+target_sha256 = "33d9d29e17ae3718d36fb4c5d66a3898ec007bb0fda944353c0759dbafc3002f"
+evidence = "The source drawWindow calls heroWindow::drawWindow, then drawChatEdit. Mac 0x813b0 calls those exact retained bodies at 0x20b58c and 0x81294 in order; the former 0x81294 assignment was the adjacent drawChatEdit helper. Prior onChatActivate BLR at 0x813ac; own BLR at 0x813f0 precedes a generated deleting destructor at 0x813f4."
+
+[[helpers]]
+source_helper = "TCombatWindow::convertID2HelpID"
+unit = "combatwindow"
+mac_section = 0
+mac_offset = 0x80894
+mac_size = 0xe0
+target_sha256 = "b79cb783349d9df7b666febf523206d1c80e3a3d8041bf3fe89fe803c8880dc5"
+evidence = "Mac processRightSelect calls this retained widget-ID switch at 0x80988. Its 2001..2010 and 2300/0x7802 cases return help indices 0..10, including shared index 5 for scroll arrows, matching the canonical inline helper expanded in Windows. Destructor BLR at 0x80890 precedes entry; final BLR at 0x80970 precedes processRightSelect."
+
+[[helpers]]
+source_helper = "TCombatWindow::setRollover"
+unit = "combatwindow"
+mac_section = 0
+mac_offset = 0x80a28
+mac_size = 0x4c
+target_sha256 = "1cd71832e78f021c4b9bff328f98143620e69465badbcecd21713049908dd8bc"
+evidence = "handleWidgetHover calls this retained helper twice; showMessages and combatMessage also call it. It checks control subwindow +0x68 and chat-edit focus +0x61, then invokes the control subwindow's virtual rollover setter. The Dreamcast-proven inline source helper expands in Windows. Prior processRightSelect BLR at 0x80a24; own BLR at 0x80a70 precedes handleWidgetHover."
+
+[[helpers]]
+source_helper = "TCombatWindow::drawChatEdit"
+unit = "combatwindow"
+mac_section = 0
 mac_offset = 0x81294
 mac_size = 0x84
 target_sha256 = "548f3de095c96a988ba49b304a4d20370b01efc9f5c65778e54ae816b7154bd2"
-evidence = "NEW: DrawWindow invokes active child/subwindow drawing and optional update0x20df2c. End0x81318; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+evidence = "Mac drawWindow at 0x813b0 calls this retained helper after heroWindow::drawWindow. It checks the chat-edit pointer +0x48 and focus flag +0x61, draws the widget virtually and optionally updates its rectangle through 0x20df2c. The canonical ordinary source helper expands in Windows. Prior drawChatText BLR at 0x81290; own BLR at 0x81314 precedes onChatActivate."
+
+[[helpers]]
+source_helper = "TCombatWindow::onChatActivate"
+unit = "combatwindow"
+mac_section = 0
+mac_offset = 0x81318
+mac_size = 0x98
+target_sha256 = "2112825642920f250888896a7c1fc2916ea50314c041d96b47de25e8661948a6"
+evidence = "sendChat and escape handling call this retained activation helper. It sends widget status 5 or 6 to the control subwindow rollover widget and redraws the subwindow in the deactivate arm, matching the canonical ordinary helper expanded in Windows. Prior drawChatEdit BLR at 0x81314; own BLR at 0x813ac precedes drawWindow."

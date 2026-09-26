@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <bitset>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -39,7 +40,20 @@ static TSplitWindow* g_splitWindow;
 // Runtime-loaded combat-stat description lines. Their storage addresses and
 // uses are retail-proven here; the text-resource loader owns the definitions.
 
-inline void TSplitWindow::updateSplitArmy(unsigned char update)
+VA(0x004496a0, 0x16)  // dc 0x4dae4
+unsigned char armyGroup::hasCreatures() const
+{
+    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (m_armies[i] != CREATURE_NONE)
+            return 1;
+    }
+    return 0;
+}
+
+// Dreamcast armygrp.cpp:62 and Mac code0+0x564e8 place this standalone
+// helper between hasCreatures and splitSliderCallback. The Mac callback,
+// splitArmy and windowHandler retain calls; VC6 expands the same-TU calls.
+void TSplitWindow::updateSplitArmy(unsigned char update)
 {
     message msg;
     msg.m_id = MESSAGE_WIDGET;
@@ -57,16 +71,6 @@ inline void TSplitWindow::updateSplitArmy(unsigned char update)
 
     if (update)
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-}
-
-VA(0x004496a0, 0x16)  // dc 0x4dae4
-unsigned char armyGroup::hasCreatures() const
-{
-    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-        if (m_armies[i] != CREATURE_NONE)
-            return 1;
-    }
-    return 0;
 }
 
 VA(0x004496c0, 0xC3)  // dc 0x4db88
@@ -90,7 +94,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
         0, 0, m_width, m_height, 0, "GPuCrDiv.pcx", 0x800));
 
     sprintf(g_text,
-            g_generalText->getText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT),
+            (*g_generalText)[GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER_FORMAT],
             g_creatureTypeTraits[m_creature].m_pluralName);
     m_widgets.push_back(new textWidget(
         0, 20, m_width, 30, g_text, "bigfont.fnt", font::HEADING,
@@ -226,8 +230,8 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
 }
 
 // E:\gamedcs\armygrp.cpp:208. Retail /Ob2 expands the sole call below and
-// /OPT:REF removes the out-of-line copy.
-inline void TSplitWindow::setRolloverText(int codeY)
+// /OPT:REF removes the out-of-line copy. Mac retains it at code0+0x5751c.
+void TSplitWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
     case DIALOG_RETURN_SPLIT_CANCEL:
@@ -554,15 +558,13 @@ int armyGroup::load(TAbstractFile* infile)
 VA(0x0044aa80, 0x1F)  // dc 0x4eab8
 armyGroup::armyGroup()
 {
-    memset(m_armies, 0xFF, sizeof(m_armies));
-    memset(m_numTroops, 0, sizeof(m_numTroops));
+    initialize();
 }
 
 VA(0x0044aaa0, 0x5A)  // dc 0x4ead0
 armyGroup::armyGroup(TCreatureType type, int amount)
 {
-    memset(m_armies, 0xFF, sizeof(m_armies));
-    memset(m_numTroops, 0, sizeof(m_numTroops));
+    initialize();
     for (short i = 0;
             i < ARMY_GROUP_SLOT_COUNT && amount > 0; ++i) {
         m_armies[i] = type;
@@ -636,11 +638,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[m_armies[i]];
         if (traits.m_attributes & g_ctaSiegeWeapon)
             continue;
-        int alignment;
-        if (g_game->m_gameVersion == 0 && isBaseElemental(m_armies[i]))
-            alignment = -1;
-        else
-            alignment = traits.m_townType;
+        int alignment = g_game->getAlignment(m_armies[i]);
         alignments[alignment + 1]++;
     }
     int count = 0;
@@ -859,47 +857,43 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
         int type = m_armies[index];
-        if (g_game->m_gameVersion != 0 || !isBaseElemental(type)) {
-            do {
-                switch (g_creatureTypeTraits[type].m_townType) {
-                case TOWN_CASTLE:
-                case TOWN_RAMPART:
-                case TOWN_TOWER:
-                    morale++;
-                    break;
-                case TOWN_INFERNO:
-                case TOWN_NECROPOLIS:
-                case TOWN_DUNGEON:
-                    morale--;
-                    break;
-                case TOWN_STRONGHOLD:
-                case TOWN_FORTRESS:
-                case TOWN_CONFLUX:
-                    continue;
-                }
-            } while (0);
-        }
+        do {
+            switch (g_game->getAlignment(type)) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+                morale++;
+                break;
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                morale--;
+                break;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                continue;
+            }
+        } while (0);
     }
     do {
         if (mode == MAGIC_TERRAIN_EVIL_FOG) {
             int type = m_armies[index];
-            if (g_game->m_gameVersion != 0 || !isBaseElemental(type)) {
-                switch (g_creatureTypeTraits[type].m_townType) {
-                case TOWN_CASTLE:
-                case TOWN_RAMPART:
-                case TOWN_TOWER:
-                    morale--;
-                    break;
-                case TOWN_INFERNO:
-                case TOWN_NECROPOLIS:
-                case TOWN_DUNGEON:
-                    morale++;
-                    break;
-                case TOWN_STRONGHOLD:
-                case TOWN_FORTRESS:
-                case TOWN_CONFLUX:
-                    continue;
-                }
+            switch (g_game->getAlignment(type)) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+                morale--;
+                break;
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                morale++;
+                break;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                continue;
             }
         }
     } while (0);
@@ -948,26 +942,24 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
         int creature = m_armies[index];
-        if (g_game->m_gameVersion != 0 || !isBaseElemental(creature)) {
-            do {
-                switch (g_creatureTypeTraits[creature].m_townType) {
-                case TOWN_CASTLE:
-                case TOWN_RAMPART:
-                case TOWN_TOWER:
-                case TOWN_INFERNO:
-                case TOWN_NECROPOLIS:
-                case TOWN_DUNGEON:
-                    continue;
-                case TOWN_STRONGHOLD:
-                case TOWN_FORTRESS:
-                case TOWN_CONFLUX:
-                    luck += 2;
-                    break;
-                default:
-                    break;
-                }
-            } while (0);
-        }
+        do {
+            switch (g_game->getAlignment(creature)) {
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
+                continue;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                luck += 2;
+                break;
+            default:
+                break;
+            }
+        } while (0);
     }
     if (m_armies[index] == CREATURE_HALFLING && luck < 1)
         luck = 1;
@@ -1172,10 +1164,10 @@ std::string armyGroup::getMoraleDescription(
 
     // Complete terrain arms: mutate the incoming morale home, then subtract
     // currentMorale at the tail, as proved by retail 0x44b960.
+    int alignment = g_game->getAlignment(creature);
     {
-        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
-            && (g_game->m_gameVersion != 0 || !isBaseElemental(creature))) {
-            switch (g_creatureTypeTraits[creature].m_townType) {
+        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND && alignment != -1) {
+            switch (alignment) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -1201,9 +1193,8 @@ std::string armyGroup::getMoraleDescription(
             result += g_moraleInfo[38];
             goto moraleTerrainDone;
         }
-        if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
-            && (g_game->m_gameVersion != 0 || !isBaseElemental(creature))) {
-            switch (g_creatureTypeTraits[creature].m_townType) {
+        if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG && alignment != -1) {
+            switch (alignment) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -1469,11 +1460,7 @@ TTerrainType armyGroup::getNativeTerrain() const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        int alignment;
-        if (g_game->m_gameVersion == 0 && isBaseElemental(m_armies[i]))
-            alignment = -1;
-        else
-            alignment = g_creatureTypeTraits[m_armies[i]].m_townType;
+        int alignment = g_game->getAlignment(m_armies[i]);
         TTerrainType terrain = townManager::getNativeTerrain(alignment);
         if (native != TERRAIN_NONE) {
             if (terrain != native)

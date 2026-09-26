@@ -164,7 +164,7 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
         case WM_CLOSE:
             if (window == g_hwndApp && gameUnsaved()) {
                 videoPause();
-                normalDialog(g_generalText->getText(GENERAL_TEXT_QUIT), 2,
+                normalDialog((*g_generalText)[GENERAL_TEXT_QUIT], 2,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 videoResume();
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
@@ -222,6 +222,8 @@ void appExit()
     cleanUpMenus();
 }
 
+// Mac retains the shared event pump at code 0+0x20f90c. Its event polling
+// uses Mac OS services; this Windows body pumps native window messages.
 VA(0x004f7fb0, 0xAA)  // dc 0xe7fd0
 void process1WindowsMessage()
 {

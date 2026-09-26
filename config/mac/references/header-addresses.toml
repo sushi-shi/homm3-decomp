@@ -219,3 +219,13 @@ mac_offset = 0x5bcc
 mac_size = 0x4c
 target_sha256 = "dd7f42d3cd3790eb035c4e6e27b8198a764bd6e813e14ad7f71ad5c4b6b1dfa6"
 evidence = "Text widget constructor0x1b149c calls widget ctor, constructs MSL string at+0x30, loads font0x153944 and installs vtable through TOC1+0x110c. Its virtual setText slot13(+0x3c) resolves0x5bcc; body strlen then MSL assign0x445c on this+0x30; BLR0x5c14."
+
+[[helpers]]
+source_helper = "game::getNumAllies"
+unit = "game"
+source = "include/game.h"
+mac_section = 0
+mac_offset = 0x1b840c
+mac_size = 0x138
+target_sha256 = "b7447f045c6a8808a665e75b1adbcfb2af1419036d84554427b091f62512e5c1"
+evidence = "TTownGateWindow constructor calls this body at 0x1b750c. It rejects player indices outside 0..7, loads the signed team byte through game::getTeam and counts matching team bytes across all eight slots. BLR at 0x1b8540; the town-gate destructor starts at 0x1b8544. The ordinary header helper is already the Windows source call and VC6 expands it."

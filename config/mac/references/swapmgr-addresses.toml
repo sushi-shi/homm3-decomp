@@ -197,3 +197,102 @@ mac_offset = 0x1a9bcc
 mac_size = 0x4c
 target_sha256 = "25df9243cff8eb6b3ac90aeb223342fef5055590d41e62ff5e2f4ea6c095eeb9"
 evidence = "IsLeftHero compares first hero owner with game local-player position via0xe6cc4; paired isRightHero0x1a9c18 follows."
+
+[[helpers]]
+source_helper = "swapManager::drawSwapWin"
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a6174
+mac_size = 0x64
+target_sha256 = "3ce1eeae025bb57e8908407a793bdcd2feb7874bb505a9d96948c9d3ef6e0f9a"
+evidence = "Bounded PowerPC body loads m_parent at +0x38, virtually draws the window, then calls heroWindowManager::updateScreen(0,0,800,600); direct calls from handleArtifactClick and other swap-manager handlers. Dreamcast swapmgr.cpp:655 names the same ordinary draw helper."
+
+[[helpers]]
+source_helper = "swapManager::isRightHero"
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a9c18
+mac_size = 0x4c
+target_sha256 = "e0c91d1a16919bd85b7e86ee7ae83e8befa90cd1dbcf6cade27b67ea860074b2"
+evidence = "Follows paired isLeftHero, compares m_heroes[1]->m_owner with game::getLocalPlayerGamePos, and is called from main and onWidgetDeselect; Dreamcast names the same inline helper."
+
+[[helpers]]
+source_helper = "swapManager::viewMon"
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a8cd4
+mac_size = 0xa0
+target_sha256 = "0577803f5ef9cf6cda6cc7aad183513191a6b9c2b80da1342cfabb730c8a3fc9"
+evidence = "handleMonster calls this retained helper; it selects the source hero, asks its army for the count, then calls game::viewArmy with the source and destination slot. BLR at 0x1a8d70; swapMons begins at 0x1a8d74. Windows expands the canonical viewMon call in handleMonster."
+
+[[helpers]]
+source_helper = "swapManager::getOtherHero"
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a9c64
+mac_size = 0x40
+target_sha256 = "23b8f6dbe827a3a7369f6c13a56a25f33cc66c543a5f64053373bc6173569c44"
+evidence = "Calls isLeftHero and returns m_heroes[1] when true, m_heroes[0] otherwise; four retained calls from main and onWidgetDeselect match the authored source calls. Dreamcast names the same inline helper."
+
+[[helpers]]
+source_helper = "swapManager::canModHero"
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a9ca4
+mac_size = 0x110
+target_sha256 = "373b5b3fd8278e6c9d6c8ebeaa00f8fc411daf77734dfab663f334d8b3a6efe3"
+evidence = "Tests hot-seat protocol, hero owner teams, human trade and local owner, matching the ordinary source helper; two retained calls in artifact handling."
+
+[[helpers]]
+source_helper = "swapManager::exitSwapManager"
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a8714
+mac_size = 0x18
+target_sha256 = "3f8c190e1fadd9fe8c9e0d2b06faa9f469cb471a7f56be68f1cb19348714c3d1"
+evidence = "Writes MESSAGE_EXECUTIVE and EXECUTIVE_COMMAND_RETURN_RESULT to the message and returns MESSAGE_DISPATCH_FORWARD; main calls it at both exits."
+
+[[helpers]]
+source_helper = "swapManager::onChatUpdate"
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a91c4
+mac_size = 0x34
+target_sha256 = "edc04a52fe6de8e39973bfe82090c261e08a3816c811f7cc0e87b0b2b0d330ca"
+evidence = "Calls drawSwapWin and update in source order after the chat refresh; Dreamcast names the same inline helper."
+
+[[helpers]]
+source_helper = "swapManager::onReceiveFromAlly"
+unit = "swapmgr"
+mac_section = 0x0
+mac_offset = 0x1a9db4
+mac_size = 0x90
+target_sha256 = "69e6e29a81e673f817d3de6c1e3465ebaeef1a93547aef4f403d079a9390d1e0"
+evidence = "Clears m_givingToAlly, updates arrows and swap window, constructs CGiveMeStuffMsg, then sends it to getOtherHero()->m_owner; onWidgetDeselect calls this ordinary helper."
+
+[[helpers]]
+source_helper = "swapManager::updateArtifactWidget"
+unit = "swapmgr"
+mac_section = 0
+mac_offset = 0x1a69dc
+mac_size = 0xc4
+target_sha256 = "480972bfcf7b5190222cec98ff8d978cc4a8387c18ffc817a93e7b92be164a93"
+evidence = "Dreamcast swapmgr.cpp:914 names the inline helper and updateSlot calls it four times. Mac constructs MESSAGE_WIDGET with the artifact widget id, broadcasts an icon frame for occupied slots, then sets or clears drawn status via heroWindow::broadcastMessage 0x20b3e8. Four retained calls from updateSlot target this body; final BLR at 0x1a6a9c precedes updateSlot at 0x1a6aa0."
+
+[[helpers]]
+source_helper = "swapManager::updateAllSlots"
+unit = "swapmgr"
+mac_section = 0
+mac_offset = 0x1a6c1c
+mac_size = 0x70
+target_sha256 = "482bd05683735f3b57ecc339982de859ad85eec72984a3f9a5561363f22ca7e6"
+evidence = "Mac walks two heroes and 19 artifact slots and calls updateSlot 0x1a6aa0 for each. handleBackpackClick calls this retained body twice, and update calls it once; Windows expands the authored loop. Final BLR at 0x1a6c88 precedes updateBackpackItem."
+
+[[helpers]]
+source_helper = "swapManager::updateBackpackItem"
+unit = "swapmgr"
+mac_section = 0
+mac_offset = 0x1a6c8c
+mac_size = 0x108
+target_sha256 = "73e062e86709ba31436dea834cfc2e75773cba686a37eddc5e8839c811d4ea79"
+evidence = "Dreamcast swapmgr.cpp:977 names UpdateBackpackItem and updateBackpack calls it in the five-item loop. Mac reads hero backpack entry, computes hero*5+i+0x59 widget id, and broadcasts occupied/empty widget messages. Retained call from updateBackpack at 0x1a6e10; final BLR at 0x1a6d90 precedes updateBackpack."

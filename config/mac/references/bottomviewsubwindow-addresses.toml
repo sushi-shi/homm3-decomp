@@ -1,5 +1,14 @@
 # Reviewed address identities; source owns names and compiler symbols remain unbound.
 
+[[helpers]]
+source_helper = "type_bottom_view_window::type_bottom_view_window"
+unit = "bottomviewsubwindow"
+mac_section = 0
+mac_offset = 0x5f188
+mac_size = 0x68
+target_sha256 = "a8ecb23c3a4199c2a78e14a888fdcc016be2bfb433b661c1414c92cc52ddbaa2"
+evidence = "Seven derived bottom-view constructors call this retained Mac base constructor. It calls TSubWindow's default constructor, stores its own vptr, and initializes the 614,400,176,166 rectangle with the parent pointer. The same canonical source helper already exists in bottomviewsubwindow.cpp and expands inside Windows constructors. Final BLR at 0x5f1ec precedes the base destructor."
+
 [[functions]]
 retail_va = 0x450d50
 unit = "bottomviewsubwindow"
@@ -144,11 +153,20 @@ mac_size = 0x60
 target_sha256 = "dcb67896012248e7f87b6e4d5269cc14d9aa83be980c17b7cea68e5078b1040a"
 evidence = "EnemyTurn RTTI data1:0x2b180 selects descriptor1:0x6ba0 -> integrated deleting destructor calling base0x5f1f0; complete bounded PowerPC span."
 
-[[functions]]
-retail_va = 0x4536f0
+[[helpers]]
+source_helper = "TBottomViewEnemyTurn::sumMobility"
 unit = "bottomviewsubwindow"
 mac_section = 0x0
 mac_offset = 0x622d4
 mac_size = 0x98
 target_sha256 = "88c23e43cd70ec15287595c224c9b6a0cf880ef1f196feb3daa03ac37e292f54"
-evidence = "EnemyTurn animate calls GameTime0x105be0 and advances view frame; class RTTI animate slot descriptor1:0x6ba8; complete bounded PowerPC span."
+evidence = "EnemyTurn constructor calls this retained helper with the player index; it sums hero mobility from g_game and returns the result stored in m_mobility."
+
+[[functions]]
+retail_va = 0x4536f0
+unit = "bottomviewsubwindow"
+mac_section = 0x0
+mac_offset = 0x6236c
+mac_size = 0x2ec
+target_sha256 = "389991ebed265e67cbacdf4917f92d3c8524e2edfccd235ef71abdcad6aa741b"
+evidence = "EnemyTurn animate reads lastStepTime, calls GameTime, updates the view frame and ends at 0x62658 before the deleting destructor. RTTI animate slot descriptor1:0x6ba8 corroborates the entry."

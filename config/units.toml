@@ -11,6 +11,9 @@ includes = [
 ]
 analysis_profile = "game_o2_mt_gr_windows"
 
+[header_comparisons]
+"0x0042b9e0" = "town"
+
 [flags]
 
 zlib_o2_ml_gr_c_windows = [

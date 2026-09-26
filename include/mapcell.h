@@ -1369,6 +1369,11 @@ public:
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
     int readSeerData(TAbstractFile* infile, CObject* seerObject);
     int readScholarData(TAbstractFile* infile, CObject* scholarObject);
+    void readHeroPlaceholderData(TAbstractFile* infile, CObject* object);
+    void readRandomDwellingData(TAbstractFile* infile, CObject* object);
+    void readRandomDwellingLevelData(TAbstractFile* infile, CObject* object);
+    void readRandomDwellingFactionData(TAbstractFile* infile, CObject* object);
+    void readQuestGuardData(TAbstractFile* infile, CObject* object);
     // The map-object dispatcher. `ret 0xc`: three arguments, and the third
     // is the map version every version-sensitive reader below takes - it is
     // forwarded verbatim to readTownData, readHeroData, readEventData,
@@ -1734,12 +1739,18 @@ inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
     m_wagonInfo.m_visitedBits = 0;
 }
 
+// DC MapCell.h:1186..1189 assigns artifact, full, has_artifact, visited_bits.
+// Mac randomizeWagon 0xd67f4..0xd6820 expands the same four field stores.
+// These named stores retain the exact 0x4c2390 body; the packed-mask
+// spelling made VC6 expand every use and omit the standalone helper.
 // E:\gamedcs\MapCell.h:1185, dc 0xbcb3c
 VA(0x004c2390, 0x21)
 inline void ExtraInfoUnion::setWagon(int artifact)
 {
-    m_value = (m_value & 0xfe00601f)
-        | ((artifact & 0x3ff) << 15) | 0x6000;
+    m_wagonInfo.m_artifact = artifact;
+    m_wagonInfo.m_full = 1;
+    m_wagonInfo.m_hasArtifact = 1;
+    m_wagonInfo.m_visitedBits = 0;
 }
 
 inline void ExtraInfoUnion::emptyTomb() { m_tombInfo.m_hasArtifact = 0; }

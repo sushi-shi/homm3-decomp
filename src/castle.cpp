@@ -251,13 +251,14 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
             g_castleWindow->broadcastMessage(msg);
             msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             msg.m_extra = state;
+            g_castleWindow->broadcastMessage(msg);
         } else {
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = CASTLE_BUILD_BUTTON_FIRST_ID + i;
             msg.m_extra = widget::WIDGET_DRAWN;
+            // Mac retains this clear-status call at 0:0x6d498.
+            g_castleWindow->broadcastMessage(msg);
         }
-        g_castleWindow->broadcastMessage(msg);
-
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = CASTLE_BUILD_FRAME_FIRST_ID + i;
         if (!state)
@@ -356,7 +357,8 @@ int THallWindow::windowHandler(message& msg)
             case DWELLING_5_UPG_ID:
             case DWELLING_6_UPG_ID:
                 if (g_game->townAlreadyBuiltOn(g_townManager->m_townToView->m_id)) {
-                    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TOWN_ALREADY_BUILT_THIS_TURN));
+                    // Dreamcast castle.cpp:654 names TTextResource::operator[].
+                    strcpy(g_text, (*g_generalText)[GENERAL_TEXT_TOWN_ALREADY_BUILT_THIS_TURN]);
                 } else if (g_townManager->m_townToView->hasBuilding(building, false)) {
                     sprintf(g_text, g_hallInfo[4],
                             getBuildingName(g_townManager->m_townToView->m_type, building));

@@ -83,9 +83,10 @@ public:
     // loads in VC6; ordinary integer accessors retain the observed boundary.
     // Their role names are provisional: this editor type is Complete-only.
     int getWidth() const { return m_imageInfo.m_objectSize.m_x; }
-    // Complete-only query hypothesis: non-const subscript uses VC6's
-    // reference proxy, preserving the checked bitset call in mine placement
-    // at 0x545a01. A const query expands test and retains only _Xran.
+    // Project name for the Complete-only terrain query. The non-const
+    // subscript uses VC6's reference proxy, preserving the checked bitset
+    // call in mine placement at 0x545a01. A const query expands test and
+    // retains only _Xran.
     bool isRecommendedTerrain(int terrain)
     {
         return m_recommendedTerrainMask[terrain];

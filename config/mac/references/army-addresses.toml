@@ -720,3 +720,237 @@ mac_offset = 0x54de4
 mac_size = 0x5c
 target_sha256 = "23685ff3634b64a5034418c8d6a4aa8f64e98267d5a697a2e332a681104216db"
 evidence = "NEW: Magic Mirror spell row or creature134 gate, returns mirror effect strength. End0x54e40; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[helpers]]
+source_helper = "groupHasMelee"
+unit = "army"
+mac_section = 0
+mac_offset = 0x54034
+mac_size = 0x134
+target_sha256 = "cdfff1e292862e4d46582f76386cad8e049892c1604bf2fae726d02ad4a93693"
+evidence = "spellIsValidOnTarget calls this source helper at 0x54408. It scans the selected army group in reverse, rejects cannotAttack, calls army::canShoot at 0x54120 and returns true for a non-shooter; BLR 0x54164 and next shooter helper 0x54168. Dreamcast names group_has_melee."
+
+[[helpers]]
+source_helper = "groupHasShooters"
+unit = "army"
+mac_section = 0
+mac_offset = 0x54168
+mac_size = 0x134
+target_sha256 = "5a730a3d9411e7bde063e0c34c3abe934ab55dfdcf33f3ff6705a0776765ab56"
+evidence = "spellIsValidOnTarget calls this source helper at 0x54414. It scans the selected army group in reverse, rejects cannotAttack, calls army::canShoot at 0x54254 and returns true for a shooter; BLR 0x54298 and next dragon helper 0x5429c. Dreamcast names group_has_shooters."
+
+[[helpers]]
+source_helper = "groupHasDragons"
+unit = "army"
+mac_section = 0
+mac_offset = 0x5429c
+mac_size = 0x54
+target_sha256 = "fa46fb2f9b74143bdcfdc2cd78d2d54fef35a44858ebb6c5f4c643a75cfb9fef"
+evidence = "spellIsValidOnTarget calls this source helper at 0x543fc. It scans the selected army group backward, tests the creatureKing1 attribute bit at +0x84 and returns one for a dragon; BLR 0x542ec and next spell-validity worker 0x542f0. Dreamcast names group_has_dragons."
+
+[[helpers]]
+source_helper = "army::topY"
+unit = "army"
+mac_section = 0
+mac_offset = 0x52780
+mac_size = 0x24
+target_sha256 = "5e05fb55b318709189927d8f04d55ac361b2420bb3f804c2e8b5bbf57495d836"
+evidence = "drawToBuffer calls this retained top-edge helper at 0x4a62c. It reads the cell refY by m_gridIndex and subtracts m_imageHeight; BLR 0x527a0. Adjacent midY and bottomY bodies fix source order."
+
+[[helpers]]
+source_helper = "army::bottomY"
+unit = "army"
+mac_section = 0
+mac_offset = 0x527a4
+mac_size = 0x1c
+target_sha256 = "bfabd8ab760c3b158f8d1ffc366f44263c4543f8e69623fbc79cf966437e33cd"
+evidence = "drawToBuffer calls this retained bottom-edge helper at 0x4a5b4. It returns the cell refY indexed by m_gridIndex without height adjustment; BLR 0x527bc. Adjacent topY and midX bodies fix source order."
+
+[[helpers]]
+source_helper = "army::frontX"
+unit = "army"
+mac_section = 0
+mac_offset = 0x52808
+mac_size = 0x6c
+target_sha256 = "1095d1b605054a7f41bda3cfebe78b88e3305c044fc5c4189a04f72cc9c739cf"
+evidence = "drawToBuffer calls this retained front-edge helper at 0x4a63c. It computes cropped x plus width minus 196 from m_stdIcon, then subtracts or adds that offset to cell refX according to facing; BLR 0x52870. Next getSecondGridIndex 0x52874."
+
+[[helpers]]
+source_helper = "army::damageEnemy"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4ffb4
+mac_size = 0x98
+target_sha256 = "95430868268328a107672de23b4f0382041869d56c67d8ca8341dbf7e9f15bc7"
+evidence = "Ranged and melee attack callers retain this helper at 0x4ffb4. It checks the enemy, computes base damage, calls adjustDamage at 0x4fe80 and enemy::damage at 0x5004c, writes both output pointers, clears luck status and returns fire damage. The canonical army.cpp definition is explicit inline; Windows expands it in callers. Final BLR at 0x50048; next entry 0x5004c."
+
+[[helpers]]
+source_helper = "army::computeDefenderDamageBonuses"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4fab8
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "getEstimatedDamage and adjustDamage call this retained leaf at 0x4fab8; it returns zero for every baseDamage, matching the canonical explicit-inline source definition. Windows expands the constant return into callers. Final BLR at 0x4fabc; next entry 0x4fac0."
+
+[[helpers]]
+source_helper = "army::waitSample"
+unit = "army"
+mac_section = 0
+mac_offset = 0x48f98
+mac_size = 0x70
+target_sha256 = "5c45d10880b84f11d22fef735b4791f7f3b74acd9bae3cfc8fff755df2e77cfe"
+evidence = "Mac army::rangeAttack calls this retained helper at 0x48f98. It checks quick combat at 0x76bc8, indexes m_armySample at +0x170, and passes the sample handle at +0x28 to soundManager::waitSample at 0x2189b8. Dreamcast names the member boundary; Windows expands its explicit-inline source body. Final BLR at 0x49004; next entry 0x49008."
+
+[[helpers]]
+source_helper = "army::getClockwise"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4beb0
+mac_size = 0x60
+target_sha256 = "ae1c72ada10da7b95cc0a0670da9b19e6d29ab98867a6dc437f2317d5ccb8020"
+evidence = "Mac melee/multihead callers retain this source helper. A wide army maps direction through the ring-index/order tables with +1 mod 8; a narrow army returns (direction+1) mod 6. The explicit-inline Windows source calls it in the same multihead logic. Final BLR at 0x4bf0c; next entry 0x4bf10."
+
+[[helpers]]
+source_helper = "army::getCounterClockwise"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4bf10
+mac_size = 0x60
+target_sha256 = "50a22dee7588c3ed927b9ef1a53a277fa33a0b523df93dbcf3abc92c892b4c39"
+evidence = "Mac melee/multihead callers retain this adjacent source helper. A wide army maps direction through the ring-index/order tables with +7 mod 8; a narrow army returns (direction+5) mod 6. The explicit-inline Windows source calls it. Final BLR at 0x4bf6c; next entry 0x4bf70."
+
+[[helpers]]
+source_helper = "army::adjustHitpoints"
+unit = "army"
+mac_section = 0
+mac_offset = 0x504ac
+mac_size = 0xd4
+target_sha256 = "f3bca54a3dd01f1ecc6f1b95145e0781f28bb5dd91dca20ba7926a048cbced03"
+evidence = "Mac cancelIndividualSpell and resetRound call this retained helper at 0x504ac. It scales original hit points by poison factor, halves for Age, adds 0.95 before integer conversion, then clamps top-creature damage to hitPoints-1 using the two-value min. Dreamcast names army::adjust_hitpoints; Windows expands the ordinary source helper. Final BLR at 0x5057c; next entry 0x50580."
+
+[[helpers]]
+source_helper = "army::setRetaliationCount"
+unit = "army"
+mac_section = 0
+mac_offset = 0x48e5c
+mac_size = 0x68
+target_sha256 = "798f5c6e8f183983fd281e3512b4677d61b69a8b4321717432d7784534c772b2"
+evidence = "Mac army setup and round reset retain this helper at 0x48e5c. It starts retaliation count at one, applies Griffin/Royal Griffin cases, Counterstrike bonus and siege-weapon zeroing, matching the ordinary source definition and its two Windows callers. Final BLR at 0x48ec0; next entry 0x48ec4."
+
+[[helpers]]
+source_helper = "army::checkLuck"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e014
+mac_size = 0x160
+target_sha256 = "d6d9c965f68c0caf10b6bc2ffe64dfe0ab0a85e21ffb5efaa473dccf59feea57"
+evidence = "Mac attack callers retain this helper at 0x4e014. It clears luck status, obtains controller at 0x4e4e8, rolls luck through Mac sRandom at 0x1314b4 and emits sound/text/spell effect outside quick combat. Windows expands the explicit-inline source helper and uses the same authored sRandom call; the sRandom and random bodies share retail code at 0x50b230. Final BLR at 0x4e170; next entry at 0x4e174."
+
+[[helpers]]
+source_helper = "army::endWalk"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4ad08
+mac_size = 0x8c
+target_sha256 = "b92bb3cede72cf36d4ad740a5a641599e652a6ff9ca6fc5865f97630aeceaf63"
+evidence = "Mac walk callers retain this ordinary source helper. It checks quick combat at 0x76bc8, plays the post-walk sample at 0x48ec4, stops the walk sample and plays postwalk/wait animations at 0x52c08. The existing Windows callers use endWalk; final BLR at 0x4ad90, next entry 0x4ad94."
+
+[[helpers]]
+source_helper = "isNaturalEnemy"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e538
+mac_size = 0xe4
+target_sha256 = "c2183ce95bcdb1406d3cb789ceb5747bcfce934963fc348316520b848efb8160"
+evidence = "Mac computeAttackerBonus retains this source call. Its switch checks Angel 0xc/0xd against Devil 0x36/0x37, Efreet 0x34/0x35 against Genie 0x24/0x25, and Black Dragon 0x53 against Titan 0x29 in both directions, matching the Dreamcast-named ordinary army.cpp helper. Final BLR at 0x4e618; next entry 0x4e61c."
+
+[[helpers]]
+source_helper = "chooseWallTarget"
+unit = "army"
+mac_section = 0
+mac_offset = 0x51ca8
+mac_size = 0xac
+target_sha256 = "6f89ed171df37de09039cde4e5157f4dd66c0e3bb66171471348711622cae2f6"
+evidence = "Mac attackWall overloads call this retained helper with candidate array and count. It starts at distance 50, skips the current wall and invalid targets, chooses nearest valid wall, and breaks equal distances with sRandom. The existing Windows source calls chooseWallTarget; final BLR at 0x51d50, next entry 0x51d54."
+
+[[helpers]]
+source_helper = "enchanterSpellHasTarget"
+unit = "army"
+mac_section = 0
+mac_offset = 0x5446c
+mac_size = 0xac
+target_sha256 = "d5f327d8d65ba00cc0d27845ff50fb324fe34f2c32c2e8040b03512bbeeea12f"
+evidence = "Mac Enchanter calls this retained helper twice. It selects side from spell karma, reads that side's army count, tests spellIsValidOnTarget at 0x542f0 and returns whether any test succeeds. The Windows source had duplicated this scan in both caller loops; the helper name is inferred. Final BLR at 0x54514, next entry 0x54518."
+
+[[helpers]]
+source_helper = "army::getValidCaliphSpells"
+unit = "army"
+mac_section = 0
+mac_offset = 0x5455c
+mac_size = 0x68
+target_sha256 = "0213ab909d5c1f4e6f7b44aaee7469933d2c1f1659621e216e78dbd1d3150bab"
+evidence = "Mac canCastSpell and castCaliphSpell call this retained source helper. It counts spells 10 through 69 for which isValidCaliphSpell at 0x54518 succeeds. Windows expands the existing helper in both callers; final BLR at 0x545c0, next entry 0x545c4."
+
+[[helpers]]
+source_helper = "army::castResurrect"
+unit = "army"
+mac_section = 0
+mac_offset = 0x53f00
+mac_size = 0xc4
+target_sha256 = "f69047a88a442575b95f1dc30f2e9cdb0d19b3476311f9493b91ce5d6f185f38"
+evidence = "Mac castSpell retains this ordinary method. It selects a resurrection target by controlling side and hex at 0x1945d8, then plays its sample and calls combatManager::resurrect at 0x1986ec for m_numTroops times 100. The existing Windows source calls castResurrect; final BLR at 0x53fc0, next entry 0x53fc4."
+
+[[helpers]]
+source_helper = "army::castDemonicResurrect"
+unit = "army"
+mac_section = 0
+mac_offset = 0x53fc4
+mac_size = 0x70
+target_sha256 = "6306672c39c472beac41c2184f6f81cfa03d2fa6de7779032c206bbead8b353e"
+evidence = "Mac castSpell retains this adjacent ordinary method. It finds the demonic resurrection target by controlling side and hex at 0x194788, then calls combatManager::demonicResurrection at 0x1984ec. The Windows source already calls it; final BLR at 0x54030, next entry 0x54034."
+
+[[helpers]]
+source_helper = "army::castFaerieDragonSpell"
+unit = "army"
+mac_section = 0
+mac_offset = 0x5469c
+mac_size = 0x64
+target_sha256 = "97c136ac36e6d48a86697c38f291f0b7c4711447cfa82b000496099a6ea6fed5"
+evidence = "Mac castSpell retains this method after castCaliphSpell and before the Enchanter. It bounds-checks hex against 187 and passes m_faerieDragonSpell and m_numTroops times five to combatManager::castSpell at 0x190540. Windows source previously had its body inline in the switch; name inferred. Final BLR at 0x546fc, next entry 0x54700."
+
+[[helpers]]
+source_helper = "army::cancelAllSpells"
+unit = "army"
+mac_section = 0
+mac_offset = 0x50c24
+mac_size = 0x68
+target_sha256 = "c13ffbead54ec6a2c97845c6af025bf59d6dd9e551d48359e061c983788e962d"
+evidence = "Mac processDeath retains this ordinary source helper. It scans 81 spell-duration entries at +0x198 and calls cancelIndividualSpell at 0x50580 for positive durations. Windows source already calls cancelAllSpells; final BLR at 0x50c88, next entry 0x50c8c."
+
+[[helpers]]
+source_helper = "army::decrementSpellRounds"
+unit = "army"
+mac_section = 0
+mac_offset = 0x51434
+mac_size = 0x98
+target_sha256 = "abd799961682d1a02bc51fdeaf7b3b2deb7f00154849f118872c549175b1edae"
+evidence = "Mac resetRound retains this ordinary source helper. It decrements positive spell-duration entries except Frenzy at index 56, cancels one-round spells through 0x50580 and decrements roundsLeftBeforeVanish at +0x2c. Windows expands the existing source helper; final BLR at 0x514c8, next entry 0x514cc."
+
+[[helpers]]
+source_helper = "army::computeKarma"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4a6e4
+mac_size = 0xcc
+target_sha256 = "74d11aaa3e662d3e65e06dd76911685b00eebea0c4d353c6c1f4d7c8af1c0ff3"
+evidence = "Mac drawToBuffer retains this ordinary source helper. It checks m_numSpellInfluences at +0x194, sums spell karma and absolute karma across 81 entries, then divides the sums as double. Dreamcast names army::ComputeKarma; Windows expands the existing source call. Final BLR at 0x4a7ac, next entry 0x4a7b0."
+
+[[helpers]]
+source_helper = "addItem"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4a7b0
+mac_size = 0xdc
+target_sha256 = "4acfc9326919ffe7fb9a7b14580a6fd1f37523851508d90cfe391cf686953944"
+evidence = "Six calls from addAura and checkSpecialAttack reach this source-private helper. It searches a vector<army*> for the argument, returns zero when found, otherwise appends it and returns one. The final BLR is at 0x4a888; the next body starts at 0x4a88c. All six callers already use the canonical addItem source call."

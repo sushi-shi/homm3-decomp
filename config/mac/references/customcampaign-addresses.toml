@@ -1,4 +1,49 @@
 # Reviewed address identities; compiler linkage names remain unbound.
+[[helpers]]
+source_helper = "CampaignScenarioInfo::read"
+unit = "customcampaign"
+mac_section = 0x0
+mac_offset = 0x97e70
+mac_size = 0x104
+target_sha256 = "c8ad109e67a470c735ff39d6749d1620ee8f57592d6b9e4ec1fb897a31e55287"
+evidence = "SCampaign::load calls this retained score reader at 0x99388 for each 0x14-byte CampaignScenarioInfo row. It reads completed (byte), days and score (little-endian words), completeOrder and index (signed bytes) into the record. BLR at 0x97f70 precedes the paired score writer."
+
+[[helpers]]
+source_helper = "convertLegacyCampaignHero"
+unit = "customcampaign"
+mac_section = 0x0
+mac_offset = 0x98cb0
+mac_size = 0x218
+target_sha256 = "6d69b4a32c406513af64cca0030eb2139524a18a2876f26b721c5e5d96d11c96"
+evidence = "The pre-v28 branch of SCampaign::load calls this retained conversion at 0x990c8 with the destination hero and legacy hero record. Its field-copy sequence includes the packed legacy ID/name/army bands and ends at 0x98ec4 before SCampaign::load begins. Windows already expands this one canonical source helper; original spelling is unproved."
+
+[[helpers]]
+source_helper = "CampaignScenarioInfo::write"
+unit = "customcampaign"
+mac_section = 0x0
+mac_offset = 0x97f74
+mac_size = 0xf0
+target_sha256 = "5fa86d3df31d2fbb0af5dc0ae23bdb2dab4f5de15d9e8bd3ecff0176c710706b"
+evidence = "SCampaign::save calls this retained score writer at 0x997c8 for every 0x14-byte CampaignScenarioInfo row. It writes completed (byte), days and score (little-endian words), completeOrder and index (bytes), matching the expanded Windows loop. BLR at 0x98060 precedes the next function."
+
+[[helpers]]
+source_helper = "offerArtifactToPlayerHeroes"
+unit = "customcampaign"
+mac_section = 0x0
+mac_offset = 0x951b0
+mac_size = 0xa4
+target_sha256 = "22df7b02a29c00bf6e48026db5cfa33f5fdd87db60ebbfe62dc1cdf2a9ab2630"
+evidence = "giveCrossoverArtifacts calls this retained helper once at 0x95cd0 with a local type_artifact and selected player. It walks that player's hero IDs, resolves each hero and offers the artifact until giveArtifact succeeds. Windows expands the identical loop at the authored call site; original spelling is unproved. BLR at 0x95250 precedes placeStartingHero."
+
+[[helpers]]
+source_helper = "TCampaignBrief::ScenarioStruct::prerequisitesMet"
+unit = "customcampaign"
+mac_section = 0x0
+mac_offset = 0x9758c
+mac_size = 0x90
+target_sha256 = "91a2dcde24d2ea9e3003aab596ca71c2287a154df245c5c59b91fb2b8ab276a5"
+evidence = "Start-option slot12 calls this retained method at 0x9324c; getAvailableScenarios calls it at 0x97684. It walks the scenario prerequisite byte vector and rejects any required map whose campaign score is not completed, returning true after the full scan. BLR at 0x97618 precedes getAvailableScenarios. Original spelling unproved."
+
 [[functions]]
 mac_section = 0x0
 mac_offset = 0x91bfc

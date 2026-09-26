@@ -297,5 +297,5 @@ VA(0x0044fe80, 0x40)  // dc 0x5429c
 void Bitmap816::resetPalette()
 {
     TPalette16 converted(m_p24);
-    m_p16.m_colors = converted.m_colors;
+    setPalette(converted.m_data);
 }

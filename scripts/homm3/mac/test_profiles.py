@@ -78,6 +78,22 @@ class TestMacProfiles(unittest.TestCase):
             source_path.write_text(source_path.read_text().replace("return 7;", "return 8;"))
             self.assertEqual(after, source_identity(second, candidate_source(second).encode()))
 
+    def test_source_helper_with_template_return_type(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            self.fixture(root)
+            source_path = root / "src/test.cpp"
+            source_path.write_text(source_path.read_text().replace(
+                "VA(0x00400100, 4)",
+                "namespace std { template<int N> struct bitset {}; }\n"
+                "std::bitset<70> markSpells(int school) { return std::bitset<70>(); }\n"
+                "VA(0x00400100, 4)"))
+            profile_path = root / "config/mac/units.toml"
+            profile_path.write_text(profile_path.read_text() + 'source_helpers=["markSpells"]\n')
+            first = next(pair for pair in load_pairs(root) if pair.retail_va == 0x400100)
+            generated = candidate_source(first)
+            self.assertIn("std::bitset<70> markSpells(int school) { return std::bitset<70>(); }", generated)
+
     def test_cache_shared_across_selectors_but_not_tampered_headers(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

@@ -1,4 +1,13 @@
 # Reviewed TU-order address discoveries. No compiler symbol or byte-match verdict is claimed.
+[[helpers]]
+source_helper = "game::checkHeroConsistency"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe2410
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "Mac townManager::open calls this on g_game between startMouseThread and pollSound, matching the authored source sequence. philAI::doAI calls the same entry before showing the pointer. The body is one BLR at 0xe2410, consistent with the empty shared helper; setupDynamicStuff begins at 0xe2414."
+
 [[functions]]
 retail_va = 0x004b9070
 unit = "game"
@@ -143,6 +152,15 @@ mac_size = 0x78
 target_sha256 = "bce7a8ebd1c9176a95612c9c3ccfb0fcba382a52e0d9a683f3eeb74061fe4ad6"
 evidence = "One-byte read; sentinel255->-1; saveVersion<25 remaps hero128/129; distinct from preceding equality-to14 reader. Reviewed extent code0+0xcc800..0xcc878; terminal return and following entry separate the span."
 
+[[helpers]]
+source_helper = "loadHeroIdShort"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc878
+mac_size = 0x74
+target_sha256 = "68452259aad2c8412b1dc270ec05b46535ac7a70892edf027f1fe6e5c13d1f90"
+evidence = "Signed 16-bit hero-ID read through the stream virtual, followed by saveVersion<25 remapping of ids 128 and 129. NewSMapHeader::loadLossCondition calls this body at 0xda64c; its BLR ends at 0xcc8e8 before playerData::load begins at 0xcc8ec."
+
 [[functions]]
 retail_va = 0x004ba260
 unit = "game"
@@ -222,6 +240,7 @@ unit = "game"
 mac_section = 0
 mac_offset = 0xcd5c0
 mac_size = 0x44
+mac_symbol = ".findHero__10playerDataCFi"
 target_sha256 = "46f55e6d55f4be544c8ec9a952289bcaf0c0f015652aaaa6aabaa65074490301"
 evidence = "Rejects id-1, scans signed numHeroes at+1 and int hero IDs at+4, returns matching index or-1. Reviewed extent code0+0xcd5c0..0xcd604; terminal return and following entry separate the span."
 
@@ -424,6 +443,33 @@ target_sha256 = "52a078405ebdc7c8503fe2fb311e3b8ed0f64f309128892e0aca006e6a3adfd
 evidence = "Constructs empty string, calls loadString then strcpy to current rumour, reads state/count, resizes rumour vector and loops strings plus availability flag. Reviewed extent code0+0xcefc0..0xcf178; terminal return and following entry separate the span."
 
 [[helpers]]
+source_helper = "game::saveBlackMarkets"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcf178
+mac_size = 0xb0
+target_sha256 = "13799e03474eaa4b17b3e37af2f845c6d28b371eafd150a98930e6de69735bad"
+evidence = "Dreamcast game.cpp:2654 names SaveBlackMarkets. Mac game::save calls this body at 0xd2b50. It writes the signed-byte size of the black-market vector at game+0x1ef10, then its data at +0x1ef18 with stride 0x1c, matching the canonical source. Complete return at 0xcf224 and next load helper prologue 0xcf228 bound 0xb0 bytes. Windows retains the authored source call but expands the helper."
+
+[[helpers]]
+source_helper = "game::loadBlackMarkets"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcf228
+mac_size = 0xc8
+target_sha256 = "5ec271e4ecd95524a2830249a77c32ab19a24177a80d973233f123c62a8b770a"
+evidence = "Dreamcast game.cpp:2672 names LoadBlackMarkets. Mac game::load calls this body at 0xd0810. It clears the vector at game+0x1ef10, reads its signed-byte size, resizes it, then reads size times 0x1c bytes into data at +0x1ef18. Complete return at 0xcf2ec and following creature-bank load prologue 0xcf2f0 bound 0xc8 bytes. Windows retains the canonical source call but expands the helper."
+
+[[helpers]]
+source_helper = "applySavedGameHeader"
+unit = "game"
+mac_section = 0
+mac_offset = 0xcffd8
+mac_size = 0x2d0
+target_sha256 = "df0c498dc26b6e9f9c814088d02d2b4582277c18949e60b37e6488805d3b9404"
+evidence = "Mac game::load calls this separate routine at 0xd05f0 immediately after SavedGameHeader::load succeeds. Its receiver is the stack SavedGameHeader; it copies gameVersion and CMapHeaderData into g_game, then map name/description, setup/campaign and player state, matching the inferred canonical applySavedGameHeader phase in game.cpp. The final BLR at 0xd02a4 and next setupShipyards prologue 0xd02a8 bound 0x2d0 bytes. Source call was already present; no independent Windows VA or Dreamcast name is claimed."
+
+[[helpers]]
 source_helper = "type_creature_bank::load"
 unit = "game"
 mac_section = 0
@@ -485,6 +531,15 @@ mac_offset = 0xe17d8
 mac_size = 0x138
 target_sha256 = "ca7b8e7e5ba204fd62a0cd5cd78b72c61df55c821a954a199af4d7c99680f326"
 evidence = "Packed excluded point255/255/255, nested map loops, findAdjacentMonster0x1aed0 and getMapExtraPtr0x119764; sets or clears0x100 halfword flag. Reviewed extent code0+0xe17d8..0xe1910; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "setComputerScreenWidgetsEnabled"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe1910
+mac_size = 0xc4
+target_sha256 = "b0e3e6ddd40577deb70934049970eb96354231827eba261ac2ad4fcaa1ad38a3"
+evidence = "The Mac body sits in game.cpp source order between setupAdjacentMons and cancelComputerScreen. It receives one enable byte, then calls heroWindow::getWidget for IDs 8, 7, 6 and 12, invoking each widget's virtual enable with the same value. Mac cancelComputerScreen at 0xe19d4 passes 1; showComputerScreen at 0xe1a24 passes 0. The four operations were duplicated in both Windows source callers and are now canonical source calls. Final BLR 0xe19d0 and next caller prologue 0xe19d4 bound 0xc4 bytes. Dreamcast's older CancelComputerScreen omits widget operations."
 
 [[functions]]
 retail_va = 0x004ca530
@@ -574,7 +629,7 @@ mac_section = 0
 mac_offset = 0xe6d54
 mac_size = 0xe0
 target_sha256 = "cd4430f64062a7f8db18e908aeeeae362c15769fb1032b09ddbd5ff068bc8c1f"
-evidence = "Packed ultimate-artifact coordinates minus9/minus8; seed coefficients81901/67843/79451, two random(-2,2) calls0x1314b4. Reviewed extent code0+0xe6d54..0xe6e34; terminal return and following entry separate the span."
+evidence = "Packed ultimate-artifact coordinates minus9/minus8; seed coefficients81901/67843/79451 and two sRandom(-2,2) calls to 0x1314b4. Dreamcast game.cpp lines 11822/11823 name SRandom; Windows uses the body folded with random at 0x50b230. Reviewed extent code0+0xe6d54..0xe6e34; terminal return and following entry separate the span."
 
 [[functions]]
 retail_va = 0x004cec20
@@ -602,6 +657,15 @@ mac_offset = 0xe6fc4
 mac_size = 0x30
 target_sha256 = "ff202992974b25b7708d10479df9fd91687b4dfa6df3b391e58176d76b830ac2"
 evidence = "Returns bool of remote flag or network protocol3 (hotseat). Reviewed extent code0+0xe6fc4..0xe6ff4; terminal return and following entry separate the span."
+
+[[helpers]]
+source_helper = "game::getLastHuman"
+unit = "game"
+mac_section = 0
+mac_offset = 0xe6ff4
+mac_size = 0x60
+target_sha256 = "3f28d21ad1ab373a231156d96e78ad4ff3dbfa80e3b73997e8e647ad6a04dde1"
+evidence = "Reverse scan of eight 0x15c-byte player records calls playerData::isHuman 0xcdbf0 and returns the first index, otherwise zero. getLocalPlayerGamePos calls this body at 0xe6cc4. Reviewed extent code0+0xe6ff4..0xe7054; terminal return and following prologue separate the span."
 
 [[functions]]
 retail_va = 0x004cecb0
@@ -1548,3 +1612,12 @@ mac_offset = 0xd6a2c
 mac_size = 0x118
 target_sha256 = "56f9f227fbbba8aca97aff7821ff97788c679a819640299317b86a446fc7c8e1"
 evidence = "Temporary spell vector;70spell loop level5 and disabled/school checks, push_back0xbe580, random selection and vector destruction0xbe748. Reviewed extent code0+0xd6a2c..0xd6b44; terminal return and following entry separate the span."
+
+[[helpers]]
+mac_section = 0
+mac_offset = 0xd65d0
+mac_size = 0x5c
+unit = "game"
+target_sha256 = "269601f9858b26757c59cabee5899524eeb2b1694198f6b174383f87973e38ec"
+source_helper = "randomizeRefugeeCamp"
+evidence = "Retained 0:0xd65d0 body between randomizeArtifact and randomizeSeaChest calls getRandomMonster(0,6), stores objectIndex+0x1e and growthRate+0; direct calls from randomizeEvents 0:0xd7dfc and perWeek 0:0xdf9a4. Distinct prologue and terminal BLR."

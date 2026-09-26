@@ -156,7 +156,7 @@ void TTownGateWindow::updateTownLocator(int i)
 
         msg.m_codeX = widget::WIDGET_SET_COLOR;
         const town* whichTown = g_game->getTown(m_towns[m_topTown + i]);
-        if (((whichTown->m_active & g_bitNumber[EXTRA_1_ID]) != 0 || m_adventureSpell)
+        if (((whichTown->getBuildingMask() & g_bitNumber[EXTRA_1_ID]) != 0 || m_adventureSpell)
             && whichTown->m_visitingHeroId < 0) {
             msg.m_extra = font::PRIMARY;
             if (m_topTown + i == m_selectedTown) {

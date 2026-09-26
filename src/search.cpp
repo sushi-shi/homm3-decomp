@@ -33,9 +33,8 @@
 VA(0x0056a0d0, 0x282)  // anchor-global, dc 0x12b2e0
 int searchArray::buildPath(const hero* currentHero, long limit)
 {
-    type_point source(currentHero->m_x, currentHero->m_y, currentHero->m_z);
-    type_point dest(currentHero->m_pathTargetX, currentHero->m_pathTargetY,
-                    currentHero->m_pathTargetZ);
+    type_point source = currentHero->getLocation();
+    type_point dest = currentHero->getTarget();
     pathCell* currentPathCell;
 
     unsigned char flying = 0;
@@ -92,13 +91,16 @@ int aiResourceCost(const playerData* player, const int* resources);
 // Mac stores the found monster before loading the barrier value, as retail
 // does. Reversing the addition operands and hoisting `value` to function scope
 // are byte-flat in VC6 (93.2615%); retain the direct source order.
+// DC calls the three-coordinate GetMapExtra here; using that overload
+// restores the full nine-block retail shape without a point-wrapper copy.
 VA(0x0056a360, 0x9E)  // exhaustive search.obj order-map, dc 0x12b3f0
 unsigned char checkAdjacentMonster(const hero* currentHero,
                                      pathCell* entryPoint,
                                      type_search_type searchType)
 {
     type_point monster;
-    if (getMapExtra(entryPoint->m_point.m_x, entryPoint->m_point.m_y,
+    if (getMapExtra(entryPoint->m_point.m_x,
+                    entryPoint->m_point.m_y,
                     entryPoint->m_point.m_z)
         & MAP_EXTRA_MONSTER) {
         if (g_advManager->findAdjacentMonster(entryPoint->m_point, &monster,
@@ -142,7 +144,7 @@ void searchArray::enterLith(const hero* currentHero,
         && count > 0) {
         for (int i = 0; i < count; i++) {
             type_point exitPoint = (*list)[i];
-            NewmapCell* cell = g_game->m_worldMap.cell(exitPoint);
+            NewmapCell* cell = g_game->getCell(exitPoint);
             if (cell->m_type == cellType && cell->m_extraInfo != excluded
                 && cell->m_isTrigger) {
                 if (g_advManager->findAdjacentMonster(
@@ -159,7 +161,7 @@ void searchArray::enterLith(const hero* currentHero,
     pathCell exitCell = *entryPoint;
     for (int i = 0; i < count; i++) {
         type_point exitPoint = (*list)[i];
-        NewmapCell* cell = g_game->m_worldMap.cell(exitPoint);
+        NewmapCell* cell = g_game->getCell(exitPoint);
         if (cell->m_type == HERO) {
             if (g_game->onSameTeam(g_game->getHero(cell->m_extraInfo)->m_owner,
                                    currentHero->m_owner))
@@ -197,7 +199,8 @@ void searchArray::enterGate(const pathCell* cell, const NewmapCell* mapCell,
     const int noGateExit = 0xff;
     if (exitPoint.m_x != noGateExit) {
         pathCell exitCell = *cell;
-        NewmapCell* exitMapCell = g_game->m_worldMap.cell(exitPoint);
+        // DC search.cpp:251 names game::get_cell; Mac and VC6 expand it.
+        NewmapCell* exitMapCell = g_game->getCell(exitPoint);
         exitCell.m_point.m_x = exitPoint.m_x;
         exitCell.m_point.m_y = exitPoint.m_y;
         exitCell.m_point.m_z = exitPoint.m_z;
@@ -279,9 +282,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
                 continue;
             newCell.m_barrierValue -= aiResourceCost(player, cost);
         }
-        newCell.m_point.m_x = otherTown->m_mapX;
-        newCell.m_point.m_y = otherTown->m_mapY;
-        newCell.m_point.m_z = otherTown->m_mapZ;
+        newCell.m_point = otherTown->getLocation();
         newCell.m_castleGate = 1;
         pushPoint(*currentPathCell, newCell, 0, 0, limit,
                   newCell.m_barrierValue + barrierValue, newCell.m_monster,
@@ -442,7 +443,7 @@ static unsigned char checkSummonBoat(const hero* currentHero)
         newPoint.m_y = point.m_y + g_normalDirTable[i].m_y;
         newPoint.m_z = point.m_z;
         if (newPoint.isValid()
-            && g_game->m_worldMap.cell(newPoint)->m_type == BOAT
+            && g_game->getCell(newPoint)->m_type == BOAT
             && g_game->getCell(newPoint)->m_isTrigger)
             return 0;
     }
@@ -508,6 +509,27 @@ void searchArray::checkTownPortal(const hero* currentHero,
         newCell.m_adjustedCost += (distance + 4) * 50;
         pushPoint(*startCell, newCell, 0, cost, maxMobility, 0,
                   startCell->m_monster, 0);
+    }
+}
+
+// Mac 0:0x163074..0x1631a0 retains this helper between checkTownPortal and
+// seedPosition. seedPosition calls it at 0:0x16383c; VC6 expands the same
+// trigger-cell copy and enterTrigger call in the start-town-negative arm.
+// The older Dreamcast build does not give this Complete helper a name.
+void searchArray::enterStartTrigger(const hero* currentHero,
+                                    const pathCell* startCell,
+                                    long maxMobility,
+                                    type_search_type searchType)
+{
+    NewmapCell* mapCell = g_game->getCell(startCell->m_point);
+    if (mapCell->m_isTrigger
+        && (mapCell->m_type == LITH_ONEWAY_ENTRANCE
+            || mapCell->m_type == LITH_TWOWAY
+            || mapCell->m_type == UNDERGROUND_GATE)) {
+        pathCell triggerCell = *startCell;
+        triggerCell.m_startAtTrigger = 1;
+        triggerCell.m_adjustedCost += 50;
+        enterTrigger(currentHero, &triggerCell, maxMobility, searchType);
     }
 }
 
@@ -652,17 +674,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
                 enterTown(currentHero, startTown, &cell, maxMobility,
                            searchType);
             } else {
-                NewmapCell* mapCell = g_game->m_worldMap.cell(cell.m_point);
-                if (mapCell->m_isTrigger
-                    && (mapCell->m_type == LITH_ONEWAY_ENTRANCE
-                        || mapCell->m_type == LITH_TWOWAY
-                        || mapCell->m_type == UNDERGROUND_GATE)) {
-                    pathCell triggerCell = cell;
-                    triggerCell.m_startAtTrigger = 1;
-                    triggerCell.m_adjustedCost += 50;
-                    enterTrigger(currentHero, &triggerCell, maxMobility,
-                                  searchType);
-                }
+                enterStartTrigger(currentHero, &cell, maxMobility, searchType);
             }
         }
         if (searchType == const_AI_search)
@@ -701,9 +713,12 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
                 continue;
         }
 
+        // DC also calls the three-coordinate GetMapExtra at this site.
         if (!cell.m_flying && !cell.m_dimensionDoor
             && searchType < const_AI_search
-            && (getMapExtra(cell.m_point.m_x, cell.m_point.m_y, cell.m_point.m_z)
+            && (getMapExtra(cell.m_point.m_x,
+                            cell.m_point.m_y,
+                            cell.m_point.m_z)
                 & MAP_EXTRA_MONSTER)
             && cell.m_point != start
             && g_advManager->findAdjacentMonster(

@@ -7,7 +7,7 @@ import sys
 from types import SimpleNamespace
 
 from homm3.core import common, inputs
-from homm3.mac import build, call_report, calls, discovery, pairing, references, symbols, toolchain
+from homm3.mac import build, call_report, calls, discovery, pairing, references, sdk, symbols, toolchain
 from homm3.mac.loader import ImportedAddress, Loader
 from homm3.mac.pef import PEF
 from homm3.mac.relocations import Address
@@ -89,6 +89,17 @@ def main(argv=None) -> int:
     p.add_argument("--limit", type=int, default=20, help="maximum displayed tasks; full files always include all")
     p.add_argument("--include-deferred", action="store_true", help="display user-deferred modules too")
     p.add_argument("--json", action="store_true", help="print the full structured queue")
+    p = sub.add_parser("helper-queue", help="queue Mac-retained game helper calls")
+    p.add_argument("--owner", action="append", default=[], metavar="WORKER=UNIT[,UNIT...]",
+                   help="assign units to a worker; repeat for other workers")
+    p.add_argument("--unit", help="display only this unit; output files still cover all units")
+    p.add_argument("--limit", type=int, default=30, help="maximum displayed target leads")
+    p.add_argument("--include-deferred", action="store_true", help="display user-deferred modules too")
+    p.add_argument("--all-functions", action="store_true",
+                   help="include exact Windows callers in a separate whole-corpus helper inventory")
+    p.add_argument("--include-named", action="store_true",
+                   help="display other named Mac callees for transitive helper review")
+    p.add_argument("--json", action="store_true", help="print the full structured helper queue")
     p = sub.add_parser("campaign", help="prepare disjoint worker packets from the current action queue")
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--unit", action="append", help="select an initial unit; repeat for distinct workers")
@@ -111,7 +122,6 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "sdk":
-            from homm3.mac import sdk
             destination = sdk.stage(args.path)
             print(f"[mac] verified native library headers: {destination}")
             return 0
@@ -192,6 +202,44 @@ def main(argv=None) -> int:
                     if row["command"]:
                         print(f"  {row['command']}")
                 print("[mac] complete queue: build/mac/queue.tsv and build/mac/queue.json")
+            return 0
+        if args.command == "helper-queue":
+            from homm3.mac import helper_queue, queue
+            if args.limit < 0:
+                parser.error("--limit must be nonnegative")
+            assignments = {}
+            for spec in args.owner:
+                worker, sep, units = spec.partition("=")
+                if not sep or not worker or not units or any(not unit for unit in units.split(",")):
+                    parser.error("--owner requires WORKER=UNIT[,UNIT...]")
+                for unit in units.split(","):
+                    if unit in assignments:
+                        parser.error(f"unit {unit!r} assigned more than once")
+                    assignments[unit] = worker
+            action_queue = queue.generate(common.HOMM3_DIR,
+                                          include_banked_exact=args.all_functions)
+            report = helper_queue.generate(common.HOMM3_DIR, action_queue,
+                                           discovery.Index(_image()), assignments,
+                                           all_functions=args.all_functions)
+            stem = "helper-queue-all" if args.all_functions else "helper-queue"
+            helper_queue.write(common.HOMM3_DIR, report, stem=stem)
+            if args.json:
+                print(json.dumps(report, indent=2))
+            else:
+                coverage = report["coverage"]
+                print(f"[mac] helper queue: {coverage['functions_in_scope']} Windows functions in scope; "
+                      f"{coverage['helper_reviewed_functions']} helper-reviewed from Mac calls; "
+                      f"{coverage['reviewed_mac_callers']} paired Mac caller spans")
+                print(f"[mac] {coverage['missing_named_source_calls']} reviewed helper calls absent from source; "
+                      f"{coverage['unreviewed_direct_targets']} distinct direct targets need identity review")
+                for lead in helper_queue.leads(report, args.unit, args.include_deferred,
+                                               args.include_named)[:args.limit]:
+                    example = lead["example"]
+                    print(f"  {lead['mac_target']} {lead['target_name']} [{lead['state']}] "
+                          f"{lead['sites']} sites in {lead['caller_count']} callers / "
+                          f"{lead['unit_count']} units; e.g. {example['retail_va']} "
+                          f"[{example['unit']}] at {example['mac_call_site']}")
+                print(f"[mac] complete queue: build/mac/{stem}.json and {stem}-*.tsv")
             return 0
         if args.command in ("find", "xrefs", "census"):
             index = discovery.Index(_image())
@@ -286,9 +334,11 @@ def main(argv=None) -> int:
                 selected = [pair for pair in pairs if pair.unit == args.selector]
                 pairs = selected or [_select(args.selector)]
             pef, tools_dir = _image(), toolchain.stage()
+            if any(pair.compile_group for pair in pairs):
+                sdk.stage(root=common.HOMM3_DIR)
             context = call_report.inspection_context(common.HOMM3_DIR, pef)
             rows = [call_report.inspect(common.HOMM3_DIR, pair, pef, tools_dir,
-                                        context=context) for pair in pairs]
+                                        context=context, sdk_staged=True) for pair in pairs]
             report = call_report.write(common.HOMM3_DIR, rows,
                                        units=sorted({p.unit for p in pairs}) if args.selector else None)
             if args.selector:

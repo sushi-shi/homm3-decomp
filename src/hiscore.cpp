@@ -321,6 +321,7 @@ void highScoreManager::viewHiScore()
 // Dreamcast hiscore.cpp:738 names WriteHighScores and preserves its
 // 351-byte cBuf local even in the VMU port. Retail's two caller expansions
 // prove the PC file path, flags, error handler and full score-table write.
+// Mac retains this helper at 0:0x10a8bc using its file adapter.
 void writeHighScores()
 {
     char path[351];
@@ -461,9 +462,9 @@ int highScoreManager::getMonType(int score, int scoreType)
 }
 
 // Mac code 0x10b024 retains this source-local wrapper between getMonType
-// and THighScoreWindow's constructor; the constructor calls it for both icon
-// families. It loads the score, resolves the monster type, and returns the
-// selected object's image name.
+// and THighScoreWindow's constructor. The constructor and the score-reset
+// handler call it for both icon families. It loads the score, resolves the
+// monster type, and returns the selected object's image name.
 static const char* highScoreCreatureImageName(int index, int scoreType)
 {
     int score = g_highScoreManager->m_highScores[scoreType][index].m_score;
@@ -742,20 +743,13 @@ int highScoreWindowHandler(message& msg)
 
             writeHighScores();
 
+            // Mac retains both image-name calls; retail VC6 expands them.
             for (int reset = 0; reset < 11; ++reset) {
-                int monsterType = highScoreManager::getMonType(
-                    g_highScoreManager->m_highScores[1][reset].m_score,
-                    1);
                 g_highScoreWindow->m_creatures[1][reset]->setSprite(
-                    g_game->m_worldMap.findObjectType(
-                        MONSTER, monsterType)->m_imageName.c_str());
+                    highScoreCreatureImageName(reset, 1));
                 g_highScoreWindow->m_creatures[1][reset]->setIconFrame(0);
-                monsterType = highScoreManager::getMonType(
-                    g_highScoreManager->m_highScores[0][reset].m_score,
-                    0);
                 g_highScoreWindow->m_creatures[0][reset]->setSprite(
-                    g_game->m_worldMap.findObjectType(
-                        MONSTER, monsterType)->m_imageName.c_str());
+                    highScoreCreatureImageName(reset, 0));
                 g_highScoreWindow->m_creatures[0][reset]->setIconFrame(0);
             }
             }

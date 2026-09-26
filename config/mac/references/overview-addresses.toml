@@ -1,5 +1,14 @@
 # Reviewed Mac address identities; unbound compiler names are intentionally omitted.
 
+[[helpers]]
+source_helper = "TOverviewWindow::setHeroArtifactPage"
+unit = "overview"
+mac_section = 0
+mac_offset = 0x13ac30
+mac_size = 0x74
+target_sha256 = "c724011b33dafdaea7f72e3080367020e46600778d2418e1d4d8baf37471fc1e"
+evidence = "The retained Mac body lies between doRollover and windowHandler and has eight direct calls at 0x13af00..0x13afa8 from the page-1/page-2 arms of four overview rows. It checks overviewType==0, assigns page 0 or 1 to overviewHeroArtifactPage[overviewTop[0]+row], then calls setupNewOverviewType(0,1). Windows retail expands those operations in the same eight arms; restoring this ordinary source helper raised windowHandler from 83.20 to 93.48 percent under VC6. The Mac callers pass row, row widget id and page id; the retained body does not read the widget id. Final BLR at 0x13aca0 bounds the helper before windowHandler at 0x13aca4."
+
 [[functions]]
 retail_va = 0x51bd50
 unit = "overview"
@@ -137,3 +146,39 @@ mac_offset = 0x139f84
 mac_size = 0x94
 target_sha256 = "95d1d4431dee36d9ef77fd9327b4b0206549e6d1ff4a95a3403aa938d3b88145"
 evidence = "Unique source helper builds MESSAGE_WIDGET SET_TEXT code3 for widget37, broadcasts through g_overWin then draws range 36..37 via virtual drawWindow. BLR 0x13a014; next doRollover 0x13a018."
+
+[[helpers]]
+source_helper = "incrementBackpackStart"
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x136f0c
+mac_size = 0x84
+target_sha256 = "5d3a722fa9fed9bc19afdcae1d24040266ff137dea7a0077a8f83e93fa367e45"
+evidence = "Four windowHandler BL sites target this retained scroll-right helper. It adds selected top and slot, calls getLastBackpackIndex 0x136e7c, advances the byte in g_overviewBackpackStart modulo count when count exceeds eight, and calls updateBackpack 0x136cb0; BLR 0x136f8c."
+
+[[helpers]]
+source_helper = "decrementBackpackStart"
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x136f90
+mac_size = 0x84
+target_sha256 = "ecea73c9a66a8dac0e21597b28d8fa2193f224d58c9c8af1d78807a195fdd68a"
+evidence = "Four windowHandler BL sites target this retained scroll-left helper. It reads selected top and slot, calls getLastBackpackIndex 0x136e7c, decrements the start modulo count when count exceeds eight, and calls updateBackpack 0x136cb0; BLR 0x137010."
+
+[[helpers]]
+source_helper = "showArtifact"
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x137014
+mac_size = 0xe8
+target_sha256 = "7a784b1d97aa294dd297884a3334b81fceebf89804318915146ccf67f8bbfa9e"
+evidence = "Two processIconSelect calls target this hero/artifact/rightMouse helper. It opens a spellbook window when artifact id is zero, otherwise obtains artifact description and calls normalDialog; BLR 0x1370f8. Dreamcast also names ShowArtifact as a source helper."
+
+[[helpers]]
+source_helper = "TOverviewWindow::addFlaggableItem"
+unit = "overview"
+mac_section = 0x0
+mac_offset = 0x139ee4
+mac_size = 0xa0
+target_sha256 = "766c45b1ad6d4c762828c5ed9bbdc2141cb252064d676ac0f37c27c1c532f06a"
+evidence = "Eight constructor BL sites call this method with r3=this and item type in r4: U/R for mines, variable/P/Q for generators, S/T for garrisons, W for shipyards. It scans 8-byte records at this+0x5c, inserts {type,0} if absent, increments count, and returns at 0x139f80. Windows constructor expands those bodies."

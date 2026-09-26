@@ -192,26 +192,24 @@ unsigned char VictoryConditionStruct::checkForUpgradedTown()
 
     switch (m_hallLevel) {
     case VICTORY_HALL_TOWN:
-        hallOk = (checkedTown->m_active & g_bitNumber[HALL_TOWN_ID]) != 0;
+        hallOk = checkedTown->hasBuilding(HALL_TOWN_ID, true);
         break;
     case VICTORY_HALL_CITY:
-        hallOk = (checkedTown->m_active & g_bitNumber[HALL_CITY_ID]) != 0;
+        hallOk = checkedTown->hasBuilding(HALL_CITY_ID, true);
         break;
     case VICTORY_HALL_CAPITOL:
-        hallOk = (checkedTown->m_active & g_bitNumber[HALL_CAPITOL_ID]) != 0;
+        hallOk = checkedTown->hasBuilding(HALL_CAPITOL_ID, true);
         break;
     }
     switch (m_castleLevel) {
     case VICTORY_CASTLE_FORT:
-        castleOk = (checkedTown->m_active & g_bitNumber[CASTLE_FORT_ID]) != 0;
+        castleOk = checkedTown->hasBuilding(CASTLE_FORT_ID, true);
         break;
     case VICTORY_CASTLE_CITADEL:
-        castleOk =
-            (checkedTown->m_active & g_bitNumber[CASTLE_CITADEL_ID]) != 0;
+        castleOk = checkedTown->hasBuilding(CASTLE_CITADEL_ID, true);
         break;
     case VICTORY_CASTLE_CASTLE:
-        castleOk =
-            (checkedTown->m_active & g_bitNumber[CASTLE_CASTLE_ID]) != 0;
+        castleOk = checkedTown->hasBuilding(CASTLE_CASTLE_ID, true);
         break;
     }
     if (hallOk && castleOk) {
@@ -239,8 +237,7 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
             for (int j = 0; j < g_game->m_players[player].m_numTowns; ++j) {
                 town* thisTown = g_game->getTown(
                     g_game->m_players[player].m_townIds[j]);
-                type_point thisTownLoc(thisTown->m_mapX, thisTown->m_mapY,
-                                         thisTown->m_mapZ);
+                type_point thisTownLoc = thisTown->getLocation();
                 bool hasGrail = false;
                 if (thisTownLoc == grailTownLoc
                     || grailTownLoc == anyTownLoc)
@@ -279,11 +276,10 @@ unsigned char VictoryConditionStruct::isGrailTarget(town* thisTown)
 {
     type_point anyTownLoc(-1, -1, -1);
     type_point grailTownLoc(m_townX, m_townY, m_townZ);
-    type_point thisTownLoc(thisTown->m_mapX, thisTown->m_mapY,
-                             thisTown->m_mapZ);
+    type_point thisTownLoc = thisTown->getLocation();
 
     if (thisTownLoc == grailTownLoc
-        || grailTownLoc == anyTownLoc)
+        || anyTownLoc == grailTownLoc)
         return 1;
     return 0;
 }
@@ -327,13 +323,12 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
 {
     if (m_type == VICTORY_CONDITION_DEFEAT_ALL_MONSTERS) {
         type_point pos;
-        for (pos.m_z = 0; pos.m_z < g_game->m_worldMap.getNumLevels(); ++pos.m_z) {
+        for (pos.m_z = 0; pos.m_z < g_game->getNumMapLevels(); ++pos.m_z) {
             for (pos.m_y = 0; pos.m_y < g_mapHeight; ++pos.m_y) {
                 for (pos.m_x = 0; pos.m_x < g_mapWidth; ++pos.m_x) {
-                    NewmapCell* cell =
-                        g_game->m_worldMap.cell(pos.m_x, pos.m_y, pos.m_z);
+                    NewmapCell* cell = g_game->getCell(pos);
                     if (cell->m_isTrigger && cell->m_type == MONSTER) {
-                        if (!pos.operator==(monsterLoc))
+                        if (!(pos == monsterLoc))
                             return 0;
                     }
                 }
@@ -346,7 +341,7 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
         && g_currentPlayer
         && !g_game->m_playerDisabled[g_netLocalGamePos]) {
         type_point pos(m_monsterX, m_monsterY, m_monsterZ);
-        if (monsterLoc.operator==(pos)) {
+        if (monsterLoc == pos) {
             m_playerWinner = thisHero->m_owner;
             m_gameWon = 1;
             return 1;
@@ -403,8 +398,7 @@ VA(0x005f2810, 0x45)  // hd-crossbuild
 unsigned char VictoryConditionStruct::checkForTimeSurvival()
 {
     if (m_type == VICTORY_CONDITION_SURVIVE_TIME) {
-        short days = (g_game->m_month * 4
-            + g_game->m_week - 5) * 7 + g_game->m_day;
+        short days = g_game->getCurrentTurn();
         if (days > m_numDays) {
             m_gameWon = 1;
             return 1;
@@ -425,7 +419,7 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
     int team = g_game->getTeam(g_netLocalGamePos);
     if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
         type_point target(m_townX, m_townY, m_townZ);
-        if (!target.operator==(townLoc))
+        if (!(target == townLoc))
             return 0;
 
         if (thisHero->hasArtifact(m_artifactNum)) {
@@ -674,10 +668,9 @@ unsigned char LossConditionStruct::checkForDefeatedTownLoss(
 {
     if (m_type == LOSS_CONDITION_LOSE_TOWN) {
         type_point target(m_townX, m_townY, m_townZ);
-        type_point lost(lostTown->m_mapX, lostTown->m_mapY,
-                        lostTown->m_mapZ);
+        type_point lost = lostTown->getLocation();
 
-        if (lost.operator==(target)) {
+        if (target == lost) {
             m_playerLoser = static_cast<signed char>(oldOwner);
             m_gameLost = 1;
             return 1;
@@ -690,6 +683,8 @@ VA(0x005f2f20, 0x50)  // dc 0x1907bc
 unsigned char LossConditionStruct::checkForTimeLimitExpired()
 {
     if (m_type == LOSS_CONDITION_TIME_LIMIT) {
+        // The time-limit check keeps the full unsigned calendar expression;
+        // getCurrentTurn() returns a short and would narrow it first.
         int days = (static_cast<unsigned short>(g_game->m_month) * 4
             + static_cast<unsigned short>(g_game->m_week) - 5) * 7
           + g_game->m_day;
