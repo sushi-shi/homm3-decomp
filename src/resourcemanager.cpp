@@ -446,6 +446,7 @@ static bool openArchiveResource(int archiveIndex)
 // Mac retains the archive searches at 0:0x1522ec and 0:0x152374.
 // Resource loaders call them directly; the public pointTo* wrappers near
 // the end of this file remain separate calls at 0:0x154660 and 0:0x154680.
+MAC_ADDRESS(0x1522ec, 0x88)
 static LODFile* findSpriteResource(const char* name)
 {
     TResourceArchiveList& archives =
@@ -464,6 +465,7 @@ static LODFile* findSpriteResource(const char* name)
     return file;
 }
 
+MAC_ADDRESS(0x152374, 0x88)
 static LODFile* findBitmapResource(const char* name)
 {
     TResourceArchiveList& archives =
@@ -1642,13 +1644,13 @@ void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
     }
 }
 
-VA(0x0055cf50, 0x83) MAC_ADDRESS(0x1522ec, 0x88)
+VA(0x0055cf50, 0x83) MAC_ADDRESS(0x154660, 0x20)
 LODFile* ResourceManager::pointToSpriteResource(const char* name)
 {
     return findSpriteResource(name);
 }
 
-VA(0x0055cfe0, 0x83) MAC_ADDRESS(0x152374, 0x88)  // bitmap-field twin of PointToSpriteResource
+VA(0x0055cfe0, 0x83) MAC_ADDRESS(0x154680, 0x20)  // bitmap-field twin of PointToSpriteResource
 LODFile* ResourceManager::pointToBitmapResource(const char* name)
 {
     return findBitmapResource(name);
