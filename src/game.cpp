@@ -2805,31 +2805,23 @@ VA_COMPGEN(0x004bdc70, 0x309, IMPLICIT_COPY_ASSIGN, SCampaign)
 VA(0x004be140, 0x11E) MAC_ADDRESS(0x0d2508, 0x228)
 int SGameSetupOptions::save(TAbstractFile* outfile)
 {
-    char charBuffer;
-
     outfile->write(m_color, sizeof(m_color));
     outfile->write(m_color, sizeof(m_handicap));
     outfile->write(m_alignment, sizeof(m_alignment));
     outfile->write(m_playerPos, sizeof(m_playerPos));
 
-    charBuffer = m_difficulty;
-    outfile->write(&charBuffer, sizeof(charBuffer));
+    writeValue<char>(outfile, m_difficulty);
     outfile->write(m_filename, sizeof(m_filename));
     outfile->write(m_path, sizeof(m_path));
     outfile->write(m_canFlipFromToComputer, sizeof(m_canFlipFromToComputer));
 
-    charBuffer = m_curSelectedPlayer;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = m_fileInitialized;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = m_initializationNumHumans;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = m_turnDuration;
-    outfile->write(&charBuffer, sizeof(charBuffer));
+    writeValue<char>(outfile, m_curSelectedPlayer);
+    writeValue<char>(outfile, m_fileInitialized);
+    writeValue<char>(outfile, m_initializationNumHumans);
+    writeValue<char>(outfile, m_turnDuration);
 
     for (int i = 0; i < 8; ++i) {
-        charBuffer = m_startingHero[i];
-        outfile->write(&charBuffer, sizeof(charBuffer));
+        writeValue<char>(outfile, m_startingHero[i]);
     }
 
     return outfile->write(m_startingBonus, sizeof(m_startingBonus)) <
@@ -2842,31 +2834,22 @@ VA(0x004be260, 0x188) MAC_ADDRESS(0x0d2730, 0x224)
 int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 {
     TAbstractFile* input = infile;
-    {
-        char charBuffer;
+    input->read(m_color, sizeof(m_color));
+    input->read(m_color, sizeof(m_handicap));
+    input->read(m_alignment, sizeof(m_alignment));
+    input->read(m_playerPos, sizeof(m_playerPos));
 
-        input->read(m_color, sizeof(m_color));
-        input->read(m_color, sizeof(m_handicap));
-        input->read(m_alignment, sizeof(m_alignment));
-        input->read(m_playerPos, sizeof(m_playerPos));
+    m_difficulty = readValue<char>(input);
+    input->read(m_filename, sizeof(m_filename));
+    input->read(m_path, sizeof(m_path));
+    if (saveVersion < 28)
+        strcpy(m_path, "maps");
+    input->read(m_canFlipFromToComputer, sizeof(m_canFlipFromToComputer));
 
-        input->read(&charBuffer, sizeof(charBuffer));
-        m_difficulty = charBuffer;
-        input->read(m_filename, sizeof(m_filename));
-        input->read(m_path, sizeof(m_path));
-        if (saveVersion < 28)
-            strcpy(m_path, "maps");
-        input->read(m_canFlipFromToComputer, sizeof(m_canFlipFromToComputer));
-
-        input->read(&charBuffer, sizeof(charBuffer));
-        m_curSelectedPlayer = charBuffer;
-        input->read(&charBuffer, sizeof(charBuffer));
-        m_fileInitialized = charBuffer != 0;
-        input->read(&charBuffer, sizeof(charBuffer));
-        m_initializationNumHumans = charBuffer;
-        input->read(&charBuffer, sizeof(charBuffer));
-        m_turnDuration = charBuffer;
-    }
+    m_curSelectedPlayer = readValue<char>(input);
+    m_fileInitialized = readValue<char>(input) != 0;
+    m_initializationNumHumans = readValue<char>(input);
+    m_turnDuration = readValue<char>(input);
 
     int* heroPos = m_startingHero;
     int heroesRemaining = 8;
