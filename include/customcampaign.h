@@ -202,7 +202,7 @@ public:
     // Out of line at 0x485370, seven bytes of vftable restore; its
     // scalar deleting destructor is 0x484020.
     virtual ~TCampaignBonus();
-    virtual bool isBuildingBonus() const;
+    virtual bool isBuildingBonus() const = 0;
     virtual const char* getIconDefName() const = 0;
     virtual int getIconIndex() const = 0;
     virtual std::string getText() const = 0;
@@ -217,6 +217,7 @@ public:
 // word then an unsigned byte (0x484050).
 class TCampaignSpellBonus : public TCampaignBonus {
 public:
+    virtual bool isBuildingBonus() const;
     virtual const char* getIconDefName() const;
     virtual int getIconIndex() const { return m_spell; }
     virtual std::string getText() const;
@@ -241,6 +242,7 @@ public:
 // (0x4844f0) - the first two signed, the count unsigned.
 class TCampaignCreatureBonus : public TCampaignBonus {
 public:
+    virtual bool isBuildingBonus() const;
     virtual const char* getIconDefName() const;
     virtual int getIconIndex() const;
     virtual std::string getText() const;
@@ -272,6 +274,7 @@ public:
 // Artifact: hero and artifact, both signed words (0x4848a0).
 class TCampaignArtifactBonus : public TCampaignBonus {
 public:
+    virtual bool isBuildingBonus() const;
     virtual const char* getIconDefName() const;
     virtual int getIconIndex() const { return m_artifact; }
     virtual std::string getText() const;
@@ -288,6 +291,7 @@ public:
 // four ints).
 class TCampaignPrimarySkillBonus : public TCampaignBonus {
 public:
+    virtual bool isBuildingBonus() const;
     virtual const char* getIconDefName() const;
     virtual int getIconIndex() const;
     virtual std::string getText() const;
@@ -302,6 +306,7 @@ public:
 // as unsigned bytes (0x484cf0).
 class TCampaignSecondarySkillBonus : public TCampaignBonus {
 public:
+    virtual bool isBuildingBonus() const;
     virtual const char* getIconDefName() const;
     virtual int getIconIndex() const;
     virtual std::string getText() const;
@@ -318,6 +323,7 @@ public:
 // 7 and 8 (0x484d70).
 class TCampaignResourceBonus : public TCampaignBonus {
 public:
+    virtual bool isBuildingBonus() const;
     virtual const char* getIconDefName() const;
     virtual int getIconIndex() const;
     virtual std::string getText() const;

@@ -290,6 +290,14 @@ void TCampaignSpellBonus::read(TAbstractFile* file)
     }
 }
 
+// Mac keeps one predicate per concrete bonus; Windows folds the false bodies
+// to 0x484d50. The abstract base's retail vtable slot is __purecall.
+MAC_ADDRESS(0x09201c, 0x8)
+bool TCampaignSpellBonus::isBuildingBonus() const
+{
+    return false;
+}
+
 VA(0x00484090, 0x6) MAC_ADDRESS(0x092024, 0x8)
 const char* TCampaignSpellBonus::getIconDefName() const
 {
@@ -422,6 +430,12 @@ void TCampaignCreatureBonus::read(TAbstractFile* file)
     }
 }
 
+MAC_ADDRESS(0x09247c, 0x8)
+bool TCampaignCreatureBonus::isBuildingBonus() const
+{
+    return false;
+}
+
 VA(0x00484550, 0x6) MAC_ADDRESS(0x092484, 0x8)
 const char* TCampaignCreatureBonus::getIconDefName() const
 {
@@ -516,6 +530,12 @@ void TCampaignBuildingBonus::setTown(int town)
     m_building = g_eventBuildingIds[town][m_building];
 }
 
+MAC_ADDRESS(0x092828, 0x8)
+bool TCampaignArtifactBonus::isBuildingBonus() const
+{
+    return false;
+}
+
 VA(0x00484810, 0x6) MAC_ADDRESS(0x092830, 0x8)
 const char* TCampaignArtifactBonus::getIconDefName() const
 {
@@ -548,6 +568,12 @@ void TCampaignArtifactBonus::read(TAbstractFile* file)
     m_hero = value;
     file->read(&value, sizeof(short));
     m_artifact = value;
+}
+
+MAC_ADDRESS(0x092990, 0x8)
+bool TCampaignPrimarySkillBonus::isBuildingBonus() const
+{
+    return false;
 }
 
 VA(0x004848e0, 0x6) MAC_ADDRESS(0x092998, 0x8)
@@ -623,6 +649,12 @@ void TCampaignPrimarySkillBonus::read(TAbstractFile* file)
     file->read(m_skills, sizeof(m_skills));
 }
 
+MAC_ADDRESS(0x092d14, 0x8)
+bool TCampaignSecondarySkillBonus::isBuildingBonus() const
+{
+    return false;
+}
+
 VA(0x00484c30, 0x6) MAC_ADDRESS(0x092d1c, 0x8)
 const char* TCampaignSecondarySkillBonus::getIconDefName() const
 {
@@ -677,7 +709,8 @@ void TCampaignSecondarySkillBonus::read(TAbstractFile* file)
 }
 
 VA(0x00484d50, 0x3)
-bool TCampaignBonus::isBuildingBonus() const
+MAC_ADDRESS(0x092ed0, 0x8)
+bool TCampaignResourceBonus::isBuildingBonus() const
 {
     return false;
 }
