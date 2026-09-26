@@ -587,7 +587,7 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
                 checkAdjacentHexes(second, 0, 3);
         }
     }
-    return m_bestHex >= 0 && m_bestHex < 187;
+    return combatManager::validHex(m_bestHex);
 }
 
 // E:\gamedcs\ai_tactical.cpp:744 - dc 0x3d524. No retail slot: both

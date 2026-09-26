@@ -2511,7 +2511,7 @@ unsigned char combatManager::leftOfMoat(int index)
 VA(0x004674c0, 0x4C) MAC_ADDRESS(0x07367c, 0xfc)  // dc 0x611a0
 unsigned char combatManager::isAdjacent(int first, int second) const
 {
-    if (first >= 0 && first < 187 && second >= 0 && second < 187) {
+    if (validHex(first) && validHex(second)) {
         for (int i = 0; i < 6; i++) {
             if (m_adjacentCells[first][i] == second)
                 return 1;
