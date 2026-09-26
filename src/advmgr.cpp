@@ -4059,6 +4059,7 @@ int advManager::processSearch(int x, int y, int z)
 
             if (g_currentPlayer->isHuman()) {
                 g_grailOwner = g_netLocalGamePos;
+                // Mac uses channel 2 here; Windows retail passes 3.
                 launchSample(DATA_COMPGEN(
                                   0x00660360, processSearchGrailSample,
                                   "UltimateArtifact.wav"),

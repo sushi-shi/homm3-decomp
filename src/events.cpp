@@ -5098,6 +5098,7 @@ void advManager::eventSound(int eventID, int extraInfo)
     }
 
     if (sampleName.size())
+        // Mac uses channel 2 here; Windows retail passes 3.
         launchSample(sampleName.c_str(), -1, 3);
 }
 
@@ -5595,6 +5596,7 @@ void advManager::fizzleCenter(int whichSound)
     default:
         return;
     }
+    // Mac uses channel 2 here; Windows retail passes 3.
     launchSample(g_text, -1, 3);
     g_mouseManager->hidePointer();
     g_windowManager->saveFizzleSourceX(0xc0, 0xa0, 0xe0, 0xe0);

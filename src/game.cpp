@@ -9166,6 +9166,7 @@ void game::doNewTurn()
     // Mac doNewTurn retains turnOffAIMusic at 0:0xe420c and 0:0xe4294;
     // the earlier conditional sound enable remains a direct store.
     turnOffAIMusic();
+    // Mac uses channel 2 here; Windows retail passes 3.
     launchSample(sample, 30000, 3);
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
     g_advManager->m_advWindow->setBackgroundAnimation(1);
