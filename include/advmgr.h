@@ -682,7 +682,7 @@ public:
     inline void setBackgroundAnimation(unsigned char enable);
     void setBottomView(class type_bottom_view_window* newView);
     void updateResourceDisplay(bool draw, bool update);
-    void setAdvWinButtonPalette(int id, int player);
+    static void setAdvWinButtonPalette(int id, int player);
     void drawChatText(unsigned char update);
     void updateButtons(unsigned char draw, unsigned char update);
 
