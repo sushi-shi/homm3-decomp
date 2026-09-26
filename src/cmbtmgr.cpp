@@ -2275,11 +2275,11 @@ void combatManager::removeObstacle(int index)
         return;
     TObstacle* obstacle = &getObstacle(index);
     const TObstacleInfo* shape = obstacle->m_shape;
-    unsigned char rowIsOdd =
-        static_cast<unsigned char>((obstacle->m_hex / 0x11) & 1);
+    // Mac 0x72d9c/0x72de8 expands gridY and rowIsOdd at both checks.
+    unsigned char oddRow = rowIsOdd(gridY(obstacle->m_hex));
     for (int i = 0; i < shape->m_extraHexCount; i++) {
         int cellIndex = shape->m_extraHexOffsets[i] + obstacle->m_hex;
-        if (rowIsOdd && ((cellIndex / 0x11) & 1) == 0)
+        if (oddRow && !rowIsOdd(gridY(cellIndex)))
             cellIndex--;
         hexcell& cell = m_cells[cellIndex];
         cell.m_attributes &= ~hexcell::obstacleMask;
@@ -2499,13 +2499,13 @@ void combatManager::testRaiseDoor()
 VA(0x00467460, 0x22) MAC_ADDRESS(0x073610, 0x34)  // dc 0x61160
 unsigned char combatManager::inCastle(int index)
 {
-    return index >= g_castleWallColumns[index / 0x11];
+    return index >= g_castleWallColumns[gridY(index)];
 }
 
 VA(0x00467490, 0x22) MAC_ADDRESS(0x073644, 0x38)  // dc 0x61180
 unsigned char combatManager::leftOfMoat(int index)
 {
-    return index < g_moatHexes[index / 0x11];
+    return index < g_moatHexes[gridY(index)];
 }
 
 VA(0x004674c0, 0x4C) MAC_ADDRESS(0x07367c, 0xfc)  // dc 0x611a0
@@ -3428,13 +3428,14 @@ unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIn
     return 0;
 }
 
+// Mac 0x75cf0..0x75d5c expands gridX/gridY for both endpoints.
 VA(0x00469670, 0xD2) MAC_ADDRESS(0x075cd8, 0x138)  // dc 0x62e4c
 long combatManager::getDistance(long start, long stop)
 {
-    int sx = start % 0x11;
-    int sy = start / 0x11;
-    int tx = stop % 0x11;
-    int ty = stop / 0x11;
+    int sx = gridX(start);
+    int sy = gridY(start);
+    int tx = gridX(stop);
+    int ty = gridY(stop);
     int a = (sy + 1) / 2 - (ty + 1) / 2 - sx + tx;
     int b = ty / 2 - sy / 2 - sx + tx;
     if ((a < 0) == (b < 0))
