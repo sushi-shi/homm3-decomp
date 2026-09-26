@@ -2307,12 +2307,8 @@ void combatManager::initializeArchers()
 
     archer->m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    if (archer->m_sprite)
-        archer->m_sprite->dispose();
     archer->m_sprite = locals.m_sprite;
     locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    if (archer->m_shadowSprite)
-        archer->m_shadowSprite->dispose();
     archer->m_shadowSprite = locals.m_sprite;
     archer->m_x = info.m_positions[0].m_x;
     archer->m_y = info.m_positions[0].m_y;
@@ -2325,12 +2321,8 @@ void combatManager::initializeArchers()
 
     m_archers[1].m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    if (m_archers[1].m_sprite)
-        m_archers[1].m_sprite->dispose();
     m_archers[1].m_sprite = locals.m_sprite;
     locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    if (m_archers[1].m_shadowSprite)
-        m_archers[1].m_shadowSprite->dispose();
     m_archers[1].m_shadowSprite = locals.m_sprite;
     m_archers[1].m_x = info.m_positions[1].m_x;
     m_archers[1].m_y = info.m_positions[1].m_y;
@@ -2340,12 +2332,8 @@ void combatManager::initializeArchers()
 
     m_archers[2].m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    if (m_archers[2].m_sprite)
-        m_archers[2].m_sprite->dispose();
     m_archers[2].m_sprite = locals.m_sprite;
     locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    if (m_archers[2].m_shadowSprite)
-        m_archers[2].m_shadowSprite->dispose();
     m_archers[2].m_shadowSprite = locals.m_sprite;
     m_archers[2].m_x = info.m_positions[2].m_x;
     m_archers[2].m_y = info.m_positions[2].m_y;

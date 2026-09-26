@@ -84,17 +84,11 @@ DATA(0x00693858) int g_walkingYMod;
 VA(0x0043d250, 0x1A8) MAC_ADDRESS(0x048b38, 0x1ac)  // anchor-global + member-construction run, dc 0x436b8
 army::army()
 {
-    if (m_stdIcon)
-        m_stdIcon->dispose();
     m_stdIcon = 0;
-    if (m_missileIcon)
-        m_missileIcon->dispose();
     m_missileIcon = 0;
     m_imageHeight = 0;
     m_gridIndex = 0;
     for (int i = 0; i < MAX_SAMPLES; i++) {
-        if (m_armySample[i])
-            m_armySample[i]->dispose();
         m_armySample[i] = 0;
     }
     m_side = -1;
@@ -196,8 +190,6 @@ VA(0x0043d5c0, 0x166) MAC_ADDRESS(0x049008, 0x100)  // anchor-bracket + arity, d
 void army::initClean()
 {
     for (int i = 0; i < 8; i++) {
-        if (m_armySample[i])
-            m_armySample[i]->dispose();
         m_armySample[i] = 0;
     }
     m_roundsLeftBeforeVanish = -1;
@@ -205,8 +197,6 @@ void army::initClean()
     memset(m_spellInfluence, 0, sizeof(m_spellInfluence));
     m_spellInfluenceQueue.clear();
     m_lastFidgetTime = GameTime::get();
-    if (m_stdIcon)
-        m_stdIcon->dispose();
     m_stdIcon = 0;
     m_imageHeight = 0;
     m_showPowEffect = 0;
@@ -328,12 +318,8 @@ void army::loadResources()
                                     "%smove.82M"),
                 m_monInfo.m_samplePrefix);
         s = ResourceManager::getSample(g_text);
-        if (m_armySample[WALK_SAMPLE])
-            m_armySample[WALK_SAMPLE]->dispose();
         m_armySample[WALK_SAMPLE] = s;
     } else {
-        if (m_armySample[WALK_SAMPLE])
-            m_armySample[WALK_SAMPLE]->dispose();
         m_armySample[WALK_SAMPLE] = 0;
     }
 
@@ -350,24 +336,18 @@ void army::loadResources()
                                     "%sattk.82M"),
                 m_monInfo.m_samplePrefix);
     s = ResourceManager::getSample(g_text);
-    if (m_armySample[ATTACK_SAMPLE])
-        m_armySample[ATTACK_SAMPLE]->dispose();
     m_armySample[ATTACK_SAMPLE] = s;
 
     sprintf(g_text, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                 "%swnce.82M"),
             m_monInfo.m_samplePrefix);
     s = ResourceManager::getSample(g_text);
-    if (m_armySample[WINCE_SAMPLE])
-        m_armySample[WINCE_SAMPLE]->dispose();
     m_armySample[WINCE_SAMPLE] = s;
 
     sprintf(g_text, DATA_COMPGEN(0x006609e0, killSampleFormat,
                                 "%skill.82M"),
             m_monInfo.m_samplePrefix);
     s = ResourceManager::getSample(g_text);
-    if (m_armySample[DIE_SAMPLE])
-        m_armySample[DIE_SAMPLE]->dispose();
     m_armySample[DIE_SAMPLE] = s;
 
     if (is(creatureSiegeWeapon))
@@ -379,8 +359,6 @@ void army::loadResources()
                                     "%sdfnd.82M"),
                 m_monInfo.m_samplePrefix);
     s = ResourceManager::getSample(g_text);
-    if (m_armySample[DEFEND_SAMPLE])
-        m_armySample[DEFEND_SAMPLE]->dispose();
     m_armySample[DEFEND_SAMPLE] = s;
 
     if (is(creatureShootingArmy) || m_creatureType == CREATURE_MASTER_GENIE
@@ -389,12 +367,8 @@ void army::loadResources()
                                     "%sshot.82M"),
                 m_monInfo.m_samplePrefix);
         s = ResourceManager::getSample(g_text);
-        if (m_armySample[SHOOT_SAMPLE])
-            m_armySample[SHOOT_SAMPLE]->dispose();
         m_armySample[SHOOT_SAMPLE] = s;
     } else {
-        if (m_armySample[SHOOT_SAMPLE])
-            m_armySample[SHOOT_SAMPLE]->dispose();
         m_armySample[SHOOT_SAMPLE] = 0;
     }
 
@@ -406,22 +380,14 @@ void army::loadResources()
                                     "%sext1.82M"),
                 m_monInfo.m_samplePrefix);
         s = ResourceManager::getSample(g_text);
-        if (m_armySample[PRE_WALK_SAMPLE])
-            m_armySample[PRE_WALK_SAMPLE]->dispose();
         m_armySample[PRE_WALK_SAMPLE] = s;
         sprintf(g_text, DATA_COMPGEN(0x006609bc, ext2SampleFormat,
                                     "%sext2.82M"),
                 m_monInfo.m_samplePrefix);
         s = ResourceManager::getSample(g_text);
-        if (m_armySample[POST_WALK_SAMPLE])
-            m_armySample[POST_WALK_SAMPLE]->dispose();
         m_armySample[POST_WALK_SAMPLE] = s;
     } else {
-        if (m_armySample[PRE_WALK_SAMPLE])
-            m_armySample[PRE_WALK_SAMPLE]->dispose();
         m_armySample[PRE_WALK_SAMPLE] = 0;
-        if (m_armySample[POST_WALK_SAMPLE])
-            m_armySample[POST_WALK_SAMPLE]->dispose();
         m_armySample[POST_WALK_SAMPLE] = 0;
     }
 
@@ -436,8 +402,6 @@ void army::loadResources()
     CSprite* icon =
         ResourceManager::getSprite(g_creatureTypeTraits[m_creatureType]
                                        .m_spriteName);
-    if (m_stdIcon)
-        m_stdIcon->dispose();
     m_stdIcon = icon;
     m_imageHeight = 267 - m_stdIcon->getFrame(cs_wait, 0)->getCroppedY();
 
@@ -525,12 +489,8 @@ void army::loadResources()
             break;
         }
         CSprite* missile = ResourceManager::getSprite(missileName);
-        if (m_missileIcon)
-            m_missileIcon->dispose();
         m_missileIcon = missile;
     } else {
-        if (m_missileIcon)
-            m_missileIcon->dispose();
         m_missileIcon = 0;
     }
 }

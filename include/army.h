@@ -179,6 +179,9 @@ public:
 
     TResourceHandle& operator=(T* newResource)
     {
+        // Mac army/tower assignments inline this release-and-replace operation.
+        if (m_resource)
+            m_resource->dispose();
         m_resource = newResource;
         return *this;
     }
