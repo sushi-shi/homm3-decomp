@@ -9369,7 +9369,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
             static_cast<unsigned char*>(diffFile->apply(orig, size));
         fileSize = diffFile->m_numBytes;
         delete[] orig;
-        delete diffFile;
+        delete[] newSave;
         data = temp;
     }
 
