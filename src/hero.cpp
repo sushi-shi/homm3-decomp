@@ -1130,27 +1130,8 @@ void hero::initialize(const HeroExtra* setup)
 
     if (setup->m_customName) {
         m_hasCustomName = 1;
-        // Retail keeps basic_string::assign an out-of-line CALL here; our
-        // CL expanded it and spilled its internals (_Grow x2, _Split x2,
-        // _Eos, memmove, operator delete) into this body. inline_depth(0)
-        // is STATEMENT-granular in VC6, so it pins this one site.
-        // And the call retail makes is the THREE-argument assign, not
-        // operator=: push npos, push 0, push src, call assign(str,I,I),
-        // with npos LOADED from its out-of-line definition. Spelling the
-        // three-argument form under the same pin is worth 95.0000 ->
-        // 96.7770; unpinned it collapses (3-arg 55.7360, 1-arg 55.5946).
-        // Current TU: ordinary operator= gives 49.71% against 97.5831%.
-        // Nesting the campaign-mode gate or all three campaign checks is
-        // byte-flat at 49.71%; it does not recover this assignment boundary.
-        // CodeWarrior accepts depth(0) but rejects the empty restore;
-        // guard these VC6-only pragmas to keep later Mac bodies inlined.
-#ifdef _MSC_VER
-#pragma inline_depth(0)
-#endif
-        m_customName.assign(setup->m_name, 0, std::string::npos);
-#ifdef _MSC_VER
-#pragma inline_depth()
-#endif
+        // Mac f4944 retains assign(str, 0, npos) from operator='s expansion.
+        m_customName = setup->m_name;
     }
 
     if (setup->m_customExperience) {
