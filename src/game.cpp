@@ -806,34 +806,48 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
+// DC records count, x and two byte staging locals; Mac separates its signed
+// owner/type/abandoned slot from the unsigned count/coordinate slot.
 VA(0x004b9580, 0x165) MAC_ADDRESS(0x0cb6a8, 0x214)  // dc 0xa410c
 int game::saveMinePool(TAbstractFile* outfile)
 {
-    if (writeValue<unsigned char>(outfile, m_mines.size())
-        < sizeof(unsigned char))
+    int count;
+    int x;
+    unsigned char ucharBuffer;
+    char charBuffer;
+
+    ucharBuffer = m_mines.size();
+    count = writeScalar(outfile, ucharBuffer);
+    if (count < sizeof(ucharBuffer))
         return -1;
 
-    for (unsigned int i = 0; i < m_mines.size(); ++i) {
-        if (writeValue<unsigned char>(outfile, m_mines[i].m_playerOwner)
-            < sizeof(unsigned char))
+    for (x = 0; x < m_mines.size(); ++x) {
+        charBuffer = m_mines[x].m_playerOwner;
+        count = writeScalar(outfile, charBuffer);
+        if (count < sizeof(charBuffer))
             return -1;
-        if (writeValue<unsigned char>(outfile, m_mines[i].m_type)
-            < sizeof(unsigned char))
+        charBuffer = m_mines[x].m_type;
+        count = writeScalar(outfile, charBuffer);
+        if (count < sizeof(charBuffer))
             return -1;
-        if (writeValue<unsigned char>(outfile, m_mines[i].m_isAbandoned)
-            < sizeof(unsigned char))
+        charBuffer = m_mines[x].m_isAbandoned;
+        count = writeScalar(outfile, charBuffer);
+        if (count < sizeof(charBuffer))
             return -1;
 
-        m_mines[i].m_guards.save(outfile);
+        m_mines[x].m_guards.save(outfile);
 
-        if (writeValue<unsigned char>(outfile, m_mines[i].m_mapX)
-            < sizeof(unsigned char))
+        ucharBuffer = m_mines[x].m_mapX;
+        count = writeScalar(outfile, ucharBuffer);
+        if (count < sizeof(ucharBuffer))
             return -1;
-        if (writeValue<unsigned char>(outfile, m_mines[i].m_mapY)
-            < sizeof(unsigned char))
+        ucharBuffer = m_mines[x].m_mapY;
+        count = writeScalar(outfile, ucharBuffer);
+        if (count < sizeof(ucharBuffer))
             return -1;
-        if (writeValue<unsigned char>(outfile, m_mines[i].m_mapZ)
-            < sizeof(unsigned char))
+        ucharBuffer = m_mines[x].m_mapZ;
+        count = writeScalar(outfile, ucharBuffer);
+        if (count < sizeof(ucharBuffer))
             return -1;
     }
     return 0;
@@ -875,31 +889,43 @@ int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
+// Preserve DC's two byte staging locals. Mac retains a separate temporary
+// for the later removableTroops field, so that final by-value helper stays.
 VA(0x004b98c0, 0x139) MAC_ADDRESS(0x0cbab4, 0x1c8)  // dc 0xa4548
 int game::saveGarrisonPool(TAbstractFile* outfile)
 {
-    if (writeValue<unsigned char>(outfile, m_garrisons.size())
-        < sizeof(unsigned char))
+    int count;
+    int x;
+    unsigned char ucharBuffer;
+    char charBuffer;
+
+    ucharBuffer = m_garrisons.size();
+    count = writeScalar(outfile, ucharBuffer);
+    if (count < sizeof(ucharBuffer))
         return -1;
 
-    for (unsigned int i = 0; i < m_garrisons.size(); ++i) {
-        if (writeValue<unsigned char>(outfile, m_garrisons[i].m_playerOwner)
-            < sizeof(unsigned char))
+    for (x = 0; x < m_garrisons.size(); ++x) {
+        charBuffer = m_garrisons[x].m_playerOwner;
+        count = writeScalar(outfile, charBuffer);
+        if (count < sizeof(charBuffer))
             return -1;
 
-        m_garrisons[i].m_garrisonArmy.save(outfile);
+        m_garrisons[x].m_garrisonArmy.save(outfile);
 
-        if (writeValue<unsigned char>(outfile, m_garrisons[i].m_mapX)
-            < sizeof(unsigned char))
+        ucharBuffer = m_garrisons[x].m_mapX;
+        count = writeScalar(outfile, ucharBuffer);
+        if (count < sizeof(ucharBuffer))
             return -1;
-        if (writeValue<unsigned char>(outfile, m_garrisons[i].m_mapY)
-            < sizeof(unsigned char))
+        ucharBuffer = m_garrisons[x].m_mapY;
+        count = writeScalar(outfile, ucharBuffer);
+        if (count < sizeof(ucharBuffer))
             return -1;
-        if (writeValue<unsigned char>(outfile, m_garrisons[i].m_mapZ)
-            < sizeof(unsigned char))
+        ucharBuffer = m_garrisons[x].m_mapZ;
+        count = writeScalar(outfile, ucharBuffer);
+        if (count < sizeof(ucharBuffer))
             return -1;
 
-        writeValue<unsigned char>(outfile, m_garrisons[i].m_removableTroops);
+        writeValue<unsigned char>(outfile, m_garrisons[x].m_removableTroops);
     }
     return 0;
 }
