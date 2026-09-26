@@ -686,11 +686,11 @@ public:
     {
         m_forWho = forWho;
         sRand(GameTime::get());
-        int creature;
-        do {
+        int creature = sRandom(0, 111);
+        while (creature == WAIT_CREATURE_ARCH_DEVIL
+               || creature == WAIT_CREATURE_DEVIL) {
             creature = sRandom(0, 111);
-        } while (creature == WAIT_CREATURE_ARCH_DEVIL
-                 || creature == WAIT_CREATURE_DEVIL);
+        }
         setup(text, g_mediumFont,
               g_creatureTypeTraits[creature].m_spriteName, 0);
         doModal(0);
