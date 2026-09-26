@@ -10,11 +10,6 @@
 #include "va.h"
 
 #include <stdexcept>
-#if defined(HOMM3_TARGET_MAC)
-// MSL's <stdexcept> sees basic_string only through <stringfwd>; VC6's
-// includes <xstring>, which the default-error constructor below requires.
-#include <string>
-#endif
 
 // The catchable-type entries describe multiple inheritance, not a linear
 // chain: TRuntimeError is 32 bytes, its std::runtime_error base is 28 bytes

@@ -108,7 +108,7 @@ Mac controls still compare exactly when read from the full-TU objects.
 (`homm3.mac.cc_wrap`) producing `build/mac/obj/<unit>.o` from every
 `config/units.toml` source, with `ninja mac-objects` / `ninja mac:<unit>`
 outside `all`. The rule adds only CodeWarrior flags, `-prefix
-include/compiler.h` and the project/MSL include roots; it writes the full
+include/codewarrior_prefix.h` and the project/MSL include roots; it writes the full
 diagnostics, the `MWLinkPPC -dis` listing, an index of every emitted code and
 data hunk, and a header-closure depfile. `homm3 mac objects` reports per-TU
 state: 99 of 152 TUs compile (6968 code hunks) and 53 fail with their first

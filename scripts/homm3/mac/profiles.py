@@ -79,6 +79,6 @@ def headers(root: Path, profile: Profile) -> dict[str, bytes]:
                 raise ValueError(f"header inputs must not be symlinks: {path}")
             if path.is_file():
                 result[path.relative_to(root).as_posix()] = path.read_bytes()
-    if "include/compiler.h" not in result:
-        raise ValueError("missing ordinary compiler compatibility header: include/compiler.h")
+    if "include/codewarrior_prefix.h" not in result:
+        raise ValueError("missing ordinary compiler compatibility header: include/codewarrior_prefix.h")
     return result
