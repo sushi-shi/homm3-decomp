@@ -2,16 +2,11 @@
 # keyed by config/units.toml unit names.
 
 # One profile for every unit; -proc 750 scheduling is calibrated on hero.
+# -char unsigned scored lower: 3 hero/remote pairs, or 79 (3 exact) as a global flag.
 flags = ["-O3", "-proc", "750", "-nolink"]
 
 # A unit override replaces `flags`. A disposition accounts for a unit with no
 # Mac counterpart; it needs positive evidence from the Mac executable.
-
-[units.hero]
-flags = ["-O3", "-proc", "750", "-nolink", "-char", "unsigned"]
-
-[units.remote]
-flags = ["-O3", "-proc", "750", "-nolink", "-char", "unsigned"]
 
 [units.forcefeedback]
 disposition = "windows_only"
