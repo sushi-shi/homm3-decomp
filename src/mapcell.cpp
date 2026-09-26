@@ -286,11 +286,10 @@ int TTownEvent::load(TAbstractFile* infile, int saveVersion)
 // Dreamcast retains an out-of-line copy. Mac places the retained body between
 // TTownEvent::load and getTriggerCell; both Mac callers are in mapcell.
 // Retail's corresponding source-order slot is twelve bytes of NOP padding,
-// while isDiggable and getSpecialTerrain expand this lookup. Removing inline
-// leaves both callers exact but emits an unused VC6 COMDAT; the original
-// keyword remains unproven.
+// while isDiggable and getSpecialTerrain expand this ordinary lookup.
+// The unused VC6 COMDAT does not justify an unproven inline keyword.
 MAC_ADDRESS(0x11e1fc, 0x20)
-inline CObject* NewmapCell::TObjectCell::getObject() const
+CObject* NewmapCell::TObjectCell::getObject() const
 {
     return &g_game->m_worldMap.m_objects[m_objectIndex];
 }
@@ -1220,11 +1219,11 @@ CObjectType* CObject::getObjectTypePtr() const
 
 // E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
 // out-of-line SH4 body; Mac places it between getObjectTypePtr and findTrigger.
-// Its two Mac callers are in mapcell. Complete expands the admitted uses;
-// removing inline keeps getTriggerCell exact but emits an unused VC6 COMDAT,
-// so the original keyword remains unproven.
+// Its two Mac callers are in mapcell. Complete expands the admitted uses.
+// The ordinary body keeps getTriggerCell exact; an unused VC6 COMDAT does
+// not justify an unproven inline keyword.
 MAC_ADDRESS(0x120ab8, 0x80)
-inline type_point CObject::getTrigger() const
+type_point CObject::getTrigger() const
 {
     int resultX;
     int resultY;
