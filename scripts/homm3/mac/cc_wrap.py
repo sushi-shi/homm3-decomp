@@ -16,7 +16,9 @@ and the staged CodeWarrior library headers. Beside the object it writes:
     <unit>.o.d         gcc-style depfile over the project-header closure
 
 A failed compile exits nonzero with its real diagnostics; the TU stays in the
-graph. `homm3 mac objects` summarizes the per-TU state.
+graph. Scoring sets HOMM3_MAC_ALLOW_COMPILE_ERRORS=1 so diagnosed source errors
+can leave a TU unavailable without stopping other TUs. Infrastructure failures
+remain fatal. `homm3 mac objects` summarizes the per-TU state.
 """
 from __future__ import annotations
 
@@ -76,15 +78,15 @@ def _depfile(out: Path, source: Path) -> None:
     out.with_name(out.name + ".d").write_text(f"{target}: {escaped}\n")
 
 
-def compile_unit(unit: str, source: Path, out: Path) -> int:
+def compile_unit(unit: str, source: Path, out: Path, *, allow_compile_errors: bool = False) -> int:
     from homm3.mac import sdk, toolchain
     from homm3.mac.object import parse_code_hunks, parse_data_hunks
-    tools = toolchain.stage()
-    sdk.stage(root=ROOT)
     out.parent.mkdir(parents=True, exist_ok=True)
     log = out.with_suffix(".log")
     for stale in (out, out.with_suffix(".dis.txt"), out.with_suffix(".hunks.json")):
         stale.unlink(missing_ok=True)
+    tools = toolchain.stage()
+    sdk.stage(root=ROOT)
     _depfile(out, source)
     env = _wine_env()
     command = ["wine", str(tools / "MWCPPC.exe"), *flags_for(unit),
@@ -100,6 +102,12 @@ def compile_unit(unit: str, source: Path, out: Path) -> int:
         out.unlink(missing_ok=True)
         sys.stderr.write(f"[mac] {unit}: CodeWarrior failed ({code}); see {log.relative_to(ROOT)}\n")
         sys.stderr.write(diagnostics[-4000:])
+        # Helper-target coverage may be partial. Only an ordinary compiler
+        # diagnostic is a coverage gap; crashes, timeouts and absent outputs
+        # without such a diagnostic must still stop scoring.
+        if (allow_compile_errors and code == 1
+                and re.search(r"^#\s+Error:", diagnostics, re.MULTILINE)):
+            return 0
         return 1
     listing = subprocess.run(["wine", str(tools / "MWLinkPPC.exe"), "-dis",
                               out.relative_to(ROOT).as_posix()],
@@ -184,7 +192,8 @@ def main(argv=None) -> int:
     parser.add_argument("--out", required=True)
     args = parser.parse_args(argv)
     try:
-        return compile_unit(args.unit, (ROOT / args.src).resolve(), (ROOT / args.out).resolve())
+        return compile_unit(args.unit, (ROOT / args.src).resolve(), (ROOT / args.out).resolve(),
+                            allow_compile_errors=os.environ.get("HOMM3_MAC_ALLOW_COMPILE_ERRORS") == "1")
     except (OSError, ValueError) as exc:
         print(f"[mac] {args.unit}: {exc}", file=sys.stderr)
         return 1

@@ -10,9 +10,9 @@ For every unit with a full-TU object (`ninja mac:<unit>`), report:
                        inlined everywhere, conditionally compiled out, or
                        unused; the report does not decide which
 
-The join is by qualified name. CodeWarrior's ARM-style mangling is decoded
-only as far as the qualified name; overloads sharing that name are reported
-as ambiguous rather than guessed.
+The join verifies qualified names, member constness and parameter encodings
+from CodeWarrior's ARM-style mangling. Unsupported parameter forms and
+ambiguous overloads stay unresolved rather than being guessed.
 """
 from __future__ import annotations
 
@@ -153,7 +153,7 @@ BUILTINS = {
 def encode(spelling: str) -> str | None:
     """ARM code of a clang parameter spelling; None when the form is not modelled."""
     text = re.sub(r"\b(?:struct|class|enum|union)\s+", "", spelling).strip()
-    if "(" in text or "[" in text or "<" in text:
+    if "(" in text or "[" in text or "<" in text or "volatile" in text.split():
         return None
     split = re.search(r"[*&]", text)
     base = (text[:split.start()] if split else text).split()
@@ -178,13 +178,6 @@ def encode(spelling: str) -> str | None:
     return code  # a by-value parameter's top-level const is not mangled
 
 
-def _template_hint(spelling: str) -> str | None:
-    """`<first-argument-code,` of a template spelling such as std::vector<army *> &."""
-    match = re.search(r"<([^<>,]+)[,>]", spelling)
-    code = encode(match.group(1)) if match else None
-    return f"<{code}," if code else None
-
-
 def fit(definition, symbol: str) -> int | None:
     """How many parameters of `symbol` spell `definition`'s; None if incompatible."""
     decoded = parameters(symbol)
@@ -196,19 +189,16 @@ def fit(definition, symbol: str) -> int | None:
         wanted.append("e")
     if len(codes) != len(wanted) or (definition.member and const != definition.const):
         return None
-    if any(code is not None and code != actual and code[:1] not in "0123456789Q"
-           and not code.startswith(("P", "R")) for code, actual in zip(wanted, codes)):
-        return None  # a written builtin must mangle as itself
-    hints = [_template_hint(spelling) for spelling in definition.argument_types]
-    return (sum(code == actual for code, actual in zip(wanted, codes))
-            + sum(bool(hint) and hint in actual for hint, actual in zip(hints, codes)))
+    # A partial type/name match is not an identity proof. Unsupported types
+    # and platform-specific signatures remain inspectable claims, unscored.
+    if any(code is None or code != actual for code, actual in zip(wanted, codes)):
+        return None
+    return len(codes)
 
 
 def select(definition, symbols) -> str | None:
     """The one symbol among same-named overloads whose parameters fit `definition`."""
     symbols = sorted(set(symbols))
-    if len(symbols) == 1:
-        return symbols[0]
     scored = [(score, symbol) for symbol in symbols
               if (score := fit(definition, symbol)) is not None]
     if not scored:
@@ -220,8 +210,6 @@ def select(definition, symbols) -> str | None:
 
 def owner(symbol: str, definitions) -> object | None:
     """The one same-named definition whose parameters `symbol` spells."""
-    if len(definitions) == 1:
-        return definitions[0] if parameters(symbol) is not None else None
     scored = [(score, index) for index, definition in enumerate(definitions)
               if (score := fit(definition, symbol)) is not None]
     if not scored:

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 import hashlib
+import os
 from pathlib import Path
 import subprocess
 
@@ -82,12 +83,18 @@ class Listings:
 
 
 def objects(units: set[str] | None = None, root: Path = ROOT) -> None:
-    """Bring the full-TU objects up to date; a unit that fails to compile is reported, not fatal."""
+    """Refresh objects; only diagnosed source compilation errors are nonfatal.
+
+    The wrapper removes failed outputs before allowing Ninja to continue.
+    Every other Ninja failure prevents comparison and checkpointing.
+    """
     targets = sorted(f"mac:{unit}" for unit in units) if units else ["mac-objects"]
     completed = subprocess.run(["ninja", "-C", str(root), "-k", "0", *targets],
-                               capture_output=True, text=True, errors="replace")
-    if "Traceback" in completed.stdout + completed.stderr:
-        raise MacBuildError("full-TU object wrapper crashed; see `ninja mac-objects`")
+                               capture_output=True, text=True, errors="replace",
+                               env=dict(os.environ, HOMM3_MAC_ALLOW_COMPILE_ERRORS="1"))
+    if completed.returncode:
+        raise MacBuildError("full-TU object refresh failed; comparison withheld:\n"
+                            + (completed.stdout + completed.stderr)[-6000:])
 
 
 def linked_pair(pair: pairs.Pair, pef: PEF, destinations, listings: Listings) -> tuple[LinkedCode, CodeHunk]:

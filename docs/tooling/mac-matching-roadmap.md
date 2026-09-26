@@ -10,7 +10,9 @@ from them. Ordinary-header compilation status is recorded in the
 A pair is a source `MAC_ADDRESS` claim with a Windows VA whose definition the
 unit's full-TU object (`build/mac/obj/<unit>.o`) emits. `homm3.mac.emitted`
 joins the claim to that hunk by qualified name, telling overloads apart by
-their mangled parameters. `homm3 mac build` (run by `homm3 build`) links the
+their mangled parameters, including when only one same-named symbol exists.
+Unsupported parameter types and platform-specific signature differences stay
+unscored until the join can verify their identity. `homm3 mac build` (run by `homm3 build`) links the
 hunk at the claimed address and compares it with the pinned PEF; the Mac
 CUR/MAX/HIST ledger `config/mac/match_baseline.tsv` is keyed by the VA, and a
 VA not scored in a checkpoint keeps its previous row. MAX follows the
@@ -29,9 +31,21 @@ alongside bytes and scores. Counts are static instructions, not runtime
 execution counts or proof of inlining. Indirect calls and unknown targets
 remain explicit.
 
+Mac is a helper target for Windows source recovery, not a runnable-port
+requirement. Diagnosed CodeWarrior source errors leave that TU unavailable;
+other TUs can still provide evidence. Failed compilation removes its old
+object, listing and symbol index. Toolchain, Ninja, timeout and disassembly
+failures stop comparison and checkpointing rather than reuse stale outputs.
+Direct `ninja mac-objects` still reports source compilation failures as errors.
+
+`show`, `disasm` and `xrefs` select source claims without requiring an emitted
+candidate. `diff`, `shape` and `calls` refresh the owning TU before resolving
+its emitted body. This keeps the pinned Mac evidence available while a TU is
+unbuildable; unsupported joins never become approximate byte verdicts.
+
 ```sh
 homm3 mac build --fast <unit>          # score one unit's pairs (full build: all, with checkpoint)
-homm3 mac show <Windows-VA>            # claimed span, emitted symbol and source claim
+homm3 mac show <Windows-VA>            # claimed span and source, even without a candidate
 homm3 mac diff <Windows-VA>            # linked candidate vs retail, instruction by instruction
 homm3 mac shape <Windows-VA>           # relocation-masked comparison; works before references resolve
 homm3 mac calls [<Windows-VA>|<unit>]  # retail/candidate call sequences

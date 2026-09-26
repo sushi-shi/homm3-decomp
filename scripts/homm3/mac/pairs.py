@@ -24,7 +24,7 @@ class PairError(ValueError):
 
 @dataclass(frozen=True)
 class Pair:
-    retail_va: int
+    retail_va: int | None
     unit: str
     source: Path
     signature: str
@@ -49,6 +49,8 @@ class Inventory:
 def _universe(root: Path) -> set[str]:
     names = set()
     for index in sorted((root / "build/mac/obj").glob("*.hunks.json")):
+        if not index.with_name(index.name.replace(".hunks.json", ".o")).is_file():
+            continue
         for hunk in json.loads(index.read_text())["code"]:
             names.add(hunk["symbol"])
             names.update(reference[2] for reference in hunk["references"])
@@ -130,21 +132,49 @@ def _definitions(root: Path):
     return _cached_definitions(root.resolve())
 
 
+def claimed(root: Path) -> tuple[Pair, ...]:
+    """Inspection targets exist independently of candidate compilation."""
+    from homm3 import manifest
+    from homm3.mac import addresses
+    claims, _windows, problems = addresses.scan(root)
+    if problems:
+        raise PairError("; ".join(problems))
+    units = {row["source"]: row["unit"] for row in manifest.units(root / "config/units.toml")}
+    result = []
+    for claim, definition in emitted.bind(_definitions(root), claims):
+        owner = (definition.source_owner or definition.file) if definition else claim.path
+        name = definition.name if definition else claim.label or claim.identity
+        result.append(Pair(claim.windows_va, units.get(owner, ""), root / claim.path,
+                           name, 0, claim.offset, claim.size, "", claim.identity, claim.line))
+    return tuple(result)
+
+
+def select_claim(root: Path, value: str) -> Pair:
+    return _select(claimed(root), value, "claimed Mac targets")
+
+
 def select(inventory: Inventory, value: str) -> Pair:
     """One scored pair by Windows VA, mac:[section:]offset, or name substring."""
+    return _select(inventory.pairs, value, "scored Mac pairs")
+
+
+def _select(targets, value: str, scope: str) -> Pair:
     if value.startswith("mac:"):
         parts = value[4:].split(":")
+        if len(parts) not in (1, 2):
+            raise PairError("Mac selector must be mac:<offset> or mac:<section>:<offset>")
+        section = int(parts[0], 0) if len(parts) == 2 else 0
         offset = int(parts[-1], 0)
-        matches = [pair for pair in inventory.pairs
-                   if pair.mac_offset <= offset < pair.mac_offset + pair.mac_size]
+        matches = [pair for pair in targets
+                   if pair.mac_section == section and pair.mac_offset <= offset < pair.mac_offset + pair.mac_size]
     else:
         try:
             address = int(value, 0)
         except ValueError:
-            matches = [pair for pair in inventory.pairs
+            matches = [pair for pair in targets
                        if value in pair.signature or value == pair.unit]
         else:
-            matches = [pair for pair in inventory.pairs if pair.retail_va == address]
+            matches = [pair for pair in targets if pair.retail_va == address]
     if len(matches) != 1:
-        raise PairError(f"selector {value!r} found {len(matches)} scored Mac pairs")
+        raise PairError(f"selector {value!r} found {len(matches)} {scope}")
     return matches[0]

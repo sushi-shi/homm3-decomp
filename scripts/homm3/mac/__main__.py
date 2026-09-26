@@ -15,7 +15,16 @@ from homm3.mac.source import load_data
 
 
 def _select(value: str):
-    return pairs.select(pairs.load(common.HOMM3_DIR), value)
+    return pairs.select_claim(common.HOMM3_DIR, value)
+
+
+def _compile_target(target):
+    build.objects({target.unit} if target.unit else None)
+    inventory = pairs.load(common.HOMM3_DIR)
+    matches = [pair for pair in inventory.pairs if pair.identity == target.identity]
+    if len(matches) != 1:
+        raise pairs.PairError(f"{target.signature}: no verified emitted body after compilation")
+    return matches[0], inventory
 
 
 def _image():
@@ -357,12 +366,14 @@ def main(argv=None) -> int:
                         print(f"    homm3 mac xrefs {address}")
             return 0
         if args.command == "calls":
-            inventory = pairs.load(common.HOMM3_DIR)
-            selected = list(inventory.pairs)
+            selected = list(pairs.claimed(common.HOMM3_DIR))
             if args.selector:
                 selected = ([pair for pair in selected if pair.unit == args.selector]
-                            or [pairs.select(inventory, args.selector)])
-            build.objects({pair.unit for pair in selected} if args.selector else None)
+                            or [_select(args.selector)])
+            units = {pair.unit for pair in selected}
+            build.objects(units if args.selector and "" not in units else None)
+            inventory = pairs.load(common.HOMM3_DIR)
+            candidates = {pair.identity: pair for pair in inventory.pairs}
             pef = _image()
             destinations = symbols.targets(common.HOMM3_DIR, pef, inventory)
             listings = build.Listings()
@@ -371,13 +382,16 @@ def main(argv=None) -> int:
                 origin = Address(pair.mac_section, pair.mac_offset)
                 retail = calls.analyze(pef.code(pair.mac_section, pair.mac_offset, pair.mac_size),
                                        origin, destinations, labels=inventory.labels)
-                hunk = listings.get(pair.unit)[0].get(pair.mac_symbol)
+                emitted_pair = candidates.get(pair.identity)
+                hunk = (listings.get(emitted_pair.unit)[0].get(emitted_pair.mac_symbol)
+                        if emitted_pair else None)
                 candidate = (calls.analyze(hunk.data, origin, destinations, xrefs=hunk.xrefs,
                                            labels=inventory.labels) if hunk else None)
-                rows.append({"retail_va": f"0x{pair.retail_va:08x}", "unit": pair.unit,
+                rows.append({"retail_va": f"0x{pair.retail_va:08x}" if pair.retail_va is not None else None,
+                             "unit": pair.unit,
                              "signature": pair.signature,
                              "calls": calls.compare(retail, candidate,
-                                                    error=None if hunk else "symbol not emitted")})
+                                                    error=None if hunk else "no verified emitted body")})
             totals = calls.totals([row["calls"] for row in rows])
             if args.json:
                 print(json.dumps({"pairs": rows, "totals": totals}, indent=2))
@@ -397,9 +411,9 @@ def main(argv=None) -> int:
         pef = _image()
         target = pef.code(pair.mac_section, pair.mac_offset, pair.mac_size)
         if args.command == "show":
-            print(f"Windows VA {pair.retail_va:#010x}  {pair.signature}  [{pair.unit}]")
+            windows = f"{pair.retail_va:#010x}" if pair.retail_va is not None else "unpaired"
+            print(f"Windows VA {windows}  {pair.signature}  [{pair.unit}]")
             print(f"Mac PEF section {pair.mac_section}+{pair.mac_offset:#x}, {pair.mac_size:#x} bytes")
-            print(f"CodeWarrior symbol {pair.mac_symbol} (build/mac/obj/{pair.unit}.o)")
             print(f"Source claim {pair.source.relative_to(common.HOMM3_DIR)}:{pair.line}")
             return 0
         if args.command == "disasm":
@@ -441,13 +455,11 @@ def main(argv=None) -> int:
             return 0
         if args.command == "shape":
             from homm3.mac import shape
-            build.objects({pair.unit})
+            pair, _inventory = _compile_target(pair)
             report = shape.inspect(pair, pef)
             print(json.dumps(report, indent=2) if args.json else shape.render(report))
             return 0
-        build.objects({pair.unit})
-        inventory = pairs.load(common.HOMM3_DIR)
-        pair = pairs.select(inventory, f"0x{pair.retail_va:08x}")
+        pair, inventory = _compile_target(pair)
         destinations = symbols.targets(common.HOMM3_DIR, pef, inventory)
         listings = build.Listings()
         if args.json:

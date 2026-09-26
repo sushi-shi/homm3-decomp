@@ -156,6 +156,9 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
                 inputs=unit["source"],
                 implicit=["scripts/homm3/mac/cc_wrap.py", "config/units.toml",
                           "config/mac/toolchain.toml", "config/mac/sdk.toml",
+                          "include/codewarrior_prefix.h", "scripts/homm3/mac/profiles.py",
+                          "scripts/homm3/mac/toolchain.py", "scripts/homm3/mac/sdk.py",
+                          "scripts/homm3/mac/object.py",
                           "config/mac/units.toml"],
                 variables={"unit": unit["unit"]},
             )
