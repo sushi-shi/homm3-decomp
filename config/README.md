@@ -8,7 +8,7 @@
 | Directory | Contents |
 | --- | --- |
 | [`retail/`](retail/) | Reviewed function boundaries, vtables, funclets, initialization thunks, relocations, runtime and zlib identities, and anonymous-namespace paths. |
-| [`mac/`](mac/) | Reviewed Windows-VA/DATA to Mac PEF pairs, verified runtime destinations and constants, pinned CodeWarrior profile, campaign deferrals and separate Mac CUR/MAX/HIST ledger. |
+| [`mac/`](mac/) | Mac PEF function spans and library labels, reviewed data bindings, CodeWarrior settings and the separate Mac CUR/MAX/HIST ledger. |
 | [`source/`](source/) | Exact Dreamcast/Windows source exclusions, Dreamcast audit suppressions and accepted address-claim exceptions. |
 | [`cleanliness/`](cleanliness/) | Source-cleanliness baseline. |
 | [`matching/`](matching/) | Reviewed banked-match withdrawals and parked matching candidates. |
@@ -20,16 +20,14 @@ Windows-only modules remain in their separate companion tables.
 Table headers describe ownership and update rules. Retail inventories are
 reviewed inputs; generated analysis and scratch output belong in `build/`.
 
-Mac additions use `mac/units/<TU>.toml` for a shared compilation profile and
-`mac/functions/<TU>.toml` for reviewed spans. Existing aggregate files remain
-supported, but duplicate unit profiles, symbols, VAs and overlapping spans
-are rejected. See the [Mac extension workflow](../docs/tooling/mac-matching-roadmap.md#extending-a-unit).
+[`mac/units.toml`](mac/units.toml) holds the CodeWarrior flags for the full-TU
+Mac objects, any per-unit override and whole-unit dispositions with one-line
+evidence, keyed by `units.toml` unit names.
 
-`mac/references/<TU>.toml` records reviewed source-owned callees that resolve
-calls without adding scored targets. `mac/data/<TU>.toml` lets workers extend
-source-owned external storage bindings and compiler literal pools independently.
-Identical shared references coalesce; conflicting identities or spans fail.
-Literal `units` scopes distinguish equal payloads in different linked pools.
+`mac/data/<TU>.toml` lets workers extend source-owned external storage
+bindings and compiler literal pools independently. Identical shared
+references coalesce; conflicting identities or spans fail. Literal `units`
+scopes distinguish equal payloads in different linked pools.
 
 Mac function addresses live in source, beside the Windows claim:
 `VA(0x004d8720, 0x568) MAC_ADDRESS(0x0f3fe4, 0x568)`, or on its own line above
@@ -43,14 +41,14 @@ with provenance, [`mac/glue-map.tsv`](mac/glue-map.tsv) and
 code-section regions,
 and [`mac/dispositions.tsv`](mac/dispositions.tsv) records evidenced reasons a
 source function has no Mac body. Every source claim and runtime label must be
-one `functions.tsv` row. `homm3 mac migrate` copies reviewed TOML spans into
-these forms; `homm3 mac parity` validates them and reports every source
-function as located, unlocated or disposed (`build/gen/mac/parity.tsv`).
+one `functions.tsv` row. `homm3 mac parity` validates them and reports every
+source function as located, unlocated or disposed (`build/gen/mac/parity.tsv`).
 `homm3 mac inventory` accounts for every code-section byte and admits proven
 function spans; `homm3 mac emitted` joins full-TU objects to source.
 
-Mac candidates reuse the owning source file's include prefix and read ordinary
-project headers with the native CodeWarrior library. Duplicate declaration
-headers and the body-extraction manifest have been removed. The remaining
+`homm3 mac build` scores every claim with a Windows VA whose body its unit's
+full-TU object emits (`build/mac/obj/<unit>.o`), keyed by that VA in
+[`mac/match_baseline.tsv`](mac/match_baseline.tsv).
+
 [`source/header-fragments.toml`](source/header-fragments.toml) records ordinary
 shared headers that still need include-site ownership.

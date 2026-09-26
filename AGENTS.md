@@ -10,9 +10,9 @@ Recover C++ that reproduces Heroes III Complete's retail MSVC 6.0 object code.
 - Dreamcast's embedded debug symbols prove source facts for an older,
   cross-architecture build; x86 identities require retail proof.
 - The pinned Classic Mac PowerPC PEF is a second exact byte target for
-  hand-admitted shared functions. Mac addresses are PEF section-relative
-  offsets paired with existing Windows VA claims; unpaired functions have no
-  Mac verdict. See [the Mac target plan](docs/matching/mac-second-target-plan.md).
+  shared functions. Source `MAC_ADDRESS` claims give PEF section-relative
+  offsets beside their Windows VA claims; unclaimed functions have no Mac
+  verdict. See [the Mac target plan](docs/matching/mac-second-target-plan.md).
 
 Windows is the game being rebuilt. Use Mac solely as evidence for recovering
 the Windows source, particularly helper boundaries, source calls and function
@@ -49,10 +49,10 @@ Use `homm3 build --fast <TU>` (for example, `homm3 build --fast cursor`) for the
 inner loop. Normally supply the active TU so shared-header edits rebuild only
 that TU during iteration. It reports the selected TU's per-function projected
 MAX movements without banking them; unchanged-source CUR dips stay silent.
-Admitted Mac counterparts in that TU are compiled
-with CodeWarrior and compared in the same loop. Run `homm3 build` for the final
-checkpoint: it rebuilds affected TUs, refreshes retail targets through delinking,
-checks every admitted Mac pair, and runs the gates.
+That TU's Mac pairs are scored from its full-TU CodeWarrior object in the
+same loop. Run `homm3 build` for the final checkpoint: it rebuilds affected
+TUs, refreshes retail targets through delinking, scores every Mac pair, and
+runs the gates.
 
 ## Byte-matching evidence: DC source layout as well as statements
 
@@ -94,7 +94,7 @@ homm3 sema diff 0x00524dd0 --structure
 homm3 sema diff 0x00524dd0 --source
 ```
 
-For byte matching an admitted Mac counterpart, also run
+For byte matching a Mac pair, also run
 `homm3 mac show <Windows-VA>`, `homm3 mac disasm <Windows-VA>` and
 `homm3 mac diff <Windows-VA>` before speculative rewrites. A helper-sweep edit
 only needs enough Mac body/call evidence to identify the operation and its
@@ -107,12 +107,10 @@ differences at the owning source.
 `homm3 mac calls <Windows-VA>` compares call sites and ordered targets.
 Indirect calls through the reviewed Mac glue remain explicitly unknown;
 equal aggregate counts do not prove a matching helper/inlining decision.
-`homm3 mac queue --unit <TU>` names missing pairing, compilation and reference
-prerequisites. Follow the [Mac tooling guide](docs/tooling/mac-matching-roadmap.md)
-to create a shared unit profile, inspect emitted symbols and admit a reviewed
-span. Compile admitted bodies and extra source helpers in original source order;
-do not duplicate game bodies in Mac declaration headers. Each worker owns its
-unit profile and pair file; coordinate changes to shared runtime/data manifests.
+A pair is a source `MAC_ADDRESS` claim whose body the unit's full-TU
+CodeWarrior object (`ninja mac:<unit>`) emits; `homm3 mac build` scores it.
+Follow the [Mac tooling guide](docs/tooling/mac-matching-roadmap.md) to add
+a claim. Do not duplicate game bodies in Mac declaration headers.
 
 Use `homm3 dreamcast find NAME` to locate counterparts. Selectors also accept
 unambiguous names, `module.obj:0xOFF`, and `dc:0xOFF`. `show` gives the dossier;

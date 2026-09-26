@@ -7,9 +7,8 @@ unit in config/units.toml:
         --out build/mac/obj/hero.o
 
 It compiles the actual source file - never a generated selection of bodies -
-with the unit's Mac profile flags (config/mac/units*.toml) or the shared
-toolchain profile, the project include roots and the staged CodeWarrior
-library headers. Beside the object it writes:
+with the unit's flags from config/mac/units.toml, the project include roots
+and the staged CodeWarrior library headers. Beside the object it writes:
 
     <unit>.log         CodeWarrior's complete diagnostics (also on failure)
     <unit>.dis.txt     MWLinkPPC -dis listing of the object
@@ -17,7 +16,9 @@ library headers. Beside the object it writes:
     <unit>.o.d         gcc-style depfile over the project-header closure
 
 A failed compile exits nonzero with its real diagnostics; the TU stays in the
-graph. `homm3 mac objects` summarizes the per-TU state.
+graph. Scoring sets HOMM3_MAC_ALLOW_COMPILE_ERRORS=1 so diagnosed source errors
+can leave a TU unavailable without stopping other TUs. Infrastructure failures
+remain fatal. `homm3 mac objects` summarizes the per-TU state.
 """
 from __future__ import annotations
 
@@ -39,9 +40,8 @@ MAC_DEFINES = ("-msext", "on", "-DHOMM3_TARGET_MAC=1", "-prefix", "include/codew
 
 
 def flags_for(unit: str) -> tuple[str, ...]:
-    from homm3.mac import profiles, toolchain
-    profile = profiles.load(ROOT, unit)
-    flags = tuple(profile.flags) if profile and profile.flags else tuple(toolchain.specification()["flags"])
+    from homm3.mac import profiles
+    flags = profiles.flags(ROOT, unit)
     if "-nolink" not in flags:
         raise ValueError(f"{unit}: Mac profile must emit an object with -nolink")
     return (*flags, *MAC_DEFINES)
@@ -56,9 +56,9 @@ def include_roots() -> tuple[str, ...]:
 
 
 def _wine_env() -> dict[str, str]:
-    from homm3.mac.build import _wine_version
+    from homm3.mac.toolchain import wine_version
     env = dict(os.environ)
-    version = re.sub(r"[^A-Za-z0-9._-]", "_", _wine_version())
+    version = re.sub(r"[^A-Za-z0-9._-]", "_", wine_version())
     env["WINEPREFIX"] = os.environ.get("HOMM3_MAC_WINEPREFIX",
                                        str(ROOT / "build/mac/wineprefix" / version))
     env.setdefault("WINEDEBUG", "-all")
@@ -78,15 +78,15 @@ def _depfile(out: Path, source: Path) -> None:
     out.with_name(out.name + ".d").write_text(f"{target}: {escaped}\n")
 
 
-def compile_unit(unit: str, source: Path, out: Path) -> int:
+def compile_unit(unit: str, source: Path, out: Path, *, allow_compile_errors: bool = False) -> int:
     from homm3.mac import sdk, toolchain
     from homm3.mac.object import parse_code_hunks, parse_data_hunks
-    tools = toolchain.stage()
-    sdk.stage(root=ROOT)
     out.parent.mkdir(parents=True, exist_ok=True)
     log = out.with_suffix(".log")
     for stale in (out, out.with_suffix(".dis.txt"), out.with_suffix(".hunks.json")):
         stale.unlink(missing_ok=True)
+    tools = toolchain.stage()
+    sdk.stage(root=ROOT)
     _depfile(out, source)
     env = _wine_env()
     command = ["wine", str(tools / "MWCPPC.exe"), *flags_for(unit),
@@ -102,6 +102,12 @@ def compile_unit(unit: str, source: Path, out: Path) -> int:
         out.unlink(missing_ok=True)
         sys.stderr.write(f"[mac] {unit}: CodeWarrior failed ({code}); see {log.relative_to(ROOT)}\n")
         sys.stderr.write(diagnostics[-4000:])
+        # Helper-target coverage may be partial. Only an ordinary compiler
+        # diagnostic is a coverage gap; crashes, timeouts and absent outputs
+        # without such a diagnostic must still stop scoring.
+        if (allow_compile_errors and code == 1
+                and re.search(r"^#\s+Error:", diagnostics, re.MULTILINE)):
+            return 0
         return 1
     listing = subprocess.run(["wine", str(tools / "MWLinkPPC.exe"), "-dis",
                               out.relative_to(ROOT).as_posix()],
@@ -153,13 +159,14 @@ def first_error(log: str) -> str:
 def status(root: Path = ROOT) -> list[dict]:
     """Per-unit full-TU Mac object state for every manifest unit."""
     from homm3 import manifest
-    from homm3.core.tsv import read as read_tsv
-    platform = {}
-    table = root / "config/mac/tu-dispositions.tsv"
-    if table.is_file():
-        platform = {row["unit"]: row["disposition"] for row in read_tsv(table)[2]}
+    from homm3.mac import profiles
+    platform = {unit: kind for unit, (kind, _evidence) in profiles.dispositions(root).items()}
+    units = manifest.units(root / "config/units.toml")
+    unknown = set(platform) - {unit["unit"] for unit in units}
+    if unknown:
+        raise ValueError(f"config/mac/units.toml: dispositions name unknown units {sorted(unknown)}")
     rows = []
-    for unit in manifest.units(root / "config/units.toml"):
+    for unit in units:
         name = unit["unit"]
         obj = root / "build/mac/obj" / f"{name}.o"
         log = obj.with_suffix(".log")
@@ -185,7 +192,8 @@ def main(argv=None) -> int:
     parser.add_argument("--out", required=True)
     args = parser.parse_args(argv)
     try:
-        return compile_unit(args.unit, (ROOT / args.src).resolve(), (ROOT / args.out).resolve())
+        return compile_unit(args.unit, (ROOT / args.src).resolve(), (ROOT / args.out).resolve(),
+                            allow_compile_errors=os.environ.get("HOMM3_MAC_ALLOW_COMPILE_ERRORS") == "1")
     except (OSError, ValueError) as exc:
         print(f"[mac] {args.unit}: {exc}", file=sys.stderr)
         return 1

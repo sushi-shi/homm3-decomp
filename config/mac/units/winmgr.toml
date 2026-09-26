@@ -1,6 +1,0 @@
-mode = "paired_bodies"
-# Address-reviewed fizzle/fade bodies compile from the ordinary game headers.
-# Shape comparisons are evidence only until symbol and TOC references are bound.
-flags = ["-O3", "-proc", "750", "-nolink"]
-helpers = []
-source_helpers = ["heroWindowManager::sleepAllWindows"]

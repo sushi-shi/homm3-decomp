@@ -69,11 +69,9 @@ compiler-generated rows into source (4011 claims) and wrote
 `runtime-aliases.tsv` (9 folded names) and an empty `dispositions.tsv`.
 `homm3 mac parity` reports 6563 source functions: 4011 located and 2552
 unlocated, with no ownership, bounds, overlap, hash or agreement defects.
-The reviewed TOML inventories stay as the legacy build input while workers
-still add rows; rerun `homm3 mac migrate` after merging them, and retire the
-TOML readers with the extracted-body path in step 3 of the rollout. Same-line
-annotations are excluded from the Windows ratchet fingerprint, so existing
-MAX rows keep their source hashes.
+The TOML pair, reference and helper inventories and `homm3 mac migrate`
+were retired in step 3. Same-line annotations are excluded from the Windows
+ratchet fingerprint, so existing MAX rows keep their source hashes.
 
 ## 2. Full CodeWarrior objects in Ninja
 
@@ -114,12 +112,8 @@ data hunk, and a header-closure depfile. `homm3 mac objects` reports per-TU
 state: 99 of 152 TUs compile (6968 code hunks) and 53 fail with their first
 real error in `build/mac/objects.tsv` (DirectDraw/Windows SDK types,
 `__declspec` operator declarations, CRT functions without a declaration in
-scope, overload ambiguities). No TU has a platform-only disposition yet
-(`config/mac/tu-dispositions.tsv` is read when present). `homm3 mac tu-compare
-<unit>` is the migration control: hero currently reproduces 2 of its 16
-admitted pairs exactly from the full-TU object; its data-binding model still
-assumes the selected-body extern shims, and full-TU std instantiations need
-runtime identities.
+scope, overload ambiguities). Platform-only dispositions live beside the
+flags in `config/mac/units.toml`.
 
 `homm3 mac emitted` joins every full-TU hunk to authored definitions by
 CodeWarrior qualified name: of 6968 emitted code hunks, 2017 belong to the
@@ -128,9 +122,9 @@ unit's own source, 354 to project headers, 4249 are MSL library templates,
 9 another source file and 49 have no source owner. 33 non-template
 definitions authored in a compiled unit have no emitted body. Reports are in
 `build/gen/mac/{emitted-symbols,not-emitted}.tsv`.
-`config/mac/tu-dispositions.tsv` exists but is empty: a unit's missing string
-literals do not discriminate (shared units such as font and palette have none
-in the PEF either), so no unit is yet evidenced as platform-only.
+A unit's missing string literals do not discriminate (shared units such as
+font and palette have none in the PEF either); a disposition needs other
+positive evidence.
 
 ## 3. Pair the source and emitted object with the PEF
 
@@ -151,6 +145,21 @@ to callers; only a retained out-of-line helper receives its own Mac address.
 comparisons. Parity output reports every unlocated function and every emitted
 helper without a target identity. Exact-match percentage is reported only
 over verified spans, alongside source/TU coverage denominators.
+
+**Status (2026-09-26):** implemented for scoring. `homm3 mac build` scores
+every claim with a Windows VA whose body its unit's full-TU object emits,
+found by the emitted-symbol join (overloads told apart by mangled
+parameters); call targets resolve through the same join plus the runtime,
+alias, zlib and glue maps. Of 3961 claims, 2387 with a Windows VA have an
+emitted body: 843 link and score (267 exact) and 1544 are unavailable, mostly
+unreviewed TOC data (559 relocatable payloads, 261 UDATA, 249 anonymous
+literals, 72 named data), 329 calls to unlabelled callees (mostly MSL
+template instances) and 65 declaration-only data rows that the full TU now
+defines. 919 claims have no scored body (907 in units that do not
+compile, 4 ambiguous template overloads, 4 not emitted, 4 without a
+definition). The ledger keeps a VA's previous row when it is not scored. The
+TOML pair, reference, helper-review and campaign inventories, the queue and
+selected-body compiler are removed.
 
 ## 4. Library and generated-code maps
 

@@ -156,11 +156,10 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
                 inputs=unit["source"],
                 implicit=["scripts/homm3/mac/cc_wrap.py", "config/units.toml",
                           "config/mac/toolchain.toml", "config/mac/sdk.toml",
-                          *(["config/mac/units/%s.toml" % unit["unit"]]
-                            if (ROOT / "config/mac/units" / (unit["unit"] + ".toml")).is_file()
-                            else []),
-                          *(["config/mac/units.toml"]
-                            if (ROOT / "config/mac/units.toml").is_file() else [])],
+                          "include/codewarrior_prefix.h", "scripts/homm3/mac/profiles.py",
+                          "scripts/homm3/mac/toolchain.py", "scripts/homm3/mac/sdk.py",
+                          "scripts/homm3/mac/object.py",
+                          "config/mac/units.toml"],
                 variables={"unit": unit["unit"]},
             )
             mac_objects.append(obj)

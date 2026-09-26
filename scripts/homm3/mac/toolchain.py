@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import os
 from pathlib import Path
+import subprocess
 import tempfile
 import tomllib
 
@@ -21,6 +22,13 @@ DESTINATION = ROOT / "build/mac/toolchain"
 def specification() -> dict:
     with (ROOT / "config/mac/toolchain.toml").open("rb") as stream:
         return tomllib.load(stream)
+
+
+def wine_version() -> str:
+    completed = subprocess.run(["wine", "--version"], capture_output=True, text=True)
+    if completed.returncode or not completed.stdout.strip():
+        raise ToolchainError("cannot identify Wine version for Mac CodeWarrior")
+    return completed.stdout.strip()
 
 
 def stage(source: str | Path | None = None) -> Path:

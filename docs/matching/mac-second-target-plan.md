@@ -53,14 +53,14 @@ The ordinary-header migration and its current limitations are tracked in
 ## Labeling rule
 
 The existing `VA(address, size)` in an owning source file is the function's
-project identity. `config/mac/functions.toml` pairs that Windows VA with one
-Mac PEF section and section-relative byte span. `homm3 mac show <Windows-VA>`
+project identity. A `MAC_ADDRESS(offset, size)` claim beside it pairs that
+Windows VA with one Mac PEF section-relative byte span. `homm3 mac show <Windows-VA>`
 and `homm3 mac show mac:<section>:<offset>` resolve to the same pair and inherit
 the source name and unit. Pairing evidence is mandatory; similar names or
 ordinal positions alone cannot admit a Mac span. A Mac-only function needs a
 separate documented disposition until it can be tied to an authored source
 claim. This avoids pretending that section offsets are Windows VAs.
-`homm3 mac labels` prints the admitted section-offset/name mapping as TSV.
+`homm3 mac labels` prints the scored section-offset/name mapping as TSV.
 
 The current admitted control is `hero::getHighestSchool` at Windows VA
 `0x004e51c0` and Mac section `0` offset `0x106188`. The target toolchain
@@ -116,23 +116,14 @@ targets, including unresolved candidate calls before linking. Indirect targets
 remain unknown; local linked branches and outgoing possible tail branches are
 separate observations. Both builds and this command write
 `build/mac/calls.json` and `build/mac/calls.tsv`.
-`homm3 mac queue` joins the full Windows game inventory with Mac pairing,
-scores, call differences and freshness checks. See the
-[tooling rollout](../tooling/mac-matching-roadmap.md) for remaining compilation,
-pairing and worker-readiness requirements.
+See the [tooling guide](../tooling/mac-matching-roadmap.md) for how pairs are
+scored from full-TU objects.
 
-The build cache binds the source group, complete project-header closure and
-compiler profile to hashes of the MWOB object and disassembly. A changed or
-missing artifact recompiles; input changes during compilation invalidate the
-observation. A function's own source identity excludes neighboring bodies, so
-context changes rebuild the group without resetting that function's MAX.
-Compilation and report publication use locks; partial unit reports retain
-other units' original provenance. A full checkpoint rejects stale results. Reports
-record source, build, object and target hashes plus each resolved call/data
-reference and removed/restored reload slot. Changing a call target changes the compared
-bytes. Action queues also check current source, profile, object, disassembly,
-pair inventory and analysis-tool hashes before presenting call evidence as
-current.
+Ninja rebuilds a unit's full-TU object when its source or header closure
+changes. A function's own source identity excludes neighboring bodies, so
+context changes do not reset that function's MAX. Partial unit reports retain
+other units' observations. Reports record source and target hashes plus each
+resolved call/data reference and removed/restored reload slot.
 
 ## Implementation sequence
 

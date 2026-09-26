@@ -9,7 +9,9 @@ inlines them. A runnable Mac port is not required. The declaration views and
 marker extraction used by the historical checkpoint below have been removed.
 Every profile now uses [ordinary-header compilation with the real SDK](mac-native-headers.md).
 Remaining platform/header errors are compilation coverage gaps; the historical
-scores below do not certify the new inputs.
+scores below do not certify the new inputs. The selected-body compiler, TOML
+pair/reference ledgers and action queue described below have since been
+replaced by [full-TU scoring from source claims](mac-matching-roadmap.md).
 
 ## Historical matching checkpoint
 
@@ -228,8 +230,6 @@ function and across all admitted pairs:
 ```sh
 homm3 mac calls 0x004d97f0
 homm3 mac calls
-homm3 mac queue
-homm3 mac queue --unit hero
 ```
 
 For example, the integrated report records `hero::updateArmies` with 12 retail

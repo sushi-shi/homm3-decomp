@@ -7,39 +7,24 @@ import sys
 from types import SimpleNamespace
 
 from homm3.core import common, inputs
-from homm3.mac import build, call_report, calls, discovery, pairing, references, sdk, symbols, toolchain
+from homm3.mac import build, calls, discovery, pairs, sdk, symbols
 from homm3.mac.loader import ImportedAddress, Loader
 from homm3.mac.pef import PEF
 from homm3.mac.relocations import Address
-from homm3.mac.source import load_data, load_pairs
+from homm3.mac.source import load_data
 
 
-def _select(value: str, *, include_references=False):
-    pairs = load_pairs(common.HOMM3_DIR)
-    if include_references:
-        paired = {pair.retail_va for pair in pairs}
-        pairs += [ref for ref in references.load(common.HOMM3_DIR) if ref.retail_va not in paired]
-    if value.startswith("mac:"):
-        parts = value[4:].split(":")
-        if len(parts) == 1:
-            section, offset = 0, int(parts[0], 0)
-        elif len(parts) == 2:
-            section, offset = int(parts[0], 0), int(parts[1], 0)
-        else:
-            raise ValueError("Mac selector must be mac:<offset> or mac:<section>:<offset>")
-        matches = [pair for pair in pairs if pair.mac_section == section
-                   and pair.mac_offset <= offset < pair.mac_offset + pair.mac_size]
-    else:
-        try:
-            address = int(value, 0)
-        except ValueError:
-            matches = [pair for pair in pairs if value in pair.signature or value == pair.unit]
-        else:
-            matches = [pair for pair in pairs if pair.retail_va == address]
+def _select(value: str):
+    return pairs.select_claim(common.HOMM3_DIR, value)
+
+
+def _compile_target(target):
+    build.objects({target.unit} if target.unit else None)
+    inventory = pairs.load(common.HOMM3_DIR)
+    matches = [pair for pair in inventory.pairs if pair.identity == target.identity]
     if len(matches) != 1:
-        scope = "reviewed Mac identities" if include_references else "admitted Mac pairs"
-        raise ValueError(f"selector {value!r} found {len(matches)} {scope}")
-    return matches[0]
+        raise pairs.PairError(f"{target.signature}: no verified emitted body after compilation")
+    return matches[0], inventory
 
 
 def _image():
@@ -52,58 +37,25 @@ def main(argv=None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("sdk", help="stage or verify native CodeWarrior library headers for source comparison")
     p.add_argument("path", nargs="?", help="extracted CodeWarrior Pro 6 archive root (or HOMM3_MAC_SDK)")
-    p = sub.add_parser("build", help="compile and compare admitted Mac counterparts")
+    p = sub.add_parser("build", help="score Mac pairs from the full-TU CodeWarrior objects")
     p.add_argument("--fast", action="store_true", help="skip the Mac MAX checkpoint")
     p.add_argument("units", nargs="*", help="unit names (normally with --fast)")
-    sub.add_parser("labels", help="list admitted Mac section offsets and inherited source labels")
-    p = sub.add_parser("show", help="show a reviewed Mac address or admitted byte target")
+    sub.add_parser("labels", help="list scored Mac pairs with their claimed spans and source labels")
+    p = sub.add_parser("show", help="show a scored pair's Mac span, symbol and source claim")
     p.add_argument("selector", help="Windows VA, mac:section:offset, unit, or function name substring")
     p = sub.add_parser("disasm", help="disassemble a pinned Mac code span")
     p.add_argument("selector")
     p.add_argument("--size", type=lambda value: int(value, 0),
                    help="inspect an unadmitted mac:section:offset span of this many bytes")
-    p = sub.add_parser("diff", help="compile one shared body and compare Mac bytes")
+    p = sub.add_parser("diff", help="compare one pair's full-TU body with its Mac bytes")
     p.add_argument("selector")
     p.add_argument("--json", action="store_true", help="byte verdict, provenance and call comparison")
-    p = sub.add_parser("shape", help="compile and compare instructions with relocation operands masked")
+    p = sub.add_parser("shape", help="compare a pair's full-TU instructions with relocation operands masked")
     p.add_argument("selector")
     p.add_argument("--json", action="store_true", help="include every unaligned instruction region")
-    p = sub.add_parser("pair", help="prepare or admit a reviewed source-VA/Mac-span pairing")
-    p.add_argument("va", type=lambda value: int(value, 0))
-    p.add_argument("--unit", required=True)
-    p.add_argument("--at", required=True, type=discovery.parse_address)
-    p.add_argument("--size", required=True, type=lambda value: int(value, 0))
-    p.add_argument("--symbol", required=True, help="exact named CodeWarrior MWOB hunk")
-    p.add_argument("--evidence", required=True, help="identity anchors and function boundary evidence")
-    p.add_argument("--data", type=lambda value: int(value, 0), action="append", default=[])
-    p.add_argument("--admit", action="store_true", help="write validated pair into its unit inventory")
-    p = sub.add_parser("compile", help="inspect emitted CodeWarrior hunks before admitting a Mac pair")
-    p.add_argument("va", type=lambda value: int(value, 0))
-    p.add_argument("--unit", required=True)
-    p.add_argument("--data", type=lambda value: int(value, 0), action="append", default=[])
     p = sub.add_parser("calls", help="compare retail/candidate call counts and ordered targets")
     p.add_argument("selector", nargs="?", help="Windows VA, Mac address, function, or unit; default all pairs")
     p.add_argument("--json", action="store_true", help="print the complete structured report")
-    p = sub.add_parser("queue", help="write an actionable queue with explicit Mac coverage gaps")
-    p.add_argument("--unit", help="filter displayed tasks to one unit")
-    p.add_argument("--limit", type=int, default=20, help="maximum displayed tasks; full files always include all")
-    p.add_argument("--include-deferred", action="store_true", help="display user-deferred modules too")
-    p.add_argument("--json", action="store_true", help="print the full structured queue")
-    p = sub.add_parser("helper-queue", help="queue Mac-retained game helper calls")
-    p.add_argument("--owner", action="append", default=[], metavar="WORKER=UNIT[,UNIT...]",
-                   help="assign units to a worker; repeat for other workers")
-    p.add_argument("--unit", help="display only this unit; output files still cover all units")
-    p.add_argument("--limit", type=int, default=30, help="maximum displayed target leads")
-    p.add_argument("--include-deferred", action="store_true", help="display user-deferred modules too")
-    p.add_argument("--all-functions", action="store_true",
-                   help="include exact Windows callers in a separate whole-corpus helper inventory")
-    p.add_argument("--include-named", action="store_true",
-                   help="display other named Mac callees for transitive helper review")
-    p.add_argument("--json", action="store_true", help="print the full structured helper queue")
-    p = sub.add_parser("campaign", help="prepare disjoint worker packets from the current action queue")
-    p.add_argument("--workers", type=int, default=6)
-    p.add_argument("--unit", action="append", help="select an initial unit; repeat for distinct workers")
-    p.add_argument("--json", action="store_true")
     p = sub.add_parser("xrefs", help="find direct branches, loader pointers and TOC uses of a Mac address")
     p.add_argument("selector", help="Mac address, or an admitted Windows VA/name")
     p.add_argument("--json", action="store_true")
@@ -121,9 +73,6 @@ def main(argv=None) -> int:
     p.add_argument("--json", action="store_true")
     p = sub.add_parser("objects", help="report full-TU CodeWarrior objects built by `ninja mac-objects`")
     p.add_argument("--json", action="store_true")
-    p = sub.add_parser("tu-compare", help="compare a unit's admitted pairs using its full-TU object")
-    p.add_argument("unit")
-    p.add_argument("--json", action="store_true")
     p = sub.add_parser("dashboard", help="show the separate Mac accounting numbers side by side")
     p.add_argument("--json", action="store_true")
     p = sub.add_parser("emitted", help="join full-TU emitted symbols with authored definitions")
@@ -135,7 +84,6 @@ def main(argv=None) -> int:
     p.add_argument("--admit-proven", action="store_true",
                    help="add proven single-function spans to config/mac/functions.tsv as unowned rows")
     p.add_argument("--json", action="store_true")
-    p = sub.add_parser("migrate", help="copy reviewed TOML spans into MAC_ADDRESS annotations and TSV maps")
     p = sub.add_parser("parity", help="validate MAC_ADDRESS claims and report every source function's Mac state")
     p.add_argument("--unit", help="display one unit's rows")
     p.add_argument("--state", help="display rows in one state (located, unlocated, or a disposition)")
@@ -163,23 +111,9 @@ def main(argv=None) -> int:
                 print(f"[mac] {len(rows)} TUs: " + ", ".join(f"{state} {count}"
                                                              for state, count in sorted(counts.items()))
                       + f"; {sum(row['code_hunks'] for row in rows)} emitted code hunks; {path}")
-            # A reviewed tu-dispositions.tsv row accounts for a unit as well.
+            # A disposition in config/mac/units.toml accounts for a unit as well.
             return 0 if all(row["state"] != "failed" and row["state"] != "not_built"
                             for row in rows) else 1
-        if args.command == "tu-compare":
-            from homm3.mac import full_tu
-            rows = full_tu.compare(args.unit, _image())
-            if args.json:
-                print(json.dumps(rows, indent=2))
-            else:
-                for row in rows:
-                    legacy = "-" if row["legacy_cur"] is None else f"{row['legacy_cur']:.4f}"
-                    score = row["error"] or f"{row['score']:.4f}{' exact' if row['exact'] else ''}"
-                    print(f"{row['retail_va']} legacy {legacy:>9} full-TU {score}  {row['symbol']}")
-                regressions = [row for row in rows if row["legacy_cur"] == 100.0 and not row["exact"]]
-                print(f"[mac] {args.unit}: {sum(row['exact'] for row in rows)}/{len(rows)} exact from the "
-                      f"full-TU object; {len(regressions)} legacy-exact pairs differ")
-            return 0
         if args.command == "dashboard":
             from homm3.mac import dashboard
             result = dashboard.collect(common.HOMM3_DIR)
@@ -226,7 +160,7 @@ def main(argv=None) -> int:
                       ["# GENERATED by `homm3 mac emitted`: each MAC_ADDRESS claim's full-TU body.",
                        "# symbol_size equal to mac_size is a size agreement, not a byte verdict."],
                       ["identity", "file", "line", "name", "unit", "mac_offset", "mac_size",
-                       "state", "symbol", "symbol_size"], bodies)
+                       "state", "symbol", "symbol_size", "object"], bodies)
             states = Counter(row["state"] for row in bodies)
             same = sum(row["state"] == "emitted" and row["symbol_size"] == row["mac_size"] for row in bodies)
             print(f"[mac] {len(bodies)} MAC_ADDRESS claims by full-TU body: "
@@ -293,15 +227,6 @@ def main(argv=None) -> int:
                     print(f"[mac] inventory: {problem}", file=sys.stderr)
                 print(f"[mac] report: {path.parent}/{{inventory.json,code-regions,candidates,gaps}}.tsv")
             return 1 if result["problems"] else 0
-        if args.command == "migrate":
-            from homm3.mac import addresses
-            counts = addresses.migrate(common.HOMM3_DIR, _image())
-            print("[mac] migrate: " + ", ".join(f"{key} {value}" for key, value in sorted(counts.items())))
-            claims, windows, problems = addresses.scan(common.HOMM3_DIR)
-            problems += addresses.check(common.HOMM3_DIR, _image(), claims, windows)
-            for problem in problems:
-                print(f"[mac] parity: {problem}", file=sys.stderr)
-            return 1 if problems else 0
         if args.command == "parity":
             from homm3.mac import addresses
             root = common.HOMM3_DIR
@@ -346,121 +271,18 @@ def main(argv=None) -> int:
             destination = sdk.stage(args.path)
             print(f"[mac] verified native library headers: {destination}")
             return 0
-        if args.command == "compile":
-            probe = pairing.candidate(common.HOMM3_DIR, args.va, args.unit, args.data)
-            build.compile_pair(probe, toolchain.stage())
-            work = build.object_directory(common.HOMM3_DIR, probe)
-            report = json.loads((work / "compilation.json").read_text())
-            print(f"[mac] compile-only source probe; no target verdict: {probe.signature}")
-            for hunk in report["emitted_hunks"]:
-                print(f"  {hunk['symbol']} ({hunk['size']} bytes, {len(hunk['references'])} references)")
-            print(f"[mac] source, object, disassembly and coverage: {work}")
-            return 0
-        if args.command == "pair":
-            row = pairing.proposal(common.HOMM3_DIR, _image(), args.va, args.unit,
-                                   args.at, args.size, args.symbol, args.evidence, args.data)
-            path = pairing.write(common.HOMM3_DIR, row, admit=args.admit)
-            print(pairing.render(row))
-            print(f"[mac] {'admitted' if args.admit else 'proposal'}: {path}")
-            print(f"[mac] next: homm3 build --fast {args.unit}")
-            return 0
         if args.command == "labels":
-            pairs = load_pairs(common.HOMM3_DIR)
-            paired = {pair.retail_va for pair in pairs}
-            refs = [ref for ref in references.load(common.HOMM3_DIR) if ref.retail_va not in paired]
-            print("section\toffset\tsize\twindows_va\tunit\trole\tsource_label")
-            for pair in sorted([*pairs, *refs],
-                               key=lambda item: (item.mac_section, item.mac_offset)):
-                role = "byte_target" if pair.retail_va in paired else "callee_reference_only"
-                va = f"0x{pair.retail_va:08x}" if pair.retail_va is not None else ""
-                if pair.retail_va is None:
-                    role = "source_helper_reference_only"
-                elif pair.mac_symbol is None:
-                    role = "address_reference_only"
+            inventory = pairs.load(common.HOMM3_DIR)
+            print("section\toffset\tsize\twindows_va\tunit\tsymbol\tsource_label")
+            for pair in sorted(inventory.pairs, key=lambda item: item.mac_offset):
                 print(f"{pair.mac_section}\t0x{pair.mac_offset:x}\t0x{pair.mac_size:x}\t"
-                      f"{va}\t{pair.unit}\t{role}\t{pair.signature}")
+                      f"0x{pair.retail_va:08x}\t{pair.unit}\t{pair.mac_symbol}\t{pair.signature}")
             return 0
         if args.command == "build":
             if args.units and not args.fast:
                 parser.error("unit selection requires --fast")
             build.run(set(args.units) if args.units else None,
                       checkpoint=not args.fast)
-            return 0
-        if args.command == "campaign":
-            from homm3.mac import campaign, queue
-            report = campaign.plan(queue.generate(common.HOMM3_DIR), args.workers, args.unit)
-            path = campaign.write(common.HOMM3_DIR, report)
-            if args.json:
-                print(json.dumps(report, indent=2))
-            else:
-                for packet in report["packets"]:
-                    print(f"worker {packet['worker']}: {packet['unit']} [{packet['phase']}]")
-                    for row in packet["initial_targets"]:
-                        print(f"  {row['retail_va']} {row['state']}: {row['function']}")
-                print(f"[mac] packets: {path}; {len(report['unassigned_tasks'])} tasks outside this wave")
-            return 0
-        if args.command == "queue":
-            from homm3.mac import queue
-            if args.limit < 0:
-                parser.error("--limit must be nonnegative")
-            report = queue.generate(common.HOMM3_DIR)
-            queue.write(common.HOMM3_DIR, report)
-            if args.json:
-                print(json.dumps(report, indent=2))
-            else:
-                coverage = report["coverage"]
-                print(f"[mac] {coverage['mac_paired_targets']}/{coverage['windows_targets']} Windows targets paired; "
-                      f"{coverage['queued']} unfinished tasks; {coverage['dispatchable']} with current comparison evidence")
-                print("[mac] compilation scope is recorded per task; unpaired functions lack a Mac byte verdict")
-                for state, count in sorted(coverage["dispositions"].items()):
-                    print(f"  {state}: {count}")
-                selected = [row for row in report["rows"]
-                            if (not args.unit or row["unit"] == args.unit)
-                            and (args.include_deferred or row["state"] != "deferred")]
-                for row in selected[:args.limit]:
-                    print(f"{row['retail_va']} [{row['unit'] or '?'}] {row['state']}: {row['function']}")
-                    print(f"  {row['action']}")
-                    if row["command"]:
-                        print(f"  {row['command']}")
-                print("[mac] complete queue: build/mac/queue.tsv and build/mac/queue.json")
-            return 0
-        if args.command == "helper-queue":
-            from homm3.mac import helper_queue, queue
-            if args.limit < 0:
-                parser.error("--limit must be nonnegative")
-            assignments = {}
-            for spec in args.owner:
-                worker, sep, units = spec.partition("=")
-                if not sep or not worker or not units or any(not unit for unit in units.split(",")):
-                    parser.error("--owner requires WORKER=UNIT[,UNIT...]")
-                for unit in units.split(","):
-                    if unit in assignments:
-                        parser.error(f"unit {unit!r} assigned more than once")
-                    assignments[unit] = worker
-            action_queue = queue.generate(common.HOMM3_DIR,
-                                          include_banked_exact=args.all_functions)
-            report = helper_queue.generate(common.HOMM3_DIR, action_queue,
-                                           discovery.Index(_image()), assignments,
-                                           all_functions=args.all_functions)
-            stem = "helper-queue-all" if args.all_functions else "helper-queue"
-            helper_queue.write(common.HOMM3_DIR, report, stem=stem)
-            if args.json:
-                print(json.dumps(report, indent=2))
-            else:
-                coverage = report["coverage"]
-                print(f"[mac] helper queue: {coverage['functions_in_scope']} Windows functions in scope; "
-                      f"{coverage['helper_reviewed_functions']} helper-reviewed from Mac calls; "
-                      f"{coverage['reviewed_mac_callers']} paired Mac caller spans")
-                print(f"[mac] {coverage['missing_named_source_calls']} reviewed helper calls absent from source; "
-                      f"{coverage['unreviewed_direct_targets']} distinct direct targets need identity review")
-                for lead in helper_queue.leads(report, args.unit, args.include_deferred,
-                                               args.include_named)[:args.limit]:
-                    example = lead["example"]
-                    print(f"  {lead['mac_target']} {lead['target_name']} [{lead['state']}] "
-                          f"{lead['sites']} sites in {lead['caller_count']} callers / "
-                          f"{lead['unit_count']} units; e.g. {example['retail_va']} "
-                          f"[{example['unit']}] at {example['mac_call_site']}")
-                print(f"[mac] complete queue: build/mac/{stem}.json and {stem}-*.tsv")
             return 0
         if args.command in ("find", "xrefs", "census"):
             index = discovery.Index(_image())
@@ -473,12 +295,7 @@ def main(argv=None) -> int:
                                      if kind == "linked_branch" and destination in glue_kinds)
                 report = {"scope": "unclassified_code_instruction_scan",
                           "target_sha256": inputs.MAC.sha256,
-                          "reviewed_game_pairs": len(load_pairs(common.HOMM3_DIR)),
-                          "reviewed_callee_only_references": len({r.retail_va for r in references.load(common.HOMM3_DIR)
-                                                                  if r.retail_va is not None}
-                              - {p.retail_va for p in load_pairs(common.HOMM3_DIR)}),
-                          "reviewed_helpers_without_windows_va": sum(r.retail_va is None
-                              for r in references.load(common.HOMM3_DIR)),
+                          "scored_pairs": len(pairs.load(common.HOMM3_DIR).pairs),
                           "loader_pointers": len(index.loader.pointers),
                           "imports": len(index.loader.imports), "scan": dict(index.census),
                           "verified_import_stubs": sum(t.kind == "import" for t in known.values()),
@@ -493,8 +310,7 @@ def main(argv=None) -> int:
                     print("[mac] Unclassified code-section scan; validate function boundaries before admission.")
                     for key, value in index.census.items():
                         print(f"  {key}: {value}")
-                    print(f"  reviewed_game_pairs: {report['reviewed_game_pairs']}")
-                    print(f"  reviewed_callee_only_references: {report['reviewed_callee_only_references']}")
+                    print(f"  scored_pairs: {report['scored_pairs']}")
                     print(f"  verified_import_stubs: {report['verified_import_stubs']}")
                     for kind, count in glue_calls.items():
                         print(f"  {kind}_glue_calls: {count}")
@@ -504,19 +320,19 @@ def main(argv=None) -> int:
                 if args.selector.startswith("mac:"):
                     address = discovery.parse_address(args.selector)
                 else:
-                    pair = _select(args.selector, include_references=True)
+                    pair = _select(args.selector)
                     address = Address(pair.mac_section, pair.mac_offset)
                 report = index.xrefs(address)
                 if args.json:
                     print(json.dumps(report, indent=2))
                 else:
                     print(f"[mac] references to {calls.address_key(address)}")
-                    pairs = load_pairs(common.HOMM3_DIR)
+                    scored = pairs.load(common.HOMM3_DIR).pairs
                     for group in ("code_branches", "loader_pointers", "toc_uses"):
                         print(f"  {group}: {len(report[group])}")
                         for row in report[group]:
                             at = Address(row["section"], row["offset"])
-                            owner = next((p.signature for p in pairs if p.mac_section == at.section
+                            owner = next((p.signature for p in scored if p.mac_section == at.section
                                           and p.mac_offset <= at.offset < p.mac_offset + p.mac_size), "")
                             detail = row.get("kind", "")
                             if "toc_offset" in row:
@@ -550,55 +366,61 @@ def main(argv=None) -> int:
                         print(f"    homm3 mac xrefs {address}")
             return 0
         if args.command == "calls":
-            pairs = load_pairs(common.HOMM3_DIR)
+            selected = list(pairs.claimed(common.HOMM3_DIR))
             if args.selector:
-                selected = [pair for pair in pairs if pair.unit == args.selector]
-                pairs = selected or [_select(args.selector)]
-            pef, tools_dir = _image(), toolchain.stage()
-            if any(pair.compile_group for pair in pairs):
-                sdk.stage(root=common.HOMM3_DIR)
-            context = call_report.inspection_context(common.HOMM3_DIR, pef)
-            rows = [call_report.inspect(common.HOMM3_DIR, pair, pef, tools_dir,
-                                        context=context, sdk_staged=True) for pair in pairs]
-            report = call_report.write(common.HOMM3_DIR, rows,
-                                       units=sorted({p.unit for p in pairs}) if args.selector else None)
-            if args.selector:
-                report = dict(report, pairs=rows, reported_pairs=len(rows),
-                              totals=calls.totals([row["calls"] for row in rows]))
+                selected = ([pair for pair in selected if pair.unit == args.selector]
+                            or [_select(args.selector)])
+            units = {pair.unit for pair in selected}
+            build.objects(units if args.selector and "" not in units else None)
+            inventory = pairs.load(common.HOMM3_DIR)
+            candidates = {pair.identity: pair for pair in inventory.pairs}
+            pef = _image()
+            destinations = symbols.targets(common.HOMM3_DIR, pef, inventory)
+            listings = build.Listings()
+            rows = []
+            for pair in selected:
+                origin = Address(pair.mac_section, pair.mac_offset)
+                retail = calls.analyze(pef.code(pair.mac_section, pair.mac_offset, pair.mac_size),
+                                       origin, destinations, labels=inventory.labels)
+                emitted_pair = candidates.get(pair.identity)
+                hunk = (listings.get(emitted_pair.unit)[0].get(emitted_pair.mac_symbol)
+                        if emitted_pair else None)
+                candidate = (calls.analyze(hunk.data, origin, destinations, xrefs=hunk.xrefs,
+                                           labels=inventory.labels) if hunk else None)
+                rows.append({"retail_va": f"0x{pair.retail_va:08x}" if pair.retail_va is not None else None,
+                             "unit": pair.unit,
+                             "signature": pair.signature,
+                             "calls": calls.compare(retail, candidate,
+                                                    error=None if hunk else "no verified emitted body")})
+            totals = calls.totals([row["calls"] for row in rows])
             if args.json:
-                print(json.dumps(report, indent=2))
+                print(json.dumps({"pairs": rows, "totals": totals}, indent=2))
             else:
                 for row in rows:
                     print(f"{row['retail_va']} {row['signature']} [{row['unit']}]")
                     print("\n".join(calls.render(row["calls"])))
-                totals = report["totals"]
-                print(f"[mac] admitted scope: {len(rows)}/{report['configured_pairs']} functions; "
-                      f"retail {totals['retail']['total']} calls; candidate {totals['candidate']['total']} calls "
-                      f"across {totals['candidate']['functions']} available candidates")
-                print("[mac] reports: build/mac/calls.tsv and build/mac/calls.json")
-            return 2 if any(row["calls"]["candidate"] is None for row in rows) else 0
+                print(f"[mac] {len(rows)} pairs; retail {totals['retail']['total']} calls; "
+                      f"candidate {totals['candidate']['total']} calls")
+            return 0
         if args.command == "disasm" and args.size is not None:
             address = discovery.parse_address(args.selector)
             pair = SimpleNamespace(mac_section=address.section, mac_offset=address.offset, mac_size=args.size)
             print("[mac] Raw inspection span; function boundaries are unverified.")
         else:
-            pair = _select(args.selector, include_references=args.command in ("show", "disasm", "shape"))
+            pair = _select(args.selector)
         pef = _image()
         target = pef.code(pair.mac_section, pair.mac_offset, pair.mac_size)
         if args.command == "show":
-            identity = f"Windows VA {pair.retail_va:#010x}" if pair.retail_va is not None else "Source helper"
-            print(f"{identity}  {pair.signature}  [{pair.unit}]")
+            windows = f"{pair.retail_va:#010x}" if pair.retail_va is not None else "unpaired"
+            print(f"Windows VA {windows}  {pair.signature}  [{pair.unit}]")
             print(f"Mac PEF section {pair.mac_section}+{pair.mac_offset:#x}, {pair.mac_size:#x} bytes")
-            print(f"CodeWarrior symbol {pair.mac_symbol or 'not yet bound (address only)'}")
-            print(f"Evidence: {pair.evidence}")
+            print(f"Source claim {pair.source.relative_to(common.HOMM3_DIR)}:{pair.line}")
             return 0
         if args.command == "disasm":
             from capstone import Cs, CS_ARCH_PPC, CS_MODE_32, CS_MODE_BIG_ENDIAN
             decoder = Cs(CS_ARCH_PPC, CS_MODE_32 | CS_MODE_BIG_ENDIAN)
             names = {(address.section, address.offset): name
                      for name, address in symbols.addresses(common.HOMM3_DIR, pef).items()}
-            for ref in references.load(common.HOMM3_DIR):
-                names.setdefault((ref.mac_section, ref.mac_offset), ref.signature)
             loader = Loader(pef)
             toc = loader.toc()
             data_names = {(claim.mac_section, claim.mac_offset): claim.name
@@ -633,14 +455,19 @@ def main(argv=None) -> int:
             return 0
         if args.command == "shape":
             from homm3.mac import shape
-            report = shape.inspect(pair, pef, toolchain.stage())
+            pair, _inventory = _compile_target(pair)
+            report = shape.inspect(pair, pef)
             print(json.dumps(report, indent=2) if args.json else shape.render(report))
             return 0
-        if args.command == "diff" and args.json:
+        pair, inventory = _compile_target(pair)
+        destinations = symbols.targets(common.HOMM3_DIR, pef, inventory)
+        listings = build.Listings()
+        if args.json:
             from dataclasses import asdict
-            print(json.dumps(asdict(build.compare_pair(pair, pef, toolchain.stage())), indent=2))
+            print(json.dumps(asdict(build.compare_pair(pair, pef, destinations, inventory.labels,
+                                                       listings)), indent=2))
             return 0
-        linked, _ = build.linked_pair(pair, pef, toolchain.stage())
+        linked, _ = build.linked_pair(pair, pef, destinations, listings)
         base = linked.data
         for call in linked.calls:
             print(f"[mac] call +0x{call.linked_offset:x}: {call.symbol} -> "

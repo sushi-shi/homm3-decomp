@@ -945,801 +945,1216 @@ build build/objdiff/base/victor_pcx_kernels.obj: cl $
 build victor_pcx_kernels: phony build/objdiff/base/victor_pcx_kernels.obj
 build build/mac/obj/adler32.o: mwcc vendor/zlib-1.1.3/adler32.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = adler32
 build mac$:adler32: phony build/mac/obj/adler32.o
 build build/mac/obj/compress.o: mwcc vendor/zlib-1.1.3/compress.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = compress
 build mac$:compress: phony build/mac/obj/compress.o
 build build/mac/obj/crc32.o: mwcc vendor/zlib-1.1.3/crc32.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = crc32
 build mac$:crc32: phony build/mac/obj/crc32.o
 build build/mac/obj/deflate.o: mwcc vendor/zlib-1.1.3/deflate.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = deflate
 build mac$:deflate: phony build/mac/obj/deflate.o
 build build/mac/obj/gzio.o: mwcc vendor/zlib-1.1.3/gzio.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = gzio
 build mac$:gzio: phony build/mac/obj/gzio.o
 build build/mac/obj/infblock.o: mwcc vendor/zlib-1.1.3/infblock.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = infblock
 build mac$:infblock: phony build/mac/obj/infblock.o
 build build/mac/obj/infcodes.o: mwcc vendor/zlib-1.1.3/infcodes.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = infcodes
 build mac$:infcodes: phony build/mac/obj/infcodes.o
 build build/mac/obj/inffast.o: mwcc vendor/zlib-1.1.3/inffast.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = inffast
 build mac$:inffast: phony build/mac/obj/inffast.o
 build build/mac/obj/inflate.o: mwcc vendor/zlib-1.1.3/inflate.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = inflate
 build mac$:inflate: phony build/mac/obj/inflate.o
 build build/mac/obj/inftrees.o: mwcc vendor/zlib-1.1.3/inftrees.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = inftrees
 build mac$:inftrees: phony build/mac/obj/inftrees.o
 build build/mac/obj/infutil.o: mwcc vendor/zlib-1.1.3/infutil.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = infutil
 build mac$:infutil: phony build/mac/obj/infutil.o
 build build/mac/obj/trees.o: mwcc vendor/zlib-1.1.3/trees.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = trees
 build mac$:trees: phony build/mac/obj/trees.o
 build build/mac/obj/uncompr.o: mwcc vendor/zlib-1.1.3/uncompr.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = uncompr
 build mac$:uncompr: phony build/mac/obj/uncompr.o
 build build/mac/obj/zutil.o: mwcc vendor/zlib-1.1.3/zutil.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = zutil
 build mac$:zutil: phony build/mac/obj/zutil.o
 build build/mac/obj/misc.o: mwcc src/misc.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = misc
 build mac$:misc: phony build/mac/obj/misc.o
 build build/mac/obj/armygrp.o: mwcc src/armygrp.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/armygrp.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = armygrp
 build mac$:armygrp: phony build/mac/obj/armygrp.o
 build build/mac/obj/basemgr.o: mwcc src/basemgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = basemgr
 build mac$:basemgr: phony build/mac/obj/basemgr.o
 build build/mac/obj/button.o: mwcc src/button.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = button
 build mac$:button: phony build/mac/obj/button.o
 build build/mac/obj/widget.o: mwcc src/widget.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = widget
 build mac$:widget: phony build/mac/obj/widget.o
 build build/mac/obj/window.o: mwcc src/window.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/window.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = window
 build mac$:window: phony build/mac/obj/window.o
 build build/mac/obj/resource.o: mwcc src/resource.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = resource
 build mac$:resource: phony build/mac/obj/resource.o
 build build/mac/obj/border.o: mwcc src/border.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = border
 build mac$:border: phony build/mac/obj/border.o
 build build/mac/obj/iconwdgt.o: mwcc src/iconwdgt.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = iconwdgt
 build mac$:iconwdgt: phony build/mac/obj/iconwdgt.o
 build build/mac/obj/textscroller.o: mwcc src/textscroller.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = textscroller
 build mac$:textscroller: phony build/mac/obj/textscroller.o
 build build/mac/obj/textwdgt.o: mwcc src/textwdgt.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = textwdgt
 build mac$:textwdgt: phony build/mac/obj/textwdgt.o
 build build/mac/obj/textntry.o: mwcc src/textntry.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = textntry
 build mac$:textntry: phony build/mac/obj/textntry.o
 build build/mac/obj/textresource.o: mwcc src/textresource.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = textresource
 build mac$:textresource: phony build/mac/obj/textresource.o
 build build/mac/obj/hiscore.o: mwcc src/hiscore.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/hiscore.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = hiscore
 build mac$:hiscore: phony build/mac/obj/hiscore.o
 build build/mac/obj/sample.o: mwcc src/sample.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = sample
 build mac$:sample: phony build/mac/obj/sample.o
 build build/mac/obj/font.o: mwcc src/font.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = font
 build mac$:font: phony build/mac/obj/font.o
 build build/mac/obj/exec.o: mwcc src/exec.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = exec
 build mac$:exec: phony build/mac/obj/exec.o
 build build/mac/obj/inputmgr.o: mwcc src/inputmgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = inputmgr
 build mac$:inputmgr: phony build/mac/obj/inputmgr.o
 build build/mac/obj/gamecontext.o: mwcc src/gamecontext.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = gamecontext
 build mac$:gamecontext: phony build/mac/obj/gamecontext.o
 build build/mac/obj/findpath.o: mwcc src/findpath.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = findpath
 build mac$:findpath: phony build/mac/obj/findpath.o
 build build/mac/obj/smackmgr.o: mwcc src/smackmgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = smackmgr
 build mac$:smackmgr: phony build/mac/obj/smackmgr.o
 build build/mac/obj/path.o: mwcc src/path.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = path
 build mac$:path: phony build/mac/obj/path.o
 build build/mac/obj/monframeinfo.o: mwcc src/monframeinfo.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = monframeinfo
 build mac$:monframeinfo: phony build/mac/obj/monframeinfo.o
 build build/mac/obj/initialize.o: mwcc src/initialize.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = initialize
 build mac$:initialize: phony build/mac/obj/initialize.o
 build build/mac/obj/winfile.o: mwcc src/winfile.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = winfile
 build mac$:winfile: phony build/mac/obj/winfile.o
 build build/mac/obj/strip.o: mwcc src/strip.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = strip
 build mac$:strip: phony build/mac/obj/strip.o
 build build/mac/obj/winmgr.o: mwcc src/winmgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/winmgr.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = winmgr
 build mac$:winmgr: phony build/mac/obj/winmgr.o
 build build/mac/obj/subwindow.o: mwcc src/subwindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = subwindow
 build mac$:subwindow: phony build/mac/obj/subwindow.o
 build build/mac/obj/resourcedisplay.o: mwcc src/resourcedisplay.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = resourcedisplay
 build mac$:resourcedisplay: phony build/mac/obj/resourcedisplay.o
 build build/mac/obj/resourcemanager.o: mwcc src/resourcemanager.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/resourcemanager.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = resourcemanager
 build mac$:resourcemanager: phony build/mac/obj/resourcemanager.o
 build build/mac/obj/spells.o: mwcc src/spells.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/spells.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = spells
 build mac$:spells: phony build/mac/obj/spells.o
 build build/mac/obj/creaturetype.o: mwcc src/creaturetype.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = creaturetype
 build mac$:creaturetype: phony build/mac/obj/creaturetype.o
 build build/mac/obj/creature_bank.o: mwcc src/creature_bank.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = creature_bank
 build mac$:creature_bank: phony build/mac/obj/creature_bank.o
 build build/mac/obj/u2dvers.o: mwcc src/u2dvers.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = u2dvers
 build mac$:u2dvers: phony build/mac/obj/u2dvers.o
 build build/mac/obj/levelupwindow.o: mwcc src/levelupwindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = levelupwindow
 build mac$:levelupwindow: phony build/mac/obj/levelupwindow.o
 build build/mac/obj/gametypewindow.o: mwcc src/gametypewindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = gametypewindow
 build mac$:gametypewindow: phony build/mac/obj/gametypewindow.o
 build build/mac/obj/quickinfowindow.o: mwcc src/quickinfowindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = quickinfowindow
 build mac$:quickinfowindow: phony build/mac/obj/quickinfowindow.o
 build build/mac/obj/campaignmap.o: mwcc src/campaignmap.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = campaignmap
 build mac$:campaignmap: phony build/mac/obj/campaignmap.o
 build build/mac/obj/campaignwindow.o: mwcc src/campaignwindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = campaignwindow
 build mac$:campaignwindow: phony build/mac/obj/campaignwindow.o
 build build/mac/obj/adventureoptionswindow.o: mwcc $
     src/adventureoptionswindow.cpp | scripts/homm3/mac/cc_wrap.py $
     config/units.toml config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = adventureoptionswindow
 build mac$:adventureoptionswindow: phony $
     build/mac/obj/adventureoptionswindow.o
 build build/mac/obj/kbwin.o: mwcc src/kbwin.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = kbwin
 build mac$:kbwin: phony build/mac/obj/kbwin.o
 build build/mac/obj/soundmgr.o: mwcc src/soundmgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = soundmgr
 build mac$:soundmgr: phony build/mac/obj/soundmgr.o
 build build/mac/obj/mousemgr.o: mwcc src/mousemgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = mousemgr
 build mac$:mousemgr: phony build/mac/obj/mousemgr.o
 build build/mac/obj/castle.o: mwcc src/castle.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = castle
 build mac$:castle: phony build/mac/obj/castle.o
 build build/mac/obj/combatcontrolsubwindow.o: mwcc $
     src/combatcontrolsubwindow.cpp | scripts/homm3/mac/cc_wrap.py $
     config/units.toml config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = combatcontrolsubwindow
 build mac$:combatcontrolsubwindow: phony $
     build/mac/obj/combatcontrolsubwindow.o
 build build/mac/obj/binkmanager.o: mwcc src/binkmanager.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = binkmanager
 build mac$:binkmanager: phony build/mac/obj/binkmanager.o
 build build/mac/obj/townmgr.o: mwcc src/townmgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/townmgr.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = townmgr
 build mac$:townmgr: phony build/mac/obj/townmgr.o
 build build/mac/obj/bitmap16.o: mwcc src/bitmap16.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = bitmap16
 build mac$:bitmap16: phony build/mac/obj/bitmap16.o
 build build/mac/obj/bitmap24.o: mwcc src/bitmap24.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = bitmap24
 build mac$:bitmap24: phony build/mac/obj/bitmap24.o
 build build/mac/obj/mainmenu.o: mwcc src/mainmenu.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = mainmenu
 build mac$:mainmenu: phony build/mac/obj/mainmenu.o
 build build/mac/obj/campaignbrief.o: mwcc src/campaignbrief.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/campaignbrief.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = campaignbrief
 build mac$:campaignbrief: phony build/mac/obj/campaignbrief.o
 build build/mac/obj/customcampaign.o: mwcc src/customcampaign.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/customcampaign.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = customcampaign
 build mac$:customcampaign: phony build/mac/obj/customcampaign.o
 build build/mac/obj/customcampaignwindow.o: mwcc $
     src/customcampaignwindow.cpp | scripts/homm3/mac/cc_wrap.py $
     config/units.toml config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = customcampaignwindow
 build mac$:customcampaignwindow: phony build/mac/obj/customcampaignwindow.o
 build build/mac/obj/questlogwindow.o: mwcc src/questlogwindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = questlogwindow
 build mac$:questlogwindow: phony build/mac/obj/questlogwindow.o
 build build/mac/obj/lodfile.o: mwcc src/lodfile.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = lodfile
 build mac$:lodfile: phony build/mac/obj/lodfile.o
 build build/mac/obj/towngatewindow.o: mwcc src/towngatewindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = towngatewindow
 build mac$:towngatewindow: phony build/mac/obj/towngatewindow.o
 build build/mac/obj/drawing.o: mwcc src/drawing.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = drawing
 build mac$:drawing: phony build/mac/obj/drawing.o
 build build/mac/obj/dimensiondoorwindow.o: mwcc src/dimensiondoorwindow.cpp $
     | scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = dimensiondoorwindow
 build mac$:dimensiondoorwindow: phony build/mac/obj/dimensiondoorwindow.o
 build build/mac/obj/wingraph.o: mwcc src/wingraph.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = wingraph
 build mac$:wingraph: phony build/mac/obj/wingraph.o
 build build/mac/obj/csprite.o: mwcc src/csprite.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = csprite
 build mac$:csprite: phony build/mac/obj/csprite.o
 build build/mac/obj/text.o: mwcc src/text.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = text
 build mac$:text: phony build/mac/obj/text.o
 build build/mac/obj/palette.o: mwcc src/palette.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = palette
 build mac$:palette: phony build/mac/obj/palette.o
 build build/mac/obj/army.o: mwcc src/army.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/army.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = army
 build mac$:army: phony build/mac/obj/army.o
 build build/mac/obj/adventuremapwindow.o: mwcc src/adventuremapwindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = adventuremapwindow
 build mac$:adventuremapwindow: phony build/mac/obj/adventuremapwindow.o
 build build/mac/obj/philai.o: mwcc src/philai.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/philai.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = philai
 build mac$:philai: phony build/mac/obj/philai.o
 build build/mac/obj/cspriteframe.o: mwcc src/cspriteframe.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = cspriteframe
 build mac$:cspriteframe: phony build/mac/obj/cspriteframe.o
 build build/mac/obj/events.o: mwcc src/events.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/events.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = events
 build mac$:events: phony build/mac/obj/events.o
 build build/mac/obj/kb.o: mwcc src/kb.cpp | scripts/homm3/mac/cc_wrap.py $
     config/units.toml config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/kb.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = kb
 build mac$:kb: phony build/mac/obj/kb.o
 build build/mac/obj/bottomviewsubwindow.o: mwcc src/bottomviewsubwindow.cpp $
     | scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = bottomviewsubwindow
 build mac$:bottomviewsubwindow: phony build/mac/obj/bottomviewsubwindow.o
 build build/mac/obj/recruit.o: mwcc src/recruit.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/recruit.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = recruit
 build mac$:recruit: phony build/mac/obj/recruit.o
 build build/mac/obj/hexcell.o: mwcc src/hexcell.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = hexcell
 build mac$:hexcell: phony build/mac/obj/hexcell.o
 build build/mac/obj/town.o: mwcc src/town.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/town.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = town
 build mac$:town: phony build/mac/obj/town.o
 build build/mac/obj/hero.o: mwcc src/hero.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = hero
 build mac$:hero: phony build/mac/obj/hero.o
 build build/mac/obj/game.o: mwcc src/game.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/game.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = game
 build mac$:game: phony build/mac/obj/game.o
 build build/mac/obj/mapcell.o: mwcc src/mapcell.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/mapcell.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = mapcell
 build mac$:mapcell: phony build/mac/obj/mapcell.o
 build build/mac/obj/cmbtmgr.o: mwcc src/cmbtmgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/cmbtmgr.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = cmbtmgr
 build mac$:cmbtmgr: phony build/mac/obj/cmbtmgr.o
 build build/mac/obj/command.o: mwcc src/command.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/command.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = command
 build mac$:command: phony build/mac/obj/command.o
 build build/mac/obj/advmgr.o: mwcc src/advmgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/advmgr.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = advmgr
 build mac$:advmgr: phony build/mac/obj/advmgr.o
 build build/mac/obj/ai.o: mwcc src/ai.cpp | scripts/homm3/mac/cc_wrap.py $
     config/units.toml config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/ai.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = ai
 build mac$:ai: phony build/mac/obj/ai.o
 build build/mac/obj/ai_combat.o: mwcc src/ai_combat.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = ai_combat
 build mac$:ai_combat: phony build/mac/obj/ai_combat.o
 build build/mac/obj/ai_tactical.o: mwcc src/ai_tactical.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/ai_tactical.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = ai_tactical
 build mac$:ai_tactical: phony build/mac/obj/ai_tactical.o
 build build/mac/obj/ai_player.o: mwcc src/ai_player.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/ai_player.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = ai_player
 build mac$:ai_player: phony build/mac/obj/ai_player.o
 build build/mac/obj/fly.o: mwcc src/fly.cpp | scripts/homm3/mac/cc_wrap.py $
     config/units.toml config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = fly
 build mac$:fly: phony build/mac/obj/fly.o
 build build/mac/obj/quickherowindow.o: mwcc src/quickherowindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = quickherowindow
 build mac$:quickherowindow: phony build/mac/obj/quickherowindow.o
 build build/mac/obj/systemoptionswindow.o: mwcc src/systemoptionswindow.cpp $
     | scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = systemoptionswindow
 build mac$:systemoptionswindow: phony build/mac/obj/systemoptionswindow.o
 build build/mac/obj/viewarmywindow.o: mwcc src/viewarmywindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = viewarmywindow
 build mac$:viewarmywindow: phony build/mac/obj/viewarmywindow.o
 build build/mac/obj/viewwrld.o: mwcc src/viewwrld.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/viewwrld.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = viewwrld
 build mac$:viewwrld: phony build/mac/obj/viewwrld.o
 build build/mac/obj/newgame.o: mwcc src/newgame.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/newgame.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = newgame
 build mac$:newgame: phony build/mac/obj/newgame.o
 build build/mac/obj/advspells.o: mwcc src/advspells.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = advspells
 build mac$:advspells: phony build/mac/obj/advspells.o
 build build/mac/obj/multiplayerwindow.o: mwcc src/multiplayerwindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = multiplayerwindow
 build mac$:multiplayerwindow: phony build/mac/obj/multiplayerwindow.o
 build build/mac/obj/singleselectionwindow.o: mwcc $
     src/singleselectionwindow.cpp | scripts/homm3/mac/cc_wrap.py $
     config/units.toml config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = singleselectionwindow
 build mac$:singleselectionwindow: phony build/mac/obj/singleselectionwindow.o
 build build/mac/obj/diff.o: mwcc src/diff.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = diff
 build mac$:diff: phony build/mac/obj/diff.o
 build build/mac/obj/artifact.o: mwcc src/artifact.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = artifact
 build mac$:artifact: phony build/mac/obj/artifact.o
 build build/mac/obj/quicktownwindow.o: mwcc src/quicktownwindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = quicktownwindow
 build mac$:quicktownwindow: phony build/mac/obj/quicktownwindow.o
 build build/mac/obj/slider.o: mwcc src/slider.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = slider
 build mac$:slider: phony build/mac/obj/slider.o
 build build/mac/obj/combatresultswindow.o: mwcc src/combatresultswindow.cpp $
     | scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/combatresultswindow.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = combatresultswindow
 build mac$:combatresultswindow: phony build/mac/obj/combatresultswindow.o
 build build/mac/obj/combatoptionswindow.o: mwcc src/combatoptionswindow.cpp $
     | scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = combatoptionswindow
 build mac$:combatoptionswindow: phony build/mac/obj/combatoptionswindow.o
 build build/mac/obj/combatwindow.o: mwcc src/combatwindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = combatwindow
 build mac$:combatwindow: phony build/mac/obj/combatwindow.o
 build build/mac/obj/spelldefs.o: mwcc src/spelldefs.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = spelldefs
 build mac$:spelldefs: phony build/mac/obj/spelldefs.o
 build build/mac/obj/seerhuttext.o: mwcc src/seerhuttext.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = seerhuttext
 build mac$:seerhuttext: phony build/mac/obj/seerhuttext.o
 build build/mac/obj/scenarioinfo.o: mwcc src/scenarioinfo.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = scenarioinfo
 build mac$:scenarioinfo: phony build/mac/obj/scenarioinfo.o
 build build/mac/obj/dialogbox.o: mwcc src/dialogbox.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = dialogbox
 build mac$:dialogbox: phony build/mac/obj/dialogbox.o
 build build/mac/obj/puzzlewindow.o: mwcc src/puzzlewindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = puzzlewindow
 build mac$:puzzlewindow: phony build/mac/obj/puzzlewindow.o
 build build/mac/obj/remote.o: mwcc src/remote.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/remote.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = remote
 build mac$:remote: phony build/mac/obj/remote.o
 build build/mac/obj/university_window.o: mwcc src/university_window.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = university_window
 build mac$:university_window: phony build/mac/obj/university_window.o
 build build/mac/obj/csequence.o: mwcc src/csequence.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = csequence
 build mac$:csequence: phony build/mac/obj/csequence.o
 build build/mac/obj/cursor.o: mwcc src/cursor.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = cursor
 build mac$:cursor: phony build/mac/obj/cursor.o
 build build/mac/obj/event_record.o: mwcc src/event_record.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/event_record.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = event_record
 build mac$:event_record: phony build/mac/obj/event_record.o
 build build/mac/obj/singleselectionpopups.o: mwcc $
     src/singleselectionpopups.cpp | scripts/homm3/mac/cc_wrap.py $
     config/units.toml config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = singleselectionpopups
 build mac$:singleselectionpopups: phony build/mac/obj/singleselectionpopups.o
 build build/mac/obj/victorylossconditions.o: mwcc $
     src/victorylossconditions.cpp | scripts/homm3/mac/cc_wrap.py $
     config/units.toml config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = victorylossconditions
 build mac$:victorylossconditions: phony build/mac/obj/victorylossconditions.o
 build build/mac/obj/bitmap816.o: mwcc src/bitmap816.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = bitmap816
 build mac$:bitmap816: phony build/mac/obj/bitmap816.o
 build build/mac/obj/search.o: mwcc src/search.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/search.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = search
 build mac$:search: phony build/mac/obj/search.o
 build build/mac/obj/herodefs.o: mwcc src/herodefs.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = herodefs
 build mac$:herodefs: phony build/mac/obj/herodefs.o
 build build/mac/obj/overview.o: mwcc src/overview.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/overview.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = overview
 build mac$:overview: phony build/mac/obj/overview.o
 build build/mac/obj/spellbookwindow.o: mwcc src/spellbookwindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = spellbookwindow
 build mac$:spellbookwindow: phony build/mac/obj/spellbookwindow.o
 build build/mac/obj/hillfortwindow.o: mwcc src/hillfortwindow.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = hillfortwindow
 build mac$:hillfortwindow: phony build/mac/obj/hillfortwindow.o
 build build/mac/obj/dxplay.o: mwcc src/dxplay.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = dxplay
 build mac$:dxplay: phony build/mac/obj/dxplay.o
 build build/mac/obj/swapmgr.o: mwcc src/swapmgr.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = swapmgr
 build mac$:swapmgr: phony build/mac/obj/swapmgr.o
 build build/mac/obj/tradpost.o: mwcc src/tradpost.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/tradpost.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = tradpost
 build mac$:tradpost: phony build/mac/obj/tradpost.o
 build build/mac/obj/seerhut.o: mwcc src/seerhut.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/seerhut.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = seerhut
 build mac$:seerhut: phony build/mac/obj/seerhut.o
 build build/mac/obj/sacrifice_window.o: mwcc src/sacrifice_window.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = sacrifice_window
 build mac$:sacrifice_window: phony build/mac/obj/sacrifice_window.o
 build build/mac/obj/rmg.o: mwcc src/rmg.cpp | scripts/homm3/mac/cc_wrap.py $
     config/units.toml config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = rmg
 build mac$:rmg: phony build/mac/obj/rmg.o
 build build/mac/obj/rmg_support.o: mwcc src/rmg_support.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = rmg_support
 build mac$:rmg_support: phony build/mac/obj/rmg_support.o
 build build/mac/obj/rmg_terrain.o: mwcc src/rmg_terrain.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = rmg_terrain
 build mac$:rmg_terrain: phony build/mac/obj/rmg_terrain.o
 build build/mac/obj/objnames.o: mwcc src/objnames.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = objnames
 build mac$:objnames: phony build/mac/obj/objnames.o
 build build/mac/obj/forcefeedback.o: mwcc src/forcefeedback.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = forcefeedback
 build mac$:forcefeedback: phony build/mac/obj/forcefeedback.o
 build build/mac/obj/objecttype.o: mwcc src/objecttype.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
-    config/mac/units/objecttype.toml config/mac/units.toml
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = objecttype
 build mac$:objecttype: phony build/mac/obj/objecttype.o
 build build/mac/obj/string_support.o: mwcc src/string_support.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = string_support
 build mac$:string_support: phony build/mac/obj/string_support.o
 build build/mac/obj/gzfile.o: mwcc src/gzfile.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = gzfile
 build mac$:gzfile: phony build/mac/obj/gzfile.o
 build build/mac/obj/gzinflatebuf.o: mwcc src/gzinflatebuf.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = gzinflatebuf
 build mac$:gzinflatebuf: phony build/mac/obj/gzinflatebuf.o
 build build/mac/obj/netmsg.o: mwcc src/netmsg.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = netmsg
 build mac$:netmsg: phony build/mac/obj/netmsg.o
 build build/mac/obj/campaign.o: mwcc src/campaign.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = campaign
 build mac$:campaign: phony build/mac/obj/campaign.o
 build build/mac/obj/campaignmusic.o: mwcc src/campaignmusic.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = campaignmusic
 build mac$:campaignmusic: phony build/mac/obj/campaignmusic.o
 build build/mac/obj/tiles.o: mwcc src/tiles.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = tiles
 build mac$:tiles: phony build/mac/obj/tiles.o
 build build/mac/obj/victor.o: mwcc src/victor.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = victor
 build mac$:victor: phony build/mac/obj/victor.o
 build build/mac/obj/victor_flip.o: mwcc src/victor_flip.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = victor_flip
 build mac$:victor_flip: phony build/mac/obj/victor_flip.o
 build build/mac/obj/victor_loadpcx.o: mwcc src/victor_loadpcx.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = victor_loadpcx
 build mac$:victor_loadpcx: phony build/mac/obj/victor_loadpcx.o
 build build/mac/obj/victor_pcx_kernels.o: mwcc src/victor_pcx_kernels.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
   unit = victor_pcx_kernels
 build mac$:victor_pcx_kernels: phony build/mac/obj/victor_pcx_kernels.o
 build mac-objects: phony build/mac/obj/adler32.o build/mac/obj/compress.o $

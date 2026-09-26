@@ -1,9 +1,25 @@
-# Authored bodies retain their source include prefix and source order.
-# Both compilers read ordinary project headers; MSL supplies Mac library types.
-[units.hero]
-mode = "paired_bodies"
-flags = ["-O3", "-proc", "750", "-nolink", "-char", "unsigned"]
-# Additional source-owned VA definitions can be made visible as ordinary
-# helpers without admitting them as scored Mac pairs.
-helpers = []
-source_helpers = ["markSpells", "hero::getLevel", "hero::isLevelUpCampaignOverride"]
+# CodeWarrior settings for the full-TU Mac objects (`ninja mac:<unit>`),
+# keyed by config/units.toml unit names.
+
+# One profile for every unit; -proc 750 scheduling is calibrated on hero.
+# -char unsigned scored lower: 3 hero/remote pairs, or 79 (3 exact) as a global flag.
+flags = ["-O3", "-proc", "750", "-nolink"]
+
+# A unit override replaces `flags`. A disposition accounts for a unit with no
+# Mac counterpart; it needs positive evidence from the Mac executable.
+
+[units.forcefeedback]
+disposition = "windows_only"
+evidence = "IFC20.dll Immersion layer: no IFC import or its RTTI names (t_initialize_failure, CImmMouse) in the PEF."
+
+[units.victor_pcx_kernels]
+disposition = "windows_only"
+evidence = "x86 __asm PCX kernels: no 0xC0 run-marker test or 0x3F count mask in the Mac code."
+
+[units.winfile]
+disposition = "platform_rewritten"
+evidence = "Win32 file layer: Mac file I/O calls FSpOpenDF/FSRead/FSWrite/FSClose from 0:0x277e5c..0x2780c8."
+
+[units.dxplay]
+disposition = "platform_rewritten"
+evidence = "DirectPlay layer: Mac networks over OpenTransport; no DirectPlay import."

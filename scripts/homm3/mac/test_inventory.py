@@ -152,7 +152,10 @@ class TestClaimBodies(unittest.TestCase):
                 '[[unit]]\nunit = "town"\nsource = "src/town.cpp"\nflags = "x"\n')
             (root / "build/mac/obj").mkdir(parents=True)
             (root / "build/mac/obj/hero.hunks.json").write_text(json.dumps({"code": [
-                {"symbol": ".getLevel__4heroFi", "size": 0x40, "references": []}]}))
+                {"symbol": ".getLevel__4heroFi", "size": 0x40, "references": []},
+                {"symbol": ".getLevel__4heroFv", "size": 0x10, "references": []}]}))
+            (root / "build/mac/obj/hero.o").write_bytes(b"MWOBPPC ")
+            (root / "build/mac/obj/town.hunks.json").write_text('{"code": []}')  # stale index, no object
             claims = addresses.scan_text(
                 "VA(0x004d0000, 0x10) MAC_ADDRESS(0x100, 0x40)\nint hero::getLevel(int x)\n{\n}\n"
                 "MAC_ADDRESS(0x200, 0x8)\nstatic int helper()\n{\n}\n", "src/hero.cpp")[0]
@@ -160,7 +163,7 @@ class TestClaimBodies(unittest.TestCase):
                 "VA(0x005d0000, 0x10) MAC_ADDRESS(0x300, 0x20)\nvoid town::build()\n{\n}\n",
                 "src/town.cpp")[0]
             level = Definition("src/hero.cpp", 2, 0, 1, "hero::getLevel", "int (int)", 1, True, False,
-                               0x004D0000, "?getLevel@hero@@QAEHH@Z")
+                               0x004D0000, "?getLevel@hero@@QAEHH@Z", argument_types=("int",))
             helper = Definition("src/hero.cpp", 6, 50, 60, "helper", "int ()", 0, False, False,
                                 None, "?helper@@YAHXZ", mac_offset=0x200, mac_size=0x8)
             build = Definition("src/town.cpp", 2, 0, 1, "town::build", "void ()", 0, True, False,
@@ -168,6 +171,7 @@ class TestClaimBodies(unittest.TestCase):
             rows = {row["identity"]: row for row in
                     emitted.claim_bodies(root, [level, helper, build], claims)}
         self.assertEqual(rows["va:0x004d0000"]["state"], "emitted")
+        self.assertEqual(rows["va:0x004d0000"]["symbol"], ".getLevel__4heroFi")  # overload by parameters
         self.assertEqual(rows["va:0x004d0000"]["symbol_size"], "0x40")
         self.assertEqual(rows["source:src/hero.cpp:helper()"]["state"], "not_emitted")
         self.assertEqual(rows["va:0x005d0000"]["state"], "no_object")
@@ -193,3 +197,28 @@ class TestZlibMap(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestParameterJoin(unittest.TestCase):
+    def test_codewarrior_parameters_and_clang_spellings_agree(self):
+        self.assertEqual(emitted.parameters(".initialize__4heroFPC9HeroExtra"),
+                         (False, ("PC9HeroExtra",)))
+        self.assertEqual(emitted.parameters(".total__9armyGroupCFv"), (True, ()))
+        self.assertEqual(emitted.parameters(".__ct__6buttonFlPFR7message_ii"),
+                         (False, ("l", "PFR7message_i", "i")))
+        self.assertEqual(emitted.encode("const HeroExtra *"), "PC9HeroExtra")
+        self.assertEqual(emitted.encode("const type_icon_definition &"), "RC20type_icon_definition")
+        self.assertEqual(emitted.encode("A::B &"), "RQ21A1B")
+        self.assertIsNone(emitted.encode("int (*)(message &)"))
+
+    def test_owner_picks_the_one_fitting_overload(self):
+        from homm3.match.source_ownership import Definition
+        short = Definition("src/hero.cpp", 1, 0, 1, "hero::initialize", "void (short)", 1, True,
+                           False, 0x4d8720, "", argument_types=("short",))
+        extra = Definition("src/hero.cpp", 9, 2, 3, "hero::initialize", "void (const HeroExtra *)", 1,
+                           True, False, 0x4d8b30, "", argument_types=("const HeroExtra *",))
+        self.assertIs(emitted.owner(".initialize__4heroFs", [short, extra]), short)
+        self.assertIs(emitted.owner(".initialize__4heroFPC9HeroExtra", [short, extra]), extra)
+        self.assertEqual(emitted.select(extra, [".initialize__4heroFs",
+                                                ".initialize__4heroFPC9HeroExtra"]),
+                         ".initialize__4heroFPC9HeroExtra")

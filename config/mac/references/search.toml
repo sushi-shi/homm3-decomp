@@ -1,9 +1,0 @@
-[[helpers]]
-unit = "search"
-source_helper = "searchArray::enterStartTrigger"
-mac_section = 0
-mac_offset = 0x163074
-mac_size = 0x12c
-mac_symbol = ".enterStartTrigger__11searchArrayFPC4heroPC8pathCelll16type_search_type"
-target_sha256 = "1b4e1eae9a36a858c2004ff448094afd6e9525c3a66da6a1cad381719c938b53"
-evidence = "Mac 0:0x163074..0x1631a0 takes searchArray, hero, pathCell, max mobility and search type; it looks up the cell at the path point, checks trigger and three transport object types, copies the pathCell, sets startAtTrigger, adds 50 adjusted cost, and calls enterTrigger. It ends in BLR at 0x16319c immediately before seedPosition begins at 0x1631a0. Mac seedPosition calls it at 0x16383c; Windows VC6 expands the same source block in the start-town-negative branch."

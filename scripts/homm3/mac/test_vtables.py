@@ -1,4 +1,4 @@
-"""External vtables require source declarations and every pinned loader link."""
+"""Reviewed vtables require source declarations and every pinned loader link."""
 import hashlib
 from pathlib import Path
 from types import SimpleNamespace
@@ -110,8 +110,13 @@ methods = ["virtual int open(int)", "virtual void close()", "virtual int main(in
             loader.pointers[Address(1, 0x10c)] = Address(1, 0x210)
             emitted = SimpleNamespace(name=cell.name, storage_class="RW",
                                       data=bytes(20), xrefs=())
-            with self.assertRaises(ObjectError):
+            with self.assertRaises(ObjectError):  # a same-TU table needs the reviewed slot layout
                 external_bindings(root, pef, loader, code, (cell, emitted), **args)
+            defined = SimpleNamespace(name=cell.name, storage_class="RW", data=bytes(20), xrefs=(
+                (0, "HUNK_XREF_32BIT", "__RTTI__3Foo"), (8, "HUNK_XREF_32BIT", "open__3FooFi"),
+                (12, "HUNK_XREF_32BIT", "close__3FooFv"), (16, "HUNK_XREF_32BIT", "main__3FooFRi")))
+            self.assertEqual(external_bindings(root, pef, loader, code, (cell, defined), **args),
+                             {"__vt__3Foo": Address(1, 0x100)})
             source.write_text("class Foo : public Base { virtual int open(int); };\n")
             with self.assertRaises(ObjectError):
                 external_bindings(root, pef, loader, code, (cell,), **args)

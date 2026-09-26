@@ -7,9 +7,7 @@ from __future__ import annotations
 
 from difflib import SequenceMatcher
 
-from homm3.mac import build, pairing
-from homm3.mac.object import parse_code_hunks, select_hunk
-from homm3.mac.source import Pair
+from homm3.mac import build
 
 
 def _key(word: int) -> int:
@@ -29,32 +27,12 @@ def _words(data: bytes) -> list[int]:
     return [int.from_bytes(data[at:at + 4], "big") for at in range(0, len(data), 4)]
 
 
-def inspect(pair, pef, tools_dir) -> dict:
-    if pair.retail_va is None:
-        raise ValueError("Mac shape needs a Windows VA source claim")
-    source_pair = (pair if isinstance(pair, Pair) else
-                   pairing.candidate(build.ROOT, pair.retail_va, pair.unit))
-    compiled = build.compile_pair(source_pair, tools_dir)
-    hunk = compiled.hunk
+def inspect(pair, pef, listings=None) -> dict:
+    """Shape of a scored pair's full-TU body against its claimed Mac span."""
+    listings = listings or build.Listings()
+    hunk = listings.get(pair.unit)[0].get(pair.mac_symbol)
     if hunk is None:
-        listing = (build.object_directory(build.ROOT, source_pair) / "candidate.dis.txt").read_text()
-        hunks = parse_code_hunks(listing)
-        if pair.mac_symbol:
-            hunk = select_hunk(listing, pair.mac_symbol)
-        else:
-            function_name = pair.signature.rsplit("::", 1)[-1].split("(", 1)[0].strip()
-            named = [item for item in hunks
-                     if item.name.startswith(f".{function_name}__")]
-            if len(named) == 1:
-                hunk = named[0]
-            else:
-                authored = [item for item in hunks
-                            if not item.name.startswith((".__sinit_", ".__sti__"))]
-                if len(authored) == 1:
-                    hunk = authored[0]
-                else:
-                    raise ValueError(f"compile probe emitted {len(hunks)} code hunks; "
-                                     "record the reviewed mac_symbol on this address reference")
+        raise ValueError(f"{pair.unit} listing lacks {pair.mac_symbol}")
     candidate = _words(hunk.data)
     target = _words(pef.code(pair.mac_section, pair.mac_offset, pair.mac_size))
     removed = []
@@ -108,8 +86,7 @@ def inspect(pair, pef, tools_dir) -> dict:
             "assumed_removed_reload_slots": [f"0x{at * 4:x}" for at in removed],
             "aligned_equal_instructions": equal,
             "candidate_calls": candidate_calls, "retail_calls": retail_calls,
-            "changes": changes,
-            "source_hash": compiled.source_hash, "object_hash": compiled.object_hash}
+            "changes": changes, "source_hash": pair.source_hash}
 
 
 def render(report: dict) -> str:
