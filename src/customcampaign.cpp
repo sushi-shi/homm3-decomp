@@ -1436,7 +1436,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     currentHero->m_army.initialize();
     for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         if (sourceHero->m_army.m_armies[slot] != -1
-            && m_crossoverCreatures.test(sourceHero->m_army.m_armies[slot])) {
+            && m_crossoverCreatures[sourceHero->m_army.m_armies[slot]]) {
             currentHero->m_army.add(sourceHero->m_army.m_armies[slot],
                                   sourceHero->m_army.m_numTroops[slot], -1);
         }

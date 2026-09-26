@@ -8490,7 +8490,7 @@ int TSingleSelectionWindow::getCommonGameVersion()
     }
 
     int level = 3;
-    while (!features.test(level))
+    while (!features[level])
         level--;
     return level;
 }
