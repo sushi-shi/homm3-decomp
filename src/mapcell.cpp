@@ -923,56 +923,79 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
     return size * size;
 }
 
+// DC records separate byte, unsigned/signed short, int and unsigned-long
+// staging, count and two scoped x counters. Mac reuses the same width slots:
+// char +0x58, ushort +0x52, short +0x50, ulong +0x4c, int +0x54.
 VA(0x004fe490, 0x22A) MAC_ADDRESS(0x1200b4, 0x334)  // dc 0xed384
 int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
 {
     NewmapCell* thisCell = cell(0, 0, layer);
+    int y;
+    int x;
+    unsigned short ushortBuffer;
+    int intBuffer;
+    short shortBuffer;
+    int count;
+    unsigned long ulongBuffer;
+    char charBuffer;
 
-    for (int y = 0; y < size; ++y) {
-        for (int x = 0; x < size; ++x) {
-            if (static_cast<unsigned>(
-                    writeValue<char>(outfile, thisCell->m_groundSet)) < 1)
+    for (y = 0; y < size; ++y) {
+        for (x = 0; x < size; ++x) {
+            charBuffer = thisCell->m_groundSet;
+            count = writeScalar(outfile, charBuffer);
+            if (count < sizeof(charBuffer))
                 return -1;
-            if (static_cast<unsigned>(
-                    writeValue<char>(outfile, thisCell->m_groundIndex)) < 1)
+            charBuffer = thisCell->m_groundIndex;
+            count = writeScalar(outfile, charBuffer);
+            if (count < sizeof(charBuffer))
                 return -1;
-            if (static_cast<unsigned>(
-                    writeValue<char>(outfile, thisCell->m_riverSet)) < 1)
+            charBuffer = thisCell->m_riverSet;
+            count = writeScalar(outfile, charBuffer);
+            if (count < sizeof(charBuffer))
                 return -1;
-            if (static_cast<unsigned>(
-                    writeValue<char>(outfile, thisCell->m_riverIndex)) < 1)
+            charBuffer = thisCell->m_riverIndex;
+            count = writeScalar(outfile, charBuffer);
+            if (count < sizeof(charBuffer))
                 return -1;
-            if (static_cast<unsigned>(
-                    writeValue<char>(outfile, thisCell->m_roadSet)) < 1)
+            charBuffer = thisCell->m_roadSet;
+            count = writeScalar(outfile, charBuffer);
+            if (count < sizeof(charBuffer))
                 return -1;
-            if (static_cast<unsigned>(
-                    writeValue<char>(outfile, thisCell->m_roadIndex)) < 1)
-                return -1;
-
-            if (static_cast<unsigned>(
-                    writeValue<short>(outfile, thisCell->m_cellFlags)) < 2)
-                return -1;
-            if (static_cast<unsigned>(
-                    writeValue<short>(outfile, thisCell->m_type)) < 2)
-                return -1;
-            if (static_cast<unsigned>(
-                    writeValue<short>(outfile, thisCell->m_objectIndex)) < 2)
-                return -1;
-            if (static_cast<unsigned>(
-                    writeValue<short>(outfile, thisCell->m_objectTypeIndex)) < 2)
-                return -1;
-
-            if (static_cast<unsigned>(
-                    writeValue<unsigned long>(outfile, thisCell->m_extraInfo)) < 4)
+            charBuffer = thisCell->m_roadIndex;
+            count = writeScalar(outfile, charBuffer);
+            if (count < sizeof(charBuffer))
                 return -1;
 
-            if (static_cast<unsigned>(
-                    writeValue<int>(outfile, thisCell->m_objects.size())) < 4)
+            ushortBuffer = thisCell->m_cellFlags;
+            count = writeScalar(outfile, ushortBuffer);
+            if (count < sizeof(ushortBuffer))
+                return -1;
+            ushortBuffer = thisCell->m_type;
+            count = writeScalar(outfile, ushortBuffer);
+            if (count < sizeof(ushortBuffer))
+                return -1;
+            shortBuffer = thisCell->m_objectIndex;
+            count = writeScalar(outfile, shortBuffer);
+            if (count < sizeof(shortBuffer))
+                return -1;
+            shortBuffer = thisCell->m_objectTypeIndex;
+            count = writeScalar(outfile, shortBuffer);
+            if (count < sizeof(shortBuffer))
                 return -1;
 
-            for (unsigned int i = 0; i < thisCell->m_objects.size(); ++i) {
-                if (static_cast<unsigned>(
-                        outfile->write(&thisCell->m_objects[i], 4)) < 4)
+            ulongBuffer = thisCell->m_extraInfo;
+            count = writeScalar(outfile, ulongBuffer);
+            if (count < sizeof(ulongBuffer))
+                return -1;
+
+            intBuffer = thisCell->m_objects.size();
+            count = writeScalar(outfile, intBuffer);
+            if (count < sizeof(intBuffer))
+                return -1;
+
+            for (int x = 0; x < thisCell->m_objects.size(); ++x) {
+                count = outfile->write(&thisCell->m_objects[x], sizeof(int));
+                if (count < sizeof(int))
                     return -1;
             }
             ++thisCell;
